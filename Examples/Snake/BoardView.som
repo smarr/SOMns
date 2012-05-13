@@ -1,7 +1,5 @@
 "
 
-$Id: BoardView.som 426 2008-05-22 08:22:07Z stefan.marr $
-
 Copyright (c) 2001-2008 see AUTHORS file
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -35,7 +33,7 @@ BoardView = (
       y isNil ifFalse: [
         y do: [ :apple |
           apple isNil ifFalse: [
-            Terminal cursorToX: (apple x) Y: (apple y).
+            Terminal cursorToX: (apple x + 1) Y: (apple y + 1).
             Terminal put: 'o'
           ]
         ]
