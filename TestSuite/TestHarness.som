@@ -28,7 +28,7 @@ TestHarness = (
     tests = (
         ^ EmptyTest, DoubleTest, HashTest, SymbolTest, BigIntegerTest,
           SuperTest, SelfBlockTest, ObjectSizeTest, ArrayTest, ReflectionTest,
-          CoercionTest, ClosureTest, CompilerReturnTest
+          CoercionTest, ClosureTest, CompilerReturnTest, PreliminaryTest, IntegerTest
     )
     
     run = (
