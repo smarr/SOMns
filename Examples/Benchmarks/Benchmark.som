@@ -1,6 +1,5 @@
 "
 
-$Id: Benchmark.som 31 2009-07-31 12:25:18Z michael.haupt $
 
 Copyright (c) 2001-2007 see AUTHORS file
 
@@ -26,29 +25,33 @@ THE SOFTWARE.
 Benchmark = (
 
     run = (
-        | startTime elapsedTime measuredTime minTime iterations |
-        
-        (('Starting ' + (self name)) + ' benchmark ... ') println.
-        
-        iterations := elapsedTime := 0.
-        minTime := 100000.
-        
-        [ elapsedTime < 2000 or: [ iterations < 5 ] ]
-            whileTrue: [
-                system fullGC.
-                startTime  := system time.
-                self benchmark.
-                measuredTime := system time - startTime.
-                elapsedTime := elapsedTime + measuredTime.
-                minTime > measuredTime ifTrue: [ minTime := measuredTime ].
-                iterations := iterations + 1. ].
-        
-        ('   Iterations: ' + iterations + ' (elapsed time ' + elapsedTime
-            + ' ms)') println.
-        ('   RESULT: ' + minTime + ' ms') println.
-        '' println.
-        ^minTime
+        self exec: 1.
     )
+
+    run: params = (
+		self exec: (params at: 2) intValue.
+    )
+
+	exec: iterations = (
+        | startTime i runTime |
+        
+        i := iterations.
+        startTime := system ticks.
+        
+		[ i > 0 ]
+	        whileTrue: [
+	            self benchmark.
+	            i := i - 1. ].
+                
+        runTime := system ticks - startTime.
+        
+        self name print.
+        ': iterations=' print.
+        iterations print.
+        ' runtime: ' print.
+        runTime print.
+        'us' println.
+	)
     
     benchmark  = ( self subclassResponsibility )
     name       = ( ^self class name asString )

@@ -1,6 +1,5 @@
 "
 
-$Id: All.som 31 2009-07-31 12:25:18Z michael.haupt $
 
 Copyright (c) 2001-2007 see AUTHORS file
 
@@ -25,16 +24,30 @@ THE SOFTWARE.
 
 All = (
 
-    run = ( 
-        | total |
-        total := 0.
+    run = (
+        self exec: 1
+    )
+
+    run: params = (
+		self exec: (params at: 2) intValue.
+    )
+    
+    exec: iterations = (
+        | startTime i runTime |
         
+        startTime := system ticks.
+               
         Fibonacci, Dispatch, Bounce, Loop, Permute, Queens, List, Recurse,
-        Storage, Sieve, BubbleSort, QuickSort, Sum, Towers, TreeSort,
-        IntegerLoop
-            do: [ :benchmark | total := total + benchmark new run ].
-        
-        ('All tests completed (' + total + ' ms)') println.
+        Storage, Sieve, BubbleSort, QuickSort, Sum, Towers, TreeSort
+            do: [ :benchmark | benchmark new exec: iterations ].
+
+        runTime := system ticks - startTime.
+
+        'All: iterations=' print.
+        iterations print.
+        ' run time: ' print.
+        runTime print.
+        'µs' println.
     )
     
 )
