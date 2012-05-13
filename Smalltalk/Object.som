@@ -50,6 +50,11 @@ Object = nil (
     "Evaluating"
     value     = ( ^self )
     
+    "Convenience"
+    ifNil: aBlock = (^self)
+    ifNotNil: aBlock = (^aBlock value)
+    ifNil: noGoBlock ifNotNil: goBlock = (^goBlock value)
+    
     "Printing"
     print     = ( self asString print )
     println   = ( self print. system printNewline )

@@ -80,7 +80,7 @@ System = (
     
     "Time"
     time  = primitive
-    ticks = primitive
+    ticks = primitive      "returns the microseconds since start"
     
     "Force Garbage Collection"
     fullGC = primitive

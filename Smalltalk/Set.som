@@ -47,6 +47,14 @@ Set = (
         items := newItems
     )
     
+    first = (
+        ^items at: 1
+    )
+    
+    isEmpty = (
+               ^items isEmpty
+    )
+    
     "Iteration"
     do: block = ( items do: block )
     

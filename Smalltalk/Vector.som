@@ -36,6 +36,8 @@ Vector = (
         self checkIndex: index ifValid: [ ^storage at: index put: value ]
     )
     
+    first = ( (self size > 0) ifTrue: [^storage at: 1] ifFalse: [^nil] )
+    
     "Iterating"
     do: block = (
         self doIndexes: [ :i | block value: (self at: i) ]
@@ -70,6 +72,39 @@ Vector = (
             ifFalse: [
                 self error:
                     'Vector: Attempting to pop element from empty Vector' ]
+    )
+    
+    remove: object = (
+        | newArray newLast found |
+        newArray := Array new: self capacity.
+        newLast := 1.
+        found := false.
+       
+        self do: [ :it |
+          (it == object)
+              ifTrue:  [ found := true ]
+              ifFalse: [
+                  newArray at: newLast put: it.
+                  newLast := newLast + 1.
+              ]
+        ].
+       
+        storage := newArray.
+        last := newLast.
+        first := 1.
+        ^found
+    )
+   
+    contains: anObject = (
+        storage do: [ :it | it == anObject ifTrue: [ ^true ] ].
+        ^false
+    )
+  
+    "Printing"
+    println = (
+        '(' print.
+        self do: [ :it | '(' print. it print. ')' print ].
+        ')' println
     )
     
     "Sizing"
