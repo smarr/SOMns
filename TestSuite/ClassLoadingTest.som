@@ -1,0 +1,12 @@
+ClassLoadingTest = (
+    run: harness = (
+      | a b|
+      b := ClassB new.
+      a := ClassA new.
+      (b result) = 42 ifFalse: [harness fail: self because: 'The answer is 42!' ].
+
+      (a class) == (b class superclass) ifFalse: [
+        harness fail: self because: ('classes are not equal: ' + (a class) +' and ' + (b class superclass))
+      ].
+    )
+)

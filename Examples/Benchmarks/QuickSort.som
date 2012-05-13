@@ -1,0 +1,57 @@
+"
+
+$Id: QuickSort.som 31 2009-07-31 12:25:18Z michael.haupt $
+
+Copyright (c) 2001-2007 see AUTHORS file
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the 'Software'), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+"
+
+QuickSort = Sort (
+
+    sort: array = (
+        self sort: array low: 1 high: self dataSize
+    )
+    
+    sort: array low: low high: high = (
+        | pivot i j |
+        
+        pivot := array at: (low + high) / 2.
+        i := low.
+        j := high.
+        [ i <= j ]
+            whileTrue: [
+                [ (array at: i) < pivot ] whileTrue: [ i := i + 1 ].
+                [ pivot < (array at: j) ] whileTrue: [ j := j - 1 ].
+                ( i <= j )
+                    ifTrue: [
+                        | tmp |
+                        tmp := array at: i.
+                        array at: i put: (array at: j).
+                        array at: j put: tmp.
+                        i := i + 1.
+                        j := j - 1. ] ].
+        
+        (low < j)  ifTrue: [ self sort: array low: low high: j  ].
+        (i < high) ifTrue: [ self sort: array low: i high: high ]
+    )
+    
+    dataSize = ( ^800 )
+    
+)

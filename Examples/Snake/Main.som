@@ -1,0 +1,83 @@
+"
+
+$Id: Main.som 191 2008-04-10 18:15:47Z michael.haupt $
+
+Copyright (c) 2001-2008 see AUTHORS file
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the 'Software'), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+"
+
+Main = (
+  run = (
+    | board view chr snake dir continue |
+    Terminal init.
+    Terminal clear.
+    dir := Terminal KEY_UP.
+
+    board := Board newWithWidth: 10 height: 10 numberOfApples: 5.
+    view := BoardView new: board.
+    view drawBoarder.
+    
+    snake := Snake newWithX: 5 Y: 5 andBoard: board.
+    continue := true.
+    [ continue ] whileTrue: [
+      chr := Terminal get. 
+      ((Terminal KEY_UP = chr)
+        || ((Terminal KEY_DOWN) = chr)
+        || ((Terminal KEY_LEFT) = chr)
+        || ((Terminal KEY_RIGHT) = chr)) ifTrue: [ dir := chr ].
+      Terminal sleepFor: 250.
+      
+      "Terminal cursorToX: 15 Y: 15."
+      (Terminal KEY_UP = dir) ifTrue: [ continue := snake moveUp ].
+      (Terminal KEY_DOWN = dir) ifTrue: [ continue := snake moveDown ].
+      (Terminal KEY_LEFT = dir) ifTrue: [ continue := snake moveLeft ].
+      (Terminal KEY_RIGHT = dir) ifTrue: [ continue := snake moveRight ].
+      '' println.
+    ].
+    
+    'GAME OVER' println.
+    Terminal uninit.
+  )
+)
+
+"
+
+while (true) {
+	$i = 4;
+	while ($i > 0) {
+		$key = Terminal::get(0);
+		if (in_array($key, array(Terminal::KEY_UP, Terminal::KEY_DOWN, Terminal::KEY_LEFT, Terminal::KEY_RIGHT))) {
+			$dir = $key;
+		}
+		usleep(100000);
+		$i--;
+	}
+		
+	
+	if (!$result) {
+		Terminal::cursorTo(5, 15);
+		Terminal::put('GAME OVER');
+		sleep(5);
+		return;
+	}
+}
+
+Terminal::clear();
+"

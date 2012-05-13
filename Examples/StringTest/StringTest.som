@@ -1,0 +1,41 @@
+" Simple Object Machine
+  $Id: StringTest.som 1 2009-07-14 14:35:11Z michael.haupt $
+
+  Copyright (C) 2001-2002  See AUTHORS file
+  All rights reserved
+"
+
+StringTest = (
+  "The 'run' method is called when initializing the system"
+  run = ( 
+     |str1 str2 str3|
+     
+     "test equality (true, false, true)"
+     str1 := 'foo'.
+     str2 := 'bar'.
+     
+     (str1 = str1) println.
+     (str1 = str2) println.
+     (str2 = str2) println.
+
+     "test length (6)"
+     str3 := str1 + str2.
+     str3 length println.
+
+     "test charAt"
+     (str3 charAt: 0) println.
+     (str3 charAt: 1) println.
+     (str3 charAt: 2) println.
+     (str3 charAt: 3) println.
+     (str3 charAt: 4) println.
+     (str3 charAt: 5) println.
+
+     "test substring. 'foo' , 'bar' , 'foobar'" 
+     (str3 primSubstringFrom: 0 To: 2) println.
+     (str3 primSubstringFrom: 3 To: 5) println.
+     (str3 primSubstringFrom: 0 To: 5) println.
+
+
+'Hello, World from SmallTalk(tm)' println )
+
+)

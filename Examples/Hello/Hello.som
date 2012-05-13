@@ -1,0 +1,12 @@
+" Simple Object Machine
+  $Id: Hello.som 27 2009-07-31 11:17:53Z michael.haupt $
+
+  Copyright (C) 2001-2002  See AUTHORS file
+  All rights reserved
+"
+
+Hello = (
+  "The 'run' method is called when initializing the system"
+  run = ('Hello, world from Smalltalk!' println )
+
+)
