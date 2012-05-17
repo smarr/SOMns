@@ -28,12 +28,13 @@ THE SOFTWARE.
 ArrayTest = (
     run: harness = (
         
-        | a |
+        | a j |
         a := Array new: 3.
         a at: 1 put: 'hello'.
         a at: 2 put: #world.
         a at: 3 put: 23.
         
+
         a length = 3 ifFalse: [
             harness
                 fail: self
@@ -49,7 +50,19 @@ ArrayTest = (
         (a contains: 23) ifFalse: [
             harness
                 fail: self
-                because: 'Containment check for 23 should be true.' ]
-                
+                because: 'Containment check for 23 should be true.' ].
+
+		"Test #do:"
+		j := 1.
+        a do: [:i | 
+			(a at: j) = i ifFalse: [
+				harness
+					fail: self
+					because: 'Error with #do: on Array. Should have seen ', 
+							 (a at: j) asString, ' at index ', j asString,
+							 ' but got ', i asString.
+			].
+			j := j + 1.
+		].
     )
 )
