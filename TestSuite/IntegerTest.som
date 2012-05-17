@@ -134,12 +134,12 @@ IntegerTest = (
 		self assert: 'Comparasion <'  actual: (1<2)  expected: true.
 		self assert: 'Comparasion <'  actual: (2<1)  expected: false.
 		self assert: 'Comparasion <'  actual: (-3<2) expected: true.
-		self assert: 'Comparasion <'  actual: (3<-2) expected: false.
+		self assert: 'Comparasion <'  actual: (3< -2) expected: false.
 		self assert: 'Comparasion >'  actual: (0>0)  expected: false.
 		self assert: 'Comparasion >'  actual: (1>2)  expected: false.
 		self assert: 'Comparasion >'  actual: (2>1)  expected: true.
 		self assert: 'Comparasion >'  actual: (-3>2) expected: false.
-		self assert: 'Comparasion >'  actual: (3>-2) expected: true.
+		self assert: 'Comparasion >'  actual: (3> -2) expected: true.
 		self assert: 'Comparasion >=' actual: (4>=3) expected: true.
 		self assert: 'Comparasion >=' actual: (3>=3) expected: true.
 		self assert: 'Comparasion >=' actual: (2>=3) expected: false.
@@ -166,28 +166,28 @@ IntegerTest = (
 	multiplicationTest = (
 		self assert: 'Multiplication' actual: (1*0)   expected: 0.						
 		self assert: 'Multiplication' actual: (-1*1)  expected: -1.						
-		self assert: 'Multiplication' actual: (5*-5)  expected: -25.						
-		self assert: 'Multiplication' actual: (-3*-4) expected: 12.	
+		self assert: 'Multiplication' actual: (5* -5)  expected: -25.						
+		self assert: 'Multiplication' actual: (-3* -4) expected: 12.	
 	)
 
 	divisionTest = (
 		self assert: 'Division' actual: (1/1) 	 expected: 1.						
 		self assert: 'Division' actual: (3/2) 	 expected: 1.	
-		self assert: 'Division' actual: (4/-2) 	 expected: -2.		
+		self assert: 'Division' actual: (4/ -2) 	 expected: -2.		
 		self assert: 'Division' actual: (-6/3) 	 expected: -2.		
-		self assert: 'Division' actual: (-12/-4) expected: 3.		
+		self assert: 'Division' actual: (-12/ -4) expected: 3.		
 	)
 
 	doubleTest = (
 		self assert: 'Comparison With Double' actual: (36//6)  expected: 6.
 		self assert: 'Comparison With Double' actual: (-10//2) expected: -5.
-		self assert: 'Comparison With Double' actual: (20//-5) expected: -4.
-		self assert: 'Comparison With Double' actual: (-5//-5) expected: 1.
+		self assert: 'Comparison With Double' actual: (20// -5) expected: -4.
+		self assert: 'Comparison With Double' actual: (-5// -5) expected: 1.
 	)
 			
 	moduloTest = (
 		self assert: 'Modulo' actual: (10%3) expected: 1. 
-		self assert: 'Modulo' actual: (-10%3) expected: -1.
+		self assert: 'Modulo' actual: (10% -3) expected: -2.
 	)
 
 	absoluteValueTest = (
@@ -202,7 +202,7 @@ IntegerTest = (
 
 	squareRootTest = (
 		self assert: 'SquareRoot' actual: (25 sqrt) expected: 5.
-		self assert: 'SquareRoot' actual: (25 sqrt class) expected: Double.
+		self assert: 'SquareRoot' actual: (25 sqrt class) expected: Integer.
 	)
 
 	andTest = (
