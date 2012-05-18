@@ -96,8 +96,7 @@ Vector = (
     )
    
     contains: anObject = (
-        storage do: [ :it | it == anObject ifTrue: [ ^true ] ].
-        ^false
+        ^ storage contains: anObject
     )
   
     "Printing"
