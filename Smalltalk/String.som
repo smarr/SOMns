@@ -42,14 +42,24 @@ String = (
     
     "substring: from 'start' to (and including) 'end'. First character is at
      position 0."
-    primSubstringFrom: start To: end = primitive
+    primSubstringFrom: start to: end = primitive
     
     substringFrom: start To: end = (
-        ((end < self length) && (start >= 0) && (start <= end))
-            ifTrue: [^self primSubstringFrom: start To: end]
+        ((end <= self length) && (start > 0) && (start <= end))
+            ifTrue: [^self primSubstringFrom: start to: end]
             ifFalse: [
                 self error: 'Attempting to index string out of its bounds.' ]
     )
+
+	beginsWith: prefix = (
+		self length < prefix length ifTrue: [^ false ].
+		
+		1 to: prefix length do: [:i | 
+			((self charAt: i) = (prefix charAt: i)) ifFalse: [^ false ].  
+		].
+		
+		^ true
+	)
     
     charAt: argument = (
         ^self substringFrom: argument To: argument
