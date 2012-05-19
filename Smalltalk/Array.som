@@ -63,5 +63,22 @@ Array = (
     new                        = ( ^self new: 0 )
     new: length                = primitive
     new: length withAll: block = ( ^((self new: length) putAll: block) )
+    
+    "Convenience"
+    with: a with: b            = (
+        | arr |
+        arr := self new: 2.
+        arr at: 1 put: a.
+        arr at: 2 put: b.
+        ^ arr
+    )
 
+    with: a with: b with: c    = (
+        | arr |
+        arr := self new: 3.
+        arr at: 1 put: a.
+        arr at: 2 put: b.
+        arr at: 3 put: c.
+        ^ arr
+    )
 )
