@@ -27,10 +27,13 @@ THE SOFTWARE.
 
 ReflectionTest = (
     run: harness = (
+		| tmp |
+		
         (Object methods at: 1) signature = #class ifFalse: [
             harness
                 fail: self
-                because: 'The first method in Object is not #class.' ].
+                because: 'The first method in Object is not #class. ' +
+ 						 'It is ', (Object methods at: 1) signature asString.].
         (Object hasMethod: #==) ifFalse: [
             harness
                 fail: self
@@ -46,6 +49,27 @@ ReflectionTest = (
         (23 respondsTo: #+) ifFalse: [
             harness
                 fail: self
-                because: '23 should respond to #+.' ]
+                because: '23 should respond to #+.' ].
+		
+		tmp := 23 perform: #class.
+		
+		tmp = Integer ifFalse: [
+			harness
+				fail: self
+				because: '`23 perform: #class` shoud return Integer, but returned ', tmp asString. ].
+		
+		"Trying to see whether the stack works properly"
+		tmp := (23 perform: #class) = Integer ifTrue: [#a] ifFalse: [#b].
+		tmp = #a ifFalse: [
+			harness
+				fail: self
+				because: 'There seems to be something fishy going on with the stack. tmp = ' + tmp asString ].
+		
+		tmp := 5 + (23 perform: #value).
+		tmp = 28 ifFalse: [
+			harness
+				fail: self
+				because: 'There seems to be something fishy going on with the stack. tmp = ' + tmp asString ].
+		
     )
 )
