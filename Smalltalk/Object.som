@@ -25,7 +25,7 @@ THE SOFTWARE.
 
 Object = nil (
 
-    | class |
+    | class domain |
     
     "Accessing"
     class     = ( ^class )
