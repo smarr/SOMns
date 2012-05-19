@@ -1,0 +1,73 @@
+TestCase = (
+	| testSelector runner |
+	
+	selector 	   = ( ^ testSelector )
+	selector: aSym = ( testSelector := aSym )
+	
+	"asserting"
+	assert: aBoolean = ( aBoolean ifFalse: [self signalFailure: 'Assertion failed'] )
+
+	assert: aBooleanOrBlock description: aString = (
+		aBooleanOrBlock value ifFalse: [
+			self signalFailure: aString
+		]
+	)
+	
+	assert: expected equals: actual = (
+		^ self
+			assert: (expected = actual)
+			description: (self comparingStringBetween: expected and: actual)
+	)
+	
+	deny: aBoolean = (
+		self assert: aBoolean not
+	)
+	
+	deny: aBooleanOrBlock description: aString = (
+		self assert: aBooleanOrBlock value not description: aString
+	)
+	
+	signalFailure: aString = (
+		runner fail: self class name, '>>#', testSelector because: aString.
+	)
+	
+	comparingStringBetween: expected and: actual = (
+		^ 'Expected ', expected asString,
+		  ' but was ', actual asString, '.'
+	)
+	
+	"running"
+	run: aRunner = (
+		runner := aRunner.
+		
+		self setUp.
+		self performTest.
+		self tearDown.
+	)
+	
+	setUp    = ()
+	tearDown = ()
+	
+	performTest = ( self perform: testSelector )
+	
+	----
+	
+	for: aSelector = (
+		| case |
+		case := self new.
+		case selector: aSelector.
+		^ case
+	)
+	
+	tests = (
+		| tests |
+		tests := Vector new: self methods length.
+		self methods do: [:m |
+			(m signature beginsWith: #test) ifTrue: [
+				tests append: (self for: m signature).
+			].
+		].
+		
+		^ tests
+	)
+)

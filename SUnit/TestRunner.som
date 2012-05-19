@@ -1,0 +1,53 @@
+TestRunner = (
+	| suite |
+
+	initializeOn: aSuite = ( suite := aSuite )
+
+	run = (
+		self setUp.
+		self runAll.
+		self tearDown.
+		self overviewReport.
+	)
+	
+	setUp = (
+		('TestSuite ' + suite name + ':') println.
+		('Tests: ' + suite tests size asString) println.
+	)
+	
+	tearDown = (
+		('failures=' + suiteFailures asString) print.
+		'    ' print.
+		('errors=' + suiteErrors aString) println.
+	)
+	
+	runAll = (
+		suite tests do: [ :each | each run: self ]
+	)
+	
+	overviewReport = (
+		('Run: ' + self runCount asString) println.
+		('Expected passes: ' + self expectedPassCount asString) println.
+		'------------------------------' println.
+		
+		('Expected failures: ' + self expectedDefectCount asString) println.
+		self expectedDefects do: [:each |
+			('    ' + each asString) println ].
+		'------------------------------' println.
+		
+		('Unexpected failures: ' + self unexpectedFailureCount asString) println.
+		self unexpectedFailures do: [:each |
+			('    ' + each asString) println ].
+		'------------------------------' println.
+
+		('Errors: ' + self unexpectedErrors size asString) println.
+		self unexpectedErrors do: [:each |
+			('    ' + each asString) println ].
+		'------------------------------' println.
+		
+		('Unexpected passes: ' + self unexpectedPasses size asString) println.
+		self unexpectedPasses do: [:each |
+			('    ' + each asString) println ].
+
+	)
+)
