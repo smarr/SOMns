@@ -1,7 +1,11 @@
 TestRunner = (
-	| suite |
+	| suite failures passes |
 
-	initializeOn: aSuite = ( suite := aSuite )
+	initializeOn: aSuite = (
+		suite    := aSuite.
+		failures := Vector new.
+		passes   := Vector new.
+	)
 
 	run = (
 		self setUp.
@@ -10,44 +14,42 @@ TestRunner = (
 		self overviewReport.
 	)
 	
+	"Naming is reflecting the original code in the RoarVM images"
 	setUp = (
 		('TestSuite ' + suite name + ':') println.
 		('Tests: ' + suite tests size asString) println.
 	)
 	
+	"Naming is reflecting the original code in the RoarVM images"
 	tearDown = (
-		('failures=' + suiteFailures asString) print.
-		'    ' print.
-		('errors=' + suiteErrors aString) println.
+		('Failures: ' + failures size asString) println.
 	)
 	
 	runAll = (
-		suite tests do: [ :each | each run: self ]
+		suite tests do: [ :each |
+		    each run: self ].
 	)
 	
 	overviewReport = (
-		('Run: ' + self runCount asString) println.
-		('Expected passes: ' + self expectedPassCount asString) println.
+		('Expected passes: ' + passes size asString) println.
 		'------------------------------' println.
 		
-		('Expected failures: ' + self expectedDefectCount asString) println.
-		self expectedDefects do: [:each |
-			('    ' + each asString) println ].
-		'------------------------------' println.
 		
-		('Unexpected failures: ' + self unexpectedFailureCount asString) println.
-		self unexpectedFailures do: [:each |
-			('    ' + each asString) println ].
-		'------------------------------' println.
+		('Failures: ' + failures size asString) println.
+		failures do: [:each |
+			('    ' + each key asString) println.
+			('        ' + each value asString) println ].
 
-		('Errors: ' + self unexpectedErrors size asString) println.
-		self unexpectedErrors do: [:each |
-			('    ' + each asString) println ].
-		'------------------------------' println.
-		
-		('Unexpected passes: ' + self unexpectedPasses size asString) println.
-		self unexpectedPasses do: [:each |
-			('    ' + each asString) println ].
 
+	)
+	
+	fail: aSignature because: aReason = (
+		| pair |
+		pair := Pair withKey: aSignature andValue: aReason.
+		failures append: pair.
+	)
+	
+	passed: aSignature = (
+	    passes append: aSignature
 	)
 )
