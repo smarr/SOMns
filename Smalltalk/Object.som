@@ -59,8 +59,8 @@ Object = nil (
     print     = ( self asString print )
     println   = ( self print. system printNewline )
 
-	"Debugging"
-	inspect	  = primitive
+    "Debugging"
+    inspect   = primitive
     
     "Error handling"
     error: string = ( '' println. ('ERROR: ' + string) println. system exit )
@@ -95,9 +95,9 @@ Object = nil (
                 ^ false ]
     )
     
-	perform: aSymbol = primitive
-	instVarAt: idx          = primitive
-	instVarAt: idx put: obj = primitive
-	instVarNamed: sym       = primitive
+    perform: aSymbol = primitive
+    instVarAt: idx          = primitive
+    instVarAt: idx put: obj = primitive
+    instVarNamed: sym       = primitive
 
 )
