@@ -27,13 +27,13 @@ THE SOFTWARE.
 
 ReflectionTest = (
     run: harness = (
-		| tmp o |
-		
+        | tmp o |
+        
         (Object methods at: 1) signature = #class ifFalse: [
             harness
                 fail: self
                 because: 'The first method in Object is not #class. ' +
- 						 'It is ', (Object methods at: 1) signature asString.].
+                         'It is ', (Object methods at: 1) signature asString.].
         (Object hasMethod: #==) ifFalse: [
             harness
                 fail: self
@@ -50,58 +50,58 @@ ReflectionTest = (
             harness
                 fail: self
                 because: '23 should respond to #+.' ].
-		
-		"Testing #perform"
-		tmp := 23 perform: #class.
-		
-		tmp = Integer ifFalse: [
-			harness
-				fail: self
-				because: '`23 perform: #class` shoud return Integer, but returned ', tmp asString. ].
-				
-		tmp := 23 perform: #between:and: withArguments: (Array with: 22 with: 24).
-		tmp ifFalse: [
-		    harness
-		        fail: self
-		        because: '#between:and: seems to have failed when it was applied with #perform:withArguments:'.
-		].
-		
-		o := SuperTest new.
-		tmp := o perform: #something inSuperclass: SuperTestSuperClass.
-		tmp = #super ifFalse: [
-		    harness
-		        fail: self
-		        because: 'Perform was not executed in expected super class'.
-		].
-		
-		"Trying to see whether the stack works properly"
-		tmp := (23 perform: #class) = Integer ifTrue: [#a] ifFalse: [#b].
-		tmp = #a ifFalse: [
-			harness
-				fail: self
-				because: 'There seems to be something fishy going on with the stack. tmp = ' + tmp asString ].
-		
-		tmp := 5 + (23 perform: #value).
-		tmp = 28 ifFalse: [
-			harness
-				fail: self
-				because: 'There seems to be something fishy going on with the stack. tmp = ' + tmp asString ].
-				    
-		
-		"Testing #at: and #at:put:"
-		tmp := Pair withKey: 3 andValue: 42.
-		(tmp instVarAt: 3) = tmp key ifFalse: [  "REM: this might be different, depending on the number of fields in Object!!!"
-		    harness
-		        fail: self
-		        because: '#at: did not return the expected value from the Pair object.'
-	    ].
-	    
-	    tmp instVarAt: 3 put: #foo.
-	    tmp key = #foo ifFalse: [  "REM: this might be different, depending on the number of fields in Object!!!"
-		    harness
-		        fail: self
-		        because: '#at:put: did not set the correct field in the pair object.'
-	    ].
-		
+        
+        "Testing #perform"
+        tmp := 23 perform: #class.
+        
+        tmp = Integer ifFalse: [
+            harness
+                fail: self
+                because: '`23 perform: #class` shoud return Integer, but returned ', tmp asString. ].
+                
+        tmp := 23 perform: #between:and: withArguments: (Array with: 22 with: 24).
+        tmp ifFalse: [
+            harness
+                fail: self
+                because: '#between:and: seems to have failed when it was applied with #perform:withArguments:'.
+        ].
+        
+        o := SuperTest new.
+        tmp := o perform: #something inSuperclass: SuperTestSuperClass.
+        tmp = #super ifFalse: [
+            harness
+                fail: self
+                because: 'Perform was not executed in expected super class'.
+        ].
+        
+        "Trying to see whether the stack works properly"
+        tmp := (23 perform: #class) = Integer ifTrue: [#a] ifFalse: [#b].
+        tmp = #a ifFalse: [
+            harness
+                fail: self
+                because: 'There seems to be something fishy going on with the stack. tmp = ' + tmp asString ].
+        
+        tmp := 5 + (23 perform: #value).
+        tmp = 28 ifFalse: [
+            harness
+                fail: self
+                because: 'There seems to be something fishy going on with the stack. tmp = ' + tmp asString ].
+                    
+        
+        "Testing #at: and #at:put:"
+        tmp := Pair withKey: 3 andValue: 42.
+        (tmp instVarAt: 3) = tmp key ifFalse: [  "REM: this might be different, depending on the number of fields in Object!!!"
+            harness
+                fail: self
+                because: '#at: did not return the expected value from the Pair object.'
+        ].
+        
+        tmp instVarAt: 3 put: #foo.
+        tmp key = #foo ifFalse: [  "REM: this might be different, depending on the number of fields in Object!!!"
+            harness
+                fail: self
+                because: '#at:put: did not set the correct field in the pair object.'
+        ].
+        
     )
 )
