@@ -57,7 +57,7 @@ ReflectionTest = (
         tmp = Integer ifFalse: [
             harness
                 fail: self
-                because: '`23 perform: #class` shoud return Integer, but returned ', tmp asString. ].
+                because: '`23 perform: #class` should return Integer, but returned ', tmp asString. ].
                 
         tmp := 23 perform: #between:and: withArguments: (Array with: 22 with: 24).
         tmp ifFalse: [
