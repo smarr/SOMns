@@ -27,7 +27,7 @@ THE SOFTWARE.
 
 ReflectionTest = (
     run: harness = (
-		| tmp |
+		| tmp o |
 		
         (Object methods at: 1) signature = #class ifFalse: [
             harness
@@ -64,6 +64,14 @@ ReflectionTest = (
 		    harness
 		        fail: self
 		        because: '#between:and: seems to have failed when it was applied with #perform:withArguments:'.
+		].
+		
+		o := SuperTest new.
+		tmp := o perform: #something inSuperclass: SuperTestSuperClass.
+		tmp = #super ifFalse: [
+		    harness
+		        fail: self
+		        because: 'Perform was not executed in expected super class'.
 		].
 		
 		"Trying to see whether the stack works properly"

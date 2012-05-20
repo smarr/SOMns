@@ -97,6 +97,10 @@ Object = nil (
     
     perform: aSymbol = primitive
     perform: aSymbol withArguments: args = primitive
+    
+    perform: aSymbol inSuperclass: cls = primitive
+    perform: aSymbol withArguments: args inSuperclass: cls = primitive
+    
     instVarAt: idx          = primitive
     instVarAt: idx put: obj = primitive
     instVarNamed: sym       = primitive

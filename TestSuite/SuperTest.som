@@ -48,5 +48,9 @@ SuperTest = SuperTestSuperClass (
         ^[ super give42 ] value
     )
     
+    something = (
+        ^ #sub
+    )
+    
 )
 
