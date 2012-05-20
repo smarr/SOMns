@@ -61,6 +61,7 @@ Object = nil (
 
     "Debugging"
     inspect   = primitive
+    halt      = primitive
     
     "Error handling"
     error: string = ( '' println. ('ERROR: ' + string) println. system exit )
