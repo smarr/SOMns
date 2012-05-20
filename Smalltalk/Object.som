@@ -96,7 +96,8 @@ Object = nil (
     )
     
 	perform: aSymbol = primitive
-	at: idx          = primitive
-	at: idx put: obj = primitive
+	instVarAt: idx          = primitive
+	instVarAt: idx put: obj = primitive
+	instVarNamed: sym       = primitive
 
 )
