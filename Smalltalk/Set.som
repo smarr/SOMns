@@ -32,6 +32,19 @@ Set = (
             ifFalse: [ items append: anObject ]
     )
     
+    addAll: aCollection = (
+        aCollection do: [:each |
+            self add: each]
+    )
+    
+    union: aCollection = (
+        | new |
+        new := Set new.
+        new addAll: self.
+        new addAll: aCollection.
+        ^ new
+    )
+        
     contains: anObject = (
         items do: [ :it | it == anObject ifTrue: [ ^true ] ].
         ^false

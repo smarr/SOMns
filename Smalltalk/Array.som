@@ -57,6 +57,27 @@ Array = (
         ^result
     )
     
+    reject: aBlock = (
+        ^ self select: [:element | (aBlock value: element) == false ]
+    )
+    
+    select: aBlock = (
+        "TODO: fix the hard reference to Vector..."
+        | newCollection |
+        newCollection := Vector new: self length.
+        self do: [:each | (aBlock value: each)  
+                            ifTrue: [newCollection append: each]].
+        ^ newCollection
+    )
+    
+    union: aCollection = (
+        | new |
+        new := Set new.
+        new addAll: self.
+        new addAll: aCollection.
+        ^ new
+    )
+    
     ----------------------------
     
     "Allocation"
