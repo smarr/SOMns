@@ -51,12 +51,20 @@ ReflectionTest = (
                 fail: self
                 because: '23 should respond to #+.' ].
 		
+		"Testing #perform"
 		tmp := 23 perform: #class.
 		
 		tmp = Integer ifFalse: [
 			harness
 				fail: self
 				because: '`23 perform: #class` shoud return Integer, but returned ', tmp asString. ].
+				
+		tmp := 23 perform: #between:and: withArguments: (Array with: 22 with: 24).
+		tmp ifFalse: [
+		    harness
+		        fail: self
+		        because: '#between:and: seems to have failed when it was applied with #perform:withArguments:'.
+		].
 		
 		"Trying to see whether the stack works properly"
 		tmp := (23 perform: #class) = Integer ifTrue: [#a] ifFalse: [#b].

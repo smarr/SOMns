@@ -96,6 +96,7 @@ Object = nil (
     )
     
     perform: aSymbol = primitive
+    perform: aSymbol withArguments: args = primitive
     instVarAt: idx          = primitive
     instVarAt: idx put: obj = primitive
     instVarNamed: sym       = primitive
