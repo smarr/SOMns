@@ -27,6 +27,14 @@ Set = (
 
     | items |
     
+    = otherSet = (
+        self size = otherSet size ifFalse: [^ false ].
+        
+        self do: [:item | (otherSet contains: item) ifFalse: [^ false]. ].
+        
+        ^ true.
+    )
+    
     add: anObject = (
         (self contains: anObject)
             ifFalse: [ items append: anObject ]
@@ -76,6 +84,10 @@ Set = (
         '(' print.
         self do: [ :it | '(' print. it print. ')' print ].
         ')' println
+    )
+    
+    size = (
+        ^ items size
     )
     
     "Private"
