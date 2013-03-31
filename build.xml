@@ -28,4 +28,13 @@
         </jar>
     </target>
 
+    <target name="test" depends="compile">
+        <java classname="som.vm.Universe" fork="true">
+            <classpath>
+                <pathelement location="${classes.dir}" />
+            </classpath>
+            <arg line="-cp Smalltalk TestSuite/TestHarness.som" />
+        </java>
+    </target>
+
 </project>
