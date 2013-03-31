@@ -1,0 +1,69 @@
+BlockTest = (
+    |escape_count escaped_block|
+
+    simpleBlock = (
+      ^[42]
+    )
+
+    incBlock = (
+      ^[ :val | val + 1]
+    )
+
+    "This requires a closure"
+    adderBlock: amount = (
+      ^[ :val | amount + val]
+    )
+
+    "Closure with mutable state in block"
+    counterBlock = (
+      |count|
+      count := 0.
+      ^[count := count + 1. count]
+    )
+
+    selfKeeper = (
+      ^[self]
+    )
+
+    escapingBlock = (
+      ^[^42]
+    )
+
+    run: harness = (
+      |counter test_inst escaping_block|
+
+      escape_count := 0.
+
+      (self simpleBlock value) = 42 ifFalse: [harness fail: self because: 'Cannot evaluate simple block'].
+
+      (self incBlock value: 41) = 42 ifFalse: [harness fail: self because: 'Cannot evaluate increment block'].
+
+      ((self adderBlock: 13) value: 29) = 42 ifFalse: [harness fail: self because: 'Cannot evalute adder block'].
+
+      counter := self counterBlock.
+      (counter value) = 1 ifFalse: [harness fail: self because: 'Counter should be 1'].
+      (counter value) = 2 ifFalse: [harness fail: self because: 'Counter should be 2'].
+      (self counterBlock value) = 1 ifFalse: [harness fail: self because: 'New counter should be 1'].
+      (counter value) = 3 ifFalse: [harness fail: self because: 'Counter should be 3'].
+
+      test_inst := BlockTest new.
+      (test_inst selfKeeper value) == test_inst ifFalse: [harness fail: self because: 'Did not close on self properly'].
+      (self selfKeeper value) == test_inst ifTrue: [harness fail: self because: 'mixed up self in closure'].
+
+      escaping_block := self escapingBlock.
+      escape_count = 0 ifFalse: [harness fail: self because: 'No block has escaped so far.'].
+      (escaping_block value) = 666 ifFalse: [harness fail: self because: 'escapedBlock has not been called'].
+      escape_count = 1 ifFalse: [harness fail: self because: 'Wrong escape_count'].
+      escaped_block == escaping_block ifFalse: [harness fail: self because: 'Wrong block escaped.'].
+
+            
+    )
+
+    escapedBlock: block = (
+      escape_count := escape_count + 1.
+      escaped_block := block.
+
+      "return some dummy value to the object that sent 'value' to block"
+      ^666
+    )
+)

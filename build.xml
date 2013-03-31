@@ -1,0 +1,31 @@
+<project name="som" basedir="." default="compile">
+
+    <property name="src.dir"     value="src"/>
+
+    <property name="build.dir"   value="build"/>
+    <property name="classes.dir" value="${build.dir}/classes"/>
+
+    <property name="lib.dir"     value="lib"/>
+
+    <path id="classpath">
+        <fileset dir="${lib.dir}" includes="**/*.jar"/>
+    </path>
+
+
+    <target name="clean">
+        <delete dir="${build.dir}"/>
+    </target>
+
+    <target name="compile">
+        <mkdir dir="${classes.dir}"/>
+        <javac srcdir="${src.dir}" destdir="${classes.dir}"
+        classpathref="classpath" debug="true"/>
+    </target>
+
+    <target name="jar" depends="compile">
+        <mkdir dir="${build.dir}"/>
+        <jar destfile="${build.dir}/som.jar" basedir="${classes.dir}">
+        </jar>
+    </target>
+
+</project>
