@@ -29,7 +29,7 @@
     </target>
 
     <target name="test" depends="compile">
-        <java classname="som.vm.Universe" fork="true">
+        <java classname="som.vm.Universe" fork="true" failonerror="true">
             <classpath>
                 <pathelement location="${classes.dir}" />
             </classpath>
