@@ -38,4 +38,11 @@ A simple Hello World program is executed with:
 Information on previous authors are included in the AUTHORS file. This code is
 distributed under the MIT License. Please see the LICENSE file for details.
 
+Build Status
+------------
+
+Thanks to Travis CI, all commits of this repository are tests.
+The current build status is: [![Build Status](https://travis-ci.org/smarr/som-java.png)](https://travis-ci.org/smarr/som-java)
+
  [SOM]: http://www.hpi.uni-potsdam.de/hirschfeld/projects/som/
+
