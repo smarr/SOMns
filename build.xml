@@ -5,13 +5,6 @@
     <property name="build.dir"   value="build"/>
     <property name="classes.dir" value="${build.dir}/classes"/>
 
-    <property name="lib.dir"     value="lib"/>
-
-    <path id="classpath">
-        <fileset dir="${lib.dir}" includes="**/*.jar"/>
-    </path>
-
-
     <target name="clean">
         <delete dir="${build.dir}"/>
     </target>
