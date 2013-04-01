@@ -41,7 +41,7 @@ distributed under the MIT License. Please see the LICENSE file for details.
 Build Status
 ------------
 
-Thanks to Travis CI, all commits of this repository are tests.
+Thanks to Travis CI, all commits of this repository are tested.
 The current build status is: [![Build Status](https://travis-ci.org/smarr/som-java.png)](https://travis-ci.org/smarr/som-java)
 
  [SOM]: http://www.hpi.uni-potsdam.de/hirschfeld/projects/som/
