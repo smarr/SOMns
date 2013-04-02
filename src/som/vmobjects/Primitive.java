@@ -25,18 +25,21 @@
 package som.vmobjects;
 
 import som.vm.Universe;
+import som.interpreter.Interpreter;
 
 public abstract class Primitive extends Object implements Invokable
 {
-  public boolean isPrimitive() { return true; }
+	public boolean isPrimitive() { return true; }
 
-  public Primitive(java.lang.String signatureString)
+  public Primitive(java.lang.String signatureString, final Universe universe)
   {
+	  super(universe.nilObject);
+	  
     // Set the class of this primitive to be the universal primitive class
-    setClass(Universe.primitiveClass);
+    setClass(universe.primitiveClass);
     
     // Set the signature of this primitive
-    setSignature(Universe.symbolFor(signatureString));
+    setSignature(universe.symbolFor(signatureString));
   }
   
   public Symbol getSignature()
@@ -75,13 +78,13 @@ public abstract class Primitive extends Object implements Invokable
     return false;
   }
   
-  public static Primitive getEmptyPrimitive(java.lang.String signatureString)
+  public static Primitive getEmptyPrimitive(java.lang.String signatureString, final Universe universe)
   {
     // Return an empty primitive with the given signature
     return 
-      (new Primitive(signatureString) 
+      (new Primitive(signatureString, universe)
         {
-          public void invoke(Frame frame)
+          public void invoke(Frame frame, final Interpreter interpreter)
           {
             // Write a warning to the screen
             System.out.println("Warning: undefined primitive " + this.getSignature().getString() + 

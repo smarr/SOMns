@@ -24,23 +24,25 @@
 
 package som.vm;
 
+import java.util.HashMap;
+
 import som.vmobjects.Symbol;
 
 public class SymbolTable
 {
-  public static Symbol lookup(java.lang.String string)
+  public Symbol lookup(java.lang.String string)
   {
     // Lookup the given string in the hash map
     return (Symbol) map.get(string);
   }
 
-  public static void insert(Symbol symbol)
+  public void insert(Symbol symbol)
   {
     // Insert the given symbol into the hash map by associating the
     // symbol associated string to the symbol itself
     map.put(symbol.getString(), symbol);
   }
   
-  // Private static variable holding the hash map representing the symbol table
-  private static java.util.HashMap<java.lang.String,Symbol> map = new java.util.HashMap<java.lang.String,Symbol>();
+  // Private variable holding the hash map representing the symbol table
+  private HashMap<java.lang.String,Symbol> map = new HashMap<java.lang.String,Symbol>();
 }

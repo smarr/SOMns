@@ -25,21 +25,26 @@
 package som.primitives;
 
 import som.vm.Universe;
+import som.interpreter.Interpreter;
 import som.vmobjects.Class;
 import som.vmobjects.Frame;
 import som.vmobjects.Primitive;
 
 public class ClassPrimitives extends Primitives 
 {   
+	public ClassPrimitives(final Universe universe) {
+		super(universe);
+	}
+	
   public void installPrimitives() 
   {
     installInstancePrimitive
-      (new Primitive("new")
+      (new Primitive("new", universe)
         {
-          public void invoke(Frame frame)
+          public void invoke(Frame frame, final Interpreter interpreter)
           {
             Class self = (Class) frame.pop();
-            frame.push(Universe.newInstance(self));
+            frame.push(universe.newInstance(self));
           }
         }
        );

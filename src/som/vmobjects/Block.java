@@ -25,9 +25,14 @@
 package som.vmobjects;
 
 import som.interpreter.Interpreter;
+import som.vm.Universe;
 
 public class Block extends Object
 {
+	public Block(final Object nilObject) {
+		super(nilObject);
+	}
+	
   public Method getMethod()
   {
     // Get the method of this block by reading the field with method index
@@ -58,20 +63,20 @@ public class Block extends Object
     return numberOfBlockFields;
   }
   
-  public static Primitive getEvaluationPrimitive(int numberOfArguments)
+  public static Primitive getEvaluationPrimitive(int numberOfArguments, final Universe universe)
   {
-    return new Evaluation(numberOfArguments);
+    return new Evaluation(numberOfArguments, universe);
   }
   
   public static class Evaluation extends Primitive
   {
-    public Evaluation(int numberOfArguments)
+    public Evaluation(int numberOfArguments, final Universe universe)
     {
-      super(computeSignatureString(numberOfArguments));
+      super(computeSignatureString(numberOfArguments), universe);
       this.numberOfArguments = numberOfArguments;
     }
       
-    public void invoke(Frame frame)
+    public void invoke(Frame frame, final Interpreter interpreter)
     {
       // Get the block (the receiver) from the stack
       Block self = (Block) frame.getStackElement(numberOfArguments - 1);
@@ -80,7 +85,7 @@ public class Block extends Object
       Frame context = self.getContext();
 
       // Push a new frame and set its context to be the one specified in the block
-      Frame newFrame = Interpreter.pushNewFrame(self.getMethod());
+      Frame newFrame = interpreter.pushNewFrame(self.getMethod());
       newFrame.copyArgumentsFrom(frame);
       newFrame.setContext(context);
     }

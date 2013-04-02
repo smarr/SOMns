@@ -26,6 +26,10 @@ package som.vmobjects;
 
 public class Symbol extends Object
 {
+	public Symbol(final Object nilObject) {
+		super(nilObject);
+	}
+	
   public java.lang.String getString()
   {
     // Get the string associated to this symbol

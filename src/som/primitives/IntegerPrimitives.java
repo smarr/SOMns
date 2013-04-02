@@ -31,71 +31,76 @@ import som.vmobjects.Frame;
 import som.vmobjects.Integer;
 import som.vmobjects.Object;
 import som.vmobjects.Primitive;
+import som.interpreter.Interpreter;
 
 public class IntegerPrimitives extends Primitives 
 {   
-    void pushLongResult(Frame frame, long result)
+	public IntegerPrimitives(final Universe universe) {
+		super(universe);
+	}
+	
+    private void pushLongResult(Frame frame, long result)
     {
 	// Check with integer bounds and push:
 	if (result > java.lang.Integer.MAX_VALUE || result < java.lang.Integer.MIN_VALUE)
-	    frame.push(Universe.newBigInteger(result));
+	    frame.push(universe.newBigInteger(result));
 	else
-	    frame.push(Universe.newInteger((int)result));
+	    frame.push(universe.newInteger((int)result));
     }
     
-    void resendAsBigInteger(java.lang.String operator, Integer left, BigInteger right)
+    private void resendAsBigInteger(java.lang.String operator, Integer left, BigInteger right)
     {
 	// Construct left value as BigInteger:
-	BigInteger leftBigInteger = Universe.newBigInteger((long)left.getEmbeddedInteger());
+	BigInteger leftBigInteger = universe.newBigInteger((long)left.getEmbeddedInteger());
 	
 	// Resend message:
 	Object[] operands = new Object[1];
 	operands[0] = right;
 	
-	leftBigInteger.send(operator, operands);
+	leftBigInteger.send(operator, operands, universe, universe.getInterpreter());
     }
     
     void resendAsDouble(java.lang.String operator, Integer left, Double right) {
-        Double leftDouble = Universe.newDouble((double)left.getEmbeddedInteger());
+        Double leftDouble = universe.newDouble((double)left.getEmbeddedInteger());
         Object[] operands = new Object[] { right };
-        leftDouble.send(operator, operands);
+        leftDouble.send(operator, operands, universe, universe.getInterpreter());
     }
         
-    public void installPrimitives() 
+    public void installPrimitives()
     {
 	installInstancePrimitive
-	    (new Primitive("asString")
+	    (new Primitive("asString", universe)
 		{
-		    public void invoke(Frame frame)
+		    public void invoke(Frame frame, final Interpreter interpreter)
 		    {
 			Integer self = (Integer) frame.pop();
-			frame.push(Universe.newString(java.lang.Integer.toString(self.getEmbeddedInteger())));
+			frame.push(universe.newString(java.lang.Integer.toString(self.getEmbeddedInteger())));
 		    }
 		}
 	     );
 	
 	installInstancePrimitive(
-			new Primitive("sqrt") {
-				public void invoke(Frame frame) {
+			new Primitive("sqrt", universe) {
+				public void invoke(Frame frame, final Interpreter interpreter) {
 					Integer self = (Integer) frame.pop();
-					frame.push(Universe.newDouble(Math.sqrt((double) self.getEmbeddedInteger())));
+					frame.push(universe.newDouble(Math.sqrt((double) self.getEmbeddedInteger())));
 				}
 			}
 		);
 	
 	installInstancePrimitive(
-			new Primitive("atRandom") {
-				public void invoke(Frame frame) {
+			new Primitive("atRandom", universe) {
+				public void invoke(Frame frame, final Interpreter interpreter) {
 					Integer self = (Integer) frame.pop();
-					frame.push(Universe.newInteger((int) ((double) self.getEmbeddedInteger() * Math.random())));
+					frame.push(universe.newInteger((int) ((double) self.getEmbeddedInteger() * Math.random())));
 				}
 			}
 		);
     
 	installInstancePrimitive
-	    (new Primitive("+")
+	    (new Primitive("+", universe)
 		{
-		    public void invoke(Frame frame)
+		    public void invoke(Frame frame, final Interpreter interpreter)
 		    {
 			Object rightObj = frame.pop();
 			Integer left = (Integer) frame.pop();
@@ -118,9 +123,9 @@ public class IntegerPrimitives extends Primitives
 	     );
     
 	installInstancePrimitive
-	    (new Primitive("-")
+	    (new Primitive("-", universe)
 		{
-		    public void invoke(Frame frame)
+		    public void invoke(Frame frame, final Interpreter interpreter)
 		    {
 			Object rightObj = frame.pop();
 			Integer left = (Integer) frame.pop();
@@ -143,9 +148,9 @@ public class IntegerPrimitives extends Primitives
 	     );
     
 	installInstancePrimitive
-	    (new Primitive("*")
+	    (new Primitive("*", universe)
 		{
-		    public void invoke(Frame frame)
+		    public void invoke(Frame frame, final Interpreter interpreter)
 		    {
 			Object rightObj = frame.pop();
 			Integer left = (Integer) frame.pop();
@@ -168,14 +173,14 @@ public class IntegerPrimitives extends Primitives
 	     );
     
 	installInstancePrimitive
-	    (new Primitive("//")
+	    (new Primitive("//", universe)
 		{
-		    public void invoke(Frame frame)
+		    public void invoke(Frame frame, final Interpreter interpreter)
 		    {
 			/*
 			Integer op1 = (Integer) frame.pop();
 			Integer op2 = (Integer) frame.pop();
-			frame.push(Universe.new_double((double)op2.get_embedded_integer() / (double)op1.get_embedded_integer()));
+			frame.push(universe.new_double((double)op2.get_embedded_integer() / (double)op1.get_embedded_integer()));
 			*/
 			Object rightObj = frame.pop();
 			Integer left = (Integer) frame.pop();
@@ -191,16 +196,16 @@ public class IntegerPrimitives extends Primitives
 			    Integer right = (Integer)rightObj;
 			    
 			    double result = ((double)left.getEmbeddedInteger()) / right.getEmbeddedInteger();
-			    frame.push(Universe.newDouble(result));
+			    frame.push(universe.newDouble(result));
 			}
 		    }
 		}
 	     );
 	
 	installInstancePrimitive
-	    (new Primitive("/")
+	    (new Primitive("/", universe)
 		{
-		    public void invoke(Frame frame)
+		    public void invoke(Frame frame, final Interpreter interpreter)
 		    {
 			Object rightObj = frame.pop();
 			Integer left = (Integer) frame.pop();
@@ -223,9 +228,9 @@ public class IntegerPrimitives extends Primitives
 	     );
 
 	installInstancePrimitive
-	    (new Primitive("%")
+	    (new Primitive("%", universe)
 		{
-		    public void invoke(Frame frame)
+		    public void invoke(Frame frame, final Interpreter interpreter)
 		    {
 			Object rightObj = frame.pop();
 			Integer left = (Integer) frame.pop();
@@ -248,9 +253,9 @@ public class IntegerPrimitives extends Primitives
 	     );
 
 	installInstancePrimitive
-	    (new Primitive("&")
+	    (new Primitive("&", universe)
 		{
-		    public void invoke(Frame frame)
+		    public void invoke(Frame frame, final Interpreter interpreter)
 		    {
 			Object rightObj = frame.pop();
 			Integer left = (Integer) frame.pop();
@@ -273,9 +278,9 @@ public class IntegerPrimitives extends Primitives
 	     );
     
 	installInstancePrimitive
-	    (new Primitive("=")
+	    (new Primitive("=", universe)
 		{
-		    public void invoke(Frame frame)
+		    public void invoke(Frame frame, final Interpreter interpreter)
 		    {
 			Object rightObj = frame.pop();
 			Integer left = (Integer) frame.pop();
@@ -289,29 +294,29 @@ public class IntegerPrimitives extends Primitives
 			    Integer right = (Integer)rightObj;
 			    
 			    if (left.getEmbeddedInteger() == right.getEmbeddedInteger())
-				frame.push(Universe.trueObject);
+				frame.push(universe.trueObject);
 			    else
-				frame.push(Universe.falseObject);
+				frame.push(universe.falseObject);
 			}
 			else if (rightObj instanceof Double) {
 			    // Second operand was Integer:
 			    Double right = (Double)rightObj;
 			    
 			    if (left.getEmbeddedInteger() == right.getEmbeddedDouble())
-				frame.push(Universe.trueObject);
+				frame.push(universe.trueObject);
 			    else
-				frame.push(Universe.falseObject);
+				frame.push(universe.falseObject);
 			}
 			else
-			    frame.push(Universe.falseObject);
+			    frame.push(universe.falseObject);
 		    }
 		}
 	     );
     
 	installInstancePrimitive
-	    (new Primitive("<")
+	    (new Primitive("<", universe)
 		{
-		    public void invoke(Frame frame)
+		    public void invoke(Frame frame, final Interpreter interpreter)
 		    {
 			Object rightObj = frame.pop();
 			Integer left = (Integer) frame.pop();
@@ -327,9 +332,9 @@ public class IntegerPrimitives extends Primitives
 			    Integer right = (Integer)rightObj;
 			    
 			    if (left.getEmbeddedInteger() < right.getEmbeddedInteger())
-				frame.push(Universe.trueObject);
+				frame.push(universe.trueObject);
 			    else
-				frame.push(Universe.falseObject);
+				frame.push(universe.falseObject);
 			}
 		    }
 		}

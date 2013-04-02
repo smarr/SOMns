@@ -26,35 +26,37 @@ package som.vmobjects;
 
 import som.interpreter.Bytecodes;
 import som.interpreter.Interpreter;
-import som.vm.Universe;
 
 public class Method extends Array implements Invokable
 {
+	public Method(final Object nilObject) {
+		super(nilObject);
+	}
 
   public boolean isPrimitive() { return false; }
 
-  public int getNumberOfLocals()
+  public Integer getNumberOfLocals()
   {
     // Get the number of locals (converted to a Java integer)
-    return ((Integer) getField(numberOfLocalsIndex)).getEmbeddedInteger();
+    return (Integer) getField(numberOfLocalsIndex);
   }
   
-  public void setNumberOfLocals(int value)
+  public void setNumberOfLocals(Integer value)
   {
     // Set the number of locals
-    setField(numberOfLocalsIndex, Universe.newInteger(value));
+    setField(numberOfLocalsIndex, value);
   }
   
-  public int getMaximumNumberOfStackElements()
+  public Integer getMaximumNumberOfStackElements()
   {
     // Get the maximum number of stack elements (converted to a Java integer)
-    return ((Integer) getField(maximumNumberOfStackElementsIndex)).getEmbeddedInteger();
+    return (Integer) getField(maximumNumberOfStackElementsIndex);
   }
   
-  public void setMaximumNumberOfStackElements(int value)
+  public void setMaximumNumberOfStackElements(Integer value)
   {
     // Set the maximum number of stack elements
-    setField(maximumNumberOfStackElementsIndex, Universe.newInteger(value));
+    setField(maximumNumberOfStackElementsIndex, value);
   }
   
   public Symbol getSignature()
@@ -136,12 +138,12 @@ public class Method extends Array implements Invokable
     return invocationCount;
   }
   
-  public void invoke(Frame frame)
+  public void invoke(Frame frame, final Interpreter interpreter)
   {
     // Increase the invocation counter
     invocationCount++;
     // Allocate and push a new frame on the interpreter stack
-    Frame newFrame = Interpreter.pushNewFrame(this);
+    Frame newFrame = interpreter.pushNewFrame(this);
     newFrame.copyArgumentsFrom(frame);
   }
     

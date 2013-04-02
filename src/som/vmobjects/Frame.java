@@ -24,7 +24,6 @@
 
 package som.vmobjects;
 
-import som.vm.Universe;
 
 /**
  * Frame layout:
@@ -40,6 +39,10 @@ import som.vm.Universe;
  */
 public class Frame extends Array
 {
+	public Frame(final Object nilObject) {
+		super(nilObject);
+	}
+	
   public Frame getPreviousFrame()
   {
     // Get the previous frame by reading the field with previous frame index
@@ -52,20 +55,20 @@ public class Frame extends Array
     setField(previousFrameIndex, value);
   }
 
-  public void clearPreviousFrame()
+  public void clearPreviousFrame(Object nilObject)
   {
     // Set the previous frame to nil
-    setField(previousFrameIndex, Universe.nilObject);
+    setField(previousFrameIndex, nilObject);
   }
 
-  public boolean hasPreviousFrame()
+  public boolean hasPreviousFrame(Object nilObject)
   {
-    return getField(previousFrameIndex) != Universe.nilObject;
+    return getField(previousFrameIndex) != nilObject;
   }
 
-  public boolean isBootstrapFrame()
+  public boolean isBootstrapFrame(Object nilObject)
   {
-    return !hasPreviousFrame();
+    return !hasPreviousFrame(nilObject);
   }
 
   public Frame getContext()
@@ -80,9 +83,9 @@ public class Frame extends Array
     setField(contextIndex, value);
   }
 
-  public boolean hasContext()
+  public boolean hasContext(Object nilObject)
   {
-    return getField(contextIndex) != Universe.nilObject;
+    return getField(contextIndex) != nilObject;
   }
 
   public Frame getContext(int level)
@@ -103,13 +106,13 @@ public class Frame extends Array
     return frame;
   }
 
-  public Frame getOuterContext()
+  public Frame getOuterContext(Object nilObject)
   {
     // Compute the outer context of this frame
     Frame frame = this;
 
     // Iterate through the context chain until null is reached
-    while (frame.hasContext()) frame = frame.getContext();
+    while (frame.hasContext(nilObject)) frame = frame.getContext();
 
     // Return the outer context
     return frame;
@@ -167,7 +170,7 @@ public class Frame extends Array
     localOffset = getMethod().getNumberOfArguments();
 
     // Set the stack pointer to its initial value thereby clearing the stack
-    setStackPointer(localOffset + getMethod().getNumberOfLocals() - 1);
+    setStackPointer(localOffset + getMethod().getNumberOfLocals().getEmbeddedInteger() - 1);
   }
 
   public int getBytecodeIndex()
@@ -244,12 +247,12 @@ public class Frame extends Array
     }
   }
 
-  public void printStackTrace()
+  public void printStackTrace(Object nilObject)
   {
     // Print a stack trace starting in this frame
     System.out.print(getMethod().getHolder().getName().getString());
     System.out.print(getBytecodeIndex() + "@" + getMethod().getSignature().getString());
-    if (hasPreviousFrame()) getPreviousFrame().printStackTrace();
+    if (hasPreviousFrame(nilObject)) getPreviousFrame().printStackTrace(nilObject);
   }
 
   // Private variables holding the stack pointer and the bytecode index

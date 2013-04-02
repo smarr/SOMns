@@ -31,6 +31,12 @@ import som.vm.Universe;
 import som.vmobjects.Symbol;
 
 public class ClassGenerationContext {
+	
+	private final Universe universe;
+	
+	public ClassGenerationContext(final Universe universe) {
+		this.universe = universe;
+	}
     
     private som.vmobjects.Symbol name;
     private som.vmobjects.Symbol superName;
@@ -69,7 +75,7 @@ public class ClassGenerationContext {
     }
 
     public boolean findField(String field) {
-        return (isClassSide() ? classFields : instanceFields).indexOf(Universe.symbolFor(field)) != -1;
+        return (isClassSide() ? classFields : instanceFields).indexOf(universe.symbolFor(field)) != -1;
     }
     
     public boolean isClassSide() {
@@ -81,25 +87,25 @@ public class ClassGenerationContext {
         String ccname = name.getString() + " class";
         
         // Load the super class
-        som.vmobjects.Class superClass = Universe.loadClass(superName);
+        som.vmobjects.Class superClass = universe.loadClass(superName);
         
         // Allocate the class of the resulting class
-        som.vmobjects.Class resultClass = Universe.newClass(Universe.metaclassClass);
+        som.vmobjects.Class resultClass = universe.newClass(universe.metaclassClass);
 
         // Initialize the class of the resulting class
-        resultClass.setInstanceFields(Universe.newArray(classFields));
-        resultClass.setInstanceInvokables(Universe.newArray(classMethods));
-        resultClass.setName(Universe.symbolFor(ccname));
+        resultClass.setInstanceFields(universe.newArray(classFields));
+        resultClass.setInstanceInvokables(universe.newArray(classMethods));
+        resultClass.setName(universe.symbolFor(ccname));
 
         som.vmobjects.Class superMClass = superClass.getSOMClass();
         resultClass.setSuperClass(superMClass);
         
         // Allocate the resulting class
-        som.vmobjects.Class result = Universe.newClass(resultClass);
+        som.vmobjects.Class result = universe.newClass(resultClass);
         
         // Initialize the resulting class
-        result.setInstanceFields(Universe.newArray(instanceFields));
-        result.setInstanceInvokables(Universe.newArray(instanceMethods));
+        result.setInstanceFields(universe.newArray(instanceFields));
+        result.setInstanceInvokables(universe.newArray(instanceMethods));
         result.setName(name);
         result.setSuperClass(superClass);
         
@@ -107,12 +113,12 @@ public class ClassGenerationContext {
     }
     
     public void assembleSystemClass(som.vmobjects.Class systemClass) {
-        systemClass.setInstanceInvokables(Universe.newArray(instanceMethods));
-        systemClass.setInstanceFields(Universe.newArray(instanceFields));
+        systemClass.setInstanceInvokables(universe.newArray(instanceMethods));
+        systemClass.setInstanceFields(universe.newArray(instanceFields));
         // class-bound == class-instance-bound 
         som.vmobjects.Class superMClass = systemClass.getSOMClass();
-        superMClass.setInstanceInvokables(Universe.newArray(classMethods));
-        superMClass.setInstanceFields(Universe.newArray(classFields));
+        superMClass.setInstanceInvokables(universe.newArray(classMethods));
+        superMClass.setInstanceFields(universe.newArray(classFields));
     }
 
 }

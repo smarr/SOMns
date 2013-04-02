@@ -26,6 +26,10 @@ package som.vmobjects;
 
 public class BigInteger extends Object
 {
+	public BigInteger(final Object nilObject) {
+		super(nilObject);
+	}
+	
     public java.math.BigInteger getEmbeddedBiginteger()
     {
 	// Get the embedded big integer

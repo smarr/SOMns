@@ -64,12 +64,16 @@ import java.util.List;
 import som.vm.Universe;
 
 public class Parser {
+	
+    private final Universe universe;
     
-    private Lexer lexer;
+    private final Lexer lexer;
+    private final BytecodeGenerator bcGen;
+    
     private Symbol sym;
     private String text;
     private Symbol nextSym;
-    private BytecodeGenerator bcGen;
+    
     
     private static final List<Symbol> singleOpSyms = new ArrayList<Symbol>();
     private static final List<Symbol> binaryOpSyms = new ArrayList<Symbol>();
@@ -86,7 +90,9 @@ public class Parser {
             keywordSelectorSyms.add(s);
     }
     
-    public Parser(Reader reader) {
+    public Parser(Reader reader, final Universe universe) {
+    	this.universe = universe;
+    	
         sym = NONE;
         lexer = new Lexer(reader);
         bcGen = new BytecodeGenerator();
@@ -95,15 +101,15 @@ public class Parser {
     }
     
     public void classdef(ClassGenerationContext cgenc) {
-        cgenc.setName(Universe.symbolFor(text));
+        cgenc.setName(universe.symbolFor(text));
         expect(Identifier);
         expect(Equal);
         
         if(sym == Identifier) {
-            cgenc.setSuperName(Universe.symbolFor(text));
+            cgenc.setSuperName(universe.symbolFor(text));
             accept(Identifier);
         } else
-            cgenc.setSuperName(Universe.symbolFor("Object"));
+            cgenc.setSuperName(universe.symbolFor("Object"));
         
         expect(NewTerm);
         instanceFields(cgenc);
@@ -115,9 +121,9 @@ public class Parser {
             method(mgenc);
             
             if(mgenc.isPrimitive())
-                cgenc.addInstanceMethod(mgenc.assemblePrimitive());
+                cgenc.addInstanceMethod(mgenc.assemblePrimitive(universe));
             else
-                cgenc.addInstanceMethod(mgenc.assemble());
+                cgenc.addInstanceMethod(mgenc.assemble(universe));
         }
         
         if(accept(Separator)) {
@@ -131,9 +137,9 @@ public class Parser {
                 method(mgenc);
                 
                 if(mgenc.isPrimitive())
-                    cgenc.addClassMethod(mgenc.assemblePrimitive());
+                    cgenc.addClassMethod(mgenc.assemblePrimitive(universe));
                 else
-                    cgenc.addClassMethod(mgenc.assemble());
+                    cgenc.addClassMethod(mgenc.assemble(universe));
             }    
         }
         expect(EndTerm);
@@ -188,7 +194,7 @@ public class Parser {
         if(accept(Or)) {
             while(sym == Identifier) {
                 String var = variable();
-                cgenc.addInstanceField(Universe.symbolFor(var));
+                cgenc.addInstanceField(universe.symbolFor(var));
             }
             expect(Or);
         }
@@ -198,7 +204,7 @@ public class Parser {
         if(accept(Or)) {
             while(sym == Identifier) {
                 String var = variable();
-                cgenc.addClassField(Universe.symbolFor(var));
+                cgenc.addClassField(universe.symbolFor(var));
             }
             expect(Or);
         }
@@ -248,7 +254,7 @@ public class Parser {
             mgenc.addArgumentIfAbsent(argument());
         } while(sym == Keyword);
         
-        mgenc.setSignature(Universe.symbolFor(kw.toString()));
+        mgenc.setSignature(universe.symbolFor(kw.toString()));
     }
     
     private void methodBlock(MethodGenerationContext mgenc) {
@@ -268,7 +274,7 @@ public class Parser {
     }
     
     private som.vmobjects.Symbol unarySelector() {
-        return Universe.symbolFor(identifier());
+        return universe.symbolFor(identifier());
     }
     
     private som.vmobjects.Symbol binarySelector() {
@@ -289,7 +295,7 @@ public class Parser {
         else
             expect(NONE);
         
-        return Universe.symbolFor(s);
+        return universe.symbolFor(s);
     }
     
     private String identifier() {
@@ -397,7 +403,7 @@ public class Parser {
     
     private String assignment(MethodGenerationContext mgenc) {
         String v = variable();
-        som.vmobjects.Symbol var = Universe.symbolFor(v);
+        som.vmobjects.Symbol var = universe.symbolFor(v);
         mgenc.addLiteralIfAbsent(var);
         
         expect(Assign);
@@ -440,7 +446,7 @@ public class Parser {
                 
                 nestedBlock(bgenc);
                 
-                som.vmobjects.Method blockMethod = bgenc.assemble();
+                som.vmobjects.Method blockMethod = bgenc.assemble(universe);
                 mgenc.addLiteral(blockMethod);
                 bcGen.emitPUSHBLOCK(mgenc, blockMethod);
                 break;
@@ -520,7 +526,7 @@ public class Parser {
             formula(mgenc);
         } while(sym == Keyword);
         
-        som.vmobjects.Symbol msg = Universe.symbolFor(kw.toString());
+        som.vmobjects.Symbol msg = universe.symbolFor(kw.toString());
         
         mgenc.addLiteralIfAbsent(msg);
         
@@ -568,7 +574,7 @@ public class Parser {
         else
             val = literalDecimal();
         
-        som.vmobjects.Integer lit = Universe.newInteger(val);
+        som.vmobjects.Integer lit = universe.newInteger(val);
         mgenc.addLiteralIfAbsent(lit);
         bcGen.emitPUSHCONSTANT(mgenc, lit);
     }
@@ -593,7 +599,7 @@ public class Parser {
         expect(Pound);
         if(sym == STString) {
             String s = string();
-            symb = Universe.symbolFor(s);
+            symb = universe.symbolFor(s);
         } else
             symb = selector();
         mgenc.addLiteralIfAbsent(symb);
@@ -603,7 +609,7 @@ public class Parser {
     private void literalString(MethodGenerationContext mgenc) {
         String s = string();
         
-        som.vmobjects.String str = Universe.newString(s);
+        som.vmobjects.String str = universe.newString(s);
         mgenc.addLiteralIfAbsent(str);
         
         bcGen.emitPUSHCONSTANT(mgenc, str);
@@ -621,7 +627,7 @@ public class Parser {
     private som.vmobjects.Symbol keywordSelector() {
         String s = new String(text);
         expectOneOf(keywordSelectorSyms);
-        som.vmobjects.Symbol symb = Universe.symbolFor(s);
+        som.vmobjects.Symbol symb = universe.symbolFor(s);
         return symb;
     }
     
@@ -644,7 +650,7 @@ public class Parser {
         for(int i = 1; i < argSize; i++)
             blockSig += ":";
 
-        mgenc.setSignature(Universe.symbolFor(blockSig));
+        mgenc.setSignature(universe.symbolFor(blockSig));
         
         blockContents(mgenc);
         
@@ -685,11 +691,11 @@ public class Parser {
             else 
                 bcGen.emitPUSHLOCAL(mgenc, tri.getX(), tri.getY());
         } else if(mgenc.findField(var)) {
-            som.vmobjects.Symbol fieldName = Universe.symbolFor(var);
+            som.vmobjects.Symbol fieldName = universe.symbolFor(var);
             mgenc.addLiteralIfAbsent(fieldName);
             bcGen.emitPUSHFIELD(mgenc, fieldName);
         } else {
-            som.vmobjects.Symbol global = Universe.symbolFor(var);
+            som.vmobjects.Symbol global = universe.symbolFor(var);
             mgenc.addLiteralIfAbsent(global);
             bcGen.emitPUSHGLOBAL(mgenc, global);
         }
@@ -710,7 +716,7 @@ public class Parser {
             else
                 bcGen.emitPOPLOCAL(mgenc, tri.getX(), tri.getY());
         } else
-            bcGen.emitPOPFIELD(mgenc, Universe.symbolFor(var));
+            bcGen.emitPOPFIELD(mgenc, universe.symbolFor(var));
     }
     
     private void GETSYM() {

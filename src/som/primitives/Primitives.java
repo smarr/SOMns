@@ -24,11 +24,18 @@
 
 package som.primitives;
 
+import som.vm.Universe;
 import som.vmobjects.Class;
 import som.vmobjects.Primitive;
 
 public abstract class Primitives
 {
+  protected final Universe universe;
+  
+  public Primitives(final Universe universe) {
+	  this.universe = universe;
+  }
+  
   public final void installPrimitivesIn(Class value)
   {
     // Save a reference to the holder class

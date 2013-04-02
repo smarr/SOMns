@@ -24,22 +24,27 @@
 
 package som.primitives;
 
+import som.interpreter.Interpreter;
 import som.vm.Universe;
 import som.vmobjects.Frame;
 import som.vmobjects.Primitive;
 import som.vmobjects.Symbol;
 
 public class SymbolPrimitives extends Primitives 
-{   
+{
+	public SymbolPrimitives(final Universe universe) {
+		super(universe);
+	}
+	
   public void installPrimitives() 
   {
     installInstancePrimitive
-      (new Primitive("asString")
+      (new Primitive("asString", universe)
         {
-          public void invoke(Frame frame)
+          public void invoke(Frame frame, final Interpreter interpreter)
           {
             Symbol self = (Symbol) frame.pop();
-            frame.push(Universe.newString(self.getString()));
+            frame.push(universe.newString(self.getString()));
           }
         }
        ); 

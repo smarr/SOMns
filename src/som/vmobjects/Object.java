@@ -29,16 +29,16 @@ import som.vm.Universe;
 
 public class Object
 {
-  public Object()
+  public Object(final Object nilObject)
   {
     // Set the number of fields to the default value
-    setNumberOfFields(getDefaultNumberOfFields());
+    setNumberOfFieldsAndClear(getDefaultNumberOfFields(), nilObject);
   }
   
-  public Object(int numberOfFields)
+  public Object(int numberOfFields, final Object nilObject)
   {
     // Set the number of fields to the given value
-    setNumberOfFields(numberOfFields);
+    setNumberOfFieldsAndClear(numberOfFields, nilObject);
   }
   
   public Class getSOMClass()
@@ -71,14 +71,14 @@ public class Object
     return fields.length;
   }
   
-  public void setNumberOfFields(int value)
+  public void setNumberOfFieldsAndClear(int value, final Object nilObject)
   {
     // Allocate a new array of fields
     fields = new Object[value];
     
     // Clear each and every field by putting nil into them
     for (int i = 0; i < getNumberOfFields(); i++) {
-      setField(i, Universe.nilObject);
+      setField(i, nilObject);
     }
   }
   
@@ -88,23 +88,23 @@ public class Object
     return numberOfObjectFields;
   }
 
-  public void send(java.lang.String selectorString, Object[] arguments) 
+  public void send(java.lang.String selectorString, Object[] arguments, final Universe universe, final Interpreter interpreter) 
   {
     // Turn the selector string into a selector
-    Symbol selector = Universe.symbolFor(selectorString);
+    Symbol selector = universe.symbolFor(selectorString);
 
     // Push the receiver onto the stack
-    Interpreter.getFrame().push(this);
+    interpreter.getFrame().push(this);
 
     // Push the arguments onto the stack
     for(Object arg : arguments)
-        Interpreter.getFrame().push(arg);
+        interpreter.getFrame().push(arg);
     
     // Lookup the invokable 
     Invokable invokable = getSOMClass().lookupInvokable(selector);
 
     // Invoke the invokable
-    invokable.invoke(Interpreter.getFrame());
+    invokable.invoke(interpreter.getFrame(), interpreter);
   }
 
   public Object getField(int index)
@@ -117,12 +117,6 @@ public class Object
   {
     // Set the field with the given index to the given value
     fields[index] = value;
-  }
-  
-  public static void _assert(boolean value)
-  {
-    // Delegate to universal assertion routine
-    Universe._assert(value);
   }
   
   // Private array of fields

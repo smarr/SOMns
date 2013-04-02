@@ -26,6 +26,9 @@ package som.vmobjects;
 
 public class Integer extends Object
 {
+	public Integer(final Object nilObject) {
+		super(nilObject);
+	}
 	
   public int getEmbeddedInteger()
   {

@@ -25,6 +25,7 @@
 package som.vm;
 
 import java.io.IOException;
+import java.util.HashMap;
 
 import som.compiler.Disassembler;
 import som.interpreter.Bytecodes;
@@ -44,35 +45,49 @@ import som.vmobjects.Symbol;
 
 public class Universe
 {
+
   public static void main(java.lang.String[] arguments)
   {
-    // Setup the system path and file separators
-    pathSeparator = System.getProperty("path.separator");
-    fileSeparator = System.getProperty("file.separator");
+    // Create Universe and setup the system path and file separators
+	Universe u = new Universe();
 
     // Check for command line switches
-    arguments = handleArguments(arguments);
+    arguments = u.handleArguments(arguments);
 
     // Initialize the known universe
-    Universe.initialize(arguments);
+    u.initialize(arguments);
 
     // Exit with error code 0
-    exit(0);
+    u.exit(0);
+  }
+  
+  static { /* static initializer */ 
+	  pathSeparator = System.getProperty("path.separator");
+	  fileSeparator = System.getProperty("file.separator");
+  } 
+  
+  public Universe() {
+	  this.interpreter = new Interpreter(this);
+	  this.symbolTable = new SymbolTable();
+  }
+  
+  public Interpreter getInterpreter() {
+	  return interpreter;
   }
 
-  public static void exit(int errorCode)
+  public void exit(int errorCode)
   {
     // Exit from the Java system
     System.exit(errorCode);
   }
 
-  public static void errorExit(java.lang.String message)
+  public void errorExit(java.lang.String message)
   {
     System.out.println("Runtime Error: " + message);
     exit(1);
   }
 
-  private static java.lang.String[] handleArguments(java.lang.String[] arguments) 
+  private java.lang.String[] handleArguments(java.lang.String[] arguments) 
   {
     boolean gotClasspath = false;
     java.lang.String[] remainingArgs = new java.lang.String[arguments.length];
@@ -120,7 +135,7 @@ public class Universe
 
   // take argument of the form "../foo/Test.som" and return 
   // "../foo", "Test", "som"
-  private static java.lang.String[] getPathClassExt(java.lang.String arg) 
+  private java.lang.String[] getPathClassExt(java.lang.String arg) 
   {
     // Create a new tokenizer to split up the string of dirs
     java.util.StringTokenizer tokenizer 
@@ -151,7 +166,7 @@ public class Universe
     return result;
   }
 
-  private static void setupClassPath(java.lang.String cp)
+  private void setupClassPath(java.lang.String cp)
   {
     // Create a new tokenizer to split up the string of directories
     java.util.StringTokenizer tokenizer 
@@ -166,7 +181,7 @@ public class Universe
     }
   }
   
-  private static java.lang.String[] setupDefaultClassPath(int directories)
+  private java.lang.String[] setupDefaultClassPath(int directories)
   {
     // Get the default system class path
     java.lang.String systemClassPath = System.getProperty("system.class.path");
@@ -189,7 +204,7 @@ public class Universe
     return result;
   }
 
-  private static void printUsageAndExit() 
+  private void printUsageAndExit() 
   {
     // Print the usage
     System.out.println("Usage: som [-options] [args...]                          ");
@@ -203,10 +218,10 @@ public class Universe
     System.exit(0);
   }
     
-  private static void initialize(java.lang.String[] arguments)
+  private void initialize(java.lang.String[] arguments)
   {
     // Allocate the nil object
-    nilObject = new Object();
+    nilObject = new Object(null);
         
     // Allocate the Metaclass classes
     metaclassClass = newMetaclassClass();
@@ -280,23 +295,24 @@ public class Universe
     // Create a fake bootstrap method to simplify later frame traversal
     Method bootstrapMethod = newMethod(symbolFor("bootstrap"), 1, 0);
     bootstrapMethod.setBytecode(0, Bytecodes.halt);
-    bootstrapMethod.setNumberOfLocals(0);
-    bootstrapMethod.setMaximumNumberOfStackElements(2);
+    bootstrapMethod.setNumberOfLocals(newInteger(0));
+    bootstrapMethod.setMaximumNumberOfStackElements(newInteger(2));
     bootstrapMethod.setHolder(systemClass);
             
     // Start the shell if no filename is given
     if (arguments.length == 0)
     {
-      Shell.setBootstrapMethod(bootstrapMethod);
-      Shell.start();
-      return;
+    	Shell shell = new Shell(this, interpreter);
+    	shell.setBootstrapMethod(bootstrapMethod);
+    	shell.start();
+    	return;
     }
 
     // Convert the arguments into an array
     Array argumentsArray = newArray(arguments);
         
     // Create a fake bootstrap frame with the system object on the stack
-    Frame bootstrapFrame = Interpreter.pushNewFrame(bootstrapMethod);
+    Frame bootstrapFrame = interpreter.pushNewFrame(bootstrapMethod);
     bootstrapFrame.push(systemObject);
     bootstrapFrame.push(argumentsArray);
         
@@ -304,24 +320,16 @@ public class Universe
     Invokable initialize = systemClass.lookupInvokable(symbolFor("initialize:"));
         
     // Invoke the initialize invokable
-    initialize.invoke(bootstrapFrame);
+    initialize.invoke(bootstrapFrame, interpreter);
 
     // Start the interpreter
-    Interpreter.start();
+    interpreter.start();
   }
 
-  public static void _assert(boolean value)
-  {
-    if (!value) {
-      // For now we just print something whenever an assertion fails
-      System.out.println("Assertion failed");
-    }
-  }
-
-  public static Symbol symbolFor(java.lang.String string)
+  public Symbol symbolFor(java.lang.String string)
   {
     // Lookup the symbol in the symbol table
-    Symbol result = SymbolTable.lookup(string);
+    Symbol result = symbolTable.lookup(string);
     if (result != null) return result;
     
     // Create a new symbol and return it
@@ -329,20 +337,20 @@ public class Universe
     return result;
   }
   
-  public static Array newArray(int length)
+  public Array newArray(int length)
   {
     // Allocate a new array and set its class to be the array class
-    Array result = new Array();
+    Array result = new Array(nilObject);
     result.setClass(arrayClass);
         
     // Set the number of indexable fields to the given value (length)
-    result.setNumberOfIndexableFields(length);
+    result.setNumberOfIndexableFieldsAndClear(length, nilObject);
         
     // Return the freshly allocated array
     return result;
     }
     
-  public static Array newArray(java.util.List<?> list)
+  public Array newArray(java.util.List<?> list)
   {
     // Allocate a new array with the same length as the list
     Array result = newArray(list.size());
@@ -356,7 +364,7 @@ public class Universe
     return result;
     }
   
-  public static Array newArray(java.lang.String[] stringArray)
+  public Array newArray(java.lang.String[] stringArray)
   {
     // Allocate a new array with the same length as the string array
     Array result = newArray(stringArray.length);
@@ -370,10 +378,10 @@ public class Universe
     return result;
     }
   
-  public static Block newBlock(Method method, Frame context, int arguments)
+  public Block newBlock(Method method, Frame context, int arguments)
   {
     // Allocate a new block and set its class to be the block class
-    Block result = new Block();
+    Block result = new Block(nilObject);
     result.setClass(getBlockClass(arguments));
     
     // Set the method and context of block
@@ -384,27 +392,30 @@ public class Universe
     return result;
     }
   
-  public static Class newClass(Class classClass)
+  public Class newClass(Class classClass)
   {
     // Allocate a new class and set its class to be the given class class
-    Class result = new Class(classClass.getNumberOfInstanceFields());
+    Class result = new Class(classClass.getNumberOfInstanceFields(), this);
     result.setClass(classClass);
     
     // Return the freshly allocated class
     return result;
     }
   
-  public static Frame newFrame(Frame previousFrame, Method method)
+  public Frame newFrame(Frame previousFrame, Method method)
   {
     // Allocate a new frame and set its class to be the frame class
-    Frame result = new Frame();
+    Frame result = new Frame(nilObject);
     result.setClass(frameClass);
     
     // Compute the maximum number of stack locations (including arguments, locals and
     // extra buffer to support doesNotUnderstand) and set the number of
     // indexable fields accordingly
-    int length = method.getNumberOfArguments() + method.getNumberOfLocals() + method.getMaximumNumberOfStackElements() + 2;
-    result.setNumberOfIndexableFields(length);
+    int length = method.getNumberOfArguments()
+    		+ method.getNumberOfLocals().getEmbeddedInteger()
+    		+ method.getMaximumNumberOfStackElements().getEmbeddedInteger()
+    		+ 2;
+    result.setNumberOfIndexableFieldsAndClear(length, nilObject);
     
     // Set the method of the frame and the previous frame
     result.setMethod(method);
@@ -418,35 +429,35 @@ public class Universe
     return result;
     }
   
-  public static Method newMethod(Symbol signature, int numberOfBytecodes, int numberOfLiterals)
+  public Method newMethod(Symbol signature, int numberOfBytecodes, int numberOfLiterals)
   {
     // Allocate a new method and set its class to be the method class
-    Method result = new Method();
+    Method result = new Method(nilObject);
     result.setClass(methodClass);
     
     // Set the signature and the number of bytecodes
     result.setSignature(signature);
     result.setNumberOfBytecodes(numberOfBytecodes);
-    result.setNumberOfIndexableFields(numberOfLiterals);
+    result.setNumberOfIndexableFieldsAndClear(numberOfLiterals, nilObject);
     
     // Return the freshly allocated method
     return result;
     }
   
-  public static Object newInstance(Class instanceClass)
+  public Object newInstance(Class instanceClass)
   {
     // Allocate a new instance and set its class to be the given class
-    Object result = new Object(instanceClass.getNumberOfInstanceFields());
+    Object result = new Object(instanceClass.getNumberOfInstanceFields(), nilObject);
     result.setClass(instanceClass);
     
     // Return the freshly allocated instance
     return result;
     }
   
-  public static Integer newInteger(int value)
+  public Integer newInteger(int value)
   {
     // Allocate a new integer and set its class to be the integer class
-    Integer result = new Integer();
+    Integer result = new Integer(nilObject);
     result.setClass(integerClass);
     
     // Set the embedded integer of the newly allocated integer
@@ -456,10 +467,10 @@ public class Universe
     return result;
     }
 
-    public static BigInteger newBigInteger(java.math.BigInteger value)
+    public BigInteger newBigInteger(java.math.BigInteger value)
     {
 	// Allocate a new integer and set its class to be the integer class
-	BigInteger result = new BigInteger();
+	BigInteger result = new BigInteger(nilObject);
 	result.setClass(bigintegerClass);
 	
 	// Set the embedded integer of the newly allocated integer
@@ -469,10 +480,10 @@ public class Universe
 	return result;
 	}
     
-    public static BigInteger newBigInteger(long value)
+    public BigInteger newBigInteger(long value)
     {
 	// Allocate a new integer and set its class to be the integer class
-	BigInteger result = new BigInteger();
+	BigInteger result = new BigInteger(nilObject);
 	result.setClass(bigintegerClass);
 	
 	// Set the embedded integer of the newly allocated integer
@@ -482,10 +493,10 @@ public class Universe
 	return result;
 	}
 
-   public static Double newDouble(double value)
+   public Double newDouble(double value)
   {
     // Allocate a new integer and set its class to be the double class
-    Double result = new Double();
+    Double result = new Double(nilObject);
     result.setClass(doubleClass);
     
     // Set the embedded double of the newly allocated double
@@ -495,11 +506,11 @@ public class Universe
     return result;
     }
 
-  public static Class newMetaclassClass()
+  public Class newMetaclassClass()
   {
     // Allocate the metaclass classes
-    Class result = new Class();
-    result.setClass(new Class());
+    Class result = new Class(this);
+    result.setClass(new Class(this));
     
     // Setup the metaclass hierarchy
     result.getSOMClass().setClass(result);
@@ -508,10 +519,10 @@ public class Universe
     return result;
     }
   
-  public static String newString(java.lang.String embeddedString)
+  public String newString(java.lang.String embeddedString)
   {
     // Allocate a new string and set its class to be the string class
-    String result = new String();
+    String result = new String(nilObject);
     result.setClass(stringClass);
     
     // Put the embedded string into the new string
@@ -519,39 +530,39 @@ public class Universe
     
     // Return the freshly allocated string
     return result;
-    }
+  }
   
   
-  public static Symbol newSymbol(java.lang.String string)
+  public Symbol newSymbol(java.lang.String string)
   {
     // Allocate a new symbol and set its class to be the symbol class
-    Symbol result = new Symbol();
+    Symbol result = new Symbol(nilObject);
     result.setClass(symbolClass);
     
     // Put the string into the symbol
     result.setString(string);
     
     // Insert the new symbol into the symbol table
-    SymbolTable.insert(result);
+    symbolTable.insert(result);
     
     // Return the freshly allocated symbol
     return result;
-    }
+  }
   
-  public static Class newSystemClass()
+  public Class newSystemClass()
   {
     // Allocate the new system class
-    Class systemClass = new Class();
+    Class systemClass = new Class(this);
     
     // Setup the metaclass hierarchy
-    systemClass.setClass(new Class());
+    systemClass.setClass(new Class(this));
     systemClass.getSOMClass().setClass(metaclassClass);
     
     // Return the freshly allocated system class
     return systemClass;
     }
   
-  public static void initializeSystemClass(Class systemClass, Class superClass, java.lang.String name)
+  public void initializeSystemClass(Class systemClass, Class superClass, java.lang.String name)
   {
     // Initialize the superclass hierarchy
     if (superClass != null) {
@@ -577,7 +588,7 @@ public class Universe
     setGlobal(systemClass.getName(), systemClass);
   }
   
-  public static Object getGlobal(Symbol name)
+  public Object getGlobal(Symbol name)
   {
     // Return the global with the given name if it's in the dictionary of globals
     if (hasGlobal(name)) return (Object) globals.get(name);
@@ -586,25 +597,25 @@ public class Universe
     return null;
   }
   
-  public static void setGlobal(Symbol name, Object value)
+  public void setGlobal(Symbol name, Object value)
   {
     // Insert the given value into the dictionary of globals
     globals.put(name, value);
   }
   
-  public static boolean hasGlobal(Symbol name)
+  public boolean hasGlobal(Symbol name)
   {
     // Returns if the universe has a value for the global of the given name
     return globals.containsKey(name);
   }
   
-  public static Class getBlockClass()
+  public Class getBlockClass()
   {
     // Get the generic block class
     return blockClass;
   }
   
-  public static Class getBlockClass(int numberOfArguments)
+  public Class getBlockClass(int numberOfArguments)
   {
     // Compute the name of the block class with the given number of arguments
     Symbol name = symbolFor("Block" + java.lang.Integer.toString(numberOfArguments));
@@ -616,7 +627,7 @@ public class Universe
     Class result = loadClass(name, null);
     
     // Add the appropriate value primitive to the block class
-    result.addInstancePrimitive(Block.getEvaluationPrimitive(numberOfArguments));
+    result.addInstancePrimitive(Block.getEvaluationPrimitive(numberOfArguments, this));
     
     // Insert the block class into the dictionary of globals
     setGlobal(name, result);
@@ -625,7 +636,7 @@ public class Universe
     return result;
   }
   
-  public static Class loadClass(Symbol name)
+  public Class loadClass(Symbol name)
   {
     // Check if the requested class is already in the dictionary of globals
     if (hasGlobal(name)) return (Class) getGlobal(name);
@@ -638,7 +649,7 @@ public class Universe
     return result;
   }
 
-  public static void loadSystemClass(Class systemClass)
+  public void loadSystemClass(Class systemClass)
   {
     // Load the system class
     Class result = loadClass(systemClass.getName(), systemClass);
@@ -647,7 +658,7 @@ public class Universe
     if(result.hasPrimitives()) result.loadPrimitives();
   }
   
-  public static Class loadClass(Symbol name, Class systemClass)
+  public Class loadClass(Symbol name, Class systemClass)
   {
     // Try loading the class from all different paths
     for(java.lang.String cpEntry : classPath) {
@@ -655,7 +666,8 @@ public class Universe
         // Load the class from a file and return the loaded class
     	Class result = som.compiler.SourcecodeCompiler.compileClass(cpEntry + fileSeparator, 
                                                 name.getString(), 
-                                                systemClass);
+                                                systemClass,
+                                                this);
     	if(dumpBytecodes) {
     	    Disassembler.dump(result.getSOMClass());
     		Disassembler.dump(result);
@@ -671,42 +683,44 @@ public class Universe
     return null;
   }
 
-  public static Class loadShellClass(java.lang.String stmt) throws IOException
+  public Class loadShellClass(java.lang.String stmt) throws IOException
   {
       //java.io.ByteArrayInputStream in = new java.io.ByteArrayInputStream(stmt.getBytes());
 
       // Load the class from a stream and return the loaded class
-      Class result = som.compiler.SourcecodeCompiler.compileClass(stmt, null);
+      Class result = som.compiler.SourcecodeCompiler.compileClass(stmt, null, this);
       if(dumpBytecodes)
     	  Disassembler.dump(result);
       return result;
   }
 
-  public static Object nilObject;
-  public static Object trueObject;
-  public static Object falseObject;
+  public Object nilObject;
+  public Object trueObject;
+  public Object falseObject;
   
-  public static Class objectClass;
-  public static Class classClass;
-  public static Class metaclassClass;
+  public Class objectClass;
+  public Class classClass;
+  public Class metaclassClass;
   
-  public static Class nilClass;
-  public static Class integerClass;
-  public static Class bigintegerClass;
-  public static Class arrayClass;
-  public static Class methodClass;
-  public static Class symbolClass;
-  public static Class frameClass;
-  public static Class primitiveClass;
-  public static Class stringClass;
-  public static Class systemClass;
-  public static Class blockClass;
-  public static Class doubleClass;
+  public Class nilClass;
+  public Class integerClass;
+  public Class bigintegerClass;
+  public Class arrayClass;
+  public Class methodClass;
+  public Class symbolClass;
+  public Class frameClass;
+  public Class primitiveClass;
+  public Class stringClass;
+  public Class systemClass;
+  public Class blockClass;
+  public Class doubleClass;
 
-  private static java.util.HashMap<Symbol,som.vmobjects.Object> globals = new java.util.HashMap<Symbol,som.vmobjects.Object>();
-  private static java.lang.String[] classPath;
-  private static boolean dumpBytecodes;
+  private HashMap<Symbol,som.vmobjects.Object> globals = new HashMap<Symbol,som.vmobjects.Object>();
+  private java.lang.String[] classPath;
+  private boolean dumpBytecodes;
 
-  public static java.lang.String pathSeparator;
-  public static java.lang.String fileSeparator;
+  public static final java.lang.String pathSeparator;
+  public static final java.lang.String fileSeparator;
+  private final Interpreter interpreter;
+  private final SymbolTable symbolTable;
 }

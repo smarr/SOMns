@@ -24,13 +24,15 @@
 
 package som.vmobjects;
 
+import som.interpreter.Interpreter;
+
 public interface Invokable
 {
   // Tells whether this is a primitive
   public boolean isPrimitive();
 
   // Invoke this invokable object in a given frame
-  public void invoke(Frame frame);
+  public void invoke(Frame frame, final Interpreter interpreter);
     
     // Get the signature for this invokable object
   public Symbol getSignature();

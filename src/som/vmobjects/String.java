@@ -26,6 +26,10 @@ package som.vmobjects;
 
 public class String extends Object
 {
+	public String(final Object nilObject) {
+		super(nilObject);
+	}
+	
   public java.lang.String getEmbeddedString()
   {
     // Get the string associated to this symbol

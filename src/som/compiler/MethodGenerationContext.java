@@ -37,7 +37,7 @@ import som.vmobjects.Symbol;
 import static som.interpreter.Bytecodes.*;
 
 public class MethodGenerationContext {
-    
+	
     private ClassGenerationContext holderGenc;
     private MethodGenerationContext outerGenc;
     private boolean blockMethod;
@@ -61,21 +61,21 @@ public class MethodGenerationContext {
         return primitive;
     }
 
-    public Invokable assemblePrimitive() {
-        return Primitive.getEmptyPrimitive(signature.getString());
+    public Invokable assemblePrimitive(final Universe universe) {
+        return Primitive.getEmptyPrimitive(signature.getString(), universe);
     }
 
-    public Method assemble() {
+    public Method assemble(final Universe universe) {
         // create a method instance with the given number of bytecodes and literals
         int numLiterals = literals.size();
         
-        Method meth = Universe.newMethod(signature, bytecode.size(), numLiterals);
+        Method meth = universe.newMethod(signature, bytecode.size(), numLiterals);
         
         // populate the fields that are immediately available
         int numLocals = locals.size();
-        meth.setNumberOfLocals(numLocals);
+        meth.setNumberOfLocals(universe.newInteger(numLocals));
 
-        meth.setMaximumNumberOfStackElements(computeStackDepth());
+        meth.setMaximumNumberOfStackElements(universe.newInteger(computeStackDepth()));
 
         // copy literals into the method
         int i = 0;

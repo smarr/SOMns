@@ -24,17 +24,23 @@
 
 package som.primitives;
 
+import som.vm.Universe;
+import som.interpreter.Interpreter;
 import som.vmobjects.Frame;
 import som.vmobjects.Primitive;
 
 public class BlockPrimitives extends Primitives {
     
+	public BlockPrimitives(final Universe universe) {
+		super(universe);
+	}
+	
   public void installPrimitives() 
   {
       installInstancePrimitive
-        (new Primitive("restart")
+        (new Primitive("restart", universe)
           {
-            public void invoke(Frame frame)
+            public void invoke(Frame frame, final Interpreter interpreter)
             {
               frame.setBytecodeIndex(0);
               frame.resetStackPointer();

@@ -24,23 +24,34 @@
 
 package som.vmobjects;
 
+import java.lang.reflect.Constructor;
+import java.util.HashMap;
+
 import som.primitives.Primitives;
 import som.vm.Universe;
 
 public class Class extends Object
 {
-  public Class()
+  private final Universe universe;
+	
+  public Class(final Universe universe)
   {
     // Initialize this class by calling the super constructor
-    super();
-    invokablesTable = new java.util.HashMap<Symbol,Invokable>();
+    super(universe.nilObject);
+    invokablesTable = new HashMap<Symbol,Invokable>();
+    this.universe = universe;
   }
   
-  public Class(int numberOfFields)
+  public Class(int numberOfFields, final Universe universe)
   {
     // Initialize this class by calling the super constructor with the given value
-    super(numberOfFields);
-    invokablesTable = new java.util.HashMap<Symbol,Invokable>();
+    super(numberOfFields, universe.nilObject);
+    invokablesTable = new HashMap<Symbol,Invokable>();
+    this.universe = universe;
+  }
+  
+  public Universe getUniverse() {
+	  return universe;
   }
   
   public Class getSuperClass()
@@ -58,7 +69,7 @@ public class Class extends Object
   public boolean hasSuperClass()
   {
     // Check whether or not this class has a super class
-    return getField(superClassIndex) != Universe.nilObject;
+    return getField(superClassIndex) != universe.nilObject;
   }
   
   public Symbol getName()
@@ -188,7 +199,7 @@ public class Class extends Object
     }
     
     // Append the given method to the array of instance methods
-    setInstanceInvokables(getInstanceInvokables().copyAndExtendWith((Object) value));
+    setInstanceInvokables(getInstanceInvokables().copyAndExtendWith((Object) value, universe));
     return true;
   }
   
@@ -237,12 +248,12 @@ public class Class extends Object
   public void setInstanceFields(java.lang.String[] fields)
   {
     // Allocate an array of the right size
-    Array instanceFields = Universe.newArray(fields.length);
+    Array instanceFields = universe.newArray(fields.length);
     
     // Iterate through all the given fields
     for (int i = 0; i < fields.length; i++) {
       // Insert the symbol corresponding to the given field string in the array
-      instanceFields.setIndexableField(i, Universe.symbolFor(fields[i]));
+      instanceFields.setIndexableField(i, universe.symbolFor(fields[i]));
     }
     
     // Set the instance fields of this class to the new array
@@ -268,7 +279,8 @@ public class Class extends Object
     try { 
       java.lang.Class<?> primitivesClass = java.lang.Class.forName(className);
       try {
-        ((Primitives) primitivesClass.newInstance()).installPrimitivesIn(this);
+    	  Constructor<?> ctor = primitivesClass.getConstructor(Universe.class);
+        ((Primitives) ctor.newInstance(universe)).installPrimitivesIn(this);
       } catch (Exception e) {
         System.out.println("Primitives class " + className + " cannot be instantiated");
       }

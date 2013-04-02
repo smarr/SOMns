@@ -30,35 +30,40 @@ import som.vmobjects.Frame;
 import som.vmobjects.Integer;
 import som.vmobjects.Object;
 import som.vmobjects.Primitive;
+import som.interpreter.Interpreter;
 
 public class BigIntegerPrimitives extends Primitives 
 {   
+	public BigIntegerPrimitives(final Universe universe) {
+		super(universe);
+	}
+	
     public void installPrimitives() 
     {
 	installInstancePrimitive
-	    (new Primitive("asString")
+	    (new Primitive("asString", universe)
 		{
-		    public void invoke(Frame frame)
+		    public void invoke(Frame frame, final Interpreter interpreter)
 		    {
 			BigInteger self = (BigInteger) frame.pop();
-			frame.push(Universe.newString(self.getEmbeddedBiginteger().toString()));
+			frame.push(universe.newString(self.getEmbeddedBiginteger().toString()));
 		    }
 		}
 	     );
 	
 	installInstancePrimitive(
-			new Primitive("sqrt") {
-				public void invoke(Frame frame) {
+			new Primitive("sqrt", universe) {
+				public void invoke(Frame frame, final Interpreter interpreter) {
 					BigInteger self = (BigInteger) frame.pop();
-					frame.push(Universe.newDouble(Math.sqrt(self.getEmbeddedBiginteger().doubleValue())));
+					frame.push(universe.newDouble(Math.sqrt(self.getEmbeddedBiginteger().doubleValue())));
 				}
 			}
 		);
     
 	installInstancePrimitive
-	    (new Primitive("+")
+	    (new Primitive("+", universe)
 		{
-		    public void invoke(Frame frame)
+		    public void invoke(Frame frame, final Interpreter interpreter)
 		    {
 			Object rightObj  = frame.pop();
 			BigInteger right = null;
@@ -67,7 +72,7 @@ public class BigIntegerPrimitives extends Primitives
 			// Check second parameter type:
 			if (rightObj instanceof Integer) {
 			    // Second operand was Integer
-			    right = Universe.newBigInteger((long)((Integer)rightObj).getEmbeddedInteger());
+			    right = universe.newBigInteger((long)((Integer)rightObj).getEmbeddedInteger());
 			}
 			else
 			    right = (BigInteger)rightObj;
@@ -75,17 +80,17 @@ public class BigIntegerPrimitives extends Primitives
 			// Do operation and perform conversion to Integer if required
 			java.math.BigInteger result = left.getEmbeddedBiginteger().add(right.getEmbeddedBiginteger());
 			if(result.bitLength() > 31)
-				frame.push(Universe.newBigInteger(result));
+				frame.push(universe.newBigInteger(result));
 			else
-				frame.push(Universe.newInteger(result.intValue()));
+				frame.push(universe.newInteger(result.intValue()));
 		    }
 		}
 	     );
     
 	installInstancePrimitive
-	    (new Primitive("-")
+	    (new Primitive("-", universe)
 		{
-		    public void invoke(Frame frame)
+		    public void invoke(Frame frame, final Interpreter interpreter)
 		    {
 			Object rightObj  = frame.pop();
 			BigInteger right = null;
@@ -94,7 +99,7 @@ public class BigIntegerPrimitives extends Primitives
 			// Check second parameter type:
 			if (rightObj instanceof Integer) {
 			    // Second operand was Integer
-			    right = Universe.newBigInteger((long)((Integer)rightObj).getEmbeddedInteger());
+			    right = universe.newBigInteger((long)((Integer)rightObj).getEmbeddedInteger());
 			}
 			else
 			    right = (BigInteger)rightObj;
@@ -102,17 +107,17 @@ public class BigIntegerPrimitives extends Primitives
 			// Do operation and perform conversion to Integer if required
 			java.math.BigInteger result = left.getEmbeddedBiginteger().subtract(right.getEmbeddedBiginteger());
 			if(result.bitLength() > 31)
-				frame.push(Universe.newBigInteger(result));
+				frame.push(universe.newBigInteger(result));
 			else
-				frame.push(Universe.newInteger(result.intValue()));
+				frame.push(universe.newInteger(result.intValue()));
 		    }
 		}
 	     );
     
 	installInstancePrimitive
-	    (new Primitive("*")
+	    (new Primitive("*", universe)
 		{
-		    public void invoke(Frame frame)
+		    public void invoke(Frame frame, final Interpreter interpreter)
 		    {
 			Object rightObj  = frame.pop();
 			BigInteger right = null;
@@ -121,7 +126,7 @@ public class BigIntegerPrimitives extends Primitives
 			// Check second parameter type:
 			if (rightObj instanceof Integer) {
 			    // Second operand was Integer
-			    right = Universe.newBigInteger((long)((Integer)rightObj).getEmbeddedInteger());
+			    right = universe.newBigInteger((long)((Integer)rightObj).getEmbeddedInteger());
 			}
 			else
 			    right = (BigInteger)rightObj;
@@ -129,17 +134,17 @@ public class BigIntegerPrimitives extends Primitives
 			// Do operation and perform conversion to Integer if required
 			java.math.BigInteger result = left.getEmbeddedBiginteger().multiply(right.getEmbeddedBiginteger());
 			if(result.bitLength() > 31)
-				frame.push(Universe.newBigInteger(result));
+				frame.push(universe.newBigInteger(result));
 			else
-				frame.push(Universe.newInteger(result.intValue()));
+				frame.push(universe.newInteger(result.intValue()));
 		    }
 		}
 	     );
     
 	installInstancePrimitive
-	    (new Primitive("/")
+	    (new Primitive("/", universe)
 		{
-		    public void invoke(Frame frame)
+		    public void invoke(Frame frame, final Interpreter interpreter)
 		    {
 			Object rightObj  = frame.pop();
 			BigInteger right = null;
@@ -148,7 +153,7 @@ public class BigIntegerPrimitives extends Primitives
 			// Check second parameter type:
 			if (rightObj instanceof Integer) {
 			    // Second operand was Integer
-			    right = Universe.newBigInteger((long)((Integer)rightObj).getEmbeddedInteger());
+			    right = universe.newBigInteger((long)((Integer)rightObj).getEmbeddedInteger());
 			}
 			else
 			    right = (BigInteger)rightObj;
@@ -156,17 +161,17 @@ public class BigIntegerPrimitives extends Primitives
 			// Do operation and perform conversion to Integer if required
 			java.math.BigInteger result = left.getEmbeddedBiginteger().divide(right.getEmbeddedBiginteger());
 			if(result.bitLength() > 31)
-				frame.push(Universe.newBigInteger(result));
+				frame.push(universe.newBigInteger(result));
 			else
-				frame.push(Universe.newInteger(result.intValue()));
+				frame.push(universe.newInteger(result.intValue()));
 		    }
 		}
 	     );
 
 	installInstancePrimitive
-	    (new Primitive("%")
+	    (new Primitive("%", universe)
 		{
-		    public void invoke(Frame frame)
+		    public void invoke(Frame frame, final Interpreter interpreter)
 		    {
 			Object rightObj  = frame.pop();
 			BigInteger right = null;
@@ -175,21 +180,21 @@ public class BigIntegerPrimitives extends Primitives
 			// Check second parameter type:
 			if (rightObj instanceof Integer) {
 			    // Second operand was Integer
-			    right = Universe.newBigInteger((long)((Integer)rightObj).getEmbeddedInteger());
+			    right = universe.newBigInteger((long)((Integer)rightObj).getEmbeddedInteger());
 			}
 			else
 			    right = (BigInteger)rightObj;
 			
 			// Do operation:
-			frame.push(Universe.newBigInteger(left.getEmbeddedBiginteger().mod(right.getEmbeddedBiginteger())));
+			frame.push(universe.newBigInteger(left.getEmbeddedBiginteger().mod(right.getEmbeddedBiginteger())));
 		    }
 		}
 	     );
 
 	installInstancePrimitive
-	    (new Primitive("&")
+	    (new Primitive("&", universe)
 		{
-		    public void invoke(Frame frame)
+		    public void invoke(Frame frame, final Interpreter interpreter)
 		    {
 			Object rightObj  = frame.pop();
 			BigInteger right = null;
@@ -198,21 +203,21 @@ public class BigIntegerPrimitives extends Primitives
 			// Check second parameter type:
 			if (rightObj instanceof Integer) {
 			    // Second operand was Integer
-			    right = Universe.newBigInteger((long)((Integer)rightObj).getEmbeddedInteger());
+			    right = universe.newBigInteger((long)((Integer)rightObj).getEmbeddedInteger());
 			}
 			else
 			    right = (BigInteger)rightObj;
 			
 			// Do operation:
-			frame.push(Universe.newBigInteger(left.getEmbeddedBiginteger().and(right.getEmbeddedBiginteger())));
+			frame.push(universe.newBigInteger(left.getEmbeddedBiginteger().and(right.getEmbeddedBiginteger())));
 		    }
 		}
 	     );
     
 	installInstancePrimitive
-	    (new Primitive("=")
+	    (new Primitive("=", universe)
 		{
-		    public void invoke(Frame frame)
+		    public void invoke(Frame frame, final Interpreter interpreter)
 		    {
 			Object rightObj  = frame.pop();
 			BigInteger right = null;
@@ -221,24 +226,24 @@ public class BigIntegerPrimitives extends Primitives
 			// Check second parameter type:
 			if (rightObj instanceof Integer) {
 			    // Second operand was Integer
-			    right = Universe.newBigInteger((long)((Integer)rightObj).getEmbeddedInteger());
+			    right = universe.newBigInteger((long)((Integer)rightObj).getEmbeddedInteger());
 			}
 			else
 			    right = (BigInteger)rightObj;
 			
 			// Do operation:
 			if (left.getEmbeddedBiginteger().compareTo(right.getEmbeddedBiginteger()) == 0)
-			    frame.push(Universe.trueObject);
+			    frame.push(universe.trueObject);
 			else
-			    frame.push(Universe.falseObject);
+			    frame.push(universe.falseObject);
 		    }
 		}
 	     );
     
 	installInstancePrimitive
-	    (new Primitive("<")
+	    (new Primitive("<", universe)
 		{
-		    public void invoke(Frame frame)
+		    public void invoke(Frame frame, final Interpreter interpreter)
 		    {
 			Object rightObj  = frame.pop();
 			BigInteger right = null;
@@ -247,16 +252,16 @@ public class BigIntegerPrimitives extends Primitives
 			// Check second parameter type:
 			if (rightObj instanceof Integer) {
 			    // Second operand was Integer
-			    right = Universe.newBigInteger((long)((Integer)rightObj).getEmbeddedInteger());
+			    right = universe.newBigInteger((long)((Integer)rightObj).getEmbeddedInteger());
 			}
 			else
 			    right = (BigInteger)rightObj;
 			
 			// Do operation:
 			if (left.getEmbeddedBiginteger().compareTo(right.getEmbeddedBiginteger()) < 0)
-			    frame.push(Universe.trueObject);
+			    frame.push(universe.trueObject);
 			else
-			    frame.push(Universe.falseObject);
+			    frame.push(universe.falseObject);
 		    }
 		}
 	     );

@@ -26,6 +26,10 @@ package som.vmobjects;
 
 public class Double extends Object
 {
+	public Double(final Object nilObject) {
+		super(nilObject);
+	}
+	
   public double getEmbeddedDouble()
   {
     // Get the embedded double

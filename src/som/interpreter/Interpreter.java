@@ -36,24 +36,30 @@ import som.vmobjects.Symbol;
 
 public class Interpreter
 {
-  private static void doDup() {
+  private final Universe universe;
+  
+  public Interpreter(final Universe universe) {
+	  this.universe = universe;
+  }
+
+  private void doDup() {
     // Handle the dup bytecode
     getFrame().push(getFrame().getStackElement(0));
   }
             
-  private static void doPushLocal(int bytecodeIndex) {
+  private void doPushLocal(int bytecodeIndex) {
     // Handle the push local bytecode
     getFrame().push(getFrame().getLocal(getMethod().getBytecode(bytecodeIndex + 1),
                                            getMethod().getBytecode(bytecodeIndex + 2)));
   }
             
-  private static void doPushArgument(int bytecodeIndex) {
+  private void doPushArgument(int bytecodeIndex) {
     // Handle the push argument bytecode
     getFrame().push(getFrame().getArgument(getMethod().getBytecode(bytecodeIndex + 1),
                                               getMethod().getBytecode(bytecodeIndex + 2)));
   }
             
-  private static void doPushField(int bytecodeIndex) {
+  private void doPushField(int bytecodeIndex) {
     // Handle the push field bytecode
     Symbol fieldName = (Symbol) getMethod().getConstant(bytecodeIndex);
     
@@ -64,26 +70,27 @@ public class Interpreter
     getFrame().push(getSelf().getField(fieldIndex));
   }
     
-  private static void doPushBlock(int bytecodeIndex) {
+  private void doPushBlock(int bytecodeIndex) {
     // Handle the push block bytecode
     Method blockMethod = (Method) getMethod().getConstant(bytecodeIndex);
         
     // Push a new block with the current getFrame() as context onto the stack
-    getFrame().push(Universe.newBlock(blockMethod, getFrame(), 
-                                        blockMethod.getNumberOfArguments()));
+    getFrame().push(universe.newBlock(blockMethod,
+    		                          getFrame(), 
+                                      blockMethod.getNumberOfArguments()));
   }
             
-  private static void doPushConstant(int bytecodeIndex) {
+  private void doPushConstant(int bytecodeIndex) {
     // Handle the push constant bytecode
     getFrame().push(getMethod().getConstant(bytecodeIndex));
   }
             
-  private static void doPushGlobal(int bytecodeIndex) {
+  private void doPushGlobal(int bytecodeIndex) {
     // Handle the push global bytecode
     Symbol globalName = (Symbol) getMethod().getConstant(bytecodeIndex);
         
     // Get the global from the universe
-    Object global = Universe.getGlobal(globalName);
+    Object global = universe.getGlobal(globalName);
         
     if (global != null) {
       // Push the global onto the stack
@@ -91,30 +98,30 @@ public class Interpreter
     } else {
       // Send 'unknownGlobal:' to self
       Object arguments[] = { globalName };
-      getSelf().send("unknownGlobal:", arguments);
+      getSelf().send("unknownGlobal:", arguments, universe, this);
     }
   }
             
-  private static void doPop() {
+  private void doPop() {
     // Handle the pop bytecode
     getFrame().pop();
   }
     
-  private static void doPopLocal(int bytecodeIndex) {
+  private void doPopLocal(int bytecodeIndex) {
     // Handle the pop local bytecode
     getFrame().setLocal(getMethod().getBytecode(bytecodeIndex + 1),
                           getMethod().getBytecode(bytecodeIndex + 2),
                           getFrame().pop());
   }
             
-  private static void doPopArgument(int bytecodeIndex) {
+  private void doPopArgument(int bytecodeIndex) {
     // Handle the pop argument bytecode
     getFrame().setArgument(getMethod().getBytecode(bytecodeIndex + 1),
                              getMethod().getBytecode(bytecodeIndex + 2),
                              getFrame().pop());
   }
             
-  private static void doPopField(int bytecodeIndex) {
+  private void doPopField(int bytecodeIndex) {
     // Handle the pop field bytecode
     Symbol fieldName = (Symbol) getMethod().getConstant(bytecodeIndex);
                 
@@ -125,7 +132,7 @@ public class Interpreter
     getSelf().setField(fieldIndex, getFrame().pop());
   }
             
-  private static void doSuperSend(int bytecodeIndex) {
+  private void doSuperSend(int bytecodeIndex) {
     // Handle the super send bytecode
     Symbol signature = (Symbol) getMethod().getConstant(bytecodeIndex);
               
@@ -135,7 +142,7 @@ public class Interpreter
 	
 	if (invokable != null) {
 	  // Invoke the invokable in the current frame
-	  invokable.invoke(getFrame());
+	  invokable.invoke(getFrame(), this);
 	        
 	} else {
 	  // Compute the number of arguments
@@ -145,7 +152,7 @@ public class Interpreter
 	  Object receiver = getFrame().getStackElement(numberOfArguments - 1);
 	
 	  // Allocate an array with enough room to hold all arguments
-	  Array argumentsArray = Universe.newArray(numberOfArguments);
+	  Array argumentsArray = universe.newArray(numberOfArguments);
 	
 	  // Remove all arguments and put them in the freshly allocated array
 	  for (int i = numberOfArguments - 1; i >= 0; i--) {
@@ -154,11 +161,11 @@ public class Interpreter
 	
 	  // Send 'doesNotUnderstand:arguments:' to the receiver object
 	  Object[] arguments = { signature, argumentsArray };
-	  receiver.send("doesNotUnderstand:arguments:", arguments);
+	  receiver.send("doesNotUnderstand:arguments:", arguments, universe, this);
 	}
   }
             
-  private static void doReturnLocal() {
+  private void doReturnLocal() {
     // Handle the return local bytecode
     Object result = getFrame().pop();
                     
@@ -166,29 +173,29 @@ public class Interpreter
     popFrameAndPushResult(result);
   }
             
-  private static void doReturnNonLocal() 
+  private void doReturnNonLocal() 
   {
     // Handle the return non local bytecode
     Object result = getFrame().pop();
                     
     // Compute the context for the non-local return
-    Frame context = getFrame().getOuterContext();
+    Frame context = getFrame().getOuterContext(universe.nilObject);
 
     // Make sure the block context is still on the stack
-    if (!context.hasPreviousFrame()) {
+    if (!context.hasPreviousFrame(universe.nilObject)) {
       // Try to recover by sending 'escapedBlock:' to the sending object
       // this can get a bit nasty when using nested blocks. In this case
       // the "sender" will be the surrounding block and not the object that
       // acutally sent the 'value' message.
        Block block = (Block)getFrame().getArgument(0,0);
-       Object sender = getFrame().getPreviousFrame().getOuterContext().getArgument(0,0);
+       Object sender = getFrame().getPreviousFrame().getOuterContext(universe.nilObject).getArgument(0,0);
        Object[] arguments = { block };
 
        // pop the frame of the currently executing block...
        popFrame();
 
        // ... and execute the escapedBlock message instead
-       sender.send("escapedBlock:", arguments);
+       sender.send("escapedBlock:", arguments, universe, this);
 
        return;
     }
@@ -203,7 +210,7 @@ public class Interpreter
   }
 
 
-  private static void doSend(int bytecodeIndex) 
+  private void doSend(int bytecodeIndex) 
   {
     // Handle the send bytecode
     Symbol signature = (Symbol) getMethod().getConstant(bytecodeIndex);
@@ -218,7 +225,7 @@ public class Interpreter
     send(signature, receiver.getSOMClass(), bytecodeIndex);
   }
 
-  public static void start()
+  public void start()
   {
     // Iterate through the bytecodes
     while (true) {
@@ -328,41 +335,41 @@ public class Interpreter
     }
   }
     
-  public static Frame pushNewFrame(Method method)
+  public Frame pushNewFrame(Method method)
   {
     // Allocate a new frame and make it the current one
-    frame = Universe.newFrame(frame, method);
+    frame = universe.newFrame(frame, method);
         
     // Return the freshly allocated and pushed frame
     return frame;
   }
 
-  public static Frame getFrame()
+  public Frame getFrame()
   {
     // Get the frame from the interpreter
     return frame;
   }
     
-  public static Method getMethod()
+  public Method getMethod()
   {
     // Get the method from the interpreter
     return getFrame().getMethod();
   }
 
-  public static Object getSelf()
+  public Object getSelf()
   {
     // Get the self object from the interpreter
-    return getFrame().getOuterContext().getArgument(0, 0);  
+    return getFrame().getOuterContext(universe.nilObject).getArgument(0, 0);  
   }
 
-  private static void send(Symbol signature, Class receiverClass, int bytecodeIndex)
+  private void send(Symbol signature, Class receiverClass, int bytecodeIndex)
   {
     // Lookup the invokable with the given signature
     Invokable invokable = receiverClass.lookupInvokable(signature);
 
     if (invokable != null) {
       // Invoke the invokable in the current frame
-      invokable.invoke(getFrame());
+      invokable.invoke(getFrame(), this);
             
     } else {
       // Compute the number of arguments
@@ -372,7 +379,7 @@ public class Interpreter
       Object receiver = getFrame().getStackElement(numberOfArguments - 1);
 
       // Allocate an array with enough room to hold all arguments
-      Array argumentsArray = Universe.newArray(numberOfArguments);
+      Array argumentsArray = universe.newArray(numberOfArguments);
       
       // Remove all arguments and put them in the freshly allocated array
       for (int i = numberOfArguments - 1; i >= 0; i--) {
@@ -381,13 +388,13 @@ public class Interpreter
 
       // Send 'doesNotUnderstand:arguments:' to the receiver object
       Object[] arguments = { signature, argumentsArray };
-      receiver.send("doesNotUnderstand:arguments:", arguments);
+      receiver.send("doesNotUnderstand:arguments:", arguments, universe, this);
     }
   }
 
 
    
-  private static Frame popFrame()
+  private Frame popFrame()
   {
     // Save a reference to the top frame
     Frame result = frame;
@@ -396,13 +403,13 @@ public class Interpreter
     frame = frame.getPreviousFrame();
 
     // Destroy the previous pointer on the old top frame
-    result.clearPreviousFrame();
+    result.clearPreviousFrame(universe.nilObject);
 
     // Return the popped frame
     return result;
   }
     
-  private static void popFrameAndPushResult(Object result)
+  private void popFrameAndPushResult(Object result)
   {
     // Pop the top frame from the interpreter frame stack and compute the number of arguments
     int numberOfArguments = popFrame().getMethod().getNumberOfArguments();
@@ -416,5 +423,5 @@ public class Interpreter
     getFrame().push(result);   
   }
 
-  private static Frame frame;
+  private Frame frame;
 }

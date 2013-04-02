@@ -28,6 +28,10 @@ import som.vm.Universe;
 
 public class Array extends Object
 {
+	public Array(final Object nilObject) {
+		super(nilObject);
+	}
+	
   public Object getIndexableField(int index)
   {
     // Get the indexable field with the given index
@@ -46,21 +50,21 @@ public class Array extends Object
     return indexableFields.length;
   }
   
-  public void setNumberOfIndexableFields(int value)
+  public void setNumberOfIndexableFieldsAndClear(int value, final Object nilObject)
   {
     // Allocate a new array of indexable fields
     indexableFields = new Object[value];
     
     // Clear each and every field by putting nil into them
     for (int i = 0; i < getNumberOfIndexableFields(); i++) {
-      setIndexableField(i, Universe.nilObject);
+      setIndexableField(i, nilObject);
     }
   }
   
-  public Array copyAndExtendWith(Object value)
+  public Array copyAndExtendWith(Object value, final Universe universe)
   {
     // Allocate a new array which has one indexable field more than this array
-    Array result = Universe.newArray(getNumberOfIndexableFields() + 1);
+    Array result = universe.newArray(getNumberOfIndexableFields() + 1);
     
     // Copy the indexable fields from this array to the new array
     copyIndexableFieldsTo(result);

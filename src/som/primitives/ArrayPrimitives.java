@@ -30,15 +30,20 @@ import som.vmobjects.Frame;
 import som.vmobjects.Integer;
 import som.vmobjects.Object;
 import som.vmobjects.Primitive;
+import som.interpreter.Interpreter;
 
 public class ArrayPrimitives extends Primitives 
 {
+	public ArrayPrimitives(final Universe universe) {
+		super(universe);
+	}
+	
   public void installPrimitives() 
   {
     installInstancePrimitive
-      (new Primitive("at:")
+      (new Primitive("at:", universe)
         {
-          public void invoke(Frame frame)
+          public void invoke(Frame frame, final Interpreter interpreter)
           {
             Integer index = (Integer) frame.pop();
             Array self = (Array) frame.pop();
@@ -48,9 +53,9 @@ public class ArrayPrimitives extends Primitives
        );
     
     installInstancePrimitive
-      (new Primitive("at:put:")
+      (new Primitive("at:put:", universe)
         {
-          public void invoke(Frame frame)
+          public void invoke(Frame frame, final Interpreter interpreter)
           {
             Object value = frame.pop();
             Integer index = (Integer) frame.pop();
@@ -61,24 +66,24 @@ public class ArrayPrimitives extends Primitives
        );
     
     installInstancePrimitive
-      (new Primitive("length")
+      (new Primitive("length", universe)
         {
-          public void invoke(Frame frame)
+          public void invoke(Frame frame, final Interpreter interpreter)
           {
             Array self = (Array) frame.pop();
-            frame.push(Universe.newInteger(self.getNumberOfIndexableFields()));
+            frame.push(universe.newInteger(self.getNumberOfIndexableFields()));
           }
         }
        );
     
     installClassPrimitive
-      (new Primitive("new:")
+      (new Primitive("new:", universe)
         {
-          public void invoke(Frame frame)
+          public void invoke(Frame frame, final Interpreter interpreter)
           {
             Integer length = (Integer) frame.pop();
             frame.pop(); // not required
-            frame.push(Universe.newArray(length.getEmbeddedInteger()));
+            frame.push(universe.newArray(length.getEmbeddedInteger()));
           }
         }
        );

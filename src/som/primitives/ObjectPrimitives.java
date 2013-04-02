@@ -29,43 +29,48 @@ import som.vmobjects.Array;
 import som.vmobjects.Frame;
 import som.vmobjects.Object;
 import som.vmobjects.Primitive;
+import som.interpreter.Interpreter;
 
 public class ObjectPrimitives extends Primitives 
 {   
-  public void installPrimitives() 
+	public ObjectPrimitives(final Universe universe) {
+		super(universe);
+	}
+	
+  public void installPrimitives()
   {
     installInstancePrimitive
-      (new Primitive("==")
+      (new Primitive("==", universe)
         {
-          public void invoke(Frame frame)
+          public void invoke(Frame frame, final Interpreter interpreter)
           {
             Object op1 = frame.pop();
             Object op2 = frame.pop();
             if (op1 == op2)
-              frame.push(Universe.trueObject);
+              frame.push(universe.trueObject);
             else
-              frame.push(Universe.falseObject);
+              frame.push(universe.falseObject);
           }
         }
        );
     installInstancePrimitive
-      (new Primitive("hashcode")
+      (new Primitive("hashcode", universe)
 	{
-	  public void invoke(Frame frame)
+	  public void invoke(Frame frame, final Interpreter interpreter)
 	  {
 	    Object self = frame.pop();
-	    frame.push(Universe.newInteger(self.hashCode()));
+	    frame.push(universe.newInteger(self.hashCode()));
 	  }
 	}
        );
     installInstancePrimitive(
-            new Primitive("objectSize") {
-                public void invoke(Frame frame) {
+            new Primitive("objectSize", universe) {
+                public void invoke(Frame frame, final Interpreter interpreter) {
                     Object self = frame.pop();
                     int size = self.getNumberOfFields();
                     if(self instanceof Array)
                         size += ((Array)self).getNumberOfIndexableFields();
-                    frame.push(Universe.newInteger(size));
+                    frame.push(universe.newInteger(size));
                 }
             }
         );
