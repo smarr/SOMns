@@ -29,7 +29,7 @@ TestHarness = (
         ^ EmptyTest,
           ArrayTest,
           BigIntegerTest,
-          BlockTest,        "Does not work currently STEFAN: 2012-05-19"
+          BlockTest,
           ClassLoadingTest,
           ClosureTest,
           CoercionTest,
@@ -37,7 +37,7 @@ TestHarness = (
           DoubleTest,
           HashTest,
           IntegerTest,
-          ObjectSizeTest,   "Does not work currently STEFAN: 2012-05-19"
+          ObjectSizeTest,
           PreliminaryTest,
           ReflectionTest,
           SelfBlockTest,
