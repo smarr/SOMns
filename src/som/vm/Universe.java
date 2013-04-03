@@ -44,19 +44,24 @@ import som.vmobjects.String;
 import som.vmobjects.Symbol;
 
 public class Universe {
-
+  
   public static void main(java.lang.String[] arguments) {
-    // Create Universe and setup the system path and file separators
+    // Create Universe
     Universe u = new Universe();
-
-    // Check for command line switches
-    arguments = u.handleArguments(arguments);
-
-    // Initialize the known universe
-    u.initialize(arguments);
-
+    
+    // Start interpretation
+    u.interpret(arguments);
+    
     // Exit with error code 0
     u.exit(0);
+  }
+  
+  public void interpret(java.lang.String[] arguments) {
+    // Check for command line switches
+    arguments = handleArguments(arguments);
+
+    // Initialize the known universe
+    initialize(arguments);
   }
 
   static { /* static initializer */
@@ -65,8 +70,17 @@ public class Universe {
   }
 
   public Universe() {
-    this.interpreter = new Interpreter(this);
-    this.symbolTable = new SymbolTable();
+    this.interpreter  = new Interpreter(this);
+    this.symbolTable  = new SymbolTable();
+    this.avoidExit    = false;
+    this.lastExitCode = 0;
+  }
+  
+  public Universe(boolean avoidExit) {
+    this.interpreter  = new Interpreter(this);
+    this.symbolTable  = new SymbolTable();
+    this.avoidExit    = avoidExit;
+    this.lastExitCode = 0;
   }
 
   public Interpreter getInterpreter() {
@@ -75,7 +89,16 @@ public class Universe {
 
   public void exit(int errorCode) {
     // Exit from the Java system
-    System.exit(errorCode);
+    if (!avoidExit) {
+      System.exit(errorCode);
+    }
+    else {
+      lastExitCode = errorCode;
+    }
+  }
+  
+  public int lastExitCode() {
+    return lastExitCode;
   }
 
   public void errorExit(java.lang.String message) {
@@ -701,4 +724,9 @@ public class Universe {
   public static final java.lang.String          fileSeparator;
   private final Interpreter                     interpreter;
   private final SymbolTable                     symbolTable;
+
+  // TODO: this is not how it is supposed to be... it is just a hack to cope
+  //       with the use of system.exit in SOM to enable testing
+  private boolean                               avoidExit;
+  private int                                   lastExitCode;
 }
