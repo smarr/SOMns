@@ -26,10 +26,18 @@ package som.compiler;
 
 public class Single<X> {
 
-    private X x;
-    
-    public Single(X x) { set(x); }
-    public void set(X x) { this.x = x; }
-    public X get() { return x; }
-    
+  private X x;
+
+  public Single(X x) {
+    set(x);
+  }
+
+  public void set(X x) {
+    this.x = x;
+  }
+
+  public X get() {
+    return x;
+  }
+
 }

@@ -37,214 +37,237 @@ import som.vmobjects.Symbol;
 import static som.interpreter.Bytecodes.*;
 
 public class MethodGenerationContext {
-	
-    private ClassGenerationContext holderGenc;
-    private MethodGenerationContext outerGenc;
-    private boolean blockMethod;
-    private som.vmobjects.Symbol signature;
-    private List<String> arguments = new ArrayList<String>();
-    private boolean primitive;
-    private List<String> locals = new ArrayList<String>();
-    private List<som.vmobjects.Object> literals = new ArrayList<som.vmobjects.Object>();
-    private boolean finished;
-    private Vector<Byte> bytecode = new Vector<Byte>();
-    
-    public void setHolder(ClassGenerationContext cgenc) {
-        holderGenc = cgenc;
-    }
 
-    public void addArgument(String arg) {
-        arguments.add(arg);
-    }
+  private ClassGenerationContext     holderGenc;
+  private MethodGenerationContext    outerGenc;
+  private boolean                    blockMethod;
+  private som.vmobjects.Symbol       signature;
+  private List<String>               arguments = new ArrayList<String>();
+  private boolean                    primitive;
+  private List<String>               locals    = new ArrayList<String>();
+  private List<som.vmobjects.Object> literals  = new ArrayList<som.vmobjects.Object>();
+  private boolean                    finished;
+  private Vector<Byte>               bytecode  = new Vector<Byte>();
 
-    public boolean isPrimitive() {
-        return primitive;
-    }
+  public void setHolder(ClassGenerationContext cgenc) {
+    holderGenc = cgenc;
+  }
 
-    public Invokable assemblePrimitive(final Universe universe) {
-        return Primitive.getEmptyPrimitive(signature.getString(), universe);
-    }
+  public void addArgument(String arg) {
+    arguments.add(arg);
+  }
 
-    public Method assemble(final Universe universe) {
-        // create a method instance with the given number of bytecodes and literals
-        int numLiterals = literals.size();
-        
-        Method meth = universe.newMethod(signature, bytecode.size(), numLiterals);
-        
-        // populate the fields that are immediately available
-        int numLocals = locals.size();
-        meth.setNumberOfLocals(universe.newInteger(numLocals));
+  public boolean isPrimitive() {
+    return primitive;
+  }
 
-        meth.setMaximumNumberOfStackElements(universe.newInteger(computeStackDepth()));
+  public Invokable assemblePrimitive(final Universe universe) {
+    return Primitive.getEmptyPrimitive(signature.getString(), universe);
+  }
 
-        // copy literals into the method
-        int i = 0;
-        for(som.vmobjects.Object l : literals)
-            meth.setIndexableField(i++, l);
+  public Method assemble(final Universe universe) {
+    // create a method instance with the given number of bytecodes and
+    // literals
+    int numLiterals = literals.size();
 
-        // copy bytecodes into method
-        i = 0;
-        for(byte bc : bytecode)
-            meth.setBytecode(i++, bc);
+    Method meth = universe.newMethod(signature, bytecode.size(), numLiterals);
 
-        // return the method - the holder field is to be set later on!
-        return meth;
-    }
+    // populate the fields that are immediately available
+    int numLocals = locals.size();
+    meth.setNumberOfLocals(universe.newInteger(numLocals));
 
-    private int computeStackDepth() {
-        int depth = 0;
-        int maxDepth = 0;
-        int i = 0;
-        
-        while(i < bytecode.size()) {
-            switch(bytecode.elementAt(i)) {
-                case halt             :          i++;    break;
-                case dup              : depth++; i++;    break;
-                case push_local       :
-                case push_argument    : depth++; i += 3; break;
-                case push_field       :
-                case push_block       :
-                case push_constant    :
-                case push_global      : depth++; i += 2; break;
-                case pop              : depth--; i++;    break;
-                case pop_local        :
-                case pop_argument     : depth--; i += 3; break;
-                case pop_field        : depth--; i += 2; break;
-                case send             :
-                case super_send       : {
-                    // these are special: they need to look at the number of
-                    // arguments (extractable from the signature)
-                    som.vmobjects.Symbol sig = (som.vmobjects.Symbol)literals.get(bytecode.elementAt(i+1));
-                    
-                    depth -= sig.getNumberOfSignatureArguments();
-                    
-                    depth++; // return value
-                    i += 2;
-                    break;
-                }
-                case return_local     :
-                case return_non_local :          i++;    break;
-                default               :
-                    throw new IllegalStateException("Illegal bytecode " + bytecode.elementAt(i));
-            }
-            
-            if(depth > maxDepth)
-                maxDepth = depth;
+    meth.setMaximumNumberOfStackElements(universe
+        .newInteger(computeStackDepth()));
+
+    // copy literals into the method
+    int i = 0;
+    for (som.vmobjects.Object l : literals)
+      meth.setIndexableField(i++, l);
+
+    // copy bytecodes into method
+    i = 0;
+    for (byte bc : bytecode)
+      meth.setBytecode(i++, bc);
+
+    // return the method - the holder field is to be set later on!
+    return meth;
+  }
+
+  private int computeStackDepth() {
+    int depth = 0;
+    int maxDepth = 0;
+    int i = 0;
+
+    while (i < bytecode.size()) {
+      switch (bytecode.elementAt(i)) {
+        case halt:
+          i++;
+          break;
+        case dup:
+          depth++;
+          i++;
+          break;
+        case push_local:
+        case push_argument:
+          depth++;
+          i += 3;
+          break;
+        case push_field:
+        case push_block:
+        case push_constant:
+        case push_global:
+          depth++;
+          i += 2;
+          break;
+        case pop:
+          depth--;
+          i++;
+          break;
+        case pop_local:
+        case pop_argument:
+          depth--;
+          i += 3;
+          break;
+        case pop_field:
+          depth--;
+          i += 2;
+          break;
+        case send:
+        case super_send: {
+          // these are special: they need to look at the number of
+          // arguments (extractable from the signature)
+          som.vmobjects.Symbol sig = (som.vmobjects.Symbol) literals
+              .get(bytecode.elementAt(i + 1));
+
+          depth -= sig.getNumberOfSignatureArguments();
+
+          depth++; // return value
+          i += 2;
+          break;
         }
-        
-        return maxDepth;
+        case return_local:
+        case return_non_local:
+          i++;
+          break;
+        default:
+          throw new IllegalStateException("Illegal bytecode "
+              + bytecode.elementAt(i));
+      }
+
+      if (depth > maxDepth) maxDepth = depth;
     }
 
-    public void setPrimitive(boolean prim) {
-        primitive = prim;
-    }
+    return maxDepth;
+  }
 
-    public void setSignature(Symbol sig) {
-        signature = sig;
-    }
+  public void setPrimitive(boolean prim) {
+    primitive = prim;
+  }
 
-    public boolean addArgumentIfAbsent(String arg) {
-        if (locals.indexOf(arg) != -1)
-            return false;
-        arguments.add(arg);
-        return true;
-    }
+  public void setSignature(Symbol sig) {
+    signature = sig;
+  }
 
-    public boolean isFinished() {
-        return finished;
-    }
+  public boolean addArgumentIfAbsent(String arg) {
+    if (locals.indexOf(arg) != -1) return false;
+    arguments.add(arg);
+    return true;
+  }
 
-    public void setFinished(boolean finished) {
-        this.finished = finished;
-    }
+  public boolean isFinished() {
+    return finished;
+  }
 
-    public boolean addLocalIfAbsent(String local) {
-        if(locals.indexOf(local) != -1)
-            return false;
-        locals.add(local);
-        return true;
-    }
-    
-    public void addLocal(String local) {
-        locals.add(local);
-    }
+  public void setFinished(boolean finished) {
+    this.finished = finished;
+  }
 
-    public void removeLastBytecode() {
-        bytecode.removeElementAt(bytecode.size()-1);
-    }
+  public boolean addLocalIfAbsent(String local) {
+    if (locals.indexOf(local) != -1) return false;
+    locals.add(local);
+    return true;
+  }
 
-    public boolean isBlockMethod() {
-        return blockMethod;
-    }
+  public void addLocal(String local) {
+    locals.add(local);
+  }
 
-    public void setFinished() {
-        finished = true;
-    }
+  public void removeLastBytecode() {
+    bytecode.removeElementAt(bytecode.size() - 1);
+  }
 
-    public boolean addLiteralIfAbsent(som.vmobjects.Object lit) {
-        if(literals.indexOf(lit) != -1)
-            return false;
-        literals.add(lit);
-        return true;
-    }
+  public boolean isBlockMethod() {
+    return blockMethod;
+  }
 
-    public void setIsBlockMethod(boolean isBlock) {
-        blockMethod = isBlock;
-    }
+  public void setFinished() {
+    finished = true;
+  }
 
-    public ClassGenerationContext getHolder() {
-        return holderGenc;
-    }
+  public boolean addLiteralIfAbsent(som.vmobjects.Object lit) {
+    if (literals.indexOf(lit) != -1) return false;
+    literals.add(lit);
+    return true;
+  }
 
-    public void setOuter(MethodGenerationContext mgenc) {
-        outerGenc = mgenc;
-    }
+  public void setIsBlockMethod(boolean isBlock) {
+    blockMethod = isBlock;
+  }
 
-    public void addLiteral(som.vmobjects.Object lit) {
-        literals.add(lit);
-    }
+  public ClassGenerationContext getHolder() {
+    return holderGenc;
+  }
 
-    public boolean findVar(String var, Triplet<Byte, Byte, Boolean> tri) {
-        // triplet: index, context, isArgument
-        tri.setX((byte) locals.indexOf(var));
-        if(tri.getX() == -1) {
-            tri.setX((byte) arguments.indexOf(var));
-            if(tri.getX() == -1) {
-                if(outerGenc == null)
-                    return false;
-                else {
-                    tri.setY((byte) (tri.getY() + 1));
-                    return outerGenc.findVar(var, tri);
-                }
-            } else
-                tri.setZ(true);
+  public void setOuter(MethodGenerationContext mgenc) {
+    outerGenc = mgenc;
+  }
+
+  public void addLiteral(som.vmobjects.Object lit) {
+    literals.add(lit);
+  }
+
+  public boolean findVar(String var, Triplet<Byte, Byte, Boolean> tri) {
+    // triplet: index, context, isArgument
+    tri.setX((byte) locals.indexOf(var));
+    if (tri.getX() == -1) {
+      tri.setX((byte) arguments.indexOf(var));
+      if (tri.getX() == -1) {
+        if (outerGenc == null)
+          return false;
+        else {
+          tri.setY((byte) (tri.getY() + 1));
+          return outerGenc.findVar(var, tri);
         }
-        
-        return true;
+      }
+      else
+        tri.setZ(true);
     }
 
-    public boolean findField(String field) {
-        return holderGenc.findField(field);
-    }
+    return true;
+  }
 
-    public int getNumberOfArguments() {
-        return arguments.size(); 
-    }
+  public boolean findField(String field) {
+    return holderGenc.findField(field);
+  }
 
-    public void addBytecode(byte code) {
-        bytecode.add(code);
-    }
+  public int getNumberOfArguments() {
+    return arguments.size();
+  }
 
-    public byte findLiteralIndex(som.vmobjects.Object lit) {
-        return (byte) literals.indexOf(lit);
-    }
-    
-    public MethodGenerationContext getOuter() {
-        return outerGenc;
-    }
-    
-    public som.vmobjects.Symbol getSignature() {
-        return signature;
-    }
+  public void addBytecode(byte code) {
+    bytecode.add(code);
+  }
+
+  public byte findLiteralIndex(som.vmobjects.Object lit) {
+    return (byte) literals.indexOf(lit);
+  }
+
+  public MethodGenerationContext getOuter() {
+    return outerGenc;
+  }
+
+  public som.vmobjects.Symbol getSignature() {
+    return signature;
+  }
 
 }

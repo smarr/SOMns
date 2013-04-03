@@ -28,21 +28,19 @@ import java.util.HashMap;
 
 import som.vmobjects.Symbol;
 
-public class SymbolTable
-{
-  public Symbol lookup(java.lang.String string)
-  {
+public class SymbolTable {
+
+  public Symbol lookup(java.lang.String string) {
     // Lookup the given string in the hash map
     return (Symbol) map.get(string);
   }
 
-  public void insert(Symbol symbol)
-  {
+  public void insert(Symbol symbol) {
     // Insert the given symbol into the hash map by associating the
     // symbol associated string to the symbol itself
     map.put(symbol.getString(), symbol);
   }
-  
+
   // Private variable holding the hash map representing the symbol table
-  private HashMap<java.lang.String,Symbol> map = new HashMap<java.lang.String,Symbol>();
+  private HashMap<java.lang.String, Symbol> map = new HashMap<java.lang.String, Symbol>();
 }

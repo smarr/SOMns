@@ -32,60 +32,47 @@ import som.vmobjects.Object;
 import som.vmobjects.Primitive;
 import som.interpreter.Interpreter;
 
-public class ArrayPrimitives extends Primitives 
-{
-	public ArrayPrimitives(final Universe universe) {
-		super(universe);
-	}
-	
-  public void installPrimitives() 
-  {
-    installInstancePrimitive
-      (new Primitive("at:", universe)
-        {
-          public void invoke(Frame frame, final Interpreter interpreter)
-          {
-            Integer index = (Integer) frame.pop();
-            Array self = (Array) frame.pop();
-            frame.push(self.getIndexableField(index.getEmbeddedInteger() - 1));
-          }
-        }
-       );
-    
-    installInstancePrimitive
-      (new Primitive("at:put:", universe)
-        {
-          public void invoke(Frame frame, final Interpreter interpreter)
-          {
-            Object value = frame.pop();
-            Integer index = (Integer) frame.pop();
-            Array self = (Array) frame.getStackElement(0);
-            self.setIndexableField(index.getEmbeddedInteger() - 1, value);
-          }
-        }
-       );
-    
-    installInstancePrimitive
-      (new Primitive("length", universe)
-        {
-          public void invoke(Frame frame, final Interpreter interpreter)
-          {
-            Array self = (Array) frame.pop();
-            frame.push(universe.newInteger(self.getNumberOfIndexableFields()));
-          }
-        }
-       );
-    
-    installClassPrimitive
-      (new Primitive("new:", universe)
-        {
-          public void invoke(Frame frame, final Interpreter interpreter)
-          {
-            Integer length = (Integer) frame.pop();
-            frame.pop(); // not required
-            frame.push(universe.newArray(length.getEmbeddedInteger()));
-          }
-        }
-       );
+public class ArrayPrimitives extends Primitives {
+
+  public ArrayPrimitives(final Universe universe) {
+    super(universe);
+  }
+
+  public void installPrimitives() {
+    installInstancePrimitive(new Primitive("at:", universe) {
+
+      public void invoke(Frame frame, final Interpreter interpreter) {
+        Integer index = (Integer) frame.pop();
+        Array self = (Array) frame.pop();
+        frame.push(self.getIndexableField(index.getEmbeddedInteger() - 1));
+      }
+    });
+
+    installInstancePrimitive(new Primitive("at:put:", universe) {
+
+      public void invoke(Frame frame, final Interpreter interpreter) {
+        Object value = frame.pop();
+        Integer index = (Integer) frame.pop();
+        Array self = (Array) frame.getStackElement(0);
+        self.setIndexableField(index.getEmbeddedInteger() - 1, value);
+      }
+    });
+
+    installInstancePrimitive(new Primitive("length", universe) {
+
+      public void invoke(Frame frame, final Interpreter interpreter) {
+        Array self = (Array) frame.pop();
+        frame.push(universe.newInteger(self.getNumberOfIndexableFields()));
+      }
+    });
+
+    installClassPrimitive(new Primitive("new:", universe) {
+
+      public void invoke(Frame frame, final Interpreter interpreter) {
+        Integer length = (Integer) frame.pop();
+        frame.pop(); // not required
+        frame.push(universe.newArray(length.getEmbeddedInteger()));
+      }
+    });
   }
 }

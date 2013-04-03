@@ -34,118 +34,92 @@ import som.vmobjects.Primitive;
 import som.vmobjects.String;
 import som.vmobjects.Symbol;
 
-public class SystemPrimitives extends Primitives 
-{ 
-	public SystemPrimitives(final Universe universe) {
-		super(universe);
-	}
-	
-  public void installPrimitives() 
-  {  
-    installInstancePrimitive
-      (new Primitive("load:", universe)
-        {
-          public void invoke(Frame frame, final Interpreter interpreter)
-          {
-            Symbol argument = (Symbol) frame.pop();
-            frame.pop(); // not required
-            Class result = universe.loadClass(argument);
-            frame.push(result != null ? result : universe.nilObject);
-          }
-        }
-       );
+public class SystemPrimitives extends Primitives {
 
-    installInstancePrimitive
-      (new Primitive("exit:", universe)
-        {
-          public void invoke(Frame frame, final Interpreter interpreter)
-          {
-            Integer error = (Integer) frame.pop();
-            universe.exit(error.getEmbeddedInteger());
-          }
-        }
-       );
-    
-    installInstancePrimitive
-      (new Primitive("global:", universe)
-        {
-          public void invoke(Frame frame, final Interpreter interpreter)
-          {
-            Symbol argument = (Symbol) frame.pop();
-            frame.pop(); // not required
-            Object result = universe.getGlobal(argument);
-            frame.push(result != null ? result : universe.nilObject);
-          }
-        }
-       );
-    
-    installInstancePrimitive
-      (new Primitive("global:put:", universe)
-        {
-          public void invoke(Frame frame, final Interpreter interpreter)
-          {
-            Object value = frame.pop();
-            Symbol argument = (Symbol) frame.pop();
-            universe.setGlobal(argument, value);
-          }
-        }
-       );
-    
-    installInstancePrimitive
-      (new Primitive("printString:", universe)
-        {
-          public void invoke(Frame frame, final Interpreter interpreter)
-          {
-            String argument = (String) frame.pop();
-            System.out.print(argument.getEmbeddedString());
-          }
-        }
-       );
-    
-    installInstancePrimitive
-      (new Primitive("printNewline", universe)
-        {
-          public void invoke(Frame frame, final Interpreter interpreter)
-          {
-            System.out.println("");
-          }
-        }
-       );
-    
+  public SystemPrimitives(final Universe universe) {
+    super(universe);
+  }
+
+  public void installPrimitives() {
+    installInstancePrimitive(new Primitive("load:", universe) {
+
+      public void invoke(Frame frame, final Interpreter interpreter) {
+        Symbol argument = (Symbol) frame.pop();
+        frame.pop(); // not required
+        Class result = universe.loadClass(argument);
+        frame.push(result != null ? result : universe.nilObject);
+      }
+    });
+
+    installInstancePrimitive(new Primitive("exit:", universe) {
+
+      public void invoke(Frame frame, final Interpreter interpreter) {
+        Integer error = (Integer) frame.pop();
+        universe.exit(error.getEmbeddedInteger());
+      }
+    });
+
+    installInstancePrimitive(new Primitive("global:", universe) {
+
+      public void invoke(Frame frame, final Interpreter interpreter) {
+        Symbol argument = (Symbol) frame.pop();
+        frame.pop(); // not required
+        Object result = universe.getGlobal(argument);
+        frame.push(result != null ? result : universe.nilObject);
+      }
+    });
+
+    installInstancePrimitive(new Primitive("global:put:", universe) {
+
+      public void invoke(Frame frame, final Interpreter interpreter) {
+        Object value = frame.pop();
+        Symbol argument = (Symbol) frame.pop();
+        universe.setGlobal(argument, value);
+      }
+    });
+
+    installInstancePrimitive(new Primitive("printString:", universe) {
+
+      public void invoke(Frame frame, final Interpreter interpreter) {
+        String argument = (String) frame.pop();
+        System.out.print(argument.getEmbeddedString());
+      }
+    });
+
+    installInstancePrimitive(new Primitive("printNewline", universe) {
+
+      public void invoke(Frame frame, final Interpreter interpreter) {
+        System.out.println("");
+      }
+    });
+
     startMicroTime = System.nanoTime() / 1000L;
     startTime = startMicroTime / 1000L;
-    installInstancePrimitive
-      (new Primitive("time", universe)
-        {
-          public void invoke(Frame frame, final Interpreter interpreter)
-          {
-            frame.pop(); // ignore
-            int time = (int) (System.currentTimeMillis() - startTime);
-            frame.push(universe.newInteger(time));
-          }
-        }
-       );
-    
-    installInstancePrimitive
-    (new Primitive("ticks", universe)
-      {
-        public void invoke(Frame frame, final Interpreter interpreter)
-        {
-          frame.pop(); // ignore
-          int time = (int) (System.nanoTime() / 1000L - startMicroTime);
-          frame.push(universe.newInteger(time));
-        }
+    installInstancePrimitive(new Primitive("time", universe) {
+
+      public void invoke(Frame frame, final Interpreter interpreter) {
+        frame.pop(); // ignore
+        int time = (int) (System.currentTimeMillis() - startTime);
+        frame.push(universe.newInteger(time));
       }
-     );
-    
-    installInstancePrimitive(
-            new Primitive("fullGC", universe) {
-                public void invoke(Frame frame, final Interpreter interpreter) {
-                    // naught - GC is entirely left to the JVM
-                }
-            }
-        );
-    
+    });
+
+    installInstancePrimitive(new Primitive("ticks", universe) {
+
+      public void invoke(Frame frame, final Interpreter interpreter) {
+        frame.pop(); // ignore
+        int time = (int) (System.nanoTime() / 1000L - startMicroTime);
+        frame.push(universe.newInteger(time));
+      }
+    });
+
+    installInstancePrimitive(new Primitive("fullGC", universe) {
+
+      public void invoke(Frame frame, final Interpreter interpreter) {
+        // naught - GC is entirely left to the JVM
+      }
+    });
+
   }
 
   private long startTime;

@@ -27,81 +27,73 @@ package som.vmobjects;
 import som.vm.Universe;
 import som.interpreter.Interpreter;
 
-public abstract class Primitive extends Object implements Invokable
-{
-	public boolean isPrimitive() { return true; }
+public abstract class Primitive extends Object implements Invokable {
 
-  public Primitive(java.lang.String signatureString, final Universe universe)
-  {
-	  super(universe.nilObject);
-	  
+  public boolean isPrimitive() {
+    return true;
+  }
+
+  public Primitive(java.lang.String signatureString, final Universe universe) {
+    super(universe.nilObject);
+
     // Set the class of this primitive to be the universal primitive class
     setClass(universe.primitiveClass);
-    
+
     // Set the signature of this primitive
     setSignature(universe.symbolFor(signatureString));
   }
-  
-  public Symbol getSignature()
-  {
+
+  public Symbol getSignature() {
     // Get the signature by reading the field with signature index
     return (Symbol) getField(signatureIndex);
   }
-  
-  public void setSignature(Symbol value)
-  {
+
+  public void setSignature(Symbol value) {
     // Set the signature by writing to the field with signature index
     setField(signatureIndex, value);
   }
-  
-  public Class getHolder()
-  {
+
+  public Class getHolder() {
     // Get the holder of this method by reading the field with holder index
     return (Class) getField(holderIndex);
   }
-  
-  public void setHolder(Class value)
-  {
-    // Set the holder of this method by writing to the field with holder index
+
+  public void setHolder(Class value) {
+    // Set the holder of this method by writing to the field with holder
+    // index
     setField(holderIndex, value);
   }
-  
-  public int getDefaultNumberOfFields()
-  {
+
+  public int getDefaultNumberOfFields() {
     // Return the default number of fields for a primitive
     return numberOfPrimitiveFields;
   }
-  
-  public boolean isEmpty()
-  {
+
+  public boolean isEmpty() {
     // By default a primitive is not empty
     return false;
   }
-  
-  public static Primitive getEmptyPrimitive(java.lang.String signatureString, final Universe universe)
-  {
+
+  public static Primitive getEmptyPrimitive(java.lang.String signatureString,
+      final Universe universe) {
     // Return an empty primitive with the given signature
-    return 
-      (new Primitive(signatureString, universe)
-        {
-          public void invoke(Frame frame, final Interpreter interpreter)
-          {
-            // Write a warning to the screen
-            System.out.println("Warning: undefined primitive " + this.getSignature().getString() + 
-                               " called");
-          }
-                    
-          public boolean isEmpty()
-          {
-            // The empty primitives are empty
-            return true;
-          }
-        }
-       );
+    return (new Primitive(signatureString, universe) {
+
+      public void invoke(Frame frame, final Interpreter interpreter) {
+        // Write a warning to the screen
+        System.out.println("Warning: undefined primitive "
+            + this.getSignature().getString() + " called");
+      }
+
+      public boolean isEmpty() {
+        // The empty primitives are empty
+        return true;
+      }
+    });
   }
-  
+
   // Static field indices and number of primitive fields
-  static final int signatureIndex            = 1 + classIndex;
-  static final int holderIndex               = 1 + signatureIndex;
+  static final int signatureIndex          = 1 + classIndex;
+  static final int holderIndex             = 1 + signatureIndex;
   static final int numberOfPrimitiveFields = 1 + holderIndex;
 }

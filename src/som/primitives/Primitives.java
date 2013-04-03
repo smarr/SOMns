@@ -28,16 +28,15 @@ import som.vm.Universe;
 import som.vmobjects.Class;
 import som.vmobjects.Primitive;
 
-public abstract class Primitives
-{
+public abstract class Primitives {
+
   protected final Universe universe;
-  
+
   public Primitives(final Universe universe) {
-	  this.universe = universe;
+    this.universe = universe;
   }
-  
-  public final void installPrimitivesIn(Class value)
-  {
+
+  public final void installPrimitivesIn(Class value) {
     // Save a reference to the holder class
     holder = value;
 
@@ -47,15 +46,15 @@ public abstract class Primitives
 
   public abstract void installPrimitives();
 
-  protected void installInstancePrimitive(Primitive primitive)
-  {
-    // Install the given primitive as an instance primitive in the holder class
+  protected void installInstancePrimitive(Primitive primitive) {
+    // Install the given primitive as an instance primitive in the holder
+    // class
     holder.addInstancePrimitive(primitive);
   }
 
-  protected void installClassPrimitive(Primitive primitive)
-  {
-    // Install the given primitive as an instance primitive in the class of the holder class
+  protected void installClassPrimitive(Primitive primitive) {
+    // Install the given primitive as an instance primitive in the class of
+    // the holder class
     holder.getSOMClass().addInstancePrimitive(primitive);
   }
 

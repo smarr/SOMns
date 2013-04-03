@@ -31,48 +31,40 @@ import som.vmobjects.Object;
 import som.vmobjects.Primitive;
 import som.interpreter.Interpreter;
 
-public class ObjectPrimitives extends Primitives 
-{   
-	public ObjectPrimitives(final Universe universe) {
-		super(universe);
-	}
-	
-  public void installPrimitives()
-  {
-    installInstancePrimitive
-      (new Primitive("==", universe)
-        {
-          public void invoke(Frame frame, final Interpreter interpreter)
-          {
-            Object op1 = frame.pop();
-            Object op2 = frame.pop();
-            if (op1 == op2)
-              frame.push(universe.trueObject);
-            else
-              frame.push(universe.falseObject);
-          }
-        }
-       );
-    installInstancePrimitive
-      (new Primitive("hashcode", universe)
-	{
-	  public void invoke(Frame frame, final Interpreter interpreter)
-	  {
-	    Object self = frame.pop();
-	    frame.push(universe.newInteger(self.hashCode()));
-	  }
-	}
-       );
-    installInstancePrimitive(
-            new Primitive("objectSize", universe) {
-                public void invoke(Frame frame, final Interpreter interpreter) {
-                    Object self = frame.pop();
-                    int size = self.getNumberOfFields();
-                    if(self instanceof Array)
-                        size += ((Array)self).getNumberOfIndexableFields();
-                    frame.push(universe.newInteger(size));
-                }
-            }
-        );
+public class ObjectPrimitives extends Primitives {
+
+  public ObjectPrimitives(final Universe universe) {
+    super(universe);
+  }
+
+  public void installPrimitives() {
+    installInstancePrimitive(new Primitive("==", universe) {
+
+      public void invoke(Frame frame, final Interpreter interpreter) {
+        Object op1 = frame.pop();
+        Object op2 = frame.pop();
+        if (op1 == op2)
+          frame.push(universe.trueObject);
+        else
+          frame.push(universe.falseObject);
+      }
+    });
+    installInstancePrimitive(new Primitive("hashcode", universe) {
+
+      public void invoke(Frame frame, final Interpreter interpreter) {
+        Object self = frame.pop();
+        frame.push(universe.newInteger(self.hashCode()));
+      }
+    });
+    installInstancePrimitive(new Primitive("objectSize", universe) {
+
+      public void invoke(Frame frame, final Interpreter interpreter) {
+        Object self = frame.pop();
+        int size = self.getNumberOfFields();
+        if (self instanceof Array)
+          size += ((Array) self).getNumberOfIndexableFields();
+        frame.push(universe.newInteger(size));
+      }
+    });
   }
 }

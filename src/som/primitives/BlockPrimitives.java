@@ -30,22 +30,18 @@ import som.vmobjects.Frame;
 import som.vmobjects.Primitive;
 
 public class BlockPrimitives extends Primitives {
-    
-	public BlockPrimitives(final Universe universe) {
-		super(universe);
-	}
-	
-  public void installPrimitives() 
-  {
-      installInstancePrimitive
-        (new Primitive("restart", universe)
-          {
-            public void invoke(Frame frame, final Interpreter interpreter)
-            {
-              frame.setBytecodeIndex(0);
-              frame.resetStackPointer();
-            }
-          }
-        );
+
+  public BlockPrimitives(final Universe universe) {
+    super(universe);
+  }
+
+  public void installPrimitives() {
+    installInstancePrimitive(new Primitive("restart", universe) {
+
+      public void invoke(Frame frame, final Interpreter interpreter) {
+        frame.setBytecodeIndex(0);
+        frame.resetStackPointer();
+      }
+    });
   }
 }

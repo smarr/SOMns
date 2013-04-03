@@ -24,64 +24,58 @@
 
 package som.vmobjects;
 
-public class Symbol extends Object
-{
-	public Symbol(final Object nilObject) {
-		super(nilObject);
-	}
-	
-  public java.lang.String getString()
-  {
+public class Symbol extends Object {
+
+  public Symbol(final Object nilObject) {
+    super(nilObject);
+  }
+
+  public java.lang.String getString() {
     // Get the string associated to this symbol
     return string;
   }
 
-  public void setString(java.lang.String value)
-  {
+  public void setString(java.lang.String value) {
     // Set the string associated to this symbol
     string = value;
     determineNumberOfSignatureArguments();
   }
-  
+
   private void determineNumberOfSignatureArguments() {
-      // Check for binary signature
-      if (isBinarySignature())
-          numberOfSignatureArguments = 2;
-      else {
-          // Count the colons in the signature string
-          int numberOfColons = 0;
-          
-          // Iterate through every character in the signature string
-          for(char c : string.toCharArray())
-              if(c == ':')
-                  numberOfColons++;
-          
-          // The number of arguments is equal to the number of colons plus one
-          numberOfSignatureArguments = numberOfColons + 1;
-      }
+    // Check for binary signature
+    if (isBinarySignature())
+      numberOfSignatureArguments = 2;
+    else {
+      // Count the colons in the signature string
+      int numberOfColons = 0;
+
+      // Iterate through every character in the signature string
+      for (char c : string.toCharArray())
+        if (c == ':') numberOfColons++;
+
+      // The number of arguments is equal to the number of colons plus one
+      numberOfSignatureArguments = numberOfColons + 1;
+    }
   }
 
-public java.lang.String toString() {
-	  return string;
-  }
-  
-  public int getNumberOfSignatureArguments()
-  {
-      return numberOfSignatureArguments;
+  public java.lang.String toString() {
+    return string;
   }
 
-public boolean isBinarySignature()
-  {
+  public int getNumberOfSignatureArguments() {
+    return numberOfSignatureArguments;
+  }
+
+  public boolean isBinarySignature() {
     // Check the individual characters of the string
-    for(char c : string.toCharArray())
-      if (c != '~' && c != '&' && c != '|' && c != '*' &&
-          c != '/' && c != '@' && c != '+' && c != '-' &&
-          c != '=' && c != '>' && c != '<' && c != ',' &&
-          c != '%' && c != '\\') return false;
+    for (char c : string.toCharArray())
+      if (c != '~' && c != '&' && c != '|' && c != '*' && c != '/' && c != '@'
+          && c != '+' && c != '-' && c != '=' && c != '>' && c != '<'
+          && c != ',' && c != '%' && c != '\\') return false;
     return true;
   }
 
-// Private variable holding the string associated to this symbol
+  // Private variable holding the string associated to this symbol
   private java.lang.String string;
-  private int numberOfSignatureArguments;
+  private int              numberOfSignatureArguments;
 }

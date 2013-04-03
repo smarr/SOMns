@@ -24,24 +24,22 @@
 
 package som.vmobjects;
 
-public class BigInteger extends Object
-{
-	public BigInteger(final Object nilObject) {
-		super(nilObject);
-	}
-	
-    public java.math.BigInteger getEmbeddedBiginteger()
-    {
-	// Get the embedded big integer
-	return embeddedBiginteger;
-    }
-    
-    public void setEmbeddedBiginteger(java.math.BigInteger value)
-    {
-	// Set the embedded big integer to the given value
-	embeddedBiginteger = value;
-    }
-  
-    // Private variable holding the embedded big integer
-    private java.math.BigInteger embeddedBiginteger;
+public class BigInteger extends Object {
+
+  public BigInteger(final Object nilObject) {
+    super(nilObject);
+  }
+
+  public java.math.BigInteger getEmbeddedBiginteger() {
+    // Get the embedded big integer
+    return embeddedBiginteger;
+  }
+
+  public void setEmbeddedBiginteger(java.math.BigInteger value) {
+    // Set the embedded big integer to the given value
+    embeddedBiginteger = value;
+  }
+
+  // Private variable holding the embedded big integer
+  private java.math.BigInteger embeddedBiginteger;
 }

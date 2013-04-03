@@ -31,56 +31,63 @@ import java.io.StringReader;
 import som.vm.Universe;
 
 public class SourcecodeCompiler {
-    
-    private Parser parser;
-    
-    public static som.vmobjects.Class compileClass(String path,
-    		String file, som.vmobjects.Class systemClass,
-    		final Universe universe) throws IOException {
-        return new SourcecodeCompiler().compile(path, file, systemClass, universe);
-    }
-    
-    public static som.vmobjects.Class compileClass(String stmt, som.vmobjects.Class systemClass, final Universe universe) {
-        return new SourcecodeCompiler().compileClassString(stmt, systemClass, universe);
-    }
 
-    private som.vmobjects.Class compile(String path, String file, som.vmobjects.Class systemClass, final Universe universe) throws IOException {
-        som.vmobjects.Class result = systemClass;
+  private Parser parser;
 
-        String fname = path + Universe.fileSeparator + file + ".som";
-        
-        parser = new Parser(new FileReader(fname), universe);
-        
-        result = compile(systemClass, universe);
+  public static som.vmobjects.Class compileClass(String path, String file,
+      som.vmobjects.Class systemClass, final Universe universe)
+      throws IOException {
+    return new SourcecodeCompiler().compile(path, file, systemClass, universe);
+  }
 
-        som.vmobjects.Symbol cname = result.getName();
-        String cnameC = cname.getString();
+  public static som.vmobjects.Class compileClass(String stmt,
+      som.vmobjects.Class systemClass, final Universe universe) {
+    return new SourcecodeCompiler().compileClassString(stmt, systemClass,
+        universe);
+  }
 
-        if(file != cnameC)
-            throw new IllegalStateException("File name " + file + " does not match class name " + cnameC);
+  private som.vmobjects.Class compile(String path, String file,
+      som.vmobjects.Class systemClass, final Universe universe)
+      throws IOException {
+    som.vmobjects.Class result = systemClass;
 
-        return result;
-    }
-    
-    private som.vmobjects.Class compileClassString(String stream, som.vmobjects.Class systemClass, final Universe universe) {
-        parser = new Parser(new StringReader(stream), universe);
-        
-        som.vmobjects.Class result = compile(systemClass, universe);
-        return result;
-    }
-    
-    private som.vmobjects.Class compile(som.vmobjects.Class systemClass, final Universe universe) {
-        ClassGenerationContext cgc = new ClassGenerationContext(universe);
+    String fname = path + Universe.fileSeparator + file + ".som";
 
-        som.vmobjects.Class result = systemClass;
-        parser.classdef(cgc);
+    parser = new Parser(new FileReader(fname), universe);
 
-        if(systemClass == null)
-            result = cgc.assemble();
-        else
-            cgc.assembleSystemClass(result);
-        
-        return result;
-    }
-    
+    result = compile(systemClass, universe);
+
+    som.vmobjects.Symbol cname = result.getName();
+    String cnameC = cname.getString();
+
+    if (file != cnameC)
+      throw new IllegalStateException("File name " + file
+          + " does not match class name " + cnameC);
+
+    return result;
+  }
+
+  private som.vmobjects.Class compileClassString(String stream,
+      som.vmobjects.Class systemClass, final Universe universe) {
+    parser = new Parser(new StringReader(stream), universe);
+
+    som.vmobjects.Class result = compile(systemClass, universe);
+    return result;
+  }
+
+  private som.vmobjects.Class compile(som.vmobjects.Class systemClass,
+      final Universe universe) {
+    ClassGenerationContext cgc = new ClassGenerationContext(universe);
+
+    som.vmobjects.Class result = systemClass;
+    parser.classdef(cgc);
+
+    if (systemClass == null)
+      result = cgc.assemble();
+    else
+      cgc.assembleSystemClass(result);
+
+    return result;
+  }
+
 }

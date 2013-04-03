@@ -26,64 +26,60 @@ package som.vmobjects;
 
 import som.vm.Universe;
 
-public class Array extends Object
-{
-	public Array(final Object nilObject) {
-		super(nilObject);
-	}
-	
-  public Object getIndexableField(int index)
-  {
+public class Array extends Object {
+
+  public Array(final Object nilObject) {
+    super(nilObject);
+  }
+
+  public Object getIndexableField(int index) {
     // Get the indexable field with the given index
     return indexableFields[index];
   }
-  
-  public void setIndexableField(int index, Object value)
-  {
+
+  public void setIndexableField(int index, Object value) {
     // Set the indexable field with the given index to the given value
     indexableFields[index] = value;
   }
-  
-  public int getNumberOfIndexableFields()
-  {
+
+  public int getNumberOfIndexableFields() {
     // Get the number of indexable fields in this array
     return indexableFields.length;
   }
-  
-  public void setNumberOfIndexableFieldsAndClear(int value, final Object nilObject)
-  {
+
+  public void setNumberOfIndexableFieldsAndClear(int value,
+      final Object nilObject) {
     // Allocate a new array of indexable fields
     indexableFields = new Object[value];
-    
+
     // Clear each and every field by putting nil into them
     for (int i = 0; i < getNumberOfIndexableFields(); i++) {
       setIndexableField(i, nilObject);
     }
   }
-  
-  public Array copyAndExtendWith(Object value, final Universe universe)
-  {
-    // Allocate a new array which has one indexable field more than this array
+
+  public Array copyAndExtendWith(Object value, final Universe universe) {
+    // Allocate a new array which has one indexable field more than this
+    // array
     Array result = universe.newArray(getNumberOfIndexableFields() + 1);
-    
+
     // Copy the indexable fields from this array to the new array
     copyIndexableFieldsTo(result);
-    
+
     // Insert the given object as the last indexable field in the new array
     result.setIndexableField(getNumberOfIndexableFields(), value);
-    
+
     // Return the new array
     return result;
   }
-  
-  protected void copyIndexableFieldsTo(Array destination)
-  {
+
+  protected void copyIndexableFieldsTo(Array destination) {
     // Copy all indexable fields from this array to the destination array
     for (int i = 0; i < getNumberOfIndexableFields(); i++) {
       destination.setIndexableField(i, getIndexableField(i));
     }
   }
-  
+
   // Private array of indexable fields
   public Object[] indexableFields;
 }

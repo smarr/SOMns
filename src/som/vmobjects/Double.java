@@ -24,24 +24,22 @@
 
 package som.vmobjects;
 
-public class Double extends Object
-{
-	public Double(final Object nilObject) {
-		super(nilObject);
-	}
-	
-  public double getEmbeddedDouble()
-  {
+public class Double extends Object {
+
+  public Double(final Object nilObject) {
+    super(nilObject);
+  }
+
+  public double getEmbeddedDouble() {
     // Get the embedded double
     return embeddedDouble;
   }
-  
-  public void setEmbeddedDouble(double value)
-  {
+
+  public void setEmbeddedDouble(double value) {
     // Set the embedded double to the given value
     embeddedDouble = value;
   }
-  
+
   // Private variable holding the embedded double
   private double embeddedDouble;
 }

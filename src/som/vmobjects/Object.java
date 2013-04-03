@@ -27,69 +27,60 @@ package som.vmobjects;
 import som.interpreter.Interpreter;
 import som.vm.Universe;
 
-public class Object
-{
-  public Object(final Object nilObject)
-  {
+public class Object {
+
+  public Object(final Object nilObject) {
     // Set the number of fields to the default value
     setNumberOfFieldsAndClear(getDefaultNumberOfFields(), nilObject);
   }
-  
-  public Object(int numberOfFields, final Object nilObject)
-  {
+
+  public Object(int numberOfFields, final Object nilObject) {
     // Set the number of fields to the given value
     setNumberOfFieldsAndClear(numberOfFields, nilObject);
   }
-  
-  public Class getSOMClass()
-  {
+
+  public Class getSOMClass() {
     // Get the class of this object by reading the field with class index
     return (Class) getField(classIndex);
   }
 
-  public void setClass(Class value)
-  {
+  public void setClass(Class value) {
     // Set the class of this object by writing to the field with class index
     setField(classIndex, value);
   }
-  
-  public Symbol getFieldName(int index)
-  {
+
+  public Symbol getFieldName(int index) {
     // Get the name of the field with the given index
     return getSOMClass().getInstanceFieldName(index);
   }
-  
-  public int getFieldIndex(Symbol name)
-  {
+
+  public int getFieldIndex(Symbol name) {
     // Get the index for the field with the given name
     return getSOMClass().lookupFieldIndex(name);
   }
-  
-  public int getNumberOfFields()
-  {
+
+  public int getNumberOfFields() {
     // Get the number of fields in this object
     return fields.length;
   }
-  
-  public void setNumberOfFieldsAndClear(int value, final Object nilObject)
-  {
+
+  public void setNumberOfFieldsAndClear(int value, final Object nilObject) {
     // Allocate a new array of fields
     fields = new Object[value];
-    
+
     // Clear each and every field by putting nil into them
     for (int i = 0; i < getNumberOfFields(); i++) {
       setField(i, nilObject);
     }
   }
-  
-  public int getDefaultNumberOfFields()
-  {
+
+  public int getDefaultNumberOfFields() {
     // Return the default number of fields in an object
     return numberOfObjectFields;
   }
 
-  public void send(java.lang.String selectorString, Object[] arguments, final Universe universe, final Interpreter interpreter) 
-  {
+  public void send(java.lang.String selectorString, Object[] arguments,
+      final Universe universe, final Interpreter interpreter) {
     // Turn the selector string into a selector
     Symbol selector = universe.symbolFor(selectorString);
 
@@ -97,33 +88,30 @@ public class Object
     interpreter.getFrame().push(this);
 
     // Push the arguments onto the stack
-    for(Object arg : arguments)
-        interpreter.getFrame().push(arg);
-    
-    // Lookup the invokable 
+    for (Object arg : arguments)
+      interpreter.getFrame().push(arg);
+
+    // Lookup the invokable
     Invokable invokable = getSOMClass().lookupInvokable(selector);
 
     // Invoke the invokable
     invokable.invoke(interpreter.getFrame(), interpreter);
   }
 
-  public Object getField(int index)
-  {
+  public Object getField(int index) {
     // Get the field with the given index
     return fields[index];
   }
 
-  public void setField(int index, Object value)
-  {
+  public void setField(int index, Object value) {
     // Set the field with the given index to the given value
     fields[index] = value;
   }
-  
+
   // Private array of fields
   private Object[] fields;
-  
+
   // Static field indices and number of object fields
-  static final int classIndex             = 0;
+  static final int classIndex           = 0;
   static final int numberOfObjectFields = 1 + classIndex;
 }
-
