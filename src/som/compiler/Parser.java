@@ -583,28 +583,34 @@ public class Parser {
   }
 
   private void literalNumber(MethodGenerationContext mgenc) {
-    int val;
+    long val;
     if (sym == Minus)
       val = negativeDecimal();
     else
       val = literalDecimal();
 
-    som.vmobjects.Integer lit = universe.newInteger(val);
+    som.vmobjects.Object lit;
+    if (val < java.lang.Integer.MIN_VALUE || val > java.lang.Integer.MAX_VALUE) {
+      lit = universe.newBigInteger(val);
+    }
+    else {
+      lit = universe.newInteger((int)val);
+    }
     mgenc.addLiteralIfAbsent(lit);
     bcGen.emitPUSHCONSTANT(mgenc, lit);
   }
 
-  private int literalDecimal() {
+  private long literalDecimal() {
     return literalInteger();
   }
 
-  private int negativeDecimal() {
+  private long negativeDecimal() {
     expect(Minus);
     return -literalInteger();
   }
 
-  private int literalInteger() {
-    int i = java.lang.Integer.parseInt(text);
+  private long literalInteger() {
+    long i = java.lang.Long.parseLong(text);
     expect(Integer);
     return i;
   }

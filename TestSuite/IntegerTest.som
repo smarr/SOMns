@@ -27,14 +27,186 @@ THE SOFTWARE.
 
 IntegerTest = (
 
-    run: harness = (
+	| harness |
+
+	"If 'what' is false, call the fail-method of the TestHarness"
+	assert: something actual: is expected: was = (
+		(is = was)
+			ifFalse: [
+				harness fail: self 
+				because: (something+' failed. Expected: '+was+', but Actual: '+is) ].
+	)
+	
+	shouldBe: something actual: is expected: was = (
+		(is = was)
+			ifFalse: [
+				harness warn: self 
+				because: (something+' failed. Expected: '+was+', but Actual: '+is) ].
+	)
+
+	"For instant test calls"
+    run = ( 
+		'Testing...' println.
+		self run: (TestHarness new).
+		'...done' println
+    )
+
+    "The 'run' method is called by the testing harness with the harness as its
+     argument"
+    run: pHarness = ( 
+
+		harness := pHarness.
+
+		self classTest.
+		self assignmentTest.
+		self stringTest.
+		self rangeBorderTest.
+		self comparisonTest.
+		self additionTest.
+		self subtractionTest.
+		self multiplicationTest.
+		self divisionTest.
+		self doubleTest.
+		self moduloTest.
+		self absoluteValueTest.
+		self negatedTest.
+		self squareRootTest.
+		self andTest.
+		self equalityAndIdentityTest.
+	)
+
+	equalityAndIdentityTest = (
         | a b |
         a := 42.
         b := 42.
-        a = b ifFalse: [
-            harness fail: self because: '42 and 42 are not equal' ].
-        a == b ifFalse: [
-            harness fail: self because: '42 and 42 are not identical' ]
+        
+        self assert: 'Equality' actual: (a = b) expected: true.
+
+		self shouldBe: 'Identity' actual: (a == b) expected: true.
+        self shouldBe: 'Identity' actual: (1073741823 == 1073741823) expected: true.
+        self shouldBe: 'Identity' actual: (1073741824 == 1073741824) expected: false.
     )
     
+	classTest = (						
+		self assert: 'Class' actual: (-42 class) expected: Integer.
+		self assert: 'Class' actual: (  0 class) expected: Integer.
+		self assert: 'Class' actual: ( 23 class) expected: Integer.
+		self assert: 'Class' actual: ( 1073741823 class) expected: Integer.
+		self assert: 'Class' actual: ( 1073741824 class) expected: Integer.
+)
+
+	assignmentTest = (	| a |
+		a := 42.  self assert: 'Assignment' actual: a expected: 42.
+		a := 0.   self assert: 'Assignment' actual: a expected: 0.
+		a := -34. self assert: 'Assignment' actual: a expected: -34.
+	)
+			
+	stringTest = (
+		self assert: 'As String' actual: (0 	asString) expected: '0'.
+		self assert: 'As String' actual: (1 	asString) expected: '1'.
+		self assert: 'As String' actual: (2 	asString) expected: '2'.
+		self assert: 'As String' actual: (-1 asString) expected: '-1'.
+		self assert: 'As String' actual: (-2 asString) expected: '-2'.
+	)
+			
+	rangeBorderTest = (
+		self assert: 'Range Border' actual: ( 536870911  asString) expected: '536870911'.
+		self assert: 'Range Border' actual: ( 536870912  asString) expected: '536870912'.
+		self assert: 'Range Border' actual: ( 536870913  asString) expected: '536870913'.
+		self assert: 'Range Border' actual: (1073741823  asString) expected: '1073741823'.
+		self assert: 'Range Border' actual: (1073741824  asString) expected: '1073741824'.
+		self assert: 'Range Border' actual: (1073741825  asString) expected: '1073741825'.
+		self assert: 'Range Border' actual: (2147483647  asString) expected: '2147483647'.
+		self assert: 'Range Border' actual: ( -536870911 asString) expected: '-536870911'.
+		self assert: 'Range Border' actual: ( -536870912 asString) expected: '-536870912'.
+		self assert: 'Range Border' actual: ( -536870913 asString) expected: '-536870913'.
+		self assert: 'Range Border' actual: (-1073741823 asString) expected: '-1073741823'.
+		self assert: 'Range Border' actual: (-1073741824 asString) expected: '-1073741824'.
+		self assert: 'Range Border' actual: (-1073741825 asString) expected: '-1073741825'.
+		self assert: 'Range Border' actual: (-2147483647 asString) expected: '-2147483647'.
+		self assert: 'Range Border' actual: (-2147483648 asString) expected: '-2147483648'.
+	)
+			
+	comparisonTest = (
+		self assert: 'Comparison ='  actual: (9=9)  expected: true.
+		self assert: 'Comparison ='  actual: (1=2)  expected: false.
+		self assert: 'Comparison <'  actual: (0<0)  expected: false.
+		self assert: 'Comparison <'  actual: (1<2)  expected: true.
+		self assert: 'Comparison <'  actual: (2<1)  expected: false.
+		self assert: 'Comparison <'  actual: (-3<2) expected: true.
+		self assert: 'Comparison <'  actual: (3< -2) expected: false.
+		self assert: 'Comparison >'  actual: (0>0)  expected: false.
+		self assert: 'Comparison >'  actual: (1>2)  expected: false.
+		self assert: 'Comparison >'  actual: (2>1)  expected: true.
+		self assert: 'Comparison >'  actual: (-3>2) expected: false.
+		self assert: 'Comparison >'  actual: (3> -2) expected: true.
+		self assert: 'Comparison >=' actual: (4>=3) expected: true.
+		self assert: 'Comparison >=' actual: (3>=3) expected: true.
+		self assert: 'Comparison >=' actual: (2>=3) expected: false.
+		self assert: 'Comparison <=' actual: (2<=4) expected: true.
+		self assert: 'Comparison <=' actual: (3<=3) expected: true.
+		self assert: 'Comparison <=' actual: (4<=3) expected: false.
+	)
+
+	additionTest = (
+		self assert: 'Addition' actual: (0+0)  expected: 0.
+		self assert: 'Addition' actual: (1+0)  expected: 1.
+		self assert: 'Addition' actual: (0+1)  expected: 1.
+		self assert: 'Addition' actual: (1+1)  expected: 2.
+		self assert: 'Addition' actual: (-1+1) expected: 0.
+		self assert: 'Addition' actual: (-1+2) expected: 1.
+	)
+
+	subtractionTest = (
+		self assert: 'Subtraction' actual: (1-0) expected: 1.
+		self assert: 'Subtraction' actual: (0-1) expected: -1.
+		self assert: 'Subtraction' actual: (2-1) expected: 1.
+	)
+
+	multiplicationTest = (
+		self assert: 'Multiplication' actual: (1*0)   expected: 0.						
+		self assert: 'Multiplication' actual: (-1*1)  expected: -1.						
+		self assert: 'Multiplication' actual: (5* -5)  expected: -25.						
+		self assert: 'Multiplication' actual: (-3* -4) expected: 12.	
+	)
+
+	divisionTest = (
+		self assert: 'Division' actual: (1/1) 	 expected: 1.						
+		self assert: 'Division' actual: (3/2) 	 expected: 1.	
+		self assert: 'Division' actual: (4/ -2) 	 expected: -2.		
+		self assert: 'Division' actual: (-6/3) 	 expected: -2.		
+		self assert: 'Division' actual: (-12/ -4) expected: 3.		
+	)
+
+	doubleTest = (
+		self assert: 'Comparison With Double' actual: (36//6)  expected: 6.
+		self assert: 'Comparison With Double' actual: (-10//2) expected: -5.
+		self assert: 'Comparison With Double' actual: (20// -5) expected: -4.
+		self assert: 'Comparison With Double' actual: (-5// -5) expected: 1.
+	)
+			
+	moduloTest = (
+		self assert: 'Modulo' actual: (10%3) expected: 1. 
+		self assert: 'Modulo' actual: (10% -3) expected: -2.
+	)
+
+	absoluteValueTest = (
+		self assert: 'Absolute Value' actual: (-4 abs) expected: 4.
+		self assert: 'Absolute Value' actual: (4 abs)  expected: 4.
+	)
+
+	negatedTest = (
+		self assert: 'Negated' actual: (23  negated) expected: -23.
+		self assert: 'Negated' actual: (-23 negated) expected: 23.
+	)
+
+	squareRootTest = (
+		self assert: 'SquareRoot' actual: (25 sqrt) expected: 5.
+		self shouldBe: 'SquareRoot' actual: (25 sqrt class) expected: Integer.
+	)
+
+	andTest = (
+		self assert: 'AND' actual: (2 & 1) expected: 0.
+		self assert: 'AND' actual: (2 & 2) expected: 2.
+	)
 )

@@ -42,7 +42,7 @@ System = (
          otherwise, #run is sent."
         application := (self resolve: (arguments at: 1) asSymbol) new.
         
-        (arguments length > 1) && (application class hasMethod: #run:)
+        (arguments length > 1) && (application respondsTo: #run:)
             ifTrue:  [ application run: arguments ]
             ifFalse: [ application run ]
     )
@@ -80,7 +80,7 @@ System = (
     
     "Time"
     time  = primitive
-    ticks = primitive
+    ticks = primitive      "returns the microseconds since start"
     
     "Force Garbage Collection"
     fullGC = primitive

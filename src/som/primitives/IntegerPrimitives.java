@@ -245,8 +245,14 @@ public class IntegerPrimitives extends Primitives {
           // Do operation:
           Integer right = (Integer) rightObj;
 
-          long result = ((long) left.getEmbeddedInteger())
-              % right.getEmbeddedInteger();
+          long l = (long) left.getEmbeddedInteger();
+          long r = (long) right.getEmbeddedInteger();
+          long result = l % r;
+          
+          if (l > 0 && r < 0) {
+            result += r;
+          }
+          
           pushLongResult(frame, result);
         }
       }

@@ -31,4 +31,9 @@ Nil = (
     "Comparing"
     isNil    = ( ^true )
     
+    "Convenience"
+    ifNil: aBlock = (^aBlock value)
+    ifNotNil: aBlock = (^self)
+    ifNil: goBlock ifNotNil: noGoBlock = (^goBlock value)
+    
 )

@@ -25,20 +25,20 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 "
 
-ArrayTest = (
+VectorTest = (
     run: harness = (
         
         | a j |
-        a := Array new: 3.
-        a at: 1 put: 'hello'.
-        a at: 2 put: #world.
-        a at: 3 put: 23.
+        a := Vector new.
+        a append: 'hello'.
+        a append: #world.
+        a append: 23.
         
-        
-        a length = 3 ifFalse: [
+
+        a size = 3 ifFalse: [
             harness
                 fail: self
-                because: 'Error in array length (should be 3).' ].
+                because: 'Error in Vector size (should be 3).' ].
         (a at: 2) = #world ifFalse: [
             harness
                 fail: self
@@ -51,7 +51,7 @@ ArrayTest = (
             harness
                 fail: self
                 because: 'Containment check for 23 should be true.' ].
-                
+
 		"Test #do:"
 		j := 1.
         a do: [:i | 

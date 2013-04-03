@@ -27,11 +27,32 @@ Set = (
 
     | items |
     
+    = otherSet = (
+        self size = otherSet size ifFalse: [^ false ].
+        
+        self do: [:item | (otherSet contains: item) ifFalse: [^ false]. ].
+        
+        ^ true.
+    )
+    
     add: anObject = (
         (self contains: anObject)
             ifFalse: [ items append: anObject ]
     )
     
+    addAll: aCollection = (
+        aCollection do: [:each |
+            self add: each]
+    )
+    
+    union: aCollection = (
+        | new |
+        new := Set new.
+        new addAll: self.
+        new addAll: aCollection.
+        ^ new
+    )
+        
     contains: anObject = (
         items do: [ :it | it == anObject ifTrue: [ ^true ] ].
         ^false
@@ -47,6 +68,14 @@ Set = (
         items := newItems
     )
     
+    first = (
+        ^items at: 1
+    )
+    
+    isEmpty = (
+               ^items isEmpty
+    )
+    
     "Iteration"
     do: block = ( items do: block )
     
@@ -55,6 +84,10 @@ Set = (
         '(' print.
         self do: [ :it | '(' print. it print. ')' print ].
         ')' println
+    )
+    
+    size = (
+        ^ items size
     )
     
     "Private"

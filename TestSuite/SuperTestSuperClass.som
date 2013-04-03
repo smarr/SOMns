@@ -31,5 +31,8 @@ SuperTestSuperClass = (
         ^42
     )
     
+    something = (
+        ^ #super
+    )
 )
 

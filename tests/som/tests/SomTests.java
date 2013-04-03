@@ -19,6 +19,7 @@ public class SomTests {
     return Arrays.asList(new Object[][] {
         { "Array" },
         { "BigInteger" },
+        { "Block" },
         { "ClassLoading" },
         { "Closure" },
         { "Coercion" },
@@ -32,7 +33,8 @@ public class SomTests {
         { "Reflection" },
         { "SelfBlock" },
         { "Super" },
-        { "Symbol" }
+        { "Symbol" },
+        { "Vector" }
       });
   }
 
