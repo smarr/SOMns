@@ -1,0 +1,5 @@
+<factorypath>
+    <factorypathentry kind="WKSPJAR" id="/com.oracle.truffle.api/com.oracle.truffle.api.jar" enabled="true" runInBatchMode="false"/>
+    <factorypathentry kind="WKSPJAR" id="/com.oracle.truffle.api.codegen/com.oracle.truffle.api.codegen.jar" enabled="true" runInBatchMode="false"/>
+    <factorypathentry kind="WKSPJAR" id="/com.oracle.truffle.codegen.processor/com.oracle.truffle.codegen.processor.jar" enabled="true" runInBatchMode="false"/>
+</factorypath>
