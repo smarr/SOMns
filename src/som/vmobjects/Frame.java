@@ -36,6 +36,8 @@ package som.vmobjects;
  * | ...             |
  * +-----------------+
  */
+
+/** REMOVED FOR TRUFFLE
 public class Frame extends Array {
 
   public Frame(final Object nilObject) {
@@ -246,3 +248,4 @@ public class Frame extends Array {
   static final int methodIndex         = 1 + contextIndex;
   static final int numberOfFrameFields = 1 + methodIndex;
 }
+*/

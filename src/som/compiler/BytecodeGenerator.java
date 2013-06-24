@@ -24,6 +24,7 @@
 
 package som.compiler;
 
+/** REMOVED FOR TRUFFLE
 import static som.interpreter.Bytecodes.dup;
 import static som.interpreter.Bytecodes.pop;
 import static som.interpreter.Bytecodes.pop_argument;
@@ -122,3 +123,4 @@ public class BytecodeGenerator {
   }
 
 }
+*/

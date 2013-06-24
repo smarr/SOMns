@@ -24,6 +24,7 @@
 
 package som.interpreter;
 
+/** REMOVED FOR TRUFFLE
 public class Bytecodes {
 
   // Bytecodes used by the simple object machine
@@ -83,3 +84,4 @@ public class Bytecodes {
   }
 
 }
+*/

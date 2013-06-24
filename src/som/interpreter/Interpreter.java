@@ -24,16 +24,8 @@
 
 package som.interpreter;
 
-import som.vm.Universe;
-import som.vmobjects.Array;
-import som.vmobjects.Block;
-import som.vmobjects.Class;
-import som.vmobjects.Frame;
-import som.vmobjects.Invokable;
-import som.vmobjects.Method;
-import som.vmobjects.Object;
-import som.vmobjects.Symbol;
 
+/** REMOVED FOR TRUFFLE
 public class Interpreter {
 
   private final Universe universe;
@@ -420,4 +412,4 @@ public class Interpreter {
   }
 
   private Frame frame;
-}
+} */
