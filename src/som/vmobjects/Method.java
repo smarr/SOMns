@@ -24,19 +24,33 @@
 
 package som.vmobjects;
 
-import som.interpreter.Bytecodes;
-import som.interpreter.Interpreter;
+import som.interpreter.nodes.Arguments;
+
+import com.oracle.truffle.api.CallTarget;
+import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.TruffleRuntime;
+import com.oracle.truffle.api.frame.FrameDescriptor;
+import com.oracle.truffle.api.frame.VirtualFrame;
 
 public class Method extends Array implements Invokable {
 
-  public Method(final Object nilObject) {
+  public Method(final Object nilObject,
+      final som.interpreter.nodes.Method truffleInvokable,
+      final FrameDescriptor frameDescriptor) {
     super(nilObject);
+    this.truffleInvokable = truffleInvokable;
+    this.frameDescriptor  = frameDescriptor;
   }
-
+  
+  public som.interpreter.nodes.Method getTruffleInvokable() {
+    return truffleInvokable;
+  }
+  
   public boolean isPrimitive() {
     return false;
   }
 
+  /** REMOVED FOR TRUFFLE
   public Integer getNumberOfLocals() {
     // Get the number of locals (converted to a Java integer)
     return (Integer) getField(numberOfLocalsIndex);
@@ -56,7 +70,7 @@ public class Method extends Array implements Invokable {
   public void setMaximumNumberOfStackElements(Integer value) {
     // Set the maximum number of stack elements
     setField(maximumNumberOfStackElementsIndex, value);
-  }
+  } */
 
   public Symbol getSignature() {
     // Get the signature of this method by reading the field with signature
@@ -86,10 +100,11 @@ public class Method extends Array implements Invokable {
         ((Invokable) getIndexableField(i)).setHolder(value);
   }
 
+  /** REMOVED FOR TRUFFLE
   public Object getConstant(int bytecodeIndex) {
     // Get the constant associated to a given bytecode index
     return getIndexableField(getBytecode(bytecodeIndex + 1));
-  }
+  } */
 
   public int getNumberOfArguments() {
     // Get the number of arguments of this method
@@ -101,6 +116,7 @@ public class Method extends Array implements Invokable {
     return numberOfMethodFields;
   }
 
+  /** REMOVED FOR TRUFFLE
   public int getNumberOfBytecodes() {
     // Get the number of bytecodes in this method
     return bytecodes.length;
@@ -119,7 +135,7 @@ public class Method extends Array implements Invokable {
   public void setBytecode(int index, byte value) {
     // Set the bytecode at the given index to the given value
     bytecodes[index] = value;
-  }
+  } */
 
   public void increaseInvocationCounter() {
     invocationCount++;
@@ -129,14 +145,33 @@ public class Method extends Array implements Invokable {
     return invocationCount;
   }
 
-  public void invoke(Frame frame, final Interpreter interpreter) {
+  public Object invokeRoot(final Object self, final Object[] args) {
     // Increase the invocation counter
     invocationCount++;
-    // Allocate and push a new frame on the interpreter stack
-    Frame newFrame = interpreter.pushNewFrame(this);
-    newFrame.copyArgumentsFrom(frame);
+    
+    TruffleRuntime runtime =  Truffle.getRuntime(); // TODO: should be: universe.getTruffleRuntime();
+    
+    CallTarget target = runtime.createCallTarget(truffleInvokable, frameDescriptor);
+    Object result = (Object) target.call(new Arguments(self, args));
+    
+    return result;
+  }
+  
+  public Object invoke(final VirtualFrame frame,
+      final Object self,
+      final Object[] args) {
+    // Increase the invocation counter
+    invocationCount++;
+
+    TruffleRuntime runtime =  Truffle.getRuntime(); // TODO: should be: universe.getTruffleRuntime();
+    
+    CallTarget target = runtime.createCallTarget(truffleInvokable, frameDescriptor);
+    Object result = (Object) target.call(frame.pack(), new Arguments(self, args));
+    
+    return result;
   }
 
+  /** REMOVED FOR TRUFFLE
   public void replaceBytecodes() {
     byte newbc[] = new byte[bytecodes.length];
     int idx = 0;
@@ -170,7 +205,7 @@ public class Method extends Array implements Invokable {
     for (int i = 0; i < idx; ++i) {
       bytecodes[i] = newbc[i];
     }
-  }
+  } */
 
   public Class getReceiverClass(byte index) {
     return receiverClassTable.get(index);
@@ -200,14 +235,14 @@ public class Method extends Array implements Invokable {
 
   // Private variable holding number of invocations and backedges
   private long                           invocationCount;
-
-  // Private variable holding byte array of bytecodes
-  private byte[]                         bytecodes;
+  
+  // Private variable holding Truffle Invokable
+  final private som.interpreter.nodes.Method truffleInvokable;
+  final private FrameDescriptor              frameDescriptor;
 
   // Static field indices and number of method fields
-  static final int                       numberOfLocalsIndex               = 1 + classIndex;
-  static final int                       maximumNumberOfStackElementsIndex = 1 + numberOfLocalsIndex;
-  static final int                       signatureIndex                    = 1 + maximumNumberOfStackElementsIndex;
+  static final int                       signatureIndex                    = 1 + classIndex;
   static final int                       holderIndex                       = 1 + signatureIndex;
   static final int                       numberOfMethodFields              = 1 + holderIndex;
+ 
 }

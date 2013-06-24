@@ -24,11 +24,20 @@
 
 package som.vmobjects;
 
-import som.interpreter.Interpreter;
+import com.oracle.truffle.api.CallTarget;
+import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.TruffleRuntime;
+import com.oracle.truffle.api.frame.FrameSlot;
+import com.oracle.truffle.api.frame.FrameSlotTypeException;
+import com.oracle.truffle.api.frame.VirtualFrame;
+
+import som.interpreter.nodes.Arguments;
 import som.vm.Universe;
 
 public class Block extends Object {
 
+  private VirtualFrame virtualFrame;
+  
   public Block(final Object nilObject) {
     super(nilObject);
   }
@@ -44,15 +53,13 @@ public class Block extends Object {
     setField(methodIndex, value);
   }
 
-  public Frame getContext() {
+  public VirtualFrame getContext() {
     // Get the context of this block by reading the field with context index
-    return (Frame) getField(contextIndex);
+    return virtualFrame;
   }
 
-  public void setContext(Frame value) {
-    // Set the context of this block by writing to the field with context
-    // index
-    setField(contextIndex, value);
+  public void setContext(VirtualFrame value) {
+    virtualFrame = value;
   }
 
   public int getDefaultNumberOfFields() {
@@ -69,21 +76,15 @@ public class Block extends Object {
 
     public Evaluation(int numberOfArguments, final Universe universe) {
       super(computeSignatureString(numberOfArguments), universe);
-      this.numberOfArguments = numberOfArguments;
+      // this.numberOfArguments = numberOfArguments;
     }
 
-    public void invoke(Frame frame, final Interpreter interpreter) {
-      // Get the block (the receiver) from the stack
-      Block self = (Block) frame.getStackElement(numberOfArguments - 1);
-
-      // Get the context of the block...
-      Frame context = self.getContext();
-
-      // Push a new frame and set its context to be the one specified in
-      // the block
-      Frame newFrame = interpreter.pushNewFrame(self.getMethod());
-      newFrame.copyArgumentsFrom(frame);
-      newFrame.setContext(context);
+    public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+      // Get the block (the receiver)
+      // TODO: check whether we need to find the outer context or so...
+      Block self = (Block) selfO;
+            
+      return self.getMethod().invoke(frame, selfO, args);
     }
 
     private static java.lang.String computeSignatureString(int numberOfArguments) {
@@ -99,7 +100,7 @@ public class Block extends Object {
       return signatureString;
     }
 
-    private int numberOfArguments;
+    // private int numberOfArguments;
   }
 
   // Static field indices and number of block fields

@@ -24,8 +24,9 @@
 
 package som.vmobjects;
 
+import com.oracle.truffle.api.frame.VirtualFrame;
+
 import som.vm.Universe;
-import som.interpreter.Interpreter;
 
 public abstract class Primitive extends Object implements Invokable {
 
@@ -79,10 +80,13 @@ public abstract class Primitive extends Object implements Invokable {
     // Return an empty primitive with the given signature
     return (new Primitive(signatureString, universe) {
 
-      public void invoke(Frame frame, final Interpreter interpreter) {
+      public Object invoke(final VirtualFrame frame,
+          final Object self,
+          final Object[] args) {
         // Write a warning to the screen
         System.out.println("Warning: undefined primitive "
             + this.getSignature().getString() + " called");
+        return null;
       }
 
       public boolean isEmpty() {
