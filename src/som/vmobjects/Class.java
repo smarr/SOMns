@@ -278,17 +278,6 @@ public class Class extends Object {
     }
   }
 
-  public void replaceBytecodes() {
-    int cnt = getNumberOfInstanceInvokables();
-    for (int index = 0; index < cnt; ++index) {
-      Invokable inv = getInstanceInvokable(index);
-      if (!inv.isPrimitive()) {
-        Method met = (Method) inv;
-        met.replaceBytecodes();
-      }
-    }
-  }
-
   // Mapping of symbols to invokables
   private java.util.HashMap<Symbol, Invokable> invokablesTable;
 
