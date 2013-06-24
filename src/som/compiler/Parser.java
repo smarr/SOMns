@@ -61,14 +61,28 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.oracle.truffle.api.frame.FrameSlot;
+
+import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.ReturnNode.ReturnNonLocalNode;
+import som.interpreter.nodes.SequenceNode;
+import som.interpreter.nodes.FieldNode.FieldReadNode;
+import som.interpreter.nodes.FieldNode.FieldWriteNode;
+import som.interpreter.nodes.GlobalNode.GlobalReadNode;
+import som.interpreter.nodes.LiteralNode;
+import som.interpreter.nodes.LiteralNode.BlockNode;
+import som.interpreter.nodes.MessageNode;
+import som.interpreter.nodes.VariableNode.SelfReadNode;
+import som.interpreter.nodes.VariableNode.SuperReadNode;
+import som.interpreter.nodes.VariableNode.VariableReadNode;
+import som.interpreter.nodes.VariableNode.VariableWriteNode;
+
 import som.vm.Universe;
 
 public class Parser {
 
   private final Universe            universe;
-
   private final Lexer               lexer;
-  private final BytecodeGenerator   bcGen;
 
   private Symbol                    sym;
   private String                    text;
@@ -94,7 +108,6 @@ public class Parser {
 
     sym = NONE;
     lexer = new Lexer(reader);
-    bcGen = new BytecodeGenerator();
     nextSym = NONE;
     GETSYM();
   }
@@ -119,12 +132,12 @@ public class Parser {
       mgenc.setHolder(cgenc);
       mgenc.addArgument("self");
 
-      method(mgenc);
+      SequenceNode methodBody = method(mgenc);
 
       if (mgenc.isPrimitive())
         cgenc.addInstanceMethod(mgenc.assemblePrimitive(universe));
       else
-        cgenc.addInstanceMethod(mgenc.assemble(universe));
+        cgenc.addInstanceMethod(mgenc.assemble(universe, methodBody));
     }
 
     if (accept(Separator)) {
@@ -136,12 +149,12 @@ public class Parser {
         mgenc.setHolder(cgenc);
         mgenc.addArgument("self");
 
-        method(mgenc);
+        SequenceNode methodBody = method(mgenc);
 
         if (mgenc.isPrimitive())
           cgenc.addClassMethod(mgenc.assemblePrimitive(universe));
         else
-          cgenc.addClassMethod(mgenc.assemble(universe));
+          cgenc.addClassMethod(mgenc.assemble(universe, methodBody));
       }
     }
     expect(EndTerm);
@@ -209,22 +222,23 @@ public class Parser {
     }
   }
 
-  private void method(MethodGenerationContext mgenc) {
+  private SequenceNode method(MethodGenerationContext mgenc) {
     pattern(mgenc);
     expect(Equal);
     if (sym == Primitive) {
       mgenc.setPrimitive(true);
       primitiveBlock();
+      return null;
     }
     else
-      methodBlock(mgenc);
+      return methodBlock(mgenc);
   }
 
   private void primitiveBlock() {
     expect(Primitive);
   }
 
-  private void pattern(MethodGenerationContext mgenc) {
+  private void pattern(final MethodGenerationContext mgenc) {
     switch (sym) {
       case Identifier:
         unaryPattern(mgenc);
@@ -238,16 +252,16 @@ public class Parser {
     }
   }
 
-  private void unaryPattern(MethodGenerationContext mgenc) {
+  private void unaryPattern(final MethodGenerationContext mgenc) {
     mgenc.setSignature(unarySelector());
   }
 
-  private void binaryPattern(MethodGenerationContext mgenc) {
+  private void binaryPattern(final MethodGenerationContext mgenc) {
     mgenc.setSignature(binarySelector());
     mgenc.addArgumentIfAbsent(argument());
   }
 
-  private void keywordPattern(MethodGenerationContext mgenc) {
+  private void keywordPattern(final MethodGenerationContext mgenc) {
     StringBuffer kw = new StringBuffer();
     do {
       kw.append(keyword());
@@ -258,21 +272,13 @@ public class Parser {
     mgenc.setSignature(universe.symbolFor(kw.toString()));
   }
 
-  private void methodBlock(MethodGenerationContext mgenc) {
+  private SequenceNode methodBlock(final MethodGenerationContext mgenc) {
     expect(NewTerm);
-    blockContents(mgenc);
-    // if no return has been generated so far, we can be sure there was no .
-    // terminating the last expression, so the last expression's value must
-    // be
-    // popped off the stack and a ^self be generated
-    if (!mgenc.isFinished()) {
-      bcGen.emitPOP(mgenc);
-      bcGen.emitPUSHARGUMENT(mgenc, (byte) 0, (byte) 0);
-      bcGen.emitRETURNLOCAL(mgenc);
-      mgenc.setFinished();
-    }
-
+    SequenceNode sequence = blockContents(mgenc);
+    // TODO: test whether we always have the right return value here, removed
+    //       code that made sure that self is returned. Had the feeling it was redundant.
     expect(EndTerm);
+    return sequence;
   }
 
   private som.vmobjects.Symbol unarySelector() {
@@ -321,145 +327,123 @@ public class Parser {
     return variable();
   }
 
-  private void blockContents(MethodGenerationContext mgenc) {
+  private SequenceNode blockContents(final MethodGenerationContext mgenc) {
     if (accept(Or)) {
       locals(mgenc);
       expect(Or);
     }
-    blockBody(mgenc, false);
+    return blockBody(mgenc);
   }
 
-  private void locals(MethodGenerationContext mgenc) {
+  private void locals(final MethodGenerationContext mgenc) {
     while (sym == Identifier)
       mgenc.addLocalIfAbsent(variable());
   }
 
-  private void blockBody(MethodGenerationContext mgenc, boolean seenPeriod) {
-    if (accept(Exit))
-      result(mgenc);
-    else if (sym == EndBlock) {
-      if (seenPeriod) {
-        // a POP has been generated which must be elided (blocks always
-        // return the value of the last expression, regardless of
-        // whether it
-        // was terminated with a . or not)
-        mgenc.removeLastBytecode();
+  private SequenceNode blockBody(final MethodGenerationContext mgenc) {
+    List<ExpressionNode> expressions = new ArrayList<ExpressionNode>();
+    
+    while (true) {
+      if (accept(Exit)) {
+        expressions.add(result(mgenc));
+        return new SequenceNode(expressions.toArray(new ExpressionNode[0]));
       }
-      bcGen.emitRETURNLOCAL(mgenc);
-      mgenc.setFinished();
-    }
-    else if (sym == EndTerm) {
-      // it does not matter whether a period has been seen, as the end of
-      // the
-      // method has been found (EndTerm) - so it is safe to emit a "return
-      // self"
-      bcGen.emitPUSHARGUMENT(mgenc, (byte) 0, (byte) 0);
-      bcGen.emitRETURNLOCAL(mgenc);
-      mgenc.setFinished();
-    }
-    else {
-      expression(mgenc);
-      if (accept(Period)) {
-        bcGen.emitPOP(mgenc);
-        blockBody(mgenc, true);
+      else if (sym == EndBlock) {
+        return new SequenceNode(expressions.toArray(new ExpressionNode[0]));
       }
+      else if (sym == EndTerm) {
+        // the end of the method has been found (EndTerm) - make it implicitly
+        // return "self"
+        expressions.add(new SelfReadNode(mgenc.getFrameSlot("self")));
+        return new SequenceNode(expressions.toArray(new ExpressionNode[0]));
+      }
+      
+      expressions.add(expression(mgenc));
+      accept(Period);
     }
   }
 
-  private void result(MethodGenerationContext mgenc) {
-    expression(mgenc);
+  private ExpressionNode result(MethodGenerationContext mgenc) {
+    ExpressionNode exp = expression(mgenc);
+    
+    accept(Period);
 
     if (mgenc.isBlockMethod())
-      bcGen.emitRETURNNONLOCAL(mgenc);
+      return new ReturnNonLocalNode(exp);
     else
-      bcGen.emitRETURNLOCAL(mgenc);
-
-    mgenc.setFinished(true);
-    accept(Period);
+      return exp; // TODO: figure out whether implicit return is sufficient, would think so, don't see why we would need a control-flow exception here.
   }
 
-  private void expression(MethodGenerationContext mgenc) {
+  private ExpressionNode expression(final MethodGenerationContext mgenc) {
     PEEK();
     if (nextSym == Assign)
-      assignation(mgenc);
+      return assignation(mgenc);
     else
-      evaluation(mgenc);
+      return evaluation(mgenc);
   }
 
-  private void assignation(MethodGenerationContext mgenc) {
-    List<String> l = new ArrayList<String>();
-
-    assignments(mgenc, l);
-    evaluation(mgenc);
-
-    for (int i = 1; i <= l.size(); i++)
-      bcGen.emitDUP(mgenc);
-    for (String s : l)
-      genPopVariable(mgenc, s);
+  private ExpressionNode assignation(final MethodGenerationContext mgenc) {
+    return assignments(mgenc);
   }
 
-  private void assignments(MethodGenerationContext mgenc, List<String> l) {
-    if (sym == Identifier) {
-      l.add(assignment(mgenc));
-      PEEK();
-      if (nextSym == Assign) assignments(mgenc, l);
+  private ExpressionNode assignments(final MethodGenerationContext mgenc) {
+    if (sym != Identifier)
+      throw new RuntimeException("This is every unexpected, assignments should always target variables or fields. But found instead a: " + sym.toString());
+    
+    String variable = assignment();
+      
+    PEEK();
+      
+    ExpressionNode value;
+    if (nextSym == Assign) {
+      value = assignments(mgenc);
+    } else {
+      value = evaluation(mgenc);
     }
+    
+    return variableWrite(mgenc, variable, value);
   }
 
-  private String assignment(MethodGenerationContext mgenc) {
+  private String assignment() {
     String v = variable();
-    som.vmobjects.Symbol var = universe.symbolFor(v);
-    mgenc.addLiteralIfAbsent(var);
 
     expect(Assign);
 
     return v;
   }
 
-  private void evaluation(MethodGenerationContext mgenc) {
-    // single: superSend
-    Single<Boolean> si = new Single<Boolean>(false);
-
-    primary(mgenc, si);
+  private ExpressionNode evaluation(final MethodGenerationContext mgenc) {
+    ExpressionNode exp = primary(mgenc);
     if (sym == Identifier || sym == Keyword || sym == OperatorSequence
         || symIn(binaryOpSyms)) {
-      messages(mgenc, si);
+      return messages(mgenc, exp);
     }
+    return exp;
   }
 
-  private void primary(MethodGenerationContext mgenc, Single<Boolean> superSend) {
-    superSend.set(false);
+  private ExpressionNode primary(final MethodGenerationContext mgenc) {
     switch (sym) {
       case Identifier: {
         String v = variable();
-        if (v.equals("super")) {
-          superSend.set(true);
-          // sends to super push self as the receiver
-          v = "self";
-        }
-
-        genPushVariable(mgenc, v);
-        break;
+        return variableRead(mgenc, v);
       }
-      case NewTerm:
-        nestedTerm(mgenc);
-        break;
+      case NewTerm: {
+        return nestedTerm(mgenc);
+      }
       case NewBlock: {
         MethodGenerationContext bgenc = new MethodGenerationContext();
         bgenc.setIsBlockMethod(true);
         bgenc.setHolder(mgenc.getHolder());
         bgenc.setOuter(mgenc);
 
-        nestedBlock(bgenc);
+        SequenceNode blockBody = nestedBlock(bgenc);
 
-        som.vmobjects.Method blockMethod = bgenc.assemble(universe);
-        mgenc.addLiteral(blockMethod);
-        bcGen.emitPUSHBLOCK(mgenc, blockMethod);
-        break;
+        som.vmobjects.Method blockMethod = bgenc.assemble(universe, blockBody);
+        return new BlockNode(blockMethod, universe);
       }
-      default:
-        literal(mgenc);
-        break;
+      default: {
+        return literal();
+      }
     }
   }
 
@@ -467,122 +451,106 @@ public class Parser {
     return identifier();
   }
 
-  private void messages(MethodGenerationContext mgenc, Single<Boolean> superSend) {
+  private MessageNode messages(final MethodGenerationContext mgenc,
+      final ExpressionNode receiver) {
+    MessageNode msg;
     if (sym == Identifier) {
-      do {
-        // only the first message in a sequence can be a super send
-        unaryMessage(mgenc, superSend);
-        superSend.set(false);
+      msg = unaryMessage(receiver);
+      
+      while (sym == Identifier) {
+        msg = unaryMessage(msg);
       }
-      while (sym == Identifier);
 
       while (sym == OperatorSequence || symIn(binaryOpSyms)) {
-        binaryMessage(mgenc, new Single<Boolean>(false));
+        msg = binaryMessage(mgenc, msg);
       }
 
       if (sym == Keyword) {
-        keywordMessage(mgenc, new Single<Boolean>(false));
+        msg = keywordMessage(mgenc, msg);
       }
     }
     else if (sym == OperatorSequence || symIn(binaryOpSyms)) {
-      do {
-        // only the first message in a sequence can be a super send
-        binaryMessage(mgenc, superSend);
-        superSend.set(false);
+      msg = binaryMessage(mgenc, receiver);
+      
+      while (sym == OperatorSequence || symIn(binaryOpSyms)) {
+        msg = binaryMessage(mgenc, msg);
       }
-      while (sym == OperatorSequence || symIn(binaryOpSyms));
 
       if (sym == Keyword) {
-        keywordMessage(mgenc, new Single<Boolean>(false));
+        msg = keywordMessage(mgenc, msg);
       }
     }
     else
-      keywordMessage(mgenc, superSend);
+      msg = keywordMessage(mgenc, receiver);
+    
+    return msg;
   }
 
-  private void unaryMessage(MethodGenerationContext mgenc,
-      Single<Boolean> superSend) {
-    som.vmobjects.Symbol msg = unarySelector();
-    mgenc.addLiteralIfAbsent(msg);
-
-    if (superSend.get())
-      bcGen.emitSUPERSEND(mgenc, msg);
-    else
-      bcGen.emitSEND(mgenc, msg);
+  private MessageNode unaryMessage(ExpressionNode receiver) {
+    som.vmobjects.Symbol selector = unarySelector();
+    return new MessageNode(receiver, null, selector, universe);
   }
 
-  private void binaryMessage(MethodGenerationContext mgenc,
-      Single<Boolean> superSend) {
+  private MessageNode binaryMessage(final MethodGenerationContext mgenc, ExpressionNode receiver) {
     som.vmobjects.Symbol msg = binarySelector();
-    mgenc.addLiteralIfAbsent(msg);
-
-    binaryOperand(mgenc, new Single<Boolean>(false));
-
-    if (superSend.get())
-      bcGen.emitSUPERSEND(mgenc, msg);
-    else
-      bcGen.emitSEND(mgenc, msg);
+    ExpressionNode operand   = binaryOperand(mgenc);
+    
+    return new MessageNode(receiver, new ExpressionNode[] { operand }, msg, universe);
   }
 
-  private void binaryOperand(MethodGenerationContext mgenc,
-      Single<Boolean> superSend) {
-    primary(mgenc, superSend);
+  private ExpressionNode binaryOperand(final MethodGenerationContext mgenc) {
+    ExpressionNode operand = primary(mgenc);
 
+    // a binary operand can receive unaryMessages
+    // Example: 2 * 3 asString
+    //   is evaluated as 2 * (3 asString)
     while (sym == Identifier)
-      unaryMessage(mgenc, superSend);
+      operand = unaryMessage(operand);
+    
+    return operand;
   }
 
-  private void keywordMessage(MethodGenerationContext mgenc,
-      Single<Boolean> superSend) {
-    StringBuffer kw = new StringBuffer();
+  private MessageNode keywordMessage(final MethodGenerationContext mgenc,
+      final ExpressionNode receiver) {
+    List<ExpressionNode> arguments = new ArrayList<ExpressionNode>();
+    StringBuffer         kw        = new StringBuffer();
+    
     do {
       kw.append(keyword());
-      formula(mgenc);
+      arguments.add(formula(mgenc));
     }
     while (sym == Keyword);
 
     som.vmobjects.Symbol msg = universe.symbolFor(kw.toString());
 
-    mgenc.addLiteralIfAbsent(msg);
-
-    if (superSend.get())
-      bcGen.emitSUPERSEND(mgenc, msg);
-    else
-      bcGen.emitSEND(mgenc, msg);
+    return new MessageNode(receiver, arguments.toArray(new ExpressionNode[0]), msg, universe);
   }
 
-  private void formula(MethodGenerationContext mgenc) {
-    Single<Boolean> superSend = new Single<Boolean>(false);
-    binaryOperand(mgenc, superSend);
+  private ExpressionNode formula(final MethodGenerationContext mgenc) {
+    ExpressionNode operand = binaryOperand(mgenc);
 
-    // only the first message in a sequence can be a super send
-    if (sym == OperatorSequence || symIn(binaryOpSyms))
-      binaryMessage(mgenc, superSend);
     while (sym == OperatorSequence || symIn(binaryOpSyms))
-      binaryMessage(mgenc, new Single<Boolean>(false));
+      operand = binaryMessage(mgenc, operand);
+    
+    return operand;
   }
 
-  private void nestedTerm(MethodGenerationContext mgenc) {
+  private ExpressionNode nestedTerm(MethodGenerationContext mgenc) {
     expect(NewTerm);
-    expression(mgenc);
+    ExpressionNode exp = expression(mgenc);
     expect(EndTerm);
+    return exp;
   }
 
-  private void literal(MethodGenerationContext mgenc) {
+  private LiteralNode literal() {
     switch (sym) {
-      case Pound:
-        literalSymbol(mgenc);
-        break;
-      case STString:
-        literalString(mgenc);
-        break;
-      default:
-        literalNumber(mgenc);
-        break;
+      case Pound:     return literalSymbol();
+      case STString:  return literalString();
+      default:        return literalNumber();
     }
   }
 
-  private void literalNumber(MethodGenerationContext mgenc) {
+  private LiteralNode literalNumber() {
     long val;
     if (sym == Minus)
       val = negativeDecimal();
@@ -596,8 +564,8 @@ public class Parser {
     else {
       lit = universe.newInteger((int)val);
     }
-    mgenc.addLiteralIfAbsent(lit);
-    bcGen.emitPUSHCONSTANT(mgenc, lit);
+    
+    return new LiteralNode(lit);
   }
 
   private long literalDecimal() {
@@ -615,7 +583,7 @@ public class Parser {
     return i;
   }
 
-  private void literalSymbol(MethodGenerationContext mgenc) {
+  private LiteralNode literalSymbol() {
     som.vmobjects.Symbol symb;
     expect(Pound);
     if (sym == STString) {
@@ -624,17 +592,16 @@ public class Parser {
     }
     else
       symb = selector();
-    mgenc.addLiteralIfAbsent(symb);
-    bcGen.emitPUSHCONSTANT(mgenc, symb);
+    
+    return new LiteralNode(symb);
   }
 
-  private void literalString(MethodGenerationContext mgenc) {
+  private LiteralNode literalString() {
     String s = string();
 
     som.vmobjects.String str = universe.newString(s);
-    mgenc.addLiteralIfAbsent(str);
-
-    bcGen.emitPUSHCONSTANT(mgenc, str);
+    
+    return new LiteralNode(str);
   }
 
   private som.vmobjects.Symbol selector() {
@@ -659,7 +626,7 @@ public class Parser {
     return s;
   }
 
-  private void nestedBlock(MethodGenerationContext mgenc) {
+  private SequenceNode nestedBlock(final MethodGenerationContext mgenc) {
     mgenc.addArgumentIfAbsent("$block self");
 
     expect(NewBlock);
@@ -673,25 +640,19 @@ public class Parser {
 
     mgenc.setSignature(universe.symbolFor(blockSig));
 
-    blockContents(mgenc);
-
-    // if no return has been generated, we can be sure that the last
-    // expression
-    // in the block was not terminated by ., and can generate a return
-    if (!mgenc.isFinished()) {
-      bcGen.emitRETURNLOCAL(mgenc);
-      mgenc.setFinished(true);
-    }
+    SequenceNode expressions = blockContents(mgenc);
 
     expect(EndBlock);
+    
+    return expressions;
   }
 
-  private void blockPattern(MethodGenerationContext mgenc) {
+  private void blockPattern(final MethodGenerationContext mgenc) {
     blockArguments(mgenc);
     expect(Or);
   }
 
-  private void blockArguments(MethodGenerationContext mgenc) {
+  private void blockArguments(final MethodGenerationContext mgenc) {
     do {
       expect(Colon);
       mgenc.addArgumentIfAbsent(argument());
@@ -699,58 +660,48 @@ public class Parser {
     while (sym == Colon);
   }
 
-  private void genPushVariable(MethodGenerationContext mgenc, String var) {
-    // The purpose of this function is to find out whether the variable to
-    // be
-    // pushed on the stack is a local variable, argument, or object field.
-    // This
-    // is done by examining all available lexical contexts, starting with
-    // the
-    // innermost (i.e., the one represented by mgenc).
-
-    // triplet: index, context, isArgument
-    Triplet<Byte, Byte, Boolean> tri = new Triplet<Byte, Byte, Boolean>(
-        (byte) 0, (byte) 0, false);
-
-    if (mgenc.findVar(var, tri)) {
-      if (tri.getZ())
-        bcGen.emitPUSHARGUMENT(mgenc, tri.getX(), tri.getY());
-      else
-        bcGen.emitPUSHLOCAL(mgenc, tri.getX(), tri.getY());
-    }
-    else if (mgenc.findField(var)) {
-      som.vmobjects.Symbol fieldName = universe.symbolFor(var);
-      mgenc.addLiteralIfAbsent(fieldName);
-      bcGen.emitPUSHFIELD(mgenc, fieldName);
-    }
-    else {
-      som.vmobjects.Symbol global = universe.symbolFor(var);
-      mgenc.addLiteralIfAbsent(global);
-      bcGen.emitPUSHGLOBAL(mgenc, global);
-    }
+  private ExpressionNode variableRead(final MethodGenerationContext mgenc,
+                                      final String variableName) {
+    // first handle the keywords/reserved names
+    if ("self".equals(variableName))
+      return new SelfReadNode(mgenc.getFrameSlot("self"));
+    
+    if ("super".equals(variableName))
+      return new SuperReadNode(mgenc.getFrameSlot("self"));
+    
+    // now look up first local variables, or method arguments
+    FrameSlot frameSlot = mgenc.getFrameSlot(variableName);
+    
+    if (frameSlot != null)
+      return new VariableReadNode(frameSlot);
+    
+    // then object fields
+    som.vmobjects.Symbol varName = universe.symbolFor(variableName); 
+    FieldReadNode fieldRead = mgenc.getObjectFieldRead(varName);
+    
+    if (fieldRead != null)
+      return fieldRead;
+    
+    // and finally assume it is a global
+    GlobalReadNode globalRead = mgenc.getGlobalRead(varName, universe);
+    return globalRead;
   }
-
-  private void genPopVariable(MethodGenerationContext mgenc, String var) {
-    // The purpose of this function is to find out whether the variable to
-    // be
-    // popped off the stack is a local variable, argument, or object field.
-    // This
-    // is done by examining all available lexical contexts, starting with
-    // the
-    // innermost (i.e., the one represented by mgenc).
-
-    // triplet: index, context, isArgument
-    Triplet<Byte, Byte, Boolean> tri = new Triplet<Byte, Byte, Boolean>(
-        (byte) 0, (byte) 0, false);
-
-    if (mgenc.findVar(var, tri)) {
-      if (tri.getZ())
-        bcGen.emitPOPARGUMENT(mgenc, tri.getX(), tri.getY());
-      else
-        bcGen.emitPOPLOCAL(mgenc, tri.getX(), tri.getY());
-    }
+  
+  private ExpressionNode variableWrite(final MethodGenerationContext mgenc,
+      final String variableName,
+      final ExpressionNode exp) {
+    FrameSlot frameSlot = mgenc.getFrameSlot(variableName);
+    
+    if (frameSlot != null)
+      return new VariableWriteNode(frameSlot, exp);
+    
+    som.vmobjects.Symbol fieldName = universe.symbolFor(variableName);
+    FieldWriteNode fieldWrite = mgenc.getObjectFieldWrite(fieldName, exp);
+    
+    if (fieldWrite != null)
+      return fieldWrite;
     else
-      bcGen.emitPOPFIELD(mgenc, universe.symbolFor(var));
+      throw new RuntimeException("Neither a variable nor a field found in current scope that is named " + variableName + ".");
   }
 
   private void GETSYM() {
