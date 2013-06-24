@@ -34,6 +34,7 @@ public class Lexer {
   private static final String PRIMITIVE = "primitive";
 
   private int                 lineNumber;
+  private int                 charsRead; // all characters read, excluding the current line
   private BufferedReader      infile;
   private Symbol              sym;
   private char                symc;
@@ -236,10 +237,22 @@ public class Lexer {
   protected int getCurrentLineNumber() {
     return lineNumber;
   }
+  
+  protected int getCurrentColumn() {
+    return bufp + 1;
+  }
+  
+  // All characters read and processed, including current line
+  protected int getNumberOfCharactersRead() {
+    return charsRead + bufp;
+  }
 
   private int fillBuffer() {
     try {
       if (!infile.ready()) return -1;
+      
+      charsRead += buf.length();
+      
       buf = infile.readLine();
       if (buf == null) return -1;
       ++lineNumber;
