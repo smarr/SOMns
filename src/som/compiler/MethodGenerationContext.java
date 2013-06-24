@@ -171,14 +171,14 @@ public class MethodGenerationContext {
   }
   
   public void addArgumentIfAbsent(String arg) {
-    if (locals.indexOf(arg) != -1)
+    if (locals.contains(arg))
       return;
     
     addArgument(arg);
   }
   
   public void addLocalIfAbsent(String local) {
-    if (locals.indexOf(local) != -1)
+    if (locals.contains(local))
       return;
     
     addLocal(local);
@@ -195,7 +195,7 @@ public class MethodGenerationContext {
 
   /** REMOVED FOR TRUFFLE
   public boolean addLiteralIfAbsent(som.vmobjects.Object lit) {
-    if (literals.indexOf(lit) != -1) return false;
+    if (literals.contains(lit)) return false;
     literals.add(lit);
     return true;
   } */
