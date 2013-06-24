@@ -24,7 +24,8 @@
 
 package som.vmobjects;
 
-import som.interpreter.Interpreter;
+import com.oracle.truffle.api.frame.VirtualFrame;
+
 
 public interface Invokable {
 
@@ -32,7 +33,9 @@ public interface Invokable {
   public boolean isPrimitive();
 
   // Invoke this invokable object in a given frame
-  public void invoke(Frame frame, final Interpreter interpreter);
+  public Object invoke(final VirtualFrame frame,
+      final Object self,
+      final Object[] args);
 
   // Get the signature for this invokable object
   public Symbol getSignature();
