@@ -24,10 +24,11 @@
 
 package som.primitives;
 
+import com.oracle.truffle.api.frame.VirtualFrame;
+
 import som.vm.Universe;
-import som.interpreter.Interpreter;
 import som.vmobjects.Class;
-import som.vmobjects.Frame;
+import som.vmobjects.Object;
 import som.vmobjects.Primitive;
 
 public class ClassPrimitives extends Primitives {
@@ -39,9 +40,8 @@ public class ClassPrimitives extends Primitives {
   public void installPrimitives() {
     installInstancePrimitive(new Primitive("new", universe) {
 
-      public void invoke(Frame frame, final Interpreter interpreter) {
-        Class self = (Class) frame.pop();
-        frame.push(universe.newInstance(self));
+      public Object invoke(final VirtualFrame frame, final Object self, final Object[] args) {
+        return universe.newInstance((Class)self);
       }
     });
   }

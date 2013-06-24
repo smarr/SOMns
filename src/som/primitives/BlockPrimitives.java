@@ -24,9 +24,11 @@
 
 package som.primitives;
 
+import com.oracle.truffle.api.frame.VirtualFrame;
+
+import som.interpreter.nodes.RestartLoopException;
 import som.vm.Universe;
-import som.interpreter.Interpreter;
-import som.vmobjects.Frame;
+import som.vmobjects.Object;
 import som.vmobjects.Primitive;
 
 public class BlockPrimitives extends Primitives {
@@ -38,9 +40,8 @@ public class BlockPrimitives extends Primitives {
   public void installPrimitives() {
     installInstancePrimitive(new Primitive("restart", universe) {
 
-      public void invoke(Frame frame, final Interpreter interpreter) {
-        frame.setBytecodeIndex(0);
-        frame.resetStackPointer();
+      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+        throw new RestartLoopException();
       }
     });
   }

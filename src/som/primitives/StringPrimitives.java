@@ -24,9 +24,9 @@
 
 package som.primitives;
 
-import som.interpreter.Interpreter;
+import com.oracle.truffle.api.frame.VirtualFrame;
+
 import som.vm.Universe;
-import som.vmobjects.Frame;
 import som.vmobjects.Integer;
 import som.vmobjects.Object;
 import som.vmobjects.Primitive;
@@ -41,71 +41,70 @@ public class StringPrimitives extends Primitives {
   public void installPrimitives() {
     installInstancePrimitive(new Primitive("concatenate:", universe) {
 
-      public void invoke(Frame frame, final Interpreter interpreter) {
-        String argument = (String) frame.pop();
-        String self = (String) frame.pop();
-        frame.push(universe.newString(self.getEmbeddedString()
-            + argument.getEmbeddedString()));
+      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+        String argument = (String) args[0];
+        String self = (String) selfO;
+        return universe.newString(self.getEmbeddedString()
+            + argument.getEmbeddedString());
       }
     });
 
     installInstancePrimitive(new Primitive("asSymbol", universe) {
 
-      public void invoke(Frame frame, final Interpreter interpreter) {
-        String self = (String) frame.pop();
-        frame.push(universe.symbolFor(self.getEmbeddedString()));
+      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+        String self = (String) selfO;
+        return universe.symbolFor(self.getEmbeddedString());
       }
     });
 
     installInstancePrimitive(new Primitive("length", universe) {
 
-      public void invoke(Frame frame, final Interpreter interpreter) {
-        String self = (String) frame.pop();
-        frame.push(universe.newInteger(self.getEmbeddedString().length()));
+      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+        String self = (String) selfO;
+        return universe.newInteger(self.getEmbeddedString().length());
       }
     });
 
     installInstancePrimitive(new Primitive("=", universe) {
 
-      public void invoke(Frame frame, final Interpreter interpreter) {
-        Object op1 = frame.pop();
-        String op2 = (String) frame.pop(); // self
+      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+        Object op1 = args[0];
+        String op2 = (String) selfO;
         if (op1.getSOMClass() == universe.stringClass) {
           String s = (String) op1;
           if (s.getEmbeddedString().equals(op2.getEmbeddedString())) {
-            frame.push(universe.trueObject);
-            return;
+            return universe.trueObject;
           }
         }
 
-        frame.push(universe.falseObject);
+        return universe.falseObject;
       }
     });
 
     installInstancePrimitive(new Primitive("primSubstringFrom:to:", universe) {
 
-      public void invoke(Frame frame, final Interpreter interpreter) {
-        Integer end = (Integer) frame.pop();
-        Integer start = (Integer) frame.pop();
+      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+        Integer end   = (Integer) args[1];
+        Integer start = (Integer) args[0];
 
-        String self = (String) frame.pop();
+        String self = (String) selfO;
 
         try {
-          frame.push(universe.newString(self.getEmbeddedString().substring(
-              start.getEmbeddedInteger(), end.getEmbeddedInteger() + 1)));
+          return universe.newString(self.getEmbeddedString().substring(
+              start.getEmbeddedInteger(), end.getEmbeddedInteger() + 1));
         }
         catch (IndexOutOfBoundsException e) {
-          frame.push(universe.newString(new java.lang.String(
-              "Error - index out of bounds")));
+          return universe.newString(new java.lang.String(
+              "Error - index out of bounds"));
         }
       }
     });
 
     installInstancePrimitive(new Primitive("hashcode", universe) {
 
-      public void invoke(Frame frame, final Interpreter interpreter) {
-        String self = (String) frame.pop();
-        frame.push(universe.newInteger(self.getEmbeddedString().hashCode()));
+      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+        String self = (String) selfO;
+        return universe.newInteger(self.getEmbeddedString().hashCode());
       }
     });
 

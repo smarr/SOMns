@@ -24,13 +24,13 @@
 
 package som.primitives;
 
+import com.oracle.truffle.api.frame.VirtualFrame;
+
 import som.vm.Universe;
 import som.vmobjects.Array;
-import som.vmobjects.Frame;
 import som.vmobjects.Integer;
 import som.vmobjects.Object;
 import som.vmobjects.Primitive;
-import som.interpreter.Interpreter;
 
 public class ArrayPrimitives extends Primitives {
 
@@ -41,37 +41,40 @@ public class ArrayPrimitives extends Primitives {
   public void installPrimitives() {
     installInstancePrimitive(new Primitive("at:", universe) {
 
-      public void invoke(Frame frame, final Interpreter interpreter) {
-        Integer index = (Integer) frame.pop();
-        Array self = (Array) frame.pop();
-        frame.push(self.getIndexableField(index.getEmbeddedInteger() - 1));
+      public Object invoke(final VirtualFrame frame, final Object self, final Object[] args) {
+        Integer index = (Integer) args[0];
+        Array   arr   = (Array)   self;
+        
+        return arr.getIndexableField(index.getEmbeddedInteger() - 1);
       }
     });
 
     installInstancePrimitive(new Primitive("at:put:", universe) {
 
-      public void invoke(Frame frame, final Interpreter interpreter) {
-        Object value = frame.pop();
-        Integer index = (Integer) frame.pop();
-        Array self = (Array) frame.getStackElement(0);
-        self.setIndexableField(index.getEmbeddedInteger() - 1, value);
+      public Object invoke(final VirtualFrame frame, final Object self, final Object[] args) {
+        Integer index = (Integer) args[0];
+        Object  value = args[1];
+        
+        Array arr = (Array) self;
+        arr.setIndexableField(index.getEmbeddedInteger() - 1, value);
+        return value;
       }
     });
 
     installInstancePrimitive(new Primitive("length", universe) {
 
-      public void invoke(Frame frame, final Interpreter interpreter) {
-        Array self = (Array) frame.pop();
-        frame.push(universe.newInteger(self.getNumberOfIndexableFields()));
+      public Object invoke(final VirtualFrame frame, final Object self, final Object[] args) {
+        Array arr = (Array) self;
+        return universe.newInteger(arr.getNumberOfIndexableFields());
       }
     });
 
     installClassPrimitive(new Primitive("new:", universe) {
 
-      public void invoke(Frame frame, final Interpreter interpreter) {
-        Integer length = (Integer) frame.pop();
-        frame.pop(); // not required
-        frame.push(universe.newArray(length.getEmbeddedInteger()));
+      public Object invoke(final VirtualFrame frame, final Object self, final Object[] args) {
+        Integer length = (Integer) args[0];
+        
+        return universe.newArray(length.getEmbeddedInteger());
       }
     });
   }

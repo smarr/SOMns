@@ -24,10 +24,10 @@
 
 package som.primitives;
 
+import com.oracle.truffle.api.frame.VirtualFrame;
+
 import som.vm.Universe;
-import som.interpreter.Interpreter;
 import som.vmobjects.Double;
-import som.vmobjects.Frame;
 import som.vmobjects.Integer;
 import som.vmobjects.Object;
 import som.vmobjects.Primitive;
@@ -48,92 +48,92 @@ public class DoublePrimitives extends Primitives {
   public void installPrimitives() {
     installInstancePrimitive(new Primitive("asString", universe) {
 
-      public void invoke(Frame frame, final Interpreter interpreter) {
-        Double self = (Double) frame.pop();
-        frame.push(universe.newString(java.lang.Double.toString(self
-            .getEmbeddedDouble())));
+      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+        Double self = (Double) selfO;
+        return universe.newString(java.lang.Double.toString(self
+            .getEmbeddedDouble()));
       }
     });
 
     installInstancePrimitive(new Primitive("sqrt", universe) {
 
-      public void invoke(Frame frame, final Interpreter interpreter) {
-        Double self = (Double) frame.pop();
-        frame.push(universe.newDouble(Math.sqrt(self.getEmbeddedDouble())));
+      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+        Double self = (Double) selfO;
+        return universe.newDouble(Math.sqrt(self.getEmbeddedDouble()));
       }
     });
 
     installInstancePrimitive(new Primitive("+", universe) {
 
-      public void invoke(Frame frame, final Interpreter interpreter) {
-        Double op1 = coerceToDouble(frame.pop());
-        Double op2 = (Double) frame.pop();
-        frame.push(universe.newDouble(op1.getEmbeddedDouble()
-            + op2.getEmbeddedDouble()));
+      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+        Double op1 = coerceToDouble(args[0]);
+        Double op2 = (Double) selfO;
+        return universe.newDouble(op1.getEmbeddedDouble()
+            + op2.getEmbeddedDouble());
       }
     });
 
     installInstancePrimitive(new Primitive("-", universe) {
 
-      public void invoke(Frame frame, final Interpreter interpreter) {
-        Double op1 = coerceToDouble(frame.pop());
-        Double op2 = (Double) frame.pop();
-        frame.push(universe.newDouble(op2.getEmbeddedDouble()
-            - op1.getEmbeddedDouble()));
+      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+        Double op1 = coerceToDouble(args[0]);
+        Double op2 = (Double) selfO;
+        return universe.newDouble(op2.getEmbeddedDouble()
+            - op1.getEmbeddedDouble());
       }
     });
 
     installInstancePrimitive(new Primitive("*", universe) {
 
-      public void invoke(Frame frame, final Interpreter interpreter) {
-        Double op1 = coerceToDouble(frame.pop());
-        Double op2 = (Double) frame.pop();
-        frame.push(universe.newDouble(op2.getEmbeddedDouble()
-            * op1.getEmbeddedDouble()));
+      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+        Double op1 = coerceToDouble(args[0]);
+        Double op2 = (Double) selfO;
+        return universe.newDouble(op2.getEmbeddedDouble()
+            * op1.getEmbeddedDouble());
       }
     });
 
     installInstancePrimitive(new Primitive("//", universe) {
 
-      public void invoke(Frame frame, final Interpreter interpreter) {
-        Double op1 = coerceToDouble(frame.pop());
-        Double op2 = (Double) frame.pop();
-        frame.push(universe.newDouble(op2.getEmbeddedDouble()
-            / op1.getEmbeddedDouble()));
+      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+        Double op1 = coerceToDouble(args[0]);
+        Double op2 = (Double) selfO;
+        return universe.newDouble(op2.getEmbeddedDouble()
+            / op1.getEmbeddedDouble());
       }
     });
 
     installInstancePrimitive(new Primitive("%", universe) {
 
-      public void invoke(Frame frame, final Interpreter interpreter) {
-        Double op1 = coerceToDouble(frame.pop());
-        Double op2 = (Double) frame.pop();
-        frame.push(universe.newDouble(op2.getEmbeddedDouble()
-            % op1.getEmbeddedDouble()));
+      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+        Double op1 = coerceToDouble(args[0]);
+        Double op2 = (Double) selfO;
+        return universe.newDouble(op2.getEmbeddedDouble()
+            % op1.getEmbeddedDouble());
       }
     });
 
     installInstancePrimitive(new Primitive("=", universe) {
 
-      public void invoke(Frame frame, final Interpreter interpreter) {
-        Double op1 = coerceToDouble(frame.pop());
-        Double op2 = (Double) frame.pop();
+      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+        Double op1 = coerceToDouble(args[0]);
+        Double op2 = (Double) selfO;
         if (op1.getEmbeddedDouble() == op2.getEmbeddedDouble())
-          frame.push(universe.trueObject);
+          return universe.trueObject;
         else
-          frame.push(universe.falseObject);
+          return universe.falseObject;
       }
     });
 
     installInstancePrimitive(new Primitive("<", universe) {
 
-      public void invoke(Frame frame, final Interpreter interpreter) {
-        Double op1 = coerceToDouble(frame.pop());
-        Double op2 = (Double) frame.pop();
+      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+        Double op1 = coerceToDouble(args[0]);
+        Double op2 = (Double) selfO;
         if (op2.getEmbeddedDouble() < op1.getEmbeddedDouble())
-          frame.push(universe.trueObject);
+          return universe.trueObject;
         else
-          frame.push(universe.falseObject);
+          return universe.falseObject;
       }
     });
   }
