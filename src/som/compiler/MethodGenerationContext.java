@@ -63,9 +63,14 @@ public class MethodGenerationContext {
   
   // Truffle
   private final FrameDescriptor frameDescriptor = new FrameDescriptor();
+  private final FrameSlot       selfSlot;
   
   public MethodGenerationContext() {
-    frameDescriptor.addFrameSlot("self", FrameSlotKind.Object);
+    selfSlot = frameDescriptor.addFrameSlot("self", FrameSlotKind.Object);
+  }
+  
+  public FrameSlot getSelfSlot() {
+    return selfSlot;
   }
 
   public void setHolder(ClassGenerationContext cgenc) {
@@ -81,7 +86,13 @@ public class MethodGenerationContext {
   }
 
   public Method assemble(final Universe universe, final SequenceNode expressions) {
-    som.interpreter.nodes.Method truffleMethod = new som.interpreter.nodes.Method(expressions);
+    FrameSlot[] argSlots = new FrameSlot[arguments.size()];
+    
+    for (int i = 0; i < arguments.size(); i++) {
+      argSlots[i] = frameDescriptor.findFrameSlot(arguments.get(i));
+    }
+    
+    som.interpreter.nodes.Method truffleMethod = new som.interpreter.nodes.Method(expressions, selfSlot, argSlots);
 
     Method meth = universe.newMethod(signature, truffleMethod, frameDescriptor);
     

@@ -130,7 +130,7 @@ public class Parser {
         || symIn(binaryOpSyms)) {
       MethodGenerationContext mgenc = new MethodGenerationContext();
       mgenc.setHolder(cgenc);
-      mgenc.addArgument("self");
+      //mgenc.addArgument("self");
 
       SequenceNode methodBody = method(mgenc);
 
@@ -354,7 +354,7 @@ public class Parser {
       else if (sym == EndTerm) {
         // the end of the method has been found (EndTerm) - make it implicitly
         // return "self"
-        expressions.add(new SelfReadNode(mgenc.getFrameSlot("self")));
+        expressions.add(new SelfReadNode(mgenc.getSelfSlot()));
         return new SequenceNode(expressions.toArray(new ExpressionNode[0]));
       }
       
@@ -627,7 +627,7 @@ public class Parser {
   }
 
   private SequenceNode nestedBlock(final MethodGenerationContext mgenc) {
-    mgenc.addArgumentIfAbsent("$block self");
+    // mgenc.addArgumentIfAbsent("$block self");
 
     expect(NewBlock);
     if (sym == Colon) blockPattern(mgenc);
@@ -664,10 +664,10 @@ public class Parser {
                                       final String variableName) {
     // first handle the keywords/reserved names
     if ("self".equals(variableName))
-      return new SelfReadNode(mgenc.getFrameSlot("self"));
+      return new SelfReadNode(mgenc.getSelfSlot());
     
     if ("super".equals(variableName))
-      return new SuperReadNode(mgenc.getFrameSlot("self"));
+      return new SuperReadNode(mgenc.getSelfSlot());
     
     // now look up first local variables, or method arguments
     FrameSlot frameSlot = mgenc.getFrameSlot(variableName);
