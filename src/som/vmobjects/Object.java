@@ -24,7 +24,8 @@
 
 package som.vmobjects;
 
-import som.interpreter.Interpreter;
+import com.oracle.truffle.api.frame.VirtualFrame;
+
 import som.vm.Universe;
 
 public class Object {
@@ -79,23 +80,38 @@ public class Object {
     return numberOfObjectFields;
   }
 
-  public void send(java.lang.String selectorString, Object[] arguments,
-      final Universe universe, final Interpreter interpreter) {
+  public Object send(java.lang.String selectorString, Object[] arguments,
+      final Universe universe, final VirtualFrame frame) {
     // Turn the selector string into a selector
     Symbol selector = universe.symbolFor(selectorString);
-
-    // Push the receiver onto the stack
-    interpreter.getFrame().push(this);
-
-    // Push the arguments onto the stack
-    for (Object arg : arguments)
-      interpreter.getFrame().push(arg);
 
     // Lookup the invokable
     Invokable invokable = getSOMClass().lookupInvokable(selector);
 
     // Invoke the invokable
-    invokable.invoke(interpreter.getFrame(), interpreter);
+    return invokable.invoke(frame, this, arguments);
+  }
+  
+  public Object sendDoesNotUnderstand(final Symbol selector,
+      final Object[] arguments,
+      final Universe universe,
+      final VirtualFrame frame) {
+    // Allocate an array with enough room to hold all arguments
+    Array argumentsArray = universe.newArray(arguments.length);
+    for (int i = 0; i < arguments.length; i++) {
+      argumentsArray.setIndexableField(i, arguments[i]);
+    }
+    
+    Object[] args = new Object[] { selector, argumentsArray };
+    
+    return send("doesNotUnderstand:arguments:", args, universe, frame);
+  }
+  
+  public Object sendUnknownGlobal(final Symbol globalName,
+      final Universe universe,
+      final VirtualFrame frame) {
+    Object arguments[] = { globalName };
+    return send("unknownGlobal:", arguments, universe, frame);
   }
 
   public Object getField(int index) {
