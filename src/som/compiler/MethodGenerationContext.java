@@ -26,35 +26,50 @@ package som.compiler;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Vector;
 
+import com.oracle.truffle.api.frame.FrameDescriptor;
+import com.oracle.truffle.api.frame.FrameSlot;
+import com.oracle.truffle.api.frame.FrameSlotKind;
+
+import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.FieldNode.FieldReadNode;
+import som.interpreter.nodes.FieldNode.FieldWriteNode;
+import som.interpreter.nodes.GlobalNode.GlobalReadNode;
+import som.interpreter.nodes.SequenceNode;
 import som.vm.Universe;
 import som.vmobjects.Invokable;
 import som.vmobjects.Method;
 import som.vmobjects.Primitive;
 import som.vmobjects.Symbol;
 
-import static som.interpreter.Bytecodes.*;
+/** REMOVED FOR TRUFFLE import static som.interpreter.Bytecodes.*; */
 
 public class MethodGenerationContext {
 
+  // SOM
   private ClassGenerationContext     holderGenc;
   private MethodGenerationContext    outerGenc;
   private boolean                    blockMethod;
   private som.vmobjects.Symbol       signature;
-  private List<String>               arguments = new ArrayList<String>();
   private boolean                    primitive;
-  private List<String>               locals    = new ArrayList<String>();
-  private List<som.vmobjects.Object> literals  = new ArrayList<som.vmobjects.Object>();
-  private boolean                    finished;
+  
+  private final List<String>         arguments = new ArrayList<String>();
+  private final List<String>         locals    = new ArrayList<String>();
+  
+  /** REMOVED FOR TRUFFLE
   private Vector<Byte>               bytecode  = new Vector<Byte>();
+  private List<som.vmobjects.Object> literals  = new ArrayList<som.vmobjects.Object>();
+  */
+  
+  // Truffle
+  private final FrameDescriptor frameDescriptor = new FrameDescriptor();
+  
+  public MethodGenerationContext() {
+    frameDescriptor.addFrameSlot("self", FrameSlotKind.Object);
+  }
 
   public void setHolder(ClassGenerationContext cgenc) {
     holderGenc = cgenc;
-  }
-
-  public void addArgument(String arg) {
-    arguments.add(arg);
   }
 
   public boolean isPrimitive() {
@@ -65,34 +80,16 @@ public class MethodGenerationContext {
     return Primitive.getEmptyPrimitive(signature.getString(), universe);
   }
 
-  public Method assemble(final Universe universe) {
-    // create a method instance with the given number of bytecodes and
-    // literals
-    int numLiterals = literals.size();
+  public Method assemble(final Universe universe, final SequenceNode expressions) {
+    som.interpreter.nodes.Method truffleMethod = new som.interpreter.nodes.Method(expressions);
 
-    Method meth = universe.newMethod(signature, bytecode.size(), numLiterals);
-
-    // populate the fields that are immediately available
-    int numLocals = locals.size();
-    meth.setNumberOfLocals(universe.newInteger(numLocals));
-
-    meth.setMaximumNumberOfStackElements(universe
-        .newInteger(computeStackDepth()));
-
-    // copy literals into the method
-    int i = 0;
-    for (som.vmobjects.Object l : literals)
-      meth.setIndexableField(i++, l);
-
-    // copy bytecodes into method
-    i = 0;
-    for (byte bc : bytecode)
-      meth.setBytecode(i++, bc);
-
+    Method meth = universe.newMethod(signature, truffleMethod, frameDescriptor);
+    
     // return the method - the holder field is to be set later on!
     return meth;
   }
 
+  /** REMOVED FOR TRUFFLE
   private int computeStackDepth() {
     int depth = 0;
     int maxDepth = 0;
@@ -158,7 +155,7 @@ public class MethodGenerationContext {
     }
 
     return maxDepth;
-  }
+  } */
 
   public void setPrimitive(boolean prim) {
     primitive = prim;
@@ -168,47 +165,40 @@ public class MethodGenerationContext {
     signature = sig;
   }
 
-  public boolean addArgumentIfAbsent(String arg) {
-    if (locals.indexOf(arg) != -1) return false;
+  public FrameSlot addArgument(String arg) {
     arguments.add(arg);
-    return true;
+    return frameDescriptor.addFrameSlot(arg, FrameSlotKind.Object);
   }
-
-  public boolean isFinished() {
-    return finished;
+  
+  public void addArgumentIfAbsent(String arg) {
+    if (locals.indexOf(arg) != -1)
+      return;
+    
+    addArgument(arg);
   }
-
-  public void setFinished(boolean finished) {
-    this.finished = finished;
-  }
-
-  public boolean addLocalIfAbsent(String local) {
-    if (locals.indexOf(local) != -1) return false;
-    locals.add(local);
-    return true;
+  
+  public void addLocalIfAbsent(String local) {
+    if (locals.indexOf(local) != -1)
+      return;
+    
+    addLocal(local);
   }
 
   public void addLocal(String local) {
+    frameDescriptor.addFrameSlot(local);
     locals.add(local);
-  }
-
-  public void removeLastBytecode() {
-    bytecode.removeElementAt(bytecode.size() - 1);
   }
 
   public boolean isBlockMethod() {
     return blockMethod;
   }
 
-  public void setFinished() {
-    finished = true;
-  }
-
+  /** REMOVED FOR TRUFFLE
   public boolean addLiteralIfAbsent(som.vmobjects.Object lit) {
     if (literals.indexOf(lit) != -1) return false;
     literals.add(lit);
     return true;
-  }
+  } */
 
   public void setIsBlockMethod(boolean isBlock) {
     blockMethod = isBlock;
@@ -222,45 +212,63 @@ public class MethodGenerationContext {
     outerGenc = mgenc;
   }
 
+  /** REMOVED FOR TRUFFLE
   public void addLiteral(som.vmobjects.Object lit) {
     literals.add(lit);
-  }
+  } */
 
-  public boolean findVar(String var, Triplet<Byte, Byte, Boolean> tri) {
+  public FrameSlot getFrameSlot(String varName) {
     // triplet: index, context, isArgument
-    tri.setX((byte) locals.indexOf(var));
-    if (tri.getX() == -1) {
-      tri.setX((byte) arguments.indexOf(var));
-      if (tri.getX() == -1) {
-        if (outerGenc == null)
-          return false;
-        else {
-          tri.setY((byte) (tri.getY() + 1));
-          return outerGenc.findVar(var, tri);
-        }
-      }
-      else
-        tri.setZ(true);
+    
+    if (locals.contains(varName) || arguments.contains(varName)) {
+      return frameDescriptor.findFrameSlot(varName);
     }
-
-    return true;
+    
+    FrameSlot slot = null;
+    if (outerGenc != null) {
+      slot = outerGenc.getFrameSlot(varName);
+    }
+    
+    return slot;
   }
-
-  public boolean findField(String field) {
-    return holderGenc.findField(field);
+  
+  public FieldReadNode getObjectFieldRead(Symbol fieldName) {
+    if (!holderGenc.hasField(fieldName))
+      return null;
+    
+    return new FieldReadNode(fieldName,
+        frameDescriptor.findFrameSlot("self"));
+  }
+  
+  public GlobalReadNode getGlobalRead(final Symbol varName,
+      final Universe universe) {
+    return new GlobalReadNode(varName,
+        frameDescriptor.findFrameSlot("self"),
+        universe);
+  }
+  
+  public FieldWriteNode getObjectFieldWrite(final Symbol fieldName,
+      final ExpressionNode exp) {
+    if (!holderGenc.hasField(fieldName))
+      return null;
+    
+    return new FieldWriteNode(fieldName,
+        frameDescriptor.findFrameSlot("self"),
+        exp);
   }
 
   public int getNumberOfArguments() {
     return arguments.size();
   }
 
+  /** REMOVED FOR TRUFFLE
   public void addBytecode(byte code) {
     bytecode.add(code);
   }
 
   public byte findLiteralIndex(som.vmobjects.Object lit) {
     return (byte) literals.indexOf(lit);
-  }
+  } */
 
   public MethodGenerationContext getOuter() {
     return outerGenc;
