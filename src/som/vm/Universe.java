@@ -27,15 +27,17 @@ package som.vm;
 import java.io.IOException;
 import java.util.HashMap;
 
+import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.TruffleRuntime;
+import com.oracle.truffle.api.frame.FrameDescriptor;
+import com.oracle.truffle.api.frame.VirtualFrame;
+
 import som.compiler.Disassembler;
-import som.interpreter.Bytecodes;
-import som.interpreter.Interpreter;
 import som.vmobjects.Array;
 import som.vmobjects.BigInteger;
 import som.vmobjects.Block;
 import som.vmobjects.Class;
 import som.vmobjects.Double;
-import som.vmobjects.Frame;
 import som.vmobjects.Integer;
 import som.vmobjects.Invokable;
 import som.vmobjects.Method;
@@ -70,21 +72,21 @@ public class Universe {
   }
 
   public Universe() {
-    this.interpreter  = new Interpreter(this);
+    this.truffleRuntime = Truffle.getRuntime();
     this.symbolTable  = new SymbolTable();
     this.avoidExit    = false;
     this.lastExitCode = 0;
   }
   
   public Universe(boolean avoidExit) {
-    this.interpreter  = new Interpreter(this);
+    this.truffleRuntime = Truffle.getRuntime();
     this.symbolTable  = new SymbolTable();
     this.avoidExit    = avoidExit;
     this.lastExitCode = 0;
   }
 
-  public Interpreter getInterpreter() {
-    return interpreter;
+  public TruffleRuntime getTruffleRuntime() {
+    return truffleRuntime;
   }
 
   public void exit(int errorCode) {
@@ -119,7 +121,7 @@ public class Universe {
         gotClasspath = true;
       }
       else if (arguments[i].equals("-d")) {
-        dumpBytecodes = true;
+        printAST = true;
       }
       else {
         remainingArgs[cnt++] = arguments[i];
@@ -254,7 +256,7 @@ public class Universe {
     methodClass = newSystemClass();
     integerClass = newSystemClass();
     bigintegerClass = newSystemClass();
-    frameClass = newSystemClass();
+    /** REMOVED FOR TRUFFLE   frameClass = newSystemClass(); */
     primitiveClass = newSystemClass();
     stringClass = newSystemClass();
     doubleClass = newSystemClass();
@@ -272,7 +274,7 @@ public class Universe {
     initializeSystemClass(symbolClass, objectClass, "Symbol");
     initializeSystemClass(integerClass, objectClass, "Integer");
     initializeSystemClass(bigintegerClass, objectClass, "BigInteger");
-    initializeSystemClass(frameClass, arrayClass, "Frame");
+    /** REMOVED FOR TRUFFLE initializeSystemClass(frameClass, arrayClass, "Frame"); */
     initializeSystemClass(primitiveClass, objectClass, "Primitive");
     initializeSystemClass(stringClass, objectClass, "String");
     initializeSystemClass(doubleClass, objectClass, "Double");
@@ -287,7 +289,7 @@ public class Universe {
     loadSystemClass(symbolClass);
     loadSystemClass(integerClass);
     loadSystemClass(bigintegerClass);
-    loadSystemClass(frameClass);
+    /** REMOVED FOR TRUFFLE loadSystemClass(frameClass); */
     loadSystemClass(primitiveClass);
     loadSystemClass(stringClass);
     loadSystemClass(doubleClass);
@@ -304,45 +306,33 @@ public class Universe {
     Object systemObject = newInstance(systemClass);
 
     // Put special objects and classes into the dictionary of globals
-    setGlobal(symbolFor("nil"), nilObject);
-    setGlobal(symbolFor("true"), trueObject);
-    setGlobal(symbolFor("false"), falseObject);
+    setGlobal(symbolFor("nil"),    nilObject);
+    setGlobal(symbolFor("true"),   trueObject);
+    setGlobal(symbolFor("false"),  falseObject);
     setGlobal(symbolFor("system"), systemObject);
     setGlobal(symbolFor("System"), systemClass);
-    setGlobal(symbolFor("Block"), blockClass);
-
-    // Create a fake bootstrap method to simplify later frame traversal
-    Method bootstrapMethod = newMethod(symbolFor("bootstrap"), 1, 0);
-    bootstrapMethod.setBytecode(0, Bytecodes.halt);
-    bootstrapMethod.setNumberOfLocals(newInteger(0));
-    bootstrapMethod.setMaximumNumberOfStackElements(newInteger(2));
-    bootstrapMethod.setHolder(systemClass);
+    setGlobal(symbolFor("Block"),  blockClass);
 
     // Start the shell if no filename is given
-    if (arguments.length == 0) {
+    
+    // TODO: add support for Shell
+    
+    /** if (arguments.length == 0) {
       Shell shell = new Shell(this, interpreter);
       shell.setBootstrapMethod(bootstrapMethod);
       shell.start();
       return;
-    }
+    } */
 
     // Convert the arguments into an array
     Array argumentsArray = newArray(arguments);
 
-    // Create a fake bootstrap frame with the system object on the stack
-    Frame bootstrapFrame = interpreter.pushNewFrame(bootstrapMethod);
-    bootstrapFrame.push(systemObject);
-    bootstrapFrame.push(argumentsArray);
-
     // Lookup the initialize invokable on the system class
-    Invokable initialize = systemClass
+    Method initialize = (Method) systemClass
         .lookupInvokable(symbolFor("initialize:"));
 
     // Invoke the initialize invokable
-    initialize.invoke(bootstrapFrame, interpreter);
-
-    // Start the interpreter
-    interpreter.start();
+    initialize.invokeRoot(systemObject, new Object[] { argumentsArray });
   }
 
   public Symbol symbolFor(java.lang.String string) {
@@ -393,7 +383,7 @@ public class Universe {
     return result;
   }
 
-  public Block newBlock(Method method, Frame context, int arguments) {
+  public Block newBlock(Method method, VirtualFrame context, int arguments) {
     // Allocate a new block and set its class to be the block class
     Block result = new Block(nilObject);
     result.setClass(getBlockClass(arguments));
@@ -415,6 +405,7 @@ public class Universe {
     return result;
   }
 
+  /** REMOVED FOR TRUFFLE
   public Frame newFrame(Frame previousFrame, Method method) {
     // Allocate a new frame and set its class to be the frame class
     Frame result = new Frame(nilObject);
@@ -439,18 +430,14 @@ public class Universe {
 
     // Return the freshly allocated frame
     return result;
-  }
+  } */
 
-  public Method newMethod(Symbol signature, int numberOfBytecodes,
-      int numberOfLiterals) {
+  public Method newMethod(Symbol signature, som.interpreter.nodes.Method truffleInvokable, FrameDescriptor frameDescriptor) {
     // Allocate a new method and set its class to be the method class
-    Method result = new Method(nilObject);
+    Method result = new Method(nilObject, truffleInvokable, frameDescriptor);
     result.setClass(methodClass);
-
-    // Set the signature and the number of bytecodes
     result.setSignature(signature);
-    result.setNumberOfBytecodes(numberOfBytecodes);
-    result.setNumberOfIndexableFieldsAndClear(numberOfLiterals, nilObject);
+    result.setNumberOfIndexableFieldsAndClear(0, nilObject);
 
     // Return the freshly allocated method
     return result;
@@ -668,7 +655,7 @@ public class Universe {
         // Load the class from a file and return the loaded class
         Class result = som.compiler.SourcecodeCompiler.compileClass(cpEntry
             + fileSeparator, name.getString(), systemClass, this);
-        if (dumpBytecodes) {
+        if (printAST) {
           Disassembler.dump(result.getSOMClass());
           Disassembler.dump(result);
         }
@@ -691,7 +678,7 @@ public class Universe {
     // Load the class from a stream and return the loaded class
     Class result = som.compiler.SourcecodeCompiler.compileClass(stmt, null,
         this);
-    if (dumpBytecodes) Disassembler.dump(result);
+    if (printAST) Disassembler.dump(result);
     return result;
   }
 
@@ -709,7 +696,7 @@ public class Universe {
   public Class                                  arrayClass;
   public Class                                  methodClass;
   public Class                                  symbolClass;
-  public Class                                  frameClass;
+  /** REMOVED FOR TRUFFLE   public Class        frameClass; */
   public Class                                  primitiveClass;
   public Class                                  stringClass;
   public Class                                  systemClass;
@@ -718,11 +705,13 @@ public class Universe {
 
   private HashMap<Symbol, som.vmobjects.Object> globals = new HashMap<Symbol, som.vmobjects.Object>();
   private java.lang.String[]                    classPath;
-  private boolean                               dumpBytecodes;
+  private boolean                               printAST;
 
   public static final java.lang.String          pathSeparator;
   public static final java.lang.String          fileSeparator;
-  private final Interpreter                     interpreter;
+  
+  private final TruffleRuntime                  truffleRuntime;
+  
   private final SymbolTable                     symbolTable;
 
   // TODO: this is not how it is supposed to be... it is just a hack to cope
