@@ -24,7 +24,6 @@
 
 package som.compiler;
 
-import som.interpreter.Bytecodes;
 import som.vmobjects.Class;
 import som.vmobjects.Invokable;
 import som.vmobjects.Method;
@@ -50,78 +49,9 @@ public class Disassembler {
 
   public static void dumpMethod(Method m, java.lang.String indent) {
     System.err.println("(");
-    // output stack information
-    System.err.println(indent + "<" + m.getNumberOfLocals() + " locals, "
-        + m.getMaximumNumberOfStackElements() + " stack, "
-        + m.getNumberOfBytecodes() + " bc_count>");
-    // output bytecodes
-    for (int b = 0; b < m.getNumberOfBytecodes(); b += Bytecodes
-        .getBytecodeLength(m.getBytecode(b))) {
-      System.err.print(indent);
-      // bytecode index
-      if (b < 10) System.err.print(' ');
-      if (b < 100) System.err.print(' ');
-      System.err.print(" " + b + ":");
-      // mnemonic
-      byte bytecode = m.getBytecode(b);
-      System.err.print(Bytecodes.bytecodeNames[bytecode] + "  ");
-      // parameters (if any)
-      if (Bytecodes.getBytecodeLength(bytecode) == 1) {
-        System.err.println();
-        continue;
-      }
-      switch (bytecode) {
-        case Bytecodes.push_local:
-          System.err.println("local: " + m.getBytecode(b + 1) + ", context: "
-              + m.getBytecode(b + 2));
-          break;
-        case Bytecodes.push_argument:
-          System.err.println("argument: " + m.getBytecode(b + 1) + ", context "
-              + m.getBytecode(b + 2));
-          break;
-        case Bytecodes.push_field:
-          System.err.println("(index: " + m.getBytecode(b + 1) + ") field: "
-              + ((Symbol) m.getConstant(b)).toString());
-          break;
-        case Bytecodes.push_block:
-          System.err.print("block: (index: " + m.getBytecode(b + 1) + ") ");
-          dumpMethod((Method) m.getConstant(b), indent + "\t");
-          break;
-        case Bytecodes.push_constant:
-          Object constant = m.getConstant(b);
-          System.err.println("(index: " + m.getBytecode(b + 1) + ") value: "
-              + "(" + constant.getSOMClass().getName().toString() + ") "
-              + constant.toString());
-          break;
-        case Bytecodes.push_global:
-          System.err.println("(index: " + m.getBytecode(b + 1) + ") value: "
-              + ((Symbol) m.getConstant(b)).toString());
-          break;
-        case Bytecodes.pop_local:
-          System.err.println("local: " + m.getBytecode(b + 1) + ", context: "
-              + m.getBytecode(b + 2));
-          break;
-        case Bytecodes.pop_argument:
-          System.err.println("argument: " + m.getBytecode(b + 1)
-              + ", context: " + m.getBytecode(b + 2));
-          break;
-        case Bytecodes.pop_field:
-          System.err.println("(index: " + m.getBytecode(b + 1) + ") field: "
-              + ((Symbol) m.getConstant(b)).toString());
-          break;
-        case Bytecodes.send:
-          System.err.println("(index: " + m.getBytecode(b + 1)
-              + ") signature: " + ((Symbol) m.getConstant(b)).toString());
-          break;
-        case Bytecodes.super_send:
-          System.err.println("(index: " + m.getBytecode(b + 1)
-              + ") signature: " + ((Symbol) m.getConstant(b)).toString());
-          break;
-        default:
-          System.err.println("<incorrect bytecode>");
-      }
-    }
+    System.err.println(m.getTruffleInvokable().toString());
     System.err.println(indent + ")");
   }
 
 }
+
