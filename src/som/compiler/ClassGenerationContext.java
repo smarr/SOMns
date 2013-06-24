@@ -73,10 +73,9 @@ public class ClassGenerationContext {
   public void addClassField(Symbol field) {
     classFields.add(field);
   }
-
-  public boolean findField(String field) {
-    return (isClassSide() ? classFields : instanceFields).indexOf(universe
-        .symbolFor(field)) != -1;
+  
+  public boolean hasField(Symbol field) {
+    return (isClassSide() ? classFields : instanceFields).contains(field);
   }
 
   public boolean isClassSide() {
