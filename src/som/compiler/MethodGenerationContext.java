@@ -227,10 +227,30 @@ public class MethodGenerationContext {
   public void addLiteral(som.vmobjects.Object lit) {
     literals.add(lit);
   } */
+  
+  public int getSelfContextLevel() {
+    int level = 0;
+    MethodGenerationContext ctx = outerGenc;
+    while (ctx != null) {
+      ctx = ctx.getOuter();
+      level++;
+    }
+    return level;
+  }
 
-  public FrameSlot getFrameSlot(String varName) {
-    // triplet: index, context, isArgument
+  public int getFrameSlotContextLevel(final String varName) {
+    if (locals.contains(varName) || arguments.contains(varName)) {
+      return 0;
+    }
     
+    if (outerGenc != null) {
+      return 1 + outerGenc.getFrameSlotContextLevel(varName);
+    }
+    
+    return 0;
+  }
+  
+  public FrameSlot getFrameSlot(final String varName) {
     if (locals.contains(varName) || arguments.contains(varName)) {
       return frameDescriptor.findFrameSlot(varName);
     }

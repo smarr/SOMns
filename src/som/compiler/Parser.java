@@ -403,6 +403,7 @@ public class Parser {
       else if (sym == EndTerm) {
         // the end of the method has been found (EndTerm) - make it implicitly
         // return "self"
+        expressions.add(new SelfReadNode(mgenc.getSelfSlot(), mgenc.getSelfContextLevel()));
         SequenceNode seq = new SequenceNode(expressions.toArray(new ExpressionNode[0]));
         assignSource(seq, coord);
         return seq;
@@ -774,16 +775,16 @@ public class Parser {
                                       final String variableName) {
     // first handle the keywords/reserved names
     if ("self".equals(variableName))
-      return new SelfReadNode(mgenc.getSelfSlot());
+      return new SelfReadNode(mgenc.getSelfSlot(), mgenc.getSelfContextLevel());
     
     if ("super".equals(variableName))
-      return new SuperReadNode(mgenc.getSelfSlot());
+      return new SuperReadNode(mgenc.getSelfSlot(), mgenc.getSelfContextLevel());
     
     // now look up first local variables, or method arguments
     FrameSlot frameSlot = mgenc.getFrameSlot(variableName);
     
     if (frameSlot != null)
-      return new VariableReadNode(frameSlot);
+      return new VariableReadNode(frameSlot, mgenc.getFrameSlotContextLevel(variableName));
     
     // then object fields
     som.vmobjects.Symbol varName = universe.symbolFor(variableName); 
