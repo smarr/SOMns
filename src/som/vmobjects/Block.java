@@ -24,15 +24,9 @@
 
 package som.vmobjects;
 
-import com.oracle.truffle.api.CallTarget;
-import com.oracle.truffle.api.Truffle;
-import com.oracle.truffle.api.TruffleRuntime;
-import com.oracle.truffle.api.frame.FrameSlot;
-import com.oracle.truffle.api.frame.FrameSlotTypeException;
-import com.oracle.truffle.api.frame.VirtualFrame;
-
-import som.interpreter.nodes.Arguments;
 import som.vm.Universe;
+
+import com.oracle.truffle.api.frame.VirtualFrame;
 
 public class Block extends Object {
 
@@ -59,6 +53,8 @@ public class Block extends Object {
   }
 
   public void setContext(VirtualFrame value) {
+    if (virtualFrame != null)
+      throw new IllegalStateException("This is most likely a bug, the block's context should not change.");
     virtualFrame = value;
   }
 
@@ -81,9 +77,7 @@ public class Block extends Object {
 
     public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
       // Get the block (the receiver)
-      // TODO: check whether we need to find the outer context or so...
       Block self = (Block) selfO;
-            
       return self.getMethod().invoke(frame, selfO, args);
     }
 
@@ -99,8 +93,6 @@ public class Block extends Object {
       // Return the signature string
       return signatureString;
     }
-
-    // private int numberOfArguments;
   }
 
   // Static field indices and number of block fields
