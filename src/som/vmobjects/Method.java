@@ -227,6 +227,11 @@ public class Method extends Array implements Invokable {
   public boolean isReceiverClassTableFull() {
     return receiverClassIndex == 255;
   }
+  
+  @Override
+  public java.lang.String toString() {
+    return "Method(" + getHolder().getName().getString() + ">>#" + getSignature().toString() + ")";
+  }
 
   // Private variables for holding the last receiver class and invoked method
   private java.util.ArrayList<Class>     receiverClassTable                = new java.util.ArrayList<Class>();
