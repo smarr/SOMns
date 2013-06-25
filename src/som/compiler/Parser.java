@@ -352,7 +352,6 @@ public class Parser {
     return s;
   }
 
-        expressions.add(new SelfReadNode(mgenc.getSelfSlot()));
   private String keyword() {
     String s = new String(text);
     expect(Keyword);
@@ -802,7 +801,9 @@ public class Parser {
     FrameSlot frameSlot = mgenc.getFrameSlot(variableName);
     
     if (frameSlot != null)
-      return new VariableWriteNode(frameSlot, exp);
+      return new VariableWriteNode(frameSlot,
+          mgenc.getFrameSlotContextLevel(variableName),
+          exp);
     
     som.vmobjects.Symbol fieldName = universe.symbolFor(variableName);
     FieldWriteNode fieldWrite = mgenc.getObjectFieldWrite(fieldName, exp);
