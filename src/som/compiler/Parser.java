@@ -107,14 +107,12 @@ public class Parser {
   }
   
   private static class SourceCoordinate {
-    public final Source source;
     public final int startLine;
     public final int startColumn;
     public final int charIndex;
     
-    public SourceCoordinate(final Source source, final int startLine,
+    public SourceCoordinate(final int startLine,
         final int startColumn, final int charIndex) {
-      this.source = source;
       this.startLine = startLine;
       this.startColumn = startColumn;
       this.charIndex = charIndex;
@@ -132,7 +130,7 @@ public class Parser {
   }
   
   private SourceCoordinate getCoordinate() {
-    return new SourceCoordinate(source, lexer.getCurrentLineNumber(),
+    return new SourceCoordinate(lexer.getCurrentLineNumber(),
         lexer.getCurrentColumn(),
         lexer.getNumberOfCharactersRead());
   }
