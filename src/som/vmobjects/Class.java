@@ -277,6 +277,11 @@ public class Class extends Object {
       System.out.println("Primitives class " + className + " not found");
     }
   }
+  
+  @Override
+  public java.lang.String toString() {
+    return "Class(" + getName().getString() + ")";
+  }
 
   // Mapping of symbols to invokables
   private java.util.HashMap<Symbol, Invokable> invokablesTable;

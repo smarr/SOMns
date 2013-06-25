@@ -123,6 +123,11 @@ public class Object {
     // Set the field with the given index to the given value
     fields[index] = value;
   }
+  
+  @Override
+  public java.lang.String toString() {
+    return "a " + getSOMClass().getName().getString(); 
+  }
 
   // Private array of fields
   private Object[] fields;
