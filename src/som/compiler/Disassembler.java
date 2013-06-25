@@ -27,8 +27,6 @@ package som.compiler;
 import som.vmobjects.Class;
 import som.vmobjects.Invokable;
 import som.vmobjects.Method;
-import som.vmobjects.Object;
-import som.vmobjects.Symbol;
 
 public class Disassembler {
 
