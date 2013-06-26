@@ -267,12 +267,10 @@ public class Universe {
     
     // TODO: add support for Shell
     
-    /** if (arguments.length == 0) {
-      Shell shell = new Shell(this, interpreter);
-      shell.setBootstrapMethod(bootstrapMethod);
-      shell.start();
-      return;
-    } */
+    if (arguments.length == 0) {
+      Shell shell = new Shell(this);
+      return shell.start();
+    }
 
     // Convert the arguments into an array
     Array argumentsArray = newArray(arguments);

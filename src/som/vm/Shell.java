@@ -24,37 +24,24 @@
 
 package som.vm;
 
-import som.interpreter.Interpreter;
 import som.vmobjects.Class;
-import som.vmobjects.Frame;
-import som.vmobjects.Invokable;
 import som.vmobjects.Method;
 import som.vmobjects.Object;
 
 public class Shell {
 
-  private final Universe    universe;
-  private final Interpreter interpreter;
+  private final Universe universe;
 
-  public Shell(final Universe universe, final Interpreter interpreter) {
+  public Shell(final Universe universe) {
     this.universe = universe;
-    this.interpreter = interpreter;
   }
 
-  private Method bootstrapMethod;
-
-  public void setBootstrapMethod(Method method) {
-    bootstrapMethod = method;
-  }
-
-  public void start() {
-
+  public Object start() {
     java.io.BufferedReader in;
     java.lang.String stmt;
-    int counter, bytecodeIndex;
+    int counter;
     Class myClass;
     Object myObject, it;
-    Frame currentFrame;
 
     counter = 0;
     in = new java.io.BufferedReader(new java.io.InputStreamReader(
@@ -63,18 +50,13 @@ public class Shell {
 
     System.out.println("SOM Shell. Type \"quit\" to exit.\n");
 
-    // Create a fake bootstrap frame
-    currentFrame = interpreter.pushNewFrame(bootstrapMethod);
-
-    // Remember the first bytecode index, e.g. index of the halt instruction
-    bytecodeIndex = currentFrame.getBytecodeIndex();
-
     while (true) {
       try {
         System.out.print("---> ");
         // Read a statement from the keyboard
         stmt = in.readLine();
-        if (stmt.equals("quit")) return;
+        if (stmt.equals("quit"))
+          return it;
 
         // Generate a temporary class with a run method
         stmt = "Shell_Class_" + counter++ + " = ( run: it = ( | tmp | tmp := ("
@@ -85,36 +67,19 @@ public class Shell {
 
         // If success
         if (myClass != null) {
-          currentFrame = interpreter.getFrame();
-
-          // Go back, so we will evaluate the bootstrap frames halt
-          // instruction again
-          currentFrame.setBytecodeIndex(bytecodeIndex);
-
           // Create and push a new instance of our class on the stack
           myObject = universe.newInstance(myClass);
-          currentFrame.push(myObject);
-
-          // Push the old value of "it" on the stack
-          currentFrame.push(it);
 
           // Lookup the run: method
-          Invokable initialize = myClass.lookupInvokable(universe
+          Method shellMethod = (Method) myClass.lookupInvokable(universe
               .symbolFor("run:"));
 
           // Invoke the run method
-          initialize.invoke(currentFrame, interpreter);
-
-          // Start the interpreter
-          interpreter.start();
-
-          // Save the result of the run method
-          it = currentFrame.pop();
+          it = shellMethod.invokeRoot(myObject, new Object[] { it });
         }
       }
       catch (Exception e) {
         System.out.println("Caught exception: " + e.getMessage());
-        System.out.println("" + interpreter.getFrame().getPreviousFrame());
       }
     }
   }
