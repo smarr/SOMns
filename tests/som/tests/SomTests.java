@@ -19,20 +19,24 @@ public class SomTests {
     return Arrays.asList(new Object[][] {
         { "Array" },
         { "BigInteger" },
-        { "Block" },
+        { "Block" }, //
         { "ClassLoading" },
+        
         { "Closure" },
         { "Coercion" },
         { "CompilerReturn" },
         { "Double" },
+        
         { "Empty" },
         { "Hash" },
         { "Integer" },
         { "ObjectSize" },
+        
         { "Preliminary" },
         { "Reflection" },
         { "SelfBlock" },
         { "Super" },
+        
         { "Symbol" },
         { "Vector" }
       });
