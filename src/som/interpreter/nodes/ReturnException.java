@@ -8,7 +8,6 @@ import com.oracle.truffle.api.nodes.ControlFlowException;
 
 import som.vmobjects.Object;
 
-// TODO: rename to ReturnNonLocalException
 public final class ReturnException extends ControlFlowException {
   
   final private Object result;

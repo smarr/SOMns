@@ -268,9 +268,6 @@ public class Universe {
     Object systemObject = initializeObjectSystem();
 
     // Start the shell if no filename is given
-    
-    // TODO: add support for Shell
-    
     if (arguments.length == 0) {
       Shell shell = new Shell(this);
       return shell.start();

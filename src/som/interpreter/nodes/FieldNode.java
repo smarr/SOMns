@@ -36,7 +36,6 @@ public abstract class FieldNode extends ContextualNode {
         VirtualFrame ctx = determineContext(frame);
         self = (Object)ctx.getObject(selfSlot);
         
-        // TODO: use the fieldIndex directly if possible
         int fieldIndex = self.getFieldIndex(fieldName);
         return self.getField(fieldIndex);
       } catch (FrameSlotTypeException e) {
@@ -67,7 +66,6 @@ public abstract class FieldNode extends ContextualNode {
         value = exp.executeGeneric(frame);
         self  = (Object)ctx.getObject(selfSlot);
         
-        // TODO: use the fieldIndex directly if possible
         int fieldIndex = self.getFieldIndex(fieldName);
         self.setField(fieldIndex, value);
         return value;

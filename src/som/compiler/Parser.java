@@ -66,7 +66,7 @@ import com.oracle.truffle.api.frame.FrameSlot;
 
 import som.compiler.SourcecodeCompiler.Source;
 import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.ReturnNode.ReturnNonLocalNode;
+import som.interpreter.nodes.ReturnNonLocalNode;
 import som.interpreter.nodes.SequenceNode;
 import som.interpreter.nodes.FieldNode.FieldReadNode;
 import som.interpreter.nodes.FieldNode.FieldWriteNode;
@@ -153,7 +153,6 @@ public class Parser {
         || symIn(binaryOpSyms)) {
       MethodGenerationContext mgenc = new MethodGenerationContext();
       mgenc.setHolder(cgenc);
-      //mgenc.addArgument("self"); //TODO: remove
 
       SequenceNode methodBody = method(mgenc);
 
@@ -170,7 +169,6 @@ public class Parser {
           || symIn(binaryOpSyms)) {
         MethodGenerationContext mgenc = new MethodGenerationContext();
         mgenc.setHolder(cgenc);
-        // mgenc.addArgument("self"); //TODO: remove
 
         SequenceNode methodBody = method(mgenc);
 
@@ -310,8 +308,6 @@ public class Parser {
     SourceCoordinate coord = getCoordinate();
     expect(NewTerm);
     SequenceNode sequence = blockContents(mgenc);
-    // TODO: test whether we always have the right return value here, removed
-    //       code that made sure that self is returned. Had the feeling it was redundant.
     expect(EndTerm);
     assignSource(sequence, coord);
     return sequence;
@@ -421,7 +417,7 @@ public class Parser {
     if (mgenc.isBlockMethod())
       result = new ReturnNonLocalNode(exp, mgenc.getSelfContextLevel());
     else
-      result = exp; // TODO: figure out whether implicit return is sufficient, would think so, don't see why we would need a control-flow exception here.
+      result = exp;
     
     assignSource(result, coord);
     return result;
