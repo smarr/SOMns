@@ -41,4 +41,16 @@ NonLocalReturn = (
     )
     test2 = ( ^ self test1 + 1 )
     test3 = ( [ self test1. ^ 3 ] value )
+    
+    test4 = ( ^ self at: 11 )
+    test5 = ( ^ self at: 10000 )
+    
+    "Test case borrowed from Vector"
+    at: index = ( self checkIndex: index ifValid: [ ^ 42 ].
+      "else" ^ 22 )
+    checkIndex: index ifValid: block = (
+        (10 <= index) && (index <= 100)
+            ifTrue:  [ ^ block value ]
+            ifFalse: [ #dontcare ]
+    )
 )
