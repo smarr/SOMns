@@ -248,18 +248,18 @@ public class Universe {
     metaclassClass = newMetaclassClass();
 
     // Allocate the rest of the system classes
-    objectClass = newSystemClass();
-    nilClass = newSystemClass();
-    classClass = newSystemClass();
-    arrayClass = newSystemClass();
-    symbolClass = newSystemClass();
-    methodClass = newSystemClass();
-    integerClass = newSystemClass();
+    objectClass     = newSystemClass();
+    nilClass        = newSystemClass();
+    classClass      = newSystemClass();
+    arrayClass      = newSystemClass();
+    symbolClass     = newSystemClass();
+    methodClass     = newSystemClass();
+    integerClass    = newSystemClass();
     bigintegerClass = newSystemClass();
     /** REMOVED FOR TRUFFLE   frameClass = newSystemClass(); */
-    primitiveClass = newSystemClass();
-    stringClass = newSystemClass();
-    doubleClass = newSystemClass();
+    primitiveClass  = newSystemClass();
+    stringClass     = newSystemClass();
+    doubleClass     = newSystemClass();
 
     // Setup the class reference for the nil object
     nilObject.setClass(nilClass);
@@ -298,7 +298,7 @@ public class Universe {
     blockClass = loadClass(symbolFor("Block"));
 
     // Setup the true and false objects
-    trueObject = newInstance(loadClass(symbolFor("True")));
+    trueObject  = newInstance(loadClass(symbolFor("True")));
     falseObject = newInstance(loadClass(symbolFor("False")));
 
     // Load the system class and create an instance of it
