@@ -250,8 +250,6 @@ public class Parser {
   }
 
   private SequenceNode method(MethodGenerationContext mgenc) {
-    SourceCoordinate coord = getCoordinate();
-    
     pattern(mgenc);
     expect(Equal);
     if (sym == Primitive) {
@@ -260,9 +258,7 @@ public class Parser {
       return null;
     }
     else {
-      SequenceNode seq = methodBlock(mgenc);
-      assignSource(seq, coord);
-      return seq;
+      return methodBlock(mgenc);
     }
   }
 
@@ -305,11 +301,9 @@ public class Parser {
   }
 
   private SequenceNode methodBlock(final MethodGenerationContext mgenc) {
-    SourceCoordinate coord = getCoordinate();
     expect(NewTerm);
     SequenceNode sequence = blockContents(mgenc);
     expect(EndTerm);
-    assignSource(sequence, coord);
     return sequence;
   }
 
@@ -360,15 +354,12 @@ public class Parser {
   }
 
   private SequenceNode blockContents(final MethodGenerationContext mgenc) {
-    SourceCoordinate coord = getCoordinate();
     if (accept(Or)) {
       locals(mgenc);
       expect(Or);
     }
     
-    SequenceNode seq = blockBody(mgenc);
-    assignSource(seq, coord);
-    return seq;
+    return blockBody(mgenc);
   }
 
   private void locals(final MethodGenerationContext mgenc) {
@@ -408,34 +399,28 @@ public class Parser {
   }
 
   private ExpressionNode result(MethodGenerationContext mgenc) {
-    SourceCoordinate coord = getCoordinate();
     ExpressionNode exp = expression(mgenc);
     
+    SourceCoordinate coord = getCoordinate();
     accept(Period);
-
-    ExpressionNode result;
-    if (mgenc.isBlockMethod())
-      result = new ReturnNonLocalNode(exp, mgenc.getSelfContextLevel());
-    else
-      result = exp;
     
-    assignSource(result, coord);
-    return result;
+    if (mgenc.isBlockMethod()) {
+      ExpressionNode result = new ReturnNonLocalNode(exp,
+          mgenc.getSelfContextLevel());
+      assignSource(result, coord);
+      return result;
+    }
+    else
+      return exp;
   }
 
   private ExpressionNode expression(final MethodGenerationContext mgenc) {
-    SourceCoordinate coord = getCoordinate();
-    
     PEEK();
     
-    ExpressionNode result;
     if (nextSym == Assign)
-      result = assignation(mgenc);
+      return assignation(mgenc);
     else
-      result = evaluation(mgenc);
-    
-    assignSource(result, coord);
-    return result;
+      return evaluation(mgenc);
   }
 
   private ExpressionNode assignation(final MethodGenerationContext mgenc) {
@@ -473,31 +458,26 @@ public class Parser {
   }
 
   private ExpressionNode evaluation(final MethodGenerationContext mgenc) {
-    SourceCoordinate coord = getCoordinate();
     ExpressionNode exp = primary(mgenc);
     if (sym == Identifier || sym == Keyword || sym == OperatorSequence
         || symIn(binaryOpSyms)) {
       exp = messages(mgenc, exp);
     }
     
-    assignSource(exp, coord);
     return exp;
   }
 
   private ExpressionNode primary(final MethodGenerationContext mgenc) {
-    SourceCoordinate coord = getCoordinate();
-    ExpressionNode result;
     switch (sym) {
       case Identifier: {
         String v = variable();
-        result = variableRead(mgenc, v);
-        break;
+        return variableRead(mgenc, v);
       }
       case NewTerm: {
-        result = nestedTerm(mgenc);
-        break;
+        return nestedTerm(mgenc);
       }
       case NewBlock: {
+        SourceCoordinate coord = getCoordinate();
         MethodGenerationContext bgenc = new MethodGenerationContext();
         bgenc.setIsBlockMethod(true);
         bgenc.setHolder(mgenc.getHolder());
@@ -506,17 +486,14 @@ public class Parser {
         SequenceNode blockBody = nestedBlock(bgenc);
 
         som.vmobjects.Method blockMethod = bgenc.assemble(universe, blockBody);
-        result = new BlockNode(blockMethod, universe);
-        break;
+        ExpressionNode result = new BlockNode(blockMethod, universe);
+        assignSource(result, coord);
+        return result;
       }
       default: {
-        result = literal();
-        break;
+        return literal();
       }
     }
-    
-    assignSource(result, coord);
-    return result;
   }
 
   private String variable() {
@@ -525,7 +502,6 @@ public class Parser {
 
   private MessageNode messages(final MethodGenerationContext mgenc,
       final ExpressionNode receiver) {
-    SourceCoordinate coord = getCoordinate();
     MessageNode msg;
     if (sym == Identifier) {
       msg = unaryMessage(receiver);
@@ -556,7 +532,6 @@ public class Parser {
     else
       msg = keywordMessage(mgenc, receiver);
     
-    assignSource(msg, coord);
     return msg;
   }
 
@@ -579,7 +554,6 @@ public class Parser {
   }
 
   private ExpressionNode binaryOperand(final MethodGenerationContext mgenc) {
-    SourceCoordinate coord = getCoordinate();
     ExpressionNode operand = primary(mgenc);
 
     // a binary operand can receive unaryMessages
@@ -588,7 +562,6 @@ public class Parser {
     while (sym == Identifier)
       operand = unaryMessage(operand);
     
-    assignSource(operand, coord);
     return operand;
   }
 
@@ -612,24 +585,18 @@ public class Parser {
   }
 
   private ExpressionNode formula(final MethodGenerationContext mgenc) {
-    SourceCoordinate coord = getCoordinate();
     ExpressionNode operand = binaryOperand(mgenc);
 
     while (sym == OperatorSequence || symIn(binaryOpSyms))
       operand = binaryMessage(mgenc, operand);
     
-    assignSource(operand, coord);
     return operand;
   }
 
   private ExpressionNode nestedTerm(MethodGenerationContext mgenc) {
-    SourceCoordinate coord = getCoordinate();
-
     expect(NewTerm);
     ExpressionNode exp = expression(mgenc);
     expect(EndTerm);
-    
-    assignSource(exp, coord);
     return exp;
   }
 
@@ -728,10 +695,6 @@ public class Parser {
   }
 
   private SequenceNode nestedBlock(final MethodGenerationContext mgenc) {
-    SourceCoordinate coord = getCoordinate();
-    
-    // mgenc.addArgumentIfAbsent("$block self");
-
     expect(NewBlock);
     if (sym == Colon) blockPattern(mgenc);
 
@@ -747,7 +710,6 @@ public class Parser {
 
     expect(EndBlock);
     
-    assignSource(expressions, coord);
     return expressions;
   }
 
