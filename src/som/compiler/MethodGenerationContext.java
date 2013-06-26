@@ -237,6 +237,13 @@ public class MethodGenerationContext {
     }
     return level;
   }
+  
+  public FrameSlot getOuterSelfSlot() {
+    if (outerGenc == null)
+      return selfSlot;
+    else
+      return outerGenc.getOuterSelfSlot();    
+  }
 
   public int getFrameSlotContextLevel(final String varName) {
     if (locals.contains(varName) || arguments.contains(varName)) {
@@ -267,15 +274,12 @@ public class MethodGenerationContext {
     if (!holderGenc.hasField(fieldName))
       return null;
     
-    return new FieldReadNode(fieldName,
-        frameDescriptor.findFrameSlot("self"));
+    return new FieldReadNode(fieldName, getOuterSelfSlot(), getSelfContextLevel());
   }
   
   public GlobalReadNode getGlobalRead(final Symbol varName,
       final Universe universe) {
-    return new GlobalReadNode(varName,
-        frameDescriptor.findFrameSlot("self"),
-        universe);
+    return new GlobalReadNode(varName, getOuterSelfSlot(), universe);
   }
   
   public FieldWriteNode getObjectFieldWrite(final Symbol fieldName,
@@ -283,9 +287,7 @@ public class MethodGenerationContext {
     if (!holderGenc.hasField(fieldName))
       return null;
     
-    return new FieldWriteNode(fieldName,
-        frameDescriptor.findFrameSlot("self"),
-        exp);
+    return new FieldWriteNode(fieldName, getOuterSelfSlot(), getSelfContextLevel(), exp);
   }
 
   /**

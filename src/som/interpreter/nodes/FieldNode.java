@@ -8,27 +8,33 @@ import com.oracle.truffle.api.frame.FrameSlotTypeException;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 
-public abstract class FieldNode extends ExpressionNode {
+public abstract class FieldNode extends ContextualNode {
 
   protected final Symbol    fieldName;
   protected final FrameSlot selfSlot;
   
-  public FieldNode(final Symbol fieldName, final FrameSlot selfSlot) {
+  public FieldNode(final Symbol fieldName,
+      final FrameSlot selfSlot,
+      final int contextLevel) {
+    super(contextLevel);
     this.fieldName = fieldName;
     this.selfSlot  = selfSlot;
   }
 
   public static class FieldReadNode extends FieldNode {
     
-    public FieldReadNode(final Symbol fieldName, final FrameSlot selfSlot) {
-      super(fieldName, selfSlot);
+    public FieldReadNode(final Symbol fieldName,
+        final FrameSlot selfSlot,
+        final int contextLevel) {
+      super(fieldName, selfSlot, contextLevel);
     }
 
     @Override
     public Object executeGeneric(VirtualFrame frame) {
       Object self;
       try {
-        self = (Object)frame.getObject(selfSlot);
+        VirtualFrame ctx = determineContext(frame);
+        self = (Object)ctx.getObject(selfSlot);
         
         // TODO: use the fieldIndex directly if possible
         int fieldIndex = self.getFieldIndex(fieldName);
@@ -46,8 +52,9 @@ public abstract class FieldNode extends ExpressionNode {
     
     public FieldWriteNode(final Symbol fieldName,
         final FrameSlot selfSlot,
+        final int contextLevel,
         final ExpressionNode exp) {
-      super(fieldName, selfSlot);
+      super(fieldName, selfSlot, contextLevel);
       this.exp = adoptChild(exp);
     }
     
@@ -56,8 +63,9 @@ public abstract class FieldNode extends ExpressionNode {
       Object self;
       Object value;
       try {
+        VirtualFrame ctx = determineContext(frame);
         value = exp.executeGeneric(frame);
-        self  = (Object)frame.getObject(selfSlot);
+        self  = (Object)ctx.getObject(selfSlot);
         
         // TODO: use the fieldIndex directly if possible
         int fieldIndex = self.getFieldIndex(fieldName);
