@@ -20,10 +20,17 @@ public class BasicInterpreterTests {
     return Arrays.asList(new Object[][] {
         { "MethodCall",     "test",  42, Integer.class },
         { "MethodCall",     "test2", 42, Integer.class },
+        
         { "NonLocalReturn", "test",  "NonLocalReturn", som.vmobjects.Class.class },
         { "NonLocalReturn", "test1", 42, Integer.class },
         { "NonLocalReturn", "test2", 43, Integer.class },
         { "NonLocalReturn", "test3",  3, Integer.class },
+        
+        { "Blocks", "arg1",  42, Integer.class },
+        { "Blocks", "arg2",  77, Integer.class },
+        { "Blocks", "arg3",  72, Integer.class },
+        { "Blocks", "argAndLocal",    8, Integer.class },
+        { "Blocks", "argAndContext",  8, Integer.class },
     }); 
   }
   
