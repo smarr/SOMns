@@ -230,7 +230,7 @@ public class Method extends Array implements Invokable {
   
   @Override
   public java.lang.String toString() {
-    return "Method(" + getHolder().getName().getString() + ">>#" + getSignature().toString() + ")";
+    return "Method(" + getHolder().getName().getString() + ">>" + getSignature().toString() + ")";
   }
 
   // Private variables for holding the last receiver class and invoked method

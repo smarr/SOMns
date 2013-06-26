@@ -59,7 +59,7 @@ public class Symbol extends Object {
   }
 
   public java.lang.String toString() {
-    return string;
+    return "#" + string;
   }
 
   public int getNumberOfSignatureArguments() {
