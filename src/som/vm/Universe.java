@@ -50,8 +50,12 @@ public class Universe {
     // Create Universe
     Universe u = new Universe();
     
-    // Start interpretation
-    u.interpret(arguments);
+    try {
+      // Start interpretation
+      u.interpret(arguments);
+    } catch (IllegalStateException e) {
+      System.err.println("ERROR: " + e.getMessage());
+    }
     
     // Exit with error code 0
     u.exit(0);
@@ -283,7 +287,7 @@ public class Universe {
     return initialize.invokeRoot(systemObject, new Object[] { argumentsArray });
   }
 
-  protected Object initializeObjectSystem() {
+  protected Object initializeObjectSystem() {    
     // Allocate the nil object
     nilObject = new Object(null);
 
@@ -666,6 +670,14 @@ public class Universe {
   public void loadSystemClass(Class systemClass) {
     // Load the system class
     Class result = loadClass(systemClass.getName(), systemClass);
+    
+    if (result == null) {
+      throw new IllegalStateException(systemClass.getName().getString()
+          + " class could not be loaded. "
+          + "It is likely that the class path has not been initialized properly. "
+          + "Please set system property 'system.class.path' or "
+          + "pass the '-cp' command-line parameter.");
+    }
 
     // Load primitives if necessary
     if (result.hasPrimitives()) result.loadPrimitives();
