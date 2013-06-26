@@ -92,7 +92,7 @@ public class ObjectPrimitives extends Primitives {
         Array  argsArr  = (Array)  args[1];
         
         Invokable invokable = self.getSOMClass().lookupInvokable(selector);
-        return invokable.invoke(frame, self, new Object[] { argsArr });
+        return invokable.invoke(frame, self, argsArr.indexableFields);
       }
     });
     
