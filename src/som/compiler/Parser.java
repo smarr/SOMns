@@ -419,7 +419,7 @@ public class Parser {
 
     ExpressionNode result;
     if (mgenc.isBlockMethod())
-      result = new ReturnNonLocalNode(exp);
+      result = new ReturnNonLocalNode(exp, mgenc.getSelfContextLevel());
     else
       result = exp; // TODO: figure out whether implicit return is sufficient, would think so, don't see why we would need a control-flow exception here.
     

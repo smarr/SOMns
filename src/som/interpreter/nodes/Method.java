@@ -26,8 +26,21 @@ public class Method extends RootNode {
   @Override
   public Object execute(VirtualFrame frame) {
     initializeFrame(frame);
+    
+    Object result;
+    try {
+        result = expressions.executeGeneric(frame);
+    }
+    catch (ReturnException e) {
+      if (!e.reachedTarget(frame)) {
+        throw e; 
+      }
+      else {
+        result = e.result();
+      }
+    }
       
-    return expressions.executeGeneric(frame);
+    return result;
   }
 
   private void initializeFrame(VirtualFrame frame) {

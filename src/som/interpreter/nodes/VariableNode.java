@@ -1,40 +1,22 @@
 package som.interpreter.nodes;
 
-import som.vmobjects.Block;
 import som.vmobjects.Object;
 
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotTypeException;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
-public abstract class VariableNode extends ExpressionNode {
+public abstract class VariableNode extends ContextualNode {
   
   protected final FrameSlot slot;
-  protected final int contextLevel;
+  
   
   public VariableNode(final FrameSlot slot, final int contextLevel) {
+    super(contextLevel);
     this.slot = slot;
-    this.contextLevel = contextLevel;
   }
   
-  protected VirtualFrame determineContext(VirtualFrame frame) {
-    VirtualFrame ctx = frame;
-    if (contextLevel > 0) {
-      int i = contextLevel;
-      
-      while (i > 0) {
-        try {
-          FrameSlot blockSelfSlot = ctx.getFrameDescriptor().findFrameSlot("self");
-          Block block = (Block)ctx.getObject(blockSelfSlot);
-          ctx = block.getContext();
-          i--;
-        } catch (FrameSlotTypeException e) {
-          throw new RuntimeException("This should really really never happen...");
-        }
-      }
-    }
-    return ctx;
-  }
+
   
   public static class VariableReadNode extends VariableNode {
 
