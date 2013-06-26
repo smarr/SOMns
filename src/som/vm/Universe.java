@@ -27,11 +27,6 @@ package som.vm;
 import java.io.IOException;
 import java.util.HashMap;
 
-import com.oracle.truffle.api.Truffle;
-import com.oracle.truffle.api.TruffleRuntime;
-import com.oracle.truffle.api.frame.FrameDescriptor;
-import com.oracle.truffle.api.frame.VirtualFrame;
-
 import som.compiler.Disassembler;
 import som.vmobjects.Array;
 import som.vmobjects.BigInteger;
@@ -39,11 +34,15 @@ import som.vmobjects.Block;
 import som.vmobjects.Class;
 import som.vmobjects.Double;
 import som.vmobjects.Integer;
-import som.vmobjects.Invokable;
 import som.vmobjects.Method;
 import som.vmobjects.Object;
 import som.vmobjects.String;
 import som.vmobjects.Symbol;
+
+import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.TruffleRuntime;
+import com.oracle.truffle.api.frame.FrameDescriptor;
+import com.oracle.truffle.api.frame.VirtualFrame;
 
 public class Universe {
   
@@ -58,12 +57,12 @@ public class Universe {
     u.exit(0);
   }
   
-  public void interpret(java.lang.String[] arguments) {
+  public Object interpret(java.lang.String[] arguments) {
     // Check for command line switches
     arguments = handleArguments(arguments);
 
     // Initialize the known universe
-    initialize(arguments);
+    return execute(arguments);
   }
 
   static { /* static initializer */
@@ -186,7 +185,7 @@ public class Universe {
     return result;
   }
 
-  private void setupClassPath(java.lang.String cp) {
+  public void setupClassPath(java.lang.String cp) {
     // Create a new tokenizer to split up the string of directories
     java.util.StringTokenizer tokenizer = new java.util.StringTokenizer(cp,
         pathSeparator);
@@ -194,7 +193,7 @@ public class Universe {
     // Get the default class path of the appropriate size
     classPath = setupDefaultClassPath(tokenizer.countTokens());
 
-    // Get the dictories and put them into the class path array
+    // Get the directories and put them into the class path array
     for (int i = 0; tokenizer.hasMoreTokens(); i++) {
       classPath[i] = tokenizer.nextToken();
     }
@@ -239,8 +238,54 @@ public class Universe {
     // Exit
     System.exit(0);
   }
+  
+  /**
+   * Start interpretation by sending the selector to the given class.
+   * This is mostly meant for testing currently.
+   * 
+   * @param className
+   * @param selector
+   * @return
+   */
+  public Object interpret(java.lang.String className,
+      java.lang.String selector) {
+    initializeObjectSystem();
 
-  private void initialize(java.lang.String[] arguments) {
+    Class clazz = loadClass(symbolFor(className));    
+
+    // Lookup the initialize invokable on the system class
+    Method initialize = (Method) clazz.getSOMClass().lookupInvokable(symbolFor(selector));
+
+    // Invoke the initialize invokable
+    return initialize.invokeRoot(clazz, new Object[0]);
+  }
+
+  private Object execute(java.lang.String[] arguments) {
+    Object systemObject = initializeObjectSystem();
+
+    // Start the shell if no filename is given
+    
+    // TODO: add support for Shell
+    
+    /** if (arguments.length == 0) {
+      Shell shell = new Shell(this, interpreter);
+      shell.setBootstrapMethod(bootstrapMethod);
+      shell.start();
+      return;
+    } */
+
+    // Convert the arguments into an array
+    Array argumentsArray = newArray(arguments);
+
+    // Lookup the initialize invokable on the system class
+    Method initialize = (Method) systemClass
+        .lookupInvokable(symbolFor("initialize:"));
+
+    // Invoke the initialize invokable
+    return initialize.invokeRoot(systemObject, new Object[] { argumentsArray });
+  }
+
+  protected Object initializeObjectSystem() {
     // Allocate the nil object
     nilObject = new Object(null);
 
@@ -312,27 +357,7 @@ public class Universe {
     setGlobal(symbolFor("system"), systemObject);
     setGlobal(symbolFor("System"), systemClass);
     setGlobal(symbolFor("Block"),  blockClass);
-
-    // Start the shell if no filename is given
-    
-    // TODO: add support for Shell
-    
-    /** if (arguments.length == 0) {
-      Shell shell = new Shell(this, interpreter);
-      shell.setBootstrapMethod(bootstrapMethod);
-      shell.start();
-      return;
-    } */
-
-    // Convert the arguments into an array
-    Array argumentsArray = newArray(arguments);
-
-    // Lookup the initialize invokable on the system class
-    Method initialize = (Method) systemClass
-        .lookupInvokable(symbolFor("initialize:"));
-
-    // Invoke the initialize invokable
-    initialize.invokeRoot(systemObject, new Object[] { argumentsArray });
+    return systemObject;
   }
 
   public Symbol symbolFor(java.lang.String string) {
