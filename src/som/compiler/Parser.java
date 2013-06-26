@@ -153,7 +153,7 @@ public class Parser {
         || symIn(binaryOpSyms)) {
       MethodGenerationContext mgenc = new MethodGenerationContext();
       mgenc.setHolder(cgenc);
-      //mgenc.addArgument("self");
+      //mgenc.addArgument("self"); //TODO: remove
 
       SequenceNode methodBody = method(mgenc);
 
@@ -170,7 +170,7 @@ public class Parser {
           || symIn(binaryOpSyms)) {
         MethodGenerationContext mgenc = new MethodGenerationContext();
         mgenc.setHolder(cgenc);
-        mgenc.addArgument("self");
+        // mgenc.addArgument("self"); //TODO: remove
 
         SequenceNode methodBody = method(mgenc);
 
