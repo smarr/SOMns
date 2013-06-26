@@ -28,9 +28,13 @@ public class BasicInterpreterTests {
         
         { "Blocks", "arg1",  42, Integer.class },
         { "Blocks", "arg2",  77, Integer.class },
-        { "Blocks", "arg3",  72, Integer.class },
         { "Blocks", "argAndLocal",    8, Integer.class },
         { "Blocks", "argAndContext",  8, Integer.class },
+        
+        { "Return", "returnSelf",           "Return", som.vmobjects.Class.class },
+        { "Return", "returnSelfImplicitly", "Return", som.vmobjects.Class.class },
+        { "Return", "noReturnReturnsSelf",  "Return", som.vmobjects.Class.class },
+        { "Return", "blockReturnsImplicitlyLastValue", 4, Integer.class }
     }); 
   }
   

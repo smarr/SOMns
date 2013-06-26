@@ -20,24 +20,15 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 "
 
-Blocks = (
+Return = (
     
     ----
     
-    arg1 = ( ^ [:a | a - 1] value: 43 )
+    returnSelf = ( ^ self )
 
-    arg2 = ( ^ [:a :b | a * b ] value: 11 with: 7 )
+    returnSelfImplicitly = ( )
   
-    argAndLocal = (
-      ^ ([:a |
-        | blockLocal | 
-        blockLocal := 3.
-        a + blockLocal] value: 5)
-    )
+    noReturnReturnsSelf = ( 1 )
     
-    argAndContext = ( | methodLocal |
-      ^ ([:a |
-        methodLocal := 3.
-        a + methodLocal] value: 5)
-    )
+    blockReturnsImplicitlyLastValue = ( ^ ([4] value) )
 )
