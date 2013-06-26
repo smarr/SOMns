@@ -35,7 +35,10 @@ NonLocalReturn = (
         self test3 asString println.
     )
     
-    test1 = ( [ ^ 42 ] value )
+    test1 = ( | t1Frame |
+      [ | nlrFrame |
+        ^ 42 ] value
+    )
     test2 = ( ^ self test1 + 1 )
     test3 = ( [ self test1. ^ 3 ] value )
 )
