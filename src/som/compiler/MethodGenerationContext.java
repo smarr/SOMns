@@ -182,7 +182,7 @@ public class MethodGenerationContext {
   }
   
   public void addArgumentIfAbsent(String arg) {
-    if (locals.contains(arg))
+    if (arguments.contains(arg))
       return;
     
     addArgument(arg);
