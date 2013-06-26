@@ -742,7 +742,7 @@ public class Parser {
     // generate Block signature
     String blockSig = "$block method";
     int argSize = mgenc.getNumberOfArguments();
-    for (int i = 1; i < argSize; i++)
+    for (int i = 0; i < argSize; i++)
       blockSig += ":";
 
     mgenc.setSignature(universe.symbolFor(blockSig));

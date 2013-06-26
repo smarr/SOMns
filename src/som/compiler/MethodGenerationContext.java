@@ -288,6 +288,10 @@ public class MethodGenerationContext {
         exp);
   }
 
+  /**
+   * @return number of explicit arguments, 
+   *         i.e., excluding the implicit 'self' argument
+   */
   public int getNumberOfArguments() {
     return arguments.size();
   }
