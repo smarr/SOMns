@@ -25,6 +25,8 @@ public class BasicInterpreterTests {
         { "NonLocalReturn", "test1", 42, Integer.class },
         { "NonLocalReturn", "test2", 43, Integer.class },
         { "NonLocalReturn", "test3",  3, Integer.class },
+        { "NonLocalReturn", "test4", 42, Integer.class },
+        { "NonLocalReturn", "test5", 22, Integer.class },
         
         { "Blocks", "arg1",  42, Integer.class },
         { "Blocks", "arg2",  77, Integer.class },
