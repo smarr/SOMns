@@ -90,8 +90,7 @@ public class ClassGenerationContext {
     som.vmobjects.Class superClass = universe.loadClass(superName);
 
     // Allocate the class of the resulting class
-    som.vmobjects.Class resultClass = universe
-        .newClass(universe.metaclassClass);
+    som.vmobjects.Class resultClass = universe.newClass(universe.metaclassClass);
 
     // Initialize the class of the resulting class
     resultClass.setInstanceFields(universe.newArray(classFields));
