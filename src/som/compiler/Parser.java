@@ -97,16 +97,19 @@ public class Parser {
   private static final List<Symbol> keywordSelectorSyms = new ArrayList<Symbol>();
 
   static {
-    for (Symbol s : new Symbol[] { Not, And, Or, Star, Div, Mod, Plus, Equal,
-      More, Less, Comma, At, Per, NONE })
+    for (Symbol s : new Symbol[] {Not, And, Or, Star, Div, Mod, Plus, Equal,
+        More, Less, Comma, At, Per, NONE}) {
       singleOpSyms.add(s);
-    for (Symbol s : new Symbol[] { Or, Comma, Minus, Equal, Not, And, Or, Star,
-      Div, Mod, Plus, Equal, More, Less, Comma, At, Per, NONE })
+    }
+    for (Symbol s : new Symbol[] {Or, Comma, Minus, Equal, Not, And, Or, Star,
+        Div, Mod, Plus, Equal, More, Less, Comma, At, Per, NONE}) {
       binaryOpSyms.add(s);
-    for (Symbol s : new Symbol[] { Keyword, KeywordSequence })
+    }
+    for (Symbol s : new Symbol[] {Keyword, KeywordSequence}) {
       keywordSelectorSyms.add(s);
+    }
   }
-  
+
   private static class SourceCoordinate {
     public final int startLine;
     public final int startColumn;
@@ -144,9 +147,9 @@ public class Parser {
     if (sym == Identifier) {
       cgenc.setSuperName(universe.symbolFor(text));
       accept(Identifier);
-    }
-    else
+    } else {
       cgenc.setSuperName(universe.symbolFor("Object"));
+    }
 
     expect(NewTerm);
     instanceFields(cgenc);
@@ -157,10 +160,11 @@ public class Parser {
 
       SequenceNode methodBody = method(mgenc);
 
-      if (mgenc.isPrimitive())
+      if (mgenc.isPrimitive()) {
         cgenc.addInstanceMethod(mgenc.assemblePrimitive(universe));
-      else
+      } else {
         cgenc.addInstanceMethod(mgenc.assemble(universe, methodBody));
+      }
     }
 
     if (accept(Separator)) {
@@ -173,10 +177,11 @@ public class Parser {
 
         SequenceNode methodBody = method(mgenc);
 
-        if (mgenc.isPrimitive())
+        if (mgenc.isPrimitive()) {
           cgenc.addClassMethod(mgenc.assemblePrimitive(universe));
-        else
+        } else {
           cgenc.addClassMethod(mgenc.assemble(universe, methodBody));
+        }
       }
     }
     expect(EndTerm);
@@ -203,23 +208,24 @@ public class Parser {
   }
 
   private boolean expect(Symbol s) {
-    if (accept(s)) return true;
+    if (accept(s)) { return true; }
     StringBuffer err = new StringBuffer("Error: unexpected symbol in line "
         + lexer.getCurrentLineNumber() + ". Expected " + s.toString()
         + ", but found " + sym.toString());
-    if (printableSymbol()) err.append(" (" + text + ")");
+    if (printableSymbol()) { err.append(" (" + text + ")"); }
     err.append(": " + lexer.getRawBuffer());
     throw new IllegalStateException(err.toString());
   }
 
   private boolean expectOneOf(List<Symbol> ss) {
-    if (acceptOneOf(ss)) return true;
+    if (acceptOneOf(ss)) { return true; }
     StringBuffer err = new StringBuffer("Error: unexpected symbol in line "
         + lexer.getCurrentLineNumber() + ". Expected one of ");
-    for (Symbol s : ss)
+    for (Symbol s : ss) {
       err.append(s.toString() + ", ");
+    }
     err.append("but found " + sym.toString());
-    if (printableSymbol()) err.append(" (" + text + ")");
+    if (printableSymbol()) { err.append(" (" + text + ")"); }
     err.append(": " + lexer.getRawBuffer());
     throw new IllegalStateException(err.toString());
   }
@@ -257,8 +263,7 @@ public class Parser {
       mgenc.setPrimitive(true);
       primitiveBlock();
       return null;
-    }
-    else {
+    } else {
       return methodBlock(mgenc);
     }
   }
@@ -315,30 +320,24 @@ public class Parser {
   private som.vmobjects.Symbol binarySelector() {
     String s = new String(text);
 
-    if (accept(Or))
-      ;
-    else if (accept(Comma))
-      ;
-    else if (accept(Minus))
-      ;
-    else if (accept(Equal))
-      ;
-    else if (acceptOneOf(singleOpSyms))
-      ;
-    else if (accept(OperatorSequence))
-      ;
-    else
-      expect(NONE);
+    if (accept(Or)) { ;
+    } else if (accept(Comma)) {
+    } else if (accept(Minus)) {
+    } else if (accept(Equal)) {
+    } else if (acceptOneOf(singleOpSyms)) {
+    } else if (accept(OperatorSequence)) {
+    } else { expect(NONE); }
 
     return universe.symbolFor(s);
   }
 
   private String identifier() {
     String s = new String(text);
-    if (accept(Primitive))
+    if (accept(Primitive)) {
       ; // text is set
-    else
+    } else {
       expect(Identifier);
+    }
 
     return s;
   }
@@ -364,8 +363,9 @@ public class Parser {
   }
 
   private void locals(final MethodGenerationContext mgenc) {
-    while (sym == Identifier)
+    while (sym == Identifier) {
       mgenc.addLocalIfAbsent(variable());
+    }
   }
 
   private SequenceNode blockBody(final MethodGenerationContext mgenc) {
@@ -379,13 +379,11 @@ public class Parser {
         SequenceNode seq = new SequenceNode(expressions.toArray(new ExpressionNode[0]));
         assignSource(seq, coord);
         return seq;
-      }
-      else if (sym == EndBlock) {
+      } else if (sym == EndBlock) {
         SequenceNode seq = new SequenceNode(expressions.toArray(new ExpressionNode[0]));
         assignSource(seq, coord);
         return seq;
-      }
-      else if (sym == EndTerm) {
+      } else if (sym == EndTerm) {
         // the end of the method has been found (EndTerm) - make it implicitly
         // return "self"
         expressions.add(new SelfReadNode(mgenc.getSelfSlot(), mgenc.getSelfContextLevel()));
@@ -410,18 +408,19 @@ public class Parser {
           mgenc.getSelfContextLevel());
       assignSource(result, coord);
       return result;
-    }
-    else
+    } else {
       return exp;
+    }
   }
 
   private ExpressionNode expression(final MethodGenerationContext mgenc) {
     PEEK();
-    
-    if (nextSym == Assign)
+
+    if (nextSym == Assign) {
       return assignation(mgenc);
-    else
+    } else {
       return evaluation(mgenc);
+    }
   }
 
   private ExpressionNode assignation(final MethodGenerationContext mgenc) {
@@ -430,14 +429,16 @@ public class Parser {
 
   private ExpressionNode assignments(final MethodGenerationContext mgenc) {
     SourceCoordinate coord = getCoordinate();
-    
-    if (sym != Identifier)
-      throw new RuntimeException("This is every unexpected, assignments should always target variables or fields. But found instead a: " + sym.toString());
-    
+
+    if (sym != Identifier) {
+      throw new RuntimeException("This is every unexpected, "
+          + "assignments should always target variables or fields. "
+          + "But found instead a: " + sym.toString());
+    }
     String variable = assignment();
-      
+
     PEEK();
-      
+
     ExpressionNode value;
     if (nextSym == Assign) {
       value = assignments(mgenc);
@@ -515,10 +516,9 @@ public class Parser {
       if (sym == Keyword) {
         msg = keywordMessage(mgenc, msg);
       }
-    }
-    else if (sym == OperatorSequence || symIn(binaryOpSyms)) {
+    } else if (sym == OperatorSequence || symIn(binaryOpSyms)) {
       msg = binaryMessage(mgenc, receiver);
-      
+
       while (sym == OperatorSequence || symIn(binaryOpSyms)) {
         msg = binaryMessage(mgenc, msg);
       }
@@ -526,14 +526,13 @@ public class Parser {
       if (sym == Keyword) {
         msg = keywordMessage(mgenc, msg);
       }
-    }
-    else
+    } else {
       msg = keywordMessage(mgenc, receiver);
-    
+    }
     return msg;
   }
 
-  private MessageNode unaryMessage(ExpressionNode receiver) {
+  private MessageNode unaryMessage(final ExpressionNode receiver) {
     SourceCoordinate coord = getCoordinate();
     som.vmobjects.Symbol selector = unarySelector();
     MessageNode msg = new MessageNode(receiver, null, selector, universe);
@@ -541,12 +540,14 @@ public class Parser {
     return msg;
   }
 
-  private MessageNode binaryMessage(final MethodGenerationContext mgenc, ExpressionNode receiver) {
+  private MessageNode binaryMessage(final MethodGenerationContext mgenc,
+      final ExpressionNode receiver) {
     SourceCoordinate coord = getCoordinate();
     som.vmobjects.Symbol msg = binarySelector();
     ExpressionNode operand   = binaryOperand(mgenc);
-    
-    MessageNode msgNode = new MessageNode(receiver, new ExpressionNode[] { operand }, msg, universe);
+
+    MessageNode msgNode = new MessageNode(receiver,
+        new ExpressionNode[] {operand}, msg, universe);
     assignSource(msgNode, coord);
     return msgNode;
   }
@@ -557,9 +558,9 @@ public class Parser {
     // a binary operand can receive unaryMessages
     // Example: 2 * 3 asString
     //   is evaluated as 2 * (3 asString)
-    while (sym == Identifier)
+    while (sym == Identifier) {
       operand = unaryMessage(operand);
-    
+    }
     return operand;
   }
 
@@ -585,13 +586,13 @@ public class Parser {
   private ExpressionNode formula(final MethodGenerationContext mgenc) {
     ExpressionNode operand = binaryOperand(mgenc);
 
-    while (sym == OperatorSequence || symIn(binaryOpSyms))
+    while (sym == OperatorSequence || symIn(binaryOpSyms)) {
       operand = binaryMessage(mgenc, operand);
-    
+    }
     return operand;
   }
 
-  private ExpressionNode nestedTerm(MethodGenerationContext mgenc) {
+  private ExpressionNode nestedTerm(final MethodGenerationContext mgenc) {
     expect(NewTerm);
     ExpressionNode exp = expression(mgenc);
     expect(EndTerm);
@@ -609,19 +610,19 @@ public class Parser {
   private LiteralNode literalNumber() {
     SourceCoordinate coord = getCoordinate();
     long val;
-    if (sym == Minus)
+    if (sym == Minus) {
       val = negativeDecimal();
-    else
+    } else {
       val = literalDecimal();
+    }
 
     som.vmobjects.Object lit;
     if (val < java.lang.Integer.MIN_VALUE || val > java.lang.Integer.MAX_VALUE) {
       lit = universe.newBigInteger(val);
+    } else {
+      lit = universe.newInteger((int) val);
     }
-    else {
-      lit = universe.newInteger((int)val);
-    }
-    
+
     LiteralNode node = new LiteralNode(lit);
     assignSource(node, coord);
     return node;
@@ -650,10 +651,10 @@ public class Parser {
     if (sym == STString) {
       String s = string();
       symb = universe.symbolFor(s);
-    }
-    else
+    } else {
       symb = selector();
-    
+    }
+
     LiteralNode lit = new LiteralNode(symb);
     assignSource(lit, coord);
     return lit;
@@ -671,12 +672,13 @@ public class Parser {
   }
 
   private som.vmobjects.Symbol selector() {
-    if (sym == OperatorSequence || symIn(singleOpSyms))
+    if (sym == OperatorSequence || symIn(singleOpSyms)) {
       return binarySelector();
-    else if (sym == Keyword || sym == KeywordSequence)
+    } else if (sym == Keyword || sym == KeywordSequence) {
       return keywordSelector();
-    else
+    } else {
       return unarySelector();
+    }
   }
 
   private som.vmobjects.Symbol keywordSelector() {
@@ -694,13 +696,14 @@ public class Parser {
 
   private SequenceNode nestedBlock(final MethodGenerationContext mgenc) {
     expect(NewBlock);
-    if (sym == Colon) blockPattern(mgenc);
+    if (sym == Colon) { blockPattern(mgenc); }
 
     // generate Block signature
     String blockSig = "$block method";
     int argSize = mgenc.getNumberOfArguments();
-    for (int i = 0; i < argSize; i++)
+    for (int i = 0; i < argSize; i++) {
       blockSig += ":";
+    }
 
     mgenc.setSignature(universe.symbolFor(blockSig));
 
@@ -727,25 +730,30 @@ public class Parser {
   private ExpressionNode variableRead(final MethodGenerationContext mgenc,
                                       final String variableName) {
     // first handle the keywords/reserved names
-    if ("self".equals(variableName))
+    if ("self".equals(variableName)) {
       return new SelfReadNode(mgenc.getSelfSlot(), mgenc.getSelfContextLevel());
-    
-    if ("super".equals(variableName))
+    }
+
+    if ("super".equals(variableName)) {
       return new SuperReadNode(mgenc.getSelfSlot(), mgenc.getSelfContextLevel());
-    
+    }
+
     // now look up first local variables, or method arguments
     FrameSlot frameSlot = mgenc.getFrameSlot(variableName);
-    
-    if (frameSlot != null)
-      return new VariableReadNode(frameSlot, mgenc.getFrameSlotContextLevel(variableName));
-    
+
+    if (frameSlot != null) {
+      return new VariableReadNode(frameSlot,
+          mgenc.getFrameSlotContextLevel(variableName));
+    }
+
     // then object fields
-    som.vmobjects.Symbol varName = universe.symbolFor(variableName); 
+    som.vmobjects.Symbol varName = universe.symbolFor(variableName);
     FieldReadNode fieldRead = mgenc.getObjectFieldRead(varName);
-    
-    if (fieldRead != null)
+
+    if (fieldRead != null) {
       return fieldRead;
-    
+    }
+
     // and finally assume it is a global
     GlobalReadNode globalRead = mgenc.getGlobalRead(varName, universe);
     return globalRead;
@@ -755,19 +763,22 @@ public class Parser {
       final String variableName,
       final ExpressionNode exp) {
     FrameSlot frameSlot = mgenc.getFrameSlot(variableName);
-    
-    if (frameSlot != null)
+
+    if (frameSlot != null) {
       return new VariableWriteNode(frameSlot,
           mgenc.getFrameSlotContextLevel(variableName),
           exp);
-    
+    }
+
     som.vmobjects.Symbol fieldName = universe.symbolFor(variableName);
     FieldWriteNode fieldWrite = mgenc.getObjectFieldWrite(fieldName, exp);
-    
-    if (fieldWrite != null)
+
+    if (fieldWrite != null) {
       return fieldWrite;
-    else
-      throw new RuntimeException("Neither a variable nor a field found in current scope that is named " + variableName + ".");
+    } else {
+      throw new RuntimeException("Neither a variable nor a field found "
+          + "in current scope that is named " + variableName + ".");
+    }
   }
 
   private void GETSYM() {
