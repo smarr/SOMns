@@ -39,28 +39,28 @@ public class BasicInterpreterTests {
   @Parameters
   public static Iterable<Object[]> data() {
     return Arrays.asList(new Object[][] {
-        { "MethodCall",     "test",  42, Integer.class },
-        { "MethodCall",     "test2", 42, Integer.class },
-        
-        { "NonLocalReturn", "test",  "NonLocalReturn", som.vmobjects.Class.class },
-        { "NonLocalReturn", "test1", 42, Integer.class },
-        { "NonLocalReturn", "test2", 43, Integer.class },
-        { "NonLocalReturn", "test3",  3, Integer.class },
-        { "NonLocalReturn", "test4", 42, Integer.class },
-        { "NonLocalReturn", "test5", 22, Integer.class },
-        
-        { "Blocks", "arg1",  42, Integer.class },
-        { "Blocks", "arg2",  77, Integer.class },
-        { "Blocks", "argAndLocal",    8, Integer.class },
-        { "Blocks", "argAndContext",  8, Integer.class },
-        
-        { "Return", "returnSelf",           "Return", som.vmobjects.Class.class },
-        { "Return", "returnSelfImplicitly", "Return", som.vmobjects.Class.class },
-        { "Return", "noReturnReturnsSelf",  "Return", som.vmobjects.Class.class },
-        { "Return", "blockReturnsImplicitlyLastValue", 4, Integer.class }
-    }); 
+        {"MethodCall",     "test",  42, Integer.class },
+        {"MethodCall",     "test2", 42, Integer.class },
+
+        {"NonLocalReturn", "test",  "NonLocalReturn", som.vmobjects.Class.class },
+        {"NonLocalReturn", "test1", 42, Integer.class },
+        {"NonLocalReturn", "test2", 43, Integer.class },
+        {"NonLocalReturn", "test3",  3, Integer.class },
+        {"NonLocalReturn", "test4", 42, Integer.class },
+        {"NonLocalReturn", "test5", 22, Integer.class },
+
+        {"Blocks", "arg1",  42, Integer.class },
+        {"Blocks", "arg2",  77, Integer.class },
+        {"Blocks", "argAndLocal",    8, Integer.class },
+        {"Blocks", "argAndContext",  8, Integer.class },
+
+        {"Return", "returnSelf",           "Return", som.vmobjects.Class.class },
+        {"Return", "returnSelfImplicitly", "Return", som.vmobjects.Class.class },
+        {"Return", "noReturnReturnsSelf",  "Return", som.vmobjects.Class.class },
+        {"Return", "blockReturnsImplicitlyLastValue", 4, Integer.class }
+    });
   }
-  
+
   private final String testClass;
   private final String testSelector;
   private final Object expectedResult;
@@ -75,18 +75,18 @@ public class BasicInterpreterTests {
     this.expectedResult = expectedResult;
     this.resultType     = resultType;
   }
-  
+
   protected void assertEqualsSOMValue(Object expectedResult, Object actualResult) {
     if (resultType == Integer.class) {
-      int expected = ((java.lang.Integer)expectedResult).intValue();
-      int actual   = ((Integer)actualResult).getEmbeddedInteger();
+      int expected = ((java.lang.Integer) expectedResult).intValue();
+      int actual   = ((Integer) actualResult).getEmbeddedInteger();
       assertEquals(expected, actual);
       return;
     }
-    
+
     if (resultType == som.vmobjects.Class.class) {
-      String expected = (String)expectedResult;
-      String actual   = ((som.vmobjects.Class)actualResult).getName().getString();
+      String expected = (String) expectedResult;
+      String actual   = ((som.vmobjects.Class) actualResult).getName().getString();
       assertEquals(expected, actual);
       return;
     }
