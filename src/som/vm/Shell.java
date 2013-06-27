@@ -42,22 +42,29 @@ public class Shell {
     java.lang.String stmt;
     int counter;
     Class myClass;
-    Object myObject, it;
+    Object myObject;
+    Object it;
 
     counter = 0;
     in = new java.io.BufferedReader(new java.io.InputStreamReader(
         java.lang.System.in));
     it = universe.nilObject;
 
+    // Checkstyle: stop
     System.out.println("SOM Shell. Type \"quit\" to exit.\n");
+    // Checkstyle: resume
 
     while (true) {
       try {
+        // Checkstyle: stop
         System.out.print("---> ");
+        // Checkstyle: resume
+
         // Read a statement from the keyboard
         stmt = in.readLine();
-        if (stmt.equals("quit"))
+        if (stmt.equals("quit")) {
           return it;
+        }
 
         // Generate a temporary class with a run method
         stmt = "Shell_Class_" + counter++ + " = ( run: it = ( | tmp | tmp := ("
@@ -72,15 +79,16 @@ public class Shell {
           myObject = universe.newInstance(myClass);
 
           // Lookup the run: method
-          Method shellMethod = (Method) myClass.lookupInvokable(universe
-              .symbolFor("run:"));
+          Method shellMethod = (Method) myClass.
+              lookupInvokable(universe.symbolFor("run:"));
 
           // Invoke the run method
-          it = shellMethod.invokeRoot(myObject, new Object[] { it });
+          it = shellMethod.invokeRoot(myObject, new Object[] {it});
         }
-      }
-      catch (Exception e) {
-        System.out.println("Caught exception: " + e.getMessage());
+      } catch (Exception e) {
+        // Checkstyle: stop
+        System.err.println("Caught exception: " + e.getMessage());
+        // Checkstyle: resume
       }
     }
   }
