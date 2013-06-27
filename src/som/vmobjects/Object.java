@@ -101,16 +101,16 @@ public class Object {
     for (int i = 0; i < arguments.length; i++) {
       argumentsArray.setIndexableField(i, arguments[i]);
     }
-    
-    Object[] args = new Object[] { selector, argumentsArray };
-    
+
+    Object[] args = new Object[] {selector, argumentsArray};
+
     return send("doesNotUnderstand:arguments:", args, universe, frame);
   }
-  
+
   public Object sendUnknownGlobal(final Symbol globalName,
       final Universe universe,
       final VirtualFrame frame) {
-    Object arguments[] = { globalName };
+    Object[] arguments = {globalName};
     return send("unknownGlobal:", arguments, universe, frame);
   }
 
@@ -123,10 +123,10 @@ public class Object {
     // Set the field with the given index to the given value
     fields[index] = value;
   }
-  
+
   @Override
   public java.lang.String toString() {
-    return "a " + getSOMClass().getName().getString(); 
+    return "a " + getSOMClass().getName().getString();
   }
 
   // Private array of fields

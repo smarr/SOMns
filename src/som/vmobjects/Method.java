@@ -69,21 +69,16 @@ public class Method extends Array implements Invokable {
   }
 
   public void setHolder(Class value) {
-    // Set the holder of this method by writing to the field with holder
-    // index
+    // Set the holder of this method by writing to the field with holder index
     setField(holderIndex, value);
 
     // Make sure all nested invokables have the same holder
-    for (int i = 0; i < getNumberOfIndexableFields(); i++)
-      if (getIndexableField(i) instanceof Invokable)
+    for (int i = 0; i < getNumberOfIndexableFields(); i++) {
+      if (getIndexableField(i) instanceof Invokable) {
         ((Invokable) getIndexableField(i)).setHolder(value);
+      }
+    }
   }
-
-  /** REMOVED FOR TRUFFLE
-  public Object getConstant(int bytecodeIndex) {
-    // Get the constant associated to a given bytecode index
-    return getIndexableField(getBytecode(bytecodeIndex + 1));
-  } */
 
   public int getNumberOfArguments() {
     // Get the number of arguments of this method
@@ -160,12 +155,12 @@ public class Method extends Array implements Invokable {
   private java.util.ArrayList<Invokable> invokedMethods                    = new java.util.ArrayList<Invokable>();
   private int                            receiverClassIndex                = 0;
 
-  // Private variable holding number of invocations and backedges
+  // Private variable holding number of invocations and back-edges
   private long                           invocationCount;
-  
-  // Private variable holding Truffle Invokable
-  final private som.interpreter.nodes.Method truffleInvokable;
-  final private FrameDescriptor              frameDescriptor;
+
+  // Private variable holding Truffle runtime information
+  private final som.interpreter.nodes.Method truffleInvokable;
+  private final FrameDescriptor              frameDescriptor;
 
   // Static field indices and number of method fields
   static final int                       signatureIndex                    = 1 + classIndex;

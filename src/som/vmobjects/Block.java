@@ -53,8 +53,10 @@ public class Block extends Object {
   }
 
   public void setContext(VirtualFrame value) {
-    if (virtualFrame != null)
-      throw new IllegalStateException("This is most likely a bug, the block's context should not change.");
+    if (virtualFrame != null) {
+      throw new IllegalStateException("This is most likely a bug, "
+          + "the block's context should not change.");
+    }
     virtualFrame = value;
   }
 
@@ -84,11 +86,12 @@ public class Block extends Object {
     private static java.lang.String computeSignatureString(int numberOfArguments) {
       // Compute the signature string
       java.lang.String signatureString = "value";
-      if (numberOfArguments > 1) signatureString += ":";
+      if (numberOfArguments > 1) { signatureString += ":"; }
 
       // Add extra value: selector elements if necessary
-      for (int i = 2; i < numberOfArguments; i++)
+      for (int i = 2; i < numberOfArguments; i++) {
         signatureString += "with:";
+      }
 
       // Return the signature string
       return signatureString;

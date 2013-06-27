@@ -30,19 +30,19 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 public interface Invokable {
 
   // Tells whether this is a primitive
-  public boolean isPrimitive();
+  boolean isPrimitive();
 
   // Invoke this invokable object in a given frame
-  public Object invoke(final VirtualFrame frame,
+  Object invoke(final VirtualFrame frame,
       final Object self,
       final Object[] args);
 
   // Get the signature for this invokable object
-  public Symbol getSignature();
+  Symbol getSignature();
 
   // Get the holder for this invokable object
-  public Class getHolder();
+  Class getHolder();
 
   // Set the holder for this invokable object
-  public void setHolder(Class value);
+  void setHolder(final Class value);
 }

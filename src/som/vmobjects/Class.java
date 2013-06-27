@@ -102,8 +102,9 @@ public class Class extends Object {
     setField(instanceInvokablesIndex, value);
 
     // Make sure this class is the holder of all invokables in the array
-    for (int i = 0; i < getNumberOfInstanceInvokables(); i++)
+    for (int i = 0; i < getNumberOfInstanceInvokables(); i++) {
       getInstanceInvokable(i).setHolder(this);
+    }
   }
 
   public int getNumberOfInstanceInvokables() {
@@ -134,7 +135,7 @@ public class Class extends Object {
 
     // Lookup invokable and return if found
     invokable = (Invokable) invokablesTable.get(signature);
-    if (invokable != null) return invokable;
+    if (invokable != null) { return invokable; }
 
     // Lookup invokable with given signature in array of instance invokables
     for (int i = 0; i < getNumberOfInstanceInvokables(); i++) {
@@ -165,7 +166,7 @@ public class Class extends Object {
     // Lookup field with given name in array of instance fields
     for (int i = getNumberOfInstanceFields() - 1; i >= 0; i--) {
       // Return the current index if the name matches
-      if (fieldName == getInstanceFieldName(i)) return i;
+      if (fieldName == getInstanceFieldName(i)) { return i; }
     }
 
     // Field not found
@@ -193,10 +194,11 @@ public class Class extends Object {
 
   public void addInstancePrimitive(Primitive value) {
     if (addInstanceInvokable(value)) {
-      System.out
-          .print("Warning: Primitive " + value.getSignature().getString());
+      // Checkstyle: stop
+      System.out.print("Warning: Primitive " + value.getSignature().getString());
       System.out.println(" is not in class definition for class "
           + getName().getString());
+      // Checkstyle: resume
     }
   }
 
@@ -208,8 +210,7 @@ public class Class extends Object {
 
       // Return the symbol representing the instance fields name
       return (Symbol) getInstanceFields().getIndexableField(index);
-    }
-    else {
+    } else {
       // Ask the super class to return the name of the instance field
       return getSuperClass().getInstanceFieldName(index);
     }
@@ -225,8 +226,7 @@ public class Class extends Object {
     // Get the total number of instance fields defined in super classes
     if (hasSuperClass()) {
       return getSuperClass().getNumberOfInstanceFields();
-    }
-    else {
+    } else {
       return 0;
     }
   }
@@ -250,7 +250,9 @@ public class Class extends Object {
     // Lookup invokable with given signature in array of instance invokables
     for (int i = 0; i < getNumberOfInstanceInvokables(); i++) {
       // Get the next invokable in the instance invokable array
-      if (getInstanceInvokable(i).isPrimitive()) return true;
+      if (getInstanceInvokable(i).isPrimitive()) {
+        return true;
+      }
     }
     return false;
   }
@@ -267,17 +269,19 @@ public class Class extends Object {
       try {
         Constructor<?> ctor = primitivesClass.getConstructor(Universe.class);
         ((Primitives) ctor.newInstance(universe)).installPrimitivesIn(this);
-      }
-      catch (Exception e) {
+      } catch (Exception e) {
+        // Checkstyle: stop
         System.out.println("Primitives class " + className
             + " cannot be instantiated");
+        // Checkstyle: resume
       }
-    }
-    catch (ClassNotFoundException e) {
+    } catch (ClassNotFoundException e) {
+      // Checkstyle: stop
       System.out.println("Primitives class " + className + " not found");
+      // Checkstyle: resume
     }
   }
-  
+
   @Override
   public java.lang.String toString() {
     return "Class(" + getName().getString() + ")";

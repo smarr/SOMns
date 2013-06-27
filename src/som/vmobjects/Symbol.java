@@ -43,15 +43,16 @@ public class Symbol extends Object {
 
   private void determineNumberOfSignatureArguments() {
     // Check for binary signature
-    if (isBinarySignature())
+    if (isBinarySignature()) {
       numberOfSignatureArguments = 2;
-    else {
+    } else {
       // Count the colons in the signature string
       int numberOfColons = 0;
 
       // Iterate through every character in the signature string
-      for (char c : string.toCharArray())
-        if (c == ':') numberOfColons++;
+      for (char c : string.toCharArray()) {
+        if (c == ':') { numberOfColons++; }
+      }
 
       // The number of arguments is equal to the number of colons plus one
       numberOfSignatureArguments = numberOfColons + 1;
@@ -68,10 +69,11 @@ public class Symbol extends Object {
 
   public boolean isBinarySignature() {
     // Check the individual characters of the string
-    for (char c : string.toCharArray())
+    for (char c : string.toCharArray()) {
       if (c != '~' && c != '&' && c != '|' && c != '*' && c != '/' && c != '@'
           && c != '+' && c != '-' && c != '=' && c != '>' && c != '<'
-          && c != ',' && c != '%' && c != '\\') return false;
+          && c != ',' && c != '%' && c != '\\') { return false; }
+    }
     return true;
   }
 
