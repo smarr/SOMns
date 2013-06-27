@@ -38,6 +38,6 @@ public class ReturnNonLocalNode extends ContextualNode {
   @Override
   public Object executeGeneric(VirtualFrame frame) {
     throw new ReturnException(expression.executeGeneric(frame),
-        (VirtualFrame)determineContext(frame));
+        (VirtualFrame) determineContext(frame));
   }
 }

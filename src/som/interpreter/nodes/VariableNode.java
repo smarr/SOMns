@@ -47,7 +47,7 @@ public abstract class VariableNode extends ContextualNode {
       VirtualFrame ctx = determineContext(frame);
 
       try {
-        return (Object)ctx.getObject(slot);
+        return (Object) ctx.getObject(slot);
       } catch (FrameSlotTypeException e) {
         throw new RuntimeException("uninitialized variable " + slot.getIdentifier());
       }

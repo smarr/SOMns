@@ -43,7 +43,7 @@ public abstract class ContextualNode extends ExpressionNode {
       while (i > 0) {
         try {
           FrameSlot blockSelfSlot = ctx.getFrameDescriptor().findFrameSlot("self");
-          Block block = (Block)ctx.getObject(blockSelfSlot);
+          Block block = (Block) ctx.getObject(blockSelfSlot);
           ctx = block.getContext();
           i--;
         } catch (FrameSlotTypeException e) {

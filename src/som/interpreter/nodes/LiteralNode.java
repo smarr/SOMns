@@ -49,10 +49,10 @@ public class LiteralNode extends ExpressionNode {
       super(blockMethod);
       this.universe = universe;
     }
-    
+
     @Override
     public Object executeGeneric(VirtualFrame frame) {
-      Method method = (Method)value;
+      Method method = (Method) value;
       return universe.newBlock(method, frame, method.getNumberOfArguments());
     }
   }

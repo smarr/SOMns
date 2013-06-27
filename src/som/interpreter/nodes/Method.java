@@ -28,11 +28,11 @@ import com.oracle.truffle.api.nodes.RootNode;
 
 
 public class Method extends RootNode {
-  
-  @Child final private SequenceNode expressions;
-  
-  final private FrameSlot selfSlot;
-  final private FrameSlot[] argumentSlots;
+
+  @Child private final SequenceNode expressions;
+
+  private final FrameSlot   selfSlot;
+  private final FrameSlot[] argumentSlots;
 
   public Method(final SequenceNode expressions,
                   final FrameSlot selfSlot,
@@ -49,12 +49,10 @@ public class Method extends RootNode {
     Object result;
     try {
         result = expressions.executeGeneric(frame);
-    }
-    catch (ReturnException e) {
+    } catch (ReturnException e) {
       if (!e.reachedTarget(frame)) {
-        throw e; 
-      }
-      else {
+        throw e;
+      } else {
         result = e.result();
       }
     }

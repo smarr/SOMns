@@ -58,19 +58,19 @@ public abstract class GlobalNode extends ExpressionNode {
       // Get the global from the universe
       Object global = universe.getGlobal(globalName);
 
-      if (global != null) 
+      if (global != null) {
         return global;
-      else {
+      } else {
         // if it is not defined, we will send a error message to the current
         // receiver object
         Object self;
         try {
-          self = (Object)frame.getObject(selfSlot);
+          self = (Object) frame.getObject(selfSlot);
         } catch (FrameSlotTypeException e) {
           throw new RuntimeException("uninitialized selfSlot, which should be pretty much imposible???");
         }
         return self.sendUnknownGlobal(globalName, universe, frame);
       }
-    }    
+    }
   }
 }

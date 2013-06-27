@@ -27,10 +27,10 @@ import com.oracle.truffle.api.nodes.ControlFlowException;
 import som.vmobjects.Object;
 
 public final class ReturnException extends ControlFlowException {
-  
-  final private Object result;
-  final private VirtualFrame target;
-  
+
+  private final Object result;
+  private final VirtualFrame target;
+
   public ReturnException(final Object result, final VirtualFrame target) {
     this.result = result;
     this.target = target;

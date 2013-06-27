@@ -62,21 +62,22 @@ public class MessageNode extends ExpressionNode {
     for (int i = 0; i < numArgs; i++) {
       args[i] = arguments[i].executeGeneric(frame);
     }
-    
+
     // now start lookup
     som.vmobjects.Class rcvrClass = rcvr.getSOMClass();
-    
+
     // first determine whether it is a normal, or super send
-    if (receiver instanceof SuperReadNode)
+    if (receiver instanceof SuperReadNode) {
       rcvrClass = rcvrClass.getSuperClass();
-    
+    }
+
     // now lookup selector
     Invokable invokable = rcvrClass.lookupInvokable(selector);
-    
-    if (invokable != null)
+
+    if (invokable != null) {
       return invokable.invoke(frame, rcvr, args);
-    else
+    } else {
       return rcvr.sendDoesNotUnderstand(selector, args, universe, frame);
+    }
   }
-  
 }
