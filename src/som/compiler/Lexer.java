@@ -87,94 +87,91 @@ public class Lexer {
       while (currentChar() != '\'');
       text.deleteCharAt(text.length() - 1);
       bufp++;
-    }
-    else if (currentChar() == '[')
+    } else if (currentChar() == '[') {
       match(Symbol.NewBlock);
-    else if (currentChar() == ']')
+    } else if (currentChar() == ']') {
       match(Symbol.EndBlock);
-    else if (currentChar() == ':') {
+    } else if (currentChar() == ':') {
       if (bufchar(bufp + 1) == '=') {
         bufp += 2;
         sym = Symbol.Assign;
         symc = 0;
         text = new StringBuffer(":=");
-      }
-      else {
+      } else {
         bufp++;
         sym = Symbol.Colon;
         symc = ':';
         text = new StringBuffer(":");
       }
-    }
-    else if (currentChar() == '(')
+    } else if (currentChar() == '(') {
       match(Symbol.NewTerm);
-    else if (currentChar() == ')')
+    } else if (currentChar() == ')') {
       match(Symbol.EndTerm);
-    else if (currentChar() == '#')
+    } else if (currentChar() == '#') {
       match(Symbol.Pound);
-    else if (currentChar() == '^')
+    } else if (currentChar() == '^') {
       match(Symbol.Exit);
-    else if (currentChar() == '.')
+    } else if (currentChar() == '.') {
       match(Symbol.Period);
-    else if (currentChar() == '-') {
+    } else if (currentChar() == '-') {
       if (buf.startsWith(SEPARATOR, bufp)) {
         text = new StringBuffer();
-        while (currentChar() == '-')
+        while (currentChar() == '-') {
           text.append(bufchar(bufp++));
+        }
         sym = Symbol.Separator;
-      }
-      else {
+      } else {
         bufp++;
         sym = Symbol.Minus;
         symc = '-';
         text = new StringBuffer("-");
       }
-    }
-    else if (isOperator(currentChar())) {
+    } else if (isOperator(currentChar())) {
       if (isOperator(bufchar(bufp + 1))) {
         sym = Symbol.OperatorSequence;
         symc = 0;
         text = new StringBuffer();
-        while (isOperator(currentChar()))
+        while (isOperator(currentChar())) {
           text.append(bufchar(bufp++));
-      }
-      else if (currentChar() == '~')
+        }
+      } else if (currentChar() == '~') {
         match(Symbol.Not);
-      else if (currentChar() == '&')
+      } else if (currentChar() == '&') {
         match(Symbol.And);
-      else if (currentChar() == '|')
+      } else if (currentChar() == '|') {
         match(Symbol.Or);
-      else if (currentChar() == '*')
+      } else if (currentChar() == '*') {
         match(Symbol.Star);
-      else if (currentChar() == '/')
+      } else if (currentChar() == '/') {
         match(Symbol.Div);
-      else if (currentChar() == '\\')
+      } else if (currentChar() == '\\') {
         match(Symbol.Mod);
-      else if (currentChar() == '+')
+      } else if (currentChar() == '+') {
         match(Symbol.Plus);
-      else if (currentChar() == '=')
+      } else if (currentChar() == '=') {
         match(Symbol.Equal);
-      else if (currentChar() == '>')
+      } else if (currentChar() == '>') {
         match(Symbol.More);
-      else if (currentChar() == '<')
+      } else if (currentChar() == '<') {
         match(Symbol.Less);
-      else if (currentChar() == ',')
+      } else if (currentChar() == ',') {
         match(Symbol.Comma);
-      else if (currentChar() == '@')
+      } else if (currentChar() == '@') {
         match(Symbol.At);
-      else if (currentChar() == '%') match(Symbol.Per);
-    }
-    else if (buf.startsWith(PRIMITIVE, bufp)) {
+      } else if (currentChar() == '%') {
+        match(Symbol.Per);
+      }
+    } else if (buf.startsWith(PRIMITIVE, bufp)) {
       bufp += PRIMITIVE.length();
       sym = Symbol.Primitive;
       symc = 0;
       text = new StringBuffer(PRIMITIVE);
-    }
-    else if (Character.isLetter(currentChar())) {
+    } else if (Character.isLetter(currentChar())) {
       symc = 0;
       text = new StringBuffer();
-      while (Character.isLetterOrDigit(currentChar()) || currentChar() == '_')
+      while (Character.isLetterOrDigit(currentChar()) || currentChar() == '_') {
         text.append(bufchar(bufp++));
+      }
       sym = Symbol.Identifier;
       if (bufchar(bufp) == ':') {
         sym = Symbol.Keyword;
@@ -182,12 +179,12 @@ public class Lexer {
         text.append(':');
         if (Character.isLetter(currentChar())) {
           sym = Symbol.KeywordSequence;
-          while (Character.isLetter(currentChar()) || currentChar() == ':')
+          while (Character.isLetter(currentChar()) || currentChar() == ':') {
             text.append(bufchar(bufp++));
+          }
         }
       }
-    }
-    else if (Character.isDigit(currentChar())) {
+    } else if (Character.isDigit(currentChar())) {
       sym = Symbol.Integer;
       symc = 0;
       text = new StringBuffer();
@@ -195,8 +192,7 @@ public class Lexer {
         text.append(bufchar(bufp++));
       }
       while (Character.isDigit(currentChar()));
-    }
-    else {
+    } else {
       sym = Symbol.NONE;
       symc = currentChar();
       text = new StringBuffer(symc);
@@ -209,8 +205,9 @@ public class Lexer {
     Symbol saveSym = sym;
     char saveSymc = symc;
     StringBuffer saveText = new StringBuffer(text);
-    if (peekDone)
+    if (peekDone) {
       throw new IllegalStateException("SOM lexer: cannot peek twice!");
+    }
     getSym();
     nextSym = sym;
     nextSymc = symc;
@@ -249,33 +246,38 @@ public class Lexer {
 
   private int fillBuffer() {
     try {
-      if (!infile.ready()) return -1;
-      
+      if (!infile.ready()) { return -1; }
+
       charsRead += buf.length();
-      
+
       buf = infile.readLine();
-      if (buf == null) return -1;
+      if (buf == null) { return -1; }
       ++lineNumber;
       bufp = 0;
       return buf.length();
-    }
-    catch (IOException ioe) {
+    } catch (IOException ioe) {
       throw new IllegalStateException("Error reading from input: "
           + ioe.toString());
     }
   }
 
   private boolean hasMoreInput() {
-    while (endOfBuffer())
-      if (fillBuffer() == -1) return false;
+    while (endOfBuffer()) {
+      if (fillBuffer() == -1) {
+        return false;
+      }
+    }
     return true;
   }
 
   private void skipWhiteSpace() {
     while (Character.isWhitespace(currentChar())) {
       bufp++;
-      while (endOfBuffer())
-        if (fillBuffer() == -1) return;
+      while (endOfBuffer()) {
+        if (fillBuffer() == -1) {
+          return;
+        }
+      }
     }
   }
 
@@ -283,8 +285,9 @@ public class Lexer {
     if (currentChar() == '"') {
       do {
         bufp++;
-        while (endOfBuffer())
-          if (fillBuffer() == -1) return;
+        while (endOfBuffer()) {
+          if (fillBuffer() == -1) { return; }
+        }
       }
       while (currentChar() != '"');
       bufp++;
