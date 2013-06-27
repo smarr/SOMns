@@ -37,12 +37,12 @@ import som.vm.Universe;
 public class SourcecodeCompiler {
 
   private Parser parser;
-  
+
   public static class Source implements com.oracle.truffle.api.Source {
-    
+
     private final String filename;
-    private final String code; 
-    
+    private final String code;
+
     public Source(final String filename) throws IOException {
       this.filename = filename;
       this.code = read(filename);
@@ -90,9 +90,10 @@ public class SourcecodeCompiler {
     som.vmobjects.Symbol cname = result.getName();
     String cnameC = cname.getString();
 
-    if (file != cnameC)
+    if (file != cnameC) {
       throw new IllegalStateException("File name " + file
           + " does not match class name " + cnameC);
+    }
 
     return result;
   }
@@ -112,10 +113,11 @@ public class SourcecodeCompiler {
     som.vmobjects.Class result = systemClass;
     parser.classdef(cgc);
 
-    if (systemClass == null)
+    if (systemClass == null) {
       result = cgc.assemble();
-    else
+    } else {
       cgc.assembleSystemClass(result);
+    }
 
     return result;
   }
