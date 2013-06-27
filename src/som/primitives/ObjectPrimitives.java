@@ -43,16 +43,17 @@ public class ObjectPrimitives extends Primitives {
   }
 
   public void installPrimitives() {
-    
+
     installInstancePrimitive(new Primitive("==", universe) {
       public Object invoke(final VirtualFrame frame, final Object self, final Object[] args) {
-        if (self == args[0])
+        if (self == args[0]) {
           return universe.trueObject;
-        else
+        } else {
           return universe.falseObject;
+        }
       }
     });
-    
+
     installInstancePrimitive(new Primitive("hashcode", universe) {
       public Object invoke(final VirtualFrame frame, final Object self, final Object[] args) {
         return universe.newInteger(self.hashCode());
@@ -62,8 +63,9 @@ public class ObjectPrimitives extends Primitives {
     installInstancePrimitive(new Primitive("objectSize", universe) {
       public Object invoke(final VirtualFrame frame, final Object self, final Object[] args) {
         int size = self.getNumberOfFields();
-        if (self instanceof Array)
+        if (self instanceof Array) {
           size += ((Array) self).getNumberOfIndexableFields();
+        }
         return universe.newInteger(size);
       }
     });

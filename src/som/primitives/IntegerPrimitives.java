@@ -43,30 +43,30 @@ public class IntegerPrimitives extends Primitives {
   private Object  makeInt(long result) {
     // Check with integer bounds and push:
     if (result > java.lang.Integer.MAX_VALUE
-        || result < java.lang.Integer.MIN_VALUE)
+        || result < java.lang.Integer.MIN_VALUE) {
       return universe.newBigInteger(result);
-    else
+    } else {
       return universe.newInteger((int) result);
+    }
   }
 
   private Object resendAsBigInteger(java.lang.String operator, Integer left,
       BigInteger right, final VirtualFrame frame) {
     // Construct left value as BigInteger:
-    BigInteger leftBigInteger = universe.newBigInteger((long) left
-        .getEmbeddedInteger());
+    BigInteger leftBigInteger = universe.
+        newBigInteger((long) left.getEmbeddedInteger());
 
     // Resend message:
     Object[] operands = new Object[1];
     operands[0] = right;
 
-    return leftBigInteger
-        .send(operator, operands, universe, frame);
+    return leftBigInteger.send(operator, operands, universe, frame);
   }
 
   private Object resendAsDouble(java.lang.String operator, Integer left, Double right,
       final VirtualFrame frame) {
     Double leftDouble = universe.newDouble((double) left.getEmbeddedInteger());
-    Object[] operands = new Object[] { right };
+    Object[] operands = new Object[] {right};
     return leftDouble.send(operator, operands, universe, frame);
   }
 
@@ -75,8 +75,8 @@ public class IntegerPrimitives extends Primitives {
 
       public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
         Integer self = (Integer) selfO;
-        return universe.newString(java.lang.Integer.toString(self
-            .getEmbeddedInteger()));
+        return universe.newString(java.lang.Integer.toString(
+            self.getEmbeddedInteger()));
       }
     });
 
@@ -84,8 +84,8 @@ public class IntegerPrimitives extends Primitives {
 
       public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
         Integer self = (Integer) selfO;
-        return universe.newDouble(Math.sqrt((double) self
-            .getEmbeddedInteger()));
+        return universe.newDouble(Math.sqrt(
+            (double) self.getEmbeddedInteger()));
       }
     });
 
@@ -93,8 +93,8 @@ public class IntegerPrimitives extends Primitives {
 
       public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
         Integer self = (Integer) selfO;
-        return universe.newInteger((int) ((double) self
-            .getEmbeddedInteger() * Math.random()));
+        return universe.newInteger(
+            (int) ((double) self.getEmbeddedInteger() * Math.random()));
       }
     });
 
@@ -108,11 +108,9 @@ public class IntegerPrimitives extends Primitives {
         if (rightObj instanceof BigInteger) {
           // Second operand was BigInteger
           return resendAsBigInteger("+", left, (BigInteger) rightObj, frame);
-        }
-        else if (rightObj instanceof Double) {
+        } else if (rightObj instanceof Double) {
           return resendAsDouble("+", left, (Double) rightObj, frame);
-        }
-        else {
+        } else {
           // Do operation:
           Integer right = (Integer) rightObj;
 
@@ -133,11 +131,9 @@ public class IntegerPrimitives extends Primitives {
         if (rightObj instanceof BigInteger) {
           // Second operand was BigInteger
           return resendAsBigInteger("-", left, (BigInteger) rightObj, frame);
-        }
-        else if (rightObj instanceof Double) {
+        } else if (rightObj instanceof Double) {
           return resendAsDouble("-", left, (Double) rightObj, frame);
-        }
-        else {
+        } else {
           // Do operation:
           Integer right = (Integer) rightObj;
 
@@ -158,11 +154,9 @@ public class IntegerPrimitives extends Primitives {
         if (rightObj instanceof BigInteger) {
           // Second operand was BigInteger
           return resendAsBigInteger("*", left, (BigInteger) rightObj, frame);
-        }
-        else if (rightObj instanceof Double) {
+        } else if (rightObj instanceof Double) {
           return resendAsDouble("*", left, (Double) rightObj, frame);
-        }
-        else {
+        } else {
           // Do operation:
           Integer right = (Integer) rightObj;
 
@@ -189,11 +183,9 @@ public class IntegerPrimitives extends Primitives {
         if (rightObj instanceof BigInteger) {
           // Second operand was BigInteger
           return resendAsBigInteger("/", left, (BigInteger) rightObj, frame);
-        }
-        else if (rightObj instanceof Double) {
+        } else if (rightObj instanceof Double) {
           return resendAsDouble("/", left, (Double) rightObj, frame);
-        }
-        else {
+        } else {
           // Do operation:
           Integer right = (Integer) rightObj;
 
@@ -214,11 +206,9 @@ public class IntegerPrimitives extends Primitives {
         if (rightObj instanceof BigInteger) {
           // Second operand was BigInteger
           return resendAsBigInteger("/", left, (BigInteger) rightObj, frame);
-        }
-        else if (rightObj instanceof Double) {
+        } else if (rightObj instanceof Double) {
           return resendAsDouble("/", left, (Double) rightObj, frame);
-        }
-        else {
+        } else {
           // Do operation:
           Integer right = (Integer) rightObj;
 
@@ -239,11 +229,9 @@ public class IntegerPrimitives extends Primitives {
         if (rightObj instanceof BigInteger) {
           // Second operand was BigInteger
           return resendAsBigInteger("%", left, (BigInteger) rightObj, frame);
-        }
-        else if (rightObj instanceof Double) {
+        } else if (rightObj instanceof Double) {
           return resendAsDouble("%", left, (Double) rightObj, frame);
-        }
-        else {
+        } else {
           // Do operation:
           Integer right = (Integer) rightObj;
 
@@ -270,11 +258,9 @@ public class IntegerPrimitives extends Primitives {
         if (rightObj instanceof BigInteger) {
           // Second operand was BigInteger
           return resendAsBigInteger("&", left, (BigInteger) rightObj, frame);
-        }
-        else if (rightObj instanceof Double) {
+        } else if (rightObj instanceof Double) {
           return resendAsDouble("&", left, (Double) rightObj, frame);
-        }
-        else {
+        } else {
           // Do operation:
           Integer right = (Integer) rightObj;
 
@@ -295,27 +281,27 @@ public class IntegerPrimitives extends Primitives {
         if (rightObj instanceof BigInteger) {
           // Second operand was BigInteger:
           return resendAsBigInteger("=", left, (BigInteger) rightObj, frame);
-        }
-        else if (rightObj instanceof Integer) {
+        } else if (rightObj instanceof Integer) {
           // Second operand was Integer:
           Integer right = (Integer) rightObj;
 
-          if (left.getEmbeddedInteger() == right.getEmbeddedInteger())
+          if (left.getEmbeddedInteger() == right.getEmbeddedInteger()) {
             return universe.trueObject;
-          else
+          } else {
             return universe.falseObject;
-        }
-        else if (rightObj instanceof Double) {
+          }
+        } else if (rightObj instanceof Double) {
           // Second operand was Integer:
           Double right = (Double) rightObj;
 
-          if (left.getEmbeddedInteger() == right.getEmbeddedDouble())
+          if (left.getEmbeddedInteger() == right.getEmbeddedDouble()) {
             return universe.trueObject;
-          else
+          } else {
             return universe.falseObject;
-        }
-        else
+          }
+        } else {
           return universe.falseObject;
+        }
       }
     });
 
@@ -329,18 +315,17 @@ public class IntegerPrimitives extends Primitives {
         if (rightObj instanceof BigInteger) {
           // Second operand was BigInteger
           return resendAsBigInteger("<", left, (BigInteger) rightObj, frame);
-        }
-        else if (rightObj instanceof Double) {
+        } else if (rightObj instanceof Double) {
           return resendAsDouble("<", left, (Double) rightObj, frame);
-        }
-        else {
+        } else {
           // Do operation:
           Integer right = (Integer) rightObj;
 
-          if (left.getEmbeddedInteger() < right.getEmbeddedInteger())
+          if (left.getEmbeddedInteger() < right.getEmbeddedInteger()) {
             return universe.trueObject;
-          else
+          } else {
             return universe.falseObject;
+          }
         }
       }
     });

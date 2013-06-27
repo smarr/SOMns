@@ -85,7 +85,9 @@ public class SystemPrimitives extends Primitives {
 
       public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
         String argument = (String) args[0];
+        // Checkstyle: stop
         System.out.print(argument.getEmbeddedString());
+        // Checkstyle: resume
         return selfO;
       }
     });
@@ -93,7 +95,9 @@ public class SystemPrimitives extends Primitives {
     installInstancePrimitive(new Primitive("printNewline", universe) {
 
       public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+        // Checkstyle: stop
         System.out.println("");
+        // Checkstyle: resume
         return selfO;
       }
     });

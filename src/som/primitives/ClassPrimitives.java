@@ -42,7 +42,7 @@ public class ClassPrimitives extends Primitives {
     installInstancePrimitive(new Primitive("new", universe) {
 
       public Object invoke(final VirtualFrame frame, final Object self, final Object[] args) {
-        return universe.newInstance((Class)self);
+        return universe.newInstance((Class) self);
       }
     });
   }

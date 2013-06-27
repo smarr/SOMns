@@ -40,9 +40,10 @@ public class DoublePrimitives extends Primitives {
   }
 
   private Double coerceToDouble(Object o) {
-    if (o instanceof Double) return (Double) o;
-    if (o instanceof Integer)
+    if (o instanceof Double) { return (Double) o; }
+    if (o instanceof Integer) {
       return universe.newDouble((double) ((Integer) o).getEmbeddedInteger());
+    }
     throw new ClassCastException("Cannot coerce to Double!");
   }
 
@@ -51,8 +52,8 @@ public class DoublePrimitives extends Primitives {
 
       public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
         Double self = (Double) selfO;
-        return universe.newString(java.lang.Double.toString(self
-            .getEmbeddedDouble()));
+        return universe.newString(java.lang.Double.toString(
+            self.getEmbeddedDouble()));
       }
     });
 
@@ -119,10 +120,11 @@ public class DoublePrimitives extends Primitives {
       public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
         Double op1 = coerceToDouble(args[0]);
         Double op2 = (Double) selfO;
-        if (op1.getEmbeddedDouble() == op2.getEmbeddedDouble())
+        if (op1.getEmbeddedDouble() == op2.getEmbeddedDouble()) {
           return universe.trueObject;
-        else
+        } else {
           return universe.falseObject;
+        }
       }
     });
 
@@ -131,10 +133,11 @@ public class DoublePrimitives extends Primitives {
       public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
         Double op1 = coerceToDouble(args[0]);
         Double op2 = (Double) selfO;
-        if (op2.getEmbeddedDouble() < op1.getEmbeddedDouble())
+        if (op2.getEmbeddedDouble() < op1.getEmbeddedDouble()) {
           return universe.trueObject;
-        else
+        } else {
           return universe.falseObject;
+        }
       }
     });
   }
