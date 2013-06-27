@@ -91,7 +91,7 @@ public class Object {
     // Invoke the invokable
     return invokable.invoke(frame, this, arguments);
   }
-  
+
   public Object sendDoesNotUnderstand(final Symbol selector,
       final Object[] arguments,
       final Universe universe,

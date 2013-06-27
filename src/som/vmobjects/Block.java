@@ -31,7 +31,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 public class Block extends Object {
 
   private VirtualFrame virtualFrame;
-  
+
   public Block(final Object nilObject) {
     super(nilObject);
   }

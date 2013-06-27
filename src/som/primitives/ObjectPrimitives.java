@@ -1,4 +1,5 @@
 /**
+ * Copyright (c) 2013 Stefan Marr,   stefan.marr@vub.ac.be
  * Copyright (c) 2009 Michael Haupt, michael.haupt@hpi.uni-potsdam.de
  * Software Architecture Group, Hasso Plattner Institute, Potsdam, Germany
  * http://www.hpi.uni-potsdam.de/swa/
@@ -57,7 +58,7 @@ public class ObjectPrimitives extends Primitives {
         return universe.newInteger(self.hashCode());
       }
     });
-    
+
     installInstancePrimitive(new Primitive("objectSize", universe) {
       public Object invoke(final VirtualFrame frame, final Object self, final Object[] args) {
         int size = self.getNumberOfFields();
@@ -66,51 +67,51 @@ public class ObjectPrimitives extends Primitives {
         return universe.newInteger(size);
       }
     });
-    
+
     installInstancePrimitive(new Primitive("perform:", universe) {
       public Object invoke(final VirtualFrame frame, final Object self, final Object[] args) {
         Symbol selector = (Symbol) args[0];
-        
+
         Invokable invokable = self.getSOMClass().lookupInvokable(selector);
         return invokable.invoke(frame, self, null);
       }
     });
-    
+
     installInstancePrimitive(new Primitive("perform:inSuperclass:", universe) {
       public Object invoke(final VirtualFrame frame, final Object self, final Object[] args) {
         Symbol selector = (Symbol) args[0];
         Class  clazz    = (Class)  args[1];
-        
+
         Invokable invokable = clazz.lookupInvokable(selector);
         return invokable.invoke(frame, self, null);
       }
     });
-    
+
     installInstancePrimitive(new Primitive("perform:withArguments:", universe) {
       public Object invoke(final VirtualFrame frame, final Object self, final Object[] args) {
         Symbol selector = (Symbol) args[0];
         Array  argsArr  = (Array)  args[1];
-        
+
         Invokable invokable = self.getSOMClass().lookupInvokable(selector);
         return invokable.invoke(frame, self, argsArr.indexableFields);
       }
     });
-    
+
     installInstancePrimitive(new Primitive("instVarAt:", universe) {
       public Object invoke(final VirtualFrame frame, final Object self, final Object[] args) {
         Integer idx = (Integer) args[0];
-        
+
         return self.getField(idx.getEmbeddedInteger() - 1);
       }
     });
-    
+
     installInstancePrimitive(new Primitive("instVarAt:put:", universe) {
       public Object invoke(final VirtualFrame frame, final Object self, final Object[] args) {
         Integer idx = (Integer) args[0];
         Object val  = args[1];
 
         self.setField(idx.getEmbeddedInteger() - 1, val);
-        
+
         return val;
       }
     });

@@ -1,4 +1,5 @@
 /**
+ * Copyright (c) 2013 Stefan Marr,   stefan.marr@vub.ac.be
  * Copyright (c) 2009 Michael Haupt, michael.haupt@hpi.uni-potsdam.de
  * Software Architecture Group, Hasso Plattner Institute, Potsdam, Germany
  * http://www.hpi.uni-potsdam.de/swa/
@@ -249,11 +250,11 @@ public class IntegerPrimitives extends Primitives {
           long l = (long) left.getEmbeddedInteger();
           long r = (long) right.getEmbeddedInteger();
           long result = l % r;
-          
+
           if (l > 0 && r < 0) {
             result += r;
           }
-          
+
           return makeInt(result);
         }
       }

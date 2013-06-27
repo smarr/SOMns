@@ -57,7 +57,7 @@ public class SourcecodeCompiler {
     public String getCode() {
       return code;
     }
-    
+
     private String read(final String filename) throws IOException {
       byte[] encoded = Files.readAllBytes(Paths.get(filename));
       return Charset.forName("US-ASCII").decode(ByteBuffer.wrap(encoded)).toString();

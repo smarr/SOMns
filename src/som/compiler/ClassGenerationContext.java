@@ -1,4 +1,5 @@
 /**
+ * Copyright (c) 2013 Stefan Marr,   stefan.marr@vub.ac.be
  * Copyright (c) 2009 Michael Haupt, michael.haupt@hpi.uni-potsdam.de
  * Software Architecture Group, Hasso Plattner Institute, Potsdam, Germany
  * http://www.hpi.uni-potsdam.de/swa/
@@ -21,7 +22,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-
 package som.compiler;
 
 import java.util.ArrayList;
@@ -73,7 +73,7 @@ public class ClassGenerationContext {
   public void addClassField(final Symbol field) {
     classFields.add(field);
   }
-  
+
   public boolean hasField(final Symbol field) {
     return (isClassSide() ? classFields : instanceFields).contains(field);
   }

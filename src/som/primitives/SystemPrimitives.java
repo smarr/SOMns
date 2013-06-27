@@ -1,4 +1,5 @@
 /**
+ * Copyright (c) 2013 Stefan Marr,   stefan.marr@vub.ac.be
  * Copyright (c) 2009 Michael Haupt, michael.haupt@hpi.uni-potsdam.de
  * Software Architecture Group, Hasso Plattner Institute, Potsdam, Germany
  * http://www.hpi.uni-potsdam.de/swa/
@@ -45,7 +46,7 @@ public class SystemPrimitives extends Primitives {
 
       public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
         Symbol argument = (Symbol) args[0];
-        
+
         Class result = universe.loadClass(argument);
         return result != null ? result : universe.nilObject;
       }
@@ -64,7 +65,7 @@ public class SystemPrimitives extends Primitives {
 
       public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
         Symbol argument = (Symbol) args[0];
-        
+
         Object result = universe.getGlobal(argument);
         return result != null ? result : universe.nilObject;
       }

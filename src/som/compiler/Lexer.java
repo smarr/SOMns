@@ -237,11 +237,11 @@ public class Lexer {
   protected int getCurrentLineNumber() {
     return lineNumber;
   }
-  
+
   protected int getCurrentColumn() {
     return bufp + 1;
   }
-  
+
   // All characters read and processed, including current line
   protected int getNumberOfCharactersRead() {
     return charsRead + bufp;

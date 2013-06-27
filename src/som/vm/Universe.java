@@ -1,4 +1,5 @@
 /**
+ * Copyright (c) 2013 Stefan Marr,   stefan.marr@vub.ac.be
  * Copyright (c) 2009 Michael Haupt, michael.haupt@hpi.uni-potsdam.de
  * Software Architecture Group, Hasso Plattner Institute, Potsdam, Germany
  * http://www.hpi.uni-potsdam.de/swa/
@@ -45,11 +46,11 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 public class Universe {
-  
+
   public static void main(java.lang.String[] arguments) {
     // Create Universe
     Universe u = new Universe();
-    
+
     try {
       // Start interpretation
       u.interpret(arguments);
@@ -60,7 +61,7 @@ public class Universe {
     // Exit with error code 0
     u.exit(0);
   }
-  
+
   public Object interpret(java.lang.String[] arguments) {
     // Check for command line switches
     arguments = handleArguments(arguments);
@@ -80,7 +81,7 @@ public class Universe {
     this.avoidExit    = false;
     this.lastExitCode = 0;
   }
-  
+
   public Universe(boolean avoidExit) {
     this.truffleRuntime = Truffle.getRuntime();
     this.symbolTable  = new SymbolTable();
@@ -101,7 +102,7 @@ public class Universe {
       lastExitCode = errorCode;
     }
   }
-  
+
   public int lastExitCode() {
     return lastExitCode;
   }
@@ -242,7 +243,7 @@ public class Universe {
     // Exit
     System.exit(0);
   }
-  
+
   /**
    * Start interpretation by sending the selector to the given class.
    * This is mostly meant for testing currently.
@@ -333,7 +334,6 @@ public class Universe {
     loadSystemClass(symbolClass);
     loadSystemClass(integerClass);
     loadSystemClass(bigintegerClass);
-    /** REMOVED FOR TRUFFLE loadSystemClass(frameClass); */
     loadSystemClass(primitiveClass);
     loadSystemClass(stringClass);
     loadSystemClass(doubleClass);
@@ -428,33 +428,6 @@ public class Universe {
     // Return the freshly allocated class
     return result;
   }
-
-  /** REMOVED FOR TRUFFLE
-  public Frame newFrame(Frame previousFrame, Method method) {
-    // Allocate a new frame and set its class to be the frame class
-    Frame result = new Frame(nilObject);
-    result.setClass(frameClass);
-
-    // Compute the maximum number of stack locations (including arguments,
-    // locals and
-    // extra buffer to support doesNotUnderstand) and set the number of
-    // indexable fields accordingly
-    int length = method.getNumberOfArguments()
-        + method.getNumberOfLocals().getEmbeddedInteger()
-        + method.getMaximumNumberOfStackElements().getEmbeddedInteger() + 2;
-    result.setNumberOfIndexableFieldsAndClear(length, nilObject);
-
-    // Set the method of the frame and the previous frame
-    result.setMethod(method);
-    if (previousFrame != null) result.setPreviousFrame(previousFrame);
-
-    // Reset the stack pointer and the bytecode index
-    result.resetStackPointer();
-    result.setBytecodeIndex(0);
-
-    // Return the freshly allocated frame
-    return result;
-  } */
 
   public Method newMethod(Symbol signature, som.interpreter.nodes.Method truffleInvokable, FrameDescriptor frameDescriptor) {
     // Allocate a new method and set its class to be the method class
@@ -667,7 +640,7 @@ public class Universe {
   public void loadSystemClass(Class systemClass) {
     // Load the system class
     Class result = loadClass(systemClass.getName(), systemClass);
-    
+
     if (result == null) {
       throw new IllegalStateException(systemClass.getName().getString()
           + " class could not be loaded. "
@@ -728,7 +701,6 @@ public class Universe {
   public Class                                  arrayClass;
   public Class                                  methodClass;
   public Class                                  symbolClass;
-  /** REMOVED FOR TRUFFLE   public Class        frameClass; */
   public Class                                  primitiveClass;
   public Class                                  stringClass;
   public Class                                  systemClass;
@@ -741,9 +713,9 @@ public class Universe {
 
   public static final java.lang.String          pathSeparator;
   public static final java.lang.String          fileSeparator;
-  
+
   private final TruffleRuntime                  truffleRuntime;
-  
+
   private final SymbolTable                     symbolTable;
 
   // TODO: this is not how it is supposed to be... it is just a hack to cope

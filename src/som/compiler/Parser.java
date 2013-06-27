@@ -1,4 +1,5 @@
 /**
+ * Copyright (c) 2013 Stefan Marr,   stefan.marr@vub.ac.be
  * Copyright (c) 2009 Michael Haupt, michael.haupt@hpi.uni-potsdam.de
  * Software Architecture Group, Hasso Plattner Institute, Potsdam, Germany
  * http://www.hpi.uni-potsdam.de/swa/
@@ -110,7 +111,7 @@ public class Parser {
     public final int startLine;
     public final int startColumn;
     public final int charIndex;
-    
+
     public SourceCoordinate(final int startLine,
         final int startColumn, final int charIndex) {
       this.startLine = startLine;
@@ -128,7 +129,7 @@ public class Parser {
     nextSym = NONE;
     GETSYM();
   }
-  
+
   private SourceCoordinate getCoordinate() {
     return new SourceCoordinate(lexer.getCurrentLineNumber(),
         lexer.getCurrentColumn(),
@@ -242,7 +243,7 @@ public class Parser {
       expect(Or);
     }
   }
-  
+
   private void assignSource(ExpressionNode node, SourceCoordinate coord) {
     node.assignSourceSection(new SourceSection(source, "method",
         coord.startLine, coord.startColumn, coord.charIndex,
@@ -358,7 +359,7 @@ public class Parser {
       locals(mgenc);
       expect(Or);
     }
-    
+
     return blockBody(mgenc);
   }
 
@@ -370,11 +371,11 @@ public class Parser {
   private SequenceNode blockBody(final MethodGenerationContext mgenc) {
     SourceCoordinate coord = getCoordinate();
     List<ExpressionNode> expressions = new ArrayList<ExpressionNode>();
-    
+
     while (true) {
       if (accept(Exit)) {
         expressions.add(result(mgenc));
-        
+
         SequenceNode seq = new SequenceNode(expressions.toArray(new ExpressionNode[0]));
         assignSource(seq, coord);
         return seq;
@@ -392,7 +393,7 @@ public class Parser {
         assignSource(seq, coord);
         return seq;
       }
-      
+
       expressions.add(expression(mgenc));
       accept(Period);
     }
@@ -400,10 +401,10 @@ public class Parser {
 
   private ExpressionNode result(MethodGenerationContext mgenc) {
     ExpressionNode exp = expression(mgenc);
-    
+
     SourceCoordinate coord = getCoordinate();
     accept(Period);
-    
+
     if (mgenc.isBlockMethod()) {
       ExpressionNode result = new ReturnNonLocalNode(exp,
           mgenc.getSelfContextLevel());
@@ -443,7 +444,7 @@ public class Parser {
     } else {
       value = evaluation(mgenc);
     }
-    
+
     ExpressionNode exp = variableWrite(mgenc, variable, value);
     assignSource(exp, coord);
     return exp;
@@ -451,9 +452,7 @@ public class Parser {
 
   private String assignment() {
     String v = variable();
-
     expect(Assign);
-
     return v;
   }
 
@@ -463,7 +462,6 @@ public class Parser {
         || symIn(binaryOpSyms)) {
       exp = messages(mgenc, exp);
     }
-    
     return exp;
   }
 
@@ -505,7 +503,7 @@ public class Parser {
     MessageNode msg;
     if (sym == Identifier) {
       msg = unaryMessage(receiver);
-      
+
       while (sym == Identifier) {
         msg = unaryMessage(msg);
       }
@@ -570,7 +568,7 @@ public class Parser {
     SourceCoordinate coord = getCoordinate();
     List<ExpressionNode> arguments = new ArrayList<ExpressionNode>();
     StringBuffer         kw        = new StringBuffer();
-    
+
     do {
       kw.append(keyword());
       arguments.add(formula(mgenc));
@@ -646,7 +644,7 @@ public class Parser {
 
   private LiteralNode literalSymbol() {
     SourceCoordinate coord = getCoordinate();
-    
+
     som.vmobjects.Symbol symb;
     expect(Pound);
     if (sym == STString) {
@@ -666,7 +664,7 @@ public class Parser {
     String s = string();
 
     som.vmobjects.String str = universe.newString(s);
-    
+
     LiteralNode lit = new LiteralNode(str);
     assignSource(lit, coord);
     return lit;
@@ -709,7 +707,7 @@ public class Parser {
     SequenceNode expressions = blockContents(mgenc);
 
     expect(EndBlock);
-    
+
     return expressions;
   }
 
@@ -752,7 +750,7 @@ public class Parser {
     GlobalReadNode globalRead = mgenc.getGlobalRead(varName, universe);
     return globalRead;
   }
-  
+
   private ExpressionNode variableWrite(final MethodGenerationContext mgenc,
       final String variableName,
       final ExpressionNode exp) {

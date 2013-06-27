@@ -1,4 +1,5 @@
 /**
+ * Copyright (c) 2013 Stefan Marr,   stefan.marr@vub.ac.be
  * Copyright (c) 2009 Michael Haupt, michael.haupt@hpi.uni-potsdam.de
  * Software Architecture Group, Hasso Plattner Institute, Potsdam, Germany
  * http://www.hpi.uni-potsdam.de/swa/
@@ -44,7 +45,7 @@ public class ArrayPrimitives extends Primitives {
       public Object invoke(final VirtualFrame frame, final Object self, final Object[] args) {
         Integer index = (Integer) args[0];
         Array   arr   = (Array)   self;
-        
+
         return arr.getIndexableField(index.getEmbeddedInteger() - 1);
       }
     });
@@ -54,7 +55,7 @@ public class ArrayPrimitives extends Primitives {
       public Object invoke(final VirtualFrame frame, final Object self, final Object[] args) {
         Integer index = (Integer) args[0];
         Object  value = args[1];
-        
+
         Array arr = (Array) self;
         arr.setIndexableField(index.getEmbeddedInteger() - 1, value);
         return value;
@@ -73,7 +74,6 @@ public class ArrayPrimitives extends Primitives {
 
       public Object invoke(final VirtualFrame frame, final Object self, final Object[] args) {
         Integer length = (Integer) args[0];
-        
         return universe.newArray(length.getEmbeddedInteger());
       }
     });
