@@ -11,8 +11,10 @@ University and Technische Universitaet Darmstadt (Germany) in VM courses in
 2006. During that time, some changes were applied to SOM by Michael Haupt and
 Sebastian Kanthak.
 
-SOM is currently maintained by Michael Haupt at the Hasso-Plattner-Institut,
-University of Potsdam, Germany.
+TruffleSOM is based on SOM as well as Oracle's Truffle Framework, which is part
+of the OpenJDK Graal project.
 
-2009-08-14, Michael Haupt
-michael.haupt@hpi.uni-potsdam.de
+TruffleSOM was implemented by Stefan Marr.
+
+2013-06-28, Stefan Marr
+<stefan.marr@vub.ac.be>
