@@ -29,7 +29,6 @@ TestHarness = (
         ^ EmptyTest,
           ArrayTest,
           BigIntegerTest,
-          BlockTest,
           ClassLoadingTest,
           ClosureTest,
           CoercionTest,
@@ -43,7 +42,8 @@ TestHarness = (
           SelfBlockTest,
           SuperTest,
           SymbolTest, 
-          VectorTest
+          VectorTest,
+          BlockTest
     )
     
     
