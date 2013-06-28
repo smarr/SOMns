@@ -27,11 +27,11 @@ SOM can be build with Ant:
 
 Afterwards, the tests can be executed with:
 
-    $ java -cp build/som.jar som.vm.Universe -cp Smalltalk TestSuite/TestHarness.som
+    $ ./som.sh -cp Smalltalk TestSuite/TestHarness.som
    
 A simple Hello World program is executed with:
 
-    $ java -cp build/som.jar som.vm.Universe -cp Smalltalk Examples/Hello/Hello.som
+    $ ./som.sh -cp Smalltalk Examples/Hello/Hello.som
 
 
 
