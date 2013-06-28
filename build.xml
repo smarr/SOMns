@@ -35,14 +35,16 @@
 
     <target name="jar" depends="compile">
         <mkdir dir="${build.dir}"/>
-        <jar destfile="${build.dir}/som.jar" basedir="${classes.dir}">
-        </jar>
+        <jar destfile="${build.dir}/som.jar" basedir="${classes.dir}"></jar>
     </target>
 
     <target name="test" depends="compile">
         <java classname="som.vm.Universe" fork="true" failonerror="true">
             <classpath>
                 <pathelement location="${classes.dir}" />
+                <pathelement location="${lib.dir}/com.oracle.truffle.api.jar" />
+                <pathelement location="${lib.dir}/com.oracle.truffle.api.codegen.jar" />
+                <pathelement location="${lib.dir}/com.oracle.truffle.codegen.processor.jar" />
             </classpath>
             <arg line="-cp Smalltalk TestSuite/TestHarness.som" />
         </java>
