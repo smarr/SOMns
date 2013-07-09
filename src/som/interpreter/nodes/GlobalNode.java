@@ -69,7 +69,7 @@ public abstract class GlobalNode extends ExpressionNode {
         } catch (FrameSlotTypeException e) {
           throw new RuntimeException("uninitialized selfSlot, which should be pretty much imposible???");
         }
-        return self.sendUnknownGlobal(globalName, universe, frame);
+        return self.sendUnknownGlobal(globalName, universe, frame.pack());
       }
     }
   }

@@ -31,7 +31,7 @@ import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.TruffleRuntime;
 import com.oracle.truffle.api.frame.FrameDescriptor;
-import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.frame.PackedFrame;
 
 public class Method extends Array implements Invokable {
 
@@ -110,7 +110,7 @@ public class Method extends Array implements Invokable {
     return result;
   }
 
-  public Object invoke(final VirtualFrame frame,
+  public Object invoke(final PackedFrame frame,
       final Object self,
       final Object[] args) {
     // Increase the invocation counter

@@ -25,8 +25,7 @@
 
 package som.primitives;
 
-import com.oracle.truffle.api.frame.VirtualFrame;
-
+import com.oracle.truffle.api.frame.PackedFrame;
 import som.vm.Universe;
 import som.vmobjects.Integer;
 import som.vmobjects.Object;
@@ -42,7 +41,7 @@ public class StringPrimitives extends Primitives {
   public void installPrimitives() {
     installInstancePrimitive(new Primitive("concatenate:", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
         String argument = (String) args[0];
         String self = (String) selfO;
         return universe.newString(self.getEmbeddedString()
@@ -52,7 +51,7 @@ public class StringPrimitives extends Primitives {
 
     installInstancePrimitive(new Primitive("asSymbol", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
         String self = (String) selfO;
         return universe.symbolFor(self.getEmbeddedString());
       }
@@ -60,7 +59,7 @@ public class StringPrimitives extends Primitives {
 
     installInstancePrimitive(new Primitive("length", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
         String self = (String) selfO;
         return universe.newInteger(self.getEmbeddedString().length());
       }
@@ -68,7 +67,7 @@ public class StringPrimitives extends Primitives {
 
     installInstancePrimitive(new Primitive("=", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
         Object op1 = args[0];
         String op2 = (String) selfO;
         if (op1.getSOMClass() == universe.stringClass) {
@@ -84,7 +83,7 @@ public class StringPrimitives extends Primitives {
 
     installInstancePrimitive(new Primitive("primSubstringFrom:to:", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
         Integer end   = (Integer) args[1];
         Integer start = (Integer) args[0];
 
@@ -102,7 +101,7 @@ public class StringPrimitives extends Primitives {
 
     installInstancePrimitive(new Primitive("hashcode", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
         String self = (String) selfO;
         return universe.newInteger(self.getEmbeddedString().hashCode());
       }

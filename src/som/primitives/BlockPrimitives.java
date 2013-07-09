@@ -25,8 +25,7 @@
 
 package som.primitives;
 
-import com.oracle.truffle.api.frame.VirtualFrame;
-
+import com.oracle.truffle.api.frame.PackedFrame;
 import som.interpreter.nodes.RestartLoopException;
 import som.vm.Universe;
 import som.vmobjects.Object;
@@ -41,7 +40,7 @@ public class BlockPrimitives extends Primitives {
   public void installPrimitives() {
     installInstancePrimitive(new Primitive("restart", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
         throw new RestartLoopException();
       }
     });

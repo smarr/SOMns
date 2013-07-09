@@ -25,8 +25,7 @@
 
 package som.primitives;
 
-import com.oracle.truffle.api.frame.VirtualFrame;
-
+import com.oracle.truffle.api.frame.PackedFrame;
 import som.vm.Universe;
 import som.vmobjects.Class;
 import som.vmobjects.Integer;
@@ -44,7 +43,7 @@ public class SystemPrimitives extends Primitives {
   public void installPrimitives() {
     installInstancePrimitive(new Primitive("load:", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
         Symbol argument = (Symbol) args[0];
 
         Class result = universe.loadClass(argument);
@@ -54,7 +53,7 @@ public class SystemPrimitives extends Primitives {
 
     installInstancePrimitive(new Primitive("exit:", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
         Integer error = (Integer) args[0];
         universe.exit(error.getEmbeddedInteger());
         return selfO;
@@ -63,7 +62,7 @@ public class SystemPrimitives extends Primitives {
 
     installInstancePrimitive(new Primitive("global:", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
         Symbol argument = (Symbol) args[0];
 
         Object result = universe.getGlobal(argument);
@@ -73,7 +72,7 @@ public class SystemPrimitives extends Primitives {
 
     installInstancePrimitive(new Primitive("global:put:", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
         Object value    = args[1];
         Symbol argument = (Symbol) args[0];
         universe.setGlobal(argument, value);
@@ -83,7 +82,7 @@ public class SystemPrimitives extends Primitives {
 
     installInstancePrimitive(new Primitive("printString:", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
         String argument = (String) args[0];
         // Checkstyle: stop
         System.out.print(argument.getEmbeddedString());
@@ -94,7 +93,7 @@ public class SystemPrimitives extends Primitives {
 
     installInstancePrimitive(new Primitive("printNewline", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
         // Checkstyle: stop
         System.out.println("");
         // Checkstyle: resume
@@ -106,7 +105,7 @@ public class SystemPrimitives extends Primitives {
     startTime = startMicroTime / 1000L;
     installInstancePrimitive(new Primitive("time", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
         int time = (int) (System.currentTimeMillis() - startTime);
         return universe.newInteger(time);
       }
@@ -114,7 +113,7 @@ public class SystemPrimitives extends Primitives {
 
     installInstancePrimitive(new Primitive("ticks", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
         int time = (int) (System.nanoTime() / 1000L - startMicroTime);
         return universe.newInteger(time);
       }
@@ -122,7 +121,7 @@ public class SystemPrimitives extends Primitives {
 
     installInstancePrimitive(new Primitive("fullGC", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
         // naught - GC is entirely left to the JVM
         return selfO;
       }

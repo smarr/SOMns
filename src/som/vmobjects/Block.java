@@ -27,6 +27,7 @@ package som.vmobjects;
 import som.vm.Universe;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.frame.PackedFrame;
 
 public class Block extends Object {
 
@@ -77,7 +78,7 @@ public class Block extends Object {
       // this.numberOfArguments = numberOfArguments;
     }
 
-    public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+    public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
       // Get the block (the receiver)
       Block self = (Block) selfO;
       return self.getMethod().invoke(frame, selfO, args);

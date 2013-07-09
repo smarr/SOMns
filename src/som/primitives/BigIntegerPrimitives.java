@@ -25,8 +25,7 @@
 
 package som.primitives;
 
-import com.oracle.truffle.api.frame.VirtualFrame;
-
+import com.oracle.truffle.api.frame.PackedFrame;
 import som.vm.Universe;
 import som.vmobjects.BigInteger;
 import som.vmobjects.Integer;
@@ -42,7 +41,7 @@ public class BigIntegerPrimitives extends Primitives {
   public void installPrimitives() {
     installInstancePrimitive(new Primitive("asString", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
         BigInteger self = (BigInteger) selfO;
         return universe.newString(self.getEmbeddedBiginteger().toString());
       }
@@ -50,7 +49,7 @@ public class BigIntegerPrimitives extends Primitives {
 
     installInstancePrimitive(new Primitive("sqrt", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
         BigInteger self = (BigInteger) selfO;
         return universe.newDouble(Math.sqrt(
             self.getEmbeddedBiginteger().doubleValue()));
@@ -59,7 +58,7 @@ public class BigIntegerPrimitives extends Primitives {
 
     installInstancePrimitive(new Primitive("+", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
         Object rightObj = args[0];
         BigInteger right = null;
         BigInteger left = (BigInteger) selfO;
@@ -86,7 +85,7 @@ public class BigIntegerPrimitives extends Primitives {
 
     installInstancePrimitive(new Primitive("-", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
         Object rightObj = args[0];
         BigInteger right = null;
         BigInteger left = (BigInteger) selfO;
@@ -113,7 +112,7 @@ public class BigIntegerPrimitives extends Primitives {
 
     installInstancePrimitive(new Primitive("*", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
         Object rightObj = args[0];
         BigInteger right = null;
         BigInteger left = (BigInteger) selfO;
@@ -140,7 +139,7 @@ public class BigIntegerPrimitives extends Primitives {
 
     installInstancePrimitive(new Primitive("/", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
         Object rightObj = args[0];
         BigInteger right = null;
         BigInteger left = (BigInteger) selfO;
@@ -167,7 +166,7 @@ public class BigIntegerPrimitives extends Primitives {
 
     installInstancePrimitive(new Primitive("%", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
         Object rightObj = args[0];
         BigInteger right = null;
         BigInteger left = (BigInteger) selfO;
@@ -189,7 +188,7 @@ public class BigIntegerPrimitives extends Primitives {
 
     installInstancePrimitive(new Primitive("&", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
         Object rightObj = args[0];
         BigInteger right = null;
         BigInteger left = (BigInteger) selfO;
@@ -211,7 +210,7 @@ public class BigIntegerPrimitives extends Primitives {
 
     installInstancePrimitive(new Primitive("=", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
         Object rightObj = args[0];
         BigInteger right = null;
         BigInteger left = (BigInteger) selfO;
@@ -237,7 +236,7 @@ public class BigIntegerPrimitives extends Primitives {
 
     installInstancePrimitive(new Primitive("<", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
         Object rightObj = args[0];
         BigInteger right = null;
         BigInteger left = (BigInteger) selfO;

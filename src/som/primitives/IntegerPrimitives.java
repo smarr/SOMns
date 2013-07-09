@@ -25,8 +25,7 @@
 
 package som.primitives;
 
-import com.oracle.truffle.api.frame.VirtualFrame;
-
+import com.oracle.truffle.api.frame.PackedFrame;
 import som.vm.Universe;
 import som.vmobjects.BigInteger;
 import som.vmobjects.Double;
@@ -51,7 +50,7 @@ public class IntegerPrimitives extends Primitives {
   }
 
   private Object resendAsBigInteger(java.lang.String operator, Integer left,
-      BigInteger right, final VirtualFrame frame) {
+      BigInteger right, final PackedFrame frame) {
     // Construct left value as BigInteger:
     BigInteger leftBigInteger = universe.
         newBigInteger((long) left.getEmbeddedInteger());
@@ -64,7 +63,7 @@ public class IntegerPrimitives extends Primitives {
   }
 
   private Object resendAsDouble(java.lang.String operator, Integer left, Double right,
-      final VirtualFrame frame) {
+      final PackedFrame frame) {
     Double leftDouble = universe.newDouble((double) left.getEmbeddedInteger());
     Object[] operands = new Object[] {right};
     return leftDouble.send(operator, operands, universe, frame);
@@ -73,7 +72,7 @@ public class IntegerPrimitives extends Primitives {
   public void installPrimitives() {
     installInstancePrimitive(new Primitive("asString", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
         Integer self = (Integer) selfO;
         return universe.newString(java.lang.Integer.toString(
             self.getEmbeddedInteger()));
@@ -82,7 +81,7 @@ public class IntegerPrimitives extends Primitives {
 
     installInstancePrimitive(new Primitive("sqrt", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
         Integer self = (Integer) selfO;
         return universe.newDouble(Math.sqrt(
             (double) self.getEmbeddedInteger()));
@@ -91,7 +90,7 @@ public class IntegerPrimitives extends Primitives {
 
     installInstancePrimitive(new Primitive("atRandom", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
         Integer self = (Integer) selfO;
         return universe.newInteger(
             (int) ((double) self.getEmbeddedInteger() * Math.random()));
@@ -100,7 +99,7 @@ public class IntegerPrimitives extends Primitives {
 
     installInstancePrimitive(new Primitive("+", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
         Object rightObj = args[0];
         Integer left = (Integer) selfO;
 
@@ -123,7 +122,7 @@ public class IntegerPrimitives extends Primitives {
 
     installInstancePrimitive(new Primitive("-", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
         Object rightObj = args[0];
         Integer left = (Integer) selfO;
 
@@ -146,7 +145,7 @@ public class IntegerPrimitives extends Primitives {
 
     installInstancePrimitive(new Primitive("*", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
         Object rightObj = args[0];
         Integer left = (Integer) selfO;
 
@@ -169,7 +168,7 @@ public class IntegerPrimitives extends Primitives {
 
     installInstancePrimitive(new Primitive("//", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
         /*
          * Integer op1 = (Integer) frame.pop(); Integer op2 = (Integer)
          * frame.pop();
@@ -198,7 +197,7 @@ public class IntegerPrimitives extends Primitives {
 
     installInstancePrimitive(new Primitive("/", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
         Object rightObj = args[0];
         Integer left = (Integer) selfO;
 
@@ -221,7 +220,7 @@ public class IntegerPrimitives extends Primitives {
 
     installInstancePrimitive(new Primitive("%", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
         Object rightObj = args[0];
         Integer left = (Integer) selfO;
 
@@ -250,7 +249,7 @@ public class IntegerPrimitives extends Primitives {
 
     installInstancePrimitive(new Primitive("&", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
         Object rightObj = args[0];
         Integer left = (Integer) selfO;
 
@@ -273,7 +272,7 @@ public class IntegerPrimitives extends Primitives {
 
     installInstancePrimitive(new Primitive("=", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
         Object rightObj = args[0];
         Integer left = (Integer) selfO;
 
@@ -307,7 +306,7 @@ public class IntegerPrimitives extends Primitives {
 
     installInstancePrimitive(new Primitive("<", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
         Object rightObj = args[0];
         Integer left = (Integer) selfO;
 

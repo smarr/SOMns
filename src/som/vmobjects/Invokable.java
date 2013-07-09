@@ -24,7 +24,7 @@
 
 package som.vmobjects;
 
-import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.frame.PackedFrame;
 
 
 public interface Invokable {
@@ -33,7 +33,7 @@ public interface Invokable {
   boolean isPrimitive();
 
   // Invoke this invokable object in a given frame
-  Object invoke(final VirtualFrame frame,
+  Object invoke(final PackedFrame frame,
       final Object self,
       final Object[] args);
 

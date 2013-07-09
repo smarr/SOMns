@@ -75,9 +75,9 @@ public class MessageNode extends ExpressionNode {
     Invokable invokable = rcvrClass.lookupInvokable(selector);
 
     if (invokable != null) {
-      return invokable.invoke(frame, rcvr, args);
+      return invokable.invoke(frame.pack(), rcvr, args);
     } else {
-      return rcvr.sendDoesNotUnderstand(selector, args, universe, frame);
+      return rcvr.sendDoesNotUnderstand(selector, args, universe, frame.pack());
     }
   }
 }

@@ -25,8 +25,7 @@
 
 package som.vmobjects;
 
-import com.oracle.truffle.api.frame.VirtualFrame;
-
+import com.oracle.truffle.api.frame.PackedFrame;
 import som.vm.Universe;
 
 public abstract class Primitive extends Object implements Invokable {
@@ -81,7 +80,7 @@ public abstract class Primitive extends Object implements Invokable {
     // Return an empty primitive with the given signature
     return (new Primitive(signatureString, universe) {
 
-      public Object invoke(final VirtualFrame frame,
+      public Object invoke(final PackedFrame frame,
           final Object self,
           final Object[] args) {
         // Checkstyle: stop

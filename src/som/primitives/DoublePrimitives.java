@@ -25,8 +25,7 @@
 
 package som.primitives;
 
-import com.oracle.truffle.api.frame.VirtualFrame;
-
+import com.oracle.truffle.api.frame.PackedFrame;
 import som.vm.Universe;
 import som.vmobjects.Double;
 import som.vmobjects.Integer;
@@ -50,7 +49,7 @@ public class DoublePrimitives extends Primitives {
   public void installPrimitives() {
     installInstancePrimitive(new Primitive("asString", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
         Double self = (Double) selfO;
         return universe.newString(java.lang.Double.toString(
             self.getEmbeddedDouble()));
@@ -59,7 +58,7 @@ public class DoublePrimitives extends Primitives {
 
     installInstancePrimitive(new Primitive("sqrt", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
         Double self = (Double) selfO;
         return universe.newDouble(Math.sqrt(self.getEmbeddedDouble()));
       }
@@ -67,7 +66,7 @@ public class DoublePrimitives extends Primitives {
 
     installInstancePrimitive(new Primitive("+", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
         Double op1 = coerceToDouble(args[0]);
         Double op2 = (Double) selfO;
         return universe.newDouble(op1.getEmbeddedDouble()
@@ -77,7 +76,7 @@ public class DoublePrimitives extends Primitives {
 
     installInstancePrimitive(new Primitive("-", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
         Double op1 = coerceToDouble(args[0]);
         Double op2 = (Double) selfO;
         return universe.newDouble(op2.getEmbeddedDouble()
@@ -87,7 +86,7 @@ public class DoublePrimitives extends Primitives {
 
     installInstancePrimitive(new Primitive("*", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
         Double op1 = coerceToDouble(args[0]);
         Double op2 = (Double) selfO;
         return universe.newDouble(op2.getEmbeddedDouble()
@@ -97,7 +96,7 @@ public class DoublePrimitives extends Primitives {
 
     installInstancePrimitive(new Primitive("//", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
         Double op1 = coerceToDouble(args[0]);
         Double op2 = (Double) selfO;
         return universe.newDouble(op2.getEmbeddedDouble()
@@ -107,7 +106,7 @@ public class DoublePrimitives extends Primitives {
 
     installInstancePrimitive(new Primitive("%", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
         Double op1 = coerceToDouble(args[0]);
         Double op2 = (Double) selfO;
         return universe.newDouble(op2.getEmbeddedDouble()
@@ -117,7 +116,7 @@ public class DoublePrimitives extends Primitives {
 
     installInstancePrimitive(new Primitive("=", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
         Double op1 = coerceToDouble(args[0]);
         Double op2 = (Double) selfO;
         if (op1.getEmbeddedDouble() == op2.getEmbeddedDouble()) {
@@ -130,7 +129,7 @@ public class DoublePrimitives extends Primitives {
 
     installInstancePrimitive(new Primitive("<", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object selfO, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
         Double op1 = coerceToDouble(args[0]);
         Double op2 = (Double) selfO;
         if (op2.getEmbeddedDouble() < op1.getEmbeddedDouble()) {

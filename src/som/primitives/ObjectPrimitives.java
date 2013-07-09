@@ -25,8 +25,7 @@
 
 package som.primitives;
 
-import com.oracle.truffle.api.frame.VirtualFrame;
-
+import com.oracle.truffle.api.frame.PackedFrame;
 import som.vm.Universe;
 import som.vmobjects.Array;
 import som.vmobjects.Class;
@@ -45,7 +44,7 @@ public class ObjectPrimitives extends Primitives {
   public void installPrimitives() {
 
     installInstancePrimitive(new Primitive("==", universe) {
-      public Object invoke(final VirtualFrame frame, final Object self, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object self, final Object[] args) {
         if (self == args[0]) {
           return universe.trueObject;
         } else {
@@ -55,13 +54,13 @@ public class ObjectPrimitives extends Primitives {
     });
 
     installInstancePrimitive(new Primitive("hashcode", universe) {
-      public Object invoke(final VirtualFrame frame, final Object self, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object self, final Object[] args) {
         return universe.newInteger(self.hashCode());
       }
     });
 
     installInstancePrimitive(new Primitive("objectSize", universe) {
-      public Object invoke(final VirtualFrame frame, final Object self, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object self, final Object[] args) {
         int size = self.getNumberOfFields();
         if (self instanceof Array) {
           size += ((Array) self).getNumberOfIndexableFields();
@@ -71,7 +70,7 @@ public class ObjectPrimitives extends Primitives {
     });
 
     installInstancePrimitive(new Primitive("perform:", universe) {
-      public Object invoke(final VirtualFrame frame, final Object self, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object self, final Object[] args) {
         Symbol selector = (Symbol) args[0];
 
         Invokable invokable = self.getSOMClass().lookupInvokable(selector);
@@ -80,7 +79,7 @@ public class ObjectPrimitives extends Primitives {
     });
 
     installInstancePrimitive(new Primitive("perform:inSuperclass:", universe) {
-      public Object invoke(final VirtualFrame frame, final Object self, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object self, final Object[] args) {
         Symbol selector = (Symbol) args[0];
         Class  clazz    = (Class)  args[1];
 
@@ -90,7 +89,7 @@ public class ObjectPrimitives extends Primitives {
     });
 
     installInstancePrimitive(new Primitive("perform:withArguments:", universe) {
-      public Object invoke(final VirtualFrame frame, final Object self, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object self, final Object[] args) {
         Symbol selector = (Symbol) args[0];
         Array  argsArr  = (Array)  args[1];
 
@@ -100,7 +99,7 @@ public class ObjectPrimitives extends Primitives {
     });
 
     installInstancePrimitive(new Primitive("instVarAt:", universe) {
-      public Object invoke(final VirtualFrame frame, final Object self, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object self, final Object[] args) {
         Integer idx = (Integer) args[0];
 
         return self.getField(idx.getEmbeddedInteger() - 1);
@@ -108,7 +107,7 @@ public class ObjectPrimitives extends Primitives {
     });
 
     installInstancePrimitive(new Primitive("instVarAt:put:", universe) {
-      public Object invoke(final VirtualFrame frame, final Object self, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object self, final Object[] args) {
         Integer idx = (Integer) args[0];
         Object val  = args[1];
 

@@ -24,8 +24,7 @@
 
 package som.vmobjects;
 
-import com.oracle.truffle.api.frame.VirtualFrame;
-
+import com.oracle.truffle.api.frame.PackedFrame;
 import som.vm.Universe;
 
 public class Object {
@@ -81,7 +80,7 @@ public class Object {
   }
 
   public Object send(java.lang.String selectorString, Object[] arguments,
-      final Universe universe, final VirtualFrame frame) {
+      final Universe universe, final PackedFrame frame) {
     // Turn the selector string into a selector
     Symbol selector = universe.symbolFor(selectorString);
 
@@ -95,7 +94,7 @@ public class Object {
   public Object sendDoesNotUnderstand(final Symbol selector,
       final Object[] arguments,
       final Universe universe,
-      final VirtualFrame frame) {
+      final PackedFrame frame) {
     // Allocate an array with enough room to hold all arguments
     Array argumentsArray = universe.newArray(arguments.length);
     for (int i = 0; i < arguments.length; i++) {
@@ -109,7 +108,7 @@ public class Object {
 
   public Object sendUnknownGlobal(final Symbol globalName,
       final Universe universe,
-      final VirtualFrame frame) {
+      final PackedFrame frame) {
     Object[] arguments = {globalName};
     return send("unknownGlobal:", arguments, universe, frame);
   }

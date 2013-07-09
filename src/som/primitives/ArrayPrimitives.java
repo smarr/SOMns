@@ -25,8 +25,7 @@
 
 package som.primitives;
 
-import com.oracle.truffle.api.frame.VirtualFrame;
-
+import com.oracle.truffle.api.frame.PackedFrame;
 import som.vm.Universe;
 import som.vmobjects.Array;
 import som.vmobjects.Integer;
@@ -42,7 +41,7 @@ public class ArrayPrimitives extends Primitives {
   public void installPrimitives() {
     installInstancePrimitive(new Primitive("at:", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object self, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object self, final Object[] args) {
         Integer index = (Integer) args[0];
         Array   arr   = (Array)   self;
 
@@ -52,7 +51,7 @@ public class ArrayPrimitives extends Primitives {
 
     installInstancePrimitive(new Primitive("at:put:", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object self, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object self, final Object[] args) {
         Integer index = (Integer) args[0];
         Object  value = args[1];
 
@@ -64,7 +63,7 @@ public class ArrayPrimitives extends Primitives {
 
     installInstancePrimitive(new Primitive("length", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object self, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object self, final Object[] args) {
         Array arr = (Array) self;
         return universe.newInteger(arr.getNumberOfIndexableFields());
       }
@@ -72,7 +71,7 @@ public class ArrayPrimitives extends Primitives {
 
     installClassPrimitive(new Primitive("new:", universe) {
 
-      public Object invoke(final VirtualFrame frame, final Object self, final Object[] args) {
+      public Object invoke(final PackedFrame frame, final Object self, final Object[] args) {
         Integer length = (Integer) args[0];
         return universe.newArray(length.getEmbeddedInteger());
       }
