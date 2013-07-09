@@ -21,9 +21,11 @@
  */
 package som.interpreter.nodes;
 
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotTypeException;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.RootNode;
 
 
@@ -32,7 +34,7 @@ public class Method extends RootNode {
   @Child private final SequenceNode expressions;
 
   private final FrameSlot   selfSlot;
-  private final FrameSlot[] argumentSlots;
+  @CompilationFinal private final FrameSlot[] argumentSlots;
 
   public Method(final SequenceNode expressions,
                   final FrameSlot selfSlot,
@@ -60,6 +62,7 @@ public class Method extends RootNode {
     return result;
   }
 
+  @ExplodeLoop
   private void initializeFrame(VirtualFrame frame) {
     Object[] args = frame.getArguments(Arguments.class).arguments;
     try {

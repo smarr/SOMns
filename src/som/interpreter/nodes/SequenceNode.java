@@ -22,6 +22,7 @@
 package som.interpreter.nodes;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
 
 import som.vmobjects.Object;
 
@@ -32,6 +33,7 @@ public class SequenceNode extends ExpressionNode {
     this.expressions = adoptChildren(expressions);
   }
 
+  @ExplodeLoop
   @Override
   public Object executeGeneric(VirtualFrame frame) {
     Object last = null;
