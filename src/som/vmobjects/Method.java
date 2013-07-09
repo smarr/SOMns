@@ -40,7 +40,11 @@ public class Method extends Array implements Invokable {
       final FrameDescriptor frameDescriptor) {
     super(nilObject);
     this.truffleInvokable = truffleInvokable;
-    this.frameDescriptor  = frameDescriptor;
+
+    TruffleRuntime runtime =  Truffle.getRuntime(); // TODO: should be: universe.getTruffleRuntime();
+
+    CallTarget target = runtime.createCallTarget(truffleInvokable, frameDescriptor);
+    this.callTarget = target;
   }
 
   public som.interpreter.nodes.Method getTruffleInvokable() {
@@ -102,10 +106,7 @@ public class Method extends Array implements Invokable {
     // Increase the invocation counter
     invocationCount++;
 
-    TruffleRuntime runtime =  Truffle.getRuntime(); // TODO: should be: universe.getTruffleRuntime();
-
-    CallTarget target = runtime.createCallTarget(truffleInvokable, frameDescriptor);
-    Object result = (Object) target.call(new Arguments(self, args));
+    Object result = (Object) callTarget.call(new Arguments(self, args));
 
     return result;
   }
@@ -116,10 +117,7 @@ public class Method extends Array implements Invokable {
     // Increase the invocation counter
     invocationCount++;
 
-    TruffleRuntime runtime =  Truffle.getRuntime(); // TODO: should be: universe.getTruffleRuntime();
-
-    CallTarget target = runtime.createCallTarget(truffleInvokable, frameDescriptor);
-    Object result = (Object) target.call(frame.pack(), new Arguments(self, args));
+    Object result = (Object) callTarget.call(frame, new Arguments(self, args));
 
     return result;
   }
@@ -160,7 +158,7 @@ public class Method extends Array implements Invokable {
 
   // Private variable holding Truffle runtime information
   private final som.interpreter.nodes.Method truffleInvokable;
-  private final FrameDescriptor              frameDescriptor;
+  private final CallTarget callTarget;
 
   // Static field indices and number of method fields
   static final int                       signatureIndex                    = 1 + classIndex;
