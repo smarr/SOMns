@@ -21,6 +21,7 @@
  */
 package som.interpreter.nodes;
 
+import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ControlFlowException;
 
@@ -29,9 +30,9 @@ import som.vmobjects.Object;
 public final class ReturnException extends ControlFlowException {
 
   private final Object result;
-  private final VirtualFrame target;
+  private final MaterializedFrame target;
 
-  public ReturnException(final Object result, final VirtualFrame target) {
+  public ReturnException(final Object result, final MaterializedFrame target) {
     this.result = result;
     this.target = target;
   }
@@ -40,7 +41,7 @@ public final class ReturnException extends ControlFlowException {
     return result;
   }
 
-  public boolean reachedTarget(VirtualFrame current) {
+  public boolean reachedTarget(MaterializedFrame current) {
     return current == target;
   }
 

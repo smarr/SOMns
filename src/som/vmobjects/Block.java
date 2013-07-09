@@ -26,12 +26,12 @@ package som.vmobjects;
 
 import som.vm.Universe;
 
-import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.PackedFrame;
 
 public class Block extends Object {
 
-  private VirtualFrame virtualFrame;
+  private MaterializedFrame declarationFrame;
 
   public Block(final Object nilObject) {
     super(nilObject);
@@ -48,17 +48,17 @@ public class Block extends Object {
     setField(methodIndex, value);
   }
 
-  public VirtualFrame getContext() {
+  public MaterializedFrame getContext() {
     // Get the context of this block by reading the field with context index
-    return virtualFrame;
+    return declarationFrame;
   }
 
-  public void setContext(VirtualFrame value) {
-    if (virtualFrame != null) {
+  public void setContext(MaterializedFrame value) {
+    if (declarationFrame != null) {
       throw new IllegalStateException("This is most likely a bug, "
           + "the block's context should not change.");
     }
-    virtualFrame = value;
+    declarationFrame = value;
   }
 
   public int getDefaultNumberOfFields() {

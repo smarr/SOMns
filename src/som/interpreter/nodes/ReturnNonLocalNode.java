@@ -21,6 +21,7 @@
  */
 package som.interpreter.nodes;
 
+import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 import som.vmobjects.Object;
@@ -38,6 +39,6 @@ public class ReturnNonLocalNode extends ContextualNode {
   @Override
   public Object executeGeneric(VirtualFrame frame) {
     throw new ReturnException(expression.executeGeneric(frame),
-        (VirtualFrame) determineContext(frame));
+        (MaterializedFrame) determineContext(frame.materialize()));
   }
 }

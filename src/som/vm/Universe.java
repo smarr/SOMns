@@ -43,7 +43,7 @@ import som.vmobjects.Symbol;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.TruffleRuntime;
 import com.oracle.truffle.api.frame.FrameDescriptor;
-import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.frame.MaterializedFrame;
 
 public class Universe {
 
@@ -409,7 +409,7 @@ public class Universe {
     return result;
   }
 
-  public Block newBlock(Method method, VirtualFrame context, int arguments) {
+  public Block newBlock(Method method, MaterializedFrame context, int arguments) {
     // Allocate a new block and set its class to be the block class
     Block result = new Block(nilObject);
     result.setClass(getBlockClass(arguments));

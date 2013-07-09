@@ -50,7 +50,7 @@ public class Method extends RootNode {
     try {
         result = expressions.executeGeneric(frame);
     } catch (ReturnException e) {
-      if (!e.reachedTarget(frame)) {
+      if (!e.reachedTarget(frame.materialize())) {
         throw e;
       } else {
         result = e.result();
