@@ -5,11 +5,11 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/com.oracle.truffle.api"/>
-	<classpathentry kind="src" path="/com.oracle.truffle.api.codegen"/>
 	<classpathentry kind="src" path="src_gen">
 		<attributes>
 			<attribute name="optional" value="true"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry combineaccessrules="false" kind="src" path="/com.oracle.truffle.api.dsl"/>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>

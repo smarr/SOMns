@@ -16,10 +16,10 @@
       <mkdir dir="${lib.dir}" />
       <get src="${truffle.libs}/com.oracle.truffle.api.jar"
            dest="${lib.dir}/com.oracle.truffle.api.jar"/>
-      <get src="${truffle.libs}/com.oracle.truffle.api.codegen.jar"
-           dest="${lib.dir}/com.oracle.truffle.api.codegen.jar"/>
-      <get src="${truffle.libs}/com.oracle.truffle.codegen.processor.jar"
-           dest="${lib.dir}/com.oracle.truffle.codegen.processor.jar"/>
+      <get src="${truffle.libs}/com.oracle.truffle.api.dsl.jar"
+           dest="${lib.dir}/com.oracle.truffle.api.dsl.jar"/>
+      <get src="${truffle.libs}/com.oracle.truffle.dsl.processor.jar"
+           dest="${lib.dir}/com.oracle.truffle.dsl.processor.jar"/>
     </target>
 
     <target name="compile" depends="libs">
@@ -27,8 +27,8 @@
         <javac includeantruntime="false" srcdir="${src.dir}" destdir="${classes.dir}" debug="true">
           <classpath>
             <pathelement location="${lib.dir}/com.oracle.truffle.api.jar" />
-            <pathelement location="${lib.dir}/com.oracle.truffle.api.codegen.jar" />
-            <pathelement location="${lib.dir}/com.oracle.truffle.codegen.processor.jar" />
+            <pathelement location="${lib.dir}/com.oracle.truffle.api.dsl.jar" />
+            <pathelement location="${lib.dir}/com.oracle.truffle.dsl.processor.jar" />
           </classpath>
         </javac>
     </target>
@@ -43,8 +43,8 @@
             <classpath>
                 <pathelement location="${classes.dir}" />
                 <pathelement location="${lib.dir}/com.oracle.truffle.api.jar" />
-                <pathelement location="${lib.dir}/com.oracle.truffle.api.codegen.jar" />
-                <pathelement location="${lib.dir}/com.oracle.truffle.codegen.processor.jar" />
+                <pathelement location="${lib.dir}/com.oracle.truffle.api.dsl.jar" />
+                <pathelement location="${lib.dir}/com.oracle.truffle.dsl.processor.jar" />
             </classpath>
             <arg line="-cp Smalltalk TestSuite/TestHarness.som" />
         </java>

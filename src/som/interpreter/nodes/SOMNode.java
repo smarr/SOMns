@@ -21,11 +21,11 @@
  */
 package som.interpreter.nodes;
 
-import com.oracle.truffle.api.codegen.TypeSystemReference;
+import som.interpreter.Types;
+
+import com.oracle.truffle.api.dsl.TypeSystemReference;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.NodeUtil;
-
-import som.interpreter.Types;
 
 @TypeSystemReference(Types.class)
 public class SOMNode extends Node {

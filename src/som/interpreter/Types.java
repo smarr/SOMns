@@ -21,7 +21,7 @@
  */
 package som.interpreter;
 
-import com.oracle.truffle.api.codegen.TypeSystem;
+import com.oracle.truffle.api.dsl.TypeSystem;
 
 @TypeSystem({som.vmobjects.Object.class})
 public class Types {
