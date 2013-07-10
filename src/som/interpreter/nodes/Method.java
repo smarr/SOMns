@@ -35,35 +35,40 @@ public class Method extends RootNode {
 
   private final FrameSlot   selfSlot;
   @CompilationFinal private final FrameSlot[] argumentSlots;
+  private final FrameSlot   nonLocalReturnMarker;
 
   public Method(final SequenceNode expressions,
                   final FrameSlot selfSlot,
-                  final FrameSlot[] argumentSlots) {
+                  final FrameSlot[] argumentSlots,
+                  final FrameSlot nonLocalReturnMarker) {
     this.expressions   = expressions;
     this.selfSlot      = selfSlot;
     this.argumentSlots = argumentSlots;
+    this.nonLocalReturnMarker = nonLocalReturnMarker;
   }
 
   @Override
   public Object execute(VirtualFrame frame) {
-    initializeFrame(frame);
+    final FrameOnStackMarker marker = initializeFrame(frame);
 
     Object result;
     try {
         result = expressions.executeGeneric(frame);
     } catch (ReturnException e) {
-      if (!e.reachedTarget(frame.materialize())) {
+      if (!e.reachedTarget(marker)) {
+        marker.frameNoLongerOnStack();
         throw e;
       } else {
         result = e.result();
       }
     }
 
+    marker.frameNoLongerOnStack();
     return result;
   }
 
   @ExplodeLoop
-  private void initializeFrame(VirtualFrame frame) {
+  private FrameOnStackMarker initializeFrame(VirtualFrame frame) {
     Object[] args = frame.getArguments(Arguments.class).arguments;
     try {
       for (int i = 0; i < argumentSlots.length; i++) {
@@ -71,6 +76,11 @@ public class Method extends RootNode {
       }
 
       frame.setObject(selfSlot, frame.getArguments(Arguments.class).self);
+
+      FrameOnStackMarker marker = new FrameOnStackMarker();
+      frame.setObject(nonLocalReturnMarker, marker);
+
+      return marker;
     } catch (FrameSlotTypeException e) {
      throw new RuntimeException("Should not happen, since we only have one type currently!");
     }

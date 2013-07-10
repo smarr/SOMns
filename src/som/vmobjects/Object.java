@@ -113,6 +113,13 @@ public class Object {
     return send("unknownGlobal:", arguments, universe, frame);
   }
 
+  public Object sendEscapedBlock(final Block block,
+      final Universe universe,
+      final PackedFrame frame) {
+    Object[] arguments = {block};
+    return send("escapedBlock:", arguments, universe, frame);
+  }
+
   public Object getField(int index) {
     // Get the field with the given index
     return fields[index];

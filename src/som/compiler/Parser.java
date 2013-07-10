@@ -407,7 +407,7 @@ public class Parser {
 
     if (mgenc.isBlockMethod()) {
       ExpressionNode result = new ReturnNonLocalNode(exp,
-          mgenc.getSelfContextLevel());
+          mgenc.getSelfContextLevel(), universe);
       assignSource(result, coord);
       return result;
     } else {
