@@ -62,24 +62,24 @@ express Smalltalk language semantics.
 
 Currently TruffleSOM demonstrates for instance:
 
- - method invocation: [som.vmobjects.Method.invoke(..)](https://github.com/smarr/som-java/blob/TruffleSOM/master/src/som/vmobjects/Method.java#L113)
+ - method invocation: [som.vmobjects.Method.invoke(..)](https://github.com/smarr/TruffleSOM/blob/master/src/som/vmobjects/Method.java#L113)
  - usage of Truffle frames
- - argument passing [som.interpreter.nodes.Method.initializeFrame(..)](https://github.com/smarr/som-java/blob/TruffleSOM/master/src/som/interpreter/nodes/Method.java#L63)
- - associating AST tree nodes with source code, e.g., [som.compiler.Parser.unaryMessage(..)](https://github.com/smarr/som-java/blob/TruffleSOM/master/src/som/compiler/Parser.java#L535)
+ - argument passing [som.interpreter.nodes.Method.initializeFrame(..)](https://github.com/smarr/TruffleSOM/blob/master/src/som/interpreter/nodes/Method.java#L63)
+ - associating AST tree nodes with source code, e.g., [som.compiler.Parser.unaryMessage(..)](https://github.com/smarr/TruffleSOM/blob/master/src/som/compiler/Parser.java#L535)
  - support for lexical scoping and access from nested blocks, cf.
-   ContextualNode subclasses and [som.interpreter.ContextualNode.determineContext(..)](https://github.com/smarr/som-java/blob/TruffleSOM/master/src/som/interpreter/nodes/ContextualNode.java#L38)
+   ContextualNode subclasses and [som.interpreter.ContextualNode.determineContext(..)](https://github.com/smarr/TruffleSOM/blob/master/src/som/interpreter/nodes/ContextualNode.java#L38)
  - usage of control-flow exception for
-     - non-local returns, cf. [som.interpreter.nodes.ReturnNonLocalNode.executeGeneric(..)](https://github.com/smarr/som-java/blob/TruffleSOM/master/src/som/interpreter/nodes/ReturnNonLocalNode.java#L40)
-       as well as [som.interpreter.nodes.Method.execute(..)](https://github.com/smarr/som-java/blob/TruffleSOM/master/src/som/interpreter/nodes/Method.java#L52)
-     - looping: [som.primitives.BlockPrimitives restart](https://github.com/smarr/som-java/blob/TruffleSOM/master/src/som/primitives/BlockPrimitives.java#L42)
-       as well as [som.interpreter.nodes.SequenceNode.executeGeneric(..)](https://github.com/smarr/som-java/blob/TruffleSOM/master/src/som/interpreter/nodes/SequenceNode.java#L48)
+     - non-local returns, cf. [som.interpreter.nodes.ReturnNonLocalNode.executeGeneric(..)](https://github.com/smarr/TruffleSOM/blob/master/src/som/interpreter/nodes/ReturnNonLocalNode.java#L40)
+       as well as [som.interpreter.nodes.Method.execute(..)](https://github.com/smarr/TruffleSOM/blob/master/src/som/interpreter/nodes/Method.java#L52)
+     - looping: [som.primitives.BlockPrimitives restart](https://github.com/smarr/TruffleSOM/blob/master/src/som/primitives/BlockPrimitives.java#L42)
+       as well as [som.interpreter.nodes.SequenceNode.executeGeneric(..)](https://github.com/smarr/TruffleSOM/blob/master/src/som/interpreter/nodes/SequenceNode.java#L48)
 
 
 Build Status
 ------------
 
 Thanks to Travis CI, all commits of this repository are tested.
-The current build status is: [![Build Status](https://travis-ci.org/smarr/som-java.png)](https://travis-ci.org/smarr/som-java)
+The current build status is: [![Build Status](https://travis-ci.org/smarr/TruffleSOM.png)](https://travis-ci.org/smarr/TruffleSOM)
 
  [SOM]: http://www.hpi.uni-potsdam.de/hirschfeld/projects/som/
  [RS]:  http://dx.doi.org/10.1016/j.cl.2005.02.003
