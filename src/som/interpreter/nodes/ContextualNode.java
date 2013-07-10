@@ -23,9 +23,9 @@ package som.interpreter.nodes;
 
 import som.vmobjects.Block;
 
+import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotTypeException;
-import com.oracle.truffle.api.frame.VirtualFrame;
 
 public abstract class ContextualNode extends ExpressionNode {
 
@@ -35,8 +35,8 @@ public abstract class ContextualNode extends ExpressionNode {
     this.contextLevel = contextLevel;
   }
 
-  protected VirtualFrame determineContext(VirtualFrame frame) {
-    VirtualFrame ctx = frame;
+  protected Frame determineContext(Frame frame) {
+    Frame ctx = frame.materialize();
     if (contextLevel > 0) {
       int i = contextLevel;
 
