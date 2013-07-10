@@ -130,7 +130,7 @@ public class Parser {
     sym = NONE;
     lexer = new Lexer(reader);
     nextSym = NONE;
-    GETSYM();
+    getSymbolFromLexer();
   }
 
   private SourceCoordinate getCoordinate() {
@@ -193,7 +193,7 @@ public class Parser {
 
   private boolean accept(Symbol s) {
     if (sym == s) {
-      GETSYM();
+      getSymbolFromLexer();
       return true;
     }
     return false;
@@ -201,7 +201,7 @@ public class Parser {
 
   private boolean acceptOneOf(List<Symbol> ss) {
     if (symIn(ss)) {
-      GETSYM();
+      getSymbolFromLexer();
       return true;
     }
     return false;
@@ -320,13 +320,15 @@ public class Parser {
   private som.vmobjects.Symbol binarySelector() {
     String s = new String(text);
 
-    if (accept(Or)) { ;
+    // Checkstyle: stop
+    if (accept(Or)) {
     } else if (accept(Comma)) {
     } else if (accept(Minus)) {
     } else if (accept(Equal)) {
     } else if (acceptOneOf(singleOpSyms)) {
     } else if (accept(OperatorSequence)) {
     } else { expect(NONE); }
+    // Checkstyle: resume
 
     return universe.symbolFor(s);
   }
@@ -414,7 +416,7 @@ public class Parser {
   }
 
   private ExpressionNode expression(final MethodGenerationContext mgenc) {
-    PEEK();
+    peekForNextSymbolFromLexer();
 
     if (nextSym == Assign) {
       return assignation(mgenc);
@@ -437,7 +439,7 @@ public class Parser {
     }
     String variable = assignment();
 
-    PEEK();
+    peekForNextSymbolFromLexer();
 
     ExpressionNode value;
     if (nextSym == Assign) {
@@ -781,12 +783,12 @@ public class Parser {
     }
   }
 
-  private void GETSYM() {
-    sym = lexer.getSym();
+  private void getSymbolFromLexer() {
+    sym  = lexer.getSym();
     text = lexer.getText();
   }
 
-  private void PEEK() {
+  private void peekForNextSymbolFromLexer() {
     nextSym = lexer.peek();
   }
 
