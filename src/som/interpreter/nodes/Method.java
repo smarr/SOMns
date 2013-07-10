@@ -24,6 +24,7 @@ package som.interpreter.nodes;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotTypeException;
+import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.RootNode;
@@ -49,7 +50,7 @@ public class Method extends RootNode {
 
   @Override
   public Object execute(VirtualFrame frame) {
-    final FrameOnStackMarker marker = initializeFrame(frame);
+    final FrameOnStackMarker marker = initializeFrame(frame.materialize());
 
     Object result;
     try {
@@ -68,7 +69,7 @@ public class Method extends RootNode {
   }
 
   @ExplodeLoop
-  private FrameOnStackMarker initializeFrame(VirtualFrame frame) {
+  private FrameOnStackMarker initializeFrame(MaterializedFrame frame) {
     Object[] args = frame.getArguments(Arguments.class).arguments;
     try {
       for (int i = 0; i < argumentSlots.length; i++) {

@@ -23,9 +23,9 @@ package som.interpreter.nodes;
 
 import som.vmobjects.Object;
 
-import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotTypeException;
+import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 public abstract class VariableNode extends ContextualNode {
@@ -45,7 +45,7 @@ public abstract class VariableNode extends ContextualNode {
 
     @Override
     public Object executeGeneric(VirtualFrame frame) {
-      Frame ctx = determineContext(frame);
+      MaterializedFrame ctx = determineContext(frame.materialize());
 
       try {
         Object value = (Object) ctx.getObject(slot);
@@ -83,7 +83,7 @@ public abstract class VariableNode extends ContextualNode {
     public Object executeGeneric(VirtualFrame frame) {
       Object result = exp.executeGeneric(frame);
 
-      Frame ctx = determineContext(frame);
+      MaterializedFrame ctx = determineContext(frame.materialize());
 
       try {
         ctx.setObject(slot, result);
