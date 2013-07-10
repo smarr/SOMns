@@ -8,6 +8,15 @@
     
     <property name="truffle.libs" value="http://soft.vub.ac.be/~smarr/downloads/truffle/latest"/>
 
+    <path id="project.classpath">
+        <pathelement location="${classes.dir}" />
+        <pathelement location="tests/" />
+        <pathelement location="${lib.dir}/com.oracle.truffle.api.jar" />
+        <pathelement location="${lib.dir}/com.oracle.truffle.api.dsl.jar" />
+        <pathelement location="${lib.dir}/com.oracle.truffle.dsl.processor.jar" />
+        <pathelement location="${lib.dir}/junit-4.8.1.jar" />        
+    </path>
+
     <target name="clean">
         <delete dir="${build.dir}"/>
     </target>
@@ -20,16 +29,17 @@
            dest="${lib.dir}/com.oracle.truffle.api.dsl.jar"/>
       <get src="${truffle.libs}/com.oracle.truffle.dsl.processor.jar"
            dest="${lib.dir}/com.oracle.truffle.dsl.processor.jar"/>
+      <get src="http://search.maven.org/remotecontent?filepath=junit/junit/4.8.1/junit-4.8.1.jar"
+           dest="${lib.dir}/junit-4.8.1.jar" />
     </target>
 
     <target name="compile" depends="libs">
         <mkdir dir="${classes.dir}" />
         <javac includeantruntime="false" srcdir="${src.dir}" destdir="${classes.dir}" debug="true">
-          <classpath>
-            <pathelement location="${lib.dir}/com.oracle.truffle.api.jar" />
-            <pathelement location="${lib.dir}/com.oracle.truffle.api.dsl.jar" />
-            <pathelement location="${lib.dir}/com.oracle.truffle.dsl.processor.jar" />
-          </classpath>
+          <classpath refid="project.classpath" />
+        </javac>
+        <javac includeantruntime="false" srcdir="tests/" destdir="${classes.dir}" debug="true">
+          <classpath refid="project.classpath" />
         </javac>
     </target>
 
@@ -39,14 +49,18 @@
     </target>
 
     <target name="test" depends="compile">
+        <junit haltonerror="false" haltonfailure="false">
+            <classpath refid="project.classpath" />
+            <batchtest fork="yes"><!--  todir="${reports.tests}" -->
+              <fileset dir="tests">
+                  <include name="**/*Test*.java"/>
+              </fileset>
+            </batchtest>
+        </junit>
+      
         <java classname="som.vm.Universe" fork="true" failonerror="true">
-            <classpath>
-                <pathelement location="${classes.dir}" />
-                <pathelement location="${lib.dir}/com.oracle.truffle.api.jar" />
-                <pathelement location="${lib.dir}/com.oracle.truffle.api.dsl.jar" />
-                <pathelement location="${lib.dir}/com.oracle.truffle.dsl.processor.jar" />
-            </classpath>
-            <arg line="-cp Smalltalk TestSuite/TestHarness.som" />
+            <classpath refid="project.classpath" />
+                <arg line="-cp Smalltalk TestSuite/TestHarness.som" />
         </java>
     </target>
 
