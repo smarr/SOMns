@@ -27,6 +27,7 @@ Loop = Benchmark (
 
     singleRun = (
         | sum |
+        sum := 0.
         1 to: 100 do: [ :j | sum := sum + 1 ].
         (sum = 100)
             ifFalse: [
