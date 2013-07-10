@@ -56,15 +56,37 @@ public class MethodGenerationContext {
   private final List<String>         locals    = new ArrayList<String>();
 
   // Truffle
-  private final FrameDescriptor frameDescriptor = new FrameDescriptor();
+  private final FrameDescriptor frameDescriptor;
   private final FrameSlot       selfSlot;
+  private final FrameSlot       nonLocalReturnMarker;
+
+  // this context is used to describe the standard frame layout
+  private static final MethodGenerationContext standardMethodGenerationContext = new MethodGenerationContext();
+
+  public static FrameSlot getStandardSelfSlot() {
+    return standardMethodGenerationContext.getSelfSlot();
+  }
+
+  public static FrameSlot getStandardNonLocalReturnMarkerSlot() {
+    return standardMethodGenerationContext.getNonLocalReturnMarker();
+  }
 
   public MethodGenerationContext() {
+    frameDescriptor = new FrameDescriptor();
     selfSlot = frameDescriptor.addFrameSlot("self", FrameSlotKind.Object);
+
+    // note the ! at the beginning: this is not legal Smalltalk,
+    // and thus, this frame slot is not going to be accessible from the language
+    nonLocalReturnMarker = frameDescriptor.addFrameSlot("!nonLocalReturnMarker",
+        FrameSlotKind.Object);
   }
 
   public FrameSlot getSelfSlot() {
     return selfSlot;
+  }
+
+  public FrameSlot getNonLocalReturnMarker() {
+    return nonLocalReturnMarker;
   }
 
   public void setHolder(ClassGenerationContext cgenc) {
@@ -86,7 +108,9 @@ public class MethodGenerationContext {
       argSlots[i] = frameDescriptor.findFrameSlot(arguments.get(i));
     }
 
-    som.interpreter.nodes.Method truffleMethod = new som.interpreter.nodes.Method(expressions, selfSlot, argSlots);
+    som.interpreter.nodes.Method truffleMethod =
+        new som.interpreter.nodes.Method(expressions,
+            selfSlot, argSlots, nonLocalReturnMarker);
 
     Method meth = universe.newMethod(signature, truffleMethod, frameDescriptor);
 
