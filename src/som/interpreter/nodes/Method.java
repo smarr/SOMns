@@ -21,6 +21,8 @@
  */
 package som.interpreter.nodes;
 
+import som.vm.Universe;
+
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotTypeException;
@@ -35,17 +37,23 @@ public class Method extends RootNode {
   @Child private final SequenceNode expressions;
 
   private final FrameSlot   selfSlot;
-  @CompilationFinal private final FrameSlot[] argumentSlots;
+  @CompilationFinal private final FrameSlot[]  argumentSlots;
+  @CompilationFinal private final FrameSlot[] temporarySlots;
   private final FrameSlot   nonLocalReturnMarker;
+  private final Universe    universe;
 
   public Method(final SequenceNode expressions,
                   final FrameSlot selfSlot,
                   final FrameSlot[] argumentSlots,
-                  final FrameSlot nonLocalReturnMarker) {
+                  final FrameSlot[] temporarySlots,
+                  final FrameSlot nonLocalReturnMarker,
+                  final Universe  universe) {
     this.expressions   = expressions;
     this.selfSlot      = selfSlot;
     this.argumentSlots = argumentSlots;
+    this.temporarySlots = temporarySlots;
     this.nonLocalReturnMarker = nonLocalReturnMarker;
+    this.universe      = universe;
   }
 
   @Override
@@ -80,6 +88,10 @@ public class Method extends RootNode {
 
       FrameOnStackMarker marker = new FrameOnStackMarker();
       frame.setObject(nonLocalReturnMarker, marker);
+
+      for (int i = 0; i < temporarySlots.length; i++) {
+        frame.setObject(temporarySlots[i], universe.nilObject);
+      }
 
       return marker;
     } catch (FrameSlotTypeException e) {

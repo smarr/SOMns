@@ -103,14 +103,19 @@ public class MethodGenerationContext {
 
   public Method assemble(final Universe universe, final SequenceNode expressions) {
     FrameSlot[] argSlots = new FrameSlot[arguments.size()];
+    FrameSlot[] localSlots = new FrameSlot[locals.size()];
 
     for (int i = 0; i < arguments.size(); i++) {
       argSlots[i] = frameDescriptor.findFrameSlot(arguments.get(i));
     }
 
+    for (int i = 0; i < locals.size(); i++) {
+      localSlots[i] = frameDescriptor.findFrameSlot(locals.get(i));
+    }
+
     som.interpreter.nodes.Method truffleMethod =
         new som.interpreter.nodes.Method(expressions,
-            selfSlot, argSlots, nonLocalReturnMarker);
+            selfSlot, argSlots, localSlots, nonLocalReturnMarker, universe);
 
     Method meth = universe.newMethod(signature, truffleMethod, frameDescriptor);
 
