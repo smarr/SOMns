@@ -21,6 +21,7 @@
  */
 package som.interpreter.nodes;
 
+import som.compiler.MethodGenerationContext;
 import som.vmobjects.Block;
 
 import com.oracle.truffle.api.frame.FrameSlot;
@@ -42,7 +43,7 @@ public abstract class ContextualNode extends ExpressionNode {
 
       while (i > 0) {
         try {
-          FrameSlot blockSelfSlot = ctx.getFrameDescriptor().findFrameSlot("self");
+          FrameSlot blockSelfSlot = MethodGenerationContext.getStandardSelfSlot();
           Block block = (Block) ctx.getObject(blockSelfSlot);
           ctx = block.getContext();
           i--;
