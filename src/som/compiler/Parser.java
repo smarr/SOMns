@@ -433,7 +433,7 @@ public class Parser {
     SourceCoordinate coord = getCoordinate();
 
     if (sym != Identifier) {
-      throw new RuntimeException("This is every unexpected, "
+      throw new RuntimeException("This is very unexpected, "
           + "assignments should always target variables or fields. "
           + "But found instead a: " + sym.toString());
     }
