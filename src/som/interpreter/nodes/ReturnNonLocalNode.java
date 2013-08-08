@@ -26,7 +26,6 @@ import som.vm.Universe;
 import som.vmobjects.Block;
 import som.vmobjects.Object;
 
-import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotTypeException;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -43,27 +42,43 @@ public class ReturnNonLocalNode extends ContextualNode {
     this.expression = adoptChild(expression);
     this.universe   = universe;
   }
+  
+  private FrameOnStackMarker getMarker(final MaterializedFrame ctx) {
+    try {
+      return (FrameOnStackMarker) ctx.getObject(MethodGenerationContext.
+        getStandardNonLocalReturnMarkerSlot());
+    } catch (FrameSlotTypeException e) {
+      throw new RuntimeException("This should never happen! really!");
+    }
+  }
+  
+  private Block getBlockFromVirtual(final VirtualFrame frame) {
+    try {
+      return (Block) frame.getObject(MethodGenerationContext.getStandardSelfSlot());
+    } catch (FrameSlotTypeException e) {
+      throw new RuntimeException("This should never happen! really!");
+    }
+  }
+  
+  private Object getSelf(final MaterializedFrame ctx) {
+    try {
+      return (Object) ctx.getObject(MethodGenerationContext.getStandardSelfSlot());
+    } catch (FrameSlotTypeException e) {
+      throw new RuntimeException("This should never happen! really!");
+    }
+  }
 
   @Override
   public Object executeGeneric(VirtualFrame frame) {
-    try {
-      MaterializedFrame ctx = determineContext(frame.materialize());
-      FrameOnStackMarker marker = (FrameOnStackMarker) ctx.
-          getObject(MethodGenerationContext.
-              getStandardNonLocalReturnMarkerSlot());
+    MaterializedFrame ctx = determineContext(frame.materialize());
+    FrameOnStackMarker marker = getMarker(ctx); 
 
-      if (marker.isOnStack()) {
-        throw new ReturnException(expression.executeGeneric(frame), marker);
-      } else {
-        FrameSlot selfSlot = MethodGenerationContext.getStandardSelfSlot();
-
-        Block block = (Block) frame.getObject(selfSlot);
-        Object self = (Object) ctx.getObject(selfSlot);
-
-        return self.sendEscapedBlock(block, universe, frame.pack());
-      }
-    } catch (FrameSlotTypeException e) {
-      throw new RuntimeException("This should never happen! really!");
+    if (marker.isOnStack()) {
+      throw new ReturnException(expression.executeGeneric(frame), marker);
+    } else {
+      Block block = getBlockFromVirtual(frame); 
+      Object self = getSelf(ctx);
+      return self.sendEscapedBlock(block, universe, frame.pack());
     }
   }
 }
