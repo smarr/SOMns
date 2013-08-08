@@ -221,12 +221,12 @@ public class MethodGenerationContext {
       return null;
     }
 
-    return new FieldReadNode(fieldName, getOuterSelfSlot(), getSelfContextLevel());
+    return new FieldReadNode(fieldName, getSelfContextLevel());
   }
 
   public GlobalReadNode getGlobalRead(final Symbol varName,
       final Universe universe) {
-    return new GlobalReadNode(varName, getOuterSelfSlot(), universe);
+    return new GlobalReadNode(varName, universe);
   }
 
   public FieldWriteNode getObjectFieldWrite(final Symbol fieldName,
@@ -234,7 +234,7 @@ public class MethodGenerationContext {
     if (!holderGenc.hasField(fieldName)) {
       return null;
     }
-    return new FieldWriteNode(fieldName, getOuterSelfSlot(), getSelfContextLevel(), exp);
+    return new FieldWriteNode(fieldName, getSelfContextLevel(), exp);
   }
 
   /**

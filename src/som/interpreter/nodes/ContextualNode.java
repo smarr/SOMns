@@ -35,6 +35,15 @@ public abstract class ContextualNode extends ExpressionNode {
   public ContextualNode(final int contextLevel) {
     this.contextLevel = contextLevel;
   }
+  
+  protected Block getBlockFromMaterialized(final MaterializedFrame ctx) {
+    try {
+      final FrameSlot blockSelfSlot = MethodGenerationContext.getStandardSelfSlot();
+      return (Block) ctx.getObject(blockSelfSlot);
+    } catch (FrameSlotTypeException e) {
+      throw new RuntimeException("This should really really never happen...");
+    }
+  }
 
   protected MaterializedFrame determineContext(MaterializedFrame frame) {
     MaterializedFrame ctx = frame;
@@ -42,14 +51,9 @@ public abstract class ContextualNode extends ExpressionNode {
       int i = contextLevel;
 
       while (i > 0) {
-        try {
-          FrameSlot blockSelfSlot = MethodGenerationContext.getStandardSelfSlot();
-          Block block = (Block) ctx.getObject(blockSelfSlot);
-          ctx = block.getContext();
-          i--;
-        } catch (FrameSlotTypeException e) {
-          throw new RuntimeException("This should really really never happen...");
-        }
+        Block block = getBlockFromMaterialized(ctx);
+        ctx = block.getContext();
+        i--;
       }
     }
     return ctx.materialize();
