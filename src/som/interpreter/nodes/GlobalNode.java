@@ -39,7 +39,7 @@ public abstract class GlobalNode extends ExpressionNode {
     this.globalName = globalName;
     this.universe   = universe;
   }
-  
+
   protected Object getSelfFromVirtual(final VirtualFrame frame) {
     try {
       return (Object) frame.getObject(MethodGenerationContext.getStandardSelfSlot());

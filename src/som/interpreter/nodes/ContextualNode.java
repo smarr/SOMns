@@ -35,7 +35,7 @@ public abstract class ContextualNode extends ExpressionNode {
   public ContextualNode(final int contextLevel) {
     this.contextLevel = contextLevel;
   }
-  
+
   protected Block getBlockFromMaterialized(final MaterializedFrame ctx) {
     try {
       final FrameSlot blockSelfSlot = MethodGenerationContext.getStandardSelfSlot();

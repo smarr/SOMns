@@ -42,7 +42,7 @@ public class ReturnNonLocalNode extends ContextualNode {
     this.expression = adoptChild(expression);
     this.universe   = universe;
   }
-  
+
   private FrameOnStackMarker getMarker(final MaterializedFrame ctx) {
     try {
       return (FrameOnStackMarker) ctx.getObject(MethodGenerationContext.
@@ -51,7 +51,7 @@ public class ReturnNonLocalNode extends ContextualNode {
       throw new RuntimeException("This should never happen! really!");
     }
   }
-  
+
   private Block getBlockFromVirtual(final VirtualFrame frame) {
     try {
       return (Block) frame.getObject(MethodGenerationContext.getStandardSelfSlot());
@@ -59,7 +59,7 @@ public class ReturnNonLocalNode extends ContextualNode {
       throw new RuntimeException("This should never happen! really!");
     }
   }
-  
+
   private Object getSelf(final MaterializedFrame ctx) {
     try {
       return (Object) ctx.getObject(MethodGenerationContext.getStandardSelfSlot());
@@ -71,12 +71,12 @@ public class ReturnNonLocalNode extends ContextualNode {
   @Override
   public Object executeGeneric(VirtualFrame frame) {
     MaterializedFrame ctx = determineContext(frame.materialize());
-    FrameOnStackMarker marker = getMarker(ctx); 
+    FrameOnStackMarker marker = getMarker(ctx);
 
     if (marker.isOnStack()) {
       throw new ReturnException(expression.executeGeneric(frame), marker);
     } else {
-      Block block = getBlockFromVirtual(frame); 
+      Block block = getBlockFromVirtual(frame);
       Object self = getSelf(ctx);
       return self.sendEscapedBlock(block, universe, frame.pack());
     }

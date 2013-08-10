@@ -33,7 +33,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 public abstract class FieldNode extends ContextualNode {
 
   protected final Symbol    fieldName;
-  
+
   public FieldNode(final Symbol fieldName, final int contextLevel) {
     super(contextLevel);
     this.fieldName = fieldName;
@@ -46,7 +46,7 @@ public abstract class FieldNode extends ContextualNode {
       throw new RuntimeException("uninitialized selfSlot, which should be pretty much imposible???");
     }
   }
-  
+
   public static class FieldReadNode extends FieldNode {
 
     public FieldReadNode(final Symbol fieldName, final int contextLevel) {
