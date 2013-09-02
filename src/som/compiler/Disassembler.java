@@ -25,6 +25,7 @@
 
 package som.compiler;
 
+import som.vm.Universe;
 import som.vmobjects.Class;
 import som.vmobjects.Invokable;
 import som.vmobjects.Method;
@@ -34,26 +35,24 @@ public class Disassembler {
   public static void dump(Class cl) {
     for (int i = 0; i < cl.getNumberOfInstanceInvokables(); i++) {
       Invokable inv = cl.getInstanceInvokable(i);
+
       // output header and skip if the Invokable is a Primitive
-      // Checkstyle: stop
-      System.err.print(cl.getName().toString() + ">>"
+      Universe.errorPrint(cl.getName().toString() + ">>"
           + inv.getSignature().toString() + " = ");
+
       if (inv.isPrimitive()) {
-        System.err.println("<primitive>");
+        Universe.errorPrintln("<primitive>");
         continue;
       }
-      // Checkstyle: resume
       // output actual method
       dumpMethod((Method) inv, "\t");
     }
   }
 
   public static void dumpMethod(Method m, java.lang.String indent) {
-    // Checkstyle: stop
-    System.err.println("(");
-    System.err.println(m.getTruffleInvokable().toString());
-    System.err.println(indent + ")");
-    // Checkstyle: resume
+    Universe.errorPrintln("(");
+    Universe.errorPrintln(m.getTruffleInvokable().toString());
+    Universe.errorPrintln(indent + ")");
   }
 
 }

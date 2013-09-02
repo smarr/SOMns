@@ -194,11 +194,9 @@ public class Class extends Object {
 
   public void addInstancePrimitive(Primitive value) {
     if (addInstanceInvokable(value)) {
-      // Checkstyle: stop
-      System.out.print("Warning: Primitive " + value.getSignature().getString());
-      System.out.println(" is not in class definition for class "
+      Universe.print("Warning: Primitive " + value.getSignature().getString());
+      Universe.println(" is not in class definition for class "
           + getName().getString());
-      // Checkstyle: resume
     }
   }
 
@@ -270,15 +268,11 @@ public class Class extends Object {
         Constructor<?> ctor = primitivesClass.getConstructor(Universe.class);
         ((Primitives) ctor.newInstance(universe)).installPrimitivesIn(this);
       } catch (Exception e) {
-        // Checkstyle: stop
-        System.out.println("Primitives class " + className
+        Universe.println("Primitives class " + className
             + " cannot be instantiated");
-        // Checkstyle: resume
       }
     } catch (ClassNotFoundException e) {
-      // Checkstyle: stop
-      System.out.println("Primitives class " + className + " not found");
-      // Checkstyle: resume
+      Universe.println("Primitives class " + className + " not found");
     }
   }
 

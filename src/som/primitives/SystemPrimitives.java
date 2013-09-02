@@ -84,9 +84,7 @@ public class SystemPrimitives extends Primitives {
 
       public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
         String argument = (String) args[0];
-        // Checkstyle: stop
-        System.out.print(argument.getEmbeddedString());
-        // Checkstyle: resume
+        Universe.print(argument.getEmbeddedString());
         return selfO;
       }
     });
@@ -94,9 +92,7 @@ public class SystemPrimitives extends Primitives {
     installInstancePrimitive(new Primitive("printNewline", universe) {
 
       public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
-        // Checkstyle: stop
-        System.out.println("");
-        // Checkstyle: resume
+        Universe.println();
         return selfO;
       }
     });

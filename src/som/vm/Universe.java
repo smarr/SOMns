@@ -55,9 +55,7 @@ public class Universe {
       // Start interpretation
       u.interpret(arguments);
     } catch (IllegalStateException e) {
-      // Checkstyle: stop
-      System.err.println("ERROR: " + e.getMessage());
-      // Checkstyle: resume
+      errorPrintln("ERROR: " + e.getMessage());
     }
 
     // Exit with error code 0
@@ -109,9 +107,7 @@ public class Universe {
   }
 
   public void errorExit(java.lang.String message) {
-    // Checkstyle: stop
-    System.out.println("Runtime Error: " + message);
-    // Checkstyle: resume
+    errorPrintln("Runtime Error: " + message);
     exit(1);
   }
 
@@ -182,9 +178,7 @@ public class Universe {
     tokenizer = new java.util.StringTokenizer(file, ".");
 
     if (tokenizer.countTokens() > 2) {
-      // Checkstyle: stop
-      System.out.println("Class with . in its name?");
-      // Checkstyle: resume
+      println("Class with . in its name?");
       exit(1);
     }
 
@@ -233,15 +227,13 @@ public class Universe {
 
   private void printUsageAndExit() {
     // Print the usage
-    // Checkstyle: stop
-    System.out.println("Usage: som [-options] [args...]                          ");
-    System.out.println("                                                         ");
-    System.out.println("where options include:                                   ");
-    System.out.println("    -cp <directories separated by " + pathSeparator
+    println("Usage: som [-options] [args...]                          ");
+    println("                                                         ");
+    println("where options include:                                   ");
+    println("    -cp <directories separated by " + pathSeparator
         + ">");
-    System.out.println("                  set search path for application classes");
-    System.out.println("    -d            enable disassembling");
-    // Checkstyle: resume
+    println("                  set search path for application classes");
+    println("    -d            enable disassembling");
 
     // Exit
     System.exit(0);
@@ -685,6 +677,42 @@ public class Universe {
         this);
     if (printAST) { Disassembler.dump(result); }
     return result;
+  }
+
+  public static void errorPrint(java.lang.String msg) {
+    // Checkstyle: stop
+    System.err.print(msg);
+    // Checkstyle: resume
+  }
+
+  public static void errorPrintln(java.lang.String msg) {
+    // Checkstyle: stop
+    System.err.println(msg);
+    // Checkstyle: resume
+  }
+
+  public static void errorPrintln() {
+    // Checkstyle: stop
+    System.err.println();
+    // Checkstyle: resume
+  }
+
+  public static void print(java.lang.String msg) {
+    // Checkstyle: stop
+    System.err.print(msg);
+    // Checkstyle: resume
+  }
+
+  public static void println(java.lang.String msg) {
+    // Checkstyle: stop
+    System.err.println(msg);
+    // Checkstyle: resume
+  }
+
+  public static void println() {
+    // Checkstyle: stop
+    System.err.println();
+    // Checkstyle: resume
   }
 
   public Object                                 nilObject;
