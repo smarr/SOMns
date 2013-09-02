@@ -75,7 +75,6 @@ public class Block extends Object {
 
     public Evaluation(int numberOfArguments, final Universe universe) {
       super(computeSignatureString(numberOfArguments), universe);
-      // this.numberOfArguments = numberOfArguments;
     }
 
     public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
