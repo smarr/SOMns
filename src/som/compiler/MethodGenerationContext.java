@@ -221,7 +221,8 @@ public class MethodGenerationContext {
       return null;
     }
 
-    return new FieldReadNode(fieldName, getSelfContextLevel());
+    return new FieldReadNode(holderGenc.getFieldIndex(fieldName),
+        getSelfContextLevel());
   }
 
   public GlobalReadNode getGlobalRead(final Symbol varName,
@@ -234,7 +235,8 @@ public class MethodGenerationContext {
     if (!holderGenc.hasField(fieldName)) {
       return null;
     }
-    return new FieldWriteNode(fieldName, getSelfContextLevel(), exp);
+    return new FieldWriteNode(holderGenc.getFieldIndex(fieldName),
+        getSelfContextLevel(), exp);
   }
 
   /**

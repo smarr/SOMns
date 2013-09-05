@@ -23,7 +23,6 @@ package som.interpreter.nodes;
 
 import som.compiler.MethodGenerationContext;
 import som.vmobjects.Object;
-import som.vmobjects.Symbol;
 
 import com.oracle.truffle.api.frame.FrameSlotTypeException;
 import com.oracle.truffle.api.frame.MaterializedFrame;
@@ -32,11 +31,11 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 
 public abstract class FieldNode extends ContextualNode {
 
-  protected final Symbol    fieldName;
+  protected final int fieldIndex;
 
-  public FieldNode(final Symbol fieldName, final int contextLevel) {
+  public FieldNode(final int fieldIndex, final int contextLevel) {
     super(contextLevel);
-    this.fieldName = fieldName;
+    this.fieldIndex = fieldIndex;
   }
 
   protected Object getSelfFromMaterialized(final MaterializedFrame ctx) {
@@ -49,16 +48,14 @@ public abstract class FieldNode extends ContextualNode {
 
   public static class FieldReadNode extends FieldNode {
 
-    public FieldReadNode(final Symbol fieldName, final int contextLevel) {
-      super(fieldName, contextLevel);
+    public FieldReadNode(final int fieldIndex, final int contextLevel) {
+      super(fieldIndex, contextLevel);
     }
 
     @Override
     public Object executeGeneric(VirtualFrame frame) {
       MaterializedFrame ctx = determineContext(frame.materialize());
-      Object   self = getSelfFromMaterialized(ctx);
-
-      int fieldIndex = self.getFieldIndex(fieldName);
+      Object self = getSelfFromMaterialized(ctx);
       return self.getField(fieldIndex);
     }
   }
@@ -67,10 +64,10 @@ public abstract class FieldNode extends ContextualNode {
 
     protected final ExpressionNode exp;
 
-    public FieldWriteNode(final Symbol fieldName,
+    public FieldWriteNode(final int fieldIndex,
         final int contextLevel,
         final ExpressionNode exp) {
-      super(fieldName, contextLevel);
+      super(fieldIndex, contextLevel);
       this.exp = adoptChild(exp);
     }
 
@@ -80,7 +77,6 @@ public abstract class FieldNode extends ContextualNode {
       Object value = exp.executeGeneric(frame);
       Object self  = getSelfFromMaterialized(ctx);
 
-      int fieldIndex = self.getFieldIndex(fieldName);
       self.setField(fieldIndex, value);
       return value;
     }

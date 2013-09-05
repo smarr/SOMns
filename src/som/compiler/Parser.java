@@ -144,12 +144,25 @@ public class Parser {
     expect(Identifier);
     expect(Equal);
 
+    som.vmobjects.Symbol superName;
     if (sym == Identifier) {
-      cgenc.setSuperName(universe.symbolFor(text));
+      superName = universe.symbolFor(text);
       accept(Identifier);
     } else {
-      cgenc.setSuperName(universe.symbolFor("Object"));
+      superName = universe.symbolFor("Object");
     }
+    cgenc.setSuperName(superName);
+
+    // Load the super class
+    if (superName.getString().equals("nil")) {    // Break the dependency cycle by hard coding the values for Object
+      cgenc.setNumberOfInstanceFieldsOfSuper(0);  // Object's super class is nil, has no fields
+      cgenc.setNumberOfClassFieldsOfSuper(4);     // Object's class has the fields of Class
+    } else {
+      som.vmobjects.Class superClass = universe.loadClass(superName);
+      cgenc.setNumberOfInstanceFieldsOfSuper(superClass.getNumberOfInstanceFields());
+      cgenc.setNumberOfClassFieldsOfSuper(superClass.getSOMClass().getNumberOfInstanceFields());
+    }
+
 
     expect(NewTerm);
     instanceFields(cgenc);

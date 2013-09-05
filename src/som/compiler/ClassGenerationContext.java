@@ -41,6 +41,8 @@ public class ClassGenerationContext {
   private som.vmobjects.Symbol          name;
   private som.vmobjects.Symbol          superName;
   private boolean                       classSide;
+  private int                           numberOfInstanceFieldsOfSuper;
+  private int                           numberOfClassFieldsOfSuper;
   private List<som.vmobjects.Object>    instanceFields  = new ArrayList<som.vmobjects.Object>();
   private List<som.vmobjects.Invokable> instanceMethods = new ArrayList<som.vmobjects.Invokable>();
   private List<som.vmobjects.Object>    classFields     = new ArrayList<som.vmobjects.Object>();
@@ -52,6 +54,14 @@ public class ClassGenerationContext {
 
   public void setSuperName(final Symbol superName) {
     this.superName = superName;
+  }
+
+  public void setNumberOfInstanceFieldsOfSuper(int numberOfInstanceFields) {
+    this.numberOfInstanceFieldsOfSuper = numberOfInstanceFields;
+  }
+
+  public void setNumberOfClassFieldsOfSuper(int numberOfClassFields) {
+    this.numberOfClassFieldsOfSuper = numberOfClassFields;
   }
 
   public void addInstanceMethod(final som.vmobjects.Invokable meth) {
@@ -76,6 +86,11 @@ public class ClassGenerationContext {
 
   public boolean hasField(final Symbol field) {
     return (isClassSide() ? classFields : instanceFields).contains(field);
+  }
+
+  public byte getFieldIndex(final Symbol field) {
+    int localIndex = (isClassSide() ? classFields : instanceFields).indexOf(field);
+    return (byte) (localIndex + (isClassSide() ? numberOfClassFieldsOfSuper : numberOfInstanceFieldsOfSuper));
   }
 
   public boolean isClassSide() {
@@ -104,10 +119,10 @@ public class ClassGenerationContext {
     som.vmobjects.Class result = universe.newClass(resultClass);
 
     // Initialize the resulting class
-    result.setInstanceFields(universe.newArray(instanceFields));
-    result.setInstanceInvokables(universe.newArray(instanceMethods));
     result.setName(name);
     result.setSuperClass(superClass);
+    result.setInstanceFields(universe.newArray(instanceFields));
+    result.setInstanceInvokables(universe.newArray(instanceMethods));
 
     return result;
   }
