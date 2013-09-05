@@ -1,4 +1,5 @@
 ClassA = (
+  | a b |
    result = (
       ^42     
    )   
