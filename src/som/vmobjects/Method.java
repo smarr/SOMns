@@ -153,7 +153,7 @@ public class Method extends Array implements Invokable {
   private java.util.ArrayList<Invokable> invokedMethods                    = new java.util.ArrayList<Invokable>();
   private int                            receiverClassIndex                = 0;
 
-  // Private variable holding number of invocations and back-edges
+  // Private variable holding number of invocations and back edges
   private long                           invocationCount;
 
   // Private variable holding Truffle runtime information
