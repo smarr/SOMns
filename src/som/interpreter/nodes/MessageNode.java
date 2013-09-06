@@ -34,8 +34,8 @@ import som.vmobjects.Symbol;
 //  @NodeChild(value = "arguments", type = ExpressionNode[].class)})
 public class MessageNode extends ExpressionNode {
 
-  @Child private final ExpressionNode   receiver;
-  @Child private final ExpressionNode[] arguments;
+  @Child    protected final ExpressionNode   receiver;
+  @Children protected final ExpressionNode[] arguments;
 
   private final Symbol   selector;
   private final Universe universe;
