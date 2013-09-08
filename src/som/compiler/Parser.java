@@ -171,7 +171,7 @@ public class Parser {
       MethodGenerationContext mgenc = new MethodGenerationContext();
       mgenc.setHolder(cgenc);
 
-      SequenceNode methodBody = method(mgenc);
+      ExpressionNode methodBody = method(mgenc);
 
       if (mgenc.isPrimitive()) {
         cgenc.addInstanceMethod(mgenc.assemblePrimitive(universe));
@@ -188,7 +188,7 @@ public class Parser {
         MethodGenerationContext mgenc = new MethodGenerationContext();
         mgenc.setHolder(cgenc);
 
-        SequenceNode methodBody = method(mgenc);
+        ExpressionNode methodBody = method(mgenc);
 
         if (mgenc.isPrimitive()) {
           cgenc.addClassMethod(mgenc.assemblePrimitive(universe));
@@ -269,7 +269,7 @@ public class Parser {
         lexer.getNumberOfCharactersRead() - coord.charIndex));
   }
 
-  private SequenceNode method(MethodGenerationContext mgenc) {
+  private ExpressionNode method(MethodGenerationContext mgenc) {
     pattern(mgenc);
     expect(Equal);
     if (sym == Primitive) {
@@ -319,9 +319,9 @@ public class Parser {
     mgenc.setSignature(universe.symbolFor(kw.toString()));
   }
 
-  private SequenceNode methodBlock(final MethodGenerationContext mgenc) {
+  private ExpressionNode methodBlock(final MethodGenerationContext mgenc) {
     expect(NewTerm);
-    SequenceNode sequence = blockContents(mgenc);
+    ExpressionNode sequence = blockContents(mgenc);
     expect(EndTerm);
     return sequence;
   }
@@ -366,7 +366,7 @@ public class Parser {
     return variable();
   }
 
-  private SequenceNode blockContents(final MethodGenerationContext mgenc) {
+  private ExpressionNode blockContents(final MethodGenerationContext mgenc) {
     if (accept(Or)) {
       locals(mgenc);
       expect(Or);
@@ -380,33 +380,37 @@ public class Parser {
     }
   }
 
-  private SequenceNode blockBody(final MethodGenerationContext mgenc) {
+  private ExpressionNode blockBody(final MethodGenerationContext mgenc) {
     SourceCoordinate coord = getCoordinate();
     List<ExpressionNode> expressions = new ArrayList<ExpressionNode>();
 
     while (true) {
       if (accept(Exit)) {
         expressions.add(result(mgenc));
-
-        SequenceNode seq = new SequenceNode(expressions.toArray(new ExpressionNode[0]));
-        assignSource(seq, coord);
-        return seq;
+        return createSequenceNode(coord, expressions);
       } else if (sym == EndBlock) {
-        SequenceNode seq = new SequenceNode(expressions.toArray(new ExpressionNode[0]));
-        assignSource(seq, coord);
-        return seq;
+        return createSequenceNode(coord, expressions);
       } else if (sym == EndTerm) {
         // the end of the method has been found (EndTerm) - make it implicitly
         // return "self"
         expressions.add(new SelfReadNode(mgenc.getSelfSlot(), mgenc.getSelfContextLevel()));
-        SequenceNode seq = new SequenceNode(expressions.toArray(new ExpressionNode[0]));
-        assignSource(seq, coord);
-        return seq;
+        return createSequenceNode(coord, expressions);
       }
 
       expressions.add(expression(mgenc));
       accept(Period);
     }
+  }
+
+  private ExpressionNode createSequenceNode(SourceCoordinate coord,
+      List<ExpressionNode> expressions) {
+    if (expressions.size() == 1) {
+      return expressions.get(0);
+    }
+
+    SequenceNode seq = new SequenceNode(expressions.toArray(new ExpressionNode[0]));
+    assignSource(seq, coord);
+    return seq;
   }
 
   private ExpressionNode result(MethodGenerationContext mgenc) {
@@ -494,7 +498,7 @@ public class Parser {
         bgenc.setHolder(mgenc.getHolder());
         bgenc.setOuter(mgenc);
 
-        SequenceNode blockBody = nestedBlock(bgenc);
+        ExpressionNode blockBody = nestedBlock(bgenc);
 
         som.vmobjects.Method blockMethod = bgenc.assemble(universe, blockBody);
         ExpressionNode result = new BlockNode(blockMethod, universe);
@@ -706,7 +710,7 @@ public class Parser {
     return s;
   }
 
-  private SequenceNode nestedBlock(final MethodGenerationContext mgenc) {
+  private ExpressionNode nestedBlock(final MethodGenerationContext mgenc) {
     expect(NewBlock);
     if (sym == Colon) { blockPattern(mgenc); }
 
@@ -719,7 +723,7 @@ public class Parser {
 
     mgenc.setSignature(universe.symbolFor(blockSig));
 
-    SequenceNode expressions = blockContents(mgenc);
+    ExpressionNode expressions = blockContents(mgenc);
 
     expect(EndBlock);
 

@@ -34,7 +34,7 @@ import com.oracle.truffle.api.nodes.RootNode;
 
 public class Method extends RootNode {
 
-  @Child private final SequenceNode expressions;
+  @Child private final ExpressionNode expressionOrSequence;
 
   private final FrameSlot   selfSlot;
   @CompilationFinal private final FrameSlot[]  argumentSlots;
@@ -42,13 +42,13 @@ public class Method extends RootNode {
   private final FrameSlot   nonLocalReturnMarker;
   private final Universe    universe;
 
-  public Method(final SequenceNode expressions,
+  public Method(final ExpressionNode expressions,
                   final FrameSlot selfSlot,
                   final FrameSlot[] argumentSlots,
                   final FrameSlot[] temporarySlots,
                   final FrameSlot nonLocalReturnMarker,
                   final Universe  universe) {
-    this.expressions   = expressions;
+    this.expressionOrSequence   = adoptChild(expressions);
     this.selfSlot      = selfSlot;
     this.argumentSlots = argumentSlots;
     this.temporarySlots = temporarySlots;
@@ -60,17 +60,25 @@ public class Method extends RootNode {
   public Object execute(VirtualFrame frame) {
     final FrameOnStackMarker marker = initializeFrame(frame.materialize());
 
-    Object result;
-    try {
-        result = expressions.executeGeneric(frame);
-    } catch (ReturnException e) {
-      if (!e.reachedTarget(marker)) {
-        marker.frameNoLongerOnStack();
-        throw e;
-      } else {
-        result = e.result();
+    Object  result;
+    boolean restart;
+
+    do {
+      restart = false;
+      try {
+        result = expressionOrSequence.executeGeneric(frame);
+      } catch (ReturnException e) {
+        if (!e.reachedTarget(marker)) {
+          marker.frameNoLongerOnStack();
+          throw e;
+        } else {
+          result = e.result();
+        }
+      } catch (RestartLoopException e) {
+        restart = true;
+        result  = null;
       }
-    }
+    } while (restart);
 
     marker.frameNoLongerOnStack();
     return result;

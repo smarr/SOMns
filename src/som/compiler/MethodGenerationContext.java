@@ -36,7 +36,6 @@ import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.FieldNode.FieldReadNode;
 import som.interpreter.nodes.FieldNode.FieldWriteNode;
 import som.interpreter.nodes.GlobalNode.GlobalReadNode;
-import som.interpreter.nodes.SequenceNode;
 import som.vm.Universe;
 import som.vmobjects.Invokable;
 import som.vmobjects.Method;
@@ -101,7 +100,7 @@ public class MethodGenerationContext {
     return Primitive.getEmptyPrimitive(signature.getString(), universe);
   }
 
-  public Method assemble(final Universe universe, final SequenceNode expressions) {
+  public Method assemble(final Universe universe, final ExpressionNode expressions) {
     FrameSlot[] argSlots = new FrameSlot[arguments.size()];
     FrameSlot[] localSlots = new FrameSlot[locals.size()];
 
