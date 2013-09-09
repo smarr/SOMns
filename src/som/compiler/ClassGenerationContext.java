@@ -52,6 +52,10 @@ public class ClassGenerationContext {
     this.name = name;
   }
 
+  public Symbol getName() {
+    return name;
+  }
+
   public void setSuperName(final Symbol superName) {
     this.superName = superName;
   }

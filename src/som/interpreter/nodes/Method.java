@@ -24,6 +24,7 @@ package som.interpreter.nodes;
 import som.vm.Universe;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotTypeException;
 import com.oracle.truffle.api.frame.MaterializedFrame;
@@ -105,5 +106,13 @@ public class Method extends RootNode {
     } catch (FrameSlotTypeException e) {
      throw new RuntimeException("Should not happen, since we only have one type currently!");
     }
+  }
+
+  @Override
+  public String toString() {
+    SourceSection ss = getSourceSection();
+    final String name = ss.getIdentifier();
+    final String location = getSourceSection().toString();
+    return "Method " + name + ":" + location + "@" + Integer.toHexString(hashCode());
   }
 }

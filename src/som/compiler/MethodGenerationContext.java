@@ -28,6 +28,7 @@ package som.compiler;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
@@ -116,10 +117,23 @@ public class MethodGenerationContext {
         new som.interpreter.nodes.Method(expressions,
             selfSlot, argSlots, localSlots, nonLocalReturnMarker, universe);
 
+    assignSourceSectionToMethod(expressions, truffleMethod);
+
     Method meth = universe.newMethod(signature, truffleMethod, frameDescriptor);
 
     // return the method - the holder field is to be set later on!
     return meth;
+  }
+
+  private void assignSourceSectionToMethod(final ExpressionNode expressions,
+      som.interpreter.nodes.Method truffleMethod) {
+    SourceSection ssBody   = expressions.getSourceSection();
+    SourceSection ssMethod = new SourceSection(ssBody.getSource(),
+        holderGenc.getName().getString() + ">>" + signature.toString(),
+        ssBody.getStartLine(), ssBody.getStartColumn(),
+        ssBody.getCharIndex(), ssBody.getCharLength());
+
+    truffleMethod.assignSourceSection(ssMethod);
   }
 
   public void setPrimitive(boolean prim) {
