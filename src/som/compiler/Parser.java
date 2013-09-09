@@ -393,7 +393,10 @@ public class Parser {
       } else if (sym == EndTerm) {
         // the end of the method has been found (EndTerm) - make it implicitly
         // return "self"
-        expressions.add(new SelfReadNode(mgenc.getSelfSlot(), mgenc.getSelfContextLevel()));
+        SelfReadNode self = new SelfReadNode(mgenc.getSelfSlot(), mgenc.getSelfContextLevel());
+        SourceCoordinate selfCoord = getCoordinate();
+        assignSource(self, selfCoord);
+        expressions.add(self);
         return createSequenceNode(coord, expressions);
       }
 
@@ -485,8 +488,11 @@ public class Parser {
   private ExpressionNode primary(final MethodGenerationContext mgenc) {
     switch (sym) {
       case Identifier: {
+        SourceCoordinate coord = getCoordinate();
         String v = variable();
-        return variableRead(mgenc, v);
+        ExpressionNode varRead = variableRead(mgenc, v);
+        assignSource(varRead, coord);
+        return varRead;
       }
       case NewTerm: {
         return nestedTerm(mgenc);
