@@ -208,7 +208,7 @@ public class MessageNode extends ExpressionNode {
         CompilerDirectives.transferToInterpreter();
         // So, it might just be a megamorphic send site.
         MegamorphicMessageNode mega = new MegamorphicMessageNode(receiver, arguments, selector, universe);
-        this.replace(mega, "It is not a monomorpic send.");
+        this.replace(mega, "It is not a polymorpic send.");
         return doFullSend(frame, rcvr, args, currentRcvrClass);
       }
     }
