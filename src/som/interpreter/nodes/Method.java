@@ -43,31 +43,40 @@ public class Method extends RootNode {
   private final FrameSlot   nonLocalReturnMarker;
   private final Universe    universe;
 
+  //private final FrameDescriptor frameDescriptor;
+
   public Method(final ExpressionNode expressions,
-                  final FrameSlot selfSlot,
-                  final FrameSlot[] argumentSlots,
-                  final FrameSlot[] temporarySlots,
-                  final FrameSlot nonLocalReturnMarker,
-                  final Universe  universe) {
-    this.expressionOrSequence   = adoptChild(expressions);
-    this.selfSlot      = selfSlot;
-    this.argumentSlots = argumentSlots;
-    this.temporarySlots = temporarySlots;
+                final FrameSlot selfSlot,
+                final FrameSlot[] argumentSlots,
+                final FrameSlot[] temporarySlots,
+                final FrameSlot nonLocalReturnMarker,
+                final Universe  universe) {
+                //, final FrameDescriptor frameDescriptor) {
+    this.expressionOrSequence = adoptChild(expressions);
+    this.selfSlot        = selfSlot;
+    this.argumentSlots   = argumentSlots;
+    this.temporarySlots  = temporarySlots;
     this.nonLocalReturnMarker = nonLocalReturnMarker;
-    this.universe      = universe;
+    this.universe        = universe;
+    //this.frameDescriptor = frameDescriptor;
   }
 
   @Override
   public Object execute(VirtualFrame frame) {
     final FrameOnStackMarker marker = initializeFrame(this, frame.materialize());
+    return messageSendExecution(marker, frame, expressionOrSequence);
+  }
 
+  private static Object messageSendExecution(final FrameOnStackMarker marker,
+      final VirtualFrame frame,
+      final ExpressionNode expr) {
     Object  result;
     boolean restart;
 
     do {
       restart = false;
       try {
-        result = expressionOrSequence.executeGeneric(frame);
+        result = expr.executeGeneric(frame);
       } catch (ReturnException e) {
         if (!e.reachedTarget(marker)) {
           marker.frameNoLongerOnStack();
@@ -88,16 +97,16 @@ public class Method extends RootNode {
   @ExplodeLoop
   private static FrameOnStackMarker initializeFrame(final Method method,
       final MaterializedFrame frame) {
-    Object[] args = frame.getArguments(Arguments.class).arguments;
     try {
+      frame.setObject(method.selfSlot, frame.getArguments(Arguments.class).self);
+
+      final FrameOnStackMarker marker = new FrameOnStackMarker();
+      frame.setObject(method.nonLocalReturnMarker, marker);
+
+      Object[] args = frame.getArguments(Arguments.class).arguments;
       for (int i = 0; i < method.argumentSlots.length; i++) {
         frame.setObject(method.argumentSlots[i], args[i]);
       }
-
-      frame.setObject(method.selfSlot, frame.getArguments(Arguments.class).self);
-
-      FrameOnStackMarker marker = new FrameOnStackMarker();
-      frame.setObject(method.nonLocalReturnMarker, marker);
 
       for (int i = 0; i < method.temporarySlots.length; i++) {
         frame.setObject(method.temporarySlots[i], method.universe.nilObject);
@@ -105,7 +114,7 @@ public class Method extends RootNode {
 
       return marker;
     } catch (FrameSlotTypeException e) {
-     throw new RuntimeException("Should not happen, since we only have one type currently!");
+      throw new RuntimeException("Should not happen, since we only have one type currently!");
     }
   }
 
