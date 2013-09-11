@@ -33,7 +33,15 @@ Benchmark = (
         iterations := elapsedTime := 0.
         minTime := 100000.
         
-        [ elapsedTime < 2000 or: [ iterations < 5 ] ]
+        "warm up"
+        [ iterations < 10 ] whileTrue: [
+          system fullGC.
+          self benchmark.
+          iterations := iterations + 1.].
+        
+        iterations := 0. 
+        
+        [ elapsedTime < 3000 or: [ iterations < 30 ] ]
             whileTrue: [
                 system fullGC.
                 startTime  := system time.
