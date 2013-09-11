@@ -59,7 +59,7 @@ public class Method extends RootNode {
 
   @Override
   public Object execute(VirtualFrame frame) {
-    final FrameOnStackMarker marker = initializeFrame(frame.materialize());
+    final FrameOnStackMarker marker = initializeFrame(this, frame.materialize());
 
     Object  result;
     boolean restart;
@@ -86,20 +86,21 @@ public class Method extends RootNode {
   }
 
   @ExplodeLoop
-  private FrameOnStackMarker initializeFrame(MaterializedFrame frame) {
+  private static FrameOnStackMarker initializeFrame(final Method method,
+      final MaterializedFrame frame) {
     Object[] args = frame.getArguments(Arguments.class).arguments;
     try {
-      for (int i = 0; i < argumentSlots.length; i++) {
-        frame.setObject(argumentSlots[i], args[i]);
+      for (int i = 0; i < method.argumentSlots.length; i++) {
+        frame.setObject(method.argumentSlots[i], args[i]);
       }
 
-      frame.setObject(selfSlot, frame.getArguments(Arguments.class).self);
+      frame.setObject(method.selfSlot, frame.getArguments(Arguments.class).self);
 
       FrameOnStackMarker marker = new FrameOnStackMarker();
-      frame.setObject(nonLocalReturnMarker, marker);
+      frame.setObject(method.nonLocalReturnMarker, marker);
 
-      for (int i = 0; i < temporarySlots.length; i++) {
-        frame.setObject(temporarySlots[i], universe.nilObject);
+      for (int i = 0; i < method.temporarySlots.length; i++) {
+        frame.setObject(method.temporarySlots[i], method.universe.nilObject);
       }
 
       return marker;
