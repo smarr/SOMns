@@ -58,6 +58,10 @@ public abstract class VariableNode extends ContextualNode {
       }
     }
 
+    @Override
+    public ExpressionNode cloneForInlining() {
+      return this;
+    }
   }
 
   public static class SelfReadNode extends VariableReadNode {
@@ -91,6 +95,11 @@ public abstract class VariableNode extends ContextualNode {
         throw new RuntimeException("Slot " + slot.getIdentifier() + " is of wrong type. Tried to assign som.Object, which is the only type we currently support.");
       }
       return result;
+    }
+
+    @Override
+    public ExpressionNode cloneForInlining() {
+      return new VariableWriteNode(slot, contextLevel, exp.cloneForInlining());
     }
   }
 }

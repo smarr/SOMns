@@ -40,6 +40,11 @@ public class LiteralNode extends ExpressionNode {
     return this.value;
   }
 
+  @Override
+  public ExpressionNode cloneForInlining() {
+    return this;
+  }
+
   public static class BlockNode extends LiteralNode {
 
     protected final Universe universe;
@@ -55,5 +60,7 @@ public class LiteralNode extends ExpressionNode {
       Method method = (Method) value;
       return universe.newBlock(method, frame.materialize(), method.getNumberOfArguments());
     }
+
+    // TODO: should we do something else for cloneForInlining() in this class?
   }
 }

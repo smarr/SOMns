@@ -29,4 +29,6 @@ public abstract class ExpressionNode extends SOMNode {
 
   public abstract Object executeGeneric(VirtualFrame frame);
 
+  public abstract ExpressionNode cloneForInlining();
+
 }

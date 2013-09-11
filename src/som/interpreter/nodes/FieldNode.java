@@ -58,6 +58,11 @@ public abstract class FieldNode extends ContextualNode {
       Object self = getSelfFromMaterialized(ctx);
       return self.getField(fieldIndex);
     }
+
+    @Override
+    public ExpressionNode cloneForInlining() {
+      return this;
+    }
   }
 
   public static class FieldWriteNode extends FieldNode {
@@ -79,6 +84,11 @@ public abstract class FieldNode extends ContextualNode {
 
       self.setField(fieldIndex, value);
       return value;
+    }
+
+    @Override
+    public ExpressionNode cloneForInlining() {
+      return new FieldWriteNode(fieldIndex, contextLevel, exp.cloneForInlining());
     }
   }
 }

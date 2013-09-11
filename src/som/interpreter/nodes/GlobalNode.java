@@ -50,7 +50,7 @@ public abstract class GlobalNode extends ExpressionNode {
 
   public static class GlobalReadNode extends GlobalNode {
 
-    public GlobalReadNode(final Symbol globalName, final Universe  universe) {
+    public GlobalReadNode(final Symbol globalName, final Universe universe) {
       super(globalName, universe);
     }
 
@@ -68,5 +68,10 @@ public abstract class GlobalNode extends ExpressionNode {
         return self.sendUnknownGlobal(globalName, universe, frame.pack());
       }
     }
+  }
+
+  @Override
+  public ExpressionNode cloneForInlining() {
+    return this;
   }
 }

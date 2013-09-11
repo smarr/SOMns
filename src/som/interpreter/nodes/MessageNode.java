@@ -55,6 +55,14 @@ public class MessageNode extends ExpressionNode {
     this.universe  = universe;
   }
 
+  /**
+   * @return uninitialized node to allow for specialization
+   */
+  @Override
+  public ExpressionNode cloneForInlining() {
+    return new MessageNode(receiver, arguments, selector, universe);
+  }
+
   protected Object[] determineArguments(final VirtualFrame frame) {
     int numArgs = (arguments == null) ? 0 : arguments.length;
 
