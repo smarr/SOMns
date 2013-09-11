@@ -25,13 +25,26 @@
 
 package som.vmobjects;
 
+import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.frame.PackedFrame;
+
+import som.interpreter.nodes.Method;
 import som.vm.Universe;
 
 public abstract class Primitive extends Object implements Invokable {
 
   public boolean isPrimitive() {
     return true;
+  }
+
+  @Override
+  public CallTarget getCallTarget() {
+    return null;
+  }
+
+  @Override
+  public Method getTruffleInvokable() {
+    return null;
   }
 
   public Primitive(java.lang.String signatureString, final Universe universe) {

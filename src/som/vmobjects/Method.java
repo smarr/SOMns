@@ -47,6 +47,10 @@ public class Method extends Array implements Invokable {
     this.callTarget = target;
   }
 
+  public CallTarget getCallTarget() {
+    return callTarget;
+  }
+
   public som.interpreter.nodes.Method getTruffleInvokable() {
     return truffleInvokable;
   }

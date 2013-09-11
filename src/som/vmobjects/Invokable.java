@@ -24,7 +24,10 @@
 
 package som.vmobjects;
 
+import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.frame.PackedFrame;
+
+import som.interpreter.nodes.Method;
 
 
 public interface Invokable {
@@ -45,4 +48,7 @@ public interface Invokable {
 
   // Set the holder for this invokable object
   void setHolder(final Class value);
+
+  Method getTruffleInvokable();
+  CallTarget getCallTarget();
 }
