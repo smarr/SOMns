@@ -63,5 +63,6 @@
                 <arg line="-cp Smalltalk TestSuite/TestHarness.som" />
         </java>
     </target>
+    <target name="tests" depends="test" />
 
 </project>
