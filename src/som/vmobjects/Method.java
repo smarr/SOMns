@@ -149,6 +149,11 @@ public class Method extends Array implements Invokable {
 
   @Override
   public java.lang.String toString() {
+    // TODO: fixme: remove special case if possible, I think it indicates a bug
+    if (!(getField(holderIndex) instanceof Class)) {
+      return "Method(nil>>" + getSignature().toString() + ")";
+    }
+
     return "Method(" + getHolder().getName().getString() + ">>" + getSignature().toString() + ")";
   }
 
