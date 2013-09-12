@@ -25,6 +25,7 @@ import som.vm.Universe;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.SourceSection;
+import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotTypeException;
 import com.oracle.truffle.api.frame.MaterializedFrame;
@@ -43,22 +44,22 @@ public class Method extends RootNode {
   private final FrameSlot   nonLocalReturnMarker;
   private final Universe    universe;
 
-  //private final FrameDescriptor frameDescriptor;
+  private final FrameDescriptor frameDescriptor;
 
   public Method(final ExpressionNode expressions,
                 final FrameSlot selfSlot,
                 final FrameSlot[] argumentSlots,
                 final FrameSlot[] temporarySlots,
                 final FrameSlot nonLocalReturnMarker,
-                final Universe  universe) {
-                //, final FrameDescriptor frameDescriptor) {
+                final Universe  universe,
+                final FrameDescriptor frameDescriptor) {
     this.expressionOrSequence = adoptChild(expressions);
     this.selfSlot        = selfSlot;
     this.argumentSlots   = argumentSlots;
     this.temporarySlots  = temporarySlots;
     this.nonLocalReturnMarker = nonLocalReturnMarker;
     this.universe        = universe;
-    //this.frameDescriptor = frameDescriptor;
+    this.frameDescriptor = frameDescriptor;
   }
 
   @Override
@@ -67,10 +68,10 @@ public class Method extends RootNode {
     return messageSendExecution(marker, frame, expressionOrSequence);
   }
 
-  private static Object messageSendExecution(final FrameOnStackMarker marker,
+  public static som.vmobjects.Object messageSendExecution(final FrameOnStackMarker marker,
       final VirtualFrame frame,
       final ExpressionNode expr) {
-    Object  result;
+    som.vmobjects.Object  result;
     boolean restart;
 
     do {
@@ -95,7 +96,7 @@ public class Method extends RootNode {
   }
 
   @ExplodeLoop
-  private static FrameOnStackMarker initializeFrame(final Method method,
+  public static FrameOnStackMarker initializeFrame(final Method method,
       final MaterializedFrame frame) {
     try {
       frame.setObject(method.selfSlot, frame.getArguments(Arguments.class).self);
@@ -124,5 +125,13 @@ public class Method extends RootNode {
     final String name = ss.getIdentifier();
     final String location = getSourceSection().toString();
     return "Method " + name + ":" + location + "@" + Integer.toHexString(hashCode());
+  }
+
+  public FrameDescriptor getFrameDescriptor() {
+    return frameDescriptor;
+  }
+
+  public ExpressionNode methodCloneForInlining() {
+    return expressionOrSequence.cloneForInlining();
   }
 }

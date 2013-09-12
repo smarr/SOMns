@@ -115,7 +115,8 @@ public class MethodGenerationContext {
 
     som.interpreter.nodes.Method truffleMethod =
         new som.interpreter.nodes.Method(expressions,
-            selfSlot, argSlots, localSlots, nonLocalReturnMarker, universe);
+            selfSlot, argSlots, localSlots, nonLocalReturnMarker, universe,
+            frameDescriptor);
 
     assignSourceSectionToMethod(expressions, truffleMethod);
 

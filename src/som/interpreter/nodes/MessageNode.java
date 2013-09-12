@@ -21,11 +21,6 @@
  */
 package som.interpreter.nodes;
 
-import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.NodeInfo;
-import com.oracle.truffle.api.nodes.NodeInfo.Kind;
-
 import som.interpreter.nodes.VariableNode.SuperReadNode;
 import som.vm.Universe;
 import som.vmobjects.Class;
@@ -33,10 +28,19 @@ import som.vmobjects.Invokable;
 import som.vmobjects.Object;
 import som.vmobjects.Symbol;
 
+import com.oracle.truffle.api.CallTarget;
+import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.FrameFactory;
+import com.oracle.truffle.api.nodes.InlinableCallSite;
+import com.oracle.truffle.api.nodes.InlinedCallSite;
+import com.oracle.truffle.api.nodes.Node;
+
+// TODO: I need to add a check that the invokable has not changed
+
 // @NodeChildren({
 //  @NodeChild(value = "receiver",  type = ExpressionNode.class),
 //  @NodeChild(value = "arguments", type = ExpressionNode[].class)})
-@NodeInfo(kind = Kind.UNINITIALIZED)
 public class MessageNode extends ExpressionNode {
 
   @Child    protected final ExpressionNode   receiver;
@@ -116,8 +120,10 @@ public class MessageNode extends ExpressionNode {
       CompilerDirectives.transferToInterpreter();
 
       // First let's rewrite this node
-      MonomorpicMessageNode mono = new MonomorpicMessageNode(receiver, arguments, selector, universe, rcvrClass, invokable);
-      this.replace(mono, "Let's assume it is a monomorphic send site.");
+      MonomorpicMessageNode mono = new MonomorpicMessageNode(receiver,
+          arguments, selector, universe, rcvrClass, invokable);
+
+      replace(mono, "Let's assume it is a monomorphic send site.");
 
       // Then execute the invokable, because it can exit this method with
       // control flow exceptions (non-local returns), which would leave node
@@ -128,11 +134,13 @@ public class MessageNode extends ExpressionNode {
     }
   }
 
-  @NodeInfo(kind = Kind.SPECIALIZED)
-  public static class MonomorpicMessageNode extends MessageNode {
+  public static class MonomorpicMessageNode extends MessageNode
+    implements InlinableCallSite {
 
     private final Class      rcvrClass;
     private final Invokable  invokable;
+
+    private int callCount;
 
     public MonomorpicMessageNode(final ExpressionNode receiver,
         final ExpressionNode[] arguments, final Symbol selector,
@@ -141,10 +149,14 @@ public class MessageNode extends ExpressionNode {
       super(receiver, arguments, selector, universe);
       this.rcvrClass = rcvrClass;
       this.invokable = invokable;
+
+      callCount = 0;
     }
 
     @Override
     public Object executeGeneric(VirtualFrame frame) {
+      callCount++;
+
       // evaluate all the expressions: first determine receiver
       Object rcvr = receiver.executeGeneric(frame);
 
@@ -160,13 +172,134 @@ public class MessageNode extends ExpressionNode {
         // So, it might just be a polymorphic send site.
         PolymorpicMessageNode poly = new PolymorpicMessageNode(receiver,
             arguments, selector, universe, rcvrClass, invokable, currentRcvrClass);
-        this.replace(poly, "It is not a monomorpic send.");
+
+        replace(poly, "It is not a monomorpic send.");
         return doFullSend(frame, rcvr, args, currentRcvrClass);
       }
     }
+
+    @Override
+    public int getCallCount() {
+      return callCount;
+    }
+
+    @Override
+    public void resetCallCount() {
+      callCount = 0;
+    }
+
+    @Override
+    public CallTarget getCallTarget() {
+      return invokable.getCallTarget();
+    }
+
+    @Override
+    public Node getInlineTree() {
+      if (invokable.isPrimitive()) {
+        return this;
+      } else {
+        return invokable.getTruffleInvokable();
+      }
+    }
+
+    private InlinedMonomorphicMessageNode newInlinedNode(
+        final FrameFactory frameFactory,
+        final Method method) {
+      return new InlinedMonomorphicMessageNode(receiver, arguments, selector,
+          universe, rcvrClass, invokable, method.methodCloneForInlining(),
+          frameFactory, method);
+    }
+
+    @Override
+    public boolean inline(FrameFactory factory) {
+      Method method = invokable.getTruffleInvokable();
+      if (method == null) {
+        return false;
+      }
+
+      InlinedMonomorphicMessageNode inlinedNode = newInlinedNode(factory,
+          method);
+
+      replace(inlinedNode, "Node got inlined");
+
+      return true;
+    }
   }
 
-  @NodeInfo(kind = Kind.SPECIALIZED)
+  public static class InlinedMonomorphicMessageNode extends MessageNode
+    implements InlinedCallSite {
+
+    private final Class      rcvrClass;
+    private final Invokable  invokable;
+
+    @Child private final ExpressionNode methodBody;
+
+    private final FrameFactory frameFactory;
+    private final Method inlinedMethod;
+
+    public InlinedMonomorphicMessageNode(final ExpressionNode receiver,
+        final ExpressionNode[] arguments, final Symbol selector,
+        final Universe universe, final Class rcvrClass,
+        final Invokable invokable, final ExpressionNode methodBody,
+        final FrameFactory frameFactory,
+        final Method inlinedMethod) {
+      super(receiver, arguments, selector, universe);
+      this.rcvrClass = rcvrClass;
+      this.invokable = invokable;
+
+      this.methodBody = adoptChild(methodBody);
+
+      this.frameFactory  = frameFactory;
+      this.inlinedMethod = inlinedMethod;
+    }
+
+    @Override
+    public Object executeGeneric(VirtualFrame frame) {
+      // evaluate all the expressions: first determine receiver
+      Object rcvr = receiver.executeGeneric(frame);
+
+      // then determine the arguments
+      Object[] args = determineArguments(frame);
+
+      Class currentRcvrClass = classOfReceiver(rcvr, receiver);
+
+      if (currentRcvrClass == rcvrClass) {
+        return executeInlined(frame, rcvr, args);
+      } else {
+        return generalizeNode(frame, rcvr, args, currentRcvrClass);
+      }
+    }
+
+    private Object executeInlined(final VirtualFrame caller, final Object rcvr,
+        final Object[] args) {
+      // CompilerDirectives.transferToInterpreter();
+      final VirtualFrame frame = frameFactory.create(
+          inlinedMethod.getFrameDescriptor(), caller.pack(),
+          new Arguments(rcvr, args));
+
+      final FrameOnStackMarker marker = Method.initializeFrame(inlinedMethod,
+          frame.materialize());
+
+      return Method.messageSendExecution(marker, frame, methodBody);
+    }
+
+    private Object generalizeNode(final VirtualFrame frame, final Object rcvr,
+        final Object[] args, final Class currentRcvrClass) {
+      CompilerDirectives.transferToInterpreter();
+      // So, it might just be a polymorphic send site.
+      PolymorpicMessageNode poly = new PolymorpicMessageNode(receiver,
+          arguments, selector, universe, rcvrClass, invokable, currentRcvrClass);
+
+      replace(poly, "It is not a monomorpic send.");
+      return doFullSend(frame, rcvr, args, currentRcvrClass);
+    }
+
+    @Override
+    public CallTarget getCallTarget() {
+      return invokable.getCallTarget();
+    }
+  }
+
   public static class PolymorpicMessageNode extends MessageNode {
     private static final int CACHE_SIZE = 8;
 
@@ -216,13 +349,13 @@ public class MessageNode extends ExpressionNode {
         CompilerDirectives.transferToInterpreter();
         // So, it might just be a megamorphic send site.
         MegamorphicMessageNode mega = new MegamorphicMessageNode(receiver, arguments, selector, universe);
-        this.replace(mega, "It is not a polymorpic send.");
+
+        replace(mega, "It is not a polymorpic send.");
         return doFullSend(frame, rcvr, args, currentRcvrClass);
       }
     }
   }
 
-  @NodeInfo(kind = Kind.GENERIC)
   public static class MegamorphicMessageNode extends MessageNode {
 
     public MegamorphicMessageNode(final ExpressionNode receiver,
