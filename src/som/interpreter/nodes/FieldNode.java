@@ -77,7 +77,7 @@ public abstract class FieldNode extends ContextualNode {
     }
 
     @Override
-    public Object executeGeneric(VirtualFrame frame) {
+    public Object executeGeneric(final VirtualFrame frame) {
       MaterializedFrame ctx = determineContext(frame.materialize());
       Object value = exp.executeGeneric(frame);
       Object self  = getSelfFromMaterialized(ctx);

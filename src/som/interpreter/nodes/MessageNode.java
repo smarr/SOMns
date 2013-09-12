@@ -103,7 +103,7 @@ public class MessageNode extends ExpressionNode {
   }
 
   @Override
-  public Object executeGeneric(VirtualFrame frame) {
+  public Object executeGeneric(final VirtualFrame frame) {
     // evaluate all the expressions: first determine receiver
     Object rcvr = receiver.executeGeneric(frame);
 
@@ -154,7 +154,7 @@ public class MessageNode extends ExpressionNode {
     }
 
     @Override
-    public Object executeGeneric(VirtualFrame frame) {
+    public Object executeGeneric(final VirtualFrame frame) {
       callCount++;
 
       // evaluate all the expressions: first determine receiver
@@ -254,7 +254,7 @@ public class MessageNode extends ExpressionNode {
     }
 
     @Override
-    public Object executeGeneric(VirtualFrame frame) {
+    public Object executeGeneric(final VirtualFrame frame) {
       // evaluate all the expressions: first determine receiver
       Object rcvr = receiver.executeGeneric(frame);
 
@@ -325,7 +325,7 @@ public class MessageNode extends ExpressionNode {
     }
 
     @Override
-    public Object executeGeneric(VirtualFrame frame) {
+    public Object executeGeneric(final VirtualFrame frame) {
       // evaluate all the expressions: first determine receiver
       Object rcvr = receiver.executeGeneric(frame);
 
@@ -365,7 +365,7 @@ public class MessageNode extends ExpressionNode {
     }
 
     @Override
-    public Object executeGeneric(VirtualFrame frame) {
+    public Object executeGeneric(final VirtualFrame frame) {
       // evaluate all the expressions: first determine receiver
       Object rcvr = receiver.executeGeneric(frame);
 

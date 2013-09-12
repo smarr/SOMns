@@ -69,7 +69,7 @@ public class ReturnNonLocalNode extends ContextualNode {
   }
 
   @Override
-  public Object executeGeneric(VirtualFrame frame) {
+  public Object executeGeneric(final VirtualFrame frame) {
     MaterializedFrame ctx = determineContext(frame.materialize());
     FrameOnStackMarker marker = getMarker(ctx);
 

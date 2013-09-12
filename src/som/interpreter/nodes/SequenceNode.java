@@ -36,7 +36,7 @@ public class SequenceNode extends ExpressionNode {
 
   @Override
   @ExplodeLoop
-  public Object executeGeneric(VirtualFrame frame) {
+  public Object executeGeneric(final VirtualFrame frame) {
     Object last = null;
 
     for (ExpressionNode expression : expressions) {

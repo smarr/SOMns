@@ -84,7 +84,7 @@ public abstract class VariableNode extends ContextualNode {
     }
 
     @Override
-    public Object executeGeneric(VirtualFrame frame) {
+    public Object executeGeneric(final VirtualFrame frame) {
       Object result = exp.executeGeneric(frame);
 
       MaterializedFrame ctx = determineContext(frame.materialize());
