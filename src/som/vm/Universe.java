@@ -145,7 +145,7 @@ public class Universe {
     for (int i = 0; i < arguments.length; i++) {
       java.lang.String[] split = getPathClassExt(arguments[i]);
 
-      if (split[0] != "") { // there was a path
+      if (!("".equals(split[0]))) { // there was a path
         java.lang.String[] tmp = new java.lang.String[classPath.length + 1];
         System.arraycopy(classPath, 0, tmp, 1, classPath.length);
         tmp[0] = split[0];
