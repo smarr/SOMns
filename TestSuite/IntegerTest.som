@@ -61,7 +61,7 @@ IntegerTest = (
 		self assignmentTest.
 		self stringTest.
 		self rangeBorderTest.
-		self comparasonTest.
+		self comparisonTest.
 		self additionTest.
 		self subtractionTest.
 		self multiplicationTest.
@@ -127,25 +127,25 @@ IntegerTest = (
 		self assert: 'Range Border' actual: (-2147483648 asString) expected: '-2147483648'.
 	)
 			
-	comparasonTest = (
-		self assert: 'Comparasion ='  actual: (9=9)  expected: true.
-		self assert: 'Comparasion ='  actual: (1=2)  expected: false.
-		self assert: 'Comparasion <'  actual: (0<0)  expected: false.
-		self assert: 'Comparasion <'  actual: (1<2)  expected: true.
-		self assert: 'Comparasion <'  actual: (2<1)  expected: false.
-		self assert: 'Comparasion <'  actual: (-3<2) expected: true.
-		self assert: 'Comparasion <'  actual: (3< -2) expected: false.
-		self assert: 'Comparasion >'  actual: (0>0)  expected: false.
-		self assert: 'Comparasion >'  actual: (1>2)  expected: false.
-		self assert: 'Comparasion >'  actual: (2>1)  expected: true.
-		self assert: 'Comparasion >'  actual: (-3>2) expected: false.
-		self assert: 'Comparasion >'  actual: (3> -2) expected: true.
-		self assert: 'Comparasion >=' actual: (4>=3) expected: true.
-		self assert: 'Comparasion >=' actual: (3>=3) expected: true.
-		self assert: 'Comparasion >=' actual: (2>=3) expected: false.
-		self assert: 'Comparasion <=' actual: (2<=4) expected: true.
-		self assert: 'Comparasion <=' actual: (3<=3) expected: true.
-		self assert: 'Comparasion <=' actual: (4<=3) expected: false.
+	comparisonTest = (
+		self assert: 'Comparison ='  actual: (9=9)  expected: true.
+		self assert: 'Comparison ='  actual: (1=2)  expected: false.
+		self assert: 'Comparison <'  actual: (0<0)  expected: false.
+		self assert: 'Comparison <'  actual: (1<2)  expected: true.
+		self assert: 'Comparison <'  actual: (2<1)  expected: false.
+		self assert: 'Comparison <'  actual: (-3<2) expected: true.
+		self assert: 'Comparison <'  actual: (3< -2) expected: false.
+		self assert: 'Comparison >'  actual: (0>0)  expected: false.
+		self assert: 'Comparison >'  actual: (1>2)  expected: false.
+		self assert: 'Comparison >'  actual: (2>1)  expected: true.
+		self assert: 'Comparison >'  actual: (-3>2) expected: false.
+		self assert: 'Comparison >'  actual: (3> -2) expected: true.
+		self assert: 'Comparison >=' actual: (4>=3) expected: true.
+		self assert: 'Comparison >=' actual: (3>=3) expected: true.
+		self assert: 'Comparison >=' actual: (2>=3) expected: false.
+		self assert: 'Comparison <=' actual: (2<=4) expected: true.
+		self assert: 'Comparison <=' actual: (3<=3) expected: true.
+		self assert: 'Comparison <=' actual: (4<=3) expected: false.
 	)
 
 	additionTest = (
