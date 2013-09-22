@@ -46,9 +46,4 @@ Block = (
     "Restarting"
     restart = primitive
     
-	"Omni"
-	enforced: aDomain = (
-		"Move to language/baselevel and in the context of the given domain"
-		^ aDomain evaluateInContextOnBaseLevel: self
-	)
 )
