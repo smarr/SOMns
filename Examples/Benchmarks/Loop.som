@@ -25,10 +25,20 @@ THE SOFTWARE.
 
 Loop = Benchmark (
 
+    singleRun = (
+        | sum |
+        sum := 0.
+        1 to: 100 do: [ :j | sum := sum + 1 ].
+        (sum = 100)
+            ifFalse: [
+                self error: 'Wrong result: ' + sum + ' should be: 100' ].
+        ^ sum
+    )
+
     benchmark = ( 
         | sum |
         sum := 0.
-        1 to: 200 do: [ :i | 1 to: 100 do: [ :j | sum := sum + 1 ] ].
+        1 to: 200 do: [ :i | sum := sum + self singleRun ].
         (sum = 20000) 
             ifFalse: [
                 self error: 'Wrong result: ' + sum + ' should be: 20000' ]
