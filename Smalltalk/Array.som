@@ -46,8 +46,8 @@ Array = (
     )
                                 
     "Containment check"
-    contains: element    = ( self do: [ :e | e = element ifTrue: [ ^true ] ].
-                             ^false )
+    contains: element = ( self do: [ :e | e = element ifTrue: [ ^true ] ].
+                          ^false )
     
     "Collection"
     collect: aBlock = (
