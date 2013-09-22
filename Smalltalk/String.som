@@ -62,7 +62,7 @@ String = (
 	)
     
     charAt: argument = (
-        ^self substringFrom: argument To: argument
+        ^self substringFrom: argument to: argument
     )
     
     "Printing"
