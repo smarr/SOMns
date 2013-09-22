@@ -27,23 +27,31 @@ TestHarness = (
 
     tests = ( "Now ordered by alphabetical order to improve maintainability"
         ^ EmptyTest,
- 		  ArrayTest,
-		  BigIntegerTest,
-		  "BlockTest,"        "Does not work currently STEFAN: 2012-05-19"
-		  ClassLoadingTest,
-		  ClosureTest,
-		  CoercionTest,
-		  CompilerReturnTest,
-		  DoubleTest,
-		  HashTest,
-		  IntegerTest,
-		  "ObjectSizeTest,"   "Does not work currently STEFAN: 2012-05-19"
-		  PreliminaryTest,
-		  ReflectionTest,
-		  SelfBlockTest,
-		  SuperTest,
-		  SymbolTest, 
-          VectorTest
+          ArrayTest,
+          BigIntegerTest,
+          ClassLoadingTest,
+          ClosureTest,
+          CoercionTest,
+          CompilerReturnTest,
+          DoubleTest,
+          HashTest,
+          IntegerTest,
+          ObjectSizeTest,
+          PreliminaryTest,
+          ReflectionTest,
+          SelfBlockTest,
+          SuperTest,
+          SymbolTest, 
+          VectorTest,
+          BlockTest
+    )
+    
+    
+    run: args = (
+        'Testing...' println.
+        ('Running test ' + (args at: 2) + 'Test') println.
+        (system resolve: ((args at: 2) + 'Test') asSymbol) new run: self.
+        '...done' println
     )
     
     run = (
