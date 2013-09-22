@@ -30,7 +30,7 @@ SuperTestSuperClass = (
     give42 = (
         ^42
     )
- 
+
     something = (
         ^ #super
     )
