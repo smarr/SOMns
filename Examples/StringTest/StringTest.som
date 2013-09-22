@@ -49,9 +49,9 @@ StringTest = (
         (str3 charAt: 5) println.
         
         "test substring. 'foo' , 'bar' , 'foobar'" 
-        (str3 primSubstringFrom: 0 To: 2) println.
-        (str3 primSubstringFrom: 3 To: 5) println.
-        (str3 primSubstringFrom: 0 To: 5) println.
+        (str3 primSubstringFrom: 0 to: 2) println.
+        (str3 primSubstringFrom: 3 to: 5) println.
+        (str3 primSubstringFrom: 0 to: 5) println.
         
         'Hello, World from SmallTalk(tm)' println
     )
