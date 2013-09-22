@@ -1,0 +1,8 @@
+SystemTest = (
+    run: harness = (
+        "Test whether #fullGC is support. We expect the VM now to return true,
+         to indicate the a GC was done."
+        (system fullGC == true) ifFalse: [
+            harness warn: self because: 'VM does not support #fullGC.'].
+    )
+)
