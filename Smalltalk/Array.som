@@ -44,6 +44,24 @@ Array = (
             block value: (self at: i).
             i := i + 1 ]
     )
+    
+    "Copying (inclusively)"
+    copyFrom: start to: end = ( | result i |
+        result := Array new: end - start + 1.
+        i := 1.
+        self from: start to: end do: [ :e |
+            result at: i put: e.
+            i := i + 1 ].
+        ^result
+    )
+    
+    copyFrom: start = ( ^self copyFrom: start to: self length )
+
+    copy = (^self copyFrom: 1)
+    
+    "Numerical"
+    sum     = ( ^self inject: 0 into: [ :sub :elem | sub + elem ] )
+    average = ( ^self sum / self length )
                                 
     "Containment check"
     contains: element = ( self do: [ :e | e = element ifTrue: [ ^true ] ].
@@ -55,6 +73,12 @@ Array = (
         result := Array new: self length.
         self doIndexes: [ :i | result at: i put: (aBlock value: (self at: i)) ].
         ^result
+    )
+
+    inject: sub into: aBlock = ( | next |
+        next := sub.
+        self do: [ :e | next := aBlock value: next with: e ].
+        ^next
     )
     
     reject: aBlock = (

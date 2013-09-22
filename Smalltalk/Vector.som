@@ -111,6 +111,13 @@ Vector = (
     size     = ( ^last - first   )
     capacity = ( ^storage length )
     
+    "Conversion"
+    asArray = ( | arr |
+        arr := Array new: self size.
+        self doIndexes: [ :i | arr at: i put: (self at: i) ].
+        ^arr
+    )
+    
     "Private"
     last:      integer = ( last      := integer )
     first:     integer = ( first     := integer )

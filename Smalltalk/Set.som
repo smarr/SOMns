@@ -68,6 +68,8 @@ Set = (
         items := newItems
     )
     
+    "Sets do not have the notion of ordering, but
+     for convenience we provide those accessors"
     first = (
         ^items at: 1
     )
@@ -78,6 +80,13 @@ Set = (
     
     "Iteration"
     do: block = ( items do: block )
+    
+    "Collection"
+    collect: block = ( | coll |
+        coll := Vector new.
+        self do: [ :e | coll append: (block value: e) ].
+        ^coll
+    )
     
     "Printing"
     println = (

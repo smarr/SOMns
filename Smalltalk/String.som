@@ -60,6 +60,10 @@ String = (
 		
 		^ true
 	)
+
+    asInteger = (
+        ^ Integer fromString: self
+    )
     
     charAt: argument = (
         ^self substringFrom: argument to: argument

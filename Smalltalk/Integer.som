@@ -86,5 +86,13 @@ Integer = (
         self to: upper do: [ :i | range at: i put: i ].
         ^range
     )
+
+    max: otherInt = (
+        (self < otherInt) ifTrue: [^otherInt] ifFalse: [^self].
+    )
+
+    ----
+    
+    fromString: aString = primitive
     
 )

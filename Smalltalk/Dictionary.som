@@ -43,6 +43,9 @@ Dictionary = (
         ^false
     )
     
+    keys   = ( ^pairs collect: [ :p | p key ] )
+    values = ( ^pairs collect: [ :p | p value ] )
+    
     "Iteration"
     do: block = ( pairs do: block )
     
