@@ -95,20 +95,27 @@ IntegerTest = (
         self assert: 'Class' actual: ( 1073741824 class) expected: Integer.
 )
 
-			
-	stringTest = (
-		self assert: 'As String' actual: (0 	asString) expected: '0'.
-		self assert: 'As String' actual: (1 	asString) expected: '1'.
-		self assert: 'As String' actual: (2 	asString) expected: '2'.
-		self assert: 'As String' actual: (-1 asString) expected: '-1'.
-		self assert: 'As String' actual: (-2 asString) expected: '-2'.
-	)
-			
     assignmentTest = (  | a |
         a := 42.  self assert: 'Assignment' actual: a expected: 42.
         a := 0.   self assert: 'Assignment' actual: a expected: 0.
         a := -34. self assert: 'Assignment' actual: a expected: -34.
     )
+            
+    stringTest = (
+        self assert: 'As String' actual: (0     asString) expected: '0'.
+        self assert: 'As String' actual: (1     asString) expected: '1'.
+        self assert: 'As String' actual: (2     asString) expected: '2'.
+        self assert: 'As String' actual: (-1 asString) expected: '-1'.
+        self assert: 'As String' actual: (-2 asString) expected: '-2'.
+        
+        self assert: 'From String' actual: (Integer fromString:  '1') expected:  1.
+        self assert: 'From String' actual: (Integer fromString: '-1') expected: -1.
+        self assert: 'From String' actual: (Integer fromString: '42') expected: 42.
+        
+        self assert: 'As Integer' actual: '42' asInteger expected: 42.
+        self assert: 'As Integer' actual: '-2' asInteger expected: -2.
+    )
+            
     rangeBorderTest = (
         self assert: 'Range Border' actual: ( 536870911  asString) expected: '536870911'.
         self assert: 'Range Border' actual: ( 536870912  asString) expected: '536870912'.
