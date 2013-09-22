@@ -40,7 +40,7 @@ Array = (
                                 
     from: start to: end do: block = ( | i |
         i := start.
-        [ i <= self length ] whileTrue: [
+        [ i <= end ] whileTrue: [
             block value: (self at: i).
             i := i + 1 ]
     )
