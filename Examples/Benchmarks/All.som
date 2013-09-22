@@ -38,7 +38,8 @@ All = (
         startTime := system ticks.
                
         Fibonacci, Dispatch, Bounce, Loop, Permute, Queens, List, Recurse,
-        Storage, Sieve, BubbleSort, QuickSort, Sum, Towers, TreeSort
+        Storage, Sieve, BubbleSort, QuickSort, Sum, Towers, TreeSort,
+        IntegerLoop, FieldLoop
             do: [ :benchmark | benchmark new exec: iterations ].
 
         runTime := system ticks - startTime.
