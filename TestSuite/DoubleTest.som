@@ -37,7 +37,14 @@ DoubleTest = (
         ((4/3) + (4/5)) asString = '1'
             ifFalse: [ harness fail: self because: 'string result of integer division incorrect.' ].
         (1//2) asString = '0.5'
-                ifFalse: [ harness fail: self because: 'double asString is incorrect' ]
+                ifFalse: [ harness fail: self because: 'double asString is incorrect' ].
+        
+        (5//10) round = 1
+            ifFalse: [ harness fail: self because: 'Rounded result of 0.5 should be 1' ].
+        (14//10) round = 1
+            ifFalse: [ harness fail: self because: 'Rounded result of 1.4 should be 1' ].
+        (44534//100) round = 445
+            ifFalse: [ harness fail: self because: 'Rounded result of 445.34 should be 445' ].
     )
     
 )
