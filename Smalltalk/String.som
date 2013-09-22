@@ -67,5 +67,5 @@ String = (
     
     "Printing"
     print    = ( system printString: self )
-    
+
 )
