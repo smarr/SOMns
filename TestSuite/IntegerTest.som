@@ -202,7 +202,7 @@ IntegerTest = (
 
 	squareRootTest = (
 		self assert: 'SquareRoot' actual: (25 sqrt) expected: 5.
-		self assert: 'SquareRoot' actual: (25 sqrt class) expected: Integer.
+		self shouldBe: 'SquareRoot' actual: (25 sqrt class) expected: Integer.
 	)
 
 	andTest = (
