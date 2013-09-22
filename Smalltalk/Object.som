@@ -64,7 +64,7 @@ Object = nil (
     halt      = primitive
     
     "Error handling"
-    error: string = ( '' println. ('ERROR: ' + string) println. system exit )
+    error: string = ( '' println. ('ERROR: ' + string) println. system exit: 1 )
     
     "Abstract method support"
     subclassResponsibility = (
