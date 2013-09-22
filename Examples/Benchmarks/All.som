@@ -48,7 +48,7 @@ All = (
         iterations print.
         ' run time: ' print.
         runTime print.
-        'µs' println.
+        'us' println.
     )
     
 )
