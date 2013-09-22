@@ -1,6 +1,4 @@
 "
-
-
 Copyright (c) 2001-2007 see AUTHORS file
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -22,33 +20,55 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 "
 
-All = (
+All = BenchmarkHarness (
 
-    run = (
-        self exec: 1
+    all = (
+        ^ Fibonacci, Dispatch, Bounce, Loop, Permute, Queens, List, Recurse,
+          Storage, Sieve, BubbleSort, QuickSort, Sum, Towers, TreeSort,
+          IntegerLoop, FieldLoop
     )
-
+    
     run: params = (
-		self exec: (params at: 2) intValue.
+        params length < 2
+            ifTrue:  [ self exec: 100 ]
+            ifFalse: [ self exec: (params at: 2) asInteger ]
+    )
+    
+    printUsage = (
+      './som.sh -cp Smalltalk Examples/Benchmarks/All.som [number-of-iterations]' println.
+      '' println.
+      '  number-of-iterations - the number of time each benchmark is executed, default: 1' println.
     )
     
     exec: iterations = (
-        | startTime i runTime |
+        | harness |
         
-        startTime := system ticks.
-               
-        Fibonacci, Dispatch, Bounce, Loop, Permute, Queens, List, Recurse,
-        Storage, Sieve, BubbleSort, QuickSort, Sum, Towers, TreeSort,
-        IntegerLoop, FieldLoop
-            do: [ :benchmark | benchmark new exec: iterations ].
+        'Start execution of all benchmarks. Iterations: ' print.
+        iterations println.
+        
+        self initialize.
+        self benchmarkClasses: self all.
+        self printAll: false.
+        self maxRuntime: 3. "seconds"
+        self numIterations: iterations.
+        self warmUp: 10.
 
-        runTime := system ticks - startTime.
+        self runBenchmarks.
+        self printTotal.
+    )
+    
+    reportRun: bench = (
+        '' println.
+        'Benchmark: ' print.
+        bench name println.
 
-        'All: iterations=' print.
-        iterations print.
-        ' run time: ' print.
-        runTime print.
-        'us' println.
+        ('   Iterations: ' + bench numIterations + ' (elapsed time ' + (bench total // 1000) round
+            + ' ms)') println.
+        ('   AVERAGE: ' + ((bench total // bench numIterations) // 1000) round + ' ms') println.
+    )
+    
+    printTotal = (
+        ('Total Runtime: ' + (self total // 1000) round asString + ' ms') println.
     )
     
 )

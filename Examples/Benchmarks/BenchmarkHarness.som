@@ -1,6 +1,4 @@
 "
-
-
 Copyright (c) 2001-2009 see AUTHORS file
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -26,38 +24,107 @@ BenchmarkHarness = (
 
     "The BenchmarkHarness can be invoked on the command line and should be
     passed a list of benchmarks to run (class names) as arguments. It will
-    run each of them and output single as well as average measurements."
+    run each of them and output single as well as a total."
     
-    | total runtimes |
+    | total runtimes benchmarkClasses numIterations warmUp maxRuntime printAll |
+    
+    benchmarkClasses: classes = ( benchmarkClasses := classes )
+    printAll: aBool = ( printAll := aBool )
+    maxRuntime: seconds = ( maxRuntime := seconds )
+    numIterations: anInt = (numIterations := anInt)
+    warmUp: anInt = (warmUp := anInt)
+    
+    total = ( ^ total )
     
     run: args = (
+        args length < 2 ifTrue: [ ^ self printUsage ].
+        
         self initialize.
-        self runBenchmarks: (args copyFrom: 2).
-        self printResults.
-        self printAverage
+        self processArguments: args.
+
+        self runBenchmarks.
+        self printTotal.
     )
     
     initialize = (
-        total := 0.
-        runtimes := Dictionary new
+        total         := 0.
+        runtimes      := Dictionary new.
+        numIterations := 1.
+        warmUp        := 0.
+        maxRuntime    := nil.
+        printAll      := true.
     )
     
-    runBenchmarks: benchmarks = (
-        benchmarks do: [ :benchmark | | bm time |
-            bm := benchmark asSymbol.
-            time := (system resolve: bm) new run.
-            total := total + time.
-            runtimes at: bm put: time ]
+    printUsage = (
+      './som.sh -cp Smalltalk Examples/Benchmarks/BenchmarkHarness.som [benchmarks] [num-iterations [warm-up]]' println.
+      '' println.
+      '  benchmarks     - list of benchmark class names (e.g.: Queens Fibonacci Dispatch)' println.
+      '  num-iterations - number of times each benchmark is executed, default: 1' println.
+      '  warm-up        - number of times each benchmark is executed before measuring, default: 0' println.
     )
     
-    printResults = (
-        runtimes do: [ :result |
-            (result key asString + ' -> ' + result value asString + ' ms')
-                println ]
+    processArguments: args = (
+        | remainingArgs |
+        remainingArgs := self collectBenchmarkClasses: args.
+        remainingArgs ifNotNil: [
+            numIterations := (remainingArgs at: 1) asInteger.
+            remainingArgs length > 1 ifTrue: [
+                warmUp := (remainingArgs at: 2) asInteger
+            ].
+        ]
     )
     
-    printAverage = (
-        ('AVERAGE ' + runtimes values asArray average asString + ' ms') println
+    collectBenchmarkClasses: args = (
+        | i benchmarks |
+        i := 2. "First argument is the BenchmarkHarness"
+        
+        benchmarks := Vector new: args length - 1.
+        [i <= args length] whileTrue: [
+            | sym cls |
+            sym := (args at: i) asSymbol.
+            cls := system load: sym.
+            cls ifNil: [
+                "This item does not seem to be a class, so it is most likely
+                 one of the other parameters"
+                 benchmarkClasses := benchmarks.
+                 ^ args copyFrom: i to: args length ].
+            cls := system resolve: sym.
+            benchmarks append: cls.
+            i := i + 1 ].
+
+        benchmarkClasses := benchmarks.
+        ^ nil
+    )
+        
+    runBenchmarks = (
+        benchmarkClasses do: [ :benchmark |
+            | time bench |
+            bench := benchmark new.
+            bench maxRuntime: maxRuntime.
+            
+            bench run: numIterations with: warmUp printAll: printAll.
+            total := total + bench total.
+            runtimes at: benchmark put: bench total.
+            
+            self reportRun: bench.
+
+            '' println. ]
+    )
+    
+    reportRun: bench = (
+        bench name print.
+        ': iterations=' print.
+        bench numIterations print.
+        ' average: ' print.
+        (bench total / bench numIterations) print.
+        'us' print.
+        ' total: ' print.
+        bench total print.
+        'us' println.
+    )
+        
+    printTotal = (
+        ('Total Runtime: ' + total asString + ' us') println.
     )
 
 )
