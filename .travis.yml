@@ -10,4 +10,4 @@ install:
 # command to run tests
 script:
   # Run unit tests with PySOM
-  - cd PySOM && ./som.sh -cp ../Smalltalk ../TestSuite/TestHarness.som
+  - cd PySOM && git --no-pager log -n 1 && ./som.sh -cp ../Smalltalk ../TestSuite/TestHarness.som
