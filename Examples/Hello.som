@@ -25,6 +25,6 @@ THE SOFTWARE.
 Hello = (
 
     "The 'run' method is called when initializing the system"
-    run = ('Hello, World from SmallTalk(tm)' println )
+    run = ('Hello, World from SOM' println )
     
 )
