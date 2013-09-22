@@ -84,7 +84,7 @@ Array = (
     new                        = ( ^self new: 0 )
     new: length                = primitive
     new: length withAll: block = ( ^((self new: length) putAll: block) )
-    
+
     "Convenience"
     with: a with: b            = (
         | arr |
