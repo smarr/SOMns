@@ -28,7 +28,7 @@ THE SOFTWARE.
 ArrayTest = (
     run: harness = (
         
-        | a j |
+        | a b j |
         a := Array new: 3.
         a at: 1 put: 'hello'.
         a at: 2 put: #world.
@@ -64,5 +64,30 @@ ArrayTest = (
 			].
 			j := j + 1.
 		].
+
+        " Test aggregation and copying of arrays "
+        1 to: 3 do: [ :i | a at: i put: i ].
+        
+        a sum = 6 ifFalse: [
+            harness
+                fail: self
+                because: 'Array sum should be 6.' ].
+        a average = 2 ifFalse: [
+            harness
+                fail: self
+                because: 'Array average should be 2.' ].
+        
+        a := Array new: 5.
+        1 to: 5 do: [ :i | a at: i put: i ].
+        b := a copyFrom: 2 to: 4.
+        ((b at: 1) = 2) && ((b at: 2) = 3) && ((b at: 3) = 4) ifFalse: [
+            harness
+                fail: self
+                because: 'Copied array should contain [2,3,4].' ].
+        b := a copyFrom: 3.
+        ((b at: 1) = 3) && ((b at: 2) = 4) && ((b at: 3) = 5) ifFalse: [
+            harness
+                fail: self
+                because: 'Copied array should contain [3,4,5].' ]
     )
 )
