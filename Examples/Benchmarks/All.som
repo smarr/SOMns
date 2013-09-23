@@ -21,6 +21,7 @@ THE SOFTWARE.
 "
 
 All = BenchmarkHarness (
+    | summedAverage |
 
     all = (
         ^ Fibonacci, Dispatch, Bounce, Loop, Permute, Queens, List, Recurse,
@@ -42,6 +43,8 @@ All = BenchmarkHarness (
     
     exec: iterations = (
         | harness |
+        
+        summedAverage := 0.
         
         'Start execution of all benchmarks. Iterations: ' print.
         iterations println.
@@ -65,10 +68,12 @@ All = BenchmarkHarness (
         ('   Iterations: ' + bench numIterations + ' (elapsed time ' + (bench total // 1000) round
             + ' ms)') println.
         ('   AVERAGE: ' + ((bench total // bench numIterations) // 1000) round + ' ms') println.
+        
+        summedAverage := summedAverage + (bench total // bench numIterations).
     )
     
     printTotal = (
-        ('Total Runtime: ' + (self total // 1000) round asString + ' ms') println.
+        ('Summed Average Runtime: ' + (summedAverage // 1000) round asString + ' ms') println.
     )
     
 )
