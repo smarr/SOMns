@@ -30,7 +30,7 @@ Benchmark = (
     
     maxRuntime: seconds = (
         "converted to microseconds i.e. ticks"
-        maxRuntime ifNotNil: [
+        seconds ifNotNil: [
             maxRuntime := seconds * 1000 * 1000].
     )
 
