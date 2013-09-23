@@ -31,27 +31,27 @@ ObjectSizeTest = (
         Object new objectSize = 1
             ifFalse: [
                 harness
-                    fail: self
+                    warn: self
                     because: 'Plain object does not have size 1.' ].
         42 objectSize = 1
             ifFalse: [
                 harness
-                    fail: self
+                    warn: self
                     because: 'Integer object does not have size 1.' ].
         'hello' objectSize = 1
             ifFalse: [
                 harness
-                    fail: self
+                    warn: self
                     because: 'hello String object does not have size 1.' ].
         Array new objectSize = 1
             ifFalse: [
                 harness
-                    fail: self
+                    warn: self
                     because: 'Empty array object does not have size 1.' ].
         (Array new: 4) objectSize = 5
             ifFalse: [
                 harness
-                    fail: self
+                    warn: self
                     because: 'Array object (length 4) does not have size 5.' ].
     )
     
