@@ -6,10 +6,10 @@ python:
 
 install:
   - git clone --depth 1 https://github.com/smarr/PySOM.git
-  - git clone --depth 1 https://github.com/smarr/SOM-java.git
+  - git clone --depth 1 https://github.com/smarr/som-java.git
 
 # command to run tests
 script:
   # Run unit tests with PySOM
   - cd PySOM && git --no-pager log -n 1 && ./som.sh -cp ../Smalltalk ../TestSuite/TestHarness.som
-  - cd SOM-java && git --no-pager log -n 1 && ant jar && ./som.sh -cp ../Smalltalk ../TestSuite/TestHarness.som
+  - cd som-java && git --no-pager log -n 1 && ant jar && ./som.sh -cp ../Smalltalk ../TestSuite/TestHarness.som
