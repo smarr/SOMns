@@ -118,8 +118,8 @@ public class SystemPrimitives extends Primitives {
     installInstancePrimitive(new Primitive("fullGC", universe) {
 
       public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
-        // naught - GC is entirely left to the JVM
-        return selfO;
+        System.gc();
+        return universe.trueObject;
       }
     });
 
