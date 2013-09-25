@@ -86,14 +86,10 @@ public abstract class VariableNode extends ContextualNode {
     @Override
     public Object executeGeneric(final VirtualFrame frame) {
       Object result = exp.executeGeneric(frame);
-
       MaterializedFrame ctx = determineContext(frame.materialize());
 
-      try {
-        ctx.setObject(slot, result);
-      } catch (FrameSlotTypeException e) {
-        throw new RuntimeException("Slot " + slot.getIdentifier() + " is of wrong type. Tried to assign som.Object, which is the only type we currently support.");
-      }
+      ctx.setObject(slot, result);
+
       return result;
     }
 

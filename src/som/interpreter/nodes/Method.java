@@ -27,7 +27,6 @@ import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlot;
-import com.oracle.truffle.api.frame.FrameSlotTypeException;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
@@ -98,25 +97,20 @@ public class Method extends RootNode {
   @ExplodeLoop
   public static FrameOnStackMarker initializeFrame(final Method method,
       final MaterializedFrame frame) {
-    try {
-      frame.setObject(method.selfSlot, frame.getArguments(Arguments.class).self);
+    frame.setObject(method.selfSlot, frame.getArguments(Arguments.class).self);
 
-      final FrameOnStackMarker marker = new FrameOnStackMarker();
-      frame.setObject(method.nonLocalReturnMarker, marker);
+    final FrameOnStackMarker marker = new FrameOnStackMarker();
+    frame.setObject(method.nonLocalReturnMarker, marker);
 
-      Object[] args = frame.getArguments(Arguments.class).arguments;
-      for (int i = 0; i < method.argumentSlots.length; i++) {
-        frame.setObject(method.argumentSlots[i], args[i]);
-      }
-
-      for (int i = 0; i < method.temporarySlots.length; i++) {
-        frame.setObject(method.temporarySlots[i], method.universe.nilObject);
-      }
-
-      return marker;
-    } catch (FrameSlotTypeException e) {
-      throw new RuntimeException("Should not happen, since we only have one type currently!");
+    Object[] args = frame.getArguments(Arguments.class).arguments;
+    for (int i = 0; i < method.argumentSlots.length; i++) {
+      frame.setObject(method.argumentSlots[i], args[i]);
     }
+
+    for (int i = 0; i < method.temporarySlots.length; i++) {
+      frame.setObject(method.temporarySlots[i], method.universe.nilObject);
+    }
+    return marker;
   }
 
   @Override
