@@ -32,6 +32,7 @@ import som.vmobjects.Double;
 import som.vmobjects.Integer;
 import som.vmobjects.Object;
 import som.vmobjects.Primitive;
+import som.vmobjects.String;
 
 public class IntegerPrimitives extends Primitives {
 
@@ -83,8 +84,14 @@ public class IntegerPrimitives extends Primitives {
 
       public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
         Integer self = (Integer) selfO;
-        return universe.newDouble(Math.sqrt(
-            (double) self.getEmbeddedInteger()));
+
+        double result = Math.sqrt((double) self.getEmbeddedInteger());
+
+        if (result == Math.rint(result)) {
+          return makeInt((long) result);
+        } else {
+          return universe.newDouble(result);
+        }
       }
     });
 
@@ -326,6 +333,17 @@ public class IntegerPrimitives extends Primitives {
             return universe.falseObject;
           }
         }
+      }
+    });
+
+    installClassPrimitive(new Primitive("fromString:", universe) {
+
+      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
+        String param = (String) args[0];
+
+        long result = java.lang.Long.parseLong(param.getEmbeddedString());
+
+        return makeInt(result);
       }
     });
   }
