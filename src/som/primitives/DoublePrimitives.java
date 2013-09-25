@@ -139,5 +139,19 @@ public class DoublePrimitives extends Primitives {
         }
       }
     });
+
+    installInstancePrimitive(new Primitive("round", universe) {
+
+      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
+        Double rcvr = (Double) selfO;
+        long result = Math.round(rcvr.getEmbeddedDouble());
+        if (result > java.lang.Integer.MAX_VALUE
+            || result < java.lang.Integer.MIN_VALUE) {
+          return universe.newBigInteger(result);
+        } else {
+          return universe.newInteger((int) result);
+        }
+      }
+    });
   }
 }
