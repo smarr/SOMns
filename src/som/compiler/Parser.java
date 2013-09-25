@@ -62,25 +62,24 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.oracle.truffle.api.SourceSection;
-import com.oracle.truffle.api.frame.FrameSlot;
-
 import som.compiler.SourcecodeCompiler.Source;
 import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.ReturnNonLocalNode;
-import som.interpreter.nodes.SequenceNode;
 import som.interpreter.nodes.FieldNode.FieldReadNode;
 import som.interpreter.nodes.FieldNode.FieldWriteNode;
 import som.interpreter.nodes.GlobalNode.GlobalReadNode;
 import som.interpreter.nodes.LiteralNode;
 import som.interpreter.nodes.LiteralNode.BlockNode;
 import som.interpreter.nodes.MessageNode;
+import som.interpreter.nodes.ReturnNonLocalNode;
+import som.interpreter.nodes.SequenceNode;
 import som.interpreter.nodes.VariableNode.SelfReadNode;
 import som.interpreter.nodes.VariableNode.SuperReadNode;
 import som.interpreter.nodes.VariableNode.VariableReadNode;
 import som.interpreter.nodes.VariableNode.VariableWriteNode;
-
 import som.vm.Universe;
+
+import com.oracle.truffle.api.frame.FrameSlot;
+import com.oracle.truffle.api.impl.DefaultSourceSection;
 
 public class Parser {
 
@@ -264,7 +263,7 @@ public class Parser {
   }
 
   private void assignSource(ExpressionNode node, SourceCoordinate coord) {
-    node.assignSourceSection(new SourceSection(source, "method",
+    node.assignSourceSection(new DefaultSourceSection(source, "method",
         coord.startLine, coord.startColumn, coord.charIndex,
         lexer.getNumberOfCharactersRead() - coord.charIndex));
   }

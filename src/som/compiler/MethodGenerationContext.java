@@ -32,6 +32,7 @@ import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
+import com.oracle.truffle.api.impl.DefaultSourceSection;
 
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.FieldNode.FieldReadNode;
@@ -129,7 +130,7 @@ public class MethodGenerationContext {
   private void assignSourceSectionToMethod(final ExpressionNode expressions,
       som.interpreter.nodes.Method truffleMethod) {
     SourceSection ssBody   = expressions.getSourceSection();
-    SourceSection ssMethod = new SourceSection(ssBody.getSource(),
+    SourceSection ssMethod = new DefaultSourceSection(ssBody.getSource(),
         holderGenc.getName().getString() + ">>" + signature.toString(),
         ssBody.getStartLine(), ssBody.getStartColumn(),
         ssBody.getCharIndex(), ssBody.getCharLength());
