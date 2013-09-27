@@ -96,7 +96,7 @@ public class BasicInterpreterTests {
   @Test
   public void testBasicInterpreterBehavior() {
     Universe u = new Universe(true);
-    u.setupClassPath("Smalltalk:BasicInterpreterTests");
+    u.setupClassPath("Smalltalk:TestSuite/BasicInterpreterTests");
 
     Object actualResult = u.interpret(testClass, testSelector);
 
