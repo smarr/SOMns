@@ -115,13 +115,13 @@ public class Method extends Array implements Invokable {
     return result;
   }
 
-  public Object invoke(final PackedFrame frame,
+  public Object invoke(final PackedFrame caller,
       final Object self,
       final Object[] args) {
     // Increase the invocation counter
     invocationCount++;
 
-    Object result = (Object) callTarget.call(frame, new Arguments(self, args));
+    Object result = (Object) callTarget.call(caller, new Arguments(self, args));
 
     return result;
   }
