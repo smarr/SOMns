@@ -46,9 +46,12 @@ ClosureTest = (
                 ifFalse: [ (factorial value: n - 1) * n ] ].
         result := (1 to: 10) collect: factorial.
         result doIndexes: [ :i |
-            (result at: i) = (facs at: i) ifFalse: [
+            | r f |
+            r := (result at: i).
+            f := (facs at: i).
+            r = f ifFalse: [
                 harness
                     fail: self
-                    because: 'incorrect result' ] ]
+                    because: 'incorrect result, expected: ' + f asString + ' got: ' + r asString  ] ]
     )
 ) 
