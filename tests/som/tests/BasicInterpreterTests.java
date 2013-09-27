@@ -57,7 +57,11 @@ public class BasicInterpreterTests {
         {"Return", "returnSelf",           "Return", som.vmobjects.Class.class },
         {"Return", "returnSelfImplicitly", "Return", som.vmobjects.Class.class },
         {"Return", "noReturnReturnsSelf",  "Return", som.vmobjects.Class.class },
-        {"Return", "blockReturnsImplicitlyLastValue", 4, Integer.class }
+        {"Return", "blockReturnsImplicitlyLastValue", 4, Integer.class },
+
+        {"IfTrueIfFalse", "test",  42, Integer.class },
+        {"IfTrueIfFalse", "test2", 33, Integer.class },
+        {"IfTrueIfFalse", "test3",  4, Integer.class },
     });
   }
 
