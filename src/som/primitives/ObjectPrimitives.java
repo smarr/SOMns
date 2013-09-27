@@ -116,5 +116,12 @@ public class ObjectPrimitives extends Primitives {
         return val;
       }
     });
+
+    installInstancePrimitive(new Primitive("halt", universe) {
+      public Object invoke(final PackedFrame frame, final Object self, final Object[] args) {
+        Universe.errorPrintln("BREAKPOINT");
+        return self;
+      }
+    });
   }
 }
