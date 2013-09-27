@@ -56,7 +56,7 @@ public abstract class ContextualNode extends ExpressionNode {
         i--;
       }
     }
-    return ctx.materialize();
+    return ctx;
   }
 
 }
