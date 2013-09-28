@@ -22,6 +22,8 @@
 package som.interpreter.nodes;
 
 import som.compiler.MethodGenerationContext;
+import som.interpreter.FrameOnStackMarker;
+import som.interpreter.ReturnException;
 import som.vm.Universe;
 import som.vmobjects.Block;
 import som.vmobjects.Object;

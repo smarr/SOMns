@@ -25,7 +25,7 @@
 
 package som.vmobjects;
 
-import som.interpreter.nodes.Arguments;
+import som.interpreter.Arguments;
 
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.Truffle;
@@ -36,7 +36,7 @@ import com.oracle.truffle.api.frame.PackedFrame;
 public class Method extends Array implements Invokable {
 
   public Method(final Object nilObject,
-      final som.interpreter.nodes.Method truffleInvokable,
+      final som.interpreter.Method truffleInvokable,
       final FrameDescriptor frameDescriptor) {
     super(nilObject);
     this.truffleInvokable = truffleInvokable; // TODO: remove truffleInvokable if possible/useful
@@ -51,7 +51,7 @@ public class Method extends Array implements Invokable {
     return callTarget;
   }
 
-  public som.interpreter.nodes.Method getTruffleInvokable() {
+  public som.interpreter.Method getTruffleInvokable() {
     return truffleInvokable;
   }
 
@@ -166,7 +166,7 @@ public class Method extends Array implements Invokable {
   private long                           invocationCount;
 
   // Private variable holding Truffle runtime information
-  private final som.interpreter.nodes.Method truffleInvokable;
+  private final som.interpreter.Method truffleInvokable;
   private final CallTarget callTarget;
 
   // Static field indices and number of method fields

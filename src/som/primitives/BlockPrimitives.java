@@ -26,7 +26,8 @@
 package som.primitives;
 
 import com.oracle.truffle.api.frame.PackedFrame;
-import som.interpreter.nodes.RestartLoopException;
+
+import som.interpreter.RestartLoopException;
 import som.vm.Universe;
 import som.vmobjects.Object;
 import som.vmobjects.Primitive;

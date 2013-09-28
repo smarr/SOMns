@@ -1,7 +1,5 @@
 /**
  * Copyright (c) 2013 Stefan Marr, stefan.marr@vub.ac.be
- * Software Architecture Group, Hasso Plattner Institute, Potsdam, Germany
- * http://www.hpi.uni-potsdam.de/swa/
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,29 +19,29 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package som.interpreter.nodes;
+package som.interpreter;
 
+import som.vmobjects.Object;
 
-/**
- * The FrameOnStackMarker is a marker to represent the identity of frames, and
- * to keep track on the status of whether the frame is still on the stack.
- * Currently it is used to implement non-local returns by marking
- * stack frames with it, and checking for the marker during unwinding.
- * 
- * @author Stefan Marr
- */
-public final class FrameOnStackMarker {
-  private boolean isOnStack;
+import com.oracle.truffle.api.nodes.ControlFlowException;
 
-  public FrameOnStackMarker() {
-    isOnStack = true;
+public final class ReturnException extends ControlFlowException {
+
+  private final Object result;
+  private final FrameOnStackMarker target;
+
+  public ReturnException(final Object result, final FrameOnStackMarker target) {
+    this.result = result;
+    this.target = target;
   }
 
-  public void frameNoLongerOnStack() {
-    isOnStack = false;
+  public Object result() {
+    return result;
   }
 
-  public boolean isOnStack() {
-    return isOnStack;
+  public boolean reachedTarget(final FrameOnStackMarker current) {
+    return current == target;
   }
+
+  private static final long serialVersionUID = 8003954137724716L;
 }

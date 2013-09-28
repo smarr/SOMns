@@ -28,7 +28,7 @@ package som.vmobjects;
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.frame.PackedFrame;
 
-import som.interpreter.nodes.Method;
+import som.interpreter.Method;
 import som.vm.Universe;
 
 public abstract class Primitive extends Object implements Invokable {

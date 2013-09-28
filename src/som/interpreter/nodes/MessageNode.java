@@ -21,6 +21,9 @@
  */
 package som.interpreter.nodes;
 
+import som.interpreter.Arguments;
+import som.interpreter.FrameOnStackMarker;
+import som.interpreter.Method;
 import som.interpreter.nodes.VariableNode.SuperReadNode;
 import som.vm.Universe;
 import som.vmobjects.Class;

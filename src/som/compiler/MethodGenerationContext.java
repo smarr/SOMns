@@ -114,8 +114,8 @@ public class MethodGenerationContext {
       localSlots[i] = frameDescriptor.findFrameSlot(locals.get(i));
     }
 
-    som.interpreter.nodes.Method truffleMethod =
-        new som.interpreter.nodes.Method(expressions,
+    som.interpreter.Method truffleMethod =
+        new som.interpreter.Method(expressions,
             selfSlot, argSlots, localSlots, nonLocalReturnMarker, universe,
             frameDescriptor);
 
@@ -128,7 +128,7 @@ public class MethodGenerationContext {
   }
 
   private void assignSourceSectionToMethod(final ExpressionNode expressions,
-      som.interpreter.nodes.Method truffleMethod) {
+      som.interpreter.Method truffleMethod) {
     SourceSection ssBody   = expressions.getSourceSection();
     SourceSection ssMethod = new DefaultSourceSection(ssBody.getSource(),
         holderGenc.getName().getString() + ">>" + signature.toString(),

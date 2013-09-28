@@ -19,8 +19,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package som.interpreter.nodes;
+package som.interpreter;
 
+import som.interpreter.nodes.ExpressionNode;
 import som.vm.Universe;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;

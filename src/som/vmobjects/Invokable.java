@@ -27,7 +27,7 @@ package som.vmobjects;
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.frame.PackedFrame;
 
-import som.interpreter.nodes.Method;
+import som.interpreter.Method;
 
 
 public interface Invokable {

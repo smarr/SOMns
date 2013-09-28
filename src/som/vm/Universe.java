@@ -423,7 +423,7 @@ public class Universe {
     return result;
   }
 
-  public Method newMethod(Symbol signature, som.interpreter.nodes.Method truffleInvokable, FrameDescriptor frameDescriptor) {
+  public Method newMethod(Symbol signature, som.interpreter.Method truffleInvokable, FrameDescriptor frameDescriptor) {
     // Allocate a new method and set its class to be the method class
     Method result = new Method(nilObject, truffleInvokable, frameDescriptor);
     result.setClass(methodClass);
