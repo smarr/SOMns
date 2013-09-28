@@ -23,6 +23,7 @@ package som.interpreter.nodes;
 
 import som.vmobjects.Object;
 
+import com.oracle.truffle.api.CompilerDirectives.SlowPath;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotTypeException;
 import com.oracle.truffle.api.frame.MaterializedFrame;
@@ -43,6 +44,11 @@ public abstract class VariableNode extends ContextualNode {
       super(slot, contextLevel);
     }
 
+    @SlowPath
+    private void throwRuntimeException(final FrameSlot slot) {
+      throw new RuntimeException("uninitialized variable " + slot.getIdentifier());
+    }
+
     @Override
     public Object executeGeneric(VirtualFrame frame) {
       MaterializedFrame ctx = determineContext(frame.materialize());
@@ -50,11 +56,12 @@ public abstract class VariableNode extends ContextualNode {
       try {
         Object value = (Object) ctx.getObject(slot);
         if (value == null) {
-          throw new RuntimeException("uninitialized variable " + slot.getIdentifier());
+          throwRuntimeException(slot);
         }
         return value;
       } catch (FrameSlotTypeException e) {
-        throw new RuntimeException("uninitialized variable " + slot.getIdentifier());
+        throwRuntimeException(slot);
+        return null;
       }
     }
 
