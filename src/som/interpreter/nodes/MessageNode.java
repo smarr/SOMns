@@ -22,8 +22,11 @@
 package som.interpreter.nodes;
 
 import som.interpreter.nodes.VariableNode.SuperReadNode;
+import som.interpreter.nodes.specialized.IfTrueAndIfFalseMessageNode;
+import som.interpreter.nodes.specialized.IfTrueIfFalseMessageNode;
 import som.interpreter.nodes.specialized.MonomorpicMessageNode;
 import som.vm.Universe;
+import som.vmobjects.Block;
 import som.vmobjects.Class;
 import som.vmobjects.Invokable;
 import som.vmobjects.Object;
@@ -116,10 +119,8 @@ public class MessageNode extends ExpressionNode {
       CompilerDirectives.transferToInterpreter();
 
       // First let's rewrite this node
-      MonomorpicMessageNode mono = new MonomorpicMessageNode(receiver,
-          arguments, selector, universe, rcvrClass, invokable);
-
-      replace(mono, "Let's assume it is a monomorphic send site.");
+      MessageNode specialized = determineSpecialization(rcvrClass, invokable, args);
+      replace(specialized);
 
       // Then execute the invokable, because it can exit this method with
       // control flow exceptions (non-local returns), which would leave node
@@ -128,5 +129,37 @@ public class MessageNode extends ExpressionNode {
     } else {
       return rcvr.sendDoesNotUnderstand(selector, args, universe, frame.pack());
     }
+  }
+
+  private MessageNode determineSpecialization(Class rcvrClass,
+      Invokable invokable, Object[] args) {
+    // first check whether it is a #ifTrue:, #ifFalse, or #ifTrue:ifFalse:
+    if ((rcvrClass == universe.trueObject.getSOMClass() ||
+         rcvrClass == universe.falseObject.getSOMClass()) &&
+         arguments != null &&
+         arguments[0] instanceof LiteralNode.BlockNode) {
+      boolean isIfTrue = selector.getString().equals("ifTrue:");
+
+      if (isIfTrue || selector.getString().equals("ifFalse:")) {
+        // it is #ifTrue: or #ifFalse: with a literal block
+        Block block = (Block) args[0];
+        return new IfTrueAndIfFalseMessageNode(receiver, arguments, selector,
+            universe, block, isIfTrue);
+      } else if (selector.getString().equals("ifTrue:ifFalse:") &&
+          arguments.length == 2 &&
+          arguments[1] instanceof LiteralNode.BlockNode) {
+        // it is #ifTrue:ifFalse: with two literal block arguments
+        Block trueBlock  = (Block) args[0];
+        Block falseBlock = (Block) args[1];
+        return new IfTrueIfFalseMessageNode(receiver, arguments, selector, universe,
+            trueBlock, falseBlock);
+      }
+    }
+
+    // if it is not one of the special message sends, it is optimistically
+    // converted into a monomorphic send site
+    MonomorpicMessageNode mono = new MonomorpicMessageNode(receiver,
+        arguments, selector, universe, rcvrClass, invokable);
+    return mono;
   }
 }
