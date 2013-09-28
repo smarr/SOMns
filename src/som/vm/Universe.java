@@ -474,8 +474,7 @@ public class Universe {
     result.setClass(bigintegerClass);
 
     // Set the embedded integer of the newly allocated integer
-    result.setEmbeddedBiginteger(new java.math.BigInteger(new java.lang.Long(
-        value).toString()));
+    result.setEmbeddedBiginteger(java.math.BigInteger.valueOf(value));
 
     // Return the freshly allocated integer
     return result;
