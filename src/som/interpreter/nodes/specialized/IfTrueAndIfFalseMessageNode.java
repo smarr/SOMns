@@ -35,6 +35,11 @@ public class IfTrueAndIfFalseMessageNode extends MessageNode {
     // determine receiver, determine arguments is not necessary, because
     // the node is specialized only when the argument is a literal node
     Object rcvr = receiver.executeGeneric(frame);
+
+    return evaluateBody(frame, rcvr);
+  }
+
+  public Object evaluateBody(final VirtualFrame frame, Object rcvr) {
     Class currentRcvrClass = classOfReceiver(rcvr, receiver);
 
     if ((executeIf  && (currentRcvrClass == trueClass)) ||
@@ -47,14 +52,19 @@ public class IfTrueAndIfFalseMessageNode extends MessageNode {
       // this is the case that False>>#ifTrue: or True>>#ifFalse
       return universe.nilObject;
     } else {
-      CompilerDirectives.transferToInterpreter();
-
-      // So, it might just be a polymorphic send site.
-      PolymorpicMessageNode poly = new PolymorpicMessageNode(receiver,
-          arguments, selector, universe, currentRcvrClass);
-      Block b = universe.newBlock(blockMethod, frame.materialize(), 1);
-      replace(poly, "Receiver wasn't a boolean. So, we need to do the actual send.");
-      return doFullSend(frame, rcvr, new Object[] {b}, currentRcvrClass);
+      return fallbackForNonBoolReceiver(frame, rcvr, currentRcvrClass);
     }
+  }
+
+  public Object fallbackForNonBoolReceiver(final VirtualFrame frame,
+      Object rcvr, Class currentRcvrClass) {
+    CompilerDirectives.transferToInterpreter();
+
+    // So, it might just be a polymorphic send site.
+    PolymorpicMessageNode poly = new PolymorpicMessageNode(receiver,
+        arguments, selector, universe, currentRcvrClass);
+    Block b = universe.newBlock(blockMethod, frame.materialize(), 1);
+    replace(poly, "Receiver wasn't a boolean. So, we need to do the actual send.");
+    return doFullSend(frame, rcvr, new Object[] {b}, currentRcvrClass);
   }
 }

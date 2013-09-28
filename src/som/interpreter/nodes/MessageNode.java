@@ -116,23 +116,16 @@ public class MessageNode extends ExpressionNode {
     Invokable invokable = rcvrClass.lookupInvokable(selector);
 
     if (invokable != null) {
-      CompilerDirectives.transferToInterpreter();
-
-      // First let's rewrite this node
-      MessageNode specialized = determineSpecialization(rcvrClass, invokable, args);
-      replace(specialized);
-
-      // Then execute the invokable, because it can exit this method with
-      // control flow exceptions (non-local returns), which would leave node
-      // unspecialized.
-      return invokable.invoke(frame.pack(), rcvr, args);
+      return specializeAndExecute(frame, rcvr, rcvrClass, invokable, args);
     } else {
       return rcvr.sendDoesNotUnderstand(selector, args, universe, frame.pack());
     }
   }
 
-  private MessageNode determineSpecialization(Class rcvrClass,
-      Invokable invokable, Object[] args) {
+  private Object specializeAndExecute(final VirtualFrame frame, Object rcvr,
+      Class rcvrClass, Invokable invokable, Object[] args) {
+    CompilerDirectives.transferToInterpreter();
+
     // first check whether it is a #ifTrue:, #ifFalse, or #ifTrue:ifFalse:
     if ((rcvrClass == universe.trueObject.getSOMClass() ||
          rcvrClass == universe.falseObject.getSOMClass()) &&
@@ -143,16 +136,21 @@ public class MessageNode extends ExpressionNode {
       if (isIfTrue || selector.getString().equals("ifFalse:")) {
         // it is #ifTrue: or #ifFalse: with a literal block
         Block block = (Block) args[0];
-        return new IfTrueAndIfFalseMessageNode(receiver, arguments, selector,
+        IfTrueAndIfFalseMessageNode node = new
+            IfTrueAndIfFalseMessageNode(receiver, arguments, selector,
             universe, block, isIfTrue);
+        replace(node, "Be optimisitc, and assume it's always a simple #ifTrue: or #ifFalse:");
+        return node.evaluateBody(frame, rcvr);
       } else if (selector.getString().equals("ifTrue:ifFalse:") &&
           arguments.length == 2 &&
           arguments[1] instanceof LiteralNode.BlockNode) {
         // it is #ifTrue:ifFalse: with two literal block arguments
         Block trueBlock  = (Block) args[0];
         Block falseBlock = (Block) args[1];
-        return new IfTrueIfFalseMessageNode(receiver, arguments, selector, universe,
-            trueBlock, falseBlock);
+        IfTrueIfFalseMessageNode node = new IfTrueIfFalseMessageNode(receiver,
+            arguments, selector, universe, trueBlock, falseBlock);
+        replace(node, "Be optimisitc, and assume it's always a simple #ifTrue:#ifFalse:");
+        return node.evaluateBody(frame, rcvr);
       }
     }
 
@@ -160,6 +158,12 @@ public class MessageNode extends ExpressionNode {
     // converted into a monomorphic send site
     MonomorpicMessageNode mono = new MonomorpicMessageNode(receiver,
         arguments, selector, universe, rcvrClass, invokable);
-    return mono;
+
+    replace(mono, "Assume it's goint to be a monomorphic send site.");
+
+    // Then execute the invokable, because it can exit this method with
+    // control flow exceptions (non-local returns), which would leave node
+    // unspecialized.
+    return invokable.invoke(frame.pack(), rcvr, args);
   }
 }

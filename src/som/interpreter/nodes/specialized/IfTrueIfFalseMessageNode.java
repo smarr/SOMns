@@ -42,6 +42,10 @@ public class IfTrueIfFalseMessageNode extends MessageNode {
     // the node is specialized only when  the arguments are literal nodes
     Object rcvr = receiver.executeGeneric(frame);
 
+    return evaluateBody(frame, rcvr);
+  }
+
+  public Object evaluateBody(final VirtualFrame frame, Object rcvr) {
     Class currentRcvrClass = classOfReceiver(rcvr, receiver);
 
     if (currentRcvrClass == trueClass) {
@@ -51,15 +55,20 @@ public class IfTrueIfFalseMessageNode extends MessageNode {
       Block b = universe.newBlock(blockMethodFalseBranch, frame.materialize(), 1);
       return blockMethodFalseBranch.invoke(frame.pack(), b, noArgs);
     } else {
-      CompilerDirectives.transferToInterpreter();
-
-      // So, it might just be a polymorphic send site.
-      PolymorpicMessageNode poly = new PolymorpicMessageNode(receiver,
-          arguments, selector, universe, currentRcvrClass);
-      Block trueBlock  = universe.newBlock(blockMethodTrueBranch,  frame.materialize(), 1);
-      Block falseBlock = universe.newBlock(blockMethodFalseBranch, frame.materialize(), 1);
-      replace(poly, "Receiver wasn't a boolean. So, we need to do the actual send.");
-      return doFullSend(frame, rcvr, new Object[] {trueBlock, falseBlock}, currentRcvrClass);
+      return fallbackForNonBoolReceiver(frame, rcvr, currentRcvrClass);
     }
+  }
+
+  private Object fallbackForNonBoolReceiver(final VirtualFrame frame,
+      Object rcvr, Class currentRcvrClass) {
+    CompilerDirectives.transferToInterpreter();
+
+    // So, it might just be a polymorphic send site.
+    PolymorpicMessageNode poly = new PolymorpicMessageNode(receiver,
+        arguments, selector, universe, currentRcvrClass);
+    Block trueBlock  = universe.newBlock(blockMethodTrueBranch,  frame.materialize(), 1);
+    Block falseBlock = universe.newBlock(blockMethodFalseBranch, frame.materialize(), 1);
+    replace(poly, "Receiver wasn't a boolean. So, we need to do the actual send.");
+    return doFullSend(frame, rcvr, new Object[] {trueBlock, falseBlock}, currentRcvrClass);
   }
 }
