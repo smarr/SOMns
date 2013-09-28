@@ -39,8 +39,8 @@ public class SequenceNode extends ExpressionNode {
   public Object executeGeneric(final VirtualFrame frame) {
     Object last = null;
 
-    for (ExpressionNode expression : expressions) {
-      last = expression.executeGeneric(frame);
+    for (int i = 0; i < expressions.length; i++) {
+      last = expressions[i].executeGeneric(frame);
     }
 
     return last;
