@@ -17,7 +17,7 @@ import com.oracle.truffle.api.nodes.FrameFactory;
 
 public class AbstractInlinedMessageNode extends MessageNode {
 
-  private final Class      rcvrClass;
+  private   final Class      rcvrClass;
   protected final Invokable  invokable;
 
   @Child private final ExpressionNode methodBody;
