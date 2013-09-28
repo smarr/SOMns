@@ -36,7 +36,7 @@ public class AbstractInlinedMessageNode extends MessageNode {
     super(receiver, arguments, selector, universe);
     this.rcvrClass = rcvrClass;
     this.invokable = invokable;
-    this.methodBody = methodBody;
+    this.methodBody = adoptChild(methodBody);
     this.frameFactory = frameFactory;
     this.inlinedMethod = inlinedMethod;
   }
