@@ -13,9 +13,10 @@ install:
 # command to run tests
 script:
   # Run unit tests with PySOM
+  - export ST_DIR=`pwd`/Smalltalk
   - cd PySOM && git --no-pager log -n 1 && ./som.sh -cp ../Smalltalk ../TestSuite/TestHarness.som
   - cd ..
   - cd som-java && git --no-pager log -n 1 && ant jar && ./som.sh -cp ../Smalltalk ../TestSuite/TestHarness.som
   - cd ..
-  - cd CSOM && git --no-pager log -n 1 && make && cp Smalltalk/SOMCore.csp ../Smalltalk && ./som.sh -cp ../Smalltalk ../TestSuite/TestHarness.som
+  - cd CSOM && git --no-pager log -n 1 && make && ./som.sh -cp ../Smalltalk ../TestSuite/TestHarness.som
 
