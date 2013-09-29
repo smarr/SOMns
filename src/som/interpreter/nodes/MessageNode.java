@@ -48,6 +48,8 @@ public class MessageNode extends ExpressionNode {
   protected final Symbol   selector;
   protected final Universe universe;
 
+  private ExpressionNode specializedVersion;
+
   public MessageNode(final ExpressionNode receiver,
       final ExpressionNode[] arguments,
       final Symbol selector,
@@ -122,6 +124,19 @@ public class MessageNode extends ExpressionNode {
     }
   }
 
+  public final MessageNode replace(MessageNode newNode, String reason) {
+    // if we have a recursive method call in the receiver expression, we
+    // might not be able to do the specialization after the receiver has
+    // been evaluated, because the node already has been specialized, but
+    // higher on the stack, we still got the uninitialized node.
+    // An example for such a situation can be found in Queens.som:49.
+    // As a work-around, we will remember the specialized version of this node
+    // and try to use it for the later part of the execution.
+    specializedVersion = newNode;
+    return super.replace(newNode, reason);
+  }
+
+
   private Object specializeAndExecute(final VirtualFrame frame, Object rcvr,
       Class rcvrClass, Invokable invokable, Object[] args) {
     CompilerDirectives.transferToInterpreter();
@@ -135,11 +150,21 @@ public class MessageNode extends ExpressionNode {
 
       if (isIfTrue || selector.getString().equals("ifFalse:")) {
         // it is #ifTrue: or #ifFalse: with a literal block
-        Block block = (Block) args[0];
-        IfTrueAndIfFalseMessageNode node = new
-            IfTrueAndIfFalseMessageNode(receiver, arguments, selector,
-            universe, block, isIfTrue);
-        replace(node, "Be optimisitc, and assume it's always a simple #ifTrue: or #ifFalse:");
+        IfTrueAndIfFalseMessageNode node;
+
+        // during evaluating receiver and arguments, we might have already
+        // specialized this node
+        if (specializedVersion == null) {
+          Block block = (Block) args[0];
+          node = new
+              IfTrueAndIfFalseMessageNode(receiver, arguments, selector,
+                  universe, block, isIfTrue);
+
+          replace(node, "Be optimisitc, and assume it's always a simple #ifTrue: or #ifFalse:");
+        } else {
+          node = (IfTrueAndIfFalseMessageNode) specializedVersion;
+        }
+
         return node.evaluateBody(frame, rcvr);
       } else if (selector.getString().equals("ifTrue:ifFalse:") &&
           arguments.length == 2 &&
@@ -147,19 +172,30 @@ public class MessageNode extends ExpressionNode {
         // it is #ifTrue:ifFalse: with two literal block arguments
         Block trueBlock  = (Block) args[0];
         Block falseBlock = (Block) args[1];
-        IfTrueIfFalseMessageNode node = new IfTrueIfFalseMessageNode(receiver,
-            arguments, selector, universe, trueBlock, falseBlock);
-        replace(node, "Be optimisitc, and assume it's always a simple #ifTrue:#ifFalse:");
+        IfTrueIfFalseMessageNode node;
+
+        if (specializedVersion == null) {
+          node = new IfTrueIfFalseMessageNode(receiver,
+              arguments, selector, universe, trueBlock, falseBlock);
+
+          replace(node, "Be optimisitc, and assume it's always a simple #ifTrue:#ifFalse:");
+        } else {
+          node = (IfTrueIfFalseMessageNode) specializedVersion;
+        }
+
         return node.evaluateBody(frame, rcvr);
       }
     }
 
     // if it is not one of the special message sends, it is optimistically
-    // converted into a monomorphic send site
-    MonomorpicMessageNode mono = new MonomorpicMessageNode(receiver,
-        arguments, selector, universe, rcvrClass, invokable);
+    // converted into a monomorphic send site, but only if we haven't
+    // specialized it already    
+    if (specializedVersion == null) {
+      MonomorpicMessageNode mono = new MonomorpicMessageNode(receiver,
+          arguments, selector, universe, rcvrClass, invokable);
 
-    replace(mono, "Assume it's goint to be a monomorphic send site.");
+      replace(mono, "Assume it's goint to be a monomorphic send site.");
+    }
 
     // Then execute the invokable, because it can exit this method with
     // control flow exceptions (non-local returns), which would leave node
