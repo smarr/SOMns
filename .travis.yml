@@ -17,5 +17,5 @@ script:
   - cd ..
   - cd som-java && git --no-pager log -n 1 && ant jar && ./som.sh -cp ../Smalltalk ../TestSuite/TestHarness.som
   - cd ..
-  - cd CSOM && git --no-pager log -n 1 && make debug && ./som.sh -cp ../Smalltalk ../TestSuite/TestHarness.som
+  - cd CSOM && git --no-pager log -n 1 && make && cp Smalltalk/SOMCore.csp ../Smalltalk && ./som.sh -cp ../Smalltalk ../TestSuite/TestHarness.som
 
