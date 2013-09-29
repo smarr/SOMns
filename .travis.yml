@@ -5,6 +5,7 @@ python:
   - "2.7"
 
 install:
+  - sudo apt-get install libc6-dev-i386
   - git clone --depth 1 https://github.com/smarr/PySOM.git
   - git clone --depth 1 https://github.com/smarr/som-java.git
   - git clone --depth 1 https://github.com/smarr/CSOM.git
