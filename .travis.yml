@@ -10,10 +10,12 @@ install:
   - git clone --depth 1 https://github.com/smarr/som-java.git
   - git clone --depth 1 https://github.com/smarr/CSOM.git
 
+env:
+  - ST_DIR=`pwd`/Smalltalk
+
 # command to run tests
 script:
   # Run unit tests with PySOM
-  - export ST_DIR=`pwd`/Smalltalk
   - cd PySOM && git --no-pager log -n 1 && ./som.sh -cp ../Smalltalk ../TestSuite/TestHarness.som
   - cd ..
   - cd som-java && git --no-pager log -n 1 && ant jar && ./som.sh -cp ../Smalltalk ../TestSuite/TestHarness.som
