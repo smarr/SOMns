@@ -126,27 +126,6 @@ public class Method extends Array implements Invokable {
     return result;
   }
 
-  public Class getReceiverClass(byte index) {
-    return receiverClassTable.get(index);
-  }
-
-  public Invokable getInvokedMethod(byte index) {
-    // return the last invoked method for a particular send
-    return invokedMethods.get(index);
-  }
-
-  public byte addReceiverClassAndMethod(Class recClass, Invokable invokable) {
-    receiverClassTable.add(receiverClassIndex, recClass);
-    invokedMethods.add(receiverClassIndex, invokable);
-    receiverClassIndex++;
-
-    return (byte) (receiverClassIndex - 1);
-  }
-
-  public boolean isReceiverClassTableFull() {
-    return receiverClassIndex == 255;
-  }
-
   @Override
   public java.lang.String toString() {
     // TODO: fixme: remove special case if possible, I think it indicates a bug
@@ -157,21 +136,15 @@ public class Method extends Array implements Invokable {
     return "Method(" + getHolder().getName().getString() + ">>" + getSignature().toString() + ")";
   }
 
-  // Private variables for holding the last receiver class and invoked method
-  private java.util.ArrayList<Class>     receiverClassTable                = new java.util.ArrayList<Class>();
-  private java.util.ArrayList<Invokable> invokedMethods                    = new java.util.ArrayList<Invokable>();
-  private int                            receiverClassIndex                = 0;
-
   // Private variable holding number of invocations and back edges
-  private long                           invocationCount;
+  private long                         invocationCount;
 
   // Private variable holding Truffle runtime information
   private final som.interpreter.Method truffleInvokable;
-  private final CallTarget callTarget;
+  private final CallTarget             callTarget;
 
   // Static field indices and number of method fields
-  static final int                       signatureIndex                    = 1 + classIndex;
-  static final int                       holderIndex                       = 1 + signatureIndex;
-  static final int                       numberOfMethodFields              = 1 + holderIndex;
-
+  static final int                     signatureIndex       = 1 + classIndex;
+  static final int                     holderIndex          = 1 + signatureIndex;
+  static final int                     numberOfMethodFields = 1 + holderIndex;
 }
