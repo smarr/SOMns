@@ -26,8 +26,9 @@ package som.vmobjects;
 
 public class BigInteger extends Object {
 
-  public BigInteger(final Object nilObject) {
+  public BigInteger(final Object nilObject, java.math.BigInteger value) {
     super(nilObject);
+    embeddedBiginteger = value;
   }
 
   public java.math.BigInteger getEmbeddedBiginteger() {
@@ -35,11 +36,6 @@ public class BigInteger extends Object {
     return embeddedBiginteger;
   }
 
-  public void setEmbeddedBiginteger(java.math.BigInteger value) {
-    // Set the embedded big integer to the given value
-    embeddedBiginteger = value;
-  }
-
   // Private variable holding the embedded big integer
-  private java.math.BigInteger embeddedBiginteger;
+  private final java.math.BigInteger embeddedBiginteger;
 }

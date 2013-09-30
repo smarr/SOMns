@@ -26,8 +26,9 @@ package som.vmobjects;
 
 public class Integer extends Object {
 
-  public Integer(final Object nilObject) {
+  public Integer(final Object nilObject, int value) {
     super(nilObject);
+    embeddedInteger = value;
   }
 
   public int getEmbeddedInteger() {
@@ -35,13 +36,8 @@ public class Integer extends Object {
     return embeddedInteger;
   }
 
-  public void setEmbeddedInteger(int value) {
-    // Set the embedded integer to the given value
-    embeddedInteger = value;
-  }
-
   // Private variable holding the embedded integer
-  private int embeddedInteger;
+  private final int embeddedInteger;
 
   public java.lang.String toString() {
     return "" + embeddedInteger;

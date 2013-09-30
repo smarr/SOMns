@@ -371,11 +371,8 @@ public class Universe {
 
   public Array newArray(int length) {
     // Allocate a new array and set its class to be the array class
-    Array result = new Array(nilObject);
+    Array result = new Array(nilObject, length);
     result.setClass(arrayClass);
-
-    // Set the number of indexable fields to the given value (length)
-    result.setNumberOfIndexableFieldsAndClear(length, nilObject);
 
     // Return the freshly allocated array
     return result;
@@ -431,10 +428,10 @@ public class Universe {
 
   public Method newMethod(Symbol signature, som.interpreter.Method truffleInvokable, FrameDescriptor frameDescriptor) {
     // Allocate a new method and set its class to be the method class
-    Method result = new Method(nilObject, truffleInvokable, frameDescriptor);
+    Method result = new Method(nilObject, truffleInvokable, frameDescriptor, 0);
     result.setClass(methodClass);
     result.setSignature(signature);
-    result.setNumberOfIndexableFieldsAndClear(0, nilObject);
+    //result.setNumberOfIndexableFieldsAndClear(0, nilObject);
 
     // Return the freshly allocated method
     return result;
@@ -452,11 +449,8 @@ public class Universe {
 
   public Integer newInteger(int value) {
     // Allocate a new integer and set its class to be the integer class
-    Integer result = new Integer(nilObject);
+    Integer result = new Integer(nilObject, value);
     result.setClass(integerClass);
-
-    // Set the embedded integer of the newly allocated integer
-    result.setEmbeddedInteger(value);
 
     // Return the freshly allocated integer
     return result;
@@ -464,11 +458,8 @@ public class Universe {
 
   public BigInteger newBigInteger(java.math.BigInteger value) {
     // Allocate a new integer and set its class to be the integer class
-    BigInteger result = new BigInteger(nilObject);
+    BigInteger result = new BigInteger(nilObject, value);
     result.setClass(bigintegerClass);
-
-    // Set the embedded integer of the newly allocated integer
-    result.setEmbeddedBiginteger(value);
 
     // Return the freshly allocated integer
     return result;
@@ -476,11 +467,9 @@ public class Universe {
 
   public BigInteger newBigInteger(long value) {
     // Allocate a new integer and set its class to be the integer class
-    BigInteger result = new BigInteger(nilObject);
+    BigInteger result = new BigInteger(nilObject,
+                                       java.math.BigInteger.valueOf(value));
     result.setClass(bigintegerClass);
-
-    // Set the embedded integer of the newly allocated integer
-    result.setEmbeddedBiginteger(java.math.BigInteger.valueOf(value));
 
     // Return the freshly allocated integer
     return result;
@@ -488,11 +477,8 @@ public class Universe {
 
   public Double newDouble(double value) {
     // Allocate a new integer and set its class to be the double class
-    Double result = new Double(nilObject);
+    Double result = new Double(nilObject, value);
     result.setClass(doubleClass);
-
-    // Set the embedded double of the newly allocated double
-    result.setEmbeddedDouble(value);
 
     // Return the freshly allocated double
     return result;
@@ -512,23 +498,17 @@ public class Universe {
 
   public String newString(java.lang.String embeddedString) {
     // Allocate a new string and set its class to be the string class
-    String result = new String(nilObject);
+    String result = new String(nilObject, embeddedString);
     result.setClass(stringClass);
-
-    // Put the embedded string into the new string
-    result.setEmbeddedString(embeddedString);
 
     // Return the freshly allocated string
     return result;
   }
 
-  public Symbol newSymbol(java.lang.String string) {
+  private Symbol newSymbol(java.lang.String string) {
     // Allocate a new symbol and set its class to be the symbol class
-    Symbol result = new Symbol(nilObject);
+    Symbol result = new Symbol(nilObject, string);
     result.setClass(symbolClass);
-
-    // Put the string into the symbol
-    result.setString(string);
 
     // Insert the new symbol into the symbol table
     symbolTable.insert(result);

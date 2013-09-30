@@ -28,8 +28,11 @@ import som.vm.Universe;
 
 public class Array extends Object {
 
-  public Array(final Object nilObject) {
+  public Array(final Object nilObject, final int size) {
     super(nilObject);
+    // Allocate a new array of indexable fields
+    indexableFields = new Object[size];
+    setNumberOfIndexableFieldsAndClear(size, nilObject);
   }
 
   public Object getIndexableField(int index) {
@@ -47,11 +50,8 @@ public class Array extends Object {
     return indexableFields.length;
   }
 
-  public void setNumberOfIndexableFieldsAndClear(int value,
+  private void setNumberOfIndexableFieldsAndClear(int value,
       final Object nilObject) {
-    // Allocate a new array of indexable fields
-    indexableFields = new Object[value];
-
     // Clear each and every field by putting nil into them
     for (int i = 0; i < getNumberOfIndexableFields(); i++) {
       setIndexableField(i, nilObject);
@@ -80,6 +80,6 @@ public class Array extends Object {
     }
   }
 
-  // Private array of indexable fields
-  public Object[] indexableFields;
+  // array of indexable fields
+  public final Object[] indexableFields;
 }

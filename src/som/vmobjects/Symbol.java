@@ -26,8 +26,9 @@ package som.vmobjects;
 
 public class Symbol extends Object {
 
-  public Symbol(final Object nilObject) {
+  public Symbol(final Object nilObject, java.lang.String value) {
     super(nilObject);
+    setString(value);
   }
 
   public java.lang.String getString() {
@@ -35,7 +36,7 @@ public class Symbol extends Object {
     return string;
   }
 
-  public void setString(java.lang.String value) {
+  private void setString(java.lang.String value) {
     // Set the string associated to this symbol
     string = value;
     determineNumberOfSignatureArguments();

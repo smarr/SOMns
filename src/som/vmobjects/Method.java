@@ -37,8 +37,9 @@ public class Method extends Array implements Invokable {
 
   public Method(final Object nilObject,
       final som.interpreter.Method truffleInvokable,
-      final FrameDescriptor frameDescriptor) {
-    super(nilObject);
+      final FrameDescriptor frameDescriptor,
+      final int size) {
+    super(nilObject, size);
     this.truffleInvokable = truffleInvokable; // TODO: remove truffleInvokable if possible/useful
 
     TruffleRuntime runtime =  Truffle.getRuntime(); // TODO: should be: universe.getTruffleRuntime();

@@ -26,8 +26,9 @@ package som.vmobjects;
 
 public class String extends Object {
 
-  public String(final Object nilObject) {
+  public String(final Object nilObject, final java.lang.String value) {
     super(nilObject);
+    this.string = value;
   }
 
   public java.lang.String getEmbeddedString() {
@@ -35,15 +36,10 @@ public class String extends Object {
     return string;
   }
 
-  public void setEmbeddedString(java.lang.String value) {
-    // Set the string associated to this symbol
-    string = value;
-  }
-
   public java.lang.String toString() {
     return "\"" + string + "\"";
   }
 
   // Private variable holding the string associated to this symbol
-  private java.lang.String string;
+  private final java.lang.String string;
 }

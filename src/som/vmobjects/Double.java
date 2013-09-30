@@ -26,8 +26,9 @@ package som.vmobjects;
 
 public class Double extends Object {
 
-  public Double(final Object nilObject) {
+  public Double(final Object nilObject, double value) {
     super(nilObject);
+    embeddedDouble = value;
   }
 
   public double getEmbeddedDouble() {
@@ -35,11 +36,6 @@ public class Double extends Object {
     return embeddedDouble;
   }
 
-  public void setEmbeddedDouble(double value) {
-    // Set the embedded double to the given value
-    embeddedDouble = value;
-  }
-
   // Private variable holding the embedded double
-  private double embeddedDouble;
+  private final double embeddedDouble;
 }
