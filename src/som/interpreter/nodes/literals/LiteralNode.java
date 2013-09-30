@@ -19,12 +19,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package som.interpreter.nodes;
+package som.interpreter.nodes.literals;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 
-import som.vm.Universe;
-import som.vmobjects.Method;
+import som.interpreter.nodes.ExpressionNode;
 import som.vmobjects.Object;
 
 public class LiteralNode extends ExpressionNode {
@@ -43,24 +42,5 @@ public class LiteralNode extends ExpressionNode {
   @Override
   public ExpressionNode cloneForInlining() {
     return this;
-  }
-
-  public static class BlockNode extends LiteralNode {
-
-    protected final Universe universe;
-
-    public BlockNode(final Method blockMethod,
-        final Universe universe) {
-      super(blockMethod);
-      this.universe = universe;
-    }
-
-    @Override
-    public Object executeGeneric(VirtualFrame frame) {
-      Method method = (Method) value;
-      return universe.newBlock(method, frame.materialize(), method.getNumberOfArguments());
-    }
-
-    // TODO: should we do something else for cloneForInlining() in this class?
   }
 }

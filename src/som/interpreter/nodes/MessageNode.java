@@ -22,6 +22,7 @@
 package som.interpreter.nodes;
 
 import som.interpreter.nodes.VariableNode.SuperReadNode;
+import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.specialized.IfTrueAndIfFalseMessageNode;
 import som.interpreter.nodes.specialized.IfTrueIfFalseMessageNode;
 import som.interpreter.nodes.specialized.MonomorpicMessageNode;
@@ -145,7 +146,7 @@ public class MessageNode extends ExpressionNode {
     if ((rcvrClass == universe.trueObject.getSOMClass() ||
          rcvrClass == universe.falseObject.getSOMClass()) &&
          arguments != null &&
-         arguments[0] instanceof LiteralNode.BlockNode) {
+         arguments[0] instanceof BlockNode) {
       boolean isIfTrue = selector.getString().equals("ifTrue:");
 
       if (isIfTrue || selector.getString().equals("ifFalse:")) {
@@ -168,7 +169,7 @@ public class MessageNode extends ExpressionNode {
         return node.evaluateBody(frame, rcvr);
       } else if (selector.getString().equals("ifTrue:ifFalse:") &&
           arguments.length == 2 &&
-          arguments[1] instanceof LiteralNode.BlockNode) {
+          arguments[1] instanceof BlockNode) {
         // it is #ifTrue:ifFalse: with two literal block arguments
         Block trueBlock  = (Block) args[0];
         Block falseBlock = (Block) args[1];

@@ -67,8 +67,6 @@ import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.FieldNode.FieldReadNode;
 import som.interpreter.nodes.FieldNode.FieldWriteNode;
 import som.interpreter.nodes.GlobalNode.GlobalReadNode;
-import som.interpreter.nodes.LiteralNode;
-import som.interpreter.nodes.LiteralNode.BlockNode;
 import som.interpreter.nodes.MessageNode;
 import som.interpreter.nodes.ReturnNonLocalNode;
 import som.interpreter.nodes.SequenceNode;
@@ -76,6 +74,8 @@ import som.interpreter.nodes.VariableNode.SelfReadNode;
 import som.interpreter.nodes.VariableNode.SuperReadNode;
 import som.interpreter.nodes.VariableNode.VariableReadNode;
 import som.interpreter.nodes.VariableNode.VariableWriteNode;
+import som.interpreter.nodes.literals.BlockNode;
+import som.interpreter.nodes.literals.LiteralNode;
 import som.vm.Universe;
 
 import com.oracle.truffle.api.frame.FrameSlot;
