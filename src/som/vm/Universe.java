@@ -428,7 +428,7 @@ public class Universe {
 
   public Method newMethod(Symbol signature, som.interpreter.Method truffleInvokable, FrameDescriptor frameDescriptor) {
     // Allocate a new method and set its class to be the method class
-    Method result = new Method(nilObject, truffleInvokable, frameDescriptor, 0);
+    Method result = new Method(nilObject, truffleInvokable, frameDescriptor);
     result.setClass(methodClass);
     result.setSignature(signature);
     //result.setNumberOfIndexableFieldsAndClear(0, nilObject);

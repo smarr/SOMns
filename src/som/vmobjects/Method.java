@@ -33,13 +33,12 @@ import com.oracle.truffle.api.TruffleRuntime;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.PackedFrame;
 
-public class Method extends Array implements Invokable {
+public class Method extends Object implements Invokable {
 
   public Method(final Object nilObject,
       final som.interpreter.Method truffleInvokable,
-      final FrameDescriptor frameDescriptor,
-      final int size) {
-    super(nilObject, size);
+      final FrameDescriptor frameDescriptor) {
+    super(nilObject);
     this.truffleInvokable = truffleInvokable; // TODO: remove truffleInvokable if possible/useful
 
     TruffleRuntime runtime =  Truffle.getRuntime(); // TODO: should be: universe.getTruffleRuntime();
@@ -80,13 +79,6 @@ public class Method extends Array implements Invokable {
   public void setHolder(Class value) {
     // Set the holder of this method by writing to the field with holder index
     setField(holderIndex, value);
-
-    // Make sure all nested invokables have the same holder
-    for (int i = 0; i < getNumberOfIndexableFields(); i++) {
-      if (getIndexableField(i) instanceof Invokable) {
-        ((Invokable) getIndexableField(i)).setHolder(value);
-      }
-    }
   }
 
   public int getNumberOfArguments() {
