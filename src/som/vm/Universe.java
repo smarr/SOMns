@@ -80,6 +80,8 @@ public class Universe {
     this.symbolTable  = new SymbolTable();
     this.avoidExit    = false;
     this.lastExitCode = 0;
+
+    this.blockClasses = new HashMap<java.lang.Integer, Class>(3);
   }
 
   public Universe(boolean avoidExit) {
@@ -87,6 +89,8 @@ public class Universe {
     this.symbolTable  = new SymbolTable();
     this.avoidExit    = avoidExit;
     this.lastExitCode = 0;
+
+    this.blockClasses = new HashMap<java.lang.Integer, Class>(3);
   }
 
   public TruffleRuntime getTruffleRuntime() {
@@ -596,6 +600,11 @@ public class Universe {
   }
 
   public Class getBlockClass(int numberOfArguments) {
+    Class result = blockClasses.get(numberOfArguments);
+    if (result != null) {
+      return result;
+    }
+
     // Compute the name of the block class with the given number of
     // arguments
     Symbol name = symbolFor("Block"
@@ -603,10 +612,14 @@ public class Universe {
 
     // Lookup the specific block class in the dictionary of globals and
     // return it
-    if (hasGlobal(name)) { return (Class) getGlobal(name); }
+    if (hasGlobal(name)) {
+      result = (Class) getGlobal(name);
+      blockClasses.put(new java.lang.Integer(numberOfArguments), result);
+      return result;
+    }
 
     // Get the block class for blocks with the given number of arguments
-    Class result = loadClass(name, null);
+    result = loadClass(name, null);
 
     // Add the appropriate value primitive to the block class
     result.addInstancePrimitive(Block.getEvaluationPrimitive(numberOfArguments,
@@ -614,6 +627,8 @@ public class Universe {
 
     // Insert the block class into the dictionary of globals
     setGlobal(name, result);
+
+    blockClasses.put(new java.lang.Integer(numberOfArguments), result);
 
     // Return the loaded block class
     return result;
@@ -751,4 +766,7 @@ public class Universe {
   //       with the use of system.exit in SOM to enable testing
   private boolean                               avoidExit;
   private int                                   lastExitCode;
+
+  // Optimizations
+  private final HashMap<java.lang.Integer, Class>         blockClasses;
 }
