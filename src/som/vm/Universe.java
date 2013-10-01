@@ -40,6 +40,7 @@ import som.vmobjects.Object;
 import som.vmobjects.String;
 import som.vmobjects.Symbol;
 
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.TruffleRuntime;
 import com.oracle.truffle.api.frame.FrameDescriptor;
@@ -82,6 +83,8 @@ public class Universe {
     this.lastExitCode = 0;
 
     this.blockClasses = new HashMap<java.lang.Integer, Class>(3);
+
+    current = this;
   }
 
   public Universe(boolean avoidExit) {
@@ -91,6 +94,8 @@ public class Universe {
     this.lastExitCode = 0;
 
     this.blockClasses = new HashMap<java.lang.Integer, Class>(3);
+
+    current = this;
   }
 
   public TruffleRuntime getTruffleRuntime() {
@@ -749,4 +754,12 @@ public class Universe {
 
   // Optimizations
   private final HashMap<java.lang.Integer, Class>         blockClasses;
+
+  // Latest instance
+  // WARNING: this is problematic with multiple interpreters in the same VM...
+  @CompilationFinal private static Universe current;
+
+  public static Universe current() {
+    return current;
+  }
 }
