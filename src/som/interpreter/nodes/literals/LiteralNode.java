@@ -21,23 +21,9 @@
  */
 package som.interpreter.nodes.literals;
 
-import com.oracle.truffle.api.frame.VirtualFrame;
-
 import som.interpreter.nodes.ExpressionNode;
-import som.vmobjects.Object;
 
-public class LiteralNode extends ExpressionNode {
-
-  protected final Object value;
-
-  public LiteralNode(final Object value) {
-    this.value = value;
-  }
-
-  @Override
-  public Object executeGeneric(VirtualFrame frame) {
-    return this.value;
-  }
+public abstract class LiteralNode extends ExpressionNode {
 
   @Override
   public ExpressionNode cloneForInlining() {

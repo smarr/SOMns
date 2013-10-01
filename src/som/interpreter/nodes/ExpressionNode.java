@@ -21,13 +21,37 @@
  */
 package som.interpreter.nodes;
 
-import com.oracle.truffle.api.frame.VirtualFrame;
+import java.math.BigInteger;
 
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.UnexpectedResultException;
+
+import som.interpreter.TypesGen;
 import som.vmobjects.Object;
 
 public abstract class ExpressionNode extends SOMNode {
 
   public abstract Object executeGeneric(final VirtualFrame frame);
+
+  public int executeInteger(final VirtualFrame frame) throws UnexpectedResultException {
+    return TypesGen.TYPES.expectInteger(executeGeneric(frame));
+  }
+
+  public BigInteger executeBigInteger(final VirtualFrame frame) throws UnexpectedResultException {
+    return TypesGen.TYPES.expectBigInteger(executeGeneric(frame));
+  }
+
+  public String executeString(final VirtualFrame frame) throws UnexpectedResultException {
+    return TypesGen.TYPES.expectString(executeGeneric(frame));
+  }
+
+  public boolean executeBoolean(final VirtualFrame frame) throws UnexpectedResultException {
+    return TypesGen.TYPES.expectBoolean(executeGeneric(frame));
+  }
+
+  public double executeDouble(final VirtualFrame frame) throws UnexpectedResultException {
+    return TypesGen.TYPES.expectDouble(executeGeneric(frame));
+  }
 
   public abstract ExpressionNode cloneForInlining();
 

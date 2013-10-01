@@ -74,8 +74,12 @@ import som.interpreter.nodes.VariableNode.SelfReadNode;
 import som.interpreter.nodes.VariableNode.SuperReadNode;
 import som.interpreter.nodes.VariableNode.VariableReadNode;
 import som.interpreter.nodes.VariableNode.VariableWriteNode;
+import som.interpreter.nodes.literals.BigIntegerLiteralNodeFactory;
 import som.interpreter.nodes.literals.BlockNode;
+import som.interpreter.nodes.literals.IntegerLiteralNodeFactory;
 import som.interpreter.nodes.literals.LiteralNode;
+import som.interpreter.nodes.literals.StringLiteralNodeFactory;
+import som.interpreter.nodes.literals.SymbolLiteralNode;
 import som.vm.Universe;
 
 import com.oracle.truffle.api.frame.FrameSlot;
@@ -637,14 +641,13 @@ public class Parser {
       val = literalDecimal();
     }
 
-    som.vmobjects.Object lit;
+    LiteralNode node;
     if (val < java.lang.Integer.MIN_VALUE || val > java.lang.Integer.MAX_VALUE) {
-      lit = universe.newBigInteger(val);
+      node = BigIntegerLiteralNodeFactory.create(java.math.BigInteger.valueOf(val));
     } else {
-      lit = universe.newInteger((int) val);
+      node = IntegerLiteralNodeFactory.create((int) val);
     }
 
-    LiteralNode node = new LiteralNode(lit);
     assignSource(node, coord);
     return node;
   }
@@ -676,7 +679,7 @@ public class Parser {
       symb = selector();
     }
 
-    LiteralNode lit = new LiteralNode(symb);
+    LiteralNode lit = new SymbolLiteralNode(symb);
     assignSource(lit, coord);
     return lit;
   }
@@ -685,11 +688,9 @@ public class Parser {
     SourceCoordinate coord = getCoordinate();
     String s = string();
 
-    som.vmobjects.String str = universe.newString(s);
-
-    LiteralNode lit = new LiteralNode(str);
-    assignSource(lit, coord);
-    return lit;
+    LiteralNode node = StringLiteralNodeFactory.create(s);
+    assignSource(node, coord);
+    return node;
   }
 
   private som.vmobjects.Symbol selector() {
