@@ -126,7 +126,7 @@ public class Parser {
     }
   }
 
-  public Parser(Reader reader, final Source source, final Universe universe) {
+  public Parser(final Reader reader, final Source source, final Universe universe) {
     this.universe = universe;
     this.source   = source;
 
@@ -142,7 +142,7 @@ public class Parser {
         lexer.getNumberOfCharactersRead());
   }
 
-  public void classdef(ClassGenerationContext cgenc) {
+  public void classdef(final ClassGenerationContext cgenc) {
     cgenc.setName(universe.symbolFor(text));
     expect(Identifier);
     expect(Equal);
@@ -203,11 +203,11 @@ public class Parser {
     expect(EndTerm);
   }
 
-  private boolean symIn(List<Symbol> ss) {
+  private boolean symIn(final List<Symbol> ss) {
     return ss.contains(sym);
   }
 
-  private boolean accept(Symbol s) {
+  private boolean accept(final Symbol s) {
     if (sym == s) {
       getSymbolFromLexer();
       return true;
@@ -215,7 +215,7 @@ public class Parser {
     return false;
   }
 
-  private boolean acceptOneOf(List<Symbol> ss) {
+  private boolean acceptOneOf(final List<Symbol> ss) {
     if (symIn(ss)) {
       getSymbolFromLexer();
       return true;
@@ -223,7 +223,7 @@ public class Parser {
     return false;
   }
 
-  private boolean expect(Symbol s) {
+  private boolean expect(final Symbol s) {
     if (accept(s)) { return true; }
     StringBuffer err = new StringBuffer("Error: unexpected symbol in line "
         + lexer.getCurrentLineNumber() + ". Expected " + s.toString()
@@ -233,7 +233,7 @@ public class Parser {
     throw new IllegalStateException(err.toString());
   }
 
-  private boolean expectOneOf(List<Symbol> ss) {
+  private boolean expectOneOf(final List<Symbol> ss) {
     if (acceptOneOf(ss)) { return true; }
     StringBuffer err = new StringBuffer("Error: unexpected symbol in line "
         + lexer.getCurrentLineNumber() + ". Expected one of ");
@@ -246,7 +246,7 @@ public class Parser {
     throw new IllegalStateException(err.toString());
   }
 
-  private void instanceFields(ClassGenerationContext cgenc) {
+  private void instanceFields(final ClassGenerationContext cgenc) {
     if (accept(Or)) {
       while (sym == Identifier) {
         String var = variable();
@@ -256,7 +256,7 @@ public class Parser {
     }
   }
 
-  private void classFields(ClassGenerationContext cgenc) {
+  private void classFields(final ClassGenerationContext cgenc) {
     if (accept(Or)) {
       while (sym == Identifier) {
         String var = variable();
@@ -266,13 +266,13 @@ public class Parser {
     }
   }
 
-  private void assignSource(ExpressionNode node, SourceCoordinate coord) {
+  private void assignSource(final ExpressionNode node, final SourceCoordinate coord) {
     node.assignSourceSection(new DefaultSourceSection(source, "method",
         coord.startLine, coord.startColumn, coord.charIndex,
         lexer.getNumberOfCharactersRead() - coord.charIndex));
   }
 
-  private ExpressionNode method(MethodGenerationContext mgenc) {
+  private ExpressionNode method(final MethodGenerationContext mgenc) {
     pattern(mgenc);
     expect(Equal);
     if (sym == Primitive) {
@@ -408,8 +408,8 @@ public class Parser {
     }
   }
 
-  private ExpressionNode createSequenceNode(SourceCoordinate coord,
-      List<ExpressionNode> expressions) {
+  private ExpressionNode createSequenceNode(final SourceCoordinate coord,
+      final List<ExpressionNode> expressions) {
     if (expressions.size() == 1) {
       return expressions.get(0);
     }
@@ -419,7 +419,7 @@ public class Parser {
     return seq;
   }
 
-  private ExpressionNode result(MethodGenerationContext mgenc) {
+  private ExpressionNode result(final MethodGenerationContext mgenc) {
     ExpressionNode exp = expression(mgenc);
 
     SourceCoordinate coord = getCoordinate();
@@ -788,8 +788,7 @@ public class Parser {
 
     if (frameSlot != null) {
       return new VariableWriteNode(frameSlot,
-          mgenc.getFrameSlotContextLevel(variableName),
-          exp);
+          mgenc.getFrameSlotContextLevel(variableName), exp);
     }
 
     som.vmobjects.Symbol fieldName = universe.symbolFor(variableName);
