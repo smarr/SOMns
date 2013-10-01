@@ -24,22 +24,18 @@
 
 package som.vmobjects;
 
-public class String extends Object {
+public class SBigInteger extends SObject {
 
-  public String(final Object nilObject, final java.lang.String value) {
+  public SBigInteger(final SObject nilObject, java.math.BigInteger value) {
     super(nilObject);
-    this.string = value;
+    embeddedBiginteger = value;
   }
 
-  public java.lang.String getEmbeddedString() {
-    // Get the string associated to this symbol
-    return string;
+  public java.math.BigInteger getEmbeddedBiginteger() {
+    // Get the embedded big integer
+    return embeddedBiginteger;
   }
 
-  public java.lang.String toString() {
-    return "\"" + string + "\"";
-  }
-
-  // Private variable holding the string associated to this symbol
-  private final java.lang.String string;
+  // Private variable holding the embedded big integer
+  private final java.math.BigInteger embeddedBiginteger;
 }

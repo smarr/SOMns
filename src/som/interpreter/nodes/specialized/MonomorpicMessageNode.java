@@ -4,10 +4,10 @@ import som.interpreter.Method;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageNode;
 import som.vm.Universe;
-import som.vmobjects.Class;
-import som.vmobjects.Invokable;
-import som.vmobjects.Object;
-import som.vmobjects.Symbol;
+import som.vmobjects.SClass;
+import som.vmobjects.SInvokable;
+import som.vmobjects.SObject;
+import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives;
@@ -19,15 +19,15 @@ import com.oracle.truffle.api.nodes.Node;
 public class MonomorpicMessageNode extends MessageNode
   implements InlinableCallSite {
 
-  private final Class      rcvrClass;
-  private final Invokable  invokable;
+  private final SClass      rcvrClass;
+  private final SInvokable  invokable;
 
   private int callCount;
 
   public MonomorpicMessageNode(final ExpressionNode receiver,
-      final ExpressionNode[] arguments, final Symbol selector,
-      final Universe universe, final Class rcvrClass,
-      final Invokable invokable) {
+      final ExpressionNode[] arguments, final SSymbol selector,
+      final Universe universe, final SClass rcvrClass,
+      final SInvokable invokable) {
     super(receiver, arguments, selector, universe);
     this.rcvrClass = rcvrClass;
     this.invokable = invokable;
@@ -36,16 +36,16 @@ public class MonomorpicMessageNode extends MessageNode
   }
 
   @Override
-  public Object executeGeneric(final VirtualFrame frame) {
+  public SObject executeGeneric(final VirtualFrame frame) {
     callCount++;
 
     // evaluate all the expressions: first determine receiver
-    Object rcvr = receiver.executeGeneric(frame);
+    SObject rcvr = receiver.executeGeneric(frame);
 
     // then determine the arguments
-    Object[] args = determineArguments(frame);
+    SObject[] args = determineArguments(frame);
 
-    Class currentRcvrClass = classOfReceiver(rcvr, receiver);
+    SClass currentRcvrClass = classOfReceiver(rcvr, receiver);
 
     if (currentRcvrClass == rcvrClass) {
       return invokable.invoke(frame.pack(), rcvr, args);

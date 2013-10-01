@@ -6,10 +6,10 @@ import som.interpreter.Method;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageNode;
 import som.vm.Universe;
-import som.vmobjects.Class;
-import som.vmobjects.Invokable;
-import som.vmobjects.Object;
-import som.vmobjects.Symbol;
+import som.vmobjects.SClass;
+import som.vmobjects.SInvokable;
+import som.vmobjects.SObject;
+import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -17,8 +17,8 @@ import com.oracle.truffle.api.nodes.FrameFactory;
 
 public class AbstractInlinedMessageNode extends MessageNode {
 
-  private   final Class      rcvrClass;
-  protected final Invokable  invokable;
+  private   final SClass      rcvrClass;
+  protected final SInvokable  invokable;
 
   @Child private ExpressionNode methodBody;
 
@@ -26,10 +26,10 @@ public class AbstractInlinedMessageNode extends MessageNode {
   private final Method inlinedMethod;
 
   public AbstractInlinedMessageNode(final ExpressionNode receiver,
-      final ExpressionNode[] arguments, final Symbol selector,
+      final ExpressionNode[] arguments, final SSymbol selector,
       final Universe universe,
-      final Class rcvrClass,
-      final Invokable invokable,
+      final SClass rcvrClass,
+      final SInvokable invokable,
       final FrameFactory frameFactory,
       final Method inlinedMethod,
       final ExpressionNode methodBody) {
@@ -42,14 +42,14 @@ public class AbstractInlinedMessageNode extends MessageNode {
   }
 
   @Override
-  public Object executeGeneric(final VirtualFrame frame) {
+  public SObject executeGeneric(final VirtualFrame frame) {
     // evaluate all the expressions: first determine receiver
-    Object rcvr = receiver.executeGeneric(frame);
+    SObject rcvr = receiver.executeGeneric(frame);
 
     // then determine the arguments
-    Object[] args = determineArguments(frame);
+    SObject[] args = determineArguments(frame);
 
-    Class currentRcvrClass = classOfReceiver(rcvr, receiver);
+    SClass currentRcvrClass = classOfReceiver(rcvr, receiver);
 
     if (currentRcvrClass == rcvrClass) {
       return executeInlined(frame, rcvr, args);
@@ -58,8 +58,8 @@ public class AbstractInlinedMessageNode extends MessageNode {
     }
   }
 
-  private Object executeInlined(final VirtualFrame caller, final Object rcvr,
-      final Object[] args) {
+  private SObject executeInlined(final VirtualFrame caller, final SObject rcvr,
+      final SObject[] args) {
     // CompilerDirectives.transferToInterpreter();
     final VirtualFrame frame = frameFactory.create(
         inlinedMethod.getFrameDescriptor(), caller.pack(),
@@ -71,8 +71,8 @@ public class AbstractInlinedMessageNode extends MessageNode {
     return Method.messageSendExecution(marker, frame, methodBody);
   }
 
-  private Object generalizeNode(final VirtualFrame frame, final Object rcvr,
-      final Object[] args, final Class currentRcvrClass) {
+  private SObject generalizeNode(final VirtualFrame frame, final SObject rcvr,
+      final SObject[] args, final SClass currentRcvrClass) {
     CompilerDirectives.transferToInterpreter();
     // So, it might just be a polymorphic send site.
     PolymorpicMessageNode poly = new PolymorpicMessageNode(receiver,

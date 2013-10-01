@@ -24,22 +24,22 @@
 
 package som.vmobjects;
 
-public class Integer extends Object {
+public class SString extends SObject {
 
-  public Integer(final Object nilObject, int value) {
+  public SString(final SObject nilObject, final java.lang.String value) {
     super(nilObject);
-    embeddedInteger = value;
+    this.string = value;
   }
 
-  public int getEmbeddedInteger() {
-    // Get the embedded integer
-    return embeddedInteger;
+  public java.lang.String getEmbeddedString() {
+    // Get the string associated to this symbol
+    return string;
   }
-
-  // Private variable holding the embedded integer
-  private final int embeddedInteger;
 
   public java.lang.String toString() {
-    return "" + embeddedInteger;
+    return "\"" + string + "\"";
   }
+
+  // Private variable holding the string associated to this symbol
+  private final java.lang.String string;
 }

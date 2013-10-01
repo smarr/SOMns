@@ -1,5 +1,7 @@
 package som.interpreter.nodes;
 
+import som.vmobjects.SObject;
+
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -55,8 +57,8 @@ public class VariableWriteNode extends VariableNode {
 //  }
 
     @Override
-    public som.vmobjects.Object executeGeneric(final VirtualFrame frame) {
-      som.vmobjects.Object result = exp.executeGeneric(frame);
+    public SObject executeGeneric(final VirtualFrame frame) {
+      SObject result = exp.executeGeneric(frame);
       MaterializedFrame ctx = determineContext(frame.materialize());
 
       ctx.setObject(slot, result);

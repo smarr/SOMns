@@ -27,11 +27,11 @@ import som.interpreter.nodes.specialized.IfTrueAndIfFalseMessageNode;
 import som.interpreter.nodes.specialized.IfTrueIfFalseMessageNode;
 import som.interpreter.nodes.specialized.MonomorpicMessageNode;
 import som.vm.Universe;
-import som.vmobjects.Block;
-import som.vmobjects.Class;
-import som.vmobjects.Invokable;
-import som.vmobjects.Object;
-import som.vmobjects.Symbol;
+import som.vmobjects.SBlock;
+import som.vmobjects.SClass;
+import som.vmobjects.SInvokable;
+import som.vmobjects.SObject;
+import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -46,14 +46,14 @@ public class MessageNode extends ExpressionNode {
   @Child    protected       ExpressionNode   receiver;
   @Children protected final ExpressionNode[] arguments;
 
-  protected final Symbol   selector;
+  protected final SSymbol   selector;
   protected final Universe universe;
 
   private ExpressionNode specializedVersion;
 
   public MessageNode(final ExpressionNode receiver,
       final ExpressionNode[] arguments,
-      final Symbol selector,
+      final SSymbol selector,
       final Universe universe) {
     this.receiver  = adoptChild(receiver);
     this.arguments = adoptChildren(arguments);
@@ -69,10 +69,10 @@ public class MessageNode extends ExpressionNode {
     return new MessageNode(receiver, arguments, selector, universe);
   }
 
-  protected Object[] determineArguments(final VirtualFrame frame) {
+  protected SObject[] determineArguments(final VirtualFrame frame) {
     int numArgs = (arguments == null) ? 0 : arguments.length;
 
-    Object[] args = new Object[numArgs];
+    SObject[] args = new SObject[numArgs];
 
     for (int i = 0; i < numArgs; i++) {
       args[i] = arguments[i].executeGeneric(frame);
@@ -81,10 +81,10 @@ public class MessageNode extends ExpressionNode {
     return args;
   }
 
-  protected Object doFullSend(final VirtualFrame frame, final Object rcvr,
-      final Object[] args, final Class rcvrClass) {
+  protected SObject doFullSend(final VirtualFrame frame, final SObject rcvr,
+      final SObject[] args, final SClass rcvrClass) {
     // now lookup selector
-    Invokable invokable = rcvrClass.lookupInvokable(selector);
+    SInvokable invokable = rcvrClass.lookupInvokable(selector);
 
     if (invokable != null) {
       return invokable.invoke(frame.pack(), rcvr, args);
@@ -93,8 +93,8 @@ public class MessageNode extends ExpressionNode {
     }
   }
 
-  protected static Class classOfReceiver(final Object rcvr, final ExpressionNode receiver) {
-    Class rcvrClass = rcvr.getSOMClass();
+  protected static SClass classOfReceiver(final SObject rcvr, final ExpressionNode receiver) {
+    SClass rcvrClass = rcvr.getSOMClass();
 
     // first determine whether it is a normal, or super send
     if (receiver instanceof SuperReadNode) {
@@ -105,18 +105,18 @@ public class MessageNode extends ExpressionNode {
   }
 
   @Override
-  public Object executeGeneric(final VirtualFrame frame) {
+  public SObject executeGeneric(final VirtualFrame frame) {
     // evaluate all the expressions: first determine receiver
-    Object rcvr = receiver.executeGeneric(frame);
+    SObject rcvr = receiver.executeGeneric(frame);
 
     // then determine the arguments
-    Object[] args = determineArguments(frame);
+    SObject[] args = determineArguments(frame);
 
     // now start lookup
-    Class rcvrClass = classOfReceiver(rcvr, receiver);
+    SClass rcvrClass = classOfReceiver(rcvr, receiver);
 
     // now lookup selector
-    Invokable invokable = rcvrClass.lookupInvokable(selector);
+    SInvokable invokable = rcvrClass.lookupInvokable(selector);
 
     if (invokable != null) {
       return specializeAndExecute(frame, rcvr, rcvrClass, invokable, args);
@@ -138,8 +138,8 @@ public class MessageNode extends ExpressionNode {
   }
 
 
-  private Object specializeAndExecute(final VirtualFrame frame, Object rcvr,
-      Class rcvrClass, Invokable invokable, Object[] args) {
+  private SObject specializeAndExecute(final VirtualFrame frame, SObject rcvr,
+      SClass rcvrClass, SInvokable invokable, SObject[] args) {
     CompilerDirectives.transferToInterpreter();
 
     // first check whether it is a #ifTrue:, #ifFalse, or #ifTrue:ifFalse:
@@ -156,7 +156,7 @@ public class MessageNode extends ExpressionNode {
         // during evaluating receiver and arguments, we might have already
         // specialized this node
         if (specializedVersion == null) {
-          Block block = (Block) args[0];
+          SBlock block = (SBlock) args[0];
           node = new
               IfTrueAndIfFalseMessageNode(receiver, arguments, selector,
                   universe, block, isIfTrue);
@@ -171,8 +171,8 @@ public class MessageNode extends ExpressionNode {
           arguments.length == 2 &&
           arguments[1] instanceof BlockNode) {
         // it is #ifTrue:ifFalse: with two literal block arguments
-        Block trueBlock  = (Block) args[0];
-        Block falseBlock = (Block) args[1];
+        SBlock trueBlock  = (SBlock) args[0];
+        SBlock falseBlock = (SBlock) args[1];
         IfTrueIfFalseMessageNode node;
 
         if (specializedVersion == null) {

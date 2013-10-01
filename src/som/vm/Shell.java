@@ -25,9 +25,9 @@
 
 package som.vm;
 
-import som.vmobjects.Class;
-import som.vmobjects.Method;
-import som.vmobjects.Object;
+import som.vmobjects.SClass;
+import som.vmobjects.SMethod;
+import som.vmobjects.SObject;
 
 public class Shell {
 
@@ -37,13 +37,13 @@ public class Shell {
     this.universe = universe;
   }
 
-  public Object start() {
+  public SObject start() {
     java.io.BufferedReader in;
     java.lang.String stmt;
     int counter;
-    Class myClass;
-    Object myObject;
-    Object it;
+    SClass myClass;
+    SObject myObject;
+    SObject it;
 
     counter = 0;
     in = new java.io.BufferedReader(new java.io.InputStreamReader(
@@ -75,11 +75,11 @@ public class Shell {
           myObject = universe.newInstance(myClass);
 
           // Lookup the run: method
-          Method shellMethod = (Method) myClass.
+          SMethod shellMethod = (SMethod) myClass.
               lookupInvokable(universe.symbolFor("run:"));
 
           // Invoke the run method
-          it = shellMethod.invokeRoot(myObject, new Object[] {it});
+          it = shellMethod.invokeRoot(myObject, new SObject[] {it});
         }
       } catch (Exception e) {
         Universe.errorPrintln("Caught exception: " + e.getMessage());

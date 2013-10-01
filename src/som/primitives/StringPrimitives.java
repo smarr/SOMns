@@ -27,10 +27,10 @@ package som.primitives;
 
 import com.oracle.truffle.api.frame.PackedFrame;
 import som.vm.Universe;
-import som.vmobjects.Integer;
-import som.vmobjects.Object;
-import som.vmobjects.Primitive;
-import som.vmobjects.String;
+import som.vmobjects.SInteger;
+import som.vmobjects.SObject;
+import som.vmobjects.SPrimitive;
+import som.vmobjects.SString;
 
 public class StringPrimitives extends Primitives {
 
@@ -39,39 +39,39 @@ public class StringPrimitives extends Primitives {
   }
 
   public void installPrimitives() {
-    installInstancePrimitive(new Primitive("concatenate:", universe) {
+    installInstancePrimitive(new SPrimitive("concatenate:", universe) {
 
-      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
-        String argument = (String) args[0];
-        String self = (String) selfO;
+      public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
+        SString argument = (SString) args[0];
+        SString self = (SString) selfO;
         return universe.newString(self.getEmbeddedString()
             + argument.getEmbeddedString());
       }
     });
 
-    installInstancePrimitive(new Primitive("asSymbol", universe) {
+    installInstancePrimitive(new SPrimitive("asSymbol", universe) {
 
-      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
-        String self = (String) selfO;
+      public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
+        SString self = (SString) selfO;
         return universe.symbolFor(self.getEmbeddedString());
       }
     });
 
-    installInstancePrimitive(new Primitive("length", universe) {
+    installInstancePrimitive(new SPrimitive("length", universe) {
 
-      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
-        String self = (String) selfO;
+      public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
+        SString self = (SString) selfO;
         return universe.newInteger(self.getEmbeddedString().length());
       }
     });
 
-    installInstancePrimitive(new Primitive("=", universe) {
+    installInstancePrimitive(new SPrimitive("=", universe) {
 
-      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
-        Object op1 = args[0];
-        String op2 = (String) selfO;
+      public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
+        SObject op1 = args[0];
+        SString op2 = (SString) selfO;
         if (op1.getSOMClass() == universe.stringClass) {
-          String s = (String) op1;
+          SString s = (SString) op1;
           if (s.getEmbeddedString().equals(op2.getEmbeddedString())) {
             return universe.trueObject;
           }
@@ -81,13 +81,13 @@ public class StringPrimitives extends Primitives {
       }
     });
 
-    installInstancePrimitive(new Primitive("primSubstringFrom:to:", universe) {
+    installInstancePrimitive(new SPrimitive("primSubstringFrom:to:", universe) {
 
-      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
-        Integer end   = (Integer) args[1];
-        Integer start = (Integer) args[0];
+      public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
+        SInteger end   = (SInteger) args[1];
+        SInteger start = (SInteger) args[0];
 
-        String self = (String) selfO;
+        SString self = (SString) selfO;
 
         try {
           return universe.newString(self.getEmbeddedString().substring(
@@ -99,10 +99,10 @@ public class StringPrimitives extends Primitives {
       }
     });
 
-    installInstancePrimitive(new Primitive("hashcode", universe) {
+    installInstancePrimitive(new SPrimitive("hashcode", universe) {
 
-      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
-        String self = (String) selfO;
+      public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
+        SString self = (SString) selfO;
         return universe.newInteger(self.getEmbeddedString().hashCode());
       }
     });

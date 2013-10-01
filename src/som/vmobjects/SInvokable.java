@@ -24,18 +24,31 @@
 
 package som.vmobjects;
 
-public class Double extends Object {
+import com.oracle.truffle.api.CallTarget;
+import com.oracle.truffle.api.frame.PackedFrame;
 
-  public Double(final Object nilObject, double value) {
-    super(nilObject);
-    embeddedDouble = value;
-  }
+import som.interpreter.Method;
 
-  public double getEmbeddedDouble() {
-    // Get the embedded double
-    return embeddedDouble;
-  }
 
-  // Private variable holding the embedded double
-  private final double embeddedDouble;
+public interface SInvokable {
+
+  // Tells whether this is a primitive
+  boolean isPrimitive();
+
+  // Invoke this invokable object in a given frame
+  SObject invoke(final PackedFrame frame,
+      final SObject self,
+      final SObject[] args);
+
+  // Get the signature for this invokable object
+  SSymbol getSignature();
+
+  // Get the holder for this invokable object
+  SClass getHolder();
+
+  // Set the holder for this invokable object
+  void setHolder(final SClass value);
+
+  Method getTruffleInvokable();
+  CallTarget getCallTarget();
 }

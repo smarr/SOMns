@@ -30,22 +30,22 @@ import java.util.HashMap;
 import som.primitives.Primitives;
 import som.vm.Universe;
 
-public class Class extends Object {
+public class SClass extends SObject {
 
   private final Universe universe;
 
-  public Class(final Universe universe) {
+  public SClass(final Universe universe) {
     // Initialize this class by calling the super constructor
     super(universe.nilObject);
-    invokablesTable = new HashMap<Symbol, Invokable>();
+    invokablesTable = new HashMap<SSymbol, SInvokable>();
     this.universe = universe;
   }
 
-  public Class(int numberOfFields, final Universe universe) {
+  public SClass(int numberOfFields, final Universe universe) {
     // Initialize this class by calling the super constructor with the given
     // value
     super(numberOfFields, universe.nilObject);
-    invokablesTable = new HashMap<Symbol, Invokable>();
+    invokablesTable = new HashMap<SSymbol, SInvokable>();
     this.universe = universe;
   }
 
@@ -53,12 +53,12 @@ public class Class extends Object {
     return universe;
   }
 
-  public Class getSuperClass() {
+  public SClass getSuperClass() {
     // Get the super class by reading the field with super class index
-    return (Class) getField(superClassIndex);
+    return (SClass) getField(superClassIndex);
   }
 
-  public void setSuperClass(Class value) {
+  public void setSuperClass(SClass value) {
     // Set the super class by writing to the field with super class index
     setField(superClassIndex, value);
   }
@@ -68,35 +68,35 @@ public class Class extends Object {
     return getField(superClassIndex) != universe.nilObject;
   }
 
-  public Symbol getName() {
+  public SSymbol getName() {
     // Get the name of this class by reading the field with name index
-    return (Symbol) getField(nameIndex);
+    return (SSymbol) getField(nameIndex);
   }
 
-  public void setName(Symbol value) {
+  public void setName(SSymbol value) {
     // Set the name of this class by writing to the field with name index
     setField(nameIndex, value);
   }
 
-  public Array getInstanceFields() {
+  public SArray getInstanceFields() {
     // Get the instance fields by reading the field with the instance fields
     // index
-    return (Array) getField(instanceFieldsIndex);
+    return (SArray) getField(instanceFieldsIndex);
   }
 
-  public void setInstanceFields(Array value) {
+  public void setInstanceFields(SArray value) {
     // Set the instance fields by writing to the field with the instance
     // fields index
     setField(instanceFieldsIndex, value);
   }
 
-  public Array getInstanceInvokables() {
+  public SArray getInstanceInvokables() {
     // Get the instance invokables by reading the field with the instance
     // invokables index
-    return (Array) getField(instanceInvokablesIndex);
+    return (SArray) getField(instanceInvokablesIndex);
   }
 
-  public void setInstanceInvokables(Array value) {
+  public void setInstanceInvokables(SArray value) {
     // Set the instance invokables by writing to the field with the instance
     // invokables index
     setField(instanceInvokablesIndex, value);
@@ -112,17 +112,17 @@ public class Class extends Object {
     return getInstanceInvokables().getNumberOfIndexableFields();
   }
 
-  public Invokable getInstanceInvokable(int index) {
+  public SInvokable getInstanceInvokable(int index) {
     // Get the instance invokable with the given index
-    return (Invokable) getInstanceInvokables().getIndexableField(index);
+    return (SInvokable) getInstanceInvokables().getIndexableField(index);
   }
 
-  public void setInstanceInvokable(int index, Invokable value) {
+  public void setInstanceInvokable(int index, SInvokable value) {
     // Set this class as the holder of the given invokable
     value.setHolder(this);
 
     // Set the instance method with the given index to the given value
-    getInstanceInvokables().setIndexableField(index, (Object) value);
+    getInstanceInvokables().setIndexableField(index, (SObject) value);
   }
 
   public int getDefaultNumberOfFields() {
@@ -130,11 +130,11 @@ public class Class extends Object {
     return numberOfClassFields;
   }
 
-  public Invokable lookupInvokable(Symbol signature) {
-    Invokable invokable;
+  public SInvokable lookupInvokable(SSymbol signature) {
+    SInvokable invokable;
 
     // Lookup invokable and return if found
-    invokable = (Invokable) invokablesTable.get(signature);
+    invokable = (SInvokable) invokablesTable.get(signature);
     if (invokable != null) { return invokable; }
 
     // Lookup invokable with given signature in array of instance invokables
@@ -162,7 +162,7 @@ public class Class extends Object {
     return null;
   }
 
-  public int lookupFieldIndex(Symbol fieldName) {
+  public int lookupFieldIndex(SSymbol fieldName) {
     // Lookup field with given name in array of instance fields
     for (int i = getNumberOfInstanceFields() - 1; i >= 0; i--) {
       // Return the current index if the name matches
@@ -173,11 +173,11 @@ public class Class extends Object {
     return -1;
   }
 
-  public boolean addInstanceInvokable(Invokable value) {
+  public boolean addInstanceInvokable(SInvokable value) {
     // Add the given invokable to the array of instance invokables
     for (int i = 0; i < getNumberOfInstanceInvokables(); i++) {
       // Get the next invokable in the instance invokable array
-      Invokable invokable = getInstanceInvokable(i);
+      SInvokable invokable = getInstanceInvokable(i);
 
       // Replace the invokable with the given one if the signature matches
       if (invokable.getSignature() == value.getSignature()) {
@@ -188,11 +188,11 @@ public class Class extends Object {
 
     // Append the given method to the array of instance methods
     setInstanceInvokables(getInstanceInvokables().copyAndExtendWith(
-        (Object) value, universe));
+        (SObject) value, universe));
     return true;
   }
 
-  public void addInstancePrimitive(Primitive value) {
+  public void addInstancePrimitive(SPrimitive value) {
     if (addInstanceInvokable(value)) {
       Universe.print("Warning: Primitive " + value.getSignature().getString());
       Universe.println(" is not in class definition for class "
@@ -200,14 +200,14 @@ public class Class extends Object {
     }
   }
 
-  public Symbol getInstanceFieldName(int index) {
+  public SSymbol getInstanceFieldName(int index) {
     // Get the name of the instance field with the given index
     if (index >= getNumberOfSuperInstanceFields()) {
       // Adjust the index to account for fields defined in the super class
       index -= getNumberOfSuperInstanceFields();
 
       // Return the symbol representing the instance fields name
-      return (Symbol) getInstanceFields().getIndexableField(index);
+      return (SSymbol) getInstanceFields().getIndexableField(index);
     } else {
       // Ask the super class to return the name of the instance field
       return getSuperClass().getInstanceFieldName(index);
@@ -231,7 +231,7 @@ public class Class extends Object {
 
   public void setInstanceFields(java.lang.String[] fields) {
     // Allocate an array of the right size
-    Array instanceFields = universe.newArray(fields.length);
+    SArray instanceFields = universe.newArray(fields.length);
 
     // Iterate through all the given fields
     for (int i = 0; i < fields.length; i++) {
@@ -282,7 +282,7 @@ public class Class extends Object {
   }
 
   // Mapping of symbols to invokables
-  private java.util.HashMap<Symbol, Invokable> invokablesTable;
+  private java.util.HashMap<SSymbol, SInvokable> invokablesTable;
 
   // Static field indices and number of class fields
   static final int                             superClassIndex         = 1 + classIndex;

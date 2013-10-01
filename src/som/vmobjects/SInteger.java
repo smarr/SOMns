@@ -24,31 +24,22 @@
 
 package som.vmobjects;
 
-import com.oracle.truffle.api.CallTarget;
-import com.oracle.truffle.api.frame.PackedFrame;
+public class SInteger extends SObject {
 
-import som.interpreter.Method;
+  public SInteger(final SObject nilObject, int value) {
+    super(nilObject);
+    embeddedInteger = value;
+  }
 
+  public int getEmbeddedInteger() {
+    // Get the embedded integer
+    return embeddedInteger;
+  }
 
-public interface Invokable {
+  // Private variable holding the embedded integer
+  private final int embeddedInteger;
 
-  // Tells whether this is a primitive
-  boolean isPrimitive();
-
-  // Invoke this invokable object in a given frame
-  Object invoke(final PackedFrame frame,
-      final Object self,
-      final Object[] args);
-
-  // Get the signature for this invokable object
-  Symbol getSignature();
-
-  // Get the holder for this invokable object
-  Class getHolder();
-
-  // Set the holder for this invokable object
-  void setHolder(final Class value);
-
-  Method getTruffleInvokable();
-  CallTarget getCallTarget();
+  public java.lang.String toString() {
+    return "" + embeddedInteger;
+  }
 }

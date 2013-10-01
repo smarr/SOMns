@@ -81,6 +81,9 @@ import som.interpreter.nodes.literals.LiteralNode;
 import som.interpreter.nodes.literals.StringLiteralNodeFactory;
 import som.interpreter.nodes.literals.SymbolLiteralNode;
 import som.vm.Universe;
+import som.vmobjects.SClass;
+import som.vmobjects.SMethod;
+import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.impl.DefaultSourceSection;
@@ -147,7 +150,7 @@ public class Parser {
     expect(Identifier);
     expect(Equal);
 
-    som.vmobjects.Symbol superName;
+    SSymbol superName;
     if (sym == Identifier) {
       superName = universe.symbolFor(text);
       accept(Identifier);
@@ -161,7 +164,7 @@ public class Parser {
       cgenc.setNumberOfInstanceFieldsOfSuper(0);  // Object's super class is nil, has no fields
       cgenc.setNumberOfClassFieldsOfSuper(4);     // Object's class has the fields of Class
     } else {
-      som.vmobjects.Class superClass = universe.loadClass(superName);
+      SClass superClass = universe.loadClass(superName);
       cgenc.setNumberOfInstanceFieldsOfSuper(superClass.getNumberOfInstanceFields());
       cgenc.setNumberOfClassFieldsOfSuper(superClass.getSOMClass().getNumberOfInstanceFields());
     }
@@ -329,11 +332,11 @@ public class Parser {
     return sequence;
   }
 
-  private som.vmobjects.Symbol unarySelector() {
+  private SSymbol unarySelector() {
     return universe.symbolFor(identifier());
   }
 
-  private som.vmobjects.Symbol binarySelector() {
+  private SSymbol binarySelector() {
     String s = new String(text);
 
     // Checkstyle: stop
@@ -509,7 +512,7 @@ public class Parser {
 
         ExpressionNode blockBody = nestedBlock(bgenc);
 
-        som.vmobjects.Method blockMethod = bgenc.assemble(universe, blockBody);
+        SMethod blockMethod = bgenc.assemble(universe, blockBody);
         ExpressionNode result = new BlockNode(blockMethod, universe);
         assignSource(result, coord);
         return result;
@@ -559,7 +562,7 @@ public class Parser {
 
   private MessageNode unaryMessage(final ExpressionNode receiver) {
     SourceCoordinate coord = getCoordinate();
-    som.vmobjects.Symbol selector = unarySelector();
+    SSymbol selector = unarySelector();
     MessageNode msg = new MessageNode(receiver, null, selector, universe);
     assignSource(msg, coord);
     return msg;
@@ -568,7 +571,7 @@ public class Parser {
   private MessageNode binaryMessage(final MethodGenerationContext mgenc,
       final ExpressionNode receiver) {
     SourceCoordinate coord = getCoordinate();
-    som.vmobjects.Symbol msg = binarySelector();
+    SSymbol msg = binarySelector();
     ExpressionNode operand   = binaryOperand(mgenc);
 
     MessageNode msgNode = new MessageNode(receiver,
@@ -601,7 +604,7 @@ public class Parser {
     }
     while (sym == Keyword);
 
-    som.vmobjects.Symbol msg = universe.symbolFor(kw.toString());
+    SSymbol msg = universe.symbolFor(kw.toString());
 
     MessageNode msgNode = new MessageNode(receiver, arguments.toArray(new ExpressionNode[0]), msg, universe);
     assignSource(msgNode, coord);
@@ -670,7 +673,7 @@ public class Parser {
   private LiteralNode literalSymbol() {
     SourceCoordinate coord = getCoordinate();
 
-    som.vmobjects.Symbol symb;
+    SSymbol symb;
     expect(Pound);
     if (sym == STString) {
       String s = string();
@@ -693,7 +696,7 @@ public class Parser {
     return node;
   }
 
-  private som.vmobjects.Symbol selector() {
+  private SSymbol selector() {
     if (sym == OperatorSequence || symIn(singleOpSyms)) {
       return binarySelector();
     } else if (sym == Keyword || sym == KeywordSequence) {
@@ -703,10 +706,10 @@ public class Parser {
     }
   }
 
-  private som.vmobjects.Symbol keywordSelector() {
+  private SSymbol keywordSelector() {
     String s = new String(text);
     expectOneOf(keywordSelectorSyms);
-    som.vmobjects.Symbol symb = universe.symbolFor(s);
+    SSymbol symb = universe.symbolFor(s);
     return symb;
   }
 
@@ -769,7 +772,7 @@ public class Parser {
     }
 
     // then object fields
-    som.vmobjects.Symbol varName = universe.symbolFor(variableName);
+    SSymbol varName = universe.symbolFor(variableName);
     FieldReadNode fieldRead = mgenc.getObjectFieldRead(varName);
 
     if (fieldRead != null) {
@@ -791,7 +794,7 @@ public class Parser {
           mgenc.getFrameSlotContextLevel(variableName), exp);
     }
 
-    som.vmobjects.Symbol fieldName = universe.symbolFor(variableName);
+    SSymbol fieldName = universe.symbolFor(variableName);
     FieldWriteNode fieldWrite = mgenc.getObjectFieldWrite(fieldName, exp);
 
     if (fieldWrite != null) {

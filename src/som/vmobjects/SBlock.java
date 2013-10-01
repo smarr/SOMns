@@ -29,20 +29,20 @@ import som.vm.Universe;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.PackedFrame;
 
-public class Block extends Object {
+public class SBlock extends SObject {
 
   private MaterializedFrame declarationFrame;
 
-  public Block(final Object nilObject) {
+  public SBlock(final SObject nilObject) {
     super(nilObject);
   }
 
-  public Method getMethod() {
+  public SMethod getMethod() {
     // Get the method of this block by reading the field with method index
-    return (Method) getField(methodIndex);
+    return (SMethod) getField(methodIndex);
   }
 
-  public void setMethod(Method value) {
+  public void setMethod(SMethod value) {
     // Set the method of this block by writing to the field with method
     // index
     setField(methodIndex, value);
@@ -66,20 +66,20 @@ public class Block extends Object {
     return numberOfBlockFields;
   }
 
-  public static Primitive getEvaluationPrimitive(int numberOfArguments,
+  public static SPrimitive getEvaluationPrimitive(int numberOfArguments,
       final Universe universe) {
     return new Evaluation(numberOfArguments, universe);
   }
 
-  public static class Evaluation extends Primitive {
+  public static class Evaluation extends SPrimitive {
 
     public Evaluation(int numberOfArguments, final Universe universe) {
       super(computeSignatureString(numberOfArguments), universe);
     }
 
-    public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
+    public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
       // Get the block (the receiver)
-      Block self = (Block) selfO;
+      SBlock self = (SBlock) selfO;
       return self.getMethod().invoke(frame, selfO, args);
     }
 

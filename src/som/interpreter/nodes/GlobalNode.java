@@ -23,8 +23,8 @@ package som.interpreter.nodes;
 
 import som.compiler.MethodGenerationContext;
 import som.vm.Universe;
-import som.vmobjects.Object;
-import som.vmobjects.Symbol;
+import som.vmobjects.SObject;
+import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.frame.FrameSlotTypeException;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -32,17 +32,17 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 
 public abstract class GlobalNode extends ExpressionNode {
 
-  protected final Symbol    globalName;
+  protected final SSymbol    globalName;
   protected final Universe  universe;
 
-  public GlobalNode(final Symbol globalName, final Universe  universe) {
+  public GlobalNode(final SSymbol globalName, final Universe  universe) {
     this.globalName = globalName;
     this.universe   = universe;
   }
 
-  protected Object getSelfFromVirtual(final VirtualFrame frame) {
+  protected SObject getSelfFromVirtual(final VirtualFrame frame) {
     try {
-      return (Object) frame.getObject(MethodGenerationContext.getStandardSelfSlot());
+      return (SObject) frame.getObject(MethodGenerationContext.getStandardSelfSlot());
     } catch (FrameSlotTypeException e) {
       throw new RuntimeException("uninitialized selfSlot, which should be pretty much imposible???");
     }
@@ -50,21 +50,21 @@ public abstract class GlobalNode extends ExpressionNode {
 
   public static class GlobalReadNode extends GlobalNode {
 
-    public GlobalReadNode(final Symbol globalName, final Universe universe) {
+    public GlobalReadNode(final SSymbol globalName, final Universe universe) {
       super(globalName, universe);
     }
 
     @Override
-    public Object executeGeneric(VirtualFrame frame) {
+    public SObject executeGeneric(VirtualFrame frame) {
       // Get the global from the universe
-      Object global = universe.getGlobal(globalName);
+      SObject global = universe.getGlobal(globalName);
 
       if (global != null) {
         return global;
       } else {
         // if it is not defined, we will send a error message to the current
         // receiver object
-        Object self = getSelfFromVirtual(frame);
+        SObject self = getSelfFromVirtual(frame);
         return self.sendUnknownGlobal(globalName, universe, frame.pack());
       }
     }

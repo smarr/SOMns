@@ -25,7 +25,7 @@ import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 
-import som.vmobjects.Object;
+import som.vmobjects.SObject;
 
 public class SequenceNode extends ExpressionNode {
   @CompilationFinal @Children private final ExpressionNode[] expressions;
@@ -36,8 +36,8 @@ public class SequenceNode extends ExpressionNode {
 
   @Override
   @ExplodeLoop
-  public Object executeGeneric(final VirtualFrame frame) {
-    Object last = null;
+  public SObject executeGeneric(final VirtualFrame frame) {
+    SObject last = null;
 
     for (int i = 0; i < expressions.length; i++) {
       last = expressions[i].executeGeneric(frame);

@@ -28,21 +28,21 @@ package som.compiler;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.oracle.truffle.api.SourceSection;
-import com.oracle.truffle.api.frame.FrameDescriptor;
-import com.oracle.truffle.api.frame.FrameSlot;
-import com.oracle.truffle.api.frame.FrameSlotKind;
-import com.oracle.truffle.api.impl.DefaultSourceSection;
-
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.FieldNode.FieldReadNode;
 import som.interpreter.nodes.FieldNode.FieldWriteNode;
 import som.interpreter.nodes.GlobalNode.GlobalReadNode;
 import som.vm.Universe;
-import som.vmobjects.Invokable;
-import som.vmobjects.Method;
-import som.vmobjects.Primitive;
-import som.vmobjects.Symbol;
+import som.vmobjects.SInvokable;
+import som.vmobjects.SMethod;
+import som.vmobjects.SPrimitive;
+import som.vmobjects.SSymbol;
+
+import com.oracle.truffle.api.SourceSection;
+import com.oracle.truffle.api.frame.FrameDescriptor;
+import com.oracle.truffle.api.frame.FrameSlot;
+import com.oracle.truffle.api.frame.FrameSlotKind;
+import com.oracle.truffle.api.impl.DefaultSourceSection;
 
 public class MethodGenerationContext {
 
@@ -50,7 +50,7 @@ public class MethodGenerationContext {
   private ClassGenerationContext     holderGenc;
   private MethodGenerationContext    outerGenc;
   private boolean                    blockMethod;
-  private som.vmobjects.Symbol       signature;
+  private SSymbol                    signature;
   private boolean                    primitive;
 
   private final List<String>         arguments = new ArrayList<String>();
@@ -90,7 +90,7 @@ public class MethodGenerationContext {
     return nonLocalReturnMarker;
   }
 
-  public void setHolder(ClassGenerationContext cgenc) {
+  public void setHolder(final ClassGenerationContext cgenc) {
     holderGenc = cgenc;
   }
 
@@ -98,11 +98,11 @@ public class MethodGenerationContext {
     return primitive;
   }
 
-  public Invokable assemblePrimitive(final Universe universe) {
-    return Primitive.getEmptyPrimitive(signature.getString(), universe);
+  public SInvokable assemblePrimitive(final Universe universe) {
+    return SPrimitive.getEmptyPrimitive(signature.getString(), universe);
   }
 
-  public Method assemble(final Universe universe, final ExpressionNode expressions) {
+  public SMethod assemble(final Universe universe, final ExpressionNode expressions) {
     FrameSlot[] argSlots = new FrameSlot[arguments.size()];
     FrameSlot[] localSlots = new FrameSlot[locals.size()];
 
@@ -121,14 +121,14 @@ public class MethodGenerationContext {
 
     assignSourceSectionToMethod(expressions, truffleMethod);
 
-    Method meth = universe.newMethod(signature, truffleMethod, frameDescriptor);
+    SMethod meth = universe.newMethod(signature, truffleMethod, frameDescriptor);
 
     // return the method - the holder field is to be set later on!
     return meth;
   }
 
   private void assignSourceSectionToMethod(final ExpressionNode expressions,
-      som.interpreter.Method truffleMethod) {
+      final som.interpreter.Method truffleMethod) {
     SourceSection ssBody   = expressions.getSourceSection();
     SourceSection ssMethod = new DefaultSourceSection(ssBody.getSource(),
         holderGenc.getName().getString() + ">>" + signature.toString(),
@@ -138,20 +138,20 @@ public class MethodGenerationContext {
     truffleMethod.assignSourceSection(ssMethod);
   }
 
-  public void setPrimitive(boolean prim) {
+  public void setPrimitive(final boolean prim) {
     primitive = prim;
   }
 
-  public void setSignature(Symbol sig) {
+  public void setSignature(final SSymbol sig) {
     signature = sig;
   }
 
-  public FrameSlot addArgument(String arg) {
+  public FrameSlot addArgument(final String arg) {
     arguments.add(arg);
     return frameDescriptor.addFrameSlot(arg, FrameSlotKind.Object);
   }
 
-  public void addArgumentIfAbsent(String arg) {
+  public void addArgumentIfAbsent(final String arg) {
     if (arguments.contains(arg)) {
       return;
     }
@@ -159,7 +159,7 @@ public class MethodGenerationContext {
     addArgument(arg);
   }
 
-  public void addLocalIfAbsent(String local) {
+  public void addLocalIfAbsent(final String local) {
     if (locals.contains(local)) {
       return;
     }
@@ -167,7 +167,7 @@ public class MethodGenerationContext {
     addLocal(local);
   }
 
-  public void addLocal(String local) {
+  public void addLocal(final String local) {
     frameDescriptor.addFrameSlot(local);
     locals.add(local);
   }
@@ -176,7 +176,7 @@ public class MethodGenerationContext {
     return blockMethod;
   }
 
-  public void setIsBlockMethod(boolean isBlock) {
+  public void setIsBlockMethod(final boolean isBlock) {
     blockMethod = isBlock;
   }
 
@@ -184,7 +184,7 @@ public class MethodGenerationContext {
     return holderGenc;
   }
 
-  public void setOuter(MethodGenerationContext mgenc) {
+  public void setOuter(final MethodGenerationContext mgenc) {
     outerGenc = mgenc;
   }
 
@@ -231,7 +231,7 @@ public class MethodGenerationContext {
     return slot;
   }
 
-  public FieldReadNode getObjectFieldRead(Symbol fieldName) {
+  public FieldReadNode getObjectFieldRead(final SSymbol fieldName) {
     if (!holderGenc.hasField(fieldName)) {
       return null;
     }
@@ -240,12 +240,12 @@ public class MethodGenerationContext {
         getSelfContextLevel());
   }
 
-  public GlobalReadNode getGlobalRead(final Symbol varName,
+  public GlobalReadNode getGlobalRead(final SSymbol varName,
       final Universe universe) {
     return new GlobalReadNode(varName, universe);
   }
 
-  public FieldWriteNode getObjectFieldWrite(final Symbol fieldName,
+  public FieldWriteNode getObjectFieldWrite(final SSymbol fieldName,
       final ExpressionNode exp) {
     if (!holderGenc.hasField(fieldName)) {
       return null;
@@ -255,7 +255,7 @@ public class MethodGenerationContext {
   }
 
   /**
-   * @return number of explicit arguments, 
+   * @return number of explicit arguments,
    *         i.e., excluding the implicit 'self' argument
    */
   public int getNumberOfArguments() {
@@ -266,7 +266,7 @@ public class MethodGenerationContext {
     return outerGenc;
   }
 
-  public som.vmobjects.Symbol getSignature() {
+  public SSymbol getSignature() {
     return signature;
   }
 

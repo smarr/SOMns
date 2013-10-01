@@ -27,11 +27,11 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 
 import som.interpreter.TypesGen;
-import som.vmobjects.Object;
+import som.vmobjects.SObject;
 
 public abstract class ExpressionNode extends SOMNode {
 
-  public abstract Object executeGeneric(final VirtualFrame frame);
+  public abstract SObject executeGeneric(final VirtualFrame frame);
 
   public int executeInteger(final VirtualFrame frame) throws UnexpectedResultException {
     return TypesGen.TYPES.expectInteger(executeGeneric(frame));
@@ -55,4 +55,18 @@ public abstract class ExpressionNode extends SOMNode {
 
   public abstract ExpressionNode cloneForInlining();
 
+////  @SuppressWarnings("unused")
+//  public SOMObject executeEvaluated(VirtualFrame frame, java.lang.Object val1) {
+//      return executeGeneric(frame);
+//  }
+//
+////  @SuppressWarnings("unused")
+//  public SOMObject executeEvaluated(VirtualFrame frame, java.lang.Object val1, java.lang.Object val2) {
+//      return executeEvaluated(frame, val1);
+//  }
+//
+////  @SuppressWarnings("unused")
+//  public SOMObject executeEvaluated(VirtualFrame frame, java.lang.Object val1, java.lang.Object val2, java.lang.Object val3) {
+//      return executeEvaluated(frame, val1, val2);
+//  }
 }

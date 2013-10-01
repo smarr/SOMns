@@ -23,6 +23,7 @@ package som.interpreter;
 
 import som.interpreter.nodes.ExpressionNode;
 import som.vm.Universe;
+import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.SourceSection;
@@ -63,15 +64,15 @@ public class Method extends RootNode {
   }
 
   @Override
-  public Object execute(VirtualFrame frame) {
+  public Object execute(final VirtualFrame frame) {
     final FrameOnStackMarker marker = initializeFrame(this, frame.materialize());
     return messageSendExecution(marker, frame, expressionOrSequence);
   }
 
-  public static som.vmobjects.Object messageSendExecution(final FrameOnStackMarker marker,
+  public static SObject messageSendExecution(final FrameOnStackMarker marker,
       final VirtualFrame frame,
       final ExpressionNode expr) {
-    som.vmobjects.Object  result;
+    SObject  result;
     boolean restart;
 
     do {

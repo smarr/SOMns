@@ -24,6 +24,11 @@ package som.interpreter;
 import java.math.BigInteger;
 
 import som.vm.Universe;
+import som.vmobjects.SBigInteger;
+import som.vmobjects.SDouble;
+import som.vmobjects.SInteger;
+import som.vmobjects.SObject;
+import som.vmobjects.SString;
 
 import com.oracle.truffle.api.dsl.TypeCast;
 import com.oracle.truffle.api.dsl.TypeCheck;
@@ -34,31 +39,31 @@ import com.oracle.truffle.api.dsl.TypeSystem;
                 boolean.class,
                  String.class,
                  double.class,
-   som.vmobjects.Object.class})
+                SObject.class})
 public class Types {
 
   @TypeCheck
-  public boolean isInteger(Object value) {
+  public boolean isInteger(final Object value) {
     return value instanceof Integer               ||
-           value instanceof som.vmobjects.Integer ||
+           value instanceof SInteger ||
           (value instanceof BigInteger && ((BigInteger) value).bitLength() < Integer.SIZE) ||
-          (value instanceof som.vmobjects.BigInteger &&
-              ((som.vmobjects.BigInteger) value).getEmbeddedBiginteger().bitLength() < Integer.SIZE);
+          (value instanceof SBigInteger &&
+              ((SBigInteger) value).getEmbeddedBiginteger().bitLength() < Integer.SIZE);
   }
 
   @TypeCast
-  public int asInteger(Object value) {
+  public int asInteger(final Object value) {
     assert isInteger(value);
     if (value instanceof Integer) {
       return (int) value;
-    } else if (value instanceof som.vmobjects.Integer) {
-      return ((som.vmobjects.Integer) value).getEmbeddedInteger();
+    } else if (value instanceof SInteger) {
+      return ((SInteger) value).getEmbeddedInteger();
     } else {
       BigInteger val;
       if (value instanceof BigInteger) {
         val = (BigInteger) value;
       } else {
-        val = ((som.vmobjects.BigInteger) value).getEmbeddedBiginteger();
+        val = ((SBigInteger) value).getEmbeddedBiginteger();
       }
       int result = val.intValue();
       assert BigInteger.valueOf(result).equals(value) : "Losing precision";
@@ -67,30 +72,30 @@ public class Types {
   }
 
   @TypeCheck
-  public boolean isBigInteger(Object value) {
+  public boolean isBigInteger(final Object value) {
     return value instanceof BigInteger ||
-           value instanceof som.vmobjects.BigInteger;
+           value instanceof SBigInteger;
   }
 
   @TypeCast
-  public BigInteger asBigInteger(Object value) {
+  public BigInteger asBigInteger(final Object value) {
     assert isBigInteger(value);
     if (value instanceof BigInteger) {
       return (BigInteger) value;
     } else {
-      return ((som.vmobjects.BigInteger) value).getEmbeddedBiginteger();
+      return ((SBigInteger) value).getEmbeddedBiginteger();
     }
   }
 
   @TypeCheck
-  public boolean isBoolean(Object value) {
+  public boolean isBoolean(final Object value) {
     return value instanceof Boolean ||
            Universe.current().trueObject == value ||
            Universe.current().falseObject == value;
   }
 
   @TypeCast
-  public boolean asBoolean(Object value) {
+  public boolean asBoolean(final Object value) {
     assert isBoolean(value);
     if (value instanceof Boolean) {
       return (boolean) value;
@@ -103,41 +108,41 @@ public class Types {
   }
 
   @TypeCheck
-  public boolean isString(Object value) {
+  public boolean isString(final Object value) {
     return value instanceof String ||
-           value instanceof som.vmobjects.String;
+           value instanceof SString;
   }
 
   @TypeCast
-  public String asString(Object value) {
+  public String asString(final Object value) {
     assert isString(value);
     if (value instanceof String) {
       return (String) value;
     } else {
-      return ((som.vmobjects.String) value).getEmbeddedString();
+      return ((SString) value).getEmbeddedString();
     }
   }
 
   @TypeCheck
-  public boolean isDouble(Object value) {
+  public boolean isDouble(final Object value) {
     return value instanceof Double ||
-           value instanceof som.vmobjects.Double;
+           value instanceof SDouble;
   }
 
   @TypeCast
-  public double asDouble(Object value) {
+  public double asDouble(final Object value) {
     assert isDouble(value);
     if (value instanceof Double) {
       return (double) value;
     } else {
-      return ((som.vmobjects.Double) value).getEmbeddedDouble();
+      return ((SDouble) value).getEmbeddedDouble();
     }
   }
 
   // TODO: clear with truffle team why this is overridden in the generated class
   @TypeCheck
-  public boolean isObject(java.lang.Object value) {
-    return value instanceof som.vmobjects.Object; // ||
+  public boolean isObject(final java.lang.Object value) {
+    return value instanceof SObject; // ||
 //           value instanceof Boolean ||
 //           value instanceof Double  ||
 //           value instanceof Integer ||
@@ -148,10 +153,10 @@ public class Types {
   // TODO: why is that currently not really supported (isObject is overridden)
   // TODO: this is also problematic, because I need to do the 'conversion' explicitly in all executeGeneric()
   @TypeCast
-  public som.vmobjects.Object asObject(Object value) {
+  public SObject asObject(final Object value) {
     assert isObject(value);
-    if (value instanceof som.vmobjects.Object) {
-      return (som.vmobjects.Object) value;
+    if (value instanceof SObject) {
+      return (SObject) value;
     } else {
       Universe u = Universe.current();
       if (value instanceof Boolean) {

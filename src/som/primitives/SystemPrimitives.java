@@ -27,12 +27,12 @@ package som.primitives;
 
 import com.oracle.truffle.api.frame.PackedFrame;
 import som.vm.Universe;
-import som.vmobjects.Class;
-import som.vmobjects.Integer;
-import som.vmobjects.Object;
-import som.vmobjects.Primitive;
-import som.vmobjects.String;
-import som.vmobjects.Symbol;
+import som.vmobjects.SClass;
+import som.vmobjects.SInteger;
+import som.vmobjects.SObject;
+import som.vmobjects.SPrimitive;
+import som.vmobjects.SString;
+import som.vmobjects.SSymbol;
 
 public class SystemPrimitives extends Primitives {
 
@@ -41,57 +41,57 @@ public class SystemPrimitives extends Primitives {
   }
 
   public void installPrimitives() {
-    installInstancePrimitive(new Primitive("load:", universe) {
+    installInstancePrimitive(new SPrimitive("load:", universe) {
 
-      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
-        Symbol argument = (Symbol) args[0];
+      public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
+        SSymbol argument = (SSymbol) args[0];
 
-        Class result = universe.loadClass(argument);
+        SClass result = universe.loadClass(argument);
         return result != null ? result : universe.nilObject;
       }
     });
 
-    installInstancePrimitive(new Primitive("exit:", universe) {
+    installInstancePrimitive(new SPrimitive("exit:", universe) {
 
-      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
-        Integer error = (Integer) args[0];
+      public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
+        SInteger error = (SInteger) args[0];
         universe.exit(error.getEmbeddedInteger());
         return selfO;
       }
     });
 
-    installInstancePrimitive(new Primitive("global:", universe) {
+    installInstancePrimitive(new SPrimitive("global:", universe) {
 
-      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
-        Symbol argument = (Symbol) args[0];
+      public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
+        SSymbol argument = (SSymbol) args[0];
 
-        Object result = universe.getGlobal(argument);
+        SObject result = universe.getGlobal(argument);
         return result != null ? result : universe.nilObject;
       }
     });
 
-    installInstancePrimitive(new Primitive("global:put:", universe) {
+    installInstancePrimitive(new SPrimitive("global:put:", universe) {
 
-      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
-        Object value    = args[1];
-        Symbol argument = (Symbol) args[0];
+      public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
+        SObject value    = args[1];
+        SSymbol argument = (SSymbol) args[0];
         universe.setGlobal(argument, value);
         return value;
       }
     });
 
-    installInstancePrimitive(new Primitive("printString:", universe) {
+    installInstancePrimitive(new SPrimitive("printString:", universe) {
 
-      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
-        String argument = (String) args[0];
+      public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
+        SString argument = (SString) args[0];
         Universe.print(argument.getEmbeddedString());
         return selfO;
       }
     });
 
-    installInstancePrimitive(new Primitive("printNewline", universe) {
+    installInstancePrimitive(new SPrimitive("printNewline", universe) {
 
-      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
+      public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
         Universe.println();
         return selfO;
       }
@@ -99,25 +99,25 @@ public class SystemPrimitives extends Primitives {
 
     startMicroTime = System.nanoTime() / 1000L;
     startTime = startMicroTime / 1000L;
-    installInstancePrimitive(new Primitive("time", universe) {
+    installInstancePrimitive(new SPrimitive("time", universe) {
 
-      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
+      public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
         int time = (int) (System.currentTimeMillis() - startTime);
         return universe.newInteger(time);
       }
     });
 
-    installInstancePrimitive(new Primitive("ticks", universe) {
+    installInstancePrimitive(new SPrimitive("ticks", universe) {
 
-      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
+      public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
         int time = (int) (System.nanoTime() / 1000L - startMicroTime);
         return universe.newInteger(time);
       }
     });
 
-    installInstancePrimitive(new Primitive("fullGC", universe) {
+    installInstancePrimitive(new SPrimitive("fullGC", universe) {
 
-      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
+      public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
         System.gc();
         return universe.trueObject;
       }

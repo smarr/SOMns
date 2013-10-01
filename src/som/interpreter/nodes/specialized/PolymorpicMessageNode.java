@@ -3,10 +3,10 @@ package som.interpreter.nodes.specialized;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageNode;
 import som.vm.Universe;
-import som.vmobjects.Class;
-import som.vmobjects.Invokable;
-import som.vmobjects.Object;
-import som.vmobjects.Symbol;
+import som.vmobjects.SClass;
+import som.vmobjects.SInvokable;
+import som.vmobjects.SObject;
+import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -14,19 +14,19 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 public class PolymorpicMessageNode extends MessageNode {
   private static final int CACHE_SIZE = 8;
 
-  private final Class[]      rcvrClasses;
-  private final Invokable[]  invokables;
+  private final SClass[]      rcvrClasses;
+  private final SInvokable[]  invokables;
 
   private int cacheEntries;
 
   public PolymorpicMessageNode(final ExpressionNode receiver,
-      final ExpressionNode[] arguments, final Symbol selector,
-      final Universe universe, final Class firstRcvrClass,
-      final Invokable firstInvokable,
-      final Class secondRcvrClass) {
+      final ExpressionNode[] arguments, final SSymbol selector,
+      final Universe universe, final SClass firstRcvrClass,
+      final SInvokable firstInvokable,
+      final SClass secondRcvrClass) {
     super(receiver, arguments, selector, universe);
-    rcvrClasses = new Class[CACHE_SIZE];
-    invokables  = new Invokable[CACHE_SIZE];
+    rcvrClasses = new SClass[CACHE_SIZE];
+    invokables  = new SInvokable[CACHE_SIZE];
 
     rcvrClasses[0] = firstRcvrClass;
     invokables[0]  = firstInvokable;
@@ -36,12 +36,12 @@ public class PolymorpicMessageNode extends MessageNode {
   }
 
   public PolymorpicMessageNode(final ExpressionNode receiver,
-      final ExpressionNode[] arguments, final Symbol selector,
+      final ExpressionNode[] arguments, final SSymbol selector,
       final Universe universe,
-      final Class currentRcvrClass) {
+      final SClass currentRcvrClass) {
     super(receiver, arguments, selector, universe);
-    rcvrClasses = new Class[CACHE_SIZE];
-    invokables  = new Invokable[CACHE_SIZE];
+    rcvrClasses = new SClass[CACHE_SIZE];
+    invokables  = new SInvokable[CACHE_SIZE];
 
     rcvrClasses[0] = currentRcvrClass;
     invokables[0]  = currentRcvrClass.lookupInvokable(selector);
@@ -49,14 +49,14 @@ public class PolymorpicMessageNode extends MessageNode {
   }
 
   @Override
-  public Object executeGeneric(final VirtualFrame frame) {
+  public SObject executeGeneric(final VirtualFrame frame) {
     // evaluate all the expressions: first determine receiver
-    Object rcvr = receiver.executeGeneric(frame);
+    SObject rcvr = receiver.executeGeneric(frame);
 
     // then determine the arguments
-    Object[] args = determineArguments(frame);
+    SObject[] args = determineArguments(frame);
 
-    Class currentRcvrClass = classOfReceiver(rcvr, receiver);
+    SClass currentRcvrClass = classOfReceiver(rcvr, receiver);
 
     int i;
     for (i = 0; i < cacheEntries; i++) {

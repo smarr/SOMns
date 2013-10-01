@@ -33,6 +33,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 import som.vm.Universe;
+import som.vmobjects.SClass;
+import som.vmobjects.SSymbol;
 
 public class SourcecodeCompiler {
 
@@ -64,22 +66,22 @@ public class SourcecodeCompiler {
     }
   }
 
-  public static som.vmobjects.Class compileClass(String path, String file,
-      som.vmobjects.Class systemClass, final Universe universe)
+  public static SClass compileClass(final String path, final String file,
+      final SClass systemClass, final Universe universe)
       throws IOException {
     return new SourcecodeCompiler().compile(path, file, systemClass, universe);
   }
 
-  public static som.vmobjects.Class compileClass(String stmt,
-      som.vmobjects.Class systemClass, final Universe universe) {
+  public static SClass compileClass(final String stmt,
+      final SClass systemClass, final Universe universe) {
     return new SourcecodeCompiler().compileClassString(stmt, systemClass,
         universe);
   }
 
-  private som.vmobjects.Class compile(String path, String file,
-      som.vmobjects.Class systemClass, final Universe universe)
+  private SClass compile(final String path, final String file,
+      final SClass systemClass, final Universe universe)
       throws IOException {
-    som.vmobjects.Class result = systemClass;
+    SClass result = systemClass;
 
     String fname = path + Universe.fileSeparator + file + ".som";
 
@@ -87,7 +89,7 @@ public class SourcecodeCompiler {
 
     result = compile(systemClass, universe);
 
-    som.vmobjects.Symbol cname = result.getName();
+    SSymbol cname = result.getName();
     String cnameC = cname.getString();
 
     if (file != cnameC) {
@@ -98,19 +100,19 @@ public class SourcecodeCompiler {
     return result;
   }
 
-  private som.vmobjects.Class compileClassString(String stream,
-      som.vmobjects.Class systemClass, final Universe universe) {
+  private SClass compileClassString(final String stream,
+      final SClass systemClass, final Universe universe) {
     parser = new Parser(new StringReader(stream), null, universe);
 
-    som.vmobjects.Class result = compile(systemClass, universe);
+    SClass result = compile(systemClass, universe);
     return result;
   }
 
-  private som.vmobjects.Class compile(som.vmobjects.Class systemClass,
+  private SClass compile(final SClass systemClass,
       final Universe universe) {
     ClassGenerationContext cgc = new ClassGenerationContext(universe);
 
-    som.vmobjects.Class result = systemClass;
+    SClass result = systemClass;
     parser.classdef(cgc);
 
     if (systemClass == null) {

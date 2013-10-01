@@ -27,12 +27,12 @@ package som.primitives;
 
 import com.oracle.truffle.api.frame.PackedFrame;
 import som.vm.Universe;
-import som.vmobjects.BigInteger;
-import som.vmobjects.Double;
-import som.vmobjects.Integer;
-import som.vmobjects.Object;
-import som.vmobjects.Primitive;
-import som.vmobjects.String;
+import som.vmobjects.SBigInteger;
+import som.vmobjects.SDouble;
+import som.vmobjects.SInteger;
+import som.vmobjects.SObject;
+import som.vmobjects.SPrimitive;
+import som.vmobjects.SString;
 
 public class IntegerPrimitives extends Primitives {
 
@@ -40,7 +40,7 @@ public class IntegerPrimitives extends Primitives {
     super(universe);
   }
 
-  private Object  makeInt(long result) {
+  private SObject  makeInt(long result) {
     // Check with integer bounds and push:
     if (result > java.lang.Integer.MAX_VALUE
         || result < java.lang.Integer.MIN_VALUE) {
@@ -50,40 +50,40 @@ public class IntegerPrimitives extends Primitives {
     }
   }
 
-  private Object resendAsBigInteger(java.lang.String operator, Integer left,
-      BigInteger right, final PackedFrame frame) {
+  private SObject resendAsBigInteger(java.lang.String operator, SInteger left,
+      SBigInteger right, final PackedFrame frame) {
     // Construct left value as BigInteger:
-    BigInteger leftBigInteger = universe.
+    SBigInteger leftBigInteger = universe.
         newBigInteger((long) left.getEmbeddedInteger());
 
     // Resend message:
-    Object[] operands = new Object[1];
+    SObject[] operands = new SObject[1];
     operands[0] = right;
 
     return leftBigInteger.send(operator, operands, universe, frame);
   }
 
-  private Object resendAsDouble(java.lang.String operator, Integer left, Double right,
+  private SObject resendAsDouble(java.lang.String operator, SInteger left, SDouble right,
       final PackedFrame frame) {
-    Double leftDouble = universe.newDouble((double) left.getEmbeddedInteger());
-    Object[] operands = new Object[] {right};
+    SDouble leftDouble = universe.newDouble((double) left.getEmbeddedInteger());
+    SObject[] operands = new SObject[] {right};
     return leftDouble.send(operator, operands, universe, frame);
   }
 
   public void installPrimitives() {
-    installInstancePrimitive(new Primitive("asString", universe) {
+    installInstancePrimitive(new SPrimitive("asString", universe) {
 
-      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
-        Integer self = (Integer) selfO;
+      public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
+        SInteger self = (SInteger) selfO;
         return universe.newString(java.lang.Integer.toString(
             self.getEmbeddedInteger()));
       }
     });
 
-    installInstancePrimitive(new Primitive("sqrt", universe) {
+    installInstancePrimitive(new SPrimitive("sqrt", universe) {
 
-      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
-        Integer self = (Integer) selfO;
+      public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
+        SInteger self = (SInteger) selfO;
 
         double result = Math.sqrt((double) self.getEmbeddedInteger());
 
@@ -95,30 +95,30 @@ public class IntegerPrimitives extends Primitives {
       }
     });
 
-    installInstancePrimitive(new Primitive("atRandom", universe) {
+    installInstancePrimitive(new SPrimitive("atRandom", universe) {
 
-      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
-        Integer self = (Integer) selfO;
+      public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
+        SInteger self = (SInteger) selfO;
         return universe.newInteger(
             (int) ((double) self.getEmbeddedInteger() * Math.random()));
       }
     });
 
-    installInstancePrimitive(new Primitive("+", universe) {
+    installInstancePrimitive(new SPrimitive("+", universe) {
 
-      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
-        Object rightObj = args[0];
-        Integer left = (Integer) selfO;
+      public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
+        SObject rightObj = args[0];
+        SInteger left = (SInteger) selfO;
 
         // Check second parameter type:
-        if (rightObj instanceof BigInteger) {
+        if (rightObj instanceof SBigInteger) {
           // Second operand was BigInteger
-          return resendAsBigInteger("+", left, (BigInteger) rightObj, frame);
-        } else if (rightObj instanceof Double) {
-          return resendAsDouble("+", left, (Double) rightObj, frame);
+          return resendAsBigInteger("+", left, (SBigInteger) rightObj, frame);
+        } else if (rightObj instanceof SDouble) {
+          return resendAsDouble("+", left, (SDouble) rightObj, frame);
         } else {
           // Do operation:
-          Integer right = (Integer) rightObj;
+          SInteger right = (SInteger) rightObj;
 
           long result = ((long) left.getEmbeddedInteger())
               + right.getEmbeddedInteger();
@@ -127,21 +127,21 @@ public class IntegerPrimitives extends Primitives {
       }
     });
 
-    installInstancePrimitive(new Primitive("-", universe) {
+    installInstancePrimitive(new SPrimitive("-", universe) {
 
-      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
-        Object rightObj = args[0];
-        Integer left = (Integer) selfO;
+      public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
+        SObject rightObj = args[0];
+        SInteger left = (SInteger) selfO;
 
         // Check second parameter type:
-        if (rightObj instanceof BigInteger) {
+        if (rightObj instanceof SBigInteger) {
           // Second operand was BigInteger
-          return resendAsBigInteger("-", left, (BigInteger) rightObj, frame);
-        } else if (rightObj instanceof Double) {
-          return resendAsDouble("-", left, (Double) rightObj, frame);
+          return resendAsBigInteger("-", left, (SBigInteger) rightObj, frame);
+        } else if (rightObj instanceof SDouble) {
+          return resendAsDouble("-", left, (SDouble) rightObj, frame);
         } else {
           // Do operation:
-          Integer right = (Integer) rightObj;
+          SInteger right = (SInteger) rightObj;
 
           long result = ((long) left.getEmbeddedInteger())
               - right.getEmbeddedInteger();
@@ -150,21 +150,21 @@ public class IntegerPrimitives extends Primitives {
       }
     });
 
-    installInstancePrimitive(new Primitive("*", universe) {
+    installInstancePrimitive(new SPrimitive("*", universe) {
 
-      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
-        Object rightObj = args[0];
-        Integer left = (Integer) selfO;
+      public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
+        SObject rightObj = args[0];
+        SInteger left = (SInteger) selfO;
 
         // Check second parameter type:
-        if (rightObj instanceof BigInteger) {
+        if (rightObj instanceof SBigInteger) {
           // Second operand was BigInteger
-          return resendAsBigInteger("*", left, (BigInteger) rightObj, frame);
-        } else if (rightObj instanceof Double) {
-          return resendAsDouble("*", left, (Double) rightObj, frame);
+          return resendAsBigInteger("*", left, (SBigInteger) rightObj, frame);
+        } else if (rightObj instanceof SDouble) {
+          return resendAsDouble("*", left, (SDouble) rightObj, frame);
         } else {
           // Do operation:
-          Integer right = (Integer) rightObj;
+          SInteger right = (SInteger) rightObj;
 
           long result = ((long) left.getEmbeddedInteger())
               * right.getEmbeddedInteger();
@@ -173,27 +173,27 @@ public class IntegerPrimitives extends Primitives {
       }
     });
 
-    installInstancePrimitive(new Primitive("//", universe) {
+    installInstancePrimitive(new SPrimitive("//", universe) {
 
-      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
+      public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
         /*
          * Integer op1 = (Integer) frame.pop(); Integer op2 = (Integer)
          * frame.pop();
          * frame.push(universe.new_double((double)op2.get_embedded_integer () /
          * (double)op1.get_embedded_integer()));
          */
-        Object rightObj = args[0];
-        Integer left = (Integer) selfO;
+        SObject rightObj = args[0];
+        SInteger left = (SInteger) selfO;
 
         // Check second parameter type:
-        if (rightObj instanceof BigInteger) {
+        if (rightObj instanceof SBigInteger) {
           // Second operand was BigInteger
-          return resendAsBigInteger("/", left, (BigInteger) rightObj, frame);
-        } else if (rightObj instanceof Double) {
-          return resendAsDouble("/", left, (Double) rightObj, frame);
+          return resendAsBigInteger("/", left, (SBigInteger) rightObj, frame);
+        } else if (rightObj instanceof SDouble) {
+          return resendAsDouble("/", left, (SDouble) rightObj, frame);
         } else {
           // Do operation:
-          Integer right = (Integer) rightObj;
+          SInteger right = (SInteger) rightObj;
 
           double result = ((double) left.getEmbeddedInteger())
               / right.getEmbeddedInteger();
@@ -202,21 +202,21 @@ public class IntegerPrimitives extends Primitives {
       }
     });
 
-    installInstancePrimitive(new Primitive("/", universe) {
+    installInstancePrimitive(new SPrimitive("/", universe) {
 
-      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
-        Object rightObj = args[0];
-        Integer left = (Integer) selfO;
+      public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
+        SObject rightObj = args[0];
+        SInteger left = (SInteger) selfO;
 
         // Check second parameter type:
-        if (rightObj instanceof BigInteger) {
+        if (rightObj instanceof SBigInteger) {
           // Second operand was BigInteger
-          return resendAsBigInteger("/", left, (BigInteger) rightObj, frame);
-        } else if (rightObj instanceof Double) {
-          return resendAsDouble("/", left, (Double) rightObj, frame);
+          return resendAsBigInteger("/", left, (SBigInteger) rightObj, frame);
+        } else if (rightObj instanceof SDouble) {
+          return resendAsDouble("/", left, (SDouble) rightObj, frame);
         } else {
           // Do operation:
-          Integer right = (Integer) rightObj;
+          SInteger right = (SInteger) rightObj;
 
           long result = ((long) left.getEmbeddedInteger())
               / right.getEmbeddedInteger();
@@ -225,21 +225,21 @@ public class IntegerPrimitives extends Primitives {
       }
     });
 
-    installInstancePrimitive(new Primitive("%", universe) {
+    installInstancePrimitive(new SPrimitive("%", universe) {
 
-      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
-        Object rightObj = args[0];
-        Integer left = (Integer) selfO;
+      public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
+        SObject rightObj = args[0];
+        SInteger left = (SInteger) selfO;
 
         // Check second parameter type:
-        if (rightObj instanceof BigInteger) {
+        if (rightObj instanceof SBigInteger) {
           // Second operand was BigInteger
-          return resendAsBigInteger("%", left, (BigInteger) rightObj, frame);
-        } else if (rightObj instanceof Double) {
-          return resendAsDouble("%", left, (Double) rightObj, frame);
+          return resendAsBigInteger("%", left, (SBigInteger) rightObj, frame);
+        } else if (rightObj instanceof SDouble) {
+          return resendAsDouble("%", left, (SDouble) rightObj, frame);
         } else {
           // Do operation:
-          Integer right = (Integer) rightObj;
+          SInteger right = (SInteger) rightObj;
 
           long l = (long) left.getEmbeddedInteger();
           long r = (long) right.getEmbeddedInteger();
@@ -254,21 +254,21 @@ public class IntegerPrimitives extends Primitives {
       }
     });
 
-    installInstancePrimitive(new Primitive("&", universe) {
+    installInstancePrimitive(new SPrimitive("&", universe) {
 
-      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
-        Object rightObj = args[0];
-        Integer left = (Integer) selfO;
+      public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
+        SObject rightObj = args[0];
+        SInteger left = (SInteger) selfO;
 
         // Check second parameter type:
-        if (rightObj instanceof BigInteger) {
+        if (rightObj instanceof SBigInteger) {
           // Second operand was BigInteger
-          return resendAsBigInteger("&", left, (BigInteger) rightObj, frame);
-        } else if (rightObj instanceof Double) {
-          return resendAsDouble("&", left, (Double) rightObj, frame);
+          return resendAsBigInteger("&", left, (SBigInteger) rightObj, frame);
+        } else if (rightObj instanceof SDouble) {
+          return resendAsDouble("&", left, (SDouble) rightObj, frame);
         } else {
           // Do operation:
-          Integer right = (Integer) rightObj;
+          SInteger right = (SInteger) rightObj;
 
           long result = ((long) left.getEmbeddedInteger())
               & right.getEmbeddedInteger();
@@ -277,28 +277,28 @@ public class IntegerPrimitives extends Primitives {
       }
     });
 
-    installInstancePrimitive(new Primitive("=", universe) {
+    installInstancePrimitive(new SPrimitive("=", universe) {
 
-      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
-        Object rightObj = args[0];
-        Integer left = (Integer) selfO;
+      public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
+        SObject rightObj = args[0];
+        SInteger left = (SInteger) selfO;
 
         // Check second parameter type:
-        if (rightObj instanceof BigInteger) {
+        if (rightObj instanceof SBigInteger) {
           // Second operand was BigInteger:
-          return resendAsBigInteger("=", left, (BigInteger) rightObj, frame);
-        } else if (rightObj instanceof Integer) {
+          return resendAsBigInteger("=", left, (SBigInteger) rightObj, frame);
+        } else if (rightObj instanceof SInteger) {
           // Second operand was Integer:
-          Integer right = (Integer) rightObj;
+          SInteger right = (SInteger) rightObj;
 
           if (left.getEmbeddedInteger() == right.getEmbeddedInteger()) {
             return universe.trueObject;
           } else {
             return universe.falseObject;
           }
-        } else if (rightObj instanceof Double) {
+        } else if (rightObj instanceof SDouble) {
           // Second operand was Integer:
-          Double right = (Double) rightObj;
+          SDouble right = (SDouble) rightObj;
 
           if (left.getEmbeddedInteger() == right.getEmbeddedDouble()) {
             return universe.trueObject;
@@ -311,21 +311,21 @@ public class IntegerPrimitives extends Primitives {
       }
     });
 
-    installInstancePrimitive(new Primitive("<", universe) {
+    installInstancePrimitive(new SPrimitive("<", universe) {
 
-      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
-        Object rightObj = args[0];
-        Integer left = (Integer) selfO;
+      public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
+        SObject rightObj = args[0];
+        SInteger left = (SInteger) selfO;
 
         // Check second parameter type:
-        if (rightObj instanceof BigInteger) {
+        if (rightObj instanceof SBigInteger) {
           // Second operand was BigInteger
-          return resendAsBigInteger("<", left, (BigInteger) rightObj, frame);
-        } else if (rightObj instanceof Double) {
-          return resendAsDouble("<", left, (Double) rightObj, frame);
+          return resendAsBigInteger("<", left, (SBigInteger) rightObj, frame);
+        } else if (rightObj instanceof SDouble) {
+          return resendAsDouble("<", left, (SDouble) rightObj, frame);
         } else {
           // Do operation:
-          Integer right = (Integer) rightObj;
+          SInteger right = (SInteger) rightObj;
 
           if (left.getEmbeddedInteger() < right.getEmbeddedInteger()) {
             return universe.trueObject;
@@ -336,10 +336,10 @@ public class IntegerPrimitives extends Primitives {
       }
     });
 
-    installClassPrimitive(new Primitive("fromString:", universe) {
+    installClassPrimitive(new SPrimitive("fromString:", universe) {
 
-      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
-        String param = (String) args[0];
+      public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
+        SString param = (SString) args[0];
 
         long result = java.lang.Long.parseLong(param.getEmbeddedString());
 

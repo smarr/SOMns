@@ -26,9 +26,9 @@
 package som.primitives;
 
 import som.vm.Universe;
-import som.vmobjects.Object;
-import som.vmobjects.Primitive;
-import som.vmobjects.Symbol;
+import som.vmobjects.SObject;
+import som.vmobjects.SPrimitive;
+import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.frame.PackedFrame;
 
@@ -39,10 +39,10 @@ public class SymbolPrimitives extends Primitives {
   }
 
   public void installPrimitives() {
-    installInstancePrimitive(new Primitive("asString", universe) {
+    installInstancePrimitive(new SPrimitive("asString", universe) {
 
-      public Object invoke(final PackedFrame frame, final Object selfO, final Object[] args) {
-        Symbol self = (Symbol) selfO;
+      public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
+        SSymbol self = (SSymbol) selfO;
         return universe.newString(self.getString());
       }
     });

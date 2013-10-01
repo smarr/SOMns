@@ -24,9 +24,9 @@
 
 package som.vmobjects;
 
-public class Symbol extends Object {
+public class SSymbol extends SObject {
 
-  public Symbol(final Object nilObject, java.lang.String value) {
+  public SSymbol(final SObject nilObject, java.lang.String value) {
     super(nilObject);
     setString(value);
   }

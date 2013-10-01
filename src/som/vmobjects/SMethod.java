@@ -33,9 +33,9 @@ import com.oracle.truffle.api.TruffleRuntime;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.PackedFrame;
 
-public class Method extends Object implements Invokable {
+public class SMethod extends SObject implements SInvokable {
 
-  public Method(final Object nilObject,
+  public SMethod(final SObject nilObject,
       final som.interpreter.Method truffleInvokable,
       final FrameDescriptor frameDescriptor) {
     super(nilObject);
@@ -59,24 +59,24 @@ public class Method extends Object implements Invokable {
     return false;
   }
 
-  public Symbol getSignature() {
+  public SSymbol getSignature() {
     // Get the signature of this method by reading the field with signature
     // index
-    return (Symbol) getField(signatureIndex);
+    return (SSymbol) getField(signatureIndex);
   }
 
-  public void setSignature(Symbol value) {
+  public void setSignature(SSymbol value) {
     // Set the signature of this method by writing to the field with
     // signature index
     setField(signatureIndex, value);
   }
 
-  public Class getHolder() {
+  public SClass getHolder() {
     // Get the holder of this method by reading the field with holder index
-    return (Class) getField(holderIndex);
+    return (SClass) getField(holderIndex);
   }
 
-  public void setHolder(Class value) {
+  public void setHolder(SClass value) {
     // Set the holder of this method by writing to the field with holder index
     setField(holderIndex, value);
   }
@@ -99,22 +99,22 @@ public class Method extends Object implements Invokable {
     return invocationCount;
   }
 
-  public Object invokeRoot(final Object self, final Object[] args) {
+  public SObject invokeRoot(final SObject self, final SObject[] args) {
     // Increase the invocation counter
     invocationCount++;
 
-    Object result = (Object) callTarget.call(new Arguments(self, args));
+    SObject result = (SObject) callTarget.call(new Arguments(self, args));
 
     return result;
   }
 
-  public Object invoke(final PackedFrame caller,
-      final Object self,
-      final Object[] args) {
+  public SObject invoke(final PackedFrame caller,
+      final SObject self,
+      final SObject[] args) {
     // Increase the invocation counter
     invocationCount++;
 
-    Object result = (Object) callTarget.call(caller, new Arguments(self, args));
+    SObject result = (SObject) callTarget.call(caller, new Arguments(self, args));
 
     return result;
   }
@@ -122,7 +122,7 @@ public class Method extends Object implements Invokable {
   @Override
   public java.lang.String toString() {
     // TODO: fixme: remove special case if possible, I think it indicates a bug
-    if (!(getField(holderIndex) instanceof Class)) {
+    if (!(getField(holderIndex) instanceof SClass)) {
       return "Method(nil>>" + getSignature().toString() + ")";
     }
 

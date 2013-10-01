@@ -31,7 +31,7 @@ import com.oracle.truffle.api.frame.PackedFrame;
 import som.interpreter.Method;
 import som.vm.Universe;
 
-public abstract class Primitive extends Object implements Invokable {
+public abstract class SPrimitive extends SObject implements SInvokable {
 
   public boolean isPrimitive() {
     return true;
@@ -47,7 +47,7 @@ public abstract class Primitive extends Object implements Invokable {
     return null;
   }
 
-  public Primitive(java.lang.String signatureString, final Universe universe) {
+  public SPrimitive(java.lang.String signatureString, final Universe universe) {
     super(universe.nilObject);
 
     // Set the class of this primitive to be the universal primitive class
@@ -57,22 +57,22 @@ public abstract class Primitive extends Object implements Invokable {
     setSignature(universe.symbolFor(signatureString));
   }
 
-  public Symbol getSignature() {
+  public SSymbol getSignature() {
     // Get the signature by reading the field with signature index
-    return (Symbol) getField(signatureIndex);
+    return (SSymbol) getField(signatureIndex);
   }
 
-  public void setSignature(Symbol value) {
+  public void setSignature(SSymbol value) {
     // Set the signature by writing to the field with signature index
     setField(signatureIndex, value);
   }
 
-  public Class getHolder() {
+  public SClass getHolder() {
     // Get the holder of this method by reading the field with holder index
-    return (Class) getField(holderIndex);
+    return (SClass) getField(holderIndex);
   }
 
-  public void setHolder(Class value) {
+  public void setHolder(SClass value) {
     // Set the holder of this method by writing to the field with holder
     // index
     setField(holderIndex, value);
@@ -88,14 +88,14 @@ public abstract class Primitive extends Object implements Invokable {
     return false;
   }
 
-  public static Primitive getEmptyPrimitive(java.lang.String signatureString,
+  public static SPrimitive getEmptyPrimitive(java.lang.String signatureString,
       final Universe universe) {
     // Return an empty primitive with the given signature
-    return (new Primitive(signatureString, universe) {
+    return (new SPrimitive(signatureString, universe) {
 
-      public Object invoke(final PackedFrame frame,
-          final Object self,
-          final Object[] args) {
+      public SObject invoke(final PackedFrame frame,
+          final SObject self,
+          final SObject[] args) {
         // Write a warning to the screen
         Universe.println("Warning: undefined primitive "
             + this.getSignature().getString() + " called");

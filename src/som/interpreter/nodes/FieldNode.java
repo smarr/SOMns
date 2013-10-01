@@ -22,7 +22,7 @@
 package som.interpreter.nodes;
 
 import som.compiler.MethodGenerationContext;
-import som.vmobjects.Object;
+import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.frame.FrameSlotTypeException;
 import com.oracle.truffle.api.frame.MaterializedFrame;
@@ -38,9 +38,9 @@ public abstract class FieldNode extends ContextualNode {
     this.fieldIndex = fieldIndex;
   }
 
-  protected Object getSelfFromMaterialized(final MaterializedFrame ctx) {
+  protected SObject getSelfFromMaterialized(final MaterializedFrame ctx) {
     try {
-      return (Object) ctx.getObject(MethodGenerationContext.getStandardSelfSlot());
+      return (SObject) ctx.getObject(MethodGenerationContext.getStandardSelfSlot());
     } catch (FrameSlotTypeException e) {
       throw new RuntimeException("uninitialized selfSlot, which should be pretty much imposible???");
     }
@@ -53,9 +53,9 @@ public abstract class FieldNode extends ContextualNode {
     }
 
     @Override
-    public Object executeGeneric(VirtualFrame frame) {
+    public SObject executeGeneric(VirtualFrame frame) {
       MaterializedFrame ctx = determineContext(frame.materialize());
-      Object self = getSelfFromMaterialized(ctx);
+      SObject self = getSelfFromMaterialized(ctx);
       return self.getField(fieldIndex);
     }
 
@@ -77,10 +77,10 @@ public abstract class FieldNode extends ContextualNode {
     }
 
     @Override
-    public Object executeGeneric(final VirtualFrame frame) {
+    public SObject executeGeneric(final VirtualFrame frame) {
       MaterializedFrame ctx = determineContext(frame.materialize());
-      Object value = exp.executeGeneric(frame);
-      Object self  = getSelfFromMaterialized(ctx);
+      SObject value = exp.executeGeneric(frame);
+      SObject self  = getSelfFromMaterialized(ctx);
 
       self.setField(fieldIndex, value);
       return value;

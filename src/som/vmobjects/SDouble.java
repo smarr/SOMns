@@ -24,18 +24,18 @@
 
 package som.vmobjects;
 
-public class BigInteger extends Object {
+public class SDouble extends SObject {
 
-  public BigInteger(final Object nilObject, java.math.BigInteger value) {
+  public SDouble(final SObject nilObject, double value) {
     super(nilObject);
-    embeddedBiginteger = value;
+    embeddedDouble = value;
   }
 
-  public java.math.BigInteger getEmbeddedBiginteger() {
-    // Get the embedded big integer
-    return embeddedBiginteger;
+  public double getEmbeddedDouble() {
+    // Get the embedded double
+    return embeddedDouble;
   }
 
-  // Private variable holding the embedded big integer
-  private final java.math.BigInteger embeddedBiginteger;
+  // Private variable holding the embedded double
+  private final double embeddedDouble;
 }
