@@ -73,7 +73,7 @@ import som.interpreter.nodes.SequenceNode;
 import som.interpreter.nodes.VariableNode.SelfReadNode;
 import som.interpreter.nodes.VariableNode.SuperReadNode;
 import som.interpreter.nodes.VariableNode.VariableReadNode;
-import som.interpreter.nodes.VariableNode.VariableWriteNode;
+import som.interpreter.nodes.VariableWriteNode;
 import som.interpreter.nodes.literals.BigIntegerLiteralNodeFactory;
 import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.literals.IntegerLiteralNodeFactory;

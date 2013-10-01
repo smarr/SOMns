@@ -80,29 +80,4 @@ public abstract class VariableNode extends ContextualNode {
     public SuperReadNode(final FrameSlot slot, final int contextLevel) {
       super(slot, contextLevel); }
   }
-
-  public static class VariableWriteNode extends VariableNode {
-    @Child private ExpressionNode exp;
-
-    public VariableWriteNode(final FrameSlot slot, final int contextLevel,
-        final ExpressionNode exp) {
-      super(slot, contextLevel);
-      this.exp = adoptChild(exp);
-    }
-
-    @Override
-    public Object executeGeneric(final VirtualFrame frame) {
-      Object result = exp.executeGeneric(frame);
-      MaterializedFrame ctx = determineContext(frame.materialize());
-
-      ctx.setObject(slot, result);
-
-      return result;
-    }
-
-    @Override
-    public ExpressionNode cloneForInlining() {
-      return new VariableWriteNode(slot, contextLevel, exp.cloneForInlining());
-    }
-  }
 }
