@@ -20,7 +20,7 @@ public class AbstractInlinedMessageNode extends MessageNode {
   private   final Class      rcvrClass;
   protected final Invokable  invokable;
 
-  @Child private final ExpressionNode methodBody;
+  @Child private ExpressionNode methodBody;
 
   private final FrameFactory frameFactory;
   private final Method inlinedMethod;

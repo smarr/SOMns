@@ -43,7 +43,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 //  @NodeChild(value = "arguments", type = ExpressionNode[].class)})
 public class MessageNode extends ExpressionNode {
 
-  @Child    protected final ExpressionNode   receiver;
+  @Child    protected       ExpressionNode   receiver;
   @Children protected final ExpressionNode[] arguments;
 
   protected final Symbol   selector;

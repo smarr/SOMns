@@ -67,7 +67,7 @@ public abstract class FieldNode extends ContextualNode {
 
   public static class FieldWriteNode extends FieldNode {
 
-    @Child protected final ExpressionNode exp;
+    @Child private ExpressionNode exp;
 
     public FieldWriteNode(final int fieldIndex,
         final int contextLevel,

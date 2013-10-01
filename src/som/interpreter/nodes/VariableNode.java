@@ -82,7 +82,7 @@ public abstract class VariableNode extends ContextualNode {
   }
 
   public static class VariableWriteNode extends VariableNode {
-    @Child protected final ExpressionNode exp;
+    @Child private ExpressionNode exp;
 
     public VariableWriteNode(final FrameSlot slot, final int contextLevel,
         final ExpressionNode exp) {

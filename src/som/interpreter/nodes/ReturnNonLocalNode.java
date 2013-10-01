@@ -34,7 +34,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 
 public class ReturnNonLocalNode extends ContextualNode {
 
-  @Child protected final ExpressionNode expression;
+  @Child private ExpressionNode expression;
   private final Universe universe;
 
   public ReturnNonLocalNode(final ExpressionNode expression,
