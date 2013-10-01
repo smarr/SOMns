@@ -37,7 +37,7 @@ import com.oracle.truffle.api.nodes.RootNode;
 
 public class Method extends RootNode {
 
-  @Child private final ExpressionNode expressionOrSequence;
+  @Child private ExpressionNode expressionOrSequence;
 
   private final FrameSlot   selfSlot;
   @CompilationFinal private final FrameSlot[]  argumentSlots;

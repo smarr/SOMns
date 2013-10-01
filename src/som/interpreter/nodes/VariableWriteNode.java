@@ -9,11 +9,11 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 //@NodeChild(value = "exp", type = ExpressionNode.class)
 //abstract
 public class VariableWriteNode extends VariableNode {
-  @Child private final ExpressionNode exp;
+  @Child private ExpressionNode exp;
 
   public VariableWriteNode(final FrameSlot slot, final int contextLevel, final ExpressionNode exp) {
     super(slot, contextLevel);
-    this.exp = exp;
+    this.exp = adoptChild(exp);
   }
 
   public VariableWriteNode(final VariableWriteNode node) {
