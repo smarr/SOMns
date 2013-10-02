@@ -36,6 +36,8 @@ import som.vm.Universe;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.CompilerDirectives.SlowPath;
+
 public class SourcecodeCompiler {
 
   private Parser parser;
@@ -66,18 +68,21 @@ public class SourcecodeCompiler {
     }
   }
 
+  @SlowPath
   public static SClass compileClass(final String path, final String file,
       final SClass systemClass, final Universe universe)
       throws IOException {
     return new SourcecodeCompiler().compile(path, file, systemClass, universe);
   }
 
+  @SlowPath
   public static SClass compileClass(final String stmt,
       final SClass systemClass, final Universe universe) {
     return new SourcecodeCompiler().compileClassString(stmt, systemClass,
         universe);
   }
 
+  @SlowPath
   private SClass compile(final String path, final String file,
       final SClass systemClass, final Universe universe)
       throws IOException {
