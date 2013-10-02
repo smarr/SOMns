@@ -98,14 +98,14 @@ public class Method extends RootNode {
   @ExplodeLoop
   public static FrameOnStackMarker initializeFrame(final Method method,
       final VirtualFrame frame) {
-    frame.setObject(method.selfSlot, frame.getArguments(Arguments.class).self);
+    frame.setObject(method.selfSlot, frame.getArguments(Arguments.class).getSelf());
 
     final FrameOnStackMarker marker = new FrameOnStackMarker();
     frame.setObject(method.nonLocalReturnMarker, marker);
 
-    Object[] args = frame.getArguments(Arguments.class).arguments;
+    Arguments args = frame.getArguments(Arguments.class);
     for (int i = 0; i < method.argumentSlots.length; i++) {
-      frame.setObject(method.argumentSlots[i], args[i]);
+      frame.setObject(method.argumentSlots[i], args.getArgument(i));
     }
 
     for (int i = 0; i < method.temporarySlots.length; i++) {

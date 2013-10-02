@@ -25,11 +25,19 @@ import som.vmobjects.SObject;
 
 public final class Arguments extends com.oracle.truffle.api.Arguments {
 
-  public final SObject   self;
-  public final SObject[] arguments;
+  private final SObject   self;
+  private final SObject[] arguments;
 
   public Arguments(final SObject self, final SObject[] arguments) {
     this.self      = self;
     this.arguments = arguments;
+  }
+
+  public SObject getSelf() {
+    return self;
+  }
+
+  public SObject getArgument(final int i) {
+    return arguments[i];
   }
 }
