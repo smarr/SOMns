@@ -35,6 +35,7 @@ import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
 
 // TODO: I need to add a check that the invokable has not changed
 
@@ -125,7 +126,7 @@ public class MessageNode extends ExpressionNode {
     }
   }
 
-  public final MessageNode replace(MessageNode newNode, String reason) {
+  public final MessageNode replace(final MessageNode newNode, final String reason) {
     // if we have a recursive method call in the receiver expression, we
     // might not be able to do the specialization after the receiver has
     // been evaluated, because the node already has been specialized, but
@@ -138,8 +139,8 @@ public class MessageNode extends ExpressionNode {
   }
 
 
-  private SObject specializeAndExecute(final VirtualFrame frame, SObject rcvr,
-      SClass rcvrClass, SInvokable invokable, SObject[] args) {
+  private SObject specializeAndExecute(final VirtualFrame frame, final SObject rcvr,
+      final SClass rcvrClass, final SInvokable invokable, final SObject[] args) {
     CompilerDirectives.transferToInterpreter();
 
     // first check whether it is a #ifTrue:, #ifFalse, or #ifTrue:ifFalse:
@@ -190,7 +191,7 @@ public class MessageNode extends ExpressionNode {
 
     // if it is not one of the special message sends, it is optimistically
     // converted into a monomorphic send site, but only if we haven't
-    // specialized it already    
+    // specialized it already
     if (specializedVersion == null) {
       MonomorpicMessageNode mono = new MonomorpicMessageNode(receiver,
           arguments, selector, universe, rcvrClass, invokable);

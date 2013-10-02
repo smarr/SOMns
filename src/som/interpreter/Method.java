@@ -29,7 +29,6 @@ import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlot;
-import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.RootNode;
@@ -65,7 +64,7 @@ public class Method extends RootNode {
 
   @Override
   public Object execute(final VirtualFrame frame) {
-    final FrameOnStackMarker marker = initializeFrame(this, frame.materialize());
+    final FrameOnStackMarker marker = initializeFrame(this, frame);
     return messageSendExecution(marker, frame, expressionOrSequence);
   }
 
@@ -98,7 +97,7 @@ public class Method extends RootNode {
 
   @ExplodeLoop
   public static FrameOnStackMarker initializeFrame(final Method method,
-      final MaterializedFrame frame) {
+      final VirtualFrame frame) {
     frame.setObject(method.selfSlot, frame.getArguments(Arguments.class).self);
 
     final FrameOnStackMarker marker = new FrameOnStackMarker();

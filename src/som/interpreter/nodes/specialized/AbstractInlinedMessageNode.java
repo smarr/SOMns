@@ -65,8 +65,7 @@ public class AbstractInlinedMessageNode extends MessageNode {
         inlinedMethod.getFrameDescriptor(), caller.pack(),
         new Arguments(rcvr, args));
 
-    final FrameOnStackMarker marker = Method.initializeFrame(inlinedMethod,
-        frame.materialize());
+    final FrameOnStackMarker marker = Method.initializeFrame(inlinedMethod, frame);
 
     return Method.messageSendExecution(marker, frame, methodBody);
   }
