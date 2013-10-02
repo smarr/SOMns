@@ -70,6 +70,7 @@ public class MessageNode extends ExpressionNode {
     return new MessageNode(receiver, arguments, selector, universe);
   }
 
+  @ExplodeLoop
   protected SObject[] determineArguments(final VirtualFrame frame) {
     int numArgs = (arguments == null) ? 0 : arguments.length;
 
