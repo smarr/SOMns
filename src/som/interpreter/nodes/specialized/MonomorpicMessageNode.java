@@ -93,7 +93,7 @@ public class MonomorpicMessageNode extends MessageNode
   }
 
   @Override
-  public boolean inline(FrameFactory factory) {
+  public boolean inline(final FrameFactory factory) {
     Method method = invokable.getTruffleInvokable();
     if (method == null) {
       return false;
