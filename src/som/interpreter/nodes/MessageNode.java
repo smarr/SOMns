@@ -27,10 +27,12 @@ import som.interpreter.nodes.specialized.IfTrueAndIfFalseMessageNode;
 import som.interpreter.nodes.specialized.IfTrueAndIfFalseWithExpMessageNode;
 import som.interpreter.nodes.specialized.IfTrueIfFalseMessageNode;
 import som.interpreter.nodes.specialized.MonomorpicMessageNode;
+import som.interpreter.nodes.specialized.WhileMessageNode;
 import som.vm.Universe;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
+import som.vmobjects.SMethod;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
@@ -222,6 +224,30 @@ public class MessageNode extends ExpressionNode {
       } else if (arguments.length == 2 &&
           selector.getString().equals("ifTrue:ifFalse:")) {
         return createIfTrueIfFalseNodeEvaluateAndReturn(frame, rcvr, args);
+      }
+    }
+
+    // both blocks don't take arguments
+    if (arguments != null && arguments.length == 1 &&
+        rcvrClass == universe.getBlockClass(1)) {
+      boolean whileTrue = selector.getString().equals("whileTrue:");
+      if (whileTrue || selector.getString().equals("whileFalse:")) {
+        WhileMessageNode node;
+
+        if (specializedVersion == null) {
+          SBlock  conditionBlock = (SBlock) rcvr;
+          SMethod loopBodyMethod = null;
+          if (args[0] instanceof SBlock) {
+            loopBodyMethod = ((SBlock) args[0]).getMethod();
+          }
+          node = new WhileMessageNode(receiver, arguments, selector, universe,
+              conditionBlock.getMethod(), loopBodyMethod, whileTrue);
+          replace(node);
+        } else {
+          node = (WhileMessageNode) specializedVersion;
+        }
+
+        return node.evaluateBody(frame, node.evalConditionIfNecessary(frame), args[0]);
       }
     }
 
