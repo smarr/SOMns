@@ -3,85 +3,74 @@ package som.interpreter.nodes.specialized;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageNode;
 import som.vm.Universe;
-import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
-import som.vmobjects.SMethod;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
-public class IfTrueAndIfFalseMessageNode extends MessageNode {
-  private final SClass falseClass;
-  private final SClass trueClass;
-  private final SMethod blockMethod;
+/**
+ * This is a special case of the #ifTrue: or #ifFalse: message that is used
+ * when the argument to the message was not a block but a normal expression.
+ *
+ * @author smarr
+ */
+public class IfTrueAndIfFalseWithExpMessageNode extends MessageNode {
+  private final SClass  falseClass;
+  private final SClass  trueClass;
   private final boolean executeIf;
-  private final SObject[] noArgs;
 
-  public IfTrueAndIfFalseMessageNode(final ExpressionNode receiver,
+  public IfTrueAndIfFalseWithExpMessageNode(final ExpressionNode receiver,
       final ExpressionNode[] arguments, final SSymbol selector,
-      final Universe universe, final SBlock block, final boolean executeIf) {
-    this(receiver, arguments, selector, universe, block.getMethod(), executeIf);
-  }
-
-  public IfTrueAndIfFalseMessageNode(final ExpressionNode receiver,
-      final ExpressionNode[] arguments, final SSymbol selector,
-      final Universe universe, final SMethod blockMethod, final boolean executeIf) {
+      final Universe universe, final boolean executeIf) {
     super(receiver, arguments, selector, universe);
+    assert arguments != null && arguments.length == 1;
     falseClass     = universe.falseObject.getSOMClass();
     trueClass      = universe.trueObject.getSOMClass();
-    this.blockMethod    = blockMethod;
     this.executeIf = executeIf;
-    noArgs = new SObject[0];
   }
 
   @Override
   public SObject executeGeneric(final VirtualFrame frame) {
-    // determine receiver, determine arguments is not necessary, because
-    // the node is specialized only when the argument is a literal node
-    SObject rcvr = receiver.executeGeneric(frame);
+    SObject rcvr   = receiver.executeGeneric(frame);
+    SObject result = arguments[0].executeGeneric(frame);
 
-    return evaluateBody(frame, rcvr);
+    return evaluateBody(frame, rcvr, result);
   }
 
-  public SObject evaluateBody(final VirtualFrame frame, final SObject rcvr) {
+  public SObject evaluateBody(final VirtualFrame frame, final SObject rcvr,
+      final SObject result) {
     SClass currentRcvrClass = classOfReceiver(rcvr, receiver);
 
     if ((executeIf  && (currentRcvrClass == trueClass)) ||
         (!executeIf && (currentRcvrClass == falseClass))) {
-      SBlock b = universe.newBlock(blockMethod, frame.materialize(), 1);
-      // this is the case True>>#ifTrue: or False>>#ifFalse
-      return blockMethod.invoke(frame.pack(), b, noArgs);
+      return result;
     } else if ((!executeIf && currentRcvrClass == trueClass) ||
                (executeIf  && currentRcvrClass == falseClass)) {
       // this is the case that False>>#ifTrue: or True>>#ifFalse
       return universe.nilObject;
     } else {
-      return fallbackForNonBoolReceiver(frame, rcvr, currentRcvrClass);
+      return fallbackForNonBoolReceiver(frame, rcvr, currentRcvrClass, result);
     }
   }
 
   public SObject fallbackForNonBoolReceiver(final VirtualFrame frame,
-      final SObject rcvr, final SClass currentRcvrClass) {
+      final SObject rcvr, final SClass currentRcvrClass, final SObject result) {
     CompilerDirectives.transferToInterpreter();
 
     // So, it might just be a polymorphic send site.
     PolymorpicMessageNode poly = new PolymorpicMessageNode(receiver,
         arguments, selector, universe, currentRcvrClass);
-    SBlock b = universe.newBlock(blockMethod, frame.materialize(), 1);
     replace(poly, "Receiver wasn't a boolean. So, we need to do the actual send.");
-    return doFullSend(frame, rcvr, new SObject[] {b}, currentRcvrClass);
+    return doFullSend(frame, rcvr, new SObject[] {result}, currentRcvrClass);
   }
-
 
   /**
    * @return uninitialized node to allow for specialization
    */
   @Override
   public ExpressionNode cloneForInlining() {
-    return new IfTrueAndIfFalseMessageNode(receiver, arguments, selector,
-        universe, blockMethod, executeIf);
+    return new IfTrueAndIfFalseWithExpMessageNode(receiver, arguments, selector, universe, executeIf);
   }
-
 }

@@ -24,6 +24,7 @@ package som.interpreter.nodes;
 import som.interpreter.nodes.VariableNode.SuperReadNode;
 import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.specialized.IfTrueAndIfFalseMessageNode;
+import som.interpreter.nodes.specialized.IfTrueAndIfFalseWithExpMessageNode;
 import som.interpreter.nodes.specialized.IfTrueIfFalseMessageNode;
 import som.interpreter.nodes.specialized.MonomorpicMessageNode;
 import som.vm.Universe;
@@ -139,6 +140,68 @@ public class MessageNode extends ExpressionNode {
     return super.replace(newNode, reason);
   }
 
+  private SObject createIfTrueAndIfFalseNodeEvaluateAndReturn(
+      final VirtualFrame frame, final SObject rcvr,
+      final ExpressionNode argumentExp, final SObject argument,
+      final boolean isIfTrue) {
+    if (argumentExp instanceof BlockNode) {
+      // it is #ifTrue: or #ifFalse: with a literal block
+      IfTrueAndIfFalseMessageNode node;
+
+      // during evaluating receiver and arguments, we might have already
+      // specialized this node
+      if (specializedVersion == null) {
+        SBlock block = (SBlock) argument;
+        node = new
+            IfTrueAndIfFalseMessageNode(receiver, arguments, selector,
+                universe, block, isIfTrue);
+
+        replace(node, "Be optimisitc, and assume it's always a simple #ifTrue: or #ifFalse: with a block argument");
+      } else {
+        node = (IfTrueAndIfFalseMessageNode) specializedVersion;
+      }
+
+      return node.evaluateBody(frame, rcvr);
+    } else {
+      IfTrueAndIfFalseWithExpMessageNode node;
+      if (specializedVersion == null) {
+        node = new IfTrueAndIfFalseWithExpMessageNode(receiver, arguments, selector, universe, isIfTrue);
+        replace(node, "Be optimisitc, and assume it's always a simple #ifTrue: or #ifFalse: with an expression argument");
+      } else {
+        node = (IfTrueAndIfFalseWithExpMessageNode) specializedVersion;
+      }
+
+      return node.evaluateBody(frame, rcvr, argument);
+    }
+  }
+
+  private SObject createIfTrueIfFalseNodeEvaluateAndReturn(
+      final VirtualFrame frame, final SObject rcvr, final SObject[] args) {
+    SBlock trueBlock  = null;
+    SBlock falseBlock = null;
+
+    if (arguments[0] instanceof BlockNode) {
+      trueBlock  = (SBlock) args[0];
+    }
+    if (arguments[1] instanceof BlockNode) {
+      falseBlock = (SBlock) args[1];
+    }
+
+    // it is #ifTrue:ifFalse: with two literal block arguments
+    IfTrueIfFalseMessageNode node;
+
+    if (specializedVersion == null) {
+      node = new IfTrueIfFalseMessageNode(receiver,
+          arguments, selector, universe, trueBlock, falseBlock);
+
+      replace(node, "Be optimisitc, and assume it's always a simple #ifTrue:#ifFalse:");
+    } else {
+      node = (IfTrueIfFalseMessageNode) specializedVersion;
+    }
+
+    return node.evaluateBody(frame, rcvr, args[0], args[1]);
+  }
+
 
   private SObject specializeAndExecute(final VirtualFrame frame, final SObject rcvr,
       final SClass rcvrClass, final SInvokable invokable, final SObject[] args) {
@@ -147,46 +210,18 @@ public class MessageNode extends ExpressionNode {
     // first check whether it is a #ifTrue:, #ifFalse, or #ifTrue:ifFalse:
     if ((rcvrClass == universe.trueObject.getSOMClass() ||
          rcvrClass == universe.falseObject.getSOMClass()) &&
-         arguments != null &&
-         arguments[0] instanceof BlockNode) {
-      boolean isIfTrue = selector.getString().equals("ifTrue:");
-
-      if (isIfTrue || selector.getString().equals("ifFalse:")) {
-        // it is #ifTrue: or #ifFalse: with a literal block
-        IfTrueAndIfFalseMessageNode node;
-
-        // during evaluating receiver and arguments, we might have already
-        // specialized this node
-        if (specializedVersion == null) {
-          SBlock block = (SBlock) args[0];
-          node = new
-              IfTrueAndIfFalseMessageNode(receiver, arguments, selector,
-                  universe, block, isIfTrue);
-
-          replace(node, "Be optimisitc, and assume it's always a simple #ifTrue: or #ifFalse:");
+         arguments != null) {
+      if (arguments.length == 1) {
+        boolean isIfTrue = selector.getString().equals("ifTrue:");
+        if (isIfTrue || selector.getString().equals("ifFalse:")) {
+          return createIfTrueAndIfFalseNodeEvaluateAndReturn(frame, rcvr, arguments[0],
+              args[0], isIfTrue);
         } else {
-          node = (IfTrueAndIfFalseMessageNode) specializedVersion;
+          // else we fall through to the monomorphic case
         }
-
-        return node.evaluateBody(frame, rcvr);
-      } else if (selector.getString().equals("ifTrue:ifFalse:") &&
-          arguments.length == 2 &&
-          arguments[1] instanceof BlockNode) {
-        // it is #ifTrue:ifFalse: with two literal block arguments
-        SBlock trueBlock  = (SBlock) args[0];
-        SBlock falseBlock = (SBlock) args[1];
-        IfTrueIfFalseMessageNode node;
-
-        if (specializedVersion == null) {
-          node = new IfTrueIfFalseMessageNode(receiver,
-              arguments, selector, universe, trueBlock, falseBlock);
-
-          replace(node, "Be optimisitc, and assume it's always a simple #ifTrue:#ifFalse:");
-        } else {
-          node = (IfTrueIfFalseMessageNode) specializedVersion;
-        }
-
-        return node.evaluateBody(frame, rcvr);
+      } else if (arguments.length == 2 &&
+          selector.getString().equals("ifTrue:ifFalse:")) {
+        return createIfTrueIfFalseNodeEvaluateAndReturn(frame, rcvr, args);
       }
     }
 
