@@ -42,7 +42,19 @@ Benchmark = (
         self exec.
     )
 
-    run = ( ^ self run: 1 with: 0 printAll: false )
+    run = ( 
+        | harness |
+        harness := All new.
+        harness initialize.
+        harness benchmarkClasses: (Vector with: self class).
+        harness printAll: false.
+        harness maxRuntime: 3. "seconds"
+        harness numIterations: 100.
+        harness warmUp: 10.
+
+        harness runBenchmarks.
+        harness printTotal.
+    )
     
     warmup = (
         numWarmUpIterations > 0 ifFalse: [

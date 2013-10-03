@@ -41,10 +41,13 @@ All = BenchmarkHarness (
       '  number-of-iterations - the number of time each benchmark is executed, default: 1' println.
     )
     
+    initialize = (
+        super initialize.
+        summedAverage := 0.
+    )
+    
     exec: iterations = (
         | harness |
-        
-        summedAverage := 0.
         
         'Start execution of all benchmarks. Iterations: ' print.
         iterations println.
