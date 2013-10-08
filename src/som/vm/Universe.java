@@ -347,8 +347,13 @@ public class Universe {
     blockClass = loadClass(symbolFor("Block"));
 
     // Setup the true and false objects
-    trueObject  = newInstance(loadClass(symbolFor("True")));
-    falseObject = newInstance(loadClass(symbolFor("False")));
+    SSymbol trueClassName = symbolFor("True");
+    SClass  trueClass     = loadClass(trueClassName);
+    trueObject            = newInstance(trueClass);
+
+    SSymbol falseClassName = symbolFor("False");
+    SClass  falseClass     = loadClass(falseClassName);
+    falseObject            = newInstance(falseClass);
 
     // Load the system class and create an instance of it
     systemClass = loadClass(symbolFor("System"));
@@ -361,6 +366,12 @@ public class Universe {
     setGlobal(symbolFor("system"), systemObject);
     setGlobal(symbolFor("System"), systemClass);
     setGlobal(symbolFor("Block"),  blockClass);
+
+    setGlobal(symbolFor("Nil"), nilClass);
+
+    setGlobal(trueClassName,  trueClass);
+    setGlobal(falseClassName, falseClass);
+
     return systemObject;
   }
 
