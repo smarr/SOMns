@@ -90,13 +90,13 @@ ReflectionTest = (
         
         "Testing #at: and #at:put:"
         tmp := Pair withKey: 3 andValue: 42.
-        (tmp instVarAt: 2) = tmp key ifFalse: [  "REM: this might be different, depending on the number of fields in Object!!!"
+        (tmp instVarAt: 1) = tmp key ifFalse: [  "REM: this might be different, depending on the number of fields in Object!!!"
             harness
                 fail: self
                 because: '#at: did not return the expected value from the Pair object.'
         ].
         
-        tmp instVarAt: 2 put: #foo.
+        tmp instVarAt: 1 put: #foo.
         tmp key = #foo ifFalse: [  "REM: this might be different, depending on the number of fields in Object!!!"
             harness
                 fail: self

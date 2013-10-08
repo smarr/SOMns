@@ -24,14 +24,8 @@ THE SOFTWARE.
 "
 
 Object = nil (
-
-    | class |
-    
-    "Accessing"
-    class     = ( ^class )
-    
-    "Primitive size in bytes"
-    objectSize = primitive
+    class      = primitive
+    objectSize = primitive  "size in bytes"
     
     "Comparing"
     =  other    = ( ^self == other )
