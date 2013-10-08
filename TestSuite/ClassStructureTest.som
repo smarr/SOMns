@@ -1,0 +1,32 @@
+ClassStructureTest = (
+    
+    run: harness = (
+        (Array new) class = Array ifFalse: [harness fail: self
+                because: 'Array instance not of class Array'].
+        1 class = Integer ifFalse:         [harness fail: self
+                because: '1 is not instance of class Integer'].
+        10000000000 class = BigInteger ifFalse: [harness fail: self
+                because: '10000000000 is not instance of class BigInteger'].
+        (1 // 2) class = Double ifFalse:     [harness fail: self
+                because: '0.5, is not instance of class Double.'].
+        [42] class = Block1 ifFalse:         [harness fail: self
+                because: 'a Block, without parameters, is not instance of class Block1.'].
+
+        Object new class = Object ifFalse:   [harness fail: self
+                because: 'a new object is not instance of class Object'].
+        Set new class = Set ifFalse:         [harness fail: self
+                because: 'a set is not instance of class Set'].
+        'foo' class = String ifFalse:        [harness fail: self
+                because: 'The string `foo` is not instance of class String'].
+        #foo class = Symbol ifFalse:         [harness fail: self
+                because: '#foo is not instance of class Symbol'].
+
+        true class = True ifFalse:           [harness fail: self
+                because: 'true is not instance of True'].
+        false class = False ifFalse:         [harness fail: self
+                because: 'false is not instance of False'].
+        nil class = Nil ifFalse:             [harness fail: self
+                because: 'nil is not instance of Nil'].
+        
+    )    
+)
