@@ -242,7 +242,7 @@ public class MessageNode extends ExpressionNode {
           }
           node = new WhileMessageNode(receiver, arguments, selector, universe,
               conditionBlock.getMethod(), loopBodyMethod, whileTrue);
-          replace(node);
+          replace(node, "Be optimistic and optimize while loops.");
         } else {
           node = (WhileMessageNode) specializedVersion;
         }
