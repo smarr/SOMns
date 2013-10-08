@@ -24,19 +24,20 @@
 
 package som.vmobjects;
 
-import com.oracle.truffle.api.frame.PackedFrame;
 import som.vm.Universe;
+
+import com.oracle.truffle.api.frame.PackedFrame;
 
 public class SObject {
 
   public SObject(final SObject nilObject) {
-    // Set the number of fields to the default value
-    setNumberOfFieldsAndClear(getDefaultNumberOfFields(), nilObject);
+    fields = new SObject[getDefaultNumberOfFields()];
+    setClearFields(getDefaultNumberOfFields(), nilObject);
   }
 
-  public SObject(int numberOfFields, final SObject nilObject) {
-    // Set the number of fields to the given value
-    setNumberOfFieldsAndClear(numberOfFields, nilObject);
+  public SObject(final int numberOfFields, final SObject nilObject) {
+    fields = new SObject[numberOfFields];
+    setClearFields(numberOfFields, nilObject);
   }
 
   public SClass getSOMClass() {
@@ -44,17 +45,17 @@ public class SObject {
     return (SClass) getField(classIndex);
   }
 
-  public void setClass(SClass value) {
+  public void setClass(final SClass value) {
     // Set the class of this object by writing to the field with class index
     setField(classIndex, value);
   }
 
-  public SSymbol getFieldName(int index) {
+  public SSymbol getFieldName(final int index) {
     // Get the name of the field with the given index
     return getSOMClass().getInstanceFieldName(index);
   }
 
-  public int getFieldIndex(SSymbol name) {
+  public int getFieldIndex(final SSymbol name) {
     // Get the index for the field with the given name
     return getSOMClass().lookupFieldIndex(name);
   }
@@ -64,12 +65,9 @@ public class SObject {
     return fields.length;
   }
 
-  public void setNumberOfFieldsAndClear(int value, final SObject nilObject) {
-    // Allocate a new array of fields
-    fields = new SObject[value];
-
+  private void setClearFields(final int numFields, final SObject nilObject) {
     // Clear each and every field by putting nil into them
-    for (int i = 0; i < getNumberOfFields(); i++) {
+    for (int i = 0; i < numFields; i++) {
       setField(i, nilObject);
     }
   }
@@ -79,7 +77,7 @@ public class SObject {
     return numberOfObjectFields;
   }
 
-  public SObject send(java.lang.String selectorString, SObject[] arguments,
+  public SObject send(final java.lang.String selectorString, final SObject[] arguments,
       final Universe universe, final PackedFrame frame) {
     // Turn the selector string into a selector
     SSymbol selector = universe.symbolFor(selectorString);
@@ -120,12 +118,12 @@ public class SObject {
     return send("escapedBlock:", arguments, universe, frame);
   }
 
-  public SObject getField(int index) {
+  public SObject getField(final int index) {
     // Get the field with the given index
     return fields[index];
   }
 
-  public void setField(int index, SObject value) {
+  public void setField(final int index, final SObject value) {
     // Set the field with the given index to the given value
     fields[index] = value;
   }
@@ -136,7 +134,7 @@ public class SObject {
   }
 
   // Private array of fields
-  private SObject[] fields;
+  private final SObject[] fields;
 
   // Static field indices and number of object fields
   static final int classIndex           = 0;

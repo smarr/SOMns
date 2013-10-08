@@ -26,6 +26,7 @@
 package som.vmobjects;
 
 import som.interpreter.Arguments;
+import som.interpreter.Method;
 
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.Truffle;
@@ -36,9 +37,12 @@ import com.oracle.truffle.api.frame.PackedFrame;
 public class SMethod extends SObject implements SInvokable {
 
   public SMethod(final SObject nilObject,
+      final SSymbol signature,
       final som.interpreter.Method truffleInvokable,
       final FrameDescriptor frameDescriptor) {
     super(nilObject);
+    setSignature(signature);
+
     this.truffleInvokable = truffleInvokable; // TODO: remove truffleInvokable if possible/useful
 
     TruffleRuntime runtime =  Truffle.getRuntime(); // TODO: should be: universe.getTruffleRuntime();
@@ -47,36 +51,42 @@ public class SMethod extends SObject implements SInvokable {
     this.callTarget = target;
   }
 
+  @Override
   public CallTarget getCallTarget() {
     return callTarget;
   }
 
-  public som.interpreter.Method getTruffleInvokable() {
+  @Override
+  public Method getTruffleInvokable() {
     return truffleInvokable;
   }
 
+  @Override
   public boolean isPrimitive() {
     return false;
   }
 
+  @Override
   public SSymbol getSignature() {
     // Get the signature of this method by reading the field with signature
     // index
     return (SSymbol) getField(signatureIndex);
   }
 
-  public void setSignature(SSymbol value) {
+  private void setSignature(final SSymbol value) {
     // Set the signature of this method by writing to the field with
     // signature index
     setField(signatureIndex, value);
   }
 
+  @Override
   public SClass getHolder() {
     // Get the holder of this method by reading the field with holder index
     return (SClass) getField(holderIndex);
   }
 
-  public void setHolder(SClass value) {
+  @Override
+  public void setHolder(final SClass value) {
     // Set the holder of this method by writing to the field with holder index
     setField(holderIndex, value);
   }
@@ -86,6 +96,7 @@ public class SMethod extends SObject implements SInvokable {
     return getSignature().getNumberOfSignatureArguments();
   }
 
+  @Override
   public int getDefaultNumberOfFields() {
     // Return the default number of fields in a method
     return numberOfMethodFields;
@@ -96,6 +107,7 @@ public class SMethod extends SObject implements SInvokable {
     return result;
   }
 
+  @Override
   public SObject invoke(final PackedFrame caller,
       final SObject self,
       final SObject[] args) {

@@ -26,9 +26,10 @@ package som.vmobjects;
 
 public class SSymbol extends SObject {
 
-  public SSymbol(final SObject nilObject, java.lang.String value) {
+  public SSymbol(final SObject nilObject, final java.lang.String value) {
     super(nilObject);
-    setString(value);
+    string = value;
+    numberOfSignatureArguments = determineNumberOfSignatureArguments();
   }
 
   public java.lang.String getString() {
@@ -36,16 +37,10 @@ public class SSymbol extends SObject {
     return string;
   }
 
-  private void setString(java.lang.String value) {
-    // Set the string associated to this symbol
-    string = value;
-    determineNumberOfSignatureArguments();
-  }
-
-  private void determineNumberOfSignatureArguments() {
+  private int determineNumberOfSignatureArguments() {
     // Check for binary signature
     if (isBinarySignature()) {
-      numberOfSignatureArguments = 2;
+      return 2;
     } else {
       // Count the colons in the signature string
       int numberOfColons = 0;
@@ -56,10 +51,11 @@ public class SSymbol extends SObject {
       }
 
       // The number of arguments is equal to the number of colons plus one
-      numberOfSignatureArguments = numberOfColons + 1;
+      return numberOfColons + 1;
     }
   }
 
+  @Override
   public java.lang.String toString() {
     return "#" + string;
   }
@@ -79,6 +75,6 @@ public class SSymbol extends SObject {
   }
 
   // Private variable holding the string associated to this symbol
-  private java.lang.String string;
-  private int              numberOfSignatureArguments;
+  private final java.lang.String string;
+  private final int              numberOfSignatureArguments;
 }

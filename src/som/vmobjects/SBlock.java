@@ -33,8 +33,11 @@ public class SBlock extends SObject {
 
   private MaterializedFrame declarationFrame;
 
-  public SBlock(final SObject nilObject) {
+  public SBlock(final SObject nilObject, final SMethod blockMethod,
+      final MaterializedFrame context) {
     super(nilObject);
+    setMethod(blockMethod);
+    setContext(context);
   }
 
   public SMethod getMethod() {
@@ -42,7 +45,7 @@ public class SBlock extends SObject {
     return (SMethod) getField(methodIndex);
   }
 
-  public void setMethod(SMethod value) {
+  private void setMethod(final SMethod value) {
     // Set the method of this block by writing to the field with method
     // index
     setField(methodIndex, value);
@@ -53,7 +56,7 @@ public class SBlock extends SObject {
     return declarationFrame;
   }
 
-  public void setContext(MaterializedFrame value) {
+  private void setContext(final MaterializedFrame value) {
     if (declarationFrame != null) {
       throw new IllegalStateException("This is most likely a bug, "
           + "the block's context should not change.");
@@ -61,29 +64,31 @@ public class SBlock extends SObject {
     declarationFrame = value;
   }
 
+  @Override
   public int getDefaultNumberOfFields() {
     // Return the default number of fields for a block
     return numberOfBlockFields;
   }
 
-  public static SPrimitive getEvaluationPrimitive(int numberOfArguments,
+  public static SPrimitive getEvaluationPrimitive(final int numberOfArguments,
       final Universe universe) {
     return new Evaluation(numberOfArguments, universe);
   }
 
   public static class Evaluation extends SPrimitive {
 
-    public Evaluation(int numberOfArguments, final Universe universe) {
+    public Evaluation(final int numberOfArguments, final Universe universe) {
       super(computeSignatureString(numberOfArguments), universe);
     }
 
+    @Override
     public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
       // Get the block (the receiver)
       SBlock self = (SBlock) selfO;
       return self.getMethod().invoke(frame, selfO, args);
     }
 
-    private static java.lang.String computeSignatureString(int numberOfArguments) {
+    private static java.lang.String computeSignatureString(final int numberOfArguments) {
       // Compute the signature string
       java.lang.String signatureString = "value";
       if (numberOfArguments > 1) { signatureString += ":"; }

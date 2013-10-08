@@ -422,12 +422,8 @@ public class Universe {
 
   public SBlock newBlock(final SMethod method, final MaterializedFrame context, final int arguments) {
     // Allocate a new block and set its class to be the block class
-    SBlock result = new SBlock(nilObject);
+    SBlock result = new SBlock(nilObject, method, context);
     result.setClass(getBlockClass(arguments));
-
-    // Set the method and context of block
-    result.setMethod(method);
-    result.setContext(context);
 
     // Return the freshly allocated block
     return result;
@@ -444,10 +440,9 @@ public class Universe {
 
   public SMethod newMethod(final SSymbol signature, final som.interpreter.Method truffleInvokable, final FrameDescriptor frameDescriptor) {
     // Allocate a new method and set its class to be the method class
-    SMethod result = new SMethod(nilObject, truffleInvokable, frameDescriptor);
+    SMethod result = new SMethod(nilObject, signature, truffleInvokable,
+        frameDescriptor);
     result.setClass(methodClass);
-    result.setSignature(signature);
-    //result.setNumberOfIndexableFieldsAndClear(0, nilObject);
 
     // Return the freshly allocated method
     return result;
