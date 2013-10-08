@@ -91,31 +91,15 @@ public class SMethod extends SObject implements SInvokable {
     return numberOfMethodFields;
   }
 
-  public void increaseInvocationCounter() {
-    invocationCount++;
-  }
-
-  public long getInvocationCount() {
-    return invocationCount;
-  }
-
   public SObject invokeRoot(final SObject self, final SObject[] args) {
-    // Increase the invocation counter
-    invocationCount++;
-
     SObject result = (SObject) callTarget.call(new Arguments(self, args));
-
     return result;
   }
 
   public SObject invoke(final PackedFrame caller,
       final SObject self,
       final SObject[] args) {
-    // Increase the invocation counter
-    invocationCount++;
-
     SObject result = (SObject) callTarget.call(caller, new Arguments(self, args));
-
     return result;
   }
 
@@ -128,9 +112,6 @@ public class SMethod extends SObject implements SInvokable {
 
     return "Method(" + getHolder().getName().getString() + ">>" + getSignature().toString() + ")";
   }
-
-  // Private variable holding number of invocations and back edges
-  private long                         invocationCount;
 
   // Private variable holding Truffle runtime information
   private final som.interpreter.Method truffleInvokable;
