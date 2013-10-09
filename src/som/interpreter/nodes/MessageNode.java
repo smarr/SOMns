@@ -196,7 +196,7 @@ public class MessageNode extends ExpressionNode {
       node = new IfTrueIfFalseMessageNode(receiver,
           arguments, selector, universe, trueBlock, falseBlock);
 
-      replace(node, "Be optimisitc, and assume it's always a simple #ifTrue:#ifFalse:");
+      replace(node, "Be optimistic, and assume it's always a simple #ifTrue:ifFalse:");
     } else {
       node = (IfTrueIfFalseMessageNode) specializedVersion;
     }
