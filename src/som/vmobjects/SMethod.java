@@ -130,7 +130,7 @@ public class SMethod extends SObject implements SInvokable {
   private final CallTarget             callTarget;
 
   // Static field indices and number of method fields
-  static final int                     signatureIndex       = 1 + classIndex;
+  static final int                     signatureIndex       = numberOfObjectFields;
   static final int                     holderIndex          = 1 + signatureIndex;
   static final int                     numberOfMethodFields = 1 + holderIndex;
 }

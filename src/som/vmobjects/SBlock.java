@@ -104,7 +104,7 @@ public class SBlock extends SObject {
   }
 
   // Static field indices and number of block fields
-  static final int methodIndex         = 1 + classIndex;
+  static final int methodIndex         = numberOfObjectFields;
   static final int contextIndex        = 1 + methodIndex;
   static final int numberOfBlockFields = 1 + contextIndex;
 }

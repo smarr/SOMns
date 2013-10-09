@@ -26,6 +26,7 @@ package som.vmobjects;
 
 import som.vm.Universe;
 
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.PackedFrame;
 
 public class SObject {
@@ -42,12 +43,12 @@ public class SObject {
 
   public SClass getSOMClass() {
     // Get the class of this object by reading the field with class index
-    return (SClass) getField(classIndex);
+    return clazz;
   }
 
   public void setClass(final SClass value) {
     // Set the class of this object by writing to the field with class index
-    setField(classIndex, value);
+    clazz = value;
   }
 
   public SSymbol getFieldName(final int index) {
@@ -135,8 +136,8 @@ public class SObject {
 
   // Private array of fields
   private final SObject[] fields;
+  @CompilationFinal private SClass    clazz;
 
   // Static field indices and number of object fields
-  static final int classIndex           = 0;
-  static final int numberOfObjectFields = 1 + classIndex;
+  static final int numberOfObjectFields = 0;
 }
