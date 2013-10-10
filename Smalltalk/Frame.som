@@ -25,10 +25,8 @@ THE SOFTWARE.
 
 Frame = Array (
 
-    | previousFrame context method |
-    
     "getters for Frame properties"
-    previousFrame = ( ^previousFrame )
-    method = ( ^method )
+    previousFrame = primitive
+    method        = primitive
     
 )
