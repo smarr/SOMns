@@ -153,9 +153,14 @@ public abstract class MessageNode extends AbstractMessageNode {
     SClass rcvrClass = classOfReceiver(receiver, getReceiver());
     SInvokable invokable = rcvrClass.lookupInvokable(selector);
 
-    MonomorpicMessageNode node = MonomorpicMessageNodeFactory.create(selector,
-        universe, rcvrClass, invokable, getReceiver(), getArguments());
-    return replace(node, "Be optimisitic and do a monomorphic lookup cache.").doMonomorphic(frame, receiver, arguments);
+    if (invokable != null) {
+      MonomorpicMessageNode node = MonomorpicMessageNodeFactory.create(selector,
+          universe, rcvrClass, invokable, getReceiver(), getArguments());
+      return replace(node, "Be optimisitic and do a monomorphic lookup cache.", true).doMonomorphic(frame, receiver, arguments);
+    } else {
+      SObject[] args = (SObject[]) arguments;
+      return doFullSend(frame, receiver, args, rcvrClass);
+    }
   }
 
   @Override
