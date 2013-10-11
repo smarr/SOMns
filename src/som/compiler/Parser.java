@@ -63,11 +63,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import som.compiler.SourcecodeCompiler.Source;
+import som.interpreter.nodes.ArgumentEvaluationNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.FieldNode.FieldReadNode;
 import som.interpreter.nodes.FieldNode.FieldWriteNode;
 import som.interpreter.nodes.GlobalNode.GlobalReadNode;
 import som.interpreter.nodes.MessageNode;
+import som.interpreter.nodes.MessageNodeFactory;
 import som.interpreter.nodes.ReturnNonLocalNode;
 import som.interpreter.nodes.SequenceNode;
 import som.interpreter.nodes.VariableNode.SelfReadNode;
@@ -563,7 +565,7 @@ public class Parser {
   private MessageNode unaryMessage(final ExpressionNode receiver) {
     SourceCoordinate coord = getCoordinate();
     SSymbol selector = unarySelector();
-    MessageNode msg = new MessageNode(receiver, null, selector, universe);
+    MessageNode msg = MessageNodeFactory.create(selector, universe, receiver, new ArgumentEvaluationNode());
     assignSource(msg, coord);
     return msg;
   }
@@ -574,8 +576,10 @@ public class Parser {
     SSymbol msg = binarySelector();
     ExpressionNode operand   = binaryOperand(mgenc);
 
-    MessageNode msgNode = new MessageNode(receiver,
-        new ExpressionNode[] {operand}, msg, universe);
+    ArgumentEvaluationNode args =
+        new ArgumentEvaluationNode(new ExpressionNode[] {operand});
+
+    MessageNode msgNode = MessageNodeFactory.create(msg, universe, receiver, args);
     assignSource(msgNode, coord);
     return msgNode;
   }
@@ -606,7 +610,10 @@ public class Parser {
 
     SSymbol msg = universe.symbolFor(kw.toString());
 
-    MessageNode msgNode = new MessageNode(receiver, arguments.toArray(new ExpressionNode[0]), msg, universe);
+    ArgumentEvaluationNode args =
+        new ArgumentEvaluationNode(arguments.toArray(new ExpressionNode[0]));
+
+    MessageNode msgNode = MessageNodeFactory.create(msg, universe, receiver, args);
     assignSource(msgNode, coord);
     return msgNode;
   }

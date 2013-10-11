@@ -1,7 +1,8 @@
 package som.interpreter.nodes.specialized;
 
+import som.interpreter.nodes.AbstractMessageNode;
 import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.MessageNode;
+import som.interpreter.nodes.MessageNodeFactory;
 import som.vm.Universe;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
@@ -9,9 +10,10 @@ import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
-public class PolymorpicMessageNode extends MessageNode {
+public abstract class PolymorpicMessageNode extends AbstractMessageNode {
   private static final int CACHE_SIZE = 8;
 
   private final SClass[]      rcvrClasses;
@@ -19,12 +21,11 @@ public class PolymorpicMessageNode extends MessageNode {
 
   private int cacheEntries;
 
-  public PolymorpicMessageNode(final ExpressionNode receiver,
-      final ExpressionNode[] arguments, final SSymbol selector,
+  public PolymorpicMessageNode(final SSymbol selector,
       final Universe universe, final SClass firstRcvrClass,
       final SInvokable firstInvokable,
       final SClass secondRcvrClass) {
-    super(receiver, arguments, selector, universe);
+    super(selector, universe);
     rcvrClasses = new SClass[CACHE_SIZE];
     invokables  = new SInvokable[CACHE_SIZE];
 
@@ -35,11 +36,10 @@ public class PolymorpicMessageNode extends MessageNode {
     cacheEntries   = 2;
   }
 
-  public PolymorpicMessageNode(final ExpressionNode receiver,
-      final ExpressionNode[] arguments, final SSymbol selector,
+  public PolymorpicMessageNode(final SSymbol selector,
       final Universe universe,
       final SClass currentRcvrClass) {
-    super(receiver, arguments, selector, universe);
+    super(selector, universe);
     rcvrClasses = new SClass[CACHE_SIZE];
     invokables  = new SInvokable[CACHE_SIZE];
 
@@ -48,34 +48,42 @@ public class PolymorpicMessageNode extends MessageNode {
     cacheEntries   = 1;
   }
 
-  @Override
-  public SObject executeGeneric(final VirtualFrame frame) {
-    // evaluate all the expressions: first determine receiver
-    SObject rcvr = receiver.executeGeneric(frame);
+  public PolymorpicMessageNode(final PolymorpicMessageNode node) {
+    this(node.selector, node.universe, node.rcvrClasses[0],
+        node.invokables[0], node.rcvrClasses[1]);
+  }
 
-    // then determine the arguments
-    SObject[] args = determineArguments(frame);
-
-    SClass currentRcvrClass = classOfReceiver(rcvr, receiver);
+  @Specialization
+  public SObject doGeneric(final VirtualFrame frame, final SObject receiver,
+      final Object arguments) {
+    SClass currentRcvrClass = classOfReceiver(receiver, getReceiver());
+    SObject[] args = (SObject[]) arguments;
 
     int i;
     for (i = 0; i < cacheEntries; i++) {
       if (rcvrClasses[i] == currentRcvrClass) {
-        return invokables[i].invoke(frame.pack(), rcvr, args);
+        return invokables[i].invoke(frame.pack(), receiver, args);
       }
     }
 
-    if (i < CACHE_SIZE) { // we got still room in this polymorphic inline cache 
+    if (i < CACHE_SIZE) { // we got still room in this polymorphic inline cache
       rcvrClasses[cacheEntries] = currentRcvrClass;
       invokables[cacheEntries]  = currentRcvrClass.lookupInvokable(selector);
-      return invokables[i].invoke(frame.pack(), rcvr, args);
+      return invokables[i].invoke(frame.pack(), receiver, args);
     } else {
       CompilerDirectives.transferToInterpreter();
       // So, it might just be a megamorphic send site.
-      MegamorphicMessageNode mega = new MegamorphicMessageNode(receiver, arguments, selector, universe);
-
-      replace(mega, "It is not a polymorpic send.");
-      return doFullSend(frame, rcvr, args, currentRcvrClass);
+      MegamorphicMessageNode mega = MegamorphicMessageNodeFactory.create(selector,
+          universe, getReceiver(), getArguments());
+      return replace(mega, "It is not a polymorpic send.").
+          doGeneric(frame, receiver, arguments);
     }
+  }
+
+  @Override
+  public ExpressionNode cloneForInlining() {
+    return MessageNodeFactory.create(selector, universe,
+        getReceiver().cloneForInlining(),
+        getArguments().cloneForInlining());
   }
 }

@@ -1,8 +1,9 @@
 package som.interpreter.nodes.specialized;
 
 import som.interpreter.Method;
+import som.interpreter.nodes.AbstractMessageNode;
 import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.MessageNode;
+import som.interpreter.nodes.MessageNodeFactory;
 import som.vm.Universe;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
@@ -11,12 +12,14 @@ import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.dsl.Generic;
+import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.FrameFactory;
 import com.oracle.truffle.api.nodes.InlinableCallSite;
 import com.oracle.truffle.api.nodes.Node;
 
-public class MonomorpicMessageNode extends MessageNode
+public abstract class MonomorpicMessageNode extends AbstractMessageNode
   implements InlinableCallSite {
 
   private final SClass      rcvrClass;
@@ -24,39 +27,45 @@ public class MonomorpicMessageNode extends MessageNode
 
   private int callCount;
 
-  public MonomorpicMessageNode(final ExpressionNode receiver,
-      final ExpressionNode[] arguments, final SSymbol selector,
-      final Universe universe, final SClass rcvrClass,
-      final SInvokable invokable) {
-    super(receiver, arguments, selector, universe);
+  public MonomorpicMessageNode(final SSymbol selector, final Universe universe,
+      final SClass rcvrClass, final SInvokable invokable) {
+    super(selector, universe);
     this.rcvrClass = rcvrClass;
     this.invokable = invokable;
 
     callCount = 0;
   }
 
-  @Override
-  public SObject executeGeneric(final VirtualFrame frame) {
+  public MonomorpicMessageNode(final MonomorpicMessageNode node) {
+    this(node.selector, node.universe, node.rcvrClass, node.invokable);
+  }
+
+  public boolean isCachedReceiverClass(final SObject receiver) {
+    SClass currentRcvrClass = classOfReceiver(receiver, getReceiver());
+    return currentRcvrClass == rcvrClass;
+  }
+
+  @Specialization(guards = "isCachedReceiverClass")
+  public SObject doMonomorphic(final VirtualFrame frame, final SObject receiver,
+      final Object arguments) {
     callCount++;
+    SObject[] args = (SObject[]) arguments;
+    return invokable.invoke(frame.pack(), receiver, args);
+  }
 
-    // evaluate all the expressions: first determine receiver
-    SObject rcvr = receiver.executeGeneric(frame);
+  @Generic
+  public SObject doGeneric(final VirtualFrame frame, final SObject receiver,
+      final Object arguments) {
 
-    // then determine the arguments
-    SObject[] args = determineArguments(frame);
-
-    SClass currentRcvrClass = classOfReceiver(rcvr, receiver);
-
-    if (currentRcvrClass == rcvrClass) {
-      return invokable.invoke(frame.pack(), rcvr, args);
+    if (isCachedReceiverClass(receiver)) {
+      return doMonomorphic(frame, receiver, arguments);
     } else {
       CompilerDirectives.transferToInterpreter();
       // So, it might just be a polymorphic send site.
-      PolymorpicMessageNode poly = new PolymorpicMessageNode(receiver,
-          arguments, selector, universe, rcvrClass, invokable, currentRcvrClass);
-
-      replace(poly, "It is not a monomorpic send.");
-      return doFullSend(frame, rcvr, args, currentRcvrClass);
+      PolymorpicMessageNode poly = PolymorpicMessageNodeFactory.create(selector,
+          universe, rcvrClass, getReceiver(), getArguments());
+      return replace(poly, "It is not a monomorpic send.").
+          doGeneric(frame, receiver, arguments);
     }
   }
 
@@ -87,9 +96,8 @@ public class MonomorpicMessageNode extends MessageNode
   private InlinedMonomorphicMessageNode newInlinedNode(
       final FrameFactory frameFactory,
       final Method method) {
-    return new InlinedMonomorphicMessageNode(receiver, arguments, selector,
-        universe, rcvrClass, invokable,
-        frameFactory, method, method.methodCloneForInlining());
+    return InlinedMonomorphicMessageNodeFactory.create(selector, universe, rcvrClass, invokable, frameFactory,
+        method, method.methodCloneForInlining(), getReceiver(), getArguments());
   }
 
   @Override
@@ -104,5 +112,12 @@ public class MonomorpicMessageNode extends MessageNode
     replace(inlinedNode, "Node got inlined");
 
     return true;
+  }
+
+  @Override
+  public ExpressionNode cloneForInlining() {
+    return MessageNodeFactory.create(selector, universe,
+        getReceiver().cloneForInlining(),
+        getArguments().cloneForInlining());
   }
 }

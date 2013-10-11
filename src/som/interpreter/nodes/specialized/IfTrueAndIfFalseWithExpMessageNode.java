@@ -1,13 +1,15 @@
 package som.interpreter.nodes.specialized;
 
+import som.interpreter.nodes.AbstractMessageNode;
 import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.MessageNode;
 import som.vm.Universe;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.dsl.Generic;
+import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 /**
@@ -16,54 +18,74 @@ import com.oracle.truffle.api.frame.VirtualFrame;
  *
  * @author smarr
  */
-public class IfTrueAndIfFalseWithExpMessageNode extends MessageNode {
-  private final SClass  falseClass;
-  private final SClass  trueClass;
+public abstract class IfTrueAndIfFalseWithExpMessageNode extends AbstractMessageNode {
   private final boolean executeIf;
 
-  public IfTrueAndIfFalseWithExpMessageNode(final ExpressionNode receiver,
-      final ExpressionNode[] arguments, final SSymbol selector,
+  public IfTrueAndIfFalseWithExpMessageNode(final SSymbol selector,
       final Universe universe, final boolean executeIf) {
-    super(receiver, arguments, selector, universe);
-    assert arguments != null && arguments.length == 1;
-    falseClass     = universe.falseObject.getSOMClass();
-    trueClass      = universe.trueObject.getSOMClass();
+    super(selector, universe);
     this.executeIf = executeIf;
   }
 
-  @Override
-  public SObject executeGeneric(final VirtualFrame frame) {
-    SObject rcvr   = receiver.executeGeneric(frame);
-    SObject result = arguments[0].executeGeneric(frame);
-
-    return evaluateBody(frame, rcvr, result);
+  public IfTrueAndIfFalseWithExpMessageNode(final IfTrueAndIfFalseWithExpMessageNode node) {
+    this(node.selector, node.universe, node.executeIf);
   }
 
-  public SObject evaluateBody(final VirtualFrame frame, final SObject rcvr,
-      final SObject result) {
-    SClass currentRcvrClass = classOfReceiver(rcvr, receiver);
+  public boolean isIfTrue() {
+    return executeIf;
+  }
 
-    if ((executeIf  && (currentRcvrClass == trueClass)) ||
-        (!executeIf && (currentRcvrClass == falseClass))) {
-      return result;
-    } else if ((!executeIf && currentRcvrClass == trueClass) ||
-               (executeIf  && currentRcvrClass == falseClass)) {
-      // this is the case that False>>#ifTrue: or True>>#ifFalse
-      return universe.nilObject;
+  public boolean isIfFalse() {
+    return !executeIf;
+  }
+
+  @Specialization(order = 10, guards = {"isIfTrue", "isBooleanReceiver"})
+  public SObject doIfTrue(final VirtualFrame frame, final SObject receiver,
+      final Object arguments) {
+    SClass rcvrClass = classOfReceiver(receiver, getReceiver());
+    if (rcvrClass == universe.trueClass) {
+      return ((SObject[]) arguments)[0];
     } else {
-      return fallbackForNonBoolReceiver(frame, rcvr, currentRcvrClass, result);
+      return universe.nilObject;
+    }
+  }
+
+  @Specialization(order = 20, guards = {"isIfFalse", "isBooleanReceiver"})
+  public SObject doIfFalse(final VirtualFrame frame, final SObject receiver,
+      final Object arguments) {
+    SClass rcvrClass = classOfReceiver(receiver, getReceiver());
+    if (rcvrClass == universe.falseClass) {
+      return ((SObject[]) arguments)[0];
+    } else {
+      return universe.nilObject;
+    }
+  }
+
+  @Generic
+  public SObject doGeneric(final VirtualFrame frame, final SObject receiver,
+      final Object arguments) {
+    if (!isBooleanReceiver(receiver)) {
+      return fallbackForNonBoolReceiver(frame, receiver, arguments);
+    }
+    if (executeIf) {
+      return doIfTrue(frame, receiver, arguments);
+    } else {
+      return doIfFalse(frame, receiver, arguments);
     }
   }
 
   public SObject fallbackForNonBoolReceiver(final VirtualFrame frame,
-      final SObject rcvr, final SClass currentRcvrClass, final SObject result) {
+      final SObject rcvr, final Object arguments) {
     CompilerDirectives.transferToInterpreter();
 
+    SClass currentRcvrClass = classOfReceiver(rcvr, getReceiver());
+
     // So, it might just be a polymorphic send site.
-    PolymorpicMessageNode poly = new PolymorpicMessageNode(receiver,
-        arguments, selector, universe, currentRcvrClass);
-    replace(poly, "Receiver wasn't a boolean. So, we need to do the actual send.");
-    return doFullSend(frame, rcvr, new SObject[] {result}, currentRcvrClass);
+    PolymorpicMessageNode poly = PolymorpicMessageNodeFactory.create(selector,
+        universe, currentRcvrClass, getReceiver(), getArguments());
+    return replace(poly, "Receiver wasn't a boolean. " +
+        "So, we need to do the actual send.").
+        doGeneric(frame, rcvr, arguments);
   }
 
   /**
@@ -71,6 +93,8 @@ public class IfTrueAndIfFalseWithExpMessageNode extends MessageNode {
    */
   @Override
   public ExpressionNode cloneForInlining() {
-    return new IfTrueAndIfFalseWithExpMessageNode(receiver, arguments, selector, universe, executeIf);
+    return IfTrueAndIfFalseWithExpMessageNodeFactory.create(selector, universe,
+        executeIf, getReceiver(), getArguments());
+
   }
 }

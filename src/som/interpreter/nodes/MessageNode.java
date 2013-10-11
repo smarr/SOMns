@@ -21,249 +21,89 @@
  */
 package som.interpreter.nodes;
 
-import som.interpreter.nodes.VariableNode.SuperReadNode;
 import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.specialized.IfTrueAndIfFalseMessageNode;
+import som.interpreter.nodes.specialized.IfTrueAndIfFalseMessageNodeFactory;
 import som.interpreter.nodes.specialized.IfTrueAndIfFalseWithExpMessageNode;
-import som.interpreter.nodes.specialized.IfTrueIfFalseMessageNode;
+import som.interpreter.nodes.specialized.IfTrueAndIfFalseWithExpMessageNodeFactory;
 import som.interpreter.nodes.specialized.MonomorpicMessageNode;
-import som.interpreter.nodes.specialized.WhileMessageNode;
+import som.interpreter.nodes.specialized.MonomorpicMessageNodeFactory;
 import som.vm.Universe;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
-import som.vmobjects.SMethod;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
-import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.dsl.Generic;
+import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.ExplodeLoop;
 
-// TODO: I need to add a check that the invokable has not changed
+public abstract class MessageNode extends AbstractMessageNode {
 
-// @NodeChildren({
-//  @NodeChild(value = "receiver",  type = ExpressionNode.class),
-//  @NodeChild(value = "arguments", type = ExpressionNode[].class)})
-public class MessageNode extends ExpressionNode {
-
-  @Child    protected       ExpressionNode   receiver;
-  @Children protected final ExpressionNode[] arguments;
-
-  protected final SSymbol   selector;
-  protected final Universe universe;
-
-  private ExpressionNode specializedVersion;
-
-  public MessageNode(final ExpressionNode receiver,
-      final ExpressionNode[] arguments,
-      final SSymbol selector,
-      final Universe universe) {
-    this.receiver  = adoptChild(receiver);
-    this.arguments = adoptChildren(arguments);
-    this.selector  = selector;
-    this.universe  = universe;
+  public MessageNode(final SSymbol selector, final Universe universe) {
+    super(selector, universe);
   }
 
-  /**
-   * @return uninitialized node to allow for specialization
-   */
+  public MessageNode(final MessageNode node) {
+    this(node.selector, node.universe);
+  }
+
+  protected boolean isIfTrueOrIfFalse() {
+    return selector.getString().equals("ifTrue:") ||
+         selector.getString().equals("ifFalse:");
+  }
+
+  protected boolean hasBlockArgument() {
+    return getArguments().getArgument(0) instanceof BlockNode;
+  }
+
+  protected boolean hasExpressionArgument() {
+    return !hasBlockArgument();
+  }
+
+  @Specialization(order = 10,
+      guards = {"isBooleanReceiver", "hasOneArgument",
+      "isIfTrueOrIfFalse", "hasBlockArgument"})
+  public SObject doIfTrueOrIfFalse(final VirtualFrame frame,
+      final SObject receiver, final Object arguments) {
+    SObject[] args = (SObject[]) arguments;
+    SBlock   block = (SBlock)    args[0];
+
+    // This specialization goes into a separate specialization hierarchy
+    IfTrueAndIfFalseMessageNode node = IfTrueAndIfFalseMessageNodeFactory.create(
+        selector, universe, block, selector.getString().equals("ifTrue:"),
+        getReceiver(), getArguments());
+    return replace(node, "Specialize for #ifTrue: or #ifFalse").doGeneric(frame, receiver, arguments);
+  }
+
+  @Specialization(order = 20,
+      guards = {"isBooleanReceiver", "hasOneArgument",
+      "isIfTrueOrIfFalse", "hasExpressionArgument"})
+  public SObject doIfTrueOrIfFalseWithExp(final VirtualFrame frame,
+      final SObject receiver, final Object arguments) {
+
+    // This specialization goes into a separate specialization hierarchy
+    IfTrueAndIfFalseWithExpMessageNode node =
+        IfTrueAndIfFalseWithExpMessageNodeFactory.create(
+        selector, universe, selector.getString().equals("ifTrue:"),
+        getReceiver(), getArguments());
+    return replace(node, "Specialize for #ifTrue: or #ifFalse with Expression").doGeneric(frame, receiver, arguments);
+  }
+
+  @Generic
+  public SObject doGeneric(final VirtualFrame frame, final SObject receiver,
+      final Object arguments) {
+    SClass rcvrClass = classOfReceiver(receiver, getReceiver());
+    SInvokable invokable = rcvrClass.lookupInvokable(selector);
+
+    MonomorpicMessageNode node = MonomorpicMessageNodeFactory.create(selector,
+        universe, rcvrClass, invokable, getReceiver(), getArguments());
+    return replace(node, "Be optimisitic and do a monomorphic lookup cache.").doMonomorphic(frame, receiver, arguments);
+  }
+
   @Override
   public ExpressionNode cloneForInlining() {
-    return new MessageNode(receiver, arguments, selector, universe);
-  }
-
-  @ExplodeLoop
-  protected SObject[] determineArguments(final VirtualFrame frame) {
-    int numArgs = (arguments == null) ? 0 : arguments.length;
-
-    SObject[] args = new SObject[numArgs];
-
-    for (int i = 0; i < numArgs; i++) {
-      args[i] = arguments[i].executeGeneric(frame);
-    }
-
-    return args;
-  }
-
-  protected SObject doFullSend(final VirtualFrame frame, final SObject rcvr,
-      final SObject[] args, final SClass rcvrClass) {
-    // now lookup selector
-    SInvokable invokable = rcvrClass.lookupInvokable(selector);
-
-    if (invokable != null) {
-      return invokable.invoke(frame.pack(), rcvr, args);
-    } else {
-      return rcvr.sendDoesNotUnderstand(selector, args, universe, frame.pack());
-    }
-  }
-
-  protected static SClass classOfReceiver(final SObject rcvr, final ExpressionNode receiver) {
-    SClass rcvrClass = rcvr.getSOMClass();
-
-    // first determine whether it is a normal, or super send
-    if (receiver instanceof SuperReadNode) {
-      rcvrClass = rcvrClass.getSuperClass();
-    }
-
-    return rcvrClass;
-  }
-
-  @Override
-  public SObject executeGeneric(final VirtualFrame frame) {
-    // evaluate all the expressions: first determine receiver
-    SObject rcvr = receiver.executeGeneric(frame);
-
-    // then determine the arguments
-    SObject[] args = determineArguments(frame);
-
-    // now start lookup
-    SClass rcvrClass = classOfReceiver(rcvr, receiver);
-
-    // now lookup selector
-    SInvokable invokable = rcvrClass.lookupInvokable(selector);
-
-    if (invokable != null) {
-      return specializeAndExecute(frame, rcvr, rcvrClass, invokable, args);
-    } else {
-      return rcvr.sendDoesNotUnderstand(selector, args, universe, frame.pack());
-    }
-  }
-
-  public final MessageNode replace(final MessageNode newNode, final String reason) {
-    // if we have a recursive method call in the receiver expression, we
-    // might not be able to do the specialization after the receiver has
-    // been evaluated, because the node already has been specialized, but
-    // higher on the stack, we still got the uninitialized node.
-    // An example for such a situation can be found in Queens.som:49.
-    // As a work-around, we will remember the specialized version of this node
-    // and try to use it for the later part of the execution.
-    specializedVersion = newNode;
-    return super.replace(newNode, reason);
-  }
-
-  private SObject createIfTrueAndIfFalseNodeEvaluateAndReturn(
-      final VirtualFrame frame, final SObject rcvr,
-      final ExpressionNode argumentExp, final SObject argument,
-      final boolean isIfTrue) {
-    if (argumentExp instanceof BlockNode) {
-      // it is #ifTrue: or #ifFalse: with a literal block
-      IfTrueAndIfFalseMessageNode node;
-
-      // during evaluating receiver and arguments, we might have already
-      // specialized this node
-      if (specializedVersion == null) {
-        SBlock block = (SBlock) argument;
-        node = new
-            IfTrueAndIfFalseMessageNode(receiver, arguments, selector,
-                universe, block, isIfTrue);
-
-        replace(node, "Be optimisitc, and assume it's always a simple #ifTrue: or #ifFalse: with a block argument");
-      } else {
-        node = (IfTrueAndIfFalseMessageNode) specializedVersion;
-      }
-
-      return node.evaluateBody(frame, rcvr);
-    } else {
-      IfTrueAndIfFalseWithExpMessageNode node;
-      if (specializedVersion == null) {
-        node = new IfTrueAndIfFalseWithExpMessageNode(receiver, arguments, selector, universe, isIfTrue);
-        replace(node, "Be optimisitc, and assume it's always a simple #ifTrue: or #ifFalse: with an expression argument");
-      } else {
-        node = (IfTrueAndIfFalseWithExpMessageNode) specializedVersion;
-      }
-
-      return node.evaluateBody(frame, rcvr, argument);
-    }
-  }
-
-  private SObject createIfTrueIfFalseNodeEvaluateAndReturn(
-      final VirtualFrame frame, final SObject rcvr, final SObject[] args) {
-    SBlock trueBlock  = null;
-    SBlock falseBlock = null;
-
-    if (arguments[0] instanceof BlockNode) {
-      trueBlock  = (SBlock) args[0];
-    }
-    if (arguments[1] instanceof BlockNode) {
-      falseBlock = (SBlock) args[1];
-    }
-
-    // it is #ifTrue:ifFalse: with two literal block arguments
-    IfTrueIfFalseMessageNode node;
-
-    if (specializedVersion == null) {
-      node = new IfTrueIfFalseMessageNode(receiver,
-          arguments, selector, universe, trueBlock, falseBlock);
-
-      replace(node, "Be optimistic, and assume it's always a simple #ifTrue:ifFalse:");
-    } else {
-      node = (IfTrueIfFalseMessageNode) specializedVersion;
-    }
-
-    return node.evaluateBody(frame, rcvr, args[0], args[1]);
-  }
-
-
-  private SObject specializeAndExecute(final VirtualFrame frame, final SObject rcvr,
-      final SClass rcvrClass, final SInvokable invokable, final SObject[] args) {
-    CompilerDirectives.transferToInterpreter();
-
-    // first check whether it is a #ifTrue:, #ifFalse, or #ifTrue:ifFalse:
-    if ((rcvrClass == universe.trueObject.getSOMClass() ||
-         rcvrClass == universe.falseObject.getSOMClass()) &&
-         arguments != null) {
-      if (arguments.length == 1) {
-        boolean isIfTrue = selector.getString().equals("ifTrue:");
-        if (isIfTrue || selector.getString().equals("ifFalse:")) {
-          return createIfTrueAndIfFalseNodeEvaluateAndReturn(frame, rcvr, arguments[0],
-              args[0], isIfTrue);
-        } else {
-          // else we fall through to the monomorphic case
-        }
-      } else if (arguments.length == 2 &&
-          selector.getString().equals("ifTrue:ifFalse:")) {
-        return createIfTrueIfFalseNodeEvaluateAndReturn(frame, rcvr, args);
-      }
-    }
-
-    // both blocks don't take arguments
-    if (arguments != null && arguments.length == 1 &&
-        rcvrClass == universe.getBlockClass(1)) {
-      boolean whileTrue = selector.getString().equals("whileTrue:");
-      if (whileTrue || selector.getString().equals("whileFalse:")) {
-        WhileMessageNode node;
-
-        if (specializedVersion == null) {
-          SBlock  conditionBlock = (SBlock) rcvr;
-          SMethod loopBodyMethod = null;
-          if (args[0] instanceof SBlock) {
-            loopBodyMethod = ((SBlock) args[0]).getMethod();
-          }
-          node = new WhileMessageNode(receiver, arguments, selector, universe,
-              conditionBlock.getMethod(), loopBodyMethod, whileTrue);
-          replace(node, "Be optimistic and optimize while loops.");
-        } else {
-          node = (WhileMessageNode) specializedVersion;
-        }
-
-        return node.evaluateBody(frame, node.evalConditionIfNecessary(frame), args[0]);
-      }
-    }
-
-    // if it is not one of the special message sends, it is optimistically
-    // converted into a monomorphic send site, but only if we haven't
-    // specialized it already
-    if (specializedVersion == null) {
-      MonomorpicMessageNode mono = new MonomorpicMessageNode(receiver,
-          arguments, selector, universe, rcvrClass, invokable);
-
-      replace(mono, "Assume it's goint to be a monomorphic send site.");
-    }
-
-    // Then execute the invokable, because it can exit this method with
-    // control flow exceptions (non-local returns), which would leave node
-    // unspecialized.
-    return invokable.invoke(frame.pack(), rcvr, args);
+    return MessageNodeFactory.create(selector, universe, getReceiver(), getArguments());
   }
 }

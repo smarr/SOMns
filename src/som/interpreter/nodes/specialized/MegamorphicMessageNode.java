@@ -1,33 +1,36 @@
 package som.interpreter.nodes.specialized;
 
+import som.interpreter.nodes.AbstractMessageNode;
 import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.MessageNode;
+import som.interpreter.nodes.MessageNodeFactory;
 import som.vm.Universe;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
-public class MegamorphicMessageNode extends MessageNode {
+public abstract class MegamorphicMessageNode extends AbstractMessageNode {
 
-  public MegamorphicMessageNode(final ExpressionNode receiver,
-      final ExpressionNode[] arguments, final SSymbol selector,
+  public MegamorphicMessageNode(final SSymbol selector,
       final Universe universe) {
-    super(receiver, arguments, selector, universe);
+    super(selector, universe);
+  }
+
+  @Specialization
+  public SObject doGeneric(final VirtualFrame frame, final SObject receiver,
+      final Object arguments) {
+    SClass rcvrClass = classOfReceiver(receiver, getReceiver());
+    SObject[] args   = ((SObject[]) arguments);
+
+    return doFullSend(frame, receiver, args, rcvrClass);
   }
 
   @Override
-  public SObject executeGeneric(final VirtualFrame frame) {
-    // evaluate all the expressions: first determine receiver
-    SObject rcvr = receiver.executeGeneric(frame);
-
-    // then determine the arguments
-    SObject[] args = determineArguments(frame);
-
-    // now start lookup
-    SClass rcvrClass = classOfReceiver(rcvr, receiver);
-
-    return doFullSend(frame, rcvr, args, rcvrClass);
+  public ExpressionNode cloneForInlining() {
+    return MessageNodeFactory.create(selector, universe,
+        getReceiver().cloneForInlining(),
+        getArguments().cloneForInlining());
   }
 }
