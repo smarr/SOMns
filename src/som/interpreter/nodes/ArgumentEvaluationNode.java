@@ -42,6 +42,10 @@ public class ArgumentEvaluationNode extends SOMNode {
   }
 
   public ArgumentEvaluationNode cloneForInlining() {
+    if (arguments == null) {
+      return this;
+    }
+
     ExpressionNode[] args = new ExpressionNode[arguments.length];
 
     for (int i = 0; i < arguments.length; i++) {
