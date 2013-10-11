@@ -348,15 +348,15 @@ public class Universe {
 
     // Setup the true and false objects
     SSymbol trueClassName = symbolFor("True");
-    SClass  trueClass     = loadClass(trueClassName);
+    trueClass             = loadClass(trueClassName);
     trueObject            = newInstance(trueClass);
 
     SSymbol falseClassName = symbolFor("False");
-    SClass  falseClass     = loadClass(falseClassName);
+    falseClass             = loadClass(falseClassName);
     falseObject            = newInstance(falseClass);
 
     // Load the system class and create an instance of it
-    systemClass = loadClass(symbolFor("System"));
+    systemClass          = loadClass(symbolFor("System"));
     SObject systemObject = newInstance(systemClass);
 
     // Put special objects and classes into the dictionary of globals
@@ -722,29 +722,32 @@ public class Universe {
     // Checkstyle: resume
   }
 
-  public SObject                                 nilObject;
-  public SObject                                 trueObject;
-  public SObject                                 falseObject;
+  @CompilationFinal public SObject              nilObject;
+  @CompilationFinal public SObject              trueObject;
+  @CompilationFinal public SObject              falseObject;
 
-  public SClass                                  objectClass;
-  public SClass                                  classClass;
-  public SClass                                  metaclassClass;
+  @CompilationFinal public SClass               objectClass;
+  @CompilationFinal public SClass               classClass;
+  @CompilationFinal public SClass               metaclassClass;
 
-  public SClass                                  nilClass;
-  public SClass                                  integerClass;
-  public SClass                                  bigintegerClass;
-  public SClass                                  arrayClass;
-  public SClass                                  methodClass;
-  public SClass                                  symbolClass;
-  public SClass                                  primitiveClass;
-  public SClass                                  stringClass;
-  public SClass                                  systemClass;
-  public SClass                                  blockClass;
-  public SClass                                  doubleClass;
+  @CompilationFinal public SClass               nilClass;
+  @CompilationFinal public SClass               integerClass;
+  @CompilationFinal public SClass               bigintegerClass;
+  @CompilationFinal public SClass               arrayClass;
+  @CompilationFinal public SClass               methodClass;
+  @CompilationFinal public SClass               symbolClass;
+  @CompilationFinal public SClass               primitiveClass;
+  @CompilationFinal public SClass               stringClass;
+  @CompilationFinal public SClass               systemClass;
+  @CompilationFinal public SClass               blockClass;
+  @CompilationFinal public SClass               doubleClass;
+
+  @CompilationFinal public SClass               trueClass;
+  @CompilationFinal public SClass               falseClass;
 
   private final HashMap<SSymbol, SObject>       globals = new HashMap<SSymbol, SObject>();
   private java.lang.String[]                    classPath;
-  private boolean                               printAST;
+  @CompilationFinal private boolean             printAST;
 
   public static final java.lang.String          pathSeparator;
   public static final java.lang.String          fileSeparator;
