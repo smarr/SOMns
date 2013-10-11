@@ -48,6 +48,10 @@ public abstract class AbstractMessageNode extends ExpressionNode {
     return (arguments != null && ((SObject[]) arguments).length == 1);
   }
 
+  protected boolean hasTwoArguments(final Object receiver, final Object arguments) {
+    return (arguments != null && ((SObject[]) arguments).length == 2);
+  }
+
   protected boolean isBooleanReceiver(final SObject receiver) {
     SClass rcvrClass = classOfReceiver(receiver, getReceiver());
     return rcvrClass == universe.trueClass || rcvrClass == universe.falseClass;
