@@ -104,6 +104,6 @@ public abstract class MessageNode extends AbstractMessageNode {
 
   @Override
   public ExpressionNode cloneForInlining() {
-    return MessageNodeFactory.create(selector, universe, getReceiver(), getArguments());
+    return NodeFactory.createMessageNode(selector, universe, getReceiver(), getArguments());
   }
 }

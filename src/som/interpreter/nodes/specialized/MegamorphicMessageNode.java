@@ -2,7 +2,7 @@ package som.interpreter.nodes.specialized;
 
 import som.interpreter.nodes.AbstractMessageNode;
 import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.MessageNodeFactory;
+import som.interpreter.nodes.NodeFactory;
 import som.vm.Universe;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject;
@@ -29,7 +29,7 @@ public abstract class MegamorphicMessageNode extends AbstractMessageNode {
 
   @Override
   public ExpressionNode cloneForInlining() {
-    return MessageNodeFactory.create(selector, universe,
+    return NodeFactory.createMessageNode(selector, universe,
         getReceiver().cloneForInlining(),
         getArguments().cloneForInlining());
   }
