@@ -61,7 +61,8 @@ public abstract class WhileMessageNode extends AbstractMessageNode {
   @Specialization(order = 1, guards = "isWhileTrue")
   public SObject doWhileTrue(final VirtualFrame frame, final SObject receiver,
       final Object arguments) {
-    SClass currentCondClass = classOfReceiver(receiver, getReceiver());
+    SObject rcvr = evalConditionIfNecessary(frame, receiver);
+    SClass currentCondClass = classOfReceiver(rcvr, getReceiver());
 
     while (currentCondClass == universe.trueClass) {
       if (blockMethodLoopBody != null) {
@@ -78,7 +79,8 @@ public abstract class WhileMessageNode extends AbstractMessageNode {
   @Specialization(order = 2, guards = "isWhileFalse")
   public SObject doWhileFalse(final VirtualFrame frame, final SObject receiver,
       final Object arguments) {
-    SClass currentCondClass = classOfReceiver(receiver, getReceiver());
+    SObject rcvr = evalConditionIfNecessary(frame, receiver);
+    SClass currentCondClass = classOfReceiver(rcvr, getReceiver());
 
     while (currentCondClass == universe.falseClass) {
       if (blockMethodLoopBody != null) {
