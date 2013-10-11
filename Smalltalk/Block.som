@@ -26,8 +26,6 @@ THE SOFTWARE.
 Block = (
 
     "For the creation of Block instances, see Universe_new_block()."
-
-    | method context |
     
     "Evaluation"
     value = primitive
