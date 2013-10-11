@@ -98,7 +98,7 @@ public abstract class MessageNode extends AbstractMessageNode {
 
     IfTrueIfFalseMessageNode node = IfTrueIfFalseMessageNodeFactory.create(
         selector, universe, trueBlock, falseBlock, getReceiver(), getArguments());
-    return replace(node, "Specialize for #ifTrue:ifFalse.", true).
+    return replace(node, "Specialize for #ifTrue:ifFalse.").
         doIfTrueIfFalse(frame, receiver, arguments);
   }
 
@@ -129,9 +129,10 @@ public abstract class MessageNode extends AbstractMessageNode {
         selector, universe, selector.getString().equals("ifTrue:"),
         getReceiver(), getArguments());
     return replace(node, "Specialize for #ifTrue: or #ifFalse with Expression").doGeneric(frame, receiver, arguments);
+  }
 
-  @Specialization(order = 30, guards = { "hasOneArgument", "isWhileTrueOrWhileFalse",
-      "hasBlockReceiver" })
+  @Specialization(order = 30, guards = { "hasOneArgument",
+      "isWhileTrueOrWhileFalse", "hasBlockReceiver" })
   public SObject doWhileTrueOrWhileFalse(final VirtualFrame frame,
       final SObject receiver, final Object arguments) {
     SBlock conditionBlock = (SBlock) receiver;
@@ -143,7 +144,7 @@ public abstract class MessageNode extends AbstractMessageNode {
     WhileMessageNode node = WhileMessageNodeFactory.create(selector, universe,
         conditionBlock.getMethod(), loopBodyMethod, selector.getString().equals("whileTrue:"),
         getReceiver(), getArguments());
-    return replace(node, "Specialize for #whileTrue: or #whileFalse:", true).
+    return replace(node, "Specialize for #whileTrue: or #whileFalse:").
         doGeneric(frame, receiver, arguments);
   }
 
@@ -156,7 +157,8 @@ public abstract class MessageNode extends AbstractMessageNode {
     if (invokable != null) {
       MonomorpicMessageNode node = MonomorpicMessageNodeFactory.create(selector,
           universe, rcvrClass, invokable, getReceiver(), getArguments());
-      return replace(node, "Be optimisitic and do a monomorphic lookup cache.", true).doMonomorphic(frame, receiver, arguments);
+      return replace(node, "Be optimisitic and do a monomorphic lookup cache.").
+          doMonomorphic(frame, receiver, arguments);
     } else {
       SObject[] args = (SObject[]) arguments;
       return doFullSend(frame, receiver, args, rcvrClass);
