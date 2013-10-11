@@ -26,12 +26,17 @@ import som.interpreter.nodes.specialized.IfTrueAndIfFalseMessageNode;
 import som.interpreter.nodes.specialized.IfTrueAndIfFalseMessageNodeFactory;
 import som.interpreter.nodes.specialized.IfTrueAndIfFalseWithExpMessageNode;
 import som.interpreter.nodes.specialized.IfTrueAndIfFalseWithExpMessageNodeFactory;
+import som.interpreter.nodes.specialized.IfTrueIfFalseMessageNode;
+import som.interpreter.nodes.specialized.IfTrueIfFalseMessageNodeFactory;
 import som.interpreter.nodes.specialized.MonomorpicMessageNode;
 import som.interpreter.nodes.specialized.MonomorpicMessageNodeFactory;
+import som.interpreter.nodes.specialized.WhileMessageNode;
+import som.interpreter.nodes.specialized.WhileMessageNodeFactory;
 import som.vm.Universe;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
+import som.vmobjects.SMethod;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
@@ -49,10 +54,20 @@ public abstract class MessageNode extends AbstractMessageNode {
     this(node.selector, node.universe);
   }
 
+  protected boolean isWhileTrueOrWhileFalse() {
+    return selector.getString().equals("whileTrue:") ||
+        selector.getString().equals("whileFalse:");
+  }
+
   protected boolean isIfTrueOrIfFalse() {
     return selector.getString().equals("ifTrue:") ||
          selector.getString().equals("ifFalse:");
   }
+
+  protected boolean isIfTrueIfFalse() {
+    return selector.getString().equals("ifTrue:ifFalse:");
+  }
+
 
   protected boolean hasBlockArgument() {
     return getArguments().getArgument(0) instanceof BlockNode;
@@ -60,6 +75,31 @@ public abstract class MessageNode extends AbstractMessageNode {
 
   protected boolean hasExpressionArgument() {
     return !hasBlockArgument();
+  }
+
+  protected boolean hasBlockReceiver() {
+    return getReceiver() instanceof BlockNode;
+  }
+
+  @Specialization(order = 1,
+      guards = {"isBooleanReceiver", "hasTwoArguments", "isIfTrueIfFalse"})
+  public SObject doIfTrueIfFalse(final VirtualFrame frame,
+      final SObject receiver, final Object arguments) {
+    SObject[] args = (SObject[]) arguments;
+    SBlock trueBlock  = null;
+    SBlock falseBlock = null;
+
+    if (getArguments().getArgument(0) instanceof BlockNode) {
+      trueBlock  = (SBlock) args[0];
+    }
+    if (getArguments().getArgument(1) instanceof BlockNode) {
+      falseBlock = (SBlock) args[1];
+    }
+
+    IfTrueIfFalseMessageNode node = IfTrueIfFalseMessageNodeFactory.create(
+        selector, universe, trueBlock, falseBlock, getReceiver(), getArguments());
+    return replace(node, "Specialize for #ifTrue:ifFalse.", true).
+        doIfTrueIfFalse(frame, receiver, arguments);
   }
 
   @Specialization(order = 10,
@@ -89,6 +129,22 @@ public abstract class MessageNode extends AbstractMessageNode {
         selector, universe, selector.getString().equals("ifTrue:"),
         getReceiver(), getArguments());
     return replace(node, "Specialize for #ifTrue: or #ifFalse with Expression").doGeneric(frame, receiver, arguments);
+
+  @Specialization(order = 30, guards = { "hasOneArgument", "isWhileTrueOrWhileFalse",
+      "hasBlockReceiver" })
+  public SObject doWhileTrueOrWhileFalse(final VirtualFrame frame,
+      final SObject receiver, final Object arguments) {
+    SBlock conditionBlock = (SBlock) receiver;
+    SObject[] args = (SObject[]) arguments;
+    SMethod loopBodyMethod = null;
+    if (args[0] instanceof SBlock) {
+      loopBodyMethod = ((SBlock) args[0]).getMethod();
+    }
+    WhileMessageNode node = WhileMessageNodeFactory.create(selector, universe,
+        conditionBlock.getMethod(), loopBodyMethod, selector.getString().equals("whileTrue:"),
+        getReceiver(), getArguments());
+    return replace(node, "Specialize for #whileTrue: or #whileFalse:", true).
+        doGeneric(frame, receiver, arguments);
   }
 
   @Generic
