@@ -68,7 +68,7 @@ Object = nil (
     "Error recovering"
     doesNotUnderstand: selector arguments: arguments = (
         self error:
-            ('Method ' + selector + ' not found in class ' + class name)
+            ('Method ' + selector + ' not found in class ' + self class name)
     )
     
     escapedBlock: block = (
