@@ -95,8 +95,10 @@ public class SObject {
       final Universe universe,
       final PackedFrame frame) {
     // Allocate an array with enough room to hold all arguments
-    SArray argumentsArray = universe.newArray(arguments.length);
-    for (int i = 0; i < arguments.length; i++) {
+    int numArgs = (arguments == null) ? 0 : arguments.length;
+
+    SArray argumentsArray = universe.newArray(numArgs);
+    for (int i = 0; i < numArgs; i++) {
       argumentsArray.setIndexableField(i, arguments[i]);
     }
 
