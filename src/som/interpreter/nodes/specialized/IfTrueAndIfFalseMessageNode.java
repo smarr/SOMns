@@ -71,7 +71,8 @@ public abstract class IfTrueAndIfFalseMessageNode extends AbstractMessageNode {
   public SObject doGeneric(final VirtualFrame frame, final SObject receiver,
       final Object arguments) {
     if (!isBooleanReceiver(receiver)) {
-      return fallbackForNonBoolReceiver(frame, receiver, arguments);
+      return fallbackForNonBoolReceiver(receiver).
+          doGeneric(frame, receiver, arguments);
     }
     if (executeIf) {
       return doIfTrue(frame, receiver, arguments);
@@ -80,8 +81,7 @@ public abstract class IfTrueAndIfFalseMessageNode extends AbstractMessageNode {
     }
   }
 
-  public SObject fallbackForNonBoolReceiver(final VirtualFrame frame,
-      final SObject receiver, final Object arguments) {
+  protected PolymorpicMessageNode fallbackForNonBoolReceiver(final SObject receiver) {
     CompilerDirectives.transferToInterpreter();
 
     SClass rcvrClass = classOfReceiver(receiver, getReceiver());
@@ -90,8 +90,7 @@ public abstract class IfTrueAndIfFalseMessageNode extends AbstractMessageNode {
     PolymorpicMessageNode poly = PolymorpicMessageNodeFactory.create(selector,
         universe, rcvrClass, getReceiver(), getArguments());
     return replace(poly, "Receiver wasn't a boolean. " +
-        "So, we need to do the actual send.").
-        doGeneric(frame, receiver, arguments);
+        "So, we need to do the actual send.");
   }
 
   /**

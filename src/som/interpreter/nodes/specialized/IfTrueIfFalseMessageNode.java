@@ -80,12 +80,12 @@ public abstract class IfTrueIfFalseMessageNode extends AbstractMessageNode {
         return blockMethodFalseBranch.invoke(frame.pack(), b, noArgs);
       }
     } else {
-      return fallbackForNonBoolReceiver(frame, rcvr, arguments, currentRcvrClass);
+      return fallbackForNonBoolReceiver(currentRcvrClass).
+          doGeneric(frame, rcvr, arguments);
     }
   }
 
-  private SObject fallbackForNonBoolReceiver(final VirtualFrame frame,
-      final SObject rcvr, final Object arguments, final SClass currentRcvrClass) {
+  private PolymorpicMessageNode fallbackForNonBoolReceiver(final SClass currentRcvrClass) {
     CompilerDirectives.transferToInterpreter();
 
     // So, it might just be a polymorphic send site.
@@ -93,8 +93,7 @@ public abstract class IfTrueIfFalseMessageNode extends AbstractMessageNode {
         universe, currentRcvrClass, getReceiver(),
         getArguments());
     return replace(poly, "Receiver wasn't a boolean. " +
-        "So, we need to do the actual send.").
-        doGeneric(frame, rcvr, arguments);
+        "So, we need to do the actual send.");
   }
 
   @Override

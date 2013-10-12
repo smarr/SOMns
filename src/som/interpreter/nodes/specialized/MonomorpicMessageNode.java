@@ -60,13 +60,17 @@ public abstract class MonomorpicMessageNode extends AbstractMessageNode
     if (isCachedReceiverClass(receiver)) {
       return doMonomorphic(frame, receiver, arguments);
     } else {
-      CompilerDirectives.transferToInterpreter();
-      // So, it might just be a polymorphic send site.
-      PolymorpicMessageNode poly = PolymorpicMessageNodeFactory.create(selector,
-          universe, rcvrClass, getReceiver(), getArguments());
-      return replace(poly, "It is not a monomorpic send.").
+      return generalizeToPolymorphicNode().
           doGeneric(frame, receiver, arguments);
     }
+  }
+
+  public PolymorpicMessageNode generalizeToPolymorphicNode() {
+    CompilerDirectives.transferToInterpreter();
+    // So, it might just be a polymorphic send site.
+    PolymorpicMessageNode poly = PolymorpicMessageNodeFactory.create(selector,
+        universe, rcvrClass, getReceiver(), getArguments());
+    return replace(poly, "It is not a monomorpic send.");
   }
 
   @Override

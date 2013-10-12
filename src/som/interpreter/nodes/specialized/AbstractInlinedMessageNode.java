@@ -10,7 +10,6 @@ import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.FrameFactory;
 
 public abstract class AbstractInlinedMessageNode extends AbstractMessageNode {
@@ -48,13 +47,11 @@ public abstract class AbstractInlinedMessageNode extends AbstractMessageNode {
     return currentRcvrClass == rcvrClass;
   }
 
-  protected SObject generalizeNode(final VirtualFrame frame, final SObject rcvr,
-      final Object arguments, final SClass currentRcvrClass) {
+  protected PolymorpicMessageNode generalizeNode(final SClass currentRcvrClass) {
     CompilerDirectives.transferToInterpreter();
     // So, it might just be a polymorphic send site.
     PolymorpicMessageNode poly = PolymorpicMessageNodeFactory.create(selector,
         universe, currentRcvrClass, getReceiver(), getArguments());
-    return replace(poly, "It is not a monomorpic send.").
-        doGeneric(frame, rcvr, arguments);
+    return replace(poly, "It is not a monomorpic send.");
   }
 }

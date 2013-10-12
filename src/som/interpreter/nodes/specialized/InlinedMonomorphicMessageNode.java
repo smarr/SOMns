@@ -59,8 +59,8 @@ public abstract class InlinedMonomorphicMessageNode extends AbstractInlinedMessa
     if (isCachedReceiverClass(receiver)) {
       return doMonomorphic(frame, receiver, arguments);
     } else {
-      return generalizeNode(frame, receiver, arguments,
-          classOfReceiver(receiver, getReceiver()));
+      return generalizeNode(classOfReceiver(receiver, getReceiver())).
+          doGeneric(frame, receiver, arguments);
     }
   }
 

@@ -71,13 +71,17 @@ public abstract class PolymorpicMessageNode extends AbstractMessageNode {
       invokables[cacheEntries]  = currentRcvrClass.lookupInvokable(selector);
       return invokables[i].invoke(frame.pack(), receiver, args);
     } else {
-      CompilerDirectives.transferToInterpreter();
-      // So, it might just be a megamorphic send site.
-      MegamorphicMessageNode mega = MegamorphicMessageNodeFactory.create(selector,
-          universe, getReceiver(), getArguments());
-      return replace(mega, "It is not a polymorpic send.").
+      return generalizeToMegamorphicNode().
           doGeneric(frame, receiver, arguments);
     }
+  }
+
+  public MegamorphicMessageNode generalizeToMegamorphicNode() {
+    CompilerDirectives.transferToInterpreter();
+    // So, it might just be a megamorphic send site.
+    MegamorphicMessageNode mega = MegamorphicMessageNodeFactory.create(selector,
+        universe, getReceiver(), getArguments());
+    return replace(mega, "It is not a polymorpic send.");
   }
 
   @Override
