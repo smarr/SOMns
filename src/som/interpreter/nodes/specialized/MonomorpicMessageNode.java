@@ -1,12 +1,12 @@
 package som.interpreter.nodes.specialized;
 
-import som.interpreter.Method;
+import som.interpreter.Invokable;
 import som.interpreter.nodes.AbstractMessageNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.NodeFactory;
 import som.vm.Universe;
 import som.vmobjects.SClass;
-import som.vmobjects.SInvokable;
+import som.vmobjects.SMethod;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
@@ -23,13 +23,13 @@ import com.oracle.truffle.api.nodes.Node;
 public abstract class MonomorpicMessageNode extends AbstractMessageNode
   implements InlinableCallSite {
 
-  private final SClass      rcvrClass;
-  private final SInvokable  invokable;
+  private final SClass  rcvrClass;
+  private final SMethod invokable;
 
   private int callCount;
 
   public MonomorpicMessageNode(final SSymbol selector, final Universe universe,
-      final SClass rcvrClass, final SInvokable invokable) {
+      final SClass rcvrClass, final SMethod invokable) {
     super(selector, universe);
     this.rcvrClass = rcvrClass;
     this.invokable = invokable;
@@ -92,7 +92,7 @@ public abstract class MonomorpicMessageNode extends AbstractMessageNode
   @SlowPath
   @Override
   public Node getInlineTree() {
-    Method method = invokable.getTruffleInvokable();
+    Invokable method = invokable.getTruffleInvokable();
     if (method == null) {
       return this;
     }
@@ -102,7 +102,7 @@ public abstract class MonomorpicMessageNode extends AbstractMessageNode
   @SlowPath
   private InlinedMonomorphicMessageNode newInlinedNode(
       final FrameFactory frameFactory,
-      final Method method) {
+      final Invokable method) {
     return InlinedMonomorphicMessageNodeFactory.create(selector, universe, rcvrClass, invokable, frameFactory,
         method, method.methodCloneForInlining(), getReceiver(), getArguments());
   }
@@ -110,7 +110,7 @@ public abstract class MonomorpicMessageNode extends AbstractMessageNode
   @SlowPath
   @Override
   public boolean inline(final FrameFactory factory) {
-    Method method = invokable.getTruffleInvokable();
+    Invokable method = invokable.getTruffleInvokable();
     if (method == null) {
       return false;
     }

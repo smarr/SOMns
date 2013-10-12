@@ -25,9 +25,20 @@
 
 package som.primitives;
 
+import som.compiler.MethodGenerationContext;
+import som.interpreter.Primitive;
+import som.interpreter.nodes.ArgumentEvaluationNode;
+import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.PrimitiveNode;
+import som.interpreter.nodes.VariableNode.SelfReadNode;
+import som.interpreter.nodes.VariableNode.VariableReadNode;
 import som.vm.Universe;
 import som.vmobjects.SClass;
-import som.vmobjects.SPrimitive;
+import som.vmobjects.SMethod;
+import som.vmobjects.SSymbol;
+
+import com.oracle.truffle.api.dsl.NodeFactory;
+import com.oracle.truffle.api.frame.FrameSlot;
 
 public abstract class Primitives {
 
@@ -37,7 +48,7 @@ public abstract class Primitives {
     this.universe = universe;
   }
 
-  public final void installPrimitivesIn(SClass value) {
+  public final void installPrimitivesIn(final SClass value) {
     // Save a reference to the holder class
     holder = value;
 
@@ -47,17 +58,53 @@ public abstract class Primitives {
 
   public abstract void installPrimitives();
 
-  protected void installInstancePrimitive(SPrimitive primitive) {
-    // Install the given primitive as an instance primitive in the holder
-    // class
-    holder.addInstancePrimitive(primitive);
+  public static SMethod constructPrimitive(final String selector,
+      final NodeFactory<? extends PrimitiveNode> nodeFactory, final Universe universe) {
+    SSymbol signature = universe.symbolFor(selector);
+    int numArgs = signature.getNumberOfSignatureArguments() - 1; // we take care of self seperately
+
+
+    MethodGenerationContext mgen = new MethodGenerationContext();
+    ExpressionNode[] args = new ExpressionNode[numArgs];
+    FrameSlot[] argSlots  = new FrameSlot[numArgs];
+    for (int i = 0; i < numArgs; i++) {
+      argSlots[i] = mgen.addArgument("primArg" + i);
+      args[i] = new VariableReadNode(argSlots[i], 0);
+    }
+
+    ArgumentEvaluationNode argEvalNode = new ArgumentEvaluationNode(args);
+
+    PrimitiveNode primNode = nodeFactory.createNode(signature, universe,
+          new SelfReadNode(mgen.getSelfSlot(), 0), argEvalNode);
+
+    Primitive primMethodNode = new Primitive(primNode, mgen.getSelfSlot(),
+        argSlots, mgen.getFrameDescriptor());
+    SMethod prim = universe.newMethod(signature, primMethodNode,
+        mgen.getFrameDescriptor(), true);
+
+    return prim;
   }
 
-  protected void installClassPrimitive(SPrimitive primitive) {
+  protected void installInstancePrimitive(final String selector,
+      final NodeFactory<? extends PrimitiveNode> nodeFactory) {
+    SMethod prim = constructPrimitive(selector, nodeFactory, universe);
+    // Install the given primitive as an instance primitive in the holder class
+    holder.addInstancePrimitive(prim);
+  }
+
+  protected void installClassPrimitive(final String selector,
+      final NodeFactory<? extends PrimitiveNode> nodeFactory) {
+    SMethod prim = constructPrimitive(selector, nodeFactory, universe);
+
     // Install the given primitive as an instance primitive in the class of
     // the holder class
-    holder.getSOMClass().addInstancePrimitive(primitive);
+    holder.getSOMClass().addInstancePrimitive(prim);
   }
 
   private SClass holder;
+
+  public static SMethod getEmptyPrimitive(final String selector,
+      final Universe universe) {
+    return constructPrimitive(selector, EmptyPrimFactory.getInstance(), universe);
+  }
 }

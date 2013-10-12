@@ -84,7 +84,7 @@ public class SObject {
     SSymbol selector = universe.symbolFor(selectorString);
 
     // Lookup the invokable
-    SInvokable invokable = getSOMClass().lookupInvokable(selector);
+    SMethod invokable = getSOMClass().lookupInvokable(selector);
 
     // Invoke the invokable
     return invokable.invoke(frame, this, arguments);

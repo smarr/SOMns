@@ -25,12 +25,8 @@
 
 package som.primitives;
 
-import com.oracle.truffle.api.frame.PackedFrame;
-
-import som.interpreter.RestartLoopException;
+import som.primitives.BlockPrimsFactory.RestartPrimFactory;
 import som.vm.Universe;
-import som.vmobjects.SObject;
-import som.vmobjects.SPrimitive;
 
 public class BlockPrimitives extends Primitives {
 
@@ -38,12 +34,8 @@ public class BlockPrimitives extends Primitives {
     super(universe);
   }
 
+  @Override
   public void installPrimitives() {
-    installInstancePrimitive(new SPrimitive("restart", universe) {
-
-      public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
-        throw new RestartLoopException();
-      }
-    });
+    installInstancePrimitive("restart", RestartPrimFactory.getInstance());
   }
 }

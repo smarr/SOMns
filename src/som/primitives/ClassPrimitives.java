@@ -25,11 +25,7 @@
 
 package som.primitives;
 
-import com.oracle.truffle.api.frame.PackedFrame;
 import som.vm.Universe;
-import som.vmobjects.SClass;
-import som.vmobjects.SObject;
-import som.vmobjects.SPrimitive;
 
 public class ClassPrimitives extends Primitives {
 
@@ -37,12 +33,8 @@ public class ClassPrimitives extends Primitives {
     super(universe);
   }
 
+  @Override
   public void installPrimitives() {
-    installInstancePrimitive(new SPrimitive("new", universe) {
-
-      public SObject invoke(final PackedFrame frame, final SObject self, final SObject[] args) {
-        return universe.newInstance((SClass) self);
-      }
-    });
+    installInstancePrimitive("new", NewObjectPrimFactory.getInstance());
   }
 }

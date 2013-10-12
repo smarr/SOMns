@@ -25,12 +25,11 @@
 
 package som.primitives;
 
-import com.oracle.truffle.api.frame.PackedFrame;
+import som.primitives.ArrayPrimsFactory.AtPrimFactory;
+import som.primitives.ArrayPrimsFactory.AtPutPrimFactory;
+import som.primitives.ArrayPrimsFactory.LengthPrimFactory;
+import som.primitives.ArrayPrimsFactory.NewPrimFactory;
 import som.vm.Universe;
-import som.vmobjects.SArray;
-import som.vmobjects.SInteger;
-import som.vmobjects.SObject;
-import som.vmobjects.SPrimitive;
 
 public class ArrayPrimitives extends Primitives {
 
@@ -38,43 +37,12 @@ public class ArrayPrimitives extends Primitives {
     super(universe);
   }
 
+  @Override
   public void installPrimitives() {
-    installInstancePrimitive(new SPrimitive("at:", universe) {
+    installInstancePrimitive("at:",     AtPrimFactory.getInstance());
+    installInstancePrimitive("at:put:", AtPutPrimFactory.getInstance());
+    installInstancePrimitive("length",  LengthPrimFactory.getInstance());
 
-      public SObject invoke(final PackedFrame frame, final SObject self, final SObject[] args) {
-        SInteger index = (SInteger) args[0];
-        SArray   arr   = (SArray)   self;
-
-        return arr.getIndexableField(index.getEmbeddedInteger() - 1);
-      }
-    });
-
-    installInstancePrimitive(new SPrimitive("at:put:", universe) {
-
-      public SObject invoke(final PackedFrame frame, final SObject self, final SObject[] args) {
-        SInteger index = (SInteger) args[0];
-        SObject  value = args[1];
-
-        SArray arr = (SArray) self;
-        arr.setIndexableField(index.getEmbeddedInteger() - 1, value);
-        return value;
-      }
-    });
-
-    installInstancePrimitive(new SPrimitive("length", universe) {
-
-      public SObject invoke(final PackedFrame frame, final SObject self, final SObject[] args) {
-        SArray arr = (SArray) self;
-        return universe.newInteger(arr.getNumberOfIndexableFields());
-      }
-    });
-
-    installClassPrimitive(new SPrimitive("new:", universe) {
-
-      public SObject invoke(final PackedFrame frame, final SObject self, final SObject[] args) {
-        SInteger length = (SInteger) args[0];
-        return universe.newArray(length.getEmbeddedInteger());
-      }
-    });
+    installClassPrimitive("new:", NewPrimFactory.getInstance());
   }
 }

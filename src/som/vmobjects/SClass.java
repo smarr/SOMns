@@ -37,7 +37,7 @@ public class SClass extends SObject {
   public SClass(final Universe universe) {
     // Initialize this class by calling the super constructor
     super(universe.nilObject);
-    invokablesTable = new HashMap<SSymbol, SInvokable>();
+    invokablesTable = new HashMap<SSymbol, SMethod>();
     this.universe = universe;
   }
 
@@ -45,7 +45,7 @@ public class SClass extends SObject {
     // Initialize this class by calling the super constructor with the given
     // value
     super(numberOfFields, universe.nilObject);
-    invokablesTable = new HashMap<SSymbol, SInvokable>();
+    invokablesTable = new HashMap<SSymbol, SMethod>();
     this.universe = universe;
   }
 
@@ -112,17 +112,17 @@ public class SClass extends SObject {
     return getInstanceInvokables().getNumberOfIndexableFields();
   }
 
-  public SInvokable getInstanceInvokable(final int index) {
+  public SMethod getInstanceInvokable(final int index) {
     // Get the instance invokable with the given index
-    return (SInvokable) getInstanceInvokables().getIndexableField(index);
+    return (SMethod) getInstanceInvokables().getIndexableField(index);
   }
 
-  public void setInstanceInvokable(final int index, final SInvokable value) {
+  public void setInstanceInvokable(final int index, final SMethod value) {
     // Set this class as the holder of the given invokable
     value.setHolder(this);
 
     // Set the instance method with the given index to the given value
-    getInstanceInvokables().setIndexableField(index, (SObject) value);
+    getInstanceInvokables().setIndexableField(index, value);
   }
 
   @Override
@@ -131,8 +131,8 @@ public class SClass extends SObject {
     return numberOfClassFields;
   }
 
-  public SInvokable lookupInvokable(final SSymbol signature) {
-    SInvokable invokable;
+  public SMethod lookupInvokable(final SSymbol signature) {
+    SMethod invokable;
 
     // Lookup invokable and return if found
     invokable = invokablesTable.get(signature);
@@ -174,11 +174,11 @@ public class SClass extends SObject {
     return -1;
   }
 
-  public boolean addInstanceInvokable(final SInvokable value) {
+  public boolean addInstanceInvokable(final SMethod value) {
     // Add the given invokable to the array of instance invokables
     for (int i = 0; i < getNumberOfInstanceInvokables(); i++) {
       // Get the next invokable in the instance invokable array
-      SInvokable invokable = getInstanceInvokable(i);
+      SMethod invokable = getInstanceInvokable(i);
 
       // Replace the invokable with the given one if the signature matches
       if (invokable.getSignature() == value.getSignature()) {
@@ -189,11 +189,11 @@ public class SClass extends SObject {
 
     // Append the given method to the array of instance methods
     setInstanceInvokables(getInstanceInvokables().copyAndExtendWith(
-        (SObject) value, universe));
+        value, universe));
     return true;
   }
 
-  public void addInstancePrimitive(final SPrimitive value) {
+  public void addInstancePrimitive(final SMethod value) {
     if (addInstanceInvokable(value)) {
       Universe.print("Warning: Primitive " + value.getSignature().getString());
       Universe.println(" is not in class definition for class "
@@ -283,7 +283,7 @@ public class SClass extends SObject {
   }
 
   // Mapping of symbols to invokables
-  private final java.util.HashMap<SSymbol, SInvokable> invokablesTable;
+  private final java.util.HashMap<SSymbol, SMethod> invokablesTable;
 
   // Static field indices and number of class fields
   static final int                             superClassIndex         = numberOfObjectFields;

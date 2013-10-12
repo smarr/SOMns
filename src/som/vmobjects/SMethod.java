@@ -26,7 +26,7 @@
 package som.vmobjects;
 
 import som.interpreter.Arguments;
-import som.interpreter.Method;
+import som.interpreter.Invokable;
 
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.Truffle;
@@ -34,39 +34,35 @@ import com.oracle.truffle.api.TruffleRuntime;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.PackedFrame;
 
-public class SMethod extends SObject implements SInvokable {
+public class SMethod extends SObject {
 
   public SMethod(final SObject nilObject,
       final SSymbol signature,
-      final som.interpreter.Method truffleInvokable,
-      final FrameDescriptor frameDescriptor) {
+      final Invokable truffleInvokable,
+      final FrameDescriptor frameDescriptor, final boolean isPrimitive) {
     super(nilObject);
     setSignature(signature);
 
-    this.truffleInvokable = truffleInvokable; // TODO: remove truffleInvokable if possible/useful
+    this.truffleInvokable = truffleInvokable;
 
     TruffleRuntime runtime =  Truffle.getRuntime(); // TODO: should be: universe.getTruffleRuntime();
-
     CallTarget target = runtime.createCallTarget(truffleInvokable, frameDescriptor);
     this.callTarget = target;
+    this.isPrimitive = isPrimitive;
   }
 
-  @Override
   public CallTarget getCallTarget() {
     return callTarget;
   }
 
-  @Override
-  public Method getTruffleInvokable() {
+  public Invokable getTruffleInvokable() {
     return truffleInvokable;
   }
 
-  @Override
   public boolean isPrimitive() {
-    return false;
+    return isPrimitive;
   }
 
-  @Override
   public SSymbol getSignature() {
     // Get the signature of this method by reading the field with signature
     // index
@@ -79,13 +75,11 @@ public class SMethod extends SObject implements SInvokable {
     setField(signatureIndex, value);
   }
 
-  @Override
   public SClass getHolder() {
     // Get the holder of this method by reading the field with holder index
     return (SClass) getField(holderIndex);
   }
 
-  @Override
   public void setHolder(final SClass value) {
     // Set the holder of this method by writing to the field with holder index
     setField(holderIndex, value);
@@ -107,7 +101,6 @@ public class SMethod extends SObject implements SInvokable {
     return result;
   }
 
-  @Override
   public SObject invoke(final PackedFrame caller,
       final SObject self,
       final SObject[] args) {
@@ -126,8 +119,9 @@ public class SMethod extends SObject implements SInvokable {
   }
 
   // Private variable holding Truffle runtime information
-  private final som.interpreter.Method truffleInvokable;
+  private final Invokable              truffleInvokable;
   private final CallTarget             callTarget;
+  private final boolean                isPrimitive;
 
   // Static field indices and number of method fields
   static final int                     signatureIndex       = numberOfObjectFields;

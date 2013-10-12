@@ -35,7 +35,6 @@ import som.interpreter.nodes.specialized.WhileMessageNodeFactory;
 import som.vm.Universe;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
-import som.vmobjects.SInvokable;
 import som.vmobjects.SMethod;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
@@ -69,7 +68,6 @@ public abstract class MessageNode extends AbstractMessageNode {
   protected boolean isIfTrueIfFalse() {
     return selector.getString().equals("ifTrue:ifFalse:");
   }
-
 
   protected boolean hasBlockArgument() {
     return getArguments().getArgument(0) instanceof BlockNode;
@@ -161,7 +159,7 @@ public abstract class MessageNode extends AbstractMessageNode {
     CompilerDirectives.transferToInterpreter();
 
     SClass rcvrClass = classOfReceiver(receiver, getReceiver());
-    SInvokable invokable = rcvrClass.lookupInvokable(selector);
+    SMethod invokable = rcvrClass.lookupInvokable(selector);
 
     if (invokable != null) {
       MonomorpicMessageNode node = MonomorpicMessageNodeFactory.create(selector,

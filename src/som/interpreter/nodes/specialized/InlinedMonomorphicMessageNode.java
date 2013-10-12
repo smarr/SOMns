@@ -1,12 +1,11 @@
 package som.interpreter.nodes.specialized;
 
 import som.interpreter.Arguments;
-import som.interpreter.FrameOnStackMarker;
-import som.interpreter.Method;
+import som.interpreter.Invokable;
 import som.interpreter.nodes.ExpressionNode;
 import som.vm.Universe;
 import som.vmobjects.SClass;
-import som.vmobjects.SInvokable;
+import som.vmobjects.SMethod;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
@@ -22,9 +21,9 @@ public abstract class InlinedMonomorphicMessageNode extends AbstractInlinedMessa
 
   public InlinedMonomorphicMessageNode(final SSymbol selector,
       final Universe universe, final SClass rcvrClass,
-      final SInvokable invokable,
+      final SMethod invokable,
       final FrameFactory frameFactory,
-      final Method inlinedMethod, final ExpressionNode methodBody) {
+      final Invokable inlinedMethod, final ExpressionNode methodBody) {
     super(selector, universe, rcvrClass, invokable,
         frameFactory, inlinedMethod, methodBody);
   }
@@ -48,9 +47,7 @@ public abstract class InlinedMonomorphicMessageNode extends AbstractInlinedMessa
         inlinedMethod.getFrameDescriptor(), caller.pack(),
         new Arguments(receiver, args));
 
-    final FrameOnStackMarker marker = Method.initializeFrame(inlinedMethod, frame);
-
-    return Method.messageSendExecution(marker, frame, methodBody);
+    return inlinedMethod.executeInlined(frame, methodBody);
   }
 
   @Generic

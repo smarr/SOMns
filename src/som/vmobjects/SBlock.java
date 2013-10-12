@@ -24,10 +24,11 @@
 
 package som.vmobjects;
 
+import som.primitives.BlockPrimsFactory.ValuePrimFactory;
+import som.primitives.Primitives;
 import som.vm.Universe;
 
 import com.oracle.truffle.api.frame.MaterializedFrame;
-import com.oracle.truffle.api.frame.PackedFrame;
 
 public class SBlock extends SObject {
 
@@ -70,37 +71,24 @@ public class SBlock extends SObject {
     return numberOfBlockFields;
   }
 
-  public static SPrimitive getEvaluationPrimitive(final int numberOfArguments,
+  public static SMethod getEvaluationPrimitive(final int numberOfArguments,
       final Universe universe) {
-    return new Evaluation(numberOfArguments, universe);
+    return Primitives.constructPrimitive(computeSignatureString(numberOfArguments),
+        ValuePrimFactory.getInstance(), universe);
   }
 
-  public static class Evaluation extends SPrimitive {
+  private static java.lang.String computeSignatureString(final int numberOfArguments) {
+    // Compute the signature string
+    java.lang.String signatureString = "value";
+    if (numberOfArguments > 1) { signatureString += ":"; }
 
-    public Evaluation(final int numberOfArguments, final Universe universe) {
-      super(computeSignatureString(numberOfArguments), universe);
+    // Add extra value: selector elements if necessary
+    for (int i = 2; i < numberOfArguments; i++) {
+      signatureString += "with:";
     }
 
-    @Override
-    public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
-      // Get the block (the receiver)
-      SBlock self = (SBlock) selfO;
-      return self.getMethod().invoke(frame, selfO, args);
-    }
-
-    private static java.lang.String computeSignatureString(final int numberOfArguments) {
-      // Compute the signature string
-      java.lang.String signatureString = "value";
-      if (numberOfArguments > 1) { signatureString += ":"; }
-
-      // Add extra value: selector elements if necessary
-      for (int i = 2; i < numberOfArguments; i++) {
-        signatureString += "with:";
-      }
-
-      // Return the signature string
-      return signatureString;
-    }
+    // Return the signature string
+    return signatureString;
   }
 
   // Static field indices and number of block fields

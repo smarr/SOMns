@@ -25,14 +25,16 @@
 
 package som.primitives;
 
-import com.oracle.truffle.api.frame.PackedFrame;
+import som.primitives.SystemPrimsFactory.ExitPrimFactory;
+import som.primitives.SystemPrimsFactory.FullGCPrimFactory;
+import som.primitives.SystemPrimsFactory.GlobalPrimFactory;
+import som.primitives.SystemPrimsFactory.GlobalPutPrimFactory;
+import som.primitives.SystemPrimsFactory.LoadPrimFactory;
+import som.primitives.SystemPrimsFactory.PrintNewlinePrimFactory;
+import som.primitives.SystemPrimsFactory.PrintStringPrimFactory;
+import som.primitives.SystemPrimsFactory.TicksPrimFactory;
+import som.primitives.SystemPrimsFactory.TimePrimFactory;
 import som.vm.Universe;
-import som.vmobjects.SClass;
-import som.vmobjects.SInteger;
-import som.vmobjects.SObject;
-import som.vmobjects.SPrimitive;
-import som.vmobjects.SString;
-import som.vmobjects.SSymbol;
 
 public class SystemPrimitives extends Primitives {
 
@@ -40,91 +42,16 @@ public class SystemPrimitives extends Primitives {
     super(universe);
   }
 
+  @Override
   public void installPrimitives() {
-    installInstancePrimitive(new SPrimitive("load:", universe) {
-
-      public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
-        SSymbol argument = (SSymbol) args[0];
-
-        SClass result = universe.loadClass(argument);
-        return result != null ? result : universe.nilObject;
-      }
-    });
-
-    installInstancePrimitive(new SPrimitive("exit:", universe) {
-
-      public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
-        SInteger error = (SInteger) args[0];
-        universe.exit(error.getEmbeddedInteger());
-        return selfO;
-      }
-    });
-
-    installInstancePrimitive(new SPrimitive("global:", universe) {
-
-      public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
-        SSymbol argument = (SSymbol) args[0];
-
-        SObject result = universe.getGlobal(argument);
-        return result != null ? result : universe.nilObject;
-      }
-    });
-
-    installInstancePrimitive(new SPrimitive("global:put:", universe) {
-
-      public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
-        SObject value    = args[1];
-        SSymbol argument = (SSymbol) args[0];
-        universe.setGlobal(argument, value);
-        return value;
-      }
-    });
-
-    installInstancePrimitive(new SPrimitive("printString:", universe) {
-
-      public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
-        SString argument = (SString) args[0];
-        Universe.print(argument.getEmbeddedString());
-        return selfO;
-      }
-    });
-
-    installInstancePrimitive(new SPrimitive("printNewline", universe) {
-
-      public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
-        Universe.println();
-        return selfO;
-      }
-    });
-
-    startMicroTime = System.nanoTime() / 1000L;
-    startTime = startMicroTime / 1000L;
-    installInstancePrimitive(new SPrimitive("time", universe) {
-
-      public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
-        int time = (int) (System.currentTimeMillis() - startTime);
-        return universe.newInteger(time);
-      }
-    });
-
-    installInstancePrimitive(new SPrimitive("ticks", universe) {
-
-      public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
-        int time = (int) (System.nanoTime() / 1000L - startMicroTime);
-        return universe.newInteger(time);
-      }
-    });
-
-    installInstancePrimitive(new SPrimitive("fullGC", universe) {
-
-      public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
-        System.gc();
-        return universe.trueObject;
-      }
-    });
-
+    installInstancePrimitive("load:",        LoadPrimFactory.getInstance());
+    installInstancePrimitive("exit:",        ExitPrimFactory.getInstance());
+    installInstancePrimitive("global:",      GlobalPrimFactory.getInstance());
+    installInstancePrimitive("global:put:",  GlobalPutPrimFactory.getInstance());
+    installInstancePrimitive("printString:", PrintStringPrimFactory.getInstance());
+    installInstancePrimitive("printNewline", PrintNewlinePrimFactory.getInstance());
+    installInstancePrimitive("time",         TimePrimFactory.getInstance());
+    installInstancePrimitive("ticks",        TicksPrimFactory.getInstance());
+    installInstancePrimitive("fullGC",       FullGCPrimFactory.getInstance());
   }
-
-  private long startTime;
-  private long startMicroTime;
 }

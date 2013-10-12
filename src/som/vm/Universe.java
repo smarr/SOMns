@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.util.HashMap;
 
 import som.compiler.Disassembler;
+import som.interpreter.Invokable;
 import som.vmobjects.SArray;
 import som.vmobjects.SBigInteger;
 import som.vmobjects.SBlock;
@@ -271,7 +272,7 @@ public class Universe {
     SClass clazz = loadClass(symbolFor(className));
 
     // Lookup the initialize invokable on the system class
-    SMethod initialize = (SMethod) clazz.getSOMClass().
+    SMethod initialize = clazz.getSOMClass().
                                         lookupInvokable(symbolFor(selector));
 
     // Invoke the initialize invokable
@@ -291,7 +292,7 @@ public class Universe {
     SArray argumentsArray = newArray(arguments);
 
     // Lookup the initialize invokable on the system class
-    SMethod initialize = (SMethod) systemClass.
+    SMethod initialize = systemClass.
         lookupInvokable(symbolFor("initialize:"));
 
     // Invoke the initialize invokable
@@ -447,10 +448,13 @@ public class Universe {
   }
 
   @SlowPath
-  public SMethod newMethod(final SSymbol signature, final som.interpreter.Method truffleInvokable, final FrameDescriptor frameDescriptor) {
+  public SMethod newMethod(final SSymbol signature,
+      final Invokable truffleInvokable,
+      final FrameDescriptor frameDescriptor,
+      final boolean isPrimitive) {
     // Allocate a new method and set its class to be the method class
     SMethod result = new SMethod(nilObject, signature, truffleInvokable,
-        frameDescriptor);
+        frameDescriptor, isPrimitive);
     result.setClass(methodClass);
 
     // Return the freshly allocated method

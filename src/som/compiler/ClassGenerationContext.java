@@ -29,7 +29,7 @@ import java.util.List;
 
 import som.vm.Universe;
 import som.vmobjects.SClass;
-import som.vmobjects.SInvokable;
+import som.vmobjects.SMethod;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
@@ -43,15 +43,15 @@ public class ClassGenerationContext {
     this.universe = universe;
   }
 
-  private SSymbol                name;
-  private SSymbol                superName;
-  private boolean                classSide;
-  private int                    numberOfInstanceFieldsOfSuper;
-  private int                    numberOfClassFieldsOfSuper;
-  private final List<SObject>    instanceFields  = new ArrayList<SObject>();
-  private final List<SInvokable> instanceMethods = new ArrayList<SInvokable>();
-  private final List<SObject>    classFields     = new ArrayList<SObject>();
-  private final List<SInvokable> classMethods    = new ArrayList<SInvokable>();
+  private SSymbol             name;
+  private SSymbol             superName;
+  private boolean             classSide;
+  private int                 numberOfInstanceFieldsOfSuper;
+  private int                 numberOfClassFieldsOfSuper;
+  private final List<SObject> instanceFields  = new ArrayList<SObject>();
+  private final List<SMethod> instanceMethods = new ArrayList<SMethod>();
+  private final List<SObject> classFields     = new ArrayList<SObject>();
+  private final List<SMethod> classMethods    = new ArrayList<SMethod>();
 
   public void setName(final SSymbol name) {
     this.name = name;
@@ -73,7 +73,7 @@ public class ClassGenerationContext {
     this.numberOfClassFieldsOfSuper = numberOfClassFields;
   }
 
-  public void addInstanceMethod(final SInvokable meth) {
+  public void addInstanceMethod(final SMethod meth) {
     instanceMethods.add(meth);
   }
 
@@ -81,7 +81,7 @@ public class ClassGenerationContext {
     classSide = b;
   }
 
-  public void addClassMethod(final SInvokable meth) {
+  public void addClassMethod(final SMethod meth) {
     classMethods.add(meth);
   }
 

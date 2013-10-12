@@ -31,20 +31,15 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
-import com.oracle.truffle.api.nodes.RootNode;
 
 
-public class Method extends RootNode {
+public class Method extends Invokable {
 
-  @Child private ExpressionNode expressionOrSequence;
-
-  private final FrameSlot   selfSlot;
-  @CompilationFinal private final FrameSlot[]  argumentSlots;
   @CompilationFinal private final FrameSlot[] temporarySlots;
   private final FrameSlot   nonLocalReturnMarker;
   private final Universe    universe;
 
-  private final FrameDescriptor frameDescriptor;
+
 
   public Method(final ExpressionNode expressions,
                 final FrameSlot selfSlot,
@@ -53,22 +48,19 @@ public class Method extends RootNode {
                 final FrameSlot nonLocalReturnMarker,
                 final Universe  universe,
                 final FrameDescriptor frameDescriptor) {
-    this.expressionOrSequence = adoptChild(expressions);
-    this.selfSlot        = selfSlot;
-    this.argumentSlots   = argumentSlots;
-    this.temporarySlots  = temporarySlots;
+    super(expressions, selfSlot, argumentSlots, frameDescriptor);
+    this.temporarySlots       = temporarySlots;
     this.nonLocalReturnMarker = nonLocalReturnMarker;
-    this.universe        = universe;
-    this.frameDescriptor = frameDescriptor;
+    this.universe             = universe;
   }
 
   @Override
   public Object execute(final VirtualFrame frame) {
-    final FrameOnStackMarker marker = initializeFrame(this, frame);
+    final FrameOnStackMarker marker = initializeFrame(frame);
     return messageSendExecution(marker, frame, expressionOrSequence);
   }
 
-  public static SObject messageSendExecution(final FrameOnStackMarker marker,
+  protected static SObject messageSendExecution(final FrameOnStackMarker marker,
       final VirtualFrame frame,
       final ExpressionNode expr) {
     SObject  result;
@@ -96,22 +88,27 @@ public class Method extends RootNode {
   }
 
   @ExplodeLoop
-  public static FrameOnStackMarker initializeFrame(final Method method,
-      final VirtualFrame frame) {
-    frame.setObject(method.selfSlot, frame.getArguments(Arguments.class).getSelf());
+  protected FrameOnStackMarker initializeFrame(final VirtualFrame frame) {
+    frame.setObject(selfSlot, frame.getArguments(Arguments.class).getSelf());
 
     final FrameOnStackMarker marker = new FrameOnStackMarker();
-    frame.setObject(method.nonLocalReturnMarker, marker);
+    frame.setObject(nonLocalReturnMarker, marker);
 
     Arguments args = frame.getArguments(Arguments.class);
-    for (int i = 0; i < method.argumentSlots.length; i++) {
-      frame.setObject(method.argumentSlots[i], args.getArgument(i));
+    for (int i = 0; i < argumentSlots.length; i++) {
+      frame.setObject(argumentSlots[i], args.getArgument(i));
     }
 
-    for (int i = 0; i < method.temporarySlots.length; i++) {
-      frame.setObject(method.temporarySlots[i], method.universe.nilObject);
+    for (int i = 0; i < temporarySlots.length; i++) {
+      frame.setObject(temporarySlots[i], universe.nilObject);
     }
     return marker;
+  }
+
+  @Override
+  public SObject executeInlined(final VirtualFrame frame, final ExpressionNode exp) {
+    FrameOnStackMarker marker = initializeFrame(frame);
+    return messageSendExecution(marker, frame, exp);
   }
 
   @Override
@@ -122,10 +119,7 @@ public class Method extends RootNode {
     return "Method " + name + ":" + location + "@" + Integer.toHexString(hashCode());
   }
 
-  public FrameDescriptor getFrameDescriptor() {
-    return frameDescriptor;
-  }
-
+  @Override
   public ExpressionNode methodCloneForInlining() {
     return expressionOrSequence.cloneForInlining();
   }

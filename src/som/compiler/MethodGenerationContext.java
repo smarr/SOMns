@@ -32,10 +32,9 @@ import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.FieldNode.FieldReadNode;
 import som.interpreter.nodes.FieldNode.FieldWriteNode;
 import som.interpreter.nodes.GlobalNode.GlobalReadNode;
+import som.primitives.Primitives;
 import som.vm.Universe;
-import som.vmobjects.SInvokable;
 import som.vmobjects.SMethod;
-import som.vmobjects.SPrimitive;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.SourceSection;
@@ -98,12 +97,12 @@ public class MethodGenerationContext {
     return primitive;
   }
 
-  public SInvokable assemblePrimitive(final Universe universe) {
-    return SPrimitive.getEmptyPrimitive(signature.getString(), universe);
+  public SMethod assemblePrimitive(final Universe universe) {
+    return Primitives.getEmptyPrimitive(signature.getString(), universe);
   }
 
   public SMethod assemble(final Universe universe, final ExpressionNode expressions) {
-    FrameSlot[] argSlots = new FrameSlot[arguments.size()];
+    FrameSlot[] argSlots   = new FrameSlot[arguments.size()];
     FrameSlot[] localSlots = new FrameSlot[locals.size()];
 
     for (int i = 0; i < arguments.size(); i++) {
@@ -121,7 +120,8 @@ public class MethodGenerationContext {
 
     assignSourceSectionToMethod(expressions, truffleMethod);
 
-    SMethod meth = universe.newMethod(signature, truffleMethod, frameDescriptor);
+    SMethod meth = universe.newMethod(signature, truffleMethod,
+        frameDescriptor, false);
 
     // return the method - the holder field is to be set later on!
     return meth;
@@ -268,6 +268,10 @@ public class MethodGenerationContext {
 
   public SSymbol getSignature() {
     return signature;
+  }
+
+  public FrameDescriptor getFrameDescriptor() {
+    return frameDescriptor;
   }
 
 }

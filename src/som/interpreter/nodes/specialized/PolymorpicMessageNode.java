@@ -5,7 +5,7 @@ import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.NodeFactory;
 import som.vm.Universe;
 import som.vmobjects.SClass;
-import som.vmobjects.SInvokable;
+import som.vmobjects.SMethod;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
@@ -16,18 +16,18 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 public abstract class PolymorpicMessageNode extends AbstractMessageNode {
   private static final int CACHE_SIZE = 8;
 
-  private final SClass[]      rcvrClasses;
-  private final SInvokable[]  invokables;
+  private final SClass[]   rcvrClasses;
+  private final SMethod[]  invokables;
 
   private int cacheEntries;
 
   public PolymorpicMessageNode(final SSymbol selector,
       final Universe universe, final SClass firstRcvrClass,
-      final SInvokable firstInvokable,
+      final SMethod firstInvokable,
       final SClass secondRcvrClass) {
     super(selector, universe);
     rcvrClasses = new SClass[CACHE_SIZE];
-    invokables  = new SInvokable[CACHE_SIZE];
+    invokables  = new SMethod[CACHE_SIZE];
 
     rcvrClasses[0] = firstRcvrClass;
     invokables[0]  = firstInvokable;
@@ -40,8 +40,9 @@ public abstract class PolymorpicMessageNode extends AbstractMessageNode {
       final Universe universe,
       final SClass currentRcvrClass) {
     super(selector, universe);
+
     rcvrClasses = new SClass[CACHE_SIZE];
-    invokables  = new SInvokable[CACHE_SIZE];
+    invokables  = new SMethod[CACHE_SIZE];
 
     rcvrClasses[0] = currentRcvrClass;
     invokables[0]  = currentRcvrClass.lookupInvokable(selector);

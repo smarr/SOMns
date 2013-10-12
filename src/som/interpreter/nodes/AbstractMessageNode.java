@@ -3,7 +3,7 @@ package som.interpreter.nodes;
 import som.interpreter.nodes.VariableNode.SuperReadNode;
 import som.vm.Universe;
 import som.vmobjects.SClass;
-import som.vmobjects.SInvokable;
+import som.vmobjects.SMethod;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
@@ -60,7 +60,7 @@ public abstract class AbstractMessageNode extends ExpressionNode {
   protected SObject doFullSend(final VirtualFrame frame, final SObject rcvr,
       final SObject[] args, final SClass rcvrClass) {
     // now lookup selector
-    SInvokable invokable = rcvrClass.lookupInvokable(selector);
+    SMethod invokable = rcvrClass.lookupInvokable(selector);
 
     if (invokable != null) {
       return invokable.invoke(frame.pack(), rcvr, args);

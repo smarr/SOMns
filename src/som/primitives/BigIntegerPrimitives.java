@@ -25,12 +25,17 @@
 
 package som.primitives;
 
-import com.oracle.truffle.api.frame.PackedFrame;
+import som.primitives.BigIntegerPrimsFactory.AndPrimFactory;
+import som.primitives.BigIntegerPrimsFactory.AsStringPrimFactory;
+import som.primitives.BigIntegerPrimsFactory.DividePrimFactory;
+import som.primitives.BigIntegerPrimsFactory.EqualsPrimFactory;
+import som.primitives.BigIntegerPrimsFactory.LessThanPrimFactory;
+import som.primitives.BigIntegerPrimsFactory.MinusPrimFactory;
+import som.primitives.BigIntegerPrimsFactory.ModPrimFactory;
+import som.primitives.BigIntegerPrimsFactory.MultPrimFactory;
+import som.primitives.BigIntegerPrimsFactory.PlusPrimFactory;
+import som.primitives.BigIntegerPrimsFactory.SqrtPrimFactory;
 import som.vm.Universe;
-import som.vmobjects.SBigInteger;
-import som.vmobjects.SInteger;
-import som.vmobjects.SObject;
-import som.vmobjects.SPrimitive;
 
 public class BigIntegerPrimitives extends Primitives {
 
@@ -38,226 +43,17 @@ public class BigIntegerPrimitives extends Primitives {
     super(universe);
   }
 
+  @Override
   public void installPrimitives() {
-    installInstancePrimitive(new SPrimitive("asString", universe) {
-
-      public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
-        SBigInteger self = (SBigInteger) selfO;
-        return universe.newString(self.getEmbeddedBiginteger().toString());
-      }
-    });
-
-    installInstancePrimitive(new SPrimitive("sqrt", universe) {
-
-      public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
-        SBigInteger self = (SBigInteger) selfO;
-        return universe.newDouble(Math.sqrt(
-            self.getEmbeddedBiginteger().doubleValue()));
-      }
-    });
-
-    installInstancePrimitive(new SPrimitive("+", universe) {
-
-      public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
-        SObject rightObj = args[0];
-        SBigInteger right = null;
-        SBigInteger left = (SBigInteger) selfO;
-
-        // Check second parameter type:
-        if (rightObj instanceof SInteger) {
-          // Second operand was Integer
-          right = universe.newBigInteger(
-              (long) ((SInteger) rightObj).getEmbeddedInteger());
-        } else {
-          right = (SBigInteger) rightObj;
-        }
-
-        // Do operation and perform conversion to Integer if required
-        java.math.BigInteger result = left.getEmbeddedBiginteger().add(
-            right.getEmbeddedBiginteger());
-        if (result.bitLength() > 31) {
-          return universe.newBigInteger(result);
-        } else {
-          return universe.newInteger(result.intValue());
-        }
-      }
-    });
-
-    installInstancePrimitive(new SPrimitive("-", universe) {
-
-      public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
-        SObject rightObj = args[0];
-        SBigInteger right = null;
-        SBigInteger left = (SBigInteger) selfO;
-
-        // Check second parameter type:
-        if (rightObj instanceof SInteger) {
-          // Second operand was Integer
-          right = universe.newBigInteger(
-              (long) ((SInteger) rightObj).getEmbeddedInteger());
-        } else {
-          right = (SBigInteger) rightObj;
-        }
-
-        // Do operation and perform conversion to Integer if required
-        java.math.BigInteger result = left.getEmbeddedBiginteger().subtract(
-            right.getEmbeddedBiginteger());
-        if (result.bitLength() > 31) {
-          return universe.newBigInteger(result);
-        } else {
-          return universe.newInteger(result.intValue());
-        }
-      }
-    });
-
-    installInstancePrimitive(new SPrimitive("*", universe) {
-
-      public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
-        SObject rightObj = args[0];
-        SBigInteger right = null;
-        SBigInteger left = (SBigInteger) selfO;
-
-        // Check second parameter type:
-        if (rightObj instanceof SInteger) {
-          // Second operand was Integer
-          right = universe.newBigInteger(
-              (long) ((SInteger) rightObj).getEmbeddedInteger());
-        } else {
-          right = (SBigInteger) rightObj;
-        }
-
-        // Do operation and perform conversion to Integer if required
-        java.math.BigInteger result = left.getEmbeddedBiginteger().multiply(
-            right.getEmbeddedBiginteger());
-        if (result.bitLength() > 31) {
-          return universe.newBigInteger(result);
-        } else {
-          return universe.newInteger(result.intValue());
-        }
-      }
-    });
-
-    installInstancePrimitive(new SPrimitive("/", universe) {
-
-      public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
-        SObject rightObj = args[0];
-        SBigInteger right = null;
-        SBigInteger left = (SBigInteger) selfO;
-
-        // Check second parameter type:
-        if (rightObj instanceof SInteger) {
-          // Second operand was Integer
-          right = universe.newBigInteger(
-              (long) ((SInteger) rightObj).getEmbeddedInteger());
-        } else {
-          right = (SBigInteger) rightObj;
-        }
-
-        // Do operation and perform conversion to Integer if required
-        java.math.BigInteger result = left.getEmbeddedBiginteger().divide(
-            right.getEmbeddedBiginteger());
-        if (result.bitLength() > 31) {
-          return universe.newBigInteger(result);
-        } else {
-          return universe.newInteger(result.intValue());
-        }
-      }
-    });
-
-    installInstancePrimitive(new SPrimitive("%", universe) {
-
-      public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
-        SObject rightObj = args[0];
-        SBigInteger right = null;
-        SBigInteger left = (SBigInteger) selfO;
-
-        // Check second parameter type:
-        if (rightObj instanceof SInteger) {
-          // Second operand was Integer
-          right = universe.newBigInteger(
-              (long) ((SInteger) rightObj).getEmbeddedInteger());
-        } else {
-          right = (SBigInteger) rightObj;
-        }
-
-        // Do operation:
-        return universe.newBigInteger(left.getEmbeddedBiginteger().mod(
-            right.getEmbeddedBiginteger()));
-      }
-    });
-
-    installInstancePrimitive(new SPrimitive("&", universe) {
-
-      public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
-        SObject rightObj = args[0];
-        SBigInteger right = null;
-        SBigInteger left = (SBigInteger) selfO;
-
-        // Check second parameter type:
-        if (rightObj instanceof SInteger) {
-          // Second operand was Integer
-          right = universe.newBigInteger(
-              (long) ((SInteger) rightObj).getEmbeddedInteger());
-        } else {
-          right = (SBigInteger) rightObj;
-        }
-
-        // Do operation:
-        return universe.newBigInteger(left.getEmbeddedBiginteger().and(
-            right.getEmbeddedBiginteger()));
-      }
-    });
-
-    installInstancePrimitive(new SPrimitive("=", universe) {
-
-      public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
-        SObject rightObj = args[0];
-        SBigInteger right = null;
-        SBigInteger left = (SBigInteger) selfO;
-
-        // Check second parameter type:
-        if (rightObj instanceof SInteger) {
-          // Second operand was Integer
-          right = universe.newBigInteger(
-              (long) ((SInteger) rightObj).getEmbeddedInteger());
-        } else {
-          right = (SBigInteger) rightObj;
-        }
-
-        // Do operation:
-        if (left.getEmbeddedBiginteger().compareTo(
-            right.getEmbeddedBiginteger()) == 0) {
-          return universe.trueObject;
-        } else {
-          return universe.falseObject;
-        }
-      }
-    });
-
-    installInstancePrimitive(new SPrimitive("<", universe) {
-
-      public SObject invoke(final PackedFrame frame, final SObject selfO, final SObject[] args) {
-        SObject rightObj = args[0];
-        SBigInteger right = null;
-        SBigInteger left = (SBigInteger) selfO;
-
-        // Check second parameter type:
-        if (rightObj instanceof SInteger) {
-          // Second operand was Integer
-          right = universe.newBigInteger(
-              (long) ((SInteger) rightObj).getEmbeddedInteger());
-        } else {
-          right = (SBigInteger) rightObj;
-        }
-
-        // Do operation:
-        if (left.getEmbeddedBiginteger().compareTo(
-            right.getEmbeddedBiginteger()) < 0) {
-          return universe.trueObject;
-        } else {
-          return universe.falseObject;
-        }
-      }
-    });
+    installInstancePrimitive("asString", AsStringPrimFactory.getInstance());
+    installInstancePrimitive("sqrt",     SqrtPrimFactory.getInstance());
+    installInstancePrimitive("+",        PlusPrimFactory.getInstance());
+    installInstancePrimitive("-",        MinusPrimFactory.getInstance());
+    installInstancePrimitive("*",        MultPrimFactory.getInstance());
+    installInstancePrimitive("/",        DividePrimFactory.getInstance());
+    installInstancePrimitive("%",        ModPrimFactory.getInstance());
+    installInstancePrimitive("&",        AndPrimFactory.getInstance());
+    installInstancePrimitive("=",        EqualsPrimFactory.getInstance());
+    installInstancePrimitive("<",        LessThanPrimFactory.getInstance());
   }
 }

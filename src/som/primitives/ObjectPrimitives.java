@@ -25,16 +25,17 @@
 
 package som.primitives;
 
+import som.primitives.ObjectPrimsFactory.ClassPrimFactory;
+import som.primitives.ObjectPrimsFactory.EqualsEqualsPrimFactory;
+import som.primitives.ObjectPrimsFactory.HaltPrimFactory;
+import som.primitives.ObjectPrimsFactory.HashPrimFactory;
+import som.primitives.ObjectPrimsFactory.InstVarAtPrimFactory;
+import som.primitives.ObjectPrimsFactory.InstVarAtPutPrimFactory;
+import som.primitives.ObjectPrimsFactory.ObjectSizePrimFactory;
+import som.primitives.ObjectPrimsFactory.PerformInSuperclassPrimFactory;
+import som.primitives.ObjectPrimsFactory.PerformPrimFactory;
+import som.primitives.ObjectPrimsFactory.PerformWithArgumentsPrimFactory;
 import som.vm.Universe;
-import som.vmobjects.SArray;
-import som.vmobjects.SClass;
-import som.vmobjects.SInteger;
-import som.vmobjects.SInvokable;
-import som.vmobjects.SObject;
-import som.vmobjects.SPrimitive;
-import som.vmobjects.SSymbol;
-
-import com.oracle.truffle.api.frame.PackedFrame;
 
 public class ObjectPrimitives extends Primitives {
 
@@ -45,101 +46,15 @@ public class ObjectPrimitives extends Primitives {
   @Override
   public void installPrimitives() {
 
-    installInstancePrimitive(new SPrimitive("==", universe) {
-      @Override
-      public SObject invoke(final PackedFrame frame, final SObject self, final SObject[] args) {
-        if (self == args[0]) {
-          return universe.trueObject;
-        } else {
-          return universe.falseObject;
-        }
-      }
-    });
-
-    installInstancePrimitive(new SPrimitive("hashcode", universe) {
-      @Override
-      public SObject invoke(final PackedFrame frame, final SObject self, final SObject[] args) {
-        return universe.newInteger(self.hashCode());
-      }
-    });
-
-    installInstancePrimitive(new SPrimitive("objectSize", universe) {
-      @Override
-      public SObject invoke(final PackedFrame frame, final SObject self, final SObject[] args) {
-        int size = self.getNumberOfFields();
-        if (self instanceof SArray) {
-          size += ((SArray) self).getNumberOfIndexableFields();
-        }
-        return universe.newInteger(size);
-      }
-    });
-
-    installInstancePrimitive(new SPrimitive("perform:", universe) {
-      @Override
-      public SObject invoke(final PackedFrame frame, final SObject self, final SObject[] args) {
-        SSymbol selector = (SSymbol) args[0];
-
-        SInvokable invokable = self.getSOMClass().lookupInvokable(selector);
-        return invokable.invoke(frame, self, null);
-      }
-    });
-
-    installInstancePrimitive(new SPrimitive("perform:inSuperclass:", universe) {
-      @Override
-      public SObject invoke(final PackedFrame frame, final SObject self, final SObject[] args) {
-        SSymbol selector = (SSymbol) args[0];
-        SClass  clazz    = (SClass)  args[1];
-
-        SInvokable invokable = clazz.lookupInvokable(selector);
-        return invokable.invoke(frame, self, null);
-      }
-    });
-
-    installInstancePrimitive(new SPrimitive("perform:withArguments:", universe) {
-      @Override
-      public SObject invoke(final PackedFrame frame, final SObject self, final SObject[] args) {
-        SSymbol selector = (SSymbol) args[0];
-        SArray  argsArr  = (SArray)  args[1];
-
-        SInvokable invokable = self.getSOMClass().lookupInvokable(selector);
-        return invokable.invoke(frame, self, argsArr.indexableFields);
-      }
-    });
-
-    installInstancePrimitive(new SPrimitive("instVarAt:", universe) {
-      @Override
-      public SObject invoke(final PackedFrame frame, final SObject self, final SObject[] args) {
-        SInteger idx = (SInteger) args[0];
-
-        return self.getField(idx.getEmbeddedInteger() - 1);
-      }
-    });
-
-    installInstancePrimitive(new SPrimitive("instVarAt:put:", universe) {
-      @Override
-      public SObject invoke(final PackedFrame frame, final SObject self, final SObject[] args) {
-        SInteger idx = (SInteger) args[0];
-        SObject val  = args[1];
-
-        self.setField(idx.getEmbeddedInteger() - 1, val);
-
-        return val;
-      }
-    });
-
-    installInstancePrimitive(new SPrimitive("halt", universe) {
-      @Override
-      public SObject invoke(final PackedFrame frame, final SObject self, final SObject[] args) {
-        Universe.errorPrintln("BREAKPOINT");
-        return self;
-      }
-    });
-
-    installInstancePrimitive(new SPrimitive("class", universe) {
-      @Override
-      public SObject invoke(final PackedFrame frame, final SObject self, final SObject[] args) {
-        return self.getSOMClass();
-      }
-    });
+    installInstancePrimitive("==",                     EqualsEqualsPrimFactory.getInstance());
+    installInstancePrimitive("hashcode",               HashPrimFactory.getInstance());
+    installInstancePrimitive("objectSize",             ObjectSizePrimFactory.getInstance());
+    installInstancePrimitive("perform:",               PerformPrimFactory.getInstance());
+    installInstancePrimitive("perform:inSuperclass:",  PerformInSuperclassPrimFactory.getInstance());
+    installInstancePrimitive("perform:withArguments:", PerformWithArgumentsPrimFactory.getInstance());
+    installInstancePrimitive("instVarAt:",             InstVarAtPrimFactory.getInstance());
+    installInstancePrimitive("instVarAt:put:",         InstVarAtPutPrimFactory.getInstance());
+    installInstancePrimitive("halt",                   HaltPrimFactory.getInstance());
+    installInstancePrimitive("class",                  ClassPrimFactory.getInstance());
   }
 }
