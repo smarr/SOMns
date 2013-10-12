@@ -33,6 +33,8 @@ import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.CompilerDirectives.SlowPath;
+
 public class ClassGenerationContext {
 
   private final Universe universe;
@@ -104,6 +106,7 @@ public class ClassGenerationContext {
     return classSide;
   }
 
+  @SlowPath
   public SClass assemble() {
     // build class class name
     String ccname = name.getString() + " class";
@@ -134,6 +137,7 @@ public class ClassGenerationContext {
     return result;
   }
 
+  @SlowPath
   public void assembleSystemClass(final SClass systemClass) {
     systemClass.setInstanceInvokables(universe.newArray(instanceMethods));
     systemClass.setInstanceFields(universe.newArray(instanceFields));

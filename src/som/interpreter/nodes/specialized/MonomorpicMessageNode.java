@@ -12,6 +12,7 @@ import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.CompilerDirectives.SlowPath;
 import com.oracle.truffle.api.dsl.Generic;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -88,6 +89,7 @@ public abstract class MonomorpicMessageNode extends AbstractMessageNode
     return invokable.getCallTarget();
   }
 
+  @SlowPath
   @Override
   public Node getInlineTree() {
     Method method = invokable.getTruffleInvokable();
@@ -97,6 +99,7 @@ public abstract class MonomorpicMessageNode extends AbstractMessageNode
     return method;
   }
 
+  @SlowPath
   private InlinedMonomorphicMessageNode newInlinedNode(
       final FrameFactory frameFactory,
       final Method method) {
@@ -104,6 +107,7 @@ public abstract class MonomorpicMessageNode extends AbstractMessageNode
         method, method.methodCloneForInlining(), getReceiver(), getArguments());
   }
 
+  @SlowPath
   @Override
   public boolean inline(final FrameFactory factory) {
     Method method = invokable.getTruffleInvokable();

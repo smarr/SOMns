@@ -87,6 +87,7 @@ import som.vmobjects.SClass;
 import som.vmobjects.SMethod;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.CompilerDirectives.SlowPath;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.impl.DefaultSourceSection;
 
@@ -147,6 +148,7 @@ public class Parser {
         lexer.getNumberOfCharactersRead());
   }
 
+  @SlowPath
   public void classdef(final ClassGenerationContext cgenc) {
     cgenc.setName(universe.symbolFor(text));
     expect(Identifier);

@@ -41,6 +41,7 @@ import som.vmobjects.SString;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.CompilerDirectives.SlowPath;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.TruffleRuntime;
 import com.oracle.truffle.api.frame.FrameDescriptor;
@@ -120,6 +121,7 @@ public class Universe {
     exit(1);
   }
 
+  @SlowPath
   private java.lang.String[] handleArguments(java.lang.String[] arguments) {
     boolean gotClasspath = false;
     java.lang.String[] remainingArgs = new java.lang.String[arguments.length];
@@ -168,6 +170,7 @@ public class Universe {
     return arguments;
   }
 
+  @SlowPath
   // take argument of the form "../foo/Test.som" and return
   // "../foo", "Test", "som"
   private java.lang.String[] getPathClassExt(final java.lang.String arg) {
@@ -200,6 +203,7 @@ public class Universe {
     return result;
   }
 
+  @SlowPath
   public void setupClassPath(final java.lang.String cp) {
     // Create a new tokenizer to split up the string of directories
     java.util.StringTokenizer tokenizer = new java.util.StringTokenizer(cp,
@@ -214,6 +218,7 @@ public class Universe {
     }
   }
 
+  @SlowPath
   private java.lang.String[] setupDefaultClassPath(final int directories) {
     // Get the default system class path
     java.lang.String systemClassPath = System.getProperty("system.class.path");
@@ -236,6 +241,7 @@ public class Universe {
     return result;
   }
 
+  @SlowPath
   private void printUsageAndExit() {
     // Print the usage
     println("Usage: som [-options] [args...]                          ");
@@ -292,6 +298,7 @@ public class Universe {
     return initialize.invokeRoot(systemObject, new SObject[] {argumentsArray});
   }
 
+  @SlowPath
   protected SObject initializeObjectSystem() {
     // Allocate the nil object
     nilObject = new SObject(null);
@@ -429,6 +436,7 @@ public class Universe {
     return result;
   }
 
+  @SlowPath
   public SClass newClass(final SClass classClass) {
     // Allocate a new class and set its class to be the given class class
     SClass result = new SClass(classClass.getNumberOfInstanceFields(), this);
@@ -438,6 +446,7 @@ public class Universe {
     return result;
   }
 
+  @SlowPath
   public SMethod newMethod(final SSymbol signature, final som.interpreter.Method truffleInvokable, final FrameDescriptor frameDescriptor) {
     // Allocate a new method and set its class to be the method class
     SMethod result = new SMethod(nilObject, signature, truffleInvokable,
@@ -495,6 +504,7 @@ public class Universe {
     return result;
   }
 
+  @SlowPath
   public SClass newMetaclassClass() {
     // Allocate the metaclass classes
     SClass result = new SClass(this);
@@ -528,6 +538,7 @@ public class Universe {
     return result;
   }
 
+  @SlowPath
   public SClass newSystemClass() {
     // Allocate the new system class
     SClass systemClass = new SClass(this);
@@ -540,6 +551,7 @@ public class Universe {
     return systemClass;
   }
 
+  @SlowPath
   public void initializeSystemClass(final SClass systemClass, final SClass superClass,
       final java.lang.String name) {
     // Initialize the superclass hierarchy
@@ -625,6 +637,7 @@ public class Universe {
     return result;
   }
 
+  @SlowPath
   public SClass loadClass(final SSymbol name) {
     // Check if the requested class is already in the dictionary of globals
     if (hasGlobal(name)) { return (SClass) getGlobal(name); }
@@ -637,6 +650,7 @@ public class Universe {
     return result;
   }
 
+  @SlowPath
   public void loadSystemClass(final SClass systemClass) {
     // Load the system class
     SClass result = loadClass(systemClass.getName(), systemClass);
@@ -653,6 +667,7 @@ public class Universe {
     if (result.hasPrimitives()) { result.loadPrimitives(); }
   }
 
+  @SlowPath
   public SClass loadClass(final SSymbol name, final SClass systemClass) {
     // Try loading the class from all different paths
     for (java.lang.String cpEntry : classPath) {
@@ -675,6 +690,7 @@ public class Universe {
     return null;
   }
 
+  @SlowPath
   public SClass loadShellClass(final java.lang.String stmt) throws IOException {
     // java.io.ByteArrayInputStream in = new
     // java.io.ByteArrayInputStream(stmt.getBytes());

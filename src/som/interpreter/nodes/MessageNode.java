@@ -40,6 +40,8 @@ import som.vmobjects.SMethod;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.CompilerDirectives.SlowPath;
 import com.oracle.truffle.api.dsl.Generic;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -81,6 +83,7 @@ public abstract class MessageNode extends AbstractMessageNode {
     return getReceiver() instanceof BlockNode;
   }
 
+  @SlowPath
   @Specialization(order = 1,
       guards = {"isBooleanReceiver", "hasTwoArguments", "isIfTrueIfFalse"})
   public SObject doIfTrueIfFalse(final VirtualFrame frame,
@@ -102,6 +105,7 @@ public abstract class MessageNode extends AbstractMessageNode {
         doIfTrueIfFalse(frame, receiver, arguments);
   }
 
+  @SlowPath
   @Specialization(order = 10,
       guards = {"isBooleanReceiver", "hasOneArgument",
       "isIfTrueOrIfFalse", "hasBlockArgument"})
@@ -117,6 +121,7 @@ public abstract class MessageNode extends AbstractMessageNode {
     return replace(node, "Specialize for #ifTrue: or #ifFalse").doGeneric(frame, receiver, arguments);
   }
 
+  @SlowPath
   @Specialization(order = 20,
       guards = {"isBooleanReceiver", "hasOneArgument",
       "isIfTrueOrIfFalse", "hasExpressionArgument"})
@@ -131,6 +136,7 @@ public abstract class MessageNode extends AbstractMessageNode {
     return replace(node, "Specialize for #ifTrue: or #ifFalse with Expression").doGeneric(frame, receiver, arguments);
   }
 
+  @SlowPath
   @Specialization(order = 30, guards = { "hasOneArgument",
       "isWhileTrueOrWhileFalse", "hasBlockReceiver" })
   public SObject doWhileTrueOrWhileFalse(final VirtualFrame frame,
@@ -148,9 +154,12 @@ public abstract class MessageNode extends AbstractMessageNode {
         doGeneric(frame, receiver, arguments);
   }
 
+  @SlowPath
   @Generic
   public SObject doGeneric(final VirtualFrame frame, final SObject receiver,
       final Object arguments) {
+    CompilerDirectives.transferToInterpreter();
+
     SClass rcvrClass = classOfReceiver(receiver, getReceiver());
     SInvokable invokable = rcvrClass.lookupInvokable(selector);
 
