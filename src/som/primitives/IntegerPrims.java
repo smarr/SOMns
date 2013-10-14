@@ -64,26 +64,6 @@ public abstract class IntegerPrims extends PrimitiveNode {
     }
   }
 
-  public abstract static class SqrtPrim extends IntegerPrims {
-    public SqrtPrim(final SSymbol selector, final Universe universe) {
-      super(selector, universe);
-    }
-
-    @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
-      SInteger self = (SInteger) receiver;
-
-      double result = Math.sqrt(self.getEmbeddedInteger());
-
-      if (result == Math.rint(result)) {
-        return makeInt((long) result);
-      } else {
-        return universe.newDouble(result);
-      }
-    }
-  }
-
   public abstract static class RandomPrim extends PrimitiveNode {
     public RandomPrim(final SSymbol selector, final Universe universe) {
       super(selector, universe);
@@ -223,36 +203,6 @@ public abstract class IntegerPrims extends PrimitiveNode {
         }
       } else {
         return universe.falseObject;
-      }
-    }
-  }
-
-  public abstract static class LessThanPrim extends IntegerPrims {
-    public LessThanPrim(final SSymbol selector, final Universe universe) {
-      super(selector, universe);
-    }
-
-    @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
-      SObject rightObj = ((SObject[]) arguments)[0];
-      SInteger left = (SInteger) receiver;
-
-      // Check second parameter type:
-      if (rightObj instanceof SBigInteger) {
-        // Second operand was BigInteger
-        return resendAsBigInteger("<", left, (SBigInteger) rightObj, frame.pack());
-      } else if (rightObj instanceof SDouble) {
-        return resendAsDouble("<", left, (SDouble) rightObj, frame.pack());
-      } else {
-        // Do operation:
-        SInteger right = (SInteger) rightObj;
-
-        if (left.getEmbeddedInteger() < right.getEmbeddedInteger()) {
-          return universe.trueObject;
-        } else {
-          return universe.falseObject;
-        }
       }
     }
   }

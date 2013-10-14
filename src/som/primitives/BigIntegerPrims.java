@@ -26,20 +26,6 @@ public class BigIntegerPrims {
     }
   }
 
-  public abstract static class SqrtPrim extends PrimitiveNode {
-    public SqrtPrim(final SSymbol selector, final Universe universe) {
-      super(selector, universe);
-    }
-
-    @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
-      SBigInteger self = (SBigInteger) receiver;
-      return universe.newDouble(Math.sqrt(
-          self.getEmbeddedBiginteger().doubleValue()));
-    }
-  }
-
   public abstract static class DividePrim extends PrimitiveNode {
     public DividePrim(final SSymbol selector, final Universe universe) {
       super(selector, universe);
@@ -124,38 +110,6 @@ public class BigIntegerPrims {
       // Do operation:
       if (left.getEmbeddedBiginteger().compareTo(
           right.getEmbeddedBiginteger()) == 0) {
-        return universe.trueObject;
-      } else {
-        return universe.falseObject;
-      }
-    }
-  }
-
-
-  public abstract static class LessThanPrim extends PrimitiveNode {
-    public LessThanPrim(final SSymbol selector, final Universe universe) {
-      super(selector, universe);
-    }
-
-    @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
-      SObject rightObj = ((SObject[]) arguments)[0];
-      SBigInteger right = null;
-      SBigInteger left = (SBigInteger) receiver;
-
-      // Check second parameter type:
-      if (rightObj instanceof SInteger) {
-        // Second operand was Integer
-        right = universe.newBigInteger(
-            ((SInteger) rightObj).getEmbeddedInteger());
-      } else {
-        right = (SBigInteger) rightObj;
-      }
-
-      // Do operation:
-      if (left.getEmbeddedBiginteger().compareTo(
-          right.getEmbeddedBiginteger()) < 0) {
         return universe.trueObject;
       } else {
         return universe.falseObject;

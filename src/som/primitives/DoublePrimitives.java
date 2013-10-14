@@ -28,12 +28,12 @@ package som.primitives;
 import som.primitives.DoublePrimsFactory.AsStringPrimFactory;
 import som.primitives.DoublePrimsFactory.DoubleDivPrimFactory;
 import som.primitives.DoublePrimsFactory.EqualsPrimFactory;
-import som.primitives.DoublePrimsFactory.LessThanPrimFactory;
 import som.primitives.DoublePrimsFactory.ModPrimFactory;
 import som.primitives.DoublePrimsFactory.RoundPrimFactory;
-import som.primitives.DoublePrimsFactory.SqrtPrimFactory;
 import som.primitives.arithmetic.AdditionPrimFactory;
+import som.primitives.arithmetic.LessThanPrimFactory;
 import som.primitives.arithmetic.MultiplicationPrimFactory;
+import som.primitives.arithmetic.SqrtPrimFactory;
 import som.primitives.arithmetic.SubtractionPrimFactory;
 import som.vm.Universe;
 
@@ -42,7 +42,6 @@ public class DoublePrimitives extends Primitives {
   public DoublePrimitives(final Universe universe) {
     super(universe);
   }
-
 
   @Override
   public void installPrimitives() {

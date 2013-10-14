@@ -40,19 +40,6 @@ public abstract class DoublePrims extends PrimitiveNode {
     }
   }
 
-  public abstract static class SqrtPrim extends PrimitiveNode {
-    public SqrtPrim(final SSymbol selector, final Universe universe) {
-      super(selector, universe);
-    }
-
-    @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
-      SDouble self = (SDouble) receiver;
-      return universe.newDouble(Math.sqrt(self.getEmbeddedDouble()));
-    }
-  }
-
   public abstract static class DoubleDivPrim extends DoublePrims {
     public DoubleDivPrim(final SSymbol selector, final Universe universe) {
       super(selector, universe);
@@ -94,24 +81,6 @@ public abstract class DoublePrims extends PrimitiveNode {
       SDouble op1 = coerceToDouble(((SObject[]) arguments)[0]);
       SDouble op2 = (SDouble) receiver;
       if (op1.getEmbeddedDouble() == op2.getEmbeddedDouble()) {
-        return universe.trueObject;
-      } else {
-        return universe.falseObject;
-      }
-    }
-  }
-
-  public abstract static class LessThanPrim extends DoublePrims {
-    public LessThanPrim(final SSymbol selector, final Universe universe) {
-      super(selector, universe);
-    }
-
-    @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
-      SDouble op1 = coerceToDouble(((SObject[]) arguments)[0]);
-      SDouble op2 = (SDouble) receiver;
-      if (op2.getEmbeddedDouble() < op1.getEmbeddedDouble()) {
         return universe.trueObject;
       } else {
         return universe.falseObject;
