@@ -29,12 +29,12 @@ import som.primitives.DoublePrimsFactory.AsStringPrimFactory;
 import som.primitives.DoublePrimsFactory.DoubleDivPrimFactory;
 import som.primitives.DoublePrimsFactory.EqualsPrimFactory;
 import som.primitives.DoublePrimsFactory.LessThanPrimFactory;
-import som.primitives.DoublePrimsFactory.MinusPrimFactory;
 import som.primitives.DoublePrimsFactory.ModPrimFactory;
-import som.primitives.DoublePrimsFactory.MultPrimFactory;
 import som.primitives.DoublePrimsFactory.RoundPrimFactory;
 import som.primitives.DoublePrimsFactory.SqrtPrimFactory;
 import som.primitives.arithmetic.AdditionPrimFactory;
+import som.primitives.arithmetic.MultiplicationPrimFactory;
+import som.primitives.arithmetic.SubtractionPrimFactory;
 import som.vm.Universe;
 
 public class DoublePrimitives extends Primitives {
@@ -50,8 +50,8 @@ public class DoublePrimitives extends Primitives {
 
     installInstancePrimitive("sqrt",  SqrtPrimFactory.getInstance());
     installInstancePrimitive("+",     AdditionPrimFactory.getInstance());
-    installInstancePrimitive("-",     MinusPrimFactory.getInstance());
-    installInstancePrimitive("*",     MultPrimFactory.getInstance());
+    installInstancePrimitive("-",     SubtractionPrimFactory.getInstance());
+    installInstancePrimitive("*",     MultiplicationPrimFactory.getInstance());
     installInstancePrimitive("//",    DoubleDivPrimFactory.getInstance());
     installInstancePrimitive("%",     ModPrimFactory.getInstance());
     installInstancePrimitive("=",     EqualsPrimFactory.getInstance());

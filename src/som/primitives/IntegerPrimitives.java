@@ -32,12 +32,12 @@ import som.primitives.IntegerPrimsFactory.DoubleDivPrimFactory;
 import som.primitives.IntegerPrimsFactory.EqualsPrimFactory;
 import som.primitives.IntegerPrimsFactory.FromStringPrimFactory;
 import som.primitives.IntegerPrimsFactory.LessThanPrimFactory;
-import som.primitives.IntegerPrimsFactory.MinusPrimFactory;
 import som.primitives.IntegerPrimsFactory.ModPrimFactory;
-import som.primitives.IntegerPrimsFactory.MultPrimFactory;
 import som.primitives.IntegerPrimsFactory.RandomPrimFactory;
 import som.primitives.IntegerPrimsFactory.SqrtPrimFactory;
 import som.primitives.arithmetic.AdditionPrimFactory;
+import som.primitives.arithmetic.MultiplicationPrimFactory;
+import som.primitives.arithmetic.SubtractionPrimFactory;
 import som.vm.Universe;
 
 public class IntegerPrimitives extends Primitives {
@@ -46,16 +46,14 @@ public class IntegerPrimitives extends Primitives {
     super(universe);
   }
 
-
-
   @Override
   public void installPrimitives() {
     installInstancePrimitive("asString", AsStringPrimFactory.getInstance());
     installInstancePrimitive("sqrt",     SqrtPrimFactory.getInstance());
     installInstancePrimitive("atRandom", RandomPrimFactory.getInstance());
     installInstancePrimitive("+",        AdditionPrimFactory.getInstance());
-    installInstancePrimitive("-",        MinusPrimFactory.getInstance());
-    installInstancePrimitive("*",        MultPrimFactory.getInstance());
+    installInstancePrimitive("-",        SubtractionPrimFactory.getInstance());
+    installInstancePrimitive("*",        MultiplicationPrimFactory.getInstance());
     installInstancePrimitive("//",       DoubleDivPrimFactory.getInstance());
     installInstancePrimitive("/",        DivPrimFactory.getInstance());
     installInstancePrimitive("%",        ModPrimFactory.getInstance());
