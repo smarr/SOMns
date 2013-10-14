@@ -37,6 +37,7 @@ import som.vmobjects.SClass;
 import som.vmobjects.SMethod;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.CompilerDirectives.SlowPath;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.frame.FrameSlot;
 
@@ -58,6 +59,7 @@ public abstract class Primitives {
 
   public abstract void installPrimitives();
 
+  @SlowPath
   public static SMethod constructPrimitive(final String selector,
       final NodeFactory<? extends PrimitiveNode> nodeFactory, final Universe universe) {
     SSymbol signature = universe.symbolFor(selector);
