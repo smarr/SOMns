@@ -32,9 +32,9 @@ import som.primitives.DoublePrimsFactory.LessThanPrimFactory;
 import som.primitives.DoublePrimsFactory.MinusPrimFactory;
 import som.primitives.DoublePrimsFactory.ModPrimFactory;
 import som.primitives.DoublePrimsFactory.MultPrimFactory;
-import som.primitives.DoublePrimsFactory.PlusPrimFactory;
 import som.primitives.DoublePrimsFactory.RoundPrimFactory;
 import som.primitives.DoublePrimsFactory.SqrtPrimFactory;
+import som.primitives.arithmetic.AdditionPrimFactory;
 import som.vm.Universe;
 
 public class DoublePrimitives extends Primitives {
@@ -49,7 +49,7 @@ public class DoublePrimitives extends Primitives {
     installInstancePrimitive("asString", AsStringPrimFactory.getInstance());
 
     installInstancePrimitive("sqrt",  SqrtPrimFactory.getInstance());
-    installInstancePrimitive("+",     PlusPrimFactory.getInstance());
+    installInstancePrimitive("+",     AdditionPrimFactory.getInstance());
     installInstancePrimitive("-",     MinusPrimFactory.getInstance());
     installInstancePrimitive("*",     MultPrimFactory.getInstance());
     installInstancePrimitive("//",    DoubleDivPrimFactory.getInstance());

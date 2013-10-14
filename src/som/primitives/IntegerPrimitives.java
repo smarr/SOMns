@@ -35,9 +35,9 @@ import som.primitives.IntegerPrimsFactory.LessThanPrimFactory;
 import som.primitives.IntegerPrimsFactory.MinusPrimFactory;
 import som.primitives.IntegerPrimsFactory.ModPrimFactory;
 import som.primitives.IntegerPrimsFactory.MultPrimFactory;
-import som.primitives.IntegerPrimsFactory.PlusPrimFactory;
 import som.primitives.IntegerPrimsFactory.RandomPrimFactory;
 import som.primitives.IntegerPrimsFactory.SqrtPrimFactory;
+import som.primitives.arithmetic.AdditionPrimFactory;
 import som.vm.Universe;
 
 public class IntegerPrimitives extends Primitives {
@@ -53,7 +53,7 @@ public class IntegerPrimitives extends Primitives {
     installInstancePrimitive("asString", AsStringPrimFactory.getInstance());
     installInstancePrimitive("sqrt",     SqrtPrimFactory.getInstance());
     installInstancePrimitive("atRandom", RandomPrimFactory.getInstance());
-    installInstancePrimitive("+",        PlusPrimFactory.getInstance());
+    installInstancePrimitive("+",        AdditionPrimFactory.getInstance());
     installInstancePrimitive("-",        MinusPrimFactory.getInstance());
     installInstancePrimitive("*",        MultPrimFactory.getInstance());
     installInstancePrimitive("//",       DoubleDivPrimFactory.getInstance());

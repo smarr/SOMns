@@ -53,21 +53,6 @@ public abstract class DoublePrims extends PrimitiveNode {
     }
   }
 
-  public abstract static class PlusPrim extends DoublePrims {
-    public PlusPrim(final SSymbol selector, final Universe universe) {
-      super(selector, universe);
-    }
-
-    @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
-      SDouble op1 = coerceToDouble(((SObject[]) arguments)[0]);
-      SDouble op2 = (SDouble) receiver;
-      return universe.newDouble(op1.getEmbeddedDouble()
-          + op2.getEmbeddedDouble());
-    }
-  }
-
   public abstract static class MinusPrim extends DoublePrims {
     public MinusPrim(final SSymbol selector, final Universe universe) {
       super(selector, universe);

@@ -40,38 +40,6 @@ public class BigIntegerPrims {
     }
   }
 
-  public abstract static class PlusPrim extends PrimitiveNode {
-    public PlusPrim(final SSymbol selector, final Universe universe) {
-      super(selector, universe);
-    }
-
-    @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
-      SObject rightObj = ((SObject[]) arguments)[0];
-      SBigInteger right = null;
-      SBigInteger left = (SBigInteger) receiver;
-
-      // Check second parameter type:
-      if (rightObj instanceof SInteger) {
-        // Second operand was Integer
-        right = universe.newBigInteger(
-            ((SInteger) rightObj).getEmbeddedInteger());
-      } else {
-        right = (SBigInteger) rightObj;
-      }
-
-      // Do operation and perform conversion to Integer if required
-      java.math.BigInteger result = left.getEmbeddedBiginteger().add(
-          right.getEmbeddedBiginteger());
-      if (result.bitLength() > 31) {
-        return universe.newBigInteger(result);
-      } else {
-        return universe.newInteger(result.intValue());
-      }
-    }
-  }
-
   public abstract static class MinusPrim extends PrimitiveNode {
     public MinusPrim(final SSymbol selector, final Universe universe) {
       super(selector, universe);

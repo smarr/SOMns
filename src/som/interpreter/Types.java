@@ -23,6 +23,9 @@ package som.interpreter;
 
 import java.math.BigInteger;
 
+import som.vmobjects.SBigInteger;
+import som.vmobjects.SDouble;
+import som.vmobjects.SInteger;
 import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.dsl.TypeSystem;
@@ -32,6 +35,9 @@ import com.oracle.truffle.api.dsl.TypeSystem;
                 boolean.class,
                  String.class,
                  double.class,
+               SInteger.class,
+                SDouble.class,
+            SBigInteger.class,
                 SObject.class})
 public class Types {
 

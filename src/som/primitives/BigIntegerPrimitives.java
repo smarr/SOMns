@@ -33,8 +33,8 @@ import som.primitives.BigIntegerPrimsFactory.LessThanPrimFactory;
 import som.primitives.BigIntegerPrimsFactory.MinusPrimFactory;
 import som.primitives.BigIntegerPrimsFactory.ModPrimFactory;
 import som.primitives.BigIntegerPrimsFactory.MultPrimFactory;
-import som.primitives.BigIntegerPrimsFactory.PlusPrimFactory;
 import som.primitives.BigIntegerPrimsFactory.SqrtPrimFactory;
+import som.primitives.arithmetic.AdditionPrimFactory;
 import som.vm.Universe;
 
 public class BigIntegerPrimitives extends Primitives {
@@ -47,7 +47,7 @@ public class BigIntegerPrimitives extends Primitives {
   public void installPrimitives() {
     installInstancePrimitive("asString", AsStringPrimFactory.getInstance());
     installInstancePrimitive("sqrt",     SqrtPrimFactory.getInstance());
-    installInstancePrimitive("+",        PlusPrimFactory.getInstance());
+    installInstancePrimitive("+",        AdditionPrimFactory.getInstance());
     installInstancePrimitive("-",        MinusPrimFactory.getInstance());
     installInstancePrimitive("*",        MultPrimFactory.getInstance());
     installInstancePrimitive("/",        DividePrimFactory.getInstance());

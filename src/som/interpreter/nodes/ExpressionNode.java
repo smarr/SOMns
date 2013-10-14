@@ -23,11 +23,14 @@ package som.interpreter.nodes;
 
 import java.math.BigInteger;
 
+import som.interpreter.TypesGen;
+import som.vmobjects.SBigInteger;
+import som.vmobjects.SDouble;
+import som.vmobjects.SInteger;
+import som.vmobjects.SObject;
+
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
-
-import som.interpreter.TypesGen;
-import som.vmobjects.SObject;
 
 public abstract class ExpressionNode extends SOMNode {
 
@@ -52,6 +55,19 @@ public abstract class ExpressionNode extends SOMNode {
   public double executeDouble(final VirtualFrame frame) throws UnexpectedResultException {
     return TypesGen.TYPES.expectDouble(executeGeneric(frame));
   }
+
+  public SInteger executeSInteger(final VirtualFrame frame) throws UnexpectedResultException {
+    return TypesGen.TYPES.expectSInteger(executeGeneric(frame));
+  }
+
+  public SBigInteger executeSBigInteger(final VirtualFrame frame) throws UnexpectedResultException {
+    return TypesGen.TYPES.expectSBigInteger(executeGeneric(frame));
+  }
+
+  public SDouble executeSDouble(final VirtualFrame frame) throws UnexpectedResultException {
+    return TypesGen.TYPES.expectSDouble(executeGeneric(frame));
+  }
+
 
   public abstract ExpressionNode cloneForInlining();
 
