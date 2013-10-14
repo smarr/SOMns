@@ -100,35 +100,6 @@ public class BigIntegerPrims {
     }
   }
 
-
-  public abstract static class AndPrim extends PrimitiveNode {
-    public AndPrim(final SSymbol selector, final Universe universe) {
-      super(selector, universe);
-    }
-
-    @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
-      SObject rightObj = ((SObject[]) arguments)[0];
-      SBigInteger right = null;
-      SBigInteger left = (SBigInteger) receiver;
-
-      // Check second parameter type:
-      if (rightObj instanceof SInteger) {
-        // Second operand was Integer
-        right = universe.newBigInteger(
-            ((SInteger) rightObj).getEmbeddedInteger());
-      } else {
-        right = (SBigInteger) rightObj;
-      }
-
-      // Do operation:
-      return universe.newBigInteger(left.getEmbeddedBiginteger().and(
-          right.getEmbeddedBiginteger()));
-    }
-  }
-
-
   public abstract static class EqualsPrim extends PrimitiveNode {
     public EqualsPrim(final SSymbol selector, final Universe universe) {
       super(selector, universe);

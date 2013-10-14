@@ -25,7 +25,6 @@
 
 package som.primitives;
 
-import som.primitives.BigIntegerPrimsFactory.AndPrimFactory;
 import som.primitives.BigIntegerPrimsFactory.AsStringPrimFactory;
 import som.primitives.BigIntegerPrimsFactory.DividePrimFactory;
 import som.primitives.BigIntegerPrimsFactory.EqualsPrimFactory;
@@ -33,6 +32,7 @@ import som.primitives.BigIntegerPrimsFactory.LessThanPrimFactory;
 import som.primitives.BigIntegerPrimsFactory.ModPrimFactory;
 import som.primitives.BigIntegerPrimsFactory.SqrtPrimFactory;
 import som.primitives.arithmetic.AdditionPrimFactory;
+import som.primitives.arithmetic.LogicAndPrimFactory;
 import som.primitives.arithmetic.MultiplicationPrimFactory;
 import som.primitives.arithmetic.SubtractionPrimFactory;
 import som.vm.Universe;
@@ -52,7 +52,7 @@ public class BigIntegerPrimitives extends Primitives {
     installInstancePrimitive("*",        MultiplicationPrimFactory.getInstance());
     installInstancePrimitive("/",        DividePrimFactory.getInstance());
     installInstancePrimitive("%",        ModPrimFactory.getInstance());
-    installInstancePrimitive("&",        AndPrimFactory.getInstance());
+    installInstancePrimitive("&",        LogicAndPrimFactory.getInstance());
     installInstancePrimitive("=",        EqualsPrimFactory.getInstance());
     installInstancePrimitive("<",        LessThanPrimFactory.getInstance());
   }

@@ -188,34 +188,6 @@ public abstract class IntegerPrims extends PrimitiveNode {
     }
   }
 
-  public abstract static class AndPrim extends IntegerPrims {
-    public AndPrim(final SSymbol selector, final Universe universe) {
-      super(selector, universe);
-    }
-
-    @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
-      SObject rightObj = ((SObject[]) arguments)[0];
-      SInteger left = (SInteger) receiver;
-
-      // Check second parameter type:
-      if (rightObj instanceof SBigInteger) {
-        // Second operand was BigInteger
-        return resendAsBigInteger("&", left, (SBigInteger) rightObj, frame.pack());
-      } else if (rightObj instanceof SDouble) {
-        return resendAsDouble("&", left, (SDouble) rightObj, frame.pack());
-      } else {
-        // Do operation:
-        SInteger right = (SInteger) rightObj;
-
-        long result = ((long) left.getEmbeddedInteger())
-            & right.getEmbeddedInteger();
-        return makeInt(result);
-      }
-    }
-  }
-
   public abstract static class EqualsPrim extends IntegerPrims {
     public EqualsPrim(final SSymbol selector, final Universe universe) {
       super(selector, universe);
