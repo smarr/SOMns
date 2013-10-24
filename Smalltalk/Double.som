@@ -32,6 +32,7 @@ Double = (
     // argument  = primitive
     % argument  = primitive
     & argument  = primitive
+    bitXor: argument = primitive
     abs         = ( ^(self < 0) ifTrue: (0 - self) ifFalse: self )
     sqrt        = primitive
     negated     = ( ^0 - self )

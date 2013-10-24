@@ -1,0 +1,23 @@
+Node = (
+    |left right|
+
+    left = (^left)
+    left: val = (
+        left := val.
+    )
+    right = (^right)
+    right: val = (
+        right := val.
+    )
+    ----
+    create = (
+        ^(Node create: nil with: nil).
+    )
+    create: l with: r = (
+        |n|
+        n := Node new.
+        n left: l.
+        n right: r.
+        ^n.
+    )
+)
