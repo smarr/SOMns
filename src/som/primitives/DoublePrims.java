@@ -106,4 +106,50 @@ public abstract class DoublePrims extends PrimitiveNode {
       }
     }
   }
+
+  public abstract static class AndPrim extends PrimitiveNode {
+    public AndPrim(final SSymbol selector, final Universe universe) {
+      super(selector, universe);
+    }
+
+    @Specialization
+    public SObject doGeneric(final VirtualFrame frame,
+        final SObject receiver, final Object arguments) {
+      SDouble rcvr = (SDouble) receiver;
+      long left  = (long) rcvr.getEmbeddedDouble();
+
+      SObject op2  = ((SObject[]) arguments)[0];
+      long right;
+      if (op2 instanceof SInteger) {
+        right = ((SInteger) op2).getEmbeddedInteger();
+      } else {
+        right = (long) ((SDouble) op2).getEmbeddedDouble();
+      }
+
+      return universe.newDouble(left & right);
+    }
+  }
+
+  public abstract static class BitXorPrim extends PrimitiveNode {
+    public BitXorPrim(final SSymbol selector, final Universe universe) {
+      super(selector, universe);
+    }
+
+    @Specialization
+    public SObject doGeneric(final VirtualFrame frame,
+        final SObject receiver, final Object arguments) {
+      SDouble rcvr = (SDouble) receiver;
+      long left = (long) rcvr.getEmbeddedDouble();
+
+      SObject op2 = ((SObject[]) arguments)[0];
+      long right;
+      if (op2 instanceof SInteger) {
+        right = ((SInteger) op2).getEmbeddedInteger();
+      } else {
+        right = (long) ((SDouble) op2).getEmbeddedDouble();
+      }
+
+      return universe.newDouble(left ^ right);
+    }
+  }
 }
