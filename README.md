@@ -58,10 +58,10 @@ The current build status is: [![Build Status](https://travis-ci.org/SOM-st/SOM.p
 The build status of the SOM implementations is as follows:
 
 * CSOM: [![CSOM Build Status](https://travis-ci.org/SOM-st/CSOM.png?branch=master)](https://travis-ci.org/SOM-st/CSOM/)
-* SOM (Java): [![CSOM Build Status](https://travis-ci.org/SOM-st/som-java.png?branch=master)](https://travis-ci.org/SOM-st/CSOM/)
-* PySOM: [![Build Status](https://travis-ci.org/SOM-st/PySOM.png?branch=master)](https://travis-ci.org/SOM-st/PySOM)
-* RPySOM: [![Build Status](https://travis-ci.org/SOM-st/RPySOM.png?branch=master)](https://travis-ci.org/SOM-st/RPySOM)
-* TruffleSOM: [![Build Status](https://travis-ci.org/SOM-st/TruffleSOM.png?branch=master)](https://travis-ci.org/SOM-st/TruffleSOM)
+* SOM (Java): [![SOM Java Build Status](https://travis-ci.org/SOM-st/som-java.png?branch=master)](https://travis-ci.org/SOM-st/som-java/)
+* PySOM: [![PySOM Build Status](https://travis-ci.org/SOM-st/PySOM.png?branch=master)](https://travis-ci.org/SOM-st/PySOM)
+* RPySOM: [![RPySOM Build Status](https://travis-ci.org/SOM-st/RPySOM.png?branch=master)](https://travis-ci.org/SOM-st/RPySOM)
+* TruffleSOM: [![TruffleSOM Build Status](https://travis-ci.org/SOM-st/TruffleSOM.png?branch=master)](https://travis-ci.org/SOM-st/TruffleSOM)
 
 
  [SOM]: http://www.hpi.uni-potsdam.de/hirschfeld/projects/som/
