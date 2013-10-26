@@ -79,8 +79,9 @@ Build Status
 ------------
 
 Thanks to Travis CI, all commits of this repository are tested.
-The current build status is: [![Build Status](https://travis-ci.org/smarr/TruffleSOM.png)](https://travis-ci.org/smarr/TruffleSOM)
+The current build status is: [![Build Status](https://travis-ci.org/SOM-st/TruffleSOM.png?branch=master)](https://travis-ci.org/SOM-st/TruffleSOM)
 
  [SOM]: http://www.hpi.uni-potsdam.de/hirschfeld/projects/som/
+ [SOMst]: https://travis-ci.org/SOM-st/
  [RS]:  http://dx.doi.org/10.1016/j.cl.2005.02.003
  [T]:   http://www.christianwimmer.at/Publications/Wuerthinger12a/
