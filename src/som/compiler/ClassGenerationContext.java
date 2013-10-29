@@ -48,9 +48,9 @@ public class ClassGenerationContext {
   private boolean             classSide;
   private int                 numberOfInstanceFieldsOfSuper;
   private int                 numberOfClassFieldsOfSuper;
-  private final List<SObject> instanceFields  = new ArrayList<SObject>();
+  private final List<SSymbol> instanceFields  = new ArrayList<SSymbol>();
   private final List<SMethod> instanceMethods = new ArrayList<SMethod>();
-  private final List<SObject> classFields     = new ArrayList<SObject>();
+  private final List<SSymbol> classFields     = new ArrayList<SSymbol>();
   private final List<SMethod> classMethods    = new ArrayList<SMethod>();
 
   public void setName(final SSymbol name) {
