@@ -587,10 +587,7 @@ public class Universe {
   public SObject getGlobal(final SSymbol name) {
     // Return the global with the given name if it's in the dictionary of
     // globals
-    if (hasGlobal(name)) { return globals.get(name); }
-
-    // Global not found
-    return null;
+    return globals.get(name);
   }
 
   public void setGlobal(final SSymbol name, final SObject value) {
