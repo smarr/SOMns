@@ -4,9 +4,9 @@ import som.interpreter.Arguments;
 import som.interpreter.Invokable;
 import som.interpreter.nodes.ExpressionNode;
 import som.vm.Universe;
+import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
 import som.vmobjects.SMethod;
-import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CallTarget;
@@ -39,9 +39,9 @@ public abstract class InlinedMonomorphicMessageNode extends AbstractInlinedMessa
   }
 
   @Specialization(guards = "isCachedReceiverClass")
-  public SObject doMonomorphic(final VirtualFrame caller, final SObject receiver,
+  public SAbstractObject doMonomorphic(final VirtualFrame caller, final SAbstractObject receiver,
       final Object arguments) {
-    SObject[] args = (SObject[]) arguments;
+    SAbstractObject[] args = (SAbstractObject[]) arguments;
 
     final VirtualFrame frame = frameFactory.create(
         inlinedMethod.getFrameDescriptor(), caller.pack(),
@@ -51,7 +51,7 @@ public abstract class InlinedMonomorphicMessageNode extends AbstractInlinedMessa
   }
 
   @Generic
-  public SObject doGeneric(final VirtualFrame frame, final SObject receiver,
+  public SAbstractObject doGeneric(final VirtualFrame frame, final SAbstractObject receiver,
       final Object arguments) {
     if (isCachedReceiverClass(receiver)) {
       return doMonomorphic(frame, receiver, arguments);

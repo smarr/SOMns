@@ -27,21 +27,20 @@ package som.vmobjects;
 
 import som.interpreter.Arguments;
 import som.interpreter.Invokable;
+import som.vm.Universe;
 
 import com.oracle.truffle.api.CallTarget;
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.TruffleRuntime;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.PackedFrame;
 
-public class SMethod extends SObject {
+public class SMethod extends SAbstractObject {
 
-  public SMethod(final SObject nilObject,
-      final SSymbol signature,
-      final Invokable truffleInvokable,
+  public SMethod(final SSymbol signature, final Invokable truffleInvokable,
       final FrameDescriptor frameDescriptor, final boolean isPrimitive) {
-    super(nilObject);
-    setSignature(signature);
+    this.signature = signature;
 
     this.truffleInvokable = truffleInvokable;
 
@@ -64,25 +63,15 @@ public class SMethod extends SObject {
   }
 
   public SSymbol getSignature() {
-    // Get the signature of this method by reading the field with signature
-    // index
-    return (SSymbol) getField(signatureIndex);
-  }
-
-  private void setSignature(final SSymbol value) {
-    // Set the signature of this method by writing to the field with
-    // signature index
-    setField(signatureIndex, value);
+    return signature;
   }
 
   public SClass getHolder() {
-    // Get the holder of this method by reading the field with holder index
-    return (SClass) getField(holderIndex);
+    return holder;
   }
 
   public void setHolder(final SClass value) {
-    // Set the holder of this method by writing to the field with holder index
-    setField(holderIndex, value);
+    holder = value;
   }
 
   public int getNumberOfArguments() {
@@ -90,28 +79,27 @@ public class SMethod extends SObject {
     return getSignature().getNumberOfSignatureArguments();
   }
 
+  public SAbstractObject invokeRoot(final SAbstractObject self, final SAbstractObject[] args) {
+    SAbstractObject result = (SAbstractObject) callTarget.call(new Arguments(self, args));
+    return result;
+  }
+
+  public SAbstractObject invoke(final PackedFrame caller,
+      final SAbstractObject self,
+      final SAbstractObject[] args) {
+    SAbstractObject result = (SAbstractObject) callTarget.call(caller, new Arguments(self, args));
+    return result;
+  }
+
   @Override
-  public int getDefaultNumberOfFields() {
-    // Return the default number of fields in a method
-    return numberOfMethodFields;
-  }
-
-  public SObject invokeRoot(final SObject self, final SObject[] args) {
-    SObject result = (SObject) callTarget.call(new Arguments(self, args));
-    return result;
-  }
-
-  public SObject invoke(final PackedFrame caller,
-      final SObject self,
-      final SObject[] args) {
-    SObject result = (SObject) callTarget.call(caller, new Arguments(self, args));
-    return result;
+  public SClass getSOMClass(final Universe universe) {
+    return universe.methodClass;
   }
 
   @Override
   public String toString() {
     // TODO: fixme: remove special case if possible, I think it indicates a bug
-    if (!(getField(holderIndex) instanceof SClass)) {
+    if (holder == null) {
       return "Method(nil>>" + getSignature().toString() + ")";
     }
 
@@ -122,9 +110,6 @@ public class SMethod extends SObject {
   private final Invokable              truffleInvokable;
   private final CallTarget             callTarget;
   private final boolean                isPrimitive;
-
-  // Static field indices and number of method fields
-  static final int                     signatureIndex       = numberOfObjectFields;
-  static final int                     holderIndex          = 1 + signatureIndex;
-  static final int                     numberOfMethodFields = 1 + holderIndex;
+  private final SSymbol                signature;
+  @CompilationFinal private SClass     holder;
 }

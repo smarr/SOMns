@@ -4,9 +4,9 @@ import som.interpreter.Invokable;
 import som.interpreter.nodes.AbstractMessageNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.vm.Universe;
+import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
 import som.vmobjects.SMethod;
-import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives;
@@ -42,7 +42,7 @@ public abstract class AbstractInlinedMessageNode extends AbstractMessageNode {
         node.frameFactory, node.inlinedMethod, node.methodBody);
   }
 
-  public boolean isCachedReceiverClass(final SObject receiver) {
+  public boolean isCachedReceiverClass(final SAbstractObject receiver) {
     SClass currentRcvrClass = classOfReceiver(receiver, getReceiver());
     return currentRcvrClass == rcvrClass;
   }

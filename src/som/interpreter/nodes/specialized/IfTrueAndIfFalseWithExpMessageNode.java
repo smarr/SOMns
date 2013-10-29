@@ -3,8 +3,8 @@ package som.interpreter.nodes.specialized;
 import som.interpreter.nodes.AbstractMessageNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.vm.Universe;
+import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
-import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives;
@@ -40,29 +40,29 @@ public abstract class IfTrueAndIfFalseWithExpMessageNode extends AbstractMessage
   }
 
   @Specialization(order = 10, guards = {"isIfTrue", "isBooleanReceiver"})
-  public SObject doIfTrue(final VirtualFrame frame, final SObject receiver,
+  public SAbstractObject doIfTrue(final VirtualFrame frame, final SAbstractObject receiver,
       final Object arguments) {
     SClass rcvrClass = classOfReceiver(receiver, getReceiver());
     if (rcvrClass == universe.trueClass) {
-      return ((SObject[]) arguments)[0];
+      return ((SAbstractObject[]) arguments)[0];
     } else {
       return universe.nilObject;
     }
   }
 
   @Specialization(order = 20, guards = {"isIfFalse", "isBooleanReceiver"})
-  public SObject doIfFalse(final VirtualFrame frame, final SObject receiver,
+  public SAbstractObject doIfFalse(final VirtualFrame frame, final SAbstractObject receiver,
       final Object arguments) {
     SClass rcvrClass = classOfReceiver(receiver, getReceiver());
     if (rcvrClass == universe.falseClass) {
-      return ((SObject[]) arguments)[0];
+      return ((SAbstractObject[]) arguments)[0];
     } else {
       return universe.nilObject;
     }
   }
 
   @Generic
-  public SObject doGeneric(final VirtualFrame frame, final SObject receiver,
+  public SAbstractObject doGeneric(final VirtualFrame frame, final SAbstractObject receiver,
       final Object arguments) {
     if (!isBooleanReceiver(receiver)) {
       return fallbackForNonBoolReceiver(receiver).
@@ -75,7 +75,7 @@ public abstract class IfTrueAndIfFalseWithExpMessageNode extends AbstractMessage
     }
   }
 
-  protected PolymorpicMessageNode fallbackForNonBoolReceiver(final SObject rcvr) {
+  protected PolymorpicMessageNode fallbackForNonBoolReceiver(final SAbstractObject rcvr) {
     CompilerDirectives.transferToInterpreter();
 
     SClass currentRcvrClass = classOfReceiver(rcvr, getReceiver());

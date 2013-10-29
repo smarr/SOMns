@@ -1,6 +1,6 @@
 package som.interpreter.nodes;
 
-import som.vmobjects.SObject;
+import som.vmobjects.SAbstractObject;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
@@ -23,12 +23,12 @@ public class ArgumentEvaluationNode extends SOMNode {
   }
 
   @ExplodeLoop
-  public SObject[] doArray(final VirtualFrame frame) {
+  public SAbstractObject[] doArray(final VirtualFrame frame) {
     if (arguments == null || arguments.length == 0) {
       return null;
     }
 
-    SObject[] result = new SObject[arguments.length];
+    SAbstractObject[] result = new SAbstractObject[arguments.length];
 
     for (int i = 0; i < arguments.length; i++) {
       result[i] = arguments[i].executeGeneric(frame);

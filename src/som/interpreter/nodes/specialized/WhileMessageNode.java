@@ -3,10 +3,10 @@ package som.interpreter.nodes.specialized;
 import som.interpreter.nodes.AbstractMessageNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.vm.Universe;
+import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import som.vmobjects.SMethod;
-import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.Specialization;
@@ -20,7 +20,7 @@ public abstract class WhileMessageNode extends AbstractMessageNode {
 
   private final boolean whileTrue;
 
-  private static final SObject[] noArgs = new SObject[0];
+  private static final SAbstractObject[] noArgs = new SAbstractObject[0];
 
   public WhileMessageNode(final SSymbol selector,
       final Universe universe, final SMethod condition,
@@ -44,13 +44,13 @@ public abstract class WhileMessageNode extends AbstractMessageNode {
     return !whileTrue;
   }
 
-  private SObject executeBlock(final VirtualFrame frame,
+  private SAbstractObject executeBlock(final VirtualFrame frame,
       final SMethod blockMethod) {
     SBlock b = universe.newBlock(blockMethod, frame.materialize(), 1);
     return blockMethod.invoke(frame.pack(), b, noArgs);
   }
 
-  public SObject evalConditionIfNecessary(final VirtualFrame frame, final SObject receiver) {
+  public SAbstractObject evalConditionIfNecessary(final VirtualFrame frame, final SAbstractObject receiver) {
     if (blockMethodCondition == null) {
       return receiver;
     } else {
@@ -59,9 +59,10 @@ public abstract class WhileMessageNode extends AbstractMessageNode {
   }
 
   @Specialization(order = 1, guards = "isWhileTrue")
-  public SObject doWhileTrue(final VirtualFrame frame, final SObject receiver,
+  public SAbstractObject doWhileTrue(final VirtualFrame frame,
+      final SAbstractObject receiver,
       final Object arguments) {
-    SObject rcvr = evalConditionIfNecessary(frame, receiver);
+    SAbstractObject rcvr = evalConditionIfNecessary(frame, receiver);
     SClass currentCondClass = classOfReceiver(rcvr, getReceiver());
 
     while (currentCondClass == universe.trueClass) {
@@ -69,7 +70,7 @@ public abstract class WhileMessageNode extends AbstractMessageNode {
         executeBlock(frame, blockMethodLoopBody);
       }
 
-      SObject newConditionResult = evalConditionIfNecessary(frame, receiver);
+      SAbstractObject newConditionResult = evalConditionIfNecessary(frame, receiver);
       currentCondClass = classOfReceiver(newConditionResult, getReceiver());
     }
 
@@ -77,9 +78,10 @@ public abstract class WhileMessageNode extends AbstractMessageNode {
   }
 
   @Specialization(order = 2, guards = "isWhileFalse")
-  public SObject doWhileFalse(final VirtualFrame frame, final SObject receiver,
+  public SAbstractObject doWhileFalse(final VirtualFrame frame,
+      final SAbstractObject receiver,
       final Object arguments) {
-    SObject rcvr = evalConditionIfNecessary(frame, receiver);
+    SAbstractObject rcvr = evalConditionIfNecessary(frame, receiver);
     SClass currentCondClass = classOfReceiver(rcvr, getReceiver());
 
     while (currentCondClass == universe.falseClass) {
@@ -87,14 +89,15 @@ public abstract class WhileMessageNode extends AbstractMessageNode {
         executeBlock(frame, blockMethodLoopBody);
       }
 
-      SObject newConditionResult = evalConditionIfNecessary(frame, receiver);
+      SAbstractObject newConditionResult = evalConditionIfNecessary(frame, receiver);
       currentCondClass = classOfReceiver(newConditionResult, getReceiver());
     }
 
     return universe.nilObject;
   }
 
-  public SObject doGeneric(final VirtualFrame frame, final SObject receiver,
+  public SAbstractObject doGeneric(final VirtualFrame frame,
+      final SAbstractObject receiver,
       final Object arguments) {
     if (isWhileTrue()) {
       return doWhileTrue(frame, receiver, arguments);

@@ -2,9 +2,9 @@ package som.primitives;
 
 import som.interpreter.nodes.PrimitiveNode;
 import som.vm.Universe;
+import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBigInteger;
 import som.vmobjects.SInteger;
-import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.Specialization;
@@ -19,8 +19,8 @@ public class BigIntegerPrims {
     }
 
     @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
+    public SAbstractObject doGeneric(final VirtualFrame frame,
+        final SAbstractObject receiver, final Object arguments) {
       SBigInteger self = (SBigInteger) receiver;
       return universe.newString(self.getEmbeddedBiginteger().toString());
     }
@@ -32,9 +32,9 @@ public class BigIntegerPrims {
     }
 
     @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
-      SObject rightObj = ((SObject[]) arguments)[0];
+    public SAbstractObject doGeneric(final VirtualFrame frame,
+        final SAbstractObject receiver, final Object arguments) {
+      SAbstractObject rightObj = ((SAbstractObject[]) arguments)[0];
       SBigInteger right = null;
       SBigInteger left = (SBigInteger) receiver;
 
@@ -65,9 +65,9 @@ public class BigIntegerPrims {
     }
 
     @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
-      SObject rightObj = ((SObject[]) arguments)[0];
+    public SAbstractObject doGeneric(final VirtualFrame frame,
+        final SAbstractObject receiver, final Object arguments) {
+      SAbstractObject rightObj = ((SAbstractObject[]) arguments)[0];
       SBigInteger right = null;
       SBigInteger left = (SBigInteger) receiver;
 
@@ -92,9 +92,9 @@ public class BigIntegerPrims {
     }
 
     @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
-      SObject rightObj = ((SObject[]) arguments)[0];
+    public SAbstractObject doGeneric(final VirtualFrame frame,
+        final SAbstractObject receiver, final Object arguments) {
+      SAbstractObject rightObj = ((SAbstractObject[]) arguments)[0];
       SBigInteger right = null;
       SBigInteger left = (SBigInteger) receiver;
 

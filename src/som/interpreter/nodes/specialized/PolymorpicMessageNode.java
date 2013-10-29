@@ -4,9 +4,9 @@ import som.interpreter.nodes.AbstractMessageNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.NodeFactory;
 import som.vm.Universe;
+import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
 import som.vmobjects.SMethod;
-import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives;
@@ -55,10 +55,10 @@ public abstract class PolymorpicMessageNode extends AbstractMessageNode {
   }
 
   @Specialization
-  public SObject doGeneric(final VirtualFrame frame, final SObject receiver,
+  public SAbstractObject doGeneric(final VirtualFrame frame, final SAbstractObject receiver,
       final Object arguments) {
     SClass currentRcvrClass = classOfReceiver(receiver, getReceiver());
-    SObject[] args = (SObject[]) arguments;
+    SAbstractObject[] args = (SAbstractObject[]) arguments;
 
     int i;
     for (i = 0; i < cacheEntries; i++) {
@@ -77,7 +77,7 @@ public abstract class PolymorpicMessageNode extends AbstractMessageNode {
     }
   }
 
-  public MegamorphicMessageNode generalizeToMegamorphicNode() {
+  private MegamorphicMessageNode generalizeToMegamorphicNode() {
     CompilerDirectives.transferToInterpreter();
     // So, it might just be a megamorphic send site.
     MegamorphicMessageNode mega = MegamorphicMessageNodeFactory.create(selector,

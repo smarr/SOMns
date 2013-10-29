@@ -170,7 +170,7 @@ public class Parser {
     } else {
       SClass superClass = universe.loadClass(superName);
       cgenc.setNumberOfInstanceFieldsOfSuper(superClass.getNumberOfInstanceFields());
-      cgenc.setNumberOfClassFieldsOfSuper(superClass.getSOMClass().getNumberOfInstanceFields());
+      cgenc.setNumberOfClassFieldsOfSuper(superClass.getSOMClass(universe).getNumberOfInstanceFields());
     }
 
 

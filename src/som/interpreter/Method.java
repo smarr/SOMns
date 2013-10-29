@@ -23,7 +23,7 @@ package som.interpreter;
 
 import som.interpreter.nodes.ExpressionNode;
 import som.vm.Universe;
-import som.vmobjects.SObject;
+import som.vmobjects.SAbstractObject;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.SourceSection;
@@ -60,10 +60,10 @@ public class Method extends Invokable {
     return messageSendExecution(marker, frame, expressionOrSequence);
   }
 
-  protected static SObject messageSendExecution(final FrameOnStackMarker marker,
+  protected static SAbstractObject messageSendExecution(final FrameOnStackMarker marker,
       final VirtualFrame frame,
       final ExpressionNode expr) {
-    SObject  result;
+    SAbstractObject  result;
     boolean restart;
 
     do {
@@ -106,7 +106,7 @@ public class Method extends Invokable {
   }
 
   @Override
-  public SObject executeInlined(final VirtualFrame frame, final ExpressionNode exp) {
+  public SAbstractObject executeInlined(final VirtualFrame frame, final ExpressionNode exp) {
     FrameOnStackMarker marker = initializeFrame(frame);
     return messageSendExecution(marker, frame, exp);
   }

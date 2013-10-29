@@ -2,10 +2,10 @@ package som.primitives;
 
 import som.interpreter.nodes.PrimitiveNode;
 import som.vm.Universe;
+import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBigInteger;
 import som.vmobjects.SDouble;
 import som.vmobjects.SInteger;
-import som.vmobjects.SObject;
 import som.vmobjects.SString;
 import som.vmobjects.SSymbol;
 
@@ -20,7 +20,7 @@ public abstract class IntegerPrims extends PrimitiveNode {
     super(selector, universe);
   }
 
-  protected SObject  makeInt(final long result) {
+  protected SAbstractObject makeInt(final long result) {
     // Check with integer bounds and push:
     if (result > Integer.MAX_VALUE
         || result < Integer.MIN_VALUE) {
@@ -30,23 +30,23 @@ public abstract class IntegerPrims extends PrimitiveNode {
     }
   }
 
-  protected SObject resendAsBigInteger(final java.lang.String operator, final SInteger left,
+  protected SAbstractObject resendAsBigInteger(final String operator, final SInteger left,
       final SBigInteger right, final PackedFrame frame) {
     // Construct left value as BigInteger:
     SBigInteger leftBigInteger = universe.
         newBigInteger(left.getEmbeddedInteger());
 
     // Resend message:
-    SObject[] operands = new SObject[1];
+    SAbstractObject[] operands = new SAbstractObject[1];
     operands[0] = right;
 
     return leftBigInteger.send(operator, operands, universe, frame);
   }
 
-  protected SObject resendAsDouble(final java.lang.String operator, final SInteger left, final SDouble right,
+  protected SAbstractObject resendAsDouble(final java.lang.String operator, final SInteger left, final SDouble right,
       final PackedFrame frame) {
     SDouble leftDouble = universe.newDouble(left.getEmbeddedInteger());
-    SObject[] operands = new SObject[] {right};
+    SAbstractObject[] operands = new SAbstractObject[] {right};
     return leftDouble.send(operator, operands, universe, frame);
   }
 
@@ -56,8 +56,8 @@ public abstract class IntegerPrims extends PrimitiveNode {
     }
 
     @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
+    public SAbstractObject doGeneric(final VirtualFrame frame,
+        final SAbstractObject receiver, final Object arguments) {
       SInteger self = (SInteger) receiver;
       return universe.newString(Integer.toString(
           self.getEmbeddedInteger()));
@@ -70,8 +70,8 @@ public abstract class IntegerPrims extends PrimitiveNode {
     }
 
     @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
+    public SAbstractObject doGeneric(final VirtualFrame frame,
+        final SAbstractObject receiver, final Object arguments) {
       SInteger self = (SInteger) receiver;
       return universe.newInteger(
           (int) (self.getEmbeddedInteger() * Math.random()));
@@ -84,9 +84,9 @@ public abstract class IntegerPrims extends PrimitiveNode {
     }
 
     @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
-      SObject rightObj = ((SObject[]) arguments)[0];
+    public SAbstractObject doGeneric(final VirtualFrame frame,
+        final SAbstractObject receiver, final Object arguments) {
+      SAbstractObject rightObj = ((SAbstractObject[]) arguments)[0];
       SInteger left = (SInteger) receiver;
 
       // Check second parameter type:
@@ -112,9 +112,9 @@ public abstract class IntegerPrims extends PrimitiveNode {
     }
 
     @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
-      SObject rightObj = ((SObject[]) arguments)[0];
+    public SAbstractObject doGeneric(final VirtualFrame frame,
+        final SAbstractObject receiver, final Object arguments) {
+      SAbstractObject rightObj = ((SAbstractObject[]) arguments)[0];
       SInteger left = (SInteger) receiver;
 
       // Check second parameter type:
@@ -140,9 +140,9 @@ public abstract class IntegerPrims extends PrimitiveNode {
     }
 
     @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
-      SObject rightObj = ((SObject[]) arguments)[0];
+    public SAbstractObject doGeneric(final VirtualFrame frame,
+        final SAbstractObject receiver, final Object arguments) {
+      SAbstractObject rightObj = ((SAbstractObject[]) arguments)[0];
       SInteger left = (SInteger) receiver;
 
       // Check second parameter type:
@@ -174,9 +174,9 @@ public abstract class IntegerPrims extends PrimitiveNode {
     }
 
     @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
-      SObject rightObj = ((SObject[]) arguments)[0];
+    public SAbstractObject doGeneric(final VirtualFrame frame,
+        final SAbstractObject receiver, final Object arguments) {
+      SAbstractObject rightObj = ((SAbstractObject[]) arguments)[0];
       SInteger left = (SInteger) receiver;
 
       // Check second parameter type:
@@ -213,9 +213,9 @@ public abstract class IntegerPrims extends PrimitiveNode {
     }
 
     @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
-      SString param = (SString) ((SObject[]) arguments)[0];
+    public SAbstractObject doGeneric(final VirtualFrame frame,
+        final SAbstractObject receiver, final Object arguments) {
+      SString param = (SString) ((SAbstractObject[]) arguments)[0];
 
       long result = Long.parseLong(param.getEmbeddedString());
       return makeInt(result);

@@ -2,9 +2,9 @@ package som.primitives;
 
 import som.interpreter.nodes.PrimitiveNode;
 import som.vm.Universe;
+import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray;
 import som.vmobjects.SInteger;
-import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.Specialization;
@@ -19,9 +19,9 @@ public class ArrayPrims {
     }
 
     @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
-      SInteger index = (SInteger) ((SObject[]) arguments)[0];
+    public SAbstractObject doGeneric(final VirtualFrame frame,
+        final SAbstractObject receiver, final Object arguments) {
+      SInteger index = (SInteger) ((SAbstractObject[]) arguments)[0];
       SArray   arr   = (SArray)   receiver;
 
       return arr.getIndexableField(index.getEmbeddedInteger() - 1);
@@ -34,10 +34,10 @@ public class ArrayPrims {
     }
 
     @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
-      SObject  value = ((SObject[]) arguments)[1];
-      SInteger index = (SInteger) ((SObject[]) arguments)[0];
+    public SAbstractObject doGeneric(final VirtualFrame frame,
+        final SAbstractObject receiver, final Object arguments) {
+      SAbstractObject value = ((SAbstractObject[]) arguments)[1];
+      SInteger index = (SInteger) ((SAbstractObject[]) arguments)[0];
       SArray   arr   = (SArray)   receiver;
 
       arr.setIndexableField(index.getEmbeddedInteger() - 1, value);
@@ -51,8 +51,8 @@ public class ArrayPrims {
     }
 
     @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
+    public SAbstractObject doGeneric(final VirtualFrame frame,
+        final SAbstractObject receiver, final Object arguments) {
       SArray arr = (SArray) receiver;
       return universe.newInteger(arr.getNumberOfIndexableFields());
     }
@@ -64,9 +64,9 @@ public class ArrayPrims {
     }
 
     @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
-      SInteger length = (SInteger) ((SObject[]) arguments)[0];
+    public SAbstractObject doGeneric(final VirtualFrame frame,
+        final SAbstractObject receiver, final Object arguments) {
+      SInteger length = (SInteger) ((SAbstractObject[]) arguments)[0];
       return universe.newArray(length.getEmbeddedInteger());
     }
   }

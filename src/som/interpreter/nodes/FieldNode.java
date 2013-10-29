@@ -22,6 +22,7 @@
 package som.interpreter.nodes;
 
 import som.compiler.MethodGenerationContext;
+import som.vmobjects.SAbstractObject;
 import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.frame.FrameSlotTypeException;
@@ -53,7 +54,7 @@ public abstract class FieldNode extends ContextualNode {
     }
 
     @Override
-    public SObject executeGeneric(VirtualFrame frame) {
+    public SAbstractObject executeGeneric(final VirtualFrame frame) {
       MaterializedFrame ctx = determineContext(frame.materialize());
       SObject self = getSelfFromMaterialized(ctx);
       return self.getField(fieldIndex);
@@ -77,9 +78,9 @@ public abstract class FieldNode extends ContextualNode {
     }
 
     @Override
-    public SObject executeGeneric(final VirtualFrame frame) {
+    public SAbstractObject executeGeneric(final VirtualFrame frame) {
       MaterializedFrame ctx = determineContext(frame.materialize());
-      SObject value = exp.executeGeneric(frame);
+      SAbstractObject value = exp.executeGeneric(frame);
       SObject self  = getSelfFromMaterialized(ctx);
 
       self.setField(fieldIndex, value);

@@ -24,12 +24,19 @@
 
 package som.vmobjects;
 
-public class SSymbol extends SObject {
+import som.vm.Universe;
 
-  public SSymbol(final SObject nilObject, final java.lang.String value) {
-    super(nilObject);
+public class SSymbol extends SAbstractObject {
+
+  public SSymbol(final String value) {
+    super();
     string = value;
     numberOfSignatureArguments = determineNumberOfSignatureArguments();
+  }
+
+  @Override
+  public SClass getSOMClass(final Universe universe) {
+    return universe.symbolClass;
   }
 
   public String getString() {

@@ -21,23 +21,23 @@
  */
 package som.interpreter.nodes;
 
+import som.vmobjects.SAbstractObject;
+
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 
-import som.vmobjects.SObject;
-
 public class SequenceNode extends ExpressionNode {
   @CompilationFinal @Children private final ExpressionNode[] expressions;
 
-  public SequenceNode(ExpressionNode[] expressions) {
+  public SequenceNode(final ExpressionNode[] expressions) {
     this.expressions = adoptChildren(expressions);
   }
 
   @Override
   @ExplodeLoop
-  public SObject executeGeneric(final VirtualFrame frame) {
-    SObject last = null;
+  public SAbstractObject executeGeneric(final VirtualFrame frame) {
+    SAbstractObject last = null;
 
     for (int i = 0; i < expressions.length; i++) {
       last = expressions[i].executeGeneric(frame);

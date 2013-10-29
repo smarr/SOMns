@@ -2,9 +2,9 @@ package som.interpreter.nodes;
 
 import som.interpreter.nodes.VariableNode.SuperReadNode;
 import som.vm.Universe;
+import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
 import som.vmobjects.SMethod;
-import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.NodeChild;
@@ -34,8 +34,8 @@ public abstract class AbstractMessageNode extends ExpressionNode {
   public abstract ExpressionNode getReceiver();
   public abstract ArgumentEvaluationNode getArguments();
 
-  protected static SClass classOfReceiver(final SObject rcvr, final ExpressionNode receiver) {
-    SClass rcvrClass = rcvr.getSOMClass();
+  protected SClass classOfReceiver(final SAbstractObject rcvr, final ExpressionNode receiver) {
+    SClass rcvrClass = rcvr.getSOMClass(universe);
 
     // first determine whether it is a normal, or super send
     if (receiver instanceof SuperReadNode) {
@@ -45,20 +45,20 @@ public abstract class AbstractMessageNode extends ExpressionNode {
   }
 
   protected boolean hasOneArgument(final Object receiver, final Object arguments) {
-    return (arguments != null && ((SObject[]) arguments).length == 1);
+    return (arguments != null && ((SAbstractObject[]) arguments).length == 1);
   }
 
   protected boolean hasTwoArguments(final Object receiver, final Object arguments) {
-    return (arguments != null && ((SObject[]) arguments).length == 2);
+    return (arguments != null && ((SAbstractObject[]) arguments).length == 2);
   }
 
-  protected boolean isBooleanReceiver(final SObject receiver) {
+  protected boolean isBooleanReceiver(final SAbstractObject receiver) {
     SClass rcvrClass = classOfReceiver(receiver, getReceiver());
     return rcvrClass == universe.trueClass || rcvrClass == universe.falseClass;
   }
 
-  protected SObject doFullSend(final VirtualFrame frame, final SObject rcvr,
-      final SObject[] args, final SClass rcvrClass) {
+  protected SAbstractObject doFullSend(final VirtualFrame frame, final SAbstractObject rcvr,
+      final SAbstractObject[] args, final SClass rcvrClass) {
     // now lookup selector
     SMethod invokable = rcvrClass.lookupInvokable(selector);
 

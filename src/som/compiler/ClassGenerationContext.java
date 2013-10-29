@@ -30,7 +30,6 @@ import java.util.List;
 import som.vm.Universe;
 import som.vmobjects.SClass;
 import som.vmobjects.SMethod;
-import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives.SlowPath;
@@ -122,7 +121,7 @@ public class ClassGenerationContext {
     resultClass.setInstanceInvokables(universe.newArray(classMethods));
     resultClass.setName(universe.symbolFor(ccname));
 
-    SClass superMClass = superClass.getSOMClass();
+    SClass superMClass = superClass.getSOMClass(universe);
     resultClass.setSuperClass(superMClass);
 
     // Allocate the resulting class
@@ -142,7 +141,7 @@ public class ClassGenerationContext {
     systemClass.setInstanceInvokables(universe.newArray(instanceMethods));
     systemClass.setInstanceFields(universe.newArray(instanceFields));
     // class-bound == class-instance-bound
-    SClass superMClass = systemClass.getSOMClass();
+    SClass superMClass = systemClass.getSOMClass(universe);
     superMClass.setInstanceInvokables(universe.newArray(classMethods));
     superMClass.setInstanceFields(universe.newArray(classFields));
   }

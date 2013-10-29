@@ -2,7 +2,7 @@ package som.interpreter;
 
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.PrimitiveNode;
-import som.vmobjects.SObject;
+import som.vmobjects.SAbstractObject;
 
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlot;
@@ -40,7 +40,7 @@ public class Primitive extends Invokable {
   }
 
   @Override
-  public SObject executeInlined(final VirtualFrame frame,
+  public SAbstractObject executeInlined(final VirtualFrame frame,
       final ExpressionNode exp) {
     initializeFrame(frame);
     return exp.executeGeneric(frame);

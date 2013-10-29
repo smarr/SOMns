@@ -24,16 +24,21 @@
 
 package som.vmobjects;
 
-public class SDouble extends SObject {
+import som.vm.Universe;
 
-  public SDouble(final SObject nilObject, double value) {
-    super(nilObject);
+public class SDouble extends SAbstractObject {
+
+  public SDouble(final double value) {
     embeddedDouble = value;
   }
 
   public double getEmbeddedDouble() {
-    // Get the embedded double
     return embeddedDouble;
+  }
+
+  @Override
+  public SClass getSOMClass(final Universe universe) {
+    return universe.doubleClass;
   }
 
   // Private variable holding the embedded double

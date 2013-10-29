@@ -2,8 +2,8 @@ package som.primitives;
 
 import som.interpreter.nodes.PrimitiveNode;
 import som.vm.Universe;
+import som.vmobjects.SAbstractObject;
 import som.vmobjects.SInteger;
-import som.vmobjects.SObject;
 import som.vmobjects.SString;
 import som.vmobjects.SSymbol;
 
@@ -19,9 +19,9 @@ public class StringPrims {
     }
 
     @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
-      SString argument = (SString) ((SObject[]) arguments)[0];
+    public SAbstractObject doGeneric(final VirtualFrame frame,
+        final SAbstractObject receiver, final Object arguments) {
+      SString argument = (SString) ((SAbstractObject[]) arguments)[0];
       SString self = (SString) receiver;
       return universe.newString(self.getEmbeddedString()
           + argument.getEmbeddedString());
@@ -34,8 +34,8 @@ public class StringPrims {
     }
 
     @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
+    public SAbstractObject doGeneric(final VirtualFrame frame,
+        final SAbstractObject receiver, final Object arguments) {
       SString self = (SString) receiver;
       return universe.symbolFor(self.getEmbeddedString());
     }
@@ -47,8 +47,8 @@ public class StringPrims {
     }
 
     @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
+    public SAbstractObject doGeneric(final VirtualFrame frame,
+        final SAbstractObject receiver, final Object arguments) {
       SString self = (SString) receiver;
       return universe.newInteger(self.getEmbeddedString().length());
     }
@@ -60,11 +60,11 @@ public class StringPrims {
     }
 
     @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
-      SObject op1 = ((SObject[]) arguments)[0];
+    public SAbstractObject doGeneric(final VirtualFrame frame,
+        final SAbstractObject receiver, final Object arguments) {
+      SAbstractObject op1 = ((SAbstractObject[]) arguments)[0];
       SString op2 = (SString) receiver;
-      if (op1.getSOMClass() == universe.stringClass) {
+      if (op1.getSOMClass(universe) == universe.stringClass) {
         SString s = (SString) op1;
         if (s.getEmbeddedString().equals(op2.getEmbeddedString())) {
           return universe.trueObject;
@@ -81,10 +81,10 @@ public class StringPrims {
     }
 
     @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
-      SInteger end   = (SInteger) ((SObject[]) arguments)[1];
-      SInteger start = (SInteger) ((SObject[]) arguments)[0];
+    public SAbstractObject doGeneric(final VirtualFrame frame,
+        final SAbstractObject receiver, final Object arguments) {
+      SInteger end   = (SInteger) ((SAbstractObject[]) arguments)[1];
+      SInteger start = (SInteger) ((SAbstractObject[]) arguments)[0];
 
       SString self = (SString) receiver;
 
@@ -104,8 +104,8 @@ public class StringPrims {
     }
 
     @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
+    public SAbstractObject doGeneric(final VirtualFrame frame,
+        final SAbstractObject receiver, final Object arguments) {
       SString self = (SString) receiver;
       return universe.newInteger(self.getEmbeddedString().hashCode());
     }

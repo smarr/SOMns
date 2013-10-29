@@ -23,7 +23,7 @@ package som.interpreter.nodes;
 
 import som.compiler.MethodGenerationContext;
 import som.vm.Universe;
-import som.vmobjects.SObject;
+import som.vmobjects.SAbstractObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.frame.FrameSlotTypeException;
@@ -40,9 +40,9 @@ public abstract class GlobalNode extends ExpressionNode {
     this.universe   = universe;
   }
 
-  protected SObject getSelfFromVirtual(final VirtualFrame frame) {
+  protected SAbstractObject getSelfFromVirtual(final VirtualFrame frame) {
     try {
-      return (SObject) frame.getObject(MethodGenerationContext.getStandardSelfSlot());
+      return (SAbstractObject) frame.getObject(MethodGenerationContext.getStandardSelfSlot());
     } catch (FrameSlotTypeException e) {
       throw new RuntimeException("uninitialized selfSlot, which should be pretty much imposible???");
     }
@@ -55,16 +55,16 @@ public abstract class GlobalNode extends ExpressionNode {
     }
 
     @Override
-    public SObject executeGeneric(VirtualFrame frame) {
+    public SAbstractObject executeGeneric(final VirtualFrame frame) {
       // Get the global from the universe
-      SObject global = universe.getGlobal(globalName);
+      SAbstractObject global = universe.getGlobal(globalName);
 
       if (global != null) {
         return global;
       } else {
         // if it is not defined, we will send a error message to the current
         // receiver object
-        SObject self = getSelfFromVirtual(frame);
+        SAbstractObject self = getSelfFromVirtual(frame);
         return self.sendUnknownGlobal(globalName, universe, frame.pack());
       }
     }

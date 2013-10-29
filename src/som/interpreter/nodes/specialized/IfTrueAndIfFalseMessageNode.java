@@ -3,10 +3,10 @@ package som.interpreter.nodes.specialized;
 import som.interpreter.nodes.AbstractMessageNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.vm.Universe;
+import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import som.vmobjects.SMethod;
-import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives;
@@ -17,7 +17,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 public abstract class IfTrueAndIfFalseMessageNode extends AbstractMessageNode {
   private final SMethod blockMethod;
   private final boolean executeIf;
-  private static final SObject[] noArgs = new SObject[0];
+  private static final SAbstractObject[] noArgs = new SAbstractObject[0];
 
   public IfTrueAndIfFalseMessageNode(final SSymbol selector,
       final Universe universe, final SBlock block, final boolean executeIf) {
@@ -36,7 +36,7 @@ public abstract class IfTrueAndIfFalseMessageNode extends AbstractMessageNode {
   }
 
   @Specialization(order = 10, guards = {"isIfTrue", "isBooleanReceiver"})
-  public SObject doIfTrue(final VirtualFrame frame, final SObject receiver,
+  public SAbstractObject doIfTrue(final VirtualFrame frame, final SAbstractObject receiver,
       final Object arguments) {
     SClass rcvrClass = classOfReceiver(receiver, getReceiver());
     if (rcvrClass == universe.trueClass) {
@@ -48,7 +48,7 @@ public abstract class IfTrueAndIfFalseMessageNode extends AbstractMessageNode {
   }
 
   @Specialization(order = 20, guards = {"isIfFalse", "isBooleanReceiver"})
-  public SObject doIfFalse(final VirtualFrame frame, final SObject receiver,
+  public SAbstractObject doIfFalse(final VirtualFrame frame, final SAbstractObject receiver,
       final Object arguments) {
     SClass rcvrClass = classOfReceiver(receiver, getReceiver());
     if (rcvrClass == universe.falseClass) {
@@ -68,7 +68,7 @@ public abstract class IfTrueAndIfFalseMessageNode extends AbstractMessageNode {
   }
 
   @Generic
-  public SObject doGeneric(final VirtualFrame frame, final SObject receiver,
+  public SAbstractObject doGeneric(final VirtualFrame frame, final SAbstractObject receiver,
       final Object arguments) {
     if (!isBooleanReceiver(receiver)) {
       return fallbackForNonBoolReceiver(receiver).
@@ -81,7 +81,7 @@ public abstract class IfTrueAndIfFalseMessageNode extends AbstractMessageNode {
     }
   }
 
-  protected PolymorpicMessageNode fallbackForNonBoolReceiver(final SObject receiver) {
+  protected PolymorpicMessageNode fallbackForNonBoolReceiver(final SAbstractObject receiver) {
     CompilerDirectives.transferToInterpreter();
 
     SClass rcvrClass = classOfReceiver(receiver, getReceiver());

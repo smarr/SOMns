@@ -33,10 +33,10 @@ import som.interpreter.nodes.specialized.MonomorpicMessageNodeFactory;
 import som.interpreter.nodes.specialized.WhileMessageNode;
 import som.interpreter.nodes.specialized.WhileMessageNodeFactory;
 import som.vm.Universe;
+import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import som.vmobjects.SMethod;
-import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives;
@@ -84,9 +84,9 @@ public abstract class MessageNode extends AbstractMessageNode {
   @SlowPath
   @Specialization(order = 1,
       guards = {"isBooleanReceiver", "hasTwoArguments", "isIfTrueIfFalse"})
-  public SObject doIfTrueIfFalse(final VirtualFrame frame,
-      final SObject receiver, final Object arguments) {
-    SObject[] args = (SObject[]) arguments;
+  public SAbstractObject doIfTrueIfFalse(final VirtualFrame frame,
+      final SAbstractObject receiver, final Object arguments) {
+    SAbstractObject[] args = (SAbstractObject[]) arguments;
     SBlock trueBlock  = null;
     SBlock falseBlock = null;
 
@@ -107,9 +107,9 @@ public abstract class MessageNode extends AbstractMessageNode {
   @Specialization(order = 10,
       guards = {"isBooleanReceiver", "hasOneArgument",
       "isIfTrueOrIfFalse", "hasBlockArgument"})
-  public SObject doIfTrueOrIfFalse(final VirtualFrame frame,
-      final SObject receiver, final Object arguments) {
-    SObject[] args = (SObject[]) arguments;
+  public SAbstractObject doIfTrueOrIfFalse(final VirtualFrame frame,
+      final SAbstractObject receiver, final Object arguments) {
+    SAbstractObject[] args = (SAbstractObject[]) arguments;
     SBlock   block = (SBlock)    args[0];
 
     // This specialization goes into a separate specialization hierarchy
@@ -123,8 +123,8 @@ public abstract class MessageNode extends AbstractMessageNode {
   @Specialization(order = 20,
       guards = {"isBooleanReceiver", "hasOneArgument",
       "isIfTrueOrIfFalse", "hasExpressionArgument"})
-  public SObject doIfTrueOrIfFalseWithExp(final VirtualFrame frame,
-      final SObject receiver, final Object arguments) {
+  public SAbstractObject doIfTrueOrIfFalseWithExp(final VirtualFrame frame,
+      final SAbstractObject receiver, final Object arguments) {
 
     // This specialization goes into a separate specialization hierarchy
     IfTrueAndIfFalseWithExpMessageNode node =
@@ -137,10 +137,10 @@ public abstract class MessageNode extends AbstractMessageNode {
   @SlowPath
   @Specialization(order = 30, guards = { "hasOneArgument",
       "isWhileTrueOrWhileFalse", "hasBlockReceiver" })
-  public SObject doWhileTrueOrWhileFalse(final VirtualFrame frame,
-      final SObject receiver, final Object arguments) {
+  public SAbstractObject doWhileTrueOrWhileFalse(final VirtualFrame frame,
+      final SAbstractObject receiver, final Object arguments) {
     SBlock conditionBlock = (SBlock) receiver;
-    SObject[] args = (SObject[]) arguments;
+    SAbstractObject[] args = (SAbstractObject[]) arguments;
     SMethod loopBodyMethod = null;
     if (args[0] instanceof SBlock) {
       loopBodyMethod = ((SBlock) args[0]).getMethod();
@@ -154,7 +154,7 @@ public abstract class MessageNode extends AbstractMessageNode {
 
   @SlowPath
   @Generic
-  public SObject doGeneric(final VirtualFrame frame, final SObject receiver,
+  public SAbstractObject doGeneric(final VirtualFrame frame, final SAbstractObject receiver,
       final Object arguments) {
     CompilerDirectives.transferToInterpreter();
 
@@ -167,7 +167,7 @@ public abstract class MessageNode extends AbstractMessageNode {
       return replace(node, "Be optimisitic and do a monomorphic lookup cache.").
           doMonomorphic(frame, receiver, arguments);
     } else {
-      SObject[] args = (SObject[]) arguments;
+      SAbstractObject[] args = (SAbstractObject[]) arguments;
       return doFullSend(frame, receiver, args, rcvrClass);
     }
   }

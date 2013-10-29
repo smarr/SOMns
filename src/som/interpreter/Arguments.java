@@ -21,23 +21,23 @@
  */
 package som.interpreter;
 
-import som.vmobjects.SObject;
+import som.vmobjects.SAbstractObject;
 
 public final class Arguments extends com.oracle.truffle.api.Arguments {
 
-  private final SObject   self;
-  private final SObject[] arguments;
+  private final SAbstractObject   self;
+  private final SAbstractObject[] arguments;
 
-  public Arguments(final SObject self, final SObject[] arguments) {
+  public Arguments(final SAbstractObject self, final SAbstractObject[] arguments) {
     this.self      = self;
     this.arguments = arguments;
   }
 
-  public SObject getSelf() {
+  public SAbstractObject getSelf() {
     return self;
   }
 
-  public SObject getArgument(final int i) {
+  public SAbstractObject getArgument(final int i) {
     return arguments[i];
   }
 }

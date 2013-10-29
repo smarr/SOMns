@@ -21,21 +21,21 @@
  */
 package som.interpreter;
 
-import som.vmobjects.SObject;
+import som.vmobjects.SAbstractObject;
 
 import com.oracle.truffle.api.nodes.ControlFlowException;
 
 public final class ReturnException extends ControlFlowException {
 
-  private final SObject result;
+  private final SAbstractObject result;
   private final FrameOnStackMarker target;
 
-  public ReturnException(final SObject result, final FrameOnStackMarker target) {
+  public ReturnException(final SAbstractObject result, final FrameOnStackMarker target) {
     this.result = result;
     this.target = target;
   }
 
-  public SObject result() {
+  public SAbstractObject result() {
     return result;
   }
 

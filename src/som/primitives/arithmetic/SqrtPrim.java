@@ -1,10 +1,10 @@
 package som.primitives.arithmetic;
 
 import som.vm.Universe;
+import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBigInteger;
 import som.vmobjects.SDouble;
 import som.vmobjects.SInteger;
-import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.Specialization;
@@ -22,7 +22,7 @@ public abstract class SqrtPrim extends ArithmeticPrim {
   }
 
   @Specialization
-  public SObject doSInteger(final VirtualFrame frame,
+  public SAbstractObject doSInteger(final VirtualFrame frame,
       final SInteger left, final Object arguments) {
     double result = Math.sqrt(left.getEmbeddedInteger());
 
@@ -34,14 +34,14 @@ public abstract class SqrtPrim extends ArithmeticPrim {
   }
 
   @Specialization
-  public SObject doSBigInteger(final VirtualFrame frame,
+  public SAbstractObject doSBigInteger(final VirtualFrame frame,
       final SBigInteger left, final Object arguments) {
     return universe.newDouble(Math.sqrt(
         left.getEmbeddedBiginteger().doubleValue()));
   }
 
   @Specialization
-  public SObject doSDouble(final VirtualFrame frame,
+  public SAbstractObject doSDouble(final VirtualFrame frame,
       final SDouble left, final Object arguments) {
     return universe.newDouble(Math.sqrt(left.getEmbeddedDouble()));
   }

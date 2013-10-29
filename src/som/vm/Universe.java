@@ -33,6 +33,7 @@ import java.util.StringTokenizer;
 
 import som.compiler.Disassembler;
 import som.interpreter.Invokable;
+import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray;
 import som.vmobjects.SBigInteger;
 import som.vmobjects.SBlock;
@@ -267,21 +268,21 @@ public class Universe {
    * @param selector
    * @return
    */
-  public SObject interpret(final java.lang.String className,
-      final java.lang.String selector) {
+  public SAbstractObject interpret(final String className,
+      final String selector) {
     initializeObjectSystem();
 
     SClass clazz = loadClass(symbolFor(className));
 
     // Lookup the initialize invokable on the system class
-    SMethod initialize = clazz.getSOMClass().
+    SMethod initialize = clazz.getSOMClass(this).
                                         lookupInvokable(symbolFor(selector));
 
     // Invoke the initialize invokable
-    return initialize.invokeRoot(clazz, new SObject[0]);
+    return initialize.invokeRoot(clazz, new SAbstractObject[0]);
   }
 
-  private SObject execute(final java.lang.String[] arguments) {
+  private SAbstractObject execute(final String[] arguments) {
     SObject systemObject = initializeObjectSystem();
 
     // Start the shell if no filename is given
@@ -298,7 +299,7 @@ public class Universe {
         lookupInvokable(symbolFor("initialize:"));
 
     // Invoke the initialize invokable
-    return initialize.invokeRoot(systemObject, new SObject[] {argumentsArray});
+    return initialize.invokeRoot(systemObject, new SAbstractObject[] {argumentsArray});
   }
 
   @SlowPath
@@ -398,7 +399,6 @@ public class Universe {
   public SArray newArray(final int length) {
     // Allocate a new array and set its class to be the array class
     SArray result = new SArray(nilObject, length);
-    result.setClass(arrayClass);
 
     // Return the freshly allocated array
     return result;
@@ -410,7 +410,7 @@ public class Universe {
 
     // Copy all elements from the list into the array
     for (int i = 0; i < list.size(); i++) {
-      result.setIndexableField(i, (SObject) list.get(i));
+      result.setIndexableField(i, (SAbstractObject) list.get(i));
     }
 
     // Return the allocated and initialized array
@@ -432,8 +432,7 @@ public class Universe {
 
   public SBlock newBlock(final SMethod method, final MaterializedFrame context, final int arguments) {
     // Allocate a new block and set its class to be the block class
-    SBlock result = new SBlock(nilObject, method, context);
-    result.setClass(getBlockClass(arguments));
+    SBlock result = new SBlock(method, context);
 
     // Return the freshly allocated block
     return result;
@@ -455,9 +454,8 @@ public class Universe {
       final FrameDescriptor frameDescriptor,
       final boolean isPrimitive) {
     // Allocate a new method and set its class to be the method class
-    SMethod result = new SMethod(nilObject, signature, truffleInvokable,
+    SMethod result = new SMethod(signature, truffleInvokable,
         frameDescriptor, isPrimitive);
-    result.setClass(methodClass);
 
     // Return the freshly allocated method
     return result;
@@ -475,8 +473,7 @@ public class Universe {
 
   public SInteger newInteger(final int value) {
     // Allocate a new integer and set its class to be the integer class
-    SInteger result = new SInteger(nilObject, value);
-    result.setClass(integerClass);
+    SInteger result = new SInteger(value);
 
     // Return the freshly allocated integer
     return result;
@@ -484,8 +481,7 @@ public class Universe {
 
   public SBigInteger newBigInteger(final java.math.BigInteger value) {
     // Allocate a new integer and set its class to be the integer class
-    SBigInteger result = new SBigInteger(nilObject, value);
-    result.setClass(bigintegerClass);
+    SBigInteger result = new SBigInteger(value);
 
     // Return the freshly allocated integer
     return result;
@@ -493,21 +489,14 @@ public class Universe {
 
   public SBigInteger newBigInteger(final long value) {
     // Allocate a new integer and set its class to be the integer class
-    SBigInteger result = new SBigInteger(nilObject,
-                                       java.math.BigInteger.valueOf(value));
-    result.setClass(bigintegerClass);
+    SBigInteger result = new SBigInteger(BigInteger.valueOf(value));
 
     // Return the freshly allocated integer
     return result;
   }
 
   public SDouble newDouble(final double value) {
-    // Allocate a new integer and set its class to be the double class
-    SDouble result = new SDouble(nilObject, value);
-    result.setClass(doubleClass);
-
-    // Return the freshly allocated double
-    return result;
+    return new SDouble(value);
   }
 
   @SlowPath
@@ -517,25 +506,19 @@ public class Universe {
     result.setClass(new SClass(this));
 
     // Setup the metaclass hierarchy
-    result.getSOMClass().setClass(result);
+    result.getSOMClass(this).setClass(result);
 
     // Return the freshly allocated metaclass class
     return result;
   }
 
-  public SString newString(final java.lang.String embeddedString) {
-    // Allocate a new string and set its class to be the string class
-    SString result = new SString(nilObject, embeddedString);
-    result.setClass(stringClass);
-
-    // Return the freshly allocated string
-    return result;
+  public SString newString(final String embeddedString) {
+    return new SString(embeddedString);
   }
 
   private SSymbol newSymbol(final String string) {
     // Allocate a new symbol and set its class to be the symbol class
-    SSymbol result = new SSymbol(nilObject, string);
-    result.setClass(symbolClass);
+    SSymbol result = new SSymbol(string);
 
     // Insert the new symbol into the symbol table
     symbolTable.insert(result);
@@ -551,7 +534,7 @@ public class Universe {
 
     // Setup the metaclass hierarchy
     systemClass.setClass(new SClass(this));
-    systemClass.getSOMClass().setClass(metaclassClass);
+    systemClass.getSOMClass(this).setClass(metaclassClass);
 
     // Return the freshly allocated system class
     return systemClass;
@@ -563,34 +546,34 @@ public class Universe {
     // Initialize the superclass hierarchy
     if (superClass != null) {
       systemClass.setSuperClass(superClass);
-      systemClass.getSOMClass().setSuperClass(superClass.getSOMClass());
+      systemClass.getSOMClass(this).setSuperClass(superClass.getSOMClass(this));
     } else {
-      systemClass.getSOMClass().setSuperClass(classClass);
+      systemClass.getSOMClass(this).setSuperClass(classClass);
     }
 
     // Initialize the array of instance fields
     systemClass.setInstanceFields(newArray(0));
-    systemClass.getSOMClass().setInstanceFields(newArray(0));
+    systemClass.getSOMClass(this).setInstanceFields(newArray(0));
 
     // Initialize the array of instance invokables
     systemClass.setInstanceInvokables(newArray(0));
-    systemClass.getSOMClass().setInstanceInvokables(newArray(0));
+    systemClass.getSOMClass(this).setInstanceInvokables(newArray(0));
 
     // Initialize the name of the system class
     systemClass.setName(symbolFor(name));
-    systemClass.getSOMClass().setName(symbolFor(name + " class"));
+    systemClass.getSOMClass(this).setName(symbolFor(name + " class"));
 
     // Insert the system class into the dictionary of globals
     setGlobal(systemClass.getName(), systemClass);
   }
 
-  public SObject getGlobal(final SSymbol name) {
+  public SAbstractObject getGlobal(final SSymbol name) {
     // Return the global with the given name if it's in the dictionary of
     // globals
     return globals.get(name);
   }
 
-  public void setGlobal(final SSymbol name, final SObject value) {
+  public void setGlobal(final SSymbol name, final SAbstractObject value) {
     // Insert the given value into the dictionary of globals
     globals.put(name, value);
   }
@@ -678,7 +661,7 @@ public class Universe {
         SClass result = som.compiler.SourcecodeCompiler.compileClass(cpEntry
             + fileSeparator, name.getString(), systemClass, this);
         if (printAST) {
-          Disassembler.dump(result.getSOMClass());
+          Disassembler.dump(result.getSOMClass(this));
           Disassembler.dump(result);
         }
         return result;
@@ -763,7 +746,7 @@ public class Universe {
   @CompilationFinal public SClass               trueClass;
   @CompilationFinal public SClass               falseClass;
 
-  private final HashMap<SSymbol, SObject>       globals = new HashMap<SSymbol, SObject>();
+  private final HashMap<SSymbol, SAbstractObject> globals = new HashMap<SSymbol, SAbstractObject>();
   private String[]                              classPath;
   @CompilationFinal private boolean             printAST;
 

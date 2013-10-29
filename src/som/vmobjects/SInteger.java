@@ -24,10 +24,11 @@
 
 package som.vmobjects;
 
-public class SInteger extends SObject {
+import som.vm.Universe;
 
-  public SInteger(final SObject nilObject, int value) {
-    super(nilObject);
+public class SInteger extends SAbstractObject {
+
+  public SInteger(final int value) {
     embeddedInteger = value;
   }
 
@@ -36,11 +37,16 @@ public class SInteger extends SObject {
     return embeddedInteger;
   }
 
-  // Private variable holding the embedded integer
-  private final int embeddedInteger;
-
   @Override
   public String toString() {
     return "" + embeddedInteger;
   }
+
+  @Override
+  public SClass getSOMClass(final Universe universe) {
+    return universe.integerClass;
+  }
+
+  // Private variable holding the embedded integer
+  private final int embeddedInteger;
 }

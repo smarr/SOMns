@@ -2,6 +2,7 @@ package som.primitives;
 
 import som.interpreter.nodes.PrimitiveNode;
 import som.vm.Universe;
+import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray;
 import som.vmobjects.SClass;
 import som.vmobjects.SInteger;
@@ -20,9 +21,10 @@ public class ObjectPrims {
     }
 
     @Specialization
-    public SObject doGeneric(final VirtualFrame frame, final SObject receiver,
+    public SAbstractObject doGeneric(final VirtualFrame frame,
+        final SAbstractObject receiver,
         final Object arguments) {
-      if (receiver == ((SObject[]) arguments)[0]) {
+      if (receiver == ((SAbstractObject[]) arguments)[0]) {
         return universe.trueObject;
       } else {
         return universe.falseObject;
@@ -36,8 +38,8 @@ public class ObjectPrims {
     }
 
     @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
+    public SAbstractObject doGeneric(final VirtualFrame frame,
+        final SAbstractObject receiver, final Object arguments) {
       return universe.newInteger(receiver.hashCode());
     }
   }
@@ -48,9 +50,12 @@ public class ObjectPrims {
     }
 
     @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
-      int size = receiver.getNumberOfFields();
+    public SAbstractObject doGeneric(final VirtualFrame frame,
+        final SAbstractObject receiver, final Object arguments) {
+      int size = 0;
+      if (receiver instanceof SObject) {
+        size += ((SObject) receiver).getNumberOfFields();
+      }
       if (receiver instanceof SArray) {
         size += ((SArray) receiver).getNumberOfIndexableFields();
       }
@@ -65,11 +70,11 @@ public class ObjectPrims {
     }
 
     @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
-      SSymbol selector = (SSymbol) ((SObject[]) arguments)[0];
+    public SAbstractObject doGeneric(final VirtualFrame frame,
+        final SAbstractObject receiver, final Object arguments) {
+      SSymbol selector = (SSymbol) ((SAbstractObject[]) arguments)[0];
 
-      SMethod invokable = receiver.getSOMClass().lookupInvokable(selector);
+      SMethod invokable = receiver.getSOMClass(universe).lookupInvokable(selector);
       return invokable.invoke(frame.pack(), receiver, null);
     }
   }
@@ -80,10 +85,10 @@ public class ObjectPrims {
     }
 
     @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
-      SSymbol selector = (SSymbol) ((SObject[]) arguments)[0];
-      SClass  clazz    = (SClass)  ((SObject[]) arguments)[1];
+    public SAbstractObject doGeneric(final VirtualFrame frame,
+        final SAbstractObject receiver, final Object arguments) {
+      SSymbol selector = (SSymbol) ((SAbstractObject[]) arguments)[0];
+      SClass  clazz    = (SClass)  ((SAbstractObject[]) arguments)[1];
 
       SMethod invokable = clazz.lookupInvokable(selector);
       return invokable.invoke(frame.pack(), receiver, null);
@@ -96,12 +101,12 @@ public class ObjectPrims {
     }
 
     @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
-      SSymbol selector = (SSymbol) ((SObject[]) arguments)[0];
-      SArray  argsArr  = (SArray)  ((SObject[]) arguments)[1];
+    public SAbstractObject doGeneric(final VirtualFrame frame,
+        final SAbstractObject receiver, final Object arguments) {
+      SSymbol selector = (SSymbol) ((SAbstractObject[]) arguments)[0];
+      SArray  argsArr  = (SArray)  ((SAbstractObject[]) arguments)[1];
 
-      SMethod invokable = receiver.getSOMClass().lookupInvokable(selector);
+      SMethod invokable = receiver.getSOMClass(universe).lookupInvokable(selector);
       return invokable.invoke(frame.pack(), receiver, argsArr.indexableFields);
     }
   }
@@ -112,11 +117,11 @@ public class ObjectPrims {
     }
 
     @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
-      SInteger idx = (SInteger) ((SObject[]) arguments)[0];
+    public SAbstractObject doGeneric(final VirtualFrame frame,
+        final SAbstractObject receiver, final Object arguments) {
+      SInteger idx = (SInteger) ((SAbstractObject[]) arguments)[0];
 
-      return receiver.getField(idx.getEmbeddedInteger() - 1);
+      return ((SObject) receiver).getField(idx.getEmbeddedInteger() - 1);
     }
   }
 
@@ -126,12 +131,12 @@ public class ObjectPrims {
     }
 
     @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
-      SInteger idx = (SInteger) ((SObject[]) arguments)[0];
-      SObject val  = ((SObject[]) arguments)[1];
+    public SAbstractObject doGeneric(final VirtualFrame frame,
+        final SAbstractObject receiver, final Object arguments) {
+      SInteger idx = (SInteger) ((SAbstractObject[]) arguments)[0];
+      SAbstractObject val  = ((SAbstractObject[]) arguments)[1];
 
-      receiver.setField(idx.getEmbeddedInteger() - 1, val);
+      ((SObject) receiver).setField(idx.getEmbeddedInteger() - 1, val);
 
       return val;
     }
@@ -143,8 +148,8 @@ public class ObjectPrims {
     }
 
     @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
+    public SAbstractObject doGeneric(final VirtualFrame frame,
+        final SAbstractObject receiver, final Object arguments) {
       Universe.errorPrintln("BREAKPOINT");
       return receiver;
     }
@@ -156,9 +161,9 @@ public class ObjectPrims {
     }
 
     @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
-      return receiver.getSOMClass();
+    public SAbstractObject doGeneric(final VirtualFrame frame,
+        final SAbstractObject receiver, final Object arguments) {
+      return receiver.getSOMClass(universe);
     }
   }
 }

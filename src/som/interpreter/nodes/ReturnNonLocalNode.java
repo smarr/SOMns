@@ -25,8 +25,8 @@ import som.compiler.MethodGenerationContext;
 import som.interpreter.FrameOnStackMarker;
 import som.interpreter.ReturnException;
 import som.vm.Universe;
+import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
-import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.frame.FrameSlotTypeException;
 import com.oracle.truffle.api.frame.MaterializedFrame;
@@ -62,16 +62,16 @@ public class ReturnNonLocalNode extends ContextualNode {
     }
   }
 
-  private SObject getSelf(final MaterializedFrame ctx) {
+  private SAbstractObject getSelf(final MaterializedFrame ctx) {
     try {
-      return (SObject) ctx.getObject(MethodGenerationContext.getStandardSelfSlot());
+      return (SAbstractObject) ctx.getObject(MethodGenerationContext.getStandardSelfSlot());
     } catch (FrameSlotTypeException e) {
       throw new RuntimeException("This should never happen! really!");
     }
   }
 
   @Override
-  public SObject executeGeneric(final VirtualFrame frame) {
+  public SAbstractObject executeGeneric(final VirtualFrame frame) {
     MaterializedFrame ctx = determineContext(frame.materialize());
     FrameOnStackMarker marker = getMarker(ctx);
 
@@ -79,7 +79,7 @@ public class ReturnNonLocalNode extends ContextualNode {
       throw new ReturnException(expression.executeGeneric(frame), marker);
     } else {
       SBlock block = getBlockFromVirtual(frame);
-      SObject self = getSelf(ctx);
+      SAbstractObject self = getSelf(ctx);
       return self.sendEscapedBlock(block, universe, frame.pack());
     }
   }

@@ -2,7 +2,7 @@ package som.primitives;
 
 import som.interpreter.nodes.PrimitiveNode;
 import som.vm.Universe;
-import som.vmobjects.SObject;
+import som.vmobjects.SAbstractObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.Specialization;
@@ -14,7 +14,8 @@ public abstract class EmptyPrim extends PrimitiveNode {
   }
 
   @Specialization
-  public SObject doGeneric(final VirtualFrame frame, final SObject receiver,
+  public SAbstractObject doGeneric(final VirtualFrame frame,
+      final SAbstractObject receiver,
       final Object arguments) {
     Universe.println("Warning: undefined primitive "
         + this.selector.getString() + " called");

@@ -5,9 +5,9 @@ import som.interpreter.nodes.AbstractMessageNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.NodeFactory;
 import som.vm.Universe;
+import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
 import som.vmobjects.SMethod;
-import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CallTarget;
@@ -41,21 +41,21 @@ public abstract class MonomorpicMessageNode extends AbstractMessageNode
     this(node.selector, node.universe, node.rcvrClass, node.invokable);
   }
 
-  public boolean isCachedReceiverClass(final SObject receiver) {
+  public boolean isCachedReceiverClass(final SAbstractObject receiver) {
     SClass currentRcvrClass = classOfReceiver(receiver, getReceiver());
     return currentRcvrClass == rcvrClass;
   }
 
   @Specialization(guards = "isCachedReceiverClass")
-  public SObject doMonomorphic(final VirtualFrame frame, final SObject receiver,
+  public SAbstractObject doMonomorphic(final VirtualFrame frame, final SAbstractObject receiver,
       final Object arguments) {
     callCount++;
-    SObject[] args = (SObject[]) arguments;
+    SAbstractObject[] args = (SAbstractObject[]) arguments;
     return invokable.invoke(frame.pack(), receiver, args);
   }
 
   @Generic
-  public SObject doGeneric(final VirtualFrame frame, final SObject receiver,
+  public SAbstractObject doGeneric(final VirtualFrame frame, final SAbstractObject receiver,
       final Object arguments) {
 
     if (isCachedReceiverClass(receiver)) {
@@ -66,7 +66,7 @@ public abstract class MonomorpicMessageNode extends AbstractMessageNode
     }
   }
 
-  public PolymorpicMessageNode generalizeToPolymorphicNode() {
+  private PolymorpicMessageNode generalizeToPolymorphicNode() {
     CompilerDirectives.transferToInterpreter();
     // So, it might just be a polymorphic send site.
     PolymorpicMessageNode poly = PolymorpicMessageNodeFactory.create(selector,

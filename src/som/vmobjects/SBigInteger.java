@@ -24,16 +24,24 @@
 
 package som.vmobjects;
 
-public class SBigInteger extends SObject {
+import java.math.BigInteger;
 
-  public SBigInteger(final SObject nilObject, java.math.BigInteger value) {
-    super(nilObject);
+import som.vm.Universe;
+
+public class SBigInteger extends SAbstractObject {
+
+  public SBigInteger(final BigInteger value) {
     embeddedBiginteger = value;
   }
 
   public BigInteger getEmbeddedBiginteger() {
     // Get the embedded big integer
     return embeddedBiginteger;
+  }
+
+  @Override
+  public SClass getSOMClass(final Universe universe) {
+    return universe.bigintegerClass;
   }
 
   // Private variable holding the embedded big integer

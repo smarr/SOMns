@@ -4,8 +4,8 @@ import som.interpreter.nodes.AbstractMessageNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.NodeFactory;
 import som.vm.Universe;
+import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
-import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.Specialization;
@@ -19,10 +19,10 @@ public abstract class MegamorphicMessageNode extends AbstractMessageNode {
   }
 
   @Specialization
-  public SObject doGeneric(final VirtualFrame frame, final SObject receiver,
+  public SAbstractObject doGeneric(final VirtualFrame frame, final SAbstractObject receiver,
       final Object arguments) {
     SClass rcvrClass = classOfReceiver(receiver, getReceiver());
-    SObject[] args   = ((SObject[]) arguments);
+    SAbstractObject[] args   = ((SAbstractObject[]) arguments);
 
     return doFullSend(frame, receiver, args, rcvrClass);
   }

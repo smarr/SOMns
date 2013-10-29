@@ -3,10 +3,10 @@ package som.interpreter.nodes.specialized;
 import som.interpreter.nodes.AbstractMessageNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.vm.Universe;
+import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import som.vmobjects.SMethod;
-import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives;
@@ -19,7 +19,7 @@ public abstract class IfTrueIfFalseMessageNode extends AbstractMessageNode {
   private final SMethod blockMethodTrueBranch;
   private final SMethod blockMethodFalseBranch;
 
-  private static final SObject[] noArgs = new SObject[0];
+  private static final SAbstractObject[] noArgs = new SAbstractObject[0];
 
   public IfTrueIfFalseMessageNode(final SSymbol selector,
       final Universe universe, final SBlock trueBlock,
@@ -43,12 +43,12 @@ public abstract class IfTrueIfFalseMessageNode extends AbstractMessageNode {
   }
 
   @Specialization
-  public SObject doIfTrueIfFalse(final VirtualFrame frame,
-      final SObject receiver, final Object arguments) {
-    SObject trueExpResult  = null;
-    SObject falseExpResult = null;
+  public SAbstractObject doIfTrueIfFalse(final VirtualFrame frame,
+      final SAbstractObject receiver, final Object arguments) {
+    SAbstractObject trueExpResult  = null;
+    SAbstractObject falseExpResult = null;
 
-    SObject[] args = (SObject[]) arguments;
+    SAbstractObject[] args = (SAbstractObject[]) arguments;
 
     if (blockMethodTrueBranch == null) {
       trueExpResult = args[0];
@@ -60,9 +60,9 @@ public abstract class IfTrueIfFalseMessageNode extends AbstractMessageNode {
     return evaluateBody(frame, receiver, arguments, trueExpResult, falseExpResult);
   }
 
-  public SObject evaluateBody(final VirtualFrame frame, final SObject rcvr,
+  public SAbstractObject evaluateBody(final VirtualFrame frame, final SAbstractObject rcvr,
       final Object arguments,
-      final SObject trueResult, final SObject falseResult) {
+      final SAbstractObject trueResult, final SAbstractObject falseResult) {
     SClass currentRcvrClass = classOfReceiver(rcvr, getReceiver());
 
     if (currentRcvrClass == universe.trueClass) {

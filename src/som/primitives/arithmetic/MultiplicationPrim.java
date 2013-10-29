@@ -3,10 +3,10 @@ package som.primitives.arithmetic;
 import java.math.BigInteger;
 
 import som.vm.Universe;
+import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBigInteger;
 import som.vmobjects.SDouble;
 import som.vmobjects.SInteger;
-import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.Specialization;
@@ -24,9 +24,9 @@ public abstract class MultiplicationPrim extends ArithmeticPrim {
   }
 
   @Specialization
-  public SObject doSInteger(final VirtualFrame frame,
+  public SAbstractObject doSInteger(final VirtualFrame frame,
       final SInteger left, final Object arguments) {
-    SObject rightObj = ((SObject[]) arguments)[0];
+    SAbstractObject rightObj = ((SAbstractObject[]) arguments)[0];
 
     // Check second parameter type:
     if (rightObj instanceof SBigInteger) {
@@ -45,9 +45,9 @@ public abstract class MultiplicationPrim extends ArithmeticPrim {
   }
 
   @Specialization
-  public SObject doSBigInteger(final VirtualFrame frame,
+  public SAbstractObject doSBigInteger(final VirtualFrame frame,
       final SBigInteger left, final Object arguments) {
-    SObject rightObj = ((SObject[]) arguments)[0];
+    SAbstractObject rightObj = ((SAbstractObject[]) arguments)[0];
     SBigInteger right = null;
 
     // Check second parameter type:
@@ -70,9 +70,9 @@ public abstract class MultiplicationPrim extends ArithmeticPrim {
   }
 
   @Specialization
-  public SObject doSDouble(final VirtualFrame frame,
+  public SAbstractObject doSDouble(final VirtualFrame frame,
       final SDouble left, final Object arguments) {
-    SDouble op1 = coerceToDouble(((SObject[]) arguments)[0]);
+    SDouble op1 = coerceToDouble(((SAbstractObject[]) arguments)[0]);
 
     return universe.newDouble(left.getEmbeddedDouble()
         * op1.getEmbeddedDouble());

@@ -1,7 +1,7 @@
 package som.interpreter;
 
 import som.interpreter.nodes.ExpressionNode;
-import som.vmobjects.SObject;
+import som.vmobjects.SAbstractObject;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.FrameDescriptor;
@@ -27,7 +27,7 @@ public abstract class Invokable extends RootNode {
     this.frameDescriptor      = frameDescriptor;
   }
 
-  public abstract SObject executeInlined(final VirtualFrame frame,
+  public abstract SAbstractObject executeInlined(final VirtualFrame frame,
       final ExpressionNode exp);
 
   public abstract ExpressionNode methodCloneForInlining();

@@ -2,9 +2,9 @@ package som.primitives;
 
 import som.interpreter.nodes.PrimitiveNode;
 import som.vm.Universe;
+import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
 import som.vmobjects.SInteger;
-import som.vmobjects.SObject;
 import som.vmobjects.SString;
 import som.vmobjects.SSymbol;
 
@@ -19,9 +19,9 @@ public class SystemPrims {
     }
 
     @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
-      SSymbol argument = (SSymbol) ((SObject[]) arguments)[0];
+    public SAbstractObject doGeneric(final VirtualFrame frame,
+        final SAbstractObject receiver, final Object arguments) {
+      SSymbol argument = (SSymbol) ((SAbstractObject[]) arguments)[0];
 
       SClass result = universe.loadClass(argument);
       return result != null ? result : universe.nilObject;
@@ -34,9 +34,9 @@ public class SystemPrims {
     }
 
     @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
-      SInteger error = (SInteger) ((SObject[]) arguments)[0];
+    public SAbstractObject doGeneric(final VirtualFrame frame,
+        final SAbstractObject receiver, final Object arguments) {
+      SInteger error = (SInteger) ((SAbstractObject[]) arguments)[0];
       universe.exit(error.getEmbeddedInteger());
       return receiver;
     }
@@ -48,11 +48,11 @@ public class SystemPrims {
     }
 
     @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
-      SSymbol argument = (SSymbol) ((SObject[]) arguments)[0];
+    public SAbstractObject doGeneric(final VirtualFrame frame,
+        final SAbstractObject receiver, final Object arguments) {
+      SSymbol argument = (SSymbol) ((SAbstractObject[]) arguments)[0];
 
-      SObject result = universe.getGlobal(argument);
+      SAbstractObject result = universe.getGlobal(argument);
       return result != null ? result : universe.nilObject;
     }
   }
@@ -63,10 +63,10 @@ public class SystemPrims {
     }
 
     @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
-      SObject value    = ((SObject[]) arguments)[1];
-      SSymbol argument = (SSymbol) ((SObject[]) arguments)[0];
+    public SAbstractObject doGeneric(final VirtualFrame frame,
+        final SAbstractObject receiver, final Object arguments) {
+      SAbstractObject value = ((SAbstractObject[]) arguments)[1];
+      SSymbol argument = (SSymbol) ((SAbstractObject[]) arguments)[0];
       universe.setGlobal(argument, value);
       return value;
     }
@@ -78,9 +78,9 @@ public class SystemPrims {
     }
 
     @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
-      SString argument = (SString) ((SObject[]) arguments)[0];
+    public SAbstractObject doGeneric(final VirtualFrame frame,
+        final SAbstractObject receiver, final Object arguments) {
+      SString argument = (SString) ((SAbstractObject[]) arguments)[0];
       Universe.print(argument.getEmbeddedString());
       return receiver;
     }
@@ -92,8 +92,8 @@ public class SystemPrims {
     }
 
     @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
+    public SAbstractObject doGeneric(final VirtualFrame frame,
+        final SAbstractObject receiver, final Object arguments) {
       Universe.println();
       return receiver;
     }
@@ -105,8 +105,8 @@ public class SystemPrims {
     }
 
     @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
+    public SAbstractObject doGeneric(final VirtualFrame frame,
+        final SAbstractObject receiver, final Object arguments) {
       System.gc();
       return universe.trueObject;
     }
@@ -118,8 +118,8 @@ public class SystemPrims {
     }
 
     @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
+    public SAbstractObject doGeneric(final VirtualFrame frame,
+        final SAbstractObject receiver, final Object arguments) {
       int time = (int) (System.currentTimeMillis() - startTime);
       return universe.newInteger(time);
     }
@@ -131,8 +131,8 @@ public class SystemPrims {
     }
 
     @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
+    public SAbstractObject doGeneric(final VirtualFrame frame,
+        final SAbstractObject receiver, final Object arguments) {
       int time = (int) (System.nanoTime() / 1000L - startMicroTime);
       return universe.newInteger(time);
     }

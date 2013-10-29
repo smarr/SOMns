@@ -36,7 +36,7 @@ public class SClass extends SObject {
 
   public SClass(final Universe universe) {
     // Initialize this class by calling the super constructor
-    super(universe.nilObject);
+    super(numberOfClassFields, universe.nilObject);
     invokablesTable = new HashMap<SSymbol, SMethod>();
     this.universe = universe;
   }
@@ -123,12 +123,6 @@ public class SClass extends SObject {
 
     // Set the instance method with the given index to the given value
     getInstanceInvokables().setIndexableField(index, value);
-  }
-
-  @Override
-  public int getDefaultNumberOfFields() {
-    // Return the default number of fields in a class
-    return numberOfClassFields;
   }
 
   public SMethod lookupInvokable(final SSymbol signature) {

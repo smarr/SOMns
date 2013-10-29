@@ -27,21 +27,20 @@ package som.vmobjects;
 import som.vm.Universe;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
-import com.oracle.truffle.api.frame.PackedFrame;
 
-public class SObject {
+public class SObject extends SAbstractObject {
 
   public SObject(final SObject nilObject) {
-    fields = new SObject[getDefaultNumberOfFields()];
-    setClearFields(getDefaultNumberOfFields(), nilObject);
+    fields = noFields;
   }
 
   public SObject(final int numberOfFields, final SObject nilObject) {
-    fields = new SObject[numberOfFields];
+    fields = new SAbstractObject[numberOfFields];
     setClearFields(numberOfFields, nilObject);
   }
 
-  public SClass getSOMClass() {
+  @Override
+  public SClass getSOMClass(final Universe universe) {
     // Get the class of this object by reading the field with class index
     return clazz;
   }
@@ -49,16 +48,6 @@ public class SObject {
   public void setClass(final SClass value) {
     // Set the class of this object by writing to the field with class index
     clazz = value;
-  }
-
-  public SSymbol getFieldName(final int index) {
-    // Get the name of the field with the given index
-    return getSOMClass().getInstanceFieldName(index);
-  }
-
-  public int getFieldIndex(final SSymbol name) {
-    // Get the index for the field with the given name
-    return getSOMClass().lookupFieldIndex(name);
   }
 
   public int getNumberOfFields() {
@@ -73,73 +62,23 @@ public class SObject {
     }
   }
 
-  public int getDefaultNumberOfFields() {
-    // Return the default number of fields in an object
-    return numberOfObjectFields;
-  }
-
-  public SObject send(final java.lang.String selectorString, final SObject[] arguments,
-      final Universe universe, final PackedFrame frame) {
-    // Turn the selector string into a selector
-    SSymbol selector = universe.symbolFor(selectorString);
-
-    // Lookup the invokable
-    SMethod invokable = getSOMClass().lookupInvokable(selector);
-
-    // Invoke the invokable
-    return invokable.invoke(frame, this, arguments);
-  }
-
-  public SObject sendDoesNotUnderstand(final SSymbol selector,
-      final SObject[] arguments,
-      final Universe universe,
-      final PackedFrame frame) {
-    // Allocate an array with enough room to hold all arguments
-    int numArgs = (arguments == null) ? 0 : arguments.length;
-
-    SArray argumentsArray = universe.newArray(numArgs);
-    for (int i = 0; i < numArgs; i++) {
-      argumentsArray.setIndexableField(i, arguments[i]);
-    }
-
-    SObject[] args = new SObject[] {selector, argumentsArray};
-
-    return send("doesNotUnderstand:arguments:", args, universe, frame);
-  }
-
-  public SObject sendUnknownGlobal(final SSymbol globalName,
-      final Universe universe,
-      final PackedFrame frame) {
-    SObject[] arguments = {globalName};
-    return send("unknownGlobal:", arguments, universe, frame);
-  }
-
-  public SObject sendEscapedBlock(final SBlock block,
-      final Universe universe,
-      final PackedFrame frame) {
-    SObject[] arguments = {block};
-    return send("escapedBlock:", arguments, universe, frame);
-  }
-
-  public SObject getField(final int index) {
+  public SAbstractObject getField(final int index) {
     // Get the field with the given index
     return fields[index];
   }
 
-  public void setField(final int index, final SObject value) {
+  public void setField(final int index, final SAbstractObject value) {
     // Set the field with the given index to the given value
     fields[index] = value;
   }
 
-  @Override
-  public java.lang.String toString() {
-    return "a " + getSOMClass().getName().getString();
-  }
 
   // Private array of fields
-  private final SObject[] fields;
-  @CompilationFinal private SClass    clazz;
+  private final SAbstractObject[]  fields;
+  @CompilationFinal private SClass clazz;
 
-  // Static field indices and number of object fields
+  private static final SAbstractObject[] noFields = new SAbstractObject[0];
+
+  // Static field indices and number of class fields
   static final int numberOfObjectFields = 0;
 }

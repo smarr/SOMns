@@ -30,45 +30,21 @@ import som.vm.Universe;
 
 import com.oracle.truffle.api.frame.MaterializedFrame;
 
-public class SBlock extends SObject {
+public class SBlock extends SAbstractObject {
 
-  private MaterializedFrame declarationFrame;
-
-  public SBlock(final SObject nilObject, final SMethod blockMethod,
-      final MaterializedFrame context) {
-    super(nilObject);
-    setMethod(blockMethod);
-    setContext(context);
+  public SBlock(final SMethod blockMethod, final MaterializedFrame context) {
+    method = blockMethod;
+    declarationFrame = context;
   }
 
   public SMethod getMethod() {
-    // Get the method of this block by reading the field with method index
-    return (SMethod) getField(methodIndex);
-  }
-
-  private void setMethod(final SMethod value) {
-    // Set the method of this block by writing to the field with method
-    // index
-    setField(methodIndex, value);
+    // Get the method of this block
+    return method;
   }
 
   public MaterializedFrame getContext() {
     // Get the context of this block by reading the field with context index
     return declarationFrame;
-  }
-
-  private void setContext(final MaterializedFrame value) {
-    if (declarationFrame != null) {
-      throw new IllegalStateException("This is most likely a bug, "
-          + "the block's context should not change.");
-    }
-    declarationFrame = value;
-  }
-
-  @Override
-  public int getDefaultNumberOfFields() {
-    // Return the default number of fields for a block
-    return numberOfBlockFields;
   }
 
   public static SMethod getEvaluationPrimitive(final int numberOfArguments,
@@ -91,8 +67,11 @@ public class SBlock extends SObject {
     return signatureString;
   }
 
-  // Static field indices and number of block fields
-  static final int methodIndex         = numberOfObjectFields;
-  static final int contextIndex        = 1 + methodIndex;
-  static final int numberOfBlockFields = 1 + contextIndex;
+  @Override
+  public SClass getSOMClass(final Universe universe) {
+    return universe.getBlockClass(method.getNumberOfArguments());
+  }
+
+  private final SMethod method;
+  private final MaterializedFrame declarationFrame;
 }

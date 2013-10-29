@@ -2,9 +2,9 @@ package som.primitives;
 
 import som.interpreter.nodes.PrimitiveNode;
 import som.vm.Universe;
+import som.vmobjects.SAbstractObject;
 import som.vmobjects.SDouble;
 import som.vmobjects.SInteger;
-import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.Specialization;
@@ -17,7 +17,7 @@ public abstract class DoublePrims extends PrimitiveNode {
     super(selector, universe);
   }
 
-  protected SDouble coerceToDouble(final SObject o) {
+  protected SDouble coerceToDouble(final SAbstractObject o) {
     if (o instanceof SDouble) { return (SDouble) o; }
     if (o instanceof SInteger) {
       return universe.newDouble(((SInteger) o).getEmbeddedInteger());
@@ -32,8 +32,8 @@ public abstract class DoublePrims extends PrimitiveNode {
     }
 
     @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
+    public SAbstractObject doGeneric(final VirtualFrame frame,
+        final SAbstractObject receiver, final Object arguments) {
       SDouble self = (SDouble) receiver;
       return universe.newString(java.lang.Double.toString(
           self.getEmbeddedDouble()));
@@ -46,9 +46,9 @@ public abstract class DoublePrims extends PrimitiveNode {
     }
 
     @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
-      SDouble op1 = coerceToDouble(((SObject[]) arguments)[0]);
+    public SAbstractObject doGeneric(final VirtualFrame frame,
+        final SAbstractObject receiver, final Object arguments) {
+      SDouble op1 = coerceToDouble(((SAbstractObject[]) arguments)[0]);
       SDouble op2 = (SDouble) receiver;
       return universe.newDouble(op2.getEmbeddedDouble()
           / op1.getEmbeddedDouble());
@@ -61,9 +61,9 @@ public abstract class DoublePrims extends PrimitiveNode {
     }
 
     @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
-      SDouble op1 = coerceToDouble(((SObject[]) arguments)[0]);
+    public SAbstractObject doGeneric(final VirtualFrame frame,
+        final SAbstractObject receiver, final Object arguments) {
+      SDouble op1 = coerceToDouble(((SAbstractObject[]) arguments)[0]);
       SDouble op2 = (SDouble) receiver;
       return universe.newDouble(op2.getEmbeddedDouble()
           % op1.getEmbeddedDouble());
@@ -76,9 +76,9 @@ public abstract class DoublePrims extends PrimitiveNode {
     }
 
     @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
-      SDouble op1 = coerceToDouble(((SObject[]) arguments)[0]);
+    public SAbstractObject doGeneric(final VirtualFrame frame,
+        final SAbstractObject receiver, final Object arguments) {
+      SDouble op1 = coerceToDouble(((SAbstractObject[]) arguments)[0]);
       SDouble op2 = (SDouble) receiver;
       if (op1.getEmbeddedDouble() == op2.getEmbeddedDouble()) {
         return universe.trueObject;
@@ -94,8 +94,8 @@ public abstract class DoublePrims extends PrimitiveNode {
     }
 
     @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
+    public SAbstractObject doGeneric(final VirtualFrame frame,
+        final SAbstractObject receiver, final Object arguments) {
       SDouble rcvr = (SDouble) receiver;
       long result = Math.round(rcvr.getEmbeddedDouble());
       if (result > java.lang.Integer.MAX_VALUE
@@ -113,12 +113,12 @@ public abstract class DoublePrims extends PrimitiveNode {
     }
 
     @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
+    public SAbstractObject doGeneric(final VirtualFrame frame,
+        final SAbstractObject receiver, final Object arguments) {
       SDouble rcvr = (SDouble) receiver;
       long left  = (long) rcvr.getEmbeddedDouble();
 
-      SObject op2  = ((SObject[]) arguments)[0];
+      SAbstractObject op2  = ((SAbstractObject[]) arguments)[0];
       long right;
       if (op2 instanceof SInteger) {
         right = ((SInteger) op2).getEmbeddedInteger();
@@ -136,12 +136,12 @@ public abstract class DoublePrims extends PrimitiveNode {
     }
 
     @Specialization
-    public SObject doGeneric(final VirtualFrame frame,
-        final SObject receiver, final Object arguments) {
+    public SAbstractObject doGeneric(final VirtualFrame frame,
+        final SAbstractObject receiver, final Object arguments) {
       SDouble rcvr = (SDouble) receiver;
       long left = (long) rcvr.getEmbeddedDouble();
 
-      SObject op2 = ((SObject[]) arguments)[0];
+      SAbstractObject op2 = ((SAbstractObject[]) arguments)[0];
       long right;
       if (op2 instanceof SInteger) {
         right = ((SInteger) op2).getEmbeddedInteger();

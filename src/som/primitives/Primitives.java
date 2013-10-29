@@ -100,7 +100,7 @@ public abstract class Primitives {
 
     // Install the given primitive as an instance primitive in the class of
     // the holder class
-    holder.getSOMClass().addInstancePrimitive(prim);
+    holder.getSOMClass(universe).addInstancePrimitive(prim);
   }
 
   private SClass holder;

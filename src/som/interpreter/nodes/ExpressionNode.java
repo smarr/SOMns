@@ -24,17 +24,17 @@ package som.interpreter.nodes;
 import java.math.BigInteger;
 
 import som.interpreter.TypesGen;
+import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBigInteger;
 import som.vmobjects.SDouble;
 import som.vmobjects.SInteger;
-import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 
 public abstract class ExpressionNode extends SOMNode {
 
-  public abstract SObject executeGeneric(final VirtualFrame frame);
+  public abstract SAbstractObject executeGeneric(final VirtualFrame frame);
 
   public int executeInteger(final VirtualFrame frame) throws UnexpectedResultException {
     return TypesGen.TYPES.expectInteger(executeGeneric(frame));

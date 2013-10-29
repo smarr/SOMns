@@ -2,7 +2,7 @@ package som.primitives;
 
 import som.interpreter.nodes.PrimitiveNode;
 import som.vm.Universe;
-import som.vmobjects.SObject;
+import som.vmobjects.SAbstractObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.Specialization;
@@ -15,8 +15,8 @@ public abstract class AsStringPrim extends PrimitiveNode {
   }
 
   @Specialization
-  public SObject doGeneric(final VirtualFrame frame,
-      final SObject receiver, final Object arguments) {
+  public SAbstractObject doGeneric(final VirtualFrame frame,
+      final SAbstractObject receiver, final Object arguments) {
     SSymbol self = (SSymbol) receiver;
     return universe.newString(self.getString());
   }

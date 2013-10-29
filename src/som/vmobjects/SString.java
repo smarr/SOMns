@@ -24,11 +24,18 @@
 
 package som.vmobjects;
 
-public class SString extends SObject {
+import som.vm.Universe;
 
-  public SString(final SObject nilObject, final java.lang.String value) {
-    super(nilObject);
+public class SString extends SAbstractObject {
+
+  public SString(final String value) {
+    super();
     this.string = value;
+  }
+
+  @Override
+  public SClass getSOMClass(final Universe universe) {
+    return universe.stringClass;
   }
 
   public String getEmbeddedString() {

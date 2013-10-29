@@ -1,8 +1,8 @@
 package som.interpreter.nodes.literals;
 
 import som.vm.Universe;
+import som.vmobjects.SAbstractObject;
 import som.vmobjects.SMethod;
-import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 
@@ -18,7 +18,7 @@ public class BlockNode extends LiteralNode {
   }
 
   @Override
-  public SObject executeGeneric(VirtualFrame frame) {
+  public SAbstractObject executeGeneric(final VirtualFrame frame) {
     return universe.newBlock(blockMethod, frame.materialize(), blockMethod.getNumberOfArguments());
   }
 
