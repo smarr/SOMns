@@ -283,7 +283,7 @@ public class SClass extends SObject {
   }
 
   // Mapping of symbols to invokables
-  private final java.util.HashMap<SSymbol, SMethod> invokablesTable;
+  private final HashMap<SSymbol, SMethod> invokablesTable;
 
   // Static field indices and number of class fields
   static final int                             superClassIndex         = numberOfObjectFields;

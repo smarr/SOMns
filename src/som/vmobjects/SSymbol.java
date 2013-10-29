@@ -32,7 +32,7 @@ public class SSymbol extends SObject {
     numberOfSignatureArguments = determineNumberOfSignatureArguments();
   }
 
-  public java.lang.String getString() {
+  public String getString() {
     // Get the string associated to this symbol
     return string;
   }
@@ -56,7 +56,7 @@ public class SSymbol extends SObject {
   }
 
   @Override
-  public java.lang.String toString() {
+  public String toString() {
     return "#" + string;
   }
 
@@ -75,6 +75,6 @@ public class SSymbol extends SObject {
   }
 
   // Private variable holding the string associated to this symbol
-  private final java.lang.String string;
-  private final int              numberOfSignatureArguments;
+  private final String string;
+  private final int    numberOfSignatureArguments;
 }

@@ -77,7 +77,7 @@ public class SBlock extends SObject {
         ValuePrimFactory.getInstance(), universe);
   }
 
-  private static java.lang.String computeSignatureString(final int numberOfArguments) {
+  private static String computeSignatureString(final int numberOfArguments) {
     // Compute the signature string
     java.lang.String signatureString = "value";
     if (numberOfArguments > 1) { signatureString += ":"; }

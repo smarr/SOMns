@@ -31,15 +31,16 @@ public class SString extends SObject {
     this.string = value;
   }
 
-  public java.lang.String getEmbeddedString() {
+  public String getEmbeddedString() {
     // Get the string associated to this symbol
     return string;
   }
 
-  public java.lang.String toString() {
+  @Override
+  public String toString() {
     return "\"" + string + "\"";
   }
 
   // Private variable holding the string associated to this symbol
-  private final java.lang.String string;
+  private final String string;
 }

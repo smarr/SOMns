@@ -109,7 +109,7 @@ public class SMethod extends SObject {
   }
 
   @Override
-  public java.lang.String toString() {
+  public String toString() {
     // TODO: fixme: remove special case if possible, I think it indicates a bug
     if (!(getField(holderIndex) instanceof SClass)) {
       return "Method(nil>>" + getSignature().toString() + ")";

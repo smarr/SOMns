@@ -31,11 +31,11 @@ public class SBigInteger extends SObject {
     embeddedBiginteger = value;
   }
 
-  public java.math.BigInteger getEmbeddedBiginteger() {
+  public BigInteger getEmbeddedBiginteger() {
     // Get the embedded big integer
     return embeddedBiginteger;
   }
 
   // Private variable holding the embedded big integer
-  private final java.math.BigInteger embeddedBiginteger;
+  private final BigInteger embeddedBiginteger;
 }

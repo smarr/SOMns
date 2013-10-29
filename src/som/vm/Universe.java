@@ -26,7 +26,10 @@
 package som.vm;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.HashMap;
+import java.util.List;
+import java.util.StringTokenizer;
 
 import som.compiler.Disassembler;
 import som.interpreter.Invokable;
@@ -50,7 +53,7 @@ import com.oracle.truffle.api.frame.MaterializedFrame;
 
 public class Universe {
 
-  public static void main(final java.lang.String[] arguments) {
+  public static void main(final String[] arguments) {
     // Create Universe
     Universe u = new Universe();
 
@@ -65,7 +68,7 @@ public class Universe {
     u.exit(0);
   }
 
-  public SObject interpret(java.lang.String[] arguments) {
+  public SAbstractObject interpret(String[] arguments) {
     // Check for command line switches
     arguments = handleArguments(arguments);
 
@@ -84,7 +87,7 @@ public class Universe {
     this.avoidExit    = false;
     this.lastExitCode = 0;
 
-    this.blockClasses = new HashMap<java.lang.Integer, SClass>(3);
+    this.blockClasses = new HashMap<Integer, SClass>(3);
 
     current = this;
   }
@@ -95,7 +98,7 @@ public class Universe {
     this.avoidExit    = avoidExit;
     this.lastExitCode = 0;
 
-    this.blockClasses = new HashMap<java.lang.Integer, SClass>(3);
+    this.blockClasses = new HashMap<Integer, SClass>(3);
 
     current = this;
   }
@@ -117,15 +120,15 @@ public class Universe {
     return lastExitCode;
   }
 
-  public void errorExit(final java.lang.String message) {
+  public void errorExit(final String message) {
     errorPrintln("Runtime Error: " + message);
     exit(1);
   }
 
   @SlowPath
-  private java.lang.String[] handleArguments(java.lang.String[] arguments) {
+  private String[] handleArguments(String[] arguments) {
     boolean gotClasspath = false;
-    java.lang.String[] remainingArgs = new java.lang.String[arguments.length];
+    String[] remainingArgs = new String[arguments.length];
     int cnt = 0;
 
     for (int i = 0; i < arguments.length; i++) {
@@ -152,15 +155,15 @@ public class Universe {
 
     // Copy the remaining elements from the original array into the new
     // array
-    arguments = new java.lang.String[cnt];
+    arguments = new String[cnt];
     System.arraycopy(remainingArgs, 0, arguments, 0, cnt);
 
     // check remaining args for class paths, and strip file extension
     for (int i = 0; i < arguments.length; i++) {
-      java.lang.String[] split = getPathClassExt(arguments[i]);
+      String[] split = getPathClassExt(arguments[i]);
 
       if (!("".equals(split[0]))) { // there was a path
-        java.lang.String[] tmp = new java.lang.String[classPath.length + 1];
+        String[] tmp = new String[classPath.length + 1];
         System.arraycopy(classPath, 0, tmp, 1, classPath.length);
         tmp[0] = split[0];
         classPath = tmp;
@@ -174,12 +177,12 @@ public class Universe {
   @SlowPath
   // take argument of the form "../foo/Test.som" and return
   // "../foo", "Test", "som"
-  private java.lang.String[] getPathClassExt(final java.lang.String arg) {
+  private String[] getPathClassExt(final String arg) {
     // Create a new tokenizer to split up the string of dirs
-    java.util.StringTokenizer tokenizer = new java.util.StringTokenizer(arg,
+    StringTokenizer tokenizer = new StringTokenizer(arg,
         fileSeparator, true);
 
-    java.lang.String cp = "";
+    String cp = "";
 
     while (tokenizer.countTokens() > 2) {
       cp = cp + tokenizer.nextToken();
@@ -188,16 +191,16 @@ public class Universe {
       tokenizer.nextToken(); // throw out delimiter
     }
 
-    java.lang.String file = tokenizer.nextToken();
+    String file = tokenizer.nextToken();
 
-    tokenizer = new java.util.StringTokenizer(file, ".");
+    tokenizer = new StringTokenizer(file, ".");
 
     if (tokenizer.countTokens() > 2) {
       println("Class with . in its name?");
       exit(1);
     }
 
-    java.lang.String[] result = new java.lang.String[3];
+    String[] result = new String[3];
     result[0] = cp;
     result[1] = tokenizer.nextToken();
     result[2] = tokenizer.hasMoreTokens() ? tokenizer.nextToken() : "";
@@ -205,10 +208,9 @@ public class Universe {
   }
 
   @SlowPath
-  public void setupClassPath(final java.lang.String cp) {
+  public void setupClassPath(final String cp) {
     // Create a new tokenizer to split up the string of directories
-    java.util.StringTokenizer tokenizer = new java.util.StringTokenizer(cp,
-        pathSeparator);
+    StringTokenizer tokenizer = new StringTokenizer(cp, pathSeparator);
 
     // Get the default class path of the appropriate size
     classPath = setupDefaultClassPath(tokenizer.countTokens());
@@ -220,15 +222,15 @@ public class Universe {
   }
 
   @SlowPath
-  private java.lang.String[] setupDefaultClassPath(final int directories) {
+  private String[] setupDefaultClassPath(final int directories) {
     // Get the default system class path
-    java.lang.String systemClassPath = System.getProperty("system.class.path");
+    String systemClassPath = System.getProperty("system.class.path");
 
     // Compute the number of defaults
     int defaults = (systemClassPath != null) ? 2 : 1;
 
     // Allocate an array with room for the directories and the defaults
-    java.lang.String[] result = new java.lang.String[directories + defaults];
+    String[] result = new String[directories + defaults];
 
     // Insert the system class path into the defaults section
     if (systemClassPath != null) {
@@ -383,7 +385,7 @@ public class Universe {
     return systemObject;
   }
 
-  public SSymbol symbolFor(final java.lang.String string) {
+  public SSymbol symbolFor(final String string) {
     // Lookup the symbol in the symbol table
     SSymbol result = symbolTable.lookup(string);
     if (result != null) { return result; }
@@ -402,7 +404,7 @@ public class Universe {
     return result;
   }
 
-  public SArray newArray(final java.util.List<?> list) {
+  public SArray newArray(final List<?> list) {
     // Allocate a new array with the same length as the list
     SArray result = newArray(list.size());
 
@@ -415,7 +417,7 @@ public class Universe {
     return result;
   }
 
-  public SArray newArray(final java.lang.String[] stringArray) {
+  public SArray newArray(final String[] stringArray) {
     // Allocate a new array with the same length as the string array
     SArray result = newArray(stringArray.length);
 
@@ -530,7 +532,7 @@ public class Universe {
     return result;
   }
 
-  private SSymbol newSymbol(final java.lang.String string) {
+  private SSymbol newSymbol(final String string) {
     // Allocate a new symbol and set its class to be the symbol class
     SSymbol result = new SSymbol(nilObject, string);
     result.setClass(symbolClass);
@@ -557,7 +559,7 @@ public class Universe {
 
   @SlowPath
   public void initializeSystemClass(final SClass systemClass, final SClass superClass,
-      final java.lang.String name) {
+      final String name) {
     // Initialize the superclass hierarchy
     if (superClass != null) {
       systemClass.setSuperClass(superClass);
@@ -614,14 +616,13 @@ public class Universe {
 
     // Compute the name of the block class with the given number of
     // arguments
-    SSymbol name = symbolFor("Block"
-        + java.lang.Integer.toString(numberOfArguments));
+    SSymbol name = symbolFor("Block" + Integer.toString(numberOfArguments));
 
     // Lookup the specific block class in the dictionary of globals and
     // return it
     if (hasGlobal(name)) {
       result = (SClass) getGlobal(name);
-      blockClasses.put(new java.lang.Integer(numberOfArguments), result);
+      blockClasses.put(new Integer(numberOfArguments), result);
       return result;
     }
 
@@ -635,7 +636,7 @@ public class Universe {
     // Insert the block class into the dictionary of globals
     setGlobal(name, result);
 
-    blockClasses.put(new java.lang.Integer(numberOfArguments), result);
+    blockClasses.put(new Integer(numberOfArguments), result);
 
     // Return the loaded block class
     return result;
@@ -674,7 +675,7 @@ public class Universe {
   @SlowPath
   public SClass loadClass(final SSymbol name, final SClass systemClass) {
     // Try loading the class from all different paths
-    for (java.lang.String cpEntry : classPath) {
+    for (String cpEntry : classPath) {
       try {
         // Load the class from a file and return the loaded class
         SClass result = som.compiler.SourcecodeCompiler.compileClass(cpEntry
@@ -695,7 +696,7 @@ public class Universe {
   }
 
   @SlowPath
-  public SClass loadShellClass(final java.lang.String stmt) throws IOException {
+  public SClass loadShellClass(final String stmt) throws IOException {
     // java.io.ByteArrayInputStream in = new
     // java.io.ByteArrayInputStream(stmt.getBytes());
 
@@ -706,13 +707,13 @@ public class Universe {
     return result;
   }
 
-  public static void errorPrint(final java.lang.String msg) {
+  public static void errorPrint(final String msg) {
     // Checkstyle: stop
     System.err.print(msg);
     // Checkstyle: resume
   }
 
-  public static void errorPrintln(final java.lang.String msg) {
+  public static void errorPrintln(final String msg) {
     // Checkstyle: stop
     System.err.println(msg);
     // Checkstyle: resume
@@ -724,13 +725,13 @@ public class Universe {
     // Checkstyle: resume
   }
 
-  public static void print(final java.lang.String msg) {
+  public static void print(final String msg) {
     // Checkstyle: stop
     System.err.print(msg);
     // Checkstyle: resume
   }
 
-  public static void println(final java.lang.String msg) {
+  public static void println(final String msg) {
     // Checkstyle: stop
     System.err.println(msg);
     // Checkstyle: resume
@@ -766,11 +767,11 @@ public class Universe {
   @CompilationFinal public SClass               falseClass;
 
   private final HashMap<SSymbol, SObject>       globals = new HashMap<SSymbol, SObject>();
-  private java.lang.String[]                    classPath;
+  private String[]                              classPath;
   @CompilationFinal private boolean             printAST;
 
-  public static final java.lang.String          pathSeparator;
-  public static final java.lang.String          fileSeparator;
+  public static final String                    pathSeparator;
+  public static final String                    fileSeparator;
 
   private final TruffleRuntime                  truffleRuntime;
 
@@ -782,7 +783,7 @@ public class Universe {
   private int                                   lastExitCode;
 
   // Optimizations
-  private final HashMap<java.lang.Integer, SClass>         blockClasses;
+  private final HashMap<Integer, SClass>        blockClasses;
 
   // Latest instance
   // WARNING: this is problematic with multiple interpreters in the same VM...

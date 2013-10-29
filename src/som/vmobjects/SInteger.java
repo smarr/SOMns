@@ -39,7 +39,8 @@ public class SInteger extends SObject {
   // Private variable holding the embedded integer
   private final int embeddedInteger;
 
-  public java.lang.String toString() {
+  @Override
+  public String toString() {
     return "" + embeddedInteger;
   }
 }
