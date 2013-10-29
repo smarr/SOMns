@@ -25,13 +25,11 @@ THE SOFTWARE.
 
 Method = (
 
-    | signature holder |
-    
     "Meta Information"
-    signature = ( ^signature )
-    holder = ( ^holder )
+    signature = primitive
+    holder    = primitive
     
     "Printing"
-    asString = ( ^holder asString + '>>' + signature asString )
+    asString = ( ^self holder asString + '>>' + self signature asString )
     
 )
