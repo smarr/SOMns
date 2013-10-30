@@ -1,6 +1,6 @@
 ClassStructureTest = (
     
-    run: harness = (
+    testClassIdentity: harness = (
         (Array new) class = Array ifFalse: [harness fail: self
                 because: 'Array instance not of class Array'].
         1 class = Integer ifFalse:         [harness fail: self
@@ -27,6 +27,29 @@ ClassStructureTest = (
                 because: 'false is not instance of False'].
         nil class = Nil ifFalse:             [harness fail: self
                 because: 'nil is not instance of Nil'].
+    )
+    
+    testThatCertainMethodsArePrimitives: harness = (
+        | m |        
+        "This is a little fragile.
+         Index needs to be adapted with changing Class definition."
+        m := Object methods at: 1. 
+        m signature = #class ifFalse: [
+            'Definition of Class changed. Testcase needs to be updated.' println.].
+
+        m class = Primitive ifFalse: [harness fail: self
+                because: 'Class>>#name should be a primitive.'].
         
+        m := Object methods at: 7.
+        m signature = #asString ifFalse: [
+            'Definition of Class changed. Testcase needs to be updated.' println.].
+        m class = Method ifFalse: [harness fail: self
+                because: 'Class>>#asString should be a normal method.'].
+        
+    )
+    
+    run: harness = (
+        self testClassIdentity: harness.
+        self testThatCertainMethodsArePrimitives: harness.
     )    
 )
