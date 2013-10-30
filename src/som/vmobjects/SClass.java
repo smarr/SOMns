@@ -30,15 +30,14 @@ import java.util.HashMap;
 import som.primitives.Primitives;
 import som.vm.Universe;
 
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+
 public class SClass extends SObject {
 
   private final Universe universe;
 
   public SClass(final Universe universe) {
-    // Initialize this class by calling the super constructor
-    super(numberOfClassFields, universe.nilObject);
-    invokablesTable = new HashMap<SSymbol, SMethod>();
-    this.universe = universe;
+    this(numberOfClassFields, universe);
   }
 
   public SClass(final int numberOfFields, final Universe universe) {
@@ -46,60 +45,48 @@ public class SClass extends SObject {
     // value
     super(numberOfFields, universe.nilObject);
     invokablesTable = new HashMap<SSymbol, SMethod>();
-    this.universe = universe;
+    this.universe   = universe;
+    this.superclass = universe.nilObject;
   }
 
   public Universe getUniverse() {
     return universe;
   }
 
-  public SClass getSuperClass() {
-    // Get the super class by reading the field with super class index
-    return (SClass) getField(superClassIndex);
+  public SObject getSuperClass() {
+    return superclass;
   }
 
   public void setSuperClass(final SClass value) {
-    // Set the super class by writing to the field with super class index
-    setField(superClassIndex, value);
+    superclass = value;
   }
 
   public boolean hasSuperClass() {
-    // Check whether or not this class has a super class
-    return getField(superClassIndex) != universe.nilObject;
+    return superclass != universe.nilObject;
   }
 
   public SSymbol getName() {
-    // Get the name of this class by reading the field with name index
-    return (SSymbol) getField(nameIndex);
+    return name;
   }
 
   public void setName(final SSymbol value) {
-    // Set the name of this class by writing to the field with name index
-    setField(nameIndex, value);
+    name = value;
   }
 
   public SArray getInstanceFields() {
-    // Get the instance fields by reading the field with the instance fields
-    // index
-    return (SArray) getField(instanceFieldsIndex);
+    return instanceFields;
   }
 
   public void setInstanceFields(final SArray value) {
-    // Set the instance fields by writing to the field with the instance
-    // fields index
-    setField(instanceFieldsIndex, value);
+    instanceFields = value;
   }
 
   public SArray getInstanceInvokables() {
-    // Get the instance invokables by reading the field with the instance
-    // invokables index
-    return (SArray) getField(instanceInvokablesIndex);
+    return instanceInvokables;
   }
 
   public void setInstanceInvokables(final SArray value) {
-    // Set the instance invokables by writing to the field with the instance
-    // invokables index
-    setField(instanceInvokablesIndex, value);
+    instanceInvokables = value;
 
     // Make sure this class is the holder of all invokables in the array
     for (int i = 0; i < getNumberOfInstanceInvokables(); i++) {
@@ -146,7 +133,7 @@ public class SClass extends SObject {
 
     // Traverse the super class chain by calling lookup on the super class
     if (hasSuperClass()) {
-      invokable = getSuperClass().lookupInvokable(signature);
+      invokable = ((SClass) getSuperClass()).lookupInvokable(signature);
       if (invokable != null) {
         invokablesTable.put(signature, invokable);
         return invokable;
@@ -205,7 +192,7 @@ public class SClass extends SObject {
       return (SSymbol) getInstanceFields().getIndexableField(index);
     } else {
       // Ask the super class to return the name of the instance field
-      return getSuperClass().getInstanceFieldName(index);
+      return ((SClass) getSuperClass()).getInstanceFieldName(index);
     }
   }
 
@@ -218,7 +205,7 @@ public class SClass extends SObject {
   private int getNumberOfSuperInstanceFields() {
     // Get the total number of instance fields defined in super classes
     if (hasSuperClass()) {
-      return getSuperClass().getNumberOfInstanceFields();
+      return ((SClass) getSuperClass()).getNumberOfInstanceFields();
     } else {
       return 0;
     }
@@ -279,10 +266,11 @@ public class SClass extends SObject {
   // Mapping of symbols to invokables
   private final HashMap<SSymbol, SMethod> invokablesTable;
 
+  @CompilationFinal private SObject superclass;
+  @CompilationFinal private SSymbol name;
+  @CompilationFinal private SArray  instanceInvokables;
+  @CompilationFinal private SArray  instanceFields;
+
   // Static field indices and number of class fields
-  static final int                             superClassIndex         = numberOfObjectFields;
-  static final int                             nameIndex               = 1 + superClassIndex;
-  static final int                             instanceFieldsIndex     = 1 + nameIndex;
-  static final int                             instanceInvokablesIndex = 1 + instanceFieldsIndex;
-  static final int                             numberOfClassFields     = 1 + instanceInvokablesIndex;
+  static final int numberOfClassFields = numberOfObjectFields;
 }

@@ -25,6 +25,10 @@
 
 package som.primitives;
 
+import som.primitives.ClassPrimsFactory.InstanceFieldsPrimFactory;
+import som.primitives.ClassPrimsFactory.InstanceInvokablesPrimFactory;
+import som.primitives.ClassPrimsFactory.NamePrimFactory;
+import som.primitives.ClassPrimsFactory.SuperClassPrimFactory;
 import som.vm.Universe;
 
 public class ClassPrimitives extends Primitives {
@@ -36,5 +40,9 @@ public class ClassPrimitives extends Primitives {
   @Override
   public void installPrimitives() {
     installInstancePrimitive("new", NewObjectPrimFactory.getInstance());
+    installInstancePrimitive("name", NamePrimFactory.getInstance());
+    installInstancePrimitive("superclass", SuperClassPrimFactory.getInstance());
+    installInstancePrimitive("methods", InstanceInvokablesPrimFactory.getInstance());
+    installInstancePrimitive("fields", InstanceFieldsPrimFactory.getInstance());
   }
 }
