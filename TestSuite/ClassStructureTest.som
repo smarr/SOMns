@@ -48,8 +48,32 @@ ClassStructureTest = (
         
     )
     
+    testAccessToInstanceFields: harness = (
+        | o |
+        o := ClassC new.
+        o a: 333.
+        o a = 333 ifFalse: [harness fail: self
+            because: 'Writing or reading of field of parent class failed.'].
+            
+        o f: 333.
+        o f = 333 ifFalse: [harness fail: self
+            because: 'Writing or reading of field of parent class failed.'].
+    )
+    
+    testAccessToClassFields: harness = (
+        | arr |
+        ClassC setAllAndInc: 4.
+        arr := ClassC getAll.
+        1 to: 9 do: [:i | 
+            ((arr at: i) = (i + (4 - 1))) ifFalse: [
+                harness fail: self because: 'Access to class fields is broken.']
+        ]
+    )
+    
     run: harness = (
         self testClassIdentity: harness.
         self testThatCertainMethodsArePrimitives: harness.
+        self testAccessToInstanceFields: harness.
+        self testAccessToClassFields: harness.
     )    
 )

@@ -1,3 +1,5 @@
 ClassB = ClassA (
   | c d |
+  ----
+  | c4 c5 c6 |
 )
