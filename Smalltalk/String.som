@@ -51,15 +51,15 @@ String = (
                 self error: 'Attempting to index string out of its bounds.' ]
     )
 
-	beginsWith: prefix = (
-		self length < prefix length ifTrue: [^ false ].
-		
-		1 to: prefix length do: [:i | 
-			((self charAt: i) = (prefix charAt: i)) ifFalse: [^ false ].  
-		].
-		
-		^ true
-	)
+    beginsWith: prefix = (
+        self length < prefix length ifTrue: [^ false ].
+        
+        1 to: prefix length do: [:i | 
+            ((self charAt: i) = (prefix charAt: i)) ifFalse: [^ false ].  
+        ].
+        
+        ^ true
+    )
 
     asInteger = (
         ^ Integer fromString: self
