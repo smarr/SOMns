@@ -79,6 +79,6 @@ public class SObject extends SAbstractObject {
 
   private static final SAbstractObject[] noFields = new SAbstractObject[0];
 
-  // Static field indices and number of class fields
+  // Static field indices and number of object fields
   static final int numberOfObjectFields = 0;
 }
