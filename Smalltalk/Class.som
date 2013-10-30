@@ -25,24 +25,22 @@ THE SOFTWARE.
 
 Class = (
 
-    | superClass name instanceFields instanceInvokables |
-    
     "Accessing"
-    name     = ( ^name )
+    name     = primitive
     
     "Converting"
     asString = ( ^self name asString )
     
     "Allocation"
-    new      = primitive
+    new = primitive
     
     "Meta Information"
-    superclass = ( ^superClass )
-    fields = ( ^instanceFields )
-    methods = ( ^instanceInvokables )
+    superclass = primitive
+    fields     = primitive
+    methods    = primitive
     
     hasMethod: aSymbol = (
-        instanceInvokables do: [ :m |
+        self methods do: [ :m |
             m signature = aSymbol ifTrue: [ ^true ] ].
         ^false
     )

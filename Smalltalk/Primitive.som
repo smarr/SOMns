@@ -25,9 +25,7 @@ THE SOFTWARE.
 
 Primitive = (
 
-    | signature holder |
-    
-    signature = ( ^signature )
-    holder    = ( ^holder    )
-    
+    signature = primitive
+    holder = primitive
+
 )
