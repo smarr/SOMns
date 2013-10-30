@@ -39,7 +39,7 @@ public abstract class AbstractMessageNode extends ExpressionNode {
 
     // first determine whether it is a normal, or super send
     if (receiver instanceof SuperReadNode) {
-      rcvrClass = rcvrClass.getSuperClass();
+      rcvrClass = (SClass) rcvrClass.getSuperClass();
     }
     return rcvrClass;
   }
