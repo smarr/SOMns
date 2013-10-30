@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import som.vm.Universe;
+import som.vmobjects.SArray;
 import som.vmobjects.SClass;
 import som.vmobjects.SMethod;
 import som.vmobjects.SSymbol;
@@ -45,8 +46,6 @@ public class ClassGenerationContext {
   private SSymbol             name;
   private SSymbol             superName;
   private boolean             classSide;
-  private int                 numberOfInstanceFieldsOfSuper;
-  private int                 numberOfClassFieldsOfSuper;
   private final List<SSymbol> instanceFields  = new ArrayList<SSymbol>();
   private final List<SMethod> instanceMethods = new ArrayList<SMethod>();
   private final List<SSymbol> classFields     = new ArrayList<SSymbol>();
@@ -64,12 +63,18 @@ public class ClassGenerationContext {
     this.superName = superName;
   }
 
-  public void setNumberOfInstanceFieldsOfSuper(final int numberOfInstanceFields) {
-    this.numberOfInstanceFieldsOfSuper = numberOfInstanceFields;
+  public void setInstanceFieldsOfSuper(final SArray fieldNames) {
+    int numFields = fieldNames.getNumberOfIndexableFields();
+    for (int i = 0; i < numFields; i++) {
+      instanceFields.add((SSymbol) fieldNames.getIndexableField(i));
+    }
   }
 
-  public void setNumberOfClassFieldsOfSuper(final int numberOfClassFields) {
-    this.numberOfClassFieldsOfSuper = numberOfClassFields;
+  public void setClassFieldsOfSuper(final SArray fieldNames) {
+    int numFields = fieldNames.getNumberOfIndexableFields();
+    for (int i = 0; i < numFields; i++) {
+      classFields.add((SSymbol) fieldNames.getIndexableField(i));
+    }
   }
 
   public void addInstanceMethod(final SMethod meth) {
@@ -97,8 +102,11 @@ public class ClassGenerationContext {
   }
 
   public byte getFieldIndex(final SSymbol field) {
-    int localIndex = (isClassSide() ? classFields : instanceFields).indexOf(field);
-    return (byte) (localIndex + (isClassSide() ? numberOfClassFieldsOfSuper : numberOfInstanceFieldsOfSuper));
+    if (isClassSide()) {
+      return (byte) classFields.indexOf(field);
+    } else {
+      return (byte) instanceFields.indexOf(field);
+    }
   }
 
   public boolean isClassSide() {
@@ -145,5 +153,4 @@ public class ClassGenerationContext {
     superMClass.setInstanceInvokables(universe.newArray(classMethods));
     superMClass.setInstanceFields(universe.newArray(classFields));
   }
-
 }
