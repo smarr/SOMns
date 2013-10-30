@@ -93,7 +93,11 @@ public class SMethod extends SAbstractObject {
 
   @Override
   public SClass getSOMClass(final Universe universe) {
-    return universe.methodClass;
+    if (isPrimitive) {
+      return universe.primitiveClass;
+    } else {
+      return universe.methodClass;
+    }
   }
 
   @Override
