@@ -283,7 +283,7 @@ public class Universe {
   }
 
   private SAbstractObject execute(final String[] arguments) {
-    SObject systemObject = initializeObjectSystem();
+    initializeObjectSystem();
 
     // Start the shell if no filename is given
     if (arguments.length == 0) {
@@ -303,7 +303,7 @@ public class Universe {
   }
 
   @SlowPath
-  protected SObject initializeObjectSystem() {
+  protected void initializeObjectSystem() {
     // Allocate the nil object
     nilObject = new SObject(null);
 
@@ -367,8 +367,8 @@ public class Universe {
     falseObject            = newInstance(falseClass);
 
     // Load the system class and create an instance of it
-    systemClass          = loadClass(symbolFor("System"));
-    SObject systemObject = newInstance(systemClass);
+    systemClass  = loadClass(symbolFor("System"));
+    systemObject = newInstance(systemClass);
 
     // Put special objects and classes into the dictionary of globals
     setGlobal(symbolFor("nil"),    nilObject);
@@ -382,8 +382,6 @@ public class Universe {
 
     setGlobal(trueClassName,  trueClass);
     setGlobal(falseClassName, falseClass);
-
-    return systemObject;
   }
 
   public SSymbol symbolFor(final String string) {
@@ -726,6 +724,7 @@ public class Universe {
   @CompilationFinal public SObject              nilObject;
   @CompilationFinal public SObject              trueObject;
   @CompilationFinal public SObject              falseObject;
+  @CompilationFinal public SObject              systemObject;
 
   @CompilationFinal public SClass               objectClass;
   @CompilationFinal public SClass               classClass;
