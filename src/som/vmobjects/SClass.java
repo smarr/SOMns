@@ -155,7 +155,7 @@ public class SClass extends SObject {
     return -1;
   }
 
-  public boolean addInstanceInvokable(final SMethod value) {
+  private boolean addInstanceInvokable(final SMethod value) {
     // Add the given invokable to the array of instance invokables
     for (int i = 0; i < getNumberOfInstanceInvokables(); i++) {
       // Get the next invokable in the instance invokable array
@@ -250,7 +250,7 @@ public class SClass extends SObject {
         Constructor<?> ctor = primitivesClass.getConstructor(Universe.class);
         ((Primitives) ctor.newInstance(universe)).installPrimitivesIn(this);
       } catch (Exception e) {
-        Universe.println("Primitives class " + className
+        Universe.current().errorExit("Primitives class " + className
             + " cannot be instantiated");
       }
     } catch (ClassNotFoundException e) {
