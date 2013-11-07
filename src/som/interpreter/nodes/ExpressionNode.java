@@ -25,16 +25,23 @@ import java.math.BigInteger;
 
 import som.interpreter.TypesGen;
 import som.vmobjects.SAbstractObject;
+import som.vmobjects.SArray;
 import som.vmobjects.SBigInteger;
+import som.vmobjects.SBlock;
+import som.vmobjects.SClass;
 import som.vmobjects.SDouble;
 import som.vmobjects.SInteger;
+import som.vmobjects.SMethod;
+import som.vmobjects.SObject;
+import som.vmobjects.SString;
+import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 
 public abstract class ExpressionNode extends SOMNode {
 
-  public abstract SAbstractObject executeGeneric(final VirtualFrame frame);
+  public abstract Object executeGeneric(final VirtualFrame frame);
 
   public int executeInteger(final VirtualFrame frame) throws UnexpectedResultException {
     return TypesGen.TYPES.expectInteger(executeGeneric(frame));
@@ -68,6 +75,41 @@ public abstract class ExpressionNode extends SOMNode {
     return TypesGen.TYPES.expectSDouble(executeGeneric(frame));
   }
 
+  public SArray executeSArray(final VirtualFrame frame) throws UnexpectedResultException {
+    return TypesGen.TYPES.expectSArray(executeGeneric(frame));
+  }
+
+  public SString executeSString(final VirtualFrame frame) throws UnexpectedResultException {
+    return TypesGen.TYPES.expectSString(executeGeneric(frame));
+  }
+
+  public SSymbol executeSSymbol(final VirtualFrame frame) throws UnexpectedResultException {
+    return TypesGen.TYPES.expectSSymbol(executeGeneric(frame));
+  }
+
+  public SBlock executeSBlock(final VirtualFrame frame) throws UnexpectedResultException {
+    return TypesGen.TYPES.expectSBlock(executeGeneric(frame));
+  }
+
+  public SClass executeSClass(final VirtualFrame frame) throws UnexpectedResultException {
+    return TypesGen.TYPES.expectSClass(executeGeneric(frame));
+  }
+
+  public SMethod executeSMethod(final VirtualFrame frame) throws UnexpectedResultException {
+    return TypesGen.TYPES.expectSMethod(executeGeneric(frame));
+  }
+
+  public SObject executeSObject(final VirtualFrame frame) throws UnexpectedResultException {
+    return TypesGen.TYPES.expectSObject(executeGeneric(frame));
+  }
+
+  public SAbstractObject executeSAbstractObject(final VirtualFrame frame) throws UnexpectedResultException {
+    return TypesGen.TYPES.expectSAbstractObject(executeGeneric(frame));
+  }
+
+  public Object executeObject(final VirtualFrame frame) throws UnexpectedResultException {
+    return executeGeneric(frame);
+  }
 
   public abstract ExpressionNode cloneForInlining();
 
