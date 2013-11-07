@@ -1,62 +1,54 @@
 package som.primitives;
 
-import som.interpreter.nodes.PrimitiveNode;
+import som.interpreter.nodes.messages.UnaryMonomorphicNode;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
+import som.vmobjects.SMethod;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.VirtualFrame;
 
 
 public class ClassPrims {
 
-  public abstract static class NamePrim extends PrimitiveNode {
-    public NamePrim(final SSymbol selector, final Universe universe) {
-      super(selector, universe);
-    }
+  public abstract static class NamePrim extends UnaryMonomorphicNode {
+    public NamePrim(final SSymbol selector, final Universe universe, final SClass rcvrClass, final SMethod invokable) { super(selector, universe, rcvrClass, invokable); }
+    public NamePrim(final NamePrim prim) { this(prim.selector, prim.universe, prim.rcvrClass, prim.invokable); }
 
     @Specialization
-    public SAbstractObject doGeneric(final VirtualFrame frame,
-        final SAbstractObject receiver, final Object arguments) {
-      return ((SClass) receiver).getName();
+    public SAbstractObject doSClass(final SClass receiver) {
+      return receiver.getName();
     }
   }
 
-  public abstract static class SuperClassPrim extends PrimitiveNode {
-    public SuperClassPrim(final SSymbol selector, final Universe universe) {
-      super(selector, universe);
-    }
+  public abstract static class SuperClassPrim extends UnaryMonomorphicNode {
+    public SuperClassPrim(final SSymbol selector, final Universe universe, final SClass rcvrClass, final SMethod invokable) { super(selector, universe, rcvrClass, invokable); }
+    public SuperClassPrim(final SuperClassPrim prim) { this(prim.selector, prim.universe, prim.rcvrClass, prim.invokable); }
 
     @Specialization
-    public SAbstractObject doGeneric(final VirtualFrame frame,
-        final SAbstractObject receiver, final Object arguments) {
-      return ((SClass) receiver).getSuperClass();
+    public SAbstractObject doSClass(final SClass receiver) {
+      return receiver.getSuperClass();
     }
   }
 
-  public abstract static class InstanceInvokablesPrim extends PrimitiveNode {
-    public InstanceInvokablesPrim(final SSymbol selector, final Universe universe) {
-      super(selector, universe);
-    }
+  public abstract static class InstanceInvokablesPrim extends UnaryMonomorphicNode {
+    public InstanceInvokablesPrim(final SSymbol selector, final Universe universe, final SClass rcvrClass, final SMethod invokable) { super(selector, universe, rcvrClass, invokable); }
+    public InstanceInvokablesPrim(final InstanceInvokablesPrim prim) { this(prim.selector, prim.universe, prim.rcvrClass, prim.invokable); }
 
     @Specialization
-    public SAbstractObject doGeneric(final VirtualFrame frame,
-        final SAbstractObject receiver, final Object arguments) {
-      return ((SClass) receiver).getInstanceInvokables();
+    public SAbstractObject doSClass(final SClass receiver) {
+      return receiver.getInstanceInvokables();
     }
   }
 
-  public abstract static class InstanceFieldsPrim extends PrimitiveNode {
-    public InstanceFieldsPrim(final SSymbol selector, final Universe universe) {
-      super(selector, universe);
-    }
+  public abstract static class InstanceFieldsPrim extends UnaryMonomorphicNode {
+    public InstanceFieldsPrim(final SSymbol selector, final Universe universe, final SClass rcvrClass, final SMethod invokable) { super(selector, universe, rcvrClass, invokable); }
+    public InstanceFieldsPrim(final InstanceFieldsPrim prim) { this(prim.selector, prim.universe, prim.rcvrClass, prim.invokable); }
 
     @Specialization
-    public SAbstractObject doGeneric(final VirtualFrame frame,
-        final SAbstractObject receiver, final Object arguments) {
-      return ((SClass) receiver).getInstanceFields();
+    public SAbstractObject doSClass(final SClass receiver) {
+      return receiver.getInstanceFields();
     }
   }
 }

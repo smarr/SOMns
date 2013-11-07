@@ -27,9 +27,6 @@ package som.primitives;
 
 import som.primitives.StringPrimsFactory.AsSymbolPrimFactory;
 import som.primitives.StringPrimsFactory.ConcatPrimFactory;
-import som.primitives.StringPrimsFactory.EqualsPrimFactory;
-import som.primitives.StringPrimsFactory.HashPrimFactory;
-import som.primitives.StringPrimsFactory.LengthPrimFactory;
 import som.primitives.StringPrimsFactory.SubstringPrimFactory;
 import som.vm.Universe;
 

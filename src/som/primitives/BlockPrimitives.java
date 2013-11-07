@@ -26,6 +26,10 @@
 package som.primitives;
 
 import som.primitives.BlockPrimsFactory.RestartPrimFactory;
+import som.primitives.BlockPrimsFactory.ValueMorePrimFactory;
+import som.primitives.BlockPrimsFactory.ValueNonePrimFactory;
+import som.primitives.BlockPrimsFactory.ValueOnePrimFactory;
+import som.primitives.BlockPrimsFactory.ValueTwoPrimFactory;
 import som.vm.Universe;
 
 public class BlockPrimitives extends Primitives {
@@ -37,5 +41,10 @@ public class BlockPrimitives extends Primitives {
   @Override
   public void installPrimitives() {
     installInstancePrimitive("restart", RestartPrimFactory.getInstance());
+
+    installInstancePrimitive("value",            ValueNonePrimFactory.getInstance());
+    installInstancePrimitive("value:",           ValueOnePrimFactory.getInstance());
+    installInstancePrimitive("value:with:",      ValueTwoPrimFactory.getInstance());
+    installInstancePrimitive("value:with:with:", ValueMorePrimFactory.getInstance());
   }
 }

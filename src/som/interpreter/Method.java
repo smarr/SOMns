@@ -69,7 +69,7 @@ public class Method extends Invokable {
     do {
       restart = false;
       try {
-        result = expr.executeGeneric(frame);
+        result = (SAbstractObject) expr.executeGeneric(frame); // TODO: work out whether there is another way than this cast!
       } catch (ReturnException e) {
         if (!e.reachedTarget(marker)) {
           marker.frameNoLongerOnStack();

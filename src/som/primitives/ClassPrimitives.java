@@ -39,10 +39,10 @@ public class ClassPrimitives extends Primitives {
 
   @Override
   public void installPrimitives() {
-    installInstancePrimitive("new", NewObjectPrimFactory.getInstance());
-    installInstancePrimitive("name", NamePrimFactory.getInstance());
+    installInstancePrimitive("new",        NewObjectPrimFactory.getInstance());
+    installInstancePrimitive("name",       NamePrimFactory.getInstance());
     installInstancePrimitive("superclass", SuperClassPrimFactory.getInstance());
-    installInstancePrimitive("methods", InstanceInvokablesPrimFactory.getInstance());
-    installInstancePrimitive("fields", InstanceFieldsPrimFactory.getInstance());
+    installInstancePrimitive("methods",    InstanceInvokablesPrimFactory.getInstance());
+    installInstancePrimitive("fields",     InstanceFieldsPrimFactory.getInstance());
   }
 }

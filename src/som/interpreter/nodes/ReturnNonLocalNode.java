@@ -76,7 +76,8 @@ public class ReturnNonLocalNode extends ContextualNode {
     FrameOnStackMarker marker = getMarker(ctx);
 
     if (marker.isOnStack()) {
-      throw new ReturnException(expression.executeGeneric(frame), marker);
+      SAbstractObject result = (SAbstractObject) expression.executeGeneric(frame); // TODO: Work out whether there is another way than this cast!
+      throw new ReturnException(result, marker);
     } else {
       SBlock block = getBlockFromVirtual(frame);
       SAbstractObject self = getSelf(ctx);

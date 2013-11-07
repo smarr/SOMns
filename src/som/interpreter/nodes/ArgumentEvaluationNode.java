@@ -31,7 +31,7 @@ public class ArgumentEvaluationNode extends SOMNode {
     SAbstractObject[] result = new SAbstractObject[arguments.length];
 
     for (int i = 0; i < arguments.length; i++) {
-      result[i] = arguments[i].executeGeneric(frame);
+      result[i] = (SAbstractObject) arguments[i].executeGeneric(frame); // TODO: Work out whether there is another way than this cast!
     }
 
     return result;

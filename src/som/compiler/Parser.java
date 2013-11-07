@@ -63,15 +63,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 import som.compiler.SourcecodeCompiler.Source;
+import som.interpreter.nodes.AbstractMessageNode;
 import som.interpreter.nodes.ArgumentEvaluationNode;
+import som.interpreter.nodes.BinaryMessageNode;
+import som.interpreter.nodes.BinaryMessageNodeFactory;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.FieldNode.FieldReadNode;
 import som.interpreter.nodes.FieldNode.FieldWriteNode;
 import som.interpreter.nodes.GlobalNode.GlobalReadNode;
-import som.interpreter.nodes.MessageNode;
-import som.interpreter.nodes.MessageNodeFactory;
+import som.interpreter.nodes.KeywordMessageNodeFactory;
 import som.interpreter.nodes.ReturnNonLocalNode;
 import som.interpreter.nodes.SequenceNode;
+import som.interpreter.nodes.TernaryMessageNodeFactory;
+import som.interpreter.nodes.UnaryMessageNode;
+import som.interpreter.nodes.UnaryMessageNodeFactory;
 import som.interpreter.nodes.VariableNode.SelfReadNode;
 import som.interpreter.nodes.VariableNode.SuperReadNode;
 import som.interpreter.nodes.VariableNode.VariableReadNode;
@@ -527,9 +532,9 @@ public class Parser {
     return identifier();
   }
 
-  private MessageNode messages(final MethodGenerationContext mgenc,
+  private AbstractMessageNode messages(final MethodGenerationContext mgenc,
       final ExpressionNode receiver) {
-    MessageNode msg;
+    AbstractMessageNode msg;
     if (sym == Identifier) {
       msg = unaryMessage(receiver);
 
@@ -560,24 +565,21 @@ public class Parser {
     return msg;
   }
 
-  private MessageNode unaryMessage(final ExpressionNode receiver) {
+  private UnaryMessageNode unaryMessage(final ExpressionNode receiver) {
     SourceCoordinate coord = getCoordinate();
     SSymbol selector = unarySelector();
-    MessageNode msg = MessageNodeFactory.create(selector, universe, receiver, new ArgumentEvaluationNode());
+    UnaryMessageNode msg = UnaryMessageNodeFactory.create(selector, universe, receiver);
     assignSource(msg, coord);
     return msg;
   }
 
-  private MessageNode binaryMessage(final MethodGenerationContext mgenc,
+  private BinaryMessageNode binaryMessage(final MethodGenerationContext mgenc,
       final ExpressionNode receiver) {
     SourceCoordinate coord = getCoordinate();
     SSymbol msg = binarySelector();
-    ExpressionNode operand   = binaryOperand(mgenc);
+    ExpressionNode operand = binaryOperand(mgenc);
 
-    ArgumentEvaluationNode args =
-        new ArgumentEvaluationNode(new ExpressionNode[] {operand});
-
-    MessageNode msgNode = MessageNodeFactory.create(msg, universe, receiver, args);
+    BinaryMessageNode msgNode = BinaryMessageNodeFactory.create(msg, universe, receiver, operand);
     assignSource(msgNode, coord);
     return msgNode;
   }
@@ -594,7 +596,7 @@ public class Parser {
     return operand;
   }
 
-  private MessageNode keywordMessage(final MethodGenerationContext mgenc,
+  private AbstractMessageNode keywordMessage(final MethodGenerationContext mgenc,
       final ExpressionNode receiver) {
     SourceCoordinate coord = getCoordinate();
     List<ExpressionNode> arguments = new ArrayList<ExpressionNode>();
@@ -608,10 +610,18 @@ public class Parser {
 
     SSymbol msg = universe.symbolFor(kw.toString());
 
-    ArgumentEvaluationNode args =
-        new ArgumentEvaluationNode(arguments.toArray(new ExpressionNode[0]));
+    AbstractMessageNode msgNode;
+    int numArgs = msg.getNumberOfSignatureArguments();
+    if (numArgs == 2) {
+      msgNode = BinaryMessageNodeFactory.create(msg, universe, receiver, arguments.get(0));
+    } else if (numArgs == 3) {
+      msgNode = TernaryMessageNodeFactory.create(msg, universe, receiver, arguments.get(0), arguments.get(1));
+    } else {
+      ArgumentEvaluationNode args =
+          new ArgumentEvaluationNode(arguments.toArray(new ExpressionNode[0]));
+      msgNode = KeywordMessageNodeFactory.create(msg, universe, receiver, args);
+    }
 
-    MessageNode msgNode = MessageNodeFactory.create(msg, universe, receiver, args);
     assignSource(msgNode, coord);
     return msgNode;
   }

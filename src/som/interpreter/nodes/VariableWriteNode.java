@@ -58,7 +58,7 @@ public class VariableWriteNode extends VariableNode {
 
     @Override
     public SAbstractObject executeGeneric(final VirtualFrame frame) {
-      SAbstractObject result = exp.executeGeneric(frame);
+      SAbstractObject result = (SAbstractObject) exp.executeGeneric(frame); // TODO: Work out whether there is another way than this cast!
       MaterializedFrame ctx = determineContext(frame.materialize());
 
       ctx.setObject(slot, result);

@@ -5,61 +5,27 @@ import java.math.BigInteger;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBigInteger;
+import som.vmobjects.SClass;
 import som.vmobjects.SDouble;
 import som.vmobjects.SInteger;
+import som.vmobjects.SMethod;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.VirtualFrame;
 
 
 public abstract class SubtractionPrim extends ArithmeticPrim {
+  public SubtractionPrim(final SSymbol selector, final Universe universe, final SClass rcvrClass, final SMethod invokable) { super(selector, universe, rcvrClass, invokable); }
+  public SubtractionPrim(final SubtractionPrim node) { this(node.selector, node.universe, node.rcvrClass, node.invokable); }
 
-  public SubtractionPrim(final SSymbol selector, final Universe universe) {
-    super(selector, universe);
+  @Specialization(order = 1)
+  public SAbstractObject doSInteger(final SInteger left, final SInteger right) {
+    long result = ((long) left.getEmbeddedInteger()) - right.getEmbeddedInteger();
+    return makeInt(result);
   }
 
-  public SubtractionPrim(final SubtractionPrim node) {
-    this(node.selector, node.universe);
-  }
-
-  @Specialization
-  public SAbstractObject doSInteger(final VirtualFrame frame, final SInteger left,
-      final Object arguments) {
-    SAbstractObject rightObj = ((SAbstractObject[]) arguments)[0];
-
-    // Check second parameter type:
-    if (rightObj instanceof SBigInteger) {
-      // Second operand was BigInteger
-      return resendAsBigInteger("-", left, (SBigInteger) rightObj, frame.pack());
-    } else if (rightObj instanceof SDouble) {
-      return resendAsDouble("-", left, (SDouble) rightObj, frame.pack());
-    } else {
-      // Do operation:
-      SInteger right = (SInteger) rightObj;
-
-      long result = ((long) left.getEmbeddedInteger())
-          - right.getEmbeddedInteger();
-      return makeInt(result);
-    }
-  }
-
-  @Specialization
-  public SAbstractObject doSBigInteger(final VirtualFrame frame, final SBigInteger left,
-      final Object arguments) {
-    SAbstractObject rightObj = ((SAbstractObject[]) arguments)[0];
-    SBigInteger right = null;
-
-    // Check second parameter type:
-    if (rightObj instanceof SInteger) {
-      // Second operand was Integer
-      right = universe.newBigInteger(
-          ((SInteger) rightObj).getEmbeddedInteger());
-    } else {
-      right = (SBigInteger) rightObj;
-    }
-
-    // Do operation and perform conversion to Integer if required
+  @Specialization(order = 2)
+  public SAbstractObject doSBigInteger(final SBigInteger left, final SBigInteger right) {
     BigInteger result = left.getEmbeddedBiginteger().subtract(
         right.getEmbeddedBiginteger());
     if (result.bitLength() > 31) {
@@ -69,12 +35,28 @@ public abstract class SubtractionPrim extends ArithmeticPrim {
     }
   }
 
-  @Specialization
-  public SAbstractObject doSDouble(final VirtualFrame frame, final SDouble left,
-      final Object arguments) {
-    SDouble op1 = coerceToDouble(((SAbstractObject[]) arguments)[0]);
+  @Specialization(order = 3)
+  public SAbstractObject doSDouble(final SDouble left, final SDouble right) {
+    return universe.newDouble(left.getEmbeddedDouble() - right.getEmbeddedDouble());
+  }
 
-    return universe.newDouble(left.getEmbeddedDouble()
-        - op1.getEmbeddedDouble());
+  @Specialization(order = 10)
+  public SAbstractObject doSInteger(final SInteger left, final SBigInteger right) {
+    return doSBigInteger(toSBigInteger(left), right);
+  }
+
+  @Specialization(order = 11)
+  public SAbstractObject doSInteger(final SInteger left, final SDouble right) {
+    return doSDouble(toSDouble(left), right);
+  }
+
+  @Specialization(order = 12)
+  public SAbstractObject doSBigInteger(final SBigInteger left, final SInteger right) {
+    return doSBigInteger(left, toSBigInteger(right));
+  }
+
+  @Specialization(order = 13)
+  public SAbstractObject doSDouble(final SDouble left, final SInteger right) {
+    return doSDouble(left, toSDouble(right));
   }
 }

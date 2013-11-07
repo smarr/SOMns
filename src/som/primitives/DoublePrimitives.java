@@ -25,15 +25,13 @@
 
 package som.primitives;
 
-import som.primitives.DoublePrimsFactory.AndPrimFactory;
-import som.primitives.DoublePrimsFactory.AsStringPrimFactory;
 import som.primitives.DoublePrimsFactory.BitXorPrimFactory;
-import som.primitives.DoublePrimsFactory.DoubleDivPrimFactory;
-import som.primitives.DoublePrimsFactory.EqualsPrimFactory;
-import som.primitives.DoublePrimsFactory.ModPrimFactory;
 import som.primitives.DoublePrimsFactory.RoundPrimFactory;
 import som.primitives.arithmetic.AdditionPrimFactory;
+import som.primitives.arithmetic.DoubleDivPrimFactory;
 import som.primitives.arithmetic.LessThanPrimFactory;
+import som.primitives.arithmetic.LogicAndPrimFactory;
+import som.primitives.arithmetic.ModuloPrimFactory;
 import som.primitives.arithmetic.MultiplicationPrimFactory;
 import som.primitives.arithmetic.SqrtPrimFactory;
 import som.primitives.arithmetic.SubtractionPrimFactory;
@@ -54,12 +52,12 @@ public class DoublePrimitives extends Primitives {
     installInstancePrimitive("-",     SubtractionPrimFactory.getInstance());
     installInstancePrimitive("*",     MultiplicationPrimFactory.getInstance());
     installInstancePrimitive("//",    DoubleDivPrimFactory.getInstance());
-    installInstancePrimitive("%",     ModPrimFactory.getInstance());
+    installInstancePrimitive("%",     ModuloPrimFactory.getInstance());
     installInstancePrimitive("=",     EqualsPrimFactory.getInstance());
     installInstancePrimitive("<",     LessThanPrimFactory.getInstance());
     installInstancePrimitive("round", RoundPrimFactory.getInstance());
 
-    installInstancePrimitive("&",     AndPrimFactory.getInstance());
+    installInstancePrimitive("&",     LogicAndPrimFactory.getInstance());
     installInstancePrimitive("bitXor:", BitXorPrimFactory.getInstance());
   }
 }

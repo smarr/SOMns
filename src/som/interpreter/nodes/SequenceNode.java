@@ -40,7 +40,7 @@ public class SequenceNode extends ExpressionNode {
     SAbstractObject last = null;
 
     for (int i = 0; i < expressions.length; i++) {
-      last = expressions[i].executeGeneric(frame);
+      last = (SAbstractObject) expressions[i].executeGeneric(frame); // TODO: Work out whether there is another way than this cast!
     }
 
     return last;

@@ -33,6 +33,7 @@ import java.util.StringTokenizer;
 
 import som.compiler.Disassembler;
 import som.interpreter.Invokable;
+import som.interpreter.nodes.NodeFactory;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray;
 import som.vmobjects.SBigInteger;
@@ -304,6 +305,9 @@ public class Universe {
 
   @SlowPath
   protected void initializeObjectSystem() {
+    // First initialize the interpreter
+    NodeFactory.registerKnownFactories();
+
     // Allocate the nil object
     nilObject = new SObject(null);
 
@@ -609,7 +613,7 @@ public class Universe {
 
     // Add the appropriate value primitive to the block class
     result.addInstancePrimitive(SBlock.getEvaluationPrimitive(numberOfArguments,
-        this));
+        this, result));
 
     // Insert the block class into the dictionary of globals
     setGlobal(name, result);

@@ -1,78 +1,69 @@
 package som.primitives.arithmetic;
 
+import java.math.BigInteger;
+
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBigInteger;
+import som.vmobjects.SClass;
 import som.vmobjects.SDouble;
 import som.vmobjects.SInteger;
+import som.vmobjects.SMethod;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.VirtualFrame;
 
 
 public abstract class AdditionPrim extends ArithmeticPrim {
+  public AdditionPrim(final SSymbol selector, final Universe universe, final SClass rcvrClass, final SMethod invokable) { super(selector, universe, rcvrClass, invokable); }
+  public AdditionPrim(final AdditionPrim node) { this(node.selector, node.universe, node.rcvrClass, node.invokable); }
 
-  public AdditionPrim(final SSymbol selector, final Universe universe) {
-    super(selector, universe);
+  @Specialization(order = 1)
+  public int doInteger(final int left, final int argument) {
+    // TODO: handle overflow
+    return left + argument;
   }
 
-  public AdditionPrim(final AdditionPrim node) {
-    this(node.selector, node.universe);
+  @Specialization(order = 2)
+  public SAbstractObject doSInteger(final SInteger left, final SInteger argument) {
+    long result = ((long) left.getEmbeddedInteger())
+        + argument.getEmbeddedInteger();
+    return makeInt(result); // TODO!!: optimize using truffle overflow handling!!!
   }
 
-  @Specialization
-  public SAbstractObject doSInteger(final VirtualFrame frame, final SInteger left,
-      final Object arguments) {
-    SAbstractObject rightObj = ((SAbstractObject[]) arguments)[0];
-
-    // Check second parameter type:
-    if (rightObj instanceof SBigInteger) {
-      // Second operand was BigInteger
-      return resendAsBigInteger("+", left, (SBigInteger) rightObj, frame.pack());
-    } else if (rightObj instanceof SDouble) {
-      return resendAsDouble("+", left, (SDouble) rightObj, frame.pack());
-    } else {
-      // Do operation:
-      SInteger right = (SInteger) rightObj;
-
-      long result = ((long) left.getEmbeddedInteger())
-          + right.getEmbeddedInteger();
-      return makeInt(result);
-    }
-  }
-
-  @Specialization
-  public SAbstractObject doSBigInteger(final VirtualFrame frame, final SBigInteger left,
-      final Object arguments) {
-    SAbstractObject rightObj = ((SAbstractObject[]) arguments)[0];
-    SBigInteger right = null;
-
-    // Check second parameter type:
-    if (rightObj instanceof SInteger) {
-      // Second operand was Integer
-      right = universe.newBigInteger(
-          ((SInteger) rightObj).getEmbeddedInteger());
-    } else {
-      right = (SBigInteger) rightObj;
-    }
-
+  @Specialization(order = 3)
+  public SAbstractObject doSBigInteger(final SBigInteger left,
+      final SBigInteger right) {
     // Do operation and perform conversion to Integer if required
-    java.math.BigInteger result = left.getEmbeddedBiginteger().add(
+    // TODO: can we optimize this using ExactMath??
+    BigInteger result = left.getEmbeddedBiginteger().add(
         right.getEmbeddedBiginteger());
-    if (result.bitLength() > 31) {
-      return universe.newBigInteger(result);
-    } else {
-      return universe.newInteger(result.intValue());
-    }
+    return makeInt(result);
   }
 
-  @Specialization
-  public SAbstractObject doSDouble(final VirtualFrame frame, final SDouble left,
-      final Object arguments) {
-    SDouble op1 = coerceToDouble(((SAbstractObject[]) arguments)[0]);
-
-    return universe.newDouble(op1.getEmbeddedDouble()
+  @Specialization(order = 4)
+  public SAbstractObject doSDouble(final SDouble left, final SDouble right) {
+    return universe.newDouble(right.getEmbeddedDouble()
         + left.getEmbeddedDouble());
+  }
+
+  @Specialization(order = 10)
+  public SAbstractObject doSInteger(final SInteger left, final SBigInteger argument) {
+    return doSBigInteger(toSBigInteger(left), argument);
+  }
+
+  @Specialization(order = 11)
+  public SAbstractObject doSInteger(final SInteger left, final SDouble argument) {
+    return doSDouble(toSDouble(left), argument);
+  }
+
+  @Specialization(order = 12)
+  public SAbstractObject doSBigInteger(final SBigInteger left, final SInteger right) {
+    return doSBigInteger(left, toSBigInteger(right));
+  }
+
+  @Specialization(order = 13)
+  public SAbstractObject doSDouble(final SDouble left, final SInteger right) {
+    return doSDouble(left, toSDouble(right));
   }
 }

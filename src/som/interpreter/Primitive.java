@@ -1,7 +1,6 @@
 package som.interpreter;
 
 import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.PrimitiveNode;
 import som.vmobjects.SAbstractObject;
 
 import com.oracle.truffle.api.frame.FrameDescriptor;
@@ -12,7 +11,7 @@ import com.oracle.truffle.api.nodes.ExplodeLoop;
 
 public class Primitive extends Invokable {
 
-  public Primitive(final PrimitiveNode primitive,
+  public Primitive(final ExpressionNode primitive,
       final FrameSlot selfSlot, final FrameSlot[] arugmentSlots,
       final FrameDescriptor frameDescriptor) {
     super(primitive, selfSlot, arugmentSlots, frameDescriptor);
@@ -43,7 +42,7 @@ public class Primitive extends Invokable {
   public SAbstractObject executeInlined(final VirtualFrame frame,
       final ExpressionNode exp) {
     initializeFrame(frame);
-    return exp.executeGeneric(frame);
+    return (SAbstractObject) exp.executeGeneric(frame); // TODO: Work out whether there is another way than this cast!
   }
 
   @Override

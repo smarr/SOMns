@@ -1,25 +1,21 @@
 package som.primitives;
 
-import som.interpreter.nodes.PrimitiveNode;
+import som.interpreter.nodes.messages.UnaryMonomorphicNode;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
+import som.vmobjects.SMethod;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.VirtualFrame;
 
 
-public abstract class NewObjectPrim extends PrimitiveNode {
-  public NewObjectPrim(final SSymbol selector, final Universe universe) {
-    super(selector, universe);
-  }
+public abstract class NewObjectPrim extends UnaryMonomorphicNode {
+  public NewObjectPrim(final SSymbol selector, final Universe universe, final SClass rcvrClass, final SMethod invokable) { super(selector, universe, rcvrClass, invokable); }
+  public NewObjectPrim(final NewObjectPrim prim) { this(prim.selector, prim.universe, prim.rcvrClass, prim.invokable); }
 
   @Specialization
-  public SAbstractObject doGeneric(final VirtualFrame frame,
-      final SAbstractObject receiver,
-      final Object arguments) {
-    return universe.newInstance((SClass) receiver);
+  public SAbstractObject doSClass(final SClass receiver) {
+    return universe.newInstance(receiver);
   }
-
 }

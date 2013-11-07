@@ -29,9 +29,9 @@ import som.compiler.MethodGenerationContext;
 import som.interpreter.Primitive;
 import som.interpreter.nodes.ArgumentEvaluationNode;
 import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.PrimitiveNode;
 import som.interpreter.nodes.VariableNode.SelfReadNode;
 import som.interpreter.nodes.VariableNode.VariableReadNode;
+import som.interpreter.nodes.messages.AbstractMonomorphicMessageNode;
 import som.vm.Universe;
 import som.vmobjects.SClass;
 import som.vmobjects.SMethod;
@@ -60,11 +60,10 @@ public abstract class Primitives {
   public abstract void installPrimitives();
 
   @SlowPath
-  public static SMethod constructPrimitive(final String selector,
-      final NodeFactory<? extends PrimitiveNode> nodeFactory, final Universe universe) {
-    SSymbol signature = universe.symbolFor(selector);
+  public static SMethod constructPrimitive(final SSymbol signature,
+      final NodeFactory<? extends AbstractMonomorphicMessageNode> nodeFactory,
+      final Universe universe, final SClass holder) {
     int numArgs = signature.getNumberOfSignatureArguments() - 1; // we take care of self seperately
-
 
     MethodGenerationContext mgen = new MethodGenerationContext();
     ExpressionNode[] args = new ExpressionNode[numArgs];
@@ -74,10 +73,51 @@ public abstract class Primitives {
       args[i] = new VariableReadNode(argSlots[i], 0);
     }
 
-    ArgumentEvaluationNode argEvalNode = new ArgumentEvaluationNode(args);
-
-    PrimitiveNode primNode = nodeFactory.createNode(signature, universe,
+    AbstractMonomorphicMessageNode primNode;
+    if (numArgs == 0) {
+      primNode = nodeFactory.createNode(signature, universe,
+          holder, null /* invokable */,
+          new SelfReadNode(mgen.getSelfSlot(), 0));
+    } else if (numArgs == 1) {
+      primNode = nodeFactory.createNode(signature, universe,
+          holder, null /* invokable */,
+          new SelfReadNode(mgen.getSelfSlot(), 0), args[0]);
+    } else if (numArgs == 2) {
+      primNode = nodeFactory.createNode(signature, universe,
+          holder, null /* invokable */,
+          new SelfReadNode(mgen.getSelfSlot(), 0), args[0], args[1]);
+    } else {
+      ArgumentEvaluationNode argEvalNode = new ArgumentEvaluationNode(args);
+      primNode = nodeFactory.createNode(signature, universe,
+          holder, null /* invokable */,
           new SelfReadNode(mgen.getSelfSlot(), 0), argEvalNode);
+    }
+
+    Primitive primMethodNode = new Primitive(primNode, mgen.getSelfSlot(),
+        argSlots, mgen.getFrameDescriptor());
+    SMethod prim = universe.newMethod(signature, primMethodNode,
+        mgen.getFrameDescriptor(), true);
+
+    primNode.setInvokable(prim);
+
+    return prim;
+  }
+
+  @SlowPath
+  public static SMethod constructEmptyPrimitive(final SSymbol signature,
+      final Universe universe) {
+    int numArgs = signature.getNumberOfSignatureArguments() - 1; // we take care of self seperately
+
+    MethodGenerationContext mgen = new MethodGenerationContext();
+    ExpressionNode[] args = new ExpressionNode[numArgs];
+    FrameSlot[] argSlots  = new FrameSlot[numArgs];
+    for (int i = 0; i < numArgs; i++) {
+      argSlots[i] = mgen.addArgument("primArg" + i);
+      args[i] = new VariableReadNode(argSlots[i], 0);
+    }
+
+
+    ExpressionNode primNode = EmptyPrimFactory.create(signature, universe);
 
     Primitive primMethodNode = new Primitive(primNode, mgen.getSelfSlot(),
         argSlots, mgen.getFrameDescriptor());
@@ -88,15 +128,20 @@ public abstract class Primitives {
   }
 
   protected void installInstancePrimitive(final String selector,
-      final NodeFactory<? extends PrimitiveNode> nodeFactory) {
-    SMethod prim = constructPrimitive(selector, nodeFactory, universe);
+      final NodeFactory<? extends AbstractMonomorphicMessageNode> nodeFactory) {
+    SSymbol signature = universe.symbolFor(selector);
+    som.interpreter.nodes.NodeFactory.registerNodeFactory(signature, nodeFactory);
+    SMethod prim = constructPrimitive(signature, nodeFactory, universe, holder);
+
     // Install the given primitive as an instance primitive in the holder class
     holder.addInstancePrimitive(prim);
   }
 
   protected void installClassPrimitive(final String selector,
-      final NodeFactory<? extends PrimitiveNode> nodeFactory) {
-    SMethod prim = constructPrimitive(selector, nodeFactory, universe);
+      final NodeFactory<? extends AbstractMonomorphicMessageNode> nodeFactory) {
+    SSymbol signature = universe.symbolFor(selector);
+    som.interpreter.nodes.NodeFactory.registerNodeFactory(signature, nodeFactory);
+    SMethod prim = constructPrimitive(signature, nodeFactory, universe, holder);
 
     // Install the given primitive as an instance primitive in the class of
     // the holder class
@@ -107,6 +152,7 @@ public abstract class Primitives {
 
   public static SMethod getEmptyPrimitive(final String selector,
       final Universe universe) {
-    return constructPrimitive(selector, EmptyPrimFactory.getInstance(), universe);
+    SSymbol signature = universe.symbolFor(selector);
+    return constructEmptyPrimitive(signature, universe);
   }
 }

@@ -27,7 +27,6 @@ package som.primitives;
 
 import som.primitives.ArrayPrimsFactory.AtPrimFactory;
 import som.primitives.ArrayPrimsFactory.AtPutPrimFactory;
-import som.primitives.ArrayPrimsFactory.LengthPrimFactory;
 import som.primitives.ArrayPrimsFactory.NewPrimFactory;
 import som.vm.Universe;
 

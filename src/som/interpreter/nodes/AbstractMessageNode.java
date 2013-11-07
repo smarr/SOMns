@@ -7,15 +7,8 @@ import som.vmobjects.SClass;
 import som.vmobjects.SMethod;
 import som.vmobjects.SSymbol;
 
-import com.oracle.truffle.api.dsl.NodeChild;
-import com.oracle.truffle.api.dsl.NodeChildren;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
-
-@NodeChildren({
-  @NodeChild(value = "receiver",  type = ExpressionNode.class),
-  @NodeChild(value = "arguments", type = ArgumentEvaluationNode.class)
-})
 public abstract class AbstractMessageNode extends ExpressionNode {
 
   protected final SSymbol  selector;
@@ -26,13 +19,9 @@ public abstract class AbstractMessageNode extends ExpressionNode {
     this.universe = universe;
   }
 
-  public AbstractMessageNode(final MessageNode node) {
+  public AbstractMessageNode(final AbstractMessageNode node) {
     this(node.selector, node.universe);
   }
-
-  // TODO: document this getter idiom
-  public abstract ExpressionNode getReceiver();
-  public abstract ArgumentEvaluationNode getArguments();
 
   protected SClass classOfReceiver(final SAbstractObject rcvr, final ExpressionNode receiver) {
     SClass rcvrClass = rcvr.getSOMClass(universe);
@@ -44,17 +33,18 @@ public abstract class AbstractMessageNode extends ExpressionNode {
     return rcvrClass;
   }
 
-  protected boolean hasOneArgument(final Object receiver, final Object arguments) {
-    return (arguments != null && ((SAbstractObject[]) arguments).length == 1);
-  }
-
-  protected boolean hasTwoArguments(final Object receiver, final Object arguments) {
-    return (arguments != null && ((SAbstractObject[]) arguments).length == 2);
-  }
-
   protected boolean isBooleanReceiver(final SAbstractObject receiver) {
-    SClass rcvrClass = classOfReceiver(receiver, getReceiver());
-    return rcvrClass == universe.trueClass || rcvrClass == universe.falseClass;
+    return receiver == universe.trueObject || receiver == universe.falseObject;
+  }
+
+  /**
+   * Guard for system primitives.
+   * TODO: make sure system primitives do not trigger on any other kind of object
+   * @param receiver
+   * @return
+   */
+  protected boolean receiverIsSystemObject(final SAbstractObject receiver) {
+    return receiver == universe.systemObject;
   }
 
   protected SAbstractObject doFullSend(final VirtualFrame frame, final SAbstractObject rcvr,
@@ -68,4 +58,8 @@ public abstract class AbstractMessageNode extends ExpressionNode {
       return rcvr.sendDoesNotUnderstand(selector, args, universe, frame.pack());
     }
   }
+
+  protected static final SAbstractObject[] noArgs = new SAbstractObject[0];
+
+  public static final int PriorityMonomorphicCase = 9999;
 }

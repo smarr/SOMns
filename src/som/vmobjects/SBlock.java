@@ -24,7 +24,10 @@
 
 package som.vmobjects;
 
-import som.primitives.BlockPrimsFactory.ValuePrimFactory;
+import som.primitives.BlockPrimsFactory.ValueMorePrimFactory;
+import som.primitives.BlockPrimsFactory.ValueNonePrimFactory;
+import som.primitives.BlockPrimsFactory.ValueOnePrimFactory;
+import som.primitives.BlockPrimsFactory.ValueTwoPrimFactory;
 import som.primitives.Primitives;
 import som.vm.Universe;
 
@@ -48,9 +51,22 @@ public class SBlock extends SAbstractObject {
   }
 
   public static SMethod getEvaluationPrimitive(final int numberOfArguments,
-      final Universe universe) {
-    return Primitives.constructPrimitive(computeSignatureString(numberOfArguments),
-        ValuePrimFactory.getInstance(), universe);
+      final Universe universe, final SClass rcvrClass) {
+    SSymbol sig = universe.symbolFor(computeSignatureString(numberOfArguments));
+
+    if (numberOfArguments == 1) {
+      return Primitives.constructPrimitive(sig,
+          ValueNonePrimFactory.getInstance(), universe, rcvrClass);
+    } else if (numberOfArguments == 2) {
+      return Primitives.constructPrimitive(sig,
+          ValueOnePrimFactory.getInstance(), universe, rcvrClass);
+    } else if (numberOfArguments == 3) {
+      return Primitives.constructPrimitive(sig,
+          ValueTwoPrimFactory.getInstance(), universe, rcvrClass);
+    } else {
+      return Primitives.constructPrimitive(sig,
+          ValueMorePrimFactory.getInstance(), universe, rcvrClass);
+    }
   }
 
   private static String computeSignatureString(final int numberOfArguments) {

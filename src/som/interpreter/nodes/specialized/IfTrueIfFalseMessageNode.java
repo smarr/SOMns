@@ -1,105 +1,98 @@
 package som.interpreter.nodes.specialized;
 
-import som.interpreter.nodes.AbstractMessageNode;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.messages.TernaryMonomorphicNode;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import som.vmobjects.SMethod;
+import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 
-public abstract class IfTrueIfFalseMessageNode extends AbstractMessageNode {
+public abstract class IfTrueIfFalseMessageNode extends TernaryMonomorphicNode {
 
-  private final SMethod blockMethodTrueBranch;
-  private final SMethod blockMethodFalseBranch;
+  public IfTrueIfFalseMessageNode(final SSymbol selector, final Universe universe, final SClass rcvrClass, final SMethod invokable) { super(selector, universe, rcvrClass, invokable); }
+  public IfTrueIfFalseMessageNode(final IfTrueIfFalseMessageNode node) { this(node.selector, node.universe, node.rcvrClass, node.invokable); }
 
-  private static final SAbstractObject[] noArgs = new SAbstractObject[0];
-
-  public IfTrueIfFalseMessageNode(final SSymbol selector,
-      final Universe universe, final SBlock trueBlock,
-      final SBlock falseBlock) {
-    this(selector, universe,
-        (trueBlock  != null) ? trueBlock.getMethod()  : null,
-        (falseBlock != null) ? falseBlock.getMethod() : null);
-  }
-
-  public IfTrueIfFalseMessageNode(final SSymbol selector,
-      final Universe universe, final SMethod trueBlockMethod,
-      final SMethod falseBlockMethod) {
-    super(selector, universe);
-    blockMethodTrueBranch  = trueBlockMethod;
-    blockMethodFalseBranch = falseBlockMethod;
-  }
-
-  public IfTrueIfFalseMessageNode(final IfTrueIfFalseMessageNode node) {
-    this(node.selector, node.universe, node.blockMethodTrueBranch,
-        node.blockMethodFalseBranch);
-  }
-
-  @Specialization
+  @Specialization(order = 1)
   public SAbstractObject doIfTrueIfFalse(final VirtualFrame frame,
-      final SAbstractObject receiver, final Object arguments) {
-    SAbstractObject trueExpResult  = null;
-    SAbstractObject falseExpResult = null;
-
-    SAbstractObject[] args = (SAbstractObject[]) arguments;
-
-    if (blockMethodTrueBranch == null) {
-      trueExpResult = args[0];
-    }
-    if (blockMethodFalseBranch == null) {
-      falseExpResult = args[1];
-    }
-
-    return evaluateBody(frame, receiver, arguments, trueExpResult, falseExpResult);
-  }
-
-  public SAbstractObject evaluateBody(final VirtualFrame frame, final SAbstractObject rcvr,
-      final Object arguments,
-      final SAbstractObject trueResult, final SAbstractObject falseResult) {
-    SClass currentRcvrClass = classOfReceiver(rcvr, getReceiver());
-
-    if (currentRcvrClass == universe.trueClass) {
-      if (blockMethodTrueBranch == null) {
-        return trueResult;
-      } else {
-        SBlock b = universe.newBlock(blockMethodTrueBranch, frame.materialize(), 1);
-        return blockMethodTrueBranch.invoke(frame.pack(), b, noArgs);
-      }
-    } else if (currentRcvrClass == universe.falseClass) {
-      if (blockMethodFalseBranch == null) {
-        return falseResult;
-      } else {
-        SBlock b = universe.newBlock(blockMethodFalseBranch, frame.materialize(), 1);
-        return blockMethodFalseBranch.invoke(frame.pack(), b, noArgs);
-      }
+      final boolean receiver, final SBlock trueBlock, final SBlock falseBlock) {
+    SMethod branchMethod;
+    if (receiver) {
+      branchMethod = trueBlock.getMethod();
     } else {
-      return fallbackForNonBoolReceiver(currentRcvrClass).
-          doGeneric(frame, rcvr, arguments);
+      branchMethod = falseBlock.getMethod();
+    }
+
+    SBlock b = universe.newBlock(branchMethod, frame.materialize(), 1);
+    return branchMethod.invoke(frame.pack(), b, noArgs);
+  }
+
+  @Specialization(guards = "isBooleanReceiver", order = 2)
+  public SAbstractObject doIfTrueIfFalse(final VirtualFrame frame,
+      final SObject receiver, final SBlock trueBlock, final SBlock falseBlock) {
+    return doIfTrueIfFalse(frame, receiver == universe.trueObject, trueBlock, falseBlock);
+  }
+
+  @Specialization(order = 10)
+  public Object doIfTrueIfFalse(final VirtualFrame frame,
+      final boolean receiver, final Object trueValue, final SBlock falseBlock) {
+    if (receiver) {
+      return trueValue;
+    } else {
+      SMethod branchMethod = falseBlock.getMethod();
+      SBlock  b = universe.newBlock(branchMethod, frame.materialize(), 1);
+      return branchMethod.invoke(frame.pack(), b, noArgs);
     }
   }
 
-  private PolymorpicMessageNode fallbackForNonBoolReceiver(final SClass currentRcvrClass) {
-    CompilerDirectives.transferToInterpreter();
+  @Specialization(guards = "isBooleanReceiver", order = 11)
+  public Object doIfTrueIfFalse(final VirtualFrame frame,
+      final SObject receiver, final Object trueValue, final SBlock falseBlock) {
+    return doIfTrueIfFalse(frame, receiver == universe.trueObject, trueValue, falseBlock);
+  }
 
-    // So, it might just be a polymorphic send site.
-    PolymorpicMessageNode poly = PolymorpicMessageNodeFactory.create(selector,
-        universe, currentRcvrClass, getReceiver(),
-        getArguments());
-    return replace(poly, "Receiver wasn't a boolean. " +
-        "So, we need to do the actual send.");
+  @Specialization(order = 12)
+  public Object doIfTrueIfFalse(final VirtualFrame frame,
+      final boolean receiver, final SBlock trueBlock, final Object falseValue) {
+    if (receiver) {
+      SMethod branchMethod = trueBlock.getMethod();
+      SBlock  b = universe.newBlock(branchMethod, frame.materialize(), 1);
+      return branchMethod.invoke(frame.pack(), b, noArgs);
+    } else {
+      return falseValue;
+    }
+  }
+
+  @Specialization(guards = "isBooleanReceiver", order = 13)
+  public Object doIfTrueIfFalse(final VirtualFrame frame,
+      final SObject receiver, final SBlock trueBlock, final Object falseValue) {
+    return doIfTrueIfFalse(frame, receiver == universe.trueObject, trueBlock, falseValue);
+  }
+
+  @Specialization(order = 20)
+  public Object doIfTrueIfFalse(final VirtualFrame frame,
+      final boolean receiver, final Object trueValue, final Object falseValue) {
+    return (receiver) ? trueValue : falseValue;
+  }
+
+  @Specialization(guards = "isBooleanReceiver", order = 21)
+  public Object doIfTrueIfFalse(final VirtualFrame frame,
+      final SObject receiver, final Object trueValue, final Object falseValue) {
+    return doIfTrueIfFalse(frame, receiver == universe.trueObject, trueValue, falseValue);
   }
 
   @Override
   public ExpressionNode cloneForInlining() {
-    return IfTrueIfFalseMessageNodeFactory.create(selector, universe,
-        blockMethodTrueBranch, blockMethodFalseBranch, getReceiver(),
-        getArguments());
+    throw new NotImplementedException();
+//    return IfTrueIfFalseMessageNodeFactory.create(selector, universe,
+//        blockMethodTrueBranch, blockMethodFalseBranch, getReceiver(),
+//        getArguments());
   }
 }

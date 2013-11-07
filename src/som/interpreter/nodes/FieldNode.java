@@ -80,8 +80,8 @@ public abstract class FieldNode extends ContextualNode {
     @Override
     public SAbstractObject executeGeneric(final VirtualFrame frame) {
       MaterializedFrame ctx = determineContext(frame.materialize());
-      SAbstractObject value = exp.executeGeneric(frame);
-      SObject self  = getSelfFromMaterialized(ctx);
+      SAbstractObject value = (SAbstractObject) exp.executeGeneric(frame);  // TODO: Work out whether there is another way than this cast!
+      SObject self = getSelfFromMaterialized(ctx);
 
       self.setField(fieldIndex, value);
       return value;
