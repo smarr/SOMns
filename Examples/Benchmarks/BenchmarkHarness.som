@@ -26,7 +26,7 @@ BenchmarkHarness = (
     passed a list of benchmarks to run (class names) as arguments. It will
     run each of them and output single as well as a total."
     
-    | total runtimes benchmarkClasses numIterations warmUp maxRuntime printAll |
+    | total runtimes benchmarkClasses numIterations warmUp innerIterations maxRuntime printAll |
     
     benchmarkClasses: classes = ( benchmarkClasses := classes )
     printAll: aBool = ( printAll := aBool )
@@ -51,16 +51,18 @@ BenchmarkHarness = (
         runtimes      := Dictionary new.
         numIterations := 1.
         warmUp        := 0.
+        innerIterations := 1.
         maxRuntime    := nil.
         printAll      := true.
     )
     
     printUsage = (
-      './som.sh -cp Smalltalk Examples/Benchmarks/BenchmarkHarness.som [benchmarks] [num-iterations [warm-up]]' println.
+      './som.sh -cp Smalltalk Examples/Benchmarks/BenchmarkHarness.som [benchmarks] [num-iterations [warm-up [inner-iter]]]' println.
       '' println.
       '  benchmarks     - list of benchmark class names (e.g.: Queens Fibonacci Dispatch)' println.
       '  num-iterations - number of times each benchmark is executed, default: 1' println.
       '  warm-up        - number of times each benchmark is executed before measuring, default: 0' println.
+      '  inner-iter     - number of times each benchmark is executed in an inner loop, which is measured in total, default: 1' println.
     )
     
     processArguments: args = (
@@ -69,7 +71,10 @@ BenchmarkHarness = (
         remainingArgs ifNotNil: [
             numIterations := (remainingArgs at: 1) asInteger.
             remainingArgs length > 1 ifTrue: [
-                warmUp := (remainingArgs at: 2) asInteger
+                warmUp := (remainingArgs at: 2) asInteger.
+                remainingArgs length > 2 ifTrue: [
+                    innerIterations := (remainingArgs at: 3) asInteger.
+                ].
             ].
         ]
     )
@@ -102,7 +107,7 @@ BenchmarkHarness = (
             bench := benchmark new.
             bench maxRuntime: maxRuntime.
             
-            bench run: numIterations with: warmUp printAll: printAll.
+            bench run: numIterations with: warmUp and: innerIterations printAll: printAll.
             total := total + bench total.
             runtimes at: benchmark put: bench total.
             
@@ -124,7 +129,7 @@ BenchmarkHarness = (
     )
         
     printTotal = (
-        ('Total Runtime: ' + total asString + ' us') println.
+        ('Total Runtime: ' + total asString + 'us') println.
     )
 
 )
