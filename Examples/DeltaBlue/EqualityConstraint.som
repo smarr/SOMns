@@ -1,0 +1,24 @@
+EqualityConstraint = BinaryConstraint (
+    "I constrain two variables to have the same value: `v1 = v2`."
+    
+    "execution"
+
+    execute = (
+        "Enforce this constraint. Assume that it is satisfied."
+
+        (self direction == #forward)
+            ifTrue:  [self v2 value: self v1 value]
+            ifFalse: [self v1 value: self v2 value].
+    )
+    
+    ----
+
+    "instance creation"
+
+    var: variable1 var: variable2 strength: strengthSymbol = (
+        "Install a constraint with the given strength equating the given
+         variables."
+
+        ^(self new) var: variable1 var: variable2 strength: strengthSymbol
+    )
+)

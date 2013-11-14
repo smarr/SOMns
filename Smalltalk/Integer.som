@@ -42,6 +42,7 @@ Integer = (
     
     "Comparing"
     =  argument = primitive
+    ~= argument = (^ (self = argument) not )
     <  argument = primitive
     >  argument = ( ^(self >= argument) and: [ self <> argument ] )
     >= argument = ( ^(self < argument) not )

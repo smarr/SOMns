@@ -30,6 +30,7 @@ Nil = (
     
     "Comparing"
     isNil    = ( ^true )
+    notNil   = ( ^false )
 
     "Convenience"
     ifNil: aBlock = (^aBlock value)

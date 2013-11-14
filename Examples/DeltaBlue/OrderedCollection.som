@@ -1,0 +1,22 @@
+OrderedCollection = Vector (
+    add: elem = (
+        ^ self append: elem
+    )
+    
+    addLast: elem = (
+        ^ self append: elem
+    )
+    
+    remove: obj ifAbsent: aBlock = (
+        (self remove: obj) ifFalse: aBlock
+    )
+        
+    ----
+    
+    with: anElement = (
+        | col |
+        col := self new: 10.
+        col append: anElement.
+        ^ col
+    )
+)

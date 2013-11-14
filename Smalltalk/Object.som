@@ -28,13 +28,16 @@ Object = nil (
     objectSize = primitive  "size in bytes"
     
     "Comparing"
-    =  other    = ( ^self == other )
-    <> argument = ( ^(self = argument) not )
-    == other    = primitive
-    isNil       = ( ^false )
+
     " If you override =, you MUST override hashcode as well.  The rule
       obj1 = obj2   =>  obj1 hashcode = obj2 hashcode
       must be valid for all objects, or Hashtable will not work"
+    =  other    = ( ^self == other )
+    <> argument = ( ^(self = argument) not )
+    == other    = primitive
+    ~= other    = (^ (self == other) not )
+    isNil       = ( ^false )
+    notNil      = ( ^true )
     
     "Converting"
     asString  = ( ^'instance of ' + (self class) )

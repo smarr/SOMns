@@ -31,6 +31,9 @@ Array = (
     length               = primitive
     putAll: block        = ( self doIndexes: [ :i |
                                 self at: i put: block value ] )
+    first = ( ^ self at: 1 )
+    last  = ( ^ self at: self length )
+    
     
     "Iterating"
     do: block            = ( self doIndexes: [ :i |
@@ -110,6 +113,13 @@ Array = (
     new: length withAll: block = ( ^((self new: length) putAll: block) )
 
     "Convenience"
+    with: a = (
+        | arr |
+        arr := self new: 1.
+        arr at: 1 put: a.
+        ^ arr
+    )
+    
     with: a with: b            = (
         | arr |
         arr := self new: 2.

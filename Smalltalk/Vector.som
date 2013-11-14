@@ -121,6 +121,8 @@ Vector = (
     "Private"
     last:      integer = ( last      := integer )
     first:     integer = ( first     := integer )
+    firstIndex = ( ^ first )
+    lastIndex  = ( ^ last  )
     storage:   array   = ( storage   := array   )
     
     checkIndex: index ifValid: block = (
@@ -131,6 +133,14 @@ Vector = (
                     'Vector[' + first asString + '..' + last asString +
                     ']: Index ' + index asString + ' out of bounds' ]
     )
+    
+    "DeltaBlue"
+    removeFirst = (
+        self isEmpty ifTrue: [ self error: 'OrderedCollection is empty' ].
+        first := first + 1.
+        ^ storage at: first - 1
+    )
+    
     
     ----------------------------
     
