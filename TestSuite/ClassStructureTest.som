@@ -67,7 +67,42 @@ ClassStructureTest = (
         1 to: 9 do: [:i | 
             ((arr at: i) = (i + (4 - 1))) ifFalse: [
                 harness fail: self because: 'Access to class fields is broken.']
-        ]
+        ].
+        
+        "We do that here to make sure that class fields do not interfere with
+         other class properties."
+        ClassC superclass = ClassB      ifFalse: [ harness fail: self because: 
+            'ClassC should be derived from ClassB, but the superclass is ' + ClassC superclass ].
+        ClassC class class = Metaclass  ifFalse: [ harness fail: self because:
+            'The class of ClassC of should be a Metaclass' ].
+        ClassC name = #ClassC           ifFalse: [ harness fail: self because: 
+            'ClassC name should be #ClassC, but was: ' + ClassC name.].
+        
+    )
+    
+    testMetaclasses: harness = (
+        Object superclass = nil         ifFalse: [ harness fail: self because:
+            'Object superclass should be nil, but was ' + Object superclass ].
+        1 class = Integer               ifFalse: [ harness fail: self because:
+            'class of 1 should be Integer' ].
+        1 class class name = #'Integer class' ifFalse: [ harness fail: self because:
+            'Integer class should be a metaclass with the proper name' ].
+        1 class class class = Metaclass       ifFalse: [ harness fail: self because:
+            'Integer class should be a metaclass' ].
+        
+        Metaclass class name = #'Metaclass class' ifFalse: [ harness fail: self because:
+            'The metaclass class name should be #Metaclass class' ].
+        Metaclass class class = Metaclass         ifFalse: [ harness fail: self because:
+            'The class of the class of a Metaclass should be a metaclass' ].
+        
+        1 class superclass = Object               ifFalse: [ harness fail: self because:
+            'Superclass of Integer should be Object' ].
+        1 class class superclass name = #'Object class' ifFalse: [ harness fail: self because:
+            'The class of the metaclass should be derived from the metaclass of the superclass'. ].
+        Object class superclass = Class           ifFalse: [ harness fail: self because:
+            'The superclass of the metaclass of Object should be Class' ].
+        Class class class = Metaclass             ifFalse: [ harness fail: self because:
+            'The class of class should be a metaclass' ].
     )
     
     run: harness = (
@@ -75,5 +110,6 @@ ClassStructureTest = (
         self testThatCertainMethodsArePrimitives: harness.
         self testAccessToInstanceFields: harness.
         self testAccessToClassFields: harness.
+        self testMetaclasses: harness.
     )    
 )
