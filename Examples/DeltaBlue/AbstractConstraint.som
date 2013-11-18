@@ -52,7 +52,7 @@ AbstractConstraint = (
 
         (self isSatisfied) ifTrue: [Planner current incrementalRemove: self].
         self removeFromGraph.
-        self release.
+        "self release."
     )
 
     removeFromGraph = (
