@@ -52,17 +52,17 @@ VectorTest = (
                 fail: self
                 because: 'Containment check for 23 should be true.' ].
 
-		"Test #do:"
-		j := 1.
+        "Test #do:"
+        j := 1.
         a do: [:i | 
-			(a at: j) = i ifFalse: [
-				harness
-					fail: self
-					because: 'Error with #do: on Array. Should have seen ', 
-							 (a at: j) asString, ' at index ', j asString,
-							 ' but got ', i asString.
-			].
-			j := j + 1.
-		].
+            (a at: j) = i ifFalse: [
+                harness
+                    fail: self
+                    because: 'Error with #do: on Array. Should have seen ', 
+                             (a at: j) asString, ' at index ', j asString,
+                             ' but got ', i asString.
+            ].
+            j := j + 1.
+        ].
     )
 )
