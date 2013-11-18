@@ -89,10 +89,10 @@ RichardsBenchmarks = RBObject (
     )
 
     createPacket: link identity: identity kind: kind = (
-	^Packet
-		create: link
-		identity: identity
-		kind: kind
+        ^Packet
+                create: link
+                identity: identity
+                kind: kind
     )
 
     createTask: identity priority: priority work: work state: state function: aBlock data: data = (
@@ -140,17 +140,17 @@ RichardsBenchmarks = RBObject (
     )
 
     run = (
-	RBObject initialize.
+        RBObject initialize.
         self start.
-	)
+    )
 
     start = (
         | workQ mark1 mark2 mark3 mark4|
         self initTrace.
-	self initScheduler.
+        self initScheduler.
         mark1 := Time millisecondClockValue.
         Transcript show: 'Bench mark starting'.
-	Transcript cr.
+        Transcript cr.
         self
                 createIdler: RBObject Idler
                 priority: 0
@@ -214,30 +214,30 @@ RichardsBenchmarks = RBObject (
                 work: RBObject NoWork
                 state: TaskState waiting.
         Transcript show: 'Starting'.
-	Transcript cr.
+        Transcript cr.
         mark2 := Time millisecondClockValue.
         self schedule.
         mark3 := Time millisecondClockValue.
         Transcript show: 'Finished'.
-	Transcript cr.
+        Transcript cr.
         Transcript show: 'QueuePacket count = '.
-	Transcript show: queuePacketCount asString.
-	Transcript show: ' HoldCount = '.
-	Transcript show: holdCount asString.
-	Transcript cr.
-	Transcript show: 'These results are '.
-	(((queuePacketCount = 23246) and: (holdCount = 9297))
+        Transcript show: queuePacketCount asString.
+        Transcript show: ' HoldCount = '.
+        Transcript show: holdCount asString.
+        Transcript cr.
+        Transcript show: 'These results are '.
+        (((queuePacketCount = 23246) and: (holdCount = 9297))
             ifTrue: [Transcript show: 'correct']
             ifFalse: [Transcript show: 'wrong']).
         Transcript cr.
-	Transcript show: 'End of run'.
-	Transcript cr.
+        Transcript show: 'End of run'.
+        Transcript cr.
         mark4 := Time millisecondClockValue.
         Transcript show: '*****Scheduler time = '.
-	Transcript show: (mark3 - mark2) asString.
-	Transcript show: ' Total time = '.
-	Transcript show: (mark4 - mark1) asString.
-	Transcript cr
+        Transcript show: (mark3 - mark2) asString.
+        Transcript show: ' Total time = '.
+        Transcript show: (mark4 - mark1) asString.
+        Transcript cr
     )
 
 
@@ -256,7 +256,7 @@ RichardsBenchmarks = RBObject (
 
     initScheduler = (
         queuePacketCount := 0.
-	holdCount := 0.
+        holdCount := 0.
         taskTable := Array new: 6 withAll: RBObject NoTask.
         taskList := RBObject NoTask
     )
@@ -305,8 +305,8 @@ RichardsBenchmarks = RBObject (
     )
 
     wait = (
-	currentTask taskWaiting: true.
-	^currentTask
+        currentTask taskWaiting: true.
+        ^currentTask
     )
 
     schedule = (
@@ -324,6 +324,6 @@ RichardsBenchmarks = RBObject (
     ----
 
     start = (
-	super new start
+        super new start
     )
 )
