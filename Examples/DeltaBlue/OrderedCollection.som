@@ -10,6 +10,55 @@ OrderedCollection = Vector (
     remove: obj ifAbsent: aBlock = (
         (self remove: obj) ifFalse: aBlock
     )
+    
+    " private "
+    insert: anObject before: spot = (
+        "spot is an index in the range firstIndex .. lastIndex,
+         such an index is not known from outside the collection. 
+         Never use this method in your code, it is meant for private use by
+         OrderedCollection only.
+         The methods for use are:
+            #add:before:   to insert an object before another object
+            #add:beforeIndex:   to insert an object before a given position. "
+        | delta spotIndex |
+        spotIndex := spot.
+        delta := spotIndex - first.
+        first = 1 ifTrue: [
+            self makeRoomAtFirst.
+            spotIndex := first + delta].
+        first := first - 1.
+        storage
+            replaceFrom: first
+            to: spotIndex - 2
+            with: storage
+            startingAt: first + 1.
+        storage at: spotIndex - 1 put: anObject.
+        ^ anObject
+    )
+    
+    makeRoomAtFirst = (
+        "Make some empty slots at the front of the array.
+         If we have more than 50% free space, then just move the elements,
+         so that the first 50% of the slots are free, otherwise add new free
+         slots to the front by growing. Precondition: firstIndex = 1"
+    
+        | tally newFirstIndex newLastIndex |
+        tally := self size.
+        tally * 2 >= storage length ifTrue: [ ^self growAtFirst ].
+        tally = 0 ifTrue: [ ^self resetTo: storage length + 1 ].
+        newFirstIndex := storage length // 2 + 1.
+        newLastIndex := newFirstIndex - first + last - 1.
+        0 to: tally - 1 do: [ :offset |
+            storage at: newLastIndex - offset put: (storage at: last - offset - 1) ].
+        storage from: first to: newFirstIndex - 1 put: nil.
+        first := newFirstIndex.
+        last := newLastIndex + 1
+    )
+    
+    resetTo: index = (
+        first := index.
+        last  := first
+    )
         
     ----
     
