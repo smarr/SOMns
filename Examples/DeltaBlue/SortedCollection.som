@@ -4,17 +4,18 @@ SortedCollection = OrderedCollection (
 
     indexForInserting: newObject = (
         | index low high |
-        low  := self firstIndex.
-        high := self lastIndex.
+        low  := first.
+        high := last - 1.
+        
         sortBlock isNil
-            ifTrue: [[index := high + low // 2.  low > high]
+            ifTrue: [[index := high + low / 2.  low > high]
                 whileFalse:
-                    [((array at: index) <= newObject)
+                    [((storage at: index) <= newObject)
                         ifTrue: [low := index + 1]
                         ifFalse: [high := index - 1]]]
-            ifFalse: [[index := high + low // 2.  low > high]
+            ifFalse: [[index := high + low / 2.  low > high]
                 whileFalse:
-                    [(sortBlock value: (array at: index) value: newObject)
+                    [(sortBlock value: (storage at: index) with: newObject)
                         ifTrue: [low := index + 1]
                         ifFalse: [high := index - 1]]].
         ^low )
@@ -28,26 +29,26 @@ SortedCollection = OrderedCollection (
         "The prefix d means the data at that index."
         (n := j + 1  - i) <= 1 ifTrue: [^self]. "Nothing to sort."
          "Sort di,dj."
-        di := array at: i.
-        dj := array at: j.
-        (sortBlock value: di value: dj) "i.e., should di precede dj?"
+        di := storage at: i.
+        dj := storage at: j.
+        (sortBlock value: di with: dj) "i.e., should di precede dj?"
             ifFalse:
-                [array swap: i with: j.
+                [storage swap: i with: j.
                  tt := di.
                  di := dj.
                  dj := tt].
         n > 2
             ifTrue:  "More than two elements."
-                [ij := (i + j) // 2.  "ij is the midpoint of i and j."
-                 dij := array at: ij.  "Sort di,dij,dj.  Make dij be their median."
-                 (sortBlock value: di value: dij) "i.e. should di precede dij?"
+                [ij := (i + j) / 2.  "ij is the midpoint of i and j."
+                 dij := storage at: ij.  "Sort di,dij,dj.  Make dij be their median."
+                 (sortBlock value: di with: dij) "i.e. should di precede dij?"
                    ifTrue:
-                    [(sortBlock value: dij value: dj) "i.e., should dij precede dj?"
+                    [(sortBlock value: dij with: dj) "i.e., should dij precede dj?"
                       ifFalse:
-                        [array swap: j with: ij.
+                        [storage swap: j with: ij.
                          dij := dj]]
                    ifFalse:  "i.e. di should come after dij"
-                    [array swap: i with: ij.
+                    [storage swap: i with: ij.
                      dij := di].
                 n > 3
                   ifTrue:  "More than three elements."
@@ -55,20 +56,20 @@ SortedCollection = OrderedCollection (
                     Swap k and l.  Repeat this procedure until k and l pass each other."
                      k := i.
                      l := j.
-                     [[l := l - 1.  k <= l and: [sortBlock value: dij value: (array at: l)]]
+                     [[l := l - 1.  k <= l and: [sortBlock value: dij with: (storage at: l)]]
                        whileTrue.  "i.e. while dl succeeds dij"
-                      [k := k + 1.  k <= l and: [sortBlock value: (array at: k) value: dij]]
+                      [k := k + 1.  k <= l and: [sortBlock value: (storage at: k) with: dij]]
                        whileTrue.  "i.e. while dij succeeds dk"
                       k <= l]
                        whileTrue:
-                        [array swap: k with: l].
+                        [storage swap: k with: l].
         "Now l<k (either 1 or 2 less), and di through dl are all less than or equal to dk
         through dj.  Sort those two segments."
                     self sort: i to: l.
                     self sort: k to: j]] )
 
     addAll: aCollection = (
-        aCollection size > (self size // 3)
+        aCollection size > (self size / 3)
             ifTrue:
                 [aCollection do: [:each | self addLast: each].
                 self reSort]
@@ -76,8 +77,8 @@ SortedCollection = OrderedCollection (
         ^ aCollection )
 
     reSort = (
-        self sort: self firstIndex 
-               to: self lastIndex
+        self sort: first
+               to: last - 1
     )
 
     sortBlock: aBlock = (
@@ -107,26 +108,26 @@ SortedCollection = OrderedCollection (
         "The prefix d means the data at that index."
         (n := j + 1  - i) <= 1 ifTrue: [^self]. "Nothing to sort."
          "Sort di,dj."
-        di := array at: i.
-        dj := array at: j.
+        di := storage at: i.
+        dj := storage at: j.
         (di <= dj) "i.e., should di precede dj?"
             ifFalse:
-                [array swap: i with: j.
+                [storage swap: i with: j.
                  tt := di.
                  di := dj.
                  dj := tt].
         n > 2
             ifTrue:  "More than two elements."
-                [ij := (i + j) // 2.  "ij is the midpoint of i and j."
-                 dij := array at: ij.  "Sort di,dij,dj.  Make dij be their median."
+                [ij := (i + j) / 2.  "ij is the midpoint of i and j."
+                 dij := storage at: ij.  "Sort di,dij,dj.  Make dij be their median."
                  (di <= dij) "i.e. should di precede dij?"
                    ifTrue:
                     [(dij <= dj) "i.e., should dij precede dj?"
                       ifFalse:
-                        [array swap: j with: ij.
+                        [storage swap: j with: ij.
                          dij := dj]]
                    ifFalse:  "i.e. di should come after dij"
-                    [array swap: i with: ij.
+                    [storage swap: i with: ij.
                      dij := di].
                 n > 3
                   ifTrue:  "More than three elements."
@@ -134,25 +135,25 @@ SortedCollection = OrderedCollection (
                     Swap k and l.  Repeat this procedure until k and l pass each other."
                      k := i.
                      l := j.
-                     [[l := l - 1.  k <= l and: [dij <= (array at: l)]]
+                     [[l := l - 1.  k <= l and: [dij <= (storage at: l)]]
                        whileTrue.  "i.e. while dl succeeds dij"
-                      [k := k + 1.  k <= l and: [(array at: k) <= dij]]
+                      [k := k + 1.  k <= l and: [(storage at: k) <= dij]]
                        whileTrue.  "i.e. while dij succeeds dk"
                       k <= l]
                        whileTrue:
-                        [array swap: k with: l].
+                        [storage swap: k with: l].
         "Now l<k (either 1 or 2 less), and di through dl are all less than or equal to dk
         through dj.  Sort those two segments."
                     self defaultSort: i to: l.
                     self defaultSort: k to: j]] )
 
     should: a precede: b = (
-        ^ sortBlock ifNil: [a <= b] ifNotNil: [sortBlock value: a value: b] )
+        ^ sortBlock ifNil: [a <= b] ifNotNil: [sortBlock value: a with: b] )
 
     median = (
         "Return the middle element, or as close as we can get."
     
-        ^ self at: self size + 1 // 2 )
+        ^ self at: self size + 1 / 2 )
 
     at: anInteger put: anObject = (
         self shouldNotImplement )
@@ -181,7 +182,7 @@ SortedCollection = OrderedCollection (
         ^ newCollection )
 
     sort: aSortBlock = (
-        "Sort this array using aSortBlock. The block should take two arguments
+        "Sort this storage using aSortBlock. The block should take two arguments
         and return true if the first element should preceed the second one."
     
         super sort: aSortBlock.
