@@ -302,7 +302,7 @@ Planner = (
         count timesRepeat: aBlock.
         endTime := system ticks.
         
-        (string + ' ' + ((endTime - startTime) // count) asString + ' milliseconds') println.
+        (string + ' ' + ((endTime - startTime) / count / 1000) asString + ' milliseconds') println.
     )
 
     standardBenchmark = (
