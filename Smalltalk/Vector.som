@@ -119,11 +119,11 @@ Vector = (
     )
     
     "Private"
-    last:      integer = ( last      := integer )
-    first:     integer = ( first     := integer )
-    firstIndex = ( ^ first )
-    lastIndex  = ( ^ last  )
-    storage:   array   = ( storage   := array   )
+    initialize: size = (
+        storage := Array new: size.
+        first := 1.
+        last  := 1.
+    )
     
     checkIndex: index ifValid: block = (
         (first <= index) && (index <= last)
@@ -141,19 +141,11 @@ Vector = (
         ^ storage at: first - 1
     )
     
-    
     ----------------------------
     
     "Allocation"
     new              = ( ^self new: 50 )
-    new: initialSize = (
-        | newVector |
-        newVector := super new.
-        newVector storage: (Array new: initialSize).
-        newVector first: 1.
-        newVector last: 1.
-        ^newVector
-    )
+    new: initialSize = ( ^ super new initialize: initialSize )
     
     with: elem = (
         | newVector |
