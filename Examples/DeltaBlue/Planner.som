@@ -206,17 +206,17 @@ Planner = (
 
         | unsatisfied todo v nextC |
         unsatisfied := SortedCollection sortBlock:
-            [: c1 : c2 | c1 strength stronger: c2 strength].
+            [:c1 :c2 | c1 strength stronger: c2 strength].
         out determinedBy: nil.
         out walkStrength: Strength absoluteWeakest.
         out stay: true.
         todo := OrderedCollection with: out.
-        [todo isEmpty] whileFalse:
-            [v := todo removeFirst.
-             v constraints do:
-                [: c | (c isSatisfied) ifFalse: [unsatisfied add: c]].
+        [todo isEmpty] whileFalse: [
+            v := todo removeFirst.
+             v constraints do: [:c |
+                 (c isSatisfied) ifFalse: [unsatisfied add: c]].
              self constraintsConsuming: v do:
-                [: c |
+                [:c |
                  c recalculate.
                  todo add: c output]].
         ^unsatisfied
@@ -238,8 +238,8 @@ Planner = (
     "benchmarks"
     chainTest: n = (
         "Do chain-of-equality-constraints performance tests."
-
         | vars editConstraint plan planner |
+        
         planner := Planner new.
         vars := (1 to: n+1) collect: [ :i | Variable new].
 
