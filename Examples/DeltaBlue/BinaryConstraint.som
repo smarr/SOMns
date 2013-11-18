@@ -9,24 +9,13 @@ BinaryConstraint = AbstractConstraint (
                         #backward ( v1 is output)
                         nil (not satisfied)"
     | v1 v2 direction |
-    
-    direction = (
-        ^ direction
-    )
-    
-    direction: dir = (
-        direction := dir
-    )
-    
-    v1 = ( ^ v1 )  v1: v = ( v1 := v )
-    v2 = ( ^ v2 )  v2: v = ( v2 := v )
-    
+        
     "initialize-release"
 
     var: variable1 var: variable2 strength: strengthSymbol = (
         "Initialize myself with the given variables and strength."
 
-        self strength: strengthSymbol.
+        strength := Strength of: strengthSymbol.
         v1 := variable1.
         v2 := variable2.
         direction := nil.
@@ -67,23 +56,23 @@ BinaryConstraint = AbstractConstraint (
          decision."
 
         (v1 mark == mark) ifTrue:       "forward or nothing"
-            [((v2 mark ~= mark) and: [self strength stronger: v2 walkStrength])
+            [((v2 mark ~= mark) and: [strength stronger: v2 walkStrength])
                 ifTrue: [^direction := #forward]
                 ifFalse: [^direction := nil]].
 
         (v2 mark == mark) ifTrue:       "backward or nothing"
-            [((v1 mark ~= mark) and: [self strength stronger: v1 walkStrength])
+            [((v1 mark ~= mark) and: [strength stronger: v1 walkStrength])
                 ifTrue: [^direction := #backward]
                 ifFalse: [^direction := nil]].
 
         "if we get here, neither variable is marked, so we have choice"
         (v1 walkStrength weaker: v2 walkStrength)
             ifTrue:
-                [(self strength stronger: v1 walkStrength)
+                [(strength stronger: v1 walkStrength)
                     ifTrue: [^direction := #backward]
                     ifFalse: [^direction := nil]]
             ifFalse:
-                [(self strength stronger: v2 walkStrength)
+                [(strength stronger: v2 walkStrength)
                     ifTrue: [^direction := #forward]
                     ifFalse: [^direction := nil]].
     )
@@ -125,7 +114,7 @@ BinaryConstraint = AbstractConstraint (
         (direction == #forward)
             ifTrue: [in := v1. out := v2]
             ifFalse: [in := v2. out := v1].
-        out walkStrength: (self strength weakest: in walkStrength).
+        out walkStrength: (strength weakest: in walkStrength).
         out stay: (in stay).
         (out stay) ifTrue: [self execute].      "stay optimization"
     )

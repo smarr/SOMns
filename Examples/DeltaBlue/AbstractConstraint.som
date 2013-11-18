@@ -148,7 +148,7 @@ AbstractConstraint = (
         aStream nextPut: '('.
         self shortPrintOn: aStream.
         aStream space.
-        aStream nextPutAll: self strength printString.
+        aStream nextPutAll: strength printString.
         (self isSatisfied)
             ifTrue:
                 [aStream cr. aStream space. aStream space. aStream space.

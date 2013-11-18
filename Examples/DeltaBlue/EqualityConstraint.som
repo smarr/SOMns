@@ -6,9 +6,9 @@ EqualityConstraint = BinaryConstraint (
     execute = (
         "Enforce this constraint. Assume that it is satisfied."
 
-        (self direction == #forward)
-            ifTrue:  [self v2 value: self v1 value]
-            ifFalse: [self v1 value: self v2 value].
+        (direction == #forward)
+            ifTrue:  [v2 value: v1 value]
+            ifFalse: [v1 value: v2 value].
     )
     
     ----

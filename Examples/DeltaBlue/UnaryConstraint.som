@@ -12,7 +12,7 @@ UnaryConstraint = AbstractConstraint (
     var: aVariable strength: strengthSymbol = (
         "Initialize myself with the given variable and strength."
 
-        self strength: strengthSymbol.
+        strength := Strength of: strengthSymbol.
         output := aVariable.
         satisfied := false.
         self addConstraint.
@@ -48,7 +48,7 @@ UnaryConstraint = AbstractConstraint (
 
         satisfied :=
             (output mark ~= mark) and:
-            [self strength stronger: output walkStrength].
+            [strength stronger: output walkStrength].
     )
 
     execute = (
@@ -75,7 +75,7 @@ UnaryConstraint = AbstractConstraint (
          the value for the current output of this constraint. Assume this
          constraint is satisfied."
 
-        output walkStrength: self strength.
+        output walkStrength: strength.
         output stay: (self isInput not).
         (output stay) ifTrue: [self execute].   "stay optimization"
     )

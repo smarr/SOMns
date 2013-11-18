@@ -13,12 +13,12 @@ ScaleConstraint = BinaryConstraint (
     src: srcVar scale: scaleVar offset: offsetVar dst: dstVar strength: strengthSymbol = (
         "Initialize myself with the given variables and strength."
 
-        self strength: strengthSymbol.
-        self v1: srcVar.
-        self v2: dstVar.
+        strength := Strength of: strengthSymbol.
+        v1 := srcVar.
+        v2 := dstVar.
         scale := scaleVar.
         offset := offsetVar.
-        self direction: nil.
+        direction := nil.
         self addConstraint.
     )
 
@@ -31,17 +31,17 @@ ScaleConstraint = BinaryConstraint (
         v2 addConstraint: self.
         scale addConstraint: self.
         offset addConstraint: self.
-        self direction: nil.
+        direction := nil.
     )
 
     removeFromGraph = (
         "Remove myself from the constraint graph."
 
-        (self v1 == nil) ifFalse: [self v1 removeConstraint: self].
-        (self v2 == nil) ifFalse: [self v2 removeConstraint: self].
+        (v1 == nil) ifFalse: [v1 removeConstraint: self].
+        (v2 == nil) ifFalse: [v2 removeConstraint: self].
         (scale == nil) ifFalse: [scale removeConstraint: self].
         (offset == nil) ifFalse: [offset removeConstraint: self].
-        self direction: nil.
+        direction := nil.
     )
 
     "planning"
@@ -49,19 +49,19 @@ ScaleConstraint = BinaryConstraint (
     execute = (
         "Enforce this constraint. Assume that it is satisfied."
 
-        (self direction == #forward)
-            ifTrue: [self v2 value: (self v1 value * scale value) + offset value]
-            ifFalse: [self v1 value: (self v2 value - offset value) // scale value].
+        (direction == #forward)
+            ifTrue:  [v2 value: (v1 value * scale value) + offset value]
+            ifFalse: [v1 value: (v2 value - offset value) // scale value].
     )
 
     inputsDo: aBlock = (
         "Evaluate the given block on my current input variable."
 
-        (self direction == #forward)
-            ifTrue: [aBlock value: self v1.
+        (direction == #forward)
+            ifTrue: [aBlock value: v1.
                      aBlock value: scale.
                      aBlock value: offset]
-            ifFalse: [aBlock value: self v2.
+            ifFalse: [aBlock value: v2.
                       aBlock value: scale.
                       aBlock value: offset].
     )
@@ -72,10 +72,10 @@ ScaleConstraint = BinaryConstraint (
          constraint is satisfied."
 
         | in out |
-        (self direction == #forward)
-            ifTrue:  [in  := self v1. out := self v2]
-            ifFalse: [out := self v1. in  := self v2].
-        out walkStrength: (self strength weakest: in walkStrength).
+        (direction == #forward)
+            ifTrue:  [in  := v1. out := v2]
+            ifFalse: [out := v1. in  := v2].
+        out walkStrength: (strength weakest: in walkStrength).
         out stay: ((in stay) and: [(scale stay) and: [offset stay]]).
         (out stay) ifTrue: [self execute].      "stay optimization"
     )
