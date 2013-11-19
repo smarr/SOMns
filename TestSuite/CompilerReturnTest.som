@@ -63,16 +63,51 @@ CompilerReturnTest = (
     testIfTrue: harness = (
         | arr |
         arr := Array new: 3.
-        self usesIfTrue: arr.
-        (arr at: 1) = 1 ifFalse: [ harness fail: self because: 'usesIfTrue method was not executed'].
-        (arr at: 2) = 2 ifFalse: [ harness fail: self because: 'usesIfTrue ifTrue was not executed'].
-        (arr at: 3) = 3 ifFalse: [ harness fail: self because: 'usesIfTrue remainder was not executed'].
+        self usesIfTrueWithDot: arr.
+        (arr at: 1) = 1 ifFalse: [ harness fail: self because: 'usesIfTrueWithDot method was not executed'].
+        (arr at: 2) = 2 ifFalse: [ harness fail: self because: 'usesIfTrueWithDot ifTrue was not executed'].
+        (arr at: 3) = 3 ifFalse: [ harness fail: self because: 'usesIfTrueWithDot remainder was not executed'].
+        
+        arr := Array new: 3.
+        self usesIfTrueWithoutDot: arr.
+        (arr at: 1) = 1 ifFalse: [ harness fail: self because: 'usesIfTrueWithoutDot method was not executed'].
+        (arr at: 2) = 2 ifFalse: [ harness fail: self because: 'usesIfTrueWithoutDot ifTrue was not executed'].
+        (arr at: 3) = 3 ifFalse: [ harness fail: self because: 'usesIfTrueWithoutDot remainder was not executed'].
+        
+        arr := Array new: 3.
+        self usesIfFalseWithDot: arr.
+        (arr at: 1) = 1 ifFalse: [ harness fail: self because: 'usesIfFalseWithDot method was not executed'].
+        (arr at: 2) = 2 ifFalse: [ harness fail: self because: 'usesIfFalseWithDot ifTrue was not executed'].
+        (arr at: 3) = 3 ifFalse: [ harness fail: self because: 'usesIfFalseWithDot remainder was not executed'].
+        
+        arr := Array new: 3.
+        self usesIfFalseWithoutDot: arr.
+        (arr at: 1) = 1 ifFalse: [ harness fail: self because: 'usesIfFalseWithoutDot method was not executed'].
+        (arr at: 2) = 2 ifFalse: [ harness fail: self because: 'usesIfFalseWithoutDot ifTrue was not executed'].
+        (arr at: 3) = 3 ifFalse: [ harness fail: self because: 'usesIfFalseWithoutDot remainder was not executed'].
     )
     
-    usesIfTrue: arr = (
+    usesIfTrueWithDot: arr = (
         arr at: 1 put: 1.
-        (3 >= 1) ifTrue: [arr at: 2 put: 2.].
+        (3 >= 1) ifTrue: [arr at: 2 put: 2. "WITH DOT"].
         arr at: 3 put: 3.
     )
     
+    usesIfTrueWithoutDot: arr = (
+        arr at: 1 put: 1.
+        (3 >= 1) ifTrue: [arr at: 2 put: 2 "WITHOUT DOT"].
+        arr at: 3 put: 3.
+    )
+    
+    usesIfFalseWithDot: arr = (
+        arr at: 1 put: 1.
+        (3 >= 1) ifTrue: [arr at: 2 put: 2. "WITH DOT"].
+        arr at: 3 put: 3.
+    )
+    
+    usesIfFalseWithoutDot: arr = (
+        arr at: 1 put: 1.
+        (3 >= 1) ifTrue: [arr at: 2 put: 2 "WITHOUT DOT"].
+        arr at: 3 put: 3.
+    )
 )
