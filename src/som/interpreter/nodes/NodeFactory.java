@@ -3,7 +3,6 @@ package som.interpreter.nodes;
 import java.util.HashMap;
 
 import som.interpreter.nodes.messages.BinarySendNode;
-import som.interpreter.nodes.messages.KeywordMonomorphicNode;
 import som.interpreter.nodes.messages.KeywordSendNode;
 import som.interpreter.nodes.messages.TernarySendNode;
 import som.interpreter.nodes.messages.UnarySendNode;
@@ -22,7 +21,7 @@ public final class NodeFactory {
     unaryMessages   = new HashMap<String, com.oracle.truffle.api.dsl.NodeFactory<? extends UnaryMessageNode>>();
     binaryMessages  = new HashMap<String, com.oracle.truffle.api.dsl.NodeFactory<? extends BinaryMessageNode>>();
     ternaryMessages = new HashMap<String, com.oracle.truffle.api.dsl.NodeFactory<? extends TernaryMessageNode>>();
-    keywordMessages = new HashMap<String, com.oracle.truffle.api.dsl.NodeFactory<? extends KeywordMonomorphicNode>>();
+    keywordMessages = new HashMap<String, com.oracle.truffle.api.dsl.NodeFactory<? extends KeywordMessageNode>>();
   }
 
   public static void registerKnownFactories() {
@@ -173,7 +172,7 @@ public final class NodeFactory {
     } else if (arity == 3) {
       old = ternaryMessages.put(selector, (com.oracle.truffle.api.dsl.NodeFactory<? extends TernaryMessageNode>) nodeFactory);
     } else {
-      old = keywordMessages.put(selector, (com.oracle.truffle.api.dsl.NodeFactory<? extends KeywordMonomorphicNode>) nodeFactory);
+      old = keywordMessages.put(selector, (com.oracle.truffle.api.dsl.NodeFactory<? extends KeywordMessageNode>) nodeFactory);
     }
 
     if (old != null && old != nodeFactory) {
@@ -185,7 +184,7 @@ public final class NodeFactory {
   private final HashMap<String, com.oracle.truffle.api.dsl.NodeFactory<? extends UnaryMessageNode>>   unaryMessages;
   private final HashMap<String, com.oracle.truffle.api.dsl.NodeFactory<? extends BinaryMessageNode>>  binaryMessages;
   private final HashMap<String, com.oracle.truffle.api.dsl.NodeFactory<? extends TernaryMessageNode>> ternaryMessages;
-  private final HashMap<String, com.oracle.truffle.api.dsl.NodeFactory<? extends KeywordMonomorphicNode>> keywordMessages;
+  private final HashMap<String, com.oracle.truffle.api.dsl.NodeFactory<? extends KeywordMessageNode>> keywordMessages;
 
   private static final NodeFactory factory = new NodeFactory();
 }
