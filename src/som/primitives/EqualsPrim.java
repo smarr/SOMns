@@ -79,12 +79,11 @@ public abstract class EqualsPrim extends BinaryMessageNode {
   }
 
   @Specialization(order = 1000)
-  public SObject doSBigInteger(final SBigInteger left, final SAbstractObject right) {
-    return universe.falseObject;
-  }
-
-  @Specialization(order = 1001)
-  public SObject doSInteger(final SInteger left, final SAbstractObject right) {
-    return universe.falseObject;
+  public SObject doSAbstractObject(final SAbstractObject left, final SAbstractObject right) {
+    if (left == right) {
+      return universe.trueObject;
+    } else {
+      return universe.falseObject;
+    }
   }
 }
