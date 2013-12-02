@@ -64,19 +64,15 @@ import java.util.List;
 
 import som.compiler.SourcecodeCompiler.Source;
 import som.interpreter.nodes.AbstractMessageNode;
-import som.interpreter.nodes.ArgumentEvaluationNode;
 import som.interpreter.nodes.BinaryMessageNode;
-import som.interpreter.nodes.BinaryMessageNodeFactory;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.FieldNode.FieldReadNode;
 import som.interpreter.nodes.FieldNode.FieldWriteNode;
 import som.interpreter.nodes.GlobalNode.GlobalReadNode;
-import som.interpreter.nodes.KeywordMessageNodeFactory;
+import som.interpreter.nodes.NodeFactory;
 import som.interpreter.nodes.ReturnNonLocalNode;
 import som.interpreter.nodes.SequenceNode;
-import som.interpreter.nodes.TernaryMessageNodeFactory;
 import som.interpreter.nodes.UnaryMessageNode;
-import som.interpreter.nodes.UnaryMessageNodeFactory;
 import som.interpreter.nodes.VariableNode.SelfReadNode;
 import som.interpreter.nodes.VariableNode.SuperReadNode;
 import som.interpreter.nodes.VariableNode.VariableReadNode;
@@ -568,7 +564,7 @@ public class Parser {
   private UnaryMessageNode unaryMessage(final ExpressionNode receiver) {
     SourceCoordinate coord = getCoordinate();
     SSymbol selector = unarySelector();
-    UnaryMessageNode msg = UnaryMessageNodeFactory.create(selector, universe, receiver);
+    UnaryMessageNode msg = NodeFactory.createUnaryMessageNode(selector, universe, receiver);
     assignSource(msg, coord);
     return msg;
   }
@@ -579,7 +575,7 @@ public class Parser {
     SSymbol msg = binarySelector();
     ExpressionNode operand = binaryOperand(mgenc);
 
-    BinaryMessageNode msgNode = BinaryMessageNodeFactory.create(msg, universe, receiver, operand);
+    BinaryMessageNode msgNode = NodeFactory.createBinaryMessageNode(msg, universe, receiver, operand);
     assignSource(msgNode, coord);
     return msgNode;
   }
@@ -610,18 +606,8 @@ public class Parser {
 
     SSymbol msg = universe.symbolFor(kw.toString());
 
-    AbstractMessageNode msgNode;
-    int numArgs = msg.getNumberOfSignatureArguments();
-    if (numArgs == 2) {
-      msgNode = BinaryMessageNodeFactory.create(msg, universe, receiver, arguments.get(0));
-    } else if (numArgs == 3) {
-      msgNode = TernaryMessageNodeFactory.create(msg, universe, receiver, arguments.get(0), arguments.get(1));
-    } else {
-      ArgumentEvaluationNode args =
-          new ArgumentEvaluationNode(arguments.toArray(new ExpressionNode[0]));
-      msgNode = KeywordMessageNodeFactory.create(msg, universe, receiver, args);
-    }
-
+    AbstractMessageNode msgNode = NodeFactory.createMessageNode(msg, universe,
+        receiver, arguments.toArray(new ExpressionNode[0]));
     assignSource(msgNode, coord);
     return msgNode;
   }
