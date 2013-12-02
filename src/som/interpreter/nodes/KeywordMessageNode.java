@@ -45,31 +45,24 @@ public abstract class KeywordMessageNode extends AbstractMessageNode {
   public abstract ArgumentEvaluationNode getArguments();
   public abstract Object executeEvaluated(final VirtualFrame frame, final Object receiver, Object[] arguments);
 
-  // TODO: want to use @Generic here!
-  @Specialization
-  public Object doGeneric(final VirtualFrame frame, final Object rcvr,
-      final Object arguments) {
-    CompilerDirectives.transferToInterpreter();
-
-    SAbstractObject receiver = (SAbstractObject) rcvr;
-
-    SClass rcvrClass = classOfReceiver(receiver, getReceiver());
-    SMethod invokable = rcvrClass.lookupInvokable(selector);
-
-    if (invokable != null) {
-      KeywordMonomorphicNode node = NodeFactory.createKeywordMonomorphicNode(selector, universe, rcvrClass, invokable, getReceiver(), getArguments());
-      return replace(node, "Be optimisitic and do a monomorphic lookup cache, or a primitive inline.").
-          executeEvaluated(frame, receiver, arguments);
-    } else {
-      SAbstractObject[] args = (SAbstractObject[]) arguments;
-      return doFullSend(frame, receiver, args, rcvrClass);
-    }
-  }
-
-  @Override
-  public ExpressionNode cloneForInlining() {
-    // TODO: test whether this is problematic
-    return (ExpressionNode) this.copy();
-    //return NodeFactory.createKeywordMessageNode(selector, universe, getReceiver(), getArguments());
-  }
+//  // TODO: want to use @Generic here!
+//  @Specialization
+//  public Object doGeneric(final VirtualFrame frame, final Object rcvr,
+//      final Object[] arguments) {
+//    CompilerDirectives.transferToInterpreter();
+//
+//    SAbstractObject receiver = (SAbstractObject) rcvr;
+//
+//    SClass rcvrClass = classOfReceiver(receiver);
+//    SMethod invokable = rcvrClass.lookupInvokable(selector);
+//
+//    if (invokable != null) {
+//      KeywordMonomorphicNode node = NodeFactory.createKeywordMonomorphicNode(selector, universe, rcvrClass, invokable, getReceiver(), getArguments());
+//      return replace(node, "Be optimisitic and do a monomorphic lookup cache, or a primitive inline.").
+//          executeEvaluated(frame, receiver, arguments);
+//    } else {
+//      SAbstractObject[] args = (SAbstractObject[]) arguments;
+//      return doFullSend(frame, receiver, args, rcvrClass);
+//    }
+//  }
 }
