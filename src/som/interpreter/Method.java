@@ -89,12 +89,12 @@ public class Method extends Invokable {
 
   @ExplodeLoop
   protected FrameOnStackMarker initializeFrame(final VirtualFrame frame) {
-    frame.setObject(selfSlot, frame.getArguments(Arguments.class).getSelf());
+    frame.setObject(selfSlot, Arguments.get(frame).getSelf());
 
     final FrameOnStackMarker marker = new FrameOnStackMarker();
     frame.setObject(nonLocalReturnMarker, marker);
 
-    Arguments args = frame.getArguments(Arguments.class);
+    Arguments args = Arguments.get(frame);
     for (int i = 0; i < argumentSlots.length; i++) {
       frame.setObject(argumentSlots[i], args.getArgument(i));
     }

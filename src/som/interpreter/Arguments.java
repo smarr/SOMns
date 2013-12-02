@@ -23,6 +23,8 @@ package som.interpreter;
 
 import som.vmobjects.SAbstractObject;
 
+import com.oracle.truffle.api.frame.VirtualFrame;
+
 public final class Arguments extends com.oracle.truffle.api.Arguments {
 
   private final SAbstractObject   self;
@@ -39,5 +41,9 @@ public final class Arguments extends com.oracle.truffle.api.Arguments {
 
   public SAbstractObject getArgument(final int i) {
     return arguments[i];
+  }
+
+  public static Arguments get(final VirtualFrame frame) {
+    return frame.getArguments(Arguments.class);
   }
 }

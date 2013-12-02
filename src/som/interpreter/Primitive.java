@@ -30,9 +30,9 @@ public class Primitive extends Invokable {
 
   @ExplodeLoop
   protected void initializeFrame(final VirtualFrame frame) {
-    frame.setObject(selfSlot, frame.getArguments(Arguments.class).getSelf());
+    frame.setObject(selfSlot, Arguments.get(frame).getSelf());
 
-    Arguments args = frame.getArguments(Arguments.class);
+    Arguments args = Arguments.get(frame);
     for (int i = 0; i < argumentSlots.length; i++) {
       frame.setObject(argumentSlots[i], args.getArgument(i));
     }
