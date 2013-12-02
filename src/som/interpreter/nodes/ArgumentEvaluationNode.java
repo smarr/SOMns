@@ -6,7 +6,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 
 
-public class ArgumentEvaluationNode extends SOMNode {
+public class ArgumentEvaluationNode extends ExpressionNode {
 
   @Children private final ExpressionNode[] arguments;
 
@@ -22,8 +22,14 @@ public class ArgumentEvaluationNode extends SOMNode {
     return arguments[idx];
   }
 
+  @Override
+  public Object executeGeneric(final VirtualFrame frame) {
+    return executeArray(frame);
+  }
+
+  @Override
   @ExplodeLoop
-  public SAbstractObject[] doArray(final VirtualFrame frame) {
+  public Object[] executeArray(final VirtualFrame frame) {
     if (arguments == null || arguments.length == 0) {
       return null;
     }
@@ -37,10 +43,7 @@ public class ArgumentEvaluationNode extends SOMNode {
     return result;
   }
 
-  public Object executeArray(final VirtualFrame frame) {
-    return doArray(frame);
-  }
-
+  @Override
   public ArgumentEvaluationNode cloneForInlining() {
     if (arguments == null) {
       return this;
@@ -54,5 +57,4 @@ public class ArgumentEvaluationNode extends SOMNode {
 
     return new ArgumentEvaluationNode(args);
   }
-
 }

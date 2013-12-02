@@ -43,7 +43,7 @@ public abstract class KeywordMessageNode extends AbstractMessageNode {
   }
 
   public abstract ArgumentEvaluationNode getArguments();
-  public abstract Object executeEvaluated(final VirtualFrame frame, final Object receiver, Object arguments);
+  public abstract Object executeEvaluated(final VirtualFrame frame, final Object receiver, Object[] arguments);
 
   // TODO: want to use @Generic here!
   @Specialization

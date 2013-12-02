@@ -64,7 +64,7 @@ public abstract class BlockPrims {
 
     @Specialization
     public SAbstractObject doSBlock(final VirtualFrame frame,
-        final SBlock receiver, final Object arguments) {
+        final SBlock receiver, final Object[] arguments) {
       return receiver.getMethod().invoke(frame.pack(), receiver, (SAbstractObject[]) arguments);
     }
   }

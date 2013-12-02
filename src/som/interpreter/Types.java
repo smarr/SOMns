@@ -52,7 +52,8 @@ import com.oracle.truffle.api.dsl.TypeSystem;
                  SClass.class,
                 SMethod.class,
                 SObject.class,
-        SAbstractObject.class})
+        SAbstractObject.class,
+               Object[].class})
 public class Types {
 
 //  @TypeCheck

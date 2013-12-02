@@ -27,7 +27,7 @@ public abstract class KeywordMonomorphicNode extends AbstractMonomorphicMessageN
     this(node.selector, node.universe, node.rcvrClass, node.invokable);
   }
 
-  public abstract Object executeEvaluated(final VirtualFrame frame, final Object receiver, Object arguments);
+  public abstract Object executeEvaluated(final VirtualFrame frame, final Object receiver, Object[] arguments);
 
   @Override
   public ExpressionNode cloneForInlining() {
@@ -36,7 +36,7 @@ public abstract class KeywordMonomorphicNode extends AbstractMonomorphicMessageN
 
   @Specialization(guards = "isCachedReceiverClass")
   public SAbstractObject doMonomorphic(final VirtualFrame frame, final SAbstractObject receiver,
-      final Object arguments) {
+      final Object[] arguments) {
     callCount++;
     SAbstractObject[] args = (SAbstractObject[]) arguments;
     return invokable.invoke(frame.pack(), receiver, args);
@@ -44,7 +44,7 @@ public abstract class KeywordMonomorphicNode extends AbstractMonomorphicMessageN
 
   @Generic
   public Object doGeneric(final VirtualFrame frame, final Object receiver,
-      final Object arguments) {
+      final Object[] arguments) {
     if (isCachedReceiverClass((SAbstractObject) receiver)) {
       throw new IllegalStateException("Don't know how that could happen?");
     }
