@@ -50,8 +50,12 @@ public class ArrayPrims {
     public NewPrim(final SSymbol selector, final Universe universe) { super(selector, universe); }
     public NewPrim(final NewPrim prim)  { this(prim.selector, prim.universe); }
 
-    @Specialization
-    public SAbstractObject doSArray(final SArray receiver, final SInteger length) {
+    protected boolean receiverIsArrayClass(final SClass receiver) {
+      return receiver == universe.arrayClass;
+    }
+
+    @Specialization(guards = "receiverIsArrayClass")
+    public SAbstractObject doSClass(final SClass receiver, final SInteger length) {
       return universe.newArray(length.getEmbeddedInteger());
     }
   }
