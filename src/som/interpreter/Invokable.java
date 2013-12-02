@@ -31,6 +31,7 @@ public abstract class Invokable extends RootNode {
       final ExpressionNode exp);
 
   public abstract ExpressionNode methodCloneForInlining();
+  public abstract boolean isAlwaysToBeInlined();
 
   public FrameDescriptor getFrameDescriptor() {
     return frameDescriptor;

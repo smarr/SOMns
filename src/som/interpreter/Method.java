@@ -123,4 +123,9 @@ public class Method extends Invokable {
   public ExpressionNode methodCloneForInlining() {
     return expressionOrSequence.cloneForInlining();
   }
+
+  @Override
+  public boolean isAlwaysToBeInlined() {
+    return false; // TODO: determine "quick" methods based on the AST, just self nodes, just field reads, etc.
+  }
 }

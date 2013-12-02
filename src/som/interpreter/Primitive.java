@@ -46,6 +46,10 @@ public class Primitive extends Invokable {
   }
 
   @Override
+  public boolean isAlwaysToBeInlined() {
+    return true;
+  }
+
   @Override
   public String toString() {
     return "Primitive " + expressionOrSequence.getClass().getSimpleName() + "@" + Integer.toHexString(hashCode());
