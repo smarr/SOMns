@@ -6,20 +6,27 @@ import som.vm.Universe;
 import som.vmobjects.SSymbol;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
-public abstract class EmptyPrim extends AbstractMessageNode {
-  public EmptyPrim(final SSymbol selector, final Universe universe) {
+public class EmptyPrim extends AbstractMessageNode {
+  private EmptyPrim(final SSymbol selector, final Universe universe,
+      final ExpressionNode receiver) {
     super(selector, universe);
+    this.receiver = adoptChild(receiver);
+  }
+
+  @Child private ExpressionNode receiver;
+
+  @Override
+  public ExpressionNode getReceiver() {
+    return receiver;
   }
 
   public EmptyPrim(final EmptyPrim node) {
-    this(node.selector, node.universe);
+    this(node.selector, node.universe, node.receiver);
   }
 
   @Override
-  @Specialization
   public Object executeGeneric(final VirtualFrame frame) {
     Universe.println("Warning: undefined primitive "
         + this.selector.getString() + " called");
@@ -29,5 +36,10 @@ public abstract class EmptyPrim extends AbstractMessageNode {
   @Override
   public ExpressionNode cloneForInlining() {
     throw new NotImplementedException();
+  }
+
+  public static EmptyPrim create(final SSymbol selector, final Universe universe,
+      final ExpressionNode receiver) {
+    return new EmptyPrim(selector, universe, receiver);
   }
 }

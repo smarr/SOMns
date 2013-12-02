@@ -94,7 +94,7 @@ public abstract class Primitives {
     SMethod prim = universe.newMethod(signature, primMethodNode,
         mgen.getFrameDescriptor(), true);
 
-    primNode.setInvokable(prim);
+    // primNode.setInvokable(prim); TODO: will i need the invokable later?
 
     return prim;
   }
@@ -112,8 +112,7 @@ public abstract class Primitives {
       args[i] = new VariableReadNode(argSlots[i], 0);
     }
 
-
-    ExpressionNode primNode = EmptyPrimFactory.create(signature, universe);
+    ExpressionNode primNode = EmptyPrim.create(signature, universe, new SelfReadNode(mgen.getSelfSlot(), 0));
 
     Primitive primMethodNode = new Primitive(primNode, mgen.getSelfSlot(),
         argSlots, mgen.getFrameDescriptor());
@@ -144,7 +143,7 @@ public abstract class Primitives {
     holder.getSOMClass(universe).addInstancePrimitive(prim);
   }
 
-  private SClass holder;
+  protected SClass holder;
 
   public static SMethod getEmptyPrimitive(final String selector,
       final Universe universe) {

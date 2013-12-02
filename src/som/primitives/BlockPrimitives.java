@@ -40,11 +40,18 @@ public class BlockPrimitives extends Primitives {
 
   @Override
   public void installPrimitives() {
-    installInstancePrimitive("restart", RestartPrimFactory.getInstance());
-
-    installInstancePrimitive("value",            ValueNonePrimFactory.getInstance());
-    installInstancePrimitive("value:",           ValueOnePrimFactory.getInstance());
-    installInstancePrimitive("value:with:",      ValueTwoPrimFactory.getInstance());
-    installInstancePrimitive("value:with:with:", ValueMorePrimFactory.getInstance());
+    if (holder == universe.getBlockClass() || universe.getBlockClass() == null) {
+      installInstancePrimitive("restart",          RestartPrimFactory.getInstance());
+    } else if (universe.getBlockClass() != null) {
+      if (holder == universe.getBlockClass(0)) {
+        installInstancePrimitive("value",            ValueNonePrimFactory.getInstance());
+      } else if (holder == universe.getBlockClass(1)) {
+        installInstancePrimitive("value:",           ValueOnePrimFactory.getInstance());
+      } else if (holder == universe.getBlockClass(2)) {
+        installInstancePrimitive("value:with:",      ValueTwoPrimFactory.getInstance());
+      } else if (holder == universe.getBlockClass(3)) {
+        installInstancePrimitive("value:with:with:", ValueMorePrimFactory.getInstance());
+      }
+    }
   }
 }
