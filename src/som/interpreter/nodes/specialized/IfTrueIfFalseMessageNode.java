@@ -1,24 +1,21 @@
 package som.interpreter.nodes.specialized;
 
-import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.messages.TernaryMonomorphicNode;
+import som.interpreter.nodes.TernaryMessageNode;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
-import som.vmobjects.SClass;
 import som.vmobjects.SMethod;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 
-public abstract class IfTrueIfFalseMessageNode extends TernaryMonomorphicNode {
+public abstract class IfTrueIfFalseMessageNode extends TernaryMessageNode {
 
-  public IfTrueIfFalseMessageNode(final SSymbol selector, final Universe universe, final SClass rcvrClass, final SMethod invokable) { super(selector, universe, rcvrClass, invokable); }
-  public IfTrueIfFalseMessageNode(final IfTrueIfFalseMessageNode node) { this(node.selector, node.universe, node.rcvrClass, node.invokable); }
+  public IfTrueIfFalseMessageNode(final SSymbol selector, final Universe universe) { super(selector, universe); }
+  public IfTrueIfFalseMessageNode(final IfTrueIfFalseMessageNode node) { this(node.selector, node.universe); }
 
   @Specialization(order = 1)
   public SAbstractObject doIfTrueIfFalse(final VirtualFrame frame,
@@ -86,13 +83,5 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryMonomorphicNode {
   public Object doIfTrueIfFalse(final VirtualFrame frame,
       final SObject receiver, final Object trueValue, final Object falseValue) {
     return doIfTrueIfFalse(frame, receiver == universe.trueObject, trueValue, falseValue);
-  }
-
-  @Override
-  public ExpressionNode cloneForInlining() {
-    throw new NotImplementedException();
-//    return IfTrueIfFalseMessageNodeFactory.create(selector, universe,
-//        blockMethodTrueBranch, blockMethodFalseBranch, getReceiver(),
-//        getArguments());
   }
 }

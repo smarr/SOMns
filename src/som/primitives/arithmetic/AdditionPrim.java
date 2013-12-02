@@ -5,18 +5,16 @@ import java.math.BigInteger;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBigInteger;
-import som.vmobjects.SClass;
 import som.vmobjects.SDouble;
 import som.vmobjects.SInteger;
-import som.vmobjects.SMethod;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.Specialization;
 
 
 public abstract class AdditionPrim extends ArithmeticPrim {
-  public AdditionPrim(final SSymbol selector, final Universe universe, final SClass rcvrClass, final SMethod invokable) { super(selector, universe, rcvrClass, invokable); }
-  public AdditionPrim(final AdditionPrim node) { this(node.selector, node.universe, node.rcvrClass, node.invokable); }
+  public AdditionPrim(final SSymbol selector, final Universe universe) { super(selector, universe); }
+  public AdditionPrim(final AdditionPrim node) { this(node.selector, node.universe); }
 
   @Specialization(order = 1)
   public int doInteger(final int left, final int argument) {

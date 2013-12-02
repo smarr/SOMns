@@ -3,18 +3,16 @@ package som.primitives.arithmetic;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBigInteger;
-import som.vmobjects.SClass;
 import som.vmobjects.SDouble;
 import som.vmobjects.SInteger;
-import som.vmobjects.SMethod;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.Specialization;
 
 
 public abstract class LogicAndPrim extends ArithmeticPrim {
-  public LogicAndPrim(final SSymbol selector, final Universe universe, final SClass rcvrClass, final SMethod invokable) { super(selector, universe, rcvrClass, invokable); }
-  public LogicAndPrim(final LogicAndPrim prim) { this(prim.selector, prim.universe, prim.rcvrClass, prim.invokable); }
+  public LogicAndPrim(final SSymbol selector, final Universe universe) { super(selector, universe); }
+  public LogicAndPrim(final LogicAndPrim prim) { this(prim.selector, prim.universe); }
 
   @Specialization(order = 1)
   public SAbstractObject doSInteger(final SInteger left, final SInteger right) {

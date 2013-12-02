@@ -27,11 +27,11 @@ package som.primitives;
 
 import som.compiler.MethodGenerationContext;
 import som.interpreter.Primitive;
+import som.interpreter.nodes.AbstractMessageNode;
 import som.interpreter.nodes.ArgumentEvaluationNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.VariableNode.SelfReadNode;
 import som.interpreter.nodes.VariableNode.VariableReadNode;
-import som.interpreter.nodes.messages.AbstractMonomorphicMessageNode;
 import som.vm.Universe;
 import som.vmobjects.SClass;
 import som.vmobjects.SMethod;
@@ -61,7 +61,7 @@ public abstract class Primitives {
 
   @SlowPath
   public static SMethod constructPrimitive(final SSymbol signature,
-      final NodeFactory<? extends AbstractMonomorphicMessageNode> nodeFactory,
+      final NodeFactory<? extends AbstractMessageNode> nodeFactory,
       final Universe universe, final SClass holder) {
     int numArgs = signature.getNumberOfSignatureArguments() - 1; // we take care of self seperately
 
@@ -73,23 +73,19 @@ public abstract class Primitives {
       args[i] = new VariableReadNode(argSlots[i], 0);
     }
 
-    AbstractMonomorphicMessageNode primNode;
+    AbstractMessageNode primNode;
     if (numArgs == 0) {
       primNode = nodeFactory.createNode(signature, universe,
-          holder, null /* invokable */,
           new SelfReadNode(mgen.getSelfSlot(), 0));
     } else if (numArgs == 1) {
       primNode = nodeFactory.createNode(signature, universe,
-          holder, null /* invokable */,
-          new SelfReadNode(mgen.getSelfSlot(), 0), args[0]);
+          new SelfReadNode(mgen.getSelfSlot(), 0), args);
     } else if (numArgs == 2) {
       primNode = nodeFactory.createNode(signature, universe,
-          holder, null /* invokable */,
-          new SelfReadNode(mgen.getSelfSlot(), 0), args[0], args[1]);
+          new SelfReadNode(mgen.getSelfSlot(), 0), args);
     } else {
       ArgumentEvaluationNode argEvalNode = new ArgumentEvaluationNode(args);
       primNode = nodeFactory.createNode(signature, universe,
-          holder, null /* invokable */,
           new SelfReadNode(mgen.getSelfSlot(), 0), argEvalNode);
     }
 
@@ -128,7 +124,7 @@ public abstract class Primitives {
   }
 
   protected void installInstancePrimitive(final String selector,
-      final NodeFactory<? extends AbstractMonomorphicMessageNode> nodeFactory) {
+      final NodeFactory<? extends AbstractMessageNode> nodeFactory) {
     SSymbol signature = universe.symbolFor(selector);
     som.interpreter.nodes.NodeFactory.registerNodeFactory(signature, nodeFactory);
     SMethod prim = constructPrimitive(signature, nodeFactory, universe, holder);
@@ -138,7 +134,7 @@ public abstract class Primitives {
   }
 
   protected void installClassPrimitive(final String selector,
-      final NodeFactory<? extends AbstractMonomorphicMessageNode> nodeFactory) {
+      final NodeFactory<? extends AbstractMessageNode> nodeFactory) {
     SSymbol signature = universe.symbolFor(selector);
     som.interpreter.nodes.NodeFactory.registerNodeFactory(signature, nodeFactory);
     SMethod prim = constructPrimitive(signature, nodeFactory, universe, holder);

@@ -7,9 +7,14 @@ import som.vmobjects.SClass;
 import som.vmobjects.SMethod;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.CallTarget;
+import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
+@NodeChild(value = "receiver", type = ExpressionNode.class)
 public abstract class AbstractMessageNode extends ExpressionNode {
+
+  protected static final int INLINE_CACHE_SIZE = 6;
 
   protected final SSymbol  selector;
   protected final Universe universe;
@@ -23,14 +28,28 @@ public abstract class AbstractMessageNode extends ExpressionNode {
     this(node.selector, node.universe);
   }
 
-  protected SClass classOfReceiver(final SAbstractObject rcvr, final ExpressionNode receiver) {
-    SClass rcvrClass = rcvr.getSOMClass(universe);
+  public abstract ExpressionNode getReceiver();
+
+  protected SClass classOfReceiver(final Object rcvr) {
+    SAbstractObject receiver = (SAbstractObject) rcvr;
+    SClass rcvrClass = receiver.getSOMClass(universe);
 
     // first determine whether it is a normal, or super send
-    if (receiver instanceof SuperReadNode) {
+    if (getReceiver() instanceof SuperReadNode) {
       rcvrClass = (SClass) rcvrClass.getSuperClass();
     }
     return rcvrClass;
+  }
+
+  protected CallTarget lookupCallTarget(final Object rcvr) {
+    SAbstractObject receiver = (SAbstractObject) rcvr;
+    SClass rcvrClass = classOfReceiver(receiver);
+    SMethod method = rcvrClass.lookupInvokable(selector);
+    if (method == null) {
+      return null;
+    } else {
+      return method.getCallTarget();
+    }
   }
 
   protected boolean isBooleanReceiver(final SAbstractObject receiver) {
@@ -57,6 +76,11 @@ public abstract class AbstractMessageNode extends ExpressionNode {
     } else {
       return rcvr.sendDoesNotUnderstand(selector, args, universe, frame.pack());
     }
+  }
+
+  @Override
+  public ExpressionNode cloneForInlining() {
+    return (ExpressionNode) createUninitialized();
   }
 
   protected static final SAbstractObject[] noArgs = new SAbstractObject[0];

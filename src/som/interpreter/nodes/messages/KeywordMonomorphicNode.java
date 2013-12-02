@@ -1,7 +1,6 @@
 package som.interpreter.nodes.messages;
 
 import som.interpreter.Invokable;
-import som.interpreter.nodes.ArgumentEvaluationNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.NodeFactory;
 import som.vm.Universe;
@@ -14,16 +13,10 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.SlowPath;
 import com.oracle.truffle.api.dsl.Generic;
-import com.oracle.truffle.api.dsl.NodeChild;
-import com.oracle.truffle.api.dsl.NodeChildren;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.FrameFactory;
 
-@NodeChildren({
-  @NodeChild(value = "receiver",  type = ExpressionNode.class), // TODO: shouldn't that one be inherited??
-  @NodeChild(value = "arguments", type = ArgumentEvaluationNode.class)
-})
 public abstract class KeywordMonomorphicNode extends AbstractMonomorphicMessageNode {
 
   public KeywordMonomorphicNode(final SSymbol selector, final Universe universe, final SClass rcvrClass, final SMethod invokable) {
@@ -34,7 +27,6 @@ public abstract class KeywordMonomorphicNode extends AbstractMonomorphicMessageN
     this(node.selector, node.universe, node.rcvrClass, node.invokable);
   }
 
-  public abstract ArgumentEvaluationNode getArguments();
   public abstract Object executeEvaluated(final VirtualFrame frame, final Object receiver, Object arguments);
 
   @Override

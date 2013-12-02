@@ -3,18 +3,16 @@ package som.primitives.arithmetic;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBigInteger;
-import som.vmobjects.SClass;
 import som.vmobjects.SDouble;
 import som.vmobjects.SInteger;
-import som.vmobjects.SMethod;
 import som.vmobjects.SSymbol;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import com.oracle.truffle.api.dsl.Specialization;
 
 public abstract class DoubleDivPrim extends ArithmeticPrim {
-  public DoubleDivPrim(final SSymbol selector, final Universe universe, final SClass rcvrClass, final SMethod invokable) { super(selector, universe, rcvrClass, invokable); }
-  public DoubleDivPrim(final DoubleDivPrim node) { this(node.selector, node.universe, node.rcvrClass, node.invokable); }
+  public DoubleDivPrim(final SSymbol selector, final Universe universe) { super(selector, universe); }
+  public DoubleDivPrim(final DoubleDivPrim node) { this(node.selector, node.universe); }
 
   @Specialization(order = 1)
   public SAbstractObject doSDouble(final SDouble left, final SDouble right) {

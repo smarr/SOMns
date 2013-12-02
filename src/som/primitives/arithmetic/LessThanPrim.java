@@ -3,18 +3,16 @@ package som.primitives.arithmetic;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBigInteger;
-import som.vmobjects.SClass;
 import som.vmobjects.SDouble;
 import som.vmobjects.SInteger;
-import som.vmobjects.SMethod;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.Specialization;
 
 
 public abstract class LessThanPrim extends ArithmeticPrim {
-  public LessThanPrim(final SSymbol selector, final Universe universe, final SClass rcvrClass, final SMethod invokable) { super(selector, universe, rcvrClass, invokable); }
-  public LessThanPrim(final LessThanPrim prim) { this(prim.selector, prim.universe, prim.rcvrClass, prim.invokable); }
+  public LessThanPrim(final SSymbol selector, final Universe universe) { super(selector, universe); }
+  public LessThanPrim(final LessThanPrim prim) { this(prim.selector, prim.universe); }
 
 
   @Specialization(order = 1)

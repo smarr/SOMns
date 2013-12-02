@@ -1,13 +1,11 @@
 package som.primitives;
 
-import som.interpreter.nodes.messages.BinaryMonomorphicNode;
-import som.interpreter.nodes.messages.TernaryMonomorphicNode;
-import som.interpreter.nodes.messages.UnaryMonomorphicNode;
+import som.interpreter.nodes.BinaryMessageNode;
+import som.interpreter.nodes.TernaryMessageNode;
+import som.interpreter.nodes.UnaryMessageNode;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
-import som.vmobjects.SClass;
 import som.vmobjects.SInteger;
-import som.vmobjects.SMethod;
 import som.vmobjects.SString;
 import som.vmobjects.SSymbol;
 
@@ -16,9 +14,9 @@ import com.oracle.truffle.api.dsl.Specialization;
 
 public class StringPrims {
 
-  public abstract static class ConcatPrim extends BinaryMonomorphicNode {
-    public ConcatPrim(final SSymbol selector, final Universe universe, final SClass rcvrClass, final SMethod invokable) { super(selector, universe, rcvrClass, invokable); }
-    public ConcatPrim(final ConcatPrim prim) { this(prim.selector, prim.universe, prim.rcvrClass, prim.invokable); }
+  public abstract static class ConcatPrim extends BinaryMessageNode {
+    public ConcatPrim(final SSymbol selector, final Universe universe) { super(selector, universe); }
+    public ConcatPrim(final ConcatPrim prim) { this(prim.selector, prim.universe); }
 
     @Specialization
     public SAbstractObject doSString(final SString receiver,
@@ -28,9 +26,9 @@ public class StringPrims {
     }
   }
 
-  public abstract static class AsSymbolPrim extends UnaryMonomorphicNode {
-    public AsSymbolPrim(final SSymbol selector, final Universe universe, final SClass rcvrClass, final SMethod invokable) { super(selector, universe, rcvrClass, invokable); }
-    public AsSymbolPrim(final AsSymbolPrim prim) { this(prim.selector, prim.universe, prim.rcvrClass, prim.invokable); }
+  public abstract static class AsSymbolPrim extends UnaryMessageNode {
+    public AsSymbolPrim(final SSymbol selector, final Universe universe) { super(selector, universe); }
+    public AsSymbolPrim(final AsSymbolPrim prim) { this(prim.selector, prim.universe); }
 
     @Specialization
     public SAbstractObject doSString(final SString receiver) {
@@ -38,9 +36,9 @@ public class StringPrims {
     }
   }
 
-  public abstract static class SubstringPrim extends TernaryMonomorphicNode {
-    public SubstringPrim(final SSymbol selector, final Universe universe, final SClass rcvrClass, final SMethod invokable) { super(selector, universe, rcvrClass, invokable); }
-    public SubstringPrim(final SubstringPrim prim) { this(prim.selector, prim.universe, prim.rcvrClass, prim.invokable); }
+  public abstract static class SubstringPrim extends TernaryMessageNode {
+    public SubstringPrim(final SSymbol selector, final Universe universe) { super(selector, universe); }
+    public SubstringPrim(final SubstringPrim prim) { this(prim.selector, prim.universe); }
 
     @Specialization
     public SAbstractObject doSString(final SString receiver, final SInteger start, final SInteger end) {

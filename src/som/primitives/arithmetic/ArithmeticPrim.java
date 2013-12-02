@@ -2,20 +2,18 @@ package som.primitives.arithmetic;
 
 import java.math.BigInteger;
 
-import som.interpreter.nodes.messages.BinaryMonomorphicNode;
+import som.interpreter.nodes.BinaryMessageNode;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBigInteger;
-import som.vmobjects.SClass;
 import som.vmobjects.SDouble;
 import som.vmobjects.SInteger;
-import som.vmobjects.SMethod;
 import som.vmobjects.SSymbol;
 
 
-public abstract class ArithmeticPrim extends BinaryMonomorphicNode {
+public abstract class ArithmeticPrim extends BinaryMessageNode {
 
-  protected ArithmeticPrim(final SSymbol selector, final Universe universe, final SClass rcvrClass, final SMethod invokable) { super(selector, universe, rcvrClass, invokable); }
+  protected ArithmeticPrim(final SSymbol selector, final Universe universe) { super(selector, universe); }
 
   protected SAbstractObject makeInt(final long result) {
     // Check with integer bounds and push:

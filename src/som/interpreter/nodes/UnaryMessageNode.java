@@ -1,18 +1,10 @@
 package som.interpreter.nodes;
 
-import som.interpreter.nodes.messages.UnaryMonomorphicNode;
 import som.vm.Universe;
-import som.vmobjects.SAbstractObject;
-import som.vmobjects.SClass;
-import som.vmobjects.SMethod;
 import som.vmobjects.SSymbol;
 
-import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.dsl.NodeChild;
-import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
-@NodeChild(value = "receiver", type = ExpressionNode.class)
 public abstract class UnaryMessageNode extends AbstractMessageNode {
 
   public UnaryMessageNode(final SSymbol selector, final Universe universe) {
@@ -23,7 +15,6 @@ public abstract class UnaryMessageNode extends AbstractMessageNode {
     this(node.selector, node.universe);
   }
 
-  public abstract ExpressionNode getReceiver();
   public abstract Object executeEvaluated(final VirtualFrame frame, final Object receiver);
 
   // TODO: want to use @Generic here!

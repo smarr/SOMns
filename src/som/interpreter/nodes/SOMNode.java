@@ -28,11 +28,16 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.NodeUtil;
 
 @TypeSystemReference(Types.class)
-public class SOMNode extends Node {
+public abstract class SOMNode extends Node {
 
   @Override
   public String toString() {
       return NodeUtil.printTreeToString(this);
   }
 
+  public Node createUninitialized() {
+    throw new RuntimeException("You need to implement createUnitialized for any node type." +
+        "Currently, there is somewhere an issue making the compiler complain " +
+        "on an abstract class that I need to implement this abstract method.");
+  }
 }

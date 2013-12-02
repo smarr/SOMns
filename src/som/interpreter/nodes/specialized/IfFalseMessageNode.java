@@ -1,11 +1,10 @@
 package som.interpreter.nodes.specialized;
 
+import som.interpreter.nodes.BinaryMessageNode;
 import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.messages.BinaryMonomorphicNode;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
-import som.vmobjects.SClass;
 import som.vmobjects.SMethod;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
@@ -15,9 +14,9 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 
-public abstract class IfFalseMessageNode extends BinaryMonomorphicNode  {
-  public IfFalseMessageNode(final SSymbol selector, final Universe universe, final SClass rcvrClass, final SMethod invokable) { super(selector, universe, rcvrClass, invokable); }
-  public IfFalseMessageNode(final IfFalseMessageNode node) { this(node.selector, node.universe, node.rcvrClass, node.invokable); }
+public abstract class IfFalseMessageNode extends BinaryMessageNode  {
+  public IfFalseMessageNode(final SSymbol selector, final Universe universe) { super(selector, universe); }
+  public IfFalseMessageNode(final IfFalseMessageNode node) { this(node.selector, node.universe); }
 
   /**
    * This is the case were we got a block as the argument. Need to actually

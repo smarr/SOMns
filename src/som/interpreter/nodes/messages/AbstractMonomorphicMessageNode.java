@@ -11,11 +11,9 @@ import som.vmobjects.SSymbol;
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.SlowPath;
-import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.nodes.InlinableCallSite;
 import com.oracle.truffle.api.nodes.Node;
 
-@NodeChild(value = "receiver", type = ExpressionNode.class)
 public abstract class AbstractMonomorphicMessageNode extends AbstractMessageNode implements InlinableCallSite {
   protected final SClass  rcvrClass;
   @CompilationFinal protected SMethod invokable; // we got a circular dependency with the creation of SMethod objects
@@ -38,10 +36,11 @@ public abstract class AbstractMonomorphicMessageNode extends AbstractMessageNode
     callCount = 0;
   }
 
+  @Override
   public abstract ExpressionNode getReceiver();
 
   public boolean isCachedReceiverClass(final SAbstractObject receiver) {
-    SClass currentRcvrClass = classOfReceiver(receiver, getReceiver());
+    SClass currentRcvrClass = classOfReceiver(receiver);
     return currentRcvrClass == rcvrClass;
   }
 
