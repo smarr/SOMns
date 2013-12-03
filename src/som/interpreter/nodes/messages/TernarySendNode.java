@@ -55,11 +55,6 @@ public abstract class TernarySendNode extends TernaryMessageNode {
     return executeEvaluated(frame, receiverValue, argument1, argument2);
   }
 
-  @Override
-  public ExpressionNode cloneForInlining() {
-    return create(selector, universe, receiverExpr, argumentsNodes);
-  }
-
   public static TernarySendNode create(final SSymbol selector,
       final Universe universe, final ExpressionNode receiver,
       final ExpressionNode[] arguments) {
@@ -89,11 +84,6 @@ public abstract class TernarySendNode extends TernaryMessageNode {
       } else {
         return nextNode.executeEvaluated(frame, receiver, argument1, argument2);
       }
-    }
-
-    @Override
-    public ExpressionNode cloneForInlining() {
-      throw new RuntimeException("This node should not be asked for inlining infos, I think. Because it is in a chain, and only the most general of these nodes is probably to be inlined so that it can specialize separately.");
     }
   }
 
@@ -158,7 +148,7 @@ public abstract class TernarySendNode extends TernaryMessageNode {
       DefaultCallTarget ct = (DefaultCallTarget) callTarget;
       Invokable invokable = (Invokable) ct.getRootNode();
       if (invokable.isAlwaysToBeInlined()) {
-        return invokable.methodCloneForInlining();
+        return invokable.inline(callTarget, selector);
       } else {
         return new InlinableSendNode(this, ct);
       }
@@ -191,7 +181,7 @@ public abstract class TernarySendNode extends TernaryMessageNode {
     @Override
     public Node getInlineTree() {
       Invokable root = (Invokable) inlinableCallTarget.getRootNode();
-      return root.methodCloneForInlining();
+      return root.getUninitializedBody();
     }
 
     @Override
@@ -200,7 +190,7 @@ public abstract class TernarySendNode extends TernaryMessageNode {
 
       ExpressionNode method = null;
       Invokable invokable = (Invokable) inlinableCallTarget.getRootNode();
-      method = invokable.methodCloneForInlining();
+      method = invokable.inline(inlinableCallTarget, selector);
       if (method != null) {
         replace(method);
         return true;
@@ -225,11 +215,6 @@ public abstract class TernarySendNode extends TernaryMessageNode {
           new SAbstractObject[] {(SAbstractObject) argument1,
                                  (SAbstractObject) argument2});
       return inlinableCallTarget.call(frame.pack(), args);
-    }
-
-    @Override
-    public ExpressionNode cloneForInlining() {
-      throw new RuntimeException("This node should not be asked for inlining infos, I think. Because it is in a chain, and only the most general of these nodes is probably to be inlined so that it can specialize separately.");
     }
   }
 

@@ -46,14 +46,4 @@ public class SequenceNode extends ExpressionNode {
     return last;
   }
 
-  @Override
-  public ExpressionNode cloneForInlining() {
-    ExpressionNode[] exprs = new ExpressionNode[expressions.length];
-
-    for (int i = 0; i < expressions.length; i++) {
-      exprs[i] = expressions[i].cloneForInlining();
-    }
-
-    return new SequenceNode(exprs);
-  }
 }

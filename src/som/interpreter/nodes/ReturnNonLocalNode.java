@@ -84,10 +84,4 @@ public class ReturnNonLocalNode extends ContextualNode {
       return self.sendEscapedBlock(block, universe, frame.pack());
     }
   }
-
-  @Override
-  public ExpressionNode cloneForInlining() {
-    return new ReturnNonLocalNode(expression.cloneForInlining(), contextLevel,
-        universe);
-  }
 }

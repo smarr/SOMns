@@ -1,14 +1,12 @@
 package som.interpreter.nodes.specialized;
 
 import som.interpreter.nodes.BinaryMessageNode;
-import som.interpreter.nodes.ExpressionNode;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
 import som.vmobjects.SMethod;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -58,10 +56,5 @@ public abstract class IfFalseMessageNode extends BinaryMessageNode  {
   public SAbstractObject doIfFalse(final VirtualFrame frame,
       final SObject receiver, final SAbstractObject argument) {
     return doIfFalse(frame, receiver == universe.falseObject, argument);
-  }
-
-  @Override
-  public ExpressionNode cloneForInlining() {
-    throw new NotImplementedException();
   }
 }

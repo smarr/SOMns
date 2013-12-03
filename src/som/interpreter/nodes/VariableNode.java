@@ -64,11 +64,6 @@ public abstract class VariableNode extends ContextualNode {
         return null;
       }
     }
-
-    @Override
-    public ExpressionNode cloneForInlining() {
-      return this;
-    }
   }
 
   public static class SelfReadNode extends VariableReadNode {

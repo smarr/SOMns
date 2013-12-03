@@ -43,18 +43,4 @@ public class ArgumentEvaluationNode extends ExpressionNode {
     return result;
   }
 
-  @Override
-  public ArgumentEvaluationNode cloneForInlining() {
-    if (arguments == null) {
-      return this;
-    }
-
-    ExpressionNode[] args = new ExpressionNode[arguments.length];
-
-    for (int i = 0; i < arguments.length; i++) {
-      args[i] = arguments[i].cloneForInlining();
-    }
-
-    return new ArgumentEvaluationNode(args);
-  }
 }

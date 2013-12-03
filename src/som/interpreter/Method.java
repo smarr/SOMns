@@ -21,16 +21,26 @@
  */
 package som.interpreter;
 
+import som.interpreter.nodes.ArgumentEvaluationNode;
+import som.interpreter.nodes.BinaryMessageNode;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.KeywordMessageNode;
+import som.interpreter.nodes.TernaryMessageNode;
+import som.interpreter.nodes.UnaryMessageNode;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
+import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.SourceSection;
+import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
+import com.oracle.truffle.api.nodes.InlinedCallSite;
+import com.oracle.truffle.api.nodes.NodeUtil;
 
 
 public class Method extends Invokable {
@@ -105,11 +115,6 @@ public class Method extends Invokable {
     return marker;
   }
 
-  @Override
-  public SAbstractObject executeInlined(final VirtualFrame frame, final ExpressionNode exp) {
-    FrameOnStackMarker marker = initializeFrame(frame);
-    return messageSendExecution(marker, frame, exp);
-  }
 
   @Override
   public String toString() {
@@ -120,12 +125,336 @@ public class Method extends Invokable {
   }
 
   @Override
-  public ExpressionNode methodCloneForInlining() {
-    return expressionOrSequence.cloneForInlining();
+  public boolean isAlwaysToBeInlined() {
+    return false; // TODO: determine "quick" methods based on the AST, just self nodes, just field reads, etc.
   }
 
   @Override
-  public boolean isAlwaysToBeInlined() {
-    return false; // TODO: determine "quick" methods based on the AST, just self nodes, just field reads, etc.
+  public ExpressionNode inline(final CallTarget inlinableCallTarget, final SSymbol selector) {
+    ExpressionNode body = NodeUtil.cloneNode(getUninitializedBody());
+    switch (argumentSlots.length) {
+      case 0:
+        return new UnaryInlinedMethod(selector, universe, body, null,
+            inlinableCallTarget, frameDescriptor, selfSlot, nonLocalReturnMarker,
+            temporarySlots);
+      case 1:
+        return new BinaryInlinedMethod(selector, universe, body, null, null,
+            inlinableCallTarget, frameDescriptor, selfSlot, nonLocalReturnMarker,
+            argumentSlots, temporarySlots);
+      case 2:
+        return new TernaryInlinedMethod(selector, universe, body, null, null,
+            inlinableCallTarget, frameDescriptor, selfSlot, nonLocalReturnMarker,
+            argumentSlots, temporarySlots);
+      default:
+        return new KeywordInlinedMethod(selector, universe, body, null, null,
+            inlinableCallTarget, frameDescriptor, selfSlot, nonLocalReturnMarker,
+            argumentSlots, temporarySlots);
+    }
+  }
+
+  private static final class UnaryInlinedMethod extends UnaryMessageNode implements InlinedCallSite {
+    @Child private ExpressionNode expressionOrSequence;
+    @Child private ExpressionNode receiver;
+
+    private final CallTarget      callTarget;
+    private final FrameDescriptor frameDescriptor;
+    private final FrameSlot       selfSlot;
+    private final FrameSlot       nonLocalReturnMarker;
+
+    @CompilationFinal private final FrameSlot[] temporarySlots;
+
+    UnaryInlinedMethod(final SSymbol selector, final Universe universe,
+        final ExpressionNode msgBody, final ExpressionNode receiver,
+        final CallTarget callTarget, final FrameDescriptor frameDescriptor,
+        final FrameSlot selfSlot, final FrameSlot nonLocalReturnMarker,
+        final FrameSlot[] temporarySlots) {
+      super(selector, universe);
+      this.expressionOrSequence = adoptChild(msgBody);
+      this.callTarget           = callTarget;
+      this.frameDescriptor      = frameDescriptor;
+      this.selfSlot             = selfSlot;
+      this.nonLocalReturnMarker = nonLocalReturnMarker;
+      this.temporarySlots       = temporarySlots;
+    }
+
+    @ExplodeLoop
+    private FrameOnStackMarker initializeFrame(final VirtualFrame frame) {
+      frame.setObject(selfSlot, Arguments.get(frame).getSelf());
+
+      final FrameOnStackMarker marker = new FrameOnStackMarker();
+      frame.setObject(nonLocalReturnMarker, marker);
+
+      for (int i = 0; i < temporarySlots.length; i++) {
+        frame.setObject(temporarySlots[i], universe.nilObject);
+      }
+      return marker;
+    }
+
+    @Override
+    public Object executeGeneric(final VirtualFrame frame) {
+      Object rcvr = receiver.executeGeneric(frame);
+      return executeEvaluated(frame, rcvr);
+    }
+
+    @Override
+    public Object executeEvaluated(final VirtualFrame frame, final Object receiver) {
+      Arguments args = new Arguments((SAbstractObject) receiver, noArgs);
+      VirtualFrame childFrame = Truffle.getRuntime().createVirtualFrame(frame.pack(), args, frameDescriptor);
+      final FrameOnStackMarker marker = initializeFrame(childFrame);
+      return messageSendExecution(marker, childFrame, expressionOrSequence);
+    }
+
+    @Override
+    public CallTarget getCallTarget() {
+      return callTarget;
+    }
+
+    @Override
+    public ExpressionNode getReceiver() {
+      return receiver;
+    }
+  }
+
+  private static final class BinaryInlinedMethod extends BinaryMessageNode implements InlinedCallSite {
+    @Child    private ExpressionNode   expressionOrSequence;
+    @Child    private ExpressionNode   receiver;
+    @Children private ExpressionNode[] arguments;
+
+    private final CallTarget      callTarget;
+    private final FrameDescriptor frameDescriptor;
+    private final FrameSlot       selfSlot;
+    private final FrameSlot       nonLocalReturnMarker;
+
+    @CompilationFinal private final FrameSlot[] argumentSlots;
+    @CompilationFinal private final FrameSlot[] temporarySlots;
+
+    BinaryInlinedMethod(final SSymbol selector, final Universe universe,
+        final ExpressionNode msgBody, final ExpressionNode receiver,
+        final ExpressionNode[] arguments,
+        final CallTarget callTarget, final FrameDescriptor frameDescriptor,
+        final FrameSlot selfSlot, final FrameSlot nonLocalReturnMarker,
+        final FrameSlot[] argumentSlots,
+        final FrameSlot[] temporarySlots) {
+      super(selector, universe);
+      this.expressionOrSequence = adoptChild(msgBody);
+      this.callTarget           = callTarget;
+      this.frameDescriptor      = frameDescriptor;
+      this.selfSlot             = selfSlot;
+      this.nonLocalReturnMarker = nonLocalReturnMarker;
+      this.argumentSlots        = argumentSlots;
+      this.temporarySlots       = temporarySlots;
+      this.arguments            = arguments;
+    }
+
+    @ExplodeLoop
+    private FrameOnStackMarker initializeFrame(final VirtualFrame frame) {
+      frame.setObject(selfSlot, Arguments.get(frame).getSelf());
+
+      final FrameOnStackMarker marker = new FrameOnStackMarker();
+      frame.setObject(nonLocalReturnMarker, marker);
+
+      Arguments args = Arguments.get(frame);
+      frame.setObject(argumentSlots[0], args.getArgument(0));
+
+      for (int i = 0; i < temporarySlots.length; i++) {
+        frame.setObject(temporarySlots[i], universe.nilObject);
+      }
+      return marker;
+    }
+
+    @Override
+    public Object executeGeneric(final VirtualFrame frame) {
+      Object rcvr = receiver.executeGeneric(frame);
+      Object arg  = arguments[0].executeGeneric(frame);
+      return executeEvaluated(frame, rcvr, arg);
+    }
+
+    @Override
+    public Object executeEvaluated(final VirtualFrame frame, final Object receiver, final Object argument) {
+      Arguments args = new Arguments((SAbstractObject) receiver, new SAbstractObject[] {(SAbstractObject) argument});
+      VirtualFrame childFrame = Truffle.getRuntime().createVirtualFrame(frame.pack(), args, frameDescriptor);
+      final FrameOnStackMarker marker = initializeFrame(childFrame);
+      return messageSendExecution(marker, childFrame, expressionOrSequence);
+    }
+
+    @Override
+    public CallTarget getCallTarget() {
+      return callTarget;
+    }
+
+    @Override
+    public ExpressionNode getReceiver() {
+      return receiver;
+    }
+
+    @Override
+    public ExpressionNode[] getArguments() {
+      return arguments;
+    }
+  }
+
+  private static final class TernaryInlinedMethod extends TernaryMessageNode implements InlinedCallSite {
+    @Child    private ExpressionNode   expressionOrSequence;
+    @Child    private ExpressionNode   receiver;
+    @Children private ExpressionNode[] arguments;
+
+    private final CallTarget      callTarget;
+    private final FrameDescriptor frameDescriptor;
+    private final FrameSlot       selfSlot;
+    private final FrameSlot       nonLocalReturnMarker;
+
+    @CompilationFinal private final FrameSlot[] argumentSlots;
+    @CompilationFinal private final FrameSlot[] temporarySlots;
+
+    TernaryInlinedMethod(final SSymbol selector, final Universe universe,
+        final ExpressionNode msgBody, final ExpressionNode receiver,
+        final ExpressionNode[] arguments,
+        final CallTarget callTarget, final FrameDescriptor frameDescriptor,
+        final FrameSlot selfSlot, final FrameSlot nonLocalReturnMarker,
+        final FrameSlot[] argumentSlots,
+        final FrameSlot[] temporarySlots) {
+      super(selector, universe);
+      this.expressionOrSequence = adoptChild(msgBody);
+      this.callTarget           = callTarget;
+      this.frameDescriptor      = frameDescriptor;
+      this.selfSlot             = selfSlot;
+      this.nonLocalReturnMarker = nonLocalReturnMarker;
+      this.argumentSlots        = argumentSlots;
+      this.temporarySlots       = temporarySlots;
+      this.arguments            = arguments;
+    }
+
+    @ExplodeLoop
+    private FrameOnStackMarker initializeFrame(final VirtualFrame frame) {
+      frame.setObject(selfSlot, Arguments.get(frame).getSelf());
+
+      final FrameOnStackMarker marker = new FrameOnStackMarker();
+      frame.setObject(nonLocalReturnMarker, marker);
+
+      Arguments args = Arguments.get(frame);
+      frame.setObject(argumentSlots[0], args.getArgument(0));
+      frame.setObject(argumentSlots[1], args.getArgument(1));
+
+      for (int i = 0; i < temporarySlots.length; i++) {
+        frame.setObject(temporarySlots[i], universe.nilObject);
+      }
+      return marker;
+    }
+
+    @Override
+    public Object executeGeneric(final VirtualFrame frame) {
+      Object rcvr = receiver.executeGeneric(frame);
+      Object arg1 = arguments[0].executeGeneric(frame);
+      Object arg2 = arguments[1].executeGeneric(frame);
+      return executeEvaluated(frame, rcvr, arg1, arg2);
+    }
+
+    @Override
+    public Object executeEvaluated(final VirtualFrame frame, final Object receiver, final Object arg1, final Object arg2) {
+      Arguments args = new Arguments((SAbstractObject) receiver, new SAbstractObject[] {(SAbstractObject) arg1, (SAbstractObject) arg2});
+      VirtualFrame childFrame = Truffle.getRuntime().createVirtualFrame(frame.pack(), args, frameDescriptor);
+      final FrameOnStackMarker marker = initializeFrame(childFrame);
+      return messageSendExecution(marker, childFrame, expressionOrSequence);
+    }
+
+    @Override
+    public CallTarget getCallTarget() {
+      return callTarget;
+    }
+
+    @Override
+    public ExpressionNode getReceiver() {
+      return receiver;
+    }
+
+    @Override
+    public ExpressionNode[] getArguments() {
+      return arguments;
+    }
+  }
+
+  private static final class KeywordInlinedMethod extends KeywordMessageNode implements InlinedCallSite {
+    @Child    private ExpressionNode   expressionOrSequence;
+    @Child    private ExpressionNode   receiver;
+    @Children private ExpressionNode[] arguments;
+
+    private final CallTarget      callTarget;
+    private final FrameDescriptor frameDescriptor;
+    private final FrameSlot       selfSlot;
+    private final FrameSlot       nonLocalReturnMarker;
+
+    @CompilationFinal private final FrameSlot[] argumentSlots;
+    @CompilationFinal private final FrameSlot[] temporarySlots;
+
+    KeywordInlinedMethod(final SSymbol selector, final Universe universe,
+        final ExpressionNode msgBody, final ExpressionNode receiver,
+        final ExpressionNode[] arguments,
+        final CallTarget callTarget, final FrameDescriptor frameDescriptor,
+        final FrameSlot selfSlot, final FrameSlot nonLocalReturnMarker,
+        final FrameSlot[] argumentSlots,
+        final FrameSlot[] temporarySlots) {
+      super(selector, universe);
+      this.expressionOrSequence = adoptChild(msgBody);
+      this.callTarget           = callTarget;
+      this.frameDescriptor      = frameDescriptor;
+      this.selfSlot             = selfSlot;
+      this.nonLocalReturnMarker = nonLocalReturnMarker;
+      this.argumentSlots        = argumentSlots;
+      this.temporarySlots       = temporarySlots;
+      this.arguments            = arguments;
+    }
+
+    @ExplodeLoop
+    private FrameOnStackMarker initializeFrame(final VirtualFrame frame) {
+      frame.setObject(selfSlot, Arguments.get(frame).getSelf());
+
+      final FrameOnStackMarker marker = new FrameOnStackMarker();
+      frame.setObject(nonLocalReturnMarker, marker);
+
+      Arguments args = Arguments.get(frame);
+      for (int i = 0; i < argumentSlots.length; i++) {
+        frame.setObject(argumentSlots[i], args.getArgument(i));
+      }
+
+      for (int i = 0; i < temporarySlots.length; i++) {
+        frame.setObject(temporarySlots[i], universe.nilObject);
+      }
+      return marker;
+    }
+
+    @ExplodeLoop
+    @Override
+    public Object executeGeneric(final VirtualFrame frame) {
+      Object rcvr = receiver.executeGeneric(frame);
+
+      Object[] args = new Object[arguments.length];
+      for (int i = 0; i < arguments.length; i++) {
+        args[i] = arguments[i].executeGeneric(frame);
+      }
+      return executeEvaluated(frame, rcvr, args);
+    }
+
+    @Override
+    public Object executeEvaluated(final VirtualFrame frame, final Object receiver, final Object[] arguments) {
+      Arguments args = new Arguments((SAbstractObject) receiver, (SAbstractObject[]) arguments);
+      VirtualFrame childFrame = Truffle.getRuntime().createVirtualFrame(frame.pack(), args, frameDescriptor);
+      final FrameOnStackMarker marker = initializeFrame(childFrame);
+      return messageSendExecution(marker, childFrame, expressionOrSequence);
+    }
+
+    @Override
+    public CallTarget getCallTarget() {
+      return callTarget;
+    }
+
+    @Override
+    public ExpressionNode getReceiver() {
+      return receiver;
+    }
+
+    @Override
+    public ArgumentEvaluationNode getArguments() {
+      return new ArgumentEvaluationNode(arguments);
+    }
   }
 }

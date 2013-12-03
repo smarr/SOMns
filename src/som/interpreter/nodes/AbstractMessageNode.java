@@ -78,11 +78,6 @@ public abstract class AbstractMessageNode extends ExpressionNode {
     }
   }
 
-  @Override
-  public ExpressionNode cloneForInlining() {
-    return (ExpressionNode) createUninitialized();
-  }
-
   protected static final SAbstractObject[] noArgs = new SAbstractObject[0];
 
   public static final int PriorityMonomorphicCase = 9999;

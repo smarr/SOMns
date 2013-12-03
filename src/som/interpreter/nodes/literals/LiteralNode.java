@@ -23,10 +23,4 @@ package som.interpreter.nodes.literals;
 
 import som.interpreter.nodes.ExpressionNode;
 
-public abstract class LiteralNode extends ExpressionNode {
-
-  @Override
-  public ExpressionNode cloneForInlining() {
-    return this;
-  }
-}
+public abstract class LiteralNode extends ExpressionNode {}

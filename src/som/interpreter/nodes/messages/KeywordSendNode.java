@@ -55,11 +55,6 @@ public abstract class KeywordSendNode extends KeywordMessageNode {
     return executeEvaluated(frame, receiverValue, args);
   }
 
-  @Override
-  public ExpressionNode cloneForInlining() {
-    return create(selector, universe, receiverExpr, argumentsNode);
-  }
-
   public static KeywordSendNode create(final SSymbol selector,
       final Universe universe, final ExpressionNode receiver,
       final ArgumentEvaluationNode arguments) {
@@ -89,11 +84,6 @@ public abstract class KeywordSendNode extends KeywordMessageNode {
       } else {
         return nextNode.executeEvaluated(frame, receiver, arguments);
       }
-    }
-
-    @Override
-    public ExpressionNode cloneForInlining() {
-      throw new RuntimeException("This node should not be asked for inlining infos, I think. Because it is in a chain, and only the most general of these nodes is probably to be inlined so that it can specialize separately.");
     }
   }
 
@@ -157,7 +147,7 @@ public abstract class KeywordSendNode extends KeywordMessageNode {
       DefaultCallTarget ct = (DefaultCallTarget) callTarget;
       Invokable invokable = (Invokable) ct.getRootNode();
       if (invokable.isAlwaysToBeInlined()) {
-        return invokable.methodCloneForInlining();
+        return invokable.inline(callTarget, selector);
       } else {
         return new InlinableSendNode(this, ct);
       }
@@ -190,7 +180,7 @@ public abstract class KeywordSendNode extends KeywordMessageNode {
     @Override
     public Node getInlineTree() {
       Invokable root = (Invokable) inlinableCallTarget.getRootNode();
-      return root.methodCloneForInlining();
+      return root.getUninitializedBody();
     }
 
     @Override
@@ -199,7 +189,7 @@ public abstract class KeywordSendNode extends KeywordMessageNode {
 
       ExpressionNode method = null;
       Invokable invokable = (Invokable) inlinableCallTarget.getRootNode();
-      method = invokable.methodCloneForInlining();
+      method = invokable.inline(inlinableCallTarget, selector);
       if (method != null) {
         replace(method);
         return true;
@@ -222,11 +212,6 @@ public abstract class KeywordSendNode extends KeywordMessageNode {
 
       Arguments args = new Arguments((SAbstractObject) receiver, (SAbstractObject[]) arguments);
       return inlinableCallTarget.call(frame.pack(), args);
-    }
-
-    @Override
-    public ExpressionNode cloneForInlining() {
-      throw new RuntimeException("This node should not be asked for inlining infos, I think. Because it is in a chain, and only the most general of these nodes is probably to be inlined so that it can specialize separately.");
     }
   }
 

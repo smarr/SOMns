@@ -4,7 +4,6 @@ import som.interpreter.nodes.AbstractMessageNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.vm.Universe;
 import som.vmobjects.SSymbol;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 
@@ -31,11 +30,6 @@ public class EmptyPrim extends AbstractMessageNode {
     Universe.println("Warning: undefined primitive "
         + this.selector.getString() + " called");
     return null;
-  }
-
-  @Override
-  public ExpressionNode cloneForInlining() {
-    throw new NotImplementedException();
   }
 
   public static EmptyPrim create(final SSymbol selector, final Universe universe,

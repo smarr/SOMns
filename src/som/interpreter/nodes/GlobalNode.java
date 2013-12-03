@@ -69,9 +69,4 @@ public abstract class GlobalNode extends ExpressionNode {
       }
     }
   }
-
-  @Override
-  public ExpressionNode cloneForInlining() {
-    return this;
-  }
 }

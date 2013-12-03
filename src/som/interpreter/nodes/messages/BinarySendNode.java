@@ -54,11 +54,6 @@ public abstract class BinarySendNode extends BinaryMessageNode {
     return executeEvaluated(frame, receiverValue, argument);
   }
 
-  @Override
-  public ExpressionNode cloneForInlining() {
-    return create(selector, universe, receiverExpr, argumentsNodes);
-  }
-
   public static BinarySendNode create(final SSymbol selector,
       final Universe universe, final ExpressionNode receiver,
       final ExpressionNode[] arguments) {
@@ -88,11 +83,6 @@ public abstract class BinarySendNode extends BinaryMessageNode {
       } else {
         return nextNode.executeEvaluated(frame, receiver, argument);
       }
-    }
-
-    @Override
-    public ExpressionNode cloneForInlining() {
-      throw new RuntimeException("This node should not be asked for inlining infos, I think. Because it is in a chain, and only the most general of these nodes is probably to be inlined so that it can specialize separately.");
     }
   }
 
@@ -156,7 +146,7 @@ public abstract class BinarySendNode extends BinaryMessageNode {
       DefaultCallTarget ct = (DefaultCallTarget) callTarget;
       Invokable invokable = (Invokable) ct.getRootNode();
       if (invokable.isAlwaysToBeInlined()) {
-        return invokable.methodCloneForInlining();
+        return invokable.inline(callTarget, selector);
       } else {
         return new InlinableSendNode(this, ct);
       }
@@ -189,7 +179,7 @@ public abstract class BinarySendNode extends BinaryMessageNode {
     @Override
     public Node getInlineTree() {
       Invokable root = (Invokable) inlinableCallTarget.getRootNode();
-      return root.methodCloneForInlining();
+      return root.getUninitializedBody();
     }
 
     @Override
@@ -198,7 +188,7 @@ public abstract class BinarySendNode extends BinaryMessageNode {
 
       ExpressionNode method = null;
       Invokable invokable = (Invokable) inlinableCallTarget.getRootNode();
-      method = invokable.methodCloneForInlining();
+      method = invokable.inline(inlinableCallTarget, selector);
       if (method != null) {
         replace(method);
         return true;
@@ -222,11 +212,6 @@ public abstract class BinarySendNode extends BinaryMessageNode {
       Arguments args = new Arguments((SAbstractObject) receiver,
           new SAbstractObject[] {(SAbstractObject) argument});
       return inlinableCallTarget.call(frame.pack(), args);
-    }
-
-    @Override
-    public ExpressionNode cloneForInlining() {
-      throw new RuntimeException("This node should not be asked for inlining infos, I think. Because it is in a chain, and only the most general of these nodes is probably to be inlined so that it can specialize separately.");
     }
   }
 

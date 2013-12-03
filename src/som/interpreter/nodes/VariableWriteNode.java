@@ -65,12 +65,4 @@ public class VariableWriteNode extends VariableNode {
 
       return result;
     }
-
-    @Override
-    public ExpressionNode cloneForInlining() {
-      // TODO: how to do the inline cloning, just via a copy constructor?
-      //       or via the factory, I suppose?
-      // throw new RuntimeException("Not sure how to do that yet");
-      return new VariableWriteNode(slot, contextLevel, exp.cloneForInlining());
-    }
 }

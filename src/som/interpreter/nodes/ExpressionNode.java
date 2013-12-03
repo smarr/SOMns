@@ -115,7 +115,6 @@ public abstract class ExpressionNode extends SOMNode {
     return executeGeneric(frame);
   }
 
-  public abstract ExpressionNode cloneForInlining();
 
 ////  @SuppressWarnings("unused")
 //  public SOMObject executeEvaluated(VirtualFrame frame, java.lang.Object val1) {
