@@ -32,10 +32,10 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 
 public abstract class GlobalNode extends ExpressionNode {
 
-  protected final SSymbol    globalName;
-  protected final Universe  universe;
+  protected final SSymbol  globalName;
+  protected final Universe universe;
 
-  public GlobalNode(final SSymbol globalName, final Universe  universe) {
+  public GlobalNode(final SSymbol globalName, final Universe universe) {
     this.globalName = globalName;
     this.universe   = universe;
   }
