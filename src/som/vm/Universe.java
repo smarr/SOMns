@@ -85,7 +85,7 @@ public class Universe {
 
   public Universe() {
     this.truffleRuntime = Truffle.getRuntime();
-    this.symbolTable  = new SymbolTable();
+    this.symbolTable  = new HashMap<>();
     this.avoidExit    = false;
     this.lastExitCode = 0;
 
@@ -96,7 +96,7 @@ public class Universe {
 
   public Universe(final boolean avoidExit) {
     this.truffleRuntime = Truffle.getRuntime();
-    this.symbolTable  = new SymbolTable();
+    this.symbolTable  = new HashMap<>();
     this.avoidExit    = avoidExit;
     this.lastExitCode = 0;
 
@@ -390,7 +390,7 @@ public class Universe {
 
   public SSymbol symbolFor(final String string) {
     // Lookup the symbol in the symbol table
-    SSymbol result = symbolTable.lookup(string);
+    SSymbol result = symbolTable.get(string);
     if (result != null) { return result; }
 
     // Create a new symbol and return it
@@ -523,7 +523,7 @@ public class Universe {
     SSymbol result = new SSymbol(string);
 
     // Insert the new symbol into the symbol table
-    symbolTable.insert(result);
+    symbolTable.put(string, result);
 
     // Return the freshly allocated symbol
     return result;
@@ -758,7 +758,7 @@ public class Universe {
 
   private final TruffleRuntime                  truffleRuntime;
 
-  private final SymbolTable                     symbolTable;
+  private final HashMap<String, SSymbol>        symbolTable;
 
   // TODO: this is not how it is supposed to be... it is just a hack to cope
   //       with the use of system.exit in SOM to enable testing
