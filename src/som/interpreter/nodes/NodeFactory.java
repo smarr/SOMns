@@ -48,7 +48,7 @@ public final class NodeFactory {
   }
 
   public static BinaryMessageNode createBinaryMessageNode(final SSymbol selector, final Universe universe, final ExpressionNode receiver, final ExpressionNode arg) {
-    return BinarySendNode.create(selector, universe, receiver, new ExpressionNode[] {arg});
+    return BinarySendNode.create(selector, universe, receiver, arg);
   }
 
   public static AbstractMessageNode createMessageNode(final SSymbol selector, final Universe universe, final ExpressionNode receiver, final ExpressionNode[] arguments) {
@@ -56,9 +56,9 @@ public final class NodeFactory {
       case 0:
         return createUnaryMessageNode(selector, universe, receiver);
       case 1:
-        return BinarySendNode.create(selector, universe, receiver, arguments);
+        return BinarySendNode.create(selector, universe, receiver, arguments[0]);
       case 2:
-        return TernarySendNode.create(selector, universe, receiver, arguments);
+        return TernarySendNode.create(selector, universe, receiver, arguments[0], arguments[1]);
       default:
         ArgumentEvaluationNode args = new ArgumentEvaluationNode(arguments);
         return KeywordSendNode.create(selector, universe, receiver, args);

@@ -79,10 +79,10 @@ public abstract class Primitives {
           new SelfReadNode(mgen.getSelfSlot(), 0));
     } else if (numArgs == 1) {
       primNode = nodeFactory.createNode(signature, universe,
-          new SelfReadNode(mgen.getSelfSlot(), 0), args);
+          new SelfReadNode(mgen.getSelfSlot(), 0), args[0]);
     } else if (numArgs == 2) {
       primNode = nodeFactory.createNode(signature, universe,
-          new SelfReadNode(mgen.getSelfSlot(), 0), args);
+          new SelfReadNode(mgen.getSelfSlot(), 0), args[0], args[1]);
     } else {
       ArgumentEvaluationNode argEvalNode = new ArgumentEvaluationNode(args);
       primNode = nodeFactory.createNode(signature, universe,

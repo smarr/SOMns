@@ -22,19 +22,19 @@ import com.oracle.truffle.api.nodes.Node;
 
 public abstract class BinarySendNode extends BinaryMessageNode {
 
-  @Child    protected ExpressionNode   receiverExpr;
-  @Children protected ExpressionNode[] argumentsNodes;
+  @Child protected ExpressionNode   receiverExpr;
+  @Child protected ExpressionNode   argumentNode;
 
   private BinarySendNode(final SSymbol selector,
       final Universe universe, final ExpressionNode receiver,
-      final ExpressionNode[] arguments) {
+      final ExpressionNode argument) {
     super(selector, universe);
-    this.receiverExpr   = adoptChild(receiver);
-    this.argumentsNodes = adoptChildren(arguments);
+    this.receiverExpr = adoptChild(receiver);
+    this.argumentNode = adoptChild(argument);
   }
 
   private BinarySendNode(final BinarySendNode node) {
-    this(node.selector, node.universe, node.receiverExpr, node.argumentsNodes);
+    this(node.selector, node.universe, node.receiverExpr, node.argumentNode);
   }
 
   @Override
@@ -43,21 +43,21 @@ public abstract class BinarySendNode extends BinaryMessageNode {
   }
 
   @Override
-  public ExpressionNode[] getArguments() {
-    return argumentsNodes;
+  public ExpressionNode getArgument() {
+    return argumentNode;
   }
 
   @Override
   public final Object executeGeneric(final VirtualFrame frame) {
     Object receiverValue = receiverExpr.executeGeneric(frame);
-    Object argument = argumentsNodes[0].executeGeneric(frame);
+    Object argument = argumentNode.executeGeneric(frame);
     return executeEvaluated(frame, receiverValue, argument);
   }
 
   public static BinarySendNode create(final SSymbol selector,
       final Universe universe, final ExpressionNode receiver,
-      final ExpressionNode[] arguments) {
-    return new UninitializedSendNode(selector, universe, receiver, arguments, 0);
+      final ExpressionNode argument) {
+    return new UninitializedSendNode(selector, universe, receiver, argument, 0);
   }
 
   private static final class CachedSendNode extends BinarySendNode {
@@ -91,9 +91,9 @@ public abstract class BinarySendNode extends BinaryMessageNode {
     protected final int depth;
 
     UninitializedSendNode(final SSymbol selector, final Universe universe,
-        final ExpressionNode receiver, final ExpressionNode[] arguments,
+        final ExpressionNode receiver, final ExpressionNode argument,
         final int depth) {
-      super(selector, universe, receiver, arguments);
+      super(selector, universe, receiver, argument);
       this.depth = depth;
     }
 

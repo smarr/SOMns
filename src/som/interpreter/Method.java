@@ -142,7 +142,7 @@ public class Method extends Invokable {
             inlinableCallTarget, frameDescriptor, selfSlot, nonLocalReturnMarker,
             argumentSlots, temporarySlots);
       case 2:
-        return new TernaryInlinedMethod(selector, universe, body, null, null,
+        return new TernaryInlinedMethod(selector, universe, body, null, null, null,
             inlinableCallTarget, frameDescriptor, selfSlot, nonLocalReturnMarker,
             argumentSlots, temporarySlots);
       default:
@@ -216,9 +216,9 @@ public class Method extends Invokable {
   }
 
   private static final class BinaryInlinedMethod extends BinaryMessageNode implements InlinedCallSite {
-    @Child    private ExpressionNode   expressionOrSequence;
-    @Child    private ExpressionNode   receiver;
-    @Children private ExpressionNode[] arguments;
+    @Child private ExpressionNode expressionOrSequence;
+    @Child private ExpressionNode receiver;
+    @Child private ExpressionNode argument;
 
     private final CallTarget      callTarget;
     private final FrameDescriptor frameDescriptor;
@@ -230,8 +230,8 @@ public class Method extends Invokable {
 
     BinaryInlinedMethod(final SSymbol selector, final Universe universe,
         final ExpressionNode msgBody, final ExpressionNode receiver,
-        final ExpressionNode[] arguments,
-        final CallTarget callTarget, final FrameDescriptor frameDescriptor,
+        final ExpressionNode argument, final CallTarget callTarget,
+        final FrameDescriptor frameDescriptor,
         final FrameSlot selfSlot, final FrameSlot nonLocalReturnMarker,
         final FrameSlot[] argumentSlots,
         final FrameSlot[] temporarySlots) {
@@ -243,7 +243,7 @@ public class Method extends Invokable {
       this.nonLocalReturnMarker = nonLocalReturnMarker;
       this.argumentSlots        = argumentSlots;
       this.temporarySlots       = temporarySlots;
-      this.arguments            = arguments;
+      this.argument             = argument;
     }
 
     @ExplodeLoop
@@ -265,7 +265,7 @@ public class Method extends Invokable {
     @Override
     public Object executeGeneric(final VirtualFrame frame) {
       Object rcvr = receiver.executeGeneric(frame);
-      Object arg  = arguments[0].executeGeneric(frame);
+      Object arg  = argument.executeGeneric(frame);
       return executeEvaluated(frame, rcvr, arg);
     }
 
@@ -288,15 +288,16 @@ public class Method extends Invokable {
     }
 
     @Override
-    public ExpressionNode[] getArguments() {
-      return arguments;
+    public ExpressionNode getArgument() {
+      return argument;
     }
   }
 
   private static final class TernaryInlinedMethod extends TernaryMessageNode implements InlinedCallSite {
-    @Child    private ExpressionNode   expressionOrSequence;
-    @Child    private ExpressionNode   receiver;
-    @Children private ExpressionNode[] arguments;
+    @Child private ExpressionNode expressionOrSequence;
+    @Child private ExpressionNode receiver;
+    @Child private ExpressionNode firstArg;
+    @Child private ExpressionNode secondArg;
 
     private final CallTarget      callTarget;
     private final FrameDescriptor frameDescriptor;
@@ -308,7 +309,7 @@ public class Method extends Invokable {
 
     TernaryInlinedMethod(final SSymbol selector, final Universe universe,
         final ExpressionNode msgBody, final ExpressionNode receiver,
-        final ExpressionNode[] arguments,
+        final ExpressionNode firstArg, final ExpressionNode secondArg,
         final CallTarget callTarget, final FrameDescriptor frameDescriptor,
         final FrameSlot selfSlot, final FrameSlot nonLocalReturnMarker,
         final FrameSlot[] argumentSlots,
@@ -321,7 +322,8 @@ public class Method extends Invokable {
       this.nonLocalReturnMarker = nonLocalReturnMarker;
       this.argumentSlots        = argumentSlots;
       this.temporarySlots       = temporarySlots;
-      this.arguments            = arguments;
+      this.firstArg             = firstArg;
+      this.secondArg            = secondArg;
     }
 
     @ExplodeLoop
@@ -344,8 +346,8 @@ public class Method extends Invokable {
     @Override
     public Object executeGeneric(final VirtualFrame frame) {
       Object rcvr = receiver.executeGeneric(frame);
-      Object arg1 = arguments[0].executeGeneric(frame);
-      Object arg2 = arguments[1].executeGeneric(frame);
+      Object arg1 = firstArg.executeGeneric(frame);
+      Object arg2 = secondArg.executeGeneric(frame);
       return executeEvaluated(frame, rcvr, arg1, arg2);
     }
 
@@ -368,8 +370,13 @@ public class Method extends Invokable {
     }
 
     @Override
-    public ExpressionNode[] getArguments() {
-      return arguments;
+    public ExpressionNode getFirstArg() {
+      return firstArg;
+    }
+
+    @Override
+    public ExpressionNode getSecondArg() {
+      return secondArg;
     }
   }
 

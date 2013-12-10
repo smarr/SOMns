@@ -6,8 +6,6 @@ import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
-//@NodeChild(value = "exp", type = ExpressionNode.class)
-//abstract
 public class VariableWriteNode extends VariableNode {
   @Child private ExpressionNode exp;
 

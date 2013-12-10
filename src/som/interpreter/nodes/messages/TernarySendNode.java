@@ -22,19 +22,21 @@ import com.oracle.truffle.api.nodes.Node;
 
 public abstract class TernarySendNode extends TernaryMessageNode {
 
-  @Child    protected ExpressionNode   receiverExpr;
-  @Children protected ExpressionNode[] argumentsNodes;
+  @Child protected ExpressionNode receiverExpr;
+  @Child protected ExpressionNode firstArgNode;
+  @Child protected ExpressionNode secondArgNode;
 
   private TernarySendNode(final SSymbol selector,
       final Universe universe, final ExpressionNode receiver,
-      final ExpressionNode[] arguments) {
+      final ExpressionNode firstArg, final ExpressionNode secondArg) {
     super(selector, universe);
-    this.receiverExpr   = adoptChild(receiver);
-    this.argumentsNodes = adoptChildren(arguments);
+    this.receiverExpr  = adoptChild(receiver);
+    this.firstArgNode  = adoptChild(firstArg);
+    this.secondArgNode = adoptChild(secondArg);
   }
 
   private TernarySendNode(final TernarySendNode node) {
-    this(node.selector, node.universe, node.receiverExpr, node.argumentsNodes);
+    this(node.selector, node.universe, node.receiverExpr, node.firstArgNode, node.secondArgNode);
   }
 
   @Override
@@ -43,22 +45,27 @@ public abstract class TernarySendNode extends TernaryMessageNode {
   }
 
   @Override
-  public ExpressionNode[] getArguments() {
-    return argumentsNodes;
+  public ExpressionNode getFirstArg() {
+    return firstArgNode;
+  }
+
+  @Override
+  public ExpressionNode getSecondArg() {
+    return secondArgNode;
   }
 
   @Override
   public final Object executeGeneric(final VirtualFrame frame) {
     Object receiverValue = receiverExpr.executeGeneric(frame);
-    Object argument1 = argumentsNodes[0].executeGeneric(frame);
-    Object argument2 = argumentsNodes[1].executeGeneric(frame);
+    Object argument1 = firstArgNode.executeGeneric(frame);
+    Object argument2 = secondArgNode.executeGeneric(frame);
     return executeEvaluated(frame, receiverValue, argument1, argument2);
   }
 
   public static TernarySendNode create(final SSymbol selector,
       final Universe universe, final ExpressionNode receiver,
-      final ExpressionNode[] arguments) {
-    return new UninitializedSendNode(selector, universe, receiver, arguments, 0);
+      final ExpressionNode firstArg, final ExpressionNode secondArg) {
+    return new UninitializedSendNode(selector, universe, receiver, firstArg, secondArg, 0);
   }
 
   private static final class CachedSendNode extends TernarySendNode {
@@ -92,9 +99,9 @@ public abstract class TernarySendNode extends TernaryMessageNode {
     protected final int depth;
 
     UninitializedSendNode(final SSymbol selector, final Universe universe,
-        final ExpressionNode receiver, final ExpressionNode[] arguments,
-        final int depth) {
-      super(selector, universe, receiver, arguments);
+        final ExpressionNode receiver, final ExpressionNode firstArg,
+        final ExpressionNode secondArg, final int depth) {
+      super(selector, universe, receiver, firstArg, secondArg);
       this.depth = depth;
     }
 
