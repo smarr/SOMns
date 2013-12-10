@@ -24,9 +24,11 @@ package som.interpreter;
 import som.interpreter.nodes.ArgumentEvaluationNode;
 import som.interpreter.nodes.BinaryMessageNode;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.GlobalNode.GlobalReadNode;
 import som.interpreter.nodes.KeywordMessageNode;
 import som.interpreter.nodes.TernaryMessageNode;
 import som.interpreter.nodes.UnaryMessageNode;
+import som.interpreter.nodes.literals.LiteralNode;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SSymbol;
@@ -126,12 +128,30 @@ public class Method extends Invokable {
 
   @Override
   public boolean isAlwaysToBeInlined() {
+    if (expressionOrSequence instanceof LiteralNode) {
+      return true;
+    } else if (expressionOrSequence instanceof GlobalReadNode) {
+      return true;
+    }
     return false; // TODO: determine "quick" methods based on the AST, just self nodes, just field reads, etc.
   }
 
   @Override
   public ExpressionNode inline(final CallTarget inlinableCallTarget, final SSymbol selector) {
     ExpressionNode body = NodeUtil.cloneNode(getUninitializedBody());
+    if (isAlwaysToBeInlined()) {
+      switch (argumentSlots.length) {
+        case 0:
+          return new UnaryInlinedExpression(selector, universe, body, inlinableCallTarget);
+        case 1:
+          return new BinaryInlinedExpression(selector, universe, body, inlinableCallTarget);
+        case 2:
+          return new TernaryInlinedExpression(selector, universe, body, inlinableCallTarget);
+        default:
+          return new KeywordInlinedExpression(selector, universe, body, inlinableCallTarget);
+      }
+    }
+
     switch (argumentSlots.length) {
       case 0:
         return new UnaryInlinedMethod(selector, universe, body, null,
@@ -150,6 +170,28 @@ public class Method extends Invokable {
             inlinableCallTarget, frameDescriptor, selfSlot, nonLocalReturnMarker,
             argumentSlots, temporarySlots);
     }
+  }
+
+  private static final class UnaryInlinedExpression extends UnaryMessageNode implements InlinedCallSite {
+    @Child private ExpressionNode expression;
+
+    private final CallTarget callTarget;
+
+    UnaryInlinedExpression(final SSymbol selector, final Universe universe,
+        final ExpressionNode body, final CallTarget callTarget) {
+      super(selector, universe);
+      this.expression = body;
+      this.callTarget = callTarget;
+    }
+
+    @Override
+    public Object executeEvaluated(final VirtualFrame frame, final Object receiver) {
+      return expression.executeGeneric(frame);
+    }
+
+    @Override public Object executeGeneric(final VirtualFrame frame) { return executeEvaluated(frame, null); }
+    @Override public CallTarget getCallTarget()   { return callTarget; }
+    @Override public ExpressionNode getReceiver() { return null; }
   }
 
   private static final class UnaryInlinedMethod extends UnaryMessageNode implements InlinedCallSite {
@@ -213,6 +255,29 @@ public class Method extends Invokable {
     public ExpressionNode getReceiver() {
       return receiver;
     }
+  }
+
+  private static final class BinaryInlinedExpression extends BinaryMessageNode implements InlinedCallSite {
+    @Child private ExpressionNode expression;
+
+    private final CallTarget callTarget;
+
+    BinaryInlinedExpression(final SSymbol selector, final Universe universe,
+        final ExpressionNode body, final CallTarget callTarget) {
+      super(selector, universe);
+      this.expression = body;
+      this.callTarget = callTarget;
+    }
+
+    @Override
+    public Object executeEvaluated(final VirtualFrame frame, final Object receiver, final Object argument) {
+      return expression.executeGeneric(frame);
+    }
+
+    @Override public Object executeGeneric(final VirtualFrame frame) { return executeEvaluated(frame, null, null); }
+    @Override public CallTarget getCallTarget()   { return callTarget; }
+    @Override public ExpressionNode getReceiver() { return null; }
+    @Override public ExpressionNode getArgument() { return null; }
   }
 
   private static final class BinaryInlinedMethod extends BinaryMessageNode implements InlinedCallSite {
@@ -291,6 +356,30 @@ public class Method extends Invokable {
     public ExpressionNode getArgument() {
       return argument;
     }
+  }
+
+  private static final class TernaryInlinedExpression extends TernaryMessageNode implements InlinedCallSite {
+    @Child private ExpressionNode expression;
+
+    private final CallTarget callTarget;
+
+    TernaryInlinedExpression(final SSymbol selector, final Universe universe,
+        final ExpressionNode body, final CallTarget callTarget) {
+      super(selector, universe);
+      this.expression = body;
+      this.callTarget = callTarget;
+    }
+
+    @Override
+    public Object executeEvaluated(final VirtualFrame frame, final Object receiver, final Object firstArg, final Object secondArg) {
+      return expression.executeGeneric(frame);
+    }
+
+    @Override public Object executeGeneric(final VirtualFrame frame) { return executeEvaluated(frame, null, null, null); }
+    @Override public CallTarget getCallTarget()   { return callTarget; }
+    @Override public ExpressionNode getReceiver() { return null; }
+    @Override public ExpressionNode getFirstArg() { return null; }
+    @Override public ExpressionNode getSecondArg() { return null; }
   }
 
   private static final class TernaryInlinedMethod extends TernaryMessageNode implements InlinedCallSite {
@@ -378,6 +467,29 @@ public class Method extends Invokable {
     public ExpressionNode getSecondArg() {
       return secondArg;
     }
+  }
+
+  private static final class KeywordInlinedExpression extends KeywordMessageNode implements InlinedCallSite {
+    @Child private ExpressionNode expression;
+
+    private final CallTarget callTarget;
+
+    KeywordInlinedExpression(final SSymbol selector, final Universe universe,
+        final ExpressionNode body, final CallTarget callTarget) {
+      super(selector, universe);
+      this.expression = body;
+      this.callTarget = callTarget;
+    }
+
+    @Override
+    public Object executeEvaluated(final VirtualFrame frame, final Object receiver, final Object[] arguments) {
+      return expression.executeGeneric(frame);
+    }
+
+    @Override public Object executeGeneric(final VirtualFrame frame) { return executeEvaluated(frame, null, null); }
+    @Override public CallTarget getCallTarget()   { return callTarget; }
+    @Override public ExpressionNode getReceiver() { return null; }
+    @Override public ArgumentEvaluationNode getArguments() { return null; }
   }
 
   private static final class KeywordInlinedMethod extends KeywordMessageNode implements InlinedCallSite {
