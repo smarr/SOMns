@@ -71,7 +71,7 @@ public class SBlock extends SAbstractObject {
 
   private static String computeSignatureString(final int numberOfArguments) {
     // Compute the signature string
-    java.lang.String signatureString = "value";
+    String signatureString = "value";
     if (numberOfArguments > 1) { signatureString += ":"; }
 
     // Add extra value: selector elements if necessary

@@ -25,6 +25,9 @@
 
 package som.vm;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
 import som.vmobjects.SMethod;
@@ -39,16 +42,15 @@ public class Shell {
   }
 
   public SAbstractObject start() {
-    java.io.BufferedReader in;
-    java.lang.String stmt;
+    BufferedReader in;
+    String stmt;
     int counter;
     SClass myClass;
     SObject myObject;
     SAbstractObject it;
 
     counter = 0;
-    in = new java.io.BufferedReader(new java.io.InputStreamReader(
-        java.lang.System.in));
+    in = new BufferedReader(new InputStreamReader(System.in));
     it = universe.nilObject;
 
     Universe.println("SOM Shell. Type \"quit\" to exit.\n");

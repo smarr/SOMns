@@ -27,7 +27,7 @@ public abstract class AsStringPrim extends UnaryMessageNode {
 
   @Specialization
   public Object doSDouble(final SDouble receiver) {
-    return universe.newString(java.lang.Double.toString(
+    return universe.newString(Double.toString(
         receiver.getEmbeddedDouble()));
   }
 

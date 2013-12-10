@@ -666,7 +666,7 @@ public class Parser {
   }
 
   private long literalInteger() {
-    long i = java.lang.Long.parseLong(text);
+    long i = Long.parseLong(text);
     expect(Integer);
     return i;
   }

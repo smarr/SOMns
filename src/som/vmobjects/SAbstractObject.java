@@ -10,11 +10,12 @@ public abstract class SAbstractObject {
   public abstract SClass getSOMClass(final Universe universe);
 
   @Override
-  public java.lang.String toString() {
+  public String toString() {
     return "a " + getSOMClass(Universe.current()).getName().getString();
   }
 
-  public SAbstractObject send(final java.lang.String selectorString, final SAbstractObject[] arguments,
+  public SAbstractObject send(final String selectorString,
+      final SAbstractObject[] arguments,
       final Universe universe, final PackedFrame frame) {
     // Turn the selector string into a selector
     SSymbol selector = universe.symbolFor(selectorString);

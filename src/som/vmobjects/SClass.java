@@ -211,7 +211,7 @@ public class SClass extends SObject {
     }
   }
 
-  public void setInstanceFields(final java.lang.String[] fields) {
+  public void setInstanceFields(final String[] fields) {
     // Allocate an array of the right size
     SArray instanceFields = universe.newArray(fields.length);
 
@@ -240,12 +240,11 @@ public class SClass extends SObject {
   public void loadPrimitives() {
     // Compute the class name of the Java(TM) class containing the
     // primitives
-    java.lang.String className = "som.primitives." + getName().getString()
-        + "Primitives";
+    String className = "som.primitives." + getName().getString() + "Primitives";
 
     // Try loading the primitives
     try {
-      java.lang.Class<?> primitivesClass = java.lang.Class.forName(className);
+      Class<?> primitivesClass = Class.forName(className);
       try {
         Constructor<?> ctor = primitivesClass.getConstructor(Universe.class);
         ((Primitives) ctor.newInstance(universe)).installPrimitivesIn(this);
@@ -259,7 +258,7 @@ public class SClass extends SObject {
   }
 
   @Override
-  public java.lang.String toString() {
+  public String toString() {
     return "Class(" + getName().getString() + ")";
   }
 

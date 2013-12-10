@@ -20,8 +20,7 @@ public abstract class DoublePrims  {
     @Specialization
     public SAbstractObject doSDouble(final SDouble receiver) {
       long result = Math.round(receiver.getEmbeddedDouble());
-      if (result > java.lang.Integer.MAX_VALUE
-          || result < java.lang.Integer.MIN_VALUE) {
+      if (result > Integer.MAX_VALUE || result < Integer.MIN_VALUE) {
         return universe.newBigInteger(result);
       } else {
         return universe.newInteger((int) result);

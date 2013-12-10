@@ -30,17 +30,17 @@ import som.vmobjects.SSymbol;
 
 public class SymbolTable {
 
-  public SSymbol lookup(java.lang.String string) {
+  public SSymbol lookup(final String string) {
     // Lookup the given string in the hash map
-    return (SSymbol) map.get(string);
+    return map.get(string);
   }
 
-  public void insert(SSymbol symbol) {
+  public void insert(final SSymbol symbol) {
     // Insert the given symbol into the hash map by associating the
     // symbol associated string to the symbol itself
     map.put(symbol.getString(), symbol);
   }
 
   // Private variable holding the hash map representing the symbol table
-  private HashMap<java.lang.String, SSymbol> map = new HashMap<java.lang.String, SSymbol>();
+  private HashMap<String, SSymbol> map = new HashMap<String, SSymbol>();
 }

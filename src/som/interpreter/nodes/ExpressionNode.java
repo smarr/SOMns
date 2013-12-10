@@ -114,20 +114,4 @@ public abstract class ExpressionNode extends SOMNode {
   public Object executeObject(final VirtualFrame frame) throws UnexpectedResultException {
     return executeGeneric(frame);
   }
-
-
-////  @SuppressWarnings("unused")
-//  public SOMObject executeEvaluated(VirtualFrame frame, java.lang.Object val1) {
-//      return executeGeneric(frame);
-//  }
-//
-////  @SuppressWarnings("unused")
-//  public SOMObject executeEvaluated(VirtualFrame frame, java.lang.Object val1, java.lang.Object val2) {
-//      return executeEvaluated(frame, val1);
-//  }
-//
-////  @SuppressWarnings("unused")
-//  public SOMObject executeEvaluated(VirtualFrame frame, java.lang.Object val1, java.lang.Object val2, java.lang.Object val3) {
-//      return executeEvaluated(frame, val1, val2);
-//  }
 }
