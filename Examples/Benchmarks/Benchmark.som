@@ -59,14 +59,26 @@ Benchmark = (
     )
     
     warmup = (
+        | numIterationsTmp printIndividualRunsTmp maxRuntimeTmp |
         numWarmUpIterations > 0 ifFalse: [
             '' println.
             ^ self].
-        
+
+        numIterationsTmp := numIterations.
+        printIndividualRunsTmp := printIndividualRuns.
+        maxRuntimeTmp := maxRuntime.
+
+        numIterations := numWarmUpIterations.
+        printIndividualRuns := false.
+        maxRuntime := nil.
+
         ' warmup ...' print.
-        numWarmUpIterations timesRepeat: [
-            self benchmark.
-            system fullGC. ].
+        self doRuns.
+
+        numIterations := numIterationsTmp.
+        printIndividualRuns := printIndividualRunsTmp.
+        maxRuntime := maxRuntimeTmp.
+
         ' completed.' println.
     )
 
