@@ -10,4 +10,4 @@ fi
 
 cd $GRAAL_HOME
 
-./mx.sh --vm server vm -Xbootclasspath/a:$BASE_DIR/build/classes:$BASE_DIR/libs/com.oracle.truffle.api.jar:$BASE_DIR/libs/com.oracle.truffle.api.dsl.jar som.vm.Universe "$@"
+./mx.sh --vm server vm -G:-TraceTruffleInlining -G:-TraceTruffleCompilation -Xbootclasspath/a:$BASE_DIR/build/classes:$BASE_DIR/libs/com.oracle.truffle.api.jar:$BASE_DIR/libs/com.oracle.truffle.api.dsl.jar som.vm.Universe "$@"
