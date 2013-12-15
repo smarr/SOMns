@@ -1,20 +1,18 @@
 package som.interpreter.nodes.specialized;
 
-import som.interpreter.nodes.BinaryMessageNode;
-import som.vm.Universe;
+import som.interpreter.nodes.messages.BinarySendNode;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
 import som.vmobjects.SMethod;
 import som.vmobjects.SObject;
-import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 
-public abstract class WhileTrueMessageNode extends BinaryMessageNode {
-  public WhileTrueMessageNode(final SSymbol selector, final Universe universe) { super(selector, universe); }
-  public WhileTrueMessageNode(final WhileTrueMessageNode node) { this(node.selector, node.universe); }
+public abstract class WhileTrueMessageNode extends BinarySendNode {
+  public WhileTrueMessageNode(final BinarySendNode node) { super(node); }
+  public WhileTrueMessageNode(final WhileTrueMessageNode node) { super(node); }
 
   private Object executeBlock(final VirtualFrame frame,
       final SBlock block) {

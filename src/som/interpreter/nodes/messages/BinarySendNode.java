@@ -4,6 +4,10 @@ import som.interpreter.Arguments;
 import som.interpreter.Invokable;
 import som.interpreter.nodes.BinaryMessageNode;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.specialized.IfFalseMessageNodeFactory;
+import som.interpreter.nodes.specialized.IfTrueMessageNodeFactory;
+import som.interpreter.nodes.specialized.WhileFalseMessageNodeFactory;
+import som.interpreter.nodes.specialized.WhileTrueMessageNodeFactory;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
@@ -33,7 +37,7 @@ public abstract class BinarySendNode extends BinaryMessageNode {
     this.argumentNode = adoptChild(argument);
   }
 
-  private BinarySendNode(final BinarySendNode node) {
+  protected BinarySendNode(final BinarySendNode node) {
     this(node.selector, node.universe, node.receiverExpr, node.argumentNode);
   }
 
@@ -113,9 +117,24 @@ public abstract class BinarySendNode extends BinaryMessageNode {
       return specialize(receiver).executeEvaluated(frame, receiver, argument);
     }
 
-    // DUPLICATED but types
+    // DUPLICATED but types and specialized nodes
     private BinarySendNode specialize(final Object receiver) {
       CompilerAsserts.neverPartOfCompilation();
+
+      switch (selector.getString()) {
+        case "whileTrue:":
+          assert this == getTopNode();
+          return replace(WhileTrueMessageNodeFactory.create(this, receiverExpr, argumentNode));
+        case "whileFalse:":
+          assert this == getTopNode();
+          return replace(WhileFalseMessageNodeFactory.create(this, receiverExpr, argumentNode));
+        case "ifTrue:":
+          assert this == getTopNode();
+          return replace(IfTrueMessageNodeFactory.create(this, receiverExpr, argumentNode));
+        case "ifFalse:":
+          assert this == getTopNode();
+          return replace(IfFalseMessageNodeFactory.create(this, receiverExpr, argumentNode));
+      }
 
       if (depth < INLINE_CACHE_SIZE) {
         CallTarget  callTarget = lookupCallTarget(receiver);

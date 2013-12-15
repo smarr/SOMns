@@ -4,6 +4,7 @@ import som.interpreter.Arguments;
 import som.interpreter.Invokable;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.TernaryMessageNode;
+import som.interpreter.nodes.specialized.IfTrueIfFalseMessageNodeFactory;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
@@ -35,7 +36,7 @@ public abstract class TernarySendNode extends TernaryMessageNode {
     this.secondArgNode = adoptChild(secondArg);
   }
 
-  private TernarySendNode(final TernarySendNode node) {
+  protected TernarySendNode(final TernarySendNode node) {
     this(node.selector, node.universe, node.receiverExpr, node.firstArgNode, node.secondArgNode);
   }
 
@@ -125,6 +126,12 @@ public abstract class TernarySendNode extends TernaryMessageNode {
     // DUPLICATED but types
     private TernarySendNode specialize(final Object receiver) {
       CompilerAsserts.neverPartOfCompilation();
+
+      switch (selector.getString()) {
+        case "ifTrue:ifFalse:":
+          assert this == getTopNode();
+          return replace(IfTrueIfFalseMessageNodeFactory.create(this, receiverExpr, firstArgNode, secondArgNode));
+      }
 
       if (depth < INLINE_CACHE_SIZE) {
         CallTarget  callTarget = lookupCallTarget(receiver);

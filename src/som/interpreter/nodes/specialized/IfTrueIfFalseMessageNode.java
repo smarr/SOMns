@@ -1,21 +1,19 @@
 package som.interpreter.nodes.specialized;
 
-import som.interpreter.nodes.TernaryMessageNode;
-import som.vm.Universe;
+import som.interpreter.nodes.messages.TernarySendNode;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
 import som.vmobjects.SMethod;
 import som.vmobjects.SObject;
-import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 
-public abstract class IfTrueIfFalseMessageNode extends TernaryMessageNode {
+public abstract class IfTrueIfFalseMessageNode extends TernarySendNode {
 
-  public IfTrueIfFalseMessageNode(final SSymbol selector, final Universe universe) { super(selector, universe); }
-  public IfTrueIfFalseMessageNode(final IfTrueIfFalseMessageNode node) { this(node.selector, node.universe); }
+  public IfTrueIfFalseMessageNode(final TernarySendNode node) { super(node); }
+  public IfTrueIfFalseMessageNode(final IfTrueIfFalseMessageNode node) { super(node); }
 
   @Specialization(order = 1)
   public SAbstractObject doIfTrueIfFalse(final VirtualFrame frame,
