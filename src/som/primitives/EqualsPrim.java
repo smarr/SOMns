@@ -2,7 +2,6 @@ package som.primitives;
 
 import som.interpreter.nodes.BinaryMessageNode;
 import som.vm.Universe;
-import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBigInteger;
 import som.vmobjects.SDouble;
 import som.vmobjects.SInteger;
@@ -52,6 +51,15 @@ public abstract class EqualsPrim extends BinaryMessageNode {
     }
   }
 
+  @Specialization(order = 5)
+  public SObject doSObject(final SObject left, final SObject right) {
+    if (left == right) {
+      return universe.trueObject;
+    } else {
+      return universe.falseObject;
+    }
+  }
+
   @Specialization(order = 10)
   public SObject doSInteger(final SInteger left, final SDouble right) {
     if (left.getEmbeddedInteger() == right.getEmbeddedDouble()) {
@@ -79,11 +87,22 @@ public abstract class EqualsPrim extends BinaryMessageNode {
   }
 
   @Specialization(order = 1000)
-  public SObject doSAbstractObject(final SAbstractObject left, final SAbstractObject right) {
-    if (left == right) {
-      return universe.trueObject;
-    } else {
-      return universe.falseObject;
-    }
+  public SObject doSInteger(final SInteger left, final SString right) {
+    return universe.falseObject;
+  }
+
+  @Specialization(order = 1001)
+  public SObject doSInteger(final SInteger left, final SObject right) {
+    return universe.falseObject;
+  }
+
+  @Specialization(order = 1010)
+  public SObject doSString(final SString receiver, final SInteger argument) {
+    return universe.falseObject;
+  }
+
+  @Specialization(order = 1011)
+  public SObject doSString(final SString receiver, final SObject argument) {
+    return universe.falseObject;
   }
 }
