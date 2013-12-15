@@ -32,6 +32,7 @@ import som.interpreter.nodes.GlobalNode.GlobalReadNode;
 import som.interpreter.nodes.KeywordMessageNode;
 import som.interpreter.nodes.TernaryMessageNode;
 import som.interpreter.nodes.UnaryMessageNode;
+import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.literals.LiteralNode;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
@@ -132,7 +133,9 @@ public class Method extends Invokable {
 
   @Override
   public boolean isAlwaysToBeInlined() {
-    if (expressionOrSequence instanceof LiteralNode) {
+    if (expressionOrSequence instanceof LiteralNode
+        // we can't do the direct inlining for block nodes, because they need a properly initialized frame
+        && !(expressionOrSequence instanceof BlockNode)) {
       return true;
     } else if (expressionOrSequence instanceof GlobalReadNode) {
       return true;
