@@ -1,6 +1,6 @@
 package som.interpreter.nodes.messages;
 
-import som.interpreter.Arguments;
+import som.interpreter.Arguments.UnaryArguments;
 import som.interpreter.Invokable;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.UnaryMessageNode;
@@ -194,7 +194,7 @@ public abstract class UnarySendNode extends UnaryMessageNode {
         callCount++;
       }
 
-      Arguments args = new Arguments((SAbstractObject) receiver, noArgs);
+      UnaryArguments args = new UnaryArguments((SAbstractObject) receiver);
       return inlinableCallTarget.call(frame.pack(), args);
     }
   }
@@ -207,7 +207,7 @@ public abstract class UnarySendNode extends UnaryMessageNode {
     @Override
     public Object executeEvaluated(final VirtualFrame frame, final Object receiver) {
       CallTarget callTarget = lookupCallTarget(receiver);
-      Arguments args = new Arguments((SAbstractObject) receiver, noArgs);
+      UnaryArguments args = new UnaryArguments((SAbstractObject) receiver);
       return callTarget.call(args);
     }
   }

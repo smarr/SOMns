@@ -21,6 +21,10 @@
  */
 package som.interpreter;
 
+import som.interpreter.Arguments.BinaryArguments;
+import som.interpreter.Arguments.KeywordArguments;
+import som.interpreter.Arguments.TernaryArguments;
+import som.interpreter.Arguments.UnaryArguments;
 import som.interpreter.nodes.ArgumentEvaluationNode;
 import som.interpreter.nodes.BinaryMessageNode;
 import som.interpreter.nodes.ExpressionNode;
@@ -240,7 +244,7 @@ public class Method extends Invokable {
 
     @Override
     public Object executeEvaluated(final VirtualFrame frame, final Object receiver) {
-      Arguments args = new Arguments((SAbstractObject) receiver, noArgs);
+      UnaryArguments args = new UnaryArguments((SAbstractObject) receiver);
       VirtualFrame childFrame = Truffle.getRuntime().createVirtualFrame(frame.pack(), args, frameDescriptor);
       final FrameOnStackMarker marker = initializeFrame(childFrame);
       return messageSendExecution(marker, childFrame, expressionOrSequence);
@@ -336,7 +340,7 @@ public class Method extends Invokable {
 
     @Override
     public Object executeEvaluated(final VirtualFrame frame, final Object receiver, final Object argument) {
-      Arguments args = new Arguments((SAbstractObject) receiver, new SAbstractObject[] {(SAbstractObject) argument});
+      BinaryArguments args = new BinaryArguments((SAbstractObject) receiver, (SAbstractObject) argument);
       VirtualFrame childFrame = Truffle.getRuntime().createVirtualFrame(frame.pack(), args, frameDescriptor);
       final FrameOnStackMarker marker = initializeFrame(childFrame);
       return messageSendExecution(marker, childFrame, expressionOrSequence);
@@ -442,7 +446,7 @@ public class Method extends Invokable {
 
     @Override
     public Object executeEvaluated(final VirtualFrame frame, final Object receiver, final Object arg1, final Object arg2) {
-      Arguments args = new Arguments((SAbstractObject) receiver, new SAbstractObject[] {(SAbstractObject) arg1, (SAbstractObject) arg2});
+      TernaryArguments args = new TernaryArguments((SAbstractObject) receiver, (SAbstractObject) arg1, (SAbstractObject) arg2);
       VirtualFrame childFrame = Truffle.getRuntime().createVirtualFrame(frame.pack(), args, frameDescriptor);
       final FrameOnStackMarker marker = initializeFrame(childFrame);
       return messageSendExecution(marker, childFrame, expressionOrSequence);
@@ -555,7 +559,7 @@ public class Method extends Invokable {
 
     @Override
     public Object executeEvaluated(final VirtualFrame frame, final Object receiver, final Object[] arguments) {
-      Arguments args = new Arguments((SAbstractObject) receiver, (SAbstractObject[]) arguments);
+      KeywordArguments args = new KeywordArguments((SAbstractObject) receiver, (SAbstractObject[]) arguments);
       VirtualFrame childFrame = Truffle.getRuntime().createVirtualFrame(frame.pack(), args, frameDescriptor);
       final FrameOnStackMarker marker = initializeFrame(childFrame);
       return messageSendExecution(marker, childFrame, expressionOrSequence);

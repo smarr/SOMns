@@ -25,7 +25,7 @@
 
 package som.vmobjects;
 
-import som.interpreter.Arguments;
+import som.interpreter.Arguments.KeywordArguments;
 import som.interpreter.Invokable;
 import som.vm.Universe;
 
@@ -80,14 +80,14 @@ public class SMethod extends SAbstractObject {
   }
 
   public SAbstractObject invokeRoot(final SAbstractObject self, final SAbstractObject[] args) {
-    SAbstractObject result = (SAbstractObject) callTarget.call(new Arguments(self, args));
+    SAbstractObject result = (SAbstractObject) callTarget.call(new KeywordArguments(self, args));
     return result;
   }
 
   public SAbstractObject invoke(final PackedFrame caller,
       final SAbstractObject self,
       final SAbstractObject[] args) {
-    SAbstractObject result = (SAbstractObject) callTarget.call(caller, new Arguments(self, args));
+    SAbstractObject result = (SAbstractObject) callTarget.call(caller, new KeywordArguments(self, args));
     return result;
   }
 

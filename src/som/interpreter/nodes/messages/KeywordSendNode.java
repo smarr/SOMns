@@ -1,6 +1,6 @@
 package som.interpreter.nodes.messages;
 
-import som.interpreter.Arguments;
+import som.interpreter.Arguments.KeywordArguments;
 import som.interpreter.Invokable;
 import som.interpreter.nodes.ArgumentEvaluationNode;
 import som.interpreter.nodes.ExpressionNode;
@@ -210,7 +210,7 @@ public abstract class KeywordSendNode extends KeywordMessageNode {
         callCount++;
       }
 
-      Arguments args = new Arguments((SAbstractObject) receiver, (SAbstractObject[]) arguments);
+      KeywordArguments args = new KeywordArguments((SAbstractObject) receiver, (SAbstractObject[]) arguments);
       return inlinableCallTarget.call(frame.pack(), args);
     }
   }
@@ -223,7 +223,7 @@ public abstract class KeywordSendNode extends KeywordMessageNode {
     @Override
     public Object executeEvaluated(final VirtualFrame frame, final Object receiver, final Object[] arguments) {
       CallTarget callTarget = lookupCallTarget(receiver);
-      Arguments args = new Arguments((SAbstractObject) receiver, (SAbstractObject[]) arguments);
+      KeywordArguments args = new KeywordArguments((SAbstractObject) receiver, (SAbstractObject[]) arguments);
       return callTarget.call(args);
     }
   }

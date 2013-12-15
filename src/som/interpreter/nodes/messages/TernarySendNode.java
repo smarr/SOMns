@@ -1,6 +1,6 @@
 package som.interpreter.nodes.messages;
 
-import som.interpreter.Arguments;
+import som.interpreter.Arguments.TernaryArguments;
 import som.interpreter.Invokable;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.TernaryMessageNode;
@@ -225,9 +225,8 @@ public abstract class TernarySendNode extends TernaryMessageNode {
         callCount++;
       }
 
-      Arguments args = new Arguments((SAbstractObject) receiver,
-          new SAbstractObject[] {(SAbstractObject) argument1,
-                                 (SAbstractObject) argument2});
+      TernaryArguments args = new TernaryArguments((SAbstractObject) receiver,
+          (SAbstractObject) argument1, (SAbstractObject) argument2);
       return inlinableCallTarget.call(frame.pack(), args);
     }
   }
@@ -241,9 +240,8 @@ public abstract class TernarySendNode extends TernaryMessageNode {
     public Object executeEvaluated(final VirtualFrame frame,
         final Object receiver, final Object argument1, final Object argument2) {
       CallTarget callTarget = lookupCallTarget(receiver);
-      Arguments args = new Arguments((SAbstractObject) receiver,
-          new SAbstractObject[] {(SAbstractObject) argument1,
-                                 (SAbstractObject) argument2});
+      TernaryArguments args = new TernaryArguments((SAbstractObject) receiver,
+          (SAbstractObject) argument1, (SAbstractObject) argument2);
       return callTarget.call(args);
     }
   }

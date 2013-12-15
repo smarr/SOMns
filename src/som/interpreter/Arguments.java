@@ -23,27 +23,103 @@ package som.interpreter;
 
 import som.vmobjects.SAbstractObject;
 
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
-public final class Arguments extends com.oracle.truffle.api.Arguments {
+public abstract class Arguments extends com.oracle.truffle.api.Arguments {
 
-  private final SAbstractObject   self;
-  private final SAbstractObject[] arguments;
+  private final SAbstractObject self;
 
-  public Arguments(final SAbstractObject self, final SAbstractObject[] arguments) {
-    this.self      = self;
-    this.arguments = arguments;
+  private Arguments(final SAbstractObject self) {
+    this.self = self;
   }
 
   public SAbstractObject getSelf() {
     return self;
   }
 
-  public SAbstractObject getArgument(final int i) {
-    return arguments[i];
-  }
+  public abstract SAbstractObject getArgument(final int i);
 
   public static Arguments get(final VirtualFrame frame) {
     return frame.getArguments(Arguments.class);
+  }
+
+//  public static Arguments getUnary(final VirtualFrame frame) {
+//    return frame.getArguments(UnaryArguments.class);
+//  }
+//
+//  public static Arguments getBinary(final VirtualFrame frame) {
+//    return frame.getArguments(BinaryArguments.class);
+//  }
+//
+//  public static Arguments getTernary(final VirtualFrame frame) {
+//    return frame.getArguments(TernaryArguments.class);
+//  }
+//
+//  public static Arguments getKeyword(final VirtualFrame frame) {
+//    return frame.getArguments(KeywordArguments.class);
+//  }
+
+  public static final class UnaryArguments extends Arguments {
+    public UnaryArguments(final SAbstractObject self) {
+      super(self);
+    }
+
+    @Override
+    public SAbstractObject getArgument(final int i) {
+      return null;
+    }
+  }
+
+  public static final class BinaryArguments extends Arguments {
+    private final SAbstractObject arg;
+    public BinaryArguments(final SAbstractObject self, final SAbstractObject arg) {
+      super(self);
+      this.arg = arg;
+    }
+
+    @Override
+    public SAbstractObject getArgument(final int i) {
+      assert i == 0;
+      return arg;
+    }
+  }
+
+  public static final class TernaryArguments extends Arguments {
+    private final SAbstractObject arg1;
+    private final SAbstractObject arg2;
+
+    public TernaryArguments(final SAbstractObject self,
+        final SAbstractObject arg1,
+        final SAbstractObject arg2) {
+      super(self);
+      this.arg1 = arg1;
+      this.arg2 = arg2;
+    }
+
+    @Override
+    public SAbstractObject getArgument(final int i) {
+      if (i == 0) {
+        return arg1;
+      } else {
+        assert i == 1;
+        return arg2;
+      }
+    }
+  }
+
+  public static final class KeywordArguments extends Arguments {
+    @CompilationFinal
+    private final SAbstractObject[] arguments;
+
+    public KeywordArguments(final SAbstractObject self, final SAbstractObject[] arguments) {
+      super(self);
+      this.arguments = arguments;
+    }
+
+    @Override
+    public SAbstractObject getArgument(final int i) {
+      return arguments[i];
+    }
   }
 }

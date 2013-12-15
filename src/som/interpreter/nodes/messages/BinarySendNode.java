@@ -1,6 +1,6 @@
 package som.interpreter.nodes.messages;
 
-import som.interpreter.Arguments;
+import som.interpreter.Arguments.BinaryArguments;
 import som.interpreter.Invokable;
 import som.interpreter.nodes.BinaryMessageNode;
 import som.interpreter.nodes.ExpressionNode;
@@ -228,8 +228,8 @@ public abstract class BinarySendNode extends BinaryMessageNode {
         callCount++;
       }
 
-      Arguments args = new Arguments((SAbstractObject) receiver,
-          new SAbstractObject[] {(SAbstractObject) argument});
+      BinaryArguments args = new BinaryArguments((SAbstractObject) receiver,
+          (SAbstractObject) argument);
       return inlinableCallTarget.call(frame.pack(), args);
     }
   }
@@ -242,8 +242,8 @@ public abstract class BinarySendNode extends BinaryMessageNode {
     @Override
     public Object executeEvaluated(final VirtualFrame frame, final Object receiver, final Object argument) {
       CallTarget callTarget = lookupCallTarget(receiver);
-      Arguments args = new Arguments((SAbstractObject) receiver,
-          new SAbstractObject[] {(SAbstractObject) argument});
+      BinaryArguments args = new BinaryArguments((SAbstractObject) receiver,
+          (SAbstractObject) argument);
       return callTarget.call(args);
     }
   }
