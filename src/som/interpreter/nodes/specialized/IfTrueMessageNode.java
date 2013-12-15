@@ -24,7 +24,7 @@ public abstract class IfTrueMessageNode extends BinarySendNode {
     if (receiver) {
       SMethod blockMethod = argument.getMethod();
       SBlock b = universe.newBlock(blockMethod, frame.materialize(), 1);
-      return blockMethod.invoke(frame.pack(), b, noArgs);
+      return blockMethod.invoke(frame.pack(), b);
     } else {
       return universe.nilObject;
     }

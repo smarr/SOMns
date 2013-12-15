@@ -40,7 +40,7 @@ public class ObjectPrims {
     @Specialization
     public SAbstractObject doSAbstractObject(final VirtualFrame frame, final SAbstractObject receiver, final SSymbol selector) {
       SMethod invokable = receiver.getSOMClass(universe).lookupInvokable(selector);
-      return invokable.invoke(frame.pack(), receiver, null);
+      return invokable.invoke(frame.pack(), receiver);
     }
   }
 
@@ -52,7 +52,7 @@ public class ObjectPrims {
     public SAbstractObject doSAbstractObject(final VirtualFrame frame,
         final SAbstractObject receiver, final SSymbol selector, final SClass  clazz) {
       SMethod invokable = clazz.lookupInvokable(selector);
-      return invokable.invoke(frame.pack(), receiver, null);
+      return invokable.invoke(frame.pack(), receiver);
     }
   }
 

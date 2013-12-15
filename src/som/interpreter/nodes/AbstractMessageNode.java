@@ -78,7 +78,5 @@ public abstract class AbstractMessageNode extends ExpressionNode {
     }
   }
 
-  protected static final SAbstractObject[] noArgs = new SAbstractObject[0];
-
   public static final int PriorityMonomorphicCase = 9999;
 }

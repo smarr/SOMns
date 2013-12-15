@@ -26,7 +26,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernarySendNode {
     }
 
     SBlock b = universe.newBlock(branchMethod, frame.materialize(), 1);
-    return branchMethod.invoke(frame.pack(), b, noArgs);
+    return branchMethod.invoke(frame.pack(), b);
   }
 
   @Specialization(guards = "isBooleanReceiver", order = 2)
@@ -43,7 +43,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernarySendNode {
     } else {
       SMethod branchMethod = falseBlock.getMethod();
       SBlock  b = universe.newBlock(branchMethod, frame.materialize(), 1);
-      return branchMethod.invoke(frame.pack(), b, noArgs);
+      return branchMethod.invoke(frame.pack(), b);
     }
   }
 
@@ -59,7 +59,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernarySendNode {
     if (receiver) {
       SMethod branchMethod = trueBlock.getMethod();
       SBlock  b = universe.newBlock(branchMethod, frame.materialize(), 1);
-      return branchMethod.invoke(frame.pack(), b, noArgs);
+      return branchMethod.invoke(frame.pack(), b);
     } else {
       return falseValue;
     }

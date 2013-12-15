@@ -18,7 +18,7 @@ public abstract class WhileTrueMessageNode extends BinarySendNode {
       final SBlock block) {
     SMethod method = block.getMethod();
     SBlock b = universe.newBlock(method, frame.materialize(), 1);
-    return method.invoke(frame.pack(), b, noArgs);
+    return method.invoke(frame.pack(), b);
   }
 
   protected boolean receiverIsTrueObject(final SObject receiver) {
