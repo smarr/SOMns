@@ -125,7 +125,6 @@ public abstract class Primitives {
   protected void installInstancePrimitive(final String selector,
       final NodeFactory<? extends AbstractMessageNode> nodeFactory) {
     SSymbol signature = universe.symbolFor(selector);
-    som.interpreter.nodes.NodeFactory.registerNodeFactory(signature, nodeFactory);
     SMethod prim = constructPrimitive(signature, nodeFactory, universe, holder);
 
     // Install the given primitive as an instance primitive in the holder class
@@ -135,7 +134,6 @@ public abstract class Primitives {
   protected void installClassPrimitive(final String selector,
       final NodeFactory<? extends AbstractMessageNode> nodeFactory) {
     SSymbol signature = universe.symbolFor(selector);
-    som.interpreter.nodes.NodeFactory.registerNodeFactory(signature, nodeFactory);
     SMethod prim = constructPrimitive(signature, nodeFactory, universe, holder);
 
     // Install the given primitive as an instance primitive in the class of

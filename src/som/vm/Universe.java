@@ -33,7 +33,6 @@ import java.util.StringTokenizer;
 
 import som.compiler.Disassembler;
 import som.interpreter.Invokable;
-import som.interpreter.nodes.NodeFactory;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray;
 import som.vmobjects.SBigInteger;
@@ -305,9 +304,6 @@ public class Universe {
 
   @SlowPath
   protected void initializeObjectSystem() {
-    // First initialize the interpreter
-    NodeFactory.registerKnownFactories();
-
     // Allocate the nil object
     nilObject = new SObject(null);
 
