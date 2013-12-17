@@ -1,5 +1,6 @@
 package som.primitives;
 
+import som.interpreter.Types;
 import som.interpreter.nodes.BinaryMessageNode;
 import som.interpreter.nodes.TernaryMessageNode;
 import som.vm.Universe;
@@ -34,15 +35,16 @@ public class ArrayPrims {
     public AtPutPrim(final AtPutPrim prim)  { this(prim.selector, prim.universe); }
 
     @Specialization
-    public SAbstractObject doSArray(final SArray receiver, final SInteger index, final SAbstractObject value) {
-      receiver.setIndexableField(index.getEmbeddedInteger() - 1, value);
+    public SAbstractObject doSArray(final SArray receiver, final int index, final SAbstractObject value) {
+      receiver.setIndexableField(index - 1, value);
       return value;
     }
 
     @Specialization
-    public SAbstractObject doSArray(final SArray receiver, final int index, final SAbstractObject value) {
-      receiver.setIndexableField(index - 1, value);
-      return value;
+    public SAbstractObject doSArray(final SArray receiver, final int index, final Object value) {
+      SAbstractObject val = Types.asAbstractObject(value, universe);
+      receiver.setIndexableField(index - 1, val);
+      return val;
     }
   }
 
@@ -57,6 +59,11 @@ public class ArrayPrims {
     @Specialization(guards = "receiverIsArrayClass")
     public SAbstractObject doSClass(final SClass receiver, final SInteger length) {
       return universe.newArray(length.getEmbeddedInteger());
+    }
+
+    @Specialization(guards = "receiverIsArrayClass")
+    public SAbstractObject doSClass(final SClass receiver, final int length) {
+      return universe.newArray(length);
     }
   }
 

@@ -1,12 +1,10 @@
 package som.primitives;
 
+import java.math.BigInteger;
+
 import som.interpreter.nodes.BinaryMessageNode;
 import som.vm.Universe;
-import som.vmobjects.SBigInteger;
-import som.vmobjects.SDouble;
-import som.vmobjects.SInteger;
 import som.vmobjects.SObject;
-import som.vmobjects.SString;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.Specialization;
@@ -16,42 +14,41 @@ public abstract class EqualsPrim extends BinaryMessageNode {
   public EqualsPrim(final EqualsPrim prim) { this(prim.selector, prim.universe); }
 
   @Specialization(order = 1)
-  public SObject doSInteger(final SInteger left, final SInteger right) {
-    if (left.getEmbeddedInteger() == right.getEmbeddedInteger()) {
+  public SObject doInteger(final int left, final int right) {
+    if (left == right) {
       return universe.trueObject;
     } else {
       return universe.falseObject;
     }
   }
 
-  @Specialization(order = 2)
-  public SObject doSBigInteger(final SBigInteger left, final SBigInteger right) {
-    if (left.getEmbeddedBiginteger().compareTo(
-        right.getEmbeddedBiginteger()) == 0) {
+  @Specialization(order = 20)
+  public SObject doBigInteger(final BigInteger left, final BigInteger right) {
+    if (left.compareTo(right) == 0) {
       return universe.trueObject;
     } else {
       return universe.falseObject;
     }
   }
 
-  @Specialization(order = 3)
-  public SObject doSString(final SString receiver, final SString argument) {
-    if (receiver.getEmbeddedString().equals(argument.getEmbeddedString())) {
+  @Specialization(order = 30)
+  public SObject doString(final String receiver, final String argument) {
+    if (receiver.equals(argument)) {
       return universe.trueObject;
     }
     return universe.falseObject;
   }
 
-  @Specialization(order = 4)
-  public SObject doSDouble(final SDouble left, final SDouble right) {
-    if (left.getEmbeddedDouble() == right.getEmbeddedDouble()) {
+  @Specialization(order = 40)
+  public SObject doDouble(final double left, final double right) {
+    if (left == right) {
       return universe.trueObject;
     } else {
       return universe.falseObject;
     }
   }
 
-  @Specialization(order = 5)
+  @Specialization(order = 50)
   public SObject doSObject(final SObject left, final SObject right) {
     if (left == right) {
       return universe.trueObject;
@@ -60,49 +57,47 @@ public abstract class EqualsPrim extends BinaryMessageNode {
     }
   }
 
-  @Specialization(order = 10)
-  public SObject doSInteger(final SInteger left, final SDouble right) {
-    if (left.getEmbeddedInteger() == right.getEmbeddedDouble()) {
+  @Specialization(order = 100)
+  public SObject doInteger(final int left, final double right) {
+    if (left == right) {
       return universe.trueObject;
     } else {
       return universe.falseObject;
     }
   }
 
-  @Specialization(order = 100)
-  public SObject doSBigInteger(final SBigInteger left, final SInteger right) {
-    return doSBigInteger(left, universe.newBigInteger(right.getEmbeddedInteger()));
-  }
-
-  @Specialization(order = 101)
-  public SObject doSInteger(final SInteger left, final SBigInteger right) {
-    SBigInteger leftBigInteger = universe.newBigInteger(left.getEmbeddedInteger());
-    return doSBigInteger(leftBigInteger, right);
-  }
-
-  @Specialization(order = 102)
-  public SObject doSDouble(final SDouble left, final SInteger right) {
-    SDouble rightDouble = universe.newDouble(right.getEmbeddedInteger());
-    return doSDouble(left, rightDouble);
-  }
-
   @Specialization(order = 1000)
-  public SObject doSInteger(final SInteger left, final SString right) {
-    return universe.falseObject;
-  }
-
-  @Specialization(order = 1001)
-  public SObject doSInteger(final SInteger left, final SObject right) {
-    return universe.falseObject;
+  public SObject doBigInteger(final BigInteger left, final int right) {
+    return doBigInteger(left, BigInteger.valueOf(right));
   }
 
   @Specialization(order = 1010)
-  public SObject doSString(final SString receiver, final SInteger argument) {
+  public SObject doInteger(final int left, final BigInteger right) {
+    return doBigInteger(BigInteger.valueOf(left), right);
+  }
+
+  @Specialization(order = 1020)
+  public SObject doDouble(final double left, final int right) {
+    return doDouble(left, (double) right);
+  }
+
+  @Specialization(order = 10000)
+  public SObject doInteger(final int left, final String right) {
     return universe.falseObject;
   }
 
-  @Specialization(order = 1011)
-  public SObject doSString(final SString receiver, final SObject argument) {
+  @Specialization(order = 10010)
+  public SObject doInteger(final int left, final SObject right) {
+    return universe.falseObject;
+  }
+
+  @Specialization(order = 10100)
+  public SObject doString(final String receiver, final int argument) {
+    return universe.falseObject;
+  }
+
+  @Specialization(order = 10110)
+  public SObject doString(final String receiver, final SObject argument) {
     return universe.falseObject;
   }
 }

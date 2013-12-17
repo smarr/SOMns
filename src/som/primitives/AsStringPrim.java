@@ -1,10 +1,9 @@
 package som.primitives;
 
+import java.math.BigInteger;
+
 import som.interpreter.nodes.UnaryMessageNode;
 import som.vm.Universe;
-import som.vmobjects.SBigInteger;
-import som.vmobjects.SDouble;
-import som.vmobjects.SInteger;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.Specialization;
@@ -20,19 +19,17 @@ public abstract class AsStringPrim extends UnaryMessageNode {
   }
 
   @Specialization
-  public Object doSInteger(final SInteger receiver) {
-    return universe.newString(Integer.toString(
-        receiver.getEmbeddedInteger()));
+  public Object doInteger(final int receiver) {
+    return universe.newString(Integer.toString(receiver));
   }
 
   @Specialization
-  public Object doSDouble(final SDouble receiver) {
-    return universe.newString(Double.toString(
-        receiver.getEmbeddedDouble()));
+  public Object doDouble(final double receiver) {
+    return universe.newString(Double.toString(receiver));
   }
 
   @Specialization
-  public Object doSBigInteger(final SBigInteger receiver) {
-    return universe.newString(receiver.getEmbeddedBiginteger().toString());
+  public Object doBigInteger(final BigInteger receiver) {
+    return universe.newString(receiver.toString());
   }
 }

@@ -1,5 +1,6 @@
 package som.interpreter.nodes;
 
+import som.interpreter.Types;
 import som.interpreter.nodes.VariableNode.SuperReadNode;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
@@ -30,9 +31,10 @@ public abstract class AbstractMessageNode extends ExpressionNode {
 
   public abstract ExpressionNode getReceiver();
 
+
+
   protected SClass classOfReceiver(final Object rcvr) {
-    SAbstractObject receiver = (SAbstractObject) rcvr;
-    SClass rcvrClass = receiver.getSOMClass(universe);
+    SClass rcvrClass = Types.getClassOf(rcvr, universe);
 
     // first determine whether it is a normal, or super send
     if (getReceiver() instanceof SuperReadNode) {
@@ -42,8 +44,7 @@ public abstract class AbstractMessageNode extends ExpressionNode {
   }
 
   protected CallTarget lookupCallTarget(final Object rcvr) {
-    SAbstractObject receiver = (SAbstractObject) rcvr;
-    SClass rcvrClass = classOfReceiver(receiver);
+    SClass rcvrClass = classOfReceiver(rcvr);
     SMethod method = rcvrClass.lookupInvokable(selector);
     if (method == null) {
       return null;
@@ -66,7 +67,7 @@ public abstract class AbstractMessageNode extends ExpressionNode {
     return receiver == universe.systemObject;
   }
 
-  protected SAbstractObject doFullSend(final VirtualFrame frame, final SAbstractObject rcvr,
+  protected Object doFullSend(final VirtualFrame frame, final SAbstractObject rcvr,
       final SAbstractObject[] args, final SClass rcvrClass) {
     // now lookup selector
     SMethod invokable = rcvrClass.lookupInvokable(selector);

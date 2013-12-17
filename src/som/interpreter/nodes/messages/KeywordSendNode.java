@@ -6,7 +6,6 @@ import som.interpreter.nodes.ArgumentEvaluationNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.KeywordMessageNode;
 import som.vm.Universe;
-import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
 
@@ -210,7 +209,7 @@ public abstract class KeywordSendNode extends KeywordMessageNode {
         callCount++;
       }
 
-      KeywordArguments args = new KeywordArguments((SAbstractObject) receiver, (SAbstractObject[]) arguments);
+      KeywordArguments args = new KeywordArguments(receiver, arguments);
       return inlinableCallTarget.call(frame.pack(), args);
     }
   }
@@ -223,7 +222,7 @@ public abstract class KeywordSendNode extends KeywordMessageNode {
     @Override
     public Object executeEvaluated(final VirtualFrame frame, final Object receiver, final Object[] arguments) {
       CallTarget callTarget = lookupCallTarget(receiver);
-      KeywordArguments args = new KeywordArguments((SAbstractObject) receiver, (SAbstractObject[]) arguments);
+      KeywordArguments args = new KeywordArguments(receiver, arguments);
       return callTarget.call(args);
     }
   }

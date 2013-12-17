@@ -6,7 +6,6 @@ import som.interpreter.nodes.UnaryMessageNode;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
-import som.vmobjects.SInteger;
 import som.vmobjects.SObject;
 import som.vmobjects.SString;
 import som.vmobjects.SSymbol;
@@ -31,8 +30,8 @@ public class SystemPrims {
     public ExitPrim(final ExitPrim prim) { this(prim.selector, prim.universe); }
 
     @Specialization(guards = "receiverIsSystemObject")
-    public Object doSObject(final SObject receiver, final SInteger error) {
-      universe.exit(error.getEmbeddedInteger());
+    public Object doSObject(final SObject receiver, final int error) {
+      universe.exit(error);
       return receiver;
     }
   }

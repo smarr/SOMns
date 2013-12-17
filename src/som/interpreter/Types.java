@@ -23,6 +23,7 @@ package som.interpreter;
 
 import java.math.BigInteger;
 
+import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray;
 import som.vmobjects.SBigInteger;
@@ -35,6 +36,8 @@ import som.vmobjects.SObject;
 import som.vmobjects.SString;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.CompilerDirectives.SlowPath;
+import com.oracle.truffle.api.dsl.ImplicitCast;
 import com.oracle.truffle.api.dsl.TypeSystem;
 
 @TypeSystem({       int.class,
@@ -55,6 +58,74 @@ import com.oracle.truffle.api.dsl.TypeSystem;
         SAbstractObject.class,
                Object[].class})
 public class Types {
+
+  public static final SAbstractObject asAbstractObject(final Object obj,
+      final Universe universe) {
+    if (obj instanceof SAbstractObject) {
+      return (SAbstractObject) obj;
+    } else if (obj instanceof Integer) {
+      return universe.newInteger((int) obj);
+    } else if (obj instanceof BigInteger) {
+      return universe.newBigInteger((BigInteger) obj);
+    } else if (obj instanceof String) {
+      return universe.newString((String) obj);
+    } else if (obj instanceof Double) {
+      return universe.newDouble((double) obj);
+    } else if (obj instanceof Boolean) {
+      boolean b = (boolean) obj;
+      if (b) {
+        return universe.trueObject;
+      } else {
+        return universe.falseObject;
+      }
+    }
+
+    throw new RuntimeException("We got an object that should be covered by the above check: " + obj.toString());
+  }
+
+  @SlowPath
+  public static SClass getClassOf(final Object obj, final Universe universe) {
+    if (obj instanceof SAbstractObject) {
+      return ((SAbstractObject) obj).getSOMClass(universe);
+    } else if (obj instanceof Integer) {
+      return universe.integerClass;
+    } else if (obj instanceof BigInteger) {
+      return universe.bigintegerClass;
+    } else if (obj instanceof String) {
+      return universe.stringClass;
+    } else if (obj instanceof Double) {
+      return universe.doubleClass;
+    } else if (obj instanceof Boolean) {
+      boolean b = (boolean) obj;
+      if (b) {
+        return universe.trueClass;
+      } else {
+        return universe.falseClass;
+      }
+    }
+
+    throw new RuntimeException("We got an object that should be covered by the above check: " + obj.toString());
+  }
+
+  @ImplicitCast
+  public int castInteger(final SInteger i) {
+    return i.getEmbeddedInteger();
+  }
+
+  @ImplicitCast
+  public BigInteger castBigInteger(final SBigInteger i) {
+    return i.getEmbeddedBiginteger();
+  }
+
+  @ImplicitCast
+  public String castString(final SString str) {
+    return str.getEmbeddedString();
+  }
+
+  @ImplicitCast
+  public double castDouble(final SDouble d) {
+    return d.getEmbeddedDouble();
+  }
 
 //  @TypeCheck
 //  public boolean isInteger(final Object value) {

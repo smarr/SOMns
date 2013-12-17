@@ -21,24 +21,22 @@
  */
 package som.interpreter;
 
-import som.vmobjects.SAbstractObject;
-
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 public abstract class Arguments extends com.oracle.truffle.api.Arguments {
 
-  private final SAbstractObject self;
+  private final Object self;
 
-  private Arguments(final SAbstractObject self) {
+  private Arguments(final Object self) {
     this.self = self;
   }
 
-  public SAbstractObject getSelf() {
+  public Object getSelf() {
     return self;
   }
 
-  public abstract SAbstractObject getArgument(final int i);
+  public abstract Object getArgument(final int i);
 
   public static Arguments get(final VirtualFrame frame) {
     return frame.getArguments(Arguments.class);
@@ -61,44 +59,43 @@ public abstract class Arguments extends com.oracle.truffle.api.Arguments {
 //  }
 
   public static final class UnaryArguments extends Arguments {
-    public UnaryArguments(final SAbstractObject self) {
+    public UnaryArguments(final Object self) {
       super(self);
     }
 
     @Override
-    public SAbstractObject getArgument(final int i) {
+    public Object getArgument(final int i) {
       return null;
     }
   }
 
   public static final class BinaryArguments extends Arguments {
-    private final SAbstractObject arg;
-    public BinaryArguments(final SAbstractObject self, final SAbstractObject arg) {
+    private final Object arg;
+    public BinaryArguments(final Object self, final Object arg) {
       super(self);
       this.arg = arg;
     }
 
     @Override
-    public SAbstractObject getArgument(final int i) {
+    public Object getArgument(final int i) {
       assert i == 0;
       return arg;
     }
   }
 
   public static final class TernaryArguments extends Arguments {
-    private final SAbstractObject arg1;
-    private final SAbstractObject arg2;
+    private final Object arg1;
+    private final Object arg2;
 
-    public TernaryArguments(final SAbstractObject self,
-        final SAbstractObject arg1,
-        final SAbstractObject arg2) {
+    public TernaryArguments(final Object self, final Object arg1,
+        final Object arg2) {
       super(self);
       this.arg1 = arg1;
       this.arg2 = arg2;
     }
 
     @Override
-    public SAbstractObject getArgument(final int i) {
+    public Object getArgument(final int i) {
       if (i == 0) {
         return arg1;
       } else {
@@ -110,15 +107,15 @@ public abstract class Arguments extends com.oracle.truffle.api.Arguments {
 
   public static final class KeywordArguments extends Arguments {
     @CompilationFinal
-    private final SAbstractObject[] arguments;
+    private final Object[] arguments;
 
-    public KeywordArguments(final SAbstractObject self, final SAbstractObject[] arguments) {
+    public KeywordArguments(final Object self, final Object[] arguments) {
       super(self);
       this.arguments = arguments;
     }
 
     @Override
-    public SAbstractObject getArgument(final int i) {
+    public Object getArgument(final int i) {
       return arguments[i];
     }
   }

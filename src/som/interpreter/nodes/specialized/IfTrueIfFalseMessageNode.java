@@ -1,7 +1,6 @@
 package som.interpreter.nodes.specialized;
 
 import som.interpreter.nodes.messages.TernarySendNode;
-import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
 import som.vmobjects.SMethod;
 import som.vmobjects.SObject;
@@ -16,7 +15,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernarySendNode {
   public IfTrueIfFalseMessageNode(final IfTrueIfFalseMessageNode node) { super(node); }
 
   @Specialization(order = 1)
-  public SAbstractObject doIfTrueIfFalse(final VirtualFrame frame,
+  public Object doIfTrueIfFalse(final VirtualFrame frame,
       final boolean receiver, final SBlock trueBlock, final SBlock falseBlock) {
     SMethod branchMethod;
     if (receiver) {
@@ -30,7 +29,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernarySendNode {
   }
 
   @Specialization(guards = "isBooleanReceiver", order = 2)
-  public SAbstractObject doIfTrueIfFalse(final VirtualFrame frame,
+  public Object doIfTrueIfFalse(final VirtualFrame frame,
       final SObject receiver, final SBlock trueBlock, final SBlock falseBlock) {
     return doIfTrueIfFalse(frame, receiver == universe.trueObject, trueBlock, falseBlock);
   }

@@ -1,11 +1,10 @@
 package som.primitives.arithmetic;
 
+import java.math.BigInteger;
+
 import som.interpreter.nodes.UnaryMessageNode;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
-import som.vmobjects.SBigInteger;
-import som.vmobjects.SDouble;
-import som.vmobjects.SInteger;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.Specialization;
@@ -26,8 +25,8 @@ public abstract class SqrtPrim extends UnaryMessageNode {
   }
 
   @Specialization
-  public SAbstractObject doSInteger(final SInteger receiver) {
-    double result = Math.sqrt(receiver.getEmbeddedInteger());
+  public SAbstractObject doInteger(final int receiver) {
+    double result = Math.sqrt(receiver);
 
     if (result == Math.rint(result)) {
       return makeInt((long) result);
@@ -37,12 +36,12 @@ public abstract class SqrtPrim extends UnaryMessageNode {
   }
 
   @Specialization
-  public SAbstractObject doSBigInteger(final SBigInteger receiver) {
-    return universe.newDouble(Math.sqrt(receiver.getEmbeddedBiginteger().doubleValue()));
+  public SAbstractObject doBigInteger(final BigInteger receiver) {
+    return universe.newDouble(Math.sqrt(receiver.doubleValue()));
   }
 
   @Specialization
-  public SAbstractObject doSDouble(final SDouble receiver) {
-    return universe.newDouble(Math.sqrt(receiver.getEmbeddedDouble()));
+  public SAbstractObject doDouble(final double receiver) {
+    return universe.newDouble(Math.sqrt(receiver));
   }
 }

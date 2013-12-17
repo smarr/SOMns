@@ -22,6 +22,8 @@
 package som.interpreter.nodes;
 
 import som.compiler.MethodGenerationContext;
+import som.interpreter.Types;
+import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SObject;
 
@@ -75,7 +77,7 @@ public abstract class FieldNode extends ContextualNode {
     @Override
     public SAbstractObject executeGeneric(final VirtualFrame frame) {
       MaterializedFrame ctx = determineContext(frame.materialize());
-      SAbstractObject value = (SAbstractObject) exp.executeGeneric(frame);  // TODO: Work out whether there is another way than this cast!
+      SAbstractObject value = Types.asAbstractObject(exp.executeGeneric(frame), Universe.current());
       SObject self = getSelfFromMaterialized(ctx);
 
       self.setField(fieldIndex, value);

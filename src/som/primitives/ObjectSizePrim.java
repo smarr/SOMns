@@ -28,7 +28,7 @@ public abstract class ObjectSizePrim extends UnaryMessageNode {
   }
 
   @Specialization
-  public SAbstractObject doSAbstractObject(final SAbstractObject receiver) {
+  public SAbstractObject doSAbstractObject(final Object receiver) {
     return universe.newInteger(0); // TODO: allow polymorphism?
   }
 }

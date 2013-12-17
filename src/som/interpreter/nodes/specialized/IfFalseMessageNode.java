@@ -19,7 +19,7 @@ public abstract class IfFalseMessageNode extends BinarySendNode  {
    * evaluate it.
    */
   @Specialization(order = 1)
-  public SAbstractObject doIfFalse(final VirtualFrame frame,
+  public Object doIfFalse(final VirtualFrame frame,
       final boolean receiver, final SBlock argument) {
     if (!receiver) {
       SMethod blockMethod = argument.getMethod();
@@ -31,7 +31,7 @@ public abstract class IfFalseMessageNode extends BinarySendNode  {
   }
 
   @Specialization(guards = "isBooleanReceiver", order = 2)
-  public SAbstractObject doIfFalse(final VirtualFrame frame,
+  public Object doIfFalse(final VirtualFrame frame,
       final SObject receiver, final SBlock argument) {
     // additional `not`/! because doIfFalse is implemented to take a boolean and check for false
     return doIfFalse(frame, !(receiver == universe.falseObject), argument);

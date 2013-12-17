@@ -1,10 +1,9 @@
 package som.primitives.arithmetic;
 
+import java.math.BigInteger;
+
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
-import som.vmobjects.SBigInteger;
-import som.vmobjects.SDouble;
-import som.vmobjects.SInteger;
 import som.vmobjects.SSymbol;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
@@ -15,30 +14,28 @@ public abstract class DoubleDivPrim extends ArithmeticPrim {
   public DoubleDivPrim(final DoubleDivPrim node) { this(node.selector, node.universe); }
 
   @Specialization(order = 1)
-  public SAbstractObject doSDouble(final SDouble left, final SDouble right) {
-    return universe.newDouble(left.getEmbeddedDouble()
-        / right.getEmbeddedDouble());
+  public SAbstractObject doDouble(final double left, final double right) {
+    return universe.newDouble(left / right);
   }
 
   @Specialization(order = 2)
-  public SAbstractObject doSInteger(final SInteger left, final SInteger right) {
-    double result = ((double) left.getEmbeddedInteger())
-        / right.getEmbeddedInteger();
+  public SAbstractObject doInteger(final int left, final int right) {
+    double result = ((double) left) / right;
     return universe.newDouble(result);
   }
 
   @Specialization(order = 10)
-  public SAbstractObject doSDouble(final SDouble left, final SInteger right) {
-    return doSDouble(left, toSDouble(right));
+  public SAbstractObject doDouble(final double left, final int right) {
+    return doDouble(left, (double) right);
   }
 
   @Specialization(order = 100)
-  public SAbstractObject doSInteger(final SInteger left, final SBigInteger right) {
+  public SAbstractObject doInteger(final int left, final BigInteger right) {
     throw new NotImplementedException(); // TODO: need to implement the "/" case here directly... : return resendAsBigInteger("/", left, (SBigInteger) rightObj, frame.pack());
   }
 
   @Specialization(order = 101)
-  public SAbstractObject doSInteger(final SInteger left, final SDouble right) {
+  public SAbstractObject doInteger(final int left, final double right) {
     throw new NotImplementedException(); // TODO: need to implement the "/" case here directly... : return resendAsDouble("/", left, (SDouble) rightObj, frame.pack());
   }
 }

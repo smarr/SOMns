@@ -28,12 +28,12 @@ public abstract class WhileTrueMessageNode extends BinarySendNode {
   @Specialization
   public SAbstractObject doWhileTrue(final VirtualFrame frame,
       final SBlock loopCondition, final SBlock loopBody) {
-    SAbstractObject loopConditionResult = (SAbstractObject) executeBlock(frame, loopCondition);
+    Object loopConditionResult = executeBlock(frame, loopCondition);
 
     // TODO: this is a simplification, we don't cover the case receiver isn't a boolean
-    while (loopConditionResult == universe.trueObject) {
+    while (loopConditionResult == universe.trueObject || loopConditionResult == Boolean.TRUE) {
       executeBlock(frame, loopBody);
-      loopConditionResult = (SAbstractObject) executeBlock(frame, loopCondition);
+      loopConditionResult = executeBlock(frame, loopCondition);
     }
 
     return universe.nilObject;

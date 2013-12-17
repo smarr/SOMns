@@ -5,7 +5,6 @@ import som.primitives.arithmetic.ArithmeticPrim;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
-import som.vmobjects.SInteger;
 import som.vmobjects.SString;
 import som.vmobjects.SSymbol;
 
@@ -19,8 +18,8 @@ public abstract class IntegerPrims {
     public RandomPrim(final RandomPrim prim) { this(prim.selector, prim.universe); }
 
     @Specialization
-    public SAbstractObject doSInteger(final SInteger receiver) {
-      return universe.newInteger((int) (receiver.getEmbeddedInteger() * Math.random()));
+    public SAbstractObject doInteger(final int receiver) {
+      return universe.newInteger((int) (receiver * Math.random()));
     }
   }
 

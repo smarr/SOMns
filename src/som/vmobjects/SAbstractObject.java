@@ -14,7 +14,7 @@ public abstract class SAbstractObject {
     return "a " + getSOMClass(Universe.current()).getName().getString();
   }
 
-  public SAbstractObject send(final String selectorString,
+  public Object send(final String selectorString,
       final SAbstractObject[] arguments,
       final Universe universe, final PackedFrame frame) {
     // Turn the selector string into a selector
@@ -27,7 +27,7 @@ public abstract class SAbstractObject {
     return invokable.invoke(frame, this, arguments);
   }
 
-  public SAbstractObject sendDoesNotUnderstand(final SSymbol selector,
+  public Object sendDoesNotUnderstand(final SSymbol selector,
       final SAbstractObject[] arguments,
       final Universe universe,
       final PackedFrame frame) {
@@ -44,14 +44,14 @@ public abstract class SAbstractObject {
     return send("doesNotUnderstand:arguments:", args, universe, frame);
   }
 
-  public SAbstractObject sendUnknownGlobal(final SSymbol globalName,
+  public Object sendUnknownGlobal(final SSymbol globalName,
       final Universe universe,
       final PackedFrame frame) {
     SAbstractObject[] arguments = {globalName};
     return send("unknownGlobal:", arguments, universe, frame);
   }
 
-  public SAbstractObject sendEscapedBlock(final SBlock block,
+  public Object sendEscapedBlock(final SBlock block,
       final Universe universe,
       final PackedFrame frame) {
     SAbstractObject[] arguments = {block};

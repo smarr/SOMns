@@ -5,7 +5,6 @@ import som.interpreter.nodes.TernaryMessageNode;
 import som.interpreter.nodes.UnaryMessageNode;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
-import som.vmobjects.SInteger;
 import som.vmobjects.SString;
 import som.vmobjects.SSymbol;
 
@@ -41,10 +40,9 @@ public class StringPrims {
     public SubstringPrim(final SubstringPrim prim) { this(prim.selector, prim.universe); }
 
     @Specialization
-    public SAbstractObject doSString(final SString receiver, final SInteger start, final SInteger end) {
+    public SAbstractObject doSString(final String receiver, final int start, final int end) {
       try {
-        return universe.newString(receiver.getEmbeddedString().substring(
-            start.getEmbeddedInteger() - 1, end.getEmbeddedInteger()));
+        return universe.newString(receiver.substring(start - 1, end));
       } catch (IndexOutOfBoundsException e) {
         return universe.newString(new String("Error - index out of bounds"));
       }

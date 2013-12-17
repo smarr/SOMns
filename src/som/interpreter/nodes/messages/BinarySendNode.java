@@ -9,7 +9,6 @@ import som.interpreter.nodes.specialized.IfTrueMessageNodeFactory;
 import som.interpreter.nodes.specialized.WhileFalseMessageNodeFactory;
 import som.interpreter.nodes.specialized.WhileTrueMessageNodeFactory;
 import som.vm.Universe;
-import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
 
@@ -228,8 +227,7 @@ public abstract class BinarySendNode extends BinaryMessageNode {
         callCount++;
       }
 
-      BinaryArguments args = new BinaryArguments((SAbstractObject) receiver,
-          (SAbstractObject) argument);
+      BinaryArguments args = new BinaryArguments(receiver, argument);
       return inlinableCallTarget.call(frame.pack(), args);
     }
   }
@@ -242,8 +240,7 @@ public abstract class BinarySendNode extends BinaryMessageNode {
     @Override
     public Object executeEvaluated(final VirtualFrame frame, final Object receiver, final Object argument) {
       CallTarget callTarget = lookupCallTarget(receiver);
-      BinaryArguments args = new BinaryArguments((SAbstractObject) receiver,
-          (SAbstractObject) argument);
+      BinaryArguments args = new BinaryArguments(receiver, argument);
       return callTarget.call(args);
     }
   }

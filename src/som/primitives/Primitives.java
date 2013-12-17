@@ -30,8 +30,8 @@ import som.interpreter.Primitive;
 import som.interpreter.nodes.AbstractMessageNode;
 import som.interpreter.nodes.ArgumentEvaluationNode;
 import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.VariableNode.SelfReadNode;
-import som.interpreter.nodes.VariableNode.VariableReadNode;
+import som.interpreter.nodes.VariableNodeFactory.SelfReadNodeFactory;
+import som.interpreter.nodes.VariableNodeFactory.VariableReadNodeFactory;
 import som.vm.Universe;
 import som.vmobjects.SClass;
 import som.vmobjects.SMethod;
@@ -70,23 +70,23 @@ public abstract class Primitives {
     FrameSlot[] argSlots  = new FrameSlot[numArgs];
     for (int i = 0; i < numArgs; i++) {
       argSlots[i] = mgen.addArgument("primArg" + i);
-      args[i] = new VariableReadNode(argSlots[i], 0);
+      args[i] = VariableReadNodeFactory.create(argSlots[i], 0);
     }
 
     AbstractMessageNode primNode;
     if (numArgs == 0) {
       primNode = nodeFactory.createNode(signature, universe,
-          new SelfReadNode(mgen.getSelfSlot(), 0));
+          SelfReadNodeFactory.create(mgen.getSelfSlot(), 0));
     } else if (numArgs == 1) {
       primNode = nodeFactory.createNode(signature, universe,
-          new SelfReadNode(mgen.getSelfSlot(), 0), args[0]);
+          SelfReadNodeFactory.create(mgen.getSelfSlot(), 0), args[0]);
     } else if (numArgs == 2) {
       primNode = nodeFactory.createNode(signature, universe,
-          new SelfReadNode(mgen.getSelfSlot(), 0), args[0], args[1]);
+          SelfReadNodeFactory.create(mgen.getSelfSlot(), 0), args[0], args[1]);
     } else {
       ArgumentEvaluationNode argEvalNode = new ArgumentEvaluationNode(args);
       primNode = nodeFactory.createNode(signature, universe,
-          new SelfReadNode(mgen.getSelfSlot(), 0), argEvalNode);
+          SelfReadNodeFactory.create(mgen.getSelfSlot(), 0), argEvalNode);
     }
 
     Primitive primMethodNode = new Primitive(primNode, mgen.getSelfSlot(),
@@ -109,10 +109,10 @@ public abstract class Primitives {
     FrameSlot[] argSlots  = new FrameSlot[numArgs];
     for (int i = 0; i < numArgs; i++) {
       argSlots[i] = mgen.addArgument("primArg" + i);
-      args[i] = new VariableReadNode(argSlots[i], 0);
+      args[i] = VariableReadNodeFactory.create(argSlots[i], 0);
     }
 
-    ExpressionNode primNode = EmptyPrim.create(signature, universe, new SelfReadNode(mgen.getSelfSlot(), 0));
+    ExpressionNode primNode = EmptyPrim.create(signature, universe, SelfReadNodeFactory.create(mgen.getSelfSlot(), 0));
 
     Primitive primMethodNode = new Primitive(primNode, mgen.getSelfSlot(),
         argSlots, mgen.getFrameDescriptor());

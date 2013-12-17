@@ -1,10 +1,9 @@
 package som.primitives.arithmetic;
 
+import java.math.BigInteger;
+
 import som.vm.Universe;
-import som.vmobjects.SAbstractObject;
-import som.vmobjects.SBigInteger;
-import som.vmobjects.SDouble;
-import som.vmobjects.SInteger;
+import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.Specialization;
@@ -16,49 +15,49 @@ public abstract class LessThanPrim extends ArithmeticPrim {
 
 
   @Specialization(order = 1)
-  public SAbstractObject doSInteger(final SInteger left, final SInteger right) {
-    if (left.getEmbeddedInteger() < right.getEmbeddedInteger()) {
+  public SObject doInteger(final int left, final int right) {
+    if (left < right) {
       return universe.trueObject;
     } else {
       return universe.falseObject;
     }
   }
 
-  @Specialization(order = 2)
-  public SAbstractObject doSBigInteger(final SBigInteger left, final SBigInteger right) {
-    if (left.getEmbeddedBiginteger().compareTo(right.getEmbeddedBiginteger()) < 0) {
+  @Specialization(order = 20)
+  public SObject doBigInteger(final BigInteger left, final BigInteger right) {
+    if (left.compareTo(right) < 0) {
       return universe.trueObject;
     } else {
       return universe.falseObject;
     }
   }
 
-  @Specialization(order = 3)
-  public SAbstractObject doSDouble(final SDouble left, final SDouble right) {
-    if (left.getEmbeddedDouble() < right.getEmbeddedDouble()) {
+  @Specialization(order = 30)
+  public SObject doDouble(final double left, final double right) {
+    if (left < right) {
       return universe.trueObject;
     } else {
       return universe.falseObject;
     }
   }
 
-  @Specialization(order = 10)
-  public SAbstractObject doSInteger(final SInteger left, final SBigInteger right) {
-    return doSBigInteger(toSBigInteger(left), right);
+  @Specialization(order = 100)
+  public SObject doInteger(final int left, final BigInteger right) {
+    return doBigInteger(BigInteger.valueOf(left), right);
   }
 
-  @Specialization(order = 11)
-  public SAbstractObject doSInteger(final SInteger left, final SDouble right) {
-    return doSDouble(toSDouble(left), right);
+  @Specialization(order = 110)
+  public SObject doInteger(final int left, final double right) {
+    return doDouble(left, right);
   }
 
-  @Specialization(order = 12)
-  public SAbstractObject doSBigInteger(final SBigInteger left, final SInteger right) {
-    return doSBigInteger(left, toSBigInteger(right));
+  @Specialization(order = 120)
+  public SObject doBigInteger(final BigInteger left, final int right) {
+    return doBigInteger(left, BigInteger.valueOf(right));
   }
 
-  @Specialization(order = 13)
-  public SAbstractObject doSDouble(final SDouble left, final SInteger right) {
-    return doSDouble(left, toSDouble(right));
+  @Specialization(order = 130)
+  public SObject doDouble(final double left, final int right) {
+    return doDouble(left, right);
   }
 }

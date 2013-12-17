@@ -5,9 +5,6 @@ import java.math.BigInteger;
 import som.interpreter.nodes.BinaryMessageNode;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
-import som.vmobjects.SBigInteger;
-import som.vmobjects.SDouble;
-import som.vmobjects.SInteger;
 import som.vmobjects.SSymbol;
 
 
@@ -31,13 +28,5 @@ public abstract class ArithmeticPrim extends BinaryMessageNode {
     } else {
       return universe.newInteger(result.intValue());
     }
-  }
-
-  protected SBigInteger toSBigInteger(final SInteger o) {
-    return universe.newBigInteger(o.getEmbeddedInteger());
-  }
-
-  protected SDouble toSDouble(final SInteger o) {
-    return universe.newDouble(o.getEmbeddedInteger());
   }
 }

@@ -4,9 +4,6 @@ import java.math.BigInteger;
 
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
-import som.vmobjects.SBigInteger;
-import som.vmobjects.SDouble;
-import som.vmobjects.SInteger;
 import som.vmobjects.SSymbol;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
@@ -17,33 +14,31 @@ public abstract class DividePrim extends ArithmeticPrim {
   public DividePrim(final DividePrim node) { this(node.selector, node.universe); }
 
   @Specialization(order = 1)
-  public SAbstractObject doSInteger(final SInteger left, final SInteger right) {
-    long result = ((long) left.getEmbeddedInteger())
-        / right.getEmbeddedInteger();
+  public SAbstractObject doInteger(final int left, final int right) {
+    long result = ((long) left) / right;
     return makeInt(result);
   }
 
   @Specialization(order = 2)
-  public SAbstractObject doSBigInteger(final SBigInteger left, final SBigInteger right) {
+  public SAbstractObject doBigInteger(final BigInteger left, final BigInteger right) {
     // TODO: optimize with ExactMath...
     // Do operation and perform conversion to Integer if required
-    BigInteger result = left.getEmbeddedBiginteger().divide(
-        right.getEmbeddedBiginteger());
+    BigInteger result = left.divide(right);
     return makeInt(result);
   }
 
   @Specialization(order = 10)
-  public SAbstractObject doSBigInteger(final SBigInteger left, final SInteger right) {
-    return doSBigInteger(left, toSBigInteger(right));
+  public SAbstractObject doBigInteger(final BigInteger left, final int right) {
+    return doBigInteger(left, BigInteger.valueOf(right));
   }
 
   @Specialization(order = 11)
-  public SAbstractObject doSInteger(final SInteger left, final SBigInteger right) {
-    return doSBigInteger(toSBigInteger(left), right);
+  public SAbstractObject doInteger(final int left, final BigInteger right) {
+    return doBigInteger(BigInteger.valueOf(left), right);
   }
 
   @Specialization(order = 13)
-  public SAbstractObject doSInteger(final SInteger left, final SDouble right) {
+  public SAbstractObject doInteger(final int left, final double right) {
     throw new NotImplementedException(); // TODO: need to implement the "//" case here directly... : resendAsDouble("//", left, (SDouble) rightObj, frame.pack());
   }
 }

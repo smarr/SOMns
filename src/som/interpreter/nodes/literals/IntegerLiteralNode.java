@@ -1,10 +1,6 @@
 package som.interpreter.nodes.literals;
 
-import som.vm.Universe;
-import som.vmobjects.SAbstractObject;
-
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.VirtualFrame;
 
 
 public abstract class IntegerLiteralNode extends LiteralNode {
@@ -13,11 +9,6 @@ public abstract class IntegerLiteralNode extends LiteralNode {
 
   public IntegerLiteralNode(final int value) {
     this.value = value;
-  }
-
-  @Override
-  public SAbstractObject executeGeneric(final VirtualFrame frameValue) {
-    return Universe.current().newInteger(this.doInteger());
   }
 
   @Specialization

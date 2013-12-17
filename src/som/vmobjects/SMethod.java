@@ -30,6 +30,7 @@ import som.interpreter.Arguments.KeywordArguments;
 import som.interpreter.Arguments.TernaryArguments;
 import som.interpreter.Arguments.UnaryArguments;
 import som.interpreter.Invokable;
+import som.interpreter.Types;
 import som.vm.Universe;
 
 import com.oracle.truffle.api.CallTarget;
@@ -83,30 +84,28 @@ public class SMethod extends SAbstractObject {
   }
 
   public SAbstractObject invokeRoot(final SAbstractObject self, final SAbstractObject[] args) {
-    SAbstractObject result = (SAbstractObject) callTarget.call(new KeywordArguments(self, args));
+    SAbstractObject result = Types.asAbstractObject(callTarget.call(new KeywordArguments(self, args)), Universe.current());
     return result;
   }
 
-  public SAbstractObject invoke(final PackedFrame caller, final SAbstractObject self) {
-    return (SAbstractObject) callTarget.call(caller, new UnaryArguments(self));
+  public Object invoke(final PackedFrame caller, final Object self) {
+    return callTarget.call(caller, new UnaryArguments(self));
   }
 
-  public SAbstractObject invoke(final PackedFrame caller,
-      final SAbstractObject self, final SAbstractObject arg) {
-    return (SAbstractObject) callTarget.call(caller, new BinaryArguments(self, arg));
+  public Object invoke(final PackedFrame caller,
+      final Object self, final Object arg) {
+    return callTarget.call(caller, new BinaryArguments(self, arg));
   }
 
-  public SAbstractObject invoke(final PackedFrame caller,
-      final SAbstractObject self,
-      final SAbstractObject arg1, final SAbstractObject arg2) {
-    return (SAbstractObject) callTarget.call(caller, new TernaryArguments(self, arg1, arg2));
+  public Object invoke(final PackedFrame caller,
+      final Object self,
+      final Object arg1, final Object arg2) {
+    return callTarget.call(caller, new TernaryArguments(self, arg1, arg2));
   }
 
-  public SAbstractObject invoke(final PackedFrame caller,
-      final SAbstractObject self,
-      final SAbstractObject[] args) {
-    SAbstractObject result = (SAbstractObject) callTarget.call(caller, new KeywordArguments(self, args));
-    return result;
+  public Object invoke(final PackedFrame caller,
+      final Object self, final Object[] args) {
+    return callTarget.call(caller, new KeywordArguments(self, args));
   }
 
   @Override

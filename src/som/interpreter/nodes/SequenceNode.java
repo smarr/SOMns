@@ -21,8 +21,6 @@
  */
 package som.interpreter.nodes;
 
-import som.vmobjects.SAbstractObject;
-
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
@@ -36,11 +34,11 @@ public class SequenceNode extends ExpressionNode {
 
   @Override
   @ExplodeLoop
-  public SAbstractObject executeGeneric(final VirtualFrame frame) {
-    SAbstractObject last = null;
+  public Object executeGeneric(final VirtualFrame frame) {
+    Object last = null;
 
     for (int i = 0; i < expressions.length; i++) {
-      last = (SAbstractObject) expressions[i].executeGeneric(frame); // TODO: Work out whether there is another way than this cast!
+      last = expressions[i].executeGeneric(frame); // TODO: Work out whether there is another way than this cast!
     }
 
     return last;

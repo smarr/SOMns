@@ -21,9 +21,9 @@
  */
 package som.interpreter.nodes;
 
-import som.vmobjects.SAbstractObject;
-
 import com.oracle.truffle.api.CompilerDirectives.SlowPath;
+import com.oracle.truffle.api.dsl.Generic;
+import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotTypeException;
 import com.oracle.truffle.api.frame.MaterializedFrame;
@@ -38,10 +38,14 @@ public abstract class VariableNode extends ContextualNode {
     this.slot = slot;
   }
 
-  public static class VariableReadNode extends VariableNode {
+  public abstract static class VariableReadNode extends VariableNode {
 
     public VariableReadNode(final FrameSlot slot, final int contextLevel) {
       super(slot, contextLevel);
+    }
+
+    public VariableReadNode(final VariableReadNode node) {
+      this(node.slot, node.contextLevel);
     }
 
     @SlowPath
@@ -49,30 +53,44 @@ public abstract class VariableNode extends ContextualNode {
       throw new RuntimeException("uninitialized variable " + slot.getIdentifier());
     }
 
-    @Override
-    public SAbstractObject executeGeneric(final VirtualFrame frame) {
+    @Specialization(rewriteOn = {FrameSlotTypeException.class})
+    public int doInteger(final VirtualFrame frame) throws FrameSlotTypeException {
       MaterializedFrame ctx = determineContext(frame.materialize());
+      return ctx.getInt(slot);
+    }
 
-      try {
-        SAbstractObject value = (SAbstractObject) ctx.getObject(slot);
-        if (value == null) {
-          throwRuntimeException(slot);
-        }
-        return value;
-      } catch (FrameSlotTypeException e) {
-        throwRuntimeException(slot);
-        return null;
-      }
+    @Specialization(rewriteOn = {FrameSlotTypeException.class})
+    public double doDouble(final VirtualFrame frame) throws FrameSlotTypeException {
+      MaterializedFrame ctx = determineContext(frame.materialize());
+      return ctx.getDouble(slot);
+    }
+
+    @Specialization(rewriteOn = {FrameSlotTypeException.class})
+    public boolean doBoolean(final VirtualFrame frame) throws FrameSlotTypeException {
+      MaterializedFrame ctx = determineContext(frame.materialize());
+      return ctx.getBoolean(slot);
+    }
+
+    @Generic
+    public Object doGeneric(final VirtualFrame frame) {
+      MaterializedFrame ctx = determineContext(frame.materialize());
+      return ctx.getValue(slot);
     }
   }
 
-  public static class SelfReadNode extends VariableReadNode {
+  public abstract static class SelfReadNode extends VariableReadNode {
     public SelfReadNode(final FrameSlot slot, final int contextLevel) {
       super(slot, contextLevel); }
+
+    public SelfReadNode(final SelfReadNode node) {
+      this(node.slot, node.contextLevel); }
   }
 
-  public static class SuperReadNode extends VariableReadNode {
+  public abstract static class SuperReadNode extends VariableReadNode {
     public SuperReadNode(final FrameSlot slot, final int contextLevel) {
       super(slot, contextLevel); }
+
+    public SuperReadNode(final SuperReadNode node) {
+      this(node.slot, node.contextLevel); }
   }
 }

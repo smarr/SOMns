@@ -1,5 +1,6 @@
 package som.primitives;
 
+import som.interpreter.Types;
 import som.interpreter.nodes.BinaryMessageNode;
 import som.interpreter.nodes.TernaryMessageNode;
 import som.interpreter.nodes.UnaryMessageNode;
@@ -7,7 +8,6 @@ import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray;
 import som.vmobjects.SClass;
-import som.vmobjects.SInteger;
 import som.vmobjects.SMethod;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
@@ -21,10 +21,28 @@ public class ObjectPrims {
     public EqualsEqualsPrim(final SSymbol selector, final Universe universe) { super(selector, universe); }
     public EqualsEqualsPrim(final EqualsEqualsPrim prim) { this(prim.selector, prim.universe); }
 
-    @Specialization
-    public SAbstractObject doSAbstractObject(final SAbstractObject receiver,
-        final SAbstractObject argument) {
-      // TODO: make sure we can still override these messages!! Do use something like a monomorphic node specialization??? Check whether the lookup gets a primitive that has the proper node as its expression?
+//    @Specialization(order = 10)
+//    public SAbstractObject doObject(final boolean receiver, final SObject argument) {
+//      if ((receiver == true  && argument == universe.trueObject) ||
+//          (receiver == false && argument == universe.falseObject)) {
+//        return universe.trueObject;
+//      } else {
+//        return universe.falseObject;
+//      }
+//    }
+//
+//    @Specialization(order = 11)
+//    public SAbstractObject doObject(final SObject receiver, final boolean argument) {
+//      if ((argument == true  && receiver == universe.trueObject) ||
+//          (argument == false && receiver == universe.falseObject)) {
+//        return universe.trueObject;
+//      } else {
+//        return universe.falseObject;
+//      }
+//    }
+
+    @Specialization(order = 100)
+    public SAbstractObject doObject(final Object receiver, final Object argument) {
       if (receiver == argument) {
         return universe.trueObject;
       } else {
@@ -38,8 +56,8 @@ public class ObjectPrims {
     public PerformPrim(final PerformPrim prim) { this(prim.selector, prim.universe); }
 
     @Specialization
-    public SAbstractObject doSAbstractObject(final VirtualFrame frame, final SAbstractObject receiver, final SSymbol selector) {
-      SMethod invokable = receiver.getSOMClass(universe).lookupInvokable(selector);
+    public Object doObject(final VirtualFrame frame, final Object receiver, final SSymbol selector) {
+      SMethod invokable = Types.getClassOf(receiver, universe).lookupInvokable(selector);
       return invokable.invoke(frame.pack(), receiver);
     }
   }
@@ -49,7 +67,7 @@ public class ObjectPrims {
     public PerformInSuperclassPrim(final PerformInSuperclassPrim prim) { this(prim.selector, prim.universe); }
 
     @Specialization
-    public SAbstractObject doSAbstractObject(final VirtualFrame frame,
+    public Object doSAbstractObject(final VirtualFrame frame,
         final SAbstractObject receiver, final SSymbol selector, final SClass  clazz) {
       SMethod invokable = clazz.lookupInvokable(selector);
       return invokable.invoke(frame.pack(), receiver);
@@ -61,9 +79,9 @@ public class ObjectPrims {
     public PerformWithArgumentsPrim(final PerformWithArgumentsPrim prim) { this(prim.selector, prim.universe); }
 
     @Specialization
-    public SAbstractObject doSAbstractObject(final VirtualFrame frame,
-        final SAbstractObject receiver, final SSymbol selector, final SArray  argsArr) {
-      SMethod invokable = receiver.getSOMClass(universe).lookupInvokable(selector);
+    public Object doObject(final VirtualFrame frame,
+        final Object receiver, final SSymbol selector, final SArray  argsArr) {
+      SMethod invokable = Types.getClassOf(receiver, universe).lookupInvokable(selector);
       return invokable.invoke(frame.pack(), receiver, argsArr.indexableFields);
     }
   }
@@ -73,8 +91,8 @@ public class ObjectPrims {
     public InstVarAtPrim(final InstVarAtPrim prim) { this(prim.selector, prim.universe); }
 
     @Specialization
-    public SAbstractObject doSObject(final SObject receiver, final SInteger idx) {
-      return receiver.getField(idx.getEmbeddedInteger() - 1);
+    public Object doSObject(final SObject receiver, final int idx) {
+      return receiver.getField(idx - 1);
     }
   }
 
@@ -83,9 +101,16 @@ public class ObjectPrims {
     public InstVarAtPutPrim(final InstVarAtPutPrim prim) { this(prim.selector, prim.universe); }
 
     @Specialization
-    public SAbstractObject doSObject(final SObject receiver, final SInteger idx, final SAbstractObject val) {
-      receiver.setField(idx.getEmbeddedInteger() - 1, val);
+    public Object doSObject(final SObject receiver, final int idx, final SAbstractObject val) {
+      receiver.setField(idx - 1, val);
       return val;
+    }
+
+    @Specialization
+    public Object doSObject(final SObject receiver, final int idx, final Object val) {
+      SAbstractObject value = Types.asAbstractObject(val, universe);
+      receiver.setField(idx - 1, value);
+      return value;
     }
   }
 
@@ -108,6 +133,11 @@ public class ObjectPrims {
     @Specialization
     public SAbstractObject doSAbstractObject(final SAbstractObject receiver) {
       return receiver.getSOMClass(universe);
+    }
+
+    @Specialization
+    public SAbstractObject doObject(final Object receiver) {
+      return Types.getClassOf(receiver, universe);
     }
   }
 }

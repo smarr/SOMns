@@ -74,9 +74,10 @@ import som.interpreter.nodes.ReturnNonLocalNode;
 import som.interpreter.nodes.SequenceNode;
 import som.interpreter.nodes.UnaryMessageNode;
 import som.interpreter.nodes.VariableNode.SelfReadNode;
-import som.interpreter.nodes.VariableNode.SuperReadNode;
-import som.interpreter.nodes.VariableNode.VariableReadNode;
-import som.interpreter.nodes.VariableWriteNode;
+import som.interpreter.nodes.VariableNodeFactory.SelfReadNodeFactory;
+import som.interpreter.nodes.VariableNodeFactory.SuperReadNodeFactory;
+import som.interpreter.nodes.VariableNodeFactory.VariableReadNodeFactory;
+import som.interpreter.nodes.VariableWriteNodeFactory;
 import som.interpreter.nodes.literals.BigIntegerLiteralNodeFactory;
 import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.literals.IntegerLiteralNodeFactory;
@@ -400,7 +401,7 @@ public class Parser {
       } else if (sym == EndTerm) {
         // the end of the method has been found (EndTerm) - make it implicitly
         // return "self"
-        SelfReadNode self = new SelfReadNode(mgenc.getSelfSlot(), mgenc.getSelfContextLevel());
+        SelfReadNode self = SelfReadNodeFactory.create(mgenc.getSelfSlot(), mgenc.getSelfContextLevel());
         SourceCoordinate selfCoord = getCoordinate();
         assignSource(self, selfCoord);
         expressions.add(self);
@@ -757,18 +758,18 @@ public class Parser {
                                       final String variableName) {
     // first handle the keywords/reserved names
     if ("self".equals(variableName)) {
-      return new SelfReadNode(mgenc.getSelfSlot(), mgenc.getSelfContextLevel());
+      return SelfReadNodeFactory.create(mgenc.getSelfSlot(), mgenc.getSelfContextLevel());
     }
 
     if ("super".equals(variableName)) {
-      return new SuperReadNode(mgenc.getSelfSlot(), mgenc.getSelfContextLevel());
+      return SuperReadNodeFactory.create(mgenc.getSelfSlot(), mgenc.getSelfContextLevel());
     }
 
     // now look up first local variables, or method arguments
     FrameSlot frameSlot = mgenc.getFrameSlot(variableName);
 
     if (frameSlot != null) {
-      return new VariableReadNode(frameSlot,
+      return VariableReadNodeFactory.create(frameSlot,
           mgenc.getFrameSlotContextLevel(variableName));
     }
 
@@ -791,7 +792,7 @@ public class Parser {
     FrameSlot frameSlot = mgenc.getFrameSlot(variableName);
 
     if (frameSlot != null) {
-      return new VariableWriteNode(frameSlot,
+      return VariableWriteNodeFactory.create(frameSlot,
           mgenc.getFrameSlotContextLevel(variableName), exp);
     }
 
