@@ -31,7 +31,7 @@ public abstract class WhileTrueMessageNode extends BinarySendNode {
     Object loopConditionResult = executeBlock(frame, loopCondition);
 
     // TODO: this is a simplification, we don't cover the case receiver isn't a boolean
-    while (loopConditionResult == universe.trueObject || loopConditionResult == Boolean.TRUE) {
+    while (loopConditionResult == universe.trueObject) {
       executeBlock(frame, loopBody);
       loopConditionResult = executeBlock(frame, loopCondition);
     }

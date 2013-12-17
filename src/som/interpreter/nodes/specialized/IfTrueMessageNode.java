@@ -1,7 +1,6 @@
 package som.interpreter.nodes.specialized;
 
 import som.interpreter.nodes.messages.BinarySendNode;
-import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
 import som.vmobjects.SMethod;
 import som.vmobjects.SObject;
@@ -18,10 +17,10 @@ public abstract class IfTrueMessageNode extends BinarySendNode {
    * This is the case were we got a block as the argument. Need to actually
    * evaluate it.
    */
-  @Specialization(order = 1)
+  @Specialization
   public Object doIfTrue(final VirtualFrame frame,
-      final boolean receiver, final SBlock argument) {
-    if (receiver) {
+      final SObject receiver, final SBlock argument) {
+    if (receiver == universe.trueObject) {
       SMethod blockMethod = argument.getMethod();
       SBlock b = universe.newBlock(blockMethod, frame.materialize(), 1);
       return blockMethod.invoke(frame.pack(), b);
@@ -30,28 +29,17 @@ public abstract class IfTrueMessageNode extends BinarySendNode {
     }
   }
 
-  @Specialization(guards = "isBooleanReceiver", order = 2)
-  public Object doIfTrue(final VirtualFrame frame,
-      final SObject receiver, final SBlock argument) {
-    return doIfTrue(frame, receiver == universe.trueObject, argument);
-  }
-
   /**
    * The argument in this case is an expression and can be returned directly.
    */
-  @Specialization(order = 10)
-  public SAbstractObject doIfTrue(final VirtualFrame frame,
-      final boolean receiver, final SAbstractObject argument) {
-    if (receiver) {
+  @Specialization
+  public Object doIfTrue(final VirtualFrame frame,
+      final SObject receiver, final Object argument) {
+    if (receiver == universe.trueObject) {
       return argument;
     } else {
       return universe.nilObject;
     }
   }
 
-  @Specialization(guards = "isBooleanReceiver", order = 11)
-  public SAbstractObject doIfTrue(final VirtualFrame frame,
-      final SObject receiver, final SAbstractObject argument) {
-    return doIfTrue(frame, receiver == universe.trueObject, argument);
-  }
 }

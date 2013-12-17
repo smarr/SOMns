@@ -55,10 +55,6 @@ public abstract class ExpressionNode extends SOMNode {
     return TypesGen.TYPES.expectString(executeGeneric(frame));
   }
 
-  public boolean executeBoolean(final VirtualFrame frame) throws UnexpectedResultException {
-    return TypesGen.TYPES.expectBoolean(executeGeneric(frame));
-  }
-
   public double executeDouble(final VirtualFrame frame) throws UnexpectedResultException {
     return TypesGen.TYPES.expectDouble(executeGeneric(frame));
   }

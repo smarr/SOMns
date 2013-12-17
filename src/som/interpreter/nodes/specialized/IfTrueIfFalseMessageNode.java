@@ -16,11 +16,12 @@ public abstract class IfTrueIfFalseMessageNode extends TernarySendNode {
 
   @Specialization(order = 1)
   public Object doIfTrueIfFalse(final VirtualFrame frame,
-      final boolean receiver, final SBlock trueBlock, final SBlock falseBlock) {
+      final SObject receiver, final SBlock trueBlock, final SBlock falseBlock) {
     SMethod branchMethod;
-    if (receiver) {
+    if (receiver == universe.trueObject) {
       branchMethod = trueBlock.getMethod();
     } else {
+      assert receiver == universe.falseObject;
       branchMethod = falseBlock.getMethod();
     }
 
@@ -28,57 +29,40 @@ public abstract class IfTrueIfFalseMessageNode extends TernarySendNode {
     return branchMethod.invoke(frame.pack(), b);
   }
 
-  @Specialization(guards = "isBooleanReceiver", order = 2)
+  @Specialization(order = 2)
   public Object doIfTrueIfFalse(final VirtualFrame frame,
-      final SObject receiver, final SBlock trueBlock, final SBlock falseBlock) {
-    return doIfTrueIfFalse(frame, receiver == universe.trueObject, trueBlock, falseBlock);
-  }
-
-  @Specialization(order = 10)
-  public Object doIfTrueIfFalse(final VirtualFrame frame,
-      final boolean receiver, final Object trueValue, final SBlock falseBlock) {
-    if (receiver) {
+      final SObject receiver, final Object trueValue, final SBlock falseBlock) {
+    if (receiver == universe.trueObject) {
       return trueValue;
     } else {
+      assert receiver == universe.falseObject;
       SMethod branchMethod = falseBlock.getMethod();
       SBlock  b = universe.newBlock(branchMethod, frame.materialize(), 1);
       return branchMethod.invoke(frame.pack(), b);
     }
   }
 
-  @Specialization(guards = "isBooleanReceiver", order = 11)
+  @Specialization(order = 3)
   public Object doIfTrueIfFalse(final VirtualFrame frame,
-      final SObject receiver, final Object trueValue, final SBlock falseBlock) {
-    return doIfTrueIfFalse(frame, receiver == universe.trueObject, trueValue, falseBlock);
-  }
-
-  @Specialization(order = 12)
-  public Object doIfTrueIfFalse(final VirtualFrame frame,
-      final boolean receiver, final SBlock trueBlock, final Object falseValue) {
-    if (receiver) {
+      final SObject receiver, final SBlock trueBlock, final Object falseValue) {
+    if (receiver == universe.trueObject) {
       SMethod branchMethod = trueBlock.getMethod();
       SBlock  b = universe.newBlock(branchMethod, frame.materialize(), 1);
       return branchMethod.invoke(frame.pack(), b);
     } else {
+      assert receiver == universe.falseObject;
       return falseValue;
     }
   }
 
-  @Specialization(guards = "isBooleanReceiver", order = 13)
-  public Object doIfTrueIfFalse(final VirtualFrame frame,
-      final SObject receiver, final SBlock trueBlock, final Object falseValue) {
-    return doIfTrueIfFalse(frame, receiver == universe.trueObject, trueBlock, falseValue);
-  }
-
-  @Specialization(order = 20)
-  public Object doIfTrueIfFalse(final VirtualFrame frame,
-      final boolean receiver, final Object trueValue, final Object falseValue) {
-    return (receiver) ? trueValue : falseValue;
-  }
-
-  @Specialization(guards = "isBooleanReceiver", order = 21)
+  @Specialization(order = 4)
   public Object doIfTrueIfFalse(final VirtualFrame frame,
       final SObject receiver, final Object trueValue, final Object falseValue) {
-    return doIfTrueIfFalse(frame, receiver == universe.trueObject, trueValue, falseValue);
+    if (receiver == universe.trueObject) {
+      return trueValue;
+    } else {
+      assert receiver == universe.falseObject;
+      return falseValue;
+    }
   }
 }

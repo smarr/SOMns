@@ -42,7 +42,6 @@ import com.oracle.truffle.api.dsl.TypeSystem;
 
 @TypeSystem({       int.class,
              BigInteger.class,
-                boolean.class,
                  String.class,
                  double.class,
                SInteger.class,
@@ -71,13 +70,6 @@ public class Types {
       return universe.newString((String) obj);
     } else if (obj instanceof Double) {
       return universe.newDouble((double) obj);
-    } else if (obj instanceof Boolean) {
-      boolean b = (boolean) obj;
-      if (b) {
-        return universe.trueObject;
-      } else {
-        return universe.falseObject;
-      }
     }
 
     throw new RuntimeException("We got an object that should be covered by the above check: " + obj.toString());
@@ -95,13 +87,6 @@ public class Types {
       return universe.stringClass;
     } else if (obj instanceof Double) {
       return universe.doubleClass;
-    } else if (obj instanceof Boolean) {
-      boolean b = (boolean) obj;
-      if (b) {
-        return universe.trueClass;
-      } else {
-        return universe.falseClass;
-      }
     }
 
     throw new RuntimeException("We got an object that should be covered by the above check: " + obj.toString());
@@ -169,26 +154,6 @@ public class Types {
 //      return (BigInteger) value;
 //    } else {
 //      return ((SBigInteger) value).getEmbeddedBiginteger();
-//    }
-//  }
-//
-//  @TypeCheck
-//  public boolean isBoolean(final Object value) {
-//    return value instanceof Boolean ||
-//           Universe.current().trueObject == value ||
-//           Universe.current().falseObject == value;
-//  }
-//
-//  @TypeCast
-//  public boolean asBoolean(final Object value) {
-//    assert isBoolean(value);
-//    if (value instanceof Boolean) {
-//      return (boolean) value;
-//    } else if (Universe.current().trueObject == value) {
-//      return true;
-//    } else {
-//      assert Universe.current().falseObject == value;
-//      return false;
 //    }
 //  }
 //

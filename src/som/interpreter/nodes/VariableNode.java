@@ -65,12 +65,6 @@ public abstract class VariableNode extends ContextualNode {
       return ctx.getDouble(slot);
     }
 
-    @Specialization(rewriteOn = {FrameSlotTypeException.class})
-    public boolean doBoolean(final VirtualFrame frame) throws FrameSlotTypeException {
-      MaterializedFrame ctx = determineContext(frame.materialize());
-      return ctx.getBoolean(slot);
-    }
-
     @Generic
     public Object doGeneric(final VirtualFrame frame) {
       MaterializedFrame ctx = determineContext(frame.materialize());

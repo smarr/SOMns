@@ -32,13 +32,6 @@ public abstract class VariableWriteNode extends VariableNode {
     return expValue;
   }
 
-  @Specialization(rewriteOn = FrameSlotTypeException.class)
-  public boolean write(final VirtualFrame frame, final boolean expValue) throws FrameSlotTypeException {
-    MaterializedFrame ctx = determineContext(frame.materialize());
-    ctx.setBoolean(slot, expValue);
-    return expValue;
-  }
-
   @Specialization
   public Object writeGeneric(final VirtualFrame frame, final Object expValue) {
     MaterializedFrame ctx = determineContext(frame.materialize());
