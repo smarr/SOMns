@@ -5,7 +5,6 @@ import som.interpreter.nodes.TernaryMessageNode;
 import som.interpreter.nodes.UnaryMessageNode;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
-import som.vmobjects.SString;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.Specialization;
@@ -18,10 +17,8 @@ public class StringPrims {
     public ConcatPrim(final ConcatPrim prim) { this(prim.selector, prim.universe); }
 
     @Specialization
-    public SAbstractObject doSString(final SString receiver,
-        final SString argument) {
-      return universe.newString(receiver.getEmbeddedString()
-          + argument.getEmbeddedString());
+    public String doSString(final String receiver, final String argument) {
+      return receiver + argument;
     }
   }
 
@@ -30,8 +27,8 @@ public class StringPrims {
     public AsSymbolPrim(final AsSymbolPrim prim) { this(prim.selector, prim.universe); }
 
     @Specialization
-    public SAbstractObject doSString(final SString receiver) {
-      return universe.symbolFor(receiver.getEmbeddedString());
+    public SAbstractObject doSString(final String receiver) {
+      return universe.symbolFor(receiver);
     }
   }
 
@@ -40,11 +37,11 @@ public class StringPrims {
     public SubstringPrim(final SubstringPrim prim) { this(prim.selector, prim.universe); }
 
     @Specialization
-    public SAbstractObject doSString(final String receiver, final int start, final int end) {
+    public String doSString(final String receiver, final int start, final int end) {
       try {
-        return universe.newString(receiver.substring(start - 1, end));
+        return receiver.substring(start - 1, end);
       } catch (IndexOutOfBoundsException e) {
-        return universe.newString(new String("Error - index out of bounds"));
+        return "Error - index out of bounds";
       }
     }
   }

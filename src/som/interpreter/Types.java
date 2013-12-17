@@ -112,6 +112,16 @@ public class Types {
     return d.getEmbeddedDouble();
   }
 
+  /**
+   * This implicit cast in order to promote ints when necessary to
+   * to big integers.
+   * We only do that for primitive Java types not SOM types.
+   */
+  @ImplicitCast
+  public BigInteger castBigInteger(final int i) {
+    return BigInteger.valueOf(i);
+  }
+
 //  @TypeCheck
 //  public boolean isInteger(final Object value) {
 //    return value instanceof Integer               ||
@@ -141,11 +151,7 @@ public class Types {
 //    }
 //  }
 //
-//  @TypeCheck
-//  public boolean isBigInteger(final Object value) {
-//    return value instanceof BigInteger ||
-//           value instanceof SBigInteger;
-//  }
+
 //
 //  @TypeCast
 //  public BigInteger asBigInteger(final Object value) {

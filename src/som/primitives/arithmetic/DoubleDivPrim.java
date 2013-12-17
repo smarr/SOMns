@@ -14,18 +14,17 @@ public abstract class DoubleDivPrim extends ArithmeticPrim {
   public DoubleDivPrim(final DoubleDivPrim node) { this(node.selector, node.universe); }
 
   @Specialization(order = 1)
-  public SAbstractObject doDouble(final double left, final double right) {
-    return universe.newDouble(left / right);
+  public double doDouble(final double left, final double right) {
+    return left / right;
   }
 
   @Specialization(order = 2)
-  public SAbstractObject doInteger(final int left, final int right) {
-    double result = ((double) left) / right;
-    return universe.newDouble(result);
+  public double doInteger(final int left, final int right) {
+    return ((double) left) / right;
   }
 
   @Specialization(order = 10)
-  public SAbstractObject doDouble(final double left, final int right) {
+  public double doDouble(final double left, final int right) {
     return doDouble(left, (double) right);
   }
 

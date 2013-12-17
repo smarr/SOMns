@@ -7,7 +7,6 @@ import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject;
-import som.vmobjects.SString;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.Specialization;
@@ -64,8 +63,8 @@ public class SystemPrims {
     public PrintStringPrim(final PrintStringPrim prim) { this(prim.selector, prim.universe); }
 
     @Specialization(guards = "receiverIsSystemObject")
-    public Object doSObject(final SObject receiver, final SString argument) {
-      Universe.print(argument.getEmbeddedString());
+    public Object doSObject(final SObject receiver, final String argument) {
+      Universe.print(argument);
       return receiver;
     }
   }
@@ -97,9 +96,8 @@ public class SystemPrims {
     public TimePrim(final TimePrim prim) { this(prim.selector, prim.universe); }
 
     @Specialization(guards = "receiverIsSystemObject")
-    public SAbstractObject doSObject(final SObject receiver) {
-      int time = (int) (System.currentTimeMillis() - startTime);
-      return universe.newInteger(time);
+    public int doSObject(final SObject receiver) {
+      return (int) (System.currentTimeMillis() - startTime);
     }
   }
 
@@ -108,9 +106,8 @@ public class SystemPrims {
     public TicksPrim(final TicksPrim prim) { this(prim.selector, prim.universe); }
 
     @Specialization(guards = "receiverIsSystemObject")
-    public SAbstractObject doSObject(final SObject receiver) {
-      int time = (int) (System.nanoTime() / 1000L - startMicroTime);
-      return universe.newInteger(time);
+    public int doSObject(final SObject receiver) {
+      return (int) (System.nanoTime() / 1000L - startMicroTime);
     }
   }
 

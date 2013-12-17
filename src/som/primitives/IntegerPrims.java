@@ -3,9 +3,7 @@ package som.primitives;
 import som.interpreter.nodes.UnaryMessageNode;
 import som.primitives.arithmetic.ArithmeticPrim;
 import som.vm.Universe;
-import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
-import som.vmobjects.SString;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.Specialization;
@@ -18,8 +16,8 @@ public abstract class IntegerPrims {
     public RandomPrim(final RandomPrim prim) { this(prim.selector, prim.universe); }
 
     @Specialization
-    public SAbstractObject doInteger(final int receiver) {
-      return universe.newInteger((int) (receiver * Math.random()));
+    public int doInteger(final int receiver) {
+      return (int) (receiver * Math.random());
     }
   }
 
@@ -32,9 +30,9 @@ public abstract class IntegerPrims {
     }
 
     @Specialization(guards = "receiverIsIntegerClass")
-    public SAbstractObject doSClass(final SClass receiver, final SString argument) {
-      long result = Long.parseLong(argument.getEmbeddedString());
-      return makeInt(result);
+    public Object doSClass(final SClass receiver, final String argument) {
+      long result = Long.parseLong(argument);
+      return intOrBigInt(result);
     }
   }
 }

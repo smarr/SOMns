@@ -14,22 +14,22 @@ public abstract class AsStringPrim extends UnaryMessageNode {
   public AsStringPrim(final AsStringPrim prim) { this(prim.selector, prim.universe); }
 
   @Specialization
-  public Object doSSymbol(final SSymbol receiver) {
-    return universe.newString(receiver.getString());
+  public String doSSymbol(final SSymbol receiver) {
+    return receiver.getString();
   }
 
   @Specialization
-  public Object doInteger(final int receiver) {
-    return universe.newString(Integer.toString(receiver));
+  public String doInteger(final int receiver) {
+    return Integer.toString(receiver);
   }
 
   @Specialization
-  public Object doDouble(final double receiver) {
-    return universe.newString(Double.toString(receiver));
+  public String doDouble(final double receiver) {
+    return Double.toString(receiver);
   }
 
   @Specialization
-  public Object doBigInteger(final BigInteger receiver) {
-    return universe.newString(receiver.toString());
+  public String doBigInteger(final BigInteger receiver) {
+    return receiver.toString();
   }
 }

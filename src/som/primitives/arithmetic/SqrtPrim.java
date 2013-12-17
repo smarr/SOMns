@@ -4,7 +4,6 @@ import java.math.BigInteger;
 
 import som.interpreter.nodes.UnaryMessageNode;
 import som.vm.Universe;
-import som.vmobjects.SAbstractObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.Specialization;
@@ -14,34 +13,32 @@ public abstract class SqrtPrim extends UnaryMessageNode {
   public SqrtPrim(final SSymbol selector, final Universe universe) { super(selector, universe); }
   public SqrtPrim(final SqrtPrim node) { this(node.selector, node.universe); }
 
-  protected SAbstractObject makeInt(final long result) {
-    // Check with integer bounds and push:
-    if (result > Integer.MAX_VALUE
-        || result < Integer.MIN_VALUE) {
-      return universe.newBigInteger(result);
+  private Object intOrBigInt(final long val) {
+    if (val > Integer.MAX_VALUE || val < Integer.MIN_VALUE) {
+      return BigInteger.valueOf(val);
     } else {
-      return universe.newInteger((int) result);
+      return (int) val;
     }
   }
 
   @Specialization
-  public SAbstractObject doInteger(final int receiver) {
+  public Object doInteger(final int receiver) {
     double result = Math.sqrt(receiver);
 
     if (result == Math.rint(result)) {
-      return makeInt((long) result);
+      return intOrBigInt((long) result);
     } else {
-      return universe.newDouble(result);
+      return result;
     }
   }
 
   @Specialization
-  public SAbstractObject doBigInteger(final BigInteger receiver) {
-    return universe.newDouble(Math.sqrt(receiver.doubleValue()));
+  public double doBigInteger(final BigInteger receiver) {
+    return Math.sqrt(receiver.doubleValue());
   }
 
   @Specialization
-  public SAbstractObject doDouble(final double receiver) {
-    return universe.newDouble(Math.sqrt(receiver));
+  public double doDouble(final double receiver) {
+    return Math.sqrt(receiver);
   }
 }
