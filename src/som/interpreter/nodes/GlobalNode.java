@@ -22,7 +22,6 @@
 package som.interpreter.nodes;
 
 import som.compiler.MethodGenerationContext;
-import som.interpreter.Types;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SSymbol;
@@ -41,9 +40,9 @@ public abstract class GlobalNode extends ExpressionNode {
     this.universe   = universe;
   }
 
-  protected SAbstractObject getSelfFromVirtual(final VirtualFrame frame) {
+  protected Object getSelfFromVirtual(final VirtualFrame frame) {
     try {
-      return Types.asAbstractObject(frame.getObject(MethodGenerationContext.getStandardSelfSlot()), universe);
+      return frame.getObject(MethodGenerationContext.getStandardSelfSlot());
     } catch (FrameSlotTypeException e) {
       throw new RuntimeException("uninitialized selfSlot, which should be pretty much imposible???");
     }
@@ -65,8 +64,8 @@ public abstract class GlobalNode extends ExpressionNode {
       } else {
         // if it is not defined, we will send a error message to the current
         // receiver object
-        SAbstractObject self = getSelfFromVirtual(frame);
-        return self.sendUnknownGlobal(globalName, universe, frame.pack());
+        Object self = getSelfFromVirtual(frame);
+        return SAbstractObject.sendUnknownGlobal(self, globalName, universe, frame.pack());
       }
     }
   }

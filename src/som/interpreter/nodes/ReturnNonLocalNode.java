@@ -62,9 +62,9 @@ public class ReturnNonLocalNode extends ContextualNode {
     }
   }
 
-  private SAbstractObject getSelf(final MaterializedFrame ctx) {
+  private Object getSelf(final MaterializedFrame ctx) {
     try {
-      return (SAbstractObject) ctx.getObject(MethodGenerationContext.getStandardSelfSlot());
+      return ctx.getObject(MethodGenerationContext.getStandardSelfSlot());
     } catch (FrameSlotTypeException e) {
       throw new RuntimeException("This should never happen! really!");
     }
@@ -76,12 +76,12 @@ public class ReturnNonLocalNode extends ContextualNode {
     FrameOnStackMarker marker = getMarker(ctx);
 
     if (marker.isOnStack()) {
-      Object result = expression.executeGeneric(frame); // TODO: Work out whether there is another way than this cast!
+      Object result = expression.executeGeneric(frame);
       throw new ReturnException(result, marker);
     } else {
       SBlock block = getBlockFromVirtual(frame);
-      SAbstractObject self = getSelf(ctx);
-      return self.sendEscapedBlock(block, universe, frame.pack());
+      Object self = getSelf(ctx);
+      return SAbstractObject.sendEscapedBlock(self, block, universe, frame.pack());
     }
   }
 }

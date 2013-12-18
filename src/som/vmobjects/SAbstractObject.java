@@ -1,5 +1,6 @@
 package som.vmobjects;
 
+import som.interpreter.Types;
 import som.vm.Universe;
 
 import com.oracle.truffle.api.frame.PackedFrame;
@@ -14,20 +15,23 @@ public abstract class SAbstractObject {
     return "a " + getSOMClass(Universe.current()).getName().getString();
   }
 
-  public Object send(final String selectorString,
+  public static final Object send(
+      final Object receiver,
+      final String selectorString,
       final SAbstractObject[] arguments,
       final Universe universe, final PackedFrame frame) {
     // Turn the selector string into a selector
     SSymbol selector = universe.symbolFor(selectorString);
 
     // Lookup the invokable
-    SMethod invokable = getSOMClass(universe).lookupInvokable(selector);
+    SMethod invokable = Types.getClassOf(receiver, universe).lookupInvokable(selector);
 
     // Invoke the invokable
-    return invokable.invoke(frame, this, arguments);
+    return invokable.invoke(frame, receiver, arguments);
   }
 
-  public Object sendDoesNotUnderstand(final SSymbol selector,
+  public static final Object sendDoesNotUnderstand(final Object receiver,
+      final SSymbol selector,
       final SAbstractObject[] arguments,
       final Universe universe,
       final PackedFrame frame) {
@@ -41,21 +45,20 @@ public abstract class SAbstractObject {
 
     SAbstractObject[] args = new SAbstractObject[] {selector, argumentsArray};
 
-    return send("doesNotUnderstand:arguments:", args, universe, frame);
+    return send(receiver, "doesNotUnderstand:arguments:", args, universe, frame);
   }
 
-  public Object sendUnknownGlobal(final SSymbol globalName,
-      final Universe universe,
+  public static final Object sendUnknownGlobal(final Object receiver,
+      final SSymbol globalName, final Universe universe,
       final PackedFrame frame) {
     SAbstractObject[] arguments = {globalName};
-    return send("unknownGlobal:", arguments, universe, frame);
+    return send(receiver, "unknownGlobal:", arguments, universe, frame);
   }
 
-  public Object sendEscapedBlock(final SBlock block,
-      final Universe universe,
-      final PackedFrame frame) {
+  public static final Object sendEscapedBlock(final Object receiver,
+      final SBlock block, final Universe universe, final PackedFrame frame) {
     SAbstractObject[] arguments = {block};
-    return send("escapedBlock:", arguments, universe, frame);
+    return send(receiver, "escapedBlock:", arguments, universe, frame);
   }
 
 }

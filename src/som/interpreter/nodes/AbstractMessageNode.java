@@ -75,7 +75,8 @@ public abstract class AbstractMessageNode extends ExpressionNode {
     if (invokable != null) {
       return invokable.invoke(frame.pack(), rcvr, args);
     } else {
-      return rcvr.sendDoesNotUnderstand(selector, args, universe, frame.pack());
+      return SAbstractObject.sendDoesNotUnderstand(rcvr, selector, args,
+          universe, frame.pack());
     }
   }
 
