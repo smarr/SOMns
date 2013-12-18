@@ -11,7 +11,7 @@ public abstract class ArithmeticPrim extends BinaryMessageNode {
 
   protected ArithmeticPrim(final SSymbol selector, final Universe universe) { super(selector, universe); }
 
-  protected final Object intOrBigInt(final long val) {
+  protected final Number intOrBigInt(final long val) {
     if (val > Integer.MAX_VALUE || val < Integer.MIN_VALUE) {
       return BigInteger.valueOf(val);
     } else {
@@ -19,7 +19,7 @@ public abstract class ArithmeticPrim extends BinaryMessageNode {
     }
   }
 
-  protected final Object reduceToIntIfPossible(final BigInteger result) {
+  protected final Number reduceToIntIfPossible(final BigInteger result) {
     if (result.bitLength() > 31) {
       return result;
     } else {

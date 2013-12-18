@@ -13,7 +13,7 @@ public abstract class SqrtPrim extends UnaryMessageNode {
   public SqrtPrim(final SSymbol selector, final Universe universe) { super(selector, universe); }
   public SqrtPrim(final SqrtPrim node) { this(node.selector, node.universe); }
 
-  private Object intOrBigInt(final long val) {
+  private Number intOrBigInt(final long val) {
     if (val > Integer.MAX_VALUE || val < Integer.MIN_VALUE) {
       return BigInteger.valueOf(val);
     } else {
