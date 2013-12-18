@@ -7,7 +7,6 @@ import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray;
 import som.vmobjects.SClass;
-import som.vmobjects.SInteger;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.Specialization;
@@ -22,11 +21,6 @@ public class ArrayPrims {
     @Specialization
     public Object doSArray(final SArray receiver, final int argument) {
       return receiver.getIndexableField(argument - 1);
-    }
-
-    @Specialization
-    public SAbstractObject doSArray(final SArray receiver, final SInteger argument) {
-      return receiver.getIndexableField(argument.getEmbeddedInteger() - 1);
     }
   }
 
@@ -54,11 +48,6 @@ public class ArrayPrims {
 
     protected boolean receiverIsArrayClass(final SClass receiver) {
       return receiver == universe.arrayClass;
-    }
-
-    @Specialization(guards = "receiverIsArrayClass")
-    public SAbstractObject doSClass(final SClass receiver, final SInteger length) {
-      return universe.newArray(length.getEmbeddedInteger());
     }
 
     @Specialization(guards = "receiverIsArrayClass")
