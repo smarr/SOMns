@@ -26,8 +26,10 @@
 package som.compiler;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashMap;
 
+import som.compiler.Variable.Argument;
+import som.compiler.Variable.Local;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.FieldNode.FieldReadNode;
 import som.interpreter.nodes.FieldNode.FieldWriteNode;
@@ -51,8 +53,8 @@ public class MethodGenerationContext {
   private SSymbol                    signature;
   private boolean                    primitive;
 
-  private final List<String>         arguments = new ArrayList<String>();
-  private final List<String>         locals    = new ArrayList<String>();
+  private final LinkedHashMap<String, Argument> arguments = new LinkedHashMap<String, Argument>();
+  private final LinkedHashMap<String, Local>    locals    = new LinkedHashMap<String, Local>();
 
   // Truffle
   private final FrameDescriptor frameDescriptor;
@@ -73,15 +75,32 @@ public class MethodGenerationContext {
     return Primitives.getEmptyPrimitive(signature.getString(), universe);
   }
 
-  public SMethod assemble(final Universe universe, final ExpressionNode expressions) {
-    FrameSlot[] localSlots = new FrameSlot[locals.size()];
+  private void separateLocals(final ArrayList<Local> onlyLocalAccess,
+      final ArrayList<Local> nonLocalAccess) {
+    for (Local l : locals.values()) {
+      if (l.isAccessedOutOfContext()) {
+        l.upvalueIndex = nonLocalAccess.size();
+        nonLocalAccess.add(l);
+      } else {
+        onlyLocalAccess.add(l);
+      }
+    }
+  }
 
-    for (int i = 0; i < locals.size(); i++) {
-      localSlots[i] = frameDescriptor.findFrameSlot(locals.get(i));
+  public SMethod assemble(final Universe universe, final ExpressionNode expressions) {
+    ArrayList<Local> onlyLocalAccess = new ArrayList<>(locals.size());
+    ArrayList<Local> nonLocalAccess  = new ArrayList<>(locals.size());
+    separateLocals(onlyLocalAccess, nonLocalAccess);
+
+    FrameSlot[] localSlots = new FrameSlot[onlyLocalAccess.size()];
+
+    for (int i = 0; i < onlyLocalAccess.size(); i++) {
+      localSlots[i] = onlyLocalAccess.get(i).slot;
     }
 
     som.interpreter.Method truffleMethod =
-        new som.interpreter.Method(expressions, arguments.size(), localSlots, frameDescriptor, universe);
+        new som.interpreter.Method(expressions, arguments.size(),
+            nonLocalAccess.size(), localSlots, frameDescriptor, universe);
 
     assignSourceSectionToMethod(expressions, truffleMethod);
 
@@ -111,16 +130,22 @@ public class MethodGenerationContext {
     signature = sig;
   }
 
+  private Argument addArgument(final String arg) {
+    Argument argument = new Argument(arg, arguments.size());
+    arguments.put(arg, argument);
+    return argument;
+  }
+
   public void addArgumentIfAbsent(final String arg) {
-    if (arguments.contains(arg)) {
+    if (arguments.containsKey(arg)) {
       return;
     }
 
-    arguments.add(arg);
+    addArgument(arg);
   }
 
   public void addLocalIfAbsent(final String local) {
-    if (locals.contains(local)) {
+    if (locals.containsKey(local)) {
       return;
     }
 
@@ -128,8 +153,8 @@ public class MethodGenerationContext {
   }
 
   public void addLocal(final String local) {
-    frameDescriptor.addFrameSlot(local);
-    locals.add(local);
+    Local l = new Local(local, frameDescriptor.addFrameSlot(local));
+    locals.put(local, l);
   }
 
   public boolean isBlockMethod() {
@@ -159,7 +184,7 @@ public class MethodGenerationContext {
   }
 
   public int getContextLevel(final String varName) {
-    if (locals.contains(varName) || arguments.contains(varName)) {
+    if (locals.containsKey(varName) || arguments.containsKey(varName)) {
       return 0;
     }
 
@@ -170,31 +195,31 @@ public class MethodGenerationContext {
     return 0;
   }
 
-  public int getArgumentIndex(final String varName) {
-    int idx = arguments.indexOf(varName);
+  // TODO: figure out whether we want to handle variables and arguments separately
+  protected Variable getVariable(final String varName) {
+    if (locals.containsKey(varName)) {
+      return locals.get(varName);
+    }
 
-    if (idx >= 0) {
-      return idx;
+    if (arguments.containsKey(varName)) {
+      return arguments.get(varName);
     }
 
     if (outerGenc != null) {
-      return outerGenc.getArgumentIndex(varName);
+      return outerGenc.getVariable(varName);
     }
-
-    return -1; // not found
+    return null;
   }
 
-  public FrameSlot getVariableFrameSlot(final String varName) {
-    if (locals.contains(varName)) {
-      return frameDescriptor.findFrameSlot(varName);
+  protected Local getLocal(final String varName) {
+    if (locals.containsKey(varName)) {
+      return locals.get(varName);
     }
 
-    FrameSlot slot = null;
     if (outerGenc != null) {
-      slot = outerGenc.getVariableFrameSlot(varName);
+      return outerGenc.getLocal(varName);
     }
-
-    return slot;
+    return null;
   }
 
   public FieldReadNode getObjectFieldRead(final SSymbol fieldName) {

@@ -11,6 +11,7 @@ import som.interpreter.nodes.specialized.WhileTrueMessageNodeFactory;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
+import som.vmobjects.SMethod;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CallTarget;
@@ -228,8 +229,10 @@ public abstract class BinarySendNode extends BinaryMessageNode {
         callCount++;
       }
 
+      Invokable root = (Invokable) inlinableCallTarget.getRootNode();
       BinaryArguments args = new BinaryArguments((SAbstractObject) receiver,
-          (SAbstractObject) argument);
+          (SAbstractObject) argument, root.getNumberOfUpvalues(),
+          universe.nilObject);
       return inlinableCallTarget.call(frame.pack(), args);
     }
   }
@@ -241,10 +244,9 @@ public abstract class BinarySendNode extends BinaryMessageNode {
 
     @Override
     public Object executeEvaluated(final VirtualFrame frame, final Object receiver, final Object argument) {
-      CallTarget callTarget = lookupCallTarget(receiver);
-      BinaryArguments args = new BinaryArguments((SAbstractObject) receiver,
-          (SAbstractObject) argument);
-      return callTarget.call(args);
+      SMethod method = lookupMethod(receiver);
+      return method.invoke(frame.pack(), (SAbstractObject) receiver,
+          (SAbstractObject) argument, universe);
     }
   }
 }

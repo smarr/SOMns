@@ -53,16 +53,19 @@ import com.oracle.truffle.api.nodes.NodeUtil;
 public class Method extends Invokable {
 
   @CompilationFinal private final FrameSlot[] temporarySlots;
+  private final int      numUpvalues;
   private final Universe universe;
 
   public Method(final ExpressionNode expressions,
                 final int numArguments,
+                final int numUpvalues,
                 final FrameSlot[] temporarySlots,
                 final FrameDescriptor frameDescriptor,
                 final Universe  universe) {
     super(expressions, numArguments, frameDescriptor);
-    this.temporarySlots       = temporarySlots;
-    this.universe             = universe;
+    this.temporarySlots = temporarySlots;
+    this.universe       = universe;
+    this.numUpvalues    = numUpvalues;
   }
 
   @Override
@@ -98,13 +101,17 @@ public class Method extends Invokable {
     return result;
   }
 
+  @Override
+  public int getNumberOfUpvalues() {
+    return numUpvalues;
+  }
+
   @ExplodeLoop
   protected void initializeFrame(final VirtualFrame frame) {
     for (int i = 0; i < temporarySlots.length; i++) {
       frame.setObject(temporarySlots[i], universe.nilObject);
     }
   }
-
 
   @Override
   public String toString() {
@@ -145,16 +152,16 @@ public class Method extends Invokable {
     switch (numArguments) {
       case 0:
         return new UnaryInlinedMethod(selector, universe, body, null,
-            inlinableCallTarget, frameDescriptor, temporarySlots);
+            inlinableCallTarget, numUpvalues, frameDescriptor, temporarySlots);
       case 1:
         return new BinaryInlinedMethod(selector, universe, body, null, null,
-            inlinableCallTarget, frameDescriptor, temporarySlots);
+            inlinableCallTarget, numUpvalues, frameDescriptor, temporarySlots);
       case 2:
         return new TernaryInlinedMethod(selector, universe, body, null, null, null,
-            inlinableCallTarget, frameDescriptor, temporarySlots);
+            inlinableCallTarget, numUpvalues, frameDescriptor, temporarySlots);
       default:
         return new KeywordInlinedMethod(selector, universe, body, null, null,
-            inlinableCallTarget, frameDescriptor, temporarySlots);
+            inlinableCallTarget, numUpvalues, frameDescriptor, temporarySlots);
     }
   }
 
@@ -186,18 +193,22 @@ public class Method extends Invokable {
 
     private final CallTarget      callTarget;
     private final FrameDescriptor frameDescriptor;
+    private final int             numUpvalues;
 
     @CompilationFinal private final FrameSlot[] temporarySlots;
 
     UnaryInlinedMethod(final SSymbol selector, final Universe universe,
         final ExpressionNode msgBody, final ExpressionNode receiver,
-        final CallTarget callTarget, final FrameDescriptor frameDescriptor,
+        final CallTarget callTarget,
+        final int numUpvalues,
+        final FrameDescriptor frameDescriptor,
         final FrameSlot[] temporarySlots) {
       super(selector, universe);
       this.expressionOrSequence = adoptChild(msgBody);
       this.callTarget           = callTarget;
       this.frameDescriptor      = frameDescriptor;
       this.temporarySlots       = temporarySlots;
+      this.numUpvalues          = numUpvalues;
     }
 
     @ExplodeLoop
@@ -215,7 +226,7 @@ public class Method extends Invokable {
 
     @Override
     public Object executeEvaluated(final VirtualFrame frame, final Object receiver) {
-      UnaryArguments args = new UnaryArguments((SAbstractObject) receiver);
+      UnaryArguments args = new UnaryArguments((SAbstractObject) receiver, numUpvalues, universe.nilObject);
       VirtualFrame childFrame = Truffle.getRuntime().createVirtualFrame(frame.pack(), args, frameDescriptor);
       initializeFrame(childFrame);
       return messageSendExecution(childFrame, expressionOrSequence);
@@ -262,12 +273,14 @@ public class Method extends Invokable {
 
     private final CallTarget      callTarget;
     private final FrameDescriptor frameDescriptor;
+    private final int             numUpvalues;
 
     @CompilationFinal private final FrameSlot[] temporarySlots;
 
     BinaryInlinedMethod(final SSymbol selector, final Universe universe,
         final ExpressionNode msgBody, final ExpressionNode receiver,
         final ExpressionNode argument, final CallTarget callTarget,
+        final int numUpvalues,
         final FrameDescriptor frameDescriptor,
         final FrameSlot[] temporarySlots) {
       super(selector, universe);
@@ -276,6 +289,7 @@ public class Method extends Invokable {
       this.frameDescriptor      = frameDescriptor;
       this.temporarySlots       = temporarySlots;
       this.argument             = argument;
+      this.numUpvalues          = numUpvalues;
     }
 
     @ExplodeLoop
@@ -294,7 +308,8 @@ public class Method extends Invokable {
 
     @Override
     public Object executeEvaluated(final VirtualFrame frame, final Object receiver, final Object argument) {
-      BinaryArguments args = new BinaryArguments((SAbstractObject) receiver, (SAbstractObject) argument);
+      BinaryArguments args = new BinaryArguments((SAbstractObject) receiver,
+          (SAbstractObject) argument, numUpvalues, universe.nilObject);
       VirtualFrame childFrame = Truffle.getRuntime().createVirtualFrame(frame.pack(), args, frameDescriptor);
       initializeFrame(childFrame);
       return messageSendExecution(childFrame, expressionOrSequence);
@@ -348,13 +363,15 @@ public class Method extends Invokable {
 
     private final CallTarget      callTarget;
     private final FrameDescriptor frameDescriptor;
+    private final int             numUpvalues;
 
     @CompilationFinal private final FrameSlot[] temporarySlots;
 
     TernaryInlinedMethod(final SSymbol selector, final Universe universe,
         final ExpressionNode msgBody, final ExpressionNode receiver,
         final ExpressionNode firstArg, final ExpressionNode secondArg,
-        final CallTarget callTarget, final FrameDescriptor frameDescriptor,
+        final CallTarget callTarget, final int numUpvalues,
+        final FrameDescriptor frameDescriptor,
         final FrameSlot[] temporarySlots) {
       super(selector, universe);
       this.expressionOrSequence = adoptChild(msgBody);
@@ -363,6 +380,7 @@ public class Method extends Invokable {
       this.temporarySlots       = temporarySlots;
       this.firstArg             = firstArg;
       this.secondArg            = secondArg;
+      this.numUpvalues          = numUpvalues;
     }
 
     @ExplodeLoop
@@ -382,7 +400,9 @@ public class Method extends Invokable {
 
     @Override
     public Object executeEvaluated(final VirtualFrame frame, final Object receiver, final Object arg1, final Object arg2) {
-      TernaryArguments args = new TernaryArguments((SAbstractObject) receiver, (SAbstractObject) arg1, (SAbstractObject) arg2);
+      TernaryArguments args = new TernaryArguments((SAbstractObject) receiver,
+          (SAbstractObject) arg1, (SAbstractObject) arg2, numUpvalues,
+          universe.nilObject);
       VirtualFrame childFrame = Truffle.getRuntime().createVirtualFrame(frame.pack(), args, frameDescriptor);
       initializeFrame(childFrame);
       return messageSendExecution(childFrame, expressionOrSequence);
@@ -439,13 +459,16 @@ public class Method extends Invokable {
 
     private final CallTarget      callTarget;
     private final FrameDescriptor frameDescriptor;
+    private final int             numUpvalues;
 
     @CompilationFinal private final FrameSlot[] temporarySlots;
 
     KeywordInlinedMethod(final SSymbol selector, final Universe universe,
         final ExpressionNode msgBody, final ExpressionNode receiver,
         final ExpressionNode[] arguments,
-        final CallTarget callTarget, final FrameDescriptor frameDescriptor,
+        final CallTarget callTarget,
+        final int numUpvalues,
+        final FrameDescriptor frameDescriptor,
         final FrameSlot[] temporarySlots) {
       super(selector, universe);
       this.expressionOrSequence = adoptChild(msgBody);
@@ -453,6 +476,7 @@ public class Method extends Invokable {
       this.frameDescriptor      = frameDescriptor;
       this.temporarySlots       = temporarySlots;
       this.arguments            = arguments;
+      this.numUpvalues          = numUpvalues;
     }
 
     @ExplodeLoop
@@ -476,7 +500,8 @@ public class Method extends Invokable {
 
     @Override
     public Object executeEvaluated(final VirtualFrame frame, final Object receiver, final Object[] arguments) {
-      KeywordArguments args = new KeywordArguments((SAbstractObject) receiver, (SAbstractObject[]) arguments);
+      KeywordArguments args = new KeywordArguments((SAbstractObject) receiver,
+          (SAbstractObject[]) arguments, numUpvalues, universe.nilObject);
       VirtualFrame childFrame = Truffle.getRuntime().createVirtualFrame(frame.pack(), args, frameDescriptor);
       initializeFrame(childFrame);
       return messageSendExecution(childFrame, expressionOrSequence);

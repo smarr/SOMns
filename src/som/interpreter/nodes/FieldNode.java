@@ -21,11 +21,9 @@
  */
 package som.interpreter.nodes;
 
-import som.interpreter.Arguments;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SObject;
 
-import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 
@@ -46,8 +44,7 @@ public abstract class FieldNode extends ContextualNode {
 
     @Override
     public SAbstractObject executeGeneric(final VirtualFrame frame) {
-      MaterializedFrame ctx = determineContext(frame.materialize());
-      SObject self = (SObject) Arguments.get(ctx).getSelf();
+      SObject self = (SObject) determineOuterSelf(frame);
       return self.getField(fieldIndex);
     }
   }
@@ -65,9 +62,8 @@ public abstract class FieldNode extends ContextualNode {
 
     @Override
     public SAbstractObject executeGeneric(final VirtualFrame frame) {
-      MaterializedFrame ctx = determineContext(frame.materialize());
       SAbstractObject value = (SAbstractObject) exp.executeGeneric(frame);  // TODO: Work out whether there is another way than this cast!
-      SObject self = (SObject) Arguments.get(ctx).getSelf();
+      SObject self = (SObject) determineOuterSelf(frame);
 
       self.setField(fieldIndex, value);
       return value;

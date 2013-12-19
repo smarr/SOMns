@@ -24,7 +24,7 @@ public abstract class SAbstractObject {
     SMethod invokable = getSOMClass(universe).lookupInvokable(selector);
 
     // Invoke the invokable
-    return invokable.invoke(frame, this, arguments);
+    return invokable.invoke(frame, this, arguments, universe);
   }
 
   public SAbstractObject sendDoesNotUnderstand(final SSymbol selector,

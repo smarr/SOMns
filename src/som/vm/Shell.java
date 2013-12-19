@@ -82,7 +82,8 @@ public class Shell {
               lookupInvokable(universe.symbolFor("run:"));
 
           // Invoke the run method
-          it = shellMethod.invokeRoot(myObject, new SAbstractObject[] {it});
+          it = shellMethod.invokeRoot(myObject, new SAbstractObject[] {it},
+              universe);
         }
       } catch (Exception e) {
         Universe.errorPrintln("Caught exception: " + e.getMessage());

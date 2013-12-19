@@ -8,6 +8,7 @@ import som.interpreter.nodes.KeywordMessageNode;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
+import som.vmobjects.SMethod;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CallTarget;
@@ -210,7 +211,10 @@ public abstract class KeywordSendNode extends KeywordMessageNode {
         callCount++;
       }
 
-      KeywordArguments args = new KeywordArguments((SAbstractObject) receiver, (SAbstractObject[]) arguments);
+      Invokable root = (Invokable) inlinableCallTarget.getRootNode();
+      KeywordArguments args = new KeywordArguments((SAbstractObject) receiver,
+          (SAbstractObject[]) arguments, root.getNumberOfUpvalues(),
+          universe.nilObject);
       return inlinableCallTarget.call(frame.pack(), args);
     }
   }
@@ -222,9 +226,9 @@ public abstract class KeywordSendNode extends KeywordMessageNode {
 
     @Override
     public Object executeEvaluated(final VirtualFrame frame, final Object receiver, final Object[] arguments) {
-      CallTarget callTarget = lookupCallTarget(receiver);
-      KeywordArguments args = new KeywordArguments((SAbstractObject) receiver, (SAbstractObject[]) arguments);
-      return callTarget.call(args);
+      SMethod method = lookupMethod(receiver);
+      return method.invoke(frame.pack(), (SAbstractObject) receiver,
+          (SAbstractObject[]) arguments, universe);
     }
   }
 }

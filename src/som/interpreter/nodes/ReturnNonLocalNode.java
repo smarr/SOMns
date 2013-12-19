@@ -28,7 +28,6 @@ import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
 
-import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 public class ReturnNonLocalNode extends ContextualNode {
@@ -46,15 +45,16 @@ public class ReturnNonLocalNode extends ContextualNode {
 
   @Override
   public SAbstractObject executeGeneric(final VirtualFrame frame) {
-    MaterializedFrame ctx = determineContext(frame.materialize());
-    FrameOnStackMarker marker = Arguments.get(ctx).getFrameOnStackMarker();
+    Arguments outer = determineOuterArguments(frame);
+    FrameOnStackMarker marker = outer.getFrameOnStackMarker();
 
     if (marker.isOnStack()) {
       SAbstractObject result = (SAbstractObject) expression.executeGeneric(frame); // TODO: Work out whether there is another way than this cast!
       throw new ReturnException(result, marker);
     } else {
       SBlock block = (SBlock) Arguments.get(frame).getSelf();
-      SAbstractObject self = Arguments.get(ctx).getSelf();
+      SAbstractObject self = outer.getSelf();
+      // TODO: mark this as an exceptional path
       return self.sendEscapedBlock(block, universe, frame.pack());
     }
   }

@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.StringTokenizer;
 
 import som.compiler.Disassembler;
+import som.interpreter.Arguments;
 import som.interpreter.Invokable;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray;
@@ -50,7 +51,6 @@ import com.oracle.truffle.api.CompilerDirectives.SlowPath;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.TruffleRuntime;
 import com.oracle.truffle.api.frame.FrameDescriptor;
-import com.oracle.truffle.api.frame.MaterializedFrame;
 
 public class Universe {
 
@@ -279,7 +279,7 @@ public class Universe {
                                         lookupInvokable(symbolFor(selector));
 
     // Invoke the initialize invokable
-    return initialize.invokeRoot(clazz, new SAbstractObject[0]);
+    return initialize.invokeRoot(clazz, new SAbstractObject[0], this);
   }
 
   private SAbstractObject execute(final String[] arguments) {
@@ -299,7 +299,7 @@ public class Universe {
         lookupInvokable(symbolFor("initialize:"));
 
     // Invoke the initialize invokable
-    return initialize.invokeRoot(systemObject, new SAbstractObject[] {argumentsArray});
+    return initialize.invokeRoot(systemObject, new SAbstractObject[] {argumentsArray}, this);
   }
 
   @SlowPath
@@ -428,9 +428,9 @@ public class Universe {
     return result;
   }
 
-  public SBlock newBlock(final SMethod method, final MaterializedFrame context, final int arguments) {
+  public SBlock newBlock(final SMethod method, final Arguments outerArguments) {
     // Allocate a new block and set its class to be the block class
-    SBlock result = new SBlock(method, context);
+    SBlock result = new SBlock(method, outerArguments);
 
     // Return the freshly allocated block
     return result;

@@ -63,6 +63,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import som.compiler.SourcecodeCompiler.Source;
+import som.compiler.Variable.Local;
 import som.interpreter.nodes.AbstractMessageNode;
 import som.interpreter.nodes.BinaryMessageNode;
 import som.interpreter.nodes.ExpressionNode;
@@ -71,13 +72,10 @@ import som.interpreter.nodes.FieldNode.FieldWriteNode;
 import som.interpreter.nodes.GlobalNode.GlobalReadNode;
 import som.interpreter.nodes.NodeFactory;
 import som.interpreter.nodes.ReturnNonLocalNode;
+import som.interpreter.nodes.SelfReadNode;
+import som.interpreter.nodes.SelfReadNode.SuperReadNode;
 import som.interpreter.nodes.SequenceNode;
 import som.interpreter.nodes.UnaryMessageNode;
-import som.interpreter.nodes.VariableNode.ArgumentReadNode;
-import som.interpreter.nodes.VariableNode.SelfReadNode;
-import som.interpreter.nodes.VariableNode.SuperReadNode;
-import som.interpreter.nodes.VariableNode.VariableReadNode;
-import som.interpreter.nodes.VariableWriteNode;
 import som.interpreter.nodes.literals.BigIntegerLiteralNodeFactory;
 import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.literals.IntegerLiteralNodeFactory;
@@ -90,7 +88,6 @@ import som.vmobjects.SMethod;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives.SlowPath;
-import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.impl.DefaultSourceSection;
 
 public class Parser {
@@ -765,17 +762,17 @@ public class Parser {
       return new SuperReadNode(mgenc.getSelfContextLevel());
     }
 
-    // now look up first method arguments
-    int argIdx = mgenc.getArgumentIndex(variableName);
-    if (argIdx >= 0) {
-      return new ArgumentReadNode(mgenc.getContextLevel(variableName), argIdx);
-    }
+    // now look up first local variables, or method arguments
+    Variable variable = mgenc.getVariable(variableName);
+    if (variable != null) {
+      variable.setIsRead();
 
-    // now look up local variables
-    FrameSlot frameSlot = mgenc.getVariableFrameSlot(variableName);
+      int ctxLevel = mgenc.getContextLevel(variableName);
+      if (ctxLevel > 0) {
+        variable.setIsReadOutOfContext();
+      }
 
-    if (frameSlot != null) {
-      return new VariableReadNode(frameSlot, mgenc.getContextLevel(variableName));
+      return variable.getReadNode(ctxLevel);
     }
 
     // then object fields
@@ -792,13 +789,16 @@ public class Parser {
   }
 
   private ExpressionNode variableWrite(final MethodGenerationContext mgenc,
-      final String variableName,
-      final ExpressionNode exp) {
-    FrameSlot frameSlot = mgenc.getVariableFrameSlot(variableName);
+      final String variableName, final ExpressionNode exp) {
+    Local variable = mgenc.getLocal(variableName);
+    if (variable != null) {
+      int ctxLevel = mgenc.getContextLevel(variableName);
+      variable.setIsWritten();
 
-    if (frameSlot != null) {
-      return new VariableWriteNode(frameSlot,
-          mgenc.getContextLevel(variableName), exp);
+      if (ctxLevel > 0) {
+        variable.setIsWrittenOutOfContext();
+      }
+      return variable.getWriteNode(ctxLevel, exp);
     }
 
     SSymbol fieldName = universe.symbolFor(variableName);

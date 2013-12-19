@@ -32,7 +32,7 @@ public abstract class BlockPrims {
 
     @Specialization
     public SAbstractObject doSBlock(final VirtualFrame frame, final SBlock receiver) {
-      return receiver.getMethod().invoke(frame.pack(), receiver);
+      return receiver.getMethod().invoke(frame.pack(), receiver, universe);
     }
   }
 
@@ -43,7 +43,7 @@ public abstract class BlockPrims {
     @Specialization
     public SAbstractObject doSBlock(final VirtualFrame frame,
         final SBlock receiver, final SAbstractObject arg) {
-      return receiver.getMethod().invoke(frame.pack(), receiver, arg);
+      return receiver.getMethod().invoke(frame.pack(), receiver, arg, universe);
     }
   }
 
@@ -54,7 +54,7 @@ public abstract class BlockPrims {
     @Specialization
     public SAbstractObject doSBlock(final VirtualFrame frame,
         final SBlock receiver, final SAbstractObject arg1, final SAbstractObject arg2) {
-      return receiver.getMethod().invoke(frame.pack(), receiver, arg1, arg2);
+      return receiver.getMethod().invoke(frame.pack(), receiver, arg1, arg2, universe);
     }
   }
 
@@ -65,7 +65,7 @@ public abstract class BlockPrims {
     @Specialization
     public SAbstractObject doSBlock(final VirtualFrame frame,
         final SBlock receiver, final Object[] arguments) {
-      return receiver.getMethod().invoke(frame.pack(), receiver, (SAbstractObject[]) arguments);
+      return receiver.getMethod().invoke(frame.pack(), receiver, (SAbstractObject[]) arguments, universe);
     }
   }
 }

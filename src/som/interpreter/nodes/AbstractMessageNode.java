@@ -1,6 +1,6 @@
 package som.interpreter.nodes;
 
-import som.interpreter.nodes.VariableNode.SuperReadNode;
+import som.interpreter.nodes.SelfReadNode.SuperReadNode;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
@@ -52,6 +52,12 @@ public abstract class AbstractMessageNode extends ExpressionNode {
     }
   }
 
+  protected SMethod lookupMethod(final Object rcvr) {
+    SAbstractObject receiver = (SAbstractObject) rcvr;
+    SClass rcvrClass = classOfReceiver(receiver);
+    return rcvrClass.lookupInvokable(selector);
+  }
+
   protected boolean isBooleanReceiver(final SAbstractObject receiver) {
     return receiver == universe.trueObject || receiver == universe.falseObject;
   }
@@ -72,8 +78,9 @@ public abstract class AbstractMessageNode extends ExpressionNode {
     SMethod invokable = rcvrClass.lookupInvokable(selector);
 
     if (invokable != null) {
-      return invokable.invoke(frame.pack(), rcvr, args);
+      return invokable.invoke(frame.pack(), rcvr, args, universe);
     } else {
+      // TODO: mark as exceptional case
       return rcvr.sendDoesNotUnderstand(selector, args, universe, frame.pack());
     }
   }

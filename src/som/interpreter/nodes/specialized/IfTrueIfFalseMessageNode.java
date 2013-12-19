@@ -1,5 +1,6 @@
 package som.interpreter.nodes.specialized;
 
+import som.interpreter.Arguments;
 import som.interpreter.nodes.messages.TernarySendNode;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
@@ -19,14 +20,17 @@ public abstract class IfTrueIfFalseMessageNode extends TernarySendNode {
   public SAbstractObject doIfTrueIfFalse(final VirtualFrame frame,
       final boolean receiver, final SBlock trueBlock, final SBlock falseBlock) {
     SMethod branchMethod;
+    Arguments context;
     if (receiver) {
       branchMethod = trueBlock.getMethod();
+      context      = trueBlock.getContext(); // TODO: test whether the current implementation is correct, or whether it should be the following: Method.getUpvalues(frame);
     } else {
       branchMethod = falseBlock.getMethod();
+      context      = falseBlock.getContext(); // TODO: test whether the current implementation is correct, or whether it should be the following: Method.getUpvalues(frame);
     }
 
-    SBlock b = universe.newBlock(branchMethod, frame.materialize(), 1);
-    return branchMethod.invoke(frame.pack(), b);
+    SBlock b = universe.newBlock(branchMethod, context);
+    return branchMethod.invoke(frame.pack(), b, universe);
   }
 
   @Specialization(guards = "isBooleanReceiver", order = 2)
@@ -41,9 +45,10 @@ public abstract class IfTrueIfFalseMessageNode extends TernarySendNode {
     if (receiver) {
       return trueValue;
     } else {
-      SMethod branchMethod = falseBlock.getMethod();
-      SBlock  b = universe.newBlock(branchMethod, frame.materialize(), 1);
-      return branchMethod.invoke(frame.pack(), b);
+      SMethod   branchMethod = falseBlock.getMethod();
+      Arguments context      = falseBlock.getContext(); // TODO: test whether the current implementation is correct, or whether it should be the following: Method.getUpvalues(frame);
+      SBlock  b = universe.newBlock(branchMethod, context);
+      return branchMethod.invoke(frame.pack(), b, universe);
     }
   }
 
@@ -58,8 +63,9 @@ public abstract class IfTrueIfFalseMessageNode extends TernarySendNode {
       final boolean receiver, final SBlock trueBlock, final Object falseValue) {
     if (receiver) {
       SMethod branchMethod = trueBlock.getMethod();
-      SBlock  b = universe.newBlock(branchMethod, frame.materialize(), 1);
-      return branchMethod.invoke(frame.pack(), b);
+      Arguments context    = trueBlock.getContext(); // TODO: test whether the current implementation is correct, or whether it should be the following: Method.getUpvalues(frame);
+      SBlock  b = universe.newBlock(branchMethod, context);
+      return branchMethod.invoke(frame.pack(), b, universe);
     } else {
       return falseValue;
     }
