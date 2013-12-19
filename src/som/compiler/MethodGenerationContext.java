@@ -238,4 +238,8 @@ public class MethodGenerationContext {
     return frameDescriptor;
   }
 
+  @Override
+  public String toString() {
+    return "MethodGenC(" + holderGenc.getName().getString() + ">>" + signature.toString() + ")";
+  }
 }

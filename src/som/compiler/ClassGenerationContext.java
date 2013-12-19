@@ -153,4 +153,9 @@ public class ClassGenerationContext {
     superMClass.setInstanceInvokables(universe.newArray(classMethods));
     superMClass.setInstanceFields(universe.newArray(classFields));
   }
+
+  @Override
+  public String toString() {
+    return "ClassGenC(" + name.getString() + ")";
+  }
 }
