@@ -53,34 +53,28 @@ import com.oracle.truffle.api.nodes.NodeUtil;
 public class Method extends Invokable {
 
   @CompilationFinal private final FrameSlot[] temporarySlots;
-  private final FrameSlot   nonLocalReturnMarker;
-  private final Universe    universe;
-
-
+  private final Universe universe;
 
   public Method(final ExpressionNode expressions,
-                final FrameSlot selfSlot,
                 final FrameSlot[] argumentSlots,
                 final FrameSlot[] temporarySlots,
-                final FrameSlot nonLocalReturnMarker,
-                final Universe  universe,
-                final FrameDescriptor frameDescriptor) {
-    super(expressions, selfSlot, argumentSlots, frameDescriptor);
+                final FrameDescriptor frameDescriptor,
+                final Universe  universe) {
+    super(expressions, argumentSlots, frameDescriptor);
     this.temporarySlots       = temporarySlots;
-    this.nonLocalReturnMarker = nonLocalReturnMarker;
     this.universe             = universe;
   }
 
   @Override
   public Object execute(final VirtualFrame frame) {
-    final FrameOnStackMarker marker = initializeFrame(frame);
-    return messageSendExecution(marker, frame, expressionOrSequence);
+    initializeFrame(frame);
+    return messageSendExecution(frame, expressionOrSequence);
   }
 
-  protected static SAbstractObject messageSendExecution(final FrameOnStackMarker marker,
-      final VirtualFrame frame,
+  protected static SAbstractObject messageSendExecution(final VirtualFrame frame,
       final ExpressionNode expr) {
-    SAbstractObject  result;
+    FrameOnStackMarker marker = Arguments.get(frame).getFrameOnStackMarker();
+    SAbstractObject result;
     boolean restart;
 
     do {
@@ -105,12 +99,7 @@ public class Method extends Invokable {
   }
 
   @ExplodeLoop
-  protected FrameOnStackMarker initializeFrame(final VirtualFrame frame) {
-    frame.setObject(selfSlot, Arguments.get(frame).getSelf());
-
-    final FrameOnStackMarker marker = new FrameOnStackMarker();
-    frame.setObject(nonLocalReturnMarker, marker);
-
+  protected void initializeFrame(final VirtualFrame frame) {
     Arguments args = Arguments.get(frame);
     for (int i = 0; i < argumentSlots.length; i++) {
       frame.setObject(argumentSlots[i], args.getArgument(i));
@@ -119,7 +108,6 @@ public class Method extends Invokable {
     for (int i = 0; i < temporarySlots.length; i++) {
       frame.setObject(temporarySlots[i], universe.nilObject);
     }
-    return marker;
   }
 
 
@@ -162,20 +150,16 @@ public class Method extends Invokable {
     switch (argumentSlots.length) {
       case 0:
         return new UnaryInlinedMethod(selector, universe, body, null,
-            inlinableCallTarget, frameDescriptor, selfSlot, nonLocalReturnMarker,
-            temporarySlots);
+            inlinableCallTarget, frameDescriptor, temporarySlots);
       case 1:
         return new BinaryInlinedMethod(selector, universe, body, null, null,
-            inlinableCallTarget, frameDescriptor, selfSlot, nonLocalReturnMarker,
-            argumentSlots, temporarySlots);
+            inlinableCallTarget, frameDescriptor, argumentSlots, temporarySlots);
       case 2:
         return new TernaryInlinedMethod(selector, universe, body, null, null, null,
-            inlinableCallTarget, frameDescriptor, selfSlot, nonLocalReturnMarker,
-            argumentSlots, temporarySlots);
+            inlinableCallTarget, frameDescriptor, argumentSlots, temporarySlots);
       default:
         return new KeywordInlinedMethod(selector, universe, body, null, null,
-            inlinableCallTarget, frameDescriptor, selfSlot, nonLocalReturnMarker,
-            argumentSlots, temporarySlots);
+            inlinableCallTarget, frameDescriptor, argumentSlots, temporarySlots);
     }
   }
 
@@ -207,36 +191,25 @@ public class Method extends Invokable {
 
     private final CallTarget      callTarget;
     private final FrameDescriptor frameDescriptor;
-    private final FrameSlot       selfSlot;
-    private final FrameSlot       nonLocalReturnMarker;
 
     @CompilationFinal private final FrameSlot[] temporarySlots;
 
     UnaryInlinedMethod(final SSymbol selector, final Universe universe,
         final ExpressionNode msgBody, final ExpressionNode receiver,
         final CallTarget callTarget, final FrameDescriptor frameDescriptor,
-        final FrameSlot selfSlot, final FrameSlot nonLocalReturnMarker,
         final FrameSlot[] temporarySlots) {
       super(selector, universe);
       this.expressionOrSequence = adoptChild(msgBody);
       this.callTarget           = callTarget;
       this.frameDescriptor      = frameDescriptor;
-      this.selfSlot             = selfSlot;
-      this.nonLocalReturnMarker = nonLocalReturnMarker;
       this.temporarySlots       = temporarySlots;
     }
 
     @ExplodeLoop
-    private FrameOnStackMarker initializeFrame(final VirtualFrame frame) {
-      frame.setObject(selfSlot, Arguments.get(frame).getSelf());
-
-      final FrameOnStackMarker marker = new FrameOnStackMarker();
-      frame.setObject(nonLocalReturnMarker, marker);
-
+    private void initializeFrame(final VirtualFrame frame) {
       for (int i = 0; i < temporarySlots.length; i++) {
         frame.setObject(temporarySlots[i], universe.nilObject);
       }
-      return marker;
     }
 
     @Override
@@ -249,8 +222,8 @@ public class Method extends Invokable {
     public Object executeEvaluated(final VirtualFrame frame, final Object receiver) {
       UnaryArguments args = new UnaryArguments((SAbstractObject) receiver);
       VirtualFrame childFrame = Truffle.getRuntime().createVirtualFrame(frame.pack(), args, frameDescriptor);
-      final FrameOnStackMarker marker = initializeFrame(childFrame);
-      return messageSendExecution(marker, childFrame, expressionOrSequence);
+      initializeFrame(childFrame);
+      return messageSendExecution(childFrame, expressionOrSequence);
     }
 
     @Override
@@ -294,8 +267,6 @@ public class Method extends Invokable {
 
     private final CallTarget      callTarget;
     private final FrameDescriptor frameDescriptor;
-    private final FrameSlot       selfSlot;
-    private final FrameSlot       nonLocalReturnMarker;
 
     @CompilationFinal private final FrameSlot[] argumentSlots;
     @CompilationFinal private final FrameSlot[] temporarySlots;
@@ -304,34 +275,25 @@ public class Method extends Invokable {
         final ExpressionNode msgBody, final ExpressionNode receiver,
         final ExpressionNode argument, final CallTarget callTarget,
         final FrameDescriptor frameDescriptor,
-        final FrameSlot selfSlot, final FrameSlot nonLocalReturnMarker,
         final FrameSlot[] argumentSlots,
         final FrameSlot[] temporarySlots) {
       super(selector, universe);
       this.expressionOrSequence = adoptChild(msgBody);
       this.callTarget           = callTarget;
       this.frameDescriptor      = frameDescriptor;
-      this.selfSlot             = selfSlot;
-      this.nonLocalReturnMarker = nonLocalReturnMarker;
       this.argumentSlots        = argumentSlots;
       this.temporarySlots       = temporarySlots;
       this.argument             = argument;
     }
 
     @ExplodeLoop
-    private FrameOnStackMarker initializeFrame(final VirtualFrame frame) {
-      frame.setObject(selfSlot, Arguments.get(frame).getSelf());
-
-      final FrameOnStackMarker marker = new FrameOnStackMarker();
-      frame.setObject(nonLocalReturnMarker, marker);
-
+    private void initializeFrame(final VirtualFrame frame) {
       Arguments args = Arguments.get(frame);
       frame.setObject(argumentSlots[0], args.getArgument(0));
 
       for (int i = 0; i < temporarySlots.length; i++) {
         frame.setObject(temporarySlots[i], universe.nilObject);
       }
-      return marker;
     }
 
     @Override
@@ -345,8 +307,8 @@ public class Method extends Invokable {
     public Object executeEvaluated(final VirtualFrame frame, final Object receiver, final Object argument) {
       BinaryArguments args = new BinaryArguments((SAbstractObject) receiver, (SAbstractObject) argument);
       VirtualFrame childFrame = Truffle.getRuntime().createVirtualFrame(frame.pack(), args, frameDescriptor);
-      final FrameOnStackMarker marker = initializeFrame(childFrame);
-      return messageSendExecution(marker, childFrame, expressionOrSequence);
+      initializeFrame(childFrame);
+      return messageSendExecution(childFrame, expressionOrSequence);
     }
 
     @Override
@@ -397,8 +359,6 @@ public class Method extends Invokable {
 
     private final CallTarget      callTarget;
     private final FrameDescriptor frameDescriptor;
-    private final FrameSlot       selfSlot;
-    private final FrameSlot       nonLocalReturnMarker;
 
     @CompilationFinal private final FrameSlot[] argumentSlots;
     @CompilationFinal private final FrameSlot[] temporarySlots;
@@ -407,15 +367,12 @@ public class Method extends Invokable {
         final ExpressionNode msgBody, final ExpressionNode receiver,
         final ExpressionNode firstArg, final ExpressionNode secondArg,
         final CallTarget callTarget, final FrameDescriptor frameDescriptor,
-        final FrameSlot selfSlot, final FrameSlot nonLocalReturnMarker,
         final FrameSlot[] argumentSlots,
         final FrameSlot[] temporarySlots) {
       super(selector, universe);
       this.expressionOrSequence = adoptChild(msgBody);
       this.callTarget           = callTarget;
       this.frameDescriptor      = frameDescriptor;
-      this.selfSlot             = selfSlot;
-      this.nonLocalReturnMarker = nonLocalReturnMarker;
       this.argumentSlots        = argumentSlots;
       this.temporarySlots       = temporarySlots;
       this.firstArg             = firstArg;
@@ -423,12 +380,7 @@ public class Method extends Invokable {
     }
 
     @ExplodeLoop
-    private FrameOnStackMarker initializeFrame(final VirtualFrame frame) {
-      frame.setObject(selfSlot, Arguments.get(frame).getSelf());
-
-      final FrameOnStackMarker marker = new FrameOnStackMarker();
-      frame.setObject(nonLocalReturnMarker, marker);
-
+    private void initializeFrame(final VirtualFrame frame) {
       Arguments args = Arguments.get(frame);
       frame.setObject(argumentSlots[0], args.getArgument(0));
       frame.setObject(argumentSlots[1], args.getArgument(1));
@@ -436,7 +388,6 @@ public class Method extends Invokable {
       for (int i = 0; i < temporarySlots.length; i++) {
         frame.setObject(temporarySlots[i], universe.nilObject);
       }
-      return marker;
     }
 
     @Override
@@ -451,8 +402,8 @@ public class Method extends Invokable {
     public Object executeEvaluated(final VirtualFrame frame, final Object receiver, final Object arg1, final Object arg2) {
       TernaryArguments args = new TernaryArguments((SAbstractObject) receiver, (SAbstractObject) arg1, (SAbstractObject) arg2);
       VirtualFrame childFrame = Truffle.getRuntime().createVirtualFrame(frame.pack(), args, frameDescriptor);
-      final FrameOnStackMarker marker = initializeFrame(childFrame);
-      return messageSendExecution(marker, childFrame, expressionOrSequence);
+      initializeFrame(childFrame);
+      return messageSendExecution(childFrame, expressionOrSequence);
     }
 
     @Override
@@ -506,8 +457,6 @@ public class Method extends Invokable {
 
     private final CallTarget      callTarget;
     private final FrameDescriptor frameDescriptor;
-    private final FrameSlot       selfSlot;
-    private final FrameSlot       nonLocalReturnMarker;
 
     @CompilationFinal private final FrameSlot[] argumentSlots;
     @CompilationFinal private final FrameSlot[] temporarySlots;
@@ -516,27 +465,19 @@ public class Method extends Invokable {
         final ExpressionNode msgBody, final ExpressionNode receiver,
         final ExpressionNode[] arguments,
         final CallTarget callTarget, final FrameDescriptor frameDescriptor,
-        final FrameSlot selfSlot, final FrameSlot nonLocalReturnMarker,
         final FrameSlot[] argumentSlots,
         final FrameSlot[] temporarySlots) {
       super(selector, universe);
       this.expressionOrSequence = adoptChild(msgBody);
       this.callTarget           = callTarget;
       this.frameDescriptor      = frameDescriptor;
-      this.selfSlot             = selfSlot;
-      this.nonLocalReturnMarker = nonLocalReturnMarker;
       this.argumentSlots        = argumentSlots;
       this.temporarySlots       = temporarySlots;
       this.arguments            = arguments;
     }
 
     @ExplodeLoop
-    private FrameOnStackMarker initializeFrame(final VirtualFrame frame) {
-      frame.setObject(selfSlot, Arguments.get(frame).getSelf());
-
-      final FrameOnStackMarker marker = new FrameOnStackMarker();
-      frame.setObject(nonLocalReturnMarker, marker);
-
+    private void initializeFrame(final VirtualFrame frame) {
       Arguments args = Arguments.get(frame);
       for (int i = 0; i < argumentSlots.length; i++) {
         frame.setObject(argumentSlots[i], args.getArgument(i));
@@ -545,7 +486,6 @@ public class Method extends Invokable {
       for (int i = 0; i < temporarySlots.length; i++) {
         frame.setObject(temporarySlots[i], universe.nilObject);
       }
-      return marker;
     }
 
     @ExplodeLoop
@@ -564,8 +504,8 @@ public class Method extends Invokable {
     public Object executeEvaluated(final VirtualFrame frame, final Object receiver, final Object[] arguments) {
       KeywordArguments args = new KeywordArguments((SAbstractObject) receiver, (SAbstractObject[]) arguments);
       VirtualFrame childFrame = Truffle.getRuntime().createVirtualFrame(frame.pack(), args, frameDescriptor);
-      final FrameOnStackMarker marker = initializeFrame(childFrame);
-      return messageSendExecution(marker, childFrame, expressionOrSequence);
+      initializeFrame(childFrame);
+      return messageSendExecution(childFrame, expressionOrSequence);
     }
 
     @Override

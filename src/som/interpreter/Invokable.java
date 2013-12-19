@@ -13,19 +13,17 @@ import com.oracle.truffle.api.nodes.RootNode;
 public abstract class Invokable extends RootNode {
 
   @Child protected ExpressionNode expressionOrSequence;
-  private final  ExpressionNode uninitializedBody;
+  private final    ExpressionNode uninitializedBody;
 
-  protected final FrameSlot   selfSlot;
   @CompilationFinal protected final FrameSlot[]  argumentSlots;
 
   protected final FrameDescriptor frameDescriptor;
 
   public Invokable(final ExpressionNode expressionOrSequence,
-      final FrameSlot selfSlot, final FrameSlot[] argumentSlots,
+      final FrameSlot[] argumentSlots,
       final FrameDescriptor frameDescriptor) {
     this.uninitializedBody    = NodeUtil.cloneNode(expressionOrSequence);
     this.expressionOrSequence = adoptChild(expressionOrSequence);
-    this.selfSlot             = selfSlot;
     this.argumentSlots        = argumentSlots;
     this.frameDescriptor      = frameDescriptor;
   }

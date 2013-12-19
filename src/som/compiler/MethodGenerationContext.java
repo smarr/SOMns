@@ -57,36 +57,9 @@ public class MethodGenerationContext {
 
   // Truffle
   private final FrameDescriptor frameDescriptor;
-  private final FrameSlot       selfSlot;
-  private final FrameSlot       nonLocalReturnMarker;
-
-  // this context is used to describe the standard frame layout
-  private static final MethodGenerationContext standardMethodGenerationContext = new MethodGenerationContext();
-
-  public static FrameSlot getStandardSelfSlot() {
-    return standardMethodGenerationContext.getSelfSlot();
-  }
-
-  public static FrameSlot getStandardNonLocalReturnMarkerSlot() {
-    return standardMethodGenerationContext.getNonLocalReturnMarker();
-  }
 
   public MethodGenerationContext() {
     frameDescriptor = new FrameDescriptor();
-    selfSlot = frameDescriptor.addFrameSlot("self", FrameSlotKind.Object);
-
-    // note the ! at the beginning: this is not legal Smalltalk,
-    // and thus, this frame slot is not going to be accessible from the language
-    nonLocalReturnMarker = frameDescriptor.addFrameSlot("!nonLocalReturnMarker",
-        FrameSlotKind.Object);
-  }
-
-  public FrameSlot getSelfSlot() {
-    return selfSlot;
-  }
-
-  public FrameSlot getNonLocalReturnMarker() {
-    return nonLocalReturnMarker;
   }
 
   public void setHolder(final ClassGenerationContext cgenc) {
@@ -114,9 +87,8 @@ public class MethodGenerationContext {
     }
 
     som.interpreter.Method truffleMethod =
-        new som.interpreter.Method(expressions,
-            selfSlot, argSlots, localSlots, nonLocalReturnMarker, universe,
-            frameDescriptor);
+        new som.interpreter.Method(expressions, argSlots, localSlots,
+            frameDescriptor, universe);
 
     assignSourceSectionToMethod(expressions, truffleMethod);
 
@@ -196,14 +168,6 @@ public class MethodGenerationContext {
       level++;
     }
     return level;
-  }
-
-  public FrameSlot getOuterSelfSlot() {
-    if (outerGenc == null) {
-      return selfSlot;
-    } else {
-      return outerGenc.getOuterSelfSlot();
-    }
   }
 
   public int getFrameSlotContextLevel(final String varName) {

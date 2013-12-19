@@ -21,11 +21,10 @@
  */
 package som.interpreter.nodes;
 
-import som.compiler.MethodGenerationContext;
+import som.interpreter.Arguments;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SObject;
 
-import com.oracle.truffle.api.frame.FrameSlotTypeException;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
@@ -39,14 +38,6 @@ public abstract class FieldNode extends ContextualNode {
     this.fieldIndex = fieldIndex;
   }
 
-  protected SObject getSelfFromMaterialized(final MaterializedFrame ctx) {
-    try {
-      return (SObject) ctx.getObject(MethodGenerationContext.getStandardSelfSlot());
-    } catch (FrameSlotTypeException e) {
-      throw new RuntimeException("uninitialized selfSlot, which should be pretty much imposible???");
-    }
-  }
-
   public static class FieldReadNode extends FieldNode {
 
     public FieldReadNode(final int fieldIndex, final int contextLevel) {
@@ -56,7 +47,7 @@ public abstract class FieldNode extends ContextualNode {
     @Override
     public SAbstractObject executeGeneric(final VirtualFrame frame) {
       MaterializedFrame ctx = determineContext(frame.materialize());
-      SObject self = getSelfFromMaterialized(ctx);
+      SObject self = (SObject) Arguments.get(ctx).getSelf();
       return self.getField(fieldIndex);
     }
   }
@@ -76,7 +67,7 @@ public abstract class FieldNode extends ContextualNode {
     public SAbstractObject executeGeneric(final VirtualFrame frame) {
       MaterializedFrame ctx = determineContext(frame.materialize());
       SAbstractObject value = (SAbstractObject) exp.executeGeneric(frame);  // TODO: Work out whether there is another way than this cast!
-      SObject self = getSelfFromMaterialized(ctx);
+      SObject self = (SObject) Arguments.get(ctx).getSelf();
 
       self.setField(fieldIndex, value);
       return value;

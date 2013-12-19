@@ -76,21 +76,21 @@ public abstract class Primitives {
     AbstractMessageNode primNode;
     if (numArgs == 0) {
       primNode = nodeFactory.createNode(signature, universe,
-          new SelfReadNode(mgen.getSelfSlot(), 0));
+          new SelfReadNode(0));
     } else if (numArgs == 1) {
       primNode = nodeFactory.createNode(signature, universe,
-          new SelfReadNode(mgen.getSelfSlot(), 0), args[0]);
+          new SelfReadNode(0), args[0]);
     } else if (numArgs == 2) {
       primNode = nodeFactory.createNode(signature, universe,
-          new SelfReadNode(mgen.getSelfSlot(), 0), args[0], args[1]);
+          new SelfReadNode(0), args[0], args[1]);
     } else {
       ArgumentEvaluationNode argEvalNode = new ArgumentEvaluationNode(args);
       primNode = nodeFactory.createNode(signature, universe,
-          new SelfReadNode(mgen.getSelfSlot(), 0), argEvalNode);
+          new SelfReadNode(0), argEvalNode);
     }
 
-    Primitive primMethodNode = new Primitive(primNode, mgen.getSelfSlot(),
-        argSlots, mgen.getFrameDescriptor());
+    Primitive primMethodNode = new Primitive(primNode, argSlots,
+        mgen.getFrameDescriptor());
     SMethod prim = universe.newMethod(signature, primMethodNode,
         mgen.getFrameDescriptor(), true);
 
@@ -112,10 +112,10 @@ public abstract class Primitives {
       args[i] = new VariableReadNode(argSlots[i], 0);
     }
 
-    ExpressionNode primNode = EmptyPrim.create(signature, universe, new SelfReadNode(mgen.getSelfSlot(), 0));
+    ExpressionNode primNode = EmptyPrim.create(signature, universe, new SelfReadNode(0));
 
-    Primitive primMethodNode = new Primitive(primNode, mgen.getSelfSlot(),
-        argSlots, mgen.getFrameDescriptor());
+    Primitive primMethodNode = new Primitive(primNode, argSlots,
+        mgen.getFrameDescriptor());
     SMethod prim = universe.newMethod(signature, primMethodNode,
         mgen.getFrameDescriptor(), true);
 

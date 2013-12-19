@@ -14,9 +14,9 @@ import com.oracle.truffle.api.nodes.NodeUtil;
 public class Primitive extends Invokable {
 
   public Primitive(final ExpressionNode primitive,
-      final FrameSlot selfSlot, final FrameSlot[] arugmentSlots,
+      final FrameSlot[] arugmentSlots,
       final FrameDescriptor frameDescriptor) {
-    super(primitive, selfSlot, arugmentSlots, frameDescriptor);
+    super(primitive, arugmentSlots, frameDescriptor);
   }
 
   @Override
@@ -27,8 +27,6 @@ public class Primitive extends Invokable {
 
   @ExplodeLoop
   protected void initializeFrame(final VirtualFrame frame) {
-    frame.setObject(selfSlot, Arguments.get(frame).getSelf());
-
     Arguments args = Arguments.get(frame);
     for (int i = 0; i < argumentSlots.length; i++) {
       frame.setObject(argumentSlots[i], args.getArgument(i));

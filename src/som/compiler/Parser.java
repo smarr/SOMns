@@ -400,7 +400,7 @@ public class Parser {
       } else if (sym == EndTerm) {
         // the end of the method has been found (EndTerm) - make it implicitly
         // return "self"
-        SelfReadNode self = new SelfReadNode(mgenc.getSelfSlot(), mgenc.getSelfContextLevel());
+        SelfReadNode self = new SelfReadNode(mgenc.getSelfContextLevel());
         SourceCoordinate selfCoord = getCoordinate();
         assignSource(self, selfCoord);
         expressions.add(self);
@@ -757,11 +757,11 @@ public class Parser {
                                       final String variableName) {
     // first handle the keywords/reserved names
     if ("self".equals(variableName)) {
-      return new SelfReadNode(mgenc.getSelfSlot(), mgenc.getSelfContextLevel());
+      return new SelfReadNode(mgenc.getSelfContextLevel());
     }
 
     if ("super".equals(variableName)) {
-      return new SuperReadNode(mgenc.getSelfSlot(), mgenc.getSelfContextLevel());
+      return new SuperReadNode(mgenc.getSelfContextLevel());
     }
 
     // now look up first local variables, or method arguments

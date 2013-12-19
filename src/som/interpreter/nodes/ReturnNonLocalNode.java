@@ -21,14 +21,13 @@
  */
 package som.interpreter.nodes;
 
-import som.compiler.MethodGenerationContext;
+import som.interpreter.Arguments;
 import som.interpreter.FrameOnStackMarker;
 import som.interpreter.ReturnException;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
 
-import com.oracle.truffle.api.frame.FrameSlotTypeException;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
@@ -45,42 +44,17 @@ public class ReturnNonLocalNode extends ContextualNode {
     this.universe   = universe;
   }
 
-  private FrameOnStackMarker getMarker(final MaterializedFrame ctx) {
-    try {
-      return (FrameOnStackMarker) ctx.getObject(MethodGenerationContext.
-        getStandardNonLocalReturnMarkerSlot());
-    } catch (FrameSlotTypeException e) {
-      throw new RuntimeException("This should never happen! really!");
-    }
-  }
-
-  private SBlock getBlockFromVirtual(final VirtualFrame frame) {
-    try {
-      return (SBlock) frame.getObject(MethodGenerationContext.getStandardSelfSlot());
-    } catch (FrameSlotTypeException e) {
-      throw new RuntimeException("This should never happen! really!");
-    }
-  }
-
-  private SAbstractObject getSelf(final MaterializedFrame ctx) {
-    try {
-      return (SAbstractObject) ctx.getObject(MethodGenerationContext.getStandardSelfSlot());
-    } catch (FrameSlotTypeException e) {
-      throw new RuntimeException("This should never happen! really!");
-    }
-  }
-
   @Override
   public SAbstractObject executeGeneric(final VirtualFrame frame) {
     MaterializedFrame ctx = determineContext(frame.materialize());
-    FrameOnStackMarker marker = getMarker(ctx);
+    FrameOnStackMarker marker = Arguments.get(ctx).getFrameOnStackMarker();
 
     if (marker.isOnStack()) {
       SAbstractObject result = (SAbstractObject) expression.executeGeneric(frame); // TODO: Work out whether there is another way than this cast!
       throw new ReturnException(result, marker);
     } else {
-      SBlock block = getBlockFromVirtual(frame);
-      SAbstractObject self = getSelf(ctx);
+      SBlock block = (SBlock) Arguments.get(frame).getSelf();
+      SAbstractObject self = Arguments.get(ctx).getSelf();
       return self.sendEscapedBlock(block, universe, frame.pack());
     }
   }

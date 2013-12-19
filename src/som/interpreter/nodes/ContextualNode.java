@@ -21,11 +21,9 @@
  */
 package som.interpreter.nodes;
 
-import som.compiler.MethodGenerationContext;
+import som.interpreter.Arguments;
 import som.vmobjects.SBlock;
 
-import com.oracle.truffle.api.frame.FrameSlot;
-import com.oracle.truffle.api.frame.FrameSlotTypeException;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 
 public abstract class ContextualNode extends ExpressionNode {
@@ -36,22 +34,13 @@ public abstract class ContextualNode extends ExpressionNode {
     this.contextLevel = contextLevel;
   }
 
-  protected SBlock getBlockFromMaterialized(final MaterializedFrame ctx) {
-    try {
-      final FrameSlot blockSelfSlot = MethodGenerationContext.getStandardSelfSlot();
-      return (SBlock) ctx.getObject(blockSelfSlot);
-    } catch (FrameSlotTypeException e) {
-      throw new RuntimeException("This should really really never happen...");
-    }
-  }
-
-  protected MaterializedFrame determineContext(MaterializedFrame frame) {
+  protected MaterializedFrame determineContext(final MaterializedFrame frame) {
     MaterializedFrame ctx = frame;
     if (contextLevel > 0) {
       int i = contextLevel;
 
       while (i > 0) {
-        SBlock block = getBlockFromMaterialized(ctx);
+        SBlock block = (SBlock) Arguments.get(ctx).getSelf();
         ctx = block.getContext();
         i--;
       }

@@ -24,23 +24,29 @@ package som.interpreter;
 import som.vmobjects.SAbstractObject;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
-import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.frame.Frame;
 
 public abstract class Arguments extends com.oracle.truffle.api.Arguments {
 
   private final SAbstractObject self;
+  private final FrameOnStackMarker onStackMarker;
 
   private Arguments(final SAbstractObject self) {
     this.self = self;
+    this.onStackMarker = new FrameOnStackMarker();
   }
 
   public SAbstractObject getSelf() {
     return self;
   }
 
+  public FrameOnStackMarker getFrameOnStackMarker() {
+    return onStackMarker;
+  }
+
   public abstract SAbstractObject getArgument(final int i);
 
-  public static Arguments get(final VirtualFrame frame) {
+  public static Arguments get(final Frame frame) {
     return frame.getArguments(Arguments.class);
   }
 

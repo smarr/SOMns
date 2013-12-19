@@ -21,6 +21,7 @@
  */
 package som.interpreter.nodes;
 
+import som.interpreter.Arguments;
 import som.vmobjects.SAbstractObject;
 
 import com.oracle.truffle.api.CompilerDirectives.SlowPath;
@@ -66,13 +67,21 @@ public abstract class VariableNode extends ContextualNode {
     }
   }
 
-  public static class SelfReadNode extends VariableReadNode {
-    public SelfReadNode(final FrameSlot slot, final int contextLevel) {
-      super(slot, contextLevel); }
+  public static class SelfReadNode extends ContextualNode {
+    public SelfReadNode(final int contextLevel) {
+      super(contextLevel);
+    }
+
+    @Override
+    public SAbstractObject executeGeneric(final VirtualFrame frame) {
+      MaterializedFrame ctx = determineContext(frame.materialize());
+
+      return Arguments.get(ctx).getSelf();
+    }
   }
 
-  public static class SuperReadNode extends VariableReadNode {
-    public SuperReadNode(final FrameSlot slot, final int contextLevel) {
-      super(slot, contextLevel); }
+  public static class SuperReadNode extends SelfReadNode {
+    public SuperReadNode(final int contextLevel) {
+      super(contextLevel); }
   }
 }
