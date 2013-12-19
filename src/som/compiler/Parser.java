@@ -73,6 +73,7 @@ import som.interpreter.nodes.NodeFactory;
 import som.interpreter.nodes.ReturnNonLocalNode;
 import som.interpreter.nodes.SequenceNode;
 import som.interpreter.nodes.UnaryMessageNode;
+import som.interpreter.nodes.VariableNode.ArgumentReadNode;
 import som.interpreter.nodes.VariableNode.SelfReadNode;
 import som.interpreter.nodes.VariableNode.SuperReadNode;
 import som.interpreter.nodes.VariableNode.VariableReadNode;
@@ -764,12 +765,17 @@ public class Parser {
       return new SuperReadNode(mgenc.getSelfContextLevel());
     }
 
-    // now look up first local variables, or method arguments
-    FrameSlot frameSlot = mgenc.getFrameSlot(variableName);
+    // now look up first method arguments
+    int argIdx = mgenc.getArgumentIndex(variableName);
+    if (argIdx >= 0) {
+      return new ArgumentReadNode(mgenc.getContextLevel(variableName), argIdx);
+    }
+
+    // now look up local variables
+    FrameSlot frameSlot = mgenc.getVariableFrameSlot(variableName);
 
     if (frameSlot != null) {
-      return new VariableReadNode(frameSlot,
-          mgenc.getFrameSlotContextLevel(variableName));
+      return new VariableReadNode(frameSlot, mgenc.getContextLevel(variableName));
     }
 
     // then object fields
@@ -788,11 +794,11 @@ public class Parser {
   private ExpressionNode variableWrite(final MethodGenerationContext mgenc,
       final String variableName,
       final ExpressionNode exp) {
-    FrameSlot frameSlot = mgenc.getFrameSlot(variableName);
+    FrameSlot frameSlot = mgenc.getVariableFrameSlot(variableName);
 
     if (frameSlot != null) {
       return new VariableWriteNode(frameSlot,
-          mgenc.getFrameSlotContextLevel(variableName), exp);
+          mgenc.getContextLevel(variableName), exp);
     }
 
     SSymbol fieldName = universe.symbolFor(variableName);
@@ -802,7 +808,7 @@ public class Parser {
       return fieldWrite;
     } else {
       throw new RuntimeException("Neither a variable nor a field found "
-          + "in current scope that is named " + variableName + ".");
+          + "in current scope that is named " + variableName + ". Arguments are read-only.");
     }
   }
 

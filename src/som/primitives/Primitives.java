@@ -30,8 +30,8 @@ import som.interpreter.Primitive;
 import som.interpreter.nodes.AbstractMessageNode;
 import som.interpreter.nodes.ArgumentEvaluationNode;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.VariableNode.ArgumentReadNode;
 import som.interpreter.nodes.VariableNode.SelfReadNode;
-import som.interpreter.nodes.VariableNode.VariableReadNode;
 import som.vm.Universe;
 import som.vmobjects.SClass;
 import som.vmobjects.SMethod;
@@ -39,7 +39,6 @@ import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives.SlowPath;
 import com.oracle.truffle.api.dsl.NodeFactory;
-import com.oracle.truffle.api.frame.FrameSlot;
 
 public abstract class Primitives {
 
@@ -67,10 +66,8 @@ public abstract class Primitives {
 
     MethodGenerationContext mgen = new MethodGenerationContext();
     ExpressionNode[] args = new ExpressionNode[numArgs];
-    FrameSlot[] argSlots  = new FrameSlot[numArgs];
     for (int i = 0; i < numArgs; i++) {
-      argSlots[i] = mgen.addArgument("primArg" + i);
-      args[i] = new VariableReadNode(argSlots[i], 0);
+      args[i] = new ArgumentReadNode(0, i);
     }
 
     AbstractMessageNode primNode;
@@ -89,7 +86,7 @@ public abstract class Primitives {
           new SelfReadNode(0), argEvalNode);
     }
 
-    Primitive primMethodNode = new Primitive(primNode, argSlots,
+    Primitive primMethodNode = new Primitive(primNode, numArgs,
         mgen.getFrameDescriptor());
     SMethod prim = universe.newMethod(signature, primMethodNode,
         mgen.getFrameDescriptor(), true);
@@ -102,19 +99,17 @@ public abstract class Primitives {
   @SlowPath
   public static SMethod constructEmptyPrimitive(final SSymbol signature,
       final Universe universe) {
-    int numArgs = signature.getNumberOfSignatureArguments() - 1; // we take care of self seperately
+    int numArgs = signature.getNumberOfSignatureArguments() - 1; // we take care of self separately
 
     MethodGenerationContext mgen = new MethodGenerationContext();
     ExpressionNode[] args = new ExpressionNode[numArgs];
-    FrameSlot[] argSlots  = new FrameSlot[numArgs];
     for (int i = 0; i < numArgs; i++) {
-      argSlots[i] = mgen.addArgument("primArg" + i);
-      args[i] = new VariableReadNode(argSlots[i], 0);
+      args[i] = new ArgumentReadNode(0, i);
     }
 
     ExpressionNode primNode = EmptyPrim.create(signature, universe, new SelfReadNode(0));
 
-    Primitive primMethodNode = new Primitive(primNode, argSlots,
+    Primitive primMethodNode = new Primitive(primNode, numArgs,
         mgen.getFrameDescriptor());
     SMethod prim = universe.newMethod(signature, primMethodNode,
         mgen.getFrameDescriptor(), true);

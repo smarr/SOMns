@@ -40,7 +40,6 @@ import som.vmobjects.SSymbol;
 import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlot;
-import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.impl.DefaultSourceSection;
 
 public class MethodGenerationContext {
@@ -75,20 +74,14 @@ public class MethodGenerationContext {
   }
 
   public SMethod assemble(final Universe universe, final ExpressionNode expressions) {
-    FrameSlot[] argSlots   = new FrameSlot[arguments.size()];
     FrameSlot[] localSlots = new FrameSlot[locals.size()];
-
-    for (int i = 0; i < arguments.size(); i++) {
-      argSlots[i] = frameDescriptor.findFrameSlot(arguments.get(i));
-    }
 
     for (int i = 0; i < locals.size(); i++) {
       localSlots[i] = frameDescriptor.findFrameSlot(locals.get(i));
     }
 
     som.interpreter.Method truffleMethod =
-        new som.interpreter.Method(expressions, argSlots, localSlots,
-            frameDescriptor, universe);
+        new som.interpreter.Method(expressions, arguments.size(), localSlots, frameDescriptor, universe);
 
     assignSourceSectionToMethod(expressions, truffleMethod);
 
@@ -118,17 +111,12 @@ public class MethodGenerationContext {
     signature = sig;
   }
 
-  public FrameSlot addArgument(final String arg) {
-    arguments.add(arg);
-    return frameDescriptor.addFrameSlot(arg, FrameSlotKind.Object);
-  }
-
   public void addArgumentIfAbsent(final String arg) {
     if (arguments.contains(arg)) {
       return;
     }
 
-    addArgument(arg);
+    arguments.add(arg);
   }
 
   public void addLocalIfAbsent(final String local) {
@@ -170,26 +158,40 @@ public class MethodGenerationContext {
     return level;
   }
 
-  public int getFrameSlotContextLevel(final String varName) {
+  public int getContextLevel(final String varName) {
     if (locals.contains(varName) || arguments.contains(varName)) {
       return 0;
     }
 
     if (outerGenc != null) {
-      return 1 + outerGenc.getFrameSlotContextLevel(varName);
+      return 1 + outerGenc.getContextLevel(varName);
     }
 
     return 0;
   }
 
-  public FrameSlot getFrameSlot(final String varName) {
-    if (locals.contains(varName) || arguments.contains(varName)) {
+  public int getArgumentIndex(final String varName) {
+    int idx = arguments.indexOf(varName);
+
+    if (idx >= 0) {
+      return idx;
+    }
+
+    if (outerGenc != null) {
+      return outerGenc.getArgumentIndex(varName);
+    }
+
+    return -1; // not found
+  }
+
+  public FrameSlot getVariableFrameSlot(final String varName) {
+    if (locals.contains(varName)) {
       return frameDescriptor.findFrameSlot(varName);
     }
 
     FrameSlot slot = null;
     if (outerGenc != null) {
-      slot = outerGenc.getFrameSlot(varName);
+      slot = outerGenc.getVariableFrameSlot(varName);
     }
 
     return slot;

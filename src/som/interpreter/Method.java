@@ -56,11 +56,11 @@ public class Method extends Invokable {
   private final Universe universe;
 
   public Method(final ExpressionNode expressions,
-                final FrameSlot[] argumentSlots,
+                final int numArguments,
                 final FrameSlot[] temporarySlots,
                 final FrameDescriptor frameDescriptor,
                 final Universe  universe) {
-    super(expressions, argumentSlots, frameDescriptor);
+    super(expressions, numArguments, frameDescriptor);
     this.temporarySlots       = temporarySlots;
     this.universe             = universe;
   }
@@ -100,11 +100,6 @@ public class Method extends Invokable {
 
   @ExplodeLoop
   protected void initializeFrame(final VirtualFrame frame) {
-    Arguments args = Arguments.get(frame);
-    for (int i = 0; i < argumentSlots.length; i++) {
-      frame.setObject(argumentSlots[i], args.getArgument(i));
-    }
-
     for (int i = 0; i < temporarySlots.length; i++) {
       frame.setObject(temporarySlots[i], universe.nilObject);
     }
@@ -135,7 +130,7 @@ public class Method extends Invokable {
   public ExpressionNode inline(final CallTarget inlinableCallTarget, final SSymbol selector) {
     ExpressionNode body = NodeUtil.cloneNode(getUninitializedBody());
     if (isAlwaysToBeInlined()) {
-      switch (argumentSlots.length) {
+      switch (numArguments) {
         case 0:
           return new UnaryInlinedExpression(selector, universe, body, inlinableCallTarget);
         case 1:
@@ -147,19 +142,19 @@ public class Method extends Invokable {
       }
     }
 
-    switch (argumentSlots.length) {
+    switch (numArguments) {
       case 0:
         return new UnaryInlinedMethod(selector, universe, body, null,
             inlinableCallTarget, frameDescriptor, temporarySlots);
       case 1:
         return new BinaryInlinedMethod(selector, universe, body, null, null,
-            inlinableCallTarget, frameDescriptor, argumentSlots, temporarySlots);
+            inlinableCallTarget, frameDescriptor, temporarySlots);
       case 2:
         return new TernaryInlinedMethod(selector, universe, body, null, null, null,
-            inlinableCallTarget, frameDescriptor, argumentSlots, temporarySlots);
+            inlinableCallTarget, frameDescriptor, temporarySlots);
       default:
         return new KeywordInlinedMethod(selector, universe, body, null, null,
-            inlinableCallTarget, frameDescriptor, argumentSlots, temporarySlots);
+            inlinableCallTarget, frameDescriptor, temporarySlots);
     }
   }
 
@@ -268,29 +263,23 @@ public class Method extends Invokable {
     private final CallTarget      callTarget;
     private final FrameDescriptor frameDescriptor;
 
-    @CompilationFinal private final FrameSlot[] argumentSlots;
     @CompilationFinal private final FrameSlot[] temporarySlots;
 
     BinaryInlinedMethod(final SSymbol selector, final Universe universe,
         final ExpressionNode msgBody, final ExpressionNode receiver,
         final ExpressionNode argument, final CallTarget callTarget,
         final FrameDescriptor frameDescriptor,
-        final FrameSlot[] argumentSlots,
         final FrameSlot[] temporarySlots) {
       super(selector, universe);
       this.expressionOrSequence = adoptChild(msgBody);
       this.callTarget           = callTarget;
       this.frameDescriptor      = frameDescriptor;
-      this.argumentSlots        = argumentSlots;
       this.temporarySlots       = temporarySlots;
       this.argument             = argument;
     }
 
     @ExplodeLoop
     private void initializeFrame(final VirtualFrame frame) {
-      Arguments args = Arguments.get(frame);
-      frame.setObject(argumentSlots[0], args.getArgument(0));
-
       for (int i = 0; i < temporarySlots.length; i++) {
         frame.setObject(temporarySlots[i], universe.nilObject);
       }
@@ -360,20 +349,17 @@ public class Method extends Invokable {
     private final CallTarget      callTarget;
     private final FrameDescriptor frameDescriptor;
 
-    @CompilationFinal private final FrameSlot[] argumentSlots;
     @CompilationFinal private final FrameSlot[] temporarySlots;
 
     TernaryInlinedMethod(final SSymbol selector, final Universe universe,
         final ExpressionNode msgBody, final ExpressionNode receiver,
         final ExpressionNode firstArg, final ExpressionNode secondArg,
         final CallTarget callTarget, final FrameDescriptor frameDescriptor,
-        final FrameSlot[] argumentSlots,
         final FrameSlot[] temporarySlots) {
       super(selector, universe);
       this.expressionOrSequence = adoptChild(msgBody);
       this.callTarget           = callTarget;
       this.frameDescriptor      = frameDescriptor;
-      this.argumentSlots        = argumentSlots;
       this.temporarySlots       = temporarySlots;
       this.firstArg             = firstArg;
       this.secondArg            = secondArg;
@@ -381,10 +367,6 @@ public class Method extends Invokable {
 
     @ExplodeLoop
     private void initializeFrame(final VirtualFrame frame) {
-      Arguments args = Arguments.get(frame);
-      frame.setObject(argumentSlots[0], args.getArgument(0));
-      frame.setObject(argumentSlots[1], args.getArgument(1));
-
       for (int i = 0; i < temporarySlots.length; i++) {
         frame.setObject(temporarySlots[i], universe.nilObject);
       }
@@ -458,31 +440,23 @@ public class Method extends Invokable {
     private final CallTarget      callTarget;
     private final FrameDescriptor frameDescriptor;
 
-    @CompilationFinal private final FrameSlot[] argumentSlots;
     @CompilationFinal private final FrameSlot[] temporarySlots;
 
     KeywordInlinedMethod(final SSymbol selector, final Universe universe,
         final ExpressionNode msgBody, final ExpressionNode receiver,
         final ExpressionNode[] arguments,
         final CallTarget callTarget, final FrameDescriptor frameDescriptor,
-        final FrameSlot[] argumentSlots,
         final FrameSlot[] temporarySlots) {
       super(selector, universe);
       this.expressionOrSequence = adoptChild(msgBody);
       this.callTarget           = callTarget;
       this.frameDescriptor      = frameDescriptor;
-      this.argumentSlots        = argumentSlots;
       this.temporarySlots       = temporarySlots;
       this.arguments            = arguments;
     }
 
     @ExplodeLoop
     private void initializeFrame(final VirtualFrame frame) {
-      Arguments args = Arguments.get(frame);
-      for (int i = 0; i < argumentSlots.length; i++) {
-        frame.setObject(argumentSlots[i], args.getArgument(i));
-      }
-
       for (int i = 0; i < temporarySlots.length; i++) {
         frame.setObject(temporarySlots[i], universe.nilObject);
       }

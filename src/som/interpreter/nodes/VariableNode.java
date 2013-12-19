@@ -67,6 +67,21 @@ public abstract class VariableNode extends ContextualNode {
     }
   }
 
+  public static class ArgumentReadNode extends ContextualNode {
+    private final int argumentIndex;
+    public ArgumentReadNode(final int contextLevel, final int argumentIndex) {
+      super(contextLevel);
+      this.argumentIndex = argumentIndex;
+    }
+
+    @Override
+    public SAbstractObject executeGeneric(final VirtualFrame frame) {
+      MaterializedFrame ctx = determineContext(frame.materialize());
+
+      return Arguments.get(ctx).getArgument(argumentIndex);
+    }
+  }
+
   public static class SelfReadNode extends ContextualNode {
     public SelfReadNode(final int contextLevel) {
       super(contextLevel);
