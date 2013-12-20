@@ -63,6 +63,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import som.compiler.SourcecodeCompiler.Source;
+import som.compiler.Variable.Local;
 import som.interpreter.nodes.AbstractMessageNode;
 import som.interpreter.nodes.BinaryMessageNode;
 import som.interpreter.nodes.ExpressionNode;
@@ -71,13 +72,10 @@ import som.interpreter.nodes.FieldNode.FieldWriteNode;
 import som.interpreter.nodes.GlobalNode.GlobalReadNode;
 import som.interpreter.nodes.NodeFactory;
 import som.interpreter.nodes.ReturnNonLocalNode;
+import som.interpreter.nodes.SelfReadNode;
+import som.interpreter.nodes.SelfReadNode.SuperReadNode;
 import som.interpreter.nodes.SequenceNode;
 import som.interpreter.nodes.UnaryMessageNode;
-import som.interpreter.nodes.VariableNode.SelfReadNode;
-import som.interpreter.nodes.VariableNodeFactory.SelfReadNodeFactory;
-import som.interpreter.nodes.VariableNodeFactory.SuperReadNodeFactory;
-import som.interpreter.nodes.VariableNodeFactory.VariableReadNodeFactory;
-import som.interpreter.nodes.VariableWriteNodeFactory;
 import som.interpreter.nodes.literals.BigIntegerLiteralNodeFactory;
 import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.literals.IntegerLiteralNodeFactory;
@@ -90,7 +88,6 @@ import som.vmobjects.SMethod;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives.SlowPath;
-import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.impl.DefaultSourceSection;
 
 public class Parser {
@@ -401,7 +398,7 @@ public class Parser {
       } else if (sym == EndTerm) {
         // the end of the method has been found (EndTerm) - make it implicitly
         // return "self"
-        SelfReadNode self = SelfReadNodeFactory.create(mgenc.getSelfSlot(), mgenc.getSelfContextLevel());
+        SelfReadNode self = new SelfReadNode(mgenc.getSelfContextLevel());
         SourceCoordinate selfCoord = getCoordinate();
         assignSource(self, selfCoord);
         expressions.add(self);
@@ -758,19 +755,24 @@ public class Parser {
                                       final String variableName) {
     // first handle the keywords/reserved names
     if ("self".equals(variableName)) {
-      return SelfReadNodeFactory.create(mgenc.getSelfSlot(), mgenc.getSelfContextLevel());
+      return new SelfReadNode(mgenc.getSelfContextLevel());
     }
 
     if ("super".equals(variableName)) {
-      return SuperReadNodeFactory.create(mgenc.getSelfSlot(), mgenc.getSelfContextLevel());
+      return new SuperReadNode(mgenc.getSelfContextLevel());
     }
 
     // now look up first local variables, or method arguments
-    FrameSlot frameSlot = mgenc.getFrameSlot(variableName);
+    Variable variable = mgenc.getVariable(variableName);
+    if (variable != null) {
+      variable.setIsRead();
 
-    if (frameSlot != null) {
-      return VariableReadNodeFactory.create(frameSlot,
-          mgenc.getFrameSlotContextLevel(variableName));
+      int ctxLevel = mgenc.getContextLevel(variableName);
+      if (ctxLevel > 0) {
+        variable.setIsReadOutOfContext();
+      }
+
+      return variable.getReadNode(ctxLevel);
     }
 
     // then object fields
@@ -787,13 +789,16 @@ public class Parser {
   }
 
   private ExpressionNode variableWrite(final MethodGenerationContext mgenc,
-      final String variableName,
-      final ExpressionNode exp) {
-    FrameSlot frameSlot = mgenc.getFrameSlot(variableName);
+      final String variableName, final ExpressionNode exp) {
+    Local variable = mgenc.getLocal(variableName);
+    if (variable != null) {
+      int ctxLevel = mgenc.getContextLevel(variableName);
+      variable.setIsWritten();
 
-    if (frameSlot != null) {
-      return VariableWriteNodeFactory.create(frameSlot,
-          mgenc.getFrameSlotContextLevel(variableName), exp);
+      if (ctxLevel > 0) {
+        variable.setIsWrittenOutOfContext();
+      }
+      return variable.getWriteNode(ctxLevel, exp);
     }
 
     SSymbol fieldName = universe.symbolFor(variableName);
@@ -803,7 +808,7 @@ public class Parser {
       return fieldWrite;
     } else {
       throw new RuntimeException("Neither a variable nor a field found "
-          + "in current scope that is named " + variableName + ".");
+          + "in current scope that is named " + variableName + ". Arguments are read-only.");
     }
   }
 

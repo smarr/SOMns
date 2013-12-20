@@ -1,5 +1,6 @@
 package som.interpreter.nodes.specialized;
 
+import som.interpreter.Arguments;
 import som.interpreter.nodes.messages.BinarySendNode;
 import som.vmobjects.SBlock;
 import som.vmobjects.SMethod;
@@ -18,12 +19,13 @@ public abstract class IfTrueMessageNode extends BinarySendNode {
    * evaluate it.
    */
   @Specialization
-  public Object doIfTrue(final VirtualFrame frame,
-      final SObject receiver, final SBlock argument) {
+  public Object doIfTrue(final VirtualFrame frame, final SObject receiver,
+      final SBlock argument) {
     if (receiver == universe.trueObject) {
-      SMethod blockMethod = argument.getMethod();
-      SBlock b = universe.newBlock(blockMethod, frame.materialize(), 1);
-      return blockMethod.invoke(frame.pack(), b);
+      SMethod   blockMethod = argument.getMethod();
+      Arguments context     = argument.getContext(); // TODO: test whether the current implementation is correct, or whether it should be the following: Method.getUpvalues(frame);
+      SBlock b = universe.newBlock(blockMethod, context);
+      return blockMethod.invoke(frame.pack(), b, universe);
     } else {
       return universe.nilObject;
     }

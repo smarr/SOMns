@@ -7,6 +7,7 @@ import som.interpreter.nodes.TernaryMessageNode;
 import som.interpreter.nodes.specialized.IfTrueIfFalseMessageNodeFactory;
 import som.vm.Universe;
 import som.vmobjects.SClass;
+import som.vmobjects.SMethod;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CallTarget;
@@ -224,8 +225,9 @@ public abstract class TernarySendNode extends TernaryMessageNode {
         callCount++;
       }
 
-      TernaryArguments args = new TernaryArguments(receiver,
-          argument1, argument2);
+      Invokable root = (Invokable) inlinableCallTarget.getRootNode();
+      TernaryArguments args = new TernaryArguments(receiver, argument1,
+          argument2, root.getNumberOfUpvalues(), universe.nilObject);
       return inlinableCallTarget.call(frame.pack(), args);
     }
   }
@@ -238,10 +240,9 @@ public abstract class TernarySendNode extends TernaryMessageNode {
     @Override
     public Object executeEvaluated(final VirtualFrame frame,
         final Object receiver, final Object argument1, final Object argument2) {
-      CallTarget callTarget = lookupCallTarget(receiver);
-      TernaryArguments args = new TernaryArguments(receiver,
-          argument1, argument2);
-      return callTarget.call(args);
+      SMethod method = lookupMethod(receiver);
+      return method.invoke(frame.pack(), receiver,
+          argument1, argument2, universe);
     }
   }
 }

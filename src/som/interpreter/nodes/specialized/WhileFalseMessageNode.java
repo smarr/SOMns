@@ -1,5 +1,6 @@
 package som.interpreter.nodes.specialized;
 
+import som.interpreter.Arguments;
 import som.interpreter.nodes.messages.BinarySendNode;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
@@ -16,9 +17,10 @@ public abstract class WhileFalseMessageNode extends BinarySendNode {
 
   private Object executeBlock(final VirtualFrame frame,
       final SBlock block) {
-    SMethod method = block.getMethod();
-    SBlock b = universe.newBlock(method, frame.materialize(), 1);
-    return method.invoke(frame.pack(), b);
+    SMethod   method  = block.getMethod();
+    Arguments context = block.getContext(); // TODO: test whether the current implementation is correct, or whether it should be the following: Method.getUpvalues(frame);
+    SBlock b = universe.newBlock(method, context);
+    return method.invoke(frame.pack(), b, universe);
   }
 
   protected boolean receiverIsFalseObject(final SObject receiver) {

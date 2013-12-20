@@ -21,13 +21,13 @@
  */
 package som.interpreter.nodes;
 
-import som.compiler.MethodGenerationContext;
+import som.interpreter.Arguments;
 import som.vmobjects.SBlock;
 
-import com.oracle.truffle.api.frame.FrameSlot;
-import com.oracle.truffle.api.frame.FrameSlotTypeException;
-import com.oracle.truffle.api.frame.MaterializedFrame;
+import com.oracle.truffle.api.frame.VirtualFrame;
 
+
+// TODO: this class is to be removed and replaced by UpValues
 public abstract class ContextualNode extends ExpressionNode {
 
   protected final int contextLevel;
@@ -36,27 +36,31 @@ public abstract class ContextualNode extends ExpressionNode {
     this.contextLevel = contextLevel;
   }
 
-  protected SBlock getBlockFromMaterialized(final MaterializedFrame ctx) {
-    try {
-      final FrameSlot blockSelfSlot = MethodGenerationContext.getStandardSelfSlot();
-      return (SBlock) ctx.getObject(blockSelfSlot);
-    } catch (FrameSlotTypeException e) {
-      throw new RuntimeException("This should really really never happen...");
-    }
-  }
-
-  protected MaterializedFrame determineContext(MaterializedFrame frame) {
-    MaterializedFrame ctx = frame;
+  protected Arguments determineOuterArguments(final VirtualFrame frame) {
+    Arguments args = Arguments.get(frame);
     if (contextLevel > 0) {
       int i = contextLevel;
 
       while (i > 0) {
-        SBlock block = getBlockFromMaterialized(ctx);
-        ctx = block.getContext();
+        SBlock block = (SBlock) args.getSelf();
+        args = block.getContext();
         i--;
       }
     }
-    return ctx;
+    return args;
   }
 
+  protected Object determineOuterSelf(final VirtualFrame frame) {
+    Object self = Arguments.get(frame).getSelf();
+    if (contextLevel > 0) {
+      int i = contextLevel;
+
+      while (i > 0) {
+        SBlock block = (SBlock) self;
+        self = block.getOuterSelf();
+        i--;
+      }
+    }
+    return self;
+  }
 }

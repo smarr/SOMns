@@ -21,15 +21,29 @@
  */
 package som.interpreter;
 
+import som.vmobjects.SObject;
+
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
-import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.frame.Frame;
 
 public abstract class Arguments extends com.oracle.truffle.api.Arguments {
 
   private final Object self;
+  private final FrameOnStackMarker onStackMarker;
+  private final Object[] upvalues;
 
-  private Arguments(final Object self) {
+  private Arguments(final Object self, final int numUpvalues, final SObject nilObject) {
     this.self = self;
+    this.onStackMarker = new FrameOnStackMarker();
+
+    if (numUpvalues > 0) {
+      upvalues = new Object[numUpvalues];
+      for (int i = 0; i < numUpvalues; i++) {
+        upvalues[i] = nilObject;
+      }
+    } else {
+      upvalues = null;
+    }
   }
 
   public Object getSelf() {
@@ -38,7 +52,15 @@ public abstract class Arguments extends com.oracle.truffle.api.Arguments {
 
   public abstract Object getArgument(final int i);
 
-  public static Arguments get(final VirtualFrame frame) {
+  public FrameOnStackMarker getFrameOnStackMarker() {
+    return onStackMarker;
+  }
+
+  public Object[] getUpvalues() {
+    return upvalues;
+  }
+
+  public static Arguments get(final Frame frame) {
     return frame.getArguments(Arguments.class);
   }
 
@@ -59,8 +81,8 @@ public abstract class Arguments extends com.oracle.truffle.api.Arguments {
 //  }
 
   public static final class UnaryArguments extends Arguments {
-    public UnaryArguments(final Object self) {
-      super(self);
+    public UnaryArguments(final Object self, final int numUpvalues, final SObject nilObject) {
+      super(self, numUpvalues, nilObject);
     }
 
     @Override
@@ -71,8 +93,9 @@ public abstract class Arguments extends com.oracle.truffle.api.Arguments {
 
   public static final class BinaryArguments extends Arguments {
     private final Object arg;
-    public BinaryArguments(final Object self, final Object arg) {
-      super(self);
+    public BinaryArguments(final Object self, final Object arg,
+        final int numUpvalues, final SObject nilObject) {
+      super(self, numUpvalues, nilObject);
       this.arg = arg;
     }
 
@@ -88,8 +111,8 @@ public abstract class Arguments extends com.oracle.truffle.api.Arguments {
     private final Object arg2;
 
     public TernaryArguments(final Object self, final Object arg1,
-        final Object arg2) {
-      super(self);
+        final Object arg2, final int numUpvalues, final SObject nilObject) {
+      super(self, numUpvalues, nilObject);
       this.arg1 = arg1;
       this.arg2 = arg2;
     }
@@ -109,8 +132,9 @@ public abstract class Arguments extends com.oracle.truffle.api.Arguments {
     @CompilationFinal
     private final Object[] arguments;
 
-    public KeywordArguments(final Object self, final Object[] arguments) {
-      super(self);
+    public KeywordArguments(final Object self, final Object[] arguments,
+        final int numUpvalues, final SObject nilObject) {
+      super(self, numUpvalues, nilObject);
       this.arguments = arguments;
     }
 

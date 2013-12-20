@@ -1,5 +1,6 @@
 package som.interpreter.nodes.literals;
 
+import som.interpreter.Arguments;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SMethod;
@@ -19,8 +20,6 @@ public class BlockNode extends LiteralNode {
 
   @Override
   public SAbstractObject executeGeneric(final VirtualFrame frame) {
-    return universe.newBlock(blockMethod, frame.materialize(), blockMethod.getNumberOfArguments());
+    return universe.newBlock(blockMethod, Arguments.get(frame));
   }
-
-  // TODO: should we do something else for cloneForInlining() in this class?
 }

@@ -25,6 +25,7 @@
 
 package som.vm;
 
+import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.HashMap;
@@ -32,6 +33,7 @@ import java.util.List;
 import java.util.StringTokenizer;
 
 import som.compiler.Disassembler;
+import som.interpreter.Arguments;
 import som.interpreter.Invokable;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray;
@@ -50,7 +52,6 @@ import com.oracle.truffle.api.CompilerDirectives.SlowPath;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.TruffleRuntime;
 import com.oracle.truffle.api.frame.FrameDescriptor;
-import com.oracle.truffle.api.frame.MaterializedFrame;
 
 public class Universe {
 
@@ -75,11 +76,6 @@ public class Universe {
 
     // Initialize the known universe
     return execute(arguments);
-  }
-
-  static { /* static initializer */
-    pathSeparator = System.getProperty("path.separator");
-    fileSeparator = System.getProperty("file.separator");
   }
 
   public Universe() {
@@ -179,22 +175,10 @@ public class Universe {
   // take argument of the form "../foo/Test.som" and return
   // "../foo", "Test", "som"
   private String[] getPathClassExt(final String arg) {
-    // Create a new tokenizer to split up the string of dirs
-    StringTokenizer tokenizer = new StringTokenizer(arg,
-        fileSeparator, true);
+    File file = new File(arg);
 
-    String cp = "";
-
-    while (tokenizer.countTokens() > 2) {
-      cp = cp + tokenizer.nextToken();
-    }
-    if (tokenizer.countTokens() == 2) {
-      tokenizer.nextToken(); // throw out delimiter
-    }
-
-    String file = tokenizer.nextToken();
-
-    tokenizer = new StringTokenizer(file, ".");
+    String path = file.getParent();
+    StringTokenizer tokenizer = new StringTokenizer(file.getName(), ".");
 
     if (tokenizer.countTokens() > 2) {
       println("Class with . in its name?");
@@ -202,16 +186,17 @@ public class Universe {
     }
 
     String[] result = new String[3];
-    result[0] = cp;
+    result[0] = (path == null) ? "" : path;
     result[1] = tokenizer.nextToken();
     result[2] = tokenizer.hasMoreTokens() ? tokenizer.nextToken() : "";
+
     return result;
   }
 
   @SlowPath
   public void setupClassPath(final String cp) {
     // Create a new tokenizer to split up the string of directories
-    StringTokenizer tokenizer = new StringTokenizer(cp, pathSeparator);
+    StringTokenizer tokenizer = new StringTokenizer(cp, File.pathSeparator);
 
     // Get the default class path of the appropriate size
     classPath = setupDefaultClassPath(tokenizer.countTokens());
@@ -251,7 +236,7 @@ public class Universe {
     println("Usage: som [-options] [args...]                          ");
     println("                                                         ");
     println("where options include:                                   ");
-    println("    -cp <directories separated by " + pathSeparator
+    println("    -cp <directories separated by " + File.pathSeparator
         + ">");
     println("                  set search path for application classes");
     println("    -d            enable disassembling");
@@ -279,7 +264,7 @@ public class Universe {
                                         lookupInvokable(symbolFor(selector));
 
     // Invoke the initialize invokable
-    return initialize.invokeRoot(clazz, new SAbstractObject[0]);
+    return initialize.invokeRoot(clazz, new SAbstractObject[0], this);
   }
 
   private SAbstractObject execute(final String[] arguments) {
@@ -299,7 +284,7 @@ public class Universe {
         lookupInvokable(symbolFor("initialize:"));
 
     // Invoke the initialize invokable
-    return initialize.invokeRoot(systemObject, new SAbstractObject[] {argumentsArray});
+    return initialize.invokeRoot(systemObject, new SAbstractObject[] {argumentsArray}, this);
   }
 
   @SlowPath
@@ -428,9 +413,9 @@ public class Universe {
     return result;
   }
 
-  public SBlock newBlock(final SMethod method, final MaterializedFrame context, final int arguments) {
+  public SBlock newBlock(final SMethod method, final Arguments outerArguments) {
     // Allocate a new block and set its class to be the block class
-    SBlock result = new SBlock(method, context);
+    SBlock result = new SBlock(method, outerArguments);
 
     // Return the freshly allocated block
     return result;
@@ -657,7 +642,7 @@ public class Universe {
       try {
         // Load the class from a file and return the loaded class
         SClass result = som.compiler.SourcecodeCompiler.compileClass(cpEntry
-            + fileSeparator, name.getString(), systemClass, this);
+            + File.separator, name.getString(), systemClass, this);
         if (printAST) {
           Disassembler.dump(result.getSOMClass(this));
           Disassembler.dump(result);
@@ -748,9 +733,6 @@ public class Universe {
   private final HashMap<SSymbol, SAbstractObject> globals = new HashMap<SSymbol, SAbstractObject>();
   private String[]                              classPath;
   @CompilationFinal private boolean             printAST;
-
-  public static final String                    pathSeparator;
-  public static final String                    fileSeparator;
 
   private final TruffleRuntime                  truffleRuntime;
 

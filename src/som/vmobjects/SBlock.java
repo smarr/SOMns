@@ -24,6 +24,8 @@
 
 package som.vmobjects;
 
+import som.interpreter.Arguments;
+import som.interpreter.FrameOnStackMarker;
 import som.primitives.BlockPrimsFactory.ValueMorePrimFactory;
 import som.primitives.BlockPrimsFactory.ValueNonePrimFactory;
 import som.primitives.BlockPrimsFactory.ValueOnePrimFactory;
@@ -31,13 +33,11 @@ import som.primitives.BlockPrimsFactory.ValueTwoPrimFactory;
 import som.primitives.Primitives;
 import som.vm.Universe;
 
-import com.oracle.truffle.api.frame.MaterializedFrame;
-
 public class SBlock extends SAbstractObject {
 
-  public SBlock(final SMethod blockMethod, final MaterializedFrame context) {
+  public SBlock(final SMethod blockMethod, final Arguments outerArguments) {
     method = blockMethod;
-    declarationFrame = context;
+    this.context = outerArguments;
   }
 
   public SMethod getMethod() {
@@ -45,9 +45,20 @@ public class SBlock extends SAbstractObject {
     return method;
   }
 
-  public MaterializedFrame getContext() {
-    // Get the context of this block by reading the field with context index
-    return declarationFrame;
+  public Arguments getContext() {
+    return context;
+  }
+
+  public Object getOuterSelf() {
+    return context.getSelf();
+  }
+
+  public Object[] getUpvalues() {
+    return context.getUpvalues();
+  }
+
+  public FrameOnStackMarker getContextMarker() {
+    return context.getFrameOnStackMarker();
   }
 
   public static SMethod getEvaluationPrimitive(final int numberOfArguments,
@@ -88,6 +99,6 @@ public class SBlock extends SAbstractObject {
     return universe.getBlockClass(method.getNumberOfArguments());
   }
 
-  private final SMethod method;
-  private final MaterializedFrame declarationFrame;
+  private final SMethod  method;
+  private final Arguments context;
 }

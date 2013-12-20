@@ -58,7 +58,7 @@ public class ObjectPrims {
     @Specialization
     public Object doObject(final VirtualFrame frame, final Object receiver, final SSymbol selector) {
       SMethod invokable = Types.getClassOf(receiver, universe).lookupInvokable(selector);
-      return invokable.invoke(frame.pack(), receiver);
+      return invokable.invoke(frame.pack(), receiver, universe);
     }
   }
 
@@ -70,7 +70,7 @@ public class ObjectPrims {
     public Object doSAbstractObject(final VirtualFrame frame,
         final SAbstractObject receiver, final SSymbol selector, final SClass  clazz) {
       SMethod invokable = clazz.lookupInvokable(selector);
-      return invokable.invoke(frame.pack(), receiver);
+      return invokable.invoke(frame.pack(), receiver, universe);
     }
   }
 
@@ -82,7 +82,7 @@ public class ObjectPrims {
     public Object doObject(final VirtualFrame frame,
         final Object receiver, final SSymbol selector, final SArray  argsArr) {
       SMethod invokable = Types.getClassOf(receiver, universe).lookupInvokable(selector);
-      return invokable.invoke(frame.pack(), receiver, argsArr.indexableFields);
+      return invokable.invoke(frame.pack(), receiver, argsArr.indexableFields, universe);
     }
   }
 

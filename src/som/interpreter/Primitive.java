@@ -5,18 +5,16 @@ import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.frame.FrameDescriptor;
-import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.NodeUtil;
 
 
 public class Primitive extends Invokable {
 
   public Primitive(final ExpressionNode primitive,
-      final FrameSlot selfSlot, final FrameSlot[] arugmentSlots,
+      final int numArguments,
       final FrameDescriptor frameDescriptor) {
-    super(primitive, selfSlot, arugmentSlots, frameDescriptor);
+    super(primitive, numArguments, frameDescriptor);
   }
 
   @Override
@@ -25,19 +23,16 @@ public class Primitive extends Invokable {
     return expressionOrSequence.executeGeneric(frame);
   }
 
-  @ExplodeLoop
-  protected void initializeFrame(final VirtualFrame frame) {
-    frame.setObject(selfSlot, Arguments.get(frame).getSelf());
-
-    Arguments args = Arguments.get(frame);
-    for (int i = 0; i < argumentSlots.length; i++) {
-      frame.setObject(argumentSlots[i], args.getArgument(i));
-    }
-  }
+  protected void initializeFrame(final VirtualFrame frame) { /* NOOP */ }
 
   @Override
   public boolean isAlwaysToBeInlined() {
     return true;
+  }
+
+  @Override
+  public int getNumberOfUpvalues() {
+    return 0; // primtives do not have a body, and thus, no upvalues
   }
 
   @Override

@@ -1,5 +1,6 @@
 package som.interpreter.nodes.specialized;
 
+import som.interpreter.Arguments;
 import som.interpreter.nodes.messages.TernarySendNode;
 import som.vmobjects.SBlock;
 import som.vmobjects.SMethod;
@@ -18,15 +19,18 @@ public abstract class IfTrueIfFalseMessageNode extends TernarySendNode {
   public Object doIfTrueIfFalse(final VirtualFrame frame,
       final SObject receiver, final SBlock trueBlock, final SBlock falseBlock) {
     SMethod branchMethod;
+    Arguments context;
     if (receiver == universe.trueObject) {
       branchMethod = trueBlock.getMethod();
+      context      = trueBlock.getContext(); // TODO: test whether the current implementation is correct, or whether it should be the following: Method.getUpvalues(frame);
     } else {
       assert receiver == universe.falseObject;
       branchMethod = falseBlock.getMethod();
+      context      = falseBlock.getContext(); // TODO: test whether the current implementation is correct, or whether it should be the following: Method.getUpvalues(frame);
     }
 
-    SBlock b = universe.newBlock(branchMethod, frame.materialize(), 1);
-    return branchMethod.invoke(frame.pack(), b);
+    SBlock b = universe.newBlock(branchMethod, context);
+    return branchMethod.invoke(frame.pack(), b, universe);
   }
 
   @Specialization(order = 2)
@@ -36,9 +40,10 @@ public abstract class IfTrueIfFalseMessageNode extends TernarySendNode {
       return trueValue;
     } else {
       assert receiver == universe.falseObject;
-      SMethod branchMethod = falseBlock.getMethod();
-      SBlock  b = universe.newBlock(branchMethod, frame.materialize(), 1);
-      return branchMethod.invoke(frame.pack(), b);
+      SMethod   branchMethod = falseBlock.getMethod();
+      Arguments context      = falseBlock.getContext(); // TODO: test whether the current implementation is correct, or whether it should be the following: Method.getUpvalues(frame);
+      SBlock b = universe.newBlock(branchMethod, context);
+      return branchMethod.invoke(frame.pack(), b, universe);
     }
   }
 
@@ -47,8 +52,9 @@ public abstract class IfTrueIfFalseMessageNode extends TernarySendNode {
       final SObject receiver, final SBlock trueBlock, final Object falseValue) {
     if (receiver == universe.trueObject) {
       SMethod branchMethod = trueBlock.getMethod();
-      SBlock  b = universe.newBlock(branchMethod, frame.materialize(), 1);
-      return branchMethod.invoke(frame.pack(), b);
+      Arguments context    = trueBlock.getContext(); // TODO: test whether the current implementation is correct, or whether it should be the following: Method.getUpvalues(frame);
+      SBlock  b = universe.newBlock(branchMethod, context);
+      return branchMethod.invoke(frame.pack(), b, universe);
     } else {
       assert receiver == universe.falseObject;
       return falseValue;

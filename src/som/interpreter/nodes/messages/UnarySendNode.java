@@ -6,6 +6,7 @@ import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.UnaryMessageNode;
 import som.vm.Universe;
 import som.vmobjects.SClass;
+import som.vmobjects.SMethod;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CallTarget;
@@ -193,7 +194,9 @@ public abstract class UnarySendNode extends UnaryMessageNode {
         callCount++;
       }
 
-      UnaryArguments args = new UnaryArguments(receiver);
+      Invokable root = (Invokable) inlinableCallTarget.getRootNode();
+      UnaryArguments args = new UnaryArguments(receiver,
+          root.getNumberOfUpvalues(), universe.nilObject);
       return inlinableCallTarget.call(frame.pack(), args);
     }
   }
@@ -205,9 +208,8 @@ public abstract class UnarySendNode extends UnaryMessageNode {
 
     @Override
     public Object executeEvaluated(final VirtualFrame frame, final Object receiver) {
-      CallTarget callTarget = lookupCallTarget(receiver);
-      UnaryArguments args = new UnaryArguments(receiver);
-      return callTarget.call(args);
+      SMethod method = lookupMethod(receiver);
+      return method.invoke(frame.pack(), receiver, universe);
     }
   }
 }

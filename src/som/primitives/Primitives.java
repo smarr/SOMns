@@ -29,9 +29,9 @@ import som.compiler.MethodGenerationContext;
 import som.interpreter.Primitive;
 import som.interpreter.nodes.AbstractMessageNode;
 import som.interpreter.nodes.ArgumentEvaluationNode;
+import som.interpreter.nodes.ArgumentReadNode;
 import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.VariableNodeFactory.SelfReadNodeFactory;
-import som.interpreter.nodes.VariableNodeFactory.VariableReadNodeFactory;
+import som.interpreter.nodes.SelfReadNode;
 import som.vm.Universe;
 import som.vmobjects.SClass;
 import som.vmobjects.SMethod;
@@ -39,7 +39,6 @@ import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives.SlowPath;
 import com.oracle.truffle.api.dsl.NodeFactory;
-import com.oracle.truffle.api.frame.FrameSlot;
 
 public abstract class Primitives {
 
@@ -67,30 +66,28 @@ public abstract class Primitives {
 
     MethodGenerationContext mgen = new MethodGenerationContext();
     ExpressionNode[] args = new ExpressionNode[numArgs];
-    FrameSlot[] argSlots  = new FrameSlot[numArgs];
     for (int i = 0; i < numArgs; i++) {
-      argSlots[i] = mgen.addArgument("primArg" + i);
-      args[i] = VariableReadNodeFactory.create(argSlots[i], 0);
+      args[i] = new ArgumentReadNode(0, i);
     }
 
     AbstractMessageNode primNode;
     if (numArgs == 0) {
       primNode = nodeFactory.createNode(signature, universe,
-          SelfReadNodeFactory.create(mgen.getSelfSlot(), 0));
+          new SelfReadNode(0));
     } else if (numArgs == 1) {
       primNode = nodeFactory.createNode(signature, universe,
-          SelfReadNodeFactory.create(mgen.getSelfSlot(), 0), args[0]);
+          new SelfReadNode(0), args[0]);
     } else if (numArgs == 2) {
       primNode = nodeFactory.createNode(signature, universe,
-          SelfReadNodeFactory.create(mgen.getSelfSlot(), 0), args[0], args[1]);
+          new SelfReadNode(0), args[0], args[1]);
     } else {
       ArgumentEvaluationNode argEvalNode = new ArgumentEvaluationNode(args);
       primNode = nodeFactory.createNode(signature, universe,
-          SelfReadNodeFactory.create(mgen.getSelfSlot(), 0), argEvalNode);
+          new SelfReadNode(0), argEvalNode);
     }
 
-    Primitive primMethodNode = new Primitive(primNode, mgen.getSelfSlot(),
-        argSlots, mgen.getFrameDescriptor());
+    Primitive primMethodNode = new Primitive(primNode, numArgs,
+        mgen.getFrameDescriptor());
     SMethod prim = universe.newMethod(signature, primMethodNode,
         mgen.getFrameDescriptor(), true);
 
@@ -102,20 +99,17 @@ public abstract class Primitives {
   @SlowPath
   public static SMethod constructEmptyPrimitive(final SSymbol signature,
       final Universe universe) {
-    int numArgs = signature.getNumberOfSignatureArguments() - 1; // we take care of self seperately
+    int numArgs = signature.getNumberOfSignatureArguments() - 1; // we take care of self separately
 
     MethodGenerationContext mgen = new MethodGenerationContext();
     ExpressionNode[] args = new ExpressionNode[numArgs];
-    FrameSlot[] argSlots  = new FrameSlot[numArgs];
     for (int i = 0; i < numArgs; i++) {
-      argSlots[i] = mgen.addArgument("primArg" + i);
-      args[i] = VariableReadNodeFactory.create(argSlots[i], 0);
+      args[i] = new ArgumentReadNode(0, i);
     }
 
-    ExpressionNode primNode = EmptyPrim.create(signature, universe, SelfReadNodeFactory.create(mgen.getSelfSlot(), 0));
-
-    Primitive primMethodNode = new Primitive(primNode, mgen.getSelfSlot(),
-        argSlots, mgen.getFrameDescriptor());
+    ExpressionNode primNode = EmptyPrim.create(signature, universe, new SelfReadNode(0));
+    Primitive primMethodNode = new Primitive(primNode, numArgs,
+        mgen.getFrameDescriptor());
     SMethod prim = universe.newMethod(signature, primMethodNode,
         mgen.getFrameDescriptor(), true);
 

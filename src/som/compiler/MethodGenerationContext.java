@@ -26,8 +26,10 @@
 package som.compiler;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashMap;
 
+import som.compiler.Variable.Argument;
+import som.compiler.Variable.Local;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.FieldNode.FieldReadNode;
 import som.interpreter.nodes.FieldNode.FieldWriteNode;
@@ -40,7 +42,6 @@ import som.vmobjects.SSymbol;
 import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlot;
-import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.impl.DefaultSourceSection;
 
 public class MethodGenerationContext {
@@ -52,41 +53,14 @@ public class MethodGenerationContext {
   private SSymbol                    signature;
   private boolean                    primitive;
 
-  private final List<String>         arguments = new ArrayList<String>();
-  private final List<String>         locals    = new ArrayList<String>();
+  private final LinkedHashMap<String, Argument> arguments = new LinkedHashMap<String, Argument>();
+  private final LinkedHashMap<String, Local>    locals    = new LinkedHashMap<String, Local>();
 
   // Truffle
   private final FrameDescriptor frameDescriptor;
-  private final FrameSlot       selfSlot;
-  private final FrameSlot       nonLocalReturnMarker;
-
-  // this context is used to describe the standard frame layout
-  private static final MethodGenerationContext standardMethodGenerationContext = new MethodGenerationContext();
-
-  public static FrameSlot getStandardSelfSlot() {
-    return standardMethodGenerationContext.getSelfSlot();
-  }
-
-  public static FrameSlot getStandardNonLocalReturnMarkerSlot() {
-    return standardMethodGenerationContext.getNonLocalReturnMarker();
-  }
 
   public MethodGenerationContext() {
     frameDescriptor = new FrameDescriptor();
-    selfSlot = frameDescriptor.addFrameSlot("self", FrameSlotKind.Object);
-
-    // note the ! at the beginning: this is not legal Smalltalk,
-    // and thus, this frame slot is not going to be accessible from the language
-    nonLocalReturnMarker = frameDescriptor.addFrameSlot("!nonLocalReturnMarker",
-        FrameSlotKind.Object);
-  }
-
-  public FrameSlot getSelfSlot() {
-    return selfSlot;
-  }
-
-  public FrameSlot getNonLocalReturnMarker() {
-    return nonLocalReturnMarker;
   }
 
   public void setHolder(final ClassGenerationContext cgenc) {
@@ -101,22 +75,32 @@ public class MethodGenerationContext {
     return Primitives.getEmptyPrimitive(signature.getString(), universe);
   }
 
-  public SMethod assemble(final Universe universe, final ExpressionNode expressions) {
-    FrameSlot[] argSlots   = new FrameSlot[arguments.size()];
-    FrameSlot[] localSlots = new FrameSlot[locals.size()];
-
-    for (int i = 0; i < arguments.size(); i++) {
-      argSlots[i] = frameDescriptor.findFrameSlot(arguments.get(i));
+  private void separateLocals(final ArrayList<Local> onlyLocalAccess,
+      final ArrayList<Local> nonLocalAccess) {
+    for (Local l : locals.values()) {
+      if (l.isAccessedOutOfContext()) {
+        l.upvalueIndex = nonLocalAccess.size();
+        nonLocalAccess.add(l);
+      } else {
+        onlyLocalAccess.add(l);
+      }
     }
+  }
 
-    for (int i = 0; i < locals.size(); i++) {
-      localSlots[i] = frameDescriptor.findFrameSlot(locals.get(i));
+  public SMethod assemble(final Universe universe, final ExpressionNode expressions) {
+    ArrayList<Local> onlyLocalAccess = new ArrayList<>(locals.size());
+    ArrayList<Local> nonLocalAccess  = new ArrayList<>(locals.size());
+    separateLocals(onlyLocalAccess, nonLocalAccess);
+
+    FrameSlot[] localSlots = new FrameSlot[onlyLocalAccess.size()];
+
+    for (int i = 0; i < onlyLocalAccess.size(); i++) {
+      localSlots[i] = onlyLocalAccess.get(i).slot;
     }
 
     som.interpreter.Method truffleMethod =
-        new som.interpreter.Method(expressions,
-            selfSlot, argSlots, localSlots, nonLocalReturnMarker, universe,
-            frameDescriptor);
+        new som.interpreter.Method(expressions, arguments.size(),
+            nonLocalAccess.size(), localSlots, frameDescriptor, universe);
 
     assignSourceSectionToMethod(expressions, truffleMethod);
 
@@ -146,13 +130,14 @@ public class MethodGenerationContext {
     signature = sig;
   }
 
-  public FrameSlot addArgument(final String arg) {
-    arguments.add(arg);
-    return frameDescriptor.addFrameSlot(arg, FrameSlotKind.Object);
+  private Argument addArgument(final String arg) {
+    Argument argument = new Argument(arg, arguments.size());
+    arguments.put(arg, argument);
+    return argument;
   }
 
   public void addArgumentIfAbsent(final String arg) {
-    if (arguments.contains(arg)) {
+    if (arguments.containsKey(arg)) {
       return;
     }
 
@@ -160,7 +145,7 @@ public class MethodGenerationContext {
   }
 
   public void addLocalIfAbsent(final String local) {
-    if (locals.contains(local)) {
+    if (locals.containsKey(local)) {
       return;
     }
 
@@ -168,8 +153,8 @@ public class MethodGenerationContext {
   }
 
   public void addLocal(final String local) {
-    frameDescriptor.addFrameSlot(local);
-    locals.add(local);
+    Local l = new Local(local, frameDescriptor.addFrameSlot(local));
+    locals.put(local, l);
   }
 
   public boolean isBlockMethod() {
@@ -198,37 +183,43 @@ public class MethodGenerationContext {
     return level;
   }
 
-  public FrameSlot getOuterSelfSlot() {
-    if (outerGenc == null) {
-      return selfSlot;
-    } else {
-      return outerGenc.getOuterSelfSlot();
-    }
-  }
-
-  public int getFrameSlotContextLevel(final String varName) {
-    if (locals.contains(varName) || arguments.contains(varName)) {
+  public int getContextLevel(final String varName) {
+    if (locals.containsKey(varName) || arguments.containsKey(varName)) {
       return 0;
     }
 
     if (outerGenc != null) {
-      return 1 + outerGenc.getFrameSlotContextLevel(varName);
+      return 1 + outerGenc.getContextLevel(varName);
     }
 
     return 0;
   }
 
-  public FrameSlot getFrameSlot(final String varName) {
-    if (locals.contains(varName) || arguments.contains(varName)) {
-      return frameDescriptor.findFrameSlot(varName);
+  // TODO: figure out whether we want to handle variables and arguments separately
+  protected Variable getVariable(final String varName) {
+    if (locals.containsKey(varName)) {
+      return locals.get(varName);
     }
 
-    FrameSlot slot = null;
+    if (arguments.containsKey(varName)) {
+      return arguments.get(varName);
+    }
+
     if (outerGenc != null) {
-      slot = outerGenc.getFrameSlot(varName);
+      return outerGenc.getVariable(varName);
+    }
+    return null;
+  }
+
+  protected Local getLocal(final String varName) {
+    if (locals.containsKey(varName)) {
+      return locals.get(varName);
     }
 
-    return slot;
+    if (outerGenc != null) {
+      return outerGenc.getLocal(varName);
+    }
+    return null;
   }
 
   public FieldReadNode getObjectFieldRead(final SSymbol fieldName) {
@@ -274,4 +265,8 @@ public class MethodGenerationContext {
     return frameDescriptor;
   }
 
+  @Override
+  public String toString() {
+    return "MethodGenC(" + holderGenc.getName().getString() + ">>" + signature.toString() + ")";
+  }
 }

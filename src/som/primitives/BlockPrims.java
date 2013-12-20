@@ -32,7 +32,7 @@ public abstract class BlockPrims {
 
     @Specialization
     public Object doSBlock(final VirtualFrame frame, final SBlock receiver) {
-      return receiver.getMethod().invoke(frame.pack(), receiver);
+      return receiver.getMethod().invoke(frame.pack(), receiver, universe);
     }
   }
 
@@ -41,9 +41,9 @@ public abstract class BlockPrims {
     public ValueOnePrim(final ValueOnePrim prim) { this(prim.selector, prim.universe); }
 
     @Specialization
-    public Object doSBlock(final VirtualFrame frame,
-        final SBlock receiver, final Object arg) {
-      return receiver.getMethod().invoke(frame.pack(), receiver, arg);
+    public Object doSBlock(final VirtualFrame frame, final SBlock receiver,
+        final Object arg) {
+      return receiver.getMethod().invoke(frame.pack(), receiver, arg, universe);
     }
   }
 
@@ -54,7 +54,7 @@ public abstract class BlockPrims {
     @Specialization
     public Object doSBlock(final VirtualFrame frame,
         final SBlock receiver, final Object arg1, final Object arg2) {
-      return receiver.getMethod().invoke(frame.pack(), receiver, arg1, arg2);
+      return receiver.getMethod().invoke(frame.pack(), receiver, arg1, arg2, universe);
     }
   }
 
@@ -65,7 +65,7 @@ public abstract class BlockPrims {
     @Specialization
     public Object doSBlock(final VirtualFrame frame,
         final SBlock receiver, final Object[] arguments) {
-      return receiver.getMethod().invoke(frame.pack(), receiver, arguments);
+      return receiver.getMethod().invoke(frame.pack(), receiver, arguments, universe);
     }
   }
 }

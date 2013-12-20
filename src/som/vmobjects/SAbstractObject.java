@@ -27,7 +27,7 @@ public abstract class SAbstractObject {
     SMethod invokable = Types.getClassOf(receiver, universe).lookupInvokable(selector);
 
     // Invoke the invokable
-    return invokable.invoke(frame, receiver, arguments);
+    return invokable.invoke(frame, receiver, arguments, universe);
   }
 
   public static final Object sendDoesNotUnderstand(final Object receiver,
