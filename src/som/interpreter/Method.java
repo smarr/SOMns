@@ -82,7 +82,7 @@ public class Method extends Invokable {
     do {
       restart = false;
       try {
-        result = expr.executeGeneric(frame); // TODO: work out whether there is another way than this cast!
+        result = expr.executeGeneric(frame);
       } catch (ReturnException e) {
         if (!e.reachedTarget(marker)) {
           marker.frameNoLongerOnStack();

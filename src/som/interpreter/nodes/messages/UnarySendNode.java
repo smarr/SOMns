@@ -106,10 +106,8 @@ public abstract class UnarySendNode extends UnaryMessageNode {
         CallTarget  callTarget = lookupCallTarget(receiver);
         UnaryMessageNode current = (UnaryMessageNode) createCacheNode(callTarget);
         UnarySendNode       next = new UninitializedSendNode(this);
-        return replace(new CachedSendNode(this,
-            // TODO: understand when the cast fails, we might want to use some wrapper then
-            //       in order to be able to use executeEvaluated in the CachedSendNode
-            next, current, classOfReceiver(receiver)));
+        return replace(new CachedSendNode(this, next, current,
+            classOfReceiver(receiver)));
       } else {
         UnarySendNode topMost = (UnarySendNode) getTopNode();
         return topMost.replace(new GenericSendNode(this));

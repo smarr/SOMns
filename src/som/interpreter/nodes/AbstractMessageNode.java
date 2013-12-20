@@ -65,7 +65,6 @@ public abstract class AbstractMessageNode extends ExpressionNode {
 
   /**
    * Guard for system primitives.
-   * TODO: make sure system primitives do not trigger on any other kind of object
    * @param receiver
    * @return
    */

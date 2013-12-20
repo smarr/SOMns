@@ -38,7 +38,7 @@ public class SequenceNode extends ExpressionNode {
     Object last = null;
 
     for (int i = 0; i < expressions.length; i++) {
-      last = expressions[i].executeGeneric(frame); // TODO: Work out whether there is another way than this cast!
+      last = expressions[i].executeGeneric(frame);
     }
 
     return last;

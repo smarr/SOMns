@@ -26,8 +26,6 @@ import som.vmobjects.SBlock;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 
-
-// TODO: this class is to be removed and replaced by UpValues
 public abstract class ContextualNode extends ExpressionNode {
 
   protected final int contextLevel;

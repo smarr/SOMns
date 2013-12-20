@@ -195,7 +195,6 @@ public class MethodGenerationContext {
     return 0;
   }
 
-  // TODO: figure out whether we want to handle variables and arguments separately
   protected Variable getVariable(final String varName) {
     if (locals.containsKey(varName)) {
       return locals.get(varName);
