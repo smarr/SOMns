@@ -24,6 +24,7 @@
 
 package som.compiler;
 
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.StringReader;
@@ -88,7 +89,7 @@ public class SourcecodeCompiler {
       throws IOException {
     SClass result = systemClass;
 
-    String fname = path + Universe.fileSeparator + file + ".som";
+    String fname = path + File.separator + file + ".som";
 
     parser = new Parser(new FileReader(fname), new Source(fname), universe);
 
