@@ -27,6 +27,7 @@ import som.vmobjects.SAbstractObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.utilities.BranchProfile;
 
 
 public abstract class GlobalNode extends ExpressionNode {
@@ -40,9 +41,11 @@ public abstract class GlobalNode extends ExpressionNode {
   }
 
   public static class GlobalReadNode extends GlobalNode {
+    private final BranchProfile unknownGlobalNotFound;
 
     public GlobalReadNode(final SSymbol globalName, final Universe universe) {
       super(globalName, universe);
+      unknownGlobalNotFound = new BranchProfile();
     }
 
     @Override
@@ -53,7 +56,7 @@ public abstract class GlobalNode extends ExpressionNode {
       if (global != null) {
         return global;
       } else {
-        // TODO: mark branch as exceptional/unlikely
+        unknownGlobalNotFound.enter();
         // if it is not defined, we will send a error message to the current
         // receiver object
         Object self = Arguments.get(frame).getSelf();

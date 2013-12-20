@@ -29,11 +29,13 @@ import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.utilities.BranchProfile;
 
 public class ReturnNonLocalNode extends ContextualNode {
 
   @Child private ExpressionNode expression;
   private final Universe universe;
+  private final BranchProfile blockEscaped;
 
   public ReturnNonLocalNode(final ExpressionNode expression,
       final int contextLevel,
@@ -41,6 +43,7 @@ public class ReturnNonLocalNode extends ContextualNode {
     super(contextLevel);
     this.expression = adoptChild(expression);
     this.universe   = universe;
+    this.blockEscaped = new BranchProfile();
   }
 
   @Override
@@ -52,9 +55,9 @@ public class ReturnNonLocalNode extends ContextualNode {
       Object result = expression.executeGeneric(frame);
       throw new ReturnException(result, marker);
     } else {
+      blockEscaped.enter();
       SBlock block = (SBlock) Arguments.get(frame).getSelf();
       Object self = outer.getSelf();
-      // TODO: mark this as an exceptional path
       return SAbstractObject.sendEscapedBlock(self, block, universe, frame.pack());
     }
   }
