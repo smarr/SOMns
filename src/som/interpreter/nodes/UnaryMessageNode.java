@@ -17,7 +17,7 @@ public abstract class UnaryMessageNode extends AbstractMessageNode {
 
   public abstract Object executeEvaluated(final VirtualFrame frame, final Object receiver);
 
-//  // TODO: want to use @Generic here!
+//  TODO: rebuild support for does not understand!
 //  @Specialization
 //  public Object doGeneric(final VirtualFrame frame, final Object rcvr) {
 //    CompilerDirectives.transferToInterpreter();
@@ -34,11 +34,5 @@ public abstract class UnaryMessageNode extends AbstractMessageNode {
 //      return doFullSend(frame, receiver, noArgs, rcvrClass);
 //    }
 //  }
-//
-//  @Override
-//  public ExpressionNode cloneForInlining() {
-//    // TODO: test whether this is problematic
-//    return (ExpressionNode) this.copy();
-//    // return NodeFactory.createUnaryMessageNode(selector, universe, getReceiver());
-//  }
+
 }

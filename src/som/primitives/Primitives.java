@@ -91,8 +91,6 @@ public abstract class Primitives {
     SMethod prim = universe.newMethod(signature, primMethodNode,
         mgen.getFrameDescriptor(), true);
 
-    // primNode.setInvokable(prim); TODO: will i need the invokable later?
-
     return prim;
   }
 
