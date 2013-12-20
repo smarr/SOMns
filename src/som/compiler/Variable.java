@@ -1,6 +1,7 @@
 package som.compiler;
 
 import som.interpreter.nodes.ArgumentReadNode;
+import som.interpreter.nodes.ContextualNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.UninitializedVariableNode.UninitializedVariableReadNode;
 import som.interpreter.nodes.UninitializedVariableNode.UninitializedVariableWriteNode;
@@ -49,9 +50,7 @@ public abstract class Variable {
     return isReadOutOfContext || isWrittenOutOfContext;
   }
 
-
-  // TODO: something more specific than an expression node?
-  public abstract ExpressionNode getReadNode(int contextLevel);
+  public abstract ContextualNode getReadNode(int contextLevel);
 
   public static final class Argument extends Variable {
     public final int index;
@@ -62,7 +61,7 @@ public abstract class Variable {
     }
 
     @Override
-    public ExpressionNode getReadNode(final int contextLevel) {
+    public ContextualNode getReadNode(final int contextLevel) {
       return new ArgumentReadNode(this, contextLevel);
     }
   }
@@ -77,7 +76,7 @@ public abstract class Variable {
     }
 
     @Override
-    public ExpressionNode getReadNode(final int contextLevel) {
+    public ContextualNode getReadNode(final int contextLevel) {
       return new UninitializedVariableReadNode(this, contextLevel);
     }
 
