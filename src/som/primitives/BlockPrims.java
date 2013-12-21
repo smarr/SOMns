@@ -1,6 +1,5 @@
 package som.primitives;
 
-import som.interpreter.RestartLoopException;
 import som.interpreter.nodes.BinaryMessageNode;
 import som.interpreter.nodes.KeywordMessageNode;
 import som.interpreter.nodes.TernaryMessageNode;
@@ -22,7 +21,10 @@ public abstract class BlockPrims {
 
     @Specialization
     public SAbstractObject doSBlock(final SBlock receiver) {
-      throw new RestartLoopException();
+      // TruffleSOM intrinsifies #whileTrue: and #whileFalse:
+      throw new RuntimeException("This primitive is not supported anymore! Something went wrong with the intrinsification of #whileTrue:/#whileFalse:?");
+      // It used to be:
+      // throw new RestartLoopException();
     }
   }
 

@@ -77,24 +77,17 @@ public class Method extends Invokable {
       final ExpressionNode expr) {
     FrameOnStackMarker marker = Arguments.get(frame).getFrameOnStackMarker();
     Object result;
-    boolean restart;
 
-    do {
-      restart = false;
-      try {
-        result = expr.executeGeneric(frame);
-      } catch (ReturnException e) {
-        if (!e.reachedTarget(marker)) {
-          marker.frameNoLongerOnStack();
-          throw e;
-        } else {
-          result = e.result();
-        }
-      } catch (RestartLoopException e) {
-        restart = true;
-        result  = null;
+    try {
+      result = expr.executeGeneric(frame);
+    } catch (ReturnException e) {
+      if (!e.reachedTarget(marker)) {
+        marker.frameNoLongerOnStack();
+        throw e;
+      } else {
+        result = e.result();
       }
-    } while (restart);
+    }
 
     marker.frameNoLongerOnStack();
     return result;
