@@ -28,10 +28,6 @@ public class ArgumentEvaluationNode extends ExpressionNode {
   @Override
   @ExplodeLoop
   public Object[] executeArray(final VirtualFrame frame) {
-    if (arguments == null || arguments.length == 0) {
-      return null;
-    }
-
     Object[] result = new Object[arguments.length];
 
     for (int i = 0; i < arguments.length; i++) {
