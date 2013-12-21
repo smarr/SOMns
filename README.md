@@ -26,19 +26,25 @@ This repository contains the [Truffle][T]-based implementation of SOM, including
 SOM's standard library and a number of examples. Please see the [main project
 page][SOM] for links to other VM implementations.
 
+Obtaining and Running TruffleSOM
+--------------------------------
 
-TruffleSOM can be build with Ant:
+To checkout the code, please note that we use git submodules. To obtain a proper
+checkout, it is easiest to use a recursive clone such as:
 
-    $ ant jar
+    git clone --recursive https://github.com/smarr/TruffleSOM.git
+
+Then, TruffleSOM can be build with Ant:
+
+    ant jar
 
 Afterwards, the tests can be executed with:
 
-    $ ./som.sh -cp Smalltalk TestSuite/TestHarness.som
+    ./som.sh -cp Smalltalk TestSuite/TestHarness.som
    
 A simple Hello World program is executed with:
 
-    $ ./som.sh -cp Smalltalk Examples/Hello/Hello.som
-
+    ./som.sh -cp Smalltalk Examples/Hello/Hello.som
 
 Information on previous authors are included in the AUTHORS file. This code is
 distributed under the MIT License. Please see the LICENSE file for details.
