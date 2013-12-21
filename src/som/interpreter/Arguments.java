@@ -24,6 +24,7 @@ package som.interpreter;
 import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.frame.Frame;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
 
 public abstract class Arguments extends com.oracle.truffle.api.Arguments {
 
@@ -37,11 +38,16 @@ public abstract class Arguments extends com.oracle.truffle.api.Arguments {
 
     if (numUpvalues > 0) {
       upvalues = new Object[numUpvalues];
-      for (int i = 0; i < numUpvalues; i++) {
-        upvalues[i] = nilObject;
-      }
+
     } else {
       upvalues = null;
+    }
+  }
+
+  @ExplodeLoop
+  private void initializeUpvalues(final SObject nilObject) {
+    for (int i = 0; i < upvalues.length; i++) {
+      upvalues[i] = nilObject;
     }
   }
 
