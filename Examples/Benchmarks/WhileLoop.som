@@ -1,5 +1,4 @@
 "
-
 Copyright (c) 2013 see AUTHORS file
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -26,27 +25,20 @@ WhileLoop = Benchmark (
     singleRun = (
         | sum |
         sum := 0.
-
         [sum < 1000]
             whileTrue:
-                [ sum := sum + 1].
-
-        (sum = 1000) ifFalse: [
-                self error: 'Wrong result: ' + sum + ' should be: 100' ].
+                [sum := sum + 1].
         ^ sum
     )
 
     benchmark = ( 
         | sum |
         sum := 0.
-        
         [sum < 20000]
             whileTrue:
                 [sum := sum + self singleRun].
-        
-        (sum = 20000) 
-            ifFalse: [
-                self error: 'Wrong result: ' + sum + ' should be: 20000' ]
+        ^ sum
     )
     
 )
+
