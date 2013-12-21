@@ -23,7 +23,6 @@ package som.interpreter;
 
 import som.vmobjects.SObject;
 
-import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.Frame;
 
 public abstract class Arguments extends com.oracle.truffle.api.Arguments {
@@ -129,7 +128,6 @@ public abstract class Arguments extends com.oracle.truffle.api.Arguments {
   }
 
   public static final class KeywordArguments extends Arguments {
-    @CompilationFinal
     private final Object[] arguments;
 
     public KeywordArguments(final Object self, final Object[] arguments,

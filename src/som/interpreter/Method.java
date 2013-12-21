@@ -38,7 +38,6 @@ import som.vm.Universe;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CallTarget;
-import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.FrameDescriptor;
@@ -51,7 +50,7 @@ import com.oracle.truffle.api.nodes.NodeUtil;
 
 public class Method extends Invokable {
 
-  @CompilationFinal private final FrameSlot[] temporarySlots;
+  private final FrameSlot[] temporarySlots;
   private final int      numUpvalues;
   private final Universe universe;
 
@@ -187,7 +186,7 @@ public class Method extends Invokable {
     private final FrameDescriptor frameDescriptor;
     private final int             numUpvalues;
 
-    @CompilationFinal private final FrameSlot[] temporarySlots;
+    private final FrameSlot[] temporarySlots;
 
     UnaryInlinedMethod(final SSymbol selector, final Universe universe,
         final ExpressionNode msgBody, final ExpressionNode receiver,
@@ -267,7 +266,7 @@ public class Method extends Invokable {
     private final FrameDescriptor frameDescriptor;
     private final int             numUpvalues;
 
-    @CompilationFinal private final FrameSlot[] temporarySlots;
+    private final FrameSlot[] temporarySlots;
 
     BinaryInlinedMethod(final SSymbol selector, final Universe universe,
         final ExpressionNode msgBody, final ExpressionNode receiver,
@@ -356,7 +355,7 @@ public class Method extends Invokable {
     private final FrameDescriptor frameDescriptor;
     private final int             numUpvalues;
 
-    @CompilationFinal private final FrameSlot[] temporarySlots;
+    private final FrameSlot[] temporarySlots;
 
     TernaryInlinedMethod(final SSymbol selector, final Universe universe,
         final ExpressionNode msgBody, final ExpressionNode receiver,
@@ -452,7 +451,7 @@ public class Method extends Invokable {
     private final FrameDescriptor frameDescriptor;
     private final int             numUpvalues;
 
-    @CompilationFinal private final FrameSlot[] temporarySlots;
+    private final FrameSlot[] temporarySlots;
 
     KeywordInlinedMethod(final SSymbol selector, final Universe universe,
         final ExpressionNode msgBody, final ExpressionNode receiver,

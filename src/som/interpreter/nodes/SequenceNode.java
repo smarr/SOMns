@@ -21,12 +21,11 @@
  */
 package som.interpreter.nodes;
 
-import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 
 public class SequenceNode extends ExpressionNode {
-  @CompilationFinal @Children private final ExpressionNode[] expressions;
+  @Children private final ExpressionNode[] expressions;
 
   public SequenceNode(final ExpressionNode[] expressions) {
     this.expressions = adoptChildren(expressions);
