@@ -59,6 +59,7 @@ import static som.compiler.Symbol.Separator;
 import static som.compiler.Symbol.Star;
 
 import java.io.Reader;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -645,7 +646,7 @@ public class Parser {
 
     LiteralNode node;
     if (val < java.lang.Integer.MIN_VALUE || val > java.lang.Integer.MAX_VALUE) {
-      node = BigIntegerLiteralNodeFactory.create(java.math.BigInteger.valueOf(val));
+      node = BigIntegerLiteralNodeFactory.create(BigInteger.valueOf(val));
     } else {
       node = IntegerLiteralNodeFactory.create((int) val);
     }
