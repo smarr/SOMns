@@ -28,46 +28,20 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.StringReader;
-import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 
 import som.vm.Universe;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives.SlowPath;
+import com.oracle.truffle.api.Source;
+import com.oracle.truffle.api.source.SourceManager;
 
 public class SourcecodeCompiler {
 
   private Parser parser;
 
-  public static class Source implements com.oracle.truffle.api.Source {
-
-    private final String filename;
-    private final String code;
-
-    public Source(final String filename) throws IOException {
-      this.filename = filename;
-      this.code = read(filename);
-    }
-
-    @Override
-    public String getName() {
-      return filename;
-    }
-
-    @Override
-    public String getCode() {
-      return code;
-    }
-
-    private String read(final String filename) throws IOException {
-      byte[] encoded = Files.readAllBytes(Paths.get(filename));
-      return Charset.forName("US-ASCII").decode(ByteBuffer.wrap(encoded)).toString();
-    }
-  }
+  private static SourceManager sourceManager = new SourceManager();
 
   @SlowPath
   public static SClass compileClass(final String path, final String file,
@@ -90,8 +64,9 @@ public class SourcecodeCompiler {
     SClass result = systemClass;
 
     String fname = path + File.separator + file + ".som";
-
-    parser = new Parser(new FileReader(fname), new Source(fname), universe);
+    FileReader stream = new FileReader(fname);
+    Source source = sourceManager.get(fname);
+    parser = new Parser(stream, source, universe);
 
     result = compile(systemClass, universe);
 

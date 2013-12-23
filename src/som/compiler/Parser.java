@@ -62,7 +62,6 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 
-import som.compiler.SourcecodeCompiler.Source;
 import som.compiler.Variable.Local;
 import som.interpreter.nodes.AbstractMessageNode;
 import som.interpreter.nodes.BinaryMessageNode;
@@ -88,6 +87,7 @@ import som.vmobjects.SMethod;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives.SlowPath;
+import com.oracle.truffle.api.Source;
 import com.oracle.truffle.api.impl.DefaultSourceSection;
 
 public class Parser {
