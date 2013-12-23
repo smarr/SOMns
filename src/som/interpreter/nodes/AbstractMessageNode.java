@@ -34,13 +34,12 @@ public abstract class AbstractMessageNode extends ExpressionNode {
 
 
   protected SClass classOfReceiver(final Object rcvr) {
-    SClass rcvrClass = Types.getClassOf(rcvr, universe);
-
     // first determine whether it is a normal, or super send
     if (getReceiver() instanceof SuperReadNode) {
-      rcvrClass = (SClass) rcvrClass.getSuperClass();
+      return ((SuperReadNode) getReceiver()).getSuperClass();
     }
-    return rcvrClass;
+
+    return Types.getClassOf(rcvr, universe);
   }
 
   protected CallTarget lookupCallTarget(final Object rcvr) {

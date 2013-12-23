@@ -72,7 +72,7 @@ import som.interpreter.nodes.GlobalNode.GlobalReadNode;
 import som.interpreter.nodes.NodeFactory;
 import som.interpreter.nodes.ReturnNonLocalNode;
 import som.interpreter.nodes.SelfReadNode;
-import som.interpreter.nodes.SelfReadNode.SuperReadNode;
+import som.interpreter.nodes.SelfReadNode.UninitializedSuperReadNode;
 import som.interpreter.nodes.SequenceNode;
 import som.interpreter.nodes.UnaryMessageNode;
 import som.interpreter.nodes.literals.BigIntegerLiteralNodeFactory;
@@ -759,7 +759,8 @@ public class Parser {
     }
 
     if ("super".equals(variableName)) {
-      return new SuperReadNode(mgenc.getSelfContextLevel());
+      return new UninitializedSuperReadNode(mgenc.getSelfContextLevel(),
+          mgenc.getHolder().getName(), mgenc.getHolder().isClassSide());
     }
 
     // now look up first local variables, or method arguments
