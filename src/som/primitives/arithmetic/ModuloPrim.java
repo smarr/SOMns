@@ -25,8 +25,8 @@ public abstract class ModuloPrim extends ArithmeticPrim {
   }
 
   @Specialization(order = 2)
-  public BigInteger doBigInteger(final BigInteger left, final BigInteger right) {
-    return left.mod(right);
+  public Object doBigInteger(final BigInteger left, final BigInteger right) {
+    return reduceToIntIfPossible(left.mod(right));
   }
 
   @Specialization(order = 3)
@@ -35,12 +35,12 @@ public abstract class ModuloPrim extends ArithmeticPrim {
   }
 
   @Specialization(order = 10)
-  public BigInteger doBigInteger(final BigInteger left, final int right) {
+  public Object doBigInteger(final BigInteger left, final int right) {
     return doBigInteger(left, BigInteger.valueOf(right));
   }
 
   @Specialization(order = 11)
-  public BigInteger doInteger(final int left, final BigInteger right) {
+  public Object doInteger(final int left, final BigInteger right) {
     return doBigInteger(BigInteger.valueOf(left), right);
   }
 
