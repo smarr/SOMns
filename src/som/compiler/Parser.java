@@ -72,6 +72,7 @@ import som.interpreter.nodes.FieldNode.FieldWriteNode;
 import som.interpreter.nodes.GlobalNode.GlobalReadNode;
 import som.interpreter.nodes.NodeFactory;
 import som.interpreter.nodes.ReturnNonLocalNode;
+import som.interpreter.nodes.ReturnNonLocalNode.CatchNonLocalReturnNode;
 import som.interpreter.nodes.SelfReadNode;
 import som.interpreter.nodes.SelfReadNode.UninitializedSuperReadNode;
 import som.interpreter.nodes.SequenceNode;
@@ -89,6 +90,7 @@ import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives.SlowPath;
 import com.oracle.truffle.api.Source;
+import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.impl.DefaultSourceSection;
 
 public class Parser {
@@ -327,9 +329,16 @@ public class Parser {
 
   private ExpressionNode methodBlock(final MethodGenerationContext mgenc) {
     expect(NewTerm);
-    ExpressionNode sequence = blockContents(mgenc);
+    ExpressionNode methodBody = blockContents(mgenc);
     expect(EndTerm);
-    return sequence;
+
+    if (mgenc.hasNonLocalReturn()) {
+      SourceSection sourceSection = methodBody.getSourceSection();
+      methodBody = new CatchNonLocalReturnNode(methodBody);
+      methodBody.assignSourceSection(sourceSection);
+    }
+
+    return methodBody;
   }
 
   private SSymbol unarySelector() {
@@ -432,6 +441,7 @@ public class Parser {
       ExpressionNode result = new ReturnNonLocalNode(exp,
           mgenc.getSelfContextLevel(), universe);
       assignSource(result, coord);
+      mgenc.requiresNonLocalReturn();
       return result;
     } else {
       return exp;

@@ -69,27 +69,7 @@ public class Method extends Invokable {
   @Override
   public Object execute(final VirtualFrame frame) {
     initializeFrame(frame);
-    return messageSendExecution(frame, expressionOrSequence);
-  }
-
-  protected static Object messageSendExecution(final VirtualFrame frame,
-      final ExpressionNode expr) {
-    FrameOnStackMarker marker = Arguments.get(frame).getFrameOnStackMarker();
-    Object result;
-
-    try {
-      result = expr.executeGeneric(frame);
-    } catch (ReturnException e) {
-      if (!e.reachedTarget(marker)) {
-        marker.frameNoLongerOnStack();
-        throw e;
-      } else {
-        result = e.result();
-      }
-    }
-
-    marker.frameNoLongerOnStack();
-    return result;
+    return expressionOrSequence.executeGeneric(frame);
   }
 
   @Override
@@ -220,7 +200,7 @@ public class Method extends Invokable {
       UnaryArguments args = new UnaryArguments(receiver, numUpvalues, universe.nilObject);
       VirtualFrame childFrame = Truffle.getRuntime().createVirtualFrame(frame.pack(), args, frameDescriptor);
       initializeFrame(childFrame);
-      return messageSendExecution(childFrame, expressionOrSequence);
+      return expressionOrSequence.executeGeneric(childFrame);
     }
 
     @Override
@@ -302,7 +282,7 @@ public class Method extends Invokable {
       BinaryArguments args = new BinaryArguments(receiver, argument, numUpvalues, universe.nilObject);
       VirtualFrame childFrame = Truffle.getRuntime().createVirtualFrame(frame.pack(), args, frameDescriptor);
       initializeFrame(childFrame);
-      return messageSendExecution(childFrame, expressionOrSequence);
+      return expressionOrSequence.executeGeneric(childFrame);
     }
 
     @Override
@@ -395,7 +375,7 @@ public class Method extends Invokable {
       VirtualFrame childFrame = Truffle.getRuntime().createVirtualFrame(frame.pack(),
           args, frameDescriptor);
       initializeFrame(childFrame);
-      return messageSendExecution(childFrame, expressionOrSequence);
+      return expressionOrSequence.executeGeneric(childFrame);
     }
 
     @Override
@@ -496,7 +476,7 @@ public class Method extends Invokable {
       VirtualFrame childFrame = Truffle.getRuntime().createVirtualFrame(frame.pack(),
           args, frameDescriptor);
       initializeFrame(childFrame);
-      return messageSendExecution(childFrame, expressionOrSequence);
+      return expressionOrSequence.executeGeneric(childFrame);
     }
 
     @Override

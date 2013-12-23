@@ -52,6 +52,7 @@ public class MethodGenerationContext {
   private boolean                    blockMethod;
   private SSymbol                    signature;
   private boolean                    primitive;
+  private boolean                    hasNonLocalReturn;
 
   private final LinkedHashMap<String, Argument> arguments = new LinkedHashMap<String, Argument>();
   private final LinkedHashMap<String, Local>    locals    = new LinkedHashMap<String, Local>();
@@ -69,6 +70,24 @@ public class MethodGenerationContext {
 
   public boolean isPrimitive() {
     return primitive;
+  }
+
+  public void requiresNonLocalReturn() {
+    MethodGenerationContext ctx = getOuterContext();
+    assert ctx != null;
+    ctx.hasNonLocalReturn = true;
+  }
+
+  private MethodGenerationContext getOuterContext() {
+    MethodGenerationContext ctx = outerGenc;
+    while (ctx.outerGenc != null) {
+      ctx = ctx.outerGenc;
+    }
+    return ctx;
+  }
+
+  public boolean hasNonLocalReturn() {
+    return hasNonLocalReturn;
   }
 
   public SMethod assemblePrimitive(final Universe universe) {
@@ -177,7 +196,7 @@ public class MethodGenerationContext {
     int level = 0;
     MethodGenerationContext ctx = outerGenc;
     while (ctx != null) {
-      ctx = ctx.getOuter();
+      ctx = ctx.outerGenc;
       level++;
     }
     return level;
@@ -250,10 +269,6 @@ public class MethodGenerationContext {
    */
   public int getNumberOfArguments() {
     return arguments.size();
-  }
-
-  public MethodGenerationContext getOuter() {
-    return outerGenc;
   }
 
   public SSymbol getSignature() {

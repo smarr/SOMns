@@ -61,4 +61,32 @@ public class ReturnNonLocalNode extends ContextualNode {
       return SAbstractObject.sendEscapedBlock(self, block, universe, frame.pack());
     }
   }
+
+  public static class CatchNonLocalReturnNode extends ExpressionNode {
+    @Child protected ExpressionNode methodBody;
+
+    public CatchNonLocalReturnNode(final ExpressionNode methodBody) {
+      this.methodBody = methodBody;
+    }
+
+    @Override
+    public Object executeGeneric(final VirtualFrame frame) {
+      FrameOnStackMarker marker = Arguments.get(frame).getFrameOnStackMarker();
+      Object result;
+
+      try {
+        result = methodBody.executeGeneric(frame);
+      } catch (ReturnException e) {
+        if (!e.reachedTarget(marker)) {
+          marker.frameNoLongerOnStack();
+          throw e;
+        } else {
+          result = e.result();
+        }
+      }
+
+      marker.frameNoLongerOnStack();
+      return result;
+    }
+  }
 }
