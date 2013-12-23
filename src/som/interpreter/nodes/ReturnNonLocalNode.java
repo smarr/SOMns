@@ -66,7 +66,7 @@ public class ReturnNonLocalNode extends ContextualNode {
     @Child protected ExpressionNode methodBody;
 
     public CatchNonLocalReturnNode(final ExpressionNode methodBody) {
-      this.methodBody = methodBody;
+      this.methodBody = adoptChild(methodBody);
     }
 
     @Override
