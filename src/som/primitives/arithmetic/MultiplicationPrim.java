@@ -20,12 +20,18 @@ public abstract class MultiplicationPrim extends ArithmeticPrim {
   }
 
   @Specialization(order = 2)
+  public Object doIntegerWithOverflow(final int left, final int right) {
+    long result = ((long) left) * right;
+    return intOrBigInt(result);
+  }
+
+  @Specialization(order = 5)
   public Object doBigInteger(final BigInteger left, final BigInteger right) {
     BigInteger result = left.multiply(right);
     return reduceToIntIfPossible(result);
   }
 
-  @Specialization(order = 3)
+  @Specialization(order = 6)
   public double doDouble(final double left, final double right) {
     return left * right;
   }

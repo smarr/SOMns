@@ -18,6 +18,12 @@ public abstract class AdditionPrim extends ArithmeticPrim {
     return ExactMath.addExact(left, argument);
   }
 
+  @Specialization(order = 11)
+  public Object doIntegerWithOverflow(final int left, final int argument) {
+    long result = ((long) left) + argument;
+    return intOrBigInt(result);
+  }
+
   @Specialization(order = 30)
   public Object doBigInteger(final BigInteger left, final BigInteger right) {
     BigInteger result = left.add(right);

@@ -18,6 +18,12 @@ public abstract class SubtractionPrim extends ArithmeticPrim {
     return ExactMath.subtractExact(left, right);
   }
 
+  @Specialization(order = 2)
+  public Object doIntegerWithOverflow(final int left, final int right) {
+    long result = ((long) left) - right;
+    return intOrBigInt(result);
+  }
+
   @Specialization(order = 20)
   public Object doBigInteger(final BigInteger left, final BigInteger right) {
     BigInteger result = left.subtract(right);
