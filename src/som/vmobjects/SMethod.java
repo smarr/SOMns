@@ -34,6 +34,7 @@ import som.interpreter.Types;
 import som.vm.Universe;
 
 import com.oracle.truffle.api.CallTarget;
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.TruffleRuntime;
@@ -75,6 +76,7 @@ public class SMethod extends SAbstractObject {
   }
 
   public void setHolder(final SClass value) {
+    CompilerDirectives.transferToInterpreterAndInvalidate();
     holder = value;
   }
 

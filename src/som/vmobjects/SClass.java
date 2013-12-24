@@ -30,6 +30,7 @@ import java.util.HashMap;
 import som.primitives.Primitives;
 import som.vm.Universe;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 
 public class SClass extends SObject {
@@ -58,6 +59,7 @@ public class SClass extends SObject {
   }
 
   public void setSuperClass(final SClass value) {
+    CompilerDirectives.transferToInterpreterAndInvalidate();
     superclass = value;
   }
 
@@ -70,6 +72,7 @@ public class SClass extends SObject {
   }
 
   public void setName(final SSymbol value) {
+    CompilerDirectives.transferToInterpreterAndInvalidate();
     name = value;
   }
 
@@ -78,6 +81,7 @@ public class SClass extends SObject {
   }
 
   public void setInstanceFields(final SArray value) {
+    CompilerDirectives.transferToInterpreterAndInvalidate();
     instanceFields = value;
   }
 
@@ -86,6 +90,7 @@ public class SClass extends SObject {
   }
 
   public void setInstanceInvokables(final SArray value) {
+    CompilerDirectives.transferToInterpreterAndInvalidate();
     instanceInvokables = value;
 
     // Make sure this class is the holder of all invokables in the array

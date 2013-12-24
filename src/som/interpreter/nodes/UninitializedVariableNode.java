@@ -31,7 +31,7 @@ public abstract class UninitializedVariableNode extends ContextualNode {
       CompilerDirectives.transferToInterpreterAndInvalidate();
 
       if (variable.isAccessedOutOfContext()) {
-        NonLocalVariableReadNode node = new NonLocalVariableReadNode(contextLevel, variable.upvalueIndex);
+        NonLocalVariableReadNode node = new NonLocalVariableReadNode(contextLevel, variable.getUpvalueIndex());
         return replace(node).executeGeneric(frame);
       } else {
         LocalVariableReadNode node = LocalVariableReadNodeFactory.create(variable);
@@ -53,7 +53,7 @@ public abstract class UninitializedVariableNode extends ContextualNode {
       CompilerDirectives.transferToInterpreterAndInvalidate();
 
       if (variable.isAccessedOutOfContext()) {
-        NonLocalVariableWriteNode node = new NonLocalVariableWriteNode(contextLevel, variable.upvalueIndex, exp);
+        NonLocalVariableWriteNode node = new NonLocalVariableWriteNode(contextLevel, variable.getUpvalueIndex(), exp);
         return replace(node).executeGeneric(frame);
       } else {
         LocalVariableWriteNode node = LocalVariableWriteNodeFactory.create(variable, exp);

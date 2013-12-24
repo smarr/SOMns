@@ -6,6 +6,7 @@ import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.UninitializedVariableNode.UninitializedVariableReadNode;
 import som.interpreter.nodes.UninitializedVariableNode.UninitializedVariableWriteNode;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.FrameSlot;
 
@@ -27,18 +28,22 @@ public abstract class Variable {
   @CompilationFinal private boolean isWrittenOutOfContext;
 
   public void setIsRead() {
+    CompilerDirectives.transferToInterpreterAndInvalidate();
     isRead = true;
   }
 
   public void setIsReadOutOfContext() {
+    CompilerDirectives.transferToInterpreterAndInvalidate();
     isReadOutOfContext = true;
   }
 
   public void setIsWritten() {
+    CompilerDirectives.transferToInterpreterAndInvalidate();
     isWritten = true;
   }
 
   public void setIsWrittenOutOfContext() {
+    CompilerDirectives.transferToInterpreterAndInvalidate();
     isWrittenOutOfContext = true;
   }
 
@@ -68,11 +73,20 @@ public abstract class Variable {
 
   public static final class Local extends Variable {
     public final FrameSlot slot;
-    @CompilationFinal public int upvalueIndex;
+    @CompilationFinal private int upvalueIndex;
 
     Local(final String name, final FrameSlot slot) {
       super(name);
       this.slot = slot;
+    }
+
+    public int getUpvalueIndex() {
+      return upvalueIndex;
+    }
+
+    public void setUpvalueIndex(final int index) {
+      CompilerDirectives.transferToInterpreterAndInvalidate();
+      upvalueIndex = index;
     }
 
     @Override

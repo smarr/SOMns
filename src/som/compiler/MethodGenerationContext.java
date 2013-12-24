@@ -98,7 +98,7 @@ public class MethodGenerationContext {
       final ArrayList<Local> nonLocalAccess) {
     for (Local l : locals.values()) {
       if (l.isAccessedOutOfContext()) {
-        l.upvalueIndex = nonLocalAccess.size();
+        l.setUpvalueIndex(nonLocalAccess.size());
         nonLocalAccess.add(l);
       } else {
         onlyLocalAccess.add(l);

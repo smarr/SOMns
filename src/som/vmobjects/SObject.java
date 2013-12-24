@@ -26,6 +26,7 @@ package som.vmobjects;
 
 import som.vm.Universe;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 
 public class SObject extends SAbstractObject {
@@ -46,6 +47,7 @@ public class SObject extends SAbstractObject {
   }
 
   public void setClass(final SClass value) {
+    CompilerDirectives.transferToInterpreterAndInvalidate();
     // Set the class of this object by writing to the field with class index
     clazz = value;
   }
