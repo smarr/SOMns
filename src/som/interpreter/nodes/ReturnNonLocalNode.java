@@ -64,9 +64,11 @@ public class ReturnNonLocalNode extends ContextualNode {
 
   public static class CatchNonLocalReturnNode extends ExpressionNode {
     @Child protected ExpressionNode methodBody;
+    private final BranchProfile nonLocalReturnHandler;
 
     public CatchNonLocalReturnNode(final ExpressionNode methodBody) {
       this.methodBody = adoptChild(methodBody);
+      this.nonLocalReturnHandler = new BranchProfile();
     }
 
     @Override
@@ -77,6 +79,7 @@ public class ReturnNonLocalNode extends ContextualNode {
       try {
         result = methodBody.executeGeneric(frame);
       } catch (ReturnException e) {
+        nonLocalReturnHandler.enter();
         if (!e.reachedTarget(marker)) {
           marker.frameNoLongerOnStack();
           throw e;
