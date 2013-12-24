@@ -25,6 +25,7 @@ import som.interpreter.Arguments;
 import som.vmobjects.SBlock;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
 
 public abstract class ContextualNode extends ExpressionNode {
 
@@ -34,30 +35,26 @@ public abstract class ContextualNode extends ExpressionNode {
     this.contextLevel = contextLevel;
   }
 
+  @ExplodeLoop
   protected Arguments determineOuterArguments(final VirtualFrame frame) {
     Arguments args = Arguments.get(frame);
-    if (contextLevel > 0) {
-      int i = contextLevel;
-
-      while (i > 0) {
-        SBlock block = (SBlock) args.getSelf();
-        args = block.getContext();
-        i--;
-      }
+    int i = contextLevel;
+    while (i > 0) {
+      SBlock block = (SBlock) args.getSelf();
+      args = block.getContext();
+      i--;
     }
     return args;
   }
 
+  @ExplodeLoop
   protected Object determineOuterSelf(final VirtualFrame frame) {
     Object self = Arguments.get(frame).getSelf();
-    if (contextLevel > 0) {
-      int i = contextLevel;
-
-      while (i > 0) {
-        SBlock block = (SBlock) self;
-        self = block.getOuterSelf();
-        i--;
-      }
+    int i = contextLevel;
+    while (i > 0) {
+      SBlock block = (SBlock) self;
+      self = block.getOuterSelf();
+      i--;
     }
     return self;
   }
