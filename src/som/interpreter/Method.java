@@ -30,6 +30,11 @@ import som.interpreter.nodes.BinaryMessageNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.GlobalNode.GlobalReadNode;
 import som.interpreter.nodes.KeywordMessageNode;
+import som.interpreter.nodes.LocalVariableNode;
+import som.interpreter.nodes.LocalVariableNode.LocalVariableReadNode;
+import som.interpreter.nodes.LocalVariableNode.LocalVariableWriteNode;
+import som.interpreter.nodes.LocalVariableNodeFactory.LocalVariableReadNodeFactory;
+import som.interpreter.nodes.LocalVariableNodeFactory.LocalVariableWriteNodeFactory;
 import som.interpreter.nodes.TernaryMessageNode;
 import som.interpreter.nodes.UnaryMessageNode;
 import som.interpreter.nodes.literals.BlockNode;
@@ -45,7 +50,9 @@ import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.InlinedCallSite;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.NodeUtil;
+import com.oracle.truffle.api.nodes.NodeVisitor;
 
 
 public class Method extends Invokable {
@@ -104,35 +111,75 @@ public class Method extends Invokable {
     return false; // TODO: determine "quick" methods based on the AST, just self nodes, just field reads, etc.
   }
 
+  private ExpressionNode prepareBody(final ExpressionNode clonedBody) {
+    clonedBody.accept(new NodeVisitor() {
+      @Override
+      public boolean visit(final Node node) {
+        prepareBodyNode(node);
+        assert !(node instanceof Method);
+        return true;
+      }});
+    return clonedBody;
+  }
+
+  private void prepareBodyNode(final Node node) {
+    if (node instanceof LocalVariableNode) {
+        LocalVariableNode varNode = (LocalVariableNode) node;
+        FrameSlot inlinedSlot = frameDescriptor.findFrameSlot(varNode.getSlotIdentifier());
+        assert inlinedSlot != null;
+
+        if (node instanceof LocalVariableReadNode) {
+            node.replace(LocalVariableReadNodeFactory.create(inlinedSlot));
+        } else if (node instanceof LocalVariableWriteNode) {
+            node.replace(LocalVariableWriteNodeFactory.create(inlinedSlot,
+                ((LocalVariableWriteNode) varNode).getExp()));
+        }
+    }
+  }
+
+  private FrameSlot[] getInlinedTemporarySlots(final FrameDescriptor descriptor) {
+    FrameSlot[] inlined = new FrameSlot[temporarySlots.length];
+    for (int i = 0; i < temporarySlots.length; i++) {
+      inlined[i] = descriptor.findFrameSlot(temporarySlots[i].getIdentifier());
+    }
+    return inlined;
+  }
+
   @Override
   public ExpressionNode inline(final CallTarget inlinableCallTarget, final SSymbol selector) {
-    ExpressionNode body = NodeUtil.cloneNode(getUninitializedBody());
+    // We clone the AST, frame descriptors, and slots to facilitate their
+    // independent specialization.
+    ExpressionNode  ininedBody = prepareBody(NodeUtil.cloneNode(getUninitializedBody()));
+    FrameDescriptor inlinedFrameDescriptor = frameDescriptor.copy();
+    FrameSlot[]     inlinedSlots = getInlinedTemporarySlots(inlinedFrameDescriptor);
+
+
     if (isAlwaysToBeInlined()) {
       switch (numArguments) {
         case 0:
-          return new UnaryInlinedExpression(selector, universe, body, inlinableCallTarget);
+          return new UnaryInlinedExpression(selector,   universe, ininedBody, inlinableCallTarget);
         case 1:
-          return new BinaryInlinedExpression(selector, universe, body, inlinableCallTarget);
+          return new BinaryInlinedExpression(selector,  universe, ininedBody, inlinableCallTarget);
         case 2:
-          return new TernaryInlinedExpression(selector, universe, body, inlinableCallTarget);
+          return new TernaryInlinedExpression(selector, universe, ininedBody, inlinableCallTarget);
         default:
-          return new KeywordInlinedExpression(selector, universe, body, inlinableCallTarget);
+          return new KeywordInlinedExpression(selector, universe, ininedBody, inlinableCallTarget);
       }
     }
 
     switch (numArguments) {
       case 0:
-        return new UnaryInlinedMethod(selector, universe, body, null,
-            inlinableCallTarget, numUpvalues, frameDescriptor, temporarySlots);
+        return new UnaryInlinedMethod(selector, universe, ininedBody, null,
+            inlinableCallTarget, numUpvalues, inlinedFrameDescriptor, inlinedSlots);
       case 1:
-        return new BinaryInlinedMethod(selector, universe, body, null, null,
-            inlinableCallTarget, numUpvalues, frameDescriptor, temporarySlots);
+        return new BinaryInlinedMethod(selector, universe, ininedBody, null, null,
+            inlinableCallTarget, numUpvalues, inlinedFrameDescriptor, inlinedSlots);
       case 2:
-        return new TernaryInlinedMethod(selector, universe, body, null, null, null,
-            inlinableCallTarget, numUpvalues, frameDescriptor, temporarySlots);
+        return new TernaryInlinedMethod(selector, universe, ininedBody, null, null, null,
+            inlinableCallTarget, numUpvalues, inlinedFrameDescriptor, inlinedSlots);
       default:
-        return new KeywordInlinedMethod(selector, universe, body, null, null,
-            inlinableCallTarget, numUpvalues, frameDescriptor, temporarySlots);
+        return new KeywordInlinedMethod(selector, universe, ininedBody, null, null,
+            inlinableCallTarget, numUpvalues, inlinedFrameDescriptor, inlinedSlots);
     }
   }
 

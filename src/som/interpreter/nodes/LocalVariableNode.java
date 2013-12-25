@@ -17,6 +17,10 @@ public abstract class LocalVariableNode extends ExpressionNode {
     this.slot = slot;
   }
 
+  public Object getSlotIdentifier() {
+    return slot.getIdentifier();
+  }
+
   public abstract static class LocalVariableReadNode extends LocalVariableNode {
     public LocalVariableReadNode(final Local variable) {
       super(variable.slot);
@@ -24,6 +28,10 @@ public abstract class LocalVariableNode extends ExpressionNode {
 
     public LocalVariableReadNode(final LocalVariableReadNode node) {
       super(node.slot);
+    }
+
+    public LocalVariableReadNode(final FrameSlot slot) {
+      super(slot);
     }
 
     @Specialization(rewriteOn = {FrameSlotTypeException.class})
@@ -52,6 +60,12 @@ public abstract class LocalVariableNode extends ExpressionNode {
     public LocalVariableWriteNode(final LocalVariableWriteNode node) {
       super(node.slot);
     }
+
+    public LocalVariableWriteNode(final FrameSlot slot) {
+      super(slot);
+    }
+
+    public abstract ExpressionNode getExp();
 
     @Specialization(rewriteOn = FrameSlotTypeException.class)
     public int write(final VirtualFrame frame, final int expValue) throws FrameSlotTypeException {
