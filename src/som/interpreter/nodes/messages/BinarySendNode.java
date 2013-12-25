@@ -114,11 +114,11 @@ public abstract class BinarySendNode extends BinaryMessageNode {
     public Object executeEvaluated(final VirtualFrame frame, final Object receiver,
         final Object argument) {
       CompilerDirectives.transferToInterpreter();
-      return specialize(receiver).executeEvaluated(frame, receiver, argument);
+      return specializeEvaluated(receiver, argument).executeEvaluated(frame, receiver, argument);
     }
 
     // DUPLICATED but types and specialized nodes
-    private BinarySendNode specialize(final Object receiver) {
+    private BinarySendNode specializeEvaluated(final Object receiver, final Object argument) {
       CompilerAsserts.neverPartOfCompilation();
 
       switch (selector.getString()) {
