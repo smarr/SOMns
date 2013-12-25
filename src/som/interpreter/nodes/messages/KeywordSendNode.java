@@ -149,7 +149,7 @@ public abstract class KeywordSendNode extends KeywordMessageNode {
       if (invokable.isAlwaysToBeInlined()) {
         return invokable.inline(callTarget, selector);
       } else {
-        return new InlinableSendNode(this, ct);
+        return new InlinableSendNode(this, ct, invokable);
       }
     }
   }
@@ -157,13 +157,16 @@ public abstract class KeywordSendNode extends KeywordMessageNode {
   private static final class InlinableSendNode extends KeywordSendNode
     implements InlinableCallSite {
 
-    private final DefaultCallTarget inlinableCallTarget;
+    private final CallTarget inlinableCallTarget;
+    private final Invokable  invokable;
 
     @CompilationFinal private int callCount;
 
-    InlinableSendNode(final KeywordSendNode node, final DefaultCallTarget callTarget) {
+    InlinableSendNode(final KeywordSendNode node, final CallTarget callTarget,
+        final Invokable invokable) {
       super(node);
       this.inlinableCallTarget = callTarget;
+      this.invokable           = invokable;
       callCount = 0;
     }
 
@@ -179,8 +182,7 @@ public abstract class KeywordSendNode extends KeywordMessageNode {
 
     @Override
     public Node getInlineTree() {
-      Invokable root = (Invokable) inlinableCallTarget.getRootNode();
-      return root.getUninitializedBody();
+      return invokable.getUninitializedBody();
     }
 
     @Override
@@ -188,7 +190,6 @@ public abstract class KeywordSendNode extends KeywordMessageNode {
       CompilerAsserts.neverPartOfCompilation();
 
       ExpressionNode method = null;
-      Invokable invokable = (Invokable) inlinableCallTarget.getRootNode();
       method = invokable.inline(inlinableCallTarget, selector);
       if (method != null) {
         replace(method);
@@ -210,9 +211,8 @@ public abstract class KeywordSendNode extends KeywordMessageNode {
         callCount++;
       }
 
-      Invokable root = (Invokable) inlinableCallTarget.getRootNode();
       KeywordArguments args = new KeywordArguments(receiver,
-          arguments, root.getNumberOfUpvalues(),
+          arguments, invokable.getNumberOfUpvalues(),
           universe.nilObject);
       return inlinableCallTarget.call(frame.pack(), args);
     }

@@ -132,21 +132,33 @@ public abstract class UnarySendNode extends UnaryMessageNode {
       if (invokable.isAlwaysToBeInlined()) {
         return invokable.inline(callTarget, selector);
       } else {
-        return new InlinableSendNode(this, ct);
+        return new InlinableUnarySendNode(this, ct, invokable);
       }
     }
   }
 
-  private static final class InlinableSendNode extends UnarySendNode
+  public static final class InlinableUnarySendNode extends UnarySendNode
     implements InlinableCallSite {
 
-    private final DefaultCallTarget inlinableCallTarget;
+    private final CallTarget inlinableCallTarget;
+    private final Invokable  invokable;
 
     @CompilationFinal private int callCount;
 
-    InlinableSendNode(final UnarySendNode node, final DefaultCallTarget callTarget) {
+    InlinableUnarySendNode(final UnarySendNode node, final CallTarget callTarget,
+        final Invokable invokable) {
       super(node.selector, node.universe, node.receiverExpr);
       this.inlinableCallTarget = callTarget;
+      this.invokable           = invokable;
+      callCount = 0;
+    }
+
+    public InlinableUnarySendNode(final SSymbol selector, final Universe universe,
+        final ExpressionNode receiver, final CallTarget callTarget,
+        final Invokable invokable) {
+      super(selector, universe, receiver);
+      this.inlinableCallTarget = callTarget;
+      this.invokable           = invokable;
       callCount = 0;
     }
 
@@ -162,8 +174,7 @@ public abstract class UnarySendNode extends UnaryMessageNode {
 
     @Override
     public Node getInlineTree() {
-      Invokable root = (Invokable) inlinableCallTarget.getRootNode();
-      return root.getUninitializedBody();
+      return invokable.getUninitializedBody();
     }
 
     @Override
@@ -171,7 +182,6 @@ public abstract class UnarySendNode extends UnaryMessageNode {
       CompilerAsserts.neverPartOfCompilation();
 
       ExpressionNode method = null;
-      Invokable invokable = (Invokable) inlinableCallTarget.getRootNode();
       method = invokable.inline(inlinableCallTarget, selector);
       if (method != null) {
         replace(method);
@@ -191,10 +201,8 @@ public abstract class UnarySendNode extends UnaryMessageNode {
       if (CompilerDirectives.inInterpreter()) {
         callCount++;
       }
-
-      Invokable root = (Invokable) inlinableCallTarget.getRootNode();
       UnaryArguments args = new UnaryArguments(receiver,
-          root.getNumberOfUpvalues(), universe.nilObject);
+          invokable.getNumberOfUpvalues(), universe.nilObject);
       return inlinableCallTarget.call(frame.pack(), args);
     }
   }
