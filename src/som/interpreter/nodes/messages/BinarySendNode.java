@@ -127,7 +127,7 @@ public abstract class BinarySendNode extends BinaryMessageNode {
           return replace(WhileTrueMessageNodeFactory.create(this, receiver, argument, receiverExpr, argumentNode));
         case "whileFalse:":
           assert this == getTopNode();
-          return replace(WhileFalseMessageNodeFactory.create(this, receiverExpr, argumentNode));
+          return replace(WhileFalseMessageNodeFactory.create(this, receiver, argument, receiverExpr, argumentNode));
         case "ifTrue:":
           assert this == getTopNode();
           return replace(IfTrueMessageNodeFactory.create(this, receiverExpr, argumentNode));
