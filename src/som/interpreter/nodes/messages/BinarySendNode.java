@@ -118,7 +118,7 @@ public abstract class BinarySendNode extends BinaryMessageNode {
     }
 
     // DUPLICATED but types and specialized nodes
-    private BinarySendNode specializeEvaluated(final Object receiver, final Object argument) {
+    private BinaryMessageNode specializeEvaluated(final Object receiver, final Object argument) {
       CompilerAsserts.neverPartOfCompilation();
 
       switch (selector.getString()) {
@@ -172,7 +172,7 @@ public abstract class BinarySendNode extends BinaryMessageNode {
     }
   }
 
-  private static final class InlinableSendNode extends BinarySendNode
+  private static final class InlinableSendNode extends BinaryMessageNode
     implements InlinableCallSite {
 
     private final CallTarget inlinableCallTarget;
@@ -180,7 +180,7 @@ public abstract class BinarySendNode extends BinaryMessageNode {
 
     @CompilationFinal private int callCount;
 
-    InlinableSendNode(final BinarySendNode node, final CallTarget callTarget,
+    InlinableSendNode(final BinaryMessageNode node, final CallTarget callTarget,
         final Invokable invokable) {
       super(node);
       this.inlinableCallTarget = callTarget;
@@ -221,6 +221,13 @@ public abstract class BinarySendNode extends BinaryMessageNode {
     public CallTarget getCallTarget() {
       return inlinableCallTarget;
     }
+
+    @Override
+    public Object executeGeneric(final VirtualFrame frame) {
+      throw new IllegalStateException("executeGeneric() is not supported for these nodes, they always need to be called from a SendNode.");
+    }
+    @Override public ExpressionNode getReceiver() { return null; }
+    @Override public ExpressionNode getArgument() { return null; }
 
     @Override
     public Object executeEvaluated(final VirtualFrame frame,

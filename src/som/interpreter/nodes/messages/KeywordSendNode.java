@@ -154,7 +154,7 @@ public abstract class KeywordSendNode extends KeywordMessageNode {
     }
   }
 
-  private static final class InlinableSendNode extends KeywordSendNode
+  private static final class InlinableSendNode extends KeywordMessageNode
     implements InlinableCallSite {
 
     private final CallTarget inlinableCallTarget;
@@ -162,7 +162,7 @@ public abstract class KeywordSendNode extends KeywordMessageNode {
 
     @CompilationFinal private int callCount;
 
-    InlinableSendNode(final KeywordSendNode node, final CallTarget callTarget,
+    InlinableSendNode(final KeywordMessageNode node, final CallTarget callTarget,
         final Invokable invokable) {
       super(node);
       this.inlinableCallTarget = callTarget;
@@ -203,6 +203,13 @@ public abstract class KeywordSendNode extends KeywordMessageNode {
     public CallTarget getCallTarget() {
       return inlinableCallTarget;
     }
+
+    @Override
+    public Object executeGeneric(final VirtualFrame frame) {
+      throw new IllegalStateException("executeGeneric() is not supported for these nodes, they always need to be called from a SendNode.");
+    }
+    @Override public ExpressionNode getReceiver() { return null; }
+    @Override public ArgumentEvaluationNode getArguments() { return null; }
 
     @Override
     public Object executeEvaluated(final VirtualFrame frame,

@@ -137,7 +137,7 @@ public abstract class UnarySendNode extends UnaryMessageNode {
     }
   }
 
-  public static final class InlinableUnarySendNode extends UnarySendNode
+  public static final class InlinableUnarySendNode extends UnaryMessageNode
     implements InlinableCallSite {
 
     private final CallTarget inlinableCallTarget;
@@ -147,16 +147,15 @@ public abstract class UnarySendNode extends UnaryMessageNode {
 
     InlinableUnarySendNode(final UnarySendNode node, final CallTarget callTarget,
         final Invokable invokable) {
-      super(node.selector, node.universe, node.receiverExpr);
+      super(node.selector, node.universe);
       this.inlinableCallTarget = callTarget;
       this.invokable           = invokable;
       callCount = 0;
     }
 
     public InlinableUnarySendNode(final SSymbol selector, final Universe universe,
-        final ExpressionNode receiver, final CallTarget callTarget,
-        final Invokable invokable) {
-      super(selector, universe, receiver);
+        final CallTarget callTarget, final Invokable invokable) {
+      super(selector, universe);
       this.inlinableCallTarget = callTarget;
       this.invokable           = invokable;
       callCount = 0;
@@ -181,8 +180,7 @@ public abstract class UnarySendNode extends UnaryMessageNode {
     public boolean inline(final FrameFactory factory) {
       CompilerAsserts.neverPartOfCompilation();
 
-      ExpressionNode method = null;
-      method = invokable.inline(inlinableCallTarget, selector);
+      ExpressionNode method = invokable.inline(inlinableCallTarget, selector);
       if (method != null) {
         replace(method);
         return true;
@@ -195,6 +193,12 @@ public abstract class UnarySendNode extends UnaryMessageNode {
     public CallTarget getCallTarget() {
       return inlinableCallTarget;
     }
+
+    @Override
+    public Object executeGeneric(final VirtualFrame frame) {
+      throw new IllegalStateException("executeGeneric() is not supported for these nodes, they always need to be called from a SendNode.");
+    }
+    @Override public ExpressionNode getReceiver() { return null; }
 
     @Override
     public Object executeEvaluated(final VirtualFrame frame, final Object receiver) {

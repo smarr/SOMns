@@ -169,7 +169,7 @@ public abstract class TernarySendNode extends TernaryMessageNode {
     }
   }
 
-  private static final class InlinableSendNode extends TernarySendNode
+  private static final class InlinableSendNode extends TernaryMessageNode
     implements InlinableCallSite {
 
     private final CallTarget inlinableCallTarget;
@@ -177,7 +177,7 @@ public abstract class TernarySendNode extends TernaryMessageNode {
 
     @CompilationFinal private int callCount;
 
-    InlinableSendNode(final TernarySendNode node, final DefaultCallTarget callTarget,
+    InlinableSendNode(final TernaryMessageNode node, final DefaultCallTarget callTarget,
         final Invokable invokable) {
       super(node);
       this.inlinableCallTarget = callTarget;
@@ -218,6 +218,14 @@ public abstract class TernarySendNode extends TernaryMessageNode {
     public CallTarget getCallTarget() {
       return inlinableCallTarget;
     }
+
+    @Override
+    public Object executeGeneric(final VirtualFrame frame) {
+      throw new IllegalStateException("executeGeneric() is not supported for these nodes, they always need to be called from a SendNode.");
+    }
+    @Override public ExpressionNode getReceiver()  { return null; }
+    @Override public ExpressionNode getFirstArg()  { return null; }
+    @Override public ExpressionNode getSecondArg() { return null; }
 
     @Override
     public Object executeEvaluated(final VirtualFrame frame,
