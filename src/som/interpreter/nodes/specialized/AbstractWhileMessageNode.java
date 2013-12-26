@@ -1,10 +1,7 @@
 package som.interpreter.nodes.specialized;
 
-import som.interpreter.Arguments;
 import som.interpreter.nodes.BinaryMessageNode;
 import som.interpreter.nodes.UnaryMessageNode;
-import som.interpreter.nodes.messages.UnarySendNode.InlinableUnarySendNode;
-import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
 import som.vmobjects.SMethod;
 import som.vmobjects.SObject;
@@ -17,7 +14,7 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 
 
-public abstract class AbstractWhileMessageNode extends BinaryMessageNode {
+public abstract class AbstractWhileMessageNode extends AbstractBinaryBlockInliningNode {
   private final SMethod conditionMethod;
   private final SMethod bodyMethod;
 
@@ -39,7 +36,6 @@ public abstract class AbstractWhileMessageNode extends BinaryMessageNode {
       SBlock argBlock = (SBlock) arg;
       bodyMethod = argBlock.getMethod();
       bodyValueSend = adoptChild(createInlineableNode(bodyMethod));
-      bodyValueSend.assignSourceSection(bodyMethod.getTruffleInvokable().getSourceSection());
     } else {
       bodyMethod = null;
     }
@@ -58,7 +54,7 @@ public abstract class AbstractWhileMessageNode extends BinaryMessageNode {
     }
   }
 
-  protected SAbstractObject doWhile(final VirtualFrame frame,
+  protected SObject doWhile(final VirtualFrame frame,
       final SBlock loopCondition, final SBlock loopBody, final SObject continueBool) {
     int iterationCount = 0;
 
@@ -83,8 +79,8 @@ public abstract class AbstractWhileMessageNode extends BinaryMessageNode {
     return universe.nilObject;
   }
 
-  protected SAbstractObject doWhile(final VirtualFrame frame,
-      final SObject loopCondition, final SBlock loopBody) {
+  protected SObject doWhile(final VirtualFrame frame,
+      final Object loopCondition, final SBlock loopBody) {
     int iterationCount = 0;
 
     try {
@@ -116,22 +112,11 @@ public abstract class AbstractWhileMessageNode extends BinaryMessageNode {
     }
   }
 
-  private InlinableUnarySendNode createInlineableNode(final SMethod method) {
-    return new InlinableUnarySendNode(method.getSignature(),
-        universe, method.getCallTarget(), method.getTruffleInvokable());
-  }
-
-  protected SBlock createBlock(final SBlock block) {
-    SMethod   method  = block.getMethod();
-    Arguments context = block.getContext(); // TODO: test whether the current implementation is correct, or whether it should be the following: Method.getUpvalues(frame);
-    return universe.newBlock(method, context);
-  }
-
-  protected boolean receiverIsTrueObject(final SObject receiver) {
+  protected boolean receiverIsTrueObject(final Object receiver) {
     return receiver == universe.trueObject;
   }
 
-  protected boolean receiverIsFalseObject(final SObject receiver) {
+  protected boolean receiverIsFalseObject(final Object receiver) {
     return receiver == universe.falseObject;
   }
 
@@ -139,5 +124,4 @@ public abstract class AbstractWhileMessageNode extends BinaryMessageNode {
     return (this.conditionMethod == null || ((SBlock) receiver).getMethod() == conditionMethod)
         && (this.bodyMethod      == null || ((SBlock) argument).getMethod() == bodyMethod);
   }
-
 }

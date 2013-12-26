@@ -1,7 +1,6 @@
 package som.interpreter.nodes.specialized;
 
 import som.interpreter.nodes.BinaryMessageNode;
-import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
 import som.vmobjects.SObject;
 
@@ -14,14 +13,14 @@ public abstract class WhileFalseMessageNode extends AbstractWhileMessageNode {
   public WhileFalseMessageNode(final WhileFalseMessageNode node) { super(node); }
 
   @Specialization(guards = "isSameArgument")
-  public SAbstractObject doWhileTrue(final VirtualFrame frame,
+  public SObject doWhileTrue(final VirtualFrame frame,
       final SBlock loopCondition, final SBlock loopBody) {
     return doWhile(frame, loopCondition, loopBody, universe.falseObject);
   }
 
   @Specialization(guards = {"receiverIsFalseObject", "isSameArgument"})
-  public SAbstractObject doWhileFalse(final VirtualFrame frame,
-      final SObject loopCondition, final SBlock loopBody) {
+  public SObject doWhileFalse(final VirtualFrame frame,
+      final Object loopCondition, final SBlock loopBody) {
     return doWhile(frame, loopCondition, loopBody);
   }
 }
