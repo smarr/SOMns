@@ -1,5 +1,6 @@
 package som.interpreter.nodes.specialized;
 
+import som.interpreter.BlockHelper;
 import som.interpreter.nodes.BinaryMessageNode;
 import som.interpreter.nodes.UnaryMessageNode;
 import som.vmobjects.SBlock;
@@ -14,7 +15,7 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 
 
-public abstract class AbstractWhileMessageNode extends AbstractBinaryBlockInliningNode {
+public abstract class AbstractWhileMessageNode extends BinaryMessageNode {
   private final SMethod conditionMethod;
   private final SMethod bodyMethod;
 
@@ -27,7 +28,7 @@ public abstract class AbstractWhileMessageNode extends AbstractBinaryBlockInlini
     if (rcvr instanceof SBlock) {
       SBlock rcvrBlock = (SBlock) rcvr;
       conditionMethod = rcvrBlock.getMethod();
-      conditionValueSend = adoptChild(createInlineableNode(conditionMethod));
+      conditionValueSend = adoptChild(BlockHelper.createInlineableNode(conditionMethod, universe));
     } else {
       conditionMethod = null;
     }
@@ -35,7 +36,7 @@ public abstract class AbstractWhileMessageNode extends AbstractBinaryBlockInlini
     if (arg instanceof SBlock) {
       SBlock argBlock = (SBlock) arg;
       bodyMethod = argBlock.getMethod();
-      bodyValueSend = adoptChild(createInlineableNode(bodyMethod));
+      bodyValueSend = adoptChild(BlockHelper.createInlineableNode(bodyMethod, universe));
     } else {
       bodyMethod = null;
     }
@@ -45,12 +46,12 @@ public abstract class AbstractWhileMessageNode extends AbstractBinaryBlockInlini
     super(node);
     conditionMethod = node.conditionMethod;
     if (node.conditionMethod != null) {
-      conditionValueSend = adoptChild(createInlineableNode(conditionMethod));
+      conditionValueSend = adoptChild(BlockHelper.createInlineableNode(conditionMethod, universe));
     }
 
     bodyMethod = node.bodyMethod;
     if (node.bodyMethod != null) {
-      bodyValueSend = adoptChild(createInlineableNode(bodyMethod));
+      bodyValueSend = adoptChild(BlockHelper.createInlineableNode(bodyMethod, universe));
     }
   }
 
@@ -58,13 +59,13 @@ public abstract class AbstractWhileMessageNode extends AbstractBinaryBlockInlini
       final SBlock loopCondition, final SBlock loopBody, final SObject continueBool) {
     int iterationCount = 0;
 
-    Object loopConditionResult = conditionValueSend.executeEvaluated(frame, createBlock(loopCondition));
+    Object loopConditionResult = conditionValueSend.executeEvaluated(frame, BlockHelper.createBlock(loopCondition, universe));
 
     try {
       // TODO: this is a simplification, we don't cover the case receiver isn't a boolean
       while (loopConditionResult == continueBool) {
-        bodyValueSend.executeEvaluated(frame, createBlock(loopBody));
-        loopConditionResult = conditionValueSend.executeEvaluated(frame, createBlock(loopCondition));
+        bodyValueSend.executeEvaluated(frame, BlockHelper.createBlock(loopBody, universe));
+        loopConditionResult = conditionValueSend.executeEvaluated(frame, BlockHelper.createBlock(loopCondition, universe));
 
         if (CompilerDirectives.inInterpreter()) {
           iterationCount++;
@@ -85,7 +86,7 @@ public abstract class AbstractWhileMessageNode extends AbstractBinaryBlockInlini
 
     try {
       while (true) {
-        bodyValueSend.executeEvaluated(frame, createBlock(loopBody));
+        bodyValueSend.executeEvaluated(frame, BlockHelper.createBlock(loopBody, universe));
 
         if (CompilerDirectives.inInterpreter()) {
           iterationCount++;

@@ -1,23 +1,19 @@
-package som.interpreter.nodes.specialized;
+package som.interpreter;
 
-import som.interpreter.Arguments;
-import som.interpreter.nodes.BinaryMessageNode;
 import som.interpreter.nodes.messages.UnarySendNode.InlinableUnarySendNode;
+import som.vm.Universe;
 import som.vmobjects.SBlock;
 import som.vmobjects.SMethod;
 
 
-public abstract class AbstractBinaryBlockInliningNode extends BinaryMessageNode {
-  public AbstractBinaryBlockInliningNode(final BinaryMessageNode node) {
-    super(node);
-  }
+public final class BlockHelper {
 
-  protected final InlinableUnarySendNode createInlineableNode(final SMethod method) {
+  public static InlinableUnarySendNode createInlineableNode(final SMethod method, final Universe universe) {
     return new InlinableUnarySendNode(method.getSignature(),
         universe, method.getCallTarget(), method.getTruffleInvokable());
   }
 
-  protected final SBlock createBlock(final SBlock block) {
+  public static SBlock createBlock(final SBlock block, final Universe universe) {
     SMethod   method  = block.getMethod();
     Arguments context = block.getContext(); // TODO: test whether the current implementation is correct, or whether it should be the following: Method.getUpvalues(frame);
     return universe.newBlock(method, context);
