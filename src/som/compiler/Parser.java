@@ -77,11 +77,11 @@ import som.interpreter.nodes.SelfReadNode;
 import som.interpreter.nodes.SelfReadNode.UninitializedSuperReadNode;
 import som.interpreter.nodes.SequenceNode;
 import som.interpreter.nodes.UnaryMessageNode;
-import som.interpreter.nodes.literals.BigIntegerLiteralNodeFactory;
+import som.interpreter.nodes.literals.BigIntegerLiteralNode;
 import som.interpreter.nodes.literals.BlockNode;
-import som.interpreter.nodes.literals.IntegerLiteralNodeFactory;
+import som.interpreter.nodes.literals.IntegerLiteralNode;
 import som.interpreter.nodes.literals.LiteralNode;
-import som.interpreter.nodes.literals.StringLiteralNodeFactory;
+import som.interpreter.nodes.literals.StringLiteralNode;
 import som.interpreter.nodes.literals.SymbolLiteralNode;
 import som.vm.Universe;
 import som.vmobjects.SClass;
@@ -656,9 +656,9 @@ public class Parser {
 
     LiteralNode node;
     if (val < java.lang.Integer.MIN_VALUE || val > java.lang.Integer.MAX_VALUE) {
-      node = BigIntegerLiteralNodeFactory.create(BigInteger.valueOf(val));
+      node = new BigIntegerLiteralNode(BigInteger.valueOf(val));
     } else {
-      node = IntegerLiteralNodeFactory.create((int) val);
+      node = new IntegerLiteralNode((int) val);
     }
 
     assignSource(node, coord);
@@ -701,7 +701,7 @@ public class Parser {
     SourceCoordinate coord = getCoordinate();
     String s = string();
 
-    LiteralNode node = StringLiteralNodeFactory.create(s);
+    LiteralNode node = new StringLiteralNode(s);
     assignSource(node, coord);
     return node;
   }

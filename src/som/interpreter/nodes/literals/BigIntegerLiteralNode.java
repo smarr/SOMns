@@ -2,10 +2,10 @@ package som.interpreter.nodes.literals;
 
 import java.math.BigInteger;
 
-import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 
 
-public abstract class BigIntegerLiteralNode extends LiteralNode {
+public final class BigIntegerLiteralNode extends LiteralNode {
 
   private final BigInteger value;
 
@@ -13,8 +13,13 @@ public abstract class BigIntegerLiteralNode extends LiteralNode {
     this.value = value;
   }
 
-  @Specialization
-  protected BigInteger doBigInteger() {
+  @Override
+  public BigInteger executeBigInteger(final VirtualFrame frame) {
+    return value;
+  }
+
+  @Override
+  public Object executeGeneric(final VirtualFrame frame) {
     return value;
   }
 }

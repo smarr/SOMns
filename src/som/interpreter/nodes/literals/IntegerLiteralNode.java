@@ -1,9 +1,9 @@
 package som.interpreter.nodes.literals;
 
-import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 
 
-public abstract class IntegerLiteralNode extends LiteralNode {
+public final class IntegerLiteralNode extends LiteralNode {
 
   private final int value;
 
@@ -11,8 +11,13 @@ public abstract class IntegerLiteralNode extends LiteralNode {
     this.value = value;
   }
 
-  @Specialization
-  protected int doInteger() {
+  @Override
+  public int executeInteger(final VirtualFrame frame) {
+    return value;
+  }
+
+  @Override
+  public Object executeGeneric(final VirtualFrame frame) {
     return value;
   }
 }

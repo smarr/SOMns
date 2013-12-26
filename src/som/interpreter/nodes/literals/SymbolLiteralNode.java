@@ -1,10 +1,8 @@
 package som.interpreter.nodes.literals;
 
-import som.vmobjects.SAbstractObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
-
 
 public class SymbolLiteralNode extends LiteralNode {
 
@@ -15,7 +13,12 @@ public class SymbolLiteralNode extends LiteralNode {
   }
 
   @Override
-  public SAbstractObject executeGeneric(final VirtualFrame frame) {
+  public SSymbol executeSSymbol(final VirtualFrame frame) {
+    return value;
+  }
+
+  @Override
+  public Object executeGeneric(final VirtualFrame frame) {
     return value;
   }
 }

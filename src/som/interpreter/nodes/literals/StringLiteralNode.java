@@ -1,9 +1,9 @@
 package som.interpreter.nodes.literals;
 
-import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 
 
-public abstract class StringLiteralNode extends LiteralNode {
+public final class StringLiteralNode extends LiteralNode {
 
   private final String value;
 
@@ -11,9 +11,13 @@ public abstract class StringLiteralNode extends LiteralNode {
     this.value = value;
   }
 
-  @Specialization
-  protected String doString() {
+  @Override
+  public String executeString(final VirtualFrame frame) {
     return value;
   }
 
+  @Override
+  public Object executeGeneric(final VirtualFrame frame) {
+    return value;
+  }
 }
