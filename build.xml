@@ -12,9 +12,7 @@
     <path id="project.classpath">
         <pathelement location="${classes.dir}" />
         <pathelement location="tests/" />
-        <pathelement location="${lib.dir}/com.oracle.truffle.api.jar" />
-        <pathelement location="${lib.dir}/com.oracle.truffle.api.dsl.jar" />
-        <pathelement location="${lib.dir}/com.oracle.truffle.dsl.processor.jar" />
+        <pathelement location="${lib.dir}/truffle.jar" />
         <pathelement location="${lib.dir}/junit-4.8.1.jar" />        
     </path>
 
@@ -25,12 +23,8 @@
     
     <target name="libs">
       <mkdir dir="${lib.dir}" />
-      <get src="${truffle.libs}/com.oracle.truffle.api.jar"  usetimestamp="true"
-           dest="${lib.dir}/com.oracle.truffle.api.jar"/>
-      <get src="${truffle.libs}/com.oracle.truffle.api.dsl.jar" usetimestamp="true"
-           dest="${lib.dir}/com.oracle.truffle.api.dsl.jar"/>
-      <get src="${truffle.libs}/com.oracle.truffle.dsl.processor.jar" usetimestamp="true"
-           dest="${lib.dir}/com.oracle.truffle.dsl.processor.jar"/>
+      <get src="${truffle.libs}/truffle.jar"  usetimestamp="true"
+           dest="${lib.dir}/truffle.jar"/>
       <get src="http://search.maven.org/remotecontent?filepath=junit/junit/4.8.1/junit-4.8.1.jar" usetimestamp="true"
            dest="${lib.dir}/junit-4.8.1.jar" />
     </target>
