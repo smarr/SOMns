@@ -34,8 +34,6 @@ import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.FieldNode.FieldReadNode;
 import som.interpreter.nodes.FieldNode.FieldWriteNode;
 import som.interpreter.nodes.GlobalNode.GlobalReadNode;
-import som.interpreter.nodes.InitializeTemporarySlotsNode;
-import som.interpreter.nodes.WriteConstantToField;
 import som.primitives.Primitives;
 import som.vm.Universe;
 import som.vmobjects.SMethod;
@@ -107,25 +105,16 @@ public class MethodGenerationContext {
     }
   }
 
-  public SMethod assemble(final Universe universe, final ExpressionNode expressions) {
+  public SMethod assemble(final Universe universe, final ExpressionNode methodBody) {
     ArrayList<Local> onlyLocalAccess = new ArrayList<>(locals.size());
     ArrayList<Local> nonLocalAccess  = new ArrayList<>(locals.size());
     separateLocals(onlyLocalAccess, nonLocalAccess);
-
-    ExpressionNode methodBody = expressions;
-    if (onlyLocalAccess.size() > 0) {
-      WriteConstantToField[] writeNils = new WriteConstantToField[onlyLocalAccess.size()];
-      for (int i = 0; i < onlyLocalAccess.size(); i++) {
-        writeNils[i] = new WriteConstantToField(onlyLocalAccess.get(i).slot, universe.nilObject);
-      }
-      methodBody = new InitializeTemporarySlotsNode(writeNils, methodBody);
-    }
 
     som.interpreter.Method truffleMethod =
         new som.interpreter.Method(methodBody, arguments.size(),
             nonLocalAccess.size(), frameDescriptor, universe);
 
-    assignSourceSectionToMethod(expressions, truffleMethod);
+    assignSourceSectionToMethod(methodBody, truffleMethod);
 
     SMethod meth = universe.newMethod(signature, truffleMethod,
         frameDescriptor, false);

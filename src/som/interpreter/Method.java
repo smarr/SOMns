@@ -37,13 +37,13 @@ import som.interpreter.nodes.LocalVariableNodeFactory.LocalVariableReadNodeFacto
 import som.interpreter.nodes.LocalVariableNodeFactory.LocalVariableWriteNodeFactory;
 import som.interpreter.nodes.TernaryMessageNode;
 import som.interpreter.nodes.UnaryMessageNode;
-import som.interpreter.nodes.WriteConstantToField;
 import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.literals.LiteralNode;
 import som.vm.Universe;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CallTarget;
+import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.FrameDescriptor;
@@ -123,17 +123,14 @@ public class Method extends Invokable {
             node.replace(LocalVariableWriteNodeFactory.create(inlinedSlot,
                 ((LocalVariableWriteNode) varNode).getExp()));
         }
-    } else if (node instanceof WriteConstantToField) {
-      WriteConstantToField constNode = (WriteConstantToField) node;
-      FrameSlot inlinedSlot = frameDescriptor.findFrameSlot(constNode.getSlotIdentifier());
-      assert inlinedSlot != null;
-      node.replace(new WriteConstantToField(inlinedSlot, constNode.getValue()));
     }
   }
 
 
   @Override
   public ExpressionNode inline(final CallTarget inlinableCallTarget, final SSymbol selector) {
+    CompilerAsserts.neverPartOfCompilation();
+
     // We clone the AST, frame descriptors, and slots to facilitate their
     // independent specialization.
     ExpressionNode  ininedBody = prepareBody(NodeUtil.cloneNode(getUninitializedBody()));
