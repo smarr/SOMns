@@ -34,6 +34,8 @@ import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.FieldNode.FieldReadNode;
 import som.interpreter.nodes.FieldNode.FieldWriteNode;
 import som.interpreter.nodes.GlobalNode.GlobalReadNode;
+import som.interpreter.nodes.InitializeTemporarySlotsNode;
+import som.interpreter.nodes.WriteConstantToField;
 import som.primitives.Primitives;
 import som.vm.Universe;
 import som.vmobjects.SMethod;
@@ -41,7 +43,6 @@ import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.frame.FrameDescriptor;
-import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.impl.DefaultSourceSection;
 
 public class MethodGenerationContext {
@@ -111,15 +112,18 @@ public class MethodGenerationContext {
     ArrayList<Local> nonLocalAccess  = new ArrayList<>(locals.size());
     separateLocals(onlyLocalAccess, nonLocalAccess);
 
-    FrameSlot[] localSlots = new FrameSlot[onlyLocalAccess.size()];
-
-    for (int i = 0; i < onlyLocalAccess.size(); i++) {
-      localSlots[i] = onlyLocalAccess.get(i).slot;
+    ExpressionNode methodBody = expressions;
+    if (onlyLocalAccess.size() > 0) {
+      WriteConstantToField[] writeNils = new WriteConstantToField[onlyLocalAccess.size()];
+      for (int i = 0; i < onlyLocalAccess.size(); i++) {
+        writeNils[i] = new WriteConstantToField(onlyLocalAccess.get(i).slot, universe.nilObject);
+      }
+      methodBody = new InitializeTemporarySlotsNode(writeNils, methodBody);
     }
 
     som.interpreter.Method truffleMethod =
-        new som.interpreter.Method(expressions, arguments.size(),
-            nonLocalAccess.size(), localSlots, frameDescriptor, universe);
+        new som.interpreter.Method(methodBody, arguments.size(),
+            nonLocalAccess.size(), frameDescriptor, universe);
 
     assignSourceSectionToMethod(expressions, truffleMethod);
 

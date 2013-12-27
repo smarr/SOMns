@@ -19,11 +19,8 @@ public class Primitive extends Invokable {
 
   @Override
   public Object execute(final VirtualFrame frame) {
-    initializeFrame(frame);
     return expressionOrSequence.executeGeneric(frame);
   }
-
-  protected void initializeFrame(final VirtualFrame frame) { /* NOOP */ }
 
   @Override
   public boolean isAlwaysToBeInlined() {
