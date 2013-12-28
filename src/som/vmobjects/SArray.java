@@ -26,7 +26,9 @@ package som.vmobjects;
 
 import som.vm.Universe;
 
-public class SArray extends SAbstractObject {
+import com.oracle.truffle.api.nodes.ExplodeLoop;
+
+public final class SArray extends SAbstractObject {
 
   public SArray(final SObject nilObject, final int size) {
     super();
@@ -50,6 +52,7 @@ public class SArray extends SAbstractObject {
     return indexableFields.length;
   }
 
+  @ExplodeLoop
   private void setNumberOfIndexableFieldsAndClear(final int value,
       final SObject nilObject) {
     // Clear each and every field by putting nil into them
