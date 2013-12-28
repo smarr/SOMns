@@ -286,7 +286,7 @@ public class Universe {
   @SlowPath
   protected void initializeObjectSystem() {
     // Allocate the nil object
-    nilObject = new SObject(null);
+    nilObject = new SObject();
 
     // Allocate the Metaclass classes
     metaclassClass = newMetaclassClass();
@@ -419,11 +419,7 @@ public class Universe {
   @SlowPath
   public SClass newClass(final SClass classClass) {
     // Allocate a new class and set its class to be the given class class
-    SClass result = new SClass(classClass.getNumberOfInstanceFields(), this);
-    result.setClass(classClass);
-
-    // Return the freshly allocated class
-    return result;
+    return new SClass(classClass, this);
   }
 
   @SlowPath
@@ -440,13 +436,7 @@ public class Universe {
   }
 
   public SObject newInstance(final SClass instanceClass) {
-    // Allocate a new instance and set its class to be the given class
-    SObject result = new SObject(instanceClass.getNumberOfInstanceFields(),
-        nilObject);
-    result.setClass(instanceClass);
-
-    // Return the freshly allocated instance
-    return result;
+    return new SObject(instanceClass, nilObject);
   }
 
   public SInteger newInteger(final int value) {

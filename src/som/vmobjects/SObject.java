@@ -28,16 +28,21 @@ import som.vm.Universe;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
 
 public class SObject extends SAbstractObject {
 
-  public SObject(final SObject nilObject) {
+  public SObject() {
     fields = noFields;
   }
 
-  public SObject(final int numberOfFields, final SObject nilObject) {
-    fields = new SAbstractObject[numberOfFields];
-    setClearFields(numberOfFields, nilObject);
+  protected SObject(final int numberOfFields, final SObject nilObject) {
+    fields = setClearFields(numberOfFields, nilObject);
+  }
+
+  public SObject(final SClass instanceClass, final SObject nilObject) {
+    clazz  = instanceClass;
+    fields = setClearFields(instanceClass.getNumberOfInstanceFields(), nilObject);
   }
 
   @Override
@@ -57,11 +62,16 @@ public class SObject extends SAbstractObject {
     return fields.length;
   }
 
-  private void setClearFields(final int numFields, final SObject nilObject) {
+  @ExplodeLoop
+  private SAbstractObject[] setClearFields(final int numberOfFields, final SObject nilObject) {
+    if (numberOfFields == 0) { return noFields; }
+
     // Clear each and every field by putting nil into them
-    for (int i = 0; i < numFields; i++) {
-      setField(i, nilObject);
+    SAbstractObject[] fieldArr = new SAbstractObject[numberOfFields];
+    for (int i = 0; i < fieldArr.length; i++) {
+      fieldArr[i] = nilObject;
     }
+    return fieldArr;
   }
 
   public SAbstractObject getField(final int index) {

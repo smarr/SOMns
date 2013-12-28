@@ -50,6 +50,13 @@ public class SClass extends SObject {
     this.superclass = universe.nilObject;
   }
 
+  public SClass(final SClass clazz, final Universe universe) {
+    super(clazz, universe.nilObject);
+    invokablesTable = new HashMap<SSymbol, SMethod>();
+    this.universe   = universe;
+    this.superclass = universe.nilObject;
+  }
+
   public Universe getUniverse() {
     return universe;
   }
