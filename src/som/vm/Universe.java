@@ -56,18 +56,14 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 public class Universe {
 
   public static void main(final String[] arguments) {
-    // Create Universe
     Universe u = new Universe();
 
     try {
-      // Start interpretation
       u.interpret(arguments);
+      u.exit(0);
     } catch (IllegalStateException e) {
-      errorPrintln("ERROR: " + e.getMessage());
+      u.errorExit(e.getMessage());
     }
-
-    // Exit with error code 0
-    u.exit(0);
   }
 
   public SAbstractObject interpret(String[] arguments) {
