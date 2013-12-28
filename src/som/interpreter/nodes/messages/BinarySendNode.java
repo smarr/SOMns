@@ -4,11 +4,15 @@ import som.interpreter.Arguments.BinaryArguments;
 import som.interpreter.Invokable;
 import som.interpreter.nodes.BinaryMessageNode;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.specialized.IfFalseMessageNodeFactory;
 import som.interpreter.nodes.specialized.IfTrueMessageNodeFactory;
-import som.interpreter.nodes.specialized.WhileFalseMessageNodeFactory;
-import som.interpreter.nodes.specialized.WhileTrueMessageNodeFactory;
+import som.interpreter.nodes.specialized.WhileWithStaticBlocksNode.WhileFalseStaticBlocksNode;
+import som.interpreter.nodes.specialized.WhileWithStaticBlocksNode.WhileTrueStaticBlocksNode;
+import som.interpreter.nodes.specialized.WhileWithValueNode.WhileFalseValueNode;
+import som.interpreter.nodes.specialized.WhileWithValueNode.WhileTrueValueNode;
 import som.vm.Universe;
+import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import som.vmobjects.SMethod;
 import som.vmobjects.SSymbol;
@@ -22,7 +26,6 @@ import com.oracle.truffle.api.impl.DefaultCallTarget;
 import com.oracle.truffle.api.nodes.FrameFactory;
 import com.oracle.truffle.api.nodes.InlinableCallSite;
 import com.oracle.truffle.api.nodes.Node;
-
 
 public abstract class BinarySendNode extends BinaryMessageNode {
 
@@ -124,10 +127,31 @@ public abstract class BinarySendNode extends BinaryMessageNode {
       switch (selector.getString()) {
         case "whileTrue:":
           assert this == getTopNode();
-          return replace(WhileTrueMessageNodeFactory.create(this, receiver, argument, receiverExpr, argumentNode));
+          if (getArgument() instanceof BlockNode) {
+            BlockNode argBlockNode = (BlockNode) getArgument();
+            SBlock    argBlock     = (SBlock)    argument;
+            if (getReceiver() instanceof BlockNode) {
+              return replace(new WhileTrueStaticBlocksNode(this,
+                  (BlockNode) getReceiver(), argBlockNode, (SBlock) receiver, argBlock));
+            } else {
+              return replace(new WhileTrueValueNode(this, getReceiver(), argBlockNode, argBlock));
+            }
+          }
+          break; // use normal send
         case "whileFalse:":
           assert this == getTopNode();
-          return replace(WhileFalseMessageNodeFactory.create(this, receiver, argument, receiverExpr, argumentNode));
+          if (getArgument() instanceof BlockNode) {
+            BlockNode argBlockNode = (BlockNode) getArgument();
+            SBlock    argBlock     = (SBlock)    argument;
+            if (getReceiver() instanceof BlockNode) {
+              return replace(new WhileFalseStaticBlocksNode(this,
+                  (BlockNode) getReceiver(), argBlockNode,
+                  (SBlock) receiver, argBlock));
+            } else {
+              return replace(new WhileFalseValueNode(this, getReceiver(), argBlockNode, argBlock));
+            }
+          }
+          break; // use normal send
         case "ifTrue:":
           assert this == getTopNode();
           return replace(IfTrueMessageNodeFactory.create(this, receiver, argument, receiverExpr, argumentNode));
