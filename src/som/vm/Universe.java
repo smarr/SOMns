@@ -369,14 +369,13 @@ public class Universe {
     setGlobal(falseClassName, falseClass);
   }
 
+  @SlowPath
   public SSymbol symbolFor(final String string) {
     // Lookup the symbol in the symbol table
     SSymbol result = symbolTable.get(string);
     if (result != null) { return result; }
 
-    // Create a new symbol and return it
-    result = newSymbol(string);
-    return result;
+    return newSymbol(string);
   }
 
   public SArray newArray(final int length) {
