@@ -119,18 +119,19 @@ public abstract class TernarySendNode extends TernaryMessageNode {
     public Object executeEvaluated(final VirtualFrame frame, final Object receiver,
         final Object argument1, final Object argument2) {
       CompilerDirectives.transferToInterpreter();
-      return specialize(receiver).executeEvaluated(frame, receiver, argument1,
-          argument2);
+      return specializeEvaluated(receiver, argument1, argument2).executeEvaluated(
+          frame, receiver, argument1, argument2);
     }
 
     // DUPLICATED but types
-    private TernarySendNode specialize(final Object receiver) {
+    private TernaryMessageNode specializeEvaluated(final Object receiver,
+        final Object firstArg, final Object secondArg) {
       CompilerAsserts.neverPartOfCompilation();
 
       switch (selector.getString()) {
         case "ifTrue:ifFalse:":
           assert this == getTopNode();
-          return replace(IfTrueIfFalseMessageNodeFactory.create(this, receiverExpr, firstArgNode, secondArgNode));
+          return replace(IfTrueIfFalseMessageNodeFactory.create(this, receiver, firstArg, secondArg, receiverExpr, firstArgNode, secondArgNode));
       }
 
       if (depth < INLINE_CACHE_SIZE) {
