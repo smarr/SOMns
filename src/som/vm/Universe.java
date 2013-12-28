@@ -119,7 +119,7 @@ public class Universe {
   }
 
   @SlowPath
-  private String[] handleArguments(String[] arguments) {
+  public String[] handleArguments(String[] arguments) {
     boolean gotClasspath = false;
     String[] remainingArgs = new String[arguments.length];
     int cnt = 0;
