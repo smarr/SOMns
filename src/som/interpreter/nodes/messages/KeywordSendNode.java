@@ -69,7 +69,7 @@ public abstract class KeywordSendNode extends KeywordMessageNode {
 
     @Child protected KeywordSendNode    nextNode;
     @Child protected KeywordMessageNode currentNode;
-           private final SClass         cachedRcvrClass;
+    @Child private ClassCheckNode       cachedRcvrClassCheck;
 
     CachedSendNode(final KeywordSendNode node,
         final KeywordSendNode next, final KeywordMessageNode current,
@@ -77,13 +77,14 @@ public abstract class KeywordSendNode extends KeywordMessageNode {
       super(node);
       this.nextNode        = adoptChild(next);
       this.currentNode     = adoptChild(current);
-      this.cachedRcvrClass = rcvrClass;
+      this.cachedRcvrClassCheck = adoptChild(new Uninitialized(rcvrClass,
+          receiverExpr instanceof SuperReadNode, universe));
     }
 
     @Override
     public Object executeEvaluated(final VirtualFrame frame,
         final Object receiver, final Object[] arguments) {
-      if (cachedRcvrClass == classOfReceiver(receiver)) {
+      if (cachedRcvrClassCheck.execute(receiver)) {
         return currentNode.executeEvaluated(frame, receiver, arguments);
       } else {
         return nextNode.executeEvaluated(frame, receiver, arguments);
