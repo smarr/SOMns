@@ -24,9 +24,9 @@
 
 package som.vmobjects;
 
+import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
 import som.vm.Universe;
 
-import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 
@@ -52,7 +52,7 @@ public class SObject extends SAbstractObject {
   }
 
   public void setClass(final SClass value) {
-    CompilerDirectives.transferToInterpreterAndInvalidate();
+    transferToInterpreterAndInvalidate("SObject.setClass");
     // Set the class of this object by writing to the field with class index
     clazz = value;
   }

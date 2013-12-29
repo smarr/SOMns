@@ -1,10 +1,10 @@
 package som.interpreter.nodes;
 
+import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
 import som.vm.Universe;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
 
-import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 public class SelfReadNode extends ContextualNode {
@@ -34,7 +34,7 @@ public class SelfReadNode extends ContextualNode {
 
     @Override
     public Object executeGeneric(final VirtualFrame frame) {
-      CompilerDirectives.transferToInterpreterAndInvalidate();
+      transferToInterpreterAndInvalidate("UninitializedSuperReadNode");
       SClass clazz = (SClass) Universe.current().getGlobal(holderClass);
       if (classSide) {
         clazz = clazz.getSOMClass(Universe.current());

@@ -1,5 +1,6 @@
 package som.interpreter.nodes.messages;
 
+import static som.interpreter.TruffleCompiler.transferToInterpreter;
 import som.interpreter.Arguments.BinaryArguments;
 import som.interpreter.Invokable;
 import som.interpreter.nodes.BinaryMessageNode;
@@ -121,7 +122,7 @@ public abstract class BinarySendNode extends BinaryMessageNode {
     @Override
     public Object executeEvaluated(final VirtualFrame frame, final Object receiver,
         final Object argument) {
-      CompilerDirectives.transferToInterpreter();
+      transferToInterpreter("UninitializedBinarySendNode.specialize");
       return specializeEvaluated(receiver, argument).executeEvaluated(frame, receiver, argument);
     }
 

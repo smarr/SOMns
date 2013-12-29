@@ -1,10 +1,10 @@
 package som.interpreter.nodes;
 
+import static som.interpreter.TruffleCompiler.transferToInterpreter;
 import som.compiler.Variable.Local;
 import som.vm.Universe;
 import som.vmobjects.SObject;
 
-import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Generic;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.PolymorphicLimit;
@@ -116,7 +116,7 @@ public abstract class LocalVariableNode extends ExpressionNode {
         return true;
       }
       if (slot.getKind() == FrameSlotKind.Illegal) {
-        CompilerDirectives.transferToInterpreter();
+        transferToInterpreter("LocalVar.writeIntToUninit");
         slot.setKind(FrameSlotKind.Int);
         return true;
       }
@@ -128,7 +128,7 @@ public abstract class LocalVariableNode extends ExpressionNode {
         return true;
       }
       if (slot.getKind() == FrameSlotKind.Illegal) {
-        CompilerDirectives.transferToInterpreter();
+        transferToInterpreter("LocalVar.writeDoubleToUninit");
         slot.setKind(FrameSlotKind.Double);
         return true;
       }
@@ -137,7 +137,7 @@ public abstract class LocalVariableNode extends ExpressionNode {
 
     protected final void ensureObjectKind() {
       if (slot.getKind() != FrameSlotKind.Object) {
-        CompilerDirectives.transferToInterpreter();
+        transferToInterpreter("LocalVar.writeObjectToUninit");
         slot.setKind(FrameSlotKind.Object);
       }
     }

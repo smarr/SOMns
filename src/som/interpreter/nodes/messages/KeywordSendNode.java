@@ -1,5 +1,6 @@
 package som.interpreter.nodes.messages;
 
+import static som.interpreter.TruffleCompiler.transferToInterpreter;
 import som.interpreter.Arguments.KeywordArguments;
 import som.interpreter.Invokable;
 import som.interpreter.nodes.ArgumentEvaluationNode;
@@ -113,7 +114,7 @@ public abstract class KeywordSendNode extends KeywordMessageNode {
     @Override
     public Object executeEvaluated(final VirtualFrame frame, final Object receiver,
         final Object[] arguments) {
-      CompilerDirectives.transferToInterpreter();
+      transferToInterpreter("UninitializedKeywordSendNode.specialize");
       return specialize(receiver).executeEvaluated(frame, receiver, arguments);
     }
 

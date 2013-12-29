@@ -24,13 +24,14 @@
 
 package som.vmobjects;
 
+import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
+
 import java.lang.reflect.Constructor;
 import java.util.HashMap;
 
 import som.primitives.Primitives;
 import som.vm.Universe;
 
-import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 
 public class SClass extends SObject {
@@ -66,7 +67,7 @@ public class SClass extends SObject {
   }
 
   public void setSuperClass(final SClass value) {
-    CompilerDirectives.transferToInterpreterAndInvalidate();
+    transferToInterpreterAndInvalidate("SClass.setSuperClass");
     superclass = value;
   }
 
@@ -79,7 +80,7 @@ public class SClass extends SObject {
   }
 
   public void setName(final SSymbol value) {
-    CompilerDirectives.transferToInterpreterAndInvalidate();
+    transferToInterpreterAndInvalidate("SClass.setName");
     name = value;
   }
 
@@ -88,7 +89,7 @@ public class SClass extends SObject {
   }
 
   public void setInstanceFields(final SArray value) {
-    CompilerDirectives.transferToInterpreterAndInvalidate();
+    transferToInterpreterAndInvalidate("SClass.setInstanceFields");
     instanceFields = value;
   }
 
@@ -97,7 +98,7 @@ public class SClass extends SObject {
   }
 
   public void setInstanceInvokables(final SArray value) {
-    CompilerDirectives.transferToInterpreterAndInvalidate();
+    transferToInterpreterAndInvalidate("SClass.setInstanceInvokables");
     instanceInvokables = value;
 
     // Make sure this class is the holder of all invokables in the array

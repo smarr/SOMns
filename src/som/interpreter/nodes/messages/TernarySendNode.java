@@ -1,5 +1,6 @@
 package som.interpreter.nodes.messages;
 
+import static som.interpreter.TruffleCompiler.transferToInterpreter;
 import som.interpreter.Arguments.TernaryArguments;
 import som.interpreter.Invokable;
 import som.interpreter.nodes.ClassCheckNode;
@@ -122,7 +123,7 @@ public abstract class TernarySendNode extends TernaryMessageNode {
     @Override
     public Object executeEvaluated(final VirtualFrame frame, final Object receiver,
         final Object argument1, final Object argument2) {
-      CompilerDirectives.transferToInterpreter();
+      transferToInterpreter("UninitializedTernarySendNode.specialize");
       return specializeEvaluated(receiver, argument1, argument2).executeEvaluated(
           frame, receiver, argument1, argument2);
     }

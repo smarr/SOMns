@@ -1,5 +1,6 @@
 package som.interpreter.nodes.messages;
 
+import static som.interpreter.TruffleCompiler.transferToInterpreter;
 import som.interpreter.Arguments.UnaryArguments;
 import som.interpreter.Invokable;
 import som.interpreter.nodes.ClassCheckNode;
@@ -99,7 +100,7 @@ public abstract class UnarySendNode extends UnaryMessageNode {
 
     @Override
     public Object executeEvaluated(final VirtualFrame frame, final Object receiver) {
-      CompilerDirectives.transferToInterpreter();
+      transferToInterpreter("UninitializedUnarySendNode.specialize");
       return specialize(receiver).executeEvaluated(frame, receiver);
     }
 

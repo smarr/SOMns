@@ -1,12 +1,12 @@
 package som.compiler;
 
+import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
 import som.interpreter.nodes.ArgumentReadNode;
 import som.interpreter.nodes.ContextualNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.UninitializedVariableNode.UninitializedVariableReadNode;
 import som.interpreter.nodes.UninitializedVariableNode.UninitializedVariableWriteNode;
 
-import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.FrameSlot;
 
@@ -28,22 +28,22 @@ public abstract class Variable {
   @CompilationFinal private boolean isWrittenOutOfContext;
 
   public void setIsRead() {
-    CompilerDirectives.transferToInterpreterAndInvalidate();
+    transferToInterpreterAndInvalidate("Variable.setIsRead");
     isRead = true;
   }
 
   public void setIsReadOutOfContext() {
-    CompilerDirectives.transferToInterpreterAndInvalidate();
+    transferToInterpreterAndInvalidate("Variable.setIsReadOutOfContext");
     isReadOutOfContext = true;
   }
 
   public void setIsWritten() {
-    CompilerDirectives.transferToInterpreterAndInvalidate();
+    transferToInterpreterAndInvalidate("Variable.setIsWritten");
     isWritten = true;
   }
 
   public void setIsWrittenOutOfContext() {
-    CompilerDirectives.transferToInterpreterAndInvalidate();
+    transferToInterpreterAndInvalidate("Variable.setIsWrittenOutOfContext");
     isWrittenOutOfContext = true;
   }
 
@@ -85,7 +85,7 @@ public abstract class Variable {
     }
 
     public void setUpvalueIndex(final int index) {
-      CompilerDirectives.transferToInterpreterAndInvalidate();
+      transferToInterpreterAndInvalidate("Variable.setUpvalueIndex");
       upvalueIndex = index;
     }
 
