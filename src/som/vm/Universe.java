@@ -409,11 +409,7 @@ public class Universe {
   }
 
   public SBlock newBlock(final SMethod method, final Arguments outerArguments) {
-    // Allocate a new block and set its class to be the block class
-    SBlock result = new SBlock(method, outerArguments);
-
-    // Return the freshly allocated block
-    return result;
+    return new SBlock(method, outerArguments);
   }
 
   @SlowPath
