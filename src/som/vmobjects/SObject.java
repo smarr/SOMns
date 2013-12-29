@@ -46,7 +46,7 @@ public class SObject extends SAbstractObject {
   }
 
   @Override
-  public SClass getSOMClass(final Universe universe) {
+  public final SClass getSOMClass(final Universe universe) {
     // Get the class of this object by reading the field with class index
     return clazz;
   }
