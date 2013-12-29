@@ -1,5 +1,6 @@
 package som.interpreter.nodes;
 
+import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
 import som.compiler.Variable.Local;
 import som.interpreter.nodes.LocalVariableNode.LocalVariableReadNode;
 import som.interpreter.nodes.LocalVariableNode.LocalVariableWriteNode;
@@ -8,7 +9,6 @@ import som.interpreter.nodes.LocalVariableNodeFactory.LocalVariableWriteNodeFact
 import som.interpreter.nodes.NonLocalVariableNode.NonLocalVariableReadNode;
 import som.interpreter.nodes.NonLocalVariableNode.NonLocalVariableWriteNode;
 
-import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 
@@ -28,7 +28,7 @@ public abstract class UninitializedVariableNode extends ContextualNode {
 
     @Override
     public Object executeGeneric(final VirtualFrame frame) {
-      CompilerDirectives.transferToInterpreterAndInvalidate();
+      transferToInterpreterAndInvalidate("UninitializedVariableReadNode");
 
       if (variable.isAccessedOutOfContext()) {
         NonLocalVariableReadNode node = new NonLocalVariableReadNode(contextLevel, variable.getUpvalueIndex());
@@ -50,7 +50,7 @@ public abstract class UninitializedVariableNode extends ContextualNode {
 
     @Override
     public Object executeGeneric(final VirtualFrame frame) {
-      CompilerDirectives.transferToInterpreterAndInvalidate();
+      transferToInterpreterAndInvalidate("UninitializedVariableWriteNode");
 
       if (variable.isAccessedOutOfContext()) {
         NonLocalVariableWriteNode node = new NonLocalVariableWriteNode(contextLevel, variable.getUpvalueIndex(), exp);
