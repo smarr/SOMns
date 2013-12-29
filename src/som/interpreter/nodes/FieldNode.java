@@ -26,6 +26,7 @@ import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SObject;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 
@@ -38,7 +39,7 @@ public abstract class FieldNode extends ContextualNode {
     this.fieldIndex = fieldIndex;
   }
 
-  public static class FieldReadNode extends FieldNode {
+  public static final class FieldReadNode extends FieldNode {
 
     public FieldReadNode(final int fieldIndex, final int contextLevel) {
       super(fieldIndex, contextLevel);
@@ -46,12 +47,13 @@ public abstract class FieldNode extends ContextualNode {
 
     @Override
     public SAbstractObject executeGeneric(final VirtualFrame frame) {
-      SObject self = (SObject) determineOuterSelf(frame);
+      Object rawSelf = determineOuterSelf(frame);
+      SObject self = CompilerDirectives.unsafeCast(rawSelf, SObject.class, true);
       return self.getField(fieldIndex);
     }
   }
 
-  public static class FieldWriteNode extends FieldNode {
+  public static final class FieldWriteNode extends FieldNode {
 
     @Child private ExpressionNode exp;
 
@@ -65,7 +67,8 @@ public abstract class FieldNode extends ContextualNode {
     @Override
     public SAbstractObject executeGeneric(final VirtualFrame frame) {
       SAbstractObject value = Types.asAbstractObject(exp.executeGeneric(frame), Universe.current());
-      SObject self = (SObject) determineOuterSelf(frame);
+      Object rawSelf = determineOuterSelf(frame);
+      SObject self = CompilerDirectives.unsafeCast(rawSelf, SObject.class, true);
 
       self.setField(fieldIndex, value);
       return value;
