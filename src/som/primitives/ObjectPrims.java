@@ -131,12 +131,12 @@ public class ObjectPrims {
     public ClassPrim(final ClassPrim prim) { this(prim.selector, prim.universe); }
 
     @Specialization
-    public SAbstractObject doSAbstractObject(final SAbstractObject receiver) {
+    public SClass doSAbstractObject(final SAbstractObject receiver) {
       return receiver.getSOMClass(universe);
     }
 
     @Specialization
-    public SAbstractObject doObject(final Object receiver) {
+    public SClass doObject(final Object receiver) {
       return Types.getClassOf(receiver, universe);
     }
   }
