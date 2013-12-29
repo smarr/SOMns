@@ -31,7 +31,7 @@ public abstract class AbstractMessageNode extends ExpressionNode {
 
   public abstract ExpressionNode getReceiver();
 
-  protected SClass classOfReceiver(final Object rcvr) {
+  protected final SClass classOfReceiver(final Object rcvr) {
     // first determine whether it is a normal, or super send
     if (getReceiver() instanceof SuperReadNode) {
       return ((SuperReadNode) getReceiver()).getSuperClass();

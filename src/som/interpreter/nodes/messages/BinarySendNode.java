@@ -3,7 +3,10 @@ package som.interpreter.nodes.messages;
 import som.interpreter.Arguments.BinaryArguments;
 import som.interpreter.Invokable;
 import som.interpreter.nodes.BinaryMessageNode;
+import som.interpreter.nodes.ClassCheckNode;
+import som.interpreter.nodes.ClassCheckNode.Uninitialized;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.SelfReadNode.SuperReadNode;
 import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.specialized.IfFalseMessageNodeFactory;
 import som.interpreter.nodes.specialized.IfTrueMessageNodeFactory;
@@ -69,9 +72,9 @@ public abstract class BinarySendNode extends BinaryMessageNode {
 
   private static final class CachedSendNode extends BinarySendNode {
 
-    @Child protected BinarySendNode    nextNode;
-    @Child protected BinaryMessageNode currentNode;
-           private final SClass        cachedRcvrClass;
+    @Child private BinarySendNode    nextNode;
+    @Child private BinaryMessageNode currentNode;
+    @Child private ClassCheckNode    cachedRcvrClassCheck;
 
     CachedSendNode(final BinarySendNode node,
         final BinarySendNode next, final BinaryMessageNode current,
@@ -79,13 +82,15 @@ public abstract class BinarySendNode extends BinaryMessageNode {
       super(node);
       this.nextNode        = adoptChild(next);
       this.currentNode     = adoptChild(current);
-      this.cachedRcvrClass = rcvrClass;
+      this.cachedRcvrClassCheck = adoptChild(new Uninitialized(rcvrClass,
+          receiverExpr instanceof SuperReadNode, universe));
     }
 
     @Override
     public Object executeEvaluated(final VirtualFrame frame,
         final Object receiver, final Object argument) {
-      if (cachedRcvrClass == classOfReceiver(receiver)) {
+
+      if (cachedRcvrClassCheck.execute(receiver)) {
         return currentNode.executeEvaluated(frame, receiver, argument);
       } else {
         return nextNode.executeEvaluated(frame, receiver, argument);

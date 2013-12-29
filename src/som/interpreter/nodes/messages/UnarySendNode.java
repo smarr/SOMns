@@ -2,7 +2,10 @@ package som.interpreter.nodes.messages;
 
 import som.interpreter.Arguments.UnaryArguments;
 import som.interpreter.Invokable;
+import som.interpreter.nodes.ClassCheckNode;
+import som.interpreter.nodes.ClassCheckNode.Uninitialized;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.SelfReadNode.SuperReadNode;
 import som.interpreter.nodes.UnaryMessageNode;
 import som.vm.Universe;
 import som.vmobjects.SClass;
@@ -51,24 +54,25 @@ public abstract class UnarySendNode extends UnaryMessageNode {
 
   private static final class CachedSendNode extends UnarySendNode {
 
-    @Child protected UnarySendNode    nextNode;
+    @Child private UnarySendNode    nextNode;
 
     // TODO: should this be an expression, or a unary message node??
     //       I am not to sure about the executeEvaluated if this can and should be a more general node type
-    @Child protected UnaryMessageNode currentNode;     // 'inlined' node from the original method/call target
-           private final SClass       cachedRcvrClass; // the receiver class is the classic PIC check criterion, and reasonably cheap
+    @Child private UnaryMessageNode currentNode;     // 'inlined' node from the original method/call target
+    @Child private ClassCheckNode   cachedRcvrClassCheck; // the receiver class is the classic PIC check criterion, and reasonably cheap
 
     CachedSendNode(final UnarySendNode node, final UnarySendNode next,
         final UnaryMessageNode current, final SClass rcvrClass) {
       super(node.selector, node.universe, node.receiverExpr);
       this.currentNode = adoptChild(current);
       this.nextNode    = adoptChild(next);
-      this.cachedRcvrClass = rcvrClass;
+      this.cachedRcvrClassCheck = adoptChild(new Uninitialized(rcvrClass,
+          receiverExpr instanceof SuperReadNode, universe));
     }
 
     @Override
     public Object executeEvaluated(final VirtualFrame frame, final Object receiver) {
-      if (cachedRcvrClass == classOfReceiver(receiver)) {
+      if (cachedRcvrClassCheck.execute(receiver)) {
         return currentNode.executeEvaluated(frame, receiver);
       } else {
         return nextNode.executeEvaluated(frame, receiver);

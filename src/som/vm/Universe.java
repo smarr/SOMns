@@ -556,6 +556,18 @@ public class Universe {
     return blockClass;
   }
 
+  public boolean isBlockClass(final SClass clazz) {
+    if (clazz == blockClass) {
+      return true;
+    }
+    for (SClass c : blockClasses.values()) {
+      if (c == clazz) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   public SClass getBlockClass(final int numberOfArguments) {
     SClass result = blockClasses.get(numberOfArguments);
     if (result != null) {
