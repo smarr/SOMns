@@ -814,7 +814,7 @@ public class Parser {
     }
 
     SSymbol fieldName = universe.symbolFor(variableName);
-    FieldWriteNode fieldWrite = mgenc.getObjectFieldWrite(fieldName, exp);
+    FieldWriteNode fieldWrite = mgenc.getObjectFieldWrite(fieldName, exp, universe);
 
     if (fieldWrite != null) {
       return fieldWrite;

@@ -33,7 +33,10 @@ import som.compiler.Variable.Local;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.FieldNode.FieldReadNode;
 import som.interpreter.nodes.FieldNode.FieldWriteNode;
+import som.interpreter.nodes.FieldNodeFactory.FieldReadNodeFactory;
+import som.interpreter.nodes.FieldNodeFactory.FieldWriteNodeFactory;
 import som.interpreter.nodes.GlobalNode.GlobalReadNode;
+import som.interpreter.nodes.SelfReadNode;
 import som.primitives.Primitives;
 import som.vm.Universe;
 import som.vmobjects.SMethod;
@@ -238,8 +241,8 @@ public class MethodGenerationContext {
       return null;
     }
 
-    return new FieldReadNode(holderGenc.getFieldIndex(fieldName),
-        getSelfContextLevel());
+    return FieldReadNodeFactory.create(holderGenc.getFieldIndex(fieldName),
+        new SelfReadNode(getSelfContextLevel()));
   }
 
   public GlobalReadNode getGlobalRead(final SSymbol varName,
@@ -248,12 +251,13 @@ public class MethodGenerationContext {
   }
 
   public FieldWriteNode getObjectFieldWrite(final SSymbol fieldName,
-      final ExpressionNode exp) {
+      final ExpressionNode exp, final Universe universe) {
     if (!holderGenc.hasField(fieldName)) {
       return null;
     }
-    return new FieldWriteNode(holderGenc.getFieldIndex(fieldName),
-        getSelfContextLevel(), exp);
+
+    return FieldWriteNodeFactory.create(holderGenc.getFieldIndex(fieldName),
+        universe, new SelfReadNode(getSelfContextLevel()), exp);
   }
 
   /**
