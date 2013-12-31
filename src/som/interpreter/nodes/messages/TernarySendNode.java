@@ -237,7 +237,7 @@ public abstract class TernarySendNode extends TernaryMessageNode {
     public Object executeEvaluated(final VirtualFrame frame,
         final Object receiver, final Object argument1, final Object argument2) {
       if (CompilerDirectives.inInterpreter()) {
-        callCount++;
+        callCount =+ 10;
       }
 
       TernaryArguments args = new TernaryArguments(receiver, argument1,

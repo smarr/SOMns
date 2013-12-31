@@ -263,7 +263,7 @@ public abstract class BinarySendNode extends BinaryMessageNode {
     public Object executeEvaluated(final VirtualFrame frame,
         final Object receiver, final Object argument) {
       if (CompilerDirectives.inInterpreter()) {
-        callCount++;
+        callCount =+ 10;
       }
 
       BinaryArguments args = new BinaryArguments(receiver, argument,

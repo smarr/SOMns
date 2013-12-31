@@ -208,7 +208,7 @@ public abstract class UnarySendNode extends UnaryMessageNode {
     @Override
     public Object executeEvaluated(final VirtualFrame frame, final Object receiver) {
       if (CompilerDirectives.inInterpreter()) {
-        callCount++;
+        callCount =+ 10;
       }
       UnaryArguments args = new UnaryArguments(receiver,
           invokable.getNumberOfUpvalues(), universe.nilObject);

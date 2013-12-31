@@ -48,7 +48,7 @@ public abstract class WhileWithValueNode extends AbstractWhileMessageNode {
         bodyValueSend.executeEvaluated(frame, createBlock(loopBody, universe));
 
         if (CompilerDirectives.inInterpreter()) {
-          iterationCount++;
+          iterationCount =+ 10;
         }
       }
     } finally {

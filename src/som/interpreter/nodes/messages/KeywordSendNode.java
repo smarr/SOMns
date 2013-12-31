@@ -220,7 +220,7 @@ public abstract class KeywordSendNode extends KeywordMessageNode {
     public Object executeEvaluated(final VirtualFrame frame,
         final Object receiver, final Object[] arguments) {
       if (CompilerDirectives.inInterpreter()) {
-        callCount++;
+        callCount =+ 10;
       }
 
       KeywordArguments args = new KeywordArguments(receiver,
