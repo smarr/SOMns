@@ -1,6 +1,4 @@
 "
-
-
 Copyright (c) 2001-2013 see AUTHORS file
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -31,7 +29,7 @@ THE SOFTWARE.
 
 Fannkuch = Benchmark (
 
-    | timesRotated perm atEnd benchSize |
+    | timesRotated perm atEnd |
 
     pfannkuchen: anArray = (
         | first complement a b k |
@@ -78,15 +76,10 @@ Fannkuch = Benchmark (
 
 
     maxPfannkuchen = (
-        | max permutation check |
+        | max permutation |
         max := 0.
-        check := 0.
         [self atEnd] whileFalse: [
             permutation := self next.
-            check < 30 ifTrue: [
-                permutation do: [:each | each print].
-                system printNewline.
-                check := check + 1].
             max := max max: (self pfannkuchen: permutation)].
         ^max
     )
@@ -102,20 +95,13 @@ Fannkuch = Benchmark (
         ^result
     )
 
-
-    "Override run method to read arguments from argv"
-    run: params = (
-        benchSize := (params at: 3) intValue.
-        super run: params
-    )
-    
-    benchmark = (
+    innerBenchmarkLoop = (
         | result |
-        self initialize: benchSize.
+        self initialize: innerIterations.
         result := self maxPfannkuchen.
         
         'Pfannkuchen(' print.
-        benchSize print.
+        innerIterations print.
         ') = ' print.
         result println.
     )
