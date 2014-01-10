@@ -43,6 +43,8 @@ import com.oracle.truffle.api.dsl.TypeSystem;
              BigInteger.class,
                  String.class,
                  double.class,
+                 SClass.class,
+                SObject.class,
                SInteger.class,
                 SDouble.class,
             SBigInteger.class,
@@ -50,9 +52,7 @@ import com.oracle.truffle.api.dsl.TypeSystem;
                  SArray.class,
                 SString.class,
                 SSymbol.class,
-                 SClass.class,
                 SMethod.class,
-                SObject.class,
         SAbstractObject.class,
                Object[].class})
 public class Types {
