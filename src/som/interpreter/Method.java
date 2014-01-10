@@ -138,11 +138,11 @@ public class Method extends Invokable {
 
     if (isAlwaysToBeInlined()) {
       switch (numArguments) {
-        case 0:
-          return new UnaryInlinedExpression(selector,   universe, ininedBody, inlinableCallTarget);
         case 1:
-          return new BinaryInlinedExpression(selector,  universe, ininedBody, inlinableCallTarget);
+          return new UnaryInlinedExpression(selector,   universe, ininedBody, inlinableCallTarget);
         case 2:
+          return new BinaryInlinedExpression(selector,  universe, ininedBody, inlinableCallTarget);
+        case 3:
           return new TernaryInlinedExpression(selector, universe, ininedBody, inlinableCallTarget);
         default:
           return new KeywordInlinedExpression(selector, universe, ininedBody, inlinableCallTarget);
@@ -150,18 +150,18 @@ public class Method extends Invokable {
     }
 
     switch (numArguments) {
-      case 0:
-        return new UnaryInlinedMethod(selector, universe, ininedBody,
-            inlinableCallTarget, numUpvalues, inlinedFrameDescriptor);
       case 1:
-        return new BinaryInlinedMethod(selector, universe, ininedBody,
-            inlinableCallTarget, numUpvalues, inlinedFrameDescriptor);
+        return new UnaryInlinedMethod(selector,   universe, ininedBody,
+            inlinableCallTarget, inlinedFrameDescriptor);
       case 2:
+        return new BinaryInlinedMethod(selector,  universe, ininedBody,
+            inlinableCallTarget, inlinedFrameDescriptor);
+      case 3:
         return new TernaryInlinedMethod(selector, universe, ininedBody,
-            inlinableCallTarget, numUpvalues, inlinedFrameDescriptor);
+            inlinableCallTarget, inlinedFrameDescriptor);
       default:
         return new KeywordInlinedMethod(selector, universe, ininedBody,
-            inlinableCallTarget, numUpvalues, inlinedFrameDescriptor);
+            inlinableCallTarget, inlinedFrameDescriptor);
     }
   }
 
@@ -193,21 +193,18 @@ public class Method extends Invokable {
 
   private static final class UnaryInlinedMethod extends UnaryInlinedExpression implements InlinedCallSite {
     private final FrameDescriptor frameDescriptor;
-    private final int             numUpvalues;
 
     UnaryInlinedMethod(final SSymbol selector, final Universe universe,
         final ExpressionNode msgBody,
         final CallTarget callTarget,
-        final int numUpvalues,
         final FrameDescriptor frameDescriptor) {
       super(selector, universe, msgBody, callTarget);
-      this.frameDescriptor      = frameDescriptor;
-      this.numUpvalues          = numUpvalues;
+      this.frameDescriptor = frameDescriptor;
     }
 
     @Override
     public Object executeEvaluated(final VirtualFrame frame, final Object receiver) {
-      UnaryArguments args = new UnaryArguments(receiver, numUpvalues, universe.nilObject);
+      UnaryArguments args = new UnaryArguments(receiver);
       VirtualFrame childFrame = Truffle.getRuntime().createVirtualFrame(frame.pack(), args, frameDescriptor);
       return expression.executeGeneric(childFrame);
     }
@@ -242,20 +239,17 @@ public class Method extends Invokable {
 
   private static final class BinaryInlinedMethod extends BinaryInlinedExpression implements InlinedCallSite {
     private final FrameDescriptor frameDescriptor;
-    private final int             numUpvalues;
 
     BinaryInlinedMethod(final SSymbol selector, final Universe universe,
         final ExpressionNode msgBody, final CallTarget callTarget,
-        final int numUpvalues,
         final FrameDescriptor frameDescriptor) {
       super(selector, universe, msgBody, callTarget);
-      this.frameDescriptor      = frameDescriptor;
-      this.numUpvalues          = numUpvalues;
+      this.frameDescriptor = frameDescriptor;
     }
 
     @Override
     public Object executeEvaluated(final VirtualFrame frame, final Object receiver, final Object argument) {
-      BinaryArguments args = new BinaryArguments(receiver, argument, numUpvalues, universe.nilObject);
+      BinaryArguments args = new BinaryArguments(receiver, argument);
       VirtualFrame childFrame = Truffle.getRuntime().createVirtualFrame(frame.pack(), args, frameDescriptor);
       return expression.executeGeneric(childFrame);
     }
@@ -290,21 +284,18 @@ public class Method extends Invokable {
 
   private static final class TernaryInlinedMethod extends TernaryInlinedExpression implements InlinedCallSite {
     private final FrameDescriptor frameDescriptor;
-    private final int             numUpvalues;
 
     TernaryInlinedMethod(final SSymbol selector, final Universe universe,
         final ExpressionNode msgBody,
-        final CallTarget callTarget, final int numUpvalues,
+        final CallTarget callTarget,
         final FrameDescriptor frameDescriptor) {
       super(selector, universe, msgBody, callTarget);
-      this.frameDescriptor      = frameDescriptor;
-      this.numUpvalues          = numUpvalues;
+      this.frameDescriptor = frameDescriptor;
     }
 
     @Override
     public Object executeEvaluated(final VirtualFrame frame, final Object receiver, final Object arg1, final Object arg2) {
-      TernaryArguments args = new TernaryArguments(receiver, arg1, arg2,
-          numUpvalues, universe.nilObject);
+      TernaryArguments args = new TernaryArguments(receiver, arg1, arg2);
       VirtualFrame childFrame = Truffle.getRuntime().createVirtualFrame(frame.pack(),
           args, frameDescriptor);
       return expression.executeGeneric(childFrame);
@@ -339,23 +330,19 @@ public class Method extends Invokable {
 
   private static final class KeywordInlinedMethod extends KeywordInlinedExpression implements InlinedCallSite {
     private final FrameDescriptor frameDescriptor;
-    private final int             numUpvalues;
 
     KeywordInlinedMethod(final SSymbol selector, final Universe universe,
         final ExpressionNode msgBody,
         final CallTarget callTarget,
-        final int numUpvalues,
         final FrameDescriptor frameDescriptor) {
       super(selector, universe, msgBody, callTarget);
-      this.frameDescriptor      = frameDescriptor;
-      this.numUpvalues          = numUpvalues;
+      this.frameDescriptor = frameDescriptor;
     }
 
     @Override
     public Object executeEvaluated(final VirtualFrame frame,
         final Object receiver, final Object[] arguments) {
-      KeywordArguments args = new KeywordArguments(receiver, arguments,
-          numUpvalues, universe.nilObject);
+      KeywordArguments args = new KeywordArguments(receiver, arguments);
       VirtualFrame childFrame = Truffle.getRuntime().createVirtualFrame(frame.pack(),
           args, frameDescriptor);
       return expression.executeGeneric(childFrame);

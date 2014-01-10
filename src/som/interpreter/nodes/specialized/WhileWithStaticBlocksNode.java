@@ -1,6 +1,5 @@
 package som.interpreter.nodes.specialized;
 
-import static som.interpreter.BlockHelper.createBlock;
 import static som.interpreter.BlockHelper.createInlineableNode;
 import som.interpreter.nodes.BinaryMessageNode;
 import som.interpreter.nodes.ExpressionNode;
@@ -44,13 +43,13 @@ public abstract class WhileWithStaticBlocksNode extends AbstractWhileMessageNode
   protected final SObject doWhileConditionally(final VirtualFrame frame,
       final SBlock loopCondition, final SBlock loopBody) {
     int iterationCount = 0;
-    Object loopConditionResult = conditionValueSend.executeEvaluated(frame, createBlock(loopCondition, universe));
+    Object loopConditionResult = conditionValueSend.executeEvaluated(frame, universe.newBlock(loopCondition));
 
     try {
       // TODO: this is a simplification, we don't cover the case receiver isn't a boolean
       while (loopConditionResult == predicateBool) {
-        bodyValueSend.executeEvaluated(frame, createBlock(loopBody, universe));
-        loopConditionResult = conditionValueSend.executeEvaluated(frame, createBlock(loopCondition, universe));
+        bodyValueSend.executeEvaluated(frame, universe.newBlock(loopBody));
+        loopConditionResult = conditionValueSend.executeEvaluated(frame, universe.newBlock(loopCondition));
 
         if (CompilerDirectives.inInterpreter()) {
           iterationCount++;

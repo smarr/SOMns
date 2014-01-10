@@ -24,8 +24,6 @@
 
 package som.vmobjects;
 
-import som.interpreter.Arguments;
-import som.interpreter.FrameOnStackMarker;
 import som.primitives.BlockPrimsFactory.ValueMorePrimFactory;
 import som.primitives.BlockPrimsFactory.ValueNonePrimFactory;
 import som.primitives.BlockPrimsFactory.ValueOnePrimFactory;
@@ -33,11 +31,23 @@ import som.primitives.BlockPrimsFactory.ValueTwoPrimFactory;
 import som.primitives.Primitives;
 import som.vm.Universe;
 
+import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.frame.FrameSlot;
+import com.oracle.truffle.api.frame.MaterializedFrame;
+
 public class SBlock extends SAbstractObject {
 
-  public SBlock(final SMethod blockMethod, final Arguments outerArguments) {
-    method = blockMethod;
-    this.context = outerArguments;
+  public SBlock(final SMethod blockMethod, final MaterializedFrame context,
+      final FrameSlot outerSelfSlot) {
+    this.method   = blockMethod;
+    this.context  = context;
+    this.outerSelfSlot = outerSelfSlot;
+  }
+
+  public SBlock(final SBlock block) {
+    this.method  = block.getMethod();
+    this.context = block.getContext();
+    this.outerSelfSlot = block.outerSelfSlot;
   }
 
   public SMethod getMethod() {
@@ -45,20 +55,12 @@ public class SBlock extends SAbstractObject {
     return method;
   }
 
-  public Arguments getContext() {
-    return context;
+  public MaterializedFrame getContext() {
+    return CompilerDirectives.unsafeFrameCast(context);
   }
 
   public Object getOuterSelf() {
-    return context.getSelf();
-  }
-
-  public Object[] getUpvalues() {
-    return context.getUpvalues();
-  }
-
-  public FrameOnStackMarker getContextMarker() {
-    return context.getFrameOnStackMarker();
+    return getContext().getValue(outerSelfSlot);
   }
 
   public static SMethod getEvaluationPrimitive(final int numberOfArguments,
@@ -89,8 +91,6 @@ public class SBlock extends SAbstractObject {
     for (int i = 2; i < numberOfArguments; i++) {
       signatureString += "with:";
     }
-
-    // Return the signature string
     return signatureString;
   }
 
@@ -99,6 +99,7 @@ public class SBlock extends SAbstractObject {
     return universe.getBlockClass(method.getNumberOfArguments());
   }
 
-  private final SMethod  method;
-  private final Arguments context;
+  private final SMethod           method;
+  private final MaterializedFrame context;
+  private final FrameSlot         outerSelfSlot;
 }

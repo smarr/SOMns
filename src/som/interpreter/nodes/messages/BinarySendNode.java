@@ -7,7 +7,7 @@ import som.interpreter.nodes.BinaryMessageNode;
 import som.interpreter.nodes.ClassCheckNode;
 import som.interpreter.nodes.ClassCheckNode.Uninitialized;
 import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.SelfReadNode.SuperReadNode;
+import som.interpreter.nodes.ISuperReadNode;
 import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.specialized.IfFalseMessageNodeFactory;
 import som.interpreter.nodes.specialized.IfTrueMessageNodeFactory;
@@ -84,7 +84,7 @@ public abstract class BinarySendNode extends BinaryMessageNode {
       this.nextNode        = adoptChild(next);
       this.currentNode     = adoptChild(current);
       this.cachedRcvrClassCheck = adoptChild(new Uninitialized(rcvrClass,
-          receiverExpr instanceof SuperReadNode, universe));
+          receiverExpr instanceof ISuperReadNode, universe));
     }
 
     @Override
@@ -266,8 +266,7 @@ public abstract class BinarySendNode extends BinaryMessageNode {
         callCount =+ 10;
       }
 
-      BinaryArguments args = new BinaryArguments(receiver, argument,
-          invokable.getNumberOfUpvalues(), universe.nilObject);
+      BinaryArguments args = new BinaryArguments(receiver, argument);
       return inlinableCallTarget.call(frame.pack(), args);
     }
   }

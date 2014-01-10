@@ -6,7 +6,7 @@ import som.interpreter.Invokable;
 import som.interpreter.nodes.ClassCheckNode;
 import som.interpreter.nodes.ClassCheckNode.Uninitialized;
 import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.SelfReadNode.SuperReadNode;
+import som.interpreter.nodes.ISuperReadNode;
 import som.interpreter.nodes.UnaryMessageNode;
 import som.vm.Universe;
 import som.vmobjects.SClass;
@@ -68,7 +68,7 @@ public abstract class UnarySendNode extends UnaryMessageNode {
       this.currentNode = adoptChild(current);
       this.nextNode    = adoptChild(next);
       this.cachedRcvrClassCheck = adoptChild(new Uninitialized(rcvrClass,
-          receiverExpr instanceof SuperReadNode, universe));
+          receiverExpr instanceof ISuperReadNode, universe));
     }
 
     @Override
@@ -210,8 +210,7 @@ public abstract class UnarySendNode extends UnaryMessageNode {
       if (CompilerDirectives.inInterpreter()) {
         callCount =+ 10;
       }
-      UnaryArguments args = new UnaryArguments(receiver,
-          invokable.getNumberOfUpvalues(), universe.nilObject);
+      UnaryArguments args = new UnaryArguments(receiver);
       return inlinableCallTarget.call(frame.pack(), args);
     }
   }

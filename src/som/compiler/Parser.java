@@ -73,12 +73,11 @@ import som.interpreter.nodes.GlobalNode.GlobalReadNode;
 import som.interpreter.nodes.NodeFactory;
 import som.interpreter.nodes.ReturnNonLocalNode;
 import som.interpreter.nodes.ReturnNonLocalNode.CatchNonLocalReturnNode;
-import som.interpreter.nodes.SelfReadNode;
-import som.interpreter.nodes.SelfReadNode.UninitializedSuperReadNode;
 import som.interpreter.nodes.SequenceNode;
 import som.interpreter.nodes.UnaryMessageNode;
 import som.interpreter.nodes.literals.BigIntegerLiteralNode;
 import som.interpreter.nodes.literals.BlockNode;
+import som.interpreter.nodes.literals.BlockNode.BlockNodeWithContext;
 import som.interpreter.nodes.literals.IntegerLiteralNode;
 import som.interpreter.nodes.literals.LiteralNode;
 import som.interpreter.nodes.literals.StringLiteralNode;
@@ -294,6 +293,7 @@ public class Parser {
   }
 
   private void pattern(final MethodGenerationContext mgenc) {
+    mgenc.addArgumentIfAbsent("self"); // TODO: can we do that optionally?
     switch (sym) {
       case Identifier:
         unaryPattern(mgenc);
@@ -332,9 +332,10 @@ public class Parser {
     ExpressionNode methodBody = blockContents(mgenc);
     expect(EndTerm);
 
-    if (mgenc.hasNonLocalReturn()) {
+    if (mgenc.needsToCatchNonLocalReturn()) {
       SourceSection sourceSection = methodBody.getSourceSection();
-      methodBody = new CatchNonLocalReturnNode(methodBody);
+      methodBody = new CatchNonLocalReturnNode(methodBody,
+          mgenc.getFrameOnStackMarkerSlot());
       methodBody.assignSourceSection(sourceSection);
     }
 
@@ -408,7 +409,7 @@ public class Parser {
       } else if (sym == EndTerm) {
         // the end of the method has been found (EndTerm) - make it implicitly
         // return "self"
-        SelfReadNode self = new SelfReadNode(mgenc.getSelfContextLevel());
+        ExpressionNode self = variableRead(mgenc, "self");
         SourceCoordinate selfCoord = getCoordinate();
         assignSource(self, selfCoord);
         expressions.add(self);
@@ -439,9 +440,13 @@ public class Parser {
 
     if (mgenc.isBlockMethod()) {
       ExpressionNode result = new ReturnNonLocalNode(exp,
-          mgenc.getSelfContextLevel(), universe);
+          mgenc.getFrameOnStackMarkerSlot(),
+          mgenc.getOuterSelfSlot(),
+          mgenc.getOuterSelfContextLevel(),
+          universe,
+          mgenc.getLocalSelfSlot());
       assignSource(result, coord);
-      mgenc.requiresNonLocalReturn();
+      mgenc.makeCatchNonLocalReturn();
       return result;
     } else {
       return exp;
@@ -523,7 +528,13 @@ public class Parser {
         ExpressionNode blockBody = nestedBlock(bgenc);
 
         SMethod blockMethod = bgenc.assemble(universe, blockBody);
-        ExpressionNode result = new BlockNode(blockMethod, universe);
+        ExpressionNode result;
+        if (bgenc.requiresContext()) {
+          result = new BlockNodeWithContext(blockMethod, universe,
+              mgenc.getOuterSelfSlot());
+        } else {
+          result = new BlockNode(blockMethod, universe);
+        }
         assignSource(result, coord);
         return result;
       }
@@ -731,12 +742,17 @@ public class Parser {
 
   private ExpressionNode nestedBlock(final MethodGenerationContext mgenc) {
     expect(NewBlock);
-    if (sym == Colon) { blockPattern(mgenc); }
+
+    mgenc.addArgumentIfAbsent("$blockSelf");
+
+    if (sym == Colon) {
+      blockPattern(mgenc);
+    }
 
     // generate Block signature
     String blockSig = "$block method";
     int argSize = mgenc.getNumberOfArguments();
-    for (int i = 0; i < argSize; i++) {
+    for (int i = 1; i < argSize; i++) {
       blockSig += ":";
     }
 
@@ -764,27 +780,19 @@ public class Parser {
 
   private ExpressionNode variableRead(final MethodGenerationContext mgenc,
                                       final String variableName) {
-    // first handle the keywords/reserved names
-    if ("self".equals(variableName)) {
-      return new SelfReadNode(mgenc.getSelfContextLevel());
-    }
-
+    // we need to handle super special here
     if ("super".equals(variableName)) {
-      return new UninitializedSuperReadNode(mgenc.getSelfContextLevel(),
-          mgenc.getHolder().getName(), mgenc.getHolder().isClassSide());
+      Variable variable = mgenc.getVariable("self");
+      return variable.getSuperReadNode(mgenc.getOuterSelfContextLevel(),
+          mgenc.getHolder().getName(), mgenc.getHolder().isClassSide(),
+          mgenc.getLocalSelfSlot());
     }
 
     // now look up first local variables, or method arguments
     Variable variable = mgenc.getVariable(variableName);
     if (variable != null) {
-      variable.setIsRead();
-
-      int ctxLevel = mgenc.getContextLevel(variableName);
-      if (ctxLevel > 0) {
-        variable.setIsReadOutOfContext();
-      }
-
-      return variable.getReadNode(ctxLevel);
+      return variable.getReadNode(mgenc.getContextLevel(variableName),
+          mgenc.getLocalSelfSlot());
     }
 
     // then object fields
@@ -804,13 +812,8 @@ public class Parser {
       final String variableName, final ExpressionNode exp) {
     Local variable = mgenc.getLocal(variableName);
     if (variable != null) {
-      int ctxLevel = mgenc.getContextLevel(variableName);
-      variable.setIsWritten();
-
-      if (ctxLevel > 0) {
-        variable.setIsWrittenOutOfContext();
-      }
-      return variable.getWriteNode(ctxLevel, exp);
+      return variable.getWriteNode(mgenc.getContextLevel(variableName),
+          mgenc.getLocalSelfSlot(), exp);
     }
 
     SSymbol fieldName = universe.symbolFor(variableName);

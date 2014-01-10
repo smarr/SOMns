@@ -1,46 +1,158 @@
 package som.interpreter.nodes;
 
+import static som.interpreter.TruffleCompiler.transferToInterpreter;
+import som.vm.Universe;
+import som.vmobjects.SClass;
+import som.vmobjects.SObject;
+
+import com.oracle.truffle.api.dsl.Generic;
+import com.oracle.truffle.api.dsl.NodeChild;
+import com.oracle.truffle.api.dsl.PolymorphicLimit;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.FrameSlot;
+import com.oracle.truffle.api.frame.FrameSlotKind;
+import com.oracle.truffle.api.frame.FrameSlotTypeException;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 
 public abstract class NonLocalVariableNode extends ContextualNode {
 
-  protected final int upvalueIndex;
+  protected final FrameSlot slot;
 
-  private NonLocalVariableNode(final int contextLevel, final int upvalueIndex) {
-    super(contextLevel);
-    this.upvalueIndex = upvalueIndex;
+  private NonLocalVariableNode(final int contextLevel, final FrameSlot slot,
+      final FrameSlot localSelf) {
+    super(contextLevel, localSelf);
+    this.slot = slot;
   }
 
-  public static class NonLocalVariableReadNode extends NonLocalVariableNode {
+  @PolymorphicLimit(1)
+  public abstract static class NonLocalVariableReadNode extends NonLocalVariableNode {
     public NonLocalVariableReadNode(final int contextLevel,
-        final int upvalueIndex) {
-      super(contextLevel, upvalueIndex);
+        final FrameSlot slot, final FrameSlot localSelf) {
+      super(contextLevel, slot, localSelf);
+    }
+
+    public NonLocalVariableReadNode(final NonLocalVariableReadNode node) {
+      this(node.contextLevel, node.slot, node.localSelf);
+    }
+
+    @Specialization(guards = "isUninitialized")
+    public SObject doNil() {
+      return Universe.current().nilObject;
+    }
+
+    @Specialization(guards = "isInitialized", rewriteOn = {FrameSlotTypeException.class})
+    public int doInteger(final VirtualFrame frame) throws FrameSlotTypeException {
+      return determineContext(frame).getInt(slot);
+    }
+
+    @Specialization(guards = "isInitialized", rewriteOn = {FrameSlotTypeException.class})
+    public double doDouble(final VirtualFrame frame) throws FrameSlotTypeException {
+      return determineContext(frame).getDouble(slot);
+    }
+
+    @Specialization(guards = "isInitialized", rewriteOn = {FrameSlotTypeException.class})
+    public Object doObject(final VirtualFrame frame) throws FrameSlotTypeException {
+      return determineContext(frame).getObject(slot);
+    }
+
+    @Generic
+    public Object doGeneric(final VirtualFrame frame) {
+      assert isInitialized();
+      return determineContext(frame).getValue(slot);
+    }
+
+    protected final boolean isInitialized() {
+      return slot.getKind() != FrameSlotKind.Illegal;
+    }
+
+    protected final boolean isUninitialized() {
+      return slot.getKind() == FrameSlotKind.Illegal;
+    }
+  }
+
+  @PolymorphicLimit(1)
+  public abstract static class NonLocalSuperReadNode
+                       extends NonLocalVariableReadNode implements ISuperReadNode {
+    private final SClass superClass;
+
+    public NonLocalSuperReadNode(final int contextLevel, final FrameSlot slot,
+        final FrameSlot localSelf, final SClass superClass) {
+      super(contextLevel, slot, localSelf);
+      this.superClass = superClass;
+    }
+
+    public NonLocalSuperReadNode(final NonLocalSuperReadNode node) {
+      this(node.contextLevel, node.slot, node.localSelf, node.superClass);
     }
 
     @Override
-    public Object executeGeneric(final VirtualFrame frame) {
-      Object[] upvalues = determineOuterArguments(frame).getUpvalues();
-      return upvalues[upvalueIndex];
+    public final SClass getSuperClass() {
+      return superClass;
     }
   }
 
-  public static class NonLocalVariableWriteNode extends NonLocalVariableNode {
-    @Child protected ExpressionNode exp;
+  @PolymorphicLimit(1)
+  @NodeChild(value = "exp", type = ExpressionNode.class)
+  public abstract static class NonLocalVariableWriteNode extends NonLocalVariableNode {
 
     public NonLocalVariableWriteNode(final int contextLevel,
-        final int upvalueIndex, final ExpressionNode exp) {
-      super(contextLevel, upvalueIndex);
-      this.exp = adoptChild(exp);
+        final FrameSlot slot, final FrameSlot localSelf) {
+      super(contextLevel, slot, localSelf);
     }
 
-    @Override
-    public Object executeGeneric(final VirtualFrame frame) {
-      Object value = exp.executeGeneric(frame);
+    public NonLocalVariableWriteNode(final NonLocalVariableWriteNode node) {
+      this(node.contextLevel, node.slot, node.localSelf);
+    }
 
-      Object[] upvalues = determineOuterArguments(frame).getUpvalues();
-      upvalues[upvalueIndex] = value;
-      return value;
+    @Specialization(guards = "isIntKind", rewriteOn = FrameSlotTypeException.class)
+    public int write(final VirtualFrame frame, final int expValue) throws FrameSlotTypeException {
+      determineContext(frame).setInt(slot, expValue);
+      return expValue;
+    }
+
+    @Specialization(guards = "isDoubleKind", rewriteOn = FrameSlotTypeException.class)
+    public double write(final VirtualFrame frame, final double expValue) throws FrameSlotTypeException {
+      determineContext(frame).setDouble(slot, expValue);
+      return expValue;
+    }
+
+    @Generic
+    public Object writeGeneric(final VirtualFrame frame, final Object expValue) {
+      ensureObjectKind();
+      determineContext(frame).setObject(slot, expValue);
+      return expValue;
+    }
+
+    protected final boolean isIntKind() {
+      if (slot.getKind() == FrameSlotKind.Int) {
+        return true;
+      }
+      if (slot.getKind() == FrameSlotKind.Illegal) {
+        transferToInterpreter("LocalVar.writeIntToUninit");
+        slot.setKind(FrameSlotKind.Int);
+        return true;
+      }
+      return false;
+    }
+
+    protected final boolean isDoubleKind() {
+      if (slot.getKind() == FrameSlotKind.Double) {
+        return true;
+      }
+      if (slot.getKind() == FrameSlotKind.Illegal) {
+        transferToInterpreter("LocalVar.writeDoubleToUninit");
+        slot.setKind(FrameSlotKind.Double);
+        return true;
+      }
+      return false;
+    }
+
+    protected final void ensureObjectKind() {
+      if (slot.getKind() != FrameSlotKind.Object) {
+        transferToInterpreter("LocalVar.writeObjectToUninit");
+        slot.setKind(FrameSlotKind.Object);
+      }
     }
   }
 }

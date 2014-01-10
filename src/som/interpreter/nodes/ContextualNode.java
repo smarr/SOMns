@@ -21,35 +21,51 @@
  */
 package som.interpreter.nodes;
 
-import som.interpreter.Arguments;
 import som.vmobjects.SBlock;
 
+import com.oracle.truffle.api.frame.FrameSlot;
+import com.oracle.truffle.api.frame.FrameSlotTypeException;
+import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 
 public abstract class ContextualNode extends ExpressionNode {
 
   protected final int contextLevel;
+  protected final FrameSlot localSelf;
 
-  public ContextualNode(final int contextLevel) {
+  public ContextualNode(final int contextLevel, final FrameSlot localSelf) {
+    // TODO: change to use local and outer nodes to avoid this complex code
+    // TODO reenable: assert contextLevel > 0;
     this.contextLevel = contextLevel;
+    this.localSelf    = localSelf;
   }
 
   @ExplodeLoop
-  protected Arguments determineOuterArguments(final VirtualFrame frame) {
-    Arguments args = Arguments.get(frame);
+  protected MaterializedFrame determineContext(final VirtualFrame frame) {
+    // TODO: this doesn't look optimal, can we get rid of last assignment to self in the loop?
+    Object self = getLocalSelf(frame);
     int i = contextLevel;
+    MaterializedFrame ctx = frame.materialize();
     while (i > 0) {
-      SBlock block = (SBlock) args.getSelf();
-      args = block.getContext();
+      ctx  = ((SBlock) self).getContext();
+      self = ((SBlock) self).getOuterSelf();
       i--;
     }
-    return args;
+    return ctx;
+  }
+
+  private SBlock getLocalSelf(final VirtualFrame frame) {
+    try {
+      return (SBlock) frame.getObject(localSelf);
+    } catch (FrameSlotTypeException e) {
+      throw new RuntimeException("This should never happen.");
+    }
   }
 
   @ExplodeLoop
   protected Object determineOuterSelf(final VirtualFrame frame) {
-    Object self = Arguments.get(frame).getSelf();
+    Object self = getLocalSelf(frame);
     int i = contextLevel;
     while (i > 0) {
       SBlock block = (SBlock) self;

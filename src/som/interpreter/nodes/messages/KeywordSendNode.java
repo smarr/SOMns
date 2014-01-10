@@ -7,8 +7,8 @@ import som.interpreter.nodes.ArgumentEvaluationNode;
 import som.interpreter.nodes.ClassCheckNode;
 import som.interpreter.nodes.ClassCheckNode.Uninitialized;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.ISuperReadNode;
 import som.interpreter.nodes.KeywordMessageNode;
-import som.interpreter.nodes.SelfReadNode.SuperReadNode;
 import som.vm.Universe;
 import som.vmobjects.SClass;
 import som.vmobjects.SMethod;
@@ -78,7 +78,7 @@ public abstract class KeywordSendNode extends KeywordMessageNode {
       this.nextNode        = adoptChild(next);
       this.currentNode     = adoptChild(current);
       this.cachedRcvrClassCheck = adoptChild(new Uninitialized(rcvrClass,
-          receiverExpr instanceof SuperReadNode, universe));
+          receiverExpr instanceof ISuperReadNode, universe));
     }
 
     @Override
@@ -223,9 +223,7 @@ public abstract class KeywordSendNode extends KeywordMessageNode {
         callCount =+ 10;
       }
 
-      KeywordArguments args = new KeywordArguments(receiver,
-          arguments, invokable.getNumberOfUpvalues(),
-          universe.nilObject);
+      KeywordArguments args = new KeywordArguments(receiver, arguments);
       return inlinableCallTarget.call(frame.pack(), args);
     }
   }

@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.StringTokenizer;
 
 import som.compiler.Disassembler;
-import som.interpreter.Arguments;
 import som.interpreter.Invokable;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray;
@@ -52,6 +51,8 @@ import com.oracle.truffle.api.CompilerDirectives.SlowPath;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.TruffleRuntime;
 import com.oracle.truffle.api.frame.FrameDescriptor;
+import com.oracle.truffle.api.frame.FrameSlot;
+import com.oracle.truffle.api.frame.MaterializedFrame;
 
 public class Universe {
 
@@ -408,8 +409,13 @@ public class Universe {
     return result;
   }
 
-  public SBlock newBlock(final SMethod method, final Arguments outerArguments) {
-    return new SBlock(method, outerArguments);
+  public SBlock newBlock(final SMethod method, final MaterializedFrame context,
+      final FrameSlot outerSelfSlot) {
+    return new SBlock(method, context, outerSelfSlot);
+  }
+
+  public SBlock newBlock(final SBlock block) {
+    return new SBlock(block);
   }
 
   @SlowPath

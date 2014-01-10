@@ -87,33 +87,28 @@ public class SMethod extends SAbstractObject {
 
   public SAbstractObject invokeRoot(final SAbstractObject self,
       final SAbstractObject[] args, final Universe universe) {
-    SAbstractObject result = Types.asAbstractObject(callTarget.call(new KeywordArguments(self,
-        args, truffleInvokable.getNumberOfUpvalues(), universe.nilObject)), universe);
+    SAbstractObject result = Types.asAbstractObject(callTarget.call(new KeywordArguments(self, args)), universe);
     return result;
   }
 
   public Object invoke(final PackedFrame caller, final Object self,
       final Universe universe) {
-    return callTarget.call(caller, new UnaryArguments(self,
-        truffleInvokable.getNumberOfUpvalues(), universe.nilObject));
+    return callTarget.call(caller, new UnaryArguments(self));
   }
 
   public Object invoke(final PackedFrame caller, final Object self,
       final Object arg, final Universe universe) {
-    return callTarget.call(caller, new BinaryArguments(self,
-        arg, truffleInvokable.getNumberOfUpvalues(), universe.nilObject));
+    return callTarget.call(caller, new BinaryArguments(self, arg));
   }
 
   public Object invoke(final PackedFrame caller, final Object self,
       final Object arg1, final Object arg2, final Universe universe) {
-    return callTarget.call(caller, new TernaryArguments(self,
-        arg1, arg2, truffleInvokable.getNumberOfUpvalues(), universe.nilObject));
+    return callTarget.call(caller, new TernaryArguments(self, arg1, arg2));
   }
 
   public Object invoke(final PackedFrame caller, final Object self,
       final Object[] args, final Universe universe) {
-    Object result = callTarget.call(caller, new KeywordArguments(self, args,
-        truffleInvokable.getNumberOfUpvalues(), universe.nilObject));
+    Object result = callTarget.call(caller, new KeywordArguments(self, args));
     return result;
   }
 

@@ -21,49 +21,21 @@
  */
 package som.interpreter;
 
-import som.vmobjects.SObject;
-
 import com.oracle.truffle.api.frame.Frame;
-import com.oracle.truffle.api.nodes.ExplodeLoop;
 
 public abstract class Arguments extends com.oracle.truffle.api.Arguments {
 
-  private final Object self;
-  private final FrameOnStackMarker onStackMarker;
-  private final Object[] upvalues;
+  protected final Object self;
 
-  private Arguments(final Object self, final int numUpvalues, final SObject nilObject) {
+  private Arguments(final Object self) {
     this.self = self;
-    this.onStackMarker = new FrameOnStackMarker();
-
-    if (numUpvalues > 0) {
-      upvalues = new Object[numUpvalues];
-
-    } else {
-      upvalues = null;
-    }
   }
 
-  @ExplodeLoop
-  private void initializeUpvalues(final SObject nilObject) {
-    for (int i = 0; i < upvalues.length; i++) {
-      upvalues[i] = nilObject;
-    }
-  }
-
-  public Object getSelf() {
+  public final Object getSelf() {
     return self;
   }
 
   public abstract Object getArgument(final int i);
-
-  public FrameOnStackMarker getFrameOnStackMarker() {
-    return onStackMarker;
-  }
-
-  public Object[] getUpvalues() {
-    return upvalues;
-  }
 
   public static Arguments get(final Frame frame) {
     return frame.getArguments(Arguments.class);
@@ -86,28 +58,32 @@ public abstract class Arguments extends com.oracle.truffle.api.Arguments {
 //  }
 
   public static final class UnaryArguments extends Arguments {
-    public UnaryArguments(final Object self, final int numUpvalues, final SObject nilObject) {
-      super(self, numUpvalues, nilObject);
-    }
-
-    @Override
-    public Object getArgument(final int i) {
-      return null;
-    }
-  }
-
-  public static final class BinaryArguments extends Arguments {
-    private final Object arg;
-    public BinaryArguments(final Object self, final Object arg,
-        final int numUpvalues, final SObject nilObject) {
-      super(self, numUpvalues, nilObject);
-      this.arg = arg;
+    public UnaryArguments(final Object self) {
+      super(self);
     }
 
     @Override
     public Object getArgument(final int i) {
       assert i == 0;
-      return arg;
+      return self;
+    }
+  }
+
+  public static final class BinaryArguments extends Arguments {
+    private final Object arg;
+    public BinaryArguments(final Object self, final Object arg) {
+      super(self);
+      this.arg = arg;
+    }
+
+    @Override
+    public Object getArgument(final int i) {
+      if (i == 0) {
+        return self;
+      } else {
+        assert i == 1;
+        return arg;
+      }
     }
   }
 
@@ -115,9 +91,8 @@ public abstract class Arguments extends com.oracle.truffle.api.Arguments {
     private final Object arg1;
     private final Object arg2;
 
-    public TernaryArguments(final Object self, final Object arg1,
-        final Object arg2, final int numUpvalues, final SObject nilObject) {
-      super(self, numUpvalues, nilObject);
+    public TernaryArguments(final Object self, final Object arg1, final Object arg2) {
+      super(self);
       this.arg1 = arg1;
       this.arg2 = arg2;
     }
@@ -125,9 +100,11 @@ public abstract class Arguments extends com.oracle.truffle.api.Arguments {
     @Override
     public Object getArgument(final int i) {
       if (i == 0) {
+        return self;
+      } else if (i == 1) {
         return arg1;
       } else {
-        assert i == 1;
+        assert i == 2;
         return arg2;
       }
     }
@@ -136,15 +113,17 @@ public abstract class Arguments extends com.oracle.truffle.api.Arguments {
   public static final class KeywordArguments extends Arguments {
     private final Object[] arguments;
 
-    public KeywordArguments(final Object self, final Object[] arguments,
-        final int numUpvalues, final SObject nilObject) {
-      super(self, numUpvalues, nilObject);
+    public KeywordArguments(final Object self, final Object[] arguments) {
+      super(self);
       this.arguments = arguments;
     }
 
     @Override
     public Object getArgument(final int i) {
-      return arguments[i];
+      if (i == 0) {
+        return self;
+      }
+      return arguments[i - 1];
     }
   }
 }

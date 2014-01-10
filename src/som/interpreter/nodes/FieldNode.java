@@ -32,7 +32,7 @@ import com.oracle.truffle.api.dsl.NodeChildren;
 import com.oracle.truffle.api.dsl.Specialization;
 
 
-@NodeChild(value = "self", type = SelfReadNode.class)
+@NodeChild(value = "self", type = ExpressionNode.class)
 public abstract class FieldNode extends ExpressionNode {
 
   protected final int fieldIndex;
@@ -52,7 +52,7 @@ public abstract class FieldNode extends ExpressionNode {
   }
 
   @NodeChildren({
-    @NodeChild(value = "self",  type = SelfReadNode.class),
+    @NodeChild(value = "self",  type = ExpressionNode.class),
     @NodeChild(value = "value", type = ExpressionNode.class)})
   public abstract static class FieldWriteNode extends FieldNode {
     private final Universe universe;

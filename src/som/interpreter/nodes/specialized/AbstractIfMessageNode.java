@@ -1,6 +1,5 @@
 package som.interpreter.nodes.specialized;
 
-import som.interpreter.BlockHelper;
 import static som.interpreter.BlockHelper.createInlineableNode;
 import som.interpreter.nodes.BinaryMessageNode;
 import som.interpreter.nodes.UnaryMessageNode;
@@ -48,7 +47,7 @@ public abstract class AbstractIfMessageNode extends BinaryMessageNode {
       final SBlock argument, final SObject predicateObject) {
     if (receiver == predicateObject) {
       ifTrueBranch.enter();
-      return branchValueSend.executeEvaluated(frame, BlockHelper.createBlock(argument, universe));
+      return branchValueSend.executeEvaluated(frame, universe.newBlock(argument));
     } else {
       ifFalseBranch.enter();
       return universe.nilObject;
@@ -59,7 +58,7 @@ public abstract class AbstractIfMessageNode extends BinaryMessageNode {
       final SBlock argument, final SObject predicateObject) {
     if (receiver == predicateObject) {
       ifTrueBranch.enter();
-      return argument.getMethod().invoke(frame.pack(), BlockHelper.createBlock(argument, universe), universe);
+      return argument.getMethod().invoke(frame.pack(), universe.newBlock(argument), universe);
     } else {
       ifFalseBranch.enter();
       return universe.nilObject;

@@ -1,8 +1,10 @@
 package som.interpreter.nodes;
 
 import static som.interpreter.TruffleCompiler.transferToInterpreter;
+import som.compiler.Variable;
 import som.compiler.Variable.Local;
 import som.vm.Universe;
+import som.vmobjects.SClass;
 import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.dsl.Generic;
@@ -28,7 +30,7 @@ public abstract class LocalVariableNode extends ExpressionNode {
 
   @PolymorphicLimit(1)
   public abstract static class LocalVariableReadNode extends LocalVariableNode {
-    public LocalVariableReadNode(final Local variable) {
+    public LocalVariableReadNode(final Variable variable) {
       super(variable.slot);
     }
 
@@ -75,6 +77,31 @@ public abstract class LocalVariableNode extends ExpressionNode {
     }
   }
 
+  @PolymorphicLimit(1)
+  public abstract static class LocalSuperReadNode
+                       extends LocalVariableReadNode implements ISuperReadNode {
+    private final SClass superClass;
+
+    public LocalSuperReadNode(final Variable variable, final SClass superClass) {
+      this(variable.slot, superClass);
+    }
+
+    public LocalSuperReadNode(final FrameSlot slot, final SClass superClass) {
+      super(slot);
+      this.superClass = superClass;
+    }
+
+    public LocalSuperReadNode(final LocalSuperReadNode node) {
+      this(node.slot, node.superClass);
+    }
+
+    @Override
+    public final SClass getSuperClass() {
+      return superClass;
+    }
+  }
+
+  @PolymorphicLimit(1)
   @NodeChild(value = "exp", type = ExpressionNode.class)
   public abstract static class LocalVariableWriteNode extends LocalVariableNode {
 

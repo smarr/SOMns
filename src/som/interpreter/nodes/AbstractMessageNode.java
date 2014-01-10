@@ -1,7 +1,6 @@
 package som.interpreter.nodes;
 
 import som.interpreter.Types;
-import som.interpreter.nodes.SelfReadNode.SuperReadNode;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
@@ -33,8 +32,8 @@ public abstract class AbstractMessageNode extends ExpressionNode {
 
   protected final SClass classOfReceiver(final Object rcvr) {
     // first determine whether it is a normal, or super send
-    if (getReceiver() instanceof SuperReadNode) {
-      return ((SuperReadNode) getReceiver()).getSuperClass();
+    if (getReceiver() instanceof ISuperReadNode) {
+      return ((ISuperReadNode) getReceiver()).getSuperClass();
     }
 
     return Types.getClassOf(rcvr, universe);

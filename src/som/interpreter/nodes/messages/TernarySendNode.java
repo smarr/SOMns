@@ -6,7 +6,7 @@ import som.interpreter.Invokable;
 import som.interpreter.nodes.ClassCheckNode;
 import som.interpreter.nodes.ClassCheckNode.Uninitialized;
 import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.SelfReadNode.SuperReadNode;
+import som.interpreter.nodes.ISuperReadNode;
 import som.interpreter.nodes.TernaryMessageNode;
 import som.interpreter.nodes.specialized.IfTrueIfFalseMessageNodeFactory;
 import som.vm.Universe;
@@ -86,7 +86,7 @@ public abstract class TernarySendNode extends TernaryMessageNode {
       this.nextNode        = adoptChild(next);
       this.currentNode     = adoptChild(current);
       this.cachedRcvrClassCheck = adoptChild(new Uninitialized(rcvrClass,
-          receiverExpr instanceof SuperReadNode, universe));
+          receiverExpr instanceof ISuperReadNode, universe));
     }
 
     @Override
@@ -240,8 +240,7 @@ public abstract class TernarySendNode extends TernaryMessageNode {
         callCount =+ 10;
       }
 
-      TernaryArguments args = new TernaryArguments(receiver, argument1,
-          argument2, invokable.getNumberOfUpvalues(), universe.nilObject);
+      TernaryArguments args = new TernaryArguments(receiver, argument1, argument2);
       return inlinableCallTarget.call(frame.pack(), args);
     }
   }

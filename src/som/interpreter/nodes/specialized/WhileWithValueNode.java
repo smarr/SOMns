@@ -1,6 +1,5 @@
 package som.interpreter.nodes.specialized;
 
-import static som.interpreter.BlockHelper.createBlock;
 import som.interpreter.nodes.BinaryMessageNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.literals.BlockNode;
@@ -45,7 +44,7 @@ public abstract class WhileWithValueNode extends AbstractWhileMessageNode {
 
     try {
       while (true) {
-        bodyValueSend.executeEvaluated(frame, createBlock(loopBody, universe));
+        bodyValueSend.executeEvaluated(frame, universe.newBlock(loopBody));
 
         if (CompilerDirectives.inInterpreter()) {
           iterationCount =+ 10;
