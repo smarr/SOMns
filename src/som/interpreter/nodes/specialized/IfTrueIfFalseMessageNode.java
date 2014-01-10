@@ -1,6 +1,7 @@
 package som.interpreter.nodes.specialized;
 
 import som.interpreter.BlockHelper;
+import static som.interpreter.BlockHelper.createInlineableNode;
 import som.interpreter.nodes.TernaryMessageNode;
 import som.interpreter.nodes.UnaryMessageNode;
 import som.vmobjects.SBlock;
@@ -27,7 +28,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryMessageNode {
     if (arg1 instanceof SBlock) {
       SBlock trueBlock = (SBlock) arg1;
       trueMethod = trueBlock.getMethod();
-      trueValueSend = adoptChild(BlockHelper.createInlineableNode(trueMethod, universe));
+      trueValueSend = adoptChild(createInlineableNode(trueMethod, universe));
     } else {
       trueMethod = null;
     }
@@ -35,7 +36,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryMessageNode {
     if (arg2 instanceof SBlock) {
       SBlock falseBlock = (SBlock) arg2;
       falseMethod = falseBlock.getMethod();
-      falseValueSend = adoptChild(BlockHelper.createInlineableNode(falseMethod, universe));
+      falseValueSend = adoptChild(createInlineableNode(falseMethod, universe));
     } else {
       falseMethod = null;
     }
@@ -44,12 +45,12 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryMessageNode {
     super(node);
     trueMethod = node.trueMethod;
     if (node.trueMethod != null) {
-      trueValueSend = adoptChild(BlockHelper.createInlineableNode(trueMethod, universe));
+      trueValueSend = adoptChild(createInlineableNode(trueMethod, universe));
     }
 
     falseMethod = node.falseMethod;
     if (node.falseMethod != null) {
-      falseValueSend = adoptChild(BlockHelper.createInlineableNode(falseMethod, universe));
+      falseValueSend = adoptChild(createInlineableNode(falseMethod, universe));
     }
   }
 

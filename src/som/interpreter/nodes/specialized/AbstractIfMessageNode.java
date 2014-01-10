@@ -1,6 +1,7 @@
 package som.interpreter.nodes.specialized;
 
 import som.interpreter.BlockHelper;
+import static som.interpreter.BlockHelper.createInlineableNode;
 import som.interpreter.nodes.BinaryMessageNode;
 import som.interpreter.nodes.UnaryMessageNode;
 import som.vmobjects.SBlock;
@@ -25,7 +26,7 @@ public abstract class AbstractIfMessageNode extends BinaryMessageNode {
     if (arg instanceof SBlock) {
       SBlock argBlock = (SBlock) arg;
       branchMethod = argBlock.getMethod();
-      branchValueSend = adoptChild(BlockHelper.createInlineableNode(branchMethod, universe));
+      branchValueSend = adoptChild(createInlineableNode(branchMethod, universe));
     } else {
       branchMethod = null;
     }
@@ -35,7 +36,7 @@ public abstract class AbstractIfMessageNode extends BinaryMessageNode {
     super(node);
     branchMethod = node.branchMethod;
     if (node.branchMethod != null) {
-      branchValueSend = adoptChild(BlockHelper.createInlineableNode(branchMethod, universe));
+      branchValueSend = adoptChild(createInlineableNode(branchMethod, universe));
     }
   }
 
