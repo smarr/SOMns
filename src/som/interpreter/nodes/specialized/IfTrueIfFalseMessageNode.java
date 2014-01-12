@@ -40,6 +40,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryMessageNode {
       falseMethod = null;
     }
   }
+
   public IfTrueIfFalseMessageNode(final IfTrueIfFalseMessageNode node) {
     super(node);
     trueMethod = node.trueMethod;
