@@ -165,8 +165,7 @@ public class MethodGenerationContext {
 
     assignSourceSectionToMethod(methodBody, truffleMethod);
 
-    SMethod meth = universe.newMethod(signature, truffleMethod,
-        frameDescriptor, false);
+    SMethod meth = universe.newMethod(signature, truffleMethod, false);
 
     // return the method - the holder field is to be set later on!
     return meth;

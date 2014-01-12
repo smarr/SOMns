@@ -50,7 +50,6 @@ import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.SlowPath;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.TruffleRuntime;
-import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 
@@ -427,13 +426,8 @@ public class Universe {
   @SlowPath
   public SMethod newMethod(final SSymbol signature,
       final Invokable truffleInvokable,
-      final FrameDescriptor frameDescriptor,
       final boolean isPrimitive) {
-    // Allocate a new method and set its class to be the method class
-    SMethod result = new SMethod(signature, truffleInvokable,
-        frameDescriptor, isPrimitive);
-
-    // Return the freshly allocated method
+    SMethod result = new SMethod(signature, truffleInvokable, isPrimitive);
     return result;
   }
 
