@@ -56,11 +56,7 @@ public abstract class ContextualNode extends ExpressionNode {
   }
 
   private SBlock getLocalSelf(final VirtualFrame frame) {
-    try {
-      return (SBlock) frame.getObject(localSelf);
-    } catch (FrameSlotTypeException e) {
-      throw new RuntimeException("This should never happen.");
-    }
+    return (SBlock) FrameUtil.getObjectSafe(frame, localSelf);
   }
 
   @ExplodeLoop
