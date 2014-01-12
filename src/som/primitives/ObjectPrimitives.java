@@ -26,7 +26,6 @@
 package som.primitives;
 
 import som.primitives.ObjectPrimsFactory.ClassPrimFactory;
-import som.primitives.ObjectPrimsFactory.EqualsEqualsPrimFactory;
 import som.primitives.ObjectPrimsFactory.HaltPrimFactory;
 import som.primitives.ObjectPrimsFactory.InstVarAtPrimFactory;
 import som.primitives.ObjectPrimsFactory.InstVarAtPutPrimFactory;

@@ -17,40 +17,6 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 
 
 public class ObjectPrims {
-  public abstract static class EqualsEqualsPrim extends BinaryMessageNode {
-    public EqualsEqualsPrim(final SSymbol selector, final Universe universe) { super(selector, universe); }
-    public EqualsEqualsPrim(final EqualsEqualsPrim prim) { this(prim.selector, prim.universe); }
-
-//    @Specialization(order = 10)
-//    public SAbstractObject doObject(final boolean receiver, final SObject argument) {
-//      if ((receiver == true  && argument == universe.trueObject) ||
-//          (receiver == false && argument == universe.falseObject)) {
-//        return universe.trueObject;
-//      } else {
-//        return universe.falseObject;
-//      }
-//    }
-//
-//    @Specialization(order = 11)
-//    public SAbstractObject doObject(final SObject receiver, final boolean argument) {
-//      if ((argument == true  && receiver == universe.trueObject) ||
-//          (argument == false && receiver == universe.falseObject)) {
-//        return universe.trueObject;
-//      } else {
-//        return universe.falseObject;
-//      }
-//    }
-
-    @Specialization(order = 100)
-    public SAbstractObject doObject(final Object receiver, final Object argument) {
-      if (receiver == argument) {
-        return universe.trueObject;
-      } else {
-        return universe.falseObject;
-      }
-    }
-  }
-
   public abstract static class PerformPrim extends BinaryMessageNode {
     public PerformPrim(final SSymbol selector, final Universe universe) { super(selector, universe); }
     public PerformPrim(final PerformPrim prim) { this(prim.selector, prim.universe); }
