@@ -76,7 +76,7 @@ public abstract class UninitializedVariableNode extends ContextualNode {
     public Object executeGeneric(final VirtualFrame frame) {
       transferToInterpreterAndInvalidate("UninitializedSuperReadNode");
 
-      if (contextLevel > 0) {
+      if (accessesOuterContext()) {
         NonLocalSuperReadNode node = NonLocalSuperReadNodeFactory.create(contextLevel,
             variable.slot, localSelf, getLexicalSuperClass());
         return replace(node).executeGeneric(frame);
@@ -101,7 +101,7 @@ public abstract class UninitializedVariableNode extends ContextualNode {
     public Object executeGeneric(final VirtualFrame frame) {
       transferToInterpreterAndInvalidate("UninitializedVariableWriteNode");
 
-      if (contextLevel > 0) {
+      if (accessesOuterContext()) {
         NonLocalVariableWriteNode node = NonLocalVariableWriteNodeFactory.create(contextLevel, variable.slot, localSelf, exp);
         return replace(node).executeGeneric(frame);
       } else {

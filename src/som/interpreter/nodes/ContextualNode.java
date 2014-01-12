@@ -41,6 +41,10 @@ public abstract class ContextualNode extends ExpressionNode {
     this.localSelf    = localSelf;
   }
 
+  public final boolean accessesOuterContext() {
+    return contextLevel > 0;
+  }
+
   @ExplodeLoop
   protected MaterializedFrame determineContext(final VirtualFrame frame) {
     // TODO: this doesn't look optimal, can we get rid of last assignment to self in the loop?
