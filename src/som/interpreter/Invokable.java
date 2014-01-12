@@ -33,8 +33,6 @@ public abstract class Invokable extends RootNode {
 
   public abstract boolean isAlwaysToBeInlined();
 
-  public abstract int getNumberOfUpvalues();
-
   public FrameDescriptor getFrameDescriptor() {
     return frameDescriptor;
   }

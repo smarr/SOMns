@@ -28,11 +28,6 @@ public class Primitive extends Invokable {
   }
 
   @Override
-  public int getNumberOfUpvalues() {
-    return 0; // primtives do not have a body, and thus, no upvalues
-  }
-
-  @Override
   public ExpressionNode inline(final CallTarget inlinableCallTarget, final SSymbol selector) {
     // for primitives, we assume that they are wrapped in a proper *SendNode
     // And, that inlining is realized so that the monomorphic/PIC check is

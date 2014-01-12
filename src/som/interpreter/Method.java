@@ -57,7 +57,6 @@ import com.oracle.truffle.api.nodes.NodeVisitor;
 
 public class Method extends Invokable {
 
-  private final int      numUpvalues;
   private final Universe universe;
 
   public Method(final ExpressionNode expressions,
@@ -67,17 +66,11 @@ public class Method extends Invokable {
                 final Universe universe) {
     super(expressions, numArguments, frameDescriptor);
     this.universe       = universe;
-    this.numUpvalues    = numUpvalues;
   }
 
   @Override
   public Object execute(final VirtualFrame frame) {
     return expressionOrSequence.executeGeneric(frame);
-  }
-
-  @Override
-  public int getNumberOfUpvalues() {
-    return numUpvalues;
   }
 
   @Override
