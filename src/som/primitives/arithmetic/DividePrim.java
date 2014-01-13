@@ -2,9 +2,9 @@ package som.primitives.arithmetic;
 
 import java.math.BigInteger;
 
+import som.vm.NotYetImplementedException;
 import som.vm.Universe;
 import som.vmobjects.SSymbol;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import com.oracle.truffle.api.dsl.Specialization;
 
@@ -36,6 +36,6 @@ public abstract class DividePrim extends ArithmeticPrim {
 
   @Specialization(order = 13)
   public Object doInteger(final int left, final double right) {
-    throw new NotImplementedException(); // TODO: need to implement the "//" case here directly... : resendAsDouble("//", left, (SDouble) rightObj, frame.pack());
+    throw new NotYetImplementedException(); // TODO: need to implement the "//" case here directly... : resendAsDouble("//", left, (SDouble) rightObj, frame.pack());
   }
 }

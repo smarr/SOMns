@@ -2,10 +2,10 @@ package som.primitives.arithmetic;
 
 import java.math.BigInteger;
 
+import som.vm.NotYetImplementedException;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SSymbol;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import com.oracle.truffle.api.dsl.Specialization;
 
@@ -30,11 +30,11 @@ public abstract class DoubleDivPrim extends ArithmeticPrim {
 
   @Specialization(order = 100)
   public SAbstractObject doInteger(final int left, final BigInteger right) {
-    throw new NotImplementedException(); // TODO: need to implement the "/" case here directly... : return resendAsBigInteger("/", left, (SBigInteger) rightObj, frame.pack());
+    throw new NotYetImplementedException(); // TODO: need to implement the "/" case here directly... : return resendAsBigInteger("/", left, (SBigInteger) rightObj, frame.pack());
   }
 
   @Specialization(order = 101)
   public SAbstractObject doInteger(final int left, final double right) {
-    throw new NotImplementedException(); // TODO: need to implement the "/" case here directly... : return resendAsDouble("/", left, (SDouble) rightObj, frame.pack());
+    throw new NotYetImplementedException(); // TODO: need to implement the "/" case here directly... : return resendAsDouble("/", left, (SDouble) rightObj, frame.pack());
   }
 }
