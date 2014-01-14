@@ -50,7 +50,7 @@ public class Disassembler {
   @SlowPath
   public static void dumpMethod(final SMethod m, final String indent) {
     Universe.errorPrintln("(");
-    Universe.errorPrintln(m.getTruffleInvokable().toString());
+    Universe.errorPrintln(m.getInvokable().toString());
     Universe.errorPrintln(indent + ")");
   }
 

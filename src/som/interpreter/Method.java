@@ -130,7 +130,7 @@ public class Method extends Invokable {
     FrameDescriptor inlinedFrameDescriptor = frameDescriptor.copy();
 
     if (isAlwaysToBeInlined()) {
-      switch (numArguments) {
+      switch (selector.getNumberOfSignatureArguments()) {
         case 1:
           return new UnaryInlinedExpression(selector,   universe, ininedBody, inlinableCallTarget);
         case 2:
@@ -142,7 +142,7 @@ public class Method extends Invokable {
       }
     }
 
-    switch (numArguments) {
+    switch (selector.getNumberOfSignatureArguments()) {
       case 1:
         return new UnaryInlinedMethod(selector,   universe, ininedBody,
             inlinableCallTarget, inlinedFrameDescriptor);

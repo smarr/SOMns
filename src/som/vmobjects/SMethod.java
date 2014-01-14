@@ -36,22 +36,16 @@ import som.vm.Universe;
 
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
-import com.oracle.truffle.api.Truffle;
-import com.oracle.truffle.api.TruffleRuntime;
 import com.oracle.truffle.api.frame.PackedFrame;
 
 public class SMethod extends SAbstractObject {
 
-  public SMethod(final SSymbol signature, final Invokable truffleInvokable,
+  public SMethod(final SSymbol signature, final Invokable invokable,
       final boolean isPrimitive) {
     this.signature = signature;
 
-    this.truffleInvokable = truffleInvokable;
-
-    TruffleRuntime runtime =  Truffle.getRuntime(); // TODO: should be: universe.getTruffleRuntime();
-    CallTarget target = runtime.createCallTarget(truffleInvokable,
-        truffleInvokable.getFrameDescriptor());
-    this.callTarget = target;
+    this.invokable   = invokable;
+    this.callTarget  = invokable.createCallTarget();
     this.isPrimitive = isPrimitive;
   }
 
@@ -59,8 +53,8 @@ public class SMethod extends SAbstractObject {
     return callTarget;
   }
 
-  public Invokable getTruffleInvokable() {
-    return truffleInvokable;
+  public Invokable getInvokable() {
+    return invokable;
   }
 
   public boolean isPrimitive() {
@@ -132,7 +126,7 @@ public class SMethod extends SAbstractObject {
   }
 
   // Private variable holding Truffle runtime information
-  private final Invokable              truffleInvokable;
+  private final Invokable              invokable;
   private final CallTarget             callTarget;
   private final boolean                isPrimitive;
   private final SSymbol                signature;
