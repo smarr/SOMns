@@ -197,12 +197,12 @@ public abstract class BinarySendNode extends BinaryMessageNode {
       if (invokable.isAlwaysToBeInlined()) {
         return invokable.inline(callTarget, selector);
       } else {
-        return new InlinableSendNode(this, ct, invokable);
+        return new InlinableBinarySendNode(this, ct, invokable);
       }
     }
   }
 
-  private static final class InlinableSendNode extends BinaryMessageNode
+  public static final class InlinableBinarySendNode extends BinaryMessageNode
     implements InlinableCallSite {
 
     private final CallTarget inlinableCallTarget;
@@ -210,9 +210,17 @@ public abstract class BinarySendNode extends BinaryMessageNode {
 
     @CompilationFinal private int callCount;
 
-    InlinableSendNode(final BinaryMessageNode node, final CallTarget callTarget,
+    public InlinableBinarySendNode(final BinaryMessageNode node, final CallTarget callTarget,
         final Invokable invokable) {
       super(node);
+      this.inlinableCallTarget = callTarget;
+      this.invokable           = invokable;
+      callCount = 0;
+    }
+
+    public InlinableBinarySendNode(final SSymbol selector, final Universe universe,
+        final CallTarget callTarget, final Invokable invokable) {
+      super(selector, universe);
       this.inlinableCallTarget = callTarget;
       this.invokable           = invokable;
       callCount = 0;

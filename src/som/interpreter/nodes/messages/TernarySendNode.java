@@ -3,13 +3,16 @@ package som.interpreter.nodes.messages;
 import static som.interpreter.TruffleCompiler.transferToInterpreter;
 import som.interpreter.Arguments.TernaryArguments;
 import som.interpreter.Invokable;
+import som.interpreter.TypesGen;
 import som.interpreter.nodes.ClassCheckNode;
 import som.interpreter.nodes.ClassCheckNode.Uninitialized;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.ISuperReadNode;
 import som.interpreter.nodes.TernaryMessageNode;
 import som.interpreter.nodes.specialized.IfTrueIfFalseMessageNodeFactory;
+import som.interpreter.nodes.specialized.IntToDoMessageNodeFactory;
 import som.vm.Universe;
+import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import som.vmobjects.SMethod;
 import som.vmobjects.SSymbol;
@@ -137,6 +140,14 @@ public abstract class TernarySendNode extends TernaryMessageNode {
         case "ifTrue:ifFalse:":
           assert this == getTopNode();
           return replace(IfTrueIfFalseMessageNodeFactory.create(this, receiver, firstArg, secondArg, receiverExpr, firstArgNode, secondArgNode));
+        case "to:do:":
+          assert this == getTopNode();
+          if (TypesGen.TYPES.isImplicitInteger(receiver) &&
+              TypesGen.TYPES.isImplicitInteger(firstArg) &&
+              TypesGen.TYPES.isSBlock(secondArg)) {
+            return replace(IntToDoMessageNodeFactory.create(this, (SBlock) secondArg, receiverExpr, firstArgNode, secondArgNode));
+          }
+          break;
       }
 
       if (depth < INLINE_CACHE_SIZE) {
