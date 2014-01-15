@@ -5,13 +5,10 @@ import som.vm.Universe;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject;
 
-import com.oracle.truffle.api.dsl.Generic;
 import com.oracle.truffle.api.dsl.NodeChild;
-import com.oracle.truffle.api.dsl.PolymorphicLimit;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
-import com.oracle.truffle.api.frame.FrameSlotTypeException;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 
@@ -25,7 +22,6 @@ public abstract class NonLocalVariableNode extends ContextualNode {
     this.slot = slot;
   }
 
-  @PolymorphicLimit(1)
   public abstract static class NonLocalVariableReadNode extends NonLocalVariableNode {
     public NonLocalVariableReadNode(final int contextLevel,
         final FrameSlot slot, final FrameSlot localSelf) {
@@ -41,22 +37,22 @@ public abstract class NonLocalVariableNode extends ContextualNode {
       return Universe.current().nilObject;
     }
 
-    @Specialization(guards = "isInitialized", rewriteOn = {FrameSlotTypeException.class})
-    public int doInteger(final VirtualFrame frame) throws FrameSlotTypeException {
-      return determineContext(frame).getInt(slot);
-    }
+//    @Specialization(guards = "isInitialized", rewriteOn = {FrameSlotTypeException.class})
+//    public int doInteger(final VirtualFrame frame) throws FrameSlotTypeException {
+//      return determineContext(frame).getInt(slot);
+//    }
+//
+//    @Specialization(guards = "isInitialized", rewriteOn = {FrameSlotTypeException.class})
+//    public double doDouble(final VirtualFrame frame) throws FrameSlotTypeException {
+//      return determineContext(frame).getDouble(slot);
+//    }
+//
+//    @Specialization(guards = "isInitialized", rewriteOn = {FrameSlotTypeException.class})
+//    public Object doObject(final VirtualFrame frame) throws FrameSlotTypeException {
+//      return determineContext(frame).getObject(slot);
+//    }
 
-    @Specialization(guards = "isInitialized", rewriteOn = {FrameSlotTypeException.class})
-    public double doDouble(final VirtualFrame frame) throws FrameSlotTypeException {
-      return determineContext(frame).getDouble(slot);
-    }
-
-    @Specialization(guards = "isInitialized", rewriteOn = {FrameSlotTypeException.class})
-    public Object doObject(final VirtualFrame frame) throws FrameSlotTypeException {
-      return determineContext(frame).getObject(slot);
-    }
-
-    @Generic
+    @Specialization //@Generic
     public Object doGeneric(final VirtualFrame frame) {
       assert isInitialized();
       return determineContext(frame).getValue(slot);
@@ -71,7 +67,6 @@ public abstract class NonLocalVariableNode extends ContextualNode {
     }
   }
 
-  @PolymorphicLimit(1)
   public abstract static class NonLocalSuperReadNode
                        extends NonLocalVariableReadNode implements ISuperReadNode {
     private final SClass superClass;
@@ -92,7 +87,6 @@ public abstract class NonLocalVariableNode extends ContextualNode {
     }
   }
 
-  @PolymorphicLimit(1)
   @NodeChild(value = "exp", type = ExpressionNode.class)
   public abstract static class NonLocalVariableWriteNode extends NonLocalVariableNode {
 
@@ -105,19 +99,19 @@ public abstract class NonLocalVariableNode extends ContextualNode {
       this(node.contextLevel, node.slot, node.localSelf);
     }
 
-    @Specialization(guards = "isIntKind", rewriteOn = FrameSlotTypeException.class)
-    public int write(final VirtualFrame frame, final int expValue) throws FrameSlotTypeException {
-      determineContext(frame).setInt(slot, expValue);
-      return expValue;
-    }
+//    @Specialization(guards = "isIntKind", rewriteOn = FrameSlotTypeException.class)
+//    public int write(final VirtualFrame frame, final int expValue) throws FrameSlotTypeException {
+//      determineContext(frame).setInt(slot, expValue);
+//      return expValue;
+//    }
+//
+//    @Specialization(guards = "isDoubleKind", rewriteOn = FrameSlotTypeException.class)
+//    public double write(final VirtualFrame frame, final double expValue) throws FrameSlotTypeException {
+//      determineContext(frame).setDouble(slot, expValue);
+//      return expValue;
+//    }
 
-    @Specialization(guards = "isDoubleKind", rewriteOn = FrameSlotTypeException.class)
-    public double write(final VirtualFrame frame, final double expValue) throws FrameSlotTypeException {
-      determineContext(frame).setDouble(slot, expValue);
-      return expValue;
-    }
-
-    @Generic
+    @Specialization //@Generic
     public Object writeGeneric(final VirtualFrame frame, final Object expValue) {
       ensureObjectKind();
       determineContext(frame).setObject(slot, expValue);
