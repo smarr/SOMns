@@ -531,7 +531,7 @@ public class Parser {
         ExpressionNode result;
         if (bgenc.requiresContext()) {
           result = new BlockNodeWithContext(blockMethod, universe,
-              mgenc.getOuterSelfSlot());
+              mgenc.getOuterSelfSlot(), mgenc.getOuterSelfContextLevel());
         } else {
           result = new BlockNode(blockMethod, universe);
         }

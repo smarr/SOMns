@@ -28,6 +28,7 @@ public abstract class Invokable extends RootNode {
     return uninitializedBody;
   }
 
+  public abstract Invokable cloneWithNewLexicalContext(final LexicalContext outerContext);
   public abstract ExpressionNode inline(final CallTarget inlinableCallTarget, final SSymbol selector);
 
   public abstract boolean isAlwaysToBeInlined();

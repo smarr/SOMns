@@ -22,6 +22,7 @@
 package som.interpreter.nodes;
 
 import som.interpreter.FrameOnStackMarker;
+import som.interpreter.Inliner;
 import som.interpreter.ReturnException;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
@@ -35,7 +36,7 @@ import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.utilities.BranchProfile;
 
-public class ReturnNonLocalNode extends ContextualNode {
+public final class ReturnNonLocalNode extends ContextualNode {
 
   @Child private ExpressionNode expression;
   private final Universe universe;
@@ -55,6 +56,12 @@ public class ReturnNonLocalNode extends ContextualNode {
     this.blockEscaped = new BranchProfile();
     this.frameOnStackMarker = frameOnStackMarker;
     this.outerSelfSlot      = outerSelfSlot;
+  }
+
+  public ReturnNonLocalNode(final ReturnNonLocalNode node, final FrameSlot inlinedFrameOnStack,
+      final FrameSlot inlinedOuterSelfSlot, final FrameSlot inlinedLocalSelfSlot) {
+    this(node.expression, inlinedFrameOnStack, inlinedOuterSelfSlot,
+        node.contextLevel, node.universe, inlinedLocalSelfSlot);
   }
 
   private FrameOnStackMarker getMarkerFromContext(final MaterializedFrame ctx) {
@@ -79,6 +86,18 @@ public class ReturnNonLocalNode extends ContextualNode {
       Object self = ctx.getValue(outerSelfSlot);
       return SAbstractObject.sendEscapedBlock(self, block, universe, frame.pack());
     }
+  }
+
+  @Override
+  public void replaceWithIndependentCopyForInlining(final Inliner inliner) {
+    FrameSlot localSelfSlot        = inliner.getLocalFrameSlot(getLocalSelfSlotIdentifier());
+    FrameSlot inlinedFrameOnStack  = inliner.getFrameSlot(this, frameOnStackMarker.getIdentifier());
+    FrameSlot inlinedOuterSelfSlot = inliner.getFrameSlot(this, outerSelfSlot.getIdentifier());
+
+    assert localSelfSlot        != null;
+    assert inlinedFrameOnStack  != null;
+    assert inlinedOuterSelfSlot != null;
+    replace(new ReturnNonLocalNode(this, inlinedFrameOnStack, inlinedOuterSelfSlot, localSelfSlot));
   }
 
   public static class CatchNonLocalReturnNode extends ExpressionNode {
@@ -114,6 +133,13 @@ public class ReturnNonLocalNode extends ContextualNode {
 
       marker.frameNoLongerOnStack();
       return result;
+    }
+
+    @Override
+    public void replaceWithIndependentCopyForInlining(final Inliner inliner) {
+      FrameSlot inlinedFrameOnStackMarker = inliner.getLocalFrameSlot(frameOnStackMarker.getIdentifier());
+      assert inlinedFrameOnStackMarker != null;
+      replace(new CatchNonLocalReturnNode(methodBody, inlinedFrameOnStackMarker));
     }
   }
 }

@@ -15,8 +15,8 @@ public abstract class Variable {
   public final String name;
   public final FrameSlot slot;
 
-  @CompilationFinal private boolean isRead;
-  @CompilationFinal private boolean isReadOutOfContext;
+  @CompilationFinal protected boolean isRead;
+  @CompilationFinal protected boolean isReadOutOfContext;
 
   Variable(final String name, final FrameSlot slot) {
     this.name      = name;
@@ -24,6 +24,16 @@ public abstract class Variable {
     this.isRead    = false;
     this.isReadOutOfContext = false;
   }
+
+  public final FrameSlot getSlot() {
+    return slot;
+  }
+
+  public final Object getSlotIdentifier() {
+    return slot.getIdentifier();
+  }
+
+  public abstract Variable cloneForInlining(final FrameSlot inlinedSlot);
 
   public boolean isAccessed() {
     return isRead;
@@ -61,6 +71,14 @@ public abstract class Variable {
       super(name, slot);
       this.index = index;
     }
+
+    @Override
+    public Variable cloneForInlining(final FrameSlot inlinedSlot) {
+      Argument arg = new Argument(name, inlinedSlot, index);
+      arg.isRead = isRead;
+      arg.isReadOutOfContext = isReadOutOfContext;
+      return arg;
+    }
   }
 
   public static final class Local extends Variable {
@@ -71,6 +89,16 @@ public abstract class Variable {
       super(name, slot);
       this.isWritten = false;
       this.isWrittenOutOfContext = false;
+    }
+
+    @Override
+    public Variable cloneForInlining(final FrameSlot inlinedSlot) {
+      Local local = new Local(name, inlinedSlot);
+      local.isRead = isRead;
+      local.isReadOutOfContext = isReadOutOfContext;
+      local.isWritten = isWritten;
+      local.isWrittenOutOfContext = isWrittenOutOfContext;
+      return local;
     }
 
     @Override

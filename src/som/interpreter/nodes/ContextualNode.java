@@ -31,14 +31,20 @@ import com.oracle.truffle.api.nodes.ExplodeLoop;
 
 public abstract class ContextualNode extends ExpressionNode {
 
-  protected final int contextLevel;
-  protected final FrameSlot localSelf;
+  protected final int            contextLevel;
+  protected final FrameSlot      localSelf;
 
   public ContextualNode(final int contextLevel, final FrameSlot localSelf) {
-    // TODO: change to use local and outer nodes to avoid this complex code
-    // TODO reenable: assert contextLevel > 0;
     this.contextLevel = contextLevel;
     this.localSelf    = localSelf;
+  }
+
+  protected final Object getLocalSelfSlotIdentifier() {
+    return localSelf.getIdentifier();
+  }
+
+  public final int getContextLevel() {
+    return contextLevel;
   }
 
   public final boolean accessesOuterContext() {

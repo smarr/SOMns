@@ -30,11 +30,6 @@ import som.interpreter.nodes.BinaryMessageNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.GlobalNode.GlobalReadNode;
 import som.interpreter.nodes.KeywordMessageNode;
-import som.interpreter.nodes.LocalVariableNode;
-import som.interpreter.nodes.LocalVariableNode.LocalVariableReadNode;
-import som.interpreter.nodes.LocalVariableNode.LocalVariableWriteNode;
-import som.interpreter.nodes.LocalVariableNodeFactory.LocalVariableReadNodeFactory;
-import som.interpreter.nodes.LocalVariableNodeFactory.LocalVariableWriteNodeFactory;
 import som.interpreter.nodes.TernaryMessageNode;
 import som.interpreter.nodes.UnaryMessageNode;
 import som.interpreter.nodes.literals.BlockNode;
@@ -47,24 +42,24 @@ import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.FrameDescriptor;
-import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.InlinedCallSite;
-import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.nodes.NodeUtil;
-import com.oracle.truffle.api.nodes.NodeVisitor;
 
 
 public class Method extends Invokable {
 
   private final Universe universe;
+  private final LexicalContext outerContext;
 
   public Method(final ExpressionNode expressions,
-                final int numArguments,
                 final FrameDescriptor frameDescriptor,
-                final Universe universe) {
-    super(expressions, numArguments, frameDescriptor);
-    this.universe = universe;
+                final Universe universe,
+                final LexicalContext outerContext,
+                final SourceSection sourceSection) {
+    super(expressions, frameDescriptor);
+    this.universe     = universe;
+    this.outerContext = outerContext;
+    assignSourceSection(sourceSection);
   }
 
   @Override
@@ -92,32 +87,16 @@ public class Method extends Invokable {
     return false; // TODO: determine "quick" methods based on the AST, just self nodes, just field reads, etc.
   }
 
-  private ExpressionNode prepareBody(final ExpressionNode clonedBody) {
-    clonedBody.accept(new NodeVisitor() {
-      @Override
-      public boolean visit(final Node node) {
-        prepareBodyNode(node);
-        assert !(node instanceof Method);
-        return true;
-      }});
-    return clonedBody;
+  @Override
+  public Invokable cloneWithNewLexicalContext(final LexicalContext outerContext) {
+    FrameDescriptor inlinedFrameDescriptor = frameDescriptor.copy();
+    LexicalContext  inlinedContext = new LexicalContext(inlinedFrameDescriptor,
+        outerContext);
+    ExpressionNode  inlinedBody = Inliner.doInline(getUninitializedBody(),
+        inlinedContext);
+    return new Method(inlinedBody, inlinedFrameDescriptor, universe,
+        outerContext, getSourceSection());
   }
-
-  private void prepareBodyNode(final Node node) {
-    if (node instanceof LocalVariableNode) {
-        LocalVariableNode varNode = (LocalVariableNode) node;
-        FrameSlot inlinedSlot = frameDescriptor.findFrameSlot(varNode.getSlotIdentifier());
-        assert inlinedSlot != null;
-
-        if (node instanceof LocalVariableReadNode) {
-            node.replace(LocalVariableReadNodeFactory.create(inlinedSlot));
-        } else if (node instanceof LocalVariableWriteNode) {
-            node.replace(LocalVariableWriteNodeFactory.create(inlinedSlot,
-                ((LocalVariableWriteNode) varNode).getExp()));
-        }
-    }
-  }
-
 
   @Override
   public ExpressionNode inline(final CallTarget inlinableCallTarget, final SSymbol selector) {
@@ -125,34 +104,38 @@ public class Method extends Invokable {
 
     // We clone the AST, frame descriptors, and slots to facilitate their
     // independent specialization.
-    ExpressionNode  ininedBody = prepareBody(NodeUtil.cloneNode(getUninitializedBody()));
     FrameDescriptor inlinedFrameDescriptor = frameDescriptor.copy();
+    LexicalContext  inlinedContext = new LexicalContext(inlinedFrameDescriptor,
+        outerContext);
+    ExpressionNode  inlinedBody = Inliner.doInline(getUninitializedBody(),
+        inlinedContext);
+
 
     if (isAlwaysToBeInlined()) {
       switch (selector.getNumberOfSignatureArguments()) {
         case 1:
-          return new UnaryInlinedExpression(selector,   universe, ininedBody, inlinableCallTarget);
+          return new UnaryInlinedExpression(selector,   universe, inlinedBody, inlinableCallTarget);
         case 2:
-          return new BinaryInlinedExpression(selector,  universe, ininedBody, inlinableCallTarget);
+          return new BinaryInlinedExpression(selector,  universe, inlinedBody, inlinableCallTarget);
         case 3:
-          return new TernaryInlinedExpression(selector, universe, ininedBody, inlinableCallTarget);
+          return new TernaryInlinedExpression(selector, universe, inlinedBody, inlinableCallTarget);
         default:
-          return new KeywordInlinedExpression(selector, universe, ininedBody, inlinableCallTarget);
+          return new KeywordInlinedExpression(selector, universe, inlinedBody, inlinableCallTarget);
       }
     }
 
     switch (selector.getNumberOfSignatureArguments()) {
       case 1:
-        return new UnaryInlinedMethod(selector,   universe, ininedBody,
+        return new UnaryInlinedMethod(selector,   universe, inlinedBody,
             inlinableCallTarget, inlinedFrameDescriptor);
       case 2:
-        return new BinaryInlinedMethod(selector,  universe, ininedBody,
+        return new BinaryInlinedMethod(selector,  universe, inlinedBody,
             inlinableCallTarget, inlinedFrameDescriptor);
       case 3:
-        return new TernaryInlinedMethod(selector, universe, ininedBody,
+        return new TernaryInlinedMethod(selector, universe, inlinedBody,
             inlinableCallTarget, inlinedFrameDescriptor);
       default:
-        return new KeywordInlinedMethod(selector, universe, ininedBody,
+        return new KeywordInlinedMethod(selector, universe, inlinedBody,
             inlinableCallTarget, inlinedFrameDescriptor);
     }
   }
@@ -160,13 +143,13 @@ public class Method extends Invokable {
   private static class UnaryInlinedExpression extends UnaryMessageNode implements InlinedCallSite {
     @Child protected ExpressionNode expression;
 
-    private final CallTarget callTarget;
+    private final CallTarget originalCallTarget;
 
     UnaryInlinedExpression(final SSymbol selector, final Universe universe,
         final ExpressionNode body, final CallTarget callTarget) {
       super(selector, universe);
       this.expression = adoptChild(body);
-      this.callTarget = callTarget;
+      this.originalCallTarget = callTarget;
     }
 
     @Override
@@ -179,25 +162,25 @@ public class Method extends Invokable {
       throw new IllegalStateException("executeGeneric() is not supported for these nodes, they always need to be called from a SendNode.");
     }
 
-    @Override public CallTarget getCallTarget()   { return callTarget; }
+    @Override public CallTarget getCallTarget()   { return originalCallTarget; }
     @Override public ExpressionNode getReceiver() { return null; }
   }
 
   private static final class UnaryInlinedMethod extends UnaryInlinedExpression implements InlinedCallSite {
-    private final FrameDescriptor frameDescriptor;
+    private final FrameDescriptor inlinedFrameDescriptor;
 
     UnaryInlinedMethod(final SSymbol selector, final Universe universe,
         final ExpressionNode msgBody,
         final CallTarget callTarget,
         final FrameDescriptor frameDescriptor) {
       super(selector, universe, msgBody, callTarget);
-      this.frameDescriptor = frameDescriptor;
+      inlinedFrameDescriptor = frameDescriptor;
     }
 
     @Override
     public Object executeEvaluated(final VirtualFrame frame, final Object receiver) {
       UnaryArguments args = new UnaryArguments(receiver);
-      VirtualFrame childFrame = Truffle.getRuntime().createVirtualFrame(frame.pack(), args, frameDescriptor);
+      VirtualFrame childFrame = Truffle.getRuntime().createVirtualFrame(frame.pack(), args, inlinedFrameDescriptor);
       return expression.executeGeneric(childFrame);
     }
   }
@@ -205,13 +188,13 @@ public class Method extends Invokable {
   private static class BinaryInlinedExpression extends BinaryMessageNode implements InlinedCallSite {
     @Child protected ExpressionNode expression;
 
-    private final CallTarget callTarget;
+    private final CallTarget originalCallTarget;
 
     BinaryInlinedExpression(final SSymbol selector, final Universe universe,
         final ExpressionNode body, final CallTarget callTarget) {
       super(selector, universe);
       this.expression = adoptChild(body);
-      this.callTarget = callTarget;
+      this.originalCallTarget = callTarget;
     }
 
     @Override
@@ -224,25 +207,25 @@ public class Method extends Invokable {
       throw new IllegalStateException("executeGeneric() is not supported for these nodes, they always need to be called from a SendNode.");
     }
 
-    @Override public CallTarget getCallTarget()   { return callTarget; }
+    @Override public CallTarget getCallTarget()   { return originalCallTarget; }
     @Override public ExpressionNode getReceiver() { return null; }
     @Override public ExpressionNode getArgument() { return null; }
   }
 
   private static final class BinaryInlinedMethod extends BinaryInlinedExpression implements InlinedCallSite {
-    private final FrameDescriptor frameDescriptor;
+    private final FrameDescriptor inlinedFrameDescriptor;
 
     BinaryInlinedMethod(final SSymbol selector, final Universe universe,
         final ExpressionNode msgBody, final CallTarget callTarget,
         final FrameDescriptor frameDescriptor) {
       super(selector, universe, msgBody, callTarget);
-      this.frameDescriptor = frameDescriptor;
+      inlinedFrameDescriptor = frameDescriptor;
     }
 
     @Override
     public Object executeEvaluated(final VirtualFrame frame, final Object receiver, final Object argument) {
       BinaryArguments args = new BinaryArguments(receiver, argument);
-      VirtualFrame childFrame = Truffle.getRuntime().createVirtualFrame(frame.pack(), args, frameDescriptor);
+      VirtualFrame childFrame = Truffle.getRuntime().createVirtualFrame(frame.pack(), args, inlinedFrameDescriptor);
       return expression.executeGeneric(childFrame);
     }
   }
@@ -250,13 +233,13 @@ public class Method extends Invokable {
   private static class TernaryInlinedExpression extends TernaryMessageNode implements InlinedCallSite {
     @Child protected ExpressionNode expression;
 
-    private final CallTarget callTarget;
+    private final CallTarget originalCallTarget;
 
     TernaryInlinedExpression(final SSymbol selector, final Universe universe,
         final ExpressionNode body, final CallTarget callTarget) {
       super(selector, universe);
       this.expression = adoptChild(body);
-      this.callTarget = callTarget;
+      this.originalCallTarget = callTarget;
     }
 
     @Override
@@ -268,28 +251,28 @@ public class Method extends Invokable {
     public Object executeGeneric(final VirtualFrame frame) {
       throw new IllegalStateException("executeGeneric() is not supported for these nodes, they always need to be called from a SendNode.");
     }
-    @Override public CallTarget getCallTarget()   { return callTarget; }
+    @Override public CallTarget getCallTarget()   { return originalCallTarget; }
     @Override public ExpressionNode getReceiver() { return null; }
     @Override public ExpressionNode getFirstArg() { return null; }
     @Override public ExpressionNode getSecondArg() { return null; }
   }
 
   private static final class TernaryInlinedMethod extends TernaryInlinedExpression implements InlinedCallSite {
-    private final FrameDescriptor frameDescriptor;
+    private final FrameDescriptor inlinedFrameDescriptor;
 
     TernaryInlinedMethod(final SSymbol selector, final Universe universe,
         final ExpressionNode msgBody,
         final CallTarget callTarget,
         final FrameDescriptor frameDescriptor) {
       super(selector, universe, msgBody, callTarget);
-      this.frameDescriptor = frameDescriptor;
+      inlinedFrameDescriptor = frameDescriptor;
     }
 
     @Override
     public Object executeEvaluated(final VirtualFrame frame, final Object receiver, final Object arg1, final Object arg2) {
       TernaryArguments args = new TernaryArguments(receiver, arg1, arg2);
       VirtualFrame childFrame = Truffle.getRuntime().createVirtualFrame(frame.pack(),
-          args, frameDescriptor);
+          args, inlinedFrameDescriptor);
       return expression.executeGeneric(childFrame);
     }
   }
@@ -297,13 +280,13 @@ public class Method extends Invokable {
   private static class KeywordInlinedExpression extends KeywordMessageNode implements InlinedCallSite {
     @Child protected ExpressionNode expression;
 
-    private final CallTarget callTarget;
+    private final CallTarget originalCallTarget;
 
     KeywordInlinedExpression(final SSymbol selector, final Universe universe,
         final ExpressionNode body, final CallTarget callTarget) {
       super(selector, universe);
       this.expression = adoptChild(body);
-      this.callTarget = callTarget;
+      this.originalCallTarget = callTarget;
     }
 
     @Override
@@ -315,20 +298,20 @@ public class Method extends Invokable {
     public Object executeGeneric(final VirtualFrame frame) {
       throw new IllegalStateException("executeGeneric() is not supported for these nodes, they always need to be called from a SendNode.");
     }
-    @Override public CallTarget getCallTarget()   { return callTarget; }
+    @Override public CallTarget getCallTarget()   { return originalCallTarget; }
     @Override public ExpressionNode getReceiver() { return null; }
     @Override public ArgumentEvaluationNode getArguments() { return null; }
   }
 
   private static final class KeywordInlinedMethod extends KeywordInlinedExpression implements InlinedCallSite {
-    private final FrameDescriptor frameDescriptor;
+    private final FrameDescriptor inlinedFrameDescriptor;
 
     KeywordInlinedMethod(final SSymbol selector, final Universe universe,
         final ExpressionNode msgBody,
         final CallTarget callTarget,
         final FrameDescriptor frameDescriptor) {
       super(selector, universe, msgBody, callTarget);
-      this.frameDescriptor = frameDescriptor;
+      inlinedFrameDescriptor = frameDescriptor;
     }
 
     @Override
@@ -336,7 +319,7 @@ public class Method extends Invokable {
         final Object receiver, final Object[] arguments) {
       KeywordArguments args = new KeywordArguments(receiver, arguments);
       VirtualFrame childFrame = Truffle.getRuntime().createVirtualFrame(frame.pack(),
-          args, frameDescriptor);
+          args, inlinedFrameDescriptor);
       return expression.executeGeneric(childFrame);
     }
   }

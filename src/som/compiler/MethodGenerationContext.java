@@ -31,6 +31,7 @@ import java.util.LinkedHashMap;
 
 import som.compiler.Variable.Argument;
 import som.compiler.Variable.Local;
+import som.interpreter.LexicalContext;
 import som.interpreter.nodes.ArgumentInitializationNode;
 import som.interpreter.nodes.ArgumentReadNode;
 import som.interpreter.nodes.ContextualNode;
@@ -69,6 +70,7 @@ public class MethodGenerationContext {
 
   private final FrameDescriptor frameDescriptor;
   private       FrameSlot       frameOnStackSlot;
+  private       LexicalContext  lexicalContext;
 
   public MethodGenerationContext() {
     frameDescriptor = new FrameDescriptor();
@@ -79,6 +81,18 @@ public class MethodGenerationContext {
 
   public void setHolder(final ClassGenerationContext cgenc) {
     holderGenc = cgenc;
+  }
+
+  public LexicalContext getLexicalContext() {
+    if (outerGenc == null) {
+      return null;
+    }
+
+    if (lexicalContext == null) {
+      lexicalContext = new LexicalContext(outerGenc.frameDescriptor,
+          outerGenc.getLexicalContext());
+    }
+    return lexicalContext;
   }
 
   public boolean isPrimitive() {
@@ -97,7 +111,6 @@ public class MethodGenerationContext {
     if (frameOnStackSlot == null) {
       frameOnStackSlot = frameDescriptor.addFrameSlot(frameOnStackSlotName);
     }
-
     return frameOnStackSlot;
   }
 
@@ -159,9 +172,8 @@ public class MethodGenerationContext {
     som.interpreter.Method truffleMethod =
         new som.interpreter.Method(addArgumentInitialization(methodBody),
             frameDescriptor,
-            universe);
-
-    assignSourceSectionToMethod(methodBody, truffleMethod);
+            universe, getLexicalContext(),
+            getSourceSectionForMethod(methodBody));
 
     SMethod meth = universe.newMethod(signature, truffleMethod, false);
 
@@ -169,15 +181,13 @@ public class MethodGenerationContext {
     return meth;
   }
 
-  private void assignSourceSectionToMethod(final ExpressionNode expressions,
-      final som.interpreter.Method truffleMethod) {
+  private SourceSection getSourceSectionForMethod(final ExpressionNode expressions) {
     SourceSection ssBody   = expressions.getSourceSection();
     SourceSection ssMethod = new DefaultSourceSection(ssBody.getSource(),
         holderGenc.getName().getString() + ">>" + signature.toString(),
         ssBody.getStartLine(), ssBody.getStartColumn(),
         ssBody.getCharIndex(), ssBody.getCharLength());
-
-    truffleMethod.assignSourceSection(ssMethod);
+    return ssMethod;
   }
 
   public void setPrimitive(final boolean prim) {

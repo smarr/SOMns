@@ -3,6 +3,8 @@ package som.interpreter.nodes;
 import static som.interpreter.TruffleCompiler.transferToInterpreter;
 import som.compiler.Variable;
 import som.compiler.Variable.Local;
+import som.interpreter.Inliner;
+import som.interpreter.nodes.LocalVariableNodeFactory.LocalVariableWriteNodeFactory;
 import som.vm.Universe;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject;
@@ -166,6 +168,17 @@ public abstract class LocalVariableNode extends ExpressionNode {
       if (slot.getKind() != FrameSlotKind.Object) {
         transferToInterpreter("LocalVar.writeObjectToUninit");
         slot.setKind(FrameSlotKind.Object);
+      }
+    }
+
+    @Override
+    public void replaceWithIndependentCopyForInlining(final Inliner inliner) {
+      if (getParent() instanceof ArgumentInitializationNode) {
+        FrameSlot varSlot = inliner.getLocalFrameSlot(getSlotIdentifier());
+        assert varSlot != null;
+        replace(LocalVariableWriteNodeFactory.create(varSlot, getExp()));
+      } else {
+        throw new RuntimeException("Should not be part of an uninitalized tree. And this should only be done with uninitialized trees.");
       }
     }
   }

@@ -26,6 +26,15 @@ public class Primitive extends Invokable {
     return true;
   }
 
+  public Invokable cloneWithNewLexicalContext(final LexicalContext outerContext) {
+    FrameDescriptor inlinedFrameDescriptor = frameDescriptor.copy();
+    LexicalContext  inlinedContext = new LexicalContext(inlinedFrameDescriptor,
+        outerContext);
+    ExpressionNode  inlinedBody = Inliner.doInline(getUninitializedBody(),
+        inlinedContext);
+    return new Primitive(inlinedBody, inlinedFrameDescriptor);
+  }
+
   @Override
   public ExpressionNode inline(final CallTarget inlinableCallTarget, final SSymbol selector) {
     // for primitives, we assume that they are wrapped in a proper *SendNode

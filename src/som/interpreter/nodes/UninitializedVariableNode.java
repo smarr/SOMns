@@ -3,6 +3,7 @@ package som.interpreter.nodes;
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
 import som.compiler.Variable;
 import som.compiler.Variable.Local;
+import som.interpreter.Inliner;
 import som.interpreter.nodes.LocalVariableNode.LocalSuperReadNode;
 import som.interpreter.nodes.LocalVariableNode.LocalVariableReadNode;
 import som.interpreter.nodes.LocalVariableNode.LocalVariableWriteNode;
@@ -38,17 +39,33 @@ public abstract class UninitializedVariableNode extends ContextualNode {
       super(variable, contextLevel, localSelf);
     }
 
+    public UninitializedVariableReadNode(final UninitializedVariableReadNode node,
+        final FrameSlot inlinedVarSlot, final FrameSlot inlinedLocalSelfSlot) {
+      this(node.variable.cloneForInlining(inlinedVarSlot), node.contextLevel,
+          inlinedLocalSelfSlot);
+    }
+
     @Override
     public Object executeGeneric(final VirtualFrame frame) {
       transferToInterpreterAndInvalidate("UninitializedVariableReadNode");
 
       if (contextLevel > 0) {
-        NonLocalVariableReadNode node = NonLocalVariableReadNodeFactory.create(contextLevel, variable.slot, localSelf);
+        NonLocalVariableReadNode node = NonLocalVariableReadNodeFactory.create(
+            contextLevel, variable.slot, localSelf);
         return replace(node).executeGeneric(frame);
       } else {
         LocalVariableReadNode node = LocalVariableReadNodeFactory.create(variable);
         return replace(node).executeGeneric(frame);
       }
+    }
+
+    @Override
+    public void replaceWithIndependentCopyForInlining(final Inliner inliner) {
+      FrameSlot localSelfSlot = inliner.getLocalFrameSlot(getLocalSelfSlotIdentifier());
+      FrameSlot varSlot       = inliner.getFrameSlot(this, variable.getSlotIdentifier());
+      assert localSelfSlot != null;
+      assert varSlot       != null;
+      replace(new UninitializedVariableReadNode(this, varSlot, localSelfSlot));
     }
   }
 
@@ -62,6 +79,12 @@ public abstract class UninitializedVariableNode extends ContextualNode {
       super(variable, contextLevel, localSelf);
       this.holderClass = holderClass;
       this.classSide   = classSide;
+    }
+
+    public UninitializedSuperReadNode(final UninitializedSuperReadNode node,
+        final FrameSlot inlinedVarSlot, final FrameSlot inlinedLocalSelfSlot) {
+      this(node.variable.cloneForInlining(inlinedVarSlot), node.contextLevel,
+          inlinedLocalSelfSlot, node.holderClass, node.classSide);
     }
 
     private SClass getLexicalSuperClass() {
@@ -86,15 +109,31 @@ public abstract class UninitializedVariableNode extends ContextualNode {
         return replace(node).executeGeneric(frame);
       }
     }
+
+    @Override
+    public void replaceWithIndependentCopyForInlining(final Inliner inliner) {
+      FrameSlot localSelfSlot = inliner.getLocalFrameSlot(getLocalSelfSlotIdentifier());
+      FrameSlot varSlot       = inliner.getFrameSlot(this, variable.getSlotIdentifier());
+      assert localSelfSlot != null;
+      assert varSlot       != null;
+      replace(new UninitializedSuperReadNode(this, varSlot, localSelfSlot));
+    }
   }
 
   public static class UninitializedVariableWriteNode extends UninitializedVariableNode {
     @Child private ExpressionNode exp;
 
     public UninitializedVariableWriteNode(final Local variable,
-        final int contextLevel, final FrameSlot localSelf, final ExpressionNode exp) {
+        final int contextLevel, final FrameSlot localSelf,
+        final ExpressionNode exp) {
       super(variable, contextLevel, localSelf);
       this.exp = adoptChild(exp);
+    }
+
+    public UninitializedVariableWriteNode(final UninitializedVariableWriteNode node,
+        final FrameSlot inlinedVarSlot, final FrameSlot inlinedLocalSelfSlot) {
+      this((Local) node.variable.cloneForInlining(inlinedVarSlot),
+          node.contextLevel, inlinedLocalSelfSlot, node.exp);
     }
 
     @Override
@@ -102,12 +141,22 @@ public abstract class UninitializedVariableNode extends ContextualNode {
       transferToInterpreterAndInvalidate("UninitializedVariableWriteNode");
 
       if (accessesOuterContext()) {
-        NonLocalVariableWriteNode node = NonLocalVariableWriteNodeFactory.create(contextLevel, variable.slot, localSelf, exp);
+        NonLocalVariableWriteNode node = NonLocalVariableWriteNodeFactory.create(
+            contextLevel, variable.slot, localSelf, exp);
         return replace(node).executeGeneric(frame);
       } else {
         LocalVariableWriteNode node = LocalVariableWriteNodeFactory.create((Local) variable, exp);
         return replace(node).executeGeneric(frame);
       }
+    }
+
+    @Override
+    public void replaceWithIndependentCopyForInlining(final Inliner inliner) {
+      FrameSlot localSelfSlot = inliner.getLocalFrameSlot(getLocalSelfSlotIdentifier());
+      FrameSlot varSlot       = inliner.getFrameSlot(this, variable.getSlotIdentifier());
+      assert localSelfSlot != null;
+      assert varSlot       != null;
+      replace(new UninitializedVariableWriteNode(this, varSlot, localSelfSlot));
     }
   }
 }
