@@ -158,8 +158,6 @@ public class MethodGenerationContext {
 
     som.interpreter.Method truffleMethod =
         new som.interpreter.Method(addArgumentInitialization(methodBody),
-            arguments.size(),
-            nonLocalAccess.size(),
             frameDescriptor,
             universe);
 

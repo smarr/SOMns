@@ -61,11 +61,10 @@ public class Method extends Invokable {
 
   public Method(final ExpressionNode expressions,
                 final int numArguments,
-                final int numUpvalues,
                 final FrameDescriptor frameDescriptor,
                 final Universe universe) {
     super(expressions, numArguments, frameDescriptor);
-    this.universe       = universe;
+    this.universe = universe;
   }
 
   @Override

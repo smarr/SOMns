@@ -18,7 +18,7 @@ public abstract class Invokable extends RootNode {
   private final ExpressionNode  uninitializedBody;
 
   public Invokable(final ExpressionNode expressionOrSequence,
-      final int numArguments, final FrameDescriptor frameDescriptor) {
+      final FrameDescriptor frameDescriptor) {
     this.uninitializedBody    = NodeUtil.cloneNode(expressionOrSequence);
     this.expressionOrSequence = adoptChild(expressionOrSequence);
     this.frameDescriptor      = frameDescriptor;

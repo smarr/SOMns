@@ -12,9 +12,8 @@ import com.oracle.truffle.api.nodes.NodeUtil;
 public class Primitive extends Invokable {
 
   public Primitive(final ExpressionNode primitive,
-      final int numArguments,
       final FrameDescriptor frameDescriptor) {
-    super(primitive, numArguments, frameDescriptor);
+    super(primitive, frameDescriptor);
   }
 
   @Override

@@ -83,8 +83,7 @@ public abstract class Primitives {
           self, argEvalNode);
     }
 
-    Primitive primMethodNode = new Primitive(primNode, numArgs,
-        mgen.getFrameDescriptor());
+    Primitive primMethodNode = new Primitive(primNode, mgen.getFrameDescriptor());
     SMethod prim = universe.newMethod(signature, primMethodNode, true);
     return prim;
   }
@@ -102,8 +101,7 @@ public abstract class Primitives {
     }
 
     ExpressionNode primNode = EmptyPrim.create(signature, universe, self);
-    Primitive primMethodNode = new Primitive(primNode, numArgs,
-        mgen.getFrameDescriptor());
+    Primitive primMethodNode = new Primitive(primNode, mgen.getFrameDescriptor());
     SMethod prim = universe.newMethod(signature, primMethodNode, true);
     return prim;
   }
