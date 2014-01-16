@@ -20,7 +20,9 @@ HandlerTaskDataRecord = RBObject (
     create = (
         workIn := deviceIn := RBObject NoWork
     )
-
+    asString = (
+        ^ 'HandlerTaskDataRecord(' + workIn asString + ', ' + deviceIn asString + ')'
+    )
 ----
     create = (^super new create)
 )
