@@ -423,7 +423,11 @@ public class Parser {
 
   private ExpressionNode createSequenceNode(final SourceCoordinate coord,
       final List<ExpressionNode> expressions) {
-    if (expressions.size() == 1) {
+    if (expressions.size() == 0) {
+      GlobalReadNode node = new GlobalReadNode(universe.symbolFor("nil"), universe);
+      assignSource(node, coord);
+      return node;
+    } else if (expressions.size() == 1) {
       return expressions.get(0);
     }
 
