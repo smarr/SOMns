@@ -379,7 +379,7 @@ RichardsBenchmarks = RBObject (
                 ifTrue: 
                         [Transcript cr.
                         layout := 50].
-        Transcript show: id printString
+        Transcript show: id asString
     )
 
     wait = (
