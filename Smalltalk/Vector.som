@@ -30,13 +30,13 @@ Vector = (
     | first last storage |
     
     "Accessing"
-    at: index = ( self checkIndex: index ifValid: [ ^storage at: index ] )
+    at: index = ( ^ self checkIndex: index ifValid: [ storage at: index ] )
     
     at: index put: value = (
-        self checkIndex: index ifValid: [ ^storage at: index put: value ]
+        ^ self checkIndex: index ifValid: [ storage at: index put: value ]
     )
     
-    first = ( (self size > 0) ifTrue: [^storage at: 1] ifFalse: [^nil] )
+    first = ( ^ (self size > 0) ifTrue: [storage at: 1] ifFalse: [nil] )
     
     "Iterating"
     do: block = (
@@ -126,12 +126,12 @@ Vector = (
     )
     
     checkIndex: index ifValid: block = (
-        (first <= index) && (index <= last)
-            ifTrue: [ ^block value ]
+        ^ ((first <= index) && (index <= last)
+            ifTrue: [ block value ]
             ifFalse: [
                 self error:
                     'Vector[' + first asString + '..' + last asString +
-                    ']: Index ' + index asString + ' out of bounds' ]
+                    ']: Index ' + index asString + ' out of bounds' ])
     )
     
     "DeltaBlue"
