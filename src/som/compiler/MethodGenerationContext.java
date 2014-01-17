@@ -158,7 +158,7 @@ public class MethodGenerationContext {
     LocalVariableWriteNode[] writes = new LocalVariableWriteNode[arguments.size()];
 
     for (Argument arg : arguments.values()) {
-      writes[arg.index] = LocalVariableWriteNodeFactory.create(arg.slot, new ArgumentReadNode(arg));
+      writes[arg.index] = LocalVariableWriteNodeFactory.create(arg.slot, ArgumentReadNode.create(arg.index, arguments.values().size()));
     }
     return new ArgumentInitializationNode(writes, methodBody);
   }

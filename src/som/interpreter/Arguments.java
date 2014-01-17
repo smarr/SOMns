@@ -21,7 +21,7 @@
  */
 package som.interpreter;
 
-import com.oracle.truffle.api.frame.Frame;
+import com.oracle.truffle.api.frame.VirtualFrame;
 
 public abstract class Arguments extends com.oracle.truffle.api.Arguments {
 
@@ -37,25 +37,25 @@ public abstract class Arguments extends com.oracle.truffle.api.Arguments {
 
   public abstract Object getArgument(final int i);
 
-  public static Arguments get(final Frame frame) {
+  public static Arguments get(final VirtualFrame frame) {
     return frame.getArguments(Arguments.class);
   }
 
-//  public static Arguments getUnary(final VirtualFrame frame) {
-//    return frame.getArguments(UnaryArguments.class);
-//  }
-//
-//  public static Arguments getBinary(final VirtualFrame frame) {
-//    return frame.getArguments(BinaryArguments.class);
-//  }
-//
-//  public static Arguments getTernary(final VirtualFrame frame) {
-//    return frame.getArguments(TernaryArguments.class);
-//  }
-//
-//  public static Arguments getKeyword(final VirtualFrame frame) {
-//    return frame.getArguments(KeywordArguments.class);
-//  }
+  public static Arguments getUnary(final VirtualFrame frame) {
+    return frame.getArguments(UnaryArguments.class);
+  }
+
+  public static Arguments getBinary(final VirtualFrame frame) {
+    return frame.getArguments(BinaryArguments.class);
+  }
+
+  public static Arguments getTernary(final VirtualFrame frame) {
+    return frame.getArguments(TernaryArguments.class);
+  }
+
+  public static Arguments getKeyword(final VirtualFrame frame) {
+    return frame.getArguments(KeywordArguments.class);
+  }
 
   public static final class UnaryArguments extends Arguments {
     public UnaryArguments(final Object self) {

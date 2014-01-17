@@ -64,10 +64,10 @@ public abstract class Primitives {
     int numArgs = signature.getNumberOfSignatureArguments();
 
     MethodGenerationContext mgen = new MethodGenerationContext();
-    ArgumentReadNode self = new ArgumentReadNode(0);
+    ArgumentReadNode self = ArgumentReadNode.create(0, numArgs);
     ExpressionNode[] args = new ExpressionNode[numArgs - 1];
     for (int i = 0; i < numArgs - 1; i++) {
-      args[i] = new ArgumentReadNode(i + 1);
+      args[i] = ArgumentReadNode.create(i + 1, numArgs);
     }
 
     AbstractMessageNode primNode;
@@ -94,10 +94,10 @@ public abstract class Primitives {
     int numArgs = signature.getNumberOfSignatureArguments();
 
     MethodGenerationContext mgen = new MethodGenerationContext();
-    ArgumentReadNode self = new ArgumentReadNode(0);
+    ArgumentReadNode self = ArgumentReadNode.create(0, numArgs);
     ExpressionNode[] args = new ExpressionNode[numArgs - 1];
     for (int i = 0; i < numArgs - 1; i++) {
-      args[i] = new ArgumentReadNode(i + 1);
+      args[i] = ArgumentReadNode.create(i + 1, numArgs);
     }
 
     ExpressionNode primNode = EmptyPrim.create(signature, universe, self);
