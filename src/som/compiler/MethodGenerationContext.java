@@ -43,6 +43,7 @@ import som.interpreter.nodes.FieldNodeFactory.FieldWriteNodeFactory;
 import som.interpreter.nodes.GlobalNode.GlobalReadNode;
 import som.interpreter.nodes.LocalVariableNode.LocalVariableWriteNode;
 import som.interpreter.nodes.LocalVariableNodeFactory.LocalVariableWriteNodeFactory;
+import som.interpreter.nodes.ReturnNonLocalNode.CatchNonLocalReturnNode;
 import som.primitives.Primitives;
 import som.vm.Universe;
 import som.vmobjects.SMethod;
@@ -163,17 +164,26 @@ public class MethodGenerationContext {
     return new ArgumentInitializationNode(writes, methodBody);
   }
 
-  public SMethod assemble(final Universe universe, final ExpressionNode methodBody) {
+  public SMethod assemble(final Universe universe, ExpressionNode methodBody) {
     ArrayList<Variable> onlyLocalAccess = new ArrayList<>(arguments.size() + locals.size());
     ArrayList<Variable> nonLocalAccess  = new ArrayList<>(arguments.size() + locals.size());
     separateVariables(arguments.values(), onlyLocalAccess, nonLocalAccess);
     separateVariables(locals.values(),    onlyLocalAccess, nonLocalAccess);
 
+    SourceSection sourceSection = methodBody.getSourceSection();
+
+    if (needsToCatchNonLocalReturn()) {
+      methodBody = new CatchNonLocalReturnNode(methodBody,
+          getFrameOnStackMarkerSlot());
+      methodBody.assignSourceSection(sourceSection);
+    }
+
+    methodBody = addArgumentInitialization(methodBody);
+    methodBody.assignSourceSection(sourceSection);
+
     som.interpreter.Method truffleMethod =
-        new som.interpreter.Method(addArgumentInitialization(methodBody),
-            frameDescriptor,
-            universe, getLexicalContext(),
-            getSourceSectionForMethod(methodBody));
+        new som.interpreter.Method(methodBody, frameDescriptor, universe,
+            getLexicalContext(), getSourceSectionForMethod(methodBody));
 
     SMethod meth = universe.newMethod(signature, truffleMethod, false);
 

@@ -72,7 +72,6 @@ import som.interpreter.nodes.FieldNode.FieldWriteNode;
 import som.interpreter.nodes.GlobalNode.GlobalReadNode;
 import som.interpreter.nodes.NodeFactory;
 import som.interpreter.nodes.ReturnNonLocalNode;
-import som.interpreter.nodes.ReturnNonLocalNode.CatchNonLocalReturnNode;
 import som.interpreter.nodes.SequenceNode;
 import som.interpreter.nodes.UnaryMessageNode;
 import som.interpreter.nodes.literals.BigIntegerLiteralNode;
@@ -89,7 +88,6 @@ import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives.SlowPath;
 import com.oracle.truffle.api.Source;
-import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.impl.DefaultSourceSection;
 
 public class Parser {
@@ -331,13 +329,6 @@ public class Parser {
     expect(NewTerm);
     ExpressionNode methodBody = blockContents(mgenc);
     expect(EndTerm);
-
-    if (mgenc.needsToCatchNonLocalReturn()) {
-      SourceSection sourceSection = methodBody.getSourceSection();
-      methodBody = new CatchNonLocalReturnNode(methodBody,
-          mgenc.getFrameOnStackMarkerSlot());
-      methodBody.assignSourceSection(sourceSection);
-    }
 
     return methodBody;
   }
