@@ -32,7 +32,7 @@ Obtaining and Running TruffleSOM
 To checkout the code, please note that we use git submodules. To obtain a proper
 checkout, it is easiest to use a recursive clone such as:
 
-    git clone --recursive https://github.com/smarr/TruffleSOM.git
+    git clone --recursive https://github.com/SOM-st/TruffleSOM.git
 
 Then, TruffleSOM can be build with Ant:
 
