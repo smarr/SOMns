@@ -30,6 +30,7 @@ import som.vmobjects.SObject;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.NodeChildren;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 
 
 @NodeChild(value = "self", type = ExpressionNode.class)
@@ -71,6 +72,13 @@ public abstract class FieldNode extends ExpressionNode {
     public FieldWriteNode(final FieldWriteNode node) {
       this(node.fieldIndex, node.universe);
     }
+
+    public int getFieldIndex() {
+      return fieldIndex;
+    }
+
+    public abstract ExpressionNode getValue();
+    public abstract Object executeEvaluated(VirtualFrame frame, SObject self, Object value);
 
     @Specialization(order = 1)
     public SAbstractObject doSAbstractObject(final SObject self, final SAbstractObject value) {

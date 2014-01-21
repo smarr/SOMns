@@ -29,9 +29,12 @@ import som.interpreter.nodes.ArgumentEvaluationNode;
 import som.interpreter.nodes.BinaryMessageNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.FieldNode.FieldReadNode;
+import som.interpreter.nodes.FieldNode.FieldWriteNode;
 import som.interpreter.nodes.FieldNodeFactory.FieldReadNodeFactory;
+import som.interpreter.nodes.FieldNodeFactory.FieldWriteNodeFactory;
 import som.interpreter.nodes.GlobalNode;
 import som.interpreter.nodes.KeywordMessageNode;
+import som.interpreter.nodes.LocalVariableNode.LocalVariableReadNode;
 import som.interpreter.nodes.TernaryMessageNode;
 import som.interpreter.nodes.UnaryMessageNode;
 import som.interpreter.nodes.literals.BlockNode;
@@ -88,6 +91,9 @@ public class Method extends Invokable {
       return true;
     } else if (body instanceof FieldReadNode) {
       return true;
+    } else if (body instanceof FieldWriteNode &&
+        ((FieldWriteNode) body).getValue() instanceof LocalVariableReadNode) {
+      return true;
     }
     return false; // TODO: determine "quick" methods based on the AST, just self nodes, just field reads, etc.
   }
@@ -114,6 +120,14 @@ public class Method extends Invokable {
       FieldReadNode org = (FieldReadNode) getUninitializedBody().getFirstMethodBodyNode();
       FieldReadNode inlined = FieldReadNodeFactory.create(org.getFieldIndex(), null); // self read should never be used because it comes preevaluated to this inlined node from the CachedSendNode
       return new UnaryInlinedExpressionUsingReceiver(selector, universe, inlined, inlinableCallTarget);
+    } else if (getUninitializedBody().getFirstMethodBodyNode() instanceof FieldWriteNode
+        && ((FieldWriteNode) getUninitializedBody().getFirstMethodBodyNode()).getValue() instanceof LocalVariableReadNode) {
+      if (selector.getNumberOfSignatureArguments() != 2) {
+        throw new RuntimeException("WTF?");
+      }
+      FieldWriteNode org = (FieldWriteNode) getUninitializedBody().getFirstMethodBodyNode();
+      FieldWriteNode inlined = FieldWriteNodeFactory.create(org.getFieldIndex(), universe, null, null); // self read should never be used because it comes preevaluated to this inlined node from the CachedSendNode
+      return new BinaryInlinedExpressionUsingValues(selector, universe, inlined, inlinableCallTarget);
     }
 
     // We clone the AST, frame descriptors, and slots to facilitate their
@@ -243,6 +257,33 @@ public class Method extends Invokable {
     @Override
     public Object executeEvaluated(final VirtualFrame frame, final Object receiver, final Object argument) {
       return expression.executeGeneric(frame);
+    }
+
+    @Override
+    public Object executeGeneric(final VirtualFrame frame) {
+      throw new IllegalStateException("executeGeneric() is not supported for these nodes, they always need to be called from a SendNode.");
+    }
+
+    @Override public CallTarget getCallTarget()   { return originalCallTarget; }
+    @Override public ExpressionNode getReceiver() { return null; }
+    @Override public ExpressionNode getArgument() { return null; }
+  }
+
+  private static class BinaryInlinedExpressionUsingValues extends BinaryMessageNode implements InlinedCallSite {
+    @Child protected FieldWriteNode expression;
+
+    private final CallTarget originalCallTarget;
+
+    BinaryInlinedExpressionUsingValues(final SSymbol selector, final Universe universe,
+        final FieldWriteNode body, final CallTarget callTarget) {
+      super(selector, universe);
+      this.expression = adoptChild(body);
+      this.originalCallTarget = callTarget;
+    }
+
+    @Override
+    public Object executeEvaluated(final VirtualFrame frame, final Object receiver, final Object argument) {
+      return expression.executeEvaluated(frame, (SObject) receiver, argument);
     }
 
     @Override
