@@ -46,6 +46,7 @@ import som.vmobjects.SObject;
 import som.vmobjects.SString;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.Assumption;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.SlowPath;
 import com.oracle.truffle.api.Truffle;
@@ -74,19 +75,11 @@ public class Universe {
     return execute(arguments);
   }
 
-  public Universe() {
-    this.truffleRuntime = Truffle.getRuntime();
-    this.symbolTable  = new HashMap<>();
-    this.avoidExit    = false;
-    this.lastExitCode = 0;
-
-    this.blockClasses = new HashMap<Integer, SClass>(3);
-
-    current = this;
-  }
-
+  public Universe() { this(false); }
   public Universe(final boolean avoidExit) {
     this.truffleRuntime = Truffle.getRuntime();
+    this.globals      = new HashMap<SSymbol, SAbstractObject>();
+    this.globalsUnchanged = Truffle.getRuntime().createAssumption("globals unchanged");
     this.symbolTable  = new HashMap<>();
     this.avoidExit    = avoidExit;
     this.lastExitCode = 0;
@@ -538,10 +531,16 @@ public class Universe {
     return globals.get(name);
   }
 
+  public Assumption getCurrentGlobalsUnchangedAssumption() {
+    return globalsUnchanged;
+  }
+
   @SlowPath
   public void setGlobal(final SSymbol name, final SAbstractObject value) {
     // Insert the given value into the dictionary of globals
     globals.put(name, value);
+    globalsUnchanged.invalidate();
+    globalsUnchanged = Truffle.getRuntime().createAssumption("globals unchanged");
   }
 
   public SClass getBlockClass() {
@@ -724,7 +723,10 @@ public class Universe {
   @CompilationFinal public SClass               trueClass;
   @CompilationFinal public SClass               falseClass;
 
-  private final HashMap<SSymbol, SAbstractObject> globals = new HashMap<SSymbol, SAbstractObject>();
+  private final HashMap<SSymbol, SAbstractObject> globals;
+  Assumption                                      globalsUnchanged;
+
+
   private String[]                              classPath;
   @CompilationFinal private boolean             printAST;
 

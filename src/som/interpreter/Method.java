@@ -28,7 +28,7 @@ import som.interpreter.Arguments.UnaryArguments;
 import som.interpreter.nodes.ArgumentEvaluationNode;
 import som.interpreter.nodes.BinaryMessageNode;
 import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.GlobalNode.GlobalReadNode;
+import som.interpreter.nodes.GlobalNode;
 import som.interpreter.nodes.KeywordMessageNode;
 import som.interpreter.nodes.TernaryMessageNode;
 import som.interpreter.nodes.UnaryMessageNode;
@@ -80,7 +80,7 @@ public class Method extends Invokable {
         // we can't do the direct inlining for block nodes, because they need a properly initialized frame
         && !(expressionOrSequence instanceof BlockNode)) {
       return true;
-    } else if (expressionOrSequence instanceof GlobalReadNode) {
+    } else if (expressionOrSequence instanceof GlobalNode) {
       return true;
     }
     return false; // TODO: determine "quick" methods based on the AST, just self nodes, just field reads, etc.

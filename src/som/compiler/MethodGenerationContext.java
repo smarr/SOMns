@@ -40,7 +40,8 @@ import som.interpreter.nodes.FieldNode.FieldReadNode;
 import som.interpreter.nodes.FieldNode.FieldWriteNode;
 import som.interpreter.nodes.FieldNodeFactory.FieldReadNodeFactory;
 import som.interpreter.nodes.FieldNodeFactory.FieldWriteNodeFactory;
-import som.interpreter.nodes.GlobalNode.GlobalReadNode;
+import som.interpreter.nodes.GlobalNode;
+import som.interpreter.nodes.GlobalNode.UninitializedGlobalReadNode;
 import som.interpreter.nodes.LocalVariableNode.LocalVariableWriteNode;
 import som.interpreter.nodes.LocalVariableNodeFactory.LocalVariableWriteNodeFactory;
 import som.interpreter.nodes.ReturnNonLocalNode.CatchNonLocalReturnNode;
@@ -336,9 +337,9 @@ public class MethodGenerationContext {
         getSelfRead());
   }
 
-  public GlobalReadNode getGlobalRead(final SSymbol varName,
+  public GlobalNode getGlobalRead(final SSymbol varName,
       final Universe universe) {
-    return new GlobalReadNode(varName, universe);
+    return new UninitializedGlobalReadNode(varName, universe);
   }
 
   public FieldWriteNode getObjectFieldWrite(final SSymbol fieldName,

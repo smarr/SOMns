@@ -69,7 +69,8 @@ import som.interpreter.nodes.BinaryMessageNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.FieldNode.FieldReadNode;
 import som.interpreter.nodes.FieldNode.FieldWriteNode;
-import som.interpreter.nodes.GlobalNode.GlobalReadNode;
+import som.interpreter.nodes.GlobalNode;
+import som.interpreter.nodes.GlobalNode.UninitializedGlobalReadNode;
 import som.interpreter.nodes.NodeFactory;
 import som.interpreter.nodes.ReturnNonLocalNode;
 import som.interpreter.nodes.SequenceNode;
@@ -415,7 +416,7 @@ public class Parser {
   private ExpressionNode createSequenceNode(final SourceCoordinate coord,
       final List<ExpressionNode> expressions) {
     if (expressions.size() == 0) {
-      GlobalReadNode node = new GlobalReadNode(universe.symbolFor("nil"), universe);
+      UninitializedGlobalReadNode node = new UninitializedGlobalReadNode(universe.symbolFor("nil"), universe);
       assignSource(node, coord);
       return node;
     } else if (expressions.size() == 1) {
@@ -799,7 +800,7 @@ public class Parser {
     }
 
     // and finally assume it is a global
-    GlobalReadNode globalRead = mgenc.getGlobalRead(varName, universe);
+    GlobalNode globalRead = mgenc.getGlobalRead(varName, universe);
     return globalRead;
   }
 
