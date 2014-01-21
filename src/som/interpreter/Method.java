@@ -107,9 +107,12 @@ public class Method extends Invokable {
     FrameDescriptor inlinedFrameDescriptor = getFrameDescriptor().copy();
     LexicalContext  inlinedContext = new LexicalContext(inlinedFrameDescriptor,
         outerContext);
-    ExpressionNode  inlinedBody = Inliner.doInline(getUninitializedBody(),
-        inlinedContext);
-
+    ExpressionNode  inlinedBody;
+    if (isAlwaysToBeInlined()) {
+      inlinedBody = Inliner.doInline(getUninitializedBody().getFirstMethodBodyNode(), inlinedContext);
+    } else {
+      inlinedBody = Inliner.doInline(getUninitializedBody(), inlinedContext);
+    }
 
     if (isAlwaysToBeInlined()) {
       switch (selector.getNumberOfSignatureArguments()) {
