@@ -4,8 +4,8 @@ import som.interpreter.nodes.ExpressionNode;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CallTarget;
+import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.Truffle;
-import com.oracle.truffle.api.TruffleRuntime;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.nodes.NodeUtil;
 import com.oracle.truffle.api.nodes.RootNode;
@@ -13,15 +13,15 @@ import com.oracle.truffle.api.nodes.RootNode;
 public abstract class Invokable extends RootNode {
 
   @Child protected ExpressionNode  expressionOrSequence;
-  protected final  FrameDescriptor frameDescriptor;
 
   private final ExpressionNode  uninitializedBody;
 
-  public Invokable(final ExpressionNode expressionOrSequence,
-      final FrameDescriptor frameDescriptor) {
+  public Invokable(final SourceSection sourceSection,
+      final FrameDescriptor frameDescriptor,
+      final ExpressionNode expressionOrSequence) {
+    super(sourceSection, frameDescriptor);
     this.uninitializedBody    = NodeUtil.cloneNode(expressionOrSequence);
     this.expressionOrSequence = adoptChild(expressionOrSequence);
-    this.frameDescriptor      = frameDescriptor;
   }
 
   public ExpressionNode getUninitializedBody() {
@@ -34,7 +34,6 @@ public abstract class Invokable extends RootNode {
   public abstract boolean isAlwaysToBeInlined();
 
   public final CallTarget createCallTarget() {
-    TruffleRuntime runtime = Truffle.getRuntime();
-    return runtime.createCallTarget(this, frameDescriptor);
+    return Truffle.getRuntime().createCallTarget(this);
   }
 }

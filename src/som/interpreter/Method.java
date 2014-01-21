@@ -51,15 +51,14 @@ public class Method extends Invokable {
   private final Universe universe;
   private final LexicalContext outerContext;
 
-  public Method(final ExpressionNode expressions,
+  public Method(final SourceSection sourceSection,
                 final FrameDescriptor frameDescriptor,
+                final ExpressionNode expressions,
                 final Universe universe,
-                final LexicalContext outerContext,
-                final SourceSection sourceSection) {
-    super(expressions, frameDescriptor);
+                final LexicalContext outerContext) {
+    super(sourceSection, frameDescriptor, expressions);
     this.universe     = universe;
     this.outerContext = outerContext;
-    assignSourceSection(sourceSection);
   }
 
   @Override
@@ -89,13 +88,13 @@ public class Method extends Invokable {
 
   @Override
   public Invokable cloneWithNewLexicalContext(final LexicalContext outerContext) {
-    FrameDescriptor inlinedFrameDescriptor = frameDescriptor.copy();
+    FrameDescriptor inlinedFrameDescriptor = getFrameDescriptor().copy();
     LexicalContext  inlinedContext = new LexicalContext(inlinedFrameDescriptor,
         outerContext);
     ExpressionNode  inlinedBody = Inliner.doInline(getUninitializedBody(),
         inlinedContext);
-    return new Method(inlinedBody, inlinedFrameDescriptor, universe,
-        outerContext, getSourceSection());
+    return new Method(getSourceSection(), inlinedFrameDescriptor, inlinedBody,
+        universe, outerContext);
   }
 
   @Override
@@ -104,7 +103,7 @@ public class Method extends Invokable {
 
     // We clone the AST, frame descriptors, and slots to facilitate their
     // independent specialization.
-    FrameDescriptor inlinedFrameDescriptor = frameDescriptor.copy();
+    FrameDescriptor inlinedFrameDescriptor = getFrameDescriptor().copy();
     LexicalContext  inlinedContext = new LexicalContext(inlinedFrameDescriptor,
         outerContext);
     ExpressionNode  inlinedBody = Inliner.doInline(getUninitializedBody(),

@@ -13,7 +13,7 @@ public class Primitive extends Invokable {
 
   public Primitive(final ExpressionNode primitive,
       final FrameDescriptor frameDescriptor) {
-    super(primitive, frameDescriptor);
+    super(null, frameDescriptor, primitive);
   }
 
   @Override
@@ -26,8 +26,9 @@ public class Primitive extends Invokable {
     return true;
   }
 
+  @Override
   public Invokable cloneWithNewLexicalContext(final LexicalContext outerContext) {
-    FrameDescriptor inlinedFrameDescriptor = frameDescriptor.copy();
+    FrameDescriptor inlinedFrameDescriptor = getFrameDescriptor().copy();
     LexicalContext  inlinedContext = new LexicalContext(inlinedFrameDescriptor,
         outerContext);
     ExpressionNode  inlinedBody = Inliner.doInline(getUninitializedBody(),

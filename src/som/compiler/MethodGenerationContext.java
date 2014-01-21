@@ -182,8 +182,8 @@ public class MethodGenerationContext {
     methodBody.assignSourceSection(sourceSection);
 
     som.interpreter.Method truffleMethod =
-        new som.interpreter.Method(methodBody, frameDescriptor, universe,
-            getLexicalContext(), getSourceSectionForMethod(methodBody));
+        new som.interpreter.Method(getSourceSectionForMethod(methodBody),
+            frameDescriptor, methodBody, universe, getLexicalContext());
 
     SMethod meth = universe.newMethod(signature, truffleMethod, false);
 
