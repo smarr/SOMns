@@ -113,6 +113,11 @@ public final class ReturnNonLocalNode extends ContextualNode {
     }
 
     @Override
+    public ExpressionNode getFirstMethodBodyNode() {
+      return methodBody;
+    }
+
+    @Override
     public Object executeGeneric(final VirtualFrame frame) {
       FrameOnStackMarker marker = new FrameOnStackMarker();
       frameOnStackMarker.setKind(FrameSlotKind.Object);

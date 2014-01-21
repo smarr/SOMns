@@ -38,6 +38,11 @@ public abstract class SOMNode extends Node {
     // nodes.
   }
 
+  /**
+   * @return body of a node that just wraps the actual method body.
+   */
+  public abstract ExpressionNode getFirstMethodBodyNode();
+
   @Override
   public String toString() {
       return NodeUtil.printTreeToString(this);

@@ -26,4 +26,9 @@ public class ArgumentInitializationNode extends ExpressionNode {
     }
     return methodBody.executeGeneric(frame);
   }
+
+  @Override
+  public ExpressionNode getFirstMethodBodyNode() {
+    return methodBody;
+  }
 }

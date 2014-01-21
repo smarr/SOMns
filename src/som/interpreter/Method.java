@@ -76,11 +76,12 @@ public class Method extends Invokable {
 
   @Override
   public boolean isAlwaysToBeInlined() {
-    if (expressionOrSequence instanceof LiteralNode
+    ExpressionNode body = expressionOrSequence.getFirstMethodBodyNode();
+    if (body instanceof LiteralNode
         // we can't do the direct inlining for block nodes, because they need a properly initialized frame
-        && !(expressionOrSequence instanceof BlockNode)) {
+        && !(body instanceof BlockNode)) {
       return true;
-    } else if (expressionOrSequence instanceof GlobalNode) {
+    } else if (body instanceof GlobalNode) {
       return true;
     }
     return false; // TODO: determine "quick" methods based on the AST, just self nodes, just field reads, etc.
