@@ -531,20 +531,17 @@ public class Universe {
     setGlobal(systemClass.getName(), systemClass);
   }
 
+  @SlowPath
   public SAbstractObject getGlobal(final SSymbol name) {
     // Return the global with the given name if it's in the dictionary of
     // globals
     return globals.get(name);
   }
 
+  @SlowPath
   public void setGlobal(final SSymbol name, final SAbstractObject value) {
     // Insert the given value into the dictionary of globals
     globals.put(name, value);
-  }
-
-  public boolean hasGlobal(final SSymbol name) {
-    // Returns if the universe has a value for the global of the given name
-    return globals.containsKey(name);
   }
 
   public SClass getBlockClass() {
@@ -576,8 +573,9 @@ public class Universe {
 
     // Lookup the specific block class in the dictionary of globals and
     // return it
-    if (hasGlobal(name)) {
-      result = (SClass) getGlobal(name);
+    result = (SClass) getGlobal(name);
+
+    if (result != null) {
       blockClasses.put(new Integer(numberOfArguments), result);
       return result;
     }
@@ -601,13 +599,16 @@ public class Universe {
   @SlowPath
   public SClass loadClass(final SSymbol name) {
     // Check if the requested class is already in the dictionary of globals
-    if (hasGlobal(name)) { return (SClass) getGlobal(name); }
+    SClass result = (SClass) getGlobal(name);
+    if (result != null) { return result; }
 
     // Load the class
-    SClass result = loadClass(name, null);
+    result = loadClass(name, null);
 
     // Load primitives (if necessary) and return the resulting class
-    if (result != null && result.hasPrimitives()) { result.loadPrimitives(); }
+    if (result != null && result.hasPrimitives()) {
+      result.loadPrimitives();
+    }
     return result;
   }
 
