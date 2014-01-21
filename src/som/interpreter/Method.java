@@ -28,6 +28,8 @@ import som.interpreter.Arguments.UnaryArguments;
 import som.interpreter.nodes.ArgumentEvaluationNode;
 import som.interpreter.nodes.BinaryMessageNode;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.FieldNode.FieldReadNode;
+import som.interpreter.nodes.FieldNodeFactory.FieldReadNodeFactory;
 import som.interpreter.nodes.GlobalNode;
 import som.interpreter.nodes.KeywordMessageNode;
 import som.interpreter.nodes.TernaryMessageNode;
@@ -35,6 +37,7 @@ import som.interpreter.nodes.UnaryMessageNode;
 import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.literals.LiteralNode;
 import som.vm.Universe;
+import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CallTarget;
@@ -83,6 +86,8 @@ public class Method extends Invokable {
       return true;
     } else if (body instanceof GlobalNode) {
       return true;
+    } else if (body instanceof FieldReadNode) {
+      return true;
     }
     return false; // TODO: determine "quick" methods based on the AST, just self nodes, just field reads, etc.
   }
@@ -101,6 +106,15 @@ public class Method extends Invokable {
   @Override
   public ExpressionNode inline(final CallTarget inlinableCallTarget, final SSymbol selector) {
     CompilerAsserts.neverPartOfCompilation();
+
+    if (getUninitializedBody().getFirstMethodBodyNode() instanceof FieldReadNode) {
+      if (selector.getNumberOfSignatureArguments() != 1) {
+        throw new RuntimeException("WTF?");
+      }
+      FieldReadNode org = (FieldReadNode) getUninitializedBody().getFirstMethodBodyNode();
+      FieldReadNode inlined = FieldReadNodeFactory.create(org.getFieldIndex(), null); // self read should never be used because it comes preevaluated to this inlined node from the CachedSendNode
+      return new UnaryInlinedExpressionUsingReceiver(selector, universe, inlined, inlinableCallTarget);
+    }
 
     // We clone the AST, frame descriptors, and slots to facilitate their
     // independent specialization.
@@ -158,6 +172,32 @@ public class Method extends Invokable {
     @Override
     public Object executeEvaluated(final VirtualFrame frame, final Object receiver) {
       return expression.executeGeneric(frame);
+    }
+
+    @Override
+    public Object executeGeneric(final VirtualFrame frame) {
+      throw new IllegalStateException("executeGeneric() is not supported for these nodes, they always need to be called from a SendNode.");
+    }
+
+    @Override public CallTarget getCallTarget()   { return originalCallTarget; }
+    @Override public ExpressionNode getReceiver() { return null; }
+  }
+
+  private static class UnaryInlinedExpressionUsingReceiver extends UnaryMessageNode implements InlinedCallSite {
+    @Child protected FieldReadNode expression;
+
+    private final CallTarget originalCallTarget;
+
+    UnaryInlinedExpressionUsingReceiver(final SSymbol selector, final Universe universe,
+        final FieldReadNode body, final CallTarget callTarget) {
+      super(selector, universe);
+      this.expression = adoptChild(body);
+      this.originalCallTarget = callTarget;
+    }
+
+    @Override
+    public Object executeEvaluated(final VirtualFrame frame, final Object receiver) {
+      return expression.executeEvaluated((SObject) receiver);
     }
 
     @Override

@@ -45,6 +45,12 @@ public abstract class FieldNode extends ExpressionNode {
     public FieldReadNode(final int fieldIndex)     { super(fieldIndex); }
     public FieldReadNode(final FieldReadNode node) { super(node.fieldIndex); }
 
+    public final int getFieldIndex() {
+      return fieldIndex;
+    }
+
+    public abstract SAbstractObject executeEvaluated(SObject self);
+
     @Specialization
     public SAbstractObject read(final SObject self) {
       return self.getField(fieldIndex);
