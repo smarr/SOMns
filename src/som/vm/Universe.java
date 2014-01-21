@@ -46,7 +46,6 @@ import som.vmobjects.SObject;
 import som.vmobjects.SString;
 import som.vmobjects.SSymbol;
 
-import com.oracle.truffle.api.Assumption;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.SlowPath;
 import com.oracle.truffle.api.Truffle;
@@ -55,6 +54,20 @@ import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 
 public class Universe {
+
+  /**
+   * Associations are handles for globals with a fixed
+   * SSymbol and a mutable value.
+   */
+  public static final class Association {
+    public final SSymbol    key;
+    public SAbstractObject  value;
+
+    public Association(final SSymbol key, final SAbstractObject value) {
+      this.key   = key;
+      this.value = value;
+    }
+  }
 
   public static void main(final String[] arguments) {
     Universe u = new Universe();
@@ -78,8 +91,7 @@ public class Universe {
   public Universe() { this(false); }
   public Universe(final boolean avoidExit) {
     this.truffleRuntime = Truffle.getRuntime();
-    this.globals      = new HashMap<SSymbol, SAbstractObject>();
-    this.globalsUnchanged = Truffle.getRuntime().createAssumption("globals unchanged");
+    this.globals      = new HashMap<SSymbol, Association>();
     this.symbolTable  = new HashMap<>();
     this.avoidExit    = avoidExit;
     this.lastExitCode = 0;
@@ -526,21 +538,27 @@ public class Universe {
 
   @SlowPath
   public SAbstractObject getGlobal(final SSymbol name) {
-    // Return the global with the given name if it's in the dictionary of
-    // globals
-    return globals.get(name);
+    Association assoc = globals.get(name);
+    if (assoc == null) {
+      return null;
+    }
+    return assoc.value;
   }
 
-  public Assumption getCurrentGlobalsUnchangedAssumption() {
-    return globalsUnchanged;
+  @SlowPath
+  public Association getGlobalsAssociation(final SSymbol name) {
+    return globals.get(name);
   }
 
   @SlowPath
   public void setGlobal(final SSymbol name, final SAbstractObject value) {
-    // Insert the given value into the dictionary of globals
-    globals.put(name, value);
-    globalsUnchanged.invalidate();
-    globalsUnchanged = Truffle.getRuntime().createAssumption("globals unchanged");
+    Association assoc = globals.get(name);
+    if (assoc == null) {
+      assoc = new Association(name, value);
+      globals.put(name, assoc);
+    } else {
+      assoc.value = value;
+    }
   }
 
   public SClass getBlockClass() {
@@ -723,9 +741,7 @@ public class Universe {
   @CompilationFinal public SClass               trueClass;
   @CompilationFinal public SClass               falseClass;
 
-  private final HashMap<SSymbol, SAbstractObject> globals;
-  Assumption                                      globalsUnchanged;
-
+  private final HashMap<SSymbol, Association>   globals;
 
   private String[]                              classPath;
   @CompilationFinal private boolean             printAST;

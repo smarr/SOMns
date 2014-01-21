@@ -23,12 +23,11 @@ package som.interpreter.nodes;
 
 import som.interpreter.Arguments;
 import som.vm.Universe;
+import som.vm.Universe.Association;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SSymbol;
 
-import com.oracle.truffle.api.Assumption;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 import com.oracle.truffle.api.utilities.BranchProfile;
 
 
@@ -43,48 +42,9 @@ public abstract class GlobalNode extends ExpressionNode {
   }
 
   public static class UninitializedGlobalReadNode extends GlobalNode {
-    public UninitializedGlobalReadNode(final SSymbol globalName, final Universe universe) {
-      super(globalName, universe);
-    }
-
-    @Override
-    public Object executeGeneric(final VirtualFrame frame) {
-      // Get the global from the universe
-      SAbstractObject globalValue = universe.getGlobal(globalName);
-      if (globalValue != null) {
-        return replace(new CachedGlobalReadNode(globalName, universe, globalValue, universe.getCurrentGlobalsUnchangedAssumption())).executeGeneric(frame);
-      } else {
-        return replace(new GenericGlobalReadNode(globalName, universe)).executeGeneric(frame);
-      }
-    }
-  }
-
-  private static final class CachedGlobalReadNode extends GlobalNode {
-    private final SAbstractObject globalValue;
-    private final Assumption      globalsUnchanged;
-
-    private CachedGlobalReadNode(final SSymbol globalName, final Universe universe,
-        final SAbstractObject globalValue, final Assumption globalsUnchanged) {
-      super(globalName, universe);
-      this.globalValue      = globalValue;
-      this.globalsUnchanged = globalsUnchanged;
-    }
-
-    @Override
-    public Object executeGeneric(final VirtualFrame frame) {
-      try {
-        globalsUnchanged.check();
-        return globalValue;
-      } catch (InvalidAssumptionException e) {
-        return replace(new GenericGlobalReadNode(globalName, universe)).executeGeneric(frame);
-      }
-    }
-  }
-
-  private static final class GenericGlobalReadNode extends GlobalNode {
     private final BranchProfile unknownGlobalNotFound;
 
-    private GenericGlobalReadNode(final SSymbol globalName, final Universe universe) {
+    public UninitializedGlobalReadNode(final SSymbol globalName, final Universe universe) {
       super(globalName, universe);
       unknownGlobalNotFound = new BranchProfile();
     }
@@ -92,10 +52,9 @@ public abstract class GlobalNode extends ExpressionNode {
     @Override
     public Object executeGeneric(final VirtualFrame frame) {
       // Get the global from the universe
-      SAbstractObject global = universe.getGlobal(globalName);
-
-      if (global != null) {
-        return global;
+      Association assoc = universe.getGlobalsAssociation(globalName);
+      if (assoc != null) {
+        return replace(new CachedGlobalReadNode(globalName, universe, assoc)).executeGeneric(frame);
       } else {
         unknownGlobalNotFound.enter();
         // if it is not defined, we will send a error message to the current
@@ -104,6 +63,21 @@ public abstract class GlobalNode extends ExpressionNode {
         return SAbstractObject.sendUnknownGlobal(self, globalName, universe,
             frame.pack());
       }
+    }
+  }
+
+  private static final class CachedGlobalReadNode extends GlobalNode {
+    private final Association assoc;
+
+    private CachedGlobalReadNode(final SSymbol globalName,
+        final Universe universe, final Association assoc) {
+      super(globalName, universe);
+      this.assoc = assoc;
+    }
+
+    @Override
+    public Object executeGeneric(final VirtualFrame frame) {
+      return assoc.value;
     }
   }
 }
