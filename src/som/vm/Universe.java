@@ -441,27 +441,15 @@ public class Universe {
   }
 
   public SInteger newInteger(final int value) {
-    // Allocate a new integer and set its class to be the integer class
-    SInteger result = new SInteger(value);
-
-    // Return the freshly allocated integer
-    return result;
+    return new SInteger(value);
   }
 
   public SBigInteger newBigInteger(final java.math.BigInteger value) {
-    // Allocate a new integer and set its class to be the integer class
-    SBigInteger result = new SBigInteger(value);
-
-    // Return the freshly allocated integer
-    return result;
+    return new SBigInteger(value);
   }
 
   public SBigInteger newBigInteger(final long value) {
-    // Allocate a new integer and set its class to be the integer class
-    SBigInteger result = new SBigInteger(BigInteger.valueOf(value));
-
-    // Return the freshly allocated integer
-    return result;
+    return new SBigInteger(BigInteger.valueOf(value));
   }
 
   public SDouble newDouble(final double value) {
