@@ -440,28 +440,36 @@ public class Universe {
     return new SObject(instanceClass, nilObject);
   }
 
-  public SInteger newInteger(final int value) {
-    // Allocate a new integer and set its class to be the integer class
-    SInteger result = new SInteger(value);
+  /** Do what Java does. **/
+  private static final class SIntegerCache {
+    static final int low = -128;
+    static final int high = 127;
+    static final SInteger[] cache;
 
-    // Return the freshly allocated integer
-    return result;
+    static {
+        cache = new SInteger[(high - low) + 1];
+        int j = low;
+        for (int k = 0; k < cache.length; k++) {
+          cache[k] = new SInteger(j++);
+        }
+    }
+    private SIntegerCache() { }
+  }
+
+  public SInteger newInteger(final int value) {
+    assert SIntegerCache.high >= 127;
+    if (value >= SIntegerCache.low && value <= SIntegerCache.high) {
+      return SIntegerCache.cache[value + (-SIntegerCache.low)];
+    }
+    return new SInteger(value);
   }
 
   public SBigInteger newBigInteger(final java.math.BigInteger value) {
-    // Allocate a new integer and set its class to be the integer class
-    SBigInteger result = new SBigInteger(value);
-
-    // Return the freshly allocated integer
-    return result;
+    return new SBigInteger(value);
   }
 
   public SBigInteger newBigInteger(final long value) {
-    // Allocate a new integer and set its class to be the integer class
-    SBigInteger result = new SBigInteger(BigInteger.valueOf(value));
-
-    // Return the freshly allocated integer
-    return result;
+    return new SBigInteger(BigInteger.valueOf(value));
   }
 
   public SDouble newDouble(final double value) {
