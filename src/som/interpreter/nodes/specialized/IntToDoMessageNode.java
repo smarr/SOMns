@@ -39,7 +39,7 @@ public abstract class IntToDoMessageNode extends TernaryMessageNode {
   public int doIntToDo(final VirtualFrame frame, final int receiver, final int limit, final SBlock block) {
     try {
       for (int i = receiver; i <= limit; i++) {
-        valueSend.executeEvaluated(frame, universe.newBlock(block), i);
+        valueSend.executeEvaluated(frame, block, i);
       }
     } finally {
       if (CompilerDirectives.inInterpreter()) {

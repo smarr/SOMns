@@ -418,10 +418,6 @@ public class Universe {
     return new SBlock(method, context, outerSelfSlot);
   }
 
-  public SBlock newBlock(final SBlock block) {
-    return new SBlock(block);
-  }
-
   @SlowPath
   public SClass newClass(final SClass classClass) {
     // Allocate a new class and set its class to be the given class class

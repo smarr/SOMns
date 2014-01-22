@@ -44,12 +44,6 @@ public class SBlock extends SAbstractObject {
     this.outerSelfSlot = outerSelfSlot;
   }
 
-  public SBlock(final SBlock block) {
-    this.method  = block.getMethod();
-    this.context = block.getContext();
-    this.outerSelfSlot = block.outerSelfSlot;
-  }
-
   public SMethod getMethod() {
     // Get the method of this block
     return method;

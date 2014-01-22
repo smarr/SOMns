@@ -43,13 +43,13 @@ public abstract class WhileWithStaticBlocksNode extends AbstractWhileMessageNode
   protected final SObject doWhileConditionally(final VirtualFrame frame,
       final SBlock loopCondition, final SBlock loopBody) {
     int iterationCount = 0;
-    Object loopConditionResult = conditionValueSend.executeEvaluated(frame, universe.newBlock(loopCondition));
+    Object loopConditionResult = conditionValueSend.executeEvaluated(frame, loopCondition);
 
     try {
       // TODO: this is a simplification, we don't cover the case receiver isn't a boolean
       while (loopConditionResult == predicateBool) {
-        bodyValueSend.executeEvaluated(frame, universe.newBlock(loopBody));
-        loopConditionResult = conditionValueSend.executeEvaluated(frame, universe.newBlock(loopCondition));
+        bodyValueSend.executeEvaluated(frame, loopBody);
+        loopConditionResult = conditionValueSend.executeEvaluated(frame, loopCondition);
 
         if (CompilerDirectives.inInterpreter()) {
           iterationCount++;

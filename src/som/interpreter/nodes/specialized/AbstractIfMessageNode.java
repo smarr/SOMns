@@ -47,7 +47,7 @@ public abstract class AbstractIfMessageNode extends BinaryMessageNode {
       final SBlock argument, final SObject predicateObject) {
     if (receiver == predicateObject) {
       ifTrueBranch.enter();
-      return branchValueSend.executeEvaluated(frame, universe.newBlock(argument));
+      return branchValueSend.executeEvaluated(frame, argument);
     } else {
       ifFalseBranch.enter();
       return universe.nilObject;
@@ -58,7 +58,7 @@ public abstract class AbstractIfMessageNode extends BinaryMessageNode {
       final SBlock argument, final SObject predicateObject) {
     if (receiver == predicateObject) {
       ifTrueBranch.enter();
-      return argument.getMethod().invoke(frame.pack(), universe.newBlock(argument), universe);
+      return argument.getMethod().invoke(frame.pack(), argument, universe);
     } else {
       ifFalseBranch.enter();
       return universe.nilObject;
