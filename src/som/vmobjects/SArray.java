@@ -31,7 +31,6 @@ import com.oracle.truffle.api.nodes.ExplodeLoop;
 public final class SArray extends SAbstractObject {
 
   public SArray(final SObject nilObject, final int size) {
-    super();
     // Allocate a new array of indexable fields
     indexableFields = new SAbstractObject[size];
     setNumberOfIndexableFieldsAndClear(size, nilObject);
@@ -87,7 +86,6 @@ public final class SArray extends SAbstractObject {
   public SClass getSOMClass(final Universe universe) {
     return universe.arrayClass;
   }
-
 
   // array of indexable fields
   public final SAbstractObject[] indexableFields;

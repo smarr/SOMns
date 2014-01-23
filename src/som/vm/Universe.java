@@ -380,11 +380,7 @@ public class Universe {
   }
 
   public SArray newArray(final int length) {
-    // Allocate a new array and set its class to be the array class
-    SArray result = new SArray(nilObject, length);
-
-    // Return the freshly allocated array
-    return result;
+    return new SArray(nilObject, length);
   }
 
   public SArray newArray(final List<?> list) {
