@@ -1,0 +1,12 @@
+FieldWrite = Benchmark (
+    | counter |
+    
+    benchmark = (
+        | bar |
+        bar := 1234.
+        
+        1 to: 20000 do: [:i |
+          counter := 2122.
+        ]
+    )    
+)
