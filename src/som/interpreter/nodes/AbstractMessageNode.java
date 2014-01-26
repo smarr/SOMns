@@ -7,7 +7,7 @@ import som.vmobjects.SClass;
 import som.vmobjects.SMethod;
 import som.vmobjects.SSymbol;
 
-import com.oracle.truffle.api.CallTarget;
+import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
@@ -39,7 +39,7 @@ public abstract class AbstractMessageNode extends ExpressionNode {
     return Types.getClassOf(rcvr, universe);
   }
 
-  protected CallTarget lookupCallTarget(final Object rcvr) {
+  protected RootCallTarget lookupCallTarget(final Object rcvr) {
     SClass rcvrClass = classOfReceiver(rcvr);
     SMethod method = rcvrClass.lookupInvokable(selector);
     if (method == null) {

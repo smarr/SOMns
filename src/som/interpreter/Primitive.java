@@ -3,7 +3,7 @@ package som.interpreter;
 import som.interpreter.nodes.ExpressionNode;
 import som.vmobjects.SSymbol;
 
-import com.oracle.truffle.api.CallTarget;
+import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.NodeUtil;
@@ -37,7 +37,7 @@ public class Primitive extends Invokable {
   }
 
   @Override
-  public ExpressionNode inline(final CallTarget inlinableCallTarget, final SSymbol selector) {
+  public ExpressionNode inline(final RootCallTarget inlinableCallTarget, final SSymbol selector) {
     // for primitives, we assume that they are wrapped in a proper *SendNode
     // And, that inlining is realized so that the monomorphic/PIC check is
     // done correctly, and afterwards, the `executeEvaluated(..)` method

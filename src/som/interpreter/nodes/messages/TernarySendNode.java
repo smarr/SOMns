@@ -17,12 +17,11 @@ import som.vmobjects.SClass;
 import som.vmobjects.SMethod;
 import som.vmobjects.SSymbol;
 
-import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.impl.DefaultCallTarget;
 import com.oracle.truffle.api.nodes.FrameFactory;
 import com.oracle.truffle.api.nodes.InlinableCallSite;
 import com.oracle.truffle.api.nodes.Node;
@@ -151,7 +150,7 @@ public abstract class TernarySendNode extends TernaryMessageNode {
       }
 
       if (depth < INLINE_CACHE_SIZE) {
-        CallTarget  callTarget = lookupCallTarget(receiver);
+        RootCallTarget  callTarget = lookupCallTarget(receiver);
         TernaryMessageNode current = (TernaryMessageNode) createCachedNode(callTarget);
         TernarySendNode       next = new UninitializedSendNode(this);
         return replace(new CachedSendNode(this, next, current, classOfReceiver(receiver)));
@@ -171,17 +170,12 @@ public abstract class TernarySendNode extends TernaryMessageNode {
     }
 
     // DUPLICATED but types
-    protected ExpressionNode createCachedNode(final CallTarget callTarget) {
-      if (!(callTarget instanceof DefaultCallTarget)) {
-        throw new RuntimeException("This should not happen in TruffleSOM");
-      }
-
-      DefaultCallTarget ct = (DefaultCallTarget) callTarget;
-      Invokable invokable = (Invokable) ct.getRootNode();
+    protected ExpressionNode createCachedNode(final RootCallTarget callTarget) {
+      Invokable invokable = (Invokable) callTarget.getRootNode();
       if (invokable.isAlwaysToBeInlined()) {
         return invokable.inline(callTarget, selector);
       } else {
-        return new InlinableSendNode(this, ct, invokable);
+        return new InlinableSendNode(this, callTarget, invokable);
       }
     }
   }
@@ -189,12 +183,12 @@ public abstract class TernarySendNode extends TernaryMessageNode {
   private static final class InlinableSendNode extends TernaryMessageNode
     implements InlinableCallSite {
 
-    private final CallTarget inlinableCallTarget;
+    private final RootCallTarget inlinableCallTarget;
     private final Invokable  invokable;
 
     @CompilationFinal private int callCount;
 
-    InlinableSendNode(final TernaryMessageNode node, final DefaultCallTarget callTarget,
+    InlinableSendNode(final TernaryMessageNode node, final RootCallTarget callTarget,
         final Invokable invokable) {
       super(node);
       this.inlinableCallTarget = callTarget;
@@ -232,7 +226,7 @@ public abstract class TernarySendNode extends TernaryMessageNode {
     }
 
     @Override
-    public CallTarget getCallTarget() {
+    public RootCallTarget getCallTarget() {
       return inlinableCallTarget;
     }
 

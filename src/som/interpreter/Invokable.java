@@ -3,7 +3,7 @@ package som.interpreter;
 import som.interpreter.nodes.ExpressionNode;
 import som.vmobjects.SSymbol;
 
-import com.oracle.truffle.api.CallTarget;
+import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.FrameDescriptor;
@@ -29,11 +29,11 @@ public abstract class Invokable extends RootNode {
   }
 
   public abstract Invokable cloneWithNewLexicalContext(final LexicalContext outerContext);
-  public abstract ExpressionNode inline(final CallTarget inlinableCallTarget, final SSymbol selector);
+  public abstract ExpressionNode inline(final RootCallTarget inlinableCallTarget, final SSymbol selector);
 
   public abstract boolean isAlwaysToBeInlined();
 
-  public final CallTarget createCallTarget() {
+  public final RootCallTarget createCallTarget() {
     return Truffle.getRuntime().createCallTarget(this);
   }
 }

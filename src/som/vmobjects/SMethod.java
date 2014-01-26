@@ -34,8 +34,8 @@ import som.interpreter.Invokable;
 import som.interpreter.Types;
 import som.vm.Universe;
 
-import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.frame.PackedFrame;
 
 public class SMethod extends SAbstractObject {
@@ -49,7 +49,7 @@ public class SMethod extends SAbstractObject {
     this.isPrimitive = isPrimitive;
   }
 
-  public CallTarget getCallTarget() {
+  public RootCallTarget getCallTarget() {
     return callTarget;
   }
 
@@ -127,7 +127,7 @@ public class SMethod extends SAbstractObject {
 
   // Private variable holding Truffle runtime information
   private final Invokable              invokable;
-  private final CallTarget             callTarget;
+  private final RootCallTarget         callTarget;
   private final boolean                isPrimitive;
   private final SSymbol                signature;
   @CompilationFinal private SClass     holder;
