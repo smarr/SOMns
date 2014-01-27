@@ -86,8 +86,11 @@ public class SystemPrims {
 
     @Specialization(guards = "receiverIsSystemObject")
     public Object doSObject(final SObject receiver) {
-      System.gc();
-      return universe.trueObject;
+      // TODO: deactivated GC as work around for Hotspot collecting native code
+      //       generated for the benchmarks.
+      // System.gc();
+      // return universe.trueObject;
+      return universe.falseObject;
     }
   }
 
