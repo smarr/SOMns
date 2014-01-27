@@ -33,6 +33,7 @@ import som.vm.Universe;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.FrameSlot;
+import com.oracle.truffle.api.frame.FrameUtil;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 
 public class SBlock extends SAbstractObject {
@@ -54,7 +55,7 @@ public class SBlock extends SAbstractObject {
   }
 
   public Object getOuterSelf() {
-    return getContext().getValue(outerSelfSlot);
+    return FrameUtil.getObjectSafe(getContext(), outerSelfSlot);
   }
 
   public static SMethod getEvaluationPrimitive(final int numberOfArguments,

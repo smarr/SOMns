@@ -13,6 +13,7 @@ import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
+import com.oracle.truffle.api.frame.FrameUtil;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 
@@ -63,7 +64,7 @@ public abstract class LocalVariableNode extends ExpressionNode {
     @Specialization // @Generic
     public Object doGeneric(final VirtualFrame frame) {
       assert isInitialized();
-      return frame.getValue(slot);
+      return FrameUtil.getObjectSafe(frame, slot);
     }
 
     protected final boolean isInitialized() {

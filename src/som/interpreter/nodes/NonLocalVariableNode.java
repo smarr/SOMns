@@ -9,6 +9,7 @@ import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
+import com.oracle.truffle.api.frame.FrameUtil;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 
@@ -55,7 +56,7 @@ public abstract class NonLocalVariableNode extends ContextualNode {
     @Specialization //@Generic
     public Object doGeneric(final VirtualFrame frame) {
       assert isInitialized();
-      return determineContext(frame).getValue(slot);
+      return FrameUtil.getObjectSafe(determineContext(frame), slot);
     }
 
     protected final boolean isInitialized() {
