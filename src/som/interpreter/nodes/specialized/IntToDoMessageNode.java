@@ -16,12 +16,8 @@ import com.oracle.truffle.api.nodes.RootNode;
 
 
 public abstract class IntToDoMessageNode extends TernaryMessageNode {
-//  @Child protected ExpressionNode receiver;
-//  @Child protected ExpressionNode firstArg;
-//  @Child protected BlockNode      secondArg;
-
   private final SMethod blockMethod;
-  @Child protected BinaryMessageNode valueSend;
+  @Child private BinaryMessageNode valueSend;
 
   public IntToDoMessageNode(final TernaryMessageNode node, final SBlock block) {
     super(node);
@@ -35,7 +31,11 @@ public abstract class IntToDoMessageNode extends TernaryMessageNode {
     this.valueSend   = node.valueSend;
   }
 
-  @Specialization
+  protected final boolean isSameBlock(final int receiver, final int limit, final SBlock block) {
+    return block.getMethod() == blockMethod;
+  }
+
+  @Specialization(guards = "isSameBlock")
   public int doIntToDo(final VirtualFrame frame, final int receiver, final int limit, final SBlock block) {
     try {
       for (int i = receiver; i <= limit; i++) {
