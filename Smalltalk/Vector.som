@@ -142,7 +142,7 @@ Vector = (
     ----------------------------
     
     "Allocation"
-    new              = ( ^self new: 50 )
+    new              = ( ^ self new: 50 )
     new: initialSize = ( ^ super new initialize: initialSize )
     
     with: elem = (
