@@ -25,7 +25,7 @@ THE SOFTWARE.
 
 Queens = Benchmark (
 
-    | freeMajs freeRows freeMins queenRows |
+    | freeMaxs freeRows freeMins queenRows |
     
     benchmark = (
         1 to: 10 do: [ :i | self queens ]
@@ -33,7 +33,7 @@ Queens = Benchmark (
     
     queens = (
         freeRows  := Array new:  8 withAll: true.
-        freeMajs  := Array new: 16 withAll: true.
+        freeMaxs  := Array new: 16 withAll: true.
         freeMins  := Array new: 16 withAll: true.
         queenRows := Array new:  8 withAll: -1.
         (self placeQueen: 1) ifFalse: [ self error: 'Wrong result' ]
@@ -52,12 +52,12 @@ Queens = Benchmark (
     )
     
     row: r column: c = (
-        ^(freeRows at: r) && (freeMajs at: c + r) && (freeMins at: c - r + 8)
+        ^(freeRows at: r) && (freeMaxs at: c + r) && (freeMins at: c - r + 8)
     )
     
     row: r column: c put: v = (
         freeRows at: r         put: v.
-        freeMajs at: c + r     put: v.
+        freeMaxs at: c + r     put: v.
         freeMins at: c - r + 8 put: v.
     )
     

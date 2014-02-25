@@ -40,13 +40,11 @@ Vector = (
     
     "Iterating"
     do: block = (
-        self doIndexes: [ :i | block value: (self at: i) ]
+        first to: last - 1 do: [ :i | block value: (storage at: i) ]
     )
     
     doIndexes: block = (
-        | i |
-        i := first.
-        [ i < last ] whileTrue: [ block value: i. i := i + 1 ]
+        first to: last - 1 do: block
     )
     
     "Adding"
