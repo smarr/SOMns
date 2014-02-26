@@ -8,6 +8,18 @@ if [ -z "$GRAAL_HOME" ]; then
   fi
 fi
 
-cd $GRAAL_HOME
-
-./mx.sh --vm server vm -G:-TraceTruffleInlining -G:-TraceTruffleCompilation -Xbootclasspath/a:$BASE_DIR/build/classes:$BASE_DIR/libs/truffle.jar som.vm.Universe "$@"
+if [ -z "$GRAAL_FLAGS" ]; then
+  GRAAL_FLAGS='-G:-TraceTruffleInlining -G:-TraceTruffleCompilation'
+  
+  if [ "$GRAAL_HOME" = "/Users/smarr/Projects/PostDoc/Truffle/graal" ]; then
+    echo Using Graal Development Flags
+    GRAAL_FLAGS='-ea -XX:+UnlockDiagnosticVMOptions -XX:+LogCompilation
+      -G:+TraceTruffleExpansion -G:+TraceTruffleExpansionSource
+      -XX:+TraceDeoptimization
+      -G:-TruffleBackgroundCompilation
+      -G:+TraceTruffleCompilationDetails'
+  fi
+fi
+$GRAAL_HOME/mxtool/mx --vm server vm $GRAAL_FLAGS \
+   -Xbootclasspath/a:build/classes:libs/truffle.jar \
+   som.vm.Universe "$@"
