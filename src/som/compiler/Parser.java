@@ -154,24 +154,11 @@ public class Parser {
     expect(Identifier);
     expect(Equal);
 
-    SSymbol superName;
-    if (sym == Identifier) {
-      superName = universe.symbolFor(text);
-      accept(Identifier);
-    } else {
-      superName = universe.symbolFor("Object");
-    }
-    cgenc.setSuperName(superName);
-
-    // Load the super class, if it is not nil (break the dependency cycle)
-    if (!superName.getString().equals("nil")) {
-      SClass superClass = universe.loadClass(superName);
-      cgenc.setInstanceFieldsOfSuper(superClass.getInstanceFields());
-      cgenc.setClassFieldsOfSuper(superClass.getSOMClass(universe).getInstanceFields());
-    }
+    superclass(cgenc);
 
     expect(NewTerm);
     instanceFields(cgenc);
+
     while (sym == Identifier || sym == Keyword || sym == OperatorSequence
         || symIn(binaryOpSyms)) {
       MethodGenerationContext mgenc = new MethodGenerationContext();
@@ -204,6 +191,24 @@ public class Parser {
       }
     }
     expect(EndTerm);
+  }
+
+  private void superclass(final ClassGenerationContext cgenc) {
+    SSymbol superName;
+    if (sym == Identifier) {
+      superName = universe.symbolFor(text);
+      accept(Identifier);
+    } else {
+      superName = universe.symbolFor("Object");
+    }
+    cgenc.setSuperName(superName);
+
+    // Load the super class, if it is not nil (break the dependency cycle)
+    if (!superName.getString().equals("nil")) {
+      SClass superClass = universe.loadClass(superName);
+      cgenc.setInstanceFieldsOfSuper(superClass.getInstanceFields());
+      cgenc.setClassFieldsOfSuper(superClass.getSOMClass(universe).getInstanceFields());
+    }
   }
 
   private boolean symIn(final List<Symbol> ss) {
