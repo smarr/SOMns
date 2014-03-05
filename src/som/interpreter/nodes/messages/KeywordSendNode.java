@@ -158,7 +158,8 @@ public abstract class KeywordSendNode extends KeywordMessageNode {
 
     InlinableSendNode(final KeywordMessageNode node, final CallTarget callTarget) {
       super(node);
-      this.inlinableNode = Truffle.getRuntime().createCallNode(callTarget);
+      this.inlinableNode = adoptChild(Truffle.getRuntime().createCallNode(
+          callTarget));
     }
 
     @Override

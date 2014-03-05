@@ -124,7 +124,7 @@ public abstract class BinarySendNode extends BinaryMessageNode {
 
     // DUPLICATED but types and specialized nodes
     private BinaryMessageNode specializeEvaluated(final Object receiver, final Object argument) {
-      CompilerAsserts.neverPartOfCompilation();
+       CompilerAsserts.neverPartOfCompilation();
 
       switch (selector.getString()) {
         case "whileTrue:":
@@ -198,7 +198,8 @@ public abstract class BinarySendNode extends BinaryMessageNode {
     public InlinableBinarySendNode(final SSymbol selector, final Universe universe,
         final CallTarget callTarget) {
       super(selector, universe);
-      this.inlinableNode = Truffle.getRuntime().createCallNode(callTarget);
+      this.inlinableNode = adoptChild(Truffle.getRuntime().createCallNode(
+          callTarget));
     }
 
     @Override

@@ -147,7 +147,8 @@ public abstract class UnarySendNode extends UnaryMessageNode {
     public InlinableUnarySendNode(final SSymbol selector, final Universe universe,
         final CallTarget inlinableCallTarget) {
       super(selector, universe);
-      this.inlinableNode = Truffle.getRuntime().createCallNode(inlinableCallTarget);
+      this.inlinableNode = adoptChild(Truffle.getRuntime().createCallNode(
+          inlinableCallTarget));
     }
 
     @Override
