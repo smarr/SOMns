@@ -2,7 +2,6 @@ package som.interpreter.nodes.messages;
 
 import static som.interpreter.TruffleCompiler.transferToInterpreter;
 import som.interpreter.Arguments.BinaryArguments;
-import som.interpreter.Invokable;
 import som.interpreter.nodes.BinaryMessageNode;
 import som.interpreter.nodes.ClassCheckNode;
 import som.interpreter.nodes.ClassCheckNode.Uninitialized;
@@ -178,12 +177,7 @@ public abstract class BinarySendNode extends BinaryMessageNode {
 
     // DUPLICATED but types
     protected ExpressionNode createCachedNode(final RootCallTarget callTarget) {
-      Invokable invokable = (Invokable) callTarget.getRootNode();
-      if (invokable.isAlwaysToBeInlined()) {
-        return invokable.inline(callTarget, selector);
-      } else {
-        return new InlinableBinarySendNode(this, callTarget);
-      }
+      return new InlinableBinarySendNode(this, callTarget);
     }
   }
 

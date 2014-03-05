@@ -2,7 +2,6 @@ package som.interpreter.nodes.messages;
 
 import static som.interpreter.TruffleCompiler.transferToInterpreter;
 import som.interpreter.Arguments.TernaryArguments;
-import som.interpreter.Invokable;
 import som.interpreter.TypesGen;
 import som.interpreter.nodes.ClassCheckNode;
 import som.interpreter.nodes.ClassCheckNode.Uninitialized;
@@ -170,12 +169,7 @@ public abstract class TernarySendNode extends TernaryMessageNode {
 
     // DUPLICATED but types
     protected ExpressionNode createCachedNode(final RootCallTarget callTarget) {
-      Invokable invokable = (Invokable) callTarget.getRootNode();
-      if (invokable.isAlwaysToBeInlined()) {
-        return invokable.inline(callTarget, selector);
-      } else {
-        return new InlinableSendNode(this, callTarget);
-      }
+      return new InlinableSendNode(this, callTarget);
     }
   }
 

@@ -2,7 +2,6 @@ package som.interpreter.nodes.messages;
 
 import static som.interpreter.TruffleCompiler.transferToInterpreter;
 import som.interpreter.Arguments.UnaryArguments;
-import som.interpreter.Invokable;
 import som.interpreter.nodes.ClassCheckNode;
 import som.interpreter.nodes.ClassCheckNode.Uninitialized;
 import som.interpreter.nodes.ExpressionNode;
@@ -126,12 +125,7 @@ public abstract class UnarySendNode extends UnaryMessageNode {
     }
 
     protected ExpressionNode createCacheNode(final RootCallTarget callTarget) {
-      Invokable invokable = (Invokable) callTarget.getRootNode();
-      if (invokable.isAlwaysToBeInlined()) {
-        return invokable.inline(callTarget, selector);
-      } else {
-        return new InlinableUnarySendNode(this, callTarget);
-      }
+      return new InlinableUnarySendNode(this, callTarget);
     }
   }
 
