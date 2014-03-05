@@ -20,12 +20,8 @@ import som.vmobjects.SMethod;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerAsserts;
-import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.FrameFactory;
-import com.oracle.truffle.api.nodes.InlinableCallSite;
 import com.oracle.truffle.api.nodes.Node;
 
 public abstract class BinarySendNode extends BinaryMessageNode {
@@ -188,63 +184,43 @@ public abstract class BinarySendNode extends BinaryMessageNode {
     }
   }
 
-  public static final class InlinableBinarySendNode extends BinaryMessageNode
-    implements InlinableCallSite {
+  public static final class InlinableBinarySendNode extends BinaryMessageNode {
 
     private final RootCallTarget inlinableCallTarget;
-    private final Invokable  invokable;
-
-    @CompilationFinal private int callCount;
+//    private final Invokable  invokable;
 
     public InlinableBinarySendNode(final BinaryMessageNode node, final RootCallTarget callTarget,
         final Invokable invokable) {
       super(node);
       this.inlinableCallTarget = callTarget;
-      this.invokable           = invokable;
-      callCount = 0;
+//      this.invokable           = invokable;
     }
 
     public InlinableBinarySendNode(final SSymbol selector, final Universe universe,
         final RootCallTarget callTarget, final Invokable invokable) {
       super(selector, universe);
       this.inlinableCallTarget = callTarget;
-      this.invokable           = invokable;
-      callCount = 0;
+//      this.invokable           = invokable;
     }
 
-    @Override
-    public int getCallCount() {
-      return callCount;
-    }
+//    @Override
+//    public Node getInlineTree() {
+//      return invokable.getUninitializedBody();
+//    }
 
-    @Override
-    public void resetCallCount() {
-      callCount = 0;
-    }
-
-    @Override
-    public Node getInlineTree() {
-      return invokable.getUninitializedBody();
-    }
-
-    @Override
-    public boolean inline(final FrameFactory factory) {
-      CompilerAsserts.neverPartOfCompilation();
-
-      ExpressionNode method = null;
-      method = invokable.inline(inlinableCallTarget, selector);
-      if (method != null) {
-        replace(method);
-        return true;
-      } else {
-        return false;
-      }
-    }
-
-    @Override
-    public RootCallTarget getCallTarget() {
-      return inlinableCallTarget;
-    }
+//    @Override
+//    public boolean inline(final FrameFactory factory) {
+//      CompilerAsserts.neverPartOfCompilation();
+//
+//      ExpressionNode method = null;
+//      method = invokable.inline(inlinableCallTarget, selector);
+//      if (method != null) {
+//        replace(method);
+//        return true;
+//      } else {
+//        return false;
+//      }
+//    }
 
     @Override
     public Object executeGeneric(final VirtualFrame frame) {
@@ -256,9 +232,9 @@ public abstract class BinarySendNode extends BinaryMessageNode {
     @Override
     public Object executeEvaluated(final VirtualFrame frame,
         final Object receiver, final Object argument) {
-      if (CompilerDirectives.inInterpreter()) {
-        callCount =+ 10;
-      }
+//      if (CompilerDirectives.inInterpreter()) {
+//        callCount =+ 10;
+//      }
 
       BinaryArguments args = new BinaryArguments(receiver, argument);
       return inlinableCallTarget.call(frame.pack(), args);

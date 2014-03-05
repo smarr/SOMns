@@ -18,8 +18,6 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.FrameFactory;
-import com.oracle.truffle.api.nodes.InlinableCallSite;
 import com.oracle.truffle.api.nodes.Node;
 
 public abstract class UnarySendNode extends UnaryMessageNode {
@@ -136,11 +134,10 @@ public abstract class UnarySendNode extends UnaryMessageNode {
     }
   }
 
-  public static final class InlinableUnarySendNode extends UnaryMessageNode
-    implements InlinableCallSite {
+  public static final class InlinableUnarySendNode extends UnaryMessageNode {
 
     private final RootCallTarget inlinableCallTarget;
-    private final Invokable  invokable;
+//    private final Invokable  invokable;
 
     @CompilationFinal private int callCount;
 
@@ -148,7 +145,7 @@ public abstract class UnarySendNode extends UnaryMessageNode {
         final Invokable invokable) {
       super(node.selector, node.universe);
       this.inlinableCallTarget = callTarget;
-      this.invokable           = invokable;
+//      this.invokable           = invokable;
       callCount = 0;
     }
 
@@ -156,42 +153,42 @@ public abstract class UnarySendNode extends UnaryMessageNode {
         final RootCallTarget callTarget, final Invokable invokable) {
       super(selector, universe);
       this.inlinableCallTarget = callTarget;
-      this.invokable           = invokable;
+//      this.invokable           = invokable;
       callCount = 0;
     }
 
-    @Override
-    public int getCallCount() {
-      return callCount;
-    }
-
-    @Override
-    public void resetCallCount() {
-      callCount = 0;
-    }
-
-    @Override
-    public Node getInlineTree() {
-      return invokable.getUninitializedBody();
-    }
-
-    @Override
-    public boolean inline(final FrameFactory factory) {
-      CompilerAsserts.neverPartOfCompilation();
-
-      ExpressionNode method = invokable.inline(inlinableCallTarget, selector);
-      if (method != null) {
-        replace(method);
-        return true;
-      } else {
-        return false;
-      }
-    }
-
-    @Override
-    public RootCallTarget getCallTarget() {
-      return inlinableCallTarget;
-    }
+//    @Override
+//    public int getCallCount() {
+//      return callCount;
+//    }
+//
+//    @Override
+//    public void resetCallCount() {
+//      callCount = 0;
+//    }
+//
+//    @Override
+//    public Node getInlineTree() {
+//      return invokable.getUninitializedBody();
+//    }
+//
+//    @Override
+//    public boolean inline(final FrameFactory factory) {
+//      CompilerAsserts.neverPartOfCompilation();
+//
+//      ExpressionNode method = invokable.inline(inlinableCallTarget, selector);
+//      if (method != null) {
+//        replace(method);
+//        return true;
+//      } else {
+//        return false;
+//      }
+//    }
+//
+//    @Override
+//    public RootCallTarget getCallTarget() {
+//      return inlinableCallTarget;
+//    }
 
     @Override
     public Object executeGeneric(final VirtualFrame frame) {

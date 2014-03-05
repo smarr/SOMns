@@ -49,7 +49,6 @@ import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.InlinedCallSite;
 
 
 public class Method extends Invokable {
@@ -171,16 +170,16 @@ public class Method extends Invokable {
     }
   }
 
-  private static class UnaryInlinedExpression extends UnaryMessageNode implements InlinedCallSite {
+  private static class UnaryInlinedExpression extends UnaryMessageNode {
     @Child protected ExpressionNode expression;
 
-    private final RootCallTarget originalCallTarget;
+//    private final RootCallTarget originalCallTarget;
 
     UnaryInlinedExpression(final SSymbol selector, final Universe universe,
         final ExpressionNode body, final RootCallTarget callTarget) {
       super(selector, universe);
       this.expression = adoptChild(body);
-      this.originalCallTarget = callTarget;
+//      this.originalCallTarget = callTarget;
     }
 
     @Override
@@ -193,20 +192,20 @@ public class Method extends Invokable {
       throw new IllegalStateException("executeGeneric() is not supported for these nodes, they always need to be called from a SendNode.");
     }
 
-    @Override public RootCallTarget getCallTarget() { return originalCallTarget; }
+//    @Override public RootCallTarget getCallTarget() { return originalCallTarget; }
     @Override public ExpressionNode getReceiver() { return null; }
   }
 
-  private static class UnaryInlinedExpressionUsingReceiver extends UnaryMessageNode implements InlinedCallSite {
+  private static class UnaryInlinedExpressionUsingReceiver extends UnaryMessageNode {
     @Child protected FieldReadNode expression;
 
-    private final RootCallTarget originalCallTarget;
+//    private final RootCallTarget originalCallTarget;
 
     UnaryInlinedExpressionUsingReceiver(final SSymbol selector, final Universe universe,
         final FieldReadNode body, final RootCallTarget callTarget) {
       super(selector, universe);
       this.expression = adoptChild(body);
-      this.originalCallTarget = callTarget;
+//      this.originalCallTarget = callTarget;
     }
 
     @Override
@@ -219,11 +218,11 @@ public class Method extends Invokable {
       throw new IllegalStateException("executeGeneric() is not supported for these nodes, they always need to be called from a SendNode.");
     }
 
-    @Override public RootCallTarget getCallTarget() { return originalCallTarget; }
+//    @Override public RootCallTarget getCallTarget() { return originalCallTarget; }
     @Override public ExpressionNode getReceiver()   { return null; }
   }
 
-  private static final class UnaryInlinedMethod extends UnaryInlinedExpression implements InlinedCallSite {
+  private static final class UnaryInlinedMethod extends UnaryInlinedExpression {
     private final FrameDescriptor inlinedFrameDescriptor;
 
     UnaryInlinedMethod(final SSymbol selector, final Universe universe,
@@ -242,16 +241,16 @@ public class Method extends Invokable {
     }
   }
 
-  private static class BinaryInlinedExpression extends BinaryMessageNode implements InlinedCallSite {
+  private static class BinaryInlinedExpression extends BinaryMessageNode {
     @Child protected ExpressionNode expression;
 
-    private final RootCallTarget originalCallTarget;
+//    private final RootCallTarget originalCallTarget;
 
     BinaryInlinedExpression(final SSymbol selector, final Universe universe,
         final ExpressionNode body, final RootCallTarget callTarget) {
       super(selector, universe);
       this.expression = adoptChild(body);
-      this.originalCallTarget = callTarget;
+//      this.originalCallTarget = callTarget;
     }
 
     @Override
@@ -264,21 +263,21 @@ public class Method extends Invokable {
       throw new IllegalStateException("executeGeneric() is not supported for these nodes, they always need to be called from a SendNode.");
     }
 
-    @Override public RootCallTarget getCallTarget() { return originalCallTarget; }
+//    @Override public RootCallTarget getCallTarget() { return originalCallTarget; }
     @Override public ExpressionNode getReceiver() { return null; }
     @Override public ExpressionNode getArgument() { return null; }
   }
 
-  private static class BinaryInlinedExpressionUsingValues extends BinaryMessageNode implements InlinedCallSite {
+  private static class BinaryInlinedExpressionUsingValues extends BinaryMessageNode {
     @Child protected FieldWriteNode expression;
 
-    private final RootCallTarget originalCallTarget;
+//    private final RootCallTarget originalCallTarget;
 
     BinaryInlinedExpressionUsingValues(final SSymbol selector, final Universe universe,
         final FieldWriteNode body, final RootCallTarget callTarget) {
       super(selector, universe);
       this.expression = adoptChild(body);
-      this.originalCallTarget = callTarget;
+//      this.originalCallTarget = callTarget;
     }
 
     @Override
@@ -291,12 +290,12 @@ public class Method extends Invokable {
       throw new IllegalStateException("executeGeneric() is not supported for these nodes, they always need to be called from a SendNode.");
     }
 
-    @Override public RootCallTarget getCallTarget()   { return originalCallTarget; }
+//    @Override public RootCallTarget getCallTarget()   { return originalCallTarget; }
     @Override public ExpressionNode getReceiver() { return null; }
     @Override public ExpressionNode getArgument() { return null; }
   }
 
-  private static final class BinaryInlinedMethod extends BinaryInlinedExpression implements InlinedCallSite {
+  private static final class BinaryInlinedMethod extends BinaryInlinedExpression {
     private final FrameDescriptor inlinedFrameDescriptor;
 
     BinaryInlinedMethod(final SSymbol selector, final Universe universe,
@@ -314,16 +313,16 @@ public class Method extends Invokable {
     }
   }
 
-  private static class TernaryInlinedExpression extends TernaryMessageNode implements InlinedCallSite {
+  private static class TernaryInlinedExpression extends TernaryMessageNode {
     @Child protected ExpressionNode expression;
 
-    private final RootCallTarget originalCallTarget;
+//    private final RootCallTarget originalCallTarget;
 
     TernaryInlinedExpression(final SSymbol selector, final Universe universe,
         final ExpressionNode body, final RootCallTarget callTarget) {
       super(selector, universe);
       this.expression = adoptChild(body);
-      this.originalCallTarget = callTarget;
+//      this.originalCallTarget = callTarget;
     }
 
     @Override
@@ -335,13 +334,13 @@ public class Method extends Invokable {
     public Object executeGeneric(final VirtualFrame frame) {
       throw new IllegalStateException("executeGeneric() is not supported for these nodes, they always need to be called from a SendNode.");
     }
-    @Override public RootCallTarget getCallTarget()   { return originalCallTarget; }
+//    @Override public RootCallTarget getCallTarget()   { return originalCallTarget; }
     @Override public ExpressionNode getReceiver() { return null; }
     @Override public ExpressionNode getFirstArg() { return null; }
     @Override public ExpressionNode getSecondArg() { return null; }
   }
 
-  private static final class TernaryInlinedMethod extends TernaryInlinedExpression implements InlinedCallSite {
+  private static final class TernaryInlinedMethod extends TernaryInlinedExpression {
     private final FrameDescriptor inlinedFrameDescriptor;
 
     TernaryInlinedMethod(final SSymbol selector, final Universe universe,
@@ -361,16 +360,16 @@ public class Method extends Invokable {
     }
   }
 
-  private static class KeywordInlinedExpression extends KeywordMessageNode implements InlinedCallSite {
+  private static class KeywordInlinedExpression extends KeywordMessageNode {
     @Child protected ExpressionNode expression;
 
-    private final RootCallTarget originalCallTarget;
+//    private final RootCallTarget originalCallTarget;
 
     KeywordInlinedExpression(final SSymbol selector, final Universe universe,
         final ExpressionNode body, final RootCallTarget callTarget) {
       super(selector, universe);
       this.expression = adoptChild(body);
-      this.originalCallTarget = callTarget;
+//      this.originalCallTarget = callTarget;
     }
 
     @Override
@@ -382,12 +381,12 @@ public class Method extends Invokable {
     public Object executeGeneric(final VirtualFrame frame) {
       throw new IllegalStateException("executeGeneric() is not supported for these nodes, they always need to be called from a SendNode.");
     }
-    @Override public RootCallTarget getCallTarget() { return originalCallTarget; }
+//    @Override public RootCallTarget getCallTarget() { return originalCallTarget; }
     @Override public ExpressionNode getReceiver()   { return null; }
     @Override public ArgumentEvaluationNode getArguments() { return null; }
   }
 
-  private static final class KeywordInlinedMethod extends KeywordInlinedExpression implements InlinedCallSite {
+  private static final class KeywordInlinedMethod extends KeywordInlinedExpression {
     private final FrameDescriptor inlinedFrameDescriptor;
 
     KeywordInlinedMethod(final SSymbol selector, final Universe universe,
