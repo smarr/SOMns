@@ -7,6 +7,7 @@ import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.NodeUtil;
+import com.oracle.truffle.api.nodes.RootNode;
 
 
 public class Primitive extends Invokable {
@@ -37,7 +38,12 @@ public class Primitive extends Invokable {
   }
 
   @Override
-  public ExpressionNode inline(final RootCallTarget inlinableCallTarget, final SSymbol selector) {
+  public RootNode split() {
+    return cloneWithNewLexicalContext(null);
+  }
+
+  @Override
+  public ExpressionNode inline(final RootCallTarget callTarget, final SSymbol symbol) {
     // for primitives, we assume that they are wrapped in a proper *SendNode
     // And, that inlining is realized so that the monomorphic/PIC check is
     // done correctly, and afterwards, the `executeEvaluated(..)` method

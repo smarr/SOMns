@@ -31,6 +31,11 @@ public abstract class Invokable extends RootNode {
   public abstract Invokable cloneWithNewLexicalContext(final LexicalContext outerContext);
   public abstract ExpressionNode inline(final RootCallTarget inlinableCallTarget, final SSymbol selector);
 
+  @Override
+  public boolean isSplittable() {
+    return true;
+  }
+
   public abstract boolean isAlwaysToBeInlined();
 
   public final RootCallTarget createCallTarget() {

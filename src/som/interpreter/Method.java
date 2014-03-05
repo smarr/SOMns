@@ -49,6 +49,7 @@ import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.RootNode;
 
 
 public class Method extends Invokable {
@@ -106,6 +107,11 @@ public class Method extends Invokable {
         inlinedContext);
     return new Method(getSourceSection(), inlinedFrameDescriptor, inlinedBody,
         universe, outerContext);
+  }
+
+  @Override
+  public RootNode split() {
+    return cloneWithNewLexicalContext(outerContext);
   }
 
   @Override
