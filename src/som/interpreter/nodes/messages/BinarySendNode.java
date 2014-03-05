@@ -13,8 +13,6 @@ import som.interpreter.nodes.specialized.IfFalseMessageNodeFactory;
 import som.interpreter.nodes.specialized.IfTrueMessageNodeFactory;
 import som.interpreter.nodes.specialized.WhileWithStaticBlocksNode.WhileFalseStaticBlocksNode;
 import som.interpreter.nodes.specialized.WhileWithStaticBlocksNode.WhileTrueStaticBlocksNode;
-import som.interpreter.nodes.specialized.WhileWithValueNode.WhileFalseValueNode;
-import som.interpreter.nodes.specialized.WhileWithValueNode.WhileTrueValueNode;
 import som.vm.Universe;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
@@ -132,29 +130,23 @@ public abstract class BinarySendNode extends BinaryMessageNode {
       switch (selector.getString()) {
         case "whileTrue:":
           assert this == getTopNode();
-          if (getArgument() instanceof BlockNode) {
+          if (getArgument() instanceof BlockNode &&
+              getReceiver() instanceof BlockNode) {
             BlockNode argBlockNode = (BlockNode) getArgument();
             SBlock    argBlock     = (SBlock)    argument;
-            if (getReceiver() instanceof BlockNode) {
-              return replace(new WhileTrueStaticBlocksNode(this,
-                  (BlockNode) getReceiver(), argBlockNode, (SBlock) receiver, argBlock));
-            } else {
-              return replace(new WhileTrueValueNode(this, getReceiver(), argBlockNode, argBlock));
-            }
+            return replace(new WhileTrueStaticBlocksNode(this,
+                (BlockNode) getReceiver(), argBlockNode, (SBlock) receiver, argBlock));
           }
           break; // use normal send
         case "whileFalse:":
           assert this == getTopNode();
-          if (getArgument() instanceof BlockNode) {
+          if (getArgument() instanceof BlockNode &&
+              getReceiver() instanceof BlockNode) {
             BlockNode argBlockNode = (BlockNode) getArgument();
             SBlock    argBlock     = (SBlock)    argument;
-            if (getReceiver() instanceof BlockNode) {
-              return replace(new WhileFalseStaticBlocksNode(this,
-                  (BlockNode) getReceiver(), argBlockNode,
-                  (SBlock) receiver, argBlock));
-            } else {
-              return replace(new WhileFalseValueNode(this, getReceiver(), argBlockNode, argBlock));
-            }
+            return replace(new WhileFalseStaticBlocksNode(this,
+                (BlockNode) getReceiver(), argBlockNode,
+                (SBlock) receiver, argBlock));
           }
           break; // use normal send
         case "ifTrue:":
