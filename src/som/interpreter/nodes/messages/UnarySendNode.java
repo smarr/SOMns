@@ -13,11 +13,12 @@ import som.vmobjects.SClass;
 import som.vmobjects.SMethod;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerAsserts;
-import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.RootCallTarget;
+import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.CallNode;
 import com.oracle.truffle.api.nodes.Node;
 
 public abstract class UnarySendNode extends UnaryMessageNode {
@@ -129,66 +130,25 @@ public abstract class UnarySendNode extends UnaryMessageNode {
       if (invokable.isAlwaysToBeInlined()) {
         return invokable.inline(callTarget, selector);
       } else {
-        return new InlinableUnarySendNode(this, callTarget, invokable);
+        return new InlinableUnarySendNode(this, callTarget);
       }
     }
   }
 
   public static final class InlinableUnarySendNode extends UnaryMessageNode {
 
-    private final RootCallTarget inlinableCallTarget;
-//    private final Invokable  invokable;
+    private final CallNode inlinableNode;
 
-    @CompilationFinal private int callCount;
-
-    InlinableUnarySendNode(final UnarySendNode node, final RootCallTarget callTarget,
-        final Invokable invokable) {
-      super(node.selector, node.universe);
-      this.inlinableCallTarget = callTarget;
-//      this.invokable           = invokable;
-      callCount = 0;
+    InlinableUnarySendNode(final UnarySendNode node,
+        final CallTarget inlineableCallTarget) {
+      this(node.selector, node.universe, inlineableCallTarget);
     }
 
     public InlinableUnarySendNode(final SSymbol selector, final Universe universe,
-        final RootCallTarget callTarget, final Invokable invokable) {
+        final CallTarget inlinableCallTarget) {
       super(selector, universe);
-      this.inlinableCallTarget = callTarget;
-//      this.invokable           = invokable;
-      callCount = 0;
+      this.inlinableNode = Truffle.getRuntime().createCallNode(inlinableCallTarget);
     }
-
-//    @Override
-//    public int getCallCount() {
-//      return callCount;
-//    }
-//
-//    @Override
-//    public void resetCallCount() {
-//      callCount = 0;
-//    }
-//
-//    @Override
-//    public Node getInlineTree() {
-//      return invokable.getUninitializedBody();
-//    }
-//
-//    @Override
-//    public boolean inline(final FrameFactory factory) {
-//      CompilerAsserts.neverPartOfCompilation();
-//
-//      ExpressionNode method = invokable.inline(inlinableCallTarget, selector);
-//      if (method != null) {
-//        replace(method);
-//        return true;
-//      } else {
-//        return false;
-//      }
-//    }
-//
-//    @Override
-//    public RootCallTarget getCallTarget() {
-//      return inlinableCallTarget;
-//    }
 
     @Override
     public Object executeGeneric(final VirtualFrame frame) {
@@ -198,11 +158,8 @@ public abstract class UnarySendNode extends UnaryMessageNode {
 
     @Override
     public Object executeEvaluated(final VirtualFrame frame, final Object receiver) {
-      if (CompilerDirectives.inInterpreter()) {
-        callCount =+ 10;
-      }
       UnaryArguments args = new UnaryArguments(receiver);
-      return inlinableCallTarget.call(frame.pack(), args);
+      return inlinableNode.call(frame.pack(), args);
     }
   }
 

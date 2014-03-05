@@ -10,11 +10,11 @@ public final class BlockHelper {
 
   public static InlinableUnarySendNode createInlineableNode(final SMethod method, final Universe universe) {
     return new InlinableUnarySendNode(method.getSignature(),
-        universe, method.getCallTarget(), method.getInvokable());
+        universe, method.getCallTarget());
   }
 
   public static InlinableBinarySendNode createBinaryInlineableNode(final SMethod method, final Universe universe) {
     return new InlinableBinarySendNode(method.getSignature(),
-        universe, method.getCallTarget(), method.getInvokable());
+        universe, method.getCallTarget());
   }
 }

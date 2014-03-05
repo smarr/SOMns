@@ -14,11 +14,12 @@ import som.vmobjects.SClass;
 import som.vmobjects.SMethod;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerAsserts;
-import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.RootCallTarget;
+import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.CallNode;
 import com.oracle.truffle.api.nodes.Node;
 
 
@@ -146,59 +147,19 @@ public abstract class KeywordSendNode extends KeywordMessageNode {
       if (invokable.isAlwaysToBeInlined()) {
         return invokable.inline(callTarget, selector);
       } else {
-        return new InlinableSendNode(this, callTarget, invokable);
+        return new InlinableSendNode(this, callTarget);
       }
     }
   }
 
   private static final class InlinableSendNode extends KeywordMessageNode {
 
-    private final RootCallTarget inlinableCallTarget;
-//    private final Invokable  invokable;
+    private final CallNode inlinableNode;
 
-    @CompilationFinal private int callCount;
-
-    InlinableSendNode(final KeywordMessageNode node, final RootCallTarget callTarget,
-        final Invokable invokable) {
+    InlinableSendNode(final KeywordMessageNode node, final CallTarget callTarget) {
       super(node);
-      this.inlinableCallTarget = callTarget;
-//      this.invokable           = invokable;
-      callCount = 0;
+      this.inlinableNode = Truffle.getRuntime().createCallNode(callTarget);
     }
-
-//    @Override
-//    public int getCallCount() {
-//      return callCount;
-//    }
-//
-//    @Override
-//    public void resetCallCount() {
-//      callCount = 0;
-//    }
-//
-//    @Override
-//    public Node getInlineTree() {
-//      return invokable.getUninitializedBody();
-//    }
-//
-//    @Override
-//    public boolean inline(final FrameFactory factory) {
-//      CompilerAsserts.neverPartOfCompilation();
-//
-//      ExpressionNode method = null;
-//      method = invokable.inline(inlinableCallTarget, selector);
-//      if (method != null) {
-//        replace(method);
-//        return true;
-//      } else {
-//        return false;
-//      }
-//    }
-//
-//    @Override
-//    public RootCallTarget getCallTarget() {
-//      return inlinableCallTarget;
-//    }
 
     @Override
     public Object executeGeneric(final VirtualFrame frame) {
@@ -210,12 +171,8 @@ public abstract class KeywordSendNode extends KeywordMessageNode {
     @Override
     public Object executeEvaluated(final VirtualFrame frame,
         final Object receiver, final Object[] arguments) {
-      if (CompilerDirectives.inInterpreter()) {
-        callCount =+ 10;
-      }
-
       KeywordArguments args = new KeywordArguments(receiver, arguments);
-      return inlinableCallTarget.call(frame.pack(), args);
+      return inlinableNode.call(frame.pack(), args);
     }
   }
 

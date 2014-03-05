@@ -17,11 +17,12 @@ import som.vmobjects.SClass;
 import som.vmobjects.SMethod;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerAsserts;
-import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.RootCallTarget;
+import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.CallNode;
 import com.oracle.truffle.api.nodes.Node;
 
 
@@ -173,59 +174,19 @@ public abstract class TernarySendNode extends TernaryMessageNode {
       if (invokable.isAlwaysToBeInlined()) {
         return invokable.inline(callTarget, selector);
       } else {
-        return new InlinableSendNode(this, callTarget, invokable);
+        return new InlinableSendNode(this, callTarget);
       }
     }
   }
 
   private static final class InlinableSendNode extends TernaryMessageNode {
 
-    private final RootCallTarget inlinableCallTarget;
-//    private final Invokable  invokable;
+    private final CallNode inlinableNode;
 
-    @CompilationFinal private int callCount;
-
-    InlinableSendNode(final TernaryMessageNode node, final RootCallTarget callTarget,
-        final Invokable invokable) {
+    InlinableSendNode(final TernaryMessageNode node, final CallTarget callTarget) {
       super(node);
-      this.inlinableCallTarget = callTarget;
-//      this.invokable           = invokable;
-      callCount = 0;
+      this.inlinableNode = Truffle.getRuntime().createCallNode(callTarget);
     }
-
-//    @Override
-//    public int getCallCount() {
-//      return callCount;
-//    }
-//
-//    @Override
-//    public void resetCallCount() {
-//      callCount = 0;
-//    }
-//
-//    @Override
-//    public Node getInlineTree() {
-//      return invokable.getUninitializedBody();
-//    }
-//
-//    @Override
-//    public boolean inline(final FrameFactory factory) {
-//      CompilerAsserts.neverPartOfCompilation();
-//
-//      ExpressionNode method = null;
-//      method = invokable.inline(inlinableCallTarget, selector);
-//      if (method != null) {
-//        replace(method);
-//        return true;
-//      } else {
-//        return false;
-//      }
-//    }
-//
-//    @Override
-//    public RootCallTarget getCallTarget() {
-//      return inlinableCallTarget;
-//    }
 
     @Override
     public Object executeGeneric(final VirtualFrame frame) {
@@ -238,12 +199,8 @@ public abstract class TernarySendNode extends TernaryMessageNode {
     @Override
     public Object executeEvaluated(final VirtualFrame frame,
         final Object receiver, final Object argument1, final Object argument2) {
-      if (CompilerDirectives.inInterpreter()) {
-        callCount =+ 10;
-      }
-
       TernaryArguments args = new TernaryArguments(receiver, argument1, argument2);
-      return inlinableCallTarget.call(frame.pack(), args);
+      return inlinableNode.call(frame.pack(), args);
     }
   }
 

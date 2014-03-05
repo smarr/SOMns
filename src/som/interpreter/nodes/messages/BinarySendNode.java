@@ -19,9 +19,12 @@ import som.vmobjects.SClass;
 import som.vmobjects.SMethod;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.RootCallTarget;
+import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.CallNode;
 import com.oracle.truffle.api.nodes.Node;
 
 public abstract class BinarySendNode extends BinaryMessageNode {
@@ -179,48 +182,24 @@ public abstract class BinarySendNode extends BinaryMessageNode {
       if (invokable.isAlwaysToBeInlined()) {
         return invokable.inline(callTarget, selector);
       } else {
-        return new InlinableBinarySendNode(this, callTarget, invokable);
+        return new InlinableBinarySendNode(this, callTarget);
       }
     }
   }
 
   public static final class InlinableBinarySendNode extends BinaryMessageNode {
 
-    private final RootCallTarget inlinableCallTarget;
-//    private final Invokable  invokable;
+    private final CallNode inlinableNode;
 
-    public InlinableBinarySendNode(final BinaryMessageNode node, final RootCallTarget callTarget,
-        final Invokable invokable) {
-      super(node);
-      this.inlinableCallTarget = callTarget;
-//      this.invokable           = invokable;
+    public InlinableBinarySendNode(final BinarySendNode node, final CallTarget callTarget) {
+      this(node.selector, node.universe, callTarget);
     }
 
     public InlinableBinarySendNode(final SSymbol selector, final Universe universe,
-        final RootCallTarget callTarget, final Invokable invokable) {
+        final CallTarget callTarget) {
       super(selector, universe);
-      this.inlinableCallTarget = callTarget;
-//      this.invokable           = invokable;
+      this.inlinableNode = Truffle.getRuntime().createCallNode(callTarget);
     }
-
-//    @Override
-//    public Node getInlineTree() {
-//      return invokable.getUninitializedBody();
-//    }
-
-//    @Override
-//    public boolean inline(final FrameFactory factory) {
-//      CompilerAsserts.neverPartOfCompilation();
-//
-//      ExpressionNode method = null;
-//      method = invokable.inline(inlinableCallTarget, selector);
-//      if (method != null) {
-//        replace(method);
-//        return true;
-//      } else {
-//        return false;
-//      }
-//    }
 
     @Override
     public Object executeGeneric(final VirtualFrame frame) {
@@ -232,12 +211,8 @@ public abstract class BinarySendNode extends BinaryMessageNode {
     @Override
     public Object executeEvaluated(final VirtualFrame frame,
         final Object receiver, final Object argument) {
-//      if (CompilerDirectives.inInterpreter()) {
-//        callCount =+ 10;
-//      }
-
       BinaryArguments args = new BinaryArguments(receiver, argument);
-      return inlinableCallTarget.call(frame.pack(), args);
+      return inlinableNode.call(frame.pack(), args);
     }
   }
 
