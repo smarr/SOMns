@@ -20,6 +20,11 @@ if [ -z "$GRAAL_FLAGS" ]; then
       -G:+TraceTruffleCompilationDetails'
   fi
 fi
-$GRAAL_HOME/mxtool/mx --vm server vm $GRAAL_FLAGS \
+
+if [ ! -z "$DBG" ]; then
+  GRAAL_DEBUG_SWITCH='-d'
+fi
+
+$GRAAL_HOME/mxtool/mx $GRAAL_DEBUG_SWITCH --vm server vm $GRAAL_FLAGS \
    -Xbootclasspath/a:build/classes:libs/truffle.jar \
    som.vm.Universe "$@"
