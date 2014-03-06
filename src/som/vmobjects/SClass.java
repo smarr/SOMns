@@ -33,6 +33,7 @@ import som.primitives.Primitives;
 import som.vm.Universe;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.CompilerDirectives.SlowPath;
 
 public class SClass extends SObject {
 
@@ -125,11 +126,12 @@ public class SClass extends SObject {
     getInstanceInvokables().setIndexableField(index, value);
   }
 
-  public SMethod lookupInvokable(final SSymbol signature) {
+  @SlowPath
+  public SMethod lookupInvokable(final SSymbol selector) {
     SMethod invokable;
 
     // Lookup invokable and return if found
-    invokable = invokablesTable.get(signature);
+    invokable = invokablesTable.get(selector);
     if (invokable != null) { return invokable; }
 
     // Lookup invokable with given signature in array of instance invokables
@@ -138,17 +140,17 @@ public class SClass extends SObject {
       invokable = getInstanceInvokable(i);
 
       // Return the invokable if the signature matches
-      if (invokable.getSignature() == signature) {
-        invokablesTable.put(signature, invokable);
+      if (invokable.getSignature() == selector) {
+        invokablesTable.put(selector, invokable);
         return invokable;
       }
     }
 
     // Traverse the super class chain by calling lookup on the super class
     if (hasSuperClass()) {
-      invokable = ((SClass) getSuperClass()).lookupInvokable(signature);
+      invokable = ((SClass) getSuperClass()).lookupInvokable(selector);
       if (invokable != null) {
-        invokablesTable.put(signature, invokable);
+        invokablesTable.put(selector, invokable);
         return invokable;
       }
     }
