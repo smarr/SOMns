@@ -113,8 +113,4 @@ public abstract class ExpressionNode extends SOMNode {
   public SAbstractObject executeSAbstractObject(final VirtualFrame frame) throws UnexpectedResultException {
     return TypesGen.TYPES.expectSAbstractObject(executeGeneric(frame));
   }
-
-  public Object[] executeArray(final VirtualFrame frame) throws UnexpectedResultException {
-    return TypesGen.TYPES.expectObjectArray(executeGeneric(frame));
-  }
 }

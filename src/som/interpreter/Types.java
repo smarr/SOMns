@@ -53,8 +53,7 @@ import com.oracle.truffle.api.dsl.TypeSystem;
                 SString.class,
                 SSymbol.class,
                 SMethod.class,
-        SAbstractObject.class,
-               Object[].class})
+        SAbstractObject.class})
 public class Types {
 
   public static final SAbstractObject asAbstractObject(final Object obj,
