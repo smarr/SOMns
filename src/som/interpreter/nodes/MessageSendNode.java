@@ -45,15 +45,20 @@ public final class MessageSendNode {
     }
 
     @Override
-    @ExplodeLoop
     public final Object executeGeneric(final VirtualFrame frame) {
       Object rcvr = receiverNode.executeGeneric(frame);
 
+      Object[] arguments = evaluateArguments(frame);
+      return executeEvaluated(frame, rcvr, arguments);
+    }
+
+    @ExplodeLoop
+    private Object[] evaluateArguments(final VirtualFrame frame) {
       Object[] arguments = new Object[argumentNodes.length];
       for (int i = 0; i < argumentNodes.length; i++) {
         arguments[i] = argumentNodes[i].executeGeneric(frame);
       }
-      return executeEvaluated(frame, rcvr, arguments);
+      return arguments;
     }
   }
 
