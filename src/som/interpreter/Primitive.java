@@ -3,7 +3,6 @@ package som.interpreter;
 import som.interpreter.nodes.ExpressionNode;
 
 import com.oracle.truffle.api.frame.FrameDescriptor;
-import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.RootNode;
 
 
@@ -12,11 +11,6 @@ public class Primitive extends Invokable {
   public Primitive(final ExpressionNode primitive,
       final FrameDescriptor frameDescriptor) {
     super(null, frameDescriptor, primitive);
-  }
-
-  @Override
-  public Object execute(final VirtualFrame frame) {
-    return expressionOrSequence.executeGeneric(frame);
   }
 
   @Override

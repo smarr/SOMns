@@ -26,7 +26,6 @@ import som.vm.Universe;
 
 import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.frame.FrameDescriptor;
-import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.RootNode;
 
 
@@ -43,11 +42,6 @@ public class Method extends Invokable {
     super(sourceSection, frameDescriptor, expressions);
     this.universe     = universe;
     this.outerContext = outerContext;
-  }
-
-  @Override
-  public Object execute(final VirtualFrame frame) {
-    return expressionOrSequence.executeGeneric(frame);
   }
 
   @Override
