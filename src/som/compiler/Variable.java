@@ -25,6 +25,11 @@ public abstract class Variable {
     this.isReadOutOfContext = false;
   }
 
+  @Override
+  public String toString() {
+    return getClass().getName() + "(" + name + ")";
+  }
+
   public final FrameSlot getSlot() {
     return slot;
   }
