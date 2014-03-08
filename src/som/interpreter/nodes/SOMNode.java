@@ -24,12 +24,17 @@ package som.interpreter.nodes;
 import som.interpreter.Inliner;
 import som.interpreter.Types;
 
+import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.dsl.TypeSystemReference;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.NodeUtil;
 
 @TypeSystemReference(Types.class)
 public abstract class SOMNode extends Node {
+
+  public SOMNode(final SourceSection sourceSection) {
+    super(sourceSection);
+  }
 
   public void replaceWithIndependentCopyForInlining(final Inliner inliner) {
     // do nothing!

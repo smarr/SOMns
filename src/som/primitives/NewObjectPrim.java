@@ -1,17 +1,16 @@
 package som.primitives;
 
-import som.interpreter.nodes.UnaryMessageNode;
+import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
-import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.Specialization;
 
 
-public abstract class NewObjectPrim extends UnaryMessageNode {
-  public NewObjectPrim(final SSymbol selector, final Universe universe) { super(selector, universe); }
-  public NewObjectPrim(final NewObjectPrim prim) { this(prim.selector, prim.universe); }
+public abstract class NewObjectPrim extends UnaryExpressionNode {
+  private final Universe universe;
+  public NewObjectPrim() { this.universe = Universe.current(); }
 
   @Specialization
   public SAbstractObject doSClass(final SClass receiver) {

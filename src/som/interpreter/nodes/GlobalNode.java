@@ -21,7 +21,8 @@
  */
 package som.interpreter.nodes;
 
-import som.interpreter.Arguments;
+import som.interpreter.SArguments;
+import som.interpreter.TruffleCompiler;
 import som.vm.Universe;
 import som.vm.Universe.Association;
 import som.vmobjects.SAbstractObject;
@@ -51,6 +52,7 @@ public abstract class GlobalNode extends ExpressionNode {
 
     @Override
     public Object executeGeneric(final VirtualFrame frame) {
+      TruffleCompiler.transferToInterpreterAndInvalidate("Uninitialized Global Node");
       // Get the global from the universe
       Association assoc = universe.getGlobalsAssociation(globalName);
       if (assoc != null) {
@@ -59,7 +61,7 @@ public abstract class GlobalNode extends ExpressionNode {
         unknownGlobalNotFound.enter();
         // if it is not defined, we will send a error message to the current
         // receiver object
-        Object self = Arguments.get(frame).getSelf();
+        Object self = SArguments.getReceiverFromFrame(frame);
         return SAbstractObject.sendUnknownGlobal(self, globalName, universe,
             frame.pack());
       }

@@ -36,10 +36,18 @@ import som.vmobjects.SObject;
 import som.vmobjects.SString;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 
 public abstract class ExpressionNode extends SOMNode {
+
+  public ExpressionNode(final SourceSection sourceSection) {
+    super(sourceSection);
+  }
+
+  // TODO: clean up and remove this one
+  public ExpressionNode() { this(null); }
 
   public abstract Object executeGeneric(final VirtualFrame frame);
 

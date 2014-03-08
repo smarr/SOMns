@@ -2,7 +2,7 @@ package som.primitives;
 
 import java.math.BigInteger;
 
-import som.interpreter.nodes.BinaryMessageNode;
+import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.vm.Universe;
 import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
@@ -12,9 +12,9 @@ import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.Specialization;
 
-public abstract class EqualsEqualsPrim extends BinaryMessageNode {
-  public EqualsEqualsPrim(final SSymbol selector, final Universe universe) { super(selector, universe); }
-  public EqualsEqualsPrim(final EqualsEqualsPrim prim) { this(prim.selector, prim.universe); }
+public abstract class EqualsEqualsPrim extends BinaryExpressionNode {
+  private final Universe universe;
+  public EqualsEqualsPrim() { this.universe = Universe.current(); }
 
   @Specialization(order = 1)
   public SObject doInteger(final int left, final int right) {

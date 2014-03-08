@@ -26,11 +26,8 @@
 package som.vmobjects;
 
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
-import som.interpreter.Arguments.BinaryArguments;
-import som.interpreter.Arguments.KeywordArguments;
-import som.interpreter.Arguments.TernaryArguments;
-import som.interpreter.Arguments.UnaryArguments;
 import som.interpreter.Invokable;
+import som.interpreter.SArguments;
 import som.interpreter.Types;
 import som.vm.Universe;
 
@@ -81,28 +78,28 @@ public class SMethod extends SAbstractObject {
 
   public SAbstractObject invokeRoot(final SAbstractObject self,
       final SAbstractObject[] args, final Universe universe) {
-    SAbstractObject result = Types.asAbstractObject(callTarget.call(new KeywordArguments(self, args)), universe);
+    SAbstractObject result = Types.asAbstractObject(callTarget.call(new SArguments(self, args)), universe);
     return result;
   }
 
   public Object invoke(final PackedFrame caller, final Object self,
       final Universe universe) {
-    return callTarget.call(caller, new UnaryArguments(self));
+    return callTarget.call(caller, new SArguments(self, new Object[0]));
   }
 
   public Object invoke(final PackedFrame caller, final Object self,
       final Object arg, final Universe universe) {
-    return callTarget.call(caller, new BinaryArguments(self, arg));
+    return callTarget.call(caller, new SArguments(self, new Object[] {arg}));
   }
 
   public Object invoke(final PackedFrame caller, final Object self,
       final Object arg1, final Object arg2, final Universe universe) {
-    return callTarget.call(caller, new TernaryArguments(self, arg1, arg2));
+    return callTarget.call(caller, new SArguments(self, new Object[] {arg1, arg2}));
   }
 
   public Object invoke(final PackedFrame caller, final Object self,
       final Object[] args, final Universe universe) {
-    Object result = callTarget.call(caller, new KeywordArguments(self, args));
+    Object result = callTarget.call(caller, new SArguments(self, args));
     return result;
   }
 

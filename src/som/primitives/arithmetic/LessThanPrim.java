@@ -4,14 +4,13 @@ import java.math.BigInteger;
 
 import som.vm.Universe;
 import som.vmobjects.SObject;
-import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.Specialization;
 
 
 public abstract class LessThanPrim extends ArithmeticPrim {
-  public LessThanPrim(final SSymbol selector, final Universe universe) { super(selector, universe); }
-  public LessThanPrim(final LessThanPrim prim) { this(prim.selector, prim.universe); }
+  private final Universe universe;
+  public LessThanPrim() { this.universe = Universe.current(); }
 
 
   @Specialization(order = 1)

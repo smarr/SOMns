@@ -27,9 +27,8 @@ package som.primitives;
 
 import som.compiler.MethodGenerationContext;
 import som.interpreter.Primitive;
-import som.interpreter.nodes.AbstractMessageNode;
-import som.interpreter.nodes.ArgumentEvaluationNode;
 import som.interpreter.nodes.ArgumentReadNode;
+import som.interpreter.nodes.ArgumentReadNode.SelfArgumentReadNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.vm.Universe;
 import som.vmobjects.SClass;
@@ -59,28 +58,28 @@ public abstract class Primitives {
 
   @SlowPath
   public static SMethod constructPrimitive(final SSymbol signature,
-      final NodeFactory<? extends AbstractMessageNode> nodeFactory,
+      final NodeFactory<? extends ExpressionNode> nodeFactory,
       final Universe universe, final SClass holder) {
     int numArgs = signature.getNumberOfSignatureArguments();
 
     MethodGenerationContext mgen = new MethodGenerationContext();
-    ArgumentReadNode self = ArgumentReadNode.create(0, numArgs);
+    SelfArgumentReadNode self = new SelfArgumentReadNode();
     ExpressionNode[] args = new ExpressionNode[numArgs - 1];
     for (int i = 0; i < numArgs - 1; i++) {
-      args[i] = ArgumentReadNode.create(i + 1, numArgs);
+      args[i] = new ArgumentReadNode(i);
     }
 
-    AbstractMessageNode primNode;
+    ExpressionNode primNode;
     if (numArgs == 1) {
-      primNode = nodeFactory.createNode(signature, universe, self);
+      primNode = nodeFactory.createNode(self);
     } else if (numArgs == 2) {
-      primNode = nodeFactory.createNode(signature, universe, self, args[0]);
+      primNode = nodeFactory.createNode(self, args[0]);
     } else if (numArgs == 3) {
-      primNode = nodeFactory.createNode(signature, universe, self, args[0], args[1]);
+      primNode = nodeFactory.createNode(self, args[0], args[1]);
+    } else if (numArgs == 4) {
+      primNode = nodeFactory.createNode(self, args[0], args[1], args[2]);
     } else {
-      ArgumentEvaluationNode argEvalNode = new ArgumentEvaluationNode(args);
-      primNode = nodeFactory.createNode(signature, universe,
-          self, argEvalNode);
+      throw new RuntimeException("TODO: implement this case!");
     }
 
     Primitive primMethodNode = new Primitive(primNode, mgen.getFrameDescriptor());
@@ -94,20 +93,20 @@ public abstract class Primitives {
     int numArgs = signature.getNumberOfSignatureArguments();
 
     MethodGenerationContext mgen = new MethodGenerationContext();
-    ArgumentReadNode self = ArgumentReadNode.create(0, numArgs);
+    SelfArgumentReadNode self = new SelfArgumentReadNode();
     ExpressionNode[] args = new ExpressionNode[numArgs - 1];
     for (int i = 0; i < numArgs - 1; i++) {
-      args[i] = ArgumentReadNode.create(i + 1, numArgs);
+      args[i] = new ArgumentReadNode(i);
     }
 
-    ExpressionNode primNode = EmptyPrim.create(signature, universe, self);
+    ExpressionNode primNode = EmptyPrim.create(self);
     Primitive primMethodNode = new Primitive(primNode, mgen.getFrameDescriptor());
     SMethod prim = universe.newMethod(signature, primMethodNode, true);
     return prim;
   }
 
   protected void installInstancePrimitive(final String selector,
-      final NodeFactory<? extends AbstractMessageNode> nodeFactory) {
+      final NodeFactory<? extends ExpressionNode> nodeFactory) {
     SSymbol signature = universe.symbolFor(selector);
     SMethod prim = constructPrimitive(signature, nodeFactory, universe, holder);
 
@@ -116,7 +115,7 @@ public abstract class Primitives {
   }
 
   protected void installClassPrimitive(final String selector,
-      final NodeFactory<? extends AbstractMessageNode> nodeFactory) {
+      final NodeFactory<? extends ExpressionNode> nodeFactory) {
     SSymbol signature = universe.symbolFor(selector);
     SMethod prim = constructPrimitive(signature, nodeFactory, universe, holder);
 

@@ -34,6 +34,7 @@ import som.compiler.Variable.Local;
 import som.interpreter.LexicalContext;
 import som.interpreter.nodes.ArgumentInitializationNode;
 import som.interpreter.nodes.ArgumentReadNode;
+import som.interpreter.nodes.ArgumentReadNode.SelfArgumentReadNode;
 import som.interpreter.nodes.ContextualNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.FieldNode.FieldReadNode;
@@ -160,7 +161,9 @@ public class MethodGenerationContext {
     LocalVariableWriteNode[] writes = new LocalVariableWriteNode[arguments.size()];
 
     for (Argument arg : arguments.values()) {
-      writes[arg.index] = LocalVariableWriteNodeFactory.create(arg.slot, ArgumentReadNode.create(arg.index, arguments.values().size()));
+      writes[arg.index + 1] = LocalVariableWriteNodeFactory.create(arg.slot,
+          (arg.isSelf()) ? new SelfArgumentReadNode()
+                         : new ArgumentReadNode(arg.index));
     }
     return new ArgumentInitializationNode(writes, methodBody);
   }
@@ -215,7 +218,7 @@ public class MethodGenerationContext {
     }
 
     Argument argument = new Argument(arg, frameDescriptor.addFrameSlot(arg),
-        arguments.size());
+        arguments.size() - 1);
     arguments.put(arg, argument);
   }
 

@@ -2,17 +2,12 @@ package som.primitives.arithmetic;
 
 import java.math.BigInteger;
 
-import som.interpreter.nodes.UnaryMessageNode;
-import som.vm.Universe;
-import som.vmobjects.SSymbol;
+import som.interpreter.nodes.nary.UnaryExpressionNode;
 
 import com.oracle.truffle.api.dsl.Specialization;
 
 
-public abstract class SqrtPrim extends UnaryMessageNode {
-  public SqrtPrim(final SSymbol selector, final Universe universe) { super(selector, universe); }
-  public SqrtPrim(final SqrtPrim node) { this(node.selector, node.universe); }
-
+public abstract class SqrtPrim extends UnaryExpressionNode {
   private Number intOrBigInt(final long val) {
     if (val > Integer.MAX_VALUE || val < Integer.MIN_VALUE) {
       return BigInteger.valueOf(val);

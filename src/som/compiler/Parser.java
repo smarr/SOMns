@@ -64,17 +64,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 import som.compiler.Variable.Local;
-import som.interpreter.nodes.AbstractMessageNode;
-import som.interpreter.nodes.BinaryMessageNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.FieldNode.FieldReadNode;
 import som.interpreter.nodes.FieldNode.FieldWriteNode;
 import som.interpreter.nodes.GlobalNode;
 import som.interpreter.nodes.GlobalNode.UninitializedGlobalReadNode;
-import som.interpreter.nodes.NodeFactory;
+import som.interpreter.nodes.MessageSendNode;
+import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.interpreter.nodes.ReturnNonLocalNode;
 import som.interpreter.nodes.SequenceNode;
-import som.interpreter.nodes.UnaryMessageNode;
 import som.interpreter.nodes.literals.BigIntegerLiteralNode;
 import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.literals.BlockNode.BlockNodeWithContext;
@@ -549,9 +547,9 @@ public class Parser {
     return identifier();
   }
 
-  private AbstractMessageNode messages(final MethodGenerationContext mgenc,
+  private AbstractMessageSendNode messages(final MethodGenerationContext mgenc,
       final ExpressionNode receiver) {
-    AbstractMessageNode msg;
+    AbstractMessageSendNode msg;
     if (sym == Identifier) {
       msg = unaryMessage(receiver);
 
@@ -582,21 +580,23 @@ public class Parser {
     return msg;
   }
 
-  private UnaryMessageNode unaryMessage(final ExpressionNode receiver) {
+  private AbstractMessageSendNode unaryMessage(final ExpressionNode receiver) {
     SourceCoordinate coord = getCoordinate();
     SSymbol selector = unarySelector();
-    UnaryMessageNode msg = NodeFactory.createUnaryMessageNode(selector, universe, receiver);
+    AbstractMessageSendNode msg = MessageSendNode.create(selector, receiver,
+        noArgs);
     assignSource(msg, coord);
     return msg;
   }
 
-  private BinaryMessageNode binaryMessage(final MethodGenerationContext mgenc,
+  private AbstractMessageSendNode binaryMessage(final MethodGenerationContext mgenc,
       final ExpressionNode receiver) {
     SourceCoordinate coord = getCoordinate();
     SSymbol msg = binarySelector();
     ExpressionNode operand = binaryOperand(mgenc);
 
-    BinaryMessageNode msgNode = NodeFactory.createBinaryMessageNode(msg, universe, receiver, operand);
+    AbstractMessageSendNode msgNode = MessageSendNode.create(msg, receiver,
+        new ExpressionNode[] {operand});
     assignSource(msgNode, coord);
     return msgNode;
   }
@@ -613,7 +613,7 @@ public class Parser {
     return operand;
   }
 
-  private AbstractMessageNode keywordMessage(final MethodGenerationContext mgenc,
+  private AbstractMessageSendNode keywordMessage(final MethodGenerationContext mgenc,
       final ExpressionNode receiver) {
     SourceCoordinate coord = getCoordinate();
     List<ExpressionNode> arguments = new ArrayList<ExpressionNode>();
@@ -627,8 +627,8 @@ public class Parser {
 
     SSymbol msg = universe.symbolFor(kw.toString());
 
-    AbstractMessageNode msgNode = NodeFactory.createMessageNode(msg, universe,
-        receiver, arguments.toArray(new ExpressionNode[0]));
+    AbstractMessageSendNode msgNode = MessageSendNode.create(msg, receiver,
+        arguments.toArray(new ExpressionNode[0]));
     assignSource(msgNode, coord);
     return msgNode;
   }
@@ -841,4 +841,5 @@ public class Parser {
     return sym == Integer || sym.compareTo(STString) >= 0;
   }
 
+  private static final ExpressionNode[] noArgs = new ExpressionNode[0];
 }

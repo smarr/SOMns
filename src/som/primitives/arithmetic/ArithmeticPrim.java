@@ -2,14 +2,10 @@ package som.primitives.arithmetic;
 
 import java.math.BigInteger;
 
-import som.interpreter.nodes.BinaryMessageNode;
-import som.vm.Universe;
-import som.vmobjects.SSymbol;
+import som.interpreter.nodes.nary.BinaryExpressionNode;
 
 
-public abstract class ArithmeticPrim extends BinaryMessageNode {
-
-  protected ArithmeticPrim(final SSymbol selector, final Universe universe) { super(selector, universe); }
+public abstract class ArithmeticPrim extends BinaryExpressionNode {
 
   protected final Number intOrBigInt(final long val) {
     if (val > Integer.MAX_VALUE || val < Integer.MIN_VALUE) {

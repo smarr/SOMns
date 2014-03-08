@@ -1,32 +1,27 @@
 package som.primitives;
 
 import som.interpreter.Types;
-import som.interpreter.nodes.BinaryMessageNode;
-import som.interpreter.nodes.TernaryMessageNode;
+import som.interpreter.nodes.nary.BinaryExpressionNode;
+import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray;
 import som.vmobjects.SClass;
-import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.Specialization;
 
 
 public class ArrayPrims {
-  public abstract static class AtPrim extends BinaryMessageNode {
-
-    public AtPrim(final SSymbol selector, final Universe universe) { super(selector, universe); }
-    public AtPrim(final AtPrim prim) { this(prim.selector, prim.universe); }
-
+  public abstract static class AtPrim extends BinaryExpressionNode {
     @Specialization
     public Object doSArray(final SArray receiver, final int argument) {
       return receiver.getIndexableField(argument - 1);
     }
   }
 
-  public abstract static class AtPutPrim extends TernaryMessageNode {
-    public AtPutPrim(final SSymbol selector, final Universe universe) { super(selector, universe); }
-    public AtPutPrim(final AtPutPrim prim)  { this(prim.selector, prim.universe); }
+  public abstract static class AtPutPrim extends TernaryExpressionNode {
+    private final Universe universe;
+    public AtPutPrim() { this.universe = Universe.current(); }
 
     @Specialization
     public SAbstractObject doSArray(final SArray receiver, final int index, final SAbstractObject value) {
@@ -42,9 +37,9 @@ public class ArrayPrims {
     }
   }
 
-  public abstract static class NewPrim extends BinaryMessageNode {
-    public NewPrim(final SSymbol selector, final Universe universe) { super(selector, universe); }
-    public NewPrim(final NewPrim prim)  { this(prim.selector, prim.universe); }
+  public abstract static class NewPrim extends BinaryExpressionNode {
+    private final Universe universe;
+    public NewPrim() { this.universe = Universe.current(); }
 
     protected boolean receiverIsArrayClass(final SClass receiver) {
       return receiver == universe.arrayClass;
@@ -55,5 +50,4 @@ public class ArrayPrims {
       return universe.newArray(length);
     }
   }
-
 }

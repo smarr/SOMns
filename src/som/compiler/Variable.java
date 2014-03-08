@@ -79,6 +79,10 @@ public abstract class Variable {
       arg.isReadOutOfContext = isReadOutOfContext;
       return arg;
     }
+
+    public boolean isSelf() {
+      return "self".equals(name) || "$blockSelf".equals(name);
+    }
   }
 
   public static final class Local extends Variable {

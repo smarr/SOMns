@@ -1,9 +1,9 @@
 package som.primitives;
 
 import som.interpreter.Types;
-import som.interpreter.nodes.BinaryMessageNode;
-import som.interpreter.nodes.TernaryMessageNode;
-import som.interpreter.nodes.UnaryMessageNode;
+import som.interpreter.nodes.nary.BinaryExpressionNode;
+import som.interpreter.nodes.nary.TernaryExpressionNode;
+import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray;
@@ -17,9 +17,9 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 
 
 public class ObjectPrims {
-  public abstract static class PerformPrim extends BinaryMessageNode {
-    public PerformPrim(final SSymbol selector, final Universe universe) { super(selector, universe); }
-    public PerformPrim(final PerformPrim prim) { this(prim.selector, prim.universe); }
+  public abstract static class PerformPrim extends BinaryExpressionNode {
+    private final Universe universe;
+    public PerformPrim() { this.universe = Universe.current(); }
 
     @Specialization
     public Object doObject(final VirtualFrame frame, final Object receiver, final SSymbol selector) {
@@ -28,9 +28,9 @@ public class ObjectPrims {
     }
   }
 
-  public abstract static class PerformInSuperclassPrim extends TernaryMessageNode {
-    public PerformInSuperclassPrim(final SSymbol selector, final Universe universe) { super(selector, universe); }
-    public PerformInSuperclassPrim(final PerformInSuperclassPrim prim) { this(prim.selector, prim.universe); }
+  public abstract static class PerformInSuperclassPrim extends TernaryExpressionNode {
+    private final Universe universe;
+    public PerformInSuperclassPrim() { this.universe = Universe.current(); }
 
     @Specialization
     public Object doSAbstractObject(final VirtualFrame frame,
@@ -40,9 +40,9 @@ public class ObjectPrims {
     }
   }
 
-  public abstract static class PerformWithArgumentsPrim extends TernaryMessageNode {
-    public PerformWithArgumentsPrim(final SSymbol selector, final Universe universe) { super(selector, universe); }
-    public PerformWithArgumentsPrim(final PerformWithArgumentsPrim prim) { this(prim.selector, prim.universe); }
+  public abstract static class PerformWithArgumentsPrim extends TernaryExpressionNode {
+    private final Universe universe;
+    public PerformWithArgumentsPrim() { this.universe = Universe.current(); }
 
     @Specialization
     public Object doObject(final VirtualFrame frame,
@@ -52,19 +52,16 @@ public class ObjectPrims {
     }
   }
 
-  public abstract static class InstVarAtPrim extends BinaryMessageNode {
-    public InstVarAtPrim(final SSymbol selector, final Universe universe) { super(selector, universe); }
-    public InstVarAtPrim(final InstVarAtPrim prim) { this(prim.selector, prim.universe); }
-
+  public abstract static class InstVarAtPrim extends BinaryExpressionNode {
     @Specialization
     public Object doSObject(final SObject receiver, final int idx) {
       return receiver.getField(idx - 1);
     }
   }
 
-  public abstract static class InstVarAtPutPrim extends TernaryMessageNode {
-    public InstVarAtPutPrim(final SSymbol selector, final Universe universe) { super(selector, universe); }
-    public InstVarAtPutPrim(final InstVarAtPutPrim prim) { this(prim.selector, prim.universe); }
+  public abstract static class InstVarAtPutPrim extends TernaryExpressionNode {
+    private final Universe universe;
+    public InstVarAtPutPrim() { this.universe = Universe.current(); }
 
     @Specialization
     public Object doSObject(final SObject receiver, final int idx, final SAbstractObject val) {
@@ -80,21 +77,17 @@ public class ObjectPrims {
     }
   }
 
-  public abstract static class HaltPrim extends UnaryMessageNode {
-    public HaltPrim(final SSymbol selector, final Universe universe) { super(selector, universe); }
-    public HaltPrim(final HaltPrim prim) { this(prim.selector, prim.universe); }
-
+  public abstract static class HaltPrim extends UnaryExpressionNode {
     @Specialization
     public SAbstractObject doSAbstractObject(final SAbstractObject receiver) {
       Universe.errorPrintln("BREAKPOINT");
       return receiver;
-      // TODO: Make sure overriding still works!!
     }
   }
 
-  public abstract static class ClassPrim extends UnaryMessageNode {
-    public ClassPrim(final SSymbol selector, final Universe universe) { super(selector, universe); }
-    public ClassPrim(final ClassPrim prim) { this(prim.selector, prim.universe); }
+  public abstract static class ClassPrim extends UnaryExpressionNode {
+    private final Universe universe;
+    public ClassPrim() { this.universe = Universe.current(); }
 
     @Specialization
     public SClass doSAbstractObject(final SAbstractObject receiver) {

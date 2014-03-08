@@ -1,17 +1,12 @@
 package som.primitives;
 
-import som.interpreter.nodes.UnaryMessageNode;
-import som.vm.Universe;
+import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vmobjects.SArray;
 import som.vmobjects.SObject;
-import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.Specialization;
 
-public abstract class ObjectSizePrim extends UnaryMessageNode {
-  public ObjectSizePrim(final SSymbol selector, final Universe universe) { super(selector, universe); }
-  public ObjectSizePrim(final ObjectSizePrim prim) { this(prim.selector, prim.universe); }
-
+public abstract class ObjectSizePrim extends UnaryExpressionNode {
   @Specialization
   public int doSArray(final SArray receiver) {
     int size = 0;

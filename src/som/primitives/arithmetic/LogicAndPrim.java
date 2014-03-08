@@ -2,16 +2,10 @@ package som.primitives.arithmetic;
 
 import java.math.BigInteger;
 
-import som.vm.Universe;
-import som.vmobjects.SSymbol;
-
 import com.oracle.truffle.api.dsl.Specialization;
 
 
 public abstract class LogicAndPrim extends ArithmeticPrim {
-  public LogicAndPrim(final SSymbol selector, final Universe universe) { super(selector, universe); }
-  public LogicAndPrim(final LogicAndPrim prim) { this(prim.selector, prim.universe); }
-
   @Specialization(order = 1)
   public Object doInteger(final int left, final int right) {
     long result = ((long) left) & right;

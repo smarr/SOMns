@@ -2,16 +2,9 @@ package som.primitives.arithmetic;
 
 import java.math.BigInteger;
 
-import som.vm.Universe;
-import som.vmobjects.SSymbol;
-
 import com.oracle.truffle.api.dsl.Specialization;
 
 public abstract class ModuloPrim extends ArithmeticPrim {
-
-  public ModuloPrim(final SSymbol selector, final Universe universe) { super(selector, universe); }
-  public ModuloPrim(final ModuloPrim node) { this(node.selector, node.universe); }
-
   @Specialization(order = 1)
   public Object doInteger(final int left, final int right) {
     long l = left;

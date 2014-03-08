@@ -1,33 +1,39 @@
 package som.interpreter.nodes.specialized;
 
-import static som.interpreter.BlockHelper.createInlineableNode;
-import som.interpreter.nodes.TernaryMessageNode;
-import som.interpreter.nodes.UnaryMessageNode;
+import som.interpreter.SArguments;
+import som.interpreter.nodes.PreevaluatedExpression;
+import som.interpreter.nodes.nary.TernaryExpressionNode;
+import som.vm.Universe;
 import som.vmobjects.SBlock;
 import som.vmobjects.SMethod;
 import som.vmobjects.SObject;
 
+import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.CallNode;
 import com.oracle.truffle.api.utilities.BranchProfile;
 
-public abstract class IfTrueIfFalseMessageNode extends TernaryMessageNode {
+public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
+    implements PreevaluatedExpression {
   private final BranchProfile ifFalseBranch = new BranchProfile();
   private final BranchProfile ifTrueBranch  = new BranchProfile();
 
   private final SMethod trueMethod;
   private final SMethod falseMethod;
 
-  @Child protected UnaryMessageNode trueValueSend;
-  @Child protected UnaryMessageNode falseValueSend;
+  @Child protected CallNode trueValueSend;
+  @Child protected CallNode falseValueSend;
 
-  public IfTrueIfFalseMessageNode(final TernaryMessageNode node, final Object rcvr,
-      final Object arg1, final Object arg2) {
-    super(node);
+  private final Universe universe;
+
+  public IfTrueIfFalseMessageNode(final Object rcvr, final Object arg1,
+      final Object arg2, final Universe universe) {
     if (arg1 instanceof SBlock) {
       SBlock trueBlock = (SBlock) arg1;
       trueMethod = trueBlock.getMethod();
-      trueValueSend = adoptChild(createInlineableNode(trueMethod, universe));
+      trueValueSend = adoptChild(Truffle.getRuntime().createCallNode(
+          trueMethod.getCallTarget()));
     } else {
       trueMethod = null;
     }
@@ -35,23 +41,34 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryMessageNode {
     if (arg2 instanceof SBlock) {
       SBlock falseBlock = (SBlock) arg2;
       falseMethod = falseBlock.getMethod();
-      falseValueSend = adoptChild(createInlineableNode(falseMethod, universe));
+      falseValueSend = adoptChild(Truffle.getRuntime().createCallNode(
+          falseMethod.getCallTarget()));
     } else {
       falseMethod = null;
     }
+
+    this.universe = universe;
   }
 
   public IfTrueIfFalseMessageNode(final IfTrueIfFalseMessageNode node) {
-    super(node);
     trueMethod = node.trueMethod;
     if (node.trueMethod != null) {
-      trueValueSend = adoptChild(createInlineableNode(trueMethod, universe));
+      trueValueSend = adoptChild(Truffle.getRuntime().createCallNode(
+          trueMethod.getCallTarget()));
     }
 
     falseMethod = node.falseMethod;
     if (node.falseMethod != null) {
-      falseValueSend = adoptChild(createInlineableNode(falseMethod, universe));
+      falseValueSend = adoptChild(Truffle.getRuntime().createCallNode(
+          falseMethod.getCallTarget()));
     }
+    this.universe = node.universe;
+  }
+
+  @Override
+  public final Object executeEvaluated(final VirtualFrame frame,
+      final Object receiver, final Object[] arguments) {
+    return executeEvaluated(frame, receiver, arguments[0], arguments[1]);
   }
 
   protected final boolean hasSameArguments(final Object receiver, final Object firstArg, final Object secondArg) {
@@ -64,11 +81,13 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryMessageNode {
       final SObject receiver, final SBlock trueBlock, final SBlock falseBlock) {
     if (receiver == universe.trueObject) {
       ifTrueBranch.enter();
-      return trueValueSend.executeEvaluated(frame, trueBlock);
+      return trueValueSend.call(frame.pack(),
+          new SArguments(trueBlock, new Object[0]));
     } else {
       assert receiver == universe.falseObject;
       ifFalseBranch.enter();
-      return falseValueSend.executeEvaluated(frame, falseBlock);
+      return falseValueSend.call(frame.pack(),
+          new SArguments(falseBlock, new Object[0]));
     }
   }
 
@@ -94,7 +113,8 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryMessageNode {
     } else {
       assert receiver == universe.falseObject;
       ifFalseBranch.enter();
-      return falseValueSend.executeEvaluated(frame, falseBlock);
+      return falseValueSend.call(frame.pack(), new SArguments(falseBlock,
+          new Object[0]));
     }
   }
 
@@ -103,7 +123,8 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryMessageNode {
       final SObject receiver, final SBlock trueBlock, final Object falseValue) {
     if (receiver == universe.trueObject) {
       ifTrueBranch.enter();
-      return trueValueSend.executeEvaluated(frame, trueBlock);
+      return trueValueSend.call(frame.pack(), new SArguments(trueBlock,
+          new Object[0]));
     } else {
       ifFalseBranch.enter();
       assert receiver == universe.falseObject;

@@ -2,17 +2,14 @@ package som.primitives;
 
 import java.math.BigInteger;
 
-import som.interpreter.nodes.UnaryMessageNode;
-import som.vm.Universe;
+import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives.SlowPath;
 import com.oracle.truffle.api.dsl.Specialization;
 
 
-public abstract class AsStringPrim extends UnaryMessageNode {
-  public AsStringPrim(final SSymbol selector, final Universe universe) { super(selector, universe); }
-  public AsStringPrim(final AsStringPrim prim) { this(prim.selector, prim.universe); }
+public abstract class AsStringPrim extends UnaryExpressionNode {
 
   @Specialization
   public String doSSymbol(final SSymbol receiver) {

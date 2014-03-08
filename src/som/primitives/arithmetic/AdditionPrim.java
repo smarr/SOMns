@@ -2,17 +2,11 @@ package som.primitives.arithmetic;
 
 import java.math.BigInteger;
 
-import som.vm.Universe;
-import som.vmobjects.SSymbol;
-
 import com.oracle.truffle.api.ExactMath;
 import com.oracle.truffle.api.dsl.Specialization;
 
 
 public abstract class AdditionPrim extends ArithmeticPrim {
-  public AdditionPrim(final SSymbol selector, final Universe universe) { super(selector, universe); }
-  public AdditionPrim(final AdditionPrim node) { this(node.selector, node.universe); }
-
   @Specialization(order = 10, rewriteOn = ArithmeticException.class)
   public int doInteger(final int left, final int argument) {
     return ExactMath.addExact(left, argument);

@@ -1,39 +1,32 @@
 package som.primitives;
 
-import som.interpreter.nodes.AbstractMessageNode;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vm.Universe;
-import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 
-public class EmptyPrim extends AbstractMessageNode {
-  private EmptyPrim(final SSymbol selector, final Universe universe,
-      final ExpressionNode receiver) {
-    super(selector, universe);
+public final class EmptyPrim extends UnaryExpressionNode {
+  @Child private ExpressionNode receiver;
+
+  private EmptyPrim(final ExpressionNode receiver) {
     this.receiver = adoptChild(receiver);
   }
 
-  @Child private ExpressionNode receiver;
-
-  @Override
-  public ExpressionNode getReceiver() {
-    return receiver;
-  }
-
-  public EmptyPrim(final EmptyPrim node) {
-    this(node.selector, node.universe, node.receiver);
-  }
+  public EmptyPrim(final EmptyPrim node) { this(node.receiver); }
 
   @Override
   public Object executeGeneric(final VirtualFrame frame) {
-    Universe.println("Warning: undefined primitive "
-        + this.selector.getString() + " called");
+    return executeEvaluated(frame, null);
+  }
+
+  @Override
+  public Object executeEvaluated(final VirtualFrame frame, final Object receiver) {
+    Universe.println("Warning: undefined primitive called");
     return null;
   }
 
-  public static EmptyPrim create(final SSymbol selector, final Universe universe,
-      final ExpressionNode receiver) {
-    return new EmptyPrim(selector, universe, receiver);
+  public static EmptyPrim create(final ExpressionNode receiver) {
+    return new EmptyPrim(receiver);
   }
 }

@@ -1,6 +1,6 @@
 package som.interpreter.nodes.specialized;
 
-import som.interpreter.nodes.BinaryMessageNode;
+import som.vm.Universe;
 import som.vmobjects.SBlock;
 import som.vmobjects.SObject;
 
@@ -9,7 +9,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 
 
 public abstract class IfFalseMessageNode extends AbstractIfMessageNode  {
-  public IfFalseMessageNode(final BinaryMessageNode node, final Object rcvr, final Object arg) { super(node, rcvr, arg); }
+  public IfFalseMessageNode(final Object rcvr, final Object arg, final Universe universe) { super(rcvr, arg, universe); }
   public IfFalseMessageNode(final IfFalseMessageNode node) { super(node); }
 
   /**

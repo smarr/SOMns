@@ -1,13 +1,12 @@
 package som.primitives;
 
-import som.interpreter.nodes.BinaryMessageNode;
-import som.interpreter.nodes.KeywordMessageNode;
-import som.interpreter.nodes.TernaryMessageNode;
-import som.interpreter.nodes.UnaryMessageNode;
+import som.interpreter.nodes.nary.BinaryExpressionNode;
+import som.interpreter.nodes.nary.QuaternaryExpressionNode;
+import som.interpreter.nodes.nary.TernaryExpressionNode;
+import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
-import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -15,22 +14,20 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 
 public abstract class BlockPrims {
 
-  public abstract static class RestartPrim extends UnaryMessageNode {
-    public RestartPrim(final SSymbol selector, final Universe universe) { super(selector, universe); }
-    public RestartPrim(final RestartPrim prim) { this(prim.selector, prim.universe); }
+  public abstract static class RestartPrim extends UnaryExpressionNode {
 
     @Specialization
     public SAbstractObject doSBlock(final SBlock receiver) {
       // TruffleSOM intrinsifies #whileTrue: and #whileFalse:
-      throw new RuntimeException("This primitive is not supported anymore! Something went wrong with the intrinsification of #whileTrue:/#whileFalse:?");
-      // It used to be:
-      // throw new RestartLoopException();
+      throw new RuntimeException("This primitive is not supported anymore! "
+          + "Something went wrong with the intrinsification of "
+          + "#whileTrue:/#whileFalse:?");
     }
   }
 
-  public abstract static class ValueNonePrim extends UnaryMessageNode {
-    public ValueNonePrim(final SSymbol selector, final Universe universe) { super(selector, universe); }
-    public ValueNonePrim(final ValueNonePrim prim) { this(prim.selector, prim.universe); }
+  public abstract static class ValueNonePrim extends UnaryExpressionNode {
+    private final Universe universe;
+    public ValueNonePrim() { this.universe = Universe.current(); }
 
     @Specialization
     public Object doSBlock(final VirtualFrame frame, final SBlock receiver) {
@@ -38,9 +35,9 @@ public abstract class BlockPrims {
     }
   }
 
-  public abstract static class ValueOnePrim extends BinaryMessageNode {
-    public ValueOnePrim(final SSymbol selector, final Universe universe) { super(selector, universe); }
-    public ValueOnePrim(final ValueOnePrim prim) { this(prim.selector, prim.universe); }
+  public abstract static class ValueOnePrim extends BinaryExpressionNode {
+    private final Universe universe;
+    public ValueOnePrim() { this.universe = Universe.current(); }
 
     @Specialization
     public Object doSBlock(final VirtualFrame frame, final SBlock receiver,
@@ -49,9 +46,9 @@ public abstract class BlockPrims {
     }
   }
 
-  public abstract static class ValueTwoPrim extends TernaryMessageNode {
-    public ValueTwoPrim(final SSymbol selector, final Universe universe) { super(selector, universe); }
-    public ValueTwoPrim(final ValueTwoPrim prim) { this(prim.selector, prim.universe); }
+  public abstract static class ValueTwoPrim extends TernaryExpressionNode {
+    private final Universe universe;
+    public ValueTwoPrim() { this.universe = Universe.current(); }
 
     @Specialization
     public Object doSBlock(final VirtualFrame frame,
@@ -60,14 +57,16 @@ public abstract class BlockPrims {
     }
   }
 
-  public abstract static class ValueMorePrim extends KeywordMessageNode {
-    public ValueMorePrim(final SSymbol selector, final Universe universe) { super(selector, universe); }
-    public ValueMorePrim(final ValueMorePrim prim) { this(prim.selector, prim.universe); }
+  public abstract static class ValueMorePrim extends QuaternaryExpressionNode {
+    private final Universe universe;
+    public ValueMorePrim() { this.universe = Universe.current(); }
 
     @Specialization
     public Object doSBlock(final VirtualFrame frame,
-        final SBlock receiver, final Object[] arguments) {
-      return receiver.getMethod().invoke(frame.pack(), receiver, arguments, universe);
+        final SBlock receiver, final Object firstArg, final Object secondArg,
+        final Object thirdArg) {
+      return receiver.getMethod().invoke(frame.pack(), receiver,
+          new Object[] {firstArg, secondArg, thirdArg}, universe);
     }
   }
 }
