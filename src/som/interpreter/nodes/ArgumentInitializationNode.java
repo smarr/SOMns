@@ -4,6 +4,7 @@ import som.interpreter.nodes.LocalVariableNode.LocalVariableWriteNode;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
+import com.oracle.truffle.api.nodes.NodeInfo.Kind;
 
 /**
  * Initializes the frame slots for self as well as the arguments.
@@ -30,5 +31,10 @@ public class ArgumentInitializationNode extends ExpressionNode {
   @Override
   public ExpressionNode getFirstMethodBodyNode() {
     return methodBody;
+  }
+
+  @Override
+  public Kind getKind() {
+      return Kind.GENERIC;
   }
 }

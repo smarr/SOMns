@@ -21,8 +21,11 @@
  */
 package som.interpreter.nodes;
 
+import static com.oracle.truffle.api.nodes.NodeInfo.Kind.SPECIALIZED;
+
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
+import com.oracle.truffle.api.nodes.NodeInfo.Kind;
 
 public class SequenceNode extends ExpressionNode {
   @Children private final ExpressionNode[] expressions;
@@ -43,4 +46,8 @@ public class SequenceNode extends ExpressionNode {
     return last;
   }
 
+  @Override
+  public Kind getKind() {
+      return SPECIALIZED;
+  }
 }
