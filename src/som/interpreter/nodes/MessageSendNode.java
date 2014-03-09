@@ -202,6 +202,8 @@ public final class MessageSendNode {
   public static final class GenericMessageSendNode
       extends AbstractMessageSendNode {
 
+    private final SSymbol selector;
+
     public static GenericMessageSendNode create(final SSymbol selector,
         final ExpressionNode receiverNode,
         final ExpressionNode[] argumentNodes) {
@@ -216,6 +218,7 @@ public final class MessageSendNode {
         final ExpressionNode receiver, final ExpressionNode[] arguments,
         final AbstractDispatchNode dispatchNode) {
       super(receiver, arguments);
+      this.selector = selector;
       this.dispatchNode  = adoptChild(dispatchNode);
     }
 
@@ -229,6 +232,11 @@ public final class MessageSendNode {
     public void replaceDispatchNodeBecauseCallSiteIsMegaMorphic(
         final GenericDispatchNode replacement) {
       dispatchNode.replace(replacement);
+    }
+
+    @Override
+    public String toString() {
+      return "GMsgSend(" + selector.getString() + ")";
     }
   }
 }
