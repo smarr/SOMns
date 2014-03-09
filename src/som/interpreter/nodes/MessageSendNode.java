@@ -8,12 +8,17 @@ import som.interpreter.nodes.dispatch.GenericDispatchNode;
 import som.interpreter.nodes.dispatch.SuperDispatchNode;
 import som.interpreter.nodes.dispatch.UninitializedDispatchNode;
 import som.interpreter.nodes.literals.BlockNode;
+import som.interpreter.nodes.nary.EagerBinaryPrimitiveNode;
 import som.interpreter.nodes.specialized.IfFalseMessageNodeFactory;
 import som.interpreter.nodes.specialized.IfTrueIfFalseMessageNodeFactory;
 import som.interpreter.nodes.specialized.IfTrueMessageNodeFactory;
 import som.interpreter.nodes.specialized.IntToDoMessageNodeFactory;
 import som.interpreter.nodes.specialized.WhileWithStaticBlocksNode.WhileFalseStaticBlocksNode;
 import som.interpreter.nodes.specialized.WhileWithStaticBlocksNode.WhileTrueStaticBlocksNode;
+import som.primitives.BlockPrimsFactory.ValueOnePrimFactory;
+import som.primitives.arithmetic.AdditionPrimFactory;
+import som.primitives.arithmetic.LessThanPrimFactory;
+import som.primitives.arithmetic.SubtractionPrimFactory;
 import som.vm.Universe;
 import som.vmobjects.SBlock;
 import som.vmobjects.SSymbol;
@@ -150,6 +155,24 @@ public final class MessageSendNode {
         case "ifFalse:":
           return replace(IfFalseMessageNodeFactory.create(receiver, arguments[0],
               Universe.current(), receiverNode, argumentNodes[0]));
+
+        // TODO: find a better way for primitives, use annotation or something
+        case "<":
+          return replace(new EagerBinaryPrimitiveNode(selector, receiverNode,
+              argumentNodes[0],
+              LessThanPrimFactory.create(receiverNode, argumentNodes[0])));
+        case "+":
+          return replace(new EagerBinaryPrimitiveNode(selector, receiverNode,
+              argumentNodes[0],
+              AdditionPrimFactory.create(receiverNode, argumentNodes[0])));
+        case "value:":
+          return replace(new EagerBinaryPrimitiveNode(selector, receiverNode,
+              argumentNodes[0],
+              ValueOnePrimFactory.create(receiverNode, argumentNodes[0])));
+        case "-":
+          return replace(new EagerBinaryPrimitiveNode(selector, receiverNode,
+              argumentNodes[0],
+              SubtractionPrimFactory.create(receiverNode, argumentNodes[0])));
       }
 
       return makeGenericSend();
