@@ -179,6 +179,14 @@ public final class MessageSendNode {
   public static final class GenericMessageSendNode
       extends AbstractMessageSendNode {
 
+    public static GenericMessageSendNode create(final SSymbol selector,
+        final ExpressionNode receiverNode,
+        final ExpressionNode[] argumentNodes) {
+      return new GenericMessageSendNode(selector,
+          receiverNode, argumentNodes,
+          new UninitializedDispatchNode(selector, Universe.current()));
+    }
+
     @Child private AbstractDispatchNode dispatchNode;
 
     private GenericMessageSendNode(final SSymbol selector,
