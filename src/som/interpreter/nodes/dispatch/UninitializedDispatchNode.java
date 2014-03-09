@@ -41,7 +41,7 @@ public class UninitializedDispatchNode extends AbstractDispatchWithLookupNode {
       if (method != null) {
         UninitializedDispatchNode newChainEnd = new UninitializedDispatchNode(selector, universe);
 
-        AbstractDispatchNode initializedReplacement = new CachedDispatchNode(
+        CachedDispatchNode initializedReplacement = new CachedDispatchNode(
             rcvrClass, method, newChainEnd, universe);
         return replace(initializedReplacement).executeDispatch(frame, arguments);
       }
