@@ -16,6 +16,8 @@ import som.interpreter.nodes.specialized.IntToDoMessageNodeFactory;
 import som.interpreter.nodes.specialized.WhileWithStaticBlocksNode.WhileFalseStaticBlocksNode;
 import som.interpreter.nodes.specialized.WhileWithStaticBlocksNode.WhileTrueStaticBlocksNode;
 import som.primitives.BlockPrimsFactory.ValueOnePrimFactory;
+import som.primitives.EqualsEqualsPrimFactory;
+import som.primitives.EqualsPrimFactory;
 import som.primitives.arithmetic.AdditionPrimFactory;
 import som.primitives.arithmetic.LessThanPrimFactory;
 import som.primitives.arithmetic.SubtractionPrimFactory;
@@ -173,6 +175,14 @@ public final class MessageSendNode {
           return replace(new EagerBinaryPrimitiveNode(selector, receiverNode,
               argumentNodes[0],
               SubtractionPrimFactory.create(receiverNode, argumentNodes[0])));
+        case "=":
+          return replace(new EagerBinaryPrimitiveNode(selector, receiverNode,
+              argumentNodes[0],
+              EqualsPrimFactory.create(receiverNode, argumentNodes[0])));
+        case "==":
+          return replace(new EagerBinaryPrimitiveNode(selector, receiverNode,
+              argumentNodes[0],
+              EqualsEqualsPrimFactory.create(receiverNode, argumentNodes[0])));
       }
 
       return makeGenericSend();
