@@ -1,7 +1,6 @@
 package som.interpreter.nodes.specialized;
 
 import som.interpreter.SArguments;
-import som.interpreter.nodes.PreevaluatedExpression;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.vm.Universe;
 import som.vmobjects.SBlock;
@@ -14,8 +13,7 @@ import com.oracle.truffle.api.nodes.CallNode;
 import com.oracle.truffle.api.utilities.BranchProfile;
 
 
-public abstract class AbstractIfMessageNode extends BinaryExpressionNode
-    implements PreevaluatedExpression {
+public abstract class AbstractIfMessageNode extends BinaryExpressionNode {
   protected final BranchProfile ifFalseBranch = new BranchProfile();
   protected final BranchProfile ifTrueBranch  = new BranchProfile();
 
@@ -46,13 +44,6 @@ public abstract class AbstractIfMessageNode extends BinaryExpressionNode
     }
     this.universe = node.universe;
   }
-
-  @Override
-  public final Object executeEvaluated(final VirtualFrame frame,
-      final Object receiver, final Object[] arguments) {
-    return executeEvaluated(frame, receiver, arguments[0]);
-  }
-
 
   /**
    * This is the case were we got a block as the argument. Need to actually
