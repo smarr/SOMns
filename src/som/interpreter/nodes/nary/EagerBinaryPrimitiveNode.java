@@ -56,5 +56,4 @@ public final class EagerBinaryPrimitiveNode extends BinaryExpressionNode {
         receiver, new ExpressionNode[] {argument});
     return replace(node);
   }
-
 }

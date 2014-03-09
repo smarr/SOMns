@@ -19,6 +19,7 @@ import som.primitives.BlockPrimsFactory.ValueOnePrimFactory;
 import som.primitives.EqualsEqualsPrimFactory;
 import som.primitives.EqualsPrimFactory;
 import som.primitives.arithmetic.AdditionPrimFactory;
+import som.primitives.arithmetic.LessThanOrEqualPrimFactory;
 import som.primitives.arithmetic.LessThanPrimFactory;
 import som.primitives.arithmetic.SubtractionPrimFactory;
 import som.vm.Universe;
@@ -163,6 +164,10 @@ public final class MessageSendNode {
           return replace(new EagerBinaryPrimitiveNode(selector, receiverNode,
               argumentNodes[0],
               LessThanPrimFactory.create(receiverNode, argumentNodes[0])));
+        case "<=":
+          return replace(new EagerBinaryPrimitiveNode(selector, receiverNode,
+              argumentNodes[0],
+              LessThanOrEqualPrimFactory.create(receiverNode, argumentNodes[0])));
         case "+":
           return replace(new EagerBinaryPrimitiveNode(selector, receiverNode,
               argumentNodes[0],
