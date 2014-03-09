@@ -114,8 +114,10 @@ public final class MessageSendNode {
     }
 
     private GenericMessageSendNode makeGenericSend() {
-      return new GenericMessageSendNode(selector, receiverNode, argumentNodes,
+      GenericMessageSendNode send = new GenericMessageSendNode(selector,
+          receiverNode, argumentNodes,
           new UninitializedDispatchNode(selector, Universe.current()));
+      return replace(send);
     }
 
     private PreevaluatedExpression specializeBinary(final Object receiver,
