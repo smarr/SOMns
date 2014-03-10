@@ -1,9 +1,11 @@
 package som.interpreter.nodes.nary;
 
+import som.interpreter.TruffleCompiler;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.dsl.UnsupportedSpecializationException;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.utilities.BranchProfile;
 
@@ -41,14 +43,14 @@ public final class EagerBinaryPrimitiveNode extends BinaryExpressionNode {
   @Override
   public Object executeEvaluated(final VirtualFrame frame,
     final Object receiver, final Object argument) {
-//    try {
+    try {
       return primitive.executeEvaluated(frame, receiver, argument);
-//    } catch (UnsupportedSpecializationException e) {
-//      unsupportedSpecialization.enter();
-//      TruffleCompiler.transferToInterpreterAndInvalidate("Eager Primitive with unsupported specialization.");
-//      return makeGenericSend().executePreEvaluated(frame, receiver,
-//          new Object[] {argument});
-//    }
+    } catch (UnsupportedSpecializationException e) {
+      unsupportedSpecialization.enter();
+      TruffleCompiler.transferToInterpreterAndInvalidate("Eager Primitive with unsupported specialization.");
+      return makeGenericSend().executePreEvaluated(frame, receiver,
+          new Object[] {argument});
+    }
   }
 
   private GenericMessageSendNode makeGenericSend() {
