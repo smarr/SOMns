@@ -66,7 +66,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
   }
 
   @Override
-  public final Object executeEvaluated(final VirtualFrame frame,
+  public final Object executePreEvaluated(final VirtualFrame frame,
       final Object receiver, final Object[] arguments) {
     return executeEvaluated(frame, receiver, arguments[0], arguments[1]);
   }

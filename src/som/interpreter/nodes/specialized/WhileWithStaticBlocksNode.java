@@ -1,7 +1,6 @@
 package som.interpreter.nodes.specialized;
 
 import som.interpreter.SArguments;
-import som.interpreter.nodes.PreevaluatedExpression;
 import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.vm.Universe;
@@ -20,8 +19,7 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 
 
-public abstract class WhileWithStaticBlocksNode extends BinaryExpressionNode
-    implements PreevaluatedExpression {
+public abstract class WhileWithStaticBlocksNode extends BinaryExpressionNode {
   @Child protected BlockNode receiver;
   @Child protected BlockNode argument;
   @Child protected CallNode  conditionValueSend;
@@ -59,13 +57,6 @@ public abstract class WhileWithStaticBlocksNode extends BinaryExpressionNode
   public final Object executeEvaluated(final VirtualFrame frame,
       final Object rcvr, final Object arg) {
     return doWhileConditionally(frame.pack(), (SBlock) rcvr, (SBlock) arg);
-  }
-
-  @Override
-  public final Object executeEvaluated(final VirtualFrame frame,
-      final Object rcvr, final Object[] arguments) {
-    return doWhileConditionally(frame.pack(), (SBlock) rcvr,
-        (SBlock) arguments[0]);
   }
 
   protected final SObject doWhileConditionally(final PackedFrame frame,

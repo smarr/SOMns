@@ -57,7 +57,7 @@ public final class MessageSendNode {
       Object rcvr = receiverNode.executeGeneric(frame);
 
       Object[] arguments = evaluateArguments(frame);
-      return executeEvaluated(frame, rcvr, arguments);
+      return executePreEvaluated(frame, rcvr, arguments);
     }
 
     @ExplodeLoop
@@ -82,9 +82,9 @@ public final class MessageSendNode {
     }
 
     @Override
-    public Object executeEvaluated(final VirtualFrame frame,
+    public Object executePreEvaluated(final VirtualFrame frame,
         final Object receiver, final Object[] arguments) {
-      return specialize(receiver, arguments).executeEvaluated(frame, receiver,
+      return specialize(receiver, arguments).executePreEvaluated(frame, receiver,
           arguments);
     }
 
@@ -238,7 +238,7 @@ public final class MessageSendNode {
     }
 
     @Override
-    public Object executeEvaluated(final VirtualFrame frame,
+    public Object executePreEvaluated(final VirtualFrame frame,
         final Object receiver, final Object[] arguments) {
       SArguments args = new SArguments(receiver, arguments);
       return dispatchNode.executeDispatch(frame, args);

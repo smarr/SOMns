@@ -18,7 +18,7 @@ public abstract class BinaryExpressionNode extends ExpressionNode
       final Object receiver, Object argument);
 
   @Override
-  public Object executeEvaluated(final VirtualFrame frame,
+  public Object executePreEvaluated(final VirtualFrame frame,
       final Object receiver, final Object[] arguments) {
     return executeEvaluated(frame, receiver, arguments[0]);
   }

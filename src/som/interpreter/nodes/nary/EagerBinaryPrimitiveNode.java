@@ -48,7 +48,7 @@ public final class EagerBinaryPrimitiveNode extends BinaryExpressionNode {
     } catch (UnsupportedSpecializationException e) {
       unsupportedSpecialization.enter();
       TruffleCompiler.transferToInterpreterAndInvalidate("Eager Primitive with unsupported specialization.");
-      return makeGenericSend().executeEvaluated(frame, receiver,
+      return makeGenericSend().executePreEvaluated(frame, receiver,
           new Object[] {argument});
     }
   }
