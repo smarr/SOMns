@@ -12,6 +12,7 @@ import som.interpreter.nodes.nary.EagerBinaryPrimitiveNode;
 import som.interpreter.nodes.specialized.IfFalseMessageNodeFactory;
 import som.interpreter.nodes.specialized.IfTrueIfFalseMessageNodeFactory;
 import som.interpreter.nodes.specialized.IfTrueMessageNodeFactory;
+import som.interpreter.nodes.specialized.IntToByDoMessageNodeFactory;
 import som.interpreter.nodes.specialized.IntToDoMessageNodeFactory;
 import som.interpreter.nodes.specialized.WhileWithStaticBlocksNode.WhileFalseStaticBlocksNode;
 import som.interpreter.nodes.specialized.WhileWithStaticBlocksNode.WhileTrueStaticBlocksNode;
@@ -116,6 +117,7 @@ public final class MessageSendNode {
         // case  0: return specializeUnary(  receiver, arguments); // don't have any at the moment
         case  1: return specializeBinary(receiver,  arguments);
         case  2: return specializeTernary(receiver, arguments);
+        case  3: return specializeQuaternary(receiver, arguments);
       }
 
       return makeGenericSend();
@@ -252,6 +254,17 @@ public final class MessageSendNode {
     @Override
     public String toString() {
       return "GMsgSend(" + selector.getString() + ")";
+    }
+
+    private PreevaluatedExpression specializeQuaternary(final Object receiver,
+        final Object[] arguments) {
+      switch (selector.getString()) {
+        case "to:by:do:":
+          return replace(IntToByDoMessageNodeFactory.create(this,
+              (SBlock) arguments[2], receiverNode, argumentNodes[0],
+              argumentNodes[1], argumentNodes[2]));
+      }
+      return makeGenericSend();
     }
   }
 }
