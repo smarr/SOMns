@@ -18,12 +18,20 @@ import som.interpreter.nodes.specialized.WhileWithStaticBlocksNode.WhileFalseSta
 import som.interpreter.nodes.specialized.WhileWithStaticBlocksNode.WhileTrueStaticBlocksNode;
 import som.primitives.ArrayPrimsFactory.AtPrimFactory;
 import som.primitives.ArrayPrimsFactory.NewPrimFactory;
+import som.primitives.BlockPrimsFactory.ValueNonePrimFactory;
 import som.primitives.BlockPrimsFactory.ValueOnePrimFactory;
+import som.primitives.DoublePrimsFactory.BitXorPrimFactory;
 import som.primitives.EqualsEqualsPrimFactory;
 import som.primitives.EqualsPrimFactory;
+import som.primitives.LengthPrimFactory;
 import som.primitives.arithmetic.AdditionPrimFactory;
+import som.primitives.arithmetic.DividePrimFactory;
+import som.primitives.arithmetic.DoubleDivPrimFactory;
 import som.primitives.arithmetic.LessThanOrEqualPrimFactory;
 import som.primitives.arithmetic.LessThanPrimFactory;
+import som.primitives.arithmetic.LogicAndPrimFactory;
+import som.primitives.arithmetic.ModuloPrimFactory;
+import som.primitives.arithmetic.MultiplicationPrimFactory;
 import som.primitives.arithmetic.SubtractionPrimFactory;
 import som.vm.Universe;
 import som.vmobjects.SArray;
@@ -186,6 +194,10 @@ public final class MessageSendNode {
           return replace(new EagerBinaryPrimitiveNode(selector, receiverNode,
               argumentNodes[0],
               SubtractionPrimFactory.create(receiverNode, argumentNodes[0])));
+        case "*":
+          return replace(new EagerBinaryPrimitiveNode(selector, receiverNode,
+              argumentNodes[0],
+              MultiplicationPrimFactory.create(receiverNode, argumentNodes[0])));
         case "=":
           return replace(new EagerBinaryPrimitiveNode(selector, receiverNode,
               argumentNodes[0],
@@ -194,6 +206,26 @@ public final class MessageSendNode {
           return replace(new EagerBinaryPrimitiveNode(selector, receiverNode,
               argumentNodes[0],
               EqualsEqualsPrimFactory.create(receiverNode, argumentNodes[0])));
+        case "bitXor:":
+          return replace(new EagerBinaryPrimitiveNode(selector, receiverNode,
+              argumentNodes[0],
+              BitXorPrimFactory.create(receiverNode, argumentNodes[0])));
+        case "//":
+          return replace(new EagerBinaryPrimitiveNode(selector, receiverNode,
+              argumentNodes[0],
+              DoubleDivPrimFactory.create(receiverNode, argumentNodes[0])));
+        case "%":
+          return replace(new EagerBinaryPrimitiveNode(selector, receiverNode,
+              argumentNodes[0],
+              ModuloPrimFactory.create(receiverNode, argumentNodes[0])));
+        case "/":
+          return replace(new EagerBinaryPrimitiveNode(selector, receiverNode,
+              argumentNodes[0],
+              DividePrimFactory.create(receiverNode, argumentNodes[0])));
+        case "&":
+          return replace(new EagerBinaryPrimitiveNode(selector, receiverNode,
+              argumentNodes[0],
+              LogicAndPrimFactory.create(receiverNode, argumentNodes[0])));
 
         // eagerly but causious:
         case "at:":
