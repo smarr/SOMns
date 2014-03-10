@@ -255,16 +255,5 @@ public final class MessageSendNode {
     public String toString() {
       return "GMsgSend(" + selector.getString() + ")";
     }
-
-    private PreevaluatedExpression specializeQuaternary(final Object receiver,
-        final Object[] arguments) {
-      switch (selector.getString()) {
-        case "to:by:do:":
-          return replace(IntToByDoMessageNodeFactory.create(this,
-              (SBlock) arguments[2], receiverNode, argumentNodes[0],
-              argumentNodes[1], argumentNodes[2]));
-      }
-      return makeGenericSend();
-    }
   }
 }
