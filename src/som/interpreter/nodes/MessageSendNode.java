@@ -16,6 +16,8 @@ import som.interpreter.nodes.specialized.IntToByDoMessageNodeFactory;
 import som.interpreter.nodes.specialized.IntToDoMessageNodeFactory;
 import som.interpreter.nodes.specialized.WhileWithStaticBlocksNode.WhileFalseStaticBlocksNode;
 import som.interpreter.nodes.specialized.WhileWithStaticBlocksNode.WhileTrueStaticBlocksNode;
+import som.primitives.ArrayPrimsFactory.AtPrimFactory;
+import som.primitives.ArrayPrimsFactory.NewPrimFactory;
 import som.primitives.BlockPrimsFactory.ValueOnePrimFactory;
 import som.primitives.EqualsEqualsPrimFactory;
 import som.primitives.EqualsPrimFactory;
@@ -24,7 +26,9 @@ import som.primitives.arithmetic.LessThanOrEqualPrimFactory;
 import som.primitives.arithmetic.LessThanPrimFactory;
 import som.primitives.arithmetic.SubtractionPrimFactory;
 import som.vm.Universe;
+import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
+import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -190,6 +194,20 @@ public final class MessageSendNode {
           return replace(new EagerBinaryPrimitiveNode(selector, receiverNode,
               argumentNodes[0],
               EqualsEqualsPrimFactory.create(receiverNode, argumentNodes[0])));
+
+        // eagerly but causious:
+        case "at:":
+          if (receiver instanceof SArray) {
+            return replace(new EagerBinaryPrimitiveNode(selector, receiverNode,
+                argumentNodes[0],
+                AtPrimFactory.create(receiverNode, argumentNodes[0])));
+          }
+        case "new:":
+          if (receiver instanceof SClass) {
+            return replace(new EagerBinaryPrimitiveNode(selector, receiverNode,
+                argumentNodes[0],
+                NewPrimFactory.create(receiverNode, argumentNodes[0])));
+          }
       }
 
       return makeGenericSend();
@@ -215,7 +233,7 @@ public final class MessageSendNode {
       }
       return makeGenericSend();
     }
-    
+
     private PreevaluatedExpression specializeQuaternary(final Object receiver,
         final Object[] arguments) {
       switch (selector.getString()) {
