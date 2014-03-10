@@ -43,11 +43,11 @@ public abstract class IntToDoMessageNode extends TernaryExpressionNode
     return executeEvaluated(frame, receiver, arguments[0], arguments[1]);
   }
 
-  protected final boolean isSameBlock(final int receiver, final int limit, final SBlock block) {
+  protected final boolean isSameBlockInt(final int receiver, final int limit, final SBlock block) {
     return block.getMethod() == blockMethod;
   }
 
-  @Specialization(guards = "isSameBlock")
+  @Specialization(guards = "isSameBlockInt")
   public int doIntToDo(final VirtualFrame frame, final int receiver, final int limit, final SBlock block) {
     try {
       for (int i = receiver; i <= limit; i++) {
@@ -57,6 +57,25 @@ public abstract class IntToDoMessageNode extends TernaryExpressionNode
     } finally {
       if (CompilerDirectives.inInterpreter()) {
         reportLoopCount(limit - receiver);
+      }
+    }
+    return receiver;
+  }
+
+  protected final boolean isSameBlockDouble(final int receiver, final double limit, final SBlock block) {
+    return block.getMethod() == blockMethod;
+  }
+
+  @Specialization(guards = "isSameBlockDouble")
+  public int doIntToDo(final VirtualFrame frame, final int receiver, final double limit, final SBlock block) {
+    try {
+      for (int i = receiver; i <= limit; i++) {
+        SArguments arguments = new SArguments(block, new Object[] {i});
+        valueSend.call(frame.pack(), arguments);
+      }
+    } finally {
+      if (CompilerDirectives.inInterpreter()) {
+        reportLoopCount((int) limit - receiver);
       }
     }
     return receiver;

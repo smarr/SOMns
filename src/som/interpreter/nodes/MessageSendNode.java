@@ -204,7 +204,8 @@ public final class MessageSendNode {
               argumentNodes[0], argumentNodes[1]));
         case "to:do:":
           if (TypesGen.TYPES.isImplicitInteger(receiver) &&
-              TypesGen.TYPES.isImplicitInteger(arguments[0]) &&
+              (TypesGen.TYPES.isImplicitInteger(arguments[0]) ||
+                  TypesGen.TYPES.isImplicitDouble(arguments[0])) &&
               TypesGen.TYPES.isSBlock(arguments[1])) {
             return replace(IntToDoMessageNodeFactory.create(this,
                 (SBlock) arguments[1], receiverNode, argumentNodes[0],

@@ -44,12 +44,31 @@ public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode
         arguments[2]);
   }
 
-  protected final boolean isSameBlock(final int receiver, final int step, final int limit, final SBlock block) {
+  protected final boolean isSameBlockInt(final int receiver, final int step, final int limit, final SBlock block) {
     return block.getMethod() == blockMethod;
   }
 
-  @Specialization(guards = "isSameBlock")
-  public int doIntToDo(final VirtualFrame frame, final int receiver, final int step, final int limit, final SBlock block) {
+  protected final boolean isSameBlockDouble(final int receiver, final double step, final int limit, final SBlock block) {
+    return block.getMethod() == blockMethod;
+  }
+
+  @Specialization(guards = "isSameBlockInt")
+  public int doIntToByDo(final VirtualFrame frame, final int receiver, final int step, final int limit, final SBlock block) {
+    try {
+      for (int i = receiver; i <= limit; i += step) {
+        SArguments arguments = new SArguments(block, new Object[] {i});
+        valueSend.call(frame.pack(), arguments);
+      }
+    } finally {
+      if (CompilerDirectives.inInterpreter()) {
+        reportLoopCount(limit - receiver);
+      }
+    }
+    return receiver;
+  }
+
+  @Specialization(guards = "isSameBlockDouble")
+  public int doIntToByDo(final VirtualFrame frame, final int receiver, final double step, final int limit, final SBlock block) {
     try {
       for (int i = receiver; i <= limit; i += step) {
         SArguments arguments = new SArguments(block, new Object[] {i});
