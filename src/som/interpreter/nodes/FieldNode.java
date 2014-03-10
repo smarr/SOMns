@@ -51,9 +51,49 @@ public abstract class FieldNode extends ExpressionNode {
 
     public abstract SAbstractObject executeEvaluated(SObject self);
 
-    @Specialization
-    public Object read(final SObject self) {
-      return self.getField(fieldIndex);
+    protected final boolean isSAbstractObject(final SObject self) {
+      return self.getField(fieldIndex) instanceof SAbstractObject;
+    }
+
+    @Specialization(guards = "isSAbstractObject")
+    public SAbstractObject readSAbstractObject(final SObject self) {
+      return (SAbstractObject) self.getField(fieldIndex);
+    }
+
+    protected final boolean isInteger(final SObject self) {
+      return self.getField(fieldIndex) instanceof Integer;
+    }
+
+    @Specialization(guards = "isInteger")
+    public int readInteger(final SObject self) {
+      return (int) self.getField(fieldIndex);
+    }
+
+    protected final boolean isBigInteger(final SObject self) {
+      return self.getField(fieldIndex) instanceof BigInteger;
+    }
+
+    @Specialization(guards = "isBigInteger")
+    public BigInteger readBigInteger(final SObject self) {
+      return (BigInteger) self.getField(fieldIndex);
+    }
+
+    protected final boolean isDouble(final SObject self) {
+      return self.getField(fieldIndex) instanceof Double;
+    }
+
+    @Specialization(guards = "isDouble")
+    public double readDouble(final SObject self) {
+      return (double) self.getField(fieldIndex);
+    }
+
+    protected final boolean isString(final SObject self) {
+      return self.getField(fieldIndex) instanceof String;
+    }
+
+    @Specialization(guards = "isString")
+    public String readString(final SObject self) {
+      return (String) self.getField(fieldIndex);
     }
   }
 
