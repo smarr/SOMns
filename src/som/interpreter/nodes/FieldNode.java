@@ -23,7 +23,6 @@ package som.interpreter.nodes;
 
 import java.math.BigInteger;
 
-import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SObject;
 
@@ -53,7 +52,7 @@ public abstract class FieldNode extends ExpressionNode {
     public abstract SAbstractObject executeEvaluated(SObject self);
 
     @Specialization
-    public SAbstractObject read(final SObject self) {
+    public Object read(final SObject self) {
       return self.getField(fieldIndex);
     }
   }
@@ -62,15 +61,13 @@ public abstract class FieldNode extends ExpressionNode {
     @NodeChild(value = "self",  type = ExpressionNode.class),
     @NodeChild(value = "value", type = ExpressionNode.class)})
   public abstract static class FieldWriteNode extends FieldNode {
-    private final Universe universe;
 
-    public FieldWriteNode(final int fieldIndex, final Universe universe) {
+    public FieldWriteNode(final int fieldIndex) {
       super(fieldIndex);
-      this.universe = universe;
     }
 
     public FieldWriteNode(final FieldWriteNode node) {
-      this(node.fieldIndex, node.universe);
+      this(node.fieldIndex);
     }
 
     public int getFieldIndex() {
@@ -88,25 +85,25 @@ public abstract class FieldNode extends ExpressionNode {
 
     @Specialization(order = 20)
     public int doInteger(final SObject self, final int value) {
-      self.setField(fieldIndex, universe.newInteger(value));
+      self.setField(fieldIndex, value);
       return value;
     }
 
     @Specialization(order = 30)
     public BigInteger doBigInteger(final SObject self, final BigInteger value) {
-      self.setField(fieldIndex, universe.newBigInteger(value));
+      self.setField(fieldIndex, value);
       return value;
     }
 
     @Specialization(order = 40)
     public double doDouble(final SObject self, final double value) {
-      self.setField(fieldIndex, universe.newDouble(value));
+      self.setField(fieldIndex, value);
       return value;
     }
 
     @Specialization(order = 50)
     public String doString(final SObject self, final String value) {
-      self.setField(fieldIndex, universe.newString(value));
+      self.setField(fieldIndex, value);
       return value;
     }
   }

@@ -63,33 +63,33 @@ public class SObject extends SAbstractObject {
   }
 
   @ExplodeLoop
-  private SAbstractObject[] setClearFields(final int numberOfFields, final SObject nilObject) {
+  private Object[] setClearFields(final int numberOfFields, final SObject nilObject) {
     if (numberOfFields == 0) { return noFields; }
 
     // Clear each and every field by putting nil into them
-    SAbstractObject[] fieldArr = new SAbstractObject[numberOfFields];
+    Object[] fieldArr = new Object[numberOfFields];
     for (int i = 0; i < fieldArr.length; i++) {
       fieldArr[i] = nilObject;
     }
     return fieldArr;
   }
 
-  public SAbstractObject getField(final int index) {
+  public Object getField(final int index) {
     // Get the field with the given index
     return fields[index];
   }
 
-  public void setField(final int index, final SAbstractObject value) {
+  public void setField(final int index, final Object value) {
     // Set the field with the given index to the given value
     fields[index] = value;
   }
 
 
   // Private array of fields
-  private final SAbstractObject[]  fields;
+  private final Object[]  fields;
   @CompilationFinal private SClass clazz;
 
-  private static final SAbstractObject[] noFields = new SAbstractObject[0];
+  private static final Object[] noFields = new Object[0];
 
   // Static field indices and number of object fields
   static final int numberOfObjectFields = 0;

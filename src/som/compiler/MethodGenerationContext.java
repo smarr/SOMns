@@ -352,7 +352,7 @@ public class MethodGenerationContext {
     }
 
     return FieldWriteNodeFactory.create(holderGenc.getFieldIndex(fieldName),
-        universe, getSelfRead(), exp);
+        getSelfRead(), exp);
   }
 
   /**
