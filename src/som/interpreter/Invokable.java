@@ -1,6 +1,7 @@
 package som.interpreter;
 
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.PreevaluatedExpression;
 
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.SourceSection;
@@ -42,5 +43,11 @@ public abstract class Invokable extends RootNode {
 
   public final RootCallTarget createCallTarget() {
     return Truffle.getRuntime().createCallTarget(this);
+  }
+
+  public boolean isAlwaysToBeInlined() {
+    return expressionOrSequence.getFirstMethodBodyNode()
+        instanceof PreevaluatedExpression
+        && this instanceof Primitive;
   }
 }

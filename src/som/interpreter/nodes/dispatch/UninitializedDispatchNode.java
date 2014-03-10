@@ -41,9 +41,15 @@ public class UninitializedDispatchNode extends AbstractDispatchWithLookupNode {
       if (method != null) {
         UninitializedDispatchNode newChainEnd = new UninitializedDispatchNode(selector, universe);
 
-        CachedDispatchNode initializedReplacement = new CachedDispatchNode(
-            rcvrClass, method, newChainEnd, universe);
-        return replace(initializedReplacement).executeDispatch(frame, arguments);
+        if (method.getInvokable().isAlwaysToBeInlined()) {
+          InlinedDispatchNode inlined = InlinedDispatchNode.create(
+              rcvrClass, method, newChainEnd, universe);
+          return replace(inlined).executeDispatch(frame, arguments);
+        } else {
+          CachedDispatchNode initializedReplacement = new CachedDispatchNode(
+              rcvrClass, method, newChainEnd, universe);
+          return replace(initializedReplacement).executeDispatch(frame, arguments);
+        }
       }
       // if method == null: fall through and use generic node
     }
