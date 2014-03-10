@@ -1,5 +1,6 @@
 package som.interpreter.nodes.nary;
 
+import som.interpreter.TruffleCompiler;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
 import som.vmobjects.SSymbol;
@@ -46,6 +47,7 @@ public final class EagerBinaryPrimitiveNode extends BinaryExpressionNode {
       return primitive.executeEvaluated(frame, receiver, argument);
     } catch (UnsupportedSpecializationException e) {
       unsupportedSpecialization.enter();
+      TruffleCompiler.transferToInterpreterAndInvalidate("Eager Primitive with unsupported specialization.");
       return makeGenericSend().executeEvaluated(frame, receiver,
           new Object[] {argument});
     }
