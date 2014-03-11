@@ -47,6 +47,8 @@ import som.interpreter.nodes.LocalVariableNode.LocalVariableWriteNode;
 import som.interpreter.nodes.LocalVariableNodeFactory.LocalVariableWriteNodeFactory;
 import som.interpreter.nodes.ReturnNonLocalNode.CatchNonLocalReturnNode;
 import som.interpreter.nodes.UninitializedVariableNode.UninitializedVariableReadNode;
+import som.interpreter.nodes.literals.BlockNode.BlockNodeWithContext;
+import som.interpreter.nodes.literals.LiteralNode;
 import som.primitives.Primitives;
 import som.vm.Universe;
 import som.vmobjects.SMethod;
@@ -205,7 +207,8 @@ public class MethodGenerationContext {
   }
 
   private boolean isQuickMethod(final ExpressionNode methodBody) {
-    if (isDirectArgumentReturn(methodBody)) {
+    if (isDirectArgumentReturn(methodBody) ||
+        isSimpleValueReturn(methodBody)) {
       return true;
     }
     return false;
@@ -222,6 +225,12 @@ public class MethodGenerationContext {
     return false;
   }
 
+  private boolean isSimpleValueReturn(final ExpressionNode methodBody) {
+    return (methodBody instanceof LiteralNode
+        && !(methodBody instanceof BlockNodeWithContext)) ||
+        methodBody instanceof GlobalNode;
+  }
+
   private ExpressionNode simplifyToQuickMethod(final ExpressionNode methodBody) {
     if (isDirectArgumentReturn(methodBody)) {
       UninitializedVariableReadNode varRead =
@@ -231,6 +240,8 @@ public class MethodGenerationContext {
       } else {
         return new ArgumentReadNode(varRead.getArgumentIndex());
       }
+    } else if (isSimpleValueReturn(methodBody)) {
+      return methodBody;
     }
     return methodBody;
   }
