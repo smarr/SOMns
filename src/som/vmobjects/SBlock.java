@@ -36,9 +36,55 @@ import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameUtil;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 
-public class SBlock extends SAbstractObject {
+public abstract class SBlock extends SAbstractObject {
 
-  public SBlock(final SMethod blockMethod, final MaterializedFrame context,
+  public static SBlock create(final SInvokable blockMethod,
+      final MaterializedFrame context, final FrameSlot outerSelfSlot) {
+    switch (blockMethod.getNumberOfArguments()) {
+      case 1: return new SBlock1(blockMethod, context, outerSelfSlot);
+      case 2: return new SBlock2(blockMethod, context, outerSelfSlot);
+      case 3: return new SBlock3(blockMethod, context, outerSelfSlot);
+    }
+    throw new RuntimeException("We do currently not have support for more than 3 arguments to a block.");
+  }
+
+  public static final class SBlock1 extends SBlock {
+    public SBlock1(final SInvokable blockMethod, final MaterializedFrame context,
+        final FrameSlot outerSelfSlot) {
+      super(blockMethod, context, outerSelfSlot);
+    }
+
+    @Override
+    public SClass getSOMClass(final Universe universe) {
+      return universe.getBlockClass(1);
+    }
+  }
+
+  public static final class SBlock2 extends SBlock {
+    public SBlock2(final SInvokable blockMethod, final MaterializedFrame context,
+        final FrameSlot outerSelfSlot) {
+      super(blockMethod, context, outerSelfSlot);
+    }
+
+    @Override
+    public SClass getSOMClass(final Universe universe) {
+      return universe.getBlockClass(2);
+    }
+  }
+
+  public static final class SBlock3 extends SBlock {
+    public SBlock3(final SInvokable blockMethod, final MaterializedFrame context,
+        final FrameSlot outerSelfSlot) {
+      super(blockMethod, context, outerSelfSlot);
+    }
+
+    @Override
+    public SClass getSOMClass(final Universe universe) {
+      return universe.getBlockClass(3);
+    }
+  }
+
+  public SBlock(final SInvokable blockMethod, final MaterializedFrame context,
       final FrameSlot outerSelfSlot) {
     this.method   = blockMethod;
     this.context  = context;
@@ -87,11 +133,6 @@ public class SBlock extends SAbstractObject {
       signatureString += "with:";
     }
     return signatureString;
-  }
-
-  @Override
-  public SClass getSOMClass(final Universe universe) {
-    return universe.getBlockClass(method.getNumberOfArguments());
   }
 
   private final SInvokable           method;

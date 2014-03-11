@@ -98,7 +98,7 @@ public class Universe {
     this.avoidExit    = avoidExit;
     this.lastExitCode = 0;
 
-    this.blockClasses = new HashMap<Integer, SClass>(3);
+    this.blockClasses = new SClass[4];
 
     current = this;
   }
@@ -343,7 +343,7 @@ public class Universe {
     loadSystemClass(doubleClass);
 
     // Load the generic block class
-    blockClass = loadClass(symbolFor("Block"));
+    blockClasses[0] = loadClass(symbolFor("Block"));
 
     // Setup the true and false objects
     SSymbol trueClassName = symbolFor("True");
@@ -364,7 +364,7 @@ public class Universe {
     setGlobal(symbolFor("false"),  falseObject);
     setGlobal(symbolFor("system"), systemObject);
     setGlobal(symbolFor("System"), systemClass);
-    setGlobal(symbolFor("Block"),  blockClass);
+    setGlobal(symbolFor("Block"),  blockClasses[0]);
 
     setGlobal(symbolFor("Nil"), nilClass);
 
@@ -411,9 +411,9 @@ public class Universe {
     return result;
   }
 
-  public SBlock newBlock(final SMethod method, final MaterializedFrame context,
+  public SBlock newBlock(final SInvokable method, final MaterializedFrame context,
       final FrameSlot outerSelfSlot) {
-    return new SBlock(method, context, outerSelfSlot);
+    return SBlock.create(method, context, outerSelfSlot);
   }
 
   @SlowPath
@@ -546,26 +546,11 @@ public class Universe {
     }
   }
 
-  public SClass getBlockClass() {
-    // Get the generic block class
-    return blockClass;
-  }
-
-  public boolean isBlockClass(final SClass clazz) {
-    if (clazz == blockClass) {
-      return true;
-    }
-    for (SClass c : blockClasses.values()) {
-      if (c == clazz) {
-        return true;
-      }
-    }
-    return false;
-  }
-
   public SClass getBlockClass(final int numberOfArguments) {
-    SClass result = blockClasses.get(numberOfArguments);
-    if (result != null) {
+    SClass result = blockClasses[numberOfArguments];
+
+    // the base class Block (i.e., without #value method is loaded explicitly
+    if (result != null || numberOfArguments == 0) {
       return result;
     }
 
@@ -578,7 +563,7 @@ public class Universe {
     result = (SClass) getGlobal(name);
 
     if (result != null) {
-      blockClasses.put(new Integer(numberOfArguments), result);
+      blockClasses[numberOfArguments] = result;
       return result;
     }
 
@@ -592,9 +577,7 @@ public class Universe {
     // Insert the block class into the dictionary of globals
     setGlobal(name, result);
 
-    blockClasses.put(new Integer(numberOfArguments), result);
-
-    // Return the loaded block class
+    blockClasses[numberOfArguments] = result;
     return result;
   }
 
@@ -720,7 +703,6 @@ public class Universe {
   @CompilationFinal public SClass               primitiveClass;
   @CompilationFinal public SClass               stringClass;
   @CompilationFinal public SClass               systemClass;
-  @CompilationFinal public SClass               blockClass;
   @CompilationFinal public SClass               doubleClass;
 
   @CompilationFinal public SClass               trueClass;
@@ -741,7 +723,7 @@ public class Universe {
   private int                                   lastExitCode;
 
   // Optimizations
-  private final HashMap<Integer, SClass>        blockClasses;
+  private final SClass[] blockClasses;
 
   // Latest instance
   // WARNING: this is problematic with multiple interpreters in the same VM...
