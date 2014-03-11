@@ -31,7 +31,7 @@ import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import som.vmobjects.SDouble;
 import som.vmobjects.SInteger;
-import som.vmobjects.SMethod;
+import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 import som.vmobjects.SString;
 import som.vmobjects.SSymbol;
@@ -52,7 +52,7 @@ import com.oracle.truffle.api.dsl.TypeSystem;
                  SArray.class,
                 SString.class,
                 SSymbol.class,
-                SMethod.class,
+                SInvokable.class,
         SAbstractObject.class})
 public class Types {
 

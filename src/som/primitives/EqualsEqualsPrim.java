@@ -6,7 +6,7 @@ import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.vm.Universe;
 import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
-import som.vmobjects.SMethod;
+import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
@@ -71,7 +71,7 @@ public abstract class EqualsEqualsPrim extends BinaryExpressionNode {
   }
 
   @Specialization(order = 47)
-  public SObject doSMethod(final SMethod left, final Object right) {
+  public SObject doSMethod(final SInvokable left, final Object right) {
     if (left == right) {
       return universe.trueObject;
     } else {

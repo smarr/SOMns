@@ -32,7 +32,7 @@ import som.interpreter.nodes.ArgumentReadNode.SelfArgumentReadNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.vm.Universe;
 import som.vmobjects.SClass;
-import som.vmobjects.SMethod;
+import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives.SlowPath;
@@ -57,7 +57,7 @@ public abstract class Primitives {
   public abstract void installPrimitives();
 
   @SlowPath
-  public static SMethod constructPrimitive(final SSymbol signature,
+  public static SInvokable constructPrimitive(final SSymbol signature,
       final NodeFactory<? extends ExpressionNode> nodeFactory,
       final Universe universe, final SClass holder) {
     int numArgs = signature.getNumberOfSignatureArguments();
@@ -83,12 +83,12 @@ public abstract class Primitives {
     }
 
     Primitive primMethodNode = new Primitive(primNode, mgen.getFrameDescriptor());
-    SMethod prim = universe.newMethod(signature, primMethodNode, true);
+    SInvokable prim = universe.newMethod(signature, primMethodNode, true);
     return prim;
   }
 
   @SlowPath
-  public static SMethod constructEmptyPrimitive(final SSymbol signature,
+  public static SInvokable constructEmptyPrimitive(final SSymbol signature,
       final Universe universe) {
     int numArgs = signature.getNumberOfSignatureArguments();
 
@@ -101,14 +101,14 @@ public abstract class Primitives {
 
     ExpressionNode primNode = EmptyPrim.create(self);
     Primitive primMethodNode = new Primitive(primNode, mgen.getFrameDescriptor());
-    SMethod prim = universe.newMethod(signature, primMethodNode, true);
+    SInvokable prim = universe.newMethod(signature, primMethodNode, true);
     return prim;
   }
 
   protected void installInstancePrimitive(final String selector,
       final NodeFactory<? extends ExpressionNode> nodeFactory) {
     SSymbol signature = universe.symbolFor(selector);
-    SMethod prim = constructPrimitive(signature, nodeFactory, universe, holder);
+    SInvokable prim = constructPrimitive(signature, nodeFactory, universe, holder);
 
     // Install the given primitive as an instance primitive in the holder class
     holder.addInstancePrimitive(prim);
@@ -117,7 +117,7 @@ public abstract class Primitives {
   protected void installClassPrimitive(final String selector,
       final NodeFactory<? extends ExpressionNode> nodeFactory) {
     SSymbol signature = universe.symbolFor(selector);
-    SMethod prim = constructPrimitive(signature, nodeFactory, universe, holder);
+    SInvokable prim = constructPrimitive(signature, nodeFactory, universe, holder);
 
     // Install the given primitive as an instance primitive in the class of
     // the holder class
@@ -126,7 +126,7 @@ public abstract class Primitives {
 
   protected SClass holder;
 
-  public static SMethod getEmptyPrimitive(final String selector,
+  public static SInvokable getEmptyPrimitive(final String selector,
       final Universe universe) {
     SSymbol signature = universe.symbolFor(selector);
     return constructEmptyPrimitive(signature, universe);

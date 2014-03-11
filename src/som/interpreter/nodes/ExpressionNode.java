@@ -31,7 +31,7 @@ import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import som.vmobjects.SDouble;
 import som.vmobjects.SInteger;
-import som.vmobjects.SMethod;
+import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 import som.vmobjects.SString;
 import som.vmobjects.SSymbol;
@@ -102,8 +102,8 @@ public abstract class ExpressionNode extends SOMNode {
     return TypesGen.TYPES.expectSClass(executeGeneric(frame));
   }
 
-  public SMethod executeSMethod(final VirtualFrame frame) throws UnexpectedResultException {
-    return TypesGen.TYPES.expectSMethod(executeGeneric(frame));
+  public SInvokable executeSInvokable(final VirtualFrame frame) throws UnexpectedResultException {
+    return TypesGen.TYPES.expectSInvokable(executeGeneric(frame));
   }
 
   public SObject executeSObject(final VirtualFrame frame) throws UnexpectedResultException {

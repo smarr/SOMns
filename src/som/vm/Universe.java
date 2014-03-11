@@ -41,7 +41,9 @@ import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import som.vmobjects.SDouble;
 import som.vmobjects.SInteger;
-import som.vmobjects.SMethod;
+import som.vmobjects.SInvokable;
+import som.vmobjects.SInvokable.SMethod;
+import som.vmobjects.SInvokable.SPrimitive;
 import som.vmobjects.SObject;
 import som.vmobjects.SString;
 import som.vmobjects.SSymbol;
@@ -261,7 +263,7 @@ public class Universe {
     SClass clazz = loadClass(symbolFor(className));
 
     // Lookup the initialize invokable on the system class
-    SMethod initialize = clazz.getSOMClass(this).
+    SInvokable initialize = clazz.getSOMClass(this).
                                         lookupInvokable(symbolFor(selector));
 
     // Invoke the initialize invokable
@@ -281,7 +283,7 @@ public class Universe {
     SArray argumentsArray = newArray(arguments);
 
     // Lookup the initialize invokable on the system class
-    SMethod initialize = systemClass.
+    SInvokable initialize = systemClass.
         lookupInvokable(symbolFor("initialize:"));
 
     // Invoke the initialize invokable
@@ -421,11 +423,14 @@ public class Universe {
   }
 
   @SlowPath
-  public SMethod newMethod(final SSymbol signature,
+  public SInvokable newMethod(final SSymbol signature,
       final Invokable truffleInvokable,
       final boolean isPrimitive) {
-    SMethod result = new SMethod(signature, truffleInvokable, isPrimitive);
-    return result;
+    if (isPrimitive) {
+      return new SPrimitive(signature, truffleInvokable);
+    } else {
+      return new SMethod(signature, truffleInvokable);
+    }
   }
 
   public SObject newInstance(final SClass instanceClass) {

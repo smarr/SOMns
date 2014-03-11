@@ -4,7 +4,7 @@ import som.interpreter.SArguments;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.vm.Universe;
 import som.vmobjects.SBlock;
-import som.vmobjects.SMethod;
+import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.Truffle;
@@ -17,7 +17,7 @@ public abstract class AbstractIfMessageNode extends BinaryExpressionNode {
   protected final BranchProfile ifFalseBranch = new BranchProfile();
   protected final BranchProfile ifTrueBranch  = new BranchProfile();
 
-  private final SMethod branchMethod;
+  private final SInvokable branchMethod;
 
   @Child protected CallNode branchValueSend;
 

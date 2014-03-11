@@ -5,7 +5,7 @@ import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.PreevaluatedExpression;
 import som.interpreter.nodes.nary.QuaternaryExpressionNode;
 import som.vmobjects.SBlock;
-import som.vmobjects.SMethod;
+import som.vmobjects.SInvokable;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
@@ -21,7 +21,7 @@ import com.oracle.truffle.api.nodes.RootNode;
 public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode
     implements PreevaluatedExpression {
 
-  private final SMethod blockMethod;
+  private final SInvokable blockMethod;
   @Child private CallNode valueSend;
 
   public IntToByDoMessageNode(final ExpressionNode orignialNode,

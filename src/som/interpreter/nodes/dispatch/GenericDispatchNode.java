@@ -4,7 +4,7 @@ import som.interpreter.SArguments;
 import som.interpreter.Types;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
-import som.vmobjects.SMethod;
+import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -18,7 +18,7 @@ public class GenericDispatchNode extends AbstractDispatchWithLookupNode {
   @Override
   public Object executeDispatch(final VirtualFrame frame,
       final SArguments arguments) {
-    SMethod method = lookupMethod(arguments);
+    SInvokable method = lookupMethod(arguments);
     if (method != null) {
       return method.getCallTarget().call(frame.pack(), arguments);
     } else {

@@ -8,7 +8,7 @@ import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray;
 import som.vmobjects.SClass;
-import som.vmobjects.SMethod;
+import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
@@ -23,7 +23,7 @@ public class ObjectPrims {
 
     @Specialization
     public Object doObject(final VirtualFrame frame, final Object receiver, final SSymbol selector) {
-      SMethod invokable = Types.getClassOf(receiver, universe).lookupInvokable(selector);
+      SInvokable invokable = Types.getClassOf(receiver, universe).lookupInvokable(selector);
       return invokable.invoke(frame.pack(), receiver, universe);
     }
   }
@@ -35,7 +35,7 @@ public class ObjectPrims {
     @Specialization
     public Object doSAbstractObject(final VirtualFrame frame,
         final SAbstractObject receiver, final SSymbol selector, final SClass  clazz) {
-      SMethod invokable = clazz.lookupInvokable(selector);
+      SInvokable invokable = clazz.lookupInvokable(selector);
       return invokable.invoke(frame.pack(), receiver, universe);
     }
   }
@@ -47,7 +47,7 @@ public class ObjectPrims {
     @Specialization
     public Object doObject(final VirtualFrame frame,
         final Object receiver, final SSymbol selector, final SArray  argsArr) {
-      SMethod invokable = Types.getClassOf(receiver, universe).lookupInvokable(selector);
+      SInvokable invokable = Types.getClassOf(receiver, universe).lookupInvokable(selector);
       return invokable.invoke(frame.pack(), receiver, argsArr.indexableFields, universe);
     }
   }

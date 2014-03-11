@@ -27,7 +27,7 @@ package som.compiler;
 
 import som.vm.Universe;
 import som.vmobjects.SClass;
-import som.vmobjects.SMethod;
+import som.vmobjects.SInvokable;
 
 import com.oracle.truffle.api.CompilerDirectives.SlowPath;
 
@@ -36,7 +36,7 @@ public class Disassembler {
   @SlowPath
   public static void dump(final SClass cl) {
     for (int i = 0; i < cl.getNumberOfInstanceInvokables(); i++) {
-      SMethod inv = cl.getInstanceInvokable(i);
+      SInvokable inv = cl.getInstanceInvokable(i);
 
       // output header and skip if the Invokable is a Primitive
       Universe.errorPrint(cl.getName().toString() + ">>"
@@ -48,7 +48,7 @@ public class Disassembler {
   }
 
   @SlowPath
-  public static void dumpMethod(final SMethod m, final String indent) {
+  public static void dumpMethod(final SInvokable m, final String indent) {
     Universe.errorPrintln("(");
     Universe.errorPrintln(m.getInvokable().toString());
     Universe.errorPrintln(indent + ")");

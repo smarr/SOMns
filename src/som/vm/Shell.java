@@ -30,7 +30,7 @@ import java.io.InputStreamReader;
 
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
-import som.vmobjects.SMethod;
+import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 
 public class Shell {
@@ -78,7 +78,7 @@ public class Shell {
           myObject = universe.newInstance(myClass);
 
           // Lookup the run: method
-          SMethod shellMethod = myClass.
+          SInvokable shellMethod = myClass.
               lookupInvokable(universe.symbolFor("run:"));
 
           // Invoke the run method

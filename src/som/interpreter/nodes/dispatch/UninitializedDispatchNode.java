@@ -6,7 +6,7 @@ import som.interpreter.Types;
 import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
 import som.vm.Universe;
 import som.vmobjects.SClass;
-import som.vmobjects.SMethod;
+import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -36,7 +36,7 @@ public class UninitializedDispatchNode extends AbstractDispatchWithLookupNode {
 
     if (chainDepth < INLINE_CACHE_SIZE) {
       SClass rcvrClass = Types.getClassOf(arguments.getReceiver(), universe);
-      SMethod method   = rcvrClass.lookupInvokable(selector);
+      SInvokable method = rcvrClass.lookupInvokable(selector);
 
       if (method != null) {
         UninitializedDispatchNode newChainEnd = new UninitializedDispatchNode(selector, universe);

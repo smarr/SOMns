@@ -2,7 +2,7 @@ package som.interpreter.nodes.dispatch;
 
 import som.interpreter.SArguments;
 import som.interpreter.nodes.ISuperReadNode;
-import som.vmobjects.SMethod;
+import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.Truffle;
@@ -17,7 +17,7 @@ public final class SuperDispatchNode extends AbstractDispatchNode {
 
   public static SuperDispatchNode create(final SSymbol selector,
       final ISuperReadNode superNode) {
-    SMethod method = superNode.getSuperClass().lookupInvokable(selector);
+    SInvokable method = superNode.getSuperClass().lookupInvokable(selector);
 
     if (method == null) {
       throw new RuntimeException("Currently #dnu with super sent is not yet implemented. ");

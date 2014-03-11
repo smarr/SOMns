@@ -5,7 +5,7 @@ import som.interpreter.nodes.PreevaluatedExpression;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.vm.Universe;
 import som.vmobjects.SBlock;
-import som.vmobjects.SMethod;
+import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.Truffle;
@@ -19,8 +19,8 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
   private final BranchProfile ifFalseBranch = new BranchProfile();
   private final BranchProfile ifTrueBranch  = new BranchProfile();
 
-  private final SMethod trueMethod;
-  private final SMethod falseMethod;
+  private final SInvokable trueMethod;
+  private final SInvokable falseMethod;
 
   @Child protected CallNode trueValueSend;
   @Child protected CallNode falseValueSend;

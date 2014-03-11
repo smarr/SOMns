@@ -35,15 +35,35 @@ import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.frame.PackedFrame;
 
-public class SMethod extends SAbstractObject {
+public abstract class SInvokable extends SAbstractObject {
 
-  public SMethod(final SSymbol signature, final Invokable invokable,
-      final boolean isPrimitive) {
+  public SInvokable(final SSymbol signature, final Invokable invokable) {
     this.signature = signature;
 
     this.invokable   = invokable;
     this.callTarget  = invokable.createCallTarget();
-    this.isPrimitive = isPrimitive;
+  }
+
+  public static class SMethod extends SInvokable {
+    public SMethod(final SSymbol signature, final Invokable invokable) {
+      super(signature, invokable);
+    }
+
+    @Override
+    public SClass getSOMClass(final Universe universe) {
+      return universe.methodClass;
+    }
+  }
+
+  public static class SPrimitive extends SInvokable {
+    public SPrimitive(final SSymbol signature, final Invokable invokable) {
+      super(signature, invokable);
+    }
+
+    @Override
+    public SClass getSOMClass(final Universe universe) {
+      return universe.primitiveClass;
+    }
   }
 
   public RootCallTarget getCallTarget() {
@@ -52,10 +72,6 @@ public class SMethod extends SAbstractObject {
 
   public Invokable getInvokable() {
     return invokable;
-  }
-
-  public boolean isPrimitive() {
-    return isPrimitive;
   }
 
   public SSymbol getSignature() {
@@ -104,15 +120,6 @@ public class SMethod extends SAbstractObject {
   }
 
   @Override
-  public SClass getSOMClass(final Universe universe) {
-    if (isPrimitive) {
-      return universe.primitiveClass;
-    } else {
-      return universe.methodClass;
-    }
-  }
-
-  @Override
   public String toString() {
     // TODO: fixme: remove special case if possible, I think it indicates a bug
     if (holder == null) {
@@ -125,7 +132,6 @@ public class SMethod extends SAbstractObject {
   // Private variable holding Truffle runtime information
   private final Invokable              invokable;
   private final RootCallTarget         callTarget;
-  private final boolean                isPrimitive;
   private final SSymbol                signature;
   @CompilationFinal private SClass     holder;
 }

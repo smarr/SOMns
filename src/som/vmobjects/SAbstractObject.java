@@ -24,7 +24,7 @@ public abstract class SAbstractObject {
     SSymbol selector = universe.symbolFor(selectorString);
 
     // Lookup the invokable
-    SMethod invokable = Types.getClassOf(receiver, universe).lookupInvokable(selector);
+    SInvokable invokable = Types.getClassOf(receiver, universe).lookupInvokable(selector);
 
     // Invoke the invokable
     return invokable.invoke(frame, receiver, arguments, universe);

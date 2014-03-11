@@ -30,7 +30,7 @@ import java.util.List;
 import som.vm.Universe;
 import som.vmobjects.SArray;
 import som.vmobjects.SClass;
-import som.vmobjects.SMethod;
+import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives.SlowPath;
@@ -47,9 +47,9 @@ public class ClassGenerationContext {
   private SSymbol             superName;
   private boolean             classSide;
   private final List<SSymbol> instanceFields  = new ArrayList<SSymbol>();
-  private final List<SMethod> instanceMethods = new ArrayList<SMethod>();
+  private final List<SInvokable> instanceMethods = new ArrayList<SInvokable>();
   private final List<SSymbol> classFields     = new ArrayList<SSymbol>();
-  private final List<SMethod> classMethods    = new ArrayList<SMethod>();
+  private final List<SInvokable> classMethods    = new ArrayList<SInvokable>();
 
   public void setName(final SSymbol name) {
     this.name = name;
@@ -77,7 +77,7 @@ public class ClassGenerationContext {
     }
   }
 
-  public void addInstanceMethod(final SMethod meth) {
+  public void addInstanceMethod(final SInvokable meth) {
     instanceMethods.add(meth);
   }
 
@@ -85,7 +85,7 @@ public class ClassGenerationContext {
     classSide = b;
   }
 
-  public void addClassMethod(final SMethod meth) {
+  public void addClassMethod(final SInvokable meth) {
     classMethods.add(meth);
   }
 

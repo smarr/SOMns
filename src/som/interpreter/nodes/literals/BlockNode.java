@@ -5,7 +5,8 @@ import som.interpreter.Inliner;
 import som.interpreter.Invokable;
 import som.vm.Universe;
 import som.vmobjects.SBlock;
-import som.vmobjects.SMethod;
+import som.vmobjects.SInvokable;
+import som.vmobjects.SInvokable.SPrimitive;
 
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -13,10 +14,10 @@ import com.oracle.truffle.api.nodes.NodeInfo.Kind;
 
 public class BlockNode extends LiteralNode {
 
-  protected final SMethod blockMethod;
+  protected final SInvokable blockMethod;
   protected final Universe universe;
 
-  public BlockNode(final SMethod blockMethod, final Universe universe) {
+  public BlockNode(final SInvokable blockMethod, final Universe universe) {
     this.blockMethod  = blockMethod;
     this.universe     = universe;
   }
@@ -33,13 +34,15 @@ public class BlockNode extends LiteralNode {
 
   @Override
   public void replaceWithIndependentCopyForInlining(final Inliner inliner) {
-    SMethod forInlining = cloneMethod(inliner);
+    SInvokable forInlining = cloneMethod(inliner);
     replace(new BlockNode(forInlining, universe));
   }
 
-  protected SMethod cloneMethod(final Inliner inliner) {
-    Invokable clonedInvokable = blockMethod.getInvokable().cloneWithNewLexicalContext(inliner.getLexicalContext());
-    SMethod forInlining = universe.newMethod(blockMethod.getSignature(), clonedInvokable, blockMethod.isPrimitive());
+  protected SInvokable cloneMethod(final Inliner inliner) {
+    Invokable clonedInvokable = blockMethod.getInvokable().
+        cloneWithNewLexicalContext(inliner.getLexicalContext());
+    SInvokable forInlining = universe.newMethod(blockMethod.getSignature(),
+        clonedInvokable, blockMethod instanceof SPrimitive);
     return forInlining;
   }
 
@@ -52,7 +55,7 @@ public class BlockNode extends LiteralNode {
     private final FrameSlot outerSelfSlot;
     private final int       contextLevel;
 
-    public BlockNodeWithContext(final SMethod blockMethod,
+    public BlockNodeWithContext(final SInvokable blockMethod,
         final Universe universe, final FrameSlot outerSelfSlot,
         final int contextLevel) {
       super(blockMethod, universe);

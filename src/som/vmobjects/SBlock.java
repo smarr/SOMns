@@ -45,7 +45,7 @@ public class SBlock extends SAbstractObject {
     this.outerSelfSlot = outerSelfSlot;
   }
 
-  public SMethod getMethod() {
+  public SInvokable getMethod() {
     // Get the method of this block
     return method;
   }
@@ -58,7 +58,7 @@ public class SBlock extends SAbstractObject {
     return FrameUtil.getObjectSafe(getContext(), outerSelfSlot);
   }
 
-  public static SMethod getEvaluationPrimitive(final int numberOfArguments,
+  public static SInvokable getEvaluationPrimitive(final int numberOfArguments,
       final Universe universe, final SClass rcvrClass) {
     SSymbol sig = universe.symbolFor(computeSignatureString(numberOfArguments));
 
@@ -94,7 +94,7 @@ public class SBlock extends SAbstractObject {
     return universe.getBlockClass(method.getNumberOfArguments());
   }
 
-  private final SMethod           method;
+  private final SInvokable           method;
   private final MaterializedFrame context;
   private final FrameSlot         outerSelfSlot;
 }
