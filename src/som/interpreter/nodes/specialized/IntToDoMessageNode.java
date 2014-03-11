@@ -20,6 +20,7 @@ import com.oracle.truffle.api.nodes.RootNode;
 
 public abstract class IntToDoMessageNode extends TernaryExpressionNode
     implements PreevaluatedExpression {
+
   private final SMethod blockMethod;
   @Child private CallNode valueSend;
 
