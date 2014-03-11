@@ -237,21 +237,21 @@ public class MethodGenerationContext {
   }
 
   private ExpressionNode simplifyMethodIfPossible(final ExpressionNode methodBody) {
-    if (isDirectArgumentAccess(methodBody)) {
-      return createSimpleArgumentAccessNode(methodBody);
-    } else if (isSimpleValue(methodBody)) {
-      return methodBody;
-    } else if (isSimpleGetter(methodBody)) {
-      return FieldReadNodeFactory.create(((FieldReadNode) methodBody).getFieldIndex(),
-          new SelfArgumentReadNode());
-    } else if (isSimpleSetter(methodBody)) {
-      FieldWriteNode node = (FieldWriteNode) methodBody;
-      ExpressionNode value = node.getValue();
-      if (isDirectArgumentAccess(value)) {
-        value = createSimpleArgumentAccessNode(value);
-      }
-      return FieldWriteNodeFactory.create(node.getFieldIndex(), new SelfArgumentReadNode(), value);
-    }
+//    if (isDirectArgumentAccess(methodBody)) {
+//      return createSimpleArgumentAccessNode(methodBody);
+//    } else if (isSimpleValue(methodBody)) {
+//      return methodBody;
+//    } else if (isSimpleGetter(methodBody)) {
+//      return FieldReadNodeFactory.create(((FieldReadNode) methodBody).getFieldIndex(),
+//          new SelfArgumentReadNode());
+//    } else if (isSimpleSetter(methodBody)) {
+//      FieldWriteNode node = (FieldWriteNode) methodBody;
+//      ExpressionNode value = node.getValue();
+//      if (isDirectArgumentAccess(value)) {
+//        value = createSimpleArgumentAccessNode(value);
+//      }
+//      return FieldWriteNodeFactory.create(node.getFieldIndex(), new SelfArgumentReadNode(), value);
+//    }
 
     // it is not a simple method, so we need to add argument initialization
     return addArgumentInitialization(methodBody);
