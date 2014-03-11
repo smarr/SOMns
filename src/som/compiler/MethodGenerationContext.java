@@ -46,6 +46,7 @@ import som.interpreter.nodes.GlobalNode.UninitializedGlobalReadNode;
 import som.interpreter.nodes.LocalVariableNode.LocalVariableWriteNode;
 import som.interpreter.nodes.LocalVariableNodeFactory.LocalVariableWriteNodeFactory;
 import som.interpreter.nodes.ReturnNonLocalNode.CatchNonLocalReturnNode;
+import som.interpreter.nodes.UninitializedVariableNode.UninitializedVariableReadNode;
 import som.primitives.Primitives;
 import som.vm.Universe;
 import som.vmobjects.SMethod;
@@ -182,11 +183,11 @@ public class MethodGenerationContext {
       methodBody.assignSourceSection(sourceSection);
     }
 
-    methodBody = addArgumentInitialization(methodBody);
     methodBody.assignSourceSection(sourceSection);
+    methodBody = prepareForExecution(methodBody);
 
     som.interpreter.Method truffleMethod =
-        new som.interpreter.Method(getSourceSectionForMethod(methodBody),
+        new som.interpreter.Method(getSourceSectionForMethod(sourceSection),
             frameDescriptor, methodBody, universe, getLexicalContext());
 
     SMethod meth = universe.newMethod(signature, truffleMethod, false);
@@ -195,8 +196,46 @@ public class MethodGenerationContext {
     return meth;
   }
 
-  private SourceSection getSourceSectionForMethod(final ExpressionNode expressions) {
-    SourceSection ssBody   = expressions.getSourceSection();
+  private ExpressionNode prepareForExecution(final ExpressionNode methodBody) {
+    if (isQuickMethod(methodBody)) {
+      return simplifyToQuickMethod(methodBody);
+    } else {
+      return addArgumentInitialization(methodBody);
+    }
+  }
+
+  private boolean isQuickMethod(final ExpressionNode methodBody) {
+    if (isDirectArgumentReturn(methodBody)) {
+      return true;
+    }
+    return false;
+  }
+
+  private boolean isDirectArgumentReturn(final ExpressionNode methodBody) {
+    if (methodBody instanceof UninitializedVariableReadNode) {
+      UninitializedVariableReadNode varRead =
+          (UninitializedVariableReadNode) methodBody;
+      if (varRead.accessesArgument() && !varRead.accessesOuterContext()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private ExpressionNode simplifyToQuickMethod(final ExpressionNode methodBody) {
+    if (isDirectArgumentReturn(methodBody)) {
+      UninitializedVariableReadNode varRead =
+          (UninitializedVariableReadNode) methodBody;
+      if (varRead.accessesSelf()) {
+        return new SelfArgumentReadNode();
+      } else {
+        return new ArgumentReadNode(varRead.getArgumentIndex());
+      }
+    }
+    return methodBody;
+  }
+
+  private SourceSection getSourceSectionForMethod(final SourceSection ssBody) {
     SourceSection ssMethod = new DefaultSourceSection(ssBody.getSource(),
         holderGenc.getName().getString() + ">>" + signature.toString(),
         ssBody.getStartLine(), ssBody.getStartColumn(),

@@ -2,6 +2,7 @@ package som.interpreter.nodes;
 
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
 import som.compiler.Variable;
+import som.compiler.Variable.Argument;
 import som.compiler.Variable.Local;
 import som.interpreter.Inliner;
 import som.interpreter.nodes.LocalVariableNode.LocalSuperReadNode;
@@ -66,6 +67,29 @@ public abstract class UninitializedVariableNode extends ContextualNode {
       assert localSelfSlot != null;
       assert varSlot       != null;
       replace(new UninitializedVariableReadNode(this, varSlot, localSelfSlot));
+    }
+
+    public boolean accessesArgument() {
+      return variable instanceof Argument;
+    }
+
+    public boolean accessesTemporary() {
+      return variable instanceof Local;
+    }
+
+    public boolean accessesSelf() {
+      if (accessesTemporary()) {
+        return false;
+      }
+      return ((Argument) variable).isSelf();
+    }
+
+    public int getArgumentIndex() {
+      if (!accessesArgument()) {
+        throw new UnsupportedOperationException("This node does not access an argument.");
+      }
+
+      return ((Argument) variable).index;
     }
   }
 
