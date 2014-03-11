@@ -23,6 +23,7 @@ package som.interpreter.nodes;
 
 import java.math.BigInteger;
 
+import som.interpreter.nodes.UninitializedVariableNode.UninitializedVariableReadNode;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SObject;
 
@@ -39,6 +40,19 @@ public abstract class FieldNode extends ExpressionNode {
 
   public FieldNode(final int fieldIndex) {
     this.fieldIndex = fieldIndex;
+  }
+
+  abstract ExpressionNode getSelf();
+
+  public boolean accessesLocalSelf() {
+    ExpressionNode self = getSelf();
+
+    if (self instanceof UninitializedVariableReadNode) {
+      UninitializedVariableReadNode selfRead =
+          (UninitializedVariableReadNode) self;
+      return selfRead.accessesSelf() && !selfRead.accessesOuterContext();
+    }
+    return false;
   }
 
   public abstract static class FieldReadNode extends FieldNode {
