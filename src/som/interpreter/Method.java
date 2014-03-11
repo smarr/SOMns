@@ -21,6 +21,7 @@
  */
 package som.interpreter;
 
+import som.interpreter.nodes.ArgumentInitializationNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.vm.Universe;
 
@@ -66,5 +67,12 @@ public class Method extends Invokable {
   @Override
   public RootNode split() {
     return cloneWithNewLexicalContext(outerContext);
+  }
+
+  @Override
+  public boolean isAlwaysToBeInlined() {
+    // If we do not have an ArgumentInitializationNode, we can directly inline
+    // the result
+    return !(expressionOrSequence instanceof ArgumentInitializationNode);
   }
 }

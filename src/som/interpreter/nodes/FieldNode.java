@@ -55,7 +55,8 @@ public abstract class FieldNode extends ExpressionNode {
     return false;
   }
 
-  public abstract static class FieldReadNode extends FieldNode {
+  public abstract static class FieldReadNode extends FieldNode
+      implements PreevaluatedExpression {
     public FieldReadNode(final int fieldIndex)     { super(fieldIndex); }
     public FieldReadNode(final FieldReadNode node) { super(node.fieldIndex); }
 
@@ -63,7 +64,13 @@ public abstract class FieldNode extends ExpressionNode {
       return fieldIndex;
     }
 
-    public abstract SAbstractObject executeEvaluated(SObject self);
+    public abstract Object executeEvaluated(SObject self);
+
+    @Override
+    public final Object executePreEvaluated(final VirtualFrame frame,
+        final Object receiver, final Object[] arguments) {
+      return executeEvaluated((SObject) receiver);
+    }
 
     protected final boolean isSAbstractObject(final SObject self) {
       return self.getField(fieldIndex) instanceof SAbstractObject;
@@ -114,7 +121,8 @@ public abstract class FieldNode extends ExpressionNode {
   @NodeChildren({
     @NodeChild(value = "self",  type = ExpressionNode.class),
     @NodeChild(value = "value", type = ExpressionNode.class)})
-  public abstract static class FieldWriteNode extends FieldNode {
+  public abstract static class FieldWriteNode extends FieldNode
+      implements PreevaluatedExpression {
 
     public FieldWriteNode(final int fieldIndex) {
       super(fieldIndex);
@@ -129,7 +137,14 @@ public abstract class FieldNode extends ExpressionNode {
     }
 
     public abstract ExpressionNode getValue();
+
     public abstract Object executeEvaluated(VirtualFrame frame, SObject self, Object value);
+
+    @Override
+    public final Object executePreEvaluated(final VirtualFrame frame,
+        final Object receiver, final Object[] arguments) {
+      return executeEvaluated(frame, (SObject) receiver, arguments[0]);
+    }
 
     @Specialization(order = 1)
     public SAbstractObject doSAbstractObject(final SObject self, final SAbstractObject value) {

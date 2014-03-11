@@ -34,7 +34,8 @@ import com.oracle.truffle.api.nodes.NodeInfo.Kind;
 import com.oracle.truffle.api.utilities.BranchProfile;
 
 
-public abstract class GlobalNode extends ExpressionNode {
+public abstract class GlobalNode extends ExpressionNode
+    implements PreevaluatedExpression {
 
   protected final SSymbol  globalName;
   protected final Universe universe;
@@ -42,6 +43,12 @@ public abstract class GlobalNode extends ExpressionNode {
   public GlobalNode(final SSymbol globalName, final Universe universe) {
     this.globalName = globalName;
     this.universe   = universe;
+  }
+
+  @Override
+  public final Object executePreEvaluated(final VirtualFrame frame,
+      final Object receiver, final Object[] arguments) {
+    return executeGeneric(frame);
   }
 
   public static class UninitializedGlobalReadNode extends GlobalNode {
