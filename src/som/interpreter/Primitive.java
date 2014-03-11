@@ -1,7 +1,6 @@
 package som.interpreter;
 
 import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.PreevaluatedExpression;
 
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.nodes.RootNode;
@@ -36,7 +35,8 @@ public class Primitive extends Invokable {
 
   @Override
   public boolean isAlwaysToBeInlined() {
-    return expressionOrSequence.getFirstMethodBodyNode()
-        instanceof PreevaluatedExpression;
+//    return expressionOrSequence.getFirstMethodBodyNode()
+//        instanceof PreevaluatedExpression;
+    return false;
   }
 }
