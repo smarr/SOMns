@@ -34,6 +34,7 @@ import org.junit.runners.Parameterized.Parameters;
 import som.vm.Universe;
 import som.vmobjects.SClass;
 import som.vmobjects.SInteger;
+import som.vmobjects.SSymbol;
 
 @RunWith(Parameterized.class)
 public class BasicInterpreterTests {
@@ -64,6 +65,15 @@ public class BasicInterpreterTests {
         {"IfTrueIfFalse", "test",  42, SInteger.class },
         {"IfTrueIfFalse", "test2", 33, SInteger.class },
         {"IfTrueIfFalse", "test3",  4, SInteger.class },
+
+        {"CompilerSimplification", "returnConstantSymbol",  "constant", SSymbol.class  },
+        {"CompilerSimplification", "returnConstantInt",     42, SInteger.class },
+        {"CompilerSimplification", "returnSelf",            "CompilerSimplification", SClass.class },
+        {"CompilerSimplification", "returnSelfImplicitly",  "CompilerSimplification", SClass.class },
+        {"CompilerSimplification", "testReturnArgumentN",   55, SInteger.class },
+        {"CompilerSimplification", "testReturnArgumentA",   44, SInteger.class },
+        {"CompilerSimplification", "testSetField",          "foo", SSymbol.class },
+        {"CompilerSimplification", "testGetField",          40, SInteger.class },
     });
   }
 
@@ -93,6 +103,13 @@ public class BasicInterpreterTests {
     if (resultType == SClass.class) {
       String expected = (String) expectedResult;
       String actual   = ((SClass) actualResult).getName().getString();
+      assertEquals(expected, actual);
+      return;
+    }
+
+    if (resultType == SSymbol.class) {
+      String expected = (String) expectedResult;
+      String actual   = ((SSymbol) actualResult).getString();
       assertEquals(expected, actual);
       return;
     }
