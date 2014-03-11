@@ -308,7 +308,15 @@ public final class MessageSendNode {
       return dispatchNode.executeDispatch(frame, args);
     }
 
-    public void replaceDispatchNodeBecauseCallSiteIsMegaMorphic(
+    public AbstractDispatchNode getDispatchListHead() {
+      return dispatchNode;
+    }
+
+    public void adoptNewDispatchListHead(final AbstractDispatchNode newHead) {
+      dispatchNode = adoptChild(newHead);
+    }
+
+    public void replaceDispatchListHead(
         final GenericDispatchNode replacement) {
       dispatchNode.replace(replacement);
     }

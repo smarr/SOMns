@@ -7,6 +7,7 @@ import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
 import som.vm.Universe;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
+import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -41,15 +42,36 @@ public class UninitializedDispatchNode extends AbstractDispatchWithLookupNode {
       if (method != null) {
         UninitializedDispatchNode newChainEnd = new UninitializedDispatchNode(selector, universe);
 
-        if (method.getInvokable().isAlwaysToBeInlined()) {
-          InlinedDispatchNode inlined = InlinedDispatchNode.create(
-              rcvrClass, method, newChainEnd, universe);
-          return replace(inlined).executeDispatch(frame, arguments);
-        } else {
-          CachedDispatchNode initializedReplacement = new CachedDispatchNode(
-              rcvrClass, method, newChainEnd, universe);
-          return replace(initializedReplacement).executeDispatch(frame, arguments);
-        }
+//        if (method.getInvokable().isAlwaysToBeInlined()) {
+//          InlinedDispatchNode inlined = InlinedDispatchNode.create(
+//              rcvrClass, method, newChainEnd, universe);
+//          return replace(inlined).executeDispatch(frame, arguments);
+//        } else {
+          if (arguments.getReceiver() instanceof SObject) {
+            SObject rcvr = (SObject) arguments.getReceiver();
+            CachedDispatchSObjectCheckNode node =
+                new CachedDispatchSObjectCheckNode(rcvr.getSOMClass(universe),
+                    method, newChainEnd, universe);
+            if ((getParent() instanceof CachedDispatchSObjectCheckNode)) {
+
+              return replace(node).executeDispatch(frame, arguments);
+            } else {
+              SObjectCheckDispatchNode checkNode = new SObjectCheckDispatchNode(node,
+                  new UninitializedDispatchNode(selector, universe));
+              return replace(checkNode).executeDispatch(frame, arguments);
+            }
+          } else {
+            // the simple checks are prepended
+            CachedDispatchSimpleCheckNode node =
+                new CachedDispatchSimpleCheckNode(
+                    arguments.getReceiver().getClass(), method,
+                    sendNode.getDispatchListHead());
+            sendNode.adoptNewDispatchListHead(node);
+            return node.executeDispatch(frame, arguments);
+          }
+
+
+//        }
       }
       // if method == null: fall through and use generic node
     }
@@ -62,8 +84,7 @@ public class UninitializedDispatchNode extends AbstractDispatchWithLookupNode {
     // megamorphic.
     // TODO: see whether we could get #DNUs fast.
     GenericDispatchNode genericReplacement = new GenericDispatchNode(selector, universe);
-    sendNode.replaceDispatchNodeBecauseCallSiteIsMegaMorphic(
-          genericReplacement);
+    sendNode.replaceDispatchListHead(genericReplacement);
     return genericReplacement.executeDispatch(frame, arguments);
   }
 }
