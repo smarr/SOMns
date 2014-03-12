@@ -27,7 +27,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.NodeInfo.Kind;
 
-public class SequenceNode extends ExpressionNode {
+public final class SequenceNode extends ExpressionNode {
   @Children private final ExpressionNode[] expressions;
 
   public SequenceNode(final ExpressionNode[] expressions) {
