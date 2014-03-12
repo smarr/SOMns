@@ -28,10 +28,15 @@ import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray;
 import som.vmobjects.SBigInteger;
 import som.vmobjects.SBlock;
+import som.vmobjects.SBlock.SBlock1;
+import som.vmobjects.SBlock.SBlock2;
+import som.vmobjects.SBlock.SBlock3;
 import som.vmobjects.SClass;
 import som.vmobjects.SDouble;
 import som.vmobjects.SInteger;
 import som.vmobjects.SInvokable;
+import som.vmobjects.SInvokable.SMethod;
+import som.vmobjects.SInvokable.SPrimitive;
 import som.vmobjects.SObject;
 import som.vmobjects.SString;
 import som.vmobjects.SSymbol;
@@ -84,6 +89,16 @@ public class Types {
       return universe.stringClass;
     } else if (obj instanceof Double) {
       return universe.doubleClass;
+    } else if (obj instanceof SMethod) {
+      return universe.methodClass;
+    } else if (obj instanceof SPrimitive) {
+      return universe.primitiveClass;
+    } else if (obj instanceof SBlock1) {
+      return universe.getBlockClass(1);
+    } else if (obj instanceof SBlock2) {
+      return universe.getBlockClass(2);
+    } else if (obj instanceof SBlock3) {
+      return universe.getBlockClass(3);
     }
 
     throw new RuntimeException("We got an object that should be covered by the above check: " + obj.toString());
