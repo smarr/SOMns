@@ -9,6 +9,7 @@ import som.vmobjects.SArray;
 import som.vmobjects.SClass;
 
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 
 
 public class ArrayPrims {
@@ -17,6 +18,9 @@ public class ArrayPrims {
     public Object doSArray(final SArray receiver, final int argument) {
       return receiver.getIndexableField(argument - 1);
     }
+
+    @Override
+    public final void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
   }
 
   public abstract static class AtPutPrim extends TernaryExpressionNode {
@@ -49,5 +53,8 @@ public class ArrayPrims {
     public SAbstractObject doSClass(final SClass receiver, final int length) {
       return universe.newArray(length);
     }
+
+    @Override
+    public final void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
   }
 }

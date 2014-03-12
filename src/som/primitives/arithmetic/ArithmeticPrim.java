@@ -4,6 +4,8 @@ import java.math.BigInteger;
 
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 
+import com.oracle.truffle.api.frame.VirtualFrame;
+
 
 public abstract class ArithmeticPrim extends BinaryExpressionNode {
 
@@ -22,4 +24,7 @@ public abstract class ArithmeticPrim extends BinaryExpressionNode {
       return result.intValue();
     }
   }
+
+  @Override
+  public final void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
 }

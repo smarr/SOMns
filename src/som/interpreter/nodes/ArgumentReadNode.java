@@ -37,10 +37,16 @@ public final class ArgumentReadNode extends ExpressionNode
         final Object receiver, final Object[] arguments) {
       return receiver;
     }
+
+    @Override
+    public void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
   }
 
   @Override
   public Kind getKind() {
       return Kind.GENERIC;
   }
+
+  @Override
+  public void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
 }

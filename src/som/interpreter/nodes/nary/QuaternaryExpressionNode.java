@@ -25,4 +25,8 @@ public abstract class QuaternaryExpressionNode extends ExpressionNode {
       final Object receiver, final Object firstArg, final Object secondArg,
       final Object thirdArg);
 
+  public abstract void executeEvaluatedVoid(final VirtualFrame frame,
+      final Object receiver, final Object firstArg, final Object secondArg,
+      final Object thirdArg);
+
 }

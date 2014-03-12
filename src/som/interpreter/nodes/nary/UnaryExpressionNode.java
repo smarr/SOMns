@@ -13,6 +13,9 @@ public abstract class UnaryExpressionNode extends ExpressionNode
   public abstract Object executeEvaluated(final VirtualFrame frame,
       final Object receiver);
 
+  public abstract void executeEvaluatedVoid(final VirtualFrame frame,
+      final Object receiver);
+
   @Override
   public final Object executePreEvaluated(final VirtualFrame frame,
       final Object receiver, final Object[] arguments) {

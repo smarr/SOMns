@@ -91,6 +91,11 @@ public final class ReturnNonLocalNode extends ContextualNode {
   }
 
   @Override
+  public void executeVoid(final VirtualFrame frame) {
+    executeGeneric(frame);
+  }
+
+  @Override
   public void replaceWithIndependentCopyForInlining(final Inliner inliner) {
     FrameSlot localSelfSlot        = inliner.getLocalFrameSlot(getLocalSelfSlotIdentifier());
     FrameSlot inlinedFrameOnStack  = inliner.getFrameSlot(this, frameOnStackMarker.getIdentifier());
@@ -145,6 +150,25 @@ public final class ReturnNonLocalNode extends ContextualNode {
 
       marker.frameNoLongerOnStack();
       return result;
+    }
+
+    @Override
+    public final void executeVoid(final VirtualFrame frame) {
+      FrameOnStackMarker marker = new FrameOnStackMarker();
+      frameOnStackMarker.setKind(FrameSlotKind.Object);
+      frame.setObject(frameOnStackMarker, marker);
+
+      try {
+        methodBody.executeVoid(frame);
+      } catch (ReturnException e) {
+        nonLocalReturnHandler.enter();
+        if (!e.reachedTarget(marker)) {
+          marker.frameNoLongerOnStack();
+          throw e;
+        }
+      }
+
+      marker.frameNoLongerOnStack();
     }
 
     @Override

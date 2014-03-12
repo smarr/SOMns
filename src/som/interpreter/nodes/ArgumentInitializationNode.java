@@ -9,7 +9,7 @@ import com.oracle.truffle.api.nodes.NodeInfo.Kind;
 /**
  * Initializes the frame slots for self as well as the arguments.
  */
-public class ArgumentInitializationNode extends ExpressionNode {
+public final class ArgumentInitializationNode extends ExpressionNode {
   @Children private final LocalVariableWriteNode[] argumentInits;
   @Child    private       ExpressionNode           methodBody;
 
@@ -20,12 +20,22 @@ public class ArgumentInitializationNode extends ExpressionNode {
   }
 
   @Override
-  @ExplodeLoop
   public Object executeGeneric(final VirtualFrame frame) {
-    for (int i = 0; i < argumentInits.length; i++) {
-      argumentInits[i].executeGeneric(frame);
-    }
+    executeAllArguments(frame);
     return methodBody.executeGeneric(frame);
+  }
+
+  @Override
+  public void executeVoid(final VirtualFrame frame) {
+    executeAllArguments(frame);
+    methodBody.executeVoid(frame);
+  }
+
+  @ExplodeLoop
+  private void executeAllArguments(final VirtualFrame frame) {
+    for (int i = 0; i < argumentInits.length; i++) {
+      argumentInits[i].executeVoid(frame);
+    }
   }
 
   @Override

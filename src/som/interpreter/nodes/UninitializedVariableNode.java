@@ -61,6 +61,9 @@ public abstract class UninitializedVariableNode extends ContextualNode {
     }
 
     @Override
+    public void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
+
+    @Override
     public void replaceWithIndependentCopyForInlining(final Inliner inliner) {
       FrameSlot localSelfSlot = inliner.getLocalFrameSlot(getLocalSelfSlotIdentifier());
       FrameSlot varSlot       = inliner.getFrameSlot(this, variable.getSlotIdentifier());
@@ -135,6 +138,9 @@ public abstract class UninitializedVariableNode extends ContextualNode {
     }
 
     @Override
+    public void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
+
+    @Override
     public void replaceWithIndependentCopyForInlining(final Inliner inliner) {
       FrameSlot localSelfSlot = inliner.getLocalFrameSlot(getLocalSelfSlotIdentifier());
       FrameSlot varSlot       = inliner.getFrameSlot(this, variable.getSlotIdentifier());
@@ -144,7 +150,7 @@ public abstract class UninitializedVariableNode extends ContextualNode {
     }
   }
 
-  public static class UninitializedVariableWriteNode extends UninitializedVariableNode {
+  public static final class UninitializedVariableWriteNode extends UninitializedVariableNode {
     @Child private ExpressionNode exp;
 
     public UninitializedVariableWriteNode(final Local variable,
@@ -171,6 +177,20 @@ public abstract class UninitializedVariableNode extends ContextualNode {
       } else {
         LocalVariableWriteNode node = LocalVariableWriteNodeFactory.create((Local) variable, exp);
         return replace(node).executeGeneric(frame);
+      }
+    }
+
+    @Override
+    public void executeVoid(final VirtualFrame frame) {
+      transferToInterpreterAndInvalidate("UninitializedVariableWriteNode");
+
+      if (accessesOuterContext()) {
+        NonLocalVariableWriteNode node = NonLocalVariableWriteNodeFactory.create(
+            contextLevel, variable.slot, localSelf, exp);
+        replace(node).executeVoid(frame);
+      } else {
+        LocalVariableWriteNode node = LocalVariableWriteNodeFactory.create((Local) variable, exp);
+        replace(node).executeVoid(frame);
       }
     }
 

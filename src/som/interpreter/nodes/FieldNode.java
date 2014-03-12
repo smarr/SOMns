@@ -116,6 +116,9 @@ public abstract class FieldNode extends ExpressionNode {
     public String readString(final SObject self) {
       return (String) self.getField(fieldIndex);
     }
+
+    @Override
+    public final void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
   }
 
   @NodeChildren({

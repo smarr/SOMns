@@ -57,6 +57,8 @@ public class ObjectPrims {
     public Object doSObject(final SObject receiver, final int idx) {
       return receiver.getField(idx - 1);
     }
+    @Override
+    public final void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
   }
 
   public abstract static class InstVarAtPutPrim extends TernaryExpressionNode {
@@ -98,5 +100,7 @@ public class ObjectPrims {
     public SClass doObject(final Object receiver) {
       return Types.getClassOf(receiver, universe);
     }
+    @Override
+    public final void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
   }
 }

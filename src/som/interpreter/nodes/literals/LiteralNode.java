@@ -34,4 +34,7 @@ public abstract class LiteralNode extends ExpressionNode
       final Object receiver, final Object[] arguments) {
     return executeGeneric(frame);
   }
+
+  @Override
+  public void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
 }

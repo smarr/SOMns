@@ -35,15 +35,22 @@ public final class SequenceNode extends ExpressionNode {
   }
 
   @Override
-  @ExplodeLoop
   public Object executeGeneric(final VirtualFrame frame) {
-    Object last = expressions[0].executeGeneric(frame);
+    executeAllButLast(frame);
+    return expressions[expressions.length - 1].executeGeneric(frame);
+  }
 
-    for (int i = 1; i < expressions.length; i++) {
-      last = expressions[i].executeGeneric(frame);
+  @ExplodeLoop
+  private void executeAllButLast(final VirtualFrame frame) {
+    for (int i = 0; i < expressions.length - 1; i++) {
+      expressions[i].executeVoid(frame);
     }
+  }
 
-    return last;
+  @Override
+  public void executeVoid(final VirtualFrame frame) {
+    executeAllButLast(frame);
+    expressions[expressions.length - 1].executeVoid(frame);
   }
 
   @Override

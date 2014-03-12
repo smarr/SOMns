@@ -11,6 +11,7 @@ import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 
 public abstract class EqualsEqualsPrim extends BinaryExpressionNode {
   private final Universe universe;
@@ -136,4 +137,7 @@ public abstract class EqualsEqualsPrim extends BinaryExpressionNode {
   public SObject doString(final String receiver, final SObject argument) {
     return universe.falseObject;
   }
+
+  @Override
+  public final void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
 }

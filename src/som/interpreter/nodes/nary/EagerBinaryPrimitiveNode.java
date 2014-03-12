@@ -41,6 +41,14 @@ public final class EagerBinaryPrimitiveNode extends BinaryExpressionNode {
   }
 
   @Override
+  public void executeVoid(final VirtualFrame frame) {
+    Object rcvr = receiver.executeGeneric(frame);
+    Object arg  = argument.executeGeneric(frame);
+
+    executeEvaluatedVoid(frame, rcvr, arg);
+  }
+
+  @Override
   public Object executeEvaluated(final VirtualFrame frame,
     final Object receiver, final Object argument) {
     try {
@@ -49,6 +57,19 @@ public final class EagerBinaryPrimitiveNode extends BinaryExpressionNode {
       unsupportedSpecialization.enter();
       TruffleCompiler.transferToInterpreterAndInvalidate("Eager Primitive with unsupported specialization.");
       return makeGenericSend().executePreEvaluated(frame, receiver,
+          new Object[] {argument});
+    }
+  }
+
+  @Override
+  public void executeEvaluatedVoid(final VirtualFrame frame,
+    final Object receiver, final Object argument) {
+    try {
+      primitive.executeEvaluatedVoid(frame, receiver, argument);
+    } catch (UnsupportedSpecializationException e) {
+      unsupportedSpecialization.enter();
+      TruffleCompiler.transferToInterpreterAndInvalidate("Eager Primitive with unsupported specialization.");
+      makeGenericSend().executePreEvaluated(frame, receiver,
           new Object[] {argument});
     }
   }

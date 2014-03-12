@@ -22,4 +22,7 @@ public abstract class TernaryExpressionNode extends ExpressionNode {
 
   public abstract Object executeEvaluated(final VirtualFrame frame,
       final Object receiver, final Object firstArg, final Object secondArg);
+
+  public abstract void executeEvaluatedVoid(final VirtualFrame frame,
+      final Object receiver, final Object firstArg, final Object secondArg);
 }

@@ -51,7 +51,7 @@ public abstract class GlobalNode extends ExpressionNode
     return executeGeneric(frame);
   }
 
-  public static class UninitializedGlobalReadNode extends GlobalNode {
+  public static final class UninitializedGlobalReadNode extends GlobalNode {
     private final BranchProfile unknownGlobalNotFound;
 
     public UninitializedGlobalReadNode(final SSymbol globalName, final Universe universe) {
@@ -77,6 +77,9 @@ public abstract class GlobalNode extends ExpressionNode
     }
 
     @Override
+    public void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
+
+    @Override
     public Kind getKind() {
         return Kind.UNINITIALIZED;
     }
@@ -95,6 +98,9 @@ public abstract class GlobalNode extends ExpressionNode
     public Object executeGeneric(final VirtualFrame frame) {
       return assoc.value;
     }
+
+    @Override
+    public void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
 
     @Override
     public Kind getKind() {
