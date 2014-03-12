@@ -9,6 +9,7 @@ import som.vmobjects.SInvokable;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.CompilerDirectives.SlowPath;
 import com.oracle.truffle.api.LoopCountReceiver;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -52,8 +53,7 @@ public abstract class IntToDoMessageNode extends TernaryExpressionNode
   public int doIntToDo(final VirtualFrame frame, final int receiver, final int limit, final SBlock block) {
     try {
       for (int i = receiver; i <= limit; i++) {
-        SArguments arguments = new SArguments(block, new Object[] {i});
-        valueSend.call(frame.pack(), arguments);
+        valueSend.call(frame.pack(), new SArguments(block, new Object[] {i}));
       }
     } finally {
       if (CompilerDirectives.inInterpreter()) {
@@ -71,8 +71,7 @@ public abstract class IntToDoMessageNode extends TernaryExpressionNode
   public int doIntToDo(final VirtualFrame frame, final int receiver, final double limit, final SBlock block) {
     try {
       for (int i = receiver; i <= limit; i++) {
-        SArguments arguments = new SArguments(block, new Object[] {i});
-        valueSend.call(frame.pack(), arguments);
+        valueSend.call(frame.pack(), new SArguments(block, new Object[] {i}));
       }
     } finally {
       if (CompilerDirectives.inInterpreter()) {
@@ -82,7 +81,8 @@ public abstract class IntToDoMessageNode extends TernaryExpressionNode
     return receiver;
   }
 
-  protected final void reportLoopCount(final int count) {
+  @SlowPath
+  private void reportLoopCount(final int count) {
     CompilerAsserts.neverPartOfCompilation();
     Node current = getParent();
     while (current != null && !(current instanceof RootNode)) {
