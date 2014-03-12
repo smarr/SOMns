@@ -24,6 +24,7 @@
 
 package som.vmobjects;
 
+import som.interpreter.nodes.literals.BlockNode.BlockNodeWithContext;
 import som.primitives.BlockPrimsFactory.ValueMorePrimFactory;
 import som.primitives.BlockPrimsFactory.ValueNonePrimFactory;
 import som.primitives.BlockPrimsFactory.ValueOnePrimFactory;
@@ -32,26 +33,24 @@ import som.primitives.Primitives;
 import som.vm.Universe;
 
 import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.frame.FrameSlot;
-import com.oracle.truffle.api.frame.FrameUtil;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 
 public abstract class SBlock extends SAbstractObject {
 
   public static SBlock create(final SInvokable blockMethod,
-      final MaterializedFrame context, final FrameSlot outerSelfSlot) {
+      final MaterializedFrame context, final BlockNodeWithContext originNode) {
     switch (blockMethod.getNumberOfArguments()) {
-      case 1: return new SBlock1(blockMethod, context, outerSelfSlot);
-      case 2: return new SBlock2(blockMethod, context, outerSelfSlot);
-      case 3: return new SBlock3(blockMethod, context, outerSelfSlot);
+      case 1: return new SBlock1(blockMethod, context, originNode);
+      case 2: return new SBlock2(blockMethod, context, originNode);
+      case 3: return new SBlock3(blockMethod, context, originNode);
     }
     throw new RuntimeException("We do currently not have support for more than 3 arguments to a block.");
   }
 
   public static final class SBlock1 extends SBlock {
     public SBlock1(final SInvokable blockMethod, final MaterializedFrame context,
-        final FrameSlot outerSelfSlot) {
-      super(blockMethod, context, outerSelfSlot);
+        final BlockNodeWithContext originNode) {
+      super(blockMethod, context, originNode);
     }
 
     @Override
@@ -62,8 +61,8 @@ public abstract class SBlock extends SAbstractObject {
 
   public static final class SBlock2 extends SBlock {
     public SBlock2(final SInvokable blockMethod, final MaterializedFrame context,
-        final FrameSlot outerSelfSlot) {
-      super(blockMethod, context, outerSelfSlot);
+        final BlockNodeWithContext originNode) {
+      super(blockMethod, context, originNode);
     }
 
     @Override
@@ -74,8 +73,8 @@ public abstract class SBlock extends SAbstractObject {
 
   public static final class SBlock3 extends SBlock {
     public SBlock3(final SInvokable blockMethod, final MaterializedFrame context,
-        final FrameSlot outerSelfSlot) {
-      super(blockMethod, context, outerSelfSlot);
+        final BlockNodeWithContext originNode) {
+      super(blockMethod, context, originNode);
     }
 
     @Override
@@ -85,10 +84,10 @@ public abstract class SBlock extends SAbstractObject {
   }
 
   public SBlock(final SInvokable blockMethod, final MaterializedFrame context,
-      final FrameSlot outerSelfSlot) {
+      final BlockNodeWithContext originNode) {
     this.method   = blockMethod;
     this.context  = context;
-    this.outerSelfSlot = outerSelfSlot;
+    this.originNode = originNode;
   }
 
   public final SInvokable getMethod() {
@@ -101,7 +100,7 @@ public abstract class SBlock extends SAbstractObject {
   }
 
   public final Object getOuterSelf() {
-    return FrameUtil.getObjectSafe(getContext(), outerSelfSlot);
+    return originNode.getOuterSelf(context);
   }
 
   public static SInvokable getEvaluationPrimitive(final int numberOfArguments,
@@ -137,5 +136,5 @@ public abstract class SBlock extends SAbstractObject {
 
   private final SInvokable           method;
   private final MaterializedFrame context;
-  private final FrameSlot         outerSelfSlot;
+  private final BlockNodeWithContext originNode;
 }

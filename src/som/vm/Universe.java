@@ -34,6 +34,7 @@ import java.util.StringTokenizer;
 
 import som.compiler.Disassembler;
 import som.interpreter.Invokable;
+import som.interpreter.nodes.literals.BlockNode.BlockNodeWithContext;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray;
 import som.vmobjects.SBigInteger;
@@ -52,7 +53,6 @@ import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.SlowPath;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.TruffleRuntime;
-import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 
 public class Universe {
@@ -414,8 +414,8 @@ public class Universe {
   }
 
   public SBlock newBlock(final SMethod method, final MaterializedFrame context,
-      final FrameSlot outerSelfSlot) {
-    return SBlock.create(method, context, outerSelfSlot);
+      final BlockNodeWithContext originNode) {
+    return SBlock.create(method, context, originNode);
   }
 
   @SlowPath

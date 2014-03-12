@@ -6,10 +6,11 @@ import som.interpreter.Invokable;
 import som.vm.Universe;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
-import som.vmobjects.SInvokable.SPrimitive;
 import som.vmobjects.SInvokable.SMethod;
 
 import com.oracle.truffle.api.frame.FrameSlot;
+import com.oracle.truffle.api.frame.FrameUtil;
+import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.NodeInfo.Kind;
 
@@ -69,9 +70,13 @@ public class BlockNode extends LiteralNode {
       this(node.blockMethod, node.universe, inlinedOuterSelfSlot, node.contextLevel);
     }
 
+    public Object getOuterSelf(final MaterializedFrame frame) {
+      return FrameUtil.getObjectSafe(frame, outerSelfSlot);
+    }
+
     @Override
     public SBlock executeSBlock(final VirtualFrame frame) {
-      return universe.newBlock(blockMethod, frame.materialize(), outerSelfSlot);
+      return universe.newBlock(blockMethod, frame.materialize(), this);
     }
 
     @Override
