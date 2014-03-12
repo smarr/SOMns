@@ -1,7 +1,6 @@
 package som.interpreter.nodes.dispatch;
 
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
-import som.interpreter.SArguments;
 import som.interpreter.Types;
 import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
 import som.vm.Universe;
@@ -21,8 +20,8 @@ public class UninitializedDispatchNode extends AbstractDispatchWithLookupNode {
   }
 
   @Override
-  public Object executeDispatch(final VirtualFrame frame,
-      final SArguments arguments) {
+  public Object executeDispatch(final VirtualFrame frame, final Object rcvr,
+      final Object[] arguments) {
     transferToInterpreterAndInvalidate("Initialize a dispatch node.");
 
     // Determine position in dispatch node chain, i.e., size of inline cache
@@ -36,7 +35,7 @@ public class UninitializedDispatchNode extends AbstractDispatchWithLookupNode {
 
 
     if (chainDepth < INLINE_CACHE_SIZE) {
-      SClass rcvrClass = Types.getClassOf(arguments.getReceiver(), universe);
+      SClass rcvrClass = Types.getClassOf(rcvr, universe);
       SInvokable method = rcvrClass.lookupInvokable(selector);
 
       if (method != null) {
@@ -47,27 +46,27 @@ public class UninitializedDispatchNode extends AbstractDispatchWithLookupNode {
 //              rcvrClass, method, newChainEnd, universe);
 //          return replace(inlined).executeDispatch(frame, arguments);
 //        } else {
-          if (arguments.getReceiver() instanceof SObject) {
-            SObject rcvr = (SObject) arguments.getReceiver();
+          if (rcvr instanceof SObject) {
+            SObject receiver = (SObject) rcvr;
             CachedDispatchSObjectCheckNode node =
-                new CachedDispatchSObjectCheckNode(rcvr.getSOMClass(universe),
-                    method, newChainEnd, universe);
+                new CachedDispatchSObjectCheckNode(receiver.getSOMClass(universe),
+                    method, newChainEnd);
             if ((getParent() instanceof CachedDispatchSObjectCheckNode)) {
 
-              return replace(node).executeDispatch(frame, arguments);
+              return replace(node).executeDispatch(frame, rcvr, arguments);
             } else {
               SObjectCheckDispatchNode checkNode = new SObjectCheckDispatchNode(node,
                   new UninitializedDispatchNode(selector, universe));
-              return replace(checkNode).executeDispatch(frame, arguments);
+              return replace(checkNode).executeDispatch(frame, rcvr, arguments);
             }
           } else {
             // the simple checks are prepended
             CachedDispatchSimpleCheckNode node =
                 new CachedDispatchSimpleCheckNode(
-                    arguments.getReceiver().getClass(), method,
+                    rcvr.getClass(), method,
                     sendNode.getDispatchListHead());
             sendNode.adoptNewDispatchListHead(node);
-            return node.executeDispatch(frame, arguments);
+            return node.executeDispatch(frame, rcvr, arguments);
           }
 
 
@@ -85,6 +84,6 @@ public class UninitializedDispatchNode extends AbstractDispatchWithLookupNode {
     // TODO: see whether we could get #DNUs fast.
     GenericDispatchNode genericReplacement = new GenericDispatchNode(selector, universe);
     sendNode.replaceDispatchListHead(genericReplacement);
-    return genericReplacement.executeDispatch(frame, arguments);
+    return genericReplacement.executeDispatch(frame, rcvr, arguments);
   }
 }

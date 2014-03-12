@@ -16,16 +16,16 @@ public class GenericDispatchNode extends AbstractDispatchWithLookupNode {
   }
 
   @Override
-  public Object executeDispatch(final VirtualFrame frame,
-      final SArguments arguments) {
-    SInvokable method = lookupMethod(arguments);
+  public Object executeDispatch(final VirtualFrame frame, final Object rcvr,
+      final Object[] arguments) {
+    SInvokable method = lookupMethod(rcvr);
     if (method != null) {
-      return method.getCallTarget().call(frame.pack(), arguments);
+      return method.getCallTarget().call(frame.pack(), new SArguments(rcvr,
+          arguments));
     } else {
       // TODO: perhaps, I should mark this branch with a branch profile as
       //       being unlikely
-      return sendDoesNotUnderstand(frame, arguments.getReceiver(),
-          arguments.getArguments());
+      return sendDoesNotUnderstand(frame, rcvr, arguments);
     }
   }
 

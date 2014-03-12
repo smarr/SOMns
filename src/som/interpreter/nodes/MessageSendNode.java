@@ -304,8 +304,7 @@ public final class MessageSendNode {
     @Override
     public Object executePreEvaluated(final VirtualFrame frame,
         final Object receiver, final Object[] arguments) {
-      SArguments args = new SArguments(receiver, arguments);
-      return dispatchNode.executeDispatch(frame, args);
+      return dispatchNode.executeDispatch(frame, receiver, arguments);
     }
 
     public AbstractDispatchNode getDispatchListHead() {

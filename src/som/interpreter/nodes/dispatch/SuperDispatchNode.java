@@ -34,8 +34,8 @@ public final class SuperDispatchNode extends AbstractDispatchNode {
   }
 
   @Override
-  public Object executeDispatch(final VirtualFrame frame,
-      final SArguments arguments) {
-    return cachedSuperMethod.call(frame.pack(), arguments);
+  public Object executeDispatch(final VirtualFrame frame, final Object rcvr,
+      final Object[] arguments) {
+    return cachedSuperMethod.call(frame.pack(), new SArguments(rcvr, arguments));
   }
 }

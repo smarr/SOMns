@@ -1,6 +1,5 @@
 package som.interpreter.nodes.dispatch;
 
-import som.interpreter.SArguments;
 import som.interpreter.Types;
 import som.vm.Universe;
 import som.vmobjects.SClass;
@@ -21,8 +20,8 @@ public abstract class AbstractDispatchWithLookupNode extends
     this.universe = universe;
   }
 
-  protected final SInvokable lookupMethod(final SArguments arguments) {
-    SClass rcvrClass = Types.getClassOf(arguments.getReceiver(), universe);
+  protected final SInvokable lookupMethod(final Object rcvr) {
+    SClass rcvrClass = Types.getClassOf(rcvr, universe);
     return rcvrClass.lookupInvokable(selector);
   }
 }
