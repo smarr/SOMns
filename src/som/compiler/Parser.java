@@ -117,6 +117,11 @@ public class Parser {
     }
   }
 
+  @Override
+  public String toString() {
+    return "Parser(" + source.getName() + ", " + this.getCoordinate().toString() + ")";
+  }
+
   private static class SourceCoordinate {
     public final int startLine;
     public final int startColumn;
@@ -127,6 +132,11 @@ public class Parser {
       this.startLine = startLine;
       this.startColumn = startColumn;
       this.charIndex = charIndex;
+    }
+
+    @Override
+    public String toString() {
+      return "SrcCoord(line: " + startLine + ", col: " + startColumn + ")";
     }
   }
 
