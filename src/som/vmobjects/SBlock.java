@@ -91,16 +91,16 @@ public abstract class SBlock extends SAbstractObject {
     this.outerSelfSlot = outerSelfSlot;
   }
 
-  public SInvokable getMethod() {
+  public final SInvokable getMethod() {
     // Get the method of this block
     return method;
   }
 
-  public MaterializedFrame getContext() {
+  public final  MaterializedFrame getContext() {
     return CompilerDirectives.unsafeFrameCast(context);
   }
 
-  public Object getOuterSelf() {
+  public final Object getOuterSelf() {
     return FrameUtil.getObjectSafe(getContext(), outerSelfSlot);
   }
 
