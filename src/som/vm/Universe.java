@@ -107,6 +107,7 @@ public class Universe {
     return truffleRuntime;
   }
 
+  @SlowPath
   public void exit(final int errorCode) {
     // Exit from the Java system
     if (!avoidExit) {
@@ -120,6 +121,7 @@ public class Universe {
     return lastExitCode;
   }
 
+  @SlowPath
   public void errorExit(final String message) {
     errorPrintln("Runtime Error: " + message);
     exit(1);
@@ -649,36 +651,42 @@ public class Universe {
     return result;
   }
 
+  @SlowPath
   public static void errorPrint(final String msg) {
     // Checkstyle: stop
     System.err.print(msg);
     // Checkstyle: resume
   }
 
+  @SlowPath
   public static void errorPrintln(final String msg) {
     // Checkstyle: stop
     System.err.println(msg);
     // Checkstyle: resume
   }
 
+  @SlowPath
   public static void errorPrintln() {
     // Checkstyle: stop
     System.err.println();
     // Checkstyle: resume
   }
 
+  @SlowPath
   public static void print(final String msg) {
     // Checkstyle: stop
     System.err.print(msg);
     // Checkstyle: resume
   }
 
+  @SlowPath
   public static void println(final String msg) {
     // Checkstyle: stop
     System.err.println(msg);
     // Checkstyle: resume
   }
 
+  @SlowPath
   public static void println() {
     // Checkstyle: stop
     System.err.println();
