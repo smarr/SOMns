@@ -82,7 +82,7 @@ import som.interpreter.nodes.literals.StringLiteralNode;
 import som.interpreter.nodes.literals.SymbolLiteralNode;
 import som.vm.Universe;
 import som.vmobjects.SClass;
-import som.vmobjects.SInvokable;
+import som.vmobjects.SInvokable.SMethod;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives.SlowPath;
@@ -536,7 +536,7 @@ public class Parser {
 
         ExpressionNode blockBody = nestedBlock(bgenc);
 
-        SInvokable blockMethod = bgenc.assemble(universe, blockBody);
+        SMethod blockMethod = bgenc.assemble(universe, blockBody);
         ExpressionNode result;
         if (bgenc.requiresContext()) {
           result = new BlockNodeWithContext(blockMethod, universe,

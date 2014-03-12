@@ -52,6 +52,7 @@ import som.interpreter.nodes.literals.LiteralNode;
 import som.primitives.Primitives;
 import som.vm.Universe;
 import som.vmobjects.SInvokable;
+import som.vmobjects.SInvokable.SMethod;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.SourceSection;
@@ -171,7 +172,7 @@ public class MethodGenerationContext {
     return new ArgumentInitializationNode(writes, methodBody);
   }
 
-  public SInvokable assemble(final Universe universe, ExpressionNode methodBody) {
+  public SMethod assemble(final Universe universe, ExpressionNode methodBody) {
     ArrayList<Variable> onlyLocalAccess = new ArrayList<>(arguments.size() + locals.size());
     ArrayList<Variable> nonLocalAccess  = new ArrayList<>(arguments.size() + locals.size());
     separateVariables(arguments.values(), onlyLocalAccess, nonLocalAccess);
@@ -192,7 +193,7 @@ public class MethodGenerationContext {
         new som.interpreter.Method(getSourceSectionForMethod(sourceSection),
             frameDescriptor, methodBody, universe, getLexicalContext());
 
-    SInvokable meth = universe.newMethod(signature, truffleMethod, false);
+    SMethod meth = (SMethod) universe.newMethod(signature, truffleMethod, false);
 
     // return the method - the holder field is to be set later on!
     return meth;

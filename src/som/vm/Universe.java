@@ -413,7 +413,7 @@ public class Universe {
     return result;
   }
 
-  public SBlock newBlock(final SInvokable method, final MaterializedFrame context,
+  public SBlock newBlock(final SMethod method, final MaterializedFrame context,
       final FrameSlot outerSelfSlot) {
     return SBlock.create(method, context, outerSelfSlot);
   }
