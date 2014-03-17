@@ -1,6 +1,5 @@
 package som.interpreter.nodes;
 
-import som.interpreter.SArguments;
 import som.interpreter.TruffleCompiler;
 import som.interpreter.TypesGen;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
@@ -9,6 +8,7 @@ import som.interpreter.nodes.dispatch.SuperDispatchNode;
 import som.interpreter.nodes.dispatch.UninitializedDispatchNode;
 import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.nary.EagerBinaryPrimitiveNode;
+import som.interpreter.nodes.nary.EagerUnaryPrimitiveNode;
 import som.interpreter.nodes.specialized.IfFalseMessageNodeFactory;
 import som.interpreter.nodes.specialized.IfTrueIfFalseMessageNodeFactory;
 import som.interpreter.nodes.specialized.IfTrueMessageNodeFactory;
@@ -132,7 +132,7 @@ public final class MessageSendNode {
       // the chaos.
 
       switch (argumentNodes.length) {
-        // case  0: return specializeUnary(  receiver, arguments); // don't have any at the moment
+        case  0: return specializeUnary(receiver);
         case  1: return specializeBinary(receiver,  arguments);
         case  2: return specializeTernary(receiver, arguments);
         case  3: return specializeQuaternary(receiver, arguments);
@@ -146,6 +146,23 @@ public final class MessageSendNode {
           receiverNode, argumentNodes,
           new UninitializedDispatchNode(selector, Universe.current()));
       return replace(send);
+    }
+
+    private PreevaluatedExpression specializeUnary(final Object receiver) {
+      switch (selector.getString()) {
+        // eagerly but causious:
+        case "value":
+          if (receiver instanceof SBlock) {
+            return replace(new EagerUnaryPrimitiveNode(selector, receiverNode,
+                ValueNonePrimFactory.create(receiverNode)));
+          }
+        case "length":
+          if (receiver instanceof SArray) {
+            return replace(new EagerUnaryPrimitiveNode(selector, receiverNode,
+                LengthPrimFactory.create(receiverNode)));
+          }
+      }
+      return makeGenericSend();
     }
 
     private PreevaluatedExpression specializeBinary(final Object receiver,
