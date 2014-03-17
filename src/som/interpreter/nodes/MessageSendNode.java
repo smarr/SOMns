@@ -39,6 +39,7 @@ import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.CompilerDirectives.SlowPath;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.NodeInfo;
@@ -312,14 +313,17 @@ public final class MessageSendNode {
       return dispatchNode.executeDispatch(frame, receiver, arguments);
     }
 
+    @SlowPath
     public AbstractDispatchNode getDispatchListHead() {
       return dispatchNode;
     }
 
+    @SlowPath
     public void adoptNewDispatchListHead(final AbstractDispatchNode newHead) {
       dispatchNode = adoptChild(newHead);
     }
 
+    @SlowPath
     public void replaceDispatchListHead(
         final GenericDispatchNode replacement) {
       dispatchNode.replace(replacement);
