@@ -28,14 +28,14 @@ public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode
       final SBlock block) {
     super(orignialNode.getSourceSection());
     blockMethod = block.getMethod();
-    valueSend = adoptChild(Truffle.getRuntime().createCallNode(
-                    blockMethod.getCallTarget()));
+    valueSend = Truffle.getRuntime().createCallNode(
+                    blockMethod.getCallTarget());
   }
 
   public IntToByDoMessageNode(final IntToByDoMessageNode node) {
     super(node.getSourceSection());
     this.blockMethod = node.blockMethod;
-    this.valueSend   = adoptChild(node.valueSend);
+    this.valueSend   = node.valueSend;
   }
 
   @Override

@@ -30,7 +30,7 @@ public final class SuperDispatchNode extends AbstractDispatchNode {
   @Child private CallNode cachedSuperMethod;
 
   private SuperDispatchNode(final CallNode superMethod) {
-    this.cachedSuperMethod = adoptChild(superMethod);
+    this.cachedSuperMethod = superMethod;
   }
 
   @Override

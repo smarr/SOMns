@@ -32,8 +32,8 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
     if (arg1 instanceof SBlock) {
       SBlock trueBlock = (SBlock) arg1;
       trueMethod = trueBlock.getMethod();
-      trueValueSend = adoptChild(Truffle.getRuntime().createCallNode(
-          trueMethod.getCallTarget()));
+      trueValueSend = Truffle.getRuntime().createCallNode(
+          trueMethod.getCallTarget());
     } else {
       trueMethod = null;
     }
@@ -41,8 +41,8 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
     if (arg2 instanceof SBlock) {
       SBlock falseBlock = (SBlock) arg2;
       falseMethod = falseBlock.getMethod();
-      falseValueSend = adoptChild(Truffle.getRuntime().createCallNode(
-          falseMethod.getCallTarget()));
+      falseValueSend = Truffle.getRuntime().createCallNode(
+          falseMethod.getCallTarget());
     } else {
       falseMethod = null;
     }
@@ -53,14 +53,14 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
   public IfTrueIfFalseMessageNode(final IfTrueIfFalseMessageNode node) {
     trueMethod = node.trueMethod;
     if (node.trueMethod != null) {
-      trueValueSend = adoptChild(Truffle.getRuntime().createCallNode(
-          trueMethod.getCallTarget()));
+      trueValueSend = Truffle.getRuntime().createCallNode(
+          trueMethod.getCallTarget());
     }
 
     falseMethod = node.falseMethod;
     if (node.falseMethod != null) {
-      falseValueSend = adoptChild(Truffle.getRuntime().createCallNode(
-          falseMethod.getCallTarget()));
+      falseValueSend = Truffle.getRuntime().createCallNode(
+          falseMethod.getCallTarget());
     }
     this.universe = node.universe;
   }

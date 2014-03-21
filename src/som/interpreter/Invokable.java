@@ -21,7 +21,7 @@ public abstract class Invokable extends RootNode {
       final ExpressionNode expressionOrSequence) {
     super(sourceSection, frameDescriptor);
     this.uninitializedBody    = NodeUtil.cloneNode(expressionOrSequence);
-    this.expressionOrSequence = adoptChild(expressionOrSequence);
+    this.expressionOrSequence = expressionOrSequence;
   }
 
   public ExpressionNode getUninitializedBody() {

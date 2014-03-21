@@ -10,7 +10,7 @@ public final class EmptyPrim extends UnaryExpressionNode {
   @Child private ExpressionNode receiver;
 
   private EmptyPrim(final ExpressionNode receiver) {
-    this.receiver = adoptChild(receiver);
+    this.receiver = receiver;
   }
 
   public EmptyPrim(final EmptyPrim node) { this(node.receiver); }

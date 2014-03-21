@@ -21,7 +21,6 @@
  */
 package som.interpreter.nodes;
 
-import static com.oracle.truffle.api.nodes.NodeInfo.Kind.SPECIALIZED;
 import som.interpreter.FrameOnStackMarker;
 import som.interpreter.Inliner;
 import som.interpreter.ReturnException;
@@ -35,7 +34,6 @@ import com.oracle.truffle.api.frame.FrameSlotTypeException;
 import com.oracle.truffle.api.frame.FrameUtil;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.NodeInfo.Kind;
 import com.oracle.truffle.api.utilities.BranchProfile;
 
 public final class ReturnNonLocalNode extends ContextualNode {
@@ -53,7 +51,7 @@ public final class ReturnNonLocalNode extends ContextualNode {
       final Universe universe,
       final FrameSlot localSelf) {
     super(outerSelfContextLevel, localSelf);
-    this.expression = adoptChild(expression);
+    this.expression = expression;
     this.universe   = universe;
     this.blockEscaped = new BranchProfile();
     this.frameOnStackMarker = frameOnStackMarker;
@@ -107,11 +105,6 @@ public final class ReturnNonLocalNode extends ContextualNode {
     replace(new ReturnNonLocalNode(this, inlinedFrameOnStack, inlinedOuterSelfSlot, localSelfSlot));
   }
 
-  @Override
-  public Kind getKind() {
-      return SPECIALIZED;
-  }
-
   public static class CatchNonLocalReturnNode extends ExpressionNode {
     @Child protected ExpressionNode methodBody;
     private final BranchProfile nonLocalReturnHandler;
@@ -119,7 +112,7 @@ public final class ReturnNonLocalNode extends ContextualNode {
 
     public CatchNonLocalReturnNode(final ExpressionNode methodBody,
         final FrameSlot frameOnStackMarker) {
-      this.methodBody = adoptChild(methodBody);
+      this.methodBody = methodBody;
       this.nonLocalReturnHandler = new BranchProfile();
       this.frameOnStackMarker    = frameOnStackMarker;
     }
@@ -176,11 +169,6 @@ public final class ReturnNonLocalNode extends ContextualNode {
       FrameSlot inlinedFrameOnStackMarker = inliner.getLocalFrameSlot(frameOnStackMarker.getIdentifier());
       assert inlinedFrameOnStackMarker != null;
       replace(new CatchNonLocalReturnNode(methodBody, inlinedFrameOnStackMarker));
-    }
-
-    @Override
-    public Kind getKind() {
-        return SPECIALIZED;
     }
   }
 }

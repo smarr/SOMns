@@ -31,16 +31,16 @@ public abstract class WhileWithStaticBlocksNode extends BinaryExpressionNode {
   private WhileWithStaticBlocksNode(final BlockNode receiver,
       final BlockNode argument, final SBlock rcvr, final SBlock arg,
       final SObject predicateBool, final Universe universe) {
-    this.receiver = adoptChild(receiver);
-    this.argument = adoptChild(argument);
+    this.receiver = receiver;
+    this.argument = argument;
 
     CallTarget callTargetCondition = rcvr.getMethod().getCallTarget();
-    conditionValueSend = adoptChild(Truffle.getRuntime().createCallNode(
-        callTargetCondition));
+    conditionValueSend = Truffle.getRuntime().createCallNode(
+        callTargetCondition);
 
     CallTarget callTargetBody = arg.getMethod().getCallTarget();
-    bodyValueSend = adoptChild(Truffle.getRuntime().createCallNode(
-        callTargetBody));
+    bodyValueSend = Truffle.getRuntime().createCallNode(
+        callTargetBody);
 
     this.predicateBool = predicateBool;
     this.universe      = universe;

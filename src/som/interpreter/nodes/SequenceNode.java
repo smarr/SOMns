@@ -21,17 +21,14 @@
  */
 package som.interpreter.nodes;
 
-import static com.oracle.truffle.api.nodes.NodeInfo.Kind.SPECIALIZED;
-
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
-import com.oracle.truffle.api.nodes.NodeInfo.Kind;
 
 public final class SequenceNode extends ExpressionNode {
   @Children private final ExpressionNode[] expressions;
 
   public SequenceNode(final ExpressionNode[] expressions) {
-    this.expressions = adoptChildren(expressions);
+    this.expressions = expressions;
   }
 
   @Override
@@ -51,10 +48,5 @@ public final class SequenceNode extends ExpressionNode {
   public void executeVoid(final VirtualFrame frame) {
     executeAllButLast(frame);
     expressions[expressions.length - 1].executeVoid(frame);
-  }
-
-  @Override
-  public Kind getKind() {
-      return SPECIALIZED;
   }
 }

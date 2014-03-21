@@ -21,7 +21,6 @@
  */
 package som.interpreter.nodes;
 
-import static com.oracle.truffle.api.nodes.NodeInfo.Kind.SPECIALIZED;
 import som.interpreter.SArguments;
 import som.interpreter.TruffleCompiler;
 import som.vm.Universe;
@@ -30,7 +29,6 @@ import som.vmobjects.SAbstractObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.NodeInfo.Kind;
 import com.oracle.truffle.api.utilities.BranchProfile;
 
 
@@ -78,11 +76,6 @@ public abstract class GlobalNode extends ExpressionNode
 
     @Override
     public void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
-
-    @Override
-    public Kind getKind() {
-        return Kind.UNINITIALIZED;
-    }
   }
 
   private static final class CachedGlobalReadNode extends GlobalNode {
@@ -101,10 +94,5 @@ public abstract class GlobalNode extends ExpressionNode
 
     @Override
     public void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
-
-    @Override
-    public Kind getKind() {
-        return SPECIALIZED;
-    }
   }
 }

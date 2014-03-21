@@ -19,8 +19,8 @@ public class EagerUnaryPrimitiveNode extends UnaryExpressionNode {
 
   public EagerUnaryPrimitiveNode(final SSymbol selector,
       final ExpressionNode receiver, final UnaryExpressionNode primitive) {
-    this.receiver = adoptChild(receiver);
-    this.primitive = adoptChild(primitive);
+    this.receiver  = receiver;
+    this.primitive = primitive;
 
     this.unsupportedSpecialization = new BranchProfile();
     this.selector = selector;

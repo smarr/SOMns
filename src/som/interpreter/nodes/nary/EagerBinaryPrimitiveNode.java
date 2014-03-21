@@ -24,9 +24,9 @@ public final class EagerBinaryPrimitiveNode extends BinaryExpressionNode {
       final ExpressionNode receiver,
       final ExpressionNode argument,
       final BinaryExpressionNode primitive) {
-    this.receiver  = adoptChild(receiver);
-    this.argument  = adoptChild(argument);
-    this.primitive = adoptChild(primitive);
+    this.receiver  = receiver;
+    this.argument  = argument;
+    this.primitive = primitive;
 
     this.unsupportedSpecialization = new BranchProfile();
     this.selector = selector;

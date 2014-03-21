@@ -26,8 +26,8 @@ public abstract class AbstractDispatchNode extends Node {
       CallTarget methodCallTarget = method.getCallTarget();
       CallNode   cachedMethod     = Truffle.getRuntime().createCallNode(methodCallTarget);
 
-      this.cachedMethod = adoptChild(cachedMethod);
-      this.nextInCache  = adoptChild(nextInCache);
+      this.cachedMethod = cachedMethod;
+      this.nextInCache  = nextInCache;
     }
   }
 }

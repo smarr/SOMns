@@ -3,7 +3,6 @@ package som.interpreter.nodes;
 import som.interpreter.SArguments;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.NodeInfo.Kind;
 
 public final class ArgumentReadNode extends ExpressionNode
     implements PreevaluatedExpression {
@@ -40,11 +39,6 @@ public final class ArgumentReadNode extends ExpressionNode
 
     @Override
     public void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
-  }
-
-  @Override
-  public Kind getKind() {
-      return Kind.GENERIC;
   }
 
   @Override

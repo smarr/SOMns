@@ -45,7 +45,6 @@ import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.NodeInfo;
 
 
-
 public final class MessageSendNode {
 
   public static AbstractMessageSendNode create(final SSymbol selector,
@@ -62,8 +61,8 @@ public final class MessageSendNode {
 
     protected AbstractMessageSendNode(final ExpressionNode receiver,
       final ExpressionNode[] arguments) {
-      this.receiverNode  = adoptChild(receiver);
-      this.argumentNodes = adoptChildren(arguments);
+      this.receiverNode  = receiver;
+      this.argumentNodes = arguments;
     }
 
     @Override
@@ -321,7 +320,7 @@ public final class MessageSendNode {
         final AbstractDispatchNode dispatchNode) {
       super(receiver, arguments);
       this.selector = selector;
-      this.dispatchNode  = adoptChild(dispatchNode);
+      this.dispatchNode = dispatchNode;
     }
 
     @Override
@@ -337,7 +336,7 @@ public final class MessageSendNode {
 
     @SlowPath
     public void adoptNewDispatchListHead(final AbstractDispatchNode newHead) {
-      dispatchNode = adoptChild(newHead);
+      dispatchNode = insert(newHead);
     }
 
     @SlowPath
