@@ -28,7 +28,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
 
-public class Lexer {
+public final class Lexer {
 
   private static final String SEPARATOR = "----";
   private static final String PRIMITIVE = "primitive";
@@ -46,7 +46,7 @@ public class Lexer {
   private String              buf;
   private int                 bufp;
 
-  protected Lexer(Reader reader) {
+  protected Lexer(final Reader reader) {
     infile = new BufferedReader(reader);
     peekDone = false;
     buf = "";
@@ -302,20 +302,20 @@ public class Lexer {
     return bufp >= buf.length();
   }
 
-  private boolean isOperator(char c) {
+  private boolean isOperator(final char c) {
     return c == '~' || c == '&' || c == '|' || c == '*' || c == '/'
         || c == '\\' || c == '+' || c == '=' || c == '>' || c == '<'
         || c == ',' || c == '@' || c == '%';
   }
 
-  private void match(Symbol s) {
+  private void match(final Symbol s) {
     sym = s;
     symc = currentChar();
     text = new StringBuffer("" + symc);
     bufp++;
   }
 
-  private char bufchar(int p) {
+  private char bufchar(final int p) {
     return p >= buf.length() ? '\0' : buf.charAt(p);
   }
 

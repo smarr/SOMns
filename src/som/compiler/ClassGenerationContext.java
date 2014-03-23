@@ -35,7 +35,7 @@ import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives.SlowPath;
 
-public class ClassGenerationContext {
+public final class ClassGenerationContext {
 
   private final Universe universe;
 

@@ -37,7 +37,7 @@ import com.oracle.truffle.api.CompilerDirectives.SlowPath;
 import com.oracle.truffle.api.Source;
 import com.oracle.truffle.api.source.SourceManager;
 
-public class SourcecodeCompiler {
+public final class SourcecodeCompiler {
 
   private Parser parser;
 

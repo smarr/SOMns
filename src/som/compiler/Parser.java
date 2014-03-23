@@ -89,7 +89,7 @@ import com.oracle.truffle.api.CompilerDirectives.SlowPath;
 import com.oracle.truffle.api.Source;
 import com.oracle.truffle.api.impl.DefaultSourceSection;
 
-public class Parser {
+public final class Parser {
 
   private final Universe            universe;
   private final Lexer               lexer;
@@ -122,7 +122,7 @@ public class Parser {
     return "Parser(" + source.getName() + ", " + this.getCoordinate().toString() + ")";
   }
 
-  private static class SourceCoordinate {
+  private static final class SourceCoordinate {
     public final int startLine;
     public final int startColumn;
     public final int charIndex;

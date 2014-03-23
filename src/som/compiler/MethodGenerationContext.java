@@ -60,7 +60,7 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.impl.DefaultSourceSection;
 
-public class MethodGenerationContext {
+public final class MethodGenerationContext {
 
   private ClassGenerationContext     holderGenc;
   private MethodGenerationContext    outerGenc;

@@ -31,7 +31,7 @@ import som.vmobjects.SInvokable;
 
 import com.oracle.truffle.api.CompilerDirectives.SlowPath;
 
-public class Disassembler {
+public final class Disassembler {
 
   @SlowPath
   public static void dump(final SClass cl) {
