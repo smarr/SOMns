@@ -1,27 +1,24 @@
 package som.primitives;
 
-import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.interpreter.nodes.nary.TernaryExpressionNode;
-import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.interpreter.nodes.nary.BinaryExpressionNode.BinarySideEffectFreeExpressionNode;
+import som.interpreter.nodes.nary.TernaryExpressionNode.TernarySideEffectFreeExpressionNode;
+import som.interpreter.nodes.nary.UnaryExpressionNode.UnarySideEffectFreeExpressionNode;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.VirtualFrame;
 
 
 public class StringPrims {
 
-  public abstract static class ConcatPrim extends BinaryExpressionNode {
+  public abstract static class ConcatPrim extends BinarySideEffectFreeExpressionNode {
     @Specialization
     public final String doSString(final String receiver, final String argument) {
       return receiver + argument;
     }
-    @Override
-    public final void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
   }
 
-  public abstract static class AsSymbolPrim extends UnaryExpressionNode {
+  public abstract static class AsSymbolPrim extends UnarySideEffectFreeExpressionNode {
     private final Universe universe;
     public AsSymbolPrim() { this.universe = Universe.current(); }
 
@@ -29,11 +26,9 @@ public class StringPrims {
     public final SAbstractObject doSString(final String receiver) {
       return universe.symbolFor(receiver);
     }
-    @Override
-    public final void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
   }
 
-  public abstract static class SubstringPrim extends TernaryExpressionNode {
+  public abstract static class SubstringPrim extends TernarySideEffectFreeExpressionNode {
     @Specialization
     public final String doSString(final String receiver, final int start, final int end) {
       try {
@@ -42,7 +37,5 @@ public class StringPrims {
         return "Error - index out of bounds";
       }
     }
-    @Override
-    public final void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
   }
 }

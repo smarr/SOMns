@@ -1,12 +1,11 @@
 package som.primitives;
 
-import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.interpreter.nodes.nary.UnaryExpressionNode.UnarySideEffectFreeExpressionNode;
 import som.vmobjects.SAbstractObject;
 
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.VirtualFrame;
 
-public abstract class HashPrim extends UnaryExpressionNode {
+public abstract class HashPrim extends UnarySideEffectFreeExpressionNode {
   @Specialization
   public final int doSString(final String receiver) {
     return receiver.hashCode();
@@ -16,7 +15,4 @@ public abstract class HashPrim extends UnaryExpressionNode {
   public final int doSAbstractObject(final SAbstractObject receiver) {
     return receiver.hashCode();
   }
-
-  @Override
-  public final void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
 }

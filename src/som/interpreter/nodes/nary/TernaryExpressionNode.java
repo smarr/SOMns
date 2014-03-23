@@ -25,4 +25,13 @@ public abstract class TernaryExpressionNode extends ExpressionNode {
 
   public abstract void executeEvaluatedVoid(final VirtualFrame frame,
       final Object receiver, final Object firstArg, final Object secondArg);
+
+  public abstract static class TernarySideEffectFreeExpressionNode
+    extends TernaryExpressionNode {
+
+    @Override
+    public final void executeVoid(final VirtualFrame frame) {
+      /* NOOP, side effect free */
+    }
+  }
 }

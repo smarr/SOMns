@@ -2,8 +2,10 @@ package som.primitives;
 
 import som.interpreter.Types;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
+import som.interpreter.nodes.nary.BinaryExpressionNode.BinarySideEffectFreeExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.interpreter.nodes.nary.UnaryExpressionNode.UnarySideEffectFreeExpressionNode;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray;
@@ -52,13 +54,11 @@ public final class ObjectPrims {
     }
   }
 
-  public abstract static class InstVarAtPrim extends BinaryExpressionNode {
+  public abstract static class InstVarAtPrim extends BinarySideEffectFreeExpressionNode {
     @Specialization
     public final Object doSObject(final SObject receiver, final int idx) {
       return receiver.getField(idx - 1);
     }
-    @Override
-    public final void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
   }
 
   public abstract static class InstVarAtPutPrim extends TernaryExpressionNode {
@@ -87,7 +87,7 @@ public final class ObjectPrims {
     }
   }
 
-  public abstract static class ClassPrim extends UnaryExpressionNode {
+  public abstract static class ClassPrim extends UnarySideEffectFreeExpressionNode {
     private final Universe universe;
     public ClassPrim() { this.universe = Universe.current(); }
 
@@ -100,7 +100,5 @@ public final class ObjectPrims {
     public final SClass doObject(final Object receiver) {
       return Types.getClassOf(receiver, universe);
     }
-    @Override
-    public final void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
   }
 }

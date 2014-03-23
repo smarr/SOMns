@@ -25,4 +25,13 @@ public abstract class BinaryExpressionNode extends ExpressionNode
       final Object receiver, final Object[] arguments) {
     return executeEvaluated(frame, receiver, arguments[0]);
   }
+
+  public abstract static class BinarySideEffectFreeExpressionNode
+    extends BinaryExpressionNode {
+
+    @Override
+    public final void executeVoid(final VirtualFrame frame) {
+      /* NOOP, side effect free */
+    }
+  }
 }

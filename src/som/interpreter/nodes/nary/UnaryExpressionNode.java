@@ -21,4 +21,13 @@ public abstract class UnaryExpressionNode extends ExpressionNode
       final Object receiver, final Object[] arguments) {
     return executeEvaluated(frame, receiver);
   }
+
+  public abstract static class UnarySideEffectFreeExpressionNode
+    extends UnaryExpressionNode {
+
+    @Override
+    public final void executeVoid(final VirtualFrame frame) {
+      /* NOOP, side effect free */
+    }
+  }
 }

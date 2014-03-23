@@ -2,14 +2,13 @@ package som.primitives;
 
 import java.math.BigInteger;
 
-import som.interpreter.nodes.nary.BinaryExpressionNode;
+import som.interpreter.nodes.nary.BinaryExpressionNode.BinarySideEffectFreeExpressionNode;
 import som.vm.Universe;
 import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.VirtualFrame;
 
-public abstract class EqualsPrim extends BinaryExpressionNode {
+public abstract class EqualsPrim extends BinarySideEffectFreeExpressionNode {
   private final Universe universe;
   public EqualsPrim() { this.universe = Universe.current(); }
 
@@ -100,7 +99,4 @@ public abstract class EqualsPrim extends BinaryExpressionNode {
   public final SObject doString(final String receiver, final SObject argument) {
     return universe.falseObject;
   }
-
-  @Override
-  public final void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
 }

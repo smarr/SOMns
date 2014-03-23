@@ -1,13 +1,12 @@
 package som.primitives;
 
-import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.interpreter.nodes.nary.UnaryExpressionNode.UnarySideEffectFreeExpressionNode;
 import som.vmobjects.SArray;
 import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.VirtualFrame;
 
-public abstract class ObjectSizePrim extends UnaryExpressionNode {
+public abstract class ObjectSizePrim extends UnarySideEffectFreeExpressionNode {
   @Specialization
   public final int doSArray(final SArray receiver) {
     int size = 0;
@@ -26,6 +25,4 @@ public abstract class ObjectSizePrim extends UnaryExpressionNode {
   public final int doSAbstractObject(final Object receiver) {
     return 0; // TODO: allow polymorphism?
   }
-  @Override
-  public final void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
 }

@@ -2,16 +2,15 @@ package som.primitives;
 
 import java.math.BigInteger;
 
-import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.interpreter.nodes.nary.UnaryExpressionNode.UnarySideEffectFreeExpressionNode;
 import som.primitives.arithmetic.ArithmeticPrim;
 
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.VirtualFrame;
 
 
 public abstract class DoublePrims  {
 
-  public abstract static class RoundPrim extends UnaryExpressionNode {
+  public abstract static class RoundPrim extends UnarySideEffectFreeExpressionNode {
     @Specialization
     public final Object doDouble(final double receiver) {
       long val = Math.round(receiver);
@@ -21,9 +20,6 @@ public abstract class DoublePrims  {
         return (int) val;
       }
     }
-
-    @Override
-    public final void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
   }
 
   public abstract static class BitXorPrim extends ArithmeticPrim {

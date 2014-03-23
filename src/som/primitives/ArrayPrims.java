@@ -1,7 +1,7 @@
 package som.primitives;
 
 import som.interpreter.Types;
-import som.interpreter.nodes.nary.BinaryExpressionNode;
+import som.interpreter.nodes.nary.BinaryExpressionNode.BinarySideEffectFreeExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
@@ -9,18 +9,14 @@ import som.vmobjects.SArray;
 import som.vmobjects.SClass;
 
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.VirtualFrame;
 
 
 public final class ArrayPrims {
-  public abstract static class AtPrim extends BinaryExpressionNode {
+  public abstract static class AtPrim extends BinarySideEffectFreeExpressionNode {
     @Specialization
     public final Object doSArray(final SArray receiver, final int argument) {
       return receiver.getIndexableField(argument - 1);
     }
-
-    @Override
-    public final void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
   }
 
   public abstract static class AtPutPrim extends TernaryExpressionNode {
@@ -41,7 +37,7 @@ public final class ArrayPrims {
     }
   }
 
-  public abstract static class NewPrim extends BinaryExpressionNode {
+  public abstract static class NewPrim extends BinarySideEffectFreeExpressionNode {
     private final Universe universe;
     public NewPrim() { this.universe = Universe.current(); }
 
@@ -53,8 +49,5 @@ public final class ArrayPrims {
     public final SAbstractObject doSClass(final SClass receiver, final int length) {
       return universe.newArray(length);
     }
-
-    @Override
-    public final void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
   }
 }

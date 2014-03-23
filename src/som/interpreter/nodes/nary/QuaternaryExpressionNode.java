@@ -29,4 +29,12 @@ public abstract class QuaternaryExpressionNode extends ExpressionNode {
       final Object receiver, final Object firstArg, final Object secondArg,
       final Object thirdArg);
 
+  public abstract static class QuaternarySideEffectFreeExpressionNode
+    extends QuaternaryExpressionNode {
+
+    @Override
+    public final void executeVoid(final VirtualFrame frame) {
+      /* NOOP, side effect free */
+    }
+  }
 }
