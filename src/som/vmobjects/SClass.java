@@ -198,33 +198,12 @@ public class SClass extends SObject {
     }
   }
 
-  public SSymbol getInstanceFieldName(int index) {
-    // Get the name of the instance field with the given index
-    if (index >= getNumberOfSuperInstanceFields()) {
-      // Adjust the index to account for fields defined in the super class
-      index -= getNumberOfSuperInstanceFields();
-
-      // Return the symbol representing the instance fields name
-      return (SSymbol) getInstanceFields().getIndexableField(index);
-    } else {
-      // Ask the super class to return the name of the instance field
-      return ((SClass) getSuperClass()).getInstanceFieldName(index);
-    }
+  public SSymbol getInstanceFieldName(final int index) {
+    return (SSymbol) getInstanceFields().getIndexableField(index);
   }
 
   public int getNumberOfInstanceFields() {
-    // Get the total number of instance fields in this class
-    return getInstanceFields().getNumberOfIndexableFields()
-        + getNumberOfSuperInstanceFields();
-  }
-
-  private int getNumberOfSuperInstanceFields() {
-    // Get the total number of instance fields defined in super classes
-    if (hasSuperClass()) {
-      return ((SClass) getSuperClass()).getNumberOfInstanceFields();
-    } else {
-      return 0;
-    }
+    return getInstanceFields().getNumberOfIndexableFields();
   }
 
   public void setInstanceFields(final String[] fields) {
