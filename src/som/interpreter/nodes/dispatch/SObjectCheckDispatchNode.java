@@ -6,7 +6,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.utilities.BranchProfile;
 
 
-public class SObjectCheckDispatchNode extends AbstractDispatchNode {
+public final class SObjectCheckDispatchNode extends AbstractDispatchNode {
 
   @Child private AbstractDispatchNode nextInCache;
   @Child private UninitializedDispatchNode uninitializedDispatch;

@@ -54,7 +54,7 @@ public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode
   }
 
   @Specialization(guards = "isSameBlockInt")
-  public int doIntToByDo(final VirtualFrame frame, final int receiver, final int limit, final int step, final SBlock block) {
+  public final int doIntToByDo(final VirtualFrame frame, final int receiver, final int limit, final int step, final SBlock block) {
     try {
       for (int i = receiver; i <= limit; i += step) {
         SArguments arguments = new SArguments(block, new Object[] {i});
@@ -69,7 +69,7 @@ public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode
   }
 
   @Specialization(guards = "isSameBlockDouble")
-  public int doIntToByDo(final VirtualFrame frame, final int receiver, final double limit, final int step, final SBlock block) {
+  public final int doIntToByDo(final VirtualFrame frame, final int receiver, final double limit, final int step, final SBlock block) {
     try {
       for (int i = receiver; i <= limit; i += step) {
         SArguments arguments = new SArguments(block, new Object[] {i});

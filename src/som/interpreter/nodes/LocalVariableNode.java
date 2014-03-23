@@ -26,7 +26,7 @@ public abstract class LocalVariableNode extends ExpressionNode {
     this.slot = slot;
   }
 
-  public Object getSlotIdentifier() {
+  public final Object getSlotIdentifier() {
     return slot.getIdentifier();
   }
 
@@ -44,27 +44,27 @@ public abstract class LocalVariableNode extends ExpressionNode {
     }
 
     @Specialization(guards = "isUninitialized")
-    public SObject doNil() {
+    public final SObject doNil() {
       return Universe.current().nilObject;
     }
 
     @Specialization(guards = "isInitialized", rewriteOn = {FrameSlotTypeException.class})
-    public int doInteger(final VirtualFrame frame) throws FrameSlotTypeException {
+    public final int doInteger(final VirtualFrame frame) throws FrameSlotTypeException {
       return frame.getInt(slot);
     }
 
     @Specialization(guards = "isInitialized", rewriteOn = {FrameSlotTypeException.class})
-    public double doDouble(final VirtualFrame frame) throws FrameSlotTypeException {
+    public final double doDouble(final VirtualFrame frame) throws FrameSlotTypeException {
       return frame.getDouble(slot);
     }
 
     @Specialization(guards = "isInitialized", rewriteOn = {FrameSlotTypeException.class})
-    public Object doObject(final VirtualFrame frame) throws FrameSlotTypeException {
+    public final Object doObject(final VirtualFrame frame) throws FrameSlotTypeException {
       return frame.getObject(slot);
     }
 
     @Generic
-    public Object doGeneric(final VirtualFrame frame) {
+    public final Object doGeneric(final VirtualFrame frame) {
       assert isInitialized();
       return FrameUtil.getObjectSafe(frame, slot);
     }
@@ -122,19 +122,19 @@ public abstract class LocalVariableNode extends ExpressionNode {
     public abstract ExpressionNode getExp();
 
     @Specialization(guards = "isIntKind", rewriteOn = FrameSlotTypeException.class)
-    public int write(final VirtualFrame frame, final int expValue) throws FrameSlotTypeException {
+    public final int write(final VirtualFrame frame, final int expValue) throws FrameSlotTypeException {
       frame.setInt(slot, expValue);
       return expValue;
     }
 
     @Specialization(guards = "isDoubleKind", rewriteOn = FrameSlotTypeException.class)
-    public double write(final VirtualFrame frame, final double expValue) throws FrameSlotTypeException {
+    public final double write(final VirtualFrame frame, final double expValue) throws FrameSlotTypeException {
       frame.setDouble(slot, expValue);
       return expValue;
     }
 
     @Generic
-    public Object writeGeneric(final VirtualFrame frame, final Object expValue) {
+    public final Object writeGeneric(final VirtualFrame frame, final Object expValue) {
       ensureObjectKind();
       frame.setObject(slot, expValue);
       return expValue;
@@ -172,7 +172,7 @@ public abstract class LocalVariableNode extends ExpressionNode {
     }
 
     @Override
-    public void replaceWithIndependentCopyForInlining(final Inliner inliner) {
+    public final void replaceWithIndependentCopyForInlining(final Inliner inliner) {
       if (getParent() instanceof ArgumentInitializationNode) {
         FrameSlot varSlot = inliner.getLocalFrameSlot(getSlotIdentifier());
         assert varSlot != null;

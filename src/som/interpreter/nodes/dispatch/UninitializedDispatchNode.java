@@ -13,7 +13,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 
 
-public class UninitializedDispatchNode extends AbstractDispatchWithLookupNode {
+public final class UninitializedDispatchNode extends AbstractDispatchWithLookupNode {
 
   public UninitializedDispatchNode(final SSymbol selector, final Universe universe) {
     super(selector, universe);

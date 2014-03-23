@@ -6,7 +6,7 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.nodes.RootNode;
 
 
-public class Primitive extends Invokable {
+public final class Primitive extends Invokable {
 
   public Primitive(final ExpressionNode primitive,
       final FrameDescriptor frameDescriptor) {

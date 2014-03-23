@@ -50,7 +50,7 @@ public abstract class IntToDoMessageNode extends TernaryExpressionNode
   }
 
   @Specialization(guards = "isSameBlockInt")
-  public int doIntToDo(final VirtualFrame frame, final int receiver, final int limit, final SBlock block) {
+  public final int doIntToDo(final VirtualFrame frame, final int receiver, final int limit, final SBlock block) {
     try {
       for (int i = receiver; i <= limit; i++) {
         valueSend.call(frame.pack(), new SArguments(block, new Object[] {i}));
@@ -68,7 +68,7 @@ public abstract class IntToDoMessageNode extends TernaryExpressionNode
   }
 
   @Specialization(guards = "isSameBlockDouble")
-  public int doIntToDo(final VirtualFrame frame, final int receiver, final double limit, final SBlock block) {
+  public final int doIntToDo(final VirtualFrame frame, final int receiver, final double limit, final SBlock block) {
     try {
       for (int i = receiver; i <= limit; i++) {
         valueSend.call(frame.pack(), new SArguments(block, new Object[] {i}));

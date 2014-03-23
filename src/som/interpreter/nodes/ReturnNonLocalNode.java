@@ -105,7 +105,7 @@ public final class ReturnNonLocalNode extends ContextualNode {
     replace(new ReturnNonLocalNode(this, inlinedFrameOnStack, inlinedOuterSelfSlot, localSelfSlot));
   }
 
-  public static class CatchNonLocalReturnNode extends ExpressionNode {
+  public static final class CatchNonLocalReturnNode extends ExpressionNode {
     @Child protected ExpressionNode methodBody;
     private final BranchProfile nonLocalReturnHandler;
     private final FrameSlot frameOnStackMarker;
@@ -146,7 +146,7 @@ public final class ReturnNonLocalNode extends ContextualNode {
     }
 
     @Override
-    public final void executeVoid(final VirtualFrame frame) {
+    public void executeVoid(final VirtualFrame frame) {
       FrameOnStackMarker marker = new FrameOnStackMarker();
       frameOnStackMarker.setKind(FrameSlotKind.Object);
       frame.setObject(frameOnStackMarker, marker);

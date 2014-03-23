@@ -36,27 +36,27 @@ public abstract class NonLocalVariableNode extends ContextualNode {
     }
 
     @Specialization(guards = "isUninitialized")
-    public SObject doNil() {
+    public final SObject doNil() {
       return Universe.current().nilObject;
     }
 
     @Specialization(guards = "isInitialized", rewriteOn = {FrameSlotTypeException.class})
-    public int doInteger(final VirtualFrame frame) throws FrameSlotTypeException {
+    public final int doInteger(final VirtualFrame frame) throws FrameSlotTypeException {
       return determineContext(frame).getInt(slot);
     }
 
     @Specialization(guards = "isInitialized", rewriteOn = {FrameSlotTypeException.class})
-    public double doDouble(final VirtualFrame frame) throws FrameSlotTypeException {
+    public final double doDouble(final VirtualFrame frame) throws FrameSlotTypeException {
       return determineContext(frame).getDouble(slot);
     }
 
     @Specialization(guards = "isInitialized", rewriteOn = {FrameSlotTypeException.class})
-    public Object doObject(final VirtualFrame frame) throws FrameSlotTypeException {
+    public final Object doObject(final VirtualFrame frame) throws FrameSlotTypeException {
       return determineContext(frame).getObject(slot);
     }
 
     @Generic
-    public Object doGeneric(final VirtualFrame frame) {
+    public final Object doGeneric(final VirtualFrame frame) {
       assert isInitialized();
       return FrameUtil.getObjectSafe(determineContext(frame), slot);
     }
@@ -106,19 +106,19 @@ public abstract class NonLocalVariableNode extends ContextualNode {
     }
 
     @Specialization(guards = "isIntKind", rewriteOn = FrameSlotTypeException.class)
-    public int write(final VirtualFrame frame, final int expValue) throws FrameSlotTypeException {
+    public final int write(final VirtualFrame frame, final int expValue) throws FrameSlotTypeException {
       determineContext(frame).setInt(slot, expValue);
       return expValue;
     }
 
     @Specialization(guards = "isDoubleKind", rewriteOn = FrameSlotTypeException.class)
-    public double write(final VirtualFrame frame, final double expValue) throws FrameSlotTypeException {
+    public final double write(final VirtualFrame frame, final double expValue) throws FrameSlotTypeException {
       determineContext(frame).setDouble(slot, expValue);
       return expValue;
     }
 
     @Generic
-    public Object writeGeneric(final VirtualFrame frame, final Object expValue) {
+    public final Object writeGeneric(final VirtualFrame frame, final Object expValue) {
       ensureObjectKind();
       determineContext(frame).setObject(slot, expValue);
       return expValue;

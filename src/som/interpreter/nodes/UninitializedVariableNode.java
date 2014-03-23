@@ -96,7 +96,7 @@ public abstract class UninitializedVariableNode extends ContextualNode {
     }
   }
 
-  public static class UninitializedSuperReadNode extends UninitializedVariableNode {
+  public static final class UninitializedSuperReadNode extends UninitializedVariableNode {
     private final SSymbol holderClass;
     private final boolean classSide;
 

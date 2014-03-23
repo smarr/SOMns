@@ -53,7 +53,7 @@ public abstract class ContextualNode extends ExpressionNode {
   }
 
   @ExplodeLoop
-  protected MaterializedFrame determineContext(final VirtualFrame frame) {
+  protected final MaterializedFrame determineContext(final VirtualFrame frame) {
     SBlock self = getLocalSelf(frame);
     int i = contextLevel - 1;
 
@@ -69,7 +69,7 @@ public abstract class ContextualNode extends ExpressionNode {
   }
 
   @ExplodeLoop
-  protected Object determineOuterSelf(final VirtualFrame frame) {
+  protected final Object determineOuterSelf(final VirtualFrame frame) {
     Object self = getLocalSelf(frame);
     int i = contextLevel;
     while (i > 0) {

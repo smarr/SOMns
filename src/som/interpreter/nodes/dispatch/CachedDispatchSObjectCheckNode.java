@@ -10,7 +10,7 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 
-public class CachedDispatchSObjectCheckNode extends AbstractCachedDispatchNode {
+public final class CachedDispatchSObjectCheckNode extends AbstractCachedDispatchNode {
 
   private final SClass expectedClass;
 

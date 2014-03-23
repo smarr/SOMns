@@ -29,7 +29,7 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.nodes.RootNode;
 
 
-public class Method extends Invokable {
+public final class Method extends Invokable {
 
   private final Universe universe;
   private final LexicalContext outerContext;

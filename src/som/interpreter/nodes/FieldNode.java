@@ -42,9 +42,9 @@ public abstract class FieldNode extends ExpressionNode {
     this.fieldIndex = fieldIndex;
   }
 
-  abstract ExpressionNode getSelf();
+  public abstract ExpressionNode getSelf();
 
-  public boolean accessesLocalSelf() {
+  public final boolean accessesLocalSelf() {
     ExpressionNode self = getSelf();
 
     if (self instanceof UninitializedVariableReadNode) {
@@ -77,7 +77,7 @@ public abstract class FieldNode extends ExpressionNode {
     }
 
     @Specialization(guards = "isSAbstractObject")
-    public SAbstractObject readSAbstractObject(final SObject self) {
+    public final SAbstractObject readSAbstractObject(final SObject self) {
       return (SAbstractObject) self.getField(fieldIndex);
     }
 
@@ -86,7 +86,7 @@ public abstract class FieldNode extends ExpressionNode {
     }
 
     @Specialization(guards = "isInteger")
-    public int readInteger(final SObject self) {
+    public final int readInteger(final SObject self) {
       return (int) self.getField(fieldIndex);
     }
 
@@ -95,7 +95,7 @@ public abstract class FieldNode extends ExpressionNode {
     }
 
     @Specialization(guards = "isBigInteger")
-    public BigInteger readBigInteger(final SObject self) {
+    public final BigInteger readBigInteger(final SObject self) {
       return (BigInteger) self.getField(fieldIndex);
     }
 
@@ -104,7 +104,7 @@ public abstract class FieldNode extends ExpressionNode {
     }
 
     @Specialization(guards = "isDouble")
-    public double readDouble(final SObject self) {
+    public final double readDouble(final SObject self) {
       return (double) self.getField(fieldIndex);
     }
 
@@ -113,7 +113,7 @@ public abstract class FieldNode extends ExpressionNode {
     }
 
     @Specialization(guards = "isString")
-    public String readString(final SObject self) {
+    public final String readString(final SObject self) {
       return (String) self.getField(fieldIndex);
     }
 
@@ -150,31 +150,31 @@ public abstract class FieldNode extends ExpressionNode {
     }
 
     @Specialization(order = 1)
-    public SAbstractObject doSAbstractObject(final SObject self, final SAbstractObject value) {
+    public final SAbstractObject doSAbstractObject(final SObject self, final SAbstractObject value) {
       self.setField(fieldIndex, value);
       return value;
     }
 
     @Specialization(order = 20)
-    public int doInteger(final SObject self, final int value) {
+    public final int doInteger(final SObject self, final int value) {
       self.setField(fieldIndex, value);
       return value;
     }
 
     @Specialization(order = 30)
-    public BigInteger doBigInteger(final SObject self, final BigInteger value) {
+    public final BigInteger doBigInteger(final SObject self, final BigInteger value) {
       self.setField(fieldIndex, value);
       return value;
     }
 
     @Specialization(order = 40)
-    public double doDouble(final SObject self, final double value) {
+    public final double doDouble(final SObject self, final double value) {
       self.setField(fieldIndex, value);
       return value;
     }
 
     @Specialization(order = 50)
-    public String doString(final SObject self, final String value) {
+    public final String doString(final SObject self, final String value) {
       self.setField(fieldIndex, value);
       return value;
     }

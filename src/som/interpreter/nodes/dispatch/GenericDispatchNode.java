@@ -9,7 +9,7 @@ import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 
-public class GenericDispatchNode extends AbstractDispatchWithLookupNode {
+public final class GenericDispatchNode extends AbstractDispatchWithLookupNode {
 
   public GenericDispatchNode(final SSymbol selector, final Universe universe) {
     super(selector, universe);

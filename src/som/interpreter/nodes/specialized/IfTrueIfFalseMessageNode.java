@@ -77,7 +77,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
   }
 
   @Specialization(order = 1, guards = "hasSameArguments")
-  public Object doIfTrueIfFalseWithInlining(final VirtualFrame frame,
+  public final Object doIfTrueIfFalseWithInlining(final VirtualFrame frame,
       final SObject receiver, final SBlock trueBlock, final SBlock falseBlock) {
     if (receiver == universe.trueObject) {
       ifTrueBranch.enter();
@@ -92,7 +92,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
   }
 
   @Specialization(order = 10)
-  public Object doIfTrueIfFalse(final VirtualFrame frame,
+  public final Object doIfTrueIfFalse(final VirtualFrame frame,
       final SObject receiver, final SBlock trueBlock, final SBlock falseBlock) {
     if (receiver == universe.trueObject) {
       ifTrueBranch.enter();
@@ -105,7 +105,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
   }
 
   @Specialization(order = 18, guards = "hasSameArguments")
-  public Object doIfTrueIfFalseWithInlining(final VirtualFrame frame,
+  public final Object doIfTrueIfFalseWithInlining(final VirtualFrame frame,
       final SObject receiver, final Object trueValue, final SBlock falseBlock) {
     if (receiver == universe.trueObject) {
       ifTrueBranch.enter();
@@ -119,7 +119,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
   }
 
   @Specialization(order = 19, guards = "hasSameArguments")
-  public Object doIfTrueIfFalseWithInlining(final VirtualFrame frame,
+  public final Object doIfTrueIfFalseWithInlining(final VirtualFrame frame,
       final SObject receiver, final SBlock trueBlock, final Object falseValue) {
     if (receiver == universe.trueObject) {
       ifTrueBranch.enter();
@@ -133,7 +133,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
   }
 
   @Specialization(order = 20)
-  public Object doIfTrueIfFalse(final VirtualFrame frame,
+  public final Object doIfTrueIfFalse(final VirtualFrame frame,
       final SObject receiver, final Object trueValue, final SBlock falseBlock) {
     if (receiver == universe.trueObject) {
       ifTrueBranch.enter();
@@ -146,7 +146,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
   }
 
   @Specialization(order = 30)
-  public Object doIfTrueIfFalse(final VirtualFrame frame,
+  public final Object doIfTrueIfFalse(final VirtualFrame frame,
       final SObject receiver, final SBlock trueBlock, final Object falseValue) {
     if (receiver == universe.trueObject) {
       ifTrueBranch.enter();
@@ -159,7 +159,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
   }
 
   @Specialization(order = 40)
-  public Object doIfTrueIfFalse(final VirtualFrame frame,
+  public final Object doIfTrueIfFalse(final VirtualFrame frame,
       final SObject receiver, final Object trueValue, final Object falseValue) {
     if (receiver == universe.trueObject) {
       return trueValue;

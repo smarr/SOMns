@@ -7,7 +7,7 @@ import som.vmobjects.SInvokable;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 
-public class CachedDispatchSimpleCheckNode extends AbstractCachedDispatchNode {
+public final class CachedDispatchSimpleCheckNode extends AbstractCachedDispatchNode {
 
   private final Class<?>     expectedClass;
 

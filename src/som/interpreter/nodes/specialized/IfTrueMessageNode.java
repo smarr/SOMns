@@ -17,13 +17,13 @@ public abstract class IfTrueMessageNode extends AbstractIfMessageNode {
    * evaluate it.
    */
   @Specialization(order = 1, guards = "isSameArgument")
-  public Object doIfTrueWithInlining(final VirtualFrame frame, final SObject receiver,
+  public final Object doIfTrueWithInlining(final VirtualFrame frame, final SObject receiver,
       final SBlock argument) {
     return doIfWithInlining(frame, receiver, argument, universe.trueObject);
   }
 
   @Specialization(order = 10)
-  public Object doIfTrue(final VirtualFrame frame, final SObject receiver,
+  public final Object doIfTrue(final VirtualFrame frame, final SObject receiver,
       final SBlock argument) {
     return doIf(frame, receiver, argument, universe.trueObject);
   }
@@ -32,7 +32,7 @@ public abstract class IfTrueMessageNode extends AbstractIfMessageNode {
    * The argument in this case is an expression and can be returned directly.
    */
   @Specialization(order = 100)
-  public Object doIfTrue(final VirtualFrame frame,
+  public final Object doIfTrue(final VirtualFrame frame,
       final SObject receiver, final Object argument) {
     if (receiver == universe.trueObject) {
       return argument;
