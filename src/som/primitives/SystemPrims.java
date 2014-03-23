@@ -13,12 +13,12 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 
-public class SystemPrims {
+public final class SystemPrims {
   private abstract static class BinarySystemNode extends BinaryExpressionNode {
     protected final Universe universe;
     protected BinarySystemNode() { this.universe = Universe.current(); }
 
-    protected boolean receiverIsSystemObject(final SAbstractObject receiver) {
+    protected final boolean receiverIsSystemObject(final SAbstractObject receiver) {
       return receiver == universe.systemObject;
     }
   }
@@ -27,14 +27,14 @@ public class SystemPrims {
     protected final Universe universe;
     protected UnarySystemNode() { this.universe = Universe.current(); }
 
-    protected boolean receiverIsSystemObject(final SAbstractObject receiver) {
+    protected final boolean receiverIsSystemObject(final SAbstractObject receiver) {
       return receiver == universe.systemObject;
     }
   }
 
   public abstract static class LoadPrim extends BinarySystemNode {
     @Specialization(guards = "receiverIsSystemObject")
-    public Object doSObject(final SObject receiver, final SSymbol argument) {
+    public final Object doSObject(final SObject receiver, final SSymbol argument) {
       SClass result = universe.loadClass(argument);
       return result != null ? result : universe.nilObject;
     }
@@ -42,7 +42,7 @@ public class SystemPrims {
 
   public abstract static class ExitPrim extends BinarySystemNode {
     @Specialization(guards = "receiverIsSystemObject")
-    public Object doSObject(final SObject receiver, final int error) {
+    public final Object doSObject(final SObject receiver, final int error) {
       universe.exit(error);
       return receiver;
     }
@@ -50,7 +50,7 @@ public class SystemPrims {
 
   public abstract static class GlobalPrim extends BinarySystemNode {
     @Specialization(guards = "receiverIsSystemObject")
-    public Object doSObject(final SObject receiver, final SSymbol argument) {
+    public final Object doSObject(final SObject receiver, final SSymbol argument) {
       SAbstractObject result = universe.getGlobal(argument);
       return result != null ? result : universe.nilObject;
     }
@@ -63,20 +63,20 @@ public class SystemPrims {
     public GlobalPutPrim()  { this.universe = Universe.current(); }
 
     @Specialization(guards = "receiverIsSystemObject")
-    public Object doSObject(final SObject receiver, final SSymbol global,
+    public final Object doSObject(final SObject receiver, final SSymbol global,
         final SAbstractObject value) {
       universe.setGlobal(global, value);
       return value;
     }
 
-    protected boolean receiverIsSystemObject(final SAbstractObject receiver) {
+    protected final boolean receiverIsSystemObject(final SAbstractObject receiver) {
       return receiver == universe.systemObject;
     }
   }
 
   public abstract static class PrintStringPrim extends BinarySystemNode {
     @Specialization(guards = "receiverIsSystemObject")
-    public Object doSObject(final SObject receiver, final String argument) {
+    public final Object doSObject(final SObject receiver, final String argument) {
       Universe.print(argument);
       return receiver;
     }
@@ -84,7 +84,7 @@ public class SystemPrims {
 
   public abstract static class PrintNewlinePrim extends UnarySystemNode {
     @Specialization(guards = "receiverIsSystemObject")
-    public Object doSObject(final SObject receiver) {
+    public final Object doSObject(final SObject receiver) {
       Universe.println();
       return receiver;
     }
@@ -92,7 +92,7 @@ public class SystemPrims {
 
   public abstract static class FullGCPrim extends UnarySystemNode {
     @Specialization(guards = "receiverIsSystemObject")
-    public Object doSObject(final SObject receiver) {
+    public final Object doSObject(final SObject receiver) {
       // TODO: deactivated GC as work around for Hotspot collecting native code
       //       generated for the benchmarks.
       // System.gc();
@@ -103,7 +103,7 @@ public class SystemPrims {
 
   public abstract static class TimePrim extends UnarySystemNode {
     @Specialization(guards = "receiverIsSystemObject")
-    public int doSObject(final SObject receiver) {
+    public final int doSObject(final SObject receiver) {
       return (int) (System.currentTimeMillis() - startTime);
     }
     @Override
@@ -112,7 +112,7 @@ public class SystemPrims {
 
   public abstract static class TicksPrim extends UnarySystemNode {
     @Specialization(guards = "receiverIsSystemObject")
-    public int doSObject(final SObject receiver) {
+    public final int doSObject(final SObject receiver) {
       return (int) (System.nanoTime() / 1000L - startMicroTime);
     }
     @Override

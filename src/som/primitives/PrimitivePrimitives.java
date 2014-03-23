@@ -5,7 +5,7 @@ import som.primitives.MethodPrimsFactory.SignaturePrimFactory;
 import som.vm.Universe;
 
 
-public class PrimitivePrimitives extends Primitives {
+public final class PrimitivePrimitives extends Primitives {
   public PrimitivePrimitives(final Universe universe) {
     super(universe);
   }

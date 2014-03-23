@@ -30,7 +30,7 @@ import som.primitives.ArrayPrimsFactory.AtPutPrimFactory;
 import som.primitives.ArrayPrimsFactory.NewPrimFactory;
 import som.vm.Universe;
 
-public class ArrayPrimitives extends Primitives {
+public final class ArrayPrimitives extends Primitives {
 
   public ArrayPrimitives(final Universe universe) {
     super(universe);

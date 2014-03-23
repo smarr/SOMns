@@ -30,7 +30,7 @@ public abstract class BlockPrims {
     public ValueNonePrim() { this.universe = Universe.current(); }
 
     @Specialization
-    public Object doSBlock(final VirtualFrame frame, final SBlock receiver) {
+    public final Object doSBlock(final VirtualFrame frame, final SBlock receiver) {
       return receiver.getMethod().invoke(frame.pack(), receiver, universe);
     }
   }
@@ -40,7 +40,7 @@ public abstract class BlockPrims {
     public ValueOnePrim() { this.universe = Universe.current(); }
 
     @Specialization
-    public Object doSBlock(final VirtualFrame frame, final SBlock receiver,
+    public final Object doSBlock(final VirtualFrame frame, final SBlock receiver,
         final Object arg) {
       return receiver.getMethod().invoke(frame.pack(), receiver, arg, universe);
     }
@@ -51,7 +51,7 @@ public abstract class BlockPrims {
     public ValueTwoPrim() { this.universe = Universe.current(); }
 
     @Specialization
-    public Object doSBlock(final VirtualFrame frame,
+    public final Object doSBlock(final VirtualFrame frame,
         final SBlock receiver, final Object arg1, final Object arg2) {
       return receiver.getMethod().invoke(frame.pack(), receiver, arg1, arg2, universe);
     }
@@ -62,7 +62,7 @@ public abstract class BlockPrims {
     public ValueMorePrim() { this.universe = Universe.current(); }
 
     @Specialization
-    public Object doSBlock(final VirtualFrame frame,
+    public final Object doSBlock(final VirtualFrame frame,
         final SBlock receiver, final Object firstArg, final Object secondArg,
         final Object thirdArg) {
       return receiver.getMethod().invoke(frame.pack(), receiver,

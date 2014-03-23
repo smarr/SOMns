@@ -36,7 +36,7 @@ import som.primitives.SystemPrimsFactory.TicksPrimFactory;
 import som.primitives.SystemPrimsFactory.TimePrimFactory;
 import som.vm.Universe;
 
-public class SystemPrimitives extends Primitives {
+public final class SystemPrimitives extends Primitives {
 
   public SystemPrimitives(final Universe universe) {
     super(universe);

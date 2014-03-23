@@ -30,7 +30,7 @@ import som.primitives.StringPrimsFactory.ConcatPrimFactory;
 import som.primitives.StringPrimsFactory.SubstringPrimFactory;
 import som.vm.Universe;
 
-public class StringPrimitives extends Primitives {
+public final class StringPrimitives extends Primitives {
 
   public StringPrimitives(final Universe universe) {
     super(universe);

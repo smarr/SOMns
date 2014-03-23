@@ -12,10 +12,10 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 
-public class ArrayPrims {
+public final class ArrayPrims {
   public abstract static class AtPrim extends BinaryExpressionNode {
     @Specialization
-    public Object doSArray(final SArray receiver, final int argument) {
+    public final Object doSArray(final SArray receiver, final int argument) {
       return receiver.getIndexableField(argument - 1);
     }
 
@@ -28,13 +28,13 @@ public class ArrayPrims {
     public AtPutPrim() { this.universe = Universe.current(); }
 
     @Specialization
-    public SAbstractObject doSArray(final SArray receiver, final int index, final SAbstractObject value) {
+    public final SAbstractObject doSArray(final SArray receiver, final int index, final SAbstractObject value) {
       receiver.setIndexableField(index - 1, value);
       return value;
     }
 
     @Specialization
-    public SAbstractObject doSArray(final SArray receiver, final int index, final Object value) {
+    public final SAbstractObject doSArray(final SArray receiver, final int index, final Object value) {
       SAbstractObject val = Types.asAbstractObject(value, universe);
       receiver.setIndexableField(index - 1, val);
       return val;
@@ -45,12 +45,12 @@ public class ArrayPrims {
     private final Universe universe;
     public NewPrim() { this.universe = Universe.current(); }
 
-    protected boolean receiverIsArrayClass(final SClass receiver) {
+    protected final boolean receiverIsArrayClass(final SClass receiver) {
       return receiver == universe.arrayClass;
     }
 
     @Specialization(guards = "receiverIsArrayClass")
-    public SAbstractObject doSClass(final SClass receiver, final int length) {
+    public final SAbstractObject doSClass(final SClass receiver, final int length) {
       return universe.newArray(length);
     }
 

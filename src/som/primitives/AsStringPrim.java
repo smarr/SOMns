@@ -13,25 +13,25 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 public abstract class AsStringPrim extends UnaryExpressionNode {
 
   @Specialization
-  public String doSSymbol(final SSymbol receiver) {
+  public final String doSSymbol(final SSymbol receiver) {
     return receiver.getString();
   }
 
   @SlowPath
   @Specialization
-  public String doInteger(final int receiver) {
+  public final String doInteger(final int receiver) {
     return Integer.toString(receiver);
   }
 
   @SlowPath
   @Specialization
-  public String doDouble(final double receiver) {
+  public final String doDouble(final double receiver) {
     return Double.toString(receiver);
   }
 
   @SlowPath
   @Specialization
-  public String doBigInteger(final BigInteger receiver) {
+  public final String doBigInteger(final BigInteger receiver) {
     return receiver.toString();
   }
 

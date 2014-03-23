@@ -8,11 +8,11 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 
-public class MethodPrims {
+public final class MethodPrims {
 
   public abstract static class SignaturePrim extends UnaryExpressionNode {
     @Specialization
-    public SAbstractObject doSMethod(final SInvokable receiver) {
+    public final SAbstractObject doSMethod(final SInvokable receiver) {
       return receiver.getSignature();
     }
     @Override
@@ -21,7 +21,7 @@ public class MethodPrims {
 
   public abstract static class HolderPrim extends UnaryExpressionNode {
     @Specialization
-    public SAbstractObject doSMethod(final SInvokable receiver) {
+    public final SAbstractObject doSMethod(final SInvokable receiver) {
       return receiver.getHolder();
     }
     @Override

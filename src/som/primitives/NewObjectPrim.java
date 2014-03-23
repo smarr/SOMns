@@ -14,7 +14,7 @@ public abstract class NewObjectPrim extends UnaryExpressionNode {
   public NewObjectPrim() { this.universe = Universe.current(); }
 
   @Specialization
-  public SAbstractObject doSClass(final SClass receiver) {
+  public final SAbstractObject doSClass(final SClass receiver) {
     return universe.newInstance(receiver);
   }
   @Override

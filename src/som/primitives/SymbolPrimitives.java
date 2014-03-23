@@ -27,7 +27,7 @@ package som.primitives;
 
 import som.vm.Universe;
 
-public class SymbolPrimitives extends Primitives {
+public final class SymbolPrimitives extends Primitives {
 
   public SymbolPrimitives(final Universe universe) {
     super(universe);

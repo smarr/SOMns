@@ -8,12 +8,12 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 
 public abstract class LengthPrim extends UnaryExpressionNode {
   @Specialization
-  public int doSArray(final SArray receiver) {
+  public final int doSArray(final SArray receiver) {
     return receiver.getNumberOfIndexableFields();
   }
 
   @Specialization
-  public int doSString(final String receiver) {
+  public final int doSString(final String receiver) {
     return receiver.length();
   }
 

@@ -31,7 +31,7 @@ import som.primitives.ClassPrimsFactory.NamePrimFactory;
 import som.primitives.ClassPrimsFactory.SuperClassPrimFactory;
 import som.vm.Universe;
 
-public class ClassPrimitives extends Primitives {
+public final class ClassPrimitives extends Primitives {
 
   public ClassPrimitives(final Universe universe) {
     super(universe);

@@ -12,7 +12,7 @@ public class ClassPrims {
 
   public abstract static class NamePrim extends UnaryExpressionNode {
     @Specialization
-    public SAbstractObject doSClass(final SClass receiver) {
+    public final SAbstractObject doSClass(final SClass receiver) {
       return receiver.getName();
     }
     @Override
@@ -21,7 +21,7 @@ public class ClassPrims {
 
   public abstract static class SuperClassPrim extends UnaryExpressionNode {
     @Specialization
-    public SAbstractObject doSClass(final SClass receiver) {
+    public final SAbstractObject doSClass(final SClass receiver) {
       return receiver.getSuperClass();
     }
     @Override
@@ -30,7 +30,7 @@ public class ClassPrims {
 
   public abstract static class InstanceInvokablesPrim extends UnaryExpressionNode {
     @Specialization
-    public SAbstractObject doSClass(final SClass receiver) {
+    public final SAbstractObject doSClass(final SClass receiver) {
       return receiver.getInstanceInvokables();
     }
     @Override
@@ -39,7 +39,7 @@ public class ClassPrims {
 
   public abstract static class InstanceFieldsPrim extends UnaryExpressionNode {
     @Specialization
-    public SAbstractObject doSClass(final SClass receiver) {
+    public final SAbstractObject doSClass(final SClass receiver) {
       return receiver.getInstanceFields();
     }
     @Override

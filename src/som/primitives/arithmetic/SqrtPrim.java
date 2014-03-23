@@ -17,7 +17,7 @@ public abstract class SqrtPrim extends UnaryExpressionNode {
   }
 
   @Specialization
-  public Object doInteger(final int receiver) {
+  public final Object doInteger(final int receiver) {
     double result = Math.sqrt(receiver);
 
     if (result == Math.rint(result)) {
@@ -28,12 +28,12 @@ public abstract class SqrtPrim extends UnaryExpressionNode {
   }
 
   @Specialization
-  public double doBigInteger(final BigInteger receiver) {
+  public final double doBigInteger(final BigInteger receiver) {
     return Math.sqrt(receiver.doubleValue());
   }
 
   @Specialization
-  public double doDouble(final double receiver) {
+  public final double doDouble(final double receiver) {
     return Math.sqrt(receiver);
   }
 }

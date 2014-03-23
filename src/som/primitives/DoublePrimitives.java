@@ -37,7 +37,7 @@ import som.primitives.arithmetic.SqrtPrimFactory;
 import som.primitives.arithmetic.SubtractionPrimFactory;
 import som.vm.Universe;
 
-public class DoublePrimitives extends Primitives {
+public final class DoublePrimitives extends Primitives {
 
   public DoublePrimitives(final Universe universe) {
     super(universe);

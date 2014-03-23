@@ -9,27 +9,27 @@ import com.oracle.truffle.api.dsl.Specialization;
 
 public abstract class DoubleDivPrim extends ArithmeticPrim {
   @Specialization(order = 1)
-  public double doDouble(final double left, final double right) {
+  public final double doDouble(final double left, final double right) {
     return left / right;
   }
 
   @Specialization(order = 2)
-  public double doInteger(final int left, final int right) {
+  public final double doInteger(final int left, final int right) {
     return ((double) left) / right;
   }
 
   @Specialization(order = 10)
-  public double doDouble(final double left, final int right) {
+  public final double doDouble(final double left, final int right) {
     return doDouble(left, (double) right);
   }
 
   @Specialization(order = 100)
-  public SAbstractObject doInteger(final int left, final BigInteger right) {
+  public final SAbstractObject doInteger(final int left, final BigInteger right) {
     throw new NotYetImplementedException(); // TODO: need to implement the "/" case here directly... : return resendAsBigInteger("/", left, (SBigInteger) rightObj, frame.pack());
   }
 
   @Specialization(order = 101)
-  public SAbstractObject doInteger(final int left, final double right) {
+  public final SAbstractObject doInteger(final int left, final double right) {
     throw new NotYetImplementedException(); // TODO: need to implement the "/" case here directly... : return resendAsDouble("/", left, (SDouble) rightObj, frame.pack());
   }
 }

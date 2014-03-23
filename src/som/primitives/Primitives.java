@@ -105,7 +105,7 @@ public abstract class Primitives {
     return prim;
   }
 
-  protected void installInstancePrimitive(final String selector,
+  protected final void installInstancePrimitive(final String selector,
       final NodeFactory<? extends ExpressionNode> nodeFactory) {
     SSymbol signature = universe.symbolFor(selector);
     SInvokable prim = constructPrimitive(signature, nodeFactory, universe, holder);
@@ -114,7 +114,7 @@ public abstract class Primitives {
     holder.addInstancePrimitive(prim);
   }
 
-  protected void installClassPrimitive(final String selector,
+  protected final void installClassPrimitive(final String selector,
       final NodeFactory<? extends ExpressionNode> nodeFactory) {
     SSymbol signature = universe.symbolFor(selector);
     SInvokable prim = constructPrimitive(signature, nodeFactory, universe, holder);

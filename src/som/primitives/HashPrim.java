@@ -8,12 +8,12 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 
 public abstract class HashPrim extends UnaryExpressionNode {
   @Specialization
-  public int doSString(final String receiver) {
+  public final int doSString(final String receiver) {
     return receiver.hashCode();
   }
 
   @Specialization
-  public int doSAbstractObject(final SAbstractObject receiver) {
+  public final int doSAbstractObject(final SAbstractObject receiver) {
     return receiver.hashCode();
   }
 

@@ -18,7 +18,7 @@ public abstract class EqualsEqualsPrim extends BinaryExpressionNode {
   public EqualsEqualsPrim() { this.universe = Universe.current(); }
 
   @Specialization(order = 1)
-  public SObject doInteger(final int left, final int right) {
+  public final SObject doInteger(final int left, final int right) {
     if (left == right) {
       return universe.trueObject;
     } else {
@@ -27,7 +27,7 @@ public abstract class EqualsEqualsPrim extends BinaryExpressionNode {
   }
 
   @Specialization(order = 20)
-  public SObject doBigInteger(final BigInteger left, final BigInteger right) {
+  public final SObject doBigInteger(final BigInteger left, final BigInteger right) {
     if (left == right) {
       return universe.trueObject;
     } else {
@@ -36,7 +36,7 @@ public abstract class EqualsEqualsPrim extends BinaryExpressionNode {
   }
 
   @Specialization(order = 30)
-  public SObject doString(final String receiver, final String argument) {
+  public final SObject doString(final String receiver, final String argument) {
     if (receiver == argument) {
       return universe.trueObject;
     } else {
@@ -45,7 +45,7 @@ public abstract class EqualsEqualsPrim extends BinaryExpressionNode {
   }
 
   @Specialization(order = 40)
-  public SObject doDouble(final double left, final double right) {
+  public final SObject doDouble(final double left, final double right) {
     if (left == right) {
       return universe.trueObject;
     } else {
@@ -54,7 +54,7 @@ public abstract class EqualsEqualsPrim extends BinaryExpressionNode {
   }
 
   @Specialization(order = 45)
-  public SObject doSBlock(final SBlock left, final Object right) {
+  public final SObject doSBlock(final SBlock left, final Object right) {
     if (left == right) {
       return universe.trueObject;
     } else {
@@ -63,7 +63,7 @@ public abstract class EqualsEqualsPrim extends BinaryExpressionNode {
   }
 
   @Specialization(order = 46)
-  public SObject doSArray(final SArray left, final Object right) {
+  public final SObject doSArray(final SArray left, final Object right) {
     if (left == right) {
       return universe.trueObject;
     } else {
@@ -72,7 +72,7 @@ public abstract class EqualsEqualsPrim extends BinaryExpressionNode {
   }
 
   @Specialization(order = 47)
-  public SObject doSMethod(final SInvokable left, final Object right) {
+  public final SObject doSMethod(final SInvokable left, final Object right) {
     if (left == right) {
       return universe.trueObject;
     } else {
@@ -81,7 +81,7 @@ public abstract class EqualsEqualsPrim extends BinaryExpressionNode {
   }
 
   @Specialization(order = 48)
-  public SObject doSSymbol(final SSymbol left, final Object right) {
+  public final SObject doSSymbol(final SSymbol left, final Object right) {
     if (left == right) {
       return universe.trueObject;
     } else {
@@ -90,7 +90,7 @@ public abstract class EqualsEqualsPrim extends BinaryExpressionNode {
   }
 
   @Specialization(order = 50)
-  public SObject doSObject(final SObject left, final Object right) {
+  public final SObject doSObject(final SObject left, final Object right) {
     if (left == right) {
       return universe.trueObject;
     } else {
@@ -99,42 +99,42 @@ public abstract class EqualsEqualsPrim extends BinaryExpressionNode {
   }
 
   @Specialization(order = 100)
-  public SObject doInteger(final int left, final double right) {
+  public final SObject doInteger(final int left, final double right) {
     return universe.falseObject;
   }
 
   @Specialization(order = 1000)
-  public SObject doBigInteger(final BigInteger left, final int right) {
+  public final SObject doBigInteger(final BigInteger left, final int right) {
     return universe.falseObject;
   }
 
   @Specialization(order = 1010)
-  public SObject doInteger(final int left, final BigInteger right) {
+  public final SObject doInteger(final int left, final BigInteger right) {
     return universe.falseObject;
   }
 
   @Specialization(order = 1020)
-  public SObject doDouble(final double left, final int right) {
+  public final SObject doDouble(final double left, final int right) {
     return universe.falseObject;
   }
 
   @Specialization(order = 10000)
-  public SObject doInteger(final int left, final String right) {
+  public final SObject doInteger(final int left, final String right) {
     return universe.falseObject;
   }
 
   @Specialization(order = 10010)
-  public SObject doInteger(final int left, final SObject right) {
+  public final SObject doInteger(final int left, final SObject right) {
     return universe.falseObject;
   }
 
   @Specialization(order = 10100)
-  public SObject doString(final String receiver, final int argument) {
+  public final SObject doString(final String receiver, final int argument) {
     return universe.falseObject;
   }
 
   @Specialization(order = 10110)
-  public SObject doString(final String receiver, final SObject argument) {
+  public final SObject doString(final String receiver, final SObject argument) {
     return universe.falseObject;
   }
 

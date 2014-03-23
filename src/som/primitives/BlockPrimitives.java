@@ -32,7 +32,7 @@ import som.primitives.BlockPrimsFactory.ValueOnePrimFactory;
 import som.primitives.BlockPrimsFactory.ValueTwoPrimFactory;
 import som.vm.Universe;
 
-public class BlockPrimitives extends Primitives {
+public final class BlockPrimitives extends Primitives {
 
   public BlockPrimitives(final Universe universe) {
     super(universe);
