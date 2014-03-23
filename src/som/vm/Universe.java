@@ -46,6 +46,7 @@ import som.vmobjects.SInvokable;
 import som.vmobjects.SInvokable.SMethod;
 import som.vmobjects.SInvokable.SPrimitive;
 import som.vmobjects.SObject;
+import som.vmobjects.SObject.SObjectN;
 import som.vmobjects.SString;
 import som.vmobjects.SSymbol;
 
@@ -295,7 +296,7 @@ public class Universe {
   @SlowPath
   protected void initializeObjectSystem() {
     // Allocate the nil object
-    nilObject = new SObject();
+    nilObject = SObject.create(0, null);
 
     // Allocate the Metaclass classes
     metaclassClass = newMetaclassClass();
@@ -314,7 +315,7 @@ public class Universe {
     doubleClass     = newSystemClass();
 
     // Setup the class reference for the nil object
-    nilObject.setClass(nilClass);
+    ((SObjectN) nilObject).setClass(nilClass);
 
     // Initialize the system classes.
     initializeSystemClass(objectClass,            null, "Object");
@@ -436,7 +437,7 @@ public class Universe {
   }
 
   public SObject newInstance(final SClass instanceClass) {
-    return new SObject(instanceClass, nilObject);
+    return SObject.create(instanceClass, nilObject);
   }
 
   public SInteger newInteger(final int value) {

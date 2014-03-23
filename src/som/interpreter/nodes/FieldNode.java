@@ -23,6 +23,7 @@ package som.interpreter.nodes;
 
 import java.math.BigInteger;
 
+import som.interpreter.nodes.FieldAccessor.UninitializedFieldAccessor;
 import som.interpreter.nodes.UninitializedVariableNode.UninitializedVariableReadNode;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SObject;
@@ -32,14 +33,24 @@ import com.oracle.truffle.api.dsl.NodeChildren;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
-
 @NodeChild(value = "self", type = ExpressionNode.class)
 public abstract class FieldNode extends ExpressionNode {
+
+  @Child private FieldAccessor fieldAccessor;
 
   protected final int fieldIndex;
 
   public FieldNode(final int fieldIndex) {
     this.fieldIndex = fieldIndex;
+    fieldAccessor = new UninitializedFieldAccessor(fieldIndex);
+  }
+
+  protected final Object readFromObject(final SObject obj) {
+    return fieldAccessor.read(obj);
+  }
+
+  protected final void writeToObject(final SObject obj, final Object value) {
+    fieldAccessor.write(obj, value);
   }
 
   public abstract ExpressionNode getSelf();
@@ -57,8 +68,8 @@ public abstract class FieldNode extends ExpressionNode {
 
   public abstract static class FieldReadNode extends FieldNode
       implements PreevaluatedExpression {
-    public FieldReadNode(final int fieldIndex)     { super(fieldIndex); }
-    public FieldReadNode(final FieldReadNode node) { super(node.fieldIndex); }
+    public FieldReadNode(final int fieldIndex)     { super(fieldIndex);     }
+    public FieldReadNode(final FieldReadNode node) { this(node.fieldIndex); }
 
     public final int getFieldIndex() {
       return fieldIndex;
@@ -73,48 +84,48 @@ public abstract class FieldNode extends ExpressionNode {
     }
 
     protected final boolean isSAbstractObject(final SObject self) {
-      return self.getField(fieldIndex) instanceof SAbstractObject;
-    }
-
-    @Specialization(guards = "isSAbstractObject")
-    public final SAbstractObject readSAbstractObject(final SObject self) {
-      return (SAbstractObject) self.getField(fieldIndex);
+      return readFromObject(self) instanceof SAbstractObject;
     }
 
     protected final boolean isInteger(final SObject self) {
-      return self.getField(fieldIndex) instanceof Integer;
-    }
-
-    @Specialization(guards = "isInteger")
-    public final int readInteger(final SObject self) {
-      return (int) self.getField(fieldIndex);
+      return readFromObject(self) instanceof Integer;
     }
 
     protected final boolean isBigInteger(final SObject self) {
-      return self.getField(fieldIndex) instanceof BigInteger;
-    }
-
-    @Specialization(guards = "isBigInteger")
-    public final BigInteger readBigInteger(final SObject self) {
-      return (BigInteger) self.getField(fieldIndex);
+      return readFromObject(self) instanceof BigInteger;
     }
 
     protected final boolean isDouble(final SObject self) {
-      return self.getField(fieldIndex) instanceof Double;
-    }
-
-    @Specialization(guards = "isDouble")
-    public final double readDouble(final SObject self) {
-      return (double) self.getField(fieldIndex);
+      return readFromObject(self) instanceof Double;
     }
 
     protected final boolean isString(final SObject self) {
-      return self.getField(fieldIndex) instanceof String;
+      return readFromObject(self) instanceof String;
     }
 
     @Specialization(guards = "isString")
     public final String readString(final SObject self) {
-      return (String) self.getField(fieldIndex);
+      return (String) readFromObject(self);
+    }
+
+    @Specialization(guards = "isDouble")
+    public final double readDouble(final SObject self) {
+      return (double) readFromObject(self);
+    }
+
+    @Specialization(guards = "isSAbstractObject")
+    public final SAbstractObject readSAbstractObject(final SObject self) {
+      return (SAbstractObject) readFromObject(self);
+    }
+
+    @Specialization(guards = "isInteger")
+    public final int readInteger(final SObject self) {
+      return (int) readFromObject(self);
+    }
+
+    @Specialization(guards = "isBigInteger")
+    public final BigInteger readBigInteger(final SObject self) {
+      return (BigInteger) readFromObject(self);
     }
 
     @Override
@@ -151,31 +162,31 @@ public abstract class FieldNode extends ExpressionNode {
 
     @Specialization(order = 1)
     public final SAbstractObject doSAbstractObject(final SObject self, final SAbstractObject value) {
-      self.setField(fieldIndex, value);
+      writeToObject(self, value);
       return value;
     }
 
     @Specialization(order = 20)
     public final int doInteger(final SObject self, final int value) {
-      self.setField(fieldIndex, value);
+      writeToObject(self, value);
       return value;
     }
 
     @Specialization(order = 30)
     public final BigInteger doBigInteger(final SObject self, final BigInteger value) {
-      self.setField(fieldIndex, value);
+      writeToObject(self, value);
       return value;
     }
 
     @Specialization(order = 40)
     public final double doDouble(final SObject self, final double value) {
-      self.setField(fieldIndex, value);
+      writeToObject(self, value);
       return value;
     }
 
     @Specialization(order = 50)
     public final String doString(final SObject self, final String value) {
-      self.setField(fieldIndex, value);
+      writeToObject(self, value);
       return value;
     }
   }
