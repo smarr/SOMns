@@ -55,6 +55,8 @@ public final class Inliner implements NodeVisitor {
   }
 
   private void prepareBodyNode(final Node node) {
-    ((SOMNode) node).replaceWithIndependentCopyForInlining(this);
+    if (node instanceof SOMNode) {
+      ((SOMNode) node).replaceWithIndependentCopyForInlining(this);
+    }
   }
 }
