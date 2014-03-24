@@ -9,7 +9,7 @@ if [ -z "$GRAAL_HOME" ]; then
 fi
 
 if [ -z "$GRAAL_FLAGS" ]; then
-  GRAAL_FLAGS='-G:-TraceTruffleInlining -G:-TraceTruffleCompilation -G:+TruffleSplittingEnabled'
+  GRAAL_FLAGS='-G:-TraceTruffleInlining -G:-TraceTruffleCompilation -G:-TruffleSplittingEnabled'
   
   if [ "$GRAAL_HOME" = "/Users/smarr/Projects/PostDoc/Truffle/graal" ]; then
     echo Using Graal Development Flags
