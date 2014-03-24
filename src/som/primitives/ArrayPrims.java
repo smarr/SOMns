@@ -1,6 +1,5 @@
 package som.primitives;
 
-import som.interpreter.Types;
 import som.interpreter.nodes.nary.BinaryExpressionNode.BinarySideEffectFreeExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.vm.Universe;
@@ -20,20 +19,10 @@ public final class ArrayPrims {
   }
 
   public abstract static class AtPutPrim extends TernaryExpressionNode {
-    private final Universe universe;
-    public AtPutPrim() { this.universe = Universe.current(); }
-
     @Specialization
-    public final SAbstractObject doSArray(final SArray receiver, final int index, final SAbstractObject value) {
+    public final Object doSArray(final SArray receiver, final int index, final Object value) {
       receiver.setIndexableField(index - 1, value);
       return value;
-    }
-
-    @Specialization
-    public final SAbstractObject doSArray(final SArray receiver, final int index, final Object value) {
-      SAbstractObject val = Types.asAbstractObject(value, universe);
-      receiver.setIndexableField(index - 1, val);
-      return val;
     }
   }
 

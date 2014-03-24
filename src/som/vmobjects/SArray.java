@@ -24,24 +24,28 @@
 
 package som.vmobjects;
 
-import som.vm.Universe;
+import java.util.Arrays;
 
-import com.oracle.truffle.api.nodes.ExplodeLoop;
+import som.vm.Universe;
 
 public final class SArray extends SAbstractObject {
 
   public SArray(final SObject nilObject, final int size) {
     // Allocate a new array of indexable fields
-    indexableFields = new SAbstractObject[size];
-    setNumberOfIndexableFieldsAndClear(size, nilObject);
+    indexableFields = new Object[size];
+    Arrays.fill(indexableFields, nilObject);
   }
 
-  public SAbstractObject getIndexableField(final int index) {
+  private SArray(final Object[] old, final Object value) {
+    indexableFields = Arrays.copyOf(old, old.length + 1);
+  }
+
+  public Object getIndexableField(final int index) {
     // Get the indexable field with the given index
     return indexableFields[index];
   }
 
-  public void setIndexableField(final int index, final SAbstractObject value) {
+  public void setIndexableField(final int index, final Object value) {
     // Set the indexable field with the given index to the given value
     indexableFields[index] = value;
   }
@@ -51,35 +55,8 @@ public final class SArray extends SAbstractObject {
     return indexableFields.length;
   }
 
-  @ExplodeLoop
-  private void setNumberOfIndexableFieldsAndClear(final int value,
-      final SObject nilObject) {
-    // Clear each and every field by putting nil into them
-    for (int i = 0; i < getNumberOfIndexableFields(); i++) {
-      setIndexableField(i, nilObject);
-    }
-  }
-
-  public SArray copyAndExtendWith(final SAbstractObject value, final Universe universe) {
-    // Allocate a new array which has one indexable field more than this
-    // array
-    SArray result = universe.newArray(getNumberOfIndexableFields() + 1);
-
-    // Copy the indexable fields from this array to the new array
-    copyIndexableFieldsTo(result);
-
-    // Insert the given object as the last indexable field in the new array
-    result.setIndexableField(getNumberOfIndexableFields(), value);
-
-    // Return the new array
-    return result;
-  }
-
-  protected void copyIndexableFieldsTo(final SArray destination) {
-    // Copy all indexable fields from this array to the destination array
-    for (int i = 0; i < getNumberOfIndexableFields(); i++) {
-      destination.setIndexableField(i, getIndexableField(i));
-    }
+  public SArray copyAndExtendWith(final Object value, final Universe universe) {
+    return new SArray(indexableFields, value);
   }
 
   @Override
@@ -88,5 +65,5 @@ public final class SArray extends SAbstractObject {
   }
 
   // array of indexable fields
-  public final SAbstractObject[] indexableFields;
+  public final Object[] indexableFields;
 }
