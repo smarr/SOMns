@@ -32,12 +32,11 @@ import java.util.HashMap;
 import som.primitives.Primitives;
 import som.vm.Universe;
 import som.vmobjects.SInvokable.SPrimitive;
-import som.vmobjects.SObject.SObjectN;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.SlowPath;
 
-public class SClass extends SObjectN {
+public class SClass extends SObject {
 
   private final Universe universe;
 

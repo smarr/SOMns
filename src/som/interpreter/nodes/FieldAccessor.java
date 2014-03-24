@@ -1,64 +1,49 @@
 package som.interpreter.nodes;
 
 import som.vmobjects.SObject;
-import som.vmobjects.SObject.SObjectN;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.nodes.Node;
 
 
 public abstract class FieldAccessor extends Node {
-  public abstract Object read(final SObject self);
-  public abstract void   write(final SObject self, final Object value);
 
-  public static final class UninitializedFieldAccessor extends FieldAccessor {
-    private final int fieldIndex;
-
-    public UninitializedFieldAccessor(final int fieldIndex) {
-      this.fieldIndex = fieldIndex;
-    }
-
-    @Override
-    public Object read(final SObject self) {
-      return specialize(self).read(self);
-    }
-
-    @Override
-    public void write(final SObject self, final Object value) {
-      specialize(self).write(self, value);
-    }
-
-    private FieldAccessor specialize(final SObject self) {
-      if (self instanceof SObjectN) {
-        return replace(new ArrayStoreAccessor(fieldIndex));
-      } else {
-        return replace(new DirectStoreAccessor(fieldIndex));
-      }
+  public static FieldAccessor create(final int fieldIndex) {
+    if (fieldIndex < SObject.NUM_DIRECT_FIELDS) {
+      return new DirectStoreAccessor(fieldIndex);
+    } else {
+      return new ArrayStoreAccessor(fieldIndex);
     }
   }
 
-  private static final class ArrayStoreAccessor extends FieldAccessor {
-    private final int fieldIndex;
+  public abstract Object read(final SObject self);
+  public abstract void   write(final SObject self, final Object value);
 
-    public ArrayStoreAccessor(final int fieldIndex) {
-      this.fieldIndex = fieldIndex;
+
+  private static final class ArrayStoreAccessor extends FieldAccessor {
+    private final int extensionFieldIndex;
+
+    ArrayStoreAccessor(final int fieldIndex) {
+      assert fieldIndex >= SObject.NUM_DIRECT_FIELDS;
+      this.extensionFieldIndex = fieldIndex - SObject.NUM_DIRECT_FIELDS;
     }
 
     @Override
     public Object read(final SObject self) {
-      return ((SObjectN) self).getField(fieldIndex);
+      return self.getExtensionField(extensionFieldIndex);
     }
 
     @Override
     public void write(final SObject self, final Object value) {
-      ((SObjectN) self).setField(fieldIndex, value);
+      self.setExtensionField(extensionFieldIndex, value);
     }
   }
 
   private static final class DirectStoreAccessor extends FieldAccessor {
     private final long fieldOffset;
 
-    public DirectStoreAccessor(final int fieldIndex) {
+    DirectStoreAccessor(final int fieldIndex) {
+      assert fieldIndex < SObject.NUM_DIRECT_FIELDS;
       fieldOffset = SObject.FIRST_OFFSET + fieldIndex * SObject.FIELD_LENGTH;
     }
 

@@ -46,7 +46,6 @@ import som.vmobjects.SInvokable;
 import som.vmobjects.SInvokable.SMethod;
 import som.vmobjects.SInvokable.SPrimitive;
 import som.vmobjects.SObject;
-import som.vmobjects.SObject.SObjectN;
 import som.vmobjects.SString;
 import som.vmobjects.SSymbol;
 
@@ -315,7 +314,7 @@ public class Universe {
     doubleClass     = newSystemClass();
 
     // Setup the class reference for the nil object
-    ((SObjectN) nilObject).setClass(nilClass);
+    nilObject.setClass(nilClass);
 
     // Initialize the system classes.
     initializeSystemClass(objectClass,            null, "Object");
@@ -394,7 +393,7 @@ public class Universe {
 
     // Copy all elements from the list into the array
     for (int i = 0; i < list.size(); i++) {
-      result.setIndexableField(i, (SAbstractObject) list.get(i));
+      result.setIndexableField(i, list.get(i));
     }
 
     // Return the allocated and initialized array

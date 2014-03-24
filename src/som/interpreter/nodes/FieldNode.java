@@ -23,7 +23,6 @@ package som.interpreter.nodes;
 
 import java.math.BigInteger;
 
-import som.interpreter.nodes.FieldAccessor.UninitializedFieldAccessor;
 import som.interpreter.nodes.UninitializedVariableNode.UninitializedVariableReadNode;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SObject;
@@ -42,7 +41,7 @@ public abstract class FieldNode extends ExpressionNode {
 
   public FieldNode(final int fieldIndex) {
     this.fieldIndex = fieldIndex;
-    fieldAccessor = new UninitializedFieldAccessor(fieldIndex);
+    fieldAccessor = FieldAccessor.create(fieldIndex);
   }
 
   protected final Object readFromObject(final SObject obj) {
