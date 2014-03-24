@@ -1,7 +1,6 @@
 package som.interpreter.nodes;
 
 import som.vmobjects.SObject;
-import som.vmobjects.SObject.SObjectKnownClass;
 import som.vmobjects.SObject.SObjectN;
 
 import com.oracle.truffle.api.CompilerDirectives;
@@ -33,7 +32,6 @@ public abstract class FieldAccessor extends Node {
       if (self instanceof SObjectN) {
         return replace(new ArrayStoreAccessor(fieldIndex));
       } else {
-        assert self instanceof SObjectKnownClass;
         return replace(new DirectStoreAccessor(fieldIndex));
       }
     }

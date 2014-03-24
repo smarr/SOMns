@@ -37,20 +37,39 @@ import com.oracle.truffle.api.nodes.NodeUtil.FieldOffsetProvider;
 
 public abstract class SObject extends SAbstractObject {
 
+  @CompilationFinal protected SClass clazz;
+
+  protected SObject(final SClass instanceClass) {
+    clazz = instanceClass;
+  }
+
+  protected SObject() { }
+
+  @Override
+  public final SClass getSOMClass(final Universe universe) {
+    return clazz;
+  }
+
   public abstract int getNumberOfFields();
 
   public static SObject create(final SClass instanceClass, final SObject nilObject) {
-    switch (instanceClass.getNumberOfInstanceFields()) {
-      case  0: return new SObject0(instanceClass);
-      case  1: return new SObject1(instanceClass, nilObject);
-      case  2: return new SObject2(instanceClass, nilObject);
-      case  3: return new SObject3(instanceClass, nilObject);
-      case  4: return new SObject4(instanceClass, nilObject);
-      case  5: return new SObject5(instanceClass, nilObject);
-      case  6: return new SObject6(instanceClass, nilObject);
-      case  7: return new SObject7(instanceClass, nilObject);
-      default: return new SObjectN(instanceClass, nilObject);
+    if (instanceClass.getNumberOfInstanceFields() <= 7) {
+      return new SObject7(instanceClass, nilObject);
+    } else {
+      return new SObjectN(instanceClass, nilObject);
     }
+
+//    switch (instanceClass.getNumberOfInstanceFields()) {
+//      case  0: return new SObject0(instanceClass);
+//      case  1: return new SObject1(instanceClass, nilObject);
+//      case  2: return new SObject2(instanceClass, nilObject);
+//      case  3: return new SObject3(instanceClass, nilObject);
+//      case  4: return new SObject4(instanceClass, nilObject);
+//      case  5: return new SObject5(instanceClass, nilObject);
+//      case  6: return new SObject6(instanceClass, nilObject);
+//      case  7: return new SObject7(instanceClass, nilObject);
+//      default: return new SObjectN(instanceClass, nilObject);
+//    }
   }
 
   public static SObject create(final int numFields, final SObject nilObject) {
@@ -68,7 +87,7 @@ public abstract class SObject extends SAbstractObject {
       final FieldOffsetProvider fieldOffsetProvider =
           (FieldOffsetProvider) fieldOffsetProviderField.get(null);
 
-      final Field firstField = SObject1.class.getDeclaredField("field");
+      final Field firstField = SObject7.class.getDeclaredField("field1");
       return fieldOffsetProvider.objectFieldOffset(firstField);
     } catch (NoSuchFieldException | IllegalAccessException e) {
       throw new RuntimeException(e);
@@ -83,8 +102,8 @@ public abstract class SObject extends SAbstractObject {
       final FieldOffsetProvider fieldOffsetProvider =
           (FieldOffsetProvider) fieldOffsetProviderField.get(null);
 
-      final Field firstField  = SObject2.class.getDeclaredField("field1");
-      final Field secondField = SObject2.class.getDeclaredField("field2");
+      final Field firstField  = SObject7.class.getDeclaredField("field1");
+      final Field secondField = SObject7.class.getDeclaredField("field2");
       assert FIRST_OFFSET == fieldOffsetProvider.objectFieldOffset(firstField);
       return fieldOffsetProvider.objectFieldOffset(secondField) - FIRST_OFFSET;
     } catch (NoSuchFieldException | IllegalAccessException e) {
@@ -95,118 +114,106 @@ public abstract class SObject extends SAbstractObject {
   public abstract Object getField(final int index);
   public abstract void   setField(final int index, final Object value);
 
-  public abstract static class SObjectKnownClass extends SObject {
-    private final SClass clazz;
 
-    protected SObjectKnownClass(final SClass instanceClass) {
-      this.clazz = instanceClass;
-    }
+//  public static final class SObject0 extends SObjectKnownClass {
+//    protected SObject0(final SClass instanceClass)                          { super(instanceClass); }
+//    @Override public Object getField(final int index)                       { assert false; return null; }
+//    @Override public void   setField(final int index, final Object value)   { assert false; }
+//    @Override public int    getNumberOfFields() { return 0; }
+//  }
+//
+//  public static final class SObject1 extends SObjectKnownClass {
+//    private Object field;
+//    protected SObject1(final SClass instanceClass, final SObject nilObject) { super(instanceClass); field = nilObject; }
+//    @Override public Object getField(final int index)                       { assert index == 0; return field; }
+//    @Override public void   setField(final int index, final Object value)   { assert index == 0; field = value; }
+//    @Override public int    getNumberOfFields() { return 1; }
+//  }
+//
+//  public static final class SObject2 extends SObjectKnownClass {
+//    private Object field1;
+//    private Object field2;
+//    protected SObject2(final SClass instanceClass, final SObject nilObject) { super(instanceClass); field1 = field2 = nilObject; }
+//    @Override public Object getField(final int index)                       { if (index == 0) { return field1;  } else { assert index == 1; return field2;  }}
+//    @Override public void   setField(final int index, final Object value)   { if (index == 0) { field1 = value; } else { assert index == 1; field2 = value; }}
+//    @Override public int    getNumberOfFields() { return 2; }
+//  }
+//
+//  public static final class SObject3 extends SObjectKnownClass {
+//    private Object field1;
+//    private Object field2;
+//    private Object field3;
+//    protected SObject3(final SClass instanceClass, final SObject nilObject) { super(instanceClass); field1 = field2 = field3 = nilObject; }
+//    @Override public Object getField(final int index)                       {
+//      if (index == 0) { return field1;  } else
+//      if (index == 1) { return field2;  } else { assert index == 2; return field3;  }}
+//    @Override public void   setField(final int index, final Object value)   {
+//      if (index == 0) { field1 = value; } else
+//      if (index == 1) { field2 = value; } else { assert index == 2; field3 = value; }}
+//    @Override public int    getNumberOfFields() { return 3; }
+//  }
+//
+//  public static final class SObject4 extends SObjectKnownClass {
+//    private Object field1;
+//    private Object field2;
+//    private Object field3;
+//    private Object field4;
+//    protected SObject4(final SClass instanceClass, final SObject nilObject) { super(instanceClass); field1 = field2 = field3 = field4 = nilObject; }
+//    @Override public Object getField(final int index)                       {
+//      if (index == 0) { return field1;  } else
+//      if (index == 1) { return field2;  } else
+//      if (index == 2) { return field3;  } else { assert index == 3; return field4;  }}
+//    @Override public void   setField(final int index, final Object value)   {
+//      if (index == 0) { field1 = value; } else
+//      if (index == 1) { field2 = value; } else
+//      if (index == 2) { field3 = value; } else { assert index == 3; field4 = value; }}
+//    @Override public int    getNumberOfFields() { return 4; }
+//  }
+//
+//  public static final class SObject5 extends SObjectKnownClass {
+//    private Object field1;
+//    private Object field2;
+//    private Object field3;
+//    private Object field4;
+//    private Object field5;
+//    protected SObject5(final SClass instanceClass, final SObject nilObject) { super(instanceClass); field1 = field2 = field3 = field4 = field5 = nilObject; }
+//    @Override public Object getField(final int index)                       {
+//      if (index == 0) { return field1;  } else
+//      if (index == 1) { return field2;  } else
+//      if (index == 2) { return field3;  } else
+//      if (index == 3) { return field4;  } else { assert index == 4; return field5;  }}
+//    @Override public void   setField(final int index, final Object value)   {
+//      if (index == 0) { field1 = value; } else
+//      if (index == 1) { field2 = value; } else
+//      if (index == 2) { field3 = value; } else
+//      if (index == 3) { field4 = value; } else { assert index == 4; field5 = value; }}
+//    @Override public int    getNumberOfFields() { return 5; }
+//  }
+//
+//  public static final class SObject6 extends SObjectKnownClass {
+//    private Object field1;
+//    private Object field2;
+//    private Object field3;
+//    private Object field4;
+//    private Object field5;
+//    private Object field6;
+//    protected SObject6(final SClass instanceClass, final SObject nilObject) { super(instanceClass); field1 = field2 = field3 = field4 = field5 = field6 = nilObject; }
+//    @Override public Object getField(final int index)                       {
+//      if (index == 0) { return field1;  } else
+//      if (index == 1) { return field2;  } else
+//      if (index == 2) { return field3;  } else
+//      if (index == 3) { return field4;  } else
+//      if (index == 4) { return field5;  } else { assert index == 5; return field6; }}
+//    @Override public void   setField(final int index, final Object value)   {
+//      if (index == 0) { field1 = value; } else
+//      if (index == 1) { field2 = value; } else
+//      if (index == 2) { field3 = value; } else
+//      if (index == 3) { field4 = value; } else
+//      if (index == 4) { field5 = value; } else { assert index == 5; field6 = value; }}
+//    @Override public int    getNumberOfFields() { return 6; }
+//  }
 
-    @Override
-    public final SClass getSOMClass(final Universe universe) {
-      return clazz;
-    }
-  }
-
-  public static final class SObject0 extends SObjectKnownClass {
-    protected SObject0(final SClass instanceClass)                          { super(instanceClass); }
-    @Override public Object getField(final int index)                       { assert false; return null; }
-    @Override public void   setField(final int index, final Object value)   { assert false; }
-    @Override public int    getNumberOfFields() { return 0; }
-  }
-
-  public static final class SObject1 extends SObjectKnownClass {
-    private Object field;
-    protected SObject1(final SClass instanceClass, final SObject nilObject) { super(instanceClass); field = nilObject; }
-    @Override public Object getField(final int index)                       { assert index == 0; return field; }
-    @Override public void   setField(final int index, final Object value)   { assert index == 0; field = value; }
-    @Override public int    getNumberOfFields() { return 1; }
-  }
-
-  public static final class SObject2 extends SObjectKnownClass {
-    private Object field1;
-    private Object field2;
-    protected SObject2(final SClass instanceClass, final SObject nilObject) { super(instanceClass); field1 = field2 = nilObject; }
-    @Override public Object getField(final int index)                       { if (index == 0) { return field1;  } else { assert index == 1; return field2;  }}
-    @Override public void   setField(final int index, final Object value)   { if (index == 0) { field1 = value; } else { assert index == 1; field2 = value; }}
-    @Override public int    getNumberOfFields() { return 2; }
-  }
-
-  public static final class SObject3 extends SObjectKnownClass {
-    private Object field1;
-    private Object field2;
-    private Object field3;
-    protected SObject3(final SClass instanceClass, final SObject nilObject) { super(instanceClass); field1 = field2 = field3 = nilObject; }
-    @Override public Object getField(final int index)                       {
-      if (index == 0) { return field1;  } else
-      if (index == 1) { return field2;  } else { assert index == 2; return field3;  }}
-    @Override public void   setField(final int index, final Object value)   {
-      if (index == 0) { field1 = value; } else
-      if (index == 1) { field2 = value; } else { assert index == 2; field3 = value; }}
-    @Override public int    getNumberOfFields() { return 3; }
-  }
-
-  public static final class SObject4 extends SObjectKnownClass {
-    private Object field1;
-    private Object field2;
-    private Object field3;
-    private Object field4;
-    protected SObject4(final SClass instanceClass, final SObject nilObject) { super(instanceClass); field1 = field2 = field3 = field4 = nilObject; }
-    @Override public Object getField(final int index)                       {
-      if (index == 0) { return field1;  } else
-      if (index == 1) { return field2;  } else
-      if (index == 2) { return field3;  } else { assert index == 3; return field4;  }}
-    @Override public void   setField(final int index, final Object value)   {
-      if (index == 0) { field1 = value; } else
-      if (index == 1) { field2 = value; } else
-      if (index == 2) { field3 = value; } else { assert index == 3; field4 = value; }}
-    @Override public int    getNumberOfFields() { return 4; }
-  }
-
-  public static final class SObject5 extends SObjectKnownClass {
-    private Object field1;
-    private Object field2;
-    private Object field3;
-    private Object field4;
-    private Object field5;
-    protected SObject5(final SClass instanceClass, final SObject nilObject) { super(instanceClass); field1 = field2 = field3 = field4 = field5 = nilObject; }
-    @Override public Object getField(final int index)                       {
-      if (index == 0) { return field1;  } else
-      if (index == 1) { return field2;  } else
-      if (index == 2) { return field3;  } else
-      if (index == 3) { return field4;  } else { assert index == 4; return field5;  }}
-    @Override public void   setField(final int index, final Object value)   {
-      if (index == 0) { field1 = value; } else
-      if (index == 1) { field2 = value; } else
-      if (index == 2) { field3 = value; } else
-      if (index == 3) { field4 = value; } else { assert index == 4; field5 = value; }}
-    @Override public int    getNumberOfFields() { return 5; }
-  }
-
-  public static final class SObject6 extends SObjectKnownClass {
-    private Object field1;
-    private Object field2;
-    private Object field3;
-    private Object field4;
-    private Object field5;
-    private Object field6;
-    protected SObject6(final SClass instanceClass, final SObject nilObject) { super(instanceClass); field1 = field2 = field3 = field4 = field5 = field6 = nilObject; }
-    @Override public Object getField(final int index)                       {
-      if (index == 0) { return field1;  } else
-      if (index == 1) { return field2;  } else
-      if (index == 2) { return field3;  } else
-      if (index == 3) { return field4;  } else
-      if (index == 4) { return field5;  } else { assert index == 5; return field6; }}
-    @Override public void   setField(final int index, final Object value)   {
-      if (index == 0) { field1 = value; } else
-      if (index == 1) { field2 = value; } else
-      if (index == 2) { field3 = value; } else
-      if (index == 3) { field4 = value; } else
-      if (index == 4) { field5 = value; } else { assert index == 5; field6 = value; }}
-    @Override public int    getNumberOfFields() { return 6; }
-  }
-
-  public static final class SObject7 extends SObjectKnownClass {
+  public static final class SObject7 extends SObject {
     private Object field1;
     private Object field2;
     private Object field3;
@@ -234,15 +241,14 @@ public abstract class SObject extends SAbstractObject {
 
   public static class SObjectN extends SObject {
     private final Object[] fields;
-    @CompilationFinal private SClass clazz;
 
     protected SObjectN(final int numberOfFields, final SObject nilObject) {
       fields = setClearFields(numberOfFields, nilObject);
     }
 
     protected SObjectN(final SClass instanceClass, final SObject nilObject) {
+      super(instanceClass);
       fields = setClearFields(instanceClass.getNumberOfInstanceFields(), nilObject);
-      clazz  = instanceClass;
     }
 
     @Override
@@ -269,12 +275,6 @@ public abstract class SObject extends SAbstractObject {
     public final int getNumberOfFields() {
       // Get the number of fields in this object
       return fields.length;
-    }
-
-    @Override
-    public final SClass getSOMClass(final Universe universe) {
-      // Get the class of this object by reading the field with class index
-      return clazz;
     }
 
     public final void setClass(final SClass value) {
