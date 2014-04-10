@@ -375,11 +375,12 @@ public class Universe {
 
   @SlowPath
   public SSymbol symbolFor(final String string) {
+    String interned = string.intern();
     // Lookup the symbol in the symbol table
-    SSymbol result = symbolTable.get(string);
+    SSymbol result = symbolTable.get(interned);
     if (result != null) { return result; }
 
-    return newSymbol(string);
+    return newSymbol(interned);
   }
 
   public SArray newArray(final int length) {
