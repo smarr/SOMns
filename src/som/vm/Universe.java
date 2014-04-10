@@ -281,7 +281,6 @@ public class Universe {
       return shell.start();
     }
 
-    // Convert the arguments into an array
     SArray argumentsArray = newArray(arguments);
 
     // Lookup the initialize invokable on the system class
