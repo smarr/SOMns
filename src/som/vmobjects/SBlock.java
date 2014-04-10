@@ -107,18 +107,17 @@ public abstract class SBlock extends SAbstractObject {
       final Universe universe, final SClass rcvrClass) {
     SSymbol sig = universe.symbolFor(computeSignatureString(numberOfArguments));
 
-    if (numberOfArguments == 1) {
-      return Primitives.constructPrimitive(sig,
+    switch (numberOfArguments) {
+      case 1: return Primitives.constructPrimitive(sig,
           ValueNonePrimFactory.getInstance(), universe, rcvrClass);
-    } else if (numberOfArguments == 2) {
-      return Primitives.constructPrimitive(sig,
+      case 2: return Primitives.constructPrimitive(sig,
           ValueOnePrimFactory.getInstance(), universe, rcvrClass);
-    } else if (numberOfArguments == 3) {
-      return Primitives.constructPrimitive(sig,
+      case 3: return Primitives.constructPrimitive(sig,
           ValueTwoPrimFactory.getInstance(), universe, rcvrClass);
-    } else {
-      return Primitives.constructPrimitive(sig,
+      case 4: return Primitives.constructPrimitive(sig,
           ValueMorePrimFactory.getInstance(), universe, rcvrClass);
+      default:
+        throw new RuntimeException("Should not reach here. SOM only has blocks with up to 2 arguments.");
     }
   }
 

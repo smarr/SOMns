@@ -1,6 +1,5 @@
 package som.interpreter.nodes.specialized;
 
-import som.interpreter.SArguments;
 import som.interpreter.nodes.PreevaluatedExpression;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.vm.Universe;
@@ -67,8 +66,8 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
 
   @Override
   public final Object executePreEvaluated(final VirtualFrame frame,
-      final Object receiver, final Object[] arguments) {
-    return executeEvaluated(frame, receiver, arguments[0], arguments[1]);
+      final Object[] arguments) {
+    return executeEvaluated(frame, arguments[0], arguments[1], arguments[2]);
   }
 
   protected final boolean hasSameArguments(final Object receiver, final Object firstArg, final Object secondArg) {
@@ -81,13 +80,11 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
       final SObject receiver, final SBlock trueBlock, final SBlock falseBlock) {
     if (receiver == universe.trueObject) {
       ifTrueBranch.enter();
-      return trueValueSend.call(frame.pack(),
-          new SArguments(trueBlock, new Object[0]));
+      return trueValueSend.call(new Object[] {trueBlock});
     } else {
       assert receiver == universe.falseObject;
       ifFalseBranch.enter();
-      return falseValueSend.call(frame.pack(),
-          new SArguments(falseBlock, new Object[0]));
+      return falseValueSend.call(new Object[] {falseBlock});
     }
   }
 
@@ -96,11 +93,11 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
       final SObject receiver, final SBlock trueBlock, final SBlock falseBlock) {
     if (receiver == universe.trueObject) {
       ifTrueBranch.enter();
-      return trueBlock.getMethod().invoke(frame.pack(), trueBlock, universe);
+      return trueBlock.getMethod().invoke(trueBlock);
     } else {
       assert receiver == universe.falseObject;
       ifFalseBranch.enter();
-      return falseBlock.getMethod().invoke(frame.pack(), falseBlock, universe);
+      return falseBlock.getMethod().invoke(falseBlock);
     }
   }
 
@@ -113,8 +110,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
     } else {
       assert receiver == universe.falseObject;
       ifFalseBranch.enter();
-      return falseValueSend.call(frame.pack(), new SArguments(falseBlock,
-          new Object[0]));
+      return falseValueSend.call(new Object[] {falseBlock});
     }
   }
 
@@ -123,8 +119,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
       final SObject receiver, final SBlock trueBlock, final Object falseValue) {
     if (receiver == universe.trueObject) {
       ifTrueBranch.enter();
-      return trueValueSend.call(frame.pack(), new SArguments(trueBlock,
-          new Object[0]));
+      return trueValueSend.call(new Object[] {trueBlock});
     } else {
       ifFalseBranch.enter();
       assert receiver == universe.falseObject;
@@ -141,7 +136,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
     } else {
       assert receiver == universe.falseObject;
       ifFalseBranch.enter();
-      return falseBlock.getMethod().invoke(frame.pack(), falseBlock, universe);
+      return falseBlock.getMethod().invoke(falseBlock);
     }
   }
 
@@ -150,7 +145,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
       final SObject receiver, final SBlock trueBlock, final Object falseValue) {
     if (receiver == universe.trueObject) {
       ifTrueBranch.enter();
-      return trueBlock.getMethod().invoke(frame.pack(), trueBlock, universe);
+      return trueBlock.getMethod().invoke(trueBlock);
     } else {
       ifFalseBranch.enter();
       assert receiver == universe.falseObject;

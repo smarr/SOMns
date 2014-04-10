@@ -9,36 +9,19 @@ public final class ArgumentReadNode extends ExpressionNode
   protected final int argumentIndex;
 
   public ArgumentReadNode(final int argumentIndex) {
+    assert argumentIndex >= 0;
     this.argumentIndex = argumentIndex;
   }
 
   @Override
   public Object executeGeneric(final VirtualFrame frame) {
-    return SArguments.getArgumentsFromFrame(frame)[argumentIndex];
+    return SArguments.arg(frame, argumentIndex);
   }
 
   @Override
   public Object executePreEvaluated(final VirtualFrame frame,
-      final Object receiver, final Object[] arguments) {
+      final Object[] arguments) {
     return arguments[argumentIndex];
-  }
-
-  public static final class SelfArgumentReadNode extends ExpressionNode
-      implements PreevaluatedExpression {
-
-    @Override
-    public Object executeGeneric(final VirtualFrame frame) {
-      return SArguments.getReceiverFromFrame(frame);
-    }
-
-    @Override
-    public Object executePreEvaluated(final VirtualFrame frame,
-        final Object receiver, final Object[] arguments) {
-      return receiver;
-    }
-
-    @Override
-    public void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
   }
 
   @Override

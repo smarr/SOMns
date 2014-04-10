@@ -26,19 +26,16 @@ public final class ObjectPrims {
     @Specialization
     public final Object doObject(final VirtualFrame frame, final Object receiver, final SSymbol selector) {
       SInvokable invokable = Types.getClassOf(receiver, universe).lookupInvokable(selector);
-      return invokable.invoke(frame.pack(), receiver, universe);
+      return invokable.invoke(receiver);
     }
   }
 
   public abstract static class PerformInSuperclassPrim extends TernaryExpressionNode {
-    private final Universe universe;
-    public PerformInSuperclassPrim() { this.universe = Universe.current(); }
-
     @Specialization
     public final Object doSAbstractObject(final VirtualFrame frame,
         final SAbstractObject receiver, final SSymbol selector, final SClass  clazz) {
       SInvokable invokable = clazz.lookupInvokable(selector);
-      return invokable.invoke(frame.pack(), receiver, universe);
+      return invokable.invoke(receiver);
     }
   }
 
@@ -50,7 +47,15 @@ public final class ObjectPrims {
     public final Object doObject(final VirtualFrame frame,
         final Object receiver, final SSymbol selector, final SArray  argsArr) {
       SInvokable invokable = Types.getClassOf(receiver, universe).lookupInvokable(selector);
-      return invokable.invoke(frame.pack(), receiver, argsArr.indexableFields, universe);
+
+      // need to unwrap argsArr and create a new Object array including the
+      // receiver
+      Object[] args = new Object[argsArr.indexableFields.length + 1];
+      args[0] = receiver;
+      System.arraycopy(argsArr.indexableFields, 0,
+          args, 1, argsArr.indexableFields.length);
+
+      return invokable.invoke(args);
     }
   }
 

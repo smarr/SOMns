@@ -1,6 +1,5 @@
 package som.interpreter.nodes.specialized;
 
-import som.interpreter.SArguments;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.PreevaluatedExpression;
 import som.interpreter.nodes.nary.QuaternaryExpressionNode;
@@ -40,9 +39,9 @@ public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode
 
   @Override
   public final Object executePreEvaluated(final VirtualFrame frame,
-      final Object receiver, final Object[] arguments) {
-    return executeEvaluated(frame, receiver, arguments[0], arguments[1],
-        arguments[2]);
+      final Object[] arguments) {
+    return executeEvaluated(frame, arguments[0], arguments[1],
+        arguments[2], arguments[3]);
   }
 
   protected final boolean isSameBlockInt(final int receiver, final int limit, final int step, final SBlock block) {
@@ -57,8 +56,7 @@ public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode
   public final int doIntToByDo(final VirtualFrame frame, final int receiver, final int limit, final int step, final SBlock block) {
     try {
       for (int i = receiver; i <= limit; i += step) {
-        SArguments arguments = new SArguments(block, new Object[] {i});
-        valueSend.call(frame.pack(), arguments);
+        valueSend.call(new Object[] {block, i});
       }
     } finally {
       if (CompilerDirectives.inInterpreter()) {
@@ -72,8 +70,7 @@ public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode
   public final int doIntToByDo(final VirtualFrame frame, final int receiver, final double limit, final int step, final SBlock block) {
     try {
       for (int i = receiver; i <= limit; i += step) {
-        SArguments arguments = new SArguments(block, new Object[] {i});
-        valueSend.call(frame.pack(), arguments);
+        valueSend.call(new Object[] {block, i});
       }
     } finally {
       if (CompilerDirectives.inInterpreter()) {

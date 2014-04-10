@@ -1,6 +1,5 @@
 package som.interpreter.nodes.specialized;
 
-import som.interpreter.SArguments;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.PreevaluatedExpression;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
@@ -41,8 +40,8 @@ public abstract class IntToDoMessageNode extends TernaryExpressionNode
 
   @Override
   public final Object executePreEvaluated(final VirtualFrame frame,
-      final Object receiver, final Object[] arguments) {
-    return executeEvaluated(frame, receiver, arguments[0], arguments[1]);
+      final Object[] arguments) {
+    return executeEvaluated(frame, arguments[0], arguments[1], arguments[2]);
   }
 
   protected final boolean isSameBlockInt(final int receiver, final int limit, final SBlock block) {
@@ -53,7 +52,7 @@ public abstract class IntToDoMessageNode extends TernaryExpressionNode
   public final int doIntToDo(final VirtualFrame frame, final int receiver, final int limit, final SBlock block) {
     try {
       for (int i = receiver; i <= limit; i++) {
-        valueSend.call(frame.pack(), new SArguments(block, new Object[] {i}));
+        valueSend.call(new Object[] {block, i});
       }
     } finally {
       if (CompilerDirectives.inInterpreter()) {
@@ -71,7 +70,7 @@ public abstract class IntToDoMessageNode extends TernaryExpressionNode
   public final int doIntToDo(final VirtualFrame frame, final int receiver, final double limit, final SBlock block) {
     try {
       for (int i = receiver; i <= limit; i++) {
-        valueSend.call(frame.pack(), new SArguments(block, new Object[] {i}));
+        valueSend.call(new Object[] {block, i});
       }
     } finally {
       if (CompilerDirectives.inInterpreter()) {

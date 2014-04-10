@@ -1,6 +1,5 @@
 package som.interpreter.nodes.specialized;
 
-import som.interpreter.SArguments;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.vm.Universe;
 import som.vmobjects.SBlock;
@@ -53,8 +52,7 @@ public abstract class AbstractIfMessageNode extends BinaryExpressionNode {
       final SBlock argument, final SObject predicateObject) {
     if (receiver == predicateObject) {
       ifTrueBranch.enter();
-      return branchValueSend.call(frame.pack(), new SArguments(argument,
-          new Object[0]));
+      return branchValueSend.call(new Object[] {argument});
     } else {
       ifFalseBranch.enter();
       return universe.nilObject;
@@ -65,7 +63,7 @@ public abstract class AbstractIfMessageNode extends BinaryExpressionNode {
       final SBlock argument, final SObject predicateObject) {
     if (receiver == predicateObject) {
       ifTrueBranch.enter();
-      return argument.getMethod().invoke(frame.pack(), argument, universe);
+      return argument.getMethod().invoke(argument);
     } else {
       ifFalseBranch.enter();
       return universe.nilObject;

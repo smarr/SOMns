@@ -28,7 +28,6 @@ package som.primitives;
 import som.compiler.MethodGenerationContext;
 import som.interpreter.Primitive;
 import som.interpreter.nodes.ArgumentReadNode;
-import som.interpreter.nodes.ArgumentReadNode.SelfArgumentReadNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.vm.Universe;
 import som.vmobjects.SClass;
@@ -63,23 +62,27 @@ public abstract class Primitives {
     int numArgs = signature.getNumberOfSignatureArguments();
 
     MethodGenerationContext mgen = new MethodGenerationContext();
-    SelfArgumentReadNode self = new SelfArgumentReadNode();
-    ExpressionNode[] args = new ExpressionNode[numArgs - 1];
-    for (int i = 0; i < numArgs - 1; i++) {
+    ExpressionNode[] args = new ExpressionNode[numArgs];
+    for (int i = 0; i < numArgs; i++) {
       args[i] = new ArgumentReadNode(i);
     }
 
     ExpressionNode primNode;
-    if (numArgs == 1) {
-      primNode = nodeFactory.createNode(self);
-    } else if (numArgs == 2) {
-      primNode = nodeFactory.createNode(self, args[0]);
-    } else if (numArgs == 3) {
-      primNode = nodeFactory.createNode(self, args[0], args[1]);
-    } else if (numArgs == 4) {
-      primNode = nodeFactory.createNode(self, args[0], args[1], args[2]);
-    } else {
-      throw new RuntimeException("TODO: implement this case!");
+    switch (numArgs) {
+      case 1:
+        primNode = nodeFactory.createNode(args[0]);
+        break;
+      case 2:
+        primNode = nodeFactory.createNode(args[0], args[1]);
+        break;
+      case 3:
+        primNode = nodeFactory.createNode(args[0], args[1], args[2]);
+        break;
+      case 4:
+        primNode = nodeFactory.createNode(args[0], args[1], args[2], args[3]);
+        break;
+      default:
+        throw new RuntimeException("Not supported by SOM.");
     }
 
     Primitive primMethodNode = new Primitive(primNode, mgen.getFrameDescriptor());
@@ -90,16 +93,9 @@ public abstract class Primitives {
   @SlowPath
   public static SInvokable constructEmptyPrimitive(final SSymbol signature,
       final Universe universe) {
-    int numArgs = signature.getNumberOfSignatureArguments();
-
     MethodGenerationContext mgen = new MethodGenerationContext();
-    SelfArgumentReadNode self = new SelfArgumentReadNode();
-    ExpressionNode[] args = new ExpressionNode[numArgs - 1];
-    for (int i = 0; i < numArgs - 1; i++) {
-      args[i] = new ArgumentReadNode(i);
-    }
 
-    ExpressionNode primNode = EmptyPrim.create(self);
+    ExpressionNode primNode = EmptyPrim.create(new ArgumentReadNode(0));
     Primitive primMethodNode = new Primitive(primNode, mgen.getFrameDescriptor());
     SInvokable prim = universe.newMethod(signature, primMethodNode, true);
     return prim;

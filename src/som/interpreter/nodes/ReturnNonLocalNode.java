@@ -84,7 +84,7 @@ public final class ReturnNonLocalNode extends ContextualNode {
       blockEscaped.enter();
       SBlock block = (SBlock) FrameUtil.getObjectSafe(frame, localSelf);
       Object self = FrameUtil.getObjectSafe(ctx, outerSelfSlot);
-      return SAbstractObject.sendEscapedBlock(self, block, universe, frame.pack());
+      return SAbstractObject.sendEscapedBlock(self, block, universe);
     }
   }
 

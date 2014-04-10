@@ -22,8 +22,8 @@ public abstract class BinaryExpressionNode extends ExpressionNode
 
   @Override
   public Object executePreEvaluated(final VirtualFrame frame,
-      final Object receiver, final Object[] arguments) {
-    return executeEvaluated(frame, receiver, arguments[0]);
+      final Object[] arguments) {
+    return executeEvaluated(frame, arguments[0], arguments[1]);
   }
 
   public abstract static class BinarySideEffectFreeExpressionNode

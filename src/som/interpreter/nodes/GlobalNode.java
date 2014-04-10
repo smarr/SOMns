@@ -61,9 +61,8 @@ public abstract class GlobalNode extends ExpressionNode {
         unknownGlobalNotFound.enter();
         // if it is not defined, we will send a error message to the current
         // receiver object
-        Object self = SArguments.getReceiverFromFrame(frame);
-        return SAbstractObject.sendUnknownGlobal(self, globalName, universe,
-            frame.pack());
+        Object self = SArguments.rcvr(frame);
+        return SAbstractObject.sendUnknownGlobal(self, globalName, universe);
       }
     }
 

@@ -34,6 +34,7 @@ import java.util.StringTokenizer;
 
 import som.compiler.Disassembler;
 import som.interpreter.Invokable;
+import som.interpreter.Types;
 import som.interpreter.nodes.literals.BlockNode.BlockNodeWithContext;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray;
@@ -269,7 +270,7 @@ public class Universe {
                                         lookupInvokable(symbolFor(selector));
 
     // Invoke the initialize invokable
-    return initialize.invokeRoot(clazz, new SAbstractObject[0], this);
+    return Types.asAbstractObject(initialize.invoke(clazz), this);
   }
 
   private SAbstractObject execute(final String[] arguments) {
@@ -288,7 +289,8 @@ public class Universe {
         lookupInvokable(symbolFor("initialize:"));
 
     // Invoke the initialize invokable
-    return initialize.invokeRoot(systemObject, new SAbstractObject[] {argumentsArray}, this);
+    return Types.asAbstractObject(initialize.invoke(new Object[] {systemObject,
+        argumentsArray}), this);
   }
 
   @SlowPath

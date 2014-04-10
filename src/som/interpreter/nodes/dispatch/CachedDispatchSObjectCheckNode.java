@@ -1,13 +1,11 @@
 package som.interpreter.nodes.dispatch;
 
-import som.interpreter.SArguments;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode.AbstractCachedDispatchNode;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.frame.VirtualFrame;
 
 
 public final class CachedDispatchSObjectCheckNode extends AbstractCachedDispatchNode {
@@ -21,13 +19,12 @@ public final class CachedDispatchSObjectCheckNode extends AbstractCachedDispatch
   }
 
   @Override
-  public Object executeDispatch(final VirtualFrame frame, final Object receiver,
-      final Object[] arguments) {
-    SObject rcvr = CompilerDirectives.unsafeCast(receiver, SObject.class, true);
+  public Object executeDispatch(final Object[] arguments) {
+    SObject rcvr = CompilerDirectives.unsafeCast(arguments[0], SObject.class, true);
     if (rcvr.getSOMClass(null) == expectedClass) {
-      return cachedMethod.call(frame.pack(), new SArguments(receiver, arguments));
+      return cachedMethod.call(arguments);
     } else {
-      return nextInCache.executeDispatch(frame, receiver, arguments);
+      return nextInCache.executeDispatch(arguments);
     }
   }
 }

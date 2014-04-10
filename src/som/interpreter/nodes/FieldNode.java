@@ -78,8 +78,8 @@ public abstract class FieldNode extends ExpressionNode {
 
     @Override
     public final Object executePreEvaluated(final VirtualFrame frame,
-        final Object receiver, final Object[] arguments) {
-      return executeEvaluated((SObject) receiver);
+        final Object[] arguments) {
+      return executeEvaluated((SObject) arguments[0]);
     }
 
     protected final boolean isSAbstractObject(final SObject self) {
@@ -155,8 +155,8 @@ public abstract class FieldNode extends ExpressionNode {
 
     @Override
     public final Object executePreEvaluated(final VirtualFrame frame,
-        final Object receiver, final Object[] arguments) {
-      return executeEvaluated(frame, (SObject) receiver, arguments[0]);
+        final Object[] arguments) {
+      return executeEvaluated(frame, (SObject) arguments[0], arguments[1]);
     }
 
     @Specialization(order = 1)

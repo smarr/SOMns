@@ -593,8 +593,8 @@ public final class Parser {
   private AbstractMessageSendNode unaryMessage(final ExpressionNode receiver) {
     SourceCoordinate coord = getCoordinate();
     SSymbol selector = unarySelector();
-    AbstractMessageSendNode msg = MessageSendNode.create(selector, receiver,
-        noArgs);
+    AbstractMessageSendNode msg = MessageSendNode.create(selector,
+        new ExpressionNode[] {receiver});
     assignSource(msg, coord);
     return msg;
   }
@@ -605,8 +605,8 @@ public final class Parser {
     SSymbol msg = binarySelector();
     ExpressionNode operand = binaryOperand(mgenc);
 
-    AbstractMessageSendNode msgNode = MessageSendNode.create(msg, receiver,
-        new ExpressionNode[] {operand});
+    AbstractMessageSendNode msgNode = MessageSendNode.create(msg,
+        new ExpressionNode[] {receiver, operand});
     assignSource(msgNode, coord);
     return msgNode;
   }
@@ -629,6 +629,8 @@ public final class Parser {
     List<ExpressionNode> arguments = new ArrayList<ExpressionNode>();
     StringBuffer         kw        = new StringBuffer();
 
+    arguments.add(receiver);
+
     do {
       kw.append(keyword());
       arguments.add(formula(mgenc));
@@ -637,7 +639,7 @@ public final class Parser {
 
     SSymbol msg = universe.symbolFor(kw.toString());
 
-    AbstractMessageSendNode msgNode = MessageSendNode.create(msg, receiver,
+    AbstractMessageSendNode msgNode = MessageSendNode.create(msg,
         arguments.toArray(new ExpressionNode[0]));
     assignSource(msgNode, coord);
     return msgNode;
@@ -850,6 +852,4 @@ public final class Parser {
   private boolean printableSymbol() {
     return sym == Integer || sym.compareTo(STString) >= 0;
   }
-
-  private static final ExpressionNode[] noArgs = new ExpressionNode[0];
 }

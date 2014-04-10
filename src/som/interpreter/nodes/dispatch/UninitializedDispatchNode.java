@@ -9,7 +9,6 @@ import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
-import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 
 
@@ -20,9 +19,9 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
   }
 
   @Override
-  public Object executeDispatch(final VirtualFrame frame, final Object rcvr,
-      final Object[] arguments) {
+  public Object executeDispatch(final Object[] arguments) {
     transferToInterpreterAndInvalidate("Initialize a dispatch node.");
+    Object rcvr = arguments[0];
 
     // Determine position in dispatch node chain, i.e., size of inline cache
     Node i = this;
@@ -53,11 +52,11 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
                     method, newChainEnd);
             if ((getParent() instanceof CachedDispatchSObjectCheckNode)) {
 
-              return replace(node).executeDispatch(frame, rcvr, arguments);
+              return replace(node).executeDispatch(arguments);
             } else {
               SObjectCheckDispatchNode checkNode = new SObjectCheckDispatchNode(node,
                   new UninitializedDispatchNode(selector, universe));
-              return replace(checkNode).executeDispatch(frame, rcvr, arguments);
+              return replace(checkNode).executeDispatch(arguments);
             }
           } else {
             // the simple checks are prepended
@@ -66,11 +65,8 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
                     rcvr.getClass(), method,
                     sendNode.getDispatchListHead());
             sendNode.adoptNewDispatchListHead(node);
-            return node.executeDispatch(frame, rcvr, arguments);
+            return node.executeDispatch(arguments);
           }
-
-
-//        }
       }
       // if method == null: fall through and use generic node
     }
@@ -84,6 +80,6 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
     // TODO: see whether we could get #DNUs fast.
     GenericDispatchNode genericReplacement = new GenericDispatchNode(selector, universe);
     sendNode.replaceDispatchListHead(genericReplacement);
-    return genericReplacement.executeDispatch(frame, rcvr, arguments);
+    return genericReplacement.executeDispatch(arguments);
   }
 }

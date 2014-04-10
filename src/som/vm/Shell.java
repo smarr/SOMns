@@ -28,6 +28,7 @@ package som.vm;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
+import som.interpreter.Types;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
@@ -82,7 +83,7 @@ public class Shell {
               lookupInvokable(universe.symbolFor("run:"));
 
           // Invoke the run method
-          it = shellMethod.invokeRoot(myObject, new SAbstractObject[] {it},
+          it = Types.asAbstractObject(shellMethod.invoke(myObject, it),
               universe);
         }
       } catch (Exception e) {

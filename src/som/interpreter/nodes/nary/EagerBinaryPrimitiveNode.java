@@ -56,8 +56,8 @@ public final class EagerBinaryPrimitiveNode extends BinaryExpressionNode {
     } catch (UnsupportedSpecializationException e) {
       unsupportedSpecialization.enter();
       TruffleCompiler.transferToInterpreterAndInvalidate("Eager Primitive with unsupported specialization.");
-      return makeGenericSend().executePreEvaluated(frame, receiver,
-          new Object[] {argument});
+      return makeGenericSend().executePreEvaluated(frame,
+          new Object[] {receiver, argument});
     }
   }
 
@@ -69,14 +69,14 @@ public final class EagerBinaryPrimitiveNode extends BinaryExpressionNode {
     } catch (UnsupportedSpecializationException e) {
       unsupportedSpecialization.enter();
       TruffleCompiler.transferToInterpreterAndInvalidate("Eager Primitive with unsupported specialization.");
-      makeGenericSend().executePreEvaluated(frame, receiver,
-          new Object[] {argument});
+      makeGenericSend().executePreEvaluated(frame,
+          new Object[] {receiver, argument});
     }
   }
 
   private GenericMessageSendNode makeGenericSend() {
     GenericMessageSendNode node = GenericMessageSendNode.create(selector,
-        receiver, new ExpressionNode[] {argument});
+        new ExpressionNode[] {receiver, argument});
     return replace(node);
   }
 }

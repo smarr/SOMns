@@ -18,8 +18,8 @@ public abstract class UnaryExpressionNode extends ExpressionNode
 
   @Override
   public final Object executePreEvaluated(final VirtualFrame frame,
-      final Object receiver, final Object[] arguments) {
-    return executeEvaluated(frame, receiver);
+      final Object[] arguments) {
+    return executeEvaluated(frame, arguments[0]);
   }
 
   public abstract static class UnarySideEffectFreeExpressionNode

@@ -34,7 +34,6 @@ import som.compiler.Variable.Local;
 import som.interpreter.LexicalContext;
 import som.interpreter.nodes.ArgumentInitializationNode;
 import som.interpreter.nodes.ArgumentReadNode;
-import som.interpreter.nodes.ArgumentReadNode.SelfArgumentReadNode;
 import som.interpreter.nodes.ContextualNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.FieldNode.FieldReadNode;
@@ -165,9 +164,8 @@ public final class MethodGenerationContext {
     LocalVariableWriteNode[] writes = new LocalVariableWriteNode[arguments.size()];
 
     for (Argument arg : arguments.values()) {
-      writes[arg.index + 1] = LocalVariableWriteNodeFactory.create(arg.slot,
-          (arg.isSelf()) ? new SelfArgumentReadNode()
-                         : new ArgumentReadNode(arg.index));
+      writes[arg.index] = LocalVariableWriteNodeFactory.create(
+          arg.slot, new ArgumentReadNode(arg.index));
     }
     return new ArgumentInitializationNode(writes, methodBody);
   }
@@ -262,11 +260,7 @@ public final class MethodGenerationContext {
       final ExpressionNode node) {
     UninitializedVariableReadNode varRead =
         (UninitializedVariableReadNode) node;
-    if (varRead.accessesSelf()) {
-      return new SelfArgumentReadNode();
-    } else {
-      return new ArgumentReadNode(varRead.getArgumentIndex());
-    }
+    return new ArgumentReadNode(varRead.getArgumentIndex());
   }
 
   private SourceSection getSourceSectionForMethod(final SourceSection ssBody) {
@@ -291,7 +285,7 @@ public final class MethodGenerationContext {
     }
 
     Argument argument = new Argument(arg, frameDescriptor.addFrameSlot(arg),
-        arguments.size() - 1);
+        arguments.size());
     arguments.put(arg, argument);
   }
 

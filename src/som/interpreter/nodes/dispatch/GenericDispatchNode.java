@@ -1,13 +1,8 @@
 package som.interpreter.nodes.dispatch;
 
-import som.interpreter.SArguments;
-import som.interpreter.Types;
 import som.vm.Universe;
-import som.vmobjects.SAbstractObject;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
-
-import com.oracle.truffle.api.frame.VirtualFrame;
 
 public final class GenericDispatchNode extends AbstractDispatchWithLookupNode {
 
@@ -16,32 +11,29 @@ public final class GenericDispatchNode extends AbstractDispatchWithLookupNode {
   }
 
   @Override
-  public Object executeDispatch(final VirtualFrame frame, final Object rcvr,
-      final Object[] arguments) {
-    SInvokable method = lookupMethod(rcvr);
+  public Object executeDispatch(final Object[] arguments) {
+    SInvokable method = lookupMethod(arguments[0]);
     if (method != null) {
-      return method.getCallTarget().call(frame.pack(), new SArguments(rcvr,
-          arguments));
+      return method.getCallTarget().call(arguments);
     } else {
       // TODO: perhaps, I should mark this branch with a branch profile as
       //       being unlikely
-      return sendDoesNotUnderstand(frame, rcvr, arguments);
+      return sendDoesNotUnderstand(arguments);
     }
   }
 
-  private Object sendDoesNotUnderstand(final VirtualFrame frame,
-      final Object rcvr, final Object[] arguments) {
+  private Object sendDoesNotUnderstand(final Object[] arguments) {
     // TODO: this is all extremely expensive, and could be optimized by
     //       further specialization for #dnu
 
     // Need to realize full SOM objects because we'll pass them on to a
     // language level array
-    SAbstractObject[] args = new SAbstractObject[arguments.length];
-    for (int i = 0; i < arguments.length; i++) {
-      args[i] = Types.asAbstractObject(arguments[i], universe);
-    }
-
-    return SAbstractObject.sendDoesNotUnderstand(rcvr, selector, args,
-        universe, frame.pack());
+//    SAbstractObject[] args = new SAbstractObject[arguments.length];
+//    for (int i = 0; i < arguments.length; i++) {
+//      args[i] = Types.asAbstractObject(arguments[i], universe);
+//    }
+//
+//    return SAbstractObject.sendDoesNotUnderstand(selector, args, universe);
+    throw new RuntimeException("Recheck implementation, do we really need to convert here? and what's with the receiver?");
   }
 }

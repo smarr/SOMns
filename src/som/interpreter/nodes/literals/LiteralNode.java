@@ -31,7 +31,7 @@ public abstract class LiteralNode extends ExpressionNode
 
   @Override
   public final Object executePreEvaluated(final VirtualFrame frame,
-      final Object receiver, final Object[] arguments) {
+      final Object[] arguments) {
     return executeGeneric(frame);
   }
 
