@@ -148,13 +148,13 @@ public final class MessageSendNode {
           if (receiver instanceof SBlock) {
             return replace(new EagerUnaryPrimitiveNode(selector,
                 argumentNodes[0],
-                ValueNonePrimFactory.create(argumentNodes[0])));
+                ValueNonePrimFactory.create(null)));
           }
         case "length":
           if (receiver instanceof SArray) {
             return replace(new EagerUnaryPrimitiveNode(selector,
                 argumentNodes[0],
-                LengthPrimFactory.create(argumentNodes[0])));
+                LengthPrimFactory.create(null)));
           }
       }
       return makeGenericSend();
@@ -197,68 +197,68 @@ public final class MessageSendNode {
         case "<":
           return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
               argumentNodes[1],
-              LessThanPrimFactory.create(argumentNodes[0], argumentNodes[1])));
+              LessThanPrimFactory.create(null, null)));
         case "<=":
           return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
               argumentNodes[1],
-              LessThanOrEqualPrimFactory.create(argumentNodes[0], argumentNodes[1])));
+              LessThanOrEqualPrimFactory.create(null, null)));
         case "+":
           return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
               argumentNodes[1],
-              AdditionPrimFactory.create(argumentNodes[0], argumentNodes[1])));
+              AdditionPrimFactory.create(null, null)));
         case "value:":
           return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
               argumentNodes[1],
-              ValueOnePrimFactory.create(argumentNodes[0], argumentNodes[1])));
+              ValueOnePrimFactory.create(null, null)));
         case "-":
           return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
               argumentNodes[1],
-              SubtractionPrimFactory.create(argumentNodes[0], argumentNodes[1])));
+              SubtractionPrimFactory.create(null, null)));
         case "*":
           return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
               argumentNodes[1],
-              MultiplicationPrimFactory.create(argumentNodes[0], argumentNodes[1])));
+              MultiplicationPrimFactory.create(null, null)));
         case "=":
           return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
               argumentNodes[1],
-              EqualsPrimFactory.create(argumentNodes[0], argumentNodes[1])));
+              EqualsPrimFactory.create(null, null)));
         case "==":
           return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
               argumentNodes[1],
-              EqualsEqualsPrimFactory.create(argumentNodes[0], argumentNodes[1])));
+              EqualsEqualsPrimFactory.create(null, null)));
         case "bitXor:":
           return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
               argumentNodes[1],
-              BitXorPrimFactory.create(argumentNodes[0], argumentNodes[1])));
+              BitXorPrimFactory.create(null, null)));
         case "//":
           return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
               argumentNodes[1],
-              DoubleDivPrimFactory.create(argumentNodes[0], argumentNodes[1])));
+              DoubleDivPrimFactory.create(null, null)));
         case "%":
           return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
               argumentNodes[1],
-              ModuloPrimFactory.create(argumentNodes[0], argumentNodes[1])));
+              ModuloPrimFactory.create(null, null)));
         case "/":
           return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
               argumentNodes[1],
-              DividePrimFactory.create(argumentNodes[0], argumentNodes[1])));
+              DividePrimFactory.create(null, null)));
         case "&":
           return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
               argumentNodes[1],
-              LogicAndPrimFactory.create(argumentNodes[0], argumentNodes[1])));
+              LogicAndPrimFactory.create(null, null)));
 
         // eagerly but causious:
         case "at:":
           if (arguments[0] instanceof SArray) {
             return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
                 argumentNodes[1],
-                AtPrimFactory.create(argumentNodes[0], argumentNodes[1])));
+                AtPrimFactory.create(null, null)));
           }
         case "new:":
           if (arguments[0] instanceof SClass) {
             return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
                 argumentNodes[1],
-                NewPrimFactory.create(argumentNodes[0], argumentNodes[1])));
+                NewPrimFactory.create(null, null)));
           }
       }
 
