@@ -52,7 +52,7 @@ public abstract class IntToDoMessageNode extends TernaryExpressionNode
   public final int doIntToDo(final VirtualFrame frame, final int receiver, final int limit, final SBlock block) {
     try {
       for (int i = receiver; i <= limit; i++) {
-        valueSend.call(new Object[] {block, i});
+        valueSend.call(frame, new Object[] {block, i});
       }
     } finally {
       if (CompilerDirectives.inInterpreter()) {
@@ -70,7 +70,7 @@ public abstract class IntToDoMessageNode extends TernaryExpressionNode
   public final int doIntToDo(final VirtualFrame frame, final int receiver, final double limit, final SBlock block) {
     try {
       for (int i = receiver; i <= limit; i++) {
-        valueSend.call(new Object[] {block, i});
+        valueSend.call(frame, new Object[] {block, i});
       }
     } finally {
       if (CompilerDirectives.inInterpreter()) {

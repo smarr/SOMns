@@ -2,6 +2,7 @@ package som.interpreter.nodes.dispatch;
 
 import som.vmobjects.SObject;
 
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.utilities.BranchProfile;
 
 
@@ -21,12 +22,13 @@ public final class SObjectCheckDispatchNode extends AbstractDispatchNode {
   }
 
   @Override
-  public Object executeDispatch(final Object[] arguments) {
+  public Object executeDispatch(
+      final VirtualFrame frame, final Object[] arguments) {
     if (arguments[0] instanceof SObject) {
-      return nextInCache.executeDispatch(arguments);
+      return nextInCache.executeDispatch(frame, arguments);
     } else {
       uninitialized.enter();
-      return uninitializedDispatch.executeDispatch(arguments);
+      return uninitializedDispatch.executeDispatch(frame, arguments);
     }
   }
 }

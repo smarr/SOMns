@@ -80,11 +80,11 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
       final SObject receiver, final SBlock trueBlock, final SBlock falseBlock) {
     if (receiver == universe.trueObject) {
       ifTrueBranch.enter();
-      return trueValueSend.call(new Object[] {trueBlock});
+      return trueValueSend.call(frame, new Object[] {trueBlock});
     } else {
       assert receiver == universe.falseObject;
       ifFalseBranch.enter();
-      return falseValueSend.call(new Object[] {falseBlock});
+      return falseValueSend.call(frame, new Object[] {falseBlock});
     }
   }
 
@@ -110,7 +110,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
     } else {
       assert receiver == universe.falseObject;
       ifFalseBranch.enter();
-      return falseValueSend.call(new Object[] {falseBlock});
+      return falseValueSend.call(frame, new Object[] {falseBlock});
     }
   }
 
@@ -119,7 +119,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
       final SObject receiver, final SBlock trueBlock, final Object falseValue) {
     if (receiver == universe.trueObject) {
       ifTrueBranch.enter();
-      return trueValueSend.call(new Object[] {trueBlock});
+      return trueValueSend.call(frame, new Object[] {trueBlock});
     } else {
       ifFalseBranch.enter();
       assert receiver == universe.falseObject;

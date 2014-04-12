@@ -4,6 +4,8 @@ import som.vm.Universe;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.frame.VirtualFrame;
+
 public final class GenericDispatchNode extends AbstractDispatchWithLookupNode {
 
   public GenericDispatchNode(final SSymbol selector, final Universe universe) {
@@ -11,7 +13,8 @@ public final class GenericDispatchNode extends AbstractDispatchWithLookupNode {
   }
 
   @Override
-  public Object executeDispatch(final Object[] arguments) {
+  public Object executeDispatch(
+      final VirtualFrame frame, final Object[] arguments) {
     SInvokable method = lookupMethod(arguments[0]);
     if (method != null) {
       return method.getCallTarget().call(arguments);

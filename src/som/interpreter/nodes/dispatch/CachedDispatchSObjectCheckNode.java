@@ -6,6 +6,7 @@ import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.frame.VirtualFrame;
 
 
 public final class CachedDispatchSObjectCheckNode extends AbstractCachedDispatchNode {
@@ -19,12 +20,13 @@ public final class CachedDispatchSObjectCheckNode extends AbstractCachedDispatch
   }
 
   @Override
-  public Object executeDispatch(final Object[] arguments) {
+  public Object executeDispatch(
+      final VirtualFrame frame, final Object[] arguments) {
     SObject rcvr = CompilerDirectives.unsafeCast(arguments[0], SObject.class, true);
     if (rcvr.getSOMClass(null) == expectedClass) {
-      return cachedMethod.call(arguments);
+      return cachedMethod.call(frame, arguments);
     } else {
-      return nextInCache.executeDispatch(arguments);
+      return nextInCache.executeDispatch(frame, arguments);
     }
   }
 }

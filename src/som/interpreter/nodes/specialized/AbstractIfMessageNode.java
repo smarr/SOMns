@@ -52,7 +52,7 @@ public abstract class AbstractIfMessageNode extends BinaryExpressionNode {
       final SBlock argument, final SObject predicateObject) {
     if (receiver == predicateObject) {
       ifTrueBranch.enter();
-      return branchValueSend.call(new Object[] {argument});
+      return branchValueSend.call(frame, new Object[] {argument});
     } else {
       ifFalseBranch.enter();
       return universe.nilObject;

@@ -321,7 +321,7 @@ public final class MessageSendNode {
     @Override
     public Object executePreEvaluated(final VirtualFrame frame,
         final Object[] arguments) {
-      return dispatchNode.executeDispatch(arguments);
+      return dispatchNode.executeDispatch(frame, arguments);
     }
 
     @SlowPath

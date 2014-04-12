@@ -9,6 +9,7 @@ import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 
 
@@ -19,7 +20,8 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
   }
 
   @Override
-  public Object executeDispatch(final Object[] arguments) {
+  public Object executeDispatch(
+      final VirtualFrame frame, final Object[] arguments) {
     transferToInterpreterAndInvalidate("Initialize a dispatch node.");
     Object rcvr = arguments[0];
 
@@ -52,11 +54,11 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
                     method, newChainEnd);
             if ((getParent() instanceof CachedDispatchSObjectCheckNode)) {
 
-              return replace(node).executeDispatch(arguments);
+              return replace(node).executeDispatch(frame, arguments);
             } else {
               SObjectCheckDispatchNode checkNode = new SObjectCheckDispatchNode(node,
                   new UninitializedDispatchNode(selector, universe));
-              return replace(checkNode).executeDispatch(arguments);
+              return replace(checkNode).executeDispatch(frame, arguments);
             }
           } else {
             // the simple checks are prepended
@@ -65,7 +67,7 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
                     rcvr.getClass(), method,
                     sendNode.getDispatchListHead());
             sendNode.adoptNewDispatchListHead(node);
-            return node.executeDispatch(arguments);
+            return node.executeDispatch(frame, arguments);
           }
       }
       // if method == null: fall through and use generic node
@@ -80,6 +82,6 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
     // TODO: see whether we could get #DNUs fast.
     GenericDispatchNode genericReplacement = new GenericDispatchNode(selector, universe);
     sendNode.replaceDispatchListHead(genericReplacement);
-    return genericReplacement.executeDispatch(arguments);
+    return genericReplacement.executeDispatch(frame, arguments);
   }
 }

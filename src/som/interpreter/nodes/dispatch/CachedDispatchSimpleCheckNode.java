@@ -3,6 +3,8 @@ package som.interpreter.nodes.dispatch;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode.AbstractCachedDispatchNode;
 import som.vmobjects.SInvokable;
 
+import com.oracle.truffle.api.frame.VirtualFrame;
+
 
 public final class CachedDispatchSimpleCheckNode extends AbstractCachedDispatchNode {
 
@@ -15,11 +17,12 @@ public final class CachedDispatchSimpleCheckNode extends AbstractCachedDispatchN
   }
 
   @Override
-  public Object executeDispatch(final Object[] arguments) {
+  public Object executeDispatch(final VirtualFrame frame,
+      final Object[] arguments) {
     if (arguments[0].getClass() == expectedClass) {
-      return cachedMethod.call(arguments);
+      return cachedMethod.call(frame, arguments);
     } else {
-      return nextInCache.executeDispatch(arguments);
+      return nextInCache.executeDispatch(frame, arguments);
     }
   }
 }

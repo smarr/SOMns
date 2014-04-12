@@ -61,27 +61,29 @@ public abstract class WhileWithStaticBlocksNode extends BinaryExpressionNode {
   @Override
   public final Object executeEvaluated(final VirtualFrame frame,
       final Object rcvr, final Object arg) {
-    return doWhileConditionally((SBlock) rcvr, (SBlock) arg);
+    return doWhileConditionally(frame, (SBlock) rcvr, (SBlock) arg);
   }
 
   @Override
   public final void executeEvaluatedVoid(final VirtualFrame frame,
       final Object rcvr, final Object arg) {
-    doWhileConditionally((SBlock) rcvr, (SBlock) arg);
+    doWhileConditionally(frame, (SBlock) rcvr, (SBlock) arg);
   }
 
-  protected final SObject doWhileConditionally(final SBlock loopCondition,
+  protected final SObject doWhileConditionally(final VirtualFrame frame,
+      final SBlock loopCondition,
       final SBlock loopBody) {
     int iterationCount = 0;
     Object loopConditionResult = conditionValueSend.call(
-        new Object[] {loopCondition});
+        frame, new Object[] {loopCondition});
 
 
     try {
       // TODO: this is a simplification, we don't cover the case receiver isn't a boolean
       while (loopConditionResult == predicateBool) {
-        bodyValueSend.call(new Object[] {loopBody});
-        loopConditionResult = conditionValueSend.call(new Object[] {loopCondition});
+        bodyValueSend.call(frame, new Object[] {loopBody});
+        loopConditionResult = conditionValueSend.call(
+            frame, new Object[] {loopCondition});
 
         if (CompilerDirectives.inInterpreter()) {
           iterationCount++;

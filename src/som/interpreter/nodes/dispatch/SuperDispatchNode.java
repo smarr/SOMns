@@ -5,6 +5,7 @@ import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.CallNode;
 
 /**
@@ -32,7 +33,8 @@ public final class SuperDispatchNode extends AbstractDispatchNode {
   }
 
   @Override
-  public Object executeDispatch(final Object[] arguments) {
-    return cachedSuperMethod.call(arguments);
+  public Object executeDispatch(
+      final VirtualFrame frame, final Object[] arguments) {
+    return cachedSuperMethod.call(frame, arguments);
   }
 }
