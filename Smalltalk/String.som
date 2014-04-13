@@ -48,7 +48,7 @@ String = (
         ((end <= self length) && (start > 0) && (start <= end))
             ifTrue: [^self primSubstringFrom: start to: end]
             ifFalse: [
-                self error: 'Attempting to index string out of its bounds.' ]
+                self error: 'Attempting to index string out of its bounds (start: ' + start asString + ' end: ' + end asString + ' length: ' + self length asString ]
     )
 
     beginsWith: prefix = (
