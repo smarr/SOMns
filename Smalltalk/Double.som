@@ -33,9 +33,9 @@ Double = (
     % argument  = primitive
     & argument  = primitive
     bitXor: argument = primitive
-    abs         = ( ^(self < 0) ifTrue: (0 - self) ifFalse: self )
+    abs         = ( ^(self < 0.0) ifTrue: (0.0 - self) ifFalse: self )
     sqrt        = primitive
-    negated     = ( ^0 - self )
+    negated     = ( ^0.0 - self )
     round       = primitive
     
     "Comparing"
@@ -44,7 +44,7 @@ Double = (
     >  argument = ( ^(self >= argument) and: [ self <> argument ] )
     >= argument = ( ^(self < argument) not )
     <= argument = ( ^(self < argument) or: [ self = argument ] )
-    negative    = ( ^self < 0 )
+    negative    = ( ^self < 0.0 )
     between: a and: b = ( ^(self > a) and: [ self < b ] )
     
     "Converting"
@@ -54,13 +54,13 @@ Double = (
     to: limit do: block = (
         | i |
         i := self.
-        [ i <= limit ] whileTrue: [ block value: i. i := i + 1 ]
+        [ i <= limit ] whileTrue: [ block value: i. i := i + 1.0 ]
     )
     
     downTo: limit do: block = (
         | i | 
         i := self.
-        [ i >= limit ] whileTrue: [ block value: i. i := i - 1 ]
+        [ i >= limit ] whileTrue: [ block value: i. i := i - 1.0 ]
     )
     
 )
