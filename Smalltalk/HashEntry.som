@@ -84,29 +84,6 @@ HashEntry = (
             ifFalse: [ ^(next values), value ]
     )
     
-    run = ( | he |
-        he := HashEntry
-                newKey: 1
-                value: 'a'
-                next: (HashEntry newKey: 2 value: 'b' next: nil).
-        
-        "he keys print.
-        ': ' print.
-        he values print.
-        ' (expected: Vector(2, 1, ): Vector(b, a, )' println.
-        "
-        
-        (he containsValue: 'a') ifFalse: [ 'containsValue: a failed' println ].
-        (he containsValue: 'b') ifFalse: [ 'containsValue: b failed' println ].
-        (he containsKey: 1) ifFalse: [ 'containsKey: 1 failed' println ].
-        (he containsKey: 2) ifFalse: [ 'containsKey: 2 failed' println ].
-        (he getValue: 1) = 'a' ifFalse: [ 'getValue: 1 not a' println ].
-        (he getValue: 2) = 'b' ifFalse: [ 'getValue: 2 not b' println ].
-        he setKey: true value: false.
-        (he getValue: true) = false ifFalse: [ 
-            'getValue: true is not false' println ].
-    )
-    
     ----
     
     newKey: k value: v next: n = (
