@@ -25,7 +25,7 @@
 package som.compiler;
 
 enum Symbol {
-  NONE, Integer, Not, And, Or, Star, Div, Mod, Plus, Minus, Equal, More, Less,
+  NONE, Integer, Double, Not, And, Or, Star, Div, Mod, Plus, Minus, Equal, More, Less,
   Comma, At, Per, NewBlock, EndBlock, Colon, Period, Exit, Assign, NewTerm,
   EndTerm, Pound, Primitive, Separator, STString, Identifier, Keyword,
   KeywordSequence, OperatorSequence

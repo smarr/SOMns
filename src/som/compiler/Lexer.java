@@ -158,20 +158,31 @@ public final class Lexer {
     sym = Symbol.Integer;
     symc = 0;
     text = new StringBuffer();
+
+    boolean sawDecimalMark = false;
+
     do {
       text.append(bufchar(bufp++));
-    }
-    while (Character.isDigit(currentChar()));
+
+      if (!sawDecimalMark      &&
+          '.' == currentChar() &&
+          Character.isDigit(bufchar(bufp + 1))) {
+        sym = Symbol.Double;
+        text.append(bufchar(bufp++));
+      }
+    } while (Character.isDigit(currentChar()));
   }
 
   private void lexString() {
     sym = Symbol.STString;
     symc = 0;
     text = new StringBuffer();
+
     do {
       text.append(bufchar(++bufp));
     }
     while (currentChar() != '\'');
+
     text.deleteCharAt(text.length() - 1);
     bufp++;
   }

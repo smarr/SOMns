@@ -31,6 +31,7 @@ import static som.compiler.Symbol.At;
 import static som.compiler.Symbol.Colon;
 import static som.compiler.Symbol.Comma;
 import static som.compiler.Symbol.Div;
+import static som.compiler.Symbol.Double;
 import static som.compiler.Symbol.EndBlock;
 import static som.compiler.Symbol.EndTerm;
 import static som.compiler.Symbol.Equal;
@@ -76,6 +77,7 @@ import som.interpreter.nodes.SequenceNode;
 import som.interpreter.nodes.literals.BigIntegerLiteralNode;
 import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.literals.BlockNode.BlockNodeWithContext;
+import som.interpreter.nodes.literals.DoubleLiteralNode;
 import som.interpreter.nodes.literals.IntegerLiteralNode;
 import som.interpreter.nodes.literals.LiteralNode;
 import som.interpreter.nodes.literals.StringLiteralNode;
@@ -736,41 +738,61 @@ public final class Parser {
 
   private LiteralNode literalNumber() throws ParseError {
     SourceCoordinate coord = getCoordinate();
-    long val;
-    if (sym == Minus) {
-      val = negativeDecimal();
-    } else {
-      val = literalDecimal();
-    }
 
     LiteralNode node;
-    if (val < java.lang.Integer.MIN_VALUE || val > java.lang.Integer.MAX_VALUE) {
-      node = new BigIntegerLiteralNode(BigInteger.valueOf(val));
+    if (sym == Minus) {
+      node = negativeDecimal();
     } else {
-      node = new IntegerLiteralNode((int) val);
+      node = literalDecimal(false);
     }
 
     assignSource(node, coord);
     return node;
   }
 
-  private long literalDecimal() throws ParseError {
-    return literalInteger();
+  private LiteralNode literalDecimal(final boolean isNegative) throws ParseError {
+    if (sym == Integer) {
+      return literalInteger(isNegative);
+    } else {
+      assert sym == Double;
+      return literalDouble(isNegative);
+    }
   }
 
-  private long negativeDecimal() throws ParseError {
+  private LiteralNode negativeDecimal() throws ParseError {
     expect(Minus);
-    return -literalInteger();
+    return literalInteger(true);
   }
 
-  private long literalInteger() throws ParseError {
+  private LiteralNode literalInteger(final boolean isNegative) throws ParseError {
     try {
-      long i = Long.parseLong(text);
+       long i = Long.parseLong(text);
+       if (isNegative) {
+         i = 0 - i;
+       }
        expect(Integer);
-       return i;
+       if (i < java.lang.Integer.MIN_VALUE || i > java.lang.Integer.MAX_VALUE) {
+         return new BigIntegerLiteralNode(BigInteger.valueOf(i));
+       } else {
+         return new IntegerLiteralNode((int) i);
+       }
     } catch (NumberFormatException e) {
       throw new ParseError("Could not parse integer. Expected a number but " +
                            "got '" + text + "'", Symbol.NONE, this);
+    }
+  }
+
+  private LiteralNode literalDouble(final boolean isNegative) throws ParseError {
+    try {
+      double d = java.lang.Double.parseDouble(text);
+      if (isNegative) {
+        d = 0.0 - d;
+      }
+      expect(Double);
+      return new DoubleLiteralNode(d);
+    } catch (NumberFormatException e) {
+      throw new ParseError("Could not parse double. Expected a number but " +
+          "got '" + text + "'", Symbol.NONE, this);
     }
   }
 
@@ -920,6 +942,6 @@ public final class Parser {
   }
 
   private static boolean printableSymbol(final Symbol sym) {
-    return sym == Integer || sym.compareTo(STString) >= 0;
+    return sym == Integer || sym == Double || sym.compareTo(STString) >= 0;
   }
 }
