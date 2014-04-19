@@ -8,7 +8,7 @@ import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.CallNode;
+import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.utilities.BranchProfile;
 
 
@@ -18,7 +18,7 @@ public abstract class AbstractIfMessageNode extends BinaryExpressionNode {
 
   private final SInvokable branchMethod;
 
-  @Child protected CallNode branchValueSend;
+  @Child protected DirectCallNode branchValueSend;
 
   protected final Universe universe;
 
@@ -27,7 +27,7 @@ public abstract class AbstractIfMessageNode extends BinaryExpressionNode {
     if (arg instanceof SBlock) {
       SBlock argBlock = (SBlock) arg;
       branchMethod = argBlock.getMethod();
-      branchValueSend = Truffle.getRuntime().createCallNode(
+      branchValueSend = Truffle.getRuntime().createDirectCallNode(
           branchMethod.getCallTarget());
     } else {
       branchMethod = null;
@@ -38,7 +38,7 @@ public abstract class AbstractIfMessageNode extends BinaryExpressionNode {
   public AbstractIfMessageNode(final AbstractIfMessageNode node) {
     branchMethod = node.branchMethod;
     if (node.branchMethod != null) {
-      branchValueSend = Truffle.getRuntime().createCallNode(
+      branchValueSend = Truffle.getRuntime().createDirectCallNode(
           branchMethod.getCallTarget());
     }
     this.universe = node.universe;

@@ -12,7 +12,7 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.LoopCountReceiver;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.CallNode;
+import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 
@@ -20,8 +20,8 @@ import com.oracle.truffle.api.nodes.RootNode;
 public abstract class WhileWithStaticBlocksNode extends BinaryExpressionNode {
   @Child protected BlockNode receiver;
   @Child protected BlockNode argument;
-  @Child protected CallNode  conditionValueSend;
-  @Child protected CallNode  bodyValueSend;
+  @Child protected DirectCallNode  conditionValueSend;
+  @Child protected DirectCallNode  bodyValueSend;
 
   protected final SObject predicateBool;
   private final Universe universe;
@@ -33,11 +33,11 @@ public abstract class WhileWithStaticBlocksNode extends BinaryExpressionNode {
     this.argument = argument;
 
     CallTarget callTargetCondition = rcvr.getMethod().getCallTarget();
-    conditionValueSend = Truffle.getRuntime().createCallNode(
+    conditionValueSend = Truffle.getRuntime().createDirectCallNode(
         callTargetCondition);
 
     CallTarget callTargetBody = arg.getMethod().getCallTarget();
-    bodyValueSend = Truffle.getRuntime().createCallNode(
+    bodyValueSend = Truffle.getRuntime().createDirectCallNode(
         callTargetBody);
 
     this.predicateBool = predicateBool;

@@ -5,7 +5,7 @@ import som.vmobjects.SInvokable;
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.CallNode;
+import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.Node;
 
 
@@ -18,13 +18,13 @@ public abstract class AbstractDispatchNode extends Node {
   public abstract static class AbstractCachedDispatchNode
       extends AbstractDispatchNode {
 
-    @Child protected CallNode             cachedMethod;
+    @Child protected DirectCallNode       cachedMethod;
     @Child protected AbstractDispatchNode nextInCache;
 
     public AbstractCachedDispatchNode(final SInvokable method,
         final AbstractDispatchNode nextInCache) {
       CallTarget methodCallTarget = method.getCallTarget();
-      CallNode   cachedMethod     = Truffle.getRuntime().createCallNode(methodCallTarget);
+      DirectCallNode cachedMethod = Truffle.getRuntime().createDirectCallNode(methodCallTarget);
 
       this.cachedMethod = cachedMethod;
       this.nextInCache  = nextInCache;

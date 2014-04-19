@@ -10,7 +10,7 @@ import som.vmobjects.SObject;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.CallNode;
+import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.utilities.BranchProfile;
 
 public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
@@ -21,8 +21,8 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
   private final SInvokable trueMethod;
   private final SInvokable falseMethod;
 
-  @Child protected CallNode trueValueSend;
-  @Child protected CallNode falseValueSend;
+  @Child protected DirectCallNode trueValueSend;
+  @Child protected DirectCallNode falseValueSend;
 
   private final Universe universe;
 
@@ -31,7 +31,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
     if (arg1 instanceof SBlock) {
       SBlock trueBlock = (SBlock) arg1;
       trueMethod = trueBlock.getMethod();
-      trueValueSend = Truffle.getRuntime().createCallNode(
+      trueValueSend = Truffle.getRuntime().createDirectCallNode(
           trueMethod.getCallTarget());
     } else {
       trueMethod = null;
@@ -40,7 +40,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
     if (arg2 instanceof SBlock) {
       SBlock falseBlock = (SBlock) arg2;
       falseMethod = falseBlock.getMethod();
-      falseValueSend = Truffle.getRuntime().createCallNode(
+      falseValueSend = Truffle.getRuntime().createDirectCallNode(
           falseMethod.getCallTarget());
     } else {
       falseMethod = null;
@@ -52,13 +52,13 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
   public IfTrueIfFalseMessageNode(final IfTrueIfFalseMessageNode node) {
     trueMethod = node.trueMethod;
     if (node.trueMethod != null) {
-      trueValueSend = Truffle.getRuntime().createCallNode(
+      trueValueSend = Truffle.getRuntime().createDirectCallNode(
           trueMethod.getCallTarget());
     }
 
     falseMethod = node.falseMethod;
     if (node.falseMethod != null) {
-      falseValueSend = Truffle.getRuntime().createCallNode(
+      falseValueSend = Truffle.getRuntime().createDirectCallNode(
           falseMethod.getCallTarget());
     }
     this.universe = node.universe;

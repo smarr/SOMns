@@ -6,7 +6,7 @@ import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.CallNode;
+import com.oracle.truffle.api.nodes.DirectCallNode;
 
 /**
  * Super sends are special, they lead to a lexically defined receiver class.
@@ -21,14 +21,14 @@ public final class SuperDispatchNode extends AbstractDispatchNode {
     if (method == null) {
       throw new RuntimeException("Currently #dnu with super sent is not yet implemented. ");
     }
-    CallNode superMethodNode = Truffle.getRuntime().createCallNode(
+    DirectCallNode superMethodNode = Truffle.getRuntime().createDirectCallNode(
         method.getCallTarget());
     return new SuperDispatchNode(superMethodNode);
   }
 
-  @Child private CallNode cachedSuperMethod;
+  @Child private DirectCallNode cachedSuperMethod;
 
-  private SuperDispatchNode(final CallNode superMethod) {
+  private SuperDispatchNode(final DirectCallNode superMethod) {
     this.cachedSuperMethod = superMethod;
   }
 

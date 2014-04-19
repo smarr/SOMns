@@ -12,7 +12,7 @@ import com.oracle.truffle.api.LoopCountReceiver;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.CallNode;
+import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 
@@ -21,13 +21,13 @@ public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode
     implements PreevaluatedExpression {
 
   private final SInvokable blockMethod;
-  @Child private CallNode valueSend;
+  @Child private DirectCallNode valueSend;
 
   public IntToByDoMessageNode(final ExpressionNode orignialNode,
       final SBlock block) {
     super(orignialNode.getSourceSection());
     blockMethod = block.getMethod();
-    valueSend = Truffle.getRuntime().createCallNode(
+    valueSend = Truffle.getRuntime().createDirectCallNode(
                     blockMethod.getCallTarget());
   }
 
