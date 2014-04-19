@@ -140,6 +140,75 @@ public final class Parser {
     }
   }
 
+  public static class ParseError extends Exception {
+    private static final long serialVersionUID = 425390202979033628L;
+    private final String message;
+    private final SourceCoordinate sourceCoordinate;
+    private final String text;
+    private final String rawBuffer;
+    private final String fileName;
+    private final Symbol expected;
+    private final Symbol found;
+
+    ParseError(final String message, final Symbol expected, final Parser parser) {
+      this.message = message;
+      this.sourceCoordinate = parser.getCoordinate();
+      this.text             = parser.text;
+      this.rawBuffer        = parser.lexer.getRawBuffer();
+      this.fileName         = parser.source.getName();
+      this.expected         = expected;
+      this.found            = parser.sym;
+    }
+
+    protected String expectedSymbolAsString() {
+      return expected.toString();
+    }
+
+    @Override
+    public String toString() {
+      String msg = "%(file)s:%(line)d:%(column)d: error: " + message;
+      String foundStr;
+      if (Parser.printableSymbol(found)) {
+        foundStr = found + " (" + text + ")";
+      } else {
+        foundStr = found.toString();
+      }
+      msg += ": " + rawBuffer;
+      String expectedStr = expectedSymbolAsString();
+
+      msg = msg.replace("%(file)s",     fileName);
+      msg = msg.replace("%(line)d",     java.lang.Integer.toString(sourceCoordinate.startLine));
+      msg = msg.replace("%(column)d",   java.lang.Integer.toString(sourceCoordinate.startColumn));
+      msg = msg.replace("%(expected)s", expectedStr);
+      msg = msg.replace("%(found)s",    foundStr);
+      return msg;
+    }
+  }
+
+  public static class ParseErrorWithSymbolList extends ParseError {
+    private static final long serialVersionUID = 561313162441723955L;
+    private final List<Symbol> expectedSymbols;
+
+    ParseErrorWithSymbolList(final String message, final List<Symbol> expected,
+        final Parser parser) {
+      super(message, null, parser);
+      this.expectedSymbols = expected;
+    }
+
+    @Override
+    protected String expectedSymbolAsString() {
+        StringBuilder sb = new StringBuilder();
+        String deliminator = "";
+
+        for (Symbol s : expectedSymbols) {
+            sb.append(deliminator);
+            sb.append(s);
+            deliminator = ", ";
+        }
+        return sb.toString();
+    }
+  }
+
   public Parser(final Reader reader, final Source source, final Universe universe) {
     this.universe = universe;
     this.source   = source;
@@ -157,7 +226,7 @@ public final class Parser {
   }
 
   @SlowPath
-  public void classdef(final ClassGenerationContext cgenc) {
+  public void classdef(final ClassGenerationContext cgenc) throws ParseError {
     cgenc.setName(universe.symbolFor(text));
     expect(Identifier);
     expect(Equal);
@@ -201,7 +270,7 @@ public final class Parser {
     expect(EndTerm);
   }
 
-  private void superclass(final ClassGenerationContext cgenc) {
+  private void superclass(final ClassGenerationContext cgenc) throws ParseError {
     SSymbol superName;
     if (sym == Identifier) {
       superName = universe.symbolFor(text);
@@ -214,6 +283,11 @@ public final class Parser {
     // Load the super class, if it is not nil (break the dependency cycle)
     if (!superName.getString().equals("nil")) {
       SClass superClass = universe.loadClass(superName);
+      if (superClass == null) {
+        throw new ParseError("Super class " + superName.getString() +
+            " could not be loaded", Symbol.NONE, this);
+      }
+
       cgenc.setInstanceFieldsOfSuper(superClass.getInstanceFields());
       cgenc.setClassFieldsOfSuper(superClass.getSOMClass(universe).getInstanceFields());
     }
@@ -239,30 +313,21 @@ public final class Parser {
     return false;
   }
 
-  private boolean expect(final Symbol s) {
+  private boolean expect(final Symbol s) throws ParseError {
     if (accept(s)) { return true; }
-    StringBuffer err = new StringBuffer("Error: unexpected symbol in line "
-        + lexer.getCurrentLineNumber() + ". Expected " + s.toString()
-        + ", but found " + sym.toString());
-    if (printableSymbol()) { err.append(" (" + text + ")"); }
-    err.append(": " + lexer.getRawBuffer());
-    throw new IllegalStateException(err.toString());
+
+    throw new ParseError("Unexpected symbol. Expected %(expected)s, but found "
+        + "%(found)s", s, this);
   }
 
-  private boolean expectOneOf(final List<Symbol> ss) {
+  private boolean expectOneOf(final List<Symbol> ss) throws ParseError {
     if (acceptOneOf(ss)) { return true; }
-    StringBuffer err = new StringBuffer("Error: unexpected symbol in line "
-        + lexer.getCurrentLineNumber() + ". Expected one of ");
-    for (Symbol s : ss) {
-      err.append(s.toString() + ", ");
-    }
-    err.append("but found " + sym.toString());
-    if (printableSymbol()) { err.append(" (" + text + ")"); }
-    err.append(": " + lexer.getRawBuffer());
-    throw new IllegalStateException(err.toString());
+
+    throw new ParseErrorWithSymbolList("Unexpected symbol. Expected one of " +
+        "%(expected)s, but found %(found)s", ss, this);
   }
 
-  private void instanceFields(final ClassGenerationContext cgenc) {
+  private void instanceFields(final ClassGenerationContext cgenc) throws ParseError {
     if (accept(Or)) {
       while (sym == Identifier) {
         String var = variable();
@@ -272,7 +337,7 @@ public final class Parser {
     }
   }
 
-  private void classFields(final ClassGenerationContext cgenc) {
+  private void classFields(final ClassGenerationContext cgenc) throws ParseError {
     if (accept(Or)) {
       while (sym == Identifier) {
         String var = variable();
@@ -288,7 +353,7 @@ public final class Parser {
         lexer.getNumberOfCharactersRead() - coord.charIndex));
   }
 
-  private ExpressionNode method(final MethodGenerationContext mgenc) {
+  private ExpressionNode method(final MethodGenerationContext mgenc) throws ParseError {
     pattern(mgenc);
     expect(Equal);
     if (sym == Primitive) {
@@ -300,11 +365,11 @@ public final class Parser {
     }
   }
 
-  private void primitiveBlock() {
+  private void primitiveBlock() throws ParseError {
     expect(Primitive);
   }
 
-  private void pattern(final MethodGenerationContext mgenc) {
+  private void pattern(final MethodGenerationContext mgenc) throws ParseError {
     mgenc.addArgumentIfAbsent("self"); // TODO: can we do that optionally?
     switch (sym) {
       case Identifier:
@@ -319,16 +384,16 @@ public final class Parser {
     }
   }
 
-  private void unaryPattern(final MethodGenerationContext mgenc) {
+  private void unaryPattern(final MethodGenerationContext mgenc) throws ParseError {
     mgenc.setSignature(unarySelector());
   }
 
-  private void binaryPattern(final MethodGenerationContext mgenc) {
+  private void binaryPattern(final MethodGenerationContext mgenc) throws ParseError {
     mgenc.setSignature(binarySelector());
     mgenc.addArgumentIfAbsent(argument());
   }
 
-  private void keywordPattern(final MethodGenerationContext mgenc) {
+  private void keywordPattern(final MethodGenerationContext mgenc) throws ParseError {
     StringBuffer kw = new StringBuffer();
     do {
       kw.append(keyword());
@@ -339,7 +404,7 @@ public final class Parser {
     mgenc.setSignature(universe.symbolFor(kw.toString()));
   }
 
-  private ExpressionNode methodBlock(final MethodGenerationContext mgenc) {
+  private ExpressionNode methodBlock(final MethodGenerationContext mgenc) throws ParseError {
     expect(NewTerm);
     ExpressionNode methodBody = blockContents(mgenc);
     expect(EndTerm);
@@ -347,11 +412,11 @@ public final class Parser {
     return methodBody;
   }
 
-  private SSymbol unarySelector() {
+  private SSymbol unarySelector() throws ParseError {
     return universe.symbolFor(identifier());
   }
 
-  private SSymbol binarySelector() {
+  private SSymbol binarySelector() throws ParseError {
     String s = new String(text);
 
     // Checkstyle: stop
@@ -367,7 +432,7 @@ public final class Parser {
     return universe.symbolFor(s);
   }
 
-  private String identifier() {
+  private String identifier() throws ParseError {
     String s = new String(text);
     boolean isPrimitive = accept(Primitive);
     if (!isPrimitive) {
@@ -376,18 +441,18 @@ public final class Parser {
     return s;
   }
 
-  private String keyword() {
+  private String keyword() throws ParseError {
     String s = new String(text);
     expect(Keyword);
 
     return s;
   }
 
-  private String argument() {
+  private String argument() throws ParseError {
     return variable();
   }
 
-  private ExpressionNode blockContents(final MethodGenerationContext mgenc) {
+  private ExpressionNode blockContents(final MethodGenerationContext mgenc) throws ParseError {
     if (accept(Or)) {
       locals(mgenc);
       expect(Or);
@@ -395,13 +460,13 @@ public final class Parser {
     return blockBody(mgenc);
   }
 
-  private void locals(final MethodGenerationContext mgenc) {
+  private void locals(final MethodGenerationContext mgenc) throws ParseError {
     while (sym == Identifier) {
       mgenc.addLocalIfAbsent(variable());
     }
   }
 
-  private ExpressionNode blockBody(final MethodGenerationContext mgenc) {
+  private ExpressionNode blockBody(final MethodGenerationContext mgenc) throws ParseError {
     SourceCoordinate coord = getCoordinate();
     List<ExpressionNode> expressions = new ArrayList<ExpressionNode>();
 
@@ -441,7 +506,7 @@ public final class Parser {
     return seq;
   }
 
-  private ExpressionNode result(final MethodGenerationContext mgenc) {
+  private ExpressionNode result(final MethodGenerationContext mgenc) throws ParseError {
     ExpressionNode exp = expression(mgenc);
 
     SourceCoordinate coord = getCoordinate();
@@ -462,7 +527,7 @@ public final class Parser {
     }
   }
 
-  private ExpressionNode expression(final MethodGenerationContext mgenc) {
+  private ExpressionNode expression(final MethodGenerationContext mgenc) throws ParseError {
     peekForNextSymbolFromLexer();
 
     if (nextSym == Assign) {
@@ -472,17 +537,17 @@ public final class Parser {
     }
   }
 
-  private ExpressionNode assignation(final MethodGenerationContext mgenc) {
+  private ExpressionNode assignation(final MethodGenerationContext mgenc) throws ParseError {
     return assignments(mgenc);
   }
 
-  private ExpressionNode assignments(final MethodGenerationContext mgenc) {
+  private ExpressionNode assignments(final MethodGenerationContext mgenc) throws ParseError {
     SourceCoordinate coord = getCoordinate();
 
     if (sym != Identifier) {
-      throw new RuntimeException("This is very unexpected, "
-          + "assignments should always target variables or fields. "
-          + "But found instead a: " + sym.toString());
+      throw new ParseError("Assignments should always target variables or" +
+                           " fields, but found instead a %(found)s",
+                           Symbol.Identifier, this);
     }
     String variable = assignment();
 
@@ -500,13 +565,13 @@ public final class Parser {
     return exp;
   }
 
-  private String assignment() {
+  private String assignment() throws ParseError {
     String v = variable();
     expect(Assign);
     return v;
   }
 
-  private ExpressionNode evaluation(final MethodGenerationContext mgenc) {
+  private ExpressionNode evaluation(final MethodGenerationContext mgenc) throws ParseError {
     ExpressionNode exp = primary(mgenc);
     if (sym == Identifier || sym == Keyword || sym == OperatorSequence
         || symIn(binaryOpSyms)) {
@@ -515,7 +580,7 @@ public final class Parser {
     return exp;
   }
 
-  private ExpressionNode primary(final MethodGenerationContext mgenc) {
+  private ExpressionNode primary(final MethodGenerationContext mgenc) throws ParseError {
     switch (sym) {
       case Identifier: {
         SourceCoordinate coord = getCoordinate();
@@ -553,12 +618,12 @@ public final class Parser {
     }
   }
 
-  private String variable() {
+  private String variable() throws ParseError {
     return identifier();
   }
 
   private AbstractMessageSendNode messages(final MethodGenerationContext mgenc,
-      final ExpressionNode receiver) {
+      final ExpressionNode receiver) throws ParseError {
     AbstractMessageSendNode msg;
     if (sym == Identifier) {
       msg = unaryMessage(receiver);
@@ -590,7 +655,7 @@ public final class Parser {
     return msg;
   }
 
-  private AbstractMessageSendNode unaryMessage(final ExpressionNode receiver) {
+  private AbstractMessageSendNode unaryMessage(final ExpressionNode receiver) throws ParseError {
     SourceCoordinate coord = getCoordinate();
     SSymbol selector = unarySelector();
     AbstractMessageSendNode msg = MessageSendNode.create(selector,
@@ -600,7 +665,7 @@ public final class Parser {
   }
 
   private AbstractMessageSendNode binaryMessage(final MethodGenerationContext mgenc,
-      final ExpressionNode receiver) {
+      final ExpressionNode receiver) throws ParseError {
     SourceCoordinate coord = getCoordinate();
     SSymbol msg = binarySelector();
     ExpressionNode operand = binaryOperand(mgenc);
@@ -611,7 +676,7 @@ public final class Parser {
     return msgNode;
   }
 
-  private ExpressionNode binaryOperand(final MethodGenerationContext mgenc) {
+  private ExpressionNode binaryOperand(final MethodGenerationContext mgenc) throws ParseError {
     ExpressionNode operand = primary(mgenc);
 
     // a binary operand can receive unaryMessages
@@ -624,7 +689,7 @@ public final class Parser {
   }
 
   private AbstractMessageSendNode keywordMessage(final MethodGenerationContext mgenc,
-      final ExpressionNode receiver) {
+      final ExpressionNode receiver) throws ParseError {
     SourceCoordinate coord = getCoordinate();
     List<ExpressionNode> arguments = new ArrayList<ExpressionNode>();
     StringBuffer         kw        = new StringBuffer();
@@ -645,7 +710,7 @@ public final class Parser {
     return msgNode;
   }
 
-  private ExpressionNode formula(final MethodGenerationContext mgenc) {
+  private ExpressionNode formula(final MethodGenerationContext mgenc) throws ParseError {
     ExpressionNode operand = binaryOperand(mgenc);
 
     while (sym == OperatorSequence || symIn(binaryOpSyms)) {
@@ -654,14 +719,14 @@ public final class Parser {
     return operand;
   }
 
-  private ExpressionNode nestedTerm(final MethodGenerationContext mgenc) {
+  private ExpressionNode nestedTerm(final MethodGenerationContext mgenc) throws ParseError {
     expect(NewTerm);
     ExpressionNode exp = expression(mgenc);
     expect(EndTerm);
     return exp;
   }
 
-  private LiteralNode literal() {
+  private LiteralNode literal() throws ParseError {
     switch (sym) {
       case Pound:     return literalSymbol();
       case STString:  return literalString();
@@ -669,7 +734,7 @@ public final class Parser {
     }
   }
 
-  private LiteralNode literalNumber() {
+  private LiteralNode literalNumber() throws ParseError {
     SourceCoordinate coord = getCoordinate();
     long val;
     if (sym == Minus) {
@@ -689,22 +754,27 @@ public final class Parser {
     return node;
   }
 
-  private long literalDecimal() {
+  private long literalDecimal() throws ParseError {
     return literalInteger();
   }
 
-  private long negativeDecimal() {
+  private long negativeDecimal() throws ParseError {
     expect(Minus);
     return -literalInteger();
   }
 
-  private long literalInteger() {
-    long i = Long.parseLong(text);
-    expect(Integer);
-    return i;
+  private long literalInteger() throws ParseError {
+    try {
+      long i = Long.parseLong(text);
+       expect(Integer);
+       return i;
+    } catch (NumberFormatException e) {
+      throw new ParseError("Could not parse integer. Expected a number but " +
+                           "got '" + text + "'", Symbol.NONE, this);
+    }
   }
 
-  private LiteralNode literalSymbol() {
+  private LiteralNode literalSymbol() throws ParseError {
     SourceCoordinate coord = getCoordinate();
 
     SSymbol symb;
@@ -721,7 +791,7 @@ public final class Parser {
     return lit;
   }
 
-  private LiteralNode literalString() {
+  private LiteralNode literalString() throws ParseError {
     SourceCoordinate coord = getCoordinate();
     String s = string();
 
@@ -730,7 +800,7 @@ public final class Parser {
     return node;
   }
 
-  private SSymbol selector() {
+  private SSymbol selector() throws ParseError {
     if (sym == OperatorSequence || symIn(singleOpSyms)) {
       return binarySelector();
     } else if (sym == Keyword || sym == KeywordSequence) {
@@ -740,20 +810,20 @@ public final class Parser {
     }
   }
 
-  private SSymbol keywordSelector() {
+  private SSymbol keywordSelector() throws ParseError {
     String s = new String(text);
     expectOneOf(keywordSelectorSyms);
     SSymbol symb = universe.symbolFor(s);
     return symb;
   }
 
-  private String string() {
+  private String string() throws ParseError {
     String s = new String(text);
     expect(STString);
     return s;
   }
 
-  private ExpressionNode nestedBlock(final MethodGenerationContext mgenc) {
+  private ExpressionNode nestedBlock(final MethodGenerationContext mgenc) throws ParseError {
     expect(NewBlock);
 
     mgenc.addArgumentIfAbsent("$blockSelf");
@@ -778,12 +848,12 @@ public final class Parser {
     return expressions;
   }
 
-  private void blockPattern(final MethodGenerationContext mgenc) {
+  private void blockPattern(final MethodGenerationContext mgenc) throws ParseError {
     blockArguments(mgenc);
     expect(Or);
   }
 
-  private void blockArguments(final MethodGenerationContext mgenc) {
+  private void blockArguments(final MethodGenerationContext mgenc) throws ParseError {
     do {
       expect(Colon);
       mgenc.addArgumentIfAbsent(argument());
@@ -849,7 +919,7 @@ public final class Parser {
     nextSym = lexer.peek();
   }
 
-  private boolean printableSymbol() {
+  private static boolean printableSymbol(final Symbol sym) {
     return sym == Integer || sym.compareTo(STString) >= 0;
   }
 }

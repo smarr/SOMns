@@ -29,6 +29,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.StringReader;
 
+import som.compiler.Parser.ParseError;
 import som.vm.Universe;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
@@ -94,7 +95,11 @@ public final class SourcecodeCompiler {
     ClassGenerationContext cgc = new ClassGenerationContext(universe);
 
     SClass result = systemClass;
-    parser.classdef(cgc);
+    try {
+      parser.classdef(cgc);
+    } catch (ParseError pe) {
+      universe.errorExit(pe.toString());
+    }
 
     if (systemClass == null) {
       result = cgc.assemble();
