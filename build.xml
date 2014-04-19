@@ -22,11 +22,11 @@
     </target>
     
     <target name="libs">
-      <mkdir dir="${lib.dir}" />
-      <get src="${truffle.libs}/truffle.jar"  usetimestamp="true"
+			<mkdir dir="${lib.dir}" />
+			<get src="${truffle.libs}/truffle.jar"  usetimestamp="true"
            dest="${lib.dir}/truffle.jar"/>
-      <get src="http://search.maven.org/remotecontent?filepath=junit/junit/4.8.1/junit-4.8.1.jar" usetimestamp="true"
-           dest="${lib.dir}/junit-4.8.1.jar" />
+   <get src="http://kuiper.mirrorservice.org/sites/downloads.sourceforge.net/j/ju/junit/junit/4.8.1/junit-4.8.1.jar" usetimestamp="true"
+		   dest="${lib.dir}/junit-4.8.1.jar" /> <!-- http://search.maven.org/remotecontent?filepath=junit/junit/4.8.1/junit-4.8.1.jar -->
     </target>
 
     <target name="compile" depends="libs">
