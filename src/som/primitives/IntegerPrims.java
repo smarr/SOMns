@@ -30,4 +30,18 @@ public abstract class IntegerPrims {
       return intOrBigInt(result);
     }
   }
+
+  public abstract static class BitXorPrim extends ArithmeticPrim {
+    @Specialization
+    public final int doInteger(final int receiver, final int right) {
+      return receiver ^ right;
+    }
+  }
+
+  public abstract static class LeftShiftPrim extends ArithmeticPrim {
+    @Specialization
+    public final int doInteger(final int receiver, final int right) {
+      return receiver << right;
+    }
+  }
 }
