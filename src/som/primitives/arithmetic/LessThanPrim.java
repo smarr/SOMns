@@ -57,6 +57,6 @@ public abstract class LessThanPrim extends ArithmeticPrim {
 
   @Specialization(order = 130)
   public final SObject doDouble(final double left, final int right) {
-    return doDouble(left, right);
+    return doDouble(left, (double) right);
   }
 }
