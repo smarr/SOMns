@@ -78,15 +78,7 @@ public final class Lexer {
         || currentChar() == '"');
 
     if (currentChar() == '\'') {
-      sym = Symbol.STString;
-      symc = 0;
-      text = new StringBuffer();
-      do {
-        text.append(bufchar(++bufp));
-      }
-      while (currentChar() != '\'');
-      text.deleteCharAt(text.length() - 1);
-      bufp++;
+      lexString();
     } else if (currentChar() == '[') {
       match(Symbol.NewBlock);
     } else if (currentChar() == ']') {
@@ -127,40 +119,7 @@ public final class Lexer {
         text = new StringBuffer("-");
       }
     } else if (isOperator(currentChar())) {
-      if (isOperator(bufchar(bufp + 1))) {
-        sym = Symbol.OperatorSequence;
-        symc = 0;
-        text = new StringBuffer();
-        while (isOperator(currentChar())) {
-          text.append(bufchar(bufp++));
-        }
-      } else if (currentChar() == '~') {
-        match(Symbol.Not);
-      } else if (currentChar() == '&') {
-        match(Symbol.And);
-      } else if (currentChar() == '|') {
-        match(Symbol.Or);
-      } else if (currentChar() == '*') {
-        match(Symbol.Star);
-      } else if (currentChar() == '/') {
-        match(Symbol.Div);
-      } else if (currentChar() == '\\') {
-        match(Symbol.Mod);
-      } else if (currentChar() == '+') {
-        match(Symbol.Plus);
-      } else if (currentChar() == '=') {
-        match(Symbol.Equal);
-      } else if (currentChar() == '>') {
-        match(Symbol.More);
-      } else if (currentChar() == '<') {
-        match(Symbol.Less);
-      } else if (currentChar() == ',') {
-        match(Symbol.Comma);
-      } else if (currentChar() == '@') {
-        match(Symbol.At);
-      } else if (currentChar() == '%') {
-        match(Symbol.Per);
-      }
+      lexOperator();
     } else if (buf.startsWith(PRIMITIVE, bufp)) {
       bufp += PRIMITIVE.length();
       sym = Symbol.Primitive;
@@ -185,13 +144,7 @@ public final class Lexer {
         }
       }
     } else if (Character.isDigit(currentChar())) {
-      sym = Symbol.Integer;
-      symc = 0;
-      text = new StringBuffer();
-      do {
-        text.append(bufchar(bufp++));
-      }
-      while (Character.isDigit(currentChar()));
+      lexNumber();
     } else {
       sym = Symbol.NONE;
       symc = currentChar();
@@ -199,6 +152,65 @@ public final class Lexer {
     }
 
     return sym;
+  }
+
+  private void lexNumber() {
+    sym = Symbol.Integer;
+    symc = 0;
+    text = new StringBuffer();
+    do {
+      text.append(bufchar(bufp++));
+    }
+    while (Character.isDigit(currentChar()));
+  }
+
+  private void lexString() {
+    sym = Symbol.STString;
+    symc = 0;
+    text = new StringBuffer();
+    do {
+      text.append(bufchar(++bufp));
+    }
+    while (currentChar() != '\'');
+    text.deleteCharAt(text.length() - 1);
+    bufp++;
+  }
+
+  private void lexOperator() {
+    if (isOperator(bufchar(bufp + 1))) {
+      sym = Symbol.OperatorSequence;
+      symc = 0;
+      text = new StringBuffer();
+      while (isOperator(currentChar())) {
+        text.append(bufchar(bufp++));
+      }
+    } else if (currentChar() == '~') {
+      match(Symbol.Not);
+    } else if (currentChar() == '&') {
+      match(Symbol.And);
+    } else if (currentChar() == '|') {
+      match(Symbol.Or);
+    } else if (currentChar() == '*') {
+      match(Symbol.Star);
+    } else if (currentChar() == '/') {
+      match(Symbol.Div);
+    } else if (currentChar() == '\\') {
+      match(Symbol.Mod);
+    } else if (currentChar() == '+') {
+      match(Symbol.Plus);
+    } else if (currentChar() == '=') {
+      match(Symbol.Equal);
+    } else if (currentChar() == '>') {
+      match(Symbol.More);
+    } else if (currentChar() == '<') {
+      match(Symbol.Less);
+    } else if (currentChar() == ',') {
+      match(Symbol.Comma);
+    } else if (currentChar() == '@') {
+      match(Symbol.At);
+    } else if (currentChar() == '%') {
+      match(Symbol.Per);
+    }
   }
 
   protected Symbol peek() {
