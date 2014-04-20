@@ -61,12 +61,12 @@ Mandelbrot = Benchmark (
         byteAcc := 0.
         bitNum  := 0.
   
-        y := 0.0.
+        y := 0.
         
         [y < size] whileTrue: [
             | ci x |
             ci := (2.0 * y // size) - 1.0.
-            x  := 0.0.
+            x  := 0.
             
             [x < size] whileTrue: [
                 | zr zrzr zi zizi cr escape z notDone |
@@ -79,7 +79,7 @@ Mandelbrot = Benchmark (
                 escape := 0.
                 [notDone and: [z < 50]] whileTrue: [
                     zr := zrzr - zizi + cr.
-                    zi := (2//1) * zr * zi + ci.
+                    zi := 2.0 * zr * zi + ci.
             
                     "preserve recalculation"
                     zrzr := zr * zr.
@@ -91,10 +91,8 @@ Mandelbrot = Benchmark (
                     ].
                     z := z + 1.
                 ].
-                
-                
   
-                byteAcc := (byteAcc * 2) + escape.
+                byteAcc := (byteAcc << 1) + escape.
                 bitNum  := bitNum + 1.
   
                 " Code is very similar for these cases, but using separate blocks
