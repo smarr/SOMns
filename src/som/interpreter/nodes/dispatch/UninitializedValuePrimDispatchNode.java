@@ -1,7 +1,7 @@
 package som.interpreter.nodes.dispatch;
 
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
-import som.primitives.BlockPrims.ValueNonePrim;
+import som.primitives.BlockPrims.ValuePrimitiveNode;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 
@@ -24,7 +24,7 @@ public final class UninitializedValuePrimDispatchNode
       i = i.getParent();
       chainDepth++;
     }
-    ValueNonePrim primitiveNode = (ValueNonePrim) i.getParent();
+    ValuePrimitiveNode primitiveNode = (ValuePrimitiveNode) i.getParent();
 
     if (chainDepth < INLINE_CACHE_SIZE) {
       SInvokable method = rcvr.getMethod();

@@ -15,6 +15,10 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 
 public abstract class BlockPrims {
 
+  public interface ValuePrimitiveNode {
+    void adoptNewDispatchListHead(final AbstractDispatchNode node);
+  }
+
   public abstract static class RestartPrim extends UnaryExpressionNode {
 
     @Specialization
@@ -26,7 +30,8 @@ public abstract class BlockPrims {
     }
   }
 
-  public abstract static class ValueNonePrim extends UnaryExpressionNode {
+  public abstract static class ValueNonePrim extends UnaryExpressionNode
+      implements ValuePrimitiveNode {
     @Child private AbstractDispatchNode dispatchNode;
 
     public ValueNonePrim() {
@@ -39,24 +44,51 @@ public abstract class BlockPrims {
       return dispatchNode.executeDispatch(frame, new Object[] {receiver});
     }
 
+    @Override
     public void adoptNewDispatchListHead(final AbstractDispatchNode node) {
       dispatchNode = insert(node);
     }
   }
 
-  public abstract static class ValueOnePrim extends BinaryExpressionNode {
+  public abstract static class ValueOnePrim extends BinaryExpressionNode
+      implements ValuePrimitiveNode  {
+    @Child private AbstractDispatchNode dispatchNode;
+
+    public ValueOnePrim() {
+      super();
+      dispatchNode = new UninitializedValuePrimDispatchNode();
+    }
+
     @Specialization
     public final Object doSBlock(final VirtualFrame frame, final SBlock receiver,
         final Object arg) {
-      return receiver.getMethod().invoke(receiver, arg);
+      return dispatchNode.executeDispatch(frame, new Object[] {receiver, arg});
+    }
+
+    @Override
+    public void adoptNewDispatchListHead(final AbstractDispatchNode node) {
+      dispatchNode = insert(node);
     }
   }
 
-  public abstract static class ValueTwoPrim extends TernaryExpressionNode {
+  public abstract static class ValueTwoPrim extends TernaryExpressionNode
+      implements ValuePrimitiveNode {
+    @Child private AbstractDispatchNode dispatchNode;
+
+    public ValueTwoPrim() {
+      super();
+      dispatchNode = new UninitializedValuePrimDispatchNode();
+    }
+
     @Specialization
     public final Object doSBlock(final VirtualFrame frame,
         final SBlock receiver, final Object arg1, final Object arg2) {
-      return receiver.getMethod().invoke(receiver, arg1, arg2);
+      return dispatchNode.executeDispatch(frame, new Object[] {receiver, arg1, arg2});
+    }
+
+    @Override
+    public void adoptNewDispatchListHead(final AbstractDispatchNode node) {
+      dispatchNode = insert(node);
     }
   }
 
@@ -66,8 +98,6 @@ public abstract class BlockPrims {
         final SBlock receiver, final Object firstArg, final Object secondArg,
         final Object thirdArg) {
       throw new RuntimeException("This should never be called, because SOM Blocks have max. 2 arguments.");
-//      return receiver.getMethod().invoke(new Object[] {receiver, firstArg,
-//          secondArg, thirdArg});
     }
   }
 }
