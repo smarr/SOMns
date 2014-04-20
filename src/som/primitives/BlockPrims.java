@@ -1,5 +1,7 @@
 package som.primitives;
 
+import som.interpreter.nodes.dispatch.AbstractDispatchNode;
+import som.interpreter.nodes.dispatch.UninitializedValuePrimDispatchNode;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.QuaternaryExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
@@ -25,9 +27,20 @@ public abstract class BlockPrims {
   }
 
   public abstract static class ValueNonePrim extends UnaryExpressionNode {
+    @Child private AbstractDispatchNode dispatchNode;
+
+    public ValueNonePrim() {
+      super();
+      dispatchNode = new UninitializedValuePrimDispatchNode();
+    }
+
     @Specialization
     public final Object doSBlock(final VirtualFrame frame, final SBlock receiver) {
-      return receiver.getMethod().invoke(receiver);
+      return dispatchNode.executeDispatch(frame, new Object[] {receiver});
+    }
+
+    public void adoptNewDispatchListHead(final AbstractDispatchNode node) {
+      dispatchNode = insert(node);
     }
   }
 
