@@ -89,20 +89,8 @@ public abstract class SInvokable extends SAbstractObject {
     return getSignature().getNumberOfSignatureArguments();
   }
 
-  public Object invoke(final Object self) {
-    return callTarget.call(new Object[] {self});
-  }
-
-  public Object invoke(final Object self, final Object arg) {
-    return callTarget.call(new Object[] {self, arg});
-  }
-
-  public Object invoke(final Object self, final Object arg1, final Object arg2) {
-    return callTarget.call(new Object[] {self, arg1, arg2});
-  }
-
-  public Object invoke(final Object[] args) {
-    return callTarget.call(args);
+  public Object invoke(final Object... arguments) {
+    return callTarget.call(arguments);
   }
 
   @Override
