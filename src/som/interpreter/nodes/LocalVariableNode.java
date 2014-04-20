@@ -49,6 +49,12 @@ public abstract class LocalVariableNode extends ExpressionNode {
     }
 
     @Specialization(guards = "isInitialized", rewriteOn = {FrameSlotTypeException.class})
+    public final boolean doBoolean(final VirtualFrame frame) throws FrameSlotTypeException {
+      return frame.getBoolean(slot);
+    }
+
+
+    @Specialization(guards = "isInitialized", rewriteOn = {FrameSlotTypeException.class})
     public final int doInteger(final VirtualFrame frame) throws FrameSlotTypeException {
       return frame.getInt(slot);
     }
@@ -121,6 +127,12 @@ public abstract class LocalVariableNode extends ExpressionNode {
 
     public abstract ExpressionNode getExp();
 
+    @Specialization(guards = "isBoolKind", rewriteOn = FrameSlotTypeException.class)
+    public final boolean write(final VirtualFrame frame, final boolean expValue) throws FrameSlotTypeException {
+      frame.setBoolean(slot, expValue);
+      return expValue;
+    }
+
     @Specialization(guards = "isIntKind", rewriteOn = FrameSlotTypeException.class)
     public final int write(final VirtualFrame frame, final int expValue) throws FrameSlotTypeException {
       frame.setInt(slot, expValue);
@@ -138,6 +150,18 @@ public abstract class LocalVariableNode extends ExpressionNode {
       ensureObjectKind();
       frame.setObject(slot, expValue);
       return expValue;
+    }
+
+    protected final boolean isBoolKind() {
+      if (slot.getKind() == FrameSlotKind.Boolean) {
+        return true;
+      }
+      if (slot.getKind() == FrameSlotKind.Illegal) {
+        transferToInterpreter("LocalVar.writeBoolToUninit");
+        slot.setKind(FrameSlotKind.Boolean);
+        return true;
+      }
+      return false;
     }
 
     protected final boolean isIntKind() {

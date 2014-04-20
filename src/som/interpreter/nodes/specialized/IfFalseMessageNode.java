@@ -2,7 +2,6 @@ package som.interpreter.nodes.specialized;
 
 import som.vm.Universe;
 import som.vmobjects.SBlock;
-import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -18,14 +17,14 @@ public abstract class IfFalseMessageNode extends AbstractIfMessageNode  {
    */
   @Specialization(order = 1, guards = "isSameArgument")
   public final Object doIfFalseWithInlining(final VirtualFrame frame,
-      final SObject receiver, final SBlock argument) {
-    return doIfWithInlining(frame, receiver, argument, universe.falseObject);
+      final boolean receiver, final SBlock argument) {
+    return doIfWithInlining(frame, receiver, argument, false);
   }
 
   @Specialization(order = 10)
-  public final Object doIfFalse(final VirtualFrame frame, final SObject receiver,
+  public final Object doIfFalse(final VirtualFrame frame, final boolean receiver,
       final SBlock argument) {
-    return doIf(frame, receiver, argument, universe.falseObject);
+    return doIf(frame, receiver, argument, false);
   }
 
   /**
@@ -33,8 +32,8 @@ public abstract class IfFalseMessageNode extends AbstractIfMessageNode  {
    */
   @Specialization
   public final Object doIfFalse(final VirtualFrame frame,
-      final SObject receiver, final Object argument) {
-    if (receiver == universe.falseObject) {
+      final boolean receiver, final Object argument) {
+    if (receiver == false) {
       return argument;
     } else {
       return universe.nilObject;

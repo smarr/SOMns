@@ -25,4 +25,40 @@ public final class CachedDispatchSimpleCheckNode extends AbstractCachedDispatchN
       return nextInCache.executeDispatch(frame, arguments);
     }
   }
+
+  public static final class CachedDispatchTrueCheckNode
+      extends AbstractCachedDispatchNode {
+    public CachedDispatchTrueCheckNode(final SInvokable method,
+        final AbstractDispatchNode nextInCache) {
+      super(method, nextInCache);
+    }
+
+    @Override
+    public Object executeDispatch(final VirtualFrame frame,
+        final Object[] arguments) {
+      if (arguments[0] == Boolean.TRUE) {
+        return cachedMethod.call(frame, arguments);
+      } else {
+        return nextInCache.executeDispatch(frame, arguments);
+      }
+    }
+  }
+
+  public static final class CachedDispatchFalseCheckNode
+      extends AbstractCachedDispatchNode {
+    public CachedDispatchFalseCheckNode(final SInvokable method,
+        final AbstractDispatchNode nextInCache) {
+      super(method, nextInCache);
+    }
+
+    @Override
+    public Object executeDispatch(final VirtualFrame frame,
+        final Object[] arguments) {
+      if (arguments[0] == Boolean.FALSE) {
+        return cachedMethod.call(frame, arguments);
+      } else {
+        return nextInCache.executeDispatch(frame, arguments);
+      }
+    }
+  }
 }

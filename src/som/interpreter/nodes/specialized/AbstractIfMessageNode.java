@@ -4,7 +4,6 @@ import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.vm.Universe;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
-import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -48,8 +47,8 @@ public abstract class AbstractIfMessageNode extends BinaryExpressionNode {
    * This is the case were we got a block as the argument. Need to actually
    * evaluate it.
    */
-  public final Object doIfWithInlining(final VirtualFrame frame, final SObject receiver,
-      final SBlock argument, final SObject predicateObject) {
+  public final Object doIfWithInlining(final VirtualFrame frame,
+      final boolean receiver, final SBlock argument, final boolean predicateObject) {
     if (receiver == predicateObject) {
       ifTrueBranch.enter();
       return branchValueSend.call(frame, new Object[] {argument});
@@ -59,8 +58,8 @@ public abstract class AbstractIfMessageNode extends BinaryExpressionNode {
     }
   }
 
-  public final Object doIf(final VirtualFrame frame, final SObject receiver,
-      final SBlock argument, final SObject predicateObject) {
+  public final Object doIf(final VirtualFrame frame, final boolean receiver,
+      final SBlock argument, final boolean predicateObject) {
     if (receiver == predicateObject) {
       ifTrueBranch.enter();
       return argument.getMethod().invoke(argument);

@@ -44,7 +44,8 @@ import som.vmobjects.SSymbol;
 import com.oracle.truffle.api.dsl.ImplicitCast;
 import com.oracle.truffle.api.dsl.TypeSystem;
 
-@TypeSystem({       int.class,
+@TypeSystem({   boolean.class,
+                    int.class,
              BigInteger.class,
                  String.class,
                  double.class,
@@ -65,6 +66,12 @@ public class Types {
       final Universe universe) {
     if (obj instanceof SAbstractObject) {
       return (SAbstractObject) obj;
+    } else if (obj instanceof Boolean) {
+      if ((boolean) obj) {
+        return universe.trueObject;
+      } else {
+        return universe.falseObject;
+      }
     } else if (obj instanceof Integer) {
       return universe.newInteger((int) obj);
     } else if (obj instanceof BigInteger) {
@@ -81,6 +88,12 @@ public class Types {
   public static SClass getClassOf(final Object obj, final Universe universe) {
     if (obj instanceof SAbstractObject) {
       return ((SAbstractObject) obj).getSOMClass(universe);
+    } else if (obj instanceof Boolean) {
+      if ((boolean) obj) {
+        return universe.trueClass;
+      } else {
+        return universe.falseClass;
+      }
     } else if (obj instanceof Integer) {
       return universe.integerClass;
     } else if (obj instanceof BigInteger) {

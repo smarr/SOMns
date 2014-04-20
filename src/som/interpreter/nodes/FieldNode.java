@@ -86,6 +86,10 @@ public abstract class FieldNode extends ExpressionNode {
       return readFromObject(self) instanceof SAbstractObject;
     }
 
+    protected final boolean isBoolean(final SObject self) {
+      return readFromObject(self) instanceof Boolean;
+    }
+
     protected final boolean isInteger(final SObject self) {
       return readFromObject(self) instanceof Integer;
     }
@@ -115,6 +119,11 @@ public abstract class FieldNode extends ExpressionNode {
     @Specialization(guards = "isSAbstractObject")
     public final SAbstractObject readSAbstractObject(final SObject self) {
       return (SAbstractObject) readFromObject(self);
+    }
+
+    @Specialization(guards = "isBoolean")
+    public final boolean readBoolean(final SObject self) {
+      return (boolean) readFromObject(self);
     }
 
     @Specialization(guards = "isInteger")
@@ -161,6 +170,12 @@ public abstract class FieldNode extends ExpressionNode {
 
     @Specialization(order = 1)
     public final SAbstractObject doSAbstractObject(final SObject self, final SAbstractObject value) {
+      writeToObject(self, value);
+      return value;
+    }
+
+    @Specialization(order = 19)
+    public final boolean doBoolean(final SObject self, final boolean value) {
       writeToObject(self, value);
       return value;
     }

@@ -3,6 +3,8 @@ package som.interpreter.nodes.dispatch;
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
 import som.interpreter.Types;
 import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
+import som.interpreter.nodes.dispatch.CachedDispatchSimpleCheckNode.CachedDispatchFalseCheckNode;
+import som.interpreter.nodes.dispatch.CachedDispatchSimpleCheckNode.CachedDispatchTrueCheckNode;
 import som.vm.Universe;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
@@ -62,10 +64,18 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
             }
           } else {
             // the simple checks are prepended
-            CachedDispatchSimpleCheckNode node =
-                new CachedDispatchSimpleCheckNode(
-                    rcvr.getClass(), method,
-                    sendNode.getDispatchListHead());
+
+            AbstractCachedDispatchNode node;
+            AbstractDispatchNode next = sendNode.getDispatchListHead();
+
+            if (rcvr == Boolean.TRUE) {
+              node = new CachedDispatchTrueCheckNode(method, next);
+            } else if (rcvr == Boolean.FALSE) {
+              node = new CachedDispatchFalseCheckNode(method, next);
+            } else {
+              node = new CachedDispatchSimpleCheckNode(
+                    rcvr.getClass(), method, next);
+            }
             sendNode.adoptNewDispatchListHead(node);
             return node.executeDispatch(frame, arguments);
           }

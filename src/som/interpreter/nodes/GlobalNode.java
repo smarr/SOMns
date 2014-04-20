@@ -42,6 +42,9 @@ public abstract class GlobalNode extends ExpressionNode {
     this.universe   = universe;
   }
 
+  @Override
+  public final void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
+
   public static final class UninitializedGlobalReadNode extends GlobalNode {
     private final BranchProfile unknownGlobalNotFound;
 
@@ -53,6 +56,17 @@ public abstract class GlobalNode extends ExpressionNode {
     @Override
     public Object executeGeneric(final VirtualFrame frame) {
       TruffleCompiler.transferToInterpreterAndInvalidate("Uninitialized Global Node");
+
+      // first let's check whether it is one of the well known globals
+      switch (globalName.getString()) {
+        case "true":
+          return replace(new TrueGlobalNode(globalName, universe)).executeGeneric(frame);
+        case "false":
+          return replace(new FalseGlobalNode(globalName, universe)).executeGeneric(frame);
+        case "nil":
+          return replace(new NilGlobalNode(globalName, universe)).executeGeneric(frame);
+      }
+
       // Get the global from the universe
       Association assoc = universe.getGlobalsAssociation(globalName);
       if (assoc != null) {
@@ -65,9 +79,6 @@ public abstract class GlobalNode extends ExpressionNode {
         return SAbstractObject.sendUnknownGlobal(self, globalName, universe);
       }
     }
-
-    @Override
-    public void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
   }
 
   private static final class CachedGlobalReadNode extends GlobalNode {
@@ -83,8 +94,48 @@ public abstract class GlobalNode extends ExpressionNode {
     public Object executeGeneric(final VirtualFrame frame) {
       return assoc.value;
     }
+  }
+
+  private static final class TrueGlobalNode extends GlobalNode {
+    public TrueGlobalNode(final SSymbol globalName, final Universe universe) {
+      super(globalName, universe);
+    }
 
     @Override
-    public void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
+    public boolean executeBoolean(final VirtualFrame frame) {
+      return true;
+    }
+
+    @Override
+    public Object executeGeneric(final VirtualFrame frame) {
+      return executeBoolean(frame);
+    }
+  }
+
+  private static final class FalseGlobalNode extends GlobalNode {
+    public FalseGlobalNode(final SSymbol globalName, final Universe universe) {
+      super(globalName, universe);
+    }
+
+    @Override
+    public boolean executeBoolean(final VirtualFrame frame) {
+      return false;
+    }
+
+    @Override
+    public Object executeGeneric(final VirtualFrame frame) {
+      return executeBoolean(frame);
+    }
+  }
+
+  private static final class NilGlobalNode extends GlobalNode {
+    public NilGlobalNode(final SSymbol globalName, final Universe universe) {
+      super(globalName, universe);
+    }
+
+    @Override
+    public Object executeGeneric(final VirtualFrame frame) {
+      return universe.nilObject;
+    }
   }
 }

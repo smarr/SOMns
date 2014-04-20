@@ -23,12 +23,12 @@ public abstract class WhileWithStaticBlocksNode extends BinaryExpressionNode {
   @Child protected DirectCallNode  conditionValueSend;
   @Child protected DirectCallNode  bodyValueSend;
 
-  protected final SObject predicateBool;
+  protected final boolean predicateBool;
   private final Universe universe;
 
   private WhileWithStaticBlocksNode(final BlockNode receiver,
       final BlockNode argument, final SBlock rcvr, final SBlock arg,
-      final SObject predicateBool, final Universe universe) {
+      final boolean predicateBool, final Universe universe) {
     this.receiver = receiver;
     this.argument = argument;
 
@@ -74,7 +74,7 @@ public abstract class WhileWithStaticBlocksNode extends BinaryExpressionNode {
       final SBlock loopCondition,
       final SBlock loopBody) {
     int iterationCount = 0;
-    Object loopConditionResult = conditionValueSend.call(
+    boolean loopConditionResult = (boolean) conditionValueSend.call(
         frame, new Object[] {loopCondition});
 
 
@@ -82,7 +82,7 @@ public abstract class WhileWithStaticBlocksNode extends BinaryExpressionNode {
       // TODO: this is a simplification, we don't cover the case receiver isn't a boolean
       while (loopConditionResult == predicateBool) {
         bodyValueSend.call(frame, new Object[] {loopBody});
-        loopConditionResult = conditionValueSend.call(
+        loopConditionResult = (boolean) conditionValueSend.call(
             frame, new Object[] {loopCondition});
 
         if (CompilerDirectives.inInterpreter()) {
@@ -116,7 +116,7 @@ public abstract class WhileWithStaticBlocksNode extends BinaryExpressionNode {
     public WhileTrueStaticBlocksNode(final BlockNode receiver,
         final BlockNode argument, final SBlock rcvr, final SBlock arg,
         final Universe universe) {
-      super(receiver, argument, rcvr, arg, universe.trueObject, universe);
+      super(receiver, argument, rcvr, arg, true, universe);
     }
   }
 
@@ -124,7 +124,7 @@ public abstract class WhileWithStaticBlocksNode extends BinaryExpressionNode {
     public WhileFalseStaticBlocksNode(final BlockNode receiver,
         final BlockNode argument, final SBlock rcvr, final SBlock arg,
         final Universe universe) {
-      super(receiver, argument, rcvr, arg, universe.falseObject, universe);
+      super(receiver, argument, rcvr, arg, false, universe);
     }
   }
 }
