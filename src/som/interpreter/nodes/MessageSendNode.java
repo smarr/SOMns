@@ -9,6 +9,7 @@ import som.interpreter.nodes.dispatch.UninitializedDispatchNode;
 import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.nary.EagerBinaryPrimitiveNode;
 import som.interpreter.nodes.nary.EagerUnaryPrimitiveNode;
+import som.interpreter.nodes.specialized.AndMessageNodeFactory;
 import som.interpreter.nodes.specialized.IfFalseMessageNodeFactory;
 import som.interpreter.nodes.specialized.IfTrueIfFalseMessageNodeFactory;
 import som.interpreter.nodes.specialized.IfTrueMessageNodeFactory;
@@ -259,6 +260,11 @@ public final class MessageSendNode {
             return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
                 argumentNodes[1],
                 NewPrimFactory.create(null, null)));
+          }
+        case "and:":
+          if (arguments[0] instanceof Boolean && argumentNodes[1] instanceof BlockNode) {
+            return replace(AndMessageNodeFactory.create((SBlock) arguments[1],
+                argumentNodes[0], argumentNodes[1]));
           }
       }
 
