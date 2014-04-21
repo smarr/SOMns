@@ -25,9 +25,9 @@
 
 package som.primitives;
 
-import som.primitives.DoublePrimsFactory.BitXorPrimFactory;
 import som.primitives.DoublePrimsFactory.RoundPrimFactory;
 import som.primitives.arithmetic.AdditionPrimFactory;
+import som.primitives.arithmetic.BitXorPrimFactory;
 import som.primitives.arithmetic.DoubleDivPrimFactory;
 import som.primitives.arithmetic.LessThanPrimFactory;
 import som.primitives.arithmetic.LogicAndPrimFactory;

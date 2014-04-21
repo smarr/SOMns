@@ -25,11 +25,11 @@
 
 package som.primitives;
 
-import som.primitives.IntegerPrimsFactory.BitXorPrimFactory;
 import som.primitives.IntegerPrimsFactory.FromStringPrimFactory;
 import som.primitives.IntegerPrimsFactory.LeftShiftPrimFactory;
 import som.primitives.IntegerPrimsFactory.RandomPrimFactory;
 import som.primitives.arithmetic.AdditionPrimFactory;
+import som.primitives.arithmetic.BitXorPrimFactory;
 import som.primitives.arithmetic.DividePrimFactory;
 import som.primitives.arithmetic.DoubleDivPrimFactory;
 import som.primitives.arithmetic.LessThanPrimFactory;
