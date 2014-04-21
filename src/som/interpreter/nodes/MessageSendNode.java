@@ -56,7 +56,7 @@ public final class MessageSendNode {
   public abstract static class AbstractMessageSendNode extends ExpressionNode
       implements PreevaluatedExpression {
 
-    @Children protected final ExpressionNode[]     argumentNodes;
+    @Children protected final ExpressionNode[] argumentNodes;
 
     protected AbstractMessageSendNode(final ExpressionNode[] arguments) {
       this.argumentNodes = arguments;
