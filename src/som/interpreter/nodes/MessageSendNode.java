@@ -24,6 +24,7 @@ import som.primitives.BlockPrimsFactory.ValueNonePrimFactory;
 import som.primitives.BlockPrimsFactory.ValueOnePrimFactory;
 import som.primitives.EqualsEqualsPrimFactory;
 import som.primitives.EqualsPrimFactory;
+import som.primitives.IntegerPrimsFactory.LeftShiftPrimFactory;
 import som.primitives.LengthPrimFactory;
 import som.primitives.arithmetic.AdditionPrimFactory;
 import som.primitives.arithmetic.BitXorPrimFactory;
@@ -255,6 +256,12 @@ public final class MessageSendNode {
               LogicAndPrimFactory.create(null, null)));
 
         // eagerly but causious:
+        case "<<":
+          if (arguments[0] instanceof Integer) {
+            return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
+                argumentNodes[1],
+                LeftShiftPrimFactory.create(null, null)));
+          }
         case "at:":
           if (arguments[0] instanceof SArray) {
             return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
