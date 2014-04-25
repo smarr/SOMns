@@ -52,7 +52,7 @@ public abstract class FieldAccessor extends Node {
     @Override
     public Object read(final SObject self) {
       //return CompilerDirectives.unsafeGetObject(self, fieldOffset, true, this);
-      return CompilerDirectives.unsafeGetObject(self, fieldOffset, true, fieldIdentifierToken);
+      return CompilerDirectives.unsafeGetObject(self, fieldOffset, false, fieldIdentifierToken);
     }
 
 
