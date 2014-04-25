@@ -41,23 +41,34 @@ public abstract class FieldAccessor extends Node {
 
   private static final class DirectStoreAccessor extends FieldAccessor {
     private final long fieldOffset;
+    private final Object fieldIdentifierToken;
 
     DirectStoreAccessor(final int fieldIndex) {
       assert fieldIndex < SObject.NUM_DIRECT_FIELDS;
       fieldOffset = SObject.FIRST_OFFSET + fieldIndex * SObject.FIELD_LENGTH;
+      fieldIdentifierToken = fieldIdentifierTokens[fieldIndex];
     }
 
     @Override
     public Object read(final SObject self) {
       //return CompilerDirectives.unsafeGetObject(self, fieldOffset, true, this);
-      return CompilerDirectives.unsafeGetObject(self, fieldOffset, true, null);
+      return CompilerDirectives.unsafeGetObject(self, fieldOffset, true, fieldIdentifierToken);
     }
 
 
     @Override
     public void write(final SObject self, final Object value) {
       // CompilerDirectives.unsafePutObject(self, fieldOffset, value, this);
-      CompilerDirectives.unsafePutObject(self, fieldOffset, value, null);
+      CompilerDirectives.unsafePutObject(self, fieldOffset, value, fieldIdentifierToken);
+    }
+
+    private static Object[] fieldIdentifierTokens;
+    // static initializer
+    {
+      fieldIdentifierTokens = new Object[SObject.NUM_DIRECT_FIELDS];
+      for (int i = 0; i < SObject.NUM_DIRECT_FIELDS; i++) {
+        fieldIdentifierTokens[i] = new Object();
+      }
     }
   }
 }
