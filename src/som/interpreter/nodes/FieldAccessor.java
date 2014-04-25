@@ -49,13 +49,15 @@ public abstract class FieldAccessor extends Node {
 
     @Override
     public Object read(final SObject self) {
-      return CompilerDirectives.unsafeGetObject(self, fieldOffset, true, this);
+      //return CompilerDirectives.unsafeGetObject(self, fieldOffset, true, this);
+      return CompilerDirectives.unsafeGetObject(self, fieldOffset, true, null);
     }
 
 
     @Override
     public void write(final SObject self, final Object value) {
-      CompilerDirectives.unsafePutObject(self, fieldOffset, value, this);
+      // CompilerDirectives.unsafePutObject(self, fieldOffset, value, this);
+      CompilerDirectives.unsafePutObject(self, fieldOffset, value, null);
     }
   }
 }
