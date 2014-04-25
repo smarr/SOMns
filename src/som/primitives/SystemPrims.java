@@ -93,11 +93,8 @@ public final class SystemPrims {
   public abstract static class FullGCPrim extends UnarySystemNode {
     @Specialization(guards = "receiverIsSystemObject")
     public final Object doSObject(final SObject receiver) {
-      // TODO: deactivated GC as work around for Hotspot collecting native code
-      //       generated for the benchmarks.
-      // System.gc();
-      // return universe.trueObject;
-      return universe.falseObject;
+      System.gc();
+      return universe.trueObject;
     }
   }
 
