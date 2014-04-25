@@ -41,34 +41,35 @@ public abstract class FieldAccessor extends Node {
 
   private static final class DirectStoreAccessor extends FieldAccessor {
     private final long fieldOffset;
-    private final Object fieldIdentifierToken;
+//    private final Object fieldIdentifierToken;
 
     DirectStoreAccessor(final int fieldIndex) {
       assert fieldIndex < SObject.NUM_DIRECT_FIELDS;
       fieldOffset = SObject.FIRST_OFFSET + fieldIndex * SObject.FIELD_LENGTH;
-      fieldIdentifierToken = fieldIdentifierTokens[fieldIndex];
+//      fieldIdentifierToken = fieldIdentifierTokens[fieldIndex];
     }
 
     @Override
     public Object read(final SObject self) {
-      //return CompilerDirectives.unsafeGetObject(self, fieldOffset, true, this);
-      return CompilerDirectives.unsafeGetObject(self, fieldOffset, false, fieldIdentifierToken);
+      //return CompilerDirectives.unsafeGetObject(self, fieldOffset, true, fieldIdentifierToken);
+      return CompilerDirectives.unsafeGetObject(self, fieldOffset, true, null);
     }
 
 
     @Override
     public void write(final SObject self, final Object value) {
-      // CompilerDirectives.unsafePutObject(self, fieldOffset, value, this);
-      CompilerDirectives.unsafePutObject(self, fieldOffset, value, fieldIdentifierToken);
+      // CompilerDirectives.unsafePutObject(self, fieldOffset, value, fieldIdentifierToken);
+      CompilerDirectives.unsafePutObject(self, fieldOffset, value, null);
     }
 
-    private static Object[] fieldIdentifierTokens;
-    // static initializer
-    {
-      fieldIdentifierTokens = new Object[SObject.NUM_DIRECT_FIELDS];
-      for (int i = 0; i < SObject.NUM_DIRECT_FIELDS; i++) {
-        fieldIdentifierTokens[i] = new Object();
-      }
-    }
+// Disabled because of compilation correctness issues in Graal.
+//    private static Object[] fieldIdentifierTokens;
+//    // static initializer
+//    {
+//      fieldIdentifierTokens = new Object[SObject.NUM_DIRECT_FIELDS];
+//      for (int i = 0; i < SObject.NUM_DIRECT_FIELDS; i++) {
+//        fieldIdentifierTokens[i] = new Object();
+//      }
+//    }
   }
 }
