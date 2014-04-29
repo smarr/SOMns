@@ -67,12 +67,4 @@ public final class Method extends Invokable {
   public RootNode split() {
     return cloneWithNewLexicalContext(outerContext);
   }
-
-  @Override
-  public boolean isAlwaysToBeInlined() {
-    // If we do not have an ArgumentInitializationNode, we can directly inline
-    // the result
-//    return !(expressionOrSequence instanceof ArgumentInitializationNode);
-    return false;
-  }
 }

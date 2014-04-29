@@ -32,11 +32,4 @@ public final class Primitive extends Invokable {
   public String toString() {
     return "Primitive " + expressionOrSequence.getClass().getSimpleName() + "@" + Integer.toHexString(hashCode());
   }
-
-  @Override
-  public boolean isAlwaysToBeInlined() {
-//    return expressionOrSequence.getFirstMethodBodyNode()
-//        instanceof PreevaluatedExpression;
-    return false;
-  }
 }

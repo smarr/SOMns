@@ -45,9 +45,6 @@ import som.interpreter.nodes.GlobalNode.UninitializedGlobalReadNode;
 import som.interpreter.nodes.LocalVariableNode.LocalVariableWriteNode;
 import som.interpreter.nodes.LocalVariableNodeFactory.LocalVariableWriteNodeFactory;
 import som.interpreter.nodes.ReturnNonLocalNode.CatchNonLocalReturnNode;
-import som.interpreter.nodes.UninitializedVariableNode.UninitializedVariableReadNode;
-import som.interpreter.nodes.literals.BlockNode.BlockNodeWithContext;
-import som.interpreter.nodes.literals.LiteralNode;
 import som.primitives.Primitives;
 import som.vm.Universe;
 import som.vmobjects.SInvokable;
@@ -185,7 +182,7 @@ public final class MethodGenerationContext {
     }
 
     methodBody.assignSourceSection(sourceSection);
-    methodBody = prepareForExecution(methodBody);
+    methodBody = addArgumentInitialization(methodBody);
 
     som.interpreter.Method truffleMethod =
         new som.interpreter.Method(getSourceSectionForMethod(sourceSection),
@@ -195,72 +192,6 @@ public final class MethodGenerationContext {
 
     // return the method - the holder field is to be set later on!
     return meth;
-  }
-
-  private ExpressionNode prepareForExecution(final ExpressionNode methodBody) {
-    return simplifyMethodIfPossible(methodBody);
-  }
-
-  private boolean isDirectArgumentAccess(final ExpressionNode methodBody) {
-    if (methodBody instanceof UninitializedVariableReadNode) {
-      UninitializedVariableReadNode varRead =
-          (UninitializedVariableReadNode) methodBody;
-      if (varRead.accessesArgument() && !varRead.accessesOuterContext()) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  private boolean isSimpleValue(final ExpressionNode methodBody) {
-    return (methodBody instanceof LiteralNode
-        && !(methodBody instanceof BlockNodeWithContext)) ||
-        methodBody instanceof GlobalNode;
-  }
-
-  private boolean isSimpleGetter(final ExpressionNode methodBody) {
-    if (methodBody instanceof FieldReadNode) {
-      return ((FieldReadNode) methodBody).accessesLocalSelf();
-    }
-    return false;
-  }
-
-  private boolean isSimpleSetter(final ExpressionNode methodBody) {
-    if (methodBody instanceof FieldWriteNode) {
-      FieldWriteNode node = (FieldWriteNode) methodBody;
-      ExpressionNode value = node.getValue();
-      return node.accessesLocalSelf() &&
-          (isSimpleValue(value) || isDirectArgumentAccess(value));
-    }
-    return false;
-  }
-
-  private ExpressionNode simplifyMethodIfPossible(final ExpressionNode methodBody) {
-//    if (isDirectArgumentAccess(methodBody)) {
-//      return createSimpleArgumentAccessNode(methodBody);
-//    } else if (isSimpleValue(methodBody)) {
-//      return methodBody;
-//    } else if (isSimpleGetter(methodBody)) {
-//      return FieldReadNodeFactory.create(((FieldReadNode) methodBody).getFieldIndex(),
-//          new SelfArgumentReadNode());
-//    } else if (isSimpleSetter(methodBody)) {
-//      FieldWriteNode node = (FieldWriteNode) methodBody;
-//      ExpressionNode value = node.getValue();
-//      if (isDirectArgumentAccess(value)) {
-//        value = createSimpleArgumentAccessNode(value);
-//      }
-//      return FieldWriteNodeFactory.create(node.getFieldIndex(), new SelfArgumentReadNode(), value);
-//    }
-
-    // it is not a simple method, so we need to add argument initialization
-    return addArgumentInitialization(methodBody);
-  }
-
-  private ExpressionNode createSimpleArgumentAccessNode(
-      final ExpressionNode node) {
-    UninitializedVariableReadNode varRead =
-        (UninitializedVariableReadNode) node;
-    return new ArgumentReadNode(varRead.getArgumentIndex());
   }
 
   private SourceSection getSourceSectionForMethod(final SourceSection ssBody) {
