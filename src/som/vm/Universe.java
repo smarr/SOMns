@@ -64,7 +64,7 @@ public class Universe {
    */
   public static final class Association {
     public final SSymbol    key;
-    public SAbstractObject  value;
+    @CompilationFinal public SAbstractObject  value;
 
     public Association(final SSymbol key, final SAbstractObject value) {
       this.key   = key;
