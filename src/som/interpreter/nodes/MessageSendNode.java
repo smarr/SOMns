@@ -269,7 +269,7 @@ public final class MessageSendNode {
                 AtPrimFactory.create(null, null)));
           }
         case "new:":
-          if (arguments[0] instanceof SClass) {
+          if (arguments[0] == Universe.current().arrayClass) {
             return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
                 argumentNodes[1],
                 NewPrimFactory.create(null, null)));
