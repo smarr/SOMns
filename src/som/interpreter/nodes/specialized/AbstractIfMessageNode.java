@@ -43,12 +43,6 @@ public abstract class AbstractIfMessageNode extends BinaryExpressionNode {
     this.universe = node.universe;
   }
 
-  @Override
-  public final Object executePreEvaluated(final VirtualFrame frame,
-      final Object[] arguments) {
-    return executeEvaluated(frame, arguments[0], arguments[1]);
-  }
-
   /**
    * This is the case were we got a block as the argument. Need to actually
    * evaluate it.
