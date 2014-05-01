@@ -44,7 +44,6 @@ IntegerTest = (
                 because: (something+' failed. Expected: '+was+', but Actual: '+is) ].
     )
 
-    "For instant test calls"
     run = ( 
         'Testing...' println.
         self run: (TestHarness new).
@@ -72,6 +71,8 @@ IntegerTest = (
         self negatedTest.
         self squareRootTest.
         self andTest.
+        self bitXorTest.
+        
         self equalityAndIdentityTest.
     )
 
@@ -87,13 +88,55 @@ IntegerTest = (
         self shouldBe: 'Identity' actual: (1073741824 == 1073741824) expected: false.
     )
     
-    classTest = (                       
+    classTest = (
+        | i |
         self assert: 'Class' actual: (-42 class) expected: Integer.
         self assert: 'Class' actual: (  0 class) expected: Integer.
         self assert: 'Class' actual: ( 23 class) expected: Integer.
         self assert: 'Class' actual: ( 1073741823 class) expected: Integer.
         self assert: 'Class' actual: ( 1073741824 class) expected: Integer.
-)
+        
+        "Let's test for size behavior and corresponding class"
+        i := 1 << 30.
+        self assert: 'Class'    actual: i class expected: Integer.
+        self assert: 'Positive' actual: i > 0   expected: true.  "should not overflow"
+        self assert: 'asString' actual: i asString expected: '1073741824'.
+        
+        i := 1 << 32.
+        self assert: 'Class' actual: i class expected: Integer.
+        self assert: 'Class' actual: i > 0   expected: true.  "should not overflow"
+        self assert: 'asString' actual: i asString expected: '4294967296'.
+        
+        i := 1 << 60.
+        self assert: 'Class' actual: i class expected: Integer.
+        self assert: 'Class' actual: i > 0   expected: true.  "should not overflow"
+        self assert: 'asString' actual: i asString expected: '1152921504606846976'.
+        
+        i := 1 << 70.
+        self assert: 'Class' actual: i class expected: Integer.
+        self assert: 'Class' actual: i > 0   expected: true.  "should not overflow"
+        self assert: 'asString' actual: i asString expected: '1180591620717411303424'.
+        
+        i := -1 << 30.
+        self assert: 'Class' actual: i class expected: Integer.
+        self assert: 'Class' actual: i < 0   expected: true.  "should not overflow"
+        self assert: 'asString' actual: i asString expected: '-1073741824'.
+        
+        i := -1 << 32.
+        self assert: 'Class' actual: i class expected: Integer.
+        self assert: 'Class' actual: i < 0   expected: true.  "should not overflow"
+        self assert: 'asString' actual: i asString expected: '-4294967296'.
+        
+        i := -1 << 60.
+        self assert: 'Class' actual: i class expected: Integer.
+        self assert: 'Class' actual: i < 0   expected: true.  "should not overflow"
+        self assert: 'asString' actual: i asString expected: '-1152921504606846976'.
+        
+        i := -1 << 70.
+        self assert: 'Class' actual: i class expected: Integer.
+        self assert: 'Class' actual: i < 0   expected: true.  "should not overflow"
+        self assert: 'asString' actual: i asString expected: '-1180591620717411303424'.
+    )
 
     assignmentTest = (  | a |
         a := 42.  self assert: 'Assignment' actual: a expected: 42.
@@ -208,7 +251,7 @@ IntegerTest = (
     )
 
     squareRootTest = (
-        self assert: 'SquareRoot' actual: (25 sqrt) expected: 5.
+        self assert:   'SquareRoot' actual: (25 sqrt) expected: 5.
         self shouldBe: 'SquareRoot' actual: (25 sqrt class) expected: Integer.
     )
 
@@ -216,4 +259,10 @@ IntegerTest = (
         self assert: 'AND' actual: (2 & 1) expected: 0.
         self assert: 'AND' actual: (2 & 2) expected: 2.
     )
+    
+    bitXorTest = (
+        self assert: 'bitXor' actual: (1 bitXor: 1) expected: 0.
+        self assert: 'bitXor' actual: (2 bitXor: 1) expected: 3.
+    )
+    
 )

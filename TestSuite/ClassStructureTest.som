@@ -5,8 +5,6 @@ ClassStructureTest = (
                 because: 'Array instance not of class Array'].
         1 class = Integer ifFalse:         [harness fail: self
                 because: '1 is not instance of class Integer'].
-        10000000000 class = BigInteger ifFalse: [harness fail: self
-                because: '10000000000 is not instance of class BigInteger'].
         (1 // 2) class = Double ifFalse:     [harness fail: self
                 because: '0.5, is not instance of class Double.'].
         [42] class = Block1 ifFalse:         [harness fail: self
