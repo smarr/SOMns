@@ -29,6 +29,11 @@ public abstract class AdditionPrim extends ArithmeticPrim {
     return right + left;
   }
 
+  @Specialization(order = 50)
+  public final String doString(final String left, final String right) {
+    return right + left;
+  }
+
   @Specialization(order = 100)
   public final Object doInteger(final int left, final BigInteger argument) {
     return doBigInteger(BigInteger.valueOf(left), argument);
