@@ -33,7 +33,6 @@ import org.junit.runners.Parameterized.Parameters;
 
 import som.vm.Universe;
 import som.vmobjects.SClass;
-import som.vmobjects.SInteger;
 import som.vmobjects.SSymbol;
 
 @RunWith(Parameterized.class)
@@ -42,38 +41,38 @@ public class BasicInterpreterTests {
   @Parameters
   public static Iterable<Object[]> data() {
     return Arrays.asList(new Object[][] {
-        {"MethodCall",     "test",  42, SInteger.class },
-        {"MethodCall",     "test2", 42, SInteger.class },
+        {"MethodCall",     "test",  42, Integer.class },
+        {"MethodCall",     "test2", 42, Integer.class },
 
         {"NonLocalReturn", "test",  "NonLocalReturn", SClass.class },
-        {"NonLocalReturn", "test1", 42, SInteger.class },
-        {"NonLocalReturn", "test2", 43, SInteger.class },
-        {"NonLocalReturn", "test3",  3, SInteger.class },
-        {"NonLocalReturn", "test4", 42, SInteger.class },
-        {"NonLocalReturn", "test5", 22, SInteger.class },
+        {"NonLocalReturn", "test1", 42, Integer.class },
+        {"NonLocalReturn", "test2", 43, Integer.class },
+        {"NonLocalReturn", "test3",  3, Integer.class },
+        {"NonLocalReturn", "test4", 42, Integer.class },
+        {"NonLocalReturn", "test5", 22, Integer.class },
 
-        {"Blocks", "arg1",  42, SInteger.class },
-        {"Blocks", "arg2",  77, SInteger.class },
-        {"Blocks", "argAndLocal",    8, SInteger.class },
-        {"Blocks", "argAndContext",  8, SInteger.class },
+        {"Blocks", "arg1",  42, Integer.class },
+        {"Blocks", "arg2",  77, Integer.class },
+        {"Blocks", "argAndLocal",    8, Integer.class },
+        {"Blocks", "argAndContext",  8, Integer.class },
 
         {"Return", "returnSelf",           "Return", SClass.class },
         {"Return", "returnSelfImplicitly", "Return", SClass.class },
         {"Return", "noReturnReturnsSelf",  "Return", SClass.class },
-        {"Return", "blockReturnsImplicitlyLastValue", 4, SInteger.class },
+        {"Return", "blockReturnsImplicitlyLastValue", 4, Integer.class },
 
-        {"IfTrueIfFalse", "test",  42, SInteger.class },
-        {"IfTrueIfFalse", "test2", 33, SInteger.class },
-        {"IfTrueIfFalse", "test3",  4, SInteger.class },
+        {"IfTrueIfFalse", "test",  42, Integer.class },
+        {"IfTrueIfFalse", "test2", 33, Integer.class },
+        {"IfTrueIfFalse", "test3",  4, Integer.class },
 
         {"CompilerSimplification", "returnConstantSymbol",  "constant", SSymbol.class  },
-        {"CompilerSimplification", "returnConstantInt",     42, SInteger.class },
+        {"CompilerSimplification", "returnConstantInt",     42, Integer.class },
         {"CompilerSimplification", "returnSelf",            "CompilerSimplification", SClass.class },
         {"CompilerSimplification", "returnSelfImplicitly",  "CompilerSimplification", SClass.class },
-        {"CompilerSimplification", "testReturnArgumentN",   55, SInteger.class },
-        {"CompilerSimplification", "testReturnArgumentA",   44, SInteger.class },
+        {"CompilerSimplification", "testReturnArgumentN",   55, Integer.class },
+        {"CompilerSimplification", "testReturnArgumentA",   44, Integer.class },
         {"CompilerSimplification", "testSetField",          "foo", SSymbol.class },
-        {"CompilerSimplification", "testGetField",          40, SInteger.class },
+        {"CompilerSimplification", "testGetField",          40, Integer.class },
     });
   }
 
@@ -93,9 +92,9 @@ public class BasicInterpreterTests {
   }
 
   protected void assertEqualsSOMValue(final Object expectedResult, final Object actualResult) {
-    if (resultType == SInteger.class) {
-      int expected = ((Integer) expectedResult).intValue();
-      int actual   = ((SInteger) actualResult).getEmbeddedInteger();
+    if (resultType == Integer.class) {
+      int expected = (int) expectedResult;
+      int actual   = (int) actualResult;
       assertEquals(expected, actual);
       return;
     }
