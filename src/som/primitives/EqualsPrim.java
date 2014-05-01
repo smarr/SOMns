@@ -4,6 +4,7 @@ import java.math.BigInteger;
 
 import som.interpreter.nodes.nary.BinaryExpressionNode.BinarySideEffectFreeExpressionNode;
 import som.vmobjects.SObject;
+import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.Specialization;
 
@@ -35,6 +36,11 @@ public abstract class EqualsPrim extends BinarySideEffectFreeExpressionNode {
 
   @Specialization(order = 50)
   public final boolean doSObject(final SObject left, final SObject right) {
+    return left == right;
+  }
+
+  @Specialization(order = 60)
+  public final boolean doSSymbol(final SSymbol left, final SSymbol right) {
     return left == right;
   }
 
