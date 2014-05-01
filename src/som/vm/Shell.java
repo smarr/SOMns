@@ -28,8 +28,6 @@ package som.vm;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
-import som.interpreter.Types;
-import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
@@ -42,13 +40,13 @@ public class Shell {
     this.universe = universe;
   }
 
-  public SAbstractObject start() {
+  public Object start() {
     BufferedReader in;
     String stmt;
     int counter;
     SClass myClass;
     SObject myObject;
-    SAbstractObject it;
+    Object it;
 
     counter = 0;
     in = new BufferedReader(new InputStreamReader(System.in));
@@ -83,8 +81,7 @@ public class Shell {
               lookupInvokable(universe.symbolFor("run:"));
 
           // Invoke the run method
-          it = Types.asAbstractObject(shellMethod.invoke(myObject, it),
-              universe);
+          it = shellMethod.invoke(myObject, it);
         }
       } catch (Exception e) {
         Universe.errorPrintln("Caught exception: " + e.getMessage());

@@ -26,22 +26,17 @@ import java.math.BigInteger;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray;
-import som.vmobjects.SBigInteger;
 import som.vmobjects.SBlock;
 import som.vmobjects.SBlock.SBlock1;
 import som.vmobjects.SBlock.SBlock2;
 import som.vmobjects.SBlock.SBlock3;
 import som.vmobjects.SClass;
-import som.vmobjects.SDouble;
-import som.vmobjects.SInteger;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SInvokable.SMethod;
 import som.vmobjects.SInvokable.SPrimitive;
 import som.vmobjects.SObject;
-import som.vmobjects.SString;
 import som.vmobjects.SSymbol;
 
-import com.oracle.truffle.api.dsl.ImplicitCast;
 import com.oracle.truffle.api.dsl.TypeSystem;
 
 @TypeSystem({   boolean.class,
@@ -51,12 +46,8 @@ import com.oracle.truffle.api.dsl.TypeSystem;
                  double.class,
                  SClass.class,
                 SObject.class,
-               SInteger.class,
-                SDouble.class,
-            SBigInteger.class,
                  SBlock.class,
                  SArray.class,
-                SString.class,
                 SSymbol.class,
                 SInvokable.class,
         SAbstractObject.class})
@@ -72,14 +63,6 @@ public class Types {
       } else {
         return universe.falseObject;
       }
-    } else if (obj instanceof Integer) {
-      return universe.newInteger((int) obj);
-    } else if (obj instanceof BigInteger) {
-      return universe.newBigInteger((BigInteger) obj);
-    } else if (obj instanceof String) {
-      return universe.newString((String) obj);
-    } else if (obj instanceof Double) {
-      return universe.newDouble((double) obj);
     }
 
     throw new RuntimeException("We got an object that should be covered by the above check: " + obj.toString());
@@ -115,25 +98,5 @@ public class Types {
     }
 
     throw new RuntimeException("We got an object that should be covered by the above check: " + obj.toString());
-  }
-
-  @ImplicitCast
-  public int castInteger(final SInteger i) {
-    return i.getEmbeddedInteger();
-  }
-
-  @ImplicitCast
-  public BigInteger castBigInteger(final SBigInteger i) {
-    return i.getEmbeddedBiginteger();
-  }
-
-  @ImplicitCast
-  public String castString(final SString str) {
-    return str.getEmbeddedString();
-  }
-
-  @ImplicitCast
-  public double castDouble(final SDouble d) {
-    return d.getEmbeddedDouble();
   }
 }

@@ -26,14 +26,10 @@ import java.math.BigInteger;
 import som.interpreter.TypesGen;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray;
-import som.vmobjects.SBigInteger;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
-import som.vmobjects.SDouble;
-import som.vmobjects.SInteger;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
-import som.vmobjects.SString;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.SourceSection;
@@ -75,24 +71,8 @@ public abstract class ExpressionNode extends SOMNode {
     return TypesGen.TYPES.expectDouble(executeGeneric(frame));
   }
 
-  public SInteger executeSInteger(final VirtualFrame frame) throws UnexpectedResultException {
-    return TypesGen.TYPES.expectSInteger(executeGeneric(frame));
-  }
-
-  public SBigInteger executeSBigInteger(final VirtualFrame frame) throws UnexpectedResultException {
-    return TypesGen.TYPES.expectSBigInteger(executeGeneric(frame));
-  }
-
-  public SDouble executeSDouble(final VirtualFrame frame) throws UnexpectedResultException {
-    return TypesGen.TYPES.expectSDouble(executeGeneric(frame));
-  }
-
   public SArray executeSArray(final VirtualFrame frame) throws UnexpectedResultException {
     return TypesGen.TYPES.expectSArray(executeGeneric(frame));
-  }
-
-  public SString executeSString(final VirtualFrame frame) throws UnexpectedResultException {
-    return TypesGen.TYPES.expectSString(executeGeneric(frame));
   }
 
   public SSymbol executeSSymbol(final VirtualFrame frame) throws UnexpectedResultException {

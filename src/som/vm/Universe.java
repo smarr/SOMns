@@ -27,27 +27,21 @@ package som.vm;
 
 import java.io.File;
 import java.io.IOException;
-import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.List;
 import java.util.StringTokenizer;
 
 import som.compiler.Disassembler;
 import som.interpreter.Invokable;
-import som.interpreter.Types;
 import som.interpreter.nodes.literals.BlockNode.BlockNodeWithContext;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray;
-import som.vmobjects.SBigInteger;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
-import som.vmobjects.SDouble;
-import som.vmobjects.SInteger;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SInvokable.SMethod;
 import som.vmobjects.SInvokable.SPrimitive;
 import som.vmobjects.SObject;
-import som.vmobjects.SString;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
@@ -83,7 +77,7 @@ public class Universe {
     }
   }
 
-  public SAbstractObject interpret(String[] arguments) {
+  public Object interpret(String[] arguments) {
     // Check for command line switches
     arguments = handleArguments(arguments);
 
@@ -259,7 +253,7 @@ public class Universe {
    * @param selector
    * @return
    */
-  public SAbstractObject interpret(final String className,
+  public Object interpret(final String className,
       final String selector) {
     initializeObjectSystem();
 
@@ -268,12 +262,10 @@ public class Universe {
     // Lookup the initialize invokable on the system class
     SInvokable initialize = clazz.getSOMClass(this).
                                         lookupInvokable(symbolFor(selector));
-
-    // Invoke the initialize invokable
-    return Types.asAbstractObject(initialize.invoke(clazz), this);
+    return initialize.invoke(clazz);
   }
 
-  private SAbstractObject execute(final String[] arguments) {
+  private Object execute(final String[] arguments) {
     initializeObjectSystem();
 
     // Start the shell if no filename is given
@@ -288,9 +280,7 @@ public class Universe {
     SInvokable initialize = systemClass.
         lookupInvokable(symbolFor("initialize:"));
 
-    // Invoke the initialize invokable
-    return Types.asAbstractObject(initialize.invoke(new Object[] {systemObject,
-        argumentsArray}), this);
+    return initialize.invoke(new Object[] {systemObject, argumentsArray});
   }
 
   @SlowPath
@@ -408,7 +398,7 @@ public class Universe {
 
     // Copy all elements from the string array into the array
     for (int i = 0; i < stringArray.length; i++) {
-      result.setIndexableField(i, newString(stringArray[i]));
+      result.setIndexableField(i, stringArray[i]);
     }
 
     // Return the allocated and initialized array
@@ -441,22 +431,6 @@ public class Universe {
     return SObject.create(instanceClass, nilObject);
   }
 
-  public SInteger newInteger(final int value) {
-    return new SInteger(value);
-  }
-
-  public SBigInteger newBigInteger(final java.math.BigInteger value) {
-    return new SBigInteger(value);
-  }
-
-  public SBigInteger newBigInteger(final long value) {
-    return new SBigInteger(BigInteger.valueOf(value));
-  }
-
-  public SDouble newDouble(final double value) {
-    return new SDouble(value);
-  }
-
   @SlowPath
   public SClass newMetaclassClass() {
     // Allocate the metaclass classes
@@ -468,10 +442,6 @@ public class Universe {
 
     // Return the freshly allocated metaclass class
     return result;
-  }
-
-  public SString newString(final String embeddedString) {
-    return new SString(embeddedString);
   }
 
   private SSymbol newSymbol(final String string) {

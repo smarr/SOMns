@@ -306,9 +306,9 @@ public final class MessageSendNode {
               arguments[1], arguments[2], Universe.current(), argumentNodes[0],
               argumentNodes[1], argumentNodes[2]));
         case "to:do:":
-          if (TypesGen.TYPES.isImplicitInteger(arguments[0]) &&
-              (TypesGen.TYPES.isImplicitInteger(arguments[1]) ||
-                  TypesGen.TYPES.isImplicitDouble(arguments[1])) &&
+          if (TypesGen.TYPES.isInteger(arguments[0]) &&
+              (TypesGen.TYPES.isInteger(arguments[1]) ||
+                  TypesGen.TYPES.isDouble(arguments[1])) &&
               TypesGen.TYPES.isSBlock(arguments[2])) {
             return replace(IntToDoMessageNodeFactory.create(this,
                 (SBlock) arguments[2], argumentNodes[0], argumentNodes[1],
