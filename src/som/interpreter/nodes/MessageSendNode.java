@@ -40,7 +40,6 @@ import som.primitives.arithmetic.SubtractionPrimFactory;
 import som.vm.Universe;
 import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
-import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives.SlowPath;
@@ -154,12 +153,14 @@ public final class MessageSendNode {
                 argumentNodes[0],
                 ValueNonePrimFactory.create(null)));
           }
+          break;
         case "length":
           if (receiver instanceof SArray) {
             return replace(new EagerUnaryPrimitiveNode(selector,
                 argumentNodes[0],
                 LengthPrimFactory.create(null)));
           }
+          break;
       }
       return makeGenericSend();
     }
@@ -215,9 +216,12 @@ public final class MessageSendNode {
               argumentNodes[1],
               AdditionPrimFactory.create(null, null)));
         case "value:":
-          return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
-              argumentNodes[1],
-              ValueOnePrimFactory.create(null, null)));
+          if (arguments[0] instanceof SBlock) {
+            return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
+                argumentNodes[1],
+                ValueOnePrimFactory.create(null, null)));
+          }
+          break;
         case "-":
           return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
               argumentNodes[1],
@@ -262,6 +266,7 @@ public final class MessageSendNode {
                 argumentNodes[1],
                 LeftShiftPrimFactory.create(null, null)));
           }
+          break;
         case "at:":
           if (arguments[0] instanceof SArray) {
             return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
@@ -274,18 +279,21 @@ public final class MessageSendNode {
                 argumentNodes[1],
                 NewPrimFactory.create(null, null)));
           }
+          break;
         case "and:":
         case "&&":
           if (arguments[0] instanceof Boolean && argumentNodes[1] instanceof BlockNode) {
             return replace(AndMessageNodeFactory.create((SBlock) arguments[1],
                 argumentNodes[0], argumentNodes[1]));
           }
+          break;
         case "or:":
         case "||":
           if (arguments[0] instanceof Boolean && argumentNodes[1] instanceof BlockNode) {
             return replace(OrMessageNodeFactory.create((SBlock) arguments[1],
                 argumentNodes[0], argumentNodes[1]));
           }
+          break;
       }
 
       return makeGenericSend();
