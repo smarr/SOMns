@@ -31,7 +31,7 @@ public abstract class AdditionPrim extends ArithmeticPrim {
 
   @Specialization(order = 50)
   public final String doString(final String left, final String right) {
-    return right + left;
+    return left + right;
   }
 
   @Specialization(order = 100)
