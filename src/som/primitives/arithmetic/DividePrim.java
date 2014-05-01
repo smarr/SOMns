@@ -8,9 +8,8 @@ import com.oracle.truffle.api.dsl.Specialization;
 
 public abstract class DividePrim extends ArithmeticPrim {
   @Specialization(order = 1)
-  public final Object doInteger(final int left, final int right) {
-    long result = ((long) left) / right;
-    return intOrBigInt(result);
+  public final int doInteger(final int left, final int right) {
+    return left / right;
   }
 
   @Specialization(order = 2)
