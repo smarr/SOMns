@@ -8,7 +8,6 @@ import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode.UnarySideEffectFreeExpressionNode;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
-import som.vmobjects.SArray;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
@@ -45,15 +44,14 @@ public final class ObjectPrims {
 
     @Specialization
     public final Object doObject(final VirtualFrame frame,
-        final Object receiver, final SSymbol selector, final SArray  argsArr) {
+        final Object receiver, final SSymbol selector, final Object[]  argsArr) {
       SInvokable invokable = Types.getClassOf(receiver, universe).lookupInvokable(selector);
 
       // need to unwrap argsArr and create a new Object array including the
       // receiver
-      Object[] args = new Object[argsArr.indexableFields.length + 1];
+      Object[] args = new Object[argsArr.length + 1];
       args[0] = receiver;
-      System.arraycopy(argsArr.indexableFields, 0,
-          args, 1, argsArr.indexableFields.length);
+      System.arraycopy(argsArr, 0, args, 1, argsArr.length);
 
       return invokable.invoke(args);
     }

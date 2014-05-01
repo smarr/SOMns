@@ -1,16 +1,15 @@
 package som.primitives;
 
 import som.interpreter.nodes.nary.UnaryExpressionNode.UnarySideEffectFreeExpressionNode;
-import som.vmobjects.SArray;
 import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.dsl.Specialization;
 
 public abstract class ObjectSizePrim extends UnarySideEffectFreeExpressionNode {
   @Specialization
-  public final int doSArray(final SArray receiver) {
+  public final int doSArray(final Object[] receiver) {
     int size = 0;
-    size += receiver.getNumberOfIndexableFields();
+    size += receiver.length;
     return size;
   }
 

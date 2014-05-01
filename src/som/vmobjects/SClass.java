@@ -27,6 +27,7 @@ package som.vmobjects;
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
 
 import java.lang.reflect.Constructor;
+import java.util.Arrays;
 import java.util.HashMap;
 
 import som.primitives.Primitives;
@@ -86,45 +87,43 @@ public class SClass extends SObject {
     name = value;
   }
 
-  public SArray getInstanceFields() {
+  public SSymbol[] getInstanceFields() {
     return instanceFields;
   }
 
-  public void setInstanceFields(final SArray value) {
+  public void setInstanceFields(final SSymbol[] fields) {
     transferToInterpreterAndInvalidate("SClass.setInstanceFields");
-    instanceFields = value;
+    instanceFields = fields;
   }
 
-  public SArray getInstanceInvokables() {
+  public SInvokable[] getInstanceInvokables() {
     return instanceInvokables;
   }
 
-  public void setInstanceInvokables(final SArray value) {
+  public void setInstanceInvokables(final SInvokable[] value) {
     transferToInterpreterAndInvalidate("SClass.setInstanceInvokables");
     instanceInvokables = value;
 
     // Make sure this class is the holder of all invokables in the array
     for (int i = 0; i < getNumberOfInstanceInvokables(); i++) {
-      getInstanceInvokable(i).setHolder(this);
+      instanceInvokables[i].setHolder(this);
     }
   }
 
   public int getNumberOfInstanceInvokables() {
     // Return the number of instance invokables in this class
-    return getInstanceInvokables().getNumberOfIndexableFields();
+    return instanceInvokables.length;
   }
 
   public SInvokable getInstanceInvokable(final int index) {
-    // Get the instance invokable with the given index
-    return (SInvokable) getInstanceInvokables().getIndexableField(index);
+    return instanceInvokables[index];
   }
 
   public void setInstanceInvokable(final int index, final SInvokable value) {
     // Set this class as the holder of the given invokable
     value.setHolder(this);
 
-    // Set the instance method with the given index to the given value
-    getInstanceInvokables().setIndexableField(index, value);
+    instanceInvokables[index] = value;
   }
 
   @SlowPath
@@ -185,8 +184,9 @@ public class SClass extends SObject {
     }
 
     // Append the given method to the array of instance methods
-    setInstanceInvokables(getInstanceInvokables().copyAndExtendWith(
-        value, universe));
+    int numInvokables = instanceInvokables.length;
+    instanceInvokables = Arrays.copyOf(instanceInvokables, numInvokables + 1);
+    instanceInvokables[numInvokables] = value;
     return true;
   }
 
@@ -199,26 +199,11 @@ public class SClass extends SObject {
   }
 
   public SSymbol getInstanceFieldName(final int index) {
-    return (SSymbol) getInstanceFields().getIndexableField(index);
+    return instanceFields[index];
   }
 
   public int getNumberOfInstanceFields() {
-    return getInstanceFields().getNumberOfIndexableFields();
-  }
-
-  public void setInstanceFields(final String[] fields) {
-    // Allocate an array of the right size
-    SArray instanceFields = universe.newArray(fields.length);
-
-    // Iterate through all the given fields
-    for (int i = 0; i < fields.length; i++) {
-      // Insert the symbol corresponding to the given field string in the
-      // array
-      instanceFields.setIndexableField(i, universe.symbolFor(fields[i]));
-    }
-
-    // Set the instance fields of this class to the new array
-    setInstanceFields(instanceFields);
+    return instanceFields.length;
   }
 
   public boolean hasPrimitives() {
@@ -262,8 +247,8 @@ public class SClass extends SObject {
 
   @CompilationFinal private SObject superclass;
   @CompilationFinal private SSymbol name;
-  @CompilationFinal private SArray  instanceInvokables;
-  @CompilationFinal private SArray  instanceFields;
+  @CompilationFinal private SInvokable[] instanceInvokables;
+  @CompilationFinal private SSymbol[]    instanceFields;
 
   // Static field indices and number of class fields
   static final int numberOfClassFields = numberOfObjectFields;

@@ -1,5 +1,7 @@
 package som.vmobjects;
 
+import java.util.Arrays;
+
 import som.interpreter.Types;
 import som.vm.Universe;
 
@@ -28,16 +30,15 @@ public abstract class SAbstractObject {
   public static final Object sendDoesNotUnderstand(final SSymbol selector,
       final Object[] arguments,
       final Universe universe) {
-    // Allocate an array with enough room to hold all arguments
-    int numArgs = ((arguments == null) ? 0 : arguments.length) - 1;
-
-    SArray argumentsArray = universe.newArray(numArgs);
-    for (int i = 0; i < numArgs; i++) {
-      argumentsArray.setIndexableField(i, arguments[i + 1]);
+    // Allocate an array to hold the arguments, without receiver
+    Object[] argumentsArray;
+    if (arguments != null) {
+      argumentsArray = Arrays.copyOfRange(arguments, 1, arguments.length);
+    } else {
+      argumentsArray = new Object[0];
     }
 
     Object[] args = new Object[] {arguments[0], selector, argumentsArray};
-
     return send("doesNotUnderstand:arguments:", args, universe);
   }
 

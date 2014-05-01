@@ -28,7 +28,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import som.vm.Universe;
-import som.vmobjects.SArray;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
@@ -63,17 +62,15 @@ public final class ClassGenerationContext {
     this.superName = superName;
   }
 
-  public void setInstanceFieldsOfSuper(final SArray fieldNames) {
-    int numFields = fieldNames.getNumberOfIndexableFields();
-    for (int i = 0; i < numFields; i++) {
-      instanceFields.add((SSymbol) fieldNames.getIndexableField(i));
+  public void setInstanceFieldsOfSuper(final SSymbol[] fieldNames) {
+    for (int i = 0; i < fieldNames.length; i++) {
+      instanceFields.add(fieldNames[i]);
     }
   }
 
-  public void setClassFieldsOfSuper(final SArray fieldNames) {
-    int numFields = fieldNames.getNumberOfIndexableFields();
-    for (int i = 0; i < numFields; i++) {
-      classFields.add((SSymbol) fieldNames.getIndexableField(i));
+  public void setClassFieldsOfSuper(final SSymbol[] fieldNames) {
+    for (int i = 0; i < fieldNames.length; i++) {
+      classFields.add(fieldNames[i]);
     }
   }
 
@@ -125,8 +122,8 @@ public final class ClassGenerationContext {
     SClass resultClass = universe.newClass(universe.metaclassClass);
 
     // Initialize the class of the resulting class
-    resultClass.setInstanceFields(universe.newArray(classFields));
-    resultClass.setInstanceInvokables(universe.newArray(classMethods));
+    resultClass.setInstanceFields(classFields.toArray(new SSymbol[0]));
+    resultClass.setInstanceInvokables(classMethods.toArray(new SInvokable[0]));
     resultClass.setName(universe.symbolFor(ccname));
 
     SClass superMClass = superClass.getSOMClass(universe);
@@ -138,20 +135,20 @@ public final class ClassGenerationContext {
     // Initialize the resulting class
     result.setName(name);
     result.setSuperClass(superClass);
-    result.setInstanceFields(universe.newArray(instanceFields));
-    result.setInstanceInvokables(universe.newArray(instanceMethods));
+    result.setInstanceFields(instanceFields.toArray(new SSymbol[0]));
+    result.setInstanceInvokables(instanceMethods.toArray(new SInvokable[0]));
 
     return result;
   }
 
   @SlowPath
   public void assembleSystemClass(final SClass systemClass) {
-    systemClass.setInstanceInvokables(universe.newArray(instanceMethods));
-    systemClass.setInstanceFields(universe.newArray(instanceFields));
+    systemClass.setInstanceInvokables(instanceMethods.toArray(new SInvokable[0]));
+    systemClass.setInstanceFields(instanceFields.toArray(new SSymbol[0]));
     // class-bound == class-instance-bound
     SClass superMClass = systemClass.getSOMClass(universe);
-    superMClass.setInstanceInvokables(universe.newArray(classMethods));
-    superMClass.setInstanceFields(universe.newArray(classFields));
+    superMClass.setInstanceInvokables(classMethods.toArray(new SInvokable[0]));
+    superMClass.setInstanceFields(classFields.toArray(new SSymbol[0]));
   }
 
   @Override

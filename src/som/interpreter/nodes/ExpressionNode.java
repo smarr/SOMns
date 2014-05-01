@@ -25,7 +25,6 @@ import java.math.BigInteger;
 
 import som.interpreter.TypesGen;
 import som.vmobjects.SAbstractObject;
-import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
@@ -71,10 +70,6 @@ public abstract class ExpressionNode extends SOMNode {
     return TypesGen.TYPES.expectDouble(executeGeneric(frame));
   }
 
-  public SArray executeSArray(final VirtualFrame frame) throws UnexpectedResultException {
-    return TypesGen.TYPES.expectSArray(executeGeneric(frame));
-  }
-
   public SSymbol executeSSymbol(final VirtualFrame frame) throws UnexpectedResultException {
     return TypesGen.TYPES.expectSSymbol(executeGeneric(frame));
   }
@@ -97,5 +92,9 @@ public abstract class ExpressionNode extends SOMNode {
 
   public SAbstractObject executeSAbstractObject(final VirtualFrame frame) throws UnexpectedResultException {
     return TypesGen.TYPES.expectSAbstractObject(executeGeneric(frame));
+  }
+
+  public Object[] executeArray(final VirtualFrame frame) throws UnexpectedResultException {
+    return TypesGen.TYPES.expectObjectArray(executeGeneric(frame));
   }
 }

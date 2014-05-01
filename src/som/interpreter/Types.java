@@ -25,7 +25,6 @@ import java.math.BigInteger;
 
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
-import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
 import som.vmobjects.SBlock.SBlock1;
 import som.vmobjects.SBlock.SBlock2;
@@ -47,10 +46,10 @@ import com.oracle.truffle.api.dsl.TypeSystem;
                  SClass.class,
                 SObject.class,
                  SBlock.class,
-                 SArray.class,
                 SSymbol.class,
-                SInvokable.class,
-        SAbstractObject.class})
+             SInvokable.class,
+        SAbstractObject.class,
+               Object[].class})
 public class Types {
 
   public static final SAbstractObject asAbstractObject(final Object obj,
@@ -95,6 +94,8 @@ public class Types {
       return universe.getBlockClass(2);
     } else if (obj instanceof SBlock3) {
       return universe.getBlockClass(3);
+    } else if (obj instanceof Object[]) {
+      return universe.arrayClass;
     }
 
     throw new RuntimeException("We got an object that should be covered by the above check: " + obj.toString());

@@ -28,14 +28,12 @@ package som.vm;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.StringTokenizer;
 
 import som.compiler.Disassembler;
 import som.interpreter.Invokable;
 import som.interpreter.nodes.literals.BlockNode.BlockNodeWithContext;
 import som.vmobjects.SAbstractObject;
-import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
@@ -274,13 +272,11 @@ public class Universe {
       return shell.start();
     }
 
-    SArray argumentsArray = newArray(arguments);
-
     // Lookup the initialize invokable on the system class
     SInvokable initialize = systemClass.
         lookupInvokable(symbolFor("initialize:"));
 
-    return initialize.invoke(new Object[] {systemObject, argumentsArray});
+    return initialize.invoke(new Object[] {systemObject, arguments});
   }
 
   @SlowPath
@@ -375,36 +371,6 @@ public class Universe {
     return newSymbol(interned);
   }
 
-  public SArray newArray(final int length) {
-    return new SArray(nilObject, length);
-  }
-
-  public SArray newArray(final List<?> list) {
-    // Allocate a new array with the same length as the list
-    SArray result = newArray(list.size());
-
-    // Copy all elements from the list into the array
-    for (int i = 0; i < list.size(); i++) {
-      result.setIndexableField(i, list.get(i));
-    }
-
-    // Return the allocated and initialized array
-    return result;
-  }
-
-  public SArray newArray(final String[] stringArray) {
-    // Allocate a new array with the same length as the string array
-    SArray result = newArray(stringArray.length);
-
-    // Copy all elements from the string array into the array
-    for (int i = 0; i < stringArray.length; i++) {
-      result.setIndexableField(i, stringArray[i]);
-    }
-
-    // Return the allocated and initialized array
-    return result;
-  }
-
   public SBlock newBlock(final SMethod method, final MaterializedFrame context,
       final BlockNodeWithContext originNode) {
     return SBlock.create(method, context, originNode);
@@ -480,12 +446,12 @@ public class Universe {
     }
 
     // Initialize the array of instance fields
-    systemClass.setInstanceFields(newArray(0));
-    systemClass.getSOMClass(this).setInstanceFields(newArray(0));
+    systemClass.setInstanceFields(new SSymbol[0]);
+    systemClass.getSOMClass(this).setInstanceFields(new SSymbol[0]);
 
     // Initialize the array of instance invokables
-    systemClass.setInstanceInvokables(newArray(0));
-    systemClass.getSOMClass(this).setInstanceInvokables(newArray(0));
+    systemClass.setInstanceInvokables(new SInvokable[0]);
+    systemClass.getSOMClass(this).setInstanceInvokables(new SInvokable[0]);
 
     // Initialize the name of the system class
     systemClass.setName(symbolFor(name));

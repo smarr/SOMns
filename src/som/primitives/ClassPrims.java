@@ -25,14 +25,14 @@ public class ClassPrims {
 
   public abstract static class InstanceInvokablesPrim extends UnarySideEffectFreeExpressionNode {
     @Specialization
-    public final SAbstractObject doSClass(final SClass receiver) {
+    public final Object[] doSClass(final SClass receiver) {
       return receiver.getInstanceInvokables();
     }
   }
 
   public abstract static class InstanceFieldsPrim extends UnarySideEffectFreeExpressionNode {
     @Specialization
-    public final SAbstractObject doSClass(final SClass receiver) {
+    public final Object[] doSClass(final SClass receiver) {
       return receiver.getInstanceFields();
     }
   }

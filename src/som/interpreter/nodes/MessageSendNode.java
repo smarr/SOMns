@@ -38,7 +38,6 @@ import som.primitives.arithmetic.ModuloPrimFactory;
 import som.primitives.arithmetic.MultiplicationPrimFactory;
 import som.primitives.arithmetic.SubtractionPrimFactory;
 import som.vm.Universe;
-import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
 import som.vmobjects.SSymbol;
 
@@ -155,7 +154,7 @@ public final class MessageSendNode {
           }
           break;
         case "length":
-          if (receiver instanceof SArray) {
+          if (receiver instanceof Object[]) {
             return replace(new EagerUnaryPrimitiveNode(selector,
                 argumentNodes[0],
                 LengthPrimFactory.create(null)));
@@ -268,7 +267,7 @@ public final class MessageSendNode {
           }
           break;
         case "at:":
-          if (arguments[0] instanceof SArray) {
+          if (arguments[0] instanceof Object[]) {
             return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
                 argumentNodes[1],
                 AtPrimFactory.create(null, null)));

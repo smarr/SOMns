@@ -3,7 +3,6 @@ package som.primitives;
 import java.math.BigInteger;
 
 import som.interpreter.nodes.nary.BinaryExpressionNode.BinarySideEffectFreeExpressionNode;
-import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
@@ -44,7 +43,7 @@ public abstract class EqualsEqualsPrim extends BinarySideEffectFreeExpressionNod
   }
 
   @Specialization(order = 46)
-  public final boolean doSArray(final SArray left, final Object right) {
+  public final boolean doSArray(final Object[] left, final Object right) {
     return left == right;
   }
 

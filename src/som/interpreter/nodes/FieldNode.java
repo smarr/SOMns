@@ -106,6 +106,10 @@ public abstract class FieldNode extends ExpressionNode {
       return readFromObject(self) instanceof String;
     }
 
+    protected final boolean isObjectArray(final SObject self) {
+      return readFromObject(self) instanceof Object[];
+    }
+
     @Specialization(guards = "isString")
     public final String readString(final SObject self) {
       return (String) readFromObject(self);
@@ -134,6 +138,11 @@ public abstract class FieldNode extends ExpressionNode {
     @Specialization(guards = "isBigInteger")
     public final BigInteger readBigInteger(final SObject self) {
       return (BigInteger) readFromObject(self);
+    }
+
+    @Specialization(guards = "isObjectArray")
+    public final Object[] readObjectArray(final SObject self) {
+      return (Object[]) readFromObject(self);
     }
 
     @Override
@@ -200,6 +209,12 @@ public abstract class FieldNode extends ExpressionNode {
 
     @Specialization(order = 50)
     public final String doString(final SObject self, final String value) {
+      writeToObject(self, value);
+      return value;
+    }
+
+    @Specialization(order = 60)
+    public final Object[] doString(final SObject self, final Object[] value) {
       writeToObject(self, value);
       return value;
     }

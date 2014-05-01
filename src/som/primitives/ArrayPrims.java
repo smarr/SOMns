@@ -1,10 +1,10 @@
 package som.primitives;
 
+import java.util.Arrays;
+
 import som.interpreter.nodes.nary.BinaryExpressionNode.BinarySideEffectFreeExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.vm.Universe;
-import som.vmobjects.SAbstractObject;
-import som.vmobjects.SArray;
 import som.vmobjects.SClass;
 
 import com.oracle.truffle.api.dsl.Specialization;
@@ -13,15 +13,15 @@ import com.oracle.truffle.api.dsl.Specialization;
 public final class ArrayPrims {
   public abstract static class AtPrim extends BinarySideEffectFreeExpressionNode {
     @Specialization
-    public final Object doSArray(final SArray receiver, final int argument) {
-      return receiver.getIndexableField(argument - 1);
+    public final Object doSArray(final Object[] receiver, final int argument) {
+      return receiver[argument - 1];
     }
   }
 
   public abstract static class AtPutPrim extends TernaryExpressionNode {
     @Specialization
-    public final Object doSArray(final SArray receiver, final int index, final Object value) {
-      receiver.setIndexableField(index - 1, value);
+    public final Object doSArray(final Object[] receiver, final int index, final Object value) {
+      receiver[index - 1] = value;
       return value;
     }
   }
@@ -35,8 +35,10 @@ public final class ArrayPrims {
     }
 
     @Specialization(guards = "receiverIsArrayClass")
-    public final SAbstractObject doSClass(final SClass receiver, final int length) {
-      return universe.newArray(length);
+    public final Object[] doSClass(final SClass receiver, final int length) {
+      Object[] result = new Object[length];
+      Arrays.fill(result, universe.nilObject);
+      return result;
     }
   }
 }
