@@ -295,7 +295,6 @@ public class Universe {
     symbolClass     = newSystemClass();
     methodClass     = newSystemClass();
     integerClass    = newSystemClass();
-    bigintegerClass = newSystemClass();
     primitiveClass  = newSystemClass();
     stringClass     = newSystemClass();
     doubleClass     = newSystemClass();
@@ -312,7 +311,6 @@ public class Universe {
     initializeSystemClass(methodClass,      arrayClass, "Method");
     initializeSystemClass(symbolClass,     objectClass, "Symbol");
     initializeSystemClass(integerClass,    objectClass, "Integer");
-    initializeSystemClass(bigintegerClass, objectClass, "BigInteger");
     initializeSystemClass(primitiveClass,  objectClass, "Primitive");
     initializeSystemClass(stringClass,     objectClass, "String");
     initializeSystemClass(doubleClass,     objectClass, "Double");
@@ -326,7 +324,6 @@ public class Universe {
     loadSystemClass(methodClass);
     loadSystemClass(symbolClass);
     loadSystemClass(integerClass);
-    loadSystemClass(bigintegerClass);
     loadSystemClass(primitiveClass);
     loadSystemClass(stringClass);
     loadSystemClass(doubleClass);
@@ -645,7 +642,6 @@ public class Universe {
 
   @CompilationFinal public SClass               nilClass;
   @CompilationFinal public SClass               integerClass;
-  @CompilationFinal public SClass               bigintegerClass;
   @CompilationFinal public SClass               arrayClass;
   @CompilationFinal public SClass               methodClass;
   @CompilationFinal public SClass               symbolClass;

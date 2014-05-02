@@ -61,10 +61,8 @@ public class Types {
       } else {
         return universe.falseClass;
       }
-    } else if (obj instanceof Long) {
+    } else if (obj instanceof Long || obj instanceof BigInteger) {
       return universe.integerClass;
-    } else if (obj instanceof BigInteger) {
-      return universe.bigintegerClass;
     } else if (obj instanceof String) {
       return universe.stringClass;
     } else if (obj instanceof Double) {

@@ -1,5 +1,7 @@
 package som.primitives;
 
+import java.math.BigInteger;
+
 import som.interpreter.nodes.nary.UnaryExpressionNode.UnarySideEffectFreeExpressionNode;
 import som.primitives.arithmetic.ArithmeticPrim;
 import som.vm.Universe;
@@ -31,9 +33,22 @@ public abstract class IntegerPrims {
   }
 
   public abstract static class LeftShiftPrim extends ArithmeticPrim {
-    @Specialization
+    @Specialization(rewriteOn = ArithmeticException.class)
     public final long doLong(final long receiver, final long right) {
+      assert right >= 0;  // currently not defined for negative values of right
+
+      if (Long.SIZE - Long.numberOfLeadingZeros(receiver) + right > Long.SIZE - 1) {
+          throw new ArithmeticException("shift overflows long");
+      }
       return receiver << right;
+    }
+
+    @Specialization
+    public final BigInteger doLongWithOverflow(final long receiver, final long right) {
+      assert right >= 0;  // currently not defined for negative values of right
+      assert right >= Integer.MAX_VALUE;
+
+      return BigInteger.valueOf(receiver).shiftLeft((int) right);
     }
   }
 }
