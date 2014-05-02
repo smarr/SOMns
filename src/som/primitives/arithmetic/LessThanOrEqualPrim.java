@@ -7,7 +7,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 
 public abstract class LessThanOrEqualPrim extends ArithmeticPrim {
   @Specialization(order = 1)
-  public final boolean doInteger(final long left, final long right) {
+  public final boolean doLong(final long left, final long right) {
     return left <= right;
   }
 

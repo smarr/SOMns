@@ -15,7 +15,7 @@ public abstract class EqualsPrim extends BinarySideEffectFreeExpressionNode {
   }
 
   @Specialization(order = 2)
-  public final boolean doInteger(final long left, final long right) {
+  public final boolean doLong(final long left, final long right) {
     return left == right;
   }
 
@@ -45,7 +45,7 @@ public abstract class EqualsPrim extends BinarySideEffectFreeExpressionNode {
   }
 
   @Specialization(order = 100)
-  public final boolean doInteger(final long left, final double right) {
+  public final boolean doLong(final long left, final double right) {
     return left == right;
   }
 
@@ -55,7 +55,7 @@ public abstract class EqualsPrim extends BinarySideEffectFreeExpressionNode {
   }
 
   @Specialization(order = 1010)
-  public final boolean doInteger(final long left, final BigInteger right) {
+  public final boolean doLong(final long left, final BigInteger right) {
     return doBigInteger(BigInteger.valueOf(left), right);
   }
 
@@ -65,12 +65,12 @@ public abstract class EqualsPrim extends BinarySideEffectFreeExpressionNode {
   }
 
   @Specialization(order = 10000)
-  public final boolean doInteger(final long left, final String right) {
+  public final boolean doLong(final long left, final String right) {
     return false;
   }
 
   @Specialization(order = 10010)
-  public final boolean doInteger(final long left, final SObject right) {
+  public final boolean doLong(final long left, final SObject right) {
     return false;
   }
 

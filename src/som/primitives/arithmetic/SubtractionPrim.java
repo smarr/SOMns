@@ -13,7 +13,7 @@ public abstract class SubtractionPrim extends ArithmeticPrim {
   }
 
   @Specialization(order = 2)
-  public final BigInteger doIntegerWithOverflow(final long left, final long right) {
+  public final BigInteger doLongWithOverflow(final long left, final long right) {
     return BigInteger.valueOf(left).subtract(BigInteger.valueOf(right));
   }
 
@@ -34,7 +34,7 @@ public abstract class SubtractionPrim extends ArithmeticPrim {
   }
 
   @Specialization(order = 110)
-  public final double doInteger(final long left, final double right) {
+  public final double doLong(final long left, final double right) {
     return doDouble(left, right);
   }
 
