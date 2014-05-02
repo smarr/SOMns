@@ -52,21 +52,6 @@ import com.oracle.truffle.api.dsl.TypeSystem;
                Object[].class})
 public class Types {
 
-  public static final SAbstractObject asAbstractObject(final Object obj,
-      final Universe universe) {
-    if (obj instanceof SAbstractObject) {
-      return (SAbstractObject) obj;
-    } else if (obj instanceof Boolean) {
-      if ((boolean) obj) {
-        return universe.trueObject;
-      } else {
-        return universe.falseObject;
-      }
-    }
-
-    throw new RuntimeException("We got an object that should be covered by the above check: " + obj.toString());
-  }
-
   public static SClass getClassOf(final Object obj, final Universe universe) {
     if (obj instanceof SAbstractObject) {
       return ((SAbstractObject) obj).getSOMClass(universe);

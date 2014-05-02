@@ -65,9 +65,6 @@ public final class ObjectPrims {
   }
 
   public abstract static class InstVarAtPutPrim extends TernaryExpressionNode {
-    private final Universe universe;
-    public InstVarAtPutPrim() { this.universe = Universe.current(); }
-
     @Specialization
     public final Object doSObject(final SObject receiver, final int idx, final SAbstractObject val) {
       receiver.setField(idx - 1, val);
@@ -76,9 +73,8 @@ public final class ObjectPrims {
 
     @Specialization
     public final Object doSObject(final SObject receiver, final int idx, final Object val) {
-      SAbstractObject value = Types.asAbstractObject(val, universe);
-      receiver.setField(idx - 1, value);
-      return value;
+      receiver.setField(idx - 1, val);
+      return val;
     }
   }
 
