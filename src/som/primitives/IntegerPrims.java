@@ -11,8 +11,8 @@ public abstract class IntegerPrims {
 
   public abstract static class RandomPrim extends UnarySideEffectFreeExpressionNode {
     @Specialization
-    public final int doInteger(final int receiver) {
-      return (int) (receiver * Math.random());
+    public final long doLong(final long receiver) {
+      return (long) (receiver * Math.random());
     }
   }
 
@@ -26,14 +26,13 @@ public abstract class IntegerPrims {
 
     @Specialization(guards = "receiverIsIntegerClass")
     public final Object doSClass(final SClass receiver, final String argument) {
-      long result = Long.parseLong(argument);
-      return intOrBigInt(result);
+      return Long.parseLong(argument);
     }
   }
 
   public abstract static class LeftShiftPrim extends ArithmeticPrim {
     @Specialization
-    public final int doInteger(final int receiver, final int right) {
+    public final long doLong(final long receiver, final long right) {
       return receiver << right;
     }
   }

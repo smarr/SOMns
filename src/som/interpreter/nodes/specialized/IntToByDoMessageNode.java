@@ -44,18 +44,18 @@ public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode
         arguments[2], arguments[3]);
   }
 
-  protected final boolean isSameBlockInt(final int receiver, final int limit, final int step, final SBlock block) {
+  protected final boolean isSameBlockLong(final long receiver, final long limit, final long step, final SBlock block) {
     return block.getMethod() == blockMethod;
   }
 
-  protected final boolean isSameBlockDouble(final int receiver, final double limit, final int step, final SBlock block) {
+  protected final boolean isSameBlockDouble(final long receiver, final double limit, final long step, final SBlock block) {
     return block.getMethod() == blockMethod;
   }
 
-  @Specialization(guards = "isSameBlockInt")
-  public final int doIntToByDo(final VirtualFrame frame, final int receiver, final int limit, final int step, final SBlock block) {
+  @Specialization(guards = "isSameBlockLong")
+  public final long doIntToByDo(final VirtualFrame frame, final long receiver, final long limit, final long step, final SBlock block) {
     try {
-      for (int i = receiver; i <= limit; i += step) {
+      for (long i = receiver; i <= limit; i += step) {
         valueSend.call(frame, new Object[] {block, i});
       }
     } finally {
@@ -67,9 +67,9 @@ public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode
   }
 
   @Specialization(guards = "isSameBlockDouble")
-  public final int doIntToByDo(final VirtualFrame frame, final int receiver, final double limit, final int step, final SBlock block) {
+  public final long doIntToByDo(final VirtualFrame frame, final long receiver, final double limit, final long step, final SBlock block) {
     try {
-      for (int i = receiver; i <= limit; i += step) {
+      for (long i = receiver; i <= limit; i += step) {
         valueSend.call(frame, new Object[] {block, i});
       }
     } finally {
@@ -80,7 +80,7 @@ public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode
     return receiver;
   }
 
-  protected final void reportLoopCount(final int count) {
+  protected final void reportLoopCount(final long count) {
     CompilerAsserts.neverPartOfCompilation();
     Node current = getParent();
     while (current != null && !(current instanceof RootNode)) {
@@ -89,7 +89,7 @@ public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode
     if (current != null) {
       RootNode root = (RootNode) current;
       if (root.getCallTarget() instanceof LoopCountReceiver) {
-        ((LoopCountReceiver) root.getCallTarget()).reportLoopCount(count);
+        ((LoopCountReceiver) root.getCallTarget()).reportLoopCount((int) count);
       }
     }
   }

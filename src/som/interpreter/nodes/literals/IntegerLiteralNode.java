@@ -5,14 +5,14 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 
 public final class IntegerLiteralNode extends LiteralNode {
 
-  private final int value;
+  private final long value;
 
-  public IntegerLiteralNode(final int value) {
+  public IntegerLiteralNode(final long value) {
     this.value = value;
   }
 
   @Override
-  public int executeInteger(final VirtualFrame frame) {
+  public long executeLong(final VirtualFrame frame) {
     return value;
   }
 

@@ -8,20 +8,13 @@ import com.oracle.truffle.api.dsl.Specialization;
 
 
 public abstract class SqrtPrim extends UnaryExpressionNode {
-  private Number intOrBigInt(final long val) {
-    if (val > Integer.MAX_VALUE || val < Integer.MIN_VALUE) {
-      return BigInteger.valueOf(val);
-    } else {
-      return (int) val;
-    }
-  }
 
   @Specialization
-  public final Object doInteger(final int receiver) {
+  public final Number doLong(final long receiver) {
     double result = Math.sqrt(receiver);
 
     if (result == Math.rint(result)) {
-      return intOrBigInt((long) result);
+      return (long) result;
     } else {
       return result;
     }

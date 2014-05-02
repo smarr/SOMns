@@ -59,20 +59,20 @@ public final class ObjectPrims {
 
   public abstract static class InstVarAtPrim extends BinarySideEffectFreeExpressionNode {
     @Specialization
-    public final Object doSObject(final SObject receiver, final int idx) {
+    public final Object doSObject(final SObject receiver, final long idx) {
       return receiver.getField(idx - 1);
     }
   }
 
   public abstract static class InstVarAtPutPrim extends TernaryExpressionNode {
     @Specialization
-    public final Object doSObject(final SObject receiver, final int idx, final SAbstractObject val) {
+    public final Object doSObject(final SObject receiver, final long idx, final SAbstractObject val) {
       receiver.setField(idx - 1, val);
       return val;
     }
 
     @Specialization
-    public final Object doSObject(final SObject receiver, final int idx, final Object val) {
+    public final Object doSObject(final SObject receiver, final long idx, final Object val) {
       receiver.setField(idx - 1, val);
       return val;
     }

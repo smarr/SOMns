@@ -8,14 +8,13 @@ import com.oracle.truffle.api.dsl.Specialization;
 
 public abstract class AdditionPrim extends ArithmeticPrim {
   @Specialization(order = 10, rewriteOn = ArithmeticException.class)
-  public final int doInteger(final int left, final int argument) {
+  public final long doLong(final long left, final long argument) {
     return ExactMath.addExact(left, argument);
   }
 
   @Specialization(order = 11)
-  public final Object doIntegerWithOverflow(final int left, final int argument) {
-    long result = ((long) left) + argument;
-    return intOrBigInt(result);
+  public final BigInteger doLongWithOverflow(final long left, final long argument) {
+    return BigInteger.valueOf(left).add(BigInteger.valueOf(argument));
   }
 
   @Specialization(order = 30)
@@ -35,22 +34,22 @@ public abstract class AdditionPrim extends ArithmeticPrim {
   }
 
   @Specialization(order = 100)
-  public final Object doInteger(final int left, final BigInteger argument) {
+  public final Object doLong(final long left, final BigInteger argument) {
     return doBigInteger(BigInteger.valueOf(left), argument);
   }
 
   @Specialization(order = 110)
-  public final double doInteger(final int left, final double argument) {
+  public final double doLong(final long left, final double argument) {
     return doDouble(left, argument);
   }
 
   @Specialization(order = 120)
-  public final Object doBigInteger(final BigInteger left, final int right) {
+  public final Object doBigInteger(final BigInteger left, final long right) {
     return doBigInteger(left, BigInteger.valueOf(right));
   }
 
   @Specialization(order = 130)
-  public final double doDouble(final double left, final int right) {
+  public final double doDouble(final double left, final long right) {
     return doDouble(left, (double) right);
   }
 }

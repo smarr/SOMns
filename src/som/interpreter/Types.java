@@ -39,7 +39,7 @@ import som.vmobjects.SSymbol;
 import com.oracle.truffle.api.dsl.TypeSystem;
 
 @TypeSystem({   boolean.class,
-                    int.class,
+                   long.class,
              BigInteger.class,
                  String.class,
                  double.class,
@@ -61,7 +61,7 @@ public class Types {
       } else {
         return universe.falseClass;
       }
-    } else if (obj instanceof Integer) {
+    } else if (obj instanceof Long) {
       return universe.integerClass;
     } else if (obj instanceof BigInteger) {
       return universe.bigintegerClass;

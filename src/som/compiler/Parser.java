@@ -771,10 +771,10 @@ public final class Parser {
          i = 0 - i;
        }
        expect(Integer);
-       if (i < java.lang.Integer.MIN_VALUE || i > java.lang.Integer.MAX_VALUE) {
+       if (i < Long.MIN_VALUE || i > Long.MAX_VALUE) {
          return new BigIntegerLiteralNode(BigInteger.valueOf(i));
        } else {
-         return new IntegerLiteralNode((int) i);
+         return new IntegerLiteralNode(i);
        }
     } catch (NumberFormatException e) {
       throw new ParseError("Could not parse integer. Expected a number but " +

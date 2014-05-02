@@ -42,8 +42,8 @@ public final class SystemPrims {
 
   public abstract static class ExitPrim extends BinarySystemNode {
     @Specialization(guards = "receiverIsSystemObject")
-    public final Object doSObject(final SObject receiver, final int error) {
-      universe.exit(error);
+    public final Object doSObject(final SObject receiver, final long error) {
+      universe.exit((int) error);
       return receiver;
     }
   }
@@ -100,8 +100,8 @@ public final class SystemPrims {
 
   public abstract static class TimePrim extends UnarySystemNode {
     @Specialization(guards = "receiverIsSystemObject")
-    public final int doSObject(final SObject receiver) {
-      return (int) (System.currentTimeMillis() - startTime);
+    public final long doSObject(final SObject receiver) {
+      return System.currentTimeMillis() - startTime;
     }
     @Override
     public final void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
@@ -109,8 +109,8 @@ public final class SystemPrims {
 
   public abstract static class TicksPrim extends UnarySystemNode {
     @Specialization(guards = "receiverIsSystemObject")
-    public final int doSObject(final SObject receiver) {
-      return (int) (System.nanoTime() / 1000L - startMicroTime);
+    public final long doSObject(final SObject receiver) {
+      return System.nanoTime() / 1000L - startMicroTime;
     }
     @Override
     public final void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }

@@ -18,8 +18,8 @@ public abstract class AsStringPrim extends UnarySideEffectFreeExpressionNode {
 
   @SlowPath
   @Specialization
-  public final String doInteger(final int receiver) {
-    return Integer.toString(receiver);
+  public final String doInteger(final long receiver) {
+    return Long.toString(receiver);
   }
 
   @SlowPath

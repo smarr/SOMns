@@ -41,38 +41,38 @@ public class BasicInterpreterTests {
   @Parameters
   public static Iterable<Object[]> data() {
     return Arrays.asList(new Object[][] {
-        {"MethodCall",     "test",  42, Integer.class },
-        {"MethodCall",     "test2", 42, Integer.class },
+        {"MethodCall",     "test",  42, Long.class },
+        {"MethodCall",     "test2", 42, Long.class },
 
         {"NonLocalReturn", "test",  "NonLocalReturn", SClass.class },
-        {"NonLocalReturn", "test1", 42, Integer.class },
-        {"NonLocalReturn", "test2", 43, Integer.class },
-        {"NonLocalReturn", "test3",  3, Integer.class },
-        {"NonLocalReturn", "test4", 42, Integer.class },
-        {"NonLocalReturn", "test5", 22, Integer.class },
+        {"NonLocalReturn", "test1", 42, Long.class },
+        {"NonLocalReturn", "test2", 43, Long.class },
+        {"NonLocalReturn", "test3",  3, Long.class },
+        {"NonLocalReturn", "test4", 42, Long.class },
+        {"NonLocalReturn", "test5", 22, Long.class },
 
-        {"Blocks", "arg1",  42, Integer.class },
-        {"Blocks", "arg2",  77, Integer.class },
-        {"Blocks", "argAndLocal",    8, Integer.class },
-        {"Blocks", "argAndContext",  8, Integer.class },
+        {"Blocks", "arg1",  42, Long.class },
+        {"Blocks", "arg2",  77, Long.class },
+        {"Blocks", "argAndLocal",    8, Long.class },
+        {"Blocks", "argAndContext",  8, Long.class },
 
         {"Return", "returnSelf",           "Return", SClass.class },
         {"Return", "returnSelfImplicitly", "Return", SClass.class },
         {"Return", "noReturnReturnsSelf",  "Return", SClass.class },
-        {"Return", "blockReturnsImplicitlyLastValue", 4, Integer.class },
+        {"Return", "blockReturnsImplicitlyLastValue", 4, Long.class },
 
-        {"IfTrueIfFalse", "test",  42, Integer.class },
-        {"IfTrueIfFalse", "test2", 33, Integer.class },
-        {"IfTrueIfFalse", "test3",  4, Integer.class },
+        {"IfTrueIfFalse", "test",  42, Long.class },
+        {"IfTrueIfFalse", "test2", 33, Long.class },
+        {"IfTrueIfFalse", "test3",  4, Long.class },
 
         {"CompilerSimplification", "returnConstantSymbol",  "constant", SSymbol.class  },
-        {"CompilerSimplification", "returnConstantInt",     42, Integer.class },
+        {"CompilerSimplification", "returnConstantInt",     42, Long.class },
         {"CompilerSimplification", "returnSelf",            "CompilerSimplification", SClass.class },
         {"CompilerSimplification", "returnSelfImplicitly",  "CompilerSimplification", SClass.class },
-        {"CompilerSimplification", "testReturnArgumentN",   55, Integer.class },
-        {"CompilerSimplification", "testReturnArgumentA",   44, Integer.class },
+        {"CompilerSimplification", "testReturnArgumentN",   55, Long.class },
+        {"CompilerSimplification", "testReturnArgumentA",   44, Long.class },
         {"CompilerSimplification", "testSetField",          "foo", SSymbol.class },
-        {"CompilerSimplification", "testGetField",          40, Integer.class },
+        {"CompilerSimplification", "testGetField",          40, Long.class },
     });
   }
 
@@ -92,9 +92,9 @@ public class BasicInterpreterTests {
   }
 
   protected void assertEqualsSOMValue(final Object expectedResult, final Object actualResult) {
-    if (resultType == Integer.class) {
-      int expected = (int) expectedResult;
-      int actual   = (int) actualResult;
+    if (resultType == Long.class) {
+      long expected = (int) expectedResult;
+      long actual   = (long) actualResult;
       assertEquals(expected, actual);
       return;
     }

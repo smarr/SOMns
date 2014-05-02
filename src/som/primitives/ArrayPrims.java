@@ -13,15 +13,15 @@ import com.oracle.truffle.api.dsl.Specialization;
 public final class ArrayPrims {
   public abstract static class AtPrim extends BinarySideEffectFreeExpressionNode {
     @Specialization
-    public final Object doSArray(final Object[] receiver, final int argument) {
-      return receiver[argument - 1];
+    public final Object doSArray(final Object[] receiver, final long argument) {
+      return receiver[(int) argument - 1];
     }
   }
 
   public abstract static class AtPutPrim extends TernaryExpressionNode {
     @Specialization
-    public final Object doSArray(final Object[] receiver, final int index, final Object value) {
-      receiver[index - 1] = value;
+    public final Object doSArray(final Object[] receiver, final long index, final Object value) {
+      receiver[(int) index - 1] = value;
       return value;
     }
   }
@@ -35,8 +35,8 @@ public final class ArrayPrims {
     }
 
     @Specialization(guards = "receiverIsArrayClass")
-    public final Object[] doSClass(final SClass receiver, final int length) {
-      Object[] result = new Object[length];
+    public final Object[] doSClass(final SClass receiver, final long length) {
+      Object[] result = new Object[(int) length];
       Arrays.fill(result, universe.nilObject);
       return result;
     }

@@ -7,7 +7,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 
 public abstract class LessThanPrim extends ArithmeticPrim {
   @Specialization(order = 1)
-  public final boolean doInteger(final int left, final int right) {
+  public final boolean doLong(final long left, final long right) {
     return left < right;
   }
 
@@ -22,22 +22,22 @@ public abstract class LessThanPrim extends ArithmeticPrim {
   }
 
   @Specialization(order = 100)
-  public final boolean doInteger(final int left, final BigInteger right) {
+  public final boolean doLong(final long left, final BigInteger right) {
     return doBigInteger(BigInteger.valueOf(left), right);
   }
 
   @Specialization(order = 110)
-  public final boolean doInteger(final int left, final double right) {
+  public final boolean doLong(final long left, final double right) {
     return doDouble(left, right);
   }
 
   @Specialization(order = 120)
-  public final boolean doBigInteger(final BigInteger left, final int right) {
+  public final boolean doBigInteger(final BigInteger left, final long right) {
     return doBigInteger(left, BigInteger.valueOf(right));
   }
 
   @Specialization(order = 130)
-  public final boolean doDouble(final double left, final int right) {
+  public final boolean doDouble(final double left, final long right) {
     return doDouble(left, (double) right);
   }
 }

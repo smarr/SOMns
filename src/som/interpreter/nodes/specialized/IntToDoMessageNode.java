@@ -44,14 +44,14 @@ public abstract class IntToDoMessageNode extends TernaryExpressionNode
     return executeEvaluated(frame, arguments[0], arguments[1], arguments[2]);
   }
 
-  protected final boolean isSameBlockInt(final int receiver, final int limit, final SBlock block) {
+  protected final boolean isSameBlockLong(final long receiver, final long limit, final SBlock block) {
     return block.getMethod() == blockMethod;
   }
 
-  @Specialization(guards = "isSameBlockInt")
-  public final int doIntToDo(final VirtualFrame frame, final int receiver, final int limit, final SBlock block) {
+  @Specialization(guards = "isSameBlockLong")
+  public final long doIntToDo(final VirtualFrame frame, final long receiver, final long limit, final SBlock block) {
     try {
-      for (int i = receiver; i <= limit; i++) {
+      for (long i = receiver; i <= limit; i++) {
         valueSend.call(frame, new Object[] {block, i});
       }
     } finally {
@@ -62,14 +62,14 @@ public abstract class IntToDoMessageNode extends TernaryExpressionNode
     return receiver;
   }
 
-  protected final boolean isSameBlockDouble(final int receiver, final double limit, final SBlock block) {
+  protected final boolean isSameBlockDouble(final long receiver, final double limit, final SBlock block) {
     return block.getMethod() == blockMethod;
   }
 
   @Specialization(guards = "isSameBlockDouble")
-  public final int doIntToDo(final VirtualFrame frame, final int receiver, final double limit, final SBlock block) {
+  public final long doIntToDo(final VirtualFrame frame, final long receiver, final double limit, final SBlock block) {
     try {
-      for (int i = receiver; i <= limit; i++) {
+      for (long i = receiver; i <= limit; i++) {
         valueSend.call(frame, new Object[] {block, i});
       }
     } finally {
@@ -81,7 +81,7 @@ public abstract class IntToDoMessageNode extends TernaryExpressionNode
   }
 
   @SlowPath
-  private void reportLoopCount(final int count) {
+  private void reportLoopCount(final long count) {
     CompilerAsserts.neverPartOfCompilation();
     Node current = getParent();
     while (current != null && !(current instanceof RootNode)) {
@@ -90,7 +90,7 @@ public abstract class IntToDoMessageNode extends TernaryExpressionNode
     if (current != null) {
       RootNode root = (RootNode) current;
       if (root.getCallTarget() instanceof LoopCountReceiver) {
-        ((LoopCountReceiver) root.getCallTarget()).reportLoopCount(count);
+        ((LoopCountReceiver) root.getCallTarget()).reportLoopCount((int) count);
       }
     }
   }

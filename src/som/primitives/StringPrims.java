@@ -30,9 +30,10 @@ public class StringPrims {
 
   public abstract static class SubstringPrim extends TernarySideEffectFreeExpressionNode {
     @Specialization
-    public final String doSString(final String receiver, final int start, final int end) {
+    public final String doSString(final String receiver, final long start,
+        final long end) {
       try {
-        return receiver.substring(start - 1, end);
+        return receiver.substring((int) start - 1, (int) end);
       } catch (IndexOutOfBoundsException e) {
         return "Error - index out of bounds";
       }

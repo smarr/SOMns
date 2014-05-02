@@ -112,25 +112,27 @@ public class SObject extends SAbstractObject {
     }
   }
 
-  public final Object getField(final int index) {
-    switch (index) {
+  public final Object getField(final long index) {
+    int i = (int) index;
+    switch (i) {
       case  0: return field1;
       case  1: return field2;
       case  2: return field3;
       case  3: return field4;
       case  4: return field5;
-      default: return extensionFields[index - NUM_DIRECT_FIELDS];
+      default: return extensionFields[i - NUM_DIRECT_FIELDS];
     }
   }
 
-  public final void setField(final int index, final Object value) {
-    switch (index) {
+  public final void setField(final long index, final Object value) {
+    int i = (int) index;
+    switch (i) {
       case  0: field1 = value; break;
       case  1: field2 = value; break;
       case  2: field3 = value; break;
       case  3: field4 = value; break;
       case  4: field5 = value; break;
-      default: extensionFields[index - NUM_DIRECT_FIELDS] = value;  break;
+      default: extensionFields[i - NUM_DIRECT_FIELDS] = value;  break;
     }
   }
 

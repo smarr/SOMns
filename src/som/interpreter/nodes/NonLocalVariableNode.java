@@ -46,8 +46,8 @@ public abstract class NonLocalVariableNode extends ContextualNode {
     }
 
     @Specialization(guards = "isInitialized", rewriteOn = {FrameSlotTypeException.class})
-    public final int doInteger(final VirtualFrame frame) throws FrameSlotTypeException {
-      return determineContext(frame).getInt(slot);
+    public final long doLong(final VirtualFrame frame) throws FrameSlotTypeException {
+      return determineContext(frame).getLong(slot);
     }
 
     @Specialization(guards = "isInitialized", rewriteOn = {FrameSlotTypeException.class})
@@ -116,9 +116,9 @@ public abstract class NonLocalVariableNode extends ContextualNode {
       return expValue;
     }
 
-    @Specialization(guards = "isIntKind", rewriteOn = FrameSlotTypeException.class)
-    public final int write(final VirtualFrame frame, final int expValue) throws FrameSlotTypeException {
-      determineContext(frame).setInt(slot, expValue);
+    @Specialization(guards = "isLongKind", rewriteOn = FrameSlotTypeException.class)
+    public final long write(final VirtualFrame frame, final long expValue) throws FrameSlotTypeException {
+      determineContext(frame).setLong(slot, expValue);
       return expValue;
     }
 
@@ -147,13 +147,13 @@ public abstract class NonLocalVariableNode extends ContextualNode {
       return false;
     }
 
-    protected final boolean isIntKind() {
-      if (slot.getKind() == FrameSlotKind.Int) {
+    protected final boolean isLongKind() {
+      if (slot.getKind() == FrameSlotKind.Long) {
         return true;
       }
       if (slot.getKind() == FrameSlotKind.Illegal) {
         transferToInterpreter("LocalVar.writeIntToUninit");
-        slot.setKind(FrameSlotKind.Int);
+        slot.setKind(FrameSlotKind.Long);
         return true;
       }
       return false;

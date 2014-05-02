@@ -18,7 +18,7 @@ public abstract class EqualsEqualsPrim extends BinarySideEffectFreeExpressionNod
   }
 
   @Specialization(order = 2)
-  public final boolean doInteger(final int left, final int right) {
+  public final boolean doLong(final long left, final long right) {
     return left == right;
   }
 
@@ -43,7 +43,7 @@ public abstract class EqualsEqualsPrim extends BinarySideEffectFreeExpressionNod
   }
 
   @Specialization(order = 46)
-  public final boolean doSArray(final Object[] left, final Object right) {
+  public final boolean doArray(final Object[] left, final Object right) {
     return left == right;
   }
 
@@ -63,37 +63,37 @@ public abstract class EqualsEqualsPrim extends BinarySideEffectFreeExpressionNod
   }
 
   @Specialization(order = 100)
-  public final boolean doInteger(final int left, final double right) {
+  public final boolean doLong(final long left, final double right) {
     return false;
   }
 
   @Specialization(order = 1000)
-  public final boolean doBigInteger(final BigInteger left, final int right) {
+  public final boolean doBigInteger(final BigInteger left, final long right) {
     return false;
   }
 
   @Specialization(order = 1010)
-  public final boolean doInteger(final int left, final BigInteger right) {
+  public final boolean doLong(final long left, final BigInteger right) {
     return false;
   }
 
   @Specialization(order = 1020)
-  public final boolean doDouble(final double left, final int right) {
+  public final boolean doDouble(final double left, final long right) {
     return false;
   }
 
   @Specialization(order = 10000)
-  public final boolean doInteger(final int left, final String right) {
+  public final boolean doLong(final long left, final String right) {
     return false;
   }
 
   @Specialization(order = 10010)
-  public final boolean doInteger(final int left, final SObject right) {
+  public final boolean doLong(final long left, final SObject right) {
     return false;
   }
 
   @Specialization(order = 10100)
-  public final boolean doString(final String receiver, final int argument) {
+  public final boolean doString(final String receiver, final long argument) {
     return false;
   }
 

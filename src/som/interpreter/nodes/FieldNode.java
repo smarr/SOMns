@@ -90,8 +90,8 @@ public abstract class FieldNode extends ExpressionNode {
       return readFromObject(self) instanceof Boolean;
     }
 
-    protected final boolean isInteger(final SObject self) {
-      return readFromObject(self) instanceof Integer;
+    protected final boolean isLong(final SObject self) {
+      return readFromObject(self) instanceof Long;
     }
 
     protected final boolean isBigInteger(final SObject self) {
@@ -130,9 +130,9 @@ public abstract class FieldNode extends ExpressionNode {
       return (boolean) readFromObject(self);
     }
 
-    @Specialization(guards = "isInteger")
-    public final int readInteger(final SObject self) {
-      return (int) readFromObject(self);
+    @Specialization(guards = "isLong")
+    public final long readLong(final SObject self) {
+      return (long) readFromObject(self);
     }
 
     @Specialization(guards = "isBigInteger")
@@ -190,7 +190,7 @@ public abstract class FieldNode extends ExpressionNode {
     }
 
     @Specialization(order = 20)
-    public final int doInteger(final SObject self, final int value) {
+    public final long doLong(final SObject self, final long value) {
       writeToObject(self, value);
       return value;
     }

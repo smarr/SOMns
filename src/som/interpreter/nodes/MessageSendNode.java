@@ -260,7 +260,7 @@ public final class MessageSendNode {
 
         // eagerly but causious:
         case "<<":
-          if (arguments[0] instanceof Integer) {
+          if (arguments[0] instanceof Long) {
             return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
                 argumentNodes[1],
                 LeftShiftPrimFactory.create(null, null)));
@@ -305,8 +305,8 @@ public final class MessageSendNode {
               arguments[1], arguments[2], Universe.current(), argumentNodes[0],
               argumentNodes[1], argumentNodes[2]));
         case "to:do:":
-          if (TypesGen.TYPES.isInteger(arguments[0]) &&
-              (TypesGen.TYPES.isInteger(arguments[1]) ||
+          if (TypesGen.TYPES.isLong(arguments[0]) &&
+              (TypesGen.TYPES.isLong(arguments[1]) ||
                   TypesGen.TYPES.isDouble(arguments[1])) &&
               TypesGen.TYPES.isSBlock(arguments[2])) {
             return replace(IntToDoMessageNodeFactory.create(this,

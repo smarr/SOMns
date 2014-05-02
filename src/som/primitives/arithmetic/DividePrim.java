@@ -8,7 +8,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 
 public abstract class DividePrim extends ArithmeticPrim {
   @Specialization(order = 1)
-  public final int doInteger(final int left, final int right) {
+  public final long doLong(final long left, final long right) {
     return left / right;
   }
 
@@ -19,17 +19,17 @@ public abstract class DividePrim extends ArithmeticPrim {
   }
 
   @Specialization(order = 10)
-  public final Object doBigInteger(final BigInteger left, final int right) {
+  public final Object doBigInteger(final BigInteger left, final long right) {
     return doBigInteger(left, BigInteger.valueOf(right));
   }
 
   @Specialization(order = 11)
-  public final Object doInteger(final int left, final BigInteger right) {
+  public final Object doLong(final long left, final BigInteger right) {
     return doBigInteger(BigInteger.valueOf(left), right);
   }
 
   @Specialization(order = 13)
-  public final Object doInteger(final int left, final double right) {
+  public final Object doLong(final long left, final double right) {
     throw new NotYetImplementedException(); // TODO: need to implement the "//" case here directly... : resendAsDouble("//", left, (SDouble) rightObj, frame.pack());
   }
 }
