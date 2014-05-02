@@ -496,7 +496,7 @@ public class Universe {
 
     // Compute the name of the block class with the given number of
     // arguments
-    SSymbol name = symbolFor("Block" + Integer.toString(numberOfArguments));
+    SSymbol name = symbolFor("Block" + numberOfArguments);
 
     // Lookup the specific block class in the dictionary of globals and
     // return it
