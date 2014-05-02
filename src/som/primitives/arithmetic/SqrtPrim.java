@@ -10,7 +10,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 public abstract class SqrtPrim extends UnaryExpressionNode {
 
   @Specialization
-  public final Number doLong(final long receiver) {
+  public final Object doLong(final long receiver) {
     double result = Math.sqrt(receiver);
 
     if (result == Math.rint(result)) {
