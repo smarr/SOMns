@@ -92,21 +92,21 @@ public class SObject extends SAbstractObject {
     extensionObjFields  = getExtendedObjectStorage(nilObject);
   }
 
-  public int getNumberOfFields() {
+  public final int getNumberOfFields() {
     return numberOfFields;
   }
 
-  public ObjectLayout getObjectLayout() {
+  public final ObjectLayout getObjectLayout() {
     // TODO: should I really remove it, or should I update the layout?
     // assert clazz.getLayoutForInstances() == objectLayout;
     return objectLayout;
   }
 
-  public long[] getExtendedPrimFields() {
+  public final long[] getExtendedPrimFields() {
     return extensionPrimFields;
   }
 
-  public Object[] getExtensionObjFields() {
+  public final Object[] getExtensionObjFields() {
     return extensionObjFields;
   }
 
@@ -151,7 +151,7 @@ public class SObject extends SAbstractObject {
     }
   }
 
-  public boolean updateLayoutToMatchClass() {
+  public final boolean updateLayoutToMatchClass() {
     ObjectLayout layoutAtClass = clazz.getLayoutForInstances();
     assert layoutAtClass.getNumberOfFields() == numberOfFields;
 
@@ -177,7 +177,7 @@ public class SObject extends SAbstractObject {
     setAllFields(fieldValues);
   }
 
-  protected void updateLayoutWithInitializedField(final long index, final Class<?> type) {
+  protected final void updateLayoutWithInitializedField(final long index, final Class<?> type) {
     ObjectLayout layout = clazz.updateInstanceLayoutWithInitializedField(index, type);
 
     assert objectLayout != layout;
@@ -186,7 +186,7 @@ public class SObject extends SAbstractObject {
     setLayoutAndTransferFields(layout);
   }
 
-  protected void updateLayoutWithGeneralizedField(final long index) {
+  protected final void updateLayoutWithGeneralizedField(final long index) {
     ObjectLayout layout = clazz.updateInstanceLayoutWithGeneralizedField(index);
 
     assert objectLayout != layout;

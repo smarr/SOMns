@@ -39,7 +39,7 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.SlowPath;
 
-public class SClass extends SObject {
+public final class SClass extends SObject {
 
   private final Universe universe;
 

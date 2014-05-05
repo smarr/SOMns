@@ -26,7 +26,7 @@ package som.vmobjects;
 
 import som.vm.Universe;
 
-public class SSymbol extends SAbstractObject {
+public final class SSymbol extends SAbstractObject {
 
   public SSymbol(final String value) {
     super();

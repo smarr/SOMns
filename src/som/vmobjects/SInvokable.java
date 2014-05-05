@@ -41,7 +41,7 @@ public abstract class SInvokable extends SAbstractObject {
     this.callTarget  = invokable.createCallTarget();
   }
 
-  public static class SMethod extends SInvokable {
+  public static final class SMethod extends SInvokable {
     public SMethod(final SSymbol signature, final Invokable invokable) {
       super(signature, invokable);
     }
@@ -52,7 +52,7 @@ public abstract class SInvokable extends SAbstractObject {
     }
   }
 
-  public static class SPrimitive extends SInvokable {
+  public static final class SPrimitive extends SInvokable {
     public SPrimitive(final SSymbol signature, final Invokable invokable) {
       super(signature, invokable);
     }
@@ -63,38 +63,38 @@ public abstract class SInvokable extends SAbstractObject {
     }
   }
 
-  public RootCallTarget getCallTarget() {
+  public final RootCallTarget getCallTarget() {
     return callTarget;
   }
 
-  public Invokable getInvokable() {
+  public final Invokable getInvokable() {
     return invokable;
   }
 
-  public SSymbol getSignature() {
+  public final SSymbol getSignature() {
     return signature;
   }
 
-  public SClass getHolder() {
+  public final SClass getHolder() {
     return holder;
   }
 
-  public void setHolder(final SClass value) {
+  public final void setHolder(final SClass value) {
     transferToInterpreterAndInvalidate("SMethod.setHolder");
     holder = value;
   }
 
-  public int getNumberOfArguments() {
+  public final int getNumberOfArguments() {
     // Get the number of arguments of this method
     return getSignature().getNumberOfSignatureArguments();
   }
 
-  public Object invoke(final Object... arguments) {
+  public final Object invoke(final Object... arguments) {
     return callTarget.call(arguments);
   }
 
   @Override
-  public String toString() {
+  public final String toString() {
     // TODO: fixme: remove special case if possible, I think it indicates a bug
     if (holder == null) {
       return "Method(nil>>" + getSignature().toString() + ")";
