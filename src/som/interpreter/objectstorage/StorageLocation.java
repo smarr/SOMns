@@ -215,7 +215,7 @@ public abstract class StorageLocation {
       return obj.isPrimitiveSet(mask);
     }
 
-    protected void markAsSet(final SObject obj) {
+    protected final void markAsSet(final SObject obj) {
       obj.markPrimAsSet(mask);
     }
   }
