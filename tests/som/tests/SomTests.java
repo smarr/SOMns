@@ -39,7 +39,6 @@ public class SomTests {
   public static Iterable<Object[]> data() {
     return Arrays.asList(new Object[][] {
         {"Array"         },
-        {"BigInteger"    },
         {"Block"         },
         {"ClassLoading"  },
         {"ClassStructure"},
