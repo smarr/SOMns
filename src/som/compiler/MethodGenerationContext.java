@@ -38,8 +38,6 @@ import som.interpreter.nodes.ContextualNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.FieldNode.FieldReadNode;
 import som.interpreter.nodes.FieldNode.FieldWriteNode;
-import som.interpreter.nodes.FieldNodeFactory.FieldReadNodeFactory;
-import som.interpreter.nodes.FieldNodeFactory.FieldWriteNodeFactory;
 import som.interpreter.nodes.GlobalNode;
 import som.interpreter.nodes.GlobalNode.UninitializedGlobalReadNode;
 import som.interpreter.nodes.LocalVariableNode.LocalVariableWriteNode;
@@ -334,8 +332,7 @@ public final class MethodGenerationContext {
     if (!holderGenc.hasField(fieldName)) {
       return null;
     }
-    return FieldReadNodeFactory.create(holderGenc.getFieldIndex(fieldName),
-        getSelfRead());
+    return new FieldReadNode(getSelfRead(), holderGenc.getFieldIndex(fieldName));
   }
 
   public GlobalNode getGlobalRead(final SSymbol varName,
@@ -349,8 +346,8 @@ public final class MethodGenerationContext {
       return null;
     }
 
-    return FieldWriteNodeFactory.create(holderGenc.getFieldIndex(fieldName),
-        getSelfRead(), exp);
+    return new FieldWriteNode(getSelfRead(), exp,
+        holderGenc.getFieldIndex(fieldName));
   }
 
   /**

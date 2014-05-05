@@ -30,10 +30,12 @@ import java.lang.reflect.Constructor;
 import java.util.Arrays;
 import java.util.HashMap;
 
+import som.interpreter.objectstorage.ObjectLayout;
 import som.primitives.Primitives;
 import som.vm.Universe;
 import som.vmobjects.SInvokable.SPrimitive;
 
+import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.SlowPath;
 
@@ -41,21 +43,19 @@ public class SClass extends SObject {
 
   private final Universe universe;
 
-  public SClass(final Universe universe) {
-    this(numberOfClassFields, universe);
-  }
-
   public SClass(final int numberOfFields, final Universe universe) {
     // Initialize this class by calling the super constructor with the given
     // value
-    super(numberOfFields, universe.nilObject);
+    super(numberOfFields);
     invokablesTable = new HashMap<SSymbol, SInvokable>();
     this.universe   = universe;
     this.superclass = universe.nilObject;
+
+    layoutForInstances = new ObjectLayout(numberOfFields);
   }
 
   public SClass(final SClass clazz, final Universe universe) {
-    super(clazz, universe.nilObject);
+    super(clazz);
     invokablesTable = new HashMap<SSymbol, SInvokable>();
     this.universe   = universe;
     this.superclass = universe.nilObject;
@@ -94,6 +94,10 @@ public class SClass extends SObject {
   public void setInstanceFields(final SSymbol[] fields) {
     transferToInterpreterAndInvalidate("SClass.setInstanceFields");
     instanceFields = fields;
+    if (layoutForInstances == null ||
+        instanceFields.length != layoutForInstances.getNumberOfFields()) {
+      layoutForInstances = new ObjectLayout(fields.length);
+    }
   }
 
   public SInvokable[] getInstanceInvokables() {
@@ -237,6 +241,17 @@ public class SClass extends SObject {
     }
   }
 
+  public ObjectLayout getLayoutForInstances() {
+    return layoutForInstances;
+  }
+
+  public void setLayoutForInstances(final ObjectLayout layout) {
+    CompilerAsserts.neverPartOfCompilation();
+
+    assert layoutForInstances != layout;
+    layoutForInstances = layout;
+  }
+
   @Override
   public String toString() {
     return "Class(" + getName().getString() + ")";
@@ -250,6 +265,5 @@ public class SClass extends SObject {
   @CompilationFinal private SInvokable[] instanceInvokables;
   @CompilationFinal private SSymbol[]    instanceFields;
 
-  // Static field indices and number of class fields
-  static final int numberOfClassFields = numberOfObjectFields;
+  private ObjectLayout layoutForInstances;
 }

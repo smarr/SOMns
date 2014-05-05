@@ -21,42 +21,25 @@
  */
 package som.interpreter.nodes;
 
-import java.math.BigInteger;
-
 import som.interpreter.nodes.UninitializedVariableNode.UninitializedVariableReadNode;
-import som.vmobjects.SAbstractObject;
+import som.interpreter.objectstorage.FieldNode.AbstractReadFieldNode;
+import som.interpreter.objectstorage.FieldNode.AbstractWriteFieldNode;
+import som.interpreter.objectstorage.FieldNode.UninitializedReadFieldNode;
+import som.interpreter.objectstorage.FieldNode.UninitializedWriteFieldNode;
 import som.vmobjects.SObject;
 
-import com.oracle.truffle.api.dsl.NodeChild;
-import com.oracle.truffle.api.dsl.NodeChildren;
-import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.UnexpectedResultException;
 
-@NodeChild(value = "self", type = ExpressionNode.class)
 public abstract class FieldNode extends ExpressionNode {
 
-  @Child private FieldAccessor fieldAccessor;
+  @Child protected ExpressionNode self;
 
-  protected final int fieldIndex;
-
-  public FieldNode(final int fieldIndex) {
-    this.fieldIndex = fieldIndex;
-    fieldAccessor = FieldAccessor.create(fieldIndex);
+  protected FieldNode(final ExpressionNode self) {
+    this.self = self;
   }
-
-  protected final Object readFromObject(final SObject obj) {
-    return fieldAccessor.read(obj);
-  }
-
-  protected final void writeToObject(final SObject obj, final Object value) {
-    fieldAccessor.write(obj, value);
-  }
-
-  public abstract ExpressionNode getSelf();
 
   public final boolean accessesLocalSelf() {
-    ExpressionNode self = getSelf();
-
     if (self instanceof UninitializedVariableReadNode) {
       UninitializedVariableReadNode selfRead =
           (UninitializedVariableReadNode) self;
@@ -65,158 +48,118 @@ public abstract class FieldNode extends ExpressionNode {
     return false;
   }
 
-  public abstract static class FieldReadNode extends FieldNode
+  public static final class FieldReadNode extends FieldNode
       implements PreevaluatedExpression {
-    public FieldReadNode(final int fieldIndex)     { super(fieldIndex);     }
-    public FieldReadNode(final FieldReadNode node) { this(node.fieldIndex); }
+    @Child private AbstractReadFieldNode read;
 
-    public final int getFieldIndex() {
-      return fieldIndex;
+    public FieldReadNode(final ExpressionNode self, final int fieldIndex) {
+      super(self);
+      read = new UninitializedReadFieldNode(fieldIndex);
     }
 
-    public abstract Object executeEvaluated(SObject self);
+    public FieldReadNode(final FieldReadNode node) {
+      this(node.self, node.read.getFieldIndex());
+    }
+
+    public Object executeEvaluated(final SObject obj) {
+       return read.read(obj);
+    }
 
     @Override
-    public final Object executePreEvaluated(final VirtualFrame frame,
+    public Object executePreEvaluated(final VirtualFrame frame,
         final Object[] arguments) {
       return executeEvaluated((SObject) arguments[0]);
     }
 
-    protected final boolean isSAbstractObject(final SObject self) {
-      return readFromObject(self) instanceof SAbstractObject;
-    }
-
-    protected final boolean isBoolean(final SObject self) {
-      return readFromObject(self) instanceof Boolean;
-    }
-
-    protected final boolean isLong(final SObject self) {
-      return readFromObject(self) instanceof Long;
-    }
-
-    protected final boolean isBigInteger(final SObject self) {
-      return readFromObject(self) instanceof BigInteger;
-    }
-
-    protected final boolean isDouble(final SObject self) {
-      return readFromObject(self) instanceof Double;
-    }
-
-    protected final boolean isString(final SObject self) {
-      return readFromObject(self) instanceof String;
-    }
-
-    protected final boolean isObjectArray(final SObject self) {
-      return readFromObject(self) instanceof Object[];
-    }
-
-    @Specialization(guards = "isString")
-    public final String readString(final SObject self) {
-      return (String) readFromObject(self);
-    }
-
-    @Specialization(guards = "isDouble")
-    public final double readDouble(final SObject self) {
-      return (double) readFromObject(self);
-    }
-
-    @Specialization(guards = "isSAbstractObject")
-    public final SAbstractObject readSAbstractObject(final SObject self) {
-      return (SAbstractObject) readFromObject(self);
-    }
-
-    @Specialization(guards = "isBoolean")
-    public final boolean readBoolean(final SObject self) {
-      return (boolean) readFromObject(self);
-    }
-
-    @Specialization(guards = "isLong")
-    public final long readLong(final SObject self) {
-      return (long) readFromObject(self);
-    }
-
-    @Specialization(guards = "isBigInteger")
-    public final BigInteger readBigInteger(final SObject self) {
-      return (BigInteger) readFromObject(self);
-    }
-
-    @Specialization(guards = "isObjectArray")
-    public final Object[] readObjectArray(final SObject self) {
-      return (Object[]) readFromObject(self);
+    @Override
+    public long executeLong(final VirtualFrame frame) throws UnexpectedResultException {
+      SObject obj = self.executeSObject(frame);
+      return read.readLong(obj);
     }
 
     @Override
-    public final void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
+    public double executeDouble(final VirtualFrame frame) throws UnexpectedResultException {
+      SObject obj = self.executeSObject(frame);
+      return read.readDouble(obj);
+    }
+
+    @Override
+    public Object executeGeneric(final VirtualFrame frame) {
+      SObject obj;
+      try {
+        obj = self.executeSObject(frame);
+      } catch (UnexpectedResultException e) {
+        throw new RuntimeException("This should never happen by construction");
+      }
+      return executeEvaluated(obj);
+    }
+
+    @Override
+    public void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
   }
 
-  @NodeChildren({
-    @NodeChild(value = "self",  type = ExpressionNode.class),
-    @NodeChild(value = "value", type = ExpressionNode.class)})
-  public abstract static class FieldWriteNode extends FieldNode
+  public static final class FieldWriteNode extends FieldNode
       implements PreevaluatedExpression {
+    @Child private ExpressionNode value;
+    @Child private AbstractWriteFieldNode write;
 
-    public FieldWriteNode(final int fieldIndex) {
-      super(fieldIndex);
+    public FieldWriteNode(final ExpressionNode self, final ExpressionNode value,
+        final int fieldIndex) {
+      super(self);
+      this.value = value;
+      write = new UninitializedWriteFieldNode(fieldIndex);
     }
 
     public FieldWriteNode(final FieldWriteNode node) {
-      this(node.fieldIndex);
+      this(node.self, node.value, node.write.getFieldIndex());
     }
 
-    public int getFieldIndex() {
-      return fieldIndex;
+    public Object executeEvaluated(final VirtualFrame frame, final SObject self, final Object value) {
+      return write.write(self, value);
     }
-
-    public abstract ExpressionNode getValue();
-
-    public abstract Object executeEvaluated(VirtualFrame frame, SObject self, Object value);
 
     @Override
-    public final Object executePreEvaluated(final VirtualFrame frame,
+    public Object executePreEvaluated(final VirtualFrame frame,
         final Object[] arguments) {
       return executeEvaluated(frame, (SObject) arguments[0], arguments[1]);
     }
 
-    @Specialization(order = 1)
-    public final SAbstractObject doSAbstractObject(final SObject self, final SAbstractObject value) {
-      writeToObject(self, value);
-      return value;
+    @Override
+    public long executeLong(final VirtualFrame frame)
+        throws UnexpectedResultException {
+      SObject obj = executeSelf(frame);
+      long val = value.executeLong(frame);
+      return write.write(obj, val);
     }
 
-    @Specialization(order = 19)
-    public final boolean doBoolean(final SObject self, final boolean value) {
-      writeToObject(self, value);
-      return value;
+    @Override
+    public double executeDouble(final VirtualFrame frame)
+        throws UnexpectedResultException {
+      SObject obj = executeSelf(frame);
+      double val  = value.executeDouble(frame);
+      return write.write(obj, val);
     }
 
-    @Specialization(order = 20)
-    public final long doLong(final SObject self, final long value) {
-      writeToObject(self, value);
-      return value;
+    @Override
+    public Object executeGeneric(final VirtualFrame frame) {
+      SObject obj = executeSelf(frame);
+      Object  val = value.executeGeneric(frame);
+      return executeEvaluated(frame, obj, val);
     }
 
-    @Specialization(order = 30)
-    public final BigInteger doBigInteger(final SObject self, final BigInteger value) {
-      writeToObject(self, value);
-      return value;
+    private SObject executeSelf(final VirtualFrame frame) {
+      SObject obj;
+      try {
+        obj = self.executeSObject(frame);
+      } catch (UnexpectedResultException e) {
+        throw new RuntimeException("This should never happen by construction");
+      }
+      return obj;
     }
 
-    @Specialization(order = 40)
-    public final double doDouble(final SObject self, final double value) {
-      writeToObject(self, value);
-      return value;
-    }
-
-    @Specialization(order = 50)
-    public final String doString(final SObject self, final String value) {
-      writeToObject(self, value);
-      return value;
-    }
-
-    @Specialization(order = 60)
-    public final Object[] doString(final SObject self, final Object[] value) {
-      writeToObject(self, value);
-      return value;
+    @Override
+    public void executeVoid(final VirtualFrame frame) {
+      executeGeneric(frame);
     }
   }
 }
