@@ -282,7 +282,7 @@ public class Universe {
   @SlowPath
   protected void initializeObjectSystem() {
     // Allocate the nil object
-    nilObject = SObject.create(0);
+    nilObject = SObject.create(0, null);
 
     // Allocate the Metaclass classes
     metaclassClass = newMetaclassClass();
@@ -300,7 +300,7 @@ public class Universe {
     doubleClass     = newSystemClass();
 
     // Setup the class reference for the nil object
-    nilObject.setClass(nilClass);
+    nilObject.setClass(nilClass, nilObject);
 
     // Initialize the system classes.
     initializeSystemClass(objectClass,            null, "Object");
@@ -391,17 +391,17 @@ public class Universe {
   }
 
   public SObject newInstance(final SClass instanceClass) {
-    return SObject.create(instanceClass);
+    return SObject.create(instanceClass, nilObject);
   }
 
   @SlowPath
   public SClass newMetaclassClass() {
     // Allocate the metaclass classes
     SClass result = new SClass(0, this);
-    result.setClass(new SClass(0, this));
+    result.setClass(new SClass(0, this), nilObject);
 
     // Setup the metaclass hierarchy
-    result.getSOMClass(this).setClass(result);
+    result.getSOMClass(this).setClass(result, nilObject);
     return result;
   }
 
@@ -422,8 +422,8 @@ public class Universe {
     SClass systemClass = new SClass(0, this);
 
     // Setup the metaclass hierarchy
-    systemClass.setClass(new SClass(0, this));
-    systemClass.getSOMClass(this).setClass(metaclassClass);
+    systemClass.setClass(new SClass(0, this), nilObject);
+    systemClass.getSOMClass(this).setClass(metaclassClass, nilObject);
 
     // Return the freshly allocated system class
     return systemClass;

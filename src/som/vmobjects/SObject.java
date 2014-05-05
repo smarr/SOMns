@@ -27,6 +27,7 @@ package som.vmobjects;
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
 
 import java.lang.reflect.Field;
+import java.util.Arrays;
 
 import som.interpreter.objectstorage.ObjectLayout;
 import som.interpreter.objectstorage.StorageLocation;
@@ -34,7 +35,7 @@ import som.interpreter.objectstorage.StorageLocation.GeneralizeStorageLocationEx
 import som.interpreter.objectstorage.StorageLocation.UninitalizedStorageLocationException;
 import som.vm.Universe;
 
-import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.NodeUtil;
@@ -62,27 +63,33 @@ public class SObject extends SAbstractObject {
   @SuppressWarnings("unused") @CompilationFinal private long[]   extensionPrimFields;
   @SuppressWarnings("unused") @CompilationFinal private Object[] extensionObjFields;
 
-  private ObjectLayout objectLayout;
+  // we manage the layout entirely in the class, but need to keep a copy here
+  // to know in case the layout changed that we can update the instances lazily
+  @CompilationFinal private ObjectLayout objectLayout;
+
   private int    primitiveUsedMap;
 
   private final int numberOfFields;
 
-  protected SObject(final SClass instanceClass) {
+  protected SObject(final SClass instanceClass, final SObject nilObject) {
     numberOfFields = instanceClass.getNumberOfInstanceFields();
     clazz          = instanceClass;
-    objectLayout   = instanceClass.getLayoutForInstances();
+    setLayoutInitially(instanceClass.getLayoutForInstances(), nilObject);
+  }
+
+  protected SObject(final int numFields, final SObject nilObject) {
+    numberOfFields = numFields;
+    setLayoutInitially(new ObjectLayout(numFields, null), nilObject);
+  }
+
+  private void setLayoutInitially(final ObjectLayout layout, final SObject nilObject) {
+    field1 = field2 = field3 = field4 = field5 = nilObject;
+
+    objectLayout   = layout;
     assert objectLayout.getNumberOfFields() == numberOfFields;
 
     extensionPrimFields = getExtendedPrimStorage();
-    extensionObjFields  = getExtendedObjectStorage();
-  }
-
-  protected SObject(final int numFields) {
-    numberOfFields = numFields;
-    objectLayout   = new ObjectLayout(numFields);
-
-    extensionPrimFields = getExtendedPrimStorage();
-    extensionObjFields  = getExtendedObjectStorage();
+    extensionObjFields  = getExtendedObjectStorage(nilObject);
   }
 
   public int getNumberOfFields() {
@@ -90,6 +97,8 @@ public class SObject extends SAbstractObject {
   }
 
   public ObjectLayout getObjectLayout() {
+    // TODO: should I really remove it, or should I update the layout?
+    // assert clazz.getLayoutForInstances() == objectLayout;
     return objectLayout;
   }
 
@@ -101,26 +110,25 @@ public class SObject extends SAbstractObject {
     return extensionObjFields;
   }
 
-  public final void setClass(final SClass value) {
+  public final void setClass(final SClass value, final SObject nilObject) {
     transferToInterpreterAndInvalidate("SObject.setClass");
     // Set the class of this object by writing to the field with class index
     clazz = value;
-    objectLayout = value.getLayoutForInstances();
-    assert objectLayout.getNumberOfFields() == numberOfFields;
+    setLayoutInitially(value.getLayoutForInstances(), nilObject);
   }
 
   private long[] getExtendedPrimStorage() {
     return new long[objectLayout.getNumberOfUsedExtendedPrimStorageLocations()];
   }
 
-  private Object[] getExtendedObjectStorage() {
-    return new Object[objectLayout.getNumberOfUsedExtendedObjectStorageLocations()];
+  private Object[] getExtendedObjectStorage(final SObject nilObject) {
+    Object[] storage = new Object[objectLayout.getNumberOfUsedExtendedObjectStorageLocations()];
+    Arrays.fill(storage, nilObject);
+    return storage;
   }
 
   @ExplodeLoop
   private Object[] readAllFields() {
-    CompilerAsserts.neverPartOfCompilation(); // at least I think so
-
     Object[] fieldValues = new Object[numberOfFields];
     for (int i = 0; i < numberOfFields; i++) {
       if (isFieldSet(i)) {
@@ -134,7 +142,6 @@ public class SObject extends SAbstractObject {
 
   @ExplodeLoop
   private void setAllFields(final Object[] fieldValues) {
-    CompilerAsserts.neverPartOfCompilation();
     assert fieldValues.length == numberOfFields;
 
     for (int i = 0; i < numberOfFields; i++) {
@@ -144,19 +151,20 @@ public class SObject extends SAbstractObject {
     }
   }
 
-  public void updateLayoutToMatchClass() {
+  public boolean updateLayoutToMatchClass() {
     ObjectLayout layoutAtClass = clazz.getLayoutForInstances();
     assert layoutAtClass.getNumberOfFields() == numberOfFields;
+
     if (objectLayout != layoutAtClass) {
-      updateLayout(layoutAtClass);
+      setLayoutAndTransferFields(layoutAtClass);
+      return true;
+    } else {
+      return false;
     }
   }
 
-  protected void updateLayout(final ObjectLayout layout) {
-    CompilerAsserts.neverPartOfCompilation();
-
-    assert objectLayout != layout;
-    assert layout.getNumberOfFields() == numberOfFields;
+  private void setLayoutAndTransferFields(final ObjectLayout layout) {
+    CompilerDirectives.transferToInterpreterAndInvalidate();
 
     Object[] fieldValues = readAllFields();
 
@@ -164,9 +172,27 @@ public class SObject extends SAbstractObject {
 
     primitiveUsedMap    = 0;
     extensionPrimFields = getExtendedPrimStorage();
-    extensionObjFields  = getExtendedObjectStorage();
+    extensionObjFields  = getExtendedObjectStorage(null);
 
     setAllFields(fieldValues);
+  }
+
+  protected void updateLayoutWithInitializedField(final long index, final Class<?> type) {
+    ObjectLayout layout = clazz.updateInstanceLayoutWithInitializedField(index, type);
+
+    assert objectLayout != layout;
+    assert layout.getNumberOfFields() == numberOfFields;
+
+    setLayoutAndTransferFields(layout);
+  }
+
+  protected void updateLayoutWithGeneralizedField(final long index) {
+    ObjectLayout layout = clazz.updateInstanceLayoutWithGeneralizedField(index);
+
+    assert objectLayout != layout;
+    assert layout.getNumberOfFields() == numberOfFields;
+
+    setLayoutAndTransferFields(layout);
   }
 
   @Override
@@ -174,12 +200,12 @@ public class SObject extends SAbstractObject {
     return clazz;
   }
 
-  public static final SObject create(final SClass instanceClass) {
-    return new SObject(instanceClass);
+  public static final SObject create(final SClass instanceClass, final SObject nilObject) {
+    return new SObject(instanceClass, nilObject);
   }
 
-  public static SObject create(final int numFields) {
-    return new SObject(numFields);
+  public static SObject create(final int numFields, final SObject nilObject) {
+    return new SObject(numFields, nilObject);
   }
 
   private static final long FIRST_OBJECT_FIELD_OFFSET = getFirstObjectFieldOffset();
@@ -211,8 +237,6 @@ public class SObject extends SAbstractObject {
   }
 
   private StorageLocation getLocation(final long index) {
-    CompilerAsserts.neverPartOfCompilation();
-
     StorageLocation location = objectLayout.getStorageLocation(index);
     assert location != null;
     return location;
@@ -234,10 +258,10 @@ public class SObject extends SAbstractObject {
     try {
       location.write(this, value);
     } catch (UninitalizedStorageLocationException e) {
-      updateLayout(objectLayout.withInitializedField(index, value.getClass()));
+      updateLayoutWithInitializedField(index, value.getClass());
       setFieldAfterLayoutChange(index, value);
     } catch (GeneralizeStorageLocationException e) {
-      updateLayout(objectLayout.withGeneralizedField(index));
+      updateLayoutWithGeneralizedField(index);
       setFieldAfterLayoutChange(index, value);
     }
   }
@@ -250,8 +274,6 @@ public class SObject extends SAbstractObject {
         | UninitalizedStorageLocationException e) {
       throw new RuntimeException("This should not happen, we just prepared this field for the new value.");
     }
-
-    clazz.setLayoutForInstances(objectLayout);
   }
 
   private static long getFirstObjectFieldOffset() {

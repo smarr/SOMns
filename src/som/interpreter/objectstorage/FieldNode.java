@@ -8,11 +8,14 @@ import som.interpreter.objectstorage.StorageLocation.LongStorageLocation;
 import som.vm.Universe;
 import som.vmobjects.SObject;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 
 
 public abstract class FieldNode extends Node {
+  protected static final int INLINE_CACHE_SIZE = 6;
+
   protected final int fieldIndex;
 
   public FieldNode(final int fieldIndex) {
@@ -42,14 +45,19 @@ public abstract class FieldNode extends Node {
       return TypesGen.TYPES.expectDouble(read(obj));
     }
 
-    public Object respecializeAndRead(final SObject obj, final String reason) {
+    protected Object specializeAndRead(final SObject obj, final String reason, final AbstractReadFieldNode next) {
+      return specialize(obj, reason, next).read(obj);
+    }
+
+    protected AbstractReadFieldNode specialize(final SObject obj,
+        final String reason, final AbstractReadFieldNode next) {
       obj.updateLayoutToMatchClass();
 
       final ObjectLayout    layout   = obj.getObjectLayout();
       final StorageLocation location = layout.getStorageLocation(fieldIndex);
 
-      AbstractReadFieldNode newNode = location.getReadNode(fieldIndex, layout);
-      return replace(newNode, reason).read(obj);
+      AbstractReadFieldNode newNode = location.getReadNode(fieldIndex, layout, next);
+      return replace(newNode, reason);
     }
   }
 
@@ -61,28 +69,41 @@ public abstract class FieldNode extends Node {
 
     @Override
     public Object read(final SObject obj) {
-      return respecializeAndRead(obj, "uninitalized node");
+      CompilerDirectives.transferToInterpreterAndInvalidate();
+      return specializeAndRead(obj, "uninitalized node", new UninitializedReadFieldNode(fieldIndex));
     }
   }
 
   public abstract static class ReadSpecializedFieldNode extends AbstractReadFieldNode {
     protected final ObjectLayout layout;
+    @Child private AbstractReadFieldNode nextInCache;
 
-    public ReadSpecializedFieldNode(final int fieldIndex, final ObjectLayout layout) {
+    public ReadSpecializedFieldNode(final int fieldIndex,
+        final ObjectLayout layout, final AbstractReadFieldNode next) {
       super(fieldIndex);
       this.layout = layout;
+      nextInCache = next;
     }
 
     protected final boolean hasExpectedLayout(final SObject obj) {
       return layout == obj.getObjectLayout();
+    }
+
+    protected final AbstractReadFieldNode respecializedNodeOrNext(final SObject obj) {
+      if (layout.layoutForSameClass(obj.getObjectLayout())) {
+        return specialize(obj, "update outdated read node", nextInCache);
+      } else {
+        return nextInCache;
+      }
     }
   }
 
   public static final class ReadUnwrittenFieldNode extends ReadSpecializedFieldNode {
     private final SObject nilObject;
 
-    public ReadUnwrittenFieldNode(final int fieldIndex, final ObjectLayout layout) {
-      super(fieldIndex, layout);
+    public ReadUnwrittenFieldNode(final int fieldIndex,
+        final ObjectLayout layout, final AbstractReadFieldNode next) {
+      super(fieldIndex, layout, next);
       nilObject = Universe.current().nilObject;
     }
 
@@ -100,7 +121,7 @@ public abstract class FieldNode extends Node {
       if (hasExpectedLayout(obj)) {
         return nilObject;
       } else {
-        return respecializeAndRead(obj, "unexpected object layout");
+        return respecializedNodeOrNext(obj).read(obj);
       }
     }
   }
@@ -108,8 +129,9 @@ public abstract class FieldNode extends Node {
   public static final class ReadLongFieldNode extends ReadSpecializedFieldNode {
     private final LongStorageLocation storage;
 
-    public ReadLongFieldNode(final int fieldIndex, final ObjectLayout layout) {
-      super(fieldIndex, layout);
+    public ReadLongFieldNode(final int fieldIndex, final ObjectLayout layout,
+        final AbstractReadFieldNode next) {
+      super(fieldIndex, layout, next);
       this.storage = (LongStorageLocation) layout.getStorageLocation(fieldIndex);
     }
 
@@ -119,7 +141,7 @@ public abstract class FieldNode extends Node {
       if (assumption) {
         return storage.readLong(obj, assumption);
       } else {
-        return TypesGen.TYPES.expectLong(respecializeAndRead(obj, "unexpected object layout"));
+        return respecializedNodeOrNext(obj).readLong(obj);
       }
     }
 
@@ -136,8 +158,9 @@ public abstract class FieldNode extends Node {
   public static final class ReadDoubleFieldNode extends ReadSpecializedFieldNode {
     private final DoubleStorageLocation storage;
 
-    public ReadDoubleFieldNode(final int fieldIndex, final ObjectLayout layout) {
-      super(fieldIndex, layout);
+    public ReadDoubleFieldNode(final int fieldIndex, final ObjectLayout layout,
+        final AbstractReadFieldNode next) {
+      super(fieldIndex, layout, next);
       this.storage = (DoubleStorageLocation) layout.getStorageLocation(fieldIndex);
     }
 
@@ -147,7 +170,7 @@ public abstract class FieldNode extends Node {
       if (assumption) {
         return storage.readDouble(obj, assumption);
       } else {
-        return TypesGen.TYPES.expectDouble(respecializeAndRead(obj, "unexpected object layout"));
+        return respecializedNodeOrNext(obj).readDouble(obj);
       }
     }
 
@@ -164,8 +187,9 @@ public abstract class FieldNode extends Node {
   public static final class ReadObjectFieldNode extends ReadSpecializedFieldNode {
     private final AbstractObjectStorageLocation storage;
 
-    public ReadObjectFieldNode(final int fieldIndex, final ObjectLayout layout) {
-      super(fieldIndex, layout);
+    public ReadObjectFieldNode(final int fieldIndex, final ObjectLayout layout,
+        final AbstractReadFieldNode next) {
+      super(fieldIndex, layout, next);
       this.storage = (AbstractObjectStorageLocation) layout.getStorageLocation(fieldIndex);
     }
 
@@ -175,7 +199,7 @@ public abstract class FieldNode extends Node {
       if (assumption) {
         return storage.read(obj, assumption);
       } else {
-        return respecializeAndRead(obj, "unexpected object layout");
+        return respecializedNodeOrNext(obj).read(obj);
       }
     }
   }
@@ -197,15 +221,15 @@ public abstract class FieldNode extends Node {
       return value;
     }
 
-    public void writeAndRespecialize(final SObject obj, final Object value,
-        final String reason) {
+    protected void writeAndRespecialize(final SObject obj, final Object value,
+        final String reason, final AbstractWriteFieldNode next) {
       TruffleCompiler.transferToInterpreterAndInvalidate(reason);
 
       obj.setField(fieldIndex, value);
 
       final ObjectLayout layout = obj.getObjectLayout();
       final StorageLocation location = layout.getStorageLocation(fieldIndex);
-      AbstractWriteFieldNode newNode = location.getWriteNode(fieldIndex, layout);
+      AbstractWriteFieldNode newNode = location.getWriteNode(fieldIndex, layout, next);
       replace(newNode, reason);
     }
   }
@@ -217,7 +241,9 @@ public abstract class FieldNode extends Node {
 
     @Override
     public Object write(final SObject obj, final Object value) {
-      writeAndRespecialize(obj, value, "initialize write field node");
+      CompilerDirectives.transferToInterpreterAndInvalidate();
+      writeAndRespecialize(obj, value, "initialize write field node",
+          new UninitializedWriteFieldNode(fieldIndex));
       return value;
     }
   }
@@ -225,10 +251,13 @@ public abstract class FieldNode extends Node {
   private abstract static class WriteSpecializedFieldNode extends AbstractWriteFieldNode {
 
     protected final ObjectLayout layout;
+    @Child protected AbstractWriteFieldNode nextInCache;
 
-    public WriteSpecializedFieldNode(final int fieldIndex, final ObjectLayout layout) {
+    public WriteSpecializedFieldNode(final int fieldIndex,
+        final ObjectLayout layout, final AbstractWriteFieldNode next) {
       super(fieldIndex);
       this.layout = layout;
+      nextInCache = next;
     }
 
     protected final boolean hasExpectedLayout(final SObject obj) {
@@ -239,8 +268,9 @@ public abstract class FieldNode extends Node {
   public static final class WriteLongFieldNode extends WriteSpecializedFieldNode {
     private final LongStorageLocation storage;
 
-    public WriteLongFieldNode(final int fieldIndex, final ObjectLayout layout) {
-      super(fieldIndex, layout);
+    public WriteLongFieldNode(final int fieldIndex, final ObjectLayout layout,
+        final AbstractWriteFieldNode next) {
+      super(fieldIndex, layout, next);
       this.storage = (LongStorageLocation) layout.getStorageLocation(fieldIndex);
     }
 
@@ -249,7 +279,11 @@ public abstract class FieldNode extends Node {
       if (hasExpectedLayout(obj)) {
         storage.writeLong(obj, value);
       } else {
-        writeAndRespecialize(obj, value, "unexpected object layout");
+        if (layout.layoutForSameClass(obj.getObjectLayout())) {
+          writeAndRespecialize(obj, value, "update outdated read node", nextInCache);
+        } else {
+          nextInCache.write(obj, value);
+        }
       }
       return value;
     }
@@ -257,19 +291,24 @@ public abstract class FieldNode extends Node {
     @Override
     public Object write(final SObject obj, final Object value) {
       if (value instanceof Long) {
-        return write(obj, (long) value);
+        write(obj, (long) value);
       } else {
-        writeAndRespecialize(obj, value, "unexpected value");
-        return value;
+        if (layout.layoutForSameClass(obj.getObjectLayout())) {
+          writeAndRespecialize(obj, value, "update outdated read node", nextInCache);
+        } else {
+          nextInCache.write(obj, (long) value);
+        }
       }
+      return value;
     }
   }
 
   public static final class WriteDoubleFieldNode extends WriteSpecializedFieldNode {
     private final DoubleStorageLocation storage;
 
-    public WriteDoubleFieldNode(final int fieldIndex, final ObjectLayout layout) {
-      super(fieldIndex, layout);
+    public WriteDoubleFieldNode(final int fieldIndex, final ObjectLayout layout,
+        final AbstractWriteFieldNode next) {
+      super(fieldIndex, layout, next);
       this.storage = (DoubleStorageLocation) layout.getStorageLocation(fieldIndex);
     }
 
@@ -278,7 +317,11 @@ public abstract class FieldNode extends Node {
       if (hasExpectedLayout(obj)) {
         storage.writeDouble(obj, value);
       } else {
-        writeAndRespecialize(obj, value, "unexpected object layout");
+        if (layout.layoutForSameClass(obj.getObjectLayout())) {
+          writeAndRespecialize(obj, value, "update outdated read node", nextInCache);
+        } else {
+          nextInCache.write(obj, value);
+        }
       }
       return value;
     }
@@ -286,19 +329,24 @@ public abstract class FieldNode extends Node {
     @Override
     public Object write(final SObject obj, final Object value) {
       if (value instanceof Double) {
-        return write(obj, (double) value);
+        write(obj, (double) value);
       } else {
-        writeAndRespecialize(obj, value, "unexpected value");
-        return value;
+        if (layout.layoutForSameClass(obj.getObjectLayout())) {
+          writeAndRespecialize(obj, value, "update outdated read node", nextInCache);
+        } else {
+          nextInCache.write(obj, (double) value);
+        }
       }
+      return value;
     }
   }
 
   public static final class WriteObjectFieldNode extends WriteSpecializedFieldNode {
     private final AbstractObjectStorageLocation storage;
 
-    public WriteObjectFieldNode(final int fieldIndex, final ObjectLayout layout) {
-      super(fieldIndex, layout);
+    public WriteObjectFieldNode(final int fieldIndex, final ObjectLayout layout,
+        final AbstractWriteFieldNode next) {
+      super(fieldIndex, layout, next);
       this.storage = (AbstractObjectStorageLocation) layout.getStorageLocation(fieldIndex);
     }
 
@@ -307,7 +355,11 @@ public abstract class FieldNode extends Node {
       if (hasExpectedLayout(obj)) {
         storage.write(obj, value);
       } else {
-        writeAndRespecialize(obj, value, "unexpected object layout");
+        if (layout.layoutForSameClass(obj.getObjectLayout())) {
+          writeAndRespecialize(obj, value, "update outdated read node", nextInCache);
+        } else {
+          nextInCache.write(obj, value);
+        }
       }
       return value;
     }

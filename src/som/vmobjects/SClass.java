@@ -35,7 +35,7 @@ import som.primitives.Primitives;
 import som.vm.Universe;
 import som.vmobjects.SInvokable.SPrimitive;
 
-import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.SlowPath;
 
@@ -46,16 +46,16 @@ public class SClass extends SObject {
   public SClass(final int numberOfFields, final Universe universe) {
     // Initialize this class by calling the super constructor with the given
     // value
-    super(numberOfFields);
+    super(numberOfFields, universe.nilObject);
     invokablesTable = new HashMap<SSymbol, SInvokable>();
     this.universe   = universe;
     this.superclass = universe.nilObject;
 
-    layoutForInstances = new ObjectLayout(numberOfFields);
+    layoutForInstances = new ObjectLayout(numberOfFields, this);
   }
 
   public SClass(final SClass clazz, final Universe universe) {
-    super(clazz);
+    super(clazz, universe.nilObject);
     invokablesTable = new HashMap<SSymbol, SInvokable>();
     this.universe   = universe;
     this.superclass = universe.nilObject;
@@ -96,7 +96,7 @@ public class SClass extends SObject {
     instanceFields = fields;
     if (layoutForInstances == null ||
         instanceFields.length != layoutForInstances.getNumberOfFields()) {
-      layoutForInstances = new ObjectLayout(fields.length);
+      layoutForInstances = new ObjectLayout(fields.length, this);
     }
   }
 
@@ -245,12 +245,26 @@ public class SClass extends SObject {
     return layoutForInstances;
   }
 
-  public void setLayoutForInstances(final ObjectLayout layout) {
-    CompilerAsserts.neverPartOfCompilation();
+  public ObjectLayout updateInstanceLayoutWithInitializedField(final long index, final Class<?> type) {
+    ObjectLayout updated = layoutForInstances.withInitializedField(index, type);
 
-    assert layoutForInstances != layout;
-    layoutForInstances = layout;
+    if (updated != layoutForInstances) {
+      CompilerDirectives.transferToInterpreterAndInvalidate();
+      layoutForInstances = updated;
+    }
+    return layoutForInstances;
   }
+
+  public ObjectLayout updateInstanceLayoutWithGeneralizedField(final long index) {
+    ObjectLayout updated = layoutForInstances.withGeneralizedField(index);
+
+    if (updated != layoutForInstances) {
+      CompilerDirectives.transferToInterpreterAndInvalidate();
+      layoutForInstances = updated;
+    }
+    return layoutForInstances;
+  }
+
 
   @Override
   public String toString() {
@@ -265,5 +279,5 @@ public class SClass extends SObject {
   @CompilationFinal private SInvokable[] instanceInvokables;
   @CompilationFinal private SSymbol[]    instanceFields;
 
-  private ObjectLayout layoutForInstances;
+  @CompilationFinal private ObjectLayout layoutForInstances;
 }

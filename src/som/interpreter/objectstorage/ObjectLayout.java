@@ -1,11 +1,14 @@
 package som.interpreter.objectstorage;
 
 import som.interpreter.objectstorage.StorageLocation.UnwrittenStorageLocation;
+import som.vmobjects.SClass;
 import som.vmobjects.SObject;
 
 
 
 public final class ObjectLayout {
+  private final SClass forClass;
+
   private final int primitiveStorageLocationsUsed;
   private final int objectStorageLocationsUsed;
   private final int totalNumberOfStorageLocations;
@@ -13,11 +16,13 @@ public final class ObjectLayout {
   private final StorageLocation[] storageLocations;
   private final Class<?>[]        storageTypes;
 
-  public ObjectLayout(final int numberOfFields) {
-    this(new Class<?>[numberOfFields]);
+  public ObjectLayout(final int numberOfFields, final SClass forClass) {
+    this(new Class<?>[numberOfFields], forClass);
   }
 
-  public ObjectLayout(final Class<?>[] knownFieldTypes) {
+  public ObjectLayout(final Class<?>[] knownFieldTypes, final SClass forClass) {
+    this.forClass = forClass;
+
     storageTypes = knownFieldTypes;
     totalNumberOfStorageLocations = knownFieldTypes.length;
     storageLocations = new StorageLocation[knownFieldTypes.length];
@@ -50,6 +55,10 @@ public final class ObjectLayout {
     objectStorageLocationsUsed    = nextFreeObjIdx;
   }
 
+  public boolean layoutForSameClass(final ObjectLayout other) {
+    return forClass == other.forClass;
+  }
+
   public int getNumberOfFields() {
     return storageTypes.length;
   }
@@ -59,9 +68,14 @@ public final class ObjectLayout {
   }
 
   public ObjectLayout withGeneralizedField(final int fieldIndex) {
-    Class<?>[] withGeneralizedField = storageTypes.clone();
-    withGeneralizedField[fieldIndex] = Object.class;
-    return new ObjectLayout(withGeneralizedField);
+    if (storageTypes[fieldIndex] == Object.class) {
+      return this;
+    } else {
+      assert storageTypes[fieldIndex] != Object.class;
+      Class<?>[] withGeneralizedField = storageTypes.clone();
+      withGeneralizedField[fieldIndex] = Object.class;
+      return new ObjectLayout(withGeneralizedField, forClass);
+    }
   }
 
   public ObjectLayout withInitializedField(final long fieldIndex, final Class<?> type) {
@@ -75,10 +89,14 @@ public final class ObjectLayout {
   }
 
   private ObjectLayout withInitializedField(final int fieldIndex, final Class<?> type) {
-    assert storageTypes[fieldIndex] == null;
-    Class<?>[] withInitializedField = storageTypes.clone();
-    withInitializedField[fieldIndex] = type;
-    return new ObjectLayout(withInitializedField);
+    if (storageTypes[fieldIndex] == type) {
+      return this;
+    } else {
+      assert storageTypes[fieldIndex] == null;
+      Class<?>[] withInitializedField = storageTypes.clone();
+      withInitializedField[fieldIndex] = type;
+      return new ObjectLayout(withInitializedField, forClass);
+    }
   }
 
   public StorageLocation getStorageLocation(final long fieldIndex) {
