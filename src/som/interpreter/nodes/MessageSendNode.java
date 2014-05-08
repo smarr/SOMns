@@ -67,7 +67,7 @@ public final class MessageSendNode {
     @Override
     public final Object executeGeneric(final VirtualFrame frame) {
       Object[] arguments = evaluateArguments(frame);
-      return executePreEvaluated(frame, arguments);
+      return doPreEvaluated(frame, arguments);
     }
 
     @ExplodeLoop
@@ -97,9 +97,9 @@ public final class MessageSendNode {
     }
 
     @Override
-    public Object executePreEvaluated(final VirtualFrame frame,
+    public Object doPreEvaluated(final VirtualFrame frame,
         final Object[] arguments) {
-      return specialize(arguments).executePreEvaluated(frame, arguments);
+      return specialize(arguments).doPreEvaluated(frame, arguments);
     }
 
     private PreevaluatedExpression specialize(final Object[] arguments) {
@@ -352,7 +352,7 @@ public final class MessageSendNode {
     }
 
     @Override
-    public Object executePreEvaluated(final VirtualFrame frame,
+    public Object doPreEvaluated(final VirtualFrame frame,
         final Object[] arguments) {
       return dispatchNode.executeDispatch(frame, arguments);
     }

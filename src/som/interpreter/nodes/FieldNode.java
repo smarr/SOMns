@@ -66,7 +66,7 @@ public abstract class FieldNode extends ExpressionNode {
     }
 
     @Override
-    public Object executePreEvaluated(final VirtualFrame frame,
+    public Object doPreEvaluated(final VirtualFrame frame,
         final Object[] arguments) {
       return executeEvaluated((SObject) arguments[0]);
     }
@@ -119,7 +119,7 @@ public abstract class FieldNode extends ExpressionNode {
     }
 
     @Override
-    public Object executePreEvaluated(final VirtualFrame frame,
+    public Object doPreEvaluated(final VirtualFrame frame,
         final Object[] arguments) {
       return executeEvaluated(frame, (SObject) arguments[0], arguments[1]);
     }

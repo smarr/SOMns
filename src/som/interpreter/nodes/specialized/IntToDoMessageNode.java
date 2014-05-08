@@ -39,7 +39,7 @@ public abstract class IntToDoMessageNode extends TernaryExpressionNode
   }
 
   @Override
-  public final Object executePreEvaluated(final VirtualFrame frame,
+  public final Object doPreEvaluated(final VirtualFrame frame,
       final Object[] arguments) {
     return executeEvaluated(frame, arguments[0], arguments[1], arguments[2]);
   }

@@ -46,7 +46,7 @@ public class EagerUnaryPrimitiveNode extends UnaryExpressionNode {
       return primitive.executeEvaluated(frame, receiver);
     } catch (UnsupportedSpecializationException e) {
       unsupportedSpecialization.enter();
-      return makeGenericSend().executePreEvaluated(frame, new Object[] {receiver});
+      return makeGenericSend().doPreEvaluated(frame, new Object[] {receiver});
     }
   }
 
@@ -57,7 +57,7 @@ public class EagerUnaryPrimitiveNode extends UnaryExpressionNode {
       primitive.executeEvaluatedVoid(frame, receiver);
     } catch (UnsupportedSpecializationException e) {
       unsupportedSpecialization.enter();
-      makeGenericSend().executePreEvaluated(frame, new Object[] {receiver});
+      makeGenericSend().doPreEvaluated(frame, new Object[] {receiver});
     }
   }
 

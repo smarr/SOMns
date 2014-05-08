@@ -30,7 +30,7 @@ public abstract class LiteralNode extends ExpressionNode
     implements PreevaluatedExpression {
 
   @Override
-  public final Object executePreEvaluated(final VirtualFrame frame,
+  public final Object doPreEvaluated(final VirtualFrame frame,
       final Object[] arguments) {
     return executeGeneric(frame);
   }

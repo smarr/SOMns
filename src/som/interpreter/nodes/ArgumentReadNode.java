@@ -19,7 +19,7 @@ public final class ArgumentReadNode extends ExpressionNode
   }
 
   @Override
-  public Object executePreEvaluated(final VirtualFrame frame,
+  public Object doPreEvaluated(final VirtualFrame frame,
       final Object[] arguments) {
     return arguments[argumentIndex];
   }
