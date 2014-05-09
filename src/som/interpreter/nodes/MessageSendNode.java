@@ -10,6 +10,7 @@ import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.nary.EagerBinaryPrimitiveNode;
 import som.interpreter.nodes.nary.EagerUnaryPrimitiveNode;
 import som.interpreter.nodes.specialized.AndMessageNodeFactory;
+import som.interpreter.nodes.specialized.AndMessageNodeFactory.AndBoolMessageNodeFactory;
 import som.interpreter.nodes.specialized.IfFalseMessageNodeFactory;
 import som.interpreter.nodes.specialized.IfTrueIfFalseMessageNodeFactory;
 import som.interpreter.nodes.specialized.IfTrueMessageNodeFactory;
@@ -17,6 +18,7 @@ import som.interpreter.nodes.specialized.IntToByDoMessageNodeFactory;
 import som.interpreter.nodes.specialized.IntToDoMessageNodeFactory;
 import som.interpreter.nodes.specialized.NotMessageNodeFactory;
 import som.interpreter.nodes.specialized.OrMessageNodeFactory;
+import som.interpreter.nodes.specialized.OrMessageNodeFactory.OrBoolMessageNodeFactory;
 import som.interpreter.nodes.specialized.WhileWithStaticBlocksNode.WhileFalseStaticBlocksNode;
 import som.interpreter.nodes.specialized.WhileWithStaticBlocksNode.WhileTrueStaticBlocksNode;
 import som.primitives.ArrayPrimsFactory.AtPrimFactory;
@@ -289,16 +291,25 @@ public final class MessageSendNode {
           break;
         case "and:":
         case "&&":
-          if (arguments[0] instanceof Boolean && argumentNodes[1] instanceof BlockNode) {
-            return replace(AndMessageNodeFactory.create((SBlock) arguments[1],
-                argumentNodes[0], argumentNodes[1]));
+          if (arguments[0] instanceof Boolean) {
+            if (argumentNodes[1] instanceof BlockNode) {
+              return replace(AndMessageNodeFactory.create((SBlock) arguments[1],
+                  argumentNodes[0], argumentNodes[1]));
+            } else if (arguments[1] instanceof Boolean) {
+              return replace(AndBoolMessageNodeFactory.create(argumentNodes[0], argumentNodes[1]));
+            }
           }
           break;
         case "or:":
         case "||":
-          if (arguments[0] instanceof Boolean && argumentNodes[1] instanceof BlockNode) {
-            return replace(OrMessageNodeFactory.create((SBlock) arguments[1],
-                argumentNodes[0], argumentNodes[1]));
+          if (arguments[0] instanceof Boolean) {
+            if (argumentNodes[1] instanceof BlockNode) {
+              return replace(OrMessageNodeFactory.create((SBlock) arguments[1],
+                  argumentNodes[0], argumentNodes[1]));
+            } else if (arguments[1] instanceof Boolean) {
+              return replace(OrBoolMessageNodeFactory.create(
+                  argumentNodes[0], argumentNodes[1]));
+            }
           }
           break;
       }

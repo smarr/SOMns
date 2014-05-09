@@ -39,4 +39,11 @@ public abstract class AndMessageNode extends BinaryExpressionNode {
       return (boolean) blockValueSend.call(frame, new Object[] {argument});
     }
   }
+
+  public abstract static class AndBoolMessageNode extends BinaryExpressionNode {
+    @Specialization
+    public final boolean doAnd(final VirtualFrame frame, final boolean receiver, final boolean argument) {
+      return receiver && argument;
+    }
+  }
 }

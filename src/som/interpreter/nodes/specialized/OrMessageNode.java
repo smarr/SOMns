@@ -38,4 +38,12 @@ public abstract class OrMessageNode extends BinaryExpressionNode {
       return (boolean) blockValueSend.call(frame, new Object[] {argument});
     }
   }
+
+  public abstract static class OrBoolMessageNode extends BinaryExpressionNode {
+    @Specialization
+    public final boolean doOr(final VirtualFrame frame, final boolean receiver,
+        final boolean argument) {
+      return receiver || argument;
+    }
+  }
 }
