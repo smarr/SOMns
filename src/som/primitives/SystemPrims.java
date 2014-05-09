@@ -51,7 +51,7 @@ public final class SystemPrims {
   public abstract static class GlobalPrim extends BinarySystemNode {
     @Specialization(guards = "receiverIsSystemObject")
     public final Object doSObject(final SObject receiver, final SSymbol argument) {
-      SAbstractObject result = universe.getGlobal(argument);
+      Object result = universe.getGlobal(argument);
       return result != null ? result : universe.nilObject;
     }
     @Override

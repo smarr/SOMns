@@ -92,7 +92,7 @@ public abstract class GlobalNode extends ExpressionNode {
 
     @Override
     public Object executeGeneric(final VirtualFrame frame) {
-      return assoc.value;
+      return assoc.getValue();
     }
   }
 

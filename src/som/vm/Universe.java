@@ -32,8 +32,8 @@ import java.util.StringTokenizer;
 
 import som.compiler.Disassembler;
 import som.interpreter.Invokable;
+import som.interpreter.TruffleCompiler;
 import som.interpreter.nodes.literals.BlockNode.BlockNodeWithContext;
-import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
@@ -55,11 +55,24 @@ public class Universe {
    * SSymbol and a mutable value.
    */
   public static final class Association {
-    public final SSymbol    key;
-    @CompilationFinal public SAbstractObject  value;
+    private final SSymbol    key;
+    @CompilationFinal private Object  value;
 
-    public Association(final SSymbol key, final SAbstractObject value) {
+    public Association(final SSymbol key, final Object value) {
       this.key   = key;
+      this.value = value;
+    }
+
+    public SSymbol getKey() {
+      return key;
+    }
+
+    public Object getValue() {
+      return value;
+    }
+
+    public void setValue(final Object value) {
+      TruffleCompiler.transferToInterpreterAndInvalidate("Changed global");
       this.value = value;
     }
   }
@@ -457,12 +470,12 @@ public class Universe {
   }
 
   @SlowPath
-  public SAbstractObject getGlobal(final SSymbol name) {
+  public Object getGlobal(final SSymbol name) {
     Association assoc = globals.get(name);
     if (assoc == null) {
       return null;
     }
-    return assoc.value;
+    return assoc.getValue();
   }
 
   @SlowPath
@@ -471,13 +484,13 @@ public class Universe {
   }
 
   @SlowPath
-  public void setGlobal(final SSymbol name, final SAbstractObject value) {
+  public void setGlobal(final SSymbol name, final Object value) {
     Association assoc = globals.get(name);
     if (assoc == null) {
       assoc = new Association(name, value);
       globals.put(name, assoc);
     } else {
-      assoc.value = value;
+      assoc.setValue(value);
     }
   }
 
