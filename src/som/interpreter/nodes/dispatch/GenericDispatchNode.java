@@ -1,6 +1,7 @@
 package som.interpreter.nodes.dispatch;
 
 import som.vm.Universe;
+import som.vmobjects.SAbstractObject;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 
@@ -28,15 +29,6 @@ public final class GenericDispatchNode extends AbstractDispatchWithLookupNode {
   private Object sendDoesNotUnderstand(final Object[] arguments) {
     // TODO: this is all extremely expensive, and could be optimized by
     //       further specialization for #dnu
-
-    // Need to realize full SOM objects because we'll pass them on to a
-    // language level array
-//    SAbstractObject[] args = new SAbstractObject[arguments.length];
-//    for (int i = 0; i < arguments.length; i++) {
-//      args[i] = Types.asAbstractObject(arguments[i], universe);
-//    }
-//
-//    return SAbstractObject.sendDoesNotUnderstand(selector, args, universe);
-    throw new RuntimeException("Recheck implementation, do we really need to convert here? and what's with the receiver?");
+    return SAbstractObject.sendDoesNotUnderstand(selector, arguments, universe);
   }
 }
