@@ -101,7 +101,7 @@ public abstract class FieldNode extends ExpressionNode {
       return specialize(obj, reason, next).read(obj);
     }
 
-    protected AbstractReadFieldNode specialize(final SObject obj,
+    protected final AbstractReadFieldNode specialize(final SObject obj,
         final String reason, final AbstractReadFieldNode next) {
       obj.updateLayoutToMatchClass();
 
@@ -290,7 +290,7 @@ public abstract class FieldNode extends ExpressionNode {
       return value;
     }
 
-    protected void writeAndRespecialize(final SObject obj, final Object value,
+    protected final void writeAndRespecialize(final SObject obj, final Object value,
         final String reason, final AbstractWriteFieldNode next) {
       TruffleCompiler.transferToInterpreterAndInvalidate(reason);
 
@@ -303,7 +303,7 @@ public abstract class FieldNode extends ExpressionNode {
     }
 
     @Override
-    public long executeLong(final VirtualFrame frame)
+    public final long executeLong(final VirtualFrame frame)
         throws UnexpectedResultException {
       SObject obj = executeSelf(frame);
       long val = value.executeLong(frame);
@@ -311,7 +311,7 @@ public abstract class FieldNode extends ExpressionNode {
     }
 
     @Override
-    public double executeDouble(final VirtualFrame frame)
+    public final double executeDouble(final VirtualFrame frame)
         throws UnexpectedResultException {
       SObject obj = executeSelf(frame);
       double val  = value.executeDouble(frame);
@@ -319,7 +319,7 @@ public abstract class FieldNode extends ExpressionNode {
     }
 
     @Override
-    public Object executeGeneric(final VirtualFrame frame) {
+    public final Object executeGeneric(final VirtualFrame frame) {
       SObject obj = executeSelf(frame);
       Object  val = value.executeGeneric(frame);
       return executeEvaluated(frame, obj, val);
@@ -336,7 +336,7 @@ public abstract class FieldNode extends ExpressionNode {
     }
 
     @Override
-    public void executeVoid(final VirtualFrame frame) {
+    public final void executeVoid(final VirtualFrame frame) {
       executeGeneric(frame);
     }
   }
