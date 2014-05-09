@@ -15,6 +15,7 @@ import som.interpreter.nodes.specialized.IfTrueIfFalseMessageNodeFactory;
 import som.interpreter.nodes.specialized.IfTrueMessageNodeFactory;
 import som.interpreter.nodes.specialized.IntToByDoMessageNodeFactory;
 import som.interpreter.nodes.specialized.IntToDoMessageNodeFactory;
+import som.interpreter.nodes.specialized.NotMessageNodeFactory;
 import som.interpreter.nodes.specialized.OrMessageNodeFactory;
 import som.interpreter.nodes.specialized.WhileWithStaticBlocksNode.WhileFalseStaticBlocksNode;
 import som.interpreter.nodes.specialized.WhileWithStaticBlocksNode.WhileTrueStaticBlocksNode;
@@ -158,6 +159,12 @@ public final class MessageSendNode {
             return replace(new EagerUnaryPrimitiveNode(selector,
                 argumentNodes[0],
                 LengthPrimFactory.create(null)));
+          }
+          break;
+        case "not":
+          if (receiver instanceof Boolean) {
+            return replace(new EagerUnaryPrimitiveNode(selector,
+                argumentNodes[0], NotMessageNodeFactory.create(null)));
           }
           break;
       }
