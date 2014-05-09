@@ -13,12 +13,12 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 
 
-public abstract class FieldNode extends Node {
+public abstract class FieldAccessorNode extends Node {
   protected static final int INLINE_CACHE_SIZE = 6;
 
   protected final int fieldIndex;
 
-  public FieldNode(final int fieldIndex) {
+  public FieldAccessorNode(final int fieldIndex) {
     this.fieldIndex = fieldIndex;
   }
 
@@ -26,7 +26,7 @@ public abstract class FieldNode extends Node {
     return fieldIndex;
   }
 
-  public abstract static class AbstractReadFieldNode extends FieldNode {
+  public abstract static class AbstractReadFieldNode extends FieldAccessorNode {
     public AbstractReadFieldNode(final int fieldIndex) {
       super(fieldIndex);
     }
@@ -204,7 +204,7 @@ public abstract class FieldNode extends Node {
     }
   }
 
-  public abstract static class AbstractWriteFieldNode extends FieldNode {
+  public abstract static class AbstractWriteFieldNode extends FieldAccessorNode {
     public AbstractWriteFieldNode(final int fieldIndex) {
       super(fieldIndex);
     }

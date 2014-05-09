@@ -22,10 +22,10 @@
 package som.interpreter.nodes;
 
 import som.interpreter.nodes.UninitializedVariableNode.UninitializedVariableReadNode;
-import som.interpreter.objectstorage.FieldNode.AbstractReadFieldNode;
-import som.interpreter.objectstorage.FieldNode.AbstractWriteFieldNode;
-import som.interpreter.objectstorage.FieldNode.UninitializedReadFieldNode;
-import som.interpreter.objectstorage.FieldNode.UninitializedWriteFieldNode;
+import som.interpreter.objectstorage.FieldAccessorNode.AbstractReadFieldNode;
+import som.interpreter.objectstorage.FieldAccessorNode.AbstractWriteFieldNode;
+import som.interpreter.objectstorage.FieldAccessorNode.UninitializedReadFieldNode;
+import som.interpreter.objectstorage.FieldAccessorNode.UninitializedWriteFieldNode;
 import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.frame.VirtualFrame;

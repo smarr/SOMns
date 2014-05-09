@@ -1,14 +1,14 @@
 package som.interpreter.objectstorage;
 
-import som.interpreter.objectstorage.FieldNode.AbstractReadFieldNode;
-import som.interpreter.objectstorage.FieldNode.AbstractWriteFieldNode;
-import som.interpreter.objectstorage.FieldNode.ReadDoubleFieldNode;
-import som.interpreter.objectstorage.FieldNode.ReadLongFieldNode;
-import som.interpreter.objectstorage.FieldNode.ReadObjectFieldNode;
-import som.interpreter.objectstorage.FieldNode.ReadUnwrittenFieldNode;
-import som.interpreter.objectstorage.FieldNode.WriteDoubleFieldNode;
-import som.interpreter.objectstorage.FieldNode.WriteLongFieldNode;
-import som.interpreter.objectstorage.FieldNode.WriteObjectFieldNode;
+import som.interpreter.objectstorage.FieldAccessorNode.AbstractReadFieldNode;
+import som.interpreter.objectstorage.FieldAccessorNode.AbstractWriteFieldNode;
+import som.interpreter.objectstorage.FieldAccessorNode.ReadDoubleFieldNode;
+import som.interpreter.objectstorage.FieldAccessorNode.ReadLongFieldNode;
+import som.interpreter.objectstorage.FieldAccessorNode.ReadObjectFieldNode;
+import som.interpreter.objectstorage.FieldAccessorNode.ReadUnwrittenFieldNode;
+import som.interpreter.objectstorage.FieldAccessorNode.WriteDoubleFieldNode;
+import som.interpreter.objectstorage.FieldAccessorNode.WriteLongFieldNode;
+import som.interpreter.objectstorage.FieldAccessorNode.WriteObjectFieldNode;
 import som.vm.Universe;
 import som.vmobjects.SObject;
 
