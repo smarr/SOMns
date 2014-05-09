@@ -85,7 +85,7 @@ public abstract class FieldNode extends ExpressionNode {
     }
 
     @Override
-    public void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
+    public final void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
 
     protected abstract Object read(SObject obj);
 
@@ -97,7 +97,7 @@ public abstract class FieldNode extends ExpressionNode {
       return TypesGen.TYPES.expectDouble(read(obj));
     }
 
-    protected Object specializeAndRead(final SObject obj, final String reason, final AbstractReadFieldNode next) {
+    protected final Object specializeAndRead(final SObject obj, final String reason, final AbstractReadFieldNode next) {
       return specialize(obj, reason, next).read(obj);
     }
 
