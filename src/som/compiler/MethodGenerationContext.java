@@ -36,13 +36,15 @@ import som.interpreter.nodes.ArgumentInitializationNode;
 import som.interpreter.nodes.ArgumentReadNode;
 import som.interpreter.nodes.ContextualNode;
 import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.FieldNode.FieldReadNode;
-import som.interpreter.nodes.FieldNode.FieldWriteNode;
 import som.interpreter.nodes.GlobalNode;
 import som.interpreter.nodes.GlobalNode.UninitializedGlobalReadNode;
 import som.interpreter.nodes.LocalVariableNode.LocalVariableWriteNode;
 import som.interpreter.nodes.LocalVariableNodeFactory.LocalVariableWriteNodeFactory;
 import som.interpreter.nodes.ReturnNonLocalNode.CatchNonLocalReturnNode;
+import som.interpreter.objectstorage.FieldNode.AbstractReadFieldNode;
+import som.interpreter.objectstorage.FieldNode.AbstractWriteFieldNode;
+import som.interpreter.objectstorage.FieldNode.UninitializedReadFieldNode;
+import som.interpreter.objectstorage.FieldNode.UninitializedWriteFieldNode;
 import som.primitives.Primitives;
 import som.vm.Universe;
 import som.vmobjects.SInvokable;
@@ -328,11 +330,11 @@ public final class MethodGenerationContext {
         getLocalSelfSlot());
   }
 
-  public FieldReadNode getObjectFieldRead(final SSymbol fieldName) {
+  public AbstractReadFieldNode getObjectFieldRead(final SSymbol fieldName) {
     if (!holderGenc.hasField(fieldName)) {
       return null;
     }
-    return new FieldReadNode(getSelfRead(), holderGenc.getFieldIndex(fieldName));
+    return new UninitializedReadFieldNode(getSelfRead(), holderGenc.getFieldIndex(fieldName));
   }
 
   public GlobalNode getGlobalRead(final SSymbol varName,
@@ -340,13 +342,13 @@ public final class MethodGenerationContext {
     return new UninitializedGlobalReadNode(varName, universe);
   }
 
-  public FieldWriteNode getObjectFieldWrite(final SSymbol fieldName,
+  public AbstractWriteFieldNode getObjectFieldWrite(final SSymbol fieldName,
       final ExpressionNode exp, final Universe universe) {
     if (!holderGenc.hasField(fieldName)) {
       return null;
     }
 
-    return new FieldWriteNode(getSelfRead(), exp,
+    return new UninitializedWriteFieldNode(getSelfRead(), exp,
         holderGenc.getFieldIndex(fieldName));
   }
 
