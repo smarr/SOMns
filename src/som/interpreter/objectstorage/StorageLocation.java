@@ -1,6 +1,5 @@
 package som.interpreter.objectstorage;
 
-import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.objectstorage.FieldNode.AbstractReadFieldNode;
 import som.interpreter.objectstorage.FieldNode.AbstractWriteFieldNode;
 import som.interpreter.objectstorage.FieldNode.ReadDoubleFieldNode;
@@ -67,8 +66,8 @@ public abstract class StorageLocation {
   public abstract void    write(SObject obj, Object value) throws GeneralizeStorageLocationException, UninitalizedStorageLocationException;
   public abstract Class<?> getStoredClass();
 
-  public abstract AbstractReadFieldNode  getReadNode(ExpressionNode self, int fieldIndex, ObjectLayout layout, AbstractReadFieldNode next);
-  public abstract AbstractWriteFieldNode getWriteNode(ExpressionNode self, ExpressionNode value, int fieldIndex, ObjectLayout layout, AbstractWriteFieldNode next);
+  public abstract AbstractReadFieldNode  getReadNode(int fieldIndex, ObjectLayout layout, AbstractReadFieldNode next);
+  public abstract AbstractWriteFieldNode getWriteNode(int fieldIndex, ObjectLayout layout, AbstractWriteFieldNode next);
 
 
   public final ObjectLayout getObjectLayout() {
@@ -109,13 +108,13 @@ public abstract class StorageLocation {
     }
 
     @Override
-    public AbstractReadFieldNode getReadNode(final ExpressionNode self, final int fieldIndex,
+    public AbstractReadFieldNode getReadNode(final int fieldIndex,
         final ObjectLayout layout, final AbstractReadFieldNode next) {
-      return new ReadUnwrittenFieldNode(self, fieldIndex, layout, next);
+      return new ReadUnwrittenFieldNode(fieldIndex, layout, next);
     }
 
     @Override
-    public AbstractWriteFieldNode getWriteNode(final ExpressionNode self, final ExpressionNode value, final int fieldIndex,
+    public AbstractWriteFieldNode getWriteNode(final int fieldIndex,
         final ObjectLayout layout, final AbstractWriteFieldNode next) {
       throw new RuntimeException("we should not get here, should we?");
       // return new UninitializedWriteFieldNode(fieldIndex);
@@ -139,18 +138,15 @@ public abstract class StorageLocation {
     }
 
     @Override
-    public final AbstractReadFieldNode getReadNode(final ExpressionNode self,
-        final int fieldIndex,
+    public final AbstractReadFieldNode getReadNode(final int fieldIndex,
         final ObjectLayout layout, final AbstractReadFieldNode next) {
-      return new ReadObjectFieldNode(self, fieldIndex, layout, next);
+      return new ReadObjectFieldNode(fieldIndex, layout, next);
     }
 
     @Override
-    public final AbstractWriteFieldNode getWriteNode(
-        final ExpressionNode self, final ExpressionNode value,
-        final int fieldIndex,
+    public final AbstractWriteFieldNode getWriteNode(final int fieldIndex,
         final ObjectLayout layout, final AbstractWriteFieldNode next) {
-      return new WriteObjectFieldNode(self, value, fieldIndex, layout, next);
+      return new WriteObjectFieldNode(fieldIndex, layout, next);
     }
   }
 
@@ -285,16 +281,15 @@ public abstract class StorageLocation {
     }
 
     @Override
-    public AbstractReadFieldNode getReadNode(final ExpressionNode self,
-        final int fieldIndex,
+    public AbstractReadFieldNode getReadNode(final int fieldIndex,
         final ObjectLayout layout, final AbstractReadFieldNode next) {
-      return new ReadDoubleFieldNode(self, fieldIndex, layout, next);
+      return new ReadDoubleFieldNode(fieldIndex, layout, next);
     }
 
     @Override
-    public AbstractWriteFieldNode getWriteNode(final ExpressionNode self, final ExpressionNode value, final int fieldIndex,
+    public AbstractWriteFieldNode getWriteNode(final int fieldIndex,
         final ObjectLayout layout, final AbstractWriteFieldNode next) {
-      return new WriteDoubleFieldNode(self, value, fieldIndex, layout, next);
+      return new WriteDoubleFieldNode(fieldIndex, layout, next);
     }
   }
 
@@ -346,15 +341,15 @@ public abstract class StorageLocation {
     }
 
     @Override
-    public AbstractReadFieldNode getReadNode(final ExpressionNode self, final int fieldIndex,
+    public AbstractReadFieldNode getReadNode(final int fieldIndex,
         final ObjectLayout layout, final AbstractReadFieldNode next) {
-      return new ReadLongFieldNode(self, fieldIndex, layout, next);
+      return new ReadLongFieldNode(fieldIndex, layout, next);
     }
 
     @Override
-    public AbstractWriteFieldNode getWriteNode(final ExpressionNode self, final ExpressionNode value, final int fieldIndex,
+    public AbstractWriteFieldNode getWriteNode(final int fieldIndex,
         final ObjectLayout layout, final AbstractWriteFieldNode next) {
-      return new WriteLongFieldNode(self, value, fieldIndex, layout, next);
+      return new WriteLongFieldNode(fieldIndex, layout, next);
     }
   }
 
@@ -414,17 +409,15 @@ public abstract class StorageLocation {
     }
 
     @Override
-    public AbstractReadFieldNode getReadNode(final ExpressionNode self, final int fieldIndex,
+    public AbstractReadFieldNode getReadNode(final int fieldIndex,
         final ObjectLayout layout, final AbstractReadFieldNode next) {
-      return new ReadLongFieldNode(self, fieldIndex, layout, next);
+      return new ReadLongFieldNode(fieldIndex, layout, next);
     }
 
     @Override
-    public AbstractWriteFieldNode getWriteNode(
-        final ExpressionNode self, final ExpressionNode value,
-        final int fieldIndex,
+    public AbstractWriteFieldNode getWriteNode(final int fieldIndex,
         final ObjectLayout layout, final AbstractWriteFieldNode next) {
-      return new WriteLongFieldNode(self, value, fieldIndex, layout, next);
+      return new WriteLongFieldNode(fieldIndex, layout, next);
     }
   }
 }

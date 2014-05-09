@@ -2,9 +2,6 @@ package som.interpreter.objectstorage;
 
 import som.interpreter.TruffleCompiler;
 import som.interpreter.TypesGen;
-import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.PreevaluatedExpression;
-import som.interpreter.nodes.UninitializedVariableNode.UninitializedVariableReadNode;
 import som.interpreter.objectstorage.StorageLocation.AbstractObjectStorageLocation;
 import som.interpreter.objectstorage.StorageLocation.DoubleStorageLocation;
 import som.interpreter.objectstorage.StorageLocation.LongStorageLocation;
@@ -12,88 +9,39 @@ import som.vm.Universe;
 import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 
 
-public abstract class FieldNode extends ExpressionNode {
+public abstract class FieldNode extends Node {
   protected static final int INLINE_CACHE_SIZE = 6;
 
   protected final int fieldIndex;
 
-  @Child protected ExpressionNode self;
-
-  public FieldNode(final ExpressionNode self, final int fieldIndex) {
-    this.self       = self;
+  public FieldNode(final int fieldIndex) {
     this.fieldIndex = fieldIndex;
-  }
-
-  public final boolean accessesLocalSelf() {
-    if (self instanceof UninitializedVariableReadNode) {
-      UninitializedVariableReadNode selfRead =
-          (UninitializedVariableReadNode) self;
-      return selfRead.accessesSelf() && !selfRead.accessesOuterContext();
-    }
-    return false;
   }
 
   public final int getFieldIndex() {
     return fieldIndex;
   }
 
-  public abstract static class AbstractReadFieldNode extends FieldNode
-      implements PreevaluatedExpression {
-    public AbstractReadFieldNode(final ExpressionNode self, final int fieldIndex) {
-      super(self, fieldIndex);
+  public abstract static class AbstractReadFieldNode extends FieldNode {
+    public AbstractReadFieldNode(final int fieldIndex) {
+      super(fieldIndex);
     }
 
     public boolean isSet(final SObject obj) {
       return true;
     }
 
-    public final Object executeEvaluated(final SObject obj) {
-      return read(obj);
-    }
+    public abstract Object read(SObject obj);
 
-    @Override
-    public final Object doPreEvaluated(final VirtualFrame frame,
-        final Object[] arguments) {
-      return executeEvaluated((SObject) arguments[0]);
-    }
-
-    @Override
-    public final long executeLong(final VirtualFrame frame) throws UnexpectedResultException {
-      SObject obj = self.executeSObject(frame);
-      return readLong(obj);
-    }
-
-    @Override
-    public final double executeDouble(final VirtualFrame frame) throws UnexpectedResultException {
-      SObject obj = self.executeSObject(frame);
-      return readDouble(obj);
-    }
-
-    @Override
-    public final Object executeGeneric(final VirtualFrame frame) {
-      SObject obj;
-      try {
-        obj = self.executeSObject(frame);
-      } catch (UnexpectedResultException e) {
-        throw new RuntimeException("This should never happen by construction");
-      }
-      return executeEvaluated(obj);
-    }
-
-    @Override
-    public final void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
-
-    protected abstract Object read(SObject obj);
-
-    protected long readLong(final SObject obj) throws UnexpectedResultException {
+    public long readLong(final SObject obj) throws UnexpectedResultException {
       return TypesGen.TYPES.expectLong(read(obj));
     }
 
-    protected double readDouble(final SObject obj) throws UnexpectedResultException {
+    public double readDouble(final SObject obj) throws UnexpectedResultException {
       return TypesGen.TYPES.expectDouble(read(obj));
     }
 
@@ -108,21 +56,21 @@ public abstract class FieldNode extends ExpressionNode {
       final ObjectLayout    layout   = obj.getObjectLayout();
       final StorageLocation location = layout.getStorageLocation(fieldIndex);
 
-      AbstractReadFieldNode newNode = location.getReadNode(this.self, fieldIndex, layout, next);
+      AbstractReadFieldNode newNode = location.getReadNode(fieldIndex, layout, next);
       return replace(newNode, reason);
     }
   }
 
   public static final class UninitializedReadFieldNode extends AbstractReadFieldNode {
 
-    public UninitializedReadFieldNode(final ExpressionNode self, final int fieldIndex) {
-      super(self, fieldIndex);
+    public UninitializedReadFieldNode(final int fieldIndex) {
+      super(fieldIndex);
     }
 
     @Override
     public Object read(final SObject obj) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
-      return specializeAndRead(obj, "uninitalized node", new UninitializedReadFieldNode(self, fieldIndex));
+      return specializeAndRead(obj, "uninitalized node", new UninitializedReadFieldNode(fieldIndex));
     }
   }
 
@@ -130,10 +78,9 @@ public abstract class FieldNode extends ExpressionNode {
     protected final ObjectLayout layout;
     @Child private AbstractReadFieldNode nextInCache;
 
-    public ReadSpecializedFieldNode(final ExpressionNode self,
-        final int fieldIndex, final ObjectLayout layout,
-        final AbstractReadFieldNode next) {
-      super(self, fieldIndex);
+    public ReadSpecializedFieldNode(final int fieldIndex,
+        final ObjectLayout layout, final AbstractReadFieldNode next) {
+      super(fieldIndex);
       this.layout = layout;
       nextInCache = next;
     }
@@ -154,10 +101,9 @@ public abstract class FieldNode extends ExpressionNode {
   public static final class ReadUnwrittenFieldNode extends ReadSpecializedFieldNode {
     private final SObject nilObject;
 
-    public ReadUnwrittenFieldNode(final ExpressionNode self,
-        final int fieldIndex, final ObjectLayout layout,
-        final AbstractReadFieldNode next) {
-      super(self, fieldIndex, layout, next);
+    public ReadUnwrittenFieldNode(final int fieldIndex,
+        final ObjectLayout layout, final AbstractReadFieldNode next) {
+      super(fieldIndex, layout, next);
       nilObject = Universe.current().nilObject;
     }
 
@@ -183,9 +129,9 @@ public abstract class FieldNode extends ExpressionNode {
   public static final class ReadLongFieldNode extends ReadSpecializedFieldNode {
     private final LongStorageLocation storage;
 
-    public ReadLongFieldNode(final ExpressionNode self, final int fieldIndex,
-        final ObjectLayout layout, final AbstractReadFieldNode next) {
-      super(self, fieldIndex, layout, next);
+    public ReadLongFieldNode(final int fieldIndex, final ObjectLayout layout,
+        final AbstractReadFieldNode next) {
+      super(fieldIndex, layout, next);
       this.storage = (LongStorageLocation) layout.getStorageLocation(fieldIndex);
     }
 
@@ -212,9 +158,9 @@ public abstract class FieldNode extends ExpressionNode {
   public static final class ReadDoubleFieldNode extends ReadSpecializedFieldNode {
     private final DoubleStorageLocation storage;
 
-    public ReadDoubleFieldNode(final ExpressionNode self, final int fieldIndex,
-        final ObjectLayout layout, final AbstractReadFieldNode next) {
-      super(self, fieldIndex, layout, next);
+    public ReadDoubleFieldNode(final int fieldIndex, final ObjectLayout layout,
+        final AbstractReadFieldNode next) {
+      super(fieldIndex, layout, next);
       this.storage = (DoubleStorageLocation) layout.getStorageLocation(fieldIndex);
     }
 
@@ -241,9 +187,9 @@ public abstract class FieldNode extends ExpressionNode {
   public static final class ReadObjectFieldNode extends ReadSpecializedFieldNode {
     private final AbstractObjectStorageLocation storage;
 
-    public ReadObjectFieldNode(final ExpressionNode self, final int fieldIndex,
-        final ObjectLayout layout, final AbstractReadFieldNode next) {
-      super(self, fieldIndex, layout, next);
+    public ReadObjectFieldNode(final int fieldIndex, final ObjectLayout layout,
+        final AbstractReadFieldNode next) {
+      super(fieldIndex, layout, next);
       this.storage = (AbstractObjectStorageLocation) layout.getStorageLocation(fieldIndex);
     }
 
@@ -258,24 +204,9 @@ public abstract class FieldNode extends ExpressionNode {
     }
   }
 
-  public abstract static class AbstractWriteFieldNode extends FieldNode
-      implements PreevaluatedExpression {
-    @Child protected ExpressionNode value;
-
-    public AbstractWriteFieldNode(final ExpressionNode self,
-        final ExpressionNode value, final int fieldIndex) {
-      super(self, fieldIndex);
-      this.value = value;
-    }
-
-    public final Object executeEvaluated(final VirtualFrame frame, final SObject self, final Object value) {
-      return write(self, value);
-    }
-
-    @Override
-    public final Object doPreEvaluated(final VirtualFrame frame,
-        final Object[] arguments) {
-      return executeEvaluated(frame, (SObject) arguments[0], arguments[1]);
+  public abstract static class AbstractWriteFieldNode extends FieldNode {
+    public AbstractWriteFieldNode(final int fieldIndex) {
+      super(fieldIndex);
     }
 
     public abstract Object write(SObject obj, Object value);
@@ -298,60 +229,21 @@ public abstract class FieldNode extends ExpressionNode {
 
       final ObjectLayout layout = obj.getObjectLayout();
       final StorageLocation location = layout.getStorageLocation(fieldIndex);
-      AbstractWriteFieldNode newNode = location.getWriteNode(this.self, this.value, fieldIndex, layout, next);
+      AbstractWriteFieldNode newNode = location.getWriteNode(fieldIndex, layout, next);
       replace(newNode, reason);
-    }
-
-    @Override
-    public final long executeLong(final VirtualFrame frame)
-        throws UnexpectedResultException {
-      SObject obj = executeSelf(frame);
-      long val = value.executeLong(frame);
-      return write(obj, val);
-    }
-
-    @Override
-    public final double executeDouble(final VirtualFrame frame)
-        throws UnexpectedResultException {
-      SObject obj = executeSelf(frame);
-      double val  = value.executeDouble(frame);
-      return write(obj, val);
-    }
-
-    @Override
-    public final Object executeGeneric(final VirtualFrame frame) {
-      SObject obj = executeSelf(frame);
-      Object  val = value.executeGeneric(frame);
-      return executeEvaluated(frame, obj, val);
-    }
-
-    private SObject executeSelf(final VirtualFrame frame) {
-      SObject obj;
-      try {
-        obj = self.executeSObject(frame);
-      } catch (UnexpectedResultException e) {
-        throw new RuntimeException("This should never happen by construction");
-      }
-      return obj;
-    }
-
-    @Override
-    public final void executeVoid(final VirtualFrame frame) {
-      executeGeneric(frame);
     }
   }
 
   public static final class UninitializedWriteFieldNode extends AbstractWriteFieldNode {
-    public UninitializedWriteFieldNode(final ExpressionNode self,
-        final ExpressionNode value, final int fieldIndex) {
-      super(self, value, fieldIndex);
+    public UninitializedWriteFieldNode(final int fieldIndex) {
+      super(fieldIndex);
     }
 
     @Override
     public Object write(final SObject obj, final Object value) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       writeAndRespecialize(obj, value, "initialize write field node",
-          new UninitializedWriteFieldNode(this.self, this.value, fieldIndex));
+          new UninitializedWriteFieldNode(fieldIndex));
       return value;
     }
   }
@@ -361,10 +253,9 @@ public abstract class FieldNode extends ExpressionNode {
     protected final ObjectLayout layout;
     @Child protected AbstractWriteFieldNode nextInCache;
 
-    public WriteSpecializedFieldNode(final ExpressionNode self,
-        final ExpressionNode value, final int fieldIndex,
+    public WriteSpecializedFieldNode(final int fieldIndex,
         final ObjectLayout layout, final AbstractWriteFieldNode next) {
-      super(self, value, fieldIndex);
+      super(fieldIndex);
       this.layout = layout;
       nextInCache = next;
     }
@@ -377,10 +268,9 @@ public abstract class FieldNode extends ExpressionNode {
   public static final class WriteLongFieldNode extends WriteSpecializedFieldNode {
     private final LongStorageLocation storage;
 
-    public WriteLongFieldNode(final ExpressionNode self,
-        final ExpressionNode value, final int fieldIndex,
-        final ObjectLayout layout, final AbstractWriteFieldNode next) {
-      super(self, value, fieldIndex, layout, next);
+    public WriteLongFieldNode(final int fieldIndex, final ObjectLayout layout,
+        final AbstractWriteFieldNode next) {
+      super(fieldIndex, layout, next);
       this.storage = (LongStorageLocation) layout.getStorageLocation(fieldIndex);
     }
 
@@ -416,10 +306,9 @@ public abstract class FieldNode extends ExpressionNode {
   public static final class WriteDoubleFieldNode extends WriteSpecializedFieldNode {
     private final DoubleStorageLocation storage;
 
-    public WriteDoubleFieldNode(final ExpressionNode self,
-        final ExpressionNode value, final int fieldIndex, final ObjectLayout layout,
+    public WriteDoubleFieldNode(final int fieldIndex, final ObjectLayout layout,
         final AbstractWriteFieldNode next) {
-      super(self, value, fieldIndex, layout, next);
+      super(fieldIndex, layout, next);
       this.storage = (DoubleStorageLocation) layout.getStorageLocation(fieldIndex);
     }
 
@@ -455,10 +344,9 @@ public abstract class FieldNode extends ExpressionNode {
   public static final class WriteObjectFieldNode extends WriteSpecializedFieldNode {
     private final AbstractObjectStorageLocation storage;
 
-    public WriteObjectFieldNode(final ExpressionNode self,
-        final ExpressionNode value, final int fieldIndex, final ObjectLayout layout,
+    public WriteObjectFieldNode(final int fieldIndex, final ObjectLayout layout,
         final AbstractWriteFieldNode next) {
-      super(self, value, fieldIndex, layout, next);
+      super(fieldIndex, layout, next);
       this.storage = (AbstractObjectStorageLocation) layout.getStorageLocation(fieldIndex);
     }
 

@@ -66,6 +66,8 @@ import java.util.List;
 
 import som.compiler.Variable.Local;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.FieldNode.FieldReadNode;
+import som.interpreter.nodes.FieldNode.FieldWriteNode;
 import som.interpreter.nodes.GlobalNode;
 import som.interpreter.nodes.GlobalNode.UninitializedGlobalReadNode;
 import som.interpreter.nodes.MessageSendNode;
@@ -80,8 +82,6 @@ import som.interpreter.nodes.literals.IntegerLiteralNode;
 import som.interpreter.nodes.literals.LiteralNode;
 import som.interpreter.nodes.literals.StringLiteralNode;
 import som.interpreter.nodes.literals.SymbolLiteralNode;
-import som.interpreter.objectstorage.FieldNode.AbstractReadFieldNode;
-import som.interpreter.objectstorage.FieldNode.AbstractWriteFieldNode;
 import som.vm.Universe;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable.SMethod;
@@ -902,7 +902,7 @@ public final class Parser {
 
     // then object fields
     SSymbol varName = universe.symbolFor(variableName);
-    AbstractReadFieldNode fieldRead = mgenc.getObjectFieldRead(varName);
+    FieldReadNode fieldRead = mgenc.getObjectFieldRead(varName);
 
     if (fieldRead != null) {
       return fieldRead;
@@ -922,7 +922,7 @@ public final class Parser {
     }
 
     SSymbol fieldName = universe.symbolFor(variableName);
-    AbstractWriteFieldNode fieldWrite = mgenc.getObjectFieldWrite(fieldName, exp, universe);
+    FieldWriteNode fieldWrite = mgenc.getObjectFieldWrite(fieldName, exp, universe);
 
     if (fieldWrite != null) {
       return fieldWrite;
