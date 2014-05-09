@@ -76,6 +76,7 @@ public final class MessageSendNode {
       Object[] arguments = new Object[argumentNodes.length];
       for (int i = 0; i < argumentNodes.length; i++) {
         arguments[i] = argumentNodes[i].executeGeneric(frame);
+        assert arguments[i] != null;
       }
       return arguments;
     }

@@ -27,6 +27,8 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
     transferToInterpreterAndInvalidate("Initialize a dispatch node.");
     Object rcvr = arguments[0];
 
+    assert rcvr != null;
+
     // Determine position in dispatch node chain, i.e., size of inline cache
     Node i = this;
     int chainDepth = 0;

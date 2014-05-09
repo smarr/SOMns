@@ -53,6 +53,8 @@ import com.oracle.truffle.api.dsl.TypeSystem;
 public class Types {
 
   public static SClass getClassOf(final Object obj, final Universe universe) {
+    assert obj != null;
+
     if (obj instanceof SAbstractObject) {
       return ((SAbstractObject) obj).getSOMClass(universe);
     } else if (obj instanceof Boolean) {
