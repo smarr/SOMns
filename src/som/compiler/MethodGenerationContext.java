@@ -25,6 +25,12 @@
 
 package som.compiler;
 
+import static som.interpreter.SNodeFactory.createArgumentInitialization;
+import static som.interpreter.SNodeFactory.createCatchNonLocalReturn;
+import static som.interpreter.SNodeFactory.createFieldRead;
+import static som.interpreter.SNodeFactory.createFieldWrite;
+import static som.interpreter.SNodeFactory.createGlobalRead;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -33,16 +39,11 @@ import som.compiler.Variable.Argument;
 import som.compiler.Variable.Local;
 import som.interpreter.LexicalContext;
 import som.interpreter.nodes.ArgumentInitializationNode;
-import som.interpreter.nodes.ArgumentReadNode;
 import som.interpreter.nodes.ContextualNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.FieldNode.FieldReadNode;
 import som.interpreter.nodes.FieldNode.FieldWriteNode;
 import som.interpreter.nodes.GlobalNode;
-import som.interpreter.nodes.GlobalNode.UninitializedGlobalReadNode;
-import som.interpreter.nodes.LocalVariableNode.LocalVariableWriteNode;
-import som.interpreter.nodes.LocalVariableNodeFactory.LocalVariableWriteNodeFactory;
-import som.interpreter.nodes.ReturnNonLocalNode.CatchNonLocalReturnNode;
 import som.primitives.Primitives;
 import som.vm.Universe;
 import som.vmobjects.SInvokable;
@@ -52,6 +53,8 @@ import som.vmobjects.SSymbol;
 import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlot;
+
+
 
 public final class MethodGenerationContext {
 
@@ -155,13 +158,7 @@ public final class MethodGenerationContext {
   }
 
   private ArgumentInitializationNode addArgumentInitialization(final ExpressionNode methodBody) {
-    LocalVariableWriteNode[] writes = new LocalVariableWriteNode[arguments.size()];
-
-    for (Argument arg : arguments.values()) {
-      writes[arg.index] = LocalVariableWriteNodeFactory.create(
-          arg.slot, new ArgumentReadNode(arg.index));
-    }
-    return new ArgumentInitializationNode(writes, methodBody);
+    return createArgumentInitialization(methodBody, arguments);
   }
 
   public SMethod assemble(final Universe universe, ExpressionNode methodBody) {
@@ -173,7 +170,7 @@ public final class MethodGenerationContext {
     SourceSection sourceSection = methodBody.getSourceSection();
 
     if (needsToCatchNonLocalReturn()) {
-      methodBody = new CatchNonLocalReturnNode(methodBody,
+      methodBody = createCatchNonLocalReturn(methodBody,
           getFrameOnStackMarkerSlot());
       methodBody.assignSourceSection(sourceSection);
     }
@@ -331,12 +328,12 @@ public final class MethodGenerationContext {
     if (!holderGenc.hasField(fieldName)) {
       return null;
     }
-    return new FieldReadNode(getSelfRead(), holderGenc.getFieldIndex(fieldName));
+    return createFieldRead(getSelfRead(), holderGenc.getFieldIndex(fieldName));
   }
 
   public GlobalNode getGlobalRead(final SSymbol varName,
       final Universe universe) {
-    return new UninitializedGlobalReadNode(varName, universe);
+    return createGlobalRead(varName, universe);
   }
 
   public FieldWriteNode getObjectFieldWrite(final SSymbol fieldName,
@@ -345,7 +342,7 @@ public final class MethodGenerationContext {
       return null;
     }
 
-    return new FieldWriteNode(getSelfRead(), exp,
+    return createFieldWrite(getSelfRead(), exp,
         holderGenc.getFieldIndex(fieldName));
   }
 
