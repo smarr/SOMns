@@ -52,7 +52,6 @@ import som.vmobjects.SSymbol;
 import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlot;
-import com.oracle.truffle.api.impl.DefaultSourceSection;
 
 public final class MethodGenerationContext {
 
@@ -193,7 +192,7 @@ public final class MethodGenerationContext {
   }
 
   private SourceSection getSourceSectionForMethod(final SourceSection ssBody) {
-    SourceSection ssMethod = new DefaultSourceSection(ssBody.getSource(),
+    SourceSection ssMethod = ssBody.getSource().createSection(
         holderGenc.getName().getString() + ">>" + signature.toString(),
         ssBody.getStartLine(), ssBody.getStartColumn(),
         ssBody.getCharIndex(), ssBody.getCharLength());

@@ -89,7 +89,6 @@ import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives.SlowPath;
 import com.oracle.truffle.api.Source;
-import com.oracle.truffle.api.impl.DefaultSourceSection;
 
 public final class Parser {
 
@@ -350,8 +349,8 @@ public final class Parser {
   }
 
   private void assignSource(final ExpressionNode node, final SourceCoordinate coord) {
-    node.assignSourceSection(new DefaultSourceSection(source, "method",
-        coord.startLine, coord.startColumn, coord.charIndex,
+    node.assignSourceSection(source.createSection("method", coord.startLine,
+        coord.startColumn, coord.charIndex,
         lexer.getNumberOfCharactersRead() - coord.charIndex));
   }
 
