@@ -13,7 +13,8 @@
         <pathelement location="${classes.dir}" />
         <pathelement location="tests/" />
         <pathelement location="${lib.dir}/truffle.jar" />
-        <pathelement location="${lib.dir}/junit-4.8.1.jar" />        
+        <pathelement location="${lib.dir}/junit-4.8.1.jar" />
+        <pathelement location="${lib.dir}/truffle-dsl-processor.jar" />
     </path>
 
     <target name="clean">
@@ -25,6 +26,8 @@
 			<mkdir dir="${lib.dir}" />
 			<get src="${truffle.libs}/truffle.jar"  usetimestamp="true"
            dest="${lib.dir}/truffle.jar"/>
+		    <get src="${truffle.libs}/truffle-dsl-processor.jar"  usetimestamp="true"
+          dest="${lib.dir}/truffle-dsl-processor.jar"/>
    <get src="http://kuiper.mirrorservice.org/sites/downloads.sourceforge.net/j/ju/junit/junit/4.8.1/junit-4.8.1.jar" usetimestamp="true"
 		   dest="${lib.dir}/junit-4.8.1.jar" /> <!-- http://search.maven.org/remotecontent?filepath=junit/junit/4.8.1/junit-4.8.1.jar -->
     </target>
