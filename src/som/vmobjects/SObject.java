@@ -31,6 +31,7 @@ import java.util.Arrays;
 
 import som.interpreter.objectstorage.ObjectLayout;
 import som.interpreter.objectstorage.StorageLocation;
+import som.interpreter.objectstorage.StorageLocation.AbstractObjectStorageLocation;
 import som.interpreter.objectstorage.StorageLocation.GeneralizeStorageLocationException;
 import som.interpreter.objectstorage.StorageLocation.UninitalizedStorageLocationException;
 import som.vm.Universe;
@@ -142,11 +143,16 @@ public class SObject extends SAbstractObject {
 
   @ExplodeLoop
   private void setAllFields(final Object[] fieldValues) {
+    field1 = field2 = field3 = field4 = field5 = null;
+    primField1 = primField2 = primField3 = primField4 = primField5 = Long.MIN_VALUE;
+
     assert fieldValues.length == numberOfFields;
 
     for (int i = 0; i < numberOfFields; i++) {
       if (fieldValues[i] != null) {
         setField(i, fieldValues[i]);
+      } else if (getLocation(i) instanceof AbstractObjectStorageLocation) {
+        setField(i, Universe.current().nilObject);
       }
     }
   }
