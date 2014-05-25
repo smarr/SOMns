@@ -29,7 +29,6 @@ TestHarness = (
         ^ EmptyTest,
           SystemTest,
           ArrayTest,
-          BigIntegerTest,
           ClassLoadingTest,
           ClosureTest,
           CoercionTest,

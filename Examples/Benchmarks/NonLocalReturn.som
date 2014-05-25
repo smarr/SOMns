@@ -1,0 +1,20 @@
+NonLocalReturn = Benchmark (
+
+    first:  a = ( ^ self second: a )
+    second: a = ( ^ self third: a  )
+    third:  a = ( a value )
+    
+    nlr = (
+        self first: [^ 1]
+    )
+
+    benchmark = (
+        | sum |
+        sum := 0.
+        1 to: 200 do: [ :i | sum := sum + self nlr ].
+        (sum = 200) 
+            ifFalse: [
+                self error: 'Wrong result: ' + sum + ' should be: 200' ]
+    )
+    
+)
