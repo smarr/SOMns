@@ -760,7 +760,7 @@ public final class Parser {
 
   private LiteralNode negativeDecimal() throws ParseError {
     expect(Minus);
-    return literalInteger(true);
+    return literalDecimal(true);
   }
 
   private LiteralNode literalInteger(final boolean isNegative) throws ParseError {
