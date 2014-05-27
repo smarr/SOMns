@@ -24,7 +24,7 @@
 
 package som.vmobjects;
 
-import som.interpreter.nodes.literals.BlockNode.BlockNodeWithContext;
+import som.interpreter.SArguments;
 import som.primitives.BlockPrimsFactory.ValueMorePrimFactory;
 import som.primitives.BlockPrimsFactory.ValueNonePrimFactory;
 import som.primitives.BlockPrimsFactory.ValueOnePrimFactory;
@@ -38,19 +38,18 @@ import com.oracle.truffle.api.frame.MaterializedFrame;
 public abstract class SBlock extends SAbstractObject {
 
   public static SBlock create(final SInvokable blockMethod,
-      final MaterializedFrame context, final BlockNodeWithContext originNode) {
+      final MaterializedFrame context) {
     switch (blockMethod.getNumberOfArguments()) {
-      case 1: return new SBlock1(blockMethod, context, originNode);
-      case 2: return new SBlock2(blockMethod, context, originNode);
-      case 3: return new SBlock3(blockMethod, context, originNode);
+      case 1: return new SBlock1(blockMethod, context);
+      case 2: return new SBlock2(blockMethod, context);
+      case 3: return new SBlock3(blockMethod, context);
     }
     throw new RuntimeException("We do currently not have support for more than 3 arguments to a block.");
   }
 
   public static final class SBlock1 extends SBlock {
-    public SBlock1(final SInvokable blockMethod, final MaterializedFrame context,
-        final BlockNodeWithContext originNode) {
-      super(blockMethod, context, originNode);
+    public SBlock1(final SInvokable blockMethod, final MaterializedFrame context) {
+      super(blockMethod, context);
     }
 
     @Override
@@ -60,9 +59,8 @@ public abstract class SBlock extends SAbstractObject {
   }
 
   public static final class SBlock2 extends SBlock {
-    public SBlock2(final SInvokable blockMethod, final MaterializedFrame context,
-        final BlockNodeWithContext originNode) {
-      super(blockMethod, context, originNode);
+    public SBlock2(final SInvokable blockMethod, final MaterializedFrame context) {
+      super(blockMethod, context);
     }
 
     @Override
@@ -72,9 +70,8 @@ public abstract class SBlock extends SAbstractObject {
   }
 
   public static final class SBlock3 extends SBlock {
-    public SBlock3(final SInvokable blockMethod, final MaterializedFrame context,
-        final BlockNodeWithContext originNode) {
-      super(blockMethod, context, originNode);
+    public SBlock3(final SInvokable blockMethod, final MaterializedFrame context) {
+      super(blockMethod, context);
     }
 
     @Override
@@ -83,11 +80,9 @@ public abstract class SBlock extends SAbstractObject {
     }
   }
 
-  public SBlock(final SInvokable blockMethod, final MaterializedFrame context,
-      final BlockNodeWithContext originNode) {
-    this.method   = blockMethod;
-    this.context  = context;
-    this.originNode = originNode;
+  public SBlock(final SInvokable blockMethod, final MaterializedFrame context) {
+    this.method  = blockMethod;
+    this.context = context;
   }
 
   public final SInvokable getMethod() {
@@ -100,7 +95,7 @@ public abstract class SBlock extends SAbstractObject {
   }
 
   public final Object getOuterSelf() {
-    return originNode.getOuterSelf(context);
+    return SArguments.rcvr(context);
   }
 
   public static SInvokable getEvaluationPrimitive(final int numberOfArguments,
@@ -133,7 +128,6 @@ public abstract class SBlock extends SAbstractObject {
     return signatureString;
   }
 
-  private final SInvokable           method;
+  private final SInvokable        method;
   private final MaterializedFrame context;
-  private final BlockNodeWithContext originNode;
 }

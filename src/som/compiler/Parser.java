@@ -605,8 +605,7 @@ public final class Parser {
         SMethod blockMethod = bgenc.assemble(universe, blockBody);
         ExpressionNode result;
         if (bgenc.requiresContext()) {
-          result = new BlockNodeWithContext(blockMethod, universe,
-              mgenc.getOuterSelfSlot(), mgenc.getOuterSelfContextLevel());
+          result = new BlockNodeWithContext(blockMethod, universe);
         } else {
           result = new BlockNode(blockMethod, universe);
         }

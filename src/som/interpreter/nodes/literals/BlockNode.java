@@ -7,9 +7,6 @@ import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SInvokable.SMethod;
 
-import com.oracle.truffle.api.frame.FrameSlot;
-import com.oracle.truffle.api.frame.FrameUtil;
-import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 public class BlockNode extends LiteralNode {
@@ -24,7 +21,7 @@ public class BlockNode extends LiteralNode {
 
   @Override
   public SBlock executeSBlock(final VirtualFrame frame) {
-    return universe.newBlock(blockMethod, null, null);
+    return universe.newBlock(blockMethod, null);
   }
 
   @Override
@@ -47,36 +44,19 @@ public class BlockNode extends LiteralNode {
   }
 
   public static final class BlockNodeWithContext extends BlockNode {
-    private final FrameSlot outerSelfSlot;
-    private final int       contextLevel;
 
     public BlockNodeWithContext(final SMethod blockMethod,
-        final Universe universe, final FrameSlot outerSelfSlot,
-        final int contextLevel) {
+        final Universe universe) {
       super(blockMethod, universe);
-      this.outerSelfSlot = outerSelfSlot;
-      this.contextLevel  = contextLevel;
     }
 
-    public BlockNodeWithContext(final BlockNodeWithContext node,
-        final FrameSlot inlinedOuterSelfSlot) {
-      this(node.blockMethod, node.universe, inlinedOuterSelfSlot, node.contextLevel);
-    }
-
-    public Object getOuterSelf(final MaterializedFrame frame) {
-      return FrameUtil.getObjectSafe(frame, outerSelfSlot);
+    public BlockNodeWithContext(final BlockNodeWithContext node) {
+      this(node.blockMethod, node.universe);
     }
 
     @Override
     public SBlock executeSBlock(final VirtualFrame frame) {
-      return universe.newBlock(blockMethod, frame.materialize(), this);
-    }
-
-    @Override
-    public void replaceWithIndependentCopyForInlining(final Inliner inliner) {
-      FrameSlot inlinedOuterSelfSlot = inliner.getFrameSlot(outerSelfSlot.getIdentifier(), contextLevel);
-      assert    inlinedOuterSelfSlot != null;
-      replace(new BlockNodeWithContext((SMethod) cloneMethod(inliner), universe, inlinedOuterSelfSlot, contextLevel));
+      return universe.newBlock(blockMethod, frame.materialize());
     }
   }
 }

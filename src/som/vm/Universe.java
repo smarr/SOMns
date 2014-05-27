@@ -33,7 +33,6 @@ import java.util.StringTokenizer;
 import som.compiler.Disassembler;
 import som.interpreter.Invokable;
 import som.interpreter.TruffleCompiler;
-import som.interpreter.nodes.literals.BlockNode.BlockNodeWithContext;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
@@ -381,9 +380,8 @@ public class Universe {
     return newSymbol(interned);
   }
 
-  public SBlock newBlock(final SMethod method, final MaterializedFrame context,
-      final BlockNodeWithContext originNode) {
-    return SBlock.create(method, context, originNode);
+  public SBlock newBlock(final SMethod method, final MaterializedFrame context) {
+    return SBlock.create(method, context);
   }
 
   @SlowPath
