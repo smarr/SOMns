@@ -853,7 +853,7 @@ public final class Parser {
     }
 
     // generate Block signature
-    String blockSig = "$block method";
+    String blockSig = "$blockMethod@" + lexer.getCurrentLineNumber() + "@" + lexer.getCurrentColumn();
     int argSize = mgenc.getNumberOfArguments();
     for (int i = 1; i < argSize; i++) {
       blockSig += ":";
