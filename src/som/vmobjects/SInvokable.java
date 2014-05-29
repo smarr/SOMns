@@ -42,8 +42,20 @@ public abstract class SInvokable extends SAbstractObject {
   }
 
   public static final class SMethod extends SInvokable {
-    public SMethod(final SSymbol signature, final Invokable invokable) {
+    private final SMethod[] embeddedBlocks;
+
+    public SMethod(final SSymbol signature, final Invokable invokable,
+        final SMethod[] embeddedBlocks) {
       super(signature, invokable);
+      this.embeddedBlocks = embeddedBlocks;
+    }
+
+    @Override
+    public void setHolder(final SClass value) {
+      super.setHolder(value);
+      for (SMethod m : embeddedBlocks) {
+        m.setHolder(value);
+      }
     }
 
     @Override
@@ -79,7 +91,7 @@ public abstract class SInvokable extends SAbstractObject {
     return holder;
   }
 
-  public final void setHolder(final SClass value) {
+  public void setHolder(final SClass value) {
     transferToInterpreterAndInvalidate("SMethod.setHolder");
     holder = value;
   }

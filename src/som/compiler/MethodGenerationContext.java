@@ -34,6 +34,7 @@ import static som.interpreter.SNodeFactory.createGlobalRead;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.List;
 
 import som.compiler.Variable.Argument;
 import som.compiler.Variable.Local;
@@ -75,15 +76,22 @@ public final class MethodGenerationContext {
   private       FrameSlot       frameOnStackSlot;
   private       LexicalContext  lexicalContext;
 
+  private final List<SMethod>   embeddedBlockMethods;
+
   public MethodGenerationContext() {
     frameDescriptor = new FrameDescriptor();
     accessesVariablesOfOuterContext = false;
     throwsNonLocalReturn            = false;
     needsToCatchNonLocalReturn      = false;
+    embeddedBlockMethods = new ArrayList<SMethod>();
   }
 
   public void setHolder(final ClassGenerationContext cgenc) {
     holderGenc = cgenc;
+  }
+
+  public void addEmbeddedBlockMethod(final SMethod blockMethod) {
+    embeddedBlockMethods.add(blockMethod);
   }
 
   public LexicalContext getLexicalContext() {
@@ -182,7 +190,8 @@ public final class MethodGenerationContext {
         new som.interpreter.Method(getSourceSectionForMethod(sourceSection),
             frameDescriptor, methodBody, universe, getLexicalContext());
 
-    SMethod meth = (SMethod) universe.newMethod(signature, truffleMethod, false);
+    SMethod meth = (SMethod) universe.newMethod(signature, truffleMethod, false,
+        embeddedBlockMethods.toArray(new SMethod[0]));
 
     // return the method - the holder field is to be set later on!
     return meth;

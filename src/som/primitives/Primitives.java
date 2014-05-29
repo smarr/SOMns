@@ -32,6 +32,7 @@ import som.interpreter.nodes.ExpressionNode;
 import som.vm.Universe;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
+import som.vmobjects.SInvokable.SMethod;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives.SlowPath;
@@ -86,7 +87,7 @@ public abstract class Primitives {
     }
 
     Primitive primMethodNode = new Primitive(primNode, mgen.getFrameDescriptor());
-    SInvokable prim = universe.newMethod(signature, primMethodNode, true);
+    SInvokable prim = universe.newMethod(signature, primMethodNode, true, new SMethod[0]);
     return prim;
   }
 
@@ -97,7 +98,7 @@ public abstract class Primitives {
 
     ExpressionNode primNode = EmptyPrim.create(new ArgumentReadNode(0));
     Primitive primMethodNode = new Primitive(primNode, mgen.getFrameDescriptor());
-    SInvokable prim = universe.newMethod(signature, primMethodNode, true);
+    SInvokable prim = universe.newMethod(signature, primMethodNode, true, new SMethod[0]);
     return prim;
   }
 

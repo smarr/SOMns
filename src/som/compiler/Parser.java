@@ -603,6 +603,8 @@ public final class Parser {
         ExpressionNode blockBody = nestedBlock(bgenc);
 
         SMethod blockMethod = bgenc.assemble(universe, blockBody);
+        mgenc.addEmbeddedBlockMethod(blockMethod);
+
         ExpressionNode result;
         if (bgenc.requiresContext()) {
           result = new BlockNodeWithContext(blockMethod, universe);
