@@ -190,11 +190,20 @@ public final class MethodGenerationContext {
         new som.interpreter.Method(getSourceSectionForMethod(sourceSection),
             frameDescriptor, methodBody, universe, getLexicalContext());
 
+    setOuterMethodInLexicalScopes(truffleMethod);
+
     SMethod meth = (SMethod) universe.newMethod(signature, truffleMethod, false,
         embeddedBlockMethods.toArray(new SMethod[0]));
 
     // return the method - the holder field is to be set later on!
     return meth;
+  }
+
+  private void setOuterMethodInLexicalScopes(final som.interpreter.Method method) {
+    for (SMethod m : embeddedBlockMethods) {
+      som.interpreter.Method blockMethod = (som.interpreter.Method) m.getInvokable();
+      blockMethod.setOuterContextMethod(method);
+    }
   }
 
   private SourceSection getSourceSectionForMethod(final SourceSection ssBody) {

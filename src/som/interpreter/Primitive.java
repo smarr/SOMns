@@ -29,7 +29,18 @@ public final class Primitive extends Invokable {
   }
 
   @Override
+  public boolean isBlock() {
+    return false;
+  }
+
+  @Override
   public String toString() {
     return "Primitive " + expressionOrSequence.getClass().getSimpleName() + "@" + Integer.toHexString(hashCode());
+  }
+
+  @Override
+  public void propagateLoopCountThroughoutLexicalScope(final long count) {
+    throw new UnsupportedOperationException(
+        "This should not happen, primitives don't have lexically nested loops.");
   }
 }

@@ -1,5 +1,6 @@
 package som.interpreter.nodes.specialized;
 
+import som.interpreter.Invokable;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.PreevaluatedExpression;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
@@ -9,7 +10,6 @@ import som.vmobjects.SInvokable;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.SlowPath;
-import com.oracle.truffle.api.LoopCountReceiver;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -88,10 +88,7 @@ public abstract class IntToDoMessageNode extends TernaryExpressionNode
       current = current.getParent();
     }
     if (current != null) {
-      RootNode root = (RootNode) current;
-      if (root.getCallTarget() instanceof LoopCountReceiver) {
-        ((LoopCountReceiver) root.getCallTarget()).reportLoopCount((int) count);
-      }
+      ((Invokable) current).propagateLoopCountThroughoutLexicalScope(count);
     }
   }
 }

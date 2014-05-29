@@ -59,8 +59,29 @@ public final class Method extends Invokable {
         outerContext);
     ExpressionNode  inlinedBody = Inliner.doInline(getUninitializedBody(),
         inlinedContext);
-    return new Method(getSourceSection(), inlinedFrameDescriptor, inlinedBody,
+    Method clone = new Method(getSourceSection(), inlinedFrameDescriptor, inlinedBody,
         universe, outerContext);
+    inlinedContext.setOuterMethod(clone);
+    return clone;
+  }
+
+  @Override
+  public boolean isBlock() {
+    return outerContext != null;
+  }
+
+  public void setOuterContextMethod(final Method method) {
+    outerContext.setOuterMethod(method);
+  }
+
+  @Override
+  public void propagateLoopCountThroughoutLexicalScope(final long count) {
+    assert count >= 0;
+
+    if (outerContext != null) {
+      outerContext.getOuterMethod().propagateLoopCountThroughoutLexicalScope(count);
+    }
+    reportLoopCount((count > Integer.MAX_VALUE) ? Integer.MAX_VALUE : (int) count);
   }
 
   @Override

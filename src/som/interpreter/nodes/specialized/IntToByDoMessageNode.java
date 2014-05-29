@@ -1,5 +1,6 @@
 package som.interpreter.nodes.specialized;
 
+import som.interpreter.Invokable;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.PreevaluatedExpression;
 import som.interpreter.nodes.nary.QuaternaryExpressionNode;
@@ -8,13 +9,11 @@ import som.vmobjects.SInvokable;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.LoopCountReceiver;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.nodes.RootNode;
 
 
 public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode
@@ -74,7 +73,7 @@ public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode
       }
     } finally {
       if (CompilerDirectives.inInterpreter()) {
-        reportLoopCount((int) limit - receiver);
+        reportLoopCount((long) limit - receiver);
       }
     }
     return receiver;
@@ -83,14 +82,11 @@ public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode
   protected final void reportLoopCount(final long count) {
     CompilerAsserts.neverPartOfCompilation();
     Node current = getParent();
-    while (current != null && !(current instanceof RootNode)) {
+    while (current != null && !(current instanceof Invokable)) {
       current = current.getParent();
     }
     if (current != null) {
-      RootNode root = (RootNode) current;
-      if (root.getCallTarget() instanceof LoopCountReceiver) {
-        ((LoopCountReceiver) root.getCallTarget()).reportLoopCount((int) count);
-      }
+      ((Invokable) current).propagateLoopCountThroughoutLexicalScope(count);
     }
   }
 }

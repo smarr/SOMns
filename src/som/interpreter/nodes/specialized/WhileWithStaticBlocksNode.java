@@ -1,5 +1,6 @@
 package som.interpreter.nodes.specialized;
 
+import som.interpreter.Invokable;
 import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.vm.Universe;
@@ -9,7 +10,6 @@ import som.vmobjects.SObject;
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.LoopCountReceiver;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
@@ -73,7 +73,7 @@ public abstract class WhileWithStaticBlocksNode extends BinaryExpressionNode {
   protected final SObject doWhileConditionally(final VirtualFrame frame,
       final SBlock loopCondition,
       final SBlock loopBody) {
-    int iterationCount = 0;
+    long iterationCount = 0;
     boolean loopConditionResult = (boolean) conditionValueSend.call(
         frame, new Object[] {loopCondition});
 
@@ -98,17 +98,14 @@ public abstract class WhileWithStaticBlocksNode extends BinaryExpressionNode {
     return universe.nilObject;
   }
 
-  protected final void reportLoopCount(final int count) {
+  protected final void reportLoopCount(final long count) {
     CompilerAsserts.neverPartOfCompilation();
     Node current = getParent();
     while (current != null && !(current instanceof RootNode)) {
       current = current.getParent();
     }
     if (current != null) {
-      RootNode root = (RootNode) current;
-      if (root.getCallTarget() instanceof LoopCountReceiver) {
-        ((LoopCountReceiver) root.getCallTarget()).reportLoopCount(count);
-      }
+      ((Invokable) current).propagateLoopCountThroughoutLexicalScope(count);
     }
   }
 
