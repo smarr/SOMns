@@ -9,13 +9,11 @@ import som.vm.Universe;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject;
 
-import com.oracle.truffle.api.dsl.Generic;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.FrameSlotTypeException;
-import com.oracle.truffle.api.frame.FrameUtil;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 
@@ -69,11 +67,11 @@ public abstract class LocalVariableNode extends ExpressionNode {
       return frame.getObject(slot);
     }
 
-    @Generic
-    public final Object doGeneric(final VirtualFrame frame) {
-      assert isInitialized();
-      return FrameUtil.getObjectSafe(frame, slot);
-    }
+//    @Generic
+//    public final Object doGeneric(final VirtualFrame frame) {
+//      assert isInitialized();
+//      return FrameUtil.getObjectSafe(frame, slot);
+//    }
 
     protected final boolean isInitialized() {
       return slot.getKind() != FrameSlotKind.Illegal;
@@ -145,7 +143,7 @@ public abstract class LocalVariableNode extends ExpressionNode {
       return expValue;
     }
 
-    @Generic
+    @Specialization
     public final Object writeGeneric(final VirtualFrame frame, final Object expValue) {
       ensureObjectKind();
       frame.setObject(slot, expValue);
