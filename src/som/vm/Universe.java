@@ -569,8 +569,8 @@ public class Universe {
     for (String cpEntry : classPath) {
       try {
         // Load the class from a file and return the loaded class
-        SClass result = som.compiler.SourcecodeCompiler.compileClass(cpEntry
-            + File.separator, name.getString(), systemClass, this);
+        SClass result = som.compiler.SourcecodeCompiler.compileClass(cpEntry,
+            name.getString(), systemClass, this);
         if (printAST) {
           Disassembler.dump(result.getSOMClass(this));
           Disassembler.dump(result);
