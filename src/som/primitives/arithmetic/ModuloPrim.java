@@ -4,8 +4,11 @@ import java.math.BigInteger;
 
 import com.oracle.truffle.api.ExactMath;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.utilities.BranchProfile;
 
 public abstract class ModuloPrim extends ArithmeticPrim {
+  private BranchProfile negativeRightOperand = new BranchProfile();
+
   @Specialization(order = 1, rewriteOn = ArithmeticException.class)
   public final long doLong(final long left, final long right) {
     long l = left;
@@ -13,6 +16,7 @@ public abstract class ModuloPrim extends ArithmeticPrim {
     long result = l % r;
 
     if (l > 0 && r < 0) {
+      negativeRightOperand.enter();
       result = ExactMath.addExact(result, r);
     }
     return result;
