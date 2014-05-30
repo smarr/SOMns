@@ -5,17 +5,23 @@ import java.math.BigInteger;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.utilities.BranchProfile;
 
 
 public abstract class SqrtPrim extends UnaryExpressionNode {
+
+  private BranchProfile longReturn   = new BranchProfile();
+  private BranchProfile doubleReturn = new BranchProfile();
 
   @Specialization
   public final Object doLong(final long receiver) {
     double result = Math.sqrt(receiver);
 
     if (result == Math.rint(result)) {
+      longReturn.enter();
       return (long) result;
     } else {
+      doubleReturn.enter();
       return result;
     }
   }
