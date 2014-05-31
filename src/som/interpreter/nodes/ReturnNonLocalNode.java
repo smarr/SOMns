@@ -108,6 +108,8 @@ public final class ReturnNonLocalNode extends ContextualNode {
   public static final class CatchNonLocalReturnNode extends ExpressionNode {
     @Child protected ExpressionNode methodBody;
     private final BranchProfile nonLocalReturnHandler;
+    private final BranchProfile doCatch;
+    private final BranchProfile doPropagate;
     private final FrameSlot frameOnStackMarker;
 
     public CatchNonLocalReturnNode(final ExpressionNode methodBody,
@@ -115,6 +117,9 @@ public final class ReturnNonLocalNode extends ContextualNode {
       this.methodBody = methodBody;
       this.nonLocalReturnHandler = new BranchProfile();
       this.frameOnStackMarker    = frameOnStackMarker;
+
+      this.doCatch = new BranchProfile();
+      this.doPropagate = new BranchProfile();
     }
 
     @Override
@@ -134,9 +139,11 @@ public final class ReturnNonLocalNode extends ContextualNode {
       } catch (ReturnException e) {
         nonLocalReturnHandler.enter();
         if (!e.reachedTarget(marker)) {
+          doPropagate.enter();
           marker.frameNoLongerOnStack();
           throw e;
         } else {
+          doCatch.enter();
           result = e.result();
         }
       }
@@ -156,6 +163,7 @@ public final class ReturnNonLocalNode extends ContextualNode {
       } catch (ReturnException e) {
         nonLocalReturnHandler.enter();
         if (!e.reachedTarget(marker)) {
+          doPropagate.enter();
           marker.frameNoLongerOnStack();
           throw e;
         }
