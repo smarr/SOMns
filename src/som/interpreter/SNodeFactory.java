@@ -11,6 +11,7 @@ import som.interpreter.nodes.ContextualNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.FieldNode.FieldReadNode;
 import som.interpreter.nodes.FieldNode.FieldWriteNode;
+import som.interpreter.nodes.FieldNodeFactory.FieldWriteNodeFactory;
 import som.interpreter.nodes.GlobalNode;
 import som.interpreter.nodes.GlobalNode.UninitializedGlobalReadNode;
 import som.interpreter.nodes.LocalVariableNode.LocalVariableWriteNode;
@@ -56,7 +57,7 @@ public final class SNodeFactory {
 
   public static FieldWriteNode createFieldWrite(final ExpressionNode self,
       final ExpressionNode exp, final int fieldIndex) {
-    return new FieldWriteNode(self, exp, fieldIndex);
+    return FieldWriteNodeFactory.create(fieldIndex, self, exp);
   }
 
   public static ContextualNode createVariableRead(final Variable variable,
