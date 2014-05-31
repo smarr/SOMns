@@ -7,7 +7,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.utilities.BranchProfile;
 
 public abstract class ModuloPrim extends ArithmeticPrim {
-  private BranchProfile negativeRightOperand = new BranchProfile();
+  private final BranchProfile negativeRightOperand = new BranchProfile();
 
   @Specialization(order = 1, rewriteOn = ArithmeticException.class)
   public final long doLong(final long left, final long right) {
