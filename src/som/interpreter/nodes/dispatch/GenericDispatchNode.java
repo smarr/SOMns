@@ -31,4 +31,9 @@ public final class GenericDispatchNode extends AbstractDispatchWithLookupNode {
     //       further specialization for #dnu
     return SAbstractObject.sendDoesNotUnderstand(selector, arguments, universe);
   }
+
+  @Override
+  public int lengthOfDispatchChain() {
+    return 1000;
+  }
 }

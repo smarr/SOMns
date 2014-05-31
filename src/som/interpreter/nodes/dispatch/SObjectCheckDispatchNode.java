@@ -31,4 +31,9 @@ public final class SObjectCheckDispatchNode extends AbstractDispatchNode {
       return uninitializedDispatch.executeDispatch(frame, arguments);
     }
   }
+
+  @Override
+  public int lengthOfDispatchChain() {
+    return nextInCache.lengthOfDispatchChain();
+  }
 }

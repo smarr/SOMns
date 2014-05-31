@@ -39,4 +39,9 @@ public final class SuperDispatchNode extends AbstractDispatchNode {
       final VirtualFrame frame, final Object[] arguments) {
     return cachedSuperMethod.call(frame, arguments);
   }
+
+  @Override
+  public int lengthOfDispatchChain() {
+    return 1;
+  }
 }

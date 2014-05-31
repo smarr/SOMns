@@ -12,6 +12,7 @@ import som.vmobjects.SBlock;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.NodeCost;
 
 
 public abstract class BlockPrims {
@@ -50,6 +51,20 @@ public abstract class BlockPrims {
     public void adoptNewDispatchListHead(final AbstractDispatchNode node) {
       dispatchNode = insert(node);
     }
+
+    @Override
+    public NodeCost getCost() {
+      int dispatchChain = dispatchNode.lengthOfDispatchChain();
+      if (dispatchChain == 0) {
+        return NodeCost.UNINITIALIZED;
+      } else if (dispatchChain == 1) {
+        return NodeCost.MONOMORPHIC;
+      } else if (dispatchChain <= AbstractDispatchNode.INLINE_CACHE_SIZE) {
+        return NodeCost.POLYMORPHIC;
+      } else {
+        return NodeCost.MEGAMORPHIC;
+      }
+    }
   }
 
   public abstract static class ValueOnePrim extends BinaryExpressionNode
@@ -71,6 +86,20 @@ public abstract class BlockPrims {
     public void adoptNewDispatchListHead(final AbstractDispatchNode node) {
       dispatchNode = insert(node);
     }
+
+    @Override
+    public NodeCost getCost() {
+      int dispatchChain = dispatchNode.lengthOfDispatchChain();
+      if (dispatchChain == 0) {
+        return NodeCost.UNINITIALIZED;
+      } else if (dispatchChain == 1) {
+        return NodeCost.MONOMORPHIC;
+      } else if (dispatchChain <= AbstractDispatchNode.INLINE_CACHE_SIZE) {
+        return NodeCost.POLYMORPHIC;
+      } else {
+        return NodeCost.MEGAMORPHIC;
+      }
+    }
   }
 
   public abstract static class ValueTwoPrim extends TernaryExpressionNode
@@ -91,6 +120,20 @@ public abstract class BlockPrims {
     @Override
     public void adoptNewDispatchListHead(final AbstractDispatchNode node) {
       dispatchNode = insert(node);
+    }
+
+    @Override
+    public NodeCost getCost() {
+      int dispatchChain = dispatchNode.lengthOfDispatchChain();
+      if (dispatchChain == 0) {
+        return NodeCost.UNINITIALIZED;
+      } else if (dispatchChain == 1) {
+        return NodeCost.MONOMORPHIC;
+      } else if (dispatchChain <= AbstractDispatchNode.INLINE_CACHE_SIZE) {
+        return NodeCost.POLYMORPHIC;
+      } else {
+        return NodeCost.MEGAMORPHIC;
+      }
     }
   }
 

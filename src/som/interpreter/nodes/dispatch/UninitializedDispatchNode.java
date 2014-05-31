@@ -96,4 +96,10 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
     sendNode.replaceDispatchListHead(genericReplacement);
     return genericReplacement.executeDispatch(frame, arguments);
   }
+
+  @Override
+  public int lengthOfDispatchChain() {
+    return 0;
+  }
+
 }

@@ -40,4 +40,9 @@ public final class UninitializedValuePrimDispatchNode
       return generic.executeDispatch(frame, arguments);
     }
   }
+
+  @Override
+  public int lengthOfDispatchChain() {
+    return 0;
+  }
 }
