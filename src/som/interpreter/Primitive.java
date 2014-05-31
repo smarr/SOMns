@@ -2,6 +2,7 @@ package som.interpreter;
 
 import som.interpreter.nodes.ExpressionNode;
 
+import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.nodes.RootNode;
 
@@ -40,6 +41,7 @@ public final class Primitive extends Invokable {
 
   @Override
   public void propagateLoopCountThroughoutLexicalScope(final long count) {
+    CompilerAsserts.neverPartOfCompilation();
     throw new UnsupportedOperationException(
         "This should not happen, primitives don't have lexically nested loops.");
   }

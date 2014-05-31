@@ -9,6 +9,7 @@ import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
@@ -23,6 +24,7 @@ public abstract class BlockPrims {
 
     @Specialization
     public SAbstractObject doSBlock(final SBlock receiver) {
+      CompilerDirectives.transferToInterpreter();
       // TruffleSOM intrinsifies #whileTrue: and #whileFalse:
       throw new RuntimeException("This primitive is not supported anymore! "
           + "Something went wrong with the intrinsification of "
@@ -97,6 +99,7 @@ public abstract class BlockPrims {
     public final Object doSBlock(final VirtualFrame frame,
         final SBlock receiver, final Object firstArg, final Object secondArg,
         final Object thirdArg) {
+      CompilerDirectives.transferToInterpreter();
       throw new RuntimeException("This should never be called, because SOM Blocks have max. 2 arguments.");
     }
   }

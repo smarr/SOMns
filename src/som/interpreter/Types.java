@@ -36,6 +36,7 @@ import som.vmobjects.SInvokable.SPrimitive;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.dsl.TypeSystem;
 
 @TypeSystem({   boolean.class,
@@ -53,6 +54,7 @@ import com.oracle.truffle.api.dsl.TypeSystem;
 public class Types {
 
   public static SClass getClassOf(final Object obj, final Universe universe) {
+    CompilerAsserts.neverPartOfCompilation();
     assert obj != null;
 
     if (obj instanceof SAbstractObject) {
@@ -83,6 +85,7 @@ public class Types {
       return universe.arrayClass;
     }
 
+    TruffleCompiler.transferToInterpreter("Should not be reachable");
     throw new RuntimeException("We got an object that should be covered by the above check: " + obj.toString());
   }
 }

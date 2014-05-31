@@ -9,6 +9,7 @@ import som.vm.Universe;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject;
 
+import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameSlot;
@@ -195,6 +196,8 @@ public abstract class LocalVariableNode extends ExpressionNode {
 
     @Override
     public final void replaceWithIndependentCopyForInlining(final Inliner inliner) {
+      CompilerAsserts.neverPartOfCompilation();
+
       if (getParent() instanceof ArgumentInitializationNode) {
         FrameSlot varSlot = inliner.getLocalFrameSlot(getSlotIdentifier());
         assert varSlot != null;

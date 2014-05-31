@@ -21,6 +21,7 @@ import som.vm.Universe;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
@@ -88,6 +89,7 @@ public abstract class UninitializedVariableNode extends ContextualNode {
     }
 
     public int getArgumentIndex() {
+      CompilerAsserts.neverPartOfCompilation();
       if (!accessesArgument()) {
         throw new UnsupportedOperationException("This node does not access an argument.");
       }

@@ -32,6 +32,7 @@ import som.primitives.BlockPrimsFactory.ValueTwoPrimFactory;
 import som.primitives.Primitives;
 import som.vm.Universe;
 
+import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 
@@ -44,6 +45,8 @@ public abstract class SBlock extends SAbstractObject {
       case 2: return new SBlock2(blockMethod, context);
       case 3: return new SBlock3(blockMethod, context);
     }
+
+    CompilerDirectives.transferToInterpreter();
     throw new RuntimeException("We do currently not have support for more than 3 arguments to a block.");
   }
 
@@ -102,6 +105,7 @@ public abstract class SBlock extends SAbstractObject {
 
   public static SInvokable getEvaluationPrimitive(final int numberOfArguments,
       final Universe universe, final SClass rcvrClass) {
+    CompilerAsserts.neverPartOfCompilation();
     SSymbol sig = universe.symbolFor(computeSignatureString(numberOfArguments));
 
     switch (numberOfArguments) {

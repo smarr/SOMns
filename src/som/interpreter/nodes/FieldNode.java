@@ -28,6 +28,7 @@ import som.interpreter.objectstorage.FieldAccessorNode.UninitializedReadFieldNod
 import som.interpreter.objectstorage.FieldAccessorNode.UninitializedWriteFieldNode;
 import som.vmobjects.SObject;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 
@@ -89,6 +90,7 @@ public abstract class FieldNode extends ExpressionNode {
       try {
         obj = self.executeSObject(frame);
       } catch (UnexpectedResultException e) {
+        CompilerDirectives.transferToInterpreter();
         throw new RuntimeException("This should never happen by construction");
       }
       return executeEvaluated(obj);
@@ -152,6 +154,7 @@ public abstract class FieldNode extends ExpressionNode {
       try {
         obj = self.executeSObject(frame);
       } catch (UnexpectedResultException e) {
+        CompilerDirectives.transferToInterpreter();
         throw new RuntimeException("This should never happen by construction");
       }
       return obj;

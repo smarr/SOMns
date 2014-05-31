@@ -4,6 +4,7 @@ import som.interpreter.nodes.ISuperReadNode;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
@@ -16,6 +17,7 @@ public final class SuperDispatchNode extends AbstractDispatchNode {
 
   public static SuperDispatchNode create(final SSymbol selector,
       final ISuperReadNode superNode) {
+    CompilerAsserts.neverPartOfCompilation();
     SInvokable method = superNode.getSuperClass().lookupInvokable(selector);
 
     if (method == null) {

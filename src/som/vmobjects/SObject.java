@@ -36,6 +36,7 @@ import som.interpreter.objectstorage.StorageLocation.GeneralizeStorageLocationEx
 import som.interpreter.objectstorage.StorageLocation.UninitalizedStorageLocationException;
 import som.vm.Universe;
 
+import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
@@ -273,6 +274,8 @@ public class SObject extends SAbstractObject {
   }
 
   private void setFieldAfterLayoutChange(final long index, final Object value) {
+    CompilerAsserts.neverPartOfCompilation();
+
     StorageLocation location = getLocation(index);
     try {
       location.write(this, value);
@@ -283,6 +286,7 @@ public class SObject extends SAbstractObject {
   }
 
   private static long getFirstObjectFieldOffset() {
+    CompilerAsserts.neverPartOfCompilation();
     try {
       final FieldOffsetProvider fieldOffsetProvider = getFieldOffsetProvider();
 
@@ -294,6 +298,7 @@ public class SObject extends SAbstractObject {
   }
 
   private static long getFirstPrimFieldOffset() {
+    CompilerAsserts.neverPartOfCompilation();
     try {
       final FieldOffsetProvider fieldOffsetProvider = getFieldOffsetProvider();
 
@@ -315,6 +320,8 @@ public class SObject extends SAbstractObject {
   }
 
   private static long getObjectFieldLength() {
+    CompilerAsserts.neverPartOfCompilation();
+
     try {
       return getFieldDistance("field1", "field2");
     } catch (NoSuchFieldException | IllegalAccessException e) {
@@ -323,6 +330,8 @@ public class SObject extends SAbstractObject {
   }
 
   private static long getPrimFieldLength() {
+    CompilerAsserts.neverPartOfCompilation();
+
     try {
       return getFieldDistance("primField1", "primField2");
     } catch (NoSuchFieldException | IllegalAccessException e) {
