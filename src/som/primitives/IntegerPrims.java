@@ -8,6 +8,7 @@ import som.vm.Universe;
 import som.vmobjects.SClass;
 
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.utilities.BranchProfile;
 
 public abstract class IntegerPrims {
 
@@ -33,12 +34,15 @@ public abstract class IntegerPrims {
   }
 
   public abstract static class LeftShiftPrim extends ArithmeticPrim {
+    private BranchProfile overflow;
+
     @Specialization(rewriteOn = ArithmeticException.class)
     public final long doLong(final long receiver, final long right) {
       assert right >= 0;  // currently not defined for negative values of right
 
       if (Long.SIZE - Long.numberOfLeadingZeros(receiver) + right > Long.SIZE - 1) {
-          throw new ArithmeticException("shift overflows long");
+        overflow.enter();
+        throw new ArithmeticException("shift overflows long");
       }
       return receiver << right;
     }
