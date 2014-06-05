@@ -1,0 +1,21 @@
+NBody = Benchmark (
+    
+    initialize = (
+        Body initialize.
+    )
+    
+    innerBenchmarkLoop = (
+        | bodies |
+        bodies := NBodySystem new.
+        
+        1 to: innerIterations do: [:i |
+            bodies advance: 0.01.
+        ]
+    )
+    
+    ----
+    
+    new = (
+        ^ super new initialize
+    )
+)
