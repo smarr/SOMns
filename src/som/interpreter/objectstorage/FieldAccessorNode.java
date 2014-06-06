@@ -177,7 +177,7 @@ public abstract class FieldAccessorNode extends Node {
     @Override
     public Object read(final SObject obj) {
       try {
-        return readLong(obj);
+        return readDouble(obj);
       } catch (UnexpectedResultException e) {
         return e.getResult();
       }
