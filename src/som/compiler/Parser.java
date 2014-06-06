@@ -286,7 +286,7 @@ public final class Parser {
       SClass superClass = universe.loadClass(superName);
       if (superClass == null) {
         throw new ParseError("Super class " + superName.getString() +
-            " could not be loaded", Symbol.NONE, this);
+            " could not be loaded", NONE, this);
       }
 
       cgenc.setInstanceFieldsOfSuper(superClass.getInstanceFields());
@@ -548,7 +548,7 @@ public final class Parser {
     if (sym != Identifier) {
       throw new ParseError("Assignments should always target variables or" +
                            " fields, but found instead a %(found)s",
-                           Symbol.Identifier, this);
+                           Identifier, this);
     }
     String variable = assignment();
 
@@ -778,7 +778,7 @@ public final class Parser {
        }
     } catch (NumberFormatException e) {
       throw new ParseError("Could not parse integer. Expected a number but " +
-                           "got '" + text + "'", Symbol.NONE, this);
+                           "got '" + text + "'", NONE, this);
     }
   }
 
@@ -792,7 +792,7 @@ public final class Parser {
       return new DoubleLiteralNode(d);
     } catch (NumberFormatException e) {
       throw new ParseError("Could not parse double. Expected a number but " +
-          "got '" + text + "'", Symbol.NONE, this);
+          "got '" + text + "'", NONE, this);
     }
   }
 
