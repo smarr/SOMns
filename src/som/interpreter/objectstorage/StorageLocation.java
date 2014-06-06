@@ -12,6 +12,7 @@ import som.interpreter.objectstorage.FieldAccessorNode.WriteLongFieldNode;
 import som.interpreter.objectstorage.FieldAccessorNode.WriteObjectFieldNode;
 import som.vm.Universe;
 import som.vmobjects.SObject;
+import sun.misc.Unsafe;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
@@ -46,7 +47,7 @@ public abstract class StorageLocation {
     if (primFieldIndex < SObject.NUM_PRIMITIVE_FIELDS) {
       return new DoubleDirectStoreLocation(layout, primFieldIndex);
     } else {
-      throw new RuntimeException("Not yet implemented");
+      return new DoubleArrayStoreLocation(layout, primFieldIndex);
     }
   }
 
@@ -453,6 +454,84 @@ public abstract class StorageLocation {
         final ObjectLayout layout, final AbstractWriteFieldNode next) {
       CompilerAsserts.neverPartOfCompilation();
       return new WriteLongFieldNode(fieldIndex, layout, next);
+    }
+  }
+
+  public static final class DoubleArrayStoreLocation extends PrimitiveArrayStoreLocation
+      implements DoubleStorageLocation {
+    public DoubleArrayStoreLocation(final ObjectLayout layout, final int primField) {
+      super(layout, primField);
+    }
+
+    @Override
+    public Object read(final SObject obj, final boolean assumptionValid) {
+      try {
+        return readDouble(obj, assumptionValid);
+      } catch (UnexpectedResultException e) {
+        CompilerAsserts.neverPartOfCompilation();
+        TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized read node");
+        return e.getResult();
+      }
+    }
+
+    @Override
+    public double readDouble(final SObject obj, final boolean assumptionValid) throws UnexpectedResultException {
+      if (isSet(obj, assumptionValid)) {
+        long[] arr = obj.getExtendedPrimFields();
+        // TODO: for the moment Graal doesn't seem to get the optimizations
+        // right, still need to pass in the correct location identifier, which can probably be `this`.
+        return CompilerDirectives.unsafeGetDouble(arr,
+            Unsafe.ARRAY_DOUBLE_BASE_OFFSET + Unsafe.ARRAY_DOUBLE_INDEX_SCALE * extensionIndex,
+            true, null);
+      } else {
+        CompilerAsserts.neverPartOfCompilation();
+        TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized read node");
+        throw new UnexpectedResultException(Universe.current().nilObject);
+      }
+    }
+
+    @Override
+    public void write(final SObject obj, final Object value) throws GeneralizeStorageLocationException {
+      assert value != null;
+      if (value instanceof Double) {
+        writeDouble(obj, (double) value);
+      } else {
+        CompilerAsserts.neverPartOfCompilation();
+        TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized write node");
+        throw new GeneralizeStorageLocationException();
+      }
+    }
+
+    @Override
+    public void writeDouble(final SObject obj, final double value) {
+      final long[] arr = obj.getExtendedPrimFields();
+
+      // TODO: for the moment Graal doesn't seem to get the optimizations
+      // right, still need to pass in the correct location identifier, which can probably be `this`.
+      CompilerDirectives.unsafePutDouble(arr,
+          Unsafe.ARRAY_DOUBLE_BASE_OFFSET + Unsafe.ARRAY_DOUBLE_INDEX_SCALE * this.extensionIndex,
+          value, null);
+
+      markAsSet(obj);
+    }
+
+    @Override
+    public Class<?> getStoredClass() {
+      return Double.class;
+    }
+
+    @Override
+    public AbstractReadFieldNode getReadNode(final int fieldIndex,
+        final ObjectLayout layout, final AbstractReadFieldNode next) {
+      CompilerAsserts.neverPartOfCompilation();
+      return new ReadDoubleFieldNode(fieldIndex, layout, next);
+    }
+
+    @Override
+    public AbstractWriteFieldNode getWriteNode(final int fieldIndex,
+        final ObjectLayout layout, final AbstractWriteFieldNode next) {
+      CompilerAsserts.neverPartOfCompilation();
+      return new WriteDoubleFieldNode(fieldIndex, layout, next);
     }
   }
 }
