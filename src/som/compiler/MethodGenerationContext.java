@@ -69,6 +69,8 @@ public final class MethodGenerationContext {
 
   private boolean                    accessesVariablesOfOuterContext;
 
+  private boolean                    unenforced;
+
   private final LinkedHashMap<String, Argument> arguments = new LinkedHashMap<String, Argument>();
   private final LinkedHashMap<String, Local>    locals    = new LinkedHashMap<String, Local>();
 
@@ -84,10 +86,15 @@ public final class MethodGenerationContext {
     throwsNonLocalReturn            = false;
     needsToCatchNonLocalReturn      = false;
     embeddedBlockMethods = new ArrayList<SMethod>();
+    unenforced = false;
   }
 
   public void setHolder(final ClassGenerationContext cgenc) {
     holderGenc = cgenc;
+  }
+
+  public void setUnenforced() {
+    unenforced = true;
   }
 
   public void addEmbeddedBlockMethod(final SMethod blockMethod) {

@@ -357,12 +357,26 @@ public final class Parser {
   private ExpressionNode method(final MethodGenerationContext mgenc) throws ParseError {
     pattern(mgenc);
     expect(Equal);
+
+    unenforcedAnnotation(mgenc);
+
     if (sym == Primitive) {
       mgenc.setPrimitive(true);
       primitiveBlock();
       return null;
     } else {
       return methodBlock(mgenc);
+    }
+  }
+
+  private void unenforcedAnnotation(final MethodGenerationContext mgenc) throws ParseError {
+    if (sym == Identifier) {
+      if ("unenforced".equals(text)) {
+        accept(Identifier);
+        mgenc.setUnenforced();
+      } else {
+        throw new ParseError("Unexpected identifier: " + text, Identifier, this);
+      }
     }
   }
 
