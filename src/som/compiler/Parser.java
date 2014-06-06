@@ -237,7 +237,7 @@ public final class Parser {
     expect(NewTerm);
     instanceFields(cgenc);
 
-    while (sym == Identifier || sym == Keyword || sym == OperatorSequence
+    while (isIdentifier(sym) || sym == Keyword || sym == OperatorSequence
         || symIn(binaryOpSyms)) {
       MethodGenerationContext mgenc = new MethodGenerationContext();
       mgenc.setHolder(cgenc);
@@ -254,7 +254,7 @@ public final class Parser {
     if (accept(Separator)) {
       cgenc.setClassSide(true);
       classFields(cgenc);
-      while (sym == Identifier || sym == Keyword || sym == OperatorSequence
+      while (isIdentifier(sym) || sym == Keyword || sym == OperatorSequence
           || symIn(binaryOpSyms)) {
         MethodGenerationContext mgenc = new MethodGenerationContext();
         mgenc.setHolder(cgenc);
@@ -330,7 +330,7 @@ public final class Parser {
 
   private void instanceFields(final ClassGenerationContext cgenc) throws ParseError {
     if (accept(Or)) {
-      while (sym == Identifier) {
+      while (isIdentifier(sym)) {
         String var = variable();
         cgenc.addInstanceField(universe.symbolFor(var));
       }
@@ -340,7 +340,7 @@ public final class Parser {
 
   private void classFields(final ClassGenerationContext cgenc) throws ParseError {
     if (accept(Or)) {
-      while (sym == Identifier) {
+      while (isIdentifier(sym)) {
         String var = variable();
         cgenc.addClassField(universe.symbolFor(var));
       }
@@ -374,6 +374,7 @@ public final class Parser {
     mgenc.addArgumentIfAbsent("self"); // TODO: can we do that optionally?
     switch (sym) {
       case Identifier:
+      case Primitive:
         unaryPattern(mgenc);
         break;
       case Keyword:
@@ -462,7 +463,7 @@ public final class Parser {
   }
 
   private void locals(final MethodGenerationContext mgenc) throws ParseError {
-    while (sym == Identifier) {
+    while (isIdentifier(sym)) {
       mgenc.addLocalIfAbsent(variable());
     }
   }
@@ -545,7 +546,7 @@ public final class Parser {
   private ExpressionNode assignments(final MethodGenerationContext mgenc) throws ParseError {
     SourceCoordinate coord = getCoordinate();
 
-    if (sym != Identifier) {
+    if (!isIdentifier(sym)) {
       throw new ParseError("Assignments should always target variables or" +
                            " fields, but found instead a %(found)s",
                            Identifier, this);
@@ -574,7 +575,7 @@ public final class Parser {
 
   private ExpressionNode evaluation(final MethodGenerationContext mgenc) throws ParseError {
     ExpressionNode exp = primary(mgenc);
-    if (sym == Identifier || sym == Keyword || sym == OperatorSequence
+    if (isIdentifier(sym) || sym == Keyword || sym == OperatorSequence
         || symIn(binaryOpSyms)) {
       exp = messages(mgenc, exp);
     }
@@ -583,7 +584,8 @@ public final class Parser {
 
   private ExpressionNode primary(final MethodGenerationContext mgenc) throws ParseError {
     switch (sym) {
-      case Identifier: {
+      case Identifier:
+      case Primitive: {
         SourceCoordinate coord = getCoordinate();
         String v = variable();
         ExpressionNode varRead = variableRead(mgenc, v);
@@ -627,10 +629,10 @@ public final class Parser {
   private AbstractMessageSendNode messages(final MethodGenerationContext mgenc,
       final ExpressionNode receiver) throws ParseError {
     AbstractMessageSendNode msg;
-    if (sym == Identifier) {
+    if (isIdentifier(sym)) {
       msg = unaryMessage(receiver);
 
-      while (sym == Identifier) {
+      while (isIdentifier(sym)) {
         msg = unaryMessage(msg);
       }
 
@@ -684,7 +686,7 @@ public final class Parser {
     // a binary operand can receive unaryMessages
     // Example: 2 * 3 asString
     //   is evaluated as 2 * (3 asString)
-    while (sym == Identifier) {
+    while (isIdentifier(sym)) {
       operand = unaryMessage(operand);
     }
     return operand;
@@ -939,6 +941,10 @@ public final class Parser {
 
   private void peekForNextSymbolFromLexer() {
     nextSym = lexer.peek();
+  }
+
+  private static boolean isIdentifier(final Symbol sym) {
+    return sym == Identifier || sym == Primitive;
   }
 
   private static boolean printableSymbol(final Symbol sym) {
