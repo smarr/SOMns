@@ -38,15 +38,11 @@ Array = (
     "Iterating"
     do: block            = ( self doIndexes: [ :i |
                                 block value: (self at: i) ] )
-    doIndexes: block     = ( | i | i := 1. [ i <= (self length) ] whileTrue:
-                                [ block value: i. i := i + 1 ] )
-                                
+    doIndexes: block     = ( 1 to: self length do: [:i |
+                                block value: i. ] )
+    
     from: start to: end do: block = ( | i |
-        i := start.
-        [ i <= end ] whileTrue: [
-            block value: (self at: i).
-            i := i + 1 ]
-    )
+        start to: end do: [:i | block value: (self at: i) ] )
     
     "Copying (inclusively)"
     copyFrom: start to: end = ( | result i |
