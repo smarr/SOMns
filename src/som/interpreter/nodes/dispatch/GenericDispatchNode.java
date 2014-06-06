@@ -18,7 +18,7 @@ public final class GenericDispatchNode extends AbstractDispatchWithLookupNode {
       final VirtualFrame frame, final Object[] arguments) {
     SInvokable method = lookupMethod(arguments[0]);
     if (method != null) {
-      return method.getCallTarget().call(arguments);
+      return method.invoke(arguments);
     } else {
       // TODO: perhaps, I should mark this branch with a branch profile as
       //       being unlikely
