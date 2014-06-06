@@ -28,8 +28,6 @@ BubbleSort = Sort (
     sort: array = (
         | top |
         
-        "array length - 1 downTo: 0 do: [ :i |
-            0 to: i - 1 do: [ :j |"
         array length downTo: 1 do: [ :i |
             1 to: i - 1 do: [ :j |
                 | current next |
