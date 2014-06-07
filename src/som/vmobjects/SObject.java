@@ -50,6 +50,8 @@ public class SObject extends SAbstractObject {
   public static final int NUM_PRIMITIVE_FIELDS = 5;
   public static final int NUM_OBJECT_FIELDS    = 5;
 
+  private SObject domain;
+
   @SuppressWarnings("unused")  private long   primField1;
   @SuppressWarnings("unused")  private long   primField2;
   @SuppressWarnings("unused")  private long   primField3;
@@ -82,6 +84,14 @@ public class SObject extends SAbstractObject {
   protected SObject(final int numFields, final SObject nilObject) {
     numberOfFields = numFields;
     setLayoutInitially(new ObjectLayout(numFields, null), nilObject);
+  }
+
+  public SObject getDomain() {
+    return domain;
+  }
+
+  public void setDomain(final SObject domain) {
+    this.domain = domain;
   }
 
   private void setLayoutInitially(final ObjectLayout layout, final SObject nilObject) {
