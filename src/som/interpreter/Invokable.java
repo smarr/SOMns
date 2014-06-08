@@ -9,28 +9,50 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.NodeUtil;
 import com.oracle.truffle.api.nodes.RootNode;
+import com.oracle.truffle.api.utilities.BranchProfile;
 
 public abstract class Invokable extends RootNode {
 
-  @Child protected ExpressionNode  expressionOrSequence;
+  private final BranchProfile enforced;
+  private final BranchProfile unenforced;
 
-  private final ExpressionNode  uninitializedBody;
+  @Child protected ExpressionNode enforcedBody;
+  @Child protected ExpressionNode unenforcedBody;
+
+  private final ExpressionNode uninitializedEnforcedBody;
+  private final ExpressionNode uninitializedUnenforcedBody;
 
   public Invokable(final SourceSection sourceSection,
       final FrameDescriptor frameDescriptor,
-      final ExpressionNode expressionOrSequence) {
+      final ExpressionNode enforcedBody, final ExpressionNode unenforcedBody) {
     super(sourceSection, frameDescriptor);
-    this.uninitializedBody    = NodeUtil.cloneNode(expressionOrSequence);
-    this.expressionOrSequence = expressionOrSequence;
+    this.uninitializedEnforcedBody = NodeUtil.cloneNode(enforcedBody);
+    this.enforcedBody = enforcedBody;
+
+    this.uninitializedUnenforcedBody = NodeUtil.cloneNode(unenforcedBody);
+    this.unenforcedBody = unenforcedBody;
+
+    enforced = new BranchProfile();
+    unenforced = new BranchProfile();
   }
 
-  public ExpressionNode getUninitializedBody() {
-    return uninitializedBody;
+  public ExpressionNode getUninitializedEnforcedBody() {
+    return uninitializedEnforcedBody;
+  }
+
+  public ExpressionNode getUninitializedUnenforcedBody() {
+    return uninitializedUnenforcedBody;
   }
 
   @Override
   public final Object execute(final VirtualFrame frame) {
-    return expressionOrSequence.executeGeneric(frame);
+    if (SArguments.enforced(frame)) {
+      enforced.enter();
+      return enforcedBody.executeGeneric(frame);
+    } else {
+      unenforced.enter();
+      return unenforcedBody.executeGeneric(frame);
+    }
   }
 
   public abstract Invokable cloneWithNewLexicalContext(final LexicalContext outerContext);

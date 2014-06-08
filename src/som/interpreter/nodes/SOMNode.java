@@ -39,6 +39,10 @@ public abstract class SOMNode extends Node {
     this.executesEnforced = executesEnforced;
   }
 
+  public boolean executesEnforced() {
+    return executesEnforced;
+  }
+
   public void replaceWithIndependentCopyForInlining(final Inliner inliner) {
     // do nothing!
     // only a small subset of nodes needs to implement this method.

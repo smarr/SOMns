@@ -36,10 +36,11 @@ public final class Method extends Invokable {
 
   public Method(final SourceSection sourceSection,
                 final FrameDescriptor frameDescriptor,
-                final ExpressionNode expressions,
+                final ExpressionNode enforcedBody,
+                final ExpressionNode unenforcedBody,
                 final Universe universe,
                 final LexicalContext outerContext) {
-    super(sourceSection, frameDescriptor, expressions);
+    super(sourceSection, frameDescriptor, enforcedBody, unenforcedBody);
     this.universe     = universe;
     this.outerContext = outerContext;
   }

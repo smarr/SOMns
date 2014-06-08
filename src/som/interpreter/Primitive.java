@@ -9,9 +9,10 @@ import com.oracle.truffle.api.nodes.RootNode;
 
 public final class Primitive extends Invokable {
 
-  public Primitive(final ExpressionNode primitive,
+  public Primitive(final ExpressionNode primitiveEnforced,
+      final ExpressionNode primitiveUnenforced,
       final FrameDescriptor frameDescriptor) {
-    super(null, frameDescriptor, primitive);
+    super(null, frameDescriptor, primitiveEnforced, primitiveUnenforced);
   }
 
   @Override
@@ -36,7 +37,7 @@ public final class Primitive extends Invokable {
 
   @Override
   public String toString() {
-    return "Primitive " + expressionOrSequence.getClass().getSimpleName() + "@" + Integer.toHexString(hashCode());
+    return "Primitive " + unenforcedBody.getClass().getSimpleName() + "@" + Integer.toHexString(hashCode());
   }
 
   @Override
