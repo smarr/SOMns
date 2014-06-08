@@ -22,6 +22,7 @@ import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
@@ -30,21 +31,21 @@ public abstract class UninitializedVariableNode extends ContextualNode {
   protected final Variable variable;
 
   public UninitializedVariableNode(final Variable variable,
-      final int contextLevel, final FrameSlot localSelf) {
-    super(contextLevel, localSelf);
+      final int contextLevel, final FrameSlot localSelf, final SourceSection source) {
+    super(contextLevel, localSelf, source);
     this.variable = variable;
   }
 
   public static final class UninitializedVariableReadNode extends UninitializedVariableNode {
     public UninitializedVariableReadNode(final Variable variable,
-        final int contextLevel, final FrameSlot localSelf) {
-      super(variable, contextLevel, localSelf);
+        final int contextLevel, final FrameSlot localSelf, final SourceSection source) {
+      super(variable, contextLevel, localSelf, source);
     }
 
     public UninitializedVariableReadNode(final UninitializedVariableReadNode node,
         final FrameSlot inlinedVarSlot, final FrameSlot inlinedLocalSelfSlot) {
       this(node.variable.cloneForInlining(inlinedVarSlot), node.contextLevel,
-          inlinedLocalSelfSlot);
+          inlinedLocalSelfSlot, node.getSourceSection());
     }
 
     @Override
@@ -53,10 +54,10 @@ public abstract class UninitializedVariableNode extends ContextualNode {
 
       if (contextLevel > 0) {
         NonLocalVariableReadNode node = NonLocalVariableReadNodeFactory.create(
-            contextLevel, variable.slot, localSelf);
+            contextLevel, variable.slot, localSelf, getSourceSection());
         return replace(node).executeGeneric(frame);
       } else {
-        LocalVariableReadNode node = LocalVariableReadNodeFactory.create(variable);
+        LocalVariableReadNode node = LocalVariableReadNodeFactory.create(variable, getSourceSection());
         return replace(node).executeGeneric(frame);
       }
     }
@@ -104,8 +105,9 @@ public abstract class UninitializedVariableNode extends ContextualNode {
 
     public UninitializedSuperReadNode(final Variable variable,
         final int contextLevel, final FrameSlot localSelf,
-        final SSymbol holderClass, final boolean classSide) {
-      super(variable, contextLevel, localSelf);
+        final SSymbol holderClass, final boolean classSide,
+        final SourceSection source) {
+      super(variable, contextLevel, localSelf, source);
       this.holderClass = holderClass;
       this.classSide   = classSide;
     }
@@ -113,7 +115,8 @@ public abstract class UninitializedVariableNode extends ContextualNode {
     public UninitializedSuperReadNode(final UninitializedSuperReadNode node,
         final FrameSlot inlinedVarSlot, final FrameSlot inlinedLocalSelfSlot) {
       this(node.variable.cloneForInlining(inlinedVarSlot), node.contextLevel,
-          inlinedLocalSelfSlot, node.holderClass, node.classSide);
+          inlinedLocalSelfSlot, node.holderClass, node.classSide,
+          node.getSourceSection());
     }
 
     private SClass getLexicalSuperClass() {
@@ -130,11 +133,11 @@ public abstract class UninitializedVariableNode extends ContextualNode {
 
       if (accessesOuterContext()) {
         NonLocalSuperReadNode node = NonLocalSuperReadNodeFactory.create(contextLevel,
-            variable.slot, localSelf, getLexicalSuperClass());
+            variable.slot, localSelf, getLexicalSuperClass(), getSourceSection());
         return replace(node).executeGeneric(frame);
       } else {
         LocalSuperReadNode node = LocalSuperReadNodeFactory.create(variable,
-            getLexicalSuperClass());
+            getLexicalSuperClass(), getSourceSection());
         return replace(node).executeGeneric(frame);
       }
     }
@@ -157,15 +160,16 @@ public abstract class UninitializedVariableNode extends ContextualNode {
 
     public UninitializedVariableWriteNode(final Local variable,
         final int contextLevel, final FrameSlot localSelf,
-        final ExpressionNode exp) {
-      super(variable, contextLevel, localSelf);
+        final ExpressionNode exp, final SourceSection source) {
+      super(variable, contextLevel, localSelf, source);
       this.exp = exp;
     }
 
     public UninitializedVariableWriteNode(final UninitializedVariableWriteNode node,
         final FrameSlot inlinedVarSlot, final FrameSlot inlinedLocalSelfSlot) {
       this((Local) node.variable.cloneForInlining(inlinedVarSlot),
-          node.contextLevel, inlinedLocalSelfSlot, node.exp);
+          node.contextLevel, inlinedLocalSelfSlot, node.exp,
+          node.getSourceSection());
     }
 
     @Override
@@ -174,10 +178,11 @@ public abstract class UninitializedVariableNode extends ContextualNode {
 
       if (accessesOuterContext()) {
         NonLocalVariableWriteNode node = NonLocalVariableWriteNodeFactory.create(
-            contextLevel, variable.slot, localSelf, exp);
+            contextLevel, variable.slot, localSelf, getSourceSection(), exp);
         return replace(node).executeGeneric(frame);
       } else {
-        LocalVariableWriteNode node = LocalVariableWriteNodeFactory.create((Local) variable, exp);
+        LocalVariableWriteNode node = LocalVariableWriteNodeFactory.create(
+            (Local) variable, getSourceSection(), exp);
         return replace(node).executeGeneric(frame);
       }
     }
@@ -188,10 +193,11 @@ public abstract class UninitializedVariableNode extends ContextualNode {
 
       if (accessesOuterContext()) {
         NonLocalVariableWriteNode node = NonLocalVariableWriteNodeFactory.create(
-            contextLevel, variable.slot, localSelf, exp);
+            contextLevel, variable.slot, localSelf, getSourceSection(), exp);
         replace(node).executeVoid(frame);
       } else {
-        LocalVariableWriteNode node = LocalVariableWriteNodeFactory.create((Local) variable, exp);
+        LocalVariableWriteNode node = LocalVariableWriteNodeFactory.create(
+            (Local) variable, getSourceSection(), exp);
         replace(node).executeVoid(frame);
       }
     }

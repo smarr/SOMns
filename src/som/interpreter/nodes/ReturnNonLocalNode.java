@@ -28,6 +28,7 @@ import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
 
+import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.FrameUtil;
@@ -48,8 +49,8 @@ public final class ReturnNonLocalNode extends ContextualNode {
       final FrameSlot outerSelfSlot,
       final int outerSelfContextLevel,
       final Universe universe,
-      final FrameSlot localSelf) {
-    super(outerSelfContextLevel, localSelf);
+      final FrameSlot localSelf, final SourceSection source) {
+    super(outerSelfContextLevel, localSelf, source);
     this.expression = expression;
     this.universe   = universe;
     this.blockEscaped = new BranchProfile();
@@ -60,7 +61,7 @@ public final class ReturnNonLocalNode extends ContextualNode {
   public ReturnNonLocalNode(final ReturnNonLocalNode node, final FrameSlot inlinedFrameOnStack,
       final FrameSlot inlinedOuterSelfSlot, final FrameSlot inlinedLocalSelfSlot) {
     this(node.expression, inlinedFrameOnStack, inlinedOuterSelfSlot,
-        node.contextLevel, node.universe, inlinedLocalSelfSlot);
+        node.contextLevel, node.universe, inlinedLocalSelfSlot, node.getSourceSection());
   }
 
   private FrameOnStackMarker getMarkerFromContext(final MaterializedFrame ctx) {
@@ -109,6 +110,7 @@ public final class ReturnNonLocalNode extends ContextualNode {
 
     public CatchNonLocalReturnNode(final ExpressionNode methodBody,
         final FrameSlot frameOnStackMarker) {
+      super(null);
       this.methodBody = methodBody;
       this.nonLocalReturnHandler = new BranchProfile();
       this.frameOnStackMarker    = frameOnStackMarker;

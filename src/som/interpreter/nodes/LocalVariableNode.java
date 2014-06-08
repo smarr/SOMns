@@ -1,15 +1,16 @@
 package som.interpreter.nodes;
 
+import static som.interpreter.SNodeFactory.createLocalVariableWrite;
 import static som.interpreter.TruffleCompiler.transferToInterpreter;
 import som.compiler.Variable;
 import som.compiler.Variable.Local;
 import som.interpreter.Inliner;
-import som.interpreter.nodes.LocalVariableNodeFactory.LocalVariableWriteNodeFactory;
 import som.vm.Universe;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameSlot;
@@ -21,7 +22,8 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 public abstract class LocalVariableNode extends ExpressionNode {
   protected final FrameSlot slot;
 
-  private LocalVariableNode(final FrameSlot slot) {
+  private LocalVariableNode(final FrameSlot slot, final SourceSection source) {
+    super(source);
     this.slot = slot;
   }
 
@@ -30,16 +32,18 @@ public abstract class LocalVariableNode extends ExpressionNode {
   }
 
   public abstract static class LocalVariableReadNode extends LocalVariableNode {
-    public LocalVariableReadNode(final Variable variable) {
-      super(variable.slot);
+    public LocalVariableReadNode(final Variable variable,
+        final SourceSection source) {
+      super(variable.slot, source);
     }
 
     public LocalVariableReadNode(final LocalVariableReadNode node) {
-      super(node.slot);
+      super(node.slot, node.getSourceSection());
     }
 
-    public LocalVariableReadNode(final FrameSlot slot) {
-      super(slot);
+    public LocalVariableReadNode(final FrameSlot slot,
+        final SourceSection source) {
+      super(slot, source);
     }
 
     @Specialization(guards = "isUninitialized")
@@ -90,17 +94,19 @@ public abstract class LocalVariableNode extends ExpressionNode {
                        extends LocalVariableReadNode implements ISuperReadNode {
     private final SClass superClass;
 
-    public LocalSuperReadNode(final Variable variable, final SClass superClass) {
-      this(variable.slot, superClass);
+    public LocalSuperReadNode(final Variable variable, final SClass superClass,
+        final SourceSection source) {
+      this(variable.slot, superClass, source);
     }
 
-    public LocalSuperReadNode(final FrameSlot slot, final SClass superClass) {
-      super(slot);
+    public LocalSuperReadNode(final FrameSlot slot, final SClass superClass,
+        final SourceSection source) {
+      super(slot, source);
       this.superClass = superClass;
     }
 
     public LocalSuperReadNode(final LocalSuperReadNode node) {
-      this(node.slot, node.superClass);
+      this(node.slot, node.superClass, node.getSourceSection());
     }
 
     @Override
@@ -112,16 +118,16 @@ public abstract class LocalVariableNode extends ExpressionNode {
   @NodeChild(value = "exp", type = ExpressionNode.class)
   public abstract static class LocalVariableWriteNode extends LocalVariableNode {
 
-    public LocalVariableWriteNode(final Local variable) {
-      super(variable.slot);
+    public LocalVariableWriteNode(final Local variable, final SourceSection source) {
+      super(variable.slot, source);
     }
 
     public LocalVariableWriteNode(final LocalVariableWriteNode node) {
-      super(node.slot);
+      super(node.slot, node.getSourceSection());
     }
 
-    public LocalVariableWriteNode(final FrameSlot slot) {
-      super(slot);
+    public LocalVariableWriteNode(final FrameSlot slot, final SourceSection source) {
+      super(slot, source);
     }
 
     public abstract ExpressionNode getExp();
@@ -201,7 +207,7 @@ public abstract class LocalVariableNode extends ExpressionNode {
       if (getParent() instanceof ArgumentInitializationNode) {
         FrameSlot varSlot = inliner.getLocalFrameSlot(getSlotIdentifier());
         assert varSlot != null;
-        replace(LocalVariableWriteNodeFactory.create(varSlot, getExp()));
+        replace(createLocalVariableWrite(varSlot, getExp(), getSourceSection()));
       } else {
         throw new RuntimeException("Should not be part of an uninitalized tree. And this should only be done with uninitialized trees.");
       }

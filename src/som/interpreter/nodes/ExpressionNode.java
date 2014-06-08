@@ -41,9 +41,6 @@ public abstract class ExpressionNode extends SOMNode {
     super(sourceSection);
   }
 
-  // TODO: clean up and remove this one
-  public ExpressionNode() { this(null); }
-
   public abstract Object executeGeneric(final VirtualFrame frame);
   public abstract void   executeVoid(final VirtualFrame frame);
 

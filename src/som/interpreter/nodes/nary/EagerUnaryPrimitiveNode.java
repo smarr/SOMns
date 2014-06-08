@@ -19,6 +19,7 @@ public class EagerUnaryPrimitiveNode extends UnaryExpressionNode {
 
   public EagerUnaryPrimitiveNode(final SSymbol selector,
       final ExpressionNode receiver, final UnaryExpressionNode primitive) {
+    super(null);
     this.receiver  = receiver;
     this.primitive = primitive;
 
@@ -63,7 +64,7 @@ public class EagerUnaryPrimitiveNode extends UnaryExpressionNode {
 
   private GenericMessageSendNode makeGenericSend() {
     GenericMessageSendNode node = GenericMessageSendNode.create(selector,
-        new ExpressionNode[] {receiver});
+        new ExpressionNode[] {receiver}, getSourceSection());
     return replace(node);
   }
 }

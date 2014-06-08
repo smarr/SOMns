@@ -4,6 +4,7 @@ import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 
+import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -14,13 +15,15 @@ public abstract class OrMessageNode extends BinaryExpressionNode {
   private final SInvokable blockMethod;
   @Child private DirectCallNode blockValueSend;
 
-  public OrMessageNode(final SBlock arg) {
+  public OrMessageNode(final SBlock arg, final SourceSection source) {
+    super(source);
     blockMethod = arg.getMethod();
     blockValueSend = Truffle.getRuntime().createDirectCallNode(
         blockMethod.getCallTarget());
   }
 
   public OrMessageNode(final OrMessageNode copy) {
+    super(copy.getSourceSection());
     blockMethod = copy.blockMethod;
     blockValueSend = copy.blockValueSend;
   }
@@ -40,6 +43,7 @@ public abstract class OrMessageNode extends BinaryExpressionNode {
   }
 
   public abstract static class OrBoolMessageNode extends BinaryExpressionNode {
+    public OrBoolMessageNode(final SourceSection source) { super(source); }
     @Specialization
     public final boolean doOr(final VirtualFrame frame, final boolean receiver,
         final boolean argument) {

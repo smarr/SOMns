@@ -9,6 +9,7 @@ public final class ArgumentReadNode extends ExpressionNode
   protected final int argumentIndex;
 
   public ArgumentReadNode(final int argumentIndex) {
+    super(null);
     assert argumentIndex >= 0;
     this.argumentIndex = argumentIndex;
   }

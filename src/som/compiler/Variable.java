@@ -9,6 +9,7 @@ import som.interpreter.nodes.ExpressionNode;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.frame.FrameSlot;
 
 public abstract class Variable {
@@ -49,23 +50,23 @@ public abstract class Variable {
   }
 
   public final ContextualNode getReadNode(final int contextLevel,
-      final FrameSlot localSelf) {
+      final FrameSlot localSelf, final SourceSection source) {
     transferToInterpreterAndInvalidate("Variable.getReadNode");
     isRead = true;
     if (contextLevel > 0) {
       isReadOutOfContext = true;
     }
-    return createVariableRead(this, contextLevel, localSelf);
+    return createVariableRead(this, contextLevel, localSelf, source);
   }
 
   public final ContextualNode getSuperReadNode(final int contextLevel,
       final SSymbol holderClass, final boolean classSide,
-      final FrameSlot localSelf) {
+      final FrameSlot localSelf, final SourceSection source) {
     isRead = true;
     if (contextLevel > 0) {
       isReadOutOfContext = true;
     }
-    return createSuperRead(this, contextLevel, localSelf, holderClass, classSide);
+    return createSuperRead(this, contextLevel, localSelf, holderClass, classSide, source);
   }
 
   public static final class Argument extends Variable {
@@ -121,13 +122,13 @@ public abstract class Variable {
 
     public ExpressionNode getWriteNode(final int contextLevel,
         final FrameSlot localSelf,
-        final ExpressionNode valueExpr) {
+        final ExpressionNode valueExpr, final SourceSection source) {
       transferToInterpreterAndInvalidate("Variable.getWriteNode");
       isWritten = true;
       if (contextLevel > 0) {
         isWrittenOutOfContext = true;
       }
-      return createVariableWrite(this, contextLevel, localSelf, valueExpr);
+      return createVariableWrite(this, contextLevel, localSelf, valueExpr, source);
     }
   }
 }

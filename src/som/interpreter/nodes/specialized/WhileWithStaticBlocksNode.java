@@ -10,6 +10,7 @@ import som.vmobjects.SObject;
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
@@ -28,7 +29,8 @@ public abstract class WhileWithStaticBlocksNode extends BinaryExpressionNode {
 
   private WhileWithStaticBlocksNode(final BlockNode receiver,
       final BlockNode argument, final SBlock rcvr, final SBlock arg,
-      final boolean predicateBool, final Universe universe) {
+      final boolean predicateBool, final Universe universe, final SourceSection source) {
+    super(source);
     this.receiver = receiver;
     this.argument = argument;
 
@@ -112,16 +114,16 @@ public abstract class WhileWithStaticBlocksNode extends BinaryExpressionNode {
   public static final class WhileTrueStaticBlocksNode extends WhileWithStaticBlocksNode {
     public WhileTrueStaticBlocksNode(final BlockNode receiver,
         final BlockNode argument, final SBlock rcvr, final SBlock arg,
-        final Universe universe) {
-      super(receiver, argument, rcvr, arg, true, universe);
+        final Universe universe, final SourceSection source) {
+      super(receiver, argument, rcvr, arg, true, universe, source);
     }
   }
 
   public static final class WhileFalseStaticBlocksNode extends WhileWithStaticBlocksNode {
     public WhileFalseStaticBlocksNode(final BlockNode receiver,
         final BlockNode argument, final SBlock rcvr, final SBlock arg,
-        final Universe universe) {
-      super(receiver, argument, rcvr, arg, false, universe);
+        final Universe universe, final SourceSection source) {
+      super(receiver, argument, rcvr, arg, false, universe, source);
     }
   }
 }
