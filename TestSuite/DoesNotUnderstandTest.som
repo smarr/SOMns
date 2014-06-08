@@ -1,0 +1,59 @@
+DoesNotUnderstandTest = (
+
+    testSimpleUnknownFoo: harness = (
+        | result |
+        result := self foo.
+        result class = DoesNotUnderstandMessage ifFalse: [ harness fail: self because:
+            '#dnu was customized and should result in message object' ].
+        result target = self ifFalse: [ harness fail: self because:
+            '#dnu target has to be self in this case' ].
+        result selector = #foo ifFalse: [ harness fail: self because:
+            'The unknown selector should have been #foo' ].
+    )
+    
+    testArguments: harness = (
+        | result |
+        result := self foo.
+        ((result arguments class = Array) and: [result arguments length = 0])
+            ifFalse: [ harness fail: self because:
+                'Zero argument methods should have an empty arguments array in #dnu' ].
+        
+        
+        result := self foo: 1.
+        ((result arguments length = 1) and: [(1 = (result arguments at: 1))])
+            ifFalse: [ harness fail: self because:
+                '#dnu didnt result in correct arguments array for 1 arg.'].
+        
+        result := self foo: 1 bar: 2 baz: 3.
+        ((result arguments length = 3) and: [
+            (1 = (result arguments at: 1)) and: [
+            (2 = (result arguments at: 2)) and: [
+            (3 = (result arguments at: 3))    ]]])
+            ifFalse: [ harness fail: self because:
+                '#dnu didnt result in correct arguments array for 3 args.'].
+    )
+    
+    testRepeat: harness = (
+        | result |
+        result := Array new: 5.
+        1 to: result length do: [:i |
+            result at: i put: self foo.
+            
+            i > 1 ifTrue: [
+                (result at: i - 1) ~= (result at: i) ifFalse: [ harness fail: self because:
+                    '#dnu messages do not seem to be distinct for each invocation'.
+                ].
+            ]
+        ].
+    )
+
+    run: harness = (
+        self testSimpleUnknownFoo: harness.
+        self testArguments: harness.
+        self testRepeat: harness.
+    )
+    
+    doesNotUnderstand: selector arguments: arguments = (
+        ^ DoesNotUnderstandMessage to: self selector: selector arguments: arguments.
+    )
+)
