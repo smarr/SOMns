@@ -29,6 +29,7 @@ import som.interpreter.objectstorage.FieldAccessorNode.UninitializedWriteFieldNo
 import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.NodeChildren;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -37,7 +38,9 @@ import com.oracle.truffle.api.nodes.UnexpectedResultException;
 
 public abstract class FieldNode extends ExpressionNode {
 
-  protected FieldNode() { }
+  protected FieldNode(final SourceSection source) {
+    super(source);
+  }
 
   protected abstract ExpressionNode getSelf();
 
@@ -55,14 +58,15 @@ public abstract class FieldNode extends ExpressionNode {
     @Child private ExpressionNode self;
     @Child private AbstractReadFieldNode read;
 
-    public FieldReadNode(final ExpressionNode self, final int fieldIndex) {
-      super();
+    public FieldReadNode(final ExpressionNode self, final int fieldIndex,
+        final SourceSection source) {
+      super(source);
       this.self = self;
       read = new UninitializedReadFieldNode(fieldIndex);
     }
 
     public FieldReadNode(final FieldReadNode node) {
-      this(node.self, node.read.getFieldIndex());
+      this(node.self, node.read.getFieldIndex(), node.getSourceSection());
     }
 
     @Override
@@ -115,16 +119,17 @@ public abstract class FieldNode extends ExpressionNode {
       implements PreevaluatedExpression {
     @Child private AbstractWriteFieldNode write;
 
-    public FieldWriteNode(final int fieldIndex) {
-      super();
+    public FieldWriteNode(final int fieldIndex, final SourceSection source) {
+      super(source);
       write = new UninitializedWriteFieldNode(fieldIndex);
     }
 
     public FieldWriteNode(final FieldWriteNode node) {
-      this(node.write.getFieldIndex());
+      this(node.write.getFieldIndex(), node.getSourceSection());
     }
 
-    public final Object executeEvaluated(final VirtualFrame frame, final SObject self, final Object value) {
+    public final Object executeEvaluated(final VirtualFrame frame,
+        final SObject self, final Object value) {
       return write.write(self, value);
     }
 

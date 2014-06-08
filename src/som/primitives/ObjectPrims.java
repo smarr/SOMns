@@ -20,7 +20,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 public final class ObjectPrims {
   public abstract static class PerformPrim extends BinaryExpressionNode {
     private final Universe universe;
-    public PerformPrim() { this.universe = Universe.current(); }
+    public PerformPrim() { super(null); this.universe = Universe.current(); }
 
     @Specialization
     public final Object doObject(final VirtualFrame frame, final Object receiver, final SSymbol selector) {
@@ -79,6 +79,7 @@ public final class ObjectPrims {
   }
 
   public abstract static class HaltPrim extends UnaryExpressionNode {
+    public HaltPrim() { super(null); }
     @Specialization
     public final SAbstractObject doSAbstractObject(final SAbstractObject receiver) {
       Universe.errorPrintln("BREAKPOINT");

@@ -3,12 +3,17 @@ package som.interpreter.nodes.nary;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.PreevaluatedExpression;
 
+import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 @NodeChild(value = "receiver", type = ExpressionNode.class)
 public abstract class UnaryExpressionNode extends ExpressionNode
     implements PreevaluatedExpression {
+
+  public UnaryExpressionNode(final SourceSection source) {
+    super(source);
+  }
 
   public abstract Object executeEvaluated(final VirtualFrame frame,
       final Object receiver);
@@ -23,7 +28,11 @@ public abstract class UnaryExpressionNode extends ExpressionNode
   }
 
   public abstract static class UnarySideEffectFreeExpressionNode
-    extends UnaryExpressionNode {
+      extends UnaryExpressionNode {
+
+    public UnarySideEffectFreeExpressionNode() {
+      super(null);
+    }
 
     @Override
     public final void executeVoid(final VirtualFrame frame) {

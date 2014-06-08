@@ -16,7 +16,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 public final class SystemPrims {
   private abstract static class BinarySystemNode extends BinaryExpressionNode {
     protected final Universe universe;
-    protected BinarySystemNode() { this.universe = Universe.current(); }
+    protected BinarySystemNode() { super(null); this.universe = Universe.current(); }
 
     protected final boolean receiverIsSystemObject(final SAbstractObject receiver) {
       return receiver == universe.systemObject;
@@ -25,7 +25,7 @@ public final class SystemPrims {
 
   private abstract static class UnarySystemNode extends UnaryExpressionNode {
     protected final Universe universe;
-    protected UnarySystemNode() { this.universe = Universe.current(); }
+    protected UnarySystemNode() { super(null); this.universe = Universe.current(); }
 
     protected final boolean receiverIsSystemObject(final SAbstractObject receiver) {
       return receiver == universe.systemObject;

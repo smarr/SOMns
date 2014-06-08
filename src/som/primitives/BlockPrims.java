@@ -22,6 +22,7 @@ public abstract class BlockPrims {
   }
 
   public abstract static class RestartPrim extends UnaryExpressionNode {
+    public RestartPrim() { super(null); }
 
     @Specialization
     public SAbstractObject doSBlock(final SBlock receiver) {
@@ -38,7 +39,7 @@ public abstract class BlockPrims {
     @Child private AbstractDispatchNode dispatchNode;
 
     public ValueNonePrim() {
-      super();
+      super(null);
       dispatchNode = new UninitializedValuePrimDispatchNode();
     }
 
@@ -72,7 +73,7 @@ public abstract class BlockPrims {
     @Child private AbstractDispatchNode dispatchNode;
 
     public ValueOnePrim() {
-      super();
+      super(null);
       dispatchNode = new UninitializedValuePrimDispatchNode();
     }
 
@@ -107,7 +108,7 @@ public abstract class BlockPrims {
     @Child private AbstractDispatchNode dispatchNode;
 
     public ValueTwoPrim() {
-      super();
+      super(null);
       dispatchNode = new UninitializedValuePrimDispatchNode();
     }
 
@@ -138,6 +139,7 @@ public abstract class BlockPrims {
   }
 
   public abstract static class ValueMorePrim extends QuaternaryExpressionNode {
+    public ValueMorePrim() { super(null); }
     @Specialization
     public final Object doSBlock(final VirtualFrame frame,
         final SBlock receiver, final Object firstArg, final Object secondArg,

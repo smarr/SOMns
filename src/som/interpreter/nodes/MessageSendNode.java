@@ -45,6 +45,7 @@ import som.vmobjects.SBlock;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives.SlowPath;
+import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.NodeCost;
@@ -54,8 +55,8 @@ import com.oracle.truffle.api.nodes.NodeInfo;
 public final class MessageSendNode {
 
   public static AbstractMessageSendNode create(final SSymbol selector,
-      final ExpressionNode[] arguments) {
-    return new UninitializedMessageSendNode(selector, arguments);
+      final ExpressionNode[] arguments, final SourceSection source) {
+    return new UninitializedMessageSendNode(selector, arguments, source);
   }
 
   @NodeInfo(shortName = "send")
@@ -64,7 +65,9 @@ public final class MessageSendNode {
 
     @Children protected final ExpressionNode[] argumentNodes;
 
-    protected AbstractMessageSendNode(final ExpressionNode[] arguments) {
+    protected AbstractMessageSendNode(final ExpressionNode[] arguments,
+        final SourceSection source) {
+      super(source);
       this.argumentNodes = arguments;
     }
 
@@ -96,8 +99,8 @@ public final class MessageSendNode {
     private final SSymbol selector;
 
     protected UninitializedMessageSendNode(final SSymbol selector,
-        final ExpressionNode[] arguments) {
-      super(arguments);
+        final ExpressionNode[] arguments, final SourceSection source) {
+      super(arguments, source);
       this.selector = selector;
     }
 
@@ -115,7 +118,7 @@ public final class MessageSendNode {
       if (argumentNodes[0] instanceof ISuperReadNode) {
         GenericMessageSendNode node = new GenericMessageSendNode(selector,
             argumentNodes, SuperDispatchNode.create(selector,
-                (ISuperReadNode) argumentNodes[0]));
+                (ISuperReadNode) argumentNodes[0]), getSourceSection());
         return replace(node);
       }
 
@@ -143,7 +146,8 @@ public final class MessageSendNode {
     private GenericMessageSendNode makeGenericSend() {
       GenericMessageSendNode send = new GenericMessageSendNode(selector,
           argumentNodes,
-          new UninitializedDispatchNode(selector, Universe.current()));
+          new UninitializedDispatchNode(selector, Universe.current()),
+          getSourceSection());
       return replace(send);
     }
 
@@ -154,21 +158,19 @@ public final class MessageSendNode {
         case "value":
           if (receiver instanceof SBlock) {
             return replace(new EagerUnaryPrimitiveNode(selector,
-                argumentNodes[0],
-                ValueNonePrimFactory.create(null)));
+                argumentNodes[0], ValueNonePrimFactory.create(null)));
           }
           break;
         case "length":
           if (receiver instanceof Object[]) {
             return replace(new EagerUnaryPrimitiveNode(selector,
-                argumentNodes[0],
-                LengthPrimFactory.create(null)));
+                argumentNodes[0], LengthPrimFactory.create(null)));
           }
           break;
         case "not":
           if (receiver instanceof Boolean) {
             return replace(new EagerUnaryPrimitiveNode(selector,
-                argumentNodes[0], NotMessageNodeFactory.create(null)));
+                argumentNodes[0], NotMessageNodeFactory.create(getSourceSection(), null)));
           }
           break;
       }
@@ -185,7 +187,7 @@ public final class MessageSendNode {
             return replace(new WhileTrueStaticBlocksNode(
                 (BlockNode) argumentNodes[0], argBlockNode,
                 (SBlock) arguments[0],
-                argBlock, Universe.current()));
+                argBlock, Universe.current(), getSourceSection()));
           }
           break; // use normal send
         }
@@ -196,17 +198,19 @@ public final class MessageSendNode {
             SBlock    argBlock     = (SBlock)    arguments[1];
             return replace(new WhileFalseStaticBlocksNode(
                 (BlockNode) argumentNodes[0], argBlockNode,
-                (SBlock) arguments[0], argBlock, Universe.current()));
+                (SBlock) arguments[0], argBlock, Universe.current(), getSourceSection()));
           }
           break; // use normal send
         case "ifTrue:":
           return replace(IfTrueMessageNodeFactory.create(arguments[0],
               arguments[1],
-              Universe.current(), argumentNodes[0], argumentNodes[1]));
+              Universe.current(), getSourceSection(),
+              argumentNodes[0], argumentNodes[1]));
         case "ifFalse:":
           return replace(IfFalseMessageNodeFactory.create(arguments[0],
               arguments[1],
-              Universe.current(), argumentNodes[0], argumentNodes[1]));
+              Universe.current(), getSourceSection(),
+              argumentNodes[0], argumentNodes[1]));
 
         // TODO: find a better way for primitives, use annotation or something
         case "<":
@@ -295,9 +299,10 @@ public final class MessageSendNode {
           if (arguments[0] instanceof Boolean) {
             if (argumentNodes[1] instanceof BlockNode) {
               return replace(AndMessageNodeFactory.create((SBlock) arguments[1],
-                  argumentNodes[0], argumentNodes[1]));
+                  getSourceSection(), argumentNodes[0], argumentNodes[1]));
             } else if (arguments[1] instanceof Boolean) {
-              return replace(AndBoolMessageNodeFactory.create(argumentNodes[0], argumentNodes[1]));
+              return replace(AndBoolMessageNodeFactory.create(getSourceSection(),
+                  argumentNodes[0], argumentNodes[1]));
             }
           }
           break;
@@ -306,9 +311,11 @@ public final class MessageSendNode {
           if (arguments[0] instanceof Boolean) {
             if (argumentNodes[1] instanceof BlockNode) {
               return replace(OrMessageNodeFactory.create((SBlock) arguments[1],
+                  getSourceSection(),
                   argumentNodes[0], argumentNodes[1]));
             } else if (arguments[1] instanceof Boolean) {
               return replace(OrBoolMessageNodeFactory.create(
+                  getSourceSection(),
                   argumentNodes[0], argumentNodes[1]));
             }
           }
@@ -356,17 +363,17 @@ public final class MessageSendNode {
     private final SSymbol selector;
 
     public static GenericMessageSendNode create(final SSymbol selector,
-        final ExpressionNode[] argumentNodes) {
+        final ExpressionNode[] argumentNodes, final SourceSection source) {
       return new GenericMessageSendNode(selector, argumentNodes,
-          new UninitializedDispatchNode(selector, Universe.current()));
+          new UninitializedDispatchNode(selector, Universe.current()), source);
     }
 
     @Child private AbstractDispatchNode dispatchNode;
 
     private GenericMessageSendNode(final SSymbol selector,
         final ExpressionNode[] arguments,
-        final AbstractDispatchNode dispatchNode) {
-      super(arguments);
+        final AbstractDispatchNode dispatchNode, final SourceSection source) {
+      super(arguments, source);
       this.selector = selector;
       this.dispatchNode = dispatchNode;
     }

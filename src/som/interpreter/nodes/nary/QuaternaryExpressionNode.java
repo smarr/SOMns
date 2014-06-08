@@ -19,8 +19,6 @@ public abstract class QuaternaryExpressionNode extends ExpressionNode {
     super(sourceSection);
   }
 
-  public QuaternaryExpressionNode() { this(null); }
-
   public abstract Object executeEvaluated(final VirtualFrame frame,
       final Object receiver, final Object firstArg, final Object secondArg,
       final Object thirdArg);
@@ -30,7 +28,11 @@ public abstract class QuaternaryExpressionNode extends ExpressionNode {
       final Object thirdArg);
 
   public abstract static class QuaternarySideEffectFreeExpressionNode
-    extends QuaternaryExpressionNode {
+      extends QuaternaryExpressionNode {
+
+    public QuaternarySideEffectFreeExpressionNode() {
+      super(null);
+    }
 
     @Override
     public final void executeVoid(final VirtualFrame frame) {

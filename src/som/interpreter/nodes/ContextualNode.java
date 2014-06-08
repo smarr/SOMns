@@ -24,6 +24,7 @@ package som.interpreter.nodes;
 import som.vmobjects.SBlock;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameUtil;
 import com.oracle.truffle.api.frame.MaterializedFrame;
@@ -35,7 +36,9 @@ public abstract class ContextualNode extends ExpressionNode {
   protected final int            contextLevel;
   protected final FrameSlot      localSelf;
 
-  public ContextualNode(final int contextLevel, final FrameSlot localSelf) {
+  public ContextualNode(final int contextLevel, final FrameSlot localSelf,
+      final SourceSection source) {
+    super(source);
     this.contextLevel = contextLevel;
     this.localSelf    = localSelf;
   }

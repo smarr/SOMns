@@ -23,6 +23,7 @@ import som.interpreter.nodes.UninitializedVariableNode.UninitializedVariableWrit
 import som.vm.Universe;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.frame.FrameSlot;
 
 
@@ -35,7 +36,7 @@ public final class SNodeFactory {
 
     for (Argument arg : arguments.values()) {
       writes[arg.index] = LocalVariableWriteNodeFactory.create(
-          arg.slot, new ArgumentReadNode(arg.index));
+          arg.slot, null, new ArgumentReadNode(arg.index));
     }
     return new ArgumentInitializationNode(writes, methodBody);
   }
@@ -46,35 +47,44 @@ public final class SNodeFactory {
   }
 
   public static FieldReadNode createFieldRead(final ExpressionNode self,
-      final int fieldIndex) {
-    return new FieldReadNode(self, fieldIndex);
+      final int fieldIndex, final SourceSection source) {
+    return new FieldReadNode(self, fieldIndex, source);
   }
 
+  public static GlobalNode createGlobalRead(final String name,
+      final Universe universe, final SourceSection source) {
+    return createGlobalRead(universe.symbolFor(name), universe, source);
+  }
   public static GlobalNode createGlobalRead(final SSymbol name,
-      final Universe universe) {
-    return new UninitializedGlobalReadNode(name, universe);
+      final Universe universe, final SourceSection source) {
+    return new UninitializedGlobalReadNode(name, universe, source);
   }
 
   public static FieldWriteNode createFieldWrite(final ExpressionNode self,
-      final ExpressionNode exp, final int fieldIndex) {
-    return FieldWriteNodeFactory.create(fieldIndex, self, exp);
+      final ExpressionNode exp, final int fieldIndex, final SourceSection source) {
+    return FieldWriteNodeFactory.create(fieldIndex, source, self, exp);
   }
 
   public static ContextualNode createVariableRead(final Variable variable,
-      final int contextLevel, final FrameSlot localSelf) {
-    return new UninitializedVariableReadNode(variable, contextLevel, localSelf);
+      final int contextLevel, final FrameSlot localSelf, final SourceSection source) {
+    return new UninitializedVariableReadNode(variable, contextLevel, localSelf, source);
   }
 
   public static ContextualNode createSuperRead(final Variable variable,
         final int contextLevel, final FrameSlot localSelf,
-        final SSymbol holderClass, final boolean classSide) {
+        final SSymbol holderClass, final boolean classSide, final SourceSection source) {
     return new UninitializedSuperReadNode(variable, contextLevel, localSelf,
-        holderClass, classSide);
+        holderClass, classSide, source);
   }
 
   public static ContextualNode createVariableWrite(final Local variable,
         final int contextLevel, final FrameSlot localSelf,
-        final ExpressionNode exp) {
-    return new UninitializedVariableWriteNode(variable, contextLevel, localSelf, exp);
+        final ExpressionNode exp, final SourceSection source) {
+    return new UninitializedVariableWriteNode(variable, contextLevel, localSelf, exp, source);
+  }
+
+  public static LocalVariableWriteNode createLocalVariableWrite(
+      final FrameSlot varSlot, final ExpressionNode exp, final SourceSection source) {
+    return LocalVariableWriteNodeFactory.create(varSlot, source, exp);
   }
 }

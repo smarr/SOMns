@@ -10,6 +10,8 @@ import com.oracle.truffle.api.utilities.BranchProfile;
 
 public abstract class SqrtPrim extends UnaryExpressionNode {
 
+  public SqrtPrim() { super(null); }
+
   private final BranchProfile longReturn   = new BranchProfile();
   private final BranchProfile doubleReturn = new BranchProfile();
 

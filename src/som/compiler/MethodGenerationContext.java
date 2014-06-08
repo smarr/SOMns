@@ -344,31 +344,34 @@ public final class MethodGenerationContext {
     return null;
   }
 
-  private ContextualNode getSelfRead() {
+  private ContextualNode getSelfRead(final SourceSection source) {
     return getVariable("self").getReadNode(getContextLevel("self"),
-        getLocalSelfSlot());
+        getLocalSelfSlot(), source);
   }
 
-  public FieldReadNode getObjectFieldRead(final SSymbol fieldName) {
+  public FieldReadNode getObjectFieldRead(final SSymbol fieldName,
+      final SourceSection source) {
     if (!holderGenc.hasField(fieldName)) {
       return null;
     }
-    return createFieldRead(getSelfRead(), holderGenc.getFieldIndex(fieldName));
+    return createFieldRead(getSelfRead(source),
+        holderGenc.getFieldIndex(fieldName), source);
   }
 
   public GlobalNode getGlobalRead(final SSymbol varName,
-      final Universe universe) {
-    return createGlobalRead(varName, universe);
+      final Universe universe, final SourceSection source) {
+    return createGlobalRead(varName, universe, source);
   }
 
   public FieldWriteNode getObjectFieldWrite(final SSymbol fieldName,
-      final ExpressionNode exp, final Universe universe) {
+      final ExpressionNode exp, final Universe universe,
+      final SourceSection source) {
     if (!holderGenc.hasField(fieldName)) {
       return null;
     }
 
-    return createFieldWrite(getSelfRead(), exp,
-        holderGenc.getFieldIndex(fieldName));
+    return createFieldWrite(getSelfRead(source), exp,
+        holderGenc.getFieldIndex(fieldName), source);
   }
 
   /**
