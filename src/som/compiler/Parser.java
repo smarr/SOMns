@@ -737,28 +737,28 @@ public final class Parser {
     SourceCoordinate coord = getCoordinate();
 
     if (sym == Minus) {
-      return negativeDecimal(getSource(coord));
+      return negativeDecimal(coord);
     } else {
-      return literalDecimal(false, getSource(coord));
+      return literalDecimal(false, coord);
     }
   }
 
-  private LiteralNode literalDecimal(final boolean isNegative, final SourceSection source) throws ParseError {
+  private LiteralNode literalDecimal(final boolean isNegative, final SourceCoordinate coord) throws ParseError {
     if (sym == Integer) {
-      return literalInteger(isNegative, source);
+      return literalInteger(isNegative, coord);
     } else {
       assert sym == Double;
-      return literalDouble(isNegative, source);
+      return literalDouble(isNegative, coord);
     }
   }
 
-  private LiteralNode negativeDecimal(final SourceSection source) throws ParseError {
+  private LiteralNode negativeDecimal(final SourceCoordinate coord) throws ParseError {
     expect(Minus);
-    return literalDecimal(true, source);
+    return literalDecimal(true, coord);
   }
 
   private LiteralNode literalInteger(final boolean isNegative,
-      final SourceSection source) throws ParseError {
+      final SourceCoordinate coord) throws ParseError {
     try {
        long i = Long.parseLong(text);
        if (isNegative) {
@@ -766,9 +766,9 @@ public final class Parser {
        }
        expect(Integer);
        if (i < Long.MIN_VALUE || i > Long.MAX_VALUE) {
-         return new BigIntegerLiteralNode(BigInteger.valueOf(i), source);
+         return new BigIntegerLiteralNode(BigInteger.valueOf(i), getSource(coord));
        } else {
-         return new IntegerLiteralNode(i, source);
+         return new IntegerLiteralNode(i, getSource(coord));
        }
     } catch (NumberFormatException e) {
       throw new ParseError("Could not parse integer. Expected a number but " +
@@ -776,14 +776,14 @@ public final class Parser {
     }
   }
 
-  private LiteralNode literalDouble(final boolean isNegative, final SourceSection source) throws ParseError {
+  private LiteralNode literalDouble(final boolean isNegative, final SourceCoordinate coord) throws ParseError {
     try {
       double d = java.lang.Double.parseDouble(text);
       if (isNegative) {
         d = 0.0 - d;
       }
       expect(Double);
-      return new DoubleLiteralNode(d, source);
+      return new DoubleLiteralNode(d, getSource(coord));
     } catch (NumberFormatException e) {
       throw new ParseError("Could not parse double. Expected a number but " +
           "got '" + text + "'", NONE, this);
