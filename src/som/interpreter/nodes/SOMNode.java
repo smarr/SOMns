@@ -32,8 +32,11 @@ import com.oracle.truffle.api.nodes.NodeUtil;
 @TypeSystemReference(Types.class)
 public abstract class SOMNode extends Node {
 
-  public SOMNode(final SourceSection sourceSection) {
+  protected final boolean executesEnforced;
+
+  public SOMNode(final SourceSection sourceSection, final boolean executesEnforced) {
     super(sourceSection);
+    this.executesEnforced = executesEnforced;
   }
 
   public void replaceWithIndependentCopyForInlining(final Inliner inliner) {

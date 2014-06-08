@@ -30,8 +30,8 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 public abstract class LiteralNode extends ExpressionNode
     implements PreevaluatedExpression {
 
-  public LiteralNode(final SourceSection source) {
-    super(source);
+  public LiteralNode(final SourceSection source, final boolean executesEnforced) {
+    super(source, executesEnforced);
   }
 
   @Override

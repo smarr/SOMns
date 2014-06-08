@@ -176,7 +176,7 @@ public final class MethodGenerationContext {
     return createArgumentInitialization(methodBody, arguments);
   }
 
-  public SMethod assemble(final Universe universe, ExpressionNode methodBody) {
+  public SMethod assemble(final Universe universe, final ExpressionNode enforcedBody, final ExpressionNode unenforcedBody) {
     ArrayList<Variable> onlyLocalAccess = new ArrayList<>(arguments.size() + locals.size());
     ArrayList<Variable> nonLocalAccess  = new ArrayList<>(arguments.size() + locals.size());
     separateVariables(arguments.values(), onlyLocalAccess, nonLocalAccess);
@@ -344,34 +344,36 @@ public final class MethodGenerationContext {
     return null;
   }
 
-  private ContextualNode getSelfRead(final SourceSection source) {
+  private ContextualNode getSelfRead(final SourceSection source,
+      final boolean executeEnforced) {
     return getVariable("self").getReadNode(getContextLevel("self"),
-        getLocalSelfSlot(), source);
+        getLocalSelfSlot(), source, executeEnforced);
   }
 
   public FieldReadNode getObjectFieldRead(final SSymbol fieldName,
-      final SourceSection source) {
+      final SourceSection source, final boolean executeEnforced) {
     if (!holderGenc.hasField(fieldName)) {
       return null;
     }
-    return createFieldRead(getSelfRead(source),
-        holderGenc.getFieldIndex(fieldName), source);
+    return createFieldRead(getSelfRead(source, executeEnforced),
+        holderGenc.getFieldIndex(fieldName), source, executeEnforced);
   }
 
   public GlobalNode getGlobalRead(final SSymbol varName,
-      final Universe universe, final SourceSection source) {
-    return createGlobalRead(varName, universe, source);
+      final Universe universe, final SourceSection source,
+      final boolean executeEnforced) {
+    return createGlobalRead(varName, universe, source, executeEnforced);
   }
 
   public FieldWriteNode getObjectFieldWrite(final SSymbol fieldName,
       final ExpressionNode exp, final Universe universe,
-      final SourceSection source) {
+      final SourceSection source, final boolean executeEnforced) {
     if (!holderGenc.hasField(fieldName)) {
       return null;
     }
 
-    return createFieldWrite(getSelfRead(source), exp,
-        holderGenc.getFieldIndex(fieldName), source);
+    return createFieldWrite(getSelfRead(source, executeEnforced), exp,
+        holderGenc.getFieldIndex(fieldName), source, executeEnforced);
   }
 
   /**

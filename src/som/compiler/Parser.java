@@ -58,7 +58,11 @@ import static som.compiler.Symbol.Primitive;
 import static som.compiler.Symbol.STString;
 import static som.compiler.Symbol.Separator;
 import static som.compiler.Symbol.Star;
+import static som.interpreter.SNodeFactory.createBlockNode;
 import static som.interpreter.SNodeFactory.createGlobalRead;
+import static som.interpreter.SNodeFactory.createMessageSend;
+import static som.interpreter.SNodeFactory.createNonLocalReturn;
+import static som.interpreter.SNodeFactory.createSequence;
 
 import java.io.Reader;
 import java.math.BigInteger;
@@ -69,17 +73,9 @@ import som.compiler.Variable.Local;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.FieldNode.FieldReadNode;
 import som.interpreter.nodes.FieldNode.FieldWriteNode;
-import som.interpreter.nodes.GlobalNode;
-import som.interpreter.nodes.MessageSendNode;
-import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
-import som.interpreter.nodes.ReturnNonLocalNode;
-import som.interpreter.nodes.SequenceNode;
 import som.interpreter.nodes.literals.BigIntegerLiteralNode;
-import som.interpreter.nodes.literals.BlockNode;
-import som.interpreter.nodes.literals.BlockNode.BlockNodeWithContext;
 import som.interpreter.nodes.literals.DoubleLiteralNode;
 import som.interpreter.nodes.literals.IntegerLiteralNode;
-import som.interpreter.nodes.literals.LiteralNode;
 import som.interpreter.nodes.literals.StringLiteralNode;
 import som.interpreter.nodes.literals.SymbolLiteralNode;
 import som.vm.Universe;
@@ -90,6 +86,7 @@ import som.vmobjects.SSymbol;
 import com.oracle.truffle.api.CompilerDirectives.SlowPath;
 import com.oracle.truffle.api.Source;
 import com.oracle.truffle.api.SourceSection;
+import com.oracle.truffle.api.frame.FrameSlot;
 
 public final class Parser {
 
@@ -116,6 +113,20 @@ public final class Parser {
     }
     for (Symbol s : new Symbol[] {Keyword, KeywordSequence}) {
       keywordSelectorSyms.add(s);
+    }
+  }
+
+  private static ExpressionTuple tuple(final ExpressionNode en, final ExpressionNode un) {
+    return new ExpressionTuple(en, un);
+  }
+
+  private static final class ExpressionTuple {
+    public final ExpressionNode en;
+    public final ExpressionNode un;
+
+    public ExpressionTuple(final ExpressionNode en, final ExpressionNode un) {
+      this.en = en;
+      this.un = un;
     }
   }
 
@@ -243,12 +254,12 @@ public final class Parser {
       MethodGenerationContext mgenc = new MethodGenerationContext();
       mgenc.setHolder(cgenc);
 
-      ExpressionNode methodBody = method(mgenc);
+      ExpressionTuple methodBody = method(mgenc);
 
       if (mgenc.isPrimitive()) {
         cgenc.addInstanceMethod(mgenc.assemblePrimitive(universe));
       } else {
-        cgenc.addInstanceMethod(mgenc.assemble(universe, methodBody));
+        cgenc.addInstanceMethod(mgenc.assemble(universe, methodBody.en, methodBody.un));
       }
     }
 
@@ -260,12 +271,12 @@ public final class Parser {
         MethodGenerationContext mgenc = new MethodGenerationContext();
         mgenc.setHolder(cgenc);
 
-        ExpressionNode methodBody = method(mgenc);
+        ExpressionTuple methodBody = method(mgenc);
 
         if (mgenc.isPrimitive()) {
           cgenc.addClassMethod(mgenc.assemblePrimitive(universe));
         } else {
-          cgenc.addClassMethod(mgenc.assemble(universe, methodBody));
+          cgenc.addClassMethod(mgenc.assemble(universe, methodBody.en, methodBody.un));
         }
       }
     }
@@ -355,7 +366,7 @@ public final class Parser {
         lexer.getNumberOfCharactersRead() - coord.charIndex);
   }
 
-  private ExpressionNode method(final MethodGenerationContext mgenc) throws ParseError {
+  private ExpressionTuple method(final MethodGenerationContext mgenc) throws ParseError {
     pattern(mgenc);
     expect(Equal);
 
@@ -421,9 +432,9 @@ public final class Parser {
     mgenc.setSignature(universe.symbolFor(kw.toString()));
   }
 
-  private ExpressionNode methodBlock(final MethodGenerationContext mgenc) throws ParseError {
+  private ExpressionTuple methodBlock(final MethodGenerationContext mgenc) throws ParseError {
     expect(NewTerm);
-    ExpressionNode methodBody = blockContents(mgenc);
+    ExpressionTuple methodBody = blockContents(mgenc);
     expect(EndTerm);
 
     return methodBody;
@@ -469,7 +480,7 @@ public final class Parser {
     return variable();
   }
 
-  private ExpressionNode blockContents(final MethodGenerationContext mgenc) throws ParseError {
+  private ExpressionTuple blockContents(final MethodGenerationContext mgenc) throws ParseError {
     if (accept(Or)) {
       locals(mgenc);
       expect(Or);
@@ -483,61 +494,75 @@ public final class Parser {
     }
   }
 
-  private ExpressionNode blockBody(final MethodGenerationContext mgenc) throws ParseError {
+  private ExpressionTuple blockBody(final MethodGenerationContext mgenc) throws ParseError {
     SourceCoordinate coord = getCoordinate();
-    List<ExpressionNode> expressions = new ArrayList<ExpressionNode>();
+    List<ExpressionNode> enforced   = new ArrayList<ExpressionNode>();
+    List<ExpressionNode> unenforced = new ArrayList<ExpressionNode>();
 
     while (true) {
       if (accept(Exit)) {
-        expressions.add(result(mgenc));
-        return createSequenceNode(coord, expressions);
+        ExpressionTuple r = result(mgenc);
+        enforced.add(r.en);
+        unenforced.add(r.un);
+        return createSequenceNode(coord, enforced, unenforced);
       } else if (sym == EndBlock) {
-        return createSequenceNode(coord, expressions);
+        return createSequenceNode(coord, enforced, unenforced);
       } else if (sym == EndTerm) {
         // the end of the method has been found (EndTerm) - make it implicitly
         // return "self"
-        ExpressionNode self = variableRead(mgenc, "self", getSource(getCoordinate()));
-        expressions.add(self);
-        return createSequenceNode(coord, expressions);
+        ExpressionTuple self = variableRead(mgenc, "self", getSource(getCoordinate()));
+        enforced.add(self.en);
+        unenforced.add(self.un);
+        return createSequenceNode(coord, enforced, unenforced);
       }
 
-      expressions.add(expression(mgenc));
+      ExpressionTuple exp = expression(mgenc);
+      enforced.add(exp.en);
+      unenforced.add(exp.un);
       accept(Period);
     }
   }
 
-  private ExpressionNode createSequenceNode(final SourceCoordinate coord,
-      final List<ExpressionNode> expressions) {
-    if (expressions.size() == 0) {
-      return createGlobalRead("nil", universe, getSource(coord));
-    } else if (expressions.size() == 1) {
-      return expressions.get(0);
+  private ExpressionTuple createSequenceNode(final SourceCoordinate coord,
+      final List<ExpressionNode> enforced, final List<ExpressionNode> unenforced) {
+    SourceSection source = getSource(coord);
+    assert enforced.size() == unenforced.size();
+    if (enforced.size() == 0) {
+      return tuple(createGlobalRead("nil", universe, source, true),
+          createGlobalRead("nil", universe, source, false));
+    } else if (enforced.size() == 1) {
+      return tuple(enforced.get(0), unenforced.get(0));
     }
 
-    return new SequenceNode(expressions.toArray(new ExpressionNode[0]), getSource(coord));
+    return tuple(createSequence(enforced, source, true),
+        createSequence(enforced, source, false));
   }
 
-  private ExpressionNode result(final MethodGenerationContext mgenc) throws ParseError {
-    ExpressionNode exp = expression(mgenc);
+  private ExpressionTuple result(final MethodGenerationContext mgenc) throws ParseError {
+    ExpressionTuple exp = expression(mgenc);
 
     SourceCoordinate coord = getCoordinate();
     accept(Period);
 
     if (mgenc.isBlockMethod()) {
-      ExpressionNode result = new ReturnNonLocalNode(exp,
-          mgenc.getFrameOnStackMarkerSlot(),
-          mgenc.getOuterSelfSlot(),
-          mgenc.getOuterSelfContextLevel(),
-          universe,
-          mgenc.getLocalSelfSlot(), getSource(coord));
+      FrameSlot markerSlot = mgenc.getFrameOnStackMarkerSlot();
+      FrameSlot outerSelf  = mgenc.getOuterSelfSlot();
+      int contextLevel = mgenc.getOuterSelfContextLevel();
+      FrameSlot localSelf = mgenc.getLocalSelfSlot();
+      SourceSection source = getSource(coord);
+
       mgenc.makeCatchNonLocalReturn();
-      return result;
+
+      return tuple(createNonLocalReturn(exp.en, markerSlot, outerSelf,
+          contextLevel, universe, localSelf, source, true),
+          createNonLocalReturn(exp.un, markerSlot, outerSelf,
+              contextLevel, universe, localSelf, source, false));
     } else {
       return exp;
     }
   }
 
-  private ExpressionNode expression(final MethodGenerationContext mgenc) throws ParseError {
+  private ExpressionTuple expression(final MethodGenerationContext mgenc) throws ParseError {
     peekForNextSymbolFromLexer();
 
     if (nextSym == Assign) {
@@ -547,11 +572,11 @@ public final class Parser {
     }
   }
 
-  private ExpressionNode assignation(final MethodGenerationContext mgenc) throws ParseError {
+  private ExpressionTuple assignation(final MethodGenerationContext mgenc) throws ParseError {
     return assignments(mgenc);
   }
 
-  private ExpressionNode assignments(final MethodGenerationContext mgenc) throws ParseError {
+  private ExpressionTuple assignments(final MethodGenerationContext mgenc) throws ParseError {
     SourceCoordinate coord = getCoordinate();
 
     if (!isIdentifier(sym)) {
@@ -563,7 +588,7 @@ public final class Parser {
 
     peekForNextSymbolFromLexer();
 
-    ExpressionNode value;
+    ExpressionTuple value;
     if (nextSym == Assign) {
       value = assignments(mgenc);
     } else {
@@ -579,8 +604,8 @@ public final class Parser {
     return v;
   }
 
-  private ExpressionNode evaluation(final MethodGenerationContext mgenc) throws ParseError {
-    ExpressionNode exp = primary(mgenc);
+  private ExpressionTuple evaluation(final MethodGenerationContext mgenc) throws ParseError {
+    ExpressionTuple exp = primary(mgenc);
     if (isIdentifier(sym) || sym == Keyword || sym == OperatorSequence
         || symIn(binaryOpSyms)) {
       exp = messages(mgenc, exp);
@@ -588,7 +613,7 @@ public final class Parser {
     return exp;
   }
 
-  private ExpressionNode primary(final MethodGenerationContext mgenc) throws ParseError {
+  private ExpressionTuple primary(final MethodGenerationContext mgenc) throws ParseError {
     switch (sym) {
       case Identifier:
       case Primitive: {
@@ -606,16 +631,17 @@ public final class Parser {
         bgenc.setHolder(mgenc.getHolder());
         bgenc.setOuter(mgenc);
 
-        ExpressionNode blockBody = nestedBlock(bgenc);
+        ExpressionTuple blockBody = nestedBlock(bgenc);
 
-        SMethod blockMethod = bgenc.assemble(universe, blockBody);
+        SMethod blockMethod = bgenc.assemble(universe, blockBody.en, blockBody.un);
         mgenc.addEmbeddedBlockMethod(blockMethod);
 
-        if (bgenc.requiresContext()) {
-          return new BlockNodeWithContext(blockMethod, universe, getSource(coord));
-        } else {
-          return new BlockNode(blockMethod, universe, getSource(coord));
-        }
+        SourceSection source = getSource(coord);
+
+        boolean withContext = bgenc.requiresContext();
+
+        return tuple(createBlockNode(blockMethod, withContext, universe, source, true),
+            createBlockNode(blockMethod, withContext, universe, source, false));
       }
       default: {
         return literal();
@@ -627,9 +653,9 @@ public final class Parser {
     return identifier();
   }
 
-  private AbstractMessageSendNode messages(final MethodGenerationContext mgenc,
-      final ExpressionNode receiver) throws ParseError {
-    AbstractMessageSendNode msg;
+  private ExpressionTuple messages(final MethodGenerationContext mgenc,
+      final ExpressionTuple receiver) throws ParseError {
+    ExpressionTuple msg;
     if (isIdentifier(sym)) {
       msg = unaryMessage(receiver);
 
@@ -660,25 +686,25 @@ public final class Parser {
     return msg;
   }
 
-  private AbstractMessageSendNode unaryMessage(final ExpressionNode receiver) throws ParseError {
+  private ExpressionTuple unaryMessage(final ExpressionTuple receiver) throws ParseError {
     SourceCoordinate coord = getCoordinate();
     SSymbol selector = unarySelector();
-    return MessageSendNode.create(selector, new ExpressionNode[] {receiver},
-        getSource(coord));
+    return tuple(createMessageSend(selector, new ExpressionNode[] {receiver.en}, getSource(coord), true),
+        createMessageSend(selector, new ExpressionNode[] {receiver.un}, getSource(coord), true));
   }
 
-  private AbstractMessageSendNode binaryMessage(final MethodGenerationContext mgenc,
-      final ExpressionNode receiver) throws ParseError {
+  private ExpressionTuple binaryMessage(final MethodGenerationContext mgenc,
+      final ExpressionTuple receiver) throws ParseError {
     SourceCoordinate coord = getCoordinate();
     SSymbol msg = binarySelector();
-    ExpressionNode operand = binaryOperand(mgenc);
+    ExpressionTuple operand = binaryOperand(mgenc);
 
-    return MessageSendNode.create(msg, new ExpressionNode[] {receiver, operand},
-        getSource(coord));
+    return tuple(createMessageSend(msg, new ExpressionNode[] {receiver.en, operand.en}, getSource(coord), true),
+        createMessageSend(msg, new ExpressionNode[] {receiver.un, operand.un}, getSource(coord), false));
   }
 
-  private ExpressionNode binaryOperand(final MethodGenerationContext mgenc) throws ParseError {
-    ExpressionNode operand = primary(mgenc);
+  private ExpressionTuple binaryOperand(final MethodGenerationContext mgenc) throws ParseError {
+    ExpressionTuple operand = primary(mgenc);
 
     // a binary operand can receive unaryMessages
     // Example: 2 * 3 asString
@@ -689,28 +715,34 @@ public final class Parser {
     return operand;
   }
 
-  private AbstractMessageSendNode keywordMessage(final MethodGenerationContext mgenc,
-      final ExpressionNode receiver) throws ParseError {
+  private ExpressionTuple keywordMessage(final MethodGenerationContext mgenc,
+      final ExpressionTuple receiver) throws ParseError {
     SourceCoordinate coord = getCoordinate();
-    List<ExpressionNode> arguments = new ArrayList<ExpressionNode>();
-    StringBuffer         kw        = new StringBuffer();
+    List<ExpressionNode> enforcedArgs   = new ArrayList<ExpressionNode>();
+    List<ExpressionNode> unenforcedArgs = new ArrayList<ExpressionNode>();
+    StringBuffer kw = new StringBuffer();
 
-    arguments.add(receiver);
+    enforcedArgs.add(receiver.en);
+    unenforcedArgs.add(receiver.un);
 
     do {
       kw.append(keyword());
-      arguments.add(formula(mgenc));
+      ExpressionTuple f = formula(mgenc);
+      enforcedArgs.add(f.en);
+      unenforcedArgs.add(f.un);
     }
     while (sym == Keyword);
 
     SSymbol msg = universe.symbolFor(kw.toString());
 
-    return MessageSendNode.create(msg, arguments.toArray(new ExpressionNode[0]),
-        getSource(coord));
+    SourceSection source = getSource(coord);
+
+    return tuple(createMessageSend(msg, enforcedArgs, source, true),
+        createMessageSend(msg, enforcedArgs, source, true));
   }
 
-  private ExpressionNode formula(final MethodGenerationContext mgenc) throws ParseError {
-    ExpressionNode operand = binaryOperand(mgenc);
+  private ExpressionTuple formula(final MethodGenerationContext mgenc) throws ParseError {
+    ExpressionTuple operand = binaryOperand(mgenc);
 
     while (sym == OperatorSequence || symIn(binaryOpSyms)) {
       operand = binaryMessage(mgenc, operand);
@@ -718,14 +750,14 @@ public final class Parser {
     return operand;
   }
 
-  private ExpressionNode nestedTerm(final MethodGenerationContext mgenc) throws ParseError {
+  private ExpressionTuple nestedTerm(final MethodGenerationContext mgenc) throws ParseError {
     expect(NewTerm);
-    ExpressionNode exp = expression(mgenc);
+    ExpressionTuple exp = expression(mgenc);
     expect(EndTerm);
     return exp;
   }
 
-  private LiteralNode literal() throws ParseError {
+  private ExpressionTuple literal() throws ParseError {
     switch (sym) {
       case Pound:     return literalSymbol();
       case STString:  return literalString();
@@ -733,7 +765,7 @@ public final class Parser {
     }
   }
 
-  private LiteralNode literalNumber() throws ParseError {
+  private ExpressionTuple literalNumber() throws ParseError {
     SourceCoordinate coord = getCoordinate();
 
     if (sym == Minus) {
@@ -743,7 +775,7 @@ public final class Parser {
     }
   }
 
-  private LiteralNode literalDecimal(final boolean isNegative, final SourceCoordinate coord) throws ParseError {
+  private ExpressionTuple literalDecimal(final boolean isNegative, final SourceCoordinate coord) throws ParseError {
     if (sym == Integer) {
       return literalInteger(isNegative, coord);
     } else {
@@ -752,12 +784,12 @@ public final class Parser {
     }
   }
 
-  private LiteralNode negativeDecimal(final SourceCoordinate coord) throws ParseError {
+  private ExpressionTuple negativeDecimal(final SourceCoordinate coord) throws ParseError {
     expect(Minus);
     return literalDecimal(true, coord);
   }
 
-  private LiteralNode literalInteger(final boolean isNegative,
+  private ExpressionTuple literalInteger(final boolean isNegative,
       final SourceCoordinate coord) throws ParseError {
     try {
        long i = Long.parseLong(text);
@@ -765,10 +797,15 @@ public final class Parser {
          i = 0 - i;
        }
        expect(Integer);
+
+       SourceSection source = getSource(coord);
        if (i < Long.MIN_VALUE || i > Long.MAX_VALUE) {
-         return new BigIntegerLiteralNode(BigInteger.valueOf(i), getSource(coord));
+         BigInteger bi = BigInteger.valueOf(i);
+         return tuple(new BigIntegerLiteralNode(bi, source),
+             new BigIntegerLiteralNode(bi, source));
        } else {
-         return new IntegerLiteralNode(i, getSource(coord));
+         return tuple(new IntegerLiteralNode(i, source),
+             new IntegerLiteralNode(i, source));
        }
     } catch (NumberFormatException e) {
       throw new ParseError("Could not parse integer. Expected a number but " +
@@ -776,21 +813,22 @@ public final class Parser {
     }
   }
 
-  private LiteralNode literalDouble(final boolean isNegative, final SourceCoordinate coord) throws ParseError {
+  private ExpressionTuple literalDouble(final boolean isNegative, final SourceCoordinate coord) throws ParseError {
     try {
       double d = java.lang.Double.parseDouble(text);
       if (isNegative) {
         d = 0.0 - d;
       }
       expect(Double);
-      return new DoubleLiteralNode(d, getSource(coord));
+      return tuple(new DoubleLiteralNode(d, getSource(coord)),
+          new DoubleLiteralNode(d, getSource(coord)));
     } catch (NumberFormatException e) {
       throw new ParseError("Could not parse double. Expected a number but " +
           "got '" + text + "'", NONE, this);
     }
   }
 
-  private LiteralNode literalSymbol() throws ParseError {
+  private ExpressionTuple literalSymbol() throws ParseError {
     SourceCoordinate coord = getCoordinate();
 
     SSymbol symb;
@@ -801,15 +839,16 @@ public final class Parser {
     } else {
       symb = selector();
     }
-
-    return new SymbolLiteralNode(symb, getSource(coord));
+    return tuple(new SymbolLiteralNode(symb, getSource(coord)),
+        new SymbolLiteralNode(symb, getSource(coord)));
   }
 
-  private LiteralNode literalString() throws ParseError {
+  private ExpressionTuple literalString() throws ParseError {
     SourceCoordinate coord = getCoordinate();
     String s = string();
 
-    return new StringLiteralNode(s, getSource(coord));
+    return tuple(new StringLiteralNode(s, getSource(coord)),
+        new StringLiteralNode(s, getSource(coord)));
   }
 
   private SSymbol selector() throws ParseError {
@@ -835,7 +874,7 @@ public final class Parser {
     return s;
   }
 
-  private ExpressionNode nestedBlock(final MethodGenerationContext mgenc) throws ParseError {
+  private ExpressionTuple nestedBlock(final MethodGenerationContext mgenc) throws ParseError {
     expect(NewBlock);
 
     mgenc.addArgumentIfAbsent("$blockSelf");
@@ -853,7 +892,7 @@ public final class Parser {
 
     mgenc.setSignature(universe.symbolFor(blockSig));
 
-    ExpressionNode expressions = blockContents(mgenc);
+    ExpressionTuple expressions = blockContents(mgenc);
 
     expect(EndBlock);
 
@@ -873,50 +912,62 @@ public final class Parser {
     while (sym == Colon);
   }
 
-  private ExpressionNode variableRead(final MethodGenerationContext mgenc,
+  private ExpressionTuple variableRead(final MethodGenerationContext mgenc,
                                       final String variableName,
                                       final SourceSection source) {
     // we need to handle super special here
     if ("super".equals(variableName)) {
       Variable variable = mgenc.getVariable("self");
-      return variable.getSuperReadNode(mgenc.getOuterSelfContextLevel(),
-          mgenc.getHolder().getName(), mgenc.getHolder().isClassSide(),
-          mgenc.getLocalSelfSlot(), source);
+      int outerLevel = mgenc.getOuterSelfContextLevel();
+      SSymbol className = mgenc.getHolder().getName();
+      boolean classSide = mgenc.getHolder().isClassSide();
+      FrameSlot localSelf = mgenc.getLocalSelfSlot();
+      return tuple(variable.getSuperReadNode(outerLevel, className, classSide, localSelf, source, true),
+          variable.getSuperReadNode(outerLevel, className, classSide, localSelf, source, false));
     }
 
     // now look up first local variables, or method arguments
     Variable variable = mgenc.getVariable(variableName);
     if (variable != null) {
-      return variable.getReadNode(mgenc.getContextLevel(variableName),
-          mgenc.getLocalSelfSlot(), source);
+      int contextLevel = mgenc.getContextLevel(variableName);
+      FrameSlot localSelf = mgenc.getLocalSelfSlot();
+      return tuple(variable.getReadNode(contextLevel, localSelf, source, true),
+          variable.getReadNode(contextLevel, localSelf, source, false));
     }
 
     // then object fields
     SSymbol varName = universe.symbolFor(variableName);
-    FieldReadNode fieldRead = mgenc.getObjectFieldRead(varName, source);
+    FieldReadNode enforcedFieldRead = mgenc.getObjectFieldRead(varName, source, true);
 
-    if (fieldRead != null) {
-      return fieldRead;
+    if (enforcedFieldRead != null) {
+      return tuple(enforcedFieldRead,
+          mgenc.getObjectFieldRead(varName, source, false));
     }
 
     // and finally assume it is a global
-    GlobalNode globalRead = mgenc.getGlobalRead(varName, universe, source);
-    return globalRead;
+    return tuple(mgenc.getGlobalRead(varName, universe, source, true),
+        mgenc.getGlobalRead(varName, universe, source, false));
   }
 
-  private ExpressionNode variableWrite(final MethodGenerationContext mgenc,
-      final String variableName, final ExpressionNode exp, final SourceSection source) {
+  private ExpressionTuple variableWrite(final MethodGenerationContext mgenc,
+      final String variableName, final ExpressionTuple exp, final SourceSection source) {
     Local variable = mgenc.getLocal(variableName);
+
     if (variable != null) {
-      return variable.getWriteNode(mgenc.getContextLevel(variableName),
-          mgenc.getLocalSelfSlot(), exp, source);
+      int contextLevel = mgenc.getContextLevel(variableName);
+      FrameSlot localSelf = mgenc.getLocalSelfSlot();
+
+      return tuple(variable.getWriteNode(contextLevel, localSelf, exp.en, source, true),
+          variable.getWriteNode(contextLevel, localSelf, exp.un, source, false));
     }
 
     SSymbol fieldName = universe.symbolFor(variableName);
-    FieldWriteNode fieldWrite = mgenc.getObjectFieldWrite(fieldName, exp, universe, source);
+    FieldWriteNode enforcedFieldWrite = mgenc.getObjectFieldWrite(fieldName, exp.en,
+        universe, source, true);
 
-    if (fieldWrite != null) {
-      return fieldWrite;
+    if (enforcedFieldWrite != null) {
+      return tuple(enforcedFieldWrite,
+          mgenc.getObjectFieldWrite(fieldName, exp.en, universe, source, false));
     } else {
       throw new RuntimeException("Neither a variable nor a field found "
           + "in current scope that is named " + variableName + ". Arguments are read-only.");

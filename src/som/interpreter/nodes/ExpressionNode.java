@@ -37,8 +37,8 @@ import com.oracle.truffle.api.nodes.UnexpectedResultException;
 
 public abstract class ExpressionNode extends SOMNode {
 
-  public ExpressionNode(final SourceSection sourceSection) {
-    super(sourceSection);
+  public ExpressionNode(final SourceSection sourceSection, final boolean executesEnforced) {
+    super(sourceSection, executesEnforced);
   }
 
   public abstract Object executeGeneric(final VirtualFrame frame);

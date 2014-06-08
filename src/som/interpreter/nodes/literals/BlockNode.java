@@ -16,8 +16,8 @@ public class BlockNode extends LiteralNode {
   protected final Universe universe;
 
   public BlockNode(final SMethod blockMethod, final Universe universe,
-      final SourceSection source) {
-    super(source);
+      final SourceSection source, final boolean executesEnforced) {
+    super(source, executesEnforced);
     this.blockMethod  = blockMethod;
     this.universe     = universe;
   }
@@ -35,7 +35,7 @@ public class BlockNode extends LiteralNode {
   @Override
   public void replaceWithIndependentCopyForInlining(final Inliner inliner) {
     SMethod forInlining = (SMethod) cloneMethod(inliner);
-    replace(new BlockNode(forInlining, universe, getSourceSection()));
+    replace(new BlockNode(forInlining, universe, getSourceSection(), executesEnforced));
   }
 
   protected SInvokable cloneMethod(final Inliner inliner) {
@@ -49,12 +49,13 @@ public class BlockNode extends LiteralNode {
   public static final class BlockNodeWithContext extends BlockNode {
 
     public BlockNodeWithContext(final SMethod blockMethod,
-        final Universe universe, final SourceSection source) {
-      super(blockMethod, universe, source);
+        final Universe universe, final SourceSection source, final boolean executesEnforced) {
+      super(blockMethod, universe, source, executesEnforced);
     }
 
     public BlockNodeWithContext(final BlockNodeWithContext node) {
-      this(node.blockMethod, node.universe, node.getSourceSection());
+      this(node.blockMethod, node.universe, node.getSourceSection(),
+          node.executesEnforced);
     }
 
     @Override
@@ -65,7 +66,8 @@ public class BlockNode extends LiteralNode {
     @Override
     public void replaceWithIndependentCopyForInlining(final Inliner inliner) {
       SMethod forInlining = (SMethod) cloneMethod(inliner);
-      replace(new BlockNodeWithContext(forInlining, universe, getSourceSection()));
+      replace(new BlockNodeWithContext(forInlining, universe,
+          getSourceSection(), executesEnforced));
     }
   }
 }

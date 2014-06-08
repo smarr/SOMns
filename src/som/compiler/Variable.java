@@ -50,23 +50,24 @@ public abstract class Variable {
   }
 
   public final ContextualNode getReadNode(final int contextLevel,
-      final FrameSlot localSelf, final SourceSection source) {
+      final FrameSlot localSelf, final SourceSection source,
+      final boolean executeEnforced) {
     transferToInterpreterAndInvalidate("Variable.getReadNode");
     isRead = true;
     if (contextLevel > 0) {
       isReadOutOfContext = true;
     }
-    return createVariableRead(this, contextLevel, localSelf, source);
+    return createVariableRead(this, contextLevel, localSelf, source, executeEnforced);
   }
 
   public final ContextualNode getSuperReadNode(final int contextLevel,
       final SSymbol holderClass, final boolean classSide,
-      final FrameSlot localSelf, final SourceSection source) {
+      final FrameSlot localSelf, final SourceSection source, final boolean executeEnforced) {
     isRead = true;
     if (contextLevel > 0) {
       isReadOutOfContext = true;
     }
-    return createSuperRead(this, contextLevel, localSelf, holderClass, classSide, source);
+    return createSuperRead(this, contextLevel, localSelf, holderClass, classSide, source, executeEnforced);
   }
 
   public static final class Argument extends Variable {
@@ -121,14 +122,15 @@ public abstract class Variable {
     }
 
     public ExpressionNode getWriteNode(final int contextLevel,
-        final FrameSlot localSelf,
-        final ExpressionNode valueExpr, final SourceSection source) {
+        final FrameSlot localSelf, final ExpressionNode valueExpr,
+        final SourceSection source, final boolean executeEnforced) {
       transferToInterpreterAndInvalidate("Variable.getWriteNode");
       isWritten = true;
       if (contextLevel > 0) {
         isWrittenOutOfContext = true;
       }
-      return createVariableWrite(this, contextLevel, localSelf, valueExpr, source);
+      return createVariableWrite(this, contextLevel, localSelf, valueExpr,
+          source, executeEnforced);
     }
   }
 }
