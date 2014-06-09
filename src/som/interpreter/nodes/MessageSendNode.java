@@ -59,6 +59,11 @@ public final class MessageSendNode {
     return new UninitializedMessageSendNode(selector, arguments, source);
   }
 
+  public static AbstractMessageSendNode createForPerformNodes(final SSymbol selector) {
+    return new GenericMessageSendNode(selector, null,
+        new UninitializedDispatchNode(selector, Universe.current()), null);
+  }
+
   @NodeInfo(shortName = "send")
   public abstract static class AbstractMessageSendNode extends ExpressionNode
       implements PreevaluatedExpression {

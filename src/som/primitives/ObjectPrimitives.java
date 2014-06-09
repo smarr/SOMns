@@ -29,9 +29,9 @@ import som.primitives.ObjectPrimsFactory.ClassPrimFactory;
 import som.primitives.ObjectPrimsFactory.HaltPrimFactory;
 import som.primitives.ObjectPrimsFactory.InstVarAtPrimFactory;
 import som.primitives.ObjectPrimsFactory.InstVarAtPutPrimFactory;
-import som.primitives.ObjectPrimsFactory.PerformInSuperclassPrimFactory;
-import som.primitives.ObjectPrimsFactory.PerformPrimFactory;
-import som.primitives.ObjectPrimsFactory.PerformWithArgumentsPrimFactory;
+import som.primitives.reflection.PerformInSuperclassPrimFactory;
+import som.primitives.reflection.PerformPrimFactory;
+import som.primitives.reflection.PerformWithArgumentsPrimFactory;
 import som.vm.Universe;
 
 public final class ObjectPrimitives extends Primitives {
