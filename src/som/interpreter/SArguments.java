@@ -28,4 +28,24 @@ public final class SArguments {
   public static boolean enforced(final Frame frame) {
     return (boolean) frame.getArguments()[ENFORCED_FLAG_IDX];
   }
+
+  /**
+   * Create a properly encoded SArguments array to be passed via Truffle's API
+   * from a receiver object that is separate from the actual arguments.
+   */
+  public static Object[] createSArgumentsArrayFrom(final Object receiver, final Object[] argsArray) {
+    // below, we have a lot of magic numbers and implicit positioning,
+    // which are all based on this assumption
+    assert RCVR_IDX == 0;
+
+    if (argsArray == null) {
+      return new Object[] {receiver};
+    }
+
+    Object[] arguments = new Object[argsArray.length + 1];
+    arguments[RCVR_IDX] = receiver;
+
+    System.arraycopy(argsArray, 0, arguments, 1, argsArray.length);
+    return arguments;
+  }
 }
