@@ -5,6 +5,7 @@ import som.interpreter.Types;
 import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
 import som.interpreter.nodes.dispatch.CachedDispatchSimpleCheckNode.CachedDispatchFalseCheckNode;
 import som.interpreter.nodes.dispatch.CachedDispatchSimpleCheckNode.CachedDispatchTrueCheckNode;
+import som.vm.NotYetImplementedException;
 import som.vm.Universe;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
@@ -43,46 +44,50 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
       SClass rcvrClass = Types.getClassOf(rcvr, universe);
       SInvokable method = rcvrClass.lookupInvokable(selector);
 
-      if (method != null) {
-        UninitializedDispatchNode newChainEnd = new UninitializedDispatchNode(selector, universe);
+      UninitializedDispatchNode newChainEnd = new UninitializedDispatchNode(selector, universe);
 
 //        if (method.getInvokable().isAlwaysToBeInlined()) {
 //          InlinedDispatchNode inlined = InlinedDispatchNode.create(
 //              rcvrClass, method, newChainEnd, universe);
 //          return replace(inlined).executeDispatch(frame, arguments);
 //        } else {
-          if (rcvr instanceof SObject) {
-            SObject receiver = (SObject) rcvr;
-            CachedDispatchSObjectCheckNode node =
-                new CachedDispatchSObjectCheckNode(receiver.getSOMClass(universe),
-                    method, newChainEnd);
-            if ((getParent() instanceof CachedDispatchSObjectCheckNode)) {
+      if (rcvr instanceof SObject) {
+        AbstractCachedDispatchNode node;
+        if (method != null) {
+          node = new CachedDispatchSObjectCheckNode(
+              rcvrClass, method, newChainEnd);
+        } else {
+          node = new CachedDnuSObjectCheckNode(
+              rcvrClass, selector, universe, newChainEnd);
+        }
 
-              return replace(node).executeDispatch(frame, arguments);
-            } else {
-              SObjectCheckDispatchNode checkNode = new SObjectCheckDispatchNode(node,
-                  new UninitializedDispatchNode(selector, universe));
-              return replace(checkNode).executeDispatch(frame, arguments);
-            }
-          } else {
-            // the simple checks are prepended
+        if ((getParent() instanceof CachedDispatchSObjectCheckNode)) {
+          return replace(node).executeDispatch(frame, arguments);
+        } else {
+          SObjectCheckDispatchNode checkNode = new SObjectCheckDispatchNode(node,
+              new UninitializedDispatchNode(selector, universe));
+          return replace(checkNode).executeDispatch(frame, arguments);
+        }
+      } else {
+        if (method == null) {
+          throw new NotYetImplementedException();
+        }
+        // the simple checks are prepended
 
-            AbstractCachedDispatchNode node;
-            AbstractDispatchNode next = sendNode.getDispatchListHead();
+        AbstractCachedDispatchNode node;
+        AbstractDispatchNode next = sendNode.getDispatchListHead();
 
-            if (rcvr == Boolean.TRUE) {
-              node = new CachedDispatchTrueCheckNode(method, next);
-            } else if (rcvr == Boolean.FALSE) {
-              node = new CachedDispatchFalseCheckNode(method, next);
-            } else {
-              node = new CachedDispatchSimpleCheckNode(
-                    rcvr.getClass(), method, next);
-            }
-            sendNode.adoptNewDispatchListHead(node);
-            return node.executeDispatch(frame, arguments);
-          }
+        if (rcvr == Boolean.TRUE) {
+          node = new CachedDispatchTrueCheckNode(method, next);
+        } else if (rcvr == Boolean.FALSE) {
+          node = new CachedDispatchFalseCheckNode(method, next);
+        } else {
+          node = new CachedDispatchSimpleCheckNode(
+                rcvr.getClass(), method, next);
+        }
+        sendNode.adoptNewDispatchListHead(node);
+        return node.executeDispatch(frame, arguments);
       }
-      // if method == null: fall through and use generic node
     }
 
     // the chain is longer than the maximum defined by INLINE_CACHE_SIZE and

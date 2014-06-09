@@ -1,9 +1,10 @@
 package som.vmobjects;
 
-import java.util.Arrays;
-
+import som.interpreter.SArguments;
 import som.interpreter.Types;
 import som.vm.Universe;
+
+import com.oracle.truffle.api.CompilerAsserts;
 
 
 public abstract class SAbstractObject {
@@ -30,14 +31,11 @@ public abstract class SAbstractObject {
   public static final Object sendDoesNotUnderstand(final SSymbol selector,
       final Object[] arguments,
       final Universe universe) {
-    // Allocate an array to hold the arguments, without receiver
-    Object[] argumentsArray;
-    if (arguments != null) {
-      argumentsArray = Arrays.copyOfRange(arguments, 1, arguments.length);
-    } else {
-      argumentsArray = new Object[0];
-    }
+    CompilerAsserts.neverPartOfCompilation();
+    assert arguments != null;
 
+    // Allocate an array to hold the arguments, without receiver
+    Object[] argumentsArray = SArguments.getArgumentsWithoutReceiver(arguments);
     Object[] args = new Object[] {arguments[0], selector, argumentsArray};
     return send("doesNotUnderstand:arguments:", args, universe);
   }
