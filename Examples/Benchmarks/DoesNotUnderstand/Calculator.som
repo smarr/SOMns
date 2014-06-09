@@ -1,0 +1,20 @@
+Calculator = (
+    | a |
+    
+    initializeWith: anInt = (
+        a := anInt
+    )
+    
+    add: b = (
+        ^ a + b
+    )
+    
+    ----
+    
+    new: a = (
+        | calc |
+        calc := self new.
+        calc initializeWith: a.
+        ^ calc
+    )
+)

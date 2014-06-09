@@ -1,0 +1,20 @@
+Proxy = (
+    | target |
+    
+    initializeWith: anObj = (
+        target := anObj
+    )
+    
+    doesNotUnderstand: selector arguments: arguments = (
+        ^ target perform: selector withArguments: arguments
+    )
+    
+    ----
+    
+    new: target = (
+        | proxy |
+        proxy := self new.
+        proxy initializeWith: target.
+        ^ proxy
+    )
+)
