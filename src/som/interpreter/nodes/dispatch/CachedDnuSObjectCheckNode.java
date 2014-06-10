@@ -29,7 +29,7 @@ public final class CachedDnuSObjectCheckNode extends AbstractCachedDispatchNode 
 
     if (rcvr.getSOMClass(null) == expectedClass) {
       Object[] argsArr = new Object[] {
-          arguments[0], selector, SArguments.getArgumentsWithoutReceiver(arguments) };
+          rcvr, selector, SArguments.getArgumentsWithoutReceiver(arguments) };
       return cachedMethod.call(frame, argsArr);
     } else {
       return nextInCache.executeDispatch(frame, arguments);
