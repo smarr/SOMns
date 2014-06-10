@@ -51,6 +51,7 @@ public abstract class FieldAccessorNode extends Node {
 
     protected final AbstractReadFieldNode specialize(final SObject obj,
         final String reason, final AbstractReadFieldNode next) {
+      TruffleCompiler.transferToInterpreterAndInvalidate(reason);
       obj.updateLayoutToMatchClass();
 
       final ObjectLayout    layout   = obj.getObjectLayout();
