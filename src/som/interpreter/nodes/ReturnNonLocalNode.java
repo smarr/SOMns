@@ -43,11 +43,9 @@ public final class ReturnNonLocalNode extends ContextualNode {
   private final Universe universe;
   private final BranchProfile blockEscaped;
   private final FrameSlot frameOnStackMarker;
-  private final FrameSlot outerSelfSlot;
 
   public ReturnNonLocalNode(final ExpressionNode expression,
       final FrameSlot frameOnStackMarker,
-      final FrameSlot outerSelfSlot,
       final int outerSelfContextLevel,
       final Universe universe, final SourceSection source) {
     super(outerSelfContextLevel, source);
@@ -55,13 +53,11 @@ public final class ReturnNonLocalNode extends ContextualNode {
     this.universe   = universe;
     this.blockEscaped = new BranchProfile();
     this.frameOnStackMarker = frameOnStackMarker;
-    this.outerSelfSlot      = outerSelfSlot;
   }
 
   public ReturnNonLocalNode(final ReturnNonLocalNode node,
-      final FrameSlot inlinedFrameOnStack,
-      final FrameSlot inlinedOuterSelfSlot) {
-    this(node.expression, inlinedFrameOnStack, inlinedOuterSelfSlot,
+      final FrameSlot inlinedFrameOnStack) {
+    this(node.expression, inlinedFrameOnStack,
         node.contextLevel, node.universe, node.getSourceSection());
   }
 
@@ -80,7 +76,7 @@ public final class ReturnNonLocalNode extends ContextualNode {
     } else {
       blockEscaped.enter();
       SBlock block = (SBlock) SArguments.rcvr(frame);
-      Object self = FrameUtil.getObjectSafe(ctx, outerSelfSlot);
+      Object self = SArguments.rcvr(ctx);
       return SAbstractObject.sendEscapedBlock(self, block, universe);
     }
   }
@@ -93,11 +89,8 @@ public final class ReturnNonLocalNode extends ContextualNode {
   @Override
   public void replaceWithIndependentCopyForInlining(final Inliner inliner) {
     FrameSlot inlinedFrameOnStack  = inliner.getFrameSlot(this, frameOnStackMarker.getIdentifier());
-    FrameSlot inlinedOuterSelfSlot = inliner.getFrameSlot(this, outerSelfSlot.getIdentifier());
-
     assert inlinedFrameOnStack  != null;
-    assert inlinedOuterSelfSlot != null;
-    replace(new ReturnNonLocalNode(this, inlinedFrameOnStack, inlinedOuterSelfSlot));
+    replace(new ReturnNonLocalNode(this, inlinedFrameOnStack));
   }
 
   public static final class CatchNonLocalReturnNode extends ExpressionNode {

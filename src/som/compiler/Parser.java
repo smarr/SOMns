@@ -511,7 +511,6 @@ public final class Parser {
     if (mgenc.isBlockMethod()) {
       ExpressionNode result = new ReturnNonLocalNode(exp,
           mgenc.getFrameOnStackMarkerSlot(),
-          mgenc.getOuterSelfSlot(),
           mgenc.getOuterSelfContextLevel(),
           universe, getSource(coord));
       mgenc.makeCatchNonLocalReturn();
