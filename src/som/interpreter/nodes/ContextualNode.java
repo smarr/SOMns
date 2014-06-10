@@ -68,7 +68,7 @@ public abstract class ContextualNode extends ExpressionNode {
   }
 
   private SBlock getLocalSelf(final VirtualFrame frame) {
-    return (SBlock) FrameUtil.getObjectSafe(frame, localSelf);
+    return CompilerDirectives.unsafeCast(FrameUtil.getObjectSafe(frame, localSelf), SBlock.class, true);
   }
 
   @ExplodeLoop
