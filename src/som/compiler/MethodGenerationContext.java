@@ -279,6 +279,18 @@ public final class MethodGenerationContext {
     return level;
   }
 
+  public FrameSlot getOuterSelfSlot() {
+    if (outerGenc == null) {
+      return getLocalSelfSlot();
+    } else {
+      return outerGenc.getOuterSelfSlot();
+    }
+  }
+
+  public FrameSlot getLocalSelfSlot() {
+    return arguments.values().iterator().next().slot;
+  }
+
   public int getContextLevel(final String varName) {
     if (locals.containsKey(varName) || arguments.containsKey(varName)) {
       return 0;
@@ -326,7 +338,8 @@ public final class MethodGenerationContext {
   }
 
   private ContextualNode getSelfRead(final SourceSection source) {
-    return getVariable("self").getReadNode(getContextLevel("self"), source);
+    return getVariable("self").getReadNode(getContextLevel("self"),
+        getLocalSelfSlot(), source);
   }
 
   public FieldReadNode getObjectFieldRead(final SSymbol fieldName,

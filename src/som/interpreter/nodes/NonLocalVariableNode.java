@@ -19,19 +19,19 @@ public abstract class NonLocalVariableNode extends ContextualNode {
   protected final FrameSlot slot;
 
   private NonLocalVariableNode(final int contextLevel, final FrameSlot slot,
-      final SourceSection source) {
-    super(contextLevel, source);
+      final FrameSlot localSelf, final SourceSection source) {
+    super(contextLevel, localSelf, source);
     this.slot = slot;
   }
 
   public abstract static class NonLocalVariableReadNode extends NonLocalVariableNode {
     public NonLocalVariableReadNode(final int contextLevel,
-        final FrameSlot slot, final SourceSection source) {
-      super(contextLevel, slot, source);
+        final FrameSlot slot, final FrameSlot localSelf, final SourceSection source) {
+      super(contextLevel, slot, localSelf, source);
     }
 
     public NonLocalVariableReadNode(final NonLocalVariableReadNode node) {
-      this(node.contextLevel, node.slot, node.getSourceSection());
+      this(node.contextLevel, node.slot, node.localSelf, node.getSourceSection());
     }
 
     @Specialization(guards = "isUninitialized")
@@ -82,13 +82,13 @@ public abstract class NonLocalVariableNode extends ContextualNode {
     private final SClass superClass;
 
     public NonLocalSuperReadNode(final int contextLevel, final FrameSlot slot,
-        final SClass superClass, final SourceSection source) {
-      super(contextLevel, slot, source);
+        final FrameSlot localSelf, final SClass superClass, final SourceSection source) {
+      super(contextLevel, slot, localSelf, source);
       this.superClass = superClass;
     }
 
     public NonLocalSuperReadNode(final NonLocalSuperReadNode node) {
-      this(node.contextLevel, node.slot, node.superClass, node.getSourceSection());
+      this(node.contextLevel, node.slot, node.localSelf, node.superClass, node.getSourceSection());
     }
 
     @Override
@@ -101,12 +101,12 @@ public abstract class NonLocalVariableNode extends ContextualNode {
   public abstract static class NonLocalVariableWriteNode extends NonLocalVariableNode {
 
     public NonLocalVariableWriteNode(final int contextLevel,
-        final FrameSlot slot, final SourceSection source) {
-      super(contextLevel, slot, source);
+        final FrameSlot slot, final FrameSlot localSelf, final SourceSection source) {
+      super(contextLevel, slot, localSelf, source);
     }
 
     public NonLocalVariableWriteNode(final NonLocalVariableWriteNode node) {
-      this(node.contextLevel, node.slot, node.getSourceSection());
+      this(node.contextLevel, node.slot, node.localSelf, node.getSourceSection());
     }
 
     @Specialization(guards = "isBoolKind", rewriteOn = FrameSlotTypeException.class)
