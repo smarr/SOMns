@@ -513,8 +513,7 @@ public final class Parser {
           mgenc.getFrameOnStackMarkerSlot(),
           mgenc.getOuterSelfSlot(),
           mgenc.getOuterSelfContextLevel(),
-          universe,
-          mgenc.getLocalSelfSlot(), getSource(coord));
+          universe, getSource(coord));
       mgenc.makeCatchNonLocalReturn();
       return result;
     } else {
@@ -865,14 +864,13 @@ public final class Parser {
       Variable variable = mgenc.getVariable("self");
       return variable.getSuperReadNode(mgenc.getOuterSelfContextLevel(),
           mgenc.getHolder().getName(), mgenc.getHolder().isClassSide(),
-          mgenc.getLocalSelfSlot(), source);
+          source);
     }
 
     // now look up first local variables, or method arguments
     Variable variable = mgenc.getVariable(variableName);
     if (variable != null) {
-      return variable.getReadNode(mgenc.getContextLevel(variableName),
-          mgenc.getLocalSelfSlot(), source);
+      return variable.getReadNode(mgenc.getContextLevel(variableName), source);
     }
 
     // then object fields
@@ -893,7 +891,7 @@ public final class Parser {
     Local variable = mgenc.getLocal(variableName);
     if (variable != null) {
       return variable.getWriteNode(mgenc.getContextLevel(variableName),
-          mgenc.getLocalSelfSlot(), exp, source);
+          exp, source);
     }
 
     SSymbol fieldName = universe.symbolFor(variableName);

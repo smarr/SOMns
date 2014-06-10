@@ -24,6 +24,7 @@ package som.interpreter.nodes;
 import som.interpreter.FrameOnStackMarker;
 import som.interpreter.Inliner;
 import som.interpreter.ReturnException;
+import som.interpreter.SArguments;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
@@ -48,9 +49,8 @@ public final class ReturnNonLocalNode extends ContextualNode {
       final FrameSlot frameOnStackMarker,
       final FrameSlot outerSelfSlot,
       final int outerSelfContextLevel,
-      final Universe universe,
-      final FrameSlot localSelf, final SourceSection source) {
-    super(outerSelfContextLevel, localSelf, source);
+      final Universe universe, final SourceSection source) {
+    super(outerSelfContextLevel, source);
     this.expression = expression;
     this.universe   = universe;
     this.blockEscaped = new BranchProfile();
@@ -58,10 +58,11 @@ public final class ReturnNonLocalNode extends ContextualNode {
     this.outerSelfSlot      = outerSelfSlot;
   }
 
-  public ReturnNonLocalNode(final ReturnNonLocalNode node, final FrameSlot inlinedFrameOnStack,
-      final FrameSlot inlinedOuterSelfSlot, final FrameSlot inlinedLocalSelfSlot) {
+  public ReturnNonLocalNode(final ReturnNonLocalNode node,
+      final FrameSlot inlinedFrameOnStack,
+      final FrameSlot inlinedOuterSelfSlot) {
     this(node.expression, inlinedFrameOnStack, inlinedOuterSelfSlot,
-        node.contextLevel, node.universe, inlinedLocalSelfSlot, node.getSourceSection());
+        node.contextLevel, node.universe, node.getSourceSection());
   }
 
   private FrameOnStackMarker getMarkerFromContext(final MaterializedFrame ctx) {
@@ -78,7 +79,7 @@ public final class ReturnNonLocalNode extends ContextualNode {
       throw new ReturnException(result, marker);
     } else {
       blockEscaped.enter();
-      SBlock block = (SBlock) FrameUtil.getObjectSafe(frame, localSelf);
+      SBlock block = (SBlock) SArguments.rcvr(frame);
       Object self = FrameUtil.getObjectSafe(ctx, outerSelfSlot);
       return SAbstractObject.sendEscapedBlock(self, block, universe);
     }
@@ -91,14 +92,12 @@ public final class ReturnNonLocalNode extends ContextualNode {
 
   @Override
   public void replaceWithIndependentCopyForInlining(final Inliner inliner) {
-    FrameSlot localSelfSlot        = inliner.getLocalFrameSlot(getLocalSelfSlotIdentifier());
     FrameSlot inlinedFrameOnStack  = inliner.getFrameSlot(this, frameOnStackMarker.getIdentifier());
     FrameSlot inlinedOuterSelfSlot = inliner.getFrameSlot(this, outerSelfSlot.getIdentifier());
 
-    assert localSelfSlot        != null;
     assert inlinedFrameOnStack  != null;
     assert inlinedOuterSelfSlot != null;
-    replace(new ReturnNonLocalNode(this, inlinedFrameOnStack, inlinedOuterSelfSlot, localSelfSlot));
+    replace(new ReturnNonLocalNode(this, inlinedFrameOnStack, inlinedOuterSelfSlot));
   }
 
   public static final class CatchNonLocalReturnNode extends ExpressionNode {

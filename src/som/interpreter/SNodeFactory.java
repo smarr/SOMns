@@ -66,21 +66,21 @@ public final class SNodeFactory {
   }
 
   public static ContextualNode createVariableRead(final Variable variable,
-      final int contextLevel, final FrameSlot localSelf, final SourceSection source) {
-    return new UninitializedVariableReadNode(variable, contextLevel, localSelf, source);
+      final int contextLevel, final SourceSection source) {
+    return new UninitializedVariableReadNode(variable, contextLevel, source);
   }
 
   public static ContextualNode createSuperRead(final Variable variable,
-        final int contextLevel, final FrameSlot localSelf,
+        final int contextLevel,
         final SSymbol holderClass, final boolean classSide, final SourceSection source) {
-    return new UninitializedSuperReadNode(variable, contextLevel, localSelf,
+    return new UninitializedSuperReadNode(variable, contextLevel,
         holderClass, classSide, source);
   }
 
   public static ContextualNode createVariableWrite(final Local variable,
-        final int contextLevel, final FrameSlot localSelf,
+        final int contextLevel,
         final ExpressionNode exp, final SourceSection source) {
-    return new UninitializedVariableWriteNode(variable, contextLevel, localSelf, exp, source);
+    return new UninitializedVariableWriteNode(variable, contextLevel, exp, source);
   }
 
   public static LocalVariableWriteNode createLocalVariableWrite(

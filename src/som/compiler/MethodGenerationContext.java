@@ -338,8 +338,7 @@ public final class MethodGenerationContext {
   }
 
   private ContextualNode getSelfRead(final SourceSection source) {
-    return getVariable("self").getReadNode(getContextLevel("self"),
-        getLocalSelfSlot(), source);
+    return getVariable("self").getReadNode(getContextLevel("self"), source);
   }
 
   public FieldReadNode getObjectFieldRead(final SSymbol fieldName,
