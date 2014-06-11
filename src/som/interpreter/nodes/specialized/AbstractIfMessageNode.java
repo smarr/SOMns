@@ -5,6 +5,7 @@ import som.vm.Universe;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 
+import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -65,6 +66,7 @@ public abstract class AbstractIfMessageNode extends BinaryExpressionNode {
       final SBlock argument, final boolean predicateObject) {
     if (receiver == predicateObject) {
       ifTrueBranch.enter();
+      CompilerAsserts.neverPartOfCompilation();
       return argument.getMethod().invoke(argument);
     } else {
       ifFalseBranch.enter();

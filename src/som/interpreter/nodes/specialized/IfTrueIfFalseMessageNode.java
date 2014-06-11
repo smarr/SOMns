@@ -6,6 +6,7 @@ import som.vm.Universe;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 
+import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -91,9 +92,11 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
       final boolean receiver, final SBlock trueBlock, final SBlock falseBlock) {
     if (receiver) {
       ifTrueBranch.enter();
+      CompilerAsserts.neverPartOfCompilation();
       return trueBlock.getMethod().invoke(trueBlock);
     } else {
       ifFalseBranch.enter();
+      CompilerAsserts.neverPartOfCompilation();
       return falseBlock.getMethod().invoke(falseBlock);
     }
   }
@@ -130,6 +133,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
       return trueValue;
     } else {
       ifFalseBranch.enter();
+      CompilerAsserts.neverPartOfCompilation();
       return falseBlock.getMethod().invoke(falseBlock);
     }
   }
@@ -139,6 +143,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
       final boolean receiver, final SBlock trueBlock, final Object falseValue) {
     if (receiver) {
       ifTrueBranch.enter();
+      CompilerAsserts.neverPartOfCompilation();
       return trueBlock.getMethod().invoke(trueBlock);
     } else {
       ifFalseBranch.enter();
