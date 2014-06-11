@@ -119,7 +119,7 @@ public final class ClassGenerationContext {
     SClass superClass = universe.loadClass(superName);
 
     // Allocate the class of the resulting class
-    SClass resultClass = universe.newClass(universe.metaclassClass);
+    SClass resultClass = universe.newClass(universe.metaclassClass, universe.standardDomain);
 
     // Initialize the class of the resulting class
     resultClass.setInstanceFields(classFields.toArray(new SSymbol[0]));
@@ -130,7 +130,7 @@ public final class ClassGenerationContext {
     resultClass.setSuperClass(superMClass);
 
     // Allocate the resulting class
-    SClass result = universe.newClass(resultClass);
+    SClass result = universe.newClass(resultClass, universe.standardDomain);
 
     // Initialize the resulting class
     result.setName(name);

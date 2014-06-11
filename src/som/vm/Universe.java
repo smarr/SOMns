@@ -25,6 +25,8 @@
 
 package som.vm;
 
+import static som.vmobjects.SDomain.createStandardDomain;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
@@ -272,7 +274,7 @@ public class Universe {
     // Lookup the initialize invokable on the system class
     SInvokable initialize = clazz.getSOMClass(this).
                                         lookupInvokable(symbolFor(selector));
-    return initialize.invoke(clazz);
+    return initialize.invoke(standardDomain, false, clazz);
   }
 
   private Object execute(final String[] arguments) {
@@ -288,28 +290,30 @@ public class Universe {
     SInvokable initialize = systemClass.
         lookupInvokable(symbolFor("initialize:"));
 
-    return initialize.invoke(new Object[] {systemObject, arguments});
+    return initialize.invoke(standardDomain, false, systemObject, arguments);
   }
 
   @SlowPath
   protected void initializeObjectSystem() {
     // Allocate the nil object
-    nilObject = SObject.create(0, null);
+    nilObject = SObject.create(null, null, 0);
+    standardDomain = createStandardDomain(nilObject);
+    nilObject.setDomain(standardDomain);
 
     // Allocate the Metaclass classes
-    metaclassClass = newMetaclassClass();
+    metaclassClass = newMetaclassClass(standardDomain);
 
     // Allocate the rest of the system classes
-    objectClass     = newSystemClass();
-    nilClass        = newSystemClass();
-    classClass      = newSystemClass();
-    arrayClass      = newSystemClass();
-    symbolClass     = newSystemClass();
-    methodClass     = newSystemClass();
-    integerClass    = newSystemClass();
-    primitiveClass  = newSystemClass();
-    stringClass     = newSystemClass();
-    doubleClass     = newSystemClass();
+    objectClass     = newSystemClass(standardDomain);
+    nilClass        = newSystemClass(standardDomain);
+    classClass      = newSystemClass(standardDomain);
+    arrayClass      = newSystemClass(standardDomain);
+    symbolClass     = newSystemClass(standardDomain);
+    methodClass     = newSystemClass(standardDomain);
+    integerClass    = newSystemClass(standardDomain);
+    primitiveClass  = newSystemClass(standardDomain);
+    stringClass     = newSystemClass(standardDomain);
+    doubleClass     = newSystemClass(standardDomain);
 
     // Setup the class reference for the nil object
     nilObject.setClass(nilClass, nilObject);
@@ -346,15 +350,15 @@ public class Universe {
     // Setup the true and false objects
     SSymbol trueClassName = symbolFor("True");
     trueClass             = loadClass(trueClassName);
-    trueObject            = newInstance(trueClass);
+    trueObject            = newInstance(trueClass, standardDomain);
 
     SSymbol falseClassName = symbolFor("False");
     falseClass             = loadClass(falseClassName);
-    falseObject            = newInstance(falseClass);
+    falseObject            = newInstance(falseClass, standardDomain);
 
     // Load the system class and create an instance of it
     systemClass  = loadClass(symbolFor("System"));
-    systemObject = newInstance(systemClass);
+    systemObject = newInstance(systemClass, standardDomain);
 
     // Put special objects and classes into the dictionary of globals
     setGlobal(symbolFor("nil"),    nilObject);
@@ -385,9 +389,9 @@ public class Universe {
   }
 
   @SlowPath
-  public SClass newClass(final SClass classClass) {
+  public SClass newClass(final SClass classClass, final SObject domain) {
     // Allocate a new class and set its class to be the given class class
-    return new SClass(classClass, this);
+    return new SClass(domain, classClass, this);
   }
 
   @SlowPath
@@ -401,15 +405,15 @@ public class Universe {
     }
   }
 
-  public SObject newInstance(final SClass instanceClass) {
-    return SObject.create(instanceClass, nilObject);
+  public SObject newInstance(final SClass instanceClass, final SObject domain) {
+    return SObject.create(nilObject, domain, instanceClass);
   }
 
   @SlowPath
-  public SClass newMetaclassClass() {
+  public SClass newMetaclassClass(final SObject domain) {
     // Allocate the metaclass classes
-    SClass result = new SClass(0, this);
-    result.setClass(new SClass(0, this), nilObject);
+    SClass result = new SClass(domain, 0, this);
+    result.setClass(new SClass(domain, 0, this), nilObject);
 
     // Setup the metaclass hierarchy
     result.getSOMClass(this).setClass(result, nilObject);
@@ -428,12 +432,12 @@ public class Universe {
   }
 
   @SlowPath
-  public SClass newSystemClass() {
+  public SClass newSystemClass(final SObject domain) {
     // Allocate the new system class
-    SClass systemClass = new SClass(0, this);
+    SClass systemClass = new SClass(domain, 0, this);
 
     // Setup the metaclass hierarchy
-    systemClass.setClass(new SClass(0, this), nilObject);
+    systemClass.setClass(new SClass(domain, 0, this), nilObject);
     systemClass.getSOMClass(this).setClass(metaclassClass, nilObject);
 
     // Return the freshly allocated system class
@@ -661,6 +665,10 @@ public class Universe {
 
   @CompilationFinal public SClass               trueClass;
   @CompilationFinal public SClass               falseClass;
+
+  @CompilationFinal public SClass               domainClass;
+  @CompilationFinal public SObject              standardDomain;
+
 
   private final HashMap<SSymbol, Association>   globals;
 

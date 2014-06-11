@@ -75,13 +75,15 @@ public class SObject extends SAbstractObject {
 
   private final int numberOfFields;
 
-  protected SObject(final SClass instanceClass, final SObject nilObject) {
+  protected SObject(final SObject nilObject, final SObject domain, final SClass instanceClass) {
+    this.domain    = domain;
     numberOfFields = instanceClass.getNumberOfInstanceFields();
     clazz          = instanceClass;
     setLayoutInitially(instanceClass.getLayoutForInstances(), nilObject);
   }
 
-  protected SObject(final int numFields, final SObject nilObject) {
+  protected SObject(final SObject nilObject, final SObject domain, final int numFields) {
+    this.domain    = domain;
     numberOfFields = numFields;
     setLayoutInitially(new ObjectLayout(numFields, null), nilObject);
   }
@@ -217,12 +219,14 @@ public class SObject extends SAbstractObject {
     return clazz;
   }
 
-  public static final SObject create(final SClass instanceClass, final SObject nilObject) {
-    return new SObject(instanceClass, nilObject);
+  public static final SObject create(final SObject nilObject,
+      final SObject domain, final SClass instanceClass) {
+    return new SObject(nilObject, domain, instanceClass);
   }
 
-  public static SObject create(final int numFields, final SObject nilObject) {
-    return new SObject(numFields, nilObject);
+  public static SObject create(final SObject nilObject,
+      final SObject domain, final int numFields) {
+    return new SObject(nilObject, domain, numFields);
   }
 
   private static final long FIRST_OBJECT_FIELD_OFFSET = getFirstObjectFieldOffset();

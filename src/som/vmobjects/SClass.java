@@ -43,10 +43,10 @@ public final class SClass extends SObject {
 
   private final Universe universe;
 
-  public SClass(final int numberOfFields, final Universe universe) {
+  public SClass(final SObject domain, final int numberOfFields, final Universe universe) {
     // Initialize this class by calling the super constructor with the given
     // value
-    super(numberOfFields, universe.nilObject);
+    super(universe.nilObject, domain, numberOfFields);
     invokablesTable = new HashMap<SSymbol, SInvokable>();
     this.universe   = universe;
     this.superclass = universe.nilObject;
@@ -54,8 +54,8 @@ public final class SClass extends SObject {
     layoutForInstances = new ObjectLayout(numberOfFields, this);
   }
 
-  public SClass(final SClass clazz, final Universe universe) {
-    super(clazz, universe.nilObject);
+  public SClass(final SObject domain, final SClass clazz, final Universe universe) {
+    super(universe.nilObject, domain, clazz);
     invokablesTable = new HashMap<SSymbol, SInvokable>();
     this.universe   = universe;
     this.superclass = universe.nilObject;
