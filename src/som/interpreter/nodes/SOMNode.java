@@ -39,7 +39,7 @@ public abstract class SOMNode extends Node {
     this.executesEnforced = executesEnforced;
   }
 
-  public boolean executesEnforced() {
+  public final boolean nodeExecutesEnforced() {
     return executesEnforced;
   }
 
