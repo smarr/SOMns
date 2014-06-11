@@ -177,8 +177,8 @@ public final class ReturnNonLocalNode extends ContextualNode {
       FrameSlot inlinedFrameOnStackMarker = inliner.getLocalFrameSlot(
           frameOnStackMarker.getIdentifier());
       assert inlinedFrameOnStackMarker != null;
-      replace(new CatchNonLocalReturnNode(methodBody,
-          inlinedFrameOnStackMarker, executesEnforced));
+      replace(new CatchNonLocalReturnNode(methodBody, inlinedFrameOnStackMarker,
+          getSourceSection(), executesEnforced));
     }
   }
 }
