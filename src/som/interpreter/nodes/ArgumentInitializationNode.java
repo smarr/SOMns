@@ -14,8 +14,8 @@ public final class ArgumentInitializationNode extends ExpressionNode {
 
   public ArgumentInitializationNode(
       final LocalVariableWriteNode[] argumentInits,
-      final ExpressionNode methodBody) {
-    super(null);
+      final ExpressionNode methodBody, final boolean executesEnforced) {
+    super(null, executesEnforced);
     this.argumentInits = argumentInits;
     this.methodBody    = methodBody;
   }

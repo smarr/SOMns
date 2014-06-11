@@ -1,7 +1,7 @@
 package som.interpreter.nodes.literals;
 
+import som.interpreter.AbstractInvokable;
 import som.interpreter.Inliner;
-import som.interpreter.Invokable;
 import som.vm.Universe;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
@@ -39,7 +39,7 @@ public class BlockNode extends LiteralNode {
   }
 
   protected SInvokable cloneMethod(final Inliner inliner) {
-    Invokable clonedInvokable = blockMethod.getInvokable().
+    AbstractInvokable clonedInvokable = blockMethod.getInvokable().
         cloneWithNewLexicalContext(inliner.getLexicalContext());
     SInvokable forInlining = universe.newMethod(blockMethod.getSignature(),
         clonedInvokable, false, new SMethod[0]);

@@ -26,7 +26,7 @@
 package som.vmobjects;
 
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
-import som.interpreter.Invokable;
+import som.interpreter.AbstractInvokable;
 import som.vm.Universe;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
@@ -34,7 +34,7 @@ import com.oracle.truffle.api.RootCallTarget;
 
 public abstract class SInvokable extends SAbstractObject {
 
-  public SInvokable(final SSymbol signature, final Invokable invokable) {
+  public SInvokable(final SSymbol signature, final AbstractInvokable invokable) {
     this.signature = signature;
 
     this.invokable   = invokable;
@@ -44,7 +44,7 @@ public abstract class SInvokable extends SAbstractObject {
   public static final class SMethod extends SInvokable {
     private final SMethod[] embeddedBlocks;
 
-    public SMethod(final SSymbol signature, final Invokable invokable,
+    public SMethod(final SSymbol signature, final AbstractInvokable invokable,
         final SMethod[] embeddedBlocks) {
       super(signature, invokable);
       this.embeddedBlocks = embeddedBlocks;
@@ -65,7 +65,7 @@ public abstract class SInvokable extends SAbstractObject {
   }
 
   public static final class SPrimitive extends SInvokable {
-    public SPrimitive(final SSymbol signature, final Invokable invokable) {
+    public SPrimitive(final SSymbol signature, final AbstractInvokable invokable) {
       super(signature, invokable);
     }
 
@@ -79,7 +79,7 @@ public abstract class SInvokable extends SAbstractObject {
     return callTarget;
   }
 
-  public final Invokable getInvokable() {
+  public final AbstractInvokable getInvokable() {
     return invokable;
   }
 
@@ -116,7 +116,7 @@ public abstract class SInvokable extends SAbstractObject {
   }
 
   // Private variable holding Truffle runtime information
-  private final Invokable              invokable;
+  private final AbstractInvokable      invokable;
   private final RootCallTarget         callTarget;
   private final SSymbol                signature;
   @CompilationFinal private SClass     holder;

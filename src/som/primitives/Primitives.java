@@ -93,7 +93,7 @@ public abstract class Primitives {
 
   @SlowPath
   public static SInvokable constructEmptyPrimitive(final SSymbol signature,
-      final Universe universe) {
+      final Universe universe, final boolean unenforced) {
     MethodGenerationContext mgen = new MethodGenerationContext();
 
     ExpressionNode primNode = EmptyPrim.create(new ArgumentReadNode(0));
@@ -124,8 +124,8 @@ public abstract class Primitives {
   protected SClass holder;
 
   public static SInvokable getEmptyPrimitive(final String selector,
-      final Universe universe) {
+      final Universe universe, final boolean unenforced) {
     SSymbol signature = universe.symbolFor(selector);
-    return constructEmptyPrimitive(signature, universe);
+    return constructEmptyPrimitive(signature, universe, unenforced);
   }
 }

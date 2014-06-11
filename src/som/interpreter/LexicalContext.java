@@ -8,7 +8,7 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 public final class LexicalContext {
   private final FrameDescriptor frameDescriptor;
   private final LexicalContext  lexicalContext;
-  @CompilationFinal private Method outerMethod;
+  @CompilationFinal private AbstractInvokable outerMethod;
 
   public LexicalContext(final FrameDescriptor frameDescriptor,
       final LexicalContext outerContext) {
@@ -24,11 +24,11 @@ public final class LexicalContext {
     return lexicalContext;
   }
 
-  public Method getOuterMethod() {
+  public AbstractInvokable getOuterMethod() {
     return outerMethod;
   }
 
-  public void setOuterMethod(final Method method) {
+  public void setOuterMethod(final AbstractInvokable method) {
     CompilerAsserts.neverPartOfCompilation();
     assert outerMethod == null; // should not have been set before
     outerMethod = method;

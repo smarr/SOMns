@@ -8,8 +8,9 @@ public final class ArgumentReadNode extends ExpressionNode
     implements PreevaluatedExpression {
   protected final int argumentIndex;
 
-  public ArgumentReadNode(final int argumentIndex) {
-    super(null);
+  public ArgumentReadNode(final int argumentIndex,
+      final boolean executesEnforced) {
+    super(null, executesEnforced);
     assert argumentIndex >= 0;
     this.argumentIndex = argumentIndex;
   }

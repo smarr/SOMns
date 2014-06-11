@@ -31,7 +31,7 @@ import java.util.HashMap;
 import java.util.StringTokenizer;
 
 import som.compiler.Disassembler;
-import som.interpreter.Invokable;
+import som.interpreter.AbstractInvokable;
 import som.interpreter.TruffleCompiler;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
@@ -392,7 +392,7 @@ public class Universe {
 
   @SlowPath
   public SInvokable newMethod(final SSymbol signature,
-      final Invokable truffleInvokable, final boolean isPrimitive,
+      final AbstractInvokable truffleInvokable, final boolean isPrimitive,
       final SMethod[] embeddedBlocks) {
     if (isPrimitive) {
       return new SPrimitive(signature, truffleInvokable);

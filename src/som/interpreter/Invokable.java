@@ -2,16 +2,13 @@ package som.interpreter;
 
 import som.interpreter.nodes.ExpressionNode;
 
-import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.SourceSection;
-import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.NodeUtil;
-import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.utilities.BranchProfile;
 
-public abstract class Invokable extends RootNode {
+public abstract class Invokable extends AbstractInvokable {
 
   private final BranchProfile enforced;
   private final BranchProfile unenforced;
@@ -19,8 +16,8 @@ public abstract class Invokable extends RootNode {
   @Child protected ExpressionNode enforcedBody;
   @Child protected ExpressionNode unenforcedBody;
 
-  private final ExpressionNode uninitializedEnforcedBody;
-  private final ExpressionNode uninitializedUnenforcedBody;
+  protected final ExpressionNode uninitializedEnforcedBody;
+  protected final ExpressionNode uninitializedUnenforcedBody;
 
   public Invokable(final SourceSection sourceSection,
       final FrameDescriptor frameDescriptor,
@@ -32,16 +29,8 @@ public abstract class Invokable extends RootNode {
     this.uninitializedUnenforcedBody = NodeUtil.cloneNode(unenforcedBody);
     this.unenforcedBody = unenforcedBody;
 
-    enforced = new BranchProfile();
+    enforced   = new BranchProfile();
     unenforced = new BranchProfile();
-  }
-
-  public ExpressionNode getUninitializedEnforcedBody() {
-    return uninitializedEnforcedBody;
-  }
-
-  public ExpressionNode getUninitializedUnenforcedBody() {
-    return uninitializedUnenforcedBody;
   }
 
   @Override
@@ -54,19 +43,4 @@ public abstract class Invokable extends RootNode {
       return unenforcedBody.executeGeneric(frame);
     }
   }
-
-  public abstract Invokable cloneWithNewLexicalContext(final LexicalContext outerContext);
-
-  @Override
-  public final boolean isSplittable() {
-    return true;
-  }
-
-  public final RootCallTarget createCallTarget() {
-    return Truffle.getRuntime().createCallTarget(this);
-  }
-
-  public abstract void propagateLoopCountThroughoutLexicalScope(final long count);
-
-  public abstract boolean isBlock();
 }

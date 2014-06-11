@@ -7,12 +7,11 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.nodes.RootNode;
 
 
-public final class Primitive extends Invokable {
+public final class PrimitiveUnenforced extends InvokableUnenforced {
 
-  public Primitive(final ExpressionNode primitiveEnforced,
-      final ExpressionNode primitiveUnenforced,
+  public PrimitiveUnenforced(final ExpressionNode primitiveUnenforced,
       final FrameDescriptor frameDescriptor) {
-    super(null, frameDescriptor, primitiveEnforced, primitiveUnenforced);
+    super(null, frameDescriptor, primitiveUnenforced);
   }
 
   @Override
@@ -20,11 +19,9 @@ public final class Primitive extends Invokable {
     FrameDescriptor inlinedFrameDescriptor = getFrameDescriptor().copy();
     LexicalContext  inlinedContext = new LexicalContext(inlinedFrameDescriptor,
         outerContext);
-    ExpressionNode  inlinedEnforcedBody = Inliner.doInline(
-        uninitializedEnforcedBody, inlinedContext);
     ExpressionNode  inlinedUnenforcedBody = Inliner.doInline(
         uninitializedUnenforcedBody, inlinedContext);
-    return new Primitive(inlinedEnforcedBody, inlinedUnenforcedBody,
+    return new PrimitiveUnenforced(inlinedUnenforcedBody,
         inlinedFrameDescriptor);
   }
 

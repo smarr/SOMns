@@ -38,8 +38,9 @@ import java.util.List;
 
 import som.compiler.Variable.Argument;
 import som.compiler.Variable.Local;
+import som.interpreter.AbstractInvokable;
 import som.interpreter.LexicalContext;
-import som.interpreter.nodes.ArgumentInitializationNode;
+import som.interpreter.MethodUnenforced;
 import som.interpreter.nodes.ContextualNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.FieldNode.FieldReadNode;
@@ -157,7 +158,7 @@ public final class MethodGenerationContext {
   }
 
   public SInvokable assemblePrimitive(final Universe universe) {
-    return Primitives.getEmptyPrimitive(signature.getString(), universe);
+    return Primitives.getEmptyPrimitive(signature.getString(), universe, unenforced);
   }
 
   private void separateVariables(final Collection<? extends Variable> variables,
@@ -172,30 +173,38 @@ public final class MethodGenerationContext {
     }
   }
 
-  private ArgumentInitializationNode addArgumentInitialization(final ExpressionNode methodBody) {
-    return createArgumentInitialization(methodBody, arguments);
-  }
-
-  public SMethod assemble(final Universe universe, final ExpressionNode enforcedBody, final ExpressionNode unenforcedBody) {
+  public SMethod assemble(final Universe universe,
+      ExpressionNode enforcedBody, ExpressionNode unenforcedBody) {
     ArrayList<Variable> onlyLocalAccess = new ArrayList<>(arguments.size() + locals.size());
     ArrayList<Variable> nonLocalAccess  = new ArrayList<>(arguments.size() + locals.size());
     separateVariables(arguments.values(), onlyLocalAccess, nonLocalAccess);
     separateVariables(locals.values(),    onlyLocalAccess, nonLocalAccess);
 
-    SourceSection sourceSection = methodBody.getSourceSection();
+    assert enforcedBody.getSourceSection() == unenforcedBody.getSourceSection();
+    SourceSection sourceSection = enforcedBody.getSourceSection();
 
     if (needsToCatchNonLocalReturn()) {
-      methodBody = createCatchNonLocalReturn(methodBody,
-          getFrameOnStackMarkerSlot());
-      methodBody.assignSourceSection(sourceSection);
+      enforcedBody   = createCatchNonLocalReturn(enforcedBody,
+          getFrameOnStackMarkerSlot(), sourceSection, true);
+      unenforcedBody = createCatchNonLocalReturn(unenforcedBody,
+          getFrameOnStackMarkerSlot(), sourceSection, false);
     }
 
-    methodBody.assignSourceSection(sourceSection);
-    methodBody = addArgumentInitialization(methodBody);
+    enforcedBody   = createArgumentInitialization(enforcedBody,   arguments, true);
+    unenforcedBody = createArgumentInitialization(unenforcedBody, arguments, false);
 
-    som.interpreter.Method truffleMethod =
-        new som.interpreter.Method(getSourceSectionForMethod(sourceSection),
-            frameDescriptor, methodBody, universe, getLexicalContext());
+    SourceSection methodSourceSection = getSourceSectionForMethod(sourceSection);
+
+    AbstractInvokable truffleMethod;
+    if (unenforced) {
+      truffleMethod = new MethodUnenforced(methodSourceSection, frameDescriptor,
+          unenforcedBody, universe, getLexicalContext());
+    } else {
+      truffleMethod =
+        new som.interpreter.Method(methodSourceSection,
+            frameDescriptor, enforcedBody, unenforcedBody, universe,
+            getLexicalContext());
+    }
 
     setOuterMethodInLexicalScopes(truffleMethod);
 
@@ -206,7 +215,7 @@ public final class MethodGenerationContext {
     return meth;
   }
 
-  private void setOuterMethodInLexicalScopes(final som.interpreter.Method method) {
+  private void setOuterMethodInLexicalScopes(final AbstractInvokable method) {
     for (SMethod m : embeddedBlockMethods) {
       som.interpreter.Method blockMethod = (som.interpreter.Method) m.getInvokable();
       blockMethod.setOuterContextMethod(method);

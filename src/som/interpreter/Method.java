@@ -58,10 +58,12 @@ public final class Method extends Invokable {
     FrameDescriptor inlinedFrameDescriptor = getFrameDescriptor().copy();
     LexicalContext  inlinedContext = new LexicalContext(inlinedFrameDescriptor,
         outerContext);
-    ExpressionNode  inlinedBody = Inliner.doInline(getUninitializedBody(),
-        inlinedContext);
-    Method clone = new Method(getSourceSection(), inlinedFrameDescriptor, inlinedBody,
-        universe, outerContext);
+    ExpressionNode  inlinedEnforcedBody = Inliner.doInline(
+        uninitializedEnforcedBody, inlinedContext);
+    ExpressionNode  inlinedUnenforcedBody = Inliner.doInline(
+        uninitializedUnenforcedBody, inlinedContext);
+    Method clone = new Method(getSourceSection(), inlinedFrameDescriptor,
+        inlinedEnforcedBody, inlinedUnenforcedBody, universe, outerContext);
     inlinedContext.setOuterMethod(clone);
     return clone;
   }
@@ -71,7 +73,8 @@ public final class Method extends Invokable {
     return outerContext != null;
   }
 
-  public void setOuterContextMethod(final Method method) {
+  @Override
+  public void setOuterContextMethod(final AbstractInvokable method) {
     outerContext.setOuterMethod(method);
   }
 
