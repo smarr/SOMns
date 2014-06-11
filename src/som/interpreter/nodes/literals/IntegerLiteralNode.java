@@ -8,8 +8,9 @@ public final class IntegerLiteralNode extends LiteralNode {
 
   private final long value;
 
-  public IntegerLiteralNode(final long value, final SourceSection source) {
-    super(source);
+  public IntegerLiteralNode(final long value, final SourceSection source,
+      final boolean executesEnforced) {
+    super(source, executesEnforced);
     this.value = value;
   }
 

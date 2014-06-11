@@ -11,8 +11,9 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 public abstract class UnaryExpressionNode extends ExpressionNode
     implements PreevaluatedExpression {
 
-  public UnaryExpressionNode(final SourceSection source) {
-    super(source);
+  public UnaryExpressionNode(final SourceSection source,
+      final boolean executesEnforced) {
+    super(source, executesEnforced);
   }
 
   public abstract Object executeEvaluated(final VirtualFrame frame,
@@ -30,8 +31,8 @@ public abstract class UnaryExpressionNode extends ExpressionNode
   public abstract static class UnarySideEffectFreeExpressionNode
       extends UnaryExpressionNode {
 
-    public UnarySideEffectFreeExpressionNode() {
-      super(null);
+    public UnarySideEffectFreeExpressionNode(final boolean executesEnforced) {
+      super(null, executesEnforced);
     }
 
     @Override

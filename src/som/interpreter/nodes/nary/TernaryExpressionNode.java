@@ -14,11 +14,13 @@ import com.oracle.truffle.api.frame.VirtualFrame;
   @NodeChild(value = "secondArg", type = ExpressionNode.class)})
 public abstract class TernaryExpressionNode extends ExpressionNode {
 
-  public TernaryExpressionNode(final SourceSection sourceSection) {
-    super(sourceSection);
+  public TernaryExpressionNode(final SourceSection sourceSection,
+      final boolean executesEnforced) {
+    super(sourceSection, executesEnforced);
   }
 
-  public TernaryExpressionNode() { this(null); }
+  public TernaryExpressionNode(final boolean executesEnforced) {
+    this(null, executesEnforced); }
 
   public abstract Object executeEvaluated(final VirtualFrame frame,
       final Object receiver, final Object firstArg, final Object secondArg);
@@ -28,6 +30,10 @@ public abstract class TernaryExpressionNode extends ExpressionNode {
 
   public abstract static class TernarySideEffectFreeExpressionNode
     extends TernaryExpressionNode {
+
+    public TernarySideEffectFreeExpressionNode(final boolean executesEnforced) {
+      super(executesEnforced);
+    }
 
     @Override
     public final void executeVoid(final VirtualFrame frame) {

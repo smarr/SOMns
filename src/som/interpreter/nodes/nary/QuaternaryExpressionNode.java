@@ -15,8 +15,9 @@ import com.oracle.truffle.api.frame.VirtualFrame;
   @NodeChild(value = "thirdArg",  type = ExpressionNode.class)})
 public abstract class QuaternaryExpressionNode extends ExpressionNode {
 
-  public QuaternaryExpressionNode(final SourceSection sourceSection) {
-    super(sourceSection);
+  public QuaternaryExpressionNode(final SourceSection sourceSection,
+      final boolean executesEnforced) {
+    super(sourceSection, executesEnforced);
   }
 
   public abstract Object executeEvaluated(final VirtualFrame frame,
@@ -30,8 +31,8 @@ public abstract class QuaternaryExpressionNode extends ExpressionNode {
   public abstract static class QuaternarySideEffectFreeExpressionNode
       extends QuaternaryExpressionNode {
 
-    public QuaternarySideEffectFreeExpressionNode() {
-      super(null);
+    public QuaternarySideEffectFreeExpressionNode(final boolean executesEnforced) {
+      super(null, executesEnforced);
     }
 
     @Override

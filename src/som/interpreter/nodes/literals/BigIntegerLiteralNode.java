@@ -11,8 +11,8 @@ public final class BigIntegerLiteralNode extends LiteralNode {
   private final BigInteger value;
 
   public BigIntegerLiteralNode(final BigInteger value,
-      final SourceSection source) {
-    super(source);
+      final SourceSection source, final boolean executesEnforced) {
+    super(source, executesEnforced);
     this.value = value;
   }
 

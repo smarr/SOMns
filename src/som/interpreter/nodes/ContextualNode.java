@@ -37,8 +37,8 @@ public abstract class ContextualNode extends ExpressionNode {
   protected final FrameSlot      localSelf;
 
   public ContextualNode(final int contextLevel, final FrameSlot localSelf,
-      final SourceSection source) {
-    super(source);
+      final SourceSection source, final boolean executesEnforced) {
+    super(source, executesEnforced);
     this.contextLevel = contextLevel;
     this.localSelf    = localSelf;
   }

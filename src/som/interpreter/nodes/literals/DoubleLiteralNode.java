@@ -7,8 +7,9 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 public final class DoubleLiteralNode extends LiteralNode {
   private final double value;
 
-  public DoubleLiteralNode(final double value, final SourceSection source) {
-    super(source);
+  public DoubleLiteralNode(final double value, final SourceSection source,
+      final boolean executesEnforced) {
+    super(source, executesEnforced);
     this.value = value;
   }
 

@@ -12,11 +12,9 @@ import som.interpreter.nodes.ContextualNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.FieldNode.FieldReadNode;
 import som.interpreter.nodes.FieldNode.FieldWriteNode;
-import som.interpreter.nodes.FieldNodeFactory.FieldWriteNodeFactory;
 import som.interpreter.nodes.GlobalNode;
 import som.interpreter.nodes.GlobalNode.UninitializedGlobalReadNode;
 import som.interpreter.nodes.LocalVariableNode.LocalVariableWriteNode;
-import som.interpreter.nodes.LocalVariableNodeFactory.LocalVariableWriteNodeFactory;
 import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.ReturnNonLocalNode;
 import som.interpreter.nodes.ReturnNonLocalNode.CatchNonLocalReturnNode;
@@ -45,16 +43,16 @@ public final class SNodeFactory {
 
     for (Argument arg : arguments.values()) {
       writes[arg.index] = LocalVariableWriteNodeFactory.create(
-          arg.slot, null, new ArgumentReadNode(arg.index));
+          arg.slot, null, new ArgumentReadNode(arg.index, executeEnforced));
     }
-    return new ArgumentInitializationNode(writes, methodBody);
+    return new ArgumentInitializationNode(writes, methodBody, executeEnforced);
   }
 
   public static CatchNonLocalReturnNode createCatchNonLocalReturn(
       final ExpressionNode methodBody, final FrameSlot frameOnStackMarker,
-      final boolean executeEnforced) {
+      final SourceSection source, final boolean executeEnforced) {
     return new CatchNonLocalReturnNode(methodBody, frameOnStackMarker,
-        executeEnforced);
+        source, executeEnforced);
   }
 
   public static FieldReadNode createFieldRead(final ExpressionNode self,

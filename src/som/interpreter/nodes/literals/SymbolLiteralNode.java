@@ -9,8 +9,9 @@ public final class SymbolLiteralNode extends LiteralNode {
 
   private final SSymbol value;
 
-  public SymbolLiteralNode(final SSymbol value, final SourceSection source) {
-    super(source);
+  public SymbolLiteralNode(final SSymbol value, final SourceSection source,
+      final boolean executesEnforced) {
+    super(source, executesEnforced);
     this.value = value;
   }
 

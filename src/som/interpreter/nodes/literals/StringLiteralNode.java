@@ -8,8 +8,9 @@ public final class StringLiteralNode extends LiteralNode {
 
   private final String value;
 
-  public StringLiteralNode(final String value, final SourceSection source) {
-    super(source);
+  public StringLiteralNode(final String value, final SourceSection source,
+      final boolean executesEnforced) {
+    super(source, executesEnforced);
     this.value = value;
   }
 

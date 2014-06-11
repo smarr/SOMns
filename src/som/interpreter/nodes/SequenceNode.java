@@ -28,8 +28,9 @@ import com.oracle.truffle.api.nodes.ExplodeLoop;
 public final class SequenceNode extends ExpressionNode {
   @Children private final ExpressionNode[] expressions;
 
-  public SequenceNode(final ExpressionNode[] expressions, final SourceSection source) {
-    super(source);
+  public SequenceNode(final ExpressionNode[] expressions,
+      final SourceSection source, final boolean executesEnforced) {
+    super(source, executesEnforced);
     this.expressions = expressions;
   }
 

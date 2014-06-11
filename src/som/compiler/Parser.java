@@ -801,11 +801,11 @@ public final class Parser {
        SourceSection source = getSource(coord);
        if (i < Long.MIN_VALUE || i > Long.MAX_VALUE) {
          BigInteger bi = BigInteger.valueOf(i);
-         return tuple(new BigIntegerLiteralNode(bi, source),
-             new BigIntegerLiteralNode(bi, source));
+         return tuple(new BigIntegerLiteralNode(bi, source, true),
+             new BigIntegerLiteralNode(bi, source, false));
        } else {
-         return tuple(new IntegerLiteralNode(i, source),
-             new IntegerLiteralNode(i, source));
+         return tuple(new IntegerLiteralNode(i, source, true),
+             new IntegerLiteralNode(i, source, false));
        }
     } catch (NumberFormatException e) {
       throw new ParseError("Could not parse integer. Expected a number but " +
@@ -820,8 +820,9 @@ public final class Parser {
         d = 0.0 - d;
       }
       expect(Double);
-      return tuple(new DoubleLiteralNode(d, getSource(coord)),
-          new DoubleLiteralNode(d, getSource(coord)));
+      SourceSection source = getSource(coord);
+      return tuple(new DoubleLiteralNode(d, source, true),
+          new DoubleLiteralNode(d, source, false));
     } catch (NumberFormatException e) {
       throw new ParseError("Could not parse double. Expected a number but " +
           "got '" + text + "'", NONE, this);
@@ -839,16 +840,18 @@ public final class Parser {
     } else {
       symb = selector();
     }
-    return tuple(new SymbolLiteralNode(symb, getSource(coord)),
-        new SymbolLiteralNode(symb, getSource(coord)));
+    SourceSection source = getSource(coord);
+    return tuple(new SymbolLiteralNode(symb, source, true),
+        new SymbolLiteralNode(symb, source, false));
   }
 
   private ExpressionTuple literalString() throws ParseError {
     SourceCoordinate coord = getCoordinate();
     String s = string();
 
-    return tuple(new StringLiteralNode(s, getSource(coord)),
-        new StringLiteralNode(s, getSource(coord)));
+    SourceSection source = getSource(coord);
+    return tuple(new StringLiteralNode(s, source, true),
+        new StringLiteralNode(s, source, false));
   }
 
   private SSymbol selector() throws ParseError {

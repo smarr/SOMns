@@ -49,8 +49,9 @@ public final class ReturnNonLocalNode extends ContextualNode {
       final FrameSlot outerSelfSlot,
       final int outerSelfContextLevel,
       final Universe universe,
-      final FrameSlot localSelf, final SourceSection source) {
-    super(outerSelfContextLevel, localSelf, source);
+      final FrameSlot localSelf, final SourceSection source,
+      final boolean executesEnforced) {
+    super(outerSelfContextLevel, localSelf, source, executesEnforced);
     this.expression = expression;
     this.universe   = universe;
     this.blockEscaped = new BranchProfile();
@@ -61,7 +62,8 @@ public final class ReturnNonLocalNode extends ContextualNode {
   public ReturnNonLocalNode(final ReturnNonLocalNode node, final FrameSlot inlinedFrameOnStack,
       final FrameSlot inlinedOuterSelfSlot, final FrameSlot inlinedLocalSelfSlot) {
     this(node.expression, inlinedFrameOnStack, inlinedOuterSelfSlot,
-        node.contextLevel, node.universe, inlinedLocalSelfSlot, node.getSourceSection());
+        node.contextLevel, node.universe, inlinedLocalSelfSlot,
+        node.getSourceSection(), node.executesEnforced);
   }
 
   private FrameOnStackMarker getMarkerFromContext(final MaterializedFrame ctx) {
@@ -109,8 +111,9 @@ public final class ReturnNonLocalNode extends ContextualNode {
     private final FrameSlot frameOnStackMarker;
 
     public CatchNonLocalReturnNode(final ExpressionNode methodBody,
-        final FrameSlot frameOnStackMarker) {
-      super(null);
+        final FrameSlot frameOnStackMarker, final SourceSection source,
+        final boolean executesEnforced) {
+      super(source, executesEnforced);
       this.methodBody = methodBody;
       this.nonLocalReturnHandler = new BranchProfile();
       this.frameOnStackMarker    = frameOnStackMarker;
@@ -171,9 +174,11 @@ public final class ReturnNonLocalNode extends ContextualNode {
 
     @Override
     public void replaceWithIndependentCopyForInlining(final Inliner inliner) {
-      FrameSlot inlinedFrameOnStackMarker = inliner.getLocalFrameSlot(frameOnStackMarker.getIdentifier());
+      FrameSlot inlinedFrameOnStackMarker = inliner.getLocalFrameSlot(
+          frameOnStackMarker.getIdentifier());
       assert inlinedFrameOnStackMarker != null;
-      replace(new CatchNonLocalReturnNode(methodBody, inlinedFrameOnStackMarker));
+      replace(new CatchNonLocalReturnNode(methodBody,
+          inlinedFrameOnStackMarker, executesEnforced));
     }
   }
 }

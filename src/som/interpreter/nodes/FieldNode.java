@@ -38,8 +38,8 @@ import com.oracle.truffle.api.nodes.UnexpectedResultException;
 
 public abstract class FieldNode extends ExpressionNode {
 
-  protected FieldNode(final SourceSection source) {
-    super(source);
+  protected FieldNode(final SourceSection source, final boolean executesEnforced) {
+    super(source, executesEnforced);
   }
 
   protected abstract ExpressionNode getSelf();
