@@ -2,6 +2,7 @@ package som.interpreter;
 
 import som.vmobjects.SObject;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
@@ -23,11 +24,24 @@ public final class SArguments {
   }
 
   public static SObject domain(final Frame frame) {
-    return (SObject) frame.getArguments()[DOMAIN_IDX];
+    return CompilerDirectives.unsafeCast(frame.getArguments()[DOMAIN_IDX], SObject.class, true);
   }
 
   public static boolean enforced(final Frame frame) {
-    return (boolean) frame.getArguments()[ENFORCED_FLAG_IDX];
+    return CompilerDirectives.unsafeCast(frame.getArguments()[ENFORCED_FLAG_IDX], Boolean.class, true);
+  }
+
+  @ExplodeLoop
+  public static Object[] createSArguments(final SObject domain,
+      final boolean enforced, final Object[] arguments) {
+    Object[] args = new Object[arguments.length + ARGUMENT_OFFSET];
+    args[ENFORCED_FLAG_IDX] = enforced;
+    args[DOMAIN_IDX]        = domain;
+
+    for (int i = 0; i < arguments.length; i++) {
+      args[i + ARGUMENT_OFFSET] = arguments[i];
+    }
+    return args;
   }
 
   /**

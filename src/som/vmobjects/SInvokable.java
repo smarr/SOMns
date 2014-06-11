@@ -25,6 +25,7 @@
 
 package som.vmobjects;
 
+import static som.interpreter.SArguments.createSArguments;
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
 import som.interpreter.AbstractInvokable;
 import som.vm.Universe;
@@ -101,8 +102,8 @@ public abstract class SInvokable extends SAbstractObject {
     return getSignature().getNumberOfSignatureArguments();
   }
 
-  public final Object invoke(final Object... arguments) {
-    return callTarget.call(arguments);
+  public final Object invoke(final SObject domain, final boolean enforced, final Object... arguments) {
+    return callTarget.call(createSArguments(domain, enforced, arguments));
   }
 
   @Override
