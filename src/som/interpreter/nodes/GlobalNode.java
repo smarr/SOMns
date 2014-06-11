@@ -40,7 +40,7 @@ public abstract class GlobalNode extends ExpressionNode {
 
   public GlobalNode(final SSymbol globalName, final Universe universe,
       final SourceSection source) {
-    super(source);
+    super(source, false); /* TODO: enforced!!! */
     this.globalName = globalName;
     this.universe   = universe;
   }

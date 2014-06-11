@@ -12,6 +12,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 
 public final class ArrayPrims {
   public abstract static class AtPrim extends BinarySideEffectFreeExpressionNode {
+    public AtPrim() { super(false); /* TODO: enforced!!! */ }
     @Specialization
     public final Object doSArray(final Object[] receiver, final long argument) {
       return receiver[(int) argument - 1];
@@ -19,6 +20,7 @@ public final class ArrayPrims {
   }
 
   public abstract static class AtPutPrim extends TernaryExpressionNode {
+    public AtPutPrim() { super(false); /* TODO: enforced!!! */ }
     @Specialization
     public final Object doSArray(final Object[] receiver, final long index, final Object value) {
       receiver[(int) index - 1] = value;
@@ -28,7 +30,7 @@ public final class ArrayPrims {
 
   public abstract static class NewPrim extends BinarySideEffectFreeExpressionNode {
     private final Universe universe;
-    public NewPrim() { this.universe = Universe.current(); }
+    public NewPrim() { super(false);  /* TODO: enforced!!! */ this.universe = Universe.current(); }
 
     protected final boolean receiverIsArrayClass(final SClass receiver) {
       return receiver == universe.arrayClass;

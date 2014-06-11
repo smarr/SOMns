@@ -26,7 +26,7 @@
 package som.primitives;
 
 import som.compiler.MethodGenerationContext;
-import som.interpreter.Primitive;
+import som.interpreter.PrimitiveUnenforced;
 import som.interpreter.nodes.ArgumentReadNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.vm.Universe;
@@ -65,7 +65,7 @@ public abstract class Primitives {
     MethodGenerationContext mgen = new MethodGenerationContext();
     ExpressionNode[] args = new ExpressionNode[numArgs];
     for (int i = 0; i < numArgs; i++) {
-      args[i] = new ArgumentReadNode(i);
+      args[i] = new ArgumentReadNode(i, false);  /* TODO: enforced!!! */
     }
 
     ExpressionNode primNode;
@@ -86,7 +86,7 @@ public abstract class Primitives {
         throw new RuntimeException("Not supported by SOM.");
     }
 
-    Primitive primMethodNode = new Primitive(primNode, mgen.getFrameDescriptor());
+    PrimitiveUnenforced primMethodNode = new PrimitiveUnenforced(primNode, mgen.getFrameDescriptor()); /* TODO: enforced!!! */
     SInvokable prim = universe.newMethod(signature, primMethodNode, true, new SMethod[0]);
     return prim;
   }
@@ -96,8 +96,8 @@ public abstract class Primitives {
       final Universe universe, final boolean unenforced) {
     MethodGenerationContext mgen = new MethodGenerationContext();
 
-    ExpressionNode primNode = EmptyPrim.create(new ArgumentReadNode(0));
-    Primitive primMethodNode = new Primitive(primNode, mgen.getFrameDescriptor());
+    ExpressionNode primNode = EmptyPrim.create(new ArgumentReadNode(0, false), false);  /* TODO: enforced!!! */ /* TODO: enforced!!! */
+    PrimitiveUnenforced primMethodNode = new PrimitiveUnenforced(primNode, mgen.getFrameDescriptor());
     SInvokable prim = universe.newMethod(signature, primMethodNode, true, new SMethod[0]);
     return prim;
   }

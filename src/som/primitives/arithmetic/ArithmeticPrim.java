@@ -6,6 +6,7 @@ import som.interpreter.nodes.nary.BinaryExpressionNode.BinarySideEffectFreeExpre
 
 
 public abstract class ArithmeticPrim extends BinarySideEffectFreeExpressionNode {
+  public ArithmeticPrim() { super(false); } /* TODO: enforced!!! */
   protected final Number reduceToIntIfPossible(final BigInteger result) {
     if (result.bitLength() > 31) {
       return result;

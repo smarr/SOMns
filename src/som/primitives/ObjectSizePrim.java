@@ -6,6 +6,8 @@ import som.vmobjects.SObject;
 import com.oracle.truffle.api.dsl.Specialization;
 
 public abstract class ObjectSizePrim extends UnarySideEffectFreeExpressionNode {
+  public ObjectSizePrim() { super(false); } /* TODO: enforced!!! */
+
   @Specialization
   public final long doArray(final Object[] receiver) {
     int size = 0;

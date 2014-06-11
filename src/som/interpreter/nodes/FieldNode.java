@@ -60,7 +60,7 @@ public abstract class FieldNode extends ExpressionNode {
 
     public FieldReadNode(final ExpressionNode self, final int fieldIndex,
         final SourceSection source) {
-      super(source);
+      super(source, false);  /* TODO: enforced!!! */
       this.self = self;
       read = new UninitializedReadFieldNode(fieldIndex);
     }
@@ -120,7 +120,7 @@ public abstract class FieldNode extends ExpressionNode {
     @Child private AbstractWriteFieldNode write;
 
     public FieldWriteNode(final int fieldIndex, final SourceSection source) {
-      super(source);
+      super(source, false);  /* TODO: enforced!!! */
       write = new UninitializedWriteFieldNode(fieldIndex);
     }
 

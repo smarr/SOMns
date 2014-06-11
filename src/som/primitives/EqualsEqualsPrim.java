@@ -11,6 +11,7 @@ import som.vmobjects.SSymbol;
 import com.oracle.truffle.api.dsl.Specialization;
 
 public abstract class EqualsEqualsPrim extends BinarySideEffectFreeExpressionNode {
+  public EqualsEqualsPrim() { super(false); } /* TODO: enforced!!! */
 
   @Specialization(order = 1)
   public final boolean doBoolean(final boolean left, final boolean right) {

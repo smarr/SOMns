@@ -12,9 +12,11 @@ import som.interpreter.nodes.ContextualNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.FieldNode.FieldReadNode;
 import som.interpreter.nodes.FieldNode.FieldWriteNode;
+import som.interpreter.nodes.FieldNodeFactory.FieldWriteNodeFactory;
 import som.interpreter.nodes.GlobalNode;
 import som.interpreter.nodes.GlobalNode.UninitializedGlobalReadNode;
 import som.interpreter.nodes.LocalVariableNode.LocalVariableWriteNode;
+import som.interpreter.nodes.LocalVariableNodeFactory.LocalVariableWriteNodeFactory;
 import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.ReturnNonLocalNode;
 import som.interpreter.nodes.ReturnNonLocalNode.CatchNonLocalReturnNode;
@@ -58,7 +60,7 @@ public final class SNodeFactory {
   public static FieldReadNode createFieldRead(final ExpressionNode self,
       final int fieldIndex, final SourceSection source,
       final boolean executeEnforced) {
-    return new FieldReadNode(self, fieldIndex, source, executeEnforced);
+    return new FieldReadNode(self, fieldIndex, source);  /* TODO: enforced!!! */
   }
 
   public static GlobalNode createGlobalRead(final String name,
@@ -69,19 +71,19 @@ public final class SNodeFactory {
 
   public static GlobalNode createGlobalRead(final SSymbol name,
       final Universe universe, final SourceSection source, final boolean executeEnforced) {
-    return new UninitializedGlobalReadNode(name, universe, source, executeEnforced);
+    return new UninitializedGlobalReadNode(name, universe, source);  /* TODO: enforced!!! */
   }
 
   public static FieldWriteNode createFieldWrite(final ExpressionNode self,
       final ExpressionNode exp, final int fieldIndex,
       final SourceSection source, final boolean executeEnforced) {
-    return FieldWriteNodeFactory.create(fieldIndex, source, self, exp, executeEnforced);
+    return FieldWriteNodeFactory.create(fieldIndex, source, self, exp);  /* TODO: enforced!!! */
   }
 
   public static ContextualNode createVariableRead(final Variable variable,
       final int contextLevel, final FrameSlot localSelf,
       final SourceSection source, final boolean executeEnforced) {
-    return new UninitializedVariableReadNode(variable, contextLevel, localSelf, source, executeEnforced);
+    return new UninitializedVariableReadNode(variable, contextLevel, localSelf, source);  /* TODO: enforced!!! */
   }
 
   public static ContextualNode createSuperRead(final Variable variable,
@@ -89,14 +91,14 @@ public final class SNodeFactory {
         final SSymbol holderClass, final boolean classSide,
         final SourceSection source, final boolean executeEnforced) {
     return new UninitializedSuperReadNode(variable, contextLevel, localSelf,
-        holderClass, classSide, source, executeEnforced);
+        holderClass, classSide, source);  /* TODO: enforced!!! */
   }
 
   public static ContextualNode createVariableWrite(final Local variable,
         final int contextLevel, final FrameSlot localSelf,
         final ExpressionNode exp, final SourceSection source,
         final boolean executeEnforced) {
-    return new UninitializedVariableWriteNode(variable, contextLevel, localSelf, exp, source, executeEnforced);
+    return new UninitializedVariableWriteNode(variable, contextLevel, localSelf, exp, source);  /* TODO: enforced!!! */
   }
 
   public static LocalVariableWriteNode createLocalVariableWrite(
@@ -107,7 +109,7 @@ public final class SNodeFactory {
 
   public static SequenceNode createSequence(final List<ExpressionNode> exps,
       final SourceSection source, final boolean executeEnforced) {
-    new SequenceNode(exps.toArray(new ExpressionNode[0]), source, executeEnforced);
+    return new SequenceNode(exps.toArray(new ExpressionNode[0]), source, executeEnforced);
   }
 
   public static BlockNode createBlockNode(final SMethod blockMethod,
@@ -123,13 +125,13 @@ public final class SNodeFactory {
   public static ExpressionNode createMessageSend(final SSymbol msg,
       final ExpressionNode[] exprs, final SourceSection source,
       final boolean executeEnforced) {
-    return MessageSendNode.create(msg, exprs, source, executeEnforced);
+    return MessageSendNode.create(msg, exprs, source); /* TODO: enforced!!! */
   }
 
   public static ExpressionNode createMessageSend(final SSymbol msg,
       final List<ExpressionNode> exprs, final SourceSection source,
       final boolean executeEnforced) {
-    return MessageSendNode.create(msg, exprs.toArray(new ExpressionNode[0]), source, executeEnforced);
+    return MessageSendNode.create(msg, exprs.toArray(new ExpressionNode[0]), source);  /* TODO: enforced!!! */
   }
 
   public static ReturnNonLocalNode createNonLocalReturn(final ExpressionNode exp,

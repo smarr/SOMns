@@ -30,7 +30,7 @@ public abstract class WhileWithStaticBlocksNode extends BinaryExpressionNode {
   private WhileWithStaticBlocksNode(final BlockNode receiver,
       final BlockNode argument, final SBlock rcvr, final SBlock arg,
       final boolean predicateBool, final Universe universe, final SourceSection source) {
-    super(source);
+    super(source, false);   // TODO: enforced!!!
     this.receiver = receiver;
     this.argument = argument;
 

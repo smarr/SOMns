@@ -11,6 +11,7 @@ public abstract class PerformWithArgumentsPrim extends TernaryExpressionNode {
   @Child protected AbstractSymbolDispatch dispatch;
 
   public PerformWithArgumentsPrim() {
+    super(false);
     dispatch = AbstractSymbolDispatch.create();
   }
 

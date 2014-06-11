@@ -15,6 +15,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 
 public final class ObjectPrims {
   public abstract static class InstVarAtPrim extends BinarySideEffectFreeExpressionNode {
+    public InstVarAtPrim() { super(false); } /* TODO: enforced!!! */
     @Specialization
     public final Object doSObject(final SObject receiver, final long idx) {
       return receiver.getField(idx - 1);
@@ -22,6 +23,7 @@ public final class ObjectPrims {
   }
 
   public abstract static class InstVarAtPutPrim extends TernaryExpressionNode {
+    public InstVarAtPutPrim() { super(false); } /* TODO: enforced!!! */
     @Specialization
     public final Object doSObject(final SObject receiver, final long idx, final SAbstractObject val) {
       receiver.setField(idx - 1, val);
@@ -36,7 +38,7 @@ public final class ObjectPrims {
   }
 
   public abstract static class HaltPrim extends UnaryExpressionNode {
-    public HaltPrim() { super(null); }
+    public HaltPrim() { super(null, false); } /* TODO: enforced!!! */
     @Specialization
     public final SAbstractObject doSAbstractObject(final SAbstractObject receiver) {
       Universe.errorPrintln("BREAKPOINT");
@@ -46,7 +48,7 @@ public final class ObjectPrims {
 
   public abstract static class ClassPrim extends UnarySideEffectFreeExpressionNode {
     private final Universe universe;
-    public ClassPrim() { this.universe = Universe.current(); }
+    public ClassPrim() { super(false); /* TODO: enforced!!! */ this.universe = Universe.current(); }
 
     @Specialization
     public final SClass doSAbstractObject(final SAbstractObject receiver) {

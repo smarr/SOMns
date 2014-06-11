@@ -10,6 +10,8 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 public abstract class PerformInSuperclassPrim extends TernaryExpressionNode {
+  public PerformInSuperclassPrim() { super(false); } /* TODO: enforced!!! */
+
   @Specialization
   public final Object doSAbstractObject(final VirtualFrame frame,
       final SAbstractObject receiver, final SSymbol selector, final SClass  clazz) {

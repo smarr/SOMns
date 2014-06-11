@@ -23,7 +23,7 @@ public abstract class LocalVariableNode extends ExpressionNode {
   protected final FrameSlot slot;
 
   private LocalVariableNode(final FrameSlot slot, final SourceSection source) {
-    super(source);
+    super(source, false);  /* TODO: enforced!!! */
     this.slot = slot;
   }
 
@@ -207,7 +207,7 @@ public abstract class LocalVariableNode extends ExpressionNode {
       if (getParent() instanceof ArgumentInitializationNode) {
         FrameSlot varSlot = inliner.getLocalFrameSlot(getSlotIdentifier());
         assert varSlot != null;
-        replace(createLocalVariableWrite(varSlot, getExp(), getSourceSection()));
+        replace(createLocalVariableWrite(varSlot, getExp(), getSourceSection(), false));  /* TODO: enforced!!! */
       } else {
         throw new RuntimeException("Should not be part of an uninitalized tree. And this should only be done with uninitialized trees.");
       }

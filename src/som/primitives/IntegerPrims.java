@@ -13,6 +13,8 @@ import com.oracle.truffle.api.utilities.BranchProfile;
 public abstract class IntegerPrims {
 
   public abstract static class RandomPrim extends UnarySideEffectFreeExpressionNode {
+    public RandomPrim() { super(false); } /* TODO: enforced!!! */
+
     @Specialization
     public final long doLong(final long receiver) {
       return (long) (receiver * Math.random());

@@ -24,7 +24,7 @@ public abstract class AbstractIfMessageNode extends BinaryExpressionNode {
 
   public AbstractIfMessageNode(final Object rcvr, final Object arg,
       final Universe universe, final SourceSection source) {
-    super(source);
+    super(source, false); // TODO: enforced!!!
     if (arg instanceof SBlock) {
       SBlock argBlock = (SBlock) arg;
       branchMethod = argBlock.getMethod();
@@ -37,7 +37,7 @@ public abstract class AbstractIfMessageNode extends BinaryExpressionNode {
   }
 
   public AbstractIfMessageNode(final AbstractIfMessageNode node) {
-    super(node.getSourceSection());
+    super(node.getSourceSection(), false);  // TODO: enforced!!!
     branchMethod = node.branchMethod;
     if (node.branchMethod != null) {
       branchValueSend = Truffle.getRuntime().createDirectCallNode(

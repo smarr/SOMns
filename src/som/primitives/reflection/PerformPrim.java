@@ -9,7 +9,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 public abstract class PerformPrim extends BinaryExpressionNode {
   @Child protected AbstractSymbolDispatch dispatch;
 
-  public PerformPrim() { super(null); dispatch = AbstractSymbolDispatch.create(); }
+  public PerformPrim() { super(null, false); /* TODO: enforced!!! */ dispatch = AbstractSymbolDispatch.create(); }
 
   @Specialization
   public final Object doObject(final VirtualFrame frame, final Object receiver, final SSymbol selector) {

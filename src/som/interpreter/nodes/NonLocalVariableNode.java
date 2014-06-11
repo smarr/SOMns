@@ -20,7 +20,7 @@ public abstract class NonLocalVariableNode extends ContextualNode {
 
   private NonLocalVariableNode(final int contextLevel, final FrameSlot slot,
       final FrameSlot localSelf, final SourceSection source) {
-    super(contextLevel, localSelf, source);
+    super(contextLevel, localSelf, source, false);  /* TODO: enforced!!! */
     this.slot = slot;
   }
 

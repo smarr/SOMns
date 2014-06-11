@@ -31,8 +31,9 @@ public abstract class UninitializedVariableNode extends ContextualNode {
   protected final Variable variable;
 
   public UninitializedVariableNode(final Variable variable,
-      final int contextLevel, final FrameSlot localSelf, final SourceSection source) {
-    super(contextLevel, localSelf, source);
+      final int contextLevel, final FrameSlot localSelf,
+      final SourceSection source) {
+    super(contextLevel, localSelf, source, false); /* TODO: enforced!!! */
     this.variable = variable;
   }
 

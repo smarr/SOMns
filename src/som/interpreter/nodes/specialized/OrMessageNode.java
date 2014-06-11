@@ -16,14 +16,14 @@ public abstract class OrMessageNode extends BinaryExpressionNode {
   @Child private DirectCallNode blockValueSend;
 
   public OrMessageNode(final SBlock arg, final SourceSection source) {
-    super(source);
+    super(source, false);   // TODO: enforced!!!
     blockMethod = arg.getMethod();
     blockValueSend = Truffle.getRuntime().createDirectCallNode(
         blockMethod.getCallTarget());
   }
 
   public OrMessageNode(final OrMessageNode copy) {
-    super(copy.getSourceSection());
+    super(copy.getSourceSection(), false);   // TODO: enforced!!!
     blockMethod = copy.blockMethod;
     blockValueSend = copy.blockValueSend;
   }
@@ -43,7 +43,7 @@ public abstract class OrMessageNode extends BinaryExpressionNode {
   }
 
   public abstract static class OrBoolMessageNode extends BinaryExpressionNode {
-    public OrBoolMessageNode(final SourceSection source) { super(source); }
+    public OrBoolMessageNode(final SourceSection source) { super(source, false); /* TODO: enforced!!! */ }
     @Specialization
     public final boolean doOr(final VirtualFrame frame, final boolean receiver,
         final boolean argument) {

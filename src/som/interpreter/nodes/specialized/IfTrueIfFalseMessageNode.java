@@ -27,6 +27,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
 
   public IfTrueIfFalseMessageNode(final Object rcvr, final Object arg1,
       final Object arg2, final Universe universe) {
+    super(false);  // TODO: enforced!!!
     if (arg1 instanceof SBlock) {
       SBlock trueBlock = (SBlock) arg1;
       trueMethod = trueBlock.getMethod();
@@ -49,6 +50,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
   }
 
   public IfTrueIfFalseMessageNode(final IfTrueIfFalseMessageNode node) {
+    super(false);  // TODO: enforced!!!
     trueMethod = node.trueMethod;
     if (node.trueMethod != null) {
       trueValueSend = Truffle.getRuntime().createDirectCallNode(
