@@ -7,6 +7,7 @@ import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 
+import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -21,6 +22,7 @@ public abstract class AbstractIfMessageNode extends BinaryExpressionNode {
   private final SInvokable branchMethod;
 
   @Child protected DirectCallNode branchValueSend;
+  private final boolean branchEnforced;
 
   protected final Universe universe;
 
@@ -32,8 +34,10 @@ public abstract class AbstractIfMessageNode extends BinaryExpressionNode {
       branchMethod = argBlock.getMethod();
       branchValueSend = Truffle.getRuntime().createDirectCallNode(
           branchMethod.getCallTarget());
+      branchEnforced = argBlock.isEnforced();
     } else {
       branchMethod = null;
+      branchEnforced = false; // TODO: does this even matter?
     }
     this.universe = universe;
   }
@@ -41,6 +45,7 @@ public abstract class AbstractIfMessageNode extends BinaryExpressionNode {
   public AbstractIfMessageNode(final AbstractIfMessageNode node) {
     super(node.getSourceSection(), false);  // TODO: enforced!!!
     branchMethod = node.branchMethod;
+    branchEnforced = node.branchEnforced;
     if (node.branchMethod != null) {
       branchValueSend = Truffle.getRuntime().createDirectCallNode(
           branchMethod.getCallTarget());
@@ -57,8 +62,7 @@ public abstract class AbstractIfMessageNode extends BinaryExpressionNode {
     if (receiver == predicateObject) {
       ifTrueBranch.enter();
       SObject domain   = SArguments.domain(frame);
-      boolean enforced = SArguments.enforced(frame);
-      return branchValueSend.call(frame, SArguments.createSArguments(domain, enforced, new Object[] {argument}));
+      return branchValueSend.call(frame, SArguments.createSArguments(domain, branchEnforced, new Object[] {argument}));
     } else {
       ifFalseBranch.enter();
       return universe.nilObject;
@@ -69,9 +73,9 @@ public abstract class AbstractIfMessageNode extends BinaryExpressionNode {
       final SBlock argument, final boolean predicateObject) {
     if (receiver == predicateObject) {
       ifTrueBranch.enter();
+      CompilerAsserts.neverPartOfCompilation();
       SObject domain   = SArguments.domain(frame);
-      boolean enforced = SArguments.enforced(frame);
-      return argument.getMethod().invoke(domain, enforced, argument);
+      return argument.getMethod().invoke(domain, branchEnforced, argument);
     } else {
       ifFalseBranch.enter();
       return universe.nilObject;

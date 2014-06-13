@@ -17,18 +17,21 @@ public abstract class AndMessageNode extends BinaryExpressionNode {
 
   private final SInvokable blockMethod;
   @Child private DirectCallNode blockValueSend;
+  private final boolean    blockEnforced;
 
   public AndMessageNode(final SBlock arg, final SourceSection source) {
     super(source, false);  // TODO: enforced!!!
     blockMethod = arg.getMethod();
     blockValueSend = Truffle.getRuntime().createDirectCallNode(
         blockMethod.getCallTarget());
+    blockEnforced = arg.isEnforced();
   }
 
   public AndMessageNode(final AndMessageNode copy) {
     super(copy.getSourceSection(), false);  // TODO: enforced!!!
     blockMethod    = copy.blockMethod;
     blockValueSend = copy.blockValueSend;
+    blockEnforced  = copy.blockEnforced;
   }
 
   protected final boolean isSameBlock(final boolean receiver, final SBlock argument) {
@@ -42,8 +45,9 @@ public abstract class AndMessageNode extends BinaryExpressionNode {
       return false;
     } else {
       SObject domain = SArguments.domain(frame);
-      boolean enforced = SArguments.enforced(frame);
-      return (boolean) blockValueSend.call(frame, SArguments.createSArguments(domain, enforced, new Object[] {argument}));
+      return (boolean) blockValueSend.call(frame,
+          SArguments.createSArguments(domain, blockEnforced,
+              new Object[] {argument}));
     }
   }
 

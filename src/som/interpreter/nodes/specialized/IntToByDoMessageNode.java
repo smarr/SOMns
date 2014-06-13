@@ -23,6 +23,7 @@ public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode
 
   private final SInvokable blockMethod;
   @Child private DirectCallNode valueSend;
+  private final boolean blockEnforced;
 
   public IntToByDoMessageNode(final ExpressionNode orignialNode,
       final SBlock block) {
@@ -30,12 +31,14 @@ public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode
     blockMethod = block.getMethod();
     valueSend = Truffle.getRuntime().createDirectCallNode(
                     blockMethod.getCallTarget());
+    blockEnforced = block.isEnforced();
   }
 
   public IntToByDoMessageNode(final IntToByDoMessageNode node) {
     super(node.getSourceSection(), false);   // TODO: enforced!!!
     this.blockMethod = node.blockMethod;
     this.valueSend   = node.valueSend;
+    this.blockEnforced = node.blockEnforced;
   }
 
   @Override
@@ -57,9 +60,8 @@ public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode
   public final long doIntToByDo(final VirtualFrame frame, final long receiver, final long limit, final long step, final SBlock block) {
     try {
       SObject domain = SArguments.domain(frame);
-      boolean enforced = SArguments.enforced(frame);
       for (long i = receiver; i <= limit; i += step) {
-        valueSend.call(frame, SArguments.createSArguments(domain, enforced, new Object[] {block, i}));
+        valueSend.call(frame, SArguments.createSArguments(domain, blockEnforced, new Object[] {block, i}));
       }
     } finally {
       if (CompilerDirectives.inInterpreter()) {
@@ -73,9 +75,8 @@ public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode
   public final long doIntToByDo(final VirtualFrame frame, final long receiver, final double limit, final long step, final SBlock block) {
     try {
       SObject domain = SArguments.domain(frame);
-      boolean enforced = SArguments.enforced(frame);
       for (long i = receiver; i <= limit; i += step) {
-        valueSend.call(frame, SArguments.createSArguments(domain, enforced, new Object[] {block, i}));
+        valueSend.call(frame, SArguments.createSArguments(domain, blockEnforced, new Object[] {block, i}));
       }
     } finally {
       if (CompilerDirectives.inInterpreter()) {

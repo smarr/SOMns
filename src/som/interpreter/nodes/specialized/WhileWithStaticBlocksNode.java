@@ -24,9 +24,11 @@ public abstract class WhileWithStaticBlocksNode extends BinaryExpressionNode {
   @Child protected BlockNode argument;
   @Child protected DirectCallNode  conditionValueSend;
   @Child protected DirectCallNode  bodyValueSend;
+  private final boolean conditionEnforced;
+  private final boolean bodyEnforced;
 
   protected final boolean predicateBool;
-  private final Universe universe;
+  private   final Universe universe;
 
   private WhileWithStaticBlocksNode(final BlockNode receiver,
       final BlockNode argument, final SBlock rcvr, final SBlock arg,
@@ -38,10 +40,12 @@ public abstract class WhileWithStaticBlocksNode extends BinaryExpressionNode {
     CallTarget callTargetCondition = rcvr.getMethod().getCallTarget();
     conditionValueSend = Truffle.getRuntime().createDirectCallNode(
         callTargetCondition);
+    conditionEnforced = rcvr.isEnforced();
 
     CallTarget callTargetBody = arg.getMethod().getCallTarget();
     bodyValueSend = Truffle.getRuntime().createDirectCallNode(
         callTargetBody);
+    bodyEnforced = arg.isEnforced();
 
     this.predicateBool = predicateBool;
     this.universe      = universe;
@@ -78,17 +82,18 @@ public abstract class WhileWithStaticBlocksNode extends BinaryExpressionNode {
       final SBlock loopBody) {
     long iterationCount = 0;
     SObject domain = SArguments.domain(frame);
-    boolean enforced = SArguments.enforced(frame);
     boolean loopConditionResult = (boolean) conditionValueSend.call(
-        frame, SArguments.createSArguments(domain, enforced, new Object[] {loopCondition}));
+        frame, SArguments.createSArguments(domain, conditionEnforced, new Object[] {loopCondition}));
 
 
     try {
       // TODO: this is a simplification, we don't cover the case receiver isn't a boolean
       while (loopConditionResult == predicateBool) {
-        bodyValueSend.call(frame, SArguments.createSArguments(domain, enforced, new Object[] {loopBody}));
+        bodyValueSend.call(frame, SArguments.createSArguments(domain,
+            bodyEnforced, new Object[] {loopBody}));
         loopConditionResult = (boolean) conditionValueSend.call(
-            frame, SArguments.createSArguments(domain, enforced, new Object[] {loopCondition}));
+            frame, SArguments.createSArguments(domain, conditionEnforced,
+                new Object[] {loopCondition}));
 
         if (CompilerDirectives.inInterpreter()) {
           iterationCount++;
