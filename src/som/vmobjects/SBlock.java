@@ -110,13 +110,13 @@ public abstract class SBlock extends SAbstractObject {
 
     switch (numberOfArguments) {
       case 1: return Primitives.constructPrimitive(sig,
-          ValueNonePrimFactory.getInstance(), universe, rcvrClass);
+          ValueNonePrimFactory.getInstance(), universe, rcvrClass, false);
       case 2: return Primitives.constructPrimitive(sig,
-          ValueOnePrimFactory.getInstance(), universe, rcvrClass);
+          ValueOnePrimFactory.getInstance(), universe, rcvrClass, false);
       case 3: return Primitives.constructPrimitive(sig,
-          ValueTwoPrimFactory.getInstance(), universe, rcvrClass);
+          ValueTwoPrimFactory.getInstance(), universe, rcvrClass, false);
       case 4: return Primitives.constructPrimitive(sig,
-          ValueMorePrimFactory.getInstance(), universe, rcvrClass);
+          ValueMorePrimFactory.getInstance(), universe, rcvrClass, false);
       default:
         throw new RuntimeException("Should not reach here. SOM only has blocks with up to 2 arguments.");
     }

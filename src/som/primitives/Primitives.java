@@ -26,6 +26,8 @@
 package som.primitives;
 
 import som.compiler.MethodGenerationContext;
+import som.interpreter.AbstractInvokable;
+import som.interpreter.Primitive;
 import som.interpreter.PrimitiveUnenforced;
 import som.interpreter.nodes.ArgumentReadNode;
 import som.interpreter.nodes.ExpressionNode;
@@ -59,7 +61,7 @@ public abstract class Primitives {
   @SlowPath
   public static SInvokable constructPrimitive(final SSymbol signature,
       final NodeFactory<? extends ExpressionNode> nodeFactory,
-      final Universe universe, final SClass holder) {
+      final Universe universe, final SClass holder, final boolean isUnenforced) {
     int numArgs = signature.getNumberOfSignatureArguments();
 
     MethodGenerationContext mgen = new MethodGenerationContext();
@@ -68,25 +70,36 @@ public abstract class Primitives {
       args[i] = new ArgumentReadNode(i, false);  /* TODO: enforced!!! */
     }
 
-    ExpressionNode primNode;
+    ExpressionNode primNodeEnforced;
+    ExpressionNode primNodeUnenforced;
+
     switch (numArgs) {
       case 1:
-        primNode = nodeFactory.createNode(args[0]);
+        primNodeEnforced   = nodeFactory.createNode(args[0]);
+        primNodeUnenforced = nodeFactory.createNode(args[0]);
         break;
       case 2:
-        primNode = nodeFactory.createNode(args[0], args[1]);
+        primNodeEnforced   = nodeFactory.createNode(args[0], args[1]);
+        primNodeUnenforced = nodeFactory.createNode(args[0], args[1]);
         break;
       case 3:
-        primNode = nodeFactory.createNode(args[0], args[1], args[2]);
+        primNodeEnforced   = nodeFactory.createNode(args[0], args[1], args[2]);
+        primNodeUnenforced = nodeFactory.createNode(args[0], args[1], args[2]);
         break;
       case 4:
-        primNode = nodeFactory.createNode(args[0], args[1], args[2], args[3]);
+        primNodeEnforced   = nodeFactory.createNode(args[0], args[1], args[2], args[3]);
+        primNodeUnenforced = nodeFactory.createNode(args[0], args[1], args[2], args[3]);
         break;
       default:
         throw new RuntimeException("Not supported by SOM.");
     }
 
-    PrimitiveUnenforced primMethodNode = new PrimitiveUnenforced(primNode, mgen.getFrameDescriptor()); /* TODO: enforced!!! */
+    AbstractInvokable primMethodNode;
+    if (isUnenforced) {
+      primMethodNode = new PrimitiveUnenforced(primNodeUnenforced, mgen.getFrameDescriptor());
+    } else {
+      primMethodNode = new Primitive(primNodeEnforced, primNodeUnenforced, mgen.getFrameDescriptor());
+    }
     SInvokable prim = universe.newMethod(signature, primMethodNode, true, new SMethod[0]);
     return prim;
   }
@@ -105,7 +118,9 @@ public abstract class Primitives {
   protected final void installInstancePrimitive(final String selector,
       final NodeFactory<? extends ExpressionNode> nodeFactory) {
     SSymbol signature = universe.symbolFor(selector);
-    SInvokable prim = constructPrimitive(signature, nodeFactory, universe, holder);
+    SInvokable oldPrim = holder.lookupInvokable(signature);
+
+    SInvokable prim = constructPrimitive(signature, nodeFactory, universe, holder, oldPrim.isUnenforced());
 
     // Install the given primitive as an instance primitive in the holder class
     holder.addInstancePrimitive(prim);
@@ -114,7 +129,9 @@ public abstract class Primitives {
   protected final void installClassPrimitive(final String selector,
       final NodeFactory<? extends ExpressionNode> nodeFactory) {
     SSymbol signature = universe.symbolFor(selector);
-    SInvokable prim = constructPrimitive(signature, nodeFactory, universe, holder);
+    SInvokable oldPrim = holder.getSOMClass(universe).lookupInvokable(signature);
+
+    SInvokable prim = constructPrimitive(signature, nodeFactory, universe, holder, oldPrim.isUnenforced());
 
     // Install the given primitive as an instance primitive in the class of
     // the holder class

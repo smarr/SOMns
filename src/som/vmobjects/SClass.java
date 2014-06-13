@@ -35,6 +35,7 @@ import som.primitives.Primitives;
 import som.vm.Universe;
 import som.vmobjects.SInvokable.SPrimitive;
 
+import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.SlowPath;
@@ -128,6 +129,10 @@ public final class SClass extends SObject {
     value.setHolder(this);
 
     instanceInvokables[index] = value;
+
+    if (invokablesTable.containsKey(value.getSignature())) {
+      invokablesTable.put(value.getSignature(), value);
+    }
   }
 
   @SlowPath
@@ -175,6 +180,8 @@ public final class SClass extends SObject {
   }
 
   private boolean addInstanceInvokable(final SInvokable value) {
+    CompilerAsserts.neverPartOfCompilation();
+
     // Add the given invokable to the array of instance invokables
     for (int i = 0; i < getNumberOfInstanceInvokables(); i++) {
       // Get the next invokable in the instance invokable array
