@@ -102,6 +102,10 @@ public abstract class SInvokable extends SAbstractObject {
     return getSignature().getNumberOfSignatureArguments();
   }
 
+  public final Object invokeWithSArguments(final Object[] arguments) {
+    return callTarget.call(arguments);
+  }
+
   public final Object invoke(final SObject domain, final boolean enforced, final Object... arguments) {
     return callTarget.call(createSArguments(domain, enforced, arguments));
   }
