@@ -689,8 +689,10 @@ public final class Parser {
   private ExpressionTuple unaryMessage(final ExpressionTuple receiver) throws ParseError {
     SourceCoordinate coord = getCoordinate();
     SSymbol selector = unarySelector();
-    return tuple(createMessageSend(selector, new ExpressionNode[] {receiver.en}, getSource(coord), true),
-        createMessageSend(selector, new ExpressionNode[] {receiver.un}, getSource(coord), true));
+
+    SourceSection source = getSource(coord);
+    return tuple(createMessageSend(selector, new ExpressionNode[] {receiver.en}, source, true),
+        createMessageSend(selector, new ExpressionNode[] {receiver.un}, source, true));
   }
 
   private ExpressionTuple binaryMessage(final MethodGenerationContext mgenc,
@@ -699,8 +701,9 @@ public final class Parser {
     SSymbol msg = binarySelector();
     ExpressionTuple operand = binaryOperand(mgenc);
 
-    return tuple(createMessageSend(msg, new ExpressionNode[] {receiver.en, operand.en}, getSource(coord), true),
-        createMessageSend(msg, new ExpressionNode[] {receiver.un, operand.un}, getSource(coord), false));
+    SourceSection source = getSource(coord);
+    return tuple(createMessageSend(msg, new ExpressionNode[] {receiver.en, operand.en}, source, true),
+        createMessageSend(msg, new ExpressionNode[] {receiver.un, operand.un}, source, false));
   }
 
   private ExpressionTuple binaryOperand(final MethodGenerationContext mgenc) throws ParseError {
