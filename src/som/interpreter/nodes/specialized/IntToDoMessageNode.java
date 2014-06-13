@@ -59,7 +59,7 @@ public abstract class IntToDoMessageNode extends TernaryExpressionNode
         valueSend.call(frame, SArguments.createSArguments(domain, enforced, new Object[] {block, i}));
       }
     } finally {
-      if (CompilerDirectives.inInterpreter()) {
+      if (CompilerDirectives.inInterpreter() && (limit - receiver) > 0) {
         reportLoopCount(limit - receiver);
       }
     }
