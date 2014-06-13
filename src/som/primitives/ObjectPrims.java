@@ -47,7 +47,7 @@ public final class ObjectPrims {
   public abstract static class HaltPrim extends UnaryExpressionNode {
     public HaltPrim() { super(null); }
     @Specialization
-    public final SAbstractObject doSAbstractObject(final SAbstractObject receiver) {
+    public final Object doSAbstractObject(final Object receiver) {
       Universe.errorPrintln("BREAKPOINT");
       return receiver;
     }
