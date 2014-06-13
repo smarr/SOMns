@@ -89,6 +89,11 @@ public abstract class EqualsPrim extends BinarySideEffectFreeExpressionNode {
     return false;
   }
 
+  @Specialization(order = 10102)
+  public final boolean doSSymbol(final SSymbol receiver, final SObject argument) {
+    return false;
+  }
+
   @Specialization(order = 10112)
   public final boolean doString(final SObject receiver, final String argument) {
     return false;
