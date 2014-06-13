@@ -210,15 +210,20 @@ public final class SClass extends SObject {
     return instanceFields.length;
   }
 
-  public boolean hasPrimitives() {
+  private static boolean includesPrimitives(final SClass clazz) {
+    CompilerAsserts.neverPartOfCompilation();
     // Lookup invokable with given signature in array of instance invokables
-    for (int i = 0; i < getNumberOfInstanceInvokables(); i++) {
+    for (int i = 0; i < clazz.getNumberOfInstanceInvokables(); i++) {
       // Get the next invokable in the instance invokable array
-      if (getInstanceInvokable(i) instanceof SPrimitive) {
+      if (clazz.getInstanceInvokable(i) instanceof SPrimitive) {
         return true;
       }
     }
     return false;
+  }
+
+  public boolean hasPrimitives() {
+    return includesPrimitives(this) || includesPrimitives(clazz);
   }
 
   public void loadPrimitives() {
