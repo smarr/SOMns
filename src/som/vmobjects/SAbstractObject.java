@@ -23,17 +23,21 @@ public abstract class SAbstractObject {
   public static final Object send(
       final String selectorString,
       final Object[] arguments,
+      final SObject domain,
+      final boolean enforced,
       final Universe universe) {
     SSymbol selector = universe.symbolFor(selectorString);
 
     // Lookup the invokable
     SInvokable invokable = Types.getClassOf(arguments[0], universe).lookupInvokable(selector);
 
-    return invokable.invoke(arguments);
+    return invokable.invoke(domain, enforced, arguments);
   }
 
   public static final Object sendDoesNotUnderstand(final SSymbol selector,
       final Object[] arguments,
+      final SObject domain,
+      final boolean enforced,
       final Universe universe) {
     CompilerAsserts.neverPartOfCompilation();
     assert arguments != null;
@@ -41,19 +45,25 @@ public abstract class SAbstractObject {
     // Allocate an array to hold the arguments, without receiver
     Object[] argumentsArray = SArguments.getArgumentsWithoutReceiver(arguments);
     Object[] args = new Object[] {arguments[0], selector, argumentsArray};
-    return send("doesNotUnderstand:arguments:", args, universe);
+    return send("doesNotUnderstand:arguments:", args, domain, enforced, universe);
   }
 
   public static final Object sendUnknownGlobal(final Object receiver,
-      final SSymbol globalName, final Universe universe) {
+      final SSymbol globalName,
+      final SObject domain,
+      final boolean enforced,
+      final Universe universe) {
     Object[] arguments = {receiver, globalName};
-    return send("unknownGlobal:", arguments, universe);
+    return send("unknownGlobal:", arguments, domain, enforced, universe);
   }
 
   public static final Object sendEscapedBlock(final Object receiver,
-      final SBlock block, final Universe universe) {
+      final SBlock block,
+      final SObject domain,
+      final boolean enforced,
+      final Universe universe) {
     Object[] arguments = {receiver, block};
-    return send("escapedBlock:", arguments, universe);
+    return send("escapedBlock:", arguments, domain, enforced, universe);
   }
 
 }
