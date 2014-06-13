@@ -207,6 +207,10 @@ public class SObject extends SAbstractObject {
     return clazz;
   }
 
+  public final long getFieldIndex(final SSymbol fieldName) {
+    return clazz.lookupFieldIndex(fieldName);
+  }
+
   public static final SObject create(final SClass instanceClass, final SObject nilObject) {
     return new SObject(instanceClass, nilObject);
   }
