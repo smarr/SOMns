@@ -7,9 +7,11 @@ import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.vm.Universe;
 import som.vmobjects.SInvokable;
+import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
 
 
@@ -73,12 +75,21 @@ public abstract class AbstractSymbolDispatch extends Node {
       cachedSend = MessageSendNode.createForPerformNodes(selector);
     }
 
+    @ExplodeLoop
+    private Object[] mergeReceiverWithArguments(final Object receiver, final Object[] argsArray) {
+      Object[] arguments = new Object[argsArray.length + 1];
+      arguments[0] = receiver;
+      for (int i = 0; i < argsArray.length; i++) {
+        arguments[i + 1] = argsArray[i];
+      }
+      return arguments;
+    }
+
     @Override
     public Object executeDispatch(final VirtualFrame frame,
         final Object receiver, final SSymbol selector, final Object[] argsArr) {
       if (this.selector == selector) {
-        Object[] arguments = SArguments.createSArgumentsArrayFrom(receiver, argsArr);
-        return cachedSend.doPreEvaluated(frame, arguments);
+        return cachedSend.doPreEvaluated(frame, mergeReceiverWithArguments(receiver, argsArr));
       } else {
         return nextInCache.executeDispatch(frame, receiver, selector, argsArr);
       }
@@ -103,9 +114,12 @@ public abstract class AbstractSymbolDispatch extends Node {
         final Object receiver, final SSymbol selector, final Object[] argsArr) {
       SInvokable invokable = Types.getClassOf(receiver, universe).lookupInvokable(selector);
 
-      Object[] args = SArguments.createSArgumentsArrayFrom(receiver, argsArr);
+      SObject domain = SArguments.domain(frame);
+      boolean enforced = SArguments.enforced(frame);
 
-      return invokable.invoke(args);
+      Object[] args = SArguments.createSArgumentsWithReceiver(domain, enforced, receiver, argsArr);
+
+      return invokable.invokeWithSArguments(args);
     }
 
     @Override

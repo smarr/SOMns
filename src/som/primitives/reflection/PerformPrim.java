@@ -13,6 +13,6 @@ public abstract class PerformPrim extends BinaryExpressionNode {
 
   @Specialization
   public final Object doObject(final VirtualFrame frame, final Object receiver, final SSymbol selector) {
-    return dispatch.executeDispatch(frame, receiver, selector, null);
+    return dispatch.executeDispatch(frame, receiver, selector, new Object[0]);
   }
 }
