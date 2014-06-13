@@ -55,4 +55,20 @@ public final class MirrorPrims {
       return block.getMethod().invoke(domain, true, new Object[] {block});
     }
   }
+
+  public abstract static class ExecutesEnforcedPrim extends UnarySideEffectFreeExpressionNode {
+    public ExecutesEnforcedPrim() { super(false); } /* TODO: enforced!!! */
+    @Specialization
+    public final boolean doSClass(final VirtualFrame frame, final SClass clazz) {
+      return SArguments.enforced(frame);
+    }
+  }
+
+  public abstract static class ExecutesUnenforcedPrim extends UnarySideEffectFreeExpressionNode {
+    public ExecutesUnenforcedPrim() { super(false); } /* TODO: enforced!!! */
+    @Specialization
+    public final boolean doSClass(final VirtualFrame frame, final SClass clazz) {
+      return !SArguments.enforced(frame);
+    }
+  }
 }

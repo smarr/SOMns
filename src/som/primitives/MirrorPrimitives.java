@@ -4,6 +4,8 @@ import som.primitives.MirrorPrimsFactory.CurrentDomainPrimFactory;
 import som.primitives.MirrorPrimsFactory.DomainOfPrimFactory;
 import som.primitives.MirrorPrimsFactory.EvaluatedEnforcedInPrimFactory;
 import som.primitives.MirrorPrimsFactory.EvaluatedInPrimFactory;
+import som.primitives.MirrorPrimsFactory.ExecutesEnforcedPrimFactory;
+import som.primitives.MirrorPrimsFactory.ExecutesUnenforcedPrimFactory;
 import som.primitives.MirrorPrimsFactory.SetDomainOfPrimFactory;
 import som.vm.Universe;
 
@@ -20,7 +22,7 @@ public final class MirrorPrimitives extends Primitives {
     installClassPrimitive("evaluate:in:",         EvaluatedInPrimFactory.getInstance());
     installClassPrimitive("evaluate:enforcedIn:", EvaluatedEnforcedInPrimFactory.getInstance());
     installClassPrimitive("currentDomain",        CurrentDomainPrimFactory.getInstance());
-    installClassPrimitive("executesEnforced",     null);
-    installClassPrimitive("executesUnenforced",   null);
+    installClassPrimitive("executesEnforced",     ExecutesEnforcedPrimFactory.getInstance());
+    installClassPrimitive("executesUnenforced",   ExecutesUnenforcedPrimFactory.getInstance());
   }
 }
