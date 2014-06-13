@@ -314,9 +314,11 @@ public class Universe {
     primitiveClass  = newSystemClass(standardDomain);
     stringClass     = newSystemClass(standardDomain);
     doubleClass     = newSystemClass(standardDomain);
+    domainClass     = newSystemClass(standardDomain, 1);
 
     // Setup the class reference for the nil object
     nilObject.setClass(nilClass, nilObject);
+    standardDomain.setClass(domainClass, nilObject);
 
     // Initialize the system classes.
     initializeSystemClass(objectClass,            null, "Object");
@@ -330,6 +332,7 @@ public class Universe {
     initializeSystemClass(primitiveClass,  objectClass, "Primitive");
     initializeSystemClass(stringClass,     objectClass, "String");
     initializeSystemClass(doubleClass,     objectClass, "Double");
+    initializeSystemClass(domainClass,     objectClass, "Domain");
 
     // Load methods and fields into the system classes
     loadSystemClass(objectClass);
@@ -343,6 +346,7 @@ public class Universe {
     loadSystemClass(primitiveClass);
     loadSystemClass(stringClass);
     loadSystemClass(doubleClass);
+    loadSystemClass(domainClass);
 
     // Load the generic block class
     blockClasses[0] = loadClass(symbolFor("Block"));
@@ -431,13 +435,17 @@ public class Universe {
     return result;
   }
 
-  @SlowPath
   public SClass newSystemClass(final SObject domain) {
+    return newSystemClass(domain, 0);
+  }
+
+  @SlowPath
+  public SClass newSystemClass(final SObject domain, final int numberOfFields) {
     // Allocate the new system class
-    SClass systemClass = new SClass(domain, 0, this);
+    SClass systemClass = new SClass(domain, numberOfFields, this);
 
     // Setup the metaclass hierarchy
-    systemClass.setClass(new SClass(domain, 0, this), nilObject);
+    systemClass.setClass(new SClass(domain, numberOfFields, this), nilObject);
     systemClass.getSOMClass(this).setClass(metaclassClass, nilObject);
 
     // Return the freshly allocated system class
