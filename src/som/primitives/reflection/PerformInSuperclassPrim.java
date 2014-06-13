@@ -1,9 +1,11 @@
 package som.primitives.reflection;
 
+import som.interpreter.SArguments;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
+import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.Specialization;
@@ -16,6 +18,8 @@ public abstract class PerformInSuperclassPrim extends TernaryExpressionNode {
   public final Object doSAbstractObject(final VirtualFrame frame,
       final SAbstractObject receiver, final SSymbol selector, final SClass  clazz) {
     SInvokable invokable = clazz.lookupInvokable(selector);
-    return invokable.invoke(receiver);
+    SObject domain = SArguments.domain(frame);
+    boolean enforced = SArguments.enforced(frame);
+    return invokable.invoke(domain, enforced, receiver);
   }
 }

@@ -1,9 +1,11 @@
 package som.interpreter.nodes.specialized;
 
+import som.interpreter.SArguments;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.vm.Universe;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
+import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.Truffle;
@@ -54,7 +56,9 @@ public abstract class AbstractIfMessageNode extends BinaryExpressionNode {
       final boolean receiver, final SBlock argument, final boolean predicateObject) {
     if (receiver == predicateObject) {
       ifTrueBranch.enter();
-      return branchValueSend.call(frame, new Object[] {argument});
+      SObject domain   = SArguments.domain(frame);
+      boolean enforced = SArguments.enforced(frame);
+      return branchValueSend.call(frame, SArguments.createSArguments(domain, enforced, new Object[] {argument}));
     } else {
       ifFalseBranch.enter();
       return universe.nilObject;
@@ -65,7 +69,9 @@ public abstract class AbstractIfMessageNode extends BinaryExpressionNode {
       final SBlock argument, final boolean predicateObject) {
     if (receiver == predicateObject) {
       ifTrueBranch.enter();
-      return argument.getMethod().invoke(argument);
+      SObject domain   = SArguments.domain(frame);
+      boolean enforced = SArguments.enforced(frame);
+      return argument.getMethod().invoke(domain, enforced, argument);
     } else {
       ifFalseBranch.enter();
       return universe.nilObject;

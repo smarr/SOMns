@@ -1,10 +1,12 @@
 package som.interpreter.nodes.specialized;
 
+import som.interpreter.SArguments;
 import som.interpreter.nodes.PreevaluatedExpression;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.vm.Universe;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
+import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -79,24 +81,29 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
   @Specialization(order = 1, guards = "hasSameArguments")
   public final Object doIfTrueIfFalseWithInlining(final VirtualFrame frame,
       final boolean receiver, final SBlock trueBlock, final SBlock falseBlock) {
+    SObject domain   = SArguments.domain(frame);
+    boolean enforced = SArguments.enforced(frame);
+
     if (receiver) {
       ifTrueBranch.enter();
-      return trueValueSend.call(frame, new Object[] {trueBlock});
+      return trueValueSend.call(frame, SArguments.createSArguments(domain, enforced, new Object[] {trueBlock}));
     } else {
       ifFalseBranch.enter();
-      return falseValueSend.call(frame, new Object[] {falseBlock});
+      return falseValueSend.call(frame, SArguments.createSArguments(domain, enforced, new Object[] {falseBlock}));
     }
   }
 
   @Specialization(order = 10)
   public final Object doIfTrueIfFalse(final VirtualFrame frame,
       final boolean receiver, final SBlock trueBlock, final SBlock falseBlock) {
+    SObject domain   = SArguments.domain(frame);
+    boolean enforced = SArguments.enforced(frame);
     if (receiver) {
       ifTrueBranch.enter();
-      return trueBlock.getMethod().invoke(trueBlock);
+      return trueBlock.getMethod().invoke(domain, enforced, trueBlock);
     } else {
       ifFalseBranch.enter();
-      return falseBlock.getMethod().invoke(falseBlock);
+      return falseBlock.getMethod().invoke(domain, enforced, falseBlock);
     }
   }
 
@@ -108,7 +115,9 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
       return trueValue;
     } else {
       ifFalseBranch.enter();
-      return falseValueSend.call(frame, new Object[] {falseBlock});
+      SObject domain = SArguments.domain(frame);
+      boolean enforced = SArguments.enforced(frame);
+      return falseValueSend.call(frame, SArguments.createSArguments(domain, enforced, new Object[] {falseBlock}));
     }
   }
 
@@ -117,7 +126,9 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
       final boolean receiver, final SBlock trueBlock, final Object falseValue) {
     if (receiver) {
       ifTrueBranch.enter();
-      return trueValueSend.call(frame, new Object[] {trueBlock});
+      SObject domain = SArguments.domain(frame);
+      boolean enforced = SArguments.enforced(frame);
+      return trueValueSend.call(frame, SArguments.createSArguments(domain, enforced, new Object[] {trueBlock}));
     } else {
       ifFalseBranch.enter();
       return falseValue;
@@ -132,7 +143,9 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
       return trueValue;
     } else {
       ifFalseBranch.enter();
-      return falseBlock.getMethod().invoke(falseBlock);
+      SObject domain   = SArguments.domain(frame);
+      boolean enforced = SArguments.enforced(frame);
+      return falseBlock.getMethod().invoke(domain, enforced, falseBlock);
     }
   }
 
@@ -141,7 +154,9 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
       final boolean receiver, final SBlock trueBlock, final Object falseValue) {
     if (receiver) {
       ifTrueBranch.enter();
-      return trueBlock.getMethod().invoke(trueBlock);
+      SObject domain   = SArguments.domain(frame);
+      boolean enforced = SArguments.enforced(frame);
+      return trueBlock.getMethod().invoke(domain, enforced, trueBlock);
     } else {
       ifFalseBranch.enter();
       return falseValue;

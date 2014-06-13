@@ -24,9 +24,11 @@ package som.interpreter.nodes;
 import som.interpreter.FrameOnStackMarker;
 import som.interpreter.Inliner;
 import som.interpreter.ReturnException;
+import som.interpreter.SArguments;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
+import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.frame.FrameSlot;
@@ -82,7 +84,9 @@ public final class ReturnNonLocalNode extends ContextualNode {
       blockEscaped.enter();
       SBlock block = (SBlock) FrameUtil.getObjectSafe(frame, localSelf);
       Object self = FrameUtil.getObjectSafe(ctx, outerSelfSlot);
-      return SAbstractObject.sendEscapedBlock(self, block, universe);
+      SObject domain = SArguments.domain(frame);
+      boolean enforced = SArguments.enforced(frame);
+      return SAbstractObject.sendEscapedBlock(self, block, domain, enforced, universe);
     }
   }
 

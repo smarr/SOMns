@@ -1,11 +1,13 @@
 package som.interpreter.nodes.specialized;
 
 import som.interpreter.Invokable;
+import som.interpreter.SArguments;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.PreevaluatedExpression;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
+import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
@@ -51,8 +53,10 @@ public abstract class IntToDoMessageNode extends TernaryExpressionNode
   @Specialization(guards = "isSameBlockLong")
   public final long doIntToDo(final VirtualFrame frame, final long receiver, final long limit, final SBlock block) {
     try {
+      SObject domain = SArguments.domain(frame);
+      boolean enforced = SArguments.enforced(frame);
       for (long i = receiver; i <= limit; i++) {
-        valueSend.call(frame, new Object[] {block, i});
+        valueSend.call(frame, SArguments.createSArguments(domain, enforced, new Object[] {block, i}));
       }
     } finally {
       if (CompilerDirectives.inInterpreter()) {
@@ -69,8 +73,10 @@ public abstract class IntToDoMessageNode extends TernaryExpressionNode
   @Specialization(guards = "isSameBlockDouble")
   public final long doIntToDo(final VirtualFrame frame, final long receiver, final double limit, final SBlock block) {
     try {
+      SObject domain = SArguments.domain(frame);
+      boolean enforced = SArguments.enforced(frame);
       for (long i = receiver; i <= limit; i++) {
-        valueSend.call(frame, new Object[] {block, i});
+        valueSend.call(frame, SArguments.createSArguments(domain, enforced, new Object[] {block, i}));
       }
     } finally {
       if (CompilerDirectives.inInterpreter()) {

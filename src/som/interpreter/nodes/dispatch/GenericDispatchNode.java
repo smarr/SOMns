@@ -1,10 +1,13 @@
 package som.interpreter.nodes.dispatch;
 
+import som.interpreter.SArguments;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SInvokable;
+import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 public final class GenericDispatchNode extends AbstractDispatchWithLookupNode {
@@ -17,19 +20,15 @@ public final class GenericDispatchNode extends AbstractDispatchWithLookupNode {
   public Object executeDispatch(
       final VirtualFrame frame, final Object[] arguments) {
     SInvokable method = lookupMethod(arguments[0]);
+    SObject domain = SArguments.domain(frame);
+    boolean enforced = SArguments.enforced(frame);
     if (method != null) {
-      return method.invoke(arguments);
+      return method.invoke(domain, enforced, arguments);
     } else {
-      // TODO: perhaps, I should mark this branch with a branch profile as
-      //       being unlikely
-      return sendDoesNotUnderstand(arguments);
+      // TODO: should we use the DNU handling infrastructure here?
+      CompilerAsserts.neverPartOfCompilation();
+      return SAbstractObject.sendDoesNotUnderstand(selector, arguments, domain, enforced, universe);
     }
-  }
-
-  private Object sendDoesNotUnderstand(final Object[] arguments) {
-    // TODO: this is all extremely expensive, and could be optimized by
-    //       further specialization for #dnu
-    return SAbstractObject.sendDoesNotUnderstand(selector, arguments, universe);
   }
 
   @Override

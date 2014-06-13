@@ -26,6 +26,7 @@ import som.interpreter.TruffleCompiler;
 import som.vm.Universe;
 import som.vm.Universe.Association;
 import som.vmobjects.SAbstractObject;
+import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.SourceSection;
@@ -84,7 +85,10 @@ public abstract class GlobalNode extends ExpressionNode {
         // if it is not defined, we will send a error message to the current
         // receiver object
         Object self = SArguments.rcvr(frame);
-        return SAbstractObject.sendUnknownGlobal(self, globalName, universe);
+        SObject domain = SArguments.domain(frame);
+        boolean enforced = SArguments.enforced(frame);
+
+        return SAbstractObject.sendUnknownGlobal(self, globalName, domain, enforced, universe);
       }
     }
   }

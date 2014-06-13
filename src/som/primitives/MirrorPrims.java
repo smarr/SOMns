@@ -42,16 +42,17 @@ public final class MirrorPrims {
   public abstract static class EvaluatedInPrim extends TernaryExpressionNode {
     public EvaluatedInPrim() { super(false); } /* TODO: enforced!!! */
     @Specialization
-    public final Object doSClass(final SClass clazz, final SBlock block, final SObject domain) {
-      return block.getMethod().invoke(new Object[] {domain});
+    public final Object doSClass(final VirtualFrame frame, final SClass clazz, final SBlock block, final SObject domain) {
+      boolean enforced = SArguments.enforced(frame);
+      return block.getMethod().invoke(domain, enforced, new Object[] {block});
     }
   }
 
   public abstract static class EvaluatedEnforcedInPrim extends TernaryExpressionNode {
     public EvaluatedEnforcedInPrim() { super(false); } /* TODO: enforced!!! */
     @Specialization
-    public final Object doSClass(final SClass clazz, final SBlock block, final SObject domain) {
-      return block.getMethod().invoke(new Object[] {domain});
+    public final Object doSClass(final VirtualFrame frame, final SClass clazz, final SBlock block, final SObject domain) {
+      return block.getMethod().invoke(domain, true, new Object[] {block});
     }
   }
 }

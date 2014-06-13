@@ -1,8 +1,10 @@
 package som.interpreter.nodes.specialized;
 
+import som.interpreter.SArguments;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
+import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.Truffle;
@@ -38,7 +40,9 @@ public abstract class OrMessageNode extends BinaryExpressionNode {
     if (receiver) {
       return true;
     } else {
-      return (boolean) blockValueSend.call(frame, new Object[] {argument});
+      SObject domain = SArguments.domain(frame);
+      boolean enforced = SArguments.enforced(frame);
+      return (boolean) blockValueSend.call(frame, SArguments.createSArguments(domain, enforced, new Object[] {argument}));
     }
   }
 

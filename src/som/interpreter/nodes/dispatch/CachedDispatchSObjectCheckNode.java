@@ -1,5 +1,6 @@
 package som.interpreter.nodes.dispatch;
 
+import som.interpreter.SArguments;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode.AbstractCachedDispatchNode;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
@@ -24,7 +25,9 @@ public final class CachedDispatchSObjectCheckNode extends AbstractCachedDispatch
       final VirtualFrame frame, final Object[] arguments) {
     SObject rcvr = CompilerDirectives.unsafeCast(arguments[0], SObject.class, true);
     if (rcvr.getSOMClass(null) == expectedClass) {
-      return cachedMethod.call(frame, arguments);
+      SObject domain = SArguments.domain(frame);
+      boolean enforced = SArguments.enforced(frame);
+      return cachedMethod.call(frame, SArguments.createSArguments(domain, enforced, arguments));
     } else {
       return nextInCache.executeDispatch(frame, arguments);
     }

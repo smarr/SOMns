@@ -1,7 +1,9 @@
 package som.interpreter.nodes.dispatch;
 
+import som.interpreter.SArguments;
 import som.interpreter.nodes.ISuperReadNode;
 import som.vmobjects.SInvokable;
+import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerAsserts;
@@ -37,7 +39,9 @@ public final class SuperDispatchNode extends AbstractDispatchNode {
   @Override
   public Object executeDispatch(
       final VirtualFrame frame, final Object[] arguments) {
-    return cachedSuperMethod.call(frame, arguments);
+    SObject domain = SArguments.domain(frame);
+    boolean enforced = SArguments.enforced(frame);
+    return cachedSuperMethod.call(frame, SArguments.createSArguments(domain, enforced, arguments));
   }
 
   @Override

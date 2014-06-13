@@ -1,11 +1,13 @@
 package som.interpreter.nodes.specialized;
 
 import som.interpreter.Invokable;
+import som.interpreter.SArguments;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.PreevaluatedExpression;
 import som.interpreter.nodes.nary.QuaternaryExpressionNode;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
+import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
@@ -54,8 +56,10 @@ public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode
   @Specialization(guards = "isSameBlockLong")
   public final long doIntToByDo(final VirtualFrame frame, final long receiver, final long limit, final long step, final SBlock block) {
     try {
+      SObject domain = SArguments.domain(frame);
+      boolean enforced = SArguments.enforced(frame);
       for (long i = receiver; i <= limit; i += step) {
-        valueSend.call(frame, new Object[] {block, i});
+        valueSend.call(frame, SArguments.createSArguments(domain, enforced, new Object[] {block, i}));
       }
     } finally {
       if (CompilerDirectives.inInterpreter()) {
@@ -68,8 +72,10 @@ public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode
   @Specialization(guards = "isSameBlockDouble")
   public final long doIntToByDo(final VirtualFrame frame, final long receiver, final double limit, final long step, final SBlock block) {
     try {
+      SObject domain = SArguments.domain(frame);
+      boolean enforced = SArguments.enforced(frame);
       for (long i = receiver; i <= limit; i += step) {
-        valueSend.call(frame, new Object[] {block, i});
+        valueSend.call(frame, SArguments.createSArguments(domain, enforced, new Object[] {block, i}));
       }
     } finally {
       if (CompilerDirectives.inInterpreter()) {

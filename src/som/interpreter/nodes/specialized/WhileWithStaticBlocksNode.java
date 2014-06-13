@@ -1,6 +1,7 @@
 package som.interpreter.nodes.specialized;
 
 import som.interpreter.Invokable;
+import som.interpreter.SArguments;
 import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.vm.Universe;
@@ -76,16 +77,18 @@ public abstract class WhileWithStaticBlocksNode extends BinaryExpressionNode {
       final SBlock loopCondition,
       final SBlock loopBody) {
     long iterationCount = 0;
+    SObject domain = SArguments.domain(frame);
+    boolean enforced = SArguments.enforced(frame);
     boolean loopConditionResult = (boolean) conditionValueSend.call(
-        frame, new Object[] {loopCondition});
+        frame, SArguments.createSArguments(domain, enforced, new Object[] {loopCondition}));
 
 
     try {
       // TODO: this is a simplification, we don't cover the case receiver isn't a boolean
       while (loopConditionResult == predicateBool) {
-        bodyValueSend.call(frame, new Object[] {loopBody});
+        bodyValueSend.call(frame, SArguments.createSArguments(domain, enforced, new Object[] {loopBody}));
         loopConditionResult = (boolean) conditionValueSend.call(
-            frame, new Object[] {loopCondition});
+            frame, SArguments.createSArguments(domain, enforced, new Object[] {loopCondition}));
 
         if (CompilerDirectives.inInterpreter()) {
           iterationCount++;
