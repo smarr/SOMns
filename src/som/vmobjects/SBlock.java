@@ -39,11 +39,11 @@ import com.oracle.truffle.api.frame.MaterializedFrame;
 public abstract class SBlock extends SAbstractObject {
 
   public static SBlock create(final SInvokable blockMethod,
-      final MaterializedFrame context) {
+      final MaterializedFrame context, final boolean capturedEnforced) {
     switch (blockMethod.getNumberOfArguments()) {
-      case 1: return new SBlock1(blockMethod, context);
-      case 2: return new SBlock2(blockMethod, context);
-      case 3: return new SBlock3(blockMethod, context);
+      case 1: return new SBlock1(blockMethod, context, capturedEnforced);
+      case 2: return new SBlock2(blockMethod, context, capturedEnforced);
+      case 3: return new SBlock3(blockMethod, context, capturedEnforced);
     }
 
     CompilerDirectives.transferToInterpreter();
@@ -51,8 +51,9 @@ public abstract class SBlock extends SAbstractObject {
   }
 
   public static final class SBlock1 extends SBlock {
-    public SBlock1(final SInvokable blockMethod, final MaterializedFrame context) {
-      super(blockMethod, context);
+    public SBlock1(final SInvokable blockMethod,
+        final MaterializedFrame context, final boolean capturedEnforced) {
+      super(blockMethod, context, capturedEnforced);
     }
 
     @Override
@@ -62,8 +63,9 @@ public abstract class SBlock extends SAbstractObject {
   }
 
   public static final class SBlock2 extends SBlock {
-    public SBlock2(final SInvokable blockMethod, final MaterializedFrame context) {
-      super(blockMethod, context);
+    public SBlock2(final SInvokable blockMethod,
+        final MaterializedFrame context, final boolean capturedEnforced) {
+      super(blockMethod, context, capturedEnforced);
     }
 
     @Override
@@ -73,8 +75,9 @@ public abstract class SBlock extends SAbstractObject {
   }
 
   public static final class SBlock3 extends SBlock {
-    public SBlock3(final SInvokable blockMethod, final MaterializedFrame context) {
-      super(blockMethod, context);
+    public SBlock3(final SInvokable blockMethod,
+        final MaterializedFrame context, final boolean capturedEnforced) {
+      super(blockMethod, context, capturedEnforced);
     }
 
     @Override
@@ -83,9 +86,11 @@ public abstract class SBlock extends SAbstractObject {
     }
   }
 
-  public SBlock(final SInvokable blockMethod, final MaterializedFrame context) {
+  public SBlock(final SInvokable blockMethod, final MaterializedFrame context,
+      final boolean capturedEnforced) {
     this.method  = blockMethod;
     this.context = context;
+    this.capturedEnforced = capturedEnforced;
   }
 
   public final SInvokable getMethod() {
@@ -96,6 +101,10 @@ public abstract class SBlock extends SAbstractObject {
   public final  MaterializedFrame getContext() {
     assert context != null;
     return CompilerDirectives.unsafeFrameCast(context);
+  }
+
+  public boolean isEnforced() {
+    return capturedEnforced;
   }
 
   public final Object getOuterSelf() {
@@ -136,4 +145,5 @@ public abstract class SBlock extends SAbstractObject {
 
   private final SInvokable        method;
   private final MaterializedFrame context;
+  private final boolean           capturedEnforced;
 }

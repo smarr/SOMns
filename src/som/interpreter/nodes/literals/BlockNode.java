@@ -24,7 +24,7 @@ public class BlockNode extends LiteralNode {
 
   @Override
   public SBlock executeSBlock(final VirtualFrame frame) {
-    return universe.newBlock(blockMethod, null);
+    return universe.newBlock(blockMethod, null, executesEnforced);
   }
 
   @Override
@@ -60,7 +60,7 @@ public class BlockNode extends LiteralNode {
 
     @Override
     public SBlock executeSBlock(final VirtualFrame frame) {
-      return universe.newBlock(blockMethod, frame.materialize());
+      return universe.newBlock(blockMethod, frame.materialize(), executesEnforced);
     }
 
     @Override

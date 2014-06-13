@@ -390,8 +390,9 @@ public class Universe {
     return newSymbol(interned);
   }
 
-  public SBlock newBlock(final SMethod method, final MaterializedFrame context) {
-    return SBlock.create(method, context);
+  public SBlock newBlock(final SMethod method, final MaterializedFrame context,
+      final boolean capturedEnforced) {
+    return SBlock.create(method, context, capturedEnforced);
   }
 
   @SlowPath
