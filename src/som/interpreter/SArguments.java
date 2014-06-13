@@ -23,6 +23,10 @@ public final class SArguments {
     return frame.getArguments()[RCVR_IDX];
   }
 
+  public static Object rcvr(final Object[] arguments) {
+    return arguments[RCVR_IDX];
+  }
+
   public static SObject domain(final Frame frame) {
     return CompilerDirectives.unsafeCast(frame.getArguments()[DOMAIN_IDX], SObject.class, true);
   }
@@ -49,25 +53,17 @@ public final class SArguments {
    * from a receiver object that is separate from the actual arguments.
    */
   @ExplodeLoop
-  public static Object[] createSArgumentsArrayFrom(final Object receiver, final Object[] argsArray) {
-    // below, we have a lot of magic numbers and implicit positioning,
-    // which are all based on this assumption
-    assert RCVR_IDX == 0;
+  public static Object[] createSArgumentsWithReceiver(final SObject domain,
+      final boolean enforced, final Object receiver, final Object[] argumentsWithoutReceiver) {
+    Object[] args = new Object[argumentsWithoutReceiver.length + ARGUMENT_OFFSET + 1];
+    args[ENFORCED_FLAG_IDX] = enforced;
+    args[DOMAIN_IDX]        = domain;
+    args[RCVR_IDX]          = receiver;
 
-    if (argsArray == null) {
-      return new Object[] {receiver};
+    for (int i = 0; i < argumentsWithoutReceiver.length; i++) {
+      args[i + ARGUMENT_OFFSET + 1] = argumentsWithoutReceiver[i];
     }
-
-    Object[] arguments = new Object[argsArray.length + 1];
-    arguments[RCVR_IDX] = receiver;
-
-//    System.arraycopy(argsArray, 0, arguments, 1, argsArray.length);
-
-    for (int i = 0; i < argsArray.length; i++) {
-      arguments[i + 1] = argsArray[i];
-    }
-
-    return arguments;
+    return args;
   }
 
   /**
