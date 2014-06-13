@@ -9,6 +9,7 @@ import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject;
+import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.Specialization;
 
@@ -34,6 +35,14 @@ public final class ObjectPrims {
     public final Object doSObject(final SObject receiver, final long idx, final Object val) {
       receiver.setField(idx - 1, val);
       return val;
+    }
+  }
+
+  public abstract static class InstVarNamedPrim extends BinarySideEffectFreeExpressionNode {
+    public InstVarNamedPrim() { super(false); }
+    @Specialization
+    public final Object doSObject(final SObject receiver, final SSymbol fieldName) {
+      return receiver.getField(receiver.getFieldIndex(fieldName));
     }
   }
 

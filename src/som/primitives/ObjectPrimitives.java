@@ -29,6 +29,7 @@ import som.primitives.ObjectPrimsFactory.ClassPrimFactory;
 import som.primitives.ObjectPrimsFactory.HaltPrimFactory;
 import som.primitives.ObjectPrimsFactory.InstVarAtPrimFactory;
 import som.primitives.ObjectPrimsFactory.InstVarAtPutPrimFactory;
+import som.primitives.ObjectPrimsFactory.InstVarNamedPrimFactory;
 import som.primitives.reflection.PerformInSuperclassPrimFactory;
 import som.primitives.reflection.PerformPrimFactory;
 import som.primitives.reflection.PerformWithArgumentsPrimFactory;
@@ -51,6 +52,7 @@ public final class ObjectPrimitives extends Primitives {
     installInstancePrimitive("perform:withArguments:", PerformWithArgumentsPrimFactory.getInstance());
     installInstancePrimitive("instVarAt:",             InstVarAtPrimFactory.getInstance());
     installInstancePrimitive("instVarAt:put:",         InstVarAtPutPrimFactory.getInstance());
+    installInstancePrimitive("instVarNamed:",          InstVarNamedPrimFactory.getInstance());
     installInstancePrimitive("halt",                   HaltPrimFactory.getInstance());
     installInstancePrimitive("class",                  ClassPrimFactory.getInstance());
   }
