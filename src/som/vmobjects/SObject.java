@@ -92,6 +92,16 @@ public class SObject extends SAbstractObject {
     return domain;
   }
 
+  protected SObject getSDomainDomainForNewObjects() {
+    assert SDomain.NEW_OBJECT_DOMAIN_IDX == 0;
+    return (SObject) field1;
+  }
+
+  protected void setSDomainDomainForNewObjects(final SObject domain) {
+    assert SDomain.NEW_OBJECT_DOMAIN_IDX == 0;
+    field1 = domain;
+  }
+
   public void setDomain(final SObject domain) {
     this.domain = domain;
   }
