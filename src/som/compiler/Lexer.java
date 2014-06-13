@@ -120,7 +120,7 @@ public final class Lexer {
       }
     } else if (isOperator(currentChar())) {
       lexOperator();
-    } else if (buf.startsWith(PRIMITIVE, bufp)) {
+    } else if (nextWordInBufferIs(PRIMITIVE)) {
       bufp += PRIMITIVE.length();
       sym = Symbol.Primitive;
       symc = 0;
@@ -128,7 +128,7 @@ public final class Lexer {
     } else if (Character.isLetter(currentChar())) {
       symc = 0;
       text = new StringBuffer();
-      while (Character.isLetterOrDigit(currentChar()) || currentChar() == '_') {
+      while (isIdentifierChar(currentChar())) {
         text.append(bufchar(bufp++));
       }
       sym = Symbol.Identifier;
@@ -340,6 +340,17 @@ public final class Lexer {
 
   private char bufchar(final int p) {
     return p >= buf.length() ? '\0' : buf.charAt(p);
+  }
+
+  private boolean isIdentifierChar(final char c) {
+    return Character.isLetterOrDigit(c) || c == '_';
+  }
+
+  private boolean nextWordInBufferIs(final String text) {
+    if (!buf.startsWith(text, bufp)) {
+      return false;
+    }
+    return !isIdentifierChar(bufchar(bufp + text.length()));
   }
 
 }
