@@ -34,6 +34,11 @@ public abstract class Invokable extends AbstractInvokable {
   }
 
   @Override
+  public boolean isUnenforced() {
+    return false;
+  }
+
+  @Override
   public final Object execute(final VirtualFrame frame) {
     if (SArguments.enforced(frame)) {
       enforced.enter();

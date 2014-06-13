@@ -29,6 +29,7 @@ public abstract class AbstractInvokable extends RootNode {
   public abstract void propagateLoopCountThroughoutLexicalScope(final long count);
 
   public abstract boolean isBlock();
+  public abstract boolean isUnenforced();
 
   public abstract void setOuterContextMethod(final AbstractInvokable method);
 }

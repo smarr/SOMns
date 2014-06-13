@@ -21,6 +21,11 @@ public abstract class InvokableUnenforced extends AbstractInvokable {
   }
 
   @Override
+  public boolean isUnenforced() {
+    return true;
+  }
+
+  @Override
   public final Object execute(final VirtualFrame frame) {
     return unenforcedBody.executeGeneric(frame);
   }

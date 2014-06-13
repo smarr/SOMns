@@ -110,6 +110,10 @@ public abstract class SInvokable extends SAbstractObject {
     return callTarget.call(createSArguments(domain, enforced, arguments));
   }
 
+  public boolean isUnenforced() {
+    return invokable.isUnenforced();
+  }
+
   @Override
   public final String toString() {
     // TODO: fixme: remove special case if possible, I think it indicates a bug
