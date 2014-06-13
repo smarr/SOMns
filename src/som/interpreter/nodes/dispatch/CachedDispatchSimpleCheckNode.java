@@ -13,8 +13,9 @@ public final class CachedDispatchSimpleCheckNode extends AbstractCachedDispatchN
   private final Class<?> expectedClass;
 
   public CachedDispatchSimpleCheckNode(final Class<?> rcvrClass,
-      final SInvokable method, final AbstractDispatchNode nextInCache) {
-    super(method, nextInCache);
+      final SInvokable method, final AbstractDispatchNode nextInCache,
+      final boolean executesEnforced) {
+    super(method, nextInCache, executesEnforced);
     this.expectedClass = rcvrClass;
   }
 
@@ -23,8 +24,7 @@ public final class CachedDispatchSimpleCheckNode extends AbstractCachedDispatchN
       final Object[] arguments) {
     if (arguments[0].getClass() == expectedClass) {
       SObject domain = SArguments.domain(frame);
-      boolean enforced = SArguments.enforced(frame);
-      return cachedMethod.call(frame, SArguments.createSArguments(domain, enforced, arguments));
+      return cachedMethod.call(frame, SArguments.createSArguments(domain, executesEnforced, arguments));
     } else {
       return nextInCache.executeDispatch(frame, arguments);
     }
@@ -33,8 +33,8 @@ public final class CachedDispatchSimpleCheckNode extends AbstractCachedDispatchN
   public static final class CachedDispatchTrueCheckNode
       extends AbstractCachedDispatchNode {
     public CachedDispatchTrueCheckNode(final SInvokable method,
-        final AbstractDispatchNode nextInCache) {
-      super(method, nextInCache);
+        final AbstractDispatchNode nextInCache, final boolean executesEnforced) {
+      super(method, nextInCache, executesEnforced);
     }
 
     @Override
@@ -42,8 +42,7 @@ public final class CachedDispatchSimpleCheckNode extends AbstractCachedDispatchN
         final Object[] arguments) {
       if (arguments[0] == Boolean.TRUE) {
         SObject domain = SArguments.domain(frame);
-        boolean enforced = SArguments.enforced(frame);
-        return cachedMethod.call(frame, SArguments.createSArguments(domain, enforced, arguments));
+        return cachedMethod.call(frame, SArguments.createSArguments(domain, executesEnforced, arguments));
       } else {
         return nextInCache.executeDispatch(frame, arguments);
       }
@@ -53,8 +52,8 @@ public final class CachedDispatchSimpleCheckNode extends AbstractCachedDispatchN
   public static final class CachedDispatchFalseCheckNode
       extends AbstractCachedDispatchNode {
     public CachedDispatchFalseCheckNode(final SInvokable method,
-        final AbstractDispatchNode nextInCache) {
-      super(method, nextInCache);
+        final AbstractDispatchNode nextInCache, final boolean executesEnforced) {
+      super(method, nextInCache, executesEnforced);
     }
 
     @Override
@@ -62,8 +61,7 @@ public final class CachedDispatchSimpleCheckNode extends AbstractCachedDispatchN
         final Object[] arguments) {
       if (arguments[0] == Boolean.FALSE) {
         SObject domain = SArguments.domain(frame);
-        boolean enforced = SArguments.enforced(frame);
-        return cachedMethod.call(frame, SArguments.createSArguments(domain, enforced, arguments));
+        return cachedMethod.call(frame, SArguments.createSArguments(domain, executesEnforced, arguments));
       } else {
         return nextInCache.executeDispatch(frame, arguments);
       }

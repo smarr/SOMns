@@ -12,6 +12,12 @@ import com.oracle.truffle.api.nodes.Node;
 public abstract class AbstractDispatchNode extends Node {
   public static final int INLINE_CACHE_SIZE = 6;
 
+  protected final boolean executesEnforced;
+
+  public AbstractDispatchNode(final boolean executesEnforced) {
+    this.executesEnforced = executesEnforced;
+  }
+
   public abstract Object executeDispatch(
       final VirtualFrame frame, final Object[] arguments);
 
@@ -24,7 +30,8 @@ public abstract class AbstractDispatchNode extends Node {
     @Child protected AbstractDispatchNode nextInCache;
 
     public AbstractCachedDispatchNode(final SInvokable method,
-        final AbstractDispatchNode nextInCache) {
+        final AbstractDispatchNode nextInCache, final boolean executesEnforced) {
+      super(executesEnforced);
       CallTarget methodCallTarget = method.getCallTarget();
       DirectCallNode cachedMethod = Truffle.getRuntime().createDirectCallNode(methodCallTarget);
 

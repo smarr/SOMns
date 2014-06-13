@@ -12,6 +12,10 @@ import com.oracle.truffle.api.nodes.Node;
 public final class UninitializedValuePrimDispatchNode
     extends AbstractDispatchNode {
 
+  public UninitializedValuePrimDispatchNode() {
+    super(false); // is not used, executeEnforced is taken from the block
+  }
+
   @Override
   public Object executeDispatch(final VirtualFrame frame, final Object[] arguments) {
     transferToInterpreterAndInvalidate("Initialize a dispatch node.");
@@ -32,7 +36,7 @@ public final class UninitializedValuePrimDispatchNode
       assert method != null;
 
       UninitializedValuePrimDispatchNode uninitialized = new UninitializedValuePrimDispatchNode();
-      CachedBlockDispatchNode node = new CachedBlockDispatchNode(method, uninitialized);
+      CachedBlockDispatchNode node = new CachedBlockDispatchNode(method, uninitialized, rcvr.isEnforced());
       return replace(node).executeDispatch(frame, arguments);
     } else {
       GenericBlockDispatchNode generic = new GenericBlockDispatchNode();

@@ -14,8 +14,8 @@ public abstract class AbstractDispatchWithLookupNode extends
   protected final Universe universe;
 
   public AbstractDispatchWithLookupNode(final SSymbol selector,
-      final Universe universe) {
-    super();
+      final Universe universe, final boolean executesEnforced) {
+    super(executesEnforced);
     this.selector = selector;
     this.universe = universe;
   }

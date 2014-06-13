@@ -55,13 +55,14 @@ import com.oracle.truffle.api.nodes.NodeInfo;
 public final class MessageSendNode {
 
   public static AbstractMessageSendNode create(final SSymbol selector,
-      final ExpressionNode[] arguments, final SourceSection source) {
-    return new UninitializedMessageSendNode(selector, arguments, source);
+      final ExpressionNode[] arguments, final SourceSection source, final boolean executesEnforced) {
+    return new UninitializedMessageSendNode(selector, arguments, source, executesEnforced);
   }
 
-  public static AbstractMessageSendNode createForPerformNodes(final SSymbol selector) {
+  public static AbstractMessageSendNode createForPerformNodes(
+      final SSymbol selector, final boolean executesEnforced) {
     return new GenericMessageSendNode(selector, null,
-        new UninitializedDispatchNode(selector, Universe.current()), null);
+        new UninitializedDispatchNode(selector, Universe.current(), executesEnforced), null, executesEnforced);
   }
 
   @NodeInfo(shortName = "send")
@@ -71,8 +72,8 @@ public final class MessageSendNode {
     @Children protected final ExpressionNode[] argumentNodes;
 
     protected AbstractMessageSendNode(final ExpressionNode[] arguments,
-        final SourceSection source) {
-      super(source, false);  /* TODO: enforced!!! */
+        final SourceSection source, final boolean executesEnforced) {
+      super(source, executesEnforced);
       this.argumentNodes = arguments;
     }
 
@@ -104,8 +105,9 @@ public final class MessageSendNode {
     private final SSymbol selector;
 
     protected UninitializedMessageSendNode(final SSymbol selector,
-        final ExpressionNode[] arguments, final SourceSection source) {
-      super(arguments, source);
+        final ExpressionNode[] arguments, final SourceSection source,
+        final boolean executesEnforced) {
+      super(arguments, source, executesEnforced);
       this.selector = selector;
     }
 
@@ -123,7 +125,8 @@ public final class MessageSendNode {
       if (argumentNodes[0] instanceof ISuperReadNode) {
         GenericMessageSendNode node = new GenericMessageSendNode(selector,
             argumentNodes, SuperDispatchNode.create(selector,
-                (ISuperReadNode) argumentNodes[0]), getSourceSection());
+                (ISuperReadNode) argumentNodes[0], executesEnforced),
+                getSourceSection(), executesEnforced);
         return replace(node);
       }
 
@@ -151,8 +154,8 @@ public final class MessageSendNode {
     private GenericMessageSendNode makeGenericSend() {
       GenericMessageSendNode send = new GenericMessageSendNode(selector,
           argumentNodes,
-          new UninitializedDispatchNode(selector, Universe.current()),
-          getSourceSection());
+          new UninitializedDispatchNode(selector, Universe.current(), executesEnforced),
+          getSourceSection(), executesEnforced);
       return replace(send);
     }
 
@@ -368,17 +371,19 @@ public final class MessageSendNode {
     private final SSymbol selector;
 
     public static GenericMessageSendNode create(final SSymbol selector,
-        final ExpressionNode[] argumentNodes, final SourceSection source) {
+        final ExpressionNode[] argumentNodes, final SourceSection source,
+        final boolean executesEnforced) {
       return new GenericMessageSendNode(selector, argumentNodes,
-          new UninitializedDispatchNode(selector, Universe.current()), source);
+          new UninitializedDispatchNode(selector, Universe.current(), executesEnforced), source, executesEnforced);
     }
 
     @Child private AbstractDispatchNode dispatchNode;
 
     private GenericMessageSendNode(final SSymbol selector,
         final ExpressionNode[] arguments,
-        final AbstractDispatchNode dispatchNode, final SourceSection source) {
-      super(arguments, source);
+        final AbstractDispatchNode dispatchNode, final SourceSection source,
+        final boolean executesEnforced) {
+      super(arguments, source, executesEnforced);
       this.selector = selector;
       this.dispatchNode = dispatchNode;
     }

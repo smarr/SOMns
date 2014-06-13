@@ -12,8 +12,9 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 
 public final class GenericDispatchNode extends AbstractDispatchWithLookupNode {
 
-  public GenericDispatchNode(final SSymbol selector, final Universe universe) {
-    super(selector, universe);
+  public GenericDispatchNode(final SSymbol selector, final Universe universe,
+      final boolean executesEnforced) {
+    super(selector, universe, executesEnforced);
   }
 
   @Override
@@ -21,13 +22,13 @@ public final class GenericDispatchNode extends AbstractDispatchWithLookupNode {
       final VirtualFrame frame, final Object[] arguments) {
     SInvokable method = lookupMethod(arguments[0]);
     SObject domain = SArguments.domain(frame);
-    boolean enforced = SArguments.enforced(frame);
     if (method != null) {
-      return method.invoke(domain, enforced, arguments);
+      return method.invoke(domain, executesEnforced, arguments);
     } else {
-      // TODO: should we use the DNU handling infrastructure here?
+      // Won't use DNU caching here, because it is already a megamorphic node
       CompilerAsserts.neverPartOfCompilation();
-      return SAbstractObject.sendDoesNotUnderstand(selector, arguments, domain, enforced, universe);
+      return SAbstractObject.sendDoesNotUnderstand(selector, arguments, domain,
+          executesEnforced, universe);
     }
   }
 

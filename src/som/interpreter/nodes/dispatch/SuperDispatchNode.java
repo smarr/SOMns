@@ -18,7 +18,7 @@ import com.oracle.truffle.api.nodes.DirectCallNode;
 public final class SuperDispatchNode extends AbstractDispatchNode {
 
   public static SuperDispatchNode create(final SSymbol selector,
-      final ISuperReadNode superNode) {
+      final ISuperReadNode superNode, final boolean executesEnforced) {
     CompilerAsserts.neverPartOfCompilation();
     SInvokable method = superNode.getSuperClass().lookupInvokable(selector);
 
@@ -27,12 +27,13 @@ public final class SuperDispatchNode extends AbstractDispatchNode {
     }
     DirectCallNode superMethodNode = Truffle.getRuntime().createDirectCallNode(
         method.getCallTarget());
-    return new SuperDispatchNode(superMethodNode);
+    return new SuperDispatchNode(superMethodNode, executesEnforced);
   }
 
   @Child private DirectCallNode cachedSuperMethod;
 
-  private SuperDispatchNode(final DirectCallNode superMethod) {
+  private SuperDispatchNode(final DirectCallNode superMethod, final boolean executesEnforced) {
+    super(executesEnforced);
     this.cachedSuperMethod = superMethod;
   }
 
@@ -40,8 +41,7 @@ public final class SuperDispatchNode extends AbstractDispatchNode {
   public Object executeDispatch(
       final VirtualFrame frame, final Object[] arguments) {
     SObject domain = SArguments.domain(frame);
-    boolean enforced = SArguments.enforced(frame);
-    return cachedSuperMethod.call(frame, SArguments.createSArguments(domain, enforced, arguments));
+    return cachedSuperMethod.call(frame, SArguments.createSArguments(domain, executesEnforced, arguments));
   }
 
   @Override

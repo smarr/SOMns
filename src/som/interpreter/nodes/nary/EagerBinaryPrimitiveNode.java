@@ -77,7 +77,7 @@ public final class EagerBinaryPrimitiveNode extends BinaryExpressionNode {
 
   private GenericMessageSendNode makeGenericSend() {
     GenericMessageSendNode node = GenericMessageSendNode.create(selector,
-        new ExpressionNode[] {receiver, argument}, getSourceSection());
+        new ExpressionNode[] {receiver, argument}, getSourceSection(), executesEnforced);
     return replace(node);
   }
 }

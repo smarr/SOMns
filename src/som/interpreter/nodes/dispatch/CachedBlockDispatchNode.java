@@ -14,8 +14,8 @@ public final class CachedBlockDispatchNode extends AbstractCachedDispatchNode {
   private final SInvokable cachedSomMethod;
 
   public CachedBlockDispatchNode(final SInvokable method,
-      final AbstractDispatchNode nextInCache) {
-    super(method, nextInCache);
+      final AbstractDispatchNode nextInCache, final boolean executesEnforced) {
+    super(method, nextInCache, executesEnforced);
     this.cachedSomMethod = method;
   }
 
@@ -24,8 +24,7 @@ public final class CachedBlockDispatchNode extends AbstractCachedDispatchNode {
     SBlock rcvr = (SBlock) arguments[0];
     if (rcvr.getMethod() == cachedSomMethod) {
       SObject domain = SArguments.domain(frame);
-      boolean enforced = SArguments.enforced(frame);
-      return cachedMethod.call(frame, SArguments.createSArguments(domain, enforced, arguments));
+      return cachedMethod.call(frame, SArguments.createSArguments(domain, executesEnforced, arguments));
     } else {
       return nextInCache.executeDispatch(frame, arguments);
     }

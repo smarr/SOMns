@@ -9,13 +9,16 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 
 public final class GenericBlockDispatchNode extends AbstractDispatchNode {
 
+  public GenericBlockDispatchNode() {
+    super(false); // is not used
+  }
+
   @Override
   public Object executeDispatch(final VirtualFrame frame,
       final Object[] arguments) {
     SBlock rcvr = (SBlock) arguments[0];
     SObject domain = SArguments.domain(frame);
-    boolean enforced = SArguments.enforced(frame);
-    return rcvr.getMethod().invoke(domain, enforced, arguments);
+    return rcvr.getMethod().invoke(domain, rcvr.isEnforced(), arguments);
   }
 
   @Override

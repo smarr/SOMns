@@ -16,9 +16,10 @@ public final class CachedDnuSObjectCheckNode extends AbstractCachedDispatchNode 
   private final SSymbol selector;
 
   public CachedDnuSObjectCheckNode(final SClass rcvrClass,
-      final SSymbol selector, final Universe universe, final AbstractDispatchNode nextInCache) {
+      final SSymbol selector, final Universe universe,
+      final AbstractDispatchNode nextInCache, final boolean executesEnforced) {
     super(rcvrClass.lookupInvokable(universe.symbolFor("doesNotUnderstand:arguments:")),
-        nextInCache);
+        nextInCache, executesEnforced);
     expectedClass = rcvrClass;
     this.selector = selector;
   }
@@ -28,8 +29,12 @@ public final class CachedDnuSObjectCheckNode extends AbstractCachedDispatchNode 
     SObject rcvr = CompilerDirectives.unsafeCast(arguments[0], SObject.class, true);
 
     if (rcvr.getSOMClass(null) == expectedClass) {
+      // TODO: looks wrong!!! not the right array passed here?
+      // no domain, no enforcement flag
       Object[] argsArr = new Object[] {
           rcvr, selector, SArguments.getArgumentsWithoutReceiver(arguments) };
+
+      //executesEnforced
       return cachedMethod.call(frame, argsArr);
     } else {
       return nextInCache.executeDispatch(frame, arguments);

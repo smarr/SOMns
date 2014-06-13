@@ -15,8 +15,9 @@ public final class CachedDispatchSObjectCheckNode extends AbstractCachedDispatch
   private final SClass expectedClass;
 
   public CachedDispatchSObjectCheckNode(final SClass rcvrClass,
-      final SInvokable method, final AbstractDispatchNode nextInCache) {
-    super(method, nextInCache);
+      final SInvokable method, final AbstractDispatchNode nextInCache,
+      final boolean executesEnforced) {
+    super(method, nextInCache, executesEnforced);
     this.expectedClass = rcvrClass;
   }
 
@@ -26,8 +27,7 @@ public final class CachedDispatchSObjectCheckNode extends AbstractCachedDispatch
     SObject rcvr = CompilerDirectives.unsafeCast(arguments[0], SObject.class, true);
     if (rcvr.getSOMClass(null) == expectedClass) {
       SObject domain = SArguments.domain(frame);
-      boolean enforced = SArguments.enforced(frame);
-      return cachedMethod.call(frame, SArguments.createSArguments(domain, enforced, arguments));
+      return cachedMethod.call(frame, SArguments.createSArguments(domain, executesEnforced, arguments));
     } else {
       return nextInCache.executeDispatch(frame, arguments);
     }

@@ -65,7 +65,7 @@ public class EagerUnaryPrimitiveNode extends UnaryExpressionNode {
 
   private GenericMessageSendNode makeGenericSend() {
     GenericMessageSendNode node = GenericMessageSendNode.create(selector,
-        new ExpressionNode[] {receiver}, getSourceSection());
+        new ExpressionNode[] {receiver}, getSourceSection(), executesEnforced);
     return replace(node);
   }
 }

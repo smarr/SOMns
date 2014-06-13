@@ -15,7 +15,9 @@ public final class SObjectCheckDispatchNode extends AbstractDispatchNode {
 
 
   public SObjectCheckDispatchNode(final AbstractDispatchNode nextInCache,
-      final UninitializedDispatchNode uninitializedDispatch) {
+      final UninitializedDispatchNode uninitializedDispatch,
+      final boolean executesEnforced) {
+    super(executesEnforced);
     this.nextInCache           = nextInCache;
     this.uninitializedDispatch = uninitializedDispatch;
     this.uninitialized         = new BranchProfile();
