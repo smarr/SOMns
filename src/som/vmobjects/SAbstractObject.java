@@ -13,7 +13,11 @@ public abstract class SAbstractObject {
 
   @Override
   public String toString() {
-    return "a " + getSOMClass(Universe.current()).getName().getString();
+    SClass clazz = getSOMClass(Universe.current());
+    if (clazz == null) {
+      return "an Object(clazz==null)";
+    }
+    return "a " + clazz.getName().getString();
   }
 
   public static final Object send(
