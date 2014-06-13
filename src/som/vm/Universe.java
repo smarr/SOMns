@@ -376,6 +376,8 @@ public class Universe {
 
     setGlobal(trueClassName,  trueClass);
     setGlobal(falseClassName, falseClass);
+
+    objectSystemInitialized = true;
   }
 
   @SlowPath
@@ -698,6 +700,12 @@ public class Universe {
   // Latest instance
   // WARNING: this is problematic with multiple interpreters in the same VM...
   @CompilationFinal private static Universe current;
+
+  @CompilationFinal private boolean objectSystemInitialized = false;
+
+  public boolean isObjectSystemInitialized() {
+    return objectSystemInitialized;
+  }
 
   public static Universe current() {
     return current;
