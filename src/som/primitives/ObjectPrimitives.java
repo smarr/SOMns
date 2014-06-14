@@ -31,9 +31,13 @@ import som.primitives.ObjectPrimsFactory.InstVarAtPrimFactory;
 import som.primitives.ObjectPrimsFactory.InstVarAtPutPrimFactory;
 import som.primitives.ObjectPrimsFactory.InstVarNamedPrimFactory;
 import som.primitives.reflection.PerformInSuperclassPrimFactory;
+import som.primitives.reflection.PerformInSuperclassPrimFactory.PerformEnforcedInSuperclassPrimFactory;
 import som.primitives.reflection.PerformPrimFactory;
+import som.primitives.reflection.PerformPrimFactory.PerformEnforcedPrimFactory;
+import som.primitives.reflection.PerformWithArgumentsInSuperclassPrimFactory;
 import som.primitives.reflection.PerformWithArgumentsInSuperclassPrimFactory.PerformEnforcedWithArgumentsInSuperclassPrimFactory;
 import som.primitives.reflection.PerformWithArgumentsPrimFactory;
+import som.primitives.reflection.PerformWithArgumentsPrimFactory.PerformEnforcedWithArgumentsPrimFactory;
 import som.vm.Universe;
 
 public final class ObjectPrimitives extends Primitives {
@@ -57,5 +61,10 @@ public final class ObjectPrimitives extends Primitives {
     installInstancePrimitive("instVarNamed:",          InstVarNamedPrimFactory.getInstance());
     installInstancePrimitive("halt",                   HaltPrimFactory.getInstance());
     installInstancePrimitive("class",                  ClassPrimFactory.getInstance());
+
+    installInstancePrimitive("performEnforced:",                            PerformEnforcedPrimFactory.getInstance());
+    installInstancePrimitive("performEnforced:withArguments:",              PerformEnforcedWithArgumentsPrimFactory.getInstance());
+    installInstancePrimitive("performEnforced:inSuperclass:",               PerformEnforcedInSuperclassPrimFactory.getInstance());
+    installInstancePrimitive("performEnforced:withArguments:inSuperclass:", PerformEnforcedWithArgumentsInSuperclassPrimFactory.getInstance());
   }
 }

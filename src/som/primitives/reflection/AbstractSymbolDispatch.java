@@ -18,8 +18,14 @@ import com.oracle.truffle.api.nodes.Node;
 public abstract class AbstractSymbolDispatch extends Node {
   public static final int INLINE_CACHE_SIZE = 6;
 
-  public static AbstractSymbolDispatch create() {
-    return new UninitializedDispatchNode();
+  public static AbstractSymbolDispatch create(final boolean alwaysEnforced) {
+    return new UninitializedDispatchNode(alwaysEnforced);
+  }
+
+  protected final boolean alwaysEnforced;
+
+  public AbstractSymbolDispatch(final boolean alwaysEnforced) {
+    this.alwaysEnforced = alwaysEnforced;
   }
 
   public abstract Object executeDispatch(VirtualFrame frame, Object receiver,
@@ -28,6 +34,10 @@ public abstract class AbstractSymbolDispatch extends Node {
   public abstract int lengthOfDispatchChain();
 
   private static final class UninitializedDispatchNode extends AbstractSymbolDispatch {
+
+    public UninitializedDispatchNode(final boolean alwaysEnforced) {
+      super(alwaysEnforced);
+    }
 
     @Override
     public Object executeDispatch(final VirtualFrame frame,
@@ -39,12 +49,12 @@ public abstract class AbstractSymbolDispatch extends Node {
 
       if (chainDepth < INLINE_CACHE_SIZE) {
         CachedDispatchNode specialized = new CachedDispatchNode(selector,
-            new UninitializedDispatchNode(), enforced);
+            new UninitializedDispatchNode(alwaysEnforced), enforced, alwaysEnforced);
         return replace(specialized).executeDispatch(frame, receiver, selector, argsArr);
       }
 
       // TODO: normally, we throw away the whole chain, and replace it with the megamorphic node...
-      GenericDispatchNode generic = new GenericDispatchNode(enforced);
+      GenericDispatchNode generic = new GenericDispatchNode(enforced, alwaysEnforced);
       return replace(generic).executeDispatch(frame, receiver, selector, argsArr);
     }
 
@@ -72,10 +82,11 @@ public abstract class AbstractSymbolDispatch extends Node {
 
     public CachedDispatchNode(final SSymbol selector,
         final AbstractSymbolDispatch nextInCache,
-        final boolean executesEnforced) {
+        final boolean executesEnforced, final boolean alwaysEnforced) {
+      super(alwaysEnforced);
       this.selector = selector;
       this.nextInCache = nextInCache;
-      cachedSend = MessageSendNode.createForPerformNodes(selector, executesEnforced);
+      cachedSend = MessageSendNode.createForPerformNodes(selector, executesEnforced || alwaysEnforced);
     }
 
     @ExplodeLoop
@@ -109,7 +120,8 @@ public abstract class AbstractSymbolDispatch extends Node {
     private final Universe universe;
     private final boolean executesEnforced;
 
-    public GenericDispatchNode(final boolean executesEnforced) {
+    public GenericDispatchNode(final boolean executesEnforced, final boolean alwaysEnforced) {
+      super(alwaysEnforced);
       universe = Universe.current();
       this.executesEnforced = executesEnforced;
     }
@@ -120,7 +132,8 @@ public abstract class AbstractSymbolDispatch extends Node {
       SInvokable invokable = Types.getClassOf(receiver, universe).lookupInvokable(selector);
 
       SObject domain = SArguments.domain(frame);
-      Object[] args = SArguments.createSArgumentsWithReceiver(domain, executesEnforced, receiver, argsArr);
+      Object[] args = SArguments.createSArgumentsWithReceiver(domain,
+          executesEnforced || alwaysEnforced, receiver, argsArr);
 
       return invokable.invokeWithSArguments(args);
     }
