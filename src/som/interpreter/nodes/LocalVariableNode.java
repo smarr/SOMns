@@ -22,8 +22,9 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 public abstract class LocalVariableNode extends ExpressionNode {
   protected final FrameSlot slot;
 
-  private LocalVariableNode(final FrameSlot slot, final SourceSection source) {
-    super(source, false);  /* TODO: enforced!!! */
+  private LocalVariableNode(final FrameSlot slot, final SourceSection source,
+      final boolean executesEnforced) {
+    super(source, executesEnforced);
     this.slot = slot;
   }
 
@@ -33,17 +34,17 @@ public abstract class LocalVariableNode extends ExpressionNode {
 
   public abstract static class LocalVariableReadNode extends LocalVariableNode {
     public LocalVariableReadNode(final Variable variable,
-        final SourceSection source) {
-      super(variable.slot, source);
+        final SourceSection source, final boolean executesEnforced) {
+      super(variable.slot, source, executesEnforced);
     }
 
     public LocalVariableReadNode(final LocalVariableReadNode node) {
-      super(node.slot, node.getSourceSection());
+      super(node.slot, node.getSourceSection(), node.executesEnforced);
     }
 
     public LocalVariableReadNode(final FrameSlot slot,
-        final SourceSection source) {
-      super(slot, source);
+        final SourceSection source, final boolean executesEnforced) {
+      super(slot, source, executesEnforced);
     }
 
     @Specialization(guards = "isUninitialized")
@@ -95,18 +96,19 @@ public abstract class LocalVariableNode extends ExpressionNode {
     private final SClass superClass;
 
     public LocalSuperReadNode(final Variable variable, final SClass superClass,
-        final SourceSection source) {
-      this(variable.slot, superClass, source);
+        final SourceSection source, final boolean executesEnforced) {
+      this(variable.slot, superClass, source, executesEnforced);
     }
 
     public LocalSuperReadNode(final FrameSlot slot, final SClass superClass,
-        final SourceSection source) {
-      super(slot, source);
+        final SourceSection source, final boolean executesEnforced) {
+      super(slot, source, executesEnforced);
       this.superClass = superClass;
     }
 
     public LocalSuperReadNode(final LocalSuperReadNode node) {
-      this(node.slot, node.superClass, node.getSourceSection());
+      this(node.slot, node.superClass, node.getSourceSection(),
+          node.executesEnforced);
     }
 
     @Override
@@ -118,16 +120,18 @@ public abstract class LocalVariableNode extends ExpressionNode {
   @NodeChild(value = "exp", type = ExpressionNode.class)
   public abstract static class LocalVariableWriteNode extends LocalVariableNode {
 
-    public LocalVariableWriteNode(final Local variable, final SourceSection source) {
-      super(variable.slot, source);
+    public LocalVariableWriteNode(final Local variable,
+        final SourceSection source, final boolean executesEnforced) {
+      super(variable.slot, source, executesEnforced);
     }
 
     public LocalVariableWriteNode(final LocalVariableWriteNode node) {
-      super(node.slot, node.getSourceSection());
+      super(node.slot, node.getSourceSection(), node.executesEnforced);
     }
 
-    public LocalVariableWriteNode(final FrameSlot slot, final SourceSection source) {
-      super(slot, source);
+    public LocalVariableWriteNode(final FrameSlot slot,
+        final SourceSection source, final boolean executesEnforced) {
+      super(slot, source, executesEnforced);
     }
 
     public abstract ExpressionNode getExp();
@@ -207,7 +211,7 @@ public abstract class LocalVariableNode extends ExpressionNode {
       if (getParent() instanceof ArgumentInitializationNode) {
         FrameSlot varSlot = inliner.getLocalFrameSlot(getSlotIdentifier());
         assert varSlot != null;
-        replace(createLocalVariableWrite(varSlot, getExp(), getSourceSection(), false));  /* TODO: enforced!!! */
+        replace(createLocalVariableWrite(varSlot, getExp(), getSourceSection(), executesEnforced));
       } else {
         throw new RuntimeException("Should not be part of an uninitalized tree. And this should only be done with uninitialized trees.");
       }

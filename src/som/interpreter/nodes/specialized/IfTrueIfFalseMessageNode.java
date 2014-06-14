@@ -31,8 +31,8 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
   private final Universe universe;
 
   public IfTrueIfFalseMessageNode(final Object rcvr, final Object arg1,
-      final Object arg2, final Universe universe) {
-    super(false);  // TODO: enforced!!!
+      final Object arg2, final Universe universe, final boolean executesEnforced) {
+    super(executesEnforced);
     if (arg1 instanceof SBlock) {
       SBlock trueBlock = (SBlock) arg1;
       trueMethod = trueBlock.getMethod();
@@ -59,7 +59,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
   }
 
   public IfTrueIfFalseMessageNode(final IfTrueIfFalseMessageNode node) {
-    super(false);  // TODO: enforced!!!
+    super(node.executesEnforced);
     trueMethod = node.trueMethod;
     trueEnforced = node.trueEnforced;
     if (node.trueMethod != null) {

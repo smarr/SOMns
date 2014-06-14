@@ -59,14 +59,15 @@ public abstract class FieldNode extends ExpressionNode {
     @Child private AbstractReadFieldNode read;
 
     public FieldReadNode(final ExpressionNode self, final int fieldIndex,
-        final SourceSection source) {
-      super(source, false);  /* TODO: enforced!!! */
+        final SourceSection source, final boolean executesEnforced) {
+      super(source, executesEnforced);
       this.self = self;
-      read = new UninitializedReadFieldNode(fieldIndex);
+      read = new UninitializedReadFieldNode(fieldIndex); // TODO: there needs to be a variant for enforced!
     }
 
     public FieldReadNode(final FieldReadNode node) {
-      this(node.self, node.read.getFieldIndex(), node.getSourceSection());
+      this(node.self, node.read.getFieldIndex(), node.getSourceSection(),
+          node.executesEnforced);
     }
 
     @Override
@@ -75,7 +76,8 @@ public abstract class FieldNode extends ExpressionNode {
     }
 
     public Object executeEvaluated(final SObject obj) {
-       return read.read(obj);
+      assert !executesEnforced;
+      return read.read(obj);
     }
 
     @Override
@@ -86,18 +88,21 @@ public abstract class FieldNode extends ExpressionNode {
 
     @Override
     public long executeLong(final VirtualFrame frame) throws UnexpectedResultException {
+      assert !executesEnforced;
       SObject obj = self.executeSObject(frame);
       return read.readLong(obj);
     }
 
     @Override
     public double executeDouble(final VirtualFrame frame) throws UnexpectedResultException {
+      assert !executesEnforced;
       SObject obj = self.executeSObject(frame);
       return read.readDouble(obj);
     }
 
     @Override
     public Object executeGeneric(final VirtualFrame frame) {
+      assert !executesEnforced;
       SObject obj;
       try {
         obj = self.executeSObject(frame);
@@ -109,7 +114,9 @@ public abstract class FieldNode extends ExpressionNode {
     }
 
     @Override
-    public void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
+    public void executeVoid(final VirtualFrame frame) {
+      assert !executesEnforced;
+      /* NOOP, side effect free */ }
   }
 
   @NodeChildren({
@@ -119,17 +126,20 @@ public abstract class FieldNode extends ExpressionNode {
       implements PreevaluatedExpression {
     @Child private AbstractWriteFieldNode write;
 
-    public FieldWriteNode(final int fieldIndex, final SourceSection source) {
-      super(source, false);  /* TODO: enforced!!! */
-      write = new UninitializedWriteFieldNode(fieldIndex);
+    public FieldWriteNode(final int fieldIndex, final SourceSection source,
+        final boolean executesEnforced) {
+      super(source, executesEnforced);
+      write = new UninitializedWriteFieldNode(fieldIndex); // TODO: needs a solution for enforced
     }
 
     public FieldWriteNode(final FieldWriteNode node) {
-      this(node.write.getFieldIndex(), node.getSourceSection());
+      this(node.write.getFieldIndex(), node.getSourceSection(),
+          node.executesEnforced);
     }
 
     public final Object executeEvaluated(final VirtualFrame frame,
         final SObject self, final Object value) {
+      assert !executesEnforced;
       return write.write(self, value);
     }
 
@@ -142,12 +152,14 @@ public abstract class FieldNode extends ExpressionNode {
     @Specialization
     public long doLong(final VirtualFrame frame, final SObject self,
         final long value) {
+      assert !executesEnforced;
       return write.write(self, value);
     }
 
     @Specialization
     public double doDouble(final VirtualFrame frame, final SObject self,
         final double value) {
+      assert !executesEnforced;
       return write.write(self, value);
     }
 

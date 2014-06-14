@@ -45,7 +45,8 @@ public final class SNodeFactory {
 
     for (Argument arg : arguments.values()) {
       writes[arg.index] = LocalVariableWriteNodeFactory.create(
-          arg.slot, null, new ArgumentReadNode(arg.index, executeEnforced));
+          arg.slot, null, executeEnforced,
+          new ArgumentReadNode(arg.index, executeEnforced));
     }
     return new ArgumentInitializationNode(writes, methodBody, executeEnforced);
   }
@@ -59,8 +60,8 @@ public final class SNodeFactory {
 
   public static FieldReadNode createFieldRead(final ExpressionNode self,
       final int fieldIndex, final SourceSection source,
-      final boolean executeEnforced) {
-    return new FieldReadNode(self, fieldIndex, source);  /* TODO: enforced!!! */
+      final boolean executesEnforced) {
+    return new FieldReadNode(self, fieldIndex, source, executesEnforced);
   }
 
   public static GlobalNode createGlobalRead(final String name,
@@ -71,19 +72,19 @@ public final class SNodeFactory {
 
   public static GlobalNode createGlobalRead(final SSymbol name,
       final Universe universe, final SourceSection source, final boolean executeEnforced) {
-    return new UninitializedGlobalReadNode(name, universe, source);  /* TODO: enforced!!! */
+    return new UninitializedGlobalReadNode(name, universe, source, executeEnforced);
   }
 
   public static FieldWriteNode createFieldWrite(final ExpressionNode self,
       final ExpressionNode exp, final int fieldIndex,
       final SourceSection source, final boolean executeEnforced) {
-    return FieldWriteNodeFactory.create(fieldIndex, source, self, exp);  /* TODO: enforced!!! */
+    return FieldWriteNodeFactory.create(fieldIndex, source, executeEnforced, self, exp);
   }
 
   public static ContextualNode createVariableRead(final Variable variable,
       final int contextLevel, final FrameSlot localSelf,
       final SourceSection source, final boolean executeEnforced) {
-    return new UninitializedVariableReadNode(variable, contextLevel, localSelf, source);  /* TODO: enforced!!! */
+    return new UninitializedVariableReadNode(variable, contextLevel, localSelf, source, executeEnforced);
   }
 
   public static ContextualNode createSuperRead(final Variable variable,
@@ -91,20 +92,22 @@ public final class SNodeFactory {
         final SSymbol holderClass, final boolean classSide,
         final SourceSection source, final boolean executeEnforced) {
     return new UninitializedSuperReadNode(variable, contextLevel, localSelf,
-        holderClass, classSide, source);  /* TODO: enforced!!! */
+        holderClass, classSide, source, executeEnforced);
   }
 
   public static ContextualNode createVariableWrite(final Local variable,
         final int contextLevel, final FrameSlot localSelf,
         final ExpressionNode exp, final SourceSection source,
         final boolean executeEnforced) {
-    return new UninitializedVariableWriteNode(variable, contextLevel, localSelf, exp, source);  /* TODO: enforced!!! */
+    assert exp.nodeExecutesEnforced() == executeEnforced;
+    return new UninitializedVariableWriteNode(variable, contextLevel, localSelf,
+        exp, source, executeEnforced);
   }
 
   public static LocalVariableWriteNode createLocalVariableWrite(
       final FrameSlot varSlot, final ExpressionNode exp,
       final SourceSection source, final boolean executeEnforced) {
-    return LocalVariableWriteNodeFactory.create(varSlot, source, exp);
+    return LocalVariableWriteNodeFactory.create(varSlot, source, executeEnforced, exp);
   }
 
   public static SequenceNode createSequence(final List<ExpressionNode> exps,
@@ -125,13 +128,22 @@ public final class SNodeFactory {
   public static ExpressionNode createMessageSend(final SSymbol msg,
       final ExpressionNode[] exprs, final SourceSection source,
       final boolean executeEnforced) {
-    return MessageSendNode.create(msg, exprs, source); /* TODO: enforced!!! */
+    for (ExpressionNode n : exprs) {
+      assert n.nodeExecutesEnforced() == executeEnforced;
+    }
+
+    return MessageSendNode.create(msg, exprs, source, executeEnforced);
   }
 
   public static ExpressionNode createMessageSend(final SSymbol msg,
       final List<ExpressionNode> exprs, final SourceSection source,
       final boolean executeEnforced) {
-    return MessageSendNode.create(msg, exprs.toArray(new ExpressionNode[0]), source);  /* TODO: enforced!!! */
+    for (ExpressionNode n : exprs) {
+      assert n.nodeExecutesEnforced() == executeEnforced;
+    }
+
+    return MessageSendNode.create(msg, exprs.toArray(new ExpressionNode[0]),
+        source, executeEnforced);
   }
 
   public static ReturnNonLocalNode createNonLocalReturn(final ExpressionNode exp,

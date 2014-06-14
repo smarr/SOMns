@@ -28,21 +28,23 @@ public abstract class AbstractSymbolDispatch extends Node {
   public abstract int lengthOfDispatchChain();
 
   private static final class UninitializedDispatchNode extends AbstractSymbolDispatch {
+
     @Override
     public Object executeDispatch(final VirtualFrame frame,
         final Object receiver, final SSymbol selector, final Object[] argsArr) {
       transferToInterpreterAndInvalidate("Initialize a dispatch node.");
 
+      boolean enforced = SArguments.enforced(frame);
       int chainDepth = determineChainLength();
 
       if (chainDepth < INLINE_CACHE_SIZE) {
         CachedDispatchNode specialized = new CachedDispatchNode(selector,
-            new UninitializedDispatchNode());
+            new UninitializedDispatchNode(), enforced);
         return replace(specialized).executeDispatch(frame, receiver, selector, argsArr);
       }
 
       // TODO: normally, we throw away the whole chain, and replace it with the megamorphic node...
-      GenericDispatchNode generic = new GenericDispatchNode();
+      GenericDispatchNode generic = new GenericDispatchNode(enforced);
       return replace(generic).executeDispatch(frame, receiver, selector, argsArr);
     }
 
@@ -69,10 +71,11 @@ public abstract class AbstractSymbolDispatch extends Node {
     @Child protected AbstractSymbolDispatch nextInCache;
 
     public CachedDispatchNode(final SSymbol selector,
-        final AbstractSymbolDispatch nextInCache) {
+        final AbstractSymbolDispatch nextInCache,
+        final boolean executesEnforced) {
       this.selector = selector;
       this.nextInCache = nextInCache;
-      cachedSend = MessageSendNode.createForPerformNodes(selector);
+      cachedSend = MessageSendNode.createForPerformNodes(selector, executesEnforced);
     }
 
     @ExplodeLoop
@@ -104,9 +107,11 @@ public abstract class AbstractSymbolDispatch extends Node {
   private static final class GenericDispatchNode extends AbstractSymbolDispatch {
 
     private final Universe universe;
+    private final boolean executesEnforced;
 
-    public GenericDispatchNode() {
+    public GenericDispatchNode(final boolean executesEnforced) {
       universe = Universe.current();
+      this.executesEnforced = executesEnforced;
     }
 
     @Override
@@ -115,9 +120,7 @@ public abstract class AbstractSymbolDispatch extends Node {
       SInvokable invokable = Types.getClassOf(receiver, universe).lookupInvokable(selector);
 
       SObject domain = SArguments.domain(frame);
-      boolean enforced = SArguments.enforced(frame);
-
-      Object[] args = SArguments.createSArgumentsWithReceiver(domain, enforced, receiver, argsArr);
+      Object[] args = SArguments.createSArgumentsWithReceiver(domain, executesEnforced, receiver, argsArr);
 
       return invokable.invokeWithSArguments(args);
     }

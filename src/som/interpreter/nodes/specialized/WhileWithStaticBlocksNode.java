@@ -32,8 +32,9 @@ public abstract class WhileWithStaticBlocksNode extends BinaryExpressionNode {
 
   private WhileWithStaticBlocksNode(final BlockNode receiver,
       final BlockNode argument, final SBlock rcvr, final SBlock arg,
-      final boolean predicateBool, final Universe universe, final SourceSection source) {
-    super(source, false);   // TODO: enforced!!!
+      final boolean predicateBool, final Universe universe,
+      final SourceSection source, final boolean executesEnforced) {
+    super(source, executesEnforced);
     this.receiver = receiver;
     this.argument = argument;
 
@@ -122,16 +123,18 @@ public abstract class WhileWithStaticBlocksNode extends BinaryExpressionNode {
   public static final class WhileTrueStaticBlocksNode extends WhileWithStaticBlocksNode {
     public WhileTrueStaticBlocksNode(final BlockNode receiver,
         final BlockNode argument, final SBlock rcvr, final SBlock arg,
-        final Universe universe, final SourceSection source) {
-      super(receiver, argument, rcvr, arg, true, universe, source);
+        final Universe universe, final SourceSection source,
+        final boolean executesEnforced) {
+      super(receiver, argument, rcvr, arg, true, universe, source, executesEnforced);
     }
   }
 
   public static final class WhileFalseStaticBlocksNode extends WhileWithStaticBlocksNode {
     public WhileFalseStaticBlocksNode(final BlockNode receiver,
         final BlockNode argument, final SBlock rcvr, final SBlock arg,
-        final Universe universe, final SourceSection source) {
-      super(receiver, argument, rcvr, arg, false, universe, source);
+        final Universe universe, final SourceSection source,
+        final boolean executesEnforced) {
+      super(receiver, argument, rcvr, arg, false, universe, source, executesEnforced);
     }
   }
 }

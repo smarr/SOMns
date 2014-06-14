@@ -27,8 +27,8 @@ public abstract class AbstractIfMessageNode extends BinaryExpressionNode {
   protected final Universe universe;
 
   public AbstractIfMessageNode(final Object rcvr, final Object arg,
-      final Universe universe, final SourceSection source) {
-    super(source, false); // TODO: enforced!!!
+      final Universe universe, final SourceSection source, final boolean executesEnforced) {
+    super(source, executesEnforced);
     if (arg instanceof SBlock) {
       SBlock argBlock = (SBlock) arg;
       branchMethod = argBlock.getMethod();
@@ -43,7 +43,7 @@ public abstract class AbstractIfMessageNode extends BinaryExpressionNode {
   }
 
   public AbstractIfMessageNode(final AbstractIfMessageNode node) {
-    super(node.getSourceSection(), false);  // TODO: enforced!!!
+    super(node.getSourceSection(), node.executesEnforced);
     branchMethod = node.branchMethod;
     branchEnforced = node.branchEnforced;
     if (node.branchMethod != null) {

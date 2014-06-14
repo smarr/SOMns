@@ -9,7 +9,11 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 
 
 public abstract class IfTrueMessageNode extends AbstractIfMessageNode {
-  public IfTrueMessageNode(final Object rcvr, final Object arg, final Universe universe, final SourceSection source) { super(rcvr, arg, universe, source); }
+  public IfTrueMessageNode(final Object rcvr, final Object arg,
+      final Universe universe, final SourceSection source,
+      final boolean executesEnforced) {
+    super(rcvr, arg, universe, source, executesEnforced);
+  }
   public IfTrueMessageNode(final IfTrueMessageNode node) { super(node); }
 
   /**

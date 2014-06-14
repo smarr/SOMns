@@ -40,8 +40,8 @@ public abstract class GlobalNode extends ExpressionNode {
   protected final Universe universe;
 
   public GlobalNode(final SSymbol globalName, final Universe universe,
-      final SourceSection source) {
-    super(source, false); /* TODO: enforced!!! */
+      final SourceSection source, final boolean executesEnforced) {
+    super(source, executesEnforced);
     this.globalName = globalName;
     this.universe   = universe;
   }
@@ -53,8 +53,9 @@ public abstract class GlobalNode extends ExpressionNode {
     private final BranchProfile unknownGlobalNotFound;
 
     public UninitializedGlobalReadNode(final SSymbol globalName,
-        final Universe universe, final SourceSection source) {
-      super(globalName, universe, source);
+        final Universe universe, final SourceSection source,
+        final boolean executesEnforced) {
+      super(globalName, universe, source, executesEnforced);
       unknownGlobalNotFound = new BranchProfile();
     }
 
@@ -66,20 +67,20 @@ public abstract class GlobalNode extends ExpressionNode {
       switch (globalName.getString()) {
         case "true":
           return replace(new TrueGlobalNode(globalName, universe,
-              getSourceSection())).executeGeneric(frame);
+              getSourceSection(), executesEnforced)).executeGeneric(frame);
         case "false":
           return replace(new FalseGlobalNode(globalName, universe,
-              getSourceSection())).executeGeneric(frame);
+              getSourceSection(), executesEnforced)).executeGeneric(frame);
         case "nil":
           return replace(new NilGlobalNode(globalName, universe,
-              getSourceSection())).executeGeneric(frame);
+              getSourceSection(), executesEnforced)).executeGeneric(frame);
       }
 
       // Get the global from the universe
       Association assoc = universe.getGlobalsAssociation(globalName);
       if (assoc != null) {
         return replace(new CachedGlobalReadNode(globalName, universe, assoc,
-            getSourceSection())).executeGeneric(frame);
+            getSourceSection(), executesEnforced)).executeGeneric(frame);
       } else {
         unknownGlobalNotFound.enter();
         // if it is not defined, we will send a error message to the current
@@ -98,8 +99,8 @@ public abstract class GlobalNode extends ExpressionNode {
 
     private CachedGlobalReadNode(final SSymbol globalName,
         final Universe universe, final Association assoc,
-        final SourceSection source) {
-      super(globalName, universe, source);
+        final SourceSection source, final boolean executesEnforced) {
+      super(globalName, universe, source, executesEnforced);
       this.assoc = assoc;
     }
 
@@ -111,8 +112,8 @@ public abstract class GlobalNode extends ExpressionNode {
 
   private static final class TrueGlobalNode extends GlobalNode {
     public TrueGlobalNode(final SSymbol globalName, final Universe universe,
-        final SourceSection source) {
-      super(globalName, universe, source);
+        final SourceSection source, final boolean executesEnforced) {
+      super(globalName, universe, source, executesEnforced);
     }
 
     @Override
@@ -128,8 +129,8 @@ public abstract class GlobalNode extends ExpressionNode {
 
   private static final class FalseGlobalNode extends GlobalNode {
     public FalseGlobalNode(final SSymbol globalName, final Universe universe,
-        final SourceSection source) {
-      super(globalName, universe, source);
+        final SourceSection source, final boolean executesEnforced) {
+      super(globalName, universe, source, executesEnforced);
     }
 
     @Override
@@ -145,8 +146,8 @@ public abstract class GlobalNode extends ExpressionNode {
 
   private static final class NilGlobalNode extends GlobalNode {
     public NilGlobalNode(final SSymbol globalName, final Universe universe,
-        final SourceSection source) {
-      super(globalName, universe, source);
+        final SourceSection source, final boolean executesEnforced) {
+      super(globalName, universe, source, executesEnforced);
     }
 
     @Override

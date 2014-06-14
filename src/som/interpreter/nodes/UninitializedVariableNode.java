@@ -32,21 +32,22 @@ public abstract class UninitializedVariableNode extends ContextualNode {
 
   public UninitializedVariableNode(final Variable variable,
       final int contextLevel, final FrameSlot localSelf,
-      final SourceSection source) {
-    super(contextLevel, localSelf, source, false); /* TODO: enforced!!! */
+      final SourceSection source, final boolean executesEnforced) {
+    super(contextLevel, localSelf, source, executesEnforced);
     this.variable = variable;
   }
 
   public static final class UninitializedVariableReadNode extends UninitializedVariableNode {
     public UninitializedVariableReadNode(final Variable variable,
-        final int contextLevel, final FrameSlot localSelf, final SourceSection source) {
-      super(variable, contextLevel, localSelf, source);
+        final int contextLevel, final FrameSlot localSelf,
+        final SourceSection source, final boolean executesEnforced) {
+      super(variable, contextLevel, localSelf, source, executesEnforced);
     }
 
     public UninitializedVariableReadNode(final UninitializedVariableReadNode node,
         final FrameSlot inlinedVarSlot, final FrameSlot inlinedLocalSelfSlot) {
       this(node.variable.cloneForInlining(inlinedVarSlot), node.contextLevel,
-          inlinedLocalSelfSlot, node.getSourceSection());
+          inlinedLocalSelfSlot, node.getSourceSection(), node.executesEnforced);
     }
 
     @Override
@@ -55,10 +56,12 @@ public abstract class UninitializedVariableNode extends ContextualNode {
 
       if (contextLevel > 0) {
         NonLocalVariableReadNode node = NonLocalVariableReadNodeFactory.create(
-            contextLevel, variable.slot, localSelf, getSourceSection());
+            contextLevel, variable.slot, localSelf, getSourceSection(),
+            executesEnforced);
         return replace(node).executeGeneric(frame);
       } else {
-        LocalVariableReadNode node = LocalVariableReadNodeFactory.create(variable, getSourceSection());
+        LocalVariableReadNode node = LocalVariableReadNodeFactory.create(
+            variable, getSourceSection(), executesEnforced);
         return replace(node).executeGeneric(frame);
       }
     }
@@ -107,8 +110,8 @@ public abstract class UninitializedVariableNode extends ContextualNode {
     public UninitializedSuperReadNode(final Variable variable,
         final int contextLevel, final FrameSlot localSelf,
         final SSymbol holderClass, final boolean classSide,
-        final SourceSection source) {
-      super(variable, contextLevel, localSelf, source);
+        final SourceSection source, final boolean executesEnforced) {
+      super(variable, contextLevel, localSelf, source, executesEnforced);
       this.holderClass = holderClass;
       this.classSide   = classSide;
     }
@@ -117,7 +120,7 @@ public abstract class UninitializedVariableNode extends ContextualNode {
         final FrameSlot inlinedVarSlot, final FrameSlot inlinedLocalSelfSlot) {
       this(node.variable.cloneForInlining(inlinedVarSlot), node.contextLevel,
           inlinedLocalSelfSlot, node.holderClass, node.classSide,
-          node.getSourceSection());
+          node.getSourceSection(), node.executesEnforced);
     }
 
     private SClass getLexicalSuperClass() {
@@ -134,11 +137,11 @@ public abstract class UninitializedVariableNode extends ContextualNode {
 
       if (accessesOuterContext()) {
         NonLocalSuperReadNode node = NonLocalSuperReadNodeFactory.create(contextLevel,
-            variable.slot, localSelf, getLexicalSuperClass(), getSourceSection());
+            variable.slot, localSelf, getLexicalSuperClass(), getSourceSection(), executesEnforced);
         return replace(node).executeGeneric(frame);
       } else {
         LocalSuperReadNode node = LocalSuperReadNodeFactory.create(variable,
-            getLexicalSuperClass(), getSourceSection());
+            getLexicalSuperClass(), getSourceSection(), executesEnforced);
         return replace(node).executeGeneric(frame);
       }
     }
@@ -161,16 +164,19 @@ public abstract class UninitializedVariableNode extends ContextualNode {
 
     public UninitializedVariableWriteNode(final Local variable,
         final int contextLevel, final FrameSlot localSelf,
-        final ExpressionNode exp, final SourceSection source) {
-      super(variable, contextLevel, localSelf, source);
+        final ExpressionNode exp, final SourceSection source,
+        final boolean executesEnforced) {
+      super(variable, contextLevel, localSelf, source, executesEnforced);
       this.exp = exp;
     }
 
-    public UninitializedVariableWriteNode(final UninitializedVariableWriteNode node,
-        final FrameSlot inlinedVarSlot, final FrameSlot inlinedLocalSelfSlot) {
+    public UninitializedVariableWriteNode(
+        final UninitializedVariableWriteNode node,
+        final FrameSlot inlinedVarSlot, final FrameSlot inlinedLocalSelfSlot,
+        final boolean executesEnforced) {
       this((Local) node.variable.cloneForInlining(inlinedVarSlot),
           node.contextLevel, inlinedLocalSelfSlot, node.exp,
-          node.getSourceSection());
+          node.getSourceSection(), executesEnforced);
     }
 
     @Override
@@ -179,11 +185,12 @@ public abstract class UninitializedVariableNode extends ContextualNode {
 
       if (accessesOuterContext()) {
         NonLocalVariableWriteNode node = NonLocalVariableWriteNodeFactory.create(
-            contextLevel, variable.slot, localSelf, getSourceSection(), exp);
+            contextLevel, variable.slot, localSelf, getSourceSection(),
+            executesEnforced, exp);
         return replace(node).executeGeneric(frame);
       } else {
         LocalVariableWriteNode node = LocalVariableWriteNodeFactory.create(
-            (Local) variable, getSourceSection(), exp);
+            (Local) variable, getSourceSection(), executesEnforced, exp);
         return replace(node).executeGeneric(frame);
       }
     }
@@ -194,11 +201,12 @@ public abstract class UninitializedVariableNode extends ContextualNode {
 
       if (accessesOuterContext()) {
         NonLocalVariableWriteNode node = NonLocalVariableWriteNodeFactory.create(
-            contextLevel, variable.slot, localSelf, getSourceSection(), exp);
+            contextLevel, variable.slot, localSelf, getSourceSection(),
+            executesEnforced, exp);
         replace(node).executeVoid(frame);
       } else {
         LocalVariableWriteNode node = LocalVariableWriteNodeFactory.create(
-            (Local) variable, getSourceSection(), exp);
+            (Local) variable, getSourceSection(), executesEnforced, exp);
         replace(node).executeVoid(frame);
       }
     }
@@ -209,7 +217,8 @@ public abstract class UninitializedVariableNode extends ContextualNode {
       FrameSlot varSlot       = inliner.getFrameSlot(this, variable.getSlotIdentifier());
       assert localSelfSlot != null;
       assert varSlot       != null;
-      replace(new UninitializedVariableWriteNode(this, varSlot, localSelfSlot));
+      replace(new UninitializedVariableWriteNode(this, varSlot, localSelfSlot,
+          executesEnforced));
     }
   }
 }

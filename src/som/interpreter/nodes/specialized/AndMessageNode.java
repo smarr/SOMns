@@ -19,8 +19,9 @@ public abstract class AndMessageNode extends BinaryExpressionNode {
   @Child private DirectCallNode blockValueSend;
   private final boolean    blockEnforced;
 
-  public AndMessageNode(final SBlock arg, final SourceSection source) {
-    super(source, false);  // TODO: enforced!!!
+  public AndMessageNode(final SBlock arg, final SourceSection source,
+      final boolean executesEnforced) {
+    super(source, executesEnforced);
     blockMethod = arg.getMethod();
     blockValueSend = Truffle.getRuntime().createDirectCallNode(
         blockMethod.getCallTarget());
@@ -28,7 +29,7 @@ public abstract class AndMessageNode extends BinaryExpressionNode {
   }
 
   public AndMessageNode(final AndMessageNode copy) {
-    super(copy.getSourceSection(), false);  // TODO: enforced!!!
+    super(copy.getSourceSection(), copy.executesEnforced);
     blockMethod    = copy.blockMethod;
     blockValueSend = copy.blockValueSend;
     blockEnforced  = copy.blockEnforced;
@@ -53,8 +54,13 @@ public abstract class AndMessageNode extends BinaryExpressionNode {
 
   public abstract static class AndBoolMessageNode extends BinaryExpressionNode {
 
-    public AndBoolMessageNode(final SourceSection source) {
-      super(source, false);   // TODO: enforced!!!
+    public AndBoolMessageNode(final SourceSection source,
+        final boolean executesEnforced) {
+      super(source, executesEnforced);
+    }
+
+    public AndBoolMessageNode(final AndBoolMessageNode node) {
+      this(node.getSourceSection(), node.executesEnforced);
     }
 
     @Specialization

@@ -26,8 +26,8 @@ public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode
   private final boolean blockEnforced;
 
   public IntToByDoMessageNode(final ExpressionNode orignialNode,
-      final SBlock block) {
-    super(orignialNode.getSourceSection(), false);   // TODO: enforced!!!
+      final SBlock block, final boolean executesEnforced) {
+    super(orignialNode.getSourceSection(), executesEnforced);
     blockMethod = block.getMethod();
     valueSend = Truffle.getRuntime().createDirectCallNode(
                     blockMethod.getCallTarget());
@@ -35,7 +35,7 @@ public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode
   }
 
   public IntToByDoMessageNode(final IntToByDoMessageNode node) {
-    super(node.getSourceSection(), false);   // TODO: enforced!!!
+    super(node.getSourceSection(), node.executesEnforced);
     this.blockMethod = node.blockMethod;
     this.valueSend   = node.valueSend;
     this.blockEnforced = node.blockEnforced;
