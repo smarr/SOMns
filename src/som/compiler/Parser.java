@@ -127,6 +127,9 @@ public final class Parser {
     public ExpressionTuple(final ExpressionNode en, final ExpressionNode un) {
       this.en = en;
       this.un = un;
+
+      assert en.nodeExecutesEnforced();
+      assert !un.nodeExecutesEnforced();
     }
   }
 
@@ -535,7 +538,7 @@ public final class Parser {
     }
 
     return tuple(createSequence(enforced, source, true),
-        createSequence(enforced, source, false));
+        createSequence(unenforced, source, false));
   }
 
   private ExpressionTuple result(final MethodGenerationContext mgenc) throws ParseError {
@@ -692,7 +695,7 @@ public final class Parser {
 
     SourceSection source = getSource(coord);
     return tuple(createMessageSend(selector, new ExpressionNode[] {receiver.en}, source, true),
-        createMessageSend(selector, new ExpressionNode[] {receiver.un}, source, true));
+        createMessageSend(selector, new ExpressionNode[] {receiver.un}, source, false));
   }
 
   private ExpressionTuple binaryMessage(final MethodGenerationContext mgenc,
@@ -741,7 +744,7 @@ public final class Parser {
     SourceSection source = getSource(coord);
 
     return tuple(createMessageSend(msg, enforcedArgs, source, true),
-        createMessageSend(msg, enforcedArgs, source, true));
+        createMessageSend(msg, unenforcedArgs, source, false));
   }
 
   private ExpressionTuple formula(final MethodGenerationContext mgenc) throws ParseError {
@@ -973,7 +976,7 @@ public final class Parser {
 
     if (enforcedFieldWrite != null) {
       return tuple(enforcedFieldWrite,
-          mgenc.getObjectFieldWrite(fieldName, exp.en, universe, source, false));
+          mgenc.getObjectFieldWrite(fieldName, exp.un, universe, source, false));
     } else {
       throw new RuntimeException("Neither a variable nor a field found "
           + "in current scope that is named " + variableName + ". Arguments are read-only.");
