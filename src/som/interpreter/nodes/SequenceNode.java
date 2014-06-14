@@ -32,6 +32,10 @@ public final class SequenceNode extends ExpressionNode {
       final SourceSection source, final boolean executesEnforced) {
     super(source, executesEnforced);
     this.expressions = expressions;
+
+    for (ExpressionNode n : expressions) {
+      assert n.nodeExecutesEnforced() == executesEnforced;
+    }
   }
 
   @Override
