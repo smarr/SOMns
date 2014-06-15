@@ -88,21 +88,22 @@ public class SObject extends SAbstractObject {
     setLayoutInitially(new ObjectLayout(numFields, null), nilObject);
   }
 
-  public SObject getDomain() {
+  @Override
+  public final SObject getDomain() {
     return domain;
   }
 
-  protected SObject getSDomainDomainForNewObjects() {
+  protected final SObject getSDomainDomainForNewObjects() {
     assert SDomain.NEW_OBJECT_DOMAIN_IDX == 0;
     return (SObject) field1;
   }
 
-  protected void setSDomainDomainForNewObjects(final SObject domain) {
+  protected final void setSDomainDomainForNewObjects(final SObject domain) {
     assert SDomain.NEW_OBJECT_DOMAIN_IDX == 0;
     field1 = domain;
   }
 
-  public void setDomain(final SObject domain) {
+  public final void setDomain(final SObject domain) {
     this.domain = domain;
   }
 
