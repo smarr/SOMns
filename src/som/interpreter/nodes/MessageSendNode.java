@@ -6,6 +6,7 @@ import som.interpreter.nodes.dispatch.AbstractDispatchNode;
 import som.interpreter.nodes.dispatch.GenericDispatchNode;
 import som.interpreter.nodes.dispatch.SuperDispatchNode;
 import som.interpreter.nodes.dispatch.UninitializedDispatchNode;
+import som.interpreter.nodes.enforced.EnforcedMessageSendNode;
 import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.nary.EagerBinaryPrimitiveNode;
 import som.interpreter.nodes.nary.EagerUnaryPrimitiveNode;
@@ -56,7 +57,11 @@ public final class MessageSendNode {
 
   public static AbstractMessageSendNode create(final SSymbol selector,
       final ExpressionNode[] arguments, final SourceSection source, final boolean executesEnforced) {
-    return new UninitializedMessageSendNode(selector, arguments, source, executesEnforced);
+    if (executesEnforced) {
+      return new EnforcedMessageSendNode(selector, arguments, source);
+    } else {
+      return new UninitializedMessageSendNode(selector, arguments, source, executesEnforced);
+    }
   }
 
   public static AbstractMessageSendNode createForPerformNodes(

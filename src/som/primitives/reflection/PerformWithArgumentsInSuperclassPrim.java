@@ -2,7 +2,6 @@ package som.primitives.reflection;
 
 import som.interpreter.SArguments;
 import som.interpreter.nodes.nary.QuaternaryExpressionNode;
-import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;

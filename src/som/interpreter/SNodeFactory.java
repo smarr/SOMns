@@ -10,9 +10,10 @@ import som.interpreter.nodes.ArgumentInitializationNode;
 import som.interpreter.nodes.ArgumentReadNode;
 import som.interpreter.nodes.ContextualNode;
 import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.FieldNode.FieldReadNode;
-import som.interpreter.nodes.FieldNode.FieldWriteNode;
-import som.interpreter.nodes.FieldNodeFactory.FieldWriteNodeFactory;
+import som.interpreter.nodes.FieldNode.AbstractFieldReadNode;
+import som.interpreter.nodes.FieldNode.AbstractFieldWriteNode;
+import som.interpreter.nodes.FieldNode.UnenforcedFieldReadNode;
+import som.interpreter.nodes.FieldNodeFactory.UnenforcedFieldWriteNodeFactory;
 import som.interpreter.nodes.GlobalNode;
 import som.interpreter.nodes.GlobalNode.UninitializedGlobalReadNode;
 import som.interpreter.nodes.LocalVariableNode.LocalVariableWriteNode;
@@ -24,6 +25,8 @@ import som.interpreter.nodes.SequenceNode;
 import som.interpreter.nodes.UninitializedVariableNode.UninitializedSuperReadNode;
 import som.interpreter.nodes.UninitializedVariableNode.UninitializedVariableReadNode;
 import som.interpreter.nodes.UninitializedVariableNode.UninitializedVariableWriteNode;
+import som.interpreter.nodes.enforced.EnforcedFieldReadNode;
+import som.interpreter.nodes.enforced.EnforcedFieldWriteNodeFactory;
 import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.literals.BlockNode.BlockNodeWithContext;
 import som.vm.Universe;
@@ -58,10 +61,14 @@ public final class SNodeFactory {
         source, executeEnforced);
   }
 
-  public static FieldReadNode createFieldRead(final ExpressionNode self,
+  public static AbstractFieldReadNode createFieldRead(final ExpressionNode self,
       final int fieldIndex, final SourceSection source,
       final boolean executesEnforced) {
-    return new FieldReadNode(self, fieldIndex, source, executesEnforced);
+    if (executesEnforced) {
+      return new EnforcedFieldReadNode(self, fieldIndex, source);
+    } else {
+      return new UnenforcedFieldReadNode(self, fieldIndex, source);
+    }
   }
 
   public static GlobalNode createGlobalRead(final String name,
@@ -75,10 +82,14 @@ public final class SNodeFactory {
     return new UninitializedGlobalReadNode(name, universe, source, executeEnforced);
   }
 
-  public static FieldWriteNode createFieldWrite(final ExpressionNode self,
+  public static AbstractFieldWriteNode createFieldWrite(final ExpressionNode self,
       final ExpressionNode exp, final int fieldIndex,
       final SourceSection source, final boolean executeEnforced) {
-    return FieldWriteNodeFactory.create(fieldIndex, source, executeEnforced, self, exp);
+    if (executeEnforced) {
+      return EnforcedFieldWriteNodeFactory.create(fieldIndex, source, self, exp);
+    } else {
+      return UnenforcedFieldWriteNodeFactory.create(fieldIndex, source, self, exp);
+    }
   }
 
   public static ContextualNode createVariableRead(final Variable variable,

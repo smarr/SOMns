@@ -53,37 +53,57 @@ public abstract class FieldNode extends ExpressionNode {
     return false;
   }
 
-  public static final class FieldReadNode extends FieldNode
-      implements PreevaluatedExpression {
-    @Child private ExpressionNode self;
-    @Child private AbstractReadFieldNode read;
+  public abstract static class AbstractFieldReadNode extends FieldNode implements PreevaluatedExpression {
+    @Child protected ExpressionNode self;
 
-    public FieldReadNode(final ExpressionNode self, final int fieldIndex,
+    public AbstractFieldReadNode(final ExpressionNode self,
         final SourceSection source, final boolean executesEnforced) {
       super(source, executesEnforced);
       this.self = self;
-      read = new UninitializedReadFieldNode(fieldIndex); // TODO: there needs to be a variant for enforced!
-    }
-
-    public FieldReadNode(final FieldReadNode node) {
-      this(node.self, node.read.getFieldIndex(), node.getSourceSection(),
-          node.executesEnforced);
     }
 
     @Override
-    protected ExpressionNode getSelf() {
+    protected final ExpressionNode getSelf() {
       return self;
     }
 
-    public Object executeEvaluated(final SObject obj) {
-      assert !executesEnforced;
-      return read.read(obj);
+    public abstract Object executeEvaluated(final SObject obj);
+
+    @Override
+    public final Object doPreEvaluated(final VirtualFrame frame,
+        final Object[] arguments) {
+      return executeEvaluated((SObject) arguments[0]);
     }
 
     @Override
-    public Object doPreEvaluated(final VirtualFrame frame,
-        final Object[] arguments) {
-      return executeEvaluated((SObject) arguments[0]);
+    public final Object executeGeneric(final VirtualFrame frame) {
+      try {
+        SObject obj = self.executeSObject(frame);
+        return executeEvaluated(obj);
+      } catch (UnexpectedResultException e) {
+        CompilerDirectives.transferToInterpreter();
+        throw new RuntimeException("This should never happen by construction");
+      }
+    }
+  }
+
+  public static final class UnenforcedFieldReadNode extends AbstractFieldReadNode {
+    @Child private AbstractReadFieldNode read;
+
+    public UnenforcedFieldReadNode(final ExpressionNode self, final int fieldIndex,
+        final SourceSection source) {
+      super(self, source, false);
+      read = new UninitializedReadFieldNode(fieldIndex); // TODO: there needs to be a variant for enforced!
+    }
+
+    public UnenforcedFieldReadNode(final UnenforcedFieldReadNode node) {
+      this(node.self, node.read.getFieldIndex(), node.getSourceSection());
+    }
+
+    @Override
+    public Object executeEvaluated(final SObject obj) {
+      assert !executesEnforced;
+      return read.read(obj);
     }
 
     @Override
@@ -101,19 +121,6 @@ public abstract class FieldNode extends ExpressionNode {
     }
 
     @Override
-    public Object executeGeneric(final VirtualFrame frame) {
-      assert !executesEnforced;
-      SObject obj;
-      try {
-        obj = self.executeSObject(frame);
-      } catch (UnexpectedResultException e) {
-        CompilerDirectives.transferToInterpreter();
-        throw new RuntimeException("This should never happen by construction");
-      }
-      return executeEvaluated(obj);
-    }
-
-    @Override
     public void executeVoid(final VirtualFrame frame) {
       assert !executesEnforced;
       /* NOOP, side effect free */ }
@@ -122,31 +129,44 @@ public abstract class FieldNode extends ExpressionNode {
   @NodeChildren({
     @NodeChild(value = "self", type = ExpressionNode.class),
     @NodeChild(value = "value", type = ExpressionNode.class)})
-  public abstract static class FieldWriteNode extends FieldNode
-      implements PreevaluatedExpression {
-    @Child private AbstractWriteFieldNode write;
-
-    public FieldWriteNode(final int fieldIndex, final SourceSection source,
-        final boolean executesEnforced) {
+  public abstract static class AbstractFieldWriteNode extends FieldNode
+    implements PreevaluatedExpression {
+    public AbstractFieldWriteNode(final SourceSection source, final boolean executesEnforced) {
       super(source, executesEnforced);
-      write = new UninitializedWriteFieldNode(fieldIndex); // TODO: needs a solution for enforced
     }
 
-    public FieldWriteNode(final FieldWriteNode node) {
-      this(node.write.getFieldIndex(), node.getSourceSection(),
-          node.executesEnforced);
-    }
-
-    public final Object executeEvaluated(final VirtualFrame frame,
-        final SObject self, final Object value) {
-      assert !executesEnforced;
-      return write.write(self, value);
-    }
+    public abstract Object executeEvaluated(final VirtualFrame frame,
+        final SObject self, final Object value);
 
     @Override
     public final Object doPreEvaluated(final VirtualFrame frame,
         final Object[] arguments) {
       return executeEvaluated(frame, (SObject) arguments[0], arguments[1]);
+    }
+
+    @Override
+    public void executeVoid(final VirtualFrame frame) {
+      executeGeneric(frame);
+    }
+  }
+
+  public abstract static class UnenforcedFieldWriteNode extends AbstractFieldWriteNode {
+    @Child private AbstractWriteFieldNode write;
+
+    public UnenforcedFieldWriteNode(final int fieldIndex, final SourceSection source) {
+      super(source, false);
+      write = new UninitializedWriteFieldNode(fieldIndex);
+    }
+
+    public UnenforcedFieldWriteNode(final UnenforcedFieldWriteNode node) {
+      this(node.write.getFieldIndex(), node.getSourceSection());
+    }
+
+    @Override
+    public final Object executeEvaluated(final VirtualFrame frame,
+        final SObject self, final Object value) {
+      assert !executesEnforced;
+      return write.write(self, value);
     }
 
     @Specialization
@@ -167,11 +187,6 @@ public abstract class FieldNode extends ExpressionNode {
     public Object doObject(final VirtualFrame frame, final SObject self,
         final Object value) {
       return executeEvaluated(frame, self, value);
-    }
-
-    @Override
-    public void executeVoid(final VirtualFrame frame) {
-      executeGeneric(frame);
     }
   }
 }

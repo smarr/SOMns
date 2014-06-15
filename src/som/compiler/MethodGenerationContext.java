@@ -43,8 +43,8 @@ import som.interpreter.LexicalContext;
 import som.interpreter.MethodUnenforced;
 import som.interpreter.nodes.ContextualNode;
 import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.FieldNode.FieldReadNode;
-import som.interpreter.nodes.FieldNode.FieldWriteNode;
+import som.interpreter.nodes.FieldNode.AbstractFieldReadNode;
+import som.interpreter.nodes.FieldNode.AbstractFieldWriteNode;
 import som.interpreter.nodes.GlobalNode;
 import som.primitives.Primitives;
 import som.vm.Universe;
@@ -359,7 +359,7 @@ public final class MethodGenerationContext {
         getLocalSelfSlot(), source, executeEnforced);
   }
 
-  public FieldReadNode getObjectFieldRead(final SSymbol fieldName,
+  public AbstractFieldReadNode getObjectFieldRead(final SSymbol fieldName,
       final SourceSection source, final boolean executeEnforced) {
     if (!holderGenc.hasField(fieldName)) {
       return null;
@@ -374,7 +374,7 @@ public final class MethodGenerationContext {
     return createGlobalRead(varName, universe, source, executeEnforced);
   }
 
-  public FieldWriteNode getObjectFieldWrite(final SSymbol fieldName,
+  public AbstractFieldWriteNode getObjectFieldWrite(final SSymbol fieldName,
       final ExpressionNode exp, final Universe universe,
       final SourceSection source, final boolean executeEnforced) {
     if (!holderGenc.hasField(fieldName)) {

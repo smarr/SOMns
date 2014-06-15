@@ -71,8 +71,8 @@ import java.util.List;
 
 import som.compiler.Variable.Local;
 import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.FieldNode.FieldReadNode;
-import som.interpreter.nodes.FieldNode.FieldWriteNode;
+import som.interpreter.nodes.FieldNode.AbstractFieldReadNode;
+import som.interpreter.nodes.FieldNode.AbstractFieldWriteNode;
 import som.interpreter.nodes.literals.BigIntegerLiteralNode;
 import som.interpreter.nodes.literals.DoubleLiteralNode;
 import som.interpreter.nodes.literals.IntegerLiteralNode;
@@ -946,7 +946,7 @@ public final class Parser {
 
     // then object fields
     SSymbol varName = universe.symbolFor(variableName);
-    FieldReadNode enforcedFieldRead = mgenc.getObjectFieldRead(varName, source, true);
+    AbstractFieldReadNode enforcedFieldRead = mgenc.getObjectFieldRead(varName, source, true);
 
     if (enforcedFieldRead != null) {
       return tuple(enforcedFieldRead,
@@ -971,7 +971,7 @@ public final class Parser {
     }
 
     SSymbol fieldName = universe.symbolFor(variableName);
-    FieldWriteNode enforcedFieldWrite = mgenc.getObjectFieldWrite(fieldName, exp.en,
+    AbstractFieldWriteNode enforcedFieldWrite = mgenc.getObjectFieldWrite(fieldName, exp.en,
         universe, source, true);
 
     if (enforcedFieldWrite != null) {
