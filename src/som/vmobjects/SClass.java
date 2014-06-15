@@ -35,6 +35,7 @@ import som.primitives.Primitives;
 import som.vm.Universe;
 import som.vmobjects.SInvokable.SPrimitive;
 
+import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.SlowPath;

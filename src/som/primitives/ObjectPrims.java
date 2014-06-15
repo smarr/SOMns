@@ -37,7 +37,6 @@ public final class ObjectPrims {
   }
 
   public abstract static class InstVarNamedPrim extends BinarySideEffectFreeExpressionNode {
-    public InstVarNamedPrim() { super(false); }
     @Specialization
     public final Object doSObject(final SObject receiver, final SSymbol fieldName) {
       return receiver.getField(receiver.getFieldIndex(fieldName));

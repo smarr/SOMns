@@ -32,7 +32,7 @@ import som.primitives.ObjectPrimsFactory.InstVarAtPutPrimFactory;
 import som.primitives.ObjectPrimsFactory.InstVarNamedPrimFactory;
 import som.primitives.reflection.PerformInSuperclassPrimFactory;
 import som.primitives.reflection.PerformPrimFactory;
-import som.primitives.reflection.PerformWithArgumentsInSuperclassPrimFactory.PerformEnforcedWithArgumentsInSuperclassPrimFactory;
+import som.primitives.reflection.PerformWithArgumentsInSuperclassPrimFactory;
 import som.primitives.reflection.PerformWithArgumentsPrimFactory;
 import som.vm.Universe;
 
