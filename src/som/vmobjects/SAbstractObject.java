@@ -66,4 +66,5 @@ public abstract class SAbstractObject {
     return send("escapedBlock:", arguments, domain, enforced, universe);
   }
 
+  public abstract SObject getDomain();
 }

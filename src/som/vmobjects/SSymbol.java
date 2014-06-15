@@ -26,12 +26,20 @@ package som.vmobjects;
 
 import som.vm.Universe;
 
+import com.oracle.truffle.api.CompilerAsserts;
+
 public final class SSymbol extends SAbstractObject {
 
   public SSymbol(final String value) {
     super();
     string = value;
     numberOfSignatureArguments = determineNumberOfSignatureArguments();
+  }
+
+  @Override
+  public SObject getDomain() {
+    CompilerAsserts.neverPartOfCompilation();
+    return Universe.current().standardDomain;
   }
 
   @Override

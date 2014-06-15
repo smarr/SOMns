@@ -30,6 +30,7 @@ import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate
 import som.interpreter.AbstractInvokable;
 import som.vm.Universe;
 
+import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.RootCallTarget;
 
@@ -90,6 +91,12 @@ public abstract class SInvokable extends SAbstractObject {
 
   public final SClass getHolder() {
     return holder;
+  }
+
+  @Override
+  public final SObject getDomain() {
+    CompilerAsserts.neverPartOfCompilation();
+    return Universe.current().standardDomain;
   }
 
   public void setHolder(final SClass value) {

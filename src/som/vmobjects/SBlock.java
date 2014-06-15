@@ -93,6 +93,12 @@ public abstract class SBlock extends SAbstractObject {
     this.capturedEnforced = capturedEnforced;
   }
 
+  @Override
+  public SObject getDomain() {
+    CompilerAsserts.neverPartOfCompilation();
+    return Universe.current().standardDomain;
+  }
+
   public final SInvokable getMethod() {
     // Get the method of this block
     return method;
