@@ -2,6 +2,9 @@ package som.primitives.arithmetic;
 
 import java.math.BigInteger;
 
+import som.vmobjects.SClass;
+import som.vmobjects.SSymbol;
+
 import com.oracle.truffle.api.ExactMath;
 import com.oracle.truffle.api.dsl.Specialization;
 
@@ -51,5 +54,15 @@ public abstract class AdditionPrim extends ArithmeticPrim {
   @Specialization(order = 130)
   public final double doDouble(final double left, final long right) {
     return doDouble(left, (double) right);
+  }
+
+  @Specialization(order = 1000)
+  public final String doString(final String left, final SClass right) {
+    return left + right.getName().getString();
+  }
+
+  @Specialization(order = 1001)
+  public final String doString(final String left, final SSymbol right) {
+    return left + right.getString();
   }
 }
