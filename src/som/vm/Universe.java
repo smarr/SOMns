@@ -37,6 +37,7 @@ import som.interpreter.AbstractInvokable;
 import som.interpreter.TruffleCompiler;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
+import som.vmobjects.SDomain;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SInvokable.SMethod;
 import som.vmobjects.SInvokable.SPrimitive;
@@ -376,6 +377,8 @@ public class Universe {
 
     setGlobal(trueClassName,  trueClass);
     setGlobal(falseClassName, falseClass);
+
+    SDomain.completeStandardDomainInitialization(standardDomain);
 
     objectSystemInitialized = true;
   }

@@ -13,6 +13,10 @@ public final class SDomain {
     return domain;
   }
 
+  public static void completeStandardDomainInitialization(final SObject standardDomain) {
+    standardDomain.setField(0, standardDomain);
+  }
+
   public static SObject getDomainForNewObjects(final SObject domain) {
     return domain.getSDomainDomainForNewObjects();
   }
