@@ -18,7 +18,7 @@ public abstract class PerformWithArgumentsInSuperclassPrim extends QuaternaryExp
 
   @Specialization
   public final Object doSAbstractObject(final VirtualFrame frame,
-      final SAbstractObject receiver, final SSymbol selector,
+      final Object receiver, final SSymbol selector,
       final Object[] argArr, final SClass clazz) {
     CompilerAsserts.neverPartOfCompilation();
     SInvokable invokable = clazz.lookupInvokable(selector);
@@ -43,7 +43,7 @@ public abstract class PerformWithArgumentsInSuperclassPrim extends QuaternaryExp
 
     @Specialization
     public final Object doSAbstractObject(final VirtualFrame frame,
-        final SAbstractObject receiver, final SSymbol selector, final Object[] argArr, final SClass clazz) {
+        final Object receiver, final SSymbol selector, final Object[] argArr, final SClass clazz) {
       CompilerAsserts.neverPartOfCompilation();
       SInvokable invokable = clazz.lookupInvokable(selector);
       SObject domain = SArguments.domain(frame);
