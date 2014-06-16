@@ -1,9 +1,14 @@
 package som.interpreter;
 
+import java.util.Iterator;
+
 import som.interpreter.nodes.ExpressionNode;
 
 import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.RootCallTarget;
+import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.FrameDescriptor;
+import com.oracle.truffle.api.frame.FrameInstance;
 import com.oracle.truffle.api.nodes.RootNode;
 
 
@@ -46,8 +51,16 @@ public final class Primitive extends Invokable {
   @Override
   public void propagateLoopCountThroughoutLexicalScope(final long count) {
     CompilerAsserts.neverPartOfCompilation();
-    throw new UnsupportedOperationException(
-        "This should not happen, primitives don't have lexically nested loops.");
+    // we need to skip the primitive and get to the method that called the primitive
+    Iterable<FrameInstance> stack = Truffle.getRuntime().getStackTrace();
+    Iterator<FrameInstance> i = stack.iterator();
+
+    i.next();  // current frame
+    FrameInstance next2 = i.next();  // caller frame
+
+    RootCallTarget ct = (RootCallTarget) next2.getCallTarget();  // caller method
+    Method m = (Method) ct.getRootNode();
+    m.propagateLoopCountThroughoutLexicalScope(count);
   }
 
   @Override
