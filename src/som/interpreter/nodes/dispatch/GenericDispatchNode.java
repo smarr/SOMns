@@ -1,13 +1,16 @@
 package som.interpreter.nodes.dispatch;
 
 import som.interpreter.SArguments;
+import som.interpreter.Types;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
+import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.CompilerDirectives.SlowPath;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 public final class GenericDispatchNode extends AbstractDispatchWithLookupNode {
@@ -30,6 +33,12 @@ public final class GenericDispatchNode extends AbstractDispatchWithLookupNode {
       return SAbstractObject.sendDoesNotUnderstand(selector, arguments, domain,
           executesEnforced, universe);
     }
+  }
+
+  @SlowPath
+  private SInvokable lookupMethod(final Object rcvr) {
+    SClass rcvrClass = Types.getClassOf(rcvr, universe);
+    return rcvrClass.lookupInvokable(selector);
   }
 
   @Override
