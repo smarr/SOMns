@@ -19,6 +19,8 @@ import som.interpreter.nodes.specialized.IntToDoMessageNodeFactory;
 import som.interpreter.nodes.specialized.NotMessageNodeFactory;
 import som.interpreter.nodes.specialized.OrMessageNodeFactory;
 import som.interpreter.nodes.specialized.OrMessageNodeFactory.OrBoolMessageNodeFactory;
+import som.interpreter.nodes.specialized.WhileWithDynamicBlocksNode.WhileFalseDynamicBlocksNode;
+import som.interpreter.nodes.specialized.WhileWithDynamicBlocksNode.WhileTrueDynamicBlocksNode;
 import som.interpreter.nodes.specialized.WhileWithStaticBlocksNode.WhileFalseStaticBlocksNode;
 import som.interpreter.nodes.specialized.WhileWithStaticBlocksNode.WhileTrueStaticBlocksNode;
 import som.primitives.ArrayPrimsFactory.AtPrimFactory;
@@ -60,8 +62,7 @@ public final class MessageSendNode {
   }
 
   public static AbstractMessageSendNode createForPerformNodes(final SSymbol selector) {
-    return new GenericMessageSendNode(selector, null,
-        new UninitializedDispatchNode(selector, Universe.current()), null);
+    return new UninitializedSymbolSendNode(selector, null);
   }
 
   @NodeInfo(shortName = "send")
@@ -357,6 +358,243 @@ public final class MessageSendNode {
           return replace(IntToByDoMessageNodeFactory.create(this,
               (SBlock) arguments[3], argumentNodes[0], argumentNodes[1],
               argumentNodes[2], argumentNodes[3]));
+      }
+      return makeGenericSend();
+    }
+  }
+
+
+  private static final class UninitializedSymbolSendNode
+    extends AbstractMessageSendNode {
+
+    private final SSymbol selector;
+
+    protected UninitializedSymbolSendNode(final SSymbol selector,
+        final SourceSection source) {
+      super(new ExpressionNode[0], source);
+      this.selector = selector;
+    }
+
+    @Override
+    public Object doPreEvaluated(final VirtualFrame frame,
+        final Object[] arguments) {
+      return specialize(arguments).doPreEvaluated(frame, arguments);
+    }
+
+    private PreevaluatedExpression specialize(final Object[] arguments) {
+      TruffleCompiler.transferToInterpreterAndInvalidate("Specialize Symbol Send Node");
+
+      switch (arguments.length) {
+        case  1: return specializeUnary(arguments);
+        case  2: return specializeBinary(arguments);
+        case  3: return specializeTernary(arguments);
+        case  4: return specializeQuaternary(arguments);
+      }
+      return makeGenericSend();
+    }
+
+    private GenericMessageSendNode makeGenericSend() {
+      GenericMessageSendNode send = new GenericMessageSendNode(selector,
+          argumentNodes,
+          new UninitializedDispatchNode(selector, Universe.current()),
+          getSourceSection());
+      return replace(send);
+    }
+
+    private PreevaluatedExpression specializeUnary(final Object[] args) {
+      Object receiver = args[0];
+      switch (selector.getString()) {
+        // eagerly but causious:
+//        case "value":
+//          if (receiver instanceof SBlock) {
+//            return replace(new EagerUnaryPrimitiveNode(selector,
+//                argumentNodes[0], ValueNonePrimFactory.create(null)));
+//          }
+//          break;
+//        case "length":
+//          if (receiver instanceof Object[]) {
+//            return replace(new EagerUnaryPrimitiveNode(selector,
+//                argumentNodes[0], LengthPrimFactory.create(null)));
+//          }
+//          break;
+//        case "not":
+//          if (receiver instanceof Boolean) {
+//            return replace(new EagerUnaryPrimitiveNode(selector,
+//                argumentNodes[0], NotMessageNodeFactory.create(getSourceSection(), null)));
+//          }
+//          break;
+      }
+      return makeGenericSend();
+    }
+
+    private PreevaluatedExpression specializeBinary(final Object[] arguments) {
+      switch (selector.getString()) {
+        case "whileTrue:": {
+          if (arguments[1] instanceof SBlock && arguments[0] instanceof SBlock) {
+            SBlock argBlock = (SBlock) arguments[1];
+            return replace(new WhileTrueDynamicBlocksNode((SBlock) arguments[0],
+                argBlock, Universe.current(), getSourceSection()));
+          }
+          break;
+        }
+        case "whileFalse:":
+          if (arguments[1] instanceof SBlock && arguments[0] instanceof SBlock) {
+            SBlock    argBlock     = (SBlock)    arguments[1];
+            return replace(new WhileFalseDynamicBlocksNode(
+                (SBlock) arguments[0], argBlock, Universe.current(), getSourceSection()));
+          }
+          break; // use normal send
+//        case "ifTrue:":
+//          return replace(IfTrueMessageNodeFactory.create(arguments[0],
+//              arguments[1],
+//              Universe.current(), getSourceSection(),
+//              argumentNodes[0], argumentNodes[1]));
+//        case "ifFalse:":
+//          return replace(IfFalseMessageNodeFactory.create(arguments[0],
+//              arguments[1],
+//              Universe.current(), getSourceSection(),
+//              argumentNodes[0], argumentNodes[1]));
+//
+//        // TODO: find a better way for primitives, use annotation or something
+//        case "<":
+//          return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
+//              argumentNodes[1],
+//              LessThanPrimFactory.create(null, null)));
+//        case "<=":
+//          return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
+//              argumentNodes[1],
+//              LessThanOrEqualPrimFactory.create(null, null)));
+//        case ">":
+//          return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
+//              argumentNodes[1],
+//              GreaterThanPrimFactory.create(null, null)));
+//        case "+":
+//          return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
+//              argumentNodes[1],
+//              AdditionPrimFactory.create(null, null)));
+//        case "value:":
+//          if (arguments[0] instanceof SBlock) {
+//            return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
+//                argumentNodes[1],
+//                ValueOnePrimFactory.create(null, null)));
+//          }
+//          break;
+//        case "-":
+//          return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
+//              argumentNodes[1],
+//              SubtractionPrimFactory.create(null, null)));
+//        case "*":
+//          return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
+//              argumentNodes[1],
+//              MultiplicationPrimFactory.create(null, null)));
+//        case "=":
+//          return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
+//              argumentNodes[1],
+//              EqualsPrimFactory.create(null, null)));
+//        case "==":
+//          return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
+//              argumentNodes[1],
+//              EqualsEqualsPrimFactory.create(null, null)));
+//        case "bitXor:":
+//          return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
+//              argumentNodes[1],
+//              BitXorPrimFactory.create(null, null)));
+//        case "//":
+//          return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
+//              argumentNodes[1],
+//              DoubleDivPrimFactory.create(null, null)));
+//        case "%":
+//          return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
+//              argumentNodes[1],
+//              ModuloPrimFactory.create(null, null)));
+//        case "/":
+//          return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
+//              argumentNodes[1],
+//              DividePrimFactory.create(null, null)));
+//        case "&":
+//          return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
+//              argumentNodes[1],
+//              LogicAndPrimFactory.create(null, null)));
+//
+//        // eagerly but causious:
+//        case "<<":
+//          if (arguments[0] instanceof Long) {
+//            return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
+//                argumentNodes[1],
+//                LeftShiftPrimFactory.create(null, null)));
+//          }
+//          break;
+//        case "at:":
+//          if (arguments[0] instanceof Object[]) {
+//            return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
+//                argumentNodes[1],
+//                AtPrimFactory.create(null, null)));
+//          }
+//        case "new:":
+//          if (arguments[0] == Universe.current().arrayClass) {
+//            return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
+//                argumentNodes[1],
+//                NewPrimFactory.create(null, null)));
+//          }
+//          break;
+//        case "and:":
+//        case "&&":
+//          if (arguments[0] instanceof Boolean) {
+//            if (argumentNodes[1] instanceof BlockNode) {
+//              return replace(AndMessageNodeFactory.create((SBlock) arguments[1],
+//                  getSourceSection(), argumentNodes[0], argumentNodes[1]));
+//            } else if (arguments[1] instanceof Boolean) {
+//              return replace(AndBoolMessageNodeFactory.create(getSourceSection(),
+//                  argumentNodes[0], argumentNodes[1]));
+//            }
+//          }
+//          break;
+//        case "or:":
+//        case "||":
+//          if (arguments[0] instanceof Boolean) {
+//            if (argumentNodes[1] instanceof BlockNode) {
+//              return replace(OrMessageNodeFactory.create((SBlock) arguments[1],
+//                  getSourceSection(),
+//                  argumentNodes[0], argumentNodes[1]));
+//            } else if (arguments[1] instanceof Boolean) {
+//              return replace(OrBoolMessageNodeFactory.create(
+//                  getSourceSection(),
+//                  argumentNodes[0], argumentNodes[1]));
+//            }
+//          }
+//          break;
+      }
+
+      return makeGenericSend();
+    }
+
+    private PreevaluatedExpression specializeTernary(final Object[] arguments) {
+      switch (selector.getString()) {
+//        case "ifTrue:ifFalse:":
+//          return replace(IfTrueIfFalseMessageNodeFactory.create(arguments[0],
+//              arguments[1], arguments[2], Universe.current(), argumentNodes[0],
+//              argumentNodes[1], argumentNodes[2]));
+//        case "to:do:":
+//          if (TypesGen.TYPES.isLong(arguments[0]) &&
+//              (TypesGen.TYPES.isLong(arguments[1]) ||
+//                  TypesGen.TYPES.isDouble(arguments[1])) &&
+//              TypesGen.TYPES.isSBlock(arguments[2])) {
+//            return replace(IntToDoMessageNodeFactory.create(this,
+//                (SBlock) arguments[2], argumentNodes[0], argumentNodes[1],
+//                argumentNodes[2]));
+//          }
+//          break;
+      }
+      return makeGenericSend();
+    }
+
+    private PreevaluatedExpression specializeQuaternary(
+        final Object[] arguments) {
+      switch (selector.getString()) {
+//        case "to:by:do:":
+//          return replace(IntToByDoMessageNodeFactory.create(this,
+//              (SBlock) arguments[3], argumentNodes[0], argumentNodes[1],
+//              argumentNodes[2], argumentNodes[3]));
       }
       return makeGenericSend();
     }
