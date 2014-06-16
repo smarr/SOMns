@@ -20,6 +20,8 @@ import som.interpreter.nodes.specialized.IntToDoMessageNodeFactory;
 import som.interpreter.nodes.specialized.NotMessageNodeFactory;
 import som.interpreter.nodes.specialized.OrMessageNodeFactory;
 import som.interpreter.nodes.specialized.OrMessageNodeFactory.OrBoolMessageNodeFactory;
+import som.interpreter.nodes.specialized.WhileWithDynamicBlocksNode.WhileFalseDynamicBlocksNode;
+import som.interpreter.nodes.specialized.WhileWithDynamicBlocksNode.WhileTrueDynamicBlocksNode;
 import som.interpreter.nodes.specialized.WhileWithStaticBlocksNode.WhileFalseStaticBlocksNode;
 import som.interpreter.nodes.specialized.WhileWithStaticBlocksNode.WhileTrueStaticBlocksNode;
 import som.primitives.ArrayPrimsFactory.AtPrimFactory;
@@ -66,8 +68,7 @@ public final class MessageSendNode {
 
   public static AbstractMessageSendNode createForPerformNodes(
       final SSymbol selector, final boolean executesEnforced) {
-    return new GenericMessageSendNode(selector, null,
-        new UninitializedDispatchNode(selector, Universe.current(), executesEnforced), null, executesEnforced);
+    return new UninitializedSymbolSendNode(selector, null, executesEnforced);
   }
 
   @NodeInfo(shortName = "send")
@@ -368,6 +369,85 @@ public final class MessageSendNode {
               (SBlock) arguments[3], executesEnforced, argumentNodes[0],
               argumentNodes[1], argumentNodes[2], argumentNodes[3]));
       }
+      return makeGenericSend();
+    }
+  }
+
+
+  private static final class UninitializedSymbolSendNode
+    extends AbstractMessageSendNode {
+
+    private final SSymbol selector;
+
+    protected UninitializedSymbolSendNode(final SSymbol selector,
+        final SourceSection source, final boolean executesEnforced) {
+      super(new ExpressionNode[0], source, executesEnforced);
+      this.selector = selector;
+    }
+
+    @Override
+    public Object doPreEvaluated(final VirtualFrame frame,
+        final Object[] arguments) {
+      return specialize(arguments).doPreEvaluated(frame, arguments);
+    }
+
+    private PreevaluatedExpression specialize(final Object[] arguments) {
+      TruffleCompiler.transferToInterpreterAndInvalidate("Specialize Symbol Send Node");
+
+      switch (arguments.length) {
+        case  1: return specializeUnary(arguments);
+        case  2: return specializeBinary(arguments);
+        case  3: return specializeTernary(arguments);
+        case  4: return specializeQuaternary(arguments);
+      }
+      return makeGenericSend();
+    }
+
+    private GenericMessageSendNode makeGenericSend() {
+      GenericMessageSendNode send = new GenericMessageSendNode(selector,
+          argumentNodes,
+          new UninitializedDispatchNode(selector, Universe.current(), executesEnforced),
+          getSourceSection(), executesEnforced);
+      return replace(send);
+    }
+
+    private PreevaluatedExpression specializeUnary(final Object[] args) {
+      switch (selector.getString()) {
+        // eagerly but causious:
+      }
+      return makeGenericSend();
+    }
+
+    private PreevaluatedExpression specializeBinary(final Object[] arguments) {
+      switch (selector.getString()) {
+        case "whileTrue:": {
+          if (arguments[1] instanceof SBlock && arguments[0] instanceof SBlock) {
+            SBlock argBlock = (SBlock) arguments[1];
+            return replace(new WhileTrueDynamicBlocksNode((SBlock) arguments[0],
+                argBlock, Universe.current(), getSourceSection(), executesEnforced));
+          }
+          break;
+        }
+        case "whileFalse:":
+          if (arguments[1] instanceof SBlock && arguments[0] instanceof SBlock) {
+            SBlock    argBlock     = (SBlock)    arguments[1];
+            return replace(new WhileFalseDynamicBlocksNode(
+                (SBlock) arguments[0], argBlock, Universe.current(), getSourceSection(), executesEnforced));
+          }
+          break; // use normal send
+      }
+
+      return makeGenericSend();
+    }
+
+    private PreevaluatedExpression specializeTernary(final Object[] arguments) {
+      switch (selector.getString()) { }
+      return makeGenericSend();
+    }
+
+    private PreevaluatedExpression specializeQuaternary(
+        final Object[] arguments) {
+      switch (selector.getString()) { }
       return makeGenericSend();
     }
   }

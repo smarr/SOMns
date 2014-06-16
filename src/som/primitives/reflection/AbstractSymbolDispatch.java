@@ -3,13 +3,15 @@ package som.primitives.reflection;
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
 import som.interpreter.SArguments;
 import som.interpreter.Types;
+import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageSendNode;
-import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
+import som.interpreter.nodes.PreevaluatedExpression;
 import som.vm.Universe;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
@@ -77,8 +79,8 @@ public abstract class AbstractSymbolDispatch extends Node {
 
   private static final class CachedDispatchNode extends AbstractSymbolDispatch {
     private final SSymbol selector;
-    @Child protected AbstractMessageSendNode cachedSend;
-    @Child protected AbstractSymbolDispatch nextInCache;
+    @Child private ExpressionNode cachedSend;
+    @Child private AbstractSymbolDispatch nextInCache;
 
     public CachedDispatchNode(final SSymbol selector,
         final AbstractSymbolDispatch nextInCache,
@@ -103,7 +105,8 @@ public abstract class AbstractSymbolDispatch extends Node {
     public Object executeDispatch(final VirtualFrame frame,
         final Object receiver, final SSymbol selector, final Object[] argsArr) {
       if (this.selector == selector) {
-        return cachedSend.doPreEvaluated(frame, mergeReceiverWithArguments(receiver, argsArr));
+        PreevaluatedExpression realCachedSend = CompilerDirectives.unsafeCast(cachedSend, PreevaluatedExpression.class, true);
+        return realCachedSend.doPreEvaluated(frame, mergeReceiverWithArguments(receiver, argsArr));
       } else {
         return nextInCache.executeDispatch(frame, receiver, selector, argsArr);
       }
