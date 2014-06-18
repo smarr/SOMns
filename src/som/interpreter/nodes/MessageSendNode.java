@@ -45,6 +45,7 @@ import som.primitives.arithmetic.MultiplicationPrimFactory;
 import som.primitives.arithmetic.SubtractionPrimFactory;
 import som.vm.Universe;
 import som.vmobjects.SBlock;
+import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives.SlowPath;
@@ -69,6 +70,13 @@ public final class MessageSendNode {
   public static AbstractMessageSendNode createForPerformNodes(
       final SSymbol selector, final boolean executesEnforced) {
     return new UninitializedSymbolSendNode(selector, null, executesEnforced);
+  }
+
+  public static AbstractMessageSendNode createForPerformInSuperclassNodes(
+      final SSymbol selector, final SClass lookupClass, final boolean executesEnforced) {
+    return new GenericMessageSendNode(selector, null,
+        SuperDispatchNode.create(selector, lookupClass, executesEnforced),
+            null, executesEnforced);
   }
 
   @NodeInfo(shortName = "send")

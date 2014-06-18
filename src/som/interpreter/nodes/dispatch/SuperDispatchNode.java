@@ -2,6 +2,7 @@ package som.interpreter.nodes.dispatch;
 
 import som.interpreter.SArguments;
 import som.interpreter.nodes.ISuperReadNode;
+import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
@@ -20,7 +21,13 @@ public final class SuperDispatchNode extends AbstractDispatchNode {
   public static SuperDispatchNode create(final SSymbol selector,
       final ISuperReadNode superNode, final boolean executesEnforced) {
     CompilerAsserts.neverPartOfCompilation();
-    SInvokable method = superNode.getSuperClass().lookupInvokable(selector);
+    return create(selector, superNode.getSuperClass(), executesEnforced);
+  }
+
+  public static SuperDispatchNode create(final SSymbol selector,
+      final SClass lookupClass, final boolean executesEnforced) {
+    CompilerAsserts.neverPartOfCompilation();
+    SInvokable method = lookupClass.lookupInvokable(selector);
 
     if (method == null) {
       throw new RuntimeException("Currently #dnu with super sent is not yet implemented. ");
