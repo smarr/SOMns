@@ -55,13 +55,13 @@ public final class SArguments {
   @ExplodeLoop
   public static Object[] createSArgumentsWithReceiver(final SObject domain,
       final boolean enforced, final Object receiver, final Object[] argumentsWithoutReceiver) {
-    Object[] args = new Object[argumentsWithoutReceiver.length + ARGUMENT_OFFSET + 1];
+    Object[] args = new Object[argumentsWithoutReceiver.length + ARGUMENT_OFFSET];  // + 1
     args[ENFORCED_FLAG_IDX] = enforced;
     args[DOMAIN_IDX]        = domain;
     args[RCVR_IDX]          = receiver;
 
-    for (int i = 0; i < argumentsWithoutReceiver.length; i++) {
-      args[i + ARGUMENT_OFFSET + 1] = argumentsWithoutReceiver[i];
+    for (int i = 1; i < argumentsWithoutReceiver.length; i++) { // = 0
+      args[i + ARGUMENT_OFFSET] = argumentsWithoutReceiver[i]; // A_O + 1
     }
     return args;
   }

@@ -34,6 +34,7 @@ public final class ArgumentInitializationNode extends ExpressionNode {
 
   @ExplodeLoop
   private void executeAllArguments(final VirtualFrame frame) {
+    assert frame.getArguments().length == 2 + argumentInits.length;
     for (int i = 0; i < argumentInits.length; i++) {
       argumentInits[i].executeVoid(frame);
     }

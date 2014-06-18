@@ -7,6 +7,7 @@ import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.PreevaluatedExpression;
 import som.vm.Universe;
+import som.vmobjects.SArray;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
@@ -106,7 +107,7 @@ public abstract class AbstractSymbolDispatch extends Node {
         final Object receiver, final SSymbol selector, final Object[] argsArr) {
       if (this.selector == selector) {
         PreevaluatedExpression realCachedSend = CompilerDirectives.unsafeCast(cachedSend, PreevaluatedExpression.class, true);
-        return realCachedSend.doPreEvaluated(frame, mergeReceiverWithArguments(receiver, argsArr));
+        return realCachedSend.doPreEvaluated(frame, SArray.fromSArrayToArgArrayWithReceiver(argsArr, receiver));
       } else {
         return nextInCache.executeDispatch(frame, receiver, selector, argsArr);
       }

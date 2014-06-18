@@ -1,13 +1,16 @@
 package som.primitives;
 
-import java.util.Arrays;
-
+import static som.vmobjects.SDomain.getDomainForNewObjects;
+import som.interpreter.SArguments;
 import som.interpreter.nodes.nary.BinaryExpressionNode.BinarySideEffectFreeExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.vm.Universe;
+import som.vmobjects.SArray;
 import som.vmobjects.SClass;
+import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 
 
 public final class ArrayPrims {
@@ -15,7 +18,7 @@ public final class ArrayPrims {
     public AtPrim() { super(false); /* TODO: enforced!!! */ }
     @Specialization
     public final Object doSArray(final Object[] receiver, final long argument) {
-      return receiver[(int) argument - 1];
+      return SArray.get(receiver, argument);
     }
   }
 
@@ -23,7 +26,7 @@ public final class ArrayPrims {
     public AtPutPrim() { super(false); /* TODO: enforced!!! */ }
     @Specialization
     public final Object doSArray(final Object[] receiver, final long index, final Object value) {
-      receiver[(int) index - 1] = value;
+      SArray.set(receiver, index, value);
       return value;
     }
   }
@@ -37,10 +40,10 @@ public final class ArrayPrims {
     }
 
     @Specialization(guards = "receiverIsArrayClass")
-    public final Object[] doSClass(final SClass receiver, final long length) {
-      Object[] result = new Object[(int) length];
-      Arrays.fill(result, universe.nilObject);
-      return result;
+    public final Object[] doSClass(final VirtualFrame frame, final SClass receiver, final long length) {
+      SObject domain = SArguments.domain(frame);
+      return SArray.newSArray(length, universe.nilObject,
+          getDomainForNewObjects(domain));
     }
   }
 }

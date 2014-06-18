@@ -35,6 +35,7 @@ import java.util.StringTokenizer;
 import som.compiler.Disassembler;
 import som.interpreter.AbstractInvokable;
 import som.interpreter.TruffleCompiler;
+import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import som.vmobjects.SDomain;
@@ -291,7 +292,8 @@ public class Universe {
     SInvokable initialize = systemClass.
         lookupInvokable(symbolFor("initialize:"));
 
-    return initialize.invoke(standardDomain, false, systemObject, arguments);
+    return initialize.invoke(standardDomain, false, systemObject,
+        SArray.newSArray(arguments, standardDomain));
   }
 
   @SlowPath

@@ -1,11 +1,13 @@
 package som.interpreter.nodes.enforced;
 
+import som.interpreter.SArguments;
 import som.interpreter.Types;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.ISuperReadNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
+import som.vmobjects.SArray;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
@@ -63,14 +65,17 @@ public class EnforcedMessageSendNode extends AbstractMessageSendNode {
     if (rcvr instanceof SAbstractObject) {
       domain = ((SAbstractObject) rcvr).getDomain();
 
+    } else if (rcvr instanceof Object[]) {
+      domain = SArray.getOwner((Object[]) rcvr);
     } else {
-      assert !(rcvr instanceof Object[]);
       domain = Universe.current().standardDomain;
     }
 
     handler = domain.getSOMClass(Universe.current()).lookupInvokable(intercessionHandler);
     return handler.invoke(domain, false, domain, selector,
-        getArgumentsWithoutReceiver(args), rcvr, rcvrClass);
+        SArray.fromArgArrayWithReceiverToSArrayWithoutReceiver(
+            args, SArguments.domain(frame)),
+            rcvr, rcvrClass);
   }
 
 }

@@ -3,6 +3,7 @@ package som.interpreter.nodes.dispatch;
 import som.interpreter.SArguments;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode.AbstractCachedDispatchNode;
 import som.vm.Universe;
+import som.vmobjects.SArray;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
@@ -32,7 +33,8 @@ public final class CachedDnuSObjectCheckNode extends AbstractCachedDispatchNode 
       // TODO: looks wrong!!! not the right array passed here?
       // no domain, no enforcement flag
       Object[] argsArr = new Object[] {
-          rcvr, selector, SArguments.getArgumentsWithoutReceiver(arguments) };
+          rcvr, selector, SArray.fromArgArrayWithReceiverToSArrayWithoutReceiver(
+              arguments, SArguments.domain(frame)) };
 
       //executesEnforced
       return cachedMethod.call(frame, argsArr);

@@ -1,6 +1,5 @@
 package som.vmobjects;
 
-import som.interpreter.SArguments;
 import som.interpreter.Types;
 import som.vm.Universe;
 
@@ -43,7 +42,8 @@ public abstract class SAbstractObject {
     assert arguments != null;
 
     // Allocate an array to hold the arguments, without receiver
-    Object[] argumentsArray = SArguments.getArgumentsWithoutReceiver(arguments);
+    Object[] argumentsArray = SArray.fromArgArrayWithReceiverToSArrayWithoutReceiver(
+        arguments, domain);
     Object[] args = new Object[] {arguments[0], selector, argumentsArray};
     return send("doesNotUnderstand:arguments:", args, domain, enforced, universe);
   }
