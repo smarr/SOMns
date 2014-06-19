@@ -1,5 +1,9 @@
 package som.vmobjects;
 
+import som.vm.Universe;
+
+import com.oracle.truffle.api.CompilerAsserts;
+
 
 public final class SDomain {
 
@@ -23,5 +27,17 @@ public final class SDomain {
 
   public static void setDomainForNewObjects(final SObject domain, final SObject newObjectDomain) {
     domain.setSDomainDomainForNewObjects(newObjectDomain);
+  }
+
+  public static SObject getOwner(final Object o) {
+    CompilerAsserts.neverPartOfCompilation();
+
+    if (o instanceof SAbstractObject) {
+      return ((SAbstractObject) o).getDomain();
+    } else if (o instanceof Object[]) {
+      return SArray.getOwner((Object[]) o);
+    } else {
+      return Universe.current().standardDomain;
+    }
   }
 }
