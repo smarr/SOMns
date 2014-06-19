@@ -8,15 +8,11 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 
 public final class EmptyPrim extends UnaryExpressionNode {
   @Child private ExpressionNode receiver;
-  private final boolean isUnenforced;
 
-  private EmptyPrim(final ExpressionNode receiver, final boolean isUnenforced) {
+  private EmptyPrim(final ExpressionNode receiver) {
     super(null, false);
     this.receiver = receiver;
-    this.isUnenforced = isUnenforced;
   }
-
-  public EmptyPrim(final EmptyPrim node) { this(node.receiver, node.isUnenforced); }
 
   @Override
   public Object executeGeneric(final VirtualFrame frame) {
@@ -38,8 +34,7 @@ public final class EmptyPrim extends UnaryExpressionNode {
   public void executeEvaluatedVoid(final VirtualFrame frame,
       final Object receiver) { executeEvaluated(frame, receiver); }
 
-  public static EmptyPrim create(final ExpressionNode receiver,
-      final boolean isUnenforced) {
-    return new EmptyPrim(receiver, isUnenforced);
+  public static EmptyPrim create(final ExpressionNode receiver) {
+    return new EmptyPrim(receiver);
   }
 }

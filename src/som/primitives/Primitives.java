@@ -35,6 +35,7 @@ import som.vm.Universe;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SInvokable.SMethod;
+import som.vmobjects.SInvokable.SPrimitive;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives.SlowPath;
@@ -65,30 +66,29 @@ public abstract class Primitives {
     int numArgs = signature.getNumberOfSignatureArguments();
 
     MethodGenerationContext mgen = new MethodGenerationContext();
-    ExpressionNode[] args = new ExpressionNode[numArgs];
+
+    ExpressionNode[] argsEnforced   = new ExpressionNode[numArgs];
+    ExpressionNode[] argsUnenforced = new ExpressionNode[numArgs];
     for (int i = 0; i < numArgs; i++) {
-      args[i] = new ArgumentReadNode(i, false);  /* TODO: enforced!!! */
+      argsEnforced[i]   = new ArgumentReadNode(i, true);
+      argsUnenforced[i] = new ArgumentReadNode(i, false);
     }
 
-    ExpressionNode primNodeEnforced;
+    EnforcedPrim   primNodeEnforced = EnforcedPrim.create(argsEnforced);
     ExpressionNode primNodeUnenforced;
 
     switch (numArgs) {
       case 1:
-        primNodeEnforced   = nodeFactory.createNode(args[0]);
-        primNodeUnenforced = nodeFactory.createNode(args[0]);
+        primNodeUnenforced = nodeFactory.createNode(argsUnenforced[0]);
         break;
       case 2:
-        primNodeEnforced   = nodeFactory.createNode(args[0], args[1]);
-        primNodeUnenforced = nodeFactory.createNode(args[0], args[1]);
+        primNodeUnenforced = nodeFactory.createNode(argsUnenforced[0], argsUnenforced[1]);
         break;
       case 3:
-        primNodeEnforced   = nodeFactory.createNode(args[0], args[1], args[2]);
-        primNodeUnenforced = nodeFactory.createNode(args[0], args[1], args[2]);
+        primNodeUnenforced = nodeFactory.createNode(argsUnenforced[0], argsUnenforced[1], argsUnenforced[2]);
         break;
       case 4:
-        primNodeEnforced   = nodeFactory.createNode(args[0], args[1], args[2], args[3]);
-        primNodeUnenforced = nodeFactory.createNode(args[0], args[1], args[2], args[3]);
+        primNodeUnenforced = nodeFactory.createNode(argsUnenforced[0], argsUnenforced[1], argsUnenforced[2], argsUnenforced[3]);
         break;
       default:
         throw new RuntimeException("Not supported by SOM.");
@@ -100,7 +100,8 @@ public abstract class Primitives {
     } else {
       primMethodNode = new Primitive(primNodeEnforced, primNodeUnenforced, mgen.getFrameDescriptor());
     }
-    SInvokable prim = universe.newMethod(signature, primMethodNode, true, new SMethod[0]);
+    SPrimitive prim = (SPrimitive) universe.newMethod(signature, primMethodNode, true, new SMethod[0]);
+    primNodeEnforced.setPrimitive(prim);
     return prim;
   }
 
@@ -109,7 +110,7 @@ public abstract class Primitives {
       final Universe universe, final boolean unenforced) {
     MethodGenerationContext mgen = new MethodGenerationContext();
 
-    ExpressionNode primNode = EmptyPrim.create(new ArgumentReadNode(0, false), false);  /* TODO: enforced!!! */ /* TODO: enforced!!! */
+    ExpressionNode primNode = EmptyPrim.create(new ArgumentReadNode(0, false));  /* TODO: enforced!!! */ /* TODO: enforced!!! */
     PrimitiveUnenforced primMethodNode = new PrimitiveUnenforced(primNode, mgen.getFrameDescriptor());
     SInvokable prim = universe.newMethod(signature, primMethodNode, true, new SMethod[0]);
     return prim;
