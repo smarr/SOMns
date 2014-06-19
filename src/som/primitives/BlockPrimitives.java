@@ -25,6 +25,8 @@
 
 package som.primitives;
 
+import som.interpreter.nodes.specialized.WhilePrimitiveNodeFactory.WhileFalsePrimitiveNodeFactory;
+import som.interpreter.nodes.specialized.WhilePrimitiveNodeFactory.WhileTruePrimitiveNodeFactory;
 import som.primitives.BlockPrimsFactory.RestartPrimFactory;
 import som.primitives.BlockPrimsFactory.ValueMorePrimFactory;
 import som.primitives.BlockPrimsFactory.ValueNonePrimFactory;
@@ -42,6 +44,8 @@ public final class BlockPrimitives extends Primitives {
   public void installPrimitives() {
     if (holder == universe.getBlockClass(0) || universe.getBlockClass(0) == null) {
       installInstancePrimitive("restart",          RestartPrimFactory.getInstance());
+      installInstancePrimitive("whileTrue:",       WhileTruePrimitiveNodeFactory.getInstance());
+      installInstancePrimitive("whileFalse:",      WhileFalsePrimitiveNodeFactory.getInstance());
     } else if (universe.getBlockClass(0) != null) {
       if (holder == universe.getBlockClass(1)) {
         installInstancePrimitive("value",            ValueNonePrimFactory.getInstance());
