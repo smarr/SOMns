@@ -36,11 +36,6 @@ public abstract class EqualsPrim extends BinarySideEffectFreeExpressionNode {
     return left == right;
   }
 
-  @Specialization(order = 50)
-  public final boolean doSObject(final SObject left, final SObject right) {
-    return left == right;
-  }
-
   @Specialization(order = 60)
   public final boolean doSSymbol(final SSymbol left, final SSymbol right) {
     return left == right;
