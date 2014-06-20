@@ -21,14 +21,18 @@ import com.oracle.truffle.api.nodes.Node;
 public abstract class AbstractSymbolSuperDispatch extends Node {
   public static final int INLINE_CACHE_SIZE = 6;
 
-  public static AbstractSymbolSuperDispatch create(final boolean alwaysEnforced) {
-    return new UninitializedDispatchNode(alwaysEnforced);
+  public static AbstractSymbolSuperDispatch create(
+      final boolean executesEnforced, final boolean alwaysEnforced) {
+    return new UninitializedDispatchNode(executesEnforced, alwaysEnforced);
   }
 
+  protected final boolean executesEnforced;
   protected final boolean alwaysEnforced;
 
-  public AbstractSymbolSuperDispatch(final boolean alwaysEnforced) {
-    this.alwaysEnforced = alwaysEnforced;
+  public AbstractSymbolSuperDispatch(final boolean executesEnforced,
+      final boolean alwaysEnforced) {
+    this.executesEnforced = executesEnforced;
+    this.alwaysEnforced   = alwaysEnforced;
   }
 
   public abstract Object executeDispatch(VirtualFrame frame, Object receiver,
@@ -38,8 +42,9 @@ public abstract class AbstractSymbolSuperDispatch extends Node {
 
   private static final class UninitializedDispatchNode extends AbstractSymbolSuperDispatch {
 
-    public UninitializedDispatchNode(final boolean alwaysEnforced) {
-      super(alwaysEnforced);
+    public UninitializedDispatchNode(final boolean executesEnforced,
+        final boolean alwaysEnforced) {
+      super(executesEnforced, alwaysEnforced);
     }
 
     @Override
@@ -58,8 +63,10 @@ public abstract class AbstractSymbolSuperDispatch extends Node {
       if (chainDepth < INLINE_CACHE_SIZE) {
         CachedDispatchNode specialized = new CachedDispatchNode(selector,
             lookupClass, isRealSuperSend,
-            new UninitializedDispatchNode(alwaysEnforced), enforced, alwaysEnforced);
-        return replace(specialized).executeDispatch(frame, receiver, selector, lookupClass, argsArr);
+            new UninitializedDispatchNode(executesEnforced, alwaysEnforced),
+            executesEnforced, alwaysEnforced);
+        return replace(specialized).
+            executeDispatch(frame, receiver, selector, lookupClass, argsArr);
       }
 
       // TODO: normally, we throw away the whole chain, and replace it with the megamorphic node...
@@ -94,15 +101,17 @@ public abstract class AbstractSymbolSuperDispatch extends Node {
         final boolean isRealSuperSend,
         final AbstractSymbolSuperDispatch nextInCache,
         final boolean executesEnforced, final boolean alwaysEnforced) {
-      super(alwaysEnforced);
+      super(executesEnforced, alwaysEnforced);
       this.selector    = selector;
       this.lookupClass = lookupClass;
       this.nextInCache = nextInCache;
 
       if (isRealSuperSend) {
-        cachedSend = MessageSendNode.createForPerformInSuperclassNodes(selector, lookupClass, executesEnforced || alwaysEnforced);
+        cachedSend = MessageSendNode.createForPerformInSuperclassNodes(
+            selector, lookupClass, executesEnforced || alwaysEnforced);
       } else {
-        cachedSend = MessageSendNode.createForPerformNodes(selector, executesEnforced);
+        cachedSend = MessageSendNode.createForPerformNodes(
+            selector, executesEnforced || alwaysEnforced);
       }
     }
 
@@ -124,11 +133,9 @@ public abstract class AbstractSymbolSuperDispatch extends Node {
   }
 
   private static final class GenericDispatchNode extends AbstractSymbolSuperDispatch {
-    private final boolean executesEnforced;
 
     public GenericDispatchNode(final boolean executesEnforced, final boolean alwaysEnforced) {
-      super(alwaysEnforced);
-      this.executesEnforced = executesEnforced;
+      super(executesEnforced, alwaysEnforced);
     }
 
     @Override

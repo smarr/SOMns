@@ -31,7 +31,7 @@ public abstract class PerformWithArgumentsInSuperclassPrim extends QuaternaryExp
 
     public PerformEnforcedWithArgumentsInSuperclassPrim() {
       super(null, true);
-      dispatch = AbstractSymbolSuperDispatch.create(true);
+      dispatch = AbstractSymbolSuperDispatch.create(executesEnforced, true);
     }
 
     @Specialization
