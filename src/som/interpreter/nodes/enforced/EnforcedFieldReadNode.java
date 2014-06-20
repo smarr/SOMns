@@ -1,5 +1,6 @@
 package som.interpreter.nodes.enforced;
 
+import som.interpreter.SArguments;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.FieldNode.AbstractFieldReadNode;
 import som.vm.Universe;
@@ -28,11 +29,12 @@ public final class EnforcedFieldReadNode extends AbstractFieldReadNode {
   }
 
   @Override
-  public Object executeEvaluated(final SObject obj) {
+  public Object executeEvaluated(final VirtualFrame frame, final SObject obj) {
     CompilerAsserts.neverPartOfCompilation();
-    SObject domain = obj.getDomain();
-    SInvokable handler = domain.getSOMClass(null).lookupInvokable(intercessionHandler);
-    return handler.invoke(domain, false, new Object[] {domain, fieldIndex, obj});
+    SObject rcvrDomain    = obj.getDomain();
+    SObject currentDomain = SArguments.domain(frame);
+    SInvokable handler = rcvrDomain.getSOMClass(null).lookupInvokable(intercessionHandler);
+    return handler.invoke(currentDomain, false, rcvrDomain, fieldIndex, obj);
   }
 
   @Override

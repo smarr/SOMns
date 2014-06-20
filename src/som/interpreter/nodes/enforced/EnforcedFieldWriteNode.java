@@ -1,5 +1,6 @@
 package som.interpreter.nodes.enforced;
 
+import som.interpreter.SArguments;
 import som.interpreter.nodes.FieldNode.AbstractFieldWriteNode;
 import som.vm.Universe;
 import som.vmobjects.SInvokable;
@@ -29,11 +30,14 @@ public abstract class EnforcedFieldWriteNode extends AbstractFieldWriteNode {
   }
 
   @Specialization
-  public final Object doSObject(final SObject obj, final Object value) {
+  public final Object doSObject(final VirtualFrame frame, final SObject obj,
+      final Object value) {
     CompilerAsserts.neverPartOfCompilation();
-    SObject domain = obj.getDomain();
-    SInvokable handler = domain.getSOMClass(null).lookupInvokable(intercessionHandler);
-    return handler.invoke(domain, false, new Object[] {domain, value, somFieldIndex, obj});
+    SObject rcvrDomain = obj.getDomain();
+    SObject currentDomain = SArguments.domain(frame);
+    SInvokable handler = rcvrDomain.getSOMClass(null).lookupInvokable(intercessionHandler);
+    return handler.invoke(currentDomain, false,
+        rcvrDomain, value, somFieldIndex, obj);
   }
 
   @Override

@@ -67,19 +67,19 @@ public abstract class FieldNode extends ExpressionNode {
       return self;
     }
 
-    public abstract Object executeEvaluated(final SObject obj);
+    public abstract Object executeEvaluated(final VirtualFrame frame, final SObject obj);
 
     @Override
     public final Object doPreEvaluated(final VirtualFrame frame,
         final Object[] arguments) {
-      return executeEvaluated((SObject) arguments[0]);
+      return executeEvaluated(frame, (SObject) arguments[0]);
     }
 
     @Override
     public final Object executeGeneric(final VirtualFrame frame) {
       try {
         SObject obj = self.executeSObject(frame);
-        return executeEvaluated(obj);
+        return executeEvaluated(frame, obj);
       } catch (UnexpectedResultException e) {
         CompilerDirectives.transferToInterpreter();
         throw new RuntimeException("This should never happen by construction");
@@ -101,7 +101,7 @@ public abstract class FieldNode extends ExpressionNode {
     }
 
     @Override
-    public Object executeEvaluated(final SObject obj) {
+    public Object executeEvaluated(final VirtualFrame frame, final SObject obj) {
       assert !executesEnforced;
       return read.read(obj);
     }
