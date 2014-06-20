@@ -65,21 +65,4 @@ public final class SArguments {
     }
     return args;
   }
-
-  /**
-   * Create a new array from an SArguments array that contains only the true
-   * arguments and excludes the receiver. This is used for instance for
-   * #doesNotUnderstand (#dnu)
-   */
-  @ExplodeLoop
-  public static Object[] getArgumentsWithoutReceiver(final Object[] arguments) {
-    // the code and magic numbers below are based on the following assumption
-    assert RCVR_IDX == 0;
-//    return Arrays.copyOfRange(arguments, 1, arguments.length);
-    Object[] argsArr = new Object[arguments.length - 1];
-    for (int i = 1; i < arguments.length; i++) {
-      argsArr[i - 1] = arguments[i];
-    }
-    return argsArr;
-  }
 }

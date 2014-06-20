@@ -14,7 +14,6 @@ import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
 
 
@@ -90,16 +89,6 @@ public abstract class AbstractSymbolDispatch extends Node {
       this.selector = selector;
       this.nextInCache = nextInCache;
       cachedSend = MessageSendNode.createForPerformNodes(selector, executesEnforced || alwaysEnforced);
-    }
-
-    @ExplodeLoop
-    private Object[] mergeReceiverWithArguments(final Object receiver, final Object[] argsArray) {
-      Object[] arguments = new Object[argsArray.length + 1];
-      arguments[0] = receiver;
-      for (int i = 0; i < argsArray.length; i++) {
-        arguments[i + 1] = argsArray[i];
-      }
-      return arguments;
     }
 
     @Override
