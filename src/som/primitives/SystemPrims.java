@@ -48,6 +48,14 @@ public final class SystemPrims {
     }
   }
 
+  public abstract static class HasGlobalPrim extends BinarySystemNode {
+    @Specialization(guards = "receiverIsSystemObject")
+    public final boolean doSObject(final SObject receiver, final SSymbol argument) {
+      return universe.hasGlobal(argument);
+    }
+  }
+
+
   public abstract static class GlobalPrim extends BinarySystemNode {
     @Specialization(guards = "receiverIsSystemObject")
     public final Object doSObject(final SObject receiver, final SSymbol argument) {

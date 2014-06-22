@@ -488,6 +488,11 @@ public class Universe {
   }
 
   @SlowPath
+  public boolean hasGlobal(final SSymbol name) {
+    return globals.containsKey(name);
+  }
+
+  @SlowPath
   public Object getGlobal(final SSymbol name) {
     Association assoc = globals.get(name);
     if (assoc == null) {
