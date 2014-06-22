@@ -1,0 +1,25 @@
+SetTest = (
+    run: harness = (
+      | a b ab  t |
+      a := Set new.
+      b := Set new.
+      ab := Set new.
+      
+      a add: #a.
+      b add: #b.
+      ab add: #a.
+      ab add: #b.
+      
+      
+      a = b ifTrue: [ harness fail: self
+        because: 'a and b should compare to be unequal.' ].
+      
+      t := Set new.
+      t add: #a.
+    
+      a == t ifTrue: [ harness fail: self
+        because: 'a and b should be different objects.' ].
+      a = t ifFalse: [ harness fail: self
+        because: 'a and b should compare to be equal.' ].
+    )
+)
