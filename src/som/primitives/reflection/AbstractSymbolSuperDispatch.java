@@ -2,11 +2,9 @@ package som.primitives.reflection;
 
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
 import som.interpreter.SArguments;
-import som.interpreter.Types;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.PreevaluatedExpression;
-import som.vm.Universe;
 import som.vmobjects.SArray;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
@@ -55,14 +53,11 @@ public abstract class AbstractSymbolSuperDispatch extends Node {
 
       boolean enforced = SArguments.enforced(frame);
 
-      SClass rcvrClass = Types.getClassOf(receiver, Universe.current());
-      boolean isRealSuperSend = rcvrClass != lookupClass;
-
       int chainDepth = determineChainLength();
 
       if (chainDepth < INLINE_CACHE_SIZE) {
         CachedDispatchNode specialized = new CachedDispatchNode(selector,
-            lookupClass, isRealSuperSend,
+            lookupClass,
             new UninitializedDispatchNode(executesEnforced, alwaysEnforced),
             executesEnforced, alwaysEnforced);
         return replace(specialized).
@@ -98,7 +93,6 @@ public abstract class AbstractSymbolSuperDispatch extends Node {
     @Child private AbstractSymbolSuperDispatch nextInCache;
 
     public CachedDispatchNode(final SSymbol selector, final SClass lookupClass,
-        final boolean isRealSuperSend,
         final AbstractSymbolSuperDispatch nextInCache,
         final boolean executesEnforced, final boolean alwaysEnforced) {
       super(executesEnforced, alwaysEnforced);
@@ -106,13 +100,8 @@ public abstract class AbstractSymbolSuperDispatch extends Node {
       this.lookupClass = lookupClass;
       this.nextInCache = nextInCache;
 
-      if (isRealSuperSend) {
-        cachedSend = MessageSendNode.createForPerformInSuperclassNodes(
-            selector, lookupClass, executesEnforced || alwaysEnforced);
-      } else {
-        cachedSend = MessageSendNode.createForPerformNodes(
-            selector, executesEnforced || alwaysEnforced);
-      }
+      cachedSend = MessageSendNode.createForPerformInSuperclassNodes(
+          selector, lookupClass, executesEnforced || alwaysEnforced);
     }
 
     @Override
