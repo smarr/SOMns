@@ -58,6 +58,7 @@ public class SomTests {
         {"SelfBlock"     },
         {"Super"         },
 
+        {"Set"           },
         {"String"        },
         {"Symbol"        },
         {"System"        },
