@@ -14,7 +14,6 @@ import som.interpreter.nodes.FieldNode.AbstractFieldReadNode;
 import som.interpreter.nodes.FieldNode.AbstractFieldWriteNode;
 import som.interpreter.nodes.FieldNode.UnenforcedFieldReadNode;
 import som.interpreter.nodes.FieldNodeFactory.UnenforcedFieldWriteNodeFactory;
-import som.interpreter.nodes.GlobalNode;
 import som.interpreter.nodes.GlobalNode.UninitializedGlobalReadNode;
 import som.interpreter.nodes.LocalVariableNode.LocalVariableWriteNode;
 import som.interpreter.nodes.LocalVariableNodeFactory.LocalVariableWriteNodeFactory;
@@ -27,6 +26,7 @@ import som.interpreter.nodes.UninitializedVariableNode.UninitializedVariableRead
 import som.interpreter.nodes.UninitializedVariableNode.UninitializedVariableWriteNode;
 import som.interpreter.nodes.enforced.EnforcedFieldReadNode;
 import som.interpreter.nodes.enforced.EnforcedFieldWriteNodeFactory;
+import som.interpreter.nodes.enforced.EnforcedGlobalReadNode;
 import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.literals.BlockNode.BlockNodeWithContext;
 import som.vm.Universe;
@@ -71,15 +71,19 @@ public final class SNodeFactory {
     }
   }
 
-  public static GlobalNode createGlobalRead(final String name,
+  public static ExpressionNode createGlobalRead(final String name,
       final Universe universe, final SourceSection source,
       final boolean executeEnforced) {
     return createGlobalRead(universe.symbolFor(name), universe, source, executeEnforced);
   }
 
-  public static GlobalNode createGlobalRead(final SSymbol name,
+  public static ExpressionNode createGlobalRead(final SSymbol name,
       final Universe universe, final SourceSection source, final boolean executeEnforced) {
-    return new UninitializedGlobalReadNode(name, universe, source, executeEnforced);
+    if (executeEnforced) {
+      return new EnforcedGlobalReadNode(name, source);
+    } else {
+      return new UninitializedGlobalReadNode(name, universe, source, executeEnforced);
+    }
   }
 
   public static AbstractFieldWriteNode createFieldWrite(final ExpressionNode self,

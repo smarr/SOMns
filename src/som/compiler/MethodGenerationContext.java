@@ -45,7 +45,6 @@ import som.interpreter.nodes.ContextualNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.FieldNode.AbstractFieldReadNode;
 import som.interpreter.nodes.FieldNode.AbstractFieldWriteNode;
-import som.interpreter.nodes.GlobalNode;
 import som.primitives.Primitives;
 import som.vm.Universe;
 import som.vmobjects.SInvokable;
@@ -368,7 +367,7 @@ public final class MethodGenerationContext {
         holderGenc.getFieldIndex(fieldName), source, executeEnforced);
   }
 
-  public GlobalNode getGlobalRead(final SSymbol varName,
+  public ExpressionNode getGlobalRead(final SSymbol varName,
       final Universe universe, final SourceSection source,
       final boolean executeEnforced) {
     return createGlobalRead(varName, universe, source, executeEnforced);
