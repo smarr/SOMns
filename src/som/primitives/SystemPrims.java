@@ -14,7 +14,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 
 
 public final class SystemPrims {
-  private abstract static class BinarySystemNode extends BinaryExpressionNode {
+  public abstract static class BinarySystemNode extends BinaryExpressionNode {
     protected final Universe universe;
     protected BinarySystemNode() { super(null, false); /* TODO: enforced!!! */ this.universe = Universe.current(); }
 
@@ -46,24 +46,6 @@ public final class SystemPrims {
       universe.exit((int) error);
       return receiver;
     }
-  }
-
-  public abstract static class HasGlobalPrim extends BinarySystemNode {
-    @Specialization(guards = "receiverIsSystemObject")
-    public final boolean doSObject(final SObject receiver, final SSymbol argument) {
-      return universe.hasGlobal(argument);
-    }
-  }
-
-
-  public abstract static class GlobalPrim extends BinarySystemNode {
-    @Specialization(guards = "receiverIsSystemObject")
-    public final Object doSObject(final SObject receiver, final SSymbol argument) {
-      Object result = universe.getGlobal(argument);
-      return result != null ? result : universe.nilObject;
-    }
-    @Override
-    public final void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
   }
 
   public abstract static class GlobalPutPrim extends TernaryExpressionNode {

@@ -49,15 +49,15 @@ public abstract class GlobalNode extends ExpressionNode {
   @Override
   public final void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
 
-  public static final class UninitializedGlobalReadNode extends GlobalNode {
-    private final BranchProfile unknownGlobalNotFound;
+  public abstract static class AbstractUninitializedGlobalReadNode extends GlobalNode {
 
-    public UninitializedGlobalReadNode(final SSymbol globalName,
+    public AbstractUninitializedGlobalReadNode(final SSymbol globalName,
         final Universe universe, final SourceSection source,
         final boolean executesEnforced) {
       super(globalName, universe, source, executesEnforced);
-      unknownGlobalNotFound = new BranchProfile();
     }
+
+    protected abstract Object executeUnknownGlobal(VirtualFrame frame);
 
     @Override
     public Object executeGeneric(final VirtualFrame frame) {
@@ -82,15 +82,44 @@ public abstract class GlobalNode extends ExpressionNode {
         return replace(new CachedGlobalReadNode(globalName, universe, assoc,
             getSourceSection(), executesEnforced)).executeGeneric(frame);
       } else {
-        unknownGlobalNotFound.enter();
-        // if it is not defined, we will send a error message to the current
-        // receiver object
-        Object self = SArguments.rcvr(frame);
-        SObject domain = SArguments.domain(frame);
-        boolean enforced = SArguments.enforced(frame);
-
-        return SAbstractObject.sendUnknownGlobal(self, globalName, domain, enforced, universe);
+        return executeUnknownGlobal(frame);
       }
+    }
+  }
+
+  public static final class UninitializedGlobalReadNode extends AbstractUninitializedGlobalReadNode {
+    private final BranchProfile unknownGlobalNotFound;
+
+    public UninitializedGlobalReadNode(final SSymbol globalName,
+        final Universe universe, final SourceSection source,
+        final boolean executesEnforced) {
+      super(globalName, universe, source, executesEnforced);
+      unknownGlobalNotFound = new BranchProfile();
+    }
+
+    @Override
+    protected Object executeUnknownGlobal(final VirtualFrame frame) {
+      unknownGlobalNotFound.enter();
+      // if it is not defined, we will send a error message to the current
+      // receiver object
+      Object self = SArguments.rcvr(frame);
+      SObject domain = SArguments.domain(frame);
+      boolean enforced = SArguments.enforced(frame);
+      return SAbstractObject.sendUnknownGlobal(self, globalName, domain,
+          enforced, universe);
+    }
+  }
+
+  public static final class UninitializedGlobalReadWithoutErrorNode extends AbstractUninitializedGlobalReadNode {
+    public UninitializedGlobalReadWithoutErrorNode(final SSymbol globalName,
+        final Universe universe, final SourceSection source,
+        final boolean executesEnforced) {
+      super(globalName, universe, source, executesEnforced);
+    }
+
+    @Override
+    protected Object executeUnknownGlobal(final VirtualFrame frame) {
+      return universe.nilObject;
     }
   }
 
