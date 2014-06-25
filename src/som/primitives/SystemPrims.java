@@ -54,7 +54,7 @@ public final class SystemPrims {
 
     @Specialization(guards = "receiverIsSystemObject")
     public final Object doSObject(final SObject receiver, final SSymbol global,
-        final SAbstractObject value) {
+        final Object value) {
       universe.setGlobal(global, value);
       return value;
     }
