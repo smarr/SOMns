@@ -318,6 +318,9 @@ public class Universe {
     stringClass     = newSystemClass(standardDomain);
     doubleClass     = newSystemClass(standardDomain);
     domainClass     = newSystemClass(standardDomain, 1);
+    booleanClass    = newSystemClass(standardDomain);
+    trueClass       = newSystemClass(standardDomain);
+    falseClass      = newSystemClass(standardDomain);
 
     // Setup the class reference for the nil object
     nilObject.setClass(nilClass, nilObject);
@@ -336,6 +339,9 @@ public class Universe {
     initializeSystemClass(stringClass,     objectClass, "String");
     initializeSystemClass(doubleClass,     objectClass, "Double");
     initializeSystemClass(domainClass,     objectClass, "Domain");
+    initializeSystemClass(booleanClass,    objectClass, "Boolean");
+    initializeSystemClass(trueClass,      booleanClass, "True");
+    initializeSystemClass(falseClass,     booleanClass, "False");
 
     // Load methods and fields into the system classes
     loadSystemClass(objectClass);
@@ -350,18 +356,16 @@ public class Universe {
     loadSystemClass(stringClass);
     loadSystemClass(doubleClass);
     loadSystemClass(domainClass);
+    loadSystemClass(booleanClass);
+    loadSystemClass(trueClass);
+    loadSystemClass(falseClass);
 
     // Load the generic block class
     blockClasses[0] = loadClass(symbolFor("Block"));
 
     // Setup the true and false objects
-    SSymbol trueClassName = symbolFor("True");
-    trueClass             = loadClass(trueClassName);
-    trueObject            = newInstance(trueClass, standardDomain);
-
-    SSymbol falseClassName = symbolFor("False");
-    falseClass             = loadClass(falseClassName);
-    falseObject            = newInstance(falseClass, standardDomain);
+    trueObject  = newInstance(trueClass,  standardDomain);
+    falseObject = newInstance(falseClass, standardDomain);
 
     // Load the system class and create an instance of it
     systemClass  = loadClass(symbolFor("System"));
@@ -377,8 +381,9 @@ public class Universe {
 
     setGlobal(symbolFor("Nil"), nilClass);
 
-    setGlobal(trueClassName,  trueClass);
-    setGlobal(falseClassName, falseClass);
+    setGlobal(symbolFor("Boolean"), booleanClass);
+    setGlobal(symbolFor("True"),    trueClass);
+    setGlobal(symbolFor("False"),   falseClass);
 
     SDomain.completeStandardDomainInitialization(standardDomain);
 
@@ -684,6 +689,7 @@ public class Universe {
   @CompilationFinal public SClass               systemClass;
   @CompilationFinal public SClass               doubleClass;
 
+  @CompilationFinal public SClass               booleanClass;
   @CompilationFinal public SClass               trueClass;
   @CompilationFinal public SClass               falseClass;
 
