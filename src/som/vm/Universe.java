@@ -566,14 +566,21 @@ public class Universe {
     // Load the class
     result = loadClass(name, null);
 
-    // Load primitives (if necessary) and return the resulting class
-    if (result != null && result.hasPrimitives()) {
-      result.loadPrimitives();
-    }
+    loadPrimitives(result, false);
 
     setGlobal(name, result);
 
     return result;
+  }
+
+  private void loadPrimitives(final SClass result, final boolean isSystemClass) {
+    if (result == null) { return; }
+
+    // Load primitives if class defines them, or try to load optional
+    // primitives defined for system classes.
+    if (result.hasPrimitives() || isSystemClass) {
+      result.loadPrimitives(!isSystemClass);
+    }
   }
 
   @SlowPath
@@ -589,9 +596,10 @@ public class Universe {
           + "pass the '-cp' command-line parameter.");
     }
 
-    // Load primitives if necessary
-    if (result.hasPrimitives()) { result.loadPrimitives(); }
+    loadPrimitives(result, true);
   }
+
+
 
   @SlowPath
   public SClass loadClass(final SSymbol name, final SClass systemClass) {
