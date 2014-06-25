@@ -100,7 +100,7 @@ public abstract class Primitives {
     } else {
       primMethodNode = new Primitive(primNodeEnforced, primNodeUnenforced, mgen.getFrameDescriptor());
     }
-    SPrimitive prim = (SPrimitive) universe.newMethod(signature, primMethodNode, true, new SMethod[0]);
+    SPrimitive prim = (SPrimitive) universe.newMethod(signature, primMethodNode, true, new SMethod[0], isUnenforced);
     primNodeEnforced.setPrimitive(prim);
     return prim;
   }
@@ -112,7 +112,7 @@ public abstract class Primitives {
 
     ExpressionNode primNode = EmptyPrim.create(new ArgumentReadNode(0, false));  /* TODO: enforced!!! */ /* TODO: enforced!!! */
     PrimitiveUnenforced primMethodNode = new PrimitiveUnenforced(primNode, mgen.getFrameDescriptor());
-    SInvokable prim = universe.newMethod(signature, primMethodNode, true, new SMethod[0]);
+    SInvokable prim = universe.newMethod(signature, primMethodNode, true, new SMethod[0], unenforced);
     return prim;
   }
 

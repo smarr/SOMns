@@ -42,7 +42,7 @@ public class BlockNode extends LiteralNode {
     AbstractInvokable clonedInvokable = blockMethod.getInvokable().
         cloneWithNewLexicalContext(inliner.getLexicalContext());
     SInvokable forInlining = universe.newMethod(blockMethod.getSignature(),
-        clonedInvokable, false, new SMethod[0]);
+        clonedInvokable, false, new SMethod[0], blockMethod.isUnenforced());
     return forInlining;
   }
 

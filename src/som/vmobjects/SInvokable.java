@@ -36,8 +36,10 @@ import com.oracle.truffle.api.RootCallTarget;
 
 public abstract class SInvokable extends SAbstractObject {
 
-  public SInvokable(final SSymbol signature, final AbstractInvokable invokable) {
-    this.signature = signature;
+  public SInvokable(final SSymbol signature, final AbstractInvokable invokable,
+      final boolean isUnenforced) {
+    this.signature    = signature;
+    this.isUnenforced = isUnenforced;
 
     this.invokable   = invokable;
     this.callTarget  = invokable.createCallTarget();
@@ -47,8 +49,8 @@ public abstract class SInvokable extends SAbstractObject {
     private final SMethod[] embeddedBlocks;
 
     public SMethod(final SSymbol signature, final AbstractInvokable invokable,
-        final SMethod[] embeddedBlocks) {
-      super(signature, invokable);
+        final boolean isUnenforced, final SMethod[] embeddedBlocks) {
+      super(signature, invokable, isUnenforced);
       this.embeddedBlocks = embeddedBlocks;
     }
 
@@ -67,8 +69,9 @@ public abstract class SInvokable extends SAbstractObject {
   }
 
   public static final class SPrimitive extends SInvokable {
-    public SPrimitive(final SSymbol signature, final AbstractInvokable invokable) {
-      super(signature, invokable);
+    public SPrimitive(final SSymbol signature,
+        final AbstractInvokable invokable, final boolean isUnenforced) {
+      super(signature, invokable, isUnenforced);
     }
 
     @Override
@@ -118,7 +121,7 @@ public abstract class SInvokable extends SAbstractObject {
   }
 
   public boolean isUnenforced() {
-    return invokable.isUnenforced();
+    return isUnenforced;
   }
 
   @Override
@@ -135,5 +138,6 @@ public abstract class SInvokable extends SAbstractObject {
   private final AbstractInvokable      invokable;
   private final RootCallTarget         callTarget;
   private final SSymbol                signature;
+  private final boolean                isUnenforced;
   @CompilationFinal private SClass     holder;
 }

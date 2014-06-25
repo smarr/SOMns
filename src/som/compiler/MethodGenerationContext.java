@@ -208,7 +208,7 @@ public final class MethodGenerationContext {
     setOuterMethodInLexicalScopes(truffleMethod);
 
     SMethod meth = (SMethod) universe.newMethod(signature, truffleMethod, false,
-        embeddedBlockMethods.toArray(new SMethod[0]));
+        embeddedBlockMethods.toArray(new SMethod[0]), unenforced);
 
     // return the method - the holder field is to be set later on!
     return meth;

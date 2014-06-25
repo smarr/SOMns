@@ -414,11 +414,11 @@ public class Universe {
   @SlowPath
   public SInvokable newMethod(final SSymbol signature,
       final AbstractInvokable truffleInvokable, final boolean isPrimitive,
-      final SMethod[] embeddedBlocks) {
+      final SMethod[] embeddedBlocks, final boolean isUnenforced) {
     if (isPrimitive) {
-      return new SPrimitive(signature, truffleInvokable);
+      return new SPrimitive(signature, truffleInvokable, isUnenforced);
     } else {
-      return new SMethod(signature, truffleInvokable, embeddedBlocks);
+      return new SMethod(signature, truffleInvokable, isUnenforced, embeddedBlocks);
     }
   }
 
