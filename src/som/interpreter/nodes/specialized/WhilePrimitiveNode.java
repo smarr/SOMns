@@ -24,18 +24,31 @@ public abstract class WhilePrimitiveNode extends BinaryExpressionNode {
     this(node.predicateBool);
   }
 
+  private boolean obj2bool(final Object o) {
+    if (o instanceof Boolean) {
+      return (boolean) o;
+    } else if (o == universe.trueObject) {
+      return true;
+    } else {
+      assert o == universe.falseObject;
+      return false;
+    }
+  }
+
   @Specialization
   protected SObject doWhileConditionally(final VirtualFrame frame,
       final SBlock loopCondition, final SBlock loopBody) {
     CompilerAsserts.neverPartOfCompilation(); // no caching, direct invokes, no loop count reporting...
 
-    boolean loopConditionResult = (boolean)
-        loopCondition.getMethod().invoke(loopCondition.getDomain(), loopCondition.isEnforced(), loopCondition);
+    Object conditionResult = loopCondition.getMethod().invoke(loopCondition.getDomain(), loopCondition.isEnforced(), loopCondition);
+    boolean loopConditionResult = obj2bool(conditionResult);
+
 
     // TODO: this is a simplification, we don't cover the case receiver isn't a boolean
     while (loopConditionResult == predicateBool) {
       loopBody.getMethod().invoke(loopBody.getDomain(), loopBody.isEnforced(), loopBody);
-      loopConditionResult = (boolean) loopCondition.getMethod().invoke(loopCondition.getDomain(), loopCondition.isEnforced(), loopCondition);
+      conditionResult = loopCondition.getMethod().invoke(loopCondition.getDomain(), loopCondition.isEnforced(), loopCondition);
+      loopConditionResult = obj2bool(conditionResult);
     }
     return universe.nilObject;
   }
