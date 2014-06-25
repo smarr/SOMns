@@ -113,12 +113,10 @@ public final class MessageSendNode {
     }
   }
 
-  private static final class UninitializedMessageSendNode
-      extends AbstractMessageSendNode {
+  private abstract static class AbstractUninitializedMessageSendNode extends AbstractMessageSendNode {
+    protected final SSymbol selector;
 
-    private final SSymbol selector;
-
-    protected UninitializedMessageSendNode(final SSymbol selector,
+    protected AbstractUninitializedMessageSendNode(final SSymbol selector,
         final ExpressionNode[] arguments, final SourceSection source,
         final boolean executesEnforced) {
       super(arguments, source, executesEnforced);
@@ -126,51 +124,25 @@ public final class MessageSendNode {
     }
 
     @Override
-    public Object doPreEvaluated(final VirtualFrame frame,
+    public final Object doPreEvaluated(final VirtualFrame frame,
         final Object[] arguments) {
       return specialize(arguments).doPreEvaluated(frame, arguments);
     }
 
-    private PreevaluatedExpression specialize(final Object[] arguments) {
-      TruffleCompiler.transferToInterpreterAndInvalidate("Specialize Message Node");
-
-      // first option is a super send, super sends are treated specially because
-      // the receiver class is lexically determined
-      if (argumentNodes[0] instanceof ISuperReadNode) {
-        GenericMessageSendNode node = new GenericMessageSendNode(selector,
-            argumentNodes, SuperDispatchNode.create(selector,
-                (ISuperReadNode) argumentNodes[0], executesEnforced),
-                getSourceSection(), executesEnforced);
-        return replace(node);
-      }
-
-      // We treat super sends separately for simplicity, might not be the
-      // optimal solution, especially in cases were the knowledge of the
-      // receiver class also allows us to do more specific things, but for the
-      // moment  we will leave it at this.
-      // TODO: revisit, and also do more specific optimizations for super sends.
-
+    protected PreevaluatedExpression specialize(final Object[] arguments) {
+      TruffleCompiler.transferToInterpreterAndInvalidate("Specialize Symbol Send Node");
 
       // let's organize the specializations by number of arguments
       // perhaps not the best, but one simple way to just get some order into
       // the chaos.
 
-      switch (argumentNodes.length) {
+      switch (arguments.length) {
         case  1: return specializeUnary(arguments);
         case  2: return specializeBinary(arguments);
         case  3: return specializeTernary(arguments);
         case  4: return specializeQuaternary(arguments);
       }
-
       return makeGenericSend();
-    }
-
-    private GenericMessageSendNode makeGenericSend() {
-      GenericMessageSendNode send = new GenericMessageSendNode(selector,
-          argumentNodes,
-          new UninitializedDispatchNode(selector, Universe.current(), executesEnforced),
-          getSourceSection(), executesEnforced);
-      return replace(send);
     }
 
     private PreevaluatedExpression specializeUnary(final Object[] args) {
@@ -199,30 +171,8 @@ public final class MessageSendNode {
       return makeGenericSend();
     }
 
-    private PreevaluatedExpression specializeBinary(final Object[] arguments) {
+    protected PreevaluatedExpression specializeBinary(final Object[] arguments) {
       switch (selector.getString()) {
-        case "whileTrue:": {
-          if (argumentNodes[1] instanceof BlockNode &&
-              argumentNodes[0] instanceof BlockNode) {
-            BlockNode argBlockNode = (BlockNode) argumentNodes[1];
-            SBlock    argBlock     = (SBlock)    arguments[1];
-            return replace(new WhileTrueStaticBlocksNode(
-                (BlockNode) argumentNodes[0], argBlockNode,
-                (SBlock) arguments[0],
-                argBlock, Universe.current(), getSourceSection(), executesEnforced));
-          }
-          break; // use normal send
-        }
-        case "whileFalse:":
-          if (argumentNodes[1] instanceof BlockNode &&
-              argumentNodes[0] instanceof BlockNode) {
-            BlockNode argBlockNode = (BlockNode) argumentNodes[1];
-            SBlock    argBlock     = (SBlock)    arguments[1];
-            return replace(new WhileFalseStaticBlocksNode(
-                (BlockNode) argumentNodes[0], argBlockNode,
-                (SBlock) arguments[0], argBlock, Universe.current(), getSourceSection(), executesEnforced));
-          }
-          break; // use normal send
         case "ifTrue:":
           return replace(IfTrueMessageNodeFactory.create(arguments[0],
               arguments[1],
@@ -316,34 +266,6 @@ public final class MessageSendNode {
                 NewPrimFactory.create(null, null), executesEnforced));
           }
           break;
-        case "and:":
-        case "&&":
-          if (arguments[0] instanceof Boolean) {
-            if (argumentNodes[1] instanceof BlockNode) {
-              return replace(AndMessageNodeFactory.create((SBlock) arguments[1],
-                  getSourceSection(), executesEnforced,
-                  argumentNodes[0], argumentNodes[1]));
-            } else if (arguments[1] instanceof Boolean) {
-              return replace(AndBoolMessageNodeFactory.create(getSourceSection(),
-                  executesEnforced,
-                  argumentNodes[0], argumentNodes[1]));
-            }
-          }
-          break;
-        case "or:":
-        case "||":
-          if (arguments[0] instanceof Boolean) {
-            if (argumentNodes[1] instanceof BlockNode) {
-              return replace(OrMessageNodeFactory.create((SBlock) arguments[1],
-                  getSourceSection(), executesEnforced,
-                  argumentNodes[0], argumentNodes[1]));
-            } else if (arguments[1] instanceof Boolean) {
-              return replace(OrBoolMessageNodeFactory.create(
-                  getSourceSection(), executesEnforced,
-                  argumentNodes[0], argumentNodes[1]));
-            }
-          }
-          break;
       }
 
       return makeGenericSend();
@@ -379,54 +301,118 @@ public final class MessageSendNode {
       }
       return makeGenericSend();
     }
-  }
 
-
-  private static final class UninitializedSymbolSendNode
-    extends AbstractMessageSendNode {
-
-    private final SSymbol selector;
-
-    protected UninitializedSymbolSendNode(final SSymbol selector,
-        final SourceSection source, final boolean executesEnforced) {
-      super(new ExpressionNode[0], source, executesEnforced);
-      this.selector = selector;
-    }
-
-    @Override
-    public Object doPreEvaluated(final VirtualFrame frame,
-        final Object[] arguments) {
-      return specialize(arguments).doPreEvaluated(frame, arguments);
-    }
-
-    private PreevaluatedExpression specialize(final Object[] arguments) {
-      TruffleCompiler.transferToInterpreterAndInvalidate("Specialize Symbol Send Node");
-
-      switch (arguments.length) {
-        case  1: return specializeUnary(arguments);
-        case  2: return specializeBinary(arguments);
-        case  3: return specializeTernary(arguments);
-        case  4: return specializeQuaternary(arguments);
-      }
-      return makeGenericSend();
-    }
-
-    private GenericMessageSendNode makeGenericSend() {
+    protected final GenericMessageSendNode makeGenericSend() {
       GenericMessageSendNode send = new GenericMessageSendNode(selector,
           argumentNodes,
           new UninitializedDispatchNode(selector, Universe.current(), executesEnforced),
           getSourceSection(), executesEnforced);
       return replace(send);
     }
+  }
 
-    private PreevaluatedExpression specializeUnary(final Object[] args) {
-      switch (selector.getString()) {
-        // eagerly but causious:
-      }
-      return makeGenericSend();
+  private static final class UninitializedMessageSendNode
+      extends AbstractUninitializedMessageSendNode {
+
+    protected UninitializedMessageSendNode(final SSymbol selector,
+        final ExpressionNode[] arguments, final SourceSection source,
+        final boolean executesEnforced) {
+      super(selector, arguments, source, executesEnforced);
     }
 
-    private PreevaluatedExpression specializeBinary(final Object[] arguments) {
+    @Override
+    protected PreevaluatedExpression specialize(final Object[] arguments) {
+      TruffleCompiler.transferToInterpreterAndInvalidate("Specialize Message Node");
+
+      // first option is a super send, super sends are treated specially because
+      // the receiver class is lexically determined
+      if (argumentNodes[0] instanceof ISuperReadNode) {
+        GenericMessageSendNode node = new GenericMessageSendNode(selector,
+            argumentNodes, SuperDispatchNode.create(selector,
+                (ISuperReadNode) argumentNodes[0], executesEnforced),
+                getSourceSection(), executesEnforced);
+        return replace(node);
+      }
+
+      // We treat super sends separately for simplicity, might not be the
+      // optimal solution, especially in cases were the knowledge of the
+      // receiver class also allows us to do more specific things, but for the
+      // moment  we will leave it at this.
+      // TODO: revisit, and also do more specific optimizations for super sends.
+
+      return super.specialize(arguments);
+    }
+
+    @Override
+    protected PreevaluatedExpression specializeBinary(final Object[] arguments) {
+      switch (selector.getString()) {
+        case "whileTrue:": {
+          if (argumentNodes[1] instanceof BlockNode &&
+              argumentNodes[0] instanceof BlockNode) {
+            BlockNode argBlockNode = (BlockNode) argumentNodes[1];
+            SBlock    argBlock     = (SBlock)    arguments[1];
+            return replace(new WhileTrueStaticBlocksNode(
+                (BlockNode) argumentNodes[0], argBlockNode,
+                (SBlock) arguments[0],
+                argBlock, Universe.current(), getSourceSection(), executesEnforced));
+          }
+          break; // use normal send
+        }
+        case "whileFalse:":
+          if (argumentNodes[1] instanceof BlockNode &&
+              argumentNodes[0] instanceof BlockNode) {
+            BlockNode argBlockNode = (BlockNode) argumentNodes[1];
+            SBlock    argBlock     = (SBlock)    arguments[1];
+            return replace(new WhileFalseStaticBlocksNode(
+                (BlockNode) argumentNodes[0], argBlockNode,
+                (SBlock) arguments[0], argBlock, Universe.current(), getSourceSection(), executesEnforced));
+          }
+          break; // use normal send
+        case "and:":
+        case "&&":
+          if (arguments[0] instanceof Boolean) {
+            if (argumentNodes[1] instanceof BlockNode) {
+              return replace(AndMessageNodeFactory.create((SBlock) arguments[1],
+                  getSourceSection(), executesEnforced,
+                  argumentNodes[0], argumentNodes[1]));
+            } else if (arguments[1] instanceof Boolean) {
+              return replace(AndBoolMessageNodeFactory.create(getSourceSection(),
+                  executesEnforced,
+                  argumentNodes[0], argumentNodes[1]));
+            }
+          }
+          break;
+        case "or:":
+        case "||":
+          if (arguments[0] instanceof Boolean) {
+            if (argumentNodes[1] instanceof BlockNode) {
+              return replace(OrMessageNodeFactory.create((SBlock) arguments[1],
+                  getSourceSection(), executesEnforced,
+                  argumentNodes[0], argumentNodes[1]));
+            } else if (arguments[1] instanceof Boolean) {
+              return replace(OrBoolMessageNodeFactory.create(
+                  getSourceSection(), executesEnforced,
+                  argumentNodes[0], argumentNodes[1]));
+            }
+          }
+          break;
+      }
+
+      return super.specializeBinary(arguments);
+    }
+  }
+
+
+  private static final class UninitializedSymbolSendNode
+    extends AbstractUninitializedMessageSendNode {
+
+    protected UninitializedSymbolSendNode(final SSymbol selector,
+        final SourceSection source, final boolean executesEnforced) {
+      super(selector, new ExpressionNode[0], source, executesEnforced);
+    }
+
+    @Override
+    protected PreevaluatedExpression specializeBinary(final Object[] arguments) {
       switch (selector.getString()) {
         case "whileTrue:": {
           if (arguments[1] instanceof SBlock && arguments[0] instanceof SBlock) {
@@ -445,18 +431,7 @@ public final class MessageSendNode {
           break; // use normal send
       }
 
-      return makeGenericSend();
-    }
-
-    private PreevaluatedExpression specializeTernary(final Object[] arguments) {
-      switch (selector.getString()) { }
-      return makeGenericSend();
-    }
-
-    private PreevaluatedExpression specializeQuaternary(
-        final Object[] arguments) {
-      switch (selector.getString()) { }
-      return makeGenericSend();
+      return super.specializeBinary(arguments);
     }
   }
 
