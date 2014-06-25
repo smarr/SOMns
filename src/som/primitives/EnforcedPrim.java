@@ -80,10 +80,10 @@ public final class EnforcedPrim extends ExpressionNode {
 
   public Object executeEvaluated(final VirtualFrame frame,
       final Object receiver, final Object[] arguments) {
-    SObject domain = SArguments.domain(frame);
-    SInvokable handler = domain.getSOMClass(null).lookupInvokable(intercessionHandler);
+    SObject currentDomain = SArguments.domain(frame);
+    SObject rcvrDomain = SDomain.getOwner(receiver);
 
-    SObject ownerDomain = SDomain.getOwner(receiver);
-    return handler.invoke(domain, false, ownerDomain, primitive, arguments, receiver);
+    SInvokable handler = rcvrDomain.getSOMClass(null).lookupInvokable(intercessionHandler);
+    return handler.invoke(currentDomain, false, rcvrDomain, primitive, arguments, receiver);
   }
 }
