@@ -30,6 +30,7 @@ public abstract class AbstractInvokable extends RootNode {
 
   public abstract boolean isBlock();
   public abstract boolean isUnenforced();
+  public abstract boolean isEmptyPrimitive();
 
   public abstract void setOuterContextMethod(final AbstractInvokable method);
 }

@@ -1,6 +1,7 @@
 package som.interpreter;
 
 import som.interpreter.nodes.ExpressionNode;
+import som.primitives.EmptyPrim;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.frame.FrameDescriptor;
@@ -33,6 +34,11 @@ public final class PrimitiveUnenforced extends InvokableUnenforced {
   @Override
   public boolean isBlock() {
     return false;
+  }
+
+  @Override
+  public boolean isEmptyPrimitive() {
+    return uninitializedUnenforcedBody instanceof EmptyPrim;
   }
 
   @Override

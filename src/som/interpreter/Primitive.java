@@ -3,6 +3,7 @@ package som.interpreter;
 import java.util.Iterator;
 
 import som.interpreter.nodes.ExpressionNode;
+import som.primitives.EmptyPrim;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.RootCallTarget;
@@ -41,6 +42,11 @@ public final class Primitive extends Invokable {
   @Override
   public boolean isBlock() {
     return false;
+  }
+
+  @Override
+  public boolean isEmptyPrimitive() {
+    return uninitializedEnforcedBody instanceof EmptyPrim;
   }
 
   @Override

@@ -49,6 +49,11 @@ public final class MethodUnenforced extends InvokableUnenforced {
   }
 
   @Override
+  public boolean isEmptyPrimitive() {
+    return false;
+  }
+
+  @Override
   public void setOuterContextMethod(final AbstractInvokable method) {
     outerContext.setOuterMethod(method);
   }

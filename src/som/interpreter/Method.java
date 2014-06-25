@@ -74,6 +74,11 @@ public final class Method extends Invokable {
   }
 
   @Override
+  public boolean isEmptyPrimitive() {
+    return false;
+  }
+
+  @Override
   public void setOuterContextMethod(final AbstractInvokable method) {
     outerContext.setOuterMethod(method);
   }
