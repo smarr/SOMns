@@ -51,4 +51,8 @@ public final class SArray {
   public static SObject getOwner(final Object[] arr) {
     return (SObject) arr[OWNER_IDX];
   }
+
+  public static void setOwner(final Object[] arr, final SObject domain) {
+    arr[OWNER_IDX] = domain;
+  }
 }

@@ -4,6 +4,7 @@ import som.interpreter.SArguments;
 import som.interpreter.nodes.nary.BinaryExpressionNode.BinarySideEffectFreeExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode.UnarySideEffectFreeExpressionNode;
+import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject;
@@ -23,10 +24,18 @@ public final class MirrorPrims {
 
   public abstract static class SetDomainOfPrim extends TernaryExpressionNode {
     public SetDomainOfPrim() { super(false); } /* TODO: enforced!!! */
+
     @Specialization
     public final SClass doSClass(final SClass clazz, final SObject obj,
         final SObject domain) {
       obj.setDomain(domain);
+      return clazz;
+    }
+
+    @Specialization
+    public final SClass doSClass(final SClass clazz, final Object[] arr,
+        final SObject domain) {
+      SArray.setOwner(arr, domain);
       return clazz;
     }
   }
