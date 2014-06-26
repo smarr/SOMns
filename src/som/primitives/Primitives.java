@@ -31,6 +31,7 @@ import som.interpreter.Primitive;
 import som.interpreter.PrimitiveUnenforced;
 import som.interpreter.nodes.ArgumentReadNode;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.enforced.EnforcedPrim;
 import som.vm.Universe;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;

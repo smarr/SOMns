@@ -1,4 +1,4 @@
-package som.primitives;
+package som.interpreter.nodes.enforced;
 
 import som.interpreter.SArguments;
 import som.interpreter.nodes.ExpressionNode;
