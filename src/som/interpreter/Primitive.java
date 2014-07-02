@@ -56,7 +56,19 @@ public final class Primitive extends Invokable {
 
   @Override
   public void propagateLoopCountThroughoutLexicalScope(final long count) {
+
+    propagateLoopCount(count);
+  }
+
+  @Override
+  public void setOuterContextMethod(final AbstractInvokable method) {
     CompilerAsserts.neverPartOfCompilation();
+    throw new UnsupportedOperationException("Only supported on methods");
+  }
+
+  public static void propagateLoopCount(final long count) {
+    CompilerAsserts.neverPartOfCompilation();
+
     // we need to skip the primitive and get to the method that called the primitive
     Iterable<FrameInstance> stack = Truffle.getRuntime().getStackTrace();
     Iterator<FrameInstance> i = stack.iterator();
@@ -65,13 +77,7 @@ public final class Primitive extends Invokable {
     FrameInstance next2 = i.next();  // caller frame
 
     RootCallTarget ct = (RootCallTarget) next2.getCallTarget();  // caller method
-    Method m = (Method) ct.getRootNode();
+    AbstractInvokable m = (AbstractInvokable) ct.getRootNode();
     m.propagateLoopCountThroughoutLexicalScope(count);
-  }
-
-  @Override
-  public void setOuterContextMethod(final AbstractInvokable method) {
-    CompilerAsserts.neverPartOfCompilation();
-    throw new UnsupportedOperationException("Only supported on methods");
   }
 }

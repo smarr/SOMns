@@ -1,6 +1,6 @@
 package som.interpreter.nodes.specialized.whileloops;
 
-import som.interpreter.Invokable;
+import som.interpreter.AbstractInvokable;
 import som.interpreter.SArguments;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.vm.Universe;
@@ -98,7 +98,7 @@ public abstract class AbstractWhileNode extends BinaryExpressionNode {
       current = current.getParent();
     }
     if (current != null) {
-      ((Invokable) current).propagateLoopCountThroughoutLexicalScope(count);
+      ((AbstractInvokable) current).propagateLoopCountThroughoutLexicalScope(count);
     }
   }
 }

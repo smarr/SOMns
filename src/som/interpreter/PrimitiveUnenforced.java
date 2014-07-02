@@ -48,9 +48,7 @@ public final class PrimitiveUnenforced extends InvokableUnenforced {
 
   @Override
   public void propagateLoopCountThroughoutLexicalScope(final long count) {
-    CompilerAsserts.neverPartOfCompilation();
-    throw new UnsupportedOperationException(
-        "This should not happen, primitives don't have lexically nested loops.");
+    Primitive.propagateLoopCount(count);
   }
 
   @Override
