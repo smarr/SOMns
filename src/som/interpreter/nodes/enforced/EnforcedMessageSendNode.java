@@ -5,6 +5,8 @@ import som.interpreter.Types;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.ISuperReadNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
+import som.interpreter.nodes.MessageSendNode.AbstractUninitializedMessageSendNode;
+import som.interpreter.nodes.PreevaluatedExpression;
 import som.vm.Universe;
 import som.vmobjects.SArray;
 import som.vmobjects.SClass;
@@ -62,4 +64,38 @@ public class EnforcedMessageSendNode extends AbstractMessageSendNode {
             rcvr, rcvrClass);
   }
 
+  public static final class UninitializedEnforcedMessageSendNode
+    extends AbstractUninitializedMessageSendNode {
+
+    public UninitializedEnforcedMessageSendNode(final SSymbol selector,
+        final ExpressionNode[] arguments, final SourceSection source) {
+      super(selector, arguments, source, true);
+    }
+
+    @Override
+    protected PreevaluatedExpression makeSuperSend() {
+      // since EnforcedMessageSendNode handles super sends explicitly, generic
+      // is good enough
+      return makeGenericSend();
+    }
+
+    @Override
+    protected PreevaluatedExpression specializeUnary(final Object[] arguments) { return this; }
+
+    @Override
+    protected PreevaluatedExpression specializeBinary(final Object[] arguments) { return this; }
+
+    @Override
+    protected PreevaluatedExpression specializeTernary(final Object[] arguments) { return this; }
+
+    @Override
+    protected PreevaluatedExpression specializeQuaternary(final Object[] arguments) { return this; }
+
+    @Override
+    protected AbstractMessageSendNode makeGenericSend() {
+      EnforcedMessageSendNode send = new EnforcedMessageSendNode(selector,
+          argumentNodes, getSourceSection());
+      return replace(send);
+    }
+  }
 }
