@@ -6,6 +6,7 @@ import som.interpreter.nodes.dispatch.AbstractDispatchNode;
 import som.interpreter.nodes.dispatch.GenericDispatchNode;
 import som.interpreter.nodes.dispatch.SuperDispatchNode;
 import som.interpreter.nodes.dispatch.UninitializedDispatchNode;
+import som.interpreter.nodes.enforced.EnforcedMessageSendNode;
 import som.interpreter.nodes.enforced.EnforcedMessageSendNode.UninitializedEnforcedMessageSendNode;
 import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.nary.EagerBinaryPrimitiveNode;
@@ -496,11 +497,16 @@ public final class MessageSendNode {
 
     private final SSymbol selector;
 
-    public static GenericMessageSendNode create(final SSymbol selector,
+    public static AbstractMessageSendNode create(final SSymbol selector,
         final ExpressionNode[] argumentNodes, final SourceSection source,
         final boolean executesEnforced) {
-      return new GenericMessageSendNode(selector, argumentNodes,
-          new UninitializedDispatchNode(selector, Universe.current(), executesEnforced), source, executesEnforced);
+      if (executesEnforced) {
+        return new EnforcedMessageSendNode(selector, argumentNodes, source);
+      } else {
+        return new GenericMessageSendNode(selector, argumentNodes,
+          new UninitializedDispatchNode(selector, Universe.current(),
+              executesEnforced), source, executesEnforced);
+      }
     }
 
     @Child private AbstractDispatchNode dispatchNode;

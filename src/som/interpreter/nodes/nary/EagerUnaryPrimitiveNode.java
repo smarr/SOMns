@@ -1,6 +1,7 @@
 package som.interpreter.nodes.nary;
 
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
 import som.vmobjects.SSymbol;
 
@@ -63,8 +64,8 @@ public class EagerUnaryPrimitiveNode extends UnaryExpressionNode {
     }
   }
 
-  private GenericMessageSendNode makeGenericSend() {
-    GenericMessageSendNode node = GenericMessageSendNode.create(selector,
+  private AbstractMessageSendNode makeGenericSend() {
+    AbstractMessageSendNode node = GenericMessageSendNode.create(selector,
         new ExpressionNode[] {receiver}, getSourceSection(), executesEnforced);
     return replace(node);
   }
