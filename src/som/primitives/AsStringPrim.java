@@ -11,7 +11,8 @@ import com.oracle.truffle.api.dsl.Specialization;
 
 public abstract class AsStringPrim extends UnarySideEffectFreeExpressionNode {
 
-  public AsStringPrim() { super(false); /* TODO: enforced!!! */ }
+  public AsStringPrim(final boolean executesEnforced) { super(executesEnforced); }
+  public AsStringPrim(final AsStringPrim node) { super(node.executesEnforced); }
 
   @Specialization
   public final String doSSymbol(final SSymbol receiver) {

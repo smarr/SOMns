@@ -16,7 +16,9 @@ import com.oracle.truffle.api.dsl.Specialization;
 
 public final class ObjectPrims {
   public abstract static class InstVarAtPrim extends BinarySideEffectFreeExpressionNode {
-    public InstVarAtPrim() { super(false); } /* TODO: enforced!!! */
+    public InstVarAtPrim(final boolean executesEnforced) { super(executesEnforced); }
+    public InstVarAtPrim(final InstVarAtPrim node) { this(node.executesEnforced); }
+
     @Specialization
     public final Object doSObject(final SObject receiver, final long idx) {
       return receiver.getField(idx - 1);
@@ -24,7 +26,9 @@ public final class ObjectPrims {
   }
 
   public abstract static class InstVarAtPutPrim extends TernaryExpressionNode {
-    public InstVarAtPutPrim() { super(false); } /* TODO: enforced!!! */
+    public InstVarAtPutPrim(final boolean executesEnforced) { super(executesEnforced); }
+    public InstVarAtPutPrim(final InstVarAtPutPrim node) { this(node.executesEnforced); }
+
     @Specialization
     public final Object doSObject(final SObject receiver, final long idx, final SAbstractObject val) {
       receiver.setField(idx - 1, val);
@@ -39,7 +43,9 @@ public final class ObjectPrims {
   }
 
   public abstract static class InstVarNamedPrim extends BinarySideEffectFreeExpressionNode {
-    public InstVarNamedPrim() { super(false); }
+    public InstVarNamedPrim(final boolean executesEnforced) { super(executesEnforced); }
+    public InstVarNamedPrim(final InstVarNamedPrim node) { this(node.executesEnforced); }
+
     @Specialization
     public final Object doSObject(final SObject receiver, final SSymbol fieldName) {
       return receiver.getField(receiver.getFieldIndex(fieldName));
@@ -47,7 +53,9 @@ public final class ObjectPrims {
   }
 
   public abstract static class HaltPrim extends UnaryExpressionNode {
-    public HaltPrim() { super(null, false); } /* TODO: enforced!!! */
+    public HaltPrim(final boolean executesEnforced) { super(null, executesEnforced); }
+    public HaltPrim(final HaltPrim node) { this(node.executesEnforced); }
+
     @Specialization
     public final Object doSAbstractObject(final Object receiver) {
       Universe.errorPrintln("BREAKPOINT");
@@ -57,7 +65,8 @@ public final class ObjectPrims {
 
   public abstract static class ClassPrim extends UnarySideEffectFreeExpressionNode {
     private final Universe universe;
-    public ClassPrim() { super(false); /* TODO: enforced!!! */ this.universe = Universe.current(); }
+    public ClassPrim(final boolean executesEnforced) { super(executesEnforced); this.universe = Universe.current(); }
+    public ClassPrim(final ClassPrim node) { this(node.executesEnforced); }
 
     @Specialization
     public final SClass doSAbstractObject(final SAbstractObject receiver) {

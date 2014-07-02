@@ -9,6 +9,9 @@ import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.dsl.Specialization;
 
 public abstract class DoubleDivPrim extends ArithmeticPrim {
+  public DoubleDivPrim(final boolean executesEnforced) { super(executesEnforced); }
+  public DoubleDivPrim(final DoubleDivPrim node) { this(node.executesEnforced); }
+
   @Specialization(order = 1)
   public final double doDouble(final double left, final double right) {
     return left / right;

@@ -15,7 +15,9 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 
 public final class MirrorPrims {
   public abstract static class DomainOfPrim extends BinarySideEffectFreeExpressionNode {
-    public DomainOfPrim() { super(false); }/* TODO: enforced!!! */
+    public DomainOfPrim(final boolean executesEnforced) { super(executesEnforced); }
+    public DomainOfPrim(final DomainOfPrim node) { super(node.executesEnforced); }
+
     @Specialization
     public final SObject doSClass(final SClass clazz, final SObject obj) {
       return obj.getDomain();
@@ -23,7 +25,8 @@ public final class MirrorPrims {
   }
 
   public abstract static class SetDomainOfPrim extends TernaryExpressionNode {
-    public SetDomainOfPrim() { super(false); } /* TODO: enforced!!! */
+    public SetDomainOfPrim(final boolean executesEnforced) { super(executesEnforced); }
+    public SetDomainOfPrim(final SetDomainOfPrim node) { super(node.executesEnforced); }
 
     @Specialization
     public final SClass doSClass(final SClass clazz, final SObject obj,
@@ -41,7 +44,9 @@ public final class MirrorPrims {
   }
 
   public abstract static class CurrentDomainPrim extends UnarySideEffectFreeExpressionNode {
-    public CurrentDomainPrim() { super(false); } /* TODO: enforced!!! */
+    public CurrentDomainPrim(final boolean executesEnforced) { super(executesEnforced); }
+    public CurrentDomainPrim(final CurrentDomainPrim node) { super(node.executesEnforced); }
+
     @Specialization
     public final SObject doSClass(final VirtualFrame frame, final SClass clazz) {
       return SArguments.domain(frame);
@@ -49,7 +54,9 @@ public final class MirrorPrims {
   }
 
   public abstract static class EvaluatedInPrim extends TernaryExpressionNode {
-    public EvaluatedInPrim() { super(false); } /* TODO: enforced!!! */
+    public EvaluatedInPrim(final boolean executesEnforced) { super(executesEnforced); }
+    public EvaluatedInPrim(final EvaluatedInPrim node) { super(node.executesEnforced); }
+
     @Specialization
     public final Object doSClass(final VirtualFrame frame, final SClass clazz, final SBlock block, final SObject domain) {
       boolean enforced = SArguments.enforced(frame);
@@ -58,7 +65,9 @@ public final class MirrorPrims {
   }
 
   public abstract static class EvaluatedEnforcedInPrim extends TernaryExpressionNode {
-    public EvaluatedEnforcedInPrim() { super(false); } /* TODO: enforced!!! */
+    public EvaluatedEnforcedInPrim(final boolean executesEnforced) { super(executesEnforced); }
+    public EvaluatedEnforcedInPrim(final EvaluatedEnforcedInPrim node) { super(node.executesEnforced); }
+
     @Specialization
     public final Object doSClass(final VirtualFrame frame, final SClass clazz, final SBlock block, final SObject domain) {
       return block.getMethod().invoke(domain, true, new Object[] {block});
@@ -66,7 +75,9 @@ public final class MirrorPrims {
   }
 
   public abstract static class ExecutesEnforcedPrim extends UnarySideEffectFreeExpressionNode {
-    public ExecutesEnforcedPrim() { super(false); } /* TODO: enforced!!! */
+    public ExecutesEnforcedPrim(final boolean executesEnforced) { super(executesEnforced); }
+    public ExecutesEnforcedPrim(final ExecutesEnforcedPrim node) { super(node.executesEnforced); }
+
     @Specialization
     public final boolean doSClass(final VirtualFrame frame, final SClass clazz) {
       return SArguments.enforced(frame);
@@ -74,7 +85,9 @@ public final class MirrorPrims {
   }
 
   public abstract static class ExecutesUnenforcedPrim extends UnarySideEffectFreeExpressionNode {
-    public ExecutesUnenforcedPrim() { super(false); } /* TODO: enforced!!! */
+    public ExecutesUnenforcedPrim(final boolean executesEnforced) { super(executesEnforced); }
+    public ExecutesUnenforcedPrim(final ExecutesUnenforcedPrim node) { super(node.executesEnforced); }
+
     @Specialization
     public final boolean doSClass(final VirtualFrame frame, final SClass clazz) {
       return !SArguments.enforced(frame);

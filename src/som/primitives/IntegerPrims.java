@@ -13,7 +13,8 @@ import com.oracle.truffle.api.utilities.BranchProfile;
 public abstract class IntegerPrims {
 
   public abstract static class RandomPrim extends UnarySideEffectFreeExpressionNode {
-    public RandomPrim() { super(false); } /* TODO: enforced!!! */
+    public RandomPrim(final boolean executesEnforced) { super(executesEnforced); }
+    public RandomPrim(final RandomPrim node) { this(node.executesEnforced); }
 
     @Specialization
     public final long doLong(final long receiver) {
@@ -23,7 +24,9 @@ public abstract class IntegerPrims {
 
   public abstract static class FromStringPrim extends ArithmeticPrim {
     private final Universe universe;
-    public FromStringPrim() { this.universe = Universe.current(); }
+
+    public FromStringPrim(final boolean executesEnforced) { super(executesEnforced); this.universe = Universe.current(); }
+    public FromStringPrim(final FromStringPrim node) { this(node.executesEnforced); }
 
     protected final boolean receiverIsIntegerClass(final SClass receiver) {
       return receiver == universe.integerClass;
@@ -36,6 +39,9 @@ public abstract class IntegerPrims {
   }
 
   public abstract static class LeftShiftPrim extends ArithmeticPrim {
+    public LeftShiftPrim(final boolean executesEnforced) { super(executesEnforced); }
+    public LeftShiftPrim(final LeftShiftPrim node) { this(node.executesEnforced); }
+
     private final BranchProfile overflow = new BranchProfile();
 
     @Specialization(rewriteOn = ArithmeticException.class)

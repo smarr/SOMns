@@ -13,7 +13,8 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 public abstract class PerformWithArgumentsInSuperclassPrim extends QuaternaryExpressionNode {
-  public PerformWithArgumentsInSuperclassPrim() { super(null, false); } /* TODO: enforced!!! */
+  public PerformWithArgumentsInSuperclassPrim(final boolean executesEnforced) { super(null, executesEnforced); }
+  public PerformWithArgumentsInSuperclassPrim(final PerformWithArgumentsInSuperclassPrim node) { this(node.executesEnforced); }
 
   @Specialization
   public final Object doSAbstractObject(final VirtualFrame frame,
@@ -29,10 +30,11 @@ public abstract class PerformWithArgumentsInSuperclassPrim extends QuaternaryExp
   public abstract static class PerformEnforcedWithArgumentsInSuperclassPrim extends QuaternaryExpressionNode {
     @Child private AbstractSymbolSuperDispatch dispatch;
 
-    public PerformEnforcedWithArgumentsInSuperclassPrim() {
-      super(null, true);
+    public PerformEnforcedWithArgumentsInSuperclassPrim(final boolean executesEnforced) {
+      super(null, executesEnforced);
       dispatch = AbstractSymbolSuperDispatch.create(executesEnforced, true);
     }
+    public PerformEnforcedWithArgumentsInSuperclassPrim(final PerformEnforcedWithArgumentsInSuperclassPrim node) { this(node.executesEnforced); }
 
     @Specialization
     public final Object doSAbstractObject(final VirtualFrame frame,

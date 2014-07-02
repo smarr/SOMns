@@ -6,7 +6,8 @@ import som.vmobjects.SAbstractObject;
 import com.oracle.truffle.api.dsl.Specialization;
 
 public abstract class HashPrim extends UnarySideEffectFreeExpressionNode {
-  public HashPrim() { super(false); } /* TODO: enforced!!! */
+  public HashPrim(final boolean executesEnforced) { super(executesEnforced); }
+  public HashPrim(final HashPrim node) { this(node.executesEnforced); }
 
   @Specialization
   public final long doSString(final String receiver) {

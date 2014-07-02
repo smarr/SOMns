@@ -16,7 +16,8 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 public final class MethodPrims {
 
   public abstract static class SignaturePrim extends UnarySideEffectFreeExpressionNode {
-    public SignaturePrim() { super(false); } /* TODO: enforced!!! */
+    public SignaturePrim(final boolean executesEnforced) { super(executesEnforced); }
+    public SignaturePrim(final SignaturePrim node) { this(node.executesEnforced); }
 
     @Specialization
     public final SAbstractObject doSMethod(final SInvokable receiver) {
@@ -25,7 +26,9 @@ public final class MethodPrims {
   }
 
   public abstract static class HolderPrim extends UnarySideEffectFreeExpressionNode {
-    public HolderPrim() { super(false); } /* TODO: enforced!!! */
+    public HolderPrim(final boolean executesEnforced) { super(executesEnforced); }
+    public HolderPrim(final HolderPrim node) { this(node.executesEnforced); }
+
     @Specialization
     public final SAbstractObject doSMethod(final SInvokable receiver) {
       return receiver.getHolder();
@@ -33,17 +36,15 @@ public final class MethodPrims {
   }
 
   public abstract static class InvokeOnPrim extends TernaryExpressionNode {
-    public InvokeOnPrim() {
-      super(false); /* TODO: enforced!!! */
-    }
+    public InvokeOnPrim(final boolean executesEnforced) { super(executesEnforced); }
+    public InvokeOnPrim(final InvokeOnPrim node) { this(node.executesEnforced); }
 
     @Specialization
     public final Object doInvoke(final VirtualFrame frame,
         final SInvokable receiver, final Object target, final Object[] argsArr) {
       CompilerAsserts.neverPartOfCompilation();
       SObject domain = SArguments.domain(frame);
-      boolean enforced = SArguments.enforced(frame); // TODO: I should get that from the node instead of from the frame!
-      return receiver.invoke(domain, enforced, SArray.fromSArrayToArgArrayWithReceiver(argsArr, target));
+      return receiver.invoke(domain, executesEnforced, SArray.fromSArrayToArgArrayWithReceiver(argsArr, target));
     }
   }
 }

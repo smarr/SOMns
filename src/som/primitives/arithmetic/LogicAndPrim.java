@@ -6,6 +6,9 @@ import com.oracle.truffle.api.dsl.Specialization;
 
 
 public abstract class LogicAndPrim extends ArithmeticPrim {
+  public LogicAndPrim(final boolean executesEnforced) { super(executesEnforced); }
+  public LogicAndPrim(final LogicAndPrim node) { this(node.executesEnforced); }
+
   @Specialization(order = 1)
   public final long doLong(final long left, final long right) {
     return left & right;

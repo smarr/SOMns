@@ -8,7 +8,8 @@ import com.oracle.truffle.api.dsl.Specialization;
 public abstract class DoublePrims  {
 
   public abstract static class RoundPrim extends UnarySideEffectFreeExpressionNode {
-    public RoundPrim() { super(false); } /* TODO: enforced!!! */
+    public RoundPrim(final boolean executesEnforced) { super(executesEnforced); }
+    public RoundPrim(final RoundPrim node) { this(node.executesEnforced); }
 
     @Specialization
     public final long doDouble(final double receiver) {

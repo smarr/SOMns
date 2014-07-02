@@ -9,7 +9,8 @@ import som.vmobjects.SSymbol;
 import com.oracle.truffle.api.dsl.Specialization;
 
 public abstract class EqualsPrim extends BinarySideEffectFreeExpressionNode {
-  public EqualsPrim() { super(false); } /* TODO: enforced!!! */
+  public EqualsPrim(final boolean executesEnforced) { super(executesEnforced); }
+  public EqualsPrim(final EqualsPrim node) { super(node.executesEnforced); }
 
   @Specialization(order = 1)
   public final boolean doBoolean(final boolean left, final boolean right) {

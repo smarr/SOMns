@@ -6,7 +6,8 @@ import som.vmobjects.SArray;
 import com.oracle.truffle.api.dsl.Specialization;
 
 public abstract class LengthPrim extends UnarySideEffectFreeExpressionNode {
-  public LengthPrim() { super(false); } /* TODO: enforced!!! */
+  public LengthPrim(final boolean executesEnforced) { super(executesEnforced); }
+  public LengthPrim(final LengthPrim node) { this(node.executesEnforced); }
 
   @Specialization
   public final long doSArray(final Object[] receiver) {

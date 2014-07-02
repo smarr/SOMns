@@ -9,9 +9,10 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 public abstract class PerformPrim extends BinaryExpressionNode {
   @Child protected AbstractSymbolDispatch dispatch;
 
-  public PerformPrim() { super(null, false); /* TODO: enforced!!! */
+  public PerformPrim(final boolean executesEnforced) { super(null, executesEnforced);
     dispatch = AbstractSymbolDispatch.create(false);
   }
+  public PerformPrim(final PerformPrim node) { this(node.executesEnforced); }
 
   @Specialization
   public final Object doObject(final VirtualFrame frame, final Object receiver, final SSymbol selector) {
@@ -19,8 +20,10 @@ public abstract class PerformPrim extends BinaryExpressionNode {
   }
 
   public abstract static class PerformEnforcedPrim extends PerformPrim {
-    public PerformEnforcedPrim() {
+    public PerformEnforcedPrim(final boolean executesEnforced) {
+      super(executesEnforced);
       dispatch = AbstractSymbolDispatch.create(true);
     }
+    public PerformEnforcedPrim(final PerformEnforcedPrim node) { this(node.executesEnforced); }
   }
 }

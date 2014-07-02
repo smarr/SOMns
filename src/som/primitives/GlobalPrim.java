@@ -14,6 +14,9 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 public abstract class GlobalPrim extends BinarySystemNode {
+  public GlobalPrim(final boolean executesEnforced) { super(executesEnforced); }
+  public GlobalPrim(final GlobalPrim node) { this(node.executesEnforced); }
+
   @Child private GetGlobalNode getGlobal = new UninitializedGetGlobal(0);
 
   @Specialization(guards = "receiverIsSystemObject")

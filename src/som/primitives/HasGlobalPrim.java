@@ -14,9 +14,11 @@ public abstract class HasGlobalPrim extends BinarySystemNode {
 
   @Child private HasGlobalNode hasGlobal;
 
-  public HasGlobalPrim() {
+  public HasGlobalPrim(final boolean executesEnforced) {
+    super(executesEnforced);
     hasGlobal = new UninitializedHasGlobal(0);
   }
+  public HasGlobalPrim(final HasGlobalPrim node) { this(node.executesEnforced); }
 
   @Specialization(guards = "receiverIsSystemObject")
   public final boolean doSObject(final SObject receiver, final SSymbol argument) {

@@ -10,6 +10,9 @@ import com.oracle.truffle.api.dsl.Specialization;
 
 
 public abstract class AdditionPrim extends ArithmeticPrim {
+  public AdditionPrim(final boolean executesEnforced) { super(executesEnforced); }
+  public AdditionPrim(final AdditionPrim node) { this(node.executesEnforced); }
+
   @Specialization(order = 10, rewriteOn = ArithmeticException.class)
   public final long doLong(final long left, final long argument) {
     return ExactMath.addExact(left, argument);

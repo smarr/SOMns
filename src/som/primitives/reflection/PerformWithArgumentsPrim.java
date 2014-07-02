@@ -10,9 +10,12 @@ public abstract class PerformWithArgumentsPrim extends TernaryExpressionNode {
 
   @Child protected AbstractSymbolDispatch dispatch;
 
-  public PerformWithArgumentsPrim() {
-    super(false);
+  public PerformWithArgumentsPrim(final boolean executesEnforced) {
+    super(executesEnforced);
     dispatch = AbstractSymbolDispatch.create(false);
+  }
+  public PerformWithArgumentsPrim(final PerformWithArgumentsPrim node) {
+    this(node.executesEnforced);
   }
 
   @Specialization
@@ -22,8 +25,13 @@ public abstract class PerformWithArgumentsPrim extends TernaryExpressionNode {
   }
 
   public abstract static class PerformEnforcedWithArgumentsPrim extends PerformWithArgumentsPrim {
-    public PerformEnforcedWithArgumentsPrim() {
+    public PerformEnforcedWithArgumentsPrim(final boolean executesEnforced) {
+      super(executesEnforced);
       dispatch = AbstractSymbolDispatch.create(true);
+    }
+
+    public PerformEnforcedWithArgumentsPrim(final PerformEnforcedWithArgumentsPrim node) {
+      this(node.executesEnforced);
     }
   }
 }

@@ -7,6 +7,9 @@ import com.oracle.truffle.api.dsl.Specialization;
 
 
 public abstract class SubtractionPrim extends ArithmeticPrim {
+  public SubtractionPrim(final boolean executesEnforced) { super(executesEnforced); }
+  public SubtractionPrim(final SubtractionPrim node) { this(node.executesEnforced); }
+
   @Specialization(order = 1, rewriteOn = ArithmeticException.class)
   public final long doLong(final long left, final long right) {
     return ExactMath.subtractExact(left, right);

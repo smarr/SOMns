@@ -16,6 +16,10 @@ public abstract class NotMessageNode extends UnaryExpressionNode {
     super(node.getSourceSection(), node.executesEnforced);
   }
 
+  public NotMessageNode(final boolean executesEnforced) { // only for the primitive version
+    super(null, executesEnforced);
+  }
+
   @Specialization
   public final boolean doNot(final VirtualFrame frame, final boolean receiver) {
     return !receiver;

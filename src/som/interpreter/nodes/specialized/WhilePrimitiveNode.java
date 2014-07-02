@@ -14,14 +14,14 @@ public abstract class WhilePrimitiveNode extends BinaryExpressionNode {
   final boolean predicateBool;
   final Universe universe;
 
-  protected WhilePrimitiveNode(final boolean predicateBool) {
-    super(null, false); // TODO: enforced!!!
+  protected WhilePrimitiveNode(final boolean executesEnforced, final boolean predicateBool) {
+    super(null, executesEnforced);
     universe = Universe.current();
     this.predicateBool = predicateBool;
   }
 
   protected WhilePrimitiveNode(final WhilePrimitiveNode node) {
-    this(node.predicateBool);
+    this(node.executesEnforced, node.predicateBool);
   }
 
   private boolean obj2bool(final Object o) {
@@ -59,10 +59,12 @@ public abstract class WhilePrimitiveNode extends BinaryExpressionNode {
   }
 
   public abstract static class WhileTruePrimitiveNode extends WhilePrimitiveNode {
-    public WhileTruePrimitiveNode() { super(true); }
+    public WhileTruePrimitiveNode(final boolean executesEnforced) { super(executesEnforced, true); }
+    public WhileTruePrimitiveNode(final WhileTruePrimitiveNode node) { this(node.executesEnforced); }
   }
 
   public abstract static class WhileFalsePrimitiveNode extends WhilePrimitiveNode {
-    public WhileFalsePrimitiveNode() { super(false); }
+    public WhileFalsePrimitiveNode(final boolean executesEnforced) { super(executesEnforced, false); }
+    public WhileFalsePrimitiveNode(final WhileFalsePrimitiveNode node) { this(node.executesEnforced); }
   }
 }

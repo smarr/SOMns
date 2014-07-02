@@ -22,7 +22,8 @@ public abstract class BlockPrims {
   }
 
   public abstract static class RestartPrim extends UnaryExpressionNode {
-    public RestartPrim() { super(null, false); /* TODO: enforced!!! */ }
+    public RestartPrim(final boolean executesEnforced) { super(null, executesEnforced); }
+    public RestartPrim(final RestartPrim node) { super(null, node.executesEnforced); }
 
     @Specialization
     public SAbstractObject doSBlock(final SBlock receiver) {
@@ -38,10 +39,11 @@ public abstract class BlockPrims {
       implements ValuePrimitiveNode {
     @Child private AbstractDispatchNode dispatchNode;
 
-    public ValueNonePrim() {
-      super(null, false); /* TODO: enforced!!! */
+    public ValueNonePrim(final boolean executesEnforced) {
+      super(null, executesEnforced);
       dispatchNode = new UninitializedValuePrimDispatchNode();
     }
+    public ValueNonePrim(final ValueNonePrim node) { this(node.executesEnforced); }
 
     @Specialization
     public final Object doSBlock(final VirtualFrame frame, final SBlock receiver) {
@@ -72,10 +74,11 @@ public abstract class BlockPrims {
       implements ValuePrimitiveNode  {
     @Child private AbstractDispatchNode dispatchNode;
 
-    public ValueOnePrim() {
-      super(null, false); /* TODO: enforced!!! */
+    public ValueOnePrim(final boolean executesEnforced) {
+      super(null, executesEnforced);
       dispatchNode = new UninitializedValuePrimDispatchNode();
     }
+    public ValueOnePrim(final ValueOnePrim node) { this(node.executesEnforced); }
 
     @Specialization
     public final Object doSBlock(final VirtualFrame frame, final SBlock receiver,
@@ -107,10 +110,11 @@ public abstract class BlockPrims {
       implements ValuePrimitiveNode {
     @Child private AbstractDispatchNode dispatchNode;
 
-    public ValueTwoPrim() {
-      super(null, false); /* TODO: enforced!!! */
+    public ValueTwoPrim(final boolean executesEnforced) {
+      super(null, executesEnforced);
       dispatchNode = new UninitializedValuePrimDispatchNode();
     }
+    public ValueTwoPrim(final ValueTwoPrim node) { this(node.executesEnforced); }
 
     @Specialization
     public final Object doSBlock(final VirtualFrame frame,
@@ -139,7 +143,9 @@ public abstract class BlockPrims {
   }
 
   public abstract static class ValueMorePrim extends QuaternaryExpressionNode {
-    public ValueMorePrim() { super(null, false); }  /* TODO: enforced!!! */
+    public ValueMorePrim(final boolean executesEnforced) { super(null, executesEnforced); }
+    public ValueMorePrim(final ValueMorePrim node) { this(node.executesEnforced); }
+
     @Specialization
     public final Object doSBlock(final VirtualFrame frame,
         final SBlock receiver, final Object firstArg, final Object secondArg,

@@ -13,7 +13,8 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 public abstract class PerformInSuperclassPrim extends TernaryExpressionNode {
-  public PerformInSuperclassPrim() { super(false); } /* TODO: enforced!!! */
+  public PerformInSuperclassPrim(final boolean executesEnforced) { super(executesEnforced); }
+  public PerformInSuperclassPrim(final PerformInSuperclassPrim node) { this(node.executesEnforced); }
 
   @Specialization
   public final Object doSAbstractObject(final VirtualFrame frame,
@@ -26,7 +27,8 @@ public abstract class PerformInSuperclassPrim extends TernaryExpressionNode {
   }
 
   public abstract static class PerformEnforcedInSuperclassPrim extends TernaryExpressionNode {
-    public PerformEnforcedInSuperclassPrim() { super(false); } /* TODO: enforced!!! */
+    public PerformEnforcedInSuperclassPrim(final boolean executesEnforced) { super(executesEnforced); }
+    public PerformEnforcedInSuperclassPrim(final PerformEnforcedInSuperclassPrim node) { this(node.executesEnforced); }
 
     @Specialization
     public final Object doSAbstractObject(final VirtualFrame frame,

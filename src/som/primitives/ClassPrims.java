@@ -15,7 +15,9 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 public class ClassPrims {
 
   public abstract static class NamePrim extends UnarySideEffectFreeExpressionNode {
-    public NamePrim() { super(false); /* TODO: enforced!!! */ }
+    public NamePrim(final boolean executesEnforced) { super(executesEnforced); }
+    public NamePrim(final NamePrim node) { super(node.executesEnforced); }
+
     @Specialization
     public final SAbstractObject doSClass(final SClass receiver) {
       return receiver.getName();
@@ -23,7 +25,9 @@ public class ClassPrims {
   }
 
   public abstract static class SuperClassPrim extends UnarySideEffectFreeExpressionNode {
-    public SuperClassPrim() { super(false); /* TODO: enforced!!! */ }
+    public SuperClassPrim(final boolean executesEnforced) { super(executesEnforced); }
+    public SuperClassPrim(final SuperClassPrim node) { super(node.executesEnforced); }
+
     @Specialization
     public final SAbstractObject doSClass(final SClass receiver) {
       return receiver.getSuperClass();
@@ -31,7 +35,9 @@ public class ClassPrims {
   }
 
   public abstract static class InstanceInvokablesPrim extends UnarySideEffectFreeExpressionNode {
-    public InstanceInvokablesPrim() { super(false); } /* TODO: enforced!!! */
+    public InstanceInvokablesPrim(final boolean executesEnforced) { super(executesEnforced); }
+    public InstanceInvokablesPrim(final InstanceInvokablesPrim node) { super(node.executesEnforced); }
+
     @Specialization
     public final Object[] doSClass(final VirtualFrame frame, final SClass receiver) {
       SObject domain = SArguments.domain(frame);
@@ -41,7 +47,9 @@ public class ClassPrims {
   }
 
   public abstract static class InstanceFieldsPrim extends UnarySideEffectFreeExpressionNode {
-    public InstanceFieldsPrim() { super(false); } /* TODO: enforced!!! */
+    public InstanceFieldsPrim(final boolean executesEnforced) { super(executesEnforced); }
+    public InstanceFieldsPrim(final InstanceFieldsPrim node) { super(node.executesEnforced); }
+
     @Specialization
     public final Object[] doSClass(final VirtualFrame frame, final SClass receiver) {
       SObject domain = SArguments.domain(frame);

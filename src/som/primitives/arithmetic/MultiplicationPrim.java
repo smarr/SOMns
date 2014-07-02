@@ -7,6 +7,9 @@ import com.oracle.truffle.api.dsl.Specialization;
 
 
 public abstract class MultiplicationPrim extends ArithmeticPrim {
+  public MultiplicationPrim(final boolean executesEnforced) { super(executesEnforced); }
+  public MultiplicationPrim(final MultiplicationPrim node) { this(node.executesEnforced); }
+
   @Specialization(order = 1, rewriteOn = ArithmeticException.class)
   public final long doLong(final long left, final long right) {
     return ExactMath.multiplyExact(left, right);

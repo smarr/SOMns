@@ -8,6 +8,9 @@ import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.dsl.Specialization;
 
 public abstract class DividePrim extends ArithmeticPrim {
+  public DividePrim(final boolean executesEnforced) { super(executesEnforced); }
+  public DividePrim(final DividePrim node) { this(node.executesEnforced); }
+
   @Specialization(order = 1)
   public final long doLong(final long left, final long right) {
     return left / right;

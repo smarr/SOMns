@@ -12,7 +12,9 @@ import com.oracle.truffle.api.dsl.Specialization;
 public class StringPrims {
 
   public abstract static class ConcatPrim extends BinarySideEffectFreeExpressionNode {
-    public ConcatPrim() { super(false); } /* TODO: enforced!!! */
+    public ConcatPrim(final boolean executesEnforced) { super(executesEnforced); }
+    public ConcatPrim(final ConcatPrim node) { this(node.executesEnforced); }
+
     @Specialization
     public final String doSString(final String receiver, final String argument) {
       return receiver + argument;
@@ -21,7 +23,8 @@ public class StringPrims {
 
   public abstract static class AsSymbolPrim extends UnarySideEffectFreeExpressionNode {
     private final Universe universe;
-    public AsSymbolPrim() { super(false); /* TODO: enforced!!! */ this.universe = Universe.current(); }
+    public AsSymbolPrim(final boolean executesEnforced) { super(executesEnforced); this.universe = Universe.current(); }
+    public AsSymbolPrim(final AsSymbolPrim node) { this(node.executesEnforced); }
 
     @Specialization
     public final SAbstractObject doSString(final String receiver) {
@@ -30,7 +33,9 @@ public class StringPrims {
   }
 
   public abstract static class SubstringPrim extends TernarySideEffectFreeExpressionNode {
-    public SubstringPrim() { super(false); } /* TODO: enforced!!! */
+    public SubstringPrim(final boolean executesEnforced) { super(executesEnforced); }
+    public SubstringPrim(final SubstringPrim node) { this(node.executesEnforced); }
+
     @Specialization
     public final String doSString(final String receiver, final long start,
         final long end) {

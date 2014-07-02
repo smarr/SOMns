@@ -6,6 +6,9 @@ import com.oracle.truffle.api.dsl.Specialization;
 
 
 public abstract class GreaterThanPrim extends ArithmeticPrim {
+  public GreaterThanPrim(final boolean executesEnforced) { super(executesEnforced); }
+  public GreaterThanPrim(final GreaterThanPrim node) { this(node.executesEnforced); }
+
   @Specialization(order = 1)
   public final boolean doLong(final long left, final long right) {
     return left > right;

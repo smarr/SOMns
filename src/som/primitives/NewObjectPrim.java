@@ -14,7 +14,8 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 
 public abstract class NewObjectPrim extends UnarySideEffectFreeExpressionNode {
   private final Universe universe;
-  public NewObjectPrim() { super(false); /* TODO: enforced!!! */ this.universe = Universe.current(); }
+  public NewObjectPrim(final boolean executesEnforced) { super(executesEnforced); this.universe = Universe.current(); }
+  public NewObjectPrim(final NewObjectPrim node) { this(node.executesEnforced); }
 
   @Specialization
   public final SAbstractObject doSClass(final VirtualFrame frame, final SClass receiver) {
