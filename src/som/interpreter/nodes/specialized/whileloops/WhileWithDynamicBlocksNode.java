@@ -6,15 +6,16 @@ import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 
+import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 
-public abstract class WhileWithDynamicBlocksNode extends AbstractWhileNode {
+public final class WhileWithDynamicBlocksNode extends AbstractWhileNode {
   private final SInvokable conditionMethod;
   private final SInvokable bodyMethod;
 
-  private WhileWithDynamicBlocksNode(final SBlock rcvr, final SBlock arg,
+  public WhileWithDynamicBlocksNode(final SBlock rcvr, final SBlock arg,
       final boolean predicateBool, final Universe universe,
       final SourceSection source, final boolean executesEnforced) {
     super(rcvr, arg, predicateBool, universe, source, executesEnforced);
@@ -23,35 +24,23 @@ public abstract class WhileWithDynamicBlocksNode extends AbstractWhileNode {
   }
 
   @Override
-  public final Object executeGeneric(final VirtualFrame frame) {
+  public Object executeGeneric(final VirtualFrame frame) {
+    CompilerAsserts.neverPartOfCompilation();
     throw new NotYetImplementedException();
   }
 
   @Override
-  public final void executeVoid(final VirtualFrame frame) {
+  public void executeVoid(final VirtualFrame frame) {
+    CompilerAsserts.neverPartOfCompilation();
     throw new NotYetImplementedException();
   }
 
   @Override
-  protected final SObject doWhileConditionally(final VirtualFrame frame,
+  protected SObject doWhileConditionally(final VirtualFrame frame,
       final SBlock loopCondition,
       final SBlock loopBody) {
     assert loopCondition.getMethod() == conditionMethod;
     assert loopBody.getMethod()      == bodyMethod;
     return doWhileUnconditionally(frame, loopCondition, loopBody);
-  }
-
-  public static final class WhileTrueDynamicBlocksNode extends WhileWithDynamicBlocksNode {
-    public WhileTrueDynamicBlocksNode(final SBlock rcvr, final SBlock arg,
-        final Universe universe, final SourceSection source, final boolean executesEnforced) {
-      super(rcvr, arg, true, universe, source, executesEnforced);
-    }
-  }
-
-  public static final class WhileFalseDynamicBlocksNode extends WhileWithDynamicBlocksNode {
-    public WhileFalseDynamicBlocksNode(final SBlock rcvr, final SBlock arg,
-        final Universe universe, final SourceSection source, final boolean executesEnforced) {
-      super(rcvr, arg, false, universe, source, executesEnforced);
-    }
   }
 }

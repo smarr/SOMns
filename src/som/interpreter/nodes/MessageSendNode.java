@@ -21,8 +21,7 @@ import som.interpreter.nodes.specialized.IntToDoMessageNodeFactory;
 import som.interpreter.nodes.specialized.NotMessageNodeFactory;
 import som.interpreter.nodes.specialized.OrMessageNodeFactory;
 import som.interpreter.nodes.specialized.OrMessageNodeFactory.OrBoolMessageNodeFactory;
-import som.interpreter.nodes.specialized.whileloops.WhileWithDynamicBlocksNode.WhileFalseDynamicBlocksNode;
-import som.interpreter.nodes.specialized.whileloops.WhileWithDynamicBlocksNode.WhileTrueDynamicBlocksNode;
+import som.interpreter.nodes.specialized.whileloops.WhileWithDynamicBlocksNode;
 import som.interpreter.nodes.specialized.whileloops.WhileWithStaticBlocksNode.WhileFalseStaticBlocksNode;
 import som.interpreter.nodes.specialized.whileloops.WhileWithStaticBlocksNode.WhileTrueStaticBlocksNode;
 import som.primitives.ArrayPrimsFactory.AtPrimFactory;
@@ -472,16 +471,17 @@ public final class MessageSendNode {
         case "whileTrue:": {
           if (arguments[1] instanceof SBlock && arguments[0] instanceof SBlock) {
             SBlock argBlock = (SBlock) arguments[1];
-            return replace(new WhileTrueDynamicBlocksNode((SBlock) arguments[0],
-                argBlock, Universe.current(), getSourceSection(), executesEnforced));
+            return replace(new WhileWithDynamicBlocksNode((SBlock) arguments[0],
+                argBlock, true, Universe.current(), getSourceSection(), executesEnforced));
           }
           break;
         }
         case "whileFalse:":
           if (arguments[1] instanceof SBlock && arguments[0] instanceof SBlock) {
             SBlock    argBlock     = (SBlock)    arguments[1];
-            return replace(new WhileFalseDynamicBlocksNode(
-                (SBlock) arguments[0], argBlock, Universe.current(), getSourceSection(), executesEnforced));
+            return replace(new WhileWithDynamicBlocksNode(
+                (SBlock) arguments[0], argBlock, false, Universe.current(),
+                getSourceSection(), executesEnforced));
           }
           break; // use normal send
       }
