@@ -1,5 +1,6 @@
 package som.interpreter.nodes.specialized;
 
+import som.interpreter.SArguments;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.vm.Universe;
 import som.vmobjects.SBlock;
@@ -40,14 +41,16 @@ public abstract class WhilePrimitiveNode extends BinaryExpressionNode {
       final SBlock loopCondition, final SBlock loopBody) {
     CompilerAsserts.neverPartOfCompilation(); // no caching, direct invokes, no loop count reporting...
 
-    Object conditionResult = loopCondition.getMethod().invoke(loopCondition.getDomain(), loopCondition.isEnforced(), loopCondition);
+    SObject currentDomain = SArguments.domain(frame);
+
+    Object conditionResult = loopCondition.getMethod().invoke(currentDomain, loopCondition.isEnforced(), loopCondition);
     boolean loopConditionResult = obj2bool(conditionResult);
 
 
     // TODO: this is a simplification, we don't cover the case receiver isn't a boolean
     while (loopConditionResult == predicateBool) {
-      loopBody.getMethod().invoke(loopBody.getDomain(), loopBody.isEnforced(), loopBody);
-      conditionResult = loopCondition.getMethod().invoke(loopCondition.getDomain(), loopCondition.isEnforced(), loopCondition);
+      loopBody.getMethod().invoke(currentDomain, loopBody.isEnforced(), loopBody);
+      conditionResult = loopCondition.getMethod().invoke(currentDomain, loopCondition.isEnforced(), loopCondition);
       loopConditionResult = obj2bool(conditionResult);
     }
     return universe.nilObject;
