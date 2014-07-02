@@ -8,6 +8,7 @@ import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 
+import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -106,6 +107,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
   public final Object doIfTrueIfFalse(final VirtualFrame frame,
       final boolean receiver, final SBlock trueBlock, final SBlock falseBlock) {
     SObject domain   = SArguments.domain(frame);
+    CompilerAsserts.neverPartOfCompilation();
     if (receiver) {
       ifTrueBranch.enter();
       return trueBlock.getMethod().invoke(domain, trueEnforced, trueBlock);
@@ -149,6 +151,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
       return trueValue;
     } else {
       ifFalseBranch.enter();
+      CompilerAsserts.neverPartOfCompilation();
       SObject domain   = SArguments.domain(frame);
       boolean enforced = SArguments.enforced(frame);
       return falseBlock.getMethod().invoke(domain, enforced, falseBlock);
@@ -160,6 +163,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
       final boolean receiver, final SBlock trueBlock, final Object falseValue) {
     if (receiver) {
       ifTrueBranch.enter();
+      CompilerAsserts.neverPartOfCompilation();
       SObject domain   = SArguments.domain(frame);
       boolean enforced = SArguments.enforced(frame);
       return trueBlock.getMethod().invoke(domain, enforced, trueBlock);

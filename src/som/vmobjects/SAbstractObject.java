@@ -25,6 +25,7 @@ public abstract class SAbstractObject {
       final SObject domain,
       final boolean enforced,
       final Universe universe) {
+    CompilerAsserts.neverPartOfCompilation();
     SSymbol selector = universe.symbolFor(selectorString);
 
     // Lookup the invokable

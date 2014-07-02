@@ -15,6 +15,7 @@ import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
@@ -40,6 +41,7 @@ public class EnforcedMessageSendNode extends AbstractMessageSendNode {
 
   @Override
   public Object doPreEvaluated(final VirtualFrame frame, final Object[] args) {
+    CompilerAsserts.neverPartOfCompilation();
     Object rcvr = args[0];
 
     // TODO need proper support for everything else...

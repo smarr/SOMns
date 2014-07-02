@@ -29,8 +29,10 @@ public abstract class WhilePrimitiveNode extends BinaryExpressionNode {
     if (o instanceof Boolean) {
       return (boolean) o;
     } else if (o == universe.trueObject) {
+      CompilerAsserts.neverPartOfCompilation();
       return true;
     } else {
+      CompilerAsserts.neverPartOfCompilation();
       assert o == universe.falseObject;
       return false;
     }

@@ -9,6 +9,7 @@ import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject;
 
+import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
@@ -59,6 +60,7 @@ public final class MirrorPrims {
 
     @Specialization
     public final Object doSClass(final VirtualFrame frame, final SClass clazz, final SBlock block, final SObject domain) {
+      CompilerAsserts.neverPartOfCompilation();
       boolean enforced = SArguments.enforced(frame);
       return block.getMethod().invoke(domain, enforced, new Object[] {block});
     }
@@ -70,6 +72,7 @@ public final class MirrorPrims {
 
     @Specialization
     public final Object doSClass(final VirtualFrame frame, final SClass clazz, final SBlock block, final SObject domain) {
+      CompilerAsserts.neverPartOfCompilation();
       return block.getMethod().invoke(domain, true, new Object[] {block});
     }
   }

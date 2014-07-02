@@ -9,6 +9,7 @@ import som.vmobjects.SInvokable.SPrimitive;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
@@ -80,6 +81,7 @@ public final class EnforcedPrim extends ExpressionNode {
 
   public Object executeEvaluated(final VirtualFrame frame,
       final Object receiver, final Object[] arguments) {
+    CompilerAsserts.neverPartOfCompilation();
     SObject currentDomain = SArguments.domain(frame);
     SObject rcvrDomain = SDomain.getOwner(receiver);
 
