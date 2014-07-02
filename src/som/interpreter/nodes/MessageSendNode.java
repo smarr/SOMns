@@ -126,7 +126,8 @@ public final class MessageSendNode {
     @Override
     public final Object doPreEvaluated(final VirtualFrame frame,
         final Object[] arguments) {
-      return specialize(arguments).doPreEvaluated(frame, arguments);
+      return specialize(arguments).
+          doPreEvaluated(frame, arguments);
     }
 
     protected PreevaluatedExpression specialize(final Object[] arguments) {
