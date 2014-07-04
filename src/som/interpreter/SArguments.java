@@ -35,6 +35,14 @@ public final class SArguments {
     return CompilerDirectives.unsafeCast(frame.getArguments()[ENFORCED_FLAG_IDX], Boolean.class, true);
   }
 
+  public static Object[] createSArgumentsArray(final Object... arguments) {
+    assert arguments.length >= 3;
+    assert arguments[ENFORCED_FLAG_IDX] instanceof Boolean;
+    assert arguments[DOMAIN_IDX]        instanceof SObject;
+    assert arguments[RCVR_IDX] != null;
+    return arguments;
+  }
+
   @ExplodeLoop
   public static Object[] createSArguments(final SObject domain,
       final boolean enforced, final Object[] arguments) {
