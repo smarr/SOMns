@@ -7,63 +7,70 @@ import som.interpreter.nodes.ISuperReadNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.interpreter.nodes.MessageSendNode.AbstractUninitializedMessageSendNode;
 import som.interpreter.nodes.PreevaluatedExpression;
+import som.interpreter.nodes.enforced.IntercessionHandlerCache.AbstractIntercessionHandlerDispatch;
 import som.vm.Universe;
 import som.vmobjects.SArray;
 import som.vmobjects.SClass;
 import som.vmobjects.SDomain;
-import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
-import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 
 public class EnforcedMessageSendNode extends AbstractMessageSendNode {
 
-  private final SSymbol selector;
-  private final SSymbol intercessionHandler;
+  protected final SSymbol selector;
+  protected final Universe universe;
+  @Child protected AbstractIntercessionHandlerDispatch dispatch;
 
   public EnforcedMessageSendNode(final SSymbol selector,
       final ExpressionNode[] arguments,
       final SourceSection source) {
     super(arguments, source, true);
     this.selector = selector;
-    intercessionHandler = Universe.current().symbolFor("requestExecutionOf:with:on:lookup:");
-  }
-
-  private boolean isSuperSend() {
-    // first option is a super send, super sends are treated specially because
-    // the receiver class is lexically determined
-    return argumentNodes[0] instanceof ISuperReadNode;
+    dispatch = IntercessionHandlerCache.create("requestExecutionOf:with:on:lookup:", true);
+    universe = Universe.current();
   }
 
   @Override
   public Object doPreEvaluated(final VirtualFrame frame, final Object[] args) {
-    CompilerAsserts.neverPartOfCompilation();
-    Object rcvr = args[0];
+    Object  rcvr = args[0];
+    SObject rcvrDomain    = SDomain.getOwner(rcvr);
+    SObject currentDomain = SArguments.domain(frame);
+    SClass  rcvrClass = Types.getClassOf(rcvr, universe);
 
-    // TODO need proper support for everything else...
-    // arrays are most problematic, but can be solved by going to 1-based direct
-    // indexing and using the slot 0 for the owner domain. Only support Object[] anyway.
+    Object[] arguments = SArguments.createSArgumentsArray(false, currentDomain,
+        rcvrDomain, selector,
+        SArray.fromArgArrayWithReceiverToSArrayWithoutReceiver(args, currentDomain),
+        rcvr, rcvrClass);
 
-    SObject rcvrDomain;
-    SInvokable handler;
-    SClass rcvrClass = Types.getClassOf(rcvr, Universe.current());
+    return dispatch.executeDispatch(frame, rcvrDomain, arguments);
+  }
 
-    if (isSuperSend()) {
-      rcvrClass = (SClass) rcvrClass.getSuperClass();
+  private static final class EnforcedSuperMessageSendNode extends EnforcedMessageSendNode {
+    private final SClass superClass;
+
+    public EnforcedSuperMessageSendNode(final SSymbol selector,
+        final ExpressionNode[] arguments, final SourceSection source) {
+      super(selector, arguments, source);
+      superClass = ((ISuperReadNode) arguments[0]).getSuperClass();
     }
 
-    rcvrDomain = SDomain.getOwner(rcvr);
+    @Override
+    public Object doPreEvaluated(final VirtualFrame frame, final Object[] args) {
+      Object  rcvr = args[0];
+      SObject rcvrDomain    = SDomain.getOwner(rcvr);
+      SObject currentDomain = SArguments.domain(frame);
 
-    handler = rcvrDomain.getSOMClass(Universe.current()).lookupInvokable(intercessionHandler);
-    SObject currentDomain = SArguments.domain(frame);
-    return handler.invoke(currentDomain, false, rcvrDomain, selector,
-        SArray.fromArgArrayWithReceiverToSArrayWithoutReceiver(
-            args, currentDomain),
-            rcvr, rcvrClass);
+      Object[] arguments = SArguments.createSArgumentsArray(false, currentDomain,
+          rcvrDomain, selector,
+          SArray.fromArgArrayWithReceiverToSArrayWithoutReceiver(args, currentDomain),
+          rcvr, superClass);
+
+      return dispatch.executeDispatch(frame, rcvrDomain, arguments);
+    }
   }
 
   public static final class UninitializedEnforcedMessageSendNode
@@ -76,9 +83,9 @@ public class EnforcedMessageSendNode extends AbstractMessageSendNode {
 
     @Override
     protected PreevaluatedExpression makeSuperSend() {
-      // since EnforcedMessageSendNode handles super sends explicitly, generic
-      // is good enough
-      return makeGenericSend();
+      EnforcedSuperMessageSendNode send = new EnforcedSuperMessageSendNode(selector,
+          argumentNodes, getSourceSection());
+      return replace(send);
     }
 
     @Override
