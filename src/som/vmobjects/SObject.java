@@ -278,7 +278,7 @@ public class SObject extends SAbstractObject {
   }
 
   private void setFieldAfterLayoutChange(final long index, final Object value) {
-    CompilerAsserts.neverPartOfCompilation();
+    CompilerAsserts.neverPartOfCompilation("SObject.setFieldAfterLayoutChange(..)");
 
     StorageLocation location = getLocation(index);
     try {
@@ -290,7 +290,7 @@ public class SObject extends SAbstractObject {
   }
 
   private static long getFirstObjectFieldOffset() {
-    CompilerAsserts.neverPartOfCompilation();
+    CompilerAsserts.neverPartOfCompilation("SObject.getFirstObjectFieldOffset()");
     try {
       final FieldOffsetProvider fieldOffsetProvider = getFieldOffsetProvider();
 
@@ -302,7 +302,7 @@ public class SObject extends SAbstractObject {
   }
 
   private static long getFirstPrimFieldOffset() {
-    CompilerAsserts.neverPartOfCompilation();
+    CompilerAsserts.neverPartOfCompilation("SObject.getFirstPrimFieldOffset()");
     try {
       final FieldOffsetProvider fieldOffsetProvider = getFieldOffsetProvider();
 
@@ -324,7 +324,7 @@ public class SObject extends SAbstractObject {
   }
 
   private static long getObjectFieldLength() {
-    CompilerAsserts.neverPartOfCompilation();
+    CompilerAsserts.neverPartOfCompilation("getObjectFieldLength()");
 
     try {
       return getFieldDistance("field1", "field2");
@@ -334,7 +334,7 @@ public class SObject extends SAbstractObject {
   }
 
   private static long getPrimFieldLength() {
-    CompilerAsserts.neverPartOfCompilation();
+    CompilerAsserts.neverPartOfCompilation("getPrimFieldLength()");
 
     try {
       return getFieldDistance("primField1", "primField2");

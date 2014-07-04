@@ -66,7 +66,7 @@ public abstract class AbstractIfMessageNode extends BinaryExpressionNode {
       final SBlock argument, final boolean predicateObject) {
     if (receiver == predicateObject) {
       ifTrueBranch.enter();
-      CompilerAsserts.neverPartOfCompilation();
+      CompilerAsserts.neverPartOfCompilation("AbstractIfMessageNode");
       return argument.getMethod().invoke(argument);
     } else {
       ifFalseBranch.enter();

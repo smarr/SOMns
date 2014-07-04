@@ -17,8 +17,14 @@ public final class SuperDispatchNode extends AbstractDispatchNode {
 
   public static SuperDispatchNode create(final SSymbol selector,
       final ISuperReadNode superNode) {
-    CompilerAsserts.neverPartOfCompilation();
-    SInvokable method = superNode.getSuperClass().lookupInvokable(selector);
+    CompilerAsserts.neverPartOfCompilation("SuperDispatchNode.create1");
+    return create(selector, superNode.getSuperClass());
+  }
+
+  public static SuperDispatchNode create(final SSymbol selector,
+      final SClass lookupClass) {
+    CompilerAsserts.neverPartOfCompilation("SuperDispatchNode.create2");
+    SInvokable method = lookupClass.lookupInvokable(selector);
 
     if (method == null) {
       throw new RuntimeException("Currently #dnu with super sent is not yet implemented. ");

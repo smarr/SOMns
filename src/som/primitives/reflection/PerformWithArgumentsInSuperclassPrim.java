@@ -18,7 +18,7 @@ public abstract class PerformWithArgumentsInSuperclassPrim extends QuaternaryExp
   public final Object doSAbstractObject(final VirtualFrame frame,
       final SAbstractObject receiver, final SSymbol selector,
       final Object[] argArr, final SClass clazz) {
-    CompilerAsserts.neverPartOfCompilation();
+    CompilerAsserts.neverPartOfCompilation("PerformWithArgumentsInSuperclassPrim.doSAbstractObject()");
     SInvokable invokable = clazz.lookupInvokable(selector);
     return invokable.invoke(mergeReceiverWithArguments(receiver, argArr));
   }

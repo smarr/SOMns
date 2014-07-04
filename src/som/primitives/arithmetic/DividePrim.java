@@ -31,7 +31,7 @@ public abstract class DividePrim extends ArithmeticPrim {
 
   @Specialization(order = 13)
   public final Object doLong(final long left, final double right) {
-    CompilerAsserts.neverPartOfCompilation();
+    CompilerAsserts.neverPartOfCompilation("DividePrim");
     throw new NotYetImplementedException(); // TODO: need to implement the "//" case here directly... : resendAsDouble("//", left, (SDouble) rightObj, frame.pack());
   }
 }

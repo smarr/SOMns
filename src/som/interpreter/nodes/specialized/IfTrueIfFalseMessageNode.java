@@ -90,13 +90,12 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
   @Specialization(order = 10)
   public final Object doIfTrueIfFalse(final VirtualFrame frame,
       final boolean receiver, final SBlock trueBlock, final SBlock falseBlock) {
+    CompilerAsserts.neverPartOfCompilation("IfTrueIfFalseMessageNode.10");
     if (receiver) {
       ifTrueBranch.enter();
-      CompilerAsserts.neverPartOfCompilation();
       return trueBlock.getMethod().invoke(trueBlock);
     } else {
       ifFalseBranch.enter();
-      CompilerAsserts.neverPartOfCompilation();
       return falseBlock.getMethod().invoke(falseBlock);
     }
   }
@@ -133,7 +132,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
       return trueValue;
     } else {
       ifFalseBranch.enter();
-      CompilerAsserts.neverPartOfCompilation();
+      CompilerAsserts.neverPartOfCompilation("IfTrueIfFalseMessageNode.20");
       return falseBlock.getMethod().invoke(falseBlock);
     }
   }
@@ -143,7 +142,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
       final boolean receiver, final SBlock trueBlock, final Object falseValue) {
     if (receiver) {
       ifTrueBranch.enter();
-      CompilerAsserts.neverPartOfCompilation();
+      CompilerAsserts.neverPartOfCompilation("IfTrueIfFalseMessageNode.30");
       return trueBlock.getMethod().invoke(trueBlock);
     } else {
       ifFalseBranch.enter();

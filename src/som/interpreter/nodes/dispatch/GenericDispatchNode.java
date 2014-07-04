@@ -23,9 +23,10 @@ public final class GenericDispatchNode extends AbstractDispatchWithLookupNode {
     if (method != null) {
       return method.invoke(arguments);
     } else {
-      // TODO: perhaps, I should mark this branch with a branch profile as
-      //       being unlikely
-      return sendDoesNotUnderstand(arguments);
+      // Won't use DNU caching here, because it is already a megamorphic node
+      CompilerAsserts.neverPartOfCompilation("GenericDispatchNode");
+      return SAbstractObject.sendDoesNotUnderstand(selector, arguments, domain,
+          executesEnforced, universe);
     }
   }
 
@@ -33,13 +34,6 @@ public final class GenericDispatchNode extends AbstractDispatchWithLookupNode {
   private SInvokable lookupMethod(final Object rcvr) {
     SClass rcvrClass = Types.getClassOf(rcvr, universe);
     return rcvrClass.lookupInvokable(selector);
-  }
-
-  @SlowPath
-  private Object sendDoesNotUnderstand(final Object[] arguments) {
-    // TODO: this is all extremely expensive, and could be optimized by
-    //       further specialization for #dnu
-    return SAbstractObject.sendDoesNotUnderstand(selector, arguments, universe);
   }
 
   @Override

@@ -90,7 +90,7 @@ public abstract class UninitializedVariableNode extends ContextualNode {
     }
 
     public int getArgumentIndex() {
-      CompilerAsserts.neverPartOfCompilation();
+      CompilerAsserts.neverPartOfCompilation("getArgumentIndex");
       if (!accessesArgument()) {
         throw new UnsupportedOperationException("This node does not access an argument.");
       }

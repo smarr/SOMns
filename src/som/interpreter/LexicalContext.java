@@ -29,7 +29,7 @@ public final class LexicalContext {
   }
 
   public void setOuterMethod(final Method method) {
-    CompilerAsserts.neverPartOfCompilation();
+    CompilerAsserts.neverPartOfCompilation("LexicalContext.sOM()");
     assert outerMethod == null; // should not have been set before
     outerMethod = method;
   }

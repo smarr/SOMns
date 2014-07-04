@@ -20,6 +20,7 @@ public abstract class SAbstractObject {
       final String selectorString,
       final Object[] arguments,
       final Universe universe) {
+    CompilerAsserts.neverPartOfCompilation("SAbstractObject.send()");
     SSymbol selector = universe.symbolFor(selectorString);
 
     // Lookup the invokable
@@ -31,7 +32,7 @@ public abstract class SAbstractObject {
   public static final Object sendDoesNotUnderstand(final SSymbol selector,
       final Object[] arguments,
       final Universe universe) {
-    CompilerAsserts.neverPartOfCompilation();
+    CompilerAsserts.neverPartOfCompilation("SAbstractObject.sendDNU()");
     assert arguments != null;
 
     // Allocate an array to hold the arguments, without receiver

@@ -176,6 +176,8 @@ public final class SClass extends SObject {
   }
 
   private boolean addInstanceInvokable(final SInvokable value) {
+    CompilerAsserts.neverPartOfCompilation("SClass.addInstanceInvokable(.)");
+
     // Add the given invokable to the array of instance invokables
     for (int i = 0; i < getNumberOfInstanceInvokables(); i++) {
       // Get the next invokable in the instance invokable array
@@ -212,7 +214,7 @@ public final class SClass extends SObject {
   }
 
   private static boolean includesPrimitives(final SClass clazz) {
-    CompilerAsserts.neverPartOfCompilation();
+    CompilerAsserts.neverPartOfCompilation("SClass.includesPrimitives(.)");
     // Lookup invokable with given signature in array of instance invokables
     for (int i = 0; i < clazz.getNumberOfInstanceInvokables(); i++) {
       // Get the next invokable in the instance invokable array
