@@ -19,7 +19,7 @@ public abstract class PerformInSuperclassPrim extends TernaryExpressionNode {
   @Specialization
   public final Object doSAbstractObject(final VirtualFrame frame,
       final SAbstractObject receiver, final SSymbol selector, final SClass  clazz) {
-    CompilerAsserts.neverPartOfCompilation();
+    CompilerAsserts.neverPartOfCompilation("PerformInSuperclassPrim");
     SInvokable invokable = clazz.lookupInvokable(selector);
     SObject domain = SArguments.domain(frame);
     boolean enforced = SArguments.enforced(frame);
@@ -33,7 +33,7 @@ public abstract class PerformInSuperclassPrim extends TernaryExpressionNode {
     @Specialization
     public final Object doSAbstractObject(final VirtualFrame frame,
         final SAbstractObject receiver, final SSymbol selector, final SClass  clazz) {
-      CompilerAsserts.neverPartOfCompilation();
+      CompilerAsserts.neverPartOfCompilation("PerformEnforcedInSuperclassPrim");
       SInvokable invokable = clazz.lookupInvokable(selector);
       SObject domain = SArguments.domain(frame);
       return invokable.invoke(domain, true, receiver);  // make sure it is enforced!

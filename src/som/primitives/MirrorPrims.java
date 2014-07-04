@@ -60,7 +60,7 @@ public final class MirrorPrims {
 
     @Specialization
     public final Object doSClass(final VirtualFrame frame, final SClass clazz, final SBlock block, final SObject domain) {
-      CompilerAsserts.neverPartOfCompilation();
+      CompilerAsserts.neverPartOfCompilation("EvaluatedInPrim");
       boolean enforced = SArguments.enforced(frame);
       return block.getMethod().invoke(domain, enforced, new Object[] {block});
     }
@@ -72,7 +72,7 @@ public final class MirrorPrims {
 
     @Specialization
     public final Object doSClass(final VirtualFrame frame, final SClass clazz, final SBlock block, final SObject domain) {
-      CompilerAsserts.neverPartOfCompilation();
+      CompilerAsserts.neverPartOfCompilation("EvaluatedEnforcedInPrim");
       return block.getMethod().invoke(domain, true, new Object[] {block});
     }
   }

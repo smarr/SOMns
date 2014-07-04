@@ -73,7 +73,7 @@ public abstract class AbstractIfMessageNode extends BinaryExpressionNode {
       final SBlock argument, final boolean predicateObject) {
     if (receiver == predicateObject) {
       ifTrueBranch.enter();
-      CompilerAsserts.neverPartOfCompilation();
+      CompilerAsserts.neverPartOfCompilation("AbstractIfMessageNode");
       SObject domain   = SArguments.domain(frame);
       return argument.getMethod().invoke(domain, branchEnforced, argument);
     } else {

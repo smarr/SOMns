@@ -81,7 +81,7 @@ public final class EnforcedPrim extends ExpressionNode {
 
   public Object executeEvaluated(final VirtualFrame frame,
       final Object receiver, final Object[] arguments) {
-    CompilerAsserts.neverPartOfCompilation();
+    CompilerAsserts.neverPartOfCompilation("EnforcedPrim");
     SObject currentDomain = SArguments.domain(frame);
     SObject rcvrDomain = SDomain.getOwner(receiver);
 

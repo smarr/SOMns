@@ -33,7 +33,7 @@ public abstract class StorageLocation {
 
   public static StorageLocation createForLong(final ObjectLayout layout,
       final int primFieldIndex) {
-    CompilerAsserts.neverPartOfCompilation();
+    CompilerAsserts.neverPartOfCompilation("StorageLocation");
     if (primFieldIndex < SObject.NUM_PRIMITIVE_FIELDS) {
       return new LongDirectStoreLocation(layout, primFieldIndex);
     } else {
@@ -43,7 +43,7 @@ public abstract class StorageLocation {
 
   public static StorageLocation createForDouble(final ObjectLayout layout,
       final int primFieldIndex) {
-    CompilerAsserts.neverPartOfCompilation();
+    CompilerAsserts.neverPartOfCompilation("StorageLocation");
     if (primFieldIndex < SObject.NUM_PRIMITIVE_FIELDS) {
       return new DoubleDirectStoreLocation(layout, primFieldIndex);
     } else {
@@ -53,7 +53,7 @@ public abstract class StorageLocation {
 
   public static StorageLocation createForObject(final ObjectLayout layout,
       final int objFieldIndex) {
-    CompilerAsserts.neverPartOfCompilation();
+    CompilerAsserts.neverPartOfCompilation("StorageLocation");
     if (objFieldIndex < SObject.NUM_PRIMITIVE_FIELDS) {
       return new ObjectDirectStorageLocation(layout, objFieldIndex);
     } else {
@@ -100,13 +100,13 @@ public abstract class StorageLocation {
 
     @Override
     public Object read(final SObject obj, final boolean assumptionValid) {
-      CompilerAsserts.neverPartOfCompilation();
+      CompilerAsserts.neverPartOfCompilation("StorageLocation");
       return Universe.current().nilObject;
     }
 
     @Override
     public void write(final SObject obj, final Object value) throws UninitalizedStorageLocationException {
-      CompilerAsserts.neverPartOfCompilation();
+      CompilerAsserts.neverPartOfCompilation("StorageLocation");
       throw new UninitalizedStorageLocationException();
     }
 
@@ -118,14 +118,14 @@ public abstract class StorageLocation {
     @Override
     public AbstractReadFieldNode getReadNode(final int fieldIndex,
         final ObjectLayout layout, final AbstractReadFieldNode next) {
-      CompilerAsserts.neverPartOfCompilation();
+      CompilerAsserts.neverPartOfCompilation("StorageLocation");
       return new ReadUnwrittenFieldNode(fieldIndex, layout, next);
     }
 
     @Override
     public AbstractWriteFieldNode getWriteNode(final int fieldIndex,
         final ObjectLayout layout, final AbstractWriteFieldNode next) {
-      CompilerAsserts.neverPartOfCompilation();
+      CompilerAsserts.neverPartOfCompilation("StorageLocation");
       throw new RuntimeException("we should not get here, should we?");
       // return new UninitializedWriteFieldNode(fieldIndex);
     }
@@ -150,14 +150,14 @@ public abstract class StorageLocation {
     @Override
     public final AbstractReadFieldNode getReadNode(final int fieldIndex,
         final ObjectLayout layout, final AbstractReadFieldNode next) {
-      CompilerAsserts.neverPartOfCompilation();
+      CompilerAsserts.neverPartOfCompilation("StorageLocation");
       return new ReadObjectFieldNode(fieldIndex, layout, next);
     }
 
     @Override
     public final AbstractWriteFieldNode getWriteNode(final int fieldIndex,
         final ObjectLayout layout, final AbstractWriteFieldNode next) {
-      CompilerAsserts.neverPartOfCompilation();
+      CompilerAsserts.neverPartOfCompilation("StorageLocation");
       return new WriteObjectFieldNode(fieldIndex, layout, next);
     }
   }
@@ -256,7 +256,7 @@ public abstract class StorageLocation {
       try {
         return readDouble(obj, assumptionValid);
       } catch (UnexpectedResultException e) {
-        CompilerAsserts.neverPartOfCompilation();
+        CompilerAsserts.neverPartOfCompilation("StorageLocation");
         TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized read node");
         return e.getResult();
       }
@@ -269,7 +269,7 @@ public abstract class StorageLocation {
         // right, still need to pass in the correct location identifier, which can probably be `this`.
         return CompilerDirectives.unsafeGetDouble(obj, offset, assumptionValid, null);
       } else {
-        CompilerAsserts.neverPartOfCompilation();
+        CompilerAsserts.neverPartOfCompilation("StorageLocation");
         TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized read node");
         throw new UnexpectedResultException(Universe.current().nilObject);
       }
@@ -281,7 +281,7 @@ public abstract class StorageLocation {
       if (value instanceof Double) {
         writeDouble(obj, (double) value);
       } else {
-        CompilerAsserts.neverPartOfCompilation();
+        CompilerAsserts.neverPartOfCompilation("StorageLocation");
         TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized read node");
         throw new GeneralizeStorageLocationException();
       }
@@ -301,14 +301,14 @@ public abstract class StorageLocation {
     @Override
     public AbstractReadFieldNode getReadNode(final int fieldIndex,
         final ObjectLayout layout, final AbstractReadFieldNode next) {
-      CompilerAsserts.neverPartOfCompilation();
+      CompilerAsserts.neverPartOfCompilation("StorageLocation");
       return new ReadDoubleFieldNode(fieldIndex, layout, next);
     }
 
     @Override
     public AbstractWriteFieldNode getWriteNode(final int fieldIndex,
         final ObjectLayout layout, final AbstractWriteFieldNode next) {
-      CompilerAsserts.neverPartOfCompilation();
+      CompilerAsserts.neverPartOfCompilation("StorageLocation");
       return new WriteDoubleFieldNode(fieldIndex, layout, next);
     }
   }
@@ -324,7 +324,7 @@ public abstract class StorageLocation {
       try {
         return readLong(obj, assumptionValid);
       } catch (UnexpectedResultException e) {
-        CompilerAsserts.neverPartOfCompilation();
+        CompilerAsserts.neverPartOfCompilation("StorageLocation");
         TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized read node");
         return e.getResult();
       }
@@ -337,7 +337,7 @@ public abstract class StorageLocation {
         // right, still need to pass in the correct location identifier
         return CompilerDirectives.unsafeGetLong(obj, offset, assumptionValid, null);
       } else {
-        CompilerAsserts.neverPartOfCompilation();
+        CompilerAsserts.neverPartOfCompilation("StorageLocation");
         TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized read node");
         throw new UnexpectedResultException(Universe.current().nilObject);
       }
@@ -349,7 +349,7 @@ public abstract class StorageLocation {
       if (value instanceof Long) {
         writeLong(obj, (long) value);
       } else {
-        CompilerAsserts.neverPartOfCompilation();
+        CompilerAsserts.neverPartOfCompilation("StorageLocation");
         TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized write node");
         throw new GeneralizeStorageLocationException();
       }
@@ -369,14 +369,14 @@ public abstract class StorageLocation {
     @Override
     public AbstractReadFieldNode getReadNode(final int fieldIndex,
         final ObjectLayout layout, final AbstractReadFieldNode next) {
-      CompilerAsserts.neverPartOfCompilation();
+      CompilerAsserts.neverPartOfCompilation("StorageLocation");
       return new ReadLongFieldNode(fieldIndex, layout, next);
     }
 
     @Override
     public AbstractWriteFieldNode getWriteNode(final int fieldIndex,
         final ObjectLayout layout, final AbstractWriteFieldNode next) {
-      CompilerAsserts.neverPartOfCompilation();
+      CompilerAsserts.neverPartOfCompilation("StorageLocation");
       return new WriteLongFieldNode(fieldIndex, layout, next);
     }
   }
@@ -401,7 +401,7 @@ public abstract class StorageLocation {
       try {
         return readLong(obj, assumptionValid);
       } catch (UnexpectedResultException e) {
-        CompilerAsserts.neverPartOfCompilation();
+        CompilerAsserts.neverPartOfCompilation("StorageLocation");
         TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized read node");
         return e.getResult();
       }
@@ -413,7 +413,7 @@ public abstract class StorageLocation {
         // perhaps we should use the unsafe operations as for doubles
         return obj.getExtendedPrimFields()[extensionIndex];
       } else {
-        CompilerAsserts.neverPartOfCompilation();
+        CompilerAsserts.neverPartOfCompilation("StorageLocation");
         TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized read node");
         throw new UnexpectedResultException(Universe.current().nilObject);
       }
@@ -425,7 +425,7 @@ public abstract class StorageLocation {
       if (value instanceof Long) {
         writeLong(obj, (long) value);
       } else {
-        CompilerAsserts.neverPartOfCompilation();
+        CompilerAsserts.neverPartOfCompilation("StorageLocation");
         TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized write node");
         throw new GeneralizeStorageLocationException();
       }
@@ -445,14 +445,14 @@ public abstract class StorageLocation {
     @Override
     public AbstractReadFieldNode getReadNode(final int fieldIndex,
         final ObjectLayout layout, final AbstractReadFieldNode next) {
-      CompilerAsserts.neverPartOfCompilation();
+      CompilerAsserts.neverPartOfCompilation("StorageLocation");
       return new ReadLongFieldNode(fieldIndex, layout, next);
     }
 
     @Override
     public AbstractWriteFieldNode getWriteNode(final int fieldIndex,
         final ObjectLayout layout, final AbstractWriteFieldNode next) {
-      CompilerAsserts.neverPartOfCompilation();
+      CompilerAsserts.neverPartOfCompilation("StorageLocation");
       return new WriteLongFieldNode(fieldIndex, layout, next);
     }
   }
@@ -468,7 +468,7 @@ public abstract class StorageLocation {
       try {
         return readDouble(obj, assumptionValid);
       } catch (UnexpectedResultException e) {
-        CompilerAsserts.neverPartOfCompilation();
+        CompilerAsserts.neverPartOfCompilation("StorageLocation");
         TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized read node");
         return e.getResult();
       }
@@ -484,7 +484,7 @@ public abstract class StorageLocation {
             Unsafe.ARRAY_DOUBLE_BASE_OFFSET + Unsafe.ARRAY_DOUBLE_INDEX_SCALE * extensionIndex,
             true, null);
       } else {
-        CompilerAsserts.neverPartOfCompilation();
+        CompilerAsserts.neverPartOfCompilation("StorageLocation");
         TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized read node");
         throw new UnexpectedResultException(Universe.current().nilObject);
       }
@@ -496,7 +496,7 @@ public abstract class StorageLocation {
       if (value instanceof Double) {
         writeDouble(obj, (double) value);
       } else {
-        CompilerAsserts.neverPartOfCompilation();
+        CompilerAsserts.neverPartOfCompilation("StorageLocation");
         TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized write node");
         throw new GeneralizeStorageLocationException();
       }
@@ -523,14 +523,14 @@ public abstract class StorageLocation {
     @Override
     public AbstractReadFieldNode getReadNode(final int fieldIndex,
         final ObjectLayout layout, final AbstractReadFieldNode next) {
-      CompilerAsserts.neverPartOfCompilation();
+      CompilerAsserts.neverPartOfCompilation("StorageLocation");
       return new ReadDoubleFieldNode(fieldIndex, layout, next);
     }
 
     @Override
     public AbstractWriteFieldNode getWriteNode(final int fieldIndex,
         final ObjectLayout layout, final AbstractWriteFieldNode next) {
-      CompilerAsserts.neverPartOfCompilation();
+      CompilerAsserts.neverPartOfCompilation("StorageLocation");
       return new WriteDoubleFieldNode(fieldIndex, layout, next);
     }
   }

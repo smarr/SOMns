@@ -30,7 +30,7 @@ public final class EnforcedFieldReadNode extends AbstractFieldReadNode {
 
   @Override
   public Object executeEvaluated(final VirtualFrame frame, final SObject obj) {
-    CompilerAsserts.neverPartOfCompilation();
+    CompilerAsserts.neverPartOfCompilation("EnforcedFieldReadNode");
     SObject rcvrDomain    = obj.getDomain();
     SObject currentDomain = SArguments.domain(frame);
     SInvokable handler = rcvrDomain.getSOMClass(null).lookupInvokable(intercessionHandler);

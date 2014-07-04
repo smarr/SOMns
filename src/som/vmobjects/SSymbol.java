@@ -38,7 +38,7 @@ public final class SSymbol extends SAbstractObject {
 
   @Override
   public SObject getDomain() {
-    CompilerAsserts.neverPartOfCompilation();
+    CompilerAsserts.neverPartOfCompilation("SSymbol.getDomain");
     return Universe.current().standardDomain;
   }
 

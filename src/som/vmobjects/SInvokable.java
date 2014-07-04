@@ -98,7 +98,7 @@ public abstract class SInvokable extends SAbstractObject {
 
   @Override
   public final SObject getDomain() {
-    CompilerAsserts.neverPartOfCompilation();
+    CompilerAsserts.neverPartOfCompilation("SInvokable.getDomain()");
     return Universe.current().standardDomain;
   }
 

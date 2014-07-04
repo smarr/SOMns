@@ -92,7 +92,7 @@ public abstract class AbstractWhileNode extends BinaryExpressionNode {
       final SBlock loopCondition, final SBlock loopBody);
 
   protected final void reportLoopCount(final long count) {
-    CompilerAsserts.neverPartOfCompilation();
+    CompilerAsserts.neverPartOfCompilation("reportLoopCount");
     Node current = getParent();
     while (current != null && !(current instanceof RootNode)) {
       current = current.getParent();

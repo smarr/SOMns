@@ -206,7 +206,7 @@ public abstract class LocalVariableNode extends ExpressionNode {
 
     @Override
     public final void replaceWithIndependentCopyForInlining(final Inliner inliner) {
-      CompilerAsserts.neverPartOfCompilation();
+      CompilerAsserts.neverPartOfCompilation("replaceWithIndependentCopyForInlining");
 
       if (getParent() instanceof ArgumentInitializationNode) {
         FrameSlot varSlot = inliner.getLocalFrameSlot(getSlotIdentifier());

@@ -29,7 +29,7 @@ public final class GenericDispatchNode extends AbstractDispatchWithLookupNode {
       return method.invoke(domain, executesEnforced, arguments);
     } else {
       // Won't use DNU caching here, because it is already a megamorphic node
-      CompilerAsserts.neverPartOfCompilation();
+      CompilerAsserts.neverPartOfCompilation("GenericDispatchNode");
       return SAbstractObject.sendDoesNotUnderstand(selector, arguments, domain,
           executesEnforced, universe);
     }

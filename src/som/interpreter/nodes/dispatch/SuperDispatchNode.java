@@ -20,13 +20,13 @@ public final class SuperDispatchNode extends AbstractDispatchNode {
 
   public static SuperDispatchNode create(final SSymbol selector,
       final ISuperReadNode superNode, final boolean executesEnforced) {
-    CompilerAsserts.neverPartOfCompilation();
+    CompilerAsserts.neverPartOfCompilation("SuperDispatchNode.create1");
     return create(selector, superNode.getSuperClass(), executesEnforced);
   }
 
   public static SuperDispatchNode create(final SSymbol selector,
       final SClass lookupClass, final boolean executesEnforced) {
-    CompilerAsserts.neverPartOfCompilation();
+    CompilerAsserts.neverPartOfCompilation("SuperDispatchNode.create2");
     SInvokable method = lookupClass.lookupInvokable(selector);
 
     if (method == null) {

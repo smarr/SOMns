@@ -53,7 +53,7 @@ public final class PrimitiveUnenforced extends InvokableUnenforced {
 
   @Override
   public void setOuterContextMethod(final AbstractInvokable method) {
-    CompilerAsserts.neverPartOfCompilation();
+    CompilerAsserts.neverPartOfCompilation("PrimitiveUnenforced");
     throw new UnsupportedOperationException("Only supported on methods");
   }
 }

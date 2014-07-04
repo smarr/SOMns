@@ -32,7 +32,7 @@ public abstract class EnforcedFieldWriteNode extends AbstractFieldWriteNode {
   @Specialization
   public final Object doSObject(final VirtualFrame frame, final SObject obj,
       final Object value) {
-    CompilerAsserts.neverPartOfCompilation();
+    CompilerAsserts.neverPartOfCompilation("EnforcedFieldWriteNode");
     SObject rcvrDomain = obj.getDomain();
     SObject currentDomain = SArguments.domain(frame);
     SInvokable handler = rcvrDomain.getSOMClass(null).lookupInvokable(intercessionHandler);

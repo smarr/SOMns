@@ -62,12 +62,12 @@ public final class Primitive extends Invokable {
 
   @Override
   public void setOuterContextMethod(final AbstractInvokable method) {
-    CompilerAsserts.neverPartOfCompilation();
+    CompilerAsserts.neverPartOfCompilation("Primitive.setOuterContextMethod()");
     throw new UnsupportedOperationException("Only supported on methods");
   }
 
   public static void propagateLoopCount(final long count) {
-    CompilerAsserts.neverPartOfCompilation();
+    CompilerAsserts.neverPartOfCompilation("Primitive.pLC(.)");
 
     // we need to skip the primitive and get to the method that called the primitive
     Iterable<FrameInstance> stack = Truffle.getRuntime().getStackTrace();

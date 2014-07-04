@@ -25,7 +25,7 @@ public final class EnforcedGlobalReadNode extends ExpressionNode {
 
   @Override
   public Object executeGeneric(final VirtualFrame frame) {
-    CompilerAsserts.neverPartOfCompilation();
+    CompilerAsserts.neverPartOfCompilation("EnforcedGlobalReadNode");
     SObject currentDomain = SArguments.domain(frame);
 
     // reading globals is based on the current execution context, not the

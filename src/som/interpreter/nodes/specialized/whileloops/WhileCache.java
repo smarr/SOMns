@@ -114,10 +114,10 @@ public final class WhileCache {
       if (o instanceof Boolean) {
         return (boolean) o;
       } else if (o == universe.trueObject) {
-        CompilerAsserts.neverPartOfCompilation();
+        CompilerAsserts.neverPartOfCompilation("obj2Bool1");
         return true;
       } else {
-        CompilerAsserts.neverPartOfCompilation();
+        CompilerAsserts.neverPartOfCompilation("obj2Bool2");
         assert o == universe.falseObject;
         return false;
       }
@@ -126,7 +126,7 @@ public final class WhileCache {
     @Override
     public SObject executeDispatch(final VirtualFrame frame, final SBlock loopCondition,
         final SBlock loopBody) {
-      CompilerAsserts.neverPartOfCompilation(); // no caching, direct invokes, no loop count reporting...
+      CompilerAsserts.neverPartOfCompilation("WhileCache.GenericDispatch"); // no caching, direct invokes, no loop count reporting...
 
       SObject currentDomain = SArguments.domain(frame);
 
@@ -142,6 +142,5 @@ public final class WhileCache {
       }
       return universe.nilObject;
     }
-
   }
 }

@@ -25,7 +25,7 @@ public abstract class SAbstractObject {
       final SObject domain,
       final boolean enforced,
       final Universe universe) {
-    CompilerAsserts.neverPartOfCompilation();
+    CompilerAsserts.neverPartOfCompilation("SAbstractObject.send()");
     SSymbol selector = universe.symbolFor(selectorString);
 
     // Lookup the invokable
@@ -39,7 +39,7 @@ public abstract class SAbstractObject {
       final SObject domain,
       final boolean enforced,
       final Universe universe) {
-    CompilerAsserts.neverPartOfCompilation();
+    CompilerAsserts.neverPartOfCompilation("SAbstractObject.sendDNU()");
     assert arguments != null;
 
     // Allocate an array to hold the arguments, without receiver

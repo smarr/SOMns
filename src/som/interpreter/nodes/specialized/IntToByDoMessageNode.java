@@ -87,7 +87,7 @@ public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode
   }
 
   protected final void reportLoopCount(final long count) {
-    CompilerAsserts.neverPartOfCompilation();
+    CompilerAsserts.neverPartOfCompilation("reportLoopCount");
     Node current = getParent();
     while (current != null && !(current instanceof Invokable)) {
       current = current.getParent();

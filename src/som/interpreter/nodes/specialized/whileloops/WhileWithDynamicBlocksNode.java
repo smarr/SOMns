@@ -25,13 +25,13 @@ public final class WhileWithDynamicBlocksNode extends AbstractWhileNode {
 
   @Override
   public Object executeGeneric(final VirtualFrame frame) {
-    CompilerAsserts.neverPartOfCompilation();
+    CompilerAsserts.neverPartOfCompilation("WhileWithDynamicBlocksNode.generic");
     throw new NotYetImplementedException();
   }
 
   @Override
   public void executeVoid(final VirtualFrame frame) {
-    CompilerAsserts.neverPartOfCompilation();
+    CompilerAsserts.neverPartOfCompilation("WhileWithDynamicBlocksNode.void");
     throw new NotYetImplementedException();
   }
 

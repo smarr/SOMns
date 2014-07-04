@@ -89,7 +89,7 @@ public abstract class IntToDoMessageNode extends TernaryExpressionNode
 
   @SlowPath
   private void reportLoopCount(final long count) {
-    CompilerAsserts.neverPartOfCompilation();
+    CompilerAsserts.neverPartOfCompilation("reportLoopCount");
     Node current = getParent();
     while (current != null && !(current instanceof RootNode)) {
       current = current.getParent();

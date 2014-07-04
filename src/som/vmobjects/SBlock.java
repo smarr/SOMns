@@ -95,7 +95,7 @@ public abstract class SBlock extends SAbstractObject {
 
   @Override
   public SObject getDomain() {
-    CompilerAsserts.neverPartOfCompilation();
+    CompilerAsserts.neverPartOfCompilation("SBlock.getDomain()");
     return Universe.current().standardDomain;
   }
 
@@ -120,7 +120,7 @@ public abstract class SBlock extends SAbstractObject {
 
   public static SInvokable getEvaluationPrimitive(final int numberOfArguments,
       final Universe universe, final SClass rcvrClass) {
-    CompilerAsserts.neverPartOfCompilation();
+    CompilerAsserts.neverPartOfCompilation("SBlock.getEvaluationPrimitive(...)");
     SSymbol sig = universe.symbolFor(computeSignatureString(numberOfArguments));
 
     switch (numberOfArguments) {

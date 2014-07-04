@@ -42,7 +42,7 @@ public final class MethodPrims {
     @Specialization
     public final Object doInvoke(final VirtualFrame frame,
         final SInvokable receiver, final Object target, final Object[] argsArr) {
-      CompilerAsserts.neverPartOfCompilation();
+      CompilerAsserts.neverPartOfCompilation("InvokeOnPrim");
       SObject domain = SArguments.domain(frame);
       return receiver.invoke(domain, executesEnforced, SArray.fromSArrayToArgArrayWithReceiver(argsArr, target));
     }

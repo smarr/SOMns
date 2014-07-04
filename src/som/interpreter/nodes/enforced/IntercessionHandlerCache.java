@@ -20,7 +20,7 @@ public final class IntercessionHandlerCache {
 
   public static AbstractIntercessionHandlerDispatch create(
       final String intercessionHandler, final boolean executesEnforced) {
-    CompilerAsserts.neverPartOfCompilation();
+    CompilerAsserts.neverPartOfCompilation("IntercessionHandlerCache.create");
     return new UninitializedDispatch(Universe.current().symbolFor(intercessionHandler), executesEnforced, 0);
   }
 
@@ -121,7 +121,7 @@ public final class IntercessionHandlerCache {
     @Override
     public Object executeDispatch(final VirtualFrame frame,
         final SObject rcvrDomain, final Object[] arguments) {
-      CompilerAsserts.neverPartOfCompilation(); // no caching, direct invokes, no loop count reporting...
+      CompilerAsserts.neverPartOfCompilation("IntercessionHandlerCache.generic"); // no caching, direct invokes, no loop count reporting...
 
       SObject currentDomain = SArguments.domain(frame);
       SInvokable handler = rcvrDomain.getSOMClass(universe).

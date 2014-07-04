@@ -107,7 +107,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
   public final Object doIfTrueIfFalse(final VirtualFrame frame,
       final boolean receiver, final SBlock trueBlock, final SBlock falseBlock) {
     SObject domain   = SArguments.domain(frame);
-    CompilerAsserts.neverPartOfCompilation();
+    CompilerAsserts.neverPartOfCompilation("IfTrueIfFalseMessageNode.10");
     if (receiver) {
       ifTrueBranch.enter();
       return trueBlock.getMethod().invoke(domain, trueEnforced, trueBlock);
@@ -151,7 +151,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
       return trueValue;
     } else {
       ifFalseBranch.enter();
-      CompilerAsserts.neverPartOfCompilation();
+      CompilerAsserts.neverPartOfCompilation("IfTrueIfFalseMessageNode.20");
       SObject domain   = SArguments.domain(frame);
       boolean enforced = SArguments.enforced(frame);
       return falseBlock.getMethod().invoke(domain, enforced, falseBlock);
@@ -163,7 +163,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
       final boolean receiver, final SBlock trueBlock, final Object falseValue) {
     if (receiver) {
       ifTrueBranch.enter();
-      CompilerAsserts.neverPartOfCompilation();
+      CompilerAsserts.neverPartOfCompilation("IfTrueIfFalseMessageNode.30");
       SObject domain   = SArguments.domain(frame);
       boolean enforced = SArguments.enforced(frame);
       return trueBlock.getMethod().invoke(domain, enforced, trueBlock);
