@@ -387,6 +387,11 @@ public class Universe {
 
     SDomain.completeStandardDomainInitialization(standardDomain);
 
+    // Load the remaining block classes
+    loadBlockClass(1);
+    loadBlockClass(2);
+    loadBlockClass(3);
+
     objectSystemInitialized = true;
   }
 
@@ -524,27 +529,19 @@ public class Universe {
 
   public SClass getBlockClass(final int numberOfArguments) {
     SClass result = blockClasses[numberOfArguments];
+    assert result != null || numberOfArguments == 0;
+    return result;
+  }
 
-    // the base class Block (i.e., without #value method is loaded explicitly
-    if (result != null || numberOfArguments == 0) {
-      return result;
-    }
-
+  public SClass loadBlockClass(final int numberOfArguments) {
     // Compute the name of the block class with the given number of
     // arguments
     SSymbol name = symbolFor("Block" + numberOfArguments);
 
-    // Lookup the specific block class in the dictionary of globals and
-    // return it
-    result = (SClass) getGlobal(name);
-
-    if (result != null) {
-      blockClasses[numberOfArguments] = result;
-      return result;
-    }
+    assert getGlobal(name) == null;
 
     // Get the block class for blocks with the given number of arguments
-    result = loadClass(name, null);
+    SClass result = loadClass(name, null);
 
     // Add the appropriate value primitive to the block class
     result.addInstancePrimitive(SBlock.getEvaluationPrimitive(numberOfArguments,
