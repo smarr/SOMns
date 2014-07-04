@@ -124,6 +124,7 @@ public final class SClass extends SObject {
     return instanceInvokables[index];
   }
 
+  @SlowPath
   public void setInstanceInvokable(final int index, final SInvokable value) {
     // Set this class as the holder of the given invokable
     value.setHolder(this);
@@ -233,6 +234,7 @@ public final class SClass extends SObject {
     return includesPrimitives(this) || includesPrimitives(clazz);
   }
 
+  @SlowPath
   public void loadPrimitives(final boolean displayWarning) {
     // Compute the class name of the Java(TM) class containing the
     // primitives
