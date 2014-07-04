@@ -3,9 +3,9 @@ package som.interpreter;
 import som.interpreter.nodes.ExpressionNode;
 import som.vm.Universe;
 
-import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.nodes.RootNode;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 public final class MethodUnenforced extends InvokableUnenforced {

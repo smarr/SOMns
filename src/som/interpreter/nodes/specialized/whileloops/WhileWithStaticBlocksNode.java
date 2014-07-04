@@ -5,8 +5,8 @@ import som.vm.Universe;
 import som.vmobjects.SBlock;
 import som.vmobjects.SObject;
 
-import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 public abstract class WhileWithStaticBlocksNode extends AbstractWhileNode {
