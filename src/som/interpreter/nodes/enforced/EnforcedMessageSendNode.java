@@ -30,7 +30,7 @@ public class EnforcedMessageSendNode extends AbstractMessageSendNode {
       final SourceSection source) {
     super(arguments, source, true);
     this.selector = selector;
-    dispatch = IntercessionHandlerCache.create("requestExecutionOf:with:on:lookup:", true);
+    dispatch = IntercessionHandlerCache.create("requestExecutionOf:with:on:lookup:", executesEnforced);
     universe = Universe.current();
   }
 

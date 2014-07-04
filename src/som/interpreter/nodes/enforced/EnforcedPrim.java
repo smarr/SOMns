@@ -2,14 +2,12 @@ package som.interpreter.nodes.enforced;
 
 import som.interpreter.SArguments;
 import som.interpreter.nodes.ExpressionNode;
-import som.vm.Universe;
+import som.interpreter.nodes.enforced.IntercessionHandlerCache.AbstractIntercessionHandlerDispatch;
+import som.vmobjects.SArray;
 import som.vmobjects.SDomain;
-import som.vmobjects.SInvokable;
 import som.vmobjects.SInvokable.SPrimitive;
 import som.vmobjects.SObject;
-import som.vmobjects.SSymbol;
 
-import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
@@ -34,10 +32,9 @@ public final class EnforcedPrim extends ExpressionNode {
     return new EnforcedPrim(rcvr, args);
   }
 
-  @Child private ExpressionNode receiver;
+  @Child    private       ExpressionNode   receiver;
   @Children private final ExpressionNode[] arguments;
-
-  private final SSymbol intercessionHandler;
+  @Child    private       AbstractIntercessionHandlerDispatch dispatch;
 
   @CompilationFinal private SPrimitive primitive;
 
@@ -46,8 +43,7 @@ public final class EnforcedPrim extends ExpressionNode {
     super(null, true);
     this.receiver  = receiver;
     this.arguments = arguments;
-    intercessionHandler = Universe.current().symbolFor(
-        "requestExecutionOfPrimitive:with:on:");
+    dispatch = IntercessionHandlerCache.create("requestExecutionOfPrimitive:with:on:", executesEnforced);
   }
 
   public void setPrimitive(final SPrimitive primitive) {
@@ -80,12 +76,13 @@ public final class EnforcedPrim extends ExpressionNode {
   }
 
   public Object executeEvaluated(final VirtualFrame frame,
-      final Object receiver, final Object[] arguments) {
-    CompilerAsserts.neverPartOfCompilation("EnforcedPrim");
+      final Object receiver, final Object[] args) {
     SObject currentDomain = SArguments.domain(frame);
-    SObject rcvrDomain = SDomain.getOwner(receiver);
+    SObject rcvrDomain    = SDomain.getOwner(receiver);
 
-    SInvokable handler = rcvrDomain.getSOMClass(null).lookupInvokable(intercessionHandler);
-    return handler.invoke(currentDomain, false, rcvrDomain, primitive, arguments, receiver);
+    Object[] arguments = SArguments.createSArgumentsArray(false, currentDomain,
+        rcvrDomain, primitive,
+        SArray.fromArgArrayWithReceiverToSArrayWithoutReceiver(args, currentDomain), receiver);
+    return dispatch.executeDispatch(frame, rcvrDomain, arguments);
   }
 }
