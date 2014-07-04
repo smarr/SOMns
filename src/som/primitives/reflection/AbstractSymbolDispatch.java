@@ -41,23 +41,27 @@ public abstract class AbstractSymbolDispatch extends Node {
       super(alwaysEnforced);
     }
 
-    @Override
-    public Object executeDispatch(final VirtualFrame frame,
-        final Object receiver, final SSymbol selector, final Object[] argsArr) {
+    private AbstractSymbolDispatch specialize(final boolean enforced, final SSymbol selector) {
       transferToInterpreterAndInvalidate("Initialize a dispatch node.");
 
-      boolean enforced = SArguments.enforced(frame);
       int chainDepth = determineChainLength();
-
       if (chainDepth < INLINE_CACHE_SIZE) {
         CachedDispatchNode specialized = new CachedDispatchNode(selector,
             new UninitializedDispatchNode(alwaysEnforced), enforced, alwaysEnforced);
-        return replace(specialized).executeDispatch(frame, receiver, selector, argsArr);
+        return replace(specialized);
       }
 
       // TODO: normally, we throw away the whole chain, and replace it with the megamorphic node...
       GenericDispatchNode generic = new GenericDispatchNode(enforced, alwaysEnforced);
-      return replace(generic).executeDispatch(frame, receiver, selector, argsArr);
+      return replace(generic);
+    }
+
+    @Override
+    public Object executeDispatch(final VirtualFrame frame,
+        final Object receiver, final SSymbol selector, final Object[] argsArr) {
+      boolean enforced = SArguments.enforced(frame);
+      return specialize(enforced, selector).
+          executeDispatch(frame, receiver, selector, argsArr);
     }
 
     private int determineChainLength() {
