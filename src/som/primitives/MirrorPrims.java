@@ -10,8 +10,10 @@ import som.vmobjects.SClass;
 import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.IndirectCallNode;
 
 
 public final class MirrorPrims {
@@ -67,13 +69,19 @@ public final class MirrorPrims {
   }
 
   public abstract static class EvaluatedEnforcedInPrim extends TernaryExpressionNode {
-    public EvaluatedEnforcedInPrim(final boolean executesEnforced) { super(executesEnforced); }
-    public EvaluatedEnforcedInPrim(final EvaluatedEnforcedInPrim node) { super(node.executesEnforced); }
+    // TODO: figure out whether we should use an inline cache here
+    @Child private IndirectCallNode callNode;
+
+    public EvaluatedEnforcedInPrim(final boolean executesEnforced) {
+      super(executesEnforced);
+      callNode = Truffle.getRuntime().createIndirectCallNode();
+    }
+    public EvaluatedEnforcedInPrim(final EvaluatedEnforcedInPrim node) { this(node.executesEnforced); }
 
     @Specialization
     public final Object doSClass(final VirtualFrame frame, final SClass clazz, final SBlock block, final SObject domain) {
-      CompilerAsserts.neverPartOfCompilation("EvaluatedEnforcedInPrim");
-      return block.getMethod().invoke(domain, true, new Object[] {block});
+      return callNode.call(frame, block.getMethod().getCallTarget(),
+          SArguments.createSArgumentsArray(true, domain, block));
     }
   }
 
