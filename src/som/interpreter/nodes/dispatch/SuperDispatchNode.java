@@ -1,6 +1,7 @@
 package som.interpreter.nodes.dispatch;
 
 import som.interpreter.nodes.ISuperReadNode;
+import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 
