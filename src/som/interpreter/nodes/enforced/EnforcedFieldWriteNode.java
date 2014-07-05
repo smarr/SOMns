@@ -2,27 +2,27 @@ package som.interpreter.nodes.enforced;
 
 import som.interpreter.SArguments;
 import som.interpreter.nodes.FieldNode.AbstractFieldWriteNode;
-import som.vm.Universe;
-import som.vmobjects.SInvokable;
+import som.interpreter.nodes.dispatch.DispatchChain.Cost;
+import som.interpreter.nodes.enforced.IntercessionHandlerCache.AbstractIntercessionHandlerDispatch;
 import som.vmobjects.SObject;
-import som.vmobjects.SSymbol;
 
-import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.NodeCost;
 import com.oracle.truffle.api.source.SourceSection;
 
 
 public abstract class EnforcedFieldWriteNode extends AbstractFieldWriteNode {
   private final long fieldIndex;
   private final long somFieldIndex;
-  private final SSymbol intercessionHandler;
+
+  @Child private AbstractIntercessionHandlerDispatch dispatch;
 
   public EnforcedFieldWriteNode(final long fieldIndex, final SourceSection source) {
     super(source, true);
-    this.fieldIndex = fieldIndex;
+    this.fieldIndex    = fieldIndex;
     this.somFieldIndex = fieldIndex + 1;
-    intercessionHandler = Universe.current().symbolFor("write:toField:of:");
+    dispatch = IntercessionHandlerCache.create("write:toField:of:", executesEnforced);
   }
 
   public EnforcedFieldWriteNode(final EnforcedFieldWriteNode node) {
@@ -32,16 +32,21 @@ public abstract class EnforcedFieldWriteNode extends AbstractFieldWriteNode {
   @Specialization
   public final Object doSObject(final VirtualFrame frame, final SObject obj,
       final Object value) {
-    CompilerAsserts.neverPartOfCompilation("EnforcedFieldWriteNode");
     SObject rcvrDomain = obj.getDomain();
     SObject currentDomain = SArguments.domain(frame);
-    SInvokable handler = rcvrDomain.getSOMClass(null).lookupInvokable(intercessionHandler);
-    return handler.invoke(currentDomain, false,
+
+    Object[] arguments = SArguments.createSArgumentsArray(false, currentDomain,
         rcvrDomain, value, somFieldIndex, obj);
+    return dispatch.executeDispatch(frame, rcvrDomain, arguments);
   }
 
   @Override
   public final void executeVoid(final VirtualFrame frame) {
     executeGeneric(frame);
+  }
+
+  @Override
+  public final NodeCost getCost() {
+    return Cost.getCost(dispatch);
   }
 }
