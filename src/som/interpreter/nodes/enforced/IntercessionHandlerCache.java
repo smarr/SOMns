@@ -2,6 +2,7 @@ package som.interpreter.nodes.enforced;
 
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
 import som.interpreter.SArguments;
+import som.interpreter.nodes.dispatch.DispatchChain;
 import som.interpreter.nodes.specialized.whileloops.WhileCache.AbstractWhileDispatch;
 import som.vm.Universe;
 import som.vmobjects.SInvokable;
@@ -24,7 +25,7 @@ public final class IntercessionHandlerCache {
     return new UninitializedDispatch(Universe.current().symbolFor(intercessionHandler), executesEnforced, 0);
   }
 
-  public abstract static class AbstractIntercessionHandlerDispatch extends Node {
+  public abstract static class AbstractIntercessionHandlerDispatch extends Node implements DispatchChain {
     protected final boolean executesEnforced;
     protected final int depth;
 
@@ -46,9 +47,7 @@ public final class IntercessionHandlerCache {
       intercessionHandlerSelector = intercessionHandler;
     }
 
-    @Override
-    public Object executeDispatch(final VirtualFrame frame,
-        final SObject rcvrDomain, final Object[] arguments) {
+    private AbstractIntercessionHandlerDispatch specialize(final SObject rcvrDomain) {
       transferToInterpreterAndInvalidate("Initialize a dispatch node.");
 
       SInvokable handler = rcvrDomain.getSOMClass(Universe.current()).
@@ -57,14 +56,19 @@ public final class IntercessionHandlerCache {
       if (depth < INLINE_CACHE_SIZE) {
         CachedDispatch specialized = new CachedDispatch(rcvrDomain, handler,
             executesEnforced, depth);
-        return replace(specialized).
-            executeDispatch(frame, rcvrDomain, arguments);
+        return replace(specialized);
       }
 
       AbstractIntercessionHandlerDispatch headNode = determineChainHead();
       GenericDispatch generic = new GenericDispatch(intercessionHandlerSelector,
           executesEnforced);
-      return headNode.replace(generic).
+      return headNode.replace(generic);
+    }
+
+    @Override
+    public Object executeDispatch(final VirtualFrame frame,
+        final SObject rcvrDomain, final Object[] arguments) {
+      return specialize(rcvrDomain).
           executeDispatch(frame, rcvrDomain, arguments);
     }
 
@@ -74,6 +78,11 @@ public final class IntercessionHandlerCache {
         i = i.getParent();
       }
       return (AbstractIntercessionHandlerDispatch) i;
+    }
+
+    @Override
+    public int lengthOfDispatchChain() {
+      return 0;
     }
   }
 
@@ -104,6 +113,11 @@ public final class IntercessionHandlerCache {
         return next.executeDispatch(frame, rcvrDomain, arguments);
       }
     }
+
+    @Override
+    public int lengthOfDispatchChain() {
+      return 1 + next.lengthOfDispatchChain();
+    }
   }
 
   public static final class GenericDispatch extends AbstractIntercessionHandlerDispatch {
@@ -129,5 +143,9 @@ public final class IntercessionHandlerCache {
       return handler.invoke(currentDomain, false, arguments);
     }
 
+    @Override
+    public int lengthOfDispatchChain() {
+      return 1000;
+    }
   }
 }
