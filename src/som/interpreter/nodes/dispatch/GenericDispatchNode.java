@@ -7,6 +7,7 @@ import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.SlowPath;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
@@ -25,8 +26,7 @@ public final class GenericDispatchNode extends AbstractDispatchWithLookupNode {
     } else {
       // Won't use DNU caching here, because it is already a megamorphic node
       CompilerAsserts.neverPartOfCompilation("GenericDispatchNode");
-      return SAbstractObject.sendDoesNotUnderstand(selector, arguments, domain,
-          executesEnforced, universe);
+      return SAbstractObject.sendDoesNotUnderstand(selector, arguments, universe);
     }
   }
 
