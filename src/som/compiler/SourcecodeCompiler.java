@@ -35,7 +35,8 @@ import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives.SlowPath;
-import com.oracle.truffle.api.source.Source;
+import com.oracle.truffle.api.Source;
+import com.oracle.truffle.api.source.SourceFactory;
 
 public final class SourcecodeCompiler {
 
@@ -63,7 +64,7 @@ public final class SourcecodeCompiler {
 
     String fname = path + File.separator + file + ".som";
     FileReader stream = new FileReader(fname);
-    Source source = Source.fromFileName(fname);
+    Source source = SourceFactory.fromFile(fname);
     parser = new Parser(stream, source, universe);
 
     result = compile(systemClass, universe);

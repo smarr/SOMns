@@ -2,10 +2,10 @@ package som.interpreter;
 
 import som.interpreter.nodes.ExpressionNode;
 
+import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.NodeUtil;
-import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.api.utilities.BranchProfile;
 
 public abstract class Invokable extends AbstractInvokable {

@@ -33,8 +33,8 @@ import som.vm.Universe;
 import som.vmobjects.SInvokable.SMethod;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.frame.FrameSlot;
-import com.oracle.truffle.api.source.SourceSection;
 
 
 
