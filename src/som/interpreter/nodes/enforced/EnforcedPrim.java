@@ -2,6 +2,7 @@ package som.interpreter.nodes.enforced;
 
 import som.interpreter.SArguments;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.dispatch.DispatchChain.Cost;
 import som.interpreter.nodes.enforced.IntercessionHandlerCache.AbstractIntercessionHandlerDispatch;
 import som.vmobjects.SArray;
 import som.vmobjects.SDomain;
@@ -11,6 +12,7 @@ import som.vmobjects.SObject;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
+import com.oracle.truffle.api.nodes.NodeCost;
 
 
 public final class EnforcedPrim extends ExpressionNode {
@@ -84,5 +86,10 @@ public final class EnforcedPrim extends ExpressionNode {
         rcvrDomain, primitive,
         SArray.fromArgArrayWithReceiverToSArrayWithoutReceiver(args, currentDomain), receiver);
     return dispatch.executeDispatch(frame, rcvrDomain, arguments);
+  }
+
+  @Override
+  public NodeCost getCost() {
+    return Cost.getCost(dispatch);
   }
 }

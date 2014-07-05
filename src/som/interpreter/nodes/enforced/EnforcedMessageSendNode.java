@@ -7,6 +7,7 @@ import som.interpreter.nodes.ISuperReadNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.interpreter.nodes.MessageSendNode.AbstractUninitializedMessageSendNode;
 import som.interpreter.nodes.PreevaluatedExpression;
+import som.interpreter.nodes.dispatch.DispatchChain.Cost;
 import som.interpreter.nodes.enforced.IntercessionHandlerCache.AbstractIntercessionHandlerDispatch;
 import som.vm.Universe;
 import som.vmobjects.SArray;
@@ -16,6 +17,7 @@ import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.NodeCost;
 import com.oracle.truffle.api.source.SourceSection;
 
 
@@ -106,5 +108,10 @@ public class EnforcedMessageSendNode extends AbstractMessageSendNode {
           argumentNodes, getSourceSection());
       return replace(send);
     }
+  }
+
+  @Override
+  public final NodeCost getCost() {
+    return Cost.getCost(dispatch);
   }
 }
