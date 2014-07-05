@@ -6,6 +6,7 @@ import som.interpreter.Types;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.PreevaluatedExpression;
+import som.interpreter.nodes.dispatch.DispatchChain;
 import som.vm.Universe;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
@@ -15,46 +16,55 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 
 
-public abstract class AbstractSymbolDispatch extends Node {
+public abstract class AbstractSymbolDispatch extends Node implements DispatchChain {
   public static final int INLINE_CACHE_SIZE = 6;
 
   public static AbstractSymbolDispatch create() {
-    return new UninitializedDispatchNode();
+    return new UninitializedDispatchNode(0);
+  }
+
+  protected final int depth;
+
+  public AbstractSymbolDispatch(final int depth) {
+    this.depth = depth;
   }
 
   public abstract Object executeDispatch(VirtualFrame frame, Object receiver,
       SSymbol selector, Object[] argsArr);
 
-  public abstract int lengthOfDispatchChain();
-
   private static final class UninitializedDispatchNode extends AbstractSymbolDispatch {
+
+    public UninitializedDispatchNode(final int depth) {
+      super(depth);
+    }
+
+    private AbstractSymbolDispatch specialize(final SSymbol selector) {
+      transferToInterpreterAndInvalidate("Initialize a dispatch node.");
+
+      if (depth < INLINE_CACHE_SIZE) {
+        CachedDispatchNode specialized = new CachedDispatchNode(selector,
+            new UninitializedDispatchNode(depth + 1), depth);
+        return replace(specialized);
+      }
+
+      AbstractSymbolDispatch headNode = determineChainHead();
+      GenericDispatchNode generic = new GenericDispatchNode();
+      return headNode.replace(generic);
+    }
+
     @Override
     public Object executeDispatch(final VirtualFrame frame,
         final Object receiver, final SSymbol selector, final Object[] argsArr) {
-      transferToInterpreterAndInvalidate("Initialize a dispatch node.");
-
-      int chainDepth = determineChainLength();
-
-      if (chainDepth < INLINE_CACHE_SIZE) {
-        CachedDispatchNode specialized = new CachedDispatchNode(selector,
-            new UninitializedDispatchNode());
-        return replace(specialized).executeDispatch(frame, receiver, selector, argsArr);
-      }
-
-      // TODO: normally, we throw away the whole chain, and replace it with the megamorphic node...
-      GenericDispatchNode generic = new GenericDispatchNode();
-      return replace(generic).executeDispatch(frame, receiver, selector, argsArr);
+      return specialize(selector).
+          executeDispatch(frame, receiver, selector, argsArr);
     }
 
-    private int determineChainLength() {
-      // Determine position in dispatch chain, i.e., size of inline cache
+    private AbstractSymbolDispatch determineChainHead() {
       Node i = this;
-      int chainDepth = 0;
       while (i.getParent() instanceof AbstractSymbolDispatch) {
         i = i.getParent();
-        chainDepth++;
       }
-      return chainDepth;
+      return (AbstractSymbolDispatch) i;
     }
 
     @Override
@@ -69,7 +79,9 @@ public abstract class AbstractSymbolDispatch extends Node {
     @Child private AbstractSymbolDispatch nextInCache;
 
     public CachedDispatchNode(final SSymbol selector,
-        final AbstractSymbolDispatch nextInCache) {
+        final AbstractSymbolDispatch nextInCache,
+        final int depth) {
+      super(depth);
       this.selector = selector;
       this.nextInCache = nextInCache;
       cachedSend = MessageSendNode.createForPerformNodes(selector);
@@ -99,6 +111,7 @@ public abstract class AbstractSymbolDispatch extends Node {
     private final Universe universe;
 
     public GenericDispatchNode() {
+      super(0);
       universe = Universe.current();
     }
 
