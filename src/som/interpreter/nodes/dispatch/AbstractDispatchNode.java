@@ -9,7 +9,7 @@ import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.Node;
 
 
-public abstract class AbstractDispatchNode extends Node {
+public abstract class AbstractDispatchNode extends Node implements DispatchChain {
   public static final int INLINE_CACHE_SIZE = 6;
 
   protected final boolean executesEnforced;
@@ -20,8 +20,6 @@ public abstract class AbstractDispatchNode extends Node {
 
   public abstract Object executeDispatch(
       final VirtualFrame frame, final Object[] arguments);
-
-  public abstract int lengthOfDispatchChain();
 
   public abstract static class AbstractCachedDispatchNode
       extends AbstractDispatchNode {

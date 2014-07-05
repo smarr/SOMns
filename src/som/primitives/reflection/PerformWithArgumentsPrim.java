@@ -1,10 +1,12 @@
 package som.primitives.reflection;
 
+import som.interpreter.nodes.dispatch.DispatchChain.Cost;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.NodeCost;
 
 public abstract class PerformWithArgumentsPrim extends TernaryExpressionNode {
 
@@ -33,5 +35,10 @@ public abstract class PerformWithArgumentsPrim extends TernaryExpressionNode {
     public PerformEnforcedWithArgumentsPrim(final PerformEnforcedWithArgumentsPrim node) {
       this(node.executesEnforced);
     }
+  }
+
+  @Override
+  public final NodeCost getCost() {
+    return Cost.getCost(dispatch);
   }
 }

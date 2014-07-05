@@ -6,6 +6,7 @@ import som.interpreter.Types;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.PreevaluatedExpression;
+import som.interpreter.nodes.dispatch.DispatchChain;
 import som.vm.Universe;
 import som.vmobjects.SArray;
 import som.vmobjects.SInvokable;
@@ -17,43 +18,43 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 
 
-public abstract class AbstractSymbolDispatch extends Node {
+public abstract class AbstractSymbolDispatch extends Node implements DispatchChain {
   public static final int INLINE_CACHE_SIZE = 6;
 
   public static AbstractSymbolDispatch create(final boolean alwaysEnforced) {
-    return new UninitializedDispatchNode(alwaysEnforced);
+    return new UninitializedDispatchNode(alwaysEnforced, 0);
   }
 
   protected final boolean alwaysEnforced;
+  protected final int depth;
 
-  public AbstractSymbolDispatch(final boolean alwaysEnforced) {
+  public AbstractSymbolDispatch(final boolean alwaysEnforced, final int depth) {
     this.alwaysEnforced = alwaysEnforced;
+    this.depth = depth;
   }
 
   public abstract Object executeDispatch(VirtualFrame frame, Object receiver,
       SSymbol selector, Object[] argsArr);
 
-  public abstract int lengthOfDispatchChain();
-
   private static final class UninitializedDispatchNode extends AbstractSymbolDispatch {
 
-    public UninitializedDispatchNode(final boolean alwaysEnforced) {
-      super(alwaysEnforced);
+    public UninitializedDispatchNode(final boolean alwaysEnforced, final int depth) {
+      super(alwaysEnforced, depth);
     }
 
     private AbstractSymbolDispatch specialize(final boolean enforced, final SSymbol selector) {
       transferToInterpreterAndInvalidate("Initialize a dispatch node.");
 
-      int chainDepth = determineChainLength();
-      if (chainDepth < INLINE_CACHE_SIZE) {
+      if (depth < INLINE_CACHE_SIZE) {
         CachedDispatchNode specialized = new CachedDispatchNode(selector,
-            new UninitializedDispatchNode(alwaysEnforced), enforced, alwaysEnforced);
+            new UninitializedDispatchNode(alwaysEnforced, depth + 1),
+            enforced, alwaysEnforced, depth);
         return replace(specialized);
       }
 
-      // TODO: normally, we throw away the whole chain, and replace it with the megamorphic node...
+      AbstractSymbolDispatch headNode = determineChainHead();
       GenericDispatchNode generic = new GenericDispatchNode(enforced, alwaysEnforced);
-      return replace(generic);
+      return headNode.replace(generic);
     }
 
     @Override
@@ -64,15 +65,12 @@ public abstract class AbstractSymbolDispatch extends Node {
           executeDispatch(frame, receiver, selector, argsArr);
     }
 
-    private int determineChainLength() {
-      // Determine position in dispatch chain, i.e., size of inline cache
+    private AbstractSymbolDispatch determineChainHead() {
       Node i = this;
-      int chainDepth = 0;
       while (i.getParent() instanceof AbstractSymbolDispatch) {
         i = i.getParent();
-        chainDepth++;
       }
-      return chainDepth;
+      return (AbstractSymbolDispatch) i;
     }
 
     @Override
@@ -88,8 +86,9 @@ public abstract class AbstractSymbolDispatch extends Node {
 
     public CachedDispatchNode(final SSymbol selector,
         final AbstractSymbolDispatch nextInCache,
-        final boolean executesEnforced, final boolean alwaysEnforced) {
-      super(alwaysEnforced);
+        final boolean executesEnforced, final boolean alwaysEnforced,
+        final int depth) {
+      super(alwaysEnforced, depth);
       this.selector = selector;
       this.nextInCache = nextInCache;
       cachedSend = MessageSendNode.createForPerformNodes(selector, executesEnforced || alwaysEnforced);
@@ -117,8 +116,9 @@ public abstract class AbstractSymbolDispatch extends Node {
     private final Universe universe;
     private final boolean executesEnforced;
 
-    public GenericDispatchNode(final boolean executesEnforced, final boolean alwaysEnforced) {
-      super(alwaysEnforced);
+    public GenericDispatchNode(final boolean executesEnforced,
+        final boolean alwaysEnforced) {
+      super(alwaysEnforced, 0);
       universe = Universe.current();
       this.executesEnforced = executesEnforced;
     }
