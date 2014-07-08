@@ -1,5 +1,6 @@
 package som.primitives;
 
+import som.interpreter.SArguments;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
 import som.interpreter.nodes.dispatch.UninitializedValuePrimDispatchNode;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
@@ -8,6 +9,7 @@ import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
+import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -47,7 +49,9 @@ public abstract class BlockPrims {
 
     @Specialization
     public final Object doSBlock(final VirtualFrame frame, final SBlock receiver) {
-      return dispatchNode.executeDispatch(frame, new Object[] {receiver});
+      SObject domain = SArguments.domain(frame);
+      return dispatchNode.executeDispatch(frame, domain, receiver.isEnforced(),
+          new Object[] {receiver});
     }
 
     @Override
@@ -83,7 +87,9 @@ public abstract class BlockPrims {
     @Specialization
     public final Object doSBlock(final VirtualFrame frame, final SBlock receiver,
         final Object arg) {
-      return dispatchNode.executeDispatch(frame, new Object[] {receiver, arg});
+      SObject domain = SArguments.domain(frame);
+      return dispatchNode.executeDispatch(frame, domain, receiver.isEnforced(),
+          new Object[] {receiver, arg});
     }
 
     @Override
@@ -119,7 +125,9 @@ public abstract class BlockPrims {
     @Specialization
     public final Object doSBlock(final VirtualFrame frame,
         final SBlock receiver, final Object arg1, final Object arg2) {
-      return dispatchNode.executeDispatch(frame, new Object[] {receiver, arg1, arg2});
+      SObject domain = SArguments.domain(frame);
+      return dispatchNode.executeDispatch(frame, domain, receiver.isEnforced(),
+          new Object[] {receiver, arg1, arg2});
     }
 
     @Override

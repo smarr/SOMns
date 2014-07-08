@@ -1,5 +1,6 @@
 package som.interpreter.nodes;
 
+import som.interpreter.SArguments;
 import som.interpreter.TruffleCompiler;
 import som.interpreter.TypesGen;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
@@ -48,6 +49,7 @@ import som.vm.NotYetImplementedException;
 import som.vm.Universe;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
+import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives.SlowPath;
@@ -77,7 +79,7 @@ public final class MessageSendNode {
   public static AbstractMessageSendNode createForPerformInSuperclassNodes(
       final SSymbol selector, final SClass lookupClass, final boolean executesEnforced) {
     return new GenericMessageSendNode(selector, null,
-        SuperDispatchNode.create(selector, lookupClass, executesEnforced),
+        SuperDispatchNode.create(selector, lookupClass),
             null, executesEnforced);
   }
 
@@ -363,7 +365,7 @@ public final class MessageSendNode {
     protected AbstractMessageSendNode makeGenericSend() {
       GenericMessageSendNode send = new GenericMessageSendNode(selector,
           argumentNodes,
-          new UninitializedDispatchNode(selector, Universe.current(), executesEnforced),
+          new UninitializedDispatchNode(selector, Universe.current()),
           getSourceSection(), executesEnforced);
       return replace(send);
     }
@@ -382,7 +384,7 @@ public final class MessageSendNode {
     protected PreevaluatedExpression makeSuperSend() {
       GenericMessageSendNode node = new GenericMessageSendNode(selector,
           argumentNodes, SuperDispatchNode.create(selector,
-              (ISuperReadNode) argumentNodes[0], executesEnforced),
+              (ISuperReadNode) argumentNodes[0]),
               getSourceSection(), executesEnforced);
       return replace(node);
     }
@@ -505,8 +507,7 @@ public final class MessageSendNode {
         return new EnforcedMessageSendNode(selector, argumentNodes, source);
       } else {
         return new GenericMessageSendNode(selector, argumentNodes,
-          new UninitializedDispatchNode(selector, Universe.current(),
-              executesEnforced), source, executesEnforced);
+          new UninitializedDispatchNode(selector, Universe.current()), source, executesEnforced);
       }
     }
 
@@ -524,7 +525,8 @@ public final class MessageSendNode {
     @Override
     public Object doPreEvaluated(final VirtualFrame frame,
         final Object[] arguments) {
-      return dispatchNode.executeDispatch(frame, arguments);
+      SObject domain = SArguments.domain(frame);
+      return dispatchNode.executeDispatch(frame, domain, executesEnforced, arguments);
     }
 
     @SlowPath

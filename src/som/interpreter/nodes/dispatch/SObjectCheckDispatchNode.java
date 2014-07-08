@@ -13,11 +13,8 @@ public final class SObjectCheckDispatchNode extends AbstractDispatchNode {
 
   private final BranchProfile uninitialized;
 
-
   public SObjectCheckDispatchNode(final AbstractDispatchNode nextInCache,
-      final UninitializedDispatchNode uninitializedDispatch,
-      final boolean executesEnforced) {
-    super(executesEnforced);
+      final UninitializedDispatchNode uninitializedDispatch) {
     this.nextInCache           = nextInCache;
     this.uninitializedDispatch = uninitializedDispatch;
     this.uninitialized         = new BranchProfile();
@@ -25,12 +22,13 @@ public final class SObjectCheckDispatchNode extends AbstractDispatchNode {
 
   @Override
   public Object executeDispatch(
-      final VirtualFrame frame, final Object[] arguments) {
+      final VirtualFrame frame, final SObject domain,
+      final boolean enforced, final Object[] arguments) {
     if (arguments[0] instanceof SObject) {
-      return nextInCache.executeDispatch(frame, arguments);
+      return nextInCache.executeDispatch(frame, domain, enforced, arguments);
     } else {
       uninitialized.enter();
-      return uninitializedDispatch.executeDispatch(frame, arguments);
+      return uninitializedDispatch.executeDispatch(frame, domain, enforced, arguments);
     }
   }
 

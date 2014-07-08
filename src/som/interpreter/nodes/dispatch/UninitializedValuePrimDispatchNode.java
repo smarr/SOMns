@@ -4,6 +4,7 @@ import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate
 import som.primitives.BlockPrims.ValuePrimitiveNode;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
+import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
@@ -12,14 +13,8 @@ import com.oracle.truffle.api.nodes.Node;
 public final class UninitializedValuePrimDispatchNode
     extends AbstractDispatchNode {
 
-  public UninitializedValuePrimDispatchNode() {
-    super(false); // is not used, executeEnforced is taken from the block
-  }
-
-  @Override
-  public Object executeDispatch(final VirtualFrame frame, final Object[] arguments) {
+  private AbstractDispatchNode specialize(final SBlock rcvr) {
     transferToInterpreterAndInvalidate("Initialize a dispatch node.");
-    SBlock rcvr = (SBlock) arguments[0];
 
     // Determine position in dispatch node chain, i.e., size of inline cache
     Node i = this;
@@ -36,13 +31,20 @@ public final class UninitializedValuePrimDispatchNode
       assert method != null;
 
       UninitializedValuePrimDispatchNode uninitialized = new UninitializedValuePrimDispatchNode();
-      CachedBlockDispatchNode node = new CachedBlockDispatchNode(method, uninitialized, rcvr.isEnforced());
-      return replace(node).executeDispatch(frame, arguments);
+      CachedBlockDispatchNode node = new CachedBlockDispatchNode(method, uninitialized);
+      return replace(node);
     } else {
       GenericBlockDispatchNode generic = new GenericBlockDispatchNode();
       primitiveNode.adoptNewDispatchListHead(generic);
-      return generic.executeDispatch(frame, arguments);
+      return generic;
     }
+  }
+
+  @Override
+  public Object executeDispatch(final VirtualFrame frame, final SObject domain,
+      final boolean enforced, final Object[] arguments) {
+    return specialize((SBlock) arguments[0]).
+        executeDispatch(frame, domain, enforced, arguments);
   }
 
   @Override
