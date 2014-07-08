@@ -9,12 +9,16 @@ import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.SlowPath;
+import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.IndirectCallNode;
 
 public final class GenericDispatchNode extends AbstractDispatchWithLookupNode {
+  @Child private IndirectCallNode call;
 
   public GenericDispatchNode(final SSymbol selector, final Universe universe) {
     super(selector, universe);
+    call = Truffle.getRuntime().createIndirectCallNode();
   }
 
   @Override
@@ -22,7 +26,7 @@ public final class GenericDispatchNode extends AbstractDispatchWithLookupNode {
       final VirtualFrame frame, final Object[] arguments) {
     SInvokable method = lookupMethod(arguments[0]);
     if (method != null) {
-      return method.invoke(arguments);
+      return call.call(frame, method.getCallTarget(), arguments);
     } else {
       // Won't use DNU caching here, because it is already a megamorphic node
       CompilerAsserts.neverPartOfCompilation("GenericDispatchNode");

@@ -10,6 +10,7 @@ import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
+import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.utilities.BranchProfile;
 
 
@@ -20,6 +21,7 @@ public abstract class AbstractIfMessageNode extends BinaryExpressionNode {
   private final SInvokable branchMethod;
 
   @Child protected DirectCallNode branchValueSend;
+  @Child private   IndirectCallNode call;
 
   protected final Universe universe;
 
@@ -35,6 +37,7 @@ public abstract class AbstractIfMessageNode extends BinaryExpressionNode {
       branchMethod = null;
     }
     this.universe = universe;
+    call = Truffle.getRuntime().createIndirectCallNode();
   }
 
   public AbstractIfMessageNode(final AbstractIfMessageNode node) {
@@ -45,6 +48,7 @@ public abstract class AbstractIfMessageNode extends BinaryExpressionNode {
           branchMethod.getCallTarget());
     }
     this.universe = node.universe;
+    call = Truffle.getRuntime().createIndirectCallNode();
   }
 
   /**
@@ -67,7 +71,7 @@ public abstract class AbstractIfMessageNode extends BinaryExpressionNode {
     if (receiver == predicateObject) {
       ifTrueBranch.enter();
       CompilerAsserts.neverPartOfCompilation("AbstractIfMessageNode");
-      return argument.getMethod().invoke(argument);
+      return argument.getMethod().invoke(frame, call, argument);
     } else {
       ifFalseBranch.enter();
       return universe.nilObject;

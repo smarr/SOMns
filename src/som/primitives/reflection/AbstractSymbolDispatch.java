@@ -12,7 +12,9 @@ import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.nodes.Node;
 
 
@@ -109,10 +111,12 @@ public abstract class AbstractSymbolDispatch extends Node implements DispatchCha
   private static final class GenericDispatchNode extends AbstractSymbolDispatch {
 
     private final Universe universe;
+    @Child private IndirectCallNode call;
 
     public GenericDispatchNode() {
       super(0);
       universe = Universe.current();
+      call = Truffle.getRuntime().createIndirectCallNode();
     }
 
     @Override
@@ -122,7 +126,7 @@ public abstract class AbstractSymbolDispatch extends Node implements DispatchCha
 
       Object[] args = SArguments.createSArgumentsArrayFrom(receiver, argsArr);
 
-      return invokable.invoke(args);
+      return call.call(frame, invokable.getCallTarget(), args);
     }
 
     @Override

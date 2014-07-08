@@ -11,6 +11,7 @@ import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
+import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.utilities.BranchProfile;
 
 public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
@@ -23,6 +24,8 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
 
   @Child protected DirectCallNode trueValueSend;
   @Child protected DirectCallNode falseValueSend;
+
+  @Child private IndirectCallNode call;
 
   private final Universe universe;
 
@@ -47,6 +50,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
     }
 
     this.universe = universe;
+    call = Truffle.getRuntime().createIndirectCallNode();
   }
 
   public IfTrueIfFalseMessageNode(final IfTrueIfFalseMessageNode node) {
@@ -62,6 +66,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
           falseMethod.getCallTarget());
     }
     this.universe = node.universe;
+    call = Truffle.getRuntime().createIndirectCallNode();
   }
 
   @Override
@@ -93,10 +98,10 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
     CompilerAsserts.neverPartOfCompilation("IfTrueIfFalseMessageNode.10");
     if (receiver) {
       ifTrueBranch.enter();
-      return trueBlock.getMethod().invoke(trueBlock);
+      return trueBlock.getMethod().invoke(frame, call, trueBlock);
     } else {
       ifFalseBranch.enter();
-      return falseBlock.getMethod().invoke(falseBlock);
+      return falseBlock.getMethod().invoke(frame, call, falseBlock);
     }
   }
 
@@ -133,7 +138,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
     } else {
       ifFalseBranch.enter();
       CompilerAsserts.neverPartOfCompilation("IfTrueIfFalseMessageNode.20");
-      return falseBlock.getMethod().invoke(falseBlock);
+      return falseBlock.getMethod().invoke(frame, call, falseBlock);
     }
   }
 
@@ -143,7 +148,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
     if (receiver) {
       ifTrueBranch.enter();
       CompilerAsserts.neverPartOfCompilation("IfTrueIfFalseMessageNode.30");
-      return trueBlock.getMethod().invoke(trueBlock);
+      return trueBlock.getMethod().invoke(frame, call, trueBlock);
     } else {
       ifFalseBranch.enter();
       return falseValue;

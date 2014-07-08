@@ -31,6 +31,8 @@ import som.vm.Universe;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.RootCallTarget;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.IndirectCallNode;
 
 public abstract class SInvokable extends SAbstractObject {
 
@@ -103,6 +105,10 @@ public abstract class SInvokable extends SAbstractObject {
 
   public final Object invoke(final Object... arguments) {
     return callTarget.call(arguments);
+  }
+
+  public final Object invoke(final VirtualFrame frame, final IndirectCallNode node, final Object... arguments) {
+    return node.call(frame, callTarget, arguments);
   }
 
   @Override

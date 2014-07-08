@@ -6,18 +6,22 @@ import som.vmobjects.SBlock;
 import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.IndirectCallNode;
 
 
 public abstract class WhilePrimitiveNode extends BinaryExpressionNode {
   final boolean predicateBool;
   final Universe universe;
+  @Child private IndirectCallNode call;
 
   protected WhilePrimitiveNode(final boolean predicateBool) {
     super(null);
     universe = Universe.current();
     this.predicateBool = predicateBool;
+    call = Truffle.getRuntime().createIndirectCallNode();
   }
 
   protected WhilePrimitiveNode(final WhilePrimitiveNode node) {
@@ -29,13 +33,13 @@ public abstract class WhilePrimitiveNode extends BinaryExpressionNode {
       final SBlock loopCondition, final SBlock loopBody) {
     CompilerAsserts.neverPartOfCompilation(); // no caching, direct invokes, no loop count reporting...
 
-    boolean loopConditionResult = (boolean)
-        loopCondition.getMethod().invoke(loopCondition);
+    boolean loopConditionResult = (boolean) loopCondition.getMethod().
+        invoke(frame, call, loopCondition);
 
     // TODO: this is a simplification, we don't cover the case receiver isn't a boolean
     while (loopConditionResult == predicateBool) {
-      loopBody.getMethod().invoke(loopBody);
-      loopConditionResult = (boolean) loopCondition.getMethod().invoke(loopCondition);
+      loopBody.getMethod().invoke(frame, call, loopBody);
+      loopConditionResult = (boolean) loopCondition.getMethod().invoke(frame, call, loopCondition);
     }
     return universe.nilObject;
   }
