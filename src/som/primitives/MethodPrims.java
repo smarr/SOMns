@@ -1,16 +1,15 @@
 package som.primitives;
 
 import som.interpreter.SArguments;
+import som.interpreter.nodes.dispatch.InvokeOnCache;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode.UnarySideEffectFreeExpressionNode;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 
-import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.IndirectCallNode;
 
 
 public final class MethodPrims {
@@ -36,12 +35,11 @@ public final class MethodPrims {
   }
 
   public abstract static class InvokeOnPrim extends TernaryExpressionNode {
-    // TODO: figure out whether we should use an inline cache here
-    @Child private IndirectCallNode callNode;
+    @Child private InvokeOnCache callNode;
 
     public InvokeOnPrim(final boolean executesEnforced) {
       super(executesEnforced);
-      callNode = Truffle.getRuntime().createIndirectCallNode();
+      callNode = InvokeOnCache.create();
     }
     public InvokeOnPrim(final InvokeOnPrim node) { this(node.executesEnforced); }
 
@@ -49,8 +47,7 @@ public final class MethodPrims {
     public final Object doInvoke(final VirtualFrame frame,
         final SInvokable receiver, final Object target, final Object[] argsArr) {
       SObject domain = SArguments.domain(frame);
-      return callNode.call(frame, receiver.getCallTarget(),
-          SArguments.createSArgumentsWithReceiver(domain, executesEnforced, target, argsArr));
+      return callNode.executeDispatch(frame, receiver, SArguments.createSArgumentsWithReceiver(domain, executesEnforced, target, argsArr));
     }
   }
 }

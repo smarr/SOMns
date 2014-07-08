@@ -1,19 +1,20 @@
 package som.primitives;
 
 import som.interpreter.SArguments;
+import som.interpreter.nodes.dispatch.AbstractDispatchNode;
+import som.interpreter.nodes.dispatch.UninitializedValuePrimDispatchNode;
 import som.interpreter.nodes.nary.BinaryExpressionNode.BinarySideEffectFreeExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode.UnarySideEffectFreeExpressionNode;
+import som.primitives.BlockPrims.ValuePrimitiveNode;
 import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.CompilerAsserts;
-import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.IndirectCallNode;
 
 
 public final class MirrorPrims {
@@ -68,20 +69,23 @@ public final class MirrorPrims {
     }
   }
 
-  public abstract static class EvaluatedEnforcedInPrim extends TernaryExpressionNode {
-    // TODO: figure out whether we should use an inline cache here
-    @Child private IndirectCallNode callNode;
+  public abstract static class EvaluatedEnforcedInPrim extends TernaryExpressionNode implements ValuePrimitiveNode {
+    @Child private AbstractDispatchNode dispatchNode;
 
     public EvaluatedEnforcedInPrim(final boolean executesEnforced) {
       super(executesEnforced);
-      callNode = Truffle.getRuntime().createIndirectCallNode();
+      dispatchNode = new UninitializedValuePrimDispatchNode();
     }
     public EvaluatedEnforcedInPrim(final EvaluatedEnforcedInPrim node) { this(node.executesEnforced); }
 
     @Specialization
     public final Object doSClass(final VirtualFrame frame, final SClass clazz, final SBlock block, final SObject domain) {
-      return callNode.call(frame, block.getMethod().getCallTarget(),
-          SArguments.createSArgumentsArray(true, domain, block));
+      return dispatchNode.executeDispatch(frame, domain, true, new Object[] {block});
+    }
+
+    @Override
+    public void adoptNewDispatchListHead(final AbstractDispatchNode node) {
+      dispatchNode = insert(node);
     }
   }
 
