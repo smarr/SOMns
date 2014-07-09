@@ -173,8 +173,20 @@ public final class MessageSendNode {
           }
           break;
         }
-        case 3: { result = specializeTernary(arguments);   break; }
-        case 4: { result = specializeQuaternary(arguments); break; }
+        case 3: {
+          result = specializeTernary(arguments);
+          if (result == this) {
+            result = specializeTernaryOnValues(arguments);
+          }
+          break;
+        }
+        case 4: {
+          result = specializeQuaternary(arguments);
+          if (result == this) {
+            result = specializeQuaternaryOnValues(arguments);
+          }
+          break;
+        }
       }
 
       if (result == this) {
@@ -189,13 +201,7 @@ public final class MessageSendNode {
     protected PreevaluatedExpression specializeUnary(final Object[] args) {
       Object receiver = args[0];
       switch (selector.getString()) {
-        // eagerly but causious:
-        case "value":
-          if (receiver instanceof SBlock) {
-            return replace(new EagerUnaryPrimitiveNode(selector,
-                argumentNodes[0], ValueNonePrimFactory.create(executesEnforced, null), executesEnforced));
-          }
-          break;
+        // eagerly but cautious:
         case "length":
           if (receiver instanceof Object[]) {
             return replace(new EagerUnaryPrimitiveNode(selector,
@@ -209,7 +215,14 @@ public final class MessageSendNode {
     private PreevaluatedExpression specializeUnaryOnValues(final Object[] args) {
       Object receiver = args[0];
       switch (selector.getString()) {
-        // eagerly but causious:
+        // eagerly but cautious:
+        case "value":
+          if (receiver instanceof SBlock) {
+            return replace(new EagerUnaryPrimitiveNode(selector,
+                argumentNodes[0], ValueNonePrimFactory.create(executesEnforced, null), executesEnforced));
+          }
+          break;
+
         case "not":
           if (receiver instanceof Boolean) {
             return replace(new EagerUnaryPrimitiveNode(selector,
@@ -224,27 +237,8 @@ public final class MessageSendNode {
 
     protected PreevaluatedExpression specializeBinary(final Object[] arguments) {
       switch (selector.getString()) {
-        case "ifTrue:":
-          return replace(IfTrueMessageNodeFactory.create(arguments[0],
-              arguments[1],
-              Universe.current(), getSourceSection(), executesEnforced,
-              argumentNodes[0], argumentNodes[1]));
-        case "ifFalse:":
-          return replace(IfFalseMessageNodeFactory.create(arguments[0],
-              arguments[1],
-              Universe.current(), getSourceSection(), executesEnforced,
-              argumentNodes[0], argumentNodes[1]));
-
         // TODO: find a better way for primitives, use annotation or something
-        case "value:":
-          if (arguments[0] instanceof SBlock) {
-            return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
-                argumentNodes[1],
-                ValueOnePrimFactory.create(executesEnforced, null, null), executesEnforced));
-          }
-          break;
-
-        // eagerly but causious:
+        // eagerly but cautious:
         case "at:":
           if (arguments[0] instanceof Object[]) {
             return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
@@ -265,6 +259,25 @@ public final class MessageSendNode {
 
     protected PreevaluatedExpression specializeBinaryOnValues(final Object[] arguments) {
       switch (selector.getString()) {
+        case "value:":
+          if (arguments[0] instanceof SBlock) {
+            return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
+                argumentNodes[1],
+                ValueOnePrimFactory.create(executesEnforced, null, null), executesEnforced));
+          }
+          break;
+
+        case "ifTrue:":
+          return replace(IfTrueMessageNodeFactory.create(arguments[0],
+              arguments[1],
+              Universe.current(), getSourceSection(), executesEnforced,
+              argumentNodes[0], argumentNodes[1]));
+        case "ifFalse:":
+          return replace(IfFalseMessageNodeFactory.create(arguments[0],
+              arguments[1],
+              Universe.current(), getSourceSection(), executesEnforced,
+              argumentNodes[0], argumentNodes[1]));
+
         case "<":
           return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
               argumentNodes[1],
@@ -330,6 +343,10 @@ public final class MessageSendNode {
     }
 
     protected PreevaluatedExpression specializeTernary(final Object[] arguments) {
+      return this;
+    }
+
+    protected PreevaluatedExpression specializeTernaryOnValues(final Object[] arguments) {
       switch (selector.getString()) {
         case "ifTrue:ifFalse:":
           return replace(IfTrueIfFalseMessageNodeFactory.create(arguments[0],
@@ -346,10 +363,15 @@ public final class MessageSendNode {
           }
           break;
       }
-      return makeGenericSend();
+      return this;
     }
 
     protected PreevaluatedExpression specializeQuaternary(
+        final Object[] arguments) {
+      return this;
+    }
+
+    protected PreevaluatedExpression specializeQuaternaryOnValues(
         final Object[] arguments) {
       switch (selector.getString()) {
         case "to:by:do:":
@@ -357,7 +379,7 @@ public final class MessageSendNode {
               (SBlock) arguments[3], executesEnforced, argumentNodes[0],
               argumentNodes[1], argumentNodes[2], argumentNodes[3]));
       }
-      return makeGenericSend();
+      return this;
     }
 
     protected AbstractMessageSendNode makeGenericSend() {
