@@ -57,7 +57,6 @@ import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.NodeCost;
-import com.oracle.truffle.api.nodes.NodeInfo;
 
 
 public final class MessageSendNode {
@@ -83,7 +82,6 @@ public final class MessageSendNode {
             null, executesEnforced);
   }
 
-  @NodeInfo(shortName = "send")
   public abstract static class AbstractMessageSendNode extends ExpressionNode
       implements PreevaluatedExpression {
 
