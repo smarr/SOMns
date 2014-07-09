@@ -3,7 +3,9 @@ package som.interpreter;
 import java.util.Iterator;
 
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.enforced.EnforcedPrim;
 import som.primitives.EmptyPrim;
+import som.vmobjects.SInvokable.SPrimitive;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.RootCallTarget;
@@ -79,5 +81,10 @@ public final class Primitive extends Invokable {
     RootCallTarget ct = (RootCallTarget) next2.getCallTarget();  // caller method
     AbstractInvokable m = (AbstractInvokable) ct.getRootNode();
     m.propagateLoopCountThroughoutLexicalScope(count);
+  }
+
+  public void setPrimitive(final SPrimitive prim) {
+    ((EnforcedPrim) uninitializedEnforcedBody).setPrimitive(prim);
+    ((EnforcedPrim) enforcedBody).setPrimitive(prim);
   }
 }
