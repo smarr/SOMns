@@ -33,12 +33,12 @@ public abstract class AbstractWhileNode extends BinaryExpressionNode {
       final SourceSection source, final boolean executesEnforced) {
     super(source, executesEnforced);
 
-    CallTarget callTargetCondition = rcvr.getMethod().getCallTarget();
+    CallTarget callTargetCondition = rcvr.getMethod().getCallTarget(rcvr.isEnforced() || executesEnforced);
     conditionValueSend = Truffle.getRuntime().createDirectCallNode(
         callTargetCondition);
     conditionEnforced = rcvr.isEnforced();
 
-    CallTarget callTargetBody = arg.getMethod().getCallTarget();
+    CallTarget callTargetBody = arg.getMethod().getCallTarget(arg.isEnforced() || executesEnforced);
     bodyValueSend = Truffle.getRuntime().createDirectCallNode(
         callTargetBody);
     bodyEnforced = arg.isEnforced();

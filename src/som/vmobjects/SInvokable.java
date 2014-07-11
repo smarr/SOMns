@@ -28,6 +28,7 @@ package som.vmobjects;
 import static som.interpreter.SArguments.createSArguments;
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
 import som.interpreter.AbstractInvokable;
+import som.interpreter.SArguments;
 import som.vm.Universe;
 
 import com.oracle.truffle.api.CompilerAsserts;
@@ -36,21 +37,30 @@ import com.oracle.truffle.api.RootCallTarget;
 
 public abstract class SInvokable extends SAbstractObject {
 
-  public SInvokable(final SSymbol signature, final AbstractInvokable invokable,
-      final boolean isUnenforced) {
+  public SInvokable(final SSymbol signature, final AbstractInvokable enforced,
+      final AbstractInvokable unenforced, final boolean isUnenforced) {
     this.signature    = signature;
     this.isUnenforced = isUnenforced;
 
-    this.invokable   = invokable;
-    this.callTarget  = invokable.createCallTarget();
+    if (enforced != null) {
+      this.enforcedInvokable  = enforced;
+      this.enforcedCallTarget = enforced.createCallTarget();
+    } else {
+      this.enforcedInvokable  = null;
+      this.enforcedCallTarget = null;
+    }
+
+    this.unenforcedInvokable  = unenforced;
+    this.unenforcedCallTarget = unenforced.createCallTarget();
   }
 
   public static final class SMethod extends SInvokable {
     private final SMethod[] embeddedBlocks;
 
-    public SMethod(final SSymbol signature, final AbstractInvokable invokable,
+    public SMethod(final SSymbol signature, final AbstractInvokable enforced,
+        final AbstractInvokable unenforced,
         final boolean isUnenforced, final SMethod[] embeddedBlocks) {
-      super(signature, invokable, isUnenforced);
+      super(signature, enforced, unenforced, isUnenforced);
       this.embeddedBlocks = embeddedBlocks;
     }
 
@@ -70,8 +80,9 @@ public abstract class SInvokable extends SAbstractObject {
 
   public static final class SPrimitive extends SInvokable {
     public SPrimitive(final SSymbol signature,
-        final AbstractInvokable invokable, final boolean isUnenforced) {
-      super(signature, invokable, isUnenforced);
+        final AbstractInvokable enforced,
+        final AbstractInvokable unenforced, final boolean isUnenforced) {
+      super(signature, enforced, unenforced, isUnenforced);
     }
 
     @Override
@@ -80,12 +91,32 @@ public abstract class SInvokable extends SAbstractObject {
     }
   }
 
-  public final RootCallTarget getCallTarget() {
-    return callTarget;
+  public final RootCallTarget getCallTarget(final boolean enforced) {
+    if (enforced) {
+      return getEnforcedCallTarget();
+    } else {
+      return getUnenforcedCallTarget();
+    }
   }
 
-  public final AbstractInvokable getInvokable() {
-    return invokable;
+  public final RootCallTarget getEnforcedCallTarget() {
+    if (isUnenforced) {
+      return unenforcedCallTarget;
+    } else {
+      return enforcedCallTarget;
+    }
+  }
+
+  public final RootCallTarget getUnenforcedCallTarget() {
+    return unenforcedCallTarget;
+  }
+
+  public final AbstractInvokable getEnforcedInvokable() {
+    return enforcedInvokable;
+  }
+
+  public final AbstractInvokable getUnenforcedInvokable() {
+    return unenforcedInvokable;
   }
 
   public final SSymbol getSignature() {
@@ -113,11 +144,20 @@ public abstract class SInvokable extends SAbstractObject {
   }
 
   public final Object invokeWithSArguments(final Object[] arguments) {
-    return callTarget.call(arguments);
+    boolean enforced = SArguments.enforced(arguments);
+    if (enforced && !isUnenforced) {
+      return enforcedCallTarget.call(arguments);
+    } else {
+      return unenforcedCallTarget.call(arguments);
+    }
   }
 
   public final Object invoke(final SObject domain, final boolean enforced, final Object... arguments) {
-    return callTarget.call(createSArguments(domain, enforced, arguments));
+    if (enforced && !isUnenforced) {
+      return enforcedCallTarget.call(createSArguments(domain, enforced, arguments));
+    } else {
+      return unenforcedCallTarget.call(createSArguments(domain, enforced, arguments));
+    }
   }
 
   public boolean isUnenforced() {
@@ -135,8 +175,10 @@ public abstract class SInvokable extends SAbstractObject {
   }
 
   // Private variable holding Truffle runtime information
-  private final AbstractInvokable      invokable;
-  private final RootCallTarget         callTarget;
+  private final AbstractInvokable      enforcedInvokable;
+  private final AbstractInvokable      unenforcedInvokable;
+  private final RootCallTarget         enforcedCallTarget;
+  private final RootCallTarget         unenforcedCallTarget;
   private final SSymbol                signature;
   private final boolean                isUnenforced;
   @CompilationFinal private SClass     holder;

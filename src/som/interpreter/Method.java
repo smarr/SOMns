@@ -36,11 +36,12 @@ public final class Method extends Invokable {
 
   public Method(final SourceSection sourceSection,
                 final FrameDescriptor frameDescriptor,
-                final ExpressionNode enforcedBody,
-                final ExpressionNode unenforcedBody,
+                final ExpressionNode body,
                 final Universe universe,
-                final LexicalContext outerContext) {
-    super(sourceSection, frameDescriptor, enforcedBody, unenforcedBody);
+                final LexicalContext outerContext,
+                final boolean executesEnforced,
+                final boolean alwaysInline) {
+    super(sourceSection, frameDescriptor, body, executesEnforced, alwaysInline);
     this.universe     = universe;
     this.outerContext = outerContext;
   }
@@ -58,12 +59,10 @@ public final class Method extends Invokable {
     FrameDescriptor inlinedFrameDescriptor = getFrameDescriptor().copy();
     LexicalContext  inlinedContext = new LexicalContext(inlinedFrameDescriptor,
         outerContext);
-    ExpressionNode  inlinedEnforcedBody = Inliner.doInline(
-        uninitializedEnforcedBody, inlinedContext);
-    ExpressionNode  inlinedUnenforcedBody = Inliner.doInline(
-        uninitializedUnenforcedBody, inlinedContext);
+    ExpressionNode  inlinedBody = Inliner.doInline(
+        uninitializedBody, inlinedContext);
     Method clone = new Method(getSourceSection(), inlinedFrameDescriptor,
-        inlinedEnforcedBody, inlinedUnenforcedBody, universe, outerContext);
+        inlinedBody, universe, outerContext, executesEnforced, alwaysInline());
     inlinedContext.setOuterMethod(clone);
     return clone;
   }

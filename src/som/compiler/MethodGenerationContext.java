@@ -38,9 +38,9 @@ import java.util.List;
 
 import som.compiler.Variable.Argument;
 import som.compiler.Variable.Local;
-import som.interpreter.AbstractInvokable;
+import som.interpreter.Invokable;
 import som.interpreter.LexicalContext;
-import som.interpreter.MethodUnenforced;
+import som.interpreter.Method;
 import som.interpreter.nodes.ContextualNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.FieldNode.AbstractFieldReadNode;
@@ -194,30 +194,73 @@ public final class MethodGenerationContext {
 
     SourceSection methodSourceSection = getSourceSectionForMethod(sourceSection);
 
-    AbstractInvokable truffleMethod;
+    Invokable enforcedMethod;
+    Invokable unenforcedMethod;
     if (unenforced) {
-      truffleMethod = new MethodUnenforced(methodSourceSection, frameDescriptor,
-          unenforcedBody, universe, getLexicalContext());
+      enforcedMethod = null;
+      unenforcedMethod = new Method(methodSourceSection, frameDescriptor,
+          unenforcedBody, universe, getLexicalContext(), false, shouldAlwaysBeInlined(signature));
     } else {
-      truffleMethod =
-        new som.interpreter.Method(methodSourceSection,
-            frameDescriptor, enforcedBody, unenforcedBody, universe,
-            getLexicalContext());
+      enforcedMethod =
+          new Method(methodSourceSection, frameDescriptor, enforcedBody, universe,
+            getLexicalContext(), true, shouldAlwaysBeInlined(signature));
+      unenforcedMethod =
+          new Method(methodSourceSection, frameDescriptor, unenforcedBody, universe,
+              getLexicalContext(), false, shouldAlwaysBeInlined(signature));
     }
+    setOuterMethodInLexicalScopes(enforcedMethod, unenforcedMethod);
 
-    setOuterMethodInLexicalScopes(truffleMethod);
 
-    SMethod meth = (SMethod) universe.newMethod(signature, truffleMethod, false,
-        embeddedBlockMethods.toArray(new SMethod[0]), unenforced);
+    SMethod meth = (SMethod) universe.newMethod(signature, enforcedMethod,
+        unenforcedMethod, false, embeddedBlockMethods.toArray(new SMethod[0]),
+        unenforced);
 
     // return the method - the holder field is to be set later on!
     return meth;
   }
 
-  private void setOuterMethodInLexicalScopes(final AbstractInvokable method) {
+  private static String[] forceInliningFor = new String[] {
+    "requestExecutionOf:with:on:lookup:",
+    "requestExecutionOfPrimitive:with:on:",
+    "readField:of:",
+    "write:toField:of:",
+    "readGlobal:for:",
+//    "domainOf:",
+//    "setDomainOf:to:",
+//    "evaluate:in:",
+//    "evaluate:enforcedIn:",
+//    "currentDomain",
+//    "executesEnforced",
+//    "executesUnenforced",
+//    "perform:",
+//    "perform:withArguments:",
+//    "perform:inSuperclass:",
+//    "perform:withArguments:inSuperclass:",
+//    "instVarAt:",
+//    "instVarAt:put:",
+//    "instVarNamed:",
+//    "performEnforced:",
+//    "performEnforced:withArguments:",
+//    "performEnforced:inSuperclass:",
+    "performEnforced:withArguments:inSuperclass:"
+  };
+
+  public static boolean shouldAlwaysBeInlined(final SSymbol signature) {
+    for (String toBeForced : forceInliningFor) {
+      if (signature.getString().equals(toBeForced)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private void setOuterMethodInLexicalScopes(final Invokable enforced,
+      final Invokable unenforced) {
     for (SMethod m : embeddedBlockMethods) {
-      som.interpreter.Method blockMethod = (som.interpreter.Method) m.getInvokable();
-      blockMethod.setOuterContextMethod(method);
+      if (enforced != null && !m.isUnenforced()) {
+        ((Method) m.getEnforcedInvokable()).setOuterContextMethod(enforced);
+      }
+      ((Method) m.getUnenforcedInvokable()).setOuterContextMethod(unenforced);
     }
   }
 

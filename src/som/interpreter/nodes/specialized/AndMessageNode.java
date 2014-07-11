@@ -24,7 +24,7 @@ public abstract class AndMessageNode extends BinaryExpressionNode {
     super(source, executesEnforced);
     blockMethod = arg.getMethod();
     blockValueSend = Truffle.getRuntime().createDirectCallNode(
-        blockMethod.getCallTarget());
+        blockMethod.getCallTarget(arg.isEnforced() || executesEnforced));
     blockEnforced = arg.isEnforced();
   }
 

@@ -32,7 +32,7 @@ public abstract class IntToDoMessageNode extends TernaryExpressionNode
     super(orignialNode.getSourceSection(), executesEnforced);
     blockMethod = block.getMethod();
     valueSend = Truffle.getRuntime().createDirectCallNode(
-                    blockMethod.getCallTarget());
+                    blockMethod.getCallTarget(block.isEnforced() || executesEnforced));
     blockEnforced = block.isEnforced();
   }
 

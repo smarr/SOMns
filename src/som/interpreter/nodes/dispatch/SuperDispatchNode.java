@@ -19,13 +19,13 @@ import com.oracle.truffle.api.nodes.DirectCallNode;
 public final class SuperDispatchNode extends AbstractDispatchNode {
 
   public static SuperDispatchNode create(final SSymbol selector,
-      final ISuperReadNode superNode) {
+      final ISuperReadNode superNode, final boolean executesEnforced) {
     CompilerAsserts.neverPartOfCompilation("SuperDispatchNode.create1");
-    return create(selector, superNode.getSuperClass());
+    return create(selector, superNode.getSuperClass(), executesEnforced);
   }
 
   public static SuperDispatchNode create(final SSymbol selector,
-      final SClass lookupClass) {
+      final SClass lookupClass, final boolean executesEnforced) {
     CompilerAsserts.neverPartOfCompilation("SuperDispatchNode.create2");
     SInvokable method = lookupClass.lookupInvokable(selector);
 
@@ -33,7 +33,7 @@ public final class SuperDispatchNode extends AbstractDispatchNode {
       throw new RuntimeException("Currently #dnu with super sent is not yet implemented. ");
     }
     DirectCallNode superMethodNode = Truffle.getRuntime().createDirectCallNode(
-        method.getCallTarget());
+        method.getCallTarget(executesEnforced));
     return new SuperDispatchNode(superMethodNode);
   }
 

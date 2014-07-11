@@ -33,7 +33,7 @@ public abstract class AbstractIfMessageNode extends BinaryExpressionNode {
       SBlock argBlock = (SBlock) arg;
       branchMethod = argBlock.getMethod();
       branchValueSend = Truffle.getRuntime().createDirectCallNode(
-          branchMethod.getCallTarget());
+          branchMethod.getCallTarget(argBlock.isEnforced() || executesEnforced));
       branchEnforced = argBlock.isEnforced();
     } else {
       branchMethod = null;
@@ -48,7 +48,7 @@ public abstract class AbstractIfMessageNode extends BinaryExpressionNode {
     branchEnforced = node.branchEnforced;
     if (node.branchMethod != null) {
       branchValueSend = Truffle.getRuntime().createDirectCallNode(
-          branchMethod.getCallTarget());
+          branchMethod.getCallTarget(branchEnforced || executesEnforced));
     }
     this.universe = node.universe;
   }

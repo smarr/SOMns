@@ -100,7 +100,7 @@ public final class IntercessionHandlerCache {
       this.next = new UninitializedDispatch(intercessionHandler.getSignature(),
           executesEnforced, depth + 1);
       this.dispatch = Truffle.getRuntime().createDirectCallNode(
-          intercessionHandler.getCallTarget());
+          intercessionHandler.getCallTarget(executesEnforced));
     }
 
     @Override

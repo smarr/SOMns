@@ -31,8 +31,12 @@ public final class SArguments {
     return CompilerDirectives.unsafeCast(frame.getArguments()[DOMAIN_IDX], SObject.class, true);
   }
 
+  public static boolean enforced(final Object[] arguments) {
+    return CompilerDirectives.unsafeCast(arguments[ENFORCED_FLAG_IDX], Boolean.class, true);
+  }
+
   public static boolean enforced(final Frame frame) {
-    return CompilerDirectives.unsafeCast(frame.getArguments()[ENFORCED_FLAG_IDX], Boolean.class, true);
+    return enforced(frame.getArguments());
   }
 
   public static Object[] createSArgumentsArray(final Object... arguments) {

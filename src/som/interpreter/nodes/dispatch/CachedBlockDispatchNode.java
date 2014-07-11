@@ -6,6 +6,7 @@ import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 
+import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 
@@ -13,9 +14,10 @@ public final class CachedBlockDispatchNode extends AbstractCachedDispatchNode {
 
   private final SInvokable cachedSomMethod;
 
-  public CachedBlockDispatchNode(final SInvokable method,
+  public CachedBlockDispatchNode(final CallTarget callTarget,
+      final SInvokable method,
       final AbstractDispatchNode nextInCache) {
-    super(method, nextInCache);
+    super(callTarget, nextInCache);
     this.cachedSomMethod = method;
   }
 

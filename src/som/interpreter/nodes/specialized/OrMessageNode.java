@@ -23,7 +23,7 @@ public abstract class OrMessageNode extends BinaryExpressionNode {
     super(source, executesEnforced);
     blockMethod = arg.getMethod();
     blockValueSend = Truffle.getRuntime().createDirectCallNode(
-        blockMethod.getCallTarget());
+        blockMethod.getCallTarget(arg.isEnforced() || executesEnforced));
     blockEnforced = arg.isEnforced();
   }
 

@@ -12,6 +12,7 @@ import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 
@@ -23,7 +24,8 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
     super(selector, universe);
   }
 
-  private AbstractDispatchNode specialize(final Object[] arguments) {
+  private AbstractDispatchNode specialize(final boolean executesEnforced,
+      final Object[] arguments) {
     transferToInterpreterAndInvalidate("Initialize a dispatch node.");
     Object rcvr = arguments[0];
 
@@ -41,6 +43,13 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
     if (chainDepth < INLINE_CACHE_SIZE) {
       SClass rcvrClass = Types.getClassOf(rcvr, universe);
       SInvokable method = rcvrClass.lookupInvokable(selector);
+      CallTarget callTarget;
+      if (method != null) {
+        callTarget = method.getCallTarget(executesEnforced);
+      } else {
+        callTarget = null;
+      }
+
 
       UninitializedDispatchNode newChainEnd = new UninitializedDispatchNode(
           selector, universe);
@@ -54,7 +63,7 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
         AbstractCachedDispatchNode node;
         if (method != null) {
           node = new CachedDispatchSObjectCheckNode(
-              rcvrClass, method, newChainEnd);
+              rcvrClass, callTarget, newChainEnd);
         } else {
           node = new CachedDnuSObjectCheckNode(
               rcvrClass, selector, universe, newChainEnd);
@@ -77,12 +86,12 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
         AbstractDispatchNode next = sendNode.getDispatchListHead();
 
         if (rcvr == Boolean.TRUE) {
-          node = new CachedDispatchTrueCheckNode(method, next);
+          node = new CachedDispatchTrueCheckNode(callTarget, next);
         } else if (rcvr == Boolean.FALSE) {
-          node = new CachedDispatchFalseCheckNode(method, next);
+          node = new CachedDispatchFalseCheckNode(callTarget, next);
         } else {
           node = new CachedDispatchSimpleCheckNode(
-                rcvr.getClass(), method, next);
+                rcvr.getClass(), callTarget, next);
         }
         sendNode.adoptNewDispatchListHead(node);
         return node;
@@ -104,7 +113,7 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
   @Override
   public Object executeDispatch(final VirtualFrame frame, final SObject domain,
       final boolean enforced, final Object[] arguments) {
-    return specialize(arguments).
+    return specialize(enforced, arguments).
         executeDispatch(frame, domain, enforced, arguments);
   }
 

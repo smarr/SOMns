@@ -38,7 +38,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
       SBlock trueBlock = (SBlock) arg1;
       trueMethod = trueBlock.getMethod();
       trueValueSend = Truffle.getRuntime().createDirectCallNode(
-          trueMethod.getCallTarget());
+          trueMethod.getCallTarget(trueBlock.isEnforced() || executesEnforced));
       trueEnforced = trueBlock.isEnforced();
     } else {
       trueMethod = null;
@@ -49,7 +49,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
       SBlock falseBlock = (SBlock) arg2;
       falseMethod = falseBlock.getMethod();
       falseValueSend = Truffle.getRuntime().createDirectCallNode(
-          falseMethod.getCallTarget());
+          falseMethod.getCallTarget(falseBlock.isEnforced() || executesEnforced));
       falseEnforced = falseBlock.isEnforced();
     } else {
       falseMethod = null;
@@ -65,7 +65,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
     trueEnforced = node.trueEnforced;
     if (node.trueMethod != null) {
       trueValueSend = Truffle.getRuntime().createDirectCallNode(
-          trueMethod.getCallTarget());
+          trueMethod.getCallTarget(trueEnforced || executesEnforced));
 
     }
 
@@ -73,7 +73,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
     falseEnforced = node.falseEnforced;
     if (node.falseMethod != null) {
       falseValueSend = Truffle.getRuntime().createDirectCallNode(
-          falseMethod.getCallTarget());
+          falseMethod.getCallTarget(falseEnforced || executesEnforced));
     }
     this.universe = node.universe;
   }

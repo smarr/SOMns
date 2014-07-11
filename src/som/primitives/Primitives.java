@@ -26,9 +26,7 @@
 package som.primitives;
 
 import som.compiler.MethodGenerationContext;
-import som.interpreter.AbstractInvokable;
 import som.interpreter.Primitive;
-import som.interpreter.PrimitiveUnenforced;
 import som.interpreter.nodes.ArgumentReadNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.enforced.EnforcedPrim;
@@ -95,17 +93,24 @@ public abstract class Primitives {
         throw new RuntimeException("Not supported by SOM.");
     }
 
-    AbstractInvokable primMethodNode;
+    boolean shouldInline = MethodGenerationContext.shouldAlwaysBeInlined(signature);
+    Primitive enforcedMethod;
+    Primitive unenforcedMethod;
     if (isUnenforced) {
-      primMethodNode = new PrimitiveUnenforced(primNodeUnenforced, mgen.getFrameDescriptor());
+      enforcedMethod   = null;
+      unenforcedMethod = new Primitive(primNodeUnenforced,
+          mgen.getFrameDescriptor(), false, shouldInline);
     } else {
-      primMethodNode = new Primitive(primNodeEnforced, primNodeUnenforced, mgen.getFrameDescriptor());
+      enforcedMethod   = new Primitive(primNodeEnforced,
+          mgen.getFrameDescriptor(), true, shouldInline);
+      unenforcedMethod = new Primitive(primNodeUnenforced,
+          mgen.getFrameDescriptor(), false, shouldInline);
     }
-    SPrimitive prim = (SPrimitive) universe.newMethod(signature, primMethodNode, true, new SMethod[0], isUnenforced);
+    SPrimitive prim = (SPrimitive) universe.newMethod(signature, enforcedMethod,
+        unenforcedMethod, true, new SMethod[0], isUnenforced);
 
-    if (!isUnenforced) {
-      ((Primitive) primMethodNode).setPrimitive(prim);
-    }
+    if (!isUnenforced) { enforcedMethod.setPrimitive(prim);
+    } else {             assert enforcedMethod == null; }
     return prim;
   }
 
@@ -115,8 +120,8 @@ public abstract class Primitives {
     MethodGenerationContext mgen = new MethodGenerationContext();
 
     ExpressionNode primNode = EmptyPrim.create(false, new ArgumentReadNode(0, false));  /* TODO: enforced!!! */ /* TODO: enforced!!! */
-    PrimitiveUnenforced primMethodNode = new PrimitiveUnenforced(primNode, mgen.getFrameDescriptor());
-    SInvokable prim = universe.newMethod(signature, primMethodNode, true, new SMethod[0], unenforced);
+    Primitive primMethodNode = new Primitive(primNode, mgen.getFrameDescriptor(), false, MethodGenerationContext.shouldAlwaysBeInlined(signature));
+    SInvokable prim = universe.newMethod(signature, null, primMethodNode, true, new SMethod[0], unenforced);
     return prim;
   }
 

@@ -17,10 +17,11 @@ import com.oracle.truffle.api.nodes.RootNode;
 
 public final class Primitive extends Invokable {
 
-  public Primitive(final ExpressionNode primitiveEnforced,
-      final ExpressionNode primitiveUnenforced,
-      final FrameDescriptor frameDescriptor) {
-    super(null, frameDescriptor, primitiveEnforced, primitiveUnenforced);
+  public Primitive(final ExpressionNode primitive,
+      final FrameDescriptor frameDescriptor,
+      final boolean executesEnforced,
+      final boolean alwaysInline) {
+    super(null, frameDescriptor, primitive, executesEnforced, alwaysInline);
   }
 
   @Override
@@ -28,12 +29,10 @@ public final class Primitive extends Invokable {
     FrameDescriptor inlinedFrameDescriptor = getFrameDescriptor().copy();
     LexicalContext  inlinedContext = new LexicalContext(inlinedFrameDescriptor,
         outerContext);
-    ExpressionNode  inlinedEnforcedBody = Inliner.doInline(
-        uninitializedEnforcedBody, inlinedContext);
-    ExpressionNode  inlinedUnenforcedBody = Inliner.doInline(
-        uninitializedUnenforcedBody, inlinedContext);
-    return new Primitive(inlinedEnforcedBody, inlinedUnenforcedBody,
-        inlinedFrameDescriptor);
+    ExpressionNode  inlinedBody = Inliner.doInline(
+        uninitializedBody, inlinedContext);
+    return new Primitive(inlinedBody,
+        inlinedFrameDescriptor, executesEnforced, alwaysInline());
   }
 
   @Override
@@ -48,12 +47,12 @@ public final class Primitive extends Invokable {
 
   @Override
   public boolean isEmptyPrimitive() {
-    return uninitializedEnforcedBody instanceof EmptyPrim;
+    return uninitializedBody instanceof EmptyPrim;
   }
 
   @Override
   public String toString() {
-    return "Primitive " + unenforcedBody.getClass().getSimpleName() + "@" + Integer.toHexString(hashCode());
+    return "Primitive " + body.getClass().getSimpleName() + "@" + Integer.toHexString(hashCode());
   }
 
   @Override
@@ -84,7 +83,7 @@ public final class Primitive extends Invokable {
   }
 
   public void setPrimitive(final SPrimitive prim) {
-    ((EnforcedPrim) uninitializedEnforcedBody).setPrimitive(prim);
-    ((EnforcedPrim) enforcedBody).setPrimitive(prim);
+    ((EnforcedPrim) uninitializedBody).setPrimitive(prim);
+    ((EnforcedPrim) body).setPrimitive(prim);
   }
 }

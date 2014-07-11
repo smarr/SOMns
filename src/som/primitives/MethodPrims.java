@@ -47,7 +47,8 @@ public final class MethodPrims {
     public final Object doInvoke(final VirtualFrame frame,
         final SInvokable receiver, final Object target, final Object[] argsArr) {
       SObject domain = SArguments.domain(frame);
-      return callNode.executeDispatch(frame, receiver, SArguments.createSArgumentsWithReceiver(domain, executesEnforced, target, argsArr));
+      return callNode.executeDispatch(frame, executesEnforced, receiver,
+          SArguments.createSArgumentsWithReceiver(domain, executesEnforced, target, argsArr));
     }
   }
 }

@@ -39,10 +39,21 @@ public class BlockNode extends LiteralNode {
   }
 
   protected SInvokable cloneMethod(final Inliner inliner) {
-    AbstractInvokable clonedInvokable = blockMethod.getInvokable().
+    AbstractInvokable clonedEnforcedInvokable;
+    AbstractInvokable clonedUnenforcedInvokable;
+
+    if (blockMethod.isUnenforced()) {
+      clonedEnforcedInvokable = null;
+    } else {
+      clonedEnforcedInvokable = blockMethod.getEnforcedInvokable().
         cloneWithNewLexicalContext(inliner.getLexicalContext());
+    }
+    clonedUnenforcedInvokable = blockMethod.getUnenforcedInvokable().
+        cloneWithNewLexicalContext(inliner.getLexicalContext());
+
     SInvokable forInlining = universe.newMethod(blockMethod.getSignature(),
-        clonedInvokable, false, new SMethod[0], blockMethod.isUnenforced());
+        clonedEnforcedInvokable, clonedUnenforcedInvokable, false,
+        new SMethod[0], blockMethod.isUnenforced());
     return forInlining;
   }
 

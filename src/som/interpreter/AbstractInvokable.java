@@ -8,10 +8,12 @@ import com.oracle.truffle.api.nodes.RootNode;
 
 
 public abstract class AbstractInvokable extends RootNode {
+  protected final boolean executesEnforced;
 
   public AbstractInvokable(final SourceSection sourceSection,
-      final FrameDescriptor frameDescriptor) {
+      final FrameDescriptor frameDescriptor, final boolean executesEnforced) {
     super(sourceSection, frameDescriptor);
+    this.executesEnforced = executesEnforced;
   }
 
   public abstract AbstractInvokable cloneWithNewLexicalContext(
@@ -29,7 +31,6 @@ public abstract class AbstractInvokable extends RootNode {
   public abstract void propagateLoopCountThroughoutLexicalScope(final long count);
 
   public abstract boolean isBlock();
-  public abstract boolean isUnenforced();
   public abstract boolean isEmptyPrimitive();
 
   public abstract void setOuterContextMethod(final AbstractInvokable method);

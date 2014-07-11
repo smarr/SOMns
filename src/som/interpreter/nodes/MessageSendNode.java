@@ -78,7 +78,7 @@ public final class MessageSendNode {
   public static AbstractMessageSendNode createForPerformInSuperclassNodes(
       final SSymbol selector, final SClass lookupClass, final boolean executesEnforced) {
     return new GenericMessageSendNode(selector, null,
-        SuperDispatchNode.create(selector, lookupClass),
+        SuperDispatchNode.create(selector, lookupClass, executesEnforced),
             null, executesEnforced);
   }
 
@@ -404,7 +404,7 @@ public final class MessageSendNode {
     protected PreevaluatedExpression makeSuperSend() {
       GenericMessageSendNode node = new GenericMessageSendNode(selector,
           argumentNodes, SuperDispatchNode.create(selector,
-              (ISuperReadNode) argumentNodes[0]),
+              (ISuperReadNode) argumentNodes[0], executesEnforced),
               getSourceSection(), executesEnforced);
       return replace(node);
     }
