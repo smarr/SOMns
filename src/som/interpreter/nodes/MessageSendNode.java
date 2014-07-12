@@ -45,6 +45,7 @@ import som.primitives.arithmetic.LogicAndPrimFactory;
 import som.primitives.arithmetic.ModuloPrimFactory;
 import som.primitives.arithmetic.MultiplicationPrimFactory;
 import som.primitives.arithmetic.SubtractionPrimFactory;
+import som.vm.Classes;
 import som.vm.NotYetImplementedException;
 import som.vm.Universe;
 import som.vmobjects.SBlock;
@@ -246,7 +247,7 @@ public final class MessageSendNode {
                 AtPrimFactory.create(executesEnforced, null, null), executesEnforced));
           }
         case "new:":
-          if (arguments[0] == Universe.current().arrayClass) {
+          if (arguments[0] == Classes.arrayClass) {
             return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
                 argumentNodes[1],
                 NewPrimFactory.create(executesEnforced, null, null), executesEnforced));
@@ -420,7 +421,7 @@ public final class MessageSendNode {
             return replace(new WhileTrueStaticBlocksNode(
                 (BlockNode) argumentNodes[0], argBlockNode,
                 (SBlock) arguments[0],
-                argBlock, Universe.current(), getSourceSection(), executesEnforced));
+                argBlock, getSourceSection(), executesEnforced));
           }
           break; // use normal send
         }
@@ -431,7 +432,7 @@ public final class MessageSendNode {
             SBlock    argBlock     = (SBlock)    arguments[1];
             return replace(new WhileFalseStaticBlocksNode(
                 (BlockNode) argumentNodes[0], argBlockNode,
-                (SBlock) arguments[0], argBlock, Universe.current(), getSourceSection(), executesEnforced));
+                (SBlock) arguments[0], argBlock, getSourceSection(), executesEnforced));
           }
           break; // use normal send
         case "and:":
@@ -495,7 +496,7 @@ public final class MessageSendNode {
           if (arguments[1] instanceof SBlock && arguments[0] instanceof SBlock) {
             SBlock argBlock = (SBlock) arguments[1];
             return replace(new WhileWithDynamicBlocksNode((SBlock) arguments[0],
-                argBlock, true, Universe.current(), getSourceSection(), executesEnforced));
+                argBlock, true, getSourceSection(), executesEnforced));
           }
           break;
         }
@@ -503,8 +504,8 @@ public final class MessageSendNode {
           if (arguments[1] instanceof SBlock && arguments[0] instanceof SBlock) {
             SBlock    argBlock     = (SBlock)    arguments[1];
             return replace(new WhileWithDynamicBlocksNode(
-                (SBlock) arguments[0], argBlock, false, Universe.current(),
-                getSourceSection(), executesEnforced));
+                (SBlock) arguments[0], argBlock, false, getSourceSection(),
+                executesEnforced));
           }
           break; // use normal send
       }

@@ -437,8 +437,8 @@ public final class MethodGenerationContext {
   }
 
   public ExpressionNode getGlobalRead(final SSymbol varName,
-      final Universe universe, final SourceSection source, final boolean enforced) {
-    return createGlobalRead(varName, universe, source, enforced);
+      final SourceSection source, final boolean enforced) {
+    return createGlobalRead(varName, source, enforced);
   }
 
   public AbstractFieldWriteNode getObjectFieldWrite(final SSymbol fieldName,

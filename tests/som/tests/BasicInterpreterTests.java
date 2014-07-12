@@ -117,7 +117,8 @@ public class BasicInterpreterTests {
 
   @Test
   public void testBasicInterpreterBehavior() {
-    Universe u = new Universe(true);
+    Universe u = Universe.current();
+    u.setAvoidExit(true);
     u.setupClassPath("Smalltalk:TestSuite/BasicInterpreterTests");
 
     Object actualResult = u.interpret(testClass, testSelector);

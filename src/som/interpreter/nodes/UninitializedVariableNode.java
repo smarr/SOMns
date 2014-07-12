@@ -131,7 +131,7 @@ public abstract class UninitializedVariableNode extends ContextualNode {
     private SClass getLexicalSuperClass() {
       SClass clazz = (SClass) Universe.current().getGlobal(holderClass);
       if (classSide) {
-        clazz = clazz.getSOMClass(Universe.current());
+        clazz = clazz.getSOMClass();
       }
       return (SClass) clazz.getSuperClass();
     }

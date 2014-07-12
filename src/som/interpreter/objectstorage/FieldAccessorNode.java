@@ -5,7 +5,7 @@ import som.interpreter.TypesGen;
 import som.interpreter.objectstorage.StorageLocation.AbstractObjectStorageLocation;
 import som.interpreter.objectstorage.StorageLocation.DoubleStorageLocation;
 import som.interpreter.objectstorage.StorageLocation.LongStorageLocation;
-import som.vm.Universe;
+import som.vm.Nil;
 import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.CompilerDirectives;
@@ -100,12 +100,9 @@ public abstract class FieldAccessorNode extends Node {
   }
 
   public static final class ReadUnwrittenFieldNode extends ReadSpecializedFieldNode {
-    private final SObject nilObject;
-
     public ReadUnwrittenFieldNode(final int fieldIndex,
         final ObjectLayout layout, final AbstractReadFieldNode next) {
       super(fieldIndex, layout, next);
-      nilObject = Universe.current().nilObject;
     }
 
     @Override
@@ -120,7 +117,7 @@ public abstract class FieldAccessorNode extends Node {
     @Override
     public Object read(final SObject obj) {
       if (hasExpectedLayout(obj)) {
-        return nilObject;
+        return Nil.nilObject;
       } else {
         return respecializedNodeOrNext(obj).read(obj);
       }

@@ -32,7 +32,7 @@ public final class CachedDnuSObjectCheckNode extends AbstractCachedDispatchNode 
       final boolean enforced, final Object[] arguments) {
     SObject rcvr = CompilerDirectives.unsafeCast(arguments[0], SObject.class, true);
 
-    if (rcvr.getSOMClass(null) == expectedClass) {
+    if (rcvr.getSOMClass() == expectedClass) {
       Object[] argsArr = SArguments.createSArgumentsArray(enforced, domain,
           rcvr, selector, SArray.fromArgArrayWithReceiverToSArrayWithoutReceiver(
               arguments, domain));

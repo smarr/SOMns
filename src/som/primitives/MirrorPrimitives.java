@@ -7,14 +7,9 @@ import som.primitives.MirrorPrimsFactory.EvaluatedInPrimFactory;
 import som.primitives.MirrorPrimsFactory.ExecutesEnforcedPrimFactory;
 import som.primitives.MirrorPrimsFactory.ExecutesUnenforcedPrimFactory;
 import som.primitives.MirrorPrimsFactory.SetDomainOfPrimFactory;
-import som.vm.Universe;
 
 
 public final class MirrorPrimitives extends Primitives {
-  public MirrorPrimitives(final Universe universe) {
-    super(universe);
-  }
-
   @Override
   public void installPrimitives() {
     installClassPrimitive("domainOf:",            DomainOfPrimFactory.getInstance());

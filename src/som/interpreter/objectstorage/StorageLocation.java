@@ -10,7 +10,7 @@ import som.interpreter.objectstorage.FieldAccessorNode.ReadUnwrittenFieldNode;
 import som.interpreter.objectstorage.FieldAccessorNode.WriteDoubleFieldNode;
 import som.interpreter.objectstorage.FieldAccessorNode.WriteLongFieldNode;
 import som.interpreter.objectstorage.FieldAccessorNode.WriteObjectFieldNode;
-import som.vm.Universe;
+import som.vm.Nil;
 import som.vmobjects.SObject;
 import sun.misc.Unsafe;
 
@@ -101,7 +101,7 @@ public abstract class StorageLocation {
     @Override
     public Object read(final SObject obj, final boolean assumptionValid) {
       CompilerAsserts.neverPartOfCompilation("StorageLocation");
-      return Universe.current().nilObject;
+      return Nil.nilObject;
     }
 
     @Override
@@ -271,7 +271,7 @@ public abstract class StorageLocation {
       } else {
         CompilerAsserts.neverPartOfCompilation("StorageLocation");
         TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized read node");
-        throw new UnexpectedResultException(Universe.current().nilObject);
+        throw new UnexpectedResultException(Nil.nilObject);
       }
     }
 
@@ -339,7 +339,7 @@ public abstract class StorageLocation {
       } else {
         CompilerAsserts.neverPartOfCompilation("StorageLocation");
         TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized read node");
-        throw new UnexpectedResultException(Universe.current().nilObject);
+        throw new UnexpectedResultException(Nil.nilObject);
       }
     }
 
@@ -415,7 +415,7 @@ public abstract class StorageLocation {
       } else {
         CompilerAsserts.neverPartOfCompilation("StorageLocation");
         TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized read node");
-        throw new UnexpectedResultException(Universe.current().nilObject);
+        throw new UnexpectedResultException(Nil.nilObject);
       }
     }
 
@@ -486,7 +486,7 @@ public abstract class StorageLocation {
       } else {
         CompilerAsserts.neverPartOfCompilation("StorageLocation");
         TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized read node");
-        throw new UnexpectedResultException(Universe.current().nilObject);
+        throw new UnexpectedResultException(Nil.nilObject);
       }
     }
 

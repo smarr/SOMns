@@ -23,6 +23,8 @@ package som.interpreter;
 
 import java.math.BigInteger;
 
+import som.vm.Classes;
+import som.vm.Globals;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
@@ -58,23 +60,23 @@ public class Types {
     assert obj != null;
 
     if (obj instanceof SAbstractObject) {
-      return ((SAbstractObject) obj).getSOMClass(universe);
+      return ((SAbstractObject) obj).getSOMClass();
     } else if (obj instanceof Boolean) {
       if ((boolean) obj) {
-        return universe.trueClass;
+        return Globals.trueClass;
       } else {
-        return universe.falseClass;
+        return Globals.falseClass;
       }
     } else if (obj instanceof Long || obj instanceof BigInteger) {
-      return universe.integerClass;
+      return Classes.integerClass;
     } else if (obj instanceof String) {
-      return universe.stringClass;
+      return Classes.stringClass;
     } else if (obj instanceof Double) {
-      return universe.doubleClass;
+      return Classes.doubleClass;
     } else if (obj instanceof SMethod) {
-      return universe.methodClass;
+      return Classes.methodClass;
     } else if (obj instanceof SPrimitive) {
-      return universe.primitiveClass;
+      return Classes.primitiveClass;
     } else if (obj instanceof SBlock1) {
       return universe.getBlockClass(1);
     } else if (obj instanceof SBlock2) {
@@ -82,7 +84,7 @@ public class Types {
     } else if (obj instanceof SBlock3) {
       return universe.getBlockClass(3);
     } else if (obj instanceof Object[]) {
-      return universe.arrayClass;
+      return Classes.arrayClass;
     }
 
     TruffleCompiler.transferToInterpreter("Should not be reachable");

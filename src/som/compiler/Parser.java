@@ -300,7 +300,7 @@ public final class Parser {
       }
 
       cgenc.setInstanceFieldsOfSuper(superClass.getInstanceFields());
-      cgenc.setClassFieldsOfSuper(superClass.getSOMClass(universe).getInstanceFields());
+      cgenc.setClassFieldsOfSuper(superClass.getSOMClass().getInstanceFields());
     }
   }
 
@@ -636,8 +636,8 @@ public final class Parser {
 
         boolean withContext = bgenc.requiresContext();
 
-        return tuple(createBlockNode(blockMethod, withContext, universe, source, true),
-            createBlockNode(blockMethod, withContext, universe, source, false));
+        return tuple(createBlockNode(blockMethod, withContext, source, true),
+            createBlockNode(blockMethod, withContext, source, false));
       }
       default: {
         return literal();
@@ -940,8 +940,8 @@ public final class Parser {
     }
 
     // and finally assume it is a global
-    return tuple(mgenc.getGlobalRead(varName, universe, source, true),
-        mgenc.getGlobalRead(varName, universe, source, false));
+    return tuple(mgenc.getGlobalRead(varName, source, true),
+        mgenc.getGlobalRead(varName, source, false));
   }
 
   private ExpressionTuple variableWrite(final MethodGenerationContext mgenc,

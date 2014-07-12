@@ -33,14 +33,8 @@ import som.primitives.arithmetic.ModuloPrimFactory;
 import som.primitives.arithmetic.MultiplicationPrimFactory;
 import som.primitives.arithmetic.SqrtPrimFactory;
 import som.primitives.arithmetic.SubtractionPrimFactory;
-import som.vm.Universe;
 
 public final class DoublePrimitives extends Primitives {
-
-  public DoublePrimitives(final Universe universe) {
-    super(universe);
-  }
-
   @Override
   public void installPrimitives() {
     installInstancePrimitive("asString", AsStringPrimFactory.getInstance());

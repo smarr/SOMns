@@ -3,6 +3,8 @@ package som.primitives;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.vm.Globals;
+import som.vm.Nil;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
@@ -20,16 +22,15 @@ public final class SystemPrims {
     public BinarySystemNode(final BinarySystemNode node) { this(node.executesEnforced); }
 
     protected final boolean receiverIsSystemObject(final SAbstractObject receiver) {
-      return receiver == universe.systemObject;
+      return receiver == Globals.systemObject;
     }
   }
 
   private abstract static class UnarySystemNode extends UnaryExpressionNode {
-    protected final Universe universe;
-    protected UnarySystemNode(final boolean executesEnforced) { super(null, executesEnforced); this.universe = Universe.current(); }
+    protected UnarySystemNode(final boolean executesEnforced) { super(null, executesEnforced); }
 
     protected final boolean receiverIsSystemObject(final SAbstractObject receiver) {
-      return receiver == universe.systemObject;
+      return receiver == Globals.systemObject;
     }
   }
 
@@ -40,7 +41,7 @@ public final class SystemPrims {
     @Specialization(guards = "receiverIsSystemObject")
     public final Object doSObject(final SObject receiver, final SSymbol argument) {
       SClass result = universe.loadClass(argument);
-      return result != null ? result : universe.nilObject;
+      return result != null ? result : Nil.nilObject;
     }
   }
 
@@ -68,7 +69,7 @@ public final class SystemPrims {
     }
 
     protected final boolean receiverIsSystemObject(final SAbstractObject receiver) {
-      return receiver == universe.systemObject;
+      return receiver == Globals.systemObject;
     }
   }
 
@@ -101,7 +102,7 @@ public final class SystemPrims {
     @Specialization(guards = "receiverIsSystemObject")
     public final Object doSObject(final SObject receiver) {
       System.gc();
-      return universe.trueObject;
+      return true;
     }
   }
 

@@ -50,7 +50,7 @@ public final class IntercessionHandlerCache {
     private AbstractIntercessionHandlerDispatch specialize(final SObject rcvrDomain) {
       transferToInterpreterAndInvalidate("Initialize a dispatch node.");
 
-      SInvokable handler = rcvrDomain.getSOMClass(Universe.current()).
+      SInvokable handler = rcvrDomain.getSOMClass().
           lookupInvokable(intercessionHandlerSelector);
 
       if (depth < INLINE_CACHE_SIZE) {
@@ -121,13 +121,11 @@ public final class IntercessionHandlerCache {
   }
 
   public static final class GenericDispatch extends AbstractIntercessionHandlerDispatch {
-    private final Universe universe;
     private final SSymbol intercessionHandlerSelector;
 
     public GenericDispatch(final SSymbol intercessionHandlerSelector,
         final boolean executesEnforced) {
       super(executesEnforced, 0);
-      this.universe = Universe.current();
       this.intercessionHandlerSelector = intercessionHandlerSelector;
     }
 
@@ -138,7 +136,7 @@ public final class IntercessionHandlerCache {
       CompilerAsserts.neverPartOfCompilation("IntercessionHandlerCache.generic"); // no caching, direct invokes, no loop count reporting...
 
       SObject currentDomain = SArguments.domain(frame);
-      SInvokable handler = rcvrDomain.getSOMClass(universe).
+      SInvokable handler = rcvrDomain.getSOMClass().
           lookupInvokable(intercessionHandlerSelector);
       return handler.invoke(currentDomain, false, arguments);
     }

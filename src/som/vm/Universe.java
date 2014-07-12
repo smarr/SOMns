@@ -25,7 +25,20 @@
 
 package som.vm;
 
-import static som.vmobjects.SDomain.createStandardDomain;
+
+import static som.vm.Classes.arrayClass;
+import static som.vm.Classes.booleanClass;
+import static som.vm.Classes.classClass;
+import static som.vm.Classes.domainClass;
+import static som.vm.Classes.doubleClass;
+import static som.vm.Classes.integerClass;
+import static som.vm.Classes.metaclassClass;
+import static som.vm.Classes.methodClass;
+import static som.vm.Classes.nilClass;
+import static som.vm.Classes.objectClass;
+import static som.vm.Classes.primitiveClass;
+import static som.vm.Classes.stringClass;
+import static som.vm.Classes.symbolClass;
 
 import java.io.File;
 import java.io.IOException;
@@ -51,7 +64,7 @@ import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.TruffleRuntime;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 
-public class Universe {
+public final class Universe {
 
   /**
    * Associations are handles for globals with a fixed
@@ -81,7 +94,7 @@ public class Universe {
   }
 
   public static void main(final String[] arguments) {
-    Universe u = new Universe();
+    Universe u = current();
 
     try {
       u.interpret(arguments);
@@ -99,17 +112,15 @@ public class Universe {
     return execute(arguments);
   }
 
-  public Universe() { this(false); }
-  public Universe(final boolean avoidExit) {
+  private Universe() {
     this.truffleRuntime = Truffle.getRuntime();
     this.globals      = new HashMap<SSymbol, Association>();
     this.symbolTable  = new HashMap<>();
-    this.avoidExit    = avoidExit;
+    this.avoidExit    = false;
+    this.alreadyInitialized = false;
     this.lastExitCode = 0;
 
     this.blockClasses = new SClass[4];
-
-    current = this;
   }
 
   public TruffleRuntime getTruffleRuntime() {
@@ -131,9 +142,9 @@ public class Universe {
   }
 
   @SlowPath
-  public void errorExit(final String message) {
+  public static void errorExit(final String message) {
     errorPrintln("Runtime Error: " + message);
-    exit(1);
+    current().exit(1);
   }
 
   @SlowPath
@@ -274,9 +285,9 @@ public class Universe {
     SClass clazz = loadClass(symbolFor(className));
 
     // Lookup the initialize invokable on the system class
-    SInvokable initialize = clazz.getSOMClass(this).
+    SInvokable initialize = clazz.getSOMClass().
                                         lookupInvokable(symbolFor(selector));
-    return initialize.invoke(standardDomain, false, clazz);
+    return initialize.invoke(Domain.standard, false, clazz);
   }
 
   private Object execute(final String[] arguments) {
@@ -292,39 +303,26 @@ public class Universe {
     SInvokable initialize = systemClass.
         lookupInvokable(symbolFor("initialize:"));
 
-    return initialize.invoke(standardDomain, false, systemObject,
-        SArray.newSArray(arguments, standardDomain));
+    return initialize.invoke(Domain.standard, false, systemObject,
+        SArray.newSArray(arguments, Domain.standard));
   }
 
   @SlowPath
   protected void initializeObjectSystem() {
+    if (alreadyInitialized) {
+      return;
+    } else {
+      alreadyInitialized = true;
+    }
+
     // Allocate the nil object
-    nilObject = SObject.create(null, null, 0);
-    standardDomain = createStandardDomain(nilObject);
+    SObject nilObject = Nil.nilObject;
+    SObject standardDomain = Domain.standard;
     nilObject.setDomain(standardDomain);
 
-    // Allocate the Metaclass classes
-    metaclassClass = newMetaclassClass(standardDomain);
-
-    // Allocate the rest of the system classes
-    objectClass     = newSystemClass(standardDomain);
-    nilClass        = newSystemClass(standardDomain);
-    classClass      = newSystemClass(standardDomain);
-    arrayClass      = newSystemClass(standardDomain);
-    symbolClass     = newSystemClass(standardDomain);
-    methodClass     = newSystemClass(standardDomain);
-    integerClass    = newSystemClass(standardDomain);
-    primitiveClass  = newSystemClass(standardDomain);
-    stringClass     = newSystemClass(standardDomain);
-    doubleClass     = newSystemClass(standardDomain);
-    domainClass     = newSystemClass(standardDomain, 1);
-    booleanClass    = newSystemClass(standardDomain);
-    trueClass       = newSystemClass(standardDomain);
-    falseClass      = newSystemClass(standardDomain);
-
     // Setup the class reference for the nil object
-    nilObject.setClass(nilClass, nilObject);
-    standardDomain.setClass(domainClass, nilObject);
+    nilObject.setClass(nilClass);
+    standardDomain.setClass(domainClass);
 
     // Initialize the system classes.
     initializeSystemClass(objectClass,            null, "Object");
@@ -392,6 +390,10 @@ public class Universe {
     loadBlockClass(2);
     loadBlockClass(3);
 
+    if (Globals.trueObject != trueObject) {
+      errorExit("Initialization went wrong for class Globals");
+    }
+
     objectSystemInitialized = true;
   }
 
@@ -405,7 +407,7 @@ public class Universe {
     return newSymbol(interned);
   }
 
-  public SBlock newBlock(final SMethod method, final MaterializedFrame context,
+  public static SBlock newBlock(final SMethod method, final MaterializedFrame context,
       final boolean capturedEnforced) {
     return SBlock.create(method, context, capturedEnforced);
   }
@@ -413,11 +415,11 @@ public class Universe {
   @SlowPath
   public SClass newClass(final SClass classClass, final SObject domain) {
     // Allocate a new class and set its class to be the given class class
-    return new SClass(domain, classClass, this);
+    return new SClass(domain, classClass);
   }
 
   @SlowPath
-  public SInvokable newMethod(final SSymbol signature,
+  public static SInvokable newMethod(final SSymbol signature,
       final AbstractInvokable enforced, final AbstractInvokable unenforced,
       final boolean isPrimitive,
       final SMethod[] embeddedBlocks, final boolean isUnenforced) {
@@ -428,18 +430,18 @@ public class Universe {
     }
   }
 
-  public SObject newInstance(final SClass instanceClass, final SObject domain) {
-    return SObject.create(nilObject, domain, instanceClass);
+  public static SObject newInstance(final SClass instanceClass, final SObject domain) {
+    return SObject.create(domain, instanceClass);
   }
 
   @SlowPath
-  public SClass newMetaclassClass(final SObject domain) {
+  public static SClass newMetaclassClass(final SObject domain) {
     // Allocate the metaclass classes
-    SClass result = new SClass(domain, 0, this);
-    result.setClass(new SClass(domain, 0, this), nilObject);
+    SClass result = new SClass(domain, 0);
+    result.setClass(new SClass(domain, 0));
 
     // Setup the metaclass hierarchy
-    result.getSOMClass(this).setClass(result, nilObject);
+    result.getSOMClass().setClass(result);
     return result;
   }
 
@@ -454,18 +456,18 @@ public class Universe {
     return result;
   }
 
-  public SClass newSystemClass(final SObject domain) {
+  public static SClass newSystemClass(final SObject domain) {
     return newSystemClass(domain, 0);
   }
 
   @SlowPath
-  public SClass newSystemClass(final SObject domain, final int numberOfFields) {
+  public static SClass newSystemClass(final SObject domain, final int numberOfFields) {
     // Allocate the new system class
-    SClass systemClass = new SClass(domain, numberOfFields, this);
+    SClass systemClass = new SClass(domain, numberOfFields);
 
     // Setup the metaclass hierarchy
-    systemClass.setClass(new SClass(domain, numberOfFields, this), nilObject);
-    systemClass.getSOMClass(this).setClass(metaclassClass, nilObject);
+    systemClass.setClass(new SClass(domain, numberOfFields));
+    systemClass.getSOMClass().setClass(metaclassClass);
 
     // Return the freshly allocated system class
     return systemClass;
@@ -477,22 +479,22 @@ public class Universe {
     // Initialize the superclass hierarchy
     if (superClass != null) {
       systemClass.setSuperClass(superClass);
-      systemClass.getSOMClass(this).setSuperClass(superClass.getSOMClass(this));
+      systemClass.getSOMClass().setSuperClass(superClass.getSOMClass());
     } else {
-      systemClass.getSOMClass(this).setSuperClass(classClass);
+      systemClass.getSOMClass().setSuperClass(classClass);
     }
 
     // Initialize the array of instance fields
     systemClass.setInstanceFields(new SSymbol[0]);
-    systemClass.getSOMClass(this).setInstanceFields(new SSymbol[0]);
+    systemClass.getSOMClass().setInstanceFields(new SSymbol[0]);
 
     // Initialize the array of instance invokables
     systemClass.setInstanceInvokables(new SInvokable[0]);
-    systemClass.getSOMClass(this).setInstanceInvokables(new SInvokable[0]);
+    systemClass.getSOMClass().setInstanceInvokables(new SInvokable[0]);
 
     // Initialize the name of the system class
     systemClass.setName(symbolFor(name));
-    systemClass.getSOMClass(this).setName(symbolFor(name + " class"));
+    systemClass.getSOMClass().setName(symbolFor(name + " class"));
 
     // Insert the system class into the dictionary of globals
     setGlobal(systemClass.getName(), systemClass);
@@ -608,7 +610,7 @@ public class Universe {
         SClass result = som.compiler.SourcecodeCompiler.compileClass(cpEntry,
             name.getString(), systemClass, this);
         if (printAST) {
-          Disassembler.dump(result.getSOMClass(this));
+          Disassembler.dump(result.getSOMClass());
           Disassembler.dump(result);
         }
         return result;
@@ -632,6 +634,10 @@ public class Universe {
         this);
     if (printAST) { Disassembler.dump(result); }
     return result;
+  }
+
+  public void setAvoidExit(final boolean value) {
+    avoidExit = value;
   }
 
   @SlowPath
@@ -676,32 +682,21 @@ public class Universe {
     // Checkstyle: resume
   }
 
-  @CompilationFinal public SObject              nilObject;
-  @CompilationFinal public SObject              trueObject;
-  @CompilationFinal public SObject              falseObject;
-  @CompilationFinal public SObject              systemObject;
+  public SObject getTrueObject()   { return trueObject; }
+  public SObject getFalseObject()  { return falseObject; }
+  public SObject getSystemObject() { return systemObject; }
 
-  @CompilationFinal public SClass               objectClass;
-  @CompilationFinal public SClass               classClass;
-  @CompilationFinal public SClass               metaclassClass;
+  public SClass getTrueClass()   { return trueClass; }
+  public SClass getFalseClass()  { return falseClass; }
+  public SClass getSystemClass() { return systemClass; }
 
-  @CompilationFinal public SClass               nilClass;
-  @CompilationFinal public SClass               integerClass;
-  @CompilationFinal public SClass               arrayClass;
-  @CompilationFinal public SClass               methodClass;
-  @CompilationFinal public SClass               symbolClass;
-  @CompilationFinal public SClass               primitiveClass;
-  @CompilationFinal public SClass               stringClass;
-  @CompilationFinal public SClass               systemClass;
-  @CompilationFinal public SClass               doubleClass;
+  @CompilationFinal private SObject trueObject;
+  @CompilationFinal private SObject falseObject;
+  @CompilationFinal private SObject systemObject;
 
-  @CompilationFinal public SClass               booleanClass;
-  @CompilationFinal public SClass               trueClass;
-  @CompilationFinal public SClass               falseClass;
-
-  @CompilationFinal public SClass               domainClass;
-  @CompilationFinal public SObject              standardDomain;
-
+  @CompilationFinal private SClass  trueClass;
+  @CompilationFinal private SClass  falseClass;
+  @CompilationFinal private SClass  systemClass;
 
   private final HashMap<SSymbol, Association>   globals;
 
@@ -714,7 +709,7 @@ public class Universe {
 
   // TODO: this is not how it is supposed to be... it is just a hack to cope
   //       with the use of system.exit in SOM to enable testing
-  private final boolean                         avoidExit;
+  @CompilationFinal private boolean             avoidExit;
   private int                                   lastExitCode;
 
   // Optimizations
@@ -723,6 +718,7 @@ public class Universe {
   // Latest instance
   // WARNING: this is problematic with multiple interpreters in the same VM...
   @CompilationFinal private static Universe current;
+  @CompilationFinal private boolean alreadyInitialized;
 
   @CompilationFinal private boolean objectSystemInitialized = false;
 
@@ -731,6 +727,9 @@ public class Universe {
   }
 
   public static Universe current() {
+    if (current == null) {
+      current = new Universe();
+    }
     return current;
   }
 }

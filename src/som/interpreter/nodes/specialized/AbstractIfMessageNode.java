@@ -2,6 +2,7 @@ package som.interpreter.nodes.specialized;
 
 import som.interpreter.SArguments;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
+import som.vm.Nil;
 import som.vm.Universe;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
@@ -24,8 +25,6 @@ public abstract class AbstractIfMessageNode extends BinaryExpressionNode {
   @Child protected DirectCallNode branchValueSend;
   private final boolean branchEnforced;
 
-  protected final Universe universe;
-
   public AbstractIfMessageNode(final Object rcvr, final Object arg,
       final Universe universe, final SourceSection source, final boolean executesEnforced) {
     super(source, executesEnforced);
@@ -39,7 +38,6 @@ public abstract class AbstractIfMessageNode extends BinaryExpressionNode {
       branchMethod = null;
       branchEnforced = false; // TODO: does this even matter?
     }
-    this.universe = universe;
   }
 
   public AbstractIfMessageNode(final AbstractIfMessageNode node) {
@@ -50,7 +48,6 @@ public abstract class AbstractIfMessageNode extends BinaryExpressionNode {
       branchValueSend = Truffle.getRuntime().createDirectCallNode(
           branchMethod.getCallTarget(branchEnforced || executesEnforced));
     }
-    this.universe = node.universe;
   }
 
   /**
@@ -65,7 +62,7 @@ public abstract class AbstractIfMessageNode extends BinaryExpressionNode {
       return branchValueSend.call(frame, SArguments.createSArguments(domain, branchEnforced, new Object[] {argument}));
     } else {
       ifFalseBranch.enter();
-      return universe.nilObject;
+      return Nil.nilObject;
     }
   }
 
@@ -78,7 +75,7 @@ public abstract class AbstractIfMessageNode extends BinaryExpressionNode {
       return argument.getMethod().invoke(domain, branchEnforced, argument);
     } else {
       ifFalseBranch.enter();
-      return universe.nilObject;
+      return Nil.nilObject;
     }
   }
 

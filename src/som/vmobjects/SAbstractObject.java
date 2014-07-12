@@ -8,11 +8,12 @@ import com.oracle.truffle.api.CompilerAsserts;
 
 public abstract class SAbstractObject {
 
-  public abstract SClass getSOMClass(final Universe universe);
+  public abstract SClass getSOMClass();
 
   @Override
   public String toString() {
-    SClass clazz = getSOMClass(Universe.current());
+    CompilerAsserts.neverPartOfCompilation();
+    SClass clazz = getSOMClass();
     if (clazz == null) {
       return "an Object(clazz==null)";
     }

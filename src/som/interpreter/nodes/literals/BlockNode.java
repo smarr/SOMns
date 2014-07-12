@@ -13,18 +13,16 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 public class BlockNode extends LiteralNode {
 
   protected final SMethod  blockMethod;
-  protected final Universe universe;
 
-  public BlockNode(final SMethod blockMethod, final Universe universe,
-      final SourceSection source, final boolean executesEnforced) {
+  public BlockNode(final SMethod blockMethod, final SourceSection source,
+      final boolean executesEnforced) {
     super(source, executesEnforced);
-    this.blockMethod  = blockMethod;
-    this.universe     = universe;
+    this.blockMethod = blockMethod;
   }
 
   @Override
   public SBlock executeSBlock(final VirtualFrame frame) {
-    return universe.newBlock(blockMethod, null, executesEnforced);
+    return Universe.newBlock(blockMethod, null, executesEnforced);
   }
 
   @Override
@@ -35,7 +33,7 @@ public class BlockNode extends LiteralNode {
   @Override
   public void replaceWithIndependentCopyForInlining(final Inliner inliner) {
     SMethod forInlining = (SMethod) cloneMethod(inliner);
-    replace(new BlockNode(forInlining, universe, getSourceSection(), executesEnforced));
+    replace(new BlockNode(forInlining, getSourceSection(), executesEnforced));
   }
 
   protected SInvokable cloneMethod(final Inliner inliner) {
@@ -51,7 +49,7 @@ public class BlockNode extends LiteralNode {
     clonedUnenforcedInvokable = blockMethod.getUnenforcedInvokable().
         cloneWithNewLexicalContext(inliner.getLexicalContext());
 
-    SInvokable forInlining = universe.newMethod(blockMethod.getSignature(),
+    SInvokable forInlining = Universe.newMethod(blockMethod.getSignature(),
         clonedEnforcedInvokable, clonedUnenforcedInvokable, false,
         new SMethod[0], blockMethod.isUnenforced());
     return forInlining;
@@ -60,25 +58,25 @@ public class BlockNode extends LiteralNode {
   public static final class BlockNodeWithContext extends BlockNode {
 
     public BlockNodeWithContext(final SMethod blockMethod,
-        final Universe universe, final SourceSection source, final boolean executesEnforced) {
-      super(blockMethod, universe, source, executesEnforced);
+        final SourceSection source, final boolean executesEnforced) {
+      super(blockMethod, source, executesEnforced);
     }
 
     public BlockNodeWithContext(final BlockNodeWithContext node) {
-      this(node.blockMethod, node.universe, node.getSourceSection(),
+      this(node.blockMethod, node.getSourceSection(),
           node.executesEnforced);
     }
 
     @Override
     public SBlock executeSBlock(final VirtualFrame frame) {
-      return universe.newBlock(blockMethod, frame.materialize(), executesEnforced);
+      return Universe.newBlock(blockMethod, frame.materialize(), executesEnforced);
     }
 
     @Override
     public void replaceWithIndependentCopyForInlining(final Inliner inliner) {
       SMethod forInlining = (SMethod) cloneMethod(inliner);
-      replace(new BlockNodeWithContext(forInlining, universe,
-          getSourceSection(), executesEnforced));
+      replace(new BlockNodeWithContext(forInlining, getSourceSection(),
+          executesEnforced));
     }
   }
 }

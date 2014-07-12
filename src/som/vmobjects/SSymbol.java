@@ -24,9 +24,8 @@
 
 package som.vmobjects;
 
-import som.vm.Universe;
-
-import com.oracle.truffle.api.CompilerAsserts;
+import som.vm.Classes;
+import som.vm.Domain;
 
 public final class SSymbol extends SAbstractObject {
 
@@ -38,13 +37,13 @@ public final class SSymbol extends SAbstractObject {
 
   @Override
   public SObject getDomain() {
-    CompilerAsserts.neverPartOfCompilation("SSymbol.getDomain");
-    return Universe.current().standardDomain;
+    return Domain.standard;
   }
 
   @Override
-  public SClass getSOMClass(final Universe universe) {
-    return universe.symbolClass;
+  public SClass getSOMClass() {
+    assert Classes.symbolClass != null;
+    return Classes.symbolClass;
   }
 
   public String getString() {

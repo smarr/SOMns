@@ -29,9 +29,9 @@ import static som.interpreter.SArguments.createSArguments;
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
 import som.interpreter.AbstractInvokable;
 import som.interpreter.SArguments;
-import som.vm.Universe;
+import som.vm.Classes;
+import som.vm.Domain;
 
-import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.RootCallTarget;
 
@@ -73,8 +73,9 @@ public abstract class SInvokable extends SAbstractObject {
     }
 
     @Override
-    public SClass getSOMClass(final Universe universe) {
-      return universe.methodClass;
+    public SClass getSOMClass() {
+      assert Classes.methodClass != null;
+      return Classes.methodClass;
     }
   }
 
@@ -86,8 +87,9 @@ public abstract class SInvokable extends SAbstractObject {
     }
 
     @Override
-    public SClass getSOMClass(final Universe universe) {
-      return universe.primitiveClass;
+    public SClass getSOMClass() {
+      assert Classes.primitiveClass != null;
+      return Classes.primitiveClass;
     }
   }
 
@@ -137,8 +139,7 @@ public abstract class SInvokable extends SAbstractObject {
 
   @Override
   public final SObject getDomain() {
-    CompilerAsserts.neverPartOfCompilation("SInvokable.getDomain()");
-    return Universe.current().standardDomain;
+    return Domain.standard;
   }
 
   public void setHolder(final SClass value) {

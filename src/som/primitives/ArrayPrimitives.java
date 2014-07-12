@@ -28,14 +28,8 @@ package som.primitives;
 import som.primitives.ArrayPrimsFactory.AtPrimFactory;
 import som.primitives.ArrayPrimsFactory.AtPutPrimFactory;
 import som.primitives.ArrayPrimsFactory.NewPrimFactory;
-import som.vm.Universe;
 
 public final class ArrayPrimitives extends Primitives {
-
-  public ArrayPrimitives(final Universe universe) {
-    super(universe);
-  }
-
   @Override
   public void installPrimitives() {
     installInstancePrimitive("at:",     AtPrimFactory.getInstance());

@@ -1,7 +1,6 @@
 package som.interpreter.nodes.specialized.whileloops;
 
 import som.vm.NotYetImplementedException;
-import som.vm.Universe;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
@@ -16,9 +15,9 @@ public final class WhileWithDynamicBlocksNode extends AbstractWhileNode {
   private final SInvokable bodyMethod;
 
   public WhileWithDynamicBlocksNode(final SBlock rcvr, final SBlock arg,
-      final boolean predicateBool, final Universe universe,
-      final SourceSection source, final boolean executesEnforced) {
-    super(rcvr, arg, predicateBool, universe, source, executesEnforced);
+      final boolean predicateBool, final SourceSection source,
+      final boolean executesEnforced) {
+    super(rcvr, arg, predicateBool, source, executesEnforced);
     conditionMethod = rcvr.getMethod();
     bodyMethod = arg.getMethod();
   }

@@ -74,15 +74,15 @@ public final class SNodeFactory {
   public static ExpressionNode createGlobalRead(final String name,
       final Universe universe, final SourceSection source,
       final boolean executeEnforced) {
-    return createGlobalRead(universe.symbolFor(name), universe, source, executeEnforced);
+    return createGlobalRead(universe.symbolFor(name), source, executeEnforced);
   }
 
   public static ExpressionNode createGlobalRead(final SSymbol name,
-      final Universe universe, final SourceSection source, final boolean executeEnforced) {
+      final SourceSection source, final boolean executeEnforced) {
     if (executeEnforced) {
       return new EnforcedGlobalReadNode(name, source);
     } else {
-      return new UninitializedGlobalReadNode(name, universe, source, executeEnforced);
+      return new UninitializedGlobalReadNode(name, source, executeEnforced);
     }
   }
 
@@ -131,12 +131,12 @@ public final class SNodeFactory {
   }
 
   public static BlockNode createBlockNode(final SMethod blockMethod,
-      final boolean withContext, final Universe universe,
-      final SourceSection source, final boolean executesEnforced) {
+      final boolean withContext, final SourceSection source,
+      final boolean executesEnforced) {
     if (withContext) {
-      return new BlockNodeWithContext(blockMethod, universe, source, executesEnforced);
+      return new BlockNodeWithContext(blockMethod, source, executesEnforced);
     } else {
-      return new BlockNode(blockMethod, universe, source, executesEnforced);
+      return new BlockNode(blockMethod, source, executesEnforced);
     }
   }
 

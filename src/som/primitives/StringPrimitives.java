@@ -28,14 +28,8 @@ package som.primitives;
 import som.primitives.StringPrimsFactory.AsSymbolPrimFactory;
 import som.primitives.StringPrimsFactory.ConcatPrimFactory;
 import som.primitives.StringPrimsFactory.SubstringPrimFactory;
-import som.vm.Universe;
 
 public final class StringPrimitives extends Primitives {
-
-  public StringPrimitives(final Universe universe) {
-    super(universe);
-  }
-
   @Override
   public void installPrimitives() {
     installInstancePrimitive("concatenate:", ConcatPrimFactory.getInstance());

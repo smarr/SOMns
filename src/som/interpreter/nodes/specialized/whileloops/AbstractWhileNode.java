@@ -3,7 +3,7 @@ package som.interpreter.nodes.specialized.whileloops;
 import som.interpreter.AbstractInvokable;
 import som.interpreter.SArguments;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.vm.Universe;
+import som.vm.Nil;
 import som.vmobjects.SBlock;
 import som.vmobjects.SObject;
 
@@ -26,11 +26,10 @@ public abstract class AbstractWhileNode extends BinaryExpressionNode {
   private final boolean bodyEnforced;
 
   protected final boolean predicateBool;
-  protected final Universe universe;
 
   public AbstractWhileNode(final SBlock rcvr, final SBlock arg,
-      final boolean predicateBool, final Universe universe,
-      final SourceSection source, final boolean executesEnforced) {
+      final boolean predicateBool, final SourceSection source,
+      final boolean executesEnforced) {
     super(source, executesEnforced);
 
     CallTarget callTargetCondition = rcvr.getMethod().getCallTarget(rcvr.isEnforced() || executesEnforced);
@@ -44,7 +43,6 @@ public abstract class AbstractWhileNode extends BinaryExpressionNode {
     bodyEnforced = arg.isEnforced();
 
     this.predicateBool = predicateBool;
-    this.universe = universe;
   }
 
   @Override
@@ -85,7 +83,7 @@ public abstract class AbstractWhileNode extends BinaryExpressionNode {
         reportLoopCount(iterationCount);
       }
     }
-    return universe.nilObject;
+    return Nil.nilObject;
   }
 
   protected abstract SObject doWhileConditionally(final VirtualFrame frame,

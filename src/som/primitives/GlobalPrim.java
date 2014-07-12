@@ -5,6 +5,7 @@ import som.interpreter.nodes.GlobalNode;
 import som.interpreter.nodes.GlobalNode.UninitializedGlobalReadWithoutErrorNode;
 import som.interpreter.nodes.SOMNode;
 import som.primitives.SystemPrims.BinarySystemNode;
+import som.vm.Nil;
 import som.vm.NotYetImplementedException;
 import som.vm.Universe;
 import som.vmobjects.SObject;
@@ -75,7 +76,7 @@ public abstract class GlobalPrim extends BinarySystemNode {
     public CachedGetGlobal(final SSymbol name, final int depth) {
       this.depth = depth;
       this.name  = name;
-      getGlobal = new UninitializedGlobalReadWithoutErrorNode(name, Universe.current(), null, false);
+      getGlobal = new UninitializedGlobalReadWithoutErrorNode(name, null, false);
       next = new UninitializedGetGlobal(this.depth + 1);
     }
 
@@ -100,7 +101,7 @@ public abstract class GlobalPrim extends BinarySystemNode {
     @Override
     public Object getGlobal(final VirtualFrame frame, final SSymbol argument) {
       Object result = universe.getGlobal(argument);
-      return result != null ? result : universe.nilObject;
+      return result != null ? result : Nil.nilObject;
     }
   }
 }

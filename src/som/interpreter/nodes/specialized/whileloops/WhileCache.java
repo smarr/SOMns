@@ -2,7 +2,8 @@ package som.interpreter.nodes.specialized.whileloops;
 
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
 import som.interpreter.SArguments;
-import som.vm.Universe;
+import som.vm.Globals;
+import som.vm.Nil;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
@@ -87,7 +88,7 @@ public final class WhileCache {
       this.body      = body.getMethod();
       this.next = new UninitializedDispatch(predicateBool, executesEnforced, depth + 1);
       this.whileNode = new WhileWithDynamicBlocksNode(condition, body,
-          predicateBool, Universe.current(), null, executesEnforced);
+          predicateBool, null, executesEnforced);
     }
 
     @Override
@@ -103,22 +104,19 @@ public final class WhileCache {
   }
 
   public static final class GenericDispatch extends AbstractWhileDispatch {
-    private final Universe universe;
-
     public GenericDispatch(final boolean predicateBool, final boolean executesEnforced) {
       super(predicateBool, executesEnforced, 0);
-      this.universe = Universe.current();
     }
 
     private boolean obj2bool(final Object o) {
       if (o instanceof Boolean) {
         return (boolean) o;
-      } else if (o == universe.trueObject) {
+      } else if (o == Globals.trueObject) {
         CompilerAsserts.neverPartOfCompilation("obj2Bool1");
         return true;
       } else {
         CompilerAsserts.neverPartOfCompilation("obj2Bool2");
-        assert o == universe.falseObject;
+        assert o == Globals.falseObject;
         return false;
       }
     }
@@ -140,7 +138,7 @@ public final class WhileCache {
         conditionResult = loopCondition.getMethod().invoke(currentDomain, loopCondition.isEnforced(), loopCondition);
         loopConditionResult = obj2bool(conditionResult);
       }
-      return universe.nilObject;
+      return Nil.nilObject;
     }
   }
 }

@@ -29,14 +29,8 @@ import som.primitives.ClassPrimsFactory.InstanceFieldsPrimFactory;
 import som.primitives.ClassPrimsFactory.InstanceInvokablesPrimFactory;
 import som.primitives.ClassPrimsFactory.NamePrimFactory;
 import som.primitives.ClassPrimsFactory.SuperClassPrimFactory;
-import som.vm.Universe;
 
 public final class ClassPrimitives extends Primitives {
-
-  public ClassPrimitives(final Universe universe) {
-    super(universe);
-  }
-
   @Override
   public void installPrimitives() {
     installInstancePrimitive("new",        NewObjectPrimFactory.getInstance());

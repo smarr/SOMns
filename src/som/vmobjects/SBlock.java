@@ -30,6 +30,7 @@ import som.primitives.BlockPrimsFactory.ValueNonePrimFactory;
 import som.primitives.BlockPrimsFactory.ValueOnePrimFactory;
 import som.primitives.BlockPrimsFactory.ValueTwoPrimFactory;
 import som.primitives.Primitives;
+import som.vm.Domain;
 import som.vm.Universe;
 
 import com.oracle.truffle.api.CompilerAsserts;
@@ -57,8 +58,8 @@ public abstract class SBlock extends SAbstractObject {
     }
 
     @Override
-    public SClass getSOMClass(final Universe universe) {
-      return universe.getBlockClass(1);
+    public SClass getSOMClass() {
+      return Universe.current().getBlockClass(1);
     }
   }
 
@@ -69,8 +70,8 @@ public abstract class SBlock extends SAbstractObject {
     }
 
     @Override
-    public SClass getSOMClass(final Universe universe) {
-      return universe.getBlockClass(2);
+    public SClass getSOMClass() {
+      return Universe.current().getBlockClass(2);
     }
   }
 
@@ -81,8 +82,8 @@ public abstract class SBlock extends SAbstractObject {
     }
 
     @Override
-    public SClass getSOMClass(final Universe universe) {
-      return universe.getBlockClass(3);
+    public SClass getSOMClass() {
+      return Universe.current().getBlockClass(3);
     }
   }
 
@@ -95,8 +96,7 @@ public abstract class SBlock extends SAbstractObject {
 
   @Override
   public SObject getDomain() {
-    CompilerAsserts.neverPartOfCompilation("SBlock.getDomain()");
-    return Universe.current().standardDomain;
+    return Domain.standard;
   }
 
   public final SInvokable getMethod() {

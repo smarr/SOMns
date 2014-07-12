@@ -50,7 +50,7 @@ public class Shell {
 
     counter = 0;
     in = new BufferedReader(new InputStreamReader(System.in));
-    it = universe.nilObject;
+    it = Nil.nilObject;
 
     Universe.println("SOM Shell. Type \"quit\" to exit.\n");
 
@@ -74,14 +74,14 @@ public class Shell {
         // If success
         if (myClass != null) {
           // Create and push a new instance of our class on the stack
-          myObject = universe.newInstance(myClass, universe.standardDomain);
+          myObject = Universe.newInstance(myClass, Domain.standard);
 
           // Lookup the run: method
           SInvokable shellMethod = myClass.
               lookupInvokable(universe.symbolFor("run:"));
 
           // Invoke the run method
-          it = shellMethod.invoke(universe.standardDomain, false, myObject, it);
+          it = shellMethod.invoke(Domain.standard, false, myObject, it);
         }
       } catch (Exception e) {
         Universe.errorPrintln("Caught exception: " + e.getMessage());

@@ -38,14 +38,8 @@ import som.primitives.reflection.PerformWithArgumentsInSuperclassPrimFactory;
 import som.primitives.reflection.PerformWithArgumentsInSuperclassPrimFactory.PerformEnforcedWithArgumentsInSuperclassPrimFactory;
 import som.primitives.reflection.PerformWithArgumentsPrimFactory;
 import som.primitives.reflection.PerformWithArgumentsPrimFactory.PerformEnforcedWithArgumentsPrimFactory;
-import som.vm.Universe;
 
 public final class ObjectPrimitives extends Primitives {
-
-  public ObjectPrimitives(final Universe universe) {
-    super(universe);
-  }
-
   @Override
   public void installPrimitives() {
 

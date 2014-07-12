@@ -1,7 +1,6 @@
 package som.interpreter.nodes.specialized.whileloops;
 
 import som.interpreter.nodes.literals.BlockNode;
-import som.vm.Universe;
 import som.vmobjects.SBlock;
 import som.vmobjects.SObject;
 
@@ -15,9 +14,9 @@ public abstract class WhileWithStaticBlocksNode extends AbstractWhileNode {
 
   private WhileWithStaticBlocksNode(final BlockNode receiver,
       final BlockNode argument, final SBlock rcvr, final SBlock arg,
-      final boolean predicateBool, final Universe universe,
-      final SourceSection source, final boolean executesEnforced) {
-    super(rcvr, arg, predicateBool, universe, source, executesEnforced);
+      final boolean predicateBool, final SourceSection source,
+      final boolean executesEnforced) {
+    super(rcvr, arg, predicateBool, source, executesEnforced);
     this.receiver = receiver;
     this.argument = argument;
   }
@@ -46,18 +45,16 @@ public abstract class WhileWithStaticBlocksNode extends AbstractWhileNode {
   public static final class WhileTrueStaticBlocksNode extends WhileWithStaticBlocksNode {
     public WhileTrueStaticBlocksNode(final BlockNode receiver,
         final BlockNode argument, final SBlock rcvr, final SBlock arg,
-        final Universe universe, final SourceSection source,
-        final boolean executesEnforced) {
-      super(receiver, argument, rcvr, arg, true, universe, source, executesEnforced);
+        final SourceSection source, final boolean executesEnforced) {
+      super(receiver, argument, rcvr, arg, true, source, executesEnforced);
     }
   }
 
   public static final class WhileFalseStaticBlocksNode extends WhileWithStaticBlocksNode {
     public WhileFalseStaticBlocksNode(final BlockNode receiver,
         final BlockNode argument, final SBlock rcvr, final SBlock arg,
-        final Universe universe, final SourceSection source,
-        final boolean executesEnforced) {
-      super(receiver, argument, rcvr, arg, false, universe, source, executesEnforced);
+        final SourceSection source, final boolean executesEnforced) {
+      super(receiver, argument, rcvr, arg, false, source, executesEnforced);
     }
   }
 }
