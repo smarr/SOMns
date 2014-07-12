@@ -1,5 +1,6 @@
 package som.interpreter.nodes.dispatch;
 
+import som.interpreter.SArguments;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode.AbstractCachedDispatchNode;
 import som.vm.Universe;
 import som.vmobjects.SArray;
@@ -7,7 +8,6 @@ import som.vmobjects.SClass;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
-import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
@@ -33,14 +33,9 @@ public final class CachedDnuSObjectCheckNode extends AbstractCachedDispatchNode 
     SObject rcvr = CompilerDirectives.unsafeCast(arguments[0], SObject.class, true);
 
     if (rcvr.getSOMClass(null) == expectedClass) {
-      CompilerAsserts.neverPartOfCompilation("See todo!!");
-      // TODO: looks wrong!!! not the right array passed here?
-      // no domain, no enforcement flag
-      Object[] argsArr = new Object[] {
+      Object[] argsArr = SArguments.createSArgumentsArray(enforced, domain,
           rcvr, selector, SArray.fromArgArrayWithReceiverToSArrayWithoutReceiver(
-              arguments, domain) };
-
-      //executesEnforced
+              arguments, domain));
       return cachedMethod.call(frame, argsArr);
     } else {
       return nextInCache.executeDispatch(frame, domain, enforced, arguments);
