@@ -30,6 +30,7 @@ import static som.interpreter.SNodeFactory.createCatchNonLocalReturn;
 import static som.interpreter.SNodeFactory.createFieldRead;
 import static som.interpreter.SNodeFactory.createFieldWrite;
 import static som.interpreter.SNodeFactory.createGlobalRead;
+import static som.interpreter.SNodeFactory.createNonLocalReturn;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -45,6 +46,7 @@ import som.interpreter.nodes.ContextualNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.FieldNode.AbstractFieldReadNode;
 import som.interpreter.nodes.FieldNode.AbstractFieldWriteNode;
+import som.interpreter.nodes.ReturnNonLocalNode;
 import som.primitives.Primitives;
 import som.vm.Universe;
 import som.vmobjects.SInvokable;
@@ -59,17 +61,18 @@ import com.oracle.truffle.api.frame.FrameSlot;
 
 public final class MethodGenerationContext {
 
-  private ClassGenerationContext     holderGenc;
-  private MethodGenerationContext    outerGenc;
-  private boolean                    blockMethod;
-  private SSymbol                    signature;
-  private boolean                    primitive;
-  private boolean                    needsToCatchNonLocalReturn;
-  private boolean                    throwsNonLocalReturn;
+  private final ClassGenerationContext  holderGenc;
+  private final MethodGenerationContext outerGenc;
+  private final boolean                 blockMethod;
 
-  private boolean                    accessesVariablesOfOuterContext;
+  private SSymbol signature;
+  private boolean primitive;
+  private boolean needsToCatchNonLocalReturn;
+  private boolean throwsNonLocalReturn;
 
-  private boolean                    unenforced;
+  private boolean accessesVariablesOfOuterContext;
+
+  private boolean unenforced;
 
   private final LinkedHashMap<String, Argument> arguments = new LinkedHashMap<String, Argument>();
   private final LinkedHashMap<String, Local>    locals    = new LinkedHashMap<String, Local>();
@@ -80,17 +83,28 @@ public final class MethodGenerationContext {
 
   private final List<SMethod>   embeddedBlockMethods;
 
-  public MethodGenerationContext() {
+
+  public MethodGenerationContext(final ClassGenerationContext holderGenc) {
+    this(holderGenc, null, false);
+  }
+
+  public MethodGenerationContext(final ClassGenerationContext holderGenc,
+      final MethodGenerationContext outerGenc) {
+    this(holderGenc, outerGenc, true);
+  }
+
+  private MethodGenerationContext(final ClassGenerationContext holderGenc,
+      final MethodGenerationContext outerGenc, final boolean isBlockMethod) {
+    this.holderGenc      = holderGenc;
+    this.outerGenc       = outerGenc;
+    this.blockMethod     = isBlockMethod;
+
     frameDescriptor = new FrameDescriptor();
     accessesVariablesOfOuterContext = false;
     throwsNonLocalReturn            = false;
     needsToCatchNonLocalReturn      = false;
     embeddedBlockMethods = new ArrayList<SMethod>();
     unenforced = false;
-  }
-
-  public void setHolder(final ClassGenerationContext cgenc) {
-    holderGenc = cgenc;
   }
 
   public void setUnenforced() {
@@ -156,10 +170,6 @@ public final class MethodGenerationContext {
     return needsToCatchNonLocalReturn;
   }
 
-  public SInvokable assemblePrimitive(final Universe universe) {
-    return Primitives.getEmptyPrimitive(signature.getString(), universe, unenforced);
-  }
-
   private void separateVariables(final Collection<? extends Variable> variables,
       final ArrayList<Variable> onlyLocalAccess,
       final ArrayList<Variable> nonLocalAccess) {
@@ -172,51 +182,41 @@ public final class MethodGenerationContext {
     }
   }
 
-  public SMethod assemble(final Universe universe,
-      ExpressionNode enforcedBody, ExpressionNode unenforcedBody) {
+  public Invokable assemble(final Universe universe, ExpressionNode body,
+      final boolean enforced) {
+    if (isPrimitive()) {
+      return Primitives.getEmptyPrimitive(signature.getString(), universe, unenforced);
+    }
+
     ArrayList<Variable> onlyLocalAccess = new ArrayList<>(arguments.size() + locals.size());
     ArrayList<Variable> nonLocalAccess  = new ArrayList<>(arguments.size() + locals.size());
     separateVariables(arguments.values(), onlyLocalAccess, nonLocalAccess);
     separateVariables(locals.values(),    onlyLocalAccess, nonLocalAccess);
 
-    assert enforcedBody.getSourceSection() == unenforcedBody.getSourceSection();
-    SourceSection sourceSection = enforcedBody.getSourceSection();
+    SourceSection sourceSection = body.getSourceSection();
 
     if (needsToCatchNonLocalReturn()) {
-      enforcedBody   = createCatchNonLocalReturn(enforcedBody,
-          getFrameOnStackMarkerSlot(), sourceSection, true);
-      unenforcedBody = createCatchNonLocalReturn(unenforcedBody,
-          getFrameOnStackMarkerSlot(), sourceSection, false);
+      body = createCatchNonLocalReturn(body,
+          getFrameOnStackMarkerSlot(), sourceSection, enforced);
     }
 
-    enforcedBody   = createArgumentInitialization(enforcedBody,   arguments, true);
-    unenforcedBody = createArgumentInitialization(unenforcedBody, arguments, false);
+    body = createArgumentInitialization(body, arguments, enforced);
 
     SourceSection methodSourceSection = getSourceSectionForMethod(sourceSection);
 
-    Invokable enforcedMethod;
-    Invokable unenforcedMethod;
-    if (unenforced) {
-      enforcedMethod = null;
-      unenforcedMethod = new Method(methodSourceSection, frameDescriptor,
-          unenforcedBody, universe, getLexicalContext(), false, shouldAlwaysBeInlined(signature));
-    } else {
-      enforcedMethod =
-          new Method(methodSourceSection, frameDescriptor, enforcedBody, universe,
-            getLexicalContext(), true, shouldAlwaysBeInlined(signature));
-      unenforcedMethod =
-          new Method(methodSourceSection, frameDescriptor, unenforcedBody, universe,
-              getLexicalContext(), false, shouldAlwaysBeInlined(signature));
-    }
-    setOuterMethodInLexicalScopes(enforcedMethod, unenforcedMethod);
+    Invokable method = new Method(methodSourceSection, frameDescriptor,
+        body, universe, getLexicalContext(), enforced, shouldAlwaysBeInlined(signature));
 
-
-    SMethod meth = (SMethod) universe.newMethod(signature, enforcedMethod,
-        unenforcedMethod, false, embeddedBlockMethods.toArray(new SMethod[0]),
-        unenforced);
+    setOuterMethodInLexicalScopes(method, enforced);
 
     // return the method - the holder field is to be set later on!
-    return meth;
+    return method;
+  }
+
+  public SInvokable assembleSInvokable(final Universe universe,
+      final Invokable enforcedMthd, final Invokable unenforcedMthd) {
+    return universe.newMethod(signature, enforcedMthd, unenforcedMthd,
+        isPrimitive(), embeddedBlockMethods.toArray(new SMethod[0]), unenforced);
   }
 
   private static String[] forceInliningFor = new String[] {
@@ -254,13 +254,16 @@ public final class MethodGenerationContext {
     return false;
   }
 
-  private void setOuterMethodInLexicalScopes(final Invokable enforced,
-      final Invokable unenforced) {
+  private void setOuterMethodInLexicalScopes(final Invokable method,
+      final boolean enforced) {
+    // We only use one lexical chain, which is the unenforced one since all
+    // methods have at least an unenforced version at runtime
+    if (enforced) { return; }
+
     for (SMethod m : embeddedBlockMethods) {
-      if (enforced != null && !m.isUnenforced()) {
-        ((Method) m.getEnforcedInvokable()).setOuterContextMethod(enforced);
+      if (enforced && !m.isUnenforced() || !enforced) {
+        ((Method) m.getInvokable(enforced)).setOuterContextMethod(method);
       }
-      ((Method) m.getUnenforcedInvokable()).setOuterContextMethod(unenforced);
     }
   }
 
@@ -315,16 +318,8 @@ public final class MethodGenerationContext {
     return blockMethod;
   }
 
-  public void setIsBlockMethod(final boolean isBlock) {
-    blockMethod = isBlock;
-  }
-
   public ClassGenerationContext getHolder() {
     return holderGenc;
-  }
-
-  public void setOuter(final MethodGenerationContext mgenc) {
-    outerGenc = mgenc;
   }
 
   public int getOuterSelfContextLevel() {
@@ -337,7 +332,7 @@ public final class MethodGenerationContext {
     return level;
   }
 
-  public FrameSlot getOuterSelfSlot() {
+  private FrameSlot getOuterSelfSlot() {
     if (outerGenc == null) {
       return getLocalSelfSlot();
     } else {
@@ -380,6 +375,29 @@ public final class MethodGenerationContext {
     return null;
   }
 
+  public ContextualNode getSuperReadNode(final SourceSection source,
+      final boolean enforced) {
+    Variable self = getVariable("self");
+    return self.getSuperReadNode(getOuterSelfContextLevel(),
+        holderGenc.getName(), holderGenc.isClassSide(),
+        getLocalSelfSlot(), source, enforced);
+  }
+
+  public ContextualNode getLocalReadNode(final String variableName,
+      final SourceSection source, final boolean enforced) {
+    Variable variable = getVariable(variableName);
+    return variable.getReadNode(getContextLevel(variableName),
+        getLocalSelfSlot(), source, enforced);
+  }
+
+  public ExpressionNode getLocalWriteNode(final String variableName,
+      final ExpressionNode valExpr, final SourceSection source,
+      final boolean enforced) {
+    Local variable = getLocal(variableName);
+    return variable.getWriteNode(getContextLevel(variableName),
+        getLocalSelfSlot(), valExpr, source, enforced);
+  }
+
   protected Local getLocal(final String varName) {
     if (locals.containsKey(varName)) {
       return locals.get(varName);
@@ -395,36 +413,44 @@ public final class MethodGenerationContext {
     return null;
   }
 
-  private ContextualNode getSelfRead(final SourceSection source,
-      final boolean executeEnforced) {
+  public ReturnNonLocalNode getNonLocalReturn(final ExpressionNode expr,
+      final Universe universe, final SourceSection source, final boolean enforced) {
+    assert expr.nodeExecutesEnforced() == enforced;
+    makeCatchNonLocalReturn();
+    return createNonLocalReturn(expr, getFrameOnStackMarkerSlot(),
+        getOuterSelfSlot(),
+        getOuterSelfContextLevel(), universe, getLocalSelfSlot(), source, enforced);
+  }
+
+  private ContextualNode getSelfRead(final SourceSection source, final boolean enforced) {
     return getVariable("self").getReadNode(getContextLevel("self"),
-        getLocalSelfSlot(), source, executeEnforced);
+        getLocalSelfSlot(), source, enforced);
   }
 
   public AbstractFieldReadNode getObjectFieldRead(final SSymbol fieldName,
-      final SourceSection source, final boolean executeEnforced) {
+      final SourceSection source, final boolean enforced) {
     if (!holderGenc.hasField(fieldName)) {
       return null;
     }
-    return createFieldRead(getSelfRead(source, executeEnforced),
-        holderGenc.getFieldIndex(fieldName), source, executeEnforced);
+    return createFieldRead(getSelfRead(source, enforced),
+        holderGenc.getFieldIndex(fieldName), source, enforced);
   }
 
   public ExpressionNode getGlobalRead(final SSymbol varName,
-      final Universe universe, final SourceSection source,
-      final boolean executeEnforced) {
-    return createGlobalRead(varName, universe, source, executeEnforced);
+      final Universe universe, final SourceSection source, final boolean enforced) {
+    return createGlobalRead(varName, universe, source, enforced);
   }
 
   public AbstractFieldWriteNode getObjectFieldWrite(final SSymbol fieldName,
       final ExpressionNode exp, final Universe universe,
-      final SourceSection source, final boolean executeEnforced) {
+      final SourceSection source, final boolean enforced) {
+    assert exp.nodeExecutesEnforced() == enforced;
     if (!holderGenc.hasField(fieldName)) {
       return null;
     }
 
-    return createFieldWrite(getSelfRead(source, executeEnforced), exp,
-        holderGenc.getFieldIndex(fieldName), source, executeEnforced);
+    return createFieldWrite(getSelfRead(source, enforced), exp,
+        holderGenc.getFieldIndex(fieldName), source, enforced);
   }
 
   /**

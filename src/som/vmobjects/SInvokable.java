@@ -111,6 +111,14 @@ public abstract class SInvokable extends SAbstractObject {
     return unenforcedCallTarget;
   }
 
+  public final AbstractInvokable getInvokable(final boolean enforced) {
+    if (enforced) {
+      return getEnforcedInvokable();
+    } else {
+      return getUnenforcedInvokable();
+    }
+  }
+
   public final AbstractInvokable getEnforcedInvokable() {
     return enforcedInvokable;
   }

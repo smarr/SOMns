@@ -26,6 +26,7 @@
 package som.primitives;
 
 import som.compiler.MethodGenerationContext;
+import som.interpreter.Invokable;
 import som.interpreter.Primitive;
 import som.interpreter.nodes.ArgumentReadNode;
 import som.interpreter.nodes.ExpressionNode;
@@ -64,7 +65,8 @@ public abstract class Primitives {
       final Universe universe, final SClass holder, final boolean isUnenforced) {
     int numArgs = signature.getNumberOfSignatureArguments();
 
-    MethodGenerationContext mgen = new MethodGenerationContext();
+    MethodGenerationContext mgen = new MethodGenerationContext(null);
+    mgen.setPrimitive(true);
 
     ExpressionNode[] argsEnforced   = new ExpressionNode[numArgs];
     ExpressionNode[] argsUnenforced = new ExpressionNode[numArgs];
@@ -115,14 +117,13 @@ public abstract class Primitives {
   }
 
   @SlowPath
-  public static SInvokable constructEmptyPrimitive(final SSymbol signature,
+  public static Primitive constructEmptyPrimitive(final SSymbol signature,
       final Universe universe, final boolean unenforced) {
-    MethodGenerationContext mgen = new MethodGenerationContext();
+    MethodGenerationContext mgen = new MethodGenerationContext(null);
 
     ExpressionNode primNode = EmptyPrim.create(false, new ArgumentReadNode(0, false));  /* TODO: enforced!!! */ /* TODO: enforced!!! */
     Primitive primMethodNode = new Primitive(primNode, mgen.getFrameDescriptor(), false, MethodGenerationContext.shouldAlwaysBeInlined(signature));
-    SInvokable prim = universe.newMethod(signature, null, primMethodNode, true, new SMethod[0], unenforced);
-    return prim;
+    return primMethodNode;
   }
 
   protected final void installInstancePrimitive(final String selector,
@@ -150,7 +151,7 @@ public abstract class Primitives {
 
   protected SClass holder;
 
-  public static SInvokable getEmptyPrimitive(final String selector,
+  public static Invokable getEmptyPrimitive(final String selector,
       final Universe universe, final boolean unenforced) {
     SSymbol signature = universe.symbolFor(selector);
     return constructEmptyPrimitive(signature, universe, unenforced);
