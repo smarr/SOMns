@@ -4,7 +4,8 @@ import java.util.Arrays;
 
 import som.interpreter.nodes.nary.BinaryExpressionNode.BinarySideEffectFreeExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
-import som.vm.Universe;
+import som.vm.Classes;
+import som.vm.Nil;
 import som.vmobjects.SClass;
 
 import com.oracle.truffle.api.dsl.Specialization;
@@ -27,17 +28,15 @@ public final class ArrayPrims {
   }
 
   public abstract static class NewPrim extends BinarySideEffectFreeExpressionNode {
-    private final Universe universe;
-    public NewPrim() { this.universe = Universe.current(); }
 
     protected final boolean receiverIsArrayClass(final SClass receiver) {
-      return receiver == universe.arrayClass;
+      return receiver == Classes.arrayClass;
     }
 
     @Specialization(guards = "receiverIsArrayClass")
     public final Object[] doSClass(final SClass receiver, final long length) {
       Object[] result = new Object[(int) length];
-      Arrays.fill(result, universe.nilObject);
+      Arrays.fill(result, Nil.nilObject);
       return result;
     }
   }

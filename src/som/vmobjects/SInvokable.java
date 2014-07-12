@@ -27,7 +27,7 @@ package som.vmobjects;
 
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
 import som.interpreter.Invokable;
-import som.vm.Universe;
+import som.vm.Classes;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.RootCallTarget;
@@ -61,8 +61,9 @@ public abstract class SInvokable extends SAbstractObject {
     }
 
     @Override
-    public SClass getSOMClass(final Universe universe) {
-      return universe.methodClass;
+    public SClass getSOMClass() {
+      assert Classes.methodClass != null;
+      return Classes.methodClass;
     }
   }
 
@@ -72,8 +73,9 @@ public abstract class SInvokable extends SAbstractObject {
     }
 
     @Override
-    public SClass getSOMClass(final Universe universe) {
-      return universe.primitiveClass;
+    public SClass getSOMClass() {
+      assert Classes.primitiveClass != null;
+      return Classes.primitiveClass;
     }
   }
 

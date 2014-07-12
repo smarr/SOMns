@@ -1,5 +1,6 @@
 package som.interpreter.nodes.specialized;
 
+import som.vm.Nil;
 import som.vm.Universe;
 import som.vmobjects.SBlock;
 
@@ -37,7 +38,7 @@ public abstract class IfFalseMessageNode extends AbstractIfMessageNode  {
     if (receiver == false) {
       return argument;
     } else {
-      return universe.nilObject;
+      return Nil.nilObject;
     }
   }
 }

@@ -39,6 +39,7 @@ import java.util.List;
 import som.compiler.Variable.Argument;
 import som.compiler.Variable.Local;
 import som.interpreter.LexicalContext;
+import som.interpreter.Method;
 import som.interpreter.nodes.ArgumentInitializationNode;
 import som.interpreter.nodes.ContextualNode;
 import som.interpreter.nodes.ExpressionNode;
@@ -186,22 +187,22 @@ public final class MethodGenerationContext {
     methodBody.assignSourceSection(sourceSection);
     methodBody = addArgumentInitialization(methodBody);
 
-    som.interpreter.Method truffleMethod =
-        new som.interpreter.Method(getSourceSectionForMethod(sourceSection),
+    Method truffleMethod =
+        new Method(getSourceSectionForMethod(sourceSection),
             frameDescriptor, methodBody, universe, getLexicalContext());
 
     setOuterMethodInLexicalScopes(truffleMethod);
 
-    SMethod meth = (SMethod) universe.newMethod(signature, truffleMethod, false,
+    SMethod meth = (SMethod) Universe.newMethod(signature, truffleMethod, false,
         embeddedBlockMethods.toArray(new SMethod[0]));
 
     // return the method - the holder field is to be set later on!
     return meth;
   }
 
-  private void setOuterMethodInLexicalScopes(final som.interpreter.Method method) {
+  private void setOuterMethodInLexicalScopes(final Method method) {
     for (SMethod m : embeddedBlockMethods) {
-      som.interpreter.Method blockMethod = (som.interpreter.Method) m.getInvokable();
+      Method blockMethod = (Method) m.getInvokable();
       blockMethod.setOuterContextMethod(method);
     }
   }

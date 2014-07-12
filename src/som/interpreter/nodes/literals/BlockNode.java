@@ -13,18 +13,16 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 public class BlockNode extends LiteralNode {
 
   protected final SMethod  blockMethod;
-  protected final Universe universe;
 
-  public BlockNode(final SMethod blockMethod, final Universe universe,
+  public BlockNode(final SMethod blockMethod,
       final SourceSection source) {
     super(source);
     this.blockMethod  = blockMethod;
-    this.universe     = universe;
   }
 
   @Override
   public SBlock executeSBlock(final VirtualFrame frame) {
-    return universe.newBlock(blockMethod, null);
+    return Universe.newBlock(blockMethod, null);
   }
 
   @Override
@@ -35,13 +33,13 @@ public class BlockNode extends LiteralNode {
   @Override
   public void replaceWithIndependentCopyForInlining(final Inliner inliner) {
     SMethod forInlining = (SMethod) cloneMethod(inliner);
-    replace(new BlockNode(forInlining, universe, getSourceSection()));
+    replace(new BlockNode(forInlining, getSourceSection()));
   }
 
   protected SInvokable cloneMethod(final Inliner inliner) {
     Invokable clonedInvokable = blockMethod.getInvokable().
         cloneWithNewLexicalContext(inliner.getLexicalContext());
-    SInvokable forInlining = universe.newMethod(blockMethod.getSignature(),
+    SInvokable forInlining = Universe.newMethod(blockMethod.getSignature(),
         clonedInvokable, false, new SMethod[0]);
     return forInlining;
   }
@@ -49,23 +47,23 @@ public class BlockNode extends LiteralNode {
   public static final class BlockNodeWithContext extends BlockNode {
 
     public BlockNodeWithContext(final SMethod blockMethod,
-        final Universe universe, final SourceSection source) {
-      super(blockMethod, universe, source);
+        final SourceSection source) {
+      super(blockMethod, source);
     }
 
     public BlockNodeWithContext(final BlockNodeWithContext node) {
-      this(node.blockMethod, node.universe, node.getSourceSection());
+      this(node.blockMethod, node.getSourceSection());
     }
 
     @Override
     public SBlock executeSBlock(final VirtualFrame frame) {
-      return universe.newBlock(blockMethod, frame.materialize());
+      return Universe.newBlock(blockMethod, frame.materialize());
     }
 
     @Override
     public void replaceWithIndependentCopyForInlining(final Inliner inliner) {
       SMethod forInlining = (SMethod) cloneMethod(inliner);
-      replace(new BlockNodeWithContext(forInlining, universe, getSourceSection()));
+      replace(new BlockNodeWithContext(forInlining, getSourceSection()));
     }
   }
 }

@@ -23,6 +23,7 @@ package som.interpreter.nodes;
 
 import som.interpreter.SArguments;
 import som.interpreter.TruffleCompiler;
+import som.vm.Nil;
 import som.vm.Universe;
 import som.vm.Universe.Association;
 import som.vmobjects.SAbstractObject;
@@ -36,13 +37,11 @@ import com.oracle.truffle.api.utilities.BranchProfile;
 public abstract class GlobalNode extends ExpressionNode {
 
   protected final SSymbol  globalName;
-  protected final Universe universe;
 
-  public GlobalNode(final SSymbol globalName, final Universe universe,
-      final SourceSection source) {
+
+  public GlobalNode(final SSymbol globalName, final SourceSection source) {
     super(source);
     this.globalName = globalName;
-    this.universe   = universe;
   }
 
   @Override
@@ -50,11 +49,13 @@ public abstract class GlobalNode extends ExpressionNode {
 
   public static final class UninitializedGlobalReadNode extends GlobalNode {
     private final BranchProfile unknownGlobalNotFound;
+    private final Universe universe;
 
     public UninitializedGlobalReadNode(final SSymbol globalName,
         final Universe universe, final SourceSection source) {
-      super(globalName, universe, source);
+      super(globalName, source);
       unknownGlobalNotFound = new BranchProfile();
+      this.universe = universe;
     }
 
     @Override
@@ -64,20 +65,21 @@ public abstract class GlobalNode extends ExpressionNode {
       // first let's check whether it is one of the well known globals
       switch (globalName.getString()) {
         case "true":
-          return replace(new TrueGlobalNode(globalName, universe,
-              getSourceSection())).executeGeneric(frame);
+          return replace(new TrueGlobalNode(globalName, getSourceSection())).
+              executeGeneric(frame);
         case "false":
-          return replace(new FalseGlobalNode(globalName, universe,
-              getSourceSection())).executeGeneric(frame);
+          return replace(new FalseGlobalNode(globalName, getSourceSection())).
+              executeGeneric(frame);
         case "nil":
           return replace(new NilGlobalNode(globalName, universe,
-              getSourceSection())).executeGeneric(frame);
+              getSourceSection())).
+                executeGeneric(frame);
       }
 
       // Get the global from the universe
       Association assoc = universe.getGlobalsAssociation(globalName);
       if (assoc != null) {
-        return replace(new CachedGlobalReadNode(globalName, universe, assoc,
+        return replace(new CachedGlobalReadNode(globalName, assoc,
             getSourceSection())).executeGeneric(frame);
       } else {
         unknownGlobalNotFound.enter();
@@ -93,9 +95,8 @@ public abstract class GlobalNode extends ExpressionNode {
     private final Association assoc;
 
     private CachedGlobalReadNode(final SSymbol globalName,
-        final Universe universe, final Association assoc,
-        final SourceSection source) {
-      super(globalName, universe, source);
+        final Association assoc, final SourceSection source) {
+      super(globalName, source);
       this.assoc = assoc;
     }
 
@@ -106,9 +107,8 @@ public abstract class GlobalNode extends ExpressionNode {
   }
 
   private static final class TrueGlobalNode extends GlobalNode {
-    public TrueGlobalNode(final SSymbol globalName, final Universe universe,
-        final SourceSection source) {
-      super(globalName, universe, source);
+    public TrueGlobalNode(final SSymbol globalName, final SourceSection source) {
+      super(globalName, source);
     }
 
     @Override
@@ -123,9 +123,9 @@ public abstract class GlobalNode extends ExpressionNode {
   }
 
   private static final class FalseGlobalNode extends GlobalNode {
-    public FalseGlobalNode(final SSymbol globalName, final Universe universe,
+    public FalseGlobalNode(final SSymbol globalName,
         final SourceSection source) {
-      super(globalName, universe, source);
+      super(globalName, source);
     }
 
     @Override
@@ -142,12 +142,12 @@ public abstract class GlobalNode extends ExpressionNode {
   private static final class NilGlobalNode extends GlobalNode {
     public NilGlobalNode(final SSymbol globalName, final Universe universe,
         final SourceSection source) {
-      super(globalName, universe, source);
+      super(globalName, source);
     }
 
     @Override
     public Object executeGeneric(final VirtualFrame frame) {
-      return universe.nilObject;
+      return Nil.nilObject;
     }
   }
 }

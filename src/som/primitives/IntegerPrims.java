@@ -4,7 +4,7 @@ import java.math.BigInteger;
 
 import som.interpreter.nodes.nary.UnaryExpressionNode.UnarySideEffectFreeExpressionNode;
 import som.primitives.arithmetic.ArithmeticPrim;
-import som.vm.Universe;
+import som.vm.Classes;
 import som.vmobjects.SClass;
 
 import com.oracle.truffle.api.dsl.Specialization;
@@ -20,11 +20,8 @@ public abstract class IntegerPrims {
   }
 
   public abstract static class FromStringPrim extends ArithmeticPrim {
-    private final Universe universe;
-    public FromStringPrim() { this.universe = Universe.current(); }
-
     protected final boolean receiverIsIntegerClass(final SClass receiver) {
-      return receiver == universe.integerClass;
+      return receiver == Classes.integerClass;
     }
 
     @Specialization(guards = "receiverIsIntegerClass")

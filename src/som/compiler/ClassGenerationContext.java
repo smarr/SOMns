@@ -27,6 +27,7 @@ package som.compiler;
 import java.util.ArrayList;
 import java.util.List;
 
+import som.vm.Classes;
 import som.vm.Universe;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
@@ -119,14 +120,14 @@ public final class ClassGenerationContext {
     SClass superClass = universe.loadClass(superName);
 
     // Allocate the class of the resulting class
-    SClass resultClass = universe.newClass(universe.metaclassClass);
+    SClass resultClass = universe.newClass(Classes.metaclassClass);
 
     // Initialize the class of the resulting class
     resultClass.setInstanceFields(classFields.toArray(new SSymbol[0]));
     resultClass.setInstanceInvokables(classMethods.toArray(new SInvokable[0]));
     resultClass.setName(universe.symbolFor(ccname));
 
-    SClass superMClass = superClass.getSOMClass(universe);
+    SClass superMClass = superClass.getSOMClass();
     resultClass.setSuperClass(superMClass);
 
     // Allocate the resulting class
@@ -146,7 +147,7 @@ public final class ClassGenerationContext {
     systemClass.setInstanceInvokables(instanceMethods.toArray(new SInvokable[0]));
     systemClass.setInstanceFields(instanceFields.toArray(new SSymbol[0]));
     // class-bound == class-instance-bound
-    SClass superMClass = systemClass.getSOMClass(universe);
+    SClass superMClass = systemClass.getSOMClass();
     superMClass.setInstanceInvokables(classMethods.toArray(new SInvokable[0]));
     superMClass.setInstanceFields(classFields.toArray(new SSymbol[0]));
   }

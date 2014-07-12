@@ -32,6 +32,7 @@ import java.util.HashMap;
 
 import som.interpreter.objectstorage.ObjectLayout;
 import som.primitives.Primitives;
+import som.vm.Nil;
 import som.vm.Universe;
 import som.vmobjects.SInvokable.SPrimitive;
 
@@ -42,28 +43,20 @@ import com.oracle.truffle.api.CompilerDirectives.SlowPath;
 
 public final class SClass extends SObject {
 
-  private final Universe universe;
-
-  public SClass(final int numberOfFields, final Universe universe) {
+  public SClass(final int numberOfFields) {
     // Initialize this class by calling the super constructor with the given
     // value
-    super(numberOfFields, universe.nilObject);
+    super(numberOfFields);
     invokablesTable = new HashMap<SSymbol, SInvokable>();
-    this.universe   = universe;
-    this.superclass = universe.nilObject;
+    this.superclass = Nil.nilObject;
 
     layoutForInstances = new ObjectLayout(numberOfFields, this);
   }
 
-  public SClass(final SClass clazz, final Universe universe) {
-    super(clazz, universe.nilObject);
+  public SClass(final SClass clazz) {
+    super(clazz);
     invokablesTable = new HashMap<SSymbol, SInvokable>();
-    this.universe   = universe;
-    this.superclass = universe.nilObject;
-  }
-
-  public Universe getUniverse() {
-    return universe;
+    this.superclass = Nil.nilObject;
   }
 
   public SObject getSuperClass() {
@@ -76,7 +69,7 @@ public final class SClass extends SObject {
   }
 
   public boolean hasSuperClass() {
-    return superclass != universe.nilObject;
+    return superclass != Nil.nilObject;
   }
 
   public SSymbol getName() {
@@ -238,10 +231,10 @@ public final class SClass extends SObject {
     try {
       Class<?> primitivesClass = Class.forName(className);
       try {
-        Constructor<?> ctor = primitivesClass.getConstructor(Universe.class);
-        ((Primitives) ctor.newInstance(universe)).installPrimitivesIn(this);
+        Constructor<?> ctor = primitivesClass.getConstructor();
+        ((Primitives) ctor.newInstance()).installPrimitivesIn(this);
       } catch (Exception e) {
-        Universe.current().errorExit("Primitives class " + className
+        Universe.errorExit("Primitives class " + className
             + " cannot be instantiated");
       }
     } catch (ClassNotFoundException e) {

@@ -9,11 +9,11 @@ import com.oracle.truffle.api.CompilerAsserts;
 
 public abstract class SAbstractObject {
 
-  public abstract SClass getSOMClass(final Universe universe);
+  public abstract SClass getSOMClass();
 
   @Override
   public String toString() {
-    return "a " + getSOMClass(Universe.current()).getName().getString();
+    return "a " + getSOMClass().getName().getString();
   }
 
   public static final Object send(

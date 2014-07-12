@@ -2,7 +2,7 @@ package som.interpreter.nodes.specialized;
 
 import som.interpreter.Invokable;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.vm.Universe;
+import som.vm.Nil;
 import som.vmobjects.SBlock;
 import som.vmobjects.SObject;
 
@@ -22,9 +22,9 @@ public abstract class AbstractWhileNode extends BinaryExpressionNode {
   @Child protected DirectCallNode bodyValueSend;
 
   protected final boolean predicateBool;
-  protected final Universe universe;
 
-  public AbstractWhileNode(final SBlock rcvr, final SBlock arg, final boolean predicateBool, final Universe universe, final SourceSection source) {
+  public AbstractWhileNode(final SBlock rcvr, final SBlock arg,
+      final boolean predicateBool, final SourceSection source) {
     super(source);
 
     CallTarget callTargetCondition = rcvr.getMethod().getCallTarget();
@@ -36,7 +36,6 @@ public abstract class AbstractWhileNode extends BinaryExpressionNode {
         callTargetBody);
 
     this.predicateBool = predicateBool;
-    this.universe = universe;
   }
 
   @Override
@@ -73,7 +72,7 @@ public abstract class AbstractWhileNode extends BinaryExpressionNode {
         reportLoopCount(iterationCount);
       }
     }
-    return universe.nilObject;
+    return Nil.nilObject;
   }
 
   protected abstract SObject doWhileConditionally(final VirtualFrame frame,

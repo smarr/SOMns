@@ -43,6 +43,7 @@ import som.primitives.arithmetic.LogicAndPrimFactory;
 import som.primitives.arithmetic.ModuloPrimFactory;
 import som.primitives.arithmetic.MultiplicationPrimFactory;
 import som.primitives.arithmetic.SubtractionPrimFactory;
+import som.vm.Classes;
 import som.vm.Universe;
 import som.vmobjects.SBlock;
 import som.vmobjects.SSymbol;
@@ -295,7 +296,7 @@ public final class MessageSendNode {
                 AtPrimFactory.create(null, null)));
           }
         case "new:":
-          if (arguments[0] == Universe.current().arrayClass) {
+          if (arguments[0] == Classes.arrayClass) {
             return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
                 argumentNodes[1],
                 NewPrimFactory.create(null, null)));
@@ -405,7 +406,7 @@ public final class MessageSendNode {
     private PreevaluatedExpression specializeUnary(final Object[] args) {
       Object receiver = args[0];
       switch (selector.getString()) {
-        // eagerly but causious:
+        // eagerly but cautious:
 //        case "value":
 //          if (receiver instanceof SBlock) {
 //            return replace(new EagerUnaryPrimitiveNode(selector,
@@ -434,7 +435,7 @@ public final class MessageSendNode {
           if (arguments[1] instanceof SBlock && arguments[0] instanceof SBlock) {
             SBlock argBlock = (SBlock) arguments[1];
             return replace(new WhileTrueDynamicBlocksNode((SBlock) arguments[0],
-                argBlock, Universe.current(), getSourceSection()));
+                argBlock, getSourceSection()));
           }
           break;
         }
@@ -442,7 +443,7 @@ public final class MessageSendNode {
           if (arguments[1] instanceof SBlock && arguments[0] instanceof SBlock) {
             SBlock    argBlock     = (SBlock)    arguments[1];
             return replace(new WhileFalseDynamicBlocksNode(
-                (SBlock) arguments[0], argBlock, Universe.current(), getSourceSection()));
+                (SBlock) arguments[0], argBlock, getSourceSection()));
           }
           break; // use normal send
 //        case "ifTrue:":

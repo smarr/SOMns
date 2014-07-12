@@ -5,7 +5,7 @@ import static som.interpreter.TruffleCompiler.transferToInterpreter;
 import som.compiler.Variable;
 import som.compiler.Variable.Local;
 import som.interpreter.Inliner;
-import som.vm.Universe;
+import som.vm.Nil;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject;
 
@@ -32,13 +32,14 @@ public abstract class LocalVariableNode extends ExpressionNode {
   }
 
   public abstract static class LocalVariableReadNode extends LocalVariableNode {
+
     public LocalVariableReadNode(final Variable variable,
         final SourceSection source) {
-      super(variable.slot, source);
+      this(variable.slot, source);
     }
 
     public LocalVariableReadNode(final LocalVariableReadNode node) {
-      super(node.slot, node.getSourceSection());
+      this(node.slot, node.getSourceSection());
     }
 
     public LocalVariableReadNode(final FrameSlot slot,
@@ -48,7 +49,7 @@ public abstract class LocalVariableNode extends ExpressionNode {
 
     @Specialization(guards = "isUninitialized")
     public final SObject doNil() {
-      return Universe.current().nilObject;
+      return Nil.nilObject;
     }
 
     @Specialization(guards = "isInitialized", rewriteOn = {FrameSlotTypeException.class})

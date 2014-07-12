@@ -1,7 +1,7 @@
 package som.interpreter.nodes;
 
 import static som.interpreter.TruffleCompiler.transferToInterpreter;
-import som.vm.Universe;
+import som.vm.Nil;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject;
 
@@ -25,6 +25,7 @@ public abstract class NonLocalVariableNode extends ContextualNode {
   }
 
   public abstract static class NonLocalVariableReadNode extends NonLocalVariableNode {
+
     public NonLocalVariableReadNode(final int contextLevel,
         final FrameSlot slot, final FrameSlot localSelf, final SourceSection source) {
       super(contextLevel, slot, localSelf, source);
@@ -36,7 +37,7 @@ public abstract class NonLocalVariableNode extends ContextualNode {
 
     @Specialization(guards = "isUninitialized")
     public final SObject doNil() {
-      return Universe.current().nilObject;
+      return Nil.nilObject;
     }
 
     @Specialization(guards = "isInitialized", rewriteOn = {FrameSlotTypeException.class})

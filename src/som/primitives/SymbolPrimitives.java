@@ -25,14 +25,8 @@
 
 package som.primitives;
 
-import som.vm.Universe;
 
 public final class SymbolPrimitives extends Primitives {
-
-  public SymbolPrimitives(final Universe universe) {
-    super(universe);
-  }
-
   @Override
   public void installPrimitives() {
     installInstancePrimitive("asString", AsStringPrimFactory.getInstance());

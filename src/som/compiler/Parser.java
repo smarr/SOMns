@@ -291,7 +291,7 @@ public final class Parser {
       }
 
       cgenc.setInstanceFieldsOfSuper(superClass.getInstanceFields());
-      cgenc.setClassFieldsOfSuper(superClass.getSOMClass(universe).getInstanceFields());
+      cgenc.setClassFieldsOfSuper(superClass.getSOMClass().getInstanceFields());
     }
   }
 
@@ -598,9 +598,9 @@ public final class Parser {
         mgenc.addEmbeddedBlockMethod(blockMethod);
 
         if (bgenc.requiresContext()) {
-          return new BlockNodeWithContext(blockMethod, universe, getSource(coord));
+          return new BlockNodeWithContext(blockMethod, getSource(coord));
         } else {
-          return new BlockNode(blockMethod, universe, getSource(coord));
+          return new BlockNode(blockMethod, getSource(coord));
         }
       }
       default: {

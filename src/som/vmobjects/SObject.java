@@ -34,7 +34,7 @@ import som.interpreter.objectstorage.StorageLocation;
 import som.interpreter.objectstorage.StorageLocation.AbstractObjectStorageLocation;
 import som.interpreter.objectstorage.StorageLocation.GeneralizeStorageLocationException;
 import som.interpreter.objectstorage.StorageLocation.UninitalizedStorageLocationException;
-import som.vm.Universe;
+import som.vm.Nil;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
@@ -73,25 +73,25 @@ public class SObject extends SAbstractObject {
 
   private final int numberOfFields;
 
-  protected SObject(final SClass instanceClass, final SObject nilObject) {
+  protected SObject(final SClass instanceClass) {
     numberOfFields = instanceClass.getNumberOfInstanceFields();
     clazz          = instanceClass;
-    setLayoutInitially(instanceClass.getLayoutForInstances(), nilObject);
+    setLayoutInitially(instanceClass.getLayoutForInstances());
   }
 
-  protected SObject(final int numFields, final SObject nilObject) {
+  protected SObject(final int numFields) {
     numberOfFields = numFields;
-    setLayoutInitially(new ObjectLayout(numFields, null), nilObject);
+    setLayoutInitially(new ObjectLayout(numFields, null));
   }
 
-  private void setLayoutInitially(final ObjectLayout layout, final SObject nilObject) {
-    field1 = field2 = field3 = field4 = field5 = nilObject;
+  private void setLayoutInitially(final ObjectLayout layout) {
+    field1 = field2 = field3 = field4 = field5 = Nil.nilObject;
 
     objectLayout   = layout;
     assert objectLayout.getNumberOfFields() == numberOfFields;
 
     extensionPrimFields = getExtendedPrimStorage();
-    extensionObjFields  = getExtendedObjectStorage(nilObject);
+    extensionObjFields  = getExtendedObjectStorage();
   }
 
   public final int getNumberOfFields() {
@@ -112,20 +112,20 @@ public class SObject extends SAbstractObject {
     return extensionObjFields;
   }
 
-  public final void setClass(final SClass value, final SObject nilObject) {
+  public final void setClass(final SClass value) {
     transferToInterpreterAndInvalidate("SObject.setClass");
     // Set the class of this object by writing to the field with class index
     clazz = value;
-    setLayoutInitially(value.getLayoutForInstances(), nilObject);
+    setLayoutInitially(value.getLayoutForInstances());
   }
 
   private long[] getExtendedPrimStorage() {
     return new long[objectLayout.getNumberOfUsedExtendedPrimStorageLocations()];
   }
 
-  private Object[] getExtendedObjectStorage(final SObject nilObject) {
+  private Object[] getExtendedObjectStorage() {
     Object[] storage = new Object[objectLayout.getNumberOfUsedExtendedObjectStorageLocations()];
-    Arrays.fill(storage, nilObject);
+    Arrays.fill(storage, Nil.nilObject);
     return storage;
   }
 
@@ -153,7 +153,7 @@ public class SObject extends SAbstractObject {
       if (fieldValues[i] != null) {
         setField(i, fieldValues[i]);
       } else if (getLocation(i) instanceof AbstractObjectStorageLocation) {
-        setField(i, Universe.current().nilObject);
+        setField(i, Nil.nilObject);
       }
     }
   }
@@ -179,7 +179,7 @@ public class SObject extends SAbstractObject {
 
     primitiveUsedMap    = 0;
     extensionPrimFields = getExtendedPrimStorage();
-    extensionObjFields  = getExtendedObjectStorage(null);
+    extensionObjFields  = getExtendedObjectStorage();
 
     setAllFields(fieldValues);
   }
@@ -203,7 +203,7 @@ public class SObject extends SAbstractObject {
   }
 
   @Override
-  public final SClass getSOMClass(final Universe universe) {
+  public final SClass getSOMClass() {
     return clazz;
   }
 
@@ -211,12 +211,12 @@ public class SObject extends SAbstractObject {
     return clazz.lookupFieldIndex(fieldName);
   }
 
-  public static final SObject create(final SClass instanceClass, final SObject nilObject) {
-    return new SObject(instanceClass, nilObject);
+  public static final SObject create(final SClass instanceClass) {
+    return new SObject(instanceClass);
   }
 
-  public static SObject create(final int numFields, final SObject nilObject) {
-    return new SObject(numFields, nilObject);
+  public static SObject create(final int numFields) {
+    return new SObject(numFields);
   }
 
   private static final long FIRST_OBJECT_FIELD_OFFSET = getFirstObjectFieldOffset();

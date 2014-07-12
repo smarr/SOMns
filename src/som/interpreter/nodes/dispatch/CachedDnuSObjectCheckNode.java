@@ -27,7 +27,7 @@ public final class CachedDnuSObjectCheckNode extends AbstractCachedDispatchNode 
   public Object executeDispatch(final VirtualFrame frame, final Object[] arguments) {
     SObject rcvr = CompilerDirectives.unsafeCast(arguments[0], SObject.class, true);
 
-    if (rcvr.getSOMClass(null) == expectedClass) {
+    if (rcvr.getSOMClass() == expectedClass) {
       Object[] argsArr = new Object[] {
           rcvr, selector, SArguments.getArgumentsWithoutReceiver(arguments) };
       return cachedMethod.call(frame, argsArr);

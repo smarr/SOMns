@@ -50,7 +50,7 @@ public class Shell {
 
     counter = 0;
     in = new BufferedReader(new InputStreamReader(System.in));
-    it = universe.nilObject;
+    it = Nil.nilObject;
 
     Universe.println("SOM Shell. Type \"quit\" to exit.\n");
 

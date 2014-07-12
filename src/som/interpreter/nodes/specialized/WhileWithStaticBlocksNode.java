@@ -15,8 +15,8 @@ public abstract class WhileWithStaticBlocksNode extends AbstractWhileNode {
 
   private WhileWithStaticBlocksNode(final BlockNode receiver,
       final BlockNode argument, final SBlock rcvr, final SBlock arg,
-      final boolean predicateBool, final Universe universe, final SourceSection source) {
-    super(rcvr, arg, predicateBool, universe, source);
+      final boolean predicateBool, final SourceSection source) {
+    super(rcvr, arg, predicateBool, source);
     this.receiver = receiver;
     this.argument = argument;
   }
@@ -46,7 +46,7 @@ public abstract class WhileWithStaticBlocksNode extends AbstractWhileNode {
     public WhileTrueStaticBlocksNode(final BlockNode receiver,
         final BlockNode argument, final SBlock rcvr, final SBlock arg,
         final Universe universe, final SourceSection source) {
-      super(receiver, argument, rcvr, arg, true, universe, source);
+      super(receiver, argument, rcvr, arg, true, source);
     }
   }
 
@@ -54,7 +54,7 @@ public abstract class WhileWithStaticBlocksNode extends AbstractWhileNode {
     public WhileFalseStaticBlocksNode(final BlockNode receiver,
         final BlockNode argument, final SBlock rcvr, final SBlock arg,
         final Universe universe, final SourceSection source) {
-      super(receiver, argument, rcvr, arg, false, universe, source);
+      super(receiver, argument, rcvr, arg, false, source);
     }
   }
 }

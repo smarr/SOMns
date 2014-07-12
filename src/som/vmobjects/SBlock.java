@@ -56,8 +56,8 @@ public abstract class SBlock extends SAbstractObject {
     }
 
     @Override
-    public SClass getSOMClass(final Universe universe) {
-      return universe.getBlockClass(1);
+    public SClass getSOMClass() {
+      return Universe.current().getBlockClass(1);
     }
   }
 
@@ -67,8 +67,8 @@ public abstract class SBlock extends SAbstractObject {
     }
 
     @Override
-    public SClass getSOMClass(final Universe universe) {
-      return universe.getBlockClass(2);
+    public SClass getSOMClass() {
+      return Universe.current().getBlockClass(2);
     }
   }
 
@@ -78,8 +78,8 @@ public abstract class SBlock extends SAbstractObject {
     }
 
     @Override
-    public SClass getSOMClass(final Universe universe) {
-      return universe.getBlockClass(3);
+    public SClass getSOMClass() {
+      return Universe.current().getBlockClass(3);
     }
   }
 

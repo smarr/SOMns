@@ -58,7 +58,7 @@ public final class ObjectPrims {
 
     @Specialization
     public final SClass doSAbstractObject(final SAbstractObject receiver) {
-      return receiver.getSOMClass(universe);
+      return receiver.getSOMClass();
     }
 
     @Specialization

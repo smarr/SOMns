@@ -1,7 +1,6 @@
 package som.interpreter.nodes.specialized;
 
 import som.vm.NotYetImplementedException;
-import som.vm.Universe;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
@@ -16,8 +15,8 @@ public abstract class WhileWithDynamicBlocksNode extends AbstractWhileNode {
 
 
   private WhileWithDynamicBlocksNode(final SBlock rcvr, final SBlock arg,
-      final boolean predicateBool, final Universe universe, final SourceSection source) {
-    super(rcvr, arg, predicateBool, universe, source);
+      final boolean predicateBool, final SourceSection source) {
+    super(rcvr, arg, predicateBool, source);
     conditionMethod = rcvr.getMethod();
     bodyMethod = arg.getMethod();
   }
@@ -44,15 +43,15 @@ public abstract class WhileWithDynamicBlocksNode extends AbstractWhileNode {
 
   public static final class WhileTrueDynamicBlocksNode extends WhileWithDynamicBlocksNode {
     public WhileTrueDynamicBlocksNode(final SBlock rcvr, final SBlock arg,
-        final Universe universe, final SourceSection source) {
-      super(rcvr, arg, true, universe, source);
+        final SourceSection source) {
+      super(rcvr, arg, true, source);
     }
   }
 
   public static final class WhileFalseDynamicBlocksNode extends WhileWithDynamicBlocksNode {
     public WhileFalseDynamicBlocksNode(final SBlock rcvr, final SBlock arg,
-        final Universe universe, final SourceSection source) {
-      super(rcvr, arg, false, universe, source);
+        final SourceSection source) {
+      super(rcvr, arg, false, source);
     }
   }
 }

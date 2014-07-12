@@ -34,14 +34,8 @@ import som.primitives.SystemPrimsFactory.PrintNewlinePrimFactory;
 import som.primitives.SystemPrimsFactory.PrintStringPrimFactory;
 import som.primitives.SystemPrimsFactory.TicksPrimFactory;
 import som.primitives.SystemPrimsFactory.TimePrimFactory;
-import som.vm.Universe;
 
 public final class SystemPrimitives extends Primitives {
-
-  public SystemPrimitives(final Universe universe) {
-    super(universe);
-  }
-
   @Override
   public void installPrimitives() {
     installInstancePrimitive("load:",        LoadPrimFactory.getInstance());

@@ -1,7 +1,7 @@
 package som.interpreter.nodes.specialized;
 
 import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.vm.Universe;
+import som.vm.Nil;
 import som.vmobjects.SBlock;
 import som.vmobjects.SObject;
 
@@ -14,12 +14,10 @@ import com.oracle.truffle.api.nodes.IndirectCallNode;
 
 public abstract class WhilePrimitiveNode extends BinaryExpressionNode {
   final boolean predicateBool;
-  final Universe universe;
   @Child private IndirectCallNode call;
 
   protected WhilePrimitiveNode(final boolean predicateBool) {
     super(null);
-    universe = Universe.current();
     this.predicateBool = predicateBool;
     call = Truffle.getRuntime().createIndirectCallNode();
   }
@@ -41,7 +39,7 @@ public abstract class WhilePrimitiveNode extends BinaryExpressionNode {
       loopBody.getMethod().invoke(frame, call, loopBody);
       loopConditionResult = (boolean) loopCondition.getMethod().invoke(frame, call, loopCondition);
     }
-    return universe.nilObject;
+    return Nil.nilObject;
   }
 
   @Override

@@ -42,8 +42,8 @@ public abstract class Primitives {
 
   protected final Universe universe;
 
-  public Primitives(final Universe universe) {
-    this.universe = universe;
+  public Primitives() {
+    this.universe = Universe.current();
   }
 
   public final void installPrimitivesIn(final SClass value) {
@@ -87,7 +87,7 @@ public abstract class Primitives {
     }
 
     Primitive primMethodNode = new Primitive(primNode, mgen.getFrameDescriptor());
-    SInvokable prim = universe.newMethod(signature, primMethodNode, true, new SMethod[0]);
+    SInvokable prim = Universe.newMethod(signature, primMethodNode, true, new SMethod[0]);
     return prim;
   }
 
@@ -98,7 +98,7 @@ public abstract class Primitives {
 
     ExpressionNode primNode = EmptyPrim.create(new ArgumentReadNode(0));
     Primitive primMethodNode = new Primitive(primNode, mgen.getFrameDescriptor());
-    SInvokable prim = universe.newMethod(signature, primMethodNode, true, new SMethod[0]);
+    SInvokable prim = Universe.newMethod(signature, primMethodNode, true, new SMethod[0]);
     return prim;
   }
 
@@ -118,7 +118,7 @@ public abstract class Primitives {
 
     // Install the given primitive as an instance primitive in the class of
     // the holder class
-    holder.getSOMClass(universe).addInstancePrimitive(prim);
+    holder.getSOMClass().addInstancePrimitive(prim);
   }
 
   protected SClass holder;
