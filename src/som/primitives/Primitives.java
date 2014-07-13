@@ -118,7 +118,7 @@ public abstract class Primitives {
 
   @SlowPath
   public static Primitive constructEmptyPrimitive(final SSymbol signature,
-      final Universe universe, final boolean unenforced) {
+      final boolean unenforced) {
     MethodGenerationContext mgen = new MethodGenerationContext(null);
 
     ExpressionNode primNode = EmptyPrim.create(false, new ArgumentReadNode(0, false));  /* TODO: enforced!!! */ /* TODO: enforced!!! */
@@ -152,8 +152,8 @@ public abstract class Primitives {
   protected SClass holder;
 
   public static Invokable getEmptyPrimitive(final String selector,
-      final Universe universe, final boolean unenforced) {
-    SSymbol signature = universe.symbolFor(selector);
-    return constructEmptyPrimitive(signature, universe, unenforced);
+      final boolean unenforced) {
+    SSymbol signature = Universe.current().symbolFor(selector);
+    return constructEmptyPrimitive(signature, unenforced);
   }
 }

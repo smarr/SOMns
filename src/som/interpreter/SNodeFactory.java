@@ -163,10 +163,9 @@ public final class SNodeFactory {
 
   public static ReturnNonLocalNode createNonLocalReturn(final ExpressionNode exp,
       final FrameSlot markerSlot, final FrameSlot outerSelf,
-      final int contextLevel, final Universe universe,
-      final FrameSlot localSelf, final SourceSection source,
-      final boolean executeEnforced) {
+      final int contextLevel, final FrameSlot localSelf,
+      final SourceSection source, final boolean executeEnforced) {
     return new ReturnNonLocalNode(exp, markerSlot, outerSelf, contextLevel,
-        universe, localSelf, source, executeEnforced);
+        localSelf, source, executeEnforced);
   }
 }

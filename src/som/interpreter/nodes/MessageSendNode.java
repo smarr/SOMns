@@ -46,7 +46,6 @@ import som.primitives.arithmetic.ModuloPrimFactory;
 import som.primitives.arithmetic.MultiplicationPrimFactory;
 import som.primitives.arithmetic.SubtractionPrimFactory;
 import som.vm.NotYetImplementedException;
-import som.vm.Universe;
 import som.vm.constants.Classes;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
@@ -270,13 +269,11 @@ public final class MessageSendNode {
 
         case "ifTrue:":
           return replace(IfTrueMessageNodeFactory.create(arguments[0],
-              arguments[1],
-              Universe.current(), getSourceSection(), executesEnforced,
+              arguments[1], getSourceSection(), executesEnforced,
               argumentNodes[0], argumentNodes[1]));
         case "ifFalse:":
           return replace(IfFalseMessageNodeFactory.create(arguments[0],
-              arguments[1],
-              Universe.current(), getSourceSection(), executesEnforced,
+              arguments[1], getSourceSection(), executesEnforced,
               argumentNodes[0], argumentNodes[1]));
 
         case "<":
@@ -351,7 +348,7 @@ public final class MessageSendNode {
       switch (selector.getString()) {
         case "ifTrue:ifFalse:":
           return replace(IfTrueIfFalseMessageNodeFactory.create(arguments[0],
-              arguments[1], arguments[2], Universe.current(), executesEnforced,
+              arguments[1], arguments[2], executesEnforced,
               argumentNodes[0], argumentNodes[1], argumentNodes[2]));
         case "to:do:":
           if (TypesGen.TYPES.isLong(arguments[0]) &&
@@ -386,7 +383,7 @@ public final class MessageSendNode {
     protected AbstractMessageSendNode makeGenericSend() {
       GenericMessageSendNode send = new GenericMessageSendNode(selector,
           argumentNodes,
-          new UninitializedDispatchNode(selector, Universe.current()),
+          new UninitializedDispatchNode(selector),
           getSourceSection(), executesEnforced);
       return replace(send);
     }
@@ -528,7 +525,7 @@ public final class MessageSendNode {
         return new EnforcedMessageSendNode(selector, argumentNodes, source);
       } else {
         return new GenericMessageSendNode(selector, argumentNodes,
-          new UninitializedDispatchNode(selector, Universe.current()), source, executesEnforced);
+          new UninitializedDispatchNode(selector), source, executesEnforced);
       }
     }
 

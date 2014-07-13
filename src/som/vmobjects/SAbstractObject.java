@@ -24,10 +24,9 @@ public abstract class SAbstractObject {
       final String selectorString,
       final Object[] arguments,
       final SObject domain,
-      final boolean enforced,
-      final Universe universe) {
+      final boolean enforced) {
     CompilerAsserts.neverPartOfCompilation("SAbstractObject.send()");
-    SSymbol selector = universe.symbolFor(selectorString);
+    SSymbol selector = Universe.current().symbolFor(selectorString);
 
     // Lookup the invokable
     SInvokable invokable = Types.getClassOf(arguments[0]).lookupInvokable(selector);
@@ -38,8 +37,7 @@ public abstract class SAbstractObject {
   public static final Object sendDoesNotUnderstand(final SSymbol selector,
       final Object[] arguments,
       final SObject domain,
-      final boolean enforced,
-      final Universe universe) {
+      final boolean enforced) {
     CompilerAsserts.neverPartOfCompilation("SAbstractObject.sendDNU()");
     assert arguments != null;
 
@@ -47,25 +45,23 @@ public abstract class SAbstractObject {
     Object[] argumentsArray = SArray.fromArgArrayWithReceiverToSArrayWithoutReceiver(
         arguments, domain);
     Object[] args = new Object[] {arguments[0], selector, argumentsArray};
-    return send("doesNotUnderstand:arguments:", args, domain, enforced, universe);
+    return send("doesNotUnderstand:arguments:", args, domain, enforced);
   }
 
   public static final Object sendUnknownGlobal(final Object receiver,
       final SSymbol globalName,
       final SObject domain,
-      final boolean enforced,
-      final Universe universe) {
+      final boolean enforced) {
     Object[] arguments = {receiver, globalName};
-    return send("unknownGlobal:", arguments, domain, enforced, universe);
+    return send("unknownGlobal:", arguments, domain, enforced);
   }
 
   public static final Object sendEscapedBlock(final Object receiver,
       final SBlock block,
       final SObject domain,
-      final boolean enforced,
-      final Universe universe) {
+      final boolean enforced) {
     Object[] arguments = {receiver, block};
-    return send("escapedBlock:", arguments, domain, enforced, universe);
+    return send("escapedBlock:", arguments, domain, enforced);
   }
 
   public abstract SObject getDomain();

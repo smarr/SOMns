@@ -1,7 +1,6 @@
 package som.interpreter.nodes.dispatch;
 
 import som.interpreter.Types;
-import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
@@ -14,8 +13,8 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 
 public final class GenericDispatchNode extends AbstractDispatchWithLookupNode {
 
-  public GenericDispatchNode(final SSymbol selector, final Universe universe) {
-    super(selector, universe);
+  public GenericDispatchNode(final SSymbol selector) {
+    super(selector);
   }
 
   @Override
@@ -28,7 +27,7 @@ public final class GenericDispatchNode extends AbstractDispatchWithLookupNode {
       // Won't use DNU caching here, because it is already a megamorphic node
       CompilerAsserts.neverPartOfCompilation("GenericDispatchNode");
       return SAbstractObject.sendDoesNotUnderstand(selector, arguments, domain,
-          enforced, universe);
+          enforced);
     }
   }
 

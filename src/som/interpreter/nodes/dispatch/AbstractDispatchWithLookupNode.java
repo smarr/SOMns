@@ -1,18 +1,14 @@
 package som.interpreter.nodes.dispatch;
 
-import som.vm.Universe;
 import som.vmobjects.SSymbol;
 
 
 public abstract class AbstractDispatchWithLookupNode extends
     AbstractDispatchNode {
 
-  protected final SSymbol  selector;
-  protected final Universe universe;
+  protected final SSymbol selector;
 
-  public AbstractDispatchWithLookupNode(final SSymbol selector,
-      final Universe universe) {
+  public AbstractDispatchWithLookupNode(final SSymbol selector) {
     this.selector = selector;
-    this.universe = universe;
   }
 }

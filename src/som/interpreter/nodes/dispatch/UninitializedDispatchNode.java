@@ -6,7 +6,6 @@ import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
 import som.interpreter.nodes.dispatch.CachedDispatchSimpleCheckNode.CachedDispatchFalseCheckNode;
 import som.interpreter.nodes.dispatch.CachedDispatchSimpleCheckNode.CachedDispatchTrueCheckNode;
 import som.vm.NotYetImplementedException;
-import som.vm.Universe;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
@@ -19,9 +18,8 @@ import com.oracle.truffle.api.nodes.Node;
 
 public final class UninitializedDispatchNode extends AbstractDispatchWithLookupNode {
 
-  public UninitializedDispatchNode(final SSymbol selector,
-      final Universe universe) {
-    super(selector, universe);
+  public UninitializedDispatchNode(final SSymbol selector) {
+    super(selector);
   }
 
   private AbstractDispatchNode specialize(final boolean executesEnforced,
@@ -50,9 +48,7 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
         callTarget = null;
       }
 
-
-      UninitializedDispatchNode newChainEnd = new UninitializedDispatchNode(
-          selector, universe);
+      UninitializedDispatchNode newChainEnd = new UninitializedDispatchNode(selector);
 
 //        if (method.getInvokable().isAlwaysToBeInlined()) {
 //          InlinedDispatchNode inlined = InlinedDispatchNode.create(
@@ -65,15 +61,14 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
           node = new CachedDispatchSObjectCheckNode(
               rcvrClass, callTarget, newChainEnd);
         } else {
-          node = new CachedDnuSObjectCheckNode(
-              rcvrClass, selector, universe, newChainEnd);
+          node = new CachedDnuSObjectCheckNode(rcvrClass, selector, newChainEnd);
         }
 
         if ((getParent() instanceof CachedDispatchSObjectCheckNode)) {
           return replace(node);
         } else {
           SObjectCheckDispatchNode checkNode = new SObjectCheckDispatchNode(node,
-              new UninitializedDispatchNode(selector, universe));
+              new UninitializedDispatchNode(selector));
           return replace(checkNode);
         }
       } else {
@@ -105,7 +100,7 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
     // does not understand, which means, we also treat this callsite as
     // megamorphic.
     // TODO: see whether we could get #DNUs fast.
-    GenericDispatchNode genericReplacement = new GenericDispatchNode(selector, universe);
+    GenericDispatchNode genericReplacement = new GenericDispatchNode(selector);
     sendNode.replaceDispatchListHead(genericReplacement);
     return genericReplacement;
   }

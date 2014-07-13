@@ -2,7 +2,6 @@ package som.interpreter.nodes.specialized;
 
 import som.interpreter.SArguments;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.vm.Universe;
 import som.vm.constants.Nil;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
@@ -26,7 +25,7 @@ public abstract class AbstractIfMessageNode extends BinaryExpressionNode {
   private final boolean branchEnforced;
 
   public AbstractIfMessageNode(final Object rcvr, final Object arg,
-      final Universe universe, final SourceSection source, final boolean executesEnforced) {
+      final SourceSection source, final boolean executesEnforced) {
     super(source, executesEnforced);
     if (arg instanceof SBlock) {
       SBlock argBlock = (SBlock) arg;

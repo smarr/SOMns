@@ -25,7 +25,6 @@ import som.interpreter.FrameOnStackMarker;
 import som.interpreter.Inliner;
 import som.interpreter.ReturnException;
 import som.interpreter.SArguments;
-import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
 import som.vmobjects.SObject;
@@ -41,7 +40,6 @@ import com.oracle.truffle.api.utilities.BranchProfile;
 public final class ReturnNonLocalNode extends ContextualNode {
 
   @Child private ExpressionNode expression;
-  private final Universe universe;
   private final BranchProfile blockEscaped;
   private final FrameSlot frameOnStackMarker;
   private final FrameSlot outerSelfSlot;
@@ -50,12 +48,10 @@ public final class ReturnNonLocalNode extends ContextualNode {
       final FrameSlot frameOnStackMarker,
       final FrameSlot outerSelfSlot,
       final int outerSelfContextLevel,
-      final Universe universe,
       final FrameSlot localSelf, final SourceSection source,
       final boolean executesEnforced) {
     super(outerSelfContextLevel, localSelf, source, executesEnforced);
     this.expression = expression;
-    this.universe   = universe;
     this.blockEscaped = new BranchProfile();
     this.frameOnStackMarker = frameOnStackMarker;
     this.outerSelfSlot      = outerSelfSlot;
@@ -64,7 +60,7 @@ public final class ReturnNonLocalNode extends ContextualNode {
   public ReturnNonLocalNode(final ReturnNonLocalNode node, final FrameSlot inlinedFrameOnStack,
       final FrameSlot inlinedOuterSelfSlot, final FrameSlot inlinedLocalSelfSlot) {
     this(node.expression, inlinedFrameOnStack, inlinedOuterSelfSlot,
-        node.contextLevel, node.universe, inlinedLocalSelfSlot,
+        node.contextLevel, inlinedLocalSelfSlot,
         node.getSourceSection(), node.executesEnforced);
   }
 
@@ -86,7 +82,7 @@ public final class ReturnNonLocalNode extends ContextualNode {
       Object self = FrameUtil.getObjectSafe(ctx, outerSelfSlot);
       SObject domain = SArguments.domain(frame);
       boolean enforced = SArguments.enforced(frame);
-      return SAbstractObject.sendEscapedBlock(self, block, domain, enforced, universe);
+      return SAbstractObject.sendEscapedBlock(self, block, domain, enforced);
     }
   }
 

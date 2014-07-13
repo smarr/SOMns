@@ -3,7 +3,6 @@ package som.interpreter.nodes.specialized;
 import som.interpreter.SArguments;
 import som.interpreter.nodes.PreevaluatedExpression;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
-import som.vm.Universe;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
@@ -29,11 +28,10 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
   private final boolean trueEnforced;
   private final boolean falseEnforced;
 
-  private final Universe universe;
-
   public IfTrueIfFalseMessageNode(final Object rcvr, final Object arg1,
-      final Object arg2, final Universe universe, final boolean executesEnforced) {
+      final Object arg2, final boolean executesEnforced) {
     super(executesEnforced);
+
     if (arg1 instanceof SBlock) {
       SBlock trueBlock = (SBlock) arg1;
       trueMethod = trueBlock.getMethod();
@@ -55,8 +53,6 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
       falseMethod = null;
       falseEnforced = false; // TODO: does this even matter?
     }
-
-    this.universe = universe;
   }
 
   public IfTrueIfFalseMessageNode(final IfTrueIfFalseMessageNode node) {
@@ -75,7 +71,6 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
       falseValueSend = Truffle.getRuntime().createDirectCallNode(
           falseMethod.getCallTarget(falseEnforced || executesEnforced));
     }
-    this.universe = node.universe;
   }
 
   @Override

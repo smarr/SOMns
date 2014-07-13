@@ -182,10 +182,9 @@ public final class MethodGenerationContext {
     }
   }
 
-  public Invokable assemble(final Universe universe, ExpressionNode body,
-      final boolean enforced) {
+  public Invokable assemble(ExpressionNode body, final boolean enforced) {
     if (isPrimitive()) {
-      return Primitives.getEmptyPrimitive(signature.getString(), universe, unenforced);
+      return Primitives.constructEmptyPrimitive(signature, unenforced);
     }
 
     ArrayList<Variable> onlyLocalAccess = new ArrayList<>(arguments.size() + locals.size());
@@ -205,7 +204,7 @@ public final class MethodGenerationContext {
     SourceSection methodSourceSection = getSourceSectionForMethod(sourceSection);
 
     Invokable method = new Method(methodSourceSection, frameDescriptor,
-        body, universe, getLexicalContext(), enforced, shouldAlwaysBeInlined(signature));
+        body, getLexicalContext(), enforced, shouldAlwaysBeInlined(signature));
 
     setOuterMethodInLexicalScopes(method, enforced);
 
@@ -414,12 +413,12 @@ public final class MethodGenerationContext {
   }
 
   public ReturnNonLocalNode getNonLocalReturn(final ExpressionNode expr,
-      final Universe universe, final SourceSection source, final boolean enforced) {
+      final SourceSection source, final boolean enforced) {
     assert expr.nodeExecutesEnforced() == enforced;
     makeCatchNonLocalReturn();
     return createNonLocalReturn(expr, getFrameOnStackMarkerSlot(),
         getOuterSelfSlot(),
-        getOuterSelfContextLevel(), universe, getLocalSelfSlot(), source, enforced);
+        getOuterSelfContextLevel(), getLocalSelfSlot(), source, enforced);
   }
 
   private ContextualNode getSelfRead(final SourceSection source, final boolean enforced) {

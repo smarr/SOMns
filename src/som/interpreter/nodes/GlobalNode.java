@@ -75,8 +75,8 @@ public abstract class GlobalNode extends ExpressionNode {
               getSourceSection(), executesEnforced)).
                 executeGeneric(frame);
         case "nil":
-          return replace(new NilGlobalNode(globalName,
-              getSourceSection(), executesEnforced)).
+          return replace(new NilGlobalNode(globalName, getSourceSection(),
+              executesEnforced)).
                 executeGeneric(frame);
       }
 
@@ -111,8 +111,7 @@ public abstract class GlobalNode extends ExpressionNode {
       Object self = SArguments.rcvr(frame);
       SObject domain = SArguments.domain(frame);
       boolean enforced = SArguments.enforced(frame);
-      return SAbstractObject.sendUnknownGlobal(self, globalName, domain,
-          enforced, Universe.current());
+      return SAbstractObject.sendUnknownGlobal(self, globalName, domain, enforced);
     }
   }
 

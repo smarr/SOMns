@@ -22,7 +22,6 @@
 package som.interpreter;
 
 import som.interpreter.nodes.ExpressionNode;
-import som.vm.Universe;
 
 import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.frame.FrameDescriptor;
@@ -31,18 +30,15 @@ import com.oracle.truffle.api.nodes.RootNode;
 
 public final class Method extends Invokable {
 
-  private final Universe universe;
   private final LexicalContext outerContext;
 
   public Method(final SourceSection sourceSection,
                 final FrameDescriptor frameDescriptor,
                 final ExpressionNode body,
-                final Universe universe,
                 final LexicalContext outerContext,
                 final boolean executesEnforced,
                 final boolean alwaysInline) {
     super(sourceSection, frameDescriptor, body, executesEnforced, alwaysInline);
-    this.universe     = universe;
     this.outerContext = outerContext;
   }
 
@@ -59,10 +55,9 @@ public final class Method extends Invokable {
     FrameDescriptor inlinedFrameDescriptor = getFrameDescriptor().copy();
     LexicalContext  inlinedContext = new LexicalContext(inlinedFrameDescriptor,
         outerContext);
-    ExpressionNode  inlinedBody = Inliner.doInline(
-        uninitializedBody, inlinedContext);
+    ExpressionNode  inlinedBody = Inliner.doInline(uninitializedBody, inlinedContext);
     Method clone = new Method(getSourceSection(), inlinedFrameDescriptor,
-        inlinedBody, universe, outerContext, executesEnforced, alwaysInline());
+        inlinedBody, outerContext, executesEnforced, alwaysInline());
     inlinedContext.setOuterMethod(clone);
     return clone;
   }

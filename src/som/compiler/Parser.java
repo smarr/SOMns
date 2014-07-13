@@ -257,8 +257,8 @@ public final class Parser {
 
       ExpressionTuple methodBody = method(mgenc);
 
-      Invokable enforced   = mgenc.assemble(universe, methodBody.en, true);
-      Invokable unenforced = mgenc.assemble(universe, methodBody.un, false);
+      Invokable enforced   = mgenc.assemble(methodBody.en, true);
+      Invokable unenforced = mgenc.assemble(methodBody.un, false);
 
       cgenc.addInstanceMethod(mgenc.assembleSInvokable(universe, enforced, unenforced));
     }
@@ -272,8 +272,8 @@ public final class Parser {
 
         ExpressionTuple methodBody = method(mgenc);
 
-        Invokable enforced   = mgenc.assemble(universe, methodBody.en, true);
-        Invokable unenforced = mgenc.assemble(universe, methodBody.un, false);
+        Invokable enforced   = mgenc.assemble(methodBody.en, true);
+        Invokable unenforced = mgenc.assemble(methodBody.un, false);
 
         cgenc.addClassMethod(mgenc.assembleSInvokable(universe, enforced, unenforced));
       }
@@ -551,8 +551,8 @@ public final class Parser {
 
     if (mgenc.isBlockMethod()) {
       SourceSection source = getSource(coord);
-      return tuple(mgenc.getNonLocalReturn(exp.en, universe, source, true),
-          mgenc.getNonLocalReturn(exp.un, universe, source, false));
+      return tuple(mgenc.getNonLocalReturn(exp.en, source, true),
+          mgenc.getNonLocalReturn(exp.un, source, false));
     } else {
       return exp;
     }
@@ -626,8 +626,8 @@ public final class Parser {
 
         ExpressionTuple blockBody = nestedBlock(bgenc);
 
-        Invokable enforced   = bgenc.assemble(universe, blockBody.en, true);
-        Invokable unenforced = bgenc.assemble(universe, blockBody.un, false);
+        Invokable enforced   = bgenc.assemble(blockBody.en, true);
+        Invokable unenforced = bgenc.assemble(blockBody.un, false);
 
         SMethod blockMethod = (SMethod) bgenc.assembleSInvokable(universe, enforced, unenforced);
         mgenc.addEmbeddedBlockMethod(blockMethod);
