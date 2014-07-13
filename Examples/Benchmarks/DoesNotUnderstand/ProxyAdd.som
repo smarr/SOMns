@@ -1,18 +1,19 @@
 ProxyAdd = Benchmark (
-    | proxy |
+    | proxy calc |
     
     initialize = (
-        | calc |
         calc := Calculator new: 5.
         proxy := Proxy new: calc
     )
 
     benchmark = (
-        | sum |
-        sum := 0.
+        calc initializeWith: 5.
+    
         1 to: 20000 do: [ :i | 
-            sum := sum + (proxy add: i)
-        ]
+            proxy inc: #once
+        ].
+    
+        calc a = 20005 ifFalse: [ 'Benchmark failed with wrong result' println. calc a println. ]
     )
     
     ----

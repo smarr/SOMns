@@ -1,4 +1,4 @@
-DirectAdd = Benchmark (
+PerformAdd = Benchmark (
     | calc |
     
     initialize = (
@@ -7,11 +7,11 @@ DirectAdd = Benchmark (
 
     benchmark = (
         calc initializeWith: 5.
-        
+    
         1 to: 20000 do: [ :i | 
-            calc inc: #once
+            calc perform: #inc: withArguments: (Array with: #once)
         ].
-        
+    
         calc a = 20005 ifFalse: [ 'Benchmark failed with wrong result' println. calc a println. ]
     )
     

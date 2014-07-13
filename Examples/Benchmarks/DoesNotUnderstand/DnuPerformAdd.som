@@ -1,15 +1,15 @@
-DirectAdd = Benchmark (
+DnuPerformAdd = Benchmark (
     | calc |
     
     initialize = (
-        calc := Calculator new.
+        calc := CalculatorDnuPerform new.
     )
 
     benchmark = (
         calc initializeWith: 5.
         
         1 to: 20000 do: [ :i | 
-            calc inc: #once
+            calc incDNU: #once
         ].
         
         calc a = 20005 ifFalse: [ 'Benchmark failed with wrong result' println. calc a println. ]

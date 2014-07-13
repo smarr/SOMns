@@ -1,4 +1,4 @@
-Calculator = (
+CalculatorDnuPerform = (
     | a |
     
     initializeWith: anInt = (
@@ -12,7 +12,7 @@ Calculator = (
     a = ( ^ a )
  
     doesNotUnderstand: selector arguments: arguments = (
-        ^ self inc: #once
+        ^ self perform: #inc: withArguments: arguments
     )
     
     ----
