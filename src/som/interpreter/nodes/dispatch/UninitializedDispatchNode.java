@@ -6,7 +6,6 @@ import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
 import som.interpreter.nodes.dispatch.CachedDispatchSimpleCheckNode.CachedDispatchFalseCheckNode;
 import som.interpreter.nodes.dispatch.CachedDispatchSimpleCheckNode.CachedDispatchTrueCheckNode;
 import som.vm.NotYetImplementedException;
-import som.vm.Universe;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
@@ -18,8 +17,8 @@ import com.oracle.truffle.api.nodes.Node;
 
 public final class UninitializedDispatchNode extends AbstractDispatchWithLookupNode {
 
-  public UninitializedDispatchNode(final SSymbol selector, final Universe universe) {
-    super(selector, universe);
+  public UninitializedDispatchNode(final SSymbol selector) {
+    super(selector);
   }
 
   @Override
@@ -44,7 +43,7 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
       SClass rcvrClass = Types.getClassOf(rcvr);
       SInvokable method = rcvrClass.lookupInvokable(selector);
 
-      UninitializedDispatchNode newChainEnd = new UninitializedDispatchNode(selector, universe);
+      UninitializedDispatchNode newChainEnd = new UninitializedDispatchNode(selector);
 
 //        if (method.getInvokable().isAlwaysToBeInlined()) {
 //          InlinedDispatchNode inlined = InlinedDispatchNode.create(
@@ -58,14 +57,14 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
               rcvrClass, method, newChainEnd);
         } else {
           node = new CachedDnuSObjectCheckNode(
-              rcvrClass, selector, universe, newChainEnd);
+              rcvrClass, selector, newChainEnd);
         }
 
         if ((getParent() instanceof CachedDispatchSObjectCheckNode)) {
           return replace(node).executeDispatch(frame, arguments);
         } else {
           SObjectCheckDispatchNode checkNode = new SObjectCheckDispatchNode(node,
-              new UninitializedDispatchNode(selector, universe));
+              new UninitializedDispatchNode(selector));
           return replace(checkNode).executeDispatch(frame, arguments);
         }
       } else {
@@ -97,7 +96,7 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
     // does not understand, which means, we also treat this callsite as
     // megamorphic.
     // TODO: see whether we could get #DNUs fast.
-    GenericDispatchNode genericReplacement = new GenericDispatchNode(selector, universe);
+    GenericDispatchNode genericReplacement = new GenericDispatchNode(selector);
     sendNode.replaceDispatchListHead(genericReplacement);
     return genericReplacement.executeDispatch(frame, arguments);
   }

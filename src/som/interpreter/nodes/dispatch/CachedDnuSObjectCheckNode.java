@@ -16,8 +16,8 @@ public final class CachedDnuSObjectCheckNode extends AbstractCachedDispatchNode 
   private final SSymbol selector;
 
   public CachedDnuSObjectCheckNode(final SClass rcvrClass,
-      final SSymbol selector, final Universe universe, final AbstractDispatchNode nextInCache) {
-    super(rcvrClass.lookupInvokable(universe.symbolFor("doesNotUnderstand:arguments:")),
+      final SSymbol selector, final AbstractDispatchNode nextInCache) {
+    super(rcvrClass.lookupInvokable(Universe.current().symbolFor("doesNotUnderstand:arguments:")),
         nextInCache);
     expectedClass = rcvrClass;
     this.selector = selector;

@@ -170,7 +170,7 @@ public final class MethodGenerationContext {
     return createArgumentInitialization(methodBody, arguments);
   }
 
-  public SMethod assemble(final Universe universe, ExpressionNode methodBody) {
+  public SMethod assemble(ExpressionNode methodBody) {
     ArrayList<Variable> onlyLocalAccess = new ArrayList<>(arguments.size() + locals.size());
     ArrayList<Variable> nonLocalAccess  = new ArrayList<>(arguments.size() + locals.size());
     separateVariables(arguments.values(), onlyLocalAccess, nonLocalAccess);
@@ -189,7 +189,7 @@ public final class MethodGenerationContext {
 
     Method truffleMethod =
         new Method(getSourceSectionForMethod(sourceSection),
-            frameDescriptor, methodBody, universe, getLexicalContext());
+            frameDescriptor, methodBody, getLexicalContext());
 
     setOuterMethodInLexicalScopes(truffleMethod);
 

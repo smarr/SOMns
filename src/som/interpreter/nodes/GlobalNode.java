@@ -71,8 +71,7 @@ public abstract class GlobalNode extends ExpressionNode {
           return replace(new FalseGlobalNode(globalName, getSourceSection())).
               executeGeneric(frame);
         case "nil":
-          return replace(new NilGlobalNode(globalName, universe,
-              getSourceSection())).
+          return replace(new NilGlobalNode(globalName, getSourceSection())).
                 executeGeneric(frame);
       }
 
@@ -86,7 +85,7 @@ public abstract class GlobalNode extends ExpressionNode {
         // if it is not defined, we will send a error message to the current
         // receiver object
         Object self = SArguments.rcvr(frame);
-        return SAbstractObject.sendUnknownGlobal(self, globalName, universe);
+        return SAbstractObject.sendUnknownGlobal(self, globalName);
       }
     }
   }
@@ -140,7 +139,7 @@ public abstract class GlobalNode extends ExpressionNode {
   }
 
   private static final class NilGlobalNode extends GlobalNode {
-    public NilGlobalNode(final SSymbol globalName, final Universe universe,
+    public NilGlobalNode(final SSymbol globalName,
         final SourceSection source) {
       super(globalName, source);
     }

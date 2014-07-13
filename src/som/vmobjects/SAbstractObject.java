@@ -18,10 +18,9 @@ public abstract class SAbstractObject {
 
   public static final Object send(
       final String selectorString,
-      final Object[] arguments,
-      final Universe universe) {
+      final Object[] arguments) {
     CompilerAsserts.neverPartOfCompilation("SAbstractObject.send()");
-    SSymbol selector = universe.symbolFor(selectorString);
+    SSymbol selector = Universe.current().symbolFor(selectorString);
 
     // Lookup the invokable
     SInvokable invokable = Types.getClassOf(arguments[0]).lookupInvokable(selector);
@@ -30,27 +29,26 @@ public abstract class SAbstractObject {
   }
 
   public static final Object sendDoesNotUnderstand(final SSymbol selector,
-      final Object[] arguments,
-      final Universe universe) {
+      final Object[] arguments) {
     CompilerAsserts.neverPartOfCompilation("SAbstractObject.sendDNU()");
     assert arguments != null;
 
     // Allocate an array to hold the arguments, without receiver
     Object[] argumentsArray = SArguments.getArgumentsWithoutReceiver(arguments);
     Object[] args = new Object[] {arguments[0], selector, argumentsArray};
-    return send("doesNotUnderstand:arguments:", args, universe);
+    return send("doesNotUnderstand:arguments:", args);
   }
 
   public static final Object sendUnknownGlobal(final Object receiver,
-      final SSymbol globalName, final Universe universe) {
+      final SSymbol globalName) {
     Object[] arguments = {receiver, globalName};
-    return send("unknownGlobal:", arguments, universe);
+    return send("unknownGlobal:", arguments);
   }
 
   public static final Object sendEscapedBlock(final Object receiver,
-      final SBlock block, final Universe universe) {
+      final SBlock block) {
     Object[] arguments = {receiver, block};
-    return send("escapedBlock:", arguments, universe);
+    return send("escapedBlock:", arguments);
   }
 
 }

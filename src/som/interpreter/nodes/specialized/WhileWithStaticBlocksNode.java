@@ -1,7 +1,6 @@
 package som.interpreter.nodes.specialized;
 
 import som.interpreter.nodes.literals.BlockNode;
-import som.vm.Universe;
 import som.vmobjects.SBlock;
 import som.vmobjects.SObject;
 
@@ -45,7 +44,7 @@ public abstract class WhileWithStaticBlocksNode extends AbstractWhileNode {
   public static final class WhileTrueStaticBlocksNode extends WhileWithStaticBlocksNode {
     public WhileTrueStaticBlocksNode(final BlockNode receiver,
         final BlockNode argument, final SBlock rcvr, final SBlock arg,
-        final Universe universe, final SourceSection source) {
+        final SourceSection source) {
       super(receiver, argument, rcvr, arg, true, source);
     }
   }
@@ -53,7 +52,7 @@ public abstract class WhileWithStaticBlocksNode extends AbstractWhileNode {
   public static final class WhileFalseStaticBlocksNode extends WhileWithStaticBlocksNode {
     public WhileFalseStaticBlocksNode(final BlockNode receiver,
         final BlockNode argument, final SBlock rcvr, final SBlock arg,
-        final Universe universe, final SourceSection source) {
+        final SourceSection source) {
       super(receiver, argument, rcvr, arg, false, source);
     }
   }

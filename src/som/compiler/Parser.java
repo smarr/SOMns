@@ -248,7 +248,7 @@ public final class Parser {
       if (mgenc.isPrimitive()) {
         cgenc.addInstanceMethod(mgenc.assemblePrimitive(universe));
       } else {
-        cgenc.addInstanceMethod(mgenc.assemble(universe, methodBody));
+        cgenc.addInstanceMethod(mgenc.assemble(methodBody));
       }
     }
 
@@ -265,7 +265,7 @@ public final class Parser {
         if (mgenc.isPrimitive()) {
           cgenc.addClassMethod(mgenc.assemblePrimitive(universe));
         } else {
-          cgenc.addClassMethod(mgenc.assemble(universe, methodBody));
+          cgenc.addClassMethod(mgenc.assemble(methodBody));
         }
       }
     }
@@ -514,7 +514,6 @@ public final class Parser {
           mgenc.getFrameOnStackMarkerSlot(),
           mgenc.getOuterSelfSlot(),
           mgenc.getOuterSelfContextLevel(),
-          universe,
           mgenc.getLocalSelfSlot(), getSource(coord));
       mgenc.makeCatchNonLocalReturn();
       return result;
@@ -594,7 +593,7 @@ public final class Parser {
 
         ExpressionNode blockBody = nestedBlock(bgenc);
 
-        SMethod blockMethod = bgenc.assemble(universe, blockBody);
+        SMethod blockMethod = bgenc.assemble(blockBody);
         mgenc.addEmbeddedBlockMethod(blockMethod);
 
         if (bgenc.requiresContext()) {

@@ -43,7 +43,6 @@ import som.primitives.arithmetic.LogicAndPrimFactory;
 import som.primitives.arithmetic.ModuloPrimFactory;
 import som.primitives.arithmetic.MultiplicationPrimFactory;
 import som.primitives.arithmetic.SubtractionPrimFactory;
-import som.vm.Universe;
 import som.vm.constants.Classes;
 import som.vmobjects.SBlock;
 import som.vmobjects.SSymbol;
@@ -154,7 +153,7 @@ public final class MessageSendNode {
     private GenericMessageSendNode makeGenericSend() {
       GenericMessageSendNode send = new GenericMessageSendNode(selector,
           argumentNodes,
-          new UninitializedDispatchNode(selector, Universe.current()),
+          new UninitializedDispatchNode(selector),
           getSourceSection());
       return replace(send);
     }
@@ -195,7 +194,7 @@ public final class MessageSendNode {
             return replace(new WhileTrueStaticBlocksNode(
                 (BlockNode) argumentNodes[0], argBlockNode,
                 (SBlock) arguments[0],
-                argBlock, Universe.current(), getSourceSection()));
+                argBlock, getSourceSection()));
           }
           break; // use normal send
         }
@@ -206,18 +205,16 @@ public final class MessageSendNode {
             SBlock    argBlock     = (SBlock)    arguments[1];
             return replace(new WhileFalseStaticBlocksNode(
                 (BlockNode) argumentNodes[0], argBlockNode,
-                (SBlock) arguments[0], argBlock, Universe.current(), getSourceSection()));
+                (SBlock) arguments[0], argBlock, getSourceSection()));
           }
           break; // use normal send
         case "ifTrue:":
           return replace(IfTrueMessageNodeFactory.create(arguments[0],
-              arguments[1],
-              Universe.current(), getSourceSection(),
+              arguments[1], getSourceSection(),
               argumentNodes[0], argumentNodes[1]));
         case "ifFalse:":
           return replace(IfFalseMessageNodeFactory.create(arguments[0],
-              arguments[1],
-              Universe.current(), getSourceSection(),
+              arguments[1], getSourceSection(),
               argumentNodes[0], argumentNodes[1]));
 
         // TODO: find a better way for primitives, use annotation or something
@@ -337,7 +334,7 @@ public final class MessageSendNode {
       switch (selector.getString()) {
         case "ifTrue:ifFalse:":
           return replace(IfTrueIfFalseMessageNodeFactory.create(arguments[0],
-              arguments[1], arguments[2], Universe.current(), argumentNodes[0],
+              arguments[1], arguments[2], argumentNodes[0],
               argumentNodes[1], argumentNodes[2]));
         case "to:do:":
           if (TypesGen.TYPES.isLong(arguments[0]) &&
@@ -398,7 +395,7 @@ public final class MessageSendNode {
     private GenericMessageSendNode makeGenericSend() {
       GenericMessageSendNode send = new GenericMessageSendNode(selector,
           argumentNodes,
-          new UninitializedDispatchNode(selector, Universe.current()),
+          new UninitializedDispatchNode(selector),
           getSourceSection());
       return replace(send);
     }
@@ -610,7 +607,7 @@ public final class MessageSendNode {
     public static GenericMessageSendNode create(final SSymbol selector,
         final ExpressionNode[] argumentNodes, final SourceSection source) {
       return new GenericMessageSendNode(selector, argumentNodes,
-          new UninitializedDispatchNode(selector, Universe.current()), source);
+          new UninitializedDispatchNode(selector), source);
     }
 
     @Child private AbstractDispatchNode dispatchNode;
