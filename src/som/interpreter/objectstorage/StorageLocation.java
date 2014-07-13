@@ -10,7 +10,7 @@ import som.interpreter.objectstorage.FieldAccessorNode.ReadUnwrittenFieldNode;
 import som.interpreter.objectstorage.FieldAccessorNode.WriteDoubleFieldNode;
 import som.interpreter.objectstorage.FieldAccessorNode.WriteLongFieldNode;
 import som.interpreter.objectstorage.FieldAccessorNode.WriteObjectFieldNode;
-import som.vm.Nil;
+import som.vm.constants.Nil;
 import som.vmobjects.SObject;
 import sun.misc.Unsafe;
 

@@ -1,7 +1,7 @@
 package som.vmobjects;
 
-import som.vm.Domain;
-import som.vm.Nil;
+import som.vm.constants.Domain;
+import som.vm.constants.Nil;
 
 import com.oracle.truffle.api.CompilerAsserts;
 

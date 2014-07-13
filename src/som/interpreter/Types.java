@@ -23,9 +23,9 @@ package som.interpreter;
 
 import java.math.BigInteger;
 
-import som.vm.Classes;
-import som.vm.Globals;
 import som.vm.Universe;
+import som.vm.constants.Classes;
+import som.vm.constants.Globals;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
 import som.vmobjects.SBlock.SBlock1;

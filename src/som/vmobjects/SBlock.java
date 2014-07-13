@@ -30,8 +30,8 @@ import som.primitives.BlockPrimsFactory.ValueNonePrimFactory;
 import som.primitives.BlockPrimsFactory.ValueOnePrimFactory;
 import som.primitives.BlockPrimsFactory.ValueTwoPrimFactory;
 import som.primitives.Primitives;
-import som.vm.Domain;
 import som.vm.Universe;
+import som.vm.constants.Domain;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;

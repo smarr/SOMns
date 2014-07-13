@@ -5,9 +5,9 @@ import som.interpreter.nodes.GlobalNode;
 import som.interpreter.nodes.GlobalNode.UninitializedGlobalReadWithoutErrorNode;
 import som.interpreter.nodes.SOMNode;
 import som.primitives.SystemPrims.BinarySystemNode;
-import som.vm.Nil;
 import som.vm.NotYetImplementedException;
 import som.vm.Universe;
+import som.vm.constants.Nil;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 

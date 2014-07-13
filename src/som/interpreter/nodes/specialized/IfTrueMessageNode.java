@@ -1,7 +1,7 @@
 package som.interpreter.nodes.specialized;
 
-import som.vm.Nil;
 import som.vm.Universe;
+import som.vm.constants.Nil;
 import som.vmobjects.SBlock;
 
 import com.oracle.truffle.api.SourceSection;

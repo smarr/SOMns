@@ -34,8 +34,8 @@ import som.interpreter.objectstorage.StorageLocation;
 import som.interpreter.objectstorage.StorageLocation.AbstractObjectStorageLocation;
 import som.interpreter.objectstorage.StorageLocation.GeneralizeStorageLocationException;
 import som.interpreter.objectstorage.StorageLocation.UninitalizedStorageLocationException;
-import som.vm.Nil;
 import som.vm.Universe;
+import som.vm.constants.Nil;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;

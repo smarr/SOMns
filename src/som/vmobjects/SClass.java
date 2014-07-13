@@ -32,8 +32,8 @@ import java.util.HashMap;
 
 import som.interpreter.objectstorage.ObjectLayout;
 import som.primitives.Primitives;
-import som.vm.Nil;
 import som.vm.Universe;
+import som.vm.constants.Nil;
 import som.vmobjects.SInvokable.SPrimitive;
 
 import com.oracle.truffle.api.CompilerAsserts;

@@ -29,8 +29,8 @@ import static som.interpreter.SArguments.createSArguments;
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
 import som.interpreter.AbstractInvokable;
 import som.interpreter.SArguments;
-import som.vm.Classes;
-import som.vm.Domain;
+import som.vm.constants.Classes;
+import som.vm.constants.Domain;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.RootCallTarget;

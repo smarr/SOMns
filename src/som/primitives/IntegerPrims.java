@@ -4,7 +4,7 @@ import java.math.BigInteger;
 
 import som.interpreter.nodes.nary.UnaryExpressionNode.UnarySideEffectFreeExpressionNode;
 import som.primitives.arithmetic.ArithmeticPrim;
-import som.vm.Classes;
+import som.vm.constants.Classes;
 import som.vmobjects.SClass;
 
 import com.oracle.truffle.api.dsl.Specialization;

@@ -2,8 +2,8 @@ package som.interpreter.nodes.specialized.whileloops;
 
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
 import som.interpreter.SArguments;
-import som.vm.Globals;
-import som.vm.Nil;
+import som.vm.constants.Globals;
+import som.vm.constants.Nil;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;

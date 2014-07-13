@@ -28,6 +28,8 @@ package som.vm;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
+import som.vm.constants.Domain;
+import som.vm.constants.Nil;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
