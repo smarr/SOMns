@@ -100,7 +100,7 @@ public final class Universe {
       u.interpret(arguments);
       u.exit(0);
     } catch (IllegalStateException e) {
-      u.errorExit(e.getMessage());
+      errorExit(e.getMessage());
     }
   }
 
