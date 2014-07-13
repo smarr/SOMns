@@ -2,7 +2,7 @@ package som.interpreter.nodes.specialized;
 
 import som.interpreter.Invokable;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.vm.Nil;
+import som.vm.constants.Nil;
 import som.vmobjects.SBlock;
 import som.vmobjects.SObject;
 

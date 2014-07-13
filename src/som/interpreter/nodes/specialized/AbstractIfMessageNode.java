@@ -1,8 +1,8 @@
 package som.interpreter.nodes.specialized;
 
 import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.vm.Nil;
 import som.vm.Universe;
+import som.vm.constants.Nil;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 

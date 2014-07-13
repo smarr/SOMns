@@ -5,7 +5,7 @@ import som.interpreter.TypesGen;
 import som.interpreter.objectstorage.StorageLocation.AbstractObjectStorageLocation;
 import som.interpreter.objectstorage.StorageLocation.DoubleStorageLocation;
 import som.interpreter.objectstorage.StorageLocation.LongStorageLocation;
-import som.vm.Nil;
+import som.vm.constants.Nil;
 import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.CompilerDirectives;

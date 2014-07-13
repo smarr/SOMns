@@ -1,4 +1,4 @@
-package som.vm;
+package som.vm.constants;
 
 import som.vmobjects.SObject;
 

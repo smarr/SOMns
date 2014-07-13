@@ -5,7 +5,7 @@ import static som.interpreter.TruffleCompiler.transferToInterpreter;
 import som.compiler.Variable;
 import som.compiler.Variable.Local;
 import som.interpreter.Inliner;
-import som.vm.Nil;
+import som.vm.constants.Nil;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject;
 

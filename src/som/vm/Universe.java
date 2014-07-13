@@ -25,17 +25,17 @@
 
 package som.vm;
 
-import static som.vm.Classes.arrayClass;
-import static som.vm.Classes.classClass;
-import static som.vm.Classes.doubleClass;
-import static som.vm.Classes.integerClass;
-import static som.vm.Classes.metaclassClass;
-import static som.vm.Classes.methodClass;
-import static som.vm.Classes.nilClass;
-import static som.vm.Classes.objectClass;
-import static som.vm.Classes.primitiveClass;
-import static som.vm.Classes.stringClass;
-import static som.vm.Classes.symbolClass;
+import static som.vm.constants.Classes.arrayClass;
+import static som.vm.constants.Classes.classClass;
+import static som.vm.constants.Classes.doubleClass;
+import static som.vm.constants.Classes.integerClass;
+import static som.vm.constants.Classes.metaclassClass;
+import static som.vm.constants.Classes.methodClass;
+import static som.vm.constants.Classes.nilClass;
+import static som.vm.constants.Classes.objectClass;
+import static som.vm.constants.Classes.primitiveClass;
+import static som.vm.constants.Classes.stringClass;
+import static som.vm.constants.Classes.symbolClass;
 
 import java.io.File;
 import java.io.IOException;
@@ -45,6 +45,8 @@ import java.util.StringTokenizer;
 import som.compiler.Disassembler;
 import som.interpreter.Invokable;
 import som.interpreter.TruffleCompiler;
+import som.vm.constants.Globals;
+import som.vm.constants.Nil;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;

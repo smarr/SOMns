@@ -43,8 +43,8 @@ import som.primitives.arithmetic.LogicAndPrimFactory;
 import som.primitives.arithmetic.ModuloPrimFactory;
 import som.primitives.arithmetic.MultiplicationPrimFactory;
 import som.primitives.arithmetic.SubtractionPrimFactory;
-import som.vm.Classes;
 import som.vm.Universe;
+import som.vm.constants.Classes;
 import som.vmobjects.SBlock;
 import som.vmobjects.SSymbol;
 

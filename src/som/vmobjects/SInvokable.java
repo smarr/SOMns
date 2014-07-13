@@ -27,7 +27,7 @@ package som.vmobjects;
 
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
 import som.interpreter.Invokable;
-import som.vm.Classes;
+import som.vm.constants.Classes;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.RootCallTarget;

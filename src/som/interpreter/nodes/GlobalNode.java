@@ -23,9 +23,9 @@ package som.interpreter.nodes;
 
 import som.interpreter.SArguments;
 import som.interpreter.TruffleCompiler;
-import som.vm.Nil;
 import som.vm.Universe;
 import som.vm.Universe.Association;
+import som.vm.constants.Nil;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SSymbol;
 

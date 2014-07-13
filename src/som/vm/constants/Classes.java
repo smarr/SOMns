@@ -1,5 +1,6 @@
-package som.vm;
+package som.vm.constants;
 
+import som.vm.Universe;
 import som.vmobjects.SClass;
 
 

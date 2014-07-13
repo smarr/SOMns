@@ -4,8 +4,8 @@ import java.util.Arrays;
 
 import som.interpreter.nodes.nary.BinaryExpressionNode.BinarySideEffectFreeExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
-import som.vm.Classes;
-import som.vm.Nil;
+import som.vm.constants.Classes;
+import som.vm.constants.Nil;
 import som.vmobjects.SClass;
 
 import com.oracle.truffle.api.dsl.Specialization;

@@ -24,7 +24,7 @@
 
 package som.vmobjects;
 
-import som.vm.Classes;
+import som.vm.constants.Classes;
 
 public final class SSymbol extends SAbstractObject {
 

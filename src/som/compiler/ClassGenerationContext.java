@@ -27,8 +27,8 @@ package som.compiler;
 import java.util.ArrayList;
 import java.util.List;
 
-import som.vm.Classes;
 import som.vm.Universe;
+import som.vm.constants.Classes;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;

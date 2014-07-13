@@ -1,7 +1,7 @@
 package som.interpreter.nodes;
 
 import static som.interpreter.TruffleCompiler.transferToInterpreter;
-import som.vm.Nil;
+import som.vm.constants.Nil;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject;
 
