@@ -96,7 +96,7 @@ public final class SourcecodeCompiler {
     try {
       parser.classdef(cgc);
     } catch (ParseError pe) {
-      universe.errorExit(pe.toString());
+      Universe.errorExit(pe.toString());
     }
 
     if (systemClass == null) {
