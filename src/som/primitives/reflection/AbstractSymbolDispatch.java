@@ -7,7 +7,6 @@ import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.PreevaluatedExpression;
 import som.interpreter.nodes.dispatch.DispatchChain;
-import som.vm.Universe;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 
@@ -110,19 +109,17 @@ public abstract class AbstractSymbolDispatch extends Node implements DispatchCha
 
   private static final class GenericDispatchNode extends AbstractSymbolDispatch {
 
-    private final Universe universe;
     @Child private IndirectCallNode call;
 
     public GenericDispatchNode() {
       super(0);
-      universe = Universe.current();
       call = Truffle.getRuntime().createIndirectCallNode();
     }
 
     @Override
     public Object executeDispatch(final VirtualFrame frame,
         final Object receiver, final SSymbol selector, final Object[] argsArr) {
-      SInvokable invokable = Types.getClassOf(receiver, universe).lookupInvokable(selector);
+      SInvokable invokable = Types.getClassOf(receiver).lookupInvokable(selector);
 
       Object[] args = SArguments.createSArgumentsArrayFrom(receiver, argsArr);
 

@@ -45,6 +45,7 @@ import java.util.StringTokenizer;
 import som.compiler.Disassembler;
 import som.interpreter.Invokable;
 import som.interpreter.TruffleCompiler;
+import som.vm.constants.Blocks;
 import som.vm.constants.Globals;
 import som.vm.constants.Nil;
 import som.vmobjects.SBlock;
@@ -372,8 +373,16 @@ public final class Universe {
     setGlobal(trueClassName,  trueClass);
     setGlobal(falseClassName, falseClass);
 
+    loadBlockClass(1);
+    loadBlockClass(2);
+    loadBlockClass(3);
+
     if (Globals.trueObject != trueObject) {
       errorExit("Initialization went wrong for class Globals");
+    }
+
+    if (Blocks.blockClass1 != blockClasses[1]) {
+      errorExit("Initialization went wrong for class Blocks");
     }
   }
 
@@ -500,28 +509,16 @@ public final class Universe {
   }
 
   public SClass getBlockClass(final int numberOfArguments) {
-    SClass result = blockClasses[numberOfArguments];
+    return blockClasses[numberOfArguments];
+  }
 
-    // the base class Block (i.e., without #value method is loaded explicitly
-    if (result != null || numberOfArguments == 0) {
-      return result;
-    }
-
+  private SClass loadBlockClass(final int numberOfArguments) {
     // Compute the name of the block class with the given number of
     // arguments
     SSymbol name = symbolFor("Block" + numberOfArguments);
 
-    // Lookup the specific block class in the dictionary of globals and
-    // return it
-    result = (SClass) getGlobal(name);
-
-    if (result != null) {
-      blockClasses[numberOfArguments] = result;
-      return result;
-    }
-
     // Get the block class for blocks with the given number of arguments
-    result = loadClass(name, null);
+    SClass result = loadClass(name, null);
 
     // Add the appropriate value primitive to the block class
     result.addInstancePrimitive(SBlock.getEvaluationPrimitive(numberOfArguments,

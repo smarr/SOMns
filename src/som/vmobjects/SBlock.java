@@ -31,6 +31,7 @@ import som.primitives.BlockPrimsFactory.ValueOnePrimFactory;
 import som.primitives.BlockPrimsFactory.ValueTwoPrimFactory;
 import som.primitives.Primitives;
 import som.vm.Universe;
+import som.vm.constants.Blocks;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
@@ -57,7 +58,7 @@ public abstract class SBlock extends SAbstractObject {
 
     @Override
     public SClass getSOMClass() {
-      return Universe.current().getBlockClass(1);
+      return Blocks.blockClass1;
     }
   }
 
@@ -68,7 +69,7 @@ public abstract class SBlock extends SAbstractObject {
 
     @Override
     public SClass getSOMClass() {
-      return Universe.current().getBlockClass(2);
+      return Blocks.blockClass2;
     }
   }
 
@@ -79,7 +80,7 @@ public abstract class SBlock extends SAbstractObject {
 
     @Override
     public SClass getSOMClass() {
-      return Universe.current().getBlockClass(3);
+      return Blocks.blockClass3;
     }
   }
 

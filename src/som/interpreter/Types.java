@@ -23,7 +23,7 @@ package som.interpreter;
 
 import java.math.BigInteger;
 
-import som.vm.Universe;
+import som.vm.constants.Blocks;
 import som.vm.constants.Classes;
 import som.vm.constants.Globals;
 import som.vmobjects.SAbstractObject;
@@ -55,7 +55,7 @@ import com.oracle.truffle.api.dsl.TypeSystem;
                Object[].class})
 public class Types {
 
-  public static SClass getClassOf(final Object obj, final Universe universe) {
+  public static SClass getClassOf(final Object obj) {
     CompilerAsserts.neverPartOfCompilation();
     assert obj != null;
 
@@ -78,11 +78,11 @@ public class Types {
     } else if (obj instanceof SPrimitive) {
       return Classes.primitiveClass;
     } else if (obj instanceof SBlock1) {
-      return universe.getBlockClass(1);
+      return Blocks.blockClass1;
     } else if (obj instanceof SBlock2) {
-      return universe.getBlockClass(2);
+      return Blocks.blockClass2;
     } else if (obj instanceof SBlock3) {
-      return universe.getBlockClass(3);
+      return Blocks.blockClass3;
     } else if (obj instanceof Object[]) {
       return Classes.arrayClass;
     }
