@@ -41,7 +41,7 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
     GenericMessageSendNode sendNode = (GenericMessageSendNode) i.getParent();
 
     if (chainDepth < INLINE_CACHE_SIZE) {
-      SClass rcvrClass = Types.getClassOf(rcvr, universe);
+      SClass rcvrClass = Types.getClassOf(rcvr);
       SInvokable method = rcvrClass.lookupInvokable(selector);
       CallTarget callTarget;
       if (method != null) {

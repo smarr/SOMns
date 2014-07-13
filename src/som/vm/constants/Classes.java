@@ -22,8 +22,6 @@ public final class Classes {
   public static final SClass  domainClass;
 
   public static final SClass  booleanClass;
-  public static final SClass  trueClass;
-  public static final SClass  falseClass;
 
   // These classes can be statically preinitialized.
   static {
@@ -46,7 +44,5 @@ public final class Classes {
     domainClass     = Universe.newSystemClass(Domain.standard);
 
     booleanClass    = Universe.newSystemClass(Domain.standard);
-    trueClass       = Universe.newSystemClass(Domain.standard);
-    falseClass      = Universe.newSystemClass(Domain.standard);
   }
 }

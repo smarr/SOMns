@@ -34,7 +34,7 @@ public final class GenericDispatchNode extends AbstractDispatchWithLookupNode {
 
   @SlowPath
   private SInvokable lookupMethod(final Object rcvr) {
-    SClass rcvrClass = Types.getClassOf(rcvr, universe);
+    SClass rcvrClass = Types.getClassOf(rcvr);
     return rcvrClass.lookupInvokable(selector);
   }
 

@@ -64,8 +64,7 @@ public final class ObjectPrims {
   }
 
   public abstract static class ClassPrim extends UnarySideEffectFreeExpressionNode {
-    private final Universe universe;
-    public ClassPrim(final boolean executesEnforced) { super(executesEnforced); this.universe = Universe.current(); }
+    public ClassPrim(final boolean executesEnforced) { super(executesEnforced); }
     public ClassPrim(final ClassPrim node) { this(node.executesEnforced); }
 
     @Specialization
@@ -75,7 +74,7 @@ public final class ObjectPrims {
 
     @Specialization
     public final SClass doObject(final Object receiver) {
-      return Types.getClassOf(receiver, universe);
+      return Types.getClassOf(receiver);
     }
   }
 }

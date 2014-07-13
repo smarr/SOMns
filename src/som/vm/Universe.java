@@ -47,6 +47,7 @@ import java.util.StringTokenizer;
 import som.compiler.Disassembler;
 import som.interpreter.AbstractInvokable;
 import som.interpreter.TruffleCompiler;
+import som.vm.constants.Blocks;
 import som.vm.constants.Domain;
 import som.vm.constants.Globals;
 import som.vm.constants.Nil;
@@ -396,6 +397,9 @@ public final class Universe {
       errorExit("Initialization went wrong for class Globals");
     }
 
+    if (Blocks.blockClass1 != blockClasses[1]) {
+      errorExit("Initialization went wrong for class Blocks");
+    }
     objectSystemInitialized = true;
   }
 

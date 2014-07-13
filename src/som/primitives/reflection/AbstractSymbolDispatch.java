@@ -7,7 +7,6 @@ import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.PreevaluatedExpression;
 import som.interpreter.nodes.dispatch.DispatchChain;
-import som.vm.Universe;
 import som.vmobjects.SArray;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
@@ -113,20 +112,18 @@ public abstract class AbstractSymbolDispatch extends Node implements DispatchCha
 
   private static final class GenericDispatchNode extends AbstractSymbolDispatch {
 
-    private final Universe universe;
     private final boolean executesEnforced;
 
     public GenericDispatchNode(final boolean executesEnforced,
         final boolean alwaysEnforced) {
       super(alwaysEnforced, 0);
-      universe = Universe.current();
       this.executesEnforced = executesEnforced;
     }
 
     @Override
     public Object executeDispatch(final VirtualFrame frame,
         final Object receiver, final SSymbol selector, final Object[] argsArr) {
-      SInvokable invokable = Types.getClassOf(receiver, universe).lookupInvokable(selector);
+      SInvokable invokable = Types.getClassOf(receiver).lookupInvokable(selector);
 
       SObject domain = SArguments.domain(frame);
       Object[] args = SArguments.createSArgumentsWithReceiver(domain,

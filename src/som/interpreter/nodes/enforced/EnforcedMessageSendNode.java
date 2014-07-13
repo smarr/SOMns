@@ -9,7 +9,6 @@ import som.interpreter.nodes.MessageSendNode.AbstractUninitializedMessageSendNod
 import som.interpreter.nodes.PreevaluatedExpression;
 import som.interpreter.nodes.dispatch.DispatchChain.Cost;
 import som.interpreter.nodes.enforced.IntercessionHandlerCache.AbstractIntercessionHandlerDispatch;
-import som.vm.Universe;
 import som.vmobjects.SArray;
 import som.vmobjects.SClass;
 import som.vmobjects.SDomain;
@@ -24,7 +23,6 @@ import com.oracle.truffle.api.nodes.NodeCost;
 public class EnforcedMessageSendNode extends AbstractMessageSendNode {
 
   protected final SSymbol selector;
-  protected final Universe universe;
   @Child protected AbstractIntercessionHandlerDispatch dispatch;
 
   public EnforcedMessageSendNode(final SSymbol selector,
@@ -33,7 +31,6 @@ public class EnforcedMessageSendNode extends AbstractMessageSendNode {
     super(arguments, source, true);
     this.selector = selector;
     dispatch = IntercessionHandlerCache.create("requestExecutionOf:with:on:lookup:", executesEnforced);
-    universe = Universe.current();
   }
 
   @Override
@@ -41,7 +38,7 @@ public class EnforcedMessageSendNode extends AbstractMessageSendNode {
     Object  rcvr = args[0];
     SObject rcvrDomain    = SDomain.getOwner(rcvr);
     SObject currentDomain = SArguments.domain(frame);
-    SClass  rcvrClass = Types.getClassOf(rcvr, universe);
+    SClass  rcvrClass = Types.getClassOf(rcvr);
 
     Object[] arguments = SArguments.createSArgumentsArray(false, currentDomain,
         rcvrDomain, selector,

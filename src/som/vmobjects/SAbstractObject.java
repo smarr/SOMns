@@ -30,7 +30,7 @@ public abstract class SAbstractObject {
     SSymbol selector = universe.symbolFor(selectorString);
 
     // Lookup the invokable
-    SInvokable invokable = Types.getClassOf(arguments[0], universe).lookupInvokable(selector);
+    SInvokable invokable = Types.getClassOf(arguments[0]).lookupInvokable(selector);
 
     return invokable.invoke(domain, enforced, arguments);
   }
