@@ -21,6 +21,7 @@ public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode
 
   private final SInvokable blockMethod;
   @Child private DirectCallNode valueSend;
+  @Child private DirectCallNode firstValueSend; // explicitly peeled first iteration
 
   public IntToByDoMessageNode(final ExpressionNode orignialNode,
       final SBlock block) {
@@ -28,12 +29,15 @@ public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode
     blockMethod = block.getMethod();
     valueSend = Truffle.getRuntime().createDirectCallNode(
                     blockMethod.getCallTarget());
+    firstValueSend = Truffle.getRuntime().createDirectCallNode(
+        blockMethod.getCallTarget());
   }
 
   public IntToByDoMessageNode(final IntToByDoMessageNode node) {
     super(node.getSourceSection());
     this.blockMethod = node.blockMethod;
     this.valueSend   = node.valueSend;
+    this.firstValueSend = node.firstValueSend;
   }
 
   @Override
@@ -54,7 +58,11 @@ public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode
   @Specialization(guards = "isSameBlockLong")
   public final long doIntToByDo(final VirtualFrame frame, final long receiver, final long limit, final long step, final SBlock block) {
     try {
-      for (long i = receiver; i <= limit; i += step) {
+      if (receiver <= limit) {
+        firstValueSend.call(frame, new Object[] {block, receiver});
+      }
+
+      for (long i = receiver + 1; i <= limit; i += step) {
         valueSend.call(frame, new Object[] {block, i});
       }
     } finally {
@@ -68,7 +76,11 @@ public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode
   @Specialization(guards = "isSameBlockDouble")
   public final long doIntToByDo(final VirtualFrame frame, final long receiver, final double limit, final long step, final SBlock block) {
     try {
-      for (long i = receiver; i <= limit; i += step) {
+      if (receiver <= limit) {
+        firstValueSend.call(frame, new Object[] {block, receiver});
+      }
+
+      for (long i = receiver + 1; i <= limit; i += step) {
         valueSend.call(frame, new Object[] {block, i});
       }
     } finally {

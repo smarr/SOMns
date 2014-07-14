@@ -21,6 +21,10 @@ public abstract class AbstractWhileNode extends BinaryExpressionNode {
   @Child protected DirectCallNode conditionValueSend;
   @Child protected DirectCallNode bodyValueSend;
 
+  // explicitly peeled first iteration
+  @Child protected DirectCallNode firstConditionValueSend;
+  @Child protected DirectCallNode firstBodyValueSend;
+
   protected final boolean predicateBool;
 
   public AbstractWhileNode(final SBlock rcvr, final SBlock arg,
@@ -30,9 +34,13 @@ public abstract class AbstractWhileNode extends BinaryExpressionNode {
     CallTarget callTargetCondition = rcvr.getMethod().getCallTarget();
     conditionValueSend = Truffle.getRuntime().createDirectCallNode(
         callTargetCondition);
+    firstConditionValueSend = Truffle.getRuntime().createDirectCallNode(
+        callTargetCondition);
 
     CallTarget callTargetBody = arg.getMethod().getCallTarget();
     bodyValueSend = Truffle.getRuntime().createDirectCallNode(
+        callTargetBody);
+    firstBodyValueSend = Truffle.getRuntime().createDirectCallNode(
         callTargetBody);
 
     this.predicateBool = predicateBool;
@@ -53,18 +61,25 @@ public abstract class AbstractWhileNode extends BinaryExpressionNode {
   protected final SObject doWhileUnconditionally(final VirtualFrame frame,
       final SBlock loopCondition, final SBlock loopBody) {
     long iterationCount = 0;
-    boolean loopConditionResult = (boolean) conditionValueSend.call(
+
+    boolean loopConditionResult = (boolean) firstConditionValueSend.call(
         frame, new Object[] {loopCondition});
 
     try {
-      // TODO: this is a simplification, we don't cover the case receiver isn't a boolean
-      while (loopConditionResult == predicateBool) {
-        bodyValueSend.call(frame, new Object[] {loopBody});
+      if (loopConditionResult == predicateBool) {
+        firstBodyValueSend.call(frame, new Object[] {loopBody});
         loopConditionResult = (boolean) conditionValueSend.call(
             frame, new Object[] {loopCondition});
 
-        if (CompilerDirectives.inInterpreter()) {
-          iterationCount++;
+        if (CompilerDirectives.inInterpreter()) { iterationCount++; }
+
+        // TODO: this is a simplification, we don't cover the case receiver isn't a boolean
+        while (loopConditionResult == predicateBool) {
+          bodyValueSend.call(frame, new Object[] {loopBody});
+          loopConditionResult = (boolean) conditionValueSend.call(
+              frame, new Object[] {loopCondition});
+
+          if (CompilerDirectives.inInterpreter()) { iterationCount++; }
         }
       }
     } finally {
