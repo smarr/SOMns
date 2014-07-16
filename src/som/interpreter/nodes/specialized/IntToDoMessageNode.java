@@ -53,10 +53,9 @@ public abstract class IntToDoMessageNode extends TernaryExpressionNode
     try {
       if (receiver <= limit) {
         valueSend.call(frame, new Object[] {block, receiver});
-
-        for (long i = receiver + 1; i <= limit; i++) {
-          valueSend.call(frame, new Object[] {block, i});
-        }
+      }
+      for (long i = receiver + 1; i <= limit; i++) {
+        valueSend.call(frame, new Object[] {block, i});
       }
     } finally {
       if (CompilerDirectives.inInterpreter() && (limit - receiver) > 0) {
@@ -75,10 +74,9 @@ public abstract class IntToDoMessageNode extends TernaryExpressionNode
     try {
       if (receiver <= limit) {
         valueSend.call(frame, new Object[] {block, receiver});
-
-        for (long i = receiver + 1; i <= limit; i++) {
-          valueSend.call(frame, new Object[] {block, i});
-        }
+      }
+      for (long i = receiver + 1; i <= limit; i++) {
+        valueSend.call(frame, new Object[] {block, i});
       }
     } finally {
       if (CompilerDirectives.inInterpreter()) {
