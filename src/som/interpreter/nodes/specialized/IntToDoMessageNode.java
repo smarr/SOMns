@@ -23,7 +23,6 @@ public abstract class IntToDoMessageNode extends TernaryExpressionNode
 
   private final SInvokable blockMethod;
   @Child private DirectCallNode valueSend;
-  @Child private DirectCallNode firstValueSend; // peel off the first iteration to help the compiler
 
   public IntToDoMessageNode(final ExpressionNode orignialNode,
       final SBlock block) {
@@ -31,15 +30,12 @@ public abstract class IntToDoMessageNode extends TernaryExpressionNode
     blockMethod = block.getMethod();
     valueSend = Truffle.getRuntime().createDirectCallNode(
                     blockMethod.getCallTarget());
-    firstValueSend = Truffle.getRuntime().createDirectCallNode(
-        blockMethod.getCallTarget());
   }
 
   public IntToDoMessageNode(final IntToDoMessageNode node) {
     super(node.getSourceSection());
     this.blockMethod = node.blockMethod;
     this.valueSend   = node.valueSend;
-    this.firstValueSend = node.firstValueSend;
   }
 
   @Override
@@ -56,10 +52,11 @@ public abstract class IntToDoMessageNode extends TernaryExpressionNode
   public final long doIntToDo(final VirtualFrame frame, final long receiver, final long limit, final SBlock block) {
     try {
       if (receiver <= limit) {
-        firstValueSend.call(frame, new Object[] {block, receiver});
-      }
-      for (long i = receiver + 1; i <= limit; i++) {
-        valueSend.call(frame, new Object[] {block, i});
+        valueSend.call(frame, new Object[] {block, receiver});
+
+        for (long i = receiver + 1; i <= limit; i++) {
+          valueSend.call(frame, new Object[] {block, i});
+        }
       }
     } finally {
       if (CompilerDirectives.inInterpreter() && (limit - receiver) > 0) {
@@ -77,10 +74,11 @@ public abstract class IntToDoMessageNode extends TernaryExpressionNode
   public final long doIntToDo(final VirtualFrame frame, final long receiver, final double limit, final SBlock block) {
     try {
       if (receiver <= limit) {
-        firstValueSend.call(frame, new Object[] {block, receiver});
-      }
-      for (long i = receiver + 1; i <= limit; i++) {
-        valueSend.call(frame, new Object[] {block, i});
+        valueSend.call(frame, new Object[] {block, receiver});
+
+        for (long i = receiver + 1; i <= limit; i++) {
+          valueSend.call(frame, new Object[] {block, i});
+        }
       }
     } finally {
       if (CompilerDirectives.inInterpreter()) {

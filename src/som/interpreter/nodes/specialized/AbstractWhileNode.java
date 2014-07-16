@@ -21,10 +21,6 @@ public abstract class AbstractWhileNode extends BinaryExpressionNode {
   @Child protected DirectCallNode conditionValueSend;
   @Child protected DirectCallNode bodyValueSend;
 
-  // explicitly peeled first iteration
-  @Child protected DirectCallNode firstConditionValueSend;
-  @Child protected DirectCallNode firstBodyValueSend;
-
   protected final boolean predicateBool;
 
   public AbstractWhileNode(final SBlock rcvr, final SBlock arg,
@@ -34,13 +30,9 @@ public abstract class AbstractWhileNode extends BinaryExpressionNode {
     CallTarget callTargetCondition = rcvr.getMethod().getCallTarget();
     conditionValueSend = Truffle.getRuntime().createDirectCallNode(
         callTargetCondition);
-    firstConditionValueSend = Truffle.getRuntime().createDirectCallNode(
-        callTargetCondition);
 
     CallTarget callTargetBody = arg.getMethod().getCallTarget();
     bodyValueSend = Truffle.getRuntime().createDirectCallNode(
-        callTargetBody);
-    firstBodyValueSend = Truffle.getRuntime().createDirectCallNode(
         callTargetBody);
 
     this.predicateBool = predicateBool;
@@ -62,12 +54,12 @@ public abstract class AbstractWhileNode extends BinaryExpressionNode {
       final SBlock loopCondition, final SBlock loopBody) {
     long iterationCount = 0;
 
-    boolean loopConditionResult = (boolean) firstConditionValueSend.call(
+    boolean loopConditionResult = (boolean) conditionValueSend.call(
         frame, new Object[] {loopCondition});
 
     try {
       if (loopConditionResult == predicateBool) {
-        firstBodyValueSend.call(frame, new Object[] {loopBody});
+        bodyValueSend.call(frame, new Object[] {loopBody});
         loopConditionResult = (boolean) conditionValueSend.call(
             frame, new Object[] {loopCondition});
 
