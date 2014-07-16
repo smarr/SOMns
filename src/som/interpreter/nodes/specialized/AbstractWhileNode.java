@@ -58,21 +58,13 @@ public abstract class AbstractWhileNode extends BinaryExpressionNode {
         frame, new Object[] {loopCondition});
 
     try {
-      if (loopConditionResult == predicateBool) {
+      // TODO: this is a simplification, we don't cover the case receiver isn't a boolean
+      while (loopConditionResult == predicateBool) {
         bodyValueSend.call(frame, new Object[] {loopBody});
         loopConditionResult = (boolean) conditionValueSend.call(
             frame, new Object[] {loopCondition});
 
         if (CompilerDirectives.inInterpreter()) { iterationCount++; }
-
-        // TODO: this is a simplification, we don't cover the case receiver isn't a boolean
-        while (loopConditionResult == predicateBool) {
-          bodyValueSend.call(frame, new Object[] {loopBody});
-          loopConditionResult = (boolean) conditionValueSend.call(
-              frame, new Object[] {loopCondition});
-
-          if (CompilerDirectives.inInterpreter()) { iterationCount++; }
-        }
       }
     } finally {
       if (CompilerDirectives.inInterpreter()) {
