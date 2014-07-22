@@ -341,6 +341,10 @@ public final class Universe {
     initializeSystemClass(doubleClass,     objectClass, "Double");
     initializeSystemClass(domainClass,     objectClass, "Domain");
     initializeSystemClass(booleanClass,    objectClass, "Boolean");
+
+    trueClass  = newSystemClass(standardDomain);
+    falseClass = newSystemClass(standardDomain);
+
     initializeSystemClass(trueClass,      booleanClass, "True");
     initializeSystemClass(falseClass,     booleanClass, "False");
 

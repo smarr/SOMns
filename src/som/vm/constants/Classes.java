@@ -39,9 +39,9 @@ public final class Classes {
     integerClass    = Universe.newSystemClass(Domain.standard);
     primitiveClass  = Universe.newSystemClass(Domain.standard);
     stringClass     = Universe.newSystemClass(Domain.standard);
-    doubleClass     = Universe.newSystemClass(Domain.standard, SDomain.NUM_SDOMAIN_FIELDS);
+    doubleClass     = Universe.newSystemClass(Domain.standard);
 
-    domainClass     = Universe.newSystemClass(Domain.standard);
+    domainClass     = Universe.newSystemClass(Domain.standard, SDomain.NUM_SDOMAIN_FIELDS);
 
     booleanClass    = Universe.newSystemClass(Domain.standard);
   }
