@@ -1,4 +1,4 @@
 <factorypath>
-    <factorypathentry kind="WKSPJAR" id="/SOM/libs/truffle-dsl-processor.jar" enabled="true" runInBatchMode="false"/>
-    <factorypathentry kind="WKSPJAR" id="/SOM/libs/truffle.jar" enabled="true" runInBatchMode="false"/>
+    <factorypathentry kind="WKSPJAR" id="/TruffleSOM-OMOP/libs/truffle-dsl-processor.jar" enabled="true" runInBatchMode="false"/>
+    <factorypathentry kind="WKSPJAR" id="/TruffleSOM-OMOP/libs/truffle.jar" enabled="true" runInBatchMode="false"/>
 </factorypath>
