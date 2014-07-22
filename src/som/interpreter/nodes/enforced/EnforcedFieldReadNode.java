@@ -26,7 +26,7 @@ public final class EnforcedFieldReadNode extends AbstractFieldReadNode {
       final SourceSection source) {
     super(self, source, true);
     this.fieldIndex    = fieldIndex;
-    this.somFieldIndex = fieldIndex + 1;
+    this.somFieldIndex = this.fieldIndex + 1;
     dispatch = IntercessionHandlerCache.create("readField:of:", executesEnforced);
   }
 
