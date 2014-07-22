@@ -26,7 +26,7 @@ public abstract class Invokable extends AbstractInvokable {
     this.alwaysInline = alwaysInline;
   }
 
-  @Override
+  // @Override
   public boolean alwaysInline() {
     return alwaysInline;
   }
