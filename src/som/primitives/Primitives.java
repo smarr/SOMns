@@ -108,7 +108,7 @@ public abstract class Primitives {
       unenforcedMethod = new Primitive(primNodeUnenforced,
           mgen.getFrameDescriptor(), false, shouldInline);
     }
-    SPrimitive prim = (SPrimitive) universe.newMethod(signature, enforcedMethod,
+    SPrimitive prim = (SPrimitive) Universe.newMethod(signature, enforcedMethod,
         unenforcedMethod, true, new SMethod[0], isUnenforced);
 
     if (!isUnenforced) { enforcedMethod.setPrimitive(prim);

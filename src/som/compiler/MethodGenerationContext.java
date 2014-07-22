@@ -214,7 +214,7 @@ public final class MethodGenerationContext {
 
   public SInvokable assembleSInvokable(final Universe universe,
       final Invokable enforcedMthd, final Invokable unenforcedMthd) {
-    return universe.newMethod(signature, enforcedMthd, unenforcedMthd,
+    return Universe.newMethod(signature, enforcedMthd, unenforcedMthd,
         isPrimitive(), embeddedBlockMethods.toArray(new SMethod[0]), unenforced);
   }
 
