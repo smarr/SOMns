@@ -65,7 +65,7 @@
       
         <java classname="som.vm.Universe" fork="true" failonerror="true">
             <classpath refid="project.classpath" />
-                <arg line="-cp Smalltalk TestSuite/TestHarness.som" />
+                <arg line="-cp Smalltalk:core-lib/SUnit:TestSuite/OMOP TestSuite/TestHarness.som" />
         </java>
     </target>
     <target name="tests" depends="test" />
