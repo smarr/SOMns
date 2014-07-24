@@ -6,11 +6,11 @@ import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 
 import com.oracle.truffle.api.CompilerAsserts;
-import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
+import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.api.utilities.BranchProfile;
 
 

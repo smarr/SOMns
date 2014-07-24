@@ -23,8 +23,8 @@ import som.interpreter.nodes.UninitializedVariableNode.UninitializedVariableWrit
 import som.vm.Universe;
 import som.vmobjects.SSymbol;
 
-import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.frame.FrameSlot;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 
