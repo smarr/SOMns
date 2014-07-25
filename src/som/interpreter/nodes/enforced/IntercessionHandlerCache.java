@@ -3,7 +3,6 @@ package som.interpreter.nodes.enforced;
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
 import som.interpreter.SArguments;
 import som.interpreter.nodes.dispatch.DispatchChain;
-import som.interpreter.nodes.specialized.whileloops.WhileCache.AbstractWhileDispatch;
 import som.vm.Universe;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
@@ -74,7 +73,7 @@ public final class IntercessionHandlerCache {
 
     private AbstractIntercessionHandlerDispatch determineChainHead() {
       Node i = this;
-      while (i.getParent() instanceof AbstractWhileDispatch) {
+      while (i.getParent() instanceof AbstractIntercessionHandlerDispatch) {
         i = i.getParent();
       }
       return (AbstractIntercessionHandlerDispatch) i;
@@ -128,7 +127,6 @@ public final class IntercessionHandlerCache {
       super(executesEnforced, 0);
       this.intercessionHandlerSelector = intercessionHandlerSelector;
     }
-
 
     @Override
     public Object executeDispatch(final VirtualFrame frame,
