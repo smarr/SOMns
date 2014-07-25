@@ -91,12 +91,12 @@ public class SObject extends SAbstractObject {
 
   @Override
   public final SObject getDomain() {
-    return domain;
+    return CompilerDirectives.unsafeCast(domain, SObject.class, true, true);
   }
 
   protected final SObject getSDomainDomainForNewObjects() {
     assert SDomain.NEW_OBJECT_DOMAIN_IDX == 0;
-    return (SObject) field1;
+    return CompilerDirectives.unsafeCast(field1, SObject.class, true, true);
   }
 
   protected final void setSDomainDomainForNewObjects(final SObject domain) {
@@ -138,6 +138,8 @@ public class SObject extends SAbstractObject {
 
   public final void setClass(final SClass value) {
     transferToInterpreterAndInvalidate("SObject.setClass");
+    assert value != null;
+
     // Set the class of this object by writing to the field with class index
     clazz = value;
     setLayoutInitially(value.getLayoutForInstances());
@@ -228,7 +230,7 @@ public class SObject extends SAbstractObject {
 
   @Override
   public final SClass getSOMClass() {
-    return clazz;
+    return CompilerDirectives.unsafeCast(clazz, SClass.class, true, true);
   }
 
   public final long getFieldIndex(final SSymbol fieldName) {
