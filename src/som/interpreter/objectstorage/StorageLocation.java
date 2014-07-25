@@ -178,11 +178,14 @@ public abstract class StorageLocation {
     public Object read(final SObject obj, final boolean assumptionValid) {
       // TODO: for the moment Graal doesn't seem to get the optimizations
       // right, still need to pass in the correct location identifier, which can probably be `this`.
-      return CompilerDirectives.unsafeGetObject(obj, fieldOffset, assumptionValid, null);
+      return CompilerDirectives.unsafeCast(
+          CompilerDirectives.unsafeGetObject(obj, fieldOffset, assumptionValid, null),
+          Object.class, true, true);
     }
 
     @Override
     public void write(final SObject obj, final Object value) {
+      assert value != null;
       // TODO: for the moment Graal doesn't seem to get the optimizations
       // right, still need to pass in the correct location identifier, which can probably be `this`.
       CompilerDirectives.unsafePutObject(obj, fieldOffset, value, null);
