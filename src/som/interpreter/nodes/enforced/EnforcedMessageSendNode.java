@@ -1,18 +1,13 @@
 package som.interpreter.nodes.enforced;
 
-import som.interpreter.SArguments;
-import som.interpreter.Types;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.ISuperReadNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.interpreter.nodes.MessageSendNode.AbstractUninitializedMessageSendNode;
 import som.interpreter.nodes.PreevaluatedExpression;
 import som.interpreter.nodes.dispatch.DispatchChain.Cost;
-import som.interpreter.nodes.enforced.IntercessionHandlerCache.AbstractIntercessionHandlerDispatch;
-import som.vmobjects.SArray;
+import som.interpreter.nodes.enforced.DomainAndClassDispatch.AbstractDomainAndClassDispatch;
 import som.vmobjects.SClass;
-import som.vmobjects.SDomain;
-import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -23,29 +18,20 @@ import com.oracle.truffle.api.source.SourceSection;
 public class EnforcedMessageSendNode extends AbstractMessageSendNode {
 
   protected final SSymbol selector;
-  @Child protected AbstractIntercessionHandlerDispatch dispatch;
+  @Child protected AbstractDomainAndClassDispatch dispatch;
 
   public EnforcedMessageSendNode(final SSymbol selector,
       final ExpressionNode[] arguments,
       final SourceSection source) {
     super(arguments, source, true);
     this.selector = selector;
-    dispatch = IntercessionHandlerCache.create("requestExecutionOf:with:on:lookup:", executesEnforced);
+    dispatch = DomainAndClassDispatch.create("requestExecutionOf:with:on:lookup:",
+        executesEnforced, selector);
   }
 
   @Override
   public Object doPreEvaluated(final VirtualFrame frame, final Object[] args) {
-    Object  rcvr = args[0];
-    SObject rcvrDomain    = SDomain.getOwner(rcvr);
-    SObject currentDomain = SArguments.domain(frame);
-    SClass  rcvrClass = Types.getClassOf(rcvr);
-
-    Object[] arguments = SArguments.createSArgumentsArray(false, currentDomain,
-        rcvrDomain, selector,
-        SArray.fromArgArrayWithReceiverToSArrayWithoutReceiver(args, currentDomain),
-        rcvr, rcvrClass);
-
-    return dispatch.executeDispatch(frame, rcvrDomain, arguments);
+    return dispatch.executeDispatch(frame, args);
   }
 
   private static final class EnforcedSuperMessageSendNode extends EnforcedMessageSendNode {
@@ -55,20 +41,13 @@ public class EnforcedMessageSendNode extends AbstractMessageSendNode {
         final ExpressionNode[] arguments, final SourceSection source) {
       super(selector, arguments, source);
       superClass = ((ISuperReadNode) arguments[0]).getSuperClass();
+      dispatch = DomainAndClassDispatch.create("requestExecutionOf:with:on:lookup:",
+          executesEnforced, selector, superClass);
     }
 
     @Override
     public Object doPreEvaluated(final VirtualFrame frame, final Object[] args) {
-      Object  rcvr = args[0];
-      SObject rcvrDomain    = SDomain.getOwner(rcvr);
-      SObject currentDomain = SArguments.domain(frame);
-
-      Object[] arguments = SArguments.createSArgumentsArray(false, currentDomain,
-          rcvrDomain, selector,
-          SArray.fromArgArrayWithReceiverToSArrayWithoutReceiver(args, currentDomain),
-          rcvr, superClass);
-
-      return dispatch.executeDispatch(frame, rcvrDomain, arguments);
+      return dispatch.executeDispatch(frame, args);
     }
   }
 
