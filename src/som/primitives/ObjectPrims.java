@@ -5,6 +5,7 @@ import som.interpreter.nodes.nary.BinaryExpressionNode.BinarySideEffectFreeExpre
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode.UnarySideEffectFreeExpressionNode;
+import som.primitives.reflection.IndexDispatch;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
@@ -16,12 +17,18 @@ import com.oracle.truffle.api.dsl.Specialization;
 
 public final class ObjectPrims {
   public abstract static class InstVarAtPrim extends BinarySideEffectFreeExpressionNode {
-    public InstVarAtPrim(final boolean executesEnforced) { super(executesEnforced); }
+
+    @Child private IndexDispatch dispatch;
+
+    public InstVarAtPrim(final boolean executesEnforced) {
+      super(executesEnforced);
+      dispatch = IndexDispatch.create();
+    }
     public InstVarAtPrim(final InstVarAtPrim node) { this(node.executesEnforced); }
 
     @Specialization
     public final Object doSObject(final SObject receiver, final long idx) {
-      return receiver.getField(idx - 1);
+      return dispatch.executeDispatch(receiver, (int) idx - 1);
     }
   }
 

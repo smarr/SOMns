@@ -18,6 +18,10 @@ public abstract class FieldAccessorNode extends Node {
 
   protected final int fieldIndex;
 
+  public static AbstractReadFieldNode createRead(final int fieldIndex) {
+    return new UninitializedReadFieldNode(fieldIndex);
+  }
+
   public FieldAccessorNode(final int fieldIndex) {
     this.fieldIndex = fieldIndex;
   }
