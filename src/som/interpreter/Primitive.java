@@ -1,7 +1,5 @@
 package som.interpreter;
 
-import java.util.Iterator;
-
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.enforced.EnforcedPrim;
 import som.primitives.EmptyPrim;
@@ -71,13 +69,9 @@ public final class Primitive extends Invokable {
     CompilerAsserts.neverPartOfCompilation("Primitive.pLC(.)");
 
     // we need to skip the primitive and get to the method that called the primitive
-    Iterable<FrameInstance> stack = Truffle.getRuntime().getStackTrace();
-    Iterator<FrameInstance> i = stack.iterator();
+    FrameInstance caller = Truffle.getRuntime().getCallerFrame();
 
-    i.next();  // current frame
-    FrameInstance next2 = i.next();  // caller frame
-
-    RootCallTarget ct = (RootCallTarget) next2.getCallTarget();  // caller method
+    RootCallTarget ct = (RootCallTarget) caller.getCallTarget();  // caller method
     AbstractInvokable m = (AbstractInvokable) ct.getRootNode();
     m.propagateLoopCountThroughoutLexicalScope(count);
   }
