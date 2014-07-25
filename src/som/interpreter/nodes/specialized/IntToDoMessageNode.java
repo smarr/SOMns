@@ -57,7 +57,10 @@ public abstract class IntToDoMessageNode extends TernaryExpressionNode
   public final long doIntToDo(final VirtualFrame frame, final long receiver, final long limit, final SBlock block) {
     try {
       SObject domain = SArguments.domain(frame);
-      for (long i = receiver; i <= limit; i++) {
+      if (receiver <= limit) {
+        valueSend.call(frame, SArguments.createSArguments(domain, blockEnforced, new Object[] {block, receiver}));
+      }
+      for (long i = receiver + 1; i <= limit; i++) {
         valueSend.call(frame, SArguments.createSArguments(domain, blockEnforced, new Object[] {block, i}));
       }
     } finally {
@@ -76,7 +79,10 @@ public abstract class IntToDoMessageNode extends TernaryExpressionNode
   public final long doIntToDo(final VirtualFrame frame, final long receiver, final double limit, final SBlock block) {
     try {
       SObject domain = SArguments.domain(frame);
-      for (long i = receiver; i <= limit; i++) {
+      if (receiver <= limit) {
+        valueSend.call(frame, SArguments.createSArguments(domain, blockEnforced, new Object[] {block, receiver}));
+      }
+      for (long i = receiver + 1; i <= limit; i++) {
         valueSend.call(frame, SArguments.createSArguments(domain, blockEnforced, new Object[] {block, i}));
       }
     } finally {
