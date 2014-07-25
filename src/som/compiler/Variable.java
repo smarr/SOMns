@@ -9,8 +9,8 @@ import som.interpreter.nodes.ExpressionNode;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
-import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.frame.FrameSlot;
+import com.oracle.truffle.api.source.SourceSection;
 
 public abstract class Variable {
   public final String name;

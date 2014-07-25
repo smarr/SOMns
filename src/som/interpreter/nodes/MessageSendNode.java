@@ -53,10 +53,10 @@ import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives.SlowPath;
-import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.NodeCost;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 public final class MessageSendNode {

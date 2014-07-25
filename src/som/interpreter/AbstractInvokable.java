@@ -1,10 +1,10 @@
 package som.interpreter;
 
 import com.oracle.truffle.api.RootCallTarget;
-import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.nodes.RootNode;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 public abstract class AbstractInvokable extends RootNode {

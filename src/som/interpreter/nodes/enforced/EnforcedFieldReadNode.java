@@ -7,9 +7,9 @@ import som.interpreter.nodes.dispatch.DispatchChain.Cost;
 import som.interpreter.nodes.enforced.IntercessionHandlerCache.AbstractIntercessionHandlerDispatch;
 import som.vmobjects.SObject;
 
-import com.oracle.truffle.api.SourceSection;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.NodeCost;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 public final class EnforcedFieldReadNode extends AbstractFieldReadNode {
