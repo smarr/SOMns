@@ -115,6 +115,7 @@ public class SObject extends SAbstractObject {
   public final void setClass(final SClass value) {
     transferToInterpreterAndInvalidate("SObject.setClass");
     // Set the class of this object by writing to the field with class index
+    assert value != null;
     clazz = value;
     setLayoutInitially(value.getLayoutForInstances());
   }
@@ -204,7 +205,7 @@ public class SObject extends SAbstractObject {
 
   @Override
   public final SClass getSOMClass() {
-    return clazz;
+    return CompilerDirectives.unsafeCast(clazz, SClass.class, true, true);
   }
 
   public final long getFieldIndex(final SSymbol fieldName) {
