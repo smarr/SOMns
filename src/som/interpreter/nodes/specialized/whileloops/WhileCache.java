@@ -25,7 +25,6 @@ public final class WhileCache {
     protected final boolean executesEnforced;
     protected final int depth;
 
-
     public AbstractWhileDispatch(final boolean predicateBool,
         final boolean executesEnforced, final int depth) {
       this.predicateBool    = predicateBool;
