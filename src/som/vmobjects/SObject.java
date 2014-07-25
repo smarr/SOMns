@@ -24,6 +24,7 @@
 
 package som.vmobjects;
 
+import static som.interpreter.TruffleCompiler.transferToInterpreter;
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
 
 import java.lang.reflect.Field;
@@ -51,7 +52,7 @@ public class SObject extends SAbstractObject {
   public static final int NUM_PRIMITIVE_FIELDS = 5;
   public static final int NUM_OBJECT_FIELDS    = 5;
 
-  private SObject domain;
+  @CompilationFinal private SObject domain;
 
   @SuppressWarnings("unused")  private long   primField1;
   @SuppressWarnings("unused")  private long   primField2;
@@ -105,6 +106,7 @@ public class SObject extends SAbstractObject {
   }
 
   public final void setDomain(final SObject domain) {
+    transferToInterpreter("SObject.setDomain");
     this.domain = domain;
   }
 
