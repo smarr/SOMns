@@ -45,6 +45,7 @@ import som.primitives.arithmetic.LogicAndPrimFactory;
 import som.primitives.arithmetic.ModuloPrimFactory;
 import som.primitives.arithmetic.MultiplicationPrimFactory;
 import som.primitives.arithmetic.SubtractionPrimFactory;
+import som.primitives.reflection.PerformWithArgumentsInSuperclassPrimFactory.PerformEnforcedWithArgumentsInSuperclassPrimFactory;
 import som.vm.NotYetImplementedException;
 import som.vm.constants.Classes;
 import som.vmobjects.SBlock;
@@ -366,6 +367,12 @@ public final class MessageSendNode {
 
     protected PreevaluatedExpression specializeQuaternary(
         final Object[] arguments) {
+      switch (selector.getString()) {
+        case "performEnforced:withArguments:inSuperclass:":
+          return replace(PerformEnforcedWithArgumentsInSuperclassPrimFactory.
+              create(executesEnforced, argumentNodes[0],
+                  argumentNodes[1], argumentNodes[2], argumentNodes[3]));
+      }
       return this;
     }
 
