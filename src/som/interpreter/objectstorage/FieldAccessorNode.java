@@ -22,6 +22,10 @@ public abstract class FieldAccessorNode extends Node {
     return new UninitializedReadFieldNode(fieldIndex);
   }
 
+  public static AbstractWriteFieldNode createWrite(final int fieldIndex) {
+    return new UninitializedWriteFieldNode(fieldIndex);
+  }
+
   public FieldAccessorNode(final int fieldIndex) {
     this.fieldIndex = fieldIndex;
   }

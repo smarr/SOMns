@@ -1,6 +1,7 @@
 package som.primitives;
 
 import som.interpreter.Types;
+import som.interpreter.nodes.PreevaluatedExpression;
 import som.interpreter.nodes.nary.BinaryExpressionNode.BinarySideEffectFreeExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
@@ -12,7 +13,9 @@ import som.vmobjects.SClass;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 
 
 public final class ObjectPrims {
@@ -32,20 +35,25 @@ public final class ObjectPrims {
     }
   }
 
-  public abstract static class InstVarAtPutPrim extends TernaryExpressionNode {
-    public InstVarAtPutPrim(final boolean executesEnforced) { super(executesEnforced); }
+  public abstract static class InstVarAtPutPrim extends TernaryExpressionNode
+      implements PreevaluatedExpression {
+    @Child private IndexDispatch dispatch;
+
+    public InstVarAtPutPrim(final boolean executesEnforced) {
+      super(executesEnforced);
+      dispatch = IndexDispatch.create();
+    }
     public InstVarAtPutPrim(final InstVarAtPutPrim node) { this(node.executesEnforced); }
 
     @Specialization
-    public final Object doSObject(final SObject receiver, final long idx, final SAbstractObject val) {
-      receiver.setField(idx - 1, val);
+    public final Object doSObject(final SObject receiver, final long idx, final Object val) {
+      dispatch.executeDispatch(receiver, (int) idx - 1, val);
       return val;
     }
 
-    @Specialization
-    public final Object doSObject(final SObject receiver, final long idx, final Object val) {
-      receiver.setField(idx - 1, val);
-      return val;
+    @Override
+    public Object doPreEvaluated(final VirtualFrame frame, final Object[] args) {
+      return doSObject((SObject) args[0], (long) args[1], args[2]);
     }
   }
 
@@ -55,6 +63,7 @@ public final class ObjectPrims {
 
     @Specialization
     public final Object doSObject(final SObject receiver, final SSymbol fieldName) {
+      CompilerAsserts.neverPartOfCompilation();
       return receiver.getField(receiver.getFieldIndex(fieldName));
     }
   }

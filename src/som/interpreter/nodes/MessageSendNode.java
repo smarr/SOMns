@@ -34,7 +34,9 @@ import som.primitives.EqualsEqualsPrimFactory;
 import som.primitives.EqualsPrimFactory;
 import som.primitives.IntegerPrimsFactory.LeftShiftPrimFactory;
 import som.primitives.LengthPrimFactory;
+import som.primitives.MethodPrimsFactory.InvokeOnPrimFactory;
 import som.primitives.ObjectPrimsFactory.InstVarAtPrimFactory;
+import som.primitives.ObjectPrimsFactory.InstVarAtPutPrimFactory;
 import som.primitives.arithmetic.AdditionPrimFactory;
 import som.primitives.arithmetic.BitXorPrimFactory;
 import som.primitives.arithmetic.DividePrimFactory;
@@ -367,6 +369,12 @@ public final class MessageSendNode {
                 argumentNodes[1], argumentNodes[2]));
           }
           break;
+        case "invoke:on:":
+          return replace(InvokeOnPrimFactory.create(executesEnforced,
+              argumentNodes[0], argumentNodes[1], argumentNodes[2]));
+        case "instVarAt:put:":
+          return replace(InstVarAtPutPrimFactory.create(executesEnforced,
+              argumentNodes[0], argumentNodes[1], argumentNodes[2]));
       }
       return this;
     }
