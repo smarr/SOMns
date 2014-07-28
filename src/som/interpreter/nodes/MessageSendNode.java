@@ -369,7 +369,7 @@ public final class MessageSendNode {
                 argumentNodes[1], argumentNodes[2]));
           }
           break;
-        case "invoke:on:":
+        case "invokeOn:with:":
           return replace(InvokeOnPrimFactory.create(executesEnforced,
               argumentNodes[0], argumentNodes[1], argumentNodes[2]));
         case "instVarAt:put:":
