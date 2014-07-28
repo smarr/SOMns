@@ -2,6 +2,8 @@ package som.vmobjects;
 
 import java.util.Arrays;
 
+import com.oracle.truffle.api.CompilerDirectives;
+
 
 public final class SArray {
   private static final int OWNER_IDX = 0;
@@ -27,7 +29,9 @@ public final class SArray {
   public static Object get(final Object[] arr, final long idx) {
     assert idx > OWNER_IDX;
     assert idx <= arr.length;
-    return arr[(int) idx];
+
+    return CompilerDirectives.unsafeCast(arr[(int) idx], Object.class,
+        true, true);
   }
 
   public static void set(final Object[] arr, final long idx, final Object value) {
@@ -59,7 +63,9 @@ public final class SArray {
   }
 
   public static SObject getOwner(final Object[] arr) {
-    return (SObject) arr[OWNER_IDX];
+    assert arr[OWNER_IDX] != null;
+    return CompilerDirectives.unsafeCast(arr[OWNER_IDX], SObject.class,
+        true, true);
   }
 
   public static void setOwner(final Object[] arr, final SObject domain) {
