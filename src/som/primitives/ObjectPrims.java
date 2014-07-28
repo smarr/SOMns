@@ -14,6 +14,7 @@ import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
@@ -53,7 +54,11 @@ public final class ObjectPrims {
 
     @Override
     public Object doPreEvaluated(final VirtualFrame frame, final Object[] args) {
-      return doSObject((SObject) args[0], (long) args[1], args[2]);
+      assert args[0] instanceof SObject;
+      assert args[1] instanceof Long;
+      SObject rcvr = CompilerDirectives.unsafeCast(args[0], SObject.class, true, true);
+      long idx     = CompilerDirectives.unsafeCast(args[1], long.class, true, true);
+      return doSObject(rcvr, idx, args[2]);
     }
   }
 
