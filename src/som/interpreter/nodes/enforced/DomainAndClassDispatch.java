@@ -38,7 +38,7 @@ public final class DomainAndClassDispatch {
 
   public abstract static class AbstractDomainAndClassDispatch extends Node
       implements DispatchChain {
-    @Child protected AbstractIntercessionHandlerDispatch dispatch;
+
     protected final SSymbol selector;
     protected final SClass superSendClass;
     protected final int depth;
@@ -50,8 +50,6 @@ public final class DomainAndClassDispatch {
       this.depth    = depth;
       this.selector = selector;
       this.superSendClass = superSendClass;
-      this.dispatch = IntercessionHandlerCache.create(intercessionHandlerSelector,
-          executesEnforced);
     }
 
     public AbstractDomainAndClassDispatch(final int depth,
@@ -135,6 +133,7 @@ public final class DomainAndClassDispatch {
   private abstract static class SpecializedDispatch
       extends AbstractDomainAndClassDispatch {
     @Child protected AbstractDomainAndClassDispatch next;
+    @Child protected AbstractIntercessionHandlerDispatch dispatch;
 
     private SpecializedDispatch(final int depth,
         final String intercessionHandlerSelector, final boolean executesEnforced,
@@ -142,6 +141,8 @@ public final class DomainAndClassDispatch {
       super(depth, intercessionHandlerSelector, executesEnforced, selector, superSendClass);
       this.next = new UninitializedDispatch(depth + 1,
           intercessionHandlerSelector, executesEnforced, selector);
+      this.dispatch = IntercessionHandlerCache.create(intercessionHandlerSelector,
+          executesEnforced);
     }
 
     public abstract SObject getOwnerDomain(final Object obj);
@@ -269,10 +270,13 @@ public final class DomainAndClassDispatch {
 
   private static final class GenericDispatch
       extends AbstractDomainAndClassDispatch {
+    @Child protected AbstractIntercessionHandlerDispatch dispatch;
 
     private GenericDispatch(final String intercessionHandlerSelector,
         final boolean executesEnforced, final SSymbol selector) {
       super(0, intercessionHandlerSelector, executesEnforced, selector);
+      this.dispatch = IntercessionHandlerCache.create(intercessionHandlerSelector,
+          executesEnforced);
     }
 
     @Override
