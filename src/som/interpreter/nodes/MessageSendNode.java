@@ -567,7 +567,7 @@ public final class MessageSendNode {
 
     @Child private AbstractDispatchNode dispatchNode;
 
-    private GenericMessageSendNode(final SSymbol selector,
+    public GenericMessageSendNode(final SSymbol selector,
         final ExpressionNode[] arguments,
         final AbstractDispatchNode dispatchNode, final SourceSection source,
         final boolean executesEnforced) {
