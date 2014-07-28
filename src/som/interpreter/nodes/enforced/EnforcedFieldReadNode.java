@@ -13,6 +13,8 @@ import com.oracle.truffle.api.source.SourceSection;
 
 
 public final class EnforcedFieldReadNode extends AbstractFieldReadNode {
+  public static final String INTERCESSION_SIGNATURE = "readField:of:";
+
   // chain based on domain
   // holder == domainClass => standard domain shortcut
   // otherwise, cached dispatch to intercession handler like DNU
@@ -27,7 +29,7 @@ public final class EnforcedFieldReadNode extends AbstractFieldReadNode {
     super(self, source, true);
     this.fieldIndex    = fieldIndex;
     this.somFieldIndex = this.fieldIndex + 1;
-    dispatch = IntercessionHandlerCache.create("readField:of:", executesEnforced);
+    dispatch = IntercessionHandlerCache.create(INTERCESSION_SIGNATURE, executesEnforced);
   }
 
   @Override

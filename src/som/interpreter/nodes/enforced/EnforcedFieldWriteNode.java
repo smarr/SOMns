@@ -13,6 +13,8 @@ import com.oracle.truffle.api.source.SourceSection;
 
 
 public abstract class EnforcedFieldWriteNode extends AbstractFieldWriteNode {
+  public static final String INTERCESSION_SIGNATURE = "write:toField:of:";
+
   private final long fieldIndex;
   private final long somFieldIndex;
 
@@ -22,7 +24,7 @@ public abstract class EnforcedFieldWriteNode extends AbstractFieldWriteNode {
     super(source, true);
     this.fieldIndex    = fieldIndex;
     this.somFieldIndex = fieldIndex + 1;
-    dispatch = IntercessionHandlerCache.create("write:toField:of:", executesEnforced);
+    dispatch = IntercessionHandlerCache.create(INTERCESSION_SIGNATURE, executesEnforced);
   }
 
   public EnforcedFieldWriteNode(final EnforcedFieldWriteNode node) {

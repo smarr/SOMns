@@ -16,6 +16,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 
 public class EnforcedMessageSendNode extends AbstractMessageSendNode {
+  public static final String INTERCESSION_SIGNATURE = "requestExecutionOf:with:on:lookup:";
 
   protected final SSymbol selector;
   @Child protected AbstractDomainAndClassDispatch dispatch;
@@ -25,7 +26,7 @@ public class EnforcedMessageSendNode extends AbstractMessageSendNode {
       final SourceSection source) {
     super(arguments, source, true);
     this.selector = selector;
-    dispatch = DomainAndClassDispatch.create("requestExecutionOf:with:on:lookup:",
+    dispatch = DomainAndClassDispatch.create(INTERCESSION_SIGNATURE,
         executesEnforced, selector);
   }
 
@@ -41,7 +42,7 @@ public class EnforcedMessageSendNode extends AbstractMessageSendNode {
         final ExpressionNode[] arguments, final SourceSection source) {
       super(selector, arguments, source);
       superClass = ((ISuperReadNode) arguments[0]).getSuperClass();
-      dispatch = DomainAndClassDispatch.create("requestExecutionOf:with:on:lookup:",
+      dispatch = DomainAndClassDispatch.create(INTERCESSION_SIGNATURE,
           executesEnforced, selector, superClass);
     }
 
