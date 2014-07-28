@@ -121,6 +121,10 @@ public final class MessageSendNode {
       this.argumentNodes = arguments;
     }
 
+    public boolean isSuperSend() {
+      return argumentNodes[0] instanceof ISuperReadNode;
+    }
+
     @Override
     public final Object executeGeneric(final VirtualFrame frame) {
       Object[] arguments = evaluateArguments(frame);
@@ -158,10 +162,6 @@ public final class MessageSendNode {
         final Object[] arguments) {
       return specialize(arguments).
           doPreEvaluated(frame, arguments);
-    }
-
-    protected boolean isSuperSend() {
-      return argumentNodes[0] instanceof ISuperReadNode;
     }
 
     protected PreevaluatedExpression specialize(final Object[] arguments) {
@@ -520,7 +520,7 @@ public final class MessageSendNode {
     }
 
     @Override
-    protected boolean isSuperSend() {
+    public boolean isSuperSend() {
       // TODO: is is correct?
       return false;
     }
