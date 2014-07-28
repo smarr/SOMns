@@ -215,7 +215,7 @@ public final class IntercessionHandlerCache {
     public Object doDispatch(final VirtualFrame frame, final Object[] arguments) {
       assert arguments[3] != null;
       assert arguments[5] instanceof SObject;
-      Object val  = arguments[3]; // CompilerDirectives.unsafeCast(arguments[3],  Object.class, true, true);
+      Object val  = CompilerDirectives.unsafeCast(arguments[3],  Object.class, true, true);
       SObject obj = CompilerDirectives.unsafeCast(arguments[5], SObject.class, true, true);
       return write.write(obj, val);
     }
@@ -245,7 +245,7 @@ public final class IntercessionHandlerCache {
       assert arguments[4] instanceof Object[];
       assert arguments[5] != null;
       Object[] somArr = CompilerDirectives.unsafeCast(arguments[4], Object[].class, true, true);
-      Object   rcvr   = arguments[5]; // CompilerDirectives.unsafeCast(arguments[5],   Object.class, true, true);
+      Object   rcvr   = CompilerDirectives.unsafeCast(arguments[5],   Object.class, true, true);
       Object[] args = SArray.fromSArrayToArgArrayWithReceiver(somArr, rcvr);
       return send.doPreEvaluated(frame, args);
     }
