@@ -2,8 +2,8 @@ package som.interpreter.nodes.nary;
 
 import som.interpreter.TruffleCompiler;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
-import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.UnsupportedSpecializationException;
@@ -77,7 +77,7 @@ public final class EagerBinaryPrimitiveNode extends BinaryExpressionNode {
   }
 
   private AbstractMessageSendNode makeGenericSend() {
-    AbstractMessageSendNode node = GenericMessageSendNode.create(selector,
+    AbstractMessageSendNode node = MessageSendNode.createGeneric(selector,
         new ExpressionNode[] {receiver, argument}, getSourceSection(), executesEnforced);
     return replace(node);
   }
