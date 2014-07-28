@@ -2,13 +2,22 @@ package som.interpreter.nodes.enforced;
 
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
 import som.interpreter.SArguments;
+import som.interpreter.nodes.MessageSendNode;
+import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.interpreter.nodes.dispatch.DispatchChain;
+import som.interpreter.objectstorage.FieldAccessorNode;
+import som.interpreter.objectstorage.FieldAccessorNode.AbstractReadFieldNode;
+import som.interpreter.objectstorage.FieldAccessorNode.AbstractWriteFieldNode;
 import som.vm.Universe;
+import som.vm.constants.Classes;
+import som.vmobjects.SArray;
+import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
@@ -46,15 +55,54 @@ public final class IntercessionHandlerCache {
       intercessionHandlerSelector = intercessionHandler;
     }
 
-    private AbstractIntercessionHandlerDispatch specialize(final SObject rcvrDomain) {
+    private AbstractIntercessionHandlerDispatch specialize(
+        final SObject rcvrDomain, final Object[] arguments) {
       transferToInterpreterAndInvalidate("Initialize a dispatch node.");
 
       SInvokable handler = rcvrDomain.getSOMClass().
           lookupInvokable(intercessionHandlerSelector);
 
       if (depth < INLINE_CACHE_SIZE) {
-        CachedDispatch specialized = new CachedDispatch(rcvrDomain, handler,
+        AbstractIntercessionHandlerDispatch specialized;
+
+        if (handler.getHolder() == Classes.domainClass) {
+          switch (intercessionHandlerSelector.getString()) {
+            case EnforcedFieldReadNode.INTERCESSION_SIGNATURE: {
+              specialized = new StandardFieldRead(rcvrDomain,
+                  intercessionHandlerSelector,
+                  (int) (long) arguments[3] - 1, executesEnforced, depth);
+              break;
+            }
+            case EnforcedFieldWriteNode.INTERCESSION_SIGNATURE: {
+              specialized = new StandardFieldWrite(rcvrDomain,
+                  intercessionHandlerSelector,
+                  (int) (long) arguments[4] - 1, executesEnforced, depth);
+              break;
+            }
+            case EnforcedMessageSendNode.INTERCESSION_SIGNATURE: {
+              if (((EnforcedMessageSendNode) this.determineChainHead().getParent().getParent()).isSuperSend()) {
+                specialized = new StandardMessageSend(rcvrDomain,
+                    intercessionHandlerSelector,
+                    (SClass) arguments[6], (SSymbol) arguments[3],
+                    executesEnforced, depth);
+              } else {
+                specialized = new StandardMessageSend(rcvrDomain,
+                    intercessionHandlerSelector,
+                    (SSymbol) arguments[3], executesEnforced, depth);
+              }
+              break;
+            }
+            default: {
+              System.out.println("No standard domain support for: #" + intercessionHandlerSelector.getString());
+              specialized = new CachedDispatch(rcvrDomain, handler,
+                  executesEnforced, depth);
+            }
+          }
+        } else {
+          specialized = new CachedDispatch(rcvrDomain, handler,
             executesEnforced, depth);
+        }
+
         return replace(specialized);
       }
 
@@ -67,7 +115,7 @@ public final class IntercessionHandlerCache {
     @Override
     public Object executeDispatch(final VirtualFrame frame,
         final SObject rcvrDomain, final Object[] arguments) {
-      return specialize(rcvrDomain).
+      return specialize(rcvrDomain, arguments).
           executeDispatch(frame, rcvrDomain, arguments);
     }
 
@@ -85,41 +133,125 @@ public final class IntercessionHandlerCache {
     }
   }
 
-  public static final class CachedDispatch extends AbstractIntercessionHandlerDispatch {
+  private abstract static class AbstractChainDispatch extends AbstractIntercessionHandlerDispatch {
+    @Child private AbstractIntercessionHandlerDispatch next;
     private final SObject rcvrDomain;
 
-    @Child private DirectCallNode dispatch;
-    @Child private AbstractIntercessionHandlerDispatch next;
-
-    public CachedDispatch(final SObject rcvrDomain,
-        final SInvokable intercessionHandler, final boolean executesEnforced,
+    public AbstractChainDispatch(final SObject rcvrDomain,
+        final SSymbol intercessionHandler, final boolean executesEnforced,
         final int depth) {
       super(executesEnforced, depth);
-      this.rcvrDomain = rcvrDomain;
-      this.next = new UninitializedDispatch(intercessionHandler.getSignature(),
+      next = new UninitializedDispatch(intercessionHandler,
           executesEnforced, depth + 1);
-      this.dispatch = Truffle.getRuntime().createDirectCallNode(
-          intercessionHandler.getCallTarget(executesEnforced));
+      this.rcvrDomain = rcvrDomain;
     }
 
+    public abstract Object doDispatch(final VirtualFrame frame,
+        final Object[] arguments);
+
     @Override
-    public Object executeDispatch(final VirtualFrame frame,
+    public final Object executeDispatch(final VirtualFrame frame,
         final SObject rcvrDomain, final Object[] arguments) {
       if (this.rcvrDomain == rcvrDomain) {
-        return dispatch.call(frame, arguments);
-
+        return doDispatch(frame, arguments);
       } else {
         return next.executeDispatch(frame, rcvrDomain, arguments);
       }
     }
 
     @Override
-    public int lengthOfDispatchChain() {
+    public final int lengthOfDispatchChain() {
       return 1 + next.lengthOfDispatchChain();
     }
   }
 
-  public static final class GenericDispatch extends AbstractIntercessionHandlerDispatch {
+  public static final class CachedDispatch extends AbstractChainDispatch {
+
+    @Child private DirectCallNode dispatch;
+
+    public CachedDispatch(final SObject rcvrDomain,
+        final SInvokable intercessionHandler, final boolean executesEnforced,
+        final int depth) {
+      super(rcvrDomain, intercessionHandler.getSignature(), executesEnforced, depth);
+      this.dispatch = Truffle.getRuntime().createDirectCallNode(
+          intercessionHandler.getCallTarget(executesEnforced));
+    }
+
+    @Override
+    public Object doDispatch(final VirtualFrame frame, final Object[] arguments) {
+      return dispatch.call(frame, arguments);
+    }
+  }
+
+  private static final class StandardFieldRead extends AbstractChainDispatch {
+    @Child private AbstractReadFieldNode read;
+
+    private StandardFieldRead(final SObject rcvrDomain,
+        final SSymbol intercessionHandler, final int fieldIndex,
+        final boolean executesEnforced, final int depth) {
+      super(rcvrDomain, intercessionHandler, executesEnforced, depth);
+      this.read = FieldAccessorNode.createRead(fieldIndex);
+    }
+
+    @Override
+    public Object doDispatch(final VirtualFrame frame, final Object[] arguments) {
+      assert arguments[4] instanceof SObject;
+      SObject obj = CompilerDirectives.unsafeCast(arguments[4], SObject.class, true, true);
+      return read.read(obj);
+    }
+  }
+
+  private static final class StandardFieldWrite extends AbstractChainDispatch {
+    @Child private AbstractWriteFieldNode write;
+
+    private StandardFieldWrite(final SObject rcvrDomain,
+        final SSymbol intercessionHandler, final int fieldIndex,
+        final boolean executesEnforced, final int depth) {
+      super(rcvrDomain, intercessionHandler, executesEnforced, depth);
+      this.write = FieldAccessorNode.createWrite(fieldIndex);
+    }
+
+    @Override
+    public Object doDispatch(final VirtualFrame frame, final Object[] arguments) {
+      assert arguments[3] != null;
+      assert arguments[5] instanceof SObject;
+      Object val  = arguments[3]; // CompilerDirectives.unsafeCast(arguments[3],  Object.class, true, true);
+      SObject obj = CompilerDirectives.unsafeCast(arguments[5], SObject.class, true, true);
+      return write.write(obj, val);
+    }
+  }
+
+  private static final class StandardMessageSend extends AbstractChainDispatch {
+    @Child private AbstractMessageSendNode send;
+
+    private StandardMessageSend(final SObject rcvrDomain,
+        final SSymbol intercessionHandler, final SSymbol selector,
+        final boolean executesEnforced, final int depth) {
+      super(rcvrDomain, intercessionHandler, executesEnforced, depth);
+      send = MessageSendNode.createForStandardDomainHandler(selector,
+          getSourceSection(), executesEnforced, null);
+    }
+
+    private StandardMessageSend(final SObject rcvrDomain,
+        final SSymbol intercessionHandler, final SClass lookupClass,
+        final SSymbol selector, final boolean executesEnforced, final int depth) {
+      super(rcvrDomain, intercessionHandler, executesEnforced, depth);
+      send = MessageSendNode.createForStandardDomainHandler(selector,
+          getSourceSection(), executesEnforced, lookupClass);
+    }
+
+    @Override
+    public Object doDispatch(final VirtualFrame frame, final Object[] arguments) {
+      assert arguments[4] instanceof Object[];
+      assert arguments[5] != null;
+      Object[] somArr = CompilerDirectives.unsafeCast(arguments[4], Object[].class, true, true);
+      Object   rcvr   = arguments[5]; // CompilerDirectives.unsafeCast(arguments[5],   Object.class, true, true);
+      Object[] args = SArray.fromSArrayToArgArrayWithReceiver(somArr, rcvr);
+      return send.doPreEvaluated(frame, args);
+    }
+  }
+
+  private static final class GenericDispatch extends AbstractIntercessionHandlerDispatch {
     private final SSymbol intercessionHandlerSelector;
 
     public GenericDispatch(final SSymbol intercessionHandlerSelector,
