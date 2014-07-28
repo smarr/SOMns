@@ -62,8 +62,8 @@ public class EnforcedMessageSendNode extends AbstractMessageSendNode {
 
     @Override
     protected PreevaluatedExpression makeSuperSend() {
-      EnforcedSuperMessageSendNode send = new EnforcedSuperMessageSendNode(selector,
-          argumentNodes, getSourceSection());
+      EnforcedSuperMessageSendNode send = new EnforcedSuperMessageSendNode(
+          selector, argumentNodes, getSourceSection());
       return replace(send);
     }
 
