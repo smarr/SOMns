@@ -206,12 +206,14 @@ public abstract class StorageLocation {
 
     @Override
     public Object read(final SObject obj, final boolean assumptionValid) {
+      CompilerAsserts.neverPartOfCompilation();
       // TODO: should we use unsafe operations to avoid overhead of array bounce check etc.?
       return obj.getExtensionObjFields()[extensionIndex];
     }
 
     @Override
     public void write(final SObject obj, final Object value) {
+      CompilerAsserts.neverPartOfCompilation();
       // TODO: should we use unsafe operations to avoid overhead of array bounce check etc.?
       obj.getExtensionObjFields()[extensionIndex] = value;
     }
