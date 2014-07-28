@@ -86,6 +86,30 @@ public final class MessageSendNode {
             null, executesEnforced);
   }
 
+  public static GenericMessageSendNode createForStandardDomainHandler(
+      final SSymbol selector, final SourceSection source,
+      final boolean executesEnforced, final SClass lookupClass) {
+    if (lookupClass == null) {
+      return new GenericMessageSendNode(selector, null,
+          new UninitializedDispatchNode(selector), source, executesEnforced);
+    } else {
+      return new GenericMessageSendNode(selector, null,
+          SuperDispatchNode.create(selector, lookupClass, executesEnforced),
+          source, executesEnforced);
+    }
+  }
+
+  public static AbstractMessageSendNode createGeneric(final SSymbol selector,
+      final ExpressionNode[] argumentNodes, final SourceSection source,
+      final boolean executesEnforced) {
+    if (executesEnforced) {
+      return new EnforcedMessageSendNode(selector, argumentNodes, source);
+    } else {
+      return new GenericMessageSendNode(selector, argumentNodes,
+        new UninitializedDispatchNode(selector), source, executesEnforced);
+    }
+  }
+
   public abstract static class AbstractMessageSendNode extends ExpressionNode
       implements PreevaluatedExpression {
 
@@ -539,16 +563,7 @@ public final class MessageSendNode {
 
     private final SSymbol selector;
 
-    public static AbstractMessageSendNode create(final SSymbol selector,
-        final ExpressionNode[] argumentNodes, final SourceSection source,
-        final boolean executesEnforced) {
-      if (executesEnforced) {
-        return new EnforcedMessageSendNode(selector, argumentNodes, source);
-      } else {
-        return new GenericMessageSendNode(selector, argumentNodes,
-          new UninitializedDispatchNode(selector), source, executesEnforced);
-      }
-    }
+
 
     @Child private AbstractDispatchNode dispatchNode;
 
