@@ -5,7 +5,7 @@ import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.dispatch.DispatchChain.Cost;
 import som.interpreter.nodes.enforced.IntercessionHandlerCache.AbstractIntercessionHandlerDispatch;
 import som.vmobjects.SArray;
-import som.vmobjects.SDomain;
+import som.vmobjects.SDomain.GetOwnerNode;
 import som.vmobjects.SInvokable.SPrimitive;
 import som.vmobjects.SObject;
 
@@ -37,6 +37,7 @@ public final class EnforcedPrim extends ExpressionNode {
   @Child    private       ExpressionNode   receiver;
   @Children private final ExpressionNode[] arguments;
   @Child    private       AbstractIntercessionHandlerDispatch dispatch;
+  private final GetOwnerNode getOwner;
 
   @CompilationFinal private SPrimitive primitive;
 
@@ -46,6 +47,7 @@ public final class EnforcedPrim extends ExpressionNode {
     this.receiver  = receiver;
     this.arguments = arguments;
     dispatch = IntercessionHandlerCache.create("requestExecutionOfPrimitive:with:on:", executesEnforced);
+    getOwner = new GetOwnerNode();
   }
 
   public void setPrimitive(final SPrimitive primitive) {
@@ -80,7 +82,7 @@ public final class EnforcedPrim extends ExpressionNode {
   public Object executeEvaluated(final VirtualFrame frame,
       final Object receiver, final Object[] args) {
     SObject currentDomain = SArguments.domain(frame);
-    SObject rcvrDomain    = SDomain.getOwner(receiver);
+    SObject rcvrDomain    = getOwner.getOwner(receiver);
 
     Object[] arguments = SArguments.createSArgumentsArray(false, currentDomain,
         rcvrDomain, primitive,

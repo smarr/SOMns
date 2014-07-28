@@ -4,6 +4,7 @@ import som.vm.constants.Domain;
 import som.vm.constants.Nil;
 
 import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.utilities.BranchProfile;
 
 
 public final class SDomain {
@@ -39,6 +40,26 @@ public final class SDomain {
       return SArray.getOwner((Object[]) o);
     } else {
       return Domain.standard;
+    }
+  }
+
+  public static final class GetOwnerNode {
+
+    private final BranchProfile obj  = new BranchProfile();
+    private final BranchProfile arr  = new BranchProfile();
+    private final BranchProfile prim = new BranchProfile();
+
+    public SObject getOwner(final Object o) {
+      if (o instanceof SAbstractObject) {
+        obj.enter();
+        return ((SAbstractObject) o).getDomain();
+      } else if (o instanceof Object[]) {
+        arr.enter();
+        return SArray.getOwner((Object[]) o);
+      } else {
+        prim.enter();
+        return Domain.standard;
+      }
     }
   }
 }
