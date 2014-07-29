@@ -194,9 +194,11 @@ public abstract class StorageLocation {
 
   public static final class ObjectArrayStorageLocation extends AbstractObjectStorageLocation {
     private final int extensionIndex;
+    private final int absoluteIndex;
     public ObjectArrayStorageLocation(final ObjectLayout layout, final int fieldIndex) {
       super(layout, fieldIndex);
       extensionIndex = fieldIndex - SObject.NUM_OBJECT_FIELDS;
+      absoluteIndex = Unsafe.ARRAY_OBJECT_BASE_OFFSET + Unsafe.ARRAY_OBJECT_INDEX_SCALE * extensionIndex;
     }
 
     @Override
@@ -206,16 +208,25 @@ public abstract class StorageLocation {
 
     @Override
     public Object read(final SObject obj, final boolean assumptionValid) {
-      CompilerAsserts.neverPartOfCompilation();
-      // TODO: should we use unsafe operations to avoid overhead of array bounce check etc.?
-      return obj.getExtensionObjFields()[extensionIndex];
+      Object[] arr = obj.getExtensionObjFields();
+
+//      return CompilerDirectives.unsafeCast(
+//          // TODO: for the moment Graal doesn't seem to get the optimizations
+//          // right, still need to pass in the correct location identifier, which can probably be `this`.
+//          arr[extensionIndex],
+////          CompilerDirectives.unsafeGetObject(arr, absoluteIndex, assumptionValid, null),
+//          Object.class, true, true);
+      return arr[extensionIndex];
     }
 
     @Override
     public void write(final SObject obj, final Object value) {
-      CompilerAsserts.neverPartOfCompilation();
-      // TODO: should we use unsafe operations to avoid overhead of array bounce check etc.?
-      obj.getExtensionObjFields()[extensionIndex] = value;
+      Object[] arr = obj.getExtensionObjFields();
+
+//      // TODO: for the moment Graal doesn't seem to get the optimizations
+//      // right, still need to pass in the correct location identifier, which can probably be `this`.
+//      CompilerDirectives.unsafePutObject(arr, absoluteIndex, value, null);
+      arr[extensionIndex] = value;
     }
   }
 
