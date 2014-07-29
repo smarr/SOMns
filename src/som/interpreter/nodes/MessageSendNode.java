@@ -281,10 +281,13 @@ public final class MessageSendNode {
           }
           break;
         case "instVarAt:":
-          return replace(new EagerBinaryPrimitiveNode(selector,
-              argumentNodes[0], argumentNodes[1],
-              InstVarAtPrimFactory.create(executesEnforced, null, null),
-              executesEnforced));
+          if (!executesEnforced) {
+            return replace(new EagerBinaryPrimitiveNode(selector,
+                argumentNodes[0], argumentNodes[1],
+                InstVarAtPrimFactory.create(executesEnforced, null, null),
+                executesEnforced));
+          }
+          break;
       }
 
       return this;
@@ -394,11 +397,17 @@ public final class MessageSendNode {
           }
           break;
         case "invokeOn:with:":
-          return replace(InvokeOnPrimFactory.create(executesEnforced,
-              argumentNodes[0], argumentNodes[1], argumentNodes[2]));
+          if (!executesEnforced) {
+            return replace(InvokeOnPrimFactory.create(executesEnforced,
+                argumentNodes[0], argumentNodes[1], argumentNodes[2]));
+          }
+          break;
         case "instVarAt:put:":
-          return replace(InstVarAtPutPrimFactory.create(executesEnforced,
+          if (!executesEnforced) {
+            return replace(InstVarAtPutPrimFactory.create(executesEnforced,
               argumentNodes[0], argumentNodes[1], argumentNodes[2]));
+          }
+          break;
       }
       return this;
     }
@@ -407,9 +416,12 @@ public final class MessageSendNode {
         final Object[] arguments) {
       switch (selector.getString()) {
         case "performEnforced:withArguments:inSuperclass:":
-          return replace(PerformEnforcedWithArgumentsInSuperclassPrimFactory.
+          if (!executesEnforced) {
+            return replace(PerformEnforcedWithArgumentsInSuperclassPrimFactory.
               create(executesEnforced, argumentNodes[0],
                   argumentNodes[1], argumentNodes[2], argumentNodes[3]));
+          }
+          break;
       }
       return this;
     }
