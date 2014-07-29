@@ -55,6 +55,17 @@ public final class IntercessionHandlerCache {
       intercessionHandlerSelector = intercessionHandler;
     }
 
+    private EnforcedMessageSendNode getOuterMessageSend() {
+      Node node = determineChainHead(); // might still be `this`, just traverse the chain
+
+      // now, let's just find the message send
+      while (!(node instanceof EnforcedMessageSendNode)) {
+        node = node.getParent();
+      }
+
+      return (EnforcedMessageSendNode) node;
+    }
+
     private AbstractIntercessionHandlerDispatch specialize(
         final SObject rcvrDomain, final Object[] arguments) {
       transferToInterpreterAndInvalidate("Initialize a dispatch node.");
@@ -80,7 +91,7 @@ public final class IntercessionHandlerCache {
               break;
             }
             case EnforcedMessageSendNode.INTERCESSION_SIGNATURE: {
-              if (((EnforcedMessageSendNode) this.determineChainHead().getParent().getParent()).isSuperSend()) {
+              if (getOuterMessageSend().isSuperSend()) {
                 specialized = new StandardMessageSend(rcvrDomain,
                     intercessionHandlerSelector,
                     (SClass) arguments[6], (SSymbol) arguments[3],
