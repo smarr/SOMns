@@ -143,7 +143,7 @@ public abstract class IndexDispatch extends Node implements DispatchChain {
       if (this.index == index && this.clazz == obj.getSOMClass()) {
         return access.write(obj, value);
       } else {
-        return next.executeDispatch(obj, index);
+        return next.executeDispatch(obj, index, value);
       }
     }
 
