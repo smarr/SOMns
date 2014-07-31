@@ -117,15 +117,17 @@ BenchmarkHarness = (
     )
     
     reportRun: bench = (
-        bench name print.
-        ': iterations=' print.
-        bench numIterations print.
-        ' average: ' print.
-        (bench total / bench numIterations) print.
-        'us' print.
-        ' total: ' print.
-        bench total print.
-        'us' println.
+        | out |
+        out :=       bench name.
+        out := out + ': iterations='.
+        out := out + bench numIterations.
+        out := out + ' average: '.
+        out := out + (bench total / bench numIterations).
+        out := out + 'us total: '.
+        out := out + bench total.
+        out := out + 'us'.
+        out println.
+        '' println.
     )
         
     printTotal = (

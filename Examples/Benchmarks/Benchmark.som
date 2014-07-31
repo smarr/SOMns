@@ -125,11 +125,13 @@ Benchmark = (
     )
     
     printRun: runTime = (
-        self name print.
-        ': iterations=1' print.
-        ' runtime: ' print.
-        runTime print.
-        'us' println
+        | out |
+        out :=       self name.
+        out := out + ': iterations=1'.
+        out := out + ' runtime: '.
+        out := out + runTime.
+        out := out + 'us'.
+        out println.
     )
     
     benchmark  = ( self subclassResponsibility )
