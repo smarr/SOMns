@@ -44,7 +44,7 @@ Afterwards, the tests can be executed with:
    
 A simple Hello World program is executed with:
 
-    ./som.sh -cp Smalltalk Examples/Hello/Hello.som
+    ./som.sh -cp Smalltalk Examples/Hello.som
 
 Information on previous authors are included in the AUTHORS file. This code is
 distributed under the MIT License. Please see the LICENSE file for details.
@@ -68,17 +68,17 @@ express Smalltalk language semantics.
 
 Currently TruffleSOM demonstrates for instance:
 
- - method invocation: [som.vmobjects.Method.invoke(..)](https://github.com/smarr/TruffleSOM/blob/master/src/som/vmobjects/Method.java#L113)
+ - method invocation: [som.interpreter.nodes.MessageSendNode](hhttps://github.com/SOM-st/TruffleSOM/blob/master/src/som/interpreter/nodes/MessageSendNode.java#L626)
  - usage of Truffle frames
- - argument passing [som.interpreter.nodes.Method.initializeFrame(..)](https://github.com/smarr/TruffleSOM/blob/master/src/som/interpreter/nodes/Method.java#L63)
- - associating AST tree nodes with source code, e.g., [som.compiler.Parser.unaryMessage(..)](https://github.com/smarr/TruffleSOM/blob/master/src/som/compiler/Parser.java#L535)
+ - argument passing [som.interpreter.nodes.ArgumentInitializationNode](https://github.com/SOM-st/TruffleSOM/blob/master/src/som/interpreter/nodes/ArgumentInitializationNode.java#L24)
+ - associating AST tree nodes with source code, e.g., [som.compiler.Parser.unaryMessage(..)](https://github.com/smarr/TruffleSOM/blob/master/src/som/compiler/Parser.java#L652)
  - support for lexical scoping and access from nested blocks, cf.
-   ContextualNode subclasses and [som.interpreter.ContextualNode.determineContext(..)](https://github.com/smarr/TruffleSOM/blob/master/src/som/interpreter/nodes/ContextualNode.java#L38)
+   ContextualNode subclasses and [som.interpreter.ContextualNode.determineContext(..)](https://github.com/smarr/TruffleSOM/blob/master/src/som/interpreter/nodes/ContextualNode.java#L59)
  - usage of control-flow exception for
-     - non-local returns, cf. [som.interpreter.nodes.ReturnNonLocalNode.executeGeneric(..)](https://github.com/smarr/TruffleSOM/blob/master/src/som/interpreter/nodes/ReturnNonLocalNode.java#L40)
-       as well as [som.interpreter.nodes.Method.execute(..)](https://github.com/smarr/TruffleSOM/blob/master/src/som/interpreter/nodes/Method.java#L52)
-     - looping: [som.primitives.BlockPrimitives restart](https://github.com/smarr/TruffleSOM/blob/master/src/som/primitives/BlockPrimitives.java#L42)
-       as well as [som.interpreter.nodes.SequenceNode.executeGeneric(..)](https://github.com/smarr/TruffleSOM/blob/master/src/som/interpreter/nodes/SequenceNode.java#L48)
+     - non-local returns, cf. [som.interpreter.nodes.ReturnNonLocalNode.executeGeneric(..)](https://github.com/smarr/TruffleSOM/blob/master/src/som/interpreter/nodes/ReturnNonLocalNode.java#L68)
+       as well as [som.interpreter.nodes.ReturnNonLocalNode.CatchNonLocalReturnNode.executeGeneric(..)](https://github.com/SOM-st/TruffleSOM/blob/master/src/som/interpreter/nodes/ReturnNonLocalNode.java#L124)
+     - looping: [som.interpreter.nodes.specialized.AbstractWhileNode](https://github.com/SOM-st/TruffleSOM/blob/master/src/som/interpreter/nodes/specialized/AbstractWhileNode.java#L62)
+       as well as [som.interpreter.nodes.specialized.IntToDoMessageNode](https://github.com/SOM-st/TruffleSOM/blob/master/src/som/interpreter/nodes/specialized/IntToDoMessageNode.java#L52)
 
 
 Build Status
