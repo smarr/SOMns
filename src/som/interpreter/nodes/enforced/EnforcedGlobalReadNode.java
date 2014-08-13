@@ -13,6 +13,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 
 public final class EnforcedGlobalReadNode extends ExpressionNode {
+  public static final String INTERCESSION_SIGNATURE = "readGlobal:for:";
 
   private final SSymbol globalName;
   @Child private AbstractIntercessionHandlerDispatch dispatch;
@@ -20,7 +21,7 @@ public final class EnforcedGlobalReadNode extends ExpressionNode {
   public EnforcedGlobalReadNode(final SSymbol globalName, final SourceSection source) {
     super(source, true);
     this.globalName = globalName;
-    dispatch = IntercessionHandlerCache.create("readGlobal:for:", executesEnforced);
+    dispatch = IntercessionHandlerCache.create(INTERCESSION_SIGNATURE, executesEnforced);
   }
 
   @Override

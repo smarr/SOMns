@@ -2,6 +2,8 @@ package som.interpreter.nodes.enforced;
 
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
 import som.interpreter.SArguments;
+import som.interpreter.nodes.GlobalNode;
+import som.interpreter.nodes.GlobalNode.UninitializedGlobalReadNode;
 import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.interpreter.nodes.dispatch.DispatchChain;
@@ -101,6 +103,12 @@ public final class IntercessionHandlerCache {
                     intercessionHandlerSelector,
                     (SSymbol) arguments[3], executesEnforced, depth);
               }
+              break;
+            }
+            case EnforcedGlobalReadNode.INTERCESSION_SIGNATURE: {
+              specialized = new StandardGlobalRead(rcvrDomain,
+                  intercessionHandlerSelector, (SSymbol) arguments[3],
+                  executesEnforced, depth);
               break;
             }
             default: {
@@ -229,6 +237,22 @@ public final class IntercessionHandlerCache {
       Object val  = CompilerDirectives.unsafeCast(arguments[3],  Object.class, true, true);
       SObject obj = CompilerDirectives.unsafeCast(arguments[5], SObject.class, true, true);
       return write.write(obj, val);
+    }
+  }
+
+  private static final class StandardGlobalRead extends AbstractChainDispatch {
+    @Child private GlobalNode global;
+
+    private StandardGlobalRead(final SObject rcvrDomain,
+        final SSymbol intercessionHandler, final SSymbol globalName,
+        final boolean executesEnforced, final int depth) {
+      super(rcvrDomain, intercessionHandler, executesEnforced, depth);
+      this.global = new UninitializedGlobalReadNode(globalName, null, executesEnforced);
+    }
+
+    @Override
+    public Object doDispatch(final VirtualFrame frame, final Object[] arguments) {
+      return global.executeGeneric(frame);
     }
   }
 
