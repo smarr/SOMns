@@ -16,6 +16,7 @@ import com.oracle.truffle.api.nodes.NodeCost;
 
 
 public final class EnforcedPrim extends ExpressionNode {
+  public static final String INTERCESSION_SIGNATURE = "requestExecutionOfPrimitive:with:on:";
 
   public static EnforcedPrim create(final ExpressionNode receiver,
       final ExpressionNode[] arguments) {
@@ -46,7 +47,7 @@ public final class EnforcedPrim extends ExpressionNode {
     super(null, true);
     this.receiver  = receiver;
     this.arguments = arguments;
-    dispatch = IntercessionHandlerCache.create("requestExecutionOfPrimitive:with:on:", executesEnforced);
+    dispatch = IntercessionHandlerCache.create(INTERCESSION_SIGNATURE, executesEnforced);
     getOwner = new GetOwnerNode();
   }
 

@@ -12,6 +12,7 @@ import som.interpreter.objectstorage.FieldAccessorNode.AbstractReadFieldNode;
 import som.interpreter.objectstorage.FieldAccessorNode.AbstractWriteFieldNode;
 import som.vm.Universe;
 import som.vm.constants.Classes;
+import som.vm.constants.Domain;
 import som.vmobjects.SArray;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
@@ -108,6 +109,12 @@ public final class IntercessionHandlerCache {
             case EnforcedGlobalReadNode.INTERCESSION_SIGNATURE: {
               specialized = new StandardGlobalRead(rcvrDomain,
                   intercessionHandlerSelector, (SSymbol) arguments[3],
+                  executesEnforced, depth);
+              break;
+            }
+            case EnforcedPrim.INTERCESSION_SIGNATURE: {
+              specialized = new StandardPrim(rcvrDomain,
+                  intercessionHandlerSelector, (SInvokable) arguments[3],
                   executesEnforced, depth);
               break;
             }
@@ -253,6 +260,28 @@ public final class IntercessionHandlerCache {
     @Override
     public Object doDispatch(final VirtualFrame frame, final Object[] arguments) {
       return global.executeGeneric(frame);
+    }
+  }
+
+  private static final class StandardPrim extends AbstractChainDispatch {
+    @Child private DirectCallNode callNode;
+
+    private StandardPrim(final SObject rcvrDomain,
+        final SSymbol intercessionHandler, final SInvokable invokable,
+        final boolean executesEnforced, final int depth) {
+      super(rcvrDomain, intercessionHandler, executesEnforced, depth);
+      callNode = Truffle.getRuntime().createDirectCallNode(invokable.getCallTarget(false));
+    }
+
+    @Override
+    public Object doDispatch(final VirtualFrame frame, final Object[] arguments) {
+      assert arguments[4] instanceof Object[];
+      assert arguments[5] != null;
+      Object[] somArr = CompilerDirectives.unsafeCast(arguments[4], Object[].class, true, true);
+      Object   rcvr   = CompilerDirectives.unsafeCast(arguments[5],   Object.class, true, true);
+
+      Object[] args = SArguments.createSArgumentsWithReceiver(Domain.standard, false, rcvr, somArr);
+      return callNode.call(frame, args);
     }
   }
 
