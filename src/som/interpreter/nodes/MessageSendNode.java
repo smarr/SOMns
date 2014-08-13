@@ -295,6 +295,57 @@ public final class MessageSendNode {
 
     protected PreevaluatedExpression specializeBinaryOnValues(final Object[] arguments) {
       switch (selector.getString()) {
+        case "whileTrue:": {
+          if (argumentNodes[1] instanceof BlockNode &&
+              argumentNodes[0] instanceof BlockNode) {
+            BlockNode argBlockNode = (BlockNode) argumentNodes[1];
+            SBlock    argBlock     = (SBlock)    arguments[1];
+            return replace(new WhileTrueStaticBlocksNode(
+                (BlockNode) argumentNodes[0], argBlockNode,
+                (SBlock) arguments[0],
+                argBlock, getSourceSection(), executesEnforced));
+          }
+          break; // use normal send
+        }
+        case "whileFalse:":
+          if (argumentNodes[1] instanceof BlockNode &&
+              argumentNodes[0] instanceof BlockNode) {
+            BlockNode argBlockNode = (BlockNode) argumentNodes[1];
+            SBlock    argBlock     = (SBlock)    arguments[1];
+            return replace(new WhileFalseStaticBlocksNode(
+                (BlockNode) argumentNodes[0], argBlockNode,
+                (SBlock) arguments[0], argBlock, getSourceSection(), executesEnforced));
+          }
+          break; // use normal send
+        case "and:":
+        case "&&":
+          if (arguments[0] instanceof Boolean) {
+            if (argumentNodes[1] instanceof BlockNode) {
+              return replace(AndMessageNodeFactory.create((SBlock) arguments[1],
+                  getSourceSection(), executesEnforced,
+                  argumentNodes[0], argumentNodes[1]));
+            } else if (arguments[1] instanceof Boolean) {
+              return replace(AndBoolMessageNodeFactory.create(getSourceSection(),
+                  executesEnforced,
+                  argumentNodes[0], argumentNodes[1]));
+            }
+          }
+          break;
+        case "or:":
+        case "||":
+          if (arguments[0] instanceof Boolean) {
+            if (argumentNodes[1] instanceof BlockNode) {
+              return replace(OrMessageNodeFactory.create((SBlock) arguments[1],
+                  getSourceSection(), executesEnforced,
+                  argumentNodes[0], argumentNodes[1]));
+            } else if (arguments[1] instanceof Boolean) {
+              return replace(OrBoolMessageNodeFactory.create(
+                  getSourceSection(), executesEnforced,
+                  argumentNodes[0], argumentNodes[1]));
+            }
+          }
+          break;
+
         case "value:":
           if (arguments[0] instanceof SBlock) {
             return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
@@ -463,64 +514,6 @@ public final class MessageSendNode {
               getSourceSection(), executesEnforced);
       return replace(node);
     }
-
-    @Override
-    protected PreevaluatedExpression specializeBinary(final Object[] arguments) {
-      switch (selector.getString()) {
-        case "whileTrue:": {
-          if (argumentNodes[1] instanceof BlockNode &&
-              argumentNodes[0] instanceof BlockNode) {
-            BlockNode argBlockNode = (BlockNode) argumentNodes[1];
-            SBlock    argBlock     = (SBlock)    arguments[1];
-            return replace(new WhileTrueStaticBlocksNode(
-                (BlockNode) argumentNodes[0], argBlockNode,
-                (SBlock) arguments[0],
-                argBlock, getSourceSection(), executesEnforced));
-          }
-          break; // use normal send
-        }
-        case "whileFalse:":
-          if (argumentNodes[1] instanceof BlockNode &&
-              argumentNodes[0] instanceof BlockNode) {
-            BlockNode argBlockNode = (BlockNode) argumentNodes[1];
-            SBlock    argBlock     = (SBlock)    arguments[1];
-            return replace(new WhileFalseStaticBlocksNode(
-                (BlockNode) argumentNodes[0], argBlockNode,
-                (SBlock) arguments[0], argBlock, getSourceSection(), executesEnforced));
-          }
-          break; // use normal send
-        case "and:":
-        case "&&":
-          if (arguments[0] instanceof Boolean) {
-            if (argumentNodes[1] instanceof BlockNode) {
-              return replace(AndMessageNodeFactory.create((SBlock) arguments[1],
-                  getSourceSection(), executesEnforced,
-                  argumentNodes[0], argumentNodes[1]));
-            } else if (arguments[1] instanceof Boolean) {
-              return replace(AndBoolMessageNodeFactory.create(getSourceSection(),
-                  executesEnforced,
-                  argumentNodes[0], argumentNodes[1]));
-            }
-          }
-          break;
-        case "or:":
-        case "||":
-          if (arguments[0] instanceof Boolean) {
-            if (argumentNodes[1] instanceof BlockNode) {
-              return replace(OrMessageNodeFactory.create((SBlock) arguments[1],
-                  getSourceSection(), executesEnforced,
-                  argumentNodes[0], argumentNodes[1]));
-            } else if (arguments[1] instanceof Boolean) {
-              return replace(OrBoolMessageNodeFactory.create(
-                  getSourceSection(), executesEnforced,
-                  argumentNodes[0], argumentNodes[1]));
-            }
-          }
-          break;
-      }
-
-      return super.specializeBinary(arguments);
-    }
   }
 
   private static final class UninitializedSymbolSendNode
@@ -566,8 +559,6 @@ public final class MessageSendNode {
 
       return super.specializeBinary(arguments);
     }
-
-
   }
 
   public static final class GenericMessageSendNode
