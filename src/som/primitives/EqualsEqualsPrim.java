@@ -103,4 +103,9 @@ public abstract class EqualsEqualsPrim extends BinarySideEffectFreeExpressionNod
   public final boolean doString(final String receiver, final SObject argument) {
     return false;
   }
+
+  @Specialization(order = 10200)
+  public final boolean doBoolean(final boolean receiver, final SObject argument) {
+    return false;
+  }
 }
