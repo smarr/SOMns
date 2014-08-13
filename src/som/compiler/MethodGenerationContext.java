@@ -182,7 +182,8 @@ public final class MethodGenerationContext {
     }
   }
 
-  public Invokable assemble(ExpressionNode body, final boolean enforced) {
+  public Invokable assemble(ExpressionNode body, final boolean enforced,
+      final SourceSection sourceSection) {
     if (isPrimitive()) {
       return Primitives.constructEmptyPrimitive(signature, unenforced);
     }
@@ -191,8 +192,6 @@ public final class MethodGenerationContext {
     ArrayList<Variable> nonLocalAccess  = new ArrayList<>(arguments.size() + locals.size());
     separateVariables(arguments.values(), onlyLocalAccess, nonLocalAccess);
     separateVariables(locals.values(),    onlyLocalAccess, nonLocalAccess);
-
-    SourceSection sourceSection = body.getSourceSection();
 
     if (needsToCatchNonLocalReturn()) {
       body = createCatchNonLocalReturn(body,

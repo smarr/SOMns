@@ -68,6 +68,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
+import som.compiler.Lexer.SourceCoordinate;
 import som.compiler.Variable.Local;
 import som.interpreter.Invokable;
 import som.interpreter.nodes.ExpressionNode;
@@ -96,6 +97,8 @@ public final class Parser {
   private Symbol                    sym;
   private String                    text;
   private Symbol                    nextSym;
+
+  private SourceSection             lastMethodsSourceSection;
 
   private static final List<Symbol> singleOpSyms        = new ArrayList<Symbol>();
   private static final List<Symbol> binaryOpSyms        = new ArrayList<Symbol>();
@@ -137,23 +140,7 @@ public final class Parser {
     return "Parser(" + source.getName() + ", " + this.getCoordinate().toString() + ")";
   }
 
-  private static final class SourceCoordinate {
-    public final int startLine;
-    public final int startColumn;
-    public final int charIndex;
 
-    public SourceCoordinate(final int startLine,
-        final int startColumn, final int charIndex) {
-      this.startLine = startLine;
-      this.startColumn = startColumn;
-      this.charIndex = charIndex;
-    }
-
-    @Override
-    public String toString() {
-      return "SrcCoord(line: " + startLine + ", col: " + startColumn + ")";
-    }
-  }
 
   public static class ParseError extends Exception {
     private static final long serialVersionUID = 425390202979033628L;
@@ -235,9 +222,7 @@ public final class Parser {
   }
 
   private SourceCoordinate getCoordinate() {
-    return new SourceCoordinate(lexer.getCurrentLineNumber(),
-        lexer.getCurrentColumn(),
-        lexer.getNumberOfCharactersRead());
+    return lexer.getStartCoordinate();
   }
 
   @SlowPath
@@ -257,8 +242,8 @@ public final class Parser {
 
       ExpressionTuple methodBody = method(mgenc);
 
-      Invokable enforced   = mgenc.assemble(methodBody.en, true);
-      Invokable unenforced = mgenc.assemble(methodBody.un, false);
+      Invokable enforced   = mgenc.assemble(methodBody.en, true, lastMethodsSourceSection);
+      Invokable unenforced = mgenc.assemble(methodBody.un, false, lastMethodsSourceSection);
 
       cgenc.addInstanceMethod(mgenc.assembleSInvokable(universe, enforced, unenforced));
     }
@@ -272,8 +257,8 @@ public final class Parser {
 
         ExpressionTuple methodBody = method(mgenc);
 
-        Invokable enforced   = mgenc.assemble(methodBody.en, true);
-        Invokable unenforced = mgenc.assemble(methodBody.un, false);
+        Invokable enforced   = mgenc.assemble(methodBody.en, true, lastMethodsSourceSection);
+        Invokable unenforced = mgenc.assemble(methodBody.un, false, lastMethodsSourceSection);
 
         cgenc.addClassMethod(mgenc.assembleSInvokable(universe, enforced, unenforced));
       }
@@ -438,7 +423,9 @@ public final class Parser {
 
   private ExpressionTuple methodBlock(final MethodGenerationContext mgenc) throws ParseError {
     expect(NewTerm);
+    SourceCoordinate coord = getCoordinate();
     ExpressionTuple methodBody = blockContents(mgenc);
+    lastMethodsSourceSection = getSource(coord);
     expect(EndTerm);
 
     return methodBody;
@@ -544,9 +531,9 @@ public final class Parser {
   }
 
   private ExpressionTuple result(final MethodGenerationContext mgenc) throws ParseError {
-    ExpressionTuple exp = expression(mgenc);
-
     SourceCoordinate coord = getCoordinate();
+
+    ExpressionTuple exp = expression(mgenc);
     accept(Period);
 
     if (mgenc.isBlockMethod()) {
@@ -626,8 +613,8 @@ public final class Parser {
 
         ExpressionTuple blockBody = nestedBlock(bgenc);
 
-        Invokable enforced   = bgenc.assemble(blockBody.en, true);
-        Invokable unenforced = bgenc.assemble(blockBody.un, false);
+        Invokable enforced   = bgenc.assemble(blockBody.en, true, lastMethodsSourceSection);
+        Invokable unenforced = bgenc.assemble(blockBody.un, false, lastMethodsSourceSection);
 
         SMethod blockMethod = (SMethod) bgenc.assembleSInvokable(universe, enforced, unenforced);
         mgenc.addEmbeddedBlockMethod(blockMethod);
@@ -878,6 +865,7 @@ public final class Parser {
 
   private ExpressionTuple nestedBlock(final MethodGenerationContext mgenc) throws ParseError {
     expect(NewBlock);
+    SourceCoordinate coord = getCoordinate();
 
     mgenc.addArgumentIfAbsent("$blockSelf");
 
@@ -895,6 +883,8 @@ public final class Parser {
     mgenc.setSignature(universe.symbolFor(blockSig));
 
     ExpressionTuple expressions = blockContents(mgenc);
+
+    lastMethodsSourceSection = getSource(coord);
 
     expect(EndBlock);
 
