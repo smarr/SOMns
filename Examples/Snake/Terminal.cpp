@@ -88,7 +88,7 @@ void Terminal::getChar(VMObject* object, VMFrame* frame) {
 	  result[1] = 0;
 	  
 	  str = pString(result);
-      vmStr = (VMObject*)_UNIVERSE->NewString(str);
+      vmStr = (VMObject*)GetUniverse()->NewString(str);
       frame->Push(vmStr);
   } else {
       frame->Push(Globals::NilObject());
@@ -112,7 +112,7 @@ void Terminal::init(VMObject* object, VMFrame* frame) {
 	
 	terminalStream = open("/dev/tty", O_RDONLY | O_NONBLOCK);
 	if (terminalStream < 0) {
-        _UNIVERSE->ErrorExit("Could not open /dev/tty for read\n");
+        GetUniverse()->ErrorExit("Could not open /dev/tty for read\n");
 	}
 }
 
