@@ -18,6 +18,7 @@ import som.interpreter.nodes.specialized.AndMessageNodeFactory.AndBoolMessageNod
 import som.interpreter.nodes.specialized.IfFalseMessageNodeFactory;
 import som.interpreter.nodes.specialized.IfTrueIfFalseMessageNodeFactory;
 import som.interpreter.nodes.specialized.IfTrueMessageNodeFactory;
+import som.interpreter.nodes.specialized.IntDownToDoMessageNodeFactory;
 import som.interpreter.nodes.specialized.IntToByDoMessageNodeFactory;
 import som.interpreter.nodes.specialized.IntToDoMessageNodeFactory;
 import som.interpreter.nodes.specialized.NotMessageNodeFactory;
@@ -443,6 +444,16 @@ public final class MessageSendNode {
                   TypesGen.TYPES.isDouble(arguments[1])) &&
               TypesGen.TYPES.isSBlock(arguments[2])) {
             return replace(IntToDoMessageNodeFactory.create(this,
+                (SBlock) arguments[2], executesEnforced, argumentNodes[0],
+                argumentNodes[1], argumentNodes[2]));
+          }
+          break;
+        case "downTo:do:":
+          if (TypesGen.TYPES.isLong(arguments[0]) &&
+              (TypesGen.TYPES.isLong(arguments[1]) ||
+                  TypesGen.TYPES.isDouble(arguments[1])) &&
+              TypesGen.TYPES.isSBlock(arguments[2])) {
+            return replace(IntDownToDoMessageNodeFactory.create(this,
                 (SBlock) arguments[2], executesEnforced, argumentNodes[0],
                 argumentNodes[1], argumentNodes[2]));
           }
