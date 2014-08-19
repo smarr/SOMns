@@ -147,7 +147,8 @@ public final class MethodGenerationContext {
   }
 
   public boolean needsToCatchNonLocalReturn() {
-    return needsToCatchNonLocalReturn;
+    // only the most outer method needs to catch
+    return needsToCatchNonLocalReturn && outerGenc == null;
   }
 
   public SInvokable assemblePrimitive(final Universe universe) {
