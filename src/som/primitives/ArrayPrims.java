@@ -4,6 +4,7 @@ import static som.vmobjects.SDomain.getDomainForNewObjects;
 import som.interpreter.SArguments;
 import som.interpreter.nodes.nary.BinaryExpressionNode.BinarySideEffectFreeExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
+import som.interpreter.nodes.nary.UnaryExpressionNode.UnarySideEffectFreeExpressionNode;
 import som.vm.constants.Classes;
 import som.vm.constants.Nil;
 import som.vmobjects.SArray;
@@ -49,6 +50,17 @@ public final class ArrayPrims {
       SObject domain = SArguments.domain(frame);
       return SArray.newSArray(length, Nil.nilObject,
           getDomainForNewObjects(domain));
+    }
+  }
+
+  public abstract static class CopyPrim extends UnarySideEffectFreeExpressionNode {
+    public CopyPrim(final boolean executesEnforced) { super(executesEnforced); }
+    public CopyPrim(final CopyPrim node) { this(node.executesEnforced); }
+
+    @Specialization
+    public final Object[] doArray(final VirtualFrame frame, final Object[] receiver) {
+      // TODO: should I set the owner differently?
+      return receiver.clone();
     }
   }
 }
