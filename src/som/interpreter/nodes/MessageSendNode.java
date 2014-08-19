@@ -28,6 +28,8 @@ import som.interpreter.nodes.specialized.WhileWithStaticBlocksNode.WhileFalseSta
 import som.interpreter.nodes.specialized.WhileWithStaticBlocksNode.WhileTrueStaticBlocksNode;
 import som.primitives.ArrayPrimsFactory.AtPrimFactory;
 import som.primitives.ArrayPrimsFactory.AtPutPrimFactory;
+import som.primitives.ArrayPrimsFactory.DoIndexesPrimFactory;
+import som.primitives.ArrayPrimsFactory.DoPrimFactory;
 import som.primitives.ArrayPrimsFactory.NewPrimFactory;
 import som.primitives.BlockPrimsFactory.ValueNonePrimFactory;
 import som.primitives.BlockPrimsFactory.ValueOnePrimFactory;
@@ -332,6 +334,21 @@ public final class MessageSendNode {
                   getSourceSection(),
                   argumentNodes[0], argumentNodes[1]));
             }
+          }
+          break;
+
+        case "doIndexes:":
+          if (arguments[0] instanceof Object[]) {
+            return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
+                argumentNodes[1],
+                DoIndexesPrimFactory.create(null, null)));
+          }
+          break;
+        case "do:":
+          if (arguments[0] instanceof Object[]) {
+            return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
+                argumentNodes[1],
+                DoPrimFactory.create(null, null)));
           }
           break;
       }
