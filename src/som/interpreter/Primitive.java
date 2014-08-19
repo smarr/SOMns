@@ -10,6 +10,7 @@ import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameInstance;
+import com.oracle.truffle.api.frame.FrameInstanceVisitor;
 import com.oracle.truffle.api.nodes.RootNode;
 
 
@@ -65,6 +66,21 @@ public final class Primitive extends Invokable {
     throw new UnsupportedOperationException("Only supported on methods");
   }
 
+  private static Method getNextMethodOnStack() {
+    return Truffle.getRuntime().iterateFrames(new FrameInstanceVisitor<Method>() {
+        @Override
+        public Method visitFrame(final FrameInstance frameInstance) {
+          RootCallTarget ct = (RootCallTarget) frameInstance.getCallTarget();
+          AbstractInvokable m = (AbstractInvokable) ct.getRootNode();
+          if (m instanceof Primitive) {
+            return null;
+          } else {
+            return (Method) m;
+          }
+        }
+      });
+  }
+
   public static void propagateLoopCount(final long count) {
     CompilerAsserts.neverPartOfCompilation("Primitive.pLC(.)");
 
@@ -73,7 +89,16 @@ public final class Primitive extends Invokable {
 
     RootCallTarget ct = (RootCallTarget) caller.getCallTarget();  // caller method
     AbstractInvokable m = (AbstractInvokable) ct.getRootNode();
-    m.propagateLoopCountThroughoutLexicalScope(count);
+
+    if (m instanceof Primitive) {
+      // the caller is a primitive, that doesn't help, we need to skip it and
+      // find a proper method
+      m = getNextMethodOnStack();
+    }
+
+    if (m != null && !(m instanceof Primitive)) {
+      m.propagateLoopCountThroughoutLexicalScope(count);
+    }
   }
 
   public void setPrimitive(final SPrimitive prim) {
