@@ -12,6 +12,7 @@ import som.interpreter.nodes.enforced.EnforcedMessageSendNode;
 import som.interpreter.nodes.enforced.EnforcedMessageSendNode.UninitializedEnforcedMessageSendNode;
 import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.nary.EagerBinaryPrimitiveNode;
+import som.interpreter.nodes.nary.EagerTernaryPrimitiveNode;
 import som.interpreter.nodes.nary.EagerUnaryPrimitiveNode;
 import som.interpreter.nodes.specialized.AndMessageNodeFactory;
 import som.interpreter.nodes.specialized.AndMessageNodeFactory.AndBoolMessageNodeFactory;
@@ -28,6 +29,7 @@ import som.interpreter.nodes.specialized.whileloops.WhileWithDynamicBlocksNode;
 import som.interpreter.nodes.specialized.whileloops.WhileWithStaticBlocksNode.WhileFalseStaticBlocksNode;
 import som.interpreter.nodes.specialized.whileloops.WhileWithStaticBlocksNode.WhileTrueStaticBlocksNode;
 import som.primitives.ArrayPrimsFactory.AtPrimFactory;
+import som.primitives.ArrayPrimsFactory.AtPutPrimFactory;
 import som.primitives.ArrayPrimsFactory.NewPrimFactory;
 import som.primitives.BlockPrimsFactory.ValueNonePrimFactory;
 import som.primitives.BlockPrimsFactory.ValueOnePrimFactory;
@@ -429,6 +431,15 @@ public final class MessageSendNode {
     }
 
     protected PreevaluatedExpression specializeTernary(final Object[] arguments) {
+      switch (selector.getString()) {
+        case "at:put:":
+          if (arguments[0] instanceof Object[]) {
+            return replace(new EagerTernaryPrimitiveNode(selector, argumentNodes[0],
+                argumentNodes[1], argumentNodes[2],
+                AtPutPrimFactory.create(executesEnforced, null, null, null), executesEnforced));
+          }
+
+      }
       return this;
     }
 
