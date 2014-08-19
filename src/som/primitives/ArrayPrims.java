@@ -67,10 +67,10 @@ public final class ArrayPrims {
         final Object[] receiver, final SBlock block) {
       try {
         if (receiver.length > 0) {
-          this.block.executeDispatch(frame, new Object[] {block, (long) 0});
+          this.block.executeDispatch(frame, new Object[] {block, (long) 0 + 1}); // +1 because it is going to the smalltalk level
         }
         for (long i = 1; i < receiver.length; i++) {
-          this.block.executeDispatch(frame, new Object[] {block, i});
+          this.block.executeDispatch(frame, new Object[] {block, i + 1}); // +1 because it is going to the smalltalk level
         }
       } finally {
         if (CompilerDirectives.inInterpreter()) {
