@@ -3,6 +3,7 @@ package som.primitives;
 import java.math.BigInteger;
 
 import som.interpreter.nodes.nary.BinaryExpressionNode.BinarySideEffectFreeExpressionNode;
+import som.vm.constants.Globals;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
@@ -15,6 +16,12 @@ public abstract class EqualsPrim extends BinarySideEffectFreeExpressionNode {
   @Specialization(order = 1)
   public final boolean doBoolean(final boolean left, final boolean right) {
     return left == right;
+  }
+
+  @Specialization(order = 11)
+  public final boolean doBoolean(final boolean left, final SObject right) {
+    return (left && right == Globals.trueObject) ||
+          (!left && right == Globals.falseObject);
   }
 
   @Specialization(order = 2)
