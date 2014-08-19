@@ -35,6 +35,7 @@ import som.primitives.EqualsEqualsPrimFactory;
 import som.primitives.EqualsPrimFactory;
 import som.primitives.IntegerPrimsFactory.LeftShiftPrimFactory;
 import som.primitives.LengthPrimFactory;
+import som.primitives.UnequalsPrimFactory;
 import som.primitives.arithmetic.AdditionPrimFactory;
 import som.primitives.arithmetic.BitXorPrimFactory;
 import som.primitives.arithmetic.DividePrimFactory;
@@ -256,6 +257,10 @@ public final class MessageSendNode {
           return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
               argumentNodes[1],
               EqualsPrimFactory.create(null, null)));
+        case "<>":
+          return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
+              argumentNodes[1],
+              UnequalsPrimFactory.create(null, null)));
         case "==":
           return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
               argumentNodes[1],
