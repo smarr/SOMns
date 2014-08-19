@@ -293,6 +293,7 @@ public final class MessageSendNode {
                 argumentNodes[1],
                 AtPrimFactory.create(null, null)));
           }
+          break;
         case "new:":
           if (arguments[0] == Classes.arrayClass) {
             return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
