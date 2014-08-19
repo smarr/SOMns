@@ -8,7 +8,6 @@ import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.UnsupportedSpecializationException;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.utilities.BranchProfile;
 
 
 public final class EagerTernaryPrimitiveNode extends TernaryExpressionNode {
@@ -18,7 +17,6 @@ public final class EagerTernaryPrimitiveNode extends TernaryExpressionNode {
   @Child private ExpressionNode argument2;
   @Child private TernaryExpressionNode primitive;
 
-  private final BranchProfile unsupportedSpecialization;
   private final SSymbol selector;
 
   public EagerTernaryPrimitiveNode(
@@ -32,8 +30,6 @@ public final class EagerTernaryPrimitiveNode extends TernaryExpressionNode {
     this.argument1 = argument1;
     this.argument2 = argument2;
     this.primitive = primitive;
-
-    this.unsupportedSpecialization = new BranchProfile();
     this.selector = selector;
   }
 
@@ -61,7 +57,6 @@ public final class EagerTernaryPrimitiveNode extends TernaryExpressionNode {
     try {
       return primitive.executeEvaluated(frame, receiver, argument1, argument2);
     } catch (UnsupportedSpecializationException e) {
-      unsupportedSpecialization.enter();
       TruffleCompiler.transferToInterpreterAndInvalidate("Eager Primitive with unsupported specialization.");
       return makeGenericSend().doPreEvaluated(frame,
           new Object[] {receiver, argument1, argument2});
@@ -74,7 +69,6 @@ public final class EagerTernaryPrimitiveNode extends TernaryExpressionNode {
     try {
       primitive.executeEvaluatedVoid(frame, receiver, argument1, argument2);
     } catch (UnsupportedSpecializationException e) {
-      unsupportedSpecialization.enter();
       TruffleCompiler.transferToInterpreterAndInvalidate("Eager Primitive with unsupported specialization.");
       makeGenericSend().doPreEvaluated(frame,
           new Object[] {receiver, argument1, argument2});
