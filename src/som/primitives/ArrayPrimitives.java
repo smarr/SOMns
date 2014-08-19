@@ -28,6 +28,8 @@ package som.primitives;
 import som.primitives.ArrayPrimsFactory.AtPrimFactory;
 import som.primitives.ArrayPrimsFactory.AtPutPrimFactory;
 import som.primitives.ArrayPrimsFactory.CopyPrimFactory;
+import som.primitives.ArrayPrimsFactory.DoIndexesPrimFactory;
+import som.primitives.ArrayPrimsFactory.DoPrimFactory;
 import som.primitives.ArrayPrimsFactory.NewPrimFactory;
 
 public final class ArrayPrimitives extends Primitives {
@@ -37,6 +39,8 @@ public final class ArrayPrimitives extends Primitives {
     installInstancePrimitive("at:put:", AtPutPrimFactory.getInstance());
     installInstancePrimitive("length",  LengthPrimFactory.getInstance());
     installInstancePrimitive("copy",    CopyPrimFactory.getInstance());
+    installInstancePrimitive("doIndexes:", DoIndexesPrimFactory.getInstance());
+    installInstancePrimitive("do:",        DoPrimFactory.getInstance());
 
     installClassPrimitive("new:", NewPrimFactory.getInstance());
   }
