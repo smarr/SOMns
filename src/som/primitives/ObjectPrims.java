@@ -1,7 +1,6 @@
 package som.primitives;
 
 import som.interpreter.Types;
-import som.interpreter.nodes.PreevaluatedExpression;
 import som.interpreter.nodes.nary.BinaryExpressionNode.BinarySideEffectFreeExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
@@ -36,8 +35,7 @@ public final class ObjectPrims {
     }
   }
 
-  public abstract static class InstVarAtPutPrim extends TernaryExpressionNode
-      implements PreevaluatedExpression {
+  public abstract static class InstVarAtPutPrim extends TernaryExpressionNode {
     @Child private IndexDispatch dispatch;
 
     public InstVarAtPutPrim(final boolean executesEnforced) {
@@ -52,14 +50,26 @@ public final class ObjectPrims {
       return val;
     }
 
+
     @Override
-    public Object doPreEvaluated(final VirtualFrame frame, final Object[] args) {
-      assert args[0] instanceof SObject;
-      assert args[1] instanceof Long;
-      SObject rcvr = CompilerDirectives.unsafeCast(args[0], SObject.class, true, true);
-      long idx     = CompilerDirectives.unsafeCast(args[1], long.class, true, true);
-      return doSObject(rcvr, idx, args[2]);
+    public final Object executeEvaluated(final VirtualFrame frame,
+      final Object receiver, final Object firstArg, final Object secondArg) {
+      assert receiver instanceof SObject;
+      assert firstArg instanceof Long;
+      assert secondArg != null;
+
+      SObject rcvr = CompilerDirectives.unsafeCast(receiver, SObject.class, true, true);
+      long idx     = CompilerDirectives.unsafeCast(firstArg, long.class, true, true);
+      return doSObject(rcvr, idx, secondArg);
     }
+//    @Override
+//    public final Object doPreEvaluated(final VirtualFrame frame, final Object[] args) {
+//      assert args[0] instanceof SObject;
+//      assert args[1] instanceof Long;
+//      SObject rcvr = CompilerDirectives.unsafeCast(args[0], SObject.class, true, true);
+//      long idx     = CompilerDirectives.unsafeCast(args[1], long.class, true, true);
+//      return doSObject(rcvr, idx, args[2]);
+//    }
   }
 
   public abstract static class InstVarNamedPrim extends BinarySideEffectFreeExpressionNode {

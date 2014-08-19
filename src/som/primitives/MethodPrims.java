@@ -1,7 +1,6 @@
 package som.primitives;
 
 import som.interpreter.SArguments;
-import som.interpreter.nodes.PreevaluatedExpression;
 import som.interpreter.nodes.dispatch.InvokeOnCache;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode.UnarySideEffectFreeExpressionNode;
@@ -35,8 +34,7 @@ public final class MethodPrims {
     }
   }
 
-  public abstract static class InvokeOnPrim extends TernaryExpressionNode
-      implements PreevaluatedExpression {
+  public abstract static class InvokeOnPrim extends TernaryExpressionNode {
     @Child private InvokeOnCache callNode;
 
     public InvokeOnPrim(final boolean executesEnforced) {
@@ -51,11 +49,6 @@ public final class MethodPrims {
       SObject domain = SArguments.domain(frame);
       return callNode.executeDispatch(frame, executesEnforced, receiver,
           SArguments.createSArgumentsWithReceiver(domain, executesEnforced, target, argsArr));
-    }
-
-    @Override
-    public final Object doPreEvaluated(final VirtualFrame frame, final Object[] args) {
-      return doInvoke(frame, (SInvokable) args[0], args[1], (Object[]) args[2]);
     }
   }
 }

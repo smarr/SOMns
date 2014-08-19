@@ -1,7 +1,6 @@
 package som.interpreter.nodes.specialized;
 
 import som.interpreter.SArguments;
-import som.interpreter.nodes.PreevaluatedExpression;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
@@ -14,8 +13,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.utilities.BranchProfile;
 
-public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
-    implements PreevaluatedExpression {
+public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode {
   private final BranchProfile ifFalseBranch = new BranchProfile();
   private final BranchProfile ifTrueBranch  = new BranchProfile();
 
@@ -71,12 +69,6 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode
       falseValueSend = Truffle.getRuntime().createDirectCallNode(
           falseMethod.getCallTarget(falseEnforced || executesEnforced));
     }
-  }
-
-  @Override
-  public final Object doPreEvaluated(final VirtualFrame frame,
-      final Object[] arguments) {
-    return executeEvaluated(frame, arguments[0], arguments[1], arguments[2]);
   }
 
   protected final boolean hasSameArguments(final Object receiver, final Object firstArg, final Object secondArg) {
