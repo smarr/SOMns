@@ -167,7 +167,7 @@ public final class MethodGenerationContext {
   }
 
   public boolean needsToCatchNonLocalReturn() {
-    return needsToCatchNonLocalReturn;
+    return needsToCatchNonLocalReturn && outerGenc == null;
   }
 
   private void separateVariables(final Collection<? extends Variable> variables,
