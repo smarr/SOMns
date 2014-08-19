@@ -44,7 +44,7 @@ public abstract class EqualsEqualsPrim extends BinarySideEffectFreeExpressionNod
     return left == right;
   }
 
-  @Specialization(order = 46, guards = "nodeExecutesUnenforced")
+  @Specialization(order = 46)
   public final boolean doArray(final Object[] left, final Object right) {
     return left == right;
   }
@@ -59,7 +59,7 @@ public abstract class EqualsEqualsPrim extends BinarySideEffectFreeExpressionNod
     return left == right;
   }
 
-  @Specialization(order = 50, guards = "nodeExecutesUnenforced")
+  @Specialization(order = 50)
   public final boolean doSObject(final SObject left, final Object right) {
     return left == right;
   }
