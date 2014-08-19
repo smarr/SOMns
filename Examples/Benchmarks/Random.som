@@ -58,11 +58,8 @@ Random = Benchmark (
     
     new        = ( ^super new initialize )
     next       = ( ^self random next )
-    initialize = ( ^self random initialize )
+    initialize = ( ^random := Random new )
     
-    random = (
-        (random <> nil) ifTrue: [ ^random ].
-        ^random := Random new
-    )
+    random = ( ^random )
     
 )
