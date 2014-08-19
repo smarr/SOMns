@@ -7,6 +7,7 @@ import com.oracle.truffle.api.CompilerDirectives;
 
 public final class SArray {
   private static final int OWNER_IDX = 0;
+  public  static final int FIRST_IDX = OWNER_IDX + 1;
 
   public static Object[] newSArray(final Object[] nonSArray, final SObject domain) {
     assert domain != null;
