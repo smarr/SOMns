@@ -52,6 +52,7 @@ public final class EnforcedPrim extends ExpressionNode {
   }
 
   public void setPrimitive(final SPrimitive primitive) {
+    assert primitive != null;
     this.primitive = primitive;
   }
 
