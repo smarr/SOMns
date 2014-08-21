@@ -67,7 +67,9 @@ public final class SArguments {
     args[DOMAIN_IDX]        = domain;
     args[RCVR_IDX]          = receiver;
 
-    System.arraycopy(argumentsWithoutReceiver, 0, args, ARGUMENT_OFFSET, argumentsWithoutReceiver.length);
+    if (argumentsWithoutReceiver.length > 1) {
+      System.arraycopy(argumentsWithoutReceiver, 1, args, ARGUMENT_OFFSET + 1, argumentsWithoutReceiver.length - 1);
+    }
     return args;
   }
 }
