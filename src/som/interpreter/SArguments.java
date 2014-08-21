@@ -5,7 +5,6 @@ import som.vmobjects.SObject;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.ExplodeLoop;
 
 public final class SArguments {
 
@@ -47,16 +46,13 @@ public final class SArguments {
     return arguments;
   }
 
-  @ExplodeLoop
   public static Object[] createSArguments(final SObject domain,
       final boolean enforced, final Object[] arguments) {
     Object[] args = new Object[arguments.length + ARGUMENT_OFFSET];
     args[ENFORCED_FLAG_IDX] = enforced;
     args[DOMAIN_IDX]        = domain;
 
-    for (int i = 0; i < arguments.length; i++) {
-      args[i + ARGUMENT_OFFSET] = arguments[i];
-    }
+    System.arraycopy(arguments, 0, args, ARGUMENT_OFFSET, arguments.length);
     return args;
   }
 
@@ -64,7 +60,6 @@ public final class SArguments {
    * Create a properly encoded SArguments array to be passed via Truffle's API
    * from a receiver object that is separate from the actual arguments.
    */
-  @ExplodeLoop
   public static Object[] createSArgumentsWithReceiver(final SObject domain,
       final boolean enforced, final Object receiver, final Object[] argumentsWithoutReceiver) {
     Object[] args = new Object[argumentsWithoutReceiver.length + ARGUMENT_OFFSET];  // + 1
@@ -72,9 +67,7 @@ public final class SArguments {
     args[DOMAIN_IDX]        = domain;
     args[RCVR_IDX]          = receiver;
 
-    for (int i = 1; i < argumentsWithoutReceiver.length; i++) { // = 0
-      args[i + ARGUMENT_OFFSET] = argumentsWithoutReceiver[i]; // A_O + 1
-    }
+    System.arraycopy(argumentsWithoutReceiver, 0, args, ARGUMENT_OFFSET, argumentsWithoutReceiver.length);
     return args;
   }
 }
