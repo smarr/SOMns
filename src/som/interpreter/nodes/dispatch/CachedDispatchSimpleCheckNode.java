@@ -5,6 +5,7 @@ import som.interpreter.nodes.dispatch.AbstractDispatchNode.AbstractCachedDispatc
 import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.CallTarget;
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 
@@ -21,7 +22,8 @@ public final class CachedDispatchSimpleCheckNode extends AbstractCachedDispatchN
   @Override
   public Object executeDispatch(final VirtualFrame frame, final SObject domain,
       final boolean enforced, final Object[] arguments) {
-    if (arguments[0].getClass() == expectedClass) {
+    Object rcvr = CompilerDirectives.unsafeCast(arguments[0], Object.class, true, true);
+    if (rcvr.getClass() == expectedClass) {
       return cachedMethod.call(frame, SArguments.createSArguments(domain, enforced, arguments));
     } else {
       return nextInCache.executeDispatch(frame, domain, enforced, arguments);

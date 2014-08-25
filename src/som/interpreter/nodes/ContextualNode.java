@@ -61,14 +61,14 @@ public abstract class ContextualNode extends ExpressionNode {
     int i = contextLevel - 1;
 
     while (i > 0) {
-      self = CompilerDirectives.unsafeCast(self.getOuterSelf(), SBlock.class, true);
+      self = CompilerDirectives.unsafeCast(self.getOuterSelf(), SBlock.class, true, true);
       i--;
     }
     return self.getContext();
   }
 
   private SBlock getLocalSelf(final VirtualFrame frame) {
-    return CompilerDirectives.unsafeCast(FrameUtil.getObjectSafe(frame, localSelf), SBlock.class, true);
+    return CompilerDirectives.unsafeCast(FrameUtil.getObjectSafe(frame, localSelf), SBlock.class, true, true);
   }
 
   @ExplodeLoop
@@ -76,7 +76,7 @@ public abstract class ContextualNode extends ExpressionNode {
     Object self = getLocalSelf(frame);
     int i = contextLevel;
     while (i > 0) {
-      SBlock block = CompilerDirectives.unsafeCast(self, SBlock.class, true);
+      SBlock block = CompilerDirectives.unsafeCast(self, SBlock.class, true, true);
       self = block.getOuterSelf();
       i--;
     }

@@ -149,7 +149,7 @@ public final class DomainAndClassDispatch {
     public abstract SClass  getSOMClass(final Object obj);
 
     public final Object doDispatch(final VirtualFrame frame, final Object[] args) {
-      Object  rcvr = args[0];
+      Object  rcvr = CompilerDirectives.unsafeCast(args[0], Object.class, true, true);
       SObject rcvrDomain    =  getOwnerDomain(rcvr);
       SObject currentDomain = SArguments.domain(frame);
       SClass  rcvrClass = getSOMClass(rcvr);
@@ -184,7 +184,8 @@ public final class DomainAndClassDispatch {
     @Override
     public final Object executeDispatch(final VirtualFrame frame,
         final Object[] args) {
-      if (args[0].getClass() == clazz) {
+      Object rcvr = CompilerDirectives.unsafeCast(args[0], Object.class, true, true);
+      if (rcvr.getClass() == clazz) {
         return doDispatch(frame, args);
       } else {
         return next.executeDispatch(frame, args);
@@ -204,14 +205,14 @@ public final class DomainAndClassDispatch {
 
     @Override
     public SObject getOwnerDomain(final Object obj) {
-      SObject o = CompilerDirectives.unsafeCast(obj, SObject.class, true);
+      SObject o = CompilerDirectives.unsafeCast(obj, SObject.class, true, true);
       return o.getDomain();
     }
 
     @Override
     public SClass getSOMClass(final Object obj) {
       if (superSendClass == null) {
-        SObject o = CompilerDirectives.unsafeCast(obj, SObject.class, true);
+        SObject o = CompilerDirectives.unsafeCast(obj, SObject.class, true, true);
         return o.getSOMClass();
       } else {
         return superSendClass;
@@ -231,7 +232,7 @@ public final class DomainAndClassDispatch {
 
     @Override
     public SObject getOwnerDomain(final Object obj) {
-      Object[] arr = CompilerDirectives.unsafeCast(obj, Object[].class, true);
+      Object[] arr = CompilerDirectives.unsafeCast(obj, Object[].class, true, true);
       return SArray.getOwner(arr);
     }
 
@@ -289,7 +290,7 @@ public final class DomainAndClassDispatch {
       CompilerAsserts.neverPartOfCompilation(
           "The generic case should never be part of compilation.");
 
-      Object  rcvr = args[0];
+      Object  rcvr = CompilerDirectives.unsafeCast(args[0], Object.class, true, true);
       SObject rcvrDomain    = SDomain.getOwner(rcvr);
       SObject currentDomain = SArguments.domain(frame);
       SClass  rcvrClass = Types.getClassOf(rcvr);

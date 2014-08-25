@@ -14,24 +14,29 @@ public final class SArguments {
 
   private static final int ARGUMENT_OFFSET = RCVR_IDX;
 
+  private static Object[] args(final VirtualFrame frame) {
+    return CompilerDirectives.unsafeCast(frame.getArguments(), Object[].class, true, true);
+  }
+
   public static Object arg(final VirtualFrame frame, final int index) {
-    return frame.getArguments()[index + ARGUMENT_OFFSET];
+    return CompilerDirectives.unsafeCast(args(frame)[index + ARGUMENT_OFFSET], Object.class, true, true);
   }
 
   public static Object rcvr(final Frame frame) {
-    return frame.getArguments()[RCVR_IDX];
+    return rcvr(frame.getArguments());
   }
 
   public static Object rcvr(final Object[] arguments) {
-    return arguments[RCVR_IDX];
+    return CompilerDirectives.unsafeCast(arguments[RCVR_IDX], Object.class, true, true);
   }
 
   public static SObject domain(final Frame frame) {
-    return CompilerDirectives.unsafeCast(frame.getArguments()[DOMAIN_IDX], SObject.class, true);
+    assert frame.getArguments()[DOMAIN_IDX] != null;
+    return CompilerDirectives.unsafeCast(frame.getArguments()[DOMAIN_IDX], SObject.class, true, true);
   }
 
   public static boolean enforced(final Object[] arguments) {
-    return CompilerDirectives.unsafeCast(arguments[ENFORCED_FLAG_IDX], Boolean.class, true);
+    return CompilerDirectives.unsafeCast(arguments[ENFORCED_FLAG_IDX], Boolean.class, true, true);
   }
 
   public static boolean enforced(final Frame frame) {

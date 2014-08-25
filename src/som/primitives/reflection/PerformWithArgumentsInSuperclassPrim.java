@@ -10,6 +10,7 @@ import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
@@ -45,8 +46,11 @@ public abstract class PerformWithArgumentsInSuperclassPrim extends QuaternaryExp
 
     @Override
     public Object doPreEvaluated(final VirtualFrame frame, final Object[] args) {
-      return doSAbstractObject(frame, args[0], (SSymbol) args[1],
-          (Object[]) args[2], (SClass) args[3]);
+      return doSAbstractObject(frame,
+          CompilerDirectives.unsafeCast(args[0], Object.class, true, true),
+          CompilerDirectives.unsafeCast(args[1], SSymbol.class, true, true),
+          CompilerDirectives.unsafeCast(args[2], Object[].class, true, true),
+          CompilerDirectives.unsafeCast(args[3], SClass.class, true, true));
     }
   }
 }

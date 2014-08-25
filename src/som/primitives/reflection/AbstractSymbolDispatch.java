@@ -97,7 +97,7 @@ public abstract class AbstractSymbolDispatch extends Node implements DispatchCha
     public Object executeDispatch(final VirtualFrame frame,
         final Object receiver, final SSymbol selector, final Object[] argsArr) {
       if (this.selector == selector) {
-        PreevaluatedExpression realCachedSend = CompilerDirectives.unsafeCast(cachedSend, PreevaluatedExpression.class, true);
+        PreevaluatedExpression realCachedSend = CompilerDirectives.unsafeCast(cachedSend, PreevaluatedExpression.class, true, true);
         return realCachedSend.doPreEvaluated(frame, SArray.fromSArrayToArgArrayWithReceiver(argsArr, receiver));
       } else {
         return nextInCache.executeDispatch(frame, receiver, selector, argsArr);

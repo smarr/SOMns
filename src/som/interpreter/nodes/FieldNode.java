@@ -72,7 +72,8 @@ public abstract class FieldNode extends ExpressionNode {
     @Override
     public final Object doPreEvaluated(final VirtualFrame frame,
         final Object[] arguments) {
-      return executeEvaluated(frame, (SObject) arguments[0]);
+      return executeEvaluated(frame, CompilerDirectives.unsafeCast(
+          arguments[0], SObject.class, true, true));
     }
 
     @Override
@@ -141,7 +142,9 @@ public abstract class FieldNode extends ExpressionNode {
     @Override
     public final Object doPreEvaluated(final VirtualFrame frame,
         final Object[] arguments) {
-      return executeEvaluated(frame, (SObject) arguments[0], arguments[1]);
+      return executeEvaluated(frame,
+          CompilerDirectives.unsafeCast(arguments[0], SObject.class, true, true),
+          CompilerDirectives.unsafeCast(arguments[1],  Object.class, true, true));
     }
 
     @Override

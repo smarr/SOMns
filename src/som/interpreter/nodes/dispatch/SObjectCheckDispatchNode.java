@@ -2,6 +2,7 @@ package som.interpreter.nodes.dispatch;
 
 import som.vmobjects.SObject;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.utilities.BranchProfile;
 
@@ -24,7 +25,8 @@ public final class SObjectCheckDispatchNode extends AbstractDispatchNode {
   public Object executeDispatch(
       final VirtualFrame frame, final SObject domain,
       final boolean enforced, final Object[] arguments) {
-    if (arguments[0] instanceof SObject) {
+    Object rcvr = CompilerDirectives.unsafeCast(arguments[0], Object.class, true, true);
+    if (rcvr instanceof SObject) {
       return nextInCache.executeDispatch(frame, domain, enforced, arguments);
     } else {
       uninitialized.enter();

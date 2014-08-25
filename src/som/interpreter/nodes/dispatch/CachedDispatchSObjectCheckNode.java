@@ -23,7 +23,7 @@ public final class CachedDispatchSObjectCheckNode extends AbstractCachedDispatch
   @Override
   public Object executeDispatch(final VirtualFrame frame, final SObject domain,
       final boolean enforced, final Object[] arguments) {
-    SObject rcvr = CompilerDirectives.unsafeCast(arguments[0], SObject.class, true);
+    SObject rcvr = CompilerDirectives.unsafeCast(arguments[0], SObject.class, true, true);
     if (rcvr.getSOMClass() == expectedClass) {
       return cachedMethod.call(frame, SArguments.createSArguments(domain, enforced, arguments));
     } else {

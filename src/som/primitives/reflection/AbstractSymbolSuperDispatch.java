@@ -107,7 +107,7 @@ public abstract class AbstractSymbolSuperDispatch extends Node implements Dispat
     public Object executeDispatch(final VirtualFrame frame,
         final Object receiver, final SSymbol selector, final SClass lookupClass, final Object[] argsArr) {
       if (this.selector == selector && this.lookupClass == lookupClass) {
-        PreevaluatedExpression realCachedSend = CompilerDirectives.unsafeCast(cachedSend, PreevaluatedExpression.class, true);
+        PreevaluatedExpression realCachedSend = CompilerDirectives.unsafeCast(cachedSend, PreevaluatedExpression.class, true, true);
         return realCachedSend.doPreEvaluated(frame, SArray.fromSArrayToArgArrayWithReceiver(argsArr, receiver));
       } else {
         return nextInCache.executeDispatch(frame, receiver, selector, lookupClass, argsArr);
