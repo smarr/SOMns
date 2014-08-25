@@ -138,7 +138,8 @@ public abstract class UninitializedVariableNode extends ContextualNode {
       } else {
         LocalSuperReadNode node = LocalSuperReadNodeFactory.create(variable,
             getLexicalSuperClass(), getSourceSection());
-        return replace(node).executeGeneric(frame);
+        return replace(node).
+            executeGeneric(frame);
       }
     }
 
