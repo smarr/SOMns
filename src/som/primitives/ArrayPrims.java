@@ -1,6 +1,9 @@
 package som.primitives;
 
 import static som.vmobjects.SDomain.getDomainForNewObjects;
+
+import java.util.Arrays;
+
 import som.interpreter.AbstractInvokable;
 import som.interpreter.SArguments;
 import som.interpreter.nodes.ArgumentReadNode;
@@ -78,6 +81,21 @@ public final class ArrayPrims {
     public final Object[] doArray(final VirtualFrame frame, final Object[] receiver) {
       // TODO: should I set the owner differently?
       return receiver.clone();
+    }
+  }
+
+  public abstract static class PutAllEagerOpt extends BinaryExpressionNode {
+    public PutAllEagerOpt(final boolean executesEnforced) { super(null, executesEnforced); }
+    public PutAllEagerOpt(final PutAllEagerOpt node) { this(node.executesEnforced); }
+
+    protected boolean notABlock(final Object[] receiver, final Object value) {
+      return !(value instanceof SBlock);
+    }
+
+    @Specialization(guards = "notABlock")
+    public Object[] doPutValue(final Object[] receiver, final Object value) {
+      Arrays.fill(receiver, SArray.FIRST_IDX, receiver.length, value);
+      return receiver;
     }
   }
 
