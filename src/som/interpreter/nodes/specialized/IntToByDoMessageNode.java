@@ -63,7 +63,10 @@ public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode
   public final long doIntToByDo(final VirtualFrame frame, final long receiver, final long limit, final long step, final SBlock block) {
     try {
       SObject domain = SArguments.domain(frame);
-      for (long i = receiver; i <= limit; i += step) {
+      if (receiver <= limit) {
+        valueSend.call(frame, SArguments.createSArguments(domain, blockEnforced, new Object[] {block, receiver}));
+      }
+      for (long i = receiver + 1; i <= limit; i += step) {
         valueSend.call(frame, SArguments.createSArguments(domain, blockEnforced, new Object[] {block, i}));
       }
     } finally {
@@ -78,7 +81,10 @@ public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode
   public final long doIntToByDo(final VirtualFrame frame, final long receiver, final double limit, final long step, final SBlock block) {
     try {
       SObject domain = SArguments.domain(frame);
-      for (long i = receiver; i <= limit; i += step) {
+      if (receiver <= limit) {
+        valueSend.call(frame, SArguments.createSArguments(domain, blockEnforced, new Object[] {block, receiver}));
+      }
+      for (long i = receiver + 1; i <= limit; i += step) {
         valueSend.call(frame, SArguments.createSArguments(domain, blockEnforced, new Object[] {block, i}));
       }
     } finally {
