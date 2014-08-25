@@ -78,7 +78,7 @@ public abstract class IntDownToDoMessageNode extends TernaryExpressionNode {
         valueSend.call(frame, SArguments.createSArguments(domain, blockEnforced, new Object[] {block, i}));
       }
     } finally {
-      if (CompilerDirectives.inInterpreter() && (receiver - limit) > 0) {
+      if (CompilerDirectives.inInterpreter() && (receiver - (int) limit) > 0) {
         reportLoopCount(receiver - (int) limit);
       }
     }
