@@ -50,8 +50,8 @@ public abstract class IntDownToDoMessageNode extends TernaryExpressionNode {
         valueSend.call(frame, new Object[] {block, i});
       }
     } finally {
-      if (CompilerDirectives.inInterpreter() && (limit - receiver) > 0) {
-        reportLoopCount(limit - receiver);
+      if (CompilerDirectives.inInterpreter() && (receiver - limit) > 0) {
+        reportLoopCount(receiver - limit);
       }
     }
     return receiver;
@@ -71,8 +71,8 @@ public abstract class IntDownToDoMessageNode extends TernaryExpressionNode {
         valueSend.call(frame, new Object[] {block, i});
       }
     } finally {
-      if (CompilerDirectives.inInterpreter()) {
-        reportLoopCount((int) limit - receiver);
+      if (CompilerDirectives.inInterpreter() && (receiver - (int) limit) > 0) {
+        reportLoopCount(receiver - (int) limit);
       }
     }
     return receiver;
