@@ -130,7 +130,7 @@ public abstract class FieldNode extends ExpressionNode {
     @NodeChild(value = "self", type = ExpressionNode.class),
     @NodeChild(value = "value", type = ExpressionNode.class)})
   public abstract static class AbstractFieldWriteNode extends FieldNode
-    implements PreevaluatedExpression {
+      implements PreevaluatedExpression {
     public AbstractFieldWriteNode(final SourceSection source, final boolean executesEnforced) {
       super(source, executesEnforced);
     }

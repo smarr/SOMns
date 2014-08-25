@@ -138,7 +138,6 @@ public abstract class UninitializedVariableNode extends ContextualNode {
 
     @Override
     public Object executeGeneric(final VirtualFrame frame) {
-
       transferToInterpreterAndInvalidate("UninitializedSuperReadNode");
 
       if (accessesOuterContext()) {
@@ -190,7 +189,6 @@ public abstract class UninitializedVariableNode extends ContextualNode {
 
     @Override
     public Object executeGeneric(final VirtualFrame frame) {
-
       transferToInterpreterAndInvalidate("UninitializedVariableWriteNode");
 
       if (accessesOuterContext()) {

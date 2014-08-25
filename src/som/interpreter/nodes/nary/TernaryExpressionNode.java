@@ -14,7 +14,7 @@ import com.oracle.truffle.api.source.SourceSection;
   @NodeChild(value = "firstArg",  type = ExpressionNode.class),
   @NodeChild(value = "secondArg", type = ExpressionNode.class)})
 public abstract class TernaryExpressionNode extends ExpressionNode
-    implements PreevaluatedExpression{
+    implements PreevaluatedExpression {
 
   public TernaryExpressionNode(final SourceSection sourceSection,
       final boolean executesEnforced) {
