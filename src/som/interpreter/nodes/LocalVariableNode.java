@@ -10,6 +10,7 @@ import som.vmobjects.SClass;
 import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameSlot;
@@ -70,7 +71,8 @@ public abstract class LocalVariableNode extends ExpressionNode {
 
     @Specialization(guards = "isInitialized", rewriteOn = {FrameSlotTypeException.class})
     public final Object doObject(final VirtualFrame frame) throws FrameSlotTypeException {
-      return frame.getObject(slot);
+      return CompilerDirectives.unsafeCast(frame.getObject(slot),
+          Object.class, true, true);
     }
 
 //    @Generic

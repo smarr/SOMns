@@ -39,8 +39,11 @@ public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode
   @Override
   public final Object doPreEvaluated(final VirtualFrame frame,
       final Object[] arguments) {
-    return executeEvaluated(frame, arguments[0], arguments[1],
-        arguments[2], arguments[3]);
+    return executeEvaluated(frame,
+        CompilerDirectives.unsafeCast(arguments[0], Object.class, true, true),
+        CompilerDirectives.unsafeCast(arguments[1], Object.class, true, true),
+        CompilerDirectives.unsafeCast(arguments[2], Object.class, true, true),
+        CompilerDirectives.unsafeCast(arguments[3], Object.class, true, true));
   }
 
   protected final boolean isSameBlockLong(final long receiver, final long limit, final long step, final SBlock block) {

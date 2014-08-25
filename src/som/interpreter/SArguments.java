@@ -1,19 +1,22 @@
 package som.interpreter;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.Frame;
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.ExplodeLoop;
 
 public final class SArguments {
 
   private static final int RCVR_IDX = 0;
 
-  public static Object arg(final VirtualFrame frame, final int index) {
-    return frame.getArguments()[index];
+  private static Object[] args(final Frame frame) {
+    return CompilerDirectives.unsafeCast(frame.getArguments(), Object[].class, true, true);
+  }
+
+  public static Object arg(final Frame frame, final int index) {
+    return CompilerDirectives.unsafeCast(args(frame)[index], Object.class, true, true);
   }
 
   public static Object rcvr(final Frame frame) {
-    return frame.getArguments()[RCVR_IDX];
+    return arg(frame, RCVR_IDX);
   }
 
   /**

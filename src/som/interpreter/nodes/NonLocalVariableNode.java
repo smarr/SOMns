@@ -5,6 +5,7 @@ import som.vm.constants.Nil;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameSlot;
@@ -57,7 +58,8 @@ public abstract class NonLocalVariableNode extends ContextualNode {
 
     @Specialization(guards = "isInitialized", rewriteOn = {FrameSlotTypeException.class})
     public final Object doObject(final VirtualFrame frame) throws FrameSlotTypeException {
-      return determineContext(frame).getObject(slot);
+      return CompilerDirectives.unsafeCast(
+          determineContext(frame).getObject(slot), Object.class, true, true);
     }
 
 //    @Generic
