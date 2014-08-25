@@ -54,6 +54,11 @@ public abstract class BlockPrims {
           new Object[] {receiver});
     }
 
+    @Specialization
+    public final boolean doBoolean(final boolean receiver) {
+      return receiver;
+    }
+
     @Override
     public void adoptNewDispatchListHead(final AbstractDispatchNode node) {
       dispatchNode = insert(node);

@@ -251,7 +251,7 @@ public final class MessageSendNode {
       switch (selector.getString()) {
         // eagerly but cautious:
         case "value":
-          if (receiver instanceof SBlock) {
+          if (receiver instanceof SBlock || receiver instanceof Boolean) {
             return replace(new EagerUnaryPrimitiveNode(selector,
                 argumentNodes[0], ValueNonePrimFactory.create(executesEnforced, null), executesEnforced));
           }
