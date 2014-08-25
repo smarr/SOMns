@@ -95,18 +95,17 @@ public abstract class Primitives {
         throw new RuntimeException("Not supported by SOM.");
     }
 
-    boolean shouldInline = MethodGenerationContext.shouldAlwaysBeInlined(signature);
     Primitive enforcedMethod;
     Primitive unenforcedMethod;
     if (isUnenforced) {
       enforcedMethod   = null;
       unenforcedMethod = new Primitive(primNodeUnenforced,
-          mgen.getFrameDescriptor(), false, shouldInline);
+          mgen.getFrameDescriptor(), false);
     } else {
       enforcedMethod   = new Primitive(primNodeEnforced,
-          mgen.getFrameDescriptor(), true, shouldInline);
+          mgen.getFrameDescriptor(), true);
       unenforcedMethod = new Primitive(primNodeUnenforced,
-          mgen.getFrameDescriptor(), false, shouldInline);
+          mgen.getFrameDescriptor(), false);
     }
     SPrimitive prim = (SPrimitive) Universe.newMethod(signature, enforcedMethod,
         unenforcedMethod, true, new SMethod[0], isUnenforced);
@@ -122,7 +121,7 @@ public abstract class Primitives {
     MethodGenerationContext mgen = new MethodGenerationContext(null);
 
     ExpressionNode primNode = EmptyPrim.create(false, new ArgumentReadNode(0, false));  /* TODO: enforced!!! */ /* TODO: enforced!!! */
-    Primitive primMethodNode = new Primitive(primNode, mgen.getFrameDescriptor(), false, MethodGenerationContext.shouldAlwaysBeInlined(signature));
+    Primitive primMethodNode = new Primitive(primNode, mgen.getFrameDescriptor(), false);
     return primMethodNode;
   }
 

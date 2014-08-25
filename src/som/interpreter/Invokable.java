@@ -8,7 +8,6 @@ import com.oracle.truffle.api.nodes.NodeUtil;
 import com.oracle.truffle.api.source.SourceSection;
 
 public abstract class Invokable extends AbstractInvokable {
-  private final boolean alwaysInline;
 
   @Child protected ExpressionNode body;
 
@@ -16,19 +15,11 @@ public abstract class Invokable extends AbstractInvokable {
 
   public Invokable(final SourceSection sourceSection,
       final FrameDescriptor frameDescriptor, final ExpressionNode body,
-      final boolean executesEnforced,
-      final boolean alwaysInline) {
+      final boolean executesEnforced) {
     super(sourceSection, frameDescriptor, executesEnforced);
     this.uninitializedBody = NodeUtil.cloneNode(body);
     this.body = body;
     assert body.nodeExecutesEnforced() == executesEnforced;
-
-    this.alwaysInline = alwaysInline;
-  }
-
-  // @Override
-  public boolean alwaysInline() {
-    return alwaysInline;
   }
 
   @Override

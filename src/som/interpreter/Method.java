@@ -36,9 +36,8 @@ public final class Method extends Invokable {
                 final FrameDescriptor frameDescriptor,
                 final ExpressionNode body,
                 final LexicalContext outerContext,
-                final boolean executesEnforced,
-                final boolean alwaysInline) {
-    super(sourceSection, frameDescriptor, body, executesEnforced, alwaysInline);
+                final boolean executesEnforced) {
+    super(sourceSection, frameDescriptor, body, executesEnforced);
     this.outerContext = outerContext;
   }
 
@@ -57,7 +56,7 @@ public final class Method extends Invokable {
         outerContext);
     ExpressionNode  inlinedBody = Inliner.doInline(uninitializedBody, inlinedContext);
     Method clone = new Method(getSourceSection(), inlinedFrameDescriptor,
-        inlinedBody, outerContext, executesEnforced, alwaysInline());
+        inlinedBody, outerContext, executesEnforced);
     inlinedContext.setOuterMethod(clone);
     return clone;
   }

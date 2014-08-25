@@ -203,7 +203,7 @@ public final class MethodGenerationContext {
     SourceSection methodSourceSection = getSourceSectionForMethod(sourceSection);
 
     Invokable method = new Method(methodSourceSection, frameDescriptor,
-        body, getLexicalContext(), enforced, shouldAlwaysBeInlined(signature));
+        body, getLexicalContext(), enforced);
 
     setOuterMethodInLexicalScopes(method, enforced);
 
@@ -215,41 +215,6 @@ public final class MethodGenerationContext {
       final Invokable enforcedMthd, final Invokable unenforcedMthd) {
     return Universe.newMethod(signature, enforcedMthd, unenforcedMthd,
         isPrimitive(), embeddedBlockMethods.toArray(new SMethod[0]), unenforced);
-  }
-
-  private static String[] forceInliningFor = new String[] {
-    "requestExecutionOf:with:on:lookup:",
-    "requestExecutionOfPrimitive:with:on:",
-    "readField:of:",
-    "write:toField:of:",
-    "readGlobal:for:",
-//    "domainOf:",
-//    "setDomainOf:to:",
-//    "evaluate:in:",
-//    "evaluate:enforcedIn:",
-//    "currentDomain",
-//    "executesEnforced",
-//    "executesUnenforced",
-//    "perform:",
-//    "perform:withArguments:",
-//    "perform:inSuperclass:",
-//    "perform:withArguments:inSuperclass:",
-//    "instVarAt:",
-//    "instVarAt:put:",
-//    "instVarNamed:",
-//    "performEnforced:",
-//    "performEnforced:withArguments:",
-//    "performEnforced:inSuperclass:",
-    "performEnforced:withArguments:inSuperclass:"
-  };
-
-  public static boolean shouldAlwaysBeInlined(final SSymbol signature) {
-    for (String toBeForced : forceInliningFor) {
-      if (signature.getString().equals(toBeForced)) {
-        return true;
-      }
-    }
-    return false;
   }
 
   private void setOuterMethodInLexicalScopes(final Invokable method,

@@ -18,9 +18,8 @@ public final class Primitive extends Invokable {
 
   public Primitive(final ExpressionNode primitive,
       final FrameDescriptor frameDescriptor,
-      final boolean executesEnforced,
-      final boolean alwaysInline) {
-    super(null, frameDescriptor, primitive, executesEnforced, alwaysInline);
+      final boolean executesEnforced) {
+    super(null, frameDescriptor, primitive, executesEnforced);
   }
 
   @Override
@@ -31,7 +30,7 @@ public final class Primitive extends Invokable {
     ExpressionNode  inlinedBody = Inliner.doInline(
         uninitializedBody, inlinedContext);
     return new Primitive(inlinedBody,
-        inlinedFrameDescriptor, executesEnforced, alwaysInline());
+        inlinedFrameDescriptor, executesEnforced);
   }
 
   @Override
