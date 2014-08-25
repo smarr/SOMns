@@ -28,7 +28,7 @@ public final class SArguments {
     // which are all based on this assumption
     assert RCVR_IDX == 0;
 
-    if (argsArray == null) {
+    if (argsArray == null || argsArray.length == 0) {
       return new Object[] {receiver};
     }
 
@@ -44,15 +44,14 @@ public final class SArguments {
    * arguments and excludes the receiver. This is used for instance for
    * #doesNotUnderstand (#dnu)
    */
-  @ExplodeLoop
   public static Object[] getArgumentsWithoutReceiver(final Object[] arguments) {
     // the code and magic numbers below are based on the following assumption
     assert RCVR_IDX == 0;
-//    return Arrays.copyOfRange(arguments, 1, arguments.length);
     Object[] argsArr = new Object[arguments.length - 1];
-    for (int i = 1; i < arguments.length; i++) {
-      argsArr[i - 1] = arguments[i];
+    if (argsArr.length == 0) {
+      return argsArr;
     }
+    System.arraycopy(arguments, 1, argsArr, 0, arguments.length);
     return argsArr;
   }
 }
