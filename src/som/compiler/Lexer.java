@@ -67,8 +67,14 @@ public final class Lexer {
 
   private final Field nextCharField;
 
-  protected Lexer(final Reader reader) {
-    infile = new BufferedReader(reader);
+  protected Lexer(final Reader reader, final long fileSize) {
+    /** TODO: we rely on the internal implementation to get the position in the
+     *        file. This should be fixed and reimplemented to avoid such hacks.
+     *        We need to know for Truffle the character index of a token,
+     *        but we do not get it because line-based reading does split the
+     *        type of end-of-line indicator and its length.
+     */
+    infile = new BufferedReader(reader, (int) fileSize);
     peekDone = false;
     state = new LexerState();
     state.buf = "";
@@ -95,6 +101,9 @@ public final class Lexer {
       this.startLine   = state.lineNumber;
       this.startColumn = state.bufp + 1;
       this.charIndex   = state.charsRead + state.bufp;
+      assert startLine   >= 0;
+      assert startColumn >= 0;
+      assert charIndex   >= 0;
     }
 
     @Override
@@ -322,9 +331,10 @@ public final class Lexer {
     try {
       if (!infile.ready()) { return -1; }
 
-      // charsRead += buf.length();
       try {
-        state.charsRead = nextCharField.getInt(infile);
+        int charsRead = nextCharField.getInt(infile);
+        assert charsRead >= 0 && charsRead >= state.charsRead;
+        state.charsRead = charsRead;
       } catch (IllegalArgumentException | IllegalAccessException  e) {
         e.printStackTrace();
       }

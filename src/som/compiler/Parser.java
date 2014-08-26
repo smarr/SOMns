@@ -211,12 +211,12 @@ public final class Parser {
     }
   }
 
-  public Parser(final Reader reader, final Source source, final Universe universe) {
+  public Parser(final Reader reader, final long fileSize, final Source source, final Universe universe) {
     this.universe = universe;
     this.source   = source;
 
     sym = NONE;
-    lexer = new Lexer(reader);
+    lexer = new Lexer(reader, fileSize);
     nextSym = NONE;
     getSymbolFromLexer();
   }
@@ -344,6 +344,7 @@ public final class Parser {
   }
 
   private SourceSection getSource(final SourceCoordinate coord) {
+    assert lexer.getNumberOfCharactersRead() - coord.charIndex >= 0;
     return source.createSection("method", coord.startLine,
         coord.startColumn, coord.charIndex,
         lexer.getNumberOfCharactersRead() - coord.charIndex);

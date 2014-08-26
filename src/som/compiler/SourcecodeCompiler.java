@@ -63,8 +63,9 @@ public final class SourcecodeCompiler {
 
     String fname = path + File.separator + file + ".som";
     FileReader stream = new FileReader(fname);
+
     Source source = Source.fromFileName(fname);
-    parser = new Parser(stream, source, universe);
+    parser = new Parser(stream, new File(fname).length(), source, universe);
 
     result = compile(systemClass, universe);
 
@@ -81,7 +82,7 @@ public final class SourcecodeCompiler {
 
   private SClass compileClassString(final String stream,
       final SClass systemClass, final Universe universe) {
-    parser = new Parser(new StringReader(stream), null, universe);
+    parser = new Parser(new StringReader(stream), stream.length(), null, universe);
 
     SClass result = compile(systemClass, universe);
     return result;
