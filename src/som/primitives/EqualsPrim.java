@@ -17,7 +17,8 @@ public abstract class EqualsPrim extends BinarySideEffectFreeExpressionNode {
 
   @Specialization(order = 11)
   public final boolean doBoolean(final boolean left, final SObject right) {
-    return (left && right == Globals.trueObject) || (!left && right == Globals.falseObject);
+    return (left && right == Globals.trueObject) ||
+          (!left && right == Globals.falseObject);
   }
 
   @Specialization(order = 2)
