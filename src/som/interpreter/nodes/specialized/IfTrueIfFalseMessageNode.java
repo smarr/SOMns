@@ -93,7 +93,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode {
   @Specialization(order = 10)
   public final Object doIfTrueIfFalse(final VirtualFrame frame,
       final boolean receiver, final SBlock trueBlock, final SBlock falseBlock) {
-    SObject domain   = SArguments.domain(frame);
+    SObject domain = SArguments.domain(frame);
     CompilerAsserts.neverPartOfCompilation("IfTrueIfFalseMessageNode.10");
     if (receiver) {
       ifTrueBranch.enter();

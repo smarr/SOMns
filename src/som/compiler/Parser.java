@@ -939,7 +939,6 @@ public final class Parser {
       final String variableName, final ExpressionTuple exp,
       final SourceSection source) {
     Local variable = mgenc.getLocal(variableName);
-
     if (variable != null) {
       return tuple(mgenc.getLocalWriteNode(variableName, exp.en, source, true),
           mgenc.getLocalWriteNode(variableName, exp.un, source, false));
