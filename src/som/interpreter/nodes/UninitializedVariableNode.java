@@ -52,7 +52,6 @@ public abstract class UninitializedVariableNode extends ContextualNode {
 
     @Override
     public Object executeGeneric(final VirtualFrame frame) {
-
       transferToInterpreterAndInvalidate("UninitializedVariableReadNode");
 
       if (contextLevel > 0) {

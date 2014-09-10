@@ -609,8 +609,6 @@ public final class Universe {
     loadPrimitives(result, true);
   }
 
-
-
   @SlowPath
   public SClass loadClass(final SSymbol name, final SClass systemClass) {
     // Try loading the class from all different paths
