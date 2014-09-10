@@ -324,7 +324,7 @@ public final class Universe {
     initializeSystemClass(metaclassClass,   classClass, "Metaclass");
     initializeSystemClass(nilClass,        objectClass, "Nil");
     initializeSystemClass(arrayClass,      objectClass, "Array");
-    initializeSystemClass(methodClass,      arrayClass, "Method");
+    initializeSystemClass(methodClass,     objectClass, "Method");
     initializeSystemClass(symbolClass,     objectClass, "Symbol");
     initializeSystemClass(integerClass,    objectClass, "Integer");
     initializeSystemClass(primitiveClass,  objectClass, "Primitive");
