@@ -384,6 +384,7 @@ public final class Universe {
     if (Blocks.blockClass1 != blockClasses[1]) {
       errorExit("Initialization went wrong for class Blocks");
     }
+    objectSystemInitialized = true;
   }
 
   @SlowPath
@@ -686,6 +687,12 @@ public final class Universe {
   // WARNING: this is problematic with multiple interpreters in the same VM...
   @CompilationFinal private static Universe current;
   @CompilationFinal private boolean alreadyInitialized;
+
+  @CompilationFinal private boolean objectSystemInitialized = false;
+
+  public boolean isObjectSystemInitialized() {
+    return objectSystemInitialized;
+  }
 
   public static Universe current() {
     if (current == null) {
