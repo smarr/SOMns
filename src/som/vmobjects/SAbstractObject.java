@@ -13,7 +13,12 @@ public abstract class SAbstractObject {
 
   @Override
   public String toString() {
-    return "a " + getSOMClass().getName().getString();
+    CompilerAsserts.neverPartOfCompilation();
+    SClass clazz = getSOMClass();
+    if (clazz == null) {
+      return "an Object(clazz==null)";
+    }
+    return "a " + clazz.getName().getString();
   }
 
   public static final Object send(
