@@ -509,13 +509,17 @@ public final class Universe {
   }
 
   public SClass getBlockClass(final int numberOfArguments) {
-    return blockClasses[numberOfArguments];
+    SClass result = blockClasses[numberOfArguments];
+    assert result != null || numberOfArguments == 0;
+    return result;
   }
 
   private SClass loadBlockClass(final int numberOfArguments) {
     // Compute the name of the block class with the given number of
     // arguments
     SSymbol name = symbolFor("Block" + numberOfArguments);
+
+    assert getGlobal(name) == null;
 
     // Get the block class for blocks with the given number of arguments
     SClass result = loadClass(name, null);
