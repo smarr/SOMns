@@ -18,6 +18,8 @@ public final class Classes {
   public static final SClass  stringClass;
   public static final SClass  doubleClass;
 
+  public static final SClass  booleanClass;
+
   // These classes can be statically preinitialized.
   static {
     // Allocate the Metaclass classes
@@ -35,5 +37,6 @@ public final class Classes {
     primitiveClass  = Universe.newSystemClass();
     stringClass     = Universe.newSystemClass();
     doubleClass     = Universe.newSystemClass();
+    booleanClass    = Universe.newSystemClass();
   }
 }

@@ -330,6 +330,13 @@ public final class Universe {
     initializeSystemClass(primitiveClass,  objectClass, "Primitive");
     initializeSystemClass(stringClass,     objectClass, "String");
     initializeSystemClass(doubleClass,     objectClass, "Double");
+    initializeSystemClass(booleanClass,    objectClass, "Boolean");
+
+    trueClass  = newSystemClass(standardDomain);
+    falseClass = newSystemClass(standardDomain);
+
+    initializeSystemClass(trueClass,      booleanClass, "True");
+    initializeSystemClass(falseClass,     booleanClass, "False");
 
     // Load methods and fields into the system classes
     loadSystemClass(objectClass);
@@ -343,18 +350,16 @@ public final class Universe {
     loadSystemClass(primitiveClass);
     loadSystemClass(stringClass);
     loadSystemClass(doubleClass);
+    loadSystemClass(booleanClass);
+    loadSystemClass(trueClass);
+    loadSystemClass(falseClass);
 
     // Load the generic block class
     blockClasses[0] = loadClass(symbolFor("Block"));
 
     // Setup the true and false objects
-    SSymbol trueClassName = symbolFor("True");
-    trueClass             = loadClass(trueClassName);
-    trueObject            = newInstance(trueClass);
-
-    SSymbol falseClassName = symbolFor("False");
-    falseClass             = loadClass(falseClassName);
-    falseObject            = newInstance(falseClass);
+    trueObject  = newInstance(trueClass);
+    falseObject = newInstance(falseClass);
 
     // Load the system class and create an instance of it
     systemClass  = loadClass(symbolFor("System"));
@@ -370,9 +375,11 @@ public final class Universe {
 
     setGlobal(symbolFor("Nil"), nilClass);
 
-    setGlobal(trueClassName,  trueClass);
-    setGlobal(falseClassName, falseClass);
+    setGlobal(symbolFor("Boolean"), booleanClass);
+    setGlobal(trueClassName,        trueClass);
+    setGlobal(falseClassName,       falseClass);
 
+    // Load the remaining block classes
     loadBlockClass(1);
     loadBlockClass(2);
     loadBlockClass(3);
