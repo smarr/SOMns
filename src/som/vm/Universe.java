@@ -596,9 +596,6 @@ public final class Universe {
 
   @SlowPath
   public SClass loadShellClass(final String stmt) throws IOException {
-    // java.io.ByteArrayInputStream in = new
-    // java.io.ByteArrayInputStream(stmt.getBytes());
-
     // Load the class from a stream and return the loaded class
     SClass result = som.compiler.SourcecodeCompiler.compileClass(stmt, null,
         this);
