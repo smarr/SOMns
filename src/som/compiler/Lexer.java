@@ -46,6 +46,19 @@ public final class Lexer {
       text       = new StringBuffer(old.text);
       startCoord = old.startCoord;
     }
+
+    public void set(final Symbol sym, final char symChar, final String text) {
+      this.sym  = sym;
+      this.symc = symChar;
+      this.text = new StringBuffer(text);
+    }
+
+    public void set(final Symbol sym) {
+      this.sym = sym;
+      this.symc = 0;
+      this.text = new StringBuffer();
+    }
+
     private int                 lineNumber;
     private int                 charsRead; // all characters read, excluding the current line
 
@@ -129,9 +142,7 @@ public final class Lexer {
 
     do {
       if (!hasMoreInput()) {
-        state.sym = Symbol.NONE;
-        state.symc = '\0';
-        state.text = new StringBuffer(state.symc);
+        state.set(Symbol.NONE);
         return state.sym;
       }
       skipWhiteSpace();
@@ -149,14 +160,10 @@ public final class Lexer {
     } else if (currentChar() == ':') {
       if (bufchar(state.bufp + 1) == '=') {
         state.bufp += 2;
-        state.sym = Symbol.Assign;
-        state.symc = 0;
-        state.text = new StringBuffer(":=");
+        state.set(Symbol.Assign, '\0', ":=");
       } else {
         state.bufp++;
-        state.sym = Symbol.Colon;
-        state.symc = ':';
-        state.text = new StringBuffer(":");
+        state.set(Symbol.Colon, ':', ":");
       }
     } else if (currentChar() == '(') {
       match(Symbol.NewTerm);
@@ -177,24 +184,18 @@ public final class Lexer {
         state.sym = Symbol.Separator;
       } else {
         state.bufp++;
-        state.sym = Symbol.Minus;
-        state.symc = '-';
-        state.text = new StringBuffer("-");
+        state.set(Symbol.Minus, '-', "-");
       }
     } else if (isOperator(currentChar())) {
       lexOperator();
     } else if (nextWordInBufferIs(PRIMITIVE)) {
       state.bufp += PRIMITIVE.length();
-      state.sym = Symbol.Primitive;
-      state.symc = 0;
-      state.text = new StringBuffer(PRIMITIVE);
+      state.set(Symbol.Primitive, '\0', PRIMITIVE);
     } else if (Character.isLetter(currentChar())) {
-      state.symc = 0;
-      state.text = new StringBuffer();
+      state.set(Symbol.Identifier);
       while (isIdentifierChar(currentChar())) {
         state.text.append(bufchar(state.bufp++));
       }
-      state.sym = Symbol.Identifier;
       if (bufchar(state.bufp) == ':') {
         state.sym = Symbol.Keyword;
         state.bufp++;
@@ -209,18 +210,14 @@ public final class Lexer {
     } else if (Character.isDigit(currentChar())) {
       lexNumber();
     } else {
-      state.sym = Symbol.NONE;
-      state.symc = currentChar();
-      state.text = new StringBuffer(state.symc);
+      state.set(Symbol.NONE, currentChar(), "" + currentChar());
     }
 
     return state.sym;
   }
 
   private void lexNumber() {
-    state.sym = Symbol.Integer;
-    state.symc = 0;
-    state.text = new StringBuffer();
+    state.set(Symbol.Integer);
 
     boolean sawDecimalMark = false;
 
@@ -237,9 +234,7 @@ public final class Lexer {
   }
 
   private void lexString() {
-    state.sym = Symbol.STString;
-    state.symc = 0;
-    state.text = new StringBuffer();
+    state.set(Symbol.STString);
 
     do {
       state.text.append(bufchar(++state.bufp));
@@ -252,9 +247,7 @@ public final class Lexer {
 
   private void lexOperator() {
     if (isOperator(bufchar(state.bufp + 1))) {
-      state.sym = Symbol.OperatorSequence;
-      state.symc = 0;
-      state.text = new StringBuffer();
+      state.set(Symbol.OperatorSequence);
       while (isOperator(currentChar())) {
         state.text.append(bufchar(state.bufp++));
       }
@@ -324,7 +317,6 @@ public final class Lexer {
   // All characters read and processed, including current line
   protected int getNumberOfCharactersRead() {
     return state.startCoord.charIndex;
-    //return state.charsRead + state.bufp;
   }
 
   private int fillBuffer() {
@@ -398,9 +390,7 @@ public final class Lexer {
   }
 
   private void match(final Symbol s) {
-    state.sym = s;
-    state.symc = currentChar();
-    state.text = new StringBuffer("" + state.symc);
+    state.set(s, currentChar(), "" + currentChar());
     state.bufp++;
   }
 
