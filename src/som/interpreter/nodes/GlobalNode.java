@@ -50,7 +50,7 @@ public abstract class GlobalNode extends ExpressionNode {
   public final void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
 
   public abstract static class AbstractUninitializedGlobalReadNode extends GlobalNode {
-    private Universe universe;
+    private final Universe universe;
 
     public AbstractUninitializedGlobalReadNode(final SSymbol globalName,
         final SourceSection source, final boolean executesEnforced) {
