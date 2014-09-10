@@ -223,6 +223,7 @@ public abstract class StorageLocation {
 
     @Override
     public void write(final SObject obj, final Object value) {
+      assert value != null;
       Object[] arr = obj.getExtensionObjFields();
 
 //      // TODO: for the moment Graal doesn't seem to get the optimizations
