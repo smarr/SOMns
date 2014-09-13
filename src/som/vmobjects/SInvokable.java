@@ -34,6 +34,8 @@ import som.vm.constants.Domain;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.RootCallTarget;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.IndirectCallNode;
 
 public abstract class SInvokable extends SAbstractObject {
 
@@ -161,12 +163,26 @@ public abstract class SInvokable extends SAbstractObject {
     }
   }
 
+  // TODO: remove this and related, which aren't using Truffle's indirect
+  //       call node
   public final Object invoke(final SObject domain, final boolean enforced, final Object... arguments) {
     if (enforced && !isUnenforced) {
       return enforcedCallTarget.call(createSArguments(domain, enforced, arguments));
     } else {
       return unenforcedCallTarget.call(createSArguments(domain, enforced, arguments));
     }
+  }
+
+  public final Object invokeWithSArguments(final VirtualFrame frame,
+      final IndirectCallNode node, final Object[] arguments) {
+    boolean enforced = SArguments.enforced(arguments);
+    return node.call(frame, getCallTarget(enforced), arguments);
+  }
+
+  public final Object invoke(final VirtualFrame frame,
+      final IndirectCallNode node, final SObject domain, final boolean enforced,
+      final Object... arguments) {
+      return node.call(frame, getCallTarget(enforced), createSArguments(domain, enforced, arguments));
   }
 
   public boolean isUnenforced() {

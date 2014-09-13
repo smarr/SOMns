@@ -13,7 +13,9 @@ import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.nodes.Node;
 
 
@@ -112,24 +114,25 @@ public abstract class AbstractSymbolDispatch extends Node implements DispatchCha
 
   private static final class GenericDispatchNode extends AbstractSymbolDispatch {
 
+    @Child private IndirectCallNode call;
+
     private final boolean executesEnforced;
 
     public GenericDispatchNode(final boolean executesEnforced,
         final boolean alwaysEnforced) {
       super(alwaysEnforced, 0);
       this.executesEnforced = executesEnforced;
+      call = Truffle.getRuntime().createIndirectCallNode();
     }
 
     @Override
     public Object executeDispatch(final VirtualFrame frame,
         final Object receiver, final SSymbol selector, final Object[] argsArr) {
       SInvokable invokable = Types.getClassOf(receiver).lookupInvokable(selector);
-
       SObject domain = SArguments.domain(frame);
       Object[] args = SArguments.createSArgumentsWithReceiver(domain,
           executesEnforced || alwaysEnforced, receiver, argsArr);
-
-      return invokable.invokeWithSArguments(args);
+      return invokable.invokeWithSArguments(frame, call, args);
     }
 
     @Override

@@ -11,6 +11,7 @@ import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
+import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.api.utilities.BranchProfile;
 
@@ -22,6 +23,7 @@ public abstract class AbstractIfMessageNode extends BinaryExpressionNode {
   private final SInvokable branchMethod;
 
   @Child protected DirectCallNode branchValueSend;
+  @Child private   IndirectCallNode call;
   private final boolean branchEnforced;
 
   public AbstractIfMessageNode(final Object rcvr, final Object arg,
@@ -37,6 +39,7 @@ public abstract class AbstractIfMessageNode extends BinaryExpressionNode {
       branchMethod = null;
       branchEnforced = false; // TODO: does this even matter?
     }
+    call = Truffle.getRuntime().createIndirectCallNode();
   }
 
   public AbstractIfMessageNode(final AbstractIfMessageNode node) {
@@ -47,6 +50,7 @@ public abstract class AbstractIfMessageNode extends BinaryExpressionNode {
       branchValueSend = Truffle.getRuntime().createDirectCallNode(
           branchMethod.getCallTarget(branchEnforced || executesEnforced));
     }
+    call = Truffle.getRuntime().createIndirectCallNode();
   }
 
   /**
