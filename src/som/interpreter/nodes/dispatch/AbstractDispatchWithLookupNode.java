@@ -9,6 +9,7 @@ public abstract class AbstractDispatchWithLookupNode extends
   protected final SSymbol selector;
 
   public AbstractDispatchWithLookupNode(final SSymbol selector) {
+    super();
     this.selector = selector;
   }
 }

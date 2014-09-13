@@ -257,7 +257,6 @@ public final class MessageSendNode {
                 argumentNodes[0], ValueNonePrimFactory.create(executesEnforced, null), executesEnforced));
           }
           break;
-
         case "not":
           if (receiver instanceof Boolean) {
             return replace(new EagerUnaryPrimitiveNode(selector,

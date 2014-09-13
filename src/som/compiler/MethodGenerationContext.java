@@ -167,6 +167,7 @@ public final class MethodGenerationContext {
   }
 
   public boolean needsToCatchNonLocalReturn() {
+    // only the most outer method needs to catch
     return needsToCatchNonLocalReturn && outerGenc == null;
   }
 
