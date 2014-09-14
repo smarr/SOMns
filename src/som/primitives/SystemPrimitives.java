@@ -27,7 +27,6 @@ package som.primitives;
 
 import som.primitives.SystemPrimsFactory.ExitPrimFactory;
 import som.primitives.SystemPrimsFactory.FullGCPrimFactory;
-import som.primitives.SystemPrimsFactory.GlobalPrimFactory;
 import som.primitives.SystemPrimsFactory.GlobalPutPrimFactory;
 import som.primitives.SystemPrimsFactory.LoadPrimFactory;
 import som.primitives.SystemPrimsFactory.PrintNewlinePrimFactory;
