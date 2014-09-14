@@ -25,8 +25,8 @@
 
 package som.primitives;
 
-import som.interpreter.nodes.specialized.WhilePrimitiveNodeFactory.WhileFalsePrimitiveNodeFactory;
-import som.interpreter.nodes.specialized.WhilePrimitiveNodeFactory.WhileTruePrimitiveNodeFactory;
+import som.interpreter.nodes.specialized.whileloops.WhilePrimitiveNodeFactory.WhileFalsePrimitiveNodeFactory;
+import som.interpreter.nodes.specialized.whileloops.WhilePrimitiveNodeFactory.WhileTruePrimitiveNodeFactory;
 import som.primitives.BlockPrimsFactory.RestartPrimFactory;
 import som.primitives.BlockPrimsFactory.ValueMorePrimFactory;
 import som.primitives.BlockPrimsFactory.ValueNonePrimFactory;
