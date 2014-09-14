@@ -1,8 +1,8 @@
 package som.interpreter.nodes.dispatch;
 
 import som.interpreter.nodes.dispatch.AbstractDispatchNode.AbstractCachedDispatchNode;
-import som.vmobjects.SInvokable;
 
+import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
@@ -12,8 +12,8 @@ public final class CachedDispatchSimpleCheckNode extends AbstractCachedDispatchN
   private final Class<?> expectedClass;
 
   public CachedDispatchSimpleCheckNode(final Class<?> rcvrClass,
-      final SInvokable method, final AbstractDispatchNode nextInCache) {
-    super(method, nextInCache);
+      final CallTarget callTarget, final AbstractDispatchNode nextInCache) {
+    super(callTarget, nextInCache);
     this.expectedClass = rcvrClass;
   }
 
@@ -30,9 +30,9 @@ public final class CachedDispatchSimpleCheckNode extends AbstractCachedDispatchN
 
   public static final class CachedDispatchTrueCheckNode
       extends AbstractCachedDispatchNode {
-    public CachedDispatchTrueCheckNode(final SInvokable method,
+    public CachedDispatchTrueCheckNode(final CallTarget callTarget,
         final AbstractDispatchNode nextInCache) {
-      super(method, nextInCache);
+      super(callTarget, nextInCache);
     }
 
     @Override
@@ -48,9 +48,9 @@ public final class CachedDispatchSimpleCheckNode extends AbstractCachedDispatchN
 
   public static final class CachedDispatchFalseCheckNode
       extends AbstractCachedDispatchNode {
-    public CachedDispatchFalseCheckNode(final SInvokable method,
+    public CachedDispatchFalseCheckNode(final CallTarget callTarget,
         final AbstractDispatchNode nextInCache) {
-      super(method, nextInCache);
+      super(callTarget, nextInCache);
     }
 
     @Override

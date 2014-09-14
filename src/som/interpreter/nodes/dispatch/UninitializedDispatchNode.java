@@ -11,6 +11,7 @@ import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 
@@ -38,10 +39,15 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
     }
     GenericMessageSendNode sendNode = (GenericMessageSendNode) i.getParent();
 
-
     if (chainDepth < INLINE_CACHE_SIZE) {
       SClass rcvrClass = Types.getClassOf(rcvr);
       SInvokable method = rcvrClass.lookupInvokable(selector);
+      CallTarget callTarget;
+      if (method != null) {
+        callTarget = method.getCallTarget();
+      } else {
+        callTarget = null;
+      }
 
       UninitializedDispatchNode newChainEnd = new UninitializedDispatchNode(selector);
 
@@ -54,10 +60,9 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
         AbstractCachedDispatchNode node;
         if (method != null) {
           node = new CachedDispatchSObjectCheckNode(
-              rcvrClass, method, newChainEnd);
+              rcvrClass, callTarget, newChainEnd);
         } else {
-          node = new CachedDnuSObjectCheckNode(
-              rcvrClass, selector, newChainEnd);
+          node = new CachedDnuSObjectCheckNode(rcvrClass, selector, newChainEnd);
         }
 
         if ((getParent() instanceof CachedDispatchSObjectCheckNode)) {
@@ -77,12 +82,12 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
         AbstractDispatchNode next = sendNode.getDispatchListHead();
 
         if (rcvr == Boolean.TRUE) {
-          node = new CachedDispatchTrueCheckNode(method, next);
+          node = new CachedDispatchTrueCheckNode(callTarget, next);
         } else if (rcvr == Boolean.FALSE) {
-          node = new CachedDispatchFalseCheckNode(method, next);
+          node = new CachedDispatchFalseCheckNode(callTarget, next);
         } else {
           node = new CachedDispatchSimpleCheckNode(
-                rcvr.getClass(), method, next);
+                rcvr.getClass(), callTarget, next);
         }
         sendNode.adoptNewDispatchListHead(node);
         return node.executeDispatch(frame, arguments);
