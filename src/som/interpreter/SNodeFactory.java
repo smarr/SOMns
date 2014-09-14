@@ -1,6 +1,7 @@
 package som.interpreter;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 
 import som.compiler.Variable;
 import som.compiler.Variable.Argument;
@@ -16,11 +17,17 @@ import som.interpreter.nodes.GlobalNode;
 import som.interpreter.nodes.GlobalNode.UninitializedGlobalReadNode;
 import som.interpreter.nodes.LocalVariableNode.LocalVariableWriteNode;
 import som.interpreter.nodes.LocalVariableNodeFactory.LocalVariableWriteNodeFactory;
+import som.interpreter.nodes.MessageSendNode;
+import som.interpreter.nodes.ReturnNonLocalNode;
 import som.interpreter.nodes.ReturnNonLocalNode.CatchNonLocalReturnNode;
+import som.interpreter.nodes.SequenceNode;
 import som.interpreter.nodes.UninitializedVariableNode.UninitializedSuperReadNode;
 import som.interpreter.nodes.UninitializedVariableNode.UninitializedVariableReadNode;
 import som.interpreter.nodes.UninitializedVariableNode.UninitializedVariableWriteNode;
+import som.interpreter.nodes.literals.BlockNode;
+import som.interpreter.nodes.literals.BlockNode.BlockNodeWithContext;
 import som.vm.Universe;
+import som.vmobjects.SInvokable.SMethod;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.frame.FrameSlot;
@@ -57,7 +64,7 @@ public final class SNodeFactory {
   }
   public static GlobalNode createGlobalRead(final SSymbol name,
       final Universe universe, final SourceSection source) {
-    return new UninitializedGlobalReadNode(name, universe, source);
+    return new UninitializedGlobalReadNode(name, source);
   }
 
   public static FieldWriteNode createFieldWrite(final ExpressionNode self,
@@ -86,5 +93,37 @@ public final class SNodeFactory {
   public static LocalVariableWriteNode createLocalVariableWrite(
       final FrameSlot varSlot, final ExpressionNode exp, final SourceSection source) {
     return LocalVariableWriteNodeFactory.create(varSlot, source, exp);
+  }
+
+  public static SequenceNode createSequence(final List<ExpressionNode> exps,
+      final SourceSection source) {
+    return new SequenceNode(exps.toArray(new ExpressionNode[0]), source);
+  }
+
+  public static BlockNode createBlockNode(final SMethod blockMethod,
+      final boolean withContext, final SourceSection source) {
+    if (withContext) {
+      return new BlockNodeWithContext(blockMethod, source);
+    } else {
+      return new BlockNode(blockMethod, source);
+    }
+  }
+
+  public static ExpressionNode createMessageSend(final SSymbol msg,
+      final ExpressionNode[] exprs, final SourceSection source) {
+    return MessageSendNode.create(msg, exprs, source);
+  }
+
+  public static ExpressionNode createMessageSend(final SSymbol msg,
+      final List<ExpressionNode> exprs, final SourceSection source) {
+    return MessageSendNode.create(msg, exprs.toArray(new ExpressionNode[0]), source);
+  }
+
+  public static ReturnNonLocalNode createNonLocalReturn(final ExpressionNode exp,
+      final FrameSlot markerSlot, final FrameSlot outerSelf,
+      final int contextLevel, final FrameSlot localSelf,
+      final SourceSection source) {
+    return new ReturnNonLocalNode(exp, markerSlot, outerSelf, contextLevel,
+        localSelf, source);
   }
 }
