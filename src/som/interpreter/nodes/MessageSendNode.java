@@ -167,7 +167,7 @@ public final class MessageSendNode {
     private PreevaluatedExpression specializeUnary(final Object[] args) {
       Object receiver = args[0];
       switch (selector.getString()) {
-        // eagerly but causious:
+        // eagerly but cautious:
         case "value":
           if (receiver instanceof SBlock) {
             return replace(new EagerUnaryPrimitiveNode(selector,

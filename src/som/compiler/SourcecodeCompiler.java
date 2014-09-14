@@ -63,6 +63,7 @@ public final class SourcecodeCompiler {
 
     String fname = path + File.separator + file + ".som";
     FileReader stream = new FileReader(fname);
+
     Source source = Source.fromFileName(fname);
     parser = new Parser(stream, source, universe);
 

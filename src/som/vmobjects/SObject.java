@@ -114,8 +114,9 @@ public class SObject extends SAbstractObject {
 
   public final void setClass(final SClass value) {
     transferToInterpreterAndInvalidate("SObject.setClass");
-    // Set the class of this object by writing to the field with class index
     assert value != null;
+
+    // Set the class of this object by writing to the field with class index
     clazz = value;
     setLayoutInitially(value.getLayoutForInstances());
   }
