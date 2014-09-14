@@ -154,6 +154,8 @@ public abstract class SInvokable extends SAbstractObject {
     return getSignature().getNumberOfSignatureArguments();
   }
 
+  // TODO: remove this and related, which aren't using Truffle's indirect
+  //       call node
   public final Object invokeWithSArguments(final Object[] arguments) {
     boolean enforced = SArguments.enforced(arguments);
     if (enforced && !isUnenforced) {
