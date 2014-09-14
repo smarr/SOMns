@@ -12,10 +12,8 @@ import com.oracle.truffle.api.nodes.Node;
 public final class UninitializedValuePrimDispatchNode
     extends AbstractDispatchNode {
 
-  @Override
-  public Object executeDispatch(final VirtualFrame frame, final Object[] arguments) {
+  private AbstractDispatchNode specialize(final SBlock rcvr) {
     transferToInterpreterAndInvalidate("Initialize a dispatch node.");
-    SBlock rcvr = (SBlock) arguments[0];
 
     // Determine position in dispatch node chain, i.e., size of inline cache
     Node i = this;
@@ -33,12 +31,18 @@ public final class UninitializedValuePrimDispatchNode
 
       UninitializedValuePrimDispatchNode uninitialized = new UninitializedValuePrimDispatchNode();
       CachedBlockDispatchNode node = new CachedBlockDispatchNode(method, uninitialized);
-      return replace(node).executeDispatch(frame, arguments);
+      return replace(node);
     } else {
       GenericBlockDispatchNode generic = new GenericBlockDispatchNode();
       primitiveNode.adoptNewDispatchListHead(generic);
-      return generic.executeDispatch(frame, arguments);
+      return generic;
     }
+  }
+
+  @Override
+  public Object executeDispatch(final VirtualFrame frame, final Object[] arguments) {
+    return specialize((SBlock) arguments[0]).
+        executeDispatch(frame, arguments);
   }
 
   @Override

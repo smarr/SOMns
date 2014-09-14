@@ -22,9 +22,7 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
     super(selector);
   }
 
-  @Override
-  public Object executeDispatch(
-      final VirtualFrame frame, final Object[] arguments) {
+  private AbstractDispatchNode specialize(final Object[] arguments) {
     transferToInterpreterAndInvalidate("Initialize a dispatch node.");
     Object rcvr = arguments[0];
 
@@ -66,11 +64,11 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
         }
 
         if ((getParent() instanceof CachedDispatchSObjectCheckNode)) {
-          return replace(node).executeDispatch(frame, arguments);
+          return replace(node);
         } else {
           SObjectCheckDispatchNode checkNode = new SObjectCheckDispatchNode(node,
               new UninitializedDispatchNode(selector));
-          return replace(checkNode).executeDispatch(frame, arguments);
+          return replace(checkNode);
         }
       } else {
         if (method == null) {
@@ -90,7 +88,7 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
                 rcvr.getClass(), callTarget, next);
         }
         sendNode.adoptNewDispatchListHead(node);
-        return node.executeDispatch(frame, arguments);
+        return node;
       }
     }
 
@@ -103,7 +101,13 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
     // TODO: see whether we could get #DNUs fast.
     GenericDispatchNode genericReplacement = new GenericDispatchNode(selector);
     sendNode.replaceDispatchListHead(genericReplacement);
-    return genericReplacement.executeDispatch(frame, arguments);
+    return genericReplacement;
+  }
+
+  @Override
+  public Object executeDispatch(final VirtualFrame frame, final Object[] arguments) {
+    return specialize(arguments).
+        executeDispatch(frame, arguments);
   }
 
   @Override
