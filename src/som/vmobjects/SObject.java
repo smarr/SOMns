@@ -88,7 +88,7 @@ public class SObject extends SAbstractObject {
     field1 = field2 = field3 = field4 = field5 = Nil.nilObject;
 
     objectLayout   = layout;
-    assert objectLayout.getNumberOfFields() == numberOfFields;
+    assert objectLayout.getNumberOfFields() == numberOfFields || !Universe.current().isObjectSystemInitialized();
 
     extensionPrimFields = getExtendedPrimStorage();
     extensionObjFields  = getExtendedObjectStorage();
