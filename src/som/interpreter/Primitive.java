@@ -43,8 +43,12 @@ public final class Primitive extends Invokable {
     return "Primitive " + expressionOrSequence.getClass().getSimpleName() + "@" + Integer.toHexString(hashCode());
   }
 
+  @Override
+  public void propagateLoopCountThroughoutLexicalScope(final long count) {
+    propagateLoopCount(count);
+  }
+
   private static Method getNextMethodOnStack() {
-    CompilerAsserts.neverPartOfCompilation("Primitive.getNextMethodOnStack(.)");
     return Truffle.getRuntime().iterateFrames(new FrameInstanceVisitor<Method>() {
         @Override
         public Method visitFrame(final FrameInstance frameInstance) {
@@ -59,9 +63,9 @@ public final class Primitive extends Invokable {
       });
   }
 
-  @Override
-  public void propagateLoopCountThroughoutLexicalScope(final long count) {
+  public static void propagateLoopCount(final long count) {
     CompilerAsserts.neverPartOfCompilation("Primitive.pLC(.)");
+
     // we need to skip the primitive and get to the method that called the primitive
     FrameInstance caller = Truffle.getRuntime().getCallerFrame();
 
