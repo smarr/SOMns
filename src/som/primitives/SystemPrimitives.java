@@ -39,6 +39,7 @@ public final class SystemPrimitives extends Primitives {
   public void installPrimitives() {
     installInstancePrimitive("load:",        LoadPrimFactory.getInstance());
     installInstancePrimitive("exit:",        ExitPrimFactory.getInstance());
+    installInstancePrimitive("hasGlobal:",   HasGlobalPrimFactory.getInstance());
     installInstancePrimitive("global:",      GlobalPrimFactory.getInstance());
     installInstancePrimitive("global:put:",  GlobalPutPrimFactory.getInstance());
     installInstancePrimitive("printString:", PrintStringPrimFactory.getInstance());
