@@ -101,6 +101,8 @@ public final class Parser {
   private String                    text;
   private Symbol                    nextSym;
 
+  private SourceSection             lastMethodsSourceSection;
+
   private static final List<Symbol> singleOpSyms        = new ArrayList<Symbol>();
   private static final List<Symbol> binaryOpSyms        = new ArrayList<Symbol>();
   private static final List<Symbol> keywordSelectorSyms = new ArrayList<Symbol>();
@@ -124,23 +126,7 @@ public final class Parser {
     return "Parser(" + source.getName() + ", " + this.getCoordinate().toString() + ")";
   }
 
-  private static final class SourceCoordinate {
-    public final int startLine;
-    public final int startColumn;
-    public final int charIndex;
 
-    public SourceCoordinate(final int startLine,
-        final int startColumn, final int charIndex) {
-      this.startLine = startLine;
-      this.startColumn = startColumn;
-      this.charIndex = charIndex;
-    }
-
-    @Override
-    public String toString() {
-      return "SrcCoord(line: " + startLine + ", col: " + startColumn + ")";
-    }
-  }
 
   public static class ParseError extends Exception {
     private static final long serialVersionUID = 425390202979033628L;
@@ -211,20 +197,18 @@ public final class Parser {
     }
   }
 
-  public Parser(final Reader reader, final Source source, final Universe universe) {
+  public Parser(final Reader reader, final long fileSize, final Source source, final Universe universe) {
     this.universe = universe;
     this.source   = source;
 
     sym = NONE;
-    lexer = new Lexer(reader);
+    lexer = new Lexer(reader, fileSize);
     nextSym = NONE;
     getSymbolFromLexer();
   }
 
   private SourceCoordinate getCoordinate() {
-    return new SourceCoordinate(lexer.getCurrentLineNumber(),
-        lexer.getCurrentColumn(),
-        lexer.getNumberOfCharactersRead());
+    return lexer.getStartCoordinate();
   }
 
   @SlowPath
@@ -287,7 +271,7 @@ public final class Parser {
       SClass superClass = universe.loadClass(superName);
       if (superClass == null) {
         throw new ParseError("Super class " + superName.getString() +
-            " could not be loaded", Symbol.NONE, this);
+            " could not be loaded", NONE, this);
       }
 
       cgenc.setInstanceFieldsOfSuper(superClass.getInstanceFields());
@@ -350,6 +334,7 @@ public final class Parser {
   }
 
   private SourceSection getSource(final SourceCoordinate coord) {
+    assert lexer.getNumberOfCharactersRead() - coord.charIndex >= 0;
     return source.createSection("method", coord.startLine,
         coord.startColumn, coord.charIndex,
         lexer.getNumberOfCharactersRead() - coord.charIndex);
@@ -409,7 +394,9 @@ public final class Parser {
 
   private ExpressionNode methodBlock(final MethodGenerationContext mgenc) throws ParseError {
     expect(NewTerm);
+    SourceCoordinate coord = getCoordinate();
     ExpressionNode methodBody = blockContents(mgenc);
+    lastMethodsSourceSection = getSource(coord);
     expect(EndTerm);
 
     return methodBody;
@@ -722,34 +709,36 @@ public final class Parser {
     SourceCoordinate coord = getCoordinate();
 
     if (sym == Minus) {
-      return negativeDecimal(getSource(coord));
+      return negativeDecimal(coord);
     } else {
-      return literalDecimal(false, getSource(coord));
+      return literalDecimal(false, coord);
     }
   }
 
-  private LiteralNode literalDecimal(final boolean isNegative, final SourceSection source) throws ParseError {
+  private LiteralNode literalDecimal(final boolean isNegative, final SourceCoordinate coord) throws ParseError {
     if (sym == Integer) {
-      return literalInteger(isNegative, source);
+      return literalInteger(isNegative, coord);
     } else {
       assert sym == Double;
-      return literalDouble(isNegative, source);
+      return literalDouble(isNegative, coord);
     }
   }
 
-  private LiteralNode negativeDecimal(final SourceSection source) throws ParseError {
+  private LiteralNode negativeDecimal(final SourceCoordinate coord) throws ParseError {
     expect(Minus);
-    return literalDecimal(true, source);
+    return literalDecimal(true, coord);
   }
 
   private LiteralNode literalInteger(final boolean isNegative,
-      final SourceSection source) throws ParseError {
+      final SourceCoordinate coord) throws ParseError {
     try {
        long i = Long.parseLong(text);
        if (isNegative) {
          i = 0 - i;
        }
        expect(Integer);
+
+       SourceSection source = getSource(coord);
        if (i < Long.MIN_VALUE || i > Long.MAX_VALUE) {
          return new BigIntegerLiteralNode(BigInteger.valueOf(i), source);
        } else {
@@ -757,21 +746,22 @@ public final class Parser {
        }
     } catch (NumberFormatException e) {
       throw new ParseError("Could not parse integer. Expected a number but " +
-                           "got '" + text + "'", Symbol.NONE, this);
+                           "got '" + text + "'", NONE, this);
     }
   }
 
-  private LiteralNode literalDouble(final boolean isNegative, final SourceSection source) throws ParseError {
+  private LiteralNode literalDouble(final boolean isNegative, final SourceCoordinate coord) throws ParseError {
     try {
       double d = java.lang.Double.parseDouble(text);
       if (isNegative) {
         d = 0.0 - d;
       }
       expect(Double);
+      SourceSection source = getSource(coord);
       return new DoubleLiteralNode(d, source);
     } catch (NumberFormatException e) {
       throw new ParseError("Could not parse double. Expected a number but " +
-          "got '" + text + "'", Symbol.NONE, this);
+          "got '" + text + "'", NONE, this);
     }
   }
 
@@ -822,6 +812,7 @@ public final class Parser {
 
   private ExpressionNode nestedBlock(final MethodGenerationContext mgenc) throws ParseError {
     expect(NewBlock);
+    SourceCoordinate coord = getCoordinate();
 
     mgenc.addArgumentIfAbsent("$blockSelf");
 
@@ -839,6 +830,8 @@ public final class Parser {
     mgenc.setSignature(universe.symbolFor(blockSig));
 
     ExpressionNode expressions = blockContents(mgenc);
+
+    lastMethodsSourceSection = getSource(coord);
 
     expect(EndBlock);
 

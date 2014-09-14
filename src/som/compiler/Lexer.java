@@ -27,49 +27,123 @@ package som.compiler;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.lang.reflect.Field;
 
 public final class Lexer {
 
   private static final String SEPARATOR = "----";
   private static final String PRIMITIVE = "primitive";
 
-  private int                 lineNumber;
-  private int                 charsRead; // all characters read, excluding the current line
-  private BufferedReader      infile;
-  private Symbol              sym;
-  private char                symc;
-  private StringBuffer        text;
-  private boolean             peekDone;
-  private Symbol              nextSym;
-  private char                nextSymc;
-  private StringBuffer        nextText;
-  private String              buf;
-  private int                 bufp;
+  private class LexerState {
+    public LexerState() { }
+    public LexerState(final LexerState old) {
+      lineNumber = old.lineNumber;
+      charsRead  = old.charsRead;
+      buf        = old.buf;
+      bufp       = old.bufp;
+      sym        = old.sym;
+      symc       = old.symc;
+      text       = new StringBuffer(old.text);
+      startCoord = old.startCoord;
+    }
 
-  protected Lexer(final Reader reader) {
-    infile = new BufferedReader(reader);
+    public void set(final Symbol sym, final char symChar, final String text) {
+      this.sym  = sym;
+      this.symc = symChar;
+      this.text = new StringBuffer(text);
+    }
+
+    public void set(final Symbol sym) {
+      this.sym = sym;
+      this.symc = 0;
+      this.text = new StringBuffer();
+    }
+
+    private int                 lineNumber;
+    private int                 charsRead; // all characters read, excluding the current line
+
+    private String              buf;
+    private int                 bufp;
+
+    private Symbol              sym;
+    private char                symc;
+    private StringBuffer        text;
+
+    private SourceCoordinate    startCoord;
+  }
+
+  private final BufferedReader infile;
+
+  private boolean             peekDone;
+  private LexerState          state;
+  private LexerState          stateAfterPeek;
+
+  private final Field nextCharField;
+
+  protected Lexer(final Reader reader, final long fileSize) {
+    /** TODO: we rely on the internal implementation to get the position in the
+     *        file. This should be fixed and reimplemented to avoid such hacks.
+     *        We need to know for Truffle the character index of a token,
+     *        but we do not get it because line-based reading does split the
+     *        type of end-of-line indicator and its length.
+     */
+    infile = new BufferedReader(reader, (int) fileSize);
     peekDone = false;
-    buf = "";
-    text = new StringBuffer();
-    bufp = 0;
-    lineNumber = 0;
+    state = new LexerState();
+    state.buf = "";
+    state.text = new StringBuffer();
+    state.bufp = 0;
+    state.lineNumber = 0;
+
+    Field f = null;
+    try {
+      f = infile.getClass().getDeclaredField("nextChar");
+      f.setAccessible(true);
+    } catch (NoSuchFieldException | SecurityException e) {
+      e.printStackTrace();
+    }
+    nextCharField = f;
+  }
+
+  public static final class SourceCoordinate {
+    public final int startLine;
+    public final int startColumn;
+    public final int charIndex;
+
+    public SourceCoordinate(final LexerState state) {
+      this.startLine   = state.lineNumber;
+      this.startColumn = state.bufp + 1;
+      this.charIndex   = state.charsRead + state.bufp;
+      assert startLine   >= 0;
+      assert startColumn >= 0;
+      assert charIndex   >= 0;
+    }
+
+    @Override
+    public String toString() {
+      return "SrcCoord(line: " + startLine + ", col: " + startColumn + ")";
+    }
+  }
+
+  public SourceCoordinate getStartCoordinate() {
+    return state.startCoord;
   }
 
   protected Symbol getSym() {
     if (peekDone) {
       peekDone = false;
-      sym = nextSym;
-      symc = nextSymc;
-      text = new StringBuffer(nextText);
-      return sym;
+      state = stateAfterPeek;
+      stateAfterPeek = null;
+      state.text = new StringBuffer(state.text);
+      return state.sym;
     }
+
+    state.startCoord = new SourceCoordinate(state);
 
     do {
       if (!hasMoreInput()) {
-        sym = Symbol.NONE;
-        symc = '\0';
-        text = new StringBuffer(symc);
-        return sym;
+        state.set(Symbol.NONE);
+        return state.sym;
       }
       skipWhiteSpace();
       skipComment();
@@ -84,16 +158,12 @@ public final class Lexer {
     } else if (currentChar() == ']') {
       match(Symbol.EndBlock);
     } else if (currentChar() == ':') {
-      if (bufchar(bufp + 1) == '=') {
-        bufp += 2;
-        sym = Symbol.Assign;
-        symc = 0;
-        text = new StringBuffer(":=");
+      if (bufchar(state.bufp + 1) == '=') {
+        state.bufp += 2;
+        state.set(Symbol.Assign, '\0', ":=");
       } else {
-        bufp++;
-        sym = Symbol.Colon;
-        symc = ':';
-        text = new StringBuffer(":");
+        state.bufp++;
+        state.set(Symbol.Colon, ':', ":");
       }
     } else if (currentChar() == '(') {
       match(Symbol.NewTerm);
@@ -106,94 +176,80 @@ public final class Lexer {
     } else if (currentChar() == '.') {
       match(Symbol.Period);
     } else if (currentChar() == '-') {
-      if (buf.startsWith(SEPARATOR, bufp)) {
-        text = new StringBuffer();
+      if (state.buf.startsWith(SEPARATOR, state.bufp)) {
+        state.text = new StringBuffer();
         while (currentChar() == '-') {
-          text.append(bufchar(bufp++));
+          state.text.append(bufchar(state.bufp++));
         }
-        sym = Symbol.Separator;
+        state.sym = Symbol.Separator;
       } else {
-        bufp++;
-        sym = Symbol.Minus;
-        symc = '-';
-        text = new StringBuffer("-");
+        state.bufp++;
+        state.set(Symbol.Minus, '-', "-");
       }
     } else if (isOperator(currentChar())) {
       lexOperator();
     } else if (nextWordInBufferIs(PRIMITIVE)) {
-      bufp += PRIMITIVE.length();
-      sym = Symbol.Primitive;
-      symc = 0;
-      text = new StringBuffer(PRIMITIVE);
+      state.bufp += PRIMITIVE.length();
+      state.set(Symbol.Primitive, '\0', PRIMITIVE);
     } else if (Character.isLetter(currentChar())) {
-      symc = 0;
-      text = new StringBuffer();
+      state.set(Symbol.Identifier);
       while (isIdentifierChar(currentChar())) {
-        text.append(bufchar(bufp++));
+        state.text.append(bufchar(state.bufp++));
       }
-      sym = Symbol.Identifier;
-      if (bufchar(bufp) == ':') {
-        sym = Symbol.Keyword;
-        bufp++;
-        text.append(':');
+      if (bufchar(state.bufp) == ':') {
+        state.sym = Symbol.Keyword;
+        state.bufp++;
+        state.text.append(':');
         if (Character.isLetter(currentChar())) {
-          sym = Symbol.KeywordSequence;
+          state.sym = Symbol.KeywordSequence;
           while (Character.isLetter(currentChar()) || currentChar() == ':') {
-            text.append(bufchar(bufp++));
+            state.text.append(bufchar(state.bufp++));
           }
         }
       }
     } else if (Character.isDigit(currentChar())) {
       lexNumber();
     } else {
-      sym = Symbol.NONE;
-      symc = currentChar();
-      text = new StringBuffer(symc);
+      state.set(Symbol.NONE, currentChar(), "" + currentChar());
     }
 
-    return sym;
+    return state.sym;
   }
 
   private void lexNumber() {
-    sym = Symbol.Integer;
-    symc = 0;
-    text = new StringBuffer();
+    state.set(Symbol.Integer);
 
     boolean sawDecimalMark = false;
 
     do {
-      text.append(bufchar(bufp++));
+      state.text.append(bufchar(state.bufp++));
 
       if (!sawDecimalMark      &&
           '.' == currentChar() &&
-          Character.isDigit(bufchar(bufp + 1))) {
-        sym = Symbol.Double;
-        text.append(bufchar(bufp++));
+          Character.isDigit(bufchar(state.bufp + 1))) {
+        state.sym = Symbol.Double;
+        state.text.append(bufchar(state.bufp++));
       }
     } while (Character.isDigit(currentChar()));
   }
 
   private void lexString() {
-    sym = Symbol.STString;
-    symc = 0;
-    text = new StringBuffer();
+    state.set(Symbol.STString);
 
     do {
-      text.append(bufchar(++bufp));
+      state.text.append(bufchar(++state.bufp));
     }
     while (currentChar() != '\'');
 
-    text.deleteCharAt(text.length() - 1);
-    bufp++;
+    state.text.deleteCharAt(state.text.length() - 1);
+    state.bufp++;
   }
 
   private void lexOperator() {
-    if (isOperator(bufchar(bufp + 1))) {
-      sym = Symbol.OperatorSequence;
-      symc = 0;
-      text = new StringBuffer();
+    if (isOperator(bufchar(state.bufp + 1))) {
+      state.set(Symbol.OperatorSequence);
       while (isOperator(currentChar())) {
-        text.append(bufchar(bufp++));
+        state.text.append(bufchar(state.bufp++));
       }
     } else if (currentChar() == '~') {
       match(Symbol.Not);
@@ -225,59 +281,61 @@ public final class Lexer {
   }
 
   protected Symbol peek() {
-    Symbol saveSym = sym;
-    char saveSymc = symc;
-    StringBuffer saveText = new StringBuffer(text);
+    LexerState old = new LexerState(state);
     if (peekDone) {
       throw new IllegalStateException("SOM lexer: cannot peek twice!");
     }
     getSym();
-    nextSym = sym;
-    nextSymc = symc;
-    nextText = new StringBuffer(text);
-    sym = saveSym;
-    symc = saveSymc;
-    text = saveText;
+    Symbol nextSym = state.sym;
+    stateAfterPeek = state;
+    state = old;
+
     peekDone = true;
     return nextSym;
   }
 
   protected String getText() {
-    return text.toString();
+    return state.text.toString();
   }
 
   protected String getNextText() {
-    return nextText.toString();
+    return stateAfterPeek.text.toString();
   }
 
   protected String getRawBuffer() {
-    return buf;
+    return state.buf;
   }
 
   protected int getCurrentLineNumber() {
-    return lineNumber;
+    return state.lineNumber;
   }
 
   protected int getCurrentColumn() {
-    return bufp + 1;
+    return state.bufp + 1;
   }
 
   // All characters read and processed, including current line
   protected int getNumberOfCharactersRead() {
-    return charsRead + bufp;
+    return state.startCoord.charIndex;
   }
 
   private int fillBuffer() {
     try {
       if (!infile.ready()) { return -1; }
 
-      charsRead += buf.length();
+      try {
+        int charsRead = nextCharField.getInt(infile);
+        assert charsRead >= 0 && charsRead >= state.charsRead;
+        state.charsRead = charsRead;
+      } catch (IllegalArgumentException | IllegalAccessException  e) {
+        e.printStackTrace();
+      }
 
-      buf = infile.readLine();
-      if (buf == null) { return -1; }
-      ++lineNumber;
-      bufp = 0;
-      return buf.length();
+      state.buf = infile.readLine();
+      if (state.buf == null) { return -1; }
+      ++state.lineNumber;
+      state.bufp = 0;
+      return state.buf.length();
     } catch (IOException ioe) {
       throw new IllegalStateException("Error reading from input: "
           + ioe.toString());
@@ -295,7 +353,7 @@ public final class Lexer {
 
   private void skipWhiteSpace() {
     while (Character.isWhitespace(currentChar())) {
-      bufp++;
+      state.bufp++;
       while (endOfBuffer()) {
         if (fillBuffer() == -1) {
           return;
@@ -307,22 +365,22 @@ public final class Lexer {
   private void skipComment() {
     if (currentChar() == '"') {
       do {
-        bufp++;
+        state.bufp++;
         while (endOfBuffer()) {
           if (fillBuffer() == -1) { return; }
         }
       }
       while (currentChar() != '"');
-      bufp++;
+      state.bufp++;
     }
   }
 
   private char currentChar() {
-    return bufchar(bufp);
+    return bufchar(state.bufp);
   }
 
   private boolean endOfBuffer() {
-    return bufp >= buf.length();
+    return state.bufp >= state.buf.length();
   }
 
   private boolean isOperator(final char c) {
@@ -332,14 +390,12 @@ public final class Lexer {
   }
 
   private void match(final Symbol s) {
-    sym = s;
-    symc = currentChar();
-    text = new StringBuffer("" + symc);
-    bufp++;
+    state.set(s, currentChar(), "" + currentChar());
+    state.bufp++;
   }
 
   private char bufchar(final int p) {
-    return p >= buf.length() ? '\0' : buf.charAt(p);
+    return p >= state.buf.length() ? '\0' : state.buf.charAt(p);
   }
 
   private boolean isIdentifierChar(final char c) {
@@ -347,10 +403,10 @@ public final class Lexer {
   }
 
   private boolean nextWordInBufferIs(final String text) {
-    if (!buf.startsWith(text, bufp)) {
+    if (!state.buf.startsWith(text, state.bufp)) {
       return false;
     }
-    return !isIdentifierChar(bufchar(bufp + text.length()));
+    return !isIdentifierChar(bufchar(state.bufp + text.length()));
   }
 
 }
