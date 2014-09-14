@@ -48,6 +48,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode {
   }
 
   public IfTrueIfFalseMessageNode(final IfTrueIfFalseMessageNode node) {
+    super();
     trueMethod = node.trueMethod;
     if (node.trueMethod != null) {
       trueValueSend = Truffle.getRuntime().createDirectCallNode(
