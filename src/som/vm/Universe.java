@@ -26,6 +26,7 @@
 package som.vm;
 
 import static som.vm.constants.Classes.arrayClass;
+import static som.vm.constants.Classes.booleanClass;
 import static som.vm.constants.Classes.classClass;
 import static som.vm.constants.Classes.doubleClass;
 import static som.vm.constants.Classes.integerClass;
@@ -332,8 +333,8 @@ public final class Universe {
     initializeSystemClass(doubleClass,     objectClass, "Double");
     initializeSystemClass(booleanClass,    objectClass, "Boolean");
 
-    trueClass  = newSystemClass(standardDomain);
-    falseClass = newSystemClass(standardDomain);
+    trueClass  = newSystemClass();
+    falseClass = newSystemClass();
 
     initializeSystemClass(trueClass,      booleanClass, "True");
     initializeSystemClass(falseClass,     booleanClass, "False");
@@ -376,8 +377,8 @@ public final class Universe {
     setGlobal(symbolFor("Nil"), nilClass);
 
     setGlobal(symbolFor("Boolean"), booleanClass);
-    setGlobal(trueClassName,        trueClass);
-    setGlobal(falseClassName,       falseClass);
+    setGlobal(symbolFor("True"),    trueClass);
+    setGlobal(symbolFor("False"),   falseClass);
 
     // Load the remaining block classes
     loadBlockClass(1);
