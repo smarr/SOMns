@@ -564,9 +564,9 @@ public final class Parser {
         mgenc.addEmbeddedBlockMethod(blockMethod);
 
         if (bgenc.requiresContext()) {
-          return new BlockNodeWithContext(blockMethod, lastMethodsSourceSection);
+          return new BlockNodeWithContext(blockMethod, getSource(coord));
         } else {
-          return new BlockNode(blockMethod, lastMethodsSourceSection);
+          return new BlockNode(blockMethod, getSource(coord));
         }
       }
       default: {
