@@ -62,7 +62,7 @@ public abstract class Primitives {
       final Universe universe, final SClass holder) {
     int numArgs = signature.getNumberOfSignatureArguments();
 
-    MethodGenerationContext mgen = new MethodGenerationContext();
+    MethodGenerationContext mgen = new MethodGenerationContext(null);
     ExpressionNode[] args = new ExpressionNode[numArgs];
     for (int i = 0; i < numArgs; i++) {
       args[i] = new ArgumentReadNode(i);
@@ -92,9 +92,8 @@ public abstract class Primitives {
   }
 
   @SlowPath
-  public static SInvokable constructEmptyPrimitive(final SSymbol signature,
-      final Universe universe) {
-    MethodGenerationContext mgen = new MethodGenerationContext();
+  public static SInvokable constructEmptyPrimitive(final SSymbol signature) {
+    MethodGenerationContext mgen = new MethodGenerationContext(null);
 
     ExpressionNode primNode = EmptyPrim.create(new ArgumentReadNode(0));
     Primitive primMethodNode = new Primitive(primNode, mgen.getFrameDescriptor());
@@ -126,6 +125,6 @@ public abstract class Primitives {
   public static SInvokable getEmptyPrimitive(final String selector,
       final Universe universe) {
     SSymbol signature = universe.symbolFor(selector);
-    return constructEmptyPrimitive(signature, universe);
+    return constructEmptyPrimitive(signature);
   }
 }
