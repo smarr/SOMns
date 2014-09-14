@@ -113,7 +113,7 @@ public final class ArrayPrims {
     }
 
     @Specialization
-    public final Object[] doArrayUnenforced(final VirtualFrame frame,
+    public final Object[] doArray(final VirtualFrame frame,
         final Object[] receiver, final SBlock block) {
       try {
         if (receiver.length > 0) {
