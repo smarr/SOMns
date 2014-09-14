@@ -222,7 +222,8 @@ public final class SClass extends SObject {
     return includesPrimitives(this) || includesPrimitives(clazz);
   }
 
-  public void loadPrimitives() {
+  @SlowPath
+  public void loadPrimitives(final boolean displayWarning) {
     // Compute the class name of the Java(TM) class containing the
     // primitives
     String className = "som.primitives." + getName().getString() + "Primitives";
@@ -238,7 +239,9 @@ public final class SClass extends SObject {
             + " cannot be instantiated");
       }
     } catch (ClassNotFoundException e) {
-      Universe.println("Primitives class " + className + " not found");
+      if (displayWarning) {
+        Universe.println("Primitives class " + className + " not found");
+      }
     }
   }
 
