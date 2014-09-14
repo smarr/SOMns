@@ -65,6 +65,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
+import som.compiler.Lexer.SourceCoordinate;
 import som.compiler.Variable.Local;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.FieldNode.FieldReadNode;
