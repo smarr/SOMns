@@ -367,18 +367,18 @@ public final class Universe {
     systemObject = newInstance(systemClass);
 
     // Put special objects and classes into the dictionary of globals
-    setGlobal(symbolFor("nil"),    nilObject);
-    setGlobal(symbolFor("true"),   trueObject);
-    setGlobal(symbolFor("false"),  falseObject);
-    setGlobal(symbolFor("system"), systemObject);
-    setGlobal(symbolFor("System"), systemClass);
-    setGlobal(symbolFor("Block"),  blockClasses[0]);
+    setGlobal("nil",    nilObject);
+    setGlobal("true",   trueObject);
+    setGlobal("false",  falseObject);
+    setGlobal("system", systemObject);
+    setGlobal("System", systemClass);
+    setGlobal("Block",  blockClasses[0]);
 
-    setGlobal(symbolFor("Nil"), nilClass);
+    setGlobal("Nil", nilClass);
 
-    setGlobal(symbolFor("Boolean"), booleanClass);
-    setGlobal(symbolFor("True"),    trueClass);
-    setGlobal(symbolFor("False"),   falseClass);
+    setGlobal("Boolean", booleanClass);
+    setGlobal("True",    trueClass);
+    setGlobal("False",   falseClass);
 
     // Load the remaining block classes
     loadBlockClass(1);
@@ -504,6 +504,10 @@ public final class Universe {
   @SlowPath
   public Association getGlobalsAssociation(final SSymbol name) {
     return globals.get(name);
+  }
+
+  public void setGlobal(final String name, final Object value) {
+    setGlobal(symbolFor(name), value);
   }
 
   @SlowPath
