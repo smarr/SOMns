@@ -30,6 +30,7 @@ import static som.interpreter.SNodeFactory.createCatchNonLocalReturn;
 import static som.interpreter.SNodeFactory.createFieldRead;
 import static som.interpreter.SNodeFactory.createFieldWrite;
 import static som.interpreter.SNodeFactory.createGlobalRead;
+import static som.interpreter.SNodeFactory.createNonLocalReturn;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -40,12 +41,12 @@ import som.compiler.Variable.Argument;
 import som.compiler.Variable.Local;
 import som.interpreter.LexicalContext;
 import som.interpreter.Method;
-import som.interpreter.nodes.ArgumentInitializationNode;
 import som.interpreter.nodes.ContextualNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.FieldNode.FieldReadNode;
 import som.interpreter.nodes.FieldNode.FieldWriteNode;
 import som.interpreter.nodes.GlobalNode;
+import som.interpreter.nodes.ReturnNonLocalNode;
 import som.primitives.Primitives;
 import som.vm.Universe;
 import som.vmobjects.SInvokable;
@@ -319,6 +320,27 @@ public final class MethodGenerationContext {
     return null;
   }
 
+  public ContextualNode getSuperReadNode(final SourceSection source) {
+    Variable self = getVariable("self");
+    return self.getSuperReadNode(getOuterSelfContextLevel(),
+        holderGenc.getName(), holderGenc.isClassSide(),
+        getLocalSelfSlot(), source);
+  }
+
+  public ContextualNode getLocalReadNode(final String variableName,
+      final SourceSection source) {
+    Variable variable = getVariable(variableName);
+    return variable.getReadNode(getContextLevel(variableName),
+        getLocalSelfSlot(), source);
+  }
+
+  public ExpressionNode getLocalWriteNode(final String variableName,
+      final ExpressionNode valExpr, final SourceSection source) {
+    Local variable = getLocal(variableName);
+    return variable.getWriteNode(getContextLevel(variableName),
+        getLocalSelfSlot(), valExpr, source);
+  }
+
   protected Local getLocal(final String varName) {
     if (locals.containsKey(varName)) {
       return locals.get(varName);
@@ -332,6 +354,14 @@ public final class MethodGenerationContext {
       return outerLocal;
     }
     return null;
+  }
+
+  public ReturnNonLocalNode getNonLocalReturn(final ExpressionNode expr,
+      final SourceSection source) {
+    makeCatchNonLocalReturn();
+    return createNonLocalReturn(expr, getFrameOnStackMarkerSlot(),
+        getOuterSelfSlot(),
+        getOuterSelfContextLevel(), getLocalSelfSlot(), source);
   }
 
   private ContextualNode getSelfRead(final SourceSection source) {

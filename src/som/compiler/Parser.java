@@ -59,6 +59,7 @@ import static som.compiler.Symbol.STString;
 import static som.compiler.Symbol.Separator;
 import static som.compiler.Symbol.Star;
 import static som.interpreter.SNodeFactory.createGlobalRead;
+import static som.interpreter.SNodeFactory.createMessageSend;
 
 import java.io.Reader;
 import java.math.BigInteger;
@@ -70,10 +71,8 @@ import som.compiler.Variable.Local;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.FieldNode.FieldReadNode;
 import som.interpreter.nodes.FieldNode.FieldWriteNode;
-import som.interpreter.nodes.GlobalNode;
 import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
-import som.interpreter.nodes.ReturnNonLocalNode;
 import som.interpreter.nodes.SequenceNode;
 import som.interpreter.nodes.literals.BigIntegerLiteralNode;
 import som.interpreter.nodes.literals.BlockNode;
@@ -481,19 +480,13 @@ public final class Parser {
   }
 
   private ExpressionNode result(final MethodGenerationContext mgenc) throws ParseError {
-    ExpressionNode exp = expression(mgenc);
-
     SourceCoordinate coord = getCoordinate();
+
+    ExpressionNode exp = expression(mgenc);
     accept(Period);
 
     if (mgenc.isBlockMethod()) {
-      ExpressionNode result = new ReturnNonLocalNode(exp,
-          mgenc.getFrameOnStackMarkerSlot(),
-          mgenc.getOuterSelfSlot(),
-          mgenc.getOuterSelfContextLevel(),
-          mgenc.getLocalSelfSlot(), getSource(coord));
-      mgenc.makeCatchNonLocalReturn();
-      return result;
+      return mgenc.getNonLocalReturn(exp, getSource(coord));
     } else {
       return exp;
     }
@@ -664,7 +657,7 @@ public final class Parser {
 
     SSymbol msg = universe.symbolFor(kw.toString());
 
-    return MessageSendNode.create(msg, arguments.toArray(new ExpressionNode[0]),
+    return createMessageSend(msg, arguments.toArray(new ExpressionNode[0]),
         getSource(coord));
   }
 
@@ -843,17 +836,13 @@ public final class Parser {
                                       final SourceSection source) {
     // we need to handle super special here
     if ("super".equals(variableName)) {
-      Variable variable = mgenc.getVariable("self");
-      return variable.getSuperReadNode(mgenc.getOuterSelfContextLevel(),
-          mgenc.getHolder().getName(), mgenc.getHolder().isClassSide(),
-          mgenc.getLocalSelfSlot(), source);
+      return mgenc.getSuperReadNode(source);
     }
 
     // now look up first local variables, or method arguments
     Variable variable = mgenc.getVariable(variableName);
     if (variable != null) {
-      return variable.getReadNode(mgenc.getContextLevel(variableName),
-          mgenc.getLocalSelfSlot(), source);
+      return mgenc.getLocalReadNode(variableName, source);
     }
 
     // then object fields
@@ -865,8 +854,7 @@ public final class Parser {
     }
 
     // and finally assume it is a global
-    GlobalNode globalRead = mgenc.getGlobalRead(varName, universe, source);
-    return globalRead;
+    return mgenc.getGlobalRead(varName, universe, source);
   }
 
   private ExpressionNode variableWrite(final MethodGenerationContext mgenc,
