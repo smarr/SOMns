@@ -117,11 +117,16 @@ public final class SClass extends SObject {
     return instanceInvokables[index];
   }
 
+  @SlowPath
   public void setInstanceInvokable(final int index, final SInvokable value) {
     // Set this class as the holder of the given invokable
     value.setHolder(this);
 
     instanceInvokables[index] = value;
+
+    if (invokablesTable.containsKey(value.getSignature())) {
+      invokablesTable.put(value.getSignature(), value);
+    }
   }
 
   @SlowPath
