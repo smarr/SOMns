@@ -1,25 +1,22 @@
-package som.interpreter.nodes.specialized;
+package som.interpreter.nodes.specialized.whileloops;
 
 import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.vm.constants.Nil;
+import som.interpreter.nodes.specialized.whileloops.WhileCache.AbstractWhileDispatch;
 import som.vmobjects.SBlock;
 import som.vmobjects.SObject;
 
-import com.oracle.truffle.api.CompilerAsserts;
-import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.IndirectCallNode;
 
 
 public abstract class WhilePrimitiveNode extends BinaryExpressionNode {
   final boolean predicateBool;
-  @Child private IndirectCallNode call;
+  @Child protected AbstractWhileDispatch whileNode;
 
   protected WhilePrimitiveNode(final boolean predicateBool) {
     super(null);
     this.predicateBool = predicateBool;
-    call = Truffle.getRuntime().createIndirectCallNode();
+    this.whileNode = WhileCache.create(predicateBool);
   }
 
   protected WhilePrimitiveNode(final WhilePrimitiveNode node) {
@@ -29,17 +26,7 @@ public abstract class WhilePrimitiveNode extends BinaryExpressionNode {
   @Specialization
   protected SObject doWhileConditionally(final VirtualFrame frame,
       final SBlock loopCondition, final SBlock loopBody) {
-    CompilerAsserts.neverPartOfCompilation(); // no caching, direct invokes, no loop count reporting...
-
-    boolean loopConditionResult = (boolean) loopCondition.getMethod().
-        invoke(frame, call, loopCondition);
-
-    // TODO: this is a simplification, we don't cover the case receiver isn't a boolean
-    while (loopConditionResult == predicateBool) {
-      loopBody.getMethod().invoke(frame, call, loopBody);
-      loopConditionResult = (boolean) loopCondition.getMethod().invoke(frame, call, loopCondition);
-    }
-    return Nil.nilObject;
+    return whileNode.executeDispatch(frame, loopCondition, loopBody);
   }
 
   @Override

@@ -22,10 +22,9 @@ import som.interpreter.nodes.specialized.IntToDoMessageNodeFactory;
 import som.interpreter.nodes.specialized.NotMessageNodeFactory;
 import som.interpreter.nodes.specialized.OrMessageNodeFactory;
 import som.interpreter.nodes.specialized.OrMessageNodeFactory.OrBoolMessageNodeFactory;
-import som.interpreter.nodes.specialized.WhileWithDynamicBlocksNode.WhileFalseDynamicBlocksNode;
-import som.interpreter.nodes.specialized.WhileWithDynamicBlocksNode.WhileTrueDynamicBlocksNode;
-import som.interpreter.nodes.specialized.WhileWithStaticBlocksNode.WhileFalseStaticBlocksNode;
-import som.interpreter.nodes.specialized.WhileWithStaticBlocksNode.WhileTrueStaticBlocksNode;
+import som.interpreter.nodes.specialized.whileloops.WhileWithDynamicBlocksNode;
+import som.interpreter.nodes.specialized.whileloops.WhileWithStaticBlocksNode.WhileFalseStaticBlocksNode;
+import som.interpreter.nodes.specialized.whileloops.WhileWithStaticBlocksNode.WhileTrueStaticBlocksNode;
 import som.primitives.ArrayPrimsFactory.AtPrimFactory;
 import som.primitives.ArrayPrimsFactory.AtPutPrimFactory;
 import som.primitives.ArrayPrimsFactory.DoIndexesPrimFactory;
@@ -474,16 +473,16 @@ public final class MessageSendNode {
         case "whileTrue:": {
           if (arguments[1] instanceof SBlock && arguments[0] instanceof SBlock) {
             SBlock argBlock = (SBlock) arguments[1];
-            return replace(new WhileTrueDynamicBlocksNode((SBlock) arguments[0],
-                argBlock, getSourceSection()));
+            return replace(new WhileWithDynamicBlocksNode((SBlock) arguments[0],
+                argBlock, true, getSourceSection()));
           }
           break;
         }
         case "whileFalse:":
           if (arguments[1] instanceof SBlock && arguments[0] instanceof SBlock) {
             SBlock    argBlock     = (SBlock)    arguments[1];
-            return replace(new WhileFalseDynamicBlocksNode(
-                (SBlock) arguments[0], argBlock, getSourceSection()));
+            return replace(new WhileWithDynamicBlocksNode(
+                (SBlock) arguments[0], argBlock, false, getSourceSection()));
           }
           break; // use normal send
 //        case "ifTrue:":
