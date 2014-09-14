@@ -225,16 +225,11 @@ public final class Parser {
 
     while (isIdentifier(sym) || sym == Keyword || sym == OperatorSequence
         || symIn(binaryOpSyms)) {
-      MethodGenerationContext mgenc = new MethodGenerationContext();
-      mgenc.setHolder(cgenc);
+      MethodGenerationContext mgenc = new MethodGenerationContext(cgenc);
 
       ExpressionNode methodBody = method(mgenc);
 
-      if (mgenc.isPrimitive()) {
-        cgenc.addInstanceMethod(mgenc.assemblePrimitive(universe));
-      } else {
-        cgenc.addInstanceMethod(mgenc.assemble(methodBody));
-      }
+      cgenc.addInstanceMethod(mgenc.assemble(methodBody, lastMethodsSourceSection));
     }
 
     if (accept(Separator)) {
@@ -242,16 +237,10 @@ public final class Parser {
       classFields(cgenc);
       while (isIdentifier(sym) || sym == Keyword || sym == OperatorSequence
           || symIn(binaryOpSyms)) {
-        MethodGenerationContext mgenc = new MethodGenerationContext();
-        mgenc.setHolder(cgenc);
+        MethodGenerationContext mgenc = new MethodGenerationContext(cgenc);
 
         ExpressionNode methodBody = method(mgenc);
-
-        if (mgenc.isPrimitive()) {
-          cgenc.addClassMethod(mgenc.assemblePrimitive(universe));
-        } else {
-          cgenc.addClassMethod(mgenc.assemble(methodBody));
-        }
+        cgenc.addClassMethod(mgenc.assemble(methodBody, lastMethodsSourceSection));
       }
     }
     expect(EndTerm);
@@ -574,20 +563,17 @@ public final class Parser {
       }
       case NewBlock: {
         SourceCoordinate coord = getCoordinate();
-        MethodGenerationContext bgenc = new MethodGenerationContext();
-        bgenc.setIsBlockMethod(true);
-        bgenc.setHolder(mgenc.getHolder());
-        bgenc.setOuter(mgenc);
+        MethodGenerationContext bgenc = new MethodGenerationContext(mgenc.getHolder(), mgenc);
 
         ExpressionNode blockBody = nestedBlock(bgenc);
 
-        SMethod blockMethod = bgenc.assemble(blockBody);
+        SMethod blockMethod = (SMethod) bgenc.assemble(blockBody, lastMethodsSourceSection);
         mgenc.addEmbeddedBlockMethod(blockMethod);
 
         if (bgenc.requiresContext()) {
-          return new BlockNodeWithContext(blockMethod, getSource(coord));
+          return new BlockNodeWithContext(blockMethod, lastMethodsSourceSection);
         } else {
-          return new BlockNode(blockMethod, getSource(coord));
+          return new BlockNode(blockMethod, lastMethodsSourceSection);
         }
       }
       default: {

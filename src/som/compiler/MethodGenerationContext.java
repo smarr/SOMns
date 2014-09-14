@@ -60,15 +60,16 @@ import com.oracle.truffle.api.source.SourceSection;
 
 public final class MethodGenerationContext {
 
-  private ClassGenerationContext     holderGenc;
-  private MethodGenerationContext    outerGenc;
-  private boolean                    blockMethod;
-  private SSymbol                    signature;
-  private boolean                    primitive;
-  private boolean                    needsToCatchNonLocalReturn;
-  private boolean                    throwsNonLocalReturn;
+  private final ClassGenerationContext  holderGenc;
+  private final MethodGenerationContext outerGenc;
+  private final boolean                 blockMethod;
 
-  private boolean                    accessesVariablesOfOuterContext;
+  private SSymbol signature;
+  private boolean primitive;
+  private boolean needsToCatchNonLocalReturn;
+  private boolean throwsNonLocalReturn;
+
+  private boolean accessesVariablesOfOuterContext;
 
   private final LinkedHashMap<String, Argument> arguments = new LinkedHashMap<String, Argument>();
   private final LinkedHashMap<String, Local>    locals    = new LinkedHashMap<String, Local>();
@@ -79,16 +80,27 @@ public final class MethodGenerationContext {
 
   private final List<SMethod>   embeddedBlockMethods;
 
-  public MethodGenerationContext() {
+
+  public MethodGenerationContext(final ClassGenerationContext holderGenc) {
+    this(holderGenc, null, false);
+  }
+
+  public MethodGenerationContext(final ClassGenerationContext holderGenc,
+      final MethodGenerationContext outerGenc) {
+    this(holderGenc, outerGenc, true);
+  }
+
+  private MethodGenerationContext(final ClassGenerationContext holderGenc,
+      final MethodGenerationContext outerGenc, final boolean isBlockMethod) {
+    this.holderGenc      = holderGenc;
+    this.outerGenc       = outerGenc;
+    this.blockMethod     = isBlockMethod;
+
     frameDescriptor = new FrameDescriptor();
     accessesVariablesOfOuterContext = false;
     throwsNonLocalReturn            = false;
     needsToCatchNonLocalReturn      = false;
     embeddedBlockMethods = new ArrayList<SMethod>();
-  }
-
-  public void setHolder(final ClassGenerationContext cgenc) {
-    holderGenc = cgenc;
   }
 
   public void addEmbeddedBlockMethod(final SMethod blockMethod) {
@@ -151,10 +163,6 @@ public final class MethodGenerationContext {
     return needsToCatchNonLocalReturn && outerGenc == null;
   }
 
-  public SInvokable assemblePrimitive(final Universe universe) {
-    return Primitives.getEmptyPrimitive(signature.getString(), universe);
-  }
-
   private void separateVariables(final Collection<? extends Variable> variables,
       final ArrayList<Variable> onlyLocalAccess,
       final ArrayList<Variable> nonLocalAccess) {
@@ -167,34 +175,29 @@ public final class MethodGenerationContext {
     }
   }
 
-  private ArgumentInitializationNode addArgumentInitialization(final ExpressionNode methodBody) {
-    return createArgumentInitialization(methodBody, arguments);
-  }
+  public SInvokable assemble(ExpressionNode body, final SourceSection sourceSection) {
+    if (isPrimitive()) {
+      return Primitives.constructEmptyPrimitive(signature);
+    }
 
-  public SMethod assemble(ExpressionNode methodBody) {
     ArrayList<Variable> onlyLocalAccess = new ArrayList<>(arguments.size() + locals.size());
     ArrayList<Variable> nonLocalAccess  = new ArrayList<>(arguments.size() + locals.size());
     separateVariables(arguments.values(), onlyLocalAccess, nonLocalAccess);
     separateVariables(locals.values(),    onlyLocalAccess, nonLocalAccess);
 
-    SourceSection sourceSection = methodBody.getSourceSection();
-
     if (needsToCatchNonLocalReturn()) {
-      methodBody = createCatchNonLocalReturn(methodBody,
-          getFrameOnStackMarkerSlot());
-      methodBody.assignSourceSection(sourceSection);
+      body = createCatchNonLocalReturn(body, getFrameOnStackMarkerSlot());
     }
 
-    methodBody.assignSourceSection(sourceSection);
-    methodBody = addArgumentInitialization(methodBody);
+    body = createArgumentInitialization(body, arguments);
 
     Method truffleMethod =
         new Method(getSourceSectionForMethod(sourceSection),
-            frameDescriptor, methodBody, getLexicalContext());
+            frameDescriptor, body, getLexicalContext());
 
     setOuterMethodInLexicalScopes(truffleMethod);
 
-    SMethod meth = (SMethod) Universe.newMethod(signature, truffleMethod, false,
+    SInvokable meth = Universe.newMethod(signature, truffleMethod, false,
         embeddedBlockMethods.toArray(new SMethod[0]));
 
     // return the method - the holder field is to be set later on!
@@ -259,16 +262,8 @@ public final class MethodGenerationContext {
     return blockMethod;
   }
 
-  public void setIsBlockMethod(final boolean isBlock) {
-    blockMethod = isBlock;
-  }
-
   public ClassGenerationContext getHolder() {
     return holderGenc;
-  }
-
-  public void setOuter(final MethodGenerationContext mgenc) {
-    outerGenc = mgenc;
   }
 
   public int getOuterSelfContextLevel() {
@@ -281,7 +276,7 @@ public final class MethodGenerationContext {
     return level;
   }
 
-  public FrameSlot getOuterSelfSlot() {
+  private FrameSlot getOuterSelfSlot() {
     if (outerGenc == null) {
       return getLocalSelfSlot();
     } else {
