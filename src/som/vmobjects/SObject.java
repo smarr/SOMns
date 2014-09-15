@@ -106,11 +106,11 @@ public class SObject extends SAbstractObject {
   }
 
   public final long[] getExtendedPrimFields() {
-    return extensionPrimFields;
+    return CompilerDirectives.unsafeCast(extensionPrimFields, long[].class, true, true);
   }
 
   public final Object[] getExtensionObjFields() {
-    return extensionObjFields;
+    return CompilerDirectives.unsafeCast(extensionObjFields, Object[].class, true, true);
   }
 
   public final void setClass(final SClass value) {
