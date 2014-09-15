@@ -12,6 +12,7 @@ import som.interpreter.nodes.nary.UnaryExpressionNode.UnarySideEffectFreeExpress
 import som.primitives.BlockPrims.ValuePrimitiveNode;
 import som.vm.constants.Classes;
 import som.vm.constants.Nil;
+import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 
@@ -27,14 +28,15 @@ public final class ArrayPrims {
   public abstract static class AtPrim extends BinarySideEffectFreeExpressionNode {
     @Specialization
     public final Object doSArray(final Object[] receiver, final long argument) {
-      return receiver[(int) argument - 1];
+      return SArray.get(receiver, argument - 1);
     }
   }
 
   public abstract static class AtPutPrim extends TernaryExpressionNode {
     @Specialization
-    public final Object doSArray(final Object[] receiver, final long index, final Object value) {
-      receiver[(int) index - 1] = value;
+    public final Object doSArray(final Object[] receiver,
+        final long index, final Object value) {
+      SArray.set(receiver, index - 1, value);
       return value;
     }
   }
@@ -47,9 +49,7 @@ public final class ArrayPrims {
 
     @Specialization(guards = "receiverIsArrayClass")
     public final Object[] doSClass(final SClass receiver, final long length) {
-      Object[] result = new Object[(int) length];
-      Arrays.fill(result, Nil.nilObject);
-      return result;
+      return SArray.newSArray(length, Nil.nilObject);
     }
   }
 
@@ -70,7 +70,7 @@ public final class ArrayPrims {
 
     @Specialization(guards = "notABlock")
     public Object[] doPutValue(final Object[] receiver, final Object value) {
-      Arrays.fill(receiver, /* SArray.FIRST_IDX */ 0, receiver.length, value);
+      Arrays.fill(receiver, SArray.FIRST_IDX, receiver.length, value);
       return receiver;
     }
   }
@@ -88,8 +88,9 @@ public final class ArrayPrims {
     public final Object[] doArray(final VirtualFrame frame,
         final Object[] receiver, final SBlock block) {
       try {
-        if (receiver.length > 0) {
-          this.block.executeDispatch(frame, new Object[] {block, (long) 0 + 1}); // +1 because it is going to the smalltalk level
+        assert SArray.FIRST_IDX == 0;
+        if (SArray.FIRST_IDX < receiver.length) {
+          this.block.executeDispatch(frame, new Object[] {block, (long) SArray.FIRST_IDX + 1}); // +1 because it is going to the smalltalk level
         }
         for (long i = 1; i < receiver.length; i++) {
           this.block.executeDispatch(frame, new Object[] {block, i + 1}); // +1 because it is going to the smalltalk level
@@ -136,20 +137,20 @@ public final class ArrayPrims {
 
     @Specialization
     public final Object[] doArray(final VirtualFrame frame,
-        final Object[] receiver, final SBlock block) {
+        final Object[] arr, final SBlock block) {
       try {
-        if (receiver.length > 0) {
-          this.block.executeDispatch(frame, new Object[] {block, receiver[0]});
+        if (SArray.FIRST_IDX < arr.length) {
+          this.block.executeDispatch(frame, new Object[] {block, SArray.get(arr, SArray.FIRST_IDX)});
         }
-        for (int i = 1; i < receiver.length; i++) {
-          this.block.executeDispatch(frame, new Object[] {block, receiver[i]});
+        for (long i = SArray.FIRST_IDX + 1; i < arr.length; i++) {
+          this.block.executeDispatch(frame, new Object[] {block, SArray.get(arr, i)});
         }
       } finally {
         if (CompilerDirectives.inInterpreter()) {
-          reportLoopCount(receiver.length);
+          reportLoopCount(arr.length);
         }
       }
-      return receiver;
+      return arr;
     }
 
     protected final void reportLoopCount(final long count) {
