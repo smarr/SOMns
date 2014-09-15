@@ -1,0 +1,18 @@
+Mutex = (
+    "A Reentrant Mutex"
+    critical: aBlock = (
+        | value |
+        self lock.
+        value := aBlock value.
+        self unlock.
+        ^ value
+    )
+    
+    lock     = primitive
+    unlock   = primitive
+    isLocked = primitive
+    
+    ----
+    
+    new = primitive
+)

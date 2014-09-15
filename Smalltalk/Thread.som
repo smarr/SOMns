@@ -1,0 +1,13 @@
+Thread = (
+    | name |
+    name = ( ^ name )
+    name: aString = (name := aString)
+    
+    join = primitive
+    
+    ----
+    new = ( ^ self error: 'Use Block>>#spawn* to create a thread.' )
+    
+    yield   = primitive
+    current = primitive
+)

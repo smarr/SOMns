@@ -1,0 +1,11 @@
+ThreadSignal = (
+    signalOne = primitive
+    signalAll = primitive
+
+    await = primitive
+    await: timeoutMilliseconds = primitive
+    
+    ----
+    
+    new = primitive
+)
