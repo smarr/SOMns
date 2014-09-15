@@ -8,6 +8,7 @@ import som.interpreter.nodes.dispatch.UninitializedValuePrimDispatchNode;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.BinaryExpressionNode.BinarySideEffectFreeExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
+import som.interpreter.nodes.nary.UnaryExpressionNode.UnarySideEffectFreeExpressionNode;
 import som.primitives.BlockPrims.ValuePrimitiveNode;
 import som.vm.constants.Classes;
 import som.vm.constants.Nil;
@@ -52,6 +53,27 @@ public final class ArrayPrims {
     }
   }
 
+  public abstract static class CopyPrim extends UnarySideEffectFreeExpressionNode {
+    @Specialization
+    public final Object[] doArray(final VirtualFrame frame, final Object[] receiver) {
+      // TODO: should I set the owner differently?
+      return receiver.clone();
+    }
+  }
+
+  public abstract static class PutAllEagerOpt extends BinaryExpressionNode {
+    public PutAllEagerOpt() { super(null); }
+
+    protected boolean notABlock(final Object[] receiver, final Object value) {
+      return !(value instanceof SBlock);
+    }
+
+    @Specialization(guards = "notABlock")
+    public Object[] doPutValue(final Object[] receiver, final Object value) {
+      Arrays.fill(receiver, /* SArray.FIRST_IDX */ 0, receiver.length, value);
+      return receiver;
+    }
+  }
 
   public abstract static class DoIndexesPrim extends BinaryExpressionNode
       implements ValuePrimitiveNode {

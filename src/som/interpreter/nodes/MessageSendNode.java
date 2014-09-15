@@ -30,6 +30,7 @@ import som.primitives.ArrayPrimsFactory.AtPutPrimFactory;
 import som.primitives.ArrayPrimsFactory.DoIndexesPrimFactory;
 import som.primitives.ArrayPrimsFactory.DoPrimFactory;
 import som.primitives.ArrayPrimsFactory.NewPrimFactory;
+import som.primitives.ArrayPrimsFactory.PutAllEagerOptFactory;
 import som.primitives.BlockPrimsFactory.ValueNonePrimFactory;
 import som.primitives.BlockPrimsFactory.ValueOnePrimFactory;
 import som.primitives.EqualsEqualsPrimFactory;
@@ -233,6 +234,13 @@ public final class MessageSendNode {
             return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
                 argumentNodes[1],
                 DoPrimFactory.create(null, null)));
+          }
+          break;
+        case "putAll:":
+          if (!(arguments[1] instanceof SBlock)) {
+            return replace(new EagerBinaryPrimitiveNode(selector,
+                argumentNodes[0], argumentNodes[1],
+                PutAllEagerOptFactory.create(null, null)));
           }
           break;
         case "whileTrue:": {
