@@ -2,6 +2,7 @@ package som.interpreter.nodes.nary;
 
 import som.interpreter.TruffleCompiler;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
 import som.vmobjects.SSymbol;
@@ -76,7 +77,7 @@ public final class EagerTernaryPrimitiveNode extends TernaryExpressionNode {
   }
 
   private AbstractMessageSendNode makeGenericSend() {
-    GenericMessageSendNode node = GenericMessageSendNode.create(selector,
+    GenericMessageSendNode node = MessageSendNode.createGeneric(selector,
         new ExpressionNode[] {receiver, argument1, argument2},
         getSourceSection());
     return replace(node);
