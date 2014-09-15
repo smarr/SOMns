@@ -37,6 +37,9 @@ import som.primitives.EqualsEqualsPrimFactory;
 import som.primitives.EqualsPrimFactory;
 import som.primitives.IntegerPrimsFactory.LeftShiftPrimFactory;
 import som.primitives.LengthPrimFactory;
+import som.primitives.MethodPrimsFactory.InvokeOnPrimFactory;
+import som.primitives.ObjectPrimsFactory.InstVarAtPrimFactory;
+import som.primitives.ObjectPrimsFactory.InstVarAtPutPrimFactory;
 import som.primitives.UnequalsPrimFactory;
 import som.primitives.arithmetic.AdditionPrimFactory;
 import som.primitives.arithmetic.BitXorPrimFactory;
@@ -222,6 +225,10 @@ public final class MessageSendNode {
                 NewPrimFactory.create(null, null)));
           }
           break;
+        case "instVarAt:":
+          return replace(new EagerBinaryPrimitiveNode(selector,
+              argumentNodes[0], argumentNodes[1],
+              InstVarAtPrimFactory.create(null, null)));
         case "doIndexes:":
           if (arguments[0] instanceof Object[]) {
             return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
@@ -289,6 +296,14 @@ public final class MessageSendNode {
                   getSourceSection(),
                   argumentNodes[0], argumentNodes[1]));
             }
+          }
+          break;
+
+        case "value:":
+          if (arguments[0] instanceof SBlock) {
+            return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
+                argumentNodes[1],
+                ValueOnePrimFactory.create(null, null)));
           }
           break;
 
@@ -405,6 +420,13 @@ public final class MessageSendNode {
                 argumentNodes[2]));
           }
           break;
+
+        case "invokeOn:with:":
+          return replace(InvokeOnPrimFactory.create(
+              argumentNodes[0], argumentNodes[1], argumentNodes[2]));
+        case "instVarAt:put:":
+          return replace(InstVarAtPutPrimFactory.create(
+            argumentNodes[0], argumentNodes[1], argumentNodes[2]));
       }
       return makeGenericSend();
     }
