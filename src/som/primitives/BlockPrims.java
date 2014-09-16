@@ -59,7 +59,7 @@ public abstract class BlockPrims {
     }
 
     @Override
-    public final NodeCost getCost() {
+    public NodeCost getCost() {
       int dispatchChain = dispatchNode.lengthOfDispatchChain();
       if (dispatchChain == 0) {
         return NodeCost.UNINITIALIZED;
@@ -94,7 +94,7 @@ public abstract class BlockPrims {
     }
 
     @Override
-    public final NodeCost getCost() {
+    public NodeCost getCost() {
       int dispatchChain = dispatchNode.lengthOfDispatchChain();
       if (dispatchChain == 0) {
         return NodeCost.UNINITIALIZED;
@@ -129,7 +129,7 @@ public abstract class BlockPrims {
     }
 
     @Override
-    public final NodeCost getCost() {
+    public NodeCost getCost() {
       int dispatchChain = dispatchNode.lengthOfDispatchChain();
       if (dispatchChain == 0) {
         return NodeCost.UNINITIALIZED;
