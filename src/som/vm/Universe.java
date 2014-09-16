@@ -366,19 +366,11 @@ public final class Universe {
     systemClass  = loadClass(symbolFor("System"));
     systemObject = newInstance(systemClass);
 
-    // Put special objects and classes into the dictionary of globals
+    // Put special objects into the dictionary of globals
     setGlobal("nil",    nilObject);
     setGlobal("true",   trueObject);
     setGlobal("false",  falseObject);
     setGlobal("system", systemObject);
-    setGlobal("System", systemClass);
-    setGlobal("Block",  blockClasses[0]);
-
-    setGlobal("Nil", nilClass);
-
-    setGlobal("Boolean", booleanClass);
-    setGlobal("True",    trueClass);
-    setGlobal("False",   falseClass);
 
     // Load the remaining block classes
     loadBlockClass(1);
