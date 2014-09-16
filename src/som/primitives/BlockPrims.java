@@ -54,12 +54,12 @@ public abstract class BlockPrims {
     }
 
     @Override
-    public void adoptNewDispatchListHead(final AbstractDispatchNode node) {
+    public final void adoptNewDispatchListHead(final AbstractDispatchNode node) {
       dispatchNode = insert(node);
     }
 
     @Override
-    public NodeCost getCost() {
+    public final NodeCost getCost() {
       int dispatchChain = dispatchNode.lengthOfDispatchChain();
       if (dispatchChain == 0) {
         return NodeCost.UNINITIALIZED;
@@ -89,12 +89,12 @@ public abstract class BlockPrims {
     }
 
     @Override
-    public void adoptNewDispatchListHead(final AbstractDispatchNode node) {
+    public final void adoptNewDispatchListHead(final AbstractDispatchNode node) {
       dispatchNode = insert(node);
     }
 
     @Override
-    public NodeCost getCost() {
+    public final NodeCost getCost() {
       int dispatchChain = dispatchNode.lengthOfDispatchChain();
       if (dispatchChain == 0) {
         return NodeCost.UNINITIALIZED;
@@ -124,12 +124,12 @@ public abstract class BlockPrims {
     }
 
     @Override
-    public void adoptNewDispatchListHead(final AbstractDispatchNode node) {
+    public final void adoptNewDispatchListHead(final AbstractDispatchNode node) {
       dispatchNode = insert(node);
     }
 
     @Override
-    public NodeCost getCost() {
+    public final NodeCost getCost() {
       int dispatchChain = dispatchNode.lengthOfDispatchChain();
       if (dispatchChain == 0) {
         return NodeCost.UNINITIALIZED;
