@@ -46,6 +46,7 @@ public class SomTests {
         {"Closure"       },
         {"Coercion"      },
         {"CompilerReturn"},
+        {"DoesNotUnderstand"},
         {"Double"        },
 
         {"Empty"         },
