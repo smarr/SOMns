@@ -68,8 +68,8 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode {
         && (falseMethod == null || ((SBlock) secondArg).getMethod() == falseMethod);
   }
 
-  @Specialization(order = 1, guards = "hasSameArguments")
-  public final Object doIfTrueIfFalseWithInlining(final VirtualFrame frame,
+  @Specialization(guards = "hasSameArguments")
+  public final Object doIfTrueIfFalseWithInliningTwoBlocks(final VirtualFrame frame,
       final boolean receiver, final SBlock trueBlock, final SBlock falseBlock) {
     if (receiver) {
       ifTrueBranch.enter();
@@ -80,7 +80,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode {
     }
   }
 
-  @Specialization(order = 10)
+  @Specialization(contains = {"doIfTrueIfFalseWithInliningTwoBlocks"})
   public final Object doIfTrueIfFalse(final VirtualFrame frame,
       final boolean receiver, final SBlock trueBlock, final SBlock falseBlock) {
     CompilerAsserts.neverPartOfCompilation("IfTrueIfFalseMessageNode.10");
@@ -93,8 +93,8 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode {
     }
   }
 
-  @Specialization(order = 18, guards = "hasSameArguments")
-  public final Object doIfTrueIfFalseWithInlining(final VirtualFrame frame,
+  @Specialization(guards = "hasSameArguments")
+  public final Object doIfTrueIfFalseWithInliningTrueValue(final VirtualFrame frame,
       final boolean receiver, final Object trueValue, final SBlock falseBlock) {
     if (receiver) {
       ifTrueBranch.enter();
@@ -105,8 +105,8 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode {
     }
   }
 
-  @Specialization(order = 19, guards = "hasSameArguments")
-  public final Object doIfTrueIfFalseWithInlining(final VirtualFrame frame,
+  @Specialization(guards = "hasSameArguments")
+  public final Object doIfTrueIfFalseWithInliningFalseValue(final VirtualFrame frame,
       final boolean receiver, final SBlock trueBlock, final Object falseValue) {
     if (receiver) {
       ifTrueBranch.enter();
@@ -117,8 +117,8 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode {
     }
   }
 
-  @Specialization(order = 20)
-  public final Object doIfTrueIfFalse(final VirtualFrame frame,
+  @Specialization(contains = {"doIfTrueIfFalseWithInliningTrueValue"})
+  public final Object doIfTrueIfFalseTrueValue(final VirtualFrame frame,
       final boolean receiver, final Object trueValue, final SBlock falseBlock) {
     if (receiver) {
       ifTrueBranch.enter();
@@ -130,8 +130,8 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode {
     }
   }
 
-  @Specialization(order = 30)
-  public final Object doIfTrueIfFalse(final VirtualFrame frame,
+  @Specialization(contains = {"doIfTrueIfFalseWithInliningFalseValue"})
+  public final Object doIfTrueIfFalseFalseValue(final VirtualFrame frame,
       final boolean receiver, final SBlock trueBlock, final Object falseValue) {
     if (receiver) {
       ifTrueBranch.enter();
@@ -143,8 +143,8 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode {
     }
   }
 
-  @Specialization(order = 40)
-  public final Object doIfTrueIfFalse(final VirtualFrame frame,
+  @Specialization
+  public final Object doIfTrueIfFalseTwoValues(final VirtualFrame frame,
       final boolean receiver, final Object trueValue, final Object falseValue) {
     if (receiver) {
       return trueValue;
