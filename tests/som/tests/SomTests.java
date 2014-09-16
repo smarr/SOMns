@@ -63,7 +63,9 @@ public class SomTests {
         {"String"        },
         {"Symbol"        },
         {"System"        },
-        {"Vector"        }
+        {"Vector"        },
+
+        {"Thread"        }
       });
   }
 
