@@ -1,0 +1,96 @@
+ThreadTest = (
+
+    | harness |
+    run: pHarness = ( 
+
+        harness := pHarness.
+        
+        "Rather superficial tests merely documenting the interface."
+        self delayInterfaceTest.
+        self mutexInterfaceTest.
+        self blockInterfaceTest.
+        self threadInterfaceTest.
+        self conditionInterfaceTest.
+    )
+    
+    delayInterfaceTest = (
+        | d |
+        d := Delay forSeconds: 1.
+        self assert: 'Duration' actual: d duration expected: 1000.
+        
+        d := Delay forMilliseconds: 1.
+        self assert: 'Duration' actual: d duration expected: 1.
+        
+        "This could change, perhaps to indicate interruption."
+        self assert: 'Wait returns self' actual: d wait expected: d.
+    )
+    
+    mutexInterfaceTest = (
+        | m r cond1 cond2 |
+        m := Mutex new.
+        r := m critical: [ #value ].
+        self assert: 'Critical result' actual: r expected: #value.
+        
+        self assert: 'Is locked' actual: m isLocked expected: false.
+        self assert: 'Lock'      actual: m lock     expected: m.
+        self assert: 'Is locked' actual: m isLocked expected: true.
+        self assert: 'Unlock'    actual: m unlock   expected: m.
+        self assert: 'Is locked' actual: m isLocked expected: false.
+        
+        cond1 := m newCondition.
+        cond2 := m newCondition.
+        self assert: 'New Conditions are distinct'
+             actual:   cond1 == cond2
+             expected: false.
+    )
+    
+    blockInterfaceTest = (
+        | thread |
+        thread := [] spawn.
+        
+        self assert: 'Spawns thread' actual: thread class expected: Thread.
+        
+        thread := [:i | i ] spawn: (Array with: 1).
+
+        self assert: 'Spawns thread' actual: thread class expected: Thread.
+        
+        thread := [] spawnNamed: 'foo'.
+        self assert: 'Spawns named thread' actual: thread name expected: 'foo'.
+    )
+    
+    threadInterfaceTest = (
+        | thread thread2 |
+        thread := [] spawn.
+        self assert: 'Name unset' actual: thread name expected: nil.
+        thread name: 'bar'.
+        self assert: 'Name set'   actual: thread name expected: 'bar'.
+        
+        self assert: 'Join' actual: thread join expected: thread.
+        
+        self assert: 'Yield' actual: Thread yield expected: Thread.
+        
+        thread  := Thread current.
+        thread2 := Thread current.
+        self assert: 'Current' actual: thread expected: thread2.
+    )
+    
+    conditionInterfaceTest = (
+        | m c |
+        m := Mutex new.
+        c := m newCondition.
+        m lock.
+        c signalOne.
+        
+        self assert: 'Await times out' actual: (c await: 1) expected: false. 
+        "Can't test #await with a single thread, should be done in a proper test"
+    )
+    
+    
+    "If 'what' is false, call the fail-method of the TestHarness"
+    assert: something actual: is expected: was = (
+        (is = was)
+            ifFalse: [
+                harness fail: self 
+                because: (something+' failed. Expected: '+was+', but Actual: '+is) ].
+    )
+)

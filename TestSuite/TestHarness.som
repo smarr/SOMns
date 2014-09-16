@@ -46,7 +46,8 @@ TestHarness = (
           BlockTest,
           StringTest,
           ClassStructureTest,
-          DoesNotUnderstandTest
+          DoesNotUnderstandTest,
+          ThreadTest
     )
     
     
