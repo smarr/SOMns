@@ -1,8 +1,6 @@
 Thread = (
-    | name |
-    name = ( ^ name )
-    name: aString = (name := aString)
-    
+    name = primitive
+    name: aString = primitive
     join = primitive
     
     ----
