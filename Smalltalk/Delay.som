@@ -1,8 +1,10 @@
 Delay = (
     | durationInMilliseconds |
+
+    initializeWith: duration = ( durationInMilliseconds := duration )
     
-    duration        = ( ^ durationInMilliseconds )
-    duration: anInt = ( durationInMilliseconds := anInt )
+    duration = ( ^ durationInMilliseconds )
+    
     
     wait = primitive
 
@@ -13,6 +15,6 @@ Delay = (
     )
     
     forMilliseconds: anInt = (
-        ^ self new duration: anInt
+        ^ self new initializeWith: anInt
     )
 )
