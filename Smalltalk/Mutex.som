@@ -12,6 +12,8 @@ Mutex = (
     unlock   = primitive
     isLocked = primitive
     
+    newCondition = primitive
+    
     ----
     
     new = primitive
