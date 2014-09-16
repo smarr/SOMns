@@ -22,10 +22,13 @@
 package som.interpreter;
 
 import java.math.BigInteger;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 import som.vm.constants.Blocks;
 import som.vm.constants.Classes;
 import som.vm.constants.Globals;
+import som.vm.constants.ThreadClasses;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
 import som.vmobjects.SBlock.SBlock1;
@@ -46,6 +49,9 @@ import com.oracle.truffle.api.dsl.TypeSystem;
              BigInteger.class,
                  String.class,
                  double.class,
+          ReentrantLock.class,
+              Condition.class,
+                 Thread.class,
                  SClass.class,
                 SObject.class,
                  SBlock.class,
@@ -85,6 +91,12 @@ public class Types {
       return Blocks.blockClass3;
     } else if (obj instanceof Object[]) {
       return Classes.arrayClass;
+    } else if (obj instanceof ReentrantLock) {
+      return ThreadClasses.mutexClass;
+    } else if (obj instanceof Condition) {
+      return ThreadClasses.conditionClass;
+    } else if (obj instanceof Thread) {
+      return ThreadClasses.threadClass;
     }
 
     TruffleCompiler.transferToInterpreter("Should not be reachable");

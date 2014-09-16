@@ -1,6 +1,8 @@
 package som.primitives;
 
 import java.math.BigInteger;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 import som.interpreter.nodes.nary.BinaryExpressionNode.BinarySideEffectFreeExpressionNode;
 import som.vm.constants.Globals;
@@ -107,5 +109,20 @@ public abstract class EqualsEqualsPrim extends BinarySideEffectFreeExpressionNod
   @Specialization(order = 10110)
   public final boolean doString(final String receiver, final SObject argument) {
     return false;
+  }
+
+  @Specialization(order = 44445)
+  public final boolean doReentrantLock(final ReentrantLock receiver, final Object arg) {
+    return receiver == arg;
+  }
+
+  @Specialization(order = 44447)
+  public final boolean doCondition(final Condition receiver, final Object arg) {
+    return receiver == arg;
+  }
+
+  @Specialization(order = 44449)
+  public final boolean doThread(final Thread receiver, final Object arg) {
+    return receiver == arg;
   }
 }

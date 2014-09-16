@@ -37,6 +37,10 @@ import static som.vm.constants.Classes.objectClass;
 import static som.vm.constants.Classes.primitiveClass;
 import static som.vm.constants.Classes.stringClass;
 import static som.vm.constants.Classes.symbolClass;
+import static som.vm.constants.ThreadClasses.conditionClass;
+import static som.vm.constants.ThreadClasses.delayClass;
+import static som.vm.constants.ThreadClasses.mutexClass;
+import static som.vm.constants.ThreadClasses.threadClass;
 
 import java.io.File;
 import java.io.IOException;
@@ -333,6 +337,12 @@ public final class Universe {
     initializeSystemClass(doubleClass,     objectClass, "Double");
     initializeSystemClass(booleanClass,    objectClass, "Boolean");
 
+    // Thread support classes
+    initializeSystemClass(conditionClass, objectClass, "Condition");
+    initializeSystemClass(delayClass,     objectClass, "Delay");
+    initializeSystemClass(mutexClass,     objectClass, "Mutex");
+    initializeSystemClass(threadClass,    objectClass, "Thread");
+
     trueClass  = newSystemClass();
     falseClass = newSystemClass();
 
@@ -354,6 +364,11 @@ public final class Universe {
     loadSystemClass(booleanClass);
     loadSystemClass(trueClass);
     loadSystemClass(falseClass);
+
+    loadSystemClass(conditionClass);
+    loadSystemClass(delayClass);
+    loadSystemClass(mutexClass);
+    loadSystemClass(threadClass);
 
     // Load the generic block class
     blockClasses[0] = loadClass(symbolFor("Block"));

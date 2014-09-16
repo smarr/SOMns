@@ -1,5 +1,6 @@
 package som.primitives;
 
+import som.interpreter.SArguments;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
 import som.interpreter.nodes.dispatch.UninitializedValuePrimDispatchNode;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
@@ -151,6 +152,35 @@ public abstract class BlockPrims {
         final Object thirdArg) {
       CompilerDirectives.transferToInterpreter();
       throw new RuntimeException("This should never be called, because SOM Blocks have max. 2 arguments.");
+    }
+  }
+
+  public abstract static class SpawnPrim extends UnaryExpressionNode {
+    public SpawnPrim() { super(null); }
+
+    @Specialization
+    public final Thread doSBlock(final SBlock receiver) {
+      Thread thread = new Thread(new Runnable() {
+        @Override
+        public void run() { receiver.getMethod().getCallTarget().call(receiver); }
+      });
+      thread.start();
+      return thread;
+    }
+  }
+
+  public abstract static class SpawnWithArgsPrim extends BinaryExpressionNode {
+    public SpawnWithArgsPrim() { super(null); }
+
+    @Specialization
+    public final Thread doSBlock(final SBlock receiver, final Object[] args) {
+      Thread thread = new Thread(new Runnable() {
+        @Override
+        public void run() { receiver.getMethod().getCallTarget().call(
+            SArguments.createSArgumentsArrayFrom(receiver, args)); }
+      });
+      thread.start();
+      return thread;
     }
   }
 }

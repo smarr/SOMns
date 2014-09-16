@@ -28,6 +28,8 @@ package som.primitives;
 import som.interpreter.nodes.specialized.whileloops.WhilePrimitiveNodeFactory.WhileFalsePrimitiveNodeFactory;
 import som.interpreter.nodes.specialized.whileloops.WhilePrimitiveNodeFactory.WhileTruePrimitiveNodeFactory;
 import som.primitives.BlockPrimsFactory.RestartPrimFactory;
+import som.primitives.BlockPrimsFactory.SpawnPrimFactory;
+import som.primitives.BlockPrimsFactory.SpawnWithArgsPrimFactory;
 import som.primitives.BlockPrimsFactory.ValueMorePrimFactory;
 import som.primitives.BlockPrimsFactory.ValueNonePrimFactory;
 import som.primitives.BlockPrimsFactory.ValueOnePrimFactory;
@@ -37,9 +39,12 @@ public final class BlockPrimitives extends Primitives {
   @Override
   public void installPrimitives() {
     if (holder == universe.getBlockClass(0) || universe.getBlockClass(0) == null) {
-      installInstancePrimitive("restart",          RestartPrimFactory.getInstance());
-      installInstancePrimitive("whileTrue:",       WhileTruePrimitiveNodeFactory.getInstance());
-      installInstancePrimitive("whileFalse:",      WhileFalsePrimitiveNodeFactory.getInstance());
+      installInstancePrimitive("restart",     RestartPrimFactory.getInstance());
+      installInstancePrimitive("whileTrue:",  WhileTruePrimitiveNodeFactory.getInstance());
+      installInstancePrimitive("whileFalse:", WhileFalsePrimitiveNodeFactory.getInstance());
+      installInstancePrimitive("spawn",       SpawnPrimFactory.getInstance());
+      installInstancePrimitive("spawn:",      SpawnWithArgsPrimFactory.getInstance());
+
     } else if (universe.getBlockClass(0) != null) {
       if (holder == universe.getBlockClass(1)) {
         installInstancePrimitive("value",            ValueNonePrimFactory.getInstance());
