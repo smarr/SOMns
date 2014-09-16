@@ -13,98 +13,98 @@ import com.oracle.truffle.api.dsl.Specialization;
 
 public abstract class EqualsEqualsPrim extends BinarySideEffectFreeExpressionNode {
 
-  @Specialization(order = 1)
+  @Specialization
   public final boolean doBoolean(final boolean left, final boolean right) {
     return left == right;
   }
 
-  @Specialization(order = 11)
+  @Specialization
   public final boolean doBoolean(final boolean left, final SObject right) {
     return (left && Globals.trueObject  == right) ||
           (!left && Globals.falseObject == right);
   }
 
-  @Specialization(order = 2)
+  @Specialization
   public final boolean doLong(final long left, final long right) {
     return left == right;
   }
 
-  @Specialization(order = 20)
+  @Specialization
   public final boolean doBigInteger(final BigInteger left, final BigInteger right) {
     return left == right;
   }
 
-  @Specialization(order = 30)
+  @Specialization
   public final boolean doString(final String left, final String right) {
     return left == right;
   }
 
-  @Specialization(order = 40)
+  @Specialization
   public final boolean doDouble(final double left, final double right) {
     return left == right;
   }
 
-  @Specialization(order = 45)
+  @Specialization
   public final boolean doSBlock(final SBlock left, final Object right) {
     return left == right;
   }
 
-  @Specialization(order = 46)
+  @Specialization
   public final boolean doArray(final Object[] left, final Object right) {
     return left == right;
   }
 
-  @Specialization(order = 47)
+  @Specialization
   public final boolean doSMethod(final SInvokable left, final Object right) {
     return left == right;
   }
 
-  @Specialization(order = 48)
+  @Specialization
   public final boolean doSSymbol(final SSymbol left, final Object right) {
     return left == right;
   }
 
-  @Specialization(order = 50)
+  @Specialization
   public final boolean doSObject(final SObject left, final Object right) {
     return left == right;
   }
 
-  @Specialization(order = 100)
+  @Specialization
   public final boolean doLong(final long left, final double right) {
     return false;
   }
 
-  @Specialization(order = 1000)
+  @Specialization
   public final boolean doBigInteger(final BigInteger left, final long right) {
     return false;
   }
 
-  @Specialization(order = 1010)
+  @Specialization
   public final boolean doLong(final long left, final BigInteger right) {
     return false;
   }
 
-  @Specialization(order = 1020)
+  @Specialization
   public final boolean doDouble(final double left, final long right) {
     return false;
   }
 
-  @Specialization(order = 10000)
+  @Specialization
   public final boolean doLong(final long left, final String right) {
     return false;
   }
 
-  @Specialization(order = 10010)
+  @Specialization
   public final boolean doLong(final long left, final SObject right) {
     return false;
   }
 
-  @Specialization(order = 10100)
+  @Specialization
   public final boolean doString(final String receiver, final long argument) {
     return false;
   }
 
-  @Specialization(order = 10110)
+  @Specialization
   public final boolean doString(final String receiver, final SObject argument) {
     return false;
   }
