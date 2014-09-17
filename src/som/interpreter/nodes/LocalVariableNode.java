@@ -135,25 +135,25 @@ public abstract class LocalVariableNode extends ExpressionNode {
 
     public abstract ExpressionNode getExp();
 
-    @Specialization(guards = "isBoolKind", rewriteOn = FrameSlotTypeException.class)
-    public final boolean write(final VirtualFrame frame, final boolean expValue) throws FrameSlotTypeException {
+    @Specialization(guards = "isBoolKind")
+    public final boolean writeBoolean(final VirtualFrame frame, final boolean expValue) {
       frame.setBoolean(slot, expValue);
       return expValue;
     }
 
-    @Specialization(guards = "isLongKind", rewriteOn = FrameSlotTypeException.class)
-    public final long write(final VirtualFrame frame, final long expValue) throws FrameSlotTypeException {
+    @Specialization(guards = "isLongKind")
+    public final long writeLong(final VirtualFrame frame, final long expValue) {
       frame.setLong(slot, expValue);
       return expValue;
     }
 
-    @Specialization(guards = "isDoubleKind", rewriteOn = FrameSlotTypeException.class)
-    public final double write(final VirtualFrame frame, final double expValue) throws FrameSlotTypeException {
+    @Specialization(guards = "isDoubleKind")
+    public final double writeDouble(final VirtualFrame frame, final double expValue) {
       frame.setDouble(slot, expValue);
       return expValue;
     }
 
-    @Specialization
+    @Specialization(contains = {"writeBoolean", "writeLong", "writeDouble"})
     public final Object writeGeneric(final VirtualFrame frame, final Object expValue) {
       ensureObjectKind();
       frame.setObject(slot, expValue);

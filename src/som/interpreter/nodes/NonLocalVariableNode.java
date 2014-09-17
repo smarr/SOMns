@@ -112,25 +112,25 @@ public abstract class NonLocalVariableNode extends ContextualNode {
       this(node.contextLevel, node.slot, node.localSelf, node.getSourceSection());
     }
 
-    @Specialization(guards = "isBoolKind", rewriteOn = FrameSlotTypeException.class)
-    public final boolean write(final VirtualFrame frame, final boolean expValue) throws FrameSlotTypeException {
+    @Specialization(guards = "isBoolKind")
+    public final boolean writeBoolean(final VirtualFrame frame, final boolean expValue) {
       determineContext(frame).setBoolean(slot, expValue);
       return expValue;
     }
 
-    @Specialization(guards = "isLongKind", rewriteOn = FrameSlotTypeException.class)
-    public final long write(final VirtualFrame frame, final long expValue) throws FrameSlotTypeException {
+    @Specialization(guards = "isLongKind")
+    public final long writeLong(final VirtualFrame frame, final long expValue) {
       determineContext(frame).setLong(slot, expValue);
       return expValue;
     }
 
-    @Specialization(guards = "isDoubleKind", rewriteOn = FrameSlotTypeException.class)
-    public final double write(final VirtualFrame frame, final double expValue) throws FrameSlotTypeException {
+    @Specialization(guards = "isDoubleKind")
+    public final double writeDouble(final VirtualFrame frame, final double expValue) {
       determineContext(frame).setDouble(slot, expValue);
       return expValue;
     }
 
-    @Specialization
+    @Specialization(contains = {"writeBoolean", "writeLong", "writeDouble"})
     public final Object writeGeneric(final VirtualFrame frame, final Object expValue) {
       ensureObjectKind();
       determineContext(frame).setObject(slot, expValue);

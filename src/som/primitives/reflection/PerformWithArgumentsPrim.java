@@ -23,7 +23,7 @@ public abstract class PerformWithArgumentsPrim extends TernaryExpressionNode {
   }
 
   @Override
-  public final NodeCost getCost() {
+  public NodeCost getCost() {
     return Cost.getCost(dispatch);
   }
 }

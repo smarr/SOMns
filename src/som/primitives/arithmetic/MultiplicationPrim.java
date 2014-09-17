@@ -7,43 +7,43 @@ import com.oracle.truffle.api.dsl.Specialization;
 
 
 public abstract class MultiplicationPrim extends ArithmeticPrim {
-  @Specialization(order = 1, rewriteOn = ArithmeticException.class)
+  @Specialization(rewriteOn = ArithmeticException.class)
   public final long doLong(final long left, final long right) {
     return ExactMath.multiplyExact(left, right);
   }
 
-  @Specialization(order = 2)
+  @Specialization
   public final Object doLongWithOverflow(final long left, final long right) {
     return BigInteger.valueOf(left).multiply(BigInteger.valueOf(right));
   }
 
-  @Specialization(order = 5)
+  @Specialization
   public final Object doBigInteger(final BigInteger left, final BigInteger right) {
     BigInteger result = left.multiply(right);
     return reduceToIntIfPossible(result);
   }
 
-  @Specialization(order = 6)
+  @Specialization
   public final double doDouble(final double left, final double right) {
     return left * right;
   }
 
-  @Specialization(order = 10)
+  @Specialization
   public final Object doLong(final long left, final BigInteger right) {
     return doBigInteger(BigInteger.valueOf(left), right);
   }
 
-  @Specialization(order = 11)
+  @Specialization
   public final double doLong(final long left, final double right) {
     return doDouble(left, right);
   }
 
-  @Specialization(order = 12)
+  @Specialization
   public final Object doBigInteger(final BigInteger left, final long right) {
     return doBigInteger(left, BigInteger.valueOf(right));
   }
 
-  @Specialization(order = 13)
+  @Specialization
   public final double doDouble(final double left, final long right) {
     return doDouble(left, (double) right);
   }

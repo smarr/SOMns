@@ -11,12 +11,11 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
-import com.oracle.truffle.api.utilities.BranchProfile;
+import com.oracle.truffle.api.utilities.ConditionProfile;
 
 
 public abstract class AbstractIfMessageNode extends BinaryExpressionNode {
-  protected final BranchProfile ifFalseBranch = new BranchProfile();
-  protected final BranchProfile ifTrueBranch  = new BranchProfile();
+  protected final ConditionProfile condProf = ConditionProfile.createCountingProfile();
 
   private final SInvokable branchMethod;
 
@@ -53,23 +52,19 @@ public abstract class AbstractIfMessageNode extends BinaryExpressionNode {
    */
   public final Object doIfWithInlining(final VirtualFrame frame,
       final boolean receiver, final SBlock argument, final boolean predicateObject) {
-    if (receiver == predicateObject) {
-      ifTrueBranch.enter();
+    if (condProf.profile(receiver == predicateObject)) {
       return branchValueSend.call(frame, new Object[] {argument});
     } else {
-      ifFalseBranch.enter();
       return Nil.nilObject;
     }
   }
 
   public final Object doIf(final VirtualFrame frame, final boolean receiver,
       final SBlock argument, final boolean predicateObject) {
-    if (receiver == predicateObject) {
-      ifTrueBranch.enter();
+    if (condProf.profile(receiver == predicateObject)) {
       CompilerAsserts.neverPartOfCompilation("AbstractIfMessageNode");
       return argument.getMethod().invoke(frame, call, argument);
     } else {
-      ifFalseBranch.enter();
       return Nil.nilObject;
     }
   }

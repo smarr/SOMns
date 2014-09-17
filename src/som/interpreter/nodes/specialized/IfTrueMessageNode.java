@@ -16,13 +16,13 @@ public abstract class IfTrueMessageNode extends AbstractIfMessageNode {
    * This is the case were we got a block as the argument. Need to actually
    * evaluate it.
    */
-  @Specialization(order = 1, guards = "isSameArgument")
+  @Specialization(guards = "isSameArgument")
   public final Object doIfTrueWithInlining(final VirtualFrame frame,
       final boolean receiver, final SBlock argument) {
     return doIfWithInlining(frame, receiver, argument, true);
   }
 
-  @Specialization(order = 10)
+  @Specialization(contains = {"doIfTrueWithInlining"})
   public final Object doIfTrue(final VirtualFrame frame, final boolean receiver,
       final SBlock argument) {
     return doIf(frame, receiver, argument, true);
@@ -31,10 +31,10 @@ public abstract class IfTrueMessageNode extends AbstractIfMessageNode {
   /**
    * The argument in this case is an expression and can be returned directly.
    */
-  @Specialization(order = 100)
+  @Specialization
   public final Object doIfTrue(final VirtualFrame frame,
       final boolean receiver, final Object argument) {
-    if (receiver == true) {
+    if (condProf.profile(receiver == true)) {
       return argument;
     } else {
       return Nil.nilObject;

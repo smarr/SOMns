@@ -10,11 +10,10 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
-import com.oracle.truffle.api.utilities.BranchProfile;
+import com.oracle.truffle.api.utilities.ConditionProfile;
 
 public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode {
-  private final BranchProfile ifFalseBranch = new BranchProfile();
-  private final BranchProfile ifTrueBranch  = new BranchProfile();
+  private final ConditionProfile condProf = ConditionProfile.createCountingProfile();
 
   private final SInvokable trueMethod;
   private final SInvokable falseMethod;
@@ -68,85 +67,73 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode {
         && (falseMethod == null || ((SBlock) secondArg).getMethod() == falseMethod);
   }
 
-  @Specialization(order = 1, guards = "hasSameArguments")
-  public final Object doIfTrueIfFalseWithInlining(final VirtualFrame frame,
+  @Specialization(guards = "hasSameArguments")
+  public final Object doIfTrueIfFalseWithInliningTwoBlocks(final VirtualFrame frame,
       final boolean receiver, final SBlock trueBlock, final SBlock falseBlock) {
-    if (receiver) {
-      ifTrueBranch.enter();
+    if (condProf.profile(receiver)) {
       return trueValueSend.call(frame, new Object[] {trueBlock});
     } else {
-      ifFalseBranch.enter();
       return falseValueSend.call(frame, new Object[] {falseBlock});
     }
   }
 
-  @Specialization(order = 10)
+  @Specialization(contains = {"doIfTrueIfFalseWithInliningTwoBlocks"})
   public final Object doIfTrueIfFalse(final VirtualFrame frame,
       final boolean receiver, final SBlock trueBlock, final SBlock falseBlock) {
     CompilerAsserts.neverPartOfCompilation("IfTrueIfFalseMessageNode.10");
-    if (receiver) {
-      ifTrueBranch.enter();
+    if (condProf.profile(receiver)) {
       return trueBlock.getMethod().invoke(frame, call, trueBlock);
     } else {
-      ifFalseBranch.enter();
       return falseBlock.getMethod().invoke(frame, call, falseBlock);
     }
   }
 
-  @Specialization(order = 18, guards = "hasSameArguments")
-  public final Object doIfTrueIfFalseWithInlining(final VirtualFrame frame,
+  @Specialization(guards = "hasSameArguments")
+  public final Object doIfTrueIfFalseWithInliningTrueValue(final VirtualFrame frame,
       final boolean receiver, final Object trueValue, final SBlock falseBlock) {
-    if (receiver) {
-      ifTrueBranch.enter();
+    if (condProf.profile(receiver)) {
       return trueValue;
     } else {
-      ifFalseBranch.enter();
       return falseValueSend.call(frame, new Object[] {falseBlock});
     }
   }
 
-  @Specialization(order = 19, guards = "hasSameArguments")
-  public final Object doIfTrueIfFalseWithInlining(final VirtualFrame frame,
+  @Specialization(guards = "hasSameArguments")
+  public final Object doIfTrueIfFalseWithInliningFalseValue(final VirtualFrame frame,
       final boolean receiver, final SBlock trueBlock, final Object falseValue) {
-    if (receiver) {
-      ifTrueBranch.enter();
+    if (condProf.profile(receiver)) {
       return trueValueSend.call(frame, new Object[] {trueBlock});
     } else {
-      ifFalseBranch.enter();
       return falseValue;
     }
   }
 
-  @Specialization(order = 20)
-  public final Object doIfTrueIfFalse(final VirtualFrame frame,
+  @Specialization(contains = {"doIfTrueIfFalseWithInliningTrueValue"})
+  public final Object doIfTrueIfFalseTrueValue(final VirtualFrame frame,
       final boolean receiver, final Object trueValue, final SBlock falseBlock) {
-    if (receiver) {
-      ifTrueBranch.enter();
+    if (condProf.profile(receiver)) {
       return trueValue;
     } else {
-      ifFalseBranch.enter();
       CompilerAsserts.neverPartOfCompilation("IfTrueIfFalseMessageNode.20");
       return falseBlock.getMethod().invoke(frame, call, falseBlock);
     }
   }
 
-  @Specialization(order = 30)
-  public final Object doIfTrueIfFalse(final VirtualFrame frame,
+  @Specialization(contains = {"doIfTrueIfFalseWithInliningFalseValue"})
+  public final Object doIfTrueIfFalseFalseValue(final VirtualFrame frame,
       final boolean receiver, final SBlock trueBlock, final Object falseValue) {
-    if (receiver) {
-      ifTrueBranch.enter();
+    if (condProf.profile(receiver)) {
       CompilerAsserts.neverPartOfCompilation("IfTrueIfFalseMessageNode.30");
       return trueBlock.getMethod().invoke(frame, call, trueBlock);
     } else {
-      ifFalseBranch.enter();
       return falseValue;
     }
   }
 
-  @Specialization(order = 40)
-  public final Object doIfTrueIfFalse(final VirtualFrame frame,
+  @Specialization
+  public final Object doIfTrueIfFalseTwoValues(final VirtualFrame frame,
       final boolean receiver, final Object trueValue, final Object falseValue) {
-    if (receiver) {
+    if (condProf.profile(receiver)) {
       return trueValue;
     } else {
       return falseValue;
