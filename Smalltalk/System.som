@@ -28,6 +28,7 @@ System = (
     "Accessing"
     global: name            = primitive
     global: name put: value = primitive
+    hasGlobal: name         = primitive
     
     "Initializing"
     initialize: arguments = (

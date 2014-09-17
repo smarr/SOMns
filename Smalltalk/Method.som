@@ -31,5 +31,7 @@ Method = (
     
     "Printing"
     asString = ( ^self holder asString + '>>' + self signature asString )
+
+    invokeOn: obj with: args = primitive
     
 )
