@@ -26,6 +26,8 @@ THE SOFTWARE.
 Primitive = (
 
     signature = primitive
-    holder = primitive
+    holder    = primitive
+
+    invokeOn: obj with: args = primitive
 
 )

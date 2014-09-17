@@ -139,6 +139,11 @@ Vector = (
         ^ storage at: first - 1
     )
     
+    "Conversion"
+    asSet = (
+        ^ Set new addAll: self
+    )
+    
     ----------------------------
     
     "Allocation"

@@ -52,7 +52,23 @@ Set = (
         new addAll: aCollection.
         ^ new
     )
-        
+    
+    intersection: aCollection = (
+        | new |
+        new := Set new.
+        self do: [:it | 
+            (aCollection contains: it) ifTrue: [ new add: it ]].
+        ^ new
+    )
+    
+    - aCollection = ( "set difference"
+        | new |
+        new := Set new.
+        self do: [:it |
+            (aCollection contains: it) ifFalse: [ new add: it ]].
+        ^ new
+    )
+    
     contains: anObject = (
         items do: [ :it | it == anObject ifTrue: [ ^true ] ].
         ^false
@@ -93,6 +109,14 @@ Set = (
         '(' print.
         self do: [ :it | '(' print. it print. ')' print ].
         ')' println
+    )
+    
+    asString = (
+        | result |
+        result := 'a Set('.
+        items do: [:e | result := result + e asString + ', '].
+        result := result + ')'.
+        ^ result
     )
     
     size = (
