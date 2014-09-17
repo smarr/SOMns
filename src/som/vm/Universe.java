@@ -647,21 +647,21 @@ public final class Universe {
   @SlowPath
   public static void print(final String msg) {
     // Checkstyle: stop
-    System.err.print(msg);
+    System.out.print(msg);
     // Checkstyle: resume
   }
 
   @SlowPath
   public static void println(final String msg) {
     // Checkstyle: stop
-    System.err.println(msg);
+    System.out.println(msg);
     // Checkstyle: resume
   }
 
   @SlowPath
   public static void println() {
     // Checkstyle: stop
-    System.err.println();
+    System.out.println();
     // Checkstyle: resume
   }
 
