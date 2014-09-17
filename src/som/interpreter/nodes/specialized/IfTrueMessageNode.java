@@ -34,7 +34,7 @@ public abstract class IfTrueMessageNode extends AbstractIfMessageNode {
   @Specialization
   public final Object doIfTrue(final VirtualFrame frame,
       final boolean receiver, final Object argument) {
-    if (receiver == true) {
+    if (condProf.profile(receiver == true)) {
       return argument;
     } else {
       return Nil.nilObject;
