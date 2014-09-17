@@ -38,6 +38,7 @@ Class = (
     superclass = primitive
     fields     = primitive
     methods    = primitive
+    selectors  = ( ^self methods collect: [:inv | inv signature ] )
     
     hasMethod: aSymbol = (
         self methods do: [ :m |
