@@ -81,6 +81,14 @@ public final class SystemPrims {
     }
   }
 
+  public abstract static class PrintInclNewlinePrim extends BinarySystemNode {
+    @Specialization(guards = "receiverIsSystemObject")
+    public final Object doSObject(final SObject receiver, final String argument) {
+      Universe.println(argument);
+      return receiver;
+    }
+  }
+
   public abstract static class FullGCPrim extends UnarySystemNode {
     @Specialization(guards = "receiverIsSystemObject")
     public final Object doSObject(final SObject receiver) {

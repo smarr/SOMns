@@ -29,6 +29,7 @@ import som.primitives.SystemPrimsFactory.ExitPrimFactory;
 import som.primitives.SystemPrimsFactory.FullGCPrimFactory;
 import som.primitives.SystemPrimsFactory.GlobalPutPrimFactory;
 import som.primitives.SystemPrimsFactory.LoadPrimFactory;
+import som.primitives.SystemPrimsFactory.PrintInclNewlinePrimFactory;
 import som.primitives.SystemPrimsFactory.PrintNewlinePrimFactory;
 import som.primitives.SystemPrimsFactory.PrintStringPrimFactory;
 import som.primitives.SystemPrimsFactory.TicksPrimFactory;
@@ -44,6 +45,7 @@ public final class SystemPrimitives extends Primitives {
     installInstancePrimitive("global:put:",  GlobalPutPrimFactory.getInstance());
     installInstancePrimitive("printString:", PrintStringPrimFactory.getInstance());
     installInstancePrimitive("printNewline", PrintNewlinePrimFactory.getInstance());
+    installInstancePrimitive("printNewline:", PrintInclNewlinePrimFactory.getInstance());
     installInstancePrimitive("time",         TimePrimFactory.getInstance());
     installInstancePrimitive("ticks",        TicksPrimFactory.getInstance());
     installInstancePrimitive("fullGC",       FullGCPrimFactory.getInstance());
