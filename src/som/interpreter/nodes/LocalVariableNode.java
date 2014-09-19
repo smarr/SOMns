@@ -1,12 +1,9 @@
 package som.interpreter.nodes;
 
-import static som.interpreter.SNodeFactory.createLocalVariableWrite;
 import static som.interpreter.TruffleCompiler.transferToInterpreter;
-import som.compiler.Variable;
 import som.compiler.Variable.Local;
 import som.interpreter.Inliner;
 import som.vm.constants.Nil;
-import som.vmobjects.SClass;
 import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.CompilerAsserts;
@@ -34,9 +31,9 @@ public abstract class LocalVariableNode extends ExpressionNode {
 
   public abstract static class LocalVariableReadNode extends LocalVariableNode {
 
-    public LocalVariableReadNode(final Variable variable,
+    public LocalVariableReadNode(final Local variable,
         final SourceSection source) {
-      this(variable.slot, source);
+      this(variable.getSlot(), source);
     }
 
     public LocalVariableReadNode(final LocalVariableReadNode node) {
@@ -90,36 +87,11 @@ public abstract class LocalVariableNode extends ExpressionNode {
     }
   }
 
-  public abstract static class LocalSuperReadNode
-                       extends LocalVariableReadNode implements ISuperReadNode {
-    private final SClass superClass;
-
-    public LocalSuperReadNode(final Variable variable, final SClass superClass,
-        final SourceSection source) {
-      this(variable.slot, superClass, source);
-    }
-
-    public LocalSuperReadNode(final FrameSlot slot, final SClass superClass,
-        final SourceSection source) {
-      super(slot, source);
-      this.superClass = superClass;
-    }
-
-    public LocalSuperReadNode(final LocalSuperReadNode node) {
-      this(node.slot, node.superClass, node.getSourceSection());
-    }
-
-    @Override
-    public final SClass getSuperClass() {
-      return superClass;
-    }
-  }
-
   @NodeChild(value = "exp", type = ExpressionNode.class)
   public abstract static class LocalVariableWriteNode extends LocalVariableNode {
 
     public LocalVariableWriteNode(final Local variable, final SourceSection source) {
-      super(variable.slot, source);
+      super(variable.getSlot(), source);
     }
 
     public LocalVariableWriteNode(final LocalVariableWriteNode node) {
@@ -203,14 +175,7 @@ public abstract class LocalVariableNode extends ExpressionNode {
     @Override
     public final void replaceWithIndependentCopyForInlining(final Inliner inliner) {
       CompilerAsserts.neverPartOfCompilation("replaceWithIndependentCopyForInlining");
-
-      if (getParent() instanceof ArgumentInitializationNode) {
-        FrameSlot varSlot = inliner.getLocalFrameSlot(getSlotIdentifier());
-        assert varSlot != null;
-        replace(createLocalVariableWrite(varSlot, getExp(), getSourceSection()));
-      } else {
-        throw new RuntimeException("Should not be part of an uninitalized tree. And this should only be done with uninitialized trees.");
-      }
+      throw new RuntimeException("Should not be part of an uninitalized tree. And this should only be done with uninitialized trees.");
     }
   }
 }

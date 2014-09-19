@@ -21,7 +21,6 @@
  */
 package som.interpreter.nodes;
 
-import som.interpreter.nodes.UninitializedVariableNode.UninitializedVariableReadNode;
 import som.interpreter.objectstorage.FieldAccessorNode.AbstractReadFieldNode;
 import som.interpreter.objectstorage.FieldAccessorNode.AbstractWriteFieldNode;
 import som.interpreter.objectstorage.FieldAccessorNode.UninitializedReadFieldNode;
@@ -43,15 +42,6 @@ public abstract class FieldNode extends ExpressionNode {
   }
 
   protected abstract ExpressionNode getSelf();
-
-  public final boolean accessesLocalSelf() {
-    if (getSelf() instanceof UninitializedVariableReadNode) {
-      UninitializedVariableReadNode selfRead =
-          (UninitializedVariableReadNode) getSelf();
-      return selfRead.accessesSelf() && !selfRead.accessesOuterContext();
-    }
-    return false;
-  }
 
   public static final class FieldReadNode extends FieldNode
       implements PreevaluatedExpression {

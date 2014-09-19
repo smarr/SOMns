@@ -1,13 +1,11 @@
 package som.interpreter;
 
-import java.util.LinkedHashMap;
 import java.util.List;
 
-import som.compiler.Variable;
 import som.compiler.Variable.Argument;
 import som.compiler.Variable.Local;
-import som.interpreter.nodes.ArgumentInitializationNode;
-import som.interpreter.nodes.ArgumentReadNode;
+import som.interpreter.nodes.ArgumentReadNode.LocalArgumentReadNode;
+import som.interpreter.nodes.ArgumentReadNode.NonLocalArgumentReadNode;
 import som.interpreter.nodes.ContextualNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.FieldNode.FieldReadNode;
@@ -38,17 +36,6 @@ import com.oracle.truffle.api.source.SourceSection;
 
 public final class SNodeFactory {
 
-  public static ArgumentInitializationNode createArgumentInitialization(
-      final ExpressionNode methodBody, final LinkedHashMap<String, Argument> arguments) {
-    LocalVariableWriteNode[] writes = new LocalVariableWriteNode[arguments.size()];
-
-    for (Argument arg : arguments.values()) {
-      writes[arg.index] = LocalVariableWriteNodeFactory.create(
-          arg.slot, null, new ArgumentReadNode(arg.index));
-    }
-    return new ArgumentInitializationNode(writes, methodBody);
-  }
-
   public static CatchNonLocalReturnNode createCatchNonLocalReturn(
       final ExpressionNode methodBody, final FrameSlot frameOnStackMarker) {
     return new CatchNonLocalReturnNode(methodBody, frameOnStackMarker);
@@ -73,22 +60,29 @@ public final class SNodeFactory {
     return FieldWriteNodeFactory.create(fieldIndex, source, self, exp);
   }
 
-  public static ContextualNode createVariableRead(final Variable variable,
-      final int contextLevel, final FrameSlot localSelf, final SourceSection source) {
-    return new UninitializedVariableReadNode(variable, contextLevel, localSelf, source);
+  public static ContextualNode createLocalVarRead(final Local variable,
+      final int contextLevel, final SourceSection source) {
+    return new UninitializedVariableReadNode(variable, contextLevel, source);
   }
 
-  public static ContextualNode createSuperRead(final Variable variable,
-        final int contextLevel, final FrameSlot localSelf,
+  public static ExpressionNode createArgumentRead(final Argument variable,
+      final int contextLevel, final SourceSection source) {
+    if (contextLevel == 0) {
+      return new LocalArgumentReadNode(variable.index, source);
+    } else {
+      return new NonLocalArgumentReadNode(variable.index, contextLevel, source);
+    }
+  }
+
+  public static ExpressionNode createSuperRead(final int contextLevel,
         final SSymbol holderClass, final boolean classSide, final SourceSection source) {
-    return new UninitializedSuperReadNode(variable, contextLevel, localSelf,
-        holderClass, classSide, source);
+    return new UninitializedSuperReadNode(contextLevel, holderClass, classSide, source);
   }
 
   public static ContextualNode createVariableWrite(final Local variable,
-        final int contextLevel, final FrameSlot localSelf,
+        final int contextLevel,
         final ExpressionNode exp, final SourceSection source) {
-    return new UninitializedVariableWriteNode(variable, contextLevel, localSelf, exp, source);
+    return new UninitializedVariableWriteNode(variable, contextLevel, exp, source);
   }
 
   public static LocalVariableWriteNode createLocalVariableWrite(
@@ -121,10 +115,8 @@ public final class SNodeFactory {
   }
 
   public static ReturnNonLocalNode createNonLocalReturn(final ExpressionNode exp,
-      final FrameSlot markerSlot, final FrameSlot outerSelf,
-      final int contextLevel, final FrameSlot localSelf,
+      final FrameSlot markerSlot, final int contextLevel,
       final SourceSection source) {
-    return new ReturnNonLocalNode(exp, markerSlot, outerSelf, contextLevel,
-        localSelf, source);
+    return new ReturnNonLocalNode(exp, markerSlot, contextLevel, source);
   }
 }

@@ -2,7 +2,6 @@ package som.interpreter.nodes;
 
 import static som.interpreter.TruffleCompiler.transferToInterpreter;
 import som.vm.constants.Nil;
-import som.vmobjects.SClass;
 import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.CompilerDirectives;
@@ -20,20 +19,20 @@ public abstract class NonLocalVariableNode extends ContextualNode {
   protected final FrameSlot slot;
 
   private NonLocalVariableNode(final int contextLevel, final FrameSlot slot,
-      final FrameSlot localSelf, final SourceSection source) {
-    super(contextLevel, localSelf, source);
+      final SourceSection source) {
+    super(contextLevel, source);
     this.slot = slot;
   }
 
   public abstract static class NonLocalVariableReadNode extends NonLocalVariableNode {
 
     public NonLocalVariableReadNode(final int contextLevel,
-        final FrameSlot slot, final FrameSlot localSelf, final SourceSection source) {
-      super(contextLevel, slot, localSelf, source);
+        final FrameSlot slot, final SourceSection source) {
+      super(contextLevel, slot, source);
     }
 
     public NonLocalVariableReadNode(final NonLocalVariableReadNode node) {
-      this(node.contextLevel, node.slot, node.localSelf, node.getSourceSection());
+      this(node.contextLevel, node.slot, node.getSourceSection());
     }
 
     @Specialization(guards = "isUninitialized")
@@ -77,36 +76,16 @@ public abstract class NonLocalVariableNode extends ContextualNode {
     }
   }
 
-  public abstract static class NonLocalSuperReadNode
-                       extends NonLocalVariableReadNode implements ISuperReadNode {
-    private final SClass superClass;
-
-    public NonLocalSuperReadNode(final int contextLevel, final FrameSlot slot,
-        final FrameSlot localSelf, final SClass superClass, final SourceSection source) {
-      super(contextLevel, slot, localSelf, source);
-      this.superClass = superClass;
-    }
-
-    public NonLocalSuperReadNode(final NonLocalSuperReadNode node) {
-      this(node.contextLevel, node.slot, node.localSelf, node.superClass, node.getSourceSection());
-    }
-
-    @Override
-    public final SClass getSuperClass() {
-      return superClass;
-    }
-  }
-
   @NodeChild(value = "exp", type = ExpressionNode.class)
   public abstract static class NonLocalVariableWriteNode extends NonLocalVariableNode {
 
     public NonLocalVariableWriteNode(final int contextLevel,
-        final FrameSlot slot, final FrameSlot localSelf, final SourceSection source) {
-      super(contextLevel, slot, localSelf, source);
+        final FrameSlot slot, final SourceSection source) {
+      super(contextLevel, slot, source);
     }
 
     public NonLocalVariableWriteNode(final NonLocalVariableWriteNode node) {
-      this(node.contextLevel, node.slot, node.localSelf, node.getSourceSection());
+      this(node.contextLevel, node.slot, node.getSourceSection());
     }
 
     @Specialization(guards = "isBoolKind")
