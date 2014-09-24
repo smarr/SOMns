@@ -21,6 +21,7 @@
  */
 package som.interpreter.nodes;
 
+import som.interpreter.Inliner;
 import som.vmobjects.SBlock;
 
 import com.oracle.truffle.api.CompilerDirectives;
@@ -82,4 +83,10 @@ public abstract class ContextualNode extends ExpressionNode {
     }
     return self;
   }
+
+  @Override
+  public void replaceWithIndependentCopyForInlining(final Inliner inliner) {
+    throw new RuntimeException("Needs to be specialized in concrete subclasses to make sure that localSelf slot is specialized.");
+  }
+
 }
