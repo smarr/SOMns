@@ -12,10 +12,25 @@ import com.oracle.truffle.api.nodes.NodeVisitor;
 
 public final class Inliner implements NodeVisitor {
 
+  private static class DummyParent extends SOMNode {
+    public DummyParent() { super(null); }
+    @Child  private SOMNode child;
+
+    @Override
+    public ExpressionNode getFirstMethodBodyNode() { return null; }
+    public void adopt(final SOMNode child) {
+        this.child = insert(child);
+    }
+  }
+
   public static ExpressionNode doInline(
       final ExpressionNode body,
       final LexicalContext inlinedContext) {
     ExpressionNode inlinedBody = NodeUtil.cloneNode(body);
+
+    DummyParent dummyParent = new DummyParent();
+    dummyParent.adopt(inlinedBody);
+
     inlinedBody.accept(new Inliner(inlinedContext));
     return inlinedBody;
   }
