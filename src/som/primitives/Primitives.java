@@ -47,7 +47,6 @@ public abstract class Primitives {
   }
 
   public final void installPrimitivesIn(final SClass value) {
-    // Save a reference to the holder class
     holder = value;
 
     // Install the primitives from this primitives class

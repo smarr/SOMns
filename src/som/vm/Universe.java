@@ -434,13 +434,8 @@ public final class Universe {
   }
 
   private SSymbol newSymbol(final String string) {
-    // Allocate a new symbol and set its class to be the symbol class
     SSymbol result = new SSymbol(string);
-
-    // Insert the new symbol into the symbol table
     symbolTable.put(string, result);
-
-    // Return the freshly allocated symbol
     return result;
   }
 
@@ -551,9 +546,7 @@ public final class Universe {
     SClass result = (SClass) getGlobal(name);
     if (result != null) { return result; }
 
-    // Load the class
     result = loadClass(name, null);
-
     loadPrimitives(result, false);
 
     setGlobal(name, result);

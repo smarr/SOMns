@@ -101,7 +101,6 @@ public abstract class SInvokable extends SAbstractObject {
   }
 
   public final int getNumberOfArguments() {
-    // Get the number of arguments of this method
     return getSignature().getNumberOfSignatureArguments();
   }
 
