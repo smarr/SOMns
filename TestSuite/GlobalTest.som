@@ -1,0 +1,19 @@
+GlobalTest = (
+    | doesntKnow |
+    unknownGlobal: name = ( doesntKnow := name. ^ name )
+    
+    run: harness = (
+        "first check a couple of standard globals"
+        true class = True ifFalse: [ harness fail: self 
+                because: 'true is not instance of True class' ].
+        false class = False ifFalse: [ harness fail: self 
+                because: 'false is not instance of False class' ].
+        system class = System ifFalse: [ harness fail: self 
+                because: 'system is not instance of System class' ].
+        
+        foobar = #foobar ifFalse: [ harness fail: self 
+                because: ' undefined foobar global did not trigger #unknownGlobal handler, or returns unexpected result.' ].
+        doesntKnow = #foobar ifFalse: [ harness fail: self 
+                because: ' undefined foobar global handler did not set expected value' ].
+    )
+)

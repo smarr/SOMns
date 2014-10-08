@@ -34,6 +34,7 @@ TestHarness = (
           CoercionTest,
           CompilerReturnTest,
           DoubleTest,
+          GlobalTest,
           HashTest,
           IntegerTest,
           ObjectSizeTest,
