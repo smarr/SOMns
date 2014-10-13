@@ -66,11 +66,12 @@ public final class ReturnNonLocalNode extends ContextualNode {
 
   @Override
   public Object executeGeneric(final VirtualFrame frame) {
+    Object result = expression.executeGeneric(frame);
+
     MaterializedFrame ctx = determineContext(frame);
     FrameOnStackMarker marker = getMarkerFromContext(ctx);
 
     if (marker.isOnStack()) {
-      Object result = expression.executeGeneric(frame);
       throw new ReturnException(result, marker);
     } else {
       blockEscaped.enter();
@@ -126,9 +127,8 @@ public final class ReturnNonLocalNode extends ContextualNode {
       frameOnStackMarker.setKind(FrameSlotKind.Object);
       frame.setObject(frameOnStackMarker, marker);
 
-      Object result;
       try {
-        result = methodBody.executeGeneric(frame);
+        return methodBody.executeGeneric(frame);
       } catch (ReturnException e) {
         nonLocalReturnHandler.enter();
         if (!e.reachedTarget(marker)) {
@@ -137,12 +137,11 @@ public final class ReturnNonLocalNode extends ContextualNode {
           throw e;
         } else {
           doCatch.enter();
-          result = e.result();
+          return e.result();
         }
+      } finally {
+        marker.frameNoLongerOnStack();
       }
-
-      marker.frameNoLongerOnStack();
-      return result;
     }
 
     @Override
@@ -160,9 +159,9 @@ public final class ReturnNonLocalNode extends ContextualNode {
           marker.frameNoLongerOnStack();
           throw e;
         }
+      } finally {
+        marker.frameNoLongerOnStack();
       }
-
-      marker.frameNoLongerOnStack();
     }
 
     @Override
