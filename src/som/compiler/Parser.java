@@ -859,8 +859,7 @@ public final class Parser {
       final String variableName, final ExpressionNode exp, final SourceSection source) {
     Local variable = mgenc.getLocal(variableName);
     if (variable != null) {
-      return variable.getWriteNode(mgenc.getContextLevel(variableName),
-          mgenc.getLocalSelfSlot(), exp, source);
+      return mgenc.getLocalWriteNode(variableName, exp, source);
     }
 
     SSymbol fieldName = universe.symbolFor(variableName);
