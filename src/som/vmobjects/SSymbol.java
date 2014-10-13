@@ -27,6 +27,8 @@ package som.vmobjects;
 import som.vm.constants.Classes;
 
 public final class SSymbol extends SAbstractObject {
+  private final String string;
+  private final int    numberOfSignatureArguments;
 
   public SSymbol(final String value) {
     super();
@@ -81,8 +83,4 @@ public final class SSymbol extends SAbstractObject {
     }
     return true;
   }
-
-  // Private variable holding the string associated to this symbol
-  private final String string;
-  private final int    numberOfSignatureArguments;
 }
