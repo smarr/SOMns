@@ -333,7 +333,7 @@ public final class Parser {
     pattern(mgenc);
     expect(Equal);
     if (sym == Primitive) {
-      mgenc.setPrimitive(true);
+      mgenc.markAsPrimitive();
       primitiveBlock();
       return null;
     } else {

@@ -120,10 +120,6 @@ public final class MethodGenerationContext {
     return lexicalContext;
   }
 
-  public boolean isPrimitive() {
-    return primitive;
-  }
-
   // Name for the frameOnStack slot,
   // starting with ! to make it a name that's not possible in Smalltalk
   private static final String frameOnStackSlotName = "!frameOnStack";
@@ -177,7 +173,7 @@ public final class MethodGenerationContext {
   }
 
   public SInvokable assemble(ExpressionNode body, final SourceSection sourceSection) {
-    if (isPrimitive()) {
+    if (primitive) {
       return Primitives.constructEmptyPrimitive(signature);
     }
 
@@ -220,8 +216,8 @@ public final class MethodGenerationContext {
     return ssMethod;
   }
 
-  public void setPrimitive(final boolean prim) {
-    primitive = prim;
+  public void markAsPrimitive() {
+    primitive = true;
   }
 
   public void setSignature(final SSymbol sig) {
@@ -254,7 +250,7 @@ public final class MethodGenerationContext {
     addLocal(local);
   }
 
-  public void addLocal(final String local) {
+  private void addLocal(final String local) {
     Local l = new Local(local, frameDescriptor.addFrameSlot(local));
     locals.put(local, l);
   }
@@ -267,7 +263,7 @@ public final class MethodGenerationContext {
     return holderGenc;
   }
 
-  public int getOuterSelfContextLevel() {
+  private int getOuterSelfContextLevel() {
     int level = 0;
     MethodGenerationContext ctx = outerGenc;
     while (ctx != null) {
@@ -289,7 +285,7 @@ public final class MethodGenerationContext {
     return arguments.values().iterator().next().slot;
   }
 
-  public int getContextLevel(final String varName) {
+  private int getContextLevel(final String varName) {
     if (locals.containsKey(varName) || arguments.containsKey(varName)) {
       return 0;
     }
