@@ -90,7 +90,6 @@ public abstract class SBlock extends SAbstractObject {
   }
 
   public final SInvokable getMethod() {
-    // Get the method of this block
     return method;
   }
 
