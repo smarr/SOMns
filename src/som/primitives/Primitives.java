@@ -41,6 +41,7 @@ import com.oracle.truffle.api.dsl.NodeFactory;
 public abstract class Primitives {
 
   protected final Universe universe;
+  protected SClass holder;
 
   public Primitives() {
     this.universe = Universe.current();
@@ -118,8 +119,6 @@ public abstract class Primitives {
     // the holder class
     holder.getSOMClass().addInstancePrimitive(prim);
   }
-
-  protected SClass holder;
 
   public static SInvokable getEmptyPrimitive(final String selector,
       final Universe universe) {
