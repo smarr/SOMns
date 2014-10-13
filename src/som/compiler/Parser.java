@@ -60,6 +60,7 @@ import static som.compiler.Symbol.Separator;
 import static som.compiler.Symbol.Star;
 import static som.interpreter.SNodeFactory.createGlobalRead;
 import static som.interpreter.SNodeFactory.createMessageSend;
+import static som.interpreter.SNodeFactory.createSequence;
 
 import java.io.Reader;
 import java.math.BigInteger;
@@ -71,9 +72,7 @@ import som.compiler.Variable.Local;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.FieldNode.FieldReadNode;
 import som.interpreter.nodes.FieldNode.FieldWriteNode;
-import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
-import som.interpreter.nodes.SequenceNode;
 import som.interpreter.nodes.literals.BigIntegerLiteralNode;
 import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.literals.BlockNode.BlockNodeWithContext;
@@ -475,8 +474,7 @@ public final class Parser {
     } else if (expressions.size() == 1) {
       return expressions.get(0);
     }
-
-    return new SequenceNode(expressions.toArray(new ExpressionNode[0]), getSource(coord));
+    return createSequence(expressions, getSource(coord));
   }
 
   private ExpressionNode result(final MethodGenerationContext mgenc) throws ParseError {
@@ -615,7 +613,7 @@ public final class Parser {
   private AbstractMessageSendNode unaryMessage(final ExpressionNode receiver) throws ParseError {
     SourceCoordinate coord = getCoordinate();
     SSymbol selector = unarySelector();
-    return MessageSendNode.create(selector, new ExpressionNode[] {receiver},
+    return createMessageSend(selector, new ExpressionNode[] {receiver},
         getSource(coord));
   }
 
@@ -625,7 +623,7 @@ public final class Parser {
     SSymbol msg = binarySelector();
     ExpressionNode operand = binaryOperand(mgenc);
 
-    return MessageSendNode.create(msg, new ExpressionNode[] {receiver, operand},
+    return createMessageSend(msg, new ExpressionNode[] {receiver, operand},
         getSource(coord));
   }
 
