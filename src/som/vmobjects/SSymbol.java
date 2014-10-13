@@ -72,7 +72,7 @@ public final class SSymbol extends SAbstractObject {
     return numberOfSignatureArguments;
   }
 
-  public boolean isBinarySignature() {
+  private boolean isBinarySignature() {
     // Check the individual characters of the string
     for (char c : string.toCharArray()) {
       if (c != '~' && c != '&' && c != '|' && c != '*' && c != '/' && c != '@'
