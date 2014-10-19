@@ -205,7 +205,7 @@ public final class Universe {
     StringTokenizer tokenizer = new StringTokenizer(file.getName(), ".");
 
     if (tokenizer.countTokens() > 2) {
-      println("Class with . in its name?");
+      errorPrintln("Class with . in its name?");
       exit(1);
     }
 
