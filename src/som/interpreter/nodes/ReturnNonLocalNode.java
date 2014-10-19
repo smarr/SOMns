@@ -49,7 +49,7 @@ public final class ReturnNonLocalNode extends ContextualNode {
       final FrameSlot localSelf, final SourceSection source) {
     super(outerSelfContextLevel, localSelf, source);
     this.expression = expression;
-    this.blockEscaped = new BranchProfile();
+    this.blockEscaped = BranchProfile.create();
     this.frameOnStackMarker = frameOnStackMarker;
     this.outerSelfSlot      = outerSelfSlot;
   }
@@ -109,11 +109,11 @@ public final class ReturnNonLocalNode extends ContextualNode {
         final FrameSlot frameOnStackMarker) {
       super(null);
       this.methodBody = methodBody;
-      this.nonLocalReturnHandler = new BranchProfile();
+      this.nonLocalReturnHandler = BranchProfile.create();
       this.frameOnStackMarker    = frameOnStackMarker;
 
-      this.doCatch = new BranchProfile();
-      this.doPropagate = new BranchProfile();
+      this.doCatch = BranchProfile.create();
+      this.doPropagate = BranchProfile.create();
     }
 
     @Override

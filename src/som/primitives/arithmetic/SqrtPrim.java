@@ -12,8 +12,8 @@ public abstract class SqrtPrim extends UnaryExpressionNode {
 
   public SqrtPrim() { super(null); }
 
-  private final BranchProfile longReturn   = new BranchProfile();
-  private final BranchProfile doubleReturn = new BranchProfile();
+  private final BranchProfile longReturn   = BranchProfile.create();
+  private final BranchProfile doubleReturn = BranchProfile.create();
 
   @Specialization
   public final Object doLong(final long receiver) {

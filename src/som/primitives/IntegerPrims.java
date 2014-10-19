@@ -31,7 +31,7 @@ public abstract class IntegerPrims {
   }
 
   public abstract static class LeftShiftPrim extends ArithmeticPrim {
-    private final BranchProfile overflow = new BranchProfile();
+    private final BranchProfile overflow = BranchProfile.create();
 
     @Specialization(rewriteOn = ArithmeticException.class)
     public final long doLong(final long receiver, final long right) {
