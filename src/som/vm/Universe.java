@@ -403,7 +403,6 @@ public final class Universe {
 
   @SlowPath
   public SClass newClass(final SClass classClass) {
-    // Allocate a new class and set its class to be the given class class
     return new SClass(classClass);
   }
 
