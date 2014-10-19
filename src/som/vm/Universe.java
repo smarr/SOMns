@@ -519,7 +519,7 @@ public final class Universe {
     return result;
   }
 
-  private SClass loadBlockClass(final int numberOfArguments) {
+  private void loadBlockClass(final int numberOfArguments) {
     // Compute the name of the block class with the given number of
     // arguments
     SSymbol name = symbolFor("Block" + numberOfArguments);
@@ -537,7 +537,6 @@ public final class Universe {
     setGlobal(name, result);
 
     blockClasses[numberOfArguments] = result;
-    return result;
   }
 
   @SlowPath
