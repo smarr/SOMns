@@ -49,11 +49,6 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
 
       UninitializedDispatchNode newChainEnd = new UninitializedDispatchNode(selector);
 
-//        if (method.getInvokable().isAlwaysToBeInlined()) {
-//          InlinedDispatchNode inlined = InlinedDispatchNode.create(
-//              rcvrClass, method, newChainEnd, universe);
-//          return replace(inlined).executeDispatch(frame, arguments);
-//        } else {
       if (rcvr instanceof SObject) {
         AbstractCachedDispatchNode node;
         if (method != null) {
@@ -95,10 +90,6 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
     // the chain is longer than the maximum defined by INLINE_CACHE_SIZE and
     // thus, this callsite is considered to be megaprophic, and we generalize
     // it.
-    // Or, the lookup failed, and we have a callsite that leads to a
-    // does not understand, which means, we also treat this callsite as
-    // megamorphic.
-    // TODO: see whether we could get #DNUs fast.
     GenericDispatchNode genericReplacement = new GenericDispatchNode(selector);
     sendNode.replaceDispatchListHead(genericReplacement);
     return genericReplacement;
