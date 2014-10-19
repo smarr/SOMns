@@ -565,7 +565,7 @@ public final class Universe {
   }
 
   @SlowPath
-  public void loadSystemClass(final SClass systemClass) {
+  private void loadSystemClass(final SClass systemClass) {
     // Load the system class
     SClass result = loadClass(systemClass.getName(), systemClass);
 
@@ -581,7 +581,7 @@ public final class Universe {
   }
 
   @SlowPath
-  public SClass loadClass(final SSymbol name, final SClass systemClass) {
+  private SClass loadClass(final SSymbol name, final SClass systemClass) {
     // Try loading the class from all different paths
     for (String cpEntry : classPath) {
       try {
