@@ -260,8 +260,7 @@ public final class Universe {
     println("Usage: som [-options] [args...]                          ");
     println("                                                         ");
     println("where options include:                                   ");
-    println("    -cp <directories separated by " + File.pathSeparator
-        + ">");
+    println("    -cp <directories separated by " + File.pathSeparator + ">");
     println("                  set search path for application classes");
     println("    -d            enable disassembling");
 
@@ -270,22 +269,21 @@ public final class Universe {
   }
 
   /**
-   * Start interpretation by sending the selector to the given class.
-   * This is mostly meant for testing currently.
+   * Start interpretation by sending the selector to the given class. This is
+   * mostly meant for testing currently.
    *
    * @param className
    * @param selector
    * @return
    */
-  public Object interpret(final String className,
-      final String selector) {
+  public Object interpret(final String className, final String selector) {
     initializeObjectSystem();
 
     SClass clazz = loadClass(symbolFor(className));
 
     // Lookup the initialize invokable on the system class
-    SInvokable initialize = clazz.getSOMClass().
-                                        lookupInvokable(symbolFor(selector));
+    SInvokable initialize = clazz.getSOMClass().lookupInvokable(
+        symbolFor(selector));
     return initialize.invoke(clazz);
   }
 
@@ -529,8 +527,8 @@ public final class Universe {
     SClass result = loadClass(name, null);
 
     // Add the appropriate value primitive to the block class
-    result.addInstancePrimitive(SBlock.getEvaluationPrimitive(numberOfArguments,
-        this, result));
+    result.addInstancePrimitive(SBlock.getEvaluationPrimitive(
+        numberOfArguments, this, result));
 
     // Insert the block class into the dictionary of globals
     setGlobal(name, result);
