@@ -13,7 +13,7 @@ public abstract class LogicAndPrim extends ArithmeticPrim {
 
   @Specialization
   public final Object doBigInteger(final BigInteger left, final BigInteger right) {
-    return reduceToIntIfPossible(left.and(right));
+    return reduceToLongIfPossible(left.and(right));
   }
 
   @Specialization

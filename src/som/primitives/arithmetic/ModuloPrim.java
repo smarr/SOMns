@@ -21,7 +21,7 @@ public abstract class ModuloPrim extends ArithmeticPrim {
 
   @Specialization
   public final Object doBigInteger(final BigInteger left, final BigInteger right) {
-    return reduceToIntIfPossible(left.mod(right));
+    return reduceToLongIfPossible(left.mod(right));
   }
 
   @Specialization

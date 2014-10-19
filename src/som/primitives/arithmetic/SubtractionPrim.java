@@ -20,7 +20,7 @@ public abstract class SubtractionPrim extends ArithmeticPrim {
   @Specialization
   public final Object doBigInteger(final BigInteger left, final BigInteger right) {
     BigInteger result = left.subtract(right);
-    return reduceToIntIfPossible(result);
+    return reduceToLongIfPossible(result);
   }
 
   @Specialization

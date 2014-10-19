@@ -16,7 +16,7 @@ public abstract class DividePrim extends ArithmeticPrim {
   @Specialization
   public final Object doBigInteger(final BigInteger left, final BigInteger right) {
     BigInteger result = left.divide(right);
-    return reduceToIntIfPossible(result);
+    return reduceToLongIfPossible(result);
   }
 
   @Specialization

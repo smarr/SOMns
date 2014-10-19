@@ -23,7 +23,7 @@ public abstract class AdditionPrim extends ArithmeticPrim {
   @Specialization
   public final Object doBigInteger(final BigInteger left, final BigInteger right) {
     BigInteger result = left.add(right);
-    return reduceToIntIfPossible(result);
+    return reduceToLongIfPossible(result);
   }
 
   @Specialization

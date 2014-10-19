@@ -6,11 +6,11 @@ import som.interpreter.nodes.nary.BinaryExpressionNode.BinarySideEffectFreeExpre
 
 
 public abstract class ArithmeticPrim extends BinarySideEffectFreeExpressionNode {
-  protected final Number reduceToIntIfPossible(final BigInteger result) {
-    if (result.bitLength() > 31) {
+  protected final Number reduceToLongIfPossible(final BigInteger result) {
+    if (result.bitLength() > Long.SIZE - 1) {
       return result;
     } else {
-      return result.intValue();
+      return result.longValue();
     }
   }
 }

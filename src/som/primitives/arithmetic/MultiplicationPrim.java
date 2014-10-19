@@ -20,7 +20,7 @@ public abstract class MultiplicationPrim extends ArithmeticPrim {
   @Specialization
   public final Object doBigInteger(final BigInteger left, final BigInteger right) {
     BigInteger result = left.multiply(right);
-    return reduceToIntIfPossible(result);
+    return reduceToLongIfPossible(result);
   }
 
   @Specialization
