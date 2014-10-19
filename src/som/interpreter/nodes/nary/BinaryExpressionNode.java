@@ -40,7 +40,8 @@ public abstract class BinaryExpressionNode extends ExpressionNode
     public BinarySideEffectFreeExpressionNode() { super(null); }
 
     @Override
-    public final void executeVoid(final VirtualFrame frame) {
+    public final void executeEvaluatedVoid(final VirtualFrame frame,
+        final Object receiver, final Object argument) {
       /* NOOP, side effect free */
     }
   }

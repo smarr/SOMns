@@ -37,7 +37,8 @@ public abstract class UnaryExpressionNode extends ExpressionNode
     }
 
     @Override
-    public final void executeVoid(final VirtualFrame frame) {
+    public final void executeEvaluatedVoid(final VirtualFrame frame,
+        final Object receiver) {
       /* NOOP, side effect free */
     }
   }

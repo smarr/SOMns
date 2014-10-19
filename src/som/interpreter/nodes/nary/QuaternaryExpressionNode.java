@@ -35,7 +35,9 @@ public abstract class QuaternaryExpressionNode extends ExpressionNode {
     }
 
     @Override
-    public final void executeVoid(final VirtualFrame frame) {
+    public final void executeEvaluatedVoid(final VirtualFrame frame,
+        final Object receiver, final Object firstArg, final Object secondArg,
+        final Object thirdArg) {
       /* NOOP, side effect free */
     }
   }

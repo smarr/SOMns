@@ -42,7 +42,8 @@ public abstract class TernaryExpressionNode extends ExpressionNode
     extends TernaryExpressionNode {
 
     @Override
-    public final void executeVoid(final VirtualFrame frame) {
+    public final void executeEvaluatedVoid(final VirtualFrame frame,
+        final Object receiver, final Object firstArg, final Object secondArg) {
       /* NOOP, side effect free */
     }
   }
