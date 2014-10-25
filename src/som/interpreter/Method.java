@@ -24,7 +24,7 @@ package som.interpreter;
 import som.interpreter.nodes.ExpressionNode;
 
 import com.oracle.truffle.api.frame.FrameDescriptor;
-import com.oracle.truffle.api.nodes.RootNode;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
 
@@ -81,7 +81,7 @@ public final class Method extends Invokable {
   }
 
   @Override
-  public RootNode split() {
+  public Node copy() {
     return cloneWithNewLexicalContext(outerContext);
   }
 }

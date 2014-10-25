@@ -8,7 +8,7 @@ import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameInstance;
 import com.oracle.truffle.api.frame.FrameInstanceVisitor;
-import com.oracle.truffle.api.nodes.RootNode;
+import com.oracle.truffle.api.nodes.Node;
 
 
 public final class Primitive extends Invokable {
@@ -29,7 +29,7 @@ public final class Primitive extends Invokable {
   }
 
   @Override
-  public RootNode split() {
+  public Node copy() {
     return cloneWithNewLexicalContext(null);
   }
 

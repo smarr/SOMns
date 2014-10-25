@@ -36,7 +36,7 @@ public abstract class Invokable extends RootNode {
   public abstract Invokable cloneWithNewLexicalContext(final LexicalContext outerContext);
 
   @Override
-  public final boolean isSplittable() {
+  public final boolean isCloningAllowed() {
     return true;
   }
 
