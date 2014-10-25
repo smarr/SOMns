@@ -1,7 +1,7 @@
 package som.interpreter.nodes;
 
 import som.interpreter.SArguments;
-import som.vmobjects.SClass;
+import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
@@ -41,34 +41,49 @@ public abstract class ArgumentReadNode {
   public static final class LocalSuperReadNode extends LocalArgumentReadNode
       implements ISuperReadNode {
 
-    private final SClass superClass;
+    private final SSymbol holderClass;
+    private final boolean classSide;
 
-    public LocalSuperReadNode(final SClass superClass,
-        final SourceSection source) {
+    public LocalSuperReadNode(final SSymbol holderClass,
+        final boolean classSide, final SourceSection source) {
       super(SArguments.RCVR_IDX, source);
-      this.superClass = superClass;
+      this.holderClass = holderClass;
+      this.classSide   = classSide;
     }
 
     @Override
-    public SClass getSuperClass() {
-      return superClass;
+    public SSymbol getHolderClass() {
+      return holderClass;
+    }
+
+    @Override
+    public boolean isClassSide() {
+      return classSide;
     }
   }
 
   public static final class NonLocalSuperReadNode extends
       NonLocalArgumentReadNode implements ISuperReadNode {
 
-    private final SClass superClass;
+    private final SSymbol holderClass;
+    private final boolean classSide;
 
     public NonLocalSuperReadNode(final int contextLevel,
-        final SClass superClass, final SourceSection source) {
+        final SSymbol holderClass, final boolean classSide,
+        final SourceSection source) {
       super(SArguments.RCVR_IDX, contextLevel, source);
-      this.superClass = superClass;
+      this.holderClass = holderClass;
+      this.classSide   = classSide;
     }
 
     @Override
-    public SClass getSuperClass() {
-      return superClass;
+    public SSymbol getHolderClass() {
+      return holderClass;
+    }
+
+    @Override
+    public boolean isClassSide() {
+      return classSide;
     }
   }
 }

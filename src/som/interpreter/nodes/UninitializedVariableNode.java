@@ -3,8 +3,6 @@ package som.interpreter.nodes;
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
 import som.compiler.Variable.Local;
 import som.interpreter.Inliner;
-import som.interpreter.nodes.ArgumentReadNode.LocalSuperReadNode;
-import som.interpreter.nodes.ArgumentReadNode.NonLocalSuperReadNode;
 import som.interpreter.nodes.LocalVariableNode.LocalVariableReadNode;
 import som.interpreter.nodes.LocalVariableNode.LocalVariableWriteNode;
 import som.interpreter.nodes.LocalVariableNodeFactory.LocalVariableReadNodeFactory;
@@ -13,9 +11,6 @@ import som.interpreter.nodes.NonLocalVariableNode.NonLocalVariableReadNode;
 import som.interpreter.nodes.NonLocalVariableNode.NonLocalVariableWriteNode;
 import som.interpreter.nodes.NonLocalVariableNodeFactory.NonLocalVariableReadNodeFactory;
 import som.interpreter.nodes.NonLocalVariableNodeFactory.NonLocalVariableWriteNodeFactory;
-import som.vm.Universe;
-import som.vmobjects.SClass;
-import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -63,44 +58,6 @@ public abstract class UninitializedVariableNode extends ContextualNode {
       FrameSlot varSlot = inliner.getFrameSlot(this, variable.getSlotIdentifier());
       assert varSlot != null;
       replace(new UninitializedVariableReadNode(this, varSlot));
-    }
-  }
-
-  public static final class UninitializedSuperReadNode extends ContextualNode {
-    private final SSymbol holderClass;
-    private final boolean classSide;
-
-    public UninitializedSuperReadNode(final int contextLevel,
-        final SSymbol holderClass, final boolean classSide,
-        final SourceSection source) {
-      super(contextLevel, source);
-      this.holderClass = holderClass;
-      this.classSide   = classSide;
-    }
-
-    private SClass getLexicalSuperClass() {
-      SClass clazz = (SClass) Universe.current().getGlobal(holderClass);
-      if (classSide) {
-        clazz = clazz.getSOMClass();
-      }
-      return (SClass) clazz.getSuperClass();
-    }
-
-    @Override
-    public Object executeGeneric(final VirtualFrame frame) {
-      transferToInterpreterAndInvalidate("UninitializedSuperReadNode");
-
-      if (accessesOuterContext()) {
-        NonLocalSuperReadNode node = new NonLocalSuperReadNode(contextLevel,
-            getLexicalSuperClass(), getSourceSection());
-        return replace(node).
-            executeGeneric(frame);
-      } else {
-        LocalSuperReadNode node = new LocalSuperReadNode(
-            getLexicalSuperClass(), getSourceSection());
-        return replace(node).
-            executeGeneric(frame);
-      }
     }
   }
 

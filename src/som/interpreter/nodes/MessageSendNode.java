@@ -55,7 +55,6 @@ import som.primitives.arithmetic.SubtractionPrimFactory;
 import som.vm.NotYetImplementedException;
 import som.vm.constants.Classes;
 import som.vmobjects.SBlock;
-import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerAsserts;
@@ -74,12 +73,6 @@ public final class MessageSendNode {
 
   public static AbstractMessageSendNode createForPerformNodes(final SSymbol selector) {
     return new UninitializedSymbolSendNode(selector, null);
-  }
-
-  public static AbstractMessageSendNode createForPerformInSuperclassNodes(
-      final SSymbol selector, final SClass lookupClass) {
-    return new GenericMessageSendNode(selector, null,
-        SuperDispatchNode.create(selector, lookupClass), null);
   }
 
   public static GenericMessageSendNode createGeneric(final SSymbol selector,

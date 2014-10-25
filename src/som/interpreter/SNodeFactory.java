@@ -5,7 +5,9 @@ import java.util.List;
 import som.compiler.Variable.Argument;
 import som.compiler.Variable.Local;
 import som.interpreter.nodes.ArgumentReadNode.LocalArgumentReadNode;
+import som.interpreter.nodes.ArgumentReadNode.LocalSuperReadNode;
 import som.interpreter.nodes.ArgumentReadNode.NonLocalArgumentReadNode;
+import som.interpreter.nodes.ArgumentReadNode.NonLocalSuperReadNode;
 import som.interpreter.nodes.ContextualNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.FieldNode.FieldReadNode;
@@ -20,7 +22,6 @@ import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.interpreter.nodes.ReturnNonLocalNode;
 import som.interpreter.nodes.ReturnNonLocalNode.CatchNonLocalReturnNode;
 import som.interpreter.nodes.SequenceNode;
-import som.interpreter.nodes.UninitializedVariableNode.UninitializedSuperReadNode;
 import som.interpreter.nodes.UninitializedVariableNode.UninitializedVariableReadNode;
 import som.interpreter.nodes.UninitializedVariableNode.UninitializedVariableWriteNode;
 import som.interpreter.nodes.literals.BlockNode;
@@ -76,7 +77,11 @@ public final class SNodeFactory {
 
   public static ExpressionNode createSuperRead(final int contextLevel,
         final SSymbol holderClass, final boolean classSide, final SourceSection source) {
-    return new UninitializedSuperReadNode(contextLevel, holderClass, classSide, source);
+    if (contextLevel == 0) {
+      return new LocalSuperReadNode(holderClass, classSide, source);
+    } else {
+      return new NonLocalSuperReadNode(contextLevel, holderClass, classSide, source);
+    }
   }
 
   public static ContextualNode createVariableWrite(final Local variable,
