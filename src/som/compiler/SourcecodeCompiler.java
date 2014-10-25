@@ -34,12 +34,12 @@ import som.vm.Universe;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
 
-import com.oracle.truffle.api.CompilerDirectives.SlowPath;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.source.Source;
 
 public final class SourcecodeCompiler {
 
-  @SlowPath
+  @TruffleBoundary
   public static SClass compileClass(final String path, final String file,
       final SClass systemClass, final Universe universe)
       throws IOException {
@@ -62,7 +62,7 @@ public final class SourcecodeCompiler {
     return result;
   }
 
-  @SlowPath
+  @TruffleBoundary
   public static SClass compileClass(final String stmt, final SClass systemClass,
       final Universe universe) {
     Parser parser = new Parser(new StringReader(stmt), stmt.length(), null, universe);

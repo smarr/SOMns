@@ -8,7 +8,6 @@ import som.vmobjects.SInvokable;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.CompilerDirectives.SlowPath;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -78,7 +77,6 @@ public abstract class IntDownToDoMessageNode extends TernaryExpressionNode {
     return receiver;
   }
 
-  @SlowPath
   private void reportLoopCount(final long count) {
     CompilerAsserts.neverPartOfCompilation("reportLoopCount");
     Node current = getParent();

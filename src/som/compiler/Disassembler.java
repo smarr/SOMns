@@ -29,11 +29,11 @@ import som.vm.Universe;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 
-import com.oracle.truffle.api.CompilerDirectives.SlowPath;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
 public final class Disassembler {
 
-  @SlowPath
+  @TruffleBoundary
   public static void dump(final SClass cl) {
     for (int i = 0; i < cl.getNumberOfInstanceInvokables(); i++) {
       SInvokable inv = cl.getInstanceInvokable(i);
@@ -47,7 +47,7 @@ public final class Disassembler {
     }
   }
 
-  @SlowPath
+  @TruffleBoundary
   public static void dumpMethod(final SInvokable m, final String indent) {
     Universe.errorPrintln("(");
     Universe.errorPrintln(m.getInvokable().toString());

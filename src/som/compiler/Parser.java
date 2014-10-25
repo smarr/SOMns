@@ -86,7 +86,6 @@ import som.vmobjects.SClass;
 import som.vmobjects.SInvokable.SMethod;
 import som.vmobjects.SSymbol;
 
-import com.oracle.truffle.api.CompilerDirectives.SlowPath;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -210,7 +209,6 @@ public final class Parser {
     return lexer.getStartCoordinate();
   }
 
-  @SlowPath
   public void classdef(final ClassGenerationContext cgenc) throws ParseError {
     cgenc.setName(universe.symbolFor(text));
     expect(Identifier);

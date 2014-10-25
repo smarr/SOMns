@@ -35,7 +35,7 @@ import som.vmobjects.SInvokable;
 import som.vmobjects.SInvokable.SMethod;
 import som.vmobjects.SSymbol;
 
-import com.oracle.truffle.api.CompilerDirectives.SlowPath;
+import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.dsl.NodeFactory;
 
 public abstract class Primitives {
@@ -56,10 +56,10 @@ public abstract class Primitives {
 
   public abstract void installPrimitives();
 
-  @SlowPath
   public static SInvokable constructPrimitive(final SSymbol signature,
       final NodeFactory<? extends ExpressionNode> nodeFactory,
       final Universe universe, final SClass holder) {
+    CompilerAsserts.neverPartOfCompilation();
     int numArgs = signature.getNumberOfSignatureArguments();
 
     MethodGenerationContext mgen = new MethodGenerationContext(null);
@@ -91,8 +91,8 @@ public abstract class Primitives {
     return prim;
   }
 
-  @SlowPath
   public static SInvokable constructEmptyPrimitive(final SSymbol signature) {
+    CompilerAsserts.neverPartOfCompilation();
     MethodGenerationContext mgen = new MethodGenerationContext(null);
 
     ExpressionNode primNode = EmptyPrim.create(new ArgumentReadNode(0));

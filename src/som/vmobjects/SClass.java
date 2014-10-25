@@ -39,7 +39,7 @@ import som.vmobjects.SInvokable.SPrimitive;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
-import com.oracle.truffle.api.CompilerDirectives.SlowPath;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
 public final class SClass extends SObject {
 
@@ -117,8 +117,8 @@ public final class SClass extends SObject {
     return instanceInvokables[index];
   }
 
-  @SlowPath
   public void setInstanceInvokable(final int index, final SInvokable value) {
+    CompilerAsserts.neverPartOfCompilation();
     // Set this class as the holder of the given invokable
     value.setHolder(this);
 
@@ -129,7 +129,7 @@ public final class SClass extends SObject {
     }
   }
 
-  @SlowPath
+  @TruffleBoundary
   public SInvokable lookupInvokable(final SSymbol selector) {
     SInvokable invokable;
 
@@ -227,8 +227,9 @@ public final class SClass extends SObject {
     return includesPrimitives(this) || includesPrimitives(clazz);
   }
 
-  @SlowPath
   public void loadPrimitives(final boolean displayWarning) {
+    CompilerAsserts.neverPartOfCompilation();
+
     // Compute the class name of the Java(TM) class containing the
     // primitives
     String className = "som.primitives." + getName().getString() + "Primitives";

@@ -8,7 +8,7 @@ import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.CompilerDirectives.SlowPath;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
@@ -35,7 +35,7 @@ public final class GenericDispatchNode extends AbstractDispatchWithLookupNode {
     }
   }
 
-  @SlowPath
+  @TruffleBoundary
   private SInvokable lookupMethod(final Object rcvr) {
     SClass rcvrClass = Types.getClassOf(rcvr);
     return rcvrClass.lookupInvokable(selector);
