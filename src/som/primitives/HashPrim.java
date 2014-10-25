@@ -1,11 +1,11 @@
 package som.primitives;
 
-import som.interpreter.nodes.nary.UnaryExpressionNode.UnarySideEffectFreeExpressionNode;
+import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vmobjects.SAbstractObject;
 
 import com.oracle.truffle.api.dsl.Specialization;
 
-public abstract class HashPrim extends UnarySideEffectFreeExpressionNode {
+public abstract class HashPrim extends UnaryExpressionNode {
   @Specialization
   public final long doSString(final String receiver) {
     return receiver.hashCode();

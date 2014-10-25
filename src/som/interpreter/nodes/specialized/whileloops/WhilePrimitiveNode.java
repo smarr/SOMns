@@ -29,11 +29,6 @@ public abstract class WhilePrimitiveNode extends BinaryExpressionNode {
     return whileNode.executeDispatch(frame, loopCondition, loopBody);
   }
 
-  @Override
-  public void executeVoid(final VirtualFrame frame) {
-    executeGeneric(frame);
-  }
-
   public abstract static class WhileTruePrimitiveNode extends WhilePrimitiveNode {
     public WhileTruePrimitiveNode() { super(true); }
   }

@@ -2,14 +2,14 @@ package som.primitives;
 
 import java.math.BigInteger;
 
-import som.interpreter.nodes.nary.BinaryExpressionNode.BinarySideEffectFreeExpressionNode;
+import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.vm.constants.Globals;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.Specialization;
 
-public abstract class EqualsPrim extends BinarySideEffectFreeExpressionNode {
+public abstract class EqualsPrim extends BinaryExpressionNode {
   @Specialization
   public final boolean doBoolean(final boolean left, final boolean right) {
     return left == right;

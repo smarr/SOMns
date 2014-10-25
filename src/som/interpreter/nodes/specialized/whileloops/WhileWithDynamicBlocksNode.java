@@ -28,12 +28,6 @@ public final class WhileWithDynamicBlocksNode extends AbstractWhileNode {
   }
 
   @Override
-  public void executeVoid(final VirtualFrame frame) {
-    CompilerAsserts.neverPartOfCompilation("WhileWithDynamicBlocksNode.void");
-    throw new NotYetImplementedException();
-  }
-
-  @Override
   protected SObject doWhileConditionally(final VirtualFrame frame,
       final SBlock loopCondition,
       final SBlock loopBody) {

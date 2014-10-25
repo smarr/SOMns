@@ -26,9 +26,6 @@ public abstract class TernaryExpressionNode extends ExpressionNode
   public abstract Object executeEvaluated(final VirtualFrame frame,
       final Object receiver, final Object firstArg, final Object secondArg);
 
-  public abstract void executeEvaluatedVoid(final VirtualFrame frame,
-      final Object receiver, final Object firstArg, final Object secondArg);
-
   @Override
   public final Object doPreEvaluated(final VirtualFrame frame,
       final Object[] arguments) {
@@ -36,15 +33,5 @@ public abstract class TernaryExpressionNode extends ExpressionNode
         CompilerDirectives.unsafeCast(arguments[0], Object.class, true, true),
         CompilerDirectives.unsafeCast(arguments[1], Object.class, true, true),
         CompilerDirectives.unsafeCast(arguments[2], Object.class, true, true));
-  }
-
-  public abstract static class TernarySideEffectFreeExpressionNode
-    extends TernaryExpressionNode {
-
-    @Override
-    public final void executeEvaluatedVoid(final VirtualFrame frame,
-        final Object receiver, final Object firstArg, final Object secondArg) {
-      /* NOOP, side effect free */
-    }
   }
 }

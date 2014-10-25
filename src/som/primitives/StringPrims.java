@@ -1,8 +1,8 @@
 package som.primitives;
 
-import som.interpreter.nodes.nary.BinaryExpressionNode.BinarySideEffectFreeExpressionNode;
-import som.interpreter.nodes.nary.TernaryExpressionNode.TernarySideEffectFreeExpressionNode;
-import som.interpreter.nodes.nary.UnaryExpressionNode.UnarySideEffectFreeExpressionNode;
+import som.interpreter.nodes.nary.BinaryExpressionNode;
+import som.interpreter.nodes.nary.TernaryExpressionNode;
+import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 
@@ -11,14 +11,14 @@ import com.oracle.truffle.api.dsl.Specialization;
 
 public class StringPrims {
 
-  public abstract static class ConcatPrim extends BinarySideEffectFreeExpressionNode {
+  public abstract static class ConcatPrim extends BinaryExpressionNode {
     @Specialization
     public final String doSString(final String receiver, final String argument) {
       return receiver + argument;
     }
   }
 
-  public abstract static class AsSymbolPrim extends UnarySideEffectFreeExpressionNode {
+  public abstract static class AsSymbolPrim extends UnaryExpressionNode {
     private final Universe universe;
     public AsSymbolPrim() { this.universe = Universe.current(); }
 
@@ -28,7 +28,7 @@ public class StringPrims {
     }
   }
 
-  public abstract static class SubstringPrim extends TernarySideEffectFreeExpressionNode {
+  public abstract static class SubstringPrim extends TernaryExpressionNode {
     @Specialization
     public final String doSString(final String receiver, final long start,
         final long end) {

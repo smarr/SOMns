@@ -24,7 +24,4 @@ public final class ArgumentReadNode extends ExpressionNode
       final Object[] arguments) {
     return arguments[argumentIndex];
   }
-
-  @Override
-  public void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
 }

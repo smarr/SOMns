@@ -12,7 +12,6 @@ import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.VirtualFrame;
 
 
 public final class SystemPrims {
@@ -94,8 +93,6 @@ public final class SystemPrims {
     public final long doSObject(final SObject receiver) {
       return System.currentTimeMillis() - startTime;
     }
-    @Override
-    public final void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
   }
 
   public abstract static class TicksPrim extends UnarySystemNode {
@@ -103,8 +100,6 @@ public final class SystemPrims {
     public final long doSObject(final SObject receiver) {
       return System.nanoTime() / 1000L - startMicroTime;
     }
-    @Override
-    public final void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
   }
 
   {

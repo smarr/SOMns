@@ -26,16 +26,10 @@ public final class ArgumentInitializationNode extends ExpressionNode {
     return methodBody.executeGeneric(frame);
   }
 
-  @Override
-  public void executeVoid(final VirtualFrame frame) {
-    executeAllArguments(frame);
-    methodBody.executeVoid(frame);
-  }
-
   @ExplodeLoop
   private void executeAllArguments(final VirtualFrame frame) {
     for (int i = 0; i < argumentInits.length; i++) {
-      argumentInits[i].executeVoid(frame);
+      argumentInits[i].executeGeneric(frame);
     }
   }
 

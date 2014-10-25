@@ -1,10 +1,9 @@
 package som.primitives;
 
 import som.interpreter.Types;
-import som.interpreter.nodes.nary.BinaryExpressionNode.BinarySideEffectFreeExpressionNode;
+import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
-import som.interpreter.nodes.nary.UnaryExpressionNode.UnarySideEffectFreeExpressionNode;
 import som.primitives.reflection.IndexDispatch;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
@@ -19,7 +18,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 
 
 public final class ObjectPrims {
-  public abstract static class InstVarAtPrim extends BinarySideEffectFreeExpressionNode {
+  public abstract static class InstVarAtPrim extends BinaryExpressionNode {
 
     @Child private IndexDispatch dispatch;
 
@@ -74,7 +73,7 @@ public final class ObjectPrims {
     }
   }
 
-  public abstract static class InstVarNamedPrim extends BinarySideEffectFreeExpressionNode {
+  public abstract static class InstVarNamedPrim extends BinaryExpressionNode {
     @Specialization
     public final Object doSObject(final SObject receiver, final SSymbol fieldName) {
       CompilerAsserts.neverPartOfCompilation();
@@ -91,7 +90,7 @@ public final class ObjectPrims {
     }
   }
 
-  public abstract static class ClassPrim extends UnarySideEffectFreeExpressionNode {
+  public abstract static class ClassPrim extends UnaryExpressionNode {
     @Specialization
     public final SClass doSAbstractObject(final SAbstractObject receiver) {
       return receiver.getSOMClass();

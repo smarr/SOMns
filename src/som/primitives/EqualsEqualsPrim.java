@@ -2,7 +2,7 @@ package som.primitives;
 
 import java.math.BigInteger;
 
-import som.interpreter.nodes.nary.BinaryExpressionNode.BinarySideEffectFreeExpressionNode;
+import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.vm.constants.Globals;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
@@ -11,7 +11,7 @@ import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.Specialization;
 
-public abstract class EqualsEqualsPrim extends BinarySideEffectFreeExpressionNode {
+public abstract class EqualsEqualsPrim extends BinaryExpressionNode {
 
   @Specialization
   public final boolean doBoolean(final boolean left, final boolean right) {

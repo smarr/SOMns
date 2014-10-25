@@ -1,11 +1,11 @@
 package som.primitives;
 
-import som.interpreter.nodes.nary.UnaryExpressionNode.UnarySideEffectFreeExpressionNode;
+import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vmobjects.SArray;
 
 import com.oracle.truffle.api.dsl.Specialization;
 
-public abstract class LengthPrim extends UnarySideEffectFreeExpressionNode {
+public abstract class LengthPrim extends UnaryExpressionNode {
   @Specialization
   public final long doSArray(final Object[] receiver) {
     return SArray.length(receiver);

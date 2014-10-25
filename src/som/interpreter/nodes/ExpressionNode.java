@@ -42,7 +42,6 @@ public abstract class ExpressionNode extends SOMNode {
   }
 
   public abstract Object executeGeneric(final VirtualFrame frame);
-  public abstract void   executeVoid(final VirtualFrame frame);
 
   @Override
   public ExpressionNode getFirstMethodBodyNode() { return this; }

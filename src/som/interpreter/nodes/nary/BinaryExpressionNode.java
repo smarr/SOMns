@@ -20,10 +20,10 @@ public abstract class BinaryExpressionNode extends ExpressionNode
     super(source);
   }
 
-  public abstract Object executeEvaluated(final VirtualFrame frame,
-      final Object receiver, Object argument);
+  // for nodes that are not representing source code
+  public BinaryExpressionNode() { super(null); }
 
-  public abstract void executeEvaluatedVoid(final VirtualFrame frame,
+  public abstract Object executeEvaluated(final VirtualFrame frame,
       final Object receiver, Object argument);
 
   @Override
@@ -32,17 +32,5 @@ public abstract class BinaryExpressionNode extends ExpressionNode
     return executeEvaluated(frame,
         CompilerDirectives.unsafeCast(arguments[0], Object.class, true, true),
         CompilerDirectives.unsafeCast(arguments[1], Object.class, true, true));
-  }
-
-  public abstract static class BinarySideEffectFreeExpressionNode
-    extends BinaryExpressionNode {
-
-    public BinarySideEffectFreeExpressionNode() { super(null); }
-
-    @Override
-    public final void executeEvaluatedVoid(final VirtualFrame frame,
-        final Object receiver, final Object argument) {
-      /* NOOP, side effect free */
-    }
   }
 }

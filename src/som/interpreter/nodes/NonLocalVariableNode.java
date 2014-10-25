@@ -75,9 +75,6 @@ public abstract class NonLocalVariableNode extends ContextualNode {
     protected final boolean isUninitialized() {
       return slot.getKind() == FrameSlotKind.Illegal;
     }
-
-    @Override
-    public final void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
   }
 
   public abstract static class NonLocalSuperReadNode

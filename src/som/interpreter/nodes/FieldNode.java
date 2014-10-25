@@ -108,9 +108,6 @@ public abstract class FieldNode extends ExpressionNode {
       }
       return executeEvaluated(obj);
     }
-
-    @Override
-    public void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
   }
 
   @NodeChildren({
@@ -158,11 +155,6 @@ public abstract class FieldNode extends ExpressionNode {
     public Object doObject(final VirtualFrame frame, final SObject self,
         final Object value) {
       return executeEvaluated(frame, self, value);
-    }
-
-    @Override
-    public void executeVoid(final VirtualFrame frame) {
-      executeGeneric(frame);
     }
   }
 }

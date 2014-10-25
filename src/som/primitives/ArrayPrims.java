@@ -6,9 +6,8 @@ import som.interpreter.Invokable;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
 import som.interpreter.nodes.dispatch.UninitializedValuePrimDispatchNode;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.interpreter.nodes.nary.BinaryExpressionNode.BinarySideEffectFreeExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
-import som.interpreter.nodes.nary.UnaryExpressionNode.UnarySideEffectFreeExpressionNode;
+import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.BlockPrims.ValuePrimitiveNode;
 import som.vm.constants.Classes;
 import som.vm.constants.Nil;
@@ -25,7 +24,8 @@ import com.oracle.truffle.api.nodes.RootNode;
 
 
 public final class ArrayPrims {
-  public abstract static class AtPrim extends BinarySideEffectFreeExpressionNode {
+  public abstract static class AtPrim extends BinaryExpressionNode {
+
     @Specialization
     public final Object doSArray(final Object[] receiver, final long argument) {
       return SArray.get(receiver, argument - 1);
@@ -41,7 +41,7 @@ public final class ArrayPrims {
     }
   }
 
-  public abstract static class NewPrim extends BinarySideEffectFreeExpressionNode {
+  public abstract static class NewPrim extends BinaryExpressionNode {
 
     protected final boolean receiverIsArrayClass(final SClass receiver) {
       return receiver == Classes.arrayClass;
@@ -53,10 +53,9 @@ public final class ArrayPrims {
     }
   }
 
-  public abstract static class CopyPrim extends UnarySideEffectFreeExpressionNode {
+  public abstract static class CopyPrim extends UnaryExpressionNode {
     @Specialization
     public final Object[] doArray(final VirtualFrame frame, final Object[] receiver) {
-      // TODO: should I set the owner differently?
       return receiver.clone();
     }
   }

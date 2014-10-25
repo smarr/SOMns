@@ -2,7 +2,7 @@ package som.primitives;
 
 import java.math.BigInteger;
 
-import som.interpreter.nodes.nary.UnaryExpressionNode.UnarySideEffectFreeExpressionNode;
+import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.arithmetic.ArithmeticPrim;
 import som.vm.constants.Classes;
 import som.vmobjects.SClass;
@@ -12,7 +12,7 @@ import com.oracle.truffle.api.utilities.BranchProfile;
 
 public abstract class IntegerPrims {
 
-  public abstract static class RandomPrim extends UnarySideEffectFreeExpressionNode {
+  public abstract static class RandomPrim extends UnaryExpressionNode {
     @Specialization
     public final long doLong(final long receiver) {
       return (long) (receiver * Math.random());

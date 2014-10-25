@@ -16,10 +16,10 @@ public abstract class UnaryExpressionNode extends ExpressionNode
     super(source);
   }
 
-  public abstract Object executeEvaluated(final VirtualFrame frame,
-      final Object receiver);
+  // For nodes that are not representing source code
+  public UnaryExpressionNode() { super(null); }
 
-  public abstract void executeEvaluatedVoid(final VirtualFrame frame,
+  public abstract Object executeEvaluated(final VirtualFrame frame,
       final Object receiver);
 
   @Override
@@ -27,19 +27,5 @@ public abstract class UnaryExpressionNode extends ExpressionNode
       final Object[] arguments) {
     return executeEvaluated(frame,
         CompilerDirectives.unsafeCast(arguments[0], Object.class, true, true));
-  }
-
-  public abstract static class UnarySideEffectFreeExpressionNode
-      extends UnaryExpressionNode {
-
-    public UnarySideEffectFreeExpressionNode() {
-      super(null);
-    }
-
-    @Override
-    public final void executeEvaluatedVoid(final VirtualFrame frame,
-        final Object receiver) {
-      /* NOOP, side effect free */
-    }
   }
 }

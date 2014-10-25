@@ -42,13 +42,7 @@ public final class SequenceNode extends ExpressionNode {
   @ExplodeLoop
   private void executeAllButLast(final VirtualFrame frame) {
     for (int i = 0; i < expressions.length - 1; i++) {
-      expressions[i].executeVoid(frame);
+      expressions[i].executeGeneric(frame);
     }
-  }
-
-  @Override
-  public void executeVoid(final VirtualFrame frame) {
-    executeAllButLast(frame);
-    expressions[expressions.length - 1].executeVoid(frame);
   }
 }

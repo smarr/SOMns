@@ -22,19 +22,10 @@ public final class EmptyPrim extends UnaryExpressionNode {
   }
 
   @Override
-  public void executeVoid(final VirtualFrame frame) {
-    executeGeneric(frame);
-  }
-
-  @Override
   public Object executeEvaluated(final VirtualFrame frame, final Object receiver) {
     Universe.println("Warning: undefined primitive called");
     return null;
   }
-
-  @Override
-  public void executeEvaluatedVoid(final VirtualFrame frame,
-      final Object receiver) { executeEvaluated(frame, receiver); }
 
   public static EmptyPrim create(final ExpressionNode receiver) {
     return new EmptyPrim(receiver);

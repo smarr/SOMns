@@ -44,9 +44,6 @@ public abstract class GlobalNode extends ExpressionNode {
     this.globalName = globalName;
   }
 
-  @Override
-  public final void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
-
   public abstract static class AbstractUninitializedGlobalReadNode extends GlobalNode {
     private final Universe universe;
 

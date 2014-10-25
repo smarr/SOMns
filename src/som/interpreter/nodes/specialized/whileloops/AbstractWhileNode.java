@@ -44,12 +44,6 @@ public abstract class AbstractWhileNode extends BinaryExpressionNode {
     return doWhileConditionally(frame, (SBlock) rcvr, (SBlock) arg);
   }
 
-  @Override
-  public final void executeEvaluatedVoid(final VirtualFrame frame,
-      final Object rcvr, final Object arg) {
-    doWhileConditionally(frame, (SBlock) rcvr, (SBlock) arg);
-  }
-
   protected final SObject doWhileUnconditionally(final VirtualFrame frame,
       final SBlock loopCondition, final SBlock loopBody) {
     long iterationCount = 0;
