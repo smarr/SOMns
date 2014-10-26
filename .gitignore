@@ -1,3 +1,9 @@
 build
 src_gen
 libs
+fast-igv.sh
+fast.sh
+mini-som.sh
+mini.sh
+rebench.conf
+user-dict.txt
