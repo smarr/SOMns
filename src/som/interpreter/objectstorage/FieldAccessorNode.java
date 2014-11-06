@@ -14,8 +14,6 @@ import com.oracle.truffle.api.nodes.UnexpectedResultException;
 
 
 public abstract class FieldAccessorNode extends Node {
-  protected static final int INLINE_CACHE_SIZE = 6;
-
   protected final int fieldIndex;
 
   public static AbstractReadFieldNode createRead(final int fieldIndex) {

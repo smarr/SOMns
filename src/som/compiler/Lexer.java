@@ -298,10 +298,6 @@ public final class Lexer {
     return state.text.toString();
   }
 
-  protected String getNextText() {
-    return stateAfterPeek.text.toString();
-  }
-
   protected String getRawBuffer() {
     return state.buf;
   }
