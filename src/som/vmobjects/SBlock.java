@@ -95,7 +95,7 @@ public abstract class SBlock extends SAbstractObject {
 
   public final  MaterializedFrame getContext() {
     assert context != null;
-    return CompilerDirectives.unsafeFrameCast(context);
+    return context;
   }
 
   public final Object getOuterSelf() {
