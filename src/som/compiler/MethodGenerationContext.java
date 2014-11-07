@@ -205,8 +205,9 @@ public final class MethodGenerationContext {
   }
 
   private SourceSection getSourceSectionForMethod(final SourceSection ssBody) {
+    String cls = holderGenc.isClassSide() ? "_class" : "";
     SourceSection ssMethod = ssBody.getSource().createSection(
-        holderGenc.getName().getString() + ">>" + signature.toString(),
+        holderGenc.getName().getString() + cls + ">>" + signature.toString(),
         ssBody.getStartLine(), ssBody.getStartColumn(),
         ssBody.getCharIndex(), ssBody.getCharLength());
     return ssMethod;
