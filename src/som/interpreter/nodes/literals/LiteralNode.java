@@ -25,8 +25,11 @@ import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.PreevaluatedExpression;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.NodeCost;
+import com.oracle.truffle.api.nodes.NodeInfo;
 import com.oracle.truffle.api.source.SourceSection;
 
+@NodeInfo(cost = NodeCost.NONE)
 public abstract class LiteralNode extends ExpressionNode
     implements PreevaluatedExpression {
 
