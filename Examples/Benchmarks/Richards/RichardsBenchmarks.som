@@ -2,7 +2,7 @@ RichardsBenchmarks = RBObject (
     |taskList currentTask currentTaskIdentity taskTable tracing layout queuePacketCount holdCount|
 
     createDevice: identity priority: priority work: work state: state = (
-        | data functionWork |
+        | data |
         data := DeviceTaskDataRecord create.
         self
                 createTask: identity
@@ -10,7 +10,8 @@ RichardsBenchmarks = RBObject (
                 work: work
                 state: state
                 function: 
-                        [:work :word | 
+                        [:work :word |
+                        | data functionWork | 
                         data := word.
                         functionWork := work.
                         RBObject NoWork == functionWork
@@ -30,7 +31,7 @@ RichardsBenchmarks = RBObject (
     )
 
     createHandler: identity priority: priority work: work state: state = (
-        | data workPacket count devicePacket |
+        | data |
         data := HandlerTaskDataRecord create.
         self
                 createTask: identity
@@ -39,6 +40,7 @@ RichardsBenchmarks = RBObject (
                 state: state
                 function: 
                         [:work :word | 
+                        | data workPacket |
                         data := word.
                         RBObject NoWork == work
                                 ifFalse: [RBObject WorkPacketKind == work kind 
@@ -47,13 +49,15 @@ RichardsBenchmarks = RBObject (
                         RBObject NoWork == (workPacket := data workIn)
                                 ifTrue: [self wait]
                                 ifFalse: 
-                                        [count := workPacket datum.
+                                        [ |count|
+                                          count := workPacket datum.
                                         count > 4
                                                 ifTrue: 
                                                         [data workIn: workPacket link.
                                                         self queuePacket: workPacket]
                                                 ifFalse:
-                                                        [RBObject NoWork == (devicePacket := data deviceIn)
+                                                        [ | devicePacket |
+                                                          RBObject NoWork == (devicePacket := data deviceIn)
                                                                 ifTrue: [self wait]
                                                                 ifFalse: 
                                                                         [data deviceIn: devicePacket link.
@@ -73,6 +77,7 @@ RichardsBenchmarks = RBObject (
                 state: state
                 function: 
                         [:work :word | 
+                        | data |
                         data := word.
                         data count: data count - 1.
                         0 = data count
@@ -119,7 +124,8 @@ RichardsBenchmarks = RBObject (
                 work: work
                 state: state
                 function: 
-                        [:work :word | 
+                        [:work :word |
+                        | data | 
                         data := word.
                         RBObject NoWork == work
                                 ifTrue: [self wait]
