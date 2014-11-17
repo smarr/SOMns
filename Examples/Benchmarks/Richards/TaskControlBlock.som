@@ -1,6 +1,6 @@
 
 TaskControlBlock = TaskState (
-    |link identity priority input state function handle|
+    |link identity priority input function handle|
 
     identity = (^identity)
 
