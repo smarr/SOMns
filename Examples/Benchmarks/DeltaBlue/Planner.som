@@ -204,9 +204,9 @@ Planner = (
          downstream of the given constraint. Answer a collection of unsatisfied
          constraints sorted in order of decreasing strength."
 
-        | unsatisfied todo v nextC |
-        unsatisfied := SortedCollection sortBlock:
-            [:c1 :c2 | c1 strength stronger: c2 strength].
+        | unsatisfied todo v nextC  u2 |
+        unsatisfied := OrderedCollection new.
+            
         out determinedBy: nil.
         out walkStrength: Strength absoluteWeakest.
         out stay: true.
@@ -219,6 +219,8 @@ Planner = (
                 [:c |
                  c recalculate.
                  todo add: c output]].
+
+        unsatisfied sort: [:c1 :c2 | c1 strength stronger: c2 strength].
         ^unsatisfied
     )
     
