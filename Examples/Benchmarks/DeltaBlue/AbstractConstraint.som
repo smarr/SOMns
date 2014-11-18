@@ -117,11 +117,12 @@ AbstractConstraint = (
          dataflow graph.  Answer the constraint that this constraint overrides,
          if there is one, or nil, if there isn't."
 
-        | overridden out |
+        | overridden |
         self chooseMethod: mark.
         (self isSatisfied)
             ifTrue:         "constraint can be satisfied"
                 ["mark inputs to allow cycle detection in addPropagate"
+                 | out |
                  self inputsDo: [: in | in mark: mark].
                  out := self output.
                  overridden := out determinedBy.
