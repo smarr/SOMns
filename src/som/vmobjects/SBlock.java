@@ -95,12 +95,15 @@ public abstract class SBlock extends SAbstractObject {
 
   public final  MaterializedFrame getContext() {
     assert context != null;
-    return context;
+
+    // This cast is necessary to help Graal to see that we are
+    // really having a MaterializedFrame here.
+    return MaterializedFrame.class.cast(context);
   }
 
   public final Object getOuterSelf() {
     assert context != null;
-    return SArguments.rcvr(context);
+    return SArguments.rcvr(getContext());
   }
 
   public static SInvokable getEvaluationPrimitive(final int numberOfArguments,
