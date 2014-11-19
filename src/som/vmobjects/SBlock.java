@@ -98,7 +98,10 @@ public abstract class SBlock extends SAbstractObject {
 
     // This cast is necessary to help Graal to see that we are
     // really having a MaterializedFrame here.
-    return MaterializedFrame.class.cast(context);
+    return CompilerDirectives.unsafeCast(
+        // and while we are at it, just also tell Graal the field is not null
+        // (when getContext() is used, it is guaranteed to be set, by construction)
+        context, MaterializedFrame.class, true, true);
   }
 
   public final Object getOuterSelf() {
