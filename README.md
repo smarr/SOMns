@@ -29,8 +29,7 @@ page][SOM] for links to other VM implementations.
 Obtaining and Running TruffleSOM
 --------------------------------
 
-To checkout the code, please note that we use git submodules. To obtain a proper
-checkout, it is easiest to use a recursive clone such as:
+To checkout the code:
 
     git clone https://github.com/SOM-st/TruffleSOM.git
 
