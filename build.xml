@@ -17,7 +17,7 @@
         <pathelement location="${lib.dir}/truffle-dsl-processor.jar" />
     </path>
 
-    <target name="clean">
+    <target name="clean" description="Remove build directories and generated code">
         <delete dir="${build.dir}"/>
         <delete dir="${src_gen.dir}"/>
     </target>
@@ -32,7 +32,7 @@
 		   dest="${lib.dir}/junit-4.8.1.jar" /> <!-- http://search.maven.org/remotecontent?filepath=junit/junit/4.8.1/junit-4.8.1.jar -->
     </target>
 
-    <target name="compile" depends="libs">
+    <target name="compile" depends="libs" description="Compile TruffleSOM">
         <mkdir dir="${build.dir}"/>
         <mkdir dir="${classes.dir}" />
         <mkdir dir="${src_gen.dir}" />
@@ -49,11 +49,11 @@
         </javac>
     </target>
 
-    <target name="jar" depends="compile">
+    <target name="jar" depends="compile" description="Package as JAR">
         <jar destfile="${build.dir}/som.jar" basedir="${classes.dir}"></jar>
     </target>
 
-    <target name="test" depends="compile">
+    <target name="test" depends="compile" description="Execute tests">
         <junit haltonerror="false" haltonfailure="false">
             <classpath refid="project.classpath" />
             <batchtest fork="yes"><!--  todir="${reports.tests}" -->
