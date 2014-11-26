@@ -29,7 +29,7 @@
     <target name="core-lib" depends="check-core-lib-available"
             unless="core-lib.present">
       <exec executable="git">
-        <arg value="submodules" />
+        <arg value="submodule" />
         <arg value="update" />
         <arg value="--init" />
       </exec>
