@@ -22,7 +22,21 @@
         <delete dir="${src_gen.dir}"/>
     </target>
     
-    <target name="libs">
+
+    <target name="check-core-lib-available">
+        <available file="core-lib/.git" property="core-lib.present"/>
+    </target>
+    <target name="core-lib" depends="check-core-lib-available"
+            unless="core-lib.present">
+      <exec executable="git">
+        <arg value="submodules" />
+        <arg value="update" />
+        <arg value="--init" />
+      </exec>
+    </target>
+    
+    
+    <target name="libs" depends="core-lib">
 			<mkdir dir="${lib.dir}" />
 			<get src="${truffle.libs}/truffle.jar"  usetimestamp="true"
            dest="${lib.dir}/truffle.jar"/>
