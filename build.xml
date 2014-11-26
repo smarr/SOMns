@@ -37,13 +37,25 @@
     
     
     <target name="libs" depends="core-lib">
-			<mkdir dir="${lib.dir}" />
-			<get src="${truffle.libs}/truffle.jar"  usetimestamp="true"
-           dest="${lib.dir}/truffle.jar"/>
-		    <get src="${truffle.libs}/truffle-dsl-processor.jar"  usetimestamp="true"
-          dest="${lib.dir}/truffle-dsl-processor.jar"/>
-   <get src="http://kuiper.mirrorservice.org/sites/downloads.sourceforge.net/j/ju/junit/junit/4.8.1/junit-4.8.1.jar" usetimestamp="true"
-		   dest="${lib.dir}/junit-4.8.1.jar" /> <!-- http://search.maven.org/remotecontent?filepath=junit/junit/4.8.1/junit-4.8.1.jar -->
+		<mkdir dir="${lib.dir}" />
+		<get src="${truffle.libs}/truffle.jar" usetimestamp="true"
+            dest="${lib.dir}/truffle.jar"/>
+	    <get src="${truffle.libs}/truffle-dsl-processor.jar"
+            usetimestamp="true"
+            dest="${lib.dir}/truffle-dsl-processor.jar"/>
+        <get src="http://kuiper.mirrorservice.org/sites/downloads.sourceforge.net/j/ju/junit/junit/4.8.1/junit-4.8.1.jar"
+            usetimestamp="true"
+		    dest="${lib.dir}/junit-4.8.1.jar" />
+            <!-- http://search.maven.org/remotecontent?filepath=junit/junit/4.8.1/junit-4.8.1.jar -->
+    </target>
+    
+    <target name="src-libs" depends="libs">
+		<get src="${truffle.libs}/truffle-dsl-processor.src.zip" 
+            usetimestamp="true" 
+            dest="${lib.dir}/truffle-dsl-processor.src.zip"/>
+		<get src="${truffle.libs}/truffle.src.zip" 
+            usetimestamp="true" 
+            dest="${lib.dir}/truffle.src.zip"/>
     </target>
 
     <target name="compile" depends="libs" description="Compile TruffleSOM">
@@ -65,6 +77,9 @@
 
     <target name="jar" depends="compile" description="Package as JAR">
         <jar destfile="${build.dir}/som.jar" basedir="${classes.dir}"></jar>
+    </target>
+    
+    <target name="develop" depends="libs,src-libs" description="Load all dependencies for development">
     </target>
 
     <target name="test" depends="compile" description="Execute tests">
