@@ -32,7 +32,7 @@ Obtaining and Running TruffleSOM
 To checkout the code, please note that we use git submodules. To obtain a proper
 checkout, it is easiest to use a recursive clone such as:
 
-    git clone --recursive https://github.com/SOM-st/TruffleSOM.git
+    git clone https://github.com/SOM-st/TruffleSOM.git
 
 Then, TruffleSOM can be build with Ant:
 
@@ -45,6 +45,11 @@ Afterwards, the tests can be executed with:
 A simple Hello World program is executed with:
 
     ./som.sh -cp Smalltalk Examples/Hello.som
+
+When working on TruffleSOM, for instance in Eclipse, it is helpful to download
+the source files for Truffle as well:
+
+    ant develop
 
 Information on previous authors are included in the AUTHORS file. This code is
 distributed under the MIT License. Please see the LICENSE file for details.
