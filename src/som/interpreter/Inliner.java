@@ -14,11 +14,11 @@ public final class Inliner implements NodeVisitor {
 
   private static class DummyParent extends SOMNode {
     public DummyParent() { super(null); }
-    @Child  private SOMNode child;
+    @Child  private ExpressionNode child;
 
     @Override
     public ExpressionNode getFirstMethodBodyNode() { return null; }
-    public void adopt(final SOMNode child) {
+    public void adopt(final ExpressionNode child) {
         this.child = insert(child);
     }
   }
@@ -32,7 +32,10 @@ public final class Inliner implements NodeVisitor {
     dummyParent.adopt(inlinedBody);
 
     inlinedBody.accept(new Inliner(inlinedContext));
-    return inlinedBody;
+
+    // need to return the child of the dummy parent,
+    // since the inlinedBody could have been replaced
+    return dummyParent.child;
   }
 
   private final LexicalContext inlinedContext;
