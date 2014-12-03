@@ -84,4 +84,9 @@ public final class Method extends Invokable {
   public Node copy() {
     return cloneWithNewLexicalContext(outerContext);
   }
+
+  @Override
+  public RootNode cloneRootNode() {
+    return cloneWithNewLexicalContext(outerContext);
+  }
 }
