@@ -1,6 +1,5 @@
 package som.interpreter;
 
-import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.Frame;
 
 public final class SArguments {
@@ -8,11 +7,11 @@ public final class SArguments {
   public static final int RCVR_IDX = 0;
 
   private static Object[] args(final Frame frame) {
-    return CompilerDirectives.unsafeCast(frame.getArguments(), Object[].class, true, true);
+    return frame.getArguments();
   }
 
   public static Object arg(final Frame frame, final int index) {
-    return CompilerDirectives.unsafeCast(args(frame)[index], Object.class, true, true);
+    return args(frame)[index];
   }
 
   public static Object rcvr(final Frame frame) {

@@ -7,7 +7,6 @@ import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerAsserts;
-import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -24,7 +23,7 @@ public final class GenericDispatchNode extends AbstractDispatchWithLookupNode {
   @Override
   public Object executeDispatch(
       final VirtualFrame frame, final Object[] arguments) {
-    Object rcvr = CompilerDirectives.unsafeCast(arguments[0], Object.class, true, true);
+    Object rcvr = arguments[0];
     SInvokable method = lookupMethod(rcvr);
     if (method != null) {
       return call.call(frame, method.getCallTarget(), arguments);

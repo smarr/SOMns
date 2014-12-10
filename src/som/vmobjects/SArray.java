@@ -2,8 +2,6 @@ package som.vmobjects;
 
 import java.util.Arrays;
 
-import com.oracle.truffle.api.CompilerDirectives;
-
 
 public final class SArray {
   public  static final int FIRST_IDX = 0;
@@ -21,7 +19,7 @@ public final class SArray {
   public static Object get(final Object[] arr, final long idx) {
     assert idx >= 0;
     assert idx < arr.length;
-    return CompilerDirectives.unsafeCast(arr[(int) idx], Object.class, true, true);
+    return arr[(int) idx];
   }
 
   public static void set(final Object[] arr, final long idx, final Object value) {

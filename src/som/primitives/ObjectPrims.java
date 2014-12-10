@@ -12,7 +12,6 @@ import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerAsserts;
-import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
@@ -39,8 +38,8 @@ public final class ObjectPrims {
       assert receiver instanceof SObject;
       assert firstArg instanceof Long;
 
-      SObject rcvr = CompilerDirectives.unsafeCast(receiver, SObject.class, true, true);
-      long idx     = CompilerDirectives.unsafeCast(firstArg, long.class, true, true);
+      SObject rcvr = (SObject) receiver;
+      long idx     = (long) firstArg;
       return doSObject(rcvr, idx);
     }
   }
@@ -67,8 +66,8 @@ public final class ObjectPrims {
       assert firstArg instanceof Long;
       assert secondArg != null;
 
-      SObject rcvr = CompilerDirectives.unsafeCast(receiver, SObject.class, true, true);
-      long idx     = CompilerDirectives.unsafeCast(firstArg, long.class, true, true);
+      SObject rcvr = (SObject) receiver;
+      long idx     = (long) firstArg;
       return doSObject(rcvr, idx, secondArg);
     }
   }

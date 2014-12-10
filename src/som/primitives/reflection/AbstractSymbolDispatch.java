@@ -10,7 +10,6 @@ import som.interpreter.nodes.dispatch.DispatchChain;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 
-import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
@@ -94,7 +93,7 @@ public abstract class AbstractSymbolDispatch extends Node implements DispatchCha
       if (this.selector == selector) {
         Object[] arguments = SArguments.createSArgumentsArrayFrom(receiver, argsArr);
 
-        PreevaluatedExpression realCachedSend = CompilerDirectives.unsafeCast(cachedSend, PreevaluatedExpression.class, true);
+        PreevaluatedExpression realCachedSend = (PreevaluatedExpression) cachedSend;
         return realCachedSend.doPreEvaluated(frame, arguments);
       } else {
         return nextInCache.executeDispatch(frame, receiver, selector, argsArr);
