@@ -37,7 +37,6 @@ TestHarness = (
           GlobalTest,
           HashTest,
           IntegerTest,
-          ObjectSizeTest,
           PreliminaryTest,
           ReflectionTest,
           SelfBlockTest,
