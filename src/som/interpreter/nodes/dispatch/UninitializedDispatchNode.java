@@ -5,7 +5,6 @@ import som.interpreter.Types;
 import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
 import som.interpreter.nodes.dispatch.CachedDispatchSimpleCheckNode.CachedDispatchFalseCheckNode;
 import som.interpreter.nodes.dispatch.CachedDispatchSimpleCheckNode.CachedDispatchTrueCheckNode;
-import som.vm.NotYetImplementedException;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
@@ -66,22 +65,24 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
           return replace(checkNode);
         }
       } else {
-        if (method == null) {
-          throw new NotYetImplementedException();
-        }
-        // the simple checks are prepended
-
-        AbstractCachedDispatchNode node;
         AbstractDispatchNode next = sendNode.getDispatchListHead();
 
-        if (rcvr == Boolean.TRUE) {
-          node = new CachedDispatchTrueCheckNode(callTarget, next);
-        } else if (rcvr == Boolean.FALSE) {
-          node = new CachedDispatchFalseCheckNode(callTarget, next);
+        AbstractCachedDispatchNode node;
+        if (method == null) {
+          node = new CachedDnuSimpleCheckNode(
+              rcvr.getClass(), rcvrClass, selector, next);
         } else {
-          node = new CachedDispatchSimpleCheckNode(
-                rcvr.getClass(), callTarget, next);
+          if (rcvr == Boolean.TRUE) {
+            node = new CachedDispatchTrueCheckNode(callTarget, next);
+          } else if (rcvr == Boolean.FALSE) {
+            node = new CachedDispatchFalseCheckNode(callTarget, next);
+          } else {
+            node = new CachedDispatchSimpleCheckNode(
+                  rcvr.getClass(), callTarget, next);
+          }
         }
+
+        // the simple checks are prepended
         sendNode.adoptNewDispatchListHead(node);
         return node;
       }
