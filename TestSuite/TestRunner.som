@@ -1,0 +1,77 @@
+TestRunner = (
+	| suite passes inefficacies failures |
+
+	initializeOn: aSuite = (
+		suite := aSuite.
+		
+		passes       := Vector new.
+    inefficacies := Vector new.
+    failures     := Vector new.
+	)
+
+	run = (
+		self setUp.
+		self runAll.
+		self tearDown.
+		self overviewReport.
+	)
+	
+	"Naming is reflecting the original code in the RoarVM images"
+	setUp = (
+		('TestSuite ' + suite name + ':') println.
+		('Tests: ' + suite tests size asString) println.
+	)
+	
+	"Naming is reflecting the original code in the RoarVM images"
+	tearDown = (
+    inefficacies size > 0 ifTrue: [
+      ('Inefficacies: ' + inefficacies size asString) println
+    ].
+    failures size > 0 ifTrue: [
+      ('Failures: ' + failures size asString) println
+    ].
+	)
+	
+	runAll = (
+		suite tests do: [ :each |
+		    each run: self ].
+	)
+	
+	overviewReport = (
+		('Expected passes: ' + passes size asString) println.
+		
+    (failures size > 0 or: [inefficacies size > 0]) ifTrue: [
+        '------------------------------' println ].
+		
+    
+		inefficacies size > 0 ifTrue: [
+  		('Inefficacies: ' + inefficacies size asString) println.
+  		inefficacies do: [:each |
+  			('    ' + each key asString) println.
+  			('        ' + each value asString) println ].
+    ].
+    
+		failures size > 0 ifTrue: [
+  		('Failures: ' + failures size asString) println.
+  		failures do: [:each |
+  			('    ' + each key asString) println.
+  			('        ' + each value asString) println ].
+    ].
+	)
+	
+	fail: aSignature because: aReason = (
+		| pair |
+		pair := Pair withKey: aSignature andValue: aReason.
+		failures append: pair.
+	)
+  
+  unsatisfied: aSignature because: aReason = (
+  	| pair |
+  	pair := Pair withKey: aSignature andValue: aReason.
+  	inefficacies append: pair.
+  )
+	
+	passed: aSignature = (
+	  passes append: aSignature
+	)
+)
