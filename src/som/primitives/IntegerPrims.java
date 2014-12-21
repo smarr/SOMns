@@ -6,6 +6,7 @@ import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.arithmetic.ArithmeticPrim;
 import som.vm.constants.Classes;
 import som.vmobjects.SClass;
+import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.utilities.BranchProfile;
@@ -27,6 +28,11 @@ public abstract class IntegerPrims {
     @Specialization(guards = "receiverIsIntegerClass")
     public final Object doSClass(final SClass receiver, final String argument) {
       return Long.parseLong(argument);
+    }
+
+    @Specialization(guards = "receiverIsIntegerClass")
+    public final Object doSClass(final SClass receiver, final SSymbol argument) {
+      return Long.parseLong(argument.getString());
     }
   }
 

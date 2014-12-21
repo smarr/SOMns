@@ -70,6 +70,11 @@ public final class SystemPrims {
       Universe.print(argument);
       return receiver;
     }
+
+    @Specialization(guards = "receiverIsSystemObject")
+    public final Object doSObject(final SObject receiver, final SSymbol argument) {
+      return doSObject(receiver, argument.getString());
+    }
   }
 
   public abstract static class PrintNewlinePrim extends UnarySystemNode {

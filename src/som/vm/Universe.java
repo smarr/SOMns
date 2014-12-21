@@ -324,10 +324,10 @@ public final class Universe {
     initializeSystemClass(nilClass,        objectClass, "Nil");
     initializeSystemClass(arrayClass,      objectClass, "Array");
     initializeSystemClass(methodClass,     objectClass, "Method");
-    initializeSystemClass(symbolClass,     objectClass, "Symbol");
+    initializeSystemClass(stringClass,     objectClass, "String");
+    initializeSystemClass(symbolClass,     stringClass, "Symbol");
     initializeSystemClass(integerClass,    objectClass, "Integer");
     initializeSystemClass(primitiveClass,  objectClass, "Primitive");
-    initializeSystemClass(stringClass,     objectClass, "String");
     initializeSystemClass(doubleClass,     objectClass, "Double");
     initializeSystemClass(booleanClass,    objectClass, "Boolean");
 

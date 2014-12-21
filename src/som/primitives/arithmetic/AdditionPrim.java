@@ -37,6 +37,16 @@ public abstract class AdditionPrim extends ArithmeticPrim {
   }
 
   @Specialization
+  public final String doSSymbol(final SSymbol left, final SSymbol right) {
+    return left.getString() + right.getString();
+  }
+
+  @Specialization
+  public final String doSSymbol(final SSymbol left, final String right) {
+    return left.getString() + right;
+  }
+
+  @Specialization
   public final Object doLong(final long left, final BigInteger argument) {
     return doBigInteger(BigInteger.valueOf(left), argument);
   }

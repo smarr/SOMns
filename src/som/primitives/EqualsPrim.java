@@ -67,6 +67,18 @@ public abstract class EqualsPrim extends BinaryExpressionNode {
   }
 
   @Specialization
+  public final boolean doString(final String receiver, final SSymbol argument) {
+    return receiver.equals(argument.getString());
+  }
+
+
+  @Specialization
+  public final boolean doSSymbol(final SSymbol receiver, final String argument) {
+    return receiver.getString().equals(argument);
+  }
+
+
+  @Specialization
   public final boolean doLong(final long left, final String right) {
     return false;
   }
