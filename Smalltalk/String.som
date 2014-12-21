@@ -61,6 +61,18 @@ String = (
         
         ^ true
     )
+    
+    endsWith: suffix = (
+      | l sufL |
+      l := self length.
+      sufL := suffix length.
+      l < sufL ifTrue: [ ^ false ].
+
+      1 to: sufL do: [:i |
+          (self charAt: l - sufL + i) = (suffix charAt: i) ifFalse: [ ^ false ]
+      ].
+      ^ true
+    )
 
     asInteger = (
         ^ Integer fromString: self

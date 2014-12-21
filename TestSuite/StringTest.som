@@ -56,11 +56,18 @@ StringTest = TestCase (
     self assert: 'foo'    equals: (str primSubstringFrom: 1 to: 3).
     self assert: 'bar'    equals: (str primSubstringFrom: 4 to: 6).
     self assert: 'foobar' equals: (str primSubstringFrom: 1 to: 6).
+    self assert: 'oob' equals: ('foobar' substringFrom: 2 to: 4).
   )
   
   testBeginsWith = (
     self deny:   ('foo' beginsWith: 'oo').
     self assert: ('foo' beginsWith: 'foo').
-    self assert: 'oob' equals: ('foobar' substringFrom: 2 to: 4).
+  )
+  
+  testEndsWith = (
+    self assert: ('foo' endsWith: 'foo').
+    self assert: ('foo' endsWith: 'oo').
+    self deny: ('f' endsWith: 'bar').
+    self deny: ('f' endsWith: 'foo').
   )
 )
