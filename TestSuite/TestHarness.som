@@ -27,12 +27,15 @@ TestHarness = (
 
     tests = ( "Now ordered by alphabetical order to improve maintainability"
         ^ EmptyTest,
-          SystemTest,
+
           ArrayTest,
+          BlockTest,
           ClassLoadingTest,
+          ClassStructureTest,
           ClosureTest,
           CoercionTest,
           CompilerReturnTest,
+          DoesNotUnderstandTest,
           DoubleTest,
           GlobalTest,
           HashTest,
@@ -41,13 +44,11 @@ TestHarness = (
           ReflectionTest,
           SelfBlockTest,
           SetTest,
+          StringTest,
           SuperTest,
           SymbolTest, 
-          VectorTest,
-          BlockTest,
-          StringTest,
-          ClassStructureTest,
-          DoesNotUnderstandTest
+          SystemTest,
+          VectorTest          
     )
     
     
