@@ -56,13 +56,15 @@ TestHarness = (
         
         args length = 1
             ifTrue: [
-                PreliminaryTest new run: self.
                 self tests do: [ :test |
-                      ('Running test ' + test) println. test new run: self ]]
+                  | runner |
+                  runner := TestRunner new.
+                  runner initializeOn: test.
+                  runner run.  ]]
             ifFalse: [
                 ('Running test ' + (args at: 2) + 'Test') println.
                 (system resolve: ((args at: 2) + 'Test') asSymbol) new run: self ].
-        
+
         '...done' println
     )
     
