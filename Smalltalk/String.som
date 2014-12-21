@@ -53,10 +53,10 @@ String = (
     )
 
     beginsWith: prefix = (
-        self length < prefix length ifTrue: [^ false ].
+        self length < prefix length ifTrue: [ ^ false ].
         
         1 to: prefix length do: [:i | 
-            ((self charAt: i) = (prefix charAt: i)) ifFalse: [^ false ].  
+            ((self charAt: i) = (prefix charAt: i)) ifFalse: [ ^ false ].  
         ].
         
         ^ true
