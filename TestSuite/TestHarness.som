@@ -24,6 +24,8 @@ THE SOFTWARE.
 "
 
 TestHarness = (
+    | ignoreInefficacies |
+
 
     tests = ( "Now ordered by alphabetical order to improve maintainability"
         ^ EmptyTest,
@@ -52,39 +54,62 @@ TestHarness = (
     )
     
     
-    run: args = (
-        'Testing...' println.
+    runAllSuites = (
+      |  totalTestNum successfulTestNum |
+      totalTestNum := 0.
+      successfulTestNum := 0.
+      
+      self tests do: [ :test |
+        | runner |
+        runner := TestRunner new.
+        runner initializeOn: test.
+        runner runAllTests.
+        ((runner hasInefficacies and: [ignoreInefficacies not]) or: [
+          runner hasFailures]) ifTrue: [
+          'Test Suite: ' print.
+          test name println.
+          runner overviewReport.
+          '' println.
+        ].
         
-        args length = 1
-            ifTrue: [
-                self tests do: [ :test |
-                  | runner |
-                  runner := TestRunner new.
-                  runner initializeOn: test.
-                  runner run.  ]]
-            ifFalse: [
-                ('Running test ' + (args at: 2) + 'Test') println.
-                (system resolve: ((args at: 2) + 'Test') asSymbol) new run: self ].
-
-        '...done' println
+        totalTestNum      := totalTestNum + runner expectedPasses.
+        successfulTestNum := successfulTestNum + runner actualPasses.
+        
+      ].
+      
+      'Total Number of Tests:      ' print.
+      totalTestNum println.
+      'Number of Successful Tests: ' print.
+      successfulTestNum println.
+      totalTestNum = successfulTestNum ifFalse: [ system exit: 1].
     )
     
-    fail: who = (
-        ('Test ' + who + ' failed!') println.
-        system exit: 1
+    runOneSuite: name = (
+      | testName runner |
+      testName := name.
+      (testName endsWith: 'Test') ifFalse: [
+        testName := testName + 'Test'].
+    
+      runner := TestRunner new.
+      runner initializeOn: (system resolve: testName asSymbol).
+      runner run.
+      runner hasFailures ifTrue: [system exit: 1]
     )
     
-    fail: who because: reason = (
-        ('Test ' + who + ' failed: ' + reason) println.
-        system exit: 1
-    )
+    run: args = (
+        ignoreInefficacies := false.
     
-    warn: who = (
-        ('Warning: Test ' + who + ' failed!') println.
+        args length = 1 ifTrue:  [ self runAllSuites. ].
+        args length = 2 ifTrue:  [
+          ((args at: 2) beginsWith: '--') ifTrue: [
+            (args at: 2) = '--help' ifTrue: [
+              'TestHarness.som [--help] [--ignore-inefficacies] [TestSuiteName]' println.
+              system exit: 0.
+            ].
+            (args at: 2) = '--ignore-inefficacies' ifTrue: [
+              ignoreInefficacies := true.].
+            self runAllSuites
+          ] ifFalse: [
+            self runOneSuite: (args at: 2) ]].
     )
-    
-    warn: who because: reason = (
-        ('Warning: Test ' + who + ' failed: ' + reason) println.
-    )
-    
 )
