@@ -25,21 +25,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 "
 
-CoercionTest = (
+CoercionTest = TestCase (
 
-    run: harness = (
-        25 sqrt = 5 ifFalse: [
-            harness
-                fail: self
-                because: '25 sqrt should be equal to 5.' ].
-        (2 // 4) * 2 = 1 ifFalse: [
-            harness
-                fail: self
-                because: '(2//4)*2 should be equal to 1.' ].
-        2 * (2 // 4) = 1 ifFalse: [
-            harness
-                fail: self
-                because: '2*(2//4) should be equal to 1.' ]
-    )
-
+  testBasicNumberCoercion = (
+    self assert: 5 equals: 25 sqrt.
+    self assert: 1 equals: (2 // 4) * 2.
+    self assert: 1 equals: 2 * (2 // 4).
+  )
 )

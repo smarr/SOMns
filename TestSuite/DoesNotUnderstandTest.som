@@ -1,59 +1,43 @@
-DoesNotUnderstandTest = (
+DoesNotUnderstandTest = TestCase (
 
-    testSimpleUnknownFoo: harness = (
-        | result |
-        result := self foo.
-        result class = DoesNotUnderstandMessage ifFalse: [ harness fail: self because:
-            '#dnu was customized and should result in message object' ].
-        result target = self ifFalse: [ harness fail: self because:
-            '#dnu target has to be self in this case' ].
-        result selector = #foo ifFalse: [ harness fail: self because:
-            'The unknown selector should have been #foo' ].
-    )
-    
-    testArguments: harness = (
-        | result |
-        result := self foo.
-        ((result arguments class = Array) and: [result arguments length = 0])
-            ifFalse: [ harness fail: self because:
-                'Zero argument methods should have an empty arguments array in #dnu' ].
-        
-        
-        result := self foo: 1.
-        ((result arguments length = 1) and: [(1 = (result arguments at: 1))])
-            ifFalse: [ harness fail: self because:
-                '#dnu didnt result in correct arguments array for 1 arg.'].
-        
-        result := self foo: 1 bar: 2 baz: 3.
-        ((result arguments length = 3) and: [
-            (1 = (result arguments at: 1)) and: [
-            (2 = (result arguments at: 2)) and: [
-            (3 = (result arguments at: 3))    ]]])
-            ifFalse: [ harness fail: self because:
-                '#dnu didnt result in correct arguments array for 3 args.'].
-    )
-    
-    testRepeat: harness = (
-        | result |
-        result := Array new: 5.
-        1 to: result length do: [:i |
-            result at: i put: self foo.
-            
-            i > 1 ifTrue: [
-                (result at: i - 1) ~= (result at: i) ifFalse: [ harness fail: self because:
-                    '#dnu messages do not seem to be distinct for each invocation'.
-                ].
-            ]
-        ].
-    )
+  testSimpleUnknownFoo = (
+    | result |
+    result := self foo.
+    self assert: DoesNotUnderstandMessage is: result class.
+    self assert: self is: result target.
+    self assert: #foo is: result selector.
+  )
+  
+  testArguments = (
+    | result |
+    result := self foo.
+    self assert: Array is: result arguments class.
+    self assert: 0 equals: result arguments length.
 
-    run: harness = (
-        self testSimpleUnknownFoo: harness.
-        self testArguments: harness.
-        self testRepeat: harness.
-    )
+    result := self foo: 1.
+    self assert: 1 equals: result arguments length.
+    self assert: 1 equals: (result arguments at: 1).
     
-    doesNotUnderstand: selector arguments: arguments = (
-        ^ DoesNotUnderstandMessage to: self selector: selector arguments: arguments.
-    )
+    result := self foo: 1 bar: 2 baz: 3.
+    self assert: 3 equals: result arguments length.
+    self assert: 1 equals: (result arguments at: 1).
+    self assert: 2 equals: (result arguments at: 2).
+    self assert: 3 equals: (result arguments at: 3).
+  )
+  
+  testRepeat = (
+    | result |
+    result := Array new: 5.
+    1 to: result length do: [:i |
+      result at: i put: self foo.
+      
+      i > 1 ifTrue: [
+        self assert: (result at: i - 1) ~= (result at: i).
+      ]
+    ].
+  )
+  
+  doesNotUnderstand: selector arguments: arguments = (
+      ^ DoesNotUnderstandMessage to: self selector: selector arguments: arguments.
+  )
 )

@@ -23,58 +23,38 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 "
 
-HashTest = (
+HashTest = TestCase (
 
-    "The 'run' method is called by the testing harness with the harness as its
-     argument"
+  testHashtable = (
+    | ht string array t | 
     
-    run: harness = (
-        | ht string array t | 
-        
-        ht := Hashtable new.
-        ht isEmpty
-            ifFalse: [ harness fail: self because: 'New Hashtable not empty!' ].
-        
-        ht at: 'a' put: 'b'.
-        (ht containsValue: 'b')
-            ifFalse: [ harness fail: self because: '1 not in Hashtable' ].
-        ht isEmpty
-            ifTrue: [ harness fail: self because: 'Nonempty Hashtable empty!' ].
-        ((ht size) = 1)
-            ifFalse: [
-                harness fail: self because: 'Hashtable has wrong size!' ].
-        
-        ht at: 'c' put: 'd'.
-        ((ht size) = 2)
-            ifFalse: [
-                harness fail: self because: 'Hashtable has wrong size!' ].
-        
-        ht at: 1 put: 2.
-        t := Hashtable new.
-        ht at: Hashtable put: t.
-        (ht containsValue: 'b')
-            ifFalse: [ harness fail: self because: '1 not in Hashtable' ].
-        (ht containsValue: 'd')
-            ifFalse: [ harness fail: self because: '2 not in Hashtable' ].
-        (ht containsValue: 2)
-            ifFalse: [ harness fail: self because: '3 not in Hashtable' ].
-        (ht containsValue: t)
-            ifFalse: [ harness fail: self because: '4 not in Hashtable' ].
-        (ht containsKey: Hashtable)
-            ifFalse: [ harness fail: self because: 'key not found' ].
-        
-        ht clear.
-        ht isEmpty
-            ifFalse: [
-                harness fail: self because: 'cleared hashtable is not empty!' ].
-        ht size = 0
-            ifFalse: [
-                harness fail: self because: 'cleared hashtable has elements!' ].
-        
-        string := (ht get: 'a').
-        (string = 'b')
-            ifTrue: [ harness fail: self because: 'get from Hashtable' ].
-    )
+    ht := Hashtable new.
+    self assert: ht isEmpty.
     
+    ht at: 'a' put: 'b'.
+    self assert: (ht containsValue: 'b').
+    self deny: ht isEmpty.
+    
+    self assert: 1 equals: ht size.
+    
+    ht at: 'c' put: 'd'.
+    self assert: 2 equals: ht size.
+    
+    ht at: 1 put: 2.
+    t := Hashtable new.
+    ht at: Hashtable put: t.
+    
+    self assert: (ht containsValue: 'b').
+    self assert: (ht containsValue: 'd').
+    self assert: (ht containsValue: 2).
+    self assert: (ht containsValue: t).
+    self assert: (ht containsKey: Hashtable).
+    
+    ht clear.
+    self assert: ht isEmpty.
+    self assert: 0 equals: ht size.
+    
+    self assert: nil equals: (ht get: 'a').
+  )
 )
 

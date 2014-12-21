@@ -25,69 +25,62 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 "
 
-ArrayTest = (
-    run: harness = (
-        
-        | a b j |
-        a := Array new: 3.
-        a at: 1 put: 'hello'.
-        a at: 2 put: #world.
-        a at: 3 put: 23.
-        
+ArrayTest = TestCase (
+  | a |
+  
+  setUp = (
+    a := Array new: 3.
+    a at: 1 put: 'hello'.
+    a at: 2 put: #world.
+    a at: 3 put: 23.
+  )
+  
+  testLength = (
+    self assert: 3 equals: a length
+  )
+  
+  testAt = (
+    self assert: #world equals: (a at: 2).
+    self assert: 23 equals:     (a at: 3).
+  )
+  
+  testContains = (
+    self assert: (a contains: 23).
+    self deny:   (a contains: #notInThere).
+  )
+  
+  testDo = (
+    | j |
+    j := 1.
+    
+    a do: [:i |
+      self assert: (a at: j) is: i.
+      j := j + 1.
+    ]
+  )
+  
+  testSumAndAverage = (
+    | arr |
+    arr := Array new: 3.
+    1 to: 3 do: [ :i | arr at: i put: i ].
+    
+    self assert: 6 equals: arr sum.
+    self assert: 2 equals: arr average.
+  )
+  
+  testCopyFrom = (
+    | arr b |
+    arr := Array new: 5.
+    1 to: 5 do: [ :i | arr at: i put: i ].
 
-        a length = 3 ifFalse: [
-            harness
-                fail: self
-                because: 'Error in array length (should be 3).' ].
-        (a at: 2) = #world ifFalse: [
-            harness
-                fail: self
-                because: 'Element at 2 should be #world.' ].
-        (a at: 3) = 23 ifFalse: [
-            harness
-                fail: self
-                because: 'Element at 3 should be 23.' ].
-        (a contains: 23) ifFalse: [
-            harness
-                fail: self
-                because: 'Containment check for 23 should be true.' ].
-
-		"Test #do:"
-		j := 1.
-        a do: [:i | 
-			(a at: j) = i ifFalse: [
-				harness
-					fail: self
-					because: 'Error with #do: on Array. Should have seen ', 
-							 (a at: j) asString, ' at index ', j asString,
-							 ' but got ', i asString.
-			].
-			j := j + 1.
-		].
-
-        " Test aggregation and copying of arrays "
-        1 to: 3 do: [ :i | a at: i put: i ].
-        
-        a sum = 6 ifFalse: [
-            harness
-                fail: self
-                because: 'Array sum should be 6.' ].
-        a average = 2 ifFalse: [
-            harness
-                fail: self
-                because: 'Array average should be 2.' ].
-        
-        a := Array new: 5.
-        1 to: 5 do: [ :i | a at: i put: i ].
-        b := a copyFrom: 2 to: 4.
-        ((b at: 1) = 2) && ((b at: 2) = 3) && ((b at: 3) = 4) ifFalse: [
-            harness
-                fail: self
-                because: 'Copied array should contain [2,3,4].' ].
-        b := a copyFrom: 3.
-        ((b at: 1) = 3) && ((b at: 2) = 4) && ((b at: 3) = 5) ifFalse: [
-            harness
-                fail: self
-                because: 'Copied array should contain [3,4,5].' ]
-    )
+    b := arr copyFrom: 2 to: 4.
+    self assert: 2 equals: (b at: 1).
+    self assert: 3 equals: (b at: 2).
+    self assert: 4 equals: (b at: 3).
+    
+    b := arr copyFrom: 3.
+    self assert: 3 equals: (b at: 1).
+    self assert: 4 equals: (b at: 2).
+    self assert: 5 equals: (b at: 3).
+  )
 )

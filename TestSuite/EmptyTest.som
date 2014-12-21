@@ -23,13 +23,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 "
 
-EmptyTest = (
+EmptyTest = TestCase (
 
-    "The 'run' method is called by the testing harness with the harness as its
-     argument"
-    
-    run: harness = (
-        ^self
-    )
+    "This is just an empty TestCase.
+     It only tests the basic infrastructure"
     
 )

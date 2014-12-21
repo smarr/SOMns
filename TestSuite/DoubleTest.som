@@ -23,33 +23,28 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 "
 
-DoubleTest = (
+DoubleTest = TestCase (
 
-    "The 'run' method is called by the testing harness with the harness as its
-     argument"
-    
-    run: harness = (
-        (4/3) + (4/5) = 1
-            ifFalse: [
-                harness fail: self because: 'integer division incorrect' ].
-        (4//3) + (4//5) = (32//15)
-            ifFalse: [ harness fail: self because: 'double division incorrect' ].
-        ((4/3) + (4/5)) asString = '1'
-            ifFalse: [ harness fail: self because: 'string result of integer division incorrect.' ].
-        (1//2) asString = '0.5'
-                ifFalse: [ harness fail: self because: '(1//2) asString is incorrect' ].
-        
-        0.5 asString = '0.5'
-            ifFalse: [harness fail: self because: '0.5 asString is incorrect' ].
-        1.0 = 1
-            ifFalse: [harness fail: self because: '1.0 = 1 is false, i.e., simple double and int equality is broken'].
-        
-        (5//10) round = 1
-            ifFalse: [ harness fail: self because: 'Rounded result of 0.5 should be 1' ].
-        (14//10) round = 1
-            ifFalse: [ harness fail: self because: 'Rounded result of 1.4 should be 1' ].
-        (44534//100) round = 445
-            ifFalse: [ harness fail: self because: 'Rounded result of 445.34 should be 445' ].
-    )
-    
+  testIntegerDivision = (
+    self assert: 1 equals: (4/3) + (4/5)
+  )
+  
+  testDoubleDivision = (
+    self assert: 32 // 15 equals: (4//3) + (4//5)
+  )
+  
+  testAsString = (
+    self assert: '0.5' equals: (1//2) asString.
+    self assert: '0.5' equals: 0.5 asString.
+  )
+  
+  testEquals = (
+    self assert: (1.0 = 1).
+  )
+  
+  testRound = (
+    self assert:   1 equals:     (5//10) round.
+    self assert:   1 equals:    (14//10) round.
+    self assert: 445 equals: (44534//100) round.
+  )
 )

@@ -20,59 +20,47 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 "
 
-StringTest = (
+StringTest = TestCase (
 
-    "The 'run' method is called when initializing the system"
-    run: harness = ( 
-        |str1 str2 str3|
-        
-        25 sqrt = 5 ifFalse: [
-            harness
-                fail: self
-                because: '25 sqrt should be equal to 5.' ].
-        
-        
-        "test equality (true, false, true)"
-        str1 := 'foo'.
-        str2 := 'bar'.
-        
-        (str1 = str1) ifFalse: [ harness fail: self because: 'Equality should be given for the same object.'].
-        (str1 = str2) ifTrue:  [ harness fail: self because: 'String foo and bar should not be equal.'].
-        (str2 = str2) ifFalse: [ harness fail: self because: 'Equality should be given for the same object.'].
-        
-        "test length (6)"
-        str3 := str1 + str2.
-        str3 length = 6 ifFalse: [ harness fail: self because: 'The concatenated string should be 6 elements long.' ].
-        
-        "test charAt"
-        (str3 charAt: 1) = 'f' ifFalse: [
-			harness fail: self because: '#beginsWith: gives wrong result, expected: f'].
-        (str3 charAt: 2) = 'o' ifFalse: [
-			harness fail: self because: '#beginsWith: gives wrong result, expected: o'].
-        (str3 charAt: 3) = 'o' ifFalse: [
-			harness fail: self because: '#beginsWith: gives wrong result, expected: o'].
-        (str3 charAt: 4) = 'b' ifFalse: [
-			harness fail: self because: '#beginsWith: gives wrong result, expected: b'].
-        (str3 charAt: 5) = 'a' ifFalse: [
-			harness fail: self because: '#beginsWith: gives wrong result, expected: a'].
-		(str3 charAt: 6) = 'r' ifFalse: [
-			harness fail: self because: '#beginsWith: gives wrong result, expected: r'].
-
-        "test substring. 'foo' , 'bar' , 'foobar'" 
-        (str3 primSubstringFrom: 1 to: 3) = 'foo' ifFalse: [
-            harness fail: self because: '#primSubstringFrom:to: was expected to return foo.'].
-        (str3 primSubstringFrom: 4 to: 6)  = 'bar' ifFalse: [
-            harness fail: self because: '#primSubstringFrom:to: was expected to return bar.'].
-        (str3 primSubstringFrom: 1 to: 6)  = 'foobar' ifFalse: [
-            harness fail: self because: '#primSubstringFrom:to: was expected to return foobar.'].
+  testEquality = (
+    | str1 str2 |
+    str1 := 'foo'.
+    str2 := 'bar'.
     
-		(str1 beginsWith: 'oo') ifTrue: [
-            harness fail: self because: '#beginsWith: gives wrong result (case 1)'].
-        (str1 beginsWith: 'foo') ifFalse: [
-            harness fail: self because: '#beginsWith: gives wrong result (case 2)'].
-        
-        (str3 substringFrom: 2 to: 4) = 'oob' ifFalse: [
-            harness fail: self because: '#substringFrom:to: gives wrong result'].
-	)
-    
+    self assert: str1 = str1.
+    self assert: str1 = 'foo'.
+    self assert: str1 = ('f' + 'oo').
+    self deny:   str1 = str2.
+    self assert: str2 = str2.
+  )
+  
+  testLength = (
+    self assert: 1 equals: 't' length.
+    self assert: 6 equals: ('foo' + 'bar') length.  
+  )
+  
+  testCharAt = (
+    | str |
+    str := 'foobar'.
+    self assert: 'f' equals: (str charAt: 1).
+    self assert: 'o' equals: (str charAt: 2).
+    self assert: 'o' equals: (str charAt: 3).
+    self assert: 'b' equals: (str charAt: 4).
+    self assert: 'a' equals: (str charAt: 5).
+    self assert: 'r' equals: (str charAt: 6).
+  )
+  
+  testPrimSubstringFrom = (
+    | str |
+    str := 'foobar'.
+    self assert: 'foo'    equals: (str primSubstringFrom: 1 to: 3).
+    self assert: 'bar'    equals: (str primSubstringFrom: 4 to: 6).
+    self assert: 'foobar' equals: (str primSubstringFrom: 1 to: 6).
+  )
+  
+  testBeginsWith = (
+    self deny:   ('foo' beginsWith: 'oo').
+    self assert: ('foo' beginsWith: 'foo').
+    self assert: 'oob' equals: ('foobar' substringFrom: 2 to: 4).
+  )
 )

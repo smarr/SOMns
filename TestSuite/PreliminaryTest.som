@@ -27,19 +27,16 @@ THE SOFTWARE.
 blocks, so that we might fail here rather than when the other tests
 start, in case things are broken."
 
-PreliminaryTest = (
+PreliminaryTest = TestCase (
 
-    "The 'run' method is called by the testing harness with the harness as its
-     argument"
-    
-    run: harness = (
+    testBasicSanity = (
         | sum |
         sum := 0.
         1, 2, 3 do: [ :i |
             sum := sum + i.
             i<2 ifTrue: [ sum := sum*2 ].
             i>2 ifFalse: [ sum := sum*2 ] ].
-        sum = 15 ifFalse: [ harness fail: self ]
+        self assert: 15 equals: sum
     )
     
 )

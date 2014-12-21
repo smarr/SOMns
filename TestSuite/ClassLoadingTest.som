@@ -1,18 +1,14 @@
-ClassLoadingTest = (
-    run: harness = (
-      | a b c |
-      b := ClassB new.
-      a := ClassA new.
-      c := ClassC new.
-      (b result) = 42 ifFalse: [harness fail: self because: 'The answer is 42!' ].
-      (c result) = 42 ifFalse: [harness fail: self because: 'The answer is 42!' ].
-
-      (a class) == (b class superclass) ifFalse: [
-        harness fail: self because: ('classes are not equal: ' + (a class) +' and ' + (b class superclass))
-      ].
-      
-      (b class) == (c class superclass) ifFalse: [
-        harness fail: self because: ('classes are not equal: ' + (b class) +' and ' + (c class superclass))
-      ].
-    )
+ClassLoadingTest = TestCase (
+  testEqualityOfClasses = (
+    | a b c |
+    b := ClassB new.
+    a := ClassA new.
+    c := ClassC new.
+    
+    self assert: 42 equals: b result.
+    self assert: 42 equals: c result.
+    
+    self assert: a class equals: b class superclass.
+    self assert: b class equals: c class superclass.
+  )
 )

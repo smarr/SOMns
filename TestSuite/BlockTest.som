@@ -1,4 +1,4 @@
-BlockTest = (
+BlockTest = TestCase (
     |escape_count escaped_block|
 
     simpleBlock = (
@@ -28,35 +28,41 @@ BlockTest = (
     escapingBlock = (
       ^[^42]
     )
-
-    run: harness = (
-      |counter test_inst escaping_block|
+    
+    testSimpleBlocks = (
+      self assert: 42 equals: self simpleBlock value.
+      self assert: 4  equals: (self incBlock value: 3).
+      self assert: 43 equals: ((self adderBlock: 13) value: 30).
+    )
+    
+    testClosure = (
+      | counter |
+      counter := self counterBlock.
+      self assert: 1 equals: counter value.
+      self assert: 2 equals: counter value.
+      self assert: 1 equals: self counterBlock value. "make sure each copy is independent"
+      self assert: 3 equals: counter value.
+    )
+    
+    testSelfInBlock = (
+      | test_inst |
+      test_inst := BlockTest new.
+      self assert: test_inst equals: test_inst selfKeeper value.
+      self assert: self      equals: self selfKeeper value.
+    )
+    
+    testEscapedBlock = (
+      | escaping_block |
 
       escape_count := 0.
 
-      (self simpleBlock value) = 42 ifFalse: [harness fail: self because: 'Cannot evaluate simple block'].
-
-      (self incBlock value: 41) = 42 ifFalse: [harness fail: self because: 'Cannot evaluate increment block'].
-
-      ((self adderBlock: 13) value: 29) = 42 ifFalse: [harness fail: self because: 'Cannot evalute adder block'].
-
-      counter := self counterBlock.
-      (counter value) = 1 ifFalse: [harness fail: self because: 'Counter should be 1'].
-      (counter value) = 2 ifFalse: [harness fail: self because: 'Counter should be 2'].
-      (self counterBlock value) = 1 ifFalse: [harness fail: self because: 'New counter should be 1'].
-      (counter value) = 3 ifFalse: [harness fail: self because: 'Counter should be 3'].
-
-      test_inst := BlockTest new.
-      (test_inst selfKeeper value) == test_inst ifFalse: [harness fail: self because: 'Did not close on self properly'].
-      (self selfKeeper value) == test_inst ifTrue: [harness fail: self because: 'mixed up self in closure'].
-
       escaping_block := self escapingBlock.
-      escape_count = 0 ifFalse: [harness fail: self because: 'No block has escaped so far.'].
-      (escaping_block value) = 666 ifFalse: [harness fail: self because: 'escapedBlock has not been called'].
-      escape_count = 1 ifFalse: [harness fail: self because: 'Wrong escape_count'].
-      escaped_block == escaping_block ifFalse: [harness fail: self because: 'Wrong block escaped.'].
-
-            
+      
+      self assert: 0 equals: escape_count.
+      self assert: 666 equals: escaping_block value.
+      self assert: 1 equals: escape_count.
+      
+      self assert: escaping_block is: escaped_block.
     )
 
     escapedBlock: block = (

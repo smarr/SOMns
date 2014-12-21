@@ -1,125 +1,79 @@
-ClassStructureTest = (
+ClassStructureTest = TestCase (
+  
+  testClassIdentity = (
+    self assert: Array   equals: Array new class.
+    self assert: Integer equals: 1 class.
+    self assert: Integer equals: 10000000000 class.
+    self assert: Double  equals: (1 // 2) class.
+    self assert: Double  equals: 0.5 class.
+    self assert: Block1  equals: [42] class.
+    self assert: Object  equals: Object new class.
+    self assert: Set     equals: Set new class.
+    self assert: String  equals: 'foo' class.
+    self assert: Symbol  equals: #foo class.
+    self assert: True    equals: true class.
+    self assert: False   equals: false class.
+    self assert: Nil     equals: nil class.
+  )
     
-    testClassIdentity: harness = (
-        (Array new) class = Array ifFalse: [harness fail: self
-                because: 'Array instance not of class Array'].
-        1 class = Integer ifFalse:         [harness fail: self
-                because: '1 is not instance of class Integer'].
-        10000000000 class = Integer ifFalse: [harness fail: self
-                because: '10000000000 is not instance of class Integer'].
-        (1 // 2) class = Double ifFalse:     [harness fail: self
-                because: '0.5, is not instance of class Double.'].
-        [42] class = Block1 ifFalse:         [harness fail: self
-                because: 'a Block, without parameters, is not instance of class Block1.'].
+  testThatCertainMethodsArePrimitives = (
+    | m |        
+    "This is a little fragile.
+     Index needs to be adapted with changing Class definition."
+    m := Object methods at: 1. 
+    "self expect: #class equals: m signature."
+    
+    self expect: Primitive equals: m class. "Class>>#name should be a primitive."
+        
+    m := Object methods at: 7.
+    "self expect: #asString equals: m signature."
 
-        Object new class = Object ifFalse:   [harness fail: self
-                because: 'a new object is not instance of class Object'].
-        Set new class = Set ifFalse:         [harness fail: self
-                because: 'a set is not instance of class Set'].
-        'foo' class = String ifFalse:        [harness fail: self
-                because: 'The string `foo` is not instance of class String'].
-        #foo class = Symbol ifFalse:         [harness fail: self
-                because: '#foo is not instance of class Symbol'].
-
-        true class = True ifFalse:           [harness fail: self
-                because: 'true is not instance of True'].
-        false class = False ifFalse:         [harness fail: self
-                because: 'false is not instance of False'].
-        nil class = Nil ifFalse:             [harness fail: self
-                because: 'nil is not instance of Nil'].
-    )
+    self expect: Method equals: m class. "Class>>#asString should be a normal method."
+  )
     
-    testThatCertainMethodsArePrimitives: harness = (
-        | m |        
-        "This is a little fragile.
-         Index needs to be adapted with changing Class definition."
-        m := Object methods at: 1. 
-        m signature = #class ifFalse: [
-            'Definition of Class changed. Testcase needs to be updated.' println.].
-
-        m class = Primitive ifFalse: [harness fail: self
-                because: 'Class>>#name should be a primitive.'].
-        
-        m := Object methods at: 7.
-        m signature = #asString ifFalse: [
-            'Definition of Class changed. Testcase needs to be updated.' println.].
-        m class = Method ifFalse: [harness fail: self
-                because: 'Class>>#asString should be a normal method.'].
-        
-    )
+  testAccessToInstanceFields = (
+    | o |
+    o := ClassC new.
+    o a: 333.
+    self assert: 333 equals: o a.
     
-    testAccessToInstanceFields: harness = (
-        | o |
-        o := ClassC new.
-        o a: 333.
-        o a = 333 ifFalse: [harness fail: self
-            because: 'Writing or reading of field of parent class failed.'].
-            
-        o f: 333.
-        o f = 333 ifFalse: [harness fail: self
-            because: 'Writing or reading of field of parent class failed.'].
-    )
+    o f: 333.
+    self assert: 333 equals: o f.
+  )
+  
+  testAccessToClassFields = (
+    | arr |
+    ClassC setAllAndInc: 4.
+    arr := ClassC getAll.
+    1 to: 9 do: [:i |
+      self assert: i + (4 - 1) equals: (arr at: i).
+    ].
     
-    testAccessToClassFields: harness = (
-        | arr |
-        ClassC setAllAndInc: 4.
-        arr := ClassC getAll.
-        1 to: 9 do: [:i | 
-            ((arr at: i) = (i + (4 - 1))) ifFalse: [
-                harness fail: self because: 'Access to class fields is broken.']
-        ].
-        
-        "We do that here to make sure that class fields do not interfere with
-         other class properties."
-        ClassC superclass = ClassB      ifFalse: [ harness fail: self because: 
-            'ClassC should be derived from ClassB, but the superclass is ' + ClassC superclass ].
-        ClassC class class = Metaclass  ifFalse: [ harness fail: self because:
-            'The class of ClassC of should be a Metaclass' ].
-        ClassC name = #ClassC           ifFalse: [ harness fail: self because: 
-            'ClassC name should be #ClassC, but was: ' + ClassC name.].
-        
-    )
+    "We do that here to make sure that class fields do not interfere with
+     other class properties."
+    self assert: ClassB    is: ClassC superclass.
+    self assert: Metaclass is: ClassC class class.
+    self assert: #ClassC   equals: ClassC name.
+  )
+  
+  testMetaclasses = (
+    self assert: nil              is: Object superclass.
+    self assert: Integer          is: 1 class.
+    self assert: #'Integer class' is: 1 class class name.
+    self assert: Metaclass        is: 1 class class class.
     
-    testMetaclasses: harness = (
-        Object superclass = nil         ifFalse: [ harness fail: self because:
-            'Object superclass should be nil, but was ' + Object superclass ].
-        1 class = Integer               ifFalse: [ harness fail: self because:
-            'class of 1 should be Integer' ].
-        1 class class name = #'Integer class' ifFalse: [ harness fail: self because:
-            'Integer class should be a metaclass with the proper name' ].
-        1 class class class = Metaclass       ifFalse: [ harness fail: self because:
-            'Integer class should be a metaclass' ].
-        
-        Metaclass class name = #'Metaclass class' ifFalse: [ harness fail: self because:
-            'The metaclass class name should be #Metaclass class' ].
-        Metaclass class class = Metaclass         ifFalse: [ harness fail: self because:
-            'The class of the class of a Metaclass should be a metaclass' ].
-        
-        1 class superclass = Object               ifFalse: [ harness fail: self because:
-            'Superclass of Integer should be Object' ].
-        1 class class superclass name = #'Object class' ifFalse: [ harness fail: self because:
-            'The class of the metaclass should be derived from the metaclass of the superclass'. ].
-        Object class superclass = Class           ifFalse: [ harness fail: self because:
-            'The superclass of the metaclass of Object should be Class' ].
-        Class class class = Metaclass             ifFalse: [ harness fail: self because:
-            'The class of class should be a metaclass' ].
-    )
+    self assert: #'Metaclass class' is: Metaclass class name.
+    self assert: Metaclass          is: Metaclass class class.
     
-    testInstanceFields: harness = (
-        ClassA fields length = 2 ifFalse: [ harness fail: self because:
-            'ClassA should have 2 fields but got ', ClassA fields length asString].
-        ClassB fields length = 4 ifFalse: [ harness fail: self because:
-            'ClassB should have 4 fields but got ', ClassB fields length asString].
-        ClassC fields length = 6 ifFalse: [ harness fail: self because:
-            'ClassC should have 6 fields but got ', ClassC fields length asString].
-    )
-    
-    run: harness = (
-        self testClassIdentity: harness.
-        self testThatCertainMethodsArePrimitives: harness.
-        self testAccessToInstanceFields: harness.
-        self testAccessToClassFields: harness.
-        self testMetaclasses: harness.
-        self testInstanceFields: harness.
-    )    
+    self assert: Object          is: 1 class superclass.
+    self assert: #'Object class' is: 1 class class superclass name.
+    self assert: Class           is: Object class superclass.
+    self assert: Metaclass       is: Class class class.
+  )
+  
+  testInstanceFields = (
+    self assert: 2 equals: ClassA fields length.
+    self assert: 4 equals: ClassB fields length.
+    self assert: 6 equals: ClassC fields length.
+  )
 )

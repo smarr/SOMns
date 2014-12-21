@@ -25,29 +25,25 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 "
 
-SelfBlockTest = (
+SelfBlockTest = TestCase (
 
-    run: harness = (
-        self give42 value = 42
-            ifFalse: [
-                harness fail: self because: 'access to self in block failed' ].
-    )
+  testEscapedBlock = (
+    self assert: 42 equals: self give42 value
+  )
 
-    give42 = (
-        ^[ self giveBlock value ]
-    )
+  give42 = (
+    ^[ self giveBlock value ]
+  )
 
-    giveBlock = (
-        ^self test value
-    )
+  giveBlock = (
+    ^self returnBlock value
+  )
 
-    test = (
-        ^[ self test2 value ]
-    )
+  returnBlock = (
+    ^[ self returnBlock2 value ]
+  )
 
-    test2 = (
-        ^[ 42 ]
-    )
-    
+  returnBlock2 = (
+    ^[ 42 ]
+  )
 )
-

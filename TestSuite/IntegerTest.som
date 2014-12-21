@@ -25,244 +25,202 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 "
 
-IntegerTest = (
+IntegerTest = TestCase (
 
-    | harness |
-
-    "If 'what' is false, call the fail-method of the TestHarness"
-    assert: something actual: is expected: was = (
-        (is = was)
-            ifFalse: [
-                harness fail: self 
-                because: (something+' failed. Expected: '+was+', but Actual: '+is) ].
-    )
+  testEqualityAndIdentity = (
+    | a b |
+    a := 42.
+    b := 42.
     
-    shouldBe: something actual: is expected: was = (
-        (is = was)
-            ifFalse: [
-                harness warn: self 
-                because: (something+' failed. Expected: '+was+', but Actual: '+is) ].
-    )
+    self assert: a = b.  "Integers are equal based on their value"
+    self assert: a == b. "Integers do not have pointer/reference equality. It is also supposed to be value equality."
 
-    run = ( 
-        'Testing...' println.
-        self run: (TestHarness new).
-        '...done' println
-    )
-
-    "The 'run' method is called by the testing harness with the harness as its
-     argument"
-    run: pHarness = ( 
-
-        harness := pHarness.
-
-        self classTest.
-        self assignmentTest.
-        self stringTest.
-        self rangeBorderTest.
-        self comparisonTest.
-        self additionTest.
-        self subtractionTest.
-        self multiplicationTest.
-        self divisionTest.
-        self doubleTest.
-        self moduloTest.
-        self absoluteValueTest.
-        self negatedTest.
-        self squareRootTest.
-        self andTest.
-        self bitXorTest.
-        
-        self equalityAndIdentityTest.
-    )
-
-    equalityAndIdentityTest = (
-        | a b |
-        a := 42.
-        b := 42.
-        
-        self assert: 'Equality' actual: (a = b) expected: true.
-
-        self shouldBe: 'Identity' actual: (a == b) expected: true.
-        self shouldBe: 'Identity' actual: (1073741823 == 1073741823) expected: true.
-        self shouldBe: 'Identity' actual: (1073741824 == 1073741824) expected: false.
-    )
+    "Sometimes it can be hard to implement efficiently, but it SHOULD really
+     be true for all values of integers."
+    a := 1 << 30.  b := 1 << 30.
+    self expect: a is: b.
     
-    classTest = (
-        | i |
-        self assert: 'Class' actual: (-42 class) expected: Integer.
-        self assert: 'Class' actual: (  0 class) expected: Integer.
-        self assert: 'Class' actual: ( 23 class) expected: Integer.
-        self assert: 'Class' actual: ( 1073741823 class) expected: Integer.
-        self assert: 'Class' actual: ( 1073741824 class) expected: Integer.
-        
-        "Let's test for size behavior and corresponding class"
-        i := 1 << 30.
-        self assert: 'Class'    actual: i class expected: Integer.
-        self assert: 'Positive' actual: i > 0   expected: true.  "should not overflow"
-        self assert: 'asString' actual: i asString expected: '1073741824'.
-        
-        i := 1 << 32.
-        self assert: 'Class' actual: i class expected: Integer.
-        self assert: 'Class' actual: i > 0   expected: true.  "should not overflow"
-        self assert: 'asString' actual: i asString expected: '4294967296'.
-        
-        i := 1 << 60.
-        self assert: 'Class' actual: i class expected: Integer.
-        self assert: 'Class' actual: i > 0   expected: true.  "should not overflow"
-        self assert: 'asString' actual: i asString expected: '1152921504606846976'.
-        
-        i := 1 << 70.
-        self assert: 'Class' actual: i class expected: Integer.
-        self assert: 'Class' actual: i > 0   expected: true.  "should not overflow"
-        self assert: 'asString' actual: i asString expected: '1180591620717411303424'.
-        
-        i := -1 << 30.
-        self assert: 'Class' actual: i class expected: Integer.
-        self assert: 'Class' actual: i < 0   expected: true.  "should not overflow"
-        self assert: 'asString' actual: i asString expected: '-1073741824'.
-        
-        i := -1 << 32.
-        self assert: 'Class' actual: i class expected: Integer.
-        self assert: 'Class' actual: i < 0   expected: true.  "should not overflow"
-        self assert: 'asString' actual: i asString expected: '-4294967296'.
-        
-        i := -1 << 60.
-        self assert: 'Class' actual: i class expected: Integer.
-        self assert: 'Class' actual: i < 0   expected: true.  "should not overflow"
-        self assert: 'asString' actual: i asString expected: '-1152921504606846976'.
-        
-        i := -1 << 70.
-        self assert: 'Class' actual: i class expected: Integer.
-        self assert: 'Class' actual: i < 0   expected: true.  "should not overflow"
-        self assert: 'asString' actual: i asString expected: '-1180591620717411303424'.
-    )
-
-    assignmentTest = (  | a |
-        a := 42.  self assert: 'Assignment' actual: a expected: 42.
-        a := 0.   self assert: 'Assignment' actual: a expected: 0.
-        a := -34. self assert: 'Assignment' actual: a expected: -34.
-    )
-            
-    stringTest = (
-        self assert: 'As String' actual: (0     asString) expected: '0'.
-        self assert: 'As String' actual: (1     asString) expected: '1'.
-        self assert: 'As String' actual: (2     asString) expected: '2'.
-        self assert: 'As String' actual: (-1 asString) expected: '-1'.
-        self assert: 'As String' actual: (-2 asString) expected: '-2'.
-        
-        self assert: 'From String' actual: (Integer fromString:  '1') expected:  1.
-        self assert: 'From String' actual: (Integer fromString: '-1') expected: -1.
-        self assert: 'From String' actual: (Integer fromString: '42') expected: 42.
-        
-        self assert: 'As Integer' actual: '42' asInteger expected: 42.
-        self assert: 'As Integer' actual: '-2' asInteger expected: -2.
-    )
-            
-    rangeBorderTest = (
-        self assert: 'Range Border' actual: ( 536870911  asString) expected: '536870911'.
-        self assert: 'Range Border' actual: ( 536870912  asString) expected: '536870912'.
-        self assert: 'Range Border' actual: ( 536870913  asString) expected: '536870913'.
-        self assert: 'Range Border' actual: (1073741823  asString) expected: '1073741823'.
-        self assert: 'Range Border' actual: (1073741824  asString) expected: '1073741824'.
-        self assert: 'Range Border' actual: (1073741825  asString) expected: '1073741825'.
-        self assert: 'Range Border' actual: (2147483647  asString) expected: '2147483647'.
-        self assert: 'Range Border' actual: ( -536870911 asString) expected: '-536870911'.
-        self assert: 'Range Border' actual: ( -536870912 asString) expected: '-536870912'.
-        self assert: 'Range Border' actual: ( -536870913 asString) expected: '-536870913'.
-        self assert: 'Range Border' actual: (-1073741823 asString) expected: '-1073741823'.
-        self assert: 'Range Border' actual: (-1073741824 asString) expected: '-1073741824'.
-        self assert: 'Range Border' actual: (-1073741825 asString) expected: '-1073741825'.
-        self assert: 'Range Border' actual: (-2147483647 asString) expected: '-2147483647'.
-        self assert: 'Range Border' actual: (-2147483648 asString) expected: '-2147483648'.
-    )
-            
-    comparisonTest = (
-        self assert: 'Comparison ='  actual: (9=9)  expected: true.
-        self assert: 'Comparison ='  actual: (1=2)  expected: false.
-        self assert: 'Comparison <'  actual: (0<0)  expected: false.
-        self assert: 'Comparison <'  actual: (1<2)  expected: true.
-        self assert: 'Comparison <'  actual: (2<1)  expected: false.
-        self assert: 'Comparison <'  actual: (-3<2) expected: true.
-        self assert: 'Comparison <'  actual: (3< -2) expected: false.
-        self assert: 'Comparison >'  actual: (0>0)  expected: false.
-        self assert: 'Comparison >'  actual: (1>2)  expected: false.
-        self assert: 'Comparison >'  actual: (2>1)  expected: true.
-        self assert: 'Comparison >'  actual: (-3>2) expected: false.
-        self assert: 'Comparison >'  actual: (3> -2) expected: true.
-        self assert: 'Comparison >=' actual: (4>=3) expected: true.
-        self assert: 'Comparison >=' actual: (3>=3) expected: true.
-        self assert: 'Comparison >=' actual: (2>=3) expected: false.
-        self assert: 'Comparison <=' actual: (2<=4) expected: true.
-        self assert: 'Comparison <=' actual: (3<=3) expected: true.
-        self assert: 'Comparison <=' actual: (4<=3) expected: false.
-    )
-
-    additionTest = (
-        self assert: 'Addition' actual: (0+0)  expected: 0.
-        self assert: 'Addition' actual: (1+0)  expected: 1.
-        self assert: 'Addition' actual: (0+1)  expected: 1.
-        self assert: 'Addition' actual: (1+1)  expected: 2.
-        self assert: 'Addition' actual: (-1+1) expected: 0.
-        self assert: 'Addition' actual: (-1+2) expected: 1.
-    )
-
-    subtractionTest = (
-        self assert: 'Subtraction' actual: (1-0) expected: 1.
-        self assert: 'Subtraction' actual: (0-1) expected: -1.
-        self assert: 'Subtraction' actual: (2-1) expected: 1.
-    )
-
-    multiplicationTest = (
-        self assert: 'Multiplication' actual: (1*0)   expected: 0.                      
-        self assert: 'Multiplication' actual: (-1*1)  expected: -1.                     
-        self assert: 'Multiplication' actual: (5* -5)  expected: -25.                       
-        self assert: 'Multiplication' actual: (-3* -4) expected: 12.    
-    )
-
-    divisionTest = (
-        self assert: 'Division' actual: (1/1)    expected: 1.                       
-        self assert: 'Division' actual: (3/2)    expected: 1.   
-        self assert: 'Division' actual: (4/ -2)      expected: -2.      
-        self assert: 'Division' actual: (-6/3)   expected: -2.      
-        self assert: 'Division' actual: (-12/ -4) expected: 3.      
-    )
-
-    doubleTest = (
-        self assert: 'Comparison With Double' actual: (36//6)  expected: 6.
-        self assert: 'Comparison With Double' actual: (-10//2) expected: -5.
-        self assert: 'Comparison With Double' actual: (20// -5) expected: -4.
-        self assert: 'Comparison With Double' actual: (-5// -5) expected: 1.
-    )
-            
-    moduloTest = (
-        self assert: 'Modulo' actual: (10%3) expected: 1. 
-        self assert: 'Modulo' actual: (10% -3) expected: -2.
-    )
-
-    absoluteValueTest = (
-        self assert: 'Absolute Value' actual: (-4 abs) expected: 4.
-        self assert: 'Absolute Value' actual: (4 abs)  expected: 4.
-    )
-
-    negatedTest = (
-        self assert: 'Negated' actual: (23  negated) expected: -23.
-        self assert: 'Negated' actual: (-23 negated) expected: 23.
-    )
-
-    squareRootTest = (
-        self assert:   'SquareRoot' actual: (25 sqrt) expected: 5.
-        self shouldBe: 'SquareRoot' actual: (25 sqrt class) expected: Integer.
-    )
-
-    andTest = (
-        self assert: 'AND' actual: (2 & 1) expected: 0.
-        self assert: 'AND' actual: (2 & 2) expected: 2.
-    )
+    a := 1 << 32.  b := 1 << 32.
+    self expect: a is: b.
     
-    bitXorTest = (
-        self assert: 'bitXor' actual: (1 bitXor: 1) expected: 0.
-        self assert: 'bitXor' actual: (2 bitXor: 1) expected: 3.
-    )
+    a := 1 << 60.  b := 1 << 60.
+    self expect: a is: b.
     
+    a := 1 << 70.  b := 1 << 70.
+    self expect: a is: b.
+    
+    a := 1 << 100.  b := 1 << 100.
+    self expect: a is: b.
+  )
+    
+  testClassAndValueRanges = (
+    | i |
+    self assert: Integer equals: -42 class.
+    self assert: Integer equals:   0 class.
+    self assert: Integer equals:  23 class.
+    self assert: Integer equals:  1073741823 class.
+    self assert: Integer equals:  1073741824 class.
+    
+    "Let's test for size behavior and corresponding class"
+    i := 1 << 30.
+    self assert: Integer equals: i class.
+    self assert: i > 0 description: 'should not overflow'.
+    self assert: '1073741824' equals: i asString.
+    
+    i := 1 << 32.
+    self assert: Integer equals: i class.
+    self assert: i > 0 description: 'should not overflow'.
+    self assert: '4294967296' equals: i asString.
+    
+    i := 1 << 60.
+    self assert: Integer equals: i class.
+    self assert: i > 0 description: 'should not overflow'.
+    self assert: '1152921504606846976' equals: i asString.
+    
+    i := 1 << 70.
+    self assert: Integer equals: i class.
+    self assert: i > 0 description: 'should not overflow'.
+    self assert: '1180591620717411303424' equals: i asString.
+    
+    i := -1 << 30.
+    self assert: Integer equals: i class.
+    self assert: i < 0 description: 'should not underflow'.
+    self assert: '-1073741824' equals: i asString.
+    
+    i := -1 << 32.
+    self assert: Integer equals: i class.
+    self assert: i < 0 description: 'should not underflow'.
+    self assert: '-4294967296' equals: i asString.
+    
+    i := -1 << 60.
+    self assert: Integer equals: i class.
+    self assert: i < 0 description: 'should not underflow'.
+    self assert: '-1152921504606846976' equals: i asString.
+    
+    i := -1 << 70.
+    self assert: Integer equals: i class.
+    self assert: i < 0 description: 'should not underflow'.
+    self assert: '-1180591620717411303424' equals: i asString.
+  )
+            
+  testStringConversion = (
+    self assert:  '0' equals: ( 0 asString).
+    self assert:  '1' equals: ( 1 asString).
+    self assert:  '2' equals: ( 2 asString).
+    self assert: '-1' equals: (-1 asString).
+    self assert: '-2' equals: (-2 asString).
+    
+    self assert:  1 equals: (Integer fromString:  '1').
+    self assert: -1 equals: (Integer fromString: '-1').
+    self assert: 42 equals: (Integer fromString: '42').
+    
+    self assert: 42 equals: '42' asInteger.
+    self assert: -2 equals: '-2' asInteger.
+  )
+          
+  testRangeBorders = (
+    self assert:   '536870911' equals:   536870911 asString.
+    self assert:   '536870912' equals:   536870912 asString.
+    self assert:   '536870913' equals:   536870913 asString.
+    self assert:  '1073741823' equals:  1073741823 asString.
+    self assert:  '1073741824' equals:  1073741824 asString.
+    self assert:  '1073741825' equals:  1073741825 asString.
+    self assert:  '2147483647' equals:  2147483647 asString.
+    self assert:  '-536870911' equals:  -536870911 asString.
+    self assert:  '-536870912' equals:  -536870912 asString.
+    self assert:  '-536870913' equals:  -536870913 asString.
+    self assert: '-1073741823' equals: -1073741823 asString.
+    self assert: '-1073741824' equals: -1073741824 asString.
+    self assert: '-1073741825' equals: -1073741825 asString.
+    self assert: '-2147483647' equals: -2147483647 asString.
+    self assert: '-2147483648' equals: -2147483648 asString.
+  )
+          
+  testComparisons = (
+    self assert: ( 9 =  9).
+    self deny:   ( 1 =  2).
+    self deny:   ( 0 <  0).
+    self assert: ( 1 <  2).
+    self deny:   ( 2 <  1).
+    self assert: (-3 <  2).
+    self deny:   ( 3 < -2).
+    self deny:   ( 0 >  0).
+    self deny:   ( 1 >  2).
+    self assert: ( 2 >  1).
+    self deny:   (-3 >  2).
+    self assert: ( 3 > -2).
+    self assert: ( 4 >= 3).
+    self assert: ( 3 >= 3).
+    self deny:   ( 2 >= 3).
+    self assert: ( 2 <= 4).
+    self assert: ( 3 <= 3).
+    self deny:   ( 4 <= 3).
+  )
+
+  testAddition = (
+    self assert: 0 equals: ( 0+0).
+    self assert: 1 equals: ( 1+0).
+    self assert: 1 equals: ( 0+1).
+    self assert: 2 equals: ( 1+1).
+    self assert: 0 equals: (-1+1).
+    self assert: 1 equals: (-1+2).
+  )
+
+  testSubtraction = (
+    self assert:  1 equals: (1-0).
+    self assert: -1 equals: (0-1).
+    self assert:  1 equals: (2-1).
+  )
+
+  testMultiplication = (
+    self assert:   0 equals: ( 1*  0).                     
+    self assert:  -1 equals: (-1*  1).                   
+    self assert: -25 equals: ( 5* -5).                    
+    self assert:  12 equals: (-3* -4).
+  )
+
+  testDivision = (
+    self assert:  1 equals: (  1/  1).                       
+    self assert:  1 equals: (  3/  2).   
+    self assert: -2 equals: (  4/ -2).      
+    self assert: -2 equals: ( -6/  3).      
+    self assert:  3 equals: (-12/ -4).      
+  )
+
+  testDouble = (
+    self assert:  6 equals: ( 36//  6).
+    self assert: -5 equals: (-10//  2).
+    self assert: -4 equals: ( 20// -5).
+    self assert:  1 equals: ( -5// -5).
+  )
+          
+  testModulo = (
+    self assert:  1 equals: (10 %  3).
+    self assert: -2 equals: (10 % -3).
+  )
+
+  testAbsoluteValue = (
+    self assert: 4 equals: (-4 abs).
+    self assert: 4 equals: ( 4 abs).
+  )
+
+  testNegated = (
+    self assert: -23 equals: ( 23 negated).
+    self assert:  23 equals: (-23 negated).
+  )
+
+  testSquareRoot = (
+    self assert:       5 equals: (25 sqrt).
+    self assert: Integer equals: (25 sqrt class).
+  )
+
+  testAnd = (
+    self assert: 0 equals: (2 & 1).
+    self assert: 2 equals: (2 & 2).
+  )
+  
+  testBitXor = (
+    self assert: 0 equals: (1 bitXor: 1).
+    self assert: 3 equals: (2 bitXor: 1).
+  )
 )

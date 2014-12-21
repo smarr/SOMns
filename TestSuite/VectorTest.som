@@ -25,44 +25,35 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 "
 
-VectorTest = (
-    run: harness = (
-        
-        | a j |
-        a := Vector new.
-        a append: 'hello'.
-        a append: #world.
-        a append: 23.
-        
-
-        a size = 3 ifFalse: [
-            harness
-                fail: self
-                because: 'Error in Vector size (should be 3).' ].
-        (a at: 2) = #world ifFalse: [
-            harness
-                fail: self
-                because: 'Element at 2 should be #world.' ].
-        (a at: 3) = 23 ifFalse: [
-            harness
-                fail: self
-                because: 'Element at 3 should be 23.' ].
-        (a contains: 23) ifFalse: [
-            harness
-                fail: self
-                because: 'Containment check for 23 should be true.' ].
-
-        "Test #do:"
-        j := 1.
-        a do: [:i | 
-            (a at: j) = i ifFalse: [
-                harness
-                    fail: self
-                    because: 'Error with #do: on Array. Should have seen ', 
-                             (a at: j) asString, ' at index ', j asString,
-                             ' but got ', i asString.
-            ].
-            j := j + 1.
-        ].
-    )
+VectorTest = TestCase (
+  | a |
+  
+  setUp = (
+    a := Vector new.
+    a append: 'hello'.
+    a append: #world.
+    a append: 23.
+  )
+  
+  testSize = (
+    self assert: 3 equals: a size.
+  )
+  
+  testAt = (
+    self assert: #world equals: (a at: 2).
+    self assert:     23 equals: (a at: 3).
+  )
+  
+  testContains = (
+    self assert: (a contains: 23).
+  )
+  
+  testDo = (
+    | j |
+    j := 1.
+    a do: [:i |
+      self assert: i equals: (a at: j).
+      j := j + 1.
+    ].
+  )
 )

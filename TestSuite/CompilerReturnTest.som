@@ -25,66 +25,56 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 "
 
-CompilerReturnTest = (
+CompilerReturnTest = TestCase (
 
-    test1 = ( ^self )
-    test2 = (       )
+    return1 = ( ^self )
+    return2 = (       )
     
-    test3: arg = ( ^self )
-    test4: arg = (       )
+    return3: arg = ( ^self )
+    return4: arg = (       )
     
-    run: harness = (
-        self testIfTrue: harness.
-    
-        self test1 == self
-            ifFalse: [
-                harness
-                    fail: self
-                    because: 'Method test1 did not return self.' ].
-        self test2 == self
-            ifFalse: [
-                harness
-                    fail: self
-                    because: 'Method test2 did not return self.' ].
-        (self test3: 23) == self
-            ifFalse: [
-                harness
-                    fail: self
-                    because: 'Method test3 did not return self.' ].
-        (self test4: 23) == self
-            ifFalse: [
-                harness
-                    fail: self
-                    because: 'Method test4 did not return self.' ]
+    testExplicitAndImplicitReturns = (
+      self assert: self is: self return1.
+      self assert: self is: self return2.
+      self assert: self is: (self return3: 23).
+      self assert: self is: (self return4: 23).
     )
+    
     
     "In SOM++, code after the #ifTrue: does not seem to be executed, if the
      block expression ends with a dot."
-    testIfTrue: harness = (
-        | arr |
-        arr := Array new: 3.
-        self usesIfTrueWithDot: arr.
-        (arr at: 1) = 1 ifFalse: [ harness fail: self because: 'usesIfTrueWithDot method was not executed'].
-        (arr at: 2) = 2 ifFalse: [ harness fail: self because: 'usesIfTrueWithDot ifTrue was not executed'].
-        (arr at: 3) = 3 ifFalse: [ harness fail: self because: 'usesIfTrueWithDot remainder was not executed'].
-        
-        arr := Array new: 3.
-        self usesIfTrueWithoutDot: arr.
-        (arr at: 1) = 1 ifFalse: [ harness fail: self because: 'usesIfTrueWithoutDot method was not executed'].
-        (arr at: 2) = 2 ifFalse: [ harness fail: self because: 'usesIfTrueWithoutDot ifTrue was not executed'].
-        (arr at: 3) = 3 ifFalse: [ harness fail: self because: 'usesIfTrueWithoutDot remainder was not executed'].
-        
-        arr := Array new: 3.
-        self usesIfFalseWithDot: arr.
-        (arr at: 1) = 1 ifFalse: [ harness fail: self because: 'usesIfFalseWithDot method was not executed'].
-        (arr at: 2) = 2 ifFalse: [ harness fail: self because: 'usesIfFalseWithDot ifTrue was not executed'].
-        (arr at: 3) = 3 ifFalse: [ harness fail: self because: 'usesIfFalseWithDot remainder was not executed'].
-        
-        arr := Array new: 3.
-        self usesIfFalseWithoutDot: arr.
-        (arr at: 1) = 1 ifFalse: [ harness fail: self because: 'usesIfFalseWithoutDot method was not executed'].
-        (arr at: 2) = 2 ifFalse: [ harness fail: self because: 'usesIfFalseWithoutDot ifTrue was not executed'].
-        (arr at: 3) = 3 ifFalse: [ harness fail: self because: 'usesIfFalseWithoutDot remainder was not executed'].
+    testIfTrueWithDot = (
+      | arr |
+      arr := Array new: 3.
+      self usesIfTrueWithDot: arr.
+      self assertArrayCorrectness: arr.
+    )
+    
+    assertArrayCorrectness: arr = (
+      self assert: 1 equals: (arr at: 1). "method was not executed"
+      self assert: 2 equals: (arr at: 2). "ifTrue was not executed"
+      self assert: 3 equals: (arr at: 3). "remainder was not executed"      
+    )
+
+    testIfTrueWithoutDot = (
+      | arr |
+      arr := Array new: 3.
+      self usesIfTrueWithoutDot: arr.
+      self assertArrayCorrectness: arr.
+    )
+    
+    testIfFalseWithDot = (
+      | arr |
+      arr := Array new: 3.
+      self usesIfFalseWithDot: arr.
+      self assertArrayCorrectness: arr.
+    )
+    
+    testIfFalseWithoutDot = (
+      | arr |
+      arr := Array new: 3.
+      self usesIfFalseWithoutDot: arr.
+      self assertArrayCorrectness: arr.
     )
     
     usesIfTrueWithDot: arr = (

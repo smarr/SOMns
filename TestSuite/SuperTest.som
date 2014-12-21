@@ -27,30 +27,20 @@ THE SOFTWARE.
 
 SuperTest = SuperTestSuperClass (
 
-    run: harness = (
-        self give42 = 42
-            ifFalse: [
-                harness
-                    fail: self
-                    because: 'Direct send to super did not return 42.' ].
-        self blockGive42 = 42
-            ifFalse: [
-                harness
-                    fail: self
-                    because: 'Send to super from block did not return 42.' ]
-    )
+  testSuper = (
+    self assert: 42 equals: self give42.
+    self assert: 42 equals: self blockGive42.
+  )
 
-    give42 = (
-        ^super give42
-    )
+  give42 = (
+    ^super give42
+  )
 
-    blockGive42 = (
-        ^[ super give42 ] value
-    )
-    
-    something = (
-        ^ #sub
-    )
-    
+  blockGive42 = (
+    ^[ super give42 ] value
+  )
+  
+  something = (
+    ^ #sub
+  )
 )
-
