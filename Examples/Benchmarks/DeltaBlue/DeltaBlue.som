@@ -4,11 +4,6 @@ DeltaBlue = Benchmark (
         Strength initialize.
         Planner chainTest: innerIterations.
         Planner projectionTest: innerIterations.
-    )
-
-    benchmark = (
-        Strength initialize.
-        Planner chainTest: innerIterations.
-        Planner projectionTest: innerIterations.
+        ^ true
     )
 )

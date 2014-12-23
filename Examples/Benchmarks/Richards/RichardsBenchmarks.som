@@ -318,10 +318,7 @@ RichardsBenchmarks = RBObject (
 
         self schedule.
 
-        ((queuePacketCount = 23246) and: (holdCount = 9297))
-            ifFalse: [
-                'Results are incorrect' println.
-                system exit: 1].
+        ^ ((queuePacketCount = 23246) and: (holdCount = 9297))
     )
 
 
