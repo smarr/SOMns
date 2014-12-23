@@ -96,7 +96,8 @@ Benchmark = (
         [ i < numIterations ] whileTrue: [
             | startTime endTime runTime |
             startTime := system ticks.
-            self innerBenchmarkLoop.
+            self innerBenchmarkLoop ifFalse: [
+              self error: 'Benchmark failed with incorrect result'. ].
             endTime   := system ticks.
             
             runTime := endTime - startTime.
@@ -119,9 +120,10 @@ Benchmark = (
         | i |
         i := 0.
         [ i < innerIterations ] whileTrue: [
-            self benchmark.
+            (self verifyResult: self benchmark) ifFalse: [ ^ false ].
             i := i + 1.
         ].
+        ^ true
     )
     
     printRun: runTime = (
@@ -133,6 +135,13 @@ Benchmark = (
     )
     
     benchmark  = ( self subclassResponsibility )
+    verifyResult: result = ( self subclassResponsibility )
     name       = ( ^self class name asString )
     
+    assert: expected equals: value = (
+      expected = value ifFalse: [
+        self error: 'Expected value (' + expected asString + ') differs from actual (' + value asString + ') benchmark result.'
+      ].
+      ^ true
+    )
 )
