@@ -26,9 +26,15 @@ THE SOFTWARE.
 Dispatch = Benchmark (
 
     benchmark = (
-        1 to: 20000 do: [ :i | self method: i ]
+        | cnt |
+        cnt := 0.
+        1 to: 20000 do: [ :i | cnt := cnt + (self method: i) ]
     )
     
     method: argument = ( ^argument )
+    
+    verifyResult: result = (
+      ^ 200010000 = result
+    )
     
 )

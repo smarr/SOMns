@@ -12,9 +12,11 @@ NonLocalReturn = Benchmark (
         | sum |
         sum := 0.
         1 to: 200 do: [ :i | sum := sum + self nlr ].
-        (sum = 200) 
-            ifFalse: [
-                self error: 'Wrong result: ' + sum + ' should be: 200' ]
+        ^ sum
+    )
+    
+    verifyResult: result = (
+      ^ 200 = result
     )
     
 )

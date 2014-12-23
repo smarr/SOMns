@@ -65,6 +65,13 @@ FieldLoop = Benchmark (
           counter := counter + 1.
           counter := counter + 1.
           
-        ]
-    )    
+        ].
+        
+        ^ counter
+    )
+    
+    verifyResult: result = (
+      ^ 600000 = result
+    )
+    
 )

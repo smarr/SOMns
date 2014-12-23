@@ -7,6 +7,12 @@ FieldWrite = Benchmark (
         
         1 to: 20000 do: [:i |
           counter := 2122.
-        ]
-    )    
+        ].
+        ^ counter
+    )
+    
+    verifyResult: result = (
+      ^ 2122 = result and: [counter = result]
+    )
+    
 )

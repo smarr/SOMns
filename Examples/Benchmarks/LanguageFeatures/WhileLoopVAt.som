@@ -42,5 +42,8 @@ WhileLoopVAt = Benchmark (
         ^ sum
     )
     
+    verifyResult: result = (
+      ^ 20000 = result
+    )
 )
 

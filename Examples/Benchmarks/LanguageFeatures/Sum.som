@@ -28,9 +28,7 @@ Sum = Benchmark (
     benchmark = (
         | result |
         1 to: 2 do: [ :i | result := self sumFrom: 1 to: 10000 ].
-        (result = 50005000)
-            ifFalse: [
-                self error: 'Wrong result: ' + result + ' should be: 50005000' ]
+        ^ result
     )
     
     sumFrom: start to: end = (
@@ -39,4 +37,9 @@ Sum = Benchmark (
         start to: end do: [ :i | sum := sum + i ].
         ^sum
     )
+    
+    verifyResult: result = (
+      ^ 50005000 = result
+    )
+    
 )

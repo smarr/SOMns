@@ -25,8 +25,13 @@ THE SOFTWARE.
 
 IntegerLoop = Benchmark (
 
-    benchmark = ( | bounds |
+    benchmark = ( | bounds a |
         bounds := 20000.
-        bounds negated to: bounds by: 1 do: [:value | |a| a := value-value].
+        bounds negated to: bounds by: 1 do: [:value | a := value-value].
+        ^ a
+    )
+    
+    verifyResult: result = (
+      ^ 0 = result
     )
 )

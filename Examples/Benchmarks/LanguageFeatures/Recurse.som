@@ -26,11 +26,15 @@ THE SOFTWARE.
 Recurse = Benchmark (
 
     benchmark = (
-        self recurse: 13
+        ^ self recurse: 13
     )
     
     recurse: n = (
-        (n > 0) ifTrue: [ self recurse: n - 1. self recurse: n - 1 ]
+        (n > 0) ifTrue: [ self recurse: n - 1. self recurse: n - 1 ].
+        ^ n
     )
     
+    verifyResult: result = (
+      ^ 13 = result
+    )
 )

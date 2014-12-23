@@ -27,15 +27,17 @@ Fibonacci = Benchmark (
 
     benchmark = ( | result |
         result := self fibonacci: 20.
-        (result = 10946)
-            ifFalse: [
-                self error: 'Wrong result: ' + result + ' should be: 10946' ]
+        ^ result
     )
     
     fibonacci: n = (
         ^(n <= 1) 
             ifTrue:  1 
             ifFalse: [ (self fibonacci: (n - 1)) + (self fibonacci: (n - 2)) ]
+    )
+    
+    verifyResult: result = (
+      ^ 10946 = result
     )
     
 )
