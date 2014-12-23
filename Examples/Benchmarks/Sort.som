@@ -30,19 +30,19 @@ Sort = Benchmark (
     benchmark = (
         | array |
         array := self randomArray: self dataSize.
-        self sort: array.
-        self checkArray: array
+        ^ self sort: array.
     )
     
     sort: array = ( self subclassResponsibility )
     
-    checkArray: array = (
+    verifyResult: array = (
         ((array at: 1) <> smallest)
             || ((array at: (array length)) <> largest)
                 ifTrue: [ self error: 'Array is not sorted. smallest: ' + smallest asString + ' largest: ' + largest asString + ' [1]: ' + (array at: 1) asString + ' [l]: ' + (array at: array length) asString ].
         3 to: (array length) do: [ :i |
             (array at: i - 1) > (array at: i) 
-                ifTrue: [ self error: 'Array is not sorted. [' + i asString + ' - 1]: ' + (array at: i - 1) asString + ' [' + i asString + ']: ' + (array at: i) asString]. ]
+                ifTrue: [ self error: 'Array is not sorted. [' + i asString + ' - 1]: ' + (array at: i - 1) asString + ' [' + i asString + ']: ' + (array at: i) asString]. ].
+        ^ true
     )
     
     randomArray: size = (

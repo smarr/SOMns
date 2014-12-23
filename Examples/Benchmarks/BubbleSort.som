@@ -36,7 +36,8 @@ BubbleSort = Sort (
                 (current > next)
                     ifTrue: [
                         array at: j put: next.
-                        array at: j + 1 put: current ] ] ]
+                        array at: j + 1 put: current ] ] ].
+        ^ array
     )
     
     dataSize = ( ^130 )

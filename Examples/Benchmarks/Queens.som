@@ -28,7 +28,14 @@ Queens = Benchmark (
     | freeMaxs freeRows freeMins queenRows |
     
     benchmark = (
-        1 to: 10 do: [ :i | self queens ]
+        | result |
+        result := true.
+        1 to: 10 do: [ :i | result := result and: self queens ].
+        ^ result
+    )
+    
+    verifyResult: result = (
+      ^ result
     )
     
     queens = (
@@ -36,7 +43,7 @@ Queens = Benchmark (
         freeMaxs  := Array new: 16 withAll: true.
         freeMins  := Array new: 16 withAll: true.
         queenRows := Array new:  8 withAll: -1.
-        (self placeQueen: 1) ifFalse: [ self error: 'Wrong result' ]
+        ^ self placeQueen: 1
     )
     
     placeQueen: c = (

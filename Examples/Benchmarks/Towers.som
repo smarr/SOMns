@@ -78,10 +78,11 @@ Towers = Benchmark (
         self buildTowerAt: 1 disks: 13.
         movesdone := 0.
         self move: 13 disksFrom: 1 to: 2.
-        movesdone = 8191
-            ifFalse: [
-                self error:
-                    'Error in result: ' + movesdone + ' should be: 8191' ].
+        ^ movesdone = 8191
+    )
+    
+    verifyResult: result = (
+      ^ self assert: 8191 equals: result
     )
     
 )

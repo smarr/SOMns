@@ -31,9 +31,11 @@ Permute = Benchmark (
         count := 0.
         v     := Array new: 7.
         self permute: 6.
-        (count = 8660)
-            ifFalse: [
-                self error: 'Wrong result: ' + count + ' should be: 8660' ]
+        ^ count
+    )
+    
+    verifyResult: result = (
+      ^ self assert: 8660 equals: result
     )
     
     permute: n = (

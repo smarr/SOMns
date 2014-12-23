@@ -30,10 +30,11 @@ List = Benchmark (
             taklWithX: (self makeList: 15)
             withY: (self makeList: 10)
             withZ: (self makeList: 6).
-        (result length = 10)
-            ifFalse: [
-                self error:
-                    'Wrong result: ' + result length asString + ' should be: 10' ].
+        ^ result length
+    )
+    
+    verifyResult: result = (
+      ^ self assert: 10 equals: result
     )
     
     makeList: length = (

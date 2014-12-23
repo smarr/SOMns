@@ -26,12 +26,13 @@ THE SOFTWARE.
 Sieve = Benchmark (
 
     benchmark = (
-        | flags result |
+        | flags |
         flags  := Array new: 5000.
-        result := self sieve: flags size: 5000.
-        (result = 669)
-            ifFalse: [
-                self error: 'Wrong result: ' + result + ' should be: 669' ]
+        ^ self sieve: flags size: 5000.
+    )
+    
+    verifyResult: result = (
+      ^ self assert: 669 equals: result
     )
     
     sieve: flags size: size = (

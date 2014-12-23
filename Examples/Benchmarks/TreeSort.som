@@ -25,15 +25,19 @@ THE SOFTWARE.
 
 TreeSort = Sort (
 
-    benchmark = (
-        | array tree |
-        
-        array := self randomArray: 1000.
+    sort: array = (
+        | tree |
         array doIndexes: [ :i |
             (i = 1)
                 ifTrue: [ tree := TreeNode new: (array at: i) ]
                 ifFalse: [ tree insert: (array at: i) ] ].
-        tree check ifFalse: [ self error: 'Invalid result, tree not sorted' ].
+        ^ tree
     )
     
+    verifyResult: tree = (
+       tree check ifFalse: [ self error: 'Invalid result, tree not sorted' ].
+       ^ true.
+    )
+    
+    dataSize = ( ^ 1000 )
 )

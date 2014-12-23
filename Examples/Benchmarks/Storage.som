@@ -31,9 +31,11 @@ Storage = Benchmark (
         Random initialize.
         count := 0.
         self buildTreeDepth: 7.
-        (count = 5461)
-            ifFalse: [
-                self error: 'Wrong result: ' + count + ' should be: 5461' ]
+        ^ count
+    )
+    
+    verifyResult: result = (
+      ^ self assert: 5461 equals: result
     )
     
     buildTreeDepth: depth = (

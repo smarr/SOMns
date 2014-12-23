@@ -37,10 +37,12 @@ Bounce = Benchmark (
         1 to: 50 do: [ :i |
             balls do: [ :ball |
                 (ball bounce) ifTrue: [ bounces := bounces + 1 ] ] ].
-        
-        (bounces = 1331)
-            ifFalse: [
-                self error: 'Wrong result: ' + bounces + ' should be: 1331' ]
+
+        ^ bounces
+    )
+    
+    verifyResult: result = (
+      ^ self assert: 1331 equals: result
     )
     
 )

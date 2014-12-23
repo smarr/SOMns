@@ -47,13 +47,21 @@
 "
 
 Mandelbrot = Benchmark (
+    | firstResult |
 
-    innerBenchmarkLoop = ( self mandelbrot: innerIterations )
+    innerBenchmarkLoop = ( 
+      ^ self verifyResult: (self mandelbrot: innerIterations)
+    )
 
-    benchmark = ( 
-        (self mandelbrot: 750) = 192 ifFalse: [
-            self error: 'Mandelbrot delivers wrong results.'
-        ] )
+    verifyResult: result = (
+      innerIterations = 750 ifTrue: [
+        ^ result = 50
+      ].
+      firstResult isNil ifTrue: [
+        firstResult := result.
+      ].
+      ^ result = firstResult
+    )
 
     mandelbrot: size = (
         | sum byteAcc bitNum y |

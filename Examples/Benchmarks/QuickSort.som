@@ -26,7 +26,8 @@ THE SOFTWARE.
 QuickSort = Sort (
 
     sort: array = (
-        self sort: array low: 1 high: self dataSize
+        self sort: array low: 1 high: self dataSize.
+        ^ array
     )
     
     sort: array low: low high: high = (
