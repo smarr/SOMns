@@ -28,7 +28,8 @@ Dispatch = Benchmark (
     benchmark = (
         | cnt |
         cnt := 0.
-        1 to: 20000 do: [ :i | cnt := cnt + (self method: i) ]
+        1 to: 20000 do: [ :i | cnt := cnt + (self method: i) ].
+        ^ cnt
     )
     
     method: argument = ( ^argument )
