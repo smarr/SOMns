@@ -117,7 +117,7 @@ Fannkuch = Benchmark (
         results at:  6 put: 10.
         results at:  7 put: 16.
         results at:  8 put: 22.
-        results at:  9 put: 31.
+        results at:  9 put: 30.
         results at: 10 put: 38.
         results at: 11 put: 51.
         results at: 12 put: 65.
