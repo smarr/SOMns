@@ -61,7 +61,7 @@ public abstract class StorageLocation {
     }
   }
 
-  private ObjectLayout layout;
+  private final ObjectLayout layout; // for debugging only
 
   protected StorageLocation(final ObjectLayout layout) {
     this.layout = layout;
