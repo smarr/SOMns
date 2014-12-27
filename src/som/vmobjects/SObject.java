@@ -138,8 +138,6 @@ public class SObject extends SAbstractObject {
     for (int i = 0; i < numberOfFields; i++) {
       if (isFieldSet(i)) {
         fieldValues[i] = getField(i);
-      } else {
-        fieldValues[i] = null;
       }
     }
     return fieldValues;
