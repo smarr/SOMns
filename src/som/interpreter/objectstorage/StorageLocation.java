@@ -156,7 +156,8 @@ public abstract class StorageLocation {
 
     @Override
     public boolean isSet(final SObject obj, final boolean assumptionValid) {
-      return read(obj, assumptionValid) != null;
+      assert read(obj, assumptionValid) != null;
+      return true;
     }
 
     @Override
@@ -188,7 +189,8 @@ public abstract class StorageLocation {
 
     @Override
     public boolean isSet(final SObject obj, final boolean assumptionValid) {
-      return read(obj, assumptionValid) != null;
+      assert read(obj, assumptionValid) != null;
+      return true;
     }
 
     @Override
