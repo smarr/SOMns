@@ -70,15 +70,10 @@ public abstract class StorageLocation {
   public abstract boolean isSet(SObject obj, boolean assumptionValid);
   public abstract Object  read(SObject obj,  boolean assumptionValid);
   public abstract void    write(SObject obj, Object value) throws GeneralizeStorageLocationException, UninitalizedStorageLocationException;
-  public abstract Class<?> getStoredClass();
 
   public abstract AbstractReadFieldNode  getReadNode(int fieldIndex, ObjectLayout layout, AbstractReadFieldNode next);
   public abstract AbstractWriteFieldNode getWriteNode(int fieldIndex, ObjectLayout layout, AbstractWriteFieldNode next);
 
-
-  public final ObjectLayout getObjectLayout() {
-    return layout;
-  }
 
   public final class GeneralizeStorageLocationException extends Exception {
     private static final long serialVersionUID = 4610497040788136337L;
@@ -111,11 +106,6 @@ public abstract class StorageLocation {
     }
 
     @Override
-    public Class<?> getStoredClass() {
-      return null;
-    }
-
-    @Override
     public AbstractReadFieldNode getReadNode(final int fieldIndex,
         final ObjectLayout layout, final AbstractReadFieldNode next) {
       CompilerAsserts.neverPartOfCompilation("StorageLocation");
@@ -141,11 +131,6 @@ public abstract class StorageLocation {
 
     @Override
     public abstract void write(final SObject obj, final Object value);
-
-    @Override
-    public final Class<?> getStoredClass() {
-      return Object.class;
-    }
 
     @Override
     public final AbstractReadFieldNode getReadNode(final int fieldIndex,
@@ -249,11 +234,6 @@ public abstract class StorageLocation {
     }
   }
 
-  // TODO: implement PrimitiveArrayStoreLocation
-//  public abstract static class PrimitiveArrayStoreLocation extends PrimitiveStorageLocation {
-//
-//  }
-
   public abstract static class PrimitiveDirectStoreLocation extends PrimitiveStorageLocation {
     protected final long offset;
     public PrimitiveDirectStoreLocation(final ObjectLayout layout, final int primField) {
@@ -308,11 +288,6 @@ public abstract class StorageLocation {
     public void writeDouble(final SObject obj, final double value) {
       CompilerDirectives.unsafePutDouble(obj, offset, value, null);
       markAsSet(obj);
-    }
-
-    @Override
-    public Class<?> getStoredClass() {
-      return Double.class;
     }
 
     @Override
@@ -376,11 +351,6 @@ public abstract class StorageLocation {
     public void writeLong(final SObject obj, final long value) {
       CompilerDirectives.unsafePutLong(obj, offset, value, null);
       markAsSet(obj);
-    }
-
-    @Override
-    public Class<?> getStoredClass() {
-      return Long.class;
     }
 
     @Override
@@ -455,11 +425,6 @@ public abstract class StorageLocation {
     }
 
     @Override
-    public Class<?> getStoredClass() {
-      return Long.class;
-    }
-
-    @Override
     public AbstractReadFieldNode getReadNode(final int fieldIndex,
         final ObjectLayout layout, final AbstractReadFieldNode next) {
       CompilerAsserts.neverPartOfCompilation("StorageLocation");
@@ -530,11 +495,6 @@ public abstract class StorageLocation {
           value, null);
 
       markAsSet(obj);
-    }
-
-    @Override
-    public Class<?> getStoredClass() {
-      return Double.class;
     }
 
     @Override

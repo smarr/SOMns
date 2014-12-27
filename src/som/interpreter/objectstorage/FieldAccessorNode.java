@@ -37,10 +37,6 @@ public abstract class FieldAccessorNode extends Node {
       super(fieldIndex);
     }
 
-    public boolean isSet(final SObject obj) {
-      return true;
-    }
-
     public abstract Object read(SObject obj);
 
     public long readLong(final SObject obj) throws UnexpectedResultException {
@@ -109,15 +105,6 @@ public abstract class FieldAccessorNode extends Node {
     public ReadUnwrittenFieldNode(final int fieldIndex,
         final ObjectLayout layout, final AbstractReadFieldNode next) {
       super(fieldIndex, layout, next);
-    }
-
-    @Override
-    public boolean isSet(final SObject obj) {
-      if (hasExpectedLayout(obj)) {
-        return false;
-      } else {
-        return true;
-      }
     }
 
     @Override
