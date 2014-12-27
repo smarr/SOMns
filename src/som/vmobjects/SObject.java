@@ -133,7 +133,7 @@ public class SObject extends SAbstractObject {
   }
 
   @ExplodeLoop
-  private Object[] readAllFields() {
+  private Object[] getAllFields() {
     Object[] fieldValues = new Object[numberOfFields];
     for (int i = 0; i < numberOfFields; i++) {
       if (isFieldSet(i)) {
@@ -176,7 +176,7 @@ public class SObject extends SAbstractObject {
   private void setLayoutAndTransferFields(final ObjectLayout layout) {
     CompilerDirectives.transferToInterpreterAndInvalidate();
 
-    Object[] fieldValues = readAllFields();
+    Object[] fieldValues = getAllFields();
 
     objectLayout        = layout;
 
