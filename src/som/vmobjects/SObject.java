@@ -256,7 +256,7 @@ public class SObject extends SAbstractObject {
     return location;
   }
 
-  public final boolean isFieldSet(final long index) {
+  private boolean isFieldSet(final long index) {
     StorageLocation location = getLocation(index);
     return location.isSet(this, true);
   }
