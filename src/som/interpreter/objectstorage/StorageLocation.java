@@ -280,6 +280,7 @@ public abstract class StorageLocation {
       if (value instanceof Double) {
         writeDouble(obj, (double) value);
       } else {
+        assert value != Nil.nilObject;
         CompilerAsserts.neverPartOfCompilation("StorageLocation");
         TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized read node");
         throw new GeneralizeStorageLocationException();
@@ -414,6 +415,7 @@ public abstract class StorageLocation {
       if (value instanceof Long) {
         writeLong(obj, (long) value);
       } else {
+        assert value != Nil.nilObject;
         CompilerAsserts.neverPartOfCompilation("StorageLocation");
         TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized write node");
         throw new GeneralizeStorageLocationException();
@@ -480,6 +482,7 @@ public abstract class StorageLocation {
       if (value instanceof Double) {
         writeDouble(obj, (double) value);
       } else {
+        assert value != Nil.nilObject;
         CompilerAsserts.neverPartOfCompilation("StorageLocation");
         TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized write node");
         throw new GeneralizeStorageLocationException();
