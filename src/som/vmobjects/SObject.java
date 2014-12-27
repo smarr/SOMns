@@ -255,16 +255,19 @@ public class SObject extends SAbstractObject {
   }
 
   private boolean isFieldSet(final long index) {
+    CompilerAsserts.neverPartOfCompilation("isFieldSet");
     StorageLocation location = getLocation(index);
     return location.isSet(this, true);
   }
 
   public final Object getField(final long index) {
+    CompilerAsserts.neverPartOfCompilation("getField");
     StorageLocation location = getLocation(index);
     return location.read(this, true);
   }
 
   public final void setField(final long index, final Object value) {
+    CompilerAsserts.neverPartOfCompilation("setField");
     StorageLocation location = getLocation(index);
 
     try {
