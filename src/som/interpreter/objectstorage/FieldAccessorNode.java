@@ -271,7 +271,7 @@ public abstract class FieldAccessorNode extends Node {
         storage.writeLong(obj, value);
       } else {
         if (layout.layoutForSameClass(obj.getObjectLayout())) {
-          writeAndRespecialize(obj, value, "update outdated read node", nextInCache);
+          writeAndRespecialize(obj, value, "update outdated write node", nextInCache);
         } else {
           nextInCache.write(obj, value);
         }
