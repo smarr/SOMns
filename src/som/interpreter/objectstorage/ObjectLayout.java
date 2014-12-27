@@ -109,13 +109,13 @@ public final class ObjectLayout {
 
   public int getNumberOfUsedExtendedObjectStorageLocations() {
     int requiredExtensionFields = objectStorageLocationsUsed - SObject.NUM_OBJECT_FIELDS;
-    if (requiredExtensionFields < 0) { requiredExtensionFields = 0; }
+    if (requiredExtensionFields < 0) { return 0; }
     return requiredExtensionFields;
   }
 
   public int getNumberOfUsedExtendedPrimStorageLocations() {
     int requiredExtensionFields = primitiveStorageLocationsUsed - SObject.NUM_PRIMITIVE_FIELDS;
-    if (requiredExtensionFields < 0) { requiredExtensionFields = 0;  }
+    if (requiredExtensionFields < 0) { return 0;  }
     return requiredExtensionFields;
   }
 }
