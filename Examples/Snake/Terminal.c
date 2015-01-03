@@ -93,7 +93,7 @@ void _fini(void)
 // Classes supported by this lib.
 static char *supported_classes[] = {
     "Terminal",
-    NULL
+    nullptr
 };
 
 
@@ -170,8 +170,8 @@ void Terminal_getChar(pVMObject object, pVMFrame frame) {
   init_the_terminal();
   char chr;
   char result[2];
-  pString str = NULL;
-  pVMObject vmStr = NULL;
+  pString str = nullptr;
+  VMObject* vmStr = nullptr;
   
   pVMObject self __attribute__((unused)) = SEND(frame, pop);
   

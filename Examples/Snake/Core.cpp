@@ -10,7 +10,7 @@
 #include "../../primitivesCore/PrimitiveContainer.h"
 #include "../../primitivesCore/PrimitiveLoader.h"
 
-static PrimitiveLoader* loader = NULL;
+static PrimitiveLoader* loader = nullptr;
 //map<pString, PrimitiveContainer*> primitiveObjects;
 //"Constructor"
 static bool initialized = false;

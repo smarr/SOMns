@@ -1,8 +1,5 @@
 #pragma once
 
-#ifndef TERMINAL_H_
-#define TERMINAL_H_
-
 #include <primitivesCore/PrimitiveContainer.h>
 
 class Terminal : public PrimitiveContainer {
@@ -15,5 +12,3 @@ public:
 private:
     int terminalStream;
 };
-
-#endif;

@@ -64,22 +64,18 @@ THE SOFTWARE.
 
 struct termios old_tty;
 Terminal::Terminal() : PrimitiveContainer() {
-    this->terminalStream = 0;
-    this->SetPrimitive("getChar", static_cast<PrimitiveRoutine*>(
-                        new (_HEAP) Routine<Terminal>(this, &Terminal::getChar)));
-    this->SetPrimitive("uninit", static_cast<PrimitiveRoutine*>(
-                        new (_HEAP) Routine<Terminal>(this, &Terminal::uninit)));
-    this->SetPrimitive("init", static_cast<PrimitiveRoutine*>(
-                        new (_HEAP) Routine<Terminal>(this, &Terminal::init)));
-    this->SetPrimitive("sleepFor_",  static_cast<PrimitiveRoutine*>(
-                        new (_HEAP) Routine<Terminal>(this, &Terminal::sleepFor_)));
+    terminalStream = 0;
+    SetPrimitive("getChar",   new (GetHeap<HEAP_CLS>()) Routine<Terminal>(this, &Terminal::getChar));
+    SetPrimitive("uninit",    new (GetHeap<HEAP_CLS>()) Routine<Terminal>(this, &Terminal::uninit));
+    SetPrimitive("init",      new (GetHeap<HEAP_CLS>()) Routine<Terminal>(this, &Terminal::init));
+    SetPrimitive("sleepFor_", new (GetHeap<HEAP_CLS>()) Routine<Terminal>(this, &Terminal::sleepFor_));
 }
 
 void Terminal::getChar(VMObject* object, VMFrame* frame) {
   char chr;
   char result[2];
-  pString str = NULL;
-  VMObject* vmStr = NULL;
+  pString str = nullptr;
+  VMObject* vmStr = nullptr;
   frame->Pop();
   //VMObject self __attribute__((unused)) = SEND(frame, pop);
   
