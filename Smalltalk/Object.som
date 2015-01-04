@@ -54,7 +54,7 @@ Object = nil (
     
     "Printing"
     print     = ( self asString print )
-    println   = ( self print. system printNewline )
+    println   = ( system printNewline: self asString )
 
     "Debugging"
     inspect   = primitive

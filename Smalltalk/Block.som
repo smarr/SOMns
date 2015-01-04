@@ -44,4 +44,11 @@ Block = (
     "Restarting"
     restart = primitive
     
+    "Thread support"
+    spawn = primitive
+    spawn: arguments = primitive
+    
+    spawnNamed: name = (
+        ^ self spawn name: name
+    )
 )

@@ -78,6 +78,7 @@ System = (
     "Printing"
     printString: string = primitive
     printNewline        = primitive
+    printNewline: str   = primitive
     
     "Time"
     time  = primitive
