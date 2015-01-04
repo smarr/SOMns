@@ -35,13 +35,13 @@ extern "C" void tearDown() {
     //if (primitiveObjects) delete primitiveObjects;
 }
 
-extern "C" PrimitiveRoutine* create(const pString& cname, const pString& fname) {
+extern "C" PrimitiveRoutine* create(const pString& cname, const pString& fname, bool isPrimitive) {
 
 #ifdef __DEBUG
     cout << "Loading PrimitiveContainer: " << cname << "::" << fname << endl;
 #endif
     //if (!loader) setup();
     
-    return loader->GetPrimitiveRoutine(cname, fname);
+    return loader->GetPrimitiveRoutine(cname, fname, isPrimitive);
 }
 
