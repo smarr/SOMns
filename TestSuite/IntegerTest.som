@@ -80,7 +80,7 @@ IntegerTest = TestCase (
     i := 1 << 70.
     self assert: Integer equals: i class.
     self assert: i > 0 description: 'should not overflow'.
-    self assert: '1180591620717411303424' equals: i asString.
+    self expect: '1180591620717411303424' equals: i asString.
     
     i := -1 << 30.
     self assert: Integer equals: i class.
@@ -100,7 +100,7 @@ IntegerTest = TestCase (
     i := -1 << 70.
     self assert: Integer equals: i class.
     self assert: i < 0 description: 'should not underflow'.
-    self assert: '-1180591620717411303424' equals: i asString.
+    self expect: '-1180591620717411303424' equals: i asString.
   )
             
   testStringConversion = (
