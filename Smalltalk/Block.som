@@ -45,8 +45,8 @@ Block = (
     restart = primitive
     
     "Thread support"
-    spawn = primitive
-    spawn: arguments = primitive
+    spawn            = primitive   "executes #value"
+    spawn: arguments = primitive   "executes #value:"
     
     spawnNamed: name = (
         ^ self spawn name: name

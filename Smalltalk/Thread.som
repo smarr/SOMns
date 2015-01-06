@@ -7,5 +7,7 @@ Thread = (
     new = ( ^ self error: 'Use Block>>#spawn* to create a thread.' )
     
     yield   = primitive
+    
+    "Current may return `nil` for the main thread."
     current = primitive
 )
