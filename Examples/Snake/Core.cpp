@@ -38,7 +38,7 @@ extern "C" void tearDown() {
 extern "C" PrimitiveRoutine* create(const pString& cname, const pString& fname, bool isPrimitive) {
 
 #ifdef __DEBUG
-    cout << "Loading PrimitiveContainer: " << cname << "::" << fname << endl;
+    Universe::ErrorPrint("Loading PrimitiveContainer: " + cname + "::" + fname + "\n");
 #endif
     //if (!loader) setup();
     
