@@ -1,4 +1,4 @@
-ThreadTest = (
+ThreadTest = TestCase (
 
     testDelayInterface = (
         | d |
@@ -26,7 +26,7 @@ ThreadTest = (
         
         cond1 := m newCondition.
         cond2 := m newCondition.
-        self deny: cond1 is: cond2.
+        self deny: cond1 == cond2.
     )
     
     testBlockInterface = (
