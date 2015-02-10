@@ -58,17 +58,8 @@ System = (
         
         "Try loading the class"
         class := self load: symbol.
-        (class == nil) ifFalse: [
-            "Put class and its super-classes into global dictionary. We can stop
-             as soon as we find a super-class in the globals dictionary because
-             in this case, all its super-classes must have been added to the
-             dictionary earlier"
-             current_class := class.
-             [ (self global: (current_class name)) == nil ] whileTrue: [
-                self global: (current_class name) put: current_class.
-                current_class := current_class superclass. ].
-            ^class ].
-        self error: 'Unable to resolve ' + symbol
+        class ifNil: [ self error: 'Unable to resolve ' + symbol ].
+        ^class
     )
     
     "Exiting"
