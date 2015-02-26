@@ -238,6 +238,11 @@ public final class Lexer {
 
     do {
       state.text.append(bufchar(++state.bufp));
+      while (endOfBuffer()) {
+        if (fillBuffer() == -1) {
+          return;
+        }
+      }
     }
     while (currentChar() != '\'');
 
