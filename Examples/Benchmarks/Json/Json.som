@@ -6,7 +6,6 @@ Json = Benchmark (
     )
 
     benchmark = (
-    'benchmark' println.
       ^ (JsonParser with: Json RapBenchmarkMinified) parse.
     )
     
