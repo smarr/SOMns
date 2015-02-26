@@ -1,0 +1,101 @@
+JsonValue = (
+
+  isObject  = ( ^ false )
+  isArray   = ( ^ false )
+  isNumber  = ( ^ false )
+  isString  = ( ^ false )
+  isBoolean = ( ^ false )
+  
+  isTrue  = ( ^ false )
+  isFalse = ( ^ false )
+  isNull  = ( ^ false )
+
+  asObject = (
+    self error: 'Unsupported operation, not an object: ' + self asString
+  )
+
+  asArray = (
+    self error: 'Unsupported operation, not an array: ' + self asString
+  )
+
+  asInteger = (
+    self error: 'Unsupported operation, not a number: ' + self asString
+  )
+
+  asDouble = (
+    self error: 'Unsupported operation, not a number: ' + self asString
+  )
+
+  asString = (
+    self error: 'Unsupported operation, not a string: ' + self asString
+  )
+
+  asBoolean = (
+    self error: 'Unsupported operation, not a boolean: ' + self asString
+  )
+
+  writeTo: writer = (
+    self writeTo: writer with: nil
+  )
+
+" TODO:
+    public void writeTo( final Writer writer, final WriterConfig config ) throws IOException {
+    WritingBuffer buffer = new WritingBuffer( writer, 128 );
+    write( config == null ? new JsonWriter( buffer ) : config.createWriter( buffer ) );
+    buffer.flush();
+  }"
+
+  "TODO:
+  @Override
+  public String toString() {
+    return toString( null );
+  }
+
+  public String toString( final WriterConfig config ) {
+    StringWriter writer = new StringWriter();
+    try {
+      writeTo( writer, config );
+    } catch( IOException exception ) {
+      // StringWriter does not throw IOExceptions
+      throw new RuntimeException( exception );
+    }
+    return writer.toString();
+  }"
+
+
+  writeOn: writer = (
+    ^ self subclassResponsibility
+  )
+
+  ----
+  
+  readFrom: str = (
+    ^ (JsonParser with: str) parse
+  )
+
+  integer: anInteger = (
+    ^ JsonNumber new: anInteger asString
+  )
+
+  double: aDouble = (
+  aDouble ifNil: [self error: 'aDouble nil'].
+    ^ JsonNumber new: (self cutOffPointZero: aDouble asString)
+  )
+
+  string: aString = (
+    ^ aString == nil
+        ifTrue:  [ JsonLiteral NULL ]
+        ifFalse: [ JsonString new: string ]
+  )
+
+  boolean: aBoolean = (
+    ^ aBoolean
+        ifTrue:  [ JsonLiteral TRUE  ]
+        ifFalse: [ JsonLiteral FALSE ]
+  )
+  
+  cutOffPointZero: str = (
+    (str endsWith: '.0') ifTrue: [ ^ str substringFrom: 1 to: str length - 2].
+    ^ str
+  )
+)

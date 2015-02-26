@@ -1,0 +1,182 @@
+JsonObject = JsonValue (
+  | names values table |
+  
+  initialize = (
+    names  := Vector new.
+    values := Vector new.
+    table  := HashIndexTable new
+  )
+
+  add: name withNumber: value = (
+    self add: name with: (JsonValue number: value)
+  )
+  
+  add: name withBoolean: value = (
+    self add: name with: (JsonValue boolean: value)
+  )
+  
+  add: name withString: value = (
+    self add: name with: (JsonValue string: value)
+  )
+  
+  add: name with: aJsonValue = (
+    name ifNil: [ self error: 'name is null'  ].
+    aJsonValue ifNil: [ self error: 'aJsonValue is null' ].
+    
+    names  append: name.
+    values append: aJsonValue.
+    table at: name put: names size.
+  )
+
+  at: name putNumber: value = (
+    self at: name put: (JsonValue number: value)
+  )
+
+  at: name putBoolean: value = (
+    self at: name put: (JsonValue boolean: value)
+  )
+  
+  at: name putString: value = (
+    self at: name put: (JsonValue string: value)
+  )
+
+  at: name put: aJsonValue = (
+    | idx |
+    name ifNil: [ self error: 'name is null'  ].
+    aJsonValue ifNil: [ self error: 'aJsonValue is null' ].
+  
+    idx := self indexOf: name.
+    idx <> -1
+      ifTrue:  [values at: idx put: aJsonValue]
+      ifFalse: [
+        names  append: name.
+        values append: aJsonValue.
+        table at: name put: names size.
+      ].
+  )
+
+  remove: name = (
+    | idx |
+    name ifNil: [ self error: 'name is null' ].
+    idx := self indexOf: name.
+    idx = -1 ifFalse: [
+      table  remove: name.
+      names  remove: idx.
+      values remove: idx.
+    ].
+  )
+
+  at: name = (
+    | idx |
+    name ifNil: [ self error: 'name is null'  ].
+    idx := self indexOf: name.
+    idx = -1
+      ifTrue:  [ ^ nil ]
+      ifFalse: [ ^ values at: idx ]
+  )
+
+  at: name asIntegerWith: default = (
+    | value |
+    value := self at: name.
+    value
+      ifNil:    [ ^ default ]
+      ifNotNil: [ ^ value asInteger ]
+  )
+
+  at: name asDoubleWith: default = (
+    | value |
+    value := self at: name.
+    value
+      ifNil:    [ ^ default ]
+      ifNotNil: [ ^ value asDouble ]
+  )
+
+  at: name asBooleanWith: default = (
+    | value |
+    value := self at: name.
+    value
+      ifNil:    [ ^ default ]
+      ifNotNil: [ ^ value asBoolean ]
+  )
+
+  at: name asStringWith: default = (
+    | value |
+    value := self at: name.
+    value
+      ifNil:    [ ^ default ]
+      ifNotNil: [ ^ value asString ]
+  )
+
+  size = (
+    ^ names size
+  )
+  
+  isEmpty = (
+    ^ names isEmpty
+  )
+  
+  names = (
+    ^ names
+  )
+
+  "TODO:
+  @Override
+  void write( final JsonWriter writer ) throws IOException {
+    writer.writeObjectOpen();
+    Iterator<String> namesIterator = names.iterator();
+    Iterator<JsonValue> valuesIterator = values.iterator();
+    boolean first = true;
+    while( namesIterator.hasNext() ) {
+      if( !first ) {
+        writer.writeObjectSeparator();
+      }
+      writer.writeMemberName( namesIterator.next() );
+      writer.writeMemberSeparator();
+      valuesIterator.next().write( writer );
+      first = false;
+    }
+    writer.writeObjectClose();
+  }"
+  
+  isObject = ( ^ true )
+  asObject = ( ^ self )
+
+  hashcode = (
+    | result |
+    result := 1.
+    result := 31 * result + names hashcode.
+    result := 31 * result + values hashcode.
+    ^ result
+  )
+
+  = other = (
+    self == other ifTrue: [ ^ true  ].
+    self == nil   ifTrue: [ ^ false ].
+    self class == other class ifFalse: [ ^ false ].
+    
+    ^ names = other names && values = other values
+  )
+
+  indexOf: name = (
+    | idx |
+    idx := table at: name.
+    idx <> -1 && name = (names at: idx) ifTrue: [ ^ idx ].
+    ^ names lastIndexOf: name
+  )
+
+  updateHashIndex = (
+    | size |
+    size = names size.
+    names doIndexes: [: i |
+      table add: (names at: i) put: i
+    ]
+  )
+
+  ----
+  
+  new = ( ^ super new initialize )
+  
+  readFrom: string = (
+    ^ (JsonValue readFrom: string) asObject
+  )
+)
