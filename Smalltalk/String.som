@@ -41,8 +41,7 @@ String = (
     "Comparing"   
     = argument = primitive
     
-    "substring: from 'start' to (and including) 'end'. First character is at
-     position 0."
+    "substring: from 'start' to (and including) 'end'."
     primSubstringFrom: start to: end = primitive
     
     substringFrom: start to: end = (
