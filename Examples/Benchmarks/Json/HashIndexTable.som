@@ -8,6 +8,7 @@ HashIndexTable = (
   at: name put: index = (
     | slot |
     slot := self hashSlotFor: name.
+    
     index < 255
       ifTrue:  [ hashTable at: slot put: index + 1 ]
       ifFalse: [ hashTable at: slot put: 0 ]
@@ -27,7 +28,7 @@ HashIndexTable = (
     slot := self hashSlotFor: name.
 
     " subtract 1, 0 stands for empty "
-    ^ ((hashTable at: slot) & 255) "- 1"
+    ^ ((hashTable at: slot) & 255) - 1
   )
 
   hashSlotFor: element = (
