@@ -70,4 +70,19 @@ StringTest = TestCase (
     self deny: ('f' endsWith: 'bar').
     self deny: ('f' endsWith: 'foo').
   )
+  
+  testMultiLineString = (
+    "Test whether the parser will parse multi-line strings correctly."
+    self assert: '
+1234567890
+1234567890
+1234567890
+1234567890
+1234567890' equals: '
+1234567890
+1234567890
+1234567890
+1234567890
+1234567890'
+  )
 )
