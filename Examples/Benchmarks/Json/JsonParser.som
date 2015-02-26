@@ -285,21 +285,21 @@ JsonParser = (
 
   pauseCapture = (
     captureBuffer := captureBuffer concatenate: (
-      input substringFrom: captureStart to: index).
+      input substringFrom: captureStart to: index - 1).
     captureStart := -1
   )
 
   endCapture = (
     | captured |
     '' = captureBuffer
-      ifTrue:  [ captured := input substringFrom: captureStart to: index ]
+      ifTrue:  [ captured := input substringFrom: captureStart to: index - 1 ]
       ifFalse: [
         self pauseCapture.
         captured := captureBuffer.
         captureBuffer := '' ].
     captureStart := -1.
     
-    ^ captureBuffer
+    ^ captured
   )
 
   expected: expected = (
