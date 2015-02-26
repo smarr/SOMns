@@ -27,7 +27,6 @@ HashIndexTable = (
     slot := self hashSlotFor: name.
 
     " subtract 1, 0 stands for empty "
-    (hashTable at: slot) println.
     ^ ((hashTable at: slot) & 255) "- 1"
   )
 

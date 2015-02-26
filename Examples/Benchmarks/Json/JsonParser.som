@@ -58,7 +58,6 @@ JsonParser = (
   
   readArray = (
     | array |
-    "'readArray' println."
     self read.
     array := JsonArray new.
     
@@ -96,7 +95,6 @@ JsonParser = (
 
   readObject = (
     | object |
-"    'readObject' println."
     self read.
     object := JsonObject new.
     self skipWhiteSpace.
@@ -118,8 +116,6 @@ JsonParser = (
   )
 
   readName = (
-"    ('readName current: ' + current) println."
-    
     current = '"' ifFalse: [ self expected: 'name' ].
     ^ self readStringInternal
   )
@@ -150,14 +146,12 @@ JsonParser = (
   )
 
   readRequiredChar: ch = (
-"    'readRequiredChar' println."
     (self readChar: ch) ifFalse: [
       self expected: 'character: ' + ch
     ]
   )
 
   readString = (
-"    'readString' println."
     ^ JsonString new: self readStringInternal
   )
 
@@ -199,7 +193,6 @@ JsonParser = (
   )
 
   readEscape = (
-"    'readEscape' println."
     self read.    
     captureBuffer := captureBuffer concatenate: self readEscapeChar.
     self read
@@ -207,7 +200,6 @@ JsonParser = (
 
   readNumber = (
     | firstDigit |
-"    'readNumber' println."
     self startCapture.
     self readChar: '-'.
     firstDigit := current.
@@ -221,7 +213,6 @@ JsonParser = (
   )
 
   readFraction = (
-"    'readFraction' println."
     (self readChar: '.') ifFalse: [ ^ false ].
     
     self readDigit ifFalse: [ self expected: 'digit' ].
@@ -232,7 +223,6 @@ JsonParser = (
   )
 
   readExponent = (
-"    'readExponent' println."
     ((self readChar: 'e') not and: [
       (self readChar: 'E') not]) ifTrue: [ ^ false ].
     
@@ -247,14 +237,12 @@ JsonParser = (
   )
 
   readChar: ch = (
-"    ('readChar: ' + ch) println."
     current = ch ifFalse: [ ^ false ].
     self read.
     ^ true
   )
 
   readDigit = (
-"    'readDigit' println."
     self isDigit ifFalse: [ ^ false ].
     self read.
     ^ true
@@ -320,14 +308,10 @@ JsonParser = (
   )
 
   isWhiteSpace = (
-"    'isWhiteSpace: ---' print.
-    current print. '---' println."
-    
     current = ' '  ifTrue: [^ true].
     current = '\t' ifTrue: [^ true].
     current = '\n' ifTrue: [^ true].
     current = '\r' ifTrue: [^ true].
-"    'false' println. '+++\n+++' println."
     ^ false
   )
 
