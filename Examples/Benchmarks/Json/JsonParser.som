@@ -261,8 +261,10 @@ JsonParser = (
     ].
     
     index := index + 1.
-      input ifNil: [ self error:'input nil'].
-    index < input length
+    column := column + 1.
+
+    input ifNil: [ self error:'input nil'].
+    index <= input length
       ifTrue:  [ current := input charAt: index ]
       ifFalse: [ current := nil ]
   )
@@ -292,7 +294,7 @@ JsonParser = (
 
   expected: expected = (
     self isEndOfText ifTrue: [
-      self error: 'Unexpected end of input'
+      self error: 'Unexpected end of input, expected ' + expected asString
     ].
     self error: 'Expected ' + expected
   )
