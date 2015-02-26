@@ -22,7 +22,7 @@ JsonObject = JsonValue (
   add: name with: aJsonValue = (
     name ifNil: [ self error: 'name is null'  ].
     aJsonValue ifNil: [ self error: 'aJsonValue is null' ].
-    
+
     names  append: name.
     values append: aJsonValue.
     table at: name put: names size.
@@ -159,7 +159,7 @@ JsonObject = JsonValue (
 
   indexOf: name = (
     | idx |
-    idx := table at: name.
+    idx := table at: name.    
     idx <> -1 && name = (names at: idx) ifTrue: [ ^ idx ].
     ^ names lastIndexOf: name
   )
