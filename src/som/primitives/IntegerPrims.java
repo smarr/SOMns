@@ -58,4 +58,11 @@ public abstract class IntegerPrims {
       return BigInteger.valueOf(receiver).shiftLeft((int) right);
     }
   }
+
+  public abstract static class MaxIntPrim extends ArithmeticPrim {
+    @Specialization
+    public final long doLong(final long receiver, final long right) {
+      return Math.max(receiver, right);
+    }
+  }
 }

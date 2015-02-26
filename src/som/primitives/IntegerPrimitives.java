@@ -27,6 +27,7 @@ package som.primitives;
 
 import som.primitives.IntegerPrimsFactory.FromStringPrimFactory;
 import som.primitives.IntegerPrimsFactory.LeftShiftPrimFactory;
+import som.primitives.IntegerPrimsFactory.MaxIntPrimFactory;
 import som.primitives.IntegerPrimsFactory.RandomPrimFactory;
 import som.primitives.arithmetic.AdditionPrimFactory;
 import som.primitives.arithmetic.BitXorPrimFactory;
@@ -58,6 +59,7 @@ public final class IntegerPrimitives extends Primitives {
 
     installInstancePrimitive("<<",       LeftShiftPrimFactory.getInstance());
     installInstancePrimitive("bitXor:",  BitXorPrimFactory.getInstance());
+    installInstancePrimitive("max:",     MaxIntPrimFactory.getInstance());
 
     installClassPrimitive("fromString:", FromStringPrimFactory.getInstance());
   }
