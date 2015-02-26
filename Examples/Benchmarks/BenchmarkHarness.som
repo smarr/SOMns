@@ -92,10 +92,12 @@ BenchmarkHarness = (
                 "This item does not seem to be a class, so it is most likely
                  one of the other parameters"
                  benchmarkClasses := benchmarks.
+                 benchmarks size = 0 ifTrue: [ self error: 'No benchmark found' ].
                  ^ args copyFrom: i to: args length ].
             cls := system resolve: sym.
             benchmarks append: cls.
             i := i + 1 ].
+        benchmarks size = 0 ifTrue: [ self error: 'No benchmark found' ].
 
         benchmarkClasses := benchmarks.
         ^ nil
