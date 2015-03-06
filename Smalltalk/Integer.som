@@ -54,6 +54,8 @@ Integer = (
     
     "Converting"
     asString    = primitive
+    as32BitSignedValue   = primitive " returns an int, with the value that a signed 32-bit integer would have"
+    as32BitUnsignedValue = primitive " returns an int, with the value that a unsigned 32-bit integer would have"
     hashcode    = ( ^self )
     
     "Iterating"

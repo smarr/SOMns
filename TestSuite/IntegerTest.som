@@ -223,4 +223,19 @@ IntegerTest = TestCase (
     self assert: 0 equals: (1 bitXor: 1).
     self assert: 3 equals: (2 bitXor: 1).
   )
+  
+  testAs32BitUnsignedValue = (
+    self assert: 1 <<  1 equals: (1 <<  1) as32BitUnsignedValue.
+    self assert: 1 << 10 equals: (1 << 10) as32BitUnsignedValue.
+    self assert: 1 << 31 equals: (1 << 31) as32BitUnsignedValue.
+    self assert:       0 equals: (1 << 32) as32BitUnsignedValue.
+    self assert: 4294967295 equals:     -1 as32BitUnsignedValue.
+  )
+
+  testAs32BitSignedValue = (
+    self assert:     1 <<  1 equals: (1 <<  1) as32BitSignedValue.
+    self assert:     1 << 10 equals: (1 << 10) as32BitSignedValue.
+    self assert: -2147483648 equals: (1 << 31) as32BitSignedValue.
+    self assert:           0 equals: (1 << 32) as32BitSignedValue.
+  )
 )
