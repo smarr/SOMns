@@ -124,4 +124,21 @@ StringTest = TestCase (
     self assert: '\\' equals: '\\'.
     self assert: 1 equals: '\\' length.
   )
+  
+  testHash = (
+    | str |
+    "Hash should be identical for strings that are identical,
+     whether given literal or composed at runtime"
+    self assert: 'foobar' hashcode equals: 'foobar' hashcode.
+    self assert: 'ssdf aksdf; kasd;fk a;dfk a;dfk a;d' hashcode
+         equals: 'ssdf aksdf; kasd;fk a;dfk a;dfk a;d' hashcode.
+    
+    str := 'foo' + 'bar'.
+    str := str + str.
+    self assert: 'foobarfoobar' hashcode equals: str hashcode.
+    
+    str := 'dfadf fgsfg sfg sdfg sfg sfg' + '345243n 24n5 kwertlw erltnwrtln'.
+    self assert: 'dfadf fgsfg sfg sdfg sfg sfg345243n 24n5 kwertlw erltnwrtln' hashcode
+         equals: str hashcode.
+  )
 )
