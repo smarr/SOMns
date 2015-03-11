@@ -77,6 +77,15 @@ Array = (
     "Containment check"
     contains: element = ( self do: [ :e | e = element ifTrue: [ ^true ] ].
                           ^false )
+    indexOf: element = (
+      self doIndexes: [ :i | (self at: i) = element ifTrue: [ ^ i ]].
+      ^ nil
+    )
+  
+    lastIndexOf: element = (
+      self length downTo: 1 do: [: i | (self at: i) = element ifTrue: [ ^ i ]].
+      ^ nil
+    )
     
     "Collection"
     collect: aBlock = (
