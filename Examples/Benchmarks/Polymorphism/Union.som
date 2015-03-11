@@ -1,0 +1,17 @@
+Union = (
+  | subs |
+
+  initializeWith: anArray = ( subs := anArray )
+  score = (
+    | t |
+    t := 0.0.
+    subs do: [:s | t := t + s score].
+    t := t // (subs length * subs length).
+    ^ t
+  )
+  
+  ----
+  with: anArray = (
+    ^ super new initializeWith: anArray
+  )
+)
