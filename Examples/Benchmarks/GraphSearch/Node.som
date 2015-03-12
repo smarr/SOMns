@@ -1,0 +1,17 @@
+Node = (
+  | starting noOfEdges |
+  
+  starting  = ( ^ starting )
+  noOfEdges = ( ^ noOfEdges )
+  
+  initializeWith: start and: edges = (
+    starting  := start.
+    noOfEdges := edges.
+  )
+  
+  ----
+  
+  newWith: starting and: noOfEdges = (
+    ^ self new initializeWith: starting and: noOfEdges
+  )
+)

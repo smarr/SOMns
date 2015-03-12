@@ -1,0 +1,17 @@
+Edge = (
+  | dest weight |
+  dest   = ( ^ dest )
+  weight = ( ^ weight )
+  
+  initializeWith: destination and: w = (
+    dest   := destination.
+    weight := w.
+  )
+
+  ----
+  
+  newWith: dest and: weight = (
+    ^ self new initializeWith: dest and: weight
+  )
+
+)

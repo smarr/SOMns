@@ -1,0 +1,137 @@
+GraphSearch = Benchmark (
+  | graphNodes graphMask updatingGraphMask graphVisited cost graphEdges k firstCost |
+
+  initializeGraph: noOfNodes = (
+    | source graph totalEdges |
+    graphNodes        := Array new: noOfNodes.
+    graphMask         := Array new: noOfNodes withAll: false.
+    updatingGraphMask := Array new: noOfNodes withAll: false.
+    graphVisited      := Array new: noOfNodes withAll: false.
+    cost              := Array new: noOfNodes withAll: -1.
+
+    source := 0.
+
+    graph := Array new: noOfNodes withAll: [Vector new].
+
+    graph doIndexes: [:i |
+      | noOfNodes |
+      noOfNodes := (JenkinsRandom random % (
+                      GraphSearch MaxInitEdges - GraphSearch MinEdges + 1)) abs
+                   + GraphSearch MinEdges.
+      1 to: noOfNodes do: [:j |
+        | nodeId weight |
+        nodeId := (JenkinsRandom random % noOfNodes) abs.
+        weight := (JenkinsRandom random % (
+                    GraphSearch MaxWeight - GraphSearch MinWeight + 1)) abs
+                  + GraphSearch MinWeight.
+        (graph at: i) append: (Edge newWith: nodeId and: weight).
+        (graph at: nodeId) append: (Edge newWith: i and: weight).
+      ]
+    ].
+
+    totalEdges := 0.
+    graph doIndexes: [:i |
+      | noOfEdges |
+      noOfEdges := (graph at: i) size.
+      graphNodes at: i put: (Node newWith: totalEdges and: noOfNodes).
+      totalEdges := totalEdges + noOfEdges
+    ].
+
+    graphMask    at: source put: true.
+    graphVisited at: source put: true.
+
+    graphEdges := Array new: totalEdges withAll: 0.
+    
+    k := 0.
+    graph doIndexes: [:i |
+      1 to: (graph at: i) size do: [:j |
+        graphEdges at: k put: ((graph at: i) at: j) dest.
+        k := k + 1.
+      ]
+    ].
+    cost at: source put: 0
+  )
+
+  innerBenchmarkLoop = (
+    | noOfNodes |
+    JenkinsRandom seed: 49734321.
+    noOfNodes := GraphSearch ExpectedNoOfNodes / 1000 * innerIterations.
+    self initializeGraph: noOfNodes.
+    self breadthFirstSearch: noOfNodes.
+    ^ self verifyResult: cost
+  )
+
+  breadthFirstSearch: noOfNodes = (
+    | stop |
+    stop := true.
+    [stop] whileTrue: [
+      stop := false.
+      
+      1 to: noOfNodes do: [:tid |
+        (graphMask at: tid) ifTrue: [
+          graphMask at: tid put: false.
+          (graphNodes at: tid) starting 
+              to: ((graphNodes at: tid) noOfEdges + (graphNodes at: tid) starting) - 1
+              do: [:i |
+            | id |
+            id := graphEdges at: i.
+            (graphVisited at: id) ifFalse: [
+              cost at: id put: (cost at: tid) + 1.
+              updatingGraphMask at: id put: false.
+            ]
+          ]
+        ]
+      ].
+      
+      updatingGraphMask doIndexes: [:tid |
+        (updatingGraphMask at: tid) ifTrue: [
+          graphMask at: tid put: true.
+          graphVisited at: tid put: true.
+          stop := true.
+          updatingGraphMask at: tid put: false
+        ]
+      ]
+    ]
+  )
+
+  verifyResult: result = (
+    | totalCost |
+    cost length = (GraphSearch ExpectedNoOfNodes / 1000 * innerIterations)
+      ifFalse: [ ^ false ].
+
+    totalCost := 0.    
+    cost do: [:c | totalCost := totalCost + c].
+
+    cost length = GraphSearch ExpectedNoOfNodes
+      ifTrue:  [
+        totalCost = GraphSearch ExpectedTotalCost ifFalse: [
+          self error: 'ERROR: the total cost obtained for ' + cost length asString
+              + ' nodes is ' + totalCost asString + ' while the expected cost is '
+              + GraphSearch ExpectedTotalCost 
+        ]]
+      ifFalse: [
+        firstCost == nil
+          ifTrue: [
+            firstCost := totalCost.
+            ^ true ]
+          ifFalse: [
+            ^ firstCost = totalCost
+          ]
+      ].
+
+    ^ true
+  )
+  
+  ----
+  
+  MinNodes = ( ^ 20 )
+  MaxNodes = ( ^ 1 << 31 )
+  MinEdges = ( ^ 2 )
+  MaxInitEdges = ( ^ 4 )
+  MinWeight = ( ^ 1 )
+  MaxWeight = ( ^ 1 )
+  
+  ExpectedNoOfNodes = ( ^ 3000000 )
+  ExpectedTotalCost = ( ^ 26321966 )
+  
+)
