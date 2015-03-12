@@ -10,7 +10,7 @@ Json = Benchmark (
     )
     
     verifyResult: result = (
-    result class = ParseException ifTrue: [ result println ].
+      result class = ParseException ifTrue: [ result println ].
       result isObject ifFalse: [^ false].
       (result asObject at: 'head') isObject ifFalse: [^ false].
       (result asObject at: 'operations') isArray ifFalse: [^ false].
