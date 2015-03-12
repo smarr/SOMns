@@ -20,6 +20,20 @@ public abstract class IntegerPrims {
     }
   }
 
+  public abstract static class As32BitSignedValue extends UnaryExpressionNode {
+    @Specialization
+    public final long doLong(final long receiver) {
+      return (int) receiver;
+    }
+  }
+
+  public abstract static class As32BitUnsignedValue extends UnaryExpressionNode {
+    @Specialization
+    public final long doLong(final long receiver) {
+      return Integer.toUnsignedLong((int) receiver);
+    }
+  }
+
   public abstract static class FromStringPrim extends ArithmeticPrim {
     protected final boolean receiverIsIntegerClass(final SClass receiver) {
       return receiver == Classes.integerClass;

@@ -25,6 +25,8 @@
 
 package som.primitives;
 
+import som.primitives.IntegerPrimsFactory.As32BitSignedValueFactory;
+import som.primitives.IntegerPrimsFactory.As32BitUnsignedValueFactory;
 import som.primitives.IntegerPrimsFactory.FromStringPrimFactory;
 import som.primitives.IntegerPrimsFactory.LeftShiftPrimFactory;
 import som.primitives.IntegerPrimsFactory.MaxIntPrimFactory;
@@ -60,6 +62,9 @@ public final class IntegerPrimitives extends Primitives {
     installInstancePrimitive("<<",       LeftShiftPrimFactory.getInstance());
     installInstancePrimitive("bitXor:",  BitXorPrimFactory.getInstance());
     installInstancePrimitive("max:",     MaxIntPrimFactory.getInstance());
+
+    installInstancePrimitive("as32BitSignedValue",   As32BitSignedValueFactory.getInstance());
+    installInstancePrimitive("as32BitUnsignedValue", As32BitUnsignedValueFactory.getInstance());
 
     installClassPrimitive("fromString:", FromStringPrimFactory.getInstance());
   }
