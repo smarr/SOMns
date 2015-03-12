@@ -25,6 +25,7 @@
 
 package som.primitives;
 
+import som.primitives.DoublePrimsFactory.PositiveInfinityPrimFactory;
 import som.primitives.DoublePrimsFactory.RoundPrimFactory;
 import som.primitives.arithmetic.AdditionPrimFactory;
 import som.primitives.arithmetic.DoubleDivPrimFactory;
@@ -48,5 +49,7 @@ public final class DoublePrimitives extends Primitives {
     installInstancePrimitive("=",     EqualsPrimFactory.getInstance());
     installInstancePrimitive("<",     LessThanPrimFactory.getInstance());
     installInstancePrimitive("round", RoundPrimFactory.getInstance());
+
+    installClassPrimitive("PositiveInfinity", PositiveInfinityPrimFactory.getInstance());
   }
 }
