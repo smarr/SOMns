@@ -1,17 +1,6 @@
 "https://github.com/Sable/Ostrich/blob/master/map-reduce/page-rank/js/pagerank.js"
 PageRank = Benchmark (
-  | seed n iter thresh outLinks divisor pages maps pageRanks t maxDiff |
-
-  "Robert Jenkins' 32 bit integer hash function."
-  random = (
-    seed := ((seed       + 2127912214 "0x7ed55d16")       + (seed  << 12)) as32BitSignedValue.
-    seed := ((seed bitXor: 3345072700 "0xc761c23c") bitXor: (seed as32BitUnsignedValue >>> 19)) as32BitSignedValue.
-    seed := ((seed       +  374761393 "0x165667B1")       + (seed  <<  5)) as32BitSignedValue.
-    seed := ((seed       + 3550635116 "0xd3a2646c") bitXor: (seed  <<  9)) as32BitSignedValue.
-    seed := ((seed       + 4251993797 "0xfd7046c5")       + (seed  <<  3)) as32BitSignedValue.
-    seed := ((seed bitXor: 3042594569 "0xb55a4f09") bitXor: (seed as32BitUnsignedValue >>> 16)) as32BitSignedValue.
-    ^ seed
-  )
+  | n iter thresh outLinks divisor pages maps pageRanks t maxDiff firstResult |
 
   " generates an array of random pages and their links "
   generateRandomPages = (
@@ -23,7 +12,7 @@ PageRank = Benchmark (
       outLinks at: i + 1 put: 0.
 
       0 to: n - 1 do: [:j |
-        (i <> j and: [(self random abs % divisor) = 0]) ifTrue: [
+        (i <> j and: [(JenkinsRandom random abs % divisor) = 0]) ifTrue: [
           pages at: (i * n + j) + 1 put: 1.
           outLinks at: i + 1 put: (outLinks at: i + 1) + 1
         ]
@@ -32,9 +21,9 @@ PageRank = Benchmark (
       " the case with no outlinks is afunctioned "
     (outLinks at: i + 1) = 0 ifTrue: [
         | k |
-        k := self random abs % n.
+        k := JenkinsRandom random abs % n.
         [i = k] whileTrue: [
-          k := self random abs % n.
+          k := JenkinsRandom random abs % n.
         ].
 
         pages at: (i * n + k) + 1 put: 1.
@@ -80,8 +69,8 @@ PageRank = Benchmark (
   )
 
   benchmark = (
-    seed    := 49734321.
     n       := 5000.
+    JenkinsRandom seed: 49734321.
     iter    := 10.
     thresh  := 0.00000001.
     divisor := 100000.
