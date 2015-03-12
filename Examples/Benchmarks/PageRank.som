@@ -68,13 +68,13 @@ PageRank = Benchmark (
     ^ dif
   )
 
-  benchmark = (
-    n       := 5000.
+  innerBenchmarkLoop = (
     JenkinsRandom seed: 49734321.
+    n       := innerIterations.
     iter    := 10.
     thresh  := 0.00000001.
     divisor := 100000.
-    ^ self runPageRank.
+    ^ self verifyResult: self runPageRank.
   )
 
   runPageRank = (
@@ -120,18 +120,26 @@ PageRank = Benchmark (
           ]
         ] ]
       ifFalse: [
-        'WARNING: No self-checking for n = \'' print.
-        n print.
-        '\', iteration = \'' print.
-        iter print.
-        '\', threshold = \'' print.
-        thresh print.
-        '\', and divisor = \'' print.
-        divisor print.
-        '\'' println.
+        ^ self checkBasedOnFirstResult
       ].
+    ^ true
+  )
+  
+  checkBasedOnFirstResult = (
+    pageRanks length = n ifFalse: [ ^ false ].
 
-    ('T reached ' + t asString + ' at max dif ' + maxDiff asString) println.
+    firstResult == nil ifTrue: [
+      firstResult := pageRanks.
+      pageRanks := nil.
+      ^ true
+    ] ifFalse: [
+      1 to: n do: [:i |
+        (firstResult at: i) = (pageRanks at: i) ifFalse: [
+          ^ false
+        ]
+      ]
+    ].
+    
     ^ true
   )
 
