@@ -153,7 +153,10 @@ public final class ArrayPrims {
     }
 
     protected final void reportLoopCount(final long count) {
-      assert count > 0;
+      if (count == 0) {
+        return;
+      }
+
       CompilerAsserts.neverPartOfCompilation("reportLoopCount");
       Node current = getParent();
       while (current != null && !(current instanceof RootNode)) {
