@@ -233,20 +233,45 @@ public final class Lexer {
     } while (Character.isDigit(currentChar()));
   }
 
+  private void lexEscapeChar() {
+    assert !endOfBuffer();
+
+    char current = currentChar();
+    switch (current) {
+      case 't': state.text.append("\t"); break;
+      case 'b': state.text.append("\b"); break;
+      case 'n': state.text.append("\n"); break;
+      case 'r': state.text.append("\r"); break;
+      case 'f': state.text.append("\f"); break;
+      case '\'': state.text.append("'"); break;
+      case '\\': state.text.append("\\"); break;
+    }
+    state.bufp++;
+  }
+
+  private void lexStringChar() {
+    if (currentChar() == '\\') {
+      state.bufp++;
+      lexEscapeChar();
+    } else {
+      state.text.append(currentChar());
+      state.bufp++;
+    }
+  }
+
   private void lexString() {
     state.set(Symbol.STString);
+    state.bufp++;
 
-    do {
-      state.text.append(bufchar(++state.bufp));
+    while (currentChar() != '\'') {
+      lexStringChar();
       while (endOfBuffer()) {
         if (fillBuffer() == -1) {
           return;
         }
       }
     }
-    while (currentChar() != '\'');
 
-    state.text.deleteCharAt(state.text.length() - 1);
     state.bufp++;
   }
 
