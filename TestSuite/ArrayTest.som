@@ -122,5 +122,13 @@ ArrayTest = TestCase (
     self assert: 6 equals: (arr lastIndexOf: #one).
   )
   
+  testNewWithAll = (
+    | arr |
+    arr := Array new: 5 withAll: [1].
+    1 to: 5 do: [:i | self assert: 1 equals: (arr at: i)].
+    
+    arr := Array new: 5 withAll: 1.
+    1 to: 5 do: [:i | self assert: 1 equals: (arr at: i)].
+  )
   
 )
