@@ -1,8 +1,5 @@
 package som.interpreter.nodes.dispatch;
 
-import som.interpreter.SArguments;
-import som.interpreter.nodes.dispatch.AbstractDispatchNode.AbstractCachedDispatchNode;
-import som.vm.Universe;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
@@ -10,27 +7,20 @@ import som.vmobjects.SSymbol;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 
-public final class CachedDnuSObjectCheckNode extends AbstractCachedDispatchNode {
+public final class CachedDnuSObjectCheckNode extends AbstractCachedDnuNode {
   private final SClass expectedClass;
-  private final SSymbol selector;
 
   public CachedDnuSObjectCheckNode(final SClass rcvrClass,
       final SSymbol selector, final AbstractDispatchNode nextInCache) {
-    super(rcvrClass.lookupInvokable(
-        Universe.current().symbolFor("doesNotUnderstand:arguments:")).
-          getCallTarget(),
-      nextInCache);
+    super(rcvrClass, selector, nextInCache);
     expectedClass = rcvrClass;
-    this.selector = selector;
   }
 
   @Override
   public Object executeDispatch(final VirtualFrame frame, final Object[] arguments) {
     SObject rcvr = (SObject) arguments[0];
     if (rcvr.getSOMClass() == expectedClass) {
-      Object[] argsArr = new Object[] {
-          rcvr, selector, SArguments.getArgumentsWithoutReceiver(arguments) };
-      return cachedMethod.call(frame, argsArr);
+      return performDnu(frame, arguments, rcvr);
     } else {
       return nextInCache.executeDispatch(frame, arguments);
     }
