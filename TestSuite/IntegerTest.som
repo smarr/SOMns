@@ -195,8 +195,15 @@ IntegerTest = TestCase (
   )
           
   testModulo = (
-    self assert:  1 equals: (10 %  3).
-    self assert: -2 equals: (10 % -3).
+    self assert:  1 equals: ( 10 %  3).
+    self assert: -2 equals: ( 10 % -3).
+    self assert:  2 equals: (-10 %  3).
+    self assert: -1 equals: (-10 % -3).
+    
+    self assert:  1 equals: ( 10 rem:  3).
+    self assert:  1 equals: ( 10 rem: -3).
+    self assert: -1 equals: (-10 rem:  3).
+    self assert: -1 equals: (-10 rem: -3).
   )
 
   testAbsoluteValue = (
