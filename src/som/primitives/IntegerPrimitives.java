@@ -40,6 +40,7 @@ import som.primitives.arithmetic.LessThanPrimFactory;
 import som.primitives.arithmetic.LogicAndPrimFactory;
 import som.primitives.arithmetic.ModuloPrimFactory;
 import som.primitives.arithmetic.MultiplicationPrimFactory;
+import som.primitives.arithmetic.RemainderPrimFactory;
 import som.primitives.arithmetic.SqrtPrimFactory;
 import som.primitives.arithmetic.SubtractionPrimFactory;
 
@@ -56,6 +57,7 @@ public final class IntegerPrimitives extends Primitives {
     installInstancePrimitive("//",       DoubleDivPrimFactory.getInstance());
     installInstancePrimitive("/",        DividePrimFactory.getInstance());
     installInstancePrimitive("%",        ModuloPrimFactory.getInstance());
+    installInstancePrimitive("rem:",     RemainderPrimFactory.getInstance());
     installInstancePrimitive("&",        LogicAndPrimFactory.getInstance());
     installInstancePrimitive("=",        EqualsPrimFactory.getInstance());
     installInstancePrimitive("<",        LessThanPrimFactory.getInstance());

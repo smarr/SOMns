@@ -52,6 +52,7 @@ import som.primitives.arithmetic.LessThanPrimFactory;
 import som.primitives.arithmetic.LogicAndPrimFactory;
 import som.primitives.arithmetic.ModuloPrimFactory;
 import som.primitives.arithmetic.MultiplicationPrimFactory;
+import som.primitives.arithmetic.RemainderPrimFactory;
 import som.primitives.arithmetic.SubtractionPrimFactory;
 import som.vm.NotYetImplementedException;
 import som.vm.constants.Classes;
@@ -354,6 +355,10 @@ public final class MessageSendNode {
           return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
               argumentNodes[1],
               ModuloPrimFactory.create(null, null)));
+        case "rem:":
+          return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
+              argumentNodes[1],
+              RemainderPrimFactory.create(null, null)));
         case "/":
           return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
               argumentNodes[1],
