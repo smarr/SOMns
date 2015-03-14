@@ -14,14 +14,14 @@ GraphSearch = Benchmark (
     graph := Array new: noOfNodes withAll: [Vector new].
 
     graph doIndexes: [:i |
-      | noOfNodes |
-      noOfNodes := (JenkinsRandom random % (
-                      GraphSearch MaxInitEdges - GraphSearch MinEdges + 1)) abs
+      | noOfEdges |
+      noOfEdges := (JenkinsRandom random
+                       rem: GraphSearch MaxInitEdges - GraphSearch MinEdges + 1) abs
                    + GraphSearch MinEdges.
-      1 to: noOfNodes do: [:j |
+      1 to: noOfEdges do: [:j |
         | nodeId weight |
-        nodeId := (JenkinsRandom random % noOfNodes) abs + 1.
-        weight := (JenkinsRandom random % (
+        nodeId := (JenkinsRandom random rem: noOfNodes) abs + 1.
+        weight := (JenkinsRandom random rem: (
                     GraphSearch MaxWeight - GraphSearch MinWeight + 1)) abs
                   + GraphSearch MinWeight.
         (graph at: i)      append: (Edge newWith: nodeId and: weight).
@@ -33,7 +33,7 @@ GraphSearch = Benchmark (
     graph doIndexes: [:i |
       | noOfEdges |
       noOfEdges := (graph at: i) size.
-      graphNodes at: i put: (Node newWith: totalEdges + 1 and: noOfNodes).
+      graphNodes at: i put: (Node newWith: totalEdges + 1 and: noOfEdges).
       totalEdges := totalEdges + noOfEdges
     ].
 
@@ -49,13 +49,14 @@ GraphSearch = Benchmark (
         k := k + 1.
       ]
     ].
-    cost at: source put: 0
+    cost at: source put: 0.
   )
 
   innerBenchmarkLoop = (
     | noOfNodes |
     JenkinsRandom seed: 49734321.
     noOfNodes := GraphSearch ExpectedNoOfNodes / 1000 * innerIterations.
+
     self initializeGraph: noOfNodes.
     self breadthFirstSearch: noOfNodes.
     ^ self verifyResult: cost
@@ -77,15 +78,15 @@ GraphSearch = Benchmark (
             id := graphEdges at: i.
             (graphVisited at: id) ifFalse: [
               cost at: id put: (cost at: tid) + 1.
-              updatingGraphMask at: id put: false.
+              updatingGraphMask at: id put: true.
             ]
           ]
         ]
       ].
       
-      updatingGraphMask doIndexes: [:tid |
+      1 to: noOfNodes do: [:tid |
         (updatingGraphMask at: tid) ifTrue: [
-          graphMask at: tid put: true.
+          graphMask    at: tid put: true.
           graphVisited at: tid put: true.
           stop := true.
           updatingGraphMask at: tid put: false
