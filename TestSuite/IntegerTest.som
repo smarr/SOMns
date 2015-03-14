@@ -238,4 +238,14 @@ IntegerTest = TestCase (
     self assert: -2147483648 equals: (1 << 31) as32BitSignedValue.
     self assert:           0 equals: (1 << 32) as32BitSignedValue.
   )
+  
+  testUnsignedRightShift = (
+    self assert: 0   equals:    1 >>> 1.
+    self assert: 512 equals: 1024 >>> 1.
+    self assert: 127 equals: 1023 >>> 3.
+    
+    "not sure whether we should really insist on this"
+    self expect: 9223372036854775807 equals:    -1 >>> 1.
+    self expect: 9223372036854775296 equals: -1024 >>> 1.
+  )
 )
