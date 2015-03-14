@@ -9,7 +9,7 @@ GraphSearch = Benchmark (
     graphVisited      := Array new: noOfNodes withAll: false.
     cost              := Array new: noOfNodes withAll: -1.
 
-    source := 0.
+    source := 1.
 
     graph := Array new: noOfNodes withAll: [Vector new].
 
@@ -20,12 +20,12 @@ GraphSearch = Benchmark (
                    + GraphSearch MinEdges.
       1 to: noOfNodes do: [:j |
         | nodeId weight |
-        nodeId := (JenkinsRandom random % noOfNodes) abs.
+        nodeId := (JenkinsRandom random % noOfNodes) abs + 1.
         weight := (JenkinsRandom random % (
                     GraphSearch MaxWeight - GraphSearch MinWeight + 1)) abs
                   + GraphSearch MinWeight.
-        (graph at: i) append: (Edge newWith: nodeId and: weight).
-        (graph at: nodeId) append: (Edge newWith: i and: weight).
+        (graph at: i)      append: (Edge newWith: nodeId and: weight).
+        (graph at: nodeId) append: (Edge newWith:      i and: weight).
       ]
     ].
 
@@ -33,7 +33,7 @@ GraphSearch = Benchmark (
     graph doIndexes: [:i |
       | noOfEdges |
       noOfEdges := (graph at: i) size.
-      graphNodes at: i put: (Node newWith: totalEdges and: noOfNodes).
+      graphNodes at: i put: (Node newWith: totalEdges + 1 and: noOfNodes).
       totalEdges := totalEdges + noOfEdges
     ].
 
@@ -42,7 +42,7 @@ GraphSearch = Benchmark (
 
     graphEdges := Array new: totalEdges withAll: 0.
     
-    k := 0.
+    k := 1.
     graph doIndexes: [:i |
       1 to: (graph at: i) size do: [:j |
         graphEdges at: k put: ((graph at: i) at: j) dest.
