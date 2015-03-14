@@ -16,7 +16,7 @@ public abstract class ModuloPrim extends ArithmeticPrim {
 
   @Specialization
   public final double doDouble(final double left, final long right) {
-    return doDouble(left, right);
+    return doDouble(left, (double) right);
   }
 
   @Specialization
