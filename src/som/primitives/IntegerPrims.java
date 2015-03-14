@@ -73,6 +73,13 @@ public abstract class IntegerPrims {
     }
   }
 
+  public abstract static class UnsignedRightShiftPrim extends ArithmeticPrim {
+    @Specialization
+    public final long doLong(final long receiver, final long right) {
+      return receiver >>> right;
+    }
+  }
+
   public abstract static class MaxIntPrim extends ArithmeticPrim {
     @Specialization
     public final long doLong(final long receiver, final long right) {

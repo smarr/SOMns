@@ -36,6 +36,7 @@ import som.primitives.BlockPrimsFactory.ValueOnePrimFactory;
 import som.primitives.EqualsEqualsPrimFactory;
 import som.primitives.EqualsPrimFactory;
 import som.primitives.IntegerPrimsFactory.LeftShiftPrimFactory;
+import som.primitives.IntegerPrimsFactory.UnsignedRightShiftPrimFactory;
 import som.primitives.LengthPrimFactory;
 import som.primitives.MethodPrimsFactory.InvokeOnPrimFactory;
 import som.primitives.ObjectPrimsFactory.InstVarAtPrimFactory;
@@ -370,6 +371,14 @@ public final class MessageSendNode {
                 LeftShiftPrimFactory.create(null, null)));
           }
           break;
+        case ">>>":
+          if (arguments[0] instanceof Long) {
+            return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
+                argumentNodes[1],
+                UnsignedRightShiftPrimFactory.create(null, null)));
+          }
+          break;
+
       }
 
       return makeGenericSend();
