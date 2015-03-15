@@ -73,6 +73,12 @@ public class BasicInterpreterTests {
         {"CompilerSimplification", "testReturnArgumentA",   44, Long.class },
         {"CompilerSimplification", "testSetField",          "foo", SSymbol.class },
         {"CompilerSimplification", "testGetField",          40, Long.class },
+
+
+        {"Arrays", "testEmptyToInts", 3, Long.class },
+        {"Arrays", "testPutAllInt",   5, Long.class },
+        {"Arrays", "testPutAllNil",   "Nil", SClass.class },
+        {"Arrays", "testNewWithAll",   1, Long.class },
     });
   }
 
