@@ -47,6 +47,10 @@ public abstract class DoPrim extends BinaryExpressionNode
     return receiver.getType() == ArrayType.DOUBLE;
   }
 
+  public final static boolean isBooleanType(final SArray receiver) {
+    return receiver.getType() == ArrayType.BOOLEAN;
+  }
+
   @Override
   public void adoptNewDispatchListHead(final AbstractDispatchNode node) {
     block = insert(node);
@@ -139,6 +143,26 @@ public abstract class DoPrim extends BinaryExpressionNode
   public final SArray doDoubleArray(final VirtualFrame frame,
       final SArray arr, final SBlock block) {
     double[] storage = arr.getDoubleStorage();
+    int length = storage.length;
+    try {
+      if (SArray.FIRST_IDX < length) {
+        execBlock(frame, block, storage[SArray.FIRST_IDX]);
+      }
+      for (long i = SArray.FIRST_IDX + 1; i < length; i++) {
+        execBlock(frame, block, storage[(int) i]);
+      }
+    } finally {
+      if (CompilerDirectives.inInterpreter()) {
+        reportLoopCount(length);
+      }
+    }
+    return arr;
+  }
+
+  @Specialization(guards = "isBooleanType")
+  public final SArray doBooleanArray(final VirtualFrame frame,
+      final SArray arr, final SBlock block) {
+    boolean[] storage = arr.getBooleanStorage();
     int length = storage.length;
     try {
       if (SArray.FIRST_IDX < length) {

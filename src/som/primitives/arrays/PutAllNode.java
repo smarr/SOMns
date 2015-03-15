@@ -35,10 +35,6 @@ public abstract class PutAllNode extends BinaryExpressionNode
     block = insert(node);
   }
 
-  protected final static boolean notABlock(final SArray rcvr, final Object value) {
-    return !(value instanceof SBlock);
-  }
-
   protected final static boolean valueIsNil(final SArray rcvr, final SObject value) {
     return value == Nil.nilObject;
   }
@@ -55,9 +51,12 @@ public abstract class PutAllNode extends BinaryExpressionNode
     return receiver.getType() == ArrayType.OBJECT;
   }
 
-  protected final static boolean valueNeitherLongNorDouble(final SArray rcvr,
+  protected final static boolean valueOfNoOtherSpecialization(final SArray rcvr,
       final Object value) {
-    return !(value instanceof Long) && !(value instanceof Double);
+    return !(value instanceof Long)    &&
+           !(value instanceof Double)  &&
+           !(value instanceof Boolean) &&
+           !(value instanceof SBlock);
   }
 
   @Specialization(guards = {"isEmptyType", "valueIsNil"})
@@ -95,6 +94,12 @@ public abstract class PutAllNode extends BinaryExpressionNode
     }
   }
 
+  private void evalBlockForRemaining(final VirtualFrame frame,
+      final SBlock block, final long length, final boolean[] storage) {
+    for (int i = SArray.FIRST_IDX + 1; i < length; i++) {
+      storage[i] = (boolean) this.block.executeDispatch(frame, new Object[] {block});
+    }
+  }
 
   @Specialization
   public SArray doPutEvalBlock(final VirtualFrame frame, final SArray rcvr,
@@ -109,17 +114,22 @@ public abstract class PutAllNode extends BinaryExpressionNode
         long[] newStorage = new long[(int) length];
         newStorage[0] = (long) result;
         evalBlockForRemaining(frame, block, length, newStorage);
-        rcvr.transitionToObject(newStorage);
+        rcvr.transitionTo(ArrayType.LONG, newStorage);
       } else if (result instanceof Double) {
         double[] newStorage = new double[(int) length];
-        newStorage[0] = (long) result;
+        newStorage[0] = (double) result;
         evalBlockForRemaining(frame, block, length, newStorage);
-        rcvr.transitionToObject(newStorage);
+        rcvr.transitionTo(ArrayType.DOUBLE, newStorage);
+      } else if (result instanceof Boolean) {
+        boolean[] newStorage = new boolean[(int) length];
+        newStorage[0] = (boolean) result;
+        evalBlockForRemaining(frame, block, length, newStorage);
+        rcvr.transitionTo(ArrayType.BOOLEAN, newStorage);
       } else {
         Object[] newStorage = new Object[(int) length];
         newStorage[0] = result;
         evalBlockForRemaining(frame, block, length, newStorage);
-        rcvr.transitionToObject(newStorage);
+        rcvr.transitionTo(ArrayType.OBJECT, newStorage);
       }
     } finally {
       if (CompilerDirectives.inInterpreter()) {
@@ -158,7 +168,14 @@ public abstract class PutAllNode extends BinaryExpressionNode
     return rcvr;
   }
 
-  @Specialization(guards = {"notABlock", "valueNeitherLongNorDouble"})
+  @Specialization
+  public SArray doPutBoolean(final SArray rcvr, final boolean value,
+      final long length) {
+    rcvr.transitionToBooleanWithAll(length, value);
+    return rcvr;
+  }
+
+  @Specialization(guards = {"valueOfNoOtherSpecialization"})
   public SArray doPutObject(final SArray rcvr, final Object value,
       final long length) {
     rcvr.transitionToObjectWithAll(length, value);

@@ -27,6 +27,10 @@ public final class SArray extends SAbstractObject {
     return new SArray(values);
   }
 
+  public static SArray create(final boolean[] values) {
+    return new SArray(values);
+  }
+
   public static SArray create(final int length) {
     return new SArray(length);
   }
@@ -63,6 +67,11 @@ public final class SArray extends SAbstractObject {
     return (double[]) storage;
   }
 
+  public boolean[] getBooleanStorage() {
+    assert type == ArrayType.BOOLEAN;
+    return (boolean[]) storage;
+  }
+
   /**
    * Creates and empty array, using the EMPTY strategy.
    * @param length
@@ -84,6 +93,11 @@ public final class SArray extends SAbstractObject {
 
   private SArray(final double[] val) {
     type = ArrayType.DOUBLE;
+    storage = val;
+  }
+
+  private SArray(final boolean[] val) {
+    type = ArrayType.BOOLEAN;
     storage = val;
   }
 
@@ -114,23 +128,17 @@ public final class SArray extends SAbstractObject {
     fromEmptyToParticalWithType(ArrayType.DOUBLE, idx, val);
   }
 
+  public void transitionFromEmptyToPartiallyEmptyWith(final long idx, final boolean val) {
+    fromEmptyToParticalWithType(ArrayType.BOOLEAN, idx, val);
+  }
+
   public void transitionToEmpty(final long length) {
     type = ArrayType.EMPTY;
     storage = (int) length;
   }
 
-  public void transitionToObject(final Object[] newStorage) {
-    type = ArrayType.OBJECT;
-    storage = newStorage;
-  }
-
-  public void transitionToObject(final long[] newStorage) {
-    type = ArrayType.LONG;
-    storage = newStorage;
-  }
-
-  public void transitionToObject(final double[] newStorage) {
-    type = ArrayType.DOUBLE;
+  public void transitionTo(final ArrayType newType, final Object newStorage) {
+    type = newType;
     storage = newStorage;
   }
 
@@ -155,8 +163,17 @@ public final class SArray extends SAbstractObject {
     storage = arr;
   }
 
+  public void transitionToBooleanWithAll(final long length, final boolean val) {
+    type = ArrayType.BOOLEAN;
+    boolean[] arr = new boolean[(int) length];
+    if (val) {
+      Arrays.fill(arr, true);
+    }
+    storage = arr;
+  }
+
   public enum ArrayType { EMPTY, PARTIAL_EMPTY, LONG, DOUBLE,
-    /* TODO:? BOOLEAN,*/  OBJECT }
+    BOOLEAN,  OBJECT }
 
   private static long[] createLong(final Object[] arr) {
     long[] storage = new long[arr.length];
@@ -174,6 +191,14 @@ public final class SArray extends SAbstractObject {
     return storage;
   }
 
+  private static boolean[] createBoolean(final Object[] arr) {
+    boolean[] storage = new boolean[arr.length];
+    for (int i = 0; i < arr.length; i++) {
+      storage[i] = (boolean) arr[i];
+    }
+    return storage;
+  }
+
   public void ifFullTransitionPartiallyEmpty() {
     PartiallyEmptyArray arr = getPartiallyEmptyStorage();
 
@@ -184,6 +209,9 @@ public final class SArray extends SAbstractObject {
       } else if (arr.getType() == ArrayType.DOUBLE) {
         type = ArrayType.DOUBLE;
         storage = createDouble(arr.getStorage());
+      } else if (arr.getType() == ArrayType.BOOLEAN) {
+        type = ArrayType.BOOLEAN;
+        storage = createBoolean(arr.getStorage());
       } else {
         type = ArrayType.OBJECT;
         storage = arr.getStorage();

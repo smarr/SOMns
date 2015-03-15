@@ -5,8 +5,9 @@ import som.interpreter.nodes.dispatch.AbstractDispatchNode;
 import som.interpreter.nodes.dispatch.UninitializedValuePrimDispatchNode;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.primitives.BlockPrims.ValuePrimitiveNode;
+import som.primitives.LengthPrim;
+import som.primitives.LengthPrimFactory;
 import som.vmobjects.SArray;
-import som.vmobjects.SArray.ArrayType;
 import som.vmobjects.SBlock;
 
 import com.oracle.truffle.api.CompilerAsserts;
@@ -19,68 +20,18 @@ import com.oracle.truffle.api.nodes.RootNode;
 public abstract class DoIndexesPrim extends BinaryExpressionNode
     implements ValuePrimitiveNode {
   @Child private AbstractDispatchNode block;
+  @Child private LengthPrim length;
 
   public DoIndexesPrim() {
     super(null);
     block = new UninitializedValuePrimDispatchNode();
+    length = LengthPrimFactory.create(null);
   }
 
-  public final static boolean isEmptyType(final SArray receiver) {
-    return receiver.getType() == ArrayType.EMPTY;
-  }
-
-  public final static boolean isPartiallyEmptyType(final SArray receiver) {
-    return receiver.getType() == ArrayType.PARTIAL_EMPTY;
-  }
-
-  public final static boolean isObjectType(final SArray receiver) {
-    return receiver.getType() == ArrayType.OBJECT;
-  }
-
-  public final static boolean isLongType(final SArray receiver) {
-    return receiver.getType() == ArrayType.LONG;
-  }
-
-  public final static boolean isDoubleType(final SArray receiver) {
-    return receiver.getType() == ArrayType.DOUBLE;
-  }
-
-  @Specialization(guards = "isEmptyType")
+  @Specialization
   public final SArray doEmptyArray(final VirtualFrame frame,
       final SArray receiver, final SBlock block) {
-    int length = receiver.getEmptyStorage();
-    loop(frame, block, length);
-    return receiver;
-  }
-
-  @Specialization(guards = "isPartiallyEmptyType")
-  public final SArray doPartiallyEmptyArray(final VirtualFrame frame,
-      final SArray receiver, final SBlock block) {
-    int length = receiver.getPartiallyEmptyStorage().getLength();
-    loop(frame, block, length);
-    return receiver;
-  }
-
-  @Specialization(guards = "isObjectType")
-  public final SArray doObjectArray(final VirtualFrame frame,
-      final SArray receiver, final SBlock block) {
-    int length = receiver.getObjectStorage().length;
-    loop(frame, block, length);
-    return receiver;
-  }
-
-  @Specialization(guards = "isLongType")
-  public final SArray doLongArray(final VirtualFrame frame,
-      final SArray receiver, final SBlock block) {
-    int length = receiver.getLongStorage().length;
-    loop(frame, block, length);
-    return receiver;
-  }
-
-  @Specialization(guards = "isDoubleType")
-  public final SArray doDoubleArray(final VirtualFrame frame,
-      final SArray receiver, final SBlock block) {
-    int length = receiver.getDoubleStorage().length;
+    int length = (int) this.length.executeEvaluated(receiver);
     loop(frame, block, length);
     return receiver;
   }

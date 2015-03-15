@@ -29,6 +29,10 @@ public abstract class LengthPrim extends UnaryExpressionNode {
     return receiver.getType() == ArrayType.DOUBLE;
   }
 
+  public final static boolean isBooleanType(final SArray receiver) {
+    return receiver.getType() == ArrayType.BOOLEAN;
+  }
+
   @Specialization(guards = "isEmptyType")
   public final long doEmptySArray(final SArray receiver) {
     return receiver.getEmptyStorage();
@@ -52,6 +56,11 @@ public abstract class LengthPrim extends UnaryExpressionNode {
   @Specialization(guards = "isDoubleType")
   public final long doDoubleSArray(final SArray receiver) {
     return receiver.getDoubleStorage().length;
+  }
+
+  @Specialization(guards = "isBooleanType")
+  public final long doBooleanSArray(final SArray receiver) {
+    return receiver.getBooleanStorage().length;
   }
 
   public abstract long executeEvaluated(SArray receiver);

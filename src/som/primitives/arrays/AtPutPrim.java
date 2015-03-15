@@ -30,6 +30,10 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
     return receiver.getType() == ArrayType.DOUBLE;
   }
 
+  public final static boolean isBooleanType(final SArray receiver) {
+    return receiver.getType() == ArrayType.BOOLEAN;
+  }
+
   protected final static boolean valueIsNil(final SArray rcvr, final long idx,
       final Object value) {
     return value == Nil.nilObject;
@@ -40,9 +44,11 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
     return value != Nil.nilObject;
   }
 
-  protected final static boolean valueNeitherLongNorDouble(final SArray rcvr,
+  protected final static boolean valueNotLongDoubleBoolean(final SArray rcvr,
       final long idx, final Object value) {
-    return !(value instanceof Long) && !(value instanceof Double);
+    return !(value instanceof Long) &&
+        !(value instanceof Double) &&
+        !(value instanceof Boolean);
   }
 
   @Specialization(guards = {"isEmptyType"})
@@ -67,7 +73,18 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
     return value;
   }
 
-  @Specialization(guards = {"isEmptyType", "valueIsNotNil", "valueNeitherLongNorDouble"})
+  @Specialization(guards = {"isEmptyType"})
+  public final Object doEmptySArray(final SArray receiver, final long index,
+      final boolean value) {
+    long idx = index - 1;
+    assert idx >= 0;
+    assert idx < receiver.getEmptyStorage();
+
+    receiver.transitionFromEmptyToPartiallyEmptyWith(idx, value);
+    return value;
+  }
+
+  @Specialization(guards = {"isEmptyType", "valueIsNotNil", "valueNotLongDoubleBoolean"})
   public final Object doEmptySArray(final SArray receiver, final long index,
       final Object value) {
     long idx = index - 1;
@@ -104,7 +121,7 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
     long idx = index - 1;
     PartiallyEmptyArray storage = receiver.getPartiallyEmptyStorage();
     setValue(idx, value, storage);
-    if (storage.getType() == ArrayType.DOUBLE) {
+    if (storage.getType() != ArrayType.LONG) {
       storage.setType(ArrayType.OBJECT);
     }
 
@@ -118,7 +135,20 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
     long idx = index - 1;
     PartiallyEmptyArray storage = receiver.getPartiallyEmptyStorage();
     setValue(idx, value, storage);
-    if (storage.getType() == ArrayType.LONG) {
+    if (storage.getType() != ArrayType.DOUBLE) {
+      storage.setType(ArrayType.OBJECT);
+    }
+    receiver.ifFullTransitionPartiallyEmpty();
+    return value;
+  }
+
+  @Specialization(guards = "isPartiallyEmptyType")
+  public final boolean doPartiallyEmptySArray(final SArray receiver,
+      final long index, final boolean value) {
+    long idx = index - 1;
+    PartiallyEmptyArray storage = receiver.getPartiallyEmptyStorage();
+    setValue(idx, value, storage);
+    if (storage.getType() != ArrayType.BOOLEAN) {
       storage.setType(ArrayType.OBJECT);
     }
     receiver.ifFullTransitionPartiallyEmpty();
@@ -174,6 +204,14 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
       final double value) {
     long idx = index - 1;
     receiver.getDoubleStorage()[(int) idx] = value;
+    return value;
+  }
+
+  @Specialization(guards = "isBooleanType")
+  public final Object doBooleanSArray(final SArray receiver, final long index,
+      final boolean value) {
+    long idx = index - 1;
+    receiver.getBooleanStorage()[(int) idx] = value;
     return value;
   }
 }

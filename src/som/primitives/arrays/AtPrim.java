@@ -29,6 +29,10 @@ public abstract class AtPrim extends BinaryExpressionNode {
     return receiver.getType() == ArrayType.DOUBLE;
   }
 
+  public final static boolean isBooleanType(final SArray receiver) {
+    return receiver.getType() == ArrayType.BOOLEAN;
+  }
+
   @Specialization(guards = "isEmptyType")
   public final Object doEmptySArray(final SArray receiver, final long idx) {
     assert idx > 0;
@@ -54,5 +58,10 @@ public abstract class AtPrim extends BinaryExpressionNode {
   @Specialization(guards = "isDoubleType")
   public final double doDoubleSArray(final SArray receiver, final long idx) {
     return receiver.getDoubleStorage()[(int) idx - 1];
+  }
+
+  @Specialization(guards = "isBooleanType")
+  public final boolean doBooleanSArray(final SArray receiver, final long idx) {
+    return receiver.getBooleanStorage()[(int) idx - 1];
   }
 }

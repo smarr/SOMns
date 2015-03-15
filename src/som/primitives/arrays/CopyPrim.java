@@ -27,6 +27,10 @@ public abstract class CopyPrim extends UnaryExpressionNode {
     return receiver.getType() == ArrayType.DOUBLE;
   }
 
+  public final static boolean isBooleanType(final SArray receiver) {
+    return receiver.getType() == ArrayType.BOOLEAN;
+  }
+
   @Specialization(guards = "isEmptyType")
   public final SArray doEmptyArray(final SArray receiver) {
     return new SArray(receiver.getEmptyStorage());
@@ -50,5 +54,10 @@ public abstract class CopyPrim extends UnaryExpressionNode {
   @Specialization(guards = "isDoubleType")
   public final SArray doDoubleArray(final SArray receiver) {
     return SArray.create(receiver.getDoubleStorage().clone());
+  }
+
+  @Specialization(guards = "isBooleanType")
+  public final SArray doBooleanArray(final SArray receiver) {
+    return SArray.create(receiver.getBooleanStorage().clone());
   }
 }

@@ -43,6 +43,10 @@ public abstract class ToArgumentsArrayNode extends ExpressionNode {
     return receiver.getType() == ArrayType.DOUBLE;
   }
 
+  public final static boolean isBooleanType(final SArray receiver) {
+    return receiver.getType() == ArrayType.BOOLEAN;
+  }
+
   public abstract Object[] executedEvaluated(SArray somArray, Object rcvr);
 
   public final Object[] executedEvaluated(final Object somArray, final Object rcvr) {
@@ -98,6 +102,18 @@ public abstract class ToArgumentsArrayNode extends ExpressionNode {
   public final Object[] doDoubleArray(final SArray somArray,
       final Object rcvr) {
     double[] arr = somArray.getDoubleStorage();
+    Object[] args = new Object[arr.length + 1];
+    args[0] = rcvr;
+    for (int i = 0; i < arr.length; i++) {
+      args[i + 1] = arr[i];
+    }
+    return args;
+  }
+
+  @Specialization(guards = "isBooleanType")
+  public final Object[] doBooleanArray(final SArray somArray,
+      final Object rcvr) {
+    boolean[] arr = somArray.getBooleanStorage();
     Object[] args = new Object[arr.length + 1];
     args[0] = rcvr;
     for (int i = 0; i < arr.length; i++) {
