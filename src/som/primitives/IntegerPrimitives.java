@@ -31,6 +31,7 @@ import som.primitives.IntegerPrimsFactory.FromStringPrimFactory;
 import som.primitives.IntegerPrimsFactory.LeftShiftPrimFactory;
 import som.primitives.IntegerPrimsFactory.MaxIntPrimFactory;
 import som.primitives.IntegerPrimsFactory.RandomPrimFactory;
+import som.primitives.IntegerPrimsFactory.ToPrimFactory;
 import som.primitives.IntegerPrimsFactory.UnsignedRightShiftPrimFactory;
 import som.primitives.arithmetic.AdditionPrimFactory;
 import som.primitives.arithmetic.BitXorPrimFactory;
@@ -69,6 +70,8 @@ public final class IntegerPrimitives extends Primitives {
 
     installInstancePrimitive("as32BitSignedValue",   As32BitSignedValueFactory.getInstance());
     installInstancePrimitive("as32BitUnsignedValue", As32BitUnsignedValueFactory.getInstance());
+
+    installInstancePrimitive("to:", ToPrimFactory.getInstance());
 
     installClassPrimitive("fromString:", FromStringPrimFactory.getInstance());
   }
