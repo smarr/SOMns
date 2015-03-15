@@ -8,6 +8,7 @@ import som.primitives.BlockPrims.ValuePrimitiveNode;
 import som.vm.constants.Nil;
 import som.vmobjects.SArray;
 import som.vmobjects.SArray.ArrayType;
+import som.vmobjects.SArray.PartiallyEmptyArray;
 import som.vmobjects.SBlock;
 
 import com.oracle.truffle.api.CompilerAsserts;
@@ -38,10 +39,21 @@ public abstract class DoPrim extends BinaryExpressionNode
     return receiver.getType() == ArrayType.OBJECT;
   }
 
+  public final static boolean isLongType(final SArray receiver) {
+    return receiver.getType() == ArrayType.LONG;
+  }
+
+  public final static boolean isDoubleType(final SArray receiver) {
+    return receiver.getType() == ArrayType.DOUBLE;
+  }
 
   @Override
   public void adoptNewDispatchListHead(final AbstractDispatchNode node) {
     block = insert(node);
+  }
+
+  private void execBlock(final VirtualFrame frame, final SBlock block, final Object arg) {
+    this.block.executeDispatch(frame, new Object[] {block, arg});
   }
 
   @Specialization(guards = "isEmptyType")
@@ -50,10 +62,10 @@ public abstract class DoPrim extends BinaryExpressionNode
     int length = arr.getEmptyStorage();
     try {
       if (SArray.FIRST_IDX < length) {
-        this.block.executeDispatch(frame, new Object[] {block, Nil.nilObject});
+        execBlock(frame, block, Nil.nilObject);
       }
       for (long i = SArray.FIRST_IDX + 1; i < length; i++) {
-        this.block.executeDispatch(frame, new Object[] {block, Nil.nilObject});
+        execBlock(frame, block, Nil.nilObject);
       }
     } finally {
       if (CompilerDirectives.inInterpreter()) {
@@ -66,15 +78,14 @@ public abstract class DoPrim extends BinaryExpressionNode
   @Specialization(guards = "isPartiallyEmptyType")
   public final SArray doPartiallyEmptyArray(final VirtualFrame frame,
       final SArray arr, final SBlock block) {
-    int length = arr.getPartiallyEmptyStorage().getLength();
+    PartiallyEmptyArray storage = arr.getPartiallyEmptyStorage();
+    int length = storage.getLength();
     try {
       if (SArray.FIRST_IDX < length) {
-        this.block.executeDispatch(frame, new Object[] {
-            block, arr.getPartiallyEmptyStorage().get(SArray.FIRST_IDX)});
+        execBlock(frame, block, storage.get(SArray.FIRST_IDX));
       }
       for (long i = SArray.FIRST_IDX + 1; i < length; i++) {
-        this.block.executeDispatch(frame, new Object[] {
-            block, arr.getPartiallyEmptyStorage().get(i)});
+        execBlock(frame, block, storage.get(i));
       }
     } finally {
       if (CompilerDirectives.inInterpreter()) {
@@ -87,15 +98,54 @@ public abstract class DoPrim extends BinaryExpressionNode
   @Specialization(guards = "isObjectType")
   public final SArray doObjectArray(final VirtualFrame frame,
       final SArray arr, final SBlock block) {
-    int length = arr.getObjectStorage().length;
+    Object[] storage = arr.getObjectStorage();
+    int length = storage.length;
     try {
       if (SArray.FIRST_IDX < length) {
-        this.block.executeDispatch(frame, new Object[] {
-            block, arr.getObjectStorage()[SArray.FIRST_IDX]});
+        execBlock(frame, block, storage[SArray.FIRST_IDX]);
       }
       for (long i = SArray.FIRST_IDX + 1; i < length; i++) {
-        this.block.executeDispatch(frame, new Object[] {
-            block, arr.getObjectStorage()[(int) i]});
+        execBlock(frame, block, storage[(int) i]);
+      }
+    } finally {
+      if (CompilerDirectives.inInterpreter()) {
+        reportLoopCount(length);
+      }
+    }
+    return arr;
+  }
+
+  @Specialization(guards = "isLongType")
+  public final SArray doLongArray(final VirtualFrame frame,
+      final SArray arr, final SBlock block) {
+    long[] storage = arr.getLongStorage();
+    int length = storage.length;
+    try {
+      if (SArray.FIRST_IDX < length) {
+        execBlock(frame, block, storage[SArray.FIRST_IDX]);
+      }
+      for (long i = SArray.FIRST_IDX + 1; i < length; i++) {
+        execBlock(frame, block, storage[(int) i]);
+      }
+    } finally {
+      if (CompilerDirectives.inInterpreter()) {
+        reportLoopCount(length);
+      }
+    }
+    return arr;
+  }
+
+  @Specialization(guards = "isDoubleType")
+  public final SArray doDoubleArray(final VirtualFrame frame,
+      final SArray arr, final SBlock block) {
+    double[] storage = arr.getDoubleStorage();
+    int length = storage.length;
+    try {
+      if (SArray.FIRST_IDX < length) {
+        execBlock(frame, block, storage[SArray.FIRST_IDX]);
+      }
+      for (long i = SArray.FIRST_IDX + 1; i < length; i++) {
+        execBlock(frame, block, storage[(int) i]);
       }
     } finally {
       if (CompilerDirectives.inInterpreter()) {

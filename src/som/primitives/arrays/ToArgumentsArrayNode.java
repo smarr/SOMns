@@ -35,6 +35,14 @@ public abstract class ToArgumentsArrayNode extends ExpressionNode {
     return somArray.getType() == ArrayType.OBJECT;
   }
 
+  public final static boolean isLongType(final SArray receiver) {
+    return receiver.getType() == ArrayType.LONG;
+  }
+
+  public final static boolean isDoubleType(final SArray receiver) {
+    return receiver.getType() == ArrayType.DOUBLE;
+  }
+
   public abstract Object[] executedEvaluated(SArray somArray, Object rcvr);
 
   public final Object[] executedEvaluated(final Object somArray, final Object rcvr) {
@@ -72,5 +80,29 @@ public abstract class ToArgumentsArrayNode extends ExpressionNode {
   public final Object[] doObjectArray(final SArray somArray,
       final Object rcvr) {
     return addRcvrToObjectArray(rcvr, somArray.getObjectStorage());
+  }
+
+  @Specialization(guards = "isLongType")
+  public final Object[] doLongArray(final SArray somArray,
+      final Object rcvr) {
+    long[] arr = somArray.getLongStorage();
+    Object[] args = new Object[arr.length + 1];
+    args[0] = rcvr;
+    for (int i = 0; i < arr.length; i++) {
+      args[i + 1] = arr[i];
+    }
+    return args;
+  }
+
+  @Specialization(guards = "isDoubleType")
+  public final Object[] doDoubleArray(final SArray somArray,
+      final Object rcvr) {
+    double[] arr = somArray.getDoubleStorage();
+    Object[] args = new Object[arr.length + 1];
+    args[0] = rcvr;
+    for (int i = 0; i < arr.length; i++) {
+      args[i + 1] = arr[i];
+    }
+    return args;
   }
 }

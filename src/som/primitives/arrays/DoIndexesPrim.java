@@ -37,6 +37,14 @@ public abstract class DoIndexesPrim extends BinaryExpressionNode
     return receiver.getType() == ArrayType.OBJECT;
   }
 
+  public final static boolean isLongType(final SArray receiver) {
+    return receiver.getType() == ArrayType.LONG;
+  }
+
+  public final static boolean isDoubleType(final SArray receiver) {
+    return receiver.getType() == ArrayType.DOUBLE;
+  }
+
   @Specialization(guards = "isEmptyType")
   public final SArray doEmptyArray(final VirtualFrame frame,
       final SArray receiver, final SBlock block) {
@@ -57,6 +65,22 @@ public abstract class DoIndexesPrim extends BinaryExpressionNode
   public final SArray doObjectArray(final VirtualFrame frame,
       final SArray receiver, final SBlock block) {
     int length = receiver.getObjectStorage().length;
+    loop(frame, block, length);
+    return receiver;
+  }
+
+  @Specialization(guards = "isLongType")
+  public final SArray doLongArray(final VirtualFrame frame,
+      final SArray receiver, final SBlock block) {
+    int length = receiver.getLongStorage().length;
+    loop(frame, block, length);
+    return receiver;
+  }
+
+  @Specialization(guards = "isDoubleType")
+  public final SArray doDoubleArray(final VirtualFrame frame,
+      final SArray receiver, final SBlock block) {
+    int length = receiver.getDoubleStorage().length;
     loop(frame, block, length);
     return receiver;
   }

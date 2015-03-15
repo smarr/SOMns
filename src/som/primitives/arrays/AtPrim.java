@@ -21,6 +21,14 @@ public abstract class AtPrim extends BinaryExpressionNode {
     return receiver.getType() == ArrayType.OBJECT;
   }
 
+  public final static boolean isLongType(final SArray receiver) {
+    return receiver.getType() == ArrayType.LONG;
+  }
+
+  public final static boolean isDoubleType(final SArray receiver) {
+    return receiver.getType() == ArrayType.DOUBLE;
+  }
+
   @Specialization(guards = "isEmptyType")
   public final Object doEmptySArray(final SArray receiver, final long idx) {
     assert idx > 0;
@@ -36,5 +44,15 @@ public abstract class AtPrim extends BinaryExpressionNode {
   @Specialization(guards = "isObjectType")
   public final Object doObjectSArray(final SArray receiver, final long idx) {
     return receiver.getObjectStorage()[(int) idx - 1];
+  }
+
+  @Specialization(guards = "isLongType")
+  public final long doLongSArray(final SArray receiver, final long idx) {
+    return receiver.getLongStorage()[(int) idx - 1];
+  }
+
+  @Specialization(guards = "isDoubleType")
+  public final double doDoubleSArray(final SArray receiver, final long idx) {
+    return receiver.getDoubleStorage()[(int) idx - 1];
   }
 }

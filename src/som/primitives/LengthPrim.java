@@ -9,16 +9,24 @@ import com.oracle.truffle.api.dsl.Specialization;
 
 public abstract class LengthPrim extends UnaryExpressionNode {
 
-  public final boolean isEmptyType(final SArray receiver) {
+  public final static boolean isEmptyType(final SArray receiver) {
     return receiver.getType() == ArrayType.EMPTY;
   }
 
-  public final boolean isPartiallyEmptyType(final SArray receiver) {
+  public final static boolean isPartiallyEmptyType(final SArray receiver) {
     return receiver.getType() == ArrayType.PARTIAL_EMPTY;
   }
 
-  public final boolean isObjectType(final SArray receiver) {
+  public final static boolean isObjectType(final SArray receiver) {
     return receiver.getType() == ArrayType.OBJECT;
+  }
+
+  public final static boolean isLongType(final SArray receiver) {
+    return receiver.getType() == ArrayType.LONG;
+  }
+
+  public final static boolean isDoubleType(final SArray receiver) {
+    return receiver.getType() == ArrayType.DOUBLE;
   }
 
   @Specialization(guards = "isEmptyType")
@@ -34,6 +42,16 @@ public abstract class LengthPrim extends UnaryExpressionNode {
   @Specialization(guards = "isObjectType")
   public final long doObjectSArray(final SArray receiver) {
     return receiver.getObjectStorage().length;
+  }
+
+  @Specialization(guards = "isLongType")
+  public final long doLongSArray(final SArray receiver) {
+    return receiver.getLongStorage().length;
+  }
+
+  @Specialization(guards = "isDoubleType")
+  public final long doDoubleSArray(final SArray receiver) {
+    return receiver.getDoubleStorage().length;
   }
 
   public abstract long executeEvaluated(SArray receiver);

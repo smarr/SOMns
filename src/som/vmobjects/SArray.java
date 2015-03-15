@@ -19,6 +19,14 @@ public final class SArray extends SAbstractObject {
     return new SArray(values);
   }
 
+  public static SArray create(final long[] values) {
+    return new SArray(values);
+  }
+
+  public static SArray create(final double[] values) {
+    return new SArray(values);
+  }
+
   public static SArray create(final int length) {
     return new SArray(length);
   }
@@ -45,6 +53,16 @@ public final class SArray extends SAbstractObject {
     return (Object[]) storage;
   }
 
+  public long[] getLongStorage() {
+    assert type == ArrayType.LONG;
+    return (long[]) storage;
+  }
+
+  public double[] getDoubleStorage() {
+    assert type == ArrayType.DOUBLE;
+    return (double[]) storage;
+  }
+
   /**
    * Creates and empty array, using the EMPTY strategy.
    * @param length
@@ -56,6 +74,16 @@ public final class SArray extends SAbstractObject {
 
   private SArray(final Object[] val) {
     type = ArrayType.OBJECT;
+    storage = val;
+  }
+
+  private SArray(final long[] val) {
+    type = ArrayType.LONG;
+    storage = val;
+  }
+
+  private SArray(final double[] val) {
+    type = ArrayType.DOUBLE;
     storage = val;
   }
 
@@ -88,6 +116,20 @@ public final class SArray extends SAbstractObject {
   public void transitionToObjectWithAll(final long length, final Object val) {
     type = ArrayType.OBJECT;
     Object[] arr = new Object[(int) length];
+    Arrays.fill(arr, val);
+    storage = arr;
+  }
+
+  public void transitionToLongWithAll(final long length, final long val) {
+    type = ArrayType.LONG;
+    long[] arr = new long[(int) length];
+    Arrays.fill(arr, val);
+    storage = arr;
+  }
+
+  public void transitionToDoubleWithAll(final long length, final double val) {
+    type = ArrayType.DOUBLE;
+    double[] arr = new double[(int) length];
     Arrays.fill(arr, val);
     storage = arr;
   }

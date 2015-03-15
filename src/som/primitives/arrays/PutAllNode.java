@@ -35,23 +35,23 @@ public abstract class PutAllNode extends BinaryExpressionNode
     block = insert(node);
   }
 
-  protected final boolean notABlock(final SArray rcvr, final Object value) {
+  protected final static boolean notABlock(final SArray rcvr, final Object value) {
     return !(value instanceof SBlock);
   }
 
-  protected final boolean valueIsNil(final SArray rcvr, final SObject value) {
+  protected final static boolean valueIsNil(final SArray rcvr, final SObject value) {
     return value == Nil.nilObject;
   }
 
-  public final boolean isEmptyType(final SArray receiver) {
+  public final static boolean isEmptyType(final SArray receiver) {
     return receiver.getType() == ArrayType.EMPTY;
   }
 
-  public final boolean isPartiallyEmptyType(final SArray receiver) {
+  public final static boolean isPartiallyEmptyType(final SArray receiver) {
     return receiver.getType() == ArrayType.PARTIAL_EMPTY;
   }
 
-  public final boolean isObjectType(final SArray receiver) {
+  public final static boolean isObjectType(final SArray receiver) {
     return receiver.getType() == ArrayType.OBJECT;
   }
 
@@ -111,6 +111,20 @@ public abstract class PutAllNode extends BinaryExpressionNode
     }
   }
 
+  @Specialization
+  public SArray doPutLong(final SArray rcvr, final long value,
+      final long length) {
+    rcvr.transitionToLongWithAll(length, value);
+    return rcvr;
+  }
+
+  @Specialization
+  public SArray doPutDouble(final SArray rcvr, final double value,
+      final long length) {
+    rcvr.transitionToDoubleWithAll(length, value);
+    return rcvr;
+  }
+
   @Specialization(guards = "notABlock")
   public SArray doPutObject(final SArray rcvr, final Object value,
       final long length) {
@@ -118,4 +132,6 @@ public abstract class PutAllNode extends BinaryExpressionNode
     rcvr.transitionToObjectWithAll(length, value);
     return rcvr;
   }
+
+
 }
