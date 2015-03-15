@@ -92,15 +92,26 @@ public final class SArray extends SAbstractObject {
     this.storage = storage;
   }
 
+  private void fromEmptyToParticalWithType(final ArrayType type, final long idx, final Object val) {
+    assert this.type == ArrayType.EMPTY;
+    int length = (int) storage;
+    storage   = new PartiallyEmptyArray(type, length, idx, val);
+    this.type = ArrayType.PARTIAL_EMPTY;
+  }
+
   /**
    * Transition from the Empty, to the PartiallyEmpty state/strategy
    */
   public void transitionFromEmptyToPartiallyEmptyWith(final long idx, final Object val) {
-    assert type == ArrayType.EMPTY;
+    fromEmptyToParticalWithType(ArrayType.OBJECT, idx, val);
+  }
 
-    int length = (int) storage;
-    storage = new PartiallyEmptyArray(length, idx, val);
-    type    = ArrayType.PARTIAL_EMPTY;
+  public void transitionFromEmptyToPartiallyEmptyWith(final long idx, final long val) {
+    fromEmptyToParticalWithType(ArrayType.LONG, idx, val);
+  }
+
+  public void transitionFromEmptyToPartiallyEmptyWith(final long idx, final double val) {
+    fromEmptyToParticalWithType(ArrayType.DOUBLE, idx, val);
   }
 
   public void transitionToEmpty(final long length) {
@@ -153,42 +164,8 @@ public final class SArray extends SAbstractObject {
     return storage;
   }
 
-  public void setPartiallyEmpty(final long idx, final Object val) {
-    // TODO: CompilerAsserts.neverPartOfCompilation();
-
+  public void ifFullTransitionPartiallyEmpty() {
     PartiallyEmptyArray arr = getPartiallyEmptyStorage();
-
-    if (val == Nil.nilObject) {
-      if (arr.get(idx) != Nil.nilObject) {
-        arr.set(idx, val);
-        arr.incEmptyElements();
-      }
-      return;
-    }
-
-    if (arr.get(idx) == Nil.nilObject) {
-      arr.decEmptyElements();
-    }
-
-    arr.set(idx, val);
-
-    // now, based on the type of the element, we might need to adjust the
-    // type the full array will have in the end
-    if (val instanceof Long) {
-      if (arr.getType() == ArrayType.EMPTY) {
-        arr.setType(ArrayType.LONG);
-      } else if (arr.getType() == ArrayType.DOUBLE) {
-        arr.setType(ArrayType.OBJECT);
-      }
-    } else if (val instanceof Double) {
-      if (arr.getType() == ArrayType.EMPTY) {
-        arr.setType(ArrayType.DOUBLE);
-      } else if (arr.getType() == ArrayType.LONG) {
-        arr.setType(ArrayType.OBJECT);
-      }
-    } else {
-      arr.setType(ArrayType.OBJECT);
-    }
 
     if (arr.isFull()) {
       if (arr.getType() == ArrayType.LONG) {
@@ -209,11 +186,15 @@ public final class SArray extends SAbstractObject {
     private int emptyElements;
     private ArrayType type;
 
-    public PartiallyEmptyArray(final int length, final long idx, final Object val) {
+    public PartiallyEmptyArray(final ArrayType type, final int length,
+        final long idx, final Object val) {
+      // can't specialize this here already,
+      // because keeping track for nils would be to expensive
       arr = new Object[length];
       Arrays.fill(arr, Nil.nilObject);
       emptyElements = length - 1;
       arr[(int) idx] = val;
+      this.type = type;
     }
 
     private PartiallyEmptyArray(final PartiallyEmptyArray old) {
