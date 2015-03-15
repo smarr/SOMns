@@ -25,6 +25,7 @@
 
 package som.primitives;
 
+import som.primitives.IntegerPrimsFactory.AbsPrimFactory;
 import som.primitives.IntegerPrimsFactory.As32BitSignedValueFactory;
 import som.primitives.IntegerPrimsFactory.As32BitUnsignedValueFactory;
 import som.primitives.IntegerPrimsFactory.FromStringPrimFactory;
@@ -72,6 +73,7 @@ public final class IntegerPrimitives extends Primitives {
     installInstancePrimitive("as32BitUnsignedValue", As32BitUnsignedValueFactory.getInstance());
 
     installInstancePrimitive("to:", ToPrimFactory.getInstance());
+    installInstancePrimitive("abs", AbsPrimFactory.getInstance());
 
     installClassPrimitive("fromString:", FromStringPrimFactory.getInstance());
   }

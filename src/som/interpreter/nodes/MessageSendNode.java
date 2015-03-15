@@ -29,6 +29,7 @@ import som.primitives.BlockPrimsFactory.ValueNonePrimFactory;
 import som.primitives.BlockPrimsFactory.ValueOnePrimFactory;
 import som.primitives.EqualsEqualsPrimFactory;
 import som.primitives.EqualsPrimFactory;
+import som.primitives.IntegerPrimsFactory.AbsPrimFactory;
 import som.primitives.IntegerPrimsFactory.LeftShiftPrimFactory;
 import som.primitives.IntegerPrimsFactory.UnsignedRightShiftPrimFactory;
 import som.primitives.LengthPrimFactory;
@@ -196,6 +197,11 @@ public final class MessageSendNode {
                 argumentNodes[0], NotMessageNodeFactory.create(getSourceSection(), null)));
           }
           break;
+        case "abs":
+          if (receiver instanceof Long) {
+            return replace(new EagerUnaryPrimitiveNode(selector,
+                argumentNodes[0], AbsPrimFactory.create(null)));
+          }
       }
       return makeGenericSend();
     }

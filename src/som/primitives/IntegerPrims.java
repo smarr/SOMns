@@ -100,4 +100,11 @@ public abstract class IntegerPrims {
       return SArray.create(arr);
     }
   }
+
+  public abstract static class AbsPrim extends UnaryExpressionNode {
+    @Specialization
+    public final long doLong(final long receiver) {
+      return Math.abs(receiver);
+    }
+  }
 }
