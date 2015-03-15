@@ -124,6 +124,16 @@ public final class SArray extends SAbstractObject {
     storage = newStorage;
   }
 
+  public void transitionToObject(final long[] newStorage) {
+    type = ArrayType.LONG;
+    storage = newStorage;
+  }
+
+  public void transitionToObject(final double[] newStorage) {
+    type = ArrayType.DOUBLE;
+    storage = newStorage;
+  }
+
   public void transitionToObjectWithAll(final long length, final Object val) {
     type = ArrayType.OBJECT;
     Object[] arr = new Object[(int) length];

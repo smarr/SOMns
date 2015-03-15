@@ -80,19 +80,47 @@ public abstract class PutAllNode extends BinaryExpressionNode
       storage[i] = this.block.executeDispatch(frame, new Object[] {block});
     }
   }
+
+  private void evalBlockForRemaining(final VirtualFrame frame,
+      final SBlock block, final long length, final long[] storage) {
+    for (int i = SArray.FIRST_IDX + 1; i < length; i++) {
+      storage[i] = (long) this.block.executeDispatch(frame, new Object[] {block});
+    }
+  }
+
+  private void evalBlockForRemaining(final VirtualFrame frame,
+      final SBlock block, final long length, final double[] storage) {
+    for (int i = SArray.FIRST_IDX + 1; i < length; i++) {
+      storage[i] = (double) this.block.executeDispatch(frame, new Object[] {block});
+    }
+  }
+
+
   @Specialization
   public SArray doPutEvalBlock(final VirtualFrame frame, final SArray rcvr,
       final SBlock block, final long length) {
     if (length <= 0) {
       return rcvr;
     }
-
+// TODO: this version does not handle the case that a subsequent value is not of the expected type...
     try {
       Object result = this.block.executeDispatch(frame, new Object[] {block});
-      Object[] newStorage = new Object[(int) length];
-      newStorage[0] = result;
-      evalBlockForRemaining(frame, block, length, newStorage);
-      rcvr.transitionToObject(newStorage);
+      if (result instanceof Long) {
+        long[] newStorage = new long[(int) length];
+        newStorage[0] = (long) result;
+        evalBlockForRemaining(frame, block, length, newStorage);
+        rcvr.transitionToObject(newStorage);
+      } else if (result instanceof Double) {
+        double[] newStorage = new double[(int) length];
+        newStorage[0] = (long) result;
+        evalBlockForRemaining(frame, block, length, newStorage);
+        rcvr.transitionToObject(newStorage);
+      } else {
+        Object[] newStorage = new Object[(int) length];
+        newStorage[0] = result;
+        evalBlockForRemaining(frame, block, length, newStorage);
+        rcvr.transitionToObject(newStorage);
+      }
     } finally {
       if (CompilerDirectives.inInterpreter()) {
         reportLoopCount(length);
