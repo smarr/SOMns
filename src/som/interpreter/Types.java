@@ -26,6 +26,7 @@ import java.math.BigInteger;
 import som.vm.constants.Classes;
 import som.vm.constants.Globals;
 import som.vmobjects.SAbstractObject;
+import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
@@ -45,8 +46,9 @@ import com.oracle.truffle.api.dsl.TypeSystem;
                  SBlock.class,
                 SSymbol.class,
              SInvokable.class,
+                 SArray.class,
         SAbstractObject.class,
-               Object[].class})
+               Object[].class}) // Object[] is only for argument passing
 public class Types {
 
   public static SClass getClassOf(final Object obj) {
@@ -67,8 +69,6 @@ public class Types {
       return Classes.stringClass;
     } else if (obj instanceof Double) {
       return Classes.doubleClass;
-    } else if (obj instanceof Object[]) {
-      return Classes.arrayClass;
     }
 
     TruffleCompiler.transferToInterpreter("Should not be reachable");

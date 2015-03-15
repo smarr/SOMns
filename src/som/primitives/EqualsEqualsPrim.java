@@ -4,6 +4,7 @@ import java.math.BigInteger;
 
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.vm.constants.Globals;
+import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
@@ -50,7 +51,7 @@ public abstract class EqualsEqualsPrim extends BinaryExpressionNode {
   }
 
   @Specialization
-  public final boolean doArray(final Object[] left, final Object right) {
+  public final boolean doArray(final SArray left, final Object right) {
     return left == right;
   }
 

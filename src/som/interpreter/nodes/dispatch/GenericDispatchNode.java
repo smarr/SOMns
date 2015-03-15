@@ -1,13 +1,13 @@
 package som.interpreter.nodes.dispatch;
 
+import som.interpreter.SArguments;
 import som.interpreter.Types;
-import som.vmobjects.SAbstractObject;
+import som.vmobjects.SArray;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 
-import com.oracle.truffle.api.CompilerAsserts;
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
@@ -24,20 +24,22 @@ public final class GenericDispatchNode extends AbstractDispatchWithLookupNode {
   public Object executeDispatch(
       final VirtualFrame frame, final Object[] arguments) {
     Object rcvr = arguments[0];
-    SInvokable method = lookupMethod(rcvr);
+    SClass rcvrClass = Types.getClassOf(rcvr);
+    SInvokable method = rcvrClass.lookupInvokable(selector);
+
+    CallTarget target;
+    Object[] args;
+
     if (method != null) {
-      return call.call(frame, method.getCallTarget(), arguments);
+      target = method.getCallTarget();
+      args = arguments;
     } else {
       // Won't use DNU caching here, because it is already a megamorphic node
-      CompilerAsserts.neverPartOfCompilation("GenericDispatchNode");
-      return SAbstractObject.sendDoesNotUnderstand(selector, arguments);
+      SArray argumentsArray = SArguments.getArgumentsWithoutReceiver(arguments);
+      args = new Object[] {arguments[0], selector, argumentsArray};
+      target = AbstractCachedDnuNode.getDnuCallTarget(rcvrClass);
     }
-  }
-
-  @TruffleBoundary
-  private SInvokable lookupMethod(final Object rcvr) {
-    SClass rcvrClass = Types.getClassOf(rcvr);
-    return rcvrClass.lookupInvokable(selector);
+    return call.call(frame, target, args);
   }
 
   @Override

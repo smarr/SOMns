@@ -1,6 +1,5 @@
 package som.vmobjects;
 
-import som.interpreter.SArguments;
 import som.interpreter.Types;
 import som.vm.Universe;
 
@@ -31,17 +30,6 @@ public abstract class SAbstractObject {
     SInvokable invokable = Types.getClassOf(arguments[0]).lookupInvokable(selector);
 
     return invokable.invoke(arguments);
-  }
-
-  public static final Object sendDoesNotUnderstand(final SSymbol selector,
-      final Object[] arguments) {
-    CompilerAsserts.neverPartOfCompilation("SAbstractObject.sendDNU()");
-    assert arguments != null;
-
-    // Allocate an array to hold the arguments, without receiver
-    Object[] argumentsArray = SArguments.getArgumentsWithoutReceiver(arguments);
-    Object[] args = new Object[] {arguments[0], selector, argumentsArray};
-    return send("doesNotUnderstand:arguments:", args);
   }
 
   public static final Object sendUnknownGlobal(final Object receiver,
