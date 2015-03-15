@@ -55,6 +55,11 @@ public abstract class PutAllNode extends BinaryExpressionNode
     return receiver.getType() == ArrayType.OBJECT;
   }
 
+  protected final static boolean valueNeitherLongNorDouble(final SArray rcvr,
+      final Object value) {
+    return !(value instanceof Long) && !(value instanceof Double);
+  }
+
   @Specialization(guards = {"isEmptyType", "valueIsNil"})
   public SArray doPutNilInEmptyArray(final SArray rcvr, final SObject nil,
       final long length) {
@@ -125,13 +130,10 @@ public abstract class PutAllNode extends BinaryExpressionNode
     return rcvr;
   }
 
-  @Specialization(guards = "notABlock")
+  @Specialization(guards = {"notABlock", "valueNeitherLongNorDouble"})
   public SArray doPutObject(final SArray rcvr, final Object value,
       final long length) {
-    assert !(value instanceof SBlock);
     rcvr.transitionToObjectWithAll(length, value);
     return rcvr;
   }
-
-
 }
