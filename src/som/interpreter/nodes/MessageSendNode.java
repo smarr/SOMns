@@ -310,6 +310,13 @@ public final class MessageSendNode {
           return replace(IfFalseMessageNodeFactory.create(arguments[0],
               arguments[1], getSourceSection(),
               argumentNodes[0], argumentNodes[1]));
+        case "to:":
+          if (arguments[0] instanceof Long) {
+            return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
+                argumentNodes[1],
+                DoPrimFactory.create(null, null)));
+          }
+          break;
 
         // TODO: find a better way for primitives, use annotation or something
         case "<":
@@ -341,6 +348,10 @@ public final class MessageSendNode {
               argumentNodes[1],
               EqualsPrimFactory.create(null, null)));
         case "<>":
+          return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
+              argumentNodes[1],
+              UnequalsPrimFactory.create(null, null)));
+        case "~=":
           return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
               argumentNodes[1],
               UnequalsPrimFactory.create(null, null)));
