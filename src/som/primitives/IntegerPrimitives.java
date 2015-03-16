@@ -38,6 +38,8 @@ import som.primitives.arithmetic.AdditionPrimFactory;
 import som.primitives.arithmetic.BitXorPrimFactory;
 import som.primitives.arithmetic.DividePrimFactory;
 import som.primitives.arithmetic.DoubleDivPrimFactory;
+import som.primitives.arithmetic.GreaterThanPrimFactory;
+import som.primitives.arithmetic.LessThanOrEqualPrimFactory;
 import som.primitives.arithmetic.LessThanPrimFactory;
 import som.primitives.arithmetic.LogicAndPrimFactory;
 import som.primitives.arithmetic.ModuloPrimFactory;
@@ -64,6 +66,10 @@ public final class IntegerPrimitives extends Primitives {
     installInstancePrimitive("&",        LogicAndPrimFactory.getInstance());
     installInstancePrimitive("=",        EqualsPrimFactory.getInstance());
     installInstancePrimitive("<",        LessThanPrimFactory.getInstance());
+    installInstancePrimitive("<=",       LessThanOrEqualPrimFactory.getInstance());
+    installInstancePrimitive(">",        GreaterThanPrimFactory.getInstance());
+    installInstancePrimitive("<>",       UnequalsPrimFactory.getInstance());
+    installInstancePrimitive("~=",       UnequalsPrimFactory.getInstance());
 
     installInstancePrimitive("<<",       LeftShiftPrimFactory.getInstance());
     installInstancePrimitive(">>>",      UnsignedRightShiftPrimFactory.getInstance());

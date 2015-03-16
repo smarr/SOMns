@@ -30,6 +30,7 @@ import som.interpreter.Primitive;
 import som.interpreter.nodes.ArgumentReadNode.LocalArgumentReadNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.primitives.MethodPrimsFactory.InvokeOnPrimFactory;
+import som.primitives.arrays.PutAllNodeFactory;
 import som.vm.Universe;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
@@ -77,7 +78,12 @@ public abstract class Primitives {
         primNode = nodeFactory.createNode(args[0]);
         break;
       case 2:
-        primNode = nodeFactory.createNode(args[0], args[1]);
+        // HACK for node class where we use `executeWith`
+        if (nodeFactory == PutAllNodeFactory.getInstance()) {
+          primNode = nodeFactory.createNode(args[0], args[1], null);
+        } else {
+          primNode = nodeFactory.createNode(args[0], args[1]);
+        }
         break;
       case 3:
         // HACK for node class where we use `executeWith`
