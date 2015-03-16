@@ -44,6 +44,22 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
     return value != Nil.nilObject;
   }
 
+  protected final static boolean valueIsNotLong(final SArray rcvr, final long idx,
+      final Object value) {
+    return !(value instanceof Long);
+  }
+
+  protected final static boolean valueIsNotDouble(final SArray rcvr, final long idx,
+      final Object value) {
+    return !(value instanceof Double);
+  }
+
+  protected final static boolean valueIsNotBoolean(final SArray rcvr, final long idx,
+      final Object value) {
+    return !(value instanceof Boolean);
+  }
+
+
   protected final static boolean valueNotLongDoubleBoolean(final SArray rcvr,
       final long idx, final Object value) {
     return !(value instanceof Long) &&
@@ -189,13 +205,27 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
     return value;
   }
 
-  // TODO: we actually need to add support to transition to Object
-  // strategy if something other than a long/double comes along
   @Specialization(guards = "isLongType")
   public final Object doObjectSArray(final SArray receiver, final long index,
       final long value) {
     long idx = index - 1;
     receiver.getLongStorage()[(int) idx] = value;
+    return value;
+  }
+
+  @Specialization(guards = {"isLongType", "valueIsNotLong"})
+  public final Object doLongSArray(final SArray receiver, final long index,
+      final Object value) {
+    long idx = index - 1;
+
+    long[] storage = receiver.getLongStorage();
+    Object[] newStorage = new Object[storage.length];
+    for (int i = 0; i < storage.length; i++) {
+      newStorage[i] = storage[i];
+    }
+
+    receiver.transitionTo(ArrayType.OBJECT, newStorage);
+    newStorage[(int) idx] = value;
     return value;
   }
 
@@ -207,11 +237,43 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
     return value;
   }
 
+  @Specialization(guards = {"isDoubleType", "valueIsNotDouble"})
+  public final Object doDoubleSArray(final SArray receiver, final long index,
+      final Object value) {
+    long idx = index - 1;
+
+    double[] storage = receiver.getDoubleStorage();
+    Object[] newStorage = new Object[storage.length];
+    for (int i = 0; i < storage.length; i++) {
+      newStorage[i] = storage[i];
+    }
+
+    receiver.transitionTo(ArrayType.OBJECT, newStorage);
+    newStorage[(int) idx] = value;
+    return value;
+  }
+
   @Specialization(guards = "isBooleanType")
   public final Object doBooleanSArray(final SArray receiver, final long index,
       final boolean value) {
     long idx = index - 1;
     receiver.getBooleanStorage()[(int) idx] = value;
+    return value;
+  }
+
+  @Specialization(guards = {"isBooleanType", "valueIsNotBoolean"})
+  public final Object doBooleanSArray(final SArray receiver, final long index,
+      final Object value) {
+    long idx = index - 1;
+
+    boolean[] storage = receiver.getBooleanStorage();
+    Object[] newStorage = new Object[storage.length];
+    for (int i = 0; i < storage.length; i++) {
+      newStorage[i] = storage[i];
+    }
+
+    receiver.transitionTo(ArrayType.OBJECT, newStorage);
+    newStorage[(int) idx] = value;
     return value;
   }
 }
