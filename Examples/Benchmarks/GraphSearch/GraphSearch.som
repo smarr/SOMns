@@ -43,9 +43,9 @@ GraphSearch = Benchmark (
     graphEdges := Array new: totalEdges withAll: 0.
     
     k := 1.
-    graph doIndexes: [:i |
-      1 to: (graph at: i) size do: [:j |
-        graphEdges at: k put: ((graph at: i) at: j) dest.
+    graph do: [:i |
+      i do: [:j |
+        graphEdges at: k put: j dest.
         k := k + 1.
       ]
     ].
