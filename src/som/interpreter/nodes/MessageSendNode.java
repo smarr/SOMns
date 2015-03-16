@@ -58,6 +58,7 @@ import som.primitives.arrays.PutAllNodeFactory;
 import som.primitives.arrays.ToArgumentsArrayNodeFactory;
 import som.vm.NotYetImplementedException;
 import som.vm.constants.Classes;
+import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
 import som.vmobjects.SSymbol;
 
@@ -180,7 +181,7 @@ public final class MessageSendNode {
       switch (selector.getString()) {
         // eagerly but cautious:
         case "length":
-          if (receiver instanceof Object[]) {
+          if (receiver instanceof SArray) {
             return replace(new EagerUnaryPrimitiveNode(selector,
                 argumentNodes[0], LengthPrimFactory.create(null)));
           }
@@ -209,7 +210,7 @@ public final class MessageSendNode {
     protected PreevaluatedExpression specializeBinary(final Object[] arguments) {
       switch (selector.getString()) {
         case "at:":
-          if (arguments[0] instanceof Object[]) {
+          if (arguments[0] instanceof SArray) {
             return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
                 argumentNodes[1],
                 AtPrimFactory.create(null, null)));
@@ -227,14 +228,14 @@ public final class MessageSendNode {
               argumentNodes[0], argumentNodes[1],
               InstVarAtPrimFactory.create(null, null)));
         case "doIndexes:":
-          if (arguments[0] instanceof Object[]) {
+          if (arguments[0] instanceof SArray) {
             return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
                 argumentNodes[1],
                 DoIndexesPrimFactory.create(null, null)));
           }
           break;
         case "do:":
-          if (arguments[0] instanceof Object[]) {
+          if (arguments[0] instanceof SArray) {
             return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
                 argumentNodes[1],
                 DoPrimFactory.create(null, null)));
@@ -396,7 +397,7 @@ public final class MessageSendNode {
     protected PreevaluatedExpression specializeTernary(final Object[] arguments) {
       switch (selector.getString()) {
         case "at:put:":
-          if (arguments[0] instanceof Object[]) {
+          if (arguments[0] instanceof SArray) {
             return replace(new EagerTernaryPrimitiveNode(selector, argumentNodes[0],
                 argumentNodes[1], argumentNodes[2],
                 AtPutPrimFactory.create(null, null, null)));
