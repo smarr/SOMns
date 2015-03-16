@@ -43,9 +43,11 @@ public abstract class Primitives {
 
   protected final Universe universe;
   protected SClass holder;
+  protected final boolean displayWarning;
 
-  public Primitives() {
+  public Primitives(final boolean displayWarning) {
     this.universe = Universe.current();
+    this.displayWarning = displayWarning;
   }
 
   public final void installPrimitivesIn(final SClass value) {
@@ -113,7 +115,7 @@ public abstract class Primitives {
     SInvokable prim = constructPrimitive(signature, nodeFactory, universe, holder);
 
     // Install the given primitive as an instance primitive in the holder class
-    holder.addInstancePrimitive(prim);
+    holder.addInstancePrimitive(prim, displayWarning);
   }
 
   protected final void installClassPrimitive(final String selector,
@@ -123,7 +125,7 @@ public abstract class Primitives {
 
     // Install the given primitive as an instance primitive in the class of
     // the holder class
-    holder.getSOMClass().addInstancePrimitive(prim);
+    holder.getSOMClass().addInstancePrimitive(prim, displayWarning);
   }
 
   public static SInvokable getEmptyPrimitive(final String selector,

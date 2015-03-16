@@ -36,6 +36,8 @@ import som.primitives.reflection.PerformWithArgumentsInSuperclassPrimFactory;
 import som.primitives.reflection.PerformWithArgumentsPrimFactory;
 
 public final class ObjectPrimitives extends Primitives {
+  public ObjectPrimitives(final boolean displayWarning) { super(displayWarning); }
+
   @Override
   public void installPrimitives() {
 

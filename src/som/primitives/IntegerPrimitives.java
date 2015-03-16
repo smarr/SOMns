@@ -47,6 +47,7 @@ import som.primitives.arithmetic.SqrtPrimFactory;
 import som.primitives.arithmetic.SubtractionPrimFactory;
 
 public final class IntegerPrimitives extends Primitives {
+  public IntegerPrimitives(final boolean displayWarning) { super(displayWarning); }
 
   @Override
   public void installPrimitives() {

@@ -36,6 +36,8 @@ import som.primitives.arithmetic.SqrtPrimFactory;
 import som.primitives.arithmetic.SubtractionPrimFactory;
 
 public final class DoublePrimitives extends Primitives {
+  public DoublePrimitives(final boolean displayWarning) { super(displayWarning); }
+
   @Override
   public void installPrimitives() {
     installInstancePrimitive("asString", AsStringPrimFactory.getInstance());

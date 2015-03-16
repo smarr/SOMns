@@ -30,6 +30,8 @@ import som.primitives.StringPrimsFactory.ConcatPrimFactory;
 import som.primitives.StringPrimsFactory.SubstringPrimFactory;
 
 public final class StringPrimitives extends Primitives {
+  public StringPrimitives(final boolean displayWarning) { super(displayWarning); }
+
   @Override
   public void installPrimitives() {
     installInstancePrimitive("concatenate:", ConcatPrimFactory.getInstance());

@@ -193,8 +193,8 @@ public final class SClass extends SObject {
     return true;
   }
 
-  public void addInstancePrimitive(final SInvokable value) {
-    if (addInstanceInvokable(value)) {
+  public void addInstancePrimitive(final SInvokable value, final boolean displayWarning) {
+    if (addInstanceInvokable(value) && displayWarning) {
       Universe.print("Warning: Primitive " + value.getSignature().getString());
       Universe.println(" is not in class definition for class "
           + getName().getString());
@@ -236,8 +236,8 @@ public final class SClass extends SObject {
     try {
       Class<?> primitivesClass = Class.forName(className);
       try {
-        Constructor<?> ctor = primitivesClass.getConstructor();
-        ((Primitives) ctor.newInstance()).installPrimitivesIn(this);
+        Constructor<?> ctor = primitivesClass.getConstructor(boolean.class);
+        ((Primitives) ctor.newInstance(displayWarning)).installPrimitivesIn(this);
       } catch (Exception e) {
         Universe.errorExit("Primitives class " + className
             + " cannot be instantiated");

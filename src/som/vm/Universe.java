@@ -529,7 +529,7 @@ public final class Universe {
 
     // Add the appropriate value primitive to the block class
     result.addInstancePrimitive(SBlock.getEvaluationPrimitive(
-        numberOfArguments, this, result));
+        numberOfArguments, this, result), true);
 
     // Insert the block class into the dictionary of globals
     setGlobal(name, result);

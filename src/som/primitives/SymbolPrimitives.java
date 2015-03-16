@@ -27,6 +27,8 @@ package som.primitives;
 
 
 public final class SymbolPrimitives extends Primitives {
+  public SymbolPrimitives(final boolean displayWarning) { super(displayWarning); }
+
   @Override
   public void installPrimitives() {
     installInstancePrimitive("asString", AsStringPrimFactory.getInstance());

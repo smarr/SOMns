@@ -34,6 +34,8 @@ import som.primitives.BlockPrimsFactory.ValueOnePrimFactory;
 import som.primitives.BlockPrimsFactory.ValueTwoPrimFactory;
 
 public final class BlockPrimitives extends Primitives {
+  public BlockPrimitives(final boolean displayWarning) { super(displayWarning); }
+
   @Override
   public void installPrimitives() {
     if (holder == universe.getBlockClass(0) || universe.getBlockClass(0) == null) {

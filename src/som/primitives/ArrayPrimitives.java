@@ -33,6 +33,8 @@ import som.primitives.arrays.DoPrimFactory;
 import som.primitives.arrays.NewPrimFactory;
 
 public final class ArrayPrimitives extends Primitives {
+  public ArrayPrimitives(final boolean displayWarning) { super(displayWarning); }
+
   @Override
   public void installPrimitives() {
     installInstancePrimitive("at:",     AtPrimFactory.getInstance());
