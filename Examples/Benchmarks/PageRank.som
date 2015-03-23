@@ -1,9 +1,9 @@
 "https://github.com/Sable/Ostrich/blob/master/map-reduce/page-rank/js/pagerank.js"
 PageRank = Benchmark (
-  | n iter thresh outLinks divisor pages maps pageRanks t maxDiff firstResult |
+  | firstResult |
 
   " generates an array of random pages and their links "
-  generateRandomPages = (
+  generateRandomPagesN: n outLinks: outLinks divisor: divisor  = (
     | pages |
     " matrix cell i,j means link from j->i "
     pages := Array new: n * n withAll: 0.
@@ -33,7 +33,7 @@ PageRank = Benchmark (
     ^ pages
   )
 
-  mapPageRanks = (
+  mapPageRanks: pages pageRanks: pageRanks maps: maps outLinks: outLinks n: n = (
     0 to: n - 1 do: [:i |
       | outboundRank |
       outboundRank := (pageRanks at: i + 1) // (outLinks at: i + 1).
@@ -47,7 +47,7 @@ PageRank = Benchmark (
     ]
   )
 
-  reducePageRanks = (
+  reducePageRanks: pageRanks maps: maps n: n = (
     | dif |
     dif := 0.0.
 
@@ -70,21 +70,22 @@ PageRank = Benchmark (
 
   innerBenchmarkLoop = (
     JenkinsRandom seed: 49734321.
-    n       := innerIterations.
-    iter    := 10.
-    thresh  := 0.00000001.
-    divisor := 100000.
-    ^ self verifyResult: self runPageRank.
+    "standard for verification"
+    "n := 5000
+     iter    := 10.
+     thresh  := 0.00000001.
+     divisor := 100000."
+    ^ self verifyResult: (self runPageRankN: innerIterations iter: 10 thresh: 0.00000001 divisor: 100000).
   )
 
-  runPageRank = (
-    | nbLinks |
+  runPageRankN: n iter: iter thresh: thresh divisor: divisor = (
+    | nbLinks maxDiff pageRanks maps outLinks t pages |
     maxDiff   := Double PositiveInfinity.
     pageRanks := Array new: n     withAll: 1.0 // n.
     maps      := Array new: n * n withAll: 0.0.
     outLinks  := Array new: n     withAll: 0.
 
-    pages := self generateRandomPages.    
+    pages := self generateRandomPagesN: n outLinks: outLinks divisor: divisor.
 
     nbLinks := 0.
     0 to: n - 1 do: [:i |
@@ -95,16 +96,16 @@ PageRank = Benchmark (
 
     t := 1.
     [t <= iter and: [maxDiff >= thresh]] whileTrue: [
-      self mapPageRanks.
-      maxDiff := self reducePageRanks.
+      self mapPageRanks: pages pageRanks: pageRanks maps: maps outLinks: outLinks n: n.
+      maxDiff := self reducePageRanks: pageRanks maps: maps n: n.
       t := t + 1
     ].
     
     ^ pageRanks
   )
   
-  verifyResult: result = (
-    (n = 5000 and: [iter = 10 and: [thresh = 0.00000001 and: [divisor = 100000]]])
+  verifyResult: pageRanks = (
+    innerIterations = 5000 " and: [iter = 10 and: [thresh = 0.00000001 and: [divisor = 100000]]]"
       ifTrue: [
         | expected |
         expected := PageRank ExpectedPageRanks.
@@ -120,20 +121,19 @@ PageRank = Benchmark (
           ]
         ] ]
       ifFalse: [
-        ^ self checkBasedOnFirstResult
+        ^ self checkBasedOnFirstResult: pageRanks
       ].
     ^ true
   )
   
-  checkBasedOnFirstResult = (
-    pageRanks length = n ifFalse: [ ^ false ].
+  checkBasedOnFirstResult: pageRanks = (
+    pageRanks length = innerIterations ifFalse: [ ^ false ].
 
     firstResult == nil ifTrue: [
       firstResult := pageRanks.
-      pageRanks := nil.
       ^ true
     ] ifFalse: [
-      1 to: n do: [:i |
+      1 to: innerIterations do: [:i |
         (firstResult at: i) = (pageRanks at: i) ifFalse: [
           ^ false
         ]
