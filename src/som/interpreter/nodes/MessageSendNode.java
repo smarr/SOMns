@@ -420,21 +420,21 @@ public final class MessageSendNode {
               arguments[1], arguments[2], argumentNodes[0],
               argumentNodes[1], argumentNodes[2]));
         case "to:do:":
-          if (TypesGen.TYPES.isLong(arguments[0]) &&
-              (TypesGen.TYPES.isLong(arguments[1]) ||
-                  TypesGen.TYPES.isDouble(arguments[1])) &&
-              TypesGen.TYPES.isSBlock(arguments[2])) {
             return replace(IntToDoMessageNodeFactory.create(this,
+          if (TypesGen.isLong(arguments[0]) &&
+              (TypesGen.isLong(arguments[1]) ||
+                  TypesGen.isDouble(arguments[1])) &&
+              TypesGen.isSBlock(arguments[2])) {
                 (SBlock) arguments[2], argumentNodes[0], argumentNodes[1],
                 argumentNodes[2]));
           }
           break;
         case "downTo:do:":
-          if (TypesGen.TYPES.isLong(arguments[0]) &&
-              (TypesGen.TYPES.isLong(arguments[1]) ||
-                  TypesGen.TYPES.isDouble(arguments[1])) &&
-              TypesGen.TYPES.isSBlock(arguments[2])) {
             return replace(IntDownToDoMessageNodeFactory.create(this,
+          if (TypesGen.isLong(arguments[0]) &&
+              (TypesGen.isLong(arguments[1]) ||
+                  TypesGen.isDouble(arguments[1])) &&
+              TypesGen.isSBlock(arguments[2])) {
                 (SBlock) arguments[2], argumentNodes[0], argumentNodes[1],
                 argumentNodes[2]));
           }

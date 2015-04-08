@@ -40,11 +40,11 @@ public abstract class FieldAccessorNode extends Node {
     public abstract Object read(SObject obj);
 
     public long readLong(final SObject obj) throws UnexpectedResultException {
-      return TypesGen.TYPES.expectLong(read(obj));
+      return TypesGen.expectLong(read(obj));
     }
 
     public double readDouble(final SObject obj) throws UnexpectedResultException {
-      return TypesGen.TYPES.expectDouble(read(obj));
+      return TypesGen.expectDouble(read(obj));
     }
 
     protected final Object specializeAndRead(final SObject obj, final String reason, final AbstractReadFieldNode next) {
