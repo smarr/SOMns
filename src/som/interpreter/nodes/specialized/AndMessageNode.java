@@ -5,12 +5,14 @@ import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 
 import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 
 
+@GenerateNodeFactory
 public abstract class AndMessageNode extends BinaryExpressionNode {
 
   private final SInvokable blockMethod;
@@ -43,6 +45,7 @@ public abstract class AndMessageNode extends BinaryExpressionNode {
     }
   }
 
+  @GenerateNodeFactory
   public abstract static class AndBoolMessageNode extends BinaryExpressionNode {
 
     public AndBoolMessageNode(final SourceSection source) {

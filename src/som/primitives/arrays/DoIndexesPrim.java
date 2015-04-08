@@ -12,11 +12,14 @@ import som.vmobjects.SBlock;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 
+
+@GenerateNodeFactory
 public abstract class DoIndexesPrim extends BinaryExpressionNode
     implements ValuePrimitiveNode {
   @Child private AbstractDispatchNode block;

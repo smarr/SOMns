@@ -3,9 +3,11 @@ package som.primitives.arithmetic;
 import java.math.BigInteger;
 
 import com.oracle.truffle.api.ExactMath;
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
 
+@GenerateNodeFactory
 public abstract class MultiplicationPrim extends ArithmeticPrim {
   @Specialization(rewriteOn = ArithmeticException.class)
   public final long doLong(final long left, final long right) {

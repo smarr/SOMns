@@ -14,6 +14,7 @@ import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -21,6 +22,8 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 
+
+@GenerateNodeFactory
 @ImportStatic(ArrayType.class)
 @NodeChild(value = "length", type = LengthPrim.class, executeWith = "receiver")
 public abstract class PutAllNode extends BinaryExpressionNode

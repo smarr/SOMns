@@ -10,6 +10,7 @@ import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.NodeCost;
@@ -21,6 +22,7 @@ public abstract class BlockPrims {
     void adoptNewDispatchListHead(final AbstractDispatchNode node);
   }
 
+  @GenerateNodeFactory
   public abstract static class RestartPrim extends UnaryExpressionNode {
     public RestartPrim() { super(null); }
 
@@ -34,6 +36,7 @@ public abstract class BlockPrims {
     }
   }
 
+  @GenerateNodeFactory
   public abstract static class ValueNonePrim extends UnaryExpressionNode
       implements ValuePrimitiveNode {
     @Child private AbstractDispatchNode dispatchNode;
@@ -73,6 +76,7 @@ public abstract class BlockPrims {
     }
   }
 
+  @GenerateNodeFactory
   public abstract static class ValueOnePrim extends BinaryExpressionNode
       implements ValuePrimitiveNode  {
     @Child private AbstractDispatchNode dispatchNode;
@@ -108,6 +112,7 @@ public abstract class BlockPrims {
     }
   }
 
+  @GenerateNodeFactory
   public abstract static class ValueTwoPrim extends TernaryExpressionNode
       implements ValuePrimitiveNode {
     @Child private AbstractDispatchNode dispatchNode;
@@ -143,6 +148,7 @@ public abstract class BlockPrims {
     }
   }
 
+  @GenerateNodeFactory
   public abstract static class ValueMorePrim extends QuaternaryExpressionNode {
     public ValueMorePrim() { super(null); }
     @Specialization

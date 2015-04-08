@@ -4,11 +4,13 @@ import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vm.constants.Classes;
 import som.vmobjects.SClass;
 
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
 
 public abstract class DoublePrims  {
 
+  @GenerateNodeFactory
   public abstract static class RoundPrim extends UnaryExpressionNode {
     @Specialization
     public final long doDouble(final double receiver) {
@@ -16,6 +18,7 @@ public abstract class DoublePrims  {
     }
   }
 
+  @GenerateNodeFactory
   public abstract static class PositiveInfinityPrim extends UnaryExpressionNode {
     protected final boolean receiverIsDoubleClass(final SClass receiver) {
       return receiver == Classes.doubleClass;

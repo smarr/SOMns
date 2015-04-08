@@ -4,9 +4,12 @@ import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vmobjects.SArray;
 import som.vmobjects.SArray.ArrayType;
 
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 
+
+@GenerateNodeFactory
 @ImportStatic(ArrayType.class)
 public abstract class CopyPrim extends UnaryExpressionNode {
 

@@ -12,11 +12,14 @@ import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 
 public final class ObjectPrims {
+
+  @GenerateNodeFactory
   public abstract static class InstVarAtPrim extends BinaryExpressionNode {
 
     @Child private IndexDispatch dispatch;
@@ -44,6 +47,7 @@ public final class ObjectPrims {
     }
   }
 
+  @GenerateNodeFactory
   public abstract static class InstVarAtPutPrim extends TernaryExpressionNode {
     @Child private IndexDispatch dispatch;
 
@@ -72,6 +76,7 @@ public final class ObjectPrims {
     }
   }
 
+  @GenerateNodeFactory
   public abstract static class InstVarNamedPrim extends BinaryExpressionNode {
     @Specialization
     public final Object doSObject(final SObject receiver, final SSymbol fieldName) {
@@ -80,6 +85,7 @@ public final class ObjectPrims {
     }
   }
 
+  @GenerateNodeFactory
   public abstract static class HaltPrim extends UnaryExpressionNode {
     public HaltPrim() { super(null); }
     @Specialization
@@ -89,6 +95,7 @@ public final class ObjectPrims {
     }
   }
 
+  @GenerateNodeFactory
   public abstract static class ClassPrim extends UnaryExpressionNode {
     @Specialization
     public final SClass doSAbstractObject(final SAbstractObject receiver) {

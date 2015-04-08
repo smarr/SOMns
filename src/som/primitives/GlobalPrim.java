@@ -11,9 +11,12 @@ import som.vm.constants.Nil;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
+
+@ImportStatic(SystemPrims.class)
 public abstract class GlobalPrim extends BinarySystemNode {
   @Child private GetGlobalNode getGlobal = new UninitializedGetGlobal(0);
 

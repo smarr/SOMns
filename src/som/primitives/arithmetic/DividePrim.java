@@ -5,8 +5,11 @@ import java.math.BigInteger;
 import som.vm.NotYetImplementedException;
 
 import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
+
+@GenerateNodeFactory
 public abstract class DividePrim extends ArithmeticPrim {
   @Specialization
   public final long doLong(final long left, final long right) {

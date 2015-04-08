@@ -7,11 +7,14 @@ import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 
+
+@GenerateNodeFactory
 public abstract class PerformWithArgumentsInSuperclassPrim extends QuaternaryExpressionNode {
   @Child private IndirectCallNode call;
   public PerformWithArgumentsInSuperclassPrim() {

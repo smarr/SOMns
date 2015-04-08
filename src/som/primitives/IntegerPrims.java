@@ -10,11 +10,14 @@ import som.vmobjects.SArray;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.utilities.BranchProfile;
 
+
 public abstract class IntegerPrims {
 
+  @GenerateNodeFactory
   public abstract static class RandomPrim extends UnaryExpressionNode {
     @Specialization
     public final long doLong(final long receiver) {
@@ -22,6 +25,7 @@ public abstract class IntegerPrims {
     }
   }
 
+  @GenerateNodeFactory
   public abstract static class As32BitSignedValue extends UnaryExpressionNode {
     @Specialization
     public final long doLong(final long receiver) {
@@ -29,6 +33,7 @@ public abstract class IntegerPrims {
     }
   }
 
+  @GenerateNodeFactory
   public abstract static class As32BitUnsignedValue extends UnaryExpressionNode {
     @Specialization
     public final long doLong(final long receiver) {
@@ -36,6 +41,7 @@ public abstract class IntegerPrims {
     }
   }
 
+  @GenerateNodeFactory
   public abstract static class FromStringPrim extends ArithmeticPrim {
     protected final boolean receiverIsIntegerClass(final SClass receiver) {
       return receiver == Classes.integerClass;
@@ -52,6 +58,7 @@ public abstract class IntegerPrims {
     }
   }
 
+  @GenerateNodeFactory
   public abstract static class LeftShiftPrim extends ArithmeticPrim {
     private final BranchProfile overflow = BranchProfile.create();
 
@@ -75,6 +82,7 @@ public abstract class IntegerPrims {
     }
   }
 
+  @GenerateNodeFactory
   public abstract static class UnsignedRightShiftPrim extends ArithmeticPrim {
     @Specialization
     public final long doLong(final long receiver, final long right) {
@@ -82,6 +90,7 @@ public abstract class IntegerPrims {
     }
   }
 
+  @GenerateNodeFactory
   public abstract static class MaxIntPrim extends ArithmeticPrim {
     @Specialization
     public final long doLong(final long receiver, final long right) {
@@ -89,6 +98,7 @@ public abstract class IntegerPrims {
     }
   }
 
+  @GenerateNodeFactory
   public abstract static class ToPrim extends BinaryExpressionNode {
     @Specialization
     public final SArray doLong(final long receiver, final long right) {
@@ -101,6 +111,7 @@ public abstract class IntegerPrims {
     }
   }
 
+  @GenerateNodeFactory
   public abstract static class AbsPrim extends UnaryExpressionNode {
     @Specialization
     public final long doLong(final long receiver) {

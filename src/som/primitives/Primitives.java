@@ -31,7 +31,7 @@ import som.interpreter.nodes.ArgumentReadNode.LocalArgumentReadNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.primitives.MethodPrimsFactory.InvokeOnPrimFactory;
 import som.primitives.arrays.PutAllNodeFactory;
-import som.primitives.arrays.ToArgumentsArrayNodeFactory;
+import som.primitives.arrays.ToArgumentsArrayNodeGen;
 import som.vm.Universe;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
@@ -91,7 +91,7 @@ public abstract class Primitives {
         // HACK for node class where we use `executeWith`
         if (nodeFactory == InvokeOnPrimFactory.getInstance()) {
           primNode = nodeFactory.createNode(args[0], args[1], args[2],
-              ToArgumentsArrayNodeFactory.create(null, null));
+              ToArgumentsArrayNodeGen.create(null, null));
         } else {
           primNode = nodeFactory.createNode(args[0], args[1], args[2]);
         }

@@ -3,8 +3,11 @@ package som.primitives;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vmobjects.SObject;
 
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
+
+@GenerateNodeFactory
 public abstract class ObjectSizePrim extends UnaryExpressionNode {
   @Specialization
   public final long doArray(final Object[] receiver) {

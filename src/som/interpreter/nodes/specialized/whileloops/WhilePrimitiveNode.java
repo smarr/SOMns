@@ -5,10 +5,12 @@ import som.interpreter.nodes.specialized.whileloops.WhileCache.AbstractWhileDisp
 import som.vmobjects.SBlock;
 import som.vmobjects.SObject;
 
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 
+@GenerateNodeFactory
 public abstract class WhilePrimitiveNode extends BinaryExpressionNode {
   final boolean predicateBool;
   @Child protected AbstractWhileDispatch whileNode;

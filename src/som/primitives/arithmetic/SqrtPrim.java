@@ -4,10 +4,12 @@ import java.math.BigInteger;
 
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.utilities.BranchProfile;
 
 
+@GenerateNodeFactory
 public abstract class SqrtPrim extends UnaryExpressionNode {
 
   public SqrtPrim() { super(null); }

@@ -11,6 +11,7 @@ import som.vmobjects.SClass;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 
@@ -20,6 +21,7 @@ public final class SystemPrims {
     return receiver == Globals.systemObject;
   }
 
+  @GenerateNodeFactory
   public abstract static class BinarySystemNode extends BinaryExpressionNode {
     protected final Universe universe;
     protected BinarySystemNode() { super(null); this.universe = Universe.current(); }
@@ -44,6 +46,7 @@ public final class SystemPrims {
   }
 
   @ImportStatic(SystemPrims.class)
+  @GenerateNodeFactory
   public abstract static class GlobalPutPrim extends TernaryExpressionNode {
     private final Universe universe;
     public GlobalPutPrim()  { this.universe = Universe.current(); }
@@ -71,6 +74,7 @@ public final class SystemPrims {
   }
 
   @ImportStatic(SystemPrims.class)
+  @GenerateNodeFactory
   public abstract static class PrintNewlinePrim extends UnaryExpressionNode {
     @Specialization(guards = "receiverIsSystemObject(receiver)")
     public final Object doSObject(final SObject receiver) {
@@ -80,6 +84,7 @@ public final class SystemPrims {
   }
 
   @ImportStatic(SystemPrims.class)
+  @GenerateNodeFactory
   public abstract static class FullGCPrim extends UnaryExpressionNode {
     @Specialization(guards = "receiverIsSystemObject(receiver)")
     public final Object doSObject(final SObject receiver) {
@@ -89,6 +94,7 @@ public final class SystemPrims {
   }
 
   @ImportStatic(SystemPrims.class)
+  @GenerateNodeFactory
   public abstract static class TimePrim extends UnaryExpressionNode {
     @Specialization(guards = "receiverIsSystemObject(receiver)")
     public final long doSObject(final SObject receiver) {
@@ -97,6 +103,7 @@ public final class SystemPrims {
   }
 
   @ImportStatic(SystemPrims.class)
+  @GenerateNodeFactory
   public abstract static class TicksPrim extends UnaryExpressionNode {
     @Specialization(guards = "receiverIsSystemObject(receiver)")
     public final long doSObject(final SObject receiver) {

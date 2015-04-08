@@ -12,11 +12,11 @@ import som.interpreter.nodes.ContextualNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.FieldNode.FieldReadNode;
 import som.interpreter.nodes.FieldNode.FieldWriteNode;
-import som.interpreter.nodes.FieldNodeFactory.FieldWriteNodeFactory;
+import som.interpreter.nodes.FieldNodeFactory.FieldWriteNodeGen;
 import som.interpreter.nodes.GlobalNode;
 import som.interpreter.nodes.GlobalNode.UninitializedGlobalReadNode;
 import som.interpreter.nodes.LocalVariableNode.LocalVariableWriteNode;
-import som.interpreter.nodes.LocalVariableNodeFactory.LocalVariableWriteNodeFactory;
+import som.interpreter.nodes.LocalVariableNodeFactory.LocalVariableWriteNodeGen;
 import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.interpreter.nodes.ReturnNonLocalNode;
@@ -58,7 +58,7 @@ public final class SNodeFactory {
 
   public static FieldWriteNode createFieldWrite(final ExpressionNode self,
       final ExpressionNode exp, final int fieldIndex, final SourceSection source) {
-    return FieldWriteNodeFactory.create(fieldIndex, source, self, exp);
+    return FieldWriteNodeGen.create(fieldIndex, source, self, exp);
   }
 
   public static ContextualNode createLocalVarRead(final Local variable,
@@ -92,7 +92,7 @@ public final class SNodeFactory {
 
   public static LocalVariableWriteNode createLocalVariableWrite(
       final FrameSlot varSlot, final ExpressionNode exp, final SourceSection source) {
-    return LocalVariableWriteNodeFactory.create(varSlot, source, exp);
+    return LocalVariableWriteNodeGen.create(varSlot, source, exp);
   }
 
   public static SequenceNode createSequence(final List<ExpressionNode> exps,

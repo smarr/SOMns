@@ -5,8 +5,11 @@ import som.vm.constants.Classes;
 import som.vmobjects.SArray;
 import som.vmobjects.SClass;
 
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
+
+@GenerateNodeFactory
 public abstract class NewPrim extends BinaryExpressionNode {
 
   protected static final boolean receiverIsArrayClass(final SClass receiver) {

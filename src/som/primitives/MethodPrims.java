@@ -9,6 +9,7 @@ import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray;
 import som.vmobjects.SInvokable;
 
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.NodeChildren;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -17,6 +18,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 
 public final class MethodPrims {
 
+  @GenerateNodeFactory
   public abstract static class SignaturePrim extends UnaryExpressionNode {
     @Specialization
     public final SAbstractObject doSMethod(final SInvokable receiver) {
@@ -24,6 +26,7 @@ public final class MethodPrims {
     }
   }
 
+  @GenerateNodeFactory
   public abstract static class HolderPrim extends UnaryExpressionNode {
     @Specialization
     public final SAbstractObject doSMethod(final SInvokable receiver) {
@@ -31,6 +34,7 @@ public final class MethodPrims {
     }
   }
 
+  @GenerateNodeFactory
   @NodeChildren({
     @NodeChild(value = "receiver", type = ExpressionNode.class),
     @NodeChild(value = "target",  type = ExpressionNode.class),

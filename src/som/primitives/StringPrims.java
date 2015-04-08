@@ -7,11 +7,13 @@ import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
 
 public class StringPrims {
 
+  @GenerateNodeFactory
   public abstract static class ConcatPrim extends BinaryExpressionNode {
     @Specialization
     public final String doString(final String receiver, final String argument) {
@@ -34,6 +36,7 @@ public class StringPrims {
     }
   }
 
+  @GenerateNodeFactory
   public abstract static class AsSymbolPrim extends UnaryExpressionNode {
     private final Universe universe;
     public AsSymbolPrim() { this.universe = Universe.current(); }
@@ -49,6 +52,7 @@ public class StringPrims {
     }
   }
 
+  @GenerateNodeFactory
   public abstract static class SubstringPrim extends TernaryExpressionNode {
     @Specialization
     public final String doString(final String receiver, final long start,

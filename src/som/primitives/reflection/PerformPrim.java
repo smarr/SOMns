@@ -3,9 +3,12 @@ package som.primitives.reflection;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
+
+@GenerateNodeFactory
 public abstract class PerformPrim extends BinaryExpressionNode {
   @Child protected AbstractSymbolDispatch dispatch;
 

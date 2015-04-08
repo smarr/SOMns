@@ -10,8 +10,11 @@ import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
+
+@GenerateNodeFactory
 public abstract class EqualsEqualsPrim extends BinaryExpressionNode {
 
   @Specialization

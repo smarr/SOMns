@@ -7,7 +7,7 @@ import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.PreevaluatedExpression;
 import som.interpreter.nodes.dispatch.DispatchChain;
 import som.primitives.arrays.ToArgumentsArrayNode;
-import som.primitives.arrays.ToArgumentsArrayNodeFactory;
+import som.primitives.arrays.ToArgumentsArrayNodeGen;
 import som.vmobjects.SArray;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
@@ -88,7 +88,7 @@ public abstract class AbstractSymbolDispatch extends Node implements DispatchCha
       this.selector = selector;
       this.nextInCache = nextInCache;
       cachedSend = MessageSendNode.createForPerformNodes(selector);
-      toArgArray = ToArgumentsArrayNodeFactory.create(null, null);
+      toArgArray = ToArgumentsArrayNodeGen.create(null, null);
     }
 
     @Override
@@ -118,7 +118,7 @@ public abstract class AbstractSymbolDispatch extends Node implements DispatchCha
     public GenericDispatchNode() {
       super(0);
       call = Truffle.getRuntime().createIndirectCallNode();
-      toArgArray = ToArgumentsArrayNodeFactory.create(null, null);
+      toArgArray = ToArgumentsArrayNodeGen.create(null, null);
     }
 
     @Override

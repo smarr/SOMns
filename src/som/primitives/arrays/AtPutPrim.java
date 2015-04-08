@@ -6,8 +6,12 @@ import som.vmobjects.SArray;
 import som.vmobjects.SArray.ArrayType;
 import som.vmobjects.SArray.PartiallyEmptyArray;
 
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
+import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 
+
+@GenerateNodeFactory
 @ImportStatic(ArrayType.class)
 public abstract class AtPutPrim extends TernaryExpressionNode {
 

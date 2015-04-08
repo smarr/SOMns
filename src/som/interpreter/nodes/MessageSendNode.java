@@ -13,15 +13,15 @@ import som.interpreter.nodes.nary.EagerTernaryPrimitiveNode;
 import som.interpreter.nodes.nary.EagerUnaryPrimitiveNode;
 import som.interpreter.nodes.specialized.AndMessageNodeFactory;
 import som.interpreter.nodes.specialized.AndMessageNodeFactory.AndBoolMessageNodeFactory;
-import som.interpreter.nodes.specialized.IfFalseMessageNodeFactory;
-import som.interpreter.nodes.specialized.IfTrueIfFalseMessageNodeFactory;
-import som.interpreter.nodes.specialized.IfTrueMessageNodeFactory;
-import som.interpreter.nodes.specialized.IntDownToDoMessageNodeFactory;
-import som.interpreter.nodes.specialized.IntToByDoMessageNodeFactory;
-import som.interpreter.nodes.specialized.IntToDoMessageNodeFactory;
+import som.interpreter.nodes.specialized.IfFalseMessageNodeGen;
+import som.interpreter.nodes.specialized.IfTrueIfFalseMessageNodeGen;
+import som.interpreter.nodes.specialized.IfTrueMessageNodeGen;
+import som.interpreter.nodes.specialized.IntDownToDoMessageNodeGen;
+import som.interpreter.nodes.specialized.IntToByDoMessageNodeGen;
+import som.interpreter.nodes.specialized.IntToDoMessageNodeGen;
 import som.interpreter.nodes.specialized.NotMessageNodeFactory;
-import som.interpreter.nodes.specialized.OrMessageNodeFactory;
-import som.interpreter.nodes.specialized.OrMessageNodeFactory.OrBoolMessageNodeFactory;
+import som.interpreter.nodes.specialized.OrMessageNodeGen;
+import som.interpreter.nodes.specialized.OrMessageNodeGen.OrBoolMessageNodeGen;
 import som.interpreter.nodes.specialized.whileloops.WhileWithDynamicBlocksNode;
 import som.interpreter.nodes.specialized.whileloops.WhileWithStaticBlocksNode.WhileFalseStaticBlocksNode;
 import som.interpreter.nodes.specialized.whileloops.WhileWithStaticBlocksNode.WhileTrueStaticBlocksNode;
@@ -56,7 +56,7 @@ import som.primitives.arrays.DoIndexesPrimFactory;
 import som.primitives.arrays.DoPrimFactory;
 import som.primitives.arrays.NewPrimFactory;
 import som.primitives.arrays.PutAllNodeFactory;
-import som.primitives.arrays.ToArgumentsArrayNodeFactory;
+import som.primitives.arrays.ToArgumentsArrayNodeGen;
 import som.vm.NotYetImplementedException;
 import som.vm.constants.Classes;
 import som.vmobjects.SArray;
@@ -284,11 +284,11 @@ public final class MessageSendNode {
         case "||":
           if (arguments[0] instanceof Boolean) {
             if (argumentNodes[1] instanceof BlockNode) {
-              return replace(OrMessageNodeFactory.create((SBlock) arguments[1],
+              return replace(OrMessageNodeGen.create((SBlock) arguments[1],
                   getSourceSection(),
                   argumentNodes[0], argumentNodes[1]));
             } else if (arguments[1] instanceof Boolean) {
-              return replace(OrBoolMessageNodeFactory.create(
+              return replace(OrBoolMessageNodeGen.create(
                   getSourceSection(),
                   argumentNodes[0], argumentNodes[1]));
             }
@@ -304,11 +304,11 @@ public final class MessageSendNode {
           break;
 
         case "ifTrue:":
-          return replace(IfTrueMessageNodeFactory.create(arguments[0],
+          return replace(IfTrueMessageNodeGen.create(arguments[0],
               arguments[1], getSourceSection(),
               argumentNodes[0], argumentNodes[1]));
         case "ifFalse:":
-          return replace(IfFalseMessageNodeFactory.create(arguments[0],
+          return replace(IfFalseMessageNodeGen.create(arguments[0],
               arguments[1], getSourceSection(),
               argumentNodes[0], argumentNodes[1]));
         case "to:":
@@ -416,25 +416,25 @@ public final class MessageSendNode {
           }
           break;
         case "ifTrue:ifFalse:":
-          return replace(IfTrueIfFalseMessageNodeFactory.create(arguments[0],
+          return replace(IfTrueIfFalseMessageNodeGen.create(arguments[0],
               arguments[1], arguments[2], argumentNodes[0],
               argumentNodes[1], argumentNodes[2]));
         case "to:do:":
-            return replace(IntToDoMessageNodeFactory.create(this,
           if (TypesGen.isLong(arguments[0]) &&
               (TypesGen.isLong(arguments[1]) ||
                   TypesGen.isDouble(arguments[1])) &&
               TypesGen.isSBlock(arguments[2])) {
+            return replace(IntToDoMessageNodeGen.create(this,
                 (SBlock) arguments[2], argumentNodes[0], argumentNodes[1],
                 argumentNodes[2]));
           }
           break;
         case "downTo:do:":
-            return replace(IntDownToDoMessageNodeFactory.create(this,
           if (TypesGen.isLong(arguments[0]) &&
               (TypesGen.isLong(arguments[1]) ||
                   TypesGen.isDouble(arguments[1])) &&
               TypesGen.isSBlock(arguments[2])) {
+            return replace(IntDownToDoMessageNodeGen.create(this,
                 (SBlock) arguments[2], argumentNodes[0], argumentNodes[1],
                 argumentNodes[2]));
           }
@@ -443,7 +443,7 @@ public final class MessageSendNode {
         case "invokeOn:with:":
           return replace(InvokeOnPrimFactory.create(
               argumentNodes[0], argumentNodes[1], argumentNodes[2],
-              ToArgumentsArrayNodeFactory.create(null, null)));
+              ToArgumentsArrayNodeGen.create(null, null)));
         case "instVarAt:put:":
           return replace(InstVarAtPutPrimFactory.create(
             argumentNodes[0], argumentNodes[1], argumentNodes[2]));
@@ -455,7 +455,7 @@ public final class MessageSendNode {
         final Object[] arguments) {
       switch (selector.getString()) {
         case "to:by:do:":
-          return replace(IntToByDoMessageNodeFactory.create(this,
+          return replace(IntToByDoMessageNodeGen.create(this,
               (SBlock) arguments[3], argumentNodes[0], argumentNodes[1],
               argumentNodes[2], argumentNodes[3]));
       }

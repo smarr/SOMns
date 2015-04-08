@@ -2,9 +2,11 @@ package som.primitives.arithmetic;
 
 import java.math.BigInteger;
 
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
 
+@GenerateNodeFactory
 public abstract class RemainderPrim extends ArithmeticPrim {
   @Specialization
   public final double doDouble(final double left, final double right) {
