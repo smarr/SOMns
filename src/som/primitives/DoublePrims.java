@@ -21,7 +21,7 @@ public abstract class DoublePrims  {
       return receiver == Classes.doubleClass;
     }
 
-    @Specialization(guards = "receiverIsDoubleClass")
+    @Specialization(guards = "receiverIsDoubleClass(receiver)")
     public final double doSClass(final SClass receiver) {
       return Double.POSITIVE_INFINITY;
     }

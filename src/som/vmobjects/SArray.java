@@ -172,8 +172,34 @@ public final class SArray extends SAbstractObject {
     storage = arr;
   }
 
-  public enum ArrayType { EMPTY, PARTIAL_EMPTY, LONG, DOUBLE,
-    BOOLEAN,  OBJECT }
+  public enum ArrayType {
+    EMPTY, PARTIAL_EMPTY, LONG, DOUBLE, BOOLEAN,  OBJECT;
+
+    public final static boolean isEmptyType(final SArray receiver) {
+      return receiver.getType() == ArrayType.EMPTY;
+    }
+
+    public final static boolean isPartiallyEmptyType(final SArray receiver) {
+      return receiver.getType() == ArrayType.PARTIAL_EMPTY;
+    }
+
+    public final static boolean isObjectType(final SArray receiver) {
+      return receiver.getType() == ArrayType.OBJECT;
+    }
+
+    public final static boolean isLongType(final SArray receiver) {
+      return receiver.getType() == ArrayType.LONG;
+    }
+
+    public final static boolean isDoubleType(final SArray receiver) {
+      return receiver.getType() == ArrayType.DOUBLE;
+    }
+
+    public final static boolean isBooleanType(final SArray receiver) {
+      return receiver.getType() == BOOLEAN;
+    }
+
+  }
 
   private static long[] createLong(final Object[] arr) {
     long[] storage = new long[arr.length];

@@ -8,10 +8,12 @@ import som.vm.constants.Nil;
 import som.vmobjects.SArray;
 import som.vmobjects.SArray.ArrayType;
 
+import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.NodeChildren;
 import com.oracle.truffle.api.dsl.Specialization;
 
+@ImportStatic(ArrayType.class)
 @NodeChildren({
   @NodeChild("somArray"),
   @NodeChild("receiver")})
@@ -23,42 +25,18 @@ public abstract class ToArgumentsArrayNode extends ExpressionNode {
     return somArray == null;
   }
 
-  public final static boolean isEmptyType(final SArray somArray) {
-    return somArray.getType() == ArrayType.EMPTY;
-  }
-
-  public final static boolean isPartiallyEmptyType(final SArray somArray) {
-    return somArray.getType() == ArrayType.PARTIAL_EMPTY;
-  }
-
-  public final static boolean isObjectType(final SArray somArray) {
-    return somArray.getType() == ArrayType.OBJECT;
-  }
-
-  public final static boolean isLongType(final SArray receiver) {
-    return receiver.getType() == ArrayType.LONG;
-  }
-
-  public final static boolean isDoubleType(final SArray receiver) {
-    return receiver.getType() == ArrayType.DOUBLE;
-  }
-
-  public final static boolean isBooleanType(final SArray receiver) {
-    return receiver.getType() == ArrayType.BOOLEAN;
-  }
-
   public abstract Object[] executedEvaluated(SArray somArray, Object rcvr);
 
   public final Object[] executedEvaluated(final Object somArray, final Object rcvr) {
     return executedEvaluated((SArray) somArray, rcvr);
   }
 
-  @Specialization(guards = "isNull")
+  @Specialization(guards = "isNull(somArray)")
   public final Object[] doNoArray(final Object somArray, final Object rcvr) {
     return new Object[] {rcvr};
   }
 
-  @Specialization(guards = "isEmptyType")
+  @Specialization(guards = "isEmptyType(somArray)")
   public final Object[] doEmptyArray(final SArray somArray, final Object rcvr) {
     Object[] result = new Object[somArray.getEmptyStorage() + 1];
     Arrays.fill(result, Nil.nilObject);
@@ -73,20 +51,20 @@ public abstract class ToArgumentsArrayNode extends ExpressionNode {
     return argsArray;
   }
 
-  @Specialization(guards = "isPartiallyEmptyType")
+  @Specialization(guards = "isPartiallyEmptyType(somArray)")
   public final Object[] doPartiallyEmptyArray(final SArray somArray,
       final Object rcvr) {
     return addRcvrToObjectArray(
         rcvr, somArray.getPartiallyEmptyStorage().getStorage());
   }
 
-  @Specialization(guards = "isObjectType")
+  @Specialization(guards = "isObjectType(somArray)")
   public final Object[] doObjectArray(final SArray somArray,
       final Object rcvr) {
     return addRcvrToObjectArray(rcvr, somArray.getObjectStorage());
   }
 
-  @Specialization(guards = "isLongType")
+  @Specialization(guards = "isLongType(somArray)")
   public final Object[] doLongArray(final SArray somArray,
       final Object rcvr) {
     long[] arr = somArray.getLongStorage();
@@ -98,7 +76,7 @@ public abstract class ToArgumentsArrayNode extends ExpressionNode {
     return args;
   }
 
-  @Specialization(guards = "isDoubleType")
+  @Specialization(guards = "isDoubleType(somArray)")
   public final Object[] doDoubleArray(final SArray somArray,
       final Object rcvr) {
     double[] arr = somArray.getDoubleStorage();
@@ -110,7 +88,7 @@ public abstract class ToArgumentsArrayNode extends ExpressionNode {
     return args;
   }
 
-  @Specialization(guards = "isBooleanType")
+  @Specialization(guards = "isBooleanType(somArray)")
   public final Object[] doBooleanArray(final SArray somArray,
       final Object rcvr) {
     boolean[] arr = somArray.getBooleanStorage();

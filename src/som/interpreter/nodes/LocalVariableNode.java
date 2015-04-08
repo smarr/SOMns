@@ -44,28 +44,28 @@ public abstract class LocalVariableNode extends ExpressionNode {
       super(slot, source);
     }
 
-    @Specialization(guards = "isUninitialized")
+    @Specialization(guards = "isUninitialized()")
     public final SObject doNil() {
       return Nil.nilObject;
     }
 
-    @Specialization(guards = "isInitialized", rewriteOn = {FrameSlotTypeException.class})
+    @Specialization(guards = "isInitialized()", rewriteOn = {FrameSlotTypeException.class})
     public final boolean doBoolean(final VirtualFrame frame) throws FrameSlotTypeException {
       return frame.getBoolean(slot);
     }
 
 
-    @Specialization(guards = "isInitialized", rewriteOn = {FrameSlotTypeException.class})
+    @Specialization(guards = "isInitialized()", rewriteOn = {FrameSlotTypeException.class})
     public final long doLong(final VirtualFrame frame) throws FrameSlotTypeException {
       return frame.getLong(slot);
     }
 
-    @Specialization(guards = "isInitialized", rewriteOn = {FrameSlotTypeException.class})
+    @Specialization(guards = "isInitialized()", rewriteOn = {FrameSlotTypeException.class})
     public final double doDouble(final VirtualFrame frame) throws FrameSlotTypeException {
       return frame.getDouble(slot);
     }
 
-    @Specialization(guards = "isInitialized", rewriteOn = {FrameSlotTypeException.class})
+    @Specialization(guards = "isInitialized()", rewriteOn = {FrameSlotTypeException.class})
     public final Object doObject(final VirtualFrame frame) throws FrameSlotTypeException {
       return frame.getObject(slot);
     }
@@ -102,19 +102,19 @@ public abstract class LocalVariableNode extends ExpressionNode {
 
     public abstract ExpressionNode getExp();
 
-    @Specialization(guards = "isBoolKind")
+    @Specialization(guards = "isBoolKind()")
     public final boolean writeBoolean(final VirtualFrame frame, final boolean expValue) {
       frame.setBoolean(slot, expValue);
       return expValue;
     }
 
-    @Specialization(guards = "isLongKind")
+    @Specialization(guards = "isLongKind()")
     public final long writeLong(final VirtualFrame frame, final long expValue) {
       frame.setLong(slot, expValue);
       return expValue;
     }
 
-    @Specialization(guards = "isDoubleKind")
+    @Specialization(guards = "isDoubleKind()")
     public final double writeDouble(final VirtualFrame frame, final double expValue) {
       frame.setDouble(slot, expValue);
       return expValue;

@@ -8,8 +8,10 @@ import som.vm.Universe;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 
+@ImportStatic(SystemPrims.class)
 public abstract class HasGlobalPrim extends BinarySystemNode {
 
   @Child private HasGlobalNode hasGlobal;
@@ -19,7 +21,7 @@ public abstract class HasGlobalPrim extends BinarySystemNode {
     hasGlobal = new UninitializedHasGlobal(0);
   }
 
-  @Specialization(guards = "receiverIsSystemObject")
+  @Specialization(guards = "receiverIsSystemObject(receiver)")
   public final boolean doSObject(final SObject receiver, final SSymbol argument) {
     return hasGlobal.hasGlobal(argument);
   }

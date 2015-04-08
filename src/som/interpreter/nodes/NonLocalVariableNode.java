@@ -34,27 +34,27 @@ public abstract class NonLocalVariableNode extends ContextualNode {
       this(node.contextLevel, node.slot, node.getSourceSection());
     }
 
-    @Specialization(guards = "isUninitialized")
+    @Specialization(guards = "isUninitialized()")
     public final SObject doNil() {
       return Nil.nilObject;
     }
 
-    @Specialization(guards = "isInitialized", rewriteOn = {FrameSlotTypeException.class})
+    @Specialization(guards = "isInitialized()", rewriteOn = {FrameSlotTypeException.class})
     public final boolean doBoolean(final VirtualFrame frame) throws FrameSlotTypeException {
       return determineContext(frame).getBoolean(slot);
     }
 
-    @Specialization(guards = "isInitialized", rewriteOn = {FrameSlotTypeException.class})
+    @Specialization(guards = "isInitialized()", rewriteOn = {FrameSlotTypeException.class})
     public final long doLong(final VirtualFrame frame) throws FrameSlotTypeException {
       return determineContext(frame).getLong(slot);
     }
 
-    @Specialization(guards = "isInitialized", rewriteOn = {FrameSlotTypeException.class})
+    @Specialization(guards = "isInitialized()", rewriteOn = {FrameSlotTypeException.class})
     public final double doDouble(final VirtualFrame frame) throws FrameSlotTypeException {
       return determineContext(frame).getDouble(slot);
     }
 
-    @Specialization(guards = "isInitialized", rewriteOn = {FrameSlotTypeException.class})
+    @Specialization(guards = "isInitialized()", rewriteOn = {FrameSlotTypeException.class})
     public final Object doObject(final VirtualFrame frame) throws FrameSlotTypeException {
       return determineContext(frame).getObject(slot);
     }
@@ -86,19 +86,19 @@ public abstract class NonLocalVariableNode extends ContextualNode {
       this(node.contextLevel, node.slot, node.getSourceSection());
     }
 
-    @Specialization(guards = "isBoolKind")
+    @Specialization(guards = "isBoolKind()")
     public final boolean writeBoolean(final VirtualFrame frame, final boolean expValue) {
       determineContext(frame).setBoolean(slot, expValue);
       return expValue;
     }
 
-    @Specialization(guards = "isLongKind")
+    @Specialization(guards = "isLongKind()")
     public final long writeLong(final VirtualFrame frame, final long expValue) {
       determineContext(frame).setLong(slot, expValue);
       return expValue;
     }
 
-    @Specialization(guards = "isDoubleKind")
+    @Specialization(guards = "isDoubleKind()")
     public final double writeDouble(final VirtualFrame frame, final double expValue) {
       determineContext(frame).setDouble(slot, expValue);
       return expValue;

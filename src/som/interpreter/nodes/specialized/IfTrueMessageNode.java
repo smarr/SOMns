@@ -16,7 +16,7 @@ public abstract class IfTrueMessageNode extends AbstractIfMessageNode {
    * This is the case were we got a block as the argument. Need to actually
    * evaluate it.
    */
-  @Specialization(guards = "isSameArgument")
+  @Specialization(guards = "isSameArgument(argument)")
   public final Object doIfTrueWithInlining(final VirtualFrame frame,
       final boolean receiver, final SBlock argument) {
     return doIfWithInlining(frame, receiver, argument, true);

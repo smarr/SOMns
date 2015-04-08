@@ -5,60 +5,38 @@ import som.vmobjects.SArray;
 import som.vmobjects.SArray.ArrayType;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 
+@ImportStatic(ArrayType.class)
 public abstract class LengthPrim extends UnaryExpressionNode {
 
-  public final static boolean isEmptyType(final SArray receiver) {
-    return receiver.getType() == ArrayType.EMPTY;
-  }
-
-  public final static boolean isPartiallyEmptyType(final SArray receiver) {
-    return receiver.getType() == ArrayType.PARTIAL_EMPTY;
-  }
-
-  public final static boolean isObjectType(final SArray receiver) {
-    return receiver.getType() == ArrayType.OBJECT;
-  }
-
-  public final static boolean isLongType(final SArray receiver) {
-    return receiver.getType() == ArrayType.LONG;
-  }
-
-  public final static boolean isDoubleType(final SArray receiver) {
-    return receiver.getType() == ArrayType.DOUBLE;
-  }
-
-  public final static boolean isBooleanType(final SArray receiver) {
-    return receiver.getType() == ArrayType.BOOLEAN;
-  }
-
-  @Specialization(guards = "isEmptyType")
+  @Specialization(guards = "isEmptyType(receiver)")
   public final long doEmptySArray(final SArray receiver) {
     return receiver.getEmptyStorage();
   }
 
-  @Specialization(guards = "isPartiallyEmptyType")
+  @Specialization(guards = "isPartiallyEmptyType(receiver)")
   public final long doPartialEmptySArray(final SArray receiver) {
     return receiver.getPartiallyEmptyStorage().getLength();
   }
 
-  @Specialization(guards = "isObjectType")
+  @Specialization(guards = "isObjectType(receiver)")
   public final long doObjectSArray(final SArray receiver) {
     return receiver.getObjectStorage().length;
   }
 
-  @Specialization(guards = "isLongType")
+  @Specialization(guards = "isLongType(receiver)")
   public final long doLongSArray(final SArray receiver) {
     return receiver.getLongStorage().length;
   }
 
-  @Specialization(guards = "isDoubleType")
+  @Specialization(guards = "isDoubleType(receiver)")
   public final long doDoubleSArray(final SArray receiver) {
     return receiver.getDoubleStorage().length;
   }
 
-  @Specialization(guards = "isBooleanType")
+  @Specialization(guards = "isBooleanType(receiver)")
   public final long doBooleanSArray(final SArray receiver) {
     return receiver.getBooleanStorage().length;
   }

@@ -14,12 +14,14 @@ import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 
+@ImportStatic(ArrayType.class)
 @NodeChild(value = "length", type = LengthPrim.class, executeWith = "receiver")
 public abstract class PutAllNode extends BinaryExpressionNode
   implements ValuePrimitiveNode  {
@@ -35,38 +37,25 @@ public abstract class PutAllNode extends BinaryExpressionNode
     block = insert(node);
   }
 
-  protected final static boolean valueIsNil(final SArray rcvr, final SObject value) {
+  protected final static boolean valueIsNil(final SObject value) {
     return value == Nil.nilObject;
   }
 
-  public final static boolean isEmptyType(final SArray receiver) {
-    return receiver.getType() == ArrayType.EMPTY;
-  }
-
-  public final static boolean isPartiallyEmptyType(final SArray receiver) {
-    return receiver.getType() == ArrayType.PARTIAL_EMPTY;
-  }
-
-  public final static boolean isObjectType(final SArray receiver) {
-    return receiver.getType() == ArrayType.OBJECT;
-  }
-
-  protected final static boolean valueOfNoOtherSpecialization(final SArray rcvr,
-      final Object value) {
+  protected final static boolean valueOfNoOtherSpecialization(final Object value) {
     return !(value instanceof Long)    &&
            !(value instanceof Double)  &&
            !(value instanceof Boolean) &&
            !(value instanceof SBlock);
   }
 
-  @Specialization(guards = {"isEmptyType", "valueIsNil"})
+  @Specialization(guards = {"isEmptyType(rcvr)", "valueIsNil(nil)"})
   public SArray doPutNilInEmptyArray(final SArray rcvr, final SObject nil,
       final long length) {
     // NO OP
     return rcvr;
   }
 
-  @Specialization(guards = {"valueIsNil"}, contains = {"doPutNilInEmptyArray"})
+  @Specialization(guards = {"valueIsNil(nil)"}, contains = {"doPutNilInEmptyArray"})
   public SArray doPutNilInOtherArray(final SArray rcvr, final SObject nil,
       final long length) {
     rcvr.transitionToEmpty(length);
@@ -175,7 +164,7 @@ public abstract class PutAllNode extends BinaryExpressionNode
     return rcvr;
   }
 
-  @Specialization(guards = {"valueOfNoOtherSpecialization"})
+  @Specialization(guards = {"valueOfNoOtherSpecialization(value)"})
   public SArray doPutObject(final SArray rcvr, final Object value,
       final long length) {
     rcvr.transitionToObjectWithAll(length, value);

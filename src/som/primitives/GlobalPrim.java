@@ -17,7 +17,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 public abstract class GlobalPrim extends BinarySystemNode {
   @Child private GetGlobalNode getGlobal = new UninitializedGetGlobal(0);
 
-  @Specialization(guards = "receiverIsSystemObject")
+  @Specialization(guards = "receiverIsSystemObject(receiver)")
   public final Object doSObject(final VirtualFrame frame, final SObject receiver, final SSymbol argument) {
     return getGlobal.getGlobal(frame, argument);
   }

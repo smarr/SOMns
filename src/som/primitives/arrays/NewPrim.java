@@ -9,11 +9,11 @@ import com.oracle.truffle.api.dsl.Specialization;
 
 public abstract class NewPrim extends BinaryExpressionNode {
 
-  protected final boolean receiverIsArrayClass(final SClass receiver) {
+  protected static final boolean receiverIsArrayClass(final SClass receiver) {
     return receiver == Classes.arrayClass;
   }
 
-  @Specialization(guards = "receiverIsArrayClass")
+  @Specialization(guards = "receiverIsArrayClass(receiver)")
   public final SArray doSClass(final SClass receiver, final long length) {
     return new SArray(length);
   }

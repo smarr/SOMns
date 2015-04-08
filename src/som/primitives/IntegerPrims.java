@@ -41,12 +41,12 @@ public abstract class IntegerPrims {
       return receiver == Classes.integerClass;
     }
 
-    @Specialization(guards = "receiverIsIntegerClass")
+    @Specialization(guards = "receiverIsIntegerClass(receiver)")
     public final Object doSClass(final SClass receiver, final String argument) {
       return Long.parseLong(argument);
     }
 
-    @Specialization(guards = "receiverIsIntegerClass")
+    @Specialization(guards = "receiverIsIntegerClass(receiver)")
     public final Object doSClass(final SClass receiver, final SSymbol argument) {
       return Long.parseLong(argument.getString());
     }

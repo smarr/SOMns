@@ -8,66 +8,37 @@ import som.vmobjects.SArray.PartiallyEmptyArray;
 
 import com.oracle.truffle.api.dsl.Specialization;
 
+@ImportStatic(ArrayType.class)
 public abstract class AtPutPrim extends TernaryExpressionNode {
 
-  public final static boolean isEmptyType(final SArray receiver) {
-    return receiver.getType() == ArrayType.EMPTY;
-  }
-
-  public final static boolean isPartiallyEmptyType(final SArray receiver) {
-    return receiver.getType() == ArrayType.PARTIAL_EMPTY;
-  }
-
-  public final static boolean isObjectType(final SArray receiver) {
-    return receiver.getType() == ArrayType.OBJECT;
-  }
-
-  public final static boolean isLongType(final SArray receiver) {
-    return receiver.getType() == ArrayType.LONG;
-  }
-
-  public final static boolean isDoubleType(final SArray receiver) {
-    return receiver.getType() == ArrayType.DOUBLE;
-  }
-
-  public final static boolean isBooleanType(final SArray receiver) {
-    return receiver.getType() == ArrayType.BOOLEAN;
-  }
-
-  protected final static boolean valueIsNil(final SArray rcvr, final long idx,
-      final Object value) {
+  protected final static boolean valueIsNil(final Object value) {
     return value == Nil.nilObject;
   }
 
-  protected final static boolean valueIsNotNil(final SArray rcvr, final long idx,
-      final Object value) {
+  protected final static boolean valueIsNotNil(final Object value) {
     return value != Nil.nilObject;
   }
 
-  protected final static boolean valueIsNotLong(final SArray rcvr, final long idx,
-      final Object value) {
+  protected final static boolean valueIsNotLong(final Object value) {
     return !(value instanceof Long);
   }
 
-  protected final static boolean valueIsNotDouble(final SArray rcvr, final long idx,
-      final Object value) {
+  protected final static boolean valueIsNotDouble(final Object value) {
     return !(value instanceof Double);
   }
 
-  protected final static boolean valueIsNotBoolean(final SArray rcvr, final long idx,
-      final Object value) {
+  protected final static boolean valueIsNotBoolean(final Object value) {
     return !(value instanceof Boolean);
   }
 
 
-  protected final static boolean valueNotLongDoubleBoolean(final SArray rcvr,
-      final long idx, final Object value) {
+  protected final static boolean valueNotLongDoubleBoolean(final Object value) {
     return !(value instanceof Long) &&
         !(value instanceof Double) &&
         !(value instanceof Boolean);
   }
 
-  @Specialization(guards = {"isEmptyType"})
+  @Specialization(guards = {"isEmptyType(receiver)"})
   public final long doEmptySArray(final SArray receiver, final long index,
       final long value) {
     long idx = index - 1;
@@ -78,7 +49,7 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
     return value;
   }
 
-  @Specialization(guards = {"isEmptyType"})
+  @Specialization(guards = {"isEmptyType(receiver)"})
   public final Object doEmptySArray(final SArray receiver, final long index,
       final double value) {
     long idx = index - 1;
@@ -89,7 +60,7 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
     return value;
   }
 
-  @Specialization(guards = {"isEmptyType"})
+  @Specialization(guards = {"isEmptyType(receiver)"})
   public final Object doEmptySArray(final SArray receiver, final long index,
       final boolean value) {
     long idx = index - 1;
@@ -100,7 +71,7 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
     return value;
   }
 
-  @Specialization(guards = {"isEmptyType", "valueIsNotNil", "valueNotLongDoubleBoolean"})
+  @Specialization(guards = {"isEmptyType(receiver)", "valueIsNotNil(value)", "valueNotLongDoubleBoolean(value)"})
   public final Object doEmptySArray(final SArray receiver, final long index,
       final Object value) {
     long idx = index - 1;
@@ -111,7 +82,7 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
     return value;
   }
 
-  @Specialization(guards = {"isEmptyType", "valueIsNil"})
+  @Specialization(guards = {"isEmptyType(receiver)", "valueIsNil(value)"})
   public final Object doEmptySArrayWithNil(final SArray receiver, final long index,
       final Object value) {
     long idx = index - 1;
@@ -131,7 +102,7 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
     storage.set(idx, value);
   }
 
-  @Specialization(guards = "isPartiallyEmptyType")
+  @Specialization(guards = "isPartiallyEmptyType(receiver)")
   public final long doPartiallyEmptySArray(final SArray receiver,
       final long index, final long value) {
     long idx = index - 1;
@@ -145,7 +116,7 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
     return value;
   }
 
-  @Specialization(guards = "isPartiallyEmptyType")
+  @Specialization(guards = "isPartiallyEmptyType(receiver)")
   public final double doPartiallyEmptySArray(final SArray receiver,
       final long index, final double value) {
     long idx = index - 1;
@@ -158,7 +129,7 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
     return value;
   }
 
-  @Specialization(guards = "isPartiallyEmptyType")
+  @Specialization(guards = "isPartiallyEmptyType(receiver)")
   public final boolean doPartiallyEmptySArray(final SArray receiver,
       final long index, final boolean value) {
     long idx = index - 1;
@@ -171,7 +142,7 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
     return value;
   }
 
-  @Specialization(guards = {"isPartiallyEmptyType", "valueIsNil"})
+  @Specialization(guards = {"isPartiallyEmptyType(receiver)", "valueIsNil(value)"})
   public final Object doPartiallyEmptySArrayWithNil(final SArray receiver,
       final long index, final Object value) {
     long idx = index - 1;
@@ -186,7 +157,7 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
     return value;
   }
 
-  @Specialization(guards = {"isPartiallyEmptyType", "valueIsNotNil"})
+  @Specialization(guards = {"isPartiallyEmptyType(receiver)", "valueIsNotNil(value)"})
   public final Object doPartiallyEmptySArray(final SArray receiver,
       final long index, final Object value) {
     long idx = index - 1;
@@ -197,7 +168,7 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
     return value;
   }
 
-  @Specialization(guards = "isObjectType")
+  @Specialization(guards = "isObjectType(receiver)")
   public final Object doObjectSArray(final SArray receiver, final long index,
       final Object value) {
     long idx = index - 1;
@@ -205,7 +176,7 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
     return value;
   }
 
-  @Specialization(guards = "isLongType")
+  @Specialization(guards = "isLongType(receiver)")
   public final Object doObjectSArray(final SArray receiver, final long index,
       final long value) {
     long idx = index - 1;
@@ -213,7 +184,7 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
     return value;
   }
 
-  @Specialization(guards = {"isLongType", "valueIsNotLong"})
+  @Specialization(guards = {"isLongType(receiver)", "valueIsNotLong(value)"})
   public final Object doLongSArray(final SArray receiver, final long index,
       final Object value) {
     long idx = index - 1;
@@ -229,7 +200,7 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
     return value;
   }
 
-  @Specialization(guards = "isDoubleType")
+  @Specialization(guards = "isDoubleType(receiver)")
   public final Object doDoubleSArray(final SArray receiver, final long index,
       final double value) {
     long idx = index - 1;
@@ -237,7 +208,7 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
     return value;
   }
 
-  @Specialization(guards = {"isDoubleType", "valueIsNotDouble"})
+  @Specialization(guards = {"isDoubleType(receiver)", "valueIsNotDouble(value)"})
   public final Object doDoubleSArray(final SArray receiver, final long index,
       final Object value) {
     long idx = index - 1;
@@ -253,7 +224,7 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
     return value;
   }
 
-  @Specialization(guards = "isBooleanType")
+  @Specialization(guards = "isBooleanType(receiver)")
   public final Object doBooleanSArray(final SArray receiver, final long index,
       final boolean value) {
     long idx = index - 1;
@@ -261,7 +232,7 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
     return value;
   }
 
-  @Specialization(guards = {"isBooleanType", "valueIsNotBoolean"})
+  @Specialization(guards = {"isBooleanType(receiver)", "valueIsNotBoolean(value)"})
   public final Object doBooleanSArray(final SArray receiver, final long index,
       final Object value) {
     long idx = index - 1;

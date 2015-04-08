@@ -29,11 +29,11 @@ public abstract class AndMessageNode extends BinaryExpressionNode {
     blockValueSend = copy.blockValueSend;
   }
 
-  protected final boolean isSameBlock(final boolean receiver, final SBlock argument) {
+  protected final boolean isSameBlock(final SBlock argument) {
     return argument.getMethod() == blockMethod;
   }
 
-  @Specialization(guards = "isSameBlock")
+  @Specialization(guards = "isSameBlock(argument)")
   public final boolean doAnd(final VirtualFrame frame, final boolean receiver,
       final SBlock argument) {
     if (receiver == false) {
