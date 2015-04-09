@@ -1,5 +1,7 @@
 package som.interpreter.objectstorage;
 
+import java.lang.reflect.Field;
+
 import som.interpreter.TruffleCompiler;
 import som.interpreter.objectstorage.FieldAccessorNode.AbstractReadFieldNode;
 import som.interpreter.objectstorage.FieldAccessorNode.AbstractWriteFieldNode;
@@ -15,11 +17,29 @@ import som.vmobjects.SObject;
 import sun.misc.Unsafe;
 
 import com.oracle.truffle.api.CompilerAsserts;
-import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
+import com.oracle.truffle.api.unsafe.UnsafeAccess;
+import com.oracle.truffle.api.unsafe.UnsafeAccessFactory;
 
 
 public abstract class StorageLocation {
+  private static Unsafe loadUnsafe() {
+    try {
+        return Unsafe.getUnsafe();
+    } catch (SecurityException e) {
+    }
+    try {
+        Field theUnsafeInstance = Unsafe.class.getDeclaredField("theUnsafe");
+        theUnsafeInstance.setAccessible(true);
+        return (Unsafe) theUnsafeInstance.get(Unsafe.class);
+    } catch (Exception e) {
+        throw new RuntimeException("exception while trying to get Unsafe.theUnsafe via reflection:", e);
+    }
+}
+
+  private static UnsafeAccess ua = Truffle.getRuntime().
+      getCapability(UnsafeAccessFactory.class).createUnsafeAccess(loadUnsafe());
 
   public interface LongStorageLocation {
     long readLong(final SObject obj, boolean assumptionValid) throws UnexpectedResultException;
@@ -165,7 +185,7 @@ public abstract class StorageLocation {
       // TODO: for the moment Graal doesn't seem to get the optimizations
       // right, still need to pass in the correct location identifier,
       // which can probably be `this`.
-      return CompilerDirectives.unsafeGetObject(obj, fieldOffset, assumptionValid, null);
+      return ua.getObject(obj, fieldOffset, assumptionValid, null);
     }
 
     @Override
@@ -174,7 +194,7 @@ public abstract class StorageLocation {
 
       // TODO: for the moment Graal doesn't seem to get the optimizations
       // right, still need to pass in the correct location identifier, which can probably be `this`.
-      CompilerDirectives.unsafePutObject(obj, fieldOffset, value, null);
+      ua.putObject(obj, fieldOffset, value, null);
     }
   }
 
@@ -266,7 +286,7 @@ public abstract class StorageLocation {
       if (isSet(obj, assumptionValid)) {
         // TODO: for the moment Graal doesn't seem to get the optimizations
         // right, still need to pass in the correct location identifier, which can probably be `this`.
-        return CompilerDirectives.unsafeGetDouble(obj, offset, assumptionValid, null);
+        return ua.getDouble(obj, offset, assumptionValid, null);
       } else {
         CompilerAsserts.neverPartOfCompilation("StorageLocation");
         TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized read node");
@@ -289,7 +309,7 @@ public abstract class StorageLocation {
 
     @Override
     public void writeDouble(final SObject obj, final double value) {
-      CompilerDirectives.unsafePutDouble(obj, offset, value, null);
+      ua.putDouble(obj, offset, value, null);
       markAsSet(obj);
     }
 
@@ -330,7 +350,7 @@ public abstract class StorageLocation {
       if (isSet(obj, assumptionValid)) {
         // TODO: for the moment Graal doesn't seem to get the optimizations
         // right, still need to pass in the correct location identifier
-        return CompilerDirectives.unsafeGetLong(obj, offset, assumptionValid, null);
+        return ua.getLong(obj, offset, assumptionValid, null);
       } else {
         CompilerAsserts.neverPartOfCompilation("StorageLocation");
         TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized read node");
@@ -352,7 +372,7 @@ public abstract class StorageLocation {
 
     @Override
     public void writeLong(final SObject obj, final long value) {
-      CompilerDirectives.unsafePutLong(obj, offset, value, null);
+      ua.putLong(obj, offset, value, null);
       markAsSet(obj);
     }
 
@@ -466,7 +486,7 @@ public abstract class StorageLocation {
         long[] arr = obj.getExtendedPrimFields();
         // TODO: for the moment Graal doesn't seem to get the optimizations
         // right, still need to pass in the correct location identifier, which can probably be `this`.
-        return CompilerDirectives.unsafeGetDouble(arr,
+        return ua.getDouble(arr,
             Unsafe.ARRAY_DOUBLE_BASE_OFFSET + Unsafe.ARRAY_DOUBLE_INDEX_SCALE * extensionIndex,
             true, null);
       } else {
@@ -495,7 +515,7 @@ public abstract class StorageLocation {
 
       // TODO: for the moment Graal doesn't seem to get the optimizations
       // right, still need to pass in the correct location identifier, which can probably be `this`.
-      CompilerDirectives.unsafePutDouble(arr,
+      ua.putDouble(arr,
           Unsafe.ARRAY_DOUBLE_BASE_OFFSET + Unsafe.ARRAY_DOUBLE_INDEX_SCALE * this.extensionIndex,
           value, null);
 
