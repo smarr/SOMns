@@ -38,7 +38,7 @@ public abstract class StorageLocation {
     }
 }
 
-  private static UnsafeAccess ua = Truffle.getRuntime().
+  private static final UnsafeAccess ua = Truffle.getRuntime().
       getCapability(UnsafeAccessFactory.class).createUnsafeAccess(loadUnsafe());
 
   public interface LongStorageLocation {
