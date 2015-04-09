@@ -26,7 +26,6 @@ import som.interpreter.Types;
 
 import com.oracle.truffle.api.dsl.TypeSystemReference;
 import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.nodes.NodeUtil;
 import com.oracle.truffle.api.source.SourceSection;
 
 @TypeSystemReference(Types.class)
@@ -48,8 +47,4 @@ public abstract class SOMNode extends Node {
    */
   public abstract ExpressionNode getFirstMethodBodyNode();
 
-  @Override
-  public String toString() {
-      return NodeUtil.printTreeToString(this);
-  }
 }
