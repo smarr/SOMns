@@ -28,14 +28,17 @@ import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.source.SourceSection;
+import com.oracle.truffle.api.utilities.ValueProfile;
 
 public abstract class ContextualNode extends ExpressionNode {
 
   protected final int contextLevel;
+  private final ValueProfile frameType;
 
   public ContextualNode(final int contextLevel, final SourceSection source) {
     super(source);
     this.contextLevel = contextLevel;
+    this.frameType = ValueProfile.createClassProfile();
   }
 
   public final int getContextLevel() {
@@ -55,6 +58,9 @@ public abstract class ContextualNode extends ExpressionNode {
       self = (SBlock) self.getOuterSelf();
       i--;
     }
-    return self.getContext();
+
+    // Graal needs help here to see that this is always a MaterializedFrame
+    // so, we record explicitly a class profile
+    return frameType.profile(self.getContext());
   }
 }
