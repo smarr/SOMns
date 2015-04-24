@@ -186,7 +186,8 @@ public final class MethodGenerationContext {
 
     Method truffleMethod =
         new Method(getSourceSectionForMethod(sourceSection),
-            frameDescriptor, body, getLexicalContext());
+            frameDescriptor, body, getLexicalContext(),
+            (ExpressionNode) body.deepCopy());
 
     setOuterMethodInLexicalScopes(truffleMethod);
 

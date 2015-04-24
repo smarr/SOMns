@@ -14,8 +14,9 @@ import com.oracle.truffle.api.nodes.Node;
 public final class Primitive extends Invokable {
 
   public Primitive(final ExpressionNode primitive,
-      final FrameDescriptor frameDescriptor) {
-    super(null, frameDescriptor, primitive);
+      final FrameDescriptor frameDescriptor,
+      final ExpressionNode uninitialized) {
+    super(null, frameDescriptor, primitive, uninitialized);
   }
 
   @Override
@@ -23,9 +24,9 @@ public final class Primitive extends Invokable {
     FrameDescriptor inlinedFrameDescriptor = getFrameDescriptor().copy();
     LexicalContext  inlinedContext = new LexicalContext(inlinedFrameDescriptor,
         outerContext);
-    ExpressionNode  inlinedBody = Inliner.doInline(getUninitializedBody(),
+    ExpressionNode  inlinedBody = Inliner.doInline(uninitializedBody,
         inlinedContext);
-    return new Primitive(inlinedBody, inlinedFrameDescriptor);
+    return new Primitive(inlinedBody, inlinedFrameDescriptor, uninitializedBody);
   }
 
   @Override
