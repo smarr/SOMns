@@ -1,8 +1,6 @@
 package som.interpreter.nodes.specialized.whileloops;
 
 import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.interpreter.nodes.specialized.whileloops.WhileCache.AbstractWhileDispatch;
-import som.interpreter.nodes.specialized.whileloops.WhileCacheFactory.AbstractWhileDispatchNodeGen;
 import som.vmobjects.SBlock;
 import som.vmobjects.SObject;
 
@@ -14,12 +12,12 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 @GenerateNodeFactory
 public abstract class WhilePrimitiveNode extends BinaryExpressionNode {
   final boolean predicateBool;
-  @Child protected AbstractWhileDispatch whileNode;
+  @Child protected WhileCache whileNode;
 
   protected WhilePrimitiveNode(final boolean predicateBool) {
     super(null);
     this.predicateBool = predicateBool;
-    this.whileNode = AbstractWhileDispatchNodeGen.create(predicateBool, null, null);
+    this.whileNode = WhileCacheNodeGen.create(predicateBool, null, null);
   }
 
   protected WhilePrimitiveNode(final WhilePrimitiveNode node) {
