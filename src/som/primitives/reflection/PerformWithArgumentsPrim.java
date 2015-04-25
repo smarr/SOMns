@@ -1,6 +1,5 @@
 package som.primitives.reflection;
 
-import som.interpreter.nodes.dispatch.DispatchChain.Cost;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.vmobjects.SArray;
 import som.vmobjects.SSymbol;
@@ -17,7 +16,7 @@ public abstract class PerformWithArgumentsPrim extends TernaryExpressionNode {
   @Child protected AbstractSymbolDispatch dispatch;
 
   public PerformWithArgumentsPrim() {
-    dispatch = AbstractSymbolDispatch.create();
+    dispatch = AbstractSymbolDispatchNodeGen.create();
   }
 
   @Specialization
@@ -28,6 +27,6 @@ public abstract class PerformWithArgumentsPrim extends TernaryExpressionNode {
 
   @Override
   public NodeCost getCost() {
-    return Cost.getCost(dispatch);
+    return dispatch.getCost();
   }
 }
