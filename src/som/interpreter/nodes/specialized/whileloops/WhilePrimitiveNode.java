@@ -2,6 +2,7 @@ package som.interpreter.nodes.specialized.whileloops;
 
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.specialized.whileloops.WhileCache.AbstractWhileDispatch;
+import som.interpreter.nodes.specialized.whileloops.WhileCacheFactory.AbstractWhileDispatchNodeGen;
 import som.vmobjects.SBlock;
 import som.vmobjects.SObject;
 
@@ -18,7 +19,7 @@ public abstract class WhilePrimitiveNode extends BinaryExpressionNode {
   protected WhilePrimitiveNode(final boolean predicateBool) {
     super(null);
     this.predicateBool = predicateBool;
-    this.whileNode = WhileCache.create(predicateBool);
+    this.whileNode = AbstractWhileDispatchNodeGen.create(predicateBool, null, null);
   }
 
   protected WhilePrimitiveNode(final WhilePrimitiveNode node) {
@@ -28,7 +29,7 @@ public abstract class WhilePrimitiveNode extends BinaryExpressionNode {
   @Specialization
   protected SObject doWhileConditionally(final VirtualFrame frame,
       final SBlock loopCondition, final SBlock loopBody) {
-    return whileNode.executeDispatch(frame, loopCondition, loopBody);
+    return (SObject) whileNode.executeEvaluated(frame, loopCondition, loopBody);
   }
 
   public abstract static class WhileTruePrimitiveNode extends WhilePrimitiveNode {
