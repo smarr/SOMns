@@ -7,7 +7,7 @@
     <property name="build.dir"   value="build"/>
     <property name="classes.dir" value="${build.dir}/classes"/>
     
-    <property name="truffle.libs" value="http://stefan-marr.de/downloads/truffle/latest"/>
+    <property name="truffle.libs" value="http://stefan-marr.de/downloads/truffle"/>
 
     <path id="project.classpath">
         <pathelement location="${classes.dir}" />
@@ -37,10 +37,14 @@
     
     
     <target name="libs" depends="core-lib">
+        <exec executable="sh" outputproperty="truffle.version">
+            <arg value="-c"/>
+            <arg value="cat .graal-git-rev | tail -1 | cut -c12-19"/>
+        </exec>
 		<mkdir dir="${lib.dir}" />
-		<get src="${truffle.libs}/truffle.jar" usetimestamp="true"
+		<get src="${truffle.libs}/${truffle.version}/truffle.jar" usetimestamp="true"
             dest="${lib.dir}/truffle.jar"/>
-	    <get src="${truffle.libs}/truffle-dsl-processor.jar"
+	    <get src="${truffle.libs}/${truffle.version}/truffle-dsl-processor.jar"
             usetimestamp="true"
             dest="${lib.dir}/truffle-dsl-processor.jar"/>
         <get src="http://kuiper.mirrorservice.org/sites/downloads.sourceforge.net/j/ju/junit/junit/4.8.1/junit-4.8.1.jar"
