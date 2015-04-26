@@ -1,6 +1,6 @@
 package som.interpreter.nodes.literals;
 
-import som.interpreter.Inliner;
+import som.interpreter.SplitterForLexicallyEmbeddedCode;
 import som.interpreter.Invokable;
 import som.vm.Universe;
 import som.vmobjects.SBlock;
@@ -31,12 +31,12 @@ public class BlockNode extends LiteralNode {
   }
 
   @Override
-  public void replaceWithIndependentCopyForInlining(final Inliner inliner) {
+  public void replaceWithIndependentCopyForInlining(final SplitterForLexicallyEmbeddedCode inliner) {
     SMethod forInlining = (SMethod) cloneMethod(inliner);
     replace(new BlockNode(forInlining, getSourceSection()));
   }
 
-  protected SInvokable cloneMethod(final Inliner inliner) {
+  protected SInvokable cloneMethod(final SplitterForLexicallyEmbeddedCode inliner) {
     Invokable clonedInvokable = blockMethod.getInvokable().
         cloneWithNewLexicalContext(inliner.getLexicalContext());
     SInvokable forInlining = Universe.newMethod(blockMethod.getSignature(),
@@ -61,7 +61,7 @@ public class BlockNode extends LiteralNode {
     }
 
     @Override
-    public void replaceWithIndependentCopyForInlining(final Inliner inliner) {
+    public void replaceWithIndependentCopyForInlining(final SplitterForLexicallyEmbeddedCode inliner) {
       SMethod forInlining = (SMethod) cloneMethod(inliner);
       replace(new BlockNodeWithContext(forInlining, getSourceSection()));
     }

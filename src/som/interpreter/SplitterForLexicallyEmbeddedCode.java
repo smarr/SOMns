@@ -10,7 +10,7 @@ import com.oracle.truffle.api.nodes.NodeUtil;
 import com.oracle.truffle.api.nodes.NodeVisitor;
 
 
-public final class Inliner implements NodeVisitor {
+public final class SplitterForLexicallyEmbeddedCode implements NodeVisitor {
 
   private static class DummyParent extends SOMNode {
     public DummyParent() { super(null); }
@@ -31,7 +31,7 @@ public final class Inliner implements NodeVisitor {
     DummyParent dummyParent = new DummyParent();
     dummyParent.adopt(inlinedBody);
 
-    inlinedBody.accept(new Inliner(inlinedContext));
+    inlinedBody.accept(new SplitterForLexicallyEmbeddedCode(inlinedContext));
 
     // need to return the child of the dummy parent,
     // since the inlinedBody could have been replaced
@@ -40,7 +40,7 @@ public final class Inliner implements NodeVisitor {
 
   private final LexicalContext inlinedContext;
 
-  private Inliner(final LexicalContext inlinedContext) {
+  private SplitterForLexicallyEmbeddedCode(final LexicalContext inlinedContext) {
     this.inlinedContext = inlinedContext;
   }
 

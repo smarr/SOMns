@@ -24,7 +24,7 @@ public final class Primitive extends Invokable {
     FrameDescriptor inlinedFrameDescriptor = getFrameDescriptor().copy();
     LexicalContext  inlinedContext = new LexicalContext(inlinedFrameDescriptor,
         outerContext);
-    ExpressionNode  inlinedBody = Inliner.doInline(uninitializedBody,
+    ExpressionNode  inlinedBody = SplitterForLexicallyEmbeddedCode.doInline(uninitializedBody,
         inlinedContext);
     return new Primitive(inlinedBody, inlinedFrameDescriptor, uninitializedBody);
   }

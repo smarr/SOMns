@@ -2,7 +2,7 @@ package som.interpreter.nodes;
 
 import static som.interpreter.TruffleCompiler.transferToInterpreter;
 import som.compiler.Variable.Local;
-import som.interpreter.Inliner;
+import som.interpreter.SplitterForLexicallyEmbeddedCode;
 import som.vm.constants.Nil;
 import som.vmobjects.SObject;
 
@@ -171,7 +171,7 @@ public abstract class LocalVariableNode extends ExpressionNode {
     }
 
     @Override
-    public final void replaceWithIndependentCopyForInlining(final Inliner inliner) {
+    public final void replaceWithIndependentCopyForInlining(final SplitterForLexicallyEmbeddedCode inliner) {
       CompilerAsserts.neverPartOfCompilation("replaceWithIndependentCopyForInlining");
       throw new RuntimeException("Should not be part of an uninitalized tree. And this should only be done with uninitialized trees.");
     }

@@ -2,7 +2,7 @@ package som.interpreter.nodes;
 
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
 import som.compiler.Variable.Local;
-import som.interpreter.Inliner;
+import som.interpreter.SplitterForLexicallyEmbeddedCode;
 import som.interpreter.nodes.LocalVariableNode.LocalVariableReadNode;
 import som.interpreter.nodes.LocalVariableNode.LocalVariableWriteNode;
 import som.interpreter.nodes.LocalVariableNodeFactory.LocalVariableReadNodeGen;
@@ -54,7 +54,7 @@ public abstract class UninitializedVariableNode extends ContextualNode {
     }
 
     @Override
-    public void replaceWithIndependentCopyForInlining(final Inliner inliner) {
+    public void replaceWithIndependentCopyForInlining(final SplitterForLexicallyEmbeddedCode inliner) {
       FrameSlot varSlot = inliner.getFrameSlot(this, variable.getSlotIdentifier());
       assert varSlot != null;
       replace(new UninitializedVariableReadNode(this, varSlot));
@@ -94,7 +94,7 @@ public abstract class UninitializedVariableNode extends ContextualNode {
     }
 
     @Override
-    public void replaceWithIndependentCopyForInlining(final Inliner inliner) {
+    public void replaceWithIndependentCopyForInlining(final SplitterForLexicallyEmbeddedCode inliner) {
       FrameSlot varSlot = inliner.getFrameSlot(this, variable.getSlotIdentifier());
       assert varSlot != null;
       replace(new UninitializedVariableWriteNode(this, varSlot));

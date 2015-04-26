@@ -22,7 +22,7 @@
 package som.interpreter.nodes;
 
 import som.interpreter.FrameOnStackMarker;
-import som.interpreter.Inliner;
+import som.interpreter.SplitterForLexicallyEmbeddedCode;
 import som.interpreter.ReturnException;
 import som.interpreter.SArguments;
 import som.vmobjects.SAbstractObject;
@@ -80,7 +80,7 @@ public final class ReturnNonLocalNode extends ContextualNode {
   }
 
   @Override
-  public void replaceWithIndependentCopyForInlining(final Inliner inliner) {
+  public void replaceWithIndependentCopyForInlining(final SplitterForLexicallyEmbeddedCode inliner) {
     FrameSlot inlinedFrameOnStack  = inliner.getFrameSlot(this, frameOnStackMarker.getIdentifier());
     assert inlinedFrameOnStack  != null;
     replace(new ReturnNonLocalNode(this, inlinedFrameOnStack));
@@ -133,7 +133,7 @@ public final class ReturnNonLocalNode extends ContextualNode {
     }
 
     @Override
-    public void replaceWithIndependentCopyForInlining(final Inliner inliner) {
+    public void replaceWithIndependentCopyForInlining(final SplitterForLexicallyEmbeddedCode inliner) {
       FrameSlot inlinedFrameOnStackMarker = inliner.getLocalFrameSlot(frameOnStackMarker.getIdentifier());
       assert inlinedFrameOnStackMarker != null;
       replace(new CatchNonLocalReturnNode(methodBody, inlinedFrameOnStackMarker));

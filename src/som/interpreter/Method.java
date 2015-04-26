@@ -53,7 +53,7 @@ public final class Method extends Invokable {
     FrameDescriptor inlinedFrameDescriptor = getFrameDescriptor().copy();
     LexicalContext  inlinedContext = new LexicalContext(inlinedFrameDescriptor,
         outerContext);
-    ExpressionNode  inlinedBody = Inliner.doInline(uninitializedBody,
+    ExpressionNode  inlinedBody = SplitterForLexicallyEmbeddedCode.doInline(uninitializedBody,
         inlinedContext);
     Method clone = new Method(getSourceSection(), inlinedFrameDescriptor,
         inlinedBody, outerContext, uninitializedBody);
