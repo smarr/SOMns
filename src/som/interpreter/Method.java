@@ -51,13 +51,13 @@ public final class Method extends Invokable {
   @Override
   public Invokable cloneWithNewLexicalContext(final LexicalContext outerContext) {
     FrameDescriptor inlinedFrameDescriptor = getFrameDescriptor().copy();
-    LexicalContext  inlinedContext = new LexicalContext(inlinedFrameDescriptor,
+    LexicalContext  inlinedCurrentContext = new LexicalContext(inlinedFrameDescriptor,
         outerContext);
     ExpressionNode  inlinedBody = SplitterForLexicallyEmbeddedCode.doInline(uninitializedBody,
-        inlinedContext);
+        inlinedCurrentContext);
     Method clone = new Method(getSourceSection(), inlinedFrameDescriptor,
         inlinedBody, outerContext, uninitializedBody);
-    inlinedContext.setOuterMethod(clone);
+    inlinedCurrentContext.setOuterMethod(clone);
     return clone;
   }
 

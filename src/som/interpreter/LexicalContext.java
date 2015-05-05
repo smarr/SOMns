@@ -21,6 +21,7 @@ public final class LexicalContext {
   }
 
   public LexicalContext getOuterContext() {
+    assert lexicalContext != null;
     return lexicalContext;
   }
 

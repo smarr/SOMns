@@ -21,6 +21,7 @@ public final class Primitive extends Invokable {
 
   @Override
   public Invokable cloneWithNewLexicalContext(final LexicalContext outerContext) {
+    assert outerContext == null;
     FrameDescriptor inlinedFrameDescriptor = getFrameDescriptor().copy();
     LexicalContext  inlinedContext = new LexicalContext(inlinedFrameDescriptor,
         outerContext);
