@@ -66,7 +66,7 @@ public final class MethodGenerationContext {
   private SSymbol signature;
   private boolean primitive;
   private boolean needsToCatchNonLocalReturn;
-  private boolean throwsNonLocalReturn;
+  private boolean throwsNonLocalReturn;       // does directly or indirectly a non-local return
 
   private boolean accessesVariablesOfOuterContext;
 
@@ -136,7 +136,7 @@ public final class MethodGenerationContext {
   public void makeCatchNonLocalReturn() {
     throwsNonLocalReturn = true;
 
-    MethodGenerationContext ctx = getOuterContext();
+    MethodGenerationContext ctx = markOuterContextsToRequireContextAndGetRootContext();
     assert ctx != null;
     ctx.needsToCatchNonLocalReturn = true;
   }
@@ -145,9 +145,10 @@ public final class MethodGenerationContext {
     return throwsNonLocalReturn || accessesVariablesOfOuterContext;
   }
 
-  private MethodGenerationContext getOuterContext() {
+  private MethodGenerationContext markOuterContextsToRequireContextAndGetRootContext() {
     MethodGenerationContext ctx = outerGenc;
     while (ctx.outerGenc != null) {
+      ctx.throwsNonLocalReturn = true;
       ctx = ctx.outerGenc;
     }
     return ctx;
