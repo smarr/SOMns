@@ -8,13 +8,13 @@ ParseException = (
     column := aColumn.
   )
   
-  message = ( ^ message )
+  message = ( ^ msg )
   
   offset = ( ^ offset )
   line   = ( ^ line   )
   column = ( ^ column )
   
-  asString = ( ^ message + ':' + line + ':' + column )
+  asString = ( ^ msg + ':' + line + ':' + column )
   
   ----
 
