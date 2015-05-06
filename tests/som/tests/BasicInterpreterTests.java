@@ -84,6 +84,10 @@ public class BasicInterpreterTests {
         {"BlockInlining", "testOneLevelInlining",                     1, Long.class },
         {"BlockInlining", "testOneLevelInliningWithLocalShadowTrue",  2, Long.class },
         {"BlockInlining", "testOneLevelInliningWithLocalShadowFalse", 1, Long.class },
+
+        {"BlockInlining", "testBlockNestedInIfTrue",                  2, Long.class },
+        {"BlockInlining", "testBlockNestedInIfFalse",                42, Long.class },
+
         {"BlockInlining", "testDeepNestedInlinedIfTrue",              3, Long.class },
         {"BlockInlining", "testDeepNestedInlinedIfFalse",            42, Long.class },
 
