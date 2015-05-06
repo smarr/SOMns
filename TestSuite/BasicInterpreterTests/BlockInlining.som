@@ -71,6 +71,22 @@ BlockInlining = (
     testDeepNestedInlinedIfTrue  = ( ^ self deepNestedInlinedIf: true  )
     testDeepNestedInlinedIfFalse = ( ^ self deepNestedInlinedIf: false )
     
+    blockNestedInIf: bool = (
+      | a |
+      a := 1.
+      bool ifTrue: [
+        | block |
+        block := [ a := a + 1 ].
+        block value
+      ] ifFalse: [
+        a := 42.
+      ].
+      ^ a
+    )
+    
+    testBlockNestedInIfTrue  = ( ^ self blockNestedInIf: true  )
+    testBlockNestedInIfFalse = ( ^ self blockNestedInIf: false )
+    
     deepNestedBlocksInInlinedIf: bool = (
       | block a block2 block3 |
       a := 1.
