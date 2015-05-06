@@ -93,13 +93,12 @@ public abstract class SBlock extends SAbstractObject {
     return method;
   }
 
-  public final  MaterializedFrame getContext() {
+  public final MaterializedFrame getContext() {
     assert context != null;
     return context;
   }
 
   public final Object getOuterSelf() {
-    assert context != null;
     return SArguments.rcvr(getContext());
   }
 
