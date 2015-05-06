@@ -7,6 +7,7 @@ import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.NodeUtil;
 import com.oracle.truffle.api.nodes.NodeVisitor;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 public class InlinerAdaptToEmbeddedOuterContext implements NodeVisitor {
@@ -68,5 +69,11 @@ public class InlinerAdaptToEmbeddedOuterContext implements NodeVisitor {
       ((SOMNode) node).replaceWithCopyAdaptedToEmbeddedOuterContext(this);
     }
     return true;
+  }
+
+  public ExpressionNode getReplacementForBlockArgument(final int argumentIndex,
+      final SourceSection sourceSection) {
+    return outerInliner.getReplacementForNonLocalArgument(contextLevel,
+        argumentIndex, sourceSection);
   }
 }

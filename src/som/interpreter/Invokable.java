@@ -1,6 +1,7 @@
 package som.interpreter;
 
 import som.compiler.MethodGenerationContext;
+import som.compiler.Variable.Local;
 import som.interpreter.nodes.ExpressionNode;
 
 import com.oracle.truffle.api.RootCallTarget;
@@ -32,9 +33,10 @@ public abstract class Invokable extends RootNode {
 
   public abstract Invokable cloneWithNewLexicalContext(final LexicalContext outerContext);
 
-  public ExpressionNode inline(final MethodGenerationContext mgenc) {
+  public ExpressionNode inline(final MethodGenerationContext mgenc,
+      final Local[] locals) {
     return InlinerForLexicallyEmbeddedMethods.doInline(uninitializedBody, mgenc,
-        getSourceSection().getCharIndex());
+        locals, getSourceSection().getCharIndex());
   }
 
   @Override

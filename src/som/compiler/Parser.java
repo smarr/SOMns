@@ -82,6 +82,7 @@ import som.interpreter.nodes.literals.LiteralNode;
 import som.interpreter.nodes.literals.StringLiteralNode;
 import som.interpreter.nodes.literals.SymbolLiteralNode;
 import som.interpreter.nodes.specialized.IfTrueIfFalseInlinedLiteralsNode;
+import som.interpreter.nodes.specialized.IntToDoInlinedLiteralsNodeGen;
 import som.vm.Universe;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable.SMethod;
@@ -654,17 +655,25 @@ public final class Parser {
 
     SSymbol msg = universe.symbolFor(kw.toString());
 
+    SourceSection source = getSource(coord);
+
     if ("ifTrue:ifFalse:".equals(msg.getString()) &&
         arguments.get(1) instanceof LiteralNode && arguments.get(2) instanceof LiteralNode) {
       ExpressionNode inlinedTrueNode  = ((LiteralNode) arguments.get(1)).inline(mgenc);
       ExpressionNode inlinedFalseNode = ((LiteralNode) arguments.get(2)).inline(mgenc);
       return new IfTrueIfFalseInlinedLiteralsNode(arguments.get(0),
           inlinedTrueNode, inlinedFalseNode, arguments.get(1), arguments.get(2),
-          getSource(coord));
+          source);
+    } else if ("to:do:".equals(msg.getString()) &&
+        arguments.get(2) instanceof LiteralNode) {
+      Local loopIdx = mgenc.addLocal("i:" + source.getCharIndex());
+      ExpressionNode inlinedBody = ((LiteralNode) arguments.get(2)).inline(mgenc, loopIdx);
+      return IntToDoInlinedLiteralsNodeGen.create(inlinedBody, loopIdx.getSlot(),
+          arguments.get(2), source, arguments.get(0), arguments.get(1));
     }
 
     return createMessageSend(msg, arguments.toArray(new ExpressionNode[0]),
-        getSource(coord));
+        source);
   }
 
   private ExpressionNode formula(final MethodGenerationContext mgenc) throws ParseError {

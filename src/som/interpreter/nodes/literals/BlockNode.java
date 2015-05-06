@@ -1,6 +1,7 @@
 package som.interpreter.nodes.literals;
 
 import som.compiler.MethodGenerationContext;
+import som.compiler.Variable.Local;
 import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
 import som.interpreter.InlinerForLexicallyEmbeddedMethods;
 import som.interpreter.Invokable;
@@ -69,10 +70,11 @@ public class BlockNode extends LiteralNode {
   }
 
   @Override
-  public ExpressionNode inline(final MethodGenerationContext mgenc) {
-    // TODO: currently, we don't support other kinds of blocks
-    assert blockMethod.getNumberOfArguments() == 1;
-    return blockMethod.getInvokable().inline(mgenc);
+  public ExpressionNode inline(final MethodGenerationContext mgenc,
+      final Local... blockArguments) {
+    // self doesn't need to be passed
+    assert blockMethod.getNumberOfArguments() - 1 == blockArguments.length;
+    return blockMethod.getInvokable().inline(mgenc, blockArguments);
   }
 
   public static final class BlockNodeWithContext extends BlockNode {

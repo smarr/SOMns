@@ -96,7 +96,7 @@ public final class Method extends Invokable {
   public void propagateLoopCountThroughoutLexicalScope(final long count) {
     assert count >= 0;
 
-    if (outerContext != null) {
+    if (outerContext != null && outerContext.getOuterMethod() != null) {
       outerContext.getOuterMethod().propagateLoopCountThroughoutLexicalScope(count);
     }
     reportLoopCount((count > Integer.MAX_VALUE) ? Integer.MAX_VALUE : (int) count);

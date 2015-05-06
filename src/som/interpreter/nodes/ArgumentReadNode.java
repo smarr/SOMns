@@ -23,6 +23,13 @@ public abstract class ArgumentReadNode {
     public final Object executeGeneric(final VirtualFrame frame) {
       return SArguments.arg(frame, argumentIndex);
     }
+
+    @Override
+    public void replaceWithLexicallyEmbeddedNode(
+        final InlinerForLexicallyEmbeddedMethods inliner) {
+      replace(inliner.getReplacementForLocalArgument(argumentIndex,
+          getSourceSection()));
+    }
   }
 
   public static class NonLocalArgumentReadNode extends ContextualNode {
@@ -42,7 +49,7 @@ public abstract class ArgumentReadNode {
 
     @Override
     public void replaceWithLexicallyEmbeddedNode(
-        final InlinerForLexicallyEmbeddedMethods inlinerForLexicallyEmbeddedMethods) {
+        final InlinerForLexicallyEmbeddedMethods inliner) {
       ExpressionNode inlined;
       if (contextLevel == 1) {
         inlined = createLocalNode();
@@ -64,12 +71,14 @@ public abstract class ArgumentReadNode {
     @Override
     public void replaceWithCopyAdaptedToEmbeddedOuterContext(
         final InlinerAdaptToEmbeddedOuterContext inliner) {
-      // currently, we should not inline any blocks that have arguments, so,
-      // this case should not be happening
-      assert !inliner.appliesTo(contextLevel);
-
-      // and, in the other cases, we just need to adjust the context level
-      if (inliner.needToAdjustLevel(contextLevel)) {
+      // this should be the access to a block argument
+      if (inliner.appliesTo(contextLevel)) {
+        assert !(this instanceof NonLocalSuperReadNode);
+        ExpressionNode node = inliner.getReplacementForBlockArgument(argumentIndex, getSourceSection());
+        replace(node);
+        return;
+      } else if (inliner.needToAdjustLevel(contextLevel)) {
+        // in the other cases, we just need to adjust the context level
         NonLocalArgumentReadNode node = createNonLocalNode();
         replace(node);
         return;

@@ -248,9 +248,11 @@ public final class MethodGenerationContext {
     addLocal(local);
   }
 
-  private void addLocal(final String local) {
+  public Local addLocal(final String local) {
     Local l = new Local(local, frameDescriptor.addFrameSlot(local));
+    assert !locals.containsKey(local);
     locals.put(local, l);
+    return l;
   }
 
   public boolean isBlockMethod() {

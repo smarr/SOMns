@@ -18,20 +18,23 @@ public class InlinerForLexicallyEmbeddedMethods implements NodeVisitor {
 
   public static ExpressionNode doInline(
       final ExpressionNode body, final MethodGenerationContext mgenc,
+      final Local[] blockArguments,
       final int blockStartIdx) {
     ExpressionNode inlinedBody = NodeUtil.cloneNode(body);
 
     return NodeVisitorUtil.applyVisitor(inlinedBody,
-        new InlinerForLexicallyEmbeddedMethods(mgenc, blockStartIdx));
+        new InlinerForLexicallyEmbeddedMethods(mgenc, blockArguments, blockStartIdx));
   }
 
   private final MethodGenerationContext mgenc;
+  private final Local[] blockArguments;
   private final int blockStartIdx;
   private LexicalContext lexicalContextLazy;
 
   public InlinerForLexicallyEmbeddedMethods(final MethodGenerationContext mgenc,
-      final int blockStartIdx) {
+      final Local[] blockArguments, final int blockStartIdx) {
     this.mgenc = mgenc;
+    this.blockArguments = blockArguments;
     this.blockStartIdx = blockStartIdx;
   }
 
@@ -76,5 +79,16 @@ public class InlinerForLexicallyEmbeddedMethods implements NodeVisitor {
           mgenc.getFrameDescriptor(), mgenc.getLexicalContext());
     }
     return lexicalContextLazy;
+  }
+
+  public ExpressionNode getReplacementForLocalArgument(final int argumentIndex,
+      final SourceSection source) {
+    return blockArguments[argumentIndex - 1].getReadNode(0, source);
+  }
+
+  public ExpressionNode getReplacementForNonLocalArgument(final int contextLevel,
+      final int argumentIndex, final SourceSection source) {
+    assert contextLevel > 0;
+    return blockArguments[argumentIndex - 1].getReadNode(contextLevel, source);
   }
 }
