@@ -68,7 +68,7 @@ public final class Method extends Invokable {
     ExpressionNode uninitAdaptedBody = NodeUtil.cloneNode(adaptedBody);
 
     Method clone = new Method(getSourceSection(), getFrameDescriptor(),
-        adaptedBody, inliner.getOuterContext(), uninitAdaptedBody);
+        adaptedBody, inliner.getLexicalContext(), uninitAdaptedBody);
     return clone;
   }
 

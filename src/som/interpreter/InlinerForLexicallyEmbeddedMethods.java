@@ -27,6 +27,7 @@ public class InlinerForLexicallyEmbeddedMethods implements NodeVisitor {
 
   private final MethodGenerationContext mgenc;
   private final int blockStartIdx;
+  private LexicalContext lexicalContextLazy;
 
   public InlinerForLexicallyEmbeddedMethods(final MethodGenerationContext mgenc,
       final int blockStartIdx) {
@@ -69,7 +70,11 @@ public class InlinerForLexicallyEmbeddedMethods implements NodeVisitor {
         valExp, source);
   }
 
-  public LexicalContext getOuterContext() {
-    return mgenc.getLexicalContext();
+  public LexicalContext getLexicalContext() {
+    if (lexicalContextLazy == null) {
+      lexicalContextLazy = new LexicalContext(
+          mgenc.getFrameDescriptor(), mgenc.getLexicalContext());
+    }
+    return lexicalContextLazy;
   }
 }

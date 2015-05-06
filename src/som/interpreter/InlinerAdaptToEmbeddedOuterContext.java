@@ -47,7 +47,7 @@ public class InlinerAdaptToEmbeddedOuterContext implements NodeVisitor {
   }
 
   public LexicalContext getOuterContext() {
-    return outerInliner.getOuterContext();
+    return outerInliner.getLexicalContext();
   }
 
   /*
