@@ -12,30 +12,13 @@ import com.oracle.truffle.api.nodes.NodeVisitor;
 
 public final class SplitterForLexicallyEmbeddedCode implements NodeVisitor {
 
-  private static class DummyParent extends SOMNode {
-    public DummyParent() { super(null); }
-    @Child  private ExpressionNode child;
-
-    @Override
-    public ExpressionNode getFirstMethodBodyNode() { return null; }
-    public void adopt(final ExpressionNode child) {
-        this.child = insert(child);
-    }
-  }
-
   public static ExpressionNode doInline(
       final ExpressionNode body,
       final LexicalContext inlinedContext) {
     ExpressionNode inlinedBody = NodeUtil.cloneNode(body);
 
-    DummyParent dummyParent = new DummyParent();
-    dummyParent.adopt(inlinedBody);
-
-    inlinedBody.accept(new SplitterForLexicallyEmbeddedCode(inlinedContext));
-
-    // need to return the child of the dummy parent,
-    // since the inlinedBody could have been replaced
-    return dummyParent.child;
+    return NodeVisitorUtil.applyVisitor(inlinedBody,
+        new SplitterForLexicallyEmbeddedCode(inlinedContext));
   }
 
   private final LexicalContext inlinedContext;
