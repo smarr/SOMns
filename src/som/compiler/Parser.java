@@ -81,6 +81,7 @@ import som.interpreter.nodes.literals.IntegerLiteralNode;
 import som.interpreter.nodes.literals.LiteralNode;
 import som.interpreter.nodes.literals.StringLiteralNode;
 import som.interpreter.nodes.literals.SymbolLiteralNode;
+import som.interpreter.nodes.specialized.IfTrueIfFalseInlinedLiteralsNode;
 import som.vm.Universe;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable.SMethod;
@@ -575,9 +576,9 @@ public final class Parser {
     return identifier();
   }
 
-  private AbstractMessageSendNode messages(final MethodGenerationContext mgenc,
+  private ExpressionNode messages(final MethodGenerationContext mgenc,
       final ExpressionNode receiver) throws ParseError {
-    AbstractMessageSendNode msg;
+    ExpressionNode msg;
     if (isIdentifier(sym)) {
       msg = unaryMessage(receiver);
 
@@ -637,7 +638,7 @@ public final class Parser {
     return operand;
   }
 
-  private AbstractMessageSendNode keywordMessage(final MethodGenerationContext mgenc,
+  private ExpressionNode keywordMessage(final MethodGenerationContext mgenc,
       final ExpressionNode receiver) throws ParseError {
     SourceCoordinate coord = getCoordinate();
     List<ExpressionNode> arguments = new ArrayList<ExpressionNode>();
@@ -652,6 +653,15 @@ public final class Parser {
     while (sym == Keyword);
 
     SSymbol msg = universe.symbolFor(kw.toString());
+
+    if ("ifTrue:ifFalse:".equals(msg.getString()) &&
+        arguments.get(1) instanceof LiteralNode && arguments.get(2) instanceof LiteralNode) {
+      ExpressionNode inlinedTrueNode  = ((LiteralNode) arguments.get(1)).inline(mgenc);
+      ExpressionNode inlinedFalseNode = ((LiteralNode) arguments.get(2)).inline(mgenc);
+      return new IfTrueIfFalseInlinedLiteralsNode(arguments.get(0),
+          inlinedTrueNode, inlinedFalseNode, arguments.get(1), arguments.get(2),
+          getSource(coord));
+    }
 
     return createMessageSend(msg, arguments.toArray(new ExpressionNode[0]),
         getSource(coord));

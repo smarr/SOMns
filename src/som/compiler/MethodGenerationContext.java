@@ -283,6 +283,10 @@ public final class MethodGenerationContext {
     return 0;
   }
 
+  public Local getEmbeddedLocal(final String embeddedName) {
+    return locals.get(embeddedName);
+  }
+
   protected Variable getVariable(final String varName) {
     if (locals.containsKey(varName)) {
       return locals.get(varName);

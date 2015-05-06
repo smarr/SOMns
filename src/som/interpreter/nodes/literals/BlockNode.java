@@ -1,10 +1,14 @@
 package som.interpreter.nodes.literals;
 
-import som.interpreter.SplitterForLexicallyEmbeddedCode;
+import som.compiler.MethodGenerationContext;
+import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
+import som.interpreter.InlinerForLexicallyEmbeddedMethods;
 import som.interpreter.Invokable;
+import som.interpreter.Method;
+import som.interpreter.SplitterForLexicallyEmbeddedCode;
+import som.interpreter.nodes.ExpressionNode;
 import som.vm.Universe;
 import som.vmobjects.SBlock;
-import som.vmobjects.SInvokable;
 import som.vmobjects.SInvokable.SMethod;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -32,16 +36,43 @@ public class BlockNode extends LiteralNode {
 
   @Override
   public void replaceWithIndependentCopyForInlining(final SplitterForLexicallyEmbeddedCode inliner) {
-    SMethod forInlining = (SMethod) cloneMethod(inliner);
-    replace(new BlockNode(forInlining, getSourceSection()));
-  }
-
-  protected SInvokable cloneMethod(final SplitterForLexicallyEmbeddedCode inliner) {
     Invokable clonedInvokable = blockMethod.getInvokable().
         cloneWithNewLexicalContext(inliner.getLexicalContext());
-    SInvokable forInlining = Universe.newMethod(blockMethod.getSignature(),
-        clonedInvokable, false, new SMethod[0]);
-    return forInlining;
+    replaceAdapted(clonedInvokable);
+  }
+
+  @Override
+  public void replaceWithLexicallyEmbeddedNode(
+      final InlinerForLexicallyEmbeddedMethods inliner) {
+    Invokable adapted = ((Method) blockMethod.getInvokable()).
+        cloneAndAdaptToEmbeddedOuterContext(inliner);
+    replaceAdapted(adapted);
+  }
+
+  @Override
+  public void replaceWithCopyAdaptedToEmbeddedOuterContext(
+      final InlinerAdaptToEmbeddedOuterContext inliner) {
+    Invokable adapted = ((Method) blockMethod.getInvokable()).
+        cloneAndAdaptToSomeOuterContextBeingEmbedded(inliner);
+    replaceAdapted(adapted);
+  }
+
+  private void replaceAdapted(final Invokable adaptedForContext) {
+    SMethod adapted = (SMethod) Universe.newMethod(
+        blockMethod.getSignature(), adaptedForContext, false,
+        blockMethod.getEmbeddedBlocks());
+    replace(createNode(adapted));
+  }
+
+  protected BlockNode createNode(final SMethod adapted) {
+    return new BlockNode(adapted, getSourceSection());
+  }
+
+  @Override
+  public ExpressionNode inline(final MethodGenerationContext mgenc) {
+    // TODO: currently, we don't support other kinds of blocks
+    assert blockMethod.getNumberOfArguments() == 1;
+    return blockMethod.getInvokable().inline(mgenc);
   }
 
   public static final class BlockNodeWithContext extends BlockNode {
@@ -61,9 +92,8 @@ public class BlockNode extends LiteralNode {
     }
 
     @Override
-    public void replaceWithIndependentCopyForInlining(final SplitterForLexicallyEmbeddedCode inliner) {
-      SMethod forInlining = (SMethod) cloneMethod(inliner);
-      replace(new BlockNodeWithContext(forInlining, getSourceSection()));
+    protected BlockNode createNode(final SMethod adapted) {
+      return new BlockNodeWithContext(adapted, getSourceSection());
     }
   }
 }

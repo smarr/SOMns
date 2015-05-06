@@ -21,6 +21,8 @@
  */
 package som.interpreter.nodes;
 
+import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
+import som.interpreter.InlinerForLexicallyEmbeddedMethods;
 import som.interpreter.SplitterForLexicallyEmbeddedCode;
 import som.interpreter.Types;
 
@@ -36,6 +38,22 @@ public abstract class SOMNode extends Node {
   }
 
   public void replaceWithIndependentCopyForInlining(final SplitterForLexicallyEmbeddedCode inliner) {
+    // do nothing!
+    // only a small subset of nodes needs to implement this method.
+    // Most notably, nodes using FrameSlots, and block nodes with method
+    // nodes.
+  }
+
+  public void replaceWithLexicallyEmbeddedNode(
+      final InlinerForLexicallyEmbeddedMethods inlinerForLexicallyEmbeddedMethods) {
+    // do nothing!
+    // only a small subset of nodes needs to implement this method.
+    // Most notably, nodes using FrameSlots, and block nodes with method
+    // nodes.
+  }
+
+  public void replaceWithCopyAdaptedToEmbeddedOuterContext(
+      final InlinerAdaptToEmbeddedOuterContext inlinerAdaptToEmbeddedOuterContext) {
     // do nothing!
     // only a small subset of nodes needs to implement this method.
     // Most notably, nodes using FrameSlots, and block nodes with method

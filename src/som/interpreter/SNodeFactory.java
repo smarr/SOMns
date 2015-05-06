@@ -114,7 +114,7 @@ public final class SNodeFactory {
     return MessageSendNode.create(msg, exprs, source);
   }
 
-  public static ExpressionNode createMessageSend(final SSymbol msg,
+  public static AbstractMessageSendNode createMessageSend(final SSymbol msg,
       final List<ExpressionNode> exprs, final SourceSection source) {
     return MessageSendNode.create(msg, exprs.toArray(new ExpressionNode[0]), source);
   }

@@ -21,6 +21,8 @@
  */
 package som.interpreter.nodes;
 
+import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
+import som.interpreter.InlinerForLexicallyEmbeddedMethods;
 import som.interpreter.SArguments;
 import som.vmobjects.SBlock;
 
@@ -63,4 +65,12 @@ public abstract class ContextualNode extends ExpressionNode {
     // so, we record explicitly a class profile
     return frameType.profile(self.getContext());
   }
+
+  @Override
+  public abstract void replaceWithLexicallyEmbeddedNode(
+      final InlinerForLexicallyEmbeddedMethods inlinerForLexicallyEmbeddedMethods);
+
+  @Override
+  public abstract void replaceWithCopyAdaptedToEmbeddedOuterContext(
+      final InlinerAdaptToEmbeddedOuterContext inlinerAdaptToEmbeddedOuterContext);
 }

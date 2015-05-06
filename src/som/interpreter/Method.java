@@ -25,6 +25,7 @@ import som.interpreter.nodes.ExpressionNode;
 
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.nodes.NodeUtil;
 import com.oracle.truffle.api.source.SourceSection;
 
 
@@ -60,6 +61,27 @@ public final class Method extends Invokable {
     inlinedCurrentContext.setOuterMethod(clone);
     return clone;
   }
+
+  public Invokable cloneAndAdaptToEmbeddedOuterContext(
+      final InlinerForLexicallyEmbeddedMethods inliner) {
+    ExpressionNode adaptedBody = InlinerAdaptToEmbeddedOuterContext.doInline(uninitializedBody, inliner);
+    ExpressionNode uninitAdaptedBody = NodeUtil.cloneNode(adaptedBody);
+
+    Method clone = new Method(getSourceSection(), getFrameDescriptor(),
+        adaptedBody, inliner.getOuterContext(), uninitAdaptedBody);
+    return clone;
+  }
+
+  public Invokable cloneAndAdaptToSomeOuterContextBeingEmbedded(
+      final InlinerAdaptToEmbeddedOuterContext inliner) {
+    ExpressionNode adaptedBody = InlinerAdaptToEmbeddedOuterContext.doInline(uninitializedBody, inliner);
+    ExpressionNode uninitAdaptedBody = NodeUtil.cloneNode(adaptedBody);
+
+    Method clone = new Method(getSourceSection(), getFrameDescriptor(),
+        adaptedBody, inliner.getOuterContext(), uninitAdaptedBody);
+    return clone;
+  }
+
 
   @Override
   public boolean isBlock() {

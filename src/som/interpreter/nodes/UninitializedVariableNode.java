@@ -2,6 +2,8 @@ package som.interpreter.nodes;
 
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
 import som.compiler.Variable.Local;
+import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
+import som.interpreter.InlinerForLexicallyEmbeddedMethods;
 import som.interpreter.SplitterForLexicallyEmbeddedCode;
 import som.interpreter.nodes.LocalVariableNode.LocalVariableReadNode;
 import som.interpreter.nodes.LocalVariableNode.LocalVariableWriteNode;
@@ -59,6 +61,41 @@ public abstract class UninitializedVariableNode extends ContextualNode {
       assert varSlot != null;
       replace(new UninitializedVariableReadNode(this, varSlot));
     }
+
+    @Override
+    public void replaceWithLexicallyEmbeddedNode(
+        final InlinerForLexicallyEmbeddedMethods inliner) {
+      UninitializedVariableReadNode inlined;
+
+      if (contextLevel == 0) {
+        // might need to add new frame slot in outer method
+        inlined = inliner.getLocalRead(variable.getSlotIdentifier(),
+            getSourceSection());
+      } else {
+        inlined = new UninitializedVariableReadNode(variable, contextLevel - 1,
+            getSourceSection());
+      }
+      replace(inlined);
+    }
+
+    @Override
+    public void replaceWithCopyAdaptedToEmbeddedOuterContext(
+        final InlinerAdaptToEmbeddedOuterContext inliner) {
+      // if the context level is 1, the variable is in the outer context,
+      // which just got inlined, so, we need to adapt the slot id
+      UninitializedVariableReadNode node;
+      if (inliner.appliesTo(contextLevel)) {
+        node = new UninitializedVariableReadNode(this,
+            inliner.getOuterSlot(variable.getSlotIdentifier()));
+        replace(node);
+        return;
+      } else if (inliner.needToAdjustLevel(contextLevel)) {
+        node = new UninitializedVariableReadNode(variable, contextLevel - 1,
+            getSourceSection());
+        replace(node);
+        return;
+      }
+    }
   }
 
   public static final class UninitializedVariableWriteNode extends UninitializedVariableNode {
@@ -98,6 +135,41 @@ public abstract class UninitializedVariableNode extends ContextualNode {
       FrameSlot varSlot = inliner.getFrameSlot(this, variable.getSlotIdentifier());
       assert varSlot != null;
       replace(new UninitializedVariableWriteNode(this, varSlot));
+    }
+
+    @Override
+    public void replaceWithCopyAdaptedToEmbeddedOuterContext(
+        final InlinerAdaptToEmbeddedOuterContext inliner) {
+      // if the context level is 1, the variable is in the outer context,
+      // which just got inlined, so, we need to adapt the slot id
+      UninitializedVariableWriteNode node;
+      if (inliner.appliesTo(contextLevel)) {
+        node = new UninitializedVariableWriteNode(this,
+            inliner.getOuterSlot(variable.getSlotIdentifier()));
+        replace(node);
+        return;
+      } else if (inliner.needToAdjustLevel(contextLevel)) {
+        node = new UninitializedVariableWriteNode(variable, contextLevel - 1,
+            exp, getSourceSection());
+        replace(node);
+        return;
+      }
+    }
+
+    @Override
+    public void replaceWithLexicallyEmbeddedNode(
+        final InlinerForLexicallyEmbeddedMethods inliner) {
+      UninitializedVariableWriteNode inlined;
+
+      if (contextLevel == 0) {
+        // might need to add new frame slot in outer method
+        inlined = inliner.getLocalWrite(variable.getSlotIdentifier(),
+            exp, getSourceSection());
+      } else {
+        inlined = new UninitializedVariableWriteNode(variable, contextLevel - 1,
+            exp, getSourceSection());
+      }
+      replace(inlined);
     }
   }
 }

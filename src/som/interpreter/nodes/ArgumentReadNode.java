@@ -1,5 +1,7 @@
 package som.interpreter.nodes;
 
+import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
+import som.interpreter.InlinerForLexicallyEmbeddedMethods;
 import som.interpreter.SArguments;
 import som.vmobjects.SSymbol;
 
@@ -29,12 +31,49 @@ public abstract class ArgumentReadNode {
     public NonLocalArgumentReadNode(final int argumentIndex,
         final int contextLevel, final SourceSection source) {
       super(contextLevel, source);
+      assert contextLevel > 0;
       this.argumentIndex = argumentIndex;
     }
 
     @Override
     public final Object executeGeneric(final VirtualFrame frame) {
       return SArguments.arg(determineContext(frame), argumentIndex);
+    }
+
+    @Override
+    public void replaceWithLexicallyEmbeddedNode(
+        final InlinerForLexicallyEmbeddedMethods inlinerForLexicallyEmbeddedMethods) {
+      ExpressionNode inlined;
+      if (contextLevel == 1) {
+        inlined = createLocalNode();
+      } else {
+        inlined = createNonLocalNode();
+      }
+      replace(inlined);
+    }
+
+    protected NonLocalArgumentReadNode createNonLocalNode() {
+      return new NonLocalArgumentReadNode(argumentIndex, contextLevel - 1,
+          getSourceSection());
+    }
+
+    protected LocalArgumentReadNode createLocalNode() {
+      return new LocalArgumentReadNode(argumentIndex, getSourceSection());
+    }
+
+    @Override
+    public void replaceWithCopyAdaptedToEmbeddedOuterContext(
+        final InlinerAdaptToEmbeddedOuterContext inliner) {
+      // currently, we should not inline any blocks that have arguments, so,
+      // this case should not be happening
+      assert !inliner.appliesTo(contextLevel);
+
+      // and, in the other cases, we just need to adjust the context level
+      if (inliner.needToAdjustLevel(contextLevel)) {
+        NonLocalArgumentReadNode node = createNonLocalNode();
+        replace(node);
+        return;
+      }
     }
   }
 
@@ -79,6 +118,17 @@ public abstract class ArgumentReadNode {
     @Override
     public SSymbol getHolderClass() {
       return holderClass;
+    }
+
+    @Override
+    protected NonLocalArgumentReadNode createNonLocalNode() {
+      return new NonLocalSuperReadNode(contextLevel - 1, holderClass,
+          classSide, getSourceSection());
+    }
+
+    @Override
+    protected LocalArgumentReadNode createLocalNode() {
+      return new LocalSuperReadNode(holderClass, classSide, getSourceSection());
     }
 
     @Override

@@ -1,6 +1,8 @@
 package som.interpreter.nodes;
 
 import static som.interpreter.TruffleCompiler.transferToInterpreter;
+import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
+import som.interpreter.InlinerForLexicallyEmbeddedMethods;
 import som.vm.constants.Nil;
 import som.vmobjects.SObject;
 
@@ -21,6 +23,18 @@ public abstract class NonLocalVariableNode extends ContextualNode {
       final SourceSection source) {
     super(contextLevel, source);
     this.slot = slot;
+  }
+
+  @Override
+  public final void replaceWithLexicallyEmbeddedNode(
+      final InlinerForLexicallyEmbeddedMethods inliner) {
+    throw new RuntimeException("Normally, only uninitialized variable nodes should be encountered, because this is done at parse time");
+  }
+
+  @Override
+  public final void replaceWithCopyAdaptedToEmbeddedOuterContext(
+      final InlinerAdaptToEmbeddedOuterContext inliner) {
+    throw new RuntimeException("Normally, only uninitialized variable nodes should be encountered, because this is done at parse time");
   }
 
   public abstract static class NonLocalVariableReadNode extends NonLocalVariableNode {
