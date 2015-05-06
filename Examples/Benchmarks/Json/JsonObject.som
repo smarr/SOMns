@@ -165,8 +165,6 @@ JsonObject = JsonValue (
   )
 
   updateHashIndex = (
-    | size |
-    size = names size.
     names doIndexes: [: i |
       table add: (names at: i) put: i
     ]

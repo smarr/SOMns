@@ -26,8 +26,6 @@ THE SOFTWARE.
 BubbleSort = Sort (
 
     sort: array = (
-        | top |
-        
         array length downTo: 1 do: [ :i |
             1 to: i - 1 do: [ :j |
                 | current next |
