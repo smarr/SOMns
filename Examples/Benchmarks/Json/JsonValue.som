@@ -78,14 +78,14 @@ JsonValue = (
   )
 
   double: aDouble = (
-  aDouble ifNil: [self error: 'aDouble nil'].
+    aDouble ifNil: [self error: 'aDouble nil'].
     ^ JsonNumber new: (self cutOffPointZero: aDouble asString)
   )
 
   string: aString = (
     ^ aString == nil
         ifTrue:  [ JsonLiteral NULL ]
-        ifFalse: [ JsonString new: string ]
+        ifFalse: [ JsonString new: aString ]
   )
 
   boolean: aBoolean = (
