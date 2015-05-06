@@ -74,28 +74,22 @@ BlockInlining = (
     deepNestedBlocksInInlinedIf: bool = (
       | block a block2 block3 |
       a := 1.
-      a println.
       block := [ "not inlined"
         a := a + 1.
-        a println.
         block2 := [ "not inlined"
           bool ifTrue: [ a := a + 1. "inlined"
-            a println.
             block3 := [ |block4|
               a := a + 1.
-                a println.
               block4 := [ "not inlined"
                 a := a + 1.
-                  a println.
                 a
               ].
               block4 value
             ].
             block3 value
           ] ifFalse:[ |a block4| "inlined"
-            a := 42. 
-            a println.
-            block4 := [ a println. ^ a := a + 1 ]. "not inlined"
+            a := 42.
+            block4 := [ ^ a := a + 1 ]. "not inlined"
             block4 value
           ]
         ].
