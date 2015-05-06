@@ -36,7 +36,7 @@ Block = (
     )
     
     whileTrue: block = (
-        (self value) ifFalse: [ ^nil ].
+        self value ifFalse: [ ^nil ].
         block value.
         self restart
     )
