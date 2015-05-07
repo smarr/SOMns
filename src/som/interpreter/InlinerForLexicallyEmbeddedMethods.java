@@ -58,6 +58,12 @@ public class InlinerForLexicallyEmbeddedMethods implements NodeVisitor {
     return inlinedId;
   }
 
+  public FrameSlot addLocalSlot(final Object orgSlotId) {
+    String id = getEmbeddedSlotId(orgSlotId);
+    assert mgenc.getEmbeddedLocal(id) == null;
+    return mgenc.addLocal(id).getSlot();
+  }
+
   public FrameSlot getLocalSlot(final Object orgSlotId) {
     String id = getEmbeddedSlotId(orgSlotId);
     Local var = mgenc.getEmbeddedLocal(id);

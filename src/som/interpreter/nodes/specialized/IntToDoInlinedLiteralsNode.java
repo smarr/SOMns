@@ -1,5 +1,6 @@
 package som.interpreter.nodes.specialized;
 
+import som.interpreter.InlinerForLexicallyEmbeddedMethods;
 import som.interpreter.Invokable;
 import som.interpreter.nodes.ExpressionNode;
 
@@ -27,6 +28,9 @@ public abstract class IntToDoInlinedLiteralsNode extends ExpressionNode {
   private final ExpressionNode bodyActualNode;
 
   private final FrameSlot loopIndex;
+
+  public abstract ExpressionNode getFrom();
+  public abstract ExpressionNode getTo();
 
   public IntToDoInlinedLiteralsNode(final ExpressionNode body,
       final FrameSlot loopIndex, final ExpressionNode originalBody,
@@ -92,4 +96,15 @@ public abstract class IntToDoInlinedLiteralsNode extends ExpressionNode {
       ((Invokable) current).propagateLoopCountThroughoutLexicalScope(count);
     }
   }
-}
+
+
+  @Override
+  public void replaceWithLexicallyEmbeddedNode(
+      final InlinerForLexicallyEmbeddedMethods inliner) {
+    IntToDoInlinedLiteralsNode node = IntToDoInlinedLiteralsNodeGen.create(body,
+        inliner.addLocalSlot(loopIndex.getIdentifier()),
+        bodyActualNode, getSourceSection(), getFrom(), getTo());
+    replace(node);
+    // create loopIndex in new context...
+  }
+ }
