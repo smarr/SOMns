@@ -37,23 +37,47 @@ public abstract class SOMNode extends Node {
     super(sourceSection);
   }
 
-  public void replaceWithIndependentCopyForInlining(final SplitterForLexicallyEmbeddedCode inliner) {
+  /**
+   * This method is called by a visitor that adjusts a newly split copy of a
+   * block method to refer to the correct out lexical context, and for instance,
+   * to replace FrameSlot references by the correct and independent new outer
+   * lexical scope.
+   * @param inliner
+   */
+  public void replaceWithIndependentCopyForInlining(
+      final SplitterForLexicallyEmbeddedCode inliner) {
     // do nothing!
     // only a small subset of nodes needs to implement this method.
     // Most notably, nodes using FrameSlots, and block nodes with method
     // nodes.
   }
 
+  /**
+   * This method is called by a visitor that adjusts a copy of a block method
+   * to be embedded into its outer method/block. Thus, it needs to adjust
+   * frame slots, which are now moved up to the outer method, and also
+   * trigger adaptation of methods lexically embedded/included in this copy.
+   * The actual adaptation of those methods is done by
+   * replaceWithCopyAdaptedToEmbeddedOuterContext();
+   * @param inlinerForLexicallyEmbeddedMethods
+   */
   public void replaceWithLexicallyEmbeddedNode(
-      final InlinerForLexicallyEmbeddedMethods inlinerForLexicallyEmbeddedMethods) {
+      final InlinerForLexicallyEmbeddedMethods inliner) {
     // do nothing!
     // only a small subset of nodes needs to implement this method.
     // Most notably, nodes using FrameSlots, and block nodes with method
     // nodes.
   }
 
+  /**
+   * Adapt a copy of a method that is lexically enclosed in a block that
+   * just got embedded into its outer context.
+   * Thus, all frame slots need to be fixed up, as well as all embedded
+   * blocks.
+   * @param inlinerAdaptToEmbeddedOuterContext
+   */
   public void replaceWithCopyAdaptedToEmbeddedOuterContext(
-      final InlinerAdaptToEmbeddedOuterContext inlinerAdaptToEmbeddedOuterContext) {
+      final InlinerAdaptToEmbeddedOuterContext inliner) {
     // do nothing!
     // only a small subset of nodes needs to implement this method.
     // Most notably, nodes using FrameSlots, and block nodes with method
