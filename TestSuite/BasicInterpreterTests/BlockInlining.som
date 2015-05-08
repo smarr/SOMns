@@ -169,4 +169,17 @@ BlockInlining = (
     
     testDeepDeepNestedTrue  = ( ^ self deepDeepNested: true )
     testDeepDeepNestedFalse = ( ^ self deepDeepNested: false )
+    
+    testToDoNestDoNestIfTrue = (
+      "from the bounce benchmark"
+      | balls bounces |
+      balls := Array new: 1 withAll: true.
+      bounces := 0.
+      
+      1 to: 2 do: [ :i |
+          balls do: [ :ball |
+              ball ifTrue: [ bounces := bounces + 1 ] ] ].
+
+      ^ bounces
+    )
 )
