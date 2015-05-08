@@ -82,12 +82,6 @@ public final class Method extends Invokable {
     return clone;
   }
 
-
-  @Override
-  public boolean isBlock() {
-    return outerContext != null;
-  }
-
   public void setOuterContextMethod(final Method method) {
     outerContext.setOuterMethod(method);
   }

@@ -36,11 +36,6 @@ public final class Primitive extends Invokable {
   }
 
   @Override
-  public boolean isBlock() {
-    return false;
-  }
-
-  @Override
   public String toString() {
     return "Primitive " + expressionOrSequence.getClass().getSimpleName() + "@" + Integer.toHexString(hashCode());
   }
