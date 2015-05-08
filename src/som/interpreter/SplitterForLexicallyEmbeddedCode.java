@@ -14,21 +14,21 @@ public final class SplitterForLexicallyEmbeddedCode implements NodeVisitor {
 
   public static ExpressionNode doInline(
       final ExpressionNode body,
-      final LexicalContext inlinedContext) {
+      final LexicalScope inlinedCurrentScope) {
     ExpressionNode inlinedBody = NodeUtil.cloneNode(body);
 
     return NodeVisitorUtil.applyVisitor(inlinedBody,
-        new SplitterForLexicallyEmbeddedCode(inlinedContext));
+        new SplitterForLexicallyEmbeddedCode(inlinedCurrentScope));
   }
 
-  private final LexicalContext inlinedContext;
+  private final LexicalScope inlinedCurrentScope;
 
-  private SplitterForLexicallyEmbeddedCode(final LexicalContext inlinedContext) {
-    this.inlinedContext = inlinedContext;
+  private SplitterForLexicallyEmbeddedCode(final LexicalScope inlinedCurrentScope) {
+    this.inlinedCurrentScope = inlinedCurrentScope;
   }
 
-  public LexicalContext getLexicalContext() {
-    return inlinedContext;
+  public LexicalScope getCurrentScope() {
+    return inlinedCurrentScope;
   }
 
   @Override
@@ -39,7 +39,7 @@ public final class SplitterForLexicallyEmbeddedCode implements NodeVisitor {
   }
 
   public FrameSlot getLocalFrameSlot(final Object slotId) {
-    return inlinedContext.getFrameDescriptor().findFrameSlot(slotId);
+    return inlinedCurrentScope.getFrameDescriptor().findFrameSlot(slotId);
   }
 
   public FrameSlot getFrameSlot(final ContextualNode node, final Object slotId) {
@@ -47,9 +47,9 @@ public final class SplitterForLexicallyEmbeddedCode implements NodeVisitor {
   }
 
   public FrameSlot getFrameSlot(final Object slotId, int level) {
-    LexicalContext ctx = inlinedContext;
+    LexicalScope ctx = inlinedCurrentScope;
     while (level > 0) {
-      ctx = ctx.getOuterContext();
+      ctx = ctx.getOuterScope();
       level--;
     }
     return ctx.getFrameDescriptor().findFrameSlot(slotId);

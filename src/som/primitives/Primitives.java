@@ -103,7 +103,7 @@ public abstract class Primitives {
         throw new RuntimeException("Not supported by SOM.");
     }
 
-    Primitive primMethodNode = new Primitive(primNode, mgen.getFrameDescriptor(),
+    Primitive primMethodNode = new Primitive(primNode, mgen.getCurrentLexicalScope().getFrameDescriptor(),
         (ExpressionNode) primNode.deepCopy());
     SInvokable prim = Universe.newMethod(signature, primMethodNode, true, new SMethod[0]);
     return prim;
@@ -114,7 +114,7 @@ public abstract class Primitives {
     MethodGenerationContext mgen = new MethodGenerationContext(null);
 
     ExpressionNode primNode = EmptyPrim.create(new LocalArgumentReadNode(0, null));
-    Primitive primMethodNode = new Primitive(primNode, mgen.getFrameDescriptor(),
+    Primitive primMethodNode = new Primitive(primNode, mgen.getCurrentLexicalScope().getFrameDescriptor(),
         (ExpressionNode) primNode.deepCopy());
     SInvokable prim = Universe.newMethod(signature, primMethodNode, true, new SMethod[0]);
     return prim;

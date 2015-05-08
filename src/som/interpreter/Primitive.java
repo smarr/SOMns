@@ -20,10 +20,10 @@ public final class Primitive extends Invokable {
   }
 
   @Override
-  public Invokable cloneWithNewLexicalContext(final LexicalContext outerContext) {
+  public Invokable cloneWithNewLexicalContext(final LexicalScope outerContext) {
     assert outerContext == null;
     FrameDescriptor inlinedFrameDescriptor = getFrameDescriptor().copy();
-    LexicalContext  inlinedContext = new LexicalContext(inlinedFrameDescriptor,
+    LexicalScope  inlinedContext = new LexicalScope(inlinedFrameDescriptor,
         outerContext);
     ExpressionNode  inlinedBody = SplitterForLexicallyEmbeddedCode.doInline(uninitializedBody,
         inlinedContext);

@@ -29,13 +29,12 @@ public class InlinerForLexicallyEmbeddedMethods implements NodeVisitor {
   private final MethodGenerationContext mgenc;
   private final Local[] blockArguments;
   private final int blockStartIdx;
-  private LexicalContext lexicalContextLazy;
 
   public InlinerForLexicallyEmbeddedMethods(final MethodGenerationContext mgenc,
       final Local[] blockArguments, final int blockStartIdx) {
     this.mgenc = mgenc;
     this.blockArguments = blockArguments;
-    this.blockStartIdx = blockStartIdx;
+    this.blockStartIdx  = blockStartIdx;
   }
 
   @Override
@@ -70,6 +69,10 @@ public class InlinerForLexicallyEmbeddedMethods implements NodeVisitor {
     return var.getSlot();
   }
 
+  public LexicalScope getCurrentLexicalScope() {
+    return mgenc.getCurrentLexicalScope();
+  }
+
   public UninitializedVariableWriteNode getLocalWrite(final Object slotIdentifier,
       final ExpressionNode valExp,
       final SourceSection source) {
@@ -77,14 +80,6 @@ public class InlinerForLexicallyEmbeddedMethods implements NodeVisitor {
     mgenc.addLocalIfAbsent(inlinedId);
     return (UninitializedVariableWriteNode) mgenc.getLocalWriteNode(inlinedId,
         valExp, source);
-  }
-
-  public LexicalContext getLexicalContext() {
-    if (lexicalContextLazy == null) {
-      lexicalContextLazy = new LexicalContext(
-          mgenc.getFrameDescriptor(), mgenc.getLexicalContext());
-    }
-    return lexicalContextLazy;
   }
 
   public ExpressionNode getReplacementForLocalArgument(final int argumentIndex,

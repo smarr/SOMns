@@ -13,20 +13,23 @@ import com.oracle.truffle.api.source.SourceSection;
 public class InlinerAdaptToEmbeddedOuterContext implements NodeVisitor {
 
   public static ExpressionNode doInline(final ExpressionNode body,
-      final InlinerForLexicallyEmbeddedMethods inliner) {
+      final InlinerForLexicallyEmbeddedMethods inliner,
+      final LexicalScope currentLexicalScope) {
     ExpressionNode inlinedBody = NodeUtil.cloneNode(body);
 
     return NodeVisitorUtil.applyVisitor(inlinedBody,
-        new InlinerAdaptToEmbeddedOuterContext(inliner, 1));
+        new InlinerAdaptToEmbeddedOuterContext(inliner, 1,
+            currentLexicalScope));
   }
 
   public static ExpressionNode doInline(final ExpressionNode body,
-      final InlinerAdaptToEmbeddedOuterContext inliner) {
+      final InlinerAdaptToEmbeddedOuterContext inliner,
+      final LexicalScope currentLexicalScope) {
     ExpressionNode inlinedBody = NodeUtil.cloneNode(body);
 
     return NodeVisitorUtil.applyVisitor(inlinedBody,
         new InlinerAdaptToEmbeddedOuterContext(inliner.outerInliner,
-            inliner.contextLevel + 1));
+            inliner.contextLevel + 1, currentLexicalScope));
   }
 
   private final InlinerForLexicallyEmbeddedMethods outerInliner;
@@ -36,19 +39,27 @@ public class InlinerAdaptToEmbeddedOuterContext implements NodeVisitor {
   // level
   private final int contextLevel;
 
+  private final LexicalScope currentLexicalScope;
+
   private InlinerAdaptToEmbeddedOuterContext(
       final InlinerForLexicallyEmbeddedMethods outerInliner,
-      final int appliesToContextLevel) {
+      final int appliesToContextLevel,
+      final LexicalScope currentLexicalContext) {
     this.outerInliner = outerInliner;
     this.contextLevel = appliesToContextLevel;
+    this.currentLexicalScope = currentLexicalContext;
   }
 
   public FrameSlot getOuterSlot(final Object slotId) {
     return outerInliner.getLocalSlot(slotId);
   }
 
-  public LexicalContext getOuterContext() {
-    return outerInliner.getLexicalContext();
+  public LexicalScope getOuterContext() {
+    return currentLexicalScope.getOuterScope();
+  }
+
+  public LexicalScope getCurrentLexicalScope() {
+    return currentLexicalScope;
   }
 
   /*
