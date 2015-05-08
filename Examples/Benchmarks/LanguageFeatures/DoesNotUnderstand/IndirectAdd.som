@@ -13,7 +13,11 @@ IndirectAdd = Benchmark (
             delegate inc: #once
         ].
     
-        calc a = 20005 ifFalse: [ 'Benchmark failed with wrong result' println. calc a println. ]
+        ^ calc a
+    )
+
+    verifyResult: result = (
+      ^ 20005 = result
     )
     
     ----
