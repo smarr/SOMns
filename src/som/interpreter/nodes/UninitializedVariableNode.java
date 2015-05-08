@@ -157,6 +157,11 @@ public abstract class UninitializedVariableNode extends ContextualNode {
     }
 
     @Override
+    public String toString() {
+      return "UninitVarWrite(" + variable.toString() + ")";
+    }
+
+    @Override
     public void replaceWithLexicallyEmbeddedNode(
         final InlinerForLexicallyEmbeddedMethods inliner) {
       UninitializedVariableWriteNode inlined;
