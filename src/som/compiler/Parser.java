@@ -81,6 +81,7 @@ import som.interpreter.nodes.literals.IntegerLiteralNode;
 import som.interpreter.nodes.literals.LiteralNode;
 import som.interpreter.nodes.literals.StringLiteralNode;
 import som.interpreter.nodes.literals.SymbolLiteralNode;
+import som.interpreter.nodes.specialized.IfInlinedLiteralNode;
 import som.interpreter.nodes.specialized.IfTrueIfFalseInlinedLiteralsNode;
 import som.interpreter.nodes.specialized.IntToDoInlinedLiteralsNodeGen;
 import som.vm.Universe;
@@ -657,19 +658,33 @@ public final class Parser {
 
     SourceSection source = getSource(coord);
 
-    if ("ifTrue:ifFalse:".equals(msg.getString()) &&
-        arguments.get(1) instanceof LiteralNode && arguments.get(2) instanceof LiteralNode) {
-      ExpressionNode inlinedTrueNode  = ((LiteralNode) arguments.get(1)).inline(mgenc);
-      ExpressionNode inlinedFalseNode = ((LiteralNode) arguments.get(2)).inline(mgenc);
-      return new IfTrueIfFalseInlinedLiteralsNode(arguments.get(0),
-          inlinedTrueNode, inlinedFalseNode, arguments.get(1), arguments.get(2),
-          source);
-    } else if ("to:do:".equals(msg.getString()) &&
-        arguments.get(2) instanceof LiteralNode) {
-      Local loopIdx = mgenc.addLocal("i:" + source.getCharIndex());
-      ExpressionNode inlinedBody = ((LiteralNode) arguments.get(2)).inline(mgenc, loopIdx);
-      return IntToDoInlinedLiteralsNodeGen.create(inlinedBody, loopIdx.getSlot(),
-          arguments.get(2), source, arguments.get(0), arguments.get(1));
+    if (msg.getNumberOfSignatureArguments() == 2) {
+      if (arguments.get(1) instanceof LiteralNode) {
+        if ("ifTrue:".equals(msg.getString())) {
+          ExpressionNode inlinedBody = ((LiteralNode) arguments.get(1)).inline(mgenc);
+          return new IfInlinedLiteralNode(arguments.get(0), true, inlinedBody,
+              arguments.get(1), source);
+        } else if ("ifFalse:".equals(msg.getString())) {
+          ExpressionNode inlinedBody = ((LiteralNode) arguments.get(1)).inline(mgenc);
+          return new IfInlinedLiteralNode(arguments.get(0), false, inlinedBody,
+              arguments.get(1), source);
+        }
+      }
+    } else if (msg.getNumberOfSignatureArguments() == 3) {
+      if ("ifTrue:ifFalse:".equals(msg.getString()) &&
+          arguments.get(1) instanceof LiteralNode && arguments.get(2) instanceof LiteralNode) {
+        ExpressionNode inlinedTrueNode  = ((LiteralNode) arguments.get(1)).inline(mgenc);
+        ExpressionNode inlinedFalseNode = ((LiteralNode) arguments.get(2)).inline(mgenc);
+        return new IfTrueIfFalseInlinedLiteralsNode(arguments.get(0),
+            inlinedTrueNode, inlinedFalseNode, arguments.get(1), arguments.get(2),
+            source);
+      } else if ("to:do:".equals(msg.getString()) &&
+          arguments.get(2) instanceof LiteralNode) {
+        Local loopIdx = mgenc.addLocal("i:" + source.getCharIndex());
+        ExpressionNode inlinedBody = ((LiteralNode) arguments.get(2)).inline(mgenc, loopIdx);
+        return IntToDoInlinedLiteralsNodeGen.create(inlinedBody, loopIdx.getSlot(),
+            arguments.get(2), source, arguments.get(0), arguments.get(1));
+      }
     }
 
     return createMessageSend(msg, arguments.toArray(new ExpressionNode[0]),

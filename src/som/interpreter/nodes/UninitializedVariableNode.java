@@ -49,7 +49,7 @@ public abstract class UninitializedVariableNode extends ContextualNode {
             contextLevel, variable.getSlot(), getSourceSection());
         return replace(node).executeGeneric(frame);
       } else {
-        assert frame.getFrameDescriptor().findFrameSlot(variable.getSlotIdentifier()) == variable.getSlot();
+        // assert frame.getFrameDescriptor().findFrameSlot(variable.getSlotIdentifier()) == variable.getSlot();
         LocalVariableReadNode node = LocalVariableReadNodeGen.create(variable, getSourceSection());
         return replace(node).executeGeneric(frame);
       }
