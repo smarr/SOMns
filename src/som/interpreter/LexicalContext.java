@@ -34,4 +34,9 @@ public final class LexicalContext {
     assert outerMethod == null; // should not have been set before
     outerMethod = method;
   }
+
+  @Override
+  public String toString() {
+    return "LexCtx[" + frameDescriptor.toString() + "]";
+  }
 }
