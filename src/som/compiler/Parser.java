@@ -84,6 +84,7 @@ import som.interpreter.nodes.literals.SymbolLiteralNode;
 import som.interpreter.nodes.specialized.IfInlinedLiteralNode;
 import som.interpreter.nodes.specialized.IfTrueIfFalseInlinedLiteralsNode;
 import som.interpreter.nodes.specialized.IntToDoInlinedLiteralsNodeGen;
+import som.interpreter.nodes.specialized.whileloops.WhileInlinedLiteralsNode;
 import som.vm.Universe;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable.SMethod;
@@ -668,7 +669,18 @@ public final class Parser {
           ExpressionNode inlinedBody = ((LiteralNode) arguments.get(1)).inline(mgenc);
           return new IfInlinedLiteralNode(arguments.get(0), false, inlinedBody,
               arguments.get(1), source);
+        } else if ("whileTrue:".equals(msg.getString())) {
+          ExpressionNode inlinedCondition = ((LiteralNode) arguments.get(0)).inline(mgenc);
+          ExpressionNode inlinedBody      = ((LiteralNode) arguments.get(1)).inline(mgenc);
+          return new WhileInlinedLiteralsNode(inlinedCondition, inlinedBody,
+              true, arguments.get(0), arguments.get(1), source);
+        } else if ("whileFalse:".equals(msg.getString())) {
+          ExpressionNode inlinedCondition = ((LiteralNode) arguments.get(0)).inline(mgenc);
+          ExpressionNode inlinedBody      = ((LiteralNode) arguments.get(1)).inline(mgenc);
+          return new WhileInlinedLiteralsNode(inlinedCondition, inlinedBody,
+              false, arguments.get(0), arguments.get(1), source);
         }
+
       }
     } else if (msg.getNumberOfSignatureArguments() == 3) {
       if ("ifTrue:ifFalse:".equals(msg.getString()) &&
