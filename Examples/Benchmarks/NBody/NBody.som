@@ -5,7 +5,7 @@ NBody = Benchmark (
         Body initialize.
     )
     
-    innerBenchmarkLoop = (
+    innerBenchmarkLoop: innerIterations = (
         | bodies |
         bodies := NBodySystem new.
         

@@ -47,32 +47,32 @@ All = BenchmarkHarness (
     )
     
     exec: iterations = (
-        | harness |
-        
         'Start execution of all benchmarks. Iterations: ' print.
         iterations println.
         
-        self initialize.
-        self benchmarkClasses: self all.
-        self printAll: false.
-        self maxRuntime: 3. "seconds"
-        self numIterations: iterations.
-        self warmUp: 10.
+        self all do: [:cls |
+            self initialize.
+            self benchmarkClass: cls.
+            self printAll: false.
+            self maxRuntime: 3. "seconds"
+            self numIterations: iterations.
+            self warmUp: 10.
 
-        self runBenchmarks.
+            self runBenchmark.
+        ].
         self printTotal.
     )
     
-    reportRun: bench = (
+    reportBenchmark: bench result: total = (
         '' println.
         'Benchmark: ' print.
         bench name println.
 
-        ('   Iterations: ' + bench numIterations + ' (elapsed time ' + (bench total // 1000) round
+        ('   Iterations: ' + numIterations + ' (elapsed time ' + (total // 1000) round
             + ' ms)') println.
-        ('   AVERAGE: ' + ((bench total // bench numIterations) // 1000) round + ' ms') println.
+        ('   AVERAGE: ' + ((total // numIterations) // 1000) round + ' ms') println.
         
-        summedAverage := summedAverage + (bench total // bench numIterations).
+        summedAverage := summedAverage + (total // numIterations).
     )
     
     printTotal = (

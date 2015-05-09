@@ -1,6 +1,6 @@
 DeltaBlue = Benchmark (
 
-    innerBenchmarkLoop = (
+    innerBenchmarkLoop: innerIterations = (
         Strength initialize.
         Planner chainTest: innerIterations.
         Planner projectionTest: innerIterations.

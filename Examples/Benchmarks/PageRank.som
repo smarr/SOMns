@@ -68,14 +68,15 @@ PageRank = Benchmark (
     ^ dif
   )
 
-  innerBenchmarkLoop = (
+  innerBenchmarkLoop: innerIterations = (
     JenkinsRandom seed: 49734321.
     "standard for verification"
     "n := 5000
      iter    := 10.
      thresh  := 0.00000001.
      divisor := 100000."
-    ^ self verifyResult: (self runPageRankN: innerIterations iter: 10 thresh: 0.00000001 divisor: 100000).
+    ^ self verify: (self runPageRankN: innerIterations iter: 10 thresh: 0.00000001 divisor: 100000)
+           inner:  innerIterations.
   )
 
   runPageRankN: n iter: iter thresh: thresh divisor: divisor = (
@@ -104,7 +105,7 @@ PageRank = Benchmark (
     ^ pageRanks
   )
   
-  verifyResult: pageRanks = (
+  verify: pageRanks inner: innerIterations = (
     innerIterations = 5000 " and: [iter = 10 and: [thresh = 0.00000001 and: [divisor = 100000]]]"
       ifTrue: [
         | expected |
@@ -121,12 +122,12 @@ PageRank = Benchmark (
           ]
         ] ]
       ifFalse: [
-        ^ self checkBasedOnFirstResult: pageRanks
+        ^ self checkBasedOnFirstResult: pageRanks inner: innerIterations
       ].
     ^ true
   )
   
-  checkBasedOnFirstResult: pageRanks = (
+  checkBasedOnFirstResult: pageRanks inner: innerIterations = (
     pageRanks length = innerIterations ifFalse: [ ^ false ].
 
     firstResult == nil ifTrue: [

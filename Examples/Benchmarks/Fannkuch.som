@@ -96,7 +96,7 @@ Fannkuch = Benchmark (
         ^result
     )
 
-    innerBenchmarkLoop = (
+    innerBenchmarkLoop: innerIterations = (
         | result |
         self initialize: innerIterations.
         result := self maxPfannkuchen.
