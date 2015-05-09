@@ -6,10 +6,12 @@ import java.util.concurrent.locks.Condition;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
 
 public class ConditionPrim {
+  @GenerateNodeFactory
   public abstract static class ConditionSignalOnePrim extends UnaryExpressionNode {
     public ConditionSignalOnePrim() { super(null); }
     @Specialization
@@ -19,6 +21,7 @@ public class ConditionPrim {
     }
   }
 
+  @GenerateNodeFactory
   public abstract static class ConditionSignalAllPrim extends UnaryExpressionNode {
     public ConditionSignalAllPrim() { super(null); }
     @Specialization
@@ -28,6 +31,7 @@ public class ConditionPrim {
     }
   }
 
+  @GenerateNodeFactory
   public abstract static class ConditionAwaitPrim extends UnaryExpressionNode {
     public ConditionAwaitPrim() { super(null); }
     @Specialization
@@ -39,6 +43,7 @@ public class ConditionPrim {
     }
   }
 
+  @GenerateNodeFactory
   public abstract static class ConditionAwaitForPrim extends BinaryExpressionNode {
     public ConditionAwaitForPrim() { super(null); }
     @Specialization

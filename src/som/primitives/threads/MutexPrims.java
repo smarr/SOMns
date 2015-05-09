@@ -4,25 +4,27 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 import som.interpreter.nodes.nary.UnaryExpressionNode;
-import som.interpreter.nodes.nary.UnaryExpressionNode.UnarySideEffectFreeExpressionNode;
 import som.vm.constants.ThreadClasses;
 import som.vmobjects.SClass;
 
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
 
 public final class MutexPrims {
-  public abstract static class NewMutexPrim extends UnarySideEffectFreeExpressionNode {
+  @GenerateNodeFactory
+  public abstract static class NewMutexPrim extends UnaryExpressionNode {
     protected static final boolean isMutexClass(final SClass receiver) {
       return receiver == ThreadClasses.mutexClass;
     }
 
-    @Specialization(guards = "isMutexClass")
+    @Specialization(guards = "isMutexClass(receiver)")
     public final ReentrantLock doNew(final SClass receiver) {
       return new ReentrantLock();
     }
   }
 
+  @GenerateNodeFactory
   public abstract static class UnaryMutexPrim extends UnaryExpressionNode {
     public UnaryMutexPrim() { super(null); }
   }

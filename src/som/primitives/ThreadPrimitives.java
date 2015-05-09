@@ -8,6 +8,8 @@ import som.primitives.threads.ThreadPrimFactory.ThreadYieldPrimFactory;
 
 
 public class ThreadPrimitives extends Primitives {
+  public ThreadPrimitives(final boolean displayWarning) { super(displayWarning); }
+
   @Override
   public void installPrimitives() {
     installInstancePrimitive("name",  ThreadNamePrimFactory.getInstance());

@@ -7,6 +7,8 @@ import som.primitives.threads.ConditionPrimFactory.ConditionSignalOnePrimFactory
 
 
 public final class ConditionPrimitives extends Primitives {
+  public ConditionPrimitives(final boolean displayWarning) { super(displayWarning); }
+
   @Override
   public void installPrimitives() {
     installInstancePrimitive("signalOne", ConditionSignalOnePrimFactory.getInstance());

@@ -8,6 +8,8 @@ import som.primitives.threads.MutexPrimsFactory.UnlockPrimFactory;
 
 
 public final class MutexPrimitives extends Primitives {
+  public MutexPrimitives(final boolean displayWarning) { super(displayWarning); }
+
   @Override
   public void installPrimitives() {
     installInstancePrimitive("lock",         LockPrimFactory.getInstance());

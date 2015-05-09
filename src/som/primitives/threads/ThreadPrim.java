@@ -2,16 +2,17 @@ package som.primitives.threads;
 
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
-import som.interpreter.nodes.nary.UnaryExpressionNode.UnarySideEffectFreeExpressionNode;
 import som.vm.constants.Nil;
 import som.vm.constants.ThreadClasses;
 import som.vmobjects.SClass;
 
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
 
 public final class ThreadPrim {
-  public abstract static class ThreadNamePrim extends UnarySideEffectFreeExpressionNode {
+  @GenerateNodeFactory
+  public abstract static class ThreadNamePrim extends UnaryExpressionNode {
     @Specialization
     public final Object doThread(final Thread receiver) {
       String name = receiver.getName();
@@ -23,6 +24,7 @@ public final class ThreadPrim {
     }
   }
 
+  @GenerateNodeFactory
   public abstract static class ThreadSetNamePrim extends BinaryExpressionNode {
     public ThreadSetNamePrim() { super(null); }
     @Specialization
@@ -33,6 +35,7 @@ public final class ThreadPrim {
     }
   }
 
+  @GenerateNodeFactory
   public abstract static class ThreadJoinPrim extends UnaryExpressionNode {
     public ThreadJoinPrim() { super(null); }
     @Specialization
@@ -44,7 +47,7 @@ public final class ThreadPrim {
     }
   }
 
-
+  @GenerateNodeFactory
   public abstract static class ThreadYieldPrim extends UnaryExpressionNode {
     public ThreadYieldPrim() { super(null); }
 
@@ -52,13 +55,14 @@ public final class ThreadPrim {
       return receiver == ThreadClasses.threadClass;
     }
 
-    @Specialization(guards = "isThreadClass")
+    @Specialization(guards = "isThreadClass(receiver)")
     public final SClass doThread(final SClass receiver) {
       Thread.yield();
       return receiver;
     }
   }
 
+  @GenerateNodeFactory
   public abstract static class ThreadCurrentPrim extends UnaryExpressionNode {
     public ThreadCurrentPrim() { super(null); }
 
@@ -66,7 +70,7 @@ public final class ThreadPrim {
       return receiver == ThreadClasses.threadClass;
     }
 
-    @Specialization
+    @Specialization(guards = "isThreadClass(receiver)")
     public final Thread doThread(final SClass receiver) {
       return Thread.currentThread();
     }
