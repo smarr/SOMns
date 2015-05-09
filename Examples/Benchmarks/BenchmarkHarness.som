@@ -95,6 +95,7 @@ BenchmarkHarness = (
     runBenchmark = (
         | bench result |
         bench := benchmarkClass new.
+        bench oneTimeSetup.
         
         ('Starting ' + bench name + ' benchmark ... ') print.
         self doWarmup: bench.
