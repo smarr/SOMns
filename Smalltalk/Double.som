@@ -60,5 +60,8 @@ Double = (
         i := self.
         [ i >= limit ] whileTrue: [ block value: i. i := i - 1.0 ]
     )
+
+    ----
     
+    PositiveInfinity = primitive
 )

@@ -195,8 +195,15 @@ IntegerTest = TestCase (
   )
           
   testModulo = (
-    self assert:  1 equals: (10 %  3).
-    self assert: -2 equals: (10 % -3).
+    self assert:  1 equals: ( 10 %  3).
+    self assert: -2 equals: ( 10 % -3).
+    self assert:  2 equals: (-10 %  3).
+    self assert: -1 equals: (-10 % -3).
+    
+    self assert:  1 equals: ( 10 rem:  3).
+    self assert:  1 equals: ( 10 rem: -3).
+    self assert: -1 equals: (-10 rem:  3).
+    self assert: -1 equals: (-10 rem: -3).
   )
 
   testAbsoluteValue = (
@@ -222,5 +229,30 @@ IntegerTest = TestCase (
   testBitXor = (
     self assert: 0 equals: (1 bitXor: 1).
     self assert: 3 equals: (2 bitXor: 1).
+  )
+  
+  testAs32BitUnsignedValue = (
+    self assert: 1 <<  1 equals: (1 <<  1) as32BitUnsignedValue.
+    self assert: 1 << 10 equals: (1 << 10) as32BitUnsignedValue.
+    self assert: 1 << 31 equals: (1 << 31) as32BitUnsignedValue.
+    self assert:       0 equals: (1 << 32) as32BitUnsignedValue.
+    self assert: 4294967295 equals:     -1 as32BitUnsignedValue.
+  )
+
+  testAs32BitSignedValue = (
+    self assert:     1 <<  1 equals: (1 <<  1) as32BitSignedValue.
+    self assert:     1 << 10 equals: (1 << 10) as32BitSignedValue.
+    self assert: -2147483648 equals: (1 << 31) as32BitSignedValue.
+    self assert:           0 equals: (1 << 32) as32BitSignedValue.
+  )
+  
+  testUnsignedRightShift = (
+    self assert: 0   equals:    1 >>> 1.
+    self assert: 512 equals: 1024 >>> 1.
+    self assert: 127 equals: 1023 >>> 3.
+    
+    "not sure whether we should really insist on this"
+    self expect: 9223372036854775807 equals:    -1 >>> 1.
+    self expect: 9223372036854775296 equals: -1024 >>> 1.
   )
 )

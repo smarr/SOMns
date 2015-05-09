@@ -83,4 +83,64 @@ ArrayTest = TestCase (
     self assert: 4 equals: (b at: 2).
     self assert: 5 equals: (b at: 3).
   )
+  
+  testIndexOf = (
+    | arr |
+    arr := Array new: 6.
+    arr at: 1 put: #one.
+    arr at: 2 put: #two.
+    arr at: 3 put: #three.
+    arr at: 4 put: #four.
+    arr at: 5 put: #five.
+    arr at: 6 put: #one. 
+    
+    self assert: 2 equals: (arr indexOf: #two).
+    self assert: 4 equals: (arr indexOf: #four).
+    self assert: 5 equals: (arr indexOf: #five).
+    
+    self assert: nil equals: (arr indexOf: #notIncluded).
+    
+    self assert: 1 equals: (arr indexOf: #one).
+  )
+  
+  testLastIndexOf = (
+    | arr |
+    arr := Array new: 6.
+    arr at: 1 put: #one.
+    arr at: 2 put: #two.
+    arr at: 3 put: #three.
+    arr at: 4 put: #four.
+    arr at: 5 put: #five.
+    arr at: 6 put: #one. 
+    
+    self assert: 2 equals: (arr lastIndexOf: #two).
+    self assert: 4 equals: (arr lastIndexOf: #four).
+    self assert: 5 equals: (arr lastIndexOf: #five).
+    
+    self assert: nil equals: (arr indexOf: #notIncluded).
+    
+    self assert: 6 equals: (arr lastIndexOf: #one).
+  )
+  
+  testNewWithAll = (
+    | arr |
+    arr := Array new: 5 withAll: [1].
+    1 to: 5 do: [:i | self assert: 1 equals: (arr at: i)].
+    
+    arr := Array new: 5 withAll: 1.
+    1 to: 5 do: [:i | self assert: 1 equals: (arr at: i)].
+  )
+  
+  testPutAllIntAndObjects = (
+    | arr o |
+    arr := Array new: 5 withAll: 5.
+    self assert: 5 equals: (arr at: 3).
+    arr at: 3 put: nil.
+    self assert: nil equals: (arr at: 3).
+    
+    o := Object new.
+    arr at: 2 put: o.
+    self assert: o equals: (arr at: 2).
+  )
+  
 )

@@ -249,7 +249,7 @@ RichardsBenchmarks = RBObject (
     "This is start simply duplicated, removing all output and making the
      correctness check exiting with an error."
     reBenchStart = (
-        | workQ mark1 mark2 mark3 mark4|
+        | workQ |
         self initTrace.
         self initScheduler.
 

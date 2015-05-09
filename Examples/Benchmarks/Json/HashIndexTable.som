@@ -1,0 +1,41 @@
+HashIndexTable = (
+  | hashTable |
+  
+  initialize = (
+    hashTable := Array new: 32 withAll: 0
+  )
+
+  at: name put: index = (
+    | slot |
+    slot := self hashSlotFor: name.
+    
+    index < 255
+      ifTrue:  [ hashTable at: slot put: index + 1 ]
+      ifFalse: [ hashTable at: slot put: 0 ]
+  )
+
+  remove: index = (
+    hashTable doIndexes: [:i |
+      index + 1 = (hashTable at: i)
+        ifTrue:  [ hashTable at: i put: 0 ]
+        ifFalse: [ 
+          (hashTable at: i) > index + 1 ifTrue: [
+            hashTable at: i put: (hashTable at: i) - 1]]]
+  )
+
+  at: name = (
+    | slot |
+    slot := self hashSlotFor: name.
+
+    " subtract 1, 0 stands for empty "
+    ^ ((hashTable at: slot) & 255) - 1
+  )
+
+  hashSlotFor: element = (
+    ^ (element hashcode & 31) + 1
+  )
+  
+  ----
+  
+  new = ( ^ super new initialize )
+)

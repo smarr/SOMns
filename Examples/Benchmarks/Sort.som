@@ -33,6 +33,7 @@ Sort = Benchmark (
         ^ self sort: array.
     )
     
+    dataSize    = ( self subclassResponsibility )
     sort: array = ( self subclassResponsibility )
     
     verifyResult: array = (

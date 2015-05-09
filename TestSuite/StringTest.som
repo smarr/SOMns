@@ -70,4 +70,75 @@ StringTest = TestCase (
     self deny: ('f' endsWith: 'bar').
     self deny: ('f' endsWith: 'foo').
   )
+  
+  testMultiLineString = (
+    "Test whether the parser will parse multi-line strings correctly."
+    self assert: '
+1234567890
+1234567890
+1234567890
+1234567890
+1234567890' equals: '
+1234567890
+1234567890
+1234567890
+1234567890
+1234567890'
+  )
+  
+  testEscapeSequences = (
+    "Tests for escape sequences, not all of them are reliable represented as
+     proper strings. So, we do a simple equality test, and check substring or
+     length.
+    
+     \t	  a tab character
+     \b	  a backspace character
+     \n	  a newline character
+     \r	  a carriage return character
+     \f	  a formfeed character
+     \'	  a single quote character
+     \\	  backslash character
+    "
+
+    self assert: '\t' equals: '\t'.
+    self assert: 1 equals: '\t' length.
+
+    self assert: '\b' equals: '\b'.
+    self assert: 1 equals: '\b' length.
+
+    self assert: '\n' equals: '\n'.
+    self assert: 1 equals: '\n' length.
+    self deny: ('\n' endsWith: 'n').
+
+    self assert: '\r' equals: '\r'.
+    self assert: 1 equals: '\n' length.
+    self deny: ('\r' endsWith: 'r').
+    
+    self assert: '\f' equals: '\f'.
+    self assert: 1 equals: '\f' length.
+    self deny: ('\f' endsWith: 'f').
+    
+    self assert: '\'' equals: '\''.
+    self assert: 1 equals: '\'' length.
+
+    self assert: '\\' equals: '\\'.
+    self assert: 1 equals: '\\' length.
+  )
+  
+  testHash = (
+    | str |
+    "Hash should be identical for strings that are identical,
+     whether given literal or composed at runtime"
+    self assert: 'foobar' hashcode equals: 'foobar' hashcode.
+    self assert: 'ssdf aksdf; kasd;fk a;dfk a;dfk a;d' hashcode
+         equals: 'ssdf aksdf; kasd;fk a;dfk a;dfk a;d' hashcode.
+    
+    str := 'foo' + 'bar'.
+    str := str + str.
+    self assert: 'foobarfoobar' hashcode equals: str hashcode.
+    
+    str := 'dfadf fgsfg sfg sdfg sfg sfg' + '345243n 24n5 kwertlw erltnwrtln'.
+    self assert: 'dfadf fgsfg sfg sdfg sfg sfg345243n 24n5 kwertlw erltnwrtln' hashcode
+         equals: str hashcode.
+  )
 )
