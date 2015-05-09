@@ -13,14 +13,14 @@ env:
   - SOM=PySOM       REPO=https://github.com/SOM-st/PySOM.git       BUILD=""
   - SOM=RPySOM      REPO=https://github.com/SOM-st/RPySOM.git      BUILD=""
   - SOM=RTruffleSOM REPO=https://github.com/SOM-st/RTruffleSOM.git BUILD=""
-  - SOM=SOM         REPO=https://github.com/SOM-st/som-java.git    BUILD=make
+  - SOM=SOM         REPO=https://github.com/SOM-st/som-java.git    BUILD="jdk_switcher use oraclejdk8 && make"
   - SOM=SOMpp       REPO=https://github.com/SOM-st/SOMpp.git       BUILD=make
-  - SOM=TruffleSOM  REPO=https://github.com/SOM-st/TruffleSOM.git  BUILD=make
+  - SOM=TruffleSOM  REPO=https://github.com/SOM-st/TruffleSOM.git  BUILD="jdk_switcher use oraclejdk8 && make"
 
 install:
   - sudo apt-get install libc6-dev-i386
   - sudo apt-get install -qq python-yaml
-  - git clone --depth 1 $REPO som-vm 
+  - git clone --depth 1 $REPO som-vm
 
 # command to run tests
 script:
