@@ -29,6 +29,7 @@ import som.compiler.MethodGenerationContext;
 import som.interpreter.Primitive;
 import som.interpreter.nodes.ArgumentReadNode.LocalArgumentReadNode;
 import som.interpreter.nodes.ExpressionNode;
+import som.primitives.BlockPrimsFactory.SpawnWithArgsPrimFactory;
 import som.primitives.MethodPrimsFactory.InvokeOnPrimFactory;
 import som.primitives.arrays.PutAllNodeFactory;
 import som.primitives.arrays.ToArgumentsArrayNodeGen;
@@ -83,6 +84,9 @@ public abstract class Primitives {
         if (nodeFactory == PutAllNodeFactory.getInstance()) {
           primNode = nodeFactory.createNode(args[0], args[1],
               LengthPrimFactory.create(null));
+        } else if (nodeFactory == SpawnWithArgsPrimFactory.getInstance()) {
+          primNode = nodeFactory.createNode(args[0], args[1],
+              ToArgumentsArrayNodeGen.create(null, null));
         } else {
           primNode = nodeFactory.createNode(args[0], args[1]);
         }
