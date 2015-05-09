@@ -8,10 +8,13 @@ import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 
+
+@GenerateNodeFactory
 public abstract class PerformInSuperclassPrim extends TernaryExpressionNode {
   @Child private IndirectCallNode call = Truffle.getRuntime().createIndirectCallNode();
 

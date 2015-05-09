@@ -25,19 +25,14 @@ import java.math.BigInteger;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
-import som.vm.constants.Blocks;
 import som.vm.constants.Classes;
 import som.vm.constants.Globals;
 import som.vm.constants.ThreadClasses;
 import som.vmobjects.SAbstractObject;
+import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
-import som.vmobjects.SBlock.SBlock1;
-import som.vmobjects.SBlock.SBlock2;
-import som.vmobjects.SBlock.SBlock3;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
-import som.vmobjects.SInvokable.SMethod;
-import som.vmobjects.SInvokable.SPrimitive;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
@@ -57,8 +52,9 @@ import com.oracle.truffle.api.dsl.TypeSystem;
                  SBlock.class,
                 SSymbol.class,
              SInvokable.class,
+                 SArray.class,
         SAbstractObject.class,
-               Object[].class})
+               Object[].class}) // Object[] is only for argument passing
 public class Types {
 
   public static SClass getClassOf(final Object obj) {
@@ -79,18 +75,6 @@ public class Types {
       return Classes.stringClass;
     } else if (obj instanceof Double) {
       return Classes.doubleClass;
-    } else if (obj instanceof SMethod) {
-      return Classes.methodClass;
-    } else if (obj instanceof SPrimitive) {
-      return Classes.primitiveClass;
-    } else if (obj instanceof SBlock1) {
-      return Blocks.blockClass1;
-    } else if (obj instanceof SBlock2) {
-      return Blocks.blockClass2;
-    } else if (obj instanceof SBlock3) {
-      return Blocks.blockClass3;
-    } else if (obj instanceof Object[]) {
-      return Classes.arrayClass;
     } else if (obj instanceof ReentrantLock) {
       return ThreadClasses.mutexClass;
     } else if (obj instanceof Condition) {

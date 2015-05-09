@@ -34,40 +34,22 @@ import som.vm.Universe;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
 
-import com.oracle.truffle.api.CompilerDirectives.SlowPath;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.source.Source;
 
 public final class SourcecodeCompiler {
 
-  private Parser parser;
-
-  @SlowPath
+  @TruffleBoundary
   public static SClass compileClass(final String path, final String file,
       final SClass systemClass, final Universe universe)
       throws IOException {
-    return new SourcecodeCompiler().compile(path, file, systemClass, universe);
-  }
-
-  @SlowPath
-  public static SClass compileClass(final String stmt,
-      final SClass systemClass, final Universe universe) {
-    return new SourcecodeCompiler().compileClassString(stmt, systemClass,
-        universe);
-  }
-
-  @SlowPath
-  private SClass compile(final String path, final String file,
-      final SClass systemClass, final Universe universe)
-      throws IOException {
-    SClass result = systemClass;
-
     String fname = path + File.separator + file + ".som";
     FileReader stream = new FileReader(fname);
 
     Source source = Source.fromFileName(fname);
-    parser = new Parser(stream, new File(fname).length(), source, universe);
+    Parser parser = new Parser(stream, new File(fname).length(), source, universe);
 
-    result = compile(systemClass, universe);
+    SClass result = compile(parser, systemClass, universe);
 
     SSymbol cname = result.getName();
     String cnameC = cname.getString();
@@ -80,15 +62,16 @@ public final class SourcecodeCompiler {
     return result;
   }
 
-  private SClass compileClassString(final String stream,
-      final SClass systemClass, final Universe universe) {
-    parser = new Parser(new StringReader(stream), stream.length(), null, universe);
+  @TruffleBoundary
+  public static SClass compileClass(final String stmt, final SClass systemClass,
+      final Universe universe) {
+    Parser parser = new Parser(new StringReader(stmt), stmt.length(), null, universe);
 
-    SClass result = compile(systemClass, universe);
+    SClass result = compile(parser, systemClass, universe);
     return result;
   }
 
-  private SClass compile(final SClass systemClass,
+  private static SClass compile(final Parser parser, final SClass systemClass,
       final Universe universe) {
     ClassGenerationContext cgc = new ClassGenerationContext(universe);
 
@@ -107,5 +90,4 @@ public final class SourcecodeCompiler {
 
     return result;
   }
-
 }

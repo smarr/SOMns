@@ -25,7 +25,6 @@
 
 package som.compiler;
 
-import static som.interpreter.SNodeFactory.createArgumentInitialization;
 import static som.interpreter.SNodeFactory.createCatchNonLocalReturn;
 import static som.interpreter.SNodeFactory.createFieldRead;
 import static som.interpreter.SNodeFactory.createFieldWrite;
@@ -39,9 +38,8 @@ import java.util.List;
 
 import som.compiler.Variable.Argument;
 import som.compiler.Variable.Local;
-import som.interpreter.LexicalContext;
+import som.interpreter.LexicalScope;
 import som.interpreter.Method;
-import som.interpreter.nodes.ContextualNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.FieldNode.FieldReadNode;
 import som.interpreter.nodes.FieldNode.FieldWriteNode;
@@ -68,18 +66,17 @@ public final class MethodGenerationContext {
   private SSymbol signature;
   private boolean primitive;
   private boolean needsToCatchNonLocalReturn;
-  private boolean throwsNonLocalReturn;
+  private boolean throwsNonLocalReturn;       // does directly or indirectly a non-local return
 
-  private boolean accessesVariablesOfOuterContext;
+  private boolean accessesVariablesOfOuterScope;
 
   private final LinkedHashMap<String, Argument> arguments = new LinkedHashMap<String, Argument>();
   private final LinkedHashMap<String, Local>    locals    = new LinkedHashMap<String, Local>();
 
-  private final FrameDescriptor frameDescriptor;
-  private       FrameSlot       frameOnStackSlot;
-  private       LexicalContext  lexicalContext;
+  private       FrameSlot     frameOnStackSlot;
+  private final LexicalScope  currentScope;
 
-  private final List<SMethod>   embeddedBlockMethods;
+  private final List<SMethod> embeddedBlockMethods;
 
 
   public MethodGenerationContext(final ClassGenerationContext holderGenc) {
@@ -97,8 +94,10 @@ public final class MethodGenerationContext {
     this.outerGenc       = outerGenc;
     this.blockMethod     = isBlockMethod;
 
-    frameDescriptor = new FrameDescriptor();
-    accessesVariablesOfOuterContext = false;
+    LexicalScope outer = (outerGenc != null) ? outerGenc.getCurrentLexicalScope() : null;
+    this.currentScope   = new LexicalScope(new FrameDescriptor(), outer);
+
+    accessesVariablesOfOuterScope = false;
     throwsNonLocalReturn            = false;
     needsToCatchNonLocalReturn      = false;
     embeddedBlockMethods = new ArrayList<SMethod>();
@@ -108,20 +107,8 @@ public final class MethodGenerationContext {
     embeddedBlockMethods.add(blockMethod);
   }
 
-  public LexicalContext getLexicalContext() {
-    if (outerGenc == null) {
-      return null;
-    }
-
-    if (lexicalContext == null) {
-      lexicalContext = new LexicalContext(outerGenc.frameDescriptor,
-          outerGenc.getLexicalContext());
-    }
-    return lexicalContext;
-  }
-
-  public boolean isPrimitive() {
-    return primitive;
+  public LexicalScope getCurrentLexicalScope() {
+    return currentScope;
   }
 
   // Name for the frameOnStack slot,
@@ -134,7 +121,7 @@ public final class MethodGenerationContext {
     }
 
     if (frameOnStackSlot == null) {
-      frameOnStackSlot = frameDescriptor.addFrameSlot(frameOnStackSlotName);
+      frameOnStackSlot = currentScope.getFrameDescriptor().addFrameSlot(frameOnStackSlotName);
     }
     return frameOnStackSlot;
   }
@@ -142,18 +129,19 @@ public final class MethodGenerationContext {
   public void makeCatchNonLocalReturn() {
     throwsNonLocalReturn = true;
 
-    MethodGenerationContext ctx = getOuterContext();
+    MethodGenerationContext ctx = markOuterContextsToRequireContextAndGetRootContext();
     assert ctx != null;
     ctx.needsToCatchNonLocalReturn = true;
   }
 
   public boolean requiresContext() {
-    return throwsNonLocalReturn || accessesVariablesOfOuterContext;
+    return throwsNonLocalReturn || accessesVariablesOfOuterScope;
   }
 
-  private MethodGenerationContext getOuterContext() {
+  private MethodGenerationContext markOuterContextsToRequireContextAndGetRootContext() {
     MethodGenerationContext ctx = outerGenc;
     while (ctx.outerGenc != null) {
+      ctx.throwsNonLocalReturn = true;
       ctx = ctx.outerGenc;
     }
     return ctx;
@@ -177,7 +165,7 @@ public final class MethodGenerationContext {
   }
 
   public SInvokable assemble(ExpressionNode body, final SourceSection sourceSection) {
-    if (isPrimitive()) {
+    if (primitive) {
       return Primitives.constructEmptyPrimitive(signature);
     }
 
@@ -190,13 +178,9 @@ public final class MethodGenerationContext {
       body = createCatchNonLocalReturn(body, getFrameOnStackMarkerSlot());
     }
 
-    body = createArgumentInitialization(body, arguments);
-
     Method truffleMethod =
         new Method(getSourceSectionForMethod(sourceSection),
-            frameDescriptor, body, getLexicalContext());
-
-    setOuterMethodInLexicalScopes(truffleMethod);
+            body, currentScope, (ExpressionNode) body.deepCopy());
 
     SInvokable meth = Universe.newMethod(signature, truffleMethod, false,
         embeddedBlockMethods.toArray(new SMethod[0]));
@@ -205,23 +189,17 @@ public final class MethodGenerationContext {
     return meth;
   }
 
-  private void setOuterMethodInLexicalScopes(final Method method) {
-    for (SMethod m : embeddedBlockMethods) {
-      Method blockMethod = (Method) m.getInvokable();
-      blockMethod.setOuterContextMethod(method);
-    }
-  }
-
   private SourceSection getSourceSectionForMethod(final SourceSection ssBody) {
+    String cls = holderGenc.isClassSide() ? "_class" : "";
     SourceSection ssMethod = ssBody.getSource().createSection(
-        holderGenc.getName().getString() + ">>" + signature.toString(),
+        holderGenc.getName().getString() + cls + ">>" + signature.toString(),
         ssBody.getStartLine(), ssBody.getStartColumn(),
         ssBody.getCharIndex(), ssBody.getCharLength());
     return ssMethod;
   }
 
-  public void setPrimitive(final boolean prim) {
-    primitive = prim;
+  public void markAsPrimitive() {
+    primitive = true;
   }
 
   public void setSignature(final SSymbol sig) {
@@ -233,8 +211,7 @@ public final class MethodGenerationContext {
       throw new IllegalStateException("The self argument always has to be the first argument of a method");
     }
 
-    Argument argument = new Argument(arg, frameDescriptor.addFrameSlot(arg),
-        arguments.size());
+    Argument argument = new Argument(arg, arguments.size());
     arguments.put(arg, argument);
   }
 
@@ -254,9 +231,11 @@ public final class MethodGenerationContext {
     addLocal(local);
   }
 
-  public void addLocal(final String local) {
-    Local l = new Local(local, frameDescriptor.addFrameSlot(local));
+  public Local addLocal(final String local) {
+    Local l = new Local(local, currentScope.getFrameDescriptor().addFrameSlot(local));
+    assert !locals.containsKey(local);
     locals.put(local, l);
+    return l;
   }
 
   public boolean isBlockMethod() {
@@ -267,7 +246,7 @@ public final class MethodGenerationContext {
     return holderGenc;
   }
 
-  public int getOuterSelfContextLevel() {
+  private int getOuterSelfContextLevel() {
     int level = 0;
     MethodGenerationContext ctx = outerGenc;
     while (ctx != null) {
@@ -277,19 +256,7 @@ public final class MethodGenerationContext {
     return level;
   }
 
-  private FrameSlot getOuterSelfSlot() {
-    if (outerGenc == null) {
-      return getLocalSelfSlot();
-    } else {
-      return outerGenc.getOuterSelfSlot();
-    }
-  }
-
-  public FrameSlot getLocalSelfSlot() {
-    return arguments.values().iterator().next().slot;
-  }
-
-  public int getContextLevel(final String varName) {
+  private int getContextLevel(final String varName) {
     if (locals.containsKey(varName) || arguments.containsKey(varName)) {
       return 0;
     }
@@ -299,6 +266,10 @@ public final class MethodGenerationContext {
     }
 
     return 0;
+  }
+
+  public Local getEmbeddedLocal(final String embeddedName) {
+    return locals.get(embeddedName);
   }
 
   protected Variable getVariable(final String varName) {
@@ -313,32 +284,29 @@ public final class MethodGenerationContext {
     if (outerGenc != null) {
       Variable outerVar = outerGenc.getVariable(varName);
       if (outerVar != null) {
-        accessesVariablesOfOuterContext = true;
+        accessesVariablesOfOuterScope = true;
       }
       return outerVar;
     }
     return null;
   }
 
-  public ContextualNode getSuperReadNode(final SourceSection source) {
+  public ExpressionNode getSuperReadNode(final SourceSection source) {
     Variable self = getVariable("self");
     return self.getSuperReadNode(getOuterSelfContextLevel(),
-        holderGenc.getName(), holderGenc.isClassSide(),
-        getLocalSelfSlot(), source);
+        holderGenc.getName(), holderGenc.isClassSide(), source);
   }
 
-  public ContextualNode getLocalReadNode(final String variableName,
+  public ExpressionNode getLocalReadNode(final String variableName,
       final SourceSection source) {
     Variable variable = getVariable(variableName);
-    return variable.getReadNode(getContextLevel(variableName),
-        getLocalSelfSlot(), source);
+    return variable.getReadNode(getContextLevel(variableName), source);
   }
 
   public ExpressionNode getLocalWriteNode(final String variableName,
       final ExpressionNode valExpr, final SourceSection source) {
     Local variable = getLocal(variableName);
-    return variable.getWriteNode(getContextLevel(variableName),
-        getLocalSelfSlot(), valExpr, source);
+    return variable.getWriteNode(getContextLevel(variableName), valExpr, source);
   }
 
   protected Local getLocal(final String varName) {
@@ -349,7 +317,7 @@ public final class MethodGenerationContext {
     if (outerGenc != null) {
       Local outerLocal = outerGenc.getLocal(varName);
       if (outerLocal != null) {
-        accessesVariablesOfOuterContext = true;
+        accessesVariablesOfOuterScope = true;
       }
       return outerLocal;
     }
@@ -360,13 +328,11 @@ public final class MethodGenerationContext {
       final SourceSection source) {
     makeCatchNonLocalReturn();
     return createNonLocalReturn(expr, getFrameOnStackMarkerSlot(),
-        getOuterSelfSlot(),
-        getOuterSelfContextLevel(), getLocalSelfSlot(), source);
+        getOuterSelfContextLevel(), source);
   }
 
-  private ContextualNode getSelfRead(final SourceSection source) {
-    return getVariable("self").getReadNode(getContextLevel("self"),
-        getLocalSelfSlot(), source);
+  private ExpressionNode getSelfRead(final SourceSection source) {
+    return getVariable("self").getReadNode(getContextLevel("self"), source);
   }
 
   public FieldReadNode getObjectFieldRead(final SSymbol fieldName,
@@ -404,10 +370,6 @@ public final class MethodGenerationContext {
 
   public SSymbol getSignature() {
     return signature;
-  }
-
-  public FrameDescriptor getFrameDescriptor() {
-    return frameDescriptor;
   }
 
   @Override

@@ -41,7 +41,7 @@ import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
-import com.oracle.truffle.api.nodes.NodeUtil;
+import com.oracle.truffle.api.nodes.NodeFieldAccessor;
 import com.oracle.truffle.api.nodes.NodeUtil.FieldOffsetProvider;
 
 public class SObject extends SAbstractObject {
@@ -106,11 +106,11 @@ public class SObject extends SAbstractObject {
   }
 
   public final long[] getExtendedPrimFields() {
-    return CompilerDirectives.unsafeCast(extensionPrimFields, long[].class, true, true);
+    return extensionPrimFields;
   }
 
   public final Object[] getExtensionObjFields() {
-    return CompilerDirectives.unsafeCast(extensionObjFields, Object[].class, true, true);
+    return extensionObjFields;
   }
 
   public final void setClass(final SClass value) {
@@ -133,13 +133,11 @@ public class SObject extends SAbstractObject {
   }
 
   @ExplodeLoop
-  private Object[] readAllFields() {
+  private Object[] getAllFields() {
     Object[] fieldValues = new Object[numberOfFields];
     for (int i = 0; i < numberOfFields; i++) {
       if (isFieldSet(i)) {
         fieldValues[i] = getField(i);
-      } else {
-        fieldValues[i] = null;
       }
     }
     return fieldValues;
@@ -176,7 +174,7 @@ public class SObject extends SAbstractObject {
   private void setLayoutAndTransferFields(final ObjectLayout layout) {
     CompilerDirectives.transferToInterpreterAndInvalidate();
 
-    Object[] fieldValues = readAllFields();
+    Object[] fieldValues = getAllFields();
 
     objectLayout        = layout;
 
@@ -207,7 +205,7 @@ public class SObject extends SAbstractObject {
 
   @Override
   public final SClass getSOMClass() {
-    return CompilerDirectives.unsafeCast(clazz, SClass.class, true, true);
+    return clazz;
   }
 
   public final long getFieldIndex(final SSymbol fieldName) {
@@ -256,17 +254,20 @@ public class SObject extends SAbstractObject {
     return location;
   }
 
-  public final boolean isFieldSet(final long index) {
+  private boolean isFieldSet(final long index) {
+    CompilerAsserts.neverPartOfCompilation("isFieldSet");
     StorageLocation location = getLocation(index);
     return location.isSet(this, true);
   }
 
   public final Object getField(final long index) {
+    CompilerAsserts.neverPartOfCompilation("getField");
     StorageLocation location = getLocation(index);
     return location.read(this, true);
   }
 
   public final void setField(final long index, final Object value) {
+    CompilerAsserts.neverPartOfCompilation("setField");
     StorageLocation location = getLocation(index);
 
     try {
@@ -319,7 +320,7 @@ public class SObject extends SAbstractObject {
   private static FieldOffsetProvider getFieldOffsetProvider()
       throws NoSuchFieldException, IllegalAccessException {
     final Field fieldOffsetProviderField =
-        NodeUtil.class.getDeclaredField("unsafeFieldOffsetProvider");
+        NodeFieldAccessor.class.getDeclaredField("unsafeFieldOffsetProvider");
     fieldOffsetProviderField.setAccessible(true);
     final FieldOffsetProvider fieldOffsetProvider =
         (FieldOffsetProvider) fieldOffsetProviderField.get(null);

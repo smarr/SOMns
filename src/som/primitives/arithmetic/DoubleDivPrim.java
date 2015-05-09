@@ -6,8 +6,11 @@ import som.vm.NotYetImplementedException;
 import som.vmobjects.SAbstractObject;
 
 import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
+
+@GenerateNodeFactory
 public abstract class DoubleDivPrim extends ArithmeticPrim {
   @Specialization
   public final double doDouble(final double left, final double right) {

@@ -14,8 +14,6 @@ import com.oracle.truffle.api.nodes.UnexpectedResultException;
 
 
 public abstract class FieldAccessorNode extends Node {
-  protected static final int INLINE_CACHE_SIZE = 6;
-
   protected final int fieldIndex;
 
   public static AbstractReadFieldNode createRead(final int fieldIndex) {
@@ -26,7 +24,7 @@ public abstract class FieldAccessorNode extends Node {
     return new UninitializedWriteFieldNode(fieldIndex);
   }
 
-  public FieldAccessorNode(final int fieldIndex) {
+  private FieldAccessorNode(final int fieldIndex) {
     this.fieldIndex = fieldIndex;
   }
 
@@ -39,18 +37,14 @@ public abstract class FieldAccessorNode extends Node {
       super(fieldIndex);
     }
 
-    public boolean isSet(final SObject obj) {
-      return true;
-    }
-
     public abstract Object read(SObject obj);
 
     public long readLong(final SObject obj) throws UnexpectedResultException {
-      return TypesGen.TYPES.expectLong(read(obj));
+      return TypesGen.expectLong(read(obj));
     }
 
     public double readDouble(final SObject obj) throws UnexpectedResultException {
-      return TypesGen.TYPES.expectDouble(read(obj));
+      return TypesGen.expectDouble(read(obj));
     }
 
     protected final Object specializeAndRead(final SObject obj, final String reason, final AbstractReadFieldNode next) {
@@ -111,15 +105,6 @@ public abstract class FieldAccessorNode extends Node {
     public ReadUnwrittenFieldNode(final int fieldIndex,
         final ObjectLayout layout, final AbstractReadFieldNode next) {
       super(fieldIndex, layout, next);
-    }
-
-    @Override
-    public boolean isSet(final SObject obj) {
-      if (hasExpectedLayout(obj)) {
-        return false;
-      } else {
-        return true;
-      }
     }
 
     @Override
@@ -286,7 +271,7 @@ public abstract class FieldAccessorNode extends Node {
         storage.writeLong(obj, value);
       } else {
         if (layout.layoutForSameClass(obj.getObjectLayout())) {
-          writeAndRespecialize(obj, value, "update outdated read node", nextInCache);
+          writeAndRespecialize(obj, value, "update outdated write node", nextInCache);
         } else {
           nextInCache.write(obj, value);
         }

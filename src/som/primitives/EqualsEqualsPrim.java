@@ -4,16 +4,20 @@ import java.math.BigInteger;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
-import som.interpreter.nodes.nary.BinaryExpressionNode.BinarySideEffectFreeExpressionNode;
+import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.vm.constants.Globals;
+import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
-public abstract class EqualsEqualsPrim extends BinarySideEffectFreeExpressionNode {
+
+@GenerateNodeFactory
+public abstract class EqualsEqualsPrim extends BinaryExpressionNode {
 
   @Specialization
   public final boolean doBoolean(final boolean left, final boolean right) {
@@ -52,7 +56,7 @@ public abstract class EqualsEqualsPrim extends BinarySideEffectFreeExpressionNod
   }
 
   @Specialization
-  public final boolean doArray(final Object[] left, final Object right) {
+  public final boolean doArray(final SArray left, final Object right) {
     return left == right;
   }
 

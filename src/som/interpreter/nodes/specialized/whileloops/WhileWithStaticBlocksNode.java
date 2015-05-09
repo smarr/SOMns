@@ -28,13 +28,6 @@ public abstract class WhileWithStaticBlocksNode extends AbstractWhileNode {
   }
 
   @Override
-  public final void executeVoid(final VirtualFrame frame) {
-    SBlock rcvr = receiver.executeSBlock(frame);
-    SBlock arg  = argument.executeSBlock(frame);
-    executeEvaluatedVoid(frame, rcvr, arg);
-  }
-
-  @Override
   protected final SObject doWhileConditionally(final VirtualFrame frame,
       final SBlock loopCondition,
       final SBlock loopBody) {

@@ -8,7 +8,6 @@ import som.vmobjects.SInvokable;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.CompilerDirectives.SlowPath;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -36,11 +35,11 @@ public abstract class IntDownToDoMessageNode extends TernaryExpressionNode {
     this.valueSend   = node.valueSend;
   }
 
-  protected final boolean isSameBlockLong(final long receiver, final long limit, final SBlock block) {
+  protected final boolean isSameBlockLong(final SBlock block) {
     return block.getMethod() == blockMethod;
   }
 
-  @Specialization(guards = "isSameBlockLong")
+  @Specialization(guards = "isSameBlockLong(block)")
   public final long doIntDownToDo(final VirtualFrame frame, final long receiver, final long limit, final SBlock block) {
     try {
       if (receiver >= limit) {
@@ -57,11 +56,11 @@ public abstract class IntDownToDoMessageNode extends TernaryExpressionNode {
     return receiver;
   }
 
-  protected final boolean isSameBlockDouble(final long receiver, final double limit, final SBlock block) {
+  protected final boolean isSameBlockDouble(final SBlock block) {
     return block.getMethod() == blockMethod;
   }
 
-  @Specialization(guards = "isSameBlockDouble")
+  @Specialization(guards = "isSameBlockDouble(block)")
   public final long doIntDownToDo(final VirtualFrame frame, final long receiver, final double limit, final SBlock block) {
     try {
       if (receiver >= limit) {
@@ -78,7 +77,6 @@ public abstract class IntDownToDoMessageNode extends TernaryExpressionNode {
     return receiver;
   }
 
-  @SlowPath
   private void reportLoopCount(final long count) {
     CompilerAsserts.neverPartOfCompilation("reportLoopCount");
     Node current = getParent();

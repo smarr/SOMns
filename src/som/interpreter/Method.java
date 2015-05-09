@@ -24,64 +24,79 @@ package som.interpreter;
 import som.interpreter.nodes.ExpressionNode;
 
 import com.oracle.truffle.api.frame.FrameDescriptor;
-import com.oracle.truffle.api.nodes.RootNode;
+import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.nodes.NodeUtil;
 import com.oracle.truffle.api.source.SourceSection;
 
 
 public final class Method extends Invokable {
 
-  private final LexicalContext outerContext;
+  private final LexicalScope currentLexicalScope;
 
   public Method(final SourceSection sourceSection,
-                final FrameDescriptor frameDescriptor,
                 final ExpressionNode expressions,
-                final LexicalContext outerContext) {
-    super(sourceSection, frameDescriptor, expressions);
-    this.outerContext = outerContext;
+                final LexicalScope currentLexicalScope,
+                final ExpressionNode uninitialized) {
+    super(sourceSection, currentLexicalScope.getFrameDescriptor(),
+        expressions, uninitialized);
+    this.currentLexicalScope = currentLexicalScope;
+    currentLexicalScope.setMethod(this);
   }
 
   @Override
   public String toString() {
     SourceSection ss = getSourceSection();
-    final String name = ss.getIdentifier();
-    final String location = getSourceSection().toString();
-    return "Method " + name + ":" + location + "@" + Integer.toHexString(hashCode());
+    final String id = ss.getIdentifier();
+    return "Method " + id + "\t@" + Integer.toHexString(hashCode());
   }
 
   @Override
-  public Invokable cloneWithNewLexicalContext(final LexicalContext outerContext) {
+  public Invokable cloneWithNewLexicalContext(final LexicalScope outerScope) {
     FrameDescriptor inlinedFrameDescriptor = getFrameDescriptor().copy();
-    LexicalContext  inlinedContext = new LexicalContext(inlinedFrameDescriptor,
-        outerContext);
-    ExpressionNode  inlinedBody = Inliner.doInline(getUninitializedBody(),
-        inlinedContext);
-    Method clone = new Method(getSourceSection(), inlinedFrameDescriptor,
-        inlinedBody, outerContext);
-    inlinedContext.setOuterMethod(clone);
+    LexicalScope    inlinedCurrentScope = new LexicalScope(
+        inlinedFrameDescriptor, outerScope);
+    ExpressionNode  inlinedBody = SplitterForLexicallyEmbeddedCode.doInline(
+        uninitializedBody, inlinedCurrentScope);
+    Method clone = new Method(getSourceSection(), inlinedBody,
+        inlinedCurrentScope, uninitializedBody);
     return clone;
   }
 
-  @Override
-  public boolean isBlock() {
-    return outerContext != null;
+  public Invokable cloneAndAdaptToEmbeddedOuterContext(
+      final InlinerForLexicallyEmbeddedMethods inliner) {
+    LexicalScope currentAdaptedScope = new LexicalScope(
+        getFrameDescriptor().copy(), inliner.getCurrentLexicalScope());
+    ExpressionNode adaptedBody = InlinerAdaptToEmbeddedOuterContext.doInline(
+        uninitializedBody, inliner, currentAdaptedScope);
+    ExpressionNode uninitAdaptedBody = NodeUtil.cloneNode(adaptedBody);
+
+    Method clone = new Method(getSourceSection(), adaptedBody,
+        currentAdaptedScope, uninitAdaptedBody);
+    return clone;
   }
 
-  public void setOuterContextMethod(final Method method) {
-    outerContext.setOuterMethod(method);
+  public Invokable cloneAndAdaptToSomeOuterContextBeingEmbedded(
+      final InlinerAdaptToEmbeddedOuterContext inliner) {
+    LexicalScope currentAdaptedScope = new LexicalScope(
+        getFrameDescriptor().copy(), inliner.getCurrentLexicalScope());
+    ExpressionNode adaptedBody = InlinerAdaptToEmbeddedOuterContext.doInline(
+        uninitializedBody, inliner, currentAdaptedScope);
+    ExpressionNode uninitAdaptedBody = NodeUtil.cloneNode(adaptedBody);
+
+    Method clone = new Method(getSourceSection(),
+        adaptedBody, currentAdaptedScope, uninitAdaptedBody);
+    return clone;
   }
 
   @Override
   public void propagateLoopCountThroughoutLexicalScope(final long count) {
     assert count >= 0;
-
-    if (outerContext != null) {
-      outerContext.getOuterMethod().propagateLoopCountThroughoutLexicalScope(count);
-    }
+    currentLexicalScope.propagateLoopCountThroughoutLexicalScope(count);
     reportLoopCount((count > Integer.MAX_VALUE) ? Integer.MAX_VALUE : (int) count);
   }
 
   @Override
-  public RootNode split() {
-    return cloneWithNewLexicalContext(outerContext);
+  public Node deepCopy() {
+    return cloneWithNewLexicalContext(currentLexicalScope.getOuterScopeOrNull());
   }
 }

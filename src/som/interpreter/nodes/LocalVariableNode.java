@@ -1,16 +1,12 @@
 package som.interpreter.nodes;
 
-import static som.interpreter.SNodeFactory.createLocalVariableWrite;
 import static som.interpreter.TruffleCompiler.transferToInterpreter;
-import som.compiler.Variable;
 import som.compiler.Variable.Local;
-import som.interpreter.Inliner;
+import som.interpreter.SplitterForLexicallyEmbeddedCode;
 import som.vm.constants.Nil;
-import som.vmobjects.SClass;
 import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.CompilerAsserts;
-import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameSlot;
@@ -34,9 +30,9 @@ public abstract class LocalVariableNode extends ExpressionNode {
 
   public abstract static class LocalVariableReadNode extends LocalVariableNode {
 
-    public LocalVariableReadNode(final Variable variable,
+    public LocalVariableReadNode(final Local variable,
         final SourceSection source) {
-      this(variable.slot, source);
+      this(variable.getSlot(), source);
     }
 
     public LocalVariableReadNode(final LocalVariableReadNode node) {
@@ -48,31 +44,30 @@ public abstract class LocalVariableNode extends ExpressionNode {
       super(slot, source);
     }
 
-    @Specialization(guards = "isUninitialized")
+    @Specialization(guards = "isUninitialized()")
     public final SObject doNil() {
       return Nil.nilObject;
     }
 
-    @Specialization(guards = "isInitialized", rewriteOn = {FrameSlotTypeException.class})
+    @Specialization(guards = "isInitialized()", rewriteOn = {FrameSlotTypeException.class})
     public final boolean doBoolean(final VirtualFrame frame) throws FrameSlotTypeException {
       return frame.getBoolean(slot);
     }
 
 
-    @Specialization(guards = "isInitialized", rewriteOn = {FrameSlotTypeException.class})
+    @Specialization(guards = "isInitialized()", rewriteOn = {FrameSlotTypeException.class})
     public final long doLong(final VirtualFrame frame) throws FrameSlotTypeException {
       return frame.getLong(slot);
     }
 
-    @Specialization(guards = "isInitialized", rewriteOn = {FrameSlotTypeException.class})
+    @Specialization(guards = "isInitialized()", rewriteOn = {FrameSlotTypeException.class})
     public final double doDouble(final VirtualFrame frame) throws FrameSlotTypeException {
       return frame.getDouble(slot);
     }
 
-    @Specialization(guards = "isInitialized", rewriteOn = {FrameSlotTypeException.class})
+    @Specialization(guards = "isInitialized()", rewriteOn = {FrameSlotTypeException.class})
     public final Object doObject(final VirtualFrame frame) throws FrameSlotTypeException {
-      return CompilerDirectives.unsafeCast(frame.getObject(slot),
-          Object.class, true, true);
+      return frame.getObject(slot);
     }
 
 //    @Generic
@@ -88,41 +83,13 @@ public abstract class LocalVariableNode extends ExpressionNode {
     protected final boolean isUninitialized() {
       return slot.getKind() == FrameSlotKind.Illegal;
     }
-
-    @Override
-    public final void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
-  }
-
-  public abstract static class LocalSuperReadNode
-                       extends LocalVariableReadNode implements ISuperReadNode {
-    private final SClass superClass;
-
-    public LocalSuperReadNode(final Variable variable, final SClass superClass,
-        final SourceSection source) {
-      this(variable.slot, superClass, source);
-    }
-
-    public LocalSuperReadNode(final FrameSlot slot, final SClass superClass,
-        final SourceSection source) {
-      super(slot, source);
-      this.superClass = superClass;
-    }
-
-    public LocalSuperReadNode(final LocalSuperReadNode node) {
-      this(node.slot, node.superClass, node.getSourceSection());
-    }
-
-    @Override
-    public final SClass getSuperClass() {
-      return superClass;
-    }
   }
 
   @NodeChild(value = "exp", type = ExpressionNode.class)
   public abstract static class LocalVariableWriteNode extends LocalVariableNode {
 
     public LocalVariableWriteNode(final Local variable, final SourceSection source) {
-      super(variable.slot, source);
+      super(variable.getSlot(), source);
     }
 
     public LocalVariableWriteNode(final LocalVariableWriteNode node) {
@@ -135,19 +102,19 @@ public abstract class LocalVariableNode extends ExpressionNode {
 
     public abstract ExpressionNode getExp();
 
-    @Specialization(guards = "isBoolKind")
+    @Specialization(guards = "isBoolKind()")
     public final boolean writeBoolean(final VirtualFrame frame, final boolean expValue) {
       frame.setBoolean(slot, expValue);
       return expValue;
     }
 
-    @Specialization(guards = "isLongKind")
+    @Specialization(guards = "isLongKind()")
     public final long writeLong(final VirtualFrame frame, final long expValue) {
       frame.setLong(slot, expValue);
       return expValue;
     }
 
-    @Specialization(guards = "isDoubleKind")
+    @Specialization(guards = "isDoubleKind()")
     public final double writeDouble(final VirtualFrame frame, final double expValue) {
       frame.setDouble(slot, expValue);
       return expValue;
@@ -204,16 +171,9 @@ public abstract class LocalVariableNode extends ExpressionNode {
     }
 
     @Override
-    public final void replaceWithIndependentCopyForInlining(final Inliner inliner) {
+    public final void replaceWithIndependentCopyForInlining(final SplitterForLexicallyEmbeddedCode inliner) {
       CompilerAsserts.neverPartOfCompilation("replaceWithIndependentCopyForInlining");
-
-      if (getParent() instanceof ArgumentInitializationNode) {
-        FrameSlot varSlot = inliner.getLocalFrameSlot(getSlotIdentifier());
-        assert varSlot != null;
-        replace(createLocalVariableWrite(varSlot, getExp(), getSourceSection()));
-      } else {
-        throw new RuntimeException("Should not be part of an uninitalized tree. And this should only be done with uninitialized trees.");
-      }
+      throw new RuntimeException("Should not be part of an uninitalized tree. And this should only be done with uninitialized trees.");
     }
   }
 }

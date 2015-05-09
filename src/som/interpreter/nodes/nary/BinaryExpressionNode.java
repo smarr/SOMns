@@ -3,7 +3,6 @@ package som.interpreter.nodes.nary;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.PreevaluatedExpression;
 
-import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.NodeChildren;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -20,28 +19,15 @@ public abstract class BinaryExpressionNode extends ExpressionNode
     super(source);
   }
 
-  public abstract Object executeEvaluated(final VirtualFrame frame,
-      final Object receiver, Object argument);
+  // for nodes that are not representing source code
+  public BinaryExpressionNode() { super(null); }
 
-  public abstract void executeEvaluatedVoid(final VirtualFrame frame,
+  public abstract Object executeEvaluated(final VirtualFrame frame,
       final Object receiver, Object argument);
 
   @Override
   public final Object doPreEvaluated(final VirtualFrame frame,
       final Object[] arguments) {
-    return executeEvaluated(frame,
-        CompilerDirectives.unsafeCast(arguments[0], Object.class, true, true),
-        CompilerDirectives.unsafeCast(arguments[1], Object.class, true, true));
-  }
-
-  public abstract static class BinarySideEffectFreeExpressionNode
-    extends BinaryExpressionNode {
-
-    public BinarySideEffectFreeExpressionNode() { super(null); }
-
-    @Override
-    public final void executeVoid(final VirtualFrame frame) {
-      /* NOOP, side effect free */
-    }
+    return executeEvaluated(frame, arguments[0], arguments[1]);
   }
 }

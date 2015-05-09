@@ -53,6 +53,7 @@ import som.interpreter.TruffleCompiler;
 import som.vm.constants.Blocks;
 import som.vm.constants.Globals;
 import som.vm.constants.Nil;
+import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
@@ -61,8 +62,9 @@ import som.vmobjects.SInvokable.SPrimitive;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
-import com.oracle.truffle.api.CompilerDirectives.SlowPath;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.TruffleRuntime;
 import com.oracle.truffle.api.frame.MaterializedFrame;
@@ -130,8 +132,8 @@ public final class Universe {
     return truffleRuntime;
   }
 
-  @SlowPath
   public void exit(final int errorCode) {
+    TruffleCompiler.transferToInterpreter("exit");
     // Exit from the Java system
     if (!avoidExit) {
       System.exit(errorCode);
@@ -144,13 +146,13 @@ public final class Universe {
     return lastExitCode;
   }
 
-  @SlowPath
   public static void errorExit(final String message) {
+    TruffleCompiler.transferToInterpreter("errorExit");
     errorPrintln("Runtime Error: " + message);
     current().exit(1);
   }
 
-  @SlowPath
+  @TruffleBoundary
   public String[] handleArguments(String[] arguments) {
     boolean gotClasspath = false;
     String[] remainingArgs = new String[arguments.length];
@@ -199,7 +201,7 @@ public final class Universe {
     return arguments;
   }
 
-  @SlowPath
+  @TruffleBoundary
   // take argument of the form "../foo/Test.som" and return
   // "../foo", "Test", "som"
   private String[] getPathClassExt(final String arg) {
@@ -209,7 +211,7 @@ public final class Universe {
     StringTokenizer tokenizer = new StringTokenizer(file.getName(), ".");
 
     if (tokenizer.countTokens() > 2) {
-      println("Class with . in its name?");
+      errorPrintln("Class with . in its name?");
       exit(1);
     }
 
@@ -221,7 +223,7 @@ public final class Universe {
     return result;
   }
 
-  @SlowPath
+  @TruffleBoundary
   public void setupClassPath(final String cp) {
     // Create a new tokenizer to split up the string of directories
     StringTokenizer tokenizer = new StringTokenizer(cp, File.pathSeparator);
@@ -235,7 +237,7 @@ public final class Universe {
     }
   }
 
-  @SlowPath
+  @TruffleBoundary
   private String[] setupDefaultClassPath(final int directories) {
     // Get the default system class path
     String systemClassPath = System.getProperty("system.class.path");
@@ -258,14 +260,12 @@ public final class Universe {
     return result;
   }
 
-  @SlowPath
   private void printUsageAndExit() {
     // Print the usage
     println("Usage: som [-options] [args...]                          ");
     println("                                                         ");
     println("where options include:                                   ");
-    println("    -cp <directories separated by " + File.pathSeparator
-        + ">");
+    println("    -cp <directories separated by " + File.pathSeparator + ">");
     println("                  set search path for application classes");
     println("    -d            enable disassembling");
 
@@ -274,22 +274,21 @@ public final class Universe {
   }
 
   /**
-   * Start interpretation by sending the selector to the given class.
-   * This is mostly meant for testing currently.
+   * Start interpretation by sending the selector to the given class. This is
+   * mostly meant for testing currently.
    *
    * @param className
    * @param selector
    * @return
    */
-  public Object interpret(final String className,
-      final String selector) {
+  public Object interpret(final String className, final String selector) {
     initializeObjectSystem();
 
     SClass clazz = loadClass(symbolFor(className));
 
     // Lookup the initialize invokable on the system class
-    SInvokable initialize = clazz.getSOMClass().
-                                        lookupInvokable(symbolFor(selector));
+    SInvokable initialize = clazz.getSOMClass().lookupInvokable(
+        symbolFor(selector));
     return initialize.invoke(clazz);
   }
 
@@ -306,11 +305,12 @@ public final class Universe {
     SInvokable initialize = systemClass.
         lookupInvokable(symbolFor("initialize:"));
 
-    return initialize.invoke(new Object[] {systemObject, arguments});
+    return initialize.invoke(new Object[] {systemObject,
+        SArray.create(arguments)});
   }
 
-  @SlowPath
   protected void initializeObjectSystem() {
+    CompilerAsserts.neverPartOfCompilation();
     if (alreadyInitialized) {
       return;
     } else {
@@ -330,10 +330,10 @@ public final class Universe {
     initializeSystemClass(nilClass,        objectClass, "Nil");
     initializeSystemClass(arrayClass,      objectClass, "Array");
     initializeSystemClass(methodClass,     objectClass, "Method");
-    initializeSystemClass(symbolClass,     objectClass, "Symbol");
+    initializeSystemClass(stringClass,     objectClass, "String");
+    initializeSystemClass(symbolClass,     stringClass, "Symbol");
     initializeSystemClass(integerClass,    objectClass, "Integer");
     initializeSystemClass(primitiveClass,  objectClass, "Primitive");
-    initializeSystemClass(stringClass,     objectClass, "String");
     initializeSystemClass(doubleClass,     objectClass, "Double");
     initializeSystemClass(booleanClass,    objectClass, "Boolean");
 
@@ -402,7 +402,7 @@ public final class Universe {
     objectSystemInitialized = true;
   }
 
-  @SlowPath
+  @TruffleBoundary
   public SSymbol symbolFor(final String string) {
     String interned = string.intern();
     // Lookup the symbol in the symbol table
@@ -416,13 +416,12 @@ public final class Universe {
     return SBlock.create(method, context);
   }
 
-  @SlowPath
+  @TruffleBoundary
   public SClass newClass(final SClass classClass) {
-    // Allocate a new class and set its class to be the given class class
     return new SClass(classClass);
   }
 
-  @SlowPath
+  @TruffleBoundary
   public static SInvokable newMethod(final SSymbol signature,
       final Invokable truffleInvokable, final boolean isPrimitive,
       final SMethod[] embeddedBlocks) {
@@ -437,7 +436,7 @@ public final class Universe {
     return SObject.create(instanceClass);
   }
 
-  @SlowPath
+  @TruffleBoundary
   public static SClass newMetaclassClass() {
     // Allocate the metaclass classes
     SClass result = new SClass(0);
@@ -449,17 +448,12 @@ public final class Universe {
   }
 
   private SSymbol newSymbol(final String string) {
-    // Allocate a new symbol and set its class to be the symbol class
     SSymbol result = new SSymbol(string);
-
-    // Insert the new symbol into the symbol table
     symbolTable.put(string, result);
-
-    // Return the freshly allocated symbol
     return result;
   }
 
-  @SlowPath
+  @TruffleBoundary
   public static SClass newSystemClass() {
     // Allocate the new system class
     SClass systemClass = new SClass(0);
@@ -472,8 +466,7 @@ public final class Universe {
     return systemClass;
   }
 
-  @SlowPath
-  public void initializeSystemClass(final SClass systemClass, final SClass superClass,
+  private void initializeSystemClass(final SClass systemClass, final SClass superClass,
       final String name) {
     // Initialize the superclass hierarchy
     if (superClass != null) {
@@ -484,12 +477,12 @@ public final class Universe {
     }
 
     // Initialize the array of instance fields
-    systemClass.setInstanceFields(new SSymbol[0]);
-    systemClass.getSOMClass().setInstanceFields(new SSymbol[0]);
+    systemClass.setInstanceFields(SArray.create(new Object[0]));
+    systemClass.getSOMClass().setInstanceFields(SArray.create(new Object[0]));
 
     // Initialize the array of instance invokables
-    systemClass.setInstanceInvokables(new SInvokable[0]);
-    systemClass.getSOMClass().setInstanceInvokables(new SInvokable[0]);
+    systemClass.setInstanceInvokables(SArray.create(new Object[0]));
+    systemClass.getSOMClass().setInstanceInvokables(SArray.create(new Object[0]));
 
     // Initialize the name of the system class
     systemClass.setName(symbolFor(name));
@@ -499,12 +492,12 @@ public final class Universe {
     setGlobal(systemClass.getName(), systemClass);
   }
 
-  @SlowPath
+  @TruffleBoundary
   public boolean hasGlobal(final SSymbol name) {
     return globals.containsKey(name);
   }
 
-  @SlowPath
+  @TruffleBoundary
   public Object getGlobal(final SSymbol name) {
     Association assoc = globals.get(name);
     if (assoc == null) {
@@ -513,7 +506,7 @@ public final class Universe {
     return assoc.getValue();
   }
 
-  @SlowPath
+  @TruffleBoundary
   public Association getGlobalsAssociation(final SSymbol name) {
     return globals.get(name);
   }
@@ -522,7 +515,7 @@ public final class Universe {
     setGlobal(symbolFor(name), value);
   }
 
-  @SlowPath
+  @TruffleBoundary
   public void setGlobal(final SSymbol name, final Object value) {
     Association assoc = globals.get(name);
     if (assoc == null) {
@@ -539,7 +532,7 @@ public final class Universe {
     return result;
   }
 
-  private SClass loadBlockClass(final int numberOfArguments) {
+  private void loadBlockClass(final int numberOfArguments) {
     // Compute the name of the block class with the given number of
     // arguments
     SSymbol name = symbolFor("Block" + numberOfArguments);
@@ -550,25 +543,22 @@ public final class Universe {
     SClass result = loadClass(name, null);
 
     // Add the appropriate value primitive to the block class
-    result.addInstancePrimitive(SBlock.getEvaluationPrimitive(numberOfArguments,
-        this, result));
+    result.addInstancePrimitive(SBlock.getEvaluationPrimitive(
+        numberOfArguments, this, result), true);
 
     // Insert the block class into the dictionary of globals
     setGlobal(name, result);
 
     blockClasses[numberOfArguments] = result;
-    return result;
   }
 
-  @SlowPath
+  @TruffleBoundary
   public SClass loadClass(final SSymbol name) {
     // Check if the requested class is already in the dictionary of globals
     SClass result = (SClass) getGlobal(name);
     if (result != null) { return result; }
 
-    // Load the class
     result = loadClass(name, null);
-
     loadPrimitives(result, false);
 
     setGlobal(name, result);
@@ -586,8 +576,8 @@ public final class Universe {
     }
   }
 
-  @SlowPath
-  public void loadSystemClass(final SClass systemClass) {
+  @TruffleBoundary
+  private void loadSystemClass(final SClass systemClass) {
     // Load the system class
     SClass result = loadClass(systemClass.getName(), systemClass);
 
@@ -602,8 +592,8 @@ public final class Universe {
     loadPrimitives(result, true);
   }
 
-  @SlowPath
-  public SClass loadClass(final SSymbol name, final SClass systemClass) {
+  @TruffleBoundary
+  private SClass loadClass(final SSymbol name, final SClass systemClass) {
     // Try loading the class from all different paths
     for (String cpEntry : classPath) {
       try {
@@ -625,7 +615,7 @@ public final class Universe {
     return null;
   }
 
-  @SlowPath
+  @TruffleBoundary
   public SClass loadShellClass(final String stmt) throws IOException {
     // Load the class from a stream and return the loaded class
     SClass result = som.compiler.SourcecodeCompiler.compileClass(stmt, null,
@@ -638,42 +628,42 @@ public final class Universe {
     avoidExit = value;
   }
 
-  @SlowPath
+  @TruffleBoundary
   public static void errorPrint(final String msg) {
     // Checkstyle: stop
     System.err.print(msg);
     // Checkstyle: resume
   }
 
-  @SlowPath
+  @TruffleBoundary
   public static void errorPrintln(final String msg) {
     // Checkstyle: stop
     System.err.println(msg);
     // Checkstyle: resume
   }
 
-  @SlowPath
+  @TruffleBoundary
   public static void errorPrintln() {
     // Checkstyle: stop
     System.err.println();
     // Checkstyle: resume
   }
 
-  @SlowPath
+  @TruffleBoundary
   public static void print(final String msg) {
     // Checkstyle: stop
     System.out.print(msg);
     // Checkstyle: resume
   }
 
-  @SlowPath
+  @TruffleBoundary
   public static void println(final String msg) {
     // Checkstyle: stop
     System.out.println(msg);
     // Checkstyle: resume
   }
 
-  @SlowPath
+  @TruffleBoundary
   public static void println() {
     // Checkstyle: stop
     System.out.println();

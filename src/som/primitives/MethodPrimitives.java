@@ -6,6 +6,8 @@ import som.primitives.MethodPrimsFactory.SignaturePrimFactory;
 
 
 public final class MethodPrimitives extends Primitives {
+  public MethodPrimitives(final boolean displayWarning) { super(displayWarning); }
+
   @Override
   public void installPrimitives() {
     installInstancePrimitive("signature",      SignaturePrimFactory.getInstance());

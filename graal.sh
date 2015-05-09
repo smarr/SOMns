@@ -14,7 +14,7 @@ if [ -z "$GRAAL_FLAGS" ]; then
   if [ "$GRAAL_HOME" = "/Users/smarr/Projects/PostDoc/Truffle/graal" ]; then
     echo Using Graal Development Flags
     GRAAL_FLAGS='-ea -XX:+UnlockDiagnosticVMOptions -XX:+LogCompilation
-      -G:+TraceTruffleExpansion -G:+TraceTruffleExpansionSource
+      -G:+TraceTruffleExpansionSource
       -XX:+TraceDeoptimization
       -G:-TruffleBackgroundCompilation
       -G:+TraceTruffleCompilationDetails'

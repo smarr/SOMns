@@ -6,9 +6,11 @@ import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.ExactMath;
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
 
+@GenerateNodeFactory
 public abstract class AdditionPrim extends ArithmeticPrim {
   @Specialization(rewriteOn = ArithmeticException.class)
   public final long doLong(final long left, final long argument) {
@@ -23,7 +25,7 @@ public abstract class AdditionPrim extends ArithmeticPrim {
   @Specialization
   public final Object doBigInteger(final BigInteger left, final BigInteger right) {
     BigInteger result = left.add(right);
-    return reduceToIntIfPossible(result);
+    return reduceToLongIfPossible(result);
   }
 
   @Specialization
@@ -34,6 +36,16 @@ public abstract class AdditionPrim extends ArithmeticPrim {
   @Specialization
   public final String doString(final String left, final String right) {
     return left + right;
+  }
+
+  @Specialization
+  public final String doSSymbol(final SSymbol left, final SSymbol right) {
+    return left.getString() + right.getString();
+  }
+
+  @Specialization
+  public final String doSSymbol(final SSymbol left, final String right) {
+    return left.getString() + right;
   }
 
   @Specialization

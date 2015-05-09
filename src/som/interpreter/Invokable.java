@@ -1,12 +1,13 @@
 package som.interpreter;
 
+import som.compiler.MethodGenerationContext;
+import som.compiler.Variable.Local;
 import som.interpreter.nodes.ExpressionNode;
 
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.NodeUtil;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -14,18 +15,15 @@ public abstract class Invokable extends RootNode {
 
   @Child protected ExpressionNode  expressionOrSequence;
 
-  private final ExpressionNode  uninitializedBody;
+  protected final ExpressionNode uninitializedBody;
 
   public Invokable(final SourceSection sourceSection,
       final FrameDescriptor frameDescriptor,
-      final ExpressionNode expressionOrSequence) {
+      final ExpressionNode expressionOrSequence,
+      final ExpressionNode uninitialized) {
     super(sourceSection, frameDescriptor);
-    this.uninitializedBody    = NodeUtil.cloneNode(expressionOrSequence);
+    this.uninitializedBody    = uninitialized;
     this.expressionOrSequence = expressionOrSequence;
-  }
-
-  public ExpressionNode getUninitializedBody() {
-    return uninitializedBody;
   }
 
   @Override
@@ -33,10 +31,16 @@ public abstract class Invokable extends RootNode {
     return expressionOrSequence.executeGeneric(frame);
   }
 
-  public abstract Invokable cloneWithNewLexicalContext(final LexicalContext outerContext);
+  public abstract Invokable cloneWithNewLexicalContext(final LexicalScope outerContext);
+
+  public ExpressionNode inline(final MethodGenerationContext mgenc,
+      final Local[] locals) {
+    return InlinerForLexicallyEmbeddedMethods.doInline(uninitializedBody, mgenc,
+        locals, getSourceSection().getCharIndex());
+  }
 
   @Override
-  public final boolean isSplittable() {
+  public final boolean isCloningAllowed() {
     return true;
   }
 
@@ -45,6 +49,4 @@ public abstract class Invokable extends RootNode {
   }
 
   public abstract void propagateLoopCountThroughoutLexicalScope(final long count);
-
-  public abstract boolean isBlock();
 }

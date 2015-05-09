@@ -3,7 +3,6 @@ package som.interpreter.nodes.dispatch;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode.AbstractCachedDispatchNode;
 
 import com.oracle.truffle.api.CallTarget;
-import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 
@@ -20,7 +19,7 @@ public final class CachedDispatchSimpleCheckNode extends AbstractCachedDispatchN
   @Override
   public Object executeDispatch(final VirtualFrame frame,
       final Object[] arguments) {
-    Object rcvr = CompilerDirectives.unsafeCast(arguments[0], Object.class, true, true);
+    Object rcvr = arguments[0];
     if (rcvr.getClass() == expectedClass) {
       return cachedMethod.call(frame, arguments);
     } else {

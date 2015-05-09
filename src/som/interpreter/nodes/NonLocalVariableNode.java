@@ -1,11 +1,11 @@
 package som.interpreter.nodes;
 
 import static som.interpreter.TruffleCompiler.transferToInterpreter;
+import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
+import som.interpreter.InlinerForLexicallyEmbeddedMethods;
 import som.vm.constants.Nil;
-import som.vmobjects.SClass;
 import som.vmobjects.SObject;
 
-import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameSlot;
@@ -20,46 +20,57 @@ public abstract class NonLocalVariableNode extends ContextualNode {
   protected final FrameSlot slot;
 
   private NonLocalVariableNode(final int contextLevel, final FrameSlot slot,
-      final FrameSlot localSelf, final SourceSection source) {
-    super(contextLevel, localSelf, source);
+      final SourceSection source) {
+    super(contextLevel, source);
     this.slot = slot;
+  }
+
+  @Override
+  public final void replaceWithLexicallyEmbeddedNode(
+      final InlinerForLexicallyEmbeddedMethods inliner) {
+    throw new RuntimeException("Normally, only uninitialized variable nodes should be encountered, because this is done at parse time");
+  }
+
+  @Override
+  public final void replaceWithCopyAdaptedToEmbeddedOuterContext(
+      final InlinerAdaptToEmbeddedOuterContext inliner) {
+    throw new RuntimeException("Normally, only uninitialized variable nodes should be encountered, because this is done at parse time");
   }
 
   public abstract static class NonLocalVariableReadNode extends NonLocalVariableNode {
 
     public NonLocalVariableReadNode(final int contextLevel,
-        final FrameSlot slot, final FrameSlot localSelf, final SourceSection source) {
-      super(contextLevel, slot, localSelf, source);
+        final FrameSlot slot, final SourceSection source) {
+      super(contextLevel, slot, source);
     }
 
     public NonLocalVariableReadNode(final NonLocalVariableReadNode node) {
-      this(node.contextLevel, node.slot, node.localSelf, node.getSourceSection());
+      this(node.contextLevel, node.slot, node.getSourceSection());
     }
 
-    @Specialization(guards = "isUninitialized")
+    @Specialization(guards = "isUninitialized()")
     public final SObject doNil() {
       return Nil.nilObject;
     }
 
-    @Specialization(guards = "isInitialized", rewriteOn = {FrameSlotTypeException.class})
+    @Specialization(guards = "isInitialized()", rewriteOn = {FrameSlotTypeException.class})
     public final boolean doBoolean(final VirtualFrame frame) throws FrameSlotTypeException {
       return determineContext(frame).getBoolean(slot);
     }
 
-    @Specialization(guards = "isInitialized", rewriteOn = {FrameSlotTypeException.class})
+    @Specialization(guards = "isInitialized()", rewriteOn = {FrameSlotTypeException.class})
     public final long doLong(final VirtualFrame frame) throws FrameSlotTypeException {
       return determineContext(frame).getLong(slot);
     }
 
-    @Specialization(guards = "isInitialized", rewriteOn = {FrameSlotTypeException.class})
+    @Specialization(guards = "isInitialized()", rewriteOn = {FrameSlotTypeException.class})
     public final double doDouble(final VirtualFrame frame) throws FrameSlotTypeException {
       return determineContext(frame).getDouble(slot);
     }
 
-    @Specialization(guards = "isInitialized", rewriteOn = {FrameSlotTypeException.class})
+    @Specialization(guards = "isInitialized()", rewriteOn = {FrameSlotTypeException.class})
     public final Object doObject(final VirtualFrame frame) throws FrameSlotTypeException {
-      return CompilerDirectives.unsafeCast(
-          determineContext(frame).getObject(slot), Object.class, true, true);
+      return determineContext(frame).getObject(slot);
     }
 
 //    @Generic
@@ -75,56 +86,33 @@ public abstract class NonLocalVariableNode extends ContextualNode {
     protected final boolean isUninitialized() {
       return slot.getKind() == FrameSlotKind.Illegal;
     }
-
-    @Override
-    public final void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
-  }
-
-  public abstract static class NonLocalSuperReadNode
-                       extends NonLocalVariableReadNode implements ISuperReadNode {
-    private final SClass superClass;
-
-    public NonLocalSuperReadNode(final int contextLevel, final FrameSlot slot,
-        final FrameSlot localSelf, final SClass superClass, final SourceSection source) {
-      super(contextLevel, slot, localSelf, source);
-      this.superClass = superClass;
-    }
-
-    public NonLocalSuperReadNode(final NonLocalSuperReadNode node) {
-      this(node.contextLevel, node.slot, node.localSelf, node.superClass, node.getSourceSection());
-    }
-
-    @Override
-    public final SClass getSuperClass() {
-      return superClass;
-    }
   }
 
   @NodeChild(value = "exp", type = ExpressionNode.class)
   public abstract static class NonLocalVariableWriteNode extends NonLocalVariableNode {
 
     public NonLocalVariableWriteNode(final int contextLevel,
-        final FrameSlot slot, final FrameSlot localSelf, final SourceSection source) {
-      super(contextLevel, slot, localSelf, source);
+        final FrameSlot slot, final SourceSection source) {
+      super(contextLevel, slot, source);
     }
 
     public NonLocalVariableWriteNode(final NonLocalVariableWriteNode node) {
-      this(node.contextLevel, node.slot, node.localSelf, node.getSourceSection());
+      this(node.contextLevel, node.slot, node.getSourceSection());
     }
 
-    @Specialization(guards = "isBoolKind")
+    @Specialization(guards = "isBoolKind()")
     public final boolean writeBoolean(final VirtualFrame frame, final boolean expValue) {
       determineContext(frame).setBoolean(slot, expValue);
       return expValue;
     }
 
-    @Specialization(guards = "isLongKind")
+    @Specialization(guards = "isLongKind()")
     public final long writeLong(final VirtualFrame frame, final long expValue) {
       determineContext(frame).setLong(slot, expValue);
       return expValue;
     }
 
-    @Specialization(guards = "isDoubleKind")
+    @Specialization(guards = "isDoubleKind()")
     public final double writeDouble(final VirtualFrame frame, final double expValue) {
       determineContext(frame).setDouble(slot, expValue);
       return expValue;

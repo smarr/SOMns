@@ -5,7 +5,6 @@ import som.interpreter.Types;
 import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
 import som.interpreter.nodes.dispatch.CachedDispatchSimpleCheckNode.CachedDispatchFalseCheckNode;
 import som.interpreter.nodes.dispatch.CachedDispatchSimpleCheckNode.CachedDispatchTrueCheckNode;
-import som.vm.NotYetImplementedException;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
@@ -49,11 +48,6 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
 
       UninitializedDispatchNode newChainEnd = new UninitializedDispatchNode(selector);
 
-//        if (method.getInvokable().isAlwaysToBeInlined()) {
-//          InlinedDispatchNode inlined = InlinedDispatchNode.create(
-//              rcvrClass, method, newChainEnd, universe);
-//          return replace(inlined).executeDispatch(frame, arguments);
-//        } else {
       if (rcvr instanceof SObject) {
         AbstractCachedDispatchNode node;
         if (method != null) {
@@ -71,22 +65,24 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
           return replace(checkNode);
         }
       } else {
-        if (method == null) {
-          throw new NotYetImplementedException();
-        }
-        // the simple checks are prepended
-
-        AbstractCachedDispatchNode node;
         AbstractDispatchNode next = sendNode.getDispatchListHead();
 
-        if (rcvr == Boolean.TRUE) {
-          node = new CachedDispatchTrueCheckNode(callTarget, next);
-        } else if (rcvr == Boolean.FALSE) {
-          node = new CachedDispatchFalseCheckNode(callTarget, next);
+        AbstractCachedDispatchNode node;
+        if (method == null) {
+          node = new CachedDnuSimpleCheckNode(
+              rcvr.getClass(), rcvrClass, selector, next);
         } else {
-          node = new CachedDispatchSimpleCheckNode(
-                rcvr.getClass(), callTarget, next);
+          if (rcvr == Boolean.TRUE) {
+            node = new CachedDispatchTrueCheckNode(callTarget, next);
+          } else if (rcvr == Boolean.FALSE) {
+            node = new CachedDispatchFalseCheckNode(callTarget, next);
+          } else {
+            node = new CachedDispatchSimpleCheckNode(
+                  rcvr.getClass(), callTarget, next);
+          }
         }
+
+        // the simple checks are prepended
         sendNode.adoptNewDispatchListHead(node);
         return node;
       }
@@ -95,10 +91,6 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
     // the chain is longer than the maximum defined by INLINE_CACHE_SIZE and
     // thus, this callsite is considered to be megaprophic, and we generalize
     // it.
-    // Or, the lookup failed, and we have a callsite that leads to a
-    // does not understand, which means, we also treat this callsite as
-    // megamorphic.
-    // TODO: see whether we could get #DNUs fast.
     GenericDispatchNode genericReplacement = new GenericDispatchNode(selector);
     sendNode.replaceDispatchListHead(genericReplacement);
     return genericReplacement;

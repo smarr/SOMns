@@ -2,12 +2,12 @@ package som.primitives.arithmetic;
 
 import java.math.BigInteger;
 
-import com.oracle.truffle.api.ExactMath;
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.utilities.BranchProfile;
 
+
+@GenerateNodeFactory
 public abstract class ModuloPrim extends ArithmeticPrim {
-  private final BranchProfile negativeRightOperand = new BranchProfile();
 
   @Specialization
   public final double doDouble(final double left, final double right) {
@@ -16,12 +16,12 @@ public abstract class ModuloPrim extends ArithmeticPrim {
 
   @Specialization
   public final double doDouble(final double left, final long right) {
-    return doDouble(left, right);
+    return doDouble(left, (double) right);
   }
 
   @Specialization
   public final Object doBigInteger(final BigInteger left, final BigInteger right) {
-    return reduceToIntIfPossible(left.mod(right));
+    return reduceToLongIfPossible(left.mod(right));
   }
 
   @Specialization
@@ -39,17 +39,9 @@ public abstract class ModuloPrim extends ArithmeticPrim {
     return doDouble(left, right);
   }
 
-  @Specialization(rewriteOn = ArithmeticException.class)
+  @Specialization
   public final long doLong(final long left, final long right) {
-    long l = left;
-    long r = right;
-    long result = l % r;
-
-    if (l > 0 && r < 0) {
-      negativeRightOperand.enter();
-      result = ExactMath.addExact(result, r);
-    }
-    return result;
+    return Math.floorMod(left, right);
   }
 
   public final Object doLongPromotion(final long left, final long right) {

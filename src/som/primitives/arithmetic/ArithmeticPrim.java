@@ -2,15 +2,15 @@ package som.primitives.arithmetic;
 
 import java.math.BigInteger;
 
-import som.interpreter.nodes.nary.BinaryExpressionNode.BinarySideEffectFreeExpressionNode;
+import som.interpreter.nodes.nary.BinaryExpressionNode;
 
 
-public abstract class ArithmeticPrim extends BinarySideEffectFreeExpressionNode {
-  protected final Number reduceToIntIfPossible(final BigInteger result) {
-    if (result.bitLength() > 31) {
+public abstract class ArithmeticPrim extends BinaryExpressionNode {
+  protected final Number reduceToLongIfPossible(final BigInteger result) {
+    if (result.bitLength() > Long.SIZE - 1) {
       return result;
     } else {
-      return result.intValue();
+      return result.longValue();
     }
   }
 }

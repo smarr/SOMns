@@ -23,8 +23,11 @@ package som.interpreter.nodes;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
+import com.oracle.truffle.api.nodes.NodeCost;
+import com.oracle.truffle.api.nodes.NodeInfo;
 import com.oracle.truffle.api.source.SourceSection;
 
+@NodeInfo(cost = NodeCost.NONE)
 public final class SequenceNode extends ExpressionNode {
   @Children private final ExpressionNode[] expressions;
 
@@ -42,13 +45,7 @@ public final class SequenceNode extends ExpressionNode {
   @ExplodeLoop
   private void executeAllButLast(final VirtualFrame frame) {
     for (int i = 0; i < expressions.length - 1; i++) {
-      expressions[i].executeVoid(frame);
+      expressions[i].executeGeneric(frame);
     }
-  }
-
-  @Override
-  public void executeVoid(final VirtualFrame frame) {
-    executeAllButLast(frame);
-    expressions[expressions.length - 1].executeVoid(frame);
   }
 }

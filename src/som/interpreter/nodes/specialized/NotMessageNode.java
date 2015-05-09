@@ -2,11 +2,13 @@ package som.interpreter.nodes.specialized;
 
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
 
+@GenerateNodeFactory
 public abstract class NotMessageNode extends UnaryExpressionNode {
   public NotMessageNode(final SourceSection source) { super(source); }
   public NotMessageNode() { this(null); }  // only for the primitive version

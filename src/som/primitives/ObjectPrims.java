@@ -1,10 +1,9 @@
 package som.primitives;
 
 import som.interpreter.Types;
-import som.interpreter.nodes.nary.BinaryExpressionNode.BinarySideEffectFreeExpressionNode;
+import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
-import som.interpreter.nodes.nary.UnaryExpressionNode.UnarySideEffectFreeExpressionNode;
 import som.primitives.reflection.IndexDispatch;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
@@ -13,13 +12,15 @@ import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerAsserts;
-import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 
 public final class ObjectPrims {
-  public abstract static class InstVarAtPrim extends BinarySideEffectFreeExpressionNode {
+
+  @GenerateNodeFactory
+  public abstract static class InstVarAtPrim extends BinaryExpressionNode {
 
     @Child private IndexDispatch dispatch;
 
@@ -40,12 +41,13 @@ public final class ObjectPrims {
       assert receiver instanceof SObject;
       assert firstArg instanceof Long;
 
-      SObject rcvr = CompilerDirectives.unsafeCast(receiver, SObject.class, true, true);
-      long idx     = CompilerDirectives.unsafeCast(firstArg, long.class, true, true);
+      SObject rcvr = (SObject) receiver;
+      long idx     = (long) firstArg;
       return doSObject(rcvr, idx);
     }
   }
 
+  @GenerateNodeFactory
   public abstract static class InstVarAtPutPrim extends TernaryExpressionNode {
     @Child private IndexDispatch dispatch;
 
@@ -68,13 +70,14 @@ public final class ObjectPrims {
       assert firstArg instanceof Long;
       assert secondArg != null;
 
-      SObject rcvr = CompilerDirectives.unsafeCast(receiver, SObject.class, true, true);
-      long idx     = CompilerDirectives.unsafeCast(firstArg, long.class, true, true);
+      SObject rcvr = (SObject) receiver;
+      long idx     = (long) firstArg;
       return doSObject(rcvr, idx, secondArg);
     }
   }
 
-  public abstract static class InstVarNamedPrim extends BinarySideEffectFreeExpressionNode {
+  @GenerateNodeFactory
+  public abstract static class InstVarNamedPrim extends BinaryExpressionNode {
     @Specialization
     public final Object doSObject(final SObject receiver, final SSymbol fieldName) {
       CompilerAsserts.neverPartOfCompilation();
@@ -82,6 +85,7 @@ public final class ObjectPrims {
     }
   }
 
+  @GenerateNodeFactory
   public abstract static class HaltPrim extends UnaryExpressionNode {
     public HaltPrim() { super(null); }
     @Specialization
@@ -91,7 +95,8 @@ public final class ObjectPrims {
     }
   }
 
-  public abstract static class ClassPrim extends UnarySideEffectFreeExpressionNode {
+  @GenerateNodeFactory
+  public abstract static class ClassPrim extends UnaryExpressionNode {
     @Specialization
     public final SClass doSAbstractObject(final SAbstractObject receiver) {
       return receiver.getSOMClass();

@@ -21,7 +21,6 @@
  */
 package som.interpreter.nodes;
 
-import som.interpreter.nodes.UninitializedVariableNode.UninitializedVariableReadNode;
 import som.interpreter.objectstorage.FieldAccessorNode.AbstractReadFieldNode;
 import som.interpreter.objectstorage.FieldAccessorNode.AbstractWriteFieldNode;
 import som.interpreter.objectstorage.FieldAccessorNode.UninitializedReadFieldNode;
@@ -43,15 +42,6 @@ public abstract class FieldNode extends ExpressionNode {
   }
 
   protected abstract ExpressionNode getSelf();
-
-  public final boolean accessesLocalSelf() {
-    if (getSelf() instanceof UninitializedVariableReadNode) {
-      UninitializedVariableReadNode selfRead =
-          (UninitializedVariableReadNode) getSelf();
-      return selfRead.accessesSelf() && !selfRead.accessesOuterContext();
-    }
-    return false;
-  }
 
   public static final class FieldReadNode extends FieldNode
       implements PreevaluatedExpression {
@@ -81,8 +71,7 @@ public abstract class FieldNode extends ExpressionNode {
     @Override
     public Object doPreEvaluated(final VirtualFrame frame,
         final Object[] arguments) {
-      return executeEvaluated(CompilerDirectives.unsafeCast(
-          arguments[0], SObject.class, true, true));
+      return executeEvaluated((SObject) arguments[0]);
     }
 
     @Override
@@ -108,9 +97,6 @@ public abstract class FieldNode extends ExpressionNode {
       }
       return executeEvaluated(obj);
     }
-
-    @Override
-    public void executeVoid(final VirtualFrame frame) { /* NOOP, side effect free */ }
   }
 
   @NodeChildren({
@@ -137,9 +123,7 @@ public abstract class FieldNode extends ExpressionNode {
     @Override
     public final Object doPreEvaluated(final VirtualFrame frame,
         final Object[] arguments) {
-      return executeEvaluated(frame,
-          CompilerDirectives.unsafeCast(arguments[0], SObject.class, true, true),
-          CompilerDirectives.unsafeCast(arguments[1],  Object.class, true, true));
+      return executeEvaluated(frame, (SObject) arguments[0], arguments[1]);
     }
 
     @Specialization
@@ -158,11 +142,6 @@ public abstract class FieldNode extends ExpressionNode {
     public Object doObject(final VirtualFrame frame, final SObject self,
         final Object value) {
       return executeEvaluated(frame, self, value);
-    }
-
-    @Override
-    public void executeVoid(final VirtualFrame frame) {
-      executeGeneric(frame);
     }
   }
 }

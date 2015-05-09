@@ -36,6 +36,8 @@ import som.primitives.SystemPrimsFactory.TicksPrimFactory;
 import som.primitives.SystemPrimsFactory.TimePrimFactory;
 
 public final class SystemPrimitives extends Primitives {
+  public SystemPrimitives(final boolean displayWarning) { super(displayWarning); }
+
   @Override
   public void installPrimitives() {
     installInstancePrimitive("load:",        LoadPrimFactory.getInstance());

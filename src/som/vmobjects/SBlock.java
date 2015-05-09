@@ -90,18 +90,16 @@ public abstract class SBlock extends SAbstractObject {
   }
 
   public final SInvokable getMethod() {
-    // Get the method of this block
     return method;
   }
 
-  public final  MaterializedFrame getContext() {
+  public final MaterializedFrame getContext() {
     assert context != null;
-    return CompilerDirectives.unsafeFrameCast(context);
+    return context;
   }
 
   public final Object getOuterSelf() {
-    assert context != null;
-    return SArguments.rcvr(context);
+    return SArguments.rcvr(getContext());
   }
 
   public static SInvokable getEvaluationPrimitive(final int numberOfArguments,

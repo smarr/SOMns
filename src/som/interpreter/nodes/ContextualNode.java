@@ -21,30 +21,26 @@
  */
 package som.interpreter.nodes;
 
+import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
+import som.interpreter.InlinerForLexicallyEmbeddedMethods;
+import som.interpreter.SArguments;
 import som.vmobjects.SBlock;
 
-import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.frame.FrameSlot;
-import com.oracle.truffle.api.frame.FrameUtil;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.source.SourceSection;
+import com.oracle.truffle.api.utilities.ValueProfile;
 
 public abstract class ContextualNode extends ExpressionNode {
 
-  protected final int            contextLevel;
-  protected final FrameSlot      localSelf;
+  protected final int contextLevel;
+  private final ValueProfile frameType;
 
-  public ContextualNode(final int contextLevel, final FrameSlot localSelf,
-      final SourceSection source) {
+  public ContextualNode(final int contextLevel, final SourceSection source) {
     super(source);
     this.contextLevel = contextLevel;
-    this.localSelf    = localSelf;
-  }
-
-  protected final Object getLocalSelfSlotIdentifier() {
-    return localSelf.getIdentifier();
+    this.frameType = ValueProfile.createClassProfile();
   }
 
   public final int getContextLevel() {
@@ -57,29 +53,24 @@ public abstract class ContextualNode extends ExpressionNode {
 
   @ExplodeLoop
   protected final MaterializedFrame determineContext(final VirtualFrame frame) {
-    SBlock self = getLocalSelf(frame);
+    SBlock self = (SBlock) SArguments.rcvr(frame);
     int i = contextLevel - 1;
 
     while (i > 0) {
-      self = CompilerDirectives.unsafeCast(self.getOuterSelf(), SBlock.class, true, true);
+      self = (SBlock) self.getOuterSelf();
       i--;
     }
-    return self.getContext();
+
+    // Graal needs help here to see that this is always a MaterializedFrame
+    // so, we record explicitly a class profile
+    return frameType.profile(self.getContext());
   }
 
-  private SBlock getLocalSelf(final VirtualFrame frame) {
-    return CompilerDirectives.unsafeCast(FrameUtil.getObjectSafe(frame, localSelf), SBlock.class, true, true);
-  }
+  @Override
+  public abstract void replaceWithLexicallyEmbeddedNode(
+      final InlinerForLexicallyEmbeddedMethods inlinerForLexicallyEmbeddedMethods);
 
-  @ExplodeLoop
-  protected final Object determineOuterSelf(final VirtualFrame frame) {
-    Object self = getLocalSelf(frame);
-    int i = contextLevel;
-    while (i > 0) {
-      SBlock block = CompilerDirectives.unsafeCast(self, SBlock.class, true, true);
-      self = block.getOuterSelf();
-      i--;
-    }
-    return self;
-  }
+  @Override
+  public abstract void replaceWithCopyAdaptedToEmbeddedOuterContext(
+      final InlinerAdaptToEmbeddedOuterContext inlinerAdaptToEmbeddedOuterContext);
 }

@@ -25,14 +25,17 @@
 
 package som.primitives;
 
-import som.primitives.ArrayPrimsFactory.AtPrimFactory;
-import som.primitives.ArrayPrimsFactory.AtPutPrimFactory;
-import som.primitives.ArrayPrimsFactory.CopyPrimFactory;
-import som.primitives.ArrayPrimsFactory.DoIndexesPrimFactory;
-import som.primitives.ArrayPrimsFactory.DoPrimFactory;
-import som.primitives.ArrayPrimsFactory.NewPrimFactory;
+import som.primitives.arrays.AtPrimFactory;
+import som.primitives.arrays.AtPutPrimFactory;
+import som.primitives.arrays.CopyPrimFactory;
+import som.primitives.arrays.DoIndexesPrimFactory;
+import som.primitives.arrays.DoPrimFactory;
+import som.primitives.arrays.NewPrimFactory;
+import som.primitives.arrays.PutAllNodeFactory;
 
 public final class ArrayPrimitives extends Primitives {
+  public ArrayPrimitives(final boolean displayWarning) { super(displayWarning); }
+
   @Override
   public void installPrimitives() {
     installInstancePrimitive("at:",     AtPrimFactory.getInstance());
@@ -41,6 +44,7 @@ public final class ArrayPrimitives extends Primitives {
     installInstancePrimitive("copy",    CopyPrimFactory.getInstance());
     installInstancePrimitive("doIndexes:", DoIndexesPrimFactory.getInstance());
     installInstancePrimitive("do:",        DoPrimFactory.getInstance());
+    installInstancePrimitive("putAll:",    PutAllNodeFactory.getInstance());
 
     installClassPrimitive("new:", NewPrimFactory.getInstance());
   }

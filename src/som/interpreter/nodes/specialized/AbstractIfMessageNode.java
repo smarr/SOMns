@@ -69,7 +69,7 @@ public abstract class AbstractIfMessageNode extends BinaryExpressionNode {
     }
   }
 
-  protected final boolean isSameArgument(final Object receiver, final SBlock argument) {
+  protected final boolean isSameArgument(final SBlock argument) {
     return branchMethod == null || argument.getMethod() == branchMethod;
   }
 }

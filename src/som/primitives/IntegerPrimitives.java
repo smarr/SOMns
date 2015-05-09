@@ -25,21 +25,31 @@
 
 package som.primitives;
 
+import som.primitives.IntegerPrimsFactory.AbsPrimFactory;
+import som.primitives.IntegerPrimsFactory.As32BitSignedValueFactory;
+import som.primitives.IntegerPrimsFactory.As32BitUnsignedValueFactory;
 import som.primitives.IntegerPrimsFactory.FromStringPrimFactory;
 import som.primitives.IntegerPrimsFactory.LeftShiftPrimFactory;
+import som.primitives.IntegerPrimsFactory.MaxIntPrimFactory;
 import som.primitives.IntegerPrimsFactory.RandomPrimFactory;
+import som.primitives.IntegerPrimsFactory.ToPrimFactory;
+import som.primitives.IntegerPrimsFactory.UnsignedRightShiftPrimFactory;
 import som.primitives.arithmetic.AdditionPrimFactory;
 import som.primitives.arithmetic.BitXorPrimFactory;
 import som.primitives.arithmetic.DividePrimFactory;
 import som.primitives.arithmetic.DoubleDivPrimFactory;
+import som.primitives.arithmetic.GreaterThanPrimFactory;
+import som.primitives.arithmetic.LessThanOrEqualPrimFactory;
 import som.primitives.arithmetic.LessThanPrimFactory;
 import som.primitives.arithmetic.LogicAndPrimFactory;
 import som.primitives.arithmetic.ModuloPrimFactory;
 import som.primitives.arithmetic.MultiplicationPrimFactory;
+import som.primitives.arithmetic.RemainderPrimFactory;
 import som.primitives.arithmetic.SqrtPrimFactory;
 import som.primitives.arithmetic.SubtractionPrimFactory;
 
 public final class IntegerPrimitives extends Primitives {
+  public IntegerPrimitives(final boolean displayWarning) { super(displayWarning); }
 
   @Override
   public void installPrimitives() {
@@ -52,12 +62,25 @@ public final class IntegerPrimitives extends Primitives {
     installInstancePrimitive("//",       DoubleDivPrimFactory.getInstance());
     installInstancePrimitive("/",        DividePrimFactory.getInstance());
     installInstancePrimitive("%",        ModuloPrimFactory.getInstance());
+    installInstancePrimitive("rem:",     RemainderPrimFactory.getInstance());
     installInstancePrimitive("&",        LogicAndPrimFactory.getInstance());
     installInstancePrimitive("=",        EqualsPrimFactory.getInstance());
     installInstancePrimitive("<",        LessThanPrimFactory.getInstance());
+    installInstancePrimitive("<=",       LessThanOrEqualPrimFactory.getInstance());
+    installInstancePrimitive(">",        GreaterThanPrimFactory.getInstance());
+    installInstancePrimitive("<>",       UnequalsPrimFactory.getInstance());
+    installInstancePrimitive("~=",       UnequalsPrimFactory.getInstance());
 
     installInstancePrimitive("<<",       LeftShiftPrimFactory.getInstance());
+    installInstancePrimitive(">>>",      UnsignedRightShiftPrimFactory.getInstance());
     installInstancePrimitive("bitXor:",  BitXorPrimFactory.getInstance());
+    installInstancePrimitive("max:",     MaxIntPrimFactory.getInstance());
+
+    installInstancePrimitive("as32BitSignedValue",   As32BitSignedValueFactory.getInstance());
+    installInstancePrimitive("as32BitUnsignedValue", As32BitUnsignedValueFactory.getInstance());
+
+    installInstancePrimitive("to:", ToPrimFactory.getInstance());
+    installInstancePrimitive("abs", AbsPrimFactory.getInstance());
 
     installClassPrimitive("fromString:", FromStringPrimFactory.getInstance());
   }

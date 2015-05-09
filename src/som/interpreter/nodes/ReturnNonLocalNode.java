@@ -22,8 +22,11 @@
 package som.interpreter.nodes;
 
 import som.interpreter.FrameOnStackMarker;
-import som.interpreter.Inliner;
+import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
+import som.interpreter.InlinerForLexicallyEmbeddedMethods;
 import som.interpreter.ReturnException;
+import som.interpreter.SArguments;
+import som.interpreter.SplitterForLexicallyEmbeddedCode;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
 
@@ -40,24 +43,22 @@ public final class ReturnNonLocalNode extends ContextualNode {
   @Child private ExpressionNode expression;
   private final BranchProfile blockEscaped;
   private final FrameSlot frameOnStackMarker;
-  private final FrameSlot outerSelfSlot;
 
   public ReturnNonLocalNode(final ExpressionNode expression,
       final FrameSlot frameOnStackMarker,
-      final FrameSlot outerSelfSlot,
       final int outerSelfContextLevel,
-      final FrameSlot localSelf, final SourceSection source) {
-    super(outerSelfContextLevel, localSelf, source);
+      final SourceSection source) {
+    super(outerSelfContextLevel, source);
+    assert outerSelfContextLevel > 0;
     this.expression = expression;
-    this.blockEscaped = new BranchProfile();
+    this.blockEscaped = BranchProfile.create();
     this.frameOnStackMarker = frameOnStackMarker;
-    this.outerSelfSlot      = outerSelfSlot;
   }
 
-  public ReturnNonLocalNode(final ReturnNonLocalNode node, final FrameSlot inlinedFrameOnStack,
-      final FrameSlot inlinedOuterSelfSlot, final FrameSlot inlinedLocalSelfSlot) {
-    this(node.expression, inlinedFrameOnStack, inlinedOuterSelfSlot,
-        node.contextLevel, inlinedLocalSelfSlot, node.getSourceSection());
+  public ReturnNonLocalNode(final ReturnNonLocalNode node,
+      final FrameSlot inlinedFrameOnStack) {
+    this(node.expression, inlinedFrameOnStack,
+        node.contextLevel, node.getSourceSection());
   }
 
   private FrameOnStackMarker getMarkerFromContext(final MaterializedFrame ctx) {
@@ -66,35 +67,107 @@ public final class ReturnNonLocalNode extends ContextualNode {
 
   @Override
   public Object executeGeneric(final VirtualFrame frame) {
+    Object result = expression.executeGeneric(frame);
+
     MaterializedFrame ctx = determineContext(frame);
     FrameOnStackMarker marker = getMarkerFromContext(ctx);
 
     if (marker.isOnStack()) {
-      Object result = expression.executeGeneric(frame);
       throw new ReturnException(result, marker);
     } else {
       blockEscaped.enter();
-      SBlock block = (SBlock) FrameUtil.getObjectSafe(frame, localSelf);
-      Object self = FrameUtil.getObjectSafe(ctx, outerSelfSlot);
+      SBlock block = (SBlock) SArguments.rcvr(frame);
+      Object self = SArguments.rcvr(ctx);
       return SAbstractObject.sendEscapedBlock(self, block);
     }
   }
 
   @Override
-  public void executeVoid(final VirtualFrame frame) {
-    executeGeneric(frame);
+  public void replaceWithIndependentCopyForInlining(final SplitterForLexicallyEmbeddedCode inliner) {
+    FrameSlot inlinedFrameOnStack  = inliner.getFrameSlot(this, frameOnStackMarker.getIdentifier());
+    assert inlinedFrameOnStack  != null;
+    replace(new ReturnNonLocalNode(this, inlinedFrameOnStack));
   }
 
   @Override
-  public void replaceWithIndependentCopyForInlining(final Inliner inliner) {
-    FrameSlot localSelfSlot        = inliner.getLocalFrameSlot(getLocalSelfSlotIdentifier());
-    FrameSlot inlinedFrameOnStack  = inliner.getFrameSlot(this, frameOnStackMarker.getIdentifier());
-    FrameSlot inlinedOuterSelfSlot = inliner.getFrameSlot(this, outerSelfSlot.getIdentifier());
+  public void replaceWithLexicallyEmbeddedNode(
+      final InlinerForLexicallyEmbeddedMethods inlinerForLexicallyEmbeddedMethods) {
+    ExpressionNode inlined;
+    if (contextLevel == 1) {
+      inlined = new ReturnLocalNode(expression, frameOnStackMarker,
+          getSourceSection());
+    } else {
+      inlined = new ReturnNonLocalNode(expression,
+        frameOnStackMarker, contextLevel - 1, getSourceSection());
+    }
+    replace(inlined);
+  }
 
-    assert localSelfSlot        != null;
-    assert inlinedFrameOnStack  != null;
-    assert inlinedOuterSelfSlot != null;
-    replace(new ReturnNonLocalNode(this, inlinedFrameOnStack, inlinedOuterSelfSlot, localSelfSlot));
+  @Override
+  public void replaceWithCopyAdaptedToEmbeddedOuterContext(
+      final InlinerAdaptToEmbeddedOuterContext inliner) {
+    // if the context level is 1, the variable is in the outer context,
+    // which just got inlined, so, we need to adapt the slot id
+    assert !inliner.appliesTo(contextLevel);
+    // this case should not happen, because the frame slot is at the root level
+    // so, anything that got embedded, has to be nested at least once
+
+    if (inliner.needToAdjustLevel(contextLevel)) {
+      ReturnNonLocalNode node = new ReturnNonLocalNode(
+          expression, frameOnStackMarker, contextLevel - 1, getSourceSection());
+      replace(node);
+      return;
+    }
+  }
+
+  /**
+   * Normally, there are no local returns in SOM. However, after
+   * inlining/embedding of blocks, we need this ReturnLocalNode to replace
+   * previous non-local returns.
+   * @author Stefan Marr
+   */
+  private static final class ReturnLocalNode extends ExpressionNode {
+    @Child private ExpressionNode expression;
+    private final FrameSlot frameOnStackMarker;
+
+    private ReturnLocalNode(final ExpressionNode exp,
+        final FrameSlot frameOnStackMarker, final SourceSection source) {
+      super(source);
+      this.expression = exp;
+      this.frameOnStackMarker = frameOnStackMarker;
+    }
+
+    @Override
+    public Object executeGeneric(final VirtualFrame frame) {
+      Object result = expression.executeGeneric(frame);
+
+      FrameOnStackMarker marker = (FrameOnStackMarker) FrameUtil.getObjectSafe(
+          frame, frameOnStackMarker);
+
+      // this ReturnLocalNode should only become part of an AST because of
+      // inlining a literal block, and that block, should never be
+      // captured as a value and passed around. Because, we should only ever
+      // do the inlining for blocks where we know this doesn't happen.
+      assert marker.isOnStack();
+      throw new ReturnException(result, marker);
+
+//      if (marker.isOnStack()) {
+//      } else {
+//        throw new RuntimeException("This should never happen");
+//        blockEscaped.enter();
+//        SBlock block = (SBlock) SArguments.rcvr(frame);
+//        Object self = SArguments.rcvr(ctx);
+//        return SAbstractObject.sendEscapedBlock(self, block);
+//      }
+    }
+
+    @Override
+    public void replaceWithIndependentCopyForInlining(final SplitterForLexicallyEmbeddedCode inliner) {
+      FrameSlot inlinedFrameOnStack  = inliner.getLocalFrameSlot(frameOnStackMarker.getIdentifier());
+      assert inlinedFrameOnStack  != null;
+      replace(new ReturnLocalNode(expression, inlinedFrameOnStack,
+          getSourceSection()));
+    }
   }
 
   public static final class CatchNonLocalReturnNode extends ExpressionNode {
@@ -108,11 +181,11 @@ public final class ReturnNonLocalNode extends ContextualNode {
         final FrameSlot frameOnStackMarker) {
       super(null);
       this.methodBody = methodBody;
-      this.nonLocalReturnHandler = new BranchProfile();
+      this.nonLocalReturnHandler = BranchProfile.create();
       this.frameOnStackMarker    = frameOnStackMarker;
 
-      this.doCatch = new BranchProfile();
-      this.doPropagate = new BranchProfile();
+      this.doCatch = BranchProfile.create();
+      this.doPropagate = BranchProfile.create();
     }
 
     @Override
@@ -126,9 +199,8 @@ public final class ReturnNonLocalNode extends ContextualNode {
       frameOnStackMarker.setKind(FrameSlotKind.Object);
       frame.setObject(frameOnStackMarker, marker);
 
-      Object result;
       try {
-        result = methodBody.executeGeneric(frame);
+        return methodBody.executeGeneric(frame);
       } catch (ReturnException e) {
         nonLocalReturnHandler.enter();
         if (!e.reachedTarget(marker)) {
@@ -137,36 +209,15 @@ public final class ReturnNonLocalNode extends ContextualNode {
           throw e;
         } else {
           doCatch.enter();
-          result = e.result();
+          return e.result();
         }
+      } finally {
+        marker.frameNoLongerOnStack();
       }
-
-      marker.frameNoLongerOnStack();
-      return result;
     }
 
     @Override
-    public void executeVoid(final VirtualFrame frame) {
-      FrameOnStackMarker marker = new FrameOnStackMarker();
-      frameOnStackMarker.setKind(FrameSlotKind.Object);
-      frame.setObject(frameOnStackMarker, marker);
-
-      try {
-        methodBody.executeVoid(frame);
-      } catch (ReturnException e) {
-        nonLocalReturnHandler.enter();
-        if (!e.reachedTarget(marker)) {
-          doPropagate.enter();
-          marker.frameNoLongerOnStack();
-          throw e;
-        }
-      }
-
-      marker.frameNoLongerOnStack();
-    }
-
-    @Override
-    public void replaceWithIndependentCopyForInlining(final Inliner inliner) {
+    public void replaceWithIndependentCopyForInlining(final SplitterForLexicallyEmbeddedCode inliner) {
       FrameSlot inlinedFrameOnStackMarker = inliner.getLocalFrameSlot(frameOnStackMarker.getIdentifier());
       assert inlinedFrameOnStackMarker != null;
       replace(new CatchNonLocalReturnNode(methodBody, inlinedFrameOnStackMarker));

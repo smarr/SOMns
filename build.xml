@@ -7,7 +7,7 @@
     <property name="build.dir"   value="build"/>
     <property name="classes.dir" value="${build.dir}/classes"/>
     
-    <property name="truffle.libs" value="http://stefan-marr.de/downloads/truffle/latest"/>
+    <property name="truffle.libs" value="http://stefan-marr.de/downloads/truffle"/>
 
     <path id="project.classpath">
         <pathelement location="${classes.dir}" />
@@ -17,28 +17,59 @@
         <pathelement location="${lib.dir}/truffle-dsl-processor.jar" />
     </path>
 
-    <target name="clean">
+    <target name="clean" description="Remove build directories and generated code">
         <delete dir="${build.dir}"/>
         <delete dir="${src_gen.dir}"/>
     </target>
     
-    <target name="libs">
-			<mkdir dir="${lib.dir}" />
-			<get src="${truffle.libs}/truffle.jar"  usetimestamp="true"
-           dest="${lib.dir}/truffle.jar"/>
-		    <get src="${truffle.libs}/truffle-dsl-processor.jar"  usetimestamp="true"
-          dest="${lib.dir}/truffle-dsl-processor.jar"/>
-   <get src="http://kuiper.mirrorservice.org/sites/downloads.sourceforge.net/j/ju/junit/junit/4.8.1/junit-4.8.1.jar" usetimestamp="true"
-		   dest="${lib.dir}/junit-4.8.1.jar" /> <!-- http://search.maven.org/remotecontent?filepath=junit/junit/4.8.1/junit-4.8.1.jar -->
+
+    <target name="check-core-lib-available">
+        <available file="core-lib/.git" property="core-lib.present"/>
+    </target>
+    <target name="core-lib" depends="check-core-lib-available"
+            unless="core-lib.present">
+      <exec executable="git">
+        <arg value="submodule" />
+        <arg value="update" />
+        <arg value="--init" />
+      </exec>
+    </target>
+    
+    
+    <target name="libs" depends="core-lib">
+        <exec executable="sh" outputproperty="truffle.version">
+            <arg value="-c"/>
+            <arg value="cat .graal-git-rev | tail -1 | cut -c12-19"/>
+        </exec>
+		<mkdir dir="${lib.dir}" />
+		<get src="${truffle.libs}/${truffle.version}/truffle.jar" usetimestamp="true"
+            dest="${lib.dir}/truffle.jar"/>
+	    <get src="${truffle.libs}/${truffle.version}/truffle-dsl-processor.jar"
+            usetimestamp="true"
+            dest="${lib.dir}/truffle-dsl-processor.jar"/>
+        <get src="http://kuiper.mirrorservice.org/sites/downloads.sourceforge.net/j/ju/junit/junit/4.8.1/junit-4.8.1.jar"
+            usetimestamp="true"
+		    dest="${lib.dir}/junit-4.8.1.jar" />
+            <!-- http://search.maven.org/remotecontent?filepath=junit/junit/4.8.1/junit-4.8.1.jar -->
+    </target>
+    
+    <target name="src-libs" depends="libs">
+		<get src="${truffle.libs}/truffle-dsl-processor.src.zip" 
+            usetimestamp="true" 
+            dest="${lib.dir}/truffle-dsl-processor.src.zip"/>
+		<get src="${truffle.libs}/truffle.src.zip" 
+            usetimestamp="true" 
+            dest="${lib.dir}/truffle.src.zip"/>
     </target>
 
-    <target name="compile" depends="libs">
+    <target name="compile" depends="libs" description="Compile TruffleSOM">
         <mkdir dir="${build.dir}"/>
         <mkdir dir="${classes.dir}" />
         <mkdir dir="${src_gen.dir}" />
         <javac includeantruntime="false" srcdir="${src.dir}" destdir="${classes.dir}" debug="true">
           <classpath refid="project.classpath" />
           <compilerarg line="-s ${src_gen.dir}" />
+          <compilerarg line="-XDignore.symbol.file" />
         </javac>
         <javac includeantruntime="false" srcdir="${src_gen.dir}" destdir="${classes.dir}" debug="true">
           <classpath refid="project.classpath" />
@@ -49,11 +80,14 @@
         </javac>
     </target>
 
-    <target name="jar" depends="compile">
+    <target name="jar" depends="compile" description="Package as JAR">
         <jar destfile="${build.dir}/som.jar" basedir="${classes.dir}"></jar>
     </target>
+    
+    <target name="develop" depends="libs,src-libs" description="Load all dependencies for development">
+    </target>
 
-    <target name="test" depends="compile">
+    <target name="test" depends="compile" description="Execute tests">
         <junit haltonerror="false" haltonfailure="false">
             <classpath refid="project.classpath" />
             <batchtest fork="yes"><!--  todir="${reports.tests}" -->
@@ -65,7 +99,7 @@
       
         <java classname="som.vm.Universe" fork="true" failonerror="true">
             <classpath refid="project.classpath" />
-                <arg line="-cp Smalltalk TestSuite/TestHarness.som" />
+                <arg line="-cp Smalltalk TestSuite/TestHarness.som --ignore-inefficacies" />
         </java>
     </target>
     <target name="tests" depends="test" />

@@ -27,6 +27,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import som.interpreter.TypesGen;
 import som.vmobjects.SAbstractObject;
+import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
@@ -44,45 +45,44 @@ public abstract class ExpressionNode extends SOMNode {
   }
 
   public abstract Object executeGeneric(final VirtualFrame frame);
-  public abstract void   executeVoid(final VirtualFrame frame);
 
   @Override
   public ExpressionNode getFirstMethodBodyNode() { return this; }
 
   public boolean executeBoolean(final VirtualFrame frame) throws UnexpectedResultException {
-    return TypesGen.TYPES.expectBoolean(executeGeneric(frame));
+    return TypesGen.expectBoolean(executeGeneric(frame));
   }
 
   public long executeLong(final VirtualFrame frame) throws UnexpectedResultException {
-    return TypesGen.TYPES.expectLong(executeGeneric(frame));
+    return TypesGen.expectLong(executeGeneric(frame));
   }
 
   public BigInteger executeBigInteger(final VirtualFrame frame) throws UnexpectedResultException {
-    return TypesGen.TYPES.expectBigInteger(executeGeneric(frame));
+    return TypesGen.expectBigInteger(executeGeneric(frame));
   }
 
   public String executeString(final VirtualFrame frame) throws UnexpectedResultException {
-    return TypesGen.TYPES.expectString(executeGeneric(frame));
+    return TypesGen.expectString(executeGeneric(frame));
   }
 
   public double executeDouble(final VirtualFrame frame) throws UnexpectedResultException {
-    return TypesGen.TYPES.expectDouble(executeGeneric(frame));
+    return TypesGen.expectDouble(executeGeneric(frame));
   }
 
   public SSymbol executeSSymbol(final VirtualFrame frame) throws UnexpectedResultException {
-    return TypesGen.TYPES.expectSSymbol(executeGeneric(frame));
+    return TypesGen.expectSSymbol(executeGeneric(frame));
   }
 
   public SBlock executeSBlock(final VirtualFrame frame) throws UnexpectedResultException {
-    return TypesGen.TYPES.expectSBlock(executeGeneric(frame));
+    return TypesGen.expectSBlock(executeGeneric(frame));
   }
 
   public SClass executeSClass(final VirtualFrame frame) throws UnexpectedResultException {
-    return TypesGen.TYPES.expectSClass(executeGeneric(frame));
+    return TypesGen.expectSClass(executeGeneric(frame));
   }
 
   public SInvokable executeSInvokable(final VirtualFrame frame) throws UnexpectedResultException {
-    return TypesGen.TYPES.expectSInvokable(executeGeneric(frame));
+    return TypesGen.expectSInvokable(executeGeneric(frame));
   }
 
   public ReentrantLock executeReentrantLock(final VirtualFrame frame) throws UnexpectedResultException {
@@ -98,14 +98,18 @@ public abstract class ExpressionNode extends SOMNode {
   }
 
   public SObject executeSObject(final VirtualFrame frame) throws UnexpectedResultException {
-    return TypesGen.TYPES.expectSObject(executeGeneric(frame));
+    return TypesGen.expectSObject(executeGeneric(frame));
+  }
+
+  public SArray executeSArray(final VirtualFrame frame) throws UnexpectedResultException {
+    return TypesGen.expectSArray(executeGeneric(frame));
   }
 
   public SAbstractObject executeSAbstractObject(final VirtualFrame frame) throws UnexpectedResultException {
-    return TypesGen.TYPES.expectSAbstractObject(executeGeneric(frame));
+    return TypesGen.expectSAbstractObject(executeGeneric(frame));
   }
 
-  public Object[] executeArray(final VirtualFrame frame) throws UnexpectedResultException {
-    return TypesGen.TYPES.expectObjectArray(executeGeneric(frame));
+  public Object[] executeArgumentArray(final VirtualFrame frame) throws UnexpectedResultException {
+    return TypesGen.expectObjectArray(executeGeneric(frame));
   }
 }

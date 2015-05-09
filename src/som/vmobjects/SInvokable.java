@@ -52,6 +52,10 @@ public abstract class SInvokable extends SAbstractObject {
       this.embeddedBlocks = embeddedBlocks;
     }
 
+    public SMethod[] getEmbeddedBlocks() {
+      return embeddedBlocks;
+    }
+
     @Override
     public void setHolder(final SClass value) {
       super.setHolder(value);
@@ -101,7 +105,6 @@ public abstract class SInvokable extends SAbstractObject {
   }
 
   public final int getNumberOfArguments() {
-    // Get the number of arguments of this method
     return getSignature().getNumberOfSignatureArguments();
   }
 

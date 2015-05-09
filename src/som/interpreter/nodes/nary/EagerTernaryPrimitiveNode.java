@@ -44,15 +44,6 @@ public final class EagerTernaryPrimitiveNode extends TernaryExpressionNode {
   }
 
   @Override
-  public void executeVoid(final VirtualFrame frame) {
-    Object rcvr = receiver.executeGeneric(frame);
-    Object arg1 = argument1.executeGeneric(frame);
-    Object arg2 = argument2.executeGeneric(frame);
-
-    executeEvaluatedVoid(frame, rcvr, arg1, arg2);
-  }
-
-  @Override
   public Object executeEvaluated(final VirtualFrame frame,
     final Object receiver, final Object argument1, final Object argument2) {
     try {
@@ -60,18 +51,6 @@ public final class EagerTernaryPrimitiveNode extends TernaryExpressionNode {
     } catch (UnsupportedSpecializationException e) {
       TruffleCompiler.transferToInterpreterAndInvalidate("Eager Primitive with unsupported specialization.");
       return makeGenericSend().doPreEvaluated(frame,
-          new Object[] {receiver, argument1, argument2});
-    }
-  }
-
-  @Override
-  public void executeEvaluatedVoid(final VirtualFrame frame,
-    final Object receiver, final Object argument1, final Object argument2) {
-    try {
-      primitive.executeEvaluatedVoid(frame, receiver, argument1, argument2);
-    } catch (UnsupportedSpecializationException e) {
-      TruffleCompiler.transferToInterpreterAndInvalidate("Eager Primitive with unsupported specialization.");
-      makeGenericSend().doPreEvaluated(frame,
           new Object[] {receiver, argument1, argument2});
     }
   }

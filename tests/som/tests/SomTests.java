@@ -50,9 +50,9 @@ public class SomTests {
         {"Double"        },
 
         {"Empty"         },
+        {"Global"        },
         {"Hash"          },
         {"Integer"       },
-        {"ObjectSize"    },
 
         {"Preliminary"   },
         {"Reflection"    },

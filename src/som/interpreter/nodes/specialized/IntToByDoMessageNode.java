@@ -39,22 +39,19 @@ public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode
   @Override
   public final Object doPreEvaluated(final VirtualFrame frame,
       final Object[] arguments) {
-    return executeEvaluated(frame,
-        CompilerDirectives.unsafeCast(arguments[0], Object.class, true, true),
-        CompilerDirectives.unsafeCast(arguments[1], Object.class, true, true),
-        CompilerDirectives.unsafeCast(arguments[2], Object.class, true, true),
-        CompilerDirectives.unsafeCast(arguments[3], Object.class, true, true));
+    return executeEvaluated(frame, arguments[0], arguments[1],  arguments[2],
+        arguments[3]);
   }
 
-  protected final boolean isSameBlockLong(final long receiver, final long limit, final long step, final SBlock block) {
+  protected final boolean isSameBlockLong(final SBlock block) {
     return block.getMethod() == blockMethod;
   }
 
-  protected final boolean isSameBlockDouble(final long receiver, final double limit, final long step, final SBlock block) {
+  protected final boolean isSameBlockDouble(final SBlock block) {
     return block.getMethod() == blockMethod;
   }
 
-  @Specialization(guards = "isSameBlockLong")
+  @Specialization(guards = "isSameBlockLong(block)")
   public final long doIntToByDo(final VirtualFrame frame, final long receiver, final long limit, final long step, final SBlock block) {
     try {
       if (receiver <= limit) {
@@ -71,7 +68,7 @@ public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode
     return receiver;
   }
 
-  @Specialization(guards = "isSameBlockDouble")
+  @Specialization(guards = "isSameBlockDouble(block)")
   public final long doIntToByDo(final VirtualFrame frame, final long receiver, final double limit, final long step, final SBlock block) {
     try {
       if (receiver <= limit) {

@@ -25,9 +25,12 @@
 
 package som.primitives;
 
+import som.primitives.DoublePrimsFactory.PositiveInfinityPrimFactory;
 import som.primitives.DoublePrimsFactory.RoundPrimFactory;
 import som.primitives.arithmetic.AdditionPrimFactory;
 import som.primitives.arithmetic.DoubleDivPrimFactory;
+import som.primitives.arithmetic.GreaterThanPrimFactory;
+import som.primitives.arithmetic.LessThanOrEqualPrimFactory;
 import som.primitives.arithmetic.LessThanPrimFactory;
 import som.primitives.arithmetic.ModuloPrimFactory;
 import som.primitives.arithmetic.MultiplicationPrimFactory;
@@ -35,6 +38,8 @@ import som.primitives.arithmetic.SqrtPrimFactory;
 import som.primitives.arithmetic.SubtractionPrimFactory;
 
 public final class DoublePrimitives extends Primitives {
+  public DoublePrimitives(final boolean displayWarning) { super(displayWarning); }
+
   @Override
   public void installPrimitives() {
     installInstancePrimitive("asString", AsStringPrimFactory.getInstance());
@@ -47,6 +52,12 @@ public final class DoublePrimitives extends Primitives {
     installInstancePrimitive("%",     ModuloPrimFactory.getInstance());
     installInstancePrimitive("=",     EqualsPrimFactory.getInstance());
     installInstancePrimitive("<",     LessThanPrimFactory.getInstance());
+    installInstancePrimitive("<=",    LessThanOrEqualPrimFactory.getInstance());
+    installInstancePrimitive(">",     GreaterThanPrimFactory.getInstance());
+    installInstancePrimitive("<>",    UnequalsPrimFactory.getInstance());
+    installInstancePrimitive("~=",    UnequalsPrimFactory.getInstance());
     installInstancePrimitive("round", RoundPrimFactory.getInstance());
+
+    installClassPrimitive("PositiveInfinity", PositiveInfinityPrimFactory.getInstance());
   }
 }

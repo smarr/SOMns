@@ -5,12 +5,14 @@ import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 
 import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 
 
+@GenerateNodeFactory
 public abstract class AndMessageNode extends BinaryExpressionNode {
 
   private final SInvokable blockMethod;
@@ -29,11 +31,11 @@ public abstract class AndMessageNode extends BinaryExpressionNode {
     blockValueSend = copy.blockValueSend;
   }
 
-  protected final boolean isSameBlock(final boolean receiver, final SBlock argument) {
+  protected final boolean isSameBlock(final SBlock argument) {
     return argument.getMethod() == blockMethod;
   }
 
-  @Specialization(guards = "isSameBlock")
+  @Specialization(guards = "isSameBlock(argument)")
   public final boolean doAnd(final VirtualFrame frame, final boolean receiver,
       final SBlock argument) {
     if (receiver == false) {
@@ -43,6 +45,7 @@ public abstract class AndMessageNode extends BinaryExpressionNode {
     }
   }
 
+  @GenerateNodeFactory
   public abstract static class AndBoolMessageNode extends BinaryExpressionNode {
 
     public AndBoolMessageNode(final SourceSection source) {

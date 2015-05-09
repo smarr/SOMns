@@ -3,9 +3,11 @@ package som.primitives.arithmetic;
 import java.math.BigInteger;
 
 import com.oracle.truffle.api.ExactMath;
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
 
+@GenerateNodeFactory
 public abstract class SubtractionPrim extends ArithmeticPrim {
   @Specialization(rewriteOn = ArithmeticException.class)
   public final long doLong(final long left, final long right) {
@@ -20,7 +22,7 @@ public abstract class SubtractionPrim extends ArithmeticPrim {
   @Specialization
   public final Object doBigInteger(final BigInteger left, final BigInteger right) {
     BigInteger result = left.subtract(right);
-    return reduceToIntIfPossible(result);
+    return reduceToLongIfPossible(result);
   }
 
   @Specialization
@@ -45,6 +47,6 @@ public abstract class SubtractionPrim extends ArithmeticPrim {
 
   @Specialization
   public final double doDouble(final double left, final long right) {
-    return doDouble(left, right);
+    return doDouble(left, (double) right);
   }
 }

@@ -27,27 +27,32 @@ package som.primitives;
 
 import som.compiler.MethodGenerationContext;
 import som.interpreter.Primitive;
-import som.interpreter.nodes.ArgumentReadNode;
+import som.interpreter.nodes.ArgumentReadNode.LocalArgumentReadNode;
 import som.interpreter.nodes.ExpressionNode;
+import som.primitives.MethodPrimsFactory.InvokeOnPrimFactory;
+import som.primitives.arrays.PutAllNodeFactory;
+import som.primitives.arrays.ToArgumentsArrayNodeGen;
 import som.vm.Universe;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SInvokable.SMethod;
 import som.vmobjects.SSymbol;
 
-import com.oracle.truffle.api.CompilerDirectives.SlowPath;
+import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.dsl.NodeFactory;
 
 public abstract class Primitives {
 
   protected final Universe universe;
+  protected SClass holder;
+  protected final boolean displayWarning;
 
-  public Primitives() {
+  public Primitives(final boolean displayWarning) {
     this.universe = Universe.current();
+    this.displayWarning = displayWarning;
   }
 
   public final void installPrimitivesIn(final SClass value) {
-    // Save a reference to the holder class
     holder = value;
 
     // Install the primitives from this primitives class
@@ -56,16 +61,16 @@ public abstract class Primitives {
 
   public abstract void installPrimitives();
 
-  @SlowPath
   public static SInvokable constructPrimitive(final SSymbol signature,
       final NodeFactory<? extends ExpressionNode> nodeFactory,
       final Universe universe, final SClass holder) {
+    CompilerAsserts.neverPartOfCompilation();
     int numArgs = signature.getNumberOfSignatureArguments();
 
     MethodGenerationContext mgen = new MethodGenerationContext(null);
     ExpressionNode[] args = new ExpressionNode[numArgs];
     for (int i = 0; i < numArgs; i++) {
-      args[i] = new ArgumentReadNode(i);
+      args[i] = new LocalArgumentReadNode(i, null);
     }
 
     ExpressionNode primNode;
@@ -74,10 +79,22 @@ public abstract class Primitives {
         primNode = nodeFactory.createNode(args[0]);
         break;
       case 2:
-        primNode = nodeFactory.createNode(args[0], args[1]);
+        // HACK for node class where we use `executeWith`
+        if (nodeFactory == PutAllNodeFactory.getInstance()) {
+          primNode = nodeFactory.createNode(args[0], args[1],
+              LengthPrimFactory.create(null));
+        } else {
+          primNode = nodeFactory.createNode(args[0], args[1]);
+        }
         break;
       case 3:
-        primNode = nodeFactory.createNode(args[0], args[1], args[2]);
+        // HACK for node class where we use `executeWith`
+        if (nodeFactory == InvokeOnPrimFactory.getInstance()) {
+          primNode = nodeFactory.createNode(args[0], args[1], args[2],
+              ToArgumentsArrayNodeGen.create(null, null));
+        } else {
+          primNode = nodeFactory.createNode(args[0], args[1], args[2]);
+        }
         break;
       case 4:
         primNode = nodeFactory.createNode(args[0], args[1], args[2], args[3]);
@@ -86,17 +103,19 @@ public abstract class Primitives {
         throw new RuntimeException("Not supported by SOM.");
     }
 
-    Primitive primMethodNode = new Primitive(primNode, mgen.getFrameDescriptor());
+    Primitive primMethodNode = new Primitive(primNode, mgen.getCurrentLexicalScope().getFrameDescriptor(),
+        (ExpressionNode) primNode.deepCopy());
     SInvokable prim = Universe.newMethod(signature, primMethodNode, true, new SMethod[0]);
     return prim;
   }
 
-  @SlowPath
   public static SInvokable constructEmptyPrimitive(final SSymbol signature) {
+    CompilerAsserts.neverPartOfCompilation();
     MethodGenerationContext mgen = new MethodGenerationContext(null);
 
-    ExpressionNode primNode = EmptyPrim.create(new ArgumentReadNode(0));
-    Primitive primMethodNode = new Primitive(primNode, mgen.getFrameDescriptor());
+    ExpressionNode primNode = EmptyPrim.create(new LocalArgumentReadNode(0, null));
+    Primitive primMethodNode = new Primitive(primNode, mgen.getCurrentLexicalScope().getFrameDescriptor(),
+        (ExpressionNode) primNode.deepCopy());
     SInvokable prim = Universe.newMethod(signature, primMethodNode, true, new SMethod[0]);
     return prim;
   }
@@ -107,7 +126,7 @@ public abstract class Primitives {
     SInvokable prim = constructPrimitive(signature, nodeFactory, universe, holder);
 
     // Install the given primitive as an instance primitive in the holder class
-    holder.addInstancePrimitive(prim);
+    holder.addInstancePrimitive(prim, displayWarning);
   }
 
   protected final void installClassPrimitive(final String selector,
@@ -117,10 +136,8 @@ public abstract class Primitives {
 
     // Install the given primitive as an instance primitive in the class of
     // the holder class
-    holder.getSOMClass().addInstancePrimitive(prim);
+    holder.getSOMClass().addInstancePrimitive(prim, displayWarning);
   }
-
-  protected SClass holder;
 
   public static SInvokable getEmptyPrimitive(final String selector,
       final Universe universe) {

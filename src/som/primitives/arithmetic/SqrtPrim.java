@@ -4,16 +4,18 @@ import java.math.BigInteger;
 
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.utilities.BranchProfile;
 
 
+@GenerateNodeFactory
 public abstract class SqrtPrim extends UnaryExpressionNode {
 
   public SqrtPrim() { super(null); }
 
-  private final BranchProfile longReturn   = new BranchProfile();
-  private final BranchProfile doubleReturn = new BranchProfile();
+  private final BranchProfile longReturn   = BranchProfile.create();
+  private final BranchProfile doubleReturn = BranchProfile.create();
 
   @Specialization
   public final Object doLong(final long receiver) {
