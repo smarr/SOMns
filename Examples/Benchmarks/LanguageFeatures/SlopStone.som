@@ -38,7 +38,7 @@ Bruce Samuelson
 SlopStone = Benchmark (
   | o obj |
 
-  innerBenchmarkLoop = (
+  innerBenchmarkLoop: innerIterations = (
     "Using the SlopStone benchmarks, but not doing the
      old style Stone performance number reporting"
     obj := Object.

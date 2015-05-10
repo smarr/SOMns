@@ -23,100 +23,24 @@ THE SOFTWARE.
 "
 
 Benchmark = (
-    | numIterations numWarmUpIterations innerIterations printIndividualRuns maxRuntime total |
-    
-    total = ( ^ total )
-    numIterations = ( ^ numIterations )
-    innerIterations = ( ^ innerIterations )
-    
-    maxRuntime: seconds = (
-        "converted to microseconds i.e. ticks"
-        seconds ifNotNil: [
-            maxRuntime := seconds * 1000 * 1000].
-    )
-
-    run: numIter with: numWarmUpIter and: numInner printAll: aBool = (
-        numIterations       := numIter.
-        numWarmUpIterations := numWarmUpIter.
-        innerIterations     := numInner.
-        printIndividualRuns := aBool.
-        
-        self exec.
-    )
 
     run = ( 
         | harness |
         harness := All new.
         harness initialize.
-        harness benchmarkClasses: (Vector with: self class).
+        harness benchmarkClass: self class.
         harness printAll: false.
         harness maxRuntime: 3. "seconds"
         harness numIterations: 100.
         harness warmUp: 10.
 
-        harness runBenchmarks.
+        harness runBenchmark.
         harness printTotal.
     )
     
-    warmup = (
-        | numIterationsTmp printIndividualRunsTmp maxRuntimeTmp |
-        numWarmUpIterations > 0 ifFalse: [
-            '' println.
-            ^ self].
-
-        numIterationsTmp := numIterations.
-        printIndividualRunsTmp := printIndividualRuns.
-        maxRuntimeTmp := maxRuntime.
-
-        numIterations := numWarmUpIterations.
-        printIndividualRuns := false.
-        maxRuntime := nil.
-
-        ' warmup ...' print.
-        self doRuns.
-
-        numIterations := numIterationsTmp.
-        printIndividualRuns := printIndividualRunsTmp.
-        maxRuntime := maxRuntimeTmp.
-
-        ' completed.' println.
-    )
-
-    exec = (
-        (('Starting ' + (self name)) + ' benchmark ... ') print.
-        self warmup.
-        total := self doRuns.
-    )
+    oneTimeSetup = ()
     
-    doRuns = (
-        | i total |
-        i := 0.
-        total := 0.
-        
-        [ i < numIterations ] whileTrue: [
-            | startTime endTime runTime |
-            startTime := system ticks.
-            self innerBenchmarkLoop ifFalse: [
-              self error: 'Benchmark failed with incorrect result'. ].
-            endTime   := system ticks.
-            
-            runTime := endTime - startTime.
-            printIndividualRuns ifTrue: [ self printRun: runTime ].
-            
-            total := total + runTime.
-            i := i + 1.
-            
-            maxRuntime ifNotNil: [
-                total > maxRuntime ifTrue: [
-                    numIterations := i.
-                    ^ total ]].
-            
-            system fullGC ].
-        
-        ^ total
-    )
-    
-    innerBenchmarkLoop = (
+    innerBenchmarkLoop: innerIterations = (
         | i |
         i := 0.
         [ i < innerIterations ] whileTrue: [
@@ -124,16 +48,6 @@ Benchmark = (
             i := i + 1.
         ].
         ^ true
-    )
-    
-    printRun: runTime = (
-        | out |
-        out :=       self name.
-        out := out + ': iterations=1'.
-        out := out + ' runtime: '.
-        out := out + runTime.
-        out := out + 'us'.
-        out println.
     )
     
     benchmark  = ( self subclassResponsibility )

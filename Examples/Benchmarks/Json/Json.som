@@ -1,8 +1,7 @@
 Json = Benchmark (
 
-    exec = (
+    oneTimeSetup = (
       JsonLiteral initialize.
-      super exec
     )
 
     benchmark = (

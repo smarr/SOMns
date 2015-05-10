@@ -49,11 +49,11 @@
 Mandelbrot = Benchmark (
     | firstResult |
 
-    innerBenchmarkLoop = ( 
-      ^ self verifyResult: (self mandelbrot: innerIterations)
+    innerBenchmarkLoop: innerIterations = ( 
+      ^ self verify: (self mandelbrot: innerIterations) inner: innerIterations
     )
 
-    verifyResult: result = (
+    verify: result inner: innerIterations = (
       innerIterations = 750 ifTrue: [
         ^ result = 50
       ].

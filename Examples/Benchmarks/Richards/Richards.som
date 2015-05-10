@@ -1,6 +1,5 @@
 Richards = Benchmark (
     benchmark = (
-        RBObject initialize.
         ^ RichardsBenchmarks new reBenchStart.
     )
     verifyResult: result = (

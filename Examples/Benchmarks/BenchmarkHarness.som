@@ -26,11 +26,16 @@ BenchmarkHarness = (
     passed a list of benchmarks to run (class names) as arguments. It will
     run each of them and output single as well as a total."
     
-    | total runtimes benchmarkClasses numIterations warmUp innerIterations numThreads maxRuntime printAll |
+    | total benchmarkClass numIterations warmUp innerIterations maxRuntime printAll numThreads |
     
-    benchmarkClasses: classes = ( benchmarkClasses := classes )
+    benchmarkClass: class = ( benchmarkClass := class )
     printAll: aBool = ( printAll := aBool )
-    maxRuntime: seconds = ( maxRuntime := seconds )
+
+    maxRuntime: seconds = (
+        "converted to microseconds i.e. ticks"
+        seconds ifNotNil: [
+            maxRuntime := seconds * 1000 * 1000] )
+
     numIterations: anInt = (numIterations := anInt)
     numThreads:    anInt = (numThreads := anInt)
     warmUp: anInt = (warmUp := anInt)
@@ -43,13 +48,12 @@ BenchmarkHarness = (
         self initialize.
         self processArguments: args.
 
-        self runBenchmarks.
+        self runBenchmark.
         self printTotal.
     )
     
     initialize = (
         total         := 0.
-        runtimes      := Dictionary new.
         numIterations := 1.
         numThreads    := 1.
         warmUp        := 0.
@@ -59,103 +63,157 @@ BenchmarkHarness = (
     )
     
     printUsage = (
-      './som.sh -cp Smalltalk Examples/Benchmarks/BenchmarkHarness.som [benchmarks] [num-iterations [warm-up [inner-iter [num-threads]]]]' println.
+      './som.sh -cp Smalltalk Examples/Benchmarks/BenchmarkHarness.som [benchmark] [num-iterations [warm-up [inner-iter [num-threads]]]' println.
       '' println.
-      '  benchmarks     - list of benchmark class names (e.g.: Queens Fibonacci Dispatch)' println.
-      '  num-iterations - number of times each benchmark is executed, default: 1' println.
-      '  warm-up        - number of times each benchmark is executed before measuring, default: 0' println.
-      '  inner-iter     - number of times each benchmark is executed in an inner loop, which is measured in total, default: 1' println.
+      '  benchmark      - benchmark class name (e.g., Queens, Fibonacci, Dispatch)' println.
+      '  num-iterations - number of times to execute benchmark, default: 1' println.
+      '  warm-up        - number of times to execute benchmark before measuring, default: 0' println.
+      '  inner-iter     - number of times the benchmark is executed in an inner loop, ' println.
+      '                   which is measured in total, default: 1' println.
       '  num-threads    - number of threads executing, each doing num-iterations, default: 1' println.
     )
     
     processArguments: args = (
-        | remainingArgs |
-        remainingArgs := self collectBenchmarkClasses: args.
-        remainingArgs ifNotNil: [
-            numIterations := (remainingArgs at: 1) asInteger.
-            remainingArgs length > 1 ifTrue: [
-                warmUp := (remainingArgs at: 2) asInteger.
-                remainingArgs length > 2 ifTrue: [
-                    innerIterations := (remainingArgs at: 3) asInteger.
-                    remainingArgs length > 3 ifTrue: [
-                        numThreads := (remainingArgs at: 4) asInteger.
-                    ]
+        self loadBenchmarkClass: (args at: 2). "First argument is the BenchmarkHarness"
+        args length > 2 ifTrue: [
+            numIterations := (args at: 3) asInteger.
+            args length > 3 ifTrue: [
+                warmUp := (args at: 4) asInteger.
+                args length > 4 ifTrue: [
+                    innerIterations := (args at: 5) asInteger.
+                    args length > 5 ifTrue: [
+                        numThreads := (args at: 6) asInteger.
+                    ].
                 ].
             ].
         ]
     )
     
-    collectBenchmarkClasses: args = (
-        | i benchmarks |
-        i := 2. "First argument is the BenchmarkHarness"
+    loadBenchmarkClass: className = (
+        | sym cls |
+        sym := className asSymbol.
+        cls := system load: sym.
+        cls ifNil: [
+            self error: 'Failed loading benchmark: ', className ].
+        benchmarkClass := cls.
+    )
         
-        benchmarks := Vector new: args length - 1.
-        [i <= args length] whileTrue: [
-            | sym cls |
-            sym := (args at: i) asSymbol.
-            cls := system load: sym.
-            cls ifNil: [
-                "This item does not seem to be a class, so it is most likely
-                 one of the other parameters"
-                 benchmarkClasses := benchmarks.
-                 benchmarks size = 0 ifTrue: [ self error: 'No benchmark found' ].
-                 ^ args copyFrom: i to: args length ].
-            cls := system resolve: sym.
-            benchmarks append: cls.
-            i := i + 1 ].
-        benchmarks size = 0 ifTrue: [ self error: 'No benchmark found' ].
+    runBenchmark = (
+        | bench result |
+        bench := benchmarkClass new.
+        bench oneTimeSetup.
+        
+        ('Starting ' + bench name + ' benchmark ... ') print.
+        self doWarmup: bench.
 
-        benchmarkClasses := benchmarks.
-        ^ nil
-    )
-
-    executeBenchmark: benchmark = (
-        | bench |
-        bench := benchmark new.
-        bench maxRuntime: maxRuntime.
-
-        bench run: numIterations with: warmUp and: innerIterations printAll: printAll.
-        total := total + bench total.
-        runtimes at: benchmark put: bench total.
-        self reportRun: bench.
-    )
-
-    runBenchmarks = (
         numThreads = 1
-            ifTrue:  [
-                benchmarkClasses do: [ :benchmark |
-                    self executeBenchmark: benchmark ]]
-            ifFalse: [
-                | threads |
-                threads := Array new: numThreads.
-                1 to: numThreads do: [:i |
-                    threads at: i put: (
-                        [benchmarkClasses do: [ :benchmark |
-                            self executeBenchmark: benchmark ]] spawn).
-                ].
-                
-                1 to: numThreads do: [:i | 
-                    (threads at: i) join.
-                ]
-            ]
+          ifTrue: [
+            result := self doRuns: bench.
+            self reportBenchmark: bench result: result. ]
+          ifFalse: [
+            result := self doRunsParallel: bench.
+          ].
+            
+        total := total + result.
+        
+        '' println
     )
     
-    reportRun: bench = (
+    doRunsParallel: bench = (
+      | threads results |
+      threads := Array new: numThreads.
+      results := Array new: numThreads withAll: 0.
+      
+      1 to: numThreads do: [:i |
+        | args |
+        "use arguments array to make sure there are no races"
+        args := Array with: i with: results. 
+        
+        threads at: i put: ([:anI :theResults |
+          | result |
+          result := self doRuns: bench.
+          self reportBenchmark: bench result: result.
+          theResults at: anI put: result.] spawn: args).
+      ].
+      
+      1 to: numThreads do: [:i |
+        (threads at: i) join
+      ].
+      
+      ^ results sum
+    )
+    
+    doWarmup: bench = (
+        | numIterationsTmp printAllTmp maxRuntimeTmp |
+        warmUp > 0 ifFalse: [
+            '' println.
+            ^ self].
+
+        numIterationsTmp := numIterations.
+        printAllTmp      := printAll.
+        maxRuntimeTmp    := maxRuntime.
+
+        numIterations := warmUp.
+        printAll      := false.
+        maxRuntime    := nil.
+
+        ' warmup ...' print.
+        self doRuns: bench.
+
+        numIterations := numIterationsTmp.
+        printAll      := printAllTmp.
+        maxRuntime    := maxRuntimeTmp.
+
+        ' completed.' println.
+    )
+    
+    doRuns: bench = (
+        | i total |
+        i := 0.
+        total := 0.
+    
+        [ i < numIterations ] whileTrue: [
+            | startTime endTime runTime |
+            startTime := system ticks.
+            (bench innerBenchmarkLoop: innerIterations) ifFalse: [
+              self error: 'Benchmark failed with incorrect result'. ].
+            endTime   := system ticks.
+        
+            runTime := endTime - startTime.
+            printAll ifTrue: [ self print: bench run: runTime ].
+        
+            total := total + runTime.
+            i := i + 1.
+        
+            maxRuntime ifNotNil: [
+                total > maxRuntime ifTrue: [
+                    numIterations := i.
+                    ^ total ]].
+        
+            system fullGC ].
+    
+        ^ total
+    )
+    
+    reportBenchmark: bench result: result = (
         | out |
-        out :=       bench name.
+        out :=  bench name.
         out := out + ': iterations='.
-        out := out + bench numIterations.
+        out := out + numIterations.
         out := out + ' average: '.
-        out := out + (bench total / bench numIterations).
-        out := out + 'us total: '.
-        out := out + bench total.
+        out := out + (result / numIterations * numThreads).
         out := out + 'us'.
+        out := out + ' total: '.
+        out := out + result.
+        out := out + 'us\n'.
         out println.
-        '' println.
+    )
+     
+    print: bench run: runTime = (
+        (bench name + ': iterations=1' + ' runtime: ' + runTime + 'us') println
     )
         
     printTotal = (
         ('Total Runtime: ' + total asString + 'us') println.
     )
-
 )
