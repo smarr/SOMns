@@ -169,9 +169,8 @@ public abstract class BlockPrims {
 
     @Specialization
     public final Thread doSBlock(final SBlock receiver) {
-      Thread thread = new Thread(new Runnable() {
-        @Override
-        public void run() { receiver.getMethod().getCallTarget().call(receiver); }
+      Thread thread = new Thread(() -> {
+        receiver.getMethod().getCallTarget().call(receiver);
       });
       thread.start();
       return thread;
