@@ -118,17 +118,17 @@ public abstract class EqualsPrim extends BinaryExpressionNode {
     return false;
   }
 
-  @Specialization(order = 44445)
+  @Specialization
   public final boolean doReentrantLock(final ReentrantLock receiver, final Object arg) {
     return receiver == arg;
   }
 
-  @Specialization(order = 44447)
+  @Specialization
   public final boolean doCondition(final Condition receiver, final Object arg) {
     return receiver == arg;
   }
 
-  @Specialization(order = 44449)
+  @Specialization
   public final boolean doThread(final Thread receiver, final Object arg) {
     return receiver == arg;
   }
