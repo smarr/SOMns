@@ -9,13 +9,13 @@ UnaryConstraint = AbstractConstraint (
     
     "initialize-release"
 
-    var: aVariable strength: strengthSymbol = (
+    var: aVariable strength: strengthSymbol addTo: planner = (
         "Initialize myself with the given variable and strength."
 
         strength := Strength of: strengthSymbol.
         output := aVariable.
         satisfied := false.
-        self addConstraint.
+        self addConstraint: planner.
     )
 
     "queries"

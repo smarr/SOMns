@@ -34,11 +34,11 @@ AbstractConstraint = (
     )
 
     "add/remove"
-    addConstraint = (
+    addConstraint: planner = (
         "Activate this constraint and attempt to satisfy it."
 
         self addToGraph.
-        Planner current incrementalAdd: self.
+        planner incrementalAdd: self.
     )
 
     addToGraph = (
@@ -46,11 +46,11 @@ AbstractConstraint = (
         self subclassResponsibility
     )
 
-    destroyConstraint = (
+    destroyConstraint: planner = (
         "Deactivate this constraint, remove it from the constraint graph,
          possibly causing other constraints to be satisfied, and destroy it."
 
-        (self isSatisfied) ifTrue: [Planner current incrementalRemove: self].
+        (self isSatisfied) ifTrue: [planner incrementalRemove: self].
         self removeFromGraph.
         "self release."
     )
@@ -111,7 +111,7 @@ AbstractConstraint = (
         self subclassResponsibility
     )
 
-    satisfy: mark = (
+    satisfy: mark propagate: planner = (
         "Attempt to find a way to enforce this (still unsatisfied) constraint.
          If successful, record the solution, perhaps modifying the current
          dataflow graph.  Answer the constraint that this constraint overrides,
@@ -128,17 +128,17 @@ AbstractConstraint = (
                  overridden := out determinedBy.
                  (overridden == nil) ifFalse: [overridden markUnsatisfied].
                  out determinedBy: self.
-                 (Planner current addPropagate: self mark: mark) ifFalse:
-                    [self notify:
-                        ('Cycle encountered adding:\   ',
-                         self printString,
-                         '\Constraint removed.') withCRs.
+                 (planner addPropagate: self mark: mark) ifFalse:
+                    [self error:
+                        ('Cycle encountered adding:\t',
+                         "self printString,"
+                         '\Constraint removed.').
                      ^nil].
                  out mark: mark]
             ifFalse:            "constraint cannot be satisfied"
                 [overridden := nil.
                  (strength sameAs: (Strength required)) ifTrue:
-                    [self notify: 'Failed to satisfy a required constraint']].
+                    [self error: 'Failed to satisfy a required constraint']].
         ^overridden
     )
 

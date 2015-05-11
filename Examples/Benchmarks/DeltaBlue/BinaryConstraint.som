@@ -12,14 +12,14 @@ BinaryConstraint = AbstractConstraint (
         
     "initialize-release"
 
-    var: variable1 var: variable2 strength: strengthSymbol = (
+    var: variable1 var: variable2 strength: strengthSymbol addTo: planner = (
         "Initialize myself with the given variables and strength."
 
         strength := Strength of: strengthSymbol.
         v1 := variable1.
         v2 := variable2.
         direction := nil.
-        self addConstraint.
+        self addConstraint: planner.
     )
 
     "queries"

@@ -20,10 +20,10 @@ EditConstraint = UnaryConstraint (
 
     "instance creation"
 
-    var: aVariable strength: strengthSymbol = (
+    var: aVariable strength: strengthSymbol addTo: planner = (
         "Install an edit constraint with the given strength on the given
          variable."
 
-        ^(self new) var: aVariable strength: strengthSymbol
+        ^(self new) var: aVariable strength: strengthSymbol addTo: planner
     )
 )

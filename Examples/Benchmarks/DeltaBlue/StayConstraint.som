@@ -15,9 +15,9 @@ StayConstraint = UnaryConstraint (
 
     "instance creation"
 
-    var: aVariable strength: strengthSymbol = (
+    var: aVariable strength: strengthSymbol addTo: planner = (
         "Install a stay constraint with the given strength on the given variable."
 
-        ^(self new) var: aVariable strength: strengthSymbol
+        ^(self new) var: aVariable strength: strengthSymbol addTo: planner
     )
 )

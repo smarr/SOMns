@@ -35,9 +35,9 @@ Planner = (
 
         | mark overridden |
         mark := self newMark.
-        overridden := c satisfy: mark.
+        overridden := c satisfy: mark propagate: self.
         [overridden == nil] whileFalse:
-            [overridden := overridden satisfy: mark]
+            [overridden := overridden satisfy: mark propagate: self]
     )
 
     incrementalRemove: c = (
@@ -169,12 +169,12 @@ Planner = (
 
     changeVar: aVariable newValue: newValue = (
         | editConstraint plan |
-        editConstraint := EditConstraint var: aVariable strength: #preferred.
+        editConstraint := EditConstraint var: aVariable strength: #preferred addTo: self.
         plan := self extractPlanFromConstraints: (Array with: editConstraint).
         10 timesRepeat: [
             aVariable value: newValue.
             plan execute].
-        editConstraint destroyConstraint.
+        editConstraint destroyConstraint: self.
     )
 
     constraintsConsuming: v do: aBlock = (
@@ -229,12 +229,10 @@ Planner = (
     )
     
     ----
-    
-    | currentPlanner |
 
     "instance creation"
     new = (
-        ^currentPlanner := super new initialize
+        ^ super new initialize
     )
 
     "benchmarks"
@@ -250,16 +248,16 @@ Planner = (
             [ :i | | v1 v2 |
              v1 := vars at: i.
              v2 := vars at: i + 1.
-             EqualityConstraint var: v1 var: v2 strength: #required].
+             EqualityConstraint var: v1 var: v2 strength: #required addTo: planner].
 
-        StayConstraint var: vars last strength: #strongDefault.
-        editConstraint := EditConstraint var: (vars first) strength: #preferred.
+        StayConstraint var: vars last strength: #strongDefault addTo: planner.
+        editConstraint := EditConstraint var: (vars first) strength: #preferred addTo: planner.
         plan := planner extractPlanFromConstraints: (Array with: editConstraint).
         1 to: 100 do: [ :v | 
             vars first value: v.
             plan execute.
             vars last value ~= v ifTrue: [self error: 'Chain test failed!!']].
-        editConstraint destroyConstraint
+        editConstraint destroyConstraint: planner
     )
 
     projectionTest: n = (
@@ -276,8 +274,8 @@ Planner = (
             src := Variable value: i.
             dst := Variable value: i.
             dests add: dst.
-            StayConstraint var: src strength: #default.
-            ScaleConstraint var: src var: scale var: offset var: dst strength: #required].
+            StayConstraint var: src strength: #default addTo: planner.
+            ScaleConstraint var: src var: scale var: offset var: dst strength: #required addTo: planner].
 
         planner changeVar: src newValue: 17.
         dst value ~= 1170 ifTrue: [self error: 'Projection test 1 failed!!'].
@@ -317,10 +315,5 @@ Planner = (
             self chainTest: 100. 
             self projectionTest: 100
         ]
-    )
-
-    "accessing"
-    current = (
-        ^currentPlanner
     )
 )
