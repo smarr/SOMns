@@ -1,7 +1,7 @@
 GraphSearch = Benchmark (
   | graphNodes graphMask updatingGraphMask graphVisited cost graphEdges k firstCost |
 
-  initializeGraph: noOfNodes = (
+  initializeGraph: noOfNodes with: random = (
     | source graph totalEdges |
     graphNodes        := Array new: noOfNodes.
     graphMask         := Array new: noOfNodes withAll: false.
@@ -15,13 +15,13 @@ GraphSearch = Benchmark (
 
     graph doIndexes: [:i |
       | noOfEdges |
-      noOfEdges := (JenkinsRandom random
+      noOfEdges := (random next
                        rem: GraphSearch MaxInitEdges - GraphSearch MinEdges + 1) abs
                    + GraphSearch MinEdges.
       1 to: noOfEdges do: [:j |
         | nodeId weight |
-        nodeId := (JenkinsRandom random rem: noOfNodes) abs + 1.
-        weight := (JenkinsRandom random rem: (
+        nodeId := (random next rem: noOfNodes) abs + 1.
+        weight := (random next rem: (
                     GraphSearch MaxWeight - GraphSearch MinWeight + 1)) abs
                   + GraphSearch MinWeight.
         (graph at: i)      append: (Edge newWith: nodeId and: weight).
@@ -53,11 +53,11 @@ GraphSearch = Benchmark (
   )
 
   innerBenchmarkLoop: innerIterations = (
-    | noOfNodes |
-    JenkinsRandom seed: 49734321.
+    | noOfNodes random |
+    random := JenkinsRandom new: 49734321.
     noOfNodes := GraphSearch ExpectedNoOfNodes / 1000 * innerIterations.
 
-    self initializeGraph: noOfNodes.
+    self initializeGraph: noOfNodes with: random.
     self breadthFirstSearch: noOfNodes.
     ^ self verify: cost inner: innerIterations
   )

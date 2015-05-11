@@ -1,11 +1,10 @@
 JenkinsRandom = (
-  ----
   | seed |
   
-  seed: val = ( seed := val )
+  initialize: val = ( seed := val )
   
   "Robert Jenkins' 32 bit integer hash function."
-  random = (
+  next = (
     seed := ((seed       + 2127912214 "0x7ed55d16")       + (seed as32BitUnsignedValue  << 12) as32BitSignedValue) as32BitSignedValue.
     seed := ((seed bitXor: 3345072700 "0xc761c23c") bitXor: (seed as32BitUnsignedValue >>> 19)) as32BitSignedValue.
     seed := ((seed       +  374761393 "0x165667B1")       + (seed as32BitUnsignedValue  <<  5) as32BitSignedValue) as32BitSignedValue.
@@ -14,4 +13,8 @@ JenkinsRandom = (
     seed := ((seed bitXor: 3042594569 "0xb55a4f09") bitXor: (seed as32BitUnsignedValue >>> 16)) as32BitSignedValue.
     ^ seed
   )
+  
+  ----
+  
+  new: seed = ( ^ self new initialize: seed )
 )

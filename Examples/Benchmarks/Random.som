@@ -54,12 +54,5 @@ Random = (
     
     -------------------
     
-    | random |
-    
-    new        = ( ^super new initialize )
-    next       = ( ^self random next )
-    initialize = ( ^random := Random new )
-    
-    random = ( ^random )
-    
+    new = ( ^super new initialize )    
 )

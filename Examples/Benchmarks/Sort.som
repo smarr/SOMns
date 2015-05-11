@@ -29,7 +29,7 @@ Sort = Benchmark (
     
     benchmark = (
         | array |
-        array := self randomArray: self dataSize.
+        array := self randomArray: self dataSize with: Random new.
         ^ self sort: array.
     )
     
@@ -46,10 +46,9 @@ Sort = Benchmark (
         ^ true
     )
     
-    randomArray: size = (
+    randomArray: size with: random = (
         | array |
-        Random initialize.
-        array := Array new: size withAll: [ Random next ].
+        array := Array new: size withAll: [ random next ].
         smallest := largest := array at: 1.
         array do: [ :elm |
             (elm > largest)  ifTrue: [ largest  := elm ].

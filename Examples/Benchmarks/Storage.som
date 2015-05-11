@@ -28,9 +28,10 @@ Storage = Benchmark (
     | count |
     
     benchmark = (
-        Random initialize.
+        | random |
+        random := Random new.
         count := 0.
-        self buildTreeDepth: 7.
+        self buildTreeDepth: 7 with: random.
         ^ count
     )
     
@@ -38,12 +39,12 @@ Storage = Benchmark (
       ^ self assert: 5461 equals: result
     )
     
-    buildTreeDepth: depth = (
+    buildTreeDepth: depth with: random = (
         count := count + 1.
         ^(depth = 1) 
-            ifTrue:  [ Array new: Random next % 10 + 1 ]
+            ifTrue:  [ Array new: random next % 10 + 1 ]
             ifFalse: [
-                Array new: 4 withAll: [ self buildTreeDepth: depth - 1 ] ]
+                Array new: 4 withAll: [ self buildTreeDepth: depth - 1 with: random ] ]
     )
     
 )

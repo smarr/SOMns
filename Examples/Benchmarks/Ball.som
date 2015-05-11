@@ -45,15 +45,15 @@ Ball = (
         ^bounced
     )
     
-    initialize = (
-        x := Random next % 500.
-        y := Random next % 500.
-        xVel := (Random next % 300) - 150.
-        yVel := (Random next % 300) - 150.
+    initialize: random = (
+        x := random next % 500.
+        y := random next % 500.
+        xVel := (random next % 300) - 150.
+        yVel := (random next % 300) - 150.
     )
     
     -----------------
     
-    new = ( ^super new initialize )
+    new: random = ( ^super new initialize: random )
     
 )
