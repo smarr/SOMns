@@ -99,27 +99,32 @@ BenchmarkHarness = (
     )
         
     runBenchmark = (
-        | bench result |
-        bench := benchmarkClass new.
-        bench oneTimeSetup.
-        
-        ('Starting ' + bench name + ' benchmark ... ') print.
-        self doWarmup: bench.
+        | result warmupBench |
+        benchmarkClass oneTimeSetup.
+        warmupBench := benchmarkClass new.
+
+        ('Starting ' + warmupBench name + ' benchmark ... ') print.
+
+        self doWarmup: warmupBench.
 
         numThreads = 1
-          ifTrue: [
-            result := self doRuns: bench.
-            self reportBenchmark: bench result: result. ]
-          ifFalse: [
-            result := self doRunsParallel: bench.
-          ].
+          ifTrue:  [ result := self doRunsSequential ]
+          ifFalse: [ result := self doRunsParallel   ].
             
         total := total + result.
         
         '' println
     )
     
-    doRunsParallel: bench = (
+    doRunsSequential = (
+      | result bench |
+      bench := benchmarkClass new.
+      result := self doRuns: bench.
+      self reportBenchmark: bench result: result. 
+      ^ result
+    )
+    
+    doRunsParallel = (
       | threads results |
       threads := Array new: numThreads.
       results := Array new: numThreads withAll: 0.
@@ -130,7 +135,8 @@ BenchmarkHarness = (
         args := Array with: i with: results. 
         
         threads at: i put: ([:anI :theResults |
-          | result |
+          | result bench |
+          bench := benchmarkClass new.
           result := self doRuns: bench.
           self reportBenchmark: bench result: result.
           theResults at: anI put: result.] spawn: args).

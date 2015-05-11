@@ -38,8 +38,6 @@ Benchmark = (
         harness printTotal.
     )
     
-    oneTimeSetup = ()
-    
     innerBenchmarkLoop: innerIterations = (
         | i |
         i := 0.
@@ -60,4 +58,8 @@ Benchmark = (
       ].
       ^ true
     )
+    
+    ----
+    
+    oneTimeSetup = ()
 )
