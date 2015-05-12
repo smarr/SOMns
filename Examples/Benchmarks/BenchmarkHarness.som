@@ -94,7 +94,7 @@ BenchmarkHarness = (
         sym := className asSymbol.
         cls := system load: sym.
         cls ifNil: [
-            self error: 'Failed loading benchmark: ', className ].
+            self error: 'Failed loading benchmark: ' + className ].
         benchmarkClass := cls.
     )
         
