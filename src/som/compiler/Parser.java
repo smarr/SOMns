@@ -61,6 +61,7 @@ import static som.compiler.Symbol.Star;
 import static som.interpreter.SNodeFactory.createGlobalRead;
 import static som.interpreter.SNodeFactory.createMessageSend;
 import static som.interpreter.SNodeFactory.createSequence;
+import static som.vm.Symbols.symbolFor;
 
 import java.io.Reader;
 import java.math.BigInteger;
@@ -216,7 +217,7 @@ public final class Parser {
   }
 
   public void classdef(final ClassGenerationContext cgenc) throws ParseError {
-    cgenc.setName(universe.symbolFor(text));
+    cgenc.setName(symbolFor(text));
     expect(Identifier);
     expect(Equal);
 
@@ -251,10 +252,10 @@ public final class Parser {
   private void superclass(final ClassGenerationContext cgenc) throws ParseError {
     SSymbol superName;
     if (sym == Identifier) {
-      superName = universe.symbolFor(text);
+      superName = symbolFor(text);
       accept(Identifier);
     } else {
-      superName = universe.symbolFor("Object");
+      superName = symbolFor("Object");
     }
     cgenc.setSuperName(superName);
 
@@ -309,7 +310,7 @@ public final class Parser {
     if (accept(Or)) {
       while (isIdentifier(sym)) {
         String var = variable();
-        cgenc.addInstanceField(universe.symbolFor(var));
+        cgenc.addInstanceField(symbolFor(var));
       }
       expect(Or);
     }
@@ -319,7 +320,7 @@ public final class Parser {
     if (accept(Or)) {
       while (isIdentifier(sym)) {
         String var = variable();
-        cgenc.addClassField(universe.symbolFor(var));
+        cgenc.addClassField(symbolFor(var));
       }
       expect(Or);
     }
@@ -381,7 +382,7 @@ public final class Parser {
     }
     while (sym == Keyword);
 
-    mgenc.setSignature(universe.symbolFor(kw.toString()));
+    mgenc.setSignature(symbolFor(kw.toString()));
   }
 
   private ExpressionNode methodBlock(final MethodGenerationContext mgenc) throws ParseError {
@@ -395,7 +396,7 @@ public final class Parser {
   }
 
   private SSymbol unarySelector() throws ParseError {
-    return universe.symbolFor(identifier());
+    return symbolFor(identifier());
   }
 
   private SSymbol binarySelector() throws ParseError {
@@ -411,15 +412,12 @@ public final class Parser {
     } else { expect(NONE); }
     // Checkstyle: resume
 
-    return universe.symbolFor(s);
+    return symbolFor(s);
   }
 
   private String identifier() throws ParseError {
     String s = new String(text);
-    boolean isPrimitive = accept(Primitive);
-    if (!isPrimitive) {
-      expect(Identifier);
-    }
+    expect(Identifier);
     return s;
   }
 
@@ -658,7 +656,7 @@ public final class Parser {
     while (sym == Keyword);
 
     String msgStr = kw.toString();
-    SSymbol msg = universe.symbolFor(msgStr);
+    SSymbol msg = symbolFor(msgStr);
 
     SourceSection source = getSource(coord);
 
@@ -802,7 +800,7 @@ public final class Parser {
     expect(Pound);
     if (sym == STString) {
       String s = string();
-      symb = universe.symbolFor(s);
+      symb = symbolFor(s);
     } else {
       symb = selector();
     }
@@ -830,7 +828,7 @@ public final class Parser {
   private SSymbol keywordSelector() throws ParseError {
     String s = new String(text);
     expectOneOf(keywordSelectorSyms);
-    SSymbol symb = universe.symbolFor(s);
+    SSymbol symb = symbolFor(s);
     return symb;
   }
 
@@ -857,7 +855,7 @@ public final class Parser {
       blockSig += ":";
     }
 
-    mgenc.setSignature(universe.symbolFor(blockSig));
+    mgenc.setSignature(symbolFor(blockSig));
 
     ExpressionNode expressions = blockContents(mgenc);
 
@@ -896,7 +894,7 @@ public final class Parser {
     }
 
     // then object fields
-    SSymbol varName = universe.symbolFor(variableName);
+    SSymbol varName = symbolFor(variableName);
     FieldReadNode fieldRead = mgenc.getObjectFieldRead(varName, source);
 
     if (fieldRead != null) {
@@ -914,7 +912,7 @@ public final class Parser {
       return mgenc.getLocalWriteNode(variableName, exp, source);
     }
 
-    SSymbol fieldName = universe.symbolFor(variableName);
+    SSymbol fieldName = symbolFor(variableName);
     FieldWriteNode fieldWrite = mgenc.getObjectFieldWrite(fieldName, exp, universe, source);
 
     if (fieldWrite != null) {

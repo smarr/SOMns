@@ -2,7 +2,7 @@ package som.interpreter.nodes.dispatch;
 
 import som.interpreter.SArguments;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode.AbstractCachedDispatchNode;
-import som.vm.Universe;
+import som.vm.Symbols;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
 
@@ -15,7 +15,7 @@ public abstract class AbstractCachedDnuNode extends AbstractCachedDispatchNode {
 
   public static CallTarget getDnuCallTarget(final SClass rcvrClass) {
     return rcvrClass.lookupInvokable(
-          Universe.current().symbolFor("doesNotUnderstand:arguments:")).
+          Symbols.symbolFor("doesNotUnderstand:arguments:")).
         getCallTarget();
   }
 

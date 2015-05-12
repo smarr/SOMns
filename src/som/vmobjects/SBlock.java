@@ -30,6 +30,7 @@ import som.primitives.BlockPrimsFactory.ValueNonePrimFactory;
 import som.primitives.BlockPrimsFactory.ValueOnePrimFactory;
 import som.primitives.BlockPrimsFactory.ValueTwoPrimFactory;
 import som.primitives.Primitives;
+import som.vm.Symbols;
 import som.vm.Universe;
 import som.vm.constants.Blocks;
 
@@ -105,7 +106,7 @@ public abstract class SBlock extends SAbstractObject {
   public static SInvokable getEvaluationPrimitive(final int numberOfArguments,
       final Universe universe, final SClass rcvrClass) {
     CompilerAsserts.neverPartOfCompilation("SBlock.getEvaluationPrimitive(...)");
-    SSymbol sig = universe.symbolFor(computeSignatureString(numberOfArguments));
+    SSymbol sig = Symbols.symbolFor(computeSignatureString(numberOfArguments));
 
     switch (numberOfArguments) {
       case 1: return Primitives.constructPrimitive(sig,

@@ -27,6 +27,7 @@ package som.compiler;
 import java.util.ArrayList;
 import java.util.List;
 
+import som.vm.Symbols;
 import som.vm.Universe;
 import som.vm.constants.Classes;
 import som.vmobjects.SArray;
@@ -128,7 +129,7 @@ public final class ClassGenerationContext {
         SArray.create(classFields.toArray(new Object[0])));
     resultClass.setInstanceInvokables(
         SArray.create(classMethods.toArray(new Object[0])));
-    resultClass.setName(universe.symbolFor(ccname));
+    resultClass.setName(Symbols.symbolFor(ccname));
 
     SClass superMClass = superClass.getSOMClass();
     resultClass.setSuperClass(superMClass);

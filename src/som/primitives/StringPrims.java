@@ -3,7 +3,7 @@ package som.primitives;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
-import som.vm.Universe;
+import som.vm.Symbols;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SSymbol;
 
@@ -38,12 +38,9 @@ public class StringPrims {
 
   @GenerateNodeFactory
   public abstract static class AsSymbolPrim extends UnaryExpressionNode {
-    private final Universe universe;
-    public AsSymbolPrim() { this.universe = Universe.current(); }
-
     @Specialization
     public final SAbstractObject doString(final String receiver) {
-      return universe.symbolFor(receiver);
+      return Symbols.symbolFor(receiver);
     }
 
     @Specialization

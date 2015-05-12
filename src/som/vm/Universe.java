@@ -25,6 +25,7 @@
 
 package som.vm;
 
+import static som.vm.Symbols.symbolFor;
 import static som.vm.constants.Classes.arrayClass;
 import static som.vm.constants.Classes.booleanClass;
 import static som.vm.constants.Classes.classClass;
@@ -120,7 +121,6 @@ public final class Universe {
   private Universe() {
     this.truffleRuntime = Truffle.getRuntime();
     this.globals      = new HashMap<SSymbol, Association>();
-    this.symbolTable  = new HashMap<>();
     this.avoidExit    = false;
     this.alreadyInitialized = false;
     this.lastExitCode = 0;
@@ -402,16 +402,6 @@ public final class Universe {
     objectSystemInitialized = true;
   }
 
-  @TruffleBoundary
-  public SSymbol symbolFor(final String string) {
-    String interned = string.intern();
-    // Lookup the symbol in the symbol table
-    SSymbol result = symbolTable.get(interned);
-    if (result != null) { return result; }
-
-    return newSymbol(interned);
-  }
-
   public static SBlock newBlock(final SMethod method, final MaterializedFrame context) {
     return SBlock.create(method, context);
   }
@@ -444,12 +434,6 @@ public final class Universe {
 
     // Setup the metaclass hierarchy
     result.getSOMClass().setClass(result);
-    return result;
-  }
-
-  private SSymbol newSymbol(final String string) {
-    SSymbol result = new SSymbol(string);
-    symbolTable.put(string, result);
     return result;
   }
 
@@ -692,8 +676,6 @@ public final class Universe {
   @CompilationFinal private boolean             printAST;
 
   private final TruffleRuntime                  truffleRuntime;
-
-  private final HashMap<String, SSymbol>        symbolTable;
 
   // TODO: this is not how it is supposed to be... it is just a hack to cope
   //       with the use of system.exit in SOM to enable testing

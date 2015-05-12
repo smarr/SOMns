@@ -33,6 +33,7 @@ import som.primitives.BlockPrimsFactory.SpawnWithArgsPrimFactory;
 import som.primitives.MethodPrimsFactory.InvokeOnPrimFactory;
 import som.primitives.arrays.PutAllNodeFactory;
 import som.primitives.arrays.ToArgumentsArrayNodeGen;
+import som.vm.Symbols;
 import som.vm.Universe;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
@@ -126,7 +127,7 @@ public abstract class Primitives {
 
   protected final void installInstancePrimitive(final String selector,
       final NodeFactory<? extends ExpressionNode> nodeFactory) {
-    SSymbol signature = universe.symbolFor(selector);
+    SSymbol signature = Symbols.symbolFor(selector);
     SInvokable prim = constructPrimitive(signature, nodeFactory, universe, holder);
 
     // Install the given primitive as an instance primitive in the holder class
@@ -135,7 +136,7 @@ public abstract class Primitives {
 
   protected final void installClassPrimitive(final String selector,
       final NodeFactory<? extends ExpressionNode> nodeFactory) {
-    SSymbol signature = universe.symbolFor(selector);
+    SSymbol signature = Symbols.symbolFor(selector);
     SInvokable prim = constructPrimitive(signature, nodeFactory, universe, holder);
 
     // Install the given primitive as an instance primitive in the class of
@@ -145,7 +146,7 @@ public abstract class Primitives {
 
   public static SInvokable getEmptyPrimitive(final String selector,
       final Universe universe) {
-    SSymbol signature = universe.symbolFor(selector);
+    SSymbol signature = Symbols.symbolFor(selector);
     return constructEmptyPrimitive(signature);
   }
 }

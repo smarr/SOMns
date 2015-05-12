@@ -1,7 +1,7 @@
 package som.vmobjects;
 
 import som.interpreter.Types;
-import som.vm.Universe;
+import som.vm.Symbols;
 
 import com.oracle.truffle.api.CompilerAsserts;
 
@@ -24,7 +24,7 @@ public abstract class SAbstractObject {
       final String selectorString,
       final Object[] arguments) {
     CompilerAsserts.neverPartOfCompilation("SAbstractObject.send()");
-    SSymbol selector = Universe.current().symbolFor(selectorString);
+    SSymbol selector = Symbols.symbolFor(selectorString);
 
     // Lookup the invokable
     SInvokable invokable = Types.getClassOf(arguments[0]).lookupInvokable(selector);
