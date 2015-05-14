@@ -47,11 +47,10 @@ public final class ClassBuilder {
 
   private SSymbol             name;
   private SSymbol             superName;
-  private boolean             classSide;
-  private final List<SSymbol> instanceFields  = new ArrayList<SSymbol>();
-  private final List<SInvokable> instanceMethods = new ArrayList<SInvokable>();
-  private final List<SSymbol> classFields     = new ArrayList<SSymbol>();
-  private final List<SInvokable> classMethods    = new ArrayList<SInvokable>();
+  private final List<SSymbol>    slots  = new ArrayList<SSymbol>();
+  private final List<SInvokable> methods = new ArrayList<SInvokable>();
+  private final List<SInvokable> factoryMethods  = new ArrayList<SInvokable>();
+  private SInvokable primaryFactoryMethod;
 
   public void setName(final SSymbol name) {
     this.name = name;
@@ -65,52 +64,35 @@ public final class ClassBuilder {
     this.superName = superName;
   }
 
-  public void setInstanceFieldsOfSuper(final SArray fieldNames) {
+  public void setSlotsOfSuper(final SArray fieldNames) {
     for (int i = 0; i < fieldNames.getObjectStorage().length; i++) {
-      instanceFields.add((SSymbol) fieldNames.getObjectStorage()[i]);
+      slots.add((SSymbol) fieldNames.getObjectStorage()[i]);
     }
   }
 
-  public void setClassFieldsOfSuper(final SArray fieldNames) {
-    for (int i = 0; i < fieldNames.getObjectStorage().length; i++) {
-      classFields.add((SSymbol) fieldNames.getObjectStorage()[i]);
-    }
+  public void addMethod(final SInvokable meth) {
+    methods.add(meth);
   }
 
-  public void addInstanceMethod(final SInvokable meth) {
-    instanceMethods.add(meth);
+  public void addFactoryMethod(final SInvokable meth) {
+    factoryMethods.add(meth);
   }
 
-  public void setClassSide(final boolean b) {
-    classSide = b;
+  public void addSlot(final SSymbol field) {
+    slots.add(field);
   }
 
-  public void addClassMethod(final SInvokable meth) {
-    classMethods.add(meth);
-  }
-
-  public void addInstanceField(final SSymbol field) {
-    instanceFields.add(field);
-  }
-
-  public void addClassField(final SSymbol field) {
-    classFields.add(field);
-  }
-
-  public boolean hasField(final SSymbol field) {
-    return (isClassSide() ? classFields : instanceFields).contains(field);
+  public boolean hasSlot(final SSymbol field) {
+    return slots.contains(field);
   }
 
   public byte getFieldIndex(final SSymbol field) {
-    if (isClassSide()) {
-      return (byte) classFields.indexOf(field);
-    } else {
-      return (byte) instanceFields.indexOf(field);
-    }
+    throw new UnsupportedOperationException("Don't think we can do this");
+//    return (byte) slots.indexOf(field);
   }
 
   public boolean isClassSide() {
-    return classSide;
+    throw new UnsupportedOperationException("This is not supported anymore. Should not be necessary");
   }
 
   @TruffleBoundary
@@ -125,10 +107,8 @@ public final class ClassBuilder {
     SClass resultClass = universe.newClass(Classes.metaclassClass);
 
     // Initialize the class of the resulting class
-    resultClass.setInstanceFields(
-        SArray.create(classFields.toArray(new Object[0])));
     resultClass.setInstanceInvokables(
-        SArray.create(classMethods.toArray(new Object[0])));
+        SArray.create(factoryMethods.toArray(new Object[0])));
     resultClass.setName(Symbols.symbolFor(ccname));
 
     SClass superMClass = superClass.getSOMClass();
@@ -141,9 +121,9 @@ public final class ClassBuilder {
     result.setName(name);
     result.setSuperClass(superClass);
     result.setInstanceFields(
-        SArray.create(instanceFields.toArray(new Object[0])));
+        SArray.create(slots.toArray(new Object[0])));
     result.setInstanceInvokables(
-        SArray.create(instanceMethods.toArray(new Object[0])));
+        SArray.create(methods.toArray(new Object[0])));
 
     return result;
   }
@@ -151,15 +131,13 @@ public final class ClassBuilder {
   @TruffleBoundary
   public void assembleSystemClass(final SClass systemClass) {
     systemClass.setInstanceInvokables(
-        SArray.create(instanceMethods.toArray(new Object[0])));
+        SArray.create(methods.toArray(new Object[0])));
     systemClass.setInstanceFields(
-        SArray.create(instanceFields.toArray(new Object[0])));
+        SArray.create(slots.toArray(new Object[0])));
     // class-bound == class-instance-bound
     SClass superMClass = systemClass.getSOMClass();
     superMClass.setInstanceInvokables(
-        SArray.create(classMethods.toArray(new Object[0])));
-    superMClass.setInstanceFields(
-        SArray.create(classFields.toArray(new Object[0])));
+        SArray.create(factoryMethods.toArray(new Object[0])));
   }
 
   @Override

@@ -337,7 +337,7 @@ public final class MethodBuilder {
 
   public FieldReadNode getObjectFieldRead(final SSymbol fieldName,
       final SourceSection source) {
-    if (!holder.hasField(fieldName)) {
+    if (!holder.hasSlot(fieldName)) {
       return null;
     }
     return createFieldRead(getSelfRead(source),
@@ -352,7 +352,7 @@ public final class MethodBuilder {
   public FieldWriteNode getObjectFieldWrite(final SSymbol fieldName,
       final ExpressionNode exp, final Universe universe,
       final SourceSection source) {
-    if (!holder.hasField(fieldName)) {
+    if (!holder.hasSlot(fieldName)) {
       return null;
     }
 

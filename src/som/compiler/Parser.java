@@ -230,7 +230,7 @@ public final class Parser {
     clsBuilder.setName(symbolFor(className));
 
  // TODO: don't think this is really correct yet. the initializer should probably be class side, or something entirely separate
-    MethodBuilder initializer= new MethodBuilder(clsBuilder);
+    MethodBuilder initializer = new MethodBuilder(clsBuilder);
     // TODO(Newspeak-spec): this is not strictly sufficient for Newspeak
     //                      it could also parse a binary selector here, I think
     //                      but, doesn't seem so useful, so, let's keep it simple
@@ -455,8 +455,7 @@ public final class Parser {
             " could not be loaded", NONE, this);
       }
 
-      clsBuilder.setInstanceFieldsOfSuper(superClass.getInstanceFields());
-      clsBuilder.setClassFieldsOfSuper(superClass.getSOMClass().getInstanceFields());
+      clsBuilder.setSlotsOfSuper(superClass.getInstanceFields());
     }
   }
 
@@ -519,17 +518,7 @@ public final class Parser {
     if (accept(Or)) {
       while (isIdentifier(sym)) {
         String var = variable();
-        clsBuilder.addInstanceField(symbolFor(var));
-      }
-      expect(Or);
-    }
-  }
-
-  private void classFields(final ClassBuilder clsBuilder) throws ParseError {
-    if (accept(Or)) {
-      while (isIdentifier(sym)) {
-        String var = variable();
-        clsBuilder.addClassField(symbolFor(var));
+        clsBuilder.addSlot(symbolFor(var));
       }
       expect(Or);
     }
