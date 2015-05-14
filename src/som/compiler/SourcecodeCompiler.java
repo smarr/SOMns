@@ -43,7 +43,7 @@ public final class SourcecodeCompiler {
   public static SClass compileModule(final String path, final String file,
       final SClass systemClass, final Universe universe)
       throws IOException {
-    String fname = path + File.separator + file + ".som";
+    String fname = path + File.separator + file;
     FileReader stream = new FileReader(fname);
 
     Source source = Source.fromFileName(fname);
