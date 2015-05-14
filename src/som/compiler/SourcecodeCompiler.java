@@ -77,7 +77,7 @@ public final class SourcecodeCompiler {
 
     SClass result = systemClass;
     try {
-      parser.classdef(cgc);
+      parser.classDeclaration(cgc);
     } catch (ParseError pe) {
       Universe.errorExit(pe.toString());
     }

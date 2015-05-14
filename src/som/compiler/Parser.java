@@ -28,11 +28,13 @@ package som.compiler;
 import static som.compiler.Symbol.And;
 import static som.compiler.Symbol.Assign;
 import static som.compiler.Symbol.At;
+import static som.compiler.Symbol.BeginComment;
 import static som.compiler.Symbol.Colon;
 import static som.compiler.Symbol.Comma;
 import static som.compiler.Symbol.Div;
 import static som.compiler.Symbol.Double;
 import static som.compiler.Symbol.EndBlock;
+import static som.compiler.Symbol.EndComment;
 import static som.compiler.Symbol.EndTerm;
 import static som.compiler.Symbol.Equal;
 import static som.compiler.Symbol.Exit;
@@ -54,9 +56,7 @@ import static som.compiler.Symbol.Per;
 import static som.compiler.Symbol.Period;
 import static som.compiler.Symbol.Plus;
 import static som.compiler.Symbol.Pound;
-import static som.compiler.Symbol.Primitive;
 import static som.compiler.Symbol.STString;
-import static som.compiler.Symbol.Separator;
 import static som.compiler.Symbol.Star;
 import static som.interpreter.SNodeFactory.createGlobalRead;
 import static som.interpreter.SNodeFactory.createMessageSend;
@@ -88,6 +88,7 @@ import som.interpreter.nodes.specialized.IfInlinedLiteralNode;
 import som.interpreter.nodes.specialized.IfTrueIfFalseInlinedLiteralsNode;
 import som.interpreter.nodes.specialized.IntToDoInlinedLiteralsNodeGen;
 import som.interpreter.nodes.specialized.whileloops.WhileInlinedLiteralsNode;
+import som.vm.NotYetImplementedException;
 import som.vm.Universe;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable.SMethod;
@@ -216,44 +217,233 @@ public final class Parser {
     return lexer.getStartCoordinate();
   }
 
-  public void classdef(final ClassGenerationContext cgenc) throws ParseError {
-    cgenc.setName(symbolFor(text));
+  public void classDeclaration(final ClassGenerationContext cgenc) throws ParseError {
+    classDeclaration(AccessModifier.PUBLIC, cgenc);
+  }
+
+  private void classDeclaration(final AccessModifier accessModifier,
+      final ClassGenerationContext cgenc) throws ParseError {
+    expectIdentifier("class");
+    String className = text;
     expect(Identifier);
-    expect(Equal);
 
-    superclass(cgenc);
+    cgenc.setName(symbolFor(className));
 
-    expect(NewTerm);
-    instanceFields(cgenc);
-
-    while (isIdentifier(sym) || sym == Keyword || sym == OperatorSequence
-        || symIn(binaryOpSyms)) {
-      MethodGenerationContext mgenc = new MethodGenerationContext(cgenc);
-
-      ExpressionNode methodBody = method(mgenc);
-
-      cgenc.addInstanceMethod(mgenc.assemble(methodBody, lastMethodsSourceSection));
+ // TODO: don't think this is really correct yet. the initializer should probably be class side, or something entirely separate
+    MethodGenerationContext initializerMgenc = new MethodGenerationContext(cgenc);
+    // TODO(Newspeak-spec): this is not strictly sufficient for Newspeak
+    //                      it could also parse a binary selector here, I think
+    //                      but, doesn't seem so useful, so, let's keep it simple
+    if (isIdentifier(sym) || sym == Keyword) {
+      messagePattern(initializerMgenc);
     }
 
-    if (accept(Separator)) {
-      cgenc.setClassSide(true);
-      classFields(cgenc);
-      while (isIdentifier(sym) || sym == Keyword || sym == OperatorSequence
-          || symIn(binaryOpSyms)) {
-        MethodGenerationContext mgenc = new MethodGenerationContext(cgenc);
+    expect(Equal);
 
-        ExpressionNode methodBody = method(mgenc);
-        cgenc.addClassMethod(mgenc.assemble(methodBody, lastMethodsSourceSection));
-      }
+    inheritanceListAndOrBody(cgenc, initializerMgenc);
+  }
+
+  private void inheritanceListAndOrBody(final ClassGenerationContext cgenc,
+      final MethodGenerationContext initializerMgenc) throws ParseError {
+    if (sym == NewTerm) {
+      defaultSuperclassAndBody(cgenc, initializerMgenc);
+    } else {
+      explicitInheritanceListAndOrBody(cgenc, initializerMgenc);
+    }
+  }
+
+  private void defaultSuperclassAndBody(final ClassGenerationContext cgenc,
+      final MethodGenerationContext initializerMgenc) throws ParseError {
+    classBody(cgenc, initializerMgenc);
+  }
+
+  private void explicitInheritanceListAndOrBody(final ClassGenerationContext cgenc,
+      final MethodGenerationContext initializerMgenc) {
+    throw new NotYetImplementedException();
+  }
+
+  private void classBody(final ClassGenerationContext cgenc,
+      final MethodGenerationContext initializerMgenc) throws ParseError {
+    classHeader(cgenc, initializerMgenc);
+    sideDeclaration(cgenc);
+    if (sym == Colon) {
+      classSideDecl(cgenc);
+    }
+  }
+
+  private void classSideDecl(final ClassGenerationContext cgenc) throws ParseError {
+    expect(Colon);
+    expect(NewTerm);
+    MethodGenerationContext mgenc = new MethodGenerationContext(cgenc);
+    category(mgenc);
+    expect(EndTerm);
+  }
+
+  private void classHeader(final ClassGenerationContext cgenc,
+      final MethodGenerationContext initializerMgenc) throws ParseError {
+    expect(NewTerm);
+    if (sym == BeginComment) {
+      classComment(cgenc);
+    }
+    if (sym == Or) {
+      slotDeclarations(cgenc, initializerMgenc);
+    }
+
+    if (sym != EndTerm) {
+      initExprs(initializerMgenc);
     }
     expect(EndTerm);
   }
 
+  private void classComment(final ClassGenerationContext cgenc) throws ParseError {
+    // TODO: capture comment and add it to class
+    comment();
+  }
+
+  private void comment() throws ParseError {
+    expect(BeginComment);
+
+    while (sym != EndComment) {
+      if (sym == BeginComment) {
+        comment();
+      } else {
+        getSymbolFromLexer();
+      }
+    }
+    expect(EndComment);
+  }
+
+  private void slotDeclarations(final ClassGenerationContext cgenc,
+      final MethodGenerationContext initializer) throws ParseError {
+    // TODO: figure out whether we need support for simSlotDecls, i.e.,
+    //       simultaneous slots clauses (spec 6.3.2)
+    expect(Or);
+
+    // slotDef = accessModifier opt, slotDecl,
+    //   (( equalSign | (tokenFromSymbol: #’::=’)), expression, dot) opt.
+    while (sym != Or) {
+      slotDefinition(cgenc, initializer);
+    }
+    expect(Or);
+  }
+
+  private void slotDefinition(final ClassGenerationContext cgenc,
+      final MethodGenerationContext initializer) throws ParseError {
+    /* slotDef = accessModifier opt, slotDecl,
+        (( equalSign | (tokenFromSymbol: #’::=’)), expression, dot) opt. */
+    int dummyAM = accessModifier();
+
+    String slotName = slotDecl();
+
+    if (accept(Equal)) {
+      // TODO: mark as 'immutable' slot
+    } else {
+      // TODO: Need support for mutable slots. tokenFromSymbol: #’::=’
+      throw new NotYetImplementedException();
+    }
+
+    expression(initializer);
+
+    expect(Period);
+  }
+
+  private int accessModifier() {
+    if (sym == Identifier) {
+      // TODO: should return something that is used for the slot creation
+      if (acceptIdentifier("private")   ||
+          acceptIdentifier("protected") ||
+          acceptIdentifier("public")) {
+      }
+    }
+    return -1;
+  }
+
+  private String slotDecl() throws ParseError {
+    return identifier();
+  }
+
+  private void initExprs(final MethodGenerationContext initializer) throws ParseError {
+    expression(initializer);
+
+    while (accept(Period)) {
+      if (sym != EndTerm) {
+        expression(initializer);
+      }
+    }
+  }
+
+  private void sideDeclaration(final ClassGenerationContext cgenc) throws ParseError {
+    MethodGenerationContext mgenc = new MethodGenerationContext(cgenc);
+
+    // sideDecl = lparen, nestedClassDecl star, category star, rparent
+    expect(NewTerm);
+    while (canAcceptThisOrNextIdentifier("class")) {
+      nestedClassDeclaration(cgenc);
+    }
+
+    while (sym != EndTerm) {
+      category(mgenc);
+    }
+
+    expect(EndTerm);
+  }
+
+  private void nestedClassDeclaration(final ClassGenerationContext cgenc) throws ParseError {
+    int dummyAM = accessModifier();
+    classDeclaration(dummyAM, cgenc);
+  }
+
+  private void category(final MethodGenerationContext mgenc) throws ParseError {
+    String categoryName;
+    // Newspeak-spec: this is not conform with Newspeak,
+    //                as the category is normally not optional
+    if (sym == STString) {
+      categoryName = string();
+    } else {
+      categoryName = "";
+    }
+    while (sym != EndTerm) {
+      methodDeclaration(mgenc);
+    }
+  }
+//
+//    superclass(cgenc);
+//
+//    expect(NewTerm);
+//    instanceFields(cgenc);
+//
+//    while (isIdentifier(sym) || sym == Keyword || sym == OperatorSequence
+//        || symIn(binaryOpSyms)) {
+//      MethodGenerationContext mgenc = new MethodGenerationContext(cgenc);
+//
+//      ExpressionNode methodBody = method(mgenc);
+//
+//      cgenc.addInstanceMethod(mgenc.assemble(methodBody, lastMethodsSourceSection));
+//    }
+//
+//    //TODO: cleanup
+//    //if (accept(Separator)) {
+//      cgenc.setClassSide(true);
+//      classFields(cgenc);
+//      while (isIdentifier(sym) || sym == Keyword || sym == OperatorSequence
+//          || symIn(binaryOpSyms)) {
+//        MethodGenerationContext mgenc = new MethodGenerationContext(cgenc);
+//
+//        ExpressionNode methodBody = method(mgenc);
+//        cgenc.addClassMethod(mgenc.assemble(methodBody, lastMethodsSourceSection));
+//      }
+//    //}
+//    expect(EndTerm);
+//  }
+
+
+
+
   private void superclass(final ClassGenerationContext cgenc) throws ParseError {
     SSymbol superName;
-    if (sym == Identifier) {
+    if (isIdentifier(sym)) {
       superName = symbolFor(text);
-      accept(Identifier);
+      accept(Identifier); // TODO: Symbol.Identifier should not be done directly, because isIdentifier might redefine it
     } else {
       superName = symbolFor("Object");
     }
@@ -276,6 +466,20 @@ public final class Parser {
     return ss.contains(sym);
   }
 
+  private boolean canAcceptThisOrNextIdentifier(final String identifier) {
+    if (sym == Identifier && identifier.equals(text)) { return true; }
+    peekForNextSymbolFromLexer();
+    return nextSym == Identifier && identifier.equals(nextSym);
+  }
+
+  private boolean acceptIdentifier(final String identifier) {
+    if (sym == Identifier && identifier.equals(text)) {
+      accept(Identifier);
+      return true;
+    }
+    return false;
+  }
+
   private boolean accept(final Symbol s) {
     if (sym == s) {
       getSymbolFromLexer();
@@ -292,8 +496,15 @@ public final class Parser {
     return false;
   }
 
-  private boolean expect(final Symbol s) throws ParseError {
-    if (accept(s)) { return true; }
+  private boolean expectIdentifier(final String identifier) throws ParseError {
+    if (acceptIdentifier(identifier)) { return true; }
+
+    throw new ParseError("Unexpected token. Expected '" + identifier +
+        "', but found %(found)s", Identifier, this);
+  }
+
+  private void expect(final Symbol s) throws ParseError {
+    if (accept(s)) { return; }
 
     throw new ParseError("Unexpected symbol. Expected %(expected)s, but found "
         + "%(found)s", s, this);
@@ -333,27 +544,18 @@ public final class Parser {
         lexer.getNumberOfCharactersRead() - coord.charIndex);
   }
 
-  private ExpressionNode method(final MethodGenerationContext mgenc) throws ParseError {
-    pattern(mgenc);
+  private ExpressionNode methodDeclaration(final MethodGenerationContext mgenc) throws ParseError {
+    int dummyAM = accessModifier();
+    messagePattern(mgenc);
     expect(Equal);
-    if (sym == Primitive) {
-      mgenc.markAsPrimitive();
-      primitiveBlock();
-      return null;
-    } else {
-      return methodBlock(mgenc);
-    }
+    ExpressionNode node = methodBlock(mgenc);
+    return node;
   }
 
-  private void primitiveBlock() throws ParseError {
-    expect(Primitive);
-  }
-
-  private void pattern(final MethodGenerationContext mgenc) throws ParseError {
+  private void messagePattern(final MethodGenerationContext mgenc) throws ParseError {
     mgenc.addArgumentIfAbsent("self"); // TODO: can we do that optionally?
     switch (sym) {
       case Identifier:
-      case Primitive:
         unaryPattern(mgenc);
         break;
       case Keyword:
@@ -545,8 +747,7 @@ public final class Parser {
 
   private ExpressionNode primary(final MethodGenerationContext mgenc) throws ParseError {
     switch (sym) {
-      case Identifier:
-      case Primitive: {
+      case Identifier: {
         SourceCoordinate coord = getCoordinate();
         String v = variable();
         return variableRead(mgenc, v, getSource(coord));
@@ -933,7 +1134,7 @@ public final class Parser {
   }
 
   private static boolean isIdentifier(final Symbol sym) {
-    return sym == Identifier || sym == Primitive;
+    return sym == Identifier;
   }
 
   private static boolean printableSymbol(final Symbol sym) {
