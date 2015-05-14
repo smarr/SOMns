@@ -1,0 +1,25 @@
+class Platform usingVmMirror: vmMirror = (
+| public system  = (vmMirror load: 'System')  usingPlatform: self vmMirror: vmMirror.
+  public mirrors = (vmMirror load: 'Mirrors') usingPlatform: self vmMirror: vmMirror.
+  public kernel  = (vmMirror load: 'Kernel')  usingPlatform: self vmMirror: vmMirror. 
+|
+
+  (Application usingPlatform: self) start
+)(
+  class Application usingPlatform: platform = (
+    | private platform = platform. |
+  )(
+    public start = (
+      | arguments app errorCode |
+      arguments := system arguments.
+
+      arguments size < 1 ifTrue: [
+        system error: 'No application specified for execution.'
+      ].
+      
+      app := kernel load: (arguments at: 1).
+      errorCode := (app usingPlatform: platform) main: platform args: arguments.
+      system exit: errorCode
+    )
+  ) : ()
+) : ()
