@@ -160,7 +160,15 @@ public final class Lexer {
         match(Symbol.Colon);
       }
     } else if (currentChar() == '(') {
-      match(Symbol.NewTerm);
+      if (nextChar() == '*') {
+        state.bufp += 2;
+        state.set(Symbol.BeginComment, '\0', "(*");
+      } else {
+        match(Symbol.NewTerm);
+      }
+    } else if (currentChar() == '*' && nextChar() == ')') {
+      state.bufp += 2;
+      state.set(Symbol.EndComment, '\0', "*)");
     } else if (currentChar() == ')') {
       match(Symbol.EndTerm);
     } else if (currentChar() == '#') {
