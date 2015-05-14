@@ -37,11 +37,11 @@ import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
-public final class ClassGenerationContext {
+public final class ClassBuilder {
 
   private final Universe universe;
 
-  public ClassGenerationContext(final Universe universe) {
+  public ClassBuilder(final Universe universe) {
     this.universe = universe;
   }
 

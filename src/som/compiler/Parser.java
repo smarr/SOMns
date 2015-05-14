@@ -217,20 +217,20 @@ public final class Parser {
     return lexer.getStartCoordinate();
   }
 
-  public void classDeclaration(final ClassGenerationContext cgenc) throws ParseError {
-    classDeclaration(AccessModifier.PUBLIC, cgenc);
+  public void classDeclaration(final ClassBuilder clsBuilder) throws ParseError {
+    classDeclaration(AccessModifier.PUBLIC, clsBuilder);
   }
 
   private void classDeclaration(final AccessModifier accessModifier,
-      final ClassGenerationContext cgenc) throws ParseError {
+      final ClassBuilder clsBuilder) throws ParseError {
     expectIdentifier("class");
     String className = text;
     expect(Identifier);
 
-    cgenc.setName(symbolFor(className));
+    clsBuilder.setName(symbolFor(className));
 
  // TODO: don't think this is really correct yet. the initializer should probably be class side, or something entirely separate
-    MethodGenerationContext initializerMgenc = new MethodGenerationContext(cgenc);
+    MethodGenerationContext initializerMgenc = new MethodGenerationContext(clsBuilder);
     // TODO(Newspeak-spec): this is not strictly sufficient for Newspeak
     //                      it could also parse a binary selector here, I think
     //                      but, doesn't seem so useful, so, let's keep it simple
@@ -240,53 +240,53 @@ public final class Parser {
 
     expect(Equal);
 
-    inheritanceListAndOrBody(cgenc, initializerMgenc);
+    inheritanceListAndOrBody(clsBuilder, initializerMgenc);
   }
 
-  private void inheritanceListAndOrBody(final ClassGenerationContext cgenc,
+  private void inheritanceListAndOrBody(final ClassBuilder clsBuilder,
       final MethodGenerationContext initializerMgenc) throws ParseError {
     if (sym == NewTerm) {
-      defaultSuperclassAndBody(cgenc, initializerMgenc);
+      defaultSuperclassAndBody(clsBuilder, initializerMgenc);
     } else {
-      explicitInheritanceListAndOrBody(cgenc, initializerMgenc);
+      explicitInheritanceListAndOrBody(clsBuilder, initializerMgenc);
     }
   }
 
-  private void defaultSuperclassAndBody(final ClassGenerationContext cgenc,
+  private void defaultSuperclassAndBody(final ClassBuilder clsBuilder,
       final MethodGenerationContext initializerMgenc) throws ParseError {
-    classBody(cgenc, initializerMgenc);
+    classBody(clsBuilder, initializerMgenc);
   }
 
-  private void explicitInheritanceListAndOrBody(final ClassGenerationContext cgenc,
+  private void explicitInheritanceListAndOrBody(final ClassBuilder clsBuilder,
       final MethodGenerationContext initializerMgenc) {
     throw new NotYetImplementedException();
   }
 
-  private void classBody(final ClassGenerationContext cgenc,
+  private void classBody(final ClassBuilder clsBuilder,
       final MethodGenerationContext initializerMgenc) throws ParseError {
-    classHeader(cgenc, initializerMgenc);
-    sideDeclaration(cgenc);
+    classHeader(clsBuilder, initializerMgenc);
+    sideDeclaration(clsBuilder);
     if (sym == Colon) {
-      classSideDecl(cgenc);
+      classSideDecl(clsBuilder);
     }
   }
 
-  private void classSideDecl(final ClassGenerationContext cgenc) throws ParseError {
+  private void classSideDecl(final ClassBuilder clsBuilder) throws ParseError {
     expect(Colon);
     expect(NewTerm);
-    MethodGenerationContext mgenc = new MethodGenerationContext(cgenc);
+    MethodGenerationContext mgenc = new MethodGenerationContext(clsBuilder);
     category(mgenc);
     expect(EndTerm);
   }
 
-  private void classHeader(final ClassGenerationContext cgenc,
+  private void classHeader(final ClassBuilder clsBuilder,
       final MethodGenerationContext initializerMgenc) throws ParseError {
     expect(NewTerm);
     if (sym == BeginComment) {
-      classComment(cgenc);
+      classComment(clsBuilder);
     }
     if (sym == Or) {
-      slotDeclarations(cgenc, initializerMgenc);
+      slotDeclarations(clsBuilder, initializerMgenc);
     }
 
     if (sym != EndTerm) {
@@ -295,7 +295,7 @@ public final class Parser {
     expect(EndTerm);
   }
 
-  private void classComment(final ClassGenerationContext cgenc) throws ParseError {
+  private void classComment(final ClassBuilder clsBuilder) throws ParseError {
     // TODO: capture comment and add it to class
     comment();
   }
@@ -313,7 +313,7 @@ public final class Parser {
     expect(EndComment);
   }
 
-  private void slotDeclarations(final ClassGenerationContext cgenc,
+  private void slotDeclarations(final ClassBuilder clsBuilder,
       final MethodGenerationContext initializer) throws ParseError {
     // TODO: figure out whether we need support for simSlotDecls, i.e.,
     //       simultaneous slots clauses (spec 6.3.2)
@@ -322,12 +322,12 @@ public final class Parser {
     // slotDef = accessModifier opt, slotDecl,
     //   (( equalSign | (tokenFromSymbol: #’::=’)), expression, dot) opt.
     while (sym != Or) {
-      slotDefinition(cgenc, initializer);
+      slotDefinition(clsBuilder, initializer);
     }
     expect(Or);
   }
 
-  private void slotDefinition(final ClassGenerationContext cgenc,
+  private void slotDefinition(final ClassBuilder clsBuilder,
       final MethodGenerationContext initializer) throws ParseError {
     /* slotDef = accessModifier opt, slotDecl,
         (( equalSign | (tokenFromSymbol: #’::=’)), expression, dot) opt. */
@@ -370,13 +370,13 @@ public final class Parser {
     }
   }
 
-  private void sideDeclaration(final ClassGenerationContext cgenc) throws ParseError {
-    MethodGenerationContext mgenc = new MethodGenerationContext(cgenc);
+  private void sideDeclaration(final ClassBuilder clsBuilder) throws ParseError {
+    MethodGenerationContext mgenc = new MethodGenerationContext(clsBuilder);
 
     // sideDecl = lparen, nestedClassDecl star, category star, rparent
     expect(NewTerm);
     while (canAcceptThisOrNextIdentifier("class")) {
-      nestedClassDeclaration(cgenc);
+      nestedClassDeclaration(clsBuilder);
     }
 
     while (sym != EndTerm) {
@@ -386,9 +386,9 @@ public final class Parser {
     expect(EndTerm);
   }
 
-  private void nestedClassDeclaration(final ClassGenerationContext cgenc) throws ParseError {
+  private void nestedClassDeclaration(final ClassBuilder clsBuilder) throws ParseError {
     AccessModifier accessModifier = accessModifier();
-    classDeclaration(accessModifier, cgenc);
+    classDeclaration(accessModifier, clsBuilder);
   }
 
   private void category(final MethodGenerationContext mgenc) throws ParseError {
@@ -405,30 +405,30 @@ public final class Parser {
     }
   }
 //
-//    superclass(cgenc);
+//    superclass(clsBuilder);
 //
 //    expect(NewTerm);
-//    instanceFields(cgenc);
+//    instanceFields(clsBuilder);
 //
 //    while (isIdentifier(sym) || sym == Keyword || sym == OperatorSequence
 //        || symIn(binaryOpSyms)) {
-//      MethodGenerationContext mgenc = new MethodGenerationContext(cgenc);
+//      MethodGenerationContext mgenc = new MethodGenerationContext(clsBuilder);
 //
 //      ExpressionNode methodBody = method(mgenc);
 //
-//      cgenc.addInstanceMethod(mgenc.assemble(methodBody, lastMethodsSourceSection));
+//      clsBuilder.addInstanceMethod(mgenc.assemble(methodBody, lastMethodsSourceSection));
 //    }
 //
 //    //TODO: cleanup
 //    //if (accept(Separator)) {
-//      cgenc.setClassSide(true);
-//      classFields(cgenc);
+//      clsBuilder.setClassSide(true);
+//      classFields(clsBuilder);
 //      while (isIdentifier(sym) || sym == Keyword || sym == OperatorSequence
 //          || symIn(binaryOpSyms)) {
-//        MethodGenerationContext mgenc = new MethodGenerationContext(cgenc);
+//        MethodGenerationContext mgenc = new MethodGenerationContext(clsBuilder);
 //
 //        ExpressionNode methodBody = method(mgenc);
-//        cgenc.addClassMethod(mgenc.assemble(methodBody, lastMethodsSourceSection));
+//        clsBuilder.addClassMethod(mgenc.assemble(methodBody, lastMethodsSourceSection));
 //      }
 //    //}
 //    expect(EndTerm);
@@ -437,7 +437,7 @@ public final class Parser {
 
 
 
-  private void superclass(final ClassGenerationContext cgenc) throws ParseError {
+  private void superclass(final ClassBuilder clsBuilder) throws ParseError {
     SSymbol superName;
     if (isIdentifier(sym)) {
       superName = symbolFor(text);
@@ -445,7 +445,7 @@ public final class Parser {
     } else {
       superName = symbolFor("Object");
     }
-    cgenc.setSuperName(superName);
+    clsBuilder.setSuperName(superName);
 
     // Load the super class, if it is not nil (break the dependency cycle)
     if (!superName.getString().equals("nil")) {
@@ -455,8 +455,8 @@ public final class Parser {
             " could not be loaded", NONE, this);
       }
 
-      cgenc.setInstanceFieldsOfSuper(superClass.getInstanceFields());
-      cgenc.setClassFieldsOfSuper(superClass.getSOMClass().getInstanceFields());
+      clsBuilder.setInstanceFieldsOfSuper(superClass.getInstanceFields());
+      clsBuilder.setClassFieldsOfSuper(superClass.getSOMClass().getInstanceFields());
     }
   }
 
@@ -515,21 +515,21 @@ public final class Parser {
         "%(expected)s, but found %(found)s", ss, this);
   }
 
-  private void instanceFields(final ClassGenerationContext cgenc) throws ParseError {
+  private void instanceFields(final ClassBuilder clsBuilder) throws ParseError {
     if (accept(Or)) {
       while (isIdentifier(sym)) {
         String var = variable();
-        cgenc.addInstanceField(symbolFor(var));
+        clsBuilder.addInstanceField(symbolFor(var));
       }
       expect(Or);
     }
   }
 
-  private void classFields(final ClassGenerationContext cgenc) throws ParseError {
+  private void classFields(final ClassBuilder clsBuilder) throws ParseError {
     if (accept(Or)) {
       while (isIdentifier(sym)) {
         String var = variable();
-        cgenc.addClassField(symbolFor(var));
+        clsBuilder.addClassField(symbolFor(var));
       }
       expect(Or);
     }

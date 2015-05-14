@@ -73,19 +73,19 @@ public final class SourcecodeCompiler {
 
   private static SClass compile(final Parser parser, final SClass systemClass,
       final Universe universe) {
-    ClassGenerationContext cgc = new ClassGenerationContext(universe);
+    ClassBuilder clsBuilder = new ClassBuilder(universe);
 
     SClass result = systemClass;
     try {
-      parser.classDeclaration(cgc);
+      parser.classDeclaration(clsBuilder);
     } catch (ParseError pe) {
       Universe.errorExit(pe.toString());
     }
 
     if (systemClass == null) {
-      result = cgc.assemble();
+      result = clsBuilder.assemble();
     } else {
-      cgc.assembleSystemClass(result);
+      clsBuilder.assembleSystemClass(result);
     }
 
     return result;

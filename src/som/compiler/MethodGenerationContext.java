@@ -59,7 +59,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 public final class MethodGenerationContext {
 
-  private final ClassGenerationContext  holderGenc;
+  private final ClassBuilder  holder;
   private final MethodGenerationContext outerGenc;
   private final boolean                 blockMethod;
 
@@ -79,27 +79,27 @@ public final class MethodGenerationContext {
   private final List<SMethod> embeddedBlockMethods;
 
 
-  public MethodGenerationContext(final ClassGenerationContext holderGenc) {
-    this(holderGenc, null, false);
+  public MethodGenerationContext(final ClassBuilder holder) {
+    this(holder, null, false);
   }
 
-  public MethodGenerationContext(final ClassGenerationContext holderGenc,
+  public MethodGenerationContext(final ClassBuilder holder,
       final MethodGenerationContext outerGenc) {
-    this(holderGenc, outerGenc, true);
+    this(holder, outerGenc, true);
   }
 
-  private MethodGenerationContext(final ClassGenerationContext holderGenc,
+  private MethodGenerationContext(final ClassBuilder holder,
       final MethodGenerationContext outerGenc, final boolean isBlockMethod) {
-    this.holderGenc      = holderGenc;
-    this.outerGenc       = outerGenc;
-    this.blockMethod     = isBlockMethod;
+    this.holder      = holder;
+    this.outerGenc   = outerGenc;
+    this.blockMethod = isBlockMethod;
 
     LexicalScope outer = (outerGenc != null) ? outerGenc.getCurrentLexicalScope() : null;
     this.currentScope   = new LexicalScope(new FrameDescriptor(), outer);
 
     accessesVariablesOfOuterScope = false;
-    throwsNonLocalReturn            = false;
-    needsToCatchNonLocalReturn      = false;
+    throwsNonLocalReturn          = false;
+    needsToCatchNonLocalReturn    = false;
     embeddedBlockMethods = new ArrayList<SMethod>();
   }
 
@@ -190,9 +190,9 @@ public final class MethodGenerationContext {
   }
 
   private SourceSection getSourceSectionForMethod(final SourceSection ssBody) {
-    String cls = holderGenc.isClassSide() ? "_class" : "";
+    String cls = holder.isClassSide() ? "_class" : "";
     SourceSection ssMethod = ssBody.getSource().createSection(
-        holderGenc.getName().getString() + cls + ">>" + signature.toString(),
+        holder.getName().getString() + cls + ">>" + signature.toString(),
         ssBody.getStartLine(), ssBody.getStartColumn(),
         ssBody.getCharIndex(), ssBody.getCharLength());
     return ssMethod;
@@ -242,8 +242,8 @@ public final class MethodGenerationContext {
     return blockMethod;
   }
 
-  public ClassGenerationContext getHolder() {
-    return holderGenc;
+  public ClassBuilder getHolder() {
+    return holder;
   }
 
   private int getOuterSelfContextLevel() {
@@ -294,7 +294,7 @@ public final class MethodGenerationContext {
   public ExpressionNode getSuperReadNode(final SourceSection source) {
     Variable self = getVariable("self");
     return self.getSuperReadNode(getOuterSelfContextLevel(),
-        holderGenc.getName(), holderGenc.isClassSide(), source);
+        holder.getName(), holder.isClassSide(), source);
   }
 
   public ExpressionNode getLocalReadNode(final String variableName,
@@ -337,11 +337,11 @@ public final class MethodGenerationContext {
 
   public FieldReadNode getObjectFieldRead(final SSymbol fieldName,
       final SourceSection source) {
-    if (!holderGenc.hasField(fieldName)) {
+    if (!holder.hasField(fieldName)) {
       return null;
     }
     return createFieldRead(getSelfRead(source),
-        holderGenc.getFieldIndex(fieldName), source);
+        holder.getFieldIndex(fieldName), source);
   }
 
   public GlobalNode getGlobalRead(final SSymbol varName,
@@ -352,12 +352,12 @@ public final class MethodGenerationContext {
   public FieldWriteNode getObjectFieldWrite(final SSymbol fieldName,
       final ExpressionNode exp, final Universe universe,
       final SourceSection source) {
-    if (!holderGenc.hasField(fieldName)) {
+    if (!holder.hasField(fieldName)) {
       return null;
     }
 
     return createFieldWrite(getSelfRead(source), exp,
-        holderGenc.getFieldIndex(fieldName), source);
+        holder.getFieldIndex(fieldName), source);
   }
 
   /**
@@ -374,6 +374,6 @@ public final class MethodGenerationContext {
 
   @Override
   public String toString() {
-    return "MethodGenC(" + holderGenc.getName().getString() + ">>" + signature.toString() + ")";
+    return "MethodGenC(" + holder.getName().getString() + ">>" + signature.toString() + ")";
   }
 }
