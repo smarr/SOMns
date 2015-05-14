@@ -25,7 +25,7 @@
 
 package som.primitives;
 
-import som.compiler.MethodGenerationContext;
+import som.compiler.MethodBuilder;
 import som.interpreter.Primitive;
 import som.interpreter.nodes.ArgumentReadNode.LocalArgumentReadNode;
 import som.interpreter.nodes.ExpressionNode;
@@ -69,7 +69,7 @@ public abstract class Primitives {
     CompilerAsserts.neverPartOfCompilation();
     int numArgs = signature.getNumberOfSignatureArguments();
 
-    MethodGenerationContext mgen = new MethodGenerationContext(null);
+    MethodBuilder builder = new MethodBuilder(null);
     ExpressionNode[] args = new ExpressionNode[numArgs];
     for (int i = 0; i < numArgs; i++) {
       args[i] = new LocalArgumentReadNode(i, null);
@@ -108,7 +108,7 @@ public abstract class Primitives {
         throw new RuntimeException("Not supported by SOM.");
     }
 
-    Primitive primMethodNode = new Primitive(primNode, mgen.getCurrentLexicalScope().getFrameDescriptor(),
+    Primitive primMethodNode = new Primitive(primNode, builder.getCurrentLexicalScope().getFrameDescriptor(),
         (ExpressionNode) primNode.deepCopy());
     SInvokable prim = Universe.newMethod(signature, primMethodNode, true, new SMethod[0]);
     return prim;
@@ -116,10 +116,10 @@ public abstract class Primitives {
 
   public static SInvokable constructEmptyPrimitive(final SSymbol signature) {
     CompilerAsserts.neverPartOfCompilation();
-    MethodGenerationContext mgen = new MethodGenerationContext(null);
+    MethodBuilder builder = new MethodBuilder(null);
 
     ExpressionNode primNode = EmptyPrim.create(new LocalArgumentReadNode(0, null));
-    Primitive primMethodNode = new Primitive(primNode, mgen.getCurrentLexicalScope().getFrameDescriptor(),
+    Primitive primMethodNode = new Primitive(primNode, builder.getCurrentLexicalScope().getFrameDescriptor(),
         (ExpressionNode) primNode.deepCopy());
     SInvokable prim = Universe.newMethod(signature, primMethodNode, true, new SMethod[0]);
     return prim;

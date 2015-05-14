@@ -1,6 +1,6 @@
 package som.interpreter;
 
-import som.compiler.MethodGenerationContext;
+import som.compiler.MethodBuilder;
 import som.compiler.Variable.Local;
 import som.interpreter.nodes.ExpressionNode;
 
@@ -33,10 +33,10 @@ public abstract class Invokable extends RootNode {
 
   public abstract Invokable cloneWithNewLexicalContext(final LexicalScope outerContext);
 
-  public ExpressionNode inline(final MethodGenerationContext mgenc,
+  public ExpressionNode inline(final MethodBuilder builder,
       final Local[] locals) {
-    return InlinerForLexicallyEmbeddedMethods.doInline(uninitializedBody, mgenc,
-        locals, getSourceSection().getCharIndex());
+    return InlinerForLexicallyEmbeddedMethods.doInline(uninitializedBody,
+        builder, locals, getSourceSection().getCharIndex());
   }
 
   @Override

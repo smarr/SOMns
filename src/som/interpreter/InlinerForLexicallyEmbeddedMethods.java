@@ -1,6 +1,6 @@
 package som.interpreter;
 
-import som.compiler.MethodGenerationContext;
+import som.compiler.MethodBuilder;
 import som.compiler.Variable.Local;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.SOMNode;
@@ -17,22 +17,22 @@ import com.oracle.truffle.api.source.SourceSection;
 public class InlinerForLexicallyEmbeddedMethods implements NodeVisitor {
 
   public static ExpressionNode doInline(
-      final ExpressionNode body, final MethodGenerationContext mgenc,
+      final ExpressionNode body, final MethodBuilder builder,
       final Local[] blockArguments,
       final int blockStartIdx) {
     ExpressionNode inlinedBody = NodeUtil.cloneNode(body);
 
     return NodeVisitorUtil.applyVisitor(inlinedBody,
-        new InlinerForLexicallyEmbeddedMethods(mgenc, blockArguments, blockStartIdx));
+        new InlinerForLexicallyEmbeddedMethods(builder, blockArguments, blockStartIdx));
   }
 
-  private final MethodGenerationContext mgenc;
+  private final MethodBuilder builder;
   private final Local[] blockArguments;
   private final int blockStartIdx;
 
-  public InlinerForLexicallyEmbeddedMethods(final MethodGenerationContext mgenc,
+  public InlinerForLexicallyEmbeddedMethods(final MethodBuilder builder,
       final Local[] blockArguments, final int blockStartIdx) {
-    this.mgenc = mgenc;
+    this.builder = builder;
     this.blockArguments = blockArguments;
     this.blockStartIdx  = blockStartIdx;
   }
@@ -47,8 +47,8 @@ public class InlinerForLexicallyEmbeddedMethods implements NodeVisitor {
 
   public UninitializedVariableReadNode getLocalRead(final Object slotIdentifier, final SourceSection source) {
     String inlinedId = getEmbeddedSlotId(slotIdentifier);
-    mgenc.addLocalIfAbsent(inlinedId);
-    return (UninitializedVariableReadNode) mgenc.getLocalReadNode(inlinedId, source);
+    builder.addLocalIfAbsent(inlinedId);
+    return (UninitializedVariableReadNode) builder.getLocalReadNode(inlinedId, source);
   }
 
   private String getEmbeddedSlotId(final Object slotIdentifier) {
@@ -59,26 +59,26 @@ public class InlinerForLexicallyEmbeddedMethods implements NodeVisitor {
 
   public FrameSlot addLocalSlot(final Object orgSlotId) {
     String id = getEmbeddedSlotId(orgSlotId);
-    assert mgenc.getEmbeddedLocal(id) == null;
-    return mgenc.addLocal(id).getSlot();
+    assert builder.getEmbeddedLocal(id) == null;
+    return builder.addLocal(id).getSlot();
   }
 
   public FrameSlot getLocalSlot(final Object orgSlotId) {
     String id = getEmbeddedSlotId(orgSlotId);
-    Local var = mgenc.getEmbeddedLocal(id);
+    Local var = builder.getEmbeddedLocal(id);
     return var.getSlot();
   }
 
   public LexicalScope getCurrentLexicalScope() {
-    return mgenc.getCurrentLexicalScope();
+    return builder.getCurrentLexicalScope();
   }
 
   public UninitializedVariableWriteNode getLocalWrite(final Object slotIdentifier,
       final ExpressionNode valExp,
       final SourceSection source) {
     String inlinedId = getEmbeddedSlotId(slotIdentifier);
-    mgenc.addLocalIfAbsent(inlinedId);
-    return (UninitializedVariableWriteNode) mgenc.getLocalWriteNode(inlinedId,
+    builder.addLocalIfAbsent(inlinedId);
+    return (UninitializedVariableWriteNode) builder.getLocalWriteNode(inlinedId,
         valExp, source);
   }
 

@@ -230,41 +230,41 @@ public final class Parser {
     clsBuilder.setName(symbolFor(className));
 
  // TODO: don't think this is really correct yet. the initializer should probably be class side, or something entirely separate
-    MethodGenerationContext initializerMgenc = new MethodGenerationContext(clsBuilder);
+    MethodBuilder initializer= new MethodBuilder(clsBuilder);
     // TODO(Newspeak-spec): this is not strictly sufficient for Newspeak
     //                      it could also parse a binary selector here, I think
     //                      but, doesn't seem so useful, so, let's keep it simple
     if (isIdentifier(sym) || sym == Keyword) {
-      messagePattern(initializerMgenc);
+      messagePattern(initializer);
     }
 
     expect(Equal);
 
-    inheritanceListAndOrBody(clsBuilder, initializerMgenc);
+    inheritanceListAndOrBody(clsBuilder, initializer);
   }
 
   private void inheritanceListAndOrBody(final ClassBuilder clsBuilder,
-      final MethodGenerationContext initializerMgenc) throws ParseError {
+      final MethodBuilder initializer) throws ParseError {
     if (sym == NewTerm) {
-      defaultSuperclassAndBody(clsBuilder, initializerMgenc);
+      defaultSuperclassAndBody(clsBuilder, initializer);
     } else {
-      explicitInheritanceListAndOrBody(clsBuilder, initializerMgenc);
+      explicitInheritanceListAndOrBody(clsBuilder, initializer);
     }
   }
 
   private void defaultSuperclassAndBody(final ClassBuilder clsBuilder,
-      final MethodGenerationContext initializerMgenc) throws ParseError {
-    classBody(clsBuilder, initializerMgenc);
+      final MethodBuilder initializer) throws ParseError {
+    classBody(clsBuilder, initializer);
   }
 
   private void explicitInheritanceListAndOrBody(final ClassBuilder clsBuilder,
-      final MethodGenerationContext initializerMgenc) {
+      final MethodBuilder initializer) {
     throw new NotYetImplementedException();
   }
 
   private void classBody(final ClassBuilder clsBuilder,
-      final MethodGenerationContext initializerMgenc) throws ParseError {
-    classHeader(clsBuilder, initializerMgenc);
+      final MethodBuilder initializer) throws ParseError {
+    classHeader(clsBuilder, initializer);
     sideDeclaration(clsBuilder);
     if (sym == Colon) {
       classSideDecl(clsBuilder);
@@ -274,23 +274,23 @@ public final class Parser {
   private void classSideDecl(final ClassBuilder clsBuilder) throws ParseError {
     expect(Colon);
     expect(NewTerm);
-    MethodGenerationContext mgenc = new MethodGenerationContext(clsBuilder);
-    category(mgenc);
+    MethodBuilder builder = new MethodBuilder(clsBuilder);
+    category(builder);
     expect(EndTerm);
   }
 
   private void classHeader(final ClassBuilder clsBuilder,
-      final MethodGenerationContext initializerMgenc) throws ParseError {
+      final MethodBuilder initializer) throws ParseError {
     expect(NewTerm);
     if (sym == BeginComment) {
       classComment(clsBuilder);
     }
     if (sym == Or) {
-      slotDeclarations(clsBuilder, initializerMgenc);
+      slotDeclarations(clsBuilder, initializer);
     }
 
     if (sym != EndTerm) {
-      initExprs(initializerMgenc);
+      initExprs(initializer);
     }
     expect(EndTerm);
   }
@@ -314,7 +314,7 @@ public final class Parser {
   }
 
   private void slotDeclarations(final ClassBuilder clsBuilder,
-      final MethodGenerationContext initializer) throws ParseError {
+      final MethodBuilder initializer) throws ParseError {
     // TODO: figure out whether we need support for simSlotDecls, i.e.,
     //       simultaneous slots clauses (spec 6.3.2)
     expect(Or);
@@ -328,7 +328,7 @@ public final class Parser {
   }
 
   private void slotDefinition(final ClassBuilder clsBuilder,
-      final MethodGenerationContext initializer) throws ParseError {
+      final MethodBuilder initializer) throws ParseError {
     /* slotDef = accessModifier opt, slotDecl,
         (( equalSign | (tokenFromSymbol: #’::=’)), expression, dot) opt. */
     AccessModifier acccessModifier = accessModifier();
@@ -360,7 +360,7 @@ public final class Parser {
     return identifier();
   }
 
-  private void initExprs(final MethodGenerationContext initializer) throws ParseError {
+  private void initExprs(final MethodBuilder initializer) throws ParseError {
     expression(initializer);
 
     while (accept(Period)) {
@@ -371,7 +371,7 @@ public final class Parser {
   }
 
   private void sideDeclaration(final ClassBuilder clsBuilder) throws ParseError {
-    MethodGenerationContext mgenc = new MethodGenerationContext(clsBuilder);
+    MethodBuilder builder = new MethodBuilder(clsBuilder);
 
     // sideDecl = lparen, nestedClassDecl star, category star, rparent
     expect(NewTerm);
@@ -380,7 +380,7 @@ public final class Parser {
     }
 
     while (sym != EndTerm) {
-      category(mgenc);
+      category(builder);
     }
 
     expect(EndTerm);
@@ -391,7 +391,7 @@ public final class Parser {
     classDeclaration(accessModifier, clsBuilder);
   }
 
-  private void category(final MethodGenerationContext mgenc) throws ParseError {
+  private void category(final MethodBuilder builder) throws ParseError {
     String categoryName;
     // Newspeak-spec: this is not conform with Newspeak,
     //                as the category is normally not optional
@@ -401,7 +401,7 @@ public final class Parser {
       categoryName = "";
     }
     while (sym != EndTerm) {
-      methodDeclaration(mgenc);
+      methodDeclaration(builder);
     }
   }
 //
@@ -412,11 +412,11 @@ public final class Parser {
 //
 //    while (isIdentifier(sym) || sym == Keyword || sym == OperatorSequence
 //        || symIn(binaryOpSyms)) {
-//      MethodGenerationContext mgenc = new MethodGenerationContext(clsBuilder);
+//      MethodGenerationContext builder = new MethodGenerationContext(clsBuilder);
 //
-//      ExpressionNode methodBody = method(mgenc);
+//      ExpressionNode methodBody = method(builder);
 //
-//      clsBuilder.addInstanceMethod(mgenc.assemble(methodBody, lastMethodsSourceSection));
+//      clsBuilder.addInstanceMethod(builder.assemble(methodBody, lastMethodsSourceSection));
 //    }
 //
 //    //TODO: cleanup
@@ -425,10 +425,10 @@ public final class Parser {
 //      classFields(clsBuilder);
 //      while (isIdentifier(sym) || sym == Keyword || sym == OperatorSequence
 //          || symIn(binaryOpSyms)) {
-//        MethodGenerationContext mgenc = new MethodGenerationContext(clsBuilder);
+//        MethodGenerationContext builder = new MethodGenerationContext(clsBuilder);
 //
-//        ExpressionNode methodBody = method(mgenc);
-//        clsBuilder.addClassMethod(mgenc.assemble(methodBody, lastMethodsSourceSection));
+//        ExpressionNode methodBody = method(builder);
+//        clsBuilder.addClassMethod(builder.assemble(methodBody, lastMethodsSourceSection));
 //      }
 //    //}
 //    expect(EndTerm);
@@ -542,53 +542,53 @@ public final class Parser {
         lexer.getNumberOfCharactersRead() - coord.charIndex);
   }
 
-  private ExpressionNode methodDeclaration(final MethodGenerationContext mgenc) throws ParseError {
+  private ExpressionNode methodDeclaration(final MethodBuilder builder) throws ParseError {
     AccessModifier accessModifier = accessModifier();
-    messagePattern(mgenc);
+    messagePattern(builder);
     expect(Equal);
-    ExpressionNode node = methodBlock(mgenc);
+    ExpressionNode node = methodBlock(builder);
     return node;
   }
 
-  private void messagePattern(final MethodGenerationContext mgenc) throws ParseError {
-    mgenc.addArgumentIfAbsent("self"); // TODO: can we do that optionally?
+  private void messagePattern(final MethodBuilder builder) throws ParseError {
+    builder.addArgumentIfAbsent("self"); // TODO: can we do that optionally?
     switch (sym) {
       case Identifier:
-        unaryPattern(mgenc);
+        unaryPattern(builder);
         break;
       case Keyword:
-        keywordPattern(mgenc);
+        keywordPattern(builder);
         break;
       default:
-        binaryPattern(mgenc);
+        binaryPattern(builder);
         break;
     }
   }
 
-  private void unaryPattern(final MethodGenerationContext mgenc) throws ParseError {
-    mgenc.setSignature(unarySelector());
+  private void unaryPattern(final MethodBuilder builder) throws ParseError {
+    builder.setSignature(unarySelector());
   }
 
-  private void binaryPattern(final MethodGenerationContext mgenc) throws ParseError {
-    mgenc.setSignature(binarySelector());
-    mgenc.addArgumentIfAbsent(argument());
+  private void binaryPattern(final MethodBuilder builder) throws ParseError {
+    builder.setSignature(binarySelector());
+    builder.addArgumentIfAbsent(argument());
   }
 
-  private void keywordPattern(final MethodGenerationContext mgenc) throws ParseError {
+  private void keywordPattern(final MethodBuilder builder) throws ParseError {
     StringBuffer kw = new StringBuffer();
     do {
       kw.append(keyword());
-      mgenc.addArgumentIfAbsent(argument());
+      builder.addArgumentIfAbsent(argument());
     }
     while (sym == Keyword);
 
-    mgenc.setSignature(symbolFor(kw.toString()));
+    builder.setSignature(symbolFor(kw.toString()));
   }
 
-  private ExpressionNode methodBlock(final MethodGenerationContext mgenc) throws ParseError {
+  private ExpressionNode methodBlock(final MethodBuilder builder) throws ParseError {
     expect(NewTerm);
     SourceCoordinate coord = getCoordinate();
-    ExpressionNode methodBody = blockContents(mgenc);
+    ExpressionNode methodBody = blockContents(builder);
     lastMethodsSourceSection = getSource(coord);
     expect(EndTerm);
 
@@ -632,39 +632,39 @@ public final class Parser {
     return variable();
   }
 
-  private ExpressionNode blockContents(final MethodGenerationContext mgenc) throws ParseError {
+  private ExpressionNode blockContents(final MethodBuilder builder) throws ParseError {
     if (accept(Or)) {
-      locals(mgenc);
+      locals(builder);
       expect(Or);
     }
-    return blockBody(mgenc);
+    return blockBody(builder);
   }
 
-  private void locals(final MethodGenerationContext mgenc) throws ParseError {
+  private void locals(final MethodBuilder builder) throws ParseError {
     while (isIdentifier(sym)) {
-      mgenc.addLocalIfAbsent(variable());
+      builder.addLocalIfAbsent(variable());
     }
   }
 
-  private ExpressionNode blockBody(final MethodGenerationContext mgenc) throws ParseError {
+  private ExpressionNode blockBody(final MethodBuilder builder) throws ParseError {
     SourceCoordinate coord = getCoordinate();
     List<ExpressionNode> expressions = new ArrayList<ExpressionNode>();
 
     while (true) {
       if (accept(Exit)) {
-        expressions.add(result(mgenc));
+        expressions.add(result(builder));
         return createSequenceNode(coord, expressions);
       } else if (sym == EndBlock) {
         return createSequenceNode(coord, expressions);
       } else if (sym == EndTerm) {
         // the end of the method has been found (EndTerm) - make it implicitly
         // return "self"
-        ExpressionNode self = variableRead(mgenc, "self", getSource(getCoordinate()));
+        ExpressionNode self = variableRead(builder, "self", getSource(getCoordinate()));
         expressions.add(self);
         return createSequenceNode(coord, expressions);
       }
 
-      expressions.add(expression(mgenc));
+      expressions.add(expression(builder));
       accept(Period);
     }
   }
@@ -679,34 +679,34 @@ public final class Parser {
     return createSequence(expressions, getSource(coord));
   }
 
-  private ExpressionNode result(final MethodGenerationContext mgenc) throws ParseError {
+  private ExpressionNode result(final MethodBuilder builder) throws ParseError {
     SourceCoordinate coord = getCoordinate();
 
-    ExpressionNode exp = expression(mgenc);
+    ExpressionNode exp = expression(builder);
     accept(Period);
 
-    if (mgenc.isBlockMethod()) {
-      return mgenc.getNonLocalReturn(exp, getSource(coord));
+    if (builder.isBlockMethod()) {
+      return builder.getNonLocalReturn(exp, getSource(coord));
     } else {
       return exp;
     }
   }
 
-  private ExpressionNode expression(final MethodGenerationContext mgenc) throws ParseError {
+  private ExpressionNode expression(final MethodBuilder builder) throws ParseError {
     peekForNextSymbolFromLexer();
 
     if (nextSym == Assign) {
-      return assignation(mgenc);
+      return assignation(builder);
     } else {
-      return evaluation(mgenc);
+      return evaluation(builder);
     }
   }
 
-  private ExpressionNode assignation(final MethodGenerationContext mgenc) throws ParseError {
-    return assignments(mgenc);
+  private ExpressionNode assignation(final MethodBuilder builder) throws ParseError {
+    return assignments(builder);
   }
 
-  private ExpressionNode assignments(final MethodGenerationContext mgenc) throws ParseError {
+  private ExpressionNode assignments(final MethodBuilder builder) throws ParseError {
     SourceCoordinate coord = getCoordinate();
 
     if (!isIdentifier(sym)) {
@@ -720,12 +720,12 @@ public final class Parser {
 
     ExpressionNode value;
     if (nextSym == Assign) {
-      value = assignments(mgenc);
+      value = assignments(builder);
     } else {
-      value = evaluation(mgenc);
+      value = evaluation(builder);
     }
 
-    return variableWrite(mgenc, variable, value, getSource(coord));
+    return variableWrite(builder, variable, value, getSource(coord));
   }
 
   private String assignment() throws ParseError {
@@ -734,33 +734,33 @@ public final class Parser {
     return v;
   }
 
-  private ExpressionNode evaluation(final MethodGenerationContext mgenc) throws ParseError {
-    ExpressionNode exp = primary(mgenc);
+  private ExpressionNode evaluation(final MethodBuilder builder) throws ParseError {
+    ExpressionNode exp = primary(builder);
     if (isIdentifier(sym) || sym == Keyword || sym == OperatorSequence
         || symIn(binaryOpSyms)) {
-      exp = messages(mgenc, exp);
+      exp = messages(builder, exp);
     }
     return exp;
   }
 
-  private ExpressionNode primary(final MethodGenerationContext mgenc) throws ParseError {
+  private ExpressionNode primary(final MethodBuilder builder) throws ParseError {
     switch (sym) {
       case Identifier: {
         SourceCoordinate coord = getCoordinate();
         String v = variable();
-        return variableRead(mgenc, v, getSource(coord));
+        return variableRead(builder, v, getSource(coord));
       }
       case NewTerm: {
-        return nestedTerm(mgenc);
+        return nestedTerm(builder);
       }
       case NewBlock: {
         SourceCoordinate coord = getCoordinate();
-        MethodGenerationContext bgenc = new MethodGenerationContext(mgenc.getHolder(), mgenc);
+        MethodBuilder bgenc = new MethodBuilder(builder.getHolder(), builder);
 
         ExpressionNode blockBody = nestedBlock(bgenc);
 
         SMethod blockMethod = (SMethod) bgenc.assemble(blockBody, lastMethodsSourceSection);
-        mgenc.addEmbeddedBlockMethod(blockMethod);
+        builder.addEmbeddedBlockMethod(blockMethod);
 
         if (bgenc.requiresContext()) {
           return new BlockNodeWithContext(blockMethod, getSource(coord));
@@ -778,7 +778,7 @@ public final class Parser {
     return identifier();
   }
 
-  private ExpressionNode messages(final MethodGenerationContext mgenc,
+  private ExpressionNode messages(final MethodBuilder builder,
       final ExpressionNode receiver) throws ParseError {
     ExpressionNode msg;
     if (isIdentifier(sym)) {
@@ -789,24 +789,24 @@ public final class Parser {
       }
 
       while (sym == OperatorSequence || symIn(binaryOpSyms)) {
-        msg = binaryMessage(mgenc, msg);
+        msg = binaryMessage(builder, msg);
       }
 
       if (sym == Keyword) {
-        msg = keywordMessage(mgenc, msg);
+        msg = keywordMessage(builder, msg);
       }
     } else if (sym == OperatorSequence || symIn(binaryOpSyms)) {
-      msg = binaryMessage(mgenc, receiver);
+      msg = binaryMessage(builder, receiver);
 
       while (sym == OperatorSequence || symIn(binaryOpSyms)) {
-        msg = binaryMessage(mgenc, msg);
+        msg = binaryMessage(builder, msg);
       }
 
       if (sym == Keyword) {
-        msg = keywordMessage(mgenc, msg);
+        msg = keywordMessage(builder, msg);
       }
     } else {
-      msg = keywordMessage(mgenc, receiver);
+      msg = keywordMessage(builder, receiver);
     }
     return msg;
   }
@@ -818,18 +818,18 @@ public final class Parser {
         getSource(coord));
   }
 
-  private AbstractMessageSendNode binaryMessage(final MethodGenerationContext mgenc,
+  private AbstractMessageSendNode binaryMessage(final MethodBuilder builder,
       final ExpressionNode receiver) throws ParseError {
     SourceCoordinate coord = getCoordinate();
     SSymbol msg = binarySelector();
-    ExpressionNode operand = binaryOperand(mgenc);
+    ExpressionNode operand = binaryOperand(builder);
 
     return createMessageSend(msg, new ExpressionNode[] {receiver, operand},
         getSource(coord));
   }
 
-  private ExpressionNode binaryOperand(final MethodGenerationContext mgenc) throws ParseError {
-    ExpressionNode operand = primary(mgenc);
+  private ExpressionNode binaryOperand(final MethodBuilder builder) throws ParseError {
+    ExpressionNode operand = primary(builder);
 
     // a binary operand can receive unaryMessages
     // Example: 2 * 3 asString
@@ -840,7 +840,7 @@ public final class Parser {
     return operand;
   }
 
-  private ExpressionNode keywordMessage(final MethodGenerationContext mgenc,
+  private ExpressionNode keywordMessage(final MethodBuilder builder,
       final ExpressionNode receiver) throws ParseError {
     SourceCoordinate coord = getCoordinate();
     List<ExpressionNode> arguments = new ArrayList<ExpressionNode>();
@@ -850,7 +850,7 @@ public final class Parser {
 
     do {
       kw.append(keyword());
-      arguments.add(formula(mgenc));
+      arguments.add(formula(builder));
     }
     while (sym == Keyword);
 
@@ -862,43 +862,43 @@ public final class Parser {
     if (msg.getNumberOfSignatureArguments() == 2) {
       if (arguments.get(1) instanceof LiteralNode) {
         if ("ifTrue:".equals(msgStr)) {
-          ExpressionNode inlinedBody = ((LiteralNode) arguments.get(1)).inline(mgenc);
+          ExpressionNode inlinedBody = ((LiteralNode) arguments.get(1)).inline(builder);
           return new IfInlinedLiteralNode(arguments.get(0), true, inlinedBody,
               arguments.get(1), source);
         } else if ("ifFalse:".equals(msgStr)) {
-          ExpressionNode inlinedBody = ((LiteralNode) arguments.get(1)).inline(mgenc);
+          ExpressionNode inlinedBody = ((LiteralNode) arguments.get(1)).inline(builder);
           return new IfInlinedLiteralNode(arguments.get(0), false, inlinedBody,
               arguments.get(1), source);
         } else if ("whileTrue:".equals(msgStr)) {
-          ExpressionNode inlinedCondition = ((LiteralNode) arguments.get(0)).inline(mgenc);
-          ExpressionNode inlinedBody      = ((LiteralNode) arguments.get(1)).inline(mgenc);
+          ExpressionNode inlinedCondition = ((LiteralNode) arguments.get(0)).inline(builder);
+          ExpressionNode inlinedBody      = ((LiteralNode) arguments.get(1)).inline(builder);
           return new WhileInlinedLiteralsNode(inlinedCondition, inlinedBody,
               true, arguments.get(0), arguments.get(1), source);
         } else if ("whileFalse:".equals(msgStr)) {
-          ExpressionNode inlinedCondition = ((LiteralNode) arguments.get(0)).inline(mgenc);
-          ExpressionNode inlinedBody      = ((LiteralNode) arguments.get(1)).inline(mgenc);
+          ExpressionNode inlinedCondition = ((LiteralNode) arguments.get(0)).inline(builder);
+          ExpressionNode inlinedBody      = ((LiteralNode) arguments.get(1)).inline(builder);
           return new WhileInlinedLiteralsNode(inlinedCondition, inlinedBody,
               false, arguments.get(0), arguments.get(1), source);
         } else if ("or:".equals(msgStr) || "||".equals(msgStr)) {
-          ExpressionNode inlinedArg = ((LiteralNode) arguments.get(1)).inline(mgenc);
+          ExpressionNode inlinedArg = ((LiteralNode) arguments.get(1)).inline(builder);
           return new OrInlinedLiteralNode(arguments.get(0), inlinedArg, arguments.get(1), source);
         } else if ("and:".equals(msgStr) || "&&".equals(msgStr)) {
-          ExpressionNode inlinedArg = ((LiteralNode) arguments.get(1)).inline(mgenc);
+          ExpressionNode inlinedArg = ((LiteralNode) arguments.get(1)).inline(builder);
           return new AndInlinedLiteralNode(arguments.get(0), inlinedArg, arguments.get(1), source);
         }
       }
     } else if (msg.getNumberOfSignatureArguments() == 3) {
       if ("ifTrue:ifFalse:".equals(msgStr) &&
           arguments.get(1) instanceof LiteralNode && arguments.get(2) instanceof LiteralNode) {
-        ExpressionNode inlinedTrueNode  = ((LiteralNode) arguments.get(1)).inline(mgenc);
-        ExpressionNode inlinedFalseNode = ((LiteralNode) arguments.get(2)).inline(mgenc);
+        ExpressionNode inlinedTrueNode  = ((LiteralNode) arguments.get(1)).inline(builder);
+        ExpressionNode inlinedFalseNode = ((LiteralNode) arguments.get(2)).inline(builder);
         return new IfTrueIfFalseInlinedLiteralsNode(arguments.get(0),
             inlinedTrueNode, inlinedFalseNode, arguments.get(1), arguments.get(2),
             source);
       } else if ("to:do:".equals(msgStr) &&
           arguments.get(2) instanceof LiteralNode) {
-        Local loopIdx = mgenc.addLocal("i:" + source.getCharIndex());
-        ExpressionNode inlinedBody = ((LiteralNode) arguments.get(2)).inline(mgenc, loopIdx);
+        Local loopIdx = builder.addLocal("i:" + source.getCharIndex());
+        ExpressionNode inlinedBody = ((LiteralNode) arguments.get(2)).inline(builder, loopIdx);
         return IntToDoInlinedLiteralsNodeGen.create(inlinedBody, loopIdx.getSlot(),
             arguments.get(2), source, arguments.get(0), arguments.get(1));
       }
@@ -908,18 +908,18 @@ public final class Parser {
         source);
   }
 
-  private ExpressionNode formula(final MethodGenerationContext mgenc) throws ParseError {
-    ExpressionNode operand = binaryOperand(mgenc);
+  private ExpressionNode formula(final MethodBuilder builder) throws ParseError {
+    ExpressionNode operand = binaryOperand(builder);
 
     while (sym == OperatorSequence || symIn(binaryOpSyms)) {
-      operand = binaryMessage(mgenc, operand);
+      operand = binaryMessage(builder, operand);
     }
     return operand;
   }
 
-  private ExpressionNode nestedTerm(final MethodGenerationContext mgenc) throws ParseError {
+  private ExpressionNode nestedTerm(final MethodBuilder builder) throws ParseError {
     expect(NewTerm);
-    ExpressionNode exp = expression(mgenc);
+    ExpressionNode exp = expression(builder);
     expect(EndTerm);
     return exp;
   }
@@ -1037,26 +1037,26 @@ public final class Parser {
     return s;
   }
 
-  private ExpressionNode nestedBlock(final MethodGenerationContext mgenc) throws ParseError {
+  private ExpressionNode nestedBlock(final MethodBuilder builder) throws ParseError {
     expect(NewBlock);
     SourceCoordinate coord = getCoordinate();
 
-    mgenc.addArgumentIfAbsent("$blockSelf");
+    builder.addArgumentIfAbsent("$blockSelf");
 
     if (sym == Colon) {
-      blockPattern(mgenc);
+      blockPattern(builder);
     }
 
     // generate Block signature
     String blockSig = "$blockMethod@" + lexer.getCurrentLineNumber() + "@" + lexer.getCurrentColumn();
-    int argSize = mgenc.getNumberOfArguments();
+    int argSize = builder.getNumberOfArguments();
     for (int i = 1; i < argSize; i++) {
       blockSig += ":";
     }
 
-    mgenc.setSignature(symbolFor(blockSig));
+    builder.setSignature(symbolFor(blockSig));
 
-    ExpressionNode expressions = blockContents(mgenc);
+    ExpressionNode expressions = blockContents(builder);
 
     lastMethodsSourceSection = getSource(coord);
 
@@ -1065,54 +1065,54 @@ public final class Parser {
     return expressions;
   }
 
-  private void blockPattern(final MethodGenerationContext mgenc) throws ParseError {
-    blockArguments(mgenc);
+  private void blockPattern(final MethodBuilder builder) throws ParseError {
+    blockArguments(builder);
     expect(Or);
   }
 
-  private void blockArguments(final MethodGenerationContext mgenc) throws ParseError {
+  private void blockArguments(final MethodBuilder builder) throws ParseError {
     do {
       expect(Colon);
-      mgenc.addArgumentIfAbsent(argument());
+      builder.addArgumentIfAbsent(argument());
     }
     while (sym == Colon);
   }
 
-  private ExpressionNode variableRead(final MethodGenerationContext mgenc,
+  private ExpressionNode variableRead(final MethodBuilder builder,
                                       final String variableName,
                                       final SourceSection source) {
     // we need to handle super special here
     if ("super".equals(variableName)) {
-      return mgenc.getSuperReadNode(source);
+      return builder.getSuperReadNode(source);
     }
 
     // now look up first local variables, or method arguments
-    Variable variable = mgenc.getVariable(variableName);
+    Variable variable = builder.getVariable(variableName);
     if (variable != null) {
-      return mgenc.getLocalReadNode(variableName, source);
+      return builder.getLocalReadNode(variableName, source);
     }
 
     // then object fields
     SSymbol varName = symbolFor(variableName);
-    FieldReadNode fieldRead = mgenc.getObjectFieldRead(varName, source);
+    FieldReadNode fieldRead = builder.getObjectFieldRead(varName, source);
 
     if (fieldRead != null) {
       return fieldRead;
     }
 
     // and finally assume it is a global
-    return mgenc.getGlobalRead(varName, universe, source);
+    return builder.getGlobalRead(varName, universe, source);
   }
 
-  private ExpressionNode variableWrite(final MethodGenerationContext mgenc,
+  private ExpressionNode variableWrite(final MethodBuilder builder,
       final String variableName, final ExpressionNode exp, final SourceSection source) {
-    Local variable = mgenc.getLocal(variableName);
+    Local variable = builder.getLocal(variableName);
     if (variable != null) {
-      return mgenc.getLocalWriteNode(variableName, exp, source);
+      return builder.getLocalWriteNode(variableName, exp, source);
     }
 
     SSymbol fieldName = symbolFor(variableName);
-    FieldWriteNode fieldWrite = mgenc.getObjectFieldWrite(fieldName, exp, universe, source);
+    FieldWriteNode fieldWrite = builder.getObjectFieldWrite(fieldName, exp, universe, source);
 
     if (fieldWrite != null) {
       return fieldWrite;

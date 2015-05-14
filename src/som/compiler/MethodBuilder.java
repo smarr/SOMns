@@ -57,11 +57,11 @@ import com.oracle.truffle.api.source.SourceSection;
 
 
 
-public final class MethodGenerationContext {
+public final class MethodBuilder {
 
   private final ClassBuilder  holder;
-  private final MethodGenerationContext outerGenc;
-  private final boolean                 blockMethod;
+  private final MethodBuilder outerBuilder;
+  private final boolean       blockMethod;
 
   private SSymbol signature;
   private boolean primitive;
@@ -79,22 +79,22 @@ public final class MethodGenerationContext {
   private final List<SMethod> embeddedBlockMethods;
 
 
-  public MethodGenerationContext(final ClassBuilder holder) {
+  public MethodBuilder(final ClassBuilder holder) {
     this(holder, null, false);
   }
 
-  public MethodGenerationContext(final ClassBuilder holder,
-      final MethodGenerationContext outerGenc) {
-    this(holder, outerGenc, true);
+  public MethodBuilder(final ClassBuilder holder,
+      final MethodBuilder outerBuilder) {
+    this(holder, outerBuilder, true);
   }
 
-  private MethodGenerationContext(final ClassBuilder holder,
-      final MethodGenerationContext outerGenc, final boolean isBlockMethod) {
-    this.holder      = holder;
-    this.outerGenc   = outerGenc;
-    this.blockMethod = isBlockMethod;
+  private MethodBuilder(final ClassBuilder holder,
+      final MethodBuilder outerBuilder, final boolean isBlockMethod) {
+    this.holder       = holder;
+    this.outerBuilder = outerBuilder;
+    this.blockMethod  = isBlockMethod;
 
-    LexicalScope outer = (outerGenc != null) ? outerGenc.getCurrentLexicalScope() : null;
+    LexicalScope outer = (outerBuilder != null) ? outerBuilder.getCurrentLexicalScope() : null;
     this.currentScope   = new LexicalScope(new FrameDescriptor(), outer);
 
     accessesVariablesOfOuterScope = false;
@@ -116,8 +116,8 @@ public final class MethodGenerationContext {
   private static final String frameOnStackSlotName = "!frameOnStack";
 
   public FrameSlot getFrameOnStackMarkerSlot() {
-    if (outerGenc != null) {
-      return outerGenc.getFrameOnStackMarkerSlot();
+    if (outerBuilder != null) {
+      return outerBuilder.getFrameOnStackMarkerSlot();
     }
 
     if (frameOnStackSlot == null) {
@@ -129,7 +129,7 @@ public final class MethodGenerationContext {
   public void makeCatchNonLocalReturn() {
     throwsNonLocalReturn = true;
 
-    MethodGenerationContext ctx = markOuterContextsToRequireContextAndGetRootContext();
+    MethodBuilder ctx = markOuterContextsToRequireContextAndGetRootContext();
     assert ctx != null;
     ctx.needsToCatchNonLocalReturn = true;
   }
@@ -138,18 +138,18 @@ public final class MethodGenerationContext {
     return throwsNonLocalReturn || accessesVariablesOfOuterScope;
   }
 
-  private MethodGenerationContext markOuterContextsToRequireContextAndGetRootContext() {
-    MethodGenerationContext ctx = outerGenc;
-    while (ctx.outerGenc != null) {
+  private MethodBuilder markOuterContextsToRequireContextAndGetRootContext() {
+    MethodBuilder ctx = outerBuilder;
+    while (ctx.outerBuilder != null) {
       ctx.throwsNonLocalReturn = true;
-      ctx = ctx.outerGenc;
+      ctx = ctx.outerBuilder;
     }
     return ctx;
   }
 
   public boolean needsToCatchNonLocalReturn() {
     // only the most outer method needs to catch
-    return needsToCatchNonLocalReturn && outerGenc == null;
+    return needsToCatchNonLocalReturn && outerBuilder == null;
   }
 
   private void separateVariables(final Collection<? extends Variable> variables,
@@ -248,9 +248,9 @@ public final class MethodGenerationContext {
 
   private int getOuterSelfContextLevel() {
     int level = 0;
-    MethodGenerationContext ctx = outerGenc;
+    MethodBuilder ctx = outerBuilder;
     while (ctx != null) {
-      ctx = ctx.outerGenc;
+      ctx = ctx.outerBuilder;
       level++;
     }
     return level;
@@ -261,8 +261,8 @@ public final class MethodGenerationContext {
       return 0;
     }
 
-    if (outerGenc != null) {
-      return 1 + outerGenc.getContextLevel(varName);
+    if (outerBuilder != null) {
+      return 1 + outerBuilder.getContextLevel(varName);
     }
 
     return 0;
@@ -281,8 +281,8 @@ public final class MethodGenerationContext {
       return arguments.get(varName);
     }
 
-    if (outerGenc != null) {
-      Variable outerVar = outerGenc.getVariable(varName);
+    if (outerBuilder != null) {
+      Variable outerVar = outerBuilder.getVariable(varName);
       if (outerVar != null) {
         accessesVariablesOfOuterScope = true;
       }
@@ -314,8 +314,8 @@ public final class MethodGenerationContext {
       return locals.get(varName);
     }
 
-    if (outerGenc != null) {
-      Local outerLocal = outerGenc.getLocal(varName);
+    if (outerBuilder != null) {
+      Local outerLocal = outerBuilder.getLocal(varName);
       if (outerLocal != null) {
         accessesVariablesOfOuterScope = true;
       }
@@ -374,6 +374,6 @@ public final class MethodGenerationContext {
 
   @Override
   public String toString() {
-    return "MethodGenC(" + holder.getName().getString() + ">>" + signature.toString() + ")";
+    return "MethodBuilder(" + holder.getName().getString() + ">>" + signature.toString() + ")";
   }
 }

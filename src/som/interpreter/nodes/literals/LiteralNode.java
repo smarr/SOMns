@@ -21,7 +21,7 @@
  */
 package som.interpreter.nodes.literals;
 
-import som.compiler.MethodGenerationContext;
+import som.compiler.MethodBuilder;
 import som.compiler.Variable.Local;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.PreevaluatedExpression;
@@ -45,7 +45,7 @@ public abstract class LiteralNode extends ExpressionNode
     return executeGeneric(frame);
   }
 
-  public ExpressionNode inline(final MethodGenerationContext mgenc,
+  public ExpressionNode inline(final MethodBuilder builder,
       final Local... blockArguments) {
     return this;
   }
