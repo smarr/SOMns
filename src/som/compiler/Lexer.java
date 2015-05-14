@@ -31,8 +31,6 @@ import java.lang.reflect.Field;
 
 public final class Lexer {
 
-  private static final String SEPARATOR = "----";
-
   private class LexerState {
     public LexerState() { }
     public LexerState(final LexerState old) {
@@ -173,16 +171,7 @@ public final class Lexer {
     } else if (currentChar() == '.') {
       match(Symbol.Period);
     } else if (currentChar() == '-') {
-      if (state.buf.startsWith(SEPARATOR, state.bufp)) {
-        state.text = new StringBuffer();
-        while (currentChar() == '-') {
-          state.text.append(bufchar(state.bufp++));
-        }
-        state.sym = Symbol.Separator;
-      } else {
-        state.bufp++;
-        state.set(Symbol.Minus, '-', "-");
-      }
+      match(Symbol.Minus);
     } else if (isOperator(currentChar())) {
       lexOperator();
     } else if (Character.isLetter(currentChar())) {
