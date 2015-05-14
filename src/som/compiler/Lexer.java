@@ -146,10 +146,8 @@ public final class Lexer {
         return state.sym;
       }
       skipWhiteSpace();
-      skipComment();
     }
-    while (endOfBuffer() || Character.isWhitespace(currentChar())
-        || currentChar() == '"');
+    while (endOfBuffer() || Character.isWhitespace(currentChar()));
 
     if (currentChar() == '\'') {
       lexString();
@@ -385,19 +383,6 @@ public final class Lexer {
           return;
         }
       }
-    }
-  }
-
-  private void skipComment() {
-    if (currentChar() == '"') {
-      do {
-        state.bufp++;
-        while (endOfBuffer()) {
-          if (fillBuffer() == -1) { return; }
-        }
-      }
-      while (currentChar() != '"');
-      state.bufp++;
     }
   }
 
