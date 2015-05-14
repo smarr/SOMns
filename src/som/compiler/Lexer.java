@@ -32,7 +32,6 @@ import java.lang.reflect.Field;
 public final class Lexer {
 
   private static final String SEPARATOR = "----";
-  private static final String PRIMITIVE = "primitive";
 
   private class LexerState {
     public LexerState() { }
@@ -186,9 +185,6 @@ public final class Lexer {
       }
     } else if (isOperator(currentChar())) {
       lexOperator();
-    } else if (nextWordInBufferIs(PRIMITIVE)) {
-      state.bufp += PRIMITIVE.length();
-      state.set(Symbol.Primitive, '\0', PRIMITIVE);
     } else if (Character.isLetter(currentChar())) {
       state.set(Symbol.Identifier);
       while (isIdentifierChar(currentChar())) {
