@@ -331,7 +331,7 @@ public final class Parser {
       final MethodGenerationContext initializer) throws ParseError {
     /* slotDef = accessModifier opt, slotDecl,
         (( equalSign | (tokenFromSymbol: #’::=’)), expression, dot) opt. */
-    int dummyAM = accessModifier();
+    AccessModifier acccessModifier = accessModifier();
 
     String slotName = slotDecl();
 
@@ -347,15 +347,13 @@ public final class Parser {
     expect(Period);
   }
 
-  private int accessModifier() {
+  private AccessModifier accessModifier() {
     if (sym == Identifier) {
-      // TODO: should return something that is used for the slot creation
-      if (acceptIdentifier("private")   ||
-          acceptIdentifier("protected") ||
-          acceptIdentifier("public")) {
-      }
+      if (acceptIdentifier("private"))   { return AccessModifier.PRIVATE;   }
+      if (acceptIdentifier("protected")) { return AccessModifier.PROTECTED; }
+      if (acceptIdentifier("public"))    { return AccessModifier.PUBLIC;    }
     }
-    return -1;
+    return AccessModifier.PUBLIC;
   }
 
   private String slotDecl() throws ParseError {
@@ -389,8 +387,8 @@ public final class Parser {
   }
 
   private void nestedClassDeclaration(final ClassGenerationContext cgenc) throws ParseError {
-    int dummyAM = accessModifier();
-    classDeclaration(dummyAM, cgenc);
+    AccessModifier accessModifier = accessModifier();
+    classDeclaration(accessModifier, cgenc);
   }
 
   private void category(final MethodGenerationContext mgenc) throws ParseError {
@@ -545,7 +543,7 @@ public final class Parser {
   }
 
   private ExpressionNode methodDeclaration(final MethodGenerationContext mgenc) throws ParseError {
-    int dummyAM = accessModifier();
+    AccessModifier accessModifier = accessModifier();
     messagePattern(mgenc);
     expect(Equal);
     ExpressionNode node = methodBlock(mgenc);
