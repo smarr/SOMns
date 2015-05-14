@@ -1078,7 +1078,7 @@ public final class Parser {
     // now look up first local variables, or method arguments
     Variable variable = builder.getVariable(variableName);
     if (variable != null) {
-      return builder.getLocalReadNode(variableName, source);
+      return builder.getReadNode(variableName, source);
     }
 
     // then object fields
@@ -1097,7 +1097,7 @@ public final class Parser {
       final String variableName, final ExpressionNode exp, final SourceSection source) {
     Local variable = builder.getLocal(variableName);
     if (variable != null) {
-      return builder.getLocalWriteNode(variableName, exp, source);
+      return builder.getWriteNode(variableName, exp, source);
     }
 
     SSymbol fieldName = symbolFor(variableName);

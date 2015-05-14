@@ -297,13 +297,13 @@ public final class MethodBuilder {
         holder.getName(), holder.isClassSide(), source);
   }
 
-  public ExpressionNode getLocalReadNode(final String variableName,
+  public ExpressionNode getReadNode(final String variableName,
       final SourceSection source) {
     Variable variable = getVariable(variableName);
     return variable.getReadNode(getContextLevel(variableName), source);
   }
 
-  public ExpressionNode getLocalWriteNode(final String variableName,
+  public ExpressionNode getWriteNode(final String variableName,
       final ExpressionNode valExpr, final SourceSection source) {
     Local variable = getLocal(variableName);
     return variable.getWriteNode(getContextLevel(variableName), valExpr, source);
