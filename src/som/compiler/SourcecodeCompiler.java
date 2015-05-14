@@ -40,7 +40,7 @@ import com.oracle.truffle.api.source.Source;
 public final class SourcecodeCompiler {
 
   @TruffleBoundary
-  public static SClass compileClass(final String path, final String file,
+  public static SClass compileModule(final String path, final String file,
       final SClass systemClass, final Universe universe)
       throws IOException {
     String fname = path + File.separator + file + ".som";
