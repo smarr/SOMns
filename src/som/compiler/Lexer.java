@@ -157,8 +157,7 @@ public final class Lexer {
         state.bufp += 2;
         state.set(Symbol.Assign, '\0', ":=");
       } else {
-        state.bufp++;
-        state.set(Symbol.Colon, ':', ":");
+        match(Symbol.Colon);
       }
     } else if (currentChar() == '(') {
       match(Symbol.NewTerm);
