@@ -158,7 +158,7 @@ public final class Lexer {
     } else if (currentChar() == ']') {
       match(Symbol.EndBlock);
     } else if (currentChar() == ':') {
-      if (bufchar(state.bufp + 1) == '=') {
+      if (nextChar() == '=') {
         state.bufp += 2;
         state.set(Symbol.Assign, '\0', ":=");
       } else {
@@ -226,7 +226,7 @@ public final class Lexer {
 
       if (!sawDecimalMark      &&
           '.' == currentChar() &&
-          Character.isDigit(bufchar(state.bufp + 1))) {
+          Character.isDigit(nextChar())) {
         state.sym = Symbol.Double;
         state.text.append(bufchar(state.bufp++));
       }
@@ -276,7 +276,7 @@ public final class Lexer {
   }
 
   private void lexOperator() {
-    if (isOperator(bufchar(state.bufp + 1))) {
+    if (isOperator(nextChar())) {
       state.set(Symbol.OperatorSequence);
       while (isOperator(currentChar())) {
         state.text.append(bufchar(state.bufp++));
@@ -403,6 +403,10 @@ public final class Lexer {
 
   private char currentChar() {
     return bufchar(state.bufp);
+  }
+
+  protected char nextChar() {
+    return bufchar(state.bufp + 1);
   }
 
   private boolean endOfBuffer() {
