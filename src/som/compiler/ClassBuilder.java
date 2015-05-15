@@ -119,11 +119,6 @@ public final class ClassBuilder {
     return slots.containsKey(slot);
   }
 
-  public byte getFieldIndex(final SSymbol field) {
-    throw new UnsupportedOperationException("Don't think we can do this");
-//    return (byte) slots.indexOf(field);
-  }
-
   public boolean isClassSide() {
     return classSide;
   }
