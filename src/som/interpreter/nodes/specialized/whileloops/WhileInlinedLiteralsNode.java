@@ -72,7 +72,7 @@ public final class WhileInlinedLiteralsNode extends ExpressionNode {
     return Nil.nilObject;
   }
 
-  protected final void reportLoopCount(final long count) {
+  protected void reportLoopCount(final long count) {
     CompilerAsserts.neverPartOfCompilation("reportLoopCount");
     Node current = getParent();
     while (current != null && !(current instanceof RootNode)) {

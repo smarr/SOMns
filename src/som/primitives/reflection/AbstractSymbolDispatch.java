@@ -36,7 +36,7 @@ public abstract class AbstractSymbolDispatch extends Node {
       final Object receiver, final SSymbol selector, final Object argsArr,
       @Cached("selector") final SSymbol cachedSelector,
       @Cached("createForPerformNodes(selector)") final AbstractMessageSendNode cachedSend) {
-    Object[] arguments = { receiver };
+    Object[] arguments = {receiver};
 
     PreevaluatedExpression realCachedSend = cachedSend;
     return realCachedSend.doPreEvaluated(frame, arguments);
@@ -60,7 +60,7 @@ public abstract class AbstractSymbolDispatch extends Node {
       @Cached("create()") final IndirectCallNode call) {
     SInvokable invokable = Types.getClassOf(receiver).lookupInvokable(selector);
 
-    Object[] arguments = { receiver };
+    Object[] arguments = {receiver};
 
     return call.call(frame, invokable.getCallTarget(), arguments);
   }

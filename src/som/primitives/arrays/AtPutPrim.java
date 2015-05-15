@@ -15,28 +15,27 @@ import com.oracle.truffle.api.dsl.Specialization;
 @ImportStatic(ArrayType.class)
 public abstract class AtPutPrim extends TernaryExpressionNode {
 
-  protected final static boolean valueIsNil(final Object value) {
+  protected static final boolean valueIsNil(final Object value) {
     return value == Nil.nilObject;
   }
 
-  protected final static boolean valueIsNotNil(final Object value) {
+  protected static final boolean valueIsNotNil(final Object value) {
     return value != Nil.nilObject;
   }
 
-  protected final static boolean valueIsNotLong(final Object value) {
+  protected static final boolean valueIsNotLong(final Object value) {
     return !(value instanceof Long);
   }
 
-  protected final static boolean valueIsNotDouble(final Object value) {
+  protected static final boolean valueIsNotDouble(final Object value) {
     return !(value instanceof Double);
   }
 
-  protected final static boolean valueIsNotBoolean(final Object value) {
+  protected static final boolean valueIsNotBoolean(final Object value) {
     return !(value instanceof Boolean);
   }
 
-
-  protected final static boolean valueNotLongDoubleBoolean(final Object value) {
+  protected static final boolean valueNotLongDoubleBoolean(final Object value) {
     return !(value instanceof Long) &&
         !(value instanceof Double) &&
         !(value instanceof Boolean);

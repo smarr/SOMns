@@ -14,7 +14,7 @@ public final class WhileWithDynamicBlocksNode extends AbstractWhileNode {
   private final SInvokable conditionMethod;
   private final SInvokable bodyMethod;
 
-  public final static WhileWithDynamicBlocksNode create(final SBlock rcvr,
+  public static WhileWithDynamicBlocksNode create(final SBlock rcvr,
       final SBlock arg, final boolean predicateBool) {
     return new WhileWithDynamicBlocksNode(rcvr, arg, predicateBool, null);
   }

@@ -40,11 +40,11 @@ public abstract class PutAllNode extends BinaryExpressionNode
     block = insert(node);
   }
 
-  protected final static boolean valueIsNil(final SObject value) {
+  protected static final boolean valueIsNil(final SObject value) {
     return value == Nil.nilObject;
   }
 
-  protected final static boolean valueOfNoOtherSpecialization(final Object value) {
+  protected static final boolean valueOfNoOtherSpecialization(final Object value) {
     return !(value instanceof Long)    &&
            !(value instanceof Double)  &&
            !(value instanceof Boolean) &&

@@ -17,7 +17,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 
 
 public final class SystemPrims {
-  public static final boolean receiverIsSystemObject(final SAbstractObject receiver) {
+  public static boolean receiverIsSystemObject(final SAbstractObject receiver) {
     return receiver == Globals.systemObject;
   }
 

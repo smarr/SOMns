@@ -10,7 +10,7 @@ import com.oracle.truffle.api.nodes.NodeVisitor;
 import com.oracle.truffle.api.source.SourceSection;
 
 
-public class InlinerAdaptToEmbeddedOuterContext implements NodeVisitor {
+public final class InlinerAdaptToEmbeddedOuterContext implements NodeVisitor {
 
   public static ExpressionNode doInline(final ExpressionNode body,
       final InlinerForLexicallyEmbeddedMethods inliner,

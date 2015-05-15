@@ -21,7 +21,7 @@ public abstract class ToArgumentsArrayNode extends ExpressionNode {
 
   public ToArgumentsArrayNode() { super(null); }
 
-  public final static boolean isNull(final Object somArray) {
+  public static final boolean isNull(final Object somArray) {
     return somArray == null;
   }
 

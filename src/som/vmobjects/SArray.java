@@ -114,7 +114,7 @@ public final class SArray extends SAbstractObject {
   }
 
   /**
-   * Transition from the Empty, to the PartiallyEmpty state/strategy
+   * Transition from the Empty, to the PartiallyEmpty state/strategy.
    */
   public void transitionFromEmptyToPartiallyEmptyWith(final long idx, final Object val) {
     fromEmptyToParticalWithType(ArrayType.OBJECT, idx, val);
@@ -175,27 +175,27 @@ public final class SArray extends SAbstractObject {
   public enum ArrayType {
     EMPTY, PARTIAL_EMPTY, LONG, DOUBLE, BOOLEAN,  OBJECT;
 
-    public final static boolean isEmptyType(final SArray receiver) {
+    public static boolean isEmptyType(final SArray receiver) {
       return receiver.getType() == ArrayType.EMPTY;
     }
 
-    public final static boolean isPartiallyEmptyType(final SArray receiver) {
+    public static boolean isPartiallyEmptyType(final SArray receiver) {
       return receiver.getType() == ArrayType.PARTIAL_EMPTY;
     }
 
-    public final static boolean isObjectType(final SArray receiver) {
+    public static boolean isObjectType(final SArray receiver) {
       return receiver.getType() == ArrayType.OBJECT;
     }
 
-    public final static boolean isLongType(final SArray receiver) {
+    public static boolean isLongType(final SArray receiver) {
       return receiver.getType() == ArrayType.LONG;
     }
 
-    public final static boolean isDoubleType(final SArray receiver) {
+    public static boolean isDoubleType(final SArray receiver) {
       return receiver.getType() == ArrayType.DOUBLE;
     }
 
-    public final static boolean isBooleanType(final SArray receiver) {
+    public static boolean isBooleanType(final SArray receiver) {
       return receiver.getType() == BOOLEAN;
     }
 
@@ -309,7 +309,7 @@ public final class SArray extends SAbstractObject {
   public SArray copyAndExtendWith(final Object value) {
     Object[] newArr;
     if (type == ArrayType.EMPTY) {
-      newArr = new Object[] { value };
+      newArr = new Object[] {value};
     } else {
       // if this is not true, this method is used in a wrong context
       assert type == ArrayType.OBJECT;
