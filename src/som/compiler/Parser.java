@@ -70,6 +70,7 @@ import java.util.List;
 
 import som.compiler.Lexer.SourceCoordinate;
 import som.compiler.Variable.Local;
+import som.interpreter.SNodeFactory;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.FieldNode.FieldReadNode;
 import som.interpreter.nodes.FieldNode.FieldWriteNode;
@@ -90,7 +91,6 @@ import som.interpreter.nodes.specialized.IntToDoInlinedLiteralsNodeGen;
 import som.interpreter.nodes.specialized.whileloops.WhileInlinedLiteralsNode;
 import som.vm.NotYetImplementedException;
 import som.vm.Universe;
-import som.vmobjects.SClass;
 import som.vmobjects.SInvokable.SMethod;
 import som.vmobjects.SSymbol;
 
@@ -229,42 +229,44 @@ public final class Parser {
 
     clsBuilder.setName(symbolFor(className));
 
- // TODO: don't think this is really correct yet. the initializer should probably be class side, or something entirely separate
-    MethodBuilder initializer = new MethodBuilder(clsBuilder);
-    // TODO(Newspeak-spec): this is not strictly sufficient for Newspeak
-    //                      it could also parse a binary selector here, I think
-    //                      but, doesn't seem so useful, so, let's keep it simple
+    MethodBuilder primaryFactory = clsBuilder.getInitializerMethodBuilder();
+
+    // Newspeak-spec: this is not strictly sufficient for Newspeak
+    //                it could also parse a binary selector here, I think
+    //                but, doesn't seem so useful, so, let's keep it simple
     if (isIdentifier(sym) || sym == Keyword) {
-      messagePattern(initializer);
+      messagePattern(primaryFactory);
     }
 
     expect(Equal);
 
-    inheritanceListAndOrBody(clsBuilder, initializer);
+    inheritanceListAndOrBody(clsBuilder);
   }
 
-  private void inheritanceListAndOrBody(final ClassBuilder clsBuilder,
-      final MethodBuilder initializer) throws ParseError {
+  private void inheritanceListAndOrBody(final ClassBuilder clsBuilder) throws ParseError {
     if (sym == NewTerm) {
-      defaultSuperclassAndBody(clsBuilder, initializer);
+      defaultSuperclassAndBody(clsBuilder);
     } else {
-      explicitInheritanceListAndOrBody(clsBuilder, initializer);
+      explicitInheritanceListAndOrBody(clsBuilder);
     }
   }
 
-  private void defaultSuperclassAndBody(final ClassBuilder clsBuilder,
-      final MethodBuilder initializer) throws ParseError {
-    classBody(clsBuilder, initializer);
+  private void defaultSuperclassAndBody(final ClassBuilder clsBuilder) throws ParseError {
+    MethodBuilder def = clsBuilder.getInstantiationMethodBuilder();
+    ExpressionNode selfRead = def.getReadNode("self", null);
+    AbstractMessageSendNode superClass = SNodeFactory.createMessageSend(
+        symbolFor("Object"), new ExpressionNode[] {selfRead}, null);
+
+    clsBuilder.setSuperClassResolution(superClass);
+    classBody(clsBuilder);
   }
 
-  private void explicitInheritanceListAndOrBody(final ClassBuilder clsBuilder,
-      final MethodBuilder initializer) {
+  private void explicitInheritanceListAndOrBody(final ClassBuilder clsBuilder) {
     throw new NotYetImplementedException();
   }
 
-  private void classBody(final ClassBuilder clsBuilder,
-      final MethodBuilder initializer) throws ParseError {
-    classHeader(clsBuilder, initializer);
+  private void classBody(final ClassBuilder clsBuilder) throws ParseError {
+    classHeader(clsBuilder);
     sideDeclaration(clsBuilder);
     if (sym == Colon) {
       classSideDecl(clsBuilder);
@@ -279,18 +281,17 @@ public final class Parser {
     expect(EndTerm);
   }
 
-  private void classHeader(final ClassBuilder clsBuilder,
-      final MethodBuilder initializer) throws ParseError {
+  private void classHeader(final ClassBuilder clsBuilder) throws ParseError {
     expect(NewTerm);
     if (sym == BeginComment) {
       classComment(clsBuilder);
     }
     if (sym == Or) {
-      slotDeclarations(clsBuilder, initializer);
+      slotDeclarations(clsBuilder);
     }
 
     if (sym != EndTerm) {
-      initExprs(initializer);
+      initExprs(clsBuilder.getInitializerMethodBuilder());
     }
     expect(EndTerm);
   }
@@ -313,36 +314,33 @@ public final class Parser {
     expect(EndComment);
   }
 
-  private void slotDeclarations(final ClassBuilder clsBuilder,
-      final MethodBuilder initializer) throws ParseError {
-    // TODO: figure out whether we need support for simSlotDecls, i.e.,
-    //       simultaneous slots clauses (spec 6.3.2)
+  private void slotDeclarations(final ClassBuilder clsBuilder) throws ParseError {
+    // Newspeak-speak: we do not support simSlotDecls, i.e.,
+    //                 simultaneous slots clauses (spec 6.3.2)
     expect(Or);
 
-    // slotDef = accessModifier opt, slotDecl,
-    //   (( equalSign | (tokenFromSymbol: #’::=’)), expression, dot) opt.
     while (sym != Or) {
-      slotDefinition(clsBuilder, initializer);
+      slotDefinition(clsBuilder);
     }
     expect(Or);
   }
 
-  private void slotDefinition(final ClassBuilder clsBuilder,
-      final MethodBuilder initializer) throws ParseError {
-    /* slotDef = accessModifier opt, slotDecl,
-        (( equalSign | (tokenFromSymbol: #’::=’)), expression, dot) opt. */
+  private void slotDefinition(final ClassBuilder clsBuilder) throws ParseError {
     AccessModifier acccessModifier = accessModifier();
 
     String slotName = slotDecl();
+    boolean immutable;
 
     if (accept(Equal)) {
-      // TODO: mark as 'immutable' slot
+      immutable = true;
     } else {
-      // TODO: Need support for mutable slots. tokenFromSymbol: #’::=’
+      immutable = false;
+      // TODO: need to parse tokenFromSymbol: #’::=’
       throw new NotYetImplementedException();
     }
 
-    expression(initializer);
+    ExpressionNode init = expression(clsBuilder.getInitializerMethodBuilder());
+    clsBuilder.addSlot(symbolFor(slotName), acccessModifier, immutable, init);
 
     expect(Period);
   }
@@ -405,8 +403,6 @@ public final class Parser {
     }
   }
 //
-//    superclass(clsBuilder);
-//
 //    expect(NewTerm);
 //    instanceFields(clsBuilder);
 //
@@ -433,31 +429,6 @@ public final class Parser {
 //    //}
 //    expect(EndTerm);
 //  }
-
-
-
-
-  private void superclass(final ClassBuilder clsBuilder) throws ParseError {
-    SSymbol superName;
-    if (isIdentifier(sym)) {
-      superName = symbolFor(text);
-      accept(Identifier); // TODO: Symbol.Identifier should not be done directly, because isIdentifier might redefine it
-    } else {
-      superName = symbolFor("Object");
-    }
-    clsBuilder.setSuperName(superName);
-
-    // Load the super class, if it is not nil (break the dependency cycle)
-    if (!superName.getString().equals("nil")) {
-      SClass superClass = universe.loadClass(superName);
-      if (superClass == null) {
-        throw new ParseError("Super class " + superName.getString() +
-            " could not be loaded", NONE, this);
-      }
-
-      clsBuilder.setSlotsOfSuper(superClass.getInstanceFields());
-    }
-  }
 
   private boolean symIn(final List<Symbol> ss) {
     return ss.contains(sym);
@@ -540,7 +511,7 @@ public final class Parser {
   }
 
   private void messagePattern(final MethodBuilder builder) throws ParseError {
-    builder.addArgumentIfAbsent("self"); // TODO: can we do that optionally?
+    builder.addArgumentIfAbsent("self");
     switch (sym) {
       case Identifier:
         unaryPattern(builder);
