@@ -19,7 +19,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 *)
 class Kernel usingPlatform: platform vmMirror: vmMirror = (
-| vmMirror = vmMirror |
+| private vmMirror = vmMirror.
+  private system   = platform system. |
 )(
   public class Value = ()
   (
@@ -266,7 +267,7 @@ class Kernel usingPlatform: platform vmMirror: vmMirror = (
     )
     
     'Printing'
-    public print = ( ^ vmMirror stringPrint: self )
+    public print = ( system printString: self )
   )
   
   public class Symbol = String ()
