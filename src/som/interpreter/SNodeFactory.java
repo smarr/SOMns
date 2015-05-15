@@ -150,4 +150,15 @@ public final class SNodeFactory {
       throw new NotYetImplementedException();
     }
   }
+
+  public static ExpressionNode createImplicitReceiverSend(
+      final SSymbol selector, final SourceSection source) {
+    return new NotImplemented();
+  }
+
+  public static ExpressionNode createImplicitReceiverSetterSend(
+      final SSymbol identifier, final ExpressionNode exp,
+      final SourceSection source) {
+    return new NotImplemented();
+  }
 }
