@@ -1,0 +1,281 @@
+(* Copyright (c) 2001-2015 see AUTHORS file
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the 'Software'), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*)
+class Kernel usingPlatform: platform vmMirror: vmMirror = (
+| vmMirror = vmMirror |
+)(
+  public class Value = ()
+  (
+    public copy = ( ^ self )
+  )
+  
+  public class Boolean = Value ()
+  (
+    'Conditional evaluation'
+    public ifTrue: trueBlock ifFalse: falseBlock = (
+        self ifTrue:  [ ^ trueBlock value  ].
+        self ifFalse: [ ^ falseBlock value ].
+    )
+  
+    'Logical operations'
+    public || boolean = ( ^ self or: boolean  )
+    public && boolean = ( ^ self and: boolean )
+  )
+  
+  public class True = Boolean ()
+  (
+    'Converting'
+    public asString = ( ^ 'true' )
+  
+    'Conditional evaluation'
+    public ifTrue:  block = ( ^ block value )
+    public ifFalse: block = ( ^ nil )
+  
+    'Logical operations'
+    public not        = ( ^ false )
+    public or: block  = ( ^ true )
+    public and: block = ( ^ block value )
+  )
+  
+  public class False = Boolean ()
+  (
+    'Converting'
+    public asString = ( ^'false' )
+  
+    'Conditional evaluation'
+    public ifTrue:  block = ( ^ nil )
+    public ifFalse: block = ( ^ block value )
+  
+    'Logical operations'
+    public not        = ( ^ true )
+    public or: block  = ( ^ block value )
+    public and: block = ( ^ false )
+  )
+
+  public class Nil = Value ()
+  (
+    'Converting'
+    public asString = ( ^ 'nil' )
+    
+    'Comparing'
+    public isNil    = ( ^ true )
+    public notNil   = ( ^ false )
+
+    'Convenience'
+    public ifNil: aBlock = ( ^ aBlock value )
+    public ifNotNil: aBlock = ( ^ self )
+    public ifNil: goBlock ifNotNil: noGoBlock = ( ^ goBlock value )
+  )
+  
+  public class Integer = Value ()
+  (
+    'Arithmetic'
+    public + argument  = ( ^ vmMirror int: self add: argument )
+    public - argument  = ( ^ vmMirror int: self subtract: argument )
+    public * argument  = ( ^ vmMirror int: self multiply: argument )
+    public / argument  = ( ^ vmMirror int: self divideBy: argument )
+    public // argument = ( ^ vmMirror int: self divideDouble: argument )
+    public % argument  = ( ^ vmMirror int: self modulo: argument )   (* modulo with sign of divisor *)
+    public rem: argument=( ^ vmMirror int: self reminder: argument ) (* modulo with sign of dividend *)
+    public abs         = ( ^ (self < 0) ifTrue: (0 - self) ifFalse: self )
+    public sqrt        = ( ^ vmMirror intSqrt: self )
+    public negated     = ( ^ 0 - self )
+    
+    'Bit operations'
+    public & argument  = ( ^ vmMirror int: self bitAnd: argument )
+    public << argument = ( ^ vmMirror int: self leftShift: argument )
+    public >>> argument= ( ^ vmMirror int: self unsignedRightShift: argument )
+    public bitXor: argument = ( ^ vmMirror int: self bitXor: argument )
+    
+    'Random numbers'
+    public atRandom = ( ^ vmMirror intAtRandom: self )
+    
+    'Comparing'
+    public =  argument = ( ^ vmMirror int: self equals: argument )
+    public ~= argument = ( ^ (self = argument) not )
+    public <  argument = ( ^ vmMirror int: self lessThan: argument )
+    public >  argument = ( ^ (self >= argument) and: [ self <> argument ] )
+    public >= argument = ( ^ (self < argument) not )
+    public <= argument = ( ^ (self < argument) or: [ self = argument ] )
+    public negative    = ( ^ self < 0 )
+    public between: a and: b = ( ^ (self > a) and: [ self < b ] )
+    
+    'Converting'
+    public asString    = ( ^ vmMirror intAsString: self )
+    public as32BitSignedValue   = ( ^ vmMirror intAs32BitSignedValue: self )   (* returns an int, with the value that a signed 32-bit integer would have *)
+    public as32BitUnsignedValue = ( ^ vmMirror intAs32BitUnsignedValue: self ) (* returns an int, with the value that a unsigned 32-bit integer would have *)
+    public hashcode    = ( ^ self )
+    
+    'Iterating'
+    public to: limit do: block = (
+      self to: limit by: 1 do: block
+    )
+    
+    public to: limit by: step do: block = (
+      | i |
+      i := self.
+      [ i <= limit ] whileTrue: [ block value: i. i := i + step ]
+    )
+    
+    public downTo: limit do: block = (
+      self downTo: limit by: 1 do: block
+    )
+    
+    public downTo: limit by: step do: block = (
+      | i |
+      i := self.
+      [ i >= limit ] whileTrue: [ block value: i. i := i - step ]
+    )
+    
+    'More Iterations'
+    public timesRepeat: block = (
+      1 to: self do: [ :i | block value ]
+    )
+    
+    'Range Creation'
+    public  to: upper = (
+      | range |
+      range := Array new: upper - self + 1.
+      self to: upper do: [ :i | range at: i put: i ].
+      ^ range
+    )
+
+    public max: otherInt = (
+      (self < otherInt) ifTrue: [ ^ otherInt ] ifFalse: [ ^ self ]
+    )
+  ) : (  
+    public fromString: aString = ( ^ vmMirror intFromString: aString )
+  )
+  
+  public class Double = Value ()
+  (
+    'Arithmetic'
+    public + argument  = ( ^ vmMirror double: self add: argument )
+    public - argument  = ( ^ vmMirror double: self subtract: argument )
+    public * argument  = ( ^ vmMirror double: self multiply: argument )
+    public // argument = ( ^ vmMirror double: self divideDouble: argument )
+    public % argument  = ( ^ vmMirror double: self modulo: argument )
+    public abs         = ( ^ (self < 0.0) ifTrue: (0.0 - self) ifFalse: self )
+    public sqrt        = ( ^ vmMirror doubleSqrt: self )
+    public negated     = ( ^ 0.0 - self )
+    public round       = ( ^ vmMirror doubleRound: self )
+    
+    'Comparing'
+    public =  argument = ( ^ vmMirror double: self equals: argument )
+    public <  argument = ( ^ vmMirror double: self lessThan: argument )
+    public >  argument = ( ^ (self >= argument) and: [ self <> argument ] )
+    public >= argument = ( ^ (self < argument) not )
+    public <= argument = ( ^ (self < argument) or: [ self = argument ] )
+    public negative    = ( ^ self < 0.0 )
+    public between: a and: b = ( ^ (self > a) and: [ self < b ] )
+    
+    'Converting'
+    public asString    = ( ^ vmMirror doubleAsString: self )
+    
+    'Iterating'
+    public to: limit do: block = (
+      | i |
+      i := self.
+      [ i <= limit ] whileTrue: [ block value: i. i := i + 1.0 ]
+    )
+    
+    public downTo: limit do: block = (
+      | i | 
+      i := self.
+      [ i >= limit ] whileTrue: [ block value: i. i := i - 1.0 ]
+    )
+  ) : (  
+    public PositiveInfinity = ( ^ vmMirror doublePositiveInfinity )
+  )
+  
+  public class String = Value ()
+  (
+    'Concatenate: returns a new string object'
+    public concatenate: argument = ( ^ vmMirror string: self concat: argument )
+    public + argument            = ( ^ self concatenate: argument asString )
+    
+    'Converting'
+    public asString = ( ^ self )
+    public asSymbol = ( ^ vmMirror stringAsSymbol: self )
+    public hashcode = ( ^ vmMirror stringHashcode: self )
+    
+    'Info'
+    public length = ( ^ vmMirror stringLength: self )
+    
+    'Comparing'
+    public = argument = ( ^ vmMirror string: self equals: argument )
+    
+    (* substring: from 'start' to (and including) 'end'. *)
+    private primSubstringFrom: start to: end = ( ^ vmMirror string: self
+                                                     substringFrom: start to: end )
+    
+    public substringFrom: start to: end = (
+      ((end <= self length) && (start > 0) && (start <= end))
+        ifTrue: [^self primSubstringFrom: start to: end]
+        ifFalse: [
+          self error: 'Attempting to index string out of its bounds (start: ' +
+                      start asString + ' end: ' + end asString + ' length: ' + 
+                      self length asString + ')' ]
+    )
+
+    public beginsWith: prefix = (
+      self length < prefix length ifTrue: [ ^ false ].
+      
+      1 to: prefix length do: [:i | 
+        ((self charAt: i) = (prefix charAt: i)) ifFalse: [ ^ false ].  
+      ].
+
+      ^ true
+    )
+    
+    public endsWith: suffix = (
+      | l sufL |
+      l := self length.
+      sufL := suffix length.
+      l < sufL ifTrue: [ ^ false ].
+
+      1 to: sufL do: [:i |
+        (self charAt: l - sufL + i) = (suffix charAt: i) ifFalse: [ ^ false ]
+      ].
+      ^ true
+    )
+
+    public asInteger = (
+      ^ Integer fromString: self
+    )
+    
+    public charAt: argument = (
+      ^ self substringFrom: argument to: argument
+    )
+    
+    'Printing'
+    public print = ( ^ vmMirror stringPrint: self )
+  )
+  
+  public class Symbol = String ()
+  (
+    'Converting'
+    public asString = ( ^ vmMirror symbolAsString: self )
+    public asSymbol = ( ^ self )
+    
+    'Printing'
+    public print    = ( '#' print. super print )
+  )
+)
