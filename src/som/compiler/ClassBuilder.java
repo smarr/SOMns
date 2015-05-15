@@ -95,37 +95,37 @@ public final class ClassBuilder {
     throw new UnsupportedOperationException("This is not supported anymore. Should not be necessary");
   }
 
-  @TruffleBoundary
-  public SClass assemble() {
-    // build class class name
-    String ccname = name.getString() + " class";
-
-    // Load the super class
-    SClass superClass = universe.loadClass(superName);
-
-    // Allocate the class of the resulting class
-    SClass resultClass = universe.newClass(Classes.metaclassClass);
-
-    // Initialize the class of the resulting class
-    resultClass.setInstanceInvokables(
-        SArray.create(factoryMethods.toArray(new Object[0])));
-    resultClass.setName(Symbols.symbolFor(ccname));
-
-    SClass superMClass = superClass.getSOMClass();
-    resultClass.setSuperClass(superMClass);
-
-    // Allocate the resulting class
-    SClass result = universe.newClass(resultClass);
-
-    // Initialize the resulting class
-    result.setName(name);
-    result.setSuperClass(superClass);
-    result.setInstanceFields(
-        SArray.create(slots.toArray(new Object[0])));
-    result.setInstanceInvokables(
-        SArray.create(methods.toArray(new Object[0])));
-
-    return result;
+  public ClassDefinition assemble() {
+    throw new NotYetImplementedException();
+//    // build class class name
+//    String ccname = name.getString() + " class";
+//
+//    // Load the super class
+//    SClass superClass = null; // TODO: // universe.loadClass(superName);
+//
+//    // Allocate the class of the resulting class
+//    SClass resultClass = Universe.newClass(Classes.metaclassClass);
+//
+//    // Initialize the class of the resulting class
+//    resultClass.setInstanceInvokables(
+//        SArray.create(factoryMethods.toArray(new Object[0])));
+//    resultClass.setName(Symbols.symbolFor(ccname));
+//
+//    SClass superMClass = superClass.getSOMClass();
+//    resultClass.setSuperClass(superMClass);
+//
+//    // Allocate the resulting class
+//    SClass result = Universe.newClass(resultClass);
+//
+//    // Initialize the resulting class
+//    result.setName(name);
+//    result.setSuperClass(superClass);
+//    result.setInstanceFields(
+//        SArray.create(slots.toArray(new Object[0])));
+//    result.setInstanceInvokables(
+//        SArray.create(methods.toArray(new Object[0])));
+//
+//    return result;
   }
 
   @TruffleBoundary
