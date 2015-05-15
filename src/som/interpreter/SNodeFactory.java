@@ -35,6 +35,7 @@ import som.vmobjects.SInvokable.SMethod;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.frame.FrameSlot;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
 
@@ -131,12 +132,22 @@ public final class SNodeFactory {
 
   public static ExpressionNode createClassCreationNode(
       final ClassDefinition classBody, final AbstractMessageSendNode superClass) {
-    throw new NotYetImplementedException();
+    return new NotImplemented();
   }
 
   public static ExpressionNode createSlotInitialization(
       final SlotDefinition slot, final ExpressionNode init) {
-    return null;
+    return new NotImplemented();
     // TODO: return SlotWriteNode.create(slot, init);
+  }
+
+  public static final class NotImplemented extends ExpressionNode {
+
+    public NotImplemented() { super(null); }
+
+    @Override
+    public Object executeGeneric(final VirtualFrame frame) {
+      throw new NotYetImplementedException();
+    }
   }
 }
