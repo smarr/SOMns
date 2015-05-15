@@ -2,6 +2,8 @@ package som.interpreter;
 
 import java.util.List;
 
+import som.compiler.ClassDefinition;
+import som.compiler.ClassDefinition.SlotDefinition;
 import som.compiler.Variable.Argument;
 import som.compiler.Variable.Local;
 import som.interpreter.nodes.ArgumentReadNode.LocalArgumentReadNode;
@@ -26,6 +28,7 @@ import som.interpreter.nodes.UninitializedVariableNode.UninitializedVariableRead
 import som.interpreter.nodes.UninitializedVariableNode.UninitializedVariableWriteNode;
 import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.literals.BlockNode.BlockNodeWithContext;
+import som.vm.NotYetImplementedException;
 import som.vm.Symbols;
 import som.vm.Universe;
 import som.vmobjects.SInvokable.SMethod;
@@ -124,5 +127,16 @@ public final class SNodeFactory {
       final FrameSlot markerSlot, final int contextLevel,
       final SourceSection source) {
     return new ReturnNonLocalNode(exp, markerSlot, contextLevel, source);
+  }
+
+  public static ExpressionNode createClassCreationNode(
+      final ClassDefinition classBody, final AbstractMessageSendNode superClass) {
+    throw new NotYetImplementedException();
+  }
+
+  public static ExpressionNode createSlotInitialization(
+      final SlotDefinition slot, final ExpressionNode init) {
+    return null;
+    // TODO: return SlotWriteNode.create(slot, init);
   }
 }
