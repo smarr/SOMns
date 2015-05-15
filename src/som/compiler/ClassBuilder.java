@@ -27,9 +27,11 @@ package som.compiler;
 import java.util.ArrayList;
 import java.util.List;
 
-import som.vm.Symbols;
-import som.vm.Universe;
-import som.vm.constants.Classes;
+import som.compiler.ClassDefinition.SlotDefinition;
+import som.interpreter.SNodeFactory;
+import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
+import som.vm.NotYetImplementedException;
 import som.vmobjects.SArray;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
@@ -39,15 +41,19 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
 public final class ClassBuilder {
 
-  private final Universe universe;
-
-  public ClassBuilder(final Universe universe) {
-    this.universe = universe;
+  public ClassBuilder(final MethodBuilder instMethod) {
+    this.instantiation = instMethod;
+    this.initializer   = new MethodBuilder(this);
   }
 
+  private final MethodBuilder instantiation;
+  private final MethodBuilder initializer;
+
+  private final ArrayList<ExpressionNode> slotAndInitExprs = new ArrayList<>();
+
   private SSymbol             name;
-  private SSymbol             superName;
-  private final List<SSymbol>    slots  = new ArrayList<SSymbol>();
+  private AbstractMessageSendNode superclassResolution;
+  private final List<SlotDefinition> slots  = new ArrayList<>();
   private final List<SInvokable> methods = new ArrayList<SInvokable>();
   private final List<SInvokable> factoryMethods  = new ArrayList<SInvokable>();
   private SInvokable primaryFactoryMethod;
@@ -60,14 +66,30 @@ public final class ClassBuilder {
     return name;
   }
 
-  public void setSuperName(final SSymbol superName) {
-    this.superName = superName;
+  /**
+   * Expression to resolve the super class at runtime, used in the instantiation.
+   */
+  public void setSuperClassResolution(final AbstractMessageSendNode superClass) {
+    this.superclassResolution = superClass;
   }
 
-  public void setSlotsOfSuper(final SArray fieldNames) {
-    for (int i = 0; i < fieldNames.getObjectStorage().length; i++) {
-      slots.add((SSymbol) fieldNames.getObjectStorage()[i]);
-    }
+  /**
+   * The method that is used to instantiate the class object.
+   * This method is based on the inheritance definition of the class.
+   * Thus, it will resolve the super class to be used, and create the actual
+   * runtime class object.
+   */
+  public MethodBuilder getInstantiationMethodBuilder() {
+    return instantiation;
+  }
+
+  /**
+   * The method that is used to initialize an instance.
+   * It takes the arguments of the primary factory method, initializes the
+   * slots, and executes the initializer expressions.
+   */
+  public MethodBuilder getInitializerMethodBuilder() {
+    return initializer;
   }
 
   public void addMethod(final SInvokable meth) {
@@ -78,8 +100,11 @@ public final class ClassBuilder {
     factoryMethods.add(meth);
   }
 
-  public void addSlot(final SSymbol field) {
-    slots.add(field);
+  public void addSlot(final SSymbol name, final AccessModifier acccessModifier,
+      final boolean immutable, final ExpressionNode init) {
+    SlotDefinition slot = new SlotDefinition(name, acccessModifier, immutable);
+    slots.add(slot);
+    slotAndInitExprs.add(SNodeFactory.createSlotInitialization(slot, init));
   }
 
   public boolean hasSlot(final SSymbol field) {
