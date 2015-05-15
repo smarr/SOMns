@@ -72,8 +72,6 @@ import som.compiler.Lexer.SourceCoordinate;
 import som.compiler.Variable.Local;
 import som.interpreter.SNodeFactory;
 import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.FieldNode.FieldReadNode;
-import som.interpreter.nodes.FieldNode.FieldWriteNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.interpreter.nodes.literals.BigIntegerLiteralNode;
 import som.interpreter.nodes.literals.BlockNode;
@@ -583,7 +581,7 @@ public final class Parser {
   }
 
   private String argument() throws ParseError {
-    return variable();
+    return identifier();
   }
 
   private ExpressionNode blockContents(final MethodBuilder builder) throws ParseError {
@@ -596,7 +594,7 @@ public final class Parser {
 
   private void locals(final MethodBuilder builder) throws ParseError {
     while (isIdentifier(sym)) {
-      builder.addLocalIfAbsent(variable());
+      builder.addLocalIfAbsent(identifier());
     }
   }
 
@@ -613,7 +611,9 @@ public final class Parser {
       } else if (sym == EndTerm) {
         // the end of the method has been found (EndTerm) - make it implicitly
         // return "self"
-        ExpressionNode self = variableRead(builder, "self", getSource(getCoordinate()));
+
+        // TODO: we might need something else to access self
+        ExpressionNode self = implicitReceiverSend(builder, symbolFor("self"), getSource(getCoordinate()));
         expressions.add(self);
         return createSequenceNode(coord, expressions);
       }
@@ -668,7 +668,7 @@ public final class Parser {
                            " fields, but found instead a %(found)s",
                            Symbol.Identifier, this);
     }
-    String variable = assignment();
+    SSymbol identifier = assignment();
 
     peekForNextSymbolFromLexer();
 
@@ -679,13 +679,13 @@ public final class Parser {
       value = evaluation(builder);
     }
 
-    return variableWrite(builder, variable, value, getSource(coord));
+    return setterSend(builder, identifier, value, getSource(coord));
   }
 
-  private String assignment() throws ParseError {
-    String v = variable();
+  private SSymbol assignment() throws ParseError {
+    SSymbol id = symbolFor(identifier());
     expect(Assign);
-    return v;
+    return id;
   }
 
   private ExpressionNode evaluation(final MethodBuilder builder) throws ParseError {
@@ -701,8 +701,8 @@ public final class Parser {
     switch (sym) {
       case Identifier: {
         SourceCoordinate coord = getCoordinate();
-        String v = variable();
-        return variableRead(builder, v, getSource(coord));
+        SSymbol selector = unarySelector();
+        return implicitReceiverSend(builder, selector, getSource(coord));
       }
       case NewTerm: {
         return nestedTerm(builder);
@@ -727,10 +727,6 @@ public final class Parser {
         return literal();
       }
     }
-  }
-
-  private String variable() throws ParseError {
-    return identifier();
   }
 
   private ExpressionNode messages(final MethodBuilder builder,
@@ -1033,48 +1029,33 @@ public final class Parser {
     while (sym == Colon);
   }
 
-  private ExpressionNode variableRead(final MethodBuilder builder,
-                                      final String variableName,
-                                      final SourceSection source) {
+  private ExpressionNode implicitReceiverSend(final MethodBuilder builder,
+      final SSymbol selector, final SourceSection source) {
     // we need to handle super special here
-    if ("super".equals(variableName)) {
+    if ("super".equals(selector.getString())) {
       return builder.getSuperReadNode(source);
     }
 
-    // now look up first local variables, or method arguments
-    Variable variable = builder.getVariable(variableName);
+    // first look up local or argument variables
+    Variable variable = builder.getVariable(selector.getString());
     if (variable != null) {
-      return builder.getReadNode(variableName, source);
+      return builder.getReadNode(selector.getString(), source);
     }
 
-    // then object fields
-    SSymbol varName = symbolFor(variableName);
-    FieldReadNode fieldRead = builder.getObjectFieldRead(varName, source);
-
-    if (fieldRead != null) {
-      return fieldRead;
-    }
-
-    // and finally assume it is a global
-    return builder.getGlobalRead(varName, universe, source);
+    // otherwise, it is an implicit receiver send
+    return SNodeFactory.createImplicitReceiverSend(selector, source);
   }
 
-  private ExpressionNode variableWrite(final MethodBuilder builder,
-      final String variableName, final ExpressionNode exp, final SourceSection source) {
-    Local variable = builder.getLocal(variableName);
+  private ExpressionNode setterSend(final MethodBuilder builder,
+      final SSymbol identifier, final ExpressionNode exp, final SourceSection source) {
+    // write directly to local variables (excluding arguments)
+    Local variable = builder.getLocal(identifier.getString());
     if (variable != null) {
-      return builder.getWriteNode(variableName, exp, source);
+      return builder.getWriteNode(identifier.getString(), exp, source);
     }
 
-    SSymbol fieldName = symbolFor(variableName);
-    FieldWriteNode fieldWrite = builder.getObjectFieldWrite(fieldName, exp, universe, source);
-
-    if (fieldWrite != null) {
-      return fieldWrite;
-    } else {
-      throw new RuntimeException("Neither a variable nor a field found "
-          + "in current scope that is named " + variableName + ". Arguments are read-only.");
-    }
+    // otherwise, it is a setter send.
+    return SNodeFactory.createImplicitReceiverSetterSend(identifier, exp, source);
   }
 
   private void getSymbolFromLexer() {
