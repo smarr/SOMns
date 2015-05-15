@@ -2,5 +2,5 @@ package som.compiler;
 
 
 public enum AccessModifier {
-  PUBLIC, PROTECTED, PRIVATE
+  PUBLIC, PROTECTED, PRIVATE, NOT_APPLICABLE
 }

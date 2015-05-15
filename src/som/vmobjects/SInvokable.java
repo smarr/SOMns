@@ -26,6 +26,7 @@
 package som.vmobjects;
 
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
+import som.compiler.AccessModifier;
 import som.interpreter.Invokable;
 import som.vm.constants.Classes;
 
@@ -36,8 +37,12 @@ import com.oracle.truffle.api.nodes.IndirectCallNode;
 
 public abstract class SInvokable extends SAbstractObject {
 
-  public SInvokable(final SSymbol signature, final Invokable invokable) {
+
+  public SInvokable(final SSymbol signature, final AccessModifier accessModifier,
+      final SSymbol category, final Invokable invokable) {
     this.signature = signature;
+    this.accessModifier = accessModifier;
+    this.category = category;
 
     this.invokable   = invokable;
     this.callTarget  = invokable.createCallTarget();
@@ -46,9 +51,10 @@ public abstract class SInvokable extends SAbstractObject {
   public static final class SMethod extends SInvokable {
     private final SMethod[] embeddedBlocks;
 
-    public SMethod(final SSymbol signature, final Invokable invokable,
+    public SMethod(final SSymbol signature, final AccessModifier accessModifier,
+        final SSymbol category, final Invokable invokable,
         final SMethod[] embeddedBlocks) {
-      super(signature, invokable);
+      super(signature, accessModifier, category, invokable);
       this.embeddedBlocks = embeddedBlocks;
     }
 
@@ -73,7 +79,7 @@ public abstract class SInvokable extends SAbstractObject {
 
   public static final class SPrimitive extends SInvokable {
     public SPrimitive(final SSymbol signature, final Invokable invokable) {
-      super(signature, invokable);
+      super(signature, AccessModifier.PRIVATE, null, invokable);
     }
 
     @Override
@@ -126,7 +132,16 @@ public abstract class SInvokable extends SAbstractObject {
     return "Method(" + getHolder().getName().getString() + ">>" + getSignature().toString() + ")";
   }
 
-  // Private variable holding Truffle runtime information
+  public AccessModifier getAccessModifier() {
+    return accessModifier;
+  }
+
+  public SSymbol getCategory() {
+    return category;
+  }
+
+  private final AccessModifier         accessModifier;
+  private final SSymbol                category;
   private final Invokable              invokable;
   private final RootCallTarget         callTarget;
   private final SSymbol                signature;

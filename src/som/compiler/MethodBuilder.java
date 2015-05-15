@@ -164,7 +164,9 @@ public final class MethodBuilder {
     }
   }
 
-  public SInvokable assemble(ExpressionNode body, final SourceSection sourceSection) {
+  public SInvokable assemble(ExpressionNode body,
+      final AccessModifier accessModifier, final SSymbol category,
+      final SourceSection sourceSection) {
     if (primitive) {
       return Primitives.constructEmptyPrimitive(signature);
     }
@@ -182,8 +184,8 @@ public final class MethodBuilder {
         new Method(getSourceSectionForMethod(sourceSection),
             body, currentScope, (ExpressionNode) body.deepCopy());
 
-    SInvokable meth = Universe.newMethod(signature, truffleMethod, false,
-        embeddedBlockMethods.toArray(new SMethod[0]));
+    SInvokable meth = Universe.newMethod(signature, accessModifier, category,
+        truffleMethod, false, embeddedBlockMethods.toArray(new SMethod[0]));
 
     // return the method - the holder field is to be set later on!
     return meth;

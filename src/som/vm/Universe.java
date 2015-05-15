@@ -48,6 +48,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.StringTokenizer;
 
+import som.compiler.AccessModifier;
 import som.compiler.Disassembler;
 import som.interpreter.Invokable;
 import som.interpreter.TruffleCompiler;
@@ -413,12 +414,14 @@ public final class Universe {
 
   @TruffleBoundary
   public static SInvokable newMethod(final SSymbol signature,
+      final AccessModifier accessModifier, final SSymbol category,
       final Invokable truffleInvokable, final boolean isPrimitive,
       final SMethod[] embeddedBlocks) {
     if (isPrimitive) {
       return new SPrimitive(signature, truffleInvokable);
     } else {
-      return new SMethod(signature, truffleInvokable, embeddedBlocks);
+      return new SMethod(signature, accessModifier, category, truffleInvokable,
+          embeddedBlocks);
     }
   }
 

@@ -276,8 +276,7 @@ public final class Parser {
   private void classSideDecl(final ClassBuilder clsBuilder) throws ParseError {
     expect(Colon);
     expect(NewTerm);
-    MethodBuilder builder = new MethodBuilder(clsBuilder);
-    category(builder);
+    category(clsBuilder);
     expect(EndTerm);
   }
 
@@ -370,16 +369,13 @@ public final class Parser {
   }
 
   private void sideDeclaration(final ClassBuilder clsBuilder) throws ParseError {
-    MethodBuilder builder = new MethodBuilder(clsBuilder);
-
-    // sideDecl = lparen, nestedClassDecl star, category star, rparent
     expect(NewTerm);
     while (canAcceptThisOrNextIdentifier("class")) {
       nestedClassDeclaration(clsBuilder);
     }
 
     while (sym != EndTerm) {
-      category(builder);
+      category(clsBuilder);
     }
 
     expect(EndTerm);
@@ -390,7 +386,7 @@ public final class Parser {
     classDeclaration(accessModifier, clsBuilder);
   }
 
-  private void category(final MethodBuilder builder) throws ParseError {
+  private void category(final ClassBuilder clsBuilder) throws ParseError {
     String categoryName;
     // Newspeak-spec: this is not conform with Newspeak,
     //                as the category is normally not optional
@@ -400,12 +396,11 @@ public final class Parser {
       categoryName = "";
     }
     while (sym != EndTerm) {
-      methodDeclaration(builder);
+      methodDeclaration(clsBuilder, symbolFor(categoryName));
     }
   }
 //
 //    expect(NewTerm);
-//    instanceFields(clsBuilder);
 //
 //    while (isIdentifier(sym) || sym == Keyword || sym == OperatorSequence
 //        || symIn(binaryOpSyms)) {
@@ -486,16 +481,6 @@ public final class Parser {
         "%(expected)s, but found %(found)s", ss, this);
   }
 
-  private void instanceFields(final ClassBuilder clsBuilder) throws ParseError {
-    if (accept(Or)) {
-      while (isIdentifier(sym)) {
-        String var = variable();
-        clsBuilder.addSlot(symbolFor(var));
-      }
-      expect(Or);
-    }
-  }
-
   private SourceSection getSource(final SourceCoordinate coord) {
     assert lexer.getNumberOfCharactersRead() - coord.charIndex >= 0;
     return source.createSection("method", coord.startLine,
@@ -503,12 +488,18 @@ public final class Parser {
         lexer.getNumberOfCharactersRead() - coord.charIndex);
   }
 
-  private ExpressionNode methodDeclaration(final MethodBuilder builder) throws ParseError {
+  private void methodDeclaration(final ClassBuilder clsBuilder,
+      final SSymbol category) throws ParseError {
+    SourceCoordinate coord = getCoordinate();
+
     AccessModifier accessModifier = accessModifier();
+    MethodBuilder builder = new MethodBuilder(clsBuilder);
+
     messagePattern(builder);
     expect(Equal);
-    ExpressionNode node = methodBlock(builder);
-    return node;
+    ExpressionNode body = methodBlock(builder);
+    SMethod meth = (SMethod) builder.assemble(body, accessModifier, category, getSource(coord));
+    clsBuilder.addMethod(meth);
   }
 
   private void messagePattern(final MethodBuilder builder) throws ParseError {
@@ -720,7 +711,8 @@ public final class Parser {
 
         ExpressionNode blockBody = nestedBlock(bgenc);
 
-        SMethod blockMethod = (SMethod) bgenc.assemble(blockBody, lastMethodsSourceSection);
+        SMethod blockMethod = (SMethod) bgenc.assemble(blockBody,
+            AccessModifier.NOT_APPLICABLE, null, lastMethodsSourceSection);
         builder.addEmbeddedBlockMethod(blockMethod);
 
         if (bgenc.requiresContext()) {
