@@ -70,8 +70,8 @@ public final class MethodBuilder {
 
   private boolean accessesVariablesOfOuterScope;
 
-  private final LinkedHashMap<String, Argument> arguments = new LinkedHashMap<String, Argument>();
-  private final LinkedHashMap<String, Local>    locals    = new LinkedHashMap<String, Local>();
+  private final LinkedHashMap<String, Argument> arguments = new LinkedHashMap<>();
+  private final LinkedHashMap<String, Local>    locals    = new LinkedHashMap<>();
 
   private       FrameSlot     frameOnStackSlot;
   private final LexicalScope  currentScope;
@@ -274,6 +274,10 @@ public final class MethodBuilder {
     return locals.get(embeddedName);
   }
 
+  /**
+   * A variable is either an argument or a temporary in the lexical scope
+   * of methods (only in methods).
+   */
   protected Variable getVariable(final String varName) {
     if (locals.containsKey(varName)) {
       return locals.get(varName);
