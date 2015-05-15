@@ -274,6 +274,8 @@ public final class Parser {
   }
 
   private void classSideDecl(final ClassBuilder clsBuilder) throws ParseError {
+    clsBuilder.switchToClassSide();
+
     expect(Colon);
     expect(NewTerm);
     category(clsBuilder);

@@ -44,6 +44,8 @@ public final class ClassBuilder {
   public ClassBuilder(final MethodBuilder instMethod) {
     this.instantiation = instMethod;
     this.initializer   = new MethodBuilder(this);
+
+    this.classSide = false;
   }
 
   private final MethodBuilder instantiation;
@@ -57,6 +59,8 @@ public final class ClassBuilder {
   private final List<SInvokable> methods = new ArrayList<SInvokable>();
   private final List<SInvokable> factoryMethods  = new ArrayList<SInvokable>();
   private SInvokable primaryFactoryMethod;
+
+  private boolean classSide;
 
   public void setName(final SSymbol name) {
     this.name = name;
@@ -121,7 +125,11 @@ public final class ClassBuilder {
   }
 
   public boolean isClassSide() {
-    throw new UnsupportedOperationException("This is not supported anymore. Should not be necessary");
+    return classSide;
+  }
+
+  public void switchToClassSide() {
+    classSide = true;
   }
 
   public ClassDefinition assemble() {
