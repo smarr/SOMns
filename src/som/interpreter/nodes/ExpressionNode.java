@@ -86,15 +86,15 @@ public abstract class ExpressionNode extends SOMNode {
   }
 
   public ReentrantLock executeReentrantLock(final VirtualFrame frame) throws UnexpectedResultException {
-    return TypesGen.TYPES.expectReentrantLock(executeGeneric(frame));
+    return TypesGen.expectReentrantLock(executeGeneric(frame));
   }
 
   public Condition executeCondition(final VirtualFrame frame) throws UnexpectedResultException {
-    return TypesGen.TYPES.expectCondition(executeGeneric(frame));
+    return TypesGen.expectCondition(executeGeneric(frame));
   }
 
   public Thread executeThread(final VirtualFrame frame) throws UnexpectedResultException {
-    return TypesGen.TYPES.expectThread(executeGeneric(frame));
+    return TypesGen.expectThread(executeGeneric(frame));
   }
 
   public SObject executeSObject(final VirtualFrame frame) throws UnexpectedResultException {
