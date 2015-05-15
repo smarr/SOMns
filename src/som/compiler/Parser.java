@@ -291,7 +291,7 @@ public final class Parser {
     }
 
     if (sym != EndTerm) {
-      initExprs(clsBuilder.getInitializerMethodBuilder());
+      initExprs(clsBuilder);
     }
     expect(EndTerm);
   }
@@ -358,12 +358,13 @@ public final class Parser {
     return identifier();
   }
 
-  private void initExprs(final MethodBuilder initializer) throws ParseError {
-    expression(initializer);
+  private void initExprs(final ClassBuilder clsBuilder) throws ParseError {
+    MethodBuilder initializer = clsBuilder.getInitializerMethodBuilder();
+    clsBuilder.addInitializerExpression(expression(initializer));
 
     while (accept(Period)) {
       if (sym != EndTerm) {
-        expression(initializer);
+        clsBuilder.addInitializerExpression(expression(initializer));
       }
     }
   }

@@ -25,6 +25,7 @@
 package som.compiler;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import som.compiler.ClassDefinition.SlotDefinition;
@@ -32,7 +33,6 @@ import som.interpreter.SNodeFactory;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.vm.NotYetImplementedException;
-import som.vmobjects.SArray;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
@@ -53,7 +53,7 @@ public final class ClassBuilder {
 
   private SSymbol             name;
   private AbstractMessageSendNode superclassResolution;
-  private final List<SlotDefinition> slots  = new ArrayList<>();
+  private final LinkedHashMap<SSymbol, SlotDefinition> slots = new LinkedHashMap<>();
   private final List<SInvokable> methods = new ArrayList<SInvokable>();
   private final List<SInvokable> factoryMethods  = new ArrayList<SInvokable>();
   private SInvokable primaryFactoryMethod;
@@ -103,12 +103,16 @@ public final class ClassBuilder {
   public void addSlot(final SSymbol name, final AccessModifier acccessModifier,
       final boolean immutable, final ExpressionNode init) {
     SlotDefinition slot = new SlotDefinition(name, acccessModifier, immutable);
-    slots.add(slot);
+    slots.put(name, slot);
     slotAndInitExprs.add(SNodeFactory.createSlotInitialization(slot, init));
   }
 
-  public boolean hasSlot(final SSymbol field) {
-    return slots.contains(field);
+  public void addInitializerExpression(final ExpressionNode expression) {
+    slotAndInitExprs.add(expression);
+  }
+
+  public boolean hasSlot(final SSymbol slot) {
+    return slots.containsKey(slot);
   }
 
   public byte getFieldIndex(final SSymbol field) {
@@ -155,14 +159,15 @@ public final class ClassBuilder {
 
   @TruffleBoundary
   public void assembleSystemClass(final SClass systemClass) {
-    systemClass.setInstanceInvokables(
-        SArray.create(methods.toArray(new Object[0])));
-    systemClass.setInstanceFields(
-        SArray.create(slots.toArray(new Object[0])));
-    // class-bound == class-instance-bound
-    SClass superMClass = systemClass.getSOMClass();
-    superMClass.setInstanceInvokables(
-        SArray.create(factoryMethods.toArray(new Object[0])));
+    throw new NotYetImplementedException();
+//    systemClass.setInstanceInvokables(
+//        SArray.create(methods.toArray(new Object[0])));
+//    systemClass.setInstanceFields(
+//        SArray.create(slots.toArray(new Object[0])));
+//    // class-bound == class-instance-bound
+//    SClass superMClass = systemClass.getSOMClass();
+//    superMClass.setInstanceInvokables(
+//        SArray.create(factoryMethods.toArray(new Object[0])));
   }
 
   @Override
