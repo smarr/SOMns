@@ -407,7 +407,7 @@ public final class Universe {
   }
 
   @TruffleBoundary
-  public SClass newClass(final SClass classClass) {
+  public static SClass newClass(final SClass classClass) {
     return new SClass(classClass);
   }
 
@@ -578,25 +578,26 @@ public final class Universe {
 
   @TruffleBoundary
   private SClass loadClass(final SSymbol name, final SClass systemClass) {
-    // Try loading the class from all different paths
-    for (String cpEntry : classPath) {
-      try {
-        // Load the class from a file and return the loaded class
-        SClass result = som.compiler.SourcecodeCompiler.compileModule(cpEntry,
-            name.getString(), systemClass, this);
-        if (printAST) {
-          Disassembler.dump(result.getSOMClass());
-          Disassembler.dump(result);
-        }
-        return result;
-
-      } catch (IOException e) {
-        // Continue trying different paths
-      }
-    }
-
-    // The class could not be found.
-    return null;
+    throw new NotYetImplementedException();
+//    // Try loading the class from all different paths
+//    for (String cpEntry : classPath) {
+//      try {
+//        // Load the class from a file and return the loaded class
+//        SClass result = som.compiler.SourcecodeCompiler.compileModule(cpEntry,
+//            name.getString(), systemClass, this);
+//        if (printAST) {
+//          Disassembler.dump(result.getSOMClass());
+//          Disassembler.dump(result);
+//        }
+//        return result;
+//
+//      } catch (IOException e) {
+//        // Continue trying different paths
+//      }
+//    }
+//
+//    // The class could not be found.
+//    return null;
   }
 
   @TruffleBoundary
