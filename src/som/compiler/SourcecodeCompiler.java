@@ -27,9 +27,10 @@ package som.compiler;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.StringReader;
 
 import som.compiler.Parser.ParseError;
+import som.vm.NotYetImplementedException;
+import som.vm.Symbols;
 import som.vm.Universe;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
@@ -40,7 +41,7 @@ import com.oracle.truffle.api.source.Source;
 public final class SourcecodeCompiler {
 
   @TruffleBoundary
-  public static SClass compileModule(final String path, final String file,
+  public static ClassDefinition compileModule(final String path, final String file,
       final SClass systemClass, final Universe universe)
       throws IOException {
     String fname = path + File.separator + file;
@@ -49,7 +50,7 @@ public final class SourcecodeCompiler {
     Source source = Source.fromFileName(fname);
     Parser parser = new Parser(stream, new File(fname).length(), source, universe);
 
-    SClass result = compile(parser, systemClass, universe);
+    ClassDefinition result = compile(parser, systemClass, universe);
 
     SSymbol cname = result.getName();
     String cnameC = cname.getString();
@@ -65,17 +66,18 @@ public final class SourcecodeCompiler {
   @TruffleBoundary
   public static SClass compileClass(final String stmt, final SClass systemClass,
       final Universe universe) {
-    Parser parser = new Parser(new StringReader(stmt), stmt.length(), null, universe);
-
-    SClass result = compile(parser, systemClass, universe);
-    return result;
+    throw new NotYetImplementedException();
+//    Parser parser = new Parser(new StringReader(stmt), stmt.length(), null, universe);
+//
+//    SClass result = compile(parser, systemClass, universe);
+//    return result;
   }
 
-  private static SClass compile(final Parser parser, final SClass systemClass,
+  private static ClassDefinition compile(final Parser parser, final SClass systemClass,
       final Universe universe) {
-    ClassBuilder clsBuilder = new ClassBuilder(universe);
+    MethodBuilder definitionMethod = createClassDefinitionMethod();
+    ClassBuilder clsBuilder = new ClassBuilder(definitionMethod);
 
-    SClass result = systemClass;
     try {
       parser.classDeclaration(clsBuilder);
     } catch (ParseError pe) {
@@ -83,11 +85,21 @@ public final class SourcecodeCompiler {
     }
 
     if (systemClass == null) {
-      result = clsBuilder.assemble();
+      return clsBuilder.assemble();
     } else {
-      clsBuilder.assembleSystemClass(result);
+      clsBuilder.assembleSystemClass(systemClass);
+      throw new NotYetImplementedException();
+//      return systemClass;
     }
+  }
 
-    return result;
+  protected static MethodBuilder createClassDefinitionMethod() {
+    MethodBuilder definitionMethod = new MethodBuilder(null);
+    // self is going to be either universe, or the enclosing object
+    definitionMethod.addArgumentIfAbsent("self");
+    definitionMethod.setSignature(Symbols.symbolFor("`define`cls"));
+
+    definitionMethod.addLocalIfAbsent("$superCls");
+    return definitionMethod;
   }
 }
