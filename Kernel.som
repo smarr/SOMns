@@ -22,8 +22,54 @@ class Kernel usingPlatform: platform vmMirror: vmMirror = (
 | private vmMirror = vmMirror.
   private system   = platform system. |
 )(
-  public class Value = ()
+  private class Top ()()
+  
+  public class Thing = ()(
+    'Error recovering'
+    protected doesNotUnderstand: selector arguments: arguments = (
+      system error: 'Method ' + selector + ' not found in class ' + self class name
+    )
+    
+    protected escapedBlock: block = (
+      system error: 'Block has escaped and cannot be executed'
+    )
+    
+    'Abstract method support'
+    protected subclassResponsibility = (
+      system error: 'This method is abstract and should be overridden'
+    )
+    
+    'Evaluating'
+    public value = ( ^ self )
+    
+    'Converting, Convenience'
+    , element = ( ^ (Vector new append: self) append: element )
+    hashcode  = ( ^ vmMirror objHashcode: self )
+    
+    'Nil'
+    public isNil  = ( ^ false )
+    public notNil = ( ^ true )
+    public ifNil: aBlock = ( ^ self )
+    public ifNotNil: aBlock = ( ^ aBlock value )
+    public ifNil: noGoBlock ifNotNil: goBlock = ( ^ goBlock value )
+
+    'Debugging'
+    public print    = ( self asString print )
+    public println  = ( system printNewline: self asString )
+    public halt     = ( vmMirror halt )
+    public asString = ( ^ 'instance of ' + (vmMirror objClassName: self) )
+  )
+
+  public class Object = Thing ()
   (
+    public == other = ( ^ vmMirror object: self identicalTo: other )
+    public ~= other = ( ^ (self == other) not )
+  )
+  
+  public class Value = Thing ()
+  (
+    public =  other = ( ^ vmMirror value: self sameAs: other )
+    public <> other = ( ^ (self = other) not )
     public copy = ( ^ self )
   )
   
