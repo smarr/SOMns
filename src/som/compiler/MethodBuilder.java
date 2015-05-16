@@ -188,6 +188,7 @@ public final class MethodBuilder {
   }
 
   public void setSignature(final SSymbol sig) {
+    assert signature == null;
     signature = sig;
   }
 
