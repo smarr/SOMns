@@ -55,7 +55,8 @@ class Mirrors usingVmMirror: vmMirror = (
     )
     
     public respondsTo: selector = (
-      | cls = self classMirror. |
+      | cls |
+      cls := self classMirror.
       (cls hasMethod: selector)
         ifTrue:  [ ^ true ]
         ifFalse: [ | superCls |
