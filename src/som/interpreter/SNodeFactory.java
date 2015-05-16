@@ -161,4 +161,9 @@ public final class SNodeFactory {
       final SourceSection source) {
     return new NotImplemented();
   }
+
+  public static ExpressionNode createConstructClassNode(
+      final AbstractMessageSendNode superclassResolution) {
+    return new NotImplemented();
+  }
 }
