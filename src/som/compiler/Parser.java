@@ -385,7 +385,8 @@ public final class Parser {
 
   private void nestedClassDeclaration(final ClassBuilder clsBuilder) throws ParseError {
     AccessModifier accessModifier = accessModifier();
-    classDeclaration(accessModifier, clsBuilder);
+    ClassBuilder nestedCls = new ClassBuilder();
+    classDeclaration(accessModifier, nestedCls);
   }
 
   private void category(final ClassBuilder clsBuilder) throws ParseError {
