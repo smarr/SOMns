@@ -33,7 +33,7 @@ class Platform usingVmMirror: vmMirror = (
        leads to strange consequences, for instance, the polution of Object
        with messages to obtain various classes. *)
     | private Object = platform kernel Object.
-    | private Value  = platform kernel Value. |
+      private Value  = platform kernel Value. |
   )() : (
     public new = ( system error: 'Cannot instantiate Universe'. )
   )
