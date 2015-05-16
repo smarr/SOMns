@@ -39,9 +39,7 @@ import som.interpreter.LexicalScope;
 import som.interpreter.Method;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.ReturnNonLocalNode;
-import som.primitives.Primitives;
 import som.vm.Universe;
-import som.vmobjects.SInvokable;
 import som.vmobjects.SInvokable.SMethod;
 import som.vmobjects.SSymbol;
 
@@ -58,7 +56,6 @@ public final class MethodBuilder {
   private final boolean       blockMethod;
 
   private SSymbol signature;
-  private boolean primitive;
   private boolean needsToCatchNonLocalReturn;
   private boolean throwsNonLocalReturn;       // does directly or indirectly a non-local return
 
@@ -158,13 +155,9 @@ public final class MethodBuilder {
     }
   }
 
-  public SInvokable assemble(ExpressionNode body,
+  public SMethod assemble(ExpressionNode body,
       final AccessModifier accessModifier, final SSymbol category,
       final SourceSection sourceSection) {
-    if (primitive) {
-      return Primitives.constructEmptyPrimitive(signature);
-    }
-
     ArrayList<Variable> onlyLocalAccess = new ArrayList<>(arguments.size() + locals.size());
     ArrayList<Variable> nonLocalAccess  = new ArrayList<>(arguments.size() + locals.size());
     separateVariables(arguments.values(), onlyLocalAccess, nonLocalAccess);
@@ -178,7 +171,7 @@ public final class MethodBuilder {
         new Method(getSourceSectionForMethod(sourceSection),
             body, currentScope, (ExpressionNode) body.deepCopy());
 
-    SInvokable meth = Universe.newMethod(signature, accessModifier, category,
+    SMethod meth = (SMethod) Universe.newMethod(signature, accessModifier, category,
         truffleMethod, false, embeddedBlockMethods.toArray(new SMethod[0]));
 
     // return the method - the holder field is to be set later on!
@@ -192,10 +185,6 @@ public final class MethodBuilder {
         ssBody.getStartLine(), ssBody.getStartColumn(),
         ssBody.getCharIndex(), ssBody.getCharLength());
     return ssMethod;
-  }
-
-  public void markAsPrimitive() {
-    primitive = true;
   }
 
   public void setSignature(final SSymbol sig) {
