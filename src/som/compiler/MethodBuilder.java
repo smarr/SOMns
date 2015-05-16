@@ -26,9 +26,6 @@
 package som.compiler;
 
 import static som.interpreter.SNodeFactory.createCatchNonLocalReturn;
-import static som.interpreter.SNodeFactory.createFieldRead;
-import static som.interpreter.SNodeFactory.createFieldWrite;
-import static som.interpreter.SNodeFactory.createGlobalRead;
 import static som.interpreter.SNodeFactory.createNonLocalReturn;
 
 import java.util.ArrayList;
@@ -41,9 +38,6 @@ import som.compiler.Variable.Local;
 import som.interpreter.LexicalScope;
 import som.interpreter.Method;
 import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.FieldNode.FieldReadNode;
-import som.interpreter.nodes.FieldNode.FieldWriteNode;
-import som.interpreter.nodes.GlobalNode;
 import som.interpreter.nodes.ReturnNonLocalNode;
 import som.primitives.Primitives;
 import som.vm.Universe;
@@ -341,30 +335,28 @@ public final class MethodBuilder {
     return getVariable("self").getReadNode(getContextLevel("self"), source);
   }
 
-  public FieldReadNode getObjectFieldRead(final SSymbol fieldName,
-      final SourceSection source) {
-    if (!holder.hasSlot(fieldName)) {
-      return null;
-    }
-    return createFieldRead(getSelfRead(source),
-        holder.getFieldIndex(fieldName), source);
-  }
+//  public FieldReadNode getObjectFieldRead(final SSymbol fieldName,
+//      final SourceSection source) {
+//    if (!holder.hasSlot(fieldName)) {
+//      return null;
+//    }
+//
+//    // TODO: needs to pass slot, well, actually, we will probably need to revamp
+//    //       that even more
+//    return createFieldRead(getSelfRead(source),
+//        -1 /* holder.getFieldIndex(fieldName) */, source);
+//  }
 
-  public GlobalNode getGlobalRead(final SSymbol varName,
-      final Universe universe, final SourceSection source) {
-    return createGlobalRead(varName, universe, source);
-  }
-
-  public FieldWriteNode getObjectFieldWrite(final SSymbol fieldName,
-      final ExpressionNode exp, final Universe universe,
-      final SourceSection source) {
-    if (!holder.hasSlot(fieldName)) {
-      return null;
-    }
-
-    return createFieldWrite(getSelfRead(source), exp,
-        holder.getFieldIndex(fieldName), source);
-  }
+//  public FieldWriteNode getObjectFieldWrite(final SSymbol fieldName,
+//      final ExpressionNode exp, final Universe universe,
+//      final SourceSection source) {
+//    if (!holder.hasSlot(fieldName)) {
+//      return null;
+//    }
+//
+//    return createFieldWrite(getSelfRead(source), exp,
+//        holder.getFieldIndex(fieldName), source);
+//  }
 
   /**
    * @return number of explicit arguments,

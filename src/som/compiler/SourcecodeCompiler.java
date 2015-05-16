@@ -30,7 +30,6 @@ import java.io.IOException;
 
 import som.compiler.Parser.ParseError;
 import som.vm.NotYetImplementedException;
-import som.vm.Symbols;
 import som.vm.Universe;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
@@ -75,8 +74,7 @@ public final class SourcecodeCompiler {
 
   private static ClassDefinition compile(final Parser parser, final SClass systemClass,
       final Universe universe) {
-    MethodBuilder definitionMethod = createClassDefinitionMethod();
-    ClassBuilder clsBuilder = new ClassBuilder(definitionMethod);
+    ClassBuilder clsBuilder = new ClassBuilder();
 
     try {
       parser.classDeclaration(clsBuilder);
@@ -91,15 +89,5 @@ public final class SourcecodeCompiler {
       throw new NotYetImplementedException();
 //      return systemClass;
     }
-  }
-
-  protected static MethodBuilder createClassDefinitionMethod() {
-    MethodBuilder definitionMethod = new MethodBuilder(null);
-    // self is going to be either universe, or the enclosing object
-    definitionMethod.addArgumentIfAbsent("self");
-    definitionMethod.setSignature(Symbols.symbolFor("`define`cls"));
-
-    definitionMethod.addLocalIfAbsent("$superCls");
-    return definitionMethod;
   }
 }

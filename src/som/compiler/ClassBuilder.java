@@ -32,17 +32,20 @@ import som.compiler.ClassDefinition.SlotDefinition;
 import som.interpreter.SNodeFactory;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
+import som.primitives.NewObjectPrimFactory;
 import som.vm.NotYetImplementedException;
+import som.vm.Symbols;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
+import som.vmobjects.SInvokable.SMethod;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
 public final class ClassBuilder {
 
-  public ClassBuilder(final MethodBuilder instMethod) {
-    this.instantiation = instMethod;
+  public ClassBuilder() {
+    this.instantiation = createClassDefinitionContext();
     this.initializer   = new MethodBuilder(this);
 
     this.classSide = false;
@@ -58,9 +61,12 @@ public final class ClassBuilder {
   private final LinkedHashMap<SSymbol, SlotDefinition> slots = new LinkedHashMap<>();
   private final List<SInvokable> methods = new ArrayList<SInvokable>();
   private final List<SInvokable> factoryMethods  = new ArrayList<SInvokable>();
-  private SInvokable primaryFactoryMethod;
 
   private boolean classSide;
+
+  private SSymbol primaryFactoryMethodName;
+  private List<String> primaryFactoryArguments;
+  private SSymbol primaryFactoryMethodNameOfSuperClass;
 
   public void setName(final SSymbol name) {
     this.name = name;
@@ -68,6 +74,14 @@ public final class ClassBuilder {
 
   public SSymbol getName() {
     return name;
+  }
+
+  public void setPrimaryFactoryMethodName(final SSymbol name) {
+    primaryFactoryMethodName = name;
+  }
+
+  public void setPrimaryFactoryArguments(final List<String> arguments) {
+    primaryFactoryArguments = arguments;
   }
 
   /**
@@ -97,11 +111,11 @@ public final class ClassBuilder {
   }
 
   public void addMethod(final SInvokable meth) {
-    methods.add(meth);
-  }
-
-  public void addFactoryMethod(final SInvokable meth) {
-    factoryMethods.add(meth);
+    if (!classSide) {
+      methods.add(meth);
+    } else {
+      factoryMethods.add(meth);
+    }
   }
 
   public void addSlot(final SSymbol name, final AccessModifier acccessModifier,
@@ -128,36 +142,22 @@ public final class ClassBuilder {
   }
 
   public ClassDefinition assemble() {
-    throw new NotYetImplementedException();
-//    // build class class name
-//    String ccname = name.getString() + " class";
-//
-//    // Load the super class
-//    SClass superClass = null; // TODO: // universe.loadClass(superName);
-//
-//    // Allocate the class of the resulting class
-//    SClass resultClass = Universe.newClass(Classes.metaclassClass);
-//
-//    // Initialize the class of the resulting class
-//    resultClass.setInstanceInvokables(
-//        SArray.create(factoryMethods.toArray(new Object[0])));
-//    resultClass.setName(Symbols.symbolFor(ccname));
-//
-//    SClass superMClass = superClass.getSOMClass();
-//    resultClass.setSuperClass(superMClass);
-//
-//    // Allocate the resulting class
-//    SClass result = Universe.newClass(resultClass);
-//
-//    // Initialize the resulting class
-//    result.setName(name);
-//    result.setSuperClass(superClass);
-//    result.setInstanceFields(
-//        SArray.create(slots.toArray(new Object[0])));
-//    result.setInstanceInvokables(
-//        SArray.create(methods.toArray(new Object[0])));
-//
-//    return result;
+    // to prepare the class definition we need to assemble:
+    //   - the class instantiation method, which resolves super
+    //   - the primary factory method, which allocates the object,
+    //     and then calls initiation
+    //   - the initialization method, which class super, and then initializes the object
+
+    SMethod classObjectInstantiation = assembleClassObjectInstantiationMethod();
+    SMethod primaryFactory = assemblePrimaryFactoryMethod();
+    SMethod initializationMethod = assembleInitializationMethod();
+    factoryMethods.add(primaryFactory);
+    methods.add(initializationMethod);
+
+    ClassDefinition clsDef = new ClassDefinition(name, classObjectInstantiation,
+        methods.toArray(new SMethod[0]), factoryMethods.toArray(new SMethod[0]));
+
+    return clsDef;
   }
 
   @TruffleBoundary
@@ -171,6 +171,82 @@ public final class ClassBuilder {
 //    SClass superMClass = systemClass.getSOMClass();
 //    superMClass.setInstanceInvokables(
 //        SArray.create(factoryMethods.toArray(new Object[0])));
+  }
+
+  private static MethodBuilder createClassDefinitionContext() {
+    MethodBuilder definitionMethod = new MethodBuilder(null);
+    // self is going to be either universe, or the enclosing object
+    definitionMethod.addArgumentIfAbsent("self");
+    definitionMethod.setSignature(Symbols.symbolFor("`define`cls"));
+
+    definitionMethod.addLocalIfAbsent("$superCls");
+    return definitionMethod;
+  }
+
+  private SMethod assembleClassObjectInstantiationMethod() {
+    assert superclassResolution != null;
+    ExpressionNode body = SNodeFactory.createConstructClassNode(superclassResolution);
+    return (SMethod) instantiation.assemble(body, AccessModifier.NOT_APPLICABLE, null, null);
+  }
+
+  private SMethod assemblePrimaryFactoryMethod() {
+    MethodBuilder builder = new MethodBuilder(this);
+    builder.setSignature(primaryFactoryMethodName);
+
+    builder.addArgumentIfAbsent("self");
+
+    // first create new Object
+    ExpressionNode newObject = NewObjectPrimFactory.create(
+        builder.getReadNode("self", null));
+
+    List<ExpressionNode> args = createFactoryMethodArgumentRead(builder,
+        newObject);
+
+    // This is a bet on initializer methods being constructed well,
+    // so that they return self
+    ExpressionNode initializedObject = SNodeFactory.createMessageSend(
+        getInitializerName(primaryFactoryMethodName), args, null);
+
+    return (SMethod) builder.assemble(initializedObject, AccessModifier.PROTECTED,
+        Symbols.symbolFor("initialization"), null);
+  }
+
+  private SMethod assembleInitializationMethod() {
+    // first, we need to do a super send to the primary factor method
+    List<ExpressionNode> args = createFactoryMethodArgumentRead(initializer,
+        initializer.getReadNode("super", null));
+    ExpressionNode superInit = SNodeFactory.createMessageSend(
+        getInitializerName(primaryFactoryMethodNameOfSuperClass), args, null);
+
+    // after the initialization by the super class is finished, we need to
+    // evaluate the slot and init expressions
+    List<ExpressionNode> allExprs = new ArrayList<ExpressionNode>(1 + slotAndInitExprs.size());
+    allExprs.add(superInit);
+    allExprs.addAll(slotAndInitExprs);
+    ExpressionNode body = SNodeFactory.createSequence(allExprs, null);
+    return (SMethod) initializer.assemble(body, AccessModifier.PROTECTED,
+        Symbols.symbolFor("initialization"), null);
+  }
+
+  protected List<ExpressionNode> createFactoryMethodArgumentRead(
+      final MethodBuilder builder, final ExpressionNode receiver) {
+    // then, call the initializer on it
+    List<ExpressionNode> args = new ArrayList<>(
+        primaryFactoryMethodName.getNumberOfSignatureArguments());
+
+    args.add(receiver);
+
+    if (primaryFactoryArguments != null) {
+      for (String arg : primaryFactoryArguments) {
+        builder.addArgumentIfAbsent(arg.toString());
+        args.add(builder.getReadNode(arg, null));
+      }
+    }
+    return args;
+  }
+
+  private SSymbol getInitializerName(final SSymbol selector) {
+    return Symbols.symbolFor("initializer`" + selector.getString());
   }
 
   @Override

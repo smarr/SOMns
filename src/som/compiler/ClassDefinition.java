@@ -1,5 +1,8 @@
 package som.compiler;
 
+import som.vm.NotYetImplementedException;
+import som.vmobjects.SClass;
+import som.vmobjects.SInvokable.SMethod;
 import som.vmobjects.SSymbol;
 
 /**
@@ -10,13 +13,52 @@ import som.vmobjects.SSymbol;
  */
 public final class ClassDefinition {
   private final SSymbol name;
+  private final SMethod   assembleClassObjectMethod;
+  private final SMethod[] instanceMethods;
+  private final SMethod[] factoryMethods;
 
-  public ClassDefinition(final SSymbol name) {
+  public ClassDefinition(final SSymbol name,
+      final SMethod classObjectInstantiation, final SMethod[] instanceMethods,
+      final SMethod[] factoryMethods) {
     this.name = name;
+    this.assembleClassObjectMethod = classObjectInstantiation;
+    this.instanceMethods = instanceMethods;
+    this.factoryMethods  = factoryMethods;
   }
 
   public SSymbol getName() {
     return name;
+  }
+
+  public SClass createSClass(final SClass superClass) {
+    // build class class name
+    String ccName = name.getString() + " class";
+
+//  // Allocate the class of the resulting class
+//  SClass resultClass = Universe.newClass(Classes.metaclassClass);
+    //
+    //
+//        // Initialize the class of the resulting class
+//        resultClass.setInstanceInvokables(
+//            SArray.create(factoryMethods.toArray(new Object[0])));
+//        resultClass.setName(Symbols.symbolFor(ccname));
+    //
+//        SClass superMClass = superClass.getSOMClass();
+//        resultClass.setSuperClass(superMClass);
+    //
+//        // Allocate the resulting class
+//        SClass result = Universe.newClass(resultClass);
+    //
+//        // Initialize the resulting class
+//        result.setName(name);
+//        result.setSuperClass(superClass);
+//        result.setInstanceFields(
+//            SArray.create(slots.toArray(new Object[0])));
+//        result.setInstanceInvokables(
+//            SArray.create(methods.toArray(new Object[0])));
+    //
+//        return result;
+    throw new NotYetImplementedException();
   }
 
   public static final class SlotDefinition {
