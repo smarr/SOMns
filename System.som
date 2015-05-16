@@ -19,12 +19,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 *)
 class System usingVmMirror: vmMirror = (
-| private vmMirror = vmMirror. |
+  | private vmMirror = vmMirror. |
 )(
   'Exiting'
   public exit: error  = ( vmMirror exit: error )
   public exit         = ( self exit: 0 )
-  public error: msg   = ( self printNewline: msg. self exit: 1 )
+  public error: msg   = ( self printNewline: 'ERROR: ' + msg. self exit: 1 )
   
   'Printing'
   public printString: string = ( vmMirror printString: string )
