@@ -22,7 +22,7 @@ class Mirrors usingVmMirror: vmMirror = (
   | private vmMirror = vmMirror. |
 )(
   public class ClassMirror on: cls = (
-    | private cls = cls |
+    | private cls = cls. |
   )(
     (*:TODO: Not happy with the naming of the mirror methods yet, 
              they are not unambigious, about whether they apply to the object,
@@ -42,7 +42,7 @@ class Mirrors usingVmMirror: vmMirror = (
   )
   
   public class ObjectMirror on: obj = (
-    | private obj = obj |
+    | private obj = obj. |
   )(
     public classMirror = ( ^ ClassMirror on: obj )
     
@@ -55,7 +55,7 @@ class Mirrors usingVmMirror: vmMirror = (
     )
     
     public respondsTo: selector = (
-      | cls = self classMirror |
+      | cls = self classMirror. |
       (cls hasMethod: selector)
         ifTrue:  [ ^ true ]
         ifFalse: [ | superCls |
