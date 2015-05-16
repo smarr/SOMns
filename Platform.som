@@ -9,7 +9,7 @@ class Platform usingVmMirror: vmMirror = (
 
   (Application usingPlatform: self) start
 )(
-  class Application usingPlatform: platform = (
+  protected class Application usingPlatform: platform = (
     | private platform = platform. |
   )(
     public start = (
