@@ -69,6 +69,7 @@ public final class ClassBuilder {
   private SSymbol primaryFactoryMethodNameOfSuperClass;
 
   public void setName(final SSymbol name) {
+    assert this.name == null;
     this.name = name;
   }
 
