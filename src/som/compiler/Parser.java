@@ -217,7 +217,8 @@ public final class Parser {
     return lexer.getStartCoordinate();
   }
 
-  public void classDeclaration(final ClassBuilder clsBuilder) throws ParseError {
+  public void moduleDeclaration(final ClassBuilder clsBuilder) throws ParseError {
+    comment();
     classDeclaration(AccessModifier.PUBLIC, clsBuilder);
   }
 

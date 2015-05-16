@@ -77,7 +77,7 @@ public final class SourcecodeCompiler {
     ClassBuilder clsBuilder = new ClassBuilder();
 
     try {
-      parser.classDeclaration(clsBuilder);
+      parser.moduleDeclaration(clsBuilder);
     } catch (ParseError pe) {
       Universe.errorExit(pe.toString());
     }
