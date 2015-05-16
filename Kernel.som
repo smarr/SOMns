@@ -22,7 +22,7 @@ class Kernel usingPlatform: platform vmMirror: vmMirror = (
 | private vmMirror = vmMirror.
   private system   = platform system. |
 )(
-  private class Top ()()
+  private class Top = ()()
   
   public class Thing = ()(
     'Error recovering'
