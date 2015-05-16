@@ -68,6 +68,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
+import som.compiler.Lexer.Peek;
 import som.compiler.Lexer.SourceCoordinate;
 import som.compiler.Variable.Local;
 import som.interpreter.SNodeFactory;
@@ -104,6 +105,7 @@ public final class Parser {
   private Symbol                    sym;
   private String                    text;
   private Symbol                    nextSym;
+  private String                    nextText;
 
   private SourceSection             lastMethodsSourceSection;
 
@@ -1064,7 +1066,9 @@ public final class Parser {
   }
 
   private void peekForNextSymbolFromLexer() {
-    nextSym = lexer.peek();
+    Peek peek = lexer.peek();
+    nextSym  = peek.nextSym;
+    nextText = peek.nextText;
   }
 
   private static boolean isIdentifier(final Symbol sym) {

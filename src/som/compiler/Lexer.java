@@ -31,7 +31,16 @@ import java.lang.reflect.Field;
 
 public final class Lexer {
 
-  private class LexerState {
+  public static class Peek {
+    public Peek(final Symbol sym, final String text) {
+      nextSym  = sym;
+      nextText = text;
+    }
+    public final Symbol nextSym;
+    public final String nextText;
+  }
+
+  private static class LexerState {
     public LexerState() { }
     public LexerState(final LexerState old) {
       lineNumber = old.lineNumber;
@@ -300,18 +309,19 @@ public final class Lexer {
     }
   }
 
-  protected Symbol peek() {
+  protected Peek peek() {
     LexerState old = new LexerState(state);
     if (peekDone) {
       throw new IllegalStateException("SOM lexer: cannot peek twice!");
     }
     getSym();
-    Symbol nextSym = state.sym;
+    Peek peek = new Peek(state.sym, state.text.toString());
+
     stateAfterPeek = state;
     state = old;
 
     peekDone = true;
-    return nextSym;
+    return peek;
   }
 
   protected String getText() {
