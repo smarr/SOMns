@@ -73,6 +73,14 @@ class Kernel usingPlatform: platform vmMirror: vmMirror = (
     public copy = ( ^ self )
   )
   
+  public class Class = Value ()
+  (
+    'Allocation'
+    public new = ( ^ vmMirror instantiate: self )
+  )
+  
+  public class Metaclass = Class ()()
+  
   public class Boolean = Value ()
   (
     'Conditional evaluation'
