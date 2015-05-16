@@ -44,6 +44,16 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
 public final class ClassBuilder {
 
+  private static final ClassBuilder universeClassBuilder = new ClassBuilder(true);
+
+  private ClassBuilder(final boolean onlyForUnivserClass) {
+    assert onlyForUnivserClass;
+
+    initializer = null;
+    instantiation = null;
+    setName(Symbols.symbolFor("Universe"));
+  }
+
   public ClassBuilder() {
     this.instantiation = createClassDefinitionContext();
     this.initializer   = new MethodBuilder(this);
@@ -175,7 +185,7 @@ public final class ClassBuilder {
   }
 
   private static MethodBuilder createClassDefinitionContext() {
-    MethodBuilder definitionMethod = new MethodBuilder(null);
+    MethodBuilder definitionMethod = new MethodBuilder(universeClassBuilder);
     // self is going to be either universe, or the enclosing object
     definitionMethod.addArgumentIfAbsent("self");
     definitionMethod.setSignature(Symbols.symbolFor("`define`cls"));
