@@ -40,6 +40,6 @@ public abstract class LessThanOrEqualPrim extends ArithmeticPrim {
 
   @Specialization
   public final boolean doDouble(final double left, final long right) {
-    return doDouble(left, right);
+    return doDouble(left, (double) right);
   }
 }

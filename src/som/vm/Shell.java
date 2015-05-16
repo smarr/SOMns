@@ -61,7 +61,7 @@ public class Shell {
 
         // Read a statement from the keyboard
         stmt = in.readLine();
-        if (stmt.equals("quit")) {
+        if ("quit".equals(stmt)) {
           return it;
         }
 

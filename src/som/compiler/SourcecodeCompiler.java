@@ -54,7 +54,7 @@ public final class SourcecodeCompiler {
     SSymbol cname = result.getName();
     String cnameC = cname.getString();
 
-    if (file != cnameC) {
+    if (file.equals(cnameC)) {
       throw new IllegalStateException("File name " + file
           + " does not match class name " + cnameC);
     }
