@@ -350,7 +350,7 @@ public final class Parser {
       if (acceptIdentifier("protected")) { return AccessModifier.PROTECTED; }
       if (acceptIdentifier("public"))    { return AccessModifier.PUBLIC;    }
     }
-    return AccessModifier.PUBLIC;
+    return AccessModifier.PROTECTED;
   }
 
   private String slotDecl() throws ParseError {
