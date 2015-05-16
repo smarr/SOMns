@@ -66,6 +66,19 @@ class Mirrors usingVmMirror: vmMirror = (
               ifFalse: [ superCls := superCls superclass ] ].
           ^ false ]
     )
+  )
+  
+  public class SlotMirror = ()(
+  )
+  
+  public class MethodMirror = ()(
+    public selector = ( ^ vmMirror methodSelector: mthd )
+    public holder   = ( ^ vmMirror methodHolder:   mthd )
+    
+    public invokeOn: obj with: args = ( ^ vmMirror method: mthd invokeOn: obj with: args )
+    
+    'Debugging'
+    public asString = ( ^self holder asString + '>>' + self signature asString )
     
   )
 )
