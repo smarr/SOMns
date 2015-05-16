@@ -435,7 +435,7 @@ public final class Parser {
   private boolean canAcceptThisOrNextIdentifier(final String identifier) {
     if (sym == Identifier && identifier.equals(text)) { return true; }
     peekForNextSymbolFromLexer();
-    return nextSym == Identifier && identifier.equals(nextSym);
+    return nextSym == Identifier && identifier.equals(nextText);
   }
 
   private boolean acceptIdentifier(final String identifier) {
