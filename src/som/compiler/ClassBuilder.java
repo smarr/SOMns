@@ -24,6 +24,8 @@
  */
 package som.compiler;
 
+import static som.vm.Symbols.symbolFor;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -77,6 +79,7 @@ public final class ClassBuilder {
   private SSymbol primaryFactoryMethodName;
   private List<String> primaryFactoryArguments;
   private SSymbol primaryFactoryMethodNameOfSuperClass;
+  private ExpressionNode superclassFactorySend;
 
   public void setName(final SSymbol name) {
     assert this.name == null;
@@ -256,12 +259,24 @@ public final class ClassBuilder {
     return args;
   }
 
-  private SSymbol getInitializerName(final SSymbol selector) {
+  public ExpressionNode createStandardSuperFactorySend() {
+    ExpressionNode superNode = initializer.getSuperReadNode(null);
+    ExpressionNode superFactorySend = SNodeFactory.createMessageSend(
+        getInitializerName(symbolFor("new")),
+        new ExpressionNode[] { superNode }, null);
+    return superFactorySend;
+  }
+
+  public SSymbol getInitializerName(final SSymbol selector) {
     return Symbols.symbolFor("initializer`" + selector.getString());
   }
 
   @Override
   public String toString() {
     return "ClassGenC(" + name.getString() + ")";
+  }
+
+  public void setSuperclassFactorySend(final ExpressionNode superFactorySend) {
+    this.superclassFactorySend = superFactorySend;
   }
 }

@@ -73,7 +73,9 @@ import som.compiler.Lexer.SourceCoordinate;
 import som.compiler.Variable.Local;
 import som.interpreter.SNodeFactory;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
+import som.interpreter.nodes.MessageSendNode.AbstractUninitializedMessageSendNode;
 import som.interpreter.nodes.literals.BigIntegerLiteralNode;
 import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.literals.BlockNode.BlockNodeWithContext;
@@ -257,13 +259,64 @@ public final class Parser {
     ExpressionNode selfRead = def.getReadNode("self", null);
     AbstractMessageSendNode superClass = SNodeFactory.createMessageSend(
         symbolFor("Object"), new ExpressionNode[] {selfRead}, null);
-
     clsBuilder.setSuperClassResolution(superClass);
+
+    clsBuilder.setSuperclassFactorySend(
+        clsBuilder.createStandardSuperFactorySend());
+
     classBody(clsBuilder);
   }
 
-  private void explicitInheritanceListAndOrBody(final ClassBuilder clsBuilder) {
-    throw new NotYetImplementedException();
+  private void explicitInheritanceListAndOrBody(final ClassBuilder clsBuilder)
+      throws ParseError {
+    inheritanceClause(clsBuilder);
+    // TODO: Newspeak-spec: mixinAppSuffix
+    classBody(clsBuilder);
+  }
+
+  private void inheritanceClause(final ClassBuilder clsBuilder) throws ParseError {
+    ExpressionNode rcvr = inheritancePrefix(clsBuilder);
+    AbstractMessageSendNode superClassResolution = unaryMessage(rcvr);
+    clsBuilder.setSuperClassResolution(superClassResolution);
+
+    ExpressionNode superFactorySend;
+    if (sym != NewTerm) {
+      // This factory method on the super class is actually called as
+      // initializer of the super class after object creation.
+      // The Newspeak spec isn't entirely straight forward on that, but it says
+      // that it is a runtime error if it is not the primary factory method.
+      // Which for me implies that this one is special. And indeed, it is
+      // used to create the proper initialize method, on which we rely here.
+      superFactorySend = messages(
+          clsBuilder.getInitializerMethodBuilder(),
+          clsBuilder.getInitializerMethodBuilder().getSuperReadNode(null));
+
+      SSymbol initializerName = clsBuilder.getInitializerName(
+          ((AbstractUninitializedMessageSendNode) superFactorySend).getSelector());
+
+      superFactorySend = MessageSendNode.adaptSymbol(initializerName,
+          (AbstractUninitializedMessageSendNode) superFactorySend);
+    } else {
+      superFactorySend = clsBuilder.createStandardSuperFactorySend();
+    }
+    clsBuilder.setSuperclassFactorySend(superFactorySend);
+  }
+
+  private ExpressionNode inheritancePrefix(final ClassBuilder clsBuilder)
+      throws ParseError {
+    MethodBuilder meth = clsBuilder.getInstantiationMethodBuilder();
+    SourceCoordinate coord = getCoordinate();
+
+    if (acceptIdentifier("self")) {
+      return meth.getReadNode("self", getSource(coord));
+    } else if (acceptIdentifier("super")) {
+      return meth.getSuperReadNode(getSource(coord));
+    } else if (acceptIdentifier("outer")) {
+      ExpressionNode self = meth.getReadNode("self", getSource(coord));
+      return unaryMessage(self);
+    } else {
+      return meth.getReadNode("self", getSource(coord));
+    }
   }
 
   private void classBody(final ClassBuilder clsBuilder) throws ParseError {
