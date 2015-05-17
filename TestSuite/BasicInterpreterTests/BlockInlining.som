@@ -1,5 +1,4 @@
-"
-Copyright (c) 2015 see AUTHORS file
+(* Copyright (c) 2015 see AUTHORS file
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the 'Software'), to deal
@@ -18,11 +17,9 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
-"
+*)
+class BlockInlining = ()() : (
 
-BlockInlining = (
-    ----
-    
     testNoInlining = (
       | a block |
       a := 1.
@@ -43,7 +40,7 @@ BlockInlining = (
           ifTrue: [ | a |
             a := 2.
             a 
-          ] ifFalse: [ a "that's outer a" ]
+          ] ifFalse: [ a (* that is outer a *) ]
     )
     
     testOneLevelInliningWithLocalShadowTrue = (
@@ -57,9 +54,9 @@ BlockInlining = (
     deepNestedInlinedIf: bool = (
       | block  a block2 |
       a := 1.
-      block := [ "not inlined"
+      block := [ (* not inlined *)
         a := a + 1.
-        block2 := [ "not inlined"
+        block2 := [ (* not inlined *)
           bool ifTrue: [ ^ a := a + 1.]
                ifFalse:[ |a| a := 42. a ]
         ].
@@ -90,22 +87,22 @@ BlockInlining = (
     deepNestedBlocksInInlinedIf: bool = (
       | block a block2 block3 |
       a := 1.
-      block := [ "not inlined"
+      block := [ (* not inlined *)
         a := a + 1.
-        block2 := [ "not inlined"
-          bool ifTrue: [ a := a + 1. "inlined"
+        block2 := [ (* not inlined *)
+          bool ifTrue: [ a := a + 1. (* inlined *)
             block3 := [ |block4|
               a := a + 1.
-              block4 := [ "not inlined"
+              block4 := [ (* not inlined *)
                 a := a + 1.
                 a
               ].
               block4 value
             ].
             block3 value
-          ] ifFalse:[ |a block4| "inlined"
+          ] ifFalse:[ |a block4| (* inlined *)
             a := 42.
-            block4 := [ ^ a := a + 1 ]. "not inlined"
+            block4 := [ ^ a := a + 1 ]. (* not inlined *)
             block4 value
           ]
         ].
@@ -120,31 +117,31 @@ BlockInlining = (
     deepDeepNested: bool = (
       | block a block2 block3 |
       a := 1.
-      block := [ "not inlined"
+      block := [ (* not inlined *)
         a := a + 1.
-        block2 := [ "not inlined"
-          bool ifTrue: [ a := a + 1. "inlined"
+        block2 := [ (* not inlined *)
+          bool ifTrue: [ a := a + 1. (* inlined *)
             block3 := [ |block4|
               a := a + 1.
-              block4 := [ "not inlined"
+              block4 := [ (* not inlined *)
                 a := a + 1.
                 
                 
-                  block := [ "not inlined"
+                  block := [ (* not inlined *)
                     a := a + 1.
-                    block2 := [ "not inlined"
-                      bool ifTrue: [ a := a + 1. "inlined"
+                    block2 := [ (* not inlined *)
+                      bool ifTrue: [ a := a + 1. (* inlined *)
                         block3 := [ |block4|
                           a := a + 1.
-                          block4 := [ "not inlined"
+                          block4 := [ (* not inlined *)
                             a := a + 1.
                             a
                           ].
                           block4 value
                         ].
                         block3 value
-                      ] ifFalse:[ |a block4| a := 42. "inlined"
-                        block4 := [^ a := a + 1]. "not inlined"
+                      ] ifFalse:[ |a block4| a := 42. (* inlined *)
+                        block4 := [^ a := a + 1]. (* not inlined *)
                         block4 value
                       ]
                     ].
@@ -157,8 +154,8 @@ BlockInlining = (
               block4 value
             ].
             block3 value
-          ] ifFalse:[ |a block4| a := 42. "inlined"
-            block4 := [^ a := a + 1]. "not inlined"
+          ] ifFalse:[ |a block4| a := 42. (* inlined *)
+            block4 := [^ a := a + 1]. (* not inlined *)
             block4 value
           ]
         ].
@@ -171,7 +168,7 @@ BlockInlining = (
     testDeepDeepNestedFalse = ( ^ self deepDeepNested: false )
     
     testToDoNestDoNestIfTrue = (
-      "from the bounce benchmark"
+      (* from the bounce benchmark *)
       | balls bounces |
       balls := Array new: 1 withAll: true.
       bounces := 0.

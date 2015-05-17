@@ -1,5 +1,4 @@
-"
-Copyright (c) 2001-2013 see AUTHORS file
+(* Copyright (c) 2001-2015 see AUTHORS file
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the 'Software'), to deal
@@ -18,12 +17,9 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
-"
+*)
+class NonLocalReturn = ()():(
 
-NonLocalReturn = (
-    
-    ----
-    
     test = (
         'test1 expect 42: ' println.
         self test1 asString println.
@@ -45,9 +41,9 @@ NonLocalReturn = (
     test4 = ( ^ self at: 11 )
     test5 = ( ^ self at: 10000 )
     
-    "Test case borrowed from Vector"
+    (* Test case borrowed from Vector *)
     at: index = ( self checkIndex: index ifValid: [ ^ 42 ].
-      "else" ^ 22 )
+      (* else *) ^ 22 )
     checkIndex: index ifValid: block = (
         (10 <= index) && (index <= 100)
             ifTrue:  [ ^ block value ]
