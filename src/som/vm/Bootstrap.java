@@ -23,12 +23,14 @@ public final class Bootstrap {
   }
 
   public static void initializeObjectSystem() {
-    // TODO Auto-generated method stub
     throw new NotYetImplementedException();
   }
 
   public static long executeApplication(final String appFile, final String[] args) {
-    // TODO Auto-generated method stub
+    throw new NotYetImplementedException();
+  }
+
+  public static boolean execute(final String selector) {
     throw new NotYetImplementedException();
   }
 }

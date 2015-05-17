@@ -31,7 +31,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-import som.vm.Universe;
+import som.vm.Bootstrap;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
 
@@ -143,11 +143,13 @@ public class BasicInterpreterTests {
 
   @Test
   public void testBasicInterpreterBehavior() {
-    Universe u = Universe.current();
-    u.setAvoidExit(true);
-    u.setupClassPath("Smalltalk:TestSuite/BasicInterpreterTests");
+    Bootstrap.loadPlatformModule("TestSuite/BasicInterpreterTests/" +
+                                 testClass + ".som");
+    Bootstrap.initializeObjectSystem();
 
-    Object actualResult = u.interpret(testClass, testSelector);
+//    TODO:  u.setAvoidExit(true);
+
+    Object actualResult = Bootstrap.execute(testSelector);
 
     assertEqualsSOMValue(expectedResult, actualResult);
   }
