@@ -19,6 +19,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 *)
 class CompilerSimplification = (| aField |)(
+  class ParserTest = (| mutableField ::= 3. |)() (* Just an example for the parser *)
+  
   getField = (^ aField)
   setField: val = ( aField := val )
   
