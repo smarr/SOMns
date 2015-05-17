@@ -285,9 +285,8 @@ public final class Parser {
 
   private void classHeader(final ClassBuilder clsBuilder) throws ParseError {
     expect(NewTerm);
-    if (sym == BeginComment) {
-      classComment(clsBuilder);
-    }
+    classComment(clsBuilder);
+
     if (sym == Or) {
       slotDeclarations(clsBuilder);
     }
@@ -304,6 +303,8 @@ public final class Parser {
   }
 
   private void comment() throws ParseError {
+    if (sym != BeginComment) { return; }
+
     expect(BeginComment);
 
     while (sym != EndComment) {
@@ -399,8 +400,10 @@ public final class Parser {
     } else {
       categoryName = "";
     }
-    while (sym != EndTerm) {
+    while (sym != EndTerm && sym != STString) {
+      comment();
       methodDeclaration(clsBuilder, symbolFor(categoryName));
+      comment();
     }
   }
 //
