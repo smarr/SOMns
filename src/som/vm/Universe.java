@@ -64,8 +64,6 @@ import som.vmobjects.SSymbol;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.Truffle;
-import com.oracle.truffle.api.TruffleRuntime;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 
 public final class Universe {
@@ -98,17 +96,12 @@ public final class Universe {
   }
 
   private Universe() {
-    this.truffleRuntime = Truffle.getRuntime();
     this.globals      = new HashMap<SSymbol, Association>();
     this.avoidExit    = false;
     this.alreadyInitialized = false;
     this.lastExitCode = 0;
 
     this.blockClasses = new SClass[4];
-  }
-
-  public TruffleRuntime getTruffleRuntime() {
-    return truffleRuntime;
   }
 
   public void exit(final int errorCode) {
@@ -531,8 +524,6 @@ public final class Universe {
   @CompilationFinal private SClass  systemClass;
 
   private final HashMap<SSymbol, Association>   globals;
-
-  private final TruffleRuntime                  truffleRuntime;
 
   // TODO: this is not how it is supposed to be... it is just a hack to cope
   //       with the use of system.exit in SOM to enable testing
