@@ -505,7 +505,7 @@ public final class Parser {
     messagePattern(builder);
     expect(Equal);
     ExpressionNode body = methodBlock(builder);
-    SMethod meth = (SMethod) builder.assemble(body, accessModifier, category, getSource(coord));
+    SMethod meth = builder.assemble(body, accessModifier, category, getSource(coord));
     clsBuilder.addMethod(meth);
   }
 
@@ -720,7 +720,7 @@ public final class Parser {
 
         ExpressionNode blockBody = nestedBlock(bgenc);
 
-        SMethod blockMethod = (SMethod) bgenc.assemble(blockBody,
+        SMethod blockMethod = bgenc.assemble(blockBody,
             AccessModifier.NOT_APPLICABLE, null, lastMethodsSourceSection);
         builder.addEmbeddedBlockMethod(blockMethod);
 
