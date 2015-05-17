@@ -57,6 +57,7 @@ import static som.compiler.Symbol.Period;
 import static som.compiler.Symbol.Plus;
 import static som.compiler.Symbol.Pound;
 import static som.compiler.Symbol.STString;
+import static som.compiler.Symbol.SlotMutableAssign;
 import static som.compiler.Symbol.Star;
 import static som.interpreter.SNodeFactory.createGlobalRead;
 import static som.interpreter.SNodeFactory.createMessageSend;
@@ -90,7 +91,6 @@ import som.interpreter.nodes.specialized.IfInlinedLiteralNode;
 import som.interpreter.nodes.specialized.IfTrueIfFalseInlinedLiteralsNode;
 import som.interpreter.nodes.specialized.IntToDoInlinedLiteralsNodeGen;
 import som.interpreter.nodes.specialized.whileloops.WhileInlinedLiteralsNode;
-import som.vm.NotYetImplementedException;
 import som.vm.Universe;
 import som.vmobjects.SInvokable.SMethod;
 import som.vmobjects.SSymbol;
@@ -390,19 +390,21 @@ public final class Parser {
 
     String slotName = slotDecl();
     boolean immutable;
+    ExpressionNode init;
 
     if (accept(Equal)) {
       immutable = true;
+      init = expression(clsBuilder.getInitializerMethodBuilder());
+      expect(Period);
+    } else if (accept(SlotMutableAssign)) {
+      immutable = false;
+      init = expression(clsBuilder.getInitializerMethodBuilder());
+      expect(Period);
     } else {
       immutable = false;
-      // TODO: need to parse tokenFromSymbol: #’::=’
-      throw new NotYetImplementedException();
+      init = null;
     }
-
-    ExpressionNode init = expression(clsBuilder.getInitializerMethodBuilder());
     clsBuilder.addSlot(symbolFor(slotName), acccessModifier, immutable, init);
-
-    expect(Period);
   }
 
   private AccessModifier accessModifier() {

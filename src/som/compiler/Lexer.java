@@ -165,6 +165,14 @@ public final class Lexer {
       if (nextChar() == '=') {
         state.bufp += 2;
         state.set(Symbol.Assign, '\0', ":=");
+      } else if (nextChar() == ':') {
+        state.bufp++;
+        if (nextChar() == '=') { // a little hack to have a double peek...
+          state.bufp += 2;
+          state.set(Symbol.SlotMutableAssign, '\0', "::=");
+        } else {
+          state.set(Symbol.Colon, ':', ":");
+        }
       } else {
         match(Symbol.Colon);
       }

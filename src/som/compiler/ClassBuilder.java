@@ -128,7 +128,10 @@ public final class ClassBuilder {
       final boolean immutable, final ExpressionNode init) {
     SlotDefinition slot = new SlotDefinition(name, acccessModifier, immutable);
     slots.put(name, slot);
-    slotAndInitExprs.add(SNodeFactory.createSlotInitialization(slot, init));
+
+    if (init != null) {
+      slotAndInitExprs.add(SNodeFactory.createSlotInitialization(slot, init));
+    }
   }
 
   public void addInitializerExpression(final ExpressionNode expression) {
