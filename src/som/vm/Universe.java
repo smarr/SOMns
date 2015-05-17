@@ -532,8 +532,6 @@ public final class Universe {
 
   private final HashMap<SSymbol, Association>   globals;
 
-  private String[]                              classPath;
-
   private final TruffleRuntime                  truffleRuntime;
 
   // TODO: this is not how it is supposed to be... it is just a hack to cope
