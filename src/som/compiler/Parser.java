@@ -406,32 +406,6 @@ public final class Parser {
       comment();
     }
   }
-//
-//    expect(NewTerm);
-//
-//    while (isIdentifier(sym) || sym == Keyword || sym == OperatorSequence
-//        || symIn(binaryOpSyms)) {
-//      MethodGenerationContext builder = new MethodGenerationContext(clsBuilder);
-//
-//      ExpressionNode methodBody = method(builder);
-//
-//      clsBuilder.addInstanceMethod(builder.assemble(methodBody, lastMethodsSourceSection));
-//    }
-//
-//    //TODO: cleanup
-//    //if (accept(Separator)) {
-//      clsBuilder.setClassSide(true);
-//      classFields(clsBuilder);
-//      while (isIdentifier(sym) || sym == Keyword || sym == OperatorSequence
-//          || symIn(binaryOpSyms)) {
-//        MethodGenerationContext builder = new MethodGenerationContext(clsBuilder);
-//
-//        ExpressionNode methodBody = method(builder);
-//        clsBuilder.addClassMethod(builder.assemble(methodBody, lastMethodsSourceSection));
-//      }
-//    //}
-//    expect(EndTerm);
-//  }
 
   private boolean symIn(final List<Symbol> ss) {
     return ss.contains(sym);
