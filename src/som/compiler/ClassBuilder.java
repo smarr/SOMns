@@ -200,7 +200,7 @@ public final class ClassBuilder {
   private SMethod assembleClassObjectInstantiationMethod() {
     assert superclassResolution != null;
     ExpressionNode body = SNodeFactory.createConstructClassNode(superclassResolution);
-    return (SMethod) instantiation.assemble(body, AccessModifier.NOT_APPLICABLE, null, null);
+    return instantiation.assemble(body, AccessModifier.NOT_APPLICABLE, null, null);
   }
 
   private SMethod assemblePrimaryFactoryMethod() {
@@ -221,7 +221,7 @@ public final class ClassBuilder {
     ExpressionNode initializedObject = SNodeFactory.createMessageSend(
         getInitializerName(primaryFactoryMethodName), args, null);
 
-    return (SMethod) builder.assemble(initializedObject, AccessModifier.PROTECTED,
+    return builder.assemble(initializedObject, AccessModifier.PROTECTED,
         Symbols.symbolFor("initialization"), null);
   }
 
@@ -238,7 +238,7 @@ public final class ClassBuilder {
     allExprs.add(superInit);
     allExprs.addAll(slotAndInitExprs);
     ExpressionNode body = SNodeFactory.createSequence(allExprs, null);
-    return (SMethod) initializer.assemble(body, AccessModifier.PROTECTED,
+    return initializer.assemble(body, AccessModifier.PROTECTED,
         Symbols.symbolFor("initialization"), null);
   }
 
