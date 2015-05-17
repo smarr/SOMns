@@ -47,7 +47,6 @@ import java.io.IOException;
 import java.util.HashMap;
 
 import som.compiler.AccessModifier;
-import som.compiler.Disassembler;
 import som.interpreter.Invokable;
 import som.interpreter.TruffleCompiler;
 import som.vm.constants.Blocks;
@@ -466,7 +465,6 @@ public final class Universe {
     // Load the class from a stream and return the loaded class
     SClass result = som.compiler.SourcecodeCompiler.compileClass(stmt, null,
         this);
-    if (printAST) { Disassembler.dump(result); }
     return result;
   }
 
@@ -535,7 +533,6 @@ public final class Universe {
   private final HashMap<SSymbol, Association>   globals;
 
   private String[]                              classPath;
-  @CompilationFinal private boolean             printAST;
 
   private final TruffleRuntime                  truffleRuntime;
 
