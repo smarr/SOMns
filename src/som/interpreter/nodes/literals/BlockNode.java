@@ -1,5 +1,6 @@
 package som.interpreter.nodes.literals;
 
+import som.compiler.AccessModifier;
 import som.compiler.MethodBuilder;
 import som.compiler.Variable.Local;
 import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
@@ -8,6 +9,7 @@ import som.interpreter.Invokable;
 import som.interpreter.Method;
 import som.interpreter.SplitterForLexicallyEmbeddedCode;
 import som.interpreter.nodes.ExpressionNode;
+import som.vm.Symbols;
 import som.vm.Universe;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable.SMethod;
@@ -60,7 +62,9 @@ public class BlockNode extends LiteralNode {
 
   private void replaceAdapted(final Invokable adaptedForContext) {
     SMethod adapted = (SMethod) Universe.newMethod(
-        blockMethod.getSignature(), adaptedForContext, false,
+        blockMethod.getSignature(),
+        AccessModifier.NOT_APPLICABLE, Symbols.symbolFor("block method"),
+        adaptedForContext, false,
         blockMethod.getEmbeddedBlocks());
     replace(createNode(adapted));
   }
