@@ -32,7 +32,6 @@ import som.compiler.Parser.ParseError;
 import som.vm.NotYetImplementedException;
 import som.vm.Universe;
 import som.vmobjects.SClass;
-import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.source.Source;
@@ -40,25 +39,15 @@ import com.oracle.truffle.api.source.Source;
 public final class SourcecodeCompiler {
 
   @TruffleBoundary
-  public static ClassDefinition compileModule(final String path, final String file,
+  public static ClassDefinition compileModule(final String filename,
       final SClass systemClass, final Universe universe)
       throws IOException {
-    String fname = path + File.separator + file;
-    FileReader stream = new FileReader(fname);
+    FileReader stream = new FileReader(filename);
 
-    Source source = Source.fromFileName(fname);
-    Parser parser = new Parser(stream, new File(fname).length(), source, universe);
+    Source source = Source.fromFileName(filename);
+    Parser parser = new Parser(stream, new File(filename).length(), source, universe);
 
     ClassDefinition result = compile(parser, systemClass, universe);
-
-    SSymbol cname = result.getName();
-    String cnameC = cname.getString();
-
-    if (file.equals(cnameC)) {
-      throw new IllegalStateException("File name " + file
-          + " does not match class name " + cnameC);
-    }
-
     return result;
   }
 

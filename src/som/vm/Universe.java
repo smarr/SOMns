@@ -43,10 +43,8 @@ import static som.vm.constants.ThreadClasses.delayClass;
 import static som.vm.constants.ThreadClasses.mutexClass;
 import static som.vm.constants.ThreadClasses.threadClass;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.StringTokenizer;
 
 import som.compiler.AccessModifier;
 import som.compiler.Disassembler;
@@ -100,25 +98,6 @@ public final class Universe {
     }
   }
 
-  public static void main(final String[] arguments) {
-    Universe u = current();
-
-    try {
-      u.interpret(arguments);
-      u.exit(0);
-    } catch (IllegalStateException e) {
-      errorExit(e.getMessage());
-    }
-  }
-
-  public Object interpret(String[] arguments) {
-    // Check for command line switches
-    arguments = handleArguments(arguments);
-
-    // Initialize the known universe
-    return execute(arguments);
-  }
-
   private Universe() {
     this.truffleRuntime = Truffle.getRuntime();
     this.globals      = new HashMap<SSymbol, Association>();
@@ -151,127 +130,6 @@ public final class Universe {
     TruffleCompiler.transferToInterpreter("errorExit");
     errorPrintln("Runtime Error: " + message);
     current().exit(1);
-  }
-
-  @TruffleBoundary
-  public String[] handleArguments(String[] arguments) {
-    boolean gotClasspath = false;
-    String[] remainingArgs = new String[arguments.length];
-    int cnt = 0;
-
-    for (int i = 0; i < arguments.length; i++) {
-      if (arguments[i].equals("-cp")) {
-        if (i + 1 >= arguments.length) {
-          printUsageAndExit();
-        }
-        setupClassPath(arguments[i + 1]);
-        // Checkstyle: stop
-        ++i; // skip class path
-        // Checkstyle: resume
-        gotClasspath = true;
-      } else if (arguments[i].equals("-d")) {
-        printAST = true;
-      } else {
-        remainingArgs[cnt++] = arguments[i];
-      }
-    }
-
-    if (!gotClasspath) {
-      // Get the default class path of the appropriate size
-      classPath = setupDefaultClassPath(0);
-    }
-
-    // Copy the remaining elements from the original array into the new
-    // array
-    arguments = new String[cnt];
-    System.arraycopy(remainingArgs, 0, arguments, 0, cnt);
-
-    // check remaining args for class paths, and strip file extension
-    for (int i = 0; i < arguments.length; i++) {
-      String[] split = getPathClassExt(arguments[i]);
-
-      if (!("".equals(split[0]))) { // there was a path
-        String[] tmp = new String[classPath.length + 1];
-        System.arraycopy(classPath, 0, tmp, 1, classPath.length);
-        tmp[0] = split[0];
-        classPath = tmp;
-      }
-      arguments[i] = split[1];
-    }
-
-    return arguments;
-  }
-
-  @TruffleBoundary
-  // take argument of the form "../foo/Test.som" and return
-  // "../foo", "Test", "som"
-  private String[] getPathClassExt(final String arg) {
-    File file = new File(arg);
-
-    String path = file.getParent();
-    StringTokenizer tokenizer = new StringTokenizer(file.getName(), ".");
-
-    if (tokenizer.countTokens() > 2) {
-      errorPrintln("Class with . in its name?");
-      exit(1);
-    }
-
-    String[] result = new String[3];
-    result[0] = (path == null) ? "" : path;
-    result[1] = tokenizer.nextToken();
-    result[2] = tokenizer.hasMoreTokens() ? tokenizer.nextToken() : "";
-
-    return result;
-  }
-
-  @TruffleBoundary
-  public void setupClassPath(final String cp) {
-    // Create a new tokenizer to split up the string of directories
-    StringTokenizer tokenizer = new StringTokenizer(cp, File.pathSeparator);
-
-    // Get the default class path of the appropriate size
-    classPath = setupDefaultClassPath(tokenizer.countTokens());
-
-    // Get the directories and put them into the class path array
-    for (int i = 0; tokenizer.hasMoreTokens(); i++) {
-      classPath[i] = tokenizer.nextToken();
-    }
-  }
-
-  @TruffleBoundary
-  private String[] setupDefaultClassPath(final int directories) {
-    // Get the default system class path
-    String systemClassPath = System.getProperty("system.class.path");
-
-    // Compute the number of defaults
-    int defaults = (systemClassPath != null) ? 2 : 1;
-
-    // Allocate an array with room for the directories and the defaults
-    String[] result = new String[directories + defaults];
-
-    // Insert the system class path into the defaults section
-    if (systemClassPath != null) {
-      result[directories] = systemClassPath;
-    }
-
-    // Insert the current directory into the defaults section
-    result[directories + defaults - 1] = ".";
-
-    // Return the class path
-    return result;
-  }
-
-  private void printUsageAndExit() {
-    // Print the usage
-    println("Usage: som [-options] [args...]                          ");
-    println("                                                         ");
-    println("where options include:                                   ");
-    println("    -cp <directories separated by " + File.pathSeparator + ">");
-    println("                  set search path for application classes");
-    println("    -d            enable disassembling");
-
-    // Exit
-    System.exit(0);
   }
 
   /**
