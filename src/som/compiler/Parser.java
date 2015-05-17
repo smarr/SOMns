@@ -628,6 +628,7 @@ public final class Parser {
   }
 
   private ExpressionNode blockContents(final MethodBuilder builder) throws ParseError {
+    comment();
     if (accept(Or)) {
       locals(builder);
       expect(Or);
@@ -646,6 +647,8 @@ public final class Parser {
     List<ExpressionNode> expressions = new ArrayList<ExpressionNode>();
 
     while (true) {
+      comment();
+
       if (accept(Exit)) {
         expressions.add(result(builder));
         return createSequenceNode(coord, expressions);
