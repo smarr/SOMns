@@ -568,7 +568,10 @@ public final class Parser {
     } else if (accept(Equal)) {
     } else if (acceptOneOf(singleOpSyms)) {
     } else if (accept(OperatorSequence)) {
-    } else { expect(NONE); }
+    } else {
+      throw new ParseError("Unexpected symbol. Expected binary operator, "
+          + "but found %(found)s", Symbol.NONE, this);
+    }
     // Checkstyle: resume
 
     return symbolFor(s);
