@@ -239,6 +239,10 @@ public final class Parser {
     //                but, doesn't seem so useful, so, let's keep it simple
     if (isIdentifier(sym) || sym == Keyword) {
       messagePattern(primaryFactory);
+    } else {
+      // in the standard case, the primary factory method is #new
+      primaryFactory.addArgumentIfAbsent("self");
+      primaryFactory.setSignature(symbolFor("new"));
     }
 
     expect(Equal);

@@ -63,22 +63,22 @@ public final class ClassBuilder {
     this.classSide = false;
   }
 
+  /** The method that is used to instantiate the class object. */
   private final MethodBuilder instantiation;
+
+  /** The method that is used to initialize an instance. */
   private final MethodBuilder initializer;
 
   private final ArrayList<ExpressionNode> slotAndInitExprs = new ArrayList<>();
 
-  private SSymbol             name;
+  private SSymbol                 name;
   private AbstractMessageSendNode superclassResolution;
   private final LinkedHashMap<SSymbol, SlotDefinition> slots = new LinkedHashMap<>();
-  private final List<SInvokable> methods = new ArrayList<SInvokable>();
-  private final List<SInvokable> factoryMethods  = new ArrayList<SInvokable>();
+  private final List<SInvokable>  methods = new ArrayList<SInvokable>();
+  private final List<SInvokable>  factoryMethods  = new ArrayList<SInvokable>();
 
   private boolean classSide;
 
-  private SSymbol primaryFactoryMethodName;
-  private List<String> primaryFactoryArguments;
-  private SSymbol primaryFactoryMethodNameOfSuperClass;
   private ExpressionNode superclassFactorySend;
 
   public void setName(final SSymbol name) {
@@ -88,14 +88,6 @@ public final class ClassBuilder {
 
   public SSymbol getName() {
     return name;
-  }
-
-  public void setPrimaryFactoryMethodName(final SSymbol name) {
-    primaryFactoryMethodName = name;
-  }
-
-  public void setPrimaryFactoryArguments(final List<String> arguments) {
-    primaryFactoryArguments = arguments;
   }
 
   /**
@@ -205,8 +197,7 @@ public final class ClassBuilder {
 
   private SMethod assemblePrimaryFactoryMethod() {
     MethodBuilder builder = new MethodBuilder(this);
-    builder.setSignature(primaryFactoryMethodName);
-
+    builder.setSignature(initializer.getSignature());
     builder.addArgumentIfAbsent("self");
 
     // first create new Object
@@ -219,23 +210,18 @@ public final class ClassBuilder {
     // This is a bet on initializer methods being constructed well,
     // so that they return self
     ExpressionNode initializedObject = SNodeFactory.createMessageSend(
-        getInitializerName(primaryFactoryMethodName), args, null);
+        getInitializerName(initializer.getSignature()), args, null);
 
     return builder.assemble(initializedObject, AccessModifier.PROTECTED,
         Symbols.symbolFor("initialization"), null);
   }
 
   private SMethod assembleInitializationMethod() {
-    // first, we need to do a super send to the primary factor method
-    List<ExpressionNode> args = createFactoryMethodArgumentRead(initializer,
-        initializer.getReadNode("super", null));
-    ExpressionNode superInit = SNodeFactory.createMessageSend(
-        getInitializerName(primaryFactoryMethodNameOfSuperClass), args, null);
-
-    // after the initialization by the super class is finished, we need to
-    // evaluate the slot and init expressions
     List<ExpressionNode> allExprs = new ArrayList<ExpressionNode>(1 + slotAndInitExprs.size());
-    allExprs.add(superInit);
+    // first do initializer send to super class
+    allExprs.add(superclassFactorySend);
+
+    // then, evaluate the slot and init expressions
     allExprs.addAll(slotAndInitExprs);
     ExpressionNode body = SNodeFactory.createSequence(allExprs, null);
     return initializer.assemble(body, AccessModifier.PROTECTED,
@@ -246,12 +232,13 @@ public final class ClassBuilder {
       final MethodBuilder builder, final ExpressionNode receiver) {
     // then, call the initializer on it
     List<ExpressionNode> args = new ArrayList<>(
-        primaryFactoryMethodName.getNumberOfSignatureArguments());
-
+        initializer.getSignature().getNumberOfSignatureArguments());
     args.add(receiver);
 
-    if (primaryFactoryArguments != null) {
-      for (String arg : primaryFactoryArguments) {
+    String[] arguments = initializer.getArgumentNames();
+
+    for (String arg : arguments) {
+      if (!"self".equals(arg)) { // we already got self
         builder.addArgumentIfAbsent(arg.toString());
         args.add(builder.getReadNode(arg, null));
       }
@@ -263,7 +250,7 @@ public final class ClassBuilder {
     ExpressionNode superNode = initializer.getSuperReadNode(null);
     ExpressionNode superFactorySend = SNodeFactory.createMessageSend(
         getInitializerName(symbolFor("new")),
-        new ExpressionNode[] { superNode }, null);
+        new ExpressionNode[] {superNode}, null);
     return superFactorySend;
   }
 

@@ -94,6 +94,9 @@ public final class MethodBuilder {
     embeddedBlockMethods = new ArrayList<SMethod>();
   }
 
+  public String[] getArgumentNames() {
+    return arguments.keySet().toArray(new String[arguments.size()]);
+  }
   public void addEmbeddedBlockMethod(final SMethod blockMethod) {
     embeddedBlockMethods.add(blockMethod);
   }
@@ -179,6 +182,11 @@ public final class MethodBuilder {
   }
 
   private SourceSection getSourceSectionForMethod(final SourceSection ssBody) {
+    // we have a few synthetic methods, for which we do not yet have a source section
+    // TODO: improve that, have at least a hint to which elements in the code
+    //       those synthetic elements related
+    if (ssBody == null) { return null; } // TODO: better solution see ^^^
+
     String cls = holder.isClassSide() ? "_class" : "";
     SourceSection ssMethod = ssBody.getSource().createSection(
         holder.getName().getString() + cls + ">>" + signature.toString(),
