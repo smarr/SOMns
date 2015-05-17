@@ -77,6 +77,13 @@ public final class MessageSendNode {
     return new UninitializedMessageSendNode(selector, arguments, source);
   }
 
+  public static AbstractMessageSendNode adaptSymbol(final SSymbol newSelector,
+      final AbstractMessageSendNode node) {
+    assert node instanceof UninitializedMessageSendNode;
+    return new UninitializedMessageSendNode(newSelector, node.argumentNodes,
+        node.getSourceSection());
+  }
+
   public static AbstractMessageSendNode createForPerformNodes(final SSymbol selector) {
     return new UninitializedSymbolSendNode(selector, null);
   }
@@ -128,6 +135,10 @@ public final class MessageSendNode {
         final ExpressionNode[] arguments, final SourceSection source) {
       super(arguments, source);
       this.selector = selector;
+    }
+
+    public SSymbol getSelector() {
+      return selector;
     }
 
     @Override
