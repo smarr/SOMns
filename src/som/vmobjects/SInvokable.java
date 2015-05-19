@@ -131,7 +131,7 @@ public abstract class SInvokable extends SAbstractObject {
     return "Method(" + getHolder().getName().getString() + ">>" + getSignature().toString() + ")";
   }
 
-  public AccessModifier getAccessModifier() {
+  public final AccessModifier getAccessModifier() {
     return accessModifier;
   }
 
