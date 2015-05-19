@@ -23,6 +23,11 @@ public final class Classes {
 
   public static final SClass  booleanClass;
 
+  public static final SClass blockClass;
+  public static final SClass blockClass1;
+  public static final SClass blockClass2;
+  public static final SClass blockClass3;
+
   // These classes can be statically preinitialized.
   static {
     // Allocate the Metaclass classes
@@ -43,5 +48,10 @@ public final class Classes {
     stringClass     = Bootstrap.newEmptyClassWithItsClass("String");
     doubleClass     = Bootstrap.newEmptyClassWithItsClass("Double");
     booleanClass    = Bootstrap.newEmptyClassWithItsClass("Boolean");
+
+    blockClass  = Bootstrap.newEmptyClassWithItsClass("Block");
+    blockClass1 = Bootstrap.newEmptyClassWithItsClass("Block1");
+    blockClass2 = Bootstrap.newEmptyClassWithItsClass("Block2");
+    blockClass3 = Bootstrap.newEmptyClassWithItsClass("Block3");
   }
 }

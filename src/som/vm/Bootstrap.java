@@ -139,6 +139,11 @@ public final class Bootstrap {
     ClassDefinition doubleDef  = kernelModule.getEmbeddedClassDefinition("Double");
     ClassDefinition booleanDef = kernelModule.getEmbeddedClassDefinition("Boolean");
 
+    ClassDefinition blockDef  = kernelModule.getEmbeddedClassDefinition("Block");
+    ClassDefinition block1Def = kernelModule.getEmbeddedClassDefinition("Block1");
+    ClassDefinition block2Def = kernelModule.getEmbeddedClassDefinition("Block2");
+    ClassDefinition block3Def = kernelModule.getEmbeddedClassDefinition("Block3");
+
     // some basic assumptions about
     assert    topDef.getNumberOfSlots() == 0;
     assert  thingDef.getNumberOfSlots() == 0;
@@ -165,6 +170,11 @@ public final class Bootstrap {
      doubleDef.initializeClass(kernelObj, Classes.doubleClass,  Classes.valueClass);
     booleanDef.initializeClass(kernelObj, Classes.booleanClass, Classes.valueClass);
      symbolDef.initializeClass(kernelObj, Classes.symbolClass,  Classes.stringClass);
+
+     blockDef.initializeClass(kernelObj, Classes.blockClass,  Classes.objectClass);
+    block1Def.initializeClass(kernelObj, Classes.blockClass1, Classes.blockClass);
+    block2Def.initializeClass(kernelObj, Classes.blockClass2, Classes.blockClass1);
+    block3Def.initializeClass(kernelObj, Classes.blockClass3, Classes.blockClass2);
 
     Nil.nilObject.setClass(Classes.nilClass);
 

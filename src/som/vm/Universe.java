@@ -41,7 +41,6 @@ import java.io.IOException;
 import som.compiler.AccessModifier;
 import som.interpreter.Invokable;
 import som.interpreter.TruffleCompiler;
-import som.vm.constants.Blocks;
 import som.vm.constants.Globals;
 import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
@@ -63,8 +62,6 @@ public final class Universe {
     this.avoidExit    = false;
     this.alreadyInitialized = false;
     this.lastExitCode = 0;
-
-    this.blockClasses = new SClass[4];
   }
 
   public void exit(final int errorCode) {
@@ -159,8 +156,6 @@ public final class Universe {
     loadSystemClass(mutexClass);
     loadSystemClass(threadClass);
 
-    // Load the generic block class
-    blockClasses[0] = loadClass(symbolFor("Block"));
 
     // Setup the true and false objects
     trueObject  = newInstance(trueClass);
@@ -170,18 +165,10 @@ public final class Universe {
     systemClass  = loadClass(symbolFor("System"));
     systemObject = newInstance(systemClass);
 
-    // Load the remaining block classes
-    loadBlockClass(1);
-    loadBlockClass(2);
-    loadBlockClass(3);
-
     if (Globals.trueObject != trueObject) {
       errorExit("Initialization went wrong for class Globals");
     }
 
-    if (Blocks.blockClass1 != blockClasses[1]) {
-      errorExit("Initialization went wrong for class Blocks");
-    }
     objectSystemInitialized = true;
   }
 
@@ -228,29 +215,6 @@ public final class Universe {
     // Initialize the name of the system class
     systemClass.setName(symbolFor(name));
     systemClass.getSOMClass().setName(symbolFor(name + " class"));
-  }
-
-
-  public SClass getBlockClass(final int numberOfArguments) {
-    SClass result = blockClasses[numberOfArguments];
-    assert result != null || numberOfArguments == 0;
-    return result;
-  }
-
-  private void loadBlockClass(final int numberOfArguments) {
-    // Compute the name of the block class with the given number of
-    // arguments
-    SSymbol name = symbolFor("Block" + numberOfArguments);
-
-
-    // Get the block class for blocks with the given number of arguments
-    SClass result = loadClass(name, null);
-
-    // Add the appropriate value primitive to the block class
-    result.addInstancePrimitive(SBlock.getEvaluationPrimitive(
-        numberOfArguments, this, result), true);
-
-    blockClasses[numberOfArguments] = result;
   }
 
   @TruffleBoundary
@@ -385,9 +349,6 @@ public final class Universe {
   //       with the use of system.exit in SOM to enable testing
   @CompilationFinal private boolean             avoidExit;
   private int                                   lastExitCode;
-
-  // Optimizations
-  private final SClass[] blockClasses;
 
   // Latest instance
   // WARNING: this is problematic with multiple interpreters in the same VM...
