@@ -59,7 +59,6 @@ import static som.compiler.Symbol.Pound;
 import static som.compiler.Symbol.STString;
 import static som.compiler.Symbol.SlotMutableAssign;
 import static som.compiler.Symbol.Star;
-import static som.interpreter.SNodeFactory.createGlobalRead;
 import static som.interpreter.SNodeFactory.createMessageSend;
 import static som.interpreter.SNodeFactory.createSequence;
 import static som.vm.Symbols.symbolFor;
@@ -83,6 +82,7 @@ import som.interpreter.nodes.literals.BlockNode.BlockNodeWithContext;
 import som.interpreter.nodes.literals.DoubleLiteralNode;
 import som.interpreter.nodes.literals.IntegerLiteralNode;
 import som.interpreter.nodes.literals.LiteralNode;
+import som.interpreter.nodes.literals.NilLiteralNode;
 import som.interpreter.nodes.literals.StringLiteralNode;
 import som.interpreter.nodes.literals.SymbolLiteralNode;
 import som.interpreter.nodes.specialized.BooleanInlinedLiteralNode.AndInlinedLiteralNode;
@@ -672,7 +672,7 @@ public final class Parser {
   private ExpressionNode createSequenceNode(final SourceCoordinate coord,
       final List<ExpressionNode> expressions) {
     if (expressions.size() == 0) {
-      return createGlobalRead("nil", getSource(coord));
+      return new NilLiteralNode(getSource(coord));
     } else if (expressions.size() == 1) {
       return expressions.get(0);
     }

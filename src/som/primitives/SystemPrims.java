@@ -1,7 +1,6 @@
 package som.primitives;
 
 import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vm.Universe;
 import som.vm.constants.Globals;
@@ -42,20 +41,6 @@ public final class SystemPrims {
     public final Object doSObject(final SObject receiver, final long error) {
       universe.exit((int) error);
       return receiver;
-    }
-  }
-
-  @ImportStatic(SystemPrims.class)
-  @GenerateNodeFactory
-  public abstract static class GlobalPutPrim extends TernaryExpressionNode {
-    private final Universe universe;
-    public GlobalPutPrim()  { this.universe = Universe.current(); }
-
-    @Specialization(guards = "receiverIsSystemObject(receiver)")
-    public final Object doSObject(final SObject receiver, final SSymbol global,
-        final Object value) {
-      universe.setGlobal(global, value);
-      return value;
     }
   }
 

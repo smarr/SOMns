@@ -44,7 +44,6 @@ import static som.vm.constants.ThreadClasses.mutexClass;
 import static som.vm.constants.ThreadClasses.threadClass;
 
 import java.io.IOException;
-import java.util.HashMap;
 
 import som.compiler.AccessModifier;
 import som.interpreter.Invokable;
@@ -69,35 +68,7 @@ import com.oracle.truffle.api.frame.MaterializedFrame;
 
 public final class Universe {
 
-  /**
-   * Associations are handles for globals with a fixed
-   * SSymbol and a mutable value.
-   */
-  public static final class Association {
-    private final SSymbol    key;
-    @CompilationFinal private Object  value;
-
-    public Association(final SSymbol key, final Object value) {
-      this.key   = key;
-      this.value = value;
-    }
-
-    public SSymbol getKey() {
-      return key;
-    }
-
-    public Object getValue() {
-      return value;
-    }
-
-    public void setValue(final Object value) {
-      TruffleCompiler.transferToInterpreterAndInvalidate("Changed global");
-      this.value = value;
-    }
-  }
-
   private Universe() {
-    this.globals      = new HashMap<SSymbol, Association>();
     this.avoidExit    = false;
     this.alreadyInitialized = false;
     this.lastExitCode = 0;
@@ -233,12 +204,6 @@ public final class Universe {
     systemClass  = loadClass(symbolFor("System"));
     systemObject = newInstance(systemClass);
 
-    // Put special objects into the dictionary of globals
-    setGlobal("nil",    nilObject);
-    setGlobal("true",   trueObject);
-    setGlobal("false",  falseObject);
-    setGlobal("system", systemObject);
-
     // Load the remaining block classes
     loadBlockClass(1);
     loadBlockClass(2);
@@ -297,44 +262,8 @@ public final class Universe {
     // Initialize the name of the system class
     systemClass.setName(symbolFor(name));
     systemClass.getSOMClass().setName(symbolFor(name + " class"));
-
-    // Insert the system class into the dictionary of globals
-    setGlobal(systemClass.getName(), systemClass);
   }
 
-  @TruffleBoundary
-  public boolean hasGlobal(final SSymbol name) {
-    return globals.containsKey(name);
-  }
-
-  @TruffleBoundary
-  public Object getGlobal(final SSymbol name) {
-    Association assoc = globals.get(name);
-    if (assoc == null) {
-      return null;
-    }
-    return assoc.getValue();
-  }
-
-  @TruffleBoundary
-  public Association getGlobalsAssociation(final SSymbol name) {
-    return globals.get(name);
-  }
-
-  public void setGlobal(final String name, final Object value) {
-    setGlobal(symbolFor(name), value);
-  }
-
-  @TruffleBoundary
-  public void setGlobal(final SSymbol name, final Object value) {
-    Association assoc = globals.get(name);
-    if (assoc == null) {
-      assoc = new Association(name, value);
-      globals.put(name, assoc);
-    } else {
-      assoc.setValue(value);
-    }
-  }
 
   public SClass getBlockClass(final int numberOfArguments) {
     SClass result = blockClasses[numberOfArguments];
@@ -347,7 +276,6 @@ public final class Universe {
     // arguments
     SSymbol name = symbolFor("Block" + numberOfArguments);
 
-    assert getGlobal(name) == null;
 
     // Get the block class for blocks with the given number of arguments
     SClass result = loadClass(name, null);
@@ -356,22 +284,13 @@ public final class Universe {
     result.addInstancePrimitive(SBlock.getEvaluationPrimitive(
         numberOfArguments, this, result), true);
 
-    // Insert the block class into the dictionary of globals
-    setGlobal(name, result);
-
     blockClasses[numberOfArguments] = result;
   }
 
   @TruffleBoundary
   public SClass loadClass(final SSymbol name) {
-    // Check if the requested class is already in the dictionary of globals
-    SClass result = (SClass) getGlobal(name);
-    if (result != null) { return result; }
-
-    result = loadClass(name, null);
+    SClass result = loadClass(name, null);
     loadPrimitives(result, false);
-
-    setGlobal(name, result);
 
     return result;
   }
@@ -495,8 +414,6 @@ public final class Universe {
   @CompilationFinal private SClass  trueClass;
   @CompilationFinal private SClass  falseClass;
   @CompilationFinal private SClass  systemClass;
-
-  private final HashMap<SSymbol, Association>   globals;
 
   // TODO: this is not how it is supposed to be... it is just a hack to cope
   //       with the use of system.exit in SOM to enable testing
