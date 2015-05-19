@@ -332,7 +332,11 @@ public final class Parser {
 
     expect(Colon);
     expect(NewTerm);
-    category(clsBuilder);
+
+    while (sym != EndTerm) {
+      category(clsBuilder);
+    }
+
     expect(EndTerm);
   }
 
