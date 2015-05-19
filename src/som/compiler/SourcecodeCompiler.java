@@ -39,15 +39,14 @@ import com.oracle.truffle.api.source.Source;
 public final class SourcecodeCompiler {
 
   @TruffleBoundary
-  public static ClassDefinition compileModule(final String filename,
-      final SClass systemClass, final Universe universe)
+  public static ClassDefinition compileModule(final File file)
       throws IOException {
-    FileReader stream = new FileReader(filename);
+    FileReader stream = new FileReader(file);
 
-    Source source = Source.fromFileName(filename);
-    Parser parser = new Parser(stream, new File(filename).length(), source, universe);
+    Source source = Source.fromFileName(file.getPath());
+    Parser parser = new Parser(stream, file.length(), source);
 
-    ClassDefinition result = compile(parser, systemClass, universe);
+    ClassDefinition result = compile(parser);
     return result;
   }
 
@@ -61,8 +60,7 @@ public final class SourcecodeCompiler {
 //    return result;
   }
 
-  private static ClassDefinition compile(final Parser parser, final SClass systemClass,
-      final Universe universe) {
+  private static ClassDefinition compile(final Parser parser) {
     ClassBuilder clsBuilder = new ClassBuilder();
 
     try {
@@ -70,13 +68,6 @@ public final class SourcecodeCompiler {
     } catch (ParseError pe) {
       Universe.errorExit(pe.toString());
     }
-
-    if (systemClass == null) {
-      return clsBuilder.assemble();
-    } else {
-      clsBuilder.assembleSystemClass(systemClass);
-      throw new NotYetImplementedException();
-//      return systemClass;
-    }
+    return clsBuilder.assemble();
   }
 }
