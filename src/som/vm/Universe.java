@@ -26,18 +26,11 @@
 package som.vm;
 
 import static som.vm.Symbols.symbolFor;
-import static som.vm.constants.Classes.arrayClass;
 import static som.vm.constants.Classes.booleanClass;
 import static som.vm.constants.Classes.classClass;
-import static som.vm.constants.Classes.doubleClass;
-import static som.vm.constants.Classes.integerClass;
-import static som.vm.constants.Classes.metaclassClass;
 import static som.vm.constants.Classes.methodClass;
-import static som.vm.constants.Classes.nilClass;
 import static som.vm.constants.Classes.objectClass;
 import static som.vm.constants.Classes.primitiveClass;
-import static som.vm.constants.Classes.stringClass;
-import static som.vm.constants.Classes.symbolClass;
 import static som.vm.constants.ThreadClasses.conditionClass;
 import static som.vm.constants.ThreadClasses.delayClass;
 import static som.vm.constants.ThreadClasses.mutexClass;
@@ -50,7 +43,6 @@ import som.interpreter.Invokable;
 import som.interpreter.TruffleCompiler;
 import som.vm.constants.Blocks;
 import som.vm.constants.Globals;
-import som.vm.constants.Nil;
 import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
@@ -58,7 +50,6 @@ import som.vmobjects.SInvokable;
 import som.vmobjects.SInvokable.SMethod;
 import som.vmobjects.SInvokable.SPrimitive;
 import som.vmobjects.SObject;
-import som.vmobjects.SObjectWithoutFields;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerAsserts;
@@ -140,25 +131,10 @@ public final class Universe {
       alreadyInitialized = true;
     }
 
-    // Allocate the nil object
-    SObjectWithoutFields nilObject = Nil.nilObject;
-
-    // Setup the class reference for the nil object
-    nilObject.setClass(nilClass);
-
-    // Initialize the system classes.
-    initializeSystemClass(objectClass,            null, "Object");
-    initializeSystemClass(classClass,      objectClass, "Class");
-    initializeSystemClass(metaclassClass,   classClass, "Metaclass");
-    initializeSystemClass(nilClass,        objectClass, "Nil");
-    initializeSystemClass(arrayClass,      objectClass, "Array");
     initializeSystemClass(methodClass,     objectClass, "Method");
-    initializeSystemClass(stringClass,     objectClass, "String");
-    initializeSystemClass(symbolClass,     stringClass, "Symbol");
-    initializeSystemClass(integerClass,    objectClass, "Integer");
     initializeSystemClass(primitiveClass,  objectClass, "Primitive");
-    initializeSystemClass(doubleClass,     objectClass, "Double");
-    initializeSystemClass(booleanClass,    objectClass, "Boolean");
+
+
 
     // Thread support classes
     initializeSystemClass(conditionClass, objectClass, "Condition");
@@ -173,18 +149,8 @@ public final class Universe {
     initializeSystemClass(falseClass,     booleanClass, "False");
 
     // Load methods and fields into the system classes
-    loadSystemClass(objectClass);
-    loadSystemClass(classClass);
-    loadSystemClass(metaclassClass);
-    loadSystemClass(nilClass);
-    loadSystemClass(arrayClass);
     loadSystemClass(methodClass);
-    loadSystemClass(symbolClass);
-    loadSystemClass(integerClass);
     loadSystemClass(primitiveClass);
-    loadSystemClass(stringClass);
-    loadSystemClass(doubleClass);
-    loadSystemClass(booleanClass);
     loadSystemClass(trueClass);
     loadSystemClass(falseClass);
 
