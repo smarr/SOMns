@@ -32,6 +32,9 @@ public final class Classes {
   static {
     // Allocate the Metaclass classes
     metaclassClass = Bootstrap.newMetaclassClass();
+    classClass     = new SClass();
+    SClass classClassClass = new SClass();
+    Bootstrap.initializeClassAndItsClass("Class", classClass, classClassClass);
 
     // Allocate the rest of the system classes
     topClass        = Bootstrap.newEmptyClassWithItsClass("Top");
@@ -39,7 +42,6 @@ public final class Classes {
     objectClass     = Bootstrap.newEmptyClassWithItsClass("Object");
     valueClass      = Bootstrap.newEmptyClassWithItsClass("Value");
     nilClass        = Bootstrap.newEmptyClassWithItsClass("Nil");
-    classClass      = Bootstrap.newEmptyClassWithItsClass("Class");
     arrayClass      = Bootstrap.newEmptyClassWithItsClass("Array");
     symbolClass     = Bootstrap.newEmptyClassWithItsClass("Symbol");
     methodClass     = Bootstrap.newEmptyClassWithItsClass("Method");

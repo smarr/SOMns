@@ -111,16 +111,24 @@ public final class Bootstrap {
 
   public static SClass newEmptyClassWithItsClass(final String name) {
     SClass clazz = new SClass();
-    clazz.setName(Symbols.symbolFor(name));
-
-    // Setup the metaclass hierarchy
     SClass clazzClazz = new SClass();
-    clazzClazz.setName(Symbols.symbolFor(name + " class"));
-    clazz.setClass(clazzClazz);
-    clazz.getSOMClass().setClass(metaclassClass);
+
+    initializeClassAndItsClass(name, clazz, clazzClazz);
 
     // Return the freshly allocated system class
     return clazz;
+  }
+
+  public static void initializeClassAndItsClass(final String name,
+      final SClass clazz, final SClass clazzClazz) {
+    clazz.setName(Symbols.symbolFor(name));
+
+    // Setup the metaclass hierarchy
+    clazzClazz.setName(Symbols.symbolFor(name + " class"));
+    clazz.setClass(clazzClazz);
+
+    clazzClazz.setClass(metaclassClass);
+    clazzClazz.setSuperClass(Classes.classClass);
   }
 
   public static void initializeObjectSystem() {
