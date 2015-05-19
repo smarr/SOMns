@@ -30,7 +30,6 @@ import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.literals.BlockNode.BlockNodeWithContext;
 import som.vm.NotYetImplementedException;
 import som.vm.Symbols;
-import som.vm.Universe;
 import som.vmobjects.SInvokable.SMethod;
 import som.vmobjects.SSymbol;
 
@@ -53,11 +52,11 @@ public final class SNodeFactory {
   }
 
   public static GlobalNode createGlobalRead(final String name,
-      final Universe universe, final SourceSection source) {
-    return createGlobalRead(Symbols.symbolFor(name), universe, source);
+      final SourceSection source) {
+    return createGlobalRead(Symbols.symbolFor(name), source);
   }
   public static GlobalNode createGlobalRead(final SSymbol name,
-      final Universe universe, final SourceSection source) {
+      final SourceSection source) {
     return new UninitializedGlobalReadNode(name, source);
   }
 
