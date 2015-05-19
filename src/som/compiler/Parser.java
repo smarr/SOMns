@@ -201,8 +201,7 @@ public final class Parser {
     }
   }
 
-  public Parser(final Reader reader, final long fileSize, final Source source, final Universe universe) {
-    this.universe = universe;
+  public Parser(final Reader reader, final long fileSize, final Source source) {
     this.source   = source;
 
     sym = NONE;
