@@ -166,7 +166,8 @@ public final class ClassBuilder {
     methods.add(initializationMethod);
 
     ClassDefinition clsDef = new ClassDefinition(name, classObjectInstantiation,
-        methods.toArray(new SMethod[0]), factoryMethods.toArray(new SMethod[0]));
+        methods.toArray(new SInvokable[0]),
+        factoryMethods.toArray(new SMethod[0]), embeddedClasses, slots);
 
     return clsDef;
   }
