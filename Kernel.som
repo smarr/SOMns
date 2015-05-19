@@ -20,7 +20,10 @@ THE SOFTWARE.
 *)
 class Kernel usingPlatform: platform vmMirror: vmMirror = (
 | private vmMirror = vmMirror.
-  private system   = platform system. |
+  private system   = platform system.
+  private ObjectSlot = Object.
+  private ValueSlot  = Value.
+|
 )(
   private class Top = ()()
   
@@ -45,6 +48,12 @@ class Kernel usingPlatform: platform vmMirror: vmMirror = (
     'Converting, Convenience'
     , element = ( ^ (Vector new append: self) append: element )
     hashcode  = ( ^ vmMirror objHashcode: self )
+    
+    'Newspeak requirements'
+    (* This works around restrictions by the absense of a global scope,
+       we use inheritance instead. *)
+    public Object = ( ^ ObjectSlot )
+    public Value  = ( ^ ValueSlot  )
     
     'Nil'
     public isNil  = ( ^ false )
