@@ -99,7 +99,6 @@ public class BasicInterpreterTests {
         {"BlockInlining", "testDeepDeepNestedFalse",                 43, Long.class },
 
         {"BlockInlining", "testToDoNestDoNestIfTrue",                 2, Long.class },
-
     });
   }
 
@@ -149,10 +148,7 @@ public class BasicInterpreterTests {
         VM.standardKernelFile);
     Bootstrap.initializeObjectSystem();
 
-//    TODO:  u.setAvoidExit(true);
-
     Object actualResult = Bootstrap.execute(testSelector);
-
     assertEqualsSOMValue(expectedResult, actualResult);
   }
 }
