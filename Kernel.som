@@ -471,4 +471,40 @@ class Kernel usingPlatform: platform vmMirror: vmMirror = (
       ^ arr
     )
   )
+  
+  public class Block = Object ()
+  (
+    'Evaluation'
+    public value = ( ^ vmMirror blockValue: self )
+  
+    'Looping'
+    public whileFalse: block = ( 
+      [ self value not ] whileTrue: block 
+    )
+  
+    public whileTrue: block = (
+      self value ifFalse: [ ^ nil ].
+      block value.
+      self restart
+    )
+  
+    'Restarting'
+    public restart = ( ^ vmMirror blockRestart: self )
+  )
+  
+  protected class Block1 = Block ()()
+  protected class Block2 = Block ()
+  (
+    'Evaluating'
+    public value           = ( self value: nil )
+    public value: argument = ( ^ vmMirror blockValue: self with: argument )
+  )
+  
+  protected class Block3 = Block ()
+  (
+    'Evaluating'
+    public value                  = ( self value: nil with: nil )
+    public value: arg             = ( self value: arg with: nil )
+    public value: arg1 with: arg2 = ( ^ vmMirror blockValue: self with: arg1 with: arg2 )
+  )
 )
