@@ -91,7 +91,6 @@ import som.interpreter.nodes.specialized.IfInlinedLiteralNode;
 import som.interpreter.nodes.specialized.IfTrueIfFalseInlinedLiteralsNode;
 import som.interpreter.nodes.specialized.IntToDoInlinedLiteralsNodeGen;
 import som.interpreter.nodes.specialized.whileloops.WhileInlinedLiteralsNode;
-import som.vm.Universe;
 import som.vmobjects.SInvokable.SMethod;
 import som.vmobjects.SSymbol;
 
@@ -100,7 +99,6 @@ import com.oracle.truffle.api.source.SourceSection;
 
 public final class Parser {
 
-  private final Universe            universe;
   private final Lexer               lexer;
   private final Source              source;
 
@@ -133,8 +131,6 @@ public final class Parser {
   public String toString() {
     return "Parser(" + source.getName() + ", " + this.getCoordinate().toString() + ")";
   }
-
-
 
   public static class ParseError extends Exception {
     private static final long serialVersionUID = 425390202979033628L;
@@ -672,7 +668,7 @@ public final class Parser {
   private ExpressionNode createSequenceNode(final SourceCoordinate coord,
       final List<ExpressionNode> expressions) {
     if (expressions.size() == 0) {
-      return createGlobalRead("nil", universe, getSource(coord));
+      return createGlobalRead("nil", getSource(coord));
     } else if (expressions.size() == 1) {
       return expressions.get(0);
     }
