@@ -1,11 +1,14 @@
 package som.vm.constants;
 
-import som.vm.Universe;
+import som.vm.Bootstrap;
 import som.vmobjects.SClass;
 
 
 public final class Classes {
+  public static final SClass  topClass;
+  public static final SClass  thingClass;
   public static final SClass  objectClass;
+  public static final SClass  valueClass;
   public static final SClass  classClass;
   public static final SClass  metaclassClass;
 
@@ -23,20 +26,22 @@ public final class Classes {
   // These classes can be statically preinitialized.
   static {
     // Allocate the Metaclass classes
-    metaclassClass = Universe.newMetaclassClass();
+    metaclassClass = Bootstrap.newMetaclassClass();
 
     // Allocate the rest of the system classes
-
-    objectClass     = Universe.newSystemClass();
-    nilClass        = Universe.newSystemClass();
-    classClass      = Universe.newSystemClass();
-    arrayClass      = Universe.newSystemClass();
-    symbolClass     = Universe.newSystemClass();
-    methodClass     = Universe.newSystemClass();
-    integerClass    = Universe.newSystemClass();
-    primitiveClass  = Universe.newSystemClass();
-    stringClass     = Universe.newSystemClass();
-    doubleClass     = Universe.newSystemClass();
-    booleanClass    = Universe.newSystemClass();
+    topClass        = Bootstrap.newEmptyClassWithItsClass("Top");
+    thingClass      = Bootstrap.newEmptyClassWithItsClass("Thing");
+    objectClass     = Bootstrap.newEmptyClassWithItsClass("Object");
+    valueClass      = Bootstrap.newEmptyClassWithItsClass("Value");
+    nilClass        = Bootstrap.newEmptyClassWithItsClass("Nil");
+    classClass      = Bootstrap.newEmptyClassWithItsClass("Class");
+    arrayClass      = Bootstrap.newEmptyClassWithItsClass("Array");
+    symbolClass     = Bootstrap.newEmptyClassWithItsClass("Symbol");
+    methodClass     = Bootstrap.newEmptyClassWithItsClass("Method");
+    integerClass    = Bootstrap.newEmptyClassWithItsClass("Integer");
+    primitiveClass  = Bootstrap.newEmptyClassWithItsClass("Primitive");
+    stringClass     = Bootstrap.newEmptyClassWithItsClass("String");
+    doubleClass     = Bootstrap.newEmptyClassWithItsClass("Double");
+    booleanClass    = Bootstrap.newEmptyClassWithItsClass("Boolean");
   }
 }
