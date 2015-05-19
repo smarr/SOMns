@@ -346,25 +346,26 @@ class Kernel usingPlatform: platform vmMirror: vmMirror = (
   public class Array = Object ()
   (
     'Accessing'
-    at: index            = ( ^ vmMirror array: self at: index )
-    at: index put: value = ( ^ vmMirror array: self at: index put: value )
-    length               = ( ^ vmMirror arrayLength: self )
-    putAll: block        = ( self doIndexes: [ :i |
-                               self at: i put: block value ] )
-    first = ( ^ self at: 1 )
-    last  = ( ^ self at: self length )
+    public at: index            = ( ^ vmMirror array: self at: index )
+    public at: index put: value = ( ^ vmMirror array: self at: index put: value )
+    public length               = ( ^ vmMirror arrayLength: self )
+    public putAll: block        = ( self doIndexes: [ :i |
+                                      self at: i put: block value ] )
+    public first = ( ^ self at: 1 )
+    public last  = ( ^ self at: self length )
 
     'Iterating'
-    do: block            = ( self doIndexes: [ :i |
-                               block value: (self at: i) ] )
-    doIndexes: block     = ( 1 to: self length do: [:i |
-                               block value: i. ] )
+    public do: block            = ( self doIndexes: [ :i |
+                                      block value: (self at: i) ] )
+    public doIndexes: block     = ( 1 to: self length do: [:i |
+                                      block value: i. ] )
 
-    from: start to: end do: block = ( | i |
-      start to: end do: [:i | block value: (self at: i) ] )
+    public from: start to: end do: block = ( | i |
+                                             start to: end do: [:i |
+                                               block value: (self at: i) ] )
   
     'Copying (inclusively)'
-    copyFrom: start to: end = ( | result i |
+    public copyFrom: start to: end = ( | result i |
       result := Array new: end - start + 1.
       i := 1.
       self from: start to: end do: [ :e |
@@ -373,9 +374,9 @@ class Kernel usingPlatform: platform vmMirror: vmMirror = (
       ^ result
     )
   
-    copyFrom: start = ( ^self copyFrom: start to: self length )
+    public copyFrom: start = ( ^self copyFrom: start to: self length )
   
-    replaceFrom: start to: stop with: replacement startingAt: repStart = (
+    public replaceFrom: start to: stop with: replacement startingAt: repStart = (
       (* This destructively replaces elements from start to stop in the
       receiver starting at index, repStart, in the sequenceable collection,
       replacementCollection. Answer the receiver. No range checks are 
@@ -387,44 +388,44 @@ class Kernel usingPlatform: platform vmMirror: vmMirror = (
         whileTrue: [self at: index put: (replacement at: repOff + index)]
     )
 
-    copy = ( ^ self copyFrom: 1 )
+    public copy = ( ^ self copyFrom: 1 )
   
     'Numerical'
-    sum     = ( ^ self inject: 0 into: [ :sub :elem | sub + elem ] )
-    average = ( ^ self sum / self length )
+    public sum     = ( ^ self inject: 0 into: [ :sub :elem | sub + elem ] )
+    public average = ( ^ self sum / self length )
                               
     'Containment check'
-    contains: element = ( self do: [ :e | e = element ifTrue: [ ^ true ] ].
+    public contains: element = ( self do: [ :e | e = element ifTrue: [ ^ true ] ].
                           ^ false )
-    indexOf: element = (
+    public indexOf: element = (
       self doIndexes: [ :i | (self at: i) = element ifTrue: [ ^ i ]].
       ^ nil
     )
   
-    lastIndexOf: element = (
+    public lastIndexOf: element = (
       self length downTo: 1 do: [: i | (self at: i) = element ifTrue: [ ^ i ]].
       ^ nil
     )
   
     'Collection'
-    collect: aBlock = (
+    public collect: aBlock = (
       | result |
       result := Array new: self length.
       self doIndexes: [ :i | result at: i put: (aBlock value: (self at: i)) ].
       ^ result
     )
 
-    inject: sub into: aBlock = ( | next |
+    public inject: sub into: aBlock = ( | next |
       next := sub.
       self do: [ :e | next := aBlock value: next with: e ].
       ^ next
     )
   
-    reject: aBlock = (
+    public reject: aBlock = (
       ^ self select: [:element | (aBlock value: element) == false ]
     )
   
-    select: aBlock = (
+    public select: aBlock = (
       | newCollection |
       newCollection := Vector new: self length.
       self do: [:each | (aBlock value: each)  
@@ -432,7 +433,7 @@ class Kernel usingPlatform: platform vmMirror: vmMirror = (
       ^ newCollection
     )
   
-    union: aCollection = (
+    public union: aCollection = (
       | new |
       new := Set new.
       new addAll: self.
@@ -440,21 +441,20 @@ class Kernel usingPlatform: platform vmMirror: vmMirror = (
       ^ new
     )
   ) : (
-  
     'Allocation'
-    new                        = ( ^ self new: 0 )
-    new: length                = ( ^ vmMirror arrayNew: length )
-    new: length withAll: block = ( ^ (self new: length) putAll: block )
+    public new                        = ( ^ self new: 0 )
+    public new: length                = ( ^ vmMirror arrayNew: length )
+    public new: length withAll: block = ( ^ (self new: length) putAll: block )
 
     'Convenience'
-    with: a = (
+    public with: a = (
       | arr |
       arr := self new: 1.
       arr at: 1 put: a.
       ^ arr
     )
   
-    with: a with: b            = (
+    public with: a with: b = (
       | arr |
       arr := self new: 2.
       arr at: 1 put: a.
@@ -462,7 +462,7 @@ class Kernel usingPlatform: platform vmMirror: vmMirror = (
       ^ arr
     )
 
-    with: a with: b with: c    = (
+    public with: a with: b with: c = (
       | arr |
       arr := self new: 3.
       arr at: 1 put: a.
