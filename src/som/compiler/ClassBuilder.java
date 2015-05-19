@@ -27,6 +27,7 @@ package som.compiler;
 import static som.vm.Symbols.symbolFor;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -74,8 +75,8 @@ public final class ClassBuilder {
   private SSymbol                 name;
   private AbstractMessageSendNode superclassResolution;
   private final LinkedHashMap<SSymbol, SlotDefinition> slots = new LinkedHashMap<>();
-  private final List<SInvokable>  methods = new ArrayList<SInvokable>();
-  private final List<SInvokable>  factoryMethods  = new ArrayList<SInvokable>();
+  private final HashMap<SSymbol, SInvokable> methods = new HashMap<SSymbol, SInvokable>();
+  private final HashMap<SSymbol, SInvokable> factoryMethods = new HashMap<SSymbol, SInvokable>();
 
   private final LinkedHashMap<SSymbol, ClassDefinition> embeddedClasses = new LinkedHashMap<>();
 
@@ -120,9 +121,9 @@ public final class ClassBuilder {
 
   public void addMethod(final SInvokable meth) {
     if (!classSide) {
-      methods.add(meth);
+      methods.put(meth.getSignature(), meth);
     } else {
-      factoryMethods.add(meth);
+      factoryMethods.put(meth.getSignature(), meth);
     }
   }
 
@@ -162,12 +163,12 @@ public final class ClassBuilder {
     SMethod classObjectInstantiation = assembleClassObjectInstantiationMethod();
     SMethod primaryFactory = assemblePrimaryFactoryMethod();
     SMethod initializationMethod = assembleInitializationMethod();
-    factoryMethods.add(primaryFactory);
-    methods.add(initializationMethod);
+    factoryMethods.put(primaryFactory.getSignature(), primaryFactory);
+    methods.put(initializationMethod.getSignature(), initializationMethod);
 
     ClassDefinition clsDef = new ClassDefinition(name, classObjectInstantiation,
-        methods.toArray(new SInvokable[0]),
-        factoryMethods.toArray(new SMethod[0]), embeddedClasses, slots);
+        methods,
+        factoryMethods, embeddedClasses, slots);
 
     return clsDef;
   }

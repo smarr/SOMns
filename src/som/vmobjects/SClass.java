@@ -26,37 +26,31 @@ package som.vmobjects;
 
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
 
-import java.lang.reflect.Constructor;
+import java.util.HashMap;
 
+import som.compiler.AccessModifier;
+import som.compiler.ClassDefinition.SlotDefinition;
 import som.interpreter.objectstorage.ObjectLayout;
-import som.primitives.Primitives;
-import som.vm.Universe;
-import som.vm.constants.Nil;
-import som.vmobjects.SInvokable.SPrimitive;
+import som.vm.constants.Classes;
 
-import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
 public final class SClass extends SObjectWithoutFields {
 
-  @CompilationFinal private SObjectWithoutFields superclass;
+  @CompilationFinal private SClass superclass;
   @CompilationFinal private SSymbol name;
-  @CompilationFinal private SArray  instanceInvokables;
-  @CompilationFinal private SArray  instanceFields;
+
+  @CompilationFinal private HashMap<SSymbol, SInvokable>     instanceInvokables;
+  @CompilationFinal private HashMap<SSymbol, SlotDefinition> instanceSlots;
 
   @CompilationFinal private ObjectLayout layoutForInstances;
 
-  public SClass() {
-    // Initialize this class by calling the super constructor with the given
-    // value
-    this.superclass = Nil.nilObject;
-  }
+  public SClass() { }
 
   public SClass(final SClass clazz) {
     super(clazz);
-    this.superclass = Nil.nilObject;
   }
 
   public SObjectWithoutFields getSuperClass() {
@@ -68,100 +62,51 @@ public final class SClass extends SObjectWithoutFields {
     superclass = value;
   }
 
-  public boolean hasSuperClass() {
-    return superclass != Nil.nilObject;
-  }
-
   public SSymbol getName() {
     return name;
   }
 
   public void setName(final SSymbol value) {
     transferToInterpreterAndInvalidate("SClass.setName");
+    assert name == null || name == value; // should not reset it, let's get the initialization right instead
     name = value;
   }
 
-  public SArray getInstanceFields() {
-    return instanceFields;
-  }
-
-  public void setInstanceFields(final SArray fields) {
+  public void setInstanceSlots(final HashMap<SSymbol, SlotDefinition> slots) {
     transferToInterpreterAndInvalidate("SClass.setInstanceFields");
-    instanceFields = fields;
+    instanceSlots = slots;
     if (layoutForInstances == null ||
-        instanceFields.getObjectStorage().length != layoutForInstances.getNumberOfFields()) {
-      layoutForInstances = new ObjectLayout(
-          fields.getObjectStorage().length, this);
+        slots.size() != layoutForInstances.getNumberOfFields()) {
+      layoutForInstances = new ObjectLayout(slots.size(), this);
     }
   }
 
-  public SArray getInstanceInvokables() {
-    return instanceInvokables;
-  }
-
-  public void setInstanceInvokables(final SArray value) {
+  public void setInstanceInvokables(final HashMap<SSymbol, SInvokable> value) {
     transferToInterpreterAndInvalidate("SClass.setInstanceInvokables");
     instanceInvokables = value;
-
-    // Make sure this class is the holder of all invokables in the array
-    for (int i = 0; i < getNumberOfInstanceInvokables(); i++) {
-      ((SInvokable) instanceInvokables.getObjectStorage()[i]).setHolder(this);
+    for (SInvokable invokable : value.values()) {
+      invokable.setHolder(this);
     }
-  }
-
-  public int getNumberOfInstanceInvokables() {
-    // Return the number of instance invokables in this class
-    return instanceInvokables.getObjectStorage().length;
-  }
-
-  public SInvokable getInstanceInvokable(final int index) {
-    return (SInvokable) instanceInvokables.getObjectStorage()[index];
-  }
-
-  public void setInstanceInvokable(final int index, final SInvokable value) {
-    CompilerAsserts.neverPartOfCompilation();
-    // Set this class as the holder of the given invokable
-    value.setHolder(this);
-
-    instanceInvokables.getObjectStorage()[index] = value;
-
   }
 
   @TruffleBoundary
-  public SInvokable lookupInvokable(final SSymbol selector) {
-    SInvokable invokable;
+  public SInvokable lookupInvokable(final SSymbol selector, final AccessModifier hasAtLeast) {
+    SInvokable invokable = instanceInvokables.get(selector);
 
-    // Lookup invokable with given signature in array of instance invokables
-    for (int i = 0; i < getNumberOfInstanceInvokables(); i++) {
-      // Get the next invokable in the instance invokable array
-      invokable = getInstanceInvokable(i);
-
-      // Return the invokable if the signature matches
-      if (invokable.getSignature() == selector) {
-        return invokable;
-      }
+    if (invokable != null &&
+        invokable.getAccessModifier().ordinal() >= hasAtLeast.ordinal()) {
+      return invokable;
     }
 
-    // Traverse the super class chain by calling lookup on the super class
-    if (hasSuperClass()) {
-      invokable = ((SClass) getSuperClass()).lookupInvokable(selector);
-      if (invokable != null) {
-        return invokable;
-      }
-    }
-
-    // Invokable not found
-    return null;
-  }
-
-
-    }
-
+    if (superclass == Classes.topClass) {
+      return null;
+    } else {
+      return superclass.lookupInvokable(selector, hasAtLeast);
     }
   }
 
   public int getNumberOfInstanceFields() {
-    return instanceFields.getObjectStorage().length;
+    return instanceSlots.size();
   }
 
   public ObjectLayout getLayoutForInstances() {

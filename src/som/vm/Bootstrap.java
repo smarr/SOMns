@@ -4,9 +4,11 @@ import static som.vm.constants.Classes.metaclassClass;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import som.compiler.AccessModifier;
 import som.compiler.ClassDefinition;
 import som.compiler.MethodBuilder;
 import som.compiler.SourcecodeCompiler;
@@ -20,6 +22,7 @@ import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SInvokable.SPrimitive;
 import som.vmobjects.SObject;
+import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.nodes.NodeUtil;
@@ -62,7 +65,7 @@ public final class Bootstrap {
     }
   }
 
-  private static SInvokable[] constructVmMirrorPrimitives() {
+  private static HashMap<SSymbol, SInvokable> constructVmMirrorPrimitives() {
     /// XXX: SKETCH PRIMITIVE CONSTRUCTION
     MethodBuilder prim = new MethodBuilder(null);
     prim.addArgumentIfAbsent("self");
@@ -75,18 +78,19 @@ public final class Bootstrap {
         prim.getCurrentLexicalScope().getFrameDescriptor(),
         NodeUtil.cloneNode(primNode));
 
-    SInvokable[] vmMirrorMethods = new SInvokable[] {
-        new SPrimitive(Symbols.symbolFor("objHashcode:"), objHashcode)
-    };
+
+    HashMap<SSymbol, SInvokable> vmMirrorMethods = new HashMap<>();
+    vmMirrorMethods.put(Symbols.symbolFor("objHashcode:"),
+        new SPrimitive(Symbols.symbolFor("objHashcode:"), objHashcode));
     return vmMirrorMethods;
   }
 
   private static SObject constructVmMirror() {
-    SInvokable[] vmMirrorMethods = constructVmMirrorPrimitives();
+    HashMap<SSymbol, SInvokable> vmMirrorMethods = constructVmMirrorPrimitives();
     ClassDefinition vmMirrorDef = new ClassDefinition(
         Symbols.symbolFor("VmMirror"), null, vmMirrorMethods, null, null, null);
     SClass vmMirrorClass = vmMirrorDef.instantiateClass(null, null);
-    return Universe.newInstance(vmMirrorClass);
+    return new SObject(vmMirrorClass);
   }
 
   /**

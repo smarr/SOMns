@@ -1,11 +1,11 @@
 package som.compiler;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 
 import som.vm.Symbols;
 import som.vm.constants.Classes;
 import som.vmobjects.SAbstractObject;
-import som.vmobjects.SArray;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SInvokable.SMethod;
@@ -22,8 +22,8 @@ import com.sun.istack.internal.Nullable;
 public final class ClassDefinition {
   private final SSymbol      name;
   private final SMethod      assembleClassObjectMethod;
-  private final SInvokable[] instanceMethods;
-  private final SMethod[]    factoryMethods;
+  private final HashMap<SSymbol, SInvokable> instanceMethods;
+  private final HashMap<SSymbol, SInvokable> factoryMethods;
 
   @Nullable
   private final LinkedHashMap<SSymbol, ClassDefinition> nestedClassDefinitions;
@@ -32,8 +32,9 @@ public final class ClassDefinition {
   private final LinkedHashMap<SSymbol, SlotDefinition>  slotDefinitions;
 
   public ClassDefinition(final SSymbol name,
-      final SMethod classObjectInstantiation, final SInvokable[] instanceMethods,
-      final SMethod[] factoryMethods,
+      final SMethod classObjectInstantiation,
+      final HashMap<SSymbol, SInvokable> instanceMethods,
+      final HashMap<SSymbol, SInvokable> factoryMethods,
       final LinkedHashMap<SSymbol, ClassDefinition> nestedClassDefinitions,
       final LinkedHashMap<SSymbol, SlotDefinition> slotDefinitions) {
     this.name = name;
@@ -57,15 +58,14 @@ public final class ClassDefinition {
 
     if (result.getSOMClass() != null) {
       // Initialize the class of the resulting class
-      result.getSOMClass().setInstanceInvokables(SArray.create(factoryMethods));
+      result.getSOMClass().setInstanceInvokables(factoryMethods);
       result.getSOMClass().setName(Symbols.symbolFor(ccName));
     }
 
     // Initialize the resulting class
     result.setName(name);
-    result.setInstanceFields(SArray.create(
-        slotDefinitions.values().toArray(new Object[slotDefinitions.size()])));
-    result.setInstanceInvokables(SArray.create(instanceMethods));
+    result.setInstanceSlots(slotDefinitions);
+    result.setInstanceInvokables(instanceMethods);
   }
 
   public SClass instantiateClass(final SAbstractObject outer, final SClass superClass) {
