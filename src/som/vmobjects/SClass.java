@@ -27,7 +27,6 @@ package som.vmobjects;
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
 
 import java.lang.reflect.Constructor;
-import java.util.HashMap;
 
 import som.interpreter.objectstorage.ObjectLayout;
 import som.primitives.Primitives;
@@ -45,13 +44,11 @@ public final class SClass extends SObjectWithoutFields {
   public SClass() {
     // Initialize this class by calling the super constructor with the given
     // value
-    invokablesTable = new HashMap<SSymbol, SInvokable>();
     this.superclass = Nil.nilObject;
   }
 
   public SClass(final SClass clazz) {
     super(clazz);
-    invokablesTable = new HashMap<SSymbol, SInvokable>();
     this.superclass = Nil.nilObject;
   }
 
@@ -121,18 +118,11 @@ public final class SClass extends SObjectWithoutFields {
 
     instanceInvokables.getObjectStorage()[index] = value;
 
-    if (invokablesTable.containsKey(value.getSignature())) {
-      invokablesTable.put(value.getSignature(), value);
-    }
   }
 
   @TruffleBoundary
   public SInvokable lookupInvokable(final SSymbol selector) {
     SInvokable invokable;
-
-    // Lookup invokable and return if found
-    invokable = invokablesTable.get(selector);
-    if (invokable != null) { return invokable; }
 
     // Lookup invokable with given signature in array of instance invokables
     for (int i = 0; i < getNumberOfInstanceInvokables(); i++) {
@@ -141,7 +131,6 @@ public final class SClass extends SObjectWithoutFields {
 
       // Return the invokable if the signature matches
       if (invokable.getSignature() == selector) {
-        invokablesTable.put(selector, invokable);
         return invokable;
       }
     }
@@ -150,7 +139,6 @@ public final class SClass extends SObjectWithoutFields {
     if (hasSuperClass()) {
       invokable = ((SClass) getSuperClass()).lookupInvokable(selector);
       if (invokable != null) {
-        invokablesTable.put(selector, invokable);
         return invokable;
       }
     }
@@ -275,9 +263,6 @@ public final class SClass extends SObjectWithoutFields {
   public String toString() {
     return "Class(" + getName().getString() + ")";
   }
-
-  // Mapping of symbols to invokables
-  private final HashMap<SSymbol, SInvokable> invokablesTable;
 
   @CompilationFinal private SObjectWithoutFields superclass;
   @CompilationFinal private SSymbol name;
