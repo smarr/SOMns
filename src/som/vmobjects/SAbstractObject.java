@@ -32,12 +32,6 @@ public abstract class SAbstractObject {
     return invokable.invoke(arguments);
   }
 
-  public static final Object sendUnknownGlobal(final Object receiver,
-      final SSymbol globalName) {
-    Object[] arguments = {receiver, globalName};
-    return send("unknownGlobal:", arguments);
-  }
-
   public static final Object sendEscapedBlock(final Object receiver,
       final SBlock block) {
     Object[] arguments = {receiver, block};
