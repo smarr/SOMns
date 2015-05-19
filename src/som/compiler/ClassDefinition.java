@@ -1,9 +1,17 @@
 package som.compiler;
 
-import som.vm.NotYetImplementedException;
+import java.util.LinkedHashMap;
+
+import som.vm.Symbols;
+import som.vm.constants.Classes;
+import som.vmobjects.SAbstractObject;
+import som.vmobjects.SArray;
 import som.vmobjects.SClass;
+import som.vmobjects.SInvokable;
 import som.vmobjects.SInvokable.SMethod;
 import som.vmobjects.SSymbol;
+
+import com.sun.istack.internal.Nullable;
 
 /**
  * Produced by the Parser, contains all static information on a class that is
@@ -12,53 +20,59 @@ import som.vmobjects.SSymbol;
  * @author Stefan Marr
  */
 public final class ClassDefinition {
-  private final SSymbol name;
-  private final SMethod   assembleClassObjectMethod;
-  private final SMethod[] instanceMethods;
-  private final SMethod[] factoryMethods;
+  private final SSymbol      name;
+  private final SMethod      assembleClassObjectMethod;
+  private final SInvokable[] instanceMethods;
+  private final SMethod[]    factoryMethods;
+
+  @Nullable
+  private final LinkedHashMap<SSymbol, ClassDefinition> nestedClassDefinitions;
+
+  @Nullable
+  private final LinkedHashMap<SSymbol, SlotDefinition>  slotDefinitions;
 
   public ClassDefinition(final SSymbol name,
-      final SMethod classObjectInstantiation, final SMethod[] instanceMethods,
-      final SMethod[] factoryMethods) {
+      final SMethod classObjectInstantiation, final SInvokable[] instanceMethods,
+      final SMethod[] factoryMethods,
+      final LinkedHashMap<SSymbol, ClassDefinition> nestedClassDefinitions,
+      final LinkedHashMap<SSymbol, SlotDefinition> slotDefinitions) {
     this.name = name;
     this.assembleClassObjectMethod = classObjectInstantiation;
     this.instanceMethods = instanceMethods;
     this.factoryMethods  = factoryMethods;
+    this.nestedClassDefinitions = nestedClassDefinitions;
+    this.slotDefinitions = slotDefinitions;
   }
 
   public SSymbol getName() {
     return name;
   }
 
-  public SClass createSClass(final SClass superClass) {
+  public void initializeClass(final SAbstractObject outer, final SClass result,
+      final SClass superClass) {
+    result.setSuperClass(superClass);
+
     // build class class name
     String ccName = name.getString() + " class";
 
-//  // Allocate the class of the resulting class
-//  SClass resultClass = Universe.newClass(Classes.metaclassClass);
-    //
-    //
-//        // Initialize the class of the resulting class
-//        resultClass.setInstanceInvokables(
-//            SArray.create(factoryMethods.toArray(new Object[0])));
-//        resultClass.setName(Symbols.symbolFor(ccname));
-    //
-//        SClass superMClass = superClass.getSOMClass();
-//        resultClass.setSuperClass(superMClass);
-    //
-//        // Allocate the resulting class
-//        SClass result = Universe.newClass(resultClass);
-    //
-//        // Initialize the resulting class
-//        result.setName(name);
-//        result.setSuperClass(superClass);
-//        result.setInstanceFields(
-//            SArray.create(slots.toArray(new Object[0])));
-//        result.setInstanceInvokables(
-//            SArray.create(methods.toArray(new Object[0])));
-    //
-//        return result;
-    throw new NotYetImplementedException();
+    if (result.getSOMClass() != null) {
+      // Initialize the class of the resulting class
+      result.getSOMClass().setInstanceInvokables(SArray.create(factoryMethods));
+      result.getSOMClass().setName(Symbols.symbolFor(ccName));
+    }
+
+    // Initialize the resulting class
+    result.setName(name);
+    result.setInstanceFields(SArray.create(
+        slotDefinitions.values().toArray(new Object[slotDefinitions.size()])));
+    result.setInstanceInvokables(SArray.create(instanceMethods));
+  }
+
+  public SClass instantiateClass(final SAbstractObject outer, final SClass superClass) {
+    SClass resultClass = new SClass(Classes.metaclassClass);
+    SClass result = new SClass(resultClass);
+    initializeClass(outer, result, superClass);
+    return result;
   }
 
   public static final class SlotDefinition {
@@ -91,5 +105,19 @@ public final class ClassDefinition {
       return "SlotDef(" + name.getString()
           + " :" + modifier.toString().toLowerCase() + imm + ")";
     }
+  }
+
+  public ClassDefinition getEmbeddedClassDefinition(final String string) {
+    if (nestedClassDefinitions == null) {
+      return null;
+    }
+    return nestedClassDefinitions.get(Symbols.symbolFor(string));
+  }
+
+  public int getNumberOfSlots() {
+    if (slotDefinitions == null) {
+      return 0;
+    }
+    return slotDefinitions.size();
   }
 }
