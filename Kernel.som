@@ -24,7 +24,7 @@ class Kernel usingPlatform: platform vmMirror: vmMirror = (
 )(
   private class Top = ()()
   
-  public class Thing = ()(
+  public class Thing = Top ()(
     'Error recovering'
     protected doesNotUnderstand: selector arguments: arguments = (
       system error: 'Method ' + selector + ' not found in class ' + self class name
