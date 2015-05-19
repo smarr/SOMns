@@ -119,18 +119,22 @@ public final class SNodeFactory {
 
   public static ExpressionNode createClassCreationNode(
       final ClassDefinition classBody, final AbstractMessageSendNode superClass) {
-    return new NotImplemented();
+    return new NotImplemented("class creation", null);
   }
 
   public static ExpressionNode createSlotInitialization(
       final SlotDefinition slot, final ExpressionNode init) {
-    return new NotImplemented();
+    return new NotImplemented("slot init", null);
     // TODO: return SlotWriteNode.create(slot, init);
   }
 
   public static final class NotImplemented extends ExpressionNode {
+    private final String msg;
 
-    public NotImplemented() { super(null); }
+    public NotImplemented(final String msg, final SourceSection source) {
+      super(source);
+      this.msg = msg;
+    }
 
     @Override
     public Object executeGeneric(final VirtualFrame frame) {
@@ -140,17 +144,17 @@ public final class SNodeFactory {
 
   public static ExpressionNode createImplicitReceiverSend(
       final SSymbol selector, final SourceSection source) {
-    return new NotImplemented();
+    return new NotImplemented("implicit receiver send", source);
   }
 
   public static ExpressionNode createImplicitReceiverSetterSend(
       final SSymbol identifier, final ExpressionNode exp,
       final SourceSection source) {
-    return new NotImplemented();
+    return new NotImplemented("implicit receiver setter send", source);
   }
 
   public static ExpressionNode createConstructClassNode(
       final AbstractMessageSendNode superclassResolution) {
-    return new NotImplemented();
+    return new NotImplemented("construct class node", null);
   }
 }
