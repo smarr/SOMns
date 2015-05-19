@@ -46,8 +46,8 @@ class Kernel usingPlatform: platform vmMirror: vmMirror = (
     public value = ( ^ self )
     
     'Converting, Convenience'
-    , element = ( ^ (Vector new append: self) append: element )
-    hashcode  = ( ^ vmMirror objHashcode: self )
+    public , element = ( ^ (Vector new append: self) append: element )
+    public hashcode  = ( ^ vmMirror objHashcode: self )
     
     'Newspeak requirements'
     (* This works around restrictions by the absense of a global scope,
