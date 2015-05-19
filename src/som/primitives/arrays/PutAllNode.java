@@ -40,7 +40,7 @@ public abstract class PutAllNode extends BinaryExpressionNode
     block = insert(node);
   }
 
-  protected static final boolean valueIsNil(final SObject value) {
+  protected static final boolean valueIsNil(final Object value) {
     return value == Nil.nilObject;
   }
 
@@ -52,7 +52,7 @@ public abstract class PutAllNode extends BinaryExpressionNode
   }
 
   @Specialization(guards = {"isEmptyType(rcvr)", "valueIsNil(nil)"})
-  public SArray doPutNilInEmptyArray(final SArray rcvr, final SObject nil,
+  public SArray doPutNilInEmptyArray(final SArray rcvr, final Object nil,
       final long length) {
     // NO OP
     return rcvr;

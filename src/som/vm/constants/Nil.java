@@ -1,12 +1,12 @@
 package som.vm.constants;
 
-import som.vmobjects.SObject;
+import som.vmobjects.SObjectWithoutFields;
 
 
 public final class Nil {
-  public static final SObject nilObject;
+  public static final SObjectWithoutFields nilObject;
 
   static {
-    nilObject = SObject.create(0);
+    nilObject = new SObjectWithoutFields();
   }
 }

@@ -4,7 +4,6 @@ import static som.interpreter.TruffleCompiler.transferToInterpreter;
 import som.compiler.Variable.Local;
 import som.interpreter.SplitterForLexicallyEmbeddedCode;
 import som.vm.constants.Nil;
-import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.dsl.NodeChild;
@@ -45,7 +44,7 @@ public abstract class LocalVariableNode extends ExpressionNode {
     }
 
     @Specialization(guards = "isUninitialized()")
-    public final SObject doNil() {
+    public final Object doNil() {
       return Nil.nilObject;
     }
 

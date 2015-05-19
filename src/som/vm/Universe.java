@@ -59,6 +59,7 @@ import som.vmobjects.SInvokable;
 import som.vmobjects.SInvokable.SMethod;
 import som.vmobjects.SInvokable.SPrimitive;
 import som.vmobjects.SObject;
+import som.vmobjects.SObjectWithoutFields;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerAsserts;
@@ -169,7 +170,7 @@ public final class Universe {
     }
 
     // Allocate the nil object
-    SObject nilObject = Nil.nilObject;
+    SObjectWithoutFields nilObject = Nil.nilObject;
 
     // Setup the class reference for the nil object
     nilObject.setClass(nilClass);

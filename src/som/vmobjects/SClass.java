@@ -40,16 +40,13 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
-public final class SClass extends SObject {
+public final class SClass extends SObjectWithoutFields {
 
-  public SClass(final int numberOfFields) {
+  public SClass() {
     // Initialize this class by calling the super constructor with the given
     // value
-    super(numberOfFields);
     invokablesTable = new HashMap<SSymbol, SInvokable>();
     this.superclass = Nil.nilObject;
-
-    layoutForInstances = new ObjectLayout(numberOfFields, this);
   }
 
   public SClass(final SClass clazz) {
@@ -58,7 +55,7 @@ public final class SClass extends SObject {
     this.superclass = Nil.nilObject;
   }
 
-  public SObject getSuperClass() {
+  public SObjectWithoutFields getSuperClass() {
     return superclass;
   }
 
@@ -282,7 +279,7 @@ public final class SClass extends SObject {
   // Mapping of symbols to invokables
   private final HashMap<SSymbol, SInvokable> invokablesTable;
 
-  @CompilationFinal private SObject superclass;
+  @CompilationFinal private SObjectWithoutFields superclass;
   @CompilationFinal private SSymbol name;
   @CompilationFinal private SArray  instanceInvokables;
   @CompilationFinal private SArray  instanceFields;

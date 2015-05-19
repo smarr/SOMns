@@ -4,7 +4,6 @@ import static som.interpreter.TruffleCompiler.transferToInterpreter;
 import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
 import som.interpreter.InlinerForLexicallyEmbeddedMethods;
 import som.vm.constants.Nil;
-import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -49,7 +48,7 @@ public abstract class NonLocalVariableNode extends ContextualNode {
     }
 
     @Specialization(guards = "isUninitialized()")
-    public final SObject doNil() {
+    public final Object doNil() {
       return Nil.nilObject;
     }
 

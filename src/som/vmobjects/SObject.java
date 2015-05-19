@@ -74,13 +74,13 @@ public class SObject extends SAbstractObject {
 
   private final int numberOfFields;
 
-  protected SObject(final SClass instanceClass) {
+  public SObject(final SClass instanceClass) {
     numberOfFields = instanceClass.getNumberOfInstanceFields();
     clazz          = instanceClass;
     setLayoutInitially(instanceClass.getLayoutForInstances());
   }
 
-  protected SObject(final int numFields) {
+  public SObject(final int numFields) {
     numberOfFields = numFields;
     setLayoutInitially(new ObjectLayout(numFields, null));
   }
@@ -117,7 +117,6 @@ public class SObject extends SAbstractObject {
     transferToInterpreterAndInvalidate("SObject.setClass");
     assert value != null;
 
-    // Set the class of this object by writing to the field with class index
     clazz = value;
     setLayoutInitially(value.getLayoutForInstances());
   }
@@ -210,14 +209,6 @@ public class SObject extends SAbstractObject {
 
   public final long getFieldIndex(final SSymbol fieldName) {
     return clazz.lookupFieldIndex(fieldName);
-  }
-
-  public static final SObject create(final SClass instanceClass) {
-    return new SObject(instanceClass);
-  }
-
-  public static SObject create(final int numFields) {
-    return new SObject(numFields);
   }
 
   private static final long FIRST_OBJECT_FIELD_OFFSET = getFirstObjectFieldOffset();

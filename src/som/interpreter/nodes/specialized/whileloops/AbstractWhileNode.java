@@ -4,7 +4,6 @@ import som.interpreter.Invokable;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.vm.constants.Nil;
 import som.vmobjects.SBlock;
-import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerAsserts;
@@ -44,7 +43,7 @@ public abstract class AbstractWhileNode extends BinaryExpressionNode {
     return doWhileConditionally(frame, (SBlock) rcvr, (SBlock) arg);
   }
 
-  protected final SObject doWhileUnconditionally(final VirtualFrame frame,
+  protected final Object doWhileUnconditionally(final VirtualFrame frame,
       final SBlock loopCondition, final SBlock loopBody) {
     long iterationCount = 0;
 
@@ -68,7 +67,7 @@ public abstract class AbstractWhileNode extends BinaryExpressionNode {
     return Nil.nilObject;
   }
 
-  protected abstract SObject doWhileConditionally(final VirtualFrame frame,
+  protected abstract Object doWhileConditionally(final VirtualFrame frame,
       final SBlock loopCondition, final SBlock loopBody);
 
   protected final void reportLoopCount(final long count) {

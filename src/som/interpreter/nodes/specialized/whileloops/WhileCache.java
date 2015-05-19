@@ -5,7 +5,6 @@ import som.vm.constants.Globals;
 import som.vm.constants.Nil;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
-import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.dsl.Cached;
@@ -26,7 +25,7 @@ public abstract class WhileCache extends BinaryExpressionNode {
   @Specialization(limit = "INLINE_CACHE_SIZE",
       guards = {"loopCondition.getMethod() == cachedLoopCondition",
                 "loopBody.getMethod() == cachedLoopBody"})
-  public final SObject doCached(final VirtualFrame frame,
+  public final Object doCached(final VirtualFrame frame,
       final SBlock loopCondition, final SBlock loopBody,
       @Cached("loopCondition.getMethod()") final SInvokable cachedLoopCondition,
       @Cached("loopBody.getMethod()") final      SInvokable cachedLoopBody,
@@ -49,7 +48,7 @@ public abstract class WhileCache extends BinaryExpressionNode {
   }
 
   @Specialization(contains = "doCached")
-  public final SObject doUncached(final VirtualFrame frame, final SBlock loopCondition,
+  public final Object doUncached(final VirtualFrame frame, final SBlock loopCondition,
       final SBlock loopBody) {
     CompilerAsserts.neverPartOfCompilation("WhileCache.GenericDispatch"); // no caching, direct invokes, no loop count reporting...
 
