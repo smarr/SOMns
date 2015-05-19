@@ -30,7 +30,8 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-import som.vm.Universe;
+import som.VM;
+import som.vm.Bootstrap;
 
 @RunWith(Parameterized.class)
 public class SomTests {
@@ -77,13 +78,12 @@ public class SomTests {
 
   @Test
   public void testSomeTest() {
-    u.setAvoidExit(true);
-    String[] args = {"-cp", "Smalltalk", "TestSuite/TestHarness.som", testName};
+    Bootstrap.loadPlatformAndKernelModule(VM.standardPlatformFile,
+        VM.standardKernelFile);
+    Bootstrap.initializeObjectSystem();
 
-    u.interpret(args);
-
-    assertEquals(0, u.lastExitCode());
+    long exitCode = Bootstrap.executeApplication("TestSuite/TestHarness.som",
+        new String[] {testName});
+    assertEquals(0, exitCode);
   }
-
-  private static final Universe u = Universe.current();
 }
