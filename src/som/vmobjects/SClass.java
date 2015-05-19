@@ -41,6 +41,13 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
 public final class SClass extends SObjectWithoutFields {
 
+  @CompilationFinal private SObjectWithoutFields superclass;
+  @CompilationFinal private SSymbol name;
+  @CompilationFinal private SArray  instanceInvokables;
+  @CompilationFinal private SArray  instanceFields;
+
+  @CompilationFinal private ObjectLayout layoutForInstances;
+
   public SClass() {
     // Initialize this class by calling the super constructor with the given
     // value
@@ -263,11 +270,4 @@ public final class SClass extends SObjectWithoutFields {
   public String toString() {
     return "Class(" + getName().getString() + ")";
   }
-
-  @CompilationFinal private SObjectWithoutFields superclass;
-  @CompilationFinal private SSymbol name;
-  @CompilationFinal private SArray  instanceInvokables;
-  @CompilationFinal private SArray  instanceFields;
-
-  @CompilationFinal private ObjectLayout layoutForInstances;
 }
