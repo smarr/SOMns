@@ -73,7 +73,7 @@ class Kernel usingPlatform: platform vmMirror: vmMirror = (
     public copy = ( ^ self )
   )
   
-  public class Class = Value ()
+  public class Class = Object ()
   (
     'Allocation'
     public new = ( ^ vmMirror instantiate: self )
