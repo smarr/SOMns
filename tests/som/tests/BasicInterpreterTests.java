@@ -31,6 +31,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
+import som.VM;
 import som.vm.Bootstrap;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
@@ -143,8 +144,9 @@ public class BasicInterpreterTests {
 
   @Test
   public void testBasicInterpreterBehavior() {
-    Bootstrap.loadPlatformModule("TestSuite/BasicInterpreterTests/" +
-                                 testClass + ".som");
+    Bootstrap.loadPlatformAndKernelModule(
+        "TestSuite/BasicInterpreterTests/" + testClass + ".som",
+        VM.standardKernelFile);
     Bootstrap.initializeObjectSystem();
 
 //    TODO:  u.setAvoidExit(true);
