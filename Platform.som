@@ -25,16 +25,4 @@ class Platform usingVmMirror: vmMirror = (
       system exit: errorCode
     )
   )
-  
-  private class Universe usingPlatform: platform = Value (
-    (* The universe object is a singleton provided by the runtime.
-       It is the outer scope in case there is no other outer scope.
-       In Newspeak, the nil object is this outer scope. However, this
-       leads to strange consequences, for instance, the polution of Object
-       with messages to obtain various classes. *)
-    | private Object = platform kernel Object.
-      private Value  = platform kernel Value. |
-  )() : (
-    public new = ( system error: 'Cannot instantiate Universe'. )
-  )
 )
