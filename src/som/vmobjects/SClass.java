@@ -160,10 +160,6 @@ public final class SClass extends SObjectWithoutFields {
     }
   }
 
-  public SSymbol getInstanceFieldName(final int index) {
-    return (SSymbol) instanceFields.getObjectStorage()[index];
-  }
-
   public int getNumberOfInstanceFields() {
     return instanceFields.getObjectStorage().length;
   }
