@@ -207,10 +207,6 @@ public class SObject extends SAbstractObject {
     return clazz;
   }
 
-  public final long getFieldIndex(final SSymbol fieldName) {
-    return clazz.lookupFieldIndex(fieldName);
-  }
-
   private static final long FIRST_OBJECT_FIELD_OFFSET = getFirstObjectFieldOffset();
   private static final long FIRST_PRIM_FIELD_OFFSET   = getFirstPrimFieldOffset();
   private static final long OBJECT_FIELD_LENGTH = getObjectFieldLength();
