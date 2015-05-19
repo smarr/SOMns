@@ -18,9 +18,11 @@ public final class VM {
   }
 
   public static final String standardPlatformFile = "core-lib/Platform.som";
+  public static final String standardKernelFile   = "core-lib/Kernel.som";
 
   public static class Options {
     public String   platformFile = standardPlatformFile;
+    public String   kernelFile   = standardKernelFile;
     public String   appFile;
     public String[] args;
   }
@@ -30,13 +32,23 @@ public final class VM {
 
     int currentArg = 0;
 
-    // parse optional --platform
-    if (currentArg >= arguments.length) {
-      printUsageAndExit();
-    } else {
-      if (arguments[currentArg].equals("--platform")) {
-        result.platformFile = arguments[currentArg + 1];
-        currentArg += 2;
+    // parse optional --platform and --kernel
+    boolean parsedArgument = true;
+
+    while (parsedArgument) {
+      if (currentArg >= arguments.length) {
+        printUsageAndExit();
+        return result;
+      } else {
+        if (arguments[currentArg].equals("--platform")) {
+          result.platformFile = arguments[currentArg + 1];
+          currentArg += 2;
+        } else if (arguments[currentArg].equals("--kernel")) {
+          result.kernelFile = arguments[currentArg + 1];
+          currentArg += 2;
+        } else {
+          parsedArgument = false;
+        }
       }
     }
 
@@ -58,10 +70,12 @@ public final class VM {
 
   private void printUsageAndExit() {
     // Checkstyle: stop
-    System.out.println("Usage: ./som.sh [--platform file-name] app-file [args...]");
+    System.out.println("Usage: ./som.sh [--platform file-name] [--kernel file-name] app-file [args...]");
     System.out.println("");
     System.out.println("  --platform file-name   SOM Platform module to be loaded");
-    System.out.println("                         file-name defaults to 'core-lib/Platform.som'");
+    System.out.println("                         file-name defaults to '" + standardPlatformFile + "'");
+    System.out.println("  --kernel file-name     SOM Kernel module to be loaded");
+    System.out.println("                         file-name defaults to '" + standardKernelFile + "'");
     System.out.println("");
     System.out.println("  app-file               file-name of the application to be executed");
     System.out.println("  args...                arguments passed to the application");
@@ -73,7 +87,7 @@ public final class VM {
   }
 
   public long execute(final Options options) {
-    Bootstrap.loadPlatformModule(options.platformFile);
+    Bootstrap.loadPlatformAndKernelModule(options.platformFile, options.kernelFile);
     Bootstrap.initializeObjectSystem();
     return Bootstrap.executeApplication(options.appFile, options.args);
   }
