@@ -33,7 +33,6 @@ import som.primitives.BlockPrimsFactory.SpawnWithArgsPrimFactory;
 import som.primitives.MethodPrimsFactory.InvokeOnPrimFactory;
 import som.primitives.arrays.PutAllNodeFactory;
 import som.primitives.arrays.ToArgumentsArrayNodeGen;
-import som.vm.Symbols;
 import som.vm.Universe;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
@@ -114,39 +113,23 @@ public abstract class Primitives {
     return prim;
   }
 
-  public static SInvokable constructEmptyPrimitive(final SSymbol signature) {
-    CompilerAsserts.neverPartOfCompilation();
-    MethodBuilder builder = new MethodBuilder(null);
-
-    ExpressionNode primNode = EmptyPrim.create(new LocalArgumentReadNode(0, null));
-    Primitive primMethodNode = new Primitive(primNode, builder.getCurrentLexicalScope().getFrameDescriptor(),
-        (ExpressionNode) primNode.deepCopy());
-    SInvokable prim = Universe.newMethod(signature, primMethodNode, true, new SMethod[0]);
-    return prim;
-  }
-
   protected final void installInstancePrimitive(final String selector,
       final NodeFactory<? extends ExpressionNode> nodeFactory) {
-    SSymbol signature = Symbols.symbolFor(selector);
-    SInvokable prim = constructPrimitive(signature, nodeFactory, universe, holder);
-
-    // Install the given primitive as an instance primitive in the holder class
-    holder.addInstancePrimitive(prim, displayWarning);
+//    SSymbol signature = Symbols.symbolFor(selector);
+//    SInvokable prim = constructPrimitive(signature, nodeFactory, universe, holder);
+//
+//    // Install the given primitive as an instance primitive in the holder class
+//    holder.addInstancePrimitive(prim, displayWarning);
   }
 
   protected final void installClassPrimitive(final String selector,
       final NodeFactory<? extends ExpressionNode> nodeFactory) {
-    SSymbol signature = Symbols.symbolFor(selector);
-    SInvokable prim = constructPrimitive(signature, nodeFactory, universe, holder);
-
-    // Install the given primitive as an instance primitive in the class of
-    // the holder class
-    holder.getSOMClass().addInstancePrimitive(prim, displayWarning);
+//    SSymbol signature = Symbols.symbolFor(selector);
+//    SInvokable prim = constructPrimitive(signature, nodeFactory, universe, holder);
+//
+//    // Install the given primitive as an instance primitive in the class of
+//    // the holder class
+//    holder.getSOMClass().addInstancePrimitive(prim, displayWarning);
   }
 
-  public static SInvokable getEmptyPrimitive(final String selector,
-      final Universe universe) {
-    SSymbol signature = Symbols.symbolFor(selector);
-    return constructEmptyPrimitive(signature);
-  }
 }
