@@ -276,34 +276,6 @@ public final class Universe {
     }
   }
 
-  public static SObject newInstance(final SClass instanceClass) {
-    return SObject.create(instanceClass);
-  }
-
-  @TruffleBoundary
-  public static SClass newMetaclassClass() {
-    // Allocate the metaclass classes
-    SClass result = new SClass(0);
-    result.setClass(new SClass(0));
-
-    // Setup the metaclass hierarchy
-    result.getSOMClass().setClass(result);
-    return result;
-  }
-
-  @TruffleBoundary
-  public static SClass newSystemClass() {
-    // Allocate the new system class
-    SClass systemClass = new SClass(0);
-
-    // Setup the metaclass hierarchy
-    systemClass.setClass(new SClass(0));
-    systemClass.getSOMClass().setClass(metaclassClass);
-
-    // Return the freshly allocated system class
-    return systemClass;
-  }
-
   private void initializeSystemClass(final SClass systemClass, final SClass superClass,
       final String name) {
     // Initialize the superclass hierarchy
