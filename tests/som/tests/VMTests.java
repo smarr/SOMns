@@ -30,6 +30,15 @@ public class VMTests {
   }
 
   @Test
+  public void testProcessArgumentsWithKernelFile() {
+    Options opts = (new VM(true)).processArguments(
+        new String[] {"--kernel", "foo.som"});
+    assertEquals(opts.kernelFile, "foo.som");
+    assertNull(opts.appFile);
+    assertNull(opts.args);
+  }
+
+  @Test
   public void testProcessArgumentsWithAppFile() {
     Options opts = (new VM(true)).processArguments(
         new String[] {"app.som"});
