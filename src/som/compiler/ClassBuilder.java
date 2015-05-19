@@ -77,6 +77,8 @@ public final class ClassBuilder {
   private final List<SInvokable>  methods = new ArrayList<SInvokable>();
   private final List<SInvokable>  factoryMethods  = new ArrayList<SInvokable>();
 
+  private final LinkedHashMap<SSymbol, ClassDefinition> embeddedClasses = new LinkedHashMap<>();
+
   private boolean classSide;
 
   private ExpressionNode superclassFactorySend;
@@ -268,5 +270,9 @@ public final class ClassBuilder {
 
   public void setSuperclassFactorySend(final ExpressionNode superFactorySend) {
     this.superclassFactorySend = superFactorySend;
+  }
+
+  public void addNestedClass(final ClassDefinition nestedClass) {
+    embeddedClasses.put(nestedClass.getName(), nestedClass);
   }
 }

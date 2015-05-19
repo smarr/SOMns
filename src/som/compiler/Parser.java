@@ -447,6 +447,7 @@ public final class Parser {
     AccessModifier accessModifier = accessModifier();
     ClassBuilder nestedCls = new ClassBuilder();
     classDeclaration(accessModifier, nestedCls);
+    clsBuilder.addNestedClass(nestedCls.assemble());
   }
 
   private void category(final ClassBuilder clsBuilder) throws ParseError {
