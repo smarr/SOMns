@@ -154,42 +154,9 @@ public final class SClass extends SObjectWithoutFields {
     return null;
   }
 
-  public int lookupFieldIndex(final SSymbol fieldName) {
-    // Lookup field with given name in array of instance fields
-    for (int i = getNumberOfInstanceFields() - 1; i >= 0; i--) {
-      // Return the current index if the name matches
-      if (fieldName == getInstanceFieldName(i)) { return i; }
+
     }
 
-    // Field not found
-    return -1;
-  }
-
-  private boolean addInstanceInvokable(final SInvokable value) {
-    CompilerAsserts.neverPartOfCompilation("SClass.addInstanceInvokable(.)");
-
-    // Add the given invokable to the array of instance invokables
-    for (int i = 0; i < getNumberOfInstanceInvokables(); i++) {
-      // Get the next invokable in the instance invokable array
-      SInvokable invokable = getInstanceInvokable(i);
-
-      // Replace the invokable with the given one if the signature matches
-      if (invokable.getSignature() == value.getSignature()) {
-        setInstanceInvokable(i, value);
-        return false;
-      }
-    }
-
-    // Append the given method to the array of instance methods
-    instanceInvokables = instanceInvokables.copyAndExtendWith(value);
-    return true;
-  }
-
-  public void addInstancePrimitive(final SInvokable value, final boolean displayWarning) {
-    if (addInstanceInvokable(value) && displayWarning) {
-      Universe.print("Warning: Primitive " + value.getSignature().getString());
-      Universe.println(" is not in class definition for class "
-          + getName().getString());
     }
   }
 
@@ -199,46 +166,6 @@ public final class SClass extends SObjectWithoutFields {
 
   public int getNumberOfInstanceFields() {
     return instanceFields.getObjectStorage().length;
-  }
-
-  private static boolean includesPrimitives(final SClass clazz) {
-    CompilerAsserts.neverPartOfCompilation("SClass.includesPrimitives(.)");
-    // Lookup invokable with given signature in array of instance invokables
-    for (int i = 0; i < clazz.getNumberOfInstanceInvokables(); i++) {
-      // Get the next invokable in the instance invokable array
-      if (clazz.getInstanceInvokable(i) instanceof SPrimitive) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  public boolean hasPrimitives() {
-    return includesPrimitives(this) || includesPrimitives(clazz);
-  }
-
-  public void loadPrimitives(final boolean displayWarning) {
-    CompilerAsserts.neverPartOfCompilation();
-
-    // Compute the class name of the Java(TM) class containing the
-    // primitives
-    String className = "som.primitives." + getName().getString() + "Primitives";
-
-    // Try loading the primitives
-    try {
-      Class<?> primitivesClass = Class.forName(className);
-      try {
-        Constructor<?> ctor = primitivesClass.getConstructor(boolean.class);
-        ((Primitives) ctor.newInstance(displayWarning)).installPrimitivesIn(this);
-      } catch (Exception e) {
-        Universe.errorExit("Primitives class " + className
-            + " cannot be instantiated");
-      }
-    } catch (ClassNotFoundException e) {
-      if (displayWarning) {
-        Universe.println("Primitives class " + className + " not found");
-      }
-    }
   }
 
   public ObjectLayout getLayoutForInstances() {
@@ -264,7 +191,6 @@ public final class SClass extends SObjectWithoutFields {
     }
     return layoutForInstances;
   }
-
 
   @Override
   public String toString() {
