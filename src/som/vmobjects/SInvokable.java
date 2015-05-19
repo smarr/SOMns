@@ -37,7 +37,6 @@ import com.oracle.truffle.api.nodes.IndirectCallNode;
 
 public abstract class SInvokable extends SAbstractObject {
 
-
   public SInvokable(final SSymbol signature, final AccessModifier accessModifier,
       final SSymbol category, final Invokable invokable) {
     this.signature = signature;
