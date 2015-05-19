@@ -20,7 +20,7 @@ THE SOFTWARE.
 *)
 class NonLocalReturn = ()():(
 
-    test = (
+    public test = (
         'test1 expect 42: ' println.
         self test1 asString println.
         
@@ -31,15 +31,15 @@ class NonLocalReturn = ()():(
         self test3 asString println.
     )
     
-    test1 = ( | t1Frame |
+    public test1 = ( | t1Frame |
       [ | nlrFrame |
         ^ 42 ] value
     )
-    test2 = ( ^ self test1 + 1 )
-    test3 = ( [ self test1. ^ 3 ] value )
+    public test2 = ( ^ self test1 + 1 )
+    public test3 = ( [ self test1. ^ 3 ] value )
     
-    test4 = ( ^ self at: 11 )
-    test5 = ( ^ self at: 10000 )
+    public test4 = ( ^ self at: 11 )
+    public test5 = ( ^ self at: 10000 )
     
     (* Test case borrowed from Vector *)
     at: index = ( self checkIndex: index ifValid: [ ^ 42 ].

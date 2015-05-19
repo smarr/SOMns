@@ -20,11 +20,11 @@ THE SOFTWARE.
 *)
 class Return = ()() : (
     
-    returnSelf = ( ^ self )
+    public returnSelf = ( ^ self )
 
-    returnSelfImplicitly = ( )
+    public returnSelfImplicitly = ( )
   
-    noReturnReturnsSelf = ( 1 )
+    public noReturnReturnsSelf = ( 1 )
     
-    blockReturnsImplicitlyLastValue = ( ^ ([4] value) )
+    public blockReturnsImplicitlyLastValue = ( ^ ([4] value) )
 )

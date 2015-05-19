@@ -20,20 +20,20 @@ THE SOFTWARE.
 *)
 class BlockInlining = ()() : (
 
-    testNoInlining = (
+    public testNoInlining = (
       | a block |
       a := 1.
       block := [ a ].
       ^ block value
     )
     
-    testOneLevelInlining = (
+    public testOneLevelInlining = (
       | a |
       a := 1.
       ^ true ifTrue: [ a ] ifFalse: [ 42 ]
     )
     
-    oneLevelInliningWithLocalShadow: bool = (
+    private oneLevelInliningWithLocalShadow: bool = (
       | a |
       a := 1.
       ^ bool
@@ -43,15 +43,15 @@ class BlockInlining = ()() : (
           ] ifFalse: [ a (* that is outer a *) ]
     )
     
-    testOneLevelInliningWithLocalShadowTrue = (
+    public testOneLevelInliningWithLocalShadowTrue = (
       ^ self oneLevelInliningWithLocalShadow: true
     )
     
-    testOneLevelInliningWithLocalShadowFalse = (
+    public testOneLevelInliningWithLocalShadowFalse = (
       ^ self oneLevelInliningWithLocalShadow: false
     )
     
-    deepNestedInlinedIf: bool = (
+    private deepNestedInlinedIf: bool = (
       | block  a block2 |
       a := 1.
       block := [ (* not inlined *)
@@ -65,10 +65,10 @@ class BlockInlining = ()() : (
       ^ block value
     )
     
-    testDeepNestedInlinedIfTrue  = ( ^ self deepNestedInlinedIf: true  )
-    testDeepNestedInlinedIfFalse = ( ^ self deepNestedInlinedIf: false )
+    public testDeepNestedInlinedIfTrue  = ( ^ self deepNestedInlinedIf: true  )
+    public testDeepNestedInlinedIfFalse = ( ^ self deepNestedInlinedIf: false )
     
-    blockNestedInIf: bool = (
+    private blockNestedInIf: bool = (
       | a |
       a := 1.
       bool ifTrue: [
@@ -81,10 +81,10 @@ class BlockInlining = ()() : (
       ^ a
     )
     
-    testBlockNestedInIfTrue  = ( ^ self blockNestedInIf: true  )
-    testBlockNestedInIfFalse = ( ^ self blockNestedInIf: false )
+    public testBlockNestedInIfTrue  = ( ^ self blockNestedInIf: true  )
+    public testBlockNestedInIfFalse = ( ^ self blockNestedInIf: false )
     
-    deepNestedBlocksInInlinedIf: bool = (
+    private deepNestedBlocksInInlinedIf: bool = (
       | block a block2 block3 |
       a := 1.
       block := [ (* not inlined *)
@@ -111,10 +111,10 @@ class BlockInlining = ()() : (
       ^ block value
     )
     
-    testDeepNestedBlocksInInlinedIfTrue  = ( ^ self deepNestedBlocksInInlinedIf: true  )
-    testDeepNestedBlocksInInlinedIfFalse = ( ^ self deepNestedBlocksInInlinedIf: false )
+    public testDeepNestedBlocksInInlinedIfTrue  = ( ^ self deepNestedBlocksInInlinedIf: true  )
+    public testDeepNestedBlocksInInlinedIfFalse = ( ^ self deepNestedBlocksInInlinedIf: false )
     
-    deepDeepNested: bool = (
+    private deepDeepNested: bool = (
       | block a block2 block3 |
       a := 1.
       block := [ (* not inlined *)
@@ -164,10 +164,10 @@ class BlockInlining = ()() : (
       ^ block value
     )
     
-    testDeepDeepNestedTrue  = ( ^ self deepDeepNested: true )
-    testDeepDeepNestedFalse = ( ^ self deepDeepNested: false )
+    public testDeepDeepNestedTrue  = ( ^ self deepDeepNested: true )
+    public testDeepDeepNestedFalse = ( ^ self deepDeepNested: false )
     
-    testToDoNestDoNestIfTrue = (
+    public testToDoNestDoNestIfTrue = (
       (* from the bounce benchmark *)
       | balls bounces |
       balls := Array new: 1 withAll: true.

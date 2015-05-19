@@ -20,7 +20,7 @@ THE SOFTWARE.
 *)
 class Arrays = ()() : (
 
-  testEmptyToInts = (
+  public testEmptyToInts = (
     | arr |
     arr := Array new: 5.
     (arr at: 1) ifNotNil: [self error: 'should be initialized to nil'].
@@ -35,14 +35,14 @@ class Arrays = ()() : (
     ^ arr at: 3
   )
   
-  testPutAllInt = (
+  public testPutAllInt = (
     | arr |
     arr := Array new: 5.
     arr putAll: 5.
     ^ arr at: 3
   )
 
-  testPutAllNil = (
+  public testPutAllNil = (
     | arr |
     arr := Array new: 5.
     (arr at: 4) ifNotNil: [self error: 'should be initialized to nil'].
@@ -55,7 +55,7 @@ class Arrays = ()() : (
     ^ (arr at: 3) class
   )
   
-  testPutAllBlock = (
+  public testPutAllBlock = (
     | arr b cnt |
     cnt := 0.
     b := [cnt := cnt + 1. cnt].
@@ -69,7 +69,7 @@ class Arrays = ()() : (
     ^ arr at: 3
   )
   
-  testNewWithAll = (
+  public testNewWithAll = (
     | arr |
     arr := Array new: 5 withAll: [1].
     1 to: 5 do: [:i | (arr at: i) = 1 ifFalse: [self error: 'wrong result']].

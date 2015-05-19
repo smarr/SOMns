@@ -20,18 +20,18 @@ THE SOFTWARE.
 *)
 class Blocks = ()():(
 
-    arg1 = ( ^ [:a | a - 1] value: 43 )
+    public arg1 = ( ^ [:a | a - 1] value: 43 )
 
-    arg2 = ( ^ [:a :b | a * b ] value: 11 with: 7 )
+    public arg2 = ( ^ [:a :b | a * b ] value: 11 with: 7 )
   
-    argAndLocal = (
+    public argAndLocal = (
       ^ ([:a |
         | blockLocal | 
         blockLocal := 3.
         a + blockLocal] value: 5)
     )
     
-    argAndContext = ( | methodLocal |
+    public argAndContext = ( | methodLocal |
       ^ ([:a |
         methodLocal := 3.
         a + methodLocal] value: 5)

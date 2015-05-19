@@ -20,9 +20,9 @@ THE SOFTWARE.
 *)
 class MethodCall = ()():(
 
-    test = (
+    public test = (
         ^ self test2
     )
     
-    test2 = ( ^ 42 )
+    public test2 = ( ^ 42 )
 )

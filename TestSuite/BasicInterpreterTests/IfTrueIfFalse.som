@@ -20,18 +20,18 @@ THE SOFTWARE.
 *)
 class IfTrueIfFalse = ()():(
 
-    test = (
+    public test = (
         ^ self resolve: 42.
     )
     
-    test2 = (
+    public test2 = (
         self resolve: 42.
         self resolve: 42.
         self halt.
         ^ self resolve: 33
     )
     
-    test3 = (
+    public test3 = (
         | i a |
         i := 4.
         [ i > 0 ] whileTrue: [

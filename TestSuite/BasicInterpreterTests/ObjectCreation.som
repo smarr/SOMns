@@ -20,7 +20,7 @@ THE SOFTWARE.
 *)
 class ObjectCreation = ()():(
 
-    test = (
+    public test = (
         | i |
         i := 0.
         

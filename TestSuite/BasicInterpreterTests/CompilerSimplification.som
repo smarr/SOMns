@@ -35,23 +35,23 @@ class CompilerSimplification = (| aField |)(
       ^ self getField
   )
 ) : (
-    returnConstantSymbol = ( ^ #constant )
-    returnConstantInt    = ( ^ 42 )
+    public returnConstantSymbol = ( ^ #constant )
+    public returnConstantInt    = ( ^ 42 )
     
-    returnSelf           = ( ^ self )
-    returnSelfImplicitly = ()
+    public returnSelf           = ( ^ self )
+    public returnSelfImplicitly = ()
     
     returnArgument: n      = ( ^ n )
     returnArgument: n a: a = ( ^ a )
     
-    testReturnArgumentN = ( ^ self returnArgument: 55 )
-    testReturnArgumentA = ( ^ self returnArgument: 55 a: 44 )
+    public testReturnArgumentN = ( ^ self returnArgument: 55 )
+    public testReturnArgumentA = ( ^ self returnArgument: 55 a: 44 )
     
-    testSetField  = (
+    public testSetField  = (
         ^ self new testSetField
     )
     
-    testGetField = (
+    public testGetField = (
         ^ self new getField
     )
 )
