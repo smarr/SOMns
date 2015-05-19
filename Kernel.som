@@ -85,8 +85,8 @@ class Kernel usingPlatform: platform vmMirror: vmMirror = (
   (
     'Conditional evaluation'
     public ifTrue: trueBlock ifFalse: falseBlock = (
-        self ifTrue:  [ ^ trueBlock value  ].
-        self ifFalse: [ ^ falseBlock value ].
+      self ifTrue:  [ ^ trueBlock value  ].
+      self ifFalse: [ ^ falseBlock value ].
     )
   
     'Logical operations'
