@@ -42,6 +42,7 @@ import som.compiler.AccessModifier;
 import som.interpreter.Invokable;
 import som.interpreter.TruffleCompiler;
 import som.vm.constants.Globals;
+import som.vm.constants.KernelObj;
 import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
@@ -117,7 +118,7 @@ public final class Universe {
         lookupInvokable(symbolFor("initialize:"), AccessModifier.PROTECTED);
 
     return initialize.invoke(new Object[] {systemObject,
-        SArray.create(arguments)});
+        SArray.create(KernelObj.kernel, arguments)});
   }
 
   protected void initializeObjectSystem() {
@@ -173,7 +174,7 @@ public final class Universe {
   }
 
   public static SBlock newBlock(final SMethod method, final MaterializedFrame context) {
-    return SBlock.create(method, context);
+    return SBlock.create(KernelObj.kernel, method, context);
   }
 
   @TruffleBoundary
@@ -187,9 +188,9 @@ public final class Universe {
       final Invokable truffleInvokable, final boolean isPrimitive,
       final SMethod[] embeddedBlocks) {
     if (isPrimitive) {
-      return new SPrimitive(signature, truffleInvokable);
+      return new SPrimitive(null, signature, truffleInvokable);
     } else {
-      return new SMethod(signature, accessModifier, category, truffleInvokable,
+      return new SMethod(KernelObj.kernel, signature, accessModifier, category, truffleInvokable,
           embeddedBlocks);
     }
   }

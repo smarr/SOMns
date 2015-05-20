@@ -2,6 +2,7 @@ package som.vm;
 
 import java.util.HashMap;
 
+import som.vm.constants.KernelObj;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
@@ -16,7 +17,7 @@ public final class Symbols {
     SSymbol result = symbolTable.get(interned);
     if (result != null) { return result; }
 
-    result = new SSymbol(interned);
+    result = new SSymbol(KernelObj.kernel, interned);
     symbolTable.put(string, result);
     return result;
   }

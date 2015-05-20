@@ -31,9 +31,9 @@ public final class Classes {
   // These classes can be statically preinitialized.
   static {
     // Allocate the Metaclass classes
-    metaclassClass = Bootstrap.newMetaclassClass();
-    classClass     = new SClass();
-    SClass classClassClass = new SClass();
+    metaclassClass = Bootstrap.newMetaclassClass(KernelObj.kernel);
+    classClass     = new SClass(KernelObj.kernel);
+    SClass classClassClass = new SClass(KernelObj.kernel);
     Bootstrap.initializeClassAndItsClass("Class", classClass, classClassClass);
 
     // Allocate the rest of the system classes

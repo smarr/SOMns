@@ -4,9 +4,11 @@ import som.vmobjects.SObjectWithoutFields;
 
 
 public final class Nil {
+  private Nil() { }
+
   public static final SObjectWithoutFields nilObject;
 
   static {
-    nilObject = new SObjectWithoutFields();
+    nilObject = new SObjectWithoutFields(KernelObj.kernel);
   }
 }

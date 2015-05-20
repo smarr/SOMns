@@ -17,6 +17,7 @@ import som.interpreter.Primitive;
 import som.interpreter.nodes.ExpressionNode;
 import som.primitives.HashPrimFactory;
 import som.vm.constants.Classes;
+import som.vm.constants.KernelObj;
 import som.vm.constants.Nil;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
@@ -96,9 +97,9 @@ public final class Bootstrap {
   /**
    * Allocate the metaclass class.
    */
-  public static SClass newMetaclassClass() {
-    SClass metaclassClass      = new SClass(); // class obj for "Metaclass"
-    SClass metaclassClassClass = new SClass(); // class obj for "Metaclass class"
+  public static SClass newMetaclassClass(final SObject kernel) {
+    SClass metaclassClass      = new SClass(kernel); // class obj for "Metaclass"
+    SClass metaclassClassClass = new SClass(kernel); // class obj for "Metaclass class"
     metaclassClass.setClass(metaclassClassClass);
 
     metaclassClass.setName(Symbols.symbolFor("Metaclass"));
@@ -110,8 +111,8 @@ public final class Bootstrap {
   }
 
   public static SClass newEmptyClassWithItsClass(final String name) {
-    SClass clazz = new SClass();
-    SClass clazzClazz = new SClass();
+    SClass clazz      = new SClass(KernelObj.kernel);
+    SClass clazzClazz = new SClass(KernelObj.kernel);
 
     initializeClassAndItsClass(name, clazz, clazzClazz);
 
@@ -162,35 +163,36 @@ public final class Bootstrap {
     assert objectDef.getNumberOfSlots() == 0;
     assert  valueDef.getNumberOfSlots() == 0;
 
-    SClass kernelClass = new SClass();
-    SObject kernelObj  = new SObject(kernelModule.getNumberOfSlots());
-    kernelClass.setName(Symbols.symbolFor("Kernel"));
+    assert KernelObj.kernel.getNumberOfFields() == kernelModule.getNumberOfSlots();
 
 
     // Top doesn't have any methods or slots, so outer and super can be null
-       topDef.initializeClass(null, Classes.topClass, null);
-     thingDef.initializeClass(kernelObj, Classes.thingClass,  Classes.topClass);
-     valueDef.initializeClass(kernelObj, Classes.valueClass,  Classes.thingClass);
-    objectDef.initializeClass(kernelObj, Classes.objectClass, Classes.thingClass);
-     classDef.initializeClass(kernelObj, Classes.classClass,  Classes.objectClass);
- metaclassDef.initializeClass(kernelObj, Classes.metaclassClass, Classes.classClass);
-       nilDef.initializeClass(kernelObj, Classes.nilClass,    Classes.valueClass);
+       topDef.initializeClass(Classes.topClass, null);
+     thingDef.initializeClass(Classes.thingClass,  Classes.topClass);
+     valueDef.initializeClass(Classes.valueClass,  Classes.thingClass);
+    objectDef.initializeClass(Classes.objectClass, Classes.thingClass);
+     classDef.initializeClass(Classes.classClass,  Classes.objectClass);
+ metaclassDef.initializeClass(Classes.metaclassClass, Classes.classClass);
+       nilDef.initializeClass(Classes.nilClass,    Classes.valueClass);
 
-      arrayDef.initializeClass(kernelObj, Classes.arrayClass,   Classes.objectClass);
-    integerDef.initializeClass(kernelObj, Classes.integerClass, Classes.valueClass);
-     stringDef.initializeClass(kernelObj, Classes.stringClass,  Classes.valueClass);
-     doubleDef.initializeClass(kernelObj, Classes.doubleClass,  Classes.valueClass);
-    booleanDef.initializeClass(kernelObj, Classes.booleanClass, Classes.valueClass);
-     symbolDef.initializeClass(kernelObj, Classes.symbolClass,  Classes.stringClass);
+      arrayDef.initializeClass(Classes.arrayClass,   Classes.objectClass);
+    integerDef.initializeClass(Classes.integerClass, Classes.valueClass);
+     stringDef.initializeClass(Classes.stringClass,  Classes.valueClass);
+     doubleDef.initializeClass(Classes.doubleClass,  Classes.valueClass);
+    booleanDef.initializeClass(Classes.booleanClass, Classes.valueClass);
+     symbolDef.initializeClass(Classes.symbolClass,  Classes.stringClass);
 
-     blockDef.initializeClass(kernelObj, Classes.blockClass,  Classes.objectClass);
-    block1Def.initializeClass(kernelObj, Classes.blockClass1, Classes.blockClass);
-    block2Def.initializeClass(kernelObj, Classes.blockClass2, Classes.blockClass1);
-    block3Def.initializeClass(kernelObj, Classes.blockClass3, Classes.blockClass2);
+     blockDef.initializeClass(Classes.blockClass,  Classes.objectClass);
+    block1Def.initializeClass(Classes.blockClass1, Classes.blockClass);
+    block2Def.initializeClass(Classes.blockClass2, Classes.blockClass1);
+    block3Def.initializeClass(Classes.blockClass3, Classes.blockClass2);
 
     Nil.nilObject.setClass(Classes.nilClass);
 
     platformClass = platformModule.instantiateClass(Nil.nilObject, Classes.valueClass);
+    SClass kernelClass = kernelModule.instantiateClass(Nil.nilObject, Classes.valueClass);
+    KernelObj.kernel.setClass(kernelClass);
+
 
     // TODO:: cleanup ??? reuse comments?
     // we need:
