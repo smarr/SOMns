@@ -45,7 +45,6 @@ public class BasicInterpreterTests {
         {"MethodCall",     "test",  42, Long.class },
         {"MethodCall",     "test2", 42, Long.class },
 
-        {"NonLocalReturn", "test",  "NonLocalReturn", SClass.class },
         {"NonLocalReturn", "test1", 42, Long.class },
         {"NonLocalReturn", "test2", 43, Long.class },
         {"NonLocalReturn", "test3",  3, Long.class },
