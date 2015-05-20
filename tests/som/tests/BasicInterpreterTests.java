@@ -85,20 +85,26 @@ public class BasicInterpreterTests {
         {"BlockInlining", "testOneLevelInlining",                     1, Long.class },
         {"BlockInlining", "testOneLevelInliningWithLocalShadowTrue",  2, Long.class },
         {"BlockInlining", "testOneLevelInliningWithLocalShadowFalse", 1, Long.class },
-
         {"BlockInlining", "testBlockNestedInIfTrue",                  2, Long.class },
         {"BlockInlining", "testBlockNestedInIfFalse",                42, Long.class },
-
         {"BlockInlining", "testDeepNestedInlinedIfTrue",              3, Long.class },
         {"BlockInlining", "testDeepNestedInlinedIfFalse",            42, Long.class },
-
         {"BlockInlining", "testDeepNestedBlocksInInlinedIfTrue",      5, Long.class },
         {"BlockInlining", "testDeepNestedBlocksInInlinedIfFalse",    43, Long.class },
-
         {"BlockInlining", "testDeepDeepNestedTrue",                   9, Long.class },
         {"BlockInlining", "testDeepDeepNestedFalse",                 43, Long.class },
-
         {"BlockInlining", "testToDoNestDoNestIfTrue",                 2, Long.class },
+
+        {"Lookup", "testClassMethodsNotBlockingOuterMethods",        42, Long.class },
+        {"Lookup", "testExplicitOuterInInitializer",                182, Long.class },
+        {"Lookup", "testImplicitOuterInInitializer",                182, Long.class },
+        {"Lookup", "testImplicitSend",                               42, Long.class },
+        {"Lookup", "testSiblingsSuperclass",                       true, Boolean.class },
+        {"Lookup", "testSiblingLookupA",                             42, Long.class },
+        {"Lookup", "testSiblingLookupB",                             43, Long.class },
+        {"Lookup", "testNesting1",                                   91, Long.class },
+        {"Lookup", "testNesting2",                                  182, Long.class },
+        {"Lookup", "testNesting3",                                  364, Long.class },
     });
   }
 
