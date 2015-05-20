@@ -199,7 +199,8 @@ public final class ClassBuilder {
   private SMethod assembleClassObjectInstantiationMethod() {
     assert superclassResolution != null;
     ExpressionNode body = SNodeFactory.createConstructClassNode(superclassResolution);
-    return instantiation.assemble(body, AccessModifier.NOT_APPLICABLE, null, null);
+    return instantiation.assemble(body,
+        AccessModifier.OBJECT_INSTANTIATION_METHOD, null, null);
   }
 
   private SMethod assemblePrimaryFactoryMethod() {

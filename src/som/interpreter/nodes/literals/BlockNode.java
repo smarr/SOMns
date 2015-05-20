@@ -63,7 +63,7 @@ public class BlockNode extends LiteralNode {
   private void replaceAdapted(final Invokable adaptedForContext) {
     SMethod adapted = (SMethod) Universe.newMethod(
         blockMethod.getSignature(),
-        AccessModifier.NOT_APPLICABLE, Symbols.symbolFor("block method"),
+        AccessModifier.BLOCK_METHOD, Symbols.symbolFor("block method"),
         adaptedForContext, false,
         blockMethod.getEmbeddedBlocks());
     replace(createNode(adapted));
