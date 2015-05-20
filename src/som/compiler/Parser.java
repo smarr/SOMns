@@ -315,6 +315,7 @@ public final class Parser {
       ExpressionNode self = meth.getReadNode("self", getSource(coord));
       return unaryMessage(self);
     } else {
+      // TODO: this should probably be an implicit send!!
       return meth.getReadNode("self", getSource(coord));
     }
   }
