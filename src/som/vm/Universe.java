@@ -132,8 +132,6 @@ public final class Universe {
     initializeSystemClass(methodClass,     objectClass, "Method");
     initializeSystemClass(primitiveClass,  objectClass, "Primitive");
 
-
-
     // Thread support classes
     initializeSystemClass(conditionClass, objectClass, "Condition");
     initializeSystemClass(delayClass,     objectClass, "Delay");
@@ -204,14 +202,6 @@ public final class Universe {
     } else {
       systemClass.getSOMClass().setSuperClass(classClass);
     }
-
-    // Initialize the array of instance fields
-    systemClass.setInstanceFields(SArray.create(new Object[0]));
-    systemClass.getSOMClass().setInstanceFields(SArray.create(new Object[0]));
-
-    // Initialize the array of instance invokables
-    systemClass.setInstanceInvokables(SArray.create(new Object[0]));
-    systemClass.getSOMClass().setInstanceInvokables(SArray.create(new Object[0]));
 
     // Initialize the name of the system class
     systemClass.setName(symbolFor(name));
