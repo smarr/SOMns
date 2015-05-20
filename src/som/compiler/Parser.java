@@ -792,7 +792,7 @@ public final class Parser {
         ExpressionNode blockBody = nestedBlock(bgenc);
 
         SMethod blockMethod = bgenc.assemble(blockBody,
-            AccessModifier.NOT_APPLICABLE, null, lastMethodsSourceSection);
+            AccessModifier.BLOCK_METHOD, null, lastMethodsSourceSection);
         builder.addEmbeddedBlockMethod(blockMethod);
 
         if (bgenc.requiresContext()) {
