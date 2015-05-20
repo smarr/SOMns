@@ -221,7 +221,8 @@ public final class Parser {
 
   private void classDeclaration(final AccessModifier accessModifier,
       final ClassBuilder clsBuilder) throws ParseError {
-    expectIdentifier("class");
+    expectIdentifier("class", "Found unexpected token %(found)s. " +
+      "Tried parsing a class declaration and expected 'class' instead.");
     String className = text;
     expect(Identifier);
 
@@ -544,7 +545,7 @@ public final class Parser {
     MethodBuilder builder = new MethodBuilder(clsBuilder);
 
     messagePattern(builder);
-    expect(Equal);
+    expect(Equal, "Unexpected symbol %(found)s. Tried to parse method declaration and expect '=' between message pattern, and method body.");
     ExpressionNode body = methodBlock(builder);
     SMethod meth = builder.assemble(body, accessModifier, category, getSource(coord));
     clsBuilder.addMethod(meth);
