@@ -47,10 +47,12 @@ public final class SClass extends SObjectWithoutFields {
 
   @CompilationFinal private ObjectLayout layoutForInstances;
 
-  public SClass() { }
+  public SClass(final SAbstractObject enclosing) {
+    super(enclosing);
+  }
 
-  public SClass(final SClass clazz) {
-    super(clazz);
+  public SClass(final SAbstractObject enclosing, final SClass clazz) {
+    super(enclosing, clazz);
   }
 
   public SObjectWithoutFields getSuperClass() {

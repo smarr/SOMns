@@ -30,8 +30,8 @@ public final class SSymbol extends SAbstractObject {
   private final String string;
   private final int    numberOfSignatureArguments;
 
-  public SSymbol(final String value) {
-    super();
+  public SSymbol(final SAbstractObject enclosing, final String value) {
+    super(enclosing);
     string = value;
     numberOfSignatureArguments = determineNumberOfSignatureArguments();
   }

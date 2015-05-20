@@ -1,9 +1,9 @@
 package som.primitives;
 
 import som.interpreter.nodes.nary.UnaryExpressionNode;
-import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
+import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -13,6 +13,6 @@ import com.oracle.truffle.api.dsl.Specialization;
 public abstract class NewObjectPrim extends UnaryExpressionNode {
   @Specialization
   public final SAbstractObject doSClass(final SClass receiver) {
-    return Universe.newInstance(receiver);
+    return new SObject(receiver.getEnclosingObject(), receiver);
   }
 }

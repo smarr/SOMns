@@ -40,12 +40,13 @@ import com.oracle.truffle.api.frame.MaterializedFrame;
 
 public abstract class SBlock extends SAbstractObject {
 
-  public static SBlock create(final SInvokable blockMethod,
+  public static SBlock create(final SAbstractObject enclosing,
+      final SInvokable blockMethod,
       final MaterializedFrame context) {
     switch (blockMethod.getNumberOfArguments()) {
-      case 1: return new SBlock1(blockMethod, context);
-      case 2: return new SBlock2(blockMethod, context);
-      case 3: return new SBlock3(blockMethod, context);
+      case 1: return new SBlock1(enclosing, blockMethod, context);
+      case 2: return new SBlock2(enclosing, blockMethod, context);
+      case 3: return new SBlock3(enclosing, blockMethod, context);
     }
 
     CompilerDirectives.transferToInterpreter();
@@ -53,8 +54,8 @@ public abstract class SBlock extends SAbstractObject {
   }
 
   public static final class SBlock1 extends SBlock {
-    public SBlock1(final SInvokable blockMethod, final MaterializedFrame context) {
-      super(blockMethod, context);
+    public SBlock1(final SAbstractObject enclosing, final SInvokable blockMethod, final MaterializedFrame context) {
+      super(enclosing, blockMethod, context);
     }
 
     @Override
@@ -64,8 +65,8 @@ public abstract class SBlock extends SAbstractObject {
   }
 
   public static final class SBlock2 extends SBlock {
-    public SBlock2(final SInvokable blockMethod, final MaterializedFrame context) {
-      super(blockMethod, context);
+    public SBlock2(final SAbstractObject enclosing, final SInvokable blockMethod, final MaterializedFrame context) {
+      super(enclosing, blockMethod, context);
     }
 
     @Override
@@ -75,8 +76,8 @@ public abstract class SBlock extends SAbstractObject {
   }
 
   public static final class SBlock3 extends SBlock {
-    public SBlock3(final SInvokable blockMethod, final MaterializedFrame context) {
-      super(blockMethod, context);
+    public SBlock3(final SAbstractObject enclosing, final SInvokable blockMethod, final MaterializedFrame context) {
+      super(enclosing, blockMethod, context);
     }
 
     @Override
@@ -85,7 +86,9 @@ public abstract class SBlock extends SAbstractObject {
     }
   }
 
-  public SBlock(final SInvokable blockMethod, final MaterializedFrame context) {
+  public SBlock(final SAbstractObject enclosing, final SInvokable blockMethod,
+      final MaterializedFrame context) {
+    super(enclosing);
     this.method  = blockMethod;
     this.context = context;
   }
