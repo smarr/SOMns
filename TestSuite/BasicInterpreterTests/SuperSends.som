@@ -1,0 +1,112 @@
+class SuperSends = ()(
+  class TestSuperClassClause1 = ()(
+  	public class SuperHierarchy = ()(
+  		public class Inner1 new: x =  ( | v = x. |) (
+  			public foo = ( ^ v + 42 )
+  		)
+      public makeInnerInstance = ( ^ (Inner1 new: 1) foo )
+  	)
+
+  	public class SubHierarchy = SuperHierarchy ()(
+  		public class Inner1 new: x = super Inner1 new: x ()(
+  			public foo = ( ^ v * super foo )		
+  		)
+  	)
+  )
+  
+  class TestSuperClassClause2 = ()(
+  	public class InnerHierarchy = ()(	
+  		public class Inner1 new: x = (| v = x. |)(
+  			public foo = ( ^ v + 42 )
+  		)
+  		public class InnerInnerHierarchy = ()(
+  			public class Inner1 new: x = outer InnerHierarchy Inner1 new: x ()(
+  				public foo = ( ^ v * super foo )
+  			)
+  		)
+  	)
+  )
+  
+  class TestSuperClassClause3 = ()(
+  	public class Inner0 new: x =  (| v = x. |)(
+  		public foo = ( ^ v + 42 )
+  	)
+
+  	public class Inner1 new: x =  outer Sample Inner0 new: x ()(
+  		public foo = ( ^ v * super foo )		
+  	)
+  )
+  
+  class TestSuperClassClause4 = ()(
+  	public class Inner0 new: x = (| v = x. |)(
+  		public foo = ( ^ v + 42 )
+  	)
+  	public class Inner1 new: x = self Inner0 new: x ()(
+  		public foo = ( ^ v * super foo )		
+  	)
+  )
+) : (
+  (* assert 44 *)
+  public testSuperClassClause1A = (
+    | o superklass superInstance |
+    o := TestSuperClassClause1 new.
+		superklass := o SuperHierarchy.
+		superInstance := superklass new.
+    superInstance Inner1 = superInstance Inner1 ifFalse: [ ^ #error ].
+    ^ (superInstance Inner1 new: 2) foo
+  )
+  
+  (* assert 88 *)
+  public testSuperClassClause1B = (
+    | o subklass subInstance |
+    o := TestSuperClassClause1 new.
+    subklass := o SubHierarchy.
+  	subInstance := subklass new.
+    subInstance Inner1 = subInstance Inner1 ifFalse: [ ^ #error ].
+    ^ (subInstance Inner1 new: 2) foo
+  )
+
+  (* assert 44 *)
+  public testSuperClassClause2A = (
+    | innerklass innerInstance |
+  	innerklass := TestSuperClassClause2 new InnerHierarchy.
+  	innerInstance := innerklass new.
+    innerInstance Inner1 = innerInstance Inner1 ifFalse: [ ^ #error ].
+    ^ (innerInstance Inner1 new: 2) foo
+  )
+  
+  (* assert 88 *)
+  public testSuperClassClause2B = (
+		| innerklass innerInstance innerInnerklass innerInnerInstance |
+		innerklass := TestSuperClassClause2 new InnerHierarchy.
+		innerInstance := innerklass new.
+		innerInnerklass := innerInstance InnerInnerHierarchy.
+		innerInnerInstance := innerInnerklass new.
+    innerInnerInstance Inner1 = innerInnerInstance Inner1 ifFalse: [ ^ #error ].
+    ^ (innerInnerInstance Inner1 new: 2)
+	)
+  
+  (* assert 44 *)
+  public testSuperClassClause3A = (
+    | innerklass0 |
+    innerklass0 := TestSuperClassClause3 new Inner0.
+    ^ (innerklass0 new: 2) foo
+  )
+  
+  (* assert 88 *)
+  public testSuperClassClause3B = (
+    | innerklass1 |
+    innerklass1 := TestSuperClassClause3 new Inner1.
+    ^ (innerklass1 new: 2) foo
+  )
+  
+  (* assert 44 *)
+  public testSuperClassClause4A = (
+    ^ (TestSuperClassClause4 new Inner0 new: 2) foo
+  )
+  
+  (* assert 88 *)
+  public testSuperClassClause4B = (
+    ^ (TestSuperClassClause4 new Inner1 new: 2) foo
+  )
+)
