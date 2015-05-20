@@ -434,7 +434,9 @@ public final class Parser {
 
   private void sideDeclaration(final ClassBuilder clsBuilder) throws ParseError {
     expect(NewTerm);
-    while (canAcceptThisOrNextIdentifier("class")) {
+    // TODO: this needs to be fixed, this needs to only accept a access modifier and class
+    while (canAcceptIdentifierWithOptionalEarlierIdentifier(
+        new String[]{"private", "protected", "public"}, "class")) {
       nestedClassDeclaration(clsBuilder);
     }
 
@@ -472,8 +474,22 @@ public final class Parser {
     return ss.contains(sym);
   }
 
-  private boolean canAcceptThisOrNextIdentifier(final String identifier) {
-    if (sym == Identifier && identifier.equals(text)) { return true; }
+  private boolean canAcceptIdentifierWithOptionalEarlierIdentifier(
+      final String[] earlierIdentifier, final String identifier) {
+    if (sym != Identifier) { return false; }
+
+    if (identifier.equals(text)) { return true; }
+
+    boolean oneMatches = false;
+    for (String s : earlierIdentifier) {
+      if (s.equals(text)) {
+        oneMatches = true;
+        break;
+      }
+    }
+
+    if (!oneMatches) { return false; }
+
     peekForNextSymbolFromLexer();
     return nextSym == Identifier && identifier.equals(nextText);
   }
