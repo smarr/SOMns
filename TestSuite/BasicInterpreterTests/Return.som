@@ -19,6 +19,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 *)
 class Return = ()() : (
+
+    public returnIntLiteral = ( ^ 33 )
+    
+    public returnUnarySend = ( ^ returnIntLiteral )
     
     public returnSelf = ( ^ self )
 
