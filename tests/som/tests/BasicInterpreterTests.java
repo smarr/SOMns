@@ -61,6 +61,8 @@ public class BasicInterpreterTests {
         {"Return", "returnSelfImplicitly", "Return", SClass.class },
         {"Return", "noReturnReturnsSelf",  "Return", SClass.class },
         {"Return", "blockReturnsImplicitlyLastValue", 4, Long.class },
+        {"Return", "returnIntLiteral",           33, Long.class },
+        {"Return", "returnUnarySend",            33, Long.class },
 
         {"IfTrueIfFalse", "test",  42, Long.class },
         {"IfTrueIfFalse", "test2", 33, Long.class },
