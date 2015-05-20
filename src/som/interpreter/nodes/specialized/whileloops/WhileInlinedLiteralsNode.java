@@ -79,7 +79,7 @@ public final class WhileInlinedLiteralsNode extends ExpressionNode {
       current = current.getParent();
     }
     if (current != null) {
-      ((Invokable) current).propagateLoopCountThroughoutLexicalScope(count);
+      ((Invokable) current).propagateLoopCountThroughoutMethodScope(count);
     }
   }
 }

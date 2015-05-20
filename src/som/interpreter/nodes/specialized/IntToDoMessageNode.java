@@ -85,7 +85,7 @@ public abstract class IntToDoMessageNode extends TernaryExpressionNode {
       current = current.getParent();
     }
     if (current != null) {
-      ((Invokable) current).propagateLoopCountThroughoutLexicalScope(count);
+      ((Invokable) current).propagateLoopCountThroughoutMethodScope(count);
     }
   }
 }

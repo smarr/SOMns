@@ -21,6 +21,7 @@
  */
 package som.interpreter;
 
+import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.nodes.ExpressionNode;
 
 import com.oracle.truffle.api.frame.FrameDescriptor;
@@ -31,15 +32,15 @@ import com.oracle.truffle.api.source.SourceSection;
 
 public final class Method extends Invokable {
 
-  private final LexicalScope currentLexicalScope;
+  private final MethodScope currentMethodScope;
 
   public Method(final SourceSection sourceSection,
                 final ExpressionNode expressions,
-                final LexicalScope currentLexicalScope,
+                final MethodScope currentLexicalScope,
                 final ExpressionNode uninitialized) {
     super(sourceSection, currentLexicalScope.getFrameDescriptor(),
         expressions, uninitialized);
-    this.currentLexicalScope = currentLexicalScope;
+    this.currentMethodScope = currentLexicalScope;
     currentLexicalScope.setMethod(this);
   }
 
@@ -51,10 +52,11 @@ public final class Method extends Invokable {
   }
 
   @Override
-  public Invokable cloneWithNewLexicalContext(final LexicalScope outerScope) {
+  public Invokable cloneWithNewLexicalContext(final MethodScope outerMethodScope) {
     FrameDescriptor inlinedFrameDescriptor = getFrameDescriptor().copy();
-    LexicalScope    inlinedCurrentScope = new LexicalScope(
-        inlinedFrameDescriptor, outerScope);
+    MethodScope     inlinedCurrentScope = new MethodScope(
+        inlinedFrameDescriptor, outerMethodScope,
+        null /* because we got an enclosing method anyway */);
     ExpressionNode  inlinedBody = SplitterForLexicallyEmbeddedCode.doInline(
         uninitializedBody, inlinedCurrentScope);
     Method clone = new Method(getSourceSection(), inlinedBody,
@@ -64,8 +66,9 @@ public final class Method extends Invokable {
 
   public Invokable cloneAndAdaptToEmbeddedOuterContext(
       final InlinerForLexicallyEmbeddedMethods inliner) {
-    LexicalScope currentAdaptedScope = new LexicalScope(
-        getFrameDescriptor().copy(), inliner.getCurrentLexicalScope());
+    MethodScope currentAdaptedScope = new MethodScope(
+        getFrameDescriptor().copy(), inliner.getCurrentMethodScope(),
+        null /* because we got an enclosing method anyway */);
     ExpressionNode adaptedBody = InlinerAdaptToEmbeddedOuterContext.doInline(
         uninitializedBody, inliner, currentAdaptedScope);
     ExpressionNode uninitAdaptedBody = NodeUtil.cloneNode(adaptedBody);
@@ -77,8 +80,9 @@ public final class Method extends Invokable {
 
   public Invokable cloneAndAdaptToSomeOuterContextBeingEmbedded(
       final InlinerAdaptToEmbeddedOuterContext inliner) {
-    LexicalScope currentAdaptedScope = new LexicalScope(
-        getFrameDescriptor().copy(), inliner.getCurrentLexicalScope());
+    MethodScope currentAdaptedScope = new MethodScope(
+        getFrameDescriptor().copy(), inliner.getCurrentMethodScope(),
+        null /* because we got an enclosing method anyway */);
     ExpressionNode adaptedBody = InlinerAdaptToEmbeddedOuterContext.doInline(
         uninitializedBody, inliner, currentAdaptedScope);
     ExpressionNode uninitAdaptedBody = NodeUtil.cloneNode(adaptedBody);
@@ -89,14 +93,14 @@ public final class Method extends Invokable {
   }
 
   @Override
-  public void propagateLoopCountThroughoutLexicalScope(final long count) {
+  public void propagateLoopCountThroughoutMethodScope(final long count) {
     assert count >= 0;
-    currentLexicalScope.propagateLoopCountThroughoutLexicalScope(count);
+    currentMethodScope.propagateLoopCountThroughoutMethodScope(count);
     reportLoopCount((count > Integer.MAX_VALUE) ? Integer.MAX_VALUE : (int) count);
   }
 
   @Override
   public Node deepCopy() {
-    return cloneWithNewLexicalContext(currentLexicalScope.getOuterScopeOrNull());
+    return cloneWithNewLexicalContext(currentMethodScope.getOuterMethodScopeOrNull());
   }
 }

@@ -1,5 +1,6 @@
 package som.interpreter;
 
+import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.nodes.ContextualNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.SOMNode;
@@ -14,20 +15,20 @@ public final class SplitterForLexicallyEmbeddedCode implements NodeVisitor {
 
   public static ExpressionNode doInline(
       final ExpressionNode body,
-      final LexicalScope inlinedCurrentScope) {
+      final MethodScope inlinedCurrentScope) {
     ExpressionNode inlinedBody = NodeUtil.cloneNode(body);
 
     return NodeVisitorUtil.applyVisitor(inlinedBody,
         new SplitterForLexicallyEmbeddedCode(inlinedCurrentScope));
   }
 
-  private final LexicalScope inlinedCurrentScope;
+  private final MethodScope inlinedCurrentScope;
 
-  private SplitterForLexicallyEmbeddedCode(final LexicalScope inlinedCurrentScope) {
+  private SplitterForLexicallyEmbeddedCode(final MethodScope inlinedCurrentScope) {
     this.inlinedCurrentScope = inlinedCurrentScope;
   }
 
-  public LexicalScope getCurrentScope() {
+  public MethodScope getCurrentScope() {
     return inlinedCurrentScope;
   }
 
@@ -47,9 +48,9 @@ public final class SplitterForLexicallyEmbeddedCode implements NodeVisitor {
   }
 
   public FrameSlot getFrameSlot(final Object slotId, int level) {
-    LexicalScope ctx = inlinedCurrentScope;
+    MethodScope ctx = inlinedCurrentScope;
     while (level > 0) {
-      ctx = ctx.getOuterScope();
+      ctx = ctx.getOuterMethodScope();
       level--;
     }
     return ctx.getFrameDescriptor().findFrameSlot(slotId);

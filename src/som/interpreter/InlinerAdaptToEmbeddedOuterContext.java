@@ -1,5 +1,6 @@
 package som.interpreter;
 
+import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.SOMNode;
 
@@ -14,22 +15,22 @@ public final class InlinerAdaptToEmbeddedOuterContext implements NodeVisitor {
 
   public static ExpressionNode doInline(final ExpressionNode body,
       final InlinerForLexicallyEmbeddedMethods inliner,
-      final LexicalScope currentLexicalScope) {
+      final MethodScope currentMethodScope) {
     ExpressionNode inlinedBody = NodeUtil.cloneNode(body);
 
     return NodeVisitorUtil.applyVisitor(inlinedBody,
         new InlinerAdaptToEmbeddedOuterContext(inliner, 1,
-            currentLexicalScope));
+            currentMethodScope));
   }
 
   public static ExpressionNode doInline(final ExpressionNode body,
       final InlinerAdaptToEmbeddedOuterContext inliner,
-      final LexicalScope currentLexicalScope) {
+      final MethodScope currentMethodScope) {
     ExpressionNode inlinedBody = NodeUtil.cloneNode(body);
 
     return NodeVisitorUtil.applyVisitor(inlinedBody,
         new InlinerAdaptToEmbeddedOuterContext(inliner.outerInliner,
-            inliner.contextLevel + 1, currentLexicalScope));
+            inliner.contextLevel + 1, currentMethodScope));
   }
 
   private final InlinerForLexicallyEmbeddedMethods outerInliner;
@@ -39,12 +40,12 @@ public final class InlinerAdaptToEmbeddedOuterContext implements NodeVisitor {
   // level
   private final int contextLevel;
 
-  private final LexicalScope currentLexicalScope;
+  private final MethodScope currentLexicalScope;
 
   private InlinerAdaptToEmbeddedOuterContext(
       final InlinerForLexicallyEmbeddedMethods outerInliner,
       final int appliesToContextLevel,
-      final LexicalScope currentLexicalContext) {
+      final MethodScope currentLexicalContext) {
     this.outerInliner = outerInliner;
     this.contextLevel = appliesToContextLevel;
     this.currentLexicalScope = currentLexicalContext;
@@ -54,11 +55,11 @@ public final class InlinerAdaptToEmbeddedOuterContext implements NodeVisitor {
     return outerInliner.getLocalSlot(slotId);
   }
 
-  public LexicalScope getOuterContext() {
-    return currentLexicalScope.getOuterScope();
+  public MethodScope getOuterContext() {
+    return currentLexicalScope.getOuterMethodScope();
   }
 
-  public LexicalScope getCurrentLexicalScope() {
+  public MethodScope getCurrentMethodScope() {
     return currentLexicalScope;
   }
 

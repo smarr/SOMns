@@ -1,5 +1,6 @@
 package som.interpreter;
 
+import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.nodes.ExpressionNode;
 
 import com.oracle.truffle.api.CompilerAsserts;
@@ -20,11 +21,11 @@ public final class Primitive extends Invokable {
   }
 
   @Override
-  public Invokable cloneWithNewLexicalContext(final LexicalScope outerContext) {
+  public Invokable cloneWithNewLexicalContext(final MethodScope outerContext) {
     assert outerContext == null;
     FrameDescriptor inlinedFrameDescriptor = getFrameDescriptor().copy();
-    LexicalScope  inlinedContext = new LexicalScope(inlinedFrameDescriptor,
-        outerContext);
+    MethodScope  inlinedContext = new MethodScope(inlinedFrameDescriptor,
+        outerContext, null /* since we got an outer method scope, there won't be a direct class scope*/);
     ExpressionNode  inlinedBody = SplitterForLexicallyEmbeddedCode.doInline(uninitializedBody,
         inlinedContext);
     return new Primitive(inlinedBody, inlinedFrameDescriptor, uninitializedBody);
@@ -41,7 +42,7 @@ public final class Primitive extends Invokable {
   }
 
   @Override
-  public void propagateLoopCountThroughoutLexicalScope(final long count) {
+  public void propagateLoopCountThroughoutMethodScope(final long count) {
     propagateLoopCount(count);
   }
 
@@ -76,7 +77,7 @@ public final class Primitive extends Invokable {
     }
 
     if (m != null && !(m instanceof Primitive)) {
-      m.propagateLoopCountThroughoutLexicalScope(count);
+      m.propagateLoopCountThroughoutMethodScope(count);
     }
   }
 }

@@ -6,6 +6,7 @@ import som.compiler.ClassDefinition;
 import som.compiler.ClassDefinition.SlotDefinition;
 import som.compiler.Variable.Argument;
 import som.compiler.Variable.Local;
+import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.nodes.ArgumentReadNode.LocalArgumentReadNode;
 import som.interpreter.nodes.ArgumentReadNode.LocalSuperReadNode;
 import som.interpreter.nodes.ArgumentReadNode.NonLocalArgumentReadNode;
@@ -143,8 +144,9 @@ public final class SNodeFactory {
   }
 
   public static ExpressionNode createImplicitReceiverSend(
-      final SSymbol selector, final SourceSection source) {
     return new NotImplemented("implicit receiver send", source);
+      final SSymbol selector, final ExpressionNode[] arguments,
+      final MethodScope currentScope, final SourceSection source) {
   }
 
   public static ExpressionNode createImplicitReceiverSetterSend(

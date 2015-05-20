@@ -75,7 +75,7 @@ public final class Bootstrap {
         prim.getReadNode("obj", null));
 
     Invokable objHashcode = new Primitive(primNode,
-        prim.getCurrentLexicalScope().getFrameDescriptor(),
+        prim.getCurrentMethodScope().getFrameDescriptor(),
         NodeUtil.cloneNode(primNode));
 
 

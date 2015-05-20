@@ -2,6 +2,7 @@ package som.interpreter;
 
 import som.compiler.MethodBuilder;
 import som.compiler.Variable.Local;
+import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.nodes.ExpressionNode;
 
 import com.oracle.truffle.api.RootCallTarget;
@@ -31,7 +32,7 @@ public abstract class Invokable extends RootNode {
     return expressionOrSequence.executeGeneric(frame);
   }
 
-  public abstract Invokable cloneWithNewLexicalContext(final LexicalScope outerContext);
+  public abstract Invokable cloneWithNewLexicalContext(final MethodScope outerContext);
 
   public ExpressionNode inline(final MethodBuilder builder,
       final Local[] locals) {
@@ -48,5 +49,5 @@ public abstract class Invokable extends RootNode {
     return Truffle.getRuntime().createCallTarget(this);
   }
 
-  public abstract void propagateLoopCountThroughoutLexicalScope(final long count);
+  public abstract void propagateLoopCountThroughoutMethodScope(final long count);
 }

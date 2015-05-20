@@ -2,6 +2,7 @@ package som.interpreter;
 
 import som.compiler.MethodBuilder;
 import som.compiler.Variable.Local;
+import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.SOMNode;
 import som.interpreter.nodes.UninitializedVariableNode.UninitializedVariableReadNode;
@@ -69,8 +70,8 @@ public class InlinerForLexicallyEmbeddedMethods implements NodeVisitor {
     return var.getSlot();
   }
 
-  public LexicalScope getCurrentLexicalScope() {
-    return builder.getCurrentLexicalScope();
+  public MethodScope getCurrentMethodScope() {
+    return builder.getCurrentMethodScope();
   }
 
   public UninitializedVariableWriteNode getLocalWrite(final Object slotIdentifier,

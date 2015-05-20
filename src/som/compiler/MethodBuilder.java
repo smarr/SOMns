@@ -35,7 +35,8 @@ import java.util.List;
 
 import som.compiler.Variable.Argument;
 import som.compiler.Variable.Local;
-import som.interpreter.LexicalScope;
+import som.interpreter.LexicalScope.ClassScope;
+import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.Method;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.ReturnNonLocalNode;
@@ -65,7 +66,7 @@ public final class MethodBuilder {
   private final LinkedHashMap<String, Local>    locals    = new LinkedHashMap<>();
 
   private       FrameSlot     frameOnStackSlot;
-  private final LexicalScope  currentScope;
+  private final MethodScope   currentScope;
 
   private final List<SMethod> embeddedBlockMethods;
 
@@ -85,8 +86,10 @@ public final class MethodBuilder {
     this.outerBuilder = outerBuilder;
     this.blockMethod  = isBlockMethod;
 
-    LexicalScope outer = (outerBuilder != null) ? outerBuilder.getCurrentLexicalScope() : null;
-    this.currentScope   = new LexicalScope(new FrameDescriptor(), outer);
+    MethodScope outer = (outerBuilder != null) ? outerBuilder.getCurrentMethodScope() : null;
+
+    ClassScope clsScope = isBlockMethod ? null : holder.getCurrentClassScope();
+    this.currentScope   = new MethodScope(new FrameDescriptor(), outer, clsScope);
 
     accessesVariablesOfOuterScope = false;
     throwsNonLocalReturn          = false;
@@ -101,7 +104,7 @@ public final class MethodBuilder {
     embeddedBlockMethods.add(blockMethod);
   }
 
-  public LexicalScope getCurrentLexicalScope() {
+  public MethodScope getCurrentMethodScope() {
     return currentScope;
   }
 
