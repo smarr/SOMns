@@ -32,6 +32,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 import som.compiler.ClassDefinition.SlotDefinition;
+import som.interpreter.LexicalScope.ClassScope;
 import som.interpreter.SNodeFactory;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
@@ -47,22 +48,7 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
 public final class ClassBuilder {
 
-  private static final ClassBuilder universeClassBuilder = new ClassBuilder(true);
-
-  private ClassBuilder(final boolean onlyForUnivserClass) {
-    assert onlyForUnivserClass;
-
-    initializer = null;
-    instantiation = null;
-    setName(Symbols.symbolFor("Universe"));
-  }
-
-  public ClassBuilder() {
-    this.instantiation = createClassDefinitionContext();
-    this.initializer   = new MethodBuilder(this);
-
-    this.classSide = false;
-  }
+  private static final ClassBuilder moduleContextClassBuilder = new ClassBuilder(true);
 
   /** The method that is used to instantiate the class object. */
   private final MethodBuilder instantiation;
@@ -83,6 +69,37 @@ public final class ClassBuilder {
   private boolean classSide;
 
   private ExpressionNode superclassFactorySend;
+
+  private final ClassScope   currentScope;
+  private final ClassBuilder outerBuilder;
+
+  private ClassBuilder(final boolean onlyForModules) {
+    assert onlyForModules;
+
+    initializer = null;
+    instantiation = null;
+    setName(Symbols.symbolFor("non-existing-module-context"));
+
+    outerBuilder = null;
+    currentScope = new ClassScope(null);
+  }
+
+  public ClassBuilder() {
+    this(moduleContextClassBuilder);
+  }
+
+  public ClassBuilder(final ClassBuilder outerBuilder) {
+    this.instantiation = createClassDefinitionContext();
+    this.initializer   = new MethodBuilder(this);
+
+    this.classSide = false;
+    this.outerBuilder = outerBuilder;
+    this.currentScope = new ClassScope(outerBuilder.getCurrentClassScope());
+  }
+
+  public ClassScope getCurrentClassScope() {
+    return currentScope;
+  }
 
   public void setName(final SSymbol name) {
     assert this.name == null;
