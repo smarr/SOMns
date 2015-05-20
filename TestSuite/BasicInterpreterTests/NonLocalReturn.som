@@ -20,17 +20,6 @@ THE SOFTWARE.
 *)
 class NonLocalReturn = ()():(
 
-    public test = (
-        'test1 expect 42: ' println.
-        self test1 asString println.
-        
-        'test2 expect 43: ' println.
-        self test2 asString println.
-        
-        'test3 expect  3: ' println.
-        self test3 asString println.
-    )
-    
     public test1 = ( | t1Frame |
       [ | nlrFrame |
         ^ 42 ] value
