@@ -744,7 +744,13 @@ public final class Parser {
   }
 
   private ExpressionNode evaluation(final MethodBuilder builder) throws ParseError {
-    ExpressionNode exp = primary(builder);
+    ExpressionNode exp;
+    if (sym == Keyword) {
+      // TODO: the receiver needs to be an implicit receiver!!!
+      exp = keywordMessage(builder, builder.getReadNode("self", null));
+    } else {
+      exp = primary(builder);
+    }
     if (isIdentifier(sym) || sym == Keyword || sym == OperatorSequence
         || symIn(binaryOpSyms)) {
       exp = messages(builder, exp);
