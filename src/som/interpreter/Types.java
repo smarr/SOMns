@@ -27,7 +27,6 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import som.vm.constants.Classes;
 import som.vm.constants.Globals;
-import som.vm.constants.ThreadClasses;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
@@ -75,12 +74,6 @@ public class Types {
       return Classes.stringClass;
     } else if (obj instanceof Double) {
       return Classes.doubleClass;
-    } else if (obj instanceof ReentrantLock) {
-      return ThreadClasses.mutexClass;
-    } else if (obj instanceof Condition) {
-      return ThreadClasses.conditionClass;
-    } else if (obj instanceof Thread) {
-      return ThreadClasses.threadClass;
     }
 
     TruffleCompiler.transferToInterpreter("Should not be reachable");
