@@ -500,18 +500,26 @@ public final class Parser {
     return false;
   }
 
-  private boolean expectIdentifier(final String identifier) throws ParseError {
-    if (acceptIdentifier(identifier)) { return true; }
+  private void expectIdentifier(final String identifier, final String msg)
+      throws ParseError {
+    if (acceptIdentifier(identifier)) { return; }
 
-    throw new ParseError("Unexpected token. Expected '" + identifier +
-        "', but found %(found)s", Identifier, this);
+    throw new ParseError(msg, Identifier, this);
+  }
+
+  private void expectIdentifier(final String identifier) throws ParseError {
+    expectIdentifier(identifier, "Unexpected token. Expected '" + identifier +
+        "', but found %(found)s");
+  }
+
+  private void expect(final Symbol s, final String msg) throws ParseError {
+    if (accept(s)) { return; }
+
+    throw new ParseError(msg, s, this);
   }
 
   private void expect(final Symbol s) throws ParseError {
-    if (accept(s)) { return; }
-
-    throw new ParseError("Unexpected symbol. Expected %(expected)s, but found "
-        + "%(found)s", s, this);
+    expect(s, "Unexpected symbol. Expected %(expected)s, but found %(found)s");
   }
 
   private boolean expectOneOf(final List<Symbol> ss) throws ParseError {
