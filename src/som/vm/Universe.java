@@ -220,19 +220,7 @@ public final class Universe {
   @TruffleBoundary
   public SClass loadClass(final SSymbol name) {
     SClass result = loadClass(name, null);
-    loadPrimitives(result, false);
-
     return result;
-  }
-
-  private void loadPrimitives(final SClass result, final boolean isSystemClass) {
-    if (result == null) { return; }
-
-    // Load primitives if class defines them, or try to load optional
-    // primitives defined for system classes.
-    if (result.hasPrimitives() || isSystemClass) {
-      result.loadPrimitives(!isSystemClass);
-    }
   }
 
   @TruffleBoundary
@@ -247,8 +235,6 @@ public final class Universe {
           + "Please set system property 'system.class.path' or "
           + "pass the '-cp' command-line parameter.");
     }
-
-    loadPrimitives(result, true);
   }
 
   @TruffleBoundary
