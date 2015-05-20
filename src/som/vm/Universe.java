@@ -99,7 +99,7 @@ public final class Universe {
 
     // Lookup the initialize invokable on the system class
     SInvokable initialize = clazz.getSOMClass().lookupInvokable(
-        symbolFor(selector));
+        symbolFor(selector), AccessModifier.PROTECTED);
     return initialize.invoke(clazz);
   }
 
@@ -114,7 +114,7 @@ public final class Universe {
 
     // Lookup the initialize invokable on the system class
     SInvokable initialize = systemClass.
-        lookupInvokable(symbolFor("initialize:"));
+        lookupInvokable(symbolFor("initialize:"), AccessModifier.PROTECTED);
 
     return initialize.invoke(new Object[] {systemObject,
         SArray.create(arguments)});

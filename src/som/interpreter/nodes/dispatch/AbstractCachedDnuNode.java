@@ -1,5 +1,6 @@
 package som.interpreter.nodes.dispatch;
 
+import som.compiler.AccessModifier;
 import som.interpreter.SArguments;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode.AbstractCachedDispatchNode;
 import som.vm.Symbols;
@@ -15,7 +16,7 @@ public abstract class AbstractCachedDnuNode extends AbstractCachedDispatchNode {
 
   public static CallTarget getDnuCallTarget(final SClass rcvrClass) {
     return rcvrClass.lookupInvokable(
-          Symbols.symbolFor("doesNotUnderstand:arguments:")).
+          Symbols.symbolFor("doesNotUnderstand:arguments:"), AccessModifier.PROTECTED).
         getCallTarget();
   }
 

@@ -101,7 +101,13 @@ public final class SClass extends SObjectWithoutFields {
     if (superclass == Classes.topClass) {
       return null;
     } else {
-      return superclass.lookupInvokable(selector, hasAtLeast);
+      AccessModifier atLeastProtected;
+      if (hasAtLeast.ordinal() < AccessModifier.PROTECTED.ordinal()) {
+        atLeastProtected = AccessModifier.PROTECTED;
+      } else {
+        atLeastProtected = hasAtLeast;
+      }
+      return superclass.lookupInvokable(selector, atLeastProtected);
     }
   }
 

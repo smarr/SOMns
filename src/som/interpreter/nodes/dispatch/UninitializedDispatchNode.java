@@ -1,6 +1,7 @@
 package som.interpreter.nodes.dispatch;
 
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
+import som.compiler.AccessModifier;
 import som.interpreter.Types;
 import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
 import som.interpreter.nodes.dispatch.CachedDispatchSimpleCheckNode.CachedDispatchFalseCheckNode;
@@ -17,8 +18,12 @@ import com.oracle.truffle.api.nodes.Node;
 
 public final class UninitializedDispatchNode extends AbstractDispatchWithLookupNode {
 
-  public UninitializedDispatchNode(final SSymbol selector) {
+  private final AccessModifier minimalVisibility;
+
+  public UninitializedDispatchNode(final SSymbol selector,
+      final AccessModifier minimalVisibility) {
     super(selector);
+    this.minimalVisibility = minimalVisibility;
   }
 
   private AbstractDispatchNode specialize(final Object[] arguments) {
@@ -38,15 +43,20 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
 
     if (chainDepth < INLINE_CACHE_SIZE) {
       SClass rcvrClass = Types.getClassOf(rcvr);
-      SInvokable method = rcvrClass.lookupInvokable(selector);
+      SInvokable method = rcvrClass.lookupInvokable(selector, minimalVisibility);
+
       CallTarget callTarget;
       if (method != null) {
+        if (method.getAccessModifier() == AccessModifier.PRIVATE) {
+          System.out.println("TODO: We might replace the whole dispatch chain, and link this unconditionally");
+        }
         callTarget = method.getCallTarget();
       } else {
         callTarget = null;
       }
 
-      UninitializedDispatchNode newChainEnd = new UninitializedDispatchNode(selector);
+      UninitializedDispatchNode newChainEnd = new UninitializedDispatchNode(
+          selector, minimalVisibility);
 
       if (rcvr instanceof SObject) {
         AbstractCachedDispatchNode node;
@@ -61,7 +71,7 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
           return replace(node);
         } else {
           SObjectCheckDispatchNode checkNode = new SObjectCheckDispatchNode(node,
-              new UninitializedDispatchNode(selector));
+              new UninitializedDispatchNode(selector, minimalVisibility));
           return replace(checkNode);
         }
       } else {

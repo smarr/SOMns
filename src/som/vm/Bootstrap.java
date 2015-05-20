@@ -206,7 +206,7 @@ public final class Bootstrap {
 
   public static Object execute(final String selector) {
     SInvokable method = platformClass.getSOMClass().lookupInvokable(
-        Symbols.symbolFor(selector));
+        Symbols.symbolFor(selector), AccessModifier.PUBLIC);
     return method.invoke(platformClass);
   }
 }

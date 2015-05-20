@@ -130,11 +130,15 @@ public final class MessageSendNode {
       extends AbstractMessageSendNode {
 
     protected final SSymbol selector;
+    protected final AccessModifier minimalVisibility;
 
     protected AbstractUninitializedMessageSendNode(final SSymbol selector,
-        final ExpressionNode[] arguments, final SourceSection source) {
+        final ExpressionNode[] arguments,
+        final AccessModifier minimalVisibility,
+        final SourceSection source) {
       super(arguments, source);
       this.selector = selector;
+      this.minimalVisibility = minimalVisibility;
     }
 
     public SSymbol getSelector() {
@@ -183,7 +187,7 @@ public final class MessageSendNode {
     private GenericMessageSendNode makeGenericSend() {
       GenericMessageSendNode send = new GenericMessageSendNode(selector,
           argumentNodes,
-          new UninitializedDispatchNode(selector),
+          new UninitializedDispatchNode(selector, minimalVisibility),
           getSourceSection());
       return replace(send);
     }
@@ -478,8 +482,10 @@ public final class MessageSendNode {
       extends AbstractUninitializedMessageSendNode {
 
     protected UninitializedMessageSendNode(final SSymbol selector,
-        final ExpressionNode[] arguments, final SourceSection source) {
-      super(selector, arguments, source);
+        final ExpressionNode[] arguments,
+        final AccessModifier minimalVisibility,
+        final SourceSection source) {
+      super(selector, arguments, minimalVisibility, source);
     }
 
     @Override
@@ -496,7 +502,7 @@ public final class MessageSendNode {
 
     protected UninitializedSymbolSendNode(final SSymbol selector,
         final SourceSection source) {
-      super(selector, new ExpressionNode[0], source);
+      super(selector, new ExpressionNode[0], AccessModifier.PUBLIC, source);
     }
 
     @Override
