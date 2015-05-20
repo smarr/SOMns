@@ -116,6 +116,11 @@ public class BasicInterpreterTests {
         {"SuperSends", "testSuperClassClause3B",   88, Long.class },
         {"SuperSends", "testSuperClassClause4A",   44, Long.class },
         {"SuperSends", "testSuperClassClause4B",   88, Long.class },
+
+        {"OuterSends", "testOuterBindings1",   3, Long.class },
+        {"OuterSends", "testOuterBindings2",   2, Long.class },
+        {"OuterSends", "testOuterBindings3",   6, Long.class },
+        {"OuterSends", "testOuterSendLegalTargets", 666, Long.class },
     });
   }
 
