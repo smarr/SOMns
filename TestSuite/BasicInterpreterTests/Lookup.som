@@ -1,0 +1,130 @@
+class Lookup = ()(
+  class TestClassMethodsNotBlockingOuterMethods = ()
+  (
+    public class Inner = ()
+    (
+      public bar = (^ foo)
+    ) : (
+      public foo = (^ 91)
+    )
+    public foo = ( ^ 42 )
+  )
+
+  class TestExplicitOuterInInitializer = () (
+    public class Inner = (
+      | public f = 2 * outer Sample m. |
+    )()
+    m = ( ^ 91 )
+  )
+  
+  class TestImplicitOuterInInitializer = () (
+    public class Inner = (
+      | public f = 2 * m. |
+    )()
+    m = ( ^ 91 )
+  )
+  
+  class TestImplicitSend = ()(
+    method: arg = ( ^ arg )
+    public bar = (
+      | s |
+      ^ method: (s := 42)
+    )
+  )
+  
+  class TestSiblings = ()
+  (
+    public class A = ()(
+      public foo = ( ^ 42 )
+    )
+    public class B = A ()(
+      public bar = ( ^ foo + 1 )
+    )
+  )
+  
+  class TestNesting = ()(
+    public class NS2Test12 s: aClass = (
+      | Sup = aClass. |
+    )(
+      public class Inner1 = Sup ()(
+        public class Inner11 = Sup ()(
+          public class Inner111 = Sup ()(
+            public baz = ( ^ outer Inner11 bar
+                             + outer Inner1 foo
+                             + outer NS2Test12 m )
+          )
+          public bar = ( ^ outer NS2Test12 m + outer Inner1 foo )
+        )
+
+        public foo = (
+          ^ outer NS2Test12 m
+        )
+      )
+      m = ( ^ 91 )
+    )
+  )
+) : (
+  (* assert 42 *)
+  public testClassMethodsNotBlockingOuterMethods = (
+    ^ TestClassMethodsNotBlockingOuterMethods new Inner new bar
+  )
+  
+  (* assert 182 *)
+  public testExplicitOuterInInitializer = (
+    ^ TestExplicitOuterInInitializer new Inner new f
+  )
+  
+  (* assert 182 *)
+  public testImplicitOuterInInitializer = (
+    ^ TestImplicitOuterInInitializer new Inner new f
+  )
+  
+  (* assert 42 *)
+  public testImplicitSend = (
+    ^ TestImplicitSend new bar
+  )
+  
+  (* assert true *)
+  public testSiblingsSuperclass = (
+    | cls |
+    cls := TestSiblings new.
+    ^ (cls B superclass) = (cls A)
+  )
+  
+  (* assert 42 *)
+  public testSiblingLookupA = (
+    ^ TestSiblings new B new foo
+  )
+  
+  (* assert 43 *)
+  public testSiblingLookupB = (
+    ^ TestSiblings new B new foo
+  )
+  
+  (* assert 91 *)
+  public testNesting1 = (
+    | o |
+    o := TestNesting NS2Test12 s: Object.
+    o Inner1 = o Inner1 ifFalse: [ ^ #error ].
+    ^ o Inner1 new foo
+  )
+  
+  (* assert 182 *)
+  public testNesting2 = (
+    | o p |
+    o := TestNesting NS2Test12 s: Object.
+    p := o Inner1 new.
+    p Inner11 = p Inner11 ifFalse: [ ^ #error ].
+    ^ p Inner11 new bar
+  )
+  
+  (* assert 364 *)
+  public testNesting3 = (
+    | o p q |
+    o := TestNesting NS2Test12 s: Object.
+    p := o Inner1 new.
+    q := p Inner11 new.
+    q Inner111 = q Inner111 ifFalse: [ ^ #error ].
+    ^ q Inner111 new bar
+  )
+)
