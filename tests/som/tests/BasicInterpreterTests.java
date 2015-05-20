@@ -107,6 +107,15 @@ public class BasicInterpreterTests {
         {"Lookup", "testNesting1",                                   91, Long.class },
         {"Lookup", "testNesting2",                                  182, Long.class },
         {"Lookup", "testNesting3",                                  364, Long.class },
+
+        {"SuperSends", "testSuperClassClause1A",   44, Long.class },
+        {"SuperSends", "testSuperClassClause1B",   88, Long.class },
+        {"SuperSends", "testSuperClassClause2A",   44, Long.class },
+        {"SuperSends", "testSuperClassClause2B",   88, Long.class },
+        {"SuperSends", "testSuperClassClause3A",   44, Long.class },
+        {"SuperSends", "testSuperClassClause3B",   88, Long.class },
+        {"SuperSends", "testSuperClassClause4A",   44, Long.class },
+        {"SuperSends", "testSuperClassClause4B",   88, Long.class },
     });
   }
 
