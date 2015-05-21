@@ -244,7 +244,7 @@ public final class ClassBuilder {
   }
 
   private static MethodBuilder createClassDefinitionContext() {
-    MethodBuilder definitionMethod = new MethodBuilder(universeClassBuilder);
+    MethodBuilder definitionMethod = new MethodBuilder(moduleContextClassBuilder);
     // self is going to be either universe, or the enclosing object
     definitionMethod.addArgumentIfAbsent("self");
     definitionMethod.setSignature(Symbols.symbolFor("`define`cls"));
