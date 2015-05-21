@@ -225,6 +225,7 @@ public final class ClassBuilder {
 
     ClassDefinition clsDef = new ClassDefinition(name, classObjectInstantiation,
         methods, factoryMethods, embeddedClasses, slots, source);
+    currentScope.setClassDefinition(clsDef);
 
     return clsDef;
   }

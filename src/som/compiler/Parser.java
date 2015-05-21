@@ -463,7 +463,7 @@ public final class Parser {
       throws ParseError, ClassDefinitionError {
     SourceCoordinate coord = getCoordinate();
     AccessModifier accessModifier = accessModifier();
-    ClassBuilder nestedCls = new ClassBuilder();
+    ClassBuilder nestedCls = new ClassBuilder(clsBuilder);
     classDeclaration(accessModifier, nestedCls);
     clsBuilder.addNestedClass(nestedCls.assemble(getSource(coord)));
   }
