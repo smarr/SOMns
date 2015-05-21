@@ -169,6 +169,12 @@ public final class ClassBuilder {
             + name.getString() + ". Can't define another method with the same name.",
             meth.getSourceSection());
       }
+      if (embeddedClasses.containsKey(name)) {
+        throw new ClassDefinitionError("The class " + this.name.getString()
+            + " already contains a class named "
+            + name.getString() + ". Can't define another one with the same name.",
+            meth.getSourceSection());
+      }
       methods.put(name, meth);
     } else {
       factoryMethods.put(name, meth);
