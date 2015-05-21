@@ -1,7 +1,6 @@
 package som.interpreter.nodes.dispatch;
 
 import som.compiler.AccessModifier;
-import som.interpreter.nodes.dispatch.AbstractDispatchNode.AbstractCachedDispatchNode;
 
 import com.oracle.truffle.api.CallTarget;
 
@@ -12,7 +11,7 @@ import com.oracle.truffle.api.CallTarget;
  */
 public interface Dispatchable {
 
-  AbstractCachedDispatchNode getDispatchNode(Object rcvr, Object rcvrClass,
+  AbstractDispatchNode getDispatchNode(Object rcvr, Object rcvrClass,
       AbstractDispatchNode newChainEnd);
 
   AccessModifier getAccessModifier();

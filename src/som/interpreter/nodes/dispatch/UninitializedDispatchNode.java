@@ -49,7 +49,7 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
           selector, minimalVisibility);
 
       if (rcvr instanceof SObject) {
-        AbstractCachedDispatchNode node;
+        AbstractDispatchNode node;
         if (dispatchable != null) {
           node = dispatchable.getDispatchNode(rcvr, rcvrClass, newChainEnd);
         } else {
@@ -66,7 +66,7 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
       } else {
         AbstractDispatchNode next = sendNode.getDispatchListHead();
 
-        AbstractCachedDispatchNode node;
+        AbstractDispatchNode node;
         if (dispatchable == null) {
           node = new CachedDnuSimpleCheckNode(
               rcvr.getClass(), rcvrClass, selector, next);

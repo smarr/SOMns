@@ -93,12 +93,13 @@ public final class SClass extends SObjectWithoutFields {
   }
 
   @TruffleBoundary
-  public Dispatchable lookupMessage(final SSymbol selector, final AccessModifier hasAtLeast) {
-    SInvokable invokable = instanceInvokables.get(selector);
+  public Dispatchable lookupMessage(final SSymbol selector,
+      final AccessModifier hasAtLeast) {
+    Dispatchable disp = instanceInvokables.get(selector);
+    if (disp == null) { disp = instanceSlots.get(selector); }
 
-    if (invokable != null &&
-        invokable.getAccessModifier().ordinal() >= hasAtLeast.ordinal()) {
-      return invokable;
+    if (disp != null && disp.getAccessModifier().ordinal() >= hasAtLeast.ordinal()) {
+      return disp;
     }
 
     if (superclass == Classes.topClass) {

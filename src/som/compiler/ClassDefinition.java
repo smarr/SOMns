@@ -3,6 +3,13 @@ package som.compiler;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 
+import som.interpreter.SNodeFactory;
+import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.dispatch.AbstractDispatchNode;
+import som.interpreter.nodes.dispatch.CachedSlotAccessNode;
+import som.interpreter.nodes.dispatch.Dispatchable;
+import som.interpreter.objectstorage.FieldAccessorNode.UninitializedReadFieldNode;
+import som.vm.NotYetImplementedException;
 import som.vm.Symbols;
 import som.vm.constants.Classes;
 import som.vmobjects.SAbstractObject;
@@ -11,6 +18,7 @@ import som.vmobjects.SInvokable;
 import som.vmobjects.SInvokable.SMethod;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.source.SourceSection;
 import com.sun.istack.internal.Nullable;
 
@@ -78,7 +86,7 @@ public final class ClassDefinition {
     return result;
   }
 
-  public static final class SlotDefinition {
+  public static final class SlotDefinition implements Dispatchable {
     private final SSymbol name;
     private final int index;
     private final AccessModifier modifier;
@@ -112,6 +120,27 @@ public final class ClassDefinition {
       String imm = immutable ? ", immut" : "";
       return "SlotDef(" + name.getString()
           + " :" + modifier.toString().toLowerCase() + imm + ")";
+    }
+
+    @Override
+    public AbstractDispatchNode getDispatchNode(final Object rcvr,
+        final Object rcvrClass, final AbstractDispatchNode next) {
+      return new CachedSlotAccessNode(new UninitializedReadFieldNode(index), next);
+    }
+
+    @Override
+    public AccessModifier getAccessModifier() {
+      return modifier;
+    }
+
+    @Override
+    public Object invoke(final Object... arguments) {
+      throw new NotYetImplementedException();
+    }
+
+    @Override
+    public CallTarget getCallTargetIfAvailable() {
+      throw new UnsupportedOperationException("Slots don't have CallTargets.");
     }
   }
 
