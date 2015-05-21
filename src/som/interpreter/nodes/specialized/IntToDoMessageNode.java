@@ -69,7 +69,7 @@ public abstract class IntToDoMessageNode extends TernaryExpressionNode {
   }
 
   protected void doLooping(final VirtualFrame frame, final long receiver,
-      long limit, final SBlock block) {
+      final long limit, final SBlock block) {
     if (receiver <= limit) {
       valueSend.call(frame, new Object[] {block, receiver});
     }
