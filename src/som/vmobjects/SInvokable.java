@@ -37,6 +37,13 @@ import com.oracle.truffle.api.nodes.IndirectCallNode;
 
 public abstract class SInvokable extends SAbstractObject {
 
+  private final AccessModifier     accessModifier;
+  private final SSymbol            category;
+  private final Invokable          invokable;
+  private final RootCallTarget     callTarget;
+  private final SSymbol            signature;
+  @CompilationFinal private SClass holder;
+
   public SInvokable(final SAbstractObject enclosing, final SSymbol signature,
       final AccessModifier accessModifier,
       final SSymbol category, final Invokable invokable) {
@@ -142,11 +149,4 @@ public abstract class SInvokable extends SAbstractObject {
   public SSymbol getCategory() {
     return category;
   }
-
-  private final AccessModifier         accessModifier;
-  private final SSymbol                category;
-  private final Invokable              invokable;
-  private final RootCallTarget         callTarget;
-  private final SSymbol                signature;
-  @CompilationFinal private SClass     holder;
 }
