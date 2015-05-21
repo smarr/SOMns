@@ -210,7 +210,7 @@ public final class ClassBuilder {
     classSide = true;
   }
 
-  public ClassDefinition assemble() {
+  public ClassDefinition assemble(final SourceSection source) {
     // to prepare the class definition we need to assemble:
     //   - the class instantiation method, which resolves super
     //   - the primary factory method, which allocates the object,
@@ -224,8 +224,7 @@ public final class ClassBuilder {
     methods.put(initializationMethod.getSignature(), initializationMethod);
 
     ClassDefinition clsDef = new ClassDefinition(name, classObjectInstantiation,
-        methods,
-        factoryMethods, embeddedClasses, slots);
+        methods, factoryMethods, embeddedClasses, slots, source);
 
     return clsDef;
   }

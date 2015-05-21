@@ -29,6 +29,7 @@ import java.io.FileReader;
 import java.io.IOException;
 
 import som.compiler.ClassBuilder.ClassDefinitionError;
+import som.compiler.Lexer.SourceCoordinate;
 import som.compiler.Parser.ParseError;
 import som.vm.NotYetImplementedException;
 import som.vm.Universe;
@@ -63,12 +64,13 @@ public final class SourcecodeCompiler {
 
   private static ClassDefinition compile(final Parser parser) {
     ClassBuilder clsBuilder = new ClassBuilder();
+    SourceCoordinate coord = parser.getCoordinate();
 
     try {
       parser.moduleDeclaration(clsBuilder);
     } catch (ParseError | ClassDefinitionError pe) {
       Universe.errorExit(pe.toString());
     }
-    return clsBuilder.assemble();
+    return clsBuilder.assemble(parser.getSource(coord));
   }
 }

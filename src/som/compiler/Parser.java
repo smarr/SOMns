@@ -211,7 +211,7 @@ public final class Parser {
     getSymbolFromLexer();
   }
 
-  private SourceCoordinate getCoordinate() {
+  SourceCoordinate getCoordinate() {
     return lexer.getStartCoordinate();
   }
 
@@ -461,10 +461,11 @@ public final class Parser {
 
   private void nestedClassDeclaration(final ClassBuilder clsBuilder)
       throws ParseError, ClassDefinitionError {
+    SourceCoordinate coord = getCoordinate();
     AccessModifier accessModifier = accessModifier();
     ClassBuilder nestedCls = new ClassBuilder();
     classDeclaration(accessModifier, nestedCls);
-    clsBuilder.addNestedClass(nestedCls.assemble());
+    clsBuilder.addNestedClass(nestedCls.assemble(getSource(coord)));
   }
 
   private void category(final ClassBuilder clsBuilder)
@@ -561,7 +562,7 @@ public final class Parser {
         "%(expected)s, but found %(found)s", ss, this);
   }
 
-  private SourceSection getSource(final SourceCoordinate coord) {
+  SourceSection getSource(final SourceCoordinate coord) {
     assert lexer.getNumberOfCharactersRead() - coord.charIndex >= 0;
     return source.createSection("method", coord.startLine,
         coord.startColumn, coord.charIndex,

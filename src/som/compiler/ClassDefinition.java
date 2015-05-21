@@ -25,6 +25,7 @@ public final class ClassDefinition {
   private final SMethod      assembleClassObjectMethod;
   private final HashMap<SSymbol, SInvokable> instanceMethods;
   private final HashMap<SSymbol, SInvokable> factoryMethods;
+  private final SourceSection sourceSection;
 
   @Nullable
   private final LinkedHashMap<SSymbol, ClassDefinition> nestedClassDefinitions;
@@ -37,21 +38,22 @@ public final class ClassDefinition {
       final HashMap<SSymbol, SInvokable> instanceMethods,
       final HashMap<SSymbol, SInvokable> factoryMethods,
       final LinkedHashMap<SSymbol, ClassDefinition> nestedClassDefinitions,
-      final LinkedHashMap<SSymbol, SlotDefinition> slotDefinitions) {
+      final LinkedHashMap<SSymbol, SlotDefinition> slotDefinitions,
+      final SourceSection sourceSection) {
     this.name = name;
     this.assembleClassObjectMethod = classObjectInstantiation;
     this.instanceMethods = instanceMethods;
     this.factoryMethods  = factoryMethods;
     this.nestedClassDefinitions = nestedClassDefinitions;
     this.slotDefinitions = slotDefinitions;
+    this.sourceSection   = sourceSection;
   }
 
   public SSymbol getName() {
     return name;
   }
 
-  public void initializeClass(final SAbstractObject outer, final SClass result,
-      final SClass superClass) {
+  public void initializeClass(final SClass result, final SClass superClass) {
     result.setSuperClass(superClass);
 
     // build class class name
@@ -125,5 +127,9 @@ public final class ClassDefinition {
       return 0;
     }
     return slotDefinitions.size();
+  }
+
+  public SourceSection getSourceSection() {
+    return sourceSection;
   }
 }
