@@ -332,7 +332,26 @@ public final class ClassBuilder {
     this.superclassFactorySend = superFactorySend;
   }
 
-  public void addNestedClass(final ClassDefinition nestedClass) {
-    embeddedClasses.put(nestedClass.getName(), nestedClass);
+  public void addNestedClass(final ClassDefinition nestedClass)
+      throws ClassDefinitionError {
+    SSymbol name = nestedClass.getName();
+    if (slots.containsKey(name)) {
+      throw new ClassDefinitionError("The class " + this.name.getString() +
+          " already defines a slot with the name '" + name.getString() + "'." +
+          " Defining an inner class with the same name is not possible.",
+          nestedClass.getSourceSection());
+    }
+    if (methods.containsKey(name)) {
+      throw new ClassDefinitionError("The class " + this.name.getString() +
+          " already defines a method with the name '" + name.getString() + "'." +
+          " Defining an inner class with the same name is not possible.",
+          nestedClass.getSourceSection());
+    }
+
+    embeddedClasses.put(name, nestedClass);
+    SSymbol cacheSlot = getClassCacheSlot(name);
+    slots.put(cacheSlot,
+        new SlotDefinition(cacheSlot, AccessModifier.CLASS_CACHE_SLOT,
+            slots.size(), true, null));
   }
 }
