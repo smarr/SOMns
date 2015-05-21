@@ -170,7 +170,7 @@ public abstract class BlockPrims {
     @Specialization
     public final Thread doSBlock(final SBlock receiver) {
       Thread thread = new Thread(() -> {
-        receiver.getMethod().getCallTarget().call(receiver);
+        receiver.getMethod().getCallTargetIfAvailable().call(receiver);
       });
       thread.start();
       return thread;
@@ -187,7 +187,7 @@ public abstract class BlockPrims {
     public final Thread doSBlock(final SBlock receiver, final SArray somArgArr,
         final Object[] argArr) {
       Thread thread = new Thread(() -> {
-        receiver.getMethod().getCallTarget().call(argArr);
+        receiver.getMethod().getCallTargetIfAvailable().call(argArr);
       });
       thread.start();
       return thread;

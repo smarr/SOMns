@@ -30,6 +30,7 @@ import java.util.HashMap;
 
 import som.compiler.AccessModifier;
 import som.compiler.ClassDefinition.SlotDefinition;
+import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.objectstorage.ObjectLayout;
 import som.vm.constants.Classes;
 
@@ -92,7 +93,7 @@ public final class SClass extends SObjectWithoutFields {
   }
 
   @TruffleBoundary
-  public SInvokable lookupInvokable(final SSymbol selector, final AccessModifier hasAtLeast) {
+  public Dispatchable lookupMessage(final SSymbol selector, final AccessModifier hasAtLeast) {
     SInvokable invokable = instanceInvokables.get(selector);
 
     if (invokable != null &&
@@ -109,7 +110,7 @@ public final class SClass extends SObjectWithoutFields {
       } else {
         atLeastProtected = hasAtLeast;
       }
-      return superclass.lookupInvokable(selector, atLeastProtected);
+      return superclass.lookupMessage(selector, atLeastProtected);
     }
   }
 

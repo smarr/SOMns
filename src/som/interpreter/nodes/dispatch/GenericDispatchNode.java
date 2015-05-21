@@ -1,10 +1,10 @@
 package som.interpreter.nodes.dispatch;
 
+import som.compiler.AccessModifier;
 import som.interpreter.SArguments;
 import som.interpreter.Types;
 import som.vmobjects.SArray;
 import som.vmobjects.SClass;
-import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CallTarget;
@@ -14,9 +14,11 @@ import com.oracle.truffle.api.nodes.IndirectCallNode;
 
 public final class GenericDispatchNode extends AbstractDispatchWithLookupNode {
   @Child private IndirectCallNode call;
+  private final AccessModifier minimalVisibility;
 
-  public GenericDispatchNode(final SSymbol selector) {
+  public GenericDispatchNode(final SSymbol selector, final AccessModifier minimalAccess) {
     super(selector);
+    this.minimalVisibility = minimalAccess;
     call = Truffle.getRuntime().createIndirectCallNode();
   }
 
@@ -25,19 +27,19 @@ public final class GenericDispatchNode extends AbstractDispatchWithLookupNode {
       final VirtualFrame frame, final Object[] arguments) {
     Object rcvr = arguments[0];
     SClass rcvrClass = Types.getClassOf(rcvr);
-    SInvokable method = rcvrClass.lookupInvokable(selector);
+    Dispatchable method = rcvrClass.lookupMessage(selector, minimalVisibility);
 
     CallTarget target;
     Object[] args;
 
     if (method != null) {
-      target = method.getCallTarget();
+      target = method.getCallTargetIfAvailable();
       args = arguments;
     } else {
       // Won't use DNU caching here, because it is already a megamorphic node
       SArray argumentsArray = SArguments.getArgumentsWithoutReceiver(arguments);
       args = new Object[] {arguments[0], selector, argumentsArray};
-      target = AbstractCachedDnuNode.getDnuCallTarget(rcvrClass);
+      target = AbstractCachedDnuNode.getDnu(rcvrClass);
     }
     return call.call(frame, target, args);
   }

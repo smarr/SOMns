@@ -4,14 +4,10 @@ import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate
 import som.compiler.AccessModifier;
 import som.interpreter.Types;
 import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
-import som.interpreter.nodes.dispatch.CachedDispatchSimpleCheckNode.CachedDispatchFalseCheckNode;
-import som.interpreter.nodes.dispatch.CachedDispatchSimpleCheckNode.CachedDispatchTrueCheckNode;
 import som.vmobjects.SClass;
-import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
-import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 
@@ -43,16 +39,10 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
 
     if (chainDepth < INLINE_CACHE_SIZE) {
       SClass rcvrClass = Types.getClassOf(rcvr);
-      SInvokable method = rcvrClass.lookupInvokable(selector, minimalVisibility);
+      Dispatchable dispatchable = rcvrClass.lookupMessage(selector, minimalVisibility);
 
-      CallTarget callTarget;
-      if (method != null) {
-        if (method.getAccessModifier() == AccessModifier.PRIVATE) {
-          System.out.println("TODO: We might replace the whole dispatch chain, and link this unconditionally");
-        }
-        callTarget = method.getCallTarget();
-      } else {
-        callTarget = null;
+      if (dispatchable != null && dispatchable.getAccessModifier() == AccessModifier.PRIVATE) {
+        System.out.println("TODO: We might replace the whole dispatch chain, and link this unconditionally");
       }
 
       UninitializedDispatchNode newChainEnd = new UninitializedDispatchNode(
@@ -60,9 +50,8 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
 
       if (rcvr instanceof SObject) {
         AbstractCachedDispatchNode node;
-        if (method != null) {
-          node = new CachedDispatchSObjectCheckNode(
-              rcvrClass, callTarget, newChainEnd);
+        if (dispatchable != null) {
+          node = dispatchable.getDispatchNode(rcvr, rcvrClass, newChainEnd);
         } else {
           node = new CachedDnuSObjectCheckNode(rcvrClass, selector, newChainEnd);
         }
@@ -78,18 +67,11 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
         AbstractDispatchNode next = sendNode.getDispatchListHead();
 
         AbstractCachedDispatchNode node;
-        if (method == null) {
+        if (dispatchable == null) {
           node = new CachedDnuSimpleCheckNode(
               rcvr.getClass(), rcvrClass, selector, next);
         } else {
-          if (rcvr == Boolean.TRUE) {
-            node = new CachedDispatchTrueCheckNode(callTarget, next);
-          } else if (rcvr == Boolean.FALSE) {
-            node = new CachedDispatchFalseCheckNode(callTarget, next);
-          } else {
-            node = new CachedDispatchSimpleCheckNode(
-                  rcvr.getClass(), callTarget, next);
-          }
+          node = dispatchable.getDispatchNode(rcvr, rcvr.getClass(), next);
         }
 
         // the simple checks are prepended
@@ -101,7 +83,8 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
     // the chain is longer than the maximum defined by INLINE_CACHE_SIZE and
     // thus, this callsite is considered to be megaprophic, and we generalize
     // it.
-    GenericDispatchNode genericReplacement = new GenericDispatchNode(selector);
+    GenericDispatchNode genericReplacement = new GenericDispatchNode(selector,
+        minimalVisibility);
     sendNode.replaceDispatchListHead(genericReplacement);
     return genericReplacement;
   }

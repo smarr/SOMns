@@ -1,6 +1,8 @@
 package som.vmobjects;
 
+import som.compiler.AccessModifier;
 import som.interpreter.Types;
+import som.interpreter.nodes.dispatch.Dispatchable;
 import som.vm.Symbols;
 
 import com.oracle.truffle.api.CompilerAsserts;
@@ -37,7 +39,8 @@ public abstract class SAbstractObject {
     SSymbol selector = Symbols.symbolFor(selectorString);
 
     // Lookup the invokable
-    SInvokable invokable = Types.getClassOf(arguments[0]).lookupInvokable(selector);
+    Dispatchable invokable = Types.getClassOf(arguments[0]).lookupMessage(
+        selector, AccessModifier.PUBLIC);
 
     return invokable.invoke(arguments);
   }

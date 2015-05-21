@@ -1,8 +1,9 @@
 package som.primitives.reflection;
 
+import som.compiler.AccessModifier;
+import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.nodes.nary.QuaternaryExpressionNode;
 import som.vmobjects.SClass;
-import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerAsserts;
@@ -27,8 +28,9 @@ public abstract class PerformWithArgumentsInSuperclassPrim extends QuaternaryExp
       final Object receiver, final SSymbol selector,
       final Object[] argArr, final SClass clazz) {
     CompilerAsserts.neverPartOfCompilation("PerformWithArgumentsInSuperclassPrim.doSAbstractObject()");
-    SInvokable invokable = clazz.lookupInvokable(selector);
-    return call.call(frame, invokable.getCallTarget(), mergeReceiverWithArguments(receiver, argArr));
+    Dispatchable invokable = clazz.lookupMessage(selector, AccessModifier.PUBLIC);
+    return call.call(frame, invokable.getCallTargetIfAvailable(),
+        mergeReceiverWithArguments(receiver, argArr));
   }
 
   // TODO: remove duplicated code, also in symbol dispatch, ideally removing by optimizing this implementation...

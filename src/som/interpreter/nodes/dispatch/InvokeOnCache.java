@@ -78,7 +78,7 @@ public abstract class InvokeOnCache extends Node implements DispatchChain {
       super(depth);
       this.invokable = invokable;
       this.nextInCache = nextInCache;
-      callNode = Truffle.getRuntime().createDirectCallNode(invokable.getCallTarget());
+      callNode = Truffle.getRuntime().createDirectCallNode(invokable.getCallTargetIfAvailable());
     }
 
     @Override
@@ -109,7 +109,7 @@ public abstract class InvokeOnCache extends Node implements DispatchChain {
     @Override
     public Object executeDispatch(final VirtualFrame frame,
         final SInvokable invokable, final Object[] arguments) {
-      return callNode.call(frame, invokable.getCallTarget(), arguments);
+      return callNode.call(frame, invokable.getCallTargetIfAvailable(), arguments);
     }
 
     @Override

@@ -13,7 +13,7 @@ public final class CachedBlockDispatchNode extends AbstractCachedDispatchNode {
 
   public CachedBlockDispatchNode(final SInvokable method,
       final AbstractDispatchNode nextInCache) {
-    super(method.getCallTarget(), nextInCache);
+    super(method.getCallTargetIfAvailable(), nextInCache);
     this.cachedSomMethod = method;
   }
 

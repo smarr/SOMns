@@ -28,9 +28,10 @@ package som.vm;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
+import som.compiler.AccessModifier;
+import som.interpreter.nodes.dispatch.Dispatchable;
 import som.vm.constants.Nil;
 import som.vmobjects.SClass;
-import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 
 public class Shell {
@@ -75,11 +76,11 @@ public class Shell {
         // If success
         if (myClass != null) {
           // Create and push a new instance of our class on the stack
-          myObject = Universe.newInstance(myClass);
+          myObject = new SObject(null, myClass);
 
           // Lookup the run: method
-          SInvokable shellMethod = myClass.
-              lookupInvokable(Symbols.symbolFor("run:"));
+          Dispatchable shellMethod = myClass.
+              lookupMessage(Symbols.symbolFor("run:"), AccessModifier.PUBLIC);
 
           // Invoke the run method
           it = shellMethod.invoke(myObject, it);

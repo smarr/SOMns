@@ -1,13 +1,14 @@
 package som.primitives.reflection;
 
+import som.compiler.AccessModifier;
 import som.interpreter.Types;
 import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.interpreter.nodes.PreevaluatedExpression;
+import som.interpreter.nodes.dispatch.Dispatchable;
 import som.primitives.arrays.ToArgumentsArrayNode;
 import som.primitives.arrays.ToArgumentsArrayNodeGen;
 import som.vmobjects.SArray;
-import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.Cached;
@@ -58,11 +59,11 @@ public abstract class AbstractSymbolDispatch extends Node {
   public Object doUncached(final VirtualFrame frame,
       final Object receiver, final SSymbol selector, final Object argsArr,
       @Cached("create()") final IndirectCallNode call) {
-    SInvokable invokable = Types.getClassOf(receiver).lookupInvokable(selector);
+    Dispatchable invokable = Types.getClassOf(receiver).lookupMessage(selector, AccessModifier.PUBLIC);
 
     Object[] arguments = {receiver};
 
-    return call.call(frame, invokable.getCallTarget(), arguments);
+    return call.call(frame, invokable.getCallTargetIfAvailable(), arguments);
   }
 
   @Specialization(contains = "doCached")
@@ -70,10 +71,10 @@ public abstract class AbstractSymbolDispatch extends Node {
       final Object receiver, final SSymbol selector, final SArray argsArr,
       @Cached("create()") final IndirectCallNode call,
       @Cached("createArgArrayNode()") final ToArgumentsArrayNode toArgArray) {
-    SInvokable invokable = Types.getClassOf(receiver).lookupInvokable(selector);
+    Dispatchable invokable = Types.getClassOf(receiver).lookupMessage(selector, AccessModifier.PUBLIC);
 
     Object[] arguments = toArgArray.executedEvaluated(argsArr, receiver);
 
-    return call.call(frame, invokable.getCallTarget(), arguments);
+    return call.call(frame, invokable.getCallTargetIfAvailable(), arguments);
   }
 }

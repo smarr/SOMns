@@ -14,15 +14,15 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 public abstract class AbstractCachedDnuNode extends AbstractCachedDispatchNode {
   private final SSymbol selector;
 
-  public static CallTarget getDnuCallTarget(final SClass rcvrClass) {
-    return rcvrClass.lookupInvokable(
+  public static CallTarget getDnu(final SClass rcvrClass) {
+    return rcvrClass.lookupMessage(
           Symbols.symbolFor("doesNotUnderstand:arguments:"), AccessModifier.PROTECTED).
-        getCallTarget();
+          getCallTargetIfAvailable();
   }
 
   public AbstractCachedDnuNode(final SClass rcvrClass,
       final SSymbol selector, final AbstractDispatchNode nextInCache) {
-    super(getDnuCallTarget(rcvrClass), nextInCache);
+    super(getDnu(rcvrClass), nextInCache);
     this.selector = selector;
   }
 

@@ -37,6 +37,7 @@ import java.io.IOException;
 import som.compiler.AccessModifier;
 import som.interpreter.Invokable;
 import som.interpreter.TruffleCompiler;
+import som.interpreter.nodes.dispatch.Dispatchable;
 import som.vm.constants.Globals;
 import som.vm.constants.KernelObj;
 import som.vmobjects.SArray;
@@ -95,7 +96,7 @@ public final class Universe {
     SClass clazz = loadClass(symbolFor(className));
 
     // Lookup the initialize invokable on the system class
-    SInvokable initialize = clazz.getSOMClass().lookupInvokable(
+    Dispatchable initialize = clazz.getSOMClass().lookupMessage(
         symbolFor(selector), AccessModifier.PROTECTED);
     return initialize.invoke(clazz);
   }
@@ -110,8 +111,8 @@ public final class Universe {
     }
 
     // Lookup the initialize invokable on the system class
-    SInvokable initialize = systemClass.
-        lookupInvokable(symbolFor("initialize:"), AccessModifier.PROTECTED);
+    Dispatchable initialize = systemClass.
+        lookupMessage(symbolFor("initialize:"), AccessModifier.PROTECTED);
 
     return initialize.invoke(new Object[] {systemObject,
         SArray.create(KernelObj.kernel, arguments)});

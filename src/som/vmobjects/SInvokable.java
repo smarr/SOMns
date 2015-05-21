@@ -28,6 +28,13 @@ package som.vmobjects;
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
 import som.compiler.AccessModifier;
 import som.interpreter.Invokable;
+import som.interpreter.nodes.dispatch.AbstractDispatchNode;
+import som.interpreter.nodes.dispatch.AbstractDispatchNode.AbstractCachedDispatchNode;
+import som.interpreter.nodes.dispatch.CachedDispatchSObjectCheckNode;
+import som.interpreter.nodes.dispatch.CachedDispatchSimpleCheckNode;
+import som.interpreter.nodes.dispatch.CachedDispatchSimpleCheckNode.CachedDispatchFalseCheckNode;
+import som.interpreter.nodes.dispatch.CachedDispatchSimpleCheckNode.CachedDispatchTrueCheckNode;
+import som.interpreter.nodes.dispatch.Dispatchable;
 import som.vm.constants.Classes;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
@@ -36,7 +43,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 
-public abstract class SInvokable extends SAbstractObject {
+public abstract class SInvokable extends SAbstractObject implements Dispatchable {
 
   private final AccessModifier     accessModifier;
   private final SSymbol            category;
@@ -100,7 +107,8 @@ public abstract class SInvokable extends SAbstractObject {
     }
   }
 
-  public final RootCallTarget getCallTarget() {
+  @Override
+  public final RootCallTarget getCallTargetIfAvailable() {
     return callTarget;
   }
 
@@ -125,6 +133,7 @@ public abstract class SInvokable extends SAbstractObject {
     return getSignature().getNumberOfSignatureArguments();
   }
 
+  @Override
   public final Object invoke(final Object... arguments) {
     return callTarget.call(arguments);
   }
@@ -143,6 +152,7 @@ public abstract class SInvokable extends SAbstractObject {
     return "Method(" + getHolder().getName().getString() + ">>" + getSignature().toString() + ")";
   }
 
+  @Override
   public final AccessModifier getAccessModifier() {
     return accessModifier;
   }
@@ -153,5 +163,21 @@ public abstract class SInvokable extends SAbstractObject {
 
   public final SourceSection getSourceSection() {
     return invokable.getSourceSection();
+  }
+
+  @Override
+  public final AbstractCachedDispatchNode getDispatchNode(final Object rcvr,
+      final Object rcvrClass, final AbstractDispatchNode next) {
+    if (rcvrClass instanceof SClass) {
+      return new CachedDispatchSObjectCheckNode(
+          (SClass) rcvrClass, callTarget, next);
+    } else if (rcvr == Boolean.TRUE) {
+      return new CachedDispatchTrueCheckNode(callTarget, next);
+    } else if (rcvr == Boolean.FALSE) {
+      return new CachedDispatchFalseCheckNode(callTarget, next);
+    } else {
+      assert rcvrClass instanceof Class;
+      return new CachedDispatchSimpleCheckNode((Class<?>) rcvrClass, callTarget, next);
+    }
   }
 }

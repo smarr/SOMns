@@ -34,7 +34,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode {
       SBlock trueBlock = (SBlock) arg1;
       trueMethod = trueBlock.getMethod();
       trueValueSend = Truffle.getRuntime().createDirectCallNode(
-          trueMethod.getCallTarget());
+          trueMethod.getCallTargetIfAvailable());
     } else {
       trueMethod = null;
     }
@@ -43,7 +43,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode {
       SBlock falseBlock = (SBlock) arg2;
       falseMethod = falseBlock.getMethod();
       falseValueSend = Truffle.getRuntime().createDirectCallNode(
-          falseMethod.getCallTarget());
+          falseMethod.getCallTargetIfAvailable());
     } else {
       falseMethod = null;
     }
@@ -56,13 +56,13 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode {
     trueMethod = node.trueMethod;
     if (node.trueMethod != null) {
       trueValueSend = Truffle.getRuntime().createDirectCallNode(
-          trueMethod.getCallTarget());
+          trueMethod.getCallTargetIfAvailable());
     }
 
     falseMethod = node.falseMethod;
     if (node.falseMethod != null) {
       falseValueSend = Truffle.getRuntime().createDirectCallNode(
-          falseMethod.getCallTarget());
+          falseMethod.getCallTargetIfAvailable());
     }
     call = Truffle.getRuntime().createIndirectCallNode();
   }

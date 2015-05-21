@@ -27,7 +27,7 @@ public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode
     super(orignialNode.getSourceSection());
     blockMethod = block.getMethod();
     valueSend = Truffle.getRuntime().createDirectCallNode(
-                    blockMethod.getCallTarget());
+                    blockMethod.getCallTargetIfAvailable());
   }
 
   public IntToByDoMessageNode(final IntToByDoMessageNode node) {

@@ -15,6 +15,7 @@ import som.compiler.SourcecodeCompiler;
 import som.interpreter.Invokable;
 import som.interpreter.Primitive;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.dispatch.Dispatchable;
 import som.primitives.HashPrimFactory;
 import som.vm.constants.Classes;
 import som.vm.constants.KernelObj;
@@ -207,7 +208,7 @@ public final class Bootstrap {
   }
 
   public static Object execute(final String selector) {
-    SInvokable method = platformClass.getSOMClass().lookupInvokable(
+    Dispatchable method = platformClass.getSOMClass().lookupMessage(
         Symbols.symbolFor(selector), AccessModifier.PUBLIC);
     return method.invoke(platformClass);
   }

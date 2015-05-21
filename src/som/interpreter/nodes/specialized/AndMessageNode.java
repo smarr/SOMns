@@ -22,7 +22,7 @@ public abstract class AndMessageNode extends BinaryExpressionNode {
     super(source);
     blockMethod = arg.getMethod();
     blockValueSend = Truffle.getRuntime().createDirectCallNode(
-        blockMethod.getCallTarget());
+        blockMethod.getCallTargetIfAvailable());
   }
 
   public AndMessageNode(final AndMessageNode copy) {
