@@ -176,12 +176,12 @@ public final class Bootstrap {
  metaclassDef.initializeClass(Classes.metaclassClass, Classes.classClass);
        nilDef.initializeClass(Classes.nilClass,    Classes.valueClass);
 
-      arrayDef.initializeClass(Classes.arrayClass,   Classes.objectClass);
-    integerDef.initializeClass(Classes.integerClass, Classes.valueClass);
-     stringDef.initializeClass(Classes.stringClass,  Classes.valueClass);
-     doubleDef.initializeClass(Classes.doubleClass,  Classes.valueClass);
-    booleanDef.initializeClass(Classes.booleanClass, Classes.valueClass);
-     symbolDef.initializeClass(Classes.symbolClass,  Classes.stringClass);
+     arrayDef.initializeClass(Classes.arrayClass,   Classes.objectClass);
+   integerDef.initializeClass(Classes.integerClass, Classes.valueClass);
+    stringDef.initializeClass(Classes.stringClass,  Classes.valueClass);
+    doubleDef.initializeClass(Classes.doubleClass,  Classes.valueClass);
+   booleanDef.initializeClass(Classes.booleanClass, Classes.valueClass);
+    symbolDef.initializeClass(Classes.symbolClass,  Classes.stringClass);
 
      blockDef.initializeClass(Classes.blockClass,  Classes.objectClass);
     block1Def.initializeClass(Classes.blockClass1, Classes.blockClass);
