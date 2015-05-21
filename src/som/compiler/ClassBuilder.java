@@ -338,6 +338,10 @@ public final class ClassBuilder {
     this.superclassFactorySend = superFactorySend;
   }
 
+  private SSymbol getClassCacheSlot(final SSymbol className) {
+    return Symbols.symbolFor(className.getString() + "`o`cache");
+  }
+
   public void addNestedClass(final ClassDefinition nestedClass)
       throws ClassDefinitionError {
     SSymbol name = nestedClass.getName();
