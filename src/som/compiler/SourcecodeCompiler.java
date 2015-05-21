@@ -28,6 +28,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
+import som.compiler.ClassBuilder.ClassDefinitionError;
 import som.compiler.Parser.ParseError;
 import som.vm.NotYetImplementedException;
 import som.vm.Universe;
@@ -65,7 +66,7 @@ public final class SourcecodeCompiler {
 
     try {
       parser.moduleDeclaration(clsBuilder);
-    } catch (ParseError pe) {
+    } catch (ParseError | ClassDefinitionError pe) {
       Universe.errorExit(pe.toString());
     }
     return clsBuilder.assemble();

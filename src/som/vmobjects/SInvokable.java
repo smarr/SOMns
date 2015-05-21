@@ -34,6 +34,7 @@ import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
+import com.oracle.truffle.api.source.SourceSection;
 
 public abstract class SInvokable extends SAbstractObject {
 
@@ -148,5 +149,9 @@ public abstract class SInvokable extends SAbstractObject {
 
   public SSymbol getCategory() {
     return category;
+  }
+
+  public final SourceSection getSourceSection() {
+    return invokable.getSourceSection();
   }
 }

@@ -11,6 +11,7 @@ import som.vmobjects.SInvokable;
 import som.vmobjects.SInvokable.SMethod;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.source.SourceSection;
 import com.sun.istack.internal.Nullable;
 
 /**
@@ -77,14 +78,19 @@ public final class ClassDefinition {
 
   public static final class SlotDefinition {
     private final SSymbol name;
+    private final int index;
     private final AccessModifier modifier;
     private final boolean immutable;
+    private final SourceSection source;
 
     public SlotDefinition(final SSymbol name,
-        final AccessModifier acccessModifier, final boolean immutable) {
+        final AccessModifier acccessModifier, final int index,
+        final boolean immutable, final SourceSection source) {
       this.name      = name;
       this.modifier  = acccessModifier;
+      this.index     = index;
       this.immutable = immutable;
+      this.source    = source;
     }
 
     public SSymbol getName() {

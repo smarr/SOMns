@@ -68,6 +68,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
+import som.compiler.ClassBuilder.ClassDefinitionError;
 import som.compiler.Lexer.Peek;
 import som.compiler.Lexer.SourceCoordinate;
 import som.compiler.Variable.Local;
@@ -214,13 +215,14 @@ public final class Parser {
     return lexer.getStartCoordinate();
   }
 
-  public void moduleDeclaration(final ClassBuilder clsBuilder) throws ParseError {
+  public void moduleDeclaration(final ClassBuilder clsBuilder)
+      throws ParseError, ClassDefinitionError {
     comment();
     classDeclaration(AccessModifier.PUBLIC, clsBuilder);
   }
 
   private void classDeclaration(final AccessModifier accessModifier,
-      final ClassBuilder clsBuilder) throws ParseError {
+      final ClassBuilder clsBuilder) throws ParseError, ClassDefinitionError {
     expectIdentifier("class", "Found unexpected token %(found)s. " +
       "Tried parsing a class declaration and expected 'class' instead.");
     String className = text;
@@ -246,7 +248,8 @@ public final class Parser {
     inheritanceListAndOrBody(clsBuilder);
   }
 
-  private void inheritanceListAndOrBody(final ClassBuilder clsBuilder) throws ParseError {
+  private void inheritanceListAndOrBody(final ClassBuilder clsBuilder)
+      throws ParseError, ClassDefinitionError {
     if (sym == NewTerm) {
       defaultSuperclassAndBody(clsBuilder);
     } else {
@@ -254,7 +257,8 @@ public final class Parser {
     }
   }
 
-  private void defaultSuperclassAndBody(final ClassBuilder clsBuilder) throws ParseError {
+  private void defaultSuperclassAndBody(final ClassBuilder clsBuilder)
+      throws ParseError, ClassDefinitionError {
     MethodBuilder def = clsBuilder.getInstantiationMethodBuilder();
     ExpressionNode selfRead = def.getReadNode("self", null);
     AbstractMessageSendNode superClass = SNodeFactory.createMessageSend(
@@ -268,7 +272,7 @@ public final class Parser {
   }
 
   private void explicitInheritanceListAndOrBody(final ClassBuilder clsBuilder)
-      throws ParseError {
+      throws ParseError, ClassDefinitionError {
     inheritanceClause(clsBuilder);
     // TODO: Newspeak-spec: mixinAppSuffix
     classBody(clsBuilder);
@@ -320,7 +324,8 @@ public final class Parser {
     }
   }
 
-  private void classBody(final ClassBuilder clsBuilder) throws ParseError {
+  private void classBody(final ClassBuilder clsBuilder)
+      throws ParseError, ClassDefinitionError {
     classHeader(clsBuilder);
     sideDeclaration(clsBuilder);
     if (sym == Colon) {
@@ -328,7 +333,8 @@ public final class Parser {
     }
   }
 
-  private void classSideDecl(final ClassBuilder clsBuilder) throws ParseError {
+  private void classSideDecl(final ClassBuilder clsBuilder)
+      throws ParseError, ClassDefinitionError {
     clsBuilder.switchToClassSide();
 
     expect(Colon);
@@ -341,7 +347,8 @@ public final class Parser {
     expect(EndTerm);
   }
 
-  private void classHeader(final ClassBuilder clsBuilder) throws ParseError {
+  private void classHeader(final ClassBuilder clsBuilder)
+      throws ParseError, ClassDefinitionError {
     expect(NewTerm);
     classComment(clsBuilder);
 
@@ -375,7 +382,8 @@ public final class Parser {
     expect(EndComment);
   }
 
-  private void slotDeclarations(final ClassBuilder clsBuilder) throws ParseError {
+  private void slotDeclarations(final ClassBuilder clsBuilder)
+      throws ParseError, ClassDefinitionError {
     // Newspeak-speak: we do not support simSlotDecls, i.e.,
     //                 simultaneous slots clauses (spec 6.3.2)
     expect(Or);
@@ -386,7 +394,9 @@ public final class Parser {
     expect(Or);
   }
 
-  private void slotDefinition(final ClassBuilder clsBuilder) throws ParseError {
+  private void slotDefinition(final ClassBuilder clsBuilder)
+      throws ParseError, ClassDefinitionError {
+    SourceCoordinate coord = getCoordinate();
     AccessModifier acccessModifier = accessModifier();
 
     String slotName = slotDecl();
@@ -405,7 +415,8 @@ public final class Parser {
       immutable = false;
       init = null;
     }
-    clsBuilder.addSlot(symbolFor(slotName), acccessModifier, immutable, init);
+    clsBuilder.addSlot(symbolFor(slotName), acccessModifier, immutable, init,
+        getSource(coord));
   }
 
   private AccessModifier accessModifier() {
@@ -432,7 +443,8 @@ public final class Parser {
     }
   }
 
-  private void sideDeclaration(final ClassBuilder clsBuilder) throws ParseError {
+  private void sideDeclaration(final ClassBuilder clsBuilder)
+      throws ParseError, ClassDefinitionError {
     expect(NewTerm);
     // TODO: this needs to be fixed, this needs to only accept a access modifier and class
     while (canAcceptIdentifierWithOptionalEarlierIdentifier(
@@ -447,14 +459,16 @@ public final class Parser {
     expect(EndTerm);
   }
 
-  private void nestedClassDeclaration(final ClassBuilder clsBuilder) throws ParseError {
+  private void nestedClassDeclaration(final ClassBuilder clsBuilder)
+      throws ParseError, ClassDefinitionError {
     AccessModifier accessModifier = accessModifier();
     ClassBuilder nestedCls = new ClassBuilder();
     classDeclaration(accessModifier, nestedCls);
     clsBuilder.addNestedClass(nestedCls.assemble());
   }
 
-  private void category(final ClassBuilder clsBuilder) throws ParseError {
+  private void category(final ClassBuilder clsBuilder)
+      throws ParseError, ClassDefinitionError {
     String categoryName;
     // Newspeak-spec: this is not conform with Newspeak,
     //                as the category is normally not optional
@@ -555,7 +569,7 @@ public final class Parser {
   }
 
   private void methodDeclaration(final ClassBuilder clsBuilder,
-      final SSymbol category) throws ParseError {
+      final SSymbol category) throws ParseError, ClassDefinitionError {
     SourceCoordinate coord = getCoordinate();
 
     AccessModifier accessModifier = accessModifier();

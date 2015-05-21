@@ -45,6 +45,7 @@ import som.vmobjects.SInvokable.SMethod;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.source.SourceSection;
 
 public final class ClassBuilder {
 
@@ -97,6 +98,23 @@ public final class ClassBuilder {
     this.currentScope = new ClassScope(outerBuilder.getCurrentClassScope());
   }
 
+  public static class ClassDefinitionError extends Exception {
+    private static final long serialVersionUID = 9200967710874738189L;
+    private final String message;
+    private final SourceSection source;
+
+    ClassDefinitionError(final String message, final SourceSection source) {
+      this.message = message;
+      this.source = source;
+    }
+
+    @Override
+    public String toString() {
+      return source.getSource().getName() + ":" + source.getStartLine() + ":" +
+            source.getStartColumn() + ":error: " + message;
+    }
+  }
+
   public ClassScope getCurrentClassScope() {
     return currentScope;
   }
@@ -136,17 +154,39 @@ public final class ClassBuilder {
     return initializer;
   }
 
-  public void addMethod(final SInvokable meth) {
+  public void addMethod(final SInvokable meth) throws ClassDefinitionError {
+    SSymbol name = meth.getSignature();
     if (!classSide) {
-      methods.put(meth.getSignature(), meth);
+      if (slots.containsKey(name)) {
+        throw new ClassDefinitionError("The class " + this.name.getString()
+            + " already contains a slot named "
+            + name.getString() + ". Can't define a method with the same name.",
+            meth.getSourceSection());
+      }
+      if (methods.containsKey(name)) {
+        throw new ClassDefinitionError("The class " + this.name.getString()
+            + " already contains a method named "
+            + name.getString() + ". Can't define another method with the same name.",
+            meth.getSourceSection());
+      }
+      methods.put(name, meth);
     } else {
-      factoryMethods.put(meth.getSignature(), meth);
+      factoryMethods.put(name, meth);
     }
   }
 
   public void addSlot(final SSymbol name, final AccessModifier acccessModifier,
-      final boolean immutable, final ExpressionNode init) {
-    SlotDefinition slot = new SlotDefinition(name, acccessModifier, immutable);
+      final boolean immutable, final ExpressionNode init,
+      final SourceSection source) throws ClassDefinitionError {
+    SlotDefinition slot = new SlotDefinition(name, acccessModifier,
+        slots.size(), immutable, source);
+
+    if (slots.containsKey(name)) {
+      throw new ClassDefinitionError("The class " + this.name.getString() +
+          " already defines a slot with the name '" + name.getString() + "'." +
+          " A second slot with the same name is not possible.", source);
+    }
+
     slots.put(name, slot);
 
     if (init != null) {
