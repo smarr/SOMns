@@ -31,10 +31,6 @@ import static som.vm.constants.Classes.classClass;
 import static som.vm.constants.Classes.methodClass;
 import static som.vm.constants.Classes.objectClass;
 import static som.vm.constants.Classes.primitiveClass;
-import static som.vm.constants.ThreadClasses.conditionClass;
-import static som.vm.constants.ThreadClasses.delayClass;
-import static som.vm.constants.ThreadClasses.mutexClass;
-import static som.vm.constants.ThreadClasses.threadClass;
 
 import java.io.IOException;
 
@@ -132,12 +128,6 @@ public final class Universe {
     initializeSystemClass(methodClass,     objectClass, "Method");
     initializeSystemClass(primitiveClass,  objectClass, "Primitive");
 
-    // Thread support classes
-    initializeSystemClass(conditionClass, objectClass, "Condition");
-    initializeSystemClass(delayClass,     objectClass, "Delay");
-    initializeSystemClass(mutexClass,     objectClass, "Mutex");
-    initializeSystemClass(threadClass,    objectClass, "Thread");
-
     trueClass  = newSystemClass();
     falseClass = newSystemClass();
 
@@ -149,12 +139,6 @@ public final class Universe {
     loadSystemClass(primitiveClass);
     loadSystemClass(trueClass);
     loadSystemClass(falseClass);
-
-    loadSystemClass(conditionClass);
-    loadSystemClass(delayClass);
-    loadSystemClass(mutexClass);
-    loadSystemClass(threadClass);
-
 
     // Setup the true and false objects
     trueObject  = newInstance(trueClass);
