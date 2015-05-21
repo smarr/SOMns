@@ -72,9 +72,9 @@ public final class ClassDefinition {
   }
 
   public SClass instantiateClass(final SAbstractObject outer, final SClass superClass) {
-    SClass resultClass = new SClass(Classes.metaclassClass);
-    SClass result = new SClass(resultClass);
-    initializeClass(outer, result, superClass);
+    SClass resultClass = new SClass(outer, Classes.metaclassClass);
+    SClass result = new SClass(outer, resultClass);
+    initializeClass(result, superClass);
     return result;
   }
 
