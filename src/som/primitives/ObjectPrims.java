@@ -86,6 +86,7 @@ public final class ObjectPrims {
   }
 
   @GenerateNodeFactory
+  @Primitive("halt:")
   public abstract static class HaltPrim extends UnaryExpressionNode {
     public HaltPrim() { super(null); }
     @Specialization

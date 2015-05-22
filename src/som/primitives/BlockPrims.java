@@ -26,6 +26,7 @@ public abstract class BlockPrims {
   }
 
   @GenerateNodeFactory
+  @Primitive("blockRestart:")
   public abstract static class RestartPrim extends UnaryExpressionNode {
     public RestartPrim() { super(null); }
 
@@ -40,6 +41,7 @@ public abstract class BlockPrims {
   }
 
   @GenerateNodeFactory
+  @Primitive("blockValue:")
   public abstract static class ValueNonePrim extends UnaryExpressionNode
       implements ValuePrimitiveNode {
     @Child private AbstractDispatchNode dispatchNode;
@@ -80,6 +82,7 @@ public abstract class BlockPrims {
   }
 
   @GenerateNodeFactory
+  @Primitive("blockValue:with:")
   public abstract static class ValueOnePrim extends BinaryExpressionNode
       implements ValuePrimitiveNode  {
     @Child private AbstractDispatchNode dispatchNode;
@@ -116,6 +119,7 @@ public abstract class BlockPrims {
   }
 
   @GenerateNodeFactory
+  @Primitive("blockValue:with:with:")
   public abstract static class ValueTwoPrim extends TernaryExpressionNode
       implements ValuePrimitiveNode {
     @Child private AbstractDispatchNode dispatchNode;

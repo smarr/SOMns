@@ -10,6 +10,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 
 
 @GenerateNodeFactory
+@Primitive("instantiate:")
 public abstract class NewObjectPrim extends UnaryExpressionNode {
   @Specialization
   public final SAbstractObject doSClass(final SClass receiver) {
