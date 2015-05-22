@@ -77,6 +77,16 @@ public final class ObjectPrims {
   }
 
   @GenerateNodeFactory
+  @Primitive("objClassName:")
+  public abstract static class ObjectClassNamePrim extends UnaryExpressionNode {
+    @Specialization
+    public final SSymbol getName(final Object obj) {
+      CompilerAsserts.neverPartOfCompilation("Not yet optimized, need add specializations to remove Types.getClassOf");
+      return Types.getClassOf(obj).getName();
+    }
+  }
+
+  @GenerateNodeFactory
   public abstract static class InstVarNamedPrim extends BinaryExpressionNode {
     @Specialization
     public final Object doSObject(final SObject receiver, final SSymbol fieldName) {
