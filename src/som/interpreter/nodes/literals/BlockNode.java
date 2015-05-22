@@ -11,7 +11,10 @@ import som.interpreter.SplitterForLexicallyEmbeddedCode;
 import som.interpreter.nodes.ExpressionNode;
 import som.vm.Symbols;
 import som.vm.Universe;
+import som.vm.constants.Classes;
+import som.vm.constants.KernelObj;
 import som.vmobjects.SBlock;
+import som.vmobjects.SClass;
 import som.vmobjects.SInvokable.SMethod;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -19,17 +22,27 @@ import com.oracle.truffle.api.source.SourceSection;
 
 public class BlockNode extends LiteralNode {
 
-  protected final SMethod  blockMethod;
+  protected final SMethod blockMethod;
+  protected final SClass  blockClass;
 
   public BlockNode(final SMethod blockMethod,
       final SourceSection source) {
     super(source);
     this.blockMethod  = blockMethod;
+    switch (blockMethod.getNumberOfArguments()) {
+      case 1: { this.blockClass = Classes.blockClass1; break; }
+      case 2: { this.blockClass = Classes.blockClass2; break; }
+      case 3: { this.blockClass = Classes.blockClass3; break; }
+
+      // we don't support more than 3 arguments
+      default : this.blockClass = Classes.blockClass;
+    }
+
   }
 
   @Override
   public SBlock executeSBlock(final VirtualFrame frame) {
-    return Universe.newBlock(blockMethod, null);
+    return new SBlock(KernelObj.kernel, blockMethod, null, blockClass);
   }
 
   @Override
@@ -94,7 +107,8 @@ public class BlockNode extends LiteralNode {
 
     @Override
     public SBlock executeSBlock(final VirtualFrame frame) {
-      return Universe.newBlock(blockMethod, frame.materialize());
+      return new SBlock(KernelObj.kernel, blockMethod, frame.materialize(),
+          blockClass);
     }
 
     @Override

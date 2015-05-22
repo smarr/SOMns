@@ -25,118 +25,38 @@
 package som.vmobjects;
 
 import som.interpreter.SArguments;
-import som.primitives.BlockPrimsFactory.ValueMorePrimFactory;
-import som.primitives.BlockPrimsFactory.ValueNonePrimFactory;
-import som.primitives.BlockPrimsFactory.ValueOnePrimFactory;
-import som.primitives.BlockPrimsFactory.ValueTwoPrimFactory;
-import som.primitives.Primitives;
-import som.vm.Symbols;
-import som.vm.Universe;
-import som.vm.constants.Classes;
 
-import com.oracle.truffle.api.CompilerAsserts;
-import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 
-public abstract class SBlock extends SAbstractObject {
+public final class SBlock extends SAbstractObject {
 
-  public static SBlock create(final SAbstractObject enclosing,
-      final SInvokable blockMethod,
-      final MaterializedFrame context) {
-    switch (blockMethod.getNumberOfArguments()) {
-      case 1: return new SBlock1(enclosing, blockMethod, context);
-      case 2: return new SBlock2(enclosing, blockMethod, context);
-      case 3: return new SBlock3(enclosing, blockMethod, context);
-    }
-
-    CompilerDirectives.transferToInterpreter();
-    throw new RuntimeException("We do currently not have support for more than 3 arguments to a block.");
-  }
-
-  public static final class SBlock1 extends SBlock {
-    public SBlock1(final SAbstractObject enclosing, final SInvokable blockMethod, final MaterializedFrame context) {
-      super(enclosing, blockMethod, context);
-    }
-
-    @Override
-    public SClass getSOMClass() {
-      return Classes.blockClass1;
-    }
-  }
-
-  public static final class SBlock2 extends SBlock {
-    public SBlock2(final SAbstractObject enclosing, final SInvokable blockMethod, final MaterializedFrame context) {
-      super(enclosing, blockMethod, context);
-    }
-
-    @Override
-    public SClass getSOMClass() {
-      return Classes.blockClass2;
-    }
-  }
-
-  public static final class SBlock3 extends SBlock {
-    public SBlock3(final SAbstractObject enclosing, final SInvokable blockMethod, final MaterializedFrame context) {
-      super(enclosing, blockMethod, context);
-    }
-
-    @Override
-    public SClass getSOMClass() {
-      return Classes.blockClass3;
-    }
-  }
+  private final SInvokable        method;
+  private final MaterializedFrame context;
+  private final SClass            blockClass;
 
   public SBlock(final SAbstractObject enclosing, final SInvokable blockMethod,
-      final MaterializedFrame context) {
+      final MaterializedFrame context, final SClass blockClass) {
     super(enclosing);
-    this.method  = blockMethod;
-    this.context = context;
+    this.method     = blockMethod;
+    this.context    = context;
+    this.blockClass = blockClass;
   }
 
-  public final SInvokable getMethod() {
+  public SInvokable getMethod() {
     return method;
   }
 
-  public final MaterializedFrame getContext() {
+  public MaterializedFrame getContext() {
     assert context != null;
     return context;
   }
 
-  public final Object getOuterSelf() {
+  public Object getOuterSelf() {
     return SArguments.rcvr(getContext());
   }
 
-  public static SInvokable getEvaluationPrimitive(final int numberOfArguments,
-      final Universe universe, final SClass rcvrClass) {
-    CompilerAsserts.neverPartOfCompilation("SBlock.getEvaluationPrimitive(...)");
-    SSymbol sig = Symbols.symbolFor(computeSignatureString(numberOfArguments));
-
-    switch (numberOfArguments) {
-      case 1: return Primitives.constructPrimitive(sig,
-          ValueNonePrimFactory.getInstance(), universe, rcvrClass);
-      case 2: return Primitives.constructPrimitive(sig,
-          ValueOnePrimFactory.getInstance(), universe, rcvrClass);
-      case 3: return Primitives.constructPrimitive(sig,
-          ValueTwoPrimFactory.getInstance(), universe, rcvrClass);
-      case 4: return Primitives.constructPrimitive(sig,
-          ValueMorePrimFactory.getInstance(), universe, rcvrClass);
-      default:
-        throw new RuntimeException("Should not reach here. SOM only has blocks with up to 2 arguments.");
-    }
+  @Override
+  public SClass getSOMClass() {
+    return blockClass;
   }
-
-  private static String computeSignatureString(final int numberOfArguments) {
-    // Compute the signature string
-    String signatureString = "value";
-    if (numberOfArguments > 1) { signatureString += ":"; }
-
-    // Add extra value: selector elements if necessary
-    for (int i = 2; i < numberOfArguments; i++) {
-      signatureString += "with:";
-    }
-    return signatureString;
-  }
-
-  private final SInvokable        method;
-  private final MaterializedFrame context;
 }
