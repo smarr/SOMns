@@ -175,4 +175,9 @@ public class BasicInterpreterTests {
     Object actualResult = Bootstrap.execute(testSelector);
     assertEqualsSOMValue(expectedResult, actualResult);
   }
+
+  @Override
+  public String toString() {
+    return "BasicTest(" + testClass + ">>#" + testSelector + ")";
+  }
 }

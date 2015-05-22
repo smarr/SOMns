@@ -30,6 +30,11 @@ public abstract class ArgumentReadNode {
       replace(inliner.getReplacementForLocalArgument(argumentIndex,
           getSourceSection()));
     }
+
+    @Override
+    public String toString() {
+      return "LocalArg(" + argumentIndex + ")";
+    }
   }
 
   public static class NonLocalArgumentReadNode extends ContextualNode {

@@ -141,6 +141,12 @@ public final class MessageSendNode {
       this.minimalVisibility = minimalVisibility;
     }
 
+    @Override
+    public String toString() {
+      return "UniniMsgSend(" + selector.toString() + " >="
+          + minimalVisibility.toString().toLowerCase() + ")";
+    }
+
     public SSymbol getSelector() {
       return selector;
     }
