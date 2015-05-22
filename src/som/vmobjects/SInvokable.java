@@ -29,7 +29,6 @@ import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate
 import som.compiler.AccessModifier;
 import som.interpreter.Invokable;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
-import som.interpreter.nodes.dispatch.AbstractDispatchNode.AbstractCachedDispatchNode;
 import som.interpreter.nodes.dispatch.CachedDispatchSObjectCheckNode;
 import som.interpreter.nodes.dispatch.CachedDispatchSimpleCheckNode;
 import som.interpreter.nodes.dispatch.CachedDispatchSimpleCheckNode.CachedDispatchFalseCheckNode;
@@ -166,7 +165,7 @@ public abstract class SInvokable extends SAbstractObject implements Dispatchable
   }
 
   @Override
-  public final AbstractCachedDispatchNode getDispatchNode(final Object rcvr,
+  public final AbstractDispatchNode getDispatchNode(final Object rcvr,
       final Object rcvrClass, final AbstractDispatchNode next) {
     if (rcvrClass instanceof SClass) {
       return new CachedDispatchSObjectCheckNode(
