@@ -81,7 +81,7 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
     }
 
     // the chain is longer than the maximum defined by INLINE_CACHE_SIZE and
-    // thus, this callsite is considered to be megaprophic, and we generalize
+    // thus, this callsite is considered to be megamorphic, and we generalize
     // it.
     GenericDispatchNode genericReplacement = new GenericDispatchNode(selector,
         minimalVisibility);
