@@ -12,4 +12,9 @@ public abstract class AbstractDispatchWithLookupNode extends
     super();
     this.selector = selector;
   }
+
+  @Override
+  public String toString() {
+    return "*Dispatch(" + selector.getString() + ")";
+  }
 }
