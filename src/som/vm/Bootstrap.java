@@ -4,30 +4,47 @@ import static som.vm.constants.Classes.metaclassClass;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import som.compiler.AccessModifier;
 import som.compiler.ClassDefinition;
 import som.compiler.MethodBuilder;
 import som.compiler.SourcecodeCompiler;
-import som.interpreter.Invokable;
 import som.interpreter.Primitive;
+import som.interpreter.nodes.ArgumentReadNode.LocalArgumentReadNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
-import som.primitives.HashPrimFactory;
+import som.interpreter.nodes.specialized.AndMessageNodeFactory;
+import som.interpreter.nodes.specialized.whileloops.WhilePrimitiveNodeFactory;
+import som.primitives.BlockPrimsFactory;
+import som.primitives.ClassPrimsFactory;
+import som.primitives.DoublePrimsFactory;
+import som.primitives.IntegerPrimsFactory;
+import som.primitives.LengthPrimFactory;
+import som.primitives.MethodPrimsFactory;
+import som.primitives.MethodPrimsFactory.InvokeOnPrimFactory;
+import som.primitives.ObjectPrimsFactory;
+import som.primitives.StringPrimsFactory;
+import som.primitives.SystemPrimsFactory;
+import som.primitives.arrays.PutAllNodeFactory;
+import som.primitives.arrays.ToArgumentsArrayNodeGen;
 import som.vm.constants.Classes;
 import som.vm.constants.KernelObj;
 import som.vm.constants.Nil;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
-import som.vmobjects.SInvokable.SPrimitive;
+import som.vmobjects.SInvokable.SMethod;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
-import com.oracle.truffle.api.nodes.NodeUtil;
+import com.oracle.truffle.api.dsl.GeneratedBy;
+import com.oracle.truffle.api.dsl.NodeFactory;
 
 
 public final class Bootstrap {
@@ -67,32 +84,129 @@ public final class Bootstrap {
     }
   }
 
-  private static HashMap<SSymbol, SInvokable> constructVmMirrorPrimitives() {
-    /// XXX: SKETCH PRIMITIVE CONSTRUCTION
+  private static SInvokable constructVmMirrorPrimitive(
+      final som.primitives.Primitive primitive,
+      final NodeFactory<? extends ExpressionNode> factory) {
+    CompilerAsserts.neverPartOfCompilation("This is only executed during bootstrapping.");
+    SSymbol signature = Symbols.symbolFor(primitive.value());
+    assert signature.getNumberOfSignatureArguments() > 1 :
+      "Primitives should have the vmMirror as receiver, " +
+      "and then at least one object they are applied to";
+
+    // ignore the implicit vmMirror argument
+    final int numArgs = signature.getNumberOfSignatureArguments() - 1;
+
     MethodBuilder prim = new MethodBuilder(null);
-    prim.addArgumentIfAbsent("self");
-    prim.addArgumentIfAbsent("obj");
+    ExpressionNode[] args = new ExpressionNode[numArgs];
 
-    ExpressionNode primNode = HashPrimFactory.create(
-        prim.getReadNode("obj", null));
+    for (int i = 0; i < numArgs; i++) {
+      // we do not pass the vmMirror, makes it easier to use the same primitives
+      // as replacements on the node level
+      args[i] = new LocalArgumentReadNode(i + 1, null);
+    }
 
-    Invokable objHashcode = new Primitive(primNode,
+    ExpressionNode primNode;
+    switch (numArgs) {
+      case 1:
+        primNode = factory.createNode(args[0]);
+        break;
+      case 2:
+        // HACK for node class where we use `executeWith`
+        if (factory == PutAllNodeFactory.getInstance()) {
+          primNode = factory.createNode(args[0], args[1],
+              LengthPrimFactory.create(null));
+//        } else if (factory == SpawnWithArgsPrimFactory.getInstance()) {
+//          primNode = factory.createNode(args[0], args[1],
+//              ToArgumentsArrayNodeGen.create(null, null));
+        } else {
+          primNode = factory.createNode(args[0], args[1]);
+        }
+        break;
+      case 3:
+        // HACK for node class where we use `executeWith`
+        if (factory == InvokeOnPrimFactory.getInstance()) {
+          primNode = factory.createNode(args[0], args[1], args[2],
+              ToArgumentsArrayNodeGen.create(null, null));
+        } else {
+          primNode = factory.createNode(args[0], args[1], args[2]);
+        }
+        break;
+      case 4:
+        primNode = factory.createNode(args[0], args[1], args[2], args[3]);
+        break;
+      default:
+        throw new RuntimeException("Not supported by SOM.");
+    }
+
+    Primitive primMethodNode = new Primitive(primNode,
         prim.getCurrentMethodScope().getFrameDescriptor(),
-        NodeUtil.cloneNode(primNode));
+        (ExpressionNode) primNode.deepCopy());
+    SInvokable primInvokable = Universe.newMethod(signature,
+        AccessModifier.PUBLIC, Symbols.symbolFor(factory.toString()),
+        primMethodNode, true, new SMethod[0]);
 
+    return primInvokable;
+  }
 
-    HashMap<SSymbol, SInvokable> vmMirrorMethods = new HashMap<>();
-    vmMirrorMethods.put(Symbols.symbolFor("objHashcode:"),
-        new SPrimitive(Symbols.symbolFor("objHashcode:"), objHashcode));
-    return vmMirrorMethods;
+  private static List<NodeFactory<? extends ExpressionNode>> getFactories() {
+    List<NodeFactory<? extends ExpressionNode>> allFactories = new ArrayList<>();
+    allFactories.addAll(SystemPrimsFactory.getFactories());
+    allFactories.addAll(AndMessageNodeFactory.getFactories());
+    allFactories.addAll(WhilePrimitiveNodeFactory.getFactories());
+    allFactories.addAll(BlockPrimsFactory.getFactories());
+    allFactories.addAll(ClassPrimsFactory.getFactories());
+    allFactories.addAll(DoublePrimsFactory.getFactories());
+    allFactories.addAll(IntegerPrimsFactory.getFactories());
+    allFactories.addAll(MethodPrimsFactory.getFactories());
+    allFactories.addAll(ObjectPrimsFactory.getFactories());
+    allFactories.addAll(StringPrimsFactory.getFactories());
+    allFactories.addAll(SystemPrimsFactory.getFactories());
+
+    return allFactories;
+  }
+
+  private static HashMap<SSymbol, SInvokable> constructVmMirrorPrimitives() {
+    HashMap<SSymbol, SInvokable> primitives = new HashMap<>();
+
+    List<NodeFactory<? extends ExpressionNode>> primFacts = getFactories();
+    for (NodeFactory<? extends ExpressionNode> primFact : primFacts) {
+      som.primitives.Primitive prim = getPrimitiveAnnotation(primFact);
+      if (prim != null) {
+        primitives.put(Symbols.symbolFor(prim.value()),
+            constructVmMirrorPrimitive(prim, primFact));
+      }
+    }
+
+    return primitives;
+  }
+
+  public static som.primitives.Primitive getPrimitiveAnnotation(
+      final NodeFactory<? extends ExpressionNode> primFact) {
+    GeneratedBy[] genAnnotation = primFact.getClass().getAnnotationsByType(
+        GeneratedBy.class);
+
+    assert genAnnotation.length == 1; // should always be exactly one
+
+    Class<?> nodeClass = genAnnotation[0].value();
+    som.primitives.Primitive[] ann = nodeClass.getAnnotationsByType(
+        som.primitives.Primitive.class);
+    som.primitives.Primitive prim;
+    if (ann.length == 1) {
+      prim = ann[0];
+    } else {
+      prim = null;
+      assert ann.length == 0;
+    }
+    return prim;
   }
 
   private static SObject constructVmMirror() {
     HashMap<SSymbol, SInvokable> vmMirrorMethods = constructVmMirrorPrimitives();
     ClassDefinition vmMirrorDef = new ClassDefinition(
-        Symbols.symbolFor("VmMirror"), null, vmMirrorMethods, null, null, null);
-    SClass vmMirrorClass = vmMirrorDef.instantiateClass(null, null);
-    return new SObject(vmMirrorClass);
+        Symbols.symbolFor("VmMirror"), null, vmMirrorMethods, null, null, new LinkedHashMap<>(), null);
+    SClass vmMirrorClass = new SClass(null, null);
+    vmMirrorDef.initializeClass(vmMirrorClass, null);
+    return new SObject(null, vmMirrorClass);
   }
 
   /**
@@ -193,6 +307,9 @@ public final class Bootstrap {
     platformClass = platformModule.instantiateClass(Nil.nilObject, Classes.valueClass);
     SClass kernelClass = kernelModule.instantiateClass(Nil.nilObject, Classes.valueClass);
     KernelObj.kernel.setClass(kernelClass);
+
+    // TODO: what do we do with the VmMirror object???
+    constructVmMirror();
 
 
     // TODO:: cleanup ??? reuse comments?
