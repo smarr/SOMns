@@ -3,7 +3,6 @@ package som.interpreter;
 import java.util.List;
 
 import som.compiler.ClassBuilder.ClassDefinitionId;
-import som.compiler.ClassDefinition;
 import som.compiler.Variable.Argument;
 import som.compiler.Variable.Local;
 import som.interpreter.LexicalScope.MethodScope;
@@ -125,11 +124,6 @@ public final class SNodeFactory {
     return new ReturnNonLocalNode(exp, markerSlot, contextLevel, source);
   }
 
-  public static ExpressionNode createClassCreationNode(
-      final ClassDefinition classBody, final AbstractMessageSendNode superClass) {
-    return new NotImplemented("class creation", null);
-  }
-
   public static final class NotImplemented extends ExpressionNode {
     private final String msg;
 
@@ -160,10 +154,5 @@ public final class SNodeFactory {
       final SSymbol identifier, final ExpressionNode exp,
       final SourceSection source) {
     return new NotImplemented("implicit receiver setter send", source);
-  }
-
-  public static ExpressionNode createConstructClassNode(
-      final AbstractMessageSendNode superclassResolution) {
-    return new NotImplemented("construct class node", null);
   }
 }
