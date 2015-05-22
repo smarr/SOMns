@@ -73,9 +73,12 @@ import com.oracle.truffle.api.source.SourceSection;
 
 public final class MessageSendNode {
 
-  public static AbstractMessageSendNode create(final SSymbol selector,
+  /** See Newsspeak-spec sec 5.5. */
+  public static AbstractMessageSendNode createOrdenarySend(final SSymbol selector,
       final ExpressionNode[] arguments, final SourceSection source) {
-    return new UninitializedMessageSendNode(selector, arguments, source);
+    return new UninitializedMessageSendNode(selector, arguments,
+        AccessModifier.PUBLIC, source);
+  }
 
   /** See Newspeak-spec sec 5.7. */
   public static AbstractMessageSendNode createImplicitReceiverSend(final SSymbol selector,
@@ -83,12 +86,32 @@ public final class MessageSendNode {
     throw new NotYetImplementedException();
   }
 
+  /** See Newspeak-spec sec 5.8. */
+  public static AbstractMessageSendNode createSelfSend(final SSymbol selector,
+      final ExpressionNode[] arguments, final SourceSection source) {
+    return new UninitializedMessageSendNode(selector, arguments,
+        AccessModifier.PRIVATE, source);
+  }
+
+  /** See Newspeak-spec sec 5.9. */
+  public static AbstractMessageSendNode createOuterSend(final SSymbol selector,
+      final ExpressionNode[] arguments, final SourceSection source) {
+    return new UninitializedMessageSendNode(selector, arguments,
+        AccessModifier.PRIVATE, source);
+  }
+
+  /** See Newspeak-spec sec 5.10. */
+  public static AbstractMessageSendNode createSuperSend(final SSymbol selector,
+      final ExpressionNode[] arguments, final SourceSection source) {
+    return new UninitializedMessageSendNode(selector, arguments,
+        AccessModifier.PROTECTED, source);
   }
 
   public static AbstractMessageSendNode adaptSymbol(final SSymbol newSelector,
       final AbstractMessageSendNode node) {
     assert node instanceof UninitializedMessageSendNode;
     return new UninitializedMessageSendNode(newSelector, node.argumentNodes,
+        ((UninitializedMessageSendNode) node).minimalVisibility,
         node.getSourceSection());
   }
 
