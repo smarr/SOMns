@@ -29,7 +29,6 @@ import static som.interpreter.SNodeFactory.createCatchNonLocalReturn;
 import static som.interpreter.SNodeFactory.createNonLocalReturn;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -149,26 +148,9 @@ public final class MethodBuilder {
     return needsToCatchNonLocalReturn && outerBuilder == null;
   }
 
-  private void separateVariables(final Collection<? extends Variable> variables,
-      final ArrayList<Variable> onlyLocalAccess,
-      final ArrayList<Variable> nonLocalAccess) {
-    for (Variable l : variables) {
-      if (l.isAccessedOutOfContext()) {
-        nonLocalAccess.add(l);
-      } else {
-        onlyLocalAccess.add(l);
-      }
-    }
-  }
-
   public SMethod assemble(ExpressionNode body,
       final AccessModifier accessModifier, final SSymbol category,
       final SourceSection sourceSection) {
-    ArrayList<Variable> onlyLocalAccess = new ArrayList<>(arguments.size() + locals.size());
-    ArrayList<Variable> nonLocalAccess  = new ArrayList<>(arguments.size() + locals.size());
-    separateVariables(arguments.values(), onlyLocalAccess, nonLocalAccess);
-    separateVariables(locals.values(),    onlyLocalAccess, nonLocalAccess);
-
     if (needsToCatchNonLocalReturn()) {
       body = createCatchNonLocalReturn(body, getFrameOnStackMarkerSlot());
     }
