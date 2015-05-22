@@ -94,8 +94,8 @@ public final class ClassBuilder {
    */
   public static final class ClassDefinitionId {};
 
-  private ClassBuilder(final boolean onlyForModules) {
-    assert onlyForModules;
+  private ClassBuilder(final boolean onlyForModuleContext) {
+    assert onlyForModuleContext;
 
     initializer = null;
     classInstantiation = null;
