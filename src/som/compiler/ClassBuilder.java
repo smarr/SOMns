@@ -53,8 +53,9 @@ public final class ClassBuilder {
 
   private static final ClassBuilder moduleContextClassBuilder = new ClassBuilder(true);
 
-  /** The method that is used to instantiate the class object. */
-  private final MethodBuilder classInstantiation;
+  /** The method that is used to resolve the superclass at runtime. */
+  private final MethodBuilder superclassResolutionBuilder;
+  private AbstractMessageSendNode superclassResolution;
 
   /** The method that is used to initialize an instance. */
   private final MethodBuilder initializer;
@@ -65,7 +66,6 @@ public final class ClassBuilder {
   private final ArrayList<ExpressionNode> slotAndInitExprs = new ArrayList<>();
 
   private SSymbol                 name;
-  private AbstractMessageSendNode superclassResolution;
   private final LinkedHashMap<SSymbol, SlotDefinition> slots = new LinkedHashMap<>();
   private final HashMap<SSymbol, SInvokable> methods = new HashMap<SSymbol, SInvokable>();
   private final HashMap<SSymbol, SInvokable> factoryMethods = new HashMap<SSymbol, SInvokable>();
@@ -100,7 +100,7 @@ public final class ClassBuilder {
     assert onlyForModuleContext;
 
     initializer = null;
-    classInstantiation = null;
+    superclassResolutionBuilder = null;
     primaryFactoryMethod = null;
     setName(Symbols.symbolFor("non-existing-module-context"));
 
@@ -115,7 +115,7 @@ public final class ClassBuilder {
 
   public ClassBuilder(final ClassBuilder outerBuilder,
       final AccessModifier accessModifier) {
-    this.classInstantiation   = createClassDefinitionContext();
+    this.superclassResolutionBuilder = createSuperclassResolutionBuilder();
     this.initializer          = new MethodBuilder(this);
     this.primaryFactoryMethod = new MethodBuilder(this);
 
@@ -174,7 +174,7 @@ public final class ClassBuilder {
    * runtime class object.
    */
   public MethodBuilder getClassInstantiationMethodBuilder() {
-    return classInstantiation;
+    return superclassResolutionBuilder;
   }
 
   /**
@@ -277,8 +277,8 @@ public final class ClassBuilder {
     //     and then calls initiation
     //   - the initialization method, which class super, and then initializes the object
 
-    Method  classObjectInstantiation = assembleClassObjectInstantiationMethod();
-    SMethod primaryFactory = assemblePrimaryFactoryMethod();
+    Method  superclassResolution = assembleSuperclassResoltionMethod();
+    SMethod primaryFactory       = assemblePrimaryFactoryMethod();
     SMethod initializationMethod = assembleInitializationMethod();
     factoryMethods.put(primaryFactory.getSignature(), primaryFactory);
 
@@ -286,7 +286,7 @@ public final class ClassBuilder {
       methods.put(initializationMethod.getSignature(), initializationMethod);
     }
 
-    ClassDefinition clsDef = new ClassDefinition(name, classObjectInstantiation,
+    ClassDefinition clsDef = new ClassDefinition(name, superclassResolution,
         methods, factoryMethods, embeddedClasses, slots, classId,
         accessModifier, source);
     currentScope.setClassDefinition(clsDef);
@@ -307,20 +307,19 @@ public final class ClassBuilder {
 //        SArray.create(factoryMethods.toArray(new Object[0])));
   }
 
-  private static MethodBuilder createClassDefinitionContext() {
+  private static MethodBuilder createSuperclassResolutionBuilder() {
     MethodBuilder definitionMethod = new MethodBuilder(moduleContextClassBuilder);
-    // self is going to be either universe, or the enclosing object
+    // self is going to be the enclosing object
     definitionMethod.addArgumentIfAbsent("self");
     definitionMethod.setSignature(Symbols.symbolFor("`define`cls"));
 
-    definitionMethod.addLocalIfAbsent("$superCls");
+
     return definitionMethod;
   }
 
-  private Method assembleClassObjectInstantiationMethod() {
+  private Method assembleSuperclassResoltionMethod() {
     assert superclassResolution != null;
-    ExpressionNode body = SNodeFactory.createConstructClassNode(superclassResolution);
-    return classInstantiation.assembleInvokable(body, null);
+    return superclassResolutionBuilder.assembleInvokable(superclassResolution, null);
   }
 
   private SMethod assemblePrimaryFactoryMethod() {
@@ -400,10 +399,6 @@ public final class ClassBuilder {
     this.isSimpleNewSuperFactoySend = isSimpleNewSuperFactoySend;
   }
 
-  private SSymbol getClassCacheSlot(final SSymbol className) {
-    return Symbols.symbolFor(className.getString() + "`o`cache");
-  }
-
   public void addNestedClass(final ClassDefinition nestedClass)
       throws ClassDefinitionError {
     SSymbol name = nestedClass.getName();
@@ -421,9 +416,7 @@ public final class ClassBuilder {
     }
 
     embeddedClasses.put(name, nestedClass);
-    SSymbol cacheSlot = getClassCacheSlot(name);
-    slots.put(cacheSlot,
-        new ClassSlotDefinition(cacheSlot, slots.size(), nestedClass));
+    slots.put(name, new ClassSlotDefinition(name, slots.size(), nestedClass));
   }
 
   public ClassDefinitionId getClassId() {
