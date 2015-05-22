@@ -18,15 +18,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 *)
-class ObjectCreation = ()():(
-
-    public test = (
-        | i |
-        i := 0.
-        
-        [i < 100000000] whileTrue: [
-            self new.
-            i := i + 1.
-        ]
-    )
+class ObjectCreation = (| bar = 3. |)(
+  class A = (| foo = 42. |)()
+):(
+  public testImmutableRead      = ( ^ self new foo )
+  public testImmutableReadInner = ( ^ self new A new foo )
 )
