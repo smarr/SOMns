@@ -76,7 +76,6 @@ public class BasicInterpreterTests {
         {"CompilerSimplification", "testSetField",          "foo", SSymbol.class },
         {"CompilerSimplification", "testGetField",          40, Long.class },
 
-
         {"Arrays", "testEmptyToInts", 3, Long.class },
         {"Arrays", "testPutAllInt",   5, Long.class },
         {"Arrays", "testPutAllNil",   "Nil", SClass.class },
