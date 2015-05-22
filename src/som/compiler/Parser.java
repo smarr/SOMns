@@ -1136,7 +1136,9 @@ public final class Parser {
     }
 
     // otherwise, it is an implicit receiver send
-    return SNodeFactory.createImplicitReceiverSend(selector, source);
+    return SNodeFactory.createImplicitReceiverSend(selector,
+        new ExpressionNode[] {builder.getReadNode("self", null)},
+        builder.getCurrentMethodScope(), source);
   }
 
   private ExpressionNode setterSend(final MethodBuilder builder,

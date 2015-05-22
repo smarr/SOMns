@@ -1,5 +1,6 @@
 package som.interpreter.nodes;
 
+import som.compiler.AccessModifier;
 import som.interpreter.TruffleCompiler;
 import som.interpreter.TypesGen;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
@@ -75,6 +76,13 @@ public final class MessageSendNode {
   public static AbstractMessageSendNode create(final SSymbol selector,
       final ExpressionNode[] arguments, final SourceSection source) {
     return new UninitializedMessageSendNode(selector, arguments, source);
+
+  /** See Newspeak-spec sec 5.7. */
+  public static AbstractMessageSendNode createImplicitReceiverSend(final SSymbol selector,
+      final ExpressionNode[] arguments, final SourceSection source) {
+    throw new NotYetImplementedException();
+  }
+
   }
 
   public static AbstractMessageSendNode adaptSymbol(final SSymbol newSelector,

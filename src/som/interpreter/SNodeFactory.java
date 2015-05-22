@@ -21,6 +21,7 @@ import som.interpreter.nodes.LocalVariableNode.LocalVariableWriteNode;
 import som.interpreter.nodes.LocalVariableNodeFactory.LocalVariableWriteNodeGen;
 import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
+import som.interpreter.nodes.ResolvingImplicitReceiverSend;
 import som.interpreter.nodes.ReturnNonLocalNode;
 import som.interpreter.nodes.ReturnNonLocalNode.CatchNonLocalReturnNode;
 import som.interpreter.nodes.SequenceNode;
@@ -145,9 +146,10 @@ public final class SNodeFactory {
   }
 
   public static ExpressionNode createImplicitReceiverSend(
-    return new NotImplemented("implicit receiver send", source);
       final SSymbol selector, final ExpressionNode[] arguments,
       final MethodScope currentScope, final SourceSection source) {
+    return new ResolvingImplicitReceiverSend(selector, arguments,
+        currentScope, source);
   }
 
   public static ExpressionNode createImplicitReceiverSetterSend(
