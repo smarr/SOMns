@@ -18,7 +18,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 *)
-class ObjectCreation = (| bar = 3. |)(
+class ObjectCreation = (| foo = 3. |)(
   class A = (| foo = 42. |)()
 ):(
   public testNew = ( ^ self new )
