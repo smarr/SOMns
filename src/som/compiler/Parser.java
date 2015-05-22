@@ -692,9 +692,9 @@ public final class Parser {
 
       if (accept(Exit)) {
         expressions.add(result(builder));
-        return createSequenceNode(coord, expressions);
+        return createSequence(expressions, getSource(coord));
       } else if (sym == EndBlock) {
-        return createSequenceNode(coord, expressions);
+        return createSequence(expressions, getSource(coord));
       } else if (sym == EndTerm) {
         // the end of the method has been found (EndTerm) - make it implicitly
         // return "self"
@@ -702,22 +702,12 @@ public final class Parser {
         // TODO: we might need something else to access self
         ExpressionNode self = implicitReceiverSend(builder, symbolFor("self"), getSource(getCoordinate()));
         expressions.add(self);
-        return createSequenceNode(coord, expressions);
+        return createSequence(expressions, getSource(coord));
       }
 
       expressions.add(expression(builder));
       accept(Period);
     }
-  }
-
-  private ExpressionNode createSequenceNode(final SourceCoordinate coord,
-      final List<ExpressionNode> expressions) {
-    if (expressions.size() == 0) {
-      return new NilLiteralNode(getSource(coord));
-    } else if (expressions.size() == 1) {
-      return expressions.get(0);
-    }
-    return createSequence(expressions, getSource(coord));
   }
 
   private ExpressionNode result(final MethodBuilder builder) throws ParseError {

@@ -29,6 +29,7 @@ import som.interpreter.nodes.UninitializedVariableNode.UninitializedVariableRead
 import som.interpreter.nodes.UninitializedVariableNode.UninitializedVariableWriteNode;
 import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.literals.BlockNode.BlockNodeWithContext;
+import som.interpreter.nodes.literals.NilLiteralNode;
 import som.vm.NotYetImplementedException;
 import som.vmobjects.SInvokable.SMethod;
 import som.vmobjects.SSymbol;
@@ -90,9 +91,14 @@ public final class SNodeFactory {
     return LocalVariableWriteNodeGen.create(varSlot, source, exp);
   }
 
-  public static SequenceNode createSequence(final List<ExpressionNode> exps,
-      final SourceSection source) {
-    return new SequenceNode(exps.toArray(new ExpressionNode[0]), source);
+  public static ExpressionNode createSequence(
+      final List<ExpressionNode> expressions, final SourceSection source) {
+    if (expressions.size() == 0) {
+      return new NilLiteralNode(source);
+    } else if (expressions.size() == 1) {
+      return expressions.get(0);
+    }
+    return new SequenceNode(expressions.toArray(new ExpressionNode[0]), source);
   }
 
   public static BlockNode createBlockNode(final SMethod blockMethod,
