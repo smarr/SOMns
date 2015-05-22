@@ -120,6 +120,9 @@ public class BasicInterpreterTests {
         {"OuterSends", "testOuterBindings2",   2, Long.class },
         {"OuterSends", "testOuterBindings3",   6, Long.class },
         {"OuterSends", "testOuterSendLegalTargets", 666, Long.class },
+
+        {"ObjectCreation", "testImmutableRead",       3, Long.class },
+        {"ObjectCreation", "testImmutableReadInner", 42, Long.class },
     });
   }
 
