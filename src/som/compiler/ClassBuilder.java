@@ -338,6 +338,13 @@ public final class ClassBuilder {
 
     // then, evaluate the slot and init expressions
     allExprs.addAll(slotAndInitExprs);
+
+    if (slotAndInitExprs.size() > 0) {
+      // we need to make sure that we return self, that's the SOM Newspeak
+      // contract for initializers
+      allExprs.add(initializer.getReadNode("self", null));
+    }
+
     ExpressionNode body = SNodeFactory.createSequence(allExprs, null);
     return initializer.assemble(body, AccessModifier.PROTECTED,
         Symbols.symbolFor("initialization"), null);
