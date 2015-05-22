@@ -205,7 +205,8 @@ public final class Bootstrap {
     HashMap<SSymbol, SInvokable> vmMirrorMethods = constructVmMirrorPrimitives();
     ClassDefinition vmMirrorDef = new ClassDefinition(
         Symbols.symbolFor("VmMirror"), null, vmMirrorMethods, null, null,
-        new LinkedHashMap<>(), new ClassDefinitionId(), null);
+        new LinkedHashMap<>(), new ClassDefinitionId(), AccessModifier.PUBLIC,
+        null);
     SClass vmMirrorClass = new SClass(null, null);
     vmMirrorDef.initializeClass(vmMirrorClass, null);
     return new SObject(null, vmMirrorClass);

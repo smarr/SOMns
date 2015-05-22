@@ -75,6 +75,8 @@ public final class ClassBuilder {
   private ExpressionNode superclassFactorySend;
   private boolean   isSimpleNewSuperFactoySend;
 
+  private final AccessModifier accessModifier;
+
   private final ClassScope   currentScope;
   private final ClassBuilder outerBuilder;
 
@@ -102,13 +104,15 @@ public final class ClassBuilder {
 
     outerBuilder = null;
     currentScope = new ClassScope(null);
+    accessModifier = AccessModifier.PUBLIC;
   }
 
-  public ClassBuilder() {
-    this(moduleContextClassBuilder);
+  public ClassBuilder(final AccessModifier accessModifier) {
+    this(moduleContextClassBuilder, accessModifier);
   }
 
-  public ClassBuilder(final ClassBuilder outerBuilder) {
+  public ClassBuilder(final ClassBuilder outerBuilder,
+      final AccessModifier accessModifier) {
     this.classInstantiation   = createClassDefinitionContext();
     this.initializer          = new MethodBuilder(this);
     this.primaryFactoryMethod = new MethodBuilder(this);
@@ -116,6 +120,8 @@ public final class ClassBuilder {
     this.classSide = false;
     this.outerBuilder = outerBuilder;
     this.currentScope = new ClassScope(outerBuilder.getCurrentClassScope());
+
+    this.accessModifier = accessModifier;
   }
 
   public static class ClassDefinitionError extends Exception {
@@ -146,6 +152,10 @@ public final class ClassBuilder {
 
   public SSymbol getName() {
     return name;
+  }
+
+  public AccessModifier getAccessModifier() {
+    return accessModifier;
   }
 
   /**
@@ -275,7 +285,8 @@ public final class ClassBuilder {
     }
 
     ClassDefinition clsDef = new ClassDefinition(name, classObjectInstantiation,
-        methods, factoryMethods, embeddedClasses, slots, classId, source);
+        methods, factoryMethods, embeddedClasses, slots, classId,
+        accessModifier, source);
     currentScope.setClassDefinition(clsDef);
 
     return clsDef;

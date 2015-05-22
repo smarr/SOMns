@@ -37,6 +37,7 @@ public final class ClassDefinition {
   private final HashMap<SSymbol, SInvokable> factoryMethods;
   private final SourceSection sourceSection;
   private final ClassDefinitionId       classId;
+  private final AccessModifier accessModifier;
 
   @Nullable
   private final LinkedHashMap<SSymbol, ClassDefinition> nestedClassDefinitions;
@@ -50,7 +51,9 @@ public final class ClassDefinition {
       final HashMap<SSymbol, SInvokable> factoryMethods,
       final LinkedHashMap<SSymbol, ClassDefinition> nestedClassDefinitions,
       final LinkedHashMap<SSymbol, SlotDefinition> slotDefinitions,
-      final ClassDefinitionId classId, final SourceSection sourceSection) {
+      final ClassDefinitionId classId,
+      final AccessModifier accessModifier,
+      final SourceSection sourceSection) {
     this.name = name;
     this.assembleClassObjectMethod = classObjectInstantiation;
     this.instanceMethods = instanceMethods;
@@ -59,6 +62,7 @@ public final class ClassDefinition {
     this.slotDefinitions = slotDefinitions;
     this.sourceSection   = sourceSection;
     this.classId         = classId;
+    this.accessModifier  = accessModifier;
   }
 
   public SSymbol getName() {
@@ -163,6 +167,10 @@ public final class ClassDefinition {
       return null;
     }
     return nestedClassDefinitions.get(Symbols.symbolFor(string));
+  }
+
+  public AccessModifier getAccessModifier() {
+    return accessModifier;
   }
 
   public int getNumberOfSlots() {

@@ -63,7 +63,7 @@ public final class SourcecodeCompiler {
   }
 
   private static ClassDefinition compile(final Parser parser) {
-    ClassBuilder clsBuilder = new ClassBuilder();
+    ClassBuilder clsBuilder = new ClassBuilder(AccessModifier.PUBLIC);
     SourceCoordinate coord = parser.getCoordinate();
 
     try {
