@@ -29,6 +29,7 @@ import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate
 import java.util.HashMap;
 
 import som.compiler.AccessModifier;
+import som.compiler.ClassBuilder.ClassDefinitionId;
 import som.compiler.ClassDefinition.SlotDefinition;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.objectstorage.ObjectLayout;
@@ -48,6 +49,8 @@ public final class SClass extends SObjectWithoutFields {
 
   @CompilationFinal private ObjectLayout layoutForInstances;
 
+  @CompilationFinal private ClassDefinitionId classId;
+
   public SClass(final SAbstractObject enclosing) {
     super(enclosing);
   }
@@ -56,7 +59,7 @@ public final class SClass extends SObjectWithoutFields {
     super(enclosing, clazz);
   }
 
-  public SObjectWithoutFields getSuperClass() {
+  public SClass getSuperClass() {
     return superclass;
   }
 
@@ -67,6 +70,18 @@ public final class SClass extends SObjectWithoutFields {
 
   public SSymbol getName() {
     return name;
+  }
+
+  public ClassDefinitionId getClassId() {
+    return classId;
+  }
+
+  public void setClassId(final ClassDefinitionId classId) {
+    this.classId = classId;
+  }
+
+  public boolean isBasedOn(final ClassDefinitionId classId) {
+    return this.getClassId() == classId;
   }
 
   public void setName(final SSymbol value) {

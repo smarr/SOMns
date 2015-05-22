@@ -3,6 +3,7 @@ package som.compiler;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 
+import som.compiler.ClassBuilder.ClassDefinitionId;
 import som.interpreter.SNodeFactory;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
@@ -29,11 +30,12 @@ import com.sun.istack.internal.Nullable;
  * @author Stefan Marr
  */
 public final class ClassDefinition {
-  private final SSymbol      name;
-  private final SMethod      assembleClassObjectMethod;
+  private final SSymbol       name;
+  private final SMethod       assembleClassObjectMethod;
   private final HashMap<SSymbol, SInvokable> instanceMethods;
   private final HashMap<SSymbol, SInvokable> factoryMethods;
   private final SourceSection sourceSection;
+  private final ClassDefinitionId       classId;
 
   @Nullable
   private final LinkedHashMap<SSymbol, ClassDefinition> nestedClassDefinitions;
@@ -47,7 +49,7 @@ public final class ClassDefinition {
       final HashMap<SSymbol, SInvokable> factoryMethods,
       final LinkedHashMap<SSymbol, ClassDefinition> nestedClassDefinitions,
       final LinkedHashMap<SSymbol, SlotDefinition> slotDefinitions,
-      final SourceSection sourceSection) {
+      final ClassDefinitionId classId, final SourceSection sourceSection) {
     this.name = name;
     this.assembleClassObjectMethod = classObjectInstantiation;
     this.instanceMethods = instanceMethods;
@@ -55,14 +57,18 @@ public final class ClassDefinition {
     this.nestedClassDefinitions = nestedClassDefinitions;
     this.slotDefinitions = slotDefinitions;
     this.sourceSection   = sourceSection;
+    this.classId         = classId;
   }
 
   public SSymbol getName() {
     return name;
   }
 
+  public ClassDefinitionId getClassId() { return classId; }
+
   public void initializeClass(final SClass result, final SClass superClass) {
     result.setSuperClass(superClass);
+    result.setClassId(classId);
 
     // build class class name
     String ccName = name.getString() + " class";
@@ -71,6 +77,7 @@ public final class ClassDefinition {
       // Initialize the class of the resulting class
       result.getSOMClass().setInstanceInvokables(factoryMethods);
       result.getSOMClass().setName(Symbols.symbolFor(ccName));
+      result.getSOMClass().setClassId(classId);
     }
 
     // Initialize the resulting class

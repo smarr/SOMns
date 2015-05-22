@@ -295,7 +295,7 @@ public final class MethodBuilder {
   public ExpressionNode getSuperReadNode(final SourceSection source) {
     Variable self = getVariable("self");
     return self.getSuperReadNode(getOuterSelfContextLevel(),
-        holder.getName(), holder.isClassSide(), source);
+        holder.getClassId(), holder.isClassSide(), source);
   }
 
   public ExpressionNode getReadNode(final String variableName,

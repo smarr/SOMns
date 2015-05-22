@@ -2,6 +2,7 @@ package som.interpreter;
 
 import java.util.List;
 
+import som.compiler.ClassBuilder.ClassDefinitionId;
 import som.compiler.ClassDefinition;
 import som.compiler.ClassDefinition.SlotDefinition;
 import som.compiler.Variable.Argument;
@@ -69,7 +70,7 @@ public final class SNodeFactory {
   }
 
   public static ExpressionNode createSuperRead(final int contextLevel,
-        final SSymbol holderClass, final boolean classSide, final SourceSection source) {
+        final ClassDefinitionId holderClass, final boolean classSide, final SourceSection source) {
     if (contextLevel == 0) {
       return new LocalSuperReadNode(holderClass, classSide, source);
     } else {

@@ -5,8 +5,8 @@ import static som.interpreter.SNodeFactory.createLocalVarRead;
 import static som.interpreter.SNodeFactory.createSuperRead;
 import static som.interpreter.SNodeFactory.createVariableWrite;
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
+import som.compiler.ClassBuilder.ClassDefinitionId;
 import som.interpreter.nodes.ExpressionNode;
-import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.FrameSlot;
@@ -41,7 +41,7 @@ public abstract class Variable {
       final SourceSection source);
 
   public final ExpressionNode getSuperReadNode(final int contextLevel,
-      final SSymbol holderClass, final boolean classSide,
+      final ClassDefinitionId holderClass, final boolean classSide,
       final SourceSection source) {
     isRead = true;
     if (contextLevel > 0) {

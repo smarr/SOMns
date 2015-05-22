@@ -74,6 +74,20 @@ public final class ClassBuilder {
   private final ClassScope   currentScope;
   private final ClassBuilder outerBuilder;
 
+  private final ClassDefinitionId classId = new ClassDefinitionId();
+
+  /**
+   * A unique id to identify the class definition. Having the Id distinct from
+   * the actual definition allows us to make the definition immutable and
+   * construct it only after the parsing is completed.
+   * Currently, this is necessary because we want the immutability, and at the
+   * same time need a way to identify a class later on in super sends.
+   *
+   * Since the class object initialization method needs to support super,
+   * it is not really possible to do it differently at the moment.
+   */
+  public static final class ClassDefinitionId {};
+
   private ClassBuilder(final boolean onlyForModules) {
     assert onlyForModules;
 
@@ -230,7 +244,7 @@ public final class ClassBuilder {
     methods.put(initializationMethod.getSignature(), initializationMethod);
 
     ClassDefinition clsDef = new ClassDefinition(name, classObjectInstantiation,
-        methods, factoryMethods, embeddedClasses, slots, source);
+        methods, factoryMethods, embeddedClasses, slots, classId, source);
     currentScope.setClassDefinition(clsDef);
 
     return clsDef;
@@ -363,5 +377,9 @@ public final class ClassBuilder {
     slots.put(cacheSlot,
         new SlotDefinition(cacheSlot, AccessModifier.CLASS_CACHE_SLOT,
             slots.size(), true, null));
+  }
+
+  public ClassDefinitionId getClassId() {
+    return classId;
   }
 }

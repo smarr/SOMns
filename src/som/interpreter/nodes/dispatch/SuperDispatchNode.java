@@ -1,15 +1,14 @@
 package som.interpreter.nodes.dispatch;
 
+import som.compiler.AccessModifier;
+import som.compiler.ClassBuilder.ClassDefinitionId;
+import som.interpreter.Types;
 import som.interpreter.nodes.ISuperReadNode;
-import som.vm.Universe;
 import som.vmobjects.SClass;
-import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerAsserts;
-import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.DirectCallNode;
 
 /**
  * Super sends are special, they lead to a lexically defined receiver class.
@@ -26,55 +25,59 @@ public abstract class SuperDispatchNode extends AbstractDispatchNode {
 
   private static final class UninitializedDispatchNode extends SuperDispatchNode {
     private final SSymbol selector;
-    private final SSymbol holderClass;
+    private final ClassDefinitionId holderClass;
     private final boolean classSide;
 
     private UninitializedDispatchNode(final SSymbol selector,
-        final SSymbol holderClass, final boolean classSide) {
+        final ClassDefinitionId holderClass, final boolean classSide) {
       this.selector    = selector;
       this.holderClass = holderClass;
       this.classSide   = classSide;
     }
 
-    private SClass getLexicalSuperClass() {
-      SClass clazz = (SClass) Universe.current().getGlobal(holderClass);
-      if (classSide) {
-        clazz = clazz.getSOMClass();
+    private SClass getSuperClass(final SClass rcvrClass) {
+      SClass cls = rcvrClass;
+      while (!cls.isBasedOn(holderClass)) {
+        cls = cls.getSuperClass();
       }
-      return (SClass) clazz.getSuperClass();
+
+      SClass superClass = cls.getSuperClass();
+
+      if (classSide) {
+        return superClass.getSOMClass();
+      } else {
+        return superClass;
+      }
     }
 
-    private CachedDispatchNode specialize() {
+    private AbstractDispatchNode specialize(final Object rcvr) {
       CompilerAsserts.neverPartOfCompilation("SuperDispatchNode.create2");
-      SInvokable method = getLexicalSuperClass().lookupInvokable(selector);
+      // TODO: integrate this with the normal specialization code, to reuse the DNU handling
+      SClass rcvrClass = Types.getClassOf(rcvr);
+      Dispatchable disp = getSuperClass(rcvrClass).lookupMessage(
+          selector, AccessModifier.PROTECTED);
 
-      if (method == null) {
+      if (disp == null) {
         throw new RuntimeException("Currently #dnu with super sent is not yet implemented. ");
       }
-      DirectCallNode superMethodNode = Truffle.getRuntime().createDirectCallNode(
-          method.getCallTarget());
-      return replace(new CachedDispatchNode(superMethodNode));
+
+      UninitializedDispatchNode next = new UninitializedDispatchNode(selector,
+          holderClass, classSide);
+
+      return disp.getDispatchNode(rcvr, rcvrClass, next);
     }
 
     @Override
     public Object executeDispatch(
         final VirtualFrame frame, final Object[] arguments) {
-      return specialize().
+      return specialize(arguments[0]).
           executeDispatch(frame, arguments);
     }
-  }
-
-  private static final class CachedDispatchNode extends SuperDispatchNode {
-    @Child private DirectCallNode cachedSuperMethod;
-
-    private CachedDispatchNode(final DirectCallNode superMethod) {
-      this.cachedSuperMethod = superMethod;
-    }
 
     @Override
-    public Object executeDispatch(
-        final VirtualFrame frame, final Object[] arguments) {
-      return cachedSuperMethod.call(frame, arguments);
+    public String toString() {
+      return "UninitSuper(" + selector.toString()
+          + (classSide ? ", clsSide" : "") + ")";
     }
   }
 

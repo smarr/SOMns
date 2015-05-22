@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import som.compiler.AccessModifier;
+import som.compiler.ClassBuilder.ClassDefinitionId;
 import som.compiler.ClassDefinition;
 import som.compiler.MethodBuilder;
 import som.compiler.SourcecodeCompiler;
@@ -203,7 +204,8 @@ public final class Bootstrap {
   private static SObject constructVmMirror() {
     HashMap<SSymbol, SInvokable> vmMirrorMethods = constructVmMirrorPrimitives();
     ClassDefinition vmMirrorDef = new ClassDefinition(
-        Symbols.symbolFor("VmMirror"), null, vmMirrorMethods, null, null, new LinkedHashMap<>(), null);
+        Symbols.symbolFor("VmMirror"), null, vmMirrorMethods, null, null,
+        new LinkedHashMap<>(), new ClassDefinitionId(), null);
     SClass vmMirrorClass = new SClass(null, null);
     vmMirrorDef.initializeClass(vmMirrorClass, null);
     return new SObject(null, vmMirrorClass);

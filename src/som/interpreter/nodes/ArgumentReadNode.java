@@ -1,9 +1,9 @@
 package som.interpreter.nodes;
 
+import som.compiler.ClassBuilder.ClassDefinitionId;
 import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
 import som.interpreter.InlinerForLexicallyEmbeddedMethods;
 import som.interpreter.SArguments;
-import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
@@ -94,10 +94,10 @@ public abstract class ArgumentReadNode {
   public static final class LocalSuperReadNode extends LocalArgumentReadNode
       implements ISuperReadNode {
 
-    private final SSymbol holderClass;
+    private final ClassDefinitionId holderClass;
     private final boolean classSide;
 
-    public LocalSuperReadNode(final SSymbol holderClass,
+    public LocalSuperReadNode(final ClassDefinitionId holderClass,
         final boolean classSide, final SourceSection source) {
       super(SArguments.RCVR_IDX, source);
       this.holderClass = holderClass;
@@ -105,7 +105,7 @@ public abstract class ArgumentReadNode {
     }
 
     @Override
-    public SSymbol getHolderClass() {
+    public ClassDefinitionId getHolderClass() {
       return holderClass;
     }
 
@@ -118,11 +118,11 @@ public abstract class ArgumentReadNode {
   public static final class NonLocalSuperReadNode extends
       NonLocalArgumentReadNode implements ISuperReadNode {
 
-    private final SSymbol holderClass;
+    private final ClassDefinitionId holderClass;
     private final boolean classSide;
 
     public NonLocalSuperReadNode(final int contextLevel,
-        final SSymbol holderClass, final boolean classSide,
+        final ClassDefinitionId holderClass, final boolean classSide,
         final SourceSection source) {
       super(SArguments.RCVR_IDX, contextLevel, source);
       this.holderClass = holderClass;
@@ -130,7 +130,7 @@ public abstract class ArgumentReadNode {
     }
 
     @Override
-    public SSymbol getHolderClass() {
+    public ClassDefinitionId getHolderClass() {
       return holderClass;
     }
 
