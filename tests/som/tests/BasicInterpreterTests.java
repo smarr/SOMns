@@ -32,6 +32,7 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 import som.VM;
+import som.interpreter.Types;
 import som.vm.Bootstrap;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
@@ -121,6 +122,7 @@ public class BasicInterpreterTests {
         {"OuterSends", "testOuterBindings3",   6, Long.class },
         {"OuterSends", "testOuterSendLegalTargets", 666, Long.class },
 
+        {"ObjectCreation", "testNew",  "ObjectCreation", Object.class },
         {"ObjectCreation", "testImmutableRead",       3, Long.class },
         {"ObjectCreation", "testImmutableReadInner", 42, Long.class },
     });
@@ -160,6 +162,12 @@ public class BasicInterpreterTests {
       String expected = (String) expectedResult;
       String actual   = ((SSymbol) actualResult).getString();
       assertEquals(expected, actual);
+      return;
+    }
+
+    if (resultType == Object.class) {
+      String objClassName = Types.getClassOf(actualResult).getName().getString();
+      assertEquals(expectedResult, objClassName);
       return;
     }
     fail("SOM Value handler missing");
