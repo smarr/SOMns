@@ -4,7 +4,6 @@ import java.util.List;
 
 import som.compiler.ClassBuilder.ClassDefinitionId;
 import som.compiler.ClassDefinition;
-import som.compiler.ClassDefinition.SlotDefinition;
 import som.compiler.Variable.Argument;
 import som.compiler.Variable.Local;
 import som.interpreter.LexicalScope.MethodScope;
@@ -129,12 +128,6 @@ public final class SNodeFactory {
   public static ExpressionNode createClassCreationNode(
       final ClassDefinition classBody, final AbstractMessageSendNode superClass) {
     return new NotImplemented("class creation", null);
-  }
-
-  public static ExpressionNode createSlotInitialization(
-      final SlotDefinition slot, final ExpressionNode init) {
-    return new NotImplemented("slot init", null);
-    // TODO: return SlotWriteNode.create(slot, init);
   }
 
   public static final class NotImplemented extends ExpressionNode {

@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import som.compiler.ClassBuilder.ClassDefinitionId;
 import som.interpreter.SNodeFactory;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.FieldNode.FieldWriteNode;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
 import som.interpreter.nodes.dispatch.CachedSlotAccessNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
@@ -133,6 +134,11 @@ public final class ClassDefinition {
     public AbstractDispatchNode getDispatchNode(final Object rcvr,
         final Object rcvrClass, final AbstractDispatchNode next) {
       return new CachedSlotAccessNode(new UninitializedReadFieldNode(index), next);
+    }
+
+    public FieldWriteNode getWriteNode(final ExpressionNode receiver,
+        final ExpressionNode val, final SourceSection source) {
+      return SNodeFactory.createFieldWrite(receiver, val, index, source);
     }
 
     @Override

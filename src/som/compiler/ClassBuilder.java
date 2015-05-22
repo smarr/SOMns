@@ -237,7 +237,8 @@ public final class ClassBuilder {
     slots.put(name, slot);
 
     if (init != null) {
-      slotAndInitExprs.add(SNodeFactory.createSlotInitialization(slot, init));
+      ExpressionNode self = initializer.getReadNode("self", source);
+      slotAndInitExprs.add(slot.getWriteNode(self, init, source));
     }
   }
 
