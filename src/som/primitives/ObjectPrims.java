@@ -87,15 +87,6 @@ public final class ObjectPrims {
   }
 
   @GenerateNodeFactory
-  public abstract static class InstVarNamedPrim extends BinaryExpressionNode {
-    @Specialization
-    public final Object doSObject(final SObject receiver, final SSymbol fieldName) {
-      CompilerAsserts.neverPartOfCompilation();
-      return receiver.getField(receiver.getFieldIndex(fieldName));
-    }
-  }
-
-  @GenerateNodeFactory
   @Primitive("halt:")
   public abstract static class HaltPrim extends UnaryExpressionNode {
     public HaltPrim() { super(null); }
