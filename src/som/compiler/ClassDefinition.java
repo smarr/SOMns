@@ -7,11 +7,14 @@ import som.compiler.ClassBuilder.ClassDefinitionId;
 import som.interpreter.Method;
 import som.interpreter.SNodeFactory;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.FieldNode.FieldReadNode;
 import som.interpreter.nodes.FieldNode.FieldWriteNode;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
+import som.interpreter.nodes.dispatch.CachedClassSlotAccessNode;
 import som.interpreter.nodes.dispatch.CachedSlotAccessNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.objectstorage.FieldAccessorNode.UninitializedReadFieldNode;
+import som.interpreter.objectstorage.FieldAccessorNode.UninitializedWriteFieldNode;
 import som.vm.NotYetImplementedException;
 import som.vm.Symbols;
 import som.vm.constants.Classes;
@@ -103,9 +106,9 @@ public final class ClassDefinition {
     return result;
   }
 
-  public static final class SlotDefinition implements Dispatchable {
+  public static class SlotDefinition implements Dispatchable {
     private final SSymbol name;
-    private final int index;
+    protected final int index;
     private final AccessModifier modifier;
     private final boolean immutable;
     private final SourceSection source;
@@ -120,15 +123,16 @@ public final class ClassDefinition {
       this.source    = source;
     }
 
-    public SSymbol getName() {
+    public final SSymbol getName() {
       return name;
     }
 
-    public AccessModifier getModifier() {
+    @Override
+    public final AccessModifier getAccessModifier() {
       return modifier;
     }
 
-    public boolean isImmutable() {
+    public final boolean isImmutable() {
       return immutable;
     }
 
@@ -152,18 +156,36 @@ public final class ClassDefinition {
     }
 
     @Override
-    public AccessModifier getAccessModifier() {
-      return modifier;
-    }
-
-    @Override
-    public Object invoke(final Object... arguments) {
+    public final Object invoke(final Object... arguments) {
       throw new NotYetImplementedException();
     }
 
     @Override
-    public CallTarget getCallTargetIfAvailable() {
+    public final CallTarget getCallTargetIfAvailable() {
       throw new UnsupportedOperationException("Slots don't have CallTargets.");
+    }
+  }
+
+  /**
+   * For the class slots that are generated based on class definitions, we
+   * use a separate class to provide a different accessor node.
+   */
+  public static final class ClassSlotDefinition extends SlotDefinition {
+    private final ClassDefinition classDefinition;
+
+    public ClassSlotDefinition(final SSymbol name, final int index,
+        final ClassDefinition classDefinition) {
+      super(name, classDefinition.getAccessModifier(), index, true,
+          classDefinition.getSourceSection());
+      this.classDefinition = classDefinition;
+    }
+
+    @Override
+    public AbstractDispatchNode getDispatchNode(final Object rcvr,
+        final Object rcvrClass, final AbstractDispatchNode next) {
+      return new CachedClassSlotAccessNode(classDefinition,
+          (SClass) rcvrClass, new UninitializedReadFieldNode(index),
+          new UninitializedWriteFieldNode(index), next);
     }
   }
 

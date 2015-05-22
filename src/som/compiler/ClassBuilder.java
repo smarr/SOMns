@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import som.compiler.ClassDefinition.ClassSlotDefinition;
 import som.compiler.ClassDefinition.SlotDefinition;
 import som.interpreter.LexicalScope.ClassScope;
 import som.interpreter.Method;
@@ -422,8 +423,7 @@ public final class ClassBuilder {
     embeddedClasses.put(name, nestedClass);
     SSymbol cacheSlot = getClassCacheSlot(name);
     slots.put(cacheSlot,
-        new SlotDefinition(cacheSlot, AccessModifier.CLASS_CACHE_SLOT,
-            slots.size(), true, null));
+        new ClassSlotDefinition(cacheSlot, slots.size(), nestedClass));
   }
 
   public ClassDefinitionId getClassId() {
