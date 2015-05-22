@@ -255,6 +255,7 @@ public final class Bootstrap {
     // these classes need to be defined by the Kernel module
     ClassDefinition topDef   = kernelModule.getEmbeddedClassDefinition("Top");
     ClassDefinition thingDef = kernelModule.getEmbeddedClassDefinition("Thing");
+    thingDef.addSyntheticInitializerWithoutSuperSendOnlyForThingClass();
     ClassDefinition valueDef = kernelModule.getEmbeddedClassDefinition("Value");
     ClassDefinition nilDef   = kernelModule.getEmbeddedClassDefinition("Nil");
 

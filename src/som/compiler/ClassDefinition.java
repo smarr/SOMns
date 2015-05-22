@@ -168,4 +168,16 @@ public final class ClassDefinition {
   public SourceSection getSourceSection() {
     return sourceSection;
   }
+
+  public void addSyntheticInitializerWithoutSuperSendOnlyForThingClass() {
+    SSymbol init = ClassBuilder.getInitializerName(Symbols.symbolFor("new"));
+    MethodBuilder builder = new MethodBuilder(null);
+    builder.setSignature(init);
+    builder.addArgumentIfAbsent("self");
+
+    SMethod thingInitNew = builder.assemble(builder.getReadNode("self", null),
+        AccessModifier.PROTECTED, Symbols.symbolFor("initializer"), null);
+    assert instanceMethods.containsKey(init);
+    instanceMethods.put(init, thingInitNew);
+  }
 }

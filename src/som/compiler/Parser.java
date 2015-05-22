@@ -230,7 +230,7 @@ public final class Parser {
 
     clsBuilder.setName(symbolFor(className));
 
-    MethodBuilder primaryFactory = clsBuilder.getInitializerMethodBuilder();
+    MethodBuilder primaryFactory = clsBuilder.getPrimaryFactoryMethodBuilder();
 
     // Newspeak-spec: this is not strictly sufficient for Newspeak
     //                it could also parse a binary selector here, I think
@@ -242,8 +242,11 @@ public final class Parser {
       primaryFactory.addArgumentIfAbsent("self");
       primaryFactory.setSignature(symbolFor("new"));
     }
+    clsBuilder.setupInitializerBasedOnPrimaryFactory();
 
-    expect(Equal);
+    expect(Equal, "Unexpected symbol %(found)s."
+        + " Tried to parse the class declaration of " + className
+        + " and expect '=' before the (optional) inheritance declaration.");
 
     inheritanceListAndOrBody(clsBuilder);
   }
@@ -259,14 +262,14 @@ public final class Parser {
 
   private void defaultSuperclassAndBody(final ClassBuilder clsBuilder)
       throws ParseError, ClassDefinitionError {
-    MethodBuilder def = clsBuilder.getInstantiationMethodBuilder();
+    MethodBuilder def = clsBuilder.getClassInstantiationMethodBuilder();
     ExpressionNode selfRead = def.getReadNode("self", null);
     AbstractMessageSendNode superClass = SNodeFactory.createMessageSend(
         symbolFor("Object"), new ExpressionNode[] {selfRead}, null);
     clsBuilder.setSuperClassResolution(superClass);
 
     clsBuilder.setSuperclassFactorySend(
-        clsBuilder.createStandardSuperFactorySend());
+        clsBuilder.createStandardSuperFactorySend(), true);
 
     classBody(clsBuilder);
   }
@@ -303,12 +306,12 @@ public final class Parser {
     } else {
       superFactorySend = clsBuilder.createStandardSuperFactorySend();
     }
-    clsBuilder.setSuperclassFactorySend(superFactorySend);
+    clsBuilder.setSuperclassFactorySend(superFactorySend, false);
   }
 
   private ExpressionNode inheritancePrefix(final ClassBuilder clsBuilder)
       throws ParseError {
-    MethodBuilder meth = clsBuilder.getInstantiationMethodBuilder();
+    MethodBuilder meth = clsBuilder.getClassInstantiationMethodBuilder();
     SourceCoordinate coord = getCoordinate();
 
     if (acceptIdentifier("self")) {

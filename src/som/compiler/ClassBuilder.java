@@ -52,10 +52,13 @@ public final class ClassBuilder {
   private static final ClassBuilder moduleContextClassBuilder = new ClassBuilder(true);
 
   /** The method that is used to instantiate the class object. */
-  private final MethodBuilder instantiation;
+  private final MethodBuilder classInstantiation;
 
   /** The method that is used to initialize an instance. */
   private final MethodBuilder initializer;
+
+  /** The method that is used for instantiating the object. */
+  private final MethodBuilder primaryFactoryMethod;
 
   private final ArrayList<ExpressionNode> slotAndInitExprs = new ArrayList<>();
 
@@ -70,6 +73,7 @@ public final class ClassBuilder {
   private boolean classSide;
 
   private ExpressionNode superclassFactorySend;
+  private boolean   isSimpleNewSuperFactoySend;
 
   private final ClassScope   currentScope;
   private final ClassBuilder outerBuilder;
@@ -92,7 +96,8 @@ public final class ClassBuilder {
     assert onlyForModules;
 
     initializer = null;
-    instantiation = null;
+    classInstantiation = null;
+    primaryFactoryMethod = null;
     setName(Symbols.symbolFor("non-existing-module-context"));
 
     outerBuilder = null;
@@ -104,8 +109,9 @@ public final class ClassBuilder {
   }
 
   public ClassBuilder(final ClassBuilder outerBuilder) {
-    this.instantiation = createClassDefinitionContext();
-    this.initializer   = new MethodBuilder(this);
+    this.classInstantiation   = createClassDefinitionContext();
+    this.initializer          = new MethodBuilder(this);
+    this.primaryFactoryMethod = new MethodBuilder(this);
 
     this.classSide = false;
     this.outerBuilder = outerBuilder;
@@ -155,8 +161,8 @@ public final class ClassBuilder {
    * Thus, it will resolve the super class to be used, and create the actual
    * runtime class object.
    */
-  public MethodBuilder getInstantiationMethodBuilder() {
-    return instantiation;
+  public MethodBuilder getClassInstantiationMethodBuilder() {
+    return classInstantiation;
   }
 
   /**
@@ -166,6 +172,27 @@ public final class ClassBuilder {
    */
   public MethodBuilder getInitializerMethodBuilder() {
     return initializer;
+  }
+
+  /**
+   * The method that is used to instantiate an object.
+   * It instantiates the object, and then calls the initializer,
+   * passing all arguments.
+   */
+  public MethodBuilder getPrimaryFactoryMethodBuilder() {
+    return primaryFactoryMethod;
+  }
+
+  /**
+   * Primary factor and initializer take the same arguments, and
+   * the initializers name is derived from the factory method.
+   */
+  public void setupInitializerBasedOnPrimaryFactory() {
+    initializer.setSignature(getInitializerName(
+        primaryFactoryMethod.getSignature()));
+    for (String arg : primaryFactoryMethod.getArgumentNames()) {
+      initializer.addArgumentIfAbsent(arg);
+    }
   }
 
   public void addMethod(final SInvokable meth) throws ClassDefinitionError {
@@ -241,7 +268,10 @@ public final class ClassBuilder {
     SMethod primaryFactory = assemblePrimaryFactoryMethod();
     SMethod initializationMethod = assembleInitializationMethod();
     factoryMethods.put(primaryFactory.getSignature(), primaryFactory);
-    methods.put(initializationMethod.getSignature(), initializationMethod);
+
+    if (initializationMethod != null) {
+      methods.put(initializationMethod.getSignature(), initializationMethod);
+    }
 
     ClassDefinition clsDef = new ClassDefinition(name, classObjectInstantiation,
         methods, factoryMethods, embeddedClasses, slots, classId, source);
@@ -276,32 +306,31 @@ public final class ClassBuilder {
   private SMethod assembleClassObjectInstantiationMethod() {
     assert superclassResolution != null;
     ExpressionNode body = SNodeFactory.createConstructClassNode(superclassResolution);
-    return instantiation.assemble(body,
+    return classInstantiation.assemble(body,
         AccessModifier.OBJECT_INSTANTIATION_METHOD, null, null);
   }
 
   private SMethod assemblePrimaryFactoryMethod() {
-    MethodBuilder builder = new MethodBuilder(this);
-    builder.setSignature(initializer.getSignature());
-    builder.addArgumentIfAbsent("self");
-
     // first create new Object
     ExpressionNode newObject = NewObjectPrimFactory.create(
-        builder.getReadNode("self", null));
+        primaryFactoryMethod.getReadNode("self", null));
 
-    List<ExpressionNode> args = createFactoryMethodArgumentRead(builder,
-        newObject);
+    List<ExpressionNode> args = createPrimaryFactoryArgumentRead(newObject);
 
     // This is a bet on initializer methods being constructed well,
     // so that they return self
     ExpressionNode initializedObject = SNodeFactory.createMessageSend(
-        getInitializerName(initializer.getSignature()), args, null);
+        initializer.getSignature(), args, null);
 
-    return builder.assemble(initializedObject, AccessModifier.PROTECTED,
-        Symbols.symbolFor("initialization"), null);
+    return primaryFactoryMethod.assemble(initializedObject,
+        AccessModifier.PROTECTED, Symbols.symbolFor("initialization"), null);
   }
 
   private SMethod assembleInitializationMethod() {
+    if (isSimpleNewSuperFactoySend && slotAndInitExprs.size() == 0) {
+      return null; // this is strictly an optimization, should work without it!
+    }
+
     List<ExpressionNode> allExprs = new ArrayList<ExpressionNode>(1 + slotAndInitExprs.size());
     // first do initializer send to super class
     allExprs.add(superclassFactorySend);
@@ -313,19 +342,16 @@ public final class ClassBuilder {
         Symbols.symbolFor("initialization"), null);
   }
 
-  protected List<ExpressionNode> createFactoryMethodArgumentRead(
-      final MethodBuilder builder, final ExpressionNode receiver) {
+  protected List<ExpressionNode> createPrimaryFactoryArgumentRead(
+      final ExpressionNode objectInstantiationExpr) {
     // then, call the initializer on it
-    List<ExpressionNode> args = new ArrayList<>(
-        initializer.getSignature().getNumberOfSignatureArguments());
-    args.add(receiver);
-
-    String[] arguments = initializer.getArgumentNames();
+    String[] arguments = primaryFactoryMethod.getArgumentNames();
+    List<ExpressionNode> args = new ArrayList<>(arguments.length);
+    args.add(objectInstantiationExpr);
 
     for (String arg : arguments) {
-      if (!"self".equals(arg)) { // we already got self
-        builder.addArgumentIfAbsent(arg.toString());
-        args.add(builder.getReadNode(arg, null));
+      if (!"self".equals(arg)) { // already have self as the newly instantiated object
+        args.add(primaryFactoryMethod.getReadNode(arg, null));
       }
     }
     return args;
@@ -339,7 +365,7 @@ public final class ClassBuilder {
     return superFactorySend;
   }
 
-  public SSymbol getInitializerName(final SSymbol selector) {
+  public static SSymbol getInitializerName(final SSymbol selector) {
     return Symbols.symbolFor("initializer`" + selector.getString());
   }
 
@@ -348,8 +374,10 @@ public final class ClassBuilder {
     return "ClassGenC(" + name.getString() + ")";
   }
 
-  public void setSuperclassFactorySend(final ExpressionNode superFactorySend) {
+  public void setSuperclassFactorySend(final ExpressionNode superFactorySend,
+      final boolean isSimpleNewSuperFactoySend) {
     this.superclassFactorySend = superFactorySend;
+    this.isSimpleNewSuperFactoySend = isSimpleNewSuperFactoySend;
   }
 
   private SSymbol getClassCacheSlot(final SSymbol className) {
