@@ -65,7 +65,7 @@ public class CachedClassSlotAccessNode extends AbstractDispatchNode {
     if (classObjectInstantiation == null) {
       Invokable invokable = classDefinition.getClassObjectInstantiationInvokable();
       classObjectInstantiation = Truffle.getRuntime().createDirectCallNode(
-          invokable.getCallTarget());
+          invokable.createCallTarget());
     }
 
     SClass superClass = (SClass) classObjectInstantiation.call(frame,
