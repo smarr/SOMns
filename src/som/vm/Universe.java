@@ -41,7 +41,6 @@ import som.interpreter.nodes.dispatch.Dispatchable;
 import som.vm.constants.Globals;
 import som.vm.constants.KernelObj;
 import som.vmobjects.SArray;
-import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SInvokable.SMethod;
@@ -154,10 +153,6 @@ public final class Universe {
     }
 
     objectSystemInitialized = true;
-  }
-
-  public static SBlock newBlock(final SMethod method, final MaterializedFrame context) {
-    return SBlock.create(KernelObj.kernel, method, context);
   }
 
   @TruffleBoundary
