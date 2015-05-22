@@ -218,11 +218,11 @@ public final class Parser {
   public void moduleDeclaration(final ClassBuilder clsBuilder)
       throws ParseError, ClassDefinitionError {
     comment();
-    classDeclaration(AccessModifier.PUBLIC, clsBuilder);
+    classDeclaration(clsBuilder);
   }
 
-  private void classDeclaration(final AccessModifier accessModifier,
-      final ClassBuilder clsBuilder) throws ParseError, ClassDefinitionError {
+  private void classDeclaration(final ClassBuilder clsBuilder)
+      throws ParseError, ClassDefinitionError {
     expectIdentifier("class", "Found unexpected token %(found)s. " +
       "Tried parsing a class declaration and expected 'class' instead.");
     String className = text;
@@ -467,7 +467,7 @@ public final class Parser {
     SourceCoordinate coord = getCoordinate();
     AccessModifier accessModifier = accessModifier();
     ClassBuilder nestedCls = new ClassBuilder(clsBuilder);
-    classDeclaration(accessModifier, nestedCls);
+    classDeclaration(nestedCls);
     clsBuilder.addNestedClass(nestedCls.assemble(getSource(coord)));
   }
 
