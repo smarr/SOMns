@@ -298,7 +298,7 @@ public final class Parser {
           clsBuilder.getInitializerMethodBuilder(),
           clsBuilder.getInitializerMethodBuilder().getSuperReadNode(null));
 
-      SSymbol initializerName = clsBuilder.getInitializerName(
+      SSymbol initializerName = ClassBuilder.getInitializerName(
           ((AbstractUninitializedMessageSendNode) superFactorySend).getSelector());
 
       superFactorySend = MessageSendNode.adaptSymbol(initializerName,
