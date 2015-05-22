@@ -33,6 +33,7 @@ import java.util.List;
 
 import som.compiler.ClassDefinition.SlotDefinition;
 import som.interpreter.LexicalScope.ClassScope;
+import som.interpreter.Method;
 import som.interpreter.SNodeFactory;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
@@ -275,7 +276,7 @@ public final class ClassBuilder {
     //     and then calls initiation
     //   - the initialization method, which class super, and then initializes the object
 
-    SMethod classObjectInstantiation = assembleClassObjectInstantiationMethod();
+    Method  classObjectInstantiation = assembleClassObjectInstantiationMethod();
     SMethod primaryFactory = assemblePrimaryFactoryMethod();
     SMethod initializationMethod = assembleInitializationMethod();
     factoryMethods.put(primaryFactory.getSignature(), primaryFactory);
@@ -315,11 +316,10 @@ public final class ClassBuilder {
     return definitionMethod;
   }
 
-  private SMethod assembleClassObjectInstantiationMethod() {
+  private Method assembleClassObjectInstantiationMethod() {
     assert superclassResolution != null;
     ExpressionNode body = SNodeFactory.createConstructClassNode(superclassResolution);
-    return classInstantiation.assemble(body,
-        AccessModifier.OBJECT_INSTANTIATION_METHOD, null, null);
+    return classInstantiation.assembleInvokable(body, null);
   }
 
   private SMethod assemblePrimaryFactoryMethod() {

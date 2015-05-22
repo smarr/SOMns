@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 
 import som.compiler.ClassBuilder.ClassDefinitionId;
+import som.interpreter.Method;
 import som.interpreter.SNodeFactory;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.FieldNode.FieldWriteNode;
@@ -32,7 +33,7 @@ import com.sun.istack.internal.Nullable;
  */
 public final class ClassDefinition {
   private final SSymbol       name;
-  private final SMethod       assembleClassObjectMethod;
+  private final Method        classObjectInstantiation;
   private final HashMap<SSymbol, SInvokable> instanceMethods;
   private final HashMap<SSymbol, SInvokable> factoryMethods;
   private final SourceSection sourceSection;
@@ -46,7 +47,7 @@ public final class ClassDefinition {
   private final LinkedHashMap<SSymbol, SlotDefinition>  slotDefinitions;
 
   public ClassDefinition(final SSymbol name,
-      final SMethod classObjectInstantiation,
+      final Method classObjectInstantiation,
       final HashMap<SSymbol, SInvokable> instanceMethods,
       final HashMap<SSymbol, SInvokable> factoryMethods,
       final LinkedHashMap<SSymbol, ClassDefinition> nestedClassDefinitions,
@@ -55,7 +56,7 @@ public final class ClassDefinition {
       final AccessModifier accessModifier,
       final SourceSection sourceSection) {
     this.name = name;
-    this.assembleClassObjectMethod = classObjectInstantiation;
+    this.classObjectInstantiation = classObjectInstantiation;
     this.instanceMethods = instanceMethods;
     this.factoryMethods  = factoryMethods;
     this.nestedClassDefinitions = nestedClassDefinitions;
@@ -67,6 +68,10 @@ public final class ClassDefinition {
 
   public SSymbol getName() {
     return name;
+  }
+
+  public Method getClassObjectInstantiationInvokable() {
+    return classObjectInstantiation;
   }
 
   public ClassDefinitionId getClassId() { return classId; }

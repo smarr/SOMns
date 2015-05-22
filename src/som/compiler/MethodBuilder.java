@@ -151,6 +151,17 @@ public final class MethodBuilder {
   public SMethod assemble(ExpressionNode body,
       final AccessModifier accessModifier, final SSymbol category,
       final SourceSection sourceSection) {
+    Method truffleMethod = assembleInvokable(body, sourceSection);
+
+    SMethod meth = (SMethod) Universe.newMethod(signature, accessModifier, category,
+        truffleMethod, false, embeddedBlockMethods.toArray(new SMethod[0]));
+
+    // return the method - the holder field is to be set later on!
+    return meth;
+  }
+
+  public Method assembleInvokable(ExpressionNode body,
+      final SourceSection sourceSection) {
     if (needsToCatchNonLocalReturn()) {
       body = createCatchNonLocalReturn(body, getFrameOnStackMarkerSlot());
     }
@@ -158,12 +169,7 @@ public final class MethodBuilder {
     Method truffleMethod =
         new Method(getSourceSectionForMethod(sourceSection),
             body, currentScope, (ExpressionNode) body.deepCopy());
-
-    SMethod meth = (SMethod) Universe.newMethod(signature, accessModifier, category,
-        truffleMethod, false, embeddedBlockMethods.toArray(new SMethod[0]));
-
-    // return the method - the holder field is to be set later on!
-    return meth;
+    return truffleMethod;
   }
 
   private SourceSection getSourceSectionForMethod(final SourceSection ssBody) {
