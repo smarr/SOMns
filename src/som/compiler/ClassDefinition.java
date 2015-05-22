@@ -133,7 +133,8 @@ public final class ClassDefinition {
     @Override
     public AbstractDispatchNode getDispatchNode(final Object rcvr,
         final Object rcvrClass, final AbstractDispatchNode next) {
-      return new CachedSlotAccessNode(new UninitializedReadFieldNode(index), next);
+      assert rcvrClass instanceof SClass;
+      return new CachedSlotAccessNode((SClass) rcvrClass, new UninitializedReadFieldNode(index), next);
     }
 
     public FieldWriteNode getWriteNode(final ExpressionNode receiver,
