@@ -149,6 +149,11 @@ public final class SNodeFactory {
     public Object executeGeneric(final VirtualFrame frame) {
       throw new NotYetImplementedException();
     }
+
+    @Override
+    public String toString() {
+      return "Not Implemented: " + msg;
+    }
   }
 
   public static ExpressionNode createImplicitReceiverSend(
