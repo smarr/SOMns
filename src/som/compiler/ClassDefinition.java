@@ -36,7 +36,7 @@ import com.sun.istack.internal.Nullable;
  */
 public final class ClassDefinition {
   private final SSymbol       name;
-  private final Method        classObjectInstantiation;
+  private final Method        superclassResolution;
   private final HashMap<SSymbol, SInvokable> instanceMethods;
   private final HashMap<SSymbol, SInvokable> factoryMethods;
   private final SourceSection sourceSection;
@@ -50,7 +50,7 @@ public final class ClassDefinition {
   private final LinkedHashMap<SSymbol, SlotDefinition>  slotDefinitions;
 
   public ClassDefinition(final SSymbol name,
-      final Method classObjectInstantiation,
+      final Method superclassResolution,
       final HashMap<SSymbol, SInvokable> instanceMethods,
       final HashMap<SSymbol, SInvokable> factoryMethods,
       final LinkedHashMap<SSymbol, ClassDefinition> nestedClassDefinitions,
@@ -59,7 +59,7 @@ public final class ClassDefinition {
       final AccessModifier accessModifier,
       final SourceSection sourceSection) {
     this.name = name;
-    this.classObjectInstantiation = classObjectInstantiation;
+    this.superclassResolution = superclassResolution;
     this.instanceMethods = instanceMethods;
     this.factoryMethods  = factoryMethods;
     this.nestedClassDefinitions = nestedClassDefinitions;
@@ -73,8 +73,8 @@ public final class ClassDefinition {
     return name;
   }
 
-  public Method getClassObjectInstantiationInvokable() {
-    return classObjectInstantiation;
+  public Method getSuperclassResolutionInvokable() {
+    return superclassResolution;
   }
 
   public ClassDefinitionId getClassId() { return classId; }

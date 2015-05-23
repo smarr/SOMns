@@ -63,7 +63,7 @@ public class CachedClassSlotAccessNode extends AbstractDispatchNode {
   private SClass instantiateClassObject(final VirtualFrame frame,
       final SObject rcvr) {
     if (classObjectInstantiation == null) {
-      Invokable invokable = classDefinition.getClassObjectInstantiationInvokable();
+      Invokable invokable = classDefinition.getSuperclassResolutionInvokable();
       classObjectInstantiation = Truffle.getRuntime().createDirectCallNode(
           invokable.createCallTarget());
     }
