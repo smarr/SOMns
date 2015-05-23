@@ -1,5 +1,6 @@
 package som.interpreter.nodes;
 
+import som.compiler.ClassBuilder.ClassDefinitionId;
 import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.vmobjects.SSymbol;
@@ -12,13 +13,15 @@ public class ResolvingImplicitReceiverSend extends AbstractMessageSendNode {
 
   private final SSymbol     selector;
   private final MethodScope currentScope;
+  private final ClassDefinitionId classDefId;
 
   public ResolvingImplicitReceiverSend(final SSymbol selector,
       final ExpressionNode[] arguments, final MethodScope currentScope,
-      final SourceSection source) {
+      final ClassDefinitionId classDefId, final SourceSection source) {
     super(arguments, source);
     this.selector     = selector;
     this.currentScope = currentScope;
+    this.classDefId   = classDefId;
   }
 
   @Override
@@ -33,7 +36,7 @@ public class ResolvingImplicitReceiverSend extends AbstractMessageSendNode {
     if (contextLevel != -1) {
       assert contextLevel >= 0;
       OuterObjectRead outer = OuterObjectReadNodeGen.create(contextLevel,
-          getSourceSection(), argumentNodes[0]);
+          classDefId, getSourceSection(), argumentNodes[0]);
       argumentNodes[0] = outer;
       newNode = MessageSendNode.createOuterSend(selector, argumentNodes, getSourceSection());
       replace((ExpressionNode) newNode);
@@ -47,4 +50,8 @@ public class ResolvingImplicitReceiverSend extends AbstractMessageSendNode {
     return newNode.doPreEvaluated(frame, args);
   }
 
+  @Override
+  public String toString() {
+    return "ImplicitSend(" + selector.toString() + ")";
+  }
 }

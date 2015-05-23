@@ -1,7 +1,9 @@
 package som.interpreter.nodes;
 
+import som.compiler.ClassBuilder.ClassDefinitionId;
 import som.vm.constants.KernelObj;
 import som.vmobjects.SAbstractObject;
+import som.vmobjects.SClass;
 
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -12,10 +14,13 @@ import com.oracle.truffle.api.source.SourceSection;
 public abstract class OuterObjectRead extends ExpressionNode {
 
   private final int contextLevel;
+  private final ClassDefinitionId classDefId;
 
-  public OuterObjectRead(final int contextLevel, final SourceSection sourceSection) {
+  public OuterObjectRead(final int contextLevel,
+      final ClassDefinitionId classDefId, final SourceSection sourceSection) {
     super(sourceSection);
     this.contextLevel = contextLevel;
+    this.classDefId = classDefId;
   }
 
   @Specialization
@@ -36,11 +41,17 @@ public abstract class OuterObjectRead extends ExpressionNode {
 
   @ExplodeLoop
   private Object getEnclosingObject(final SAbstractObject receiver) {
-    int ctxLevel = contextLevel;
-    SAbstractObject enclosing = receiver;
+    if (contextLevel == 0) {
+      return receiver;
+    }
+
+    SClass cls = receiver.getSOMClass().getClassCorrespondingTo(classDefId);
+    int ctxLevel = contextLevel - 1;
+    SAbstractObject enclosing = cls.getEnclosingObject();
+
     while (ctxLevel > 0) {
       ctxLevel--;
-      enclosing = enclosing.getEnclosingObject();
+      enclosing = enclosing.getSOMClass().getEnclosingObject();
     }
     return enclosing;
   }
