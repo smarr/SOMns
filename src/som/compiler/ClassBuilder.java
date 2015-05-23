@@ -287,11 +287,22 @@ public final class ClassBuilder {
 
     ClassDefinition clsDef = new ClassDefinition(name, superclassResolution,
         methods, factoryMethods, embeddedClasses, slots, classId,
-        accessModifier, source);
+        accessModifier, instanceScope, classScope, source);
     instanceScope.setClassDefinition(clsDef, false);
     classScope.setClassDefinition(clsDef, true);
 
+    setHolders(clsDef);
     return clsDef;
+  }
+
+  private void setHolders(final ClassDefinition clsDef) {
+    for (SInvokable invok : methods.values()) {
+      invok.setHolder(clsDef);
+    }
+
+    for (SInvokable invok : factoryMethods.values()) {
+      invok.setHolder(clsDef);
+    }
   }
 
   @TruffleBoundary

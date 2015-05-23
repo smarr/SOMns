@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 
 import som.compiler.ClassBuilder.ClassDefinitionId;
+import som.interpreter.LexicalScope.ClassScope;
 import som.interpreter.Method;
 import som.interpreter.SNodeFactory;
 import som.interpreter.nodes.ExpressionNode;
@@ -18,6 +19,7 @@ import som.interpreter.objectstorage.FieldAccessorNode.UninitializedWriteFieldNo
 import som.vm.NotYetImplementedException;
 import som.vm.Symbols;
 import som.vm.constants.Classes;
+import som.vm.constants.Nil;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
@@ -40,7 +42,9 @@ public final class ClassDefinition {
   private final HashMap<SSymbol, SInvokable> instanceMethods;
   private final HashMap<SSymbol, SInvokable> factoryMethods;
   private final SourceSection sourceSection;
-  private final ClassDefinitionId       classId;
+  private final ClassDefinitionId classId;
+  private final ClassScope     instanceScope;
+  private final ClassScope     classScope;
   private final AccessModifier accessModifier;
 
   @Nullable
@@ -57,6 +61,7 @@ public final class ClassDefinition {
       final LinkedHashMap<SSymbol, SlotDefinition> slotDefinitions,
       final ClassDefinitionId classId,
       final AccessModifier accessModifier,
+      final ClassScope instanceScope, final ClassScope classScope,
       final SourceSection sourceSection) {
     this.name = name;
     this.superclassResolution = superclassResolution;
@@ -67,6 +72,8 @@ public final class ClassDefinition {
     this.sourceSection   = sourceSection;
     this.classId         = classId;
     this.accessModifier  = accessModifier;
+    this.instanceScope   = instanceScope;
+    this.classScope      = classScope;
   }
 
   public SSymbol getName() {
@@ -88,15 +95,15 @@ public final class ClassDefinition {
 
     if (result.getSOMClass() != null) {
       // Initialize the class of the resulting class
-      result.getSOMClass().setInstanceInvokables(factoryMethods);
+      result.getSOMClass().setDispatchables(classScope.getDispatchables());
       result.getSOMClass().setName(Symbols.symbolFor(ccName));
       result.getSOMClass().setClassId(classId);
     }
 
     // Initialize the resulting class
     result.setName(name);
-    result.setInstanceSlots(slotDefinitions);
-    result.setInstanceInvokables(instanceMethods);
+    result.setNumberOfSlots(slotDefinitions.size());
+    result.setDispatchables(instanceScope.getDispatchables());
   }
 
   public HashMap<SSymbol, ? extends Dispatchable> getFactoryMethods() {

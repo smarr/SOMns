@@ -15,6 +15,7 @@ import som.compiler.ClassBuilder.ClassDefinitionId;
 import som.compiler.ClassDefinition;
 import som.compiler.MethodBuilder;
 import som.compiler.SourcecodeCompiler;
+import som.interpreter.LexicalScope.ClassScope;
 import som.interpreter.Primitive;
 import som.interpreter.nodes.ArgumentReadNode.LocalArgumentReadNode;
 import som.interpreter.nodes.ExpressionNode;
@@ -203,10 +204,11 @@ public final class Bootstrap {
 
   private static SObject constructVmMirror() {
     HashMap<SSymbol, SInvokable> vmMirrorMethods = constructVmMirrorPrimitives();
+    ClassScope scope = new ClassScope(null);
     ClassDefinition vmMirrorDef = new ClassDefinition(
         Symbols.symbolFor("VmMirror"), null, vmMirrorMethods, null, null,
         new LinkedHashMap<>(), new ClassDefinitionId(), AccessModifier.PUBLIC,
-        null);
+        scope, scope, null);
     SClass vmMirrorClass = new SClass(null, null);
     vmMirrorDef.initializeClass(vmMirrorClass, null);
     return new SObject(vmMirrorClass);

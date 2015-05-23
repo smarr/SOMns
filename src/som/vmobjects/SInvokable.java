@@ -27,6 +27,7 @@ package som.vmobjects;
 
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
 import som.compiler.AccessModifier;
+import som.compiler.ClassDefinition;
 import som.interpreter.Invokable;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
 import som.interpreter.nodes.dispatch.CachedDispatchSObjectCheckNode;
@@ -49,7 +50,7 @@ public abstract class SInvokable extends SAbstractObject implements Dispatchable
   private final Invokable          invokable;
   private final RootCallTarget     callTarget;
   private final SSymbol            signature;
-  @CompilationFinal private SClass holder;
+  @CompilationFinal private ClassDefinition holder;
 
   public SInvokable(final SSymbol signature,
       final AccessModifier accessModifier, final SSymbol category,
@@ -74,14 +75,6 @@ public abstract class SInvokable extends SAbstractObject implements Dispatchable
 
     public SMethod[] getEmbeddedBlocks() {
       return embeddedBlocks;
-    }
-
-    @Override
-    public void setHolder(final SClass value) {
-      super.setHolder(value);
-      for (SMethod m : embeddedBlocks) {
-        m.setHolder(value);
-      }
     }
 
     @Override
@@ -116,11 +109,11 @@ public abstract class SInvokable extends SAbstractObject implements Dispatchable
     return signature;
   }
 
-  public final SClass getHolder() {
+  public final ClassDefinition getHolder() {
     return holder;
   }
 
-  public void setHolder(final SClass value) {
+  public void setHolder(final ClassDefinition value) {
     transferToInterpreterAndInvalidate("SMethod.setHolder");
     holder = value;
   }

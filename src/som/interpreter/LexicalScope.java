@@ -24,6 +24,10 @@ public abstract class LexicalScope {
       this.slotsClassesAndMethods = new HashMap<>();
     }
 
+    public HashMap<SSymbol, Dispatchable> getDispatchables() {
+      return slotsClassesAndMethods;
+    }
+
     public void setClassDefinition(final ClassDefinition def, final boolean classSide) {
       assert def != null;
       classDefinition = def;

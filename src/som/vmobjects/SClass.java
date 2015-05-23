@@ -30,7 +30,6 @@ import java.util.HashMap;
 
 import som.compiler.AccessModifier;
 import som.compiler.ClassBuilder.ClassDefinitionId;
-import som.compiler.ClassDefinition.SlotDefinition;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.objectstorage.ObjectLayout;
 import som.vm.constants.Classes;
@@ -44,8 +43,7 @@ public final class SClass extends SObjectWithoutFields {
   @CompilationFinal private SClass superclass;
   @CompilationFinal private SSymbol name;
 
-  @CompilationFinal private HashMap<SSymbol, SInvokable>     instanceInvokables;
-  @CompilationFinal private HashMap<SSymbol, SlotDefinition> instanceSlots;
+  @CompilationFinal private HashMap<SSymbol, Dispatchable> dispatchables;
 
   @CompilationFinal private ObjectLayout layoutForInstances;
 
@@ -105,28 +103,23 @@ public final class SClass extends SObjectWithoutFields {
     name = value;
   }
 
-  public void setInstanceSlots(final HashMap<SSymbol, SlotDefinition> slots) {
+  public void setNumberOfSlots(final int numSlots) {
     transferToInterpreterAndInvalidate("SClass.setInstanceFields");
-    instanceSlots = slots;
     if (layoutForInstances == null ||
-        slots.size() != layoutForInstances.getNumberOfFields()) {
-      layoutForInstances = new ObjectLayout(slots.size(), this);
+        numSlots != layoutForInstances.getNumberOfFields()) {
+      layoutForInstances = new ObjectLayout(numSlots, this);
     }
   }
 
-  public void setInstanceInvokables(final HashMap<SSymbol, SInvokable> value) {
-    transferToInterpreterAndInvalidate("SClass.setInstanceInvokables");
-    instanceInvokables = value;
-    for (SInvokable invokable : value.values()) {
-      invokable.setHolder(this);
-    }
+  public void setDispatchables(final HashMap<SSymbol, Dispatchable> value) {
+    transferToInterpreterAndInvalidate("SClass.setDispatchables");
+    dispatchables = value;
   }
 
   @TruffleBoundary
   public Dispatchable lookupMessage(final SSymbol selector,
       final AccessModifier hasAtLeast) {
-    Dispatchable disp = instanceInvokables.get(selector);
-    if (disp == null) { disp = instanceSlots.get(selector); }
+    Dispatchable disp = dispatchables.get(selector);
 
     if (disp != null && disp.getAccessModifier().ordinal() >= hasAtLeast.ordinal()) {
       return disp;
@@ -146,7 +139,7 @@ public final class SClass extends SObjectWithoutFields {
   }
 
   public int getNumberOfInstanceFields() {
-    return instanceSlots.size();
+    return (layoutForInstances == null) ? 0 : layoutForInstances.getNumberOfFields();
   }
 
   public ObjectLayout getLayoutForInstances() {
