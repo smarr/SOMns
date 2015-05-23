@@ -78,4 +78,9 @@ public class CachedClassSlotAccessNode extends AbstractDispatchNode {
   public final int lengthOfDispatchChain() {
     return 1 + nextInCache.lengthOfDispatchChain();
   }
+
+  @Override
+  public String toString() {
+    return "ClassSlotAccess(" + classDefinition.getName().getString() + ")";
+  }
  }
