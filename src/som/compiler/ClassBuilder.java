@@ -51,8 +51,6 @@ import com.oracle.truffle.api.source.SourceSection;
 
 public final class ClassBuilder {
 
-  private static final ClassBuilder moduleContextClassBuilder = new ClassBuilder(true);
-
   /** The method that is used to resolve the superclass at runtime. */
   private final MethodBuilder superclassResolutionBuilder;
   private AbstractMessageSendNode superclassResolution;
@@ -79,7 +77,9 @@ public final class ClassBuilder {
 
   private final AccessModifier accessModifier;
 
-  private final ClassScope   currentScope;
+  private final ClassScope   instanceScope;
+  private final ClassScope   classScope;
+
   private final ClassBuilder outerBuilder;
 
   private final ClassDefinitionId classId = new ClassDefinitionId();
@@ -96,32 +96,23 @@ public final class ClassBuilder {
    */
   public static final class ClassDefinitionId {};
 
-  private ClassBuilder(final boolean onlyForModuleContext) {
-    assert onlyForModuleContext;
-
-    initializer = null;
-    superclassResolutionBuilder = null;
-    primaryFactoryMethod = null;
-    setName(Symbols.symbolFor("non-existing-module-context"));
-
-    outerBuilder = null;
-    currentScope = new ClassScope(null);
-    accessModifier = AccessModifier.PUBLIC;
-  }
-
   public ClassBuilder(final AccessModifier accessModifier) {
-    this(moduleContextClassBuilder, accessModifier);
+    this(null, accessModifier);
   }
 
   public ClassBuilder(final ClassBuilder outerBuilder,
       final AccessModifier accessModifier) {
-    this.superclassResolutionBuilder = createSuperclassResolutionBuilder();
-    this.initializer          = new MethodBuilder(this);
-    this.primaryFactoryMethod = new MethodBuilder(this);
-
-    this.classSide = false;
+    this.classSide    = false;
     this.outerBuilder = outerBuilder;
-    this.currentScope = new ClassScope(outerBuilder.getCurrentClassScope());
+
+    // classes can only be defined on the instance side,
+    // so, both time the instance scope
+    this.instanceScope = new ClassScope(outerBuilder != null ? outerBuilder.getInstanceScope() : null);
+    this.classScope    = new ClassScope(outerBuilder != null ? outerBuilder.getInstanceScope() : null);
+
+    this.initializer          = new MethodBuilder(this, this.instanceScope);
+    this.primaryFactoryMethod = new MethodBuilder(this, this.classScope);
+    this.superclassResolutionBuilder = createSuperclassResolutionBuilder();
 
     this.accessModifier = accessModifier;
   }
@@ -143,8 +134,8 @@ public final class ClassBuilder {
     }
   }
 
-  public ClassScope getCurrentClassScope() {
-    return currentScope;
+  public ClassScope getInstanceScope() {
+    return instanceScope;
   }
 
   public void setName(final SSymbol name) {
@@ -266,6 +257,14 @@ public final class ClassBuilder {
     return classSide;
   }
 
+  public ClassScope getScopeForCurrentParserPosition() {
+    if (classSide) {
+      return classScope;
+    } else {
+      return instanceScope;
+    }
+  }
+
   public void switchToClassSide() {
     classSide = true;
   }
@@ -289,7 +288,8 @@ public final class ClassBuilder {
     ClassDefinition clsDef = new ClassDefinition(name, superclassResolution,
         methods, factoryMethods, embeddedClasses, slots, classId,
         accessModifier, source);
-    currentScope.setClassDefinition(clsDef);
+    instanceScope.setClassDefinition(clsDef, false);
+    classScope.setClassDefinition(clsDef, true);
 
     return clsDef;
   }
@@ -307,12 +307,17 @@ public final class ClassBuilder {
 //        SArray.create(factoryMethods.toArray(new Object[0])));
   }
 
-  private static MethodBuilder createSuperclassResolutionBuilder() {
-    MethodBuilder definitionMethod = new MethodBuilder(moduleContextClassBuilder);
+  private MethodBuilder createSuperclassResolutionBuilder() {
+    MethodBuilder definitionMethod;
+    if (outerBuilder == null) {
+      definitionMethod = new MethodBuilder(true);
+    } else {
+      definitionMethod = new MethodBuilder(outerBuilder,
+          outerBuilder.getInstanceScope());
+    }
     // self is going to be the enclosing object
     definitionMethod.addArgumentIfAbsent("self");
     definitionMethod.setSignature(Symbols.symbolFor("`define`cls"));
-
 
     return definitionMethod;
   }
@@ -390,7 +395,8 @@ public final class ClassBuilder {
 
   @Override
   public String toString() {
-    return "ClassGenC(" + name.getString() + ")";
+    String n = name != null ? name.getString() : "";
+    return "ClassBuilder(" + n + ")";
   }
 
   public void setSuperclassFactorySend(final ExpressionNode superFactorySend,

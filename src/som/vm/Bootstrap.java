@@ -97,7 +97,7 @@ public final class Bootstrap {
     // ignore the implicit vmMirror argument
     final int numArgs = signature.getNumberOfSignatureArguments() - 1;
 
-    MethodBuilder prim = new MethodBuilder(null);
+    MethodBuilder prim = new MethodBuilder(true);
     ExpressionNode[] args = new ExpressionNode[numArgs];
 
     for (int i = 0; i < numArgs; i++) {

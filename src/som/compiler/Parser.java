@@ -579,7 +579,8 @@ public final class Parser {
     SourceCoordinate coord = getCoordinate();
 
     AccessModifier accessModifier = accessModifier();
-    MethodBuilder builder = new MethodBuilder(clsBuilder);
+    MethodBuilder builder = new MethodBuilder(
+        clsBuilder, clsBuilder.getScopeForCurrentParserPosition());
 
     messagePattern(builder);
     expect(Equal, "Unexpected symbol %(found)s. Tried to parse method declaration and expect '=' between message pattern, and method body.");
@@ -809,7 +810,7 @@ public final class Parser {
       }
       case NewBlock: {
         SourceCoordinate coord = getCoordinate();
-        MethodBuilder bgenc = new MethodBuilder(builder.getHolder(), builder);
+        MethodBuilder bgenc = new MethodBuilder(builder);
 
         ExpressionNode blockBody = nestedBlock(bgenc);
 

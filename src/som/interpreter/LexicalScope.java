@@ -1,6 +1,9 @@
 package som.interpreter;
 
+import java.util.HashMap;
+
 import som.compiler.ClassDefinition;
+import som.interpreter.nodes.dispatch.Dispatchable;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerAsserts;
@@ -12,21 +15,30 @@ public abstract class LexicalScope {
 
   public static final class ClassScope extends LexicalScope {
     private final ClassScope outerClass;
-
-    public ClassScope(final ClassScope outerClass) {
-      this.outerClass = outerClass;
-    }
+    private final HashMap<SSymbol, Dispatchable> slotsClassesAndMethods;
 
     @CompilationFinal private ClassDefinition classDefinition;
 
-    public void setClassDefinition(final ClassDefinition def) {
+    public ClassScope(final ClassScope outerClass) {
+      this.outerClass = outerClass;
+      this.slotsClassesAndMethods = new HashMap<>();
+    }
+
+    public void setClassDefinition(final ClassDefinition def, final boolean classSide) {
       assert def != null;
       classDefinition = def;
+
+      if (classSide) {
+        slotsClassesAndMethods.putAll(classDefinition.getFactoryMethods());
+      } else {
+        slotsClassesAndMethods.putAll(classDefinition.getSlots());
+        slotsClassesAndMethods.putAll(classDefinition.getMethods());
+      }
     }
 
     public int lookupContextLevelOfSlotOrClass(final SSymbol selector, final int contextLevel) {
       assert classDefinition != null;
-      if (classDefinition.hasSlotOrClass(selector)) {
+      if (slotsClassesAndMethods.containsKey(selector)) {
         return contextLevel;
       }
 
@@ -34,6 +46,13 @@ public abstract class LexicalScope {
         return outerClass.lookupContextLevelOfSlotOrClass(selector, contextLevel + 1);
       }
       return -1;
+    }
+
+    @Override
+    public String toString() {
+      String clsName = classDefinition != null
+          ? classDefinition.getName().getString() : "";
+      return "ClassScope(" + clsName + ")";
     }
   }
 
@@ -85,7 +104,7 @@ public abstract class LexicalScope {
 
     @Override
     public String toString() {
-      return "LexScp[" + frameDescriptor.toString() + "]";
+      return "MethodScope(" + frameDescriptor.toString() + ")";
     }
 
     public int lookupContextLevelOfSlotOrClass(final SSymbol selector) {
@@ -98,6 +117,10 @@ public abstract class LexicalScope {
       } else {
         return outerMethod.getEnclosingClass();
       }
+    }
+
+    public ClassScope getHolderScope() {
+      return outerClass;
     }
   }
 }

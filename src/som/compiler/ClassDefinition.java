@@ -99,6 +99,18 @@ public final class ClassDefinition {
     result.setInstanceInvokables(instanceMethods);
   }
 
+  public HashMap<SSymbol, ? extends Dispatchable> getFactoryMethods() {
+    return factoryMethods;
+  }
+
+  public HashMap<SSymbol, ? extends Dispatchable> getMethods() {
+    return instanceMethods;
+  }
+
+  public HashMap<SSymbol, ? extends Dispatchable> getSlots() {
+    return slotDefinitions;
+  }
+
   public SClass instantiateClass(final SAbstractObject outer, final SClass superClass) {
     SClass resultClass = new SClass(outer, Classes.metaclassClass);
     SClass result = new SClass(outer, resultClass);
@@ -213,7 +225,7 @@ public final class ClassDefinition {
 
   public void addSyntheticInitializerWithoutSuperSendOnlyForThingClass() {
     SSymbol init = ClassBuilder.getInitializerName(Symbols.symbolFor("new"));
-    MethodBuilder builder = new MethodBuilder(null);
+    MethodBuilder builder = new MethodBuilder(true);
     builder.setSignature(init);
     builder.addArgumentIfAbsent("self");
 

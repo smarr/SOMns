@@ -70,24 +70,28 @@ public final class MethodBuilder {
   private final List<SMethod> embeddedBlockMethods;
 
 
-  public MethodBuilder(final ClassBuilder holder) {
-    this(holder, null, false);
+  public MethodBuilder(final ClassBuilder holder, final ClassScope clsScope) {
+    this(holder, clsScope, null, false);
   }
 
-  public MethodBuilder(final ClassBuilder holder,
-      final MethodBuilder outerBuilder) {
-    this(holder, outerBuilder, true);
+  public MethodBuilder(final boolean withoutContext) {
+    this(null, null, null, false);
+    assert withoutContext;
   }
 
-  private MethodBuilder(final ClassBuilder holder,
+  public MethodBuilder(final MethodBuilder outerBuilder) {
+    this(outerBuilder.getHolder(), outerBuilder.getHolderScope(), outerBuilder, true);
+  }
+
+  private MethodBuilder(final ClassBuilder holder, final ClassScope clsScope,
       final MethodBuilder outerBuilder, final boolean isBlockMethod) {
     this.holder       = holder;
     this.outerBuilder = outerBuilder;
     this.blockMethod  = isBlockMethod;
 
-    MethodScope outer = (outerBuilder != null) ? outerBuilder.getCurrentMethodScope() : null;
-
-    ClassScope clsScope = isBlockMethod ? null : holder.getCurrentClassScope();
+    MethodScope outer = (outerBuilder != null)
+        ? outerBuilder.getCurrentMethodScope()
+        : null;
     this.currentScope   = new MethodScope(new FrameDescriptor(), outer, clsScope);
 
     accessesVariablesOfOuterScope = false;
@@ -105,6 +109,10 @@ public final class MethodBuilder {
 
   public MethodScope getCurrentMethodScope() {
     return currentScope;
+  }
+
+  public ClassScope getHolderScope() {
+    return currentScope.getHolderScope();
   }
 
   // Name for the frameOnStack slot,
@@ -148,7 +156,7 @@ public final class MethodBuilder {
     return needsToCatchNonLocalReturn && outerBuilder == null;
   }
 
-  public SMethod assemble(ExpressionNode body,
+  public SMethod assemble(final ExpressionNode body,
       final AccessModifier accessModifier, final SSymbol category,
       final SourceSection sourceSection) {
     Method truffleMethod = assembleInvokable(body, sourceSection);
