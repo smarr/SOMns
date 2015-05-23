@@ -80,6 +80,8 @@ import som.interpreter.nodes.MessageSendNode.AbstractUninitializedMessageSendNod
 import som.interpreter.nodes.literals.BigIntegerLiteralNode;
 import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.literals.BlockNode.BlockNodeWithContext;
+import som.interpreter.nodes.literals.BooleanLiteralNode.FalseLiteralNode;
+import som.interpreter.nodes.literals.BooleanLiteralNode.TrueLiteralNode;
 import som.interpreter.nodes.literals.DoubleLiteralNode;
 import som.interpreter.nodes.literals.IntegerLiteralNode;
 import som.interpreter.nodes.literals.LiteralNode;
@@ -787,6 +789,18 @@ public final class Parser {
     switch (sym) {
       case Identifier: {
         SourceCoordinate coord = getCoordinate();
+        // Parse true, false, and nil as keyword-like constructs
+        // (cf. Newspeak spec on reserved words)
+        if (acceptIdentifier("true")) {
+          return new TrueLiteralNode(getSource(coord));
+        }
+        if (acceptIdentifier("false")) {
+          return new FalseLiteralNode(getSource(coord));
+        }
+        if (acceptIdentifier("nil")) {
+          return new NilLiteralNode(getSource(coord));
+        }
+
         SSymbol selector = unarySelector();
         return implicitReceiverSend(builder, selector, getSource(coord));
       }
