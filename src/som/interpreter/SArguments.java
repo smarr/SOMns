@@ -1,6 +1,5 @@
 package som.interpreter;
 
-import som.vm.constants.KernelObj;
 import som.vmobjects.SArray;
 
 import com.oracle.truffle.api.frame.Frame;
@@ -32,9 +31,9 @@ public final class SArguments {
     assert arguments.length >= 1;  // <- that's the receiver
     Object[] argsArr = new Object[arguments.length - 1];
     if (argsArr.length == 0) {
-      return SArray.create(KernelObj.kernel, 0);
+      return SArray.create(0);
     }
     System.arraycopy(arguments, 1, argsArr, 0, argsArr.length);
-    return SArray.create(KernelObj.kernel, argsArr);
+    return SArray.create(argsArr);
   }
 }

@@ -9,6 +9,6 @@ public final class Nil {
   public static final SObjectWithoutFields nilObject;
 
   static {
-    nilObject = new SObjectWithoutFields(KernelObj.kernel);
+    nilObject = new SObjectWithoutFields();
   }
 }

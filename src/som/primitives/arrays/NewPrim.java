@@ -18,6 +18,6 @@ public abstract class NewPrim extends BinaryExpressionNode {
 
   @Specialization(guards = "receiverIsArrayClass(receiver)")
   public final SArray doSClass(final SClass receiver, final long length) {
-    return new SArray(receiver.getEnclosingObject(), length);
+    return new SArray(length);
   }
 }

@@ -145,9 +145,11 @@ public final class SNodeFactory {
 
   public static ExpressionNode createImplicitReceiverSend(
       final SSymbol selector, final ExpressionNode[] arguments,
-      final MethodScope currentScope, final SourceSection source) {
+      final MethodScope currentScope, final ClassDefinitionId classDefId,
+      final SourceSection source) {
+    assert classDefId != null;
     return new ResolvingImplicitReceiverSend(selector, arguments,
-        currentScope, source);
+        currentScope, classDefId, source);
   }
 
   public static ExpressionNode createImplicitReceiverSetterSend(

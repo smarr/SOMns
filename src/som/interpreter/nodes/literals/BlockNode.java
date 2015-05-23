@@ -12,7 +12,6 @@ import som.interpreter.nodes.ExpressionNode;
 import som.vm.Symbols;
 import som.vm.Universe;
 import som.vm.constants.Classes;
-import som.vm.constants.KernelObj;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable.SMethod;
@@ -42,7 +41,7 @@ public class BlockNode extends LiteralNode {
 
   @Override
   public SBlock executeSBlock(final VirtualFrame frame) {
-    return new SBlock(KernelObj.kernel, blockMethod, null, blockClass);
+    return new SBlock(blockMethod, null, blockClass);
   }
 
   @Override
@@ -107,8 +106,7 @@ public class BlockNode extends LiteralNode {
 
     @Override
     public SBlock executeSBlock(final VirtualFrame frame) {
-      return new SBlock(KernelObj.kernel, blockMethod, frame.materialize(),
-          blockClass);
+      return new SBlock(blockMethod, frame.materialize(), blockClass);
     }
 
     @Override

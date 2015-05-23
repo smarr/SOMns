@@ -36,11 +36,7 @@ public abstract class SuperDispatchNode extends AbstractDispatchNode {
     }
 
     private SClass getSuperClass(final SClass rcvrClass) {
-      SClass cls = rcvrClass;
-      while (!cls.isBasedOn(holderClass)) {
-        cls = cls.getSuperClass();
-      }
-
+      SClass cls = rcvrClass.getClassCorrespondingTo(holderClass);
       SClass superClass = cls.getSuperClass();
 
       if (classSide) {

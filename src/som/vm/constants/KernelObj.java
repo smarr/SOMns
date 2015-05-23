@@ -3,12 +3,11 @@ package som.vm.constants;
 import som.vmobjects.SObject;
 
 
-// TODO: this is a lazyness hack, to avoid changing all places were SSymbols are
-//       allocated, needs to be removed once we are sure that we don't need the
-//       outer object for specific kernel classes like SSymbol
-//       (all special subclasses of SAbstractObject)
+// TODO: this was orignially a lazy hack to pass the enclosing object to Objects
+//       but, actually, this is not needed. However, we still might need this object
+//       to solve circular dependencies in the bootstrap
 public final class KernelObj {
   private KernelObj() { }
 
-  public static final SObject kernel = new SObject(null, 23); // keep update to date with the actual number
+  public static final SObject kernel = new SObject(23); // keep the actual number up-to-date
 }

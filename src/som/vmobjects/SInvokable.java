@@ -51,10 +51,9 @@ public abstract class SInvokable extends SAbstractObject implements Dispatchable
   private final SSymbol            signature;
   @CompilationFinal private SClass holder;
 
-  public SInvokable(final SAbstractObject enclosing, final SSymbol signature,
-      final AccessModifier accessModifier,
-      final SSymbol category, final Invokable invokable) {
-    super(enclosing);
+  public SInvokable(final SSymbol signature,
+      final AccessModifier accessModifier, final SSymbol category,
+      final Invokable invokable) {
     this.signature = signature;
     this.accessModifier = accessModifier;
     this.category = category;
@@ -66,11 +65,10 @@ public abstract class SInvokable extends SAbstractObject implements Dispatchable
   public static final class SMethod extends SInvokable {
     private final SMethod[] embeddedBlocks;
 
-    public SMethod(final SAbstractObject enclosing, final SSymbol signature,
-        final AccessModifier accessModifier,
+    public SMethod(final SSymbol signature, final AccessModifier accessModifier,
         final SSymbol category, final Invokable invokable,
         final SMethod[] embeddedBlocks) {
-      super(enclosing, signature, accessModifier, category, invokable);
+      super(signature, accessModifier, category, invokable);
       this.embeddedBlocks = embeddedBlocks;
     }
 
@@ -94,9 +92,8 @@ public abstract class SInvokable extends SAbstractObject implements Dispatchable
   }
 
   public static final class SPrimitive extends SInvokable {
-    public SPrimitive(final SAbstractObject enclosing, final SSymbol signature,
-        final Invokable invokable) {
-      super(enclosing, signature, AccessModifier.PRIVATE, null, invokable);
+    public SPrimitive(final SSymbol signature, final Invokable invokable) {
+      super(signature, AccessModifier.PRIVATE, null, invokable);
     }
 
     @Override

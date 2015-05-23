@@ -51,12 +51,19 @@ public final class SClass extends SObjectWithoutFields {
 
   @CompilationFinal private ClassDefinitionId classId;
 
+  protected final SAbstractObject enclosingObject;
+
   public SClass(final SAbstractObject enclosing) {
-    super(enclosing);
+    this.enclosingObject = enclosing;
   }
 
   public SClass(final SAbstractObject enclosing, final SClass clazz) {
-    super(enclosing, clazz);
+    super(clazz);
+    this.enclosingObject = enclosing;
+  }
+
+  public SAbstractObject getEnclosingObject() {
+    return enclosingObject;
   }
 
   public SClass getSuperClass() {
@@ -80,8 +87,16 @@ public final class SClass extends SObjectWithoutFields {
     this.classId = classId;
   }
 
-  public boolean isBasedOn(final ClassDefinitionId classId) {
+  private boolean isBasedOn(final ClassDefinitionId classId) {
     return this.getClassId() == classId;
+  }
+
+  public SClass getClassCorrespondingTo(final ClassDefinitionId classId) {
+    SClass cls = this;
+    while (!cls.isBasedOn(classId)) {
+      cls = cls.getSuperClass();
+    }
+    return cls;
   }
 
   public void setName(final SSymbol value) {

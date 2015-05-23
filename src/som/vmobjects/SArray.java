@@ -15,24 +15,24 @@ import som.vm.constants.Nil;
 public final class SArray extends SAbstractObject {
   public static final int FIRST_IDX = 0;
 
-  public static SArray create(final SAbstractObject enclosing, final Object[] values) {
-    return new SArray(enclosing, values);
+  public static SArray create(final Object[] values) {
+    return new SArray(values);
   }
 
-  public static SArray create(final SAbstractObject enclosing, final long[] values) {
-    return new SArray(enclosing, values);
+  public static SArray create(final long[] values) {
+    return new SArray(values);
   }
 
-  public static SArray create(final SAbstractObject enclosing, final double[] values) {
-    return new SArray(enclosing, values);
+  public static SArray create(final double[] values) {
+    return new SArray(values);
   }
 
-  public static SArray create(final SAbstractObject enclosing, final boolean[] values) {
-    return new SArray(enclosing, values);
+  public static SArray create(final boolean[] values) {
+    return new SArray(values);
   }
 
-  public static SArray create(final SAbstractObject enclosing, final int length) {
-    return new SArray(enclosing, length);
+  public static SArray create(final int length) {
+    return new SArray(length);
   }
 
   private ArrayType type;
@@ -76,38 +76,32 @@ public final class SArray extends SAbstractObject {
    * Creates and empty array, using the EMPTY strategy.
    * @param length
    */
-  public SArray(final SAbstractObject enclosing, final long length) {
-    super(enclosing);
+  public SArray(final long length) {
     type = ArrayType.EMPTY;
     storage = (int) length;
   }
 
-  private SArray(final SAbstractObject enclosing, final Object[] val) {
-    super(enclosing);
+  private SArray(final Object[] val) {
     type = ArrayType.OBJECT;
     storage = val;
   }
 
-  private SArray(final SAbstractObject enclosing, final long[] val) {
-    super(enclosing);
+  private SArray(final long[] val) {
     type = ArrayType.LONG;
     storage = val;
   }
 
-  private SArray(final SAbstractObject enclosing, final double[] val) {
-    super(enclosing);
+  private SArray(final double[] val) {
     type = ArrayType.DOUBLE;
     storage = val;
   }
 
-  private SArray(final SAbstractObject enclosing, final boolean[] val) {
-    super(enclosing);
+  private SArray(final boolean[] val) {
     type = ArrayType.BOOLEAN;
     storage = val;
   }
 
-  public SArray(final SAbstractObject enclosing, final ArrayType type, final Object storage) {
-    super(enclosing);
+  public SArray(final ArrayType type, final Object storage) {
     this.type    = type;
     this.storage = storage;
   }
@@ -323,9 +317,8 @@ public final class SArray extends SAbstractObject {
       newArr = Arrays.copyOf(s, s.length + 1);
       newArr[s.length] = value;
     }
-    return new SArray(enclosingObject, newArr);
+    return new SArray(newArr);
   }
-
 
   @Override
   public SClass getSOMClass() {

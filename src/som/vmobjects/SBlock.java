@@ -34,9 +34,8 @@ public final class SBlock extends SAbstractObject {
   private final MaterializedFrame context;
   private final SClass            blockClass;
 
-  public SBlock(final SAbstractObject enclosing, final SInvokable blockMethod,
-      final MaterializedFrame context, final SClass blockClass) {
-    super(enclosing);
+  public SBlock(final SInvokable blockMethod, final MaterializedFrame context,
+      final SClass blockClass) {
     this.method     = blockMethod;
     this.context    = context;
     this.blockClass = blockClass;

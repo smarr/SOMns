@@ -14,6 +14,6 @@ import com.oracle.truffle.api.dsl.Specialization;
 public abstract class NewObjectPrim extends UnaryExpressionNode {
   @Specialization
   public final SAbstractObject doSClass(final SClass receiver) {
-    return new SObject(receiver.getEnclosingObject(), receiver);
+    return new SObject(receiver);
   }
 }

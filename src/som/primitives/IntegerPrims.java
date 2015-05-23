@@ -6,7 +6,6 @@ import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.arithmetic.ArithmeticPrim;
 import som.vm.constants.Classes;
-import som.vm.constants.KernelObj;
 import som.vmobjects.SArray;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
@@ -108,7 +107,7 @@ public abstract class IntegerPrims {
       for (int i = 0; i < cnt; i++) {
         arr[i] = i + receiver;
       }
-      return SArray.create(KernelObj.kernel, arr);
+      return SArray.create(arr);
     }
   }
 

@@ -74,15 +74,13 @@ public class SObject extends SAbstractObject {
 
   private final int numberOfFields;
 
-  public SObject(final SAbstractObject enclosing, final SClass instanceClass) {
-    super(enclosing);
+  public SObject(final SClass instanceClass) {
     numberOfFields = instanceClass.getNumberOfInstanceFields();
     clazz          = instanceClass;
     setLayoutInitially(instanceClass.getLayoutForInstances());
   }
 
-  public SObject(final SAbstractObject enclosing, final int numFields) {
-    super(enclosing);
+  public SObject(final int numFields) {
     numberOfFields = numFields;
     setLayoutInitially(new ObjectLayout(numFields, null));
   }

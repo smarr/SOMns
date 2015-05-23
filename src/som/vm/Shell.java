@@ -76,7 +76,7 @@ public class Shell {
         // If success
         if (myClass != null) {
           // Create and push a new instance of our class on the stack
-          myObject = new SObject(null, myClass);
+          myObject = new SObject(myClass);
 
           // Lookup the run: method
           Dispatchable shellMethod = myClass.

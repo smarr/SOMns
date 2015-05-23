@@ -10,17 +10,7 @@ import com.oracle.truffle.api.CompilerAsserts;
 
 public abstract class SAbstractObject {
 
-  protected final SAbstractObject enclosingObject;
-
-  public SAbstractObject(final SAbstractObject enclosingObject) {
-    this.enclosingObject = enclosingObject;
-  }
-
   public abstract SClass getSOMClass();
-
-  public SAbstractObject getEnclosingObject() {
-    return enclosingObject;
-  }
 
   @Override
   public String toString() {

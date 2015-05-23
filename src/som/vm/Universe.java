@@ -39,7 +39,6 @@ import som.interpreter.Invokable;
 import som.interpreter.TruffleCompiler;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.vm.constants.Globals;
-import som.vm.constants.KernelObj;
 import som.vmobjects.SArray;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
@@ -51,7 +50,6 @@ import som.vmobjects.SSymbol;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.frame.MaterializedFrame;
 
 public final class Universe {
 
@@ -114,7 +112,7 @@ public final class Universe {
         lookupMessage(symbolFor("initialize:"), AccessModifier.PROTECTED);
 
     return initialize.invoke(new Object[] {systemObject,
-        SArray.create(KernelObj.kernel, arguments)});
+        SArray.create(arguments)});
   }
 
   protected void initializeObjectSystem() {
@@ -166,15 +164,15 @@ public final class Universe {
       final Invokable truffleInvokable, final boolean isPrimitive,
       final SMethod[] embeddedBlocks) {
     if (isPrimitive) {
-      return new SPrimitive(null, signature, truffleInvokable);
+      return new SPrimitive(signature, truffleInvokable);
     } else {
-      return new SMethod(KernelObj.kernel, signature, accessModifier, category, truffleInvokable,
+      return new SMethod(signature, accessModifier, category, truffleInvokable,
           embeddedBlocks);
     }
   }
 
-  private void initializeSystemClass(final SClass systemClass, final SClass superClass,
-      final String name) {
+  private void initializeSystemClass(final SClass systemClass,
+      final SClass superClass, final String name) {
     // Initialize the superclass hierarchy
     if (superClass != null) {
       systemClass.setSuperClass(superClass);

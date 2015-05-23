@@ -209,7 +209,7 @@ public final class Bootstrap {
         null);
     SClass vmMirrorClass = new SClass(null, null);
     vmMirrorDef.initializeClass(vmMirrorClass, null);
-    return new SObject(null, vmMirrorClass);
+    return new SObject(vmMirrorClass);
   }
 
   /**
