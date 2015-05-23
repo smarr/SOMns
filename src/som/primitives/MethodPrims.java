@@ -27,14 +27,6 @@ public final class MethodPrims {
   }
 
   @GenerateNodeFactory
-  public abstract static class HolderPrim extends UnaryExpressionNode {
-    @Specialization
-    public final SAbstractObject doSMethod(final SInvokable receiver) {
-      return receiver.getHolder();
-    }
-  }
-
-  @GenerateNodeFactory
   @NodeChildren({
     @NodeChild(value = "receiver", type = ExpressionNode.class),
     @NodeChild(value = "target",  type = ExpressionNode.class),
