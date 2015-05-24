@@ -138,6 +138,10 @@ public final class ClassBuilder {
     return instanceScope;
   }
 
+  public ClassBuilder getOuterBuilder() {
+    return outerBuilder;
+  }
+
   public void setName(final SSymbol name) {
     assert this.name == null;
     this.name = name;

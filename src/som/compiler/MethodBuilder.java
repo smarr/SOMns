@@ -32,12 +32,15 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import som.compiler.ClassBuilder.ClassDefinitionId;
 import som.compiler.Variable.Argument;
 import som.compiler.Variable.Local;
 import som.interpreter.LexicalScope.ClassScope;
 import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.Method;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.OuterObjectRead;
+import som.interpreter.nodes.OuterObjectReadNodeGen;
 import som.interpreter.nodes.ReturnNonLocalNode;
 import som.vm.Universe;
 import som.vmobjects.SInvokable.SMethod;
@@ -328,8 +331,30 @@ public final class MethodBuilder {
         getOuterSelfContextLevel(), source);
   }
 
-  private ExpressionNode getSelfRead(final SourceSection source) {
+  public ExpressionNode getSelfRead(final SourceSection source) {
     return getVariable("self").getReadNode(getContextLevel("self"), source);
+  }
+
+  private ClassBuilder getEnclosingClassBuilder() {
+    if (holder == null) {
+      return outerBuilder.getEnclosingClassBuilder();
+    } else {
+      return holder;
+    }
+  }
+
+  public OuterObjectRead getOuterRead(final String outerName,
+      final SourceSection source) {
+    ClassBuilder enclosing = getEnclosingClassBuilder();
+    ClassDefinitionId lexicalSelfClassId = enclosing.getClassId();
+    int ctxLevel = 0;
+    while (!enclosing.getName().getString().equals(outerName)) {
+      ctxLevel++;
+      enclosing = enclosing.getOuterBuilder();
+    }
+
+    return OuterObjectReadNodeGen.create(ctxLevel, lexicalSelfClassId,
+        source, getSelfRead(source));
   }
 
 //  public FieldReadNode getObjectFieldRead(final SSymbol fieldName,

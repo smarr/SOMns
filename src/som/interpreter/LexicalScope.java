@@ -118,7 +118,7 @@ public abstract class LexicalScope {
       return getEnclosingClass().lookupContextLevelOfSlotOrClass(selector, 0);
     }
 
-    private ClassScope getEnclosingClass() {
+    public ClassScope getEnclosingClass() {
       if (outerMethod == null) {
         return outerClass;
       } else {

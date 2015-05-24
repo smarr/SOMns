@@ -77,6 +77,7 @@ import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.interpreter.nodes.MessageSendNode.AbstractUninitializedMessageSendNode;
+import som.interpreter.nodes.OuterObjectRead;
 import som.interpreter.nodes.literals.BigIntegerLiteralNode;
 import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.literals.BlockNode.BlockNodeWithContext;
@@ -805,6 +806,9 @@ public final class Parser {
         if (acceptIdentifier("nil")) {
           return new NilLiteralNode(getSource(coord));
         }
+        if ("outer".equals(text)) {
+          return outerSend(builder);
+        }
 
         SSymbol selector = unarySelector();
         return implicitReceiverSend(builder, selector, getSource(coord));
@@ -831,6 +835,19 @@ public final class Parser {
       default: {
         return literal();
       }
+    }
+  }
+
+  private ExpressionNode outerSend(final MethodBuilder builder)
+      throws ParseError {
+    SourceCoordinate coord = getCoordinate();
+    expectIdentifier("outer");
+    String outer = identifier();
+    OuterObjectRead outerRcvr = builder.getOuterRead(outer, getSource(coord));
+    if (symIsMessageSend()) {
+      return messages(builder, outerRcvr);
+    } else {
+      return outerRcvr;
     }
   }
 
