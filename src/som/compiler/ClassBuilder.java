@@ -38,15 +38,13 @@ import som.interpreter.Method;
 import som.interpreter.SNodeFactory;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
+import som.interpreter.nodes.dispatch.Dispatchable;
 import som.primitives.NewObjectPrimFactory;
-import som.vm.NotYetImplementedException;
 import som.vm.Symbols;
-import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SInvokable.SMethod;
 import som.vmobjects.SSymbol;
 
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.source.SourceSection;
 
 public final class ClassBuilder {
@@ -63,9 +61,9 @@ public final class ClassBuilder {
 
   private final ArrayList<ExpressionNode> slotAndInitExprs = new ArrayList<>();
 
-  private SSymbol                 name;
-  private final LinkedHashMap<SSymbol, SlotDefinition> slots = new LinkedHashMap<>();
-  private final HashMap<SSymbol, SInvokable> methods = new HashMap<SSymbol, SInvokable>();
+  private SSymbol name;
+  private int numberOfSlots = 0;
+  private final LinkedHashMap<SSymbol, Dispatchable> dispatchables = new LinkedHashMap<>();
   private final HashMap<SSymbol, SInvokable> factoryMethods = new HashMap<SSymbol, SInvokable>();
 
   private final LinkedHashMap<SSymbol, ClassDefinition> embeddedClasses = new LinkedHashMap<>();
@@ -205,25 +203,14 @@ public final class ClassBuilder {
   public void addMethod(final SInvokable meth) throws ClassDefinitionError {
     SSymbol name = meth.getSignature();
     if (!classSide) {
-      if (slots.containsKey(name)) {
+      Dispatchable existing = dispatchables.get(name);
+      if (existing != null) {
         throw new ClassDefinitionError("The class " + this.name.getString()
-            + " already contains a slot named "
+            + " already contains a " + existing.typeForErrors() + " named "
             + name.getString() + ". Can't define a method with the same name.",
             meth.getSourceSection());
       }
-      if (methods.containsKey(name)) {
-        throw new ClassDefinitionError("The class " + this.name.getString()
-            + " already contains a method named "
-            + name.getString() + ". Can't define another method with the same name.",
-            meth.getSourceSection());
-      }
-      if (embeddedClasses.containsKey(name)) {
-        throw new ClassDefinitionError("The class " + this.name.getString()
-            + " already contains a class named "
-            + name.getString() + ". Can't define another one with the same name.",
-            meth.getSourceSection());
-      }
-      methods.put(name, meth);
+      dispatchables.put(name, meth);
     } else {
       factoryMethods.put(name, meth);
     }
@@ -232,16 +219,17 @@ public final class ClassBuilder {
   public void addSlot(final SSymbol name, final AccessModifier acccessModifier,
       final boolean immutable, final ExpressionNode init,
       final SourceSection source) throws ClassDefinitionError {
-    SlotDefinition slot = new SlotDefinition(name, acccessModifier,
-        slots.size(), immutable, source);
-
-    if (slots.containsKey(name)) {
+    if (dispatchables.containsKey(name)) {
       throw new ClassDefinitionError("The class " + this.name.getString() +
           " already defines a slot with the name '" + name.getString() + "'." +
           " A second slot with the same name is not possible.", source);
     }
 
-    slots.put(name, slot);
+    SlotDefinition slot = new SlotDefinition(name, acccessModifier,
+        numberOfSlots, immutable, source);
+    numberOfSlots++;
+
+    dispatchables.put(name, slot);
 
     if (init != null) {
       ExpressionNode self = initializer.getSelfRead(source);
@@ -251,10 +239,6 @@ public final class ClassBuilder {
 
   public void addInitializerExpression(final ExpressionNode expression) {
     slotAndInitExprs.add(expression);
-  }
-
-  public boolean hasSlot(final SSymbol slot) {
-    return slots.containsKey(slot);
   }
 
   public boolean isClassSide() {
@@ -286,11 +270,12 @@ public final class ClassBuilder {
     factoryMethods.put(primaryFactory.getSignature(), primaryFactory);
 
     if (initializationMethod != null) {
-      methods.put(initializationMethod.getSignature(), initializationMethod);
+      dispatchables.put(
+          initializationMethod.getSignature(), initializationMethod);
     }
 
     ClassDefinition clsDef = new ClassDefinition(name, superclassResolution,
-        methods, factoryMethods, embeddedClasses, slots, classId,
+        dispatchables, factoryMethods, embeddedClasses, numberOfSlots, classId,
         accessModifier, instanceScope, classScope, source);
     instanceScope.setClassDefinition(clsDef, false);
     classScope.setClassDefinition(clsDef, true);
@@ -300,8 +285,10 @@ public final class ClassBuilder {
   }
 
   private void setHolders(final ClassDefinition clsDef) {
-    for (SInvokable invok : methods.values()) {
-      invok.setHolder(clsDef);
+    for (Dispatchable disp : dispatchables.values()) {
+      if (disp instanceof SInvokable) {
+        ((SInvokable) disp).setHolder(clsDef);
+      }
     }
 
     for (SInvokable invok : factoryMethods.values()) {
@@ -410,21 +397,18 @@ public final class ClassBuilder {
   public void addNestedClass(final ClassDefinition nestedClass)
       throws ClassDefinitionError {
     SSymbol name = nestedClass.getName();
-    if (slots.containsKey(name)) {
+    Dispatchable disp = dispatchables.get(name);
+    if (disp != null) {
       throw new ClassDefinitionError("The class " + this.name.getString() +
-          " already defines a slot with the name '" + name.getString() + "'." +
-          " Defining an inner class with the same name is not possible.",
-          nestedClass.getSourceSection());
-    }
-    if (methods.containsKey(name)) {
-      throw new ClassDefinitionError("The class " + this.name.getString() +
-          " already defines a method with the name '" + name.getString() + "'." +
+          " already defines a " + disp.typeForErrors() + " with the name '" +
+          name.getString() + "'." +
           " Defining an inner class with the same name is not possible.",
           nestedClass.getSourceSection());
     }
 
     embeddedClasses.put(name, nestedClass);
-    slots.put(name, new ClassSlotDefinition(name, slots.size(), nestedClass));
+    dispatchables.put(name, new ClassSlotDefinition(name, numberOfSlots, nestedClass));
+    numberOfSlots++;
   }
 
   public ClassDefinitionId getClassId() {

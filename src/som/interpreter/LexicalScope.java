@@ -18,28 +18,28 @@ public abstract class LexicalScope {
   //       similar problems, instead of a single one
   public static final class ClassScope extends LexicalScope {
     private final ClassScope outerClass;
-    private final HashMap<SSymbol, Dispatchable> slotsClassesAndMethods;
+    private HashMap<SSymbol, Dispatchable> slotsClassesAndMethods;
 
     @CompilationFinal private ClassDefinition classDefinition;
 
     public ClassScope(final ClassScope outerClass) {
       this.outerClass = outerClass;
-      this.slotsClassesAndMethods = new HashMap<>();
     }
 
     public HashMap<SSymbol, Dispatchable> getDispatchables() {
       return slotsClassesAndMethods;
     }
 
+    @SuppressWarnings("unchecked")
     public void setClassDefinition(final ClassDefinition def, final boolean classSide) {
       assert def != null;
       classDefinition = def;
 
       if (classSide) {
-        slotsClassesAndMethods.putAll(classDefinition.getFactoryMethods());
+        HashMap<SSymbol, ? extends Dispatchable> disps = classDefinition.getFactoryMethods();
+        slotsClassesAndMethods = (HashMap<SSymbol, Dispatchable>) disps;
       } else {
-        slotsClassesAndMethods.putAll(classDefinition.getSlots());
-        slotsClassesAndMethods.putAll(classDefinition.getMethods());
+        slotsClassesAndMethods = classDefinition.getInstanceDispatchables();
       }
     }
 

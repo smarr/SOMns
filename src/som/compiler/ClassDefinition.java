@@ -39,36 +39,36 @@ import com.sun.istack.internal.Nullable;
 public final class ClassDefinition {
   private final SSymbol       name;
   private final Method        superclassResolution;
-  private final HashMap<SSymbol, SInvokable> instanceMethods;
+  private final HashMap<SSymbol, Dispatchable> instanceDispatchable;
   private final HashMap<SSymbol, SInvokable> factoryMethods;
   private final SourceSection sourceSection;
   private final ClassDefinitionId classId;
   private final ClassScope     instanceScope;
   private final ClassScope     classScope;
   private final AccessModifier accessModifier;
+  private final int numberOfSlots;
 
   @Nullable
   private final LinkedHashMap<SSymbol, ClassDefinition> nestedClassDefinitions;
 
-  @Nullable
-  private final LinkedHashMap<SSymbol, SlotDefinition>  slotDefinitions;
+
 
   public ClassDefinition(final SSymbol name,
       final Method superclassResolution,
-      final HashMap<SSymbol, SInvokable> instanceMethods,
-      final HashMap<SSymbol, SInvokable> factoryMethods,
+      final HashMap<SSymbol, Dispatchable> instanceDispatchable,
+      final HashMap<SSymbol, SInvokable>   factoryMethods,
       final LinkedHashMap<SSymbol, ClassDefinition> nestedClassDefinitions,
-      final LinkedHashMap<SSymbol, SlotDefinition> slotDefinitions,
+      final int numberOfSlots,
       final ClassDefinitionId classId,
       final AccessModifier accessModifier,
       final ClassScope instanceScope, final ClassScope classScope,
       final SourceSection sourceSection) {
     this.name = name;
     this.superclassResolution = superclassResolution;
-    this.instanceMethods = instanceMethods;
+    this.instanceDispatchable = instanceDispatchable;
     this.factoryMethods  = factoryMethods;
     this.nestedClassDefinitions = nestedClassDefinitions;
-    this.slotDefinitions = slotDefinitions;
+    this.numberOfSlots   = numberOfSlots;
     this.sourceSection   = sourceSection;
     this.classId         = classId;
     this.accessModifier  = accessModifier;
@@ -103,20 +103,16 @@ public final class ClassDefinition {
 
     // Initialize the resulting class
     result.setName(name);
-    result.setNumberOfSlots(slotDefinitions.size());
+    result.setNumberOfSlots(numberOfSlots);
     result.setDispatchables(instanceScope.getDispatchables());
   }
 
-  public HashMap<SSymbol, ? extends Dispatchable> getFactoryMethods() {
+  public HashMap<SSymbol, SInvokable> getFactoryMethods() {
     return factoryMethods;
   }
 
-  public HashMap<SSymbol, ? extends Dispatchable> getMethods() {
-    return instanceMethods;
-  }
-
-  public HashMap<SSymbol, ? extends Dispatchable> getSlots() {
-    return slotDefinitions;
+  public HashMap<SSymbol, Dispatchable> getInstanceDispatchables() {
+    return instanceDispatchable;
   }
 
   public SClass instantiateClass() {
@@ -177,6 +173,11 @@ public final class ClassDefinition {
       return new CachedSlotAccessNode((SClass) rcvrClass, new UninitializedReadFieldNode(index), next);
     }
 
+    @Override
+    public String typeForErrors() {
+      return "slot";
+    }
+
     public FieldWriteNode getWriteNode(final ExpressionNode receiver,
         final ExpressionNode val, final SourceSection source) {
       return SNodeFactory.createFieldWrite(receiver, val, index, source);
@@ -218,6 +219,11 @@ public final class ClassDefinition {
           (SClass) rcvrClass, new UninitializedReadFieldNode(index),
           new UninitializedWriteFieldNode(index), next);
     }
+
+    @Override
+    public String typeForErrors() {
+      return "class";
+    }
   }
 
   public ClassDefinition getEmbeddedClassDefinition(final String string) {
@@ -232,10 +238,7 @@ public final class ClassDefinition {
   }
 
   public int getNumberOfSlots() {
-    if (slotDefinitions == null) {
-      return 0;
-    }
-    return slotDefinitions.size();
+    return numberOfSlots;
   }
 
   public SourceSection getSourceSection() {
@@ -250,6 +253,6 @@ public final class ClassDefinition {
 
     SMethod thingInitNew = builder.assemble(builder.getSelfRead(null),
         AccessModifier.PROTECTED, Symbols.symbolFor("initializer"), null);
-    instanceMethods.put(init, thingInitNew);
+    instanceDispatchable.put(init, thingInitNew);
   }
 }

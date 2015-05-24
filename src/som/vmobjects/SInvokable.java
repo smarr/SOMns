@@ -169,4 +169,9 @@ public abstract class SInvokable extends SAbstractObject implements Dispatchable
       return new CachedDispatchSimpleCheckNode((Class<?>) rcvrClass, callTarget, next);
     }
   }
+
+  @Override
+  public final String typeForErrors() {
+    return "method";
+  }
 }

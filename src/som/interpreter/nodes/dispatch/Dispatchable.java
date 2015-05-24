@@ -19,4 +19,6 @@ public interface Dispatchable {
 
   CallTarget getCallTargetIfAvailable();
 
+  String typeForErrors();
+
 }

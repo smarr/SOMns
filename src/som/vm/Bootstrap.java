@@ -168,8 +168,8 @@ public final class Bootstrap {
     return allFactories;
   }
 
-  private static HashMap<SSymbol, SInvokable> constructVmMirrorPrimitives() {
-    HashMap<SSymbol, SInvokable> primitives = new HashMap<>();
+  private static HashMap<SSymbol, Dispatchable> constructVmMirrorPrimitives() {
+    HashMap<SSymbol, Dispatchable> primitives = new HashMap<>();
 
     List<NodeFactory<? extends ExpressionNode>> primFacts = getFactories();
     for (NodeFactory<? extends ExpressionNode> primFact : primFacts) {
@@ -204,13 +204,12 @@ public final class Bootstrap {
   }
 
   private static SObject constructVmMirror() {
-    HashMap<SSymbol, SInvokable> vmMirrorMethods = constructVmMirrorPrimitives();
+    HashMap<SSymbol, Dispatchable> vmMirrorMethods = constructVmMirrorPrimitives();
     ClassScope scope = new ClassScope(null);
 
     ClassDefinition vmMirrorDef = new ClassDefinition(
         Symbols.symbolFor("VmMirror"), null, vmMirrorMethods, null, null,
-        new LinkedHashMap<>(), new ClassDefinitionId(), AccessModifier.PUBLIC,
-        scope, scope, null);
+        0, new ClassDefinitionId(), AccessModifier.PUBLIC, scope, scope, null);
     scope.setClassDefinition(vmMirrorDef, false);
 
     SClass vmMirrorClass = new SClass(null, null);
@@ -327,7 +326,7 @@ public final class Bootstrap {
 
   private static void setSlot(final SObject obj, final String slotName,
       final Object value, final ClassDefinition classDef) {
-    SlotDefinition slot = (SlotDefinition) classDef.getSlots().get(
+    SlotDefinition slot = (SlotDefinition) classDef.getInstanceDispatchables().get(
         Symbols.symbolFor(slotName));
     slot.setValueDuringBootstrap(obj, value);
   }
