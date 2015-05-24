@@ -2,6 +2,7 @@ package som.interpreter.nodes;
 
 import som.compiler.ClassDefinition;
 import som.interpreter.Invokable;
+import som.interpreter.SArguments;
 import som.interpreter.objectstorage.FieldAccessorNode.AbstractReadFieldNode;
 import som.interpreter.objectstorage.FieldAccessorNode.AbstractWriteFieldNode;
 import som.vm.constants.Nil;
@@ -11,10 +12,11 @@ import som.vmobjects.SObject;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
-import com.oracle.truffle.api.nodes.Node;
 
 
-public abstract class SlotAccessNode extends Node {
+public abstract class SlotAccessNode extends ExpressionNode {
+
+  public SlotAccessNode() { super(null); }
 
   public abstract Object doRead(VirtualFrame frame, SObject rcvr);
 
@@ -30,6 +32,11 @@ public abstract class SlotAccessNode extends Node {
     @Override
     public Object doRead(final VirtualFrame frame, final SObject rcvr) {
       return read.read(rcvr);
+    }
+
+    @Override
+    public Object executeGeneric(final VirtualFrame frame) {
+      return read.read((SObject) SArguments.rcvr(frame));
     }
   }
 
@@ -74,6 +81,11 @@ public abstract class SlotAccessNode extends Node {
           new Object[] {rcvr});
       SClass classObject = classDefinition.instantiateClass(rcvr, superClass);
       return classObject;
+    }
+
+    @Override
+    public Object executeGeneric(final VirtualFrame frame) {
+      return doRead(frame, (SObject) SArguments.rcvr(frame));
     }
   }
 }

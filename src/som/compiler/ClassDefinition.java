@@ -9,6 +9,7 @@ import som.interpreter.Method;
 import som.interpreter.SNodeFactory;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.FieldNode.FieldWriteNode;
+import som.interpreter.nodes.SlotAccessNode;
 import som.interpreter.nodes.SlotAccessNode.ClassSlotAccessNode;
 import som.interpreter.nodes.SlotAccessNode.SlotReadNode;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
@@ -28,6 +29,8 @@ import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CallTarget;
+import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.source.SourceSection;
 import com.sun.istack.internal.Nullable;
 
@@ -133,9 +136,12 @@ public final class ClassDefinition {
   public static class SlotDefinition implements Dispatchable {
     private final SSymbol name;
     protected final int index;
-    private final AccessModifier modifier;
+    protected final AccessModifier modifier;
     private final boolean immutable;
     private final SourceSection source;
+
+    @CompilationFinal
+    protected CallTarget genericAccessTarget;
 
     public SlotDefinition(final SSymbol name,
         final AccessModifier acccessModifier, final int index,
@@ -168,11 +174,10 @@ public final class ClassDefinition {
     }
 
     @Override
-    public AbstractDispatchNode getDispatchNode(final Object rcvr,
+    public final AbstractDispatchNode getDispatchNode(final Object rcvr,
         final Object rcvrClass, final AbstractDispatchNode next) {
       assert rcvrClass instanceof SClass;
-      SlotReadNode node = new SlotReadNode(new UninitializedReadFieldNode(index));
-      return new CachedSlotAccessNode((SClass) rcvrClass, node, next);
+      return new CachedSlotAccessNode((SClass) rcvrClass, createNode(), next);
     }
 
     @Override
@@ -192,7 +197,22 @@ public final class ClassDefinition {
 
     @Override
     public final CallTarget getCallTargetIfAvailable() {
-      throw new UnsupportedOperationException("Slots don't have CallTargets.");
+      if (genericAccessTarget != null) { return genericAccessTarget; }
+
+      CompilerDirectives.transferToInterpreterAndInvalidate();
+
+      MethodBuilder builder = new MethodBuilder(true);
+      builder.addArgumentIfAbsent("self");
+      SMethod genericAccessMethod = builder.assemble(createNode(), modifier,
+          null, null);
+
+      genericAccessTarget = genericAccessMethod.getCallTargetIfAvailable();
+      return genericAccessTarget;
+    }
+
+    protected SlotAccessNode createNode() {
+      SlotReadNode node = new SlotReadNode(new UninitializedReadFieldNode(index));
+      return node;
     }
 
     public void setValueDuringBootstrap(final SObject obj, final Object value) {
@@ -215,12 +235,11 @@ public final class ClassDefinition {
     }
 
     @Override
-    public AbstractDispatchNode getDispatchNode(final Object rcvr,
-        final Object rcvrClass, final AbstractDispatchNode next) {
+    protected SlotAccessNode createNode() {
       ClassSlotAccessNode node = new ClassSlotAccessNode(classDefinition,
           new UninitializedReadFieldNode(index),
           new UninitializedWriteFieldNode(index));
-      return new CachedSlotAccessNode((SClass) rcvrClass, node, next);
+      return node;
     }
 
     @Override
