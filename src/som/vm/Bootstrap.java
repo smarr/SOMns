@@ -328,7 +328,10 @@ public final class Bootstrap {
     ClassDefinition integerDef = kernelModule.getEmbeddedClassDefinition("Integer");
     ClassDefinition stringDef  = kernelModule.getEmbeddedClassDefinition("String");
     ClassDefinition doubleDef  = kernelModule.getEmbeddedClassDefinition("Double");
+
     ClassDefinition booleanDef = kernelModule.getEmbeddedClassDefinition("Boolean");
+    ClassDefinition trueDef    = kernelModule.getEmbeddedClassDefinition("True");
+    ClassDefinition falseDef   = kernelModule.getEmbeddedClassDefinition("False");
 
     ClassDefinition blockDef  = kernelModule.getEmbeddedClassDefinition("Block");
     ClassDefinition block1Def = kernelModule.getEmbeddedClassDefinition("Block1");
@@ -355,8 +358,11 @@ public final class Bootstrap {
    integerDef.initializeClass(Classes.integerClass, Classes.valueClass);
     stringDef.initializeClass(Classes.stringClass,  Classes.valueClass);
     doubleDef.initializeClass(Classes.doubleClass,  Classes.valueClass);
-   booleanDef.initializeClass(Classes.booleanClass, Classes.valueClass);
     symbolDef.initializeClass(Classes.symbolClass,  Classes.stringClass);
+
+   booleanDef.initializeClass(Classes.booleanClass, Classes.valueClass);
+      trueDef.initializeClass(Classes.trueClass,    Classes.booleanClass);
+     falseDef.initializeClass(Classes.falseClass,   Classes.booleanClass);
 
      blockDef.initializeClass(Classes.blockClass,  Classes.objectClass);
     block1Def.initializeClass(Classes.blockClass1, Classes.blockClass);

@@ -26,7 +26,6 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 import som.vm.constants.Classes;
-import som.vm.constants.Globals;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
@@ -64,9 +63,9 @@ public class Types {
       return ((SAbstractObject) obj).getSOMClass();
     } else if (obj instanceof Boolean) {
       if ((boolean) obj) {
-        return Globals.trueClass;
+        return Classes.trueClass;
       } else {
-        return Globals.falseClass;
+        return Classes.falseClass;
       }
     } else if (obj instanceof Long || obj instanceof BigInteger) {
       return Classes.integerClass;

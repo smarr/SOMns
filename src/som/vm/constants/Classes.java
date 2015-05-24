@@ -21,7 +21,9 @@ public final class Classes {
   public static final SClass  stringClass;
   public static final SClass  doubleClass;
 
-  public static final SClass  booleanClass;
+  public static final SClass booleanClass;
+  public static final SClass trueClass;
+  public static final SClass falseClass;
 
   public static final SClass blockClass;
   public static final SClass blockClass1;
@@ -49,7 +51,10 @@ public final class Classes {
     primitiveClass  = Bootstrap.newEmptyClassWithItsClass("Primitive");
     stringClass     = Bootstrap.newEmptyClassWithItsClass("String");
     doubleClass     = Bootstrap.newEmptyClassWithItsClass("Double");
-    booleanClass    = Bootstrap.newEmptyClassWithItsClass("Boolean");
+
+    booleanClass = Bootstrap.newEmptyClassWithItsClass("Boolean");
+    trueClass    = Bootstrap.newEmptyClassWithItsClass("True");
+    falseClass   = Bootstrap.newEmptyClassWithItsClass("False");
 
     blockClass  = Bootstrap.newEmptyClassWithItsClass("Block");
     blockClass1 = Bootstrap.newEmptyClassWithItsClass("Block1");
