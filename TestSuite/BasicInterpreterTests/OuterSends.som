@@ -4,7 +4,7 @@ class OuterSends = ()(
       protected baz = ( ^ 6 )
     )
     public class Inner = Sup ()(
-      public test1 = (| bar | bar := 1. ^ outer Sample bar )
+      public test1 = (| bar | bar := 1. ^ outer TestOuterBindings bar )
       public test2 = (| bar | bar := 1. ^ outer Inner bar  )
       private bar = ( ^ 2 )
       public test3 = (| baz | bar := 4. ^ outer Inner baz )
@@ -21,47 +21,47 @@ class OuterSends = ()(
       |)()
     public class A = ()(
       public class C = ()(
-        public foo = ( ^ R a: outer C bar b: outer A bar c: outer Sample bar )
+        public foo = ( ^ R a: outer C bar b: outer A bar c: outer TestOuterSendLegalTargets bar )
         public bar = ( ^ 1 )
       ) : (
-        public foo = ( ^ R a: outer C bar b: outer A bar c: outer Sample bar )
+        public foo = ( ^ R a: outer C bar b: outer A bar c: outer TestOuterSendLegalTargets bar )
         public bar = ( ^ 2 )
       )
       public class D = ()(
-        public foo = (^ R a: outer D bar b: outer A bar c: outer Sample bar )
+        public foo = (^ R a: outer D bar b: outer A bar c: outer TestOuterSendLegalTargets bar )
         public bar = ( ^ 3 )
       ) : (
-        public foo = ( ^ R a: outer D bar b: outer A bar c: outer Sample bar )
+        public foo = ( ^ R a: outer D bar b: outer A bar c: outer TestOuterSendLegalTargets bar )
         public bar = ( ^ 4 )
       )
-      public foo = ( ^ R a: outer A bar b: outer Sample bar c: nil )
+      public foo = ( ^ R a: outer A bar b: outer TestOuterSendLegalTargets bar c: nil )
       public bar = ( ^ 5 )
     ) : (
-      public foo = ( ^ R a: outer A bar b: outer Sample bar c: nil )
+      public foo = ( ^ R a: outer A bar b: outer TestOuterSendLegalTargets bar c: nil )
       public bar = ( ^ 6 )
     )
     public class B = ()(
       public class C = ()(
-        public foo = ( ^ R a: outer C bar b: outer B bar c: outer Sample bar )
+        public foo = ( ^ R a: outer C bar b: outer B bar c: outer TestOuterSendLegalTargets bar )
         public bar = ( ^ 7 )
       ) : (
-        public foo = ( ^ R a: outer C bar b: outer B bar c: outer Sample bar )
+        public foo = ( ^ R a: outer C bar b: outer B bar c: outer TestOuterSendLegalTargets bar )
         public bar = ( ^ 8 )
       )
       public class D = ()(
-        public foo = ( ^ R a: outer D bar b: outer B bar c: outer Sample bar )
+        public foo = ( ^ R a: outer D bar b: outer B bar c: outer TestOuterSendLegalTargets bar )
         public bar = ( ^ 9 )
       ) : (
-        public foo = ( ^ R a: outer D bar b: outer B bar c: outer Sample bar )
+        public foo = ( ^ R a: outer D bar b: outer B bar c: outer TestOuterSendLegalTargets bar )
         public bar = ( ^ 10 )
       )
-      public foo = ( ^ R a: outer B bar b: outer Sample bar c: nil )
+      public foo = ( ^ R a: outer B bar b: outer TestOuterSendLegalTargets bar c: nil )
       public bar = ( ^ 11 )
     ) : (
-      public foo = ( ^ R a: outer B bar b: outer Sample bar c: nil )
+      public foo = ( ^ R a: outer B bar b: outer TestOuterSendLegalTargets bar c: nil )
       public bar = ( ^ 12 )
     )
-    public foo = ( ^ R a: outer Sample bar b: nil c: nil )
+    public foo = ( ^ R a: outer TestOuterSendLegalTargets bar b: nil c: nil )
     public bar = ( ^ 13 )
   )
 ) : (
