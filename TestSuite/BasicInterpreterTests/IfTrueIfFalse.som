@@ -42,7 +42,7 @@ class IfTrueIfFalse = ()():(
     )
     
     resolve: a = (
-        (a == nil) ifFalse: [ ^ a ].
+        (a = nil) ifFalse: [ ^ a ].
     )
     
     value: aBlock = (
