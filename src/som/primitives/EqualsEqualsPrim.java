@@ -8,6 +8,7 @@ import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.vm.constants.Globals;
 import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
+import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
@@ -73,6 +74,11 @@ public abstract class EqualsEqualsPrim extends BinaryExpressionNode {
 
   @Specialization
   public final boolean doSObject(final SObject left, final Object right) {
+    return left == right;
+  }
+
+  @Specialization
+  public final boolean doSClass(final SClass left, final Object right) {
     return left == right;
   }
 
