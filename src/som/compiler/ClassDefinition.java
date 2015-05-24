@@ -118,6 +118,13 @@ public final class ClassDefinition {
     return slotDefinitions;
   }
 
+  public SClass instantiateClass() {
+    CallTarget callTarget = superclassResolution.createCallTarget();
+    SClass superClass = (SClass) callTarget.call(Nil.nilObject);
+    SClass classObject = instantiateClass(Nil.nilObject, superClass);
+    return classObject;
+  }
+
   public SClass instantiateClass(final SAbstractObject outer, final SClass superClass) {
     SClass resultClass = new SClass(outer, Classes.metaclassClass);
     SClass result = new SClass(outer, resultClass);

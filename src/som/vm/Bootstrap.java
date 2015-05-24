@@ -310,8 +310,8 @@ public final class Bootstrap {
 
     Nil.nilObject.setClass(Classes.nilClass);
 
-    platformClass = platformModule.instantiateClass(Nil.nilObject, Classes.valueClass);
-    SClass kernelClass = kernelModule.instantiateClass(Nil.nilObject, Classes.valueClass);
+    platformClass = platformModule.instantiateClass(); //(Nil.nilObject, Classes.valueClass);
+    SClass kernelClass = kernelModule.instantiateClass(); // (Nil.nilObject, Classes.valueClass);
     KernelObj.kernel.setClass(kernelClass);
 
     // TODO: what do we do with the VmMirror object???
