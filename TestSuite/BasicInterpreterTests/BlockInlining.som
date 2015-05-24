@@ -170,7 +170,7 @@ class BlockInlining = ()() : (
     public testToDoNestDoNestIfTrue = (
       (* from the bounce benchmark *)
       | balls bounces |
-      balls := Array new: 1 withAll: true.
+      balls := kernel Array new: 1 withAll: true.
       bounces := 0.
       
       1 to: 2 do: [ :i |
