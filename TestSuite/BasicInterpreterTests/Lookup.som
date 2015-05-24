@@ -12,7 +12,7 @@ class Lookup = ()(
 
   class TestExplicitOuterInInitializer = () (
     public class Inner = (
-      | public f = 2 * outer Sample m. |
+      | public f = 2 * outer TestExplicitOuterInInitializer m. |
     )()
     m = ( ^ 91 )
   )
@@ -67,7 +67,7 @@ class Lookup = ()(
   class TestInner18 s: Sup = (
     (* This test creates a situation where the an object''s enclosing instance 
        with respect to its class (Inner2) is an instance of the same class
-       (Sample) as its enclosing instance with respect to its superclass
+       (TestInner18) as its enclosing instance with respect to its superclass
        (Inner1). *)
     | SuperClass = Sup. |
   )(
