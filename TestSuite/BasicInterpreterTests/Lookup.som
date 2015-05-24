@@ -120,7 +120,7 @@ class Lookup = ()(
   (* assert 91 *)
   public testNesting1 = (
     | o |
-    o := self new TestNesting NS2Test12 s: Object.
+    o := self new TestNesting new NS2Test12 s: Object.
     o Inner1 = o Inner1 ifFalse: [ ^ #error ].
     ^ o Inner1 new foo
   )
@@ -128,7 +128,7 @@ class Lookup = ()(
   (* assert 182 *)
   public testNesting2 = (
     | o p |
-    o := self new TestNesting NS2Test12 s: Object.
+    o := self new TestNesting new NS2Test12 s: Object.
     p := o Inner1 new.
     p Inner11 = p Inner11 ifFalse: [ ^ #error ].
     ^ p Inner11 new bar
