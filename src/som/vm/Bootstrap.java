@@ -286,9 +286,7 @@ public final class Bootstrap {
 
     assert KernelObj.kernel.getNumberOfFields() == kernelModule.getNumberOfSlots();
 
-
-    // Top doesn't have any methods or slots, so outer and super can be null
-       topDef.initializeClass(Classes.topClass, null);
+       topDef.initializeClass(Classes.topClass, null);  // Top doesn't have a super class
      thingDef.initializeClass(Classes.thingClass,  Classes.topClass);
      valueDef.initializeClass(Classes.valueClass,  Classes.thingClass);
     objectDef.initializeClass(Classes.objectClass, Classes.thingClass);
@@ -314,16 +312,12 @@ public final class Bootstrap {
     SClass kernelClass = kernelModule.instantiateClass(); // (Nil.nilObject, Classes.valueClass);
     KernelObj.kernel.setClass(kernelClass);
 
-    // TODO: what do we do with the VmMirror object???
+    // initialize slots of kernel object
+    // vmMirror
     constructVmMirror();
-
-
-    // TODO:: cleanup ??? reuse comments?
-    // we need:
-    //   vmMirror -> Object & Class -> Top
-    //   Platform class -super> Class & -class> Metaclass -class> Metaclass class
-    //
-    // in the end, we need to be able instantiate the outer class of the Platform module
+    // system
+    // ObjectSlot
+    // ValueSlot
   }
 
   public static long executeApplication(final String appFile, final String[] args) {

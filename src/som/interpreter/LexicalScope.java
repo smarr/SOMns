@@ -13,6 +13,9 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 
 public abstract class LexicalScope {
 
+  // TODO: figure out whether we can use this lexical scope also for the
+  //       super sends. seems like we currently have two similar ways to solve
+  //       similar problems, instead of a single one
   public static final class ClassScope extends LexicalScope {
     private final ClassScope outerClass;
     private final HashMap<SSymbol, Dispatchable> slotsClassesAndMethods;

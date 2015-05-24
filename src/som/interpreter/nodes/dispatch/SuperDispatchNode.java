@@ -15,6 +15,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
  * So, it's always the cached receiver.
  */
 public abstract class SuperDispatchNode extends AbstractDispatchNode {
+  // TODO: remove the useless wrapper class
 
   public static SuperDispatchNode create(final SSymbol selector,
       final ISuperReadNode superNode) {
