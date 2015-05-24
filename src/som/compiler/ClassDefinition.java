@@ -97,6 +97,7 @@ public final class ClassDefinition {
       result.getSOMClass().setDispatchables(classScope.getDispatchables());
       result.getSOMClass().setName(Symbols.symbolFor(ccName));
       result.getSOMClass().setClassId(classId);
+      result.getSOMClass().setSuperClass(Classes.classClass);
     }
 
     // Initialize the resulting class
