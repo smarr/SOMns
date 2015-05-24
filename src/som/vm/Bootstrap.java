@@ -13,6 +13,7 @@ import java.util.Map;
 import som.compiler.AccessModifier;
 import som.compiler.ClassBuilder.ClassDefinitionId;
 import som.compiler.ClassDefinition;
+import som.compiler.ClassDefinition.SlotDefinition;
 import som.compiler.MethodBuilder;
 import som.compiler.SourcecodeCompiler;
 import som.interpreter.LexicalScope.ClassScope;
@@ -308,16 +309,23 @@ public final class Bootstrap {
 
     Nil.nilObject.setClass(Classes.nilClass);
 
-    platformClass = platformModule.instantiateClass(); //(Nil.nilObject, Classes.valueClass);
-    SClass kernelClass = kernelModule.instantiateClass(); // (Nil.nilObject, Classes.valueClass);
+    SClass kernelClass = kernelModule.instantiateClass(Nil.nilObject, Classes.objectClass);
     KernelObj.kernel.setClass(kernelClass);
 
     // initialize slots of kernel object
-    // vmMirror
-    constructVmMirror();
-    // system
-    // ObjectSlot
-    // ValueSlot
+    // TODO: try to actually use the initializer expressions...
+    setSlot(KernelObj.kernel, "vmMirror",   constructVmMirror(), kernelModule);
+    setSlot(KernelObj.kernel, "ObjectSlot", Classes.objectClass, kernelModule);
+    setSlot(KernelObj.kernel, "ValueSlot",  Classes.valueClass,  kernelModule);
+
+    platformClass = platformModule.instantiateClass();
+  }
+
+  private static void setSlot(final SObject obj, final String slotName,
+      final Object value, final ClassDefinition classDef) {
+    SlotDefinition slot = (SlotDefinition) classDef.getSlots().get(
+        Symbols.symbolFor(slotName));
+    slot.setValueDuringBootstrap(obj, value);
   }
 
   public static long executeApplication(final String appFile, final String[] args) {

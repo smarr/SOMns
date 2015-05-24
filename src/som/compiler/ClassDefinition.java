@@ -23,6 +23,7 @@ import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SInvokable.SMethod;
+import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CallTarget;
@@ -189,6 +190,10 @@ public final class ClassDefinition {
     @Override
     public final CallTarget getCallTargetIfAvailable() {
       throw new UnsupportedOperationException("Slots don't have CallTargets.");
+    }
+
+    public void setValueDuringBootstrap(final SObject obj, final Object value) {
+      obj.setField(index, value);
     }
   }
 
