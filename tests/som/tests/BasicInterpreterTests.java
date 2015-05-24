@@ -100,7 +100,6 @@ public class BasicInterpreterTests {
         {"Lookup", "testExplicitOuterInInitializer",                182, Long.class },
         {"Lookup", "testImplicitOuterInInitializer",                182, Long.class },
         {"Lookup", "testImplicitSend",                               42, Long.class },
-        {"Lookup", "testSiblingsSuperclass",                       true, Boolean.class },
         {"Lookup", "testSiblingLookupA",                             42, Long.class },
         {"Lookup", "testSiblingLookupB",                             43, Long.class },
         {"Lookup", "testNesting1",                                   91, Long.class },
