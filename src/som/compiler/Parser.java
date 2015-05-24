@@ -266,7 +266,7 @@ public final class Parser {
   private void defaultSuperclassAndBody(final ClassBuilder clsBuilder)
       throws ParseError, ClassDefinitionError {
     MethodBuilder def = clsBuilder.getClassInstantiationMethodBuilder();
-    ExpressionNode selfRead = def.getReadNode("self", null);
+    ExpressionNode selfRead = def.getSelfRead(null);
     AbstractMessageSendNode superClass = SNodeFactory.createMessageSend(
         symbolFor("Object"), new ExpressionNode[] {selfRead}, null);
     clsBuilder.setSuperClassResolution(superClass);
@@ -318,15 +318,15 @@ public final class Parser {
     SourceCoordinate coord = getCoordinate();
 
     if (acceptIdentifier("self")) {
-      return meth.getReadNode("self", getSource(coord));
+      return meth.getSelfRead(getSource(coord));
     } else if (acceptIdentifier("super")) {
       return meth.getSuperReadNode(getSource(coord));
     } else if (acceptIdentifier("outer")) {
-      ExpressionNode self = meth.getReadNode("self", getSource(coord));
+      ExpressionNode self = meth.getSelfRead(getSource(coord));
       return unaryMessage(self);
     } else {
       // TODO: this should probably be an implicit send!!
-      return meth.getReadNode("self", getSource(coord));
+      return meth.getSelfRead(getSource(coord));
     }
   }
 
@@ -776,7 +776,7 @@ public final class Parser {
     ExpressionNode exp;
     if (sym == Keyword) {
       // TODO: the receiver needs to be an implicit receiver!!!
-      exp = keywordMessage(builder, builder.getReadNode("self", null));
+      exp = keywordMessage(builder, builder.getSelfRead(null));
     } else {
       exp = primary(builder);
     }
@@ -1166,7 +1166,7 @@ public final class Parser {
 
     // otherwise, it is an implicit receiver send
     return SNodeFactory.createImplicitReceiverSend(selector,
-        new ExpressionNode[] {builder.getReadNode("self", null)},
+        new ExpressionNode[] {builder.getSelfRead(null)},
         builder.getCurrentMethodScope(), builder.getHolder().getClassId(), source);
   }
 

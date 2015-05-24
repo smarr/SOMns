@@ -244,7 +244,7 @@ public final class ClassBuilder {
     slots.put(name, slot);
 
     if (init != null) {
-      ExpressionNode self = initializer.getReadNode("self", source);
+      ExpressionNode self = initializer.getSelfRead(source);
       slotAndInitExprs.add(slot.getWriteNode(self, init, source));
     }
   }
@@ -345,7 +345,7 @@ public final class ClassBuilder {
   private SMethod assemblePrimaryFactoryMethod() {
     // first create new Object
     ExpressionNode newObject = NewObjectPrimFactory.create(
-        primaryFactoryMethod.getReadNode("self", null));
+        primaryFactoryMethod.getSelfRead(null));
 
     List<ExpressionNode> args = createPrimaryFactoryArgumentRead(newObject);
 
@@ -373,7 +373,7 @@ public final class ClassBuilder {
     if (slotAndInitExprs.size() > 0) {
       // we need to make sure that we return self, that's the SOM Newspeak
       // contract for initializers
-      allExprs.add(initializer.getReadNode("self", null));
+      allExprs.add(initializer.getSelfRead(null));
     }
 
     ExpressionNode body = SNodeFactory.createSequence(allExprs, null);

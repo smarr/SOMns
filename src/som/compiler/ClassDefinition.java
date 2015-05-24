@@ -248,7 +248,7 @@ public final class ClassDefinition {
     builder.setSignature(init);
     builder.addArgumentIfAbsent("self");
 
-    SMethod thingInitNew = builder.assemble(builder.getReadNode("self", null),
+    SMethod thingInitNew = builder.assemble(builder.getSelfRead(null),
         AccessModifier.PROTECTED, Symbols.symbolFor("initializer"), null);
     assert instanceMethods.containsKey(init);
     instanceMethods.put(init, thingInitNew);
