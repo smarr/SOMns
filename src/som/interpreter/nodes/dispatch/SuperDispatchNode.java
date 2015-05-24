@@ -61,7 +61,7 @@ public abstract class SuperDispatchNode extends AbstractDispatchNode {
       UninitializedDispatchNode next = new UninitializedDispatchNode(selector,
           holderClass, classSide);
 
-      return disp.getDispatchNode(rcvr, rcvrClass, next);
+      return replace(disp.getDispatchNode(rcvr, rcvrClass, next));
     }
 
     @Override
