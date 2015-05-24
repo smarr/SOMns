@@ -26,7 +26,6 @@
 package som.vm;
 
 import static som.vm.Symbols.symbolFor;
-import static som.vm.constants.Classes.booleanClass;
 import static som.vm.constants.Classes.classClass;
 import static som.vm.constants.Classes.methodClass;
 import static som.vm.constants.Classes.objectClass;
@@ -126,25 +125,13 @@ public final class Universe {
     initializeSystemClass(methodClass,     objectClass, "Method");
     initializeSystemClass(primitiveClass,  objectClass, "Primitive");
 
-    trueClass  = newSystemClass();
-    falseClass = newSystemClass();
-
-    initializeSystemClass(trueClass,      booleanClass, "True");
-    initializeSystemClass(falseClass,     booleanClass, "False");
-
     // Load methods and fields into the system classes
     loadSystemClass(methodClass);
     loadSystemClass(primitiveClass);
-    loadSystemClass(trueClass);
-    loadSystemClass(falseClass);
 
     // Setup the true and false objects
     trueObject  = newInstance(trueClass);
     falseObject = newInstance(falseClass);
-
-    // Load the system class and create an instance of it
-    systemClass  = loadClass(symbolFor("System"));
-    systemObject = newInstance(systemClass);
 
     if (Globals.trueObject != trueObject) {
       errorExit("Initialization went wrong for class Globals");
