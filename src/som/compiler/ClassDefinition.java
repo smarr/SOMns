@@ -250,7 +250,6 @@ public final class ClassDefinition {
 
     SMethod thingInitNew = builder.assemble(builder.getSelfRead(null),
         AccessModifier.PROTECTED, Symbols.symbolFor("initializer"), null);
-    assert instanceMethods.containsKey(init);
     instanceMethods.put(init, thingInitNew);
   }
 }

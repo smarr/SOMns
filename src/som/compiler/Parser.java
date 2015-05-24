@@ -289,7 +289,6 @@ public final class Parser {
     AbstractMessageSendNode superClassResolution = unaryMessage(rcvr);
     clsBuilder.setSuperClassResolution(superClassResolution);
 
-    ExpressionNode superFactorySend;
     if (sym != NewTerm) {
       // This factory method on the super class is actually called as
       // initializer of the super class after object creation.
@@ -297,19 +296,21 @@ public final class Parser {
       // that it is a runtime error if it is not the primary factory method.
       // Which for me implies that this one is special. And indeed, it is
       // used to create the proper initialize method, on which we rely here.
-      superFactorySend = messages(
+      ExpressionNode superFactorySend = messages(
           clsBuilder.getInitializerMethodBuilder(),
           clsBuilder.getInitializerMethodBuilder().getSuperReadNode(null));
 
       SSymbol initializerName = ClassBuilder.getInitializerName(
           ((AbstractUninitializedMessageSendNode) superFactorySend).getSelector());
 
-      superFactorySend = MessageSendNode.adaptSymbol(initializerName,
-          (AbstractUninitializedMessageSendNode) superFactorySend);
+      clsBuilder.setSuperclassFactorySend(
+          MessageSendNode.adaptSymbol(
+              initializerName,
+              (AbstractUninitializedMessageSendNode) superFactorySend), false);
     } else {
-      superFactorySend = clsBuilder.createStandardSuperFactorySend();
+      clsBuilder.setSuperclassFactorySend(
+          clsBuilder.createStandardSuperFactorySend(), true);
     }
-    clsBuilder.setSuperclassFactorySend(superFactorySend, false);
   }
 
   private ExpressionNode inheritancePrefix(final ClassBuilder clsBuilder)
