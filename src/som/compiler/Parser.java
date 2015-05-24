@@ -284,7 +284,8 @@ public final class Parser {
     classBody(clsBuilder);
   }
 
-  private void inheritanceClause(final ClassBuilder clsBuilder) throws ParseError {
+  private void inheritanceClause(final ClassBuilder clsBuilder)
+      throws ParseError, ClassDefinitionError {
     ExpressionNode rcvr = inheritancePrefix(clsBuilder);
     AbstractMessageSendNode superClassResolution = unaryMessage(rcvr);
     clsBuilder.setSuperClassResolution(superClassResolution);
@@ -439,7 +440,8 @@ public final class Parser {
     return identifier();
   }
 
-  private void initExprs(final ClassBuilder clsBuilder) throws ParseError {
+  private void initExprs(final ClassBuilder clsBuilder)
+      throws ParseError, ClassDefinitionError {
     MethodBuilder initializer = clsBuilder.getInitializerMethodBuilder();
     clsBuilder.addInitializerExpression(expression(initializer));
 
@@ -626,7 +628,8 @@ public final class Parser {
     builder.setSignature(symbolFor(kw.toString()));
   }
 
-  private ExpressionNode methodBlock(final MethodBuilder builder) throws ParseError {
+  private ExpressionNode methodBlock(final MethodBuilder builder)
+      throws ParseError, ClassDefinitionError {
     expect(NewTerm);
     SourceCoordinate coord = getCoordinate();
     ExpressionNode methodBody = blockContents(builder);
@@ -676,7 +679,8 @@ public final class Parser {
     return identifier();
   }
 
-  private ExpressionNode blockContents(final MethodBuilder builder) throws ParseError {
+  private ExpressionNode blockContents(final MethodBuilder builder)
+      throws ParseError, ClassDefinitionError {
     comment();
     if (accept(Or)) {
       locals(builder);
@@ -691,7 +695,8 @@ public final class Parser {
     }
   }
 
-  private ExpressionNode blockBody(final MethodBuilder builder) throws ParseError {
+  private ExpressionNode blockBody(final MethodBuilder builder)
+      throws ParseError, ClassDefinitionError {
     SourceCoordinate coord = getCoordinate();
     List<ExpressionNode> expressions = new ArrayList<ExpressionNode>();
 
@@ -718,7 +723,8 @@ public final class Parser {
     }
   }
 
-  private ExpressionNode result(final MethodBuilder builder) throws ParseError {
+  private ExpressionNode result(final MethodBuilder builder)
+      throws ParseError, ClassDefinitionError {
     SourceCoordinate coord = getCoordinate();
 
     ExpressionNode exp = expression(builder);
@@ -731,7 +737,8 @@ public final class Parser {
     }
   }
 
-  private ExpressionNode expression(final MethodBuilder builder) throws ParseError {
+  private ExpressionNode expression(final MethodBuilder builder)
+      throws ParseError, ClassDefinitionError {
     peekForNextSymbolFromLexer();
 
     if (nextSym == Assign) {
@@ -741,11 +748,13 @@ public final class Parser {
     }
   }
 
-  private ExpressionNode assignation(final MethodBuilder builder) throws ParseError {
+  private ExpressionNode assignation(final MethodBuilder builder)
+      throws ParseError, ClassDefinitionError {
     return assignments(builder);
   }
 
-  private ExpressionNode assignments(final MethodBuilder builder) throws ParseError {
+  private ExpressionNode assignments(final MethodBuilder builder)
+      throws ParseError, ClassDefinitionError {
     SourceCoordinate coord = getCoordinate();
 
     if (!isIdentifier(sym)) {
@@ -773,7 +782,8 @@ public final class Parser {
     return id;
   }
 
-  private ExpressionNode evaluation(final MethodBuilder builder) throws ParseError {
+  private ExpressionNode evaluation(final MethodBuilder builder)
+      throws ParseError, ClassDefinitionError {
     ExpressionNode exp;
     if (sym == Keyword) {
       // TODO: the receiver needs to be an implicit receiver!!!
@@ -792,7 +802,8 @@ public final class Parser {
         || symIn(binaryOpSyms);
   }
 
-  private ExpressionNode primary(final MethodBuilder builder) throws ParseError {
+  private ExpressionNode primary(final MethodBuilder builder)
+      throws ParseError, ClassDefinitionError {
     switch (sym) {
       case Identifier: {
         SourceCoordinate coord = getCoordinate();
@@ -840,7 +851,7 @@ public final class Parser {
   }
 
   private ExpressionNode outerSend(final MethodBuilder builder)
-      throws ParseError {
+      throws ParseError, ClassDefinitionError {
     SourceCoordinate coord = getCoordinate();
     expectIdentifier("outer");
     String outer = identifier();
@@ -853,7 +864,7 @@ public final class Parser {
   }
 
   private ExpressionNode messages(final MethodBuilder builder,
-      final ExpressionNode receiver) throws ParseError {
+      final ExpressionNode receiver) throws ParseError, ClassDefinitionError {
     ExpressionNode msg;
     if (isIdentifier(sym)) {
       msg = unaryMessage(receiver);
@@ -893,7 +904,7 @@ public final class Parser {
   }
 
   private AbstractMessageSendNode binaryMessage(final MethodBuilder builder,
-      final ExpressionNode receiver) throws ParseError {
+      final ExpressionNode receiver) throws ParseError, ClassDefinitionError {
     SourceCoordinate coord = getCoordinate();
     SSymbol msg = binarySelector();
     ExpressionNode operand = binaryOperand(builder);
@@ -902,7 +913,8 @@ public final class Parser {
         getSource(coord));
   }
 
-  private ExpressionNode binaryOperand(final MethodBuilder builder) throws ParseError {
+  private ExpressionNode binaryOperand(final MethodBuilder builder)
+      throws ParseError, ClassDefinitionError {
     ExpressionNode operand = primary(builder);
 
     // a binary operand can receive unaryMessages
@@ -915,7 +927,7 @@ public final class Parser {
   }
 
   private ExpressionNode keywordMessage(final MethodBuilder builder,
-      final ExpressionNode receiver) throws ParseError {
+      final ExpressionNode receiver) throws ParseError, ClassDefinitionError {
     SourceCoordinate coord = getCoordinate();
     List<ExpressionNode> arguments = new ArrayList<ExpressionNode>();
     StringBuffer         kw        = new StringBuffer();
@@ -982,7 +994,8 @@ public final class Parser {
         source);
   }
 
-  private ExpressionNode formula(final MethodBuilder builder) throws ParseError {
+  private ExpressionNode formula(final MethodBuilder builder)
+      throws ParseError, ClassDefinitionError {
     ExpressionNode operand = binaryOperand(builder);
 
     while (sym == OperatorSequence || symIn(binaryOpSyms)) {
@@ -991,7 +1004,8 @@ public final class Parser {
     return operand;
   }
 
-  private ExpressionNode nestedTerm(final MethodBuilder builder) throws ParseError {
+  private ExpressionNode nestedTerm(final MethodBuilder builder)
+      throws ParseError, ClassDefinitionError {
     expect(NewTerm);
     ExpressionNode exp = expression(builder);
     expect(EndTerm);
@@ -1111,7 +1125,8 @@ public final class Parser {
     return s;
   }
 
-  private ExpressionNode nestedBlock(final MethodBuilder builder) throws ParseError {
+  private ExpressionNode nestedBlock(final MethodBuilder builder)
+      throws ParseError, ClassDefinitionError {
     expect(NewBlock);
     SourceCoordinate coord = getCoordinate();
 

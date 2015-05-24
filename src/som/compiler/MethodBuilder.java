@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import som.compiler.ClassBuilder.ClassDefinitionError;
 import som.compiler.ClassBuilder.ClassDefinitionId;
 import som.compiler.Variable.Argument;
 import som.compiler.Variable.Local;
@@ -344,13 +345,17 @@ public final class MethodBuilder {
   }
 
   public OuterObjectRead getOuterRead(final String outerName,
-      final SourceSection source) {
+      final SourceSection source) throws ClassDefinitionError {
     ClassBuilder enclosing = getEnclosingClassBuilder();
     ClassDefinitionId lexicalSelfClassId = enclosing.getClassId();
     int ctxLevel = 0;
-    while (!enclosing.getName().getString().equals(outerName)) {
+    while (!outerName.equals(enclosing.getName().getString())) {
       ctxLevel++;
       enclosing = enclosing.getOuterBuilder();
+      if (enclosing == null) {
+        throw new ClassDefinitionError("Outer send `outer " + outerName
+            + "` could not be resolved", source);
+      }
     }
 
     return OuterObjectReadNodeGen.create(ctxLevel, lexicalSelfClassId,
