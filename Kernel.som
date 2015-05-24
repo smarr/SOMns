@@ -54,6 +54,7 @@ class Kernel usingPlatform: platform vmMirror: vmMirror = (
        we use inheritance instead. *)
     public Object = ( ^ ObjectSlot )
     public Value  = ( ^ ValueSlot  )
+    public kernel = ( ^ outer Kernel )
     
     'Nil'
     public isNil  = ( ^ false )
