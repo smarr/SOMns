@@ -196,7 +196,7 @@ public final class ClassDefinition {
     }
 
     @Override
-    public final CallTarget getCallTargetIfAvailable() {
+    public final CallTarget getCallTarget() {
       if (genericAccessTarget != null) { return genericAccessTarget; }
 
       CompilerDirectives.transferToInterpreterAndInvalidate();
@@ -206,7 +206,7 @@ public final class ClassDefinition {
       SMethod genericAccessMethod = builder.assemble(createNode(), modifier,
           null, null);
 
-      genericAccessTarget = genericAccessMethod.getCallTargetIfAvailable();
+      genericAccessTarget = genericAccessMethod.getCallTarget();
       return genericAccessTarget;
     }
 

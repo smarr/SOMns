@@ -26,7 +26,7 @@ public abstract class IntDownToDoMessageNode extends TernaryExpressionNode {
     super(orignialNode.getSourceSection());
     blockMethod = block.getMethod();
     valueSend = Truffle.getRuntime().createDirectCallNode(
-                    blockMethod.getCallTargetIfAvailable());
+                    blockMethod.getCallTarget());
   }
 
   public IntDownToDoMessageNode(final IntDownToDoMessageNode node) {

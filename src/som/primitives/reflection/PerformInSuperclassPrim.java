@@ -24,6 +24,6 @@ public abstract class PerformInSuperclassPrim extends TernaryExpressionNode {
       final SAbstractObject receiver, final SSymbol selector, final SClass  clazz) {
     CompilerAsserts.neverPartOfCompilation("PerformInSuperclassPrim");
     Dispatchable invokable = clazz.lookupMessage(selector, AccessModifier.PUBLIC);
-    return call.call(frame, invokable.getCallTargetIfAvailable(), new Object[] {receiver});
+    return call.call(frame, invokable.getCallTarget(), new Object[] {receiver});
   }
 }

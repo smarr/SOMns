@@ -33,7 +33,7 @@ public final class GenericDispatchNode extends AbstractDispatchWithLookupNode {
     Object[] args;
 
     if (method != null) {
-      target = method.getCallTargetIfAvailable();
+      target = method.getCallTarget();
       args = arguments;
     } else {
       // Won't use DNU caching here, because it is already a megamorphic node

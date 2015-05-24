@@ -97,7 +97,7 @@ public abstract class SInvokable extends SAbstractObject implements Dispatchable
   }
 
   @Override
-  public final RootCallTarget getCallTargetIfAvailable() {
+  public final RootCallTarget getCallTarget() {
     return callTarget;
   }
 

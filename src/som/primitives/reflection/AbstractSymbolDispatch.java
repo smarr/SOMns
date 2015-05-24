@@ -63,7 +63,7 @@ public abstract class AbstractSymbolDispatch extends Node {
 
     Object[] arguments = {receiver};
 
-    return call.call(frame, invokable.getCallTargetIfAvailable(), arguments);
+    return call.call(frame, invokable.getCallTarget(), arguments);
   }
 
   @Specialization(contains = "doCached")
@@ -75,6 +75,6 @@ public abstract class AbstractSymbolDispatch extends Node {
 
     Object[] arguments = toArgArray.executedEvaluated(argsArr, receiver);
 
-    return call.call(frame, invokable.getCallTargetIfAvailable(), arguments);
+    return call.call(frame, invokable.getCallTarget(), arguments);
   }
 }

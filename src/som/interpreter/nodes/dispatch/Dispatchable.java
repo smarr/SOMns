@@ -17,7 +17,7 @@ public interface Dispatchable {
   AccessModifier getAccessModifier();
   Object invoke(final Object... arguments);
 
-  CallTarget getCallTargetIfAvailable();
+  CallTarget getCallTarget();
 
   String typeForErrors();
 

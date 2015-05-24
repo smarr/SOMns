@@ -14,7 +14,7 @@ public final class GenericBlockDispatchNode extends AbstractDispatchNode {
   public Object executeDispatch(final VirtualFrame frame,
       final Object[] arguments) {
     SBlock rcvr = (SBlock) arguments[0];
-    return call.call(frame, rcvr.getMethod().getCallTargetIfAvailable(), arguments);
+    return call.call(frame, rcvr.getMethod().getCallTarget(), arguments);
   }
 
   @Override

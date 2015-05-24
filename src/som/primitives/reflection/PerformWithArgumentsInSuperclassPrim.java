@@ -29,7 +29,7 @@ public abstract class PerformWithArgumentsInSuperclassPrim extends QuaternaryExp
       final Object[] argArr, final SClass clazz) {
     CompilerAsserts.neverPartOfCompilation("PerformWithArgumentsInSuperclassPrim.doSAbstractObject()");
     Dispatchable invokable = clazz.lookupMessage(selector, AccessModifier.PUBLIC);
-    return call.call(frame, invokable.getCallTargetIfAvailable(),
+    return call.call(frame, invokable.getCallTarget(),
         mergeReceiverWithArguments(receiver, argArr));
   }
 
