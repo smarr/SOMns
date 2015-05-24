@@ -1,6 +1,6 @@
 package som.interpreter.nodes.dispatch;
 
-import som.interpreter.objectstorage.FieldAccessorNode.AbstractReadFieldNode;
+import som.interpreter.nodes.SlotAccessNode;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject;
 
@@ -9,13 +9,15 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 
 public class CachedSlotAccessNode extends AbstractDispatchNode {
 
+  @Child protected SlotAccessNode access;
   @Child protected AbstractDispatchNode nextInCache;
-  @Child protected AbstractReadFieldNode read; // TODO: we only got read support at the moment
+
   private final SClass rcvrClass;
 
   public CachedSlotAccessNode(final SClass rcvrClass,
-      final AbstractReadFieldNode read, final AbstractDispatchNode nextInCache) {
-    this.read = read;
+      final SlotAccessNode access,
+      final AbstractDispatchNode nextInCache) {
+    this.access = access;
     this.nextInCache = nextInCache;
     this.rcvrClass = rcvrClass;
   }
@@ -27,7 +29,7 @@ public class CachedSlotAccessNode extends AbstractDispatchNode {
     SObject rcvr = (SObject) arguments[0];
 
     if (rcvr.getSOMClass() == rcvrClass) {
-      return read.read(rcvr);
+      return access.doRead(frame, rcvr);
     } else {
       return nextInCache.executeDispatch(frame, arguments);
     }

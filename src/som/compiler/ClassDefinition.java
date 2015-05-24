@@ -9,8 +9,9 @@ import som.interpreter.Method;
 import som.interpreter.SNodeFactory;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.FieldNode.FieldWriteNode;
+import som.interpreter.nodes.SlotAccessNode.ClassSlotAccessNode;
+import som.interpreter.nodes.SlotAccessNode.SlotReadNode;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
-import som.interpreter.nodes.dispatch.CachedClassSlotAccessNode;
 import som.interpreter.nodes.dispatch.CachedSlotAccessNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.objectstorage.FieldAccessorNode.UninitializedReadFieldNode;
@@ -170,7 +171,8 @@ public final class ClassDefinition {
     public AbstractDispatchNode getDispatchNode(final Object rcvr,
         final Object rcvrClass, final AbstractDispatchNode next) {
       assert rcvrClass instanceof SClass;
-      return new CachedSlotAccessNode((SClass) rcvrClass, new UninitializedReadFieldNode(index), next);
+      SlotReadNode node = new SlotReadNode(new UninitializedReadFieldNode(index));
+      return new CachedSlotAccessNode((SClass) rcvrClass, node, next);
     }
 
     @Override
@@ -215,9 +217,10 @@ public final class ClassDefinition {
     @Override
     public AbstractDispatchNode getDispatchNode(final Object rcvr,
         final Object rcvrClass, final AbstractDispatchNode next) {
-      return new CachedClassSlotAccessNode(classDefinition,
-          (SClass) rcvrClass, new UninitializedReadFieldNode(index),
-          new UninitializedWriteFieldNode(index), next);
+      ClassSlotAccessNode node = new ClassSlotAccessNode(classDefinition,
+          new UninitializedReadFieldNode(index),
+          new UninitializedWriteFieldNode(index));
+      return new CachedSlotAccessNode((SClass) rcvrClass, node, next);
     }
 
     @Override
