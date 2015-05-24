@@ -309,19 +309,6 @@ public final class ClassBuilder {
     }
   }
 
-  @TruffleBoundary
-  public void assembleSystemClass(final SClass systemClass) {
-    throw new NotYetImplementedException();
-//    systemClass.setInstanceInvokables(
-//        SArray.create(methods.toArray(new Object[0])));
-//    systemClass.setInstanceFields(
-//        SArray.create(slots.toArray(new Object[0])));
-//    // class-bound == class-instance-bound
-//    SClass superMClass = systemClass.getSOMClass();
-//    superMClass.setInstanceInvokables(
-//        SArray.create(factoryMethods.toArray(new Object[0])));
-  }
-
   private MethodBuilder createSuperclassResolutionBuilder() {
     MethodBuilder definitionMethod;
     if (outerBuilder == null) {
