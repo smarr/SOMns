@@ -67,20 +67,20 @@ class OuterSends = ()(
 ) : (
   (* assert 3 *)
   public testOuterBindings1 = (
-    ^ TestOuterBindings new Inner new test1
+    ^ self new TestOuterBindings new Inner new test1
   )
   (* assert 2 *)
   public testOuterBindings2 = (
-    ^ TestOuterBindings new Inner new test2
+    ^ self new TestOuterBindings new Inner new test2
   )
   (* assert 6 *)
   public testOuterBindings3 = (
-    ^ TestOuterBindings new Inner new test3
+    ^ self new TestOuterBindings new Inner new test3
   )
 
   public testOuterSendLegalTargets = (
     | o r |
-    o := TestOuterSendLegalTargets new.
+    o := self new TestOuterSendLegalTargets new.
     r := o A new C new foo.
     r a =  1 ifFalse: [ ^ #error ].
     r b =  5 ifFalse: [ ^ #error ].

@@ -82,45 +82,45 @@ class Lookup = ()(
 ) : (
   (* assert 42 *)
   public testClassMethodsNotBlockingOuterMethods = (
-    ^ TestClassMethodsNotBlockingOuterMethods new Inner new bar
+    ^ self new TestClassMethodsNotBlockingOuterMethods new Inner new bar
   )
   
   (* assert 182 *)
   public testExplicitOuterInInitializer = (
-    ^ TestExplicitOuterInInitializer new Inner new f
+    ^ self new TestExplicitOuterInInitializer new Inner new f
   )
   
   (* assert 182 *)
   public testImplicitOuterInInitializer = (
-    ^ TestImplicitOuterInInitializer new Inner new f
+    ^ self new TestImplicitOuterInInitializer new Inner new f
   )
   
   (* assert 42 *)
   public testImplicitSend = (
-    ^ TestImplicitSend new bar
+    ^ self new TestImplicitSend new bar
   )
   
   (* assert true *)
   public testSiblingsSuperclass = (
     | cls |
-    cls := TestSiblings new.
+    cls := self new TestSiblings new.
     ^ (cls B superclass) = (cls A)
   )
   
   (* assert 42 *)
   public testSiblingLookupA = (
-    ^ TestSiblings new B new foo
+    ^ self new TestSiblings new B new foo
   )
   
   (* assert 43 *)
   public testSiblingLookupB = (
-    ^ TestSiblings new B new foo
+    ^ self new TestSiblings new B new foo
   )
   
   (* assert 91 *)
   public testNesting1 = (
     | o |
-    o := TestNesting NS2Test12 s: Object.
+    o := self new TestNesting NS2Test12 s: Object.
     o Inner1 = o Inner1 ifFalse: [ ^ #error ].
     ^ o Inner1 new foo
   )
@@ -128,7 +128,7 @@ class Lookup = ()(
   (* assert 182 *)
   public testNesting2 = (
     | o p |
-    o := TestNesting NS2Test12 s: Object.
+    o := self new TestNesting NS2Test12 s: Object.
     p := o Inner1 new.
     p Inner11 = p Inner11 ifFalse: [ ^ #error ].
     ^ p Inner11 new bar
@@ -137,7 +137,7 @@ class Lookup = ()(
   (* assert 364 *)
   public testNesting3 = (
     | o p q |
-    o := TestNesting NS2Test12 s: Object.
+    o := self new TestNesting NS2Test12 s: Object.
     p := o Inner1 new.
     q := p Inner11 new.
     q Inner111 = q Inner111 ifFalse: [ ^ #error ].
@@ -146,8 +146,8 @@ class Lookup = ()(
   
   public testInner18 = (
 		| o1 o2 o1i1 o1i2 o2i1 o2i2 innerKlass11 innerKlass12 innerKlass21 innerKlass22 |
-		o1 := TestInner18 s: Object.
-		o2 := TestInner18 s: o1 Inner1.
+		o1 := self new TestInner18 s: Object.
+		o2 := self new TestInner18 s: o1 Inner1.
 		o1i1 := o1 Inner1 new.
 		o1i2 := o1 Inner2 new.
 		o2i1 := o2 Inner1 new.
