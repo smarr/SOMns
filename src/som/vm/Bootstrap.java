@@ -206,12 +206,16 @@ public final class Bootstrap {
   private static SObject constructVmMirror() {
     HashMap<SSymbol, SInvokable> vmMirrorMethods = constructVmMirrorPrimitives();
     ClassScope scope = new ClassScope(null);
+
     ClassDefinition vmMirrorDef = new ClassDefinition(
         Symbols.symbolFor("VmMirror"), null, vmMirrorMethods, null, null,
         new LinkedHashMap<>(), new ClassDefinitionId(), AccessModifier.PUBLIC,
         scope, scope, null);
+    scope.setClassDefinition(vmMirrorDef, false);
+
     SClass vmMirrorClass = new SClass(null, null);
     vmMirrorDef.initializeClass(vmMirrorClass, null);
+
     return new SObject(vmMirrorClass);
   }
 
