@@ -779,11 +779,15 @@ public final class Parser {
     } else {
       exp = primary(builder);
     }
-    if (isIdentifier(sym) || sym == Keyword || sym == OperatorSequence
-        || symIn(binaryOpSyms)) {
+    if (symIsMessageSend()) {
       exp = messages(builder, exp);
     }
     return exp;
+  }
+
+  private boolean symIsMessageSend() {
+    return isIdentifier(sym) || sym == Keyword || sym == OperatorSequence
+        || symIn(binaryOpSyms);
   }
 
   private ExpressionNode primary(final MethodBuilder builder) throws ParseError {
