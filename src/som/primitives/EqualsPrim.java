@@ -5,6 +5,7 @@ import java.math.BigInteger;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.vm.constants.Globals;
 import som.vmobjects.SObject;
+import som.vmobjects.SObjectWithoutFields;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
@@ -88,7 +89,7 @@ public abstract class EqualsPrim extends BinaryExpressionNode {
   }
 
   @Specialization
-  public final boolean doLong(final long left, final SObject right) {
+  public final boolean doLong(final long left, final SObjectWithoutFields right) {
     return false;
   }
 
@@ -103,7 +104,7 @@ public abstract class EqualsPrim extends BinaryExpressionNode {
   }
 
   @Specialization
-  public final boolean doString(final String receiver, final SObject argument) {
+  public final boolean doString(final String receiver, final SObjectWithoutFields argument) {
     return false;
   }
 
@@ -113,7 +114,7 @@ public abstract class EqualsPrim extends BinaryExpressionNode {
   }
 
   @Specialization
-  public final boolean doSSymbol(final SSymbol receiver, final SObject argument) {
+  public final boolean doSSymbol(final SSymbol receiver, final SObjectWithoutFields argument) {
     return false;
   }
 }
