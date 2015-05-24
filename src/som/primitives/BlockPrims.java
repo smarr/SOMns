@@ -6,14 +6,11 @@ import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.QuaternaryExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
-import som.primitives.arrays.ToArgumentsArrayNode;
 import som.vmobjects.SAbstractObject;
-import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
-import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.NodeCost;
@@ -164,37 +161,6 @@ public abstract class BlockPrims {
         final Object thirdArg) {
       CompilerDirectives.transferToInterpreter();
       throw new RuntimeException("This should never be called, because SOM Blocks have max. 2 arguments.");
-    }
-  }
-
-  @GenerateNodeFactory
-  public abstract static class SpawnPrim extends UnaryExpressionNode {
-    public SpawnPrim() { super(null); }
-
-    @Specialization
-    public final Thread doSBlock(final SBlock receiver) {
-      Thread thread = new Thread(() -> {
-        receiver.getMethod().getCallTargetIfAvailable().call(receiver);
-      });
-      thread.start();
-      return thread;
-    }
-  }
-
-  @GenerateNodeFactory
-  @NodeChild(value = "argArr", type = ToArgumentsArrayNode.class,
-      executeWith = {"argument", "receiver"})
-  public abstract static class SpawnWithArgsPrim extends BinaryExpressionNode {
-    public SpawnWithArgsPrim() { super(null); }
-
-    @Specialization
-    public final Thread doSBlock(final SBlock receiver, final SArray somArgArr,
-        final Object[] argArr) {
-      Thread thread = new Thread(() -> {
-        receiver.getMethod().getCallTargetIfAvailable().call(argArr);
-      });
-      thread.start();
-      return thread;
     }
   }
 }

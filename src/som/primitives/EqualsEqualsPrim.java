@@ -1,8 +1,6 @@
 package som.primitives;
 
 import java.math.BigInteger;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.ReentrantLock;
 
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.vm.constants.Globals;
@@ -120,20 +118,5 @@ public abstract class EqualsEqualsPrim extends BinaryExpressionNode {
   @Specialization
   public final boolean doString(final String receiver, final SObject argument) {
     return false;
-  }
-
-  @Specialization
-  public final boolean doReentrantLock(final ReentrantLock receiver, final Object arg) {
-    return receiver == arg;
-  }
-
-  @Specialization
-  public final boolean doCondition(final Condition receiver, final Object arg) {
-    return receiver == arg;
-  }
-
-  @Specialization
-  public final boolean doThread(final Thread receiver, final Object arg) {
-    return receiver == arg;
   }
 }
