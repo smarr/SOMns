@@ -11,7 +11,7 @@ import java.lang.annotation.Target;
 public @interface Primitive {
 
   /** Name of the selector, for which the primitive is to be installed. */
-  String value();
+  String[] value();
   // TODO: additional hints for instantiation
 
 }

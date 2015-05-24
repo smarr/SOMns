@@ -113,10 +113,10 @@ public final class Bootstrap {
   }
 
   private static SInvokable constructVmMirrorPrimitive(
+      final SSymbol signature,
       final som.primitives.Primitive primitive,
       final NodeFactory<? extends ExpressionNode> factory) {
     CompilerAsserts.neverPartOfCompilation("This is only executed during bootstrapping.");
-    SSymbol signature = Symbols.symbolFor(primitive.value());
     assert signature.getNumberOfSignatureArguments() > 1 :
       "Primitives should have the vmMirror as receiver, " +
       "and then at least one object they are applied to";
@@ -228,8 +228,11 @@ public final class Bootstrap {
     for (NodeFactory<? extends ExpressionNode> primFact : primFacts) {
       som.primitives.Primitive prim = getPrimitiveAnnotation(primFact);
       if (prim != null) {
-        primitives.put(Symbols.symbolFor(prim.value()),
-            constructVmMirrorPrimitive(prim, primFact));
+        for (String sig : prim.value()) {
+          SSymbol signature = Symbols.symbolFor(sig);
+          primitives.put(signature,
+              constructVmMirrorPrimitive(signature, prim, primFact));
+        }
       }
     }
 

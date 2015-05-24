@@ -2,6 +2,7 @@ package som.primitives.arithmetic;
 
 import java.math.BigInteger;
 
+import som.primitives.Primitive;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
 
@@ -11,6 +12,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 
 
 @GenerateNodeFactory
+@Primitive({"int:add:", "double:add:"})
 public abstract class AdditionPrim extends ArithmeticPrim {
   @Specialization(rewriteOn = ArithmeticException.class)
   public final long doLong(final long left, final long argument) {
