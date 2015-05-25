@@ -7,7 +7,7 @@ class OuterSends = ()(
       public test1 = (| bar | bar := 1. ^ outer TestOuterBindings bar )
       public test2 = (| bar | bar := 1. ^ outer Inner bar  )
       private bar = ( ^ 2 )
-      public test3 = (| baz | bar := 4. ^ outer Inner baz )
+      public test3 = (| bar | bar := 4. ^ outer Inner baz )
     )
     private bar = ( ^ 3 )
     private baz = ( ^ 5 )
