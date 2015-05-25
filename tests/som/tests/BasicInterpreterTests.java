@@ -127,6 +127,8 @@ public class BasicInterpreterTests {
 
         {"Parser", "testOuterInKeyword",   32 * 32 * 32, Long.class },
         {"Parser", "testOuterWithKeyword",        3 * 4, Long.class },
+        {"Parser", "testOuterInheritancePrefix",     32, Long.class },
+
     });
   }
 
