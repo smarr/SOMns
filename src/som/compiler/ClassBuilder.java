@@ -37,7 +37,6 @@ import som.interpreter.LexicalScope.ClassScope;
 import som.interpreter.Method;
 import som.interpreter.SNodeFactory;
 import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.primitives.NewObjectPrimFactory;
 import som.vm.Symbols;
@@ -51,7 +50,7 @@ public final class ClassBuilder {
 
   /** The method that is used to resolve the superclass at runtime. */
   private final MethodBuilder superclassResolutionBuilder;
-  private AbstractMessageSendNode superclassResolution;
+  private ExpressionNode superclassResolution;
 
   /** The method that is used to initialize an instance. */
   private final MethodBuilder initializer;
@@ -156,7 +155,7 @@ public final class ClassBuilder {
   /**
    * Expression to resolve the super class at runtime, used in the instantiation.
    */
-  public void setSuperClassResolution(final AbstractMessageSendNode superClass) {
+  public void setSuperClassResolution(final ExpressionNode superClass) {
     this.superclassResolution = superClass;
   }
 

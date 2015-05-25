@@ -313,22 +313,29 @@ public final class Parser {
     }
   }
 
-  private ExpressionNode inheritancePrefix(final ClassBuilder clsBuilder)
-      throws ParseError {
+  private ExpressionNode inheritancePrefixAndSuperclass(
+      final ClassBuilder clsBuilder) throws ParseError, ClassDefinitionError {
     MethodBuilder meth = clsBuilder.getClassInstantiationMethodBuilder();
     SourceCoordinate coord = getCoordinate();
 
-    if (acceptIdentifier("self")) {
-      return meth.getSelfRead(getSource(coord));
-    } else if (acceptIdentifier("super")) {
-      return meth.getSuperReadNode(getSource(coord));
-    } else if (acceptIdentifier("outer")) {
-      ExpressionNode self = meth.getSelfRead(getSource(coord));
-      return unaryMessage(self);
-    } else {
-      // TODO: this should probably be an implicit send!!
-      return meth.getSelfRead(getSource(coord));
+    if (acceptIdentifier("outer")) {
+      String outer = identifier();
+      ExpressionNode self = meth.getOuterRead(outer, getSource(coord));
+      if (sym == Identifier) {
+        return unaryMessage(self);
+      } else {
+        return self;
+      }
     }
+
+    ExpressionNode self;
+    if (acceptIdentifier("super")) {
+      self = meth.getSuperReadNode(getSource(coord));
+    } else {
+      acceptIdentifier("self");
+      self = meth.getSelfRead(getSource(coord));
+    }
+    return unaryMessage(self);
   }
 
   private void classBody(final ClassBuilder clsBuilder)
