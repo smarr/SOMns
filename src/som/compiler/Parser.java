@@ -77,7 +77,6 @@ import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.interpreter.nodes.MessageSendNode.AbstractUninitializedMessageSendNode;
-import som.interpreter.nodes.OuterObjectRead;
 import som.interpreter.nodes.literals.BigIntegerLiteralNode;
 import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.literals.BlockNode.BlockNodeWithContext;
@@ -855,11 +854,10 @@ public final class Parser {
     SourceCoordinate coord = getCoordinate();
     expectIdentifier("outer");
     String outer = identifier();
-    OuterObjectRead outerRcvr = builder.getOuterRead(outer, getSource(coord));
-    if (symIsMessageSend()) {
-      return messages(builder, outerRcvr);
-    } else {
-      return outerRcvr;
+
+    ExpressionNode operand = builder.getOuterRead(outer, getSource(coord));
+    operand = binaryConsecutiveMessages(builder, operand);
+    return operand;
   }
 
   protected ExpressionNode binaryConsecutiveMessages(
