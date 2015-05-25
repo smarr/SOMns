@@ -121,13 +121,15 @@ public abstract class UninitializedVariableNode extends ContextualNode {
       if (accessesOuterContext()) {
         NonLocalVariableWriteNode node = NonLocalVariableWriteNodeGen.create(
             contextLevel, variable.getSlot(), getSourceSection(), exp);
-        return replace(node).executeGeneric(frame);
+        return replace(node).
+            executeGeneric(frame);
       } else {
         // not sure about removing this assertion :(((
         // assert frame.getFrameDescriptor().findFrameSlot(variable.getSlotIdentifier()) == variable.getSlot();
         LocalVariableWriteNode node = LocalVariableWriteNodeGen.create(
             variable, getSourceSection(), exp);
-        return replace(node).executeGeneric(frame);
+        return replace(node).
+            executeGeneric(frame);
       }
     }
 
