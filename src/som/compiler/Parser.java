@@ -285,8 +285,7 @@ public final class Parser {
 
   private void inheritanceClause(final ClassBuilder clsBuilder)
       throws ParseError, ClassDefinitionError {
-    ExpressionNode rcvr = inheritancePrefix(clsBuilder);
-    AbstractMessageSendNode superClassResolution = unaryMessage(rcvr);
+    ExpressionNode superClassResolution = inheritancePrefixAndSuperclass(clsBuilder);
     clsBuilder.setSuperClassResolution(superClassResolution);
 
     if (sym != NewTerm) {
