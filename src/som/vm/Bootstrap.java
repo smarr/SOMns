@@ -383,6 +383,28 @@ public final class Bootstrap {
     setSlot(KernelObj.kernel, "ObjectSlot", Classes.objectClass, kernelModule);
     setSlot(KernelObj.kernel, "ValueSlot",  Classes.valueClass,  kernelModule);
 
+    // Initialize the class cache slots
+    setSlot(KernelObj.kernel, "Top",       Classes.topClass,       kernelModule);
+    setSlot(KernelObj.kernel, "Thing",     Classes.thingClass,     kernelModule);
+    setSlot(KernelObj.kernel, "Object",    Classes.objectClass,    kernelModule);
+    setSlot(KernelObj.kernel, "Value",     Classes.valueClass,     kernelModule);
+    setSlot(KernelObj.kernel, "Class",     Classes.classClass,     kernelModule);
+    setSlot(KernelObj.kernel, "Metaclass", Classes.metaclassClass, kernelModule);
+    setSlot(KernelObj.kernel, "Boolean",   Classes.booleanClass,   kernelModule);
+    setSlot(KernelObj.kernel, "True",      Classes.trueClass,      kernelModule);
+    setSlot(KernelObj.kernel, "False",     Classes.falseClass,     kernelModule);
+    setSlot(KernelObj.kernel, "Nil",       Classes.nilClass,       kernelModule);
+    setSlot(KernelObj.kernel, "Integer",   Classes.integerClass,   kernelModule);
+    setSlot(KernelObj.kernel, "Double",    Classes.doubleClass,    kernelModule);
+    setSlot(KernelObj.kernel, "Class",     Classes.classClass,     kernelModule);
+    setSlot(KernelObj.kernel, "String",    Classes.stringClass,    kernelModule);
+    setSlot(KernelObj.kernel, "Symbol",    Classes.symbolClass,    kernelModule);
+    setSlot(KernelObj.kernel, "Array",     Classes.arrayClass,     kernelModule);
+    setSlot(KernelObj.kernel, "Block",     Classes.blockClass,     kernelModule);
+    setSlot(KernelObj.kernel, "Block1",    Classes.blockClass1,    kernelModule);
+    setSlot(KernelObj.kernel, "Block2",    Classes.blockClass2,    kernelModule);
+    setSlot(KernelObj.kernel, "Block3",    Classes.blockClass3,    kernelModule);
+
     platformClass = platformModule.instantiateClass();
   }
 
