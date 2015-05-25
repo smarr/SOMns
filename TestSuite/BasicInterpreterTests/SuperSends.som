@@ -82,7 +82,7 @@ class SuperSends = ()(
 		innerInstance := innerklass new.
 		innerInnerklass := innerInstance InnerInnerHierarchy.
 		innerInnerInstance := innerInnerklass new.
-    innerInnerInstance Inner1 = innerInnerInstance Inner1 ifFalse: [ ^ #error ].
+    innerInnerInstance Inner1 == innerInnerInstance Inner1 ifFalse: [ ^ #error ].
     ^ (innerInnerInstance Inner1 new: 2)
 	)
   
