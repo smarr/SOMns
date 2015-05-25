@@ -52,6 +52,6 @@ class CompilerSimplification = (| aField |)(
     )
     
     public testGetField = (
-        ^ self new getField
+        ^ self new testGetField
     )
 )
