@@ -100,13 +100,6 @@ class Lookup = ()(
     ^ self new TestImplicitSend new bar
   )
   
-  (* assert true *)
-  public testSiblingsSuperclass = (
-    | cls |
-    cls := self new TestSiblings new.
-  )
-    ^ (cls B superclass) == (cls A)
-  
   (* assert 42 *)
   public testSiblingLookupA = (
     ^ self new TestSiblings new B new foo
@@ -157,7 +150,6 @@ class Lookup = ()(
     innerKlass21 := o2 Inner1.
     innerKlass22 := o2 Inner2.
 
-    o2 Inner2 superclass = o1 Inner1 ifFalse: [ ^ 'Assertion failed: o2 Inner2 superclass = o1 Inner1' ].
     o1 Inner1 == o1i1 i1 ifFalse: [ ^ 'Assertion failed: o1 Inner1 = o1i1 i1' ].
     o1 Inner1 == o1i2 i1 ifFalse: [ ^ 'Assertion failed: o1 Inner1 = o1i2 i1' ].
     o2 Inner1 == o2i1 i1 ifFalse: [ ^ 'Assertion failed: o2 Inner1 = o2i1 i1' ].
