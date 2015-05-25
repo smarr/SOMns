@@ -444,7 +444,7 @@ class Kernel usingPlatform: platform vmMirror: vmMirror = (
   ) : (
     'Allocation'
     public new                        = ( ^ self new: 0 )
-    public new: length                = ( ^ vmMirror arrayNew: length )
+    public new: length                = ( ^ vmMirror array: self new: length )
     public new: length withAll: block = ( ^ (self new: length) putAll: block )
 
     'Convenience'
