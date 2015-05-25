@@ -1185,6 +1185,7 @@ public final class Parser {
     }
 
     // otherwise, it is an implicit receiver send
+    // TODO: the builder should create the node, also in setter send
     return SNodeFactory.createImplicitReceiverSend(selector,
         new ExpressionNode[] {builder.getSelfRead(null)},
         builder.getCurrentMethodScope(), builder.getHolder().getClassId(), source);
@@ -1199,7 +1200,11 @@ public final class Parser {
     }
 
     // otherwise, it is a setter send.
-    return SNodeFactory.createImplicitReceiverSetterSend(identifier, exp, source);
+    return SNodeFactory.createImplicitReceiverSend(
+        ClassBuilder.getSetterName(identifier),
+        new ExpressionNode[] {builder.getSelfRead(source), exp},
+        builder.getCurrentMethodScope(), builder.getHolder().getClassId(),
+        source);
   }
 
   private void getSymbolFromLexer() {

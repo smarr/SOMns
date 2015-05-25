@@ -21,7 +21,7 @@ public abstract class SlotAccessNode extends ExpressionNode {
   public abstract Object doRead(VirtualFrame frame, SObject rcvr);
 
   public static final class SlotReadNode extends SlotAccessNode {
-    // TODO: may be, we can get rid of this completely??
+    // TODO: may be, we can get rid of this completely?? could directly use AbstractReadFieldNode
     // TODO: we only got read support at the moment
     @Child protected AbstractReadFieldNode read;
 
@@ -37,6 +37,21 @@ public abstract class SlotAccessNode extends ExpressionNode {
     @Override
     public Object executeGeneric(final VirtualFrame frame) {
       return read.read((SObject) SArguments.rcvr(frame));
+    }
+  }
+
+  // TODO: try to remove, should only be used in getCallTarget version of mutator slots
+  public static final class SlotWriteNode extends ExpressionNode {
+    @Child protected AbstractWriteFieldNode write;
+
+    public SlotWriteNode(final AbstractWriteFieldNode write) {
+      super(null);
+      this.write = write;
+    }
+
+    @Override
+    public Object executeGeneric(final VirtualFrame frame) {
+      return write.write((SObject) SArguments.rcvr(frame), SArguments.arg(frame, 1));
     }
   }
 

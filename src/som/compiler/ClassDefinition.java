@@ -12,9 +12,12 @@ import som.interpreter.nodes.FieldNode.FieldWriteNode;
 import som.interpreter.nodes.SlotAccessNode;
 import som.interpreter.nodes.SlotAccessNode.ClassSlotAccessNode;
 import som.interpreter.nodes.SlotAccessNode.SlotReadNode;
+import som.interpreter.nodes.SlotAccessNode.SlotWriteNode;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
 import som.interpreter.nodes.dispatch.CachedSlotAccessNode;
+import som.interpreter.nodes.dispatch.CachedSlotAccessNode.CachedSlotWriteNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
+import som.interpreter.objectstorage.FieldAccessorNode.AbstractWriteFieldNode;
 import som.interpreter.objectstorage.FieldAccessorNode.UninitializedReadFieldNode;
 import som.interpreter.objectstorage.FieldAccessorNode.UninitializedWriteFieldNode;
 import som.vm.NotYetImplementedException;
@@ -133,6 +136,9 @@ public final class ClassDefinition {
     return result;
   }
 
+  // TODO: need to rename this, it doesn't really fulfill this role anymore
+  //       should split out the definition, and the accessor related stuff
+  //       perhaps move some of the responsibilities to SlotAccessNode???
   public static class SlotDefinition implements Dispatchable {
     private final SSymbol name;
     protected final int index;
@@ -174,7 +180,7 @@ public final class ClassDefinition {
     }
 
     @Override
-    public final AbstractDispatchNode getDispatchNode(final Object rcvr,
+    public AbstractDispatchNode getDispatchNode(final Object rcvr,
         final Object rcvrClass, final AbstractDispatchNode next) {
       assert rcvrClass instanceof SClass;
       return new CachedSlotAccessNode((SClass) rcvrClass, createNode(), next);
@@ -196,7 +202,7 @@ public final class ClassDefinition {
     }
 
     @Override
-    public final CallTarget getCallTarget() {
+    public CallTarget getCallTarget() {
       if (genericAccessTarget != null) { return genericAccessTarget; }
 
       CompilerDirectives.transferToInterpreterAndInvalidate();
@@ -218,6 +224,47 @@ public final class ClassDefinition {
     public void setValueDuringBootstrap(final SObject obj, final Object value) {
       obj.setField(index, value);
     }
+  }
+
+  // TODO: should not be a subclass of SlotDefinition, should refactor SlotDef. first.
+  public static final class SlotMutator extends SlotDefinition {
+
+    public SlotMutator(final SSymbol name, final AccessModifier acccessModifier, final int index,
+        final boolean immutable, final SourceSection source) {
+      super(name, acccessModifier, index, immutable, source);
+      assert !immutable;
+    }
+
+    @Override
+    public AbstractDispatchNode getDispatchNode(final Object rcvr,
+        final Object rcvrClass, final AbstractDispatchNode next) {
+      assert rcvrClass instanceof SClass;
+      return new CachedSlotWriteNode((SClass) rcvrClass, createWriteNode(), next);
+    }
+
+    @Override
+    public CallTarget getCallTarget() {
+      if (genericAccessTarget != null) { return genericAccessTarget; }
+
+      CompilerDirectives.transferToInterpreterAndInvalidate();
+
+      MethodBuilder builder = new MethodBuilder(true);
+      builder.addArgumentIfAbsent("self");
+      builder.addArgumentIfAbsent("value");
+      SMethod genericAccessMethod = builder.assemble(
+          new SlotWriteNode(createWriteNode()), modifier,
+          null, null);
+
+      genericAccessTarget = genericAccessMethod.getCallTarget();
+      return genericAccessTarget;
+    }
+
+    protected AbstractWriteFieldNode createWriteNode() {
+      AbstractWriteFieldNode node = new UninitializedWriteFieldNode(index);
+          new SlotReadNode(new UninitializedReadFieldNode(index));
+      return node;
+    }
+
   }
 
   /**

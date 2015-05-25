@@ -151,10 +151,4 @@ public final class SNodeFactory {
     return new ResolvingImplicitReceiverSend(selector, arguments,
         currentScope, classDefId, source);
   }
-
-  public static ExpressionNode createImplicitReceiverSetterSend(
-      final SSymbol identifier, final ExpressionNode exp,
-      final SourceSection source) {
-    return new NotImplemented("implicit receiver setter send", source);
-  }
 }

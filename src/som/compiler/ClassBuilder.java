@@ -33,6 +33,7 @@ import java.util.List;
 
 import som.compiler.ClassDefinition.ClassSlotDefinition;
 import som.compiler.ClassDefinition.SlotDefinition;
+import som.compiler.ClassDefinition.SlotMutator;
 import som.interpreter.LexicalScope.ClassScope;
 import som.interpreter.Method;
 import som.interpreter.SNodeFactory;
@@ -229,6 +230,12 @@ public final class ClassBuilder {
     numberOfSlots++;
 
     dispatchables.put(name, slot);
+    if (!immutable) {
+      dispatchables.put(getSetterName(name),
+          new SlotMutator(name, acccessModifier, numberOfSlots - 1, immutable,
+              source));
+    }
+
 
     if (init != null) {
       ExpressionNode self = initializer.getSelfRead(source);
@@ -375,6 +382,11 @@ public final class ClassBuilder {
         getInitializerName(symbolFor("new")),
         new ExpressionNode[] {superNode}, null);
     return superFactorySend;
+  }
+
+  public static SSymbol getSetterName(final SSymbol selector) {
+    assert !selector.getString().endsWith(":");
+    return symbolFor(selector.getString() + ":");
   }
 
   public static SSymbol getInitializerName(final SSymbol selector) {
