@@ -1,0 +1,26 @@
+class Parser = ()(
+  public class R a: a b: b c: c = (
+    | public a = a.
+      public b = b.
+      public c = c.
+    |)()
+    
+  public class A = ()(
+    public foo = ( ^ R a: outer Parser baz b: outer Parser baz c: outer Parser baz )
+    public bar = ( ^ outer Parser a: 3 b: 4 )
+  )
+  
+  public baz = ( ^ 32 )
+  public a: a b: b = ( ^ a * b )
+
+) : (
+  public testOuterInKeyword = (
+    | r |
+    r := self new A new foo.
+    ^ r a * r b * r c
+  )
+  
+  public testOuterWithKeyword = (
+    ^ self new A new bar
+  )
+)
