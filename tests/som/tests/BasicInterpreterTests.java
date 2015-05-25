@@ -124,6 +124,9 @@ public class BasicInterpreterTests {
         {"ObjectCreation", "testNew",  "ObjectCreation", Object.class },
         {"ObjectCreation", "testImmutableRead",       3, Long.class },
         {"ObjectCreation", "testImmutableReadInner", 42, Long.class },
+
+        {"Parser", "testOuterInKeyword",   32 * 32 * 32, Long.class },
+        {"Parser", "testOuterWithKeyword",        3 * 4, Long.class },
     });
   }
 
