@@ -107,7 +107,7 @@ class Lookup = ()(
   
   (* assert 43 *)
   public testSiblingLookupB = (
-    ^ self new TestSiblings new B new foo
+    ^ self new TestSiblings new B new bar
   )
   
   (* assert 91 *)
