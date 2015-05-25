@@ -1,6 +1,7 @@
 package som.primitives.arrays;
 
 import som.interpreter.nodes.nary.BinaryExpressionNode;
+import som.primitives.Primitive;
 import som.vm.constants.Nil;
 import som.vmobjects.SArray;
 import som.vmobjects.SArray.ArrayType;
@@ -12,6 +13,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 
 @GenerateNodeFactory
 @ImportStatic(ArrayType.class)
+@Primitive("array:at:")
 public abstract class AtPrim extends BinaryExpressionNode {
 
   @Specialization(guards = "isEmptyType(receiver)")

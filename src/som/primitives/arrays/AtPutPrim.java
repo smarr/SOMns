@@ -1,6 +1,7 @@
 package som.primitives.arrays;
 
 import som.interpreter.nodes.nary.TernaryExpressionNode;
+import som.primitives.Primitive;
 import som.vm.constants.Nil;
 import som.vmobjects.SArray;
 import som.vmobjects.SArray.ArrayType;
@@ -13,6 +14,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 
 @GenerateNodeFactory
 @ImportStatic(ArrayType.class)
+@Primitive("array:at:put:")
 public abstract class AtPutPrim extends TernaryExpressionNode {
 
   protected static final boolean valueIsNil(final Object value) {

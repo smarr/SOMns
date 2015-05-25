@@ -12,6 +12,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 
 @GenerateNodeFactory
 @ImportStatic(ArrayType.class)
+@Primitive("arrayLength:")
 public abstract class LengthPrim extends UnaryExpressionNode {
 
   @Specialization(guards = "isEmptyType(receiver)")
