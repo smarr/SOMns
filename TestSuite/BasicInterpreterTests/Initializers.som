@@ -1,0 +1,11 @@
+class Initializers = ()(
+  class OneParam new: x = ( | x = x. |)()
+  class OneSub   new: x = OneParam new: x ()()
+):(
+  public testInit1 = (
+    ^ (self new OneParam new: 42) x
+  )
+  public testInit2 = (
+    ^ (self new OneSub new: 42) x
+  )
+)
