@@ -71,14 +71,14 @@ class Lookup = ()(
        (Inner1). *)
     | SuperClass = Sup. |
   )(
-		public class Inner1 = ()(
-			public i1 = ( ^ Inner1 )
-		)
-		public class Inner2 = SuperClass ()(
-			public i1 = ( ^ Inner1 )
-			public supI1 = ( ^ super i1 )
-		)
-	)
+    public class Inner1 = ()(
+      public i1 = ( ^ Inner1 )
+    )
+    public class Inner2 = SuperClass ()(
+      public i1 = ( ^ Inner1 )
+      public supI1 = ( ^ super i1 )
+    )
+  )
 ) : (
   (* assert 42 *)
   public testClassMethodsNotBlockingOuterMethods = (
@@ -145,17 +145,17 @@ class Lookup = ()(
   )
   
   public testInner18 = (
-		| o1 o2 o1i1 o1i2 o2i1 o2i2 innerKlass11 innerKlass12 innerKlass21 innerKlass22 |
-		o1 := self new TestInner18 s: Object.
-		o2 := self new TestInner18 s: o1 Inner1.
-		o1i1 := o1 Inner1 new.
-		o1i2 := o1 Inner2 new.
-		o2i1 := o2 Inner1 new.
-		o2i2 := o2 Inner2 new.
-		innerKlass11 := o1 Inner1.
-		innerKlass12 := o1 Inner2.
-		innerKlass21 := o2 Inner1.
-		innerKlass22 := o2 Inner2.
+    | o1 o2 o1i1 o1i2 o2i1 o2i2 innerKlass11 innerKlass12 innerKlass21 innerKlass22 |
+    o1 := self new TestInner18 s: Object.
+    o2 := self new TestInner18 s: o1 Inner1.
+    o1i1 := o1 Inner1 new.
+    o1i2 := o1 Inner2 new.
+    o2i1 := o2 Inner1 new.
+    o2i2 := o2 Inner2 new.
+    innerKlass11 := o1 Inner1.
+    innerKlass12 := o1 Inner2.
+    innerKlass21 := o2 Inner1.
+    innerKlass22 := o2 Inner2.
 
     o2 Inner2 superclass = o1 Inner1 ifFalse: [ ^ 'Assertion failed: o2 Inner2 superclass = o1 Inner1' ].
     o1 Inner1 == o1i1 i1 ifFalse: [ ^ 'Assertion failed: o1 Inner1 = o1i1 i1' ].
@@ -166,5 +166,5 @@ class Lookup = ()(
     o1 Inner1 == o2i2 supI1 ifFalse: [ ^ 'Assertion failed: o1 Inner1 = o2i2 supI1' ].
     (o1 Inner1 == o2 Inner1) ifTrue: [ ^ 'Assertion failed: o1 Inner1 ~= o2 Inner1' ].
     ^ 999
-	)
+  )
 )
