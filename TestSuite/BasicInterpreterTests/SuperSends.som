@@ -32,7 +32,7 @@ class SuperSends = ()(
   		public foo = ( ^ v + 42 )
   	)
 
-  	public class Inner1 new: x =  outer Sample Inner0 new: x ()(
+  	public class Inner1 new: x = outer TestSuperClassClause3 Inner0 new: x ()(
   		public foo = ( ^ v * super foo )		
   	)
   )
