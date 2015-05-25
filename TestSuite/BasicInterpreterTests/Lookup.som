@@ -137,7 +137,7 @@ class Lookup = ()(
   (* assert 364 *)
   public testNesting3 = (
     | o p q |
-    o := self new TestNesting NS2Test12 s: Object.
+    o := self new TestNesting new NS2Test12 s: Object.
     p := o Inner1 new.
     q := p Inner11 new.
     q Inner111 == q Inner111 ifFalse: [ ^ #error ].
