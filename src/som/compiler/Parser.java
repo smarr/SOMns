@@ -860,7 +860,15 @@ public final class Parser {
       return messages(builder, outerRcvr);
     } else {
       return outerRcvr;
+  }
+
+  protected ExpressionNode binaryConsecutiveMessages(
+      final MethodBuilder builder, ExpressionNode operand) throws ParseError,
+      ClassDefinitionError {
+    while (sym == OperatorSequence || symIn(binaryOpSyms)) {
+      operand = binaryMessage(builder, operand);
     }
+    return operand;
   }
 
   private ExpressionNode messages(final MethodBuilder builder,
@@ -873,19 +881,13 @@ public final class Parser {
         msg = unaryMessage(msg);
       }
 
-      while (sym == OperatorSequence || symIn(binaryOpSyms)) {
-        msg = binaryMessage(builder, msg);
-      }
+      msg = binaryConsecutiveMessages(builder, msg);
 
       if (sym == Keyword) {
         msg = keywordMessage(builder, msg);
       }
     } else if (sym == OperatorSequence || symIn(binaryOpSyms)) {
-      msg = binaryMessage(builder, receiver);
-
-      while (sym == OperatorSequence || symIn(binaryOpSyms)) {
-        msg = binaryMessage(builder, msg);
-      }
+      msg = binaryConsecutiveMessages(builder, receiver);
 
       if (sym == Keyword) {
         msg = keywordMessage(builder, msg);
@@ -998,9 +1000,7 @@ public final class Parser {
       throws ParseError, ClassDefinitionError {
     ExpressionNode operand = binaryOperand(builder);
 
-    while (sym == OperatorSequence || symIn(binaryOpSyms)) {
-      operand = binaryMessage(builder, operand);
-    }
+    operand = binaryConsecutiveMessages(builder, operand);
     return operand;
   }
 
