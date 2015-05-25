@@ -8,11 +8,13 @@ class Parser = ()(
   public class A = ()(
     public foo = ( ^ R a: outer Parser baz b: outer Parser baz c: outer Parser baz )
     public bar = ( ^ outer Parser a: 3 b: 4 )
+    public thirtyTwo = ( ^ 32 )
   )
   
+  public class B = outer Parser A ()()
+  
   public baz = ( ^ 32 )
-  public a: a b: b = ( ^ a * b )
-
+  public a: a b: b = ( ^ a * b )  
 ) : (
   public testOuterInKeyword = (
     | r |
@@ -22,5 +24,9 @@ class Parser = ()(
   
   public testOuterWithKeyword = (
     ^ self new A new bar
+  )
+  
+  public testOuterInheritancePrefix = (
+    ^ self new B new thirtyTwo
   )
 )
