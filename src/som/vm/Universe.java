@@ -141,11 +141,6 @@ public final class Universe {
   }
 
   @TruffleBoundary
-  public static SClass newClass(final SClass classClass) {
-    return new SClass(classClass);
-  }
-
-  @TruffleBoundary
   public static SInvokable newMethod(final SSymbol signature,
       final AccessModifier accessModifier, final SSymbol category,
       final Invokable truffleInvokable, final boolean isPrimitive,
