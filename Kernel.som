@@ -30,7 +30,7 @@ class Kernel usingPlatform: platform vmMirror: vmMirror = (
   public class Thing = Top ()(
     'Error recovering'
     protected doesNotUnderstand: selector arguments: arguments = (
-      system error: 'Method ' + selector + ' not found in class ' + self class name
+      system error: 'Method ' + selector + ' not found in class ' + (vmMirror mirrorClassName: self)
     )
     
     protected escapedBlock: block = (
