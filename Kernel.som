@@ -65,7 +65,7 @@ class Kernel usingPlatform: platform vmMirror: vmMirror = (
 
     'Debugging'
     public print    = ( self asString print )
-    public println  = ( system printNewline: self asString )
+    public println  = ( vmMirror printNewline: self asString ) (* TODO: should got via system *)
     public halt     = ( vmMirror halt: self )
     public asString = ( ^ 'instance of ' + (vmMirror objClassName: self) )
   )
