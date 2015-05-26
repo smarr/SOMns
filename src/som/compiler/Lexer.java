@@ -218,6 +218,7 @@ public final class Lexer {
       lexNumber();
     } else {
       state.set(Symbol.NONE, currentChar(), "" + currentChar());
+      state.bufp++;
     }
 
     return state.sym;
@@ -385,6 +386,31 @@ public final class Lexer {
     return true;
   }
 
+  protected String getCommentPart() {
+    // it ends with either a new comment starting '(*' or the original comment
+    // ending with '*)'
+    StringBuilder comment = new StringBuilder();
+    boolean commentPartEnded = false;
+
+    while (!commentPartEnded) {
+      char current = currentChar();
+      commentPartEnded = (current == '(' && nextChar() == '*')
+                      || (current == '*' && nextChar() == ')');
+      if (commentPartEnded) {
+        return comment.toString();
+      }
+      comment.append(current);
+      state.bufp++;
+
+      while (endOfBuffer()) {
+        comment.append('\n');
+        if (fillBuffer() == -1) {
+          return comment.toString();
+        }
+      }
+    }
+    return comment.toString();
+  }
   private void skipWhiteSpace() {
     while (Character.isWhitespace(currentChar())) {
       state.bufp++;

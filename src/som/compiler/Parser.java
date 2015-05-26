@@ -381,19 +381,22 @@ public final class Parser {
     comment();
   }
 
-  private void comment() throws ParseError {
-    if (sym != BeginComment) { return; }
+  private String comment() throws ParseError {
+    if (sym != BeginComment) { return ""; }
 
     expect(BeginComment);
 
+    String comment = "";
     while (sym != EndComment) {
+      comment += lexer.getCommentPart();
+      getSymbolFromLexer();
+
       if (sym == BeginComment) {
-        comment();
-      } else {
-        getSymbolFromLexer();
+        comment += "(*" + comment() + "*)";
       }
     }
     expect(EndComment);
+    return comment;
   }
 
   private void slotDeclarations(final ClassBuilder clsBuilder)
