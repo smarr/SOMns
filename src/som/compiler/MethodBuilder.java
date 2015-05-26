@@ -39,6 +39,7 @@ import som.compiler.Variable.Local;
 import som.interpreter.LexicalScope.ClassScope;
 import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.Method;
+import som.interpreter.SNodeFactory;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.OuterObjectRead;
 import som.interpreter.nodes.OuterObjectReadNodeGen;
@@ -308,6 +309,40 @@ public final class MethodBuilder {
       final ExpressionNode valExpr, final SourceSection source) {
     Local variable = getLocal(variableName);
     return variable.getWriteNode(getContextLevel(variableName), valExpr, source);
+  }
+
+  public ExpressionNode getImplicitReceiverSend(final SSymbol selector,
+      final SourceSection source) {
+    // we need to handle super special here
+    if ("super".equals(selector.getString())) {
+      return getSuperReadNode(source);
+    }
+
+    // first look up local or argument variables
+    Variable variable = getVariable(selector.getString());
+    if (variable != null) {
+      return getReadNode(selector.getString(), source);
+    }
+
+    // otherwise, it is an implicit receiver send
+    return SNodeFactory.createImplicitReceiverSend(selector,
+        new ExpressionNode[] {getSelfRead(null)},
+        getCurrentMethodScope(), getHolder().getClassId(), source);
+  }
+
+  public ExpressionNode getSetterSend(final SSymbol identifier,
+      final ExpressionNode exp, final SourceSection source) {
+    // write directly to local variables (excluding arguments)
+    Local variable = getLocal(identifier.getString());
+    if (variable != null) {
+      return getWriteNode(identifier.getString(), exp, source);
+    }
+
+    // otherwise, it is a setter send.
+    return SNodeFactory.createImplicitReceiverSend(
+        ClassBuilder.getSetterName(identifier),
+        new ExpressionNode[] {getSelfRead(source), exp},
+        getCurrentMethodScope(), getHolder().getClassId(), source);
   }
 
   protected Local getLocal(final String varName) {

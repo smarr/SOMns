@@ -718,7 +718,8 @@ public final class Parser {
         // return "self"
 
         // TODO: we might need something else to access self
-        ExpressionNode self = implicitReceiverSend(builder, symbolFor("self"), getSource(getCoordinate()));
+        ExpressionNode self = builder.getImplicitReceiverSend(symbolFor("self"),
+            getSource(getCoordinate()));
         expressions.add(self);
         return createSequence(expressions, getSource(coord));
       }
@@ -778,7 +779,7 @@ public final class Parser {
       value = evaluation(builder);
     }
 
-    return setterSend(builder, identifier, value, getSource(coord));
+    return builder.getSetterSend(identifier, value, getSource(coord));
   }
 
   private SSymbol assignment() throws ParseError {
@@ -828,7 +829,7 @@ public final class Parser {
         }
 
         SSymbol selector = unarySelector();
-        return implicitReceiverSend(builder, selector, getSource(coord));
+        return builder.getImplicitReceiverSend(selector, getSource(coord));
       }
       case NewTerm: {
         return nestedTerm(builder);
@@ -1169,42 +1170,6 @@ public final class Parser {
       builder.addArgumentIfAbsent(argument());
     }
     while (sym == Colon);
-  }
-
-  private ExpressionNode implicitReceiverSend(final MethodBuilder builder,
-      final SSymbol selector, final SourceSection source) {
-    // we need to handle super special here
-    if ("super".equals(selector.getString())) {
-      return builder.getSuperReadNode(source);
-    }
-
-    // first look up local or argument variables
-    Variable variable = builder.getVariable(selector.getString());
-    if (variable != null) {
-      return builder.getReadNode(selector.getString(), source);
-    }
-
-    // otherwise, it is an implicit receiver send
-    // TODO: the builder should create the node, also in setter send
-    return SNodeFactory.createImplicitReceiverSend(selector,
-        new ExpressionNode[] {builder.getSelfRead(null)},
-        builder.getCurrentMethodScope(), builder.getHolder().getClassId(), source);
-  }
-
-  private ExpressionNode setterSend(final MethodBuilder builder,
-      final SSymbol identifier, final ExpressionNode exp, final SourceSection source) {
-    // write directly to local variables (excluding arguments)
-    Local variable = builder.getLocal(identifier.getString());
-    if (variable != null) {
-      return builder.getWriteNode(identifier.getString(), exp, source);
-    }
-
-    // otherwise, it is a setter send.
-    return SNodeFactory.createImplicitReceiverSend(
-        ClassBuilder.getSetterName(identifier),
-        new ExpressionNode[] {builder.getSelfRead(source), exp},
-        builder.getCurrentMethodScope(), builder.getHolder().getClassId(),
-        source);
   }
 
   private void getSymbolFromLexer() {
