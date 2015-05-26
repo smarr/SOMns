@@ -1,80 +1,18 @@
 package som.primitives;
 
 import som.interpreter.Types;
-import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
-import som.primitives.reflection.IndexDispatch;
 import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
-import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.VirtualFrame;
 
 
 public final class ObjectPrims {
-
-  @GenerateNodeFactory
-  public abstract static class InstVarAtPrim extends BinaryExpressionNode {
-
-    @Child private IndexDispatch dispatch;
-
-    public InstVarAtPrim() {
-      super();
-      dispatch = IndexDispatch.create();
-    }
-    public InstVarAtPrim(final InstVarAtPrim node) { this(); }
-
-    @Specialization
-    public final Object doSObject(final SObject receiver, final long idx) {
-      return dispatch.executeDispatch(receiver, (int) idx - 1);
-    }
-
-    @Override
-    public final Object executeEvaluated(final VirtualFrame frame,
-      final Object receiver, final Object firstArg) {
-      assert receiver instanceof SObject;
-      assert firstArg instanceof Long;
-
-      SObject rcvr = (SObject) receiver;
-      long idx     = (long) firstArg;
-      return doSObject(rcvr, idx);
-    }
-  }
-
-  @GenerateNodeFactory
-  public abstract static class InstVarAtPutPrim extends TernaryExpressionNode {
-    @Child private IndexDispatch dispatch;
-
-    public InstVarAtPutPrim() {
-      super();
-      dispatch = IndexDispatch.create();
-    }
-    public InstVarAtPutPrim(final InstVarAtPutPrim node) { this(); }
-
-    @Specialization
-    public final Object doSObject(final SObject receiver, final long idx, final Object val) {
-      dispatch.executeDispatch(receiver, (int) idx - 1, val);
-      return val;
-    }
-
-    @Override
-    public final Object executeEvaluated(final VirtualFrame frame,
-      final Object receiver, final Object firstArg, final Object secondArg) {
-      assert receiver instanceof SObject;
-      assert firstArg instanceof Long;
-      assert secondArg != null;
-
-      SObject rcvr = (SObject) receiver;
-      long idx     = (long) firstArg;
-      return doSObject(rcvr, idx, secondArg);
-    }
-  }
 
   @GenerateNodeFactory
   @Primitive("objClassName:")

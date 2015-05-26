@@ -36,8 +36,6 @@ import som.primitives.IntegerPrimsFactory.ToPrimFactory;
 import som.primitives.IntegerPrimsFactory.UnsignedRightShiftPrimFactory;
 import som.primitives.LengthPrimFactory;
 import som.primitives.MethodPrimsFactory.InvokeOnPrimFactory;
-import som.primitives.ObjectPrimsFactory.InstVarAtPrimFactory;
-import som.primitives.ObjectPrimsFactory.InstVarAtPutPrimFactory;
 import som.primitives.UnequalsPrimFactory;
 import som.primitives.arithmetic.AdditionPrimFactory;
 import som.primitives.arithmetic.BitXorPrimFactory;
@@ -276,10 +274,6 @@ public final class MessageSendNode {
                 NewPrimFactory.create(null, null)));
           }
           break;
-        case "instVarAt:":
-          return replace(new EagerBinaryPrimitiveNode(selector,
-              argumentNodes[0], argumentNodes[1],
-              InstVarAtPrimFactory.create(null, null)));
         case "doIndexes:":
           if (arguments[0] instanceof SArray) {
             return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
@@ -496,9 +490,6 @@ public final class MessageSendNode {
           return replace(InvokeOnPrimFactory.create(
               argumentNodes[0], argumentNodes[1], argumentNodes[2],
               ToArgumentsArrayNodeGen.create(null, null)));
-        case "instVarAt:put:":
-          return replace(InstVarAtPutPrimFactory.create(
-            argumentNodes[0], argumentNodes[1], argumentNodes[2]));
       }
       return makeGenericSend();
     }
