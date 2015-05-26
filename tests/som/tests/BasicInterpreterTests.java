@@ -133,6 +133,8 @@ public class BasicInterpreterTests {
         {"Initializers", "testInit1", 42, Long.class },
         {"Initializers", "testInit2", 42, Long.class },
 
+        {"DoesNotUnderstand", "test",  "Foo", SSymbol.class  },
+
     });
   }
 
