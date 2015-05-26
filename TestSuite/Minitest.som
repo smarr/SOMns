@@ -363,17 +363,17 @@ public printOn: stream <WriteStream> = (
 	stream nextPutAll: ')'.
 )
 public runUsing: tester <Tester> ^<TestResult> = (
-	^[self runUnsafeUsing: tester]
-		on: Error
-		do: [:ex | ^testContextInstance 
-					ifNil: [TestError case: self exception: ex] 
-					ifNotNil: [:it | it createErrorResultFor: self exception: ex]]
+  ^[self runUnsafeUsing: tester]
+    on: Error
+    do: [:ex | ^testContextInstance 
+          ifNil: [TestError case: self exception: ex] 
+          ifNotNil: [:it | it createErrorResultFor: self exception: ex]]
 )
 'as yet unclassified'
 public runToDebugFailureUsing: tester <Tester> ^<TestResult>= (
-	instantiateTestContextUsing: tester.
-	[sendTestMessage]
-		ensure: [cleanUp]
+  instantiateTestContextUsing: tester.
+  [sendTestMessage]
+    ensure: [cleanUp]
 )
 'private'
 public cleanUp = (
@@ -381,32 +381,32 @@ public cleanUp = (
 (* Clean up and forget the test context instance. This method runs within an
    exception handler established by the runUsing: method, so any errors in test
    context instance cleanup are ok. *)
-	testContextInstance isNil ifFalse:
-		[testContextInstance cleanUp.
-		testContextInstance:: nil]
+  testContextInstance isNil ifFalse:
+    [testContextInstance cleanUp.
+    testContextInstance:: nil]
 )
 instantiateTestContextUsing: tester <Tester> = (
-	testContextInstance:: environment createInstanceIn: (tester instanceFor: environment parent)
+  testContextInstance:: environment createInstanceIn: (tester instanceFor: environment parent)
 )
 sendTestMessage = (
-	(Message selector: selector)
-		sendTo: testContextInstance
+  (Message selector: selector)
+    sendTo: testContextInstance
 )
 'restricted'
 public runUnsafeUsing: tester <Tester> ^<TestResult>= (
-	| testSuccess |
-	instantiateTestContextUsing: tester.
-	[sendTestMessage.
-	(* At this point the test has been successful, so create the TestSuccess before it is removed. *)
-	testSuccess:: testContextInstance createSuccessResultFor: self.
-	(* Clean up immediately after a successful test. This makes the test context instance
-	immeidately garbage-collectable, which is an important property for large test suites. *)
-	cleanUp]
-		on: TestFailureException
-		do: [:ex | ^testContextInstance (* testContextInstance should never be nil at this point, but just in case. *)
-					ifNil: [TestFailure case: self description: ex messageText]
-					ifNotNil: [:it | it createFailureResultFor: self description: ex messageText]].
-	^testSuccess
+  | testSuccess |
+  instantiateTestContextUsing: tester.
+  [sendTestMessage.
+  (* At this point the test has been successful, so create the TestSuccess before it is removed. *)
+  testSuccess:: testContextInstance createSuccessResultFor: self.
+  (* Clean up immediately after a successful test. This makes the test context instance
+  immeidately garbage-collectable, which is an important property for large test suites. *)
+  cleanUp]
+    on: TestFailureException
+    do: [:ex | ^testContextInstance (* testContextInstance should never be nil at this point, but just in case. *)
+          ifNil: [TestFailure case: self description: ex messageText]
+          ifNotNil: [:it | it createFailureResultFor: self description: ex messageText]].
+  ^testSuccess
 )
 ) : (
 )
@@ -419,8 +419,8 @@ public class TestCatalog forModule: testModule = (
    a TestSuite corresponding to each class. It can also return a TestSuite with
    the union of all the class-level TestSuites. *)|
 
-	testModule <Object> = testModule.
-	testsByContextName <Dictionary[String, TestSuite]> = Dictionary new.
+  testModule <Object> = testModule.
+  testsByContextName <Dictionary[String, TestSuite]> = Dictionary new.
 |Initializer new populate) (
 class Initializer = (
 (* An initializer populates the enclosing catalog with content extracted from
@@ -429,35 +429,35 @@ the test module. This class is internal to the TestCatalog implementation. *)|
 'accessing'
 public populate = (
 (* Populate the testsByContextName dictionary of the enclosing TestCatalog instance with information extracted from the module. *)
-	| moduleMirror moduleEnvironment |
-	moduleEnvironment:: TopLevelTestEnvironment module: testModule.
-	moduleMirror:: (ObjectMirror reflecting: testModule) getClass.
-	moduleMirror nestedClasses do:
-		[:each | examineClass: each under: moduleEnvironment].
-	moduleEnvironment withAllNestedEnvironmentsDo:
-		[:each |
-		each hasTestCases ifTrue:
-			[testsByContextName at: each name put: each testSuite]]
+  | moduleMirror moduleEnvironment |
+  moduleEnvironment:: TopLevelTestEnvironment module: testModule.
+  moduleMirror:: (ObjectMirror reflecting: testModule) getClass.
+  moduleMirror nestedClasses do:
+    [:each | examineClass: each under: moduleEnvironment].
+  moduleEnvironment withAllNestedEnvironmentsDo:
+    [:each |
+    each hasTestCases ifTrue:
+      [testsByContextName at: each name put: each testSuite]]
 )
 'as yet unclassified'
 examineClass: mirror <ClassDeclarationMirror> under: parentEnvironment <TestEnvironment> = (
 (* Examine the given class. If it is a test context, create a test suite listing its test cases and add it to the catalog. *)
-	| thisEnvironment |
-	thisEnvironment:: TestEnvironment parent: parentEnvironment classDeclarationMirror: mirror.
-	(isTestContext: mirror) ifTrue:
-		[thisEnvironment testCases: (testCasesIn: mirror environment: thisEnvironment).
-		parentEnvironment addNestedEnvironment: thisEnvironment.
-		(* Nested test contexts do not appear to be useful, so once a test context is found
-		we do not look inside it. The framework's own tests rely on this. *)
-		^self].
-	mirror instanceSide nestedClasses do:
-		[:each |
-		examineClass: each under: thisEnvironment].
-	(* If after all the examination thisEnvironment ends up with no test cases, or child
-	environments containing test cases, its class need not to be instantiated at runtime.
-	In that case we can forget it right here - no need to add it to the parent. *)
-	thisEnvironment hasTestCasesTransitively ifTrue:
-		[parentEnvironment addNestedEnvironment: thisEnvironment]
+  | thisEnvironment |
+  thisEnvironment:: TestEnvironment parent: parentEnvironment classDeclarationMirror: mirror.
+  (isTestContext: mirror) ifTrue:
+    [thisEnvironment testCases: (testCasesIn: mirror environment: thisEnvironment).
+    parentEnvironment addNestedEnvironment: thisEnvironment.
+    (* Nested test contexts do not appear to be useful, so once a test context is found
+    we do not look inside it. The framework's own tests rely on this. *)
+    ^self].
+  mirror instanceSide nestedClasses do:
+    [:each |
+    examineClass: each under: thisEnvironment].
+  (* If after all the examination thisEnvironment ends up with no test cases, or child
+  environments containing test cases, its class need not to be instantiated at runtime.
+  In that case we can forget it right here - no need to add it to the parent. *)
+  thisEnvironment hasTestCasesTransitively ifTrue:
+    [parentEnvironment addNestedEnvironment: thisEnvironment]
 )
 'parameters'
 testContextMarkerSelector = (
@@ -465,45 +465,45 @@ testContextMarkerSelector = (
 Initializer as a test context class. (The class's superclass chain is
 unimportant--test contexts inherit from TestContext only in order to get
 testing behavior such as the #assert: method). *)
-	^#TEST_CONTEXT
+  ^#TEST_CONTEXT
 )
 'private'
 isTestContext: mirror <ClassDeclarationMirror> = (
-	^mirror classSide methods includesMirrorNamed: testContextMarkerSelector
+  ^mirror classSide methods includesMirrorNamed: testContextMarkerSelector
 )
 isTestMethod: methodMirror <MethodMirror> = (
-	| selector |
-	selector:: methodMirror name.
-	^(selector beginsWith: 'test') and: [(selector includes: ":") not]
+  | selector |
+  selector:: methodMirror name.
+  ^(selector beginsWith: 'test') and: [(selector includes: ":") not]
 )
 testCasesIn: classMirror <ClassDeclarationMirror> environment: environment <TestEnvironment> ^<Collection[TestCase]>= (
 (* Return a collection of TestCases describing test methods in the given class. *)
-	| testCases |
-	testCases:: OrderedCollection new.
-	classMirror instanceSide methods do:
-		[:each <MethodMirror> |
-		(isTestMethod: each) ifTrue:
-			[testCases add: 
-				(TestCase environment: environment selector: each name)]].
-	^testCases
+  | testCases |
+  testCases:: OrderedCollection new.
+  classMirror instanceSide methods do:
+    [:each <MethodMirror> |
+    (isTestMethod: each) ifTrue:
+      [testCases add: 
+        (TestCase environment: environment selector: each name)]].
+  ^testCases
 )
 ) : (
 )
 'accessing'
 public allTests ^<TestSuite> = (
 (* Returns a test suite containing all test cases defined in all test context classes of the catalogued module. *)
-	| allTestCases |
-	allTestCases:: OrderedCollection new: testsByContextName size + 1 * 20.
-	testsByContextName do: [:each | allTestCases addAll: each testCases].
-	^TestSuite testCases: allTestCases
+  | allTestCases |
+  allTestCases:: OrderedCollection new: testsByContextName size + 1 * 20.
+  testsByContextName do: [:each | allTestCases addAll: each testCases].
+  ^TestSuite testCases: allTestCases
 )
 public testSuiteNamed: key <String> = (
 (* Returns a test suite containing all test cases of the given class. *)
-	^testsByContextName at: key
+  ^testsByContextName at: key
 )
 public testSuiteNames ^<Collection[String]> = (
-	(* Returns the (short) names of test context classes of the module. *)
-	^testsByContextName keys
+  (* Returns the (short) names of test context classes of the module. *)
+  ^testsByContextName keys
 )
 ) : (
 )
@@ -539,87 +539,87 @@ results are discarded. *)
 )
 'as yet unclassified'
 public createErrorResultFor: testCase <TestCase> exception: ex <Error> = (
-	^TestError case: testCase exception: ex
+  ^TestError case: testCase exception: ex
 )
 public createFailureResultFor: testCase <TestCase> description: description <String> = (
-	^TestFailure case: testCase description: description
+  ^TestFailure case: testCase description: description
 )
 public createSuccessResultFor: testCase <TestCase> = (
-	^TestSuccess case: testCase
+  ^TestSuccess case: testCase
 )
 'private'
 failWithMessage: messageText <String | nil> = (
-	TestFailureException new signal: messageText
+  TestFailureException new signal: messageText
 )
 'testing'
 assert: aBlockOrValue <[Boolean] | Boolean> = (
-	assert: aBlockOrValue description: 'Assertion failed'
+  assert: aBlockOrValue description: 'Assertion failed'
 )
 assert: aBlockOrValue <[Boolean] | Boolean> description: messageText <String> = (
-	assert: aBlockOrValue descriptionBlock: [messageText]
+  assert: aBlockOrValue descriptionBlock: [messageText]
 )
 assert: aBlockOrValue <[Boolean] | Boolean> descriptionBlock: messageBlock <[String]> = (
-	aBlockOrValue value ifFalse: [failWithMessage: messageBlock value]
+  aBlockOrValue value ifFalse: [failWithMessage: messageBlock value]
 )
 assert: anObject equals: expectedObject = (
 (* Succeed if anObject = anotherObject. Preferrable to a simple 'assert: [a =
 b]' in a test method because in case of a failure the values compared are
 available for inspection as this method's arguments. *)
-	assert: anObject = expectedObject descriptionBlock:
-		['Equality assertion failed; expected: ',
-		expectedObject printString,
-		', was: ',
-		anObject printString]
+  assert: anObject = expectedObject descriptionBlock:
+    ['Equality assertion failed; expected: ',
+    expectedObject printString,
+    ', was: ',
+    anObject printString]
 )
 assert: anObject equals: anotherObject description: messageText = (
 (* Succeed if anObject = anotherObject. Preferrable to a simple 'assert: [a =
 b]' in a test method because in case of a failure the values compared are
 available for inspection as this method's arguments. *)
-	assert: anObject = anotherObject description: messageText
+  assert: anObject = anotherObject description: messageText
 )
 assert: anObject equals: anotherObject descriptionBlock: messageBlock = (
 (* Succeed if anObject = anotherObject. Preferrable to a simple 'assert: [a =
 b]' in a test method because in case of a failure the values compared are
 available for inspection as this method's arguments. *)
-	assert: anObject = anotherObject descriptionBlock: messageBlock
+  assert: anObject = anotherObject descriptionBlock: messageBlock
 )
 deny: aBlockOrBoolean <[Boolean] | Boolean> = (
-	deny: aBlockOrBoolean description: 'Denial failed'
+  deny: aBlockOrBoolean description: 'Denial failed'
 )
 deny: aBlockOrBoolean <[Boolean] | Boolean> description: messageText <String> = (
-	deny: aBlockOrBoolean descriptionBlock: [messageText]
+  deny: aBlockOrBoolean descriptionBlock: [messageText]
 )
 deny: aBlockOrBoolean <[Boolean] | Boolean> descriptionBlock: messageBlock <[String]> = (
-	assert: aBlockOrBoolean value not descriptionBlock: messageBlock
+  assert: aBlockOrBoolean value not descriptionBlock: messageBlock
 )
 should: aBlock signal: anException = (
-	should: aBlock signal: anException description: 'Expected exception not signalled'
+  should: aBlock signal: anException description: 'Expected exception not signalled'
 )
 should: aBlock signal: anException <Class | ExceptionSet> description: failureMessage <String> = (
-	should: aBlock signal: anException descriptionBlock: [failureMessage]
+  should: aBlock signal: anException descriptionBlock: [failureMessage]
 )
 should: aBlock signal: anException <Class | ExceptionSet> descriptionBlock: descriptionBlock <[String]> = (
-	[aBlock value. (* should not return if successful *)
-	failWithMessage: descriptionBlock value]
-		on: anException
-		do: [:ex | ]
+  [aBlock value. (* should not return if successful *)
+  failWithMessage: descriptionBlock value]
+    on: anException
+    do: [:ex | ]
 )
 should: aBlock takeLongerThan: aDuration = (
-	asYetUnimplemented
+  asYetUnimplemented
 )
 shouldnt: aBlock signal: anException = (
-	shouldnt: aBlock signal: anException description: 'Exception signalled'
+  shouldnt: aBlock signal: anException description: 'Exception signalled'
 )
 shouldnt: aBlock signal: anException <Class | ExceptionSet> description: failureMessage <String> = (
-	shouldnt: aBlock signal: anException descriptionBlock: [failureMessage]
+  shouldnt: aBlock signal: anException descriptionBlock: [failureMessage]
 )
 shouldnt: aBlock signal: anException <Class | ExceptionSet> descriptionBlock: descriptionBlock <[String]> = (
-	[aBlock value]
-		on: anException
-		do: [:ex | failWithMessage: descriptionBlock value]
+  [aBlock value]
+    on: anException
+    do: [:ex | failWithMessage: descriptionBlock value]
 )
 shouldnt: aBlock takeLongerThan: aDuration = (
-	asYetUnimplemented
+  asYetUnimplemented
 )
 ) : (
 )
@@ -638,76 +638,71 @@ context, testCases holds a collection (not a real TestSuite) of TestCases
 defined in the test context. *)|
 
 
-	public parent <TestEnvironment | TopLevelTestEnvironment> = parent.
-	nestedEnvironments <Collection[TestEnvironment]> = OrderedCollection new.
-	public testCases <Collection[TestCase]> ::= OrderedCollection new.
-	public classDeclarationMirror <ClassDeclarationMirror> = mirror.
+  public parent <TestEnvironment | TopLevelTestEnvironment> = parent.
+  nestedEnvironments <Collection[TestEnvironment]> = OrderedCollection new.
+  public testCases <Collection[TestCase]> ::= OrderedCollection new.
+  public classDeclarationMirror <ClassDeclarationMirror> = mirror.
 |) (
 'accessing'
 public addNestedEnvironment: environment = (
-	nestedEnvironments add: environment
+  nestedEnvironments add: environment
 )
 classIn: parentObject <Object> ^<Class> = (
 (* Returns a class metaobject represented by this environment specific for the 
 given instance of the class corresponding to this environment's parent. *)
 
-	^ (Message selector: classAccessorName) sendTo: parentObject
+  ^ (Message selector: classAccessorName) sendTo: parentObject
 )
 public createInstanceIn: parentObject <Object> ^<Object> = (
 (* Creates and returns an instance of the class represented by this environment. *)
-	^(classIn: parentObject) new
+  ^(classIn: parentObject) new
 )
 public name = (
-	^classAccessorName
+  ^classAccessorName
 )
 'as yet unclassified'
 classAccessorName = (
 (* The class accessor name is the selector of a message that can be sent to a 
 class metaobject corresponding to the parent environment to obtain a class 
 metaobject corresponding to this environment. *)
-	^classDeclarationMirror simpleName
-)
-public printOn: stream <WriteStream> = (
-	super printOn: stream.
-	stream nextPutAll: ' '.
-	classAccessorName printOn: stream.
+  ^classDeclarationMirror simpleName
 )
 public testSuite = (
-	^TestSuite testCases: testCases
+  ^TestSuite testCases: testCases
 )
 'enumerating'
 public parentEnvironmentsDo: aBlock = (
 (* Evaluate a one-argument block with direct and indirect parents of this 
 environment, starting with the direct one and proceeding up to the top level. *)
-	parent withAllParentEnvironmentsDo: aBlock
+  parent withAllParentEnvironmentsDo: aBlock
 )
 public withAllNestedEnvironmentsDo: aBlock = (
 (* Evaluate aBlock with the receiver and all members of the transitive closure 
 of its nested environments, in preorder. *)
-	aBlock value: self.
-	nestedEnvironments do: [:each | each withAllNestedEnvironmentsDo: aBlock]
+  aBlock value: self.
+  nestedEnvironments do: [:each | each withAllNestedEnvironmentsDo: aBlock]
 )
 public withAllParentEnvironmentsDo: aBlock = (
 (* Evaluate a one-argument block with the receiver and all environment in its 
 parent chain all the way up to the top level, beginning with the receiver. *)
-	aBlock value: self.
-	parent withAllParentEnvironmentsDo: aBlock
+  aBlock value: self.
+  parent withAllParentEnvironmentsDo: aBlock
 )
 'testing'
 public hasTestCases ^<Boolean> = (
 (* True if the class represented by this environment defines any test methods. *)
-	^testCases isEmpty not
+  ^testCases isEmpty not
 )
 public hasTestCasesTransitively ^<Boolean> = (
 (* True if either the class represented by this environment or any of its nested classes define any test methods. *)
-	^hasTestCases or:
-		[(nestedEnvironments
-			detect: [:some | some hasTestCasesTransitively]
-			ifNone: [nil]) notNil]
+  ^hasTestCases or:
+    [(nestedEnvironments
+      detect: [:some | some hasTestCasesTransitively]
+      ifNone: [nil]) notNil]
 )
 public isRoot ^<Boolean> = (
 (* True if this is a top-level environment representing the entire test module. *)
-	^false
+  ^false
 )
 ) : (
 )
@@ -715,21 +710,21 @@ public class TestError case: testCase exception: exception = TestResult case: te
 (* Represents a test case that didn't complete because an error was signaled
 and not handled while running the test case. The instance holds onto the
 exception instance representing the error. *)|
-	public exception ::= exception.
+  public exception ::= exception.
 |) (
 'testing'
 public isError = (
-	^true
+  ^true
 )
 ) : (
 )
 public class TestFailure case: testCase description: text <String> = TestResult case: testCase (
 (* Represents a failed assertion in a test case. *)|
-	public description ::= text.
+  public description ::= text.
 |) (
 'testing'
 public isFailure = (
-	^true
+  ^true
 )
 ) : (
 )
@@ -738,27 +733,27 @@ class TestFailureException = Exception (
 |) (
 'as yet unclassified'
 public defaultAction = (
-	UnhandledError signalForException: self
+  UnhandledError signalForException: self
 )
 ) : (
 )
 class TestResult case: testCase = (
 (* The result of running a TestCase. An abstract class. *)|
-	public testCase ::= testCase.
+  public testCase ::= testCase.
 |) (
 'accessing'
 public cleanUp = (
-	testCase cleanUp
+  testCase cleanUp
 )
 'testing'
 public isError = (
-	^false
+  ^false
 )
 public isFailure ^<Boolean> = (
-	^false
+  ^false
 )
 public isSuccess ^<Boolean> = (
-	^false
+  ^false
 )
 ) : (
 )
@@ -767,39 +762,39 @@ class TestSuccess case: testCase = TestResult case: testCase (
 |) (
 'testing'
 public isSuccess = (
-	^true
+  ^true
 )
 ) : (
 )
 class TestSuite testCases: testCases <Collection[TestCase]> = (
 (* A TestSuite is a collection of TestCases. TestSuites are usually obtained 
 from a TestCatalog created on an instance of a test module. *)|
-	private testCases_slot <Collection[TestCase]> = testCases.
+  private testCases_slot <Collection[TestCase]> = testCases.
 |) (
 'accessing'
 + another <TestSuite> ^<TestSuite> = (
-	(* Returns a new TestSuite that contains TestCases of the receiver and the argument. *)
-	^TestSuite testCases: testCases, another testCases
+  (* Returns a new TestSuite that contains TestCases of the receiver and the argument. *)
+  ^TestSuite testCases: testCases, another testCases
 )
 modules ^<Collection[Object]> = (
 (* Returns a collection of test module instances that contain test cases of the suite. *)
-	| result |
-	result:: IdentitySet new.
-	testCases do: [:each | result add: each module].
-	^result
+  | result |
+  result:: IdentitySet new.
+  testCases do: [:each | result add: each module].
+  ^result
 )
 public size ^<Integer> = (
 (* Returns the number of test cases in the suite. *)
-	^testCases size
+  ^testCases size
 )
 public testCases ^<Collection[TestCase]> = (
 (* Returns a collection of test cases of the receiver. *)
-	^testCases_slot
+  ^testCases_slot
 )
 'as yet unclassified'
 public ++ another <TestSuite> ^<TestSuite> = (
-	(* Returns a new TestSuite that contains TestCases of the receiver and the argument. *)
-	^TestSuite testCases: testCases, another testCases
+  (* Returns a new TestSuite that contains TestCases of the receiver and the argument. *)
+  ^TestSuite testCases: testCases, another testCases
 )
 ) : (
 )
@@ -811,14 +806,14 @@ testSuite: primary factory method. Then the tests are executed, either by
 sending the #runAll message, or by reproducing the steps defined by #runAll in
 an external tool. Finally, the results can be retrieved from the 'errors',
 'failures' and 'successes' slots. *)|
-	public errors
-	public failures
-	public successes
-	
-	private testSuite_ = suite.
-	private testCaseStream
-	private testsPerformed
-	private instanceManager = TestContextManager new.
+  public errors
+  public failures
+  public successes
+  
+  private testSuite_ = suite.
+  private testCaseStream
+  private testsPerformed
+  private instanceManager = TestContextManager new.
 |) (
 class TestContextManager = (
 (* Creates and keeps track of instances of shared state classes for a test run.
@@ -828,15 +823,15 @@ they are the classes that are neither the root nor the leaves of the class
 nesting tree. Within this class, instances of these classes are referred to as
 'core instances'. *)|
 
-	instancesByEnvironment ::= IdentityDictionary new.
+  instancesByEnvironment ::= IdentityDictionary new.
 |) (
 'accessing'
 public cleanUpCoreInstances = (
 (* Send the #cleanUp message to all core instances able to understand that message. *)
-	instancesByEnvironment do:
-		[:each |
-		(understandsCleanUp: each) ifTrue: [each cleanUp]].
-	instancesByEnvironment:: IdentityDictionary new.
+  instancesByEnvironment do:
+    [:each |
+    (understandsCleanUp: each) ifTrue: [each cleanUp]].
+  instancesByEnvironment:: IdentityDictionary new.
 )
 public createCoreInstances = (
 (* Create instances of all shared state classes, which are the classes that are
@@ -844,60 +839,60 @@ not test contexts themselves but rather contain test contexts directly or
 indirectly. Such classes are instantiated once before running a suite of tests
 and cleaned up afterwards. *)
 
-	coreEnvironments do:
-		[:each |
-		ensureInstanceFor: each]
+  coreEnvironments do:
+    [:each |
+    ensureInstanceFor: each]
 )
 public createCoreInstancesFor: testCase <TestCase> = (
 (* Create instances of shared state classes required to run the argument
 testCase. See #createCoreInstances. *)
-	(coreEnvironmentsFor: testCase) do:
-		[:each |
-		ensureInstanceFor: each]
+  (coreEnvironmentsFor: testCase) do:
+    [:each |
+    ensureInstanceFor: each]
 )
 public ensureInstanceFor: environment <TestEnvironment> ^<Object> = (
 (* Return an instance of the class represented by the argument, creating one if necessary. *)
-	environment isRoot ifTrue: [^environment moduleInstance].
-	^instancesByEnvironment at: environment ifAbsent:
-		[| instance |
-		instance:: environment createInstanceIn: (ensureInstanceFor: environment parent).
-		instancesByEnvironment at: environment put: instance.
-		instance]
+  environment isRoot ifTrue: [^environment moduleInstance].
+  ^instancesByEnvironment at: environment ifAbsent:
+    [| instance |
+    instance:: environment createInstanceIn: (ensureInstanceFor: environment parent).
+    instancesByEnvironment at: environment put: instance.
+    instance]
 )
 'private'
 coreEnvironments = (
 (* The core of the environment tree are the environments between the roots of
 the class tree and its fringe. They have to be instantiated once before running
 the suite and cleaned up after. *)
-	| result |
-	result:: Set new.
-	testSuite testCases do:
-		[:each |
-		each environment parentEnvironmentsDo:
-			[:eachParent |
-			eachParent isRoot ifFalse: [result add: eachParent]]].
-	^result
+  | result |
+  result:: Set new.
+  testSuite testCases do:
+    [:each |
+    each environment parentEnvironmentsDo:
+      [:eachParent |
+      eachParent isRoot ifFalse: [result add: eachParent]]].
+  ^result
 )
 coreEnvironmentsFor: testCase <TestCase> = (
-	| result |
-	result:: OrderedCollection new.
-	testCase environment parentEnvironmentsDo:
-		[:each |
-		each isRoot ifFalse: [result add: each]].
-	^result
+  | result |
+  result:: OrderedCollection new.
+  testCase environment parentEnvironmentsDo:
+    [:each |
+    each isRoot ifFalse: [result add: each]].
+  ^result
 )
 understandsCleanUp: object = (
 (* Answer true if the object understands the #cleanUp message. *)
-	| mirror |
-	mirror:: (ObjectMirror reflecting: object) getClass.
-	^mirror methods includesMirrorNamed: #cleanUp
+  | mirror |
+  mirror:: (ObjectMirror reflecting: object) getClass.
+  ^mirror methods includesMirrorNamed: #cleanUp
 )
 ) : (
 )
 'accessing'
 public atEnd = (
 (* Returns true if all test cases in the test suite have been executed. *)
-	^testCaseStream atEnd
+  ^testCaseStream atEnd
 )
 public cleanUp = (
 (* This message should be sent to the tester once at some point after finishing
@@ -908,105 +903,105 @@ sending it the cleanup logic of shared state classes will not be called.
 However, an IDE tool may choose to delay sending this message in case there are
 tests failures or errors, so that the shared state can be examined by the user.
 *)
-	instanceManager cleanUpCoreInstances.
+  instanceManager cleanUpCoreInstances.
 )
 public cleanUpResults = (
 (* This message causes the #cleanUp message to be sent to all test results,
 which in turn clean ups their associated test cases, cleaning up and making
 garbage-collectable any test context instances they may still be holding onto.
 *)
-	successes do: [:each | each cleanUp].
-	errors do: [:each | each cleanUp].
-	failures do: [:each | each cleanUp]
+  successes do: [:each | each cleanUp].
+  errors do: [:each | each cleanUp].
+  failures do: [:each | each cleanUp]
 )
 public completedRatio ^<Float> = (
 (* Return a number between 0 and 1 indicating the ratio of tests in the suite
 completed so far. *)
 
-	| testCount |
-	testCount:: testSuite size.
-	^testCount = 0
-		ifTrue: [1.0]
-		ifFalse: [testsPerformed asFloat / testCount]
+  | testCount |
+  testCount:: testSuite size.
+  ^testCount = 0
+    ifTrue: [1.0]
+    ifFalse: [testsPerformed asFloat / testCount]
 )
 public prepare = (
 (* This message must be sent to the tester once prior to running any tests. At
 this stage the tester instantiates shared state classes of the test module,
 which may potentially cause errors to be signaled. *)
-	errors:: OrderedCollection new.
-	failures:: OrderedCollection new.
-	successes:: OrderedCollection new.
-	testCaseStream:: testSuite testCases readStream.
-	testsPerformed:: 0.
-	instanceManager createCoreInstances.
+  errors:: OrderedCollection new.
+  failures:: OrderedCollection new.
+  successes:: OrderedCollection new.
+  testCaseStream:: testSuite testCases readStream.
+  testsPerformed:: 0.
+  instanceManager createCoreInstances.
 )
 public runAll = (
-	prepare.
-	[[atEnd] whileFalse: [step]]
-		ensure: [cleanUp]
+  prepare.
+  [[atEnd] whileFalse: [step]]
+    ensure: [cleanUp]
 )
 public step ^<TestResult> = (
 (* Execute one test case, add the result to the appropriate collection and
 return it. This message should only be sent if the #atEnd message returns
 false. *)
-	| case result |
-	case:: testCaseStream next.
-	result:: case runUsing: self.
-	testsPerformed:: testsPerformed + 1.
-	result isError ifTrue: [errors add: result].
-	result isFailure ifTrue: [failures add: result].
-	result isSuccess ifTrue: [successes add: result].
-	^result
+  | case result |
+  case:: testCaseStream next.
+  result:: case runUsing: self.
+  testsPerformed:: testsPerformed + 1.
+  result isError ifTrue: [errors add: result].
+  result isFailure ifTrue: [failures add: result].
+  result isSuccess ifTrue: [successes add: result].
+  ^result
 )
 testSuite = (
-	^testSuite_
+  ^testSuite_
 )
 'as yet unclassified'
 public haveAllTestsSucceeded = (
-	^errors size = 0 and: [failures size = 0]
+  ^errors size = 0 and: [failures size = 0]
 )
 public peekSelector ^<Symbol>= (
-	(* Returns the selector of the upcoming test case. 
+  (* Returns the selector of the upcoming test case. 
      This message should only be sent if the #atEnd message returns false. *)
-	^ testCaseStream peek selector.
+  ^ testCaseStream peek selector.
 )
 public runToDebugFailure: testCase = (
-	instanceManager createCoreInstancesFor: testCase.
-	[testCase runToDebugFailureUsing: self]
-		ensure: [cleanUp]
+  instanceManager createCoreInstancesFor: testCase.
+  [testCase runToDebugFailureUsing: self]
+    ensure: [cleanUp]
 )
 public runWithNoExceptionHandling: testCase = (
-	instanceManager createCoreInstancesFor: testCase.
-	[testCase runUnsafeUsing: self]
-		ensure: [cleanUp]
+  instanceManager createCoreInstancesFor: testCase.
+  [testCase runUnsafeUsing: self]
+    ensure: [cleanUp]
 )
 'private'
 public instanceFor: environment <TestEnvironment> ^<Object> = (
-	^instanceManager ensureInstanceFor: environment
+  ^instanceManager ensureInstanceFor: environment
 )
 ) : (
 'as yet unclassified'
 testCatalogs: catalogs <Collection[TestCatalog]> = (
-	| suite |
-		(* Creating a new OrderedCollection is a hack that allows us to use #readStream in case testCases is translated to a Javascript Array *)
-	suite:: TestSuite testCases: OrderedCollection new.
-	catalogs do: [:each | suite:: suite ++ each allTests].
-	^self testSuite: suite
+  | suite |
+    (* Creating a new OrderedCollection is a hack that allows us to use #readStream in case testCases is translated to a Javascript Array *)
+  suite:: TestSuite testCases: OrderedCollection new.
+  catalogs do: [:each | suite:: suite ++ each allTests].
+  ^self testSuite: suite
 )
 public testModules: modules <Collection[TestModule]> = (
-	^testCatalogs: (modules collect: [:each | TestCatalog forModule: each])
+  ^testCatalogs: (modules collect: [:each | TestCatalog forModule: each])
 )
 )
 class TopLevelTestEnvironment module: moduleInstance = (
 (* A test environment representing a test module instance. Unlike regular
 TestEnvironments, it has no parents, but otherwise supports much of the same
 protocol. *)|
-	public moduleInstance = moduleInstance.
-	nestedEnvironments = OrderedCollection new.
+  public moduleInstance = moduleInstance.
+  nestedEnvironments = OrderedCollection new.
 |) (
 'accessing'
 public addNestedEnvironment: environment = (
-	nestedEnvironments add: environment
+  nestedEnvironments add: environment
 )
 'enumerating'
 public parentEnvironmentsDo: aBlock = (
@@ -1014,20 +1009,20 @@ public parentEnvironmentsDo: aBlock = (
 )
 public withAllNestedEnvironmentsDo: aBlock = (
 (* Evaluate aBlock with the receiver and all elements of the transitive closure of its nested environments (preorder). *)
-	aBlock value: self.
-	nestedEnvironments do: [:each | each withAllNestedEnvironmentsDo: aBlock]
+  aBlock value: self.
+  nestedEnvironments do: [:each | each withAllNestedEnvironmentsDo: aBlock]
 )
 public withAllParentEnvironmentsDo: aBlock = (
 (* Evaluate a one-argument block with the receiver and all environment in its parent chain, which is to say with the receiver only. *)
-	aBlock value: self
+  aBlock value: self
 )
 'testing'
 public hasTestCases ^<Boolean> = (
 (* A top-level test module instance cannot function as a test context because it cannot be created and discarded for each test run. *)
-	^false
+  ^false
 )
 public isRoot = (
-	^true
+  ^true
 )
 ) : (
 )
