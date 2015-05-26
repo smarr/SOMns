@@ -398,9 +398,11 @@ OTHER DEALINGS IN THE SOFTWARE. *)
       immediately garbage-collectable, which is an important property for large test suites. *)
       cleanUp]
         on: TestFailureException
-        do: [:ex | ^testContextInstance (* testContextInstance should never be nil at this point, but just in case. *)
-              ifNil: [TestFailure case: self description: ex messageText]
-              ifNotNil: [:it | it createFailureResultFor: self description: ex messageText]].
+        do: [:ex |
+               (* testContextInstance should never be nil at this point, but just in case. *)
+               ^ testContextInstance 
+                  ifNil: [TestFailure case: self description: ex messageText]
+                  ifNotNil: [:it | it createFailureResultFor: self description: ex messageText]].
       ^testSuccess
     )
   )
