@@ -27,9 +27,6 @@ package som.vm;
 
 import static som.vm.Symbols.symbolFor;
 import static som.vm.constants.Classes.classClass;
-import static som.vm.constants.Classes.methodClass;
-import static som.vm.constants.Classes.objectClass;
-import static som.vm.constants.Classes.primitiveClass;
 
 import java.io.IOException;
 
@@ -37,7 +34,6 @@ import som.compiler.AccessModifier;
 import som.interpreter.Invokable;
 import som.interpreter.TruffleCompiler;
 import som.interpreter.nodes.dispatch.Dispatchable;
-import som.vm.constants.Globals;
 import som.vmobjects.SArray;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
@@ -46,7 +42,6 @@ import som.vmobjects.SInvokable.SPrimitive;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
-import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
@@ -87,7 +82,7 @@ public final class Universe {
    * @return
    */
   public Object interpret(final String className, final String selector) {
-    initializeObjectSystem();
+//    initializeObjectSystem();
 
     SClass clazz = loadClass(symbolFor(className));
 
@@ -98,7 +93,7 @@ public final class Universe {
   }
 
   private Object execute(final String[] arguments) {
-    initializeObjectSystem();
+//    initializeObjectSystem();
 
     // Start the shell if no filename is given
     if (arguments.length == 0) {
@@ -112,30 +107,6 @@ public final class Universe {
 
     return initialize.invoke(new Object[] {systemObject,
         SArray.create(arguments)});
-  }
-
-  protected void initializeObjectSystem() {
-    CompilerAsserts.neverPartOfCompilation();
-    if (alreadyInitialized) {
-      return;
-    } else {
-      alreadyInitialized = true;
-    }
-
-    initializeSystemClass(methodClass,     objectClass, "Method");
-    initializeSystemClass(primitiveClass,  objectClass, "Primitive");
-
-    // Load methods and fields into the system classes
-    loadSystemClass(methodClass);
-    loadSystemClass(primitiveClass);
-
-    // Setup the true and false objects
-    trueObject  = newInstance(trueClass);
-    falseObject = newInstance(falseClass);
-
-    if (Globals.trueObject != trueObject) {
-      errorExit("Initialization went wrong for class Globals");
-    }
   }
 
   @TruffleBoundary
