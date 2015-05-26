@@ -1,5 +1,3 @@
-Newspeak3
-'Minitest'
 class Minitest usingPlatform: platform = (
 (* Minitest is the unit testing framework of Newspeak.
 

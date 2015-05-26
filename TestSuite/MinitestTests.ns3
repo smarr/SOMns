@@ -1,5 +1,3 @@
-Newspeak3
-'Minitest'
 class MinitestTests usingPlatform: platform testFramework: minitest = ((* Tests of the Minitest framework (that is, meta-tests). *)|
 	private Exception = platform squeak Exception.
 	private testFramework = minitest.
