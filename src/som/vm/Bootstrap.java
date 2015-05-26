@@ -423,7 +423,26 @@ public final class Bootstrap {
   }
 
   public static long executeApplication(final String appFile, final String[] args) {
-    throw new NotYetImplementedException();
+    try {
+      ClassDefinition app = loadModule(appFile);
+      SClass appClass = app.instantiateClass();
+
+      Dispatchable appFactory = appClass.getSOMClass().lookupMessage(
+          Symbols.symbolFor("usingPlatform:"), AccessModifier.PUBLIC);
+      SObject appObj = (SObject) appFactory.invoke(appClass, platformClass);
+
+      Dispatchable mainMethod = appObj.getSOMClass().lookupMessage(Symbols.symbolFor("main:args:"),
+          AccessModifier.PUBLIC);
+      Object result = mainMethod.invoke(platformClass, args);
+      if (result instanceof Long) {
+        return (long) result;
+      } else {
+        return 0;
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+      return 1;
+    }
   }
 
   public static Object execute(final String selector) {
