@@ -335,7 +335,7 @@ public final class ClassBuilder {
         initializer.getSignature(), args, null);
 
     return primaryFactoryMethod.assemble(initializedObject,
-        AccessModifier.PROTECTED, Symbols.symbolFor("initialization"), null);
+        AccessModifier.PUBLIC, Symbols.symbolFor("initialization"), null);
   }
 
   private SMethod assembleInitializationMethod() {
