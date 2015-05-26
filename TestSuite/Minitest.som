@@ -200,7 +200,7 @@ The #setUp method vs instance initializer
 In SUnit, any necessary initialization of a TestCase subclass is performed by
 the #setUp method. In Minitest, instances of text contexts are initialized
 (naturally) by their initializers. Again, the reason for this difference is the
-split personality of SUnit's TestCase, leading to what in essense are multiple
+split personality of SUnit's TestCase, leading to what in essence are multiple
 initialization schemes for those personalities.
 
 The #tearDown method vs the #cleanUp method
