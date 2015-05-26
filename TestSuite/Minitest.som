@@ -482,7 +482,7 @@ isTestContext: mirror = (
 isTestMethod: methodMirror = (
   | selector |
   selector := methodMirror name.
-  ^(selector beginsWith: 'test') and: [(selector includes: ":") not]
+  ^(selector beginsWith: 'test') and: [(selector includes: ':') not]
 )
 testCasesIn: classMirror environment: environment = (
 (* Return a collection of TestCases describing test methods in the given class. *)
