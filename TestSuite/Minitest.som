@@ -476,161 +476,187 @@ OTHER DEALINGS IN THE SOFTWARE. *)
       )
 
       'private'
-isTestContext: mirror = (
-  ^mirror classSide methods includesMirrorNamed: testContextMarkerSelector
-)
-isTestMethod: methodMirror = (
-  | selector |
-  selector := methodMirror name.
-  ^(selector beginsWith: 'test') and: [(selector includes: ':') not]
-)
-testCasesIn: classMirror environment: environment = (
-(* Return a collection of TestCases describing test methods in the given class. *)
-  | testCases |
-  testCases := OrderedCollection new.
-  classMirror instanceSide methods do:
-    [:each |
-    (isTestMethod: each) ifTrue:
-      [testCases add: 
-        (TestCase environment: environment selector: each name)]].
-  ^testCases
-)
-) : (
-)
-'accessing'
-public allTests = (
-(* Returns a test suite containing all test cases defined in all test context classes of the catalogued module. *)
-  | allTestCases |
-  allTestCases := OrderedCollection new: testsByContextName size + 1 * 20.
-  testsByContextName do: [:each | allTestCases addAll: each testCases].
-  ^TestSuite testCases: allTestCases
-)
-public testSuiteNamed: key = (
-(* Returns a test suite containing all test cases of the given class. *)
-  ^testsByContextName at: key
-)
-public testSuiteNames = (
-  (* Returns the (short) names of test context classes of the module. *)
-  ^testsByContextName keys
-)
-) : (
-)
-public class TestContext = (
+      isTestContext: mirror = (
+        ^ mirror classSide methods includesMirrorNamed: testContextMarkerSelector
+      )
 
-(* An object for defining and running individual tests. In this respect, it is
-the same thing as the TestCase class of the traditional SUnit framework. Unlike
-SUnit's TestCase, an instance does not double as a command for running a
-particular test method.
+      isTestMethod: methodMirror = (
+        | selector |
+        selector := methodMirror name.
+        ^(selector beginsWith: 'test') and: [(selector includes: ':') not]
+      )
 
-This class provides the behavior useful for running tests, such as the various
-#assert: methods inheritable by the user's TestContext subclasses. Inheriting
-that behavior is the only real reason to inherit from TestContext. The test
-framework does NOT recognize the user's test contexts on the basis of their
-inheritance. Instead, each class to be treated as a test context should be
-marked as such. Currently, it is done with a class-side marker method named
-TEST_CONTEXT. In the future, marker methods will be superseded by proper class
-metadata.
+      testCasesIn: classMirror environment: environment = (
+        (* Return a collection of TestCases describing test methods in the given class. *)
+        | testCases |
+        testCases := OrderedCollection new.
+        classMirror instanceSide methods do:
+          [:each |
+          (isTestMethod: each) ifTrue:
+            [testCases add: 
+              (TestCase environment: environment selector: each name)]].
+        ^testCases
+      )
+    )
 
-An instance is initialized by its 'natural' initializer. If any special cleanup
-behavior is required after running a test, a subclass may reimplement the
-#cleanUp method to define it. *)|
+    'accessing'
+    public allTests = (
+      (* Returns a test suite containing all test cases defined in all test
+         context classes of the catalogued module. *)
+      | allTestCases |
+      allTestCases := OrderedCollection new: testsByContextName size + 1 * 20.
+      testsByContextName do: [:each | allTestCases addAll: each testCases].
+      ^TestSuite testCases: allTestCases
+    )
 
-|) (
-'accessing'
-public cleanUp = (
-(* Sent after a successful completion of a test, to clean up if simple garbage
-collection at some point in the future is not enough (which it normally should
-be). If a test completes abnormally, with either a failure or an error, the
-test context is retained by the test case which in turn is retained by the test
-result. In this case, the message is not sent until a later time when the test
-results are discarded. *)
-)
-'as yet unclassified'
-public createErrorResultFor: testCase exception: ex = (
-  ^TestError case: testCase exception: ex
-)
-public createFailureResultFor: testCase description: description = (
-  ^TestFailure case: testCase description: description
-)
-public createSuccessResultFor: testCase = (
-  ^TestSuccess case: testCase
-)
-'private'
-failWithMessage: messageText = (
-  TestFailureException new signal: messageText
-)
-'testing'
-assert: aBlockOrValue = (
-  assert: aBlockOrValue description: 'Assertion failed'
-)
-assert: aBlockOrValue description: messageText = (
-  assert: aBlockOrValue descriptionBlock: [messageText]
-)
-assert: aBlockOrValue descriptionBlock: messageBlock = (
-  aBlockOrValue value ifFalse: [failWithMessage: messageBlock value]
-)
-assert: anObject equals: expectedObject = (
-(* Succeed if anObject = anotherObject. Preferrable to a simple 'assert: [a =
-b]' in a test method because in case of a failure the values compared are
-available for inspection as this method's arguments. *)
-  assert: anObject = expectedObject descriptionBlock:
-    ['Equality assertion failed; expected: ',
-    expectedObject printString,
-    ', was: ',
-    anObject printString]
-)
-assert: anObject equals: anotherObject description: messageText = (
-(* Succeed if anObject = anotherObject. Preferrable to a simple 'assert: [a =
-b]' in a test method because in case of a failure the values compared are
-available for inspection as this method's arguments. *)
-  assert: anObject = anotherObject description: messageText
-)
-assert: anObject equals: anotherObject descriptionBlock: messageBlock = (
-(* Succeed if anObject = anotherObject. Preferrable to a simple 'assert: [a =
-b]' in a test method because in case of a failure the values compared are
-available for inspection as this method's arguments. *)
-  assert: anObject = anotherObject descriptionBlock: messageBlock
-)
-deny: aBlockOrBoolean = (
-  deny: aBlockOrBoolean description: 'Denial failed'
-)
-deny: aBlockOrBoolean description: messageText = (
-  deny: aBlockOrBoolean descriptionBlock: [messageText]
-)
-deny: aBlockOrBoolean descriptionBlock: messageBlock = (
-  assert: aBlockOrBoolean value not descriptionBlock: messageBlock
-)
-should: aBlock signal: anException = (
-  should: aBlock signal: anException description: 'Expected exception not signalled'
-)
-should: aBlock signal: anException description: failureMessage = (
-  should: aBlock signal: anException descriptionBlock: [failureMessage]
-)
-should: aBlock signal: anException descriptionBlock: descriptionBlock = (
-  [aBlock value. (* should not return if successful *)
-  failWithMessage: descriptionBlock value]
-    on: anException
-    do: [:ex | ]
-)
-should: aBlock takeLongerThan: aDuration = (
-  asYetUnimplemented
-)
-shouldnt: aBlock signal: anException = (
-  shouldnt: aBlock signal: anException description: 'Exception signalled'
-)
-shouldnt: aBlock signal: anException description: failureMessage = (
-  shouldnt: aBlock signal: anException descriptionBlock: [failureMessage]
-)
-shouldnt: aBlock signal: anException descriptionBlock: descriptionBlock = (
-  [aBlock value]
-    on: anException
-    do: [:ex | failWithMessage: descriptionBlock value]
-)
-shouldnt: aBlock takeLongerThan: aDuration = (
-  asYetUnimplemented
-)
-) : (
-)
+    public testSuiteNamed: key = (
+      (* Returns a test suite containing all test cases of the given class. *)
+      ^testsByContextName at: key
+    )
+
+    public testSuiteNames = (
+      (* Returns the (short) names of test context classes of the module. *)
+      ^testsByContextName keys
+    )
+  )
+
+  public class TestContext = (
+    (* An object for defining and running individual tests. In this respect, it
+       is the same thing as the TestCase class of the traditional SUnit
+       framework. Unlike SUnit's TestCase, an instance does not double as a
+       command for running a particular test method.
+
+       This class provides the behavior useful for running tests, such as the
+       various #assert: methods inheritable by the user's TestContext
+       subclasses. Inheriting that behavior is the only real reason to inherit
+       from TestContext. The test framework does NOT recognize the user's test
+       contexts on the basis of their inheritance. Instead, each class to be
+       treated as a test context should be marked as such. Currently, it is
+       done with a class-side marker method named TEST_CONTEXT. In the future,
+       marker methods will be superseded by proper class metadata.
+
+       An instance is initialized by its 'natural' initializer. If any special
+       cleanup behavior is required after running a test, a subclass may
+       reimplement the #cleanUp method to define it. *)
+  ) (
+    'accessing'
+    public cleanUp = (
+      (* Sent after a successful completion of a test, to clean up if simple
+         garbage collection at some point in the future is not enough (which it
+         normally should be). If a test completes abnormally, with either a
+         failure or an error, the test context is retained by the test case
+         which in turn is retained by the test result. In this case, the
+         message is not sent until a later time when the test results are
+         discarded. *)
+    )
+
+    public createErrorResultFor: testCase exception: ex = (
+      ^TestError case: testCase exception: ex
+    )
+  
+    public createFailureResultFor: testCase description: description = (
+      ^TestFailure case: testCase description: description
+    )
+
+    public createSuccessResultFor: testCase = (
+      ^TestSuccess case: testCase
+    )
+
+    'private'
+    failWithMessage: messageText = (
+      TestFailureException new signal: messageText
+    )
+
+    'testing'
+    assert: aBlockOrValue = (
+      assert: aBlockOrValue description: 'Assertion failed'
+    )
+
+    assert: aBlockOrValue description: messageText = (
+      assert: aBlockOrValue descriptionBlock: [messageText]
+    )
+
+    assert: aBlockOrValue descriptionBlock: messageBlock = (
+      aBlockOrValue value ifFalse: [failWithMessage: messageBlock value]
+    )
+
+    assert: anObject equals: expectedObject = (
+      (* Succeed if anObject = anotherObject. Preferrable to a simple
+         'assert: [a = b]' in a test method because in case of a failure the 
+         values compared are available for inspection as this method's
+         arguments. *)
+      assert: anObject = expectedObject descriptionBlock: [
+        'Equality assertion failed; expected: ', expectedObject printString,
+        ', was: ', anObject printString
+      ]
+    )
+
+    assert: anObject equals: anotherObject description: messageText = (
+      (* Succeed if anObject = anotherObject. Preferable to a simple
+         'assert: [a = b]' in a test method because in case of a failure the
+         values compared are available for inspection as this method's
+         arguments. *)
+      assert: anObject = anotherObject description: messageText
+    )
+
+    assert: anObject equals: anotherObject descriptionBlock: messageBlock = (
+      (* Succeed if anObject = anotherObject. Preferrable to a simple
+         'assert: [a = b]' in a test method because in case of a failure the
+         values compared are available for inspection as this method's
+         arguments. *)
+      assert: anObject = anotherObject descriptionBlock: messageBlock
+    )
+
+    deny: aBlockOrBoolean = (
+      deny: aBlockOrBoolean description: 'Denial failed'
+    )
+
+    deny: aBlockOrBoolean description: messageText = (
+      deny: aBlockOrBoolean descriptionBlock: [messageText]
+    )
+
+    deny: aBlockOrBoolean descriptionBlock: messageBlock = (
+      assert: aBlockOrBoolean value not descriptionBlock: messageBlock
+    )
+
+    should: aBlock signal: anException = (
+      should: aBlock signal: anException description: 'Expected exception not signalled'
+    )
+
+    should: aBlock signal: anException description: failureMessage = (
+      should: aBlock signal: anException descriptionBlock: [failureMessage]
+    )
+
+    should: aBlock signal: anException descriptionBlock: descriptionBlock = (
+      [aBlock value. (* should not return if successful *)
+      failWithMessage: descriptionBlock value]
+        on: anException
+        do: [:ex | ]
+    )
+
+    should: aBlock takeLongerThan: aDuration = (
+      asYetUnimplemented
+    )
+
+    shouldnt: aBlock signal: anException = (
+      shouldnt: aBlock signal: anException description: 'Exception signalled'
+    )
+
+    shouldnt: aBlock signal: anException description: failureMessage = (
+      shouldnt: aBlock signal: anException descriptionBlock: [failureMessage]
+    )
+
+    shouldnt: aBlock signal: anException descriptionBlock: descriptionBlock = (
+      [aBlock value]
+        on: anException
+        do: [:ex | failWithMessage: descriptionBlock value]
+    )
+
+    shouldnt: aBlock takeLongerThan: aDuration = (
+      asYetUnimplemented
+    )
+  )
+
 class TestEnvironment parent: parent classDeclarationMirror: mirror = (
 (* Describes a class nested inside a test module. The class can be either a
 test context or a parent (direct or indirect) of at least one test context.
