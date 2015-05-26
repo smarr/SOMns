@@ -1,0 +1,6 @@
+class Hello usingPlatform: platform = ()(
+  public main: platform args: args = (
+    'Hello World!' println.
+  )
+)
+
