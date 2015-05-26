@@ -330,9 +330,10 @@ public final class Parser {
     ExpressionNode self;
     if (acceptIdentifier("super")) {
       self = meth.getSuperReadNode(getSource(coord));
-    } else {
-      acceptIdentifier("self");
+    } else if (acceptIdentifier("self")) {
       self = meth.getSelfRead(getSource(coord));
+    } else {
+      return meth.getImplicitReceiverSend(unarySelector(), getSource(coord));
     }
     return unaryMessage(self);
   }
