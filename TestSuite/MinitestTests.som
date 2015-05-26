@@ -270,14 +270,18 @@ TEST_CONTEXT = (
 )
 )
 public class TestLifecycleTests = TestContext (
-(* Tests to verify that test cases are collected and grouped into test suites correctly across test contexts, and that test contexts and their enclosing shared state classes are instantiated the correct number of times. *)|
+(* Tests to verify that test cases are collected and grouped into test suites
+correctly across test contexts, and that test contexts and their enclosing
+shared state classes are instantiated the correct number of times. *)|
 	guineaPig = GuineaPigTestModule minitest: testFramework.
 	catalog = TestCatalog forModule: guineaPig.
 |) (
 public class GuineaPigTestModule minitest: testFramework = (
 (* A fake test module for the use by tests of the enclosing class.
 
-Because this module is nested inside a test context, the test contexts and methods it contains are not included in the test catalog created for the enclosing test module. *)|
+Because this module is nested inside a test context, the test contexts and
+methods it contains are not included in the test catalog created for the
+enclosing test module. *)|
 	private TestContext = testFramework TestContext.
 	public DirectlyNestedTestContextInstantiationCount ::= 0.
 	public OuterSharedStateClassInstantiationCount ::= 0.
