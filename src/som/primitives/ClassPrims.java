@@ -10,7 +10,9 @@ import com.oracle.truffle.api.dsl.Specialization;
 
 public class ClassPrims {
 
+  // TODO: move to new mirror class
   @GenerateNodeFactory
+  @Primitive("mirrorAClassesName:")
   public abstract static class NamePrim extends UnaryExpressionNode {
     @Specialization
     public final SAbstractObject doSClass(final SClass receiver) {

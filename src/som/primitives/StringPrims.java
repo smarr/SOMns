@@ -14,6 +14,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 public class StringPrims {
 
   @GenerateNodeFactory
+  @Primitive("string:concat:")
   public abstract static class ConcatPrim extends BinaryExpressionNode {
     @Specialization
     public final String doString(final String receiver, final String argument) {

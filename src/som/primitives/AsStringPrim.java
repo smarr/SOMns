@@ -11,6 +11,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 
 
 @GenerateNodeFactory
+@Primitive({"symbolAsString:", "intAsString:", "doubleAsString:"})
 public abstract class AsStringPrim extends UnaryExpressionNode {
 
   @Specialization
