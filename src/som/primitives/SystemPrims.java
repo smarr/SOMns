@@ -59,11 +59,12 @@ public final class SystemPrims {
   }
 
   @GenerateNodeFactory
-  public abstract static class PrintInclNewlinePrim extends BinaryExpressionNode {
+  @Primitive("printNewline:")
+  public abstract static class PrintInclNewlinePrim extends UnaryExpressionNode {
     @Specialization
-    public final Object doSObject(final SObject receiver, final String argument) {
+    public final Object doSObject(final String argument) {
       Universe.println(argument);
-      return receiver;
+      return argument;
     }
   }
 
