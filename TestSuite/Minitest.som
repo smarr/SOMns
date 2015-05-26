@@ -31,7 +31,7 @@ the factory or factories that create the tested object(s).
 The actual tests are defined as methods of a test context, a subclass of
 TestContext nested inside the test module.
 
-    ( * nested inside MyCollectionsTest * )
+    (* nested inside MyCollectionsTest *)
     class ListTests = TestContext (
          | list = List new. |
     ) (
