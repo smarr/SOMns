@@ -657,111 +657,126 @@ OTHER DEALINGS IN THE SOFTWARE. *)
     )
   )
 
-class TestEnvironment parent: parent classDeclarationMirror: mirror = (
-(* Describes a class nested inside a test module. The class can be either a
-test context or a parent (direct or indirect) of at least one test context.
-Environments form a tree, with those that represent test contexts being the
-leaves. Environment are used by the framework to orchestrate the instantiation
-of their classes when running tests.
+  class TestEnvironment parent: parent classDeclarationMirror: mirror = (
+    (* Describes a class nested inside a test module. The class can be either a
+       test context or a parent (direct or indirect) of at least one test
+       context. Environments form a tree, with those that represent test
+       contexts being the leaves. Environment are used by the framework to
+       orchestrate the instantiation of their classes when running tests.
 
-An instance holds onto the parent and a collection of child environments. The
-class accessor name is the selector of a message that can be sent to a class
-metaobject corresponding to the parent environment to obtain a class metaobject
-corresponding to this environment. For an environment representing a test
-context, testCases holds a collection (not a real TestSuite) of TestCases
-defined in the test context. *)|
+       An instance holds onto the parent and a collection of child
+       environments. The class accessor name is the selector of a message that
+       can be sent to a class metaobject corresponding to the parent
+       environment to obtain a class metaobject corresponding to this
+       environment. For an environment representing a test context, testCases
+       holds a collection (not a real TestSuite) of TestCases defined in the
+       test context. *)
+    |
+      public parent = parent.
+      nestedEnvironments = OrderedCollection new.
+      public testCases ::= OrderedCollection new.
+      public classDeclarationMirror = mirror.
+    |
+  ) (
+    'accessing'
+    public addNestedEnvironment: environment = (
+      nestedEnvironments add: environment
+    )
 
+    classIn: parentObject = (
+      (* Returns a class metaobject represented by this environment specific
+         for the given instance of the class corresponding to this environment's
+         parent. *)
+      ^ (Message selector: classAccessorName) sendTo: parentObject
+    )
 
-  public parent = parent.
-  nestedEnvironments = OrderedCollection new.
-  public testCases ::= OrderedCollection new.
-  public classDeclarationMirror = mirror.
-|) (
-'accessing'
-public addNestedEnvironment: environment = (
-  nestedEnvironments add: environment
-)
-classIn: parentObject = (
-(* Returns a class metaobject represented by this environment specific for the 
-given instance of the class corresponding to this environment's parent. *)
+    public createInstanceIn: parentObject = (
+      (* Creates and returns an instance of the class represented by this environment. *)
+      ^ (classIn: parentObject) new
+    )
 
-  ^ (Message selector: classAccessorName) sendTo: parentObject
-)
-public createInstanceIn: parentObject = (
-(* Creates and returns an instance of the class represented by this environment. *)
-  ^(classIn: parentObject) new
-)
-public name = (
-  ^classAccessorName
-)
-'as yet unclassified'
-classAccessorName = (
-(* The class accessor name is the selector of a message that can be sent to a 
-class metaobject corresponding to the parent environment to obtain a class 
-metaobject corresponding to this environment. *)
-  ^classDeclarationMirror simpleName
-)
-public testSuite = (
-  ^TestSuite testCases: testCases
-)
-'enumerating'
-public parentEnvironmentsDo: aBlock = (
-(* Evaluate a one-argument block with direct and indirect parents of this 
-environment, starting with the direct one and proceeding up to the top level. *)
-  parent withAllParentEnvironmentsDo: aBlock
-)
-public withAllNestedEnvironmentsDo: aBlock = (
-(* Evaluate aBlock with the receiver and all members of the transitive closure 
-of its nested environments, in preorder. *)
-  aBlock value: self.
-  nestedEnvironments do: [:each | each withAllNestedEnvironmentsDo: aBlock]
-)
-public withAllParentEnvironmentsDo: aBlock = (
-(* Evaluate a one-argument block with the receiver and all environment in its 
-parent chain all the way up to the top level, beginning with the receiver. *)
-  aBlock value: self.
-  parent withAllParentEnvironmentsDo: aBlock
-)
-'testing'
-public hasTestCases = (
-(* True if the class represented by this environment defines any test methods. *)
-  ^testCases isEmpty not
-)
-public hasTestCasesTransitively = (
-(* True if either the class represented by this environment or any of its nested classes define any test methods. *)
-  ^hasTestCases or:
-    [(nestedEnvironments
-      detect: [:some | some hasTestCasesTransitively]
-      ifNone: [nil]) notNil]
-)
-public isRoot = (
-(* True if this is a top-level environment representing the entire test module. *)
-  ^false
-)
-) : (
-)
-public class TestError case: testCase exception: exception = TestResult case: testCase (
-(* Represents a test case that didn't complete because an error was signaled
-and not handled while running the test case. The instance holds onto the
-exception instance representing the error. *)|
-  public exception ::= exception.
-|) (
-'testing'
-public isError = (
-  ^true
-)
-) : (
-)
-public class TestFailure case: testCase description: text = TestResult case: testCase (
-(* Represents a failed assertion in a test case. *)|
-  public description ::= text.
-|) (
-'testing'
-public isFailure = (
-  ^true
-)
-) : (
-)
+    public name = (
+      ^classAccessorName
+    )
+
+    classAccessorName = (
+      (* The class accessor name is the selector of a message that can be sent
+         to a class metaobject corresponding to the parent environment to obtain
+         a class metaobject corresponding to this environment. *)
+      ^ classDeclarationMirror simpleName
+    )
+
+    public testSuite = (
+      ^TestSuite testCases: testCases
+    )
+
+    'enumerating'
+    public parentEnvironmentsDo: aBlock = (
+      (* Evaluate a one-argument block with direct and indirect parents of this 
+         environment, starting with the direct one and proceeding up to the top
+         level. *)
+      parent withAllParentEnvironmentsDo: aBlock
+    )
+
+    public withAllNestedEnvironmentsDo: aBlock = (
+      (* Evaluate aBlock with the receiver and all members of the transitive
+         closure of its nested environments, in preorder. *)
+      aBlock value: self.
+      nestedEnvironments do: [:each | each withAllNestedEnvironmentsDo: aBlock]
+    )
+
+    public withAllParentEnvironmentsDo: aBlock = (
+      (* Evaluate a one-argument block with the receiver and all environment in
+         its parent chain all the way up to the top level, beginning with the
+         receiver. *)
+      aBlock value: self.
+      parent withAllParentEnvironmentsDo: aBlock
+    )
+
+    'testing'
+    public hasTestCases = (
+      (* True if the class represented by this environment defines any test methods. *)
+      ^testCases isEmpty not
+    )
+
+    public hasTestCasesTransitively = (
+      (* True if either the class represented by this environment or any of its
+         nested classes define any test methods. *)
+      ^ hasTestCases or:
+        [(nestedEnvironments
+          detect: [:some | some hasTestCasesTransitively]
+          ifNone: [nil]) notNil]
+    )
+
+    public isRoot = (
+      (* True if this is a top-level environment representing the entire test
+         module. *)
+      ^ false
+    )
+  )
+
+  public class TestError case: testCase exception: exception = TestResult case: testCase (
+    (* Represents a test case that didn't complete because an error was signaled
+       and not handled while running the test case. The instance holds onto the
+       exception instance representing the error. *)
+    | public exception ::= exception. |
+  ) (
+    'testing'
+    public isError = (
+      ^ true
+    )
+  )
+
+  public class TestFailure case: testCase description: text = TestResult case: testCase (
+    (* Represents a failed assertion in a test case. *)
+    | public description ::= text. |
+  ) (
+    'testing'
+    public isFailure = (
+      ^true
+    )
+  )
+
 class TestFailureException = Exception (
 (* An exception thrown when an assertion fails inside a test. The description of the failure is the exception's message text. *)|
 |) (
