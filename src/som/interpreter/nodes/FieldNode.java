@@ -21,6 +21,7 @@
  */
 package som.interpreter.nodes;
 
+import som.compiler.ClassDefinition.SlotDefinition;
 import som.interpreter.objectstorage.FieldAccessorNode.AbstractReadFieldNode;
 import som.interpreter.objectstorage.FieldAccessorNode.AbstractWriteFieldNode;
 import som.interpreter.objectstorage.FieldAccessorNode.UninitializedReadFieldNode;
@@ -48,15 +49,15 @@ public abstract class FieldNode extends ExpressionNode {
     @Child private ExpressionNode self;
     @Child private AbstractReadFieldNode read;
 
-    public FieldReadNode(final ExpressionNode self, final int fieldIndex,
+    public FieldReadNode(final ExpressionNode self, final SlotDefinition slot,
         final SourceSection source) {
       super(source);
       this.self = self;
-      read = new UninitializedReadFieldNode(fieldIndex);
+      read = new UninitializedReadFieldNode(slot);
     }
 
     public FieldReadNode(final FieldReadNode node) {
-      this(node.self, node.read.getFieldIndex(), node.getSourceSection());
+      this(node.self, node.read.getSlot(), node.getSourceSection());
     }
 
     @Override
@@ -106,13 +107,13 @@ public abstract class FieldNode extends ExpressionNode {
       implements PreevaluatedExpression {
     @Child private AbstractWriteFieldNode write;
 
-    public FieldWriteNode(final int fieldIndex, final SourceSection source) {
+    public FieldWriteNode(final SlotDefinition slot, final SourceSection source) {
       super(source);
-      write = new UninitializedWriteFieldNode(fieldIndex);
+      write = new UninitializedWriteFieldNode(slot);
     }
 
     public FieldWriteNode(final FieldWriteNode node) {
-      this(node.write.getFieldIndex(), node.getSourceSection());
+      this(node.write.getSlot(), node.getSourceSection());
     }
 
     public final Object executeEvaluated(final VirtualFrame frame,

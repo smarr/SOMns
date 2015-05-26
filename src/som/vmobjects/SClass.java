@@ -27,9 +27,11 @@ package som.vmobjects;
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
 
 import java.util.HashMap;
+import java.util.HashSet;
 
 import som.compiler.AccessModifier;
 import som.compiler.ClassBuilder.ClassDefinitionId;
+import som.compiler.ClassDefinition.SlotDefinition;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.objectstorage.ObjectLayout;
 import som.vm.constants.Classes;
@@ -44,6 +46,7 @@ public final class SClass extends SObjectWithoutFields {
   @CompilationFinal private SSymbol name;
 
   @CompilationFinal private HashMap<SSymbol, Dispatchable> dispatchables;
+  @CompilationFinal private HashSet<SlotDefinition> slots; // includes slots of superclasses
 
   @CompilationFinal private ObjectLayout layoutForInstances;
 
@@ -66,6 +69,10 @@ public final class SClass extends SObjectWithoutFields {
 
   public SClass getSuperClass() {
     return superclass;
+  }
+
+  public HashSet<SlotDefinition> getInstanceSlots() {
+    return slots;
   }
 
   public void setSuperClass(final SClass value) {
@@ -103,11 +110,14 @@ public final class SClass extends SObjectWithoutFields {
     name = value;
   }
 
-  public void setNumberOfSlots(final int numSlots) {
+  public void setSlots(final HashSet<SlotDefinition> slots) {
     transferToInterpreterAndInvalidate("SClass.setInstanceFields");
-    if (layoutForInstances == null ||
-        numSlots != layoutForInstances.getNumberOfFields()) {
-      layoutForInstances = new ObjectLayout(numSlots, this);
+    if (layoutForInstances == null) {
+      layoutForInstances = new ObjectLayout(slots, this);
+      this.slots = slots;
+    } else {
+      assert slots.size() == layoutForInstances.getNumberOfFields();
+      assert slots.equals(slots);
     }
   }
 
@@ -146,8 +156,9 @@ public final class SClass extends SObjectWithoutFields {
     return layoutForInstances;
   }
 
-  public ObjectLayout updateInstanceLayoutWithInitializedField(final long index, final Class<?> type) {
-    ObjectLayout updated = layoutForInstances.withInitializedField(index, type);
+  public ObjectLayout updateInstanceLayoutWithInitializedField(
+      final SlotDefinition slot, final Class<?> type) {
+    ObjectLayout updated = layoutForInstances.withInitializedField(slot, type);
 
     if (updated != layoutForInstances) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
@@ -156,8 +167,9 @@ public final class SClass extends SObjectWithoutFields {
     return layoutForInstances;
   }
 
-  public ObjectLayout updateInstanceLayoutWithGeneralizedField(final long index) {
-    ObjectLayout updated = layoutForInstances.withGeneralizedField(index);
+  public ObjectLayout updateInstanceLayoutWithGeneralizedField(
+      final SlotDefinition slot) {
+    ObjectLayout updated = layoutForInstances.withGeneralizedField(slot);
 
     if (updated != layoutForInstances) {
       CompilerDirectives.transferToInterpreterAndInvalidate();

@@ -1,6 +1,7 @@
 package som.compiler;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 
 import som.compiler.ClassBuilder.ClassDefinitionId;
@@ -46,6 +47,7 @@ import com.sun.istack.internal.Nullable;
 public final class ClassDefinition {
   private final SSymbol       name;
   private final Method        superclassResolution;
+  private final HashSet<SlotDefinition> slots;
   private final HashMap<SSymbol, Dispatchable> instanceDispatchable;
   private final HashMap<SSymbol, SInvokable> factoryMethods;
   private final SourceSection sourceSection;
@@ -53,19 +55,16 @@ public final class ClassDefinition {
   private final ClassScope     instanceScope;
   private final ClassScope     classScope;
   private final AccessModifier accessModifier;
-  private final int numberOfSlots;
 
   @Nullable
   private final LinkedHashMap<SSymbol, ClassDefinition> nestedClassDefinitions;
 
-
-
   public ClassDefinition(final SSymbol name,
       final Method superclassResolution,
+      final HashSet<SlotDefinition> slots,
       final HashMap<SSymbol, Dispatchable> instanceDispatchable,
       final HashMap<SSymbol, SInvokable>   factoryMethods,
       final LinkedHashMap<SSymbol, ClassDefinition> nestedClassDefinitions,
-      final int numberOfSlots,
       final ClassDefinitionId classId,
       final AccessModifier accessModifier,
       final ClassScope instanceScope, final ClassScope classScope,
@@ -75,12 +74,12 @@ public final class ClassDefinition {
     this.instanceDispatchable = instanceDispatchable;
     this.factoryMethods  = factoryMethods;
     this.nestedClassDefinitions = nestedClassDefinitions;
-    this.numberOfSlots   = numberOfSlots;
     this.sourceSection   = sourceSection;
     this.classId         = classId;
     this.accessModifier  = accessModifier;
     this.instanceScope   = instanceScope;
     this.classScope      = classScope;
+    this.slots           = slots;
   }
 
   public SSymbol getName() {
@@ -110,7 +109,15 @@ public final class ClassDefinition {
 
     // Initialize the resulting class
     result.setName(name);
-    result.setNumberOfSlots(numberOfSlots);
+
+    HashSet<SlotDefinition> instanceSlots = slots != null ? new HashSet<>(slots) : new HashSet<>();
+    if (superClass != null) {
+      HashSet<SlotDefinition> superSlots = superClass.getInstanceSlots();
+      if (superSlots != null) {
+        instanceSlots.addAll(superSlots);
+      }
+    }
+    result.setSlots(instanceSlots);
     result.setDispatchables(instanceScope.getDispatchables());
   }
 
@@ -141,7 +148,6 @@ public final class ClassDefinition {
   //       perhaps move some of the responsibilities to SlotAccessNode???
   public static class SlotDefinition implements Dispatchable {
     private final SSymbol name;
-    protected final int index;
     protected final AccessModifier modifier;
     private final boolean immutable;
     private final SourceSection source;
@@ -150,11 +156,10 @@ public final class ClassDefinition {
     protected CallTarget genericAccessTarget;
 
     public SlotDefinition(final SSymbol name,
-        final AccessModifier acccessModifier, final int index,
-        final boolean immutable, final SourceSection source) {
+        final AccessModifier acccessModifier, final boolean immutable,
+        final SourceSection source) {
       this.name      = name;
       this.modifier  = acccessModifier;
-      this.index     = index;
       this.immutable = immutable;
       this.source    = source;
     }
@@ -193,7 +198,7 @@ public final class ClassDefinition {
 
     public FieldWriteNode getWriteNode(final ExpressionNode receiver,
         final ExpressionNode val, final SourceSection source) {
-      return SNodeFactory.createFieldWrite(receiver, val, index, source);
+      return SNodeFactory.createFieldWrite(receiver, val, this, source);
     }
 
     @Override
@@ -217,22 +222,27 @@ public final class ClassDefinition {
     }
 
     protected SlotAccessNode createNode() {
-      SlotReadNode node = new SlotReadNode(new UninitializedReadFieldNode(index));
+      SlotReadNode node = new SlotReadNode(
+          new UninitializedReadFieldNode(this));
       return node;
     }
 
     public void setValueDuringBootstrap(final SObject obj, final Object value) {
-      obj.setField(index, value);
+      obj.setField(this, value);
     }
   }
 
   // TODO: should not be a subclass of SlotDefinition, should refactor SlotDef. first.
   public static final class SlotMutator extends SlotDefinition {
 
-    public SlotMutator(final SSymbol name, final AccessModifier acccessModifier, final int index,
-        final boolean immutable, final SourceSection source) {
-      super(name, acccessModifier, index, immutable, source);
+    private SlotDefinition mainSlot;
+
+    public SlotMutator(final SSymbol name, final AccessModifier acccessModifier,
+        final boolean immutable, final SourceSection source,
+        final SlotDefinition mainSlot) {
+      super(name, acccessModifier, immutable, source);
       assert !immutable;
+      this.mainSlot = mainSlot;
     }
 
     @Override
@@ -260,8 +270,8 @@ public final class ClassDefinition {
     }
 
     protected AbstractWriteFieldNode createWriteNode() {
-      AbstractWriteFieldNode node = new UninitializedWriteFieldNode(index);
-          new SlotReadNode(new UninitializedReadFieldNode(index));
+      AbstractWriteFieldNode node = new UninitializedWriteFieldNode(mainSlot);
+          new SlotReadNode(new UninitializedReadFieldNode(mainSlot));
       return node;
     }
 
@@ -274,9 +284,9 @@ public final class ClassDefinition {
   public static final class ClassSlotDefinition extends SlotDefinition {
     private final ClassDefinition classDefinition;
 
-    public ClassSlotDefinition(final SSymbol name, final int index,
+    public ClassSlotDefinition(final SSymbol name,
         final ClassDefinition classDefinition) {
-      super(name, classDefinition.getAccessModifier(), index, true,
+      super(name, classDefinition.getAccessModifier(), true,
           classDefinition.getSourceSection());
       this.classDefinition = classDefinition;
     }
@@ -284,8 +294,8 @@ public final class ClassDefinition {
     @Override
     protected SlotAccessNode createNode() {
       ClassSlotAccessNode node = new ClassSlotAccessNode(classDefinition,
-          new UninitializedReadFieldNode(index),
-          new UninitializedWriteFieldNode(index));
+          new UninitializedReadFieldNode(this),
+          new UninitializedWriteFieldNode(this));
       return node;
     }
 
@@ -307,7 +317,7 @@ public final class ClassDefinition {
   }
 
   public int getNumberOfSlots() {
-    return numberOfSlots;
+    return slots.size();
   }
 
   public SourceSection getSourceSection() {

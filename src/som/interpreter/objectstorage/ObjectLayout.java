@@ -1,9 +1,13 @@
 package som.interpreter.objectstorage;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map.Entry;
+
+import som.compiler.ClassDefinition.SlotDefinition;
 import som.interpreter.objectstorage.StorageLocation.UnwrittenStorageLocation;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject;
-
 
 
 public final class ObjectLayout {
@@ -13,42 +17,49 @@ public final class ObjectLayout {
   private final int objectStorageLocationsUsed;
   private final int totalNumberOfStorageLocations;
 
-  private final StorageLocation[] storageLocations;
-  private final Class<?>[]        storageTypes;
+  private final HashMap<SlotDefinition, StorageLocation> storageLocations;
+  private final HashMap<SlotDefinition, Class<?>>        storageTypes;
 
-  public ObjectLayout(final int numberOfFields, final SClass forClass) {
-    this(new Class<?>[numberOfFields], forClass);
+  public ObjectLayout(final HashSet<SlotDefinition> slots, final SClass forClass) {
+    this(getInitialStorageTypes(slots), slots.size(), forClass);
   }
 
-  public ObjectLayout(final Class<?>[] knownFieldTypes, final SClass forClass) {
+  private static HashMap<SlotDefinition, Class<?>> getInitialStorageTypes(
+      final HashSet<SlotDefinition> slots) {
+    HashMap<SlotDefinition, Class<?>> types = new HashMap<SlotDefinition, Class<?>>((int) (slots.size() / 0.75f));
+    for (SlotDefinition slot : slots) {
+      types.put(slot, null);
+    }
+    return types;
+  }
+
+  public ObjectLayout(final HashMap<SlotDefinition, Class<?>> knownFieldTypes,
+      final int numberOfFields, final SClass forClass) {
     this.forClass = forClass;
 
     storageTypes = knownFieldTypes;
-    totalNumberOfStorageLocations = knownFieldTypes.length;
-    storageLocations = new StorageLocation[knownFieldTypes.length];
+    totalNumberOfStorageLocations = numberOfFields;
+    storageLocations = new HashMap<>((int) (numberOfFields / 0.75f));
 
     int nextFreePrimIdx = 0;
     int nextFreeObjIdx  = 0;
 
-    for (int i = 0; i < totalNumberOfStorageLocations; i++) {
-      Class<?> type = knownFieldTypes[i];
-
+    for (Entry<SlotDefinition, Class<?>> entry : knownFieldTypes.entrySet()) {
       StorageLocation storage;
-      if (type == Long.class) {
+      if (entry.getValue() == Long.class) {
         storage = StorageLocation.createForLong(this, nextFreePrimIdx);
         nextFreePrimIdx++;
-      } else if (type == Double.class) {
+      } else if (entry.getValue() == Double.class) {
         storage = StorageLocation.createForDouble(this, nextFreePrimIdx);
         nextFreePrimIdx++;
-      } else if (type == Object.class) {
+      } else if (entry.getValue() == Object.class) {
         storage = StorageLocation.createForObject(this, nextFreeObjIdx);
         nextFreeObjIdx++;
       } else {
-        assert type == null;
+        assert entry.getValue() == null;
         storage = new UnwrittenStorageLocation(this);
       }
-
-      storageLocations[i] = storage;
+      storageLocations.put(entry.getKey(), storage);
     }
 
     primitiveStorageLocationsUsed = nextFreePrimIdx;
@@ -60,51 +71,49 @@ public final class ObjectLayout {
   }
 
   public int getNumberOfFields() {
-    return storageTypes.length;
+    return totalNumberOfStorageLocations;
   }
 
-  public ObjectLayout withGeneralizedField(final long fieldIndex) {
-    return withGeneralizedField((int) fieldIndex);
+  public HashMap<SlotDefinition, StorageLocation> getStorageLocations() {
+    return storageLocations;
   }
 
-  public ObjectLayout withGeneralizedField(final int fieldIndex) {
-    if (storageTypes[fieldIndex] == Object.class) {
+  public ObjectLayout withGeneralizedField(final SlotDefinition slot) {
+    Class<?> type = storageTypes.get(slot);
+    if (type == Object.class) {
       return this;
     } else {
-      assert storageTypes[fieldIndex] != Object.class;
-      Class<?>[] withGeneralizedField = storageTypes.clone();
-      withGeneralizedField[fieldIndex] = Object.class;
-      return new ObjectLayout(withGeneralizedField, forClass);
+      assert type != Object.class;
+      return cloneWithChanged(slot, Object.class);
     }
   }
 
-  public ObjectLayout withInitializedField(final long fieldIndex, final Class<?> type) {
+  public ObjectLayout withInitializedField(final SlotDefinition slot, final Class<?> type) {
     Class <?> specType;
     if (type == Long.class || type == Double.class) {
       specType = type;
     } else {
       specType = Object.class;
     }
-    return withInitializedField((int) fieldIndex, specType);
-  }
 
-  private ObjectLayout withInitializedField(final int fieldIndex, final Class<?> type) {
-    if (storageTypes[fieldIndex] == type) {
+    Class<?> currentType = storageTypes.get(slot);
+    if (currentType == specType) {
       return this;
     } else {
-      assert storageTypes[fieldIndex] == null;
-      Class<?>[] withInitializedField = storageTypes.clone();
-      withInitializedField[fieldIndex] = type;
-      return new ObjectLayout(withInitializedField, forClass);
+      assert currentType == null;
+      return cloneWithChanged(slot, specType);
     }
   }
 
-  public StorageLocation getStorageLocation(final long fieldIndex) {
-    return getStorageLocation((int) fieldIndex);
+  protected ObjectLayout cloneWithChanged(final SlotDefinition slot,
+      final Class<?> specType) {
+    HashMap<SlotDefinition, Class<?>> withChangedField = new HashMap<>(storageTypes);
+    withChangedField.put(slot, specType);
+    return new ObjectLayout(withChangedField, totalNumberOfStorageLocations, forClass);
   }
 
-  public StorageLocation getStorageLocation(final int fieldIndex) {
-    return storageLocations[fieldIndex];
+  public StorageLocation getStorageLocation(final SlotDefinition slot) {
+    return storageLocations.get(slot);
   }
 
   public int getNumberOfUsedExtendedObjectStorageLocations() {

@@ -9,5 +9,5 @@ import som.vmobjects.SObject;
 public final class KernelObj {
   private KernelObj() { }
 
-  public static final SObject kernel = new SObject(23); // keep the actual number up-to-date
+  public static final SObject kernel = new SObject(true);
 }

@@ -3,6 +3,7 @@ package som.interpreter;
 import java.util.List;
 
 import som.compiler.ClassBuilder.ClassDefinitionId;
+import som.compiler.ClassDefinition.SlotDefinition;
 import som.compiler.Variable.Argument;
 import som.compiler.Variable.Local;
 import som.interpreter.LexicalScope.MethodScope;
@@ -46,13 +47,13 @@ public final class SNodeFactory {
   }
 
   public static FieldReadNode createFieldRead(final ExpressionNode self,
-      final int fieldIndex, final SourceSection source) {
-    return new FieldReadNode(self, fieldIndex, source);
+      final SlotDefinition slot, final SourceSection source) {
+    return new FieldReadNode(self, slot, source);
   }
 
   public static FieldWriteNode createFieldWrite(final ExpressionNode self,
-      final ExpressionNode exp, final int fieldIndex, final SourceSection source) {
-    return FieldWriteNodeGen.create(fieldIndex, source, self, exp);
+      final ExpressionNode exp, final SlotDefinition slot, final SourceSection source) {
+    return FieldWriteNodeGen.create(slot, source, self, exp);
   }
 
   public static ContextualNode createLocalVarRead(final Local variable,

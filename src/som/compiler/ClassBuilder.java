@@ -28,6 +28,7 @@ import static som.vm.Symbols.symbolFor;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -62,7 +63,7 @@ public final class ClassBuilder {
   private final ArrayList<ExpressionNode> slotAndInitExprs = new ArrayList<>();
 
   private SSymbol name;
-  private int numberOfSlots = 0;
+  private final HashSet<SlotDefinition> slots = new HashSet<>();
   private final LinkedHashMap<SSymbol, Dispatchable> dispatchables = new LinkedHashMap<>();
   private final HashMap<SSymbol, SInvokable> factoryMethods = new HashMap<SSymbol, SInvokable>();
 
@@ -225,15 +226,14 @@ public final class ClassBuilder {
           " A second slot with the same name is not possible.", source);
     }
 
-    SlotDefinition slot = new SlotDefinition(name, acccessModifier,
-        numberOfSlots, immutable, source);
-    numberOfSlots++;
+    SlotDefinition slot = new SlotDefinition(name, acccessModifier, immutable,
+        source);
+    slots.add(slot);
 
     dispatchables.put(name, slot);
     if (!immutable) {
       dispatchables.put(getSetterName(name),
-          new SlotMutator(name, acccessModifier, numberOfSlots - 1, immutable,
-              source));
+          new SlotMutator(name, acccessModifier, immutable, source, slot));
     }
 
 
@@ -281,7 +281,7 @@ public final class ClassBuilder {
     }
 
     ClassDefinition clsDef = new ClassDefinition(name, superclassResolution,
-        dispatchables, factoryMethods, embeddedClasses, numberOfSlots, classId,
+        slots, dispatchables, factoryMethods, embeddedClasses, classId,
         accessModifier, instanceScope, classScope, source);
     instanceScope.setClassDefinition(clsDef, false);
     classScope.setClassDefinition(clsDef, true);
@@ -418,8 +418,9 @@ public final class ClassBuilder {
     }
 
     embeddedClasses.put(name, nestedClass);
-    dispatchables.put(name, new ClassSlotDefinition(name, numberOfSlots, nestedClass));
-    numberOfSlots++;
+    ClassSlotDefinition cacheSlot = new ClassSlotDefinition(name, nestedClass);
+    dispatchables.put(name, cacheSlot);
+    slots.add(cacheSlot);
   }
 
   public ClassDefinitionId getClassId() {

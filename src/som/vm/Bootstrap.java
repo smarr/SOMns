@@ -87,6 +87,13 @@ public final class Bootstrap {
   @CompilationFinal
   public static SClass platformClass;
 
+  @CompilationFinal
+  private static boolean objectSystemInitialized = false;
+
+  public static boolean isObjectSystemInitialized() {
+    return objectSystemInitialized;
+  }
+
   public static ClassDefinition loadModule(final String filename)
       throws IOException {
     File file = new File(filename);
@@ -264,8 +271,8 @@ public final class Bootstrap {
     ClassScope scope = new ClassScope(null);
 
     ClassDefinition vmMirrorDef = new ClassDefinition(
-        Symbols.symbolFor("VmMirror"), null, vmMirrorMethods, null, null,
-        0, new ClassDefinitionId(), AccessModifier.PUBLIC, scope, scope, null);
+        Symbols.symbolFor("VmMirror"), null, null, vmMirrorMethods, null, null,
+        new ClassDefinitionId(), AccessModifier.PUBLIC, scope, scope, null);
     scope.setClassDefinition(vmMirrorDef, false);
 
     SClass vmMirrorClass = new SClass(null, null);
@@ -347,8 +354,6 @@ public final class Bootstrap {
     assert objectDef.getNumberOfSlots() == 0;
     assert  valueDef.getNumberOfSlots() == 0;
 
-    assert KernelObj.kernel.getNumberOfFields() == kernelModule.getNumberOfSlots();
-
        topDef.initializeClass(Classes.topClass, null);  // Top doesn't have a super class
      thingDef.initializeClass(Classes.thingClass,  Classes.topClass);
      valueDef.initializeClass(Classes.valueClass,  Classes.thingClass);
@@ -404,6 +409,8 @@ public final class Bootstrap {
     setSlot(KernelObj.kernel, "Block1",    Classes.blockClass1,    kernelModule);
     setSlot(KernelObj.kernel, "Block2",    Classes.blockClass2,    kernelModule);
     setSlot(KernelObj.kernel, "Block3",    Classes.blockClass3,    kernelModule);
+
+    objectSystemInitialized = true;
 
     platformClass = platformModule.instantiateClass();
   }

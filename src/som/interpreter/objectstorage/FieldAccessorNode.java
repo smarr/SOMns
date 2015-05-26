@@ -1,5 +1,6 @@
 package som.interpreter.objectstorage;
 
+import som.compiler.ClassDefinition.SlotDefinition;
 import som.interpreter.TruffleCompiler;
 import som.interpreter.TypesGen;
 import som.interpreter.objectstorage.StorageLocation.AbstractObjectStorageLocation;
@@ -14,27 +15,27 @@ import com.oracle.truffle.api.nodes.UnexpectedResultException;
 
 
 public abstract class FieldAccessorNode extends Node {
-  protected final int fieldIndex;
+  protected final SlotDefinition slot;
 
-  public static AbstractReadFieldNode createRead(final int fieldIndex) {
-    return new UninitializedReadFieldNode(fieldIndex);
+  public static AbstractReadFieldNode createRead(final SlotDefinition slot) {
+    return new UninitializedReadFieldNode(slot);
   }
 
-  public static AbstractWriteFieldNode createWrite(final int fieldIndex) {
-    return new UninitializedWriteFieldNode(fieldIndex);
+  public static AbstractWriteFieldNode createWrite(final SlotDefinition slot) {
+    return new UninitializedWriteFieldNode(slot);
   }
 
-  private FieldAccessorNode(final int fieldIndex) {
-    this.fieldIndex = fieldIndex;
+  private FieldAccessorNode(final SlotDefinition slot) {
+    this.slot = slot;
   }
 
-  public final int getFieldIndex() {
-    return fieldIndex;
+  public final SlotDefinition getSlot() {
+    return slot;
   }
 
   public abstract static class AbstractReadFieldNode extends FieldAccessorNode {
-    public AbstractReadFieldNode(final int fieldIndex) {
-      super(fieldIndex);
+    public AbstractReadFieldNode(final SlotDefinition slot) {
+      super(slot);
     }
 
     public abstract Object read(SObject obj);
@@ -57,23 +58,23 @@ public abstract class FieldAccessorNode extends Node {
       obj.updateLayoutToMatchClass();
 
       final ObjectLayout    layout   = obj.getObjectLayout();
-      final StorageLocation location = layout.getStorageLocation(fieldIndex);
+      final StorageLocation location = layout.getStorageLocation(slot);
 
-      AbstractReadFieldNode newNode = location.getReadNode(fieldIndex, layout, next);
+      AbstractReadFieldNode newNode = location.getReadNode(slot, layout, next);
       return replace(newNode, reason);
     }
   }
 
   public static final class UninitializedReadFieldNode extends AbstractReadFieldNode {
 
-    public UninitializedReadFieldNode(final int fieldIndex) {
-      super(fieldIndex);
+    public UninitializedReadFieldNode(final SlotDefinition slot) {
+      super(slot);
     }
 
     @Override
     public Object read(final SObject obj) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
-      return specializeAndRead(obj, "uninitalized node", new UninitializedReadFieldNode(fieldIndex));
+      return specializeAndRead(obj, "uninitalized node", new UninitializedReadFieldNode(slot));
     }
   }
 
@@ -81,9 +82,9 @@ public abstract class FieldAccessorNode extends Node {
     protected final ObjectLayout layout;
     @Child private AbstractReadFieldNode nextInCache;
 
-    public ReadSpecializedFieldNode(final int fieldIndex,
+    public ReadSpecializedFieldNode(final SlotDefinition slot,
         final ObjectLayout layout, final AbstractReadFieldNode next) {
-      super(fieldIndex);
+      super(slot);
       this.layout = layout;
       nextInCache = next;
     }
@@ -102,9 +103,9 @@ public abstract class FieldAccessorNode extends Node {
   }
 
   public static final class ReadUnwrittenFieldNode extends ReadSpecializedFieldNode {
-    public ReadUnwrittenFieldNode(final int fieldIndex,
+    public ReadUnwrittenFieldNode(final SlotDefinition slot,
         final ObjectLayout layout, final AbstractReadFieldNode next) {
-      super(fieldIndex, layout, next);
+      super(slot, layout, next);
     }
 
     @Override
@@ -120,10 +121,10 @@ public abstract class FieldAccessorNode extends Node {
   public static final class ReadLongFieldNode extends ReadSpecializedFieldNode {
     private final LongStorageLocation storage;
 
-    public ReadLongFieldNode(final int fieldIndex, final ObjectLayout layout,
-        final AbstractReadFieldNode next) {
-      super(fieldIndex, layout, next);
-      this.storage = (LongStorageLocation) layout.getStorageLocation(fieldIndex);
+    public ReadLongFieldNode(final SlotDefinition slot,
+        final ObjectLayout layout, final AbstractReadFieldNode next) {
+      super(slot, layout, next);
+      this.storage = (LongStorageLocation) layout.getStorageLocation(slot);
     }
 
     @Override
@@ -149,10 +150,10 @@ public abstract class FieldAccessorNode extends Node {
   public static final class ReadDoubleFieldNode extends ReadSpecializedFieldNode {
     private final DoubleStorageLocation storage;
 
-    public ReadDoubleFieldNode(final int fieldIndex, final ObjectLayout layout,
-        final AbstractReadFieldNode next) {
-      super(fieldIndex, layout, next);
-      this.storage = (DoubleStorageLocation) layout.getStorageLocation(fieldIndex);
+    public ReadDoubleFieldNode(final SlotDefinition slot,
+        final ObjectLayout layout, final AbstractReadFieldNode next) {
+      super(slot, layout, next);
+      this.storage = (DoubleStorageLocation) layout.getStorageLocation(slot);
     }
 
     @Override
@@ -178,10 +179,10 @@ public abstract class FieldAccessorNode extends Node {
   public static final class ReadObjectFieldNode extends ReadSpecializedFieldNode {
     private final AbstractObjectStorageLocation storage;
 
-    public ReadObjectFieldNode(final int fieldIndex, final ObjectLayout layout,
-        final AbstractReadFieldNode next) {
-      super(fieldIndex, layout, next);
-      this.storage = (AbstractObjectStorageLocation) layout.getStorageLocation(fieldIndex);
+    public ReadObjectFieldNode(final SlotDefinition slot,
+        final ObjectLayout layout, final AbstractReadFieldNode next) {
+      super(slot, layout, next);
+      this.storage = (AbstractObjectStorageLocation) layout.getStorageLocation(slot);
     }
 
     @Override
@@ -196,8 +197,8 @@ public abstract class FieldAccessorNode extends Node {
   }
 
   public abstract static class AbstractWriteFieldNode extends FieldAccessorNode {
-    public AbstractWriteFieldNode(final int fieldIndex) {
-      super(fieldIndex);
+    public AbstractWriteFieldNode(final SlotDefinition slot) {
+      super(slot);
     }
 
     public abstract Object write(SObject obj, Object value);
@@ -216,25 +217,25 @@ public abstract class FieldAccessorNode extends Node {
         final String reason, final AbstractWriteFieldNode next) {
       TruffleCompiler.transferToInterpreterAndInvalidate(reason);
 
-      obj.setField(fieldIndex, value);
+      obj.setField(slot, value);
 
       final ObjectLayout layout = obj.getObjectLayout();
-      final StorageLocation location = layout.getStorageLocation(fieldIndex);
-      AbstractWriteFieldNode newNode = location.getWriteNode(fieldIndex, layout, next);
+      final StorageLocation location = layout.getStorageLocation(slot);
+      AbstractWriteFieldNode newNode = location.getWriteNode(slot, layout, next);
       replace(newNode, reason);
     }
   }
 
   public static final class UninitializedWriteFieldNode extends AbstractWriteFieldNode {
-    public UninitializedWriteFieldNode(final int fieldIndex) {
-      super(fieldIndex);
+    public UninitializedWriteFieldNode(final SlotDefinition slot) {
+      super(slot);
     }
 
     @Override
     public Object write(final SObject obj, final Object value) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       writeAndRespecialize(obj, value, "initialize write field node",
-          new UninitializedWriteFieldNode(fieldIndex));
+          new UninitializedWriteFieldNode(slot));
       return value;
     }
   }
@@ -244,9 +245,9 @@ public abstract class FieldAccessorNode extends Node {
     protected final ObjectLayout layout;
     @Child protected AbstractWriteFieldNode nextInCache;
 
-    public WriteSpecializedFieldNode(final int fieldIndex,
+    public WriteSpecializedFieldNode(final SlotDefinition slot,
         final ObjectLayout layout, final AbstractWriteFieldNode next) {
-      super(fieldIndex);
+      super(slot);
       this.layout = layout;
       nextInCache = next;
     }
@@ -259,10 +260,10 @@ public abstract class FieldAccessorNode extends Node {
   public static final class WriteLongFieldNode extends WriteSpecializedFieldNode {
     private final LongStorageLocation storage;
 
-    public WriteLongFieldNode(final int fieldIndex, final ObjectLayout layout,
-        final AbstractWriteFieldNode next) {
-      super(fieldIndex, layout, next);
-      this.storage = (LongStorageLocation) layout.getStorageLocation(fieldIndex);
+    public WriteLongFieldNode(final SlotDefinition slot,
+        final ObjectLayout layout, final AbstractWriteFieldNode next) {
+      super(slot, layout, next);
+      this.storage = (LongStorageLocation) layout.getStorageLocation(slot);
     }
 
     @Override
@@ -297,10 +298,10 @@ public abstract class FieldAccessorNode extends Node {
   public static final class WriteDoubleFieldNode extends WriteSpecializedFieldNode {
     private final DoubleStorageLocation storage;
 
-    public WriteDoubleFieldNode(final int fieldIndex, final ObjectLayout layout,
-        final AbstractWriteFieldNode next) {
-      super(fieldIndex, layout, next);
-      this.storage = (DoubleStorageLocation) layout.getStorageLocation(fieldIndex);
+    public WriteDoubleFieldNode(final SlotDefinition slot,
+        final ObjectLayout layout, final AbstractWriteFieldNode next) {
+      super(slot, layout, next);
+      this.storage = (DoubleStorageLocation) layout.getStorageLocation(slot);
     }
 
     @Override
@@ -335,10 +336,10 @@ public abstract class FieldAccessorNode extends Node {
   public static final class WriteObjectFieldNode extends WriteSpecializedFieldNode {
     private final AbstractObjectStorageLocation storage;
 
-    public WriteObjectFieldNode(final int fieldIndex, final ObjectLayout layout,
-        final AbstractWriteFieldNode next) {
-      super(fieldIndex, layout, next);
-      this.storage = (AbstractObjectStorageLocation) layout.getStorageLocation(fieldIndex);
+    public WriteObjectFieldNode(final SlotDefinition slot,
+        final ObjectLayout layout, final AbstractWriteFieldNode next) {
+      super(slot, layout, next);
+      this.storage = (AbstractObjectStorageLocation) layout.getStorageLocation(slot);
     }
 
     @Override

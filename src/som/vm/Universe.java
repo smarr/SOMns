@@ -136,8 +136,6 @@ public final class Universe {
     if (Globals.trueObject != trueObject) {
       errorExit("Initialization went wrong for class Globals");
     }
-
-    objectSystemInitialized = true;
   }
 
   @TruffleBoundary
@@ -292,11 +290,7 @@ public final class Universe {
   @CompilationFinal private static Universe current;
   @CompilationFinal private boolean alreadyInitialized;
 
-  @CompilationFinal private boolean objectSystemInitialized = false;
 
-  public boolean isObjectSystemInitialized() {
-    return objectSystemInitialized;
-  }
 
   public static Universe current() {
     if (current == null) {

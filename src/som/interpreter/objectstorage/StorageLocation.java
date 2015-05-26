@@ -2,6 +2,7 @@ package som.interpreter.objectstorage;
 
 import java.lang.reflect.Field;
 
+import som.compiler.ClassDefinition.SlotDefinition;
 import som.interpreter.TruffleCompiler;
 import som.interpreter.objectstorage.FieldAccessorNode.AbstractReadFieldNode;
 import som.interpreter.objectstorage.FieldAccessorNode.AbstractWriteFieldNode;
@@ -42,12 +43,14 @@ public abstract class StorageLocation {
       getCapability(UnsafeAccessFactory.class).createUnsafeAccess(loadUnsafe());
 
   public interface LongStorageLocation {
-    long readLong(final SObject obj, boolean assumptionValid) throws UnexpectedResultException;
+    long readLong(final SObject obj, boolean assumptionValid)
+        throws UnexpectedResultException;
     void writeLong(final SObject obj, final long value);
   }
 
   public interface DoubleStorageLocation {
-    double readDouble(final SObject obj, boolean assumptionValid) throws UnexpectedResultException;
+    double readDouble(final SObject obj, boolean assumptionValid)
+        throws UnexpectedResultException;
     void   writeDouble(final SObject obj, final double value);
   }
 
@@ -91,8 +94,10 @@ public abstract class StorageLocation {
   public abstract Object  read(SObject obj,  boolean assumptionValid);
   public abstract void    write(SObject obj, Object value) throws GeneralizeStorageLocationException, UninitalizedStorageLocationException;
 
-  public abstract AbstractReadFieldNode  getReadNode(int fieldIndex, ObjectLayout layout, AbstractReadFieldNode next);
-  public abstract AbstractWriteFieldNode getWriteNode(int fieldIndex, ObjectLayout layout, AbstractWriteFieldNode next);
+  public abstract AbstractReadFieldNode  getReadNode(SlotDefinition slot,
+      ObjectLayout layout, AbstractReadFieldNode next);
+  public abstract AbstractWriteFieldNode getWriteNode(SlotDefinition slot,
+      ObjectLayout layout, AbstractWriteFieldNode next);
 
 
   public final class GeneralizeStorageLocationException extends Exception {
@@ -126,14 +131,14 @@ public abstract class StorageLocation {
     }
 
     @Override
-    public AbstractReadFieldNode getReadNode(final int fieldIndex,
+    public AbstractReadFieldNode getReadNode(final SlotDefinition slot,
         final ObjectLayout layout, final AbstractReadFieldNode next) {
       CompilerAsserts.neverPartOfCompilation("StorageLocation");
-      return new ReadUnwrittenFieldNode(fieldIndex, layout, next);
+      return new ReadUnwrittenFieldNode(slot, layout, next);
     }
 
     @Override
-    public AbstractWriteFieldNode getWriteNode(final int fieldIndex,
+    public AbstractWriteFieldNode getWriteNode(final SlotDefinition slot,
         final ObjectLayout layout, final AbstractWriteFieldNode next) {
       CompilerAsserts.neverPartOfCompilation("StorageLocation");
       throw new RuntimeException("we should not get here, should we?");
@@ -142,36 +147,35 @@ public abstract class StorageLocation {
   }
 
   public abstract static class AbstractObjectStorageLocation extends StorageLocation {
-    protected final int fieldIndex;
-
-    public AbstractObjectStorageLocation(final ObjectLayout layout, final int fieldIndex) {
+    public AbstractObjectStorageLocation(final ObjectLayout layout) {
       super(layout);
-      this.fieldIndex = fieldIndex;
     }
 
     @Override
     public abstract void write(final SObject obj, final Object value);
 
     @Override
-    public final AbstractReadFieldNode getReadNode(final int fieldIndex,
+    public final AbstractReadFieldNode getReadNode(final SlotDefinition slot,
         final ObjectLayout layout, final AbstractReadFieldNode next) {
       CompilerAsserts.neverPartOfCompilation("StorageLocation");
-      return new ReadObjectFieldNode(fieldIndex, layout, next);
+      return new ReadObjectFieldNode(slot, layout, next);
     }
 
     @Override
-    public final AbstractWriteFieldNode getWriteNode(final int fieldIndex,
+    public final AbstractWriteFieldNode getWriteNode(final SlotDefinition slot,
         final ObjectLayout layout, final AbstractWriteFieldNode next) {
       CompilerAsserts.neverPartOfCompilation("StorageLocation");
-      return new WriteObjectFieldNode(fieldIndex, layout, next);
+      return new WriteObjectFieldNode(slot, layout, next);
     }
   }
 
-  public static final class ObjectDirectStorageLocation extends AbstractObjectStorageLocation {
+  public static final class ObjectDirectStorageLocation
+      extends AbstractObjectStorageLocation {
     private final long fieldOffset;
-    public ObjectDirectStorageLocation(final ObjectLayout layout, final int fieldIndex) {
-      super(layout, fieldIndex);
-      fieldOffset = SObject.getObjectFieldOffset(fieldIndex);
+    public ObjectDirectStorageLocation(final ObjectLayout layout,
+        final int objFieldIdx) {
+      super(layout);
+      fieldOffset = SObject.getObjectFieldOffset(objFieldIdx);
     }
 
     @Override
@@ -200,11 +204,12 @@ public abstract class StorageLocation {
 
   public static final class ObjectArrayStorageLocation extends AbstractObjectStorageLocation {
     private final int extensionIndex;
-    private final int absoluteIndex;
-    public ObjectArrayStorageLocation(final ObjectLayout layout, final int fieldIndex) {
-      super(layout, fieldIndex);
-      extensionIndex = fieldIndex - SObject.NUM_OBJECT_FIELDS;
-      absoluteIndex = Unsafe.ARRAY_OBJECT_BASE_OFFSET + Unsafe.ARRAY_OBJECT_INDEX_SCALE * extensionIndex;
+//    private final int absoluteIndex;
+    public ObjectArrayStorageLocation(final ObjectLayout layout,
+        final int objFieldIdx) {
+      super(layout);
+      extensionIndex = objFieldIdx - SObject.NUM_OBJECT_FIELDS;
+//      absoluteIndex = Unsafe.ARRAY_OBJECT_BASE_OFFSET + Unsafe.ARRAY_OBJECT_INDEX_SCALE * extensionIndex;
     }
 
     @Override
@@ -241,13 +246,15 @@ public abstract class StorageLocation {
   public abstract static class PrimitiveStorageLocation extends StorageLocation {
     protected final int mask;
 
-    protected PrimitiveStorageLocation(final ObjectLayout layout, final int primField) {
+    protected PrimitiveStorageLocation(final ObjectLayout layout,
+        final int primField) {
       super(layout);
       mask = SObject.getPrimitiveFieldMask(primField);
     }
 
     @Override
-    public final boolean isSet(final SObject obj, final boolean assumptionValid) {
+    public final boolean isSet(final SObject obj,
+        final boolean assumptionValid) {
       return obj.isPrimitiveSet(mask);
     }
 
@@ -282,7 +289,8 @@ public abstract class StorageLocation {
     }
 
     @Override
-    public double readDouble(final SObject obj, final boolean assumptionValid) throws UnexpectedResultException {
+    public double readDouble(final SObject obj, final boolean assumptionValid)
+        throws UnexpectedResultException {
       if (isSet(obj, assumptionValid)) {
         // TODO: for the moment Graal doesn't seem to get the optimizations
         // right, still need to pass in the correct location identifier, which can probably be `this`.
@@ -295,7 +303,8 @@ public abstract class StorageLocation {
     }
 
     @Override
-    public void write(final SObject obj, final Object value) throws GeneralizeStorageLocationException {
+    public void write(final SObject obj, final Object value)
+        throws GeneralizeStorageLocationException {
       assert value != null;
       if (value instanceof Double) {
         writeDouble(obj, (double) value);
@@ -314,17 +323,17 @@ public abstract class StorageLocation {
     }
 
     @Override
-    public AbstractReadFieldNode getReadNode(final int fieldIndex,
+    public AbstractReadFieldNode getReadNode(final SlotDefinition slot,
         final ObjectLayout layout, final AbstractReadFieldNode next) {
       CompilerAsserts.neverPartOfCompilation("StorageLocation");
-      return new ReadDoubleFieldNode(fieldIndex, layout, next);
+      return new ReadDoubleFieldNode(slot, layout, next);
     }
 
     @Override
-    public AbstractWriteFieldNode getWriteNode(final int fieldIndex,
+    public AbstractWriteFieldNode getWriteNode(final SlotDefinition slot,
         final ObjectLayout layout, final AbstractWriteFieldNode next) {
       CompilerAsserts.neverPartOfCompilation("StorageLocation");
-      return new WriteDoubleFieldNode(fieldIndex, layout, next);
+      return new WriteDoubleFieldNode(slot, layout, next);
     }
   }
 
@@ -377,17 +386,17 @@ public abstract class StorageLocation {
     }
 
     @Override
-    public AbstractReadFieldNode getReadNode(final int fieldIndex,
+    public AbstractReadFieldNode getReadNode(final SlotDefinition slot,
         final ObjectLayout layout, final AbstractReadFieldNode next) {
       CompilerAsserts.neverPartOfCompilation("StorageLocation");
-      return new ReadLongFieldNode(fieldIndex, layout, next);
+      return new ReadLongFieldNode(slot, layout, next);
     }
 
     @Override
-    public AbstractWriteFieldNode getWriteNode(final int fieldIndex,
+    public AbstractWriteFieldNode getWriteNode(final SlotDefinition slot,
         final ObjectLayout layout, final AbstractWriteFieldNode next) {
       CompilerAsserts.neverPartOfCompilation("StorageLocation");
-      return new WriteLongFieldNode(fieldIndex, layout, next);
+      return new WriteLongFieldNode(slot, layout, next);
     }
   }
 
@@ -449,17 +458,17 @@ public abstract class StorageLocation {
     }
 
     @Override
-    public AbstractReadFieldNode getReadNode(final int fieldIndex,
+    public AbstractReadFieldNode getReadNode(final SlotDefinition slot,
         final ObjectLayout layout, final AbstractReadFieldNode next) {
       CompilerAsserts.neverPartOfCompilation("StorageLocation");
-      return new ReadLongFieldNode(fieldIndex, layout, next);
+      return new ReadLongFieldNode(slot, layout, next);
     }
 
     @Override
-    public AbstractWriteFieldNode getWriteNode(final int fieldIndex,
+    public AbstractWriteFieldNode getWriteNode(final SlotDefinition slot,
         final ObjectLayout layout, final AbstractWriteFieldNode next) {
       CompilerAsserts.neverPartOfCompilation("StorageLocation");
-      return new WriteLongFieldNode(fieldIndex, layout, next);
+      return new WriteLongFieldNode(slot, layout, next);
     }
   }
 
@@ -481,7 +490,8 @@ public abstract class StorageLocation {
     }
 
     @Override
-    public double readDouble(final SObject obj, final boolean assumptionValid) throws UnexpectedResultException {
+    public double readDouble(final SObject obj, final boolean assumptionValid)
+        throws UnexpectedResultException {
       if (isSet(obj, assumptionValid)) {
         long[] arr = obj.getExtendedPrimFields();
         // TODO: for the moment Graal doesn't seem to get the optimizations
@@ -497,7 +507,8 @@ public abstract class StorageLocation {
     }
 
     @Override
-    public void write(final SObject obj, final Object value) throws GeneralizeStorageLocationException {
+    public void write(final SObject obj, final Object value)
+        throws GeneralizeStorageLocationException {
       assert value != null;
       if (value instanceof Double) {
         writeDouble(obj, (double) value);
@@ -523,17 +534,17 @@ public abstract class StorageLocation {
     }
 
     @Override
-    public AbstractReadFieldNode getReadNode(final int fieldIndex,
+    public AbstractReadFieldNode getReadNode(final SlotDefinition slot,
         final ObjectLayout layout, final AbstractReadFieldNode next) {
       CompilerAsserts.neverPartOfCompilation("StorageLocation");
-      return new ReadDoubleFieldNode(fieldIndex, layout, next);
+      return new ReadDoubleFieldNode(slot, layout, next);
     }
 
     @Override
-    public AbstractWriteFieldNode getWriteNode(final int fieldIndex,
+    public AbstractWriteFieldNode getWriteNode(final SlotDefinition slot,
         final ObjectLayout layout, final AbstractWriteFieldNode next) {
       CompilerAsserts.neverPartOfCompilation("StorageLocation");
-      return new WriteDoubleFieldNode(fieldIndex, layout, next);
+      return new WriteDoubleFieldNode(slot, layout, next);
     }
   }
 }

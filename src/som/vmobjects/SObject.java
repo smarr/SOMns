@@ -28,13 +28,16 @@ import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map.Entry;
 
+import som.compiler.ClassDefinition.SlotDefinition;
 import som.interpreter.objectstorage.ObjectLayout;
 import som.interpreter.objectstorage.StorageLocation;
 import som.interpreter.objectstorage.StorageLocation.AbstractObjectStorageLocation;
 import som.interpreter.objectstorage.StorageLocation.GeneralizeStorageLocationException;
 import som.interpreter.objectstorage.StorageLocation.UninitalizedStorageLocationException;
-import som.vm.Universe;
+import som.vm.Bootstrap;
 import som.vm.constants.Nil;
 
 import com.oracle.truffle.api.CompilerAsserts;
@@ -70,9 +73,9 @@ public class SObject extends SAbstractObject {
   // to know in case the layout changed that we can update the instances lazily
   @CompilationFinal private ObjectLayout objectLayout;
 
-  private int    primitiveUsedMap;
+  private int primitiveUsedMap;
 
-  private final int numberOfFields;
+  private int numberOfFields;
 
   public SObject(final SClass instanceClass) {
     numberOfFields = instanceClass.getNumberOfInstanceFields();
@@ -80,16 +83,17 @@ public class SObject extends SAbstractObject {
     setLayoutInitially(instanceClass.getLayoutForInstances());
   }
 
-  public SObject(final int numFields) {
-    numberOfFields = numFields;
-    setLayoutInitially(new ObjectLayout(numFields, null));
+  public SObject(final boolean incompleteDefinition) {
+    assert incompleteDefinition; // used during bootstrap
+    numberOfFields = -1;
   }
 
   private void setLayoutInitially(final ObjectLayout layout) {
     field1 = field2 = field3 = field4 = field5 = Nil.nilObject;
 
     objectLayout   = layout;
-    assert objectLayout.getNumberOfFields() == numberOfFields || !Universe.current().isObjectSystemInitialized();
+    assert objectLayout.getNumberOfFields() == numberOfFields || !Bootstrap.isObjectSystemInitialized();
+    numberOfFields = objectLayout.getNumberOfFields();
 
     extensionPrimFields = getExtendedPrimStorage();
     extensionObjFields  = getExtendedObjectStorage();
@@ -132,28 +136,34 @@ public class SObject extends SAbstractObject {
   }
 
   @ExplodeLoop
-  private Object[] getAllFields() {
-    Object[] fieldValues = new Object[numberOfFields];
-    for (int i = 0; i < numberOfFields; i++) {
-      if (isFieldSet(i)) {
-        fieldValues[i] = getField(i);
+  private HashMap<SlotDefinition, Object> getAllFields() {
+    assert objectLayout != null;
+
+    HashMap<SlotDefinition, Object> fieldValues = new HashMap<>((int) (numberOfFields / 0.75f));
+    HashMap<SlotDefinition, StorageLocation> locations = objectLayout.getStorageLocations();
+
+    for (Entry<SlotDefinition, StorageLocation> loc : locations.entrySet()) {
+      if (loc.getValue().isSet(this, true)) {
+        fieldValues.put(loc.getKey(), loc.getValue().read(this, true));
+      } else {
+        fieldValues.put(loc.getKey(), null);
       }
     }
     return fieldValues;
   }
 
   @ExplodeLoop
-  private void setAllFields(final Object[] fieldValues) {
+  private void setAllFields(final HashMap<SlotDefinition, Object> fieldValues) {
     field1 = field2 = field3 = field4 = field5 = null;
     primField1 = primField2 = primField3 = primField4 = primField5 = Long.MIN_VALUE;
 
-    assert fieldValues.length == numberOfFields;
+    assert fieldValues.size() == numberOfFields;
 
-    for (int i = 0; i < numberOfFields; i++) {
-      if (fieldValues[i] != null) {
-        setField(i, fieldValues[i]);
-      } else if (getLocation(i) instanceof AbstractObjectStorageLocation) {
-        setField(i, Nil.nilObject);
+    for (Entry<SlotDefinition, Object> entry : fieldValues.entrySet()) {
+      if (entry.getValue() != null) {
+        setField(entry.getKey(), entry.getValue());
+      } else if (getLocation(entry.getKey()) instanceof AbstractObjectStorageLocation) {
+        setField(entry.getKey(), Nil.nilObject);
       }
     }
   }
@@ -173,7 +183,7 @@ public class SObject extends SAbstractObject {
   private void setLayoutAndTransferFields(final ObjectLayout layout) {
     CompilerDirectives.transferToInterpreterAndInvalidate();
 
-    Object[] fieldValues = getAllFields();
+    HashMap<SlotDefinition, Object> fieldValues = getAllFields();
 
     objectLayout        = layout;
 
@@ -184,8 +194,8 @@ public class SObject extends SAbstractObject {
     setAllFields(fieldValues);
   }
 
-  protected final void updateLayoutWithInitializedField(final long index, final Class<?> type) {
-    ObjectLayout layout = clazz.updateInstanceLayoutWithInitializedField(index, type);
+  protected final void updateLayoutWithInitializedField(final SlotDefinition slot, final Class<?> type) {
+    ObjectLayout layout = clazz.updateInstanceLayoutWithInitializedField(slot, type);
 
     assert objectLayout != layout;
     assert layout.getNumberOfFields() == numberOfFields;
@@ -193,8 +203,8 @@ public class SObject extends SAbstractObject {
     setLayoutAndTransferFields(layout);
   }
 
-  protected final void updateLayoutWithGeneralizedField(final long index) {
-    ObjectLayout layout = clazz.updateInstanceLayoutWithGeneralizedField(index);
+  protected final void updateLayoutWithGeneralizedField(final SlotDefinition slot) {
+    ObjectLayout layout = clazz.updateInstanceLayoutWithGeneralizedField(slot);
 
     assert objectLayout != layout;
     assert layout.getNumberOfFields() == numberOfFields;
@@ -235,43 +245,38 @@ public class SObject extends SAbstractObject {
     primitiveUsedMap |= mask;
   }
 
-  private StorageLocation getLocation(final long index) {
-    StorageLocation location = objectLayout.getStorageLocation(index);
+  private StorageLocation getLocation(final SlotDefinition slot) {
+    StorageLocation location = objectLayout.getStorageLocation(slot);
     assert location != null;
     return location;
   }
 
-  private boolean isFieldSet(final long index) {
-    CompilerAsserts.neverPartOfCompilation("isFieldSet");
-    StorageLocation location = getLocation(index);
-    return location.isSet(this, true);
-  }
-
-  public final Object getField(final long index) {
+  public final Object getField(final SlotDefinition slot) {
     CompilerAsserts.neverPartOfCompilation("getField");
-    StorageLocation location = getLocation(index);
+    StorageLocation location = getLocation(slot);
     return location.read(this, true);
   }
 
-  public final void setField(final long index, final Object value) {
+  public final void setField(final SlotDefinition slot, final Object value) {
     CompilerAsserts.neverPartOfCompilation("setField");
-    StorageLocation location = getLocation(index);
+    StorageLocation location = getLocation(slot);
 
     try {
       location.write(this, value);
     } catch (UninitalizedStorageLocationException e) {
-      updateLayoutWithInitializedField(index, value.getClass());
-      setFieldAfterLayoutChange(index, value);
+      updateLayoutWithInitializedField(slot, value.getClass());
+      setFieldAfterLayoutChange(slot, value);
     } catch (GeneralizeStorageLocationException e) {
-      updateLayoutWithGeneralizedField(index);
-      setFieldAfterLayoutChange(index, value);
+      updateLayoutWithGeneralizedField(slot);
+      setFieldAfterLayoutChange(slot, value);
     }
   }
 
-  private void setFieldAfterLayoutChange(final long index, final Object value) {
+  private void setFieldAfterLayoutChange(final SlotDefinition slot,
+      final Object value) {
     CompilerAsserts.neverPartOfCompilation("SObject.setFieldAfterLayoutChange(..)");
 
-    StorageLocation location = getLocation(index);
+    StorageLocation location = getLocation(slot);
     try {
       location.write(this, value);
     } catch (GeneralizeStorageLocationException
