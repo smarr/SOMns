@@ -29,6 +29,7 @@ public abstract class StorageLocation {
     try {
         return Unsafe.getUnsafe();
     } catch (SecurityException e) {
+      // can fail, is ok, just to the fallback below
     }
     try {
         Field theUnsafeInstance = Unsafe.class.getDeclaredField("theUnsafe");
