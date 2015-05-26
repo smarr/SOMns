@@ -785,7 +785,7 @@ from a TestCatalog created on an instance of a test module. *)|
 modules ^<Collection[Object]> = (
 (* Returns a collection of test module instances that contain test cases of the suite. *)
   | result |
-  result:: IdentitySet new.
+  result := IdentitySet new.
   testCases do: [:each | result add: each module].
   ^result
 )
@@ -837,7 +837,7 @@ public cleanUpCoreInstances = (
   instancesByEnvironment do:
     [:each |
     (understandsCleanUp: each) ifTrue: [each cleanUp]].
-  instancesByEnvironment:: IdentityDictionary new.
+  instancesByEnvironment := IdentityDictionary new.
 )
 public createCoreInstances = (
 (* Create instances of all shared state classes, which are the classes that are
@@ -861,7 +861,7 @@ public ensureInstanceFor: environment <TestEnvironment> ^<Object> = (
   environment isRoot ifTrue: [^environment moduleInstance].
   ^instancesByEnvironment at: environment ifAbsent:
     [| instance |
-    instance:: environment createInstanceIn: (ensureInstanceFor: environment parent).
+    instance := environment createInstanceIn: (ensureInstanceFor: environment parent).
     instancesByEnvironment at: environment put: instance.
     instance]
 )
@@ -871,7 +871,7 @@ coreEnvironments = (
 the class tree and its fringe. They have to be instantiated once before running
 the suite and cleaned up after. *)
   | result |
-  result:: Set new.
+  result := Set new.
   testSuite testCases do:
     [:each |
     each environment parentEnvironmentsDo:
@@ -881,7 +881,7 @@ the suite and cleaned up after. *)
 )
 coreEnvironmentsFor: testCase <TestCase> = (
   | result |
-  result:: OrderedCollection new.
+  result := OrderedCollection new.
   testCase environment parentEnvironmentsDo:
     [:each |
     each isRoot ifFalse: [result add: each]].
@@ -890,7 +890,7 @@ coreEnvironmentsFor: testCase <TestCase> = (
 understandsCleanUp: object = (
 (* Answer true if the object understands the #cleanUp message. *)
   | mirror |
-  mirror:: (ObjectMirror reflecting: object) getClass.
+  mirror := (ObjectMirror reflecting: object) getClass.
   ^mirror methods includesMirrorNamed: #cleanUp
 )
 ) : (
@@ -925,7 +925,7 @@ public completedRatio ^<Float> = (
 completed so far. *)
 
   | testCount |
-  testCount:: testSuite size.
+  testCount := testSuite size.
   ^testCount = 0
     ifTrue: [1.0]
     ifFalse: [testsPerformed asFloat / testCount]
@@ -934,11 +934,11 @@ public prepare = (
 (* This message must be sent to the tester once prior to running any tests. At
 this stage the tester instantiates shared state classes of the test module,
 which may potentially cause errors to be signaled. *)
-  errors:: OrderedCollection new.
-  failures:: OrderedCollection new.
-  successes:: OrderedCollection new.
-  testCaseStream:: testSuite testCases readStream.
-  testsPerformed:: 0.
+  errors := OrderedCollection new.
+  failures := OrderedCollection new.
+  successes := OrderedCollection new.
+  testCaseStream := testSuite testCases readStream.
+  testsPerformed := 0.
   instanceManager createCoreInstances.
 )
 public runAll = (
@@ -951,9 +951,9 @@ public step ^<TestResult> = (
 return it. This message should only be sent if the #atEnd message returns
 false. *)
   | case result |
-  case:: testCaseStream next.
-  result:: case runUsing: self.
-  testsPerformed:: testsPerformed + 1.
+  case := testCaseStream next.
+  result := case runUsing: self.
+  testsPerformed := testsPerformed + 1.
   result isError ifTrue: [errors add: result].
   result isFailure ifTrue: [failures add: result].
   result isSuccess ifTrue: [successes add: result].
@@ -990,8 +990,8 @@ public instanceFor: environment <TestEnvironment> ^<Object> = (
 testCatalogs: catalogs <Collection[TestCatalog]> = (
   | suite |
     (* Creating a new OrderedCollection is a hack that allows us to use #readStream in case testCases is translated to a Javascript Array *)
-  suite:: TestSuite testCases: OrderedCollection new.
-  catalogs do: [:each | suite:: suite ++ each allTests].
+  suite := TestSuite testCases: OrderedCollection new.
+  catalogs do: [:each | suite := suite ++ each allTests].
   ^self testSuite: suite
 )
 public testModules: modules <Collection[TestModule]> = (
