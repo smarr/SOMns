@@ -339,7 +339,9 @@ public final class ClassBuilder {
   }
 
   private SMethod assembleInitializationMethod() {
-    if (isSimpleNewSuperFactoySend && slotAndInitExprs.size() == 0) {
+    if (isSimpleNewSuperFactoySend
+        && slotAndInitExprs.size() == 0
+        && initializer.getSignature() == ClassBuilder.getInitializerName(symbolFor("new"))) {
       return null; // this is strictly an optimization, should work without it!
     }
 
