@@ -749,6 +749,7 @@ public final class Parser {
 
   private ExpressionNode expression(final MethodBuilder builder)
       throws ParseError, ClassDefinitionError {
+    comment();
     peekForNextSymbolFromLexer();
 
     if (nextSym == Assign) {
