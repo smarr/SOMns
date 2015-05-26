@@ -134,7 +134,7 @@ class Lookup = ()(
     p := o Inner1 new.
     q := p Inner11 new.
     q Inner111 == q Inner111 ifFalse: [ ^ #error ].
-    ^ q Inner111 new bar
+    ^ q Inner111 new baz
   )
   
   public testInner18 = (
