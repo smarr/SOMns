@@ -32,11 +32,11 @@ import som.primitives.EqualsEqualsPrimFactory;
 import som.primitives.EqualsPrimFactory;
 import som.primitives.HashPrimFactory;
 import som.primitives.IntegerPrimsFactory;
-import som.primitives.LengthPrimFactory;
 import som.primitives.MethodPrimsFactory;
 import som.primitives.MethodPrimsFactory.InvokeOnPrimFactory;
 import som.primitives.NewObjectPrimFactory;
 import som.primitives.ObjectPrimsFactory;
+import som.primitives.SizeAndLengthPrimFactory;
 import som.primitives.StringPrimsFactory;
 import som.primitives.SystemPrimsFactory;
 import som.primitives.UnequalsPrimFactory;
@@ -149,7 +149,7 @@ public final class Bootstrap {
         // HACK for node class where we use `executeWith`
         if (factory == PutAllNodeFactory.getInstance()) {
           primNode = factory.createNode(args[0], args[1],
-              LengthPrimFactory.create(null));
+              SizeAndLengthPrimFactory.create(null));
 //        } else if (factory == SpawnWithArgsPrimFactory.getInstance()) {
 //          primNode = factory.createNode(args[0], args[1],
 //              ToArgumentsArrayNodeGen.create(null, null));
@@ -202,7 +202,7 @@ public final class Bootstrap {
     allFactories.add(NotMessageNodeFactory.getInstance());
     allFactories.add(AsStringPrimFactory.getInstance());
     allFactories.add(HashPrimFactory.getInstance());
-    allFactories.add(LengthPrimFactory.getInstance());
+    allFactories.add(SizeAndLengthPrimFactory.getInstance());
     allFactories.add(NewObjectPrimFactory.getInstance());
     allFactories.add(UnequalsPrimFactory.getInstance());
     allFactories.add(AdditionPrimFactory.getInstance());

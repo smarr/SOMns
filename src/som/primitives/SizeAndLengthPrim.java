@@ -12,8 +12,8 @@ import com.oracle.truffle.api.dsl.Specialization;
 
 @GenerateNodeFactory
 @ImportStatic(ArrayType.class)
-@Primitive("arrayLength:")
-public abstract class LengthPrim extends UnaryExpressionNode {
+@Primitive({"arraySize:", "stringLength:"})
+public abstract class SizeAndLengthPrim extends UnaryExpressionNode {
 
   @Specialization(guards = "isEmptyType(receiver)")
   public final long doEmptySArray(final SArray receiver) {
