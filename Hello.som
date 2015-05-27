@@ -1,5 +1,5 @@
 class Hello usingPlatform: platform = ()(
-  public main: platform args: args = (
+  public main: args = (
     'Hello World!' println.
     ^ 0
   )

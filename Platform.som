@@ -20,7 +20,7 @@ class Platform usingVmMirror: vmMirror = (
       ].
       
       app := system loadModule: (arguments at: 1).
-      errorCode := (app usingPlatform: platform) main: platform args: arguments.
+      errorCode := (app usingPlatform: platform) main: arguments.
       system exit: errorCode
     )
   )
