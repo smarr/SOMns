@@ -18,9 +18,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 *)
-class Kernel usingPlatform: platform vmMirror: vmMirror = (
-| private vmMirror = vmMirror.
-  private system   = platform system.
+class Kernel vmMirror: vmMirror = (
+| private vmMirror   = vmMirror.
   private ObjectSlot = Object.
   private ValueSlot  = Value.
 |
@@ -28,18 +27,20 @@ class Kernel usingPlatform: platform vmMirror: vmMirror = (
   private class Top = ()()
   
   public class Thing = Top ()(
+    private error: msg = ( vmMirror printNewline: 'ERROR: ' + msg. vmMirror exit: 1 )
+  
     'Error recovering'
     protected doesNotUnderstand: selector arguments: arguments = (
-      system error: 'Method ' + selector + ' not found in class ' + (vmMirror mirrorClassName: self)
+      error: 'Method ' + selector + ' not found in class ' + (vmMirror mirrorClassName: self)
     )
     
     protected escapedBlock: block = (
-      system error: 'Block has escaped and cannot be executed'
+      error: 'Block has escaped and cannot be executed'
     )
     
     'Abstract method support'
     protected subclassResponsibility = (
-      system error: 'This method is abstract and should be overridden'
+      error: 'This method is abstract and should be overridden'
     )
     
     'Evaluating'
@@ -65,7 +66,7 @@ class Kernel usingPlatform: platform vmMirror: vmMirror = (
 
     'Debugging'
     public print    = ( self asString print )
-    public println  = ( vmMirror printNewline: self asString ) (* TODO: should got via system *)
+    public println  = ( vmMirror printNewline: self asString )
     public halt     = ( vmMirror halt: self )
     public asString = ( ^ 'instance of ' + (vmMirror objClassName: self) )
   )
@@ -331,7 +332,7 @@ class Kernel usingPlatform: platform vmMirror: vmMirror = (
     )
     
     'Printing'
-    public print = ( system printString: self )
+    public print = ( vmMirror printString: self )
   )
   
   public class Symbol = String ()
