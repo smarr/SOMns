@@ -46,6 +46,7 @@ import com.sun.istack.internal.Nullable;
  */
 public final class ClassDefinition {
   private final SSymbol       name;
+  private final SSymbol       primaryFactoryName;
   private final Method        superclassResolution;
   private final HashSet<SlotDefinition> slots;
   private final HashMap<SSymbol, Dispatchable> instanceDispatchable;
@@ -59,17 +60,16 @@ public final class ClassDefinition {
   @Nullable
   private final LinkedHashMap<SSymbol, ClassDefinition> nestedClassDefinitions;
 
-  public ClassDefinition(final SSymbol name,
-      final Method superclassResolution,
-      final HashSet<SlotDefinition> slots,
+  public ClassDefinition(final SSymbol name, final SSymbol primaryFactoryName,
+      final Method superclassResolution, final HashSet<SlotDefinition> slots,
       final HashMap<SSymbol, Dispatchable> instanceDispatchable,
       final HashMap<SSymbol, SInvokable>   factoryMethods,
       final LinkedHashMap<SSymbol, ClassDefinition> nestedClassDefinitions,
-      final ClassDefinitionId classId,
-      final AccessModifier accessModifier,
+      final ClassDefinitionId classId, final AccessModifier accessModifier,
       final ClassScope instanceScope, final ClassScope classScope,
       final SourceSection sourceSection) {
     this.name = name;
+    this.primaryFactoryName   = primaryFactoryName;
     this.superclassResolution = superclassResolution;
     this.instanceDispatchable = instanceDispatchable;
     this.factoryMethods  = factoryMethods;
@@ -333,5 +333,13 @@ public final class ClassDefinition {
     SMethod thingInitNew = builder.assemble(builder.getSelfRead(null),
         AccessModifier.PROTECTED, Symbols.symbolFor("initializer"), null);
     instanceDispatchable.put(init, thingInitNew);
+  }
+
+  public Object instantiateObject(final Object... args) {
+    assert args[0] instanceof SClass;
+    SClass classObj = (SClass) args[0];
+    Dispatchable factory = classObj.getSOMClass().lookupMessage(
+        primaryFactoryName, AccessModifier.PUBLIC);
+    return factory.invoke(args);
   }
 }

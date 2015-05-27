@@ -280,7 +280,8 @@ public final class ClassBuilder {
           initializationMethod.getSignature(), initializationMethod);
     }
 
-    ClassDefinition clsDef = new ClassDefinition(name, superclassResolution,
+    ClassDefinition clsDef = new ClassDefinition(name,
+        primaryFactory.getSignature(), superclassResolution,
         slots, dispatchables, factoryMethods, embeddedClasses, classId,
         accessModifier, instanceScope, classScope, source);
     instanceScope.setClassDefinition(clsDef, false);
