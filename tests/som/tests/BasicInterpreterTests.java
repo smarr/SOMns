@@ -107,6 +107,10 @@ public class BasicInterpreterTests {
         {"Lookup", "testNesting2",                                  182, Long.class },
         {"Lookup", "testNesting3",                                  364, Long.class },
         {"Lookup", "testInner18",                                   999, Long.class },
+        {"Lookup", "testImplicitReceiverSendToPrivateMethod",        55, Long.class },
+        {"Lookup", "testSelfSendToPrivateMethod",                    55, Long.class },
+        {"Lookup", "testImplicitReceiverSendToPrivateMethodFromSubclass", 55, Long.class },
+        {"Lookup", "testSelfSendToPrivateMethodFromSubclass",        55, Long.class },
 
         {"SuperSends", "testSuperClassClause1A",   44, Long.class },
         {"SuperSends", "testSuperClassClause1B",   88, Long.class },
