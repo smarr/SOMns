@@ -36,6 +36,7 @@ import som.primitives.MethodPrimsFactory;
 import som.primitives.MethodPrimsFactory.InvokeOnPrimFactory;
 import som.primitives.NewObjectPrimFactory;
 import som.primitives.ObjectPrimsFactory;
+import som.primitives.ObjectSystemPrimsFactory;
 import som.primitives.SizeAndLengthPrimFactory;
 import som.primitives.StringPrimsFactory;
 import som.primitives.SystemPrimsFactory;
@@ -196,6 +197,7 @@ public final class Bootstrap {
     allFactories.addAll(ObjectPrimsFactory.getFactories());
     allFactories.addAll(StringPrimsFactory.getFactories());
     allFactories.addAll(SystemPrimsFactory.getFactories());
+    allFactories.addAll(ObjectSystemPrimsFactory.getFactories());
 
     allFactories.add(EqualsEqualsPrimFactory.getInstance());
     allFactories.add(EqualsPrimFactory.getInstance());
