@@ -1,12 +1,12 @@
 package som.interpreter.nodes.specialized.whileloops;
 
 import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.vm.constants.Globals;
 import som.vm.constants.Nil;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 
 import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -37,14 +37,9 @@ public abstract class WhileCache extends BinaryExpressionNode {
   private boolean obj2bool(final Object o) {
     if (o instanceof Boolean) {
       return (boolean) o;
-    } else if (o == Globals.trueObject) {
-      CompilerAsserts.neverPartOfCompilation("obj2Bool1");
-      return true;
-    } else {
-      CompilerAsserts.neverPartOfCompilation("obj2Bool2");
-      assert o == Globals.falseObject;
-      return false;
     }
+    CompilerDirectives.transferToInterpreter();
+    throw new RuntimeException("should never get here");
   }
 
   @Specialization(contains = "doCached")

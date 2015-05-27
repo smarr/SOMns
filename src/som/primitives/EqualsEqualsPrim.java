@@ -3,7 +3,6 @@ package som.primitives;
 import java.math.BigInteger;
 
 import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.vm.constants.Globals;
 import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
@@ -22,12 +21,6 @@ public abstract class EqualsEqualsPrim extends BinaryExpressionNode {
   @Specialization
   public final boolean doBoolean(final boolean left, final boolean right) {
     return left == right;
-  }
-
-  @Specialization
-  public final boolean doBoolean(final boolean left, final SObject right) {
-    return (left && Globals.trueObject  == right) ||
-          (!left && Globals.falseObject == right);
   }
 
   @Specialization
