@@ -350,16 +350,16 @@ class Kernel vmMirror: vmMirror = (
     'Accessing'
     public at: index            = ( ^ vmMirror array: self at: index )
     public at: index put: value = ( ^ vmMirror array: self at: index put: value )
-    public length               = ( ^ vmMirror arrayLength: self )
+    public size                 = ( ^ vmMirror arraySize: self )
     public putAll: block        = ( self doIndexes: [ :i |
                                       self at: i put: block value ] )
     public first = ( ^ self at: 1 )
-    public last  = ( ^ self at: self length )
+    public last  = ( ^ self at: self size )
 
     'Iterating'
     public do: block            = ( self doIndexes: [ :i |
                                       block value: (self at: i) ] )
-    public doIndexes: block     = ( 1 to: self length do: [:i |
+    public doIndexes: block     = ( 1 to: self size do: [:i |
                                       block value: i. ] )
 
     public from: start to: end do: block = ( | i |
@@ -376,7 +376,7 @@ class Kernel vmMirror: vmMirror = (
       ^ result
     )
   
-    public copyFrom: start = ( ^self copyFrom: start to: self length )
+    public copyFrom: start = ( ^self copyFrom: start to: self size )
   
     public replaceFrom: start to: stop with: replacement startingAt: repStart = (
       (* This destructively replaces elements from start to stop in the
@@ -394,7 +394,7 @@ class Kernel vmMirror: vmMirror = (
   
     'Numerical'
     public sum     = ( ^ self inject: 0 into: [ :sub :elem | sub + elem ] )
-    public average = ( ^ self sum / self length )
+    public average = ( ^ self sum / self size )
                               
     'Containment check'
     public contains: element = ( self do: [ :e | e = element ifTrue: [ ^ true ] ].
@@ -405,14 +405,14 @@ class Kernel vmMirror: vmMirror = (
     )
   
     public lastIndexOf: element = (
-      self length downTo: 1 do: [: i | (self at: i) = element ifTrue: [ ^ i ]].
+      self size downTo: 1 do: [: i | (self at: i) = element ifTrue: [ ^ i ]].
       ^ nil
     )
   
     'Collection'
     public collect: aBlock = (
       | result |
-      result := Array new: self length.
+      result := Array new: self size.
       self doIndexes: [ :i | result at: i put: (aBlock value: (self at: i)) ].
       ^ result
     )
@@ -429,7 +429,7 @@ class Kernel vmMirror: vmMirror = (
   
     public select: aBlock = (
       | newCollection |
-      newCollection := Vector new: self length.
+      newCollection := Vector new: self size.
       self do: [:each | (aBlock value: each)  
                           ifTrue: [newCollection append: each]].
       ^ newCollection
@@ -444,9 +444,9 @@ class Kernel vmMirror: vmMirror = (
     )
   ) : (
     'Allocation'
-    public new                        = ( ^ self new: 0 )
-    public new: length                = ( ^ vmMirror array: self new: length )
-    public new: length withAll: block = ( ^ (self new: length) putAll: block )
+    public new                      = ( ^ self new: 0 )
+    public new: size                = ( ^ vmMirror array: self new: size )
+    public new: size withAll: block = ( ^ (self new: size) putAll: block )
 
     'Convenience'
     public with: a = (
