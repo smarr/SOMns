@@ -16,6 +16,7 @@ A simple Hello World program looks like:
 class Hello usingPlatform: platform = (
   public main: platform args: args = (
     'Hello World!' println.
+    ^ 0
   )
 )
 ```
