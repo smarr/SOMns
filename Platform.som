@@ -19,7 +19,7 @@ class Platform usingVmMirror: vmMirror = (
         system error: 'No application specified for execution.'
       ].
       
-      app := kernel load: (arguments at: 1).
+      app := system loadModule: (arguments at: 1).
       errorCode := (app usingPlatform: platform) main: platform args: arguments.
       system exit: errorCode
     )
