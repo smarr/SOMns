@@ -235,7 +235,7 @@ public final class MessageSendNode {
         case "length":
           if (receiver instanceof SArray) {
             return replace(new EagerUnaryPrimitiveNode(selector,
-                argumentNodes[0], LengthPrimFactory.create(null)));
+                argumentNodes[0], SizeAndLengthPrimFactory.create(null)));
           }
           break;
         case "value":
