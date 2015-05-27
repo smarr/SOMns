@@ -1,0 +1,9 @@
+class DoesNotUnderstand = ()(
+  protected doesNotUnderstand: selector arguments: arguments = (
+    ^ selector
+  )
+):(
+  public test = (
+      ^ self new Foo
+  )
+)
