@@ -1,10 +1,14 @@
 package som.primitives;
 
-import som.interpreter.nodes.nary.BinaryExpressionNode;
+import java.io.IOException;
+
+import som.VM;
+import som.compiler.ClassDefinition;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
-import som.vm.Universe;
+import som.vm.Bootstrap;
 import som.vm.constants.Nil;
-import som.vmobjects.SClass;
+import som.vmobjects.SArray;
+import som.vmobjects.SArray.ArrayType;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
@@ -15,46 +19,44 @@ import com.oracle.truffle.api.dsl.Specialization;
 public final class SystemPrims {
 
   @GenerateNodeFactory
-  public abstract static class BinarySystemNode extends BinaryExpressionNode {
-    protected final Universe universe;
-    protected BinarySystemNode() { super(null); this.universe = Universe.current(); }
-  }
-
-  public abstract static class LoadPrim extends BinarySystemNode {
+  @Primitive("load:")
+  public abstract static class LoadPrim extends UnaryExpressionNode {
     @Specialization
-    public final Object doSObject(final SObject receiver, final SSymbol argument) {
-      SClass result = universe.loadClass(argument);
-      return result != null ? result : Nil.nilObject;
-    }
-  }
-
-  public abstract static class ExitPrim extends BinarySystemNode {
-    @Specialization
-    public final Object doSObject(final SObject receiver, final long error) {
-      universe.exit((int) error);
-      return receiver;
-    }
-  }
-
-  public abstract static class PrintStringPrim extends BinarySystemNode {
-    @Specialization
-    public final Object doSObject(final SObject receiver, final String argument) {
-      Universe.print(argument);
-      return receiver;
-    }
-
-    @Specialization
-    public final Object doSObject(final SObject receiver, final SSymbol argument) {
-      return doSObject(receiver, argument.getString());
+    public final Object doSObject(final String moduleName) {
+      ClassDefinition module;
+      try {
+        module = Bootstrap.loadModule(moduleName);
+        return module.instantiateClass();
+      } catch (IOException e) {
+        // TODO convert to SOM exception when we support them
+        e.printStackTrace();
+      }
+      return Nil.nilObject;
     }
   }
 
   @GenerateNodeFactory
-  public abstract static class PrintNewlinePrim extends UnaryExpressionNode {
+  @Primitive("exit:")
+  public abstract static class ExitPrim extends UnaryExpressionNode {
     @Specialization
-    public final Object doSObject(final SObject receiver) {
-      Universe.println();
-      return receiver;
+    public final Object doSObject(final long error) {
+      VM.exit((int) error);
+      return Nil.nilObject;
+    }
+  }
+
+  @GenerateNodeFactory
+  @Primitive("printString:")
+  public abstract static class PrintStringPrim extends UnaryExpressionNode {
+    @Specialization
+    public final Object doSObject(final String argument) {
+      VM.print(argument);
+      return argument;
+    }
+
+    @Specialization
+    public final Object doSObject(final SSymbol argument) {
+      return doSObject(argument.getString());
     }
   }
 
@@ -63,8 +65,17 @@ public final class SystemPrims {
   public abstract static class PrintInclNewlinePrim extends UnaryExpressionNode {
     @Specialization
     public final Object doSObject(final String argument) {
-      Universe.println(argument);
+      VM.println(argument);
       return argument;
+    }
+  }
+
+  @GenerateNodeFactory
+  @Primitive("vmArguments:")
+  public abstract static class VMArgumentsPrim extends UnaryExpressionNode {
+    @Specialization
+    public final SArray getArguments(final Object receiver) {
+      return new SArray(ArrayType.OBJECT, VM.getArguments());
     }
   }
 
