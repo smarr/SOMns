@@ -28,7 +28,6 @@ class System usingVmMirror: vmMirror = (
   
   'Printing'
   public printString: string = ( vmMirror printString: string )
-  public printNewline        = ( vmMirror printNewline )
   public printNewline: str   = ( vmMirror printNewline: str )
   
   'Time'
