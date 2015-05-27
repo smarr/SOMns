@@ -2,15 +2,24 @@ package som;
 
 import java.util.Arrays;
 
+import som.interpreter.TruffleCompiler;
 import som.vm.Bootstrap;
+import som.vmobjects.SObject;
+
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
 
 public final class VM {
 
+  @CompilationFinal private static VM vm;
   private final boolean avoidExitForTesting;
+  private int lastExitCode = 0;
+  private Options options;
 
   public VM(final boolean avoidExitForTesting) {
     this.avoidExitForTesting = avoidExitForTesting;
+    vm = this;
   }
 
   public VM() {
@@ -29,6 +38,30 @@ public final class VM {
 
   public Options processArguments(final String[] arguments) {
     Options result = new Options();
+  public int lastExitCode() {
+    return lastExitCode;
+  }
+
+  public static void exit(final int errorCode) {
+    vm.exitVM(errorCode);
+  }
+
+  private void exitVM(final int errorCode) {
+    TruffleCompiler.transferToInterpreter("exit");
+    // Exit from the Java system
+    if (!avoidExitForTesting) {
+      System.exit(errorCode);
+    } else {
+      lastExitCode = errorCode;
+    }
+  }
+
+  public static void errorExit(final String message) {
+    TruffleCompiler.transferToInterpreter("errorExit");
+    errorPrintln("Runtime Error: " + message);
+    exit(1);
+  }
+
 
     int currentArg = 0;
 
@@ -90,6 +123,40 @@ public final class VM {
     Bootstrap.loadPlatformAndKernelModule(options.platformFile, options.kernelFile);
     Bootstrap.initializeObjectSystem();
     return Bootstrap.executeApplication(options.appFile, options.args);
+  @TruffleBoundary
+  public static void errorPrint(final String msg) {
+    // Checkstyle: stop
+    System.err.print(msg);
+    // Checkstyle: resume
+  }
+
+  @TruffleBoundary
+  public static void errorPrintln(final String msg) {
+    // Checkstyle: stop
+    System.err.println(msg);
+    // Checkstyle: resume
+  }
+
+  @TruffleBoundary
+  public static void errorPrintln() {
+    // Checkstyle: stop
+    System.err.println();
+    // Checkstyle: resume
+  }
+
+  @TruffleBoundary
+  public static void print(final String msg) {
+    // Checkstyle: stop
+    System.out.print(msg);
+    // Checkstyle: resume
+  }
+
+  @TruffleBoundary
+  public static void println(final String msg) {
+    // Checkstyle: stop
+    System.out.println(msg);
+    // Checkstyle: resume
+  }
   }
 
   public static void main(final String[] args) {

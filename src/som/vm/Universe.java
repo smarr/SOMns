@@ -32,7 +32,6 @@ import java.io.IOException;
 
 import som.compiler.AccessModifier;
 import som.interpreter.Invokable;
-import som.interpreter.TruffleCompiler;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.vmobjects.SArray;
 import som.vmobjects.SClass;
@@ -46,32 +45,6 @@ import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
 public final class Universe {
-
-  private Universe() {
-    this.avoidExit    = false;
-    this.alreadyInitialized = false;
-    this.lastExitCode = 0;
-  }
-
-  public void exit(final int errorCode) {
-    TruffleCompiler.transferToInterpreter("exit");
-    // Exit from the Java system
-    if (!avoidExit) {
-      System.exit(errorCode);
-    } else {
-      lastExitCode = errorCode;
-    }
-  }
-
-  public int lastExitCode() {
-    return lastExitCode;
-  }
-
-  public static void errorExit(final String message) {
-    TruffleCompiler.transferToInterpreter("errorExit");
-    errorPrintln("Runtime Error: " + message);
-    current().exit(1);
-  }
 
   /**
    * Start interpretation by sending the selector to the given class. This is
@@ -189,52 +162,6 @@ public final class Universe {
     return result;
   }
 
-  public void setAvoidExit(final boolean value) {
-    avoidExit = value;
-  }
-
-  @TruffleBoundary
-  public static void errorPrint(final String msg) {
-    // Checkstyle: stop
-    System.err.print(msg);
-    // Checkstyle: resume
-  }
-
-  @TruffleBoundary
-  public static void errorPrintln(final String msg) {
-    // Checkstyle: stop
-    System.err.println(msg);
-    // Checkstyle: resume
-  }
-
-  @TruffleBoundary
-  public static void errorPrintln() {
-    // Checkstyle: stop
-    System.err.println();
-    // Checkstyle: resume
-  }
-
-  @TruffleBoundary
-  public static void print(final String msg) {
-    // Checkstyle: stop
-    System.out.print(msg);
-    // Checkstyle: resume
-  }
-
-  @TruffleBoundary
-  public static void println(final String msg) {
-    // Checkstyle: stop
-    System.out.println(msg);
-    // Checkstyle: resume
-  }
-
-  @TruffleBoundary
-  public static void println() {
-    // Checkstyle: stop
-    System.out.println();
-    // Checkstyle: resume
-  }
-
   public SObject getTrueObject()   { return trueObject; }
   public SObject getFalseObject()  { return falseObject; }
   public SObject getSystemObject() { return systemObject; }
@@ -250,23 +177,4 @@ public final class Universe {
   @CompilationFinal private SClass  trueClass;
   @CompilationFinal private SClass  falseClass;
   @CompilationFinal private SClass  systemClass;
-
-  // TODO: this is not how it is supposed to be... it is just a hack to cope
-  //       with the use of system.exit in SOM to enable testing
-  @CompilationFinal private boolean             avoidExit;
-  private int                                   lastExitCode;
-
-  // Latest instance
-  // WARNING: this is problematic with multiple interpreters in the same VM...
-  @CompilationFinal private static Universe current;
-  @CompilationFinal private boolean alreadyInitialized;
-
-
-
-  public static Universe current() {
-    if (current == null) {
-      current = new Universe();
-    }
-    return current;
-  }
 }
