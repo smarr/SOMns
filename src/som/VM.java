@@ -32,14 +32,15 @@ public final class VM {
   public static class Options {
     public String   platformFile = standardPlatformFile;
     public String   kernelFile   = standardKernelFile;
-    public String   appFile;
     public String[] args;
   }
 
-  public Options processArguments(final String[] arguments) {
-    Options result = new Options();
   public int lastExitCode() {
     return lastExitCode;
+  }
+
+  public static String[] getArguments() {
+    return vm.options.args;
   }
 
   public static void exit(final int errorCode) {
@@ -62,22 +63,23 @@ public final class VM {
     exit(1);
   }
 
+  public Options processVmArguments(final String[] arguments) {
+    vm.options = new Options();
 
     int currentArg = 0;
 
-    // parse optional --platform and --kernel
+    // parse optional --platform and --kernel, need to be the first arguments
     boolean parsedArgument = true;
 
     while (parsedArgument) {
       if (currentArg >= arguments.length) {
-        printUsageAndExit();
-        return result;
+        return vm.options;
       } else {
         if (arguments[currentArg].equals("--platform")) {
-          result.platformFile = arguments[currentArg + 1];
+          vm.options.platformFile = arguments[currentArg + 1];
           currentArg += 2;
         } else if (arguments[currentArg].equals("--kernel")) {
-          result.kernelFile = arguments[currentArg + 1];
+          vm.options.kernelFile = arguments[currentArg + 1];
           currentArg += 2;
         } else {
           parsedArgument = false;
@@ -85,33 +87,21 @@ public final class VM {
       }
     }
 
-    // parse app-file
-    if (currentArg >= arguments.length) {
-      printUsageAndExit();
-    } else {
-      result.appFile = arguments[currentArg];
-      currentArg++;
-    }
-
-    // take args
+    // store remaining arguments
     if (currentArg < arguments.length) {
-      result.args = Arrays.copyOfRange(arguments, currentArg, arguments.length);
+      vm.options.args = Arrays.copyOfRange(arguments, currentArg, arguments.length);
     }
-
-    return result;
+    return vm.options;
   }
 
-  private void printUsageAndExit() {
+  protected void printUsageAndExit() {
     // Checkstyle: stop
-    System.out.println("Usage: ./som.sh [--platform file-name] [--kernel file-name] app-file [args...]");
+    System.out.println("VM arguments, need to come before any application arguments:");
     System.out.println("");
     System.out.println("  --platform file-name   SOM Platform module to be loaded");
     System.out.println("                         file-name defaults to '" + standardPlatformFile + "'");
     System.out.println("  --kernel file-name     SOM Kernel module to be loaded");
     System.out.println("                         file-name defaults to '" + standardKernelFile + "'");
-    System.out.println("");
-    System.out.println("  app-file               file-name of the application to be executed");
-    System.out.println("  args...                arguments passed to the application");
     // Checkstyle: resume
 
     if (!avoidExitForTesting) {
@@ -119,10 +109,6 @@ public final class VM {
     }
   }
 
-  public long execute(final Options options) {
-    Bootstrap.loadPlatformAndKernelModule(options.platformFile, options.kernelFile);
-    Bootstrap.initializeObjectSystem();
-    return Bootstrap.executeApplication(options.appFile, options.args);
   @TruffleBoundary
   public static void errorPrint(final String msg) {
     // Checkstyle: stop
@@ -157,11 +143,18 @@ public final class VM {
     System.out.println(msg);
     // Checkstyle: resume
   }
+
+  public long execute() {
+    Bootstrap.loadPlatformAndKernelModule(vm.options.platformFile,
+        vm.options.kernelFile);
+    SObject vmMirror = Bootstrap.initializeObjectSystem();
+    Bootstrap.executeApplication(vmMirror, vm.options.args);
+    return 0;
   }
 
   public static void main(final String[] args) {
-    VM vm = new VM();
-    Options options = vm.processArguments(args);
-    System.exit((int) vm.execute(options));
+    new VM();
+    vm.processVmArguments(args);
+    System.exit((int) vm.execute());
   }
 }

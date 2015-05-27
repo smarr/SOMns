@@ -28,6 +28,7 @@ package som.vm;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
+import som.VM;
 import som.compiler.AccessModifier;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.vm.constants.Nil;
@@ -54,11 +55,11 @@ public class Shell {
     in = new BufferedReader(new InputStreamReader(System.in));
     it = Nil.nilObject;
 
-    Universe.println("SOM Shell. Type \"quit\" to exit.\n");
+    VM.println("SOM Shell. Type \"quit\" to exit.\n");
 
     while (true) {
       try {
-        Universe.print("---> ");
+        VM.print("---> ");
 
         // Read a statement from the keyboard
         stmt = in.readLine();
@@ -86,7 +87,7 @@ public class Shell {
           it = shellMethod.invoke(myObject, it);
         }
       } catch (Exception e) {
-        Universe.errorPrintln("Caught exception: " + e.getMessage());
+        VM.errorPrintln("Caught exception: " + e.getMessage());
       }
     }
   }
