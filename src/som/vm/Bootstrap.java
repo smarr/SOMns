@@ -317,7 +317,7 @@ public final class Bootstrap {
     clazzClazz.setSuperClass(Classes.classClass);
   }
 
-  public static void initializeObjectSystem() {
+  public static SObject initializeObjectSystem() {
     assert platformModule != null && kernelModule != null;
 
     // these classes need to be defined by the Kernel module
@@ -380,9 +380,12 @@ public final class Bootstrap {
     SClass kernelClass = kernelModule.instantiateClass(Nil.nilObject, Classes.objectClass);
     KernelObj.kernel.setClass(kernelClass);
 
+    // create and initialize the vmMirror object
+    SObject vmMirror = constructVmMirror();
+
     // initialize slots of kernel object
     // TODO: try to actually use the initializer expressions...
-    setSlot(KernelObj.kernel, "vmMirror",   constructVmMirror(), kernelModule);
+    setSlot(KernelObj.kernel, "vmMirror",   vmMirror, kernelModule);
     setSlot(KernelObj.kernel, "ObjectSlot", Classes.objectClass, kernelModule);
     setSlot(KernelObj.kernel, "ValueSlot",  Classes.valueClass,  kernelModule);
 
@@ -411,6 +414,7 @@ public final class Bootstrap {
     objectSystemInitialized = true;
 
     platformClass = platformModule.instantiateClass();
+    return vmMirror;
   }
 
   private static void setSlot(final SObject obj, final String slotName,
