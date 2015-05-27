@@ -28,6 +28,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
+import som.VM;
 import som.compiler.ClassBuilder.ClassDefinitionError;
 import som.compiler.Lexer.SourceCoordinate;
 import som.compiler.Parser.ParseError;
@@ -69,7 +70,7 @@ public final class SourcecodeCompiler {
     try {
       parser.moduleDeclaration(clsBuilder);
     } catch (ParseError | ClassDefinitionError pe) {
-      Universe.errorExit(pe.toString());
+      VM.errorExit(pe.toString());
     }
     return clsBuilder.assemble(parser.getSource(coord));
   }

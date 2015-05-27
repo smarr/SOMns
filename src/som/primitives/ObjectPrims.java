@@ -1,8 +1,8 @@
 package som.primitives;
 
+import som.VM;
 import som.interpreter.Types;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
-import som.vm.Universe;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
@@ -30,7 +30,7 @@ public final class ObjectPrims {
     public HaltPrim() { super(null); }
     @Specialization
     public final Object doSAbstractObject(final Object receiver) {
-      Universe.errorPrintln("BREAKPOINT");
+      VM.errorPrintln("BREAKPOINT");
       return receiver;
     }
   }
