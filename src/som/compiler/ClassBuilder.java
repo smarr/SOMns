@@ -40,7 +40,7 @@ import som.interpreter.Method;
 import som.interpreter.SNodeFactory;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
-import som.primitives.NewObjectPrimFactory;
+import som.primitives.NewObjectPrimNodeGen;
 import som.vm.Symbols;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SInvokable.SMethod;
