@@ -45,6 +45,16 @@ class SuperSends = ()(
   		public foo = ( ^ v * super foo )		
   	)
   )
+  
+  class TestSuperInBlock = ()(
+    class Inner = ()(
+      public foo = ( ^ 42 )
+    )
+    class Supclass = Inner ()(
+      public oneBlock = ( ^ [super foo] value )
+      public twoBlocks = ( ^ [[super foo] value] value )
+    )
+  )
 ) : (
   (* assert 44 *)
   public testSuperClassClause1A = (
@@ -108,5 +118,13 @@ class SuperSends = ()(
   (* assert 88 *)
   public testSuperClassClause4B = (
     ^ (self new TestSuperClassClause4 new Inner1 new: 2) foo
+  )
+  
+  public testSuperInBlock1 = (
+    ^ self new TestSuperInBlock new Supclass new oneBlock
+  )
+  
+  public testSuperInBlock2 = (
+    ^ self new TestSuperInBlock new Supclass new twoBlocks
   )
 )
