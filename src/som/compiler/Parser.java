@@ -905,7 +905,8 @@ public final class Parser {
     return msg;
   }
 
-  private AbstractMessageSendNode unaryMessage(final ExpressionNode receiver) throws ParseError {
+  private AbstractMessageSendNode unaryMessage(final ExpressionNode receiver)
+      throws ParseError {
     SourceCoordinate coord = getCoordinate();
     SSymbol selector = unarySelector();
     return createMessageSend(selector, new ExpressionNode[] {receiver},
