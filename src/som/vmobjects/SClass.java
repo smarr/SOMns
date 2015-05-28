@@ -127,8 +127,23 @@ public final class SClass extends SObjectWithoutFields {
   }
 
   @TruffleBoundary
+  public Dispatchable lookupPrivate(final SSymbol selector,
+      final ClassDefinitionId classId) {
+    SClass cls = getClassCorrespondingTo(classId);
+    if (cls != null) {
+      Dispatchable disp = cls.dispatchables.get(selector);
+      if (disp != null) {
+        return disp;
+      }
+    }
+    return lookupMessage(selector, AccessModifier.PROTECTED);
+  }
+
+  @TruffleBoundary
   public Dispatchable lookupMessage(final SSymbol selector,
       final AccessModifier hasAtLeast) {
+    assert hasAtLeast.ordinal() >= AccessModifier.PROTECTED.ordinal();
+
     Dispatchable disp = dispatchables.get(selector);
 
     if (disp != null && disp.getAccessModifier().ordinal() >= hasAtLeast.ordinal()) {
@@ -138,13 +153,7 @@ public final class SClass extends SObjectWithoutFields {
     if (superclass == Classes.topClass) {
       return null;
     } else {
-      AccessModifier atLeastProtected;
-      if (hasAtLeast.ordinal() < AccessModifier.PROTECTED.ordinal()) {
-        atLeastProtected = AccessModifier.PROTECTED;
-      } else {
-        atLeastProtected = hasAtLeast;
-      }
-      return superclass.lookupMessage(selector, atLeastProtected);
+      return superclass.lookupMessage(selector, hasAtLeast);
     }
   }
 
