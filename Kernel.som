@@ -87,7 +87,7 @@ class Kernel vmMirror: vmMirror = (
   public class Class = Object ()
   (
     'Allocation'
-    public new = ( ^ vmMirror instantiate: self )
+    public new = ( self error: 'never execute should be:'  (* ^ (vmMirror instantiate: self) initialize`new *) )
   )
   
   public class Metaclass = Class ()()
