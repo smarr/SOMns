@@ -22,7 +22,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-
 package som.compiler;
 
 import static som.interpreter.SNodeFactory.createCatchNonLocalReturn;
@@ -51,7 +50,6 @@ import som.vmobjects.SSymbol;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.source.SourceSection;
-
 
 
 public final class MethodBuilder {

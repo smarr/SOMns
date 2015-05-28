@@ -55,5 +55,4 @@ public abstract class OuterObjectRead extends ExpressionNode {
     }
     return enclosing;
   }
-
 }
