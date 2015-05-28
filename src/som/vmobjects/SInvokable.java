@@ -43,73 +43,53 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 
-public abstract class SInvokable extends SAbstractObject implements Dispatchable {
+public final class SInvokable extends SAbstractObject implements Dispatchable {
 
   private final AccessModifier     accessModifier;
   private final SSymbol            category;
   private final Invokable          invokable;
   private final RootCallTarget     callTarget;
   private final SSymbol            signature;
+  private final SInvokable[]       embeddedBlocks;
+
   @CompilationFinal private ClassDefinition holder;
 
   public SInvokable(final SSymbol signature,
       final AccessModifier accessModifier, final SSymbol category,
-      final Invokable invokable) {
+      final Invokable invokable, final SInvokable[] embeddedBlocks) {
     this.signature = signature;
     this.accessModifier = accessModifier;
     this.category = category;
 
     this.invokable   = invokable;
     this.callTarget  = invokable.createCallTarget();
+    this.embeddedBlocks = embeddedBlocks;
   }
 
-  public static final class SMethod extends SInvokable {
-    private final SMethod[] embeddedBlocks;
-
-    public SMethod(final SSymbol signature, final AccessModifier accessModifier,
-        final SSymbol category, final Invokable invokable,
-        final SMethod[] embeddedBlocks) {
-      super(signature, accessModifier, category, invokable);
-      this.embeddedBlocks = embeddedBlocks;
-    }
-
-    public SMethod[] getEmbeddedBlocks() {
-      return embeddedBlocks;
-    }
-
-    @Override
-    public SClass getSOMClass() {
-      assert Classes.methodClass != null;
-      return Classes.methodClass;
-    }
-  }
-
-  public static final class SPrimitive extends SInvokable {
-    public SPrimitive(final SSymbol signature, final Invokable invokable) {
-      super(signature, AccessModifier.PUBLIC, null, invokable);
-    }
-
-    @Override
-    public SClass getSOMClass() {
-      assert Classes.primitiveClass != null;
-      return Classes.primitiveClass;
-    }
+  public SInvokable[] getEmbeddedBlocks() {
+    return embeddedBlocks;
   }
 
   @Override
-  public final RootCallTarget getCallTarget() {
+  public SClass getSOMClass() {
+    assert Classes.methodClass != null;
+    return Classes.methodClass;
+  }
+
+  @Override
+  public RootCallTarget getCallTarget() {
     return callTarget;
   }
 
-  public final Invokable getInvokable() {
+  public Invokable getInvokable() {
     return invokable;
   }
 
-  public final SSymbol getSignature() {
+  public SSymbol getSignature() {
     return signature;
   }
 
-  public final ClassDefinition getHolder() {
+  public ClassDefinition getHolder() {
     return holder;
   }
 
@@ -118,22 +98,21 @@ public abstract class SInvokable extends SAbstractObject implements Dispatchable
     holder = value;
   }
 
-  public final int getNumberOfArguments() {
+  public int getNumberOfArguments() {
     return getSignature().getNumberOfSignatureArguments();
   }
 
   @Override
-  public final Object invoke(final Object... arguments) {
+  public Object invoke(final Object... arguments) {
     return callTarget.call(arguments);
   }
 
-  public final Object invoke(final VirtualFrame frame, final IndirectCallNode node, final Object... arguments) {
+  public Object invoke(final VirtualFrame frame, final IndirectCallNode node, final Object... arguments) {
     return node.call(frame, callTarget, arguments);
   }
 
   @Override
-  public final String toString() {
-    // TODO: fixme: remove special case if possible, I think it indicates a bug
+  public String toString() {
     if (holder == null) {
       return "Method(nil>>" + getSignature().toString() + ")";
     }
@@ -142,7 +121,7 @@ public abstract class SInvokable extends SAbstractObject implements Dispatchable
   }
 
   @Override
-  public final AccessModifier getAccessModifier() {
+  public AccessModifier getAccessModifier() {
     return accessModifier;
   }
 
@@ -150,12 +129,12 @@ public abstract class SInvokable extends SAbstractObject implements Dispatchable
     return category;
   }
 
-  public final SourceSection getSourceSection() {
+  public SourceSection getSourceSection() {
     return invokable.getSourceSection();
   }
 
   @Override
-  public final AbstractDispatchNode getDispatchNode(final Object rcvr,
+  public AbstractDispatchNode getDispatchNode(final Object rcvr,
       final Object rcvrClass, final AbstractDispatchNode next) {
     if (rcvrClass instanceof SClass) {
       return new CachedDispatchSObjectCheckNode(
@@ -171,7 +150,7 @@ public abstract class SInvokable extends SAbstractObject implements Dispatchable
   }
 
   @Override
-  public final String typeForErrors() {
+  public String typeForErrors() {
     return "method";
   }
 }

@@ -17,7 +17,6 @@ public final class Classes {
   public static final SClass  arrayClass;
   public static final SClass  methodClass;
   public static final SClass  symbolClass;
-  public static final SClass  primitiveClass;
   public static final SClass  stringClass;
   public static final SClass  doubleClass;
 
@@ -48,7 +47,6 @@ public final class Classes {
     symbolClass     = Bootstrap.newEmptyClassWithItsClass("Symbol");
     methodClass     = Bootstrap.newEmptyClassWithItsClass("Method");
     integerClass    = Bootstrap.newEmptyClassWithItsClass("Integer");
-    primitiveClass  = Bootstrap.newEmptyClassWithItsClass("Primitive");
     stringClass     = Bootstrap.newEmptyClassWithItsClass("String");
     doubleClass     = Bootstrap.newEmptyClassWithItsClass("Double");
 

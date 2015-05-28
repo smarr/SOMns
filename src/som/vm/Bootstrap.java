@@ -65,7 +65,6 @@ import som.vm.constants.KernelObj;
 import som.vm.constants.Nil;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
-import som.vmobjects.SInvokable.SPrimitive;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
@@ -176,7 +175,8 @@ public final class Bootstrap {
     Primitive primMethodNode = new Primitive(primNode,
         prim.getCurrentMethodScope().getFrameDescriptor(),
         (ExpressionNode) primNode.deepCopy());
-    return new SPrimitive(signature, primMethodNode);
+    return new SInvokable(signature, AccessModifier.PUBLIC, null,
+        primMethodNode, null);
   }
 
   private static List<NodeFactory<? extends ExpressionNode>> getFactories() {

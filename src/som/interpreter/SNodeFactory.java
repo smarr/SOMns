@@ -32,7 +32,7 @@ import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.literals.BlockNode.BlockNodeWithContext;
 import som.interpreter.nodes.literals.NilLiteralNode;
 import som.vm.NotYetImplementedException;
-import som.vmobjects.SInvokable.SMethod;
+import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.frame.FrameSlot;
@@ -111,7 +111,7 @@ public final class SNodeFactory {
     return new SequenceNode(expressions.toArray(new ExpressionNode[0]), source);
   }
 
-  public static BlockNode createBlockNode(final SMethod blockMethod,
+  public static BlockNode createBlockNode(final SInvokable blockMethod,
       final boolean withContext, final SourceSection source) {
     if (withContext) {
       return new BlockNodeWithContext(blockMethod, source);

@@ -95,7 +95,7 @@ import som.interpreter.nodes.specialized.IfInlinedLiteralNode;
 import som.interpreter.nodes.specialized.IfTrueIfFalseInlinedLiteralsNode;
 import som.interpreter.nodes.specialized.IntToDoInlinedLiteralsNodeGen;
 import som.interpreter.nodes.specialized.whileloops.WhileInlinedLiteralsNode;
-import som.vmobjects.SInvokable.SMethod;
+import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.source.Source;
@@ -599,7 +599,7 @@ public final class Parser {
     messagePattern(builder);
     expect(Equal, "Unexpected symbol %(found)s. Tried to parse method declaration and expect '=' between message pattern, and method body.");
     ExpressionNode body = methodBlock(builder);
-    SMethod meth = builder.assemble(body, accessModifier, category, getSource(coord));
+    SInvokable meth = builder.assemble(body, accessModifier, category, getSource(coord));
     clsBuilder.addMethod(meth);
   }
 
@@ -843,7 +843,7 @@ public final class Parser {
 
         ExpressionNode blockBody = nestedBlock(bgenc);
 
-        SMethod blockMethod = bgenc.assemble(blockBody,
+        SInvokable blockMethod = bgenc.assemble(blockBody,
             AccessModifier.BLOCK_METHOD, null, lastMethodsSourceSection);
         builder.addEmbeddedBlockMethod(blockMethod);
 

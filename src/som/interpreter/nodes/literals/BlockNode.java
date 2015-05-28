@@ -13,17 +13,17 @@ import som.vm.Symbols;
 import som.vm.constants.Classes;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
-import som.vmobjects.SInvokable.SMethod;
+import som.vmobjects.SInvokable;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
 public class BlockNode extends LiteralNode {
 
-  protected final SMethod blockMethod;
+  protected final SInvokable blockMethod;
   protected final SClass  blockClass;
 
-  public BlockNode(final SMethod blockMethod,
+  public BlockNode(final SInvokable blockMethod,
       final SourceSection source) {
     super(source);
     this.blockMethod  = blockMethod;
@@ -72,13 +72,13 @@ public class BlockNode extends LiteralNode {
   }
 
   private void replaceAdapted(final Invokable adaptedForContext) {
-    SMethod adapted = new SMethod(blockMethod.getSignature(),
+    SInvokable adapted = new SInvokable(blockMethod.getSignature(),
         AccessModifier.BLOCK_METHOD, Symbols.symbolFor("block method"),
         adaptedForContext, blockMethod.getEmbeddedBlocks());
     replace(createNode(adapted));
   }
 
-  protected BlockNode createNode(final SMethod adapted) {
+  protected BlockNode createNode(final SInvokable adapted) {
     return new BlockNode(adapted, getSourceSection());
   }
 
@@ -92,7 +92,7 @@ public class BlockNode extends LiteralNode {
 
   public static final class BlockNodeWithContext extends BlockNode {
 
-    public BlockNodeWithContext(final SMethod blockMethod,
+    public BlockNodeWithContext(final SInvokable blockMethod,
         final SourceSection source) {
       super(blockMethod, source);
     }
@@ -107,7 +107,7 @@ public class BlockNode extends LiteralNode {
     }
 
     @Override
-    protected BlockNode createNode(final SMethod adapted) {
+    protected BlockNode createNode(final SInvokable adapted) {
       return new BlockNodeWithContext(adapted, getSourceSection());
     }
   }

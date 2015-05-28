@@ -43,7 +43,6 @@ import som.interpreter.nodes.dispatch.Dispatchable;
 import som.primitives.NewObjectPrimNodeGen;
 import som.vm.Symbols;
 import som.vmobjects.SInvokable;
-import som.vmobjects.SInvokable.SMethod;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.source.SourceSection;
@@ -278,8 +277,8 @@ public final class ClassBuilder {
     //   - the initialization method, which class super, and then initializes the object
 
     Method  superclassResolution = assembleSuperclassResoltionMethod();
-    SMethod primaryFactory       = assemblePrimaryFactoryMethod();
-    SMethod initializationMethod = assembleInitializationMethod();
+    SInvokable primaryFactory       = assemblePrimaryFactoryMethod();
+    SInvokable initializationMethod = assembleInitializationMethod();
     factoryMethods.put(primaryFactory.getSignature(), primaryFactory);
 
     if (initializationMethod != null) {
@@ -330,7 +329,7 @@ public final class ClassBuilder {
     return superclassResolutionBuilder.assembleInvokable(superclassResolution, null);
   }
 
-  private SMethod assemblePrimaryFactoryMethod() {
+  private SInvokable assemblePrimaryFactoryMethod() {
     // first create new Object
     ExpressionNode newObject = NewObjectPrimNodeGen.create(classId,
         primaryFactoryMethod.getSelfRead(null));
@@ -346,7 +345,7 @@ public final class ClassBuilder {
         AccessModifier.PUBLIC, Symbols.symbolFor("initialization"), null);
   }
 
-  private SMethod assembleInitializationMethod() {
+  private SInvokable assembleInitializationMethod() {
     if (isSimpleNewSuperFactoySend
         && slotAndInitExprs.size() == 0
         && initializer.getSignature() == ClassBuilder.getInitializerName(symbolFor("new"))) {

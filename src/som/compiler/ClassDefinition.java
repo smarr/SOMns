@@ -28,7 +28,6 @@ import som.vm.constants.Nil;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
-import som.vmobjects.SInvokable.SMethod;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
@@ -214,7 +213,7 @@ public final class ClassDefinition {
 
       MethodBuilder builder = new MethodBuilder(true);
       builder.addArgumentIfAbsent("self");
-      SMethod genericAccessMethod = builder.assemble(createNode(), modifier,
+      SInvokable genericAccessMethod = builder.assemble(createNode(), modifier,
           null, null);
 
       genericAccessTarget = genericAccessMethod.getCallTarget();
@@ -261,7 +260,7 @@ public final class ClassDefinition {
       MethodBuilder builder = new MethodBuilder(true);
       builder.addArgumentIfAbsent("self");
       builder.addArgumentIfAbsent("value");
-      SMethod genericAccessMethod = builder.assemble(
+      SInvokable genericAccessMethod = builder.assemble(
           new SlotWriteNode(createWriteNode()), modifier,
           null, null);
 
@@ -330,7 +329,7 @@ public final class ClassDefinition {
     builder.setSignature(init);
     builder.addArgumentIfAbsent("self");
 
-    SMethod thingInitNew = builder.assemble(builder.getSelfRead(null),
+    SInvokable thingInitNew = builder.assemble(builder.getSelfRead(null),
         AccessModifier.PROTECTED, Symbols.symbolFor("initializer"), null);
     instanceDispatchable.put(init, thingInitNew);
   }

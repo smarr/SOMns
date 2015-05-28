@@ -43,7 +43,7 @@ import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.OuterObjectRead;
 import som.interpreter.nodes.OuterObjectReadNodeGen;
 import som.interpreter.nodes.ReturnNonLocalNode;
-import som.vmobjects.SInvokable.SMethod;
+import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.frame.FrameDescriptor;
@@ -69,7 +69,7 @@ public final class MethodBuilder {
   private       FrameSlot     frameOnStackSlot;
   private final MethodScope   currentScope;
 
-  private final List<SMethod> embeddedBlockMethods;
+  private final List<SInvokable> embeddedBlockMethods;
 
 
   public MethodBuilder(final ClassBuilder holder, final ClassScope clsScope) {
@@ -99,13 +99,13 @@ public final class MethodBuilder {
     accessesVariablesOfOuterScope = false;
     throwsNonLocalReturn          = false;
     needsToCatchNonLocalReturn    = false;
-    embeddedBlockMethods = new ArrayList<SMethod>();
+    embeddedBlockMethods = new ArrayList<SInvokable>();
   }
 
   public String[] getArgumentNames() {
     return arguments.keySet().toArray(new String[arguments.size()]);
   }
-  public void addEmbeddedBlockMethod(final SMethod blockMethod) {
+  public void addEmbeddedBlockMethod(final SInvokable blockMethod) {
     embeddedBlockMethods.add(blockMethod);
   }
 
@@ -158,13 +158,13 @@ public final class MethodBuilder {
     return needsToCatchNonLocalReturn && outerBuilder == null;
   }
 
-  public SMethod assemble(final ExpressionNode body,
+  public SInvokable assemble(final ExpressionNode body,
       final AccessModifier accessModifier, final SSymbol category,
       final SourceSection sourceSection) {
     Method truffleMethod = assembleInvokable(body, sourceSection);
 
-    SMethod meth = new SMethod(signature, accessModifier, category,
-        truffleMethod, embeddedBlockMethods.toArray(new SMethod[0]));
+    SInvokable meth = new SInvokable(signature, accessModifier, category,
+        truffleMethod, embeddedBlockMethods.toArray(new SInvokable[0]));
 
     // return the method - the holder field is to be set later on!
     return meth;
