@@ -86,7 +86,7 @@ public abstract class SInvokable extends SAbstractObject implements Dispatchable
 
   public static final class SPrimitive extends SInvokable {
     public SPrimitive(final SSymbol signature, final Invokable invokable) {
-      super(signature, AccessModifier.PRIVATE, null, invokable);
+      super(signature, AccessModifier.PUBLIC, null, invokable);
     }
 
     @Override
