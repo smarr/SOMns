@@ -316,9 +316,12 @@ public final class MethodBuilder {
 
   public ExpressionNode getImplicitReceiverSend(final SSymbol selector,
       final SourceSection source) {
-    // we need to handle super special here
+    // we need to handle super and self special here
     if ("super".equals(selector.getString())) {
       return getSuperReadNode(source);
+    }
+    if ("self".equals(selector.getString())) {
+      return getSelfRead(source);
     }
 
     // first look up local or argument variables
