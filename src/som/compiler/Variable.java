@@ -2,6 +2,7 @@ package som.compiler;
 
 import static som.interpreter.SNodeFactory.createArgumentRead;
 import static som.interpreter.SNodeFactory.createLocalVarRead;
+import static som.interpreter.SNodeFactory.createSelfRead;
 import static som.interpreter.SNodeFactory.createSuperRead;
 import static som.interpreter.SNodeFactory.createVariableWrite;
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
@@ -40,9 +41,21 @@ public abstract class Variable {
   public abstract ExpressionNode getReadNode(final int contextLevel,
       final SourceSection source);
 
+  public final ExpressionNode getSelfReadNode(final int contextLevel,
+      final ClassDefinitionId holderClass,
+      final SourceSection source) {
+    assert this instanceof Argument;
+    isRead = true;
+    if (contextLevel > 0) {
+      isReadOutOfContext = true;
+    }
+    return createSelfRead(contextLevel, holderClass, source);
+  }
+
   public final ExpressionNode getSuperReadNode(final int contextLevel,
       final ClassDefinitionId holderClass, final boolean classSide,
       final SourceSection source) {
+    assert this instanceof Argument;
     isRead = true;
     if (contextLevel > 0) {
       isReadOutOfContext = true;

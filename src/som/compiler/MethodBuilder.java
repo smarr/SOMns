@@ -295,6 +295,13 @@ public final class MethodBuilder {
         holder.getClassId(), holder.isClassSide(), source);
   }
 
+  public ExpressionNode getSelfRead(final SourceSection source) {
+    ClassBuilder holder = getEnclosingClassBuilder();
+    ClassDefinitionId classId = holder == null ? null : holder.getClassId();
+    return getVariable("self").
+        getSelfReadNode(getContextLevel("self"), classId, source);
+  }
+
   public ExpressionNode getReadNode(final String variableName,
       final SourceSection source) {
     Variable variable = getVariable(variableName);
@@ -361,10 +368,6 @@ public final class MethodBuilder {
     makeCatchNonLocalReturn();
     return createNonLocalReturn(expr, getFrameOnStackMarkerSlot(),
         getOuterSelfContextLevel(), source);
-  }
-
-  public ExpressionNode getSelfRead(final SourceSection source) {
-    return getVariable("self").getReadNode(getContextLevel("self"), source);
   }
 
   public ClassBuilder getEnclosingClassBuilder() {

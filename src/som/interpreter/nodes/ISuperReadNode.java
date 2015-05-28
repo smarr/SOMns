@@ -21,9 +21,9 @@
  */
 package som.interpreter.nodes;
 
-import som.compiler.ClassBuilder.ClassDefinitionId;
 
-public interface ISuperReadNode {
-  ClassDefinitionId getHolderClass();
+public interface ISuperReadNode extends ISpecialSend {
+  @Override
+  default boolean isSuperSend() { return true; };
   boolean isClassSide();
 }

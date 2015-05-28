@@ -8,8 +8,10 @@ import som.compiler.Variable.Argument;
 import som.compiler.Variable.Local;
 import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.nodes.ArgumentReadNode.LocalArgumentReadNode;
+import som.interpreter.nodes.ArgumentReadNode.LocalSelfReadNode;
 import som.interpreter.nodes.ArgumentReadNode.LocalSuperReadNode;
 import som.interpreter.nodes.ArgumentReadNode.NonLocalArgumentReadNode;
+import som.interpreter.nodes.ArgumentReadNode.NonLocalSelfReadNode;
 import som.interpreter.nodes.ArgumentReadNode.NonLocalSuperReadNode;
 import som.interpreter.nodes.ContextualNode;
 import som.interpreter.nodes.ExpressionNode;
@@ -67,6 +69,15 @@ public final class SNodeFactory {
       return new LocalArgumentReadNode(variable.index, source);
     } else {
       return new NonLocalArgumentReadNode(variable.index, contextLevel, source);
+    }
+  }
+
+  public static ExpressionNode createSelfRead(final int contextLevel,
+      final ClassDefinitionId holderClass, final SourceSection source) {
+    if (contextLevel == 0) {
+      return new LocalSelfReadNode(holderClass, source);
+    } else {
+      return new NonLocalSelfReadNode(holderClass, contextLevel, source);
     }
   }
 

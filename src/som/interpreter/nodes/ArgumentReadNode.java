@@ -4,6 +4,7 @@ import som.compiler.ClassBuilder.ClassDefinitionId;
 import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
 import som.interpreter.InlinerForLexicallyEmbeddedMethods;
 import som.interpreter.SArguments;
+import som.vm.NotYetImplementedException;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
@@ -15,7 +16,9 @@ public abstract class ArgumentReadNode {
 
     public LocalArgumentReadNode(final int argumentIndex, final SourceSection source) {
       super(source);
-      assert argumentIndex >= 0;
+      assert argumentIndex > 0 ||
+        this instanceof LocalSelfReadNode ||
+        this instanceof LocalSuperReadNode;
       this.argumentIndex = argumentIndex;
     }
 
@@ -37,6 +40,27 @@ public abstract class ArgumentReadNode {
     }
   }
 
+  public static class LocalSelfReadNode extends LocalArgumentReadNode implements ISpecialSend {
+
+    private final ClassDefinitionId lexicalClass;
+
+    public LocalSelfReadNode(final ClassDefinitionId lexicalClass,
+        final SourceSection source) {
+      super(0, source);
+      this.lexicalClass = lexicalClass;
+    }
+
+    @Override public boolean           isSuperSend()     { return false; }
+    @Override public ClassDefinitionId getLexicalClass() { return lexicalClass; }
+    @Override public String            toString()        { return "LocalSelf"; }
+
+    @Override
+    public void replaceWithLexicallyEmbeddedNode(
+        final InlinerForLexicallyEmbeddedMethods inliner) {
+      throw new NotYetImplementedException();
+    }
+  }
+
   public static class NonLocalArgumentReadNode extends ContextualNode {
     protected final int argumentIndex;
 
@@ -44,6 +68,9 @@ public abstract class ArgumentReadNode {
         final int contextLevel, final SourceSection source) {
       super(contextLevel, source);
       assert contextLevel > 0;
+      assert argumentIndex > 0 ||
+        this instanceof NonLocalSelfReadNode ||
+        this instanceof NonLocalSuperReadNode;
       this.argumentIndex = argumentIndex;
     }
 
@@ -91,6 +118,33 @@ public abstract class ArgumentReadNode {
     }
   }
 
+  public static final class NonLocalSelfReadNode
+      extends NonLocalArgumentReadNode implements ISpecialSend {
+    private final ClassDefinitionId lexicalClass;
+
+    public NonLocalSelfReadNode(final ClassDefinitionId lexicalClass,
+        final int contextLevel, final SourceSection source) {
+      super(0, contextLevel, source);
+      this.lexicalClass = lexicalClass;
+    }
+
+    @Override public boolean           isSuperSend()     { return false; }
+    @Override public ClassDefinitionId getLexicalClass() { return lexicalClass; }
+    @Override public String            toString()        { return "NonLocalSelf"; }
+
+    @Override
+    public void replaceWithLexicallyEmbeddedNode(
+        final InlinerForLexicallyEmbeddedMethods inliner) {
+      throw new NotYetImplementedException();
+    }
+
+    @Override
+    public void replaceWithCopyAdaptedToEmbeddedOuterContext(
+        final InlinerAdaptToEmbeddedOuterContext inliner) {
+      throw new NotYetImplementedException();
+    }
+  }
+
   public static final class LocalSuperReadNode extends LocalArgumentReadNode
       implements ISuperReadNode {
 
@@ -105,7 +159,7 @@ public abstract class ArgumentReadNode {
     }
 
     @Override
-    public ClassDefinitionId getHolderClass() {
+    public ClassDefinitionId getLexicalClass() {
       return holderClass;
     }
 
@@ -130,7 +184,7 @@ public abstract class ArgumentReadNode {
     }
 
     @Override
-    public ClassDefinitionId getHolderClass() {
+    public ClassDefinitionId getLexicalClass() {
       return holderClass;
     }
 

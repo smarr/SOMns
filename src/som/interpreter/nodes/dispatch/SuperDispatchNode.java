@@ -20,7 +20,7 @@ public abstract class SuperDispatchNode extends AbstractDispatchNode {
   public static SuperDispatchNode create(final SSymbol selector,
       final ISuperReadNode superNode) {
     CompilerAsserts.neverPartOfCompilation("SuperDispatchNode.create1");
-    return new UninitializedDispatchNode(selector, superNode.getHolderClass(),
+    return new UninitializedDispatchNode(selector, superNode.getLexicalClass(),
         superNode.isClassSide());
   }
 

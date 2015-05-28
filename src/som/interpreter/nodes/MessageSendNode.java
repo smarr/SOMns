@@ -135,8 +135,8 @@ public final class MessageSendNode {
       this.argumentNodes = arguments;
     }
 
-    public boolean isSuperSend() {
-      return argumentNodes[0] instanceof ISuperReadNode;
+    public boolean isSpecialSend() {
+      return argumentNodes[0] instanceof ISpecialSend;
     }
 
     @Override
@@ -193,8 +193,8 @@ public final class MessageSendNode {
 
       // first option is a super send, super sends are treated specially because
       // the receiver class is lexically determined
-      if (isSuperSend()) {
-        return makeSuperSend();
+      if (isSpecialSend()) {
+        return makeSpecialSend();
       }
 
       // We treat super sends separately for simplicity, might not be the
@@ -218,12 +218,12 @@ public final class MessageSendNode {
       return makeGenericSend();
     }
 
-    protected abstract PreevaluatedExpression makeSuperSend();
+    protected abstract PreevaluatedExpression makeSpecialSend();
 
-    private GenericMessageSendNode makeGenericSend() {
+    private GenericMessageSendNode makeOrdenarySend() {
       GenericMessageSendNode send = new GenericMessageSendNode(selector,
           argumentNodes,
-          new UninitializedDispatchNode(selector, minimalVisibility),
+          new UninitializedDispatchNode(selector, AccessModifier.PUBLIC),
           getSourceSection());
       return replace(send);
     }
@@ -535,15 +535,15 @@ public final class MessageSendNode {
     }
 
     @Override
-    public boolean isSuperSend() {
+    public boolean isSpecialSend() {
       // TODO: is is correct?
       return false;
     }
 
     @Override
-    protected PreevaluatedExpression makeSuperSend() {
+    protected PreevaluatedExpression makeSpecialSend() {
       // should never be reached with isSuperSend() returning always false
-      throw new NotYetImplementedException();
+      throw new RuntimeException("A symbol send should never be a special send.");
     }
 
     @Override
