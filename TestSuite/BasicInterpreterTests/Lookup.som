@@ -1,5 +1,5 @@
 class Lookup = ()(
-  class TestClassMethodsNotBlockingOuterMethods = ()
+  public class TestClassMethodsNotBlockingOuterMethods = ()
   (
     public class Inner = ()
     (
@@ -10,21 +10,21 @@ class Lookup = ()(
     public foo = ( ^ 42 )
   )
 
-  class TestExplicitOuterInInitializer = () (
+  public class TestExplicitOuterInInitializer = () (
     public class Inner = (
       | public f = 2 * outer TestExplicitOuterInInitializer m. |
     )()
     m = ( ^ 91 )
   )
   
-  class TestImplicitOuterInInitializer = () (
+  public class TestImplicitOuterInInitializer = () (
     public class Inner = (
       | public f = 2 * m. |
     )()
     m = ( ^ 91 )
   )
   
-  class TestImplicitSend = ()(
+  public class TestImplicitSend = ()(
     method: arg = ( ^ arg )
     public bar = (
       | s |
@@ -32,7 +32,7 @@ class Lookup = ()(
     )
   )
   
-  class TestSiblings = ()
+  public class TestSiblings = ()
   (
     public class A = ()(
       public foo = ( ^ 42 )
@@ -42,7 +42,7 @@ class Lookup = ()(
     )
   )
   
-  class TestNesting = ()(
+  public class TestNesting = ()(
     public class NS2Test12 s: aClass = (
       | Sup = aClass. |
     )(
@@ -64,7 +64,7 @@ class Lookup = ()(
     )
   )
   
-  class TestInner18 s: Sup = (
+  public class TestInner18 s: Sup = (
     (* This test creates a situation where the an object''s enclosing instance 
        with respect to its class (Inner2) is an instance of the same class
        (TestInner18) as its enclosing instance with respect to its superclass
@@ -80,8 +80,8 @@ class Lookup = ()(
     )
   )
   
-  class TestSendsToPrivateMethodsWithInheritance = ()(
-    class Inner = ()(
+  public class TestSendsToPrivateMethodsWithInheritance = ()(
+    public class Inner = ()(
       private sendMe: arg = ( ^ arg )
   
       public doImplicitReceiverSendToPrivateMethod = (
@@ -92,7 +92,7 @@ class Lookup = ()(
         ^ sendMe: 55
       )
     )
-    class SubClass = Inner ()()
+    public class SubClass = Inner ()()
   )  
 ) : (
   (* assert 42 *)

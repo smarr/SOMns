@@ -24,13 +24,13 @@ class CompilerSimplification = (| aField |)(
   getField = (^ aField)
   setField: val = ( aField := val )
   
-  testSetField  = (
+  public testSetField  = (
       aField := #bar.
       self setField: #foo.
       ^ aField
   )
   
-  testGetField = (
+  public testGetField = (
       aField := 40.
       ^ self getField
   )

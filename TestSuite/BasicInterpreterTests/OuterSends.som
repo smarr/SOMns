@@ -1,5 +1,5 @@
 class OuterSends = ()(
-  class TestOuterBindings = ()(
+  public class TestOuterBindings = ()(
     public class Sup = ()(
       protected baz = ( ^ 6 )
     )
@@ -13,7 +13,7 @@ class OuterSends = ()(
     private baz = ( ^ 5 )
   )
   
-  class TestOuterSendLegalTargets = ()(
+  public class TestOuterSendLegalTargets = ()(
     public class R a: a b: b c: c = (
       | public a = a.
         public b = b.
