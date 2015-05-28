@@ -77,6 +77,7 @@ import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.interpreter.nodes.MessageSendNode.AbstractUninitializedMessageSendNode;
+import som.interpreter.nodes.OuterObjectRead;
 import som.interpreter.nodes.literals.BigIntegerLiteralNode;
 import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.literals.BlockNode.BlockNodeWithContext;
@@ -319,7 +320,7 @@ public final class Parser {
 
     if (acceptIdentifier("outer")) {
       String outer = identifier();
-      ExpressionNode self = meth.getOuterRead(outer, getSource(coord));
+      OuterObjectRead self = meth.getOuterRead(outer, getSource(coord));
       if (sym == Identifier) {
         return unaryMessage(self);
       } else {
