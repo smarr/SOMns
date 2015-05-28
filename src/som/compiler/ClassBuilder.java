@@ -93,7 +93,13 @@ public final class ClassBuilder {
    * Since the class object initialization method needs to support super,
    * it is not really possible to do it differently at the moment.
    */
-  public static final class ClassDefinitionId {};
+  public static final class ClassDefinitionId {
+    private SSymbol name; // for debugging
+    @Override
+    public String toString() {
+      return "ClassDefId(" + name + ")";
+    }
+  };
 
   public ClassBuilder(final AccessModifier accessModifier) {
     this(null, accessModifier);
@@ -144,6 +150,7 @@ public final class ClassBuilder {
   public void setName(final SSymbol name) {
     assert this.name == null;
     this.name = name;
+    this.classId.name = name;
   }
 
   public SSymbol getName() {
