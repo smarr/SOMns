@@ -260,7 +260,7 @@ public final class MessageSendNode {
         case "putAll:":
           return replace(new EagerBinaryPrimitiveNode(selector,
                 argumentNodes[0], argumentNodes[1],
-                PutAllNodeFactory.create(null, null, LengthPrimFactory.create(null))));
+                PutAllNodeFactory.create(null, null, SizeAndLengthPrimFactory.create(null))));
         case "whileTrue:": {
           if (argumentNodes[1] instanceof BlockNode &&
               argumentNodes[0] instanceof BlockNode) {
