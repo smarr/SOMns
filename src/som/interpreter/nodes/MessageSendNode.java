@@ -610,7 +610,14 @@ public final class MessageSendNode {
 
     @Override
     public String toString() {
-      return "GMsgSend(" + selector.getString() + ")";
+      String file = "";
+      if (getSourceSection() != null) {
+        file = " " + getSourceSection().getSource().getName();
+        file += ":" + getSourceSection().getStartLine();
+        file += ":" + getSourceSection().getStartColumn();
+      }
+
+      return "GMsgSend(" + selector.getString() + file + ")";
     }
 
     @Override
