@@ -720,10 +720,7 @@ public final class Parser {
       } else if (sym == EndTerm) {
         // the end of the method has been found (EndTerm) - make it implicitly
         // return "self"
-
-        // TODO: we might need something else to access self
-        ExpressionNode self = builder.getImplicitReceiverSend(symbolFor("self"),
-            getSource(getCoordinate()));
+        ExpressionNode self = builder.getSelfRead(getSource(getCoordinate()));
         expressions.add(self);
         return createSequence(expressions, getSource(coord));
       }
