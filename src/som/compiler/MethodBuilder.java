@@ -43,7 +43,6 @@ import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.OuterObjectRead;
 import som.interpreter.nodes.OuterObjectReadNodeGen;
 import som.interpreter.nodes.ReturnNonLocalNode;
-import som.vm.Universe;
 import som.vmobjects.SInvokable.SMethod;
 import som.vmobjects.SSymbol;
 
@@ -164,8 +163,8 @@ public final class MethodBuilder {
       final SourceSection sourceSection) {
     Method truffleMethod = assembleInvokable(body, sourceSection);
 
-    SMethod meth = (SMethod) Universe.newMethod(signature, accessModifier, category,
-        truffleMethod, false, embeddedBlockMethods.toArray(new SMethod[0]));
+    SMethod meth = new SMethod(signature, accessModifier, category,
+        truffleMethod, embeddedBlockMethods.toArray(new SMethod[0]));
 
     // return the method - the holder field is to be set later on!
     return meth;

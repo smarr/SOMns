@@ -37,12 +37,6 @@ import som.vmobjects.SObject;
 
 public class Shell {
 
-  private final Universe universe;
-
-  public Shell(final Universe universe) {
-    this.universe = universe;
-  }
-
   public Object start() {
     BufferedReader in;
     String stmt;
@@ -72,7 +66,7 @@ public class Shell {
             + stmt + " ). 'it = ' print. ^tmp println ) )";
 
         // Compile and load the newly generated class
-        myClass = universe.loadShellClass(stmt);
+        myClass = new SClass(null); // TODO: restore something like: universe.loadShellClass(stmt);
 
         // If success
         if (myClass != null) {

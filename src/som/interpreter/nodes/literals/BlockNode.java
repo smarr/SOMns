@@ -10,7 +10,6 @@ import som.interpreter.Method;
 import som.interpreter.SplitterForLexicallyEmbeddedCode;
 import som.interpreter.nodes.ExpressionNode;
 import som.vm.Symbols;
-import som.vm.Universe;
 import som.vm.constants.Classes;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
@@ -73,11 +72,9 @@ public class BlockNode extends LiteralNode {
   }
 
   private void replaceAdapted(final Invokable adaptedForContext) {
-    SMethod adapted = (SMethod) Universe.newMethod(
-        blockMethod.getSignature(),
+    SMethod adapted = new SMethod(blockMethod.getSignature(),
         AccessModifier.BLOCK_METHOD, Symbols.symbolFor("block method"),
-        adaptedForContext, false,
-        blockMethod.getEmbeddedBlocks());
+        adaptedForContext, blockMethod.getEmbeddedBlocks());
     replace(createNode(adapted));
   }
 

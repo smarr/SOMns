@@ -33,7 +33,6 @@ import som.compiler.ClassBuilder.ClassDefinitionError;
 import som.compiler.Lexer.SourceCoordinate;
 import som.compiler.Parser.ParseError;
 import som.vm.NotYetImplementedException;
-import som.vm.Universe;
 import som.vmobjects.SClass;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
@@ -54,8 +53,7 @@ public final class SourcecodeCompiler {
   }
 
   @TruffleBoundary
-  public static SClass compileClass(final String stmt, final SClass systemClass,
-      final Universe universe) {
+  public static SClass compileClass(final String stmt, final SClass systemClass) {
     throw new NotYetImplementedException();
 //    Parser parser = new Parser(new StringReader(stmt), stmt.length(), null, universe);
 //

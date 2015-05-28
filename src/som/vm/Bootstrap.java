@@ -65,7 +65,7 @@ import som.vm.constants.KernelObj;
 import som.vm.constants.Nil;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
-import som.vmobjects.SInvokable.SMethod;
+import som.vmobjects.SInvokable.SPrimitive;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
@@ -176,11 +176,7 @@ public final class Bootstrap {
     Primitive primMethodNode = new Primitive(primNode,
         prim.getCurrentMethodScope().getFrameDescriptor(),
         (ExpressionNode) primNode.deepCopy());
-    SInvokable primInvokable = Universe.newMethod(signature,
-        AccessModifier.PUBLIC, Symbols.symbolFor(factory.toString()),
-        primMethodNode, true, new SMethod[0]);
-
-    return primInvokable;
+    return new SPrimitive(signature, primMethodNode);
   }
 
   private static List<NodeFactory<? extends ExpressionNode>> getFactories() {
