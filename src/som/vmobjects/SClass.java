@@ -132,7 +132,7 @@ public final class SClass extends SObjectWithoutFields {
     SClass cls = getClassCorrespondingTo(classId);
     if (cls != null) {
       Dispatchable disp = cls.dispatchables.get(selector);
-      if (disp != null) {
+      if (disp != null && disp.getAccessModifier() == AccessModifier.PRIVATE) {
         return disp;
       }
     }
