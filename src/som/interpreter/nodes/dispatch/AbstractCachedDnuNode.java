@@ -16,8 +16,9 @@ public abstract class AbstractCachedDnuNode extends AbstractCachedDispatchNode {
 
   public static CallTarget getDnu(final SClass rcvrClass) {
     return rcvrClass.lookupMessage(
-          Symbols.symbolFor("doesNotUnderstand:arguments:"), AccessModifier.PROTECTED).
-          getCallTarget();
+        Symbols.symbolFor("doesNotUnderstand:arguments:"),
+        AccessModifier.PROTECTED).
+            getCallTarget();
   }
 
   public AbstractCachedDnuNode(final SClass rcvrClass,
