@@ -395,29 +395,6 @@ public final class MethodBuilder {
         source, getSelfRead(source));
   }
 
-//  public FieldReadNode getObjectFieldRead(final SSymbol fieldName,
-//      final SourceSection source) {
-//    if (!holder.hasSlot(fieldName)) {
-//      return null;
-//    }
-//
-//    // TODO: needs to pass slot, well, actually, we will probably need to revamp
-//    //       that even more
-//    return createFieldRead(getSelfRead(source),
-//        -1 /* holder.getFieldIndex(fieldName) */, source);
-//  }
-
-//  public FieldWriteNode getObjectFieldWrite(final SSymbol fieldName,
-//      final ExpressionNode exp, final Universe universe,
-//      final SourceSection source) {
-//    if (!holder.hasSlot(fieldName)) {
-//      return null;
-//    }
-//
-//    return createFieldWrite(getSelfRead(source), exp,
-//        holder.getFieldIndex(fieldName), source);
-//  }
-
   /**
    * @return number of explicit arguments,
    *         i.e., excluding the implicit 'self' argument
