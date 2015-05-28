@@ -54,7 +54,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 public final class MethodBuilder {
 
-  private final ClassBuilder  holder;
+  private final ClassBuilder  directOuterClass; // to get to an indirect outer, use outerBuilder
   private final MethodBuilder outerBuilder;
   private final boolean       blockMethod;
 
@@ -83,12 +83,12 @@ public final class MethodBuilder {
   }
 
   public MethodBuilder(final MethodBuilder outerBuilder) {
-    this(outerBuilder.getHolder(), outerBuilder.getHolderScope(), outerBuilder, true);
+    this(outerBuilder.directOuterClass, outerBuilder.getHolderScope(), outerBuilder, true);
   }
 
   private MethodBuilder(final ClassBuilder holder, final ClassScope clsScope,
       final MethodBuilder outerBuilder, final boolean isBlockMethod) {
-    this.holder       = holder;
+    this.directOuterClass = holder;
     this.outerBuilder = outerBuilder;
     this.blockMethod  = isBlockMethod;
 
@@ -189,6 +189,7 @@ public final class MethodBuilder {
     //       those synthetic elements related
     if (ssBody == null) { return null; } // TODO: better solution see ^^^
 
+    ClassBuilder holder = getEnclosingClassBuilder();
     String cls = holder.isClassSide() ? "_class" : "";
     SourceSection ssMethod = ssBody.getSource().createSection(
         holder.getName().getString() + cls + ">>" + signature.toString(),
@@ -236,10 +237,6 @@ public final class MethodBuilder {
 
   public boolean isBlockMethod() {
     return blockMethod;
-  }
-
-  public ClassBuilder getHolder() {
-    return holder;
   }
 
   private int getOuterSelfContextLevel() {
@@ -292,6 +289,7 @@ public final class MethodBuilder {
   }
 
   public ExpressionNode getSuperReadNode(final SourceSection source) {
+    ClassBuilder holder = getEnclosingClassBuilder();
     Variable self = getVariable("self");
     return self.getSuperReadNode(getOuterSelfContextLevel(),
         holder.getClassId(), holder.isClassSide(), source);
@@ -325,7 +323,7 @@ public final class MethodBuilder {
     // otherwise, it is an implicit receiver send
     return SNodeFactory.createImplicitReceiverSend(selector,
         new ExpressionNode[] {getSelfRead(null)},
-        getCurrentMethodScope(), getHolder().getClassId(), source);
+        getCurrentMethodScope(), getEnclosingClassBuilder().getClassId(), source);
   }
 
   public ExpressionNode getSetterSend(final SSymbol identifier,
@@ -340,7 +338,7 @@ public final class MethodBuilder {
     return SNodeFactory.createImplicitReceiverSend(
         ClassBuilder.getSetterName(identifier),
         new ExpressionNode[] {getSelfRead(source), exp},
-        getCurrentMethodScope(), getHolder().getClassId(), source);
+        getCurrentMethodScope(), getEnclosingClassBuilder().getClassId(), source);
   }
 
   protected Local getLocal(final String varName) {
@@ -369,11 +367,15 @@ public final class MethodBuilder {
     return getVariable("self").getReadNode(getContextLevel("self"), source);
   }
 
-  private ClassBuilder getEnclosingClassBuilder() {
-    if (holder == null) {
-      return outerBuilder.getEnclosingClassBuilder();
+  public ClassBuilder getEnclosingClassBuilder() {
+    if (this.directOuterClass == null) {
+      if (outerBuilder == null) {
+        return null;
+      } else {
+        return outerBuilder.getEnclosingClassBuilder();
+      }
     } else {
-      return holder;
+      return directOuterClass;
     }
   }
 
@@ -409,6 +411,7 @@ public final class MethodBuilder {
 
   @Override
   public String toString() {
-    return "MethodBuilder(" + holder.getName().getString() + ">>" + signature.toString() + ")";
+    return "MethodBuilder(" + getEnclosingClassBuilder().getName().getString() +
+        ">>" + signature.toString() + ")";
   }
 }
