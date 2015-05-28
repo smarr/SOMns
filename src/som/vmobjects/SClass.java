@@ -98,7 +98,7 @@ public final class SClass extends SObjectWithoutFields {
 
   public SClass getClassCorrespondingTo(final ClassDefinitionId classId) {
     SClass cls = this;
-    while (!cls.isBasedOn(classId)) {
+    while (cls != null && !cls.isBasedOn(classId)) {
       cls = cls.getSuperClass();
     }
     return cls;
