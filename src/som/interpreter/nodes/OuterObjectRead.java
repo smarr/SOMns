@@ -11,17 +11,34 @@ import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.source.SourceSection;
 
 @NodeChild(value = "receiver", type = ExpressionNode.class)
-public abstract class OuterObjectRead extends ExpressionNode {
+public abstract class OuterObjectRead
+    extends ExpressionNode implements ISpecialSend {
 
   private final int contextLevel;
   private final ClassDefinitionId classDefId;
+  private final ClassDefinitionId enclosingLexicalClassId;
 
   public OuterObjectRead(final int contextLevel,
-      final ClassDefinitionId classDefId, final SourceSection sourceSection) {
+      final ClassDefinitionId classDefId,
+      final ClassDefinitionId enclosingLexicalClassId,
+      final SourceSection sourceSection) {
     super(sourceSection);
     this.contextLevel = contextLevel;
     this.classDefId = classDefId;
+    this.enclosingLexicalClassId = enclosingLexicalClassId;
   }
+
+  public ClassDefinitionId getClassId() {
+    return classDefId;
+  }
+
+  @Override
+  public ClassDefinitionId getLexicalClass() {
+    return enclosingLexicalClassId;
+  }
+
+  @Override
+  public boolean isSuperSend() { return false; }
 
   @Specialization
   public Object doSAbstractObject(final SAbstractObject receiver) {

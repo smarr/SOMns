@@ -1,6 +1,7 @@
 package som.interpreter.nodes;
 
 import som.compiler.ClassBuilder.ClassDefinitionId;
+import som.interpreter.LexicalScope.ClassScope.ClassIdAndContextLevel;
 import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.vmobjects.SSymbol;
@@ -32,18 +33,20 @@ public class ResolvingImplicitReceiverSend extends AbstractMessageSendNode {
 
     // first check whether it is an outer send
     // it it is, we get the context level of the outer send and rewrite to one
-    int contextLevel = currentScope.lookupContextLevelOfSlotOrClass(selector);
-    if (contextLevel != -1) {
-      assert contextLevel >= 0;
-      OuterObjectRead outer = OuterObjectReadNodeGen.create(contextLevel,
-          classDefId, getSourceSection(), argumentNodes[0]);
+    ClassIdAndContextLevel result = currentScope.lookupSlotOrClass(selector);
+    if (result != null) {
+      assert result.contextLevel >= 0;
+      OuterObjectRead outer = OuterObjectReadNodeGen.create(result.contextLevel,
+          classDefId, result.classId, getSourceSection(), argumentNodes[0]);
       argumentNodes[0] = outer;
-      newNode = MessageSendNode.createOuterSend(selector, argumentNodes, getSourceSection());
+      newNode = MessageSendNode.createMessageSend(selector, argumentNodes,
+          getSourceSection());
       replace((ExpressionNode) newNode);
       args[0] = outer.executeEvaluated(args[0]);
     } else {
       // no outer send, so, must be a self send
-      newNode = MessageSendNode.createSelfSend(selector, argumentNodes, getSourceSection());
+      newNode = MessageSendNode.createMessageSend(selector, argumentNodes,
+          getSourceSection());
       replace((ExpressionNode) newNode);
     }
 

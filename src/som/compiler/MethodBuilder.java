@@ -400,7 +400,7 @@ public final class MethodBuilder {
     }
 
     return OuterObjectReadNodeGen.create(ctxLevel, lexicalSelfClassId,
-        source, getSelfRead(source));
+        enclosing.getClassId(), source, getSelfRead(source));
   }
 
   /**

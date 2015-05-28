@@ -2,7 +2,9 @@ package som.interpreter;
 
 import java.util.HashMap;
 
+import som.compiler.ClassBuilder.ClassDefinitionId;
 import som.compiler.ClassDefinition;
+import som.interpreter.LexicalScope.ClassScope.ClassIdAndContextLevel;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.vmobjects.SSymbol;
 
@@ -43,16 +45,25 @@ public abstract class LexicalScope {
       }
     }
 
-    public int lookupContextLevelOfSlotOrClass(final SSymbol selector, final int contextLevel) {
+    public static final class ClassIdAndContextLevel {
+      public final ClassDefinitionId classId;
+      public final int contextLevel;
+      ClassIdAndContextLevel(final ClassDefinitionId classId, final int contextLevel) {
+        this.classId = classId;
+        this.contextLevel = contextLevel;
+      }
+    }
+
+    public ClassIdAndContextLevel lookupSlotOrClass(final SSymbol selector, final int contextLevel) {
       assert classDefinition != null;
       if (slotsClassesAndMethods.containsKey(selector)) {
-        return contextLevel;
+        return new ClassIdAndContextLevel(classDefinition.getClassId(), contextLevel);
       }
 
       if (outerClass != null) {
-        return outerClass.lookupContextLevelOfSlotOrClass(selector, contextLevel + 1);
+        return outerClass.lookupSlotOrClass(selector, contextLevel + 1);
       }
-      return -1;
+      return null;
     }
 
     @Override
@@ -114,8 +125,8 @@ public abstract class LexicalScope {
       return "MethodScope(" + frameDescriptor.toString() + ")";
     }
 
-    public int lookupContextLevelOfSlotOrClass(final SSymbol selector) {
-      return getEnclosingClass().lookupContextLevelOfSlotOrClass(selector, 0);
+    public ClassIdAndContextLevel lookupSlotOrClass(final SSymbol selector) {
+      return getEnclosingClass().lookupSlotOrClass(selector, 0);
     }
 
     public ClassScope getEnclosingClass() {
