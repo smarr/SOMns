@@ -332,7 +332,7 @@ public final class ClassBuilder {
 
   private SMethod assemblePrimaryFactoryMethod() {
     // first create new Object
-    ExpressionNode newObject = NewObjectPrimFactory.create(
+    ExpressionNode newObject = NewObjectPrimNodeGen.create(classId,
         primaryFactoryMethod.getSelfRead(null));
 
     List<ExpressionNode> args = createPrimaryFactoryArgumentRead(newObject);
