@@ -48,6 +48,8 @@ public abstract class SuperDispatchNode extends AbstractDispatchNode {
     }
 
     private AbstractDispatchNode specialize(final Object rcvr) {
+      // TODO: misses the handling of chain length!!!
+
       CompilerAsserts.neverPartOfCompilation("SuperDispatchNode.create2");
       // TODO: integrate this with the normal specialization code, to reuse the DNU handling
       SClass rcvrClass = Types.getClassOf(rcvr);
@@ -61,6 +63,9 @@ public abstract class SuperDispatchNode extends AbstractDispatchNode {
       UninitializedDispatchNode next = new UninitializedDispatchNode(selector,
           holderClass, classSide);
 
+      // The reason that his is a checking dispatch is because the superclass
+      // hierarchy is dynamic, and it is perfectly possible that super sends
+      // bind in the same lexical location to different methods
       return replace(disp.getDispatchNode(rcvr, rcvrClass, next));
     }
 
