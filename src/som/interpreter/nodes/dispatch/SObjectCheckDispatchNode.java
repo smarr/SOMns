@@ -9,12 +9,12 @@ import com.oracle.truffle.api.utilities.BranchProfile;
 public final class SObjectCheckDispatchNode extends AbstractDispatchNode {
 
   @Child private AbstractDispatchNode nextInCache;
-  @Child private UninitializedDispatchNode uninitializedDispatch;
+  @Child private AbstractDispatchNode uninitializedDispatch;
 
   private final BranchProfile uninitialized;
 
   public SObjectCheckDispatchNode(final AbstractDispatchNode nextInCache,
-      final UninitializedDispatchNode uninitializedDispatch) {
+      final AbstractDispatchNode uninitializedDispatch) {
     this.nextInCache           = nextInCache;
     this.uninitializedDispatch = uninitializedDispatch;
     this.uninitialized         = BranchProfile.create();
