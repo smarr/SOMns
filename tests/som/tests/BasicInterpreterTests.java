@@ -189,6 +189,8 @@ public class BasicInterpreterTests {
 
   @Test
   public void testBasicInterpreterBehavior() {
+    new VM(true);
+
     Bootstrap.loadPlatformAndKernelModule(
         "TestSuite/BasicInterpreterTests/" + testClass + ".som",
         VM.standardKernelFile);
