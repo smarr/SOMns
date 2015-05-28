@@ -122,12 +122,13 @@ public final class SNodeFactory {
 
   public static AbstractMessageSendNode createMessageSend(final SSymbol msg,
       final ExpressionNode[] exprs, final SourceSection source) {
-    return MessageSendNode.createSelfSend(msg, exprs, source);
+    return MessageSendNode.createMessageSend(msg, exprs, source);
   }
 
   public static AbstractMessageSendNode createMessageSend(final SSymbol msg,
       final List<ExpressionNode> exprs, final SourceSection source) {
-    return MessageSendNode.createSelfSend(msg, exprs.toArray(new ExpressionNode[0]), source);
+    return MessageSendNode.createMessageSend(msg,
+        exprs.toArray(new ExpressionNode[0]), source);
   }
 
   public static ReturnNonLocalNode createNonLocalReturn(final ExpressionNode exp,

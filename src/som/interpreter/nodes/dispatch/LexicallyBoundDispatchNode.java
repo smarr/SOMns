@@ -2,6 +2,7 @@ package som.interpreter.nodes.dispatch;
 
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
 import som.compiler.AccessModifier;
+import som.compiler.ClassBuilder.ClassDefinitionId;
 import som.interpreter.Types;
 import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
 import som.vmobjects.SClass;
@@ -12,18 +13,20 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 
 
-public final class UninitializedDispatchNode extends AbstractDispatchWithLookupNode {
+/**
+ * Dispatch node for outer sends (name based on Newspeak spec), which includes
+ * self sends (i.e., outer sends with a degree k=0.).
+ */
+public final class LexicallyBoundDispatchNode extends AbstractDispatchWithLookupNode {
+  private final ClassDefinitionId classForPrivateLookup;
 
-  private final AccessModifier minimalVisibility;
-
-  public UninitializedDispatchNode(final SSymbol selector,
-      final AccessModifier minimalVisibility) {
+  public LexicallyBoundDispatchNode(final SSymbol selector,
+      final ClassDefinitionId classForPrivateLookup) {
     super(selector);
-    assert minimalVisibility == AccessModifier.PROTECTED
-        || minimalVisibility == AccessModifier.PUBLIC;
-    this.minimalVisibility = minimalVisibility;
+    this.classForPrivateLookup = classForPrivateLookup;
   }
 
+  // TODO: refactor, needs to be folded with the normal UninitializedDispatchNode
   private AbstractDispatchNode specialize(final Object[] arguments) {
     transferToInterpreterAndInvalidate("Initialize a dispatch node.");
     Object rcvr = arguments[0];
@@ -41,14 +44,14 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
 
     if (chainDepth < INLINE_CACHE_SIZE) {
       SClass rcvrClass = Types.getClassOf(rcvr);
-      Dispatchable dispatchable = rcvrClass.lookupMessage(selector, minimalVisibility);
+      Dispatchable dispatchable = rcvrClass.lookupPrivate(selector, classForPrivateLookup);
 
-      if (dispatchable != null) {
-        assert dispatchable.getAccessModifier() != AccessModifier.PRIVATE;
+      if (dispatchable != null && dispatchable.getAccessModifier() == AccessModifier.PRIVATE) {
+        System.out.println("TODO: We might replace the whole dispatch chain, and link this unconditionally");
       }
 
-      UninitializedDispatchNode newChainEnd = new UninitializedDispatchNode(
-          selector, minimalVisibility);
+      LexicallyBoundDispatchNode newChainEnd = new LexicallyBoundDispatchNode(
+          selector, classForPrivateLookup);
 
       if (rcvr instanceof SObject) {
         AbstractDispatchNode node;
@@ -62,7 +65,7 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
           return replace(node);
         } else {
           SObjectCheckDispatchNode checkNode = new SObjectCheckDispatchNode(node,
-              new UninitializedDispatchNode(selector, minimalVisibility));
+              new LexicallyBoundDispatchNode(selector, classForPrivateLookup));
           return replace(checkNode);
         }
       } else {
@@ -86,9 +89,10 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
     // thus, this callsite is considered to be megamorphic, and we generalize
     // it.
     GenericDispatchNode genericReplacement = new GenericDispatchNode(selector,
-        minimalVisibility, null);
+        AccessModifier.PRIVATE, classForPrivateLookup);
     sendNode.replaceDispatchListHead(genericReplacement);
     return genericReplacement;
+
   }
 
   @Override
@@ -101,5 +105,4 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
   public int lengthOfDispatchChain() {
     return 0;
   }
-
 }

@@ -1,11 +1,13 @@
 package som.interpreter.nodes;
 
 import som.compiler.AccessModifier;
+import som.compiler.ClassBuilder.ClassDefinitionId;
 import som.interpreter.TruffleCompiler;
 import som.interpreter.TypesGen;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
 import som.interpreter.nodes.dispatch.DispatchChain.Cost;
 import som.interpreter.nodes.dispatch.GenericDispatchNode;
+import som.interpreter.nodes.dispatch.LexicallyBoundDispatchNode;
 import som.interpreter.nodes.dispatch.SuperDispatchNode;
 import som.interpreter.nodes.dispatch.UninitializedDispatchNode;
 import som.interpreter.nodes.literals.BlockNode;
@@ -71,50 +73,20 @@ import com.oracle.truffle.api.source.SourceSection;
 
 public final class MessageSendNode {
 
-  /** See Newsspeak-spec sec 5.5. */
-  public static AbstractMessageSendNode createOrdenarySend(final SSymbol selector,
+  public static AbstractMessageSendNode createMessageSend(final SSymbol selector,
       final ExpressionNode[] arguments, final SourceSection source) {
-    return new UninitializedMessageSendNode(selector, arguments,
-        AccessModifier.PUBLIC, source);
-  }
-
-  /** See Newspeak-spec sec 5.7. */
-  public static AbstractMessageSendNode createImplicitReceiverSend(final SSymbol selector,
-      final ExpressionNode[] arguments, final SourceSection source) {
-    throw new NotYetImplementedException();
-  }
-
-  /** See Newspeak-spec sec 5.8. */
-  public static AbstractMessageSendNode createSelfSend(final SSymbol selector,
-      final ExpressionNode[] arguments, final SourceSection source) {
-    return new UninitializedMessageSendNode(selector, arguments,
-        AccessModifier.PRIVATE, source);
-  }
-
-  /** See Newspeak-spec sec 5.9. */
-  public static AbstractMessageSendNode createOuterSend(final SSymbol selector,
-      final ExpressionNode[] arguments, final SourceSection source) {
-    return new UninitializedMessageSendNode(selector, arguments,
-        AccessModifier.PRIVATE, source);
-  }
-
-  /** See Newspeak-spec sec 5.10. */
-  public static AbstractMessageSendNode createSuperSend(final SSymbol selector,
-      final ExpressionNode[] arguments, final SourceSection source) {
-    return new UninitializedMessageSendNode(selector, arguments,
-        AccessModifier.PROTECTED, source);
+    return new UninitializedMessageSendNode(selector, arguments, source);
   }
 
   public static AbstractMessageSendNode adaptSymbol(final SSymbol newSelector,
       final AbstractMessageSendNode node) {
     assert node instanceof UninitializedMessageSendNode;
     return new UninitializedMessageSendNode(newSelector, node.argumentNodes,
-        ((UninitializedMessageSendNode) node).minimalVisibility,
         node.getSourceSection());
   }
 
   public static AbstractMessageSendNode createForPerformNodes(final SSymbol selector) {
-    return new UninitializedSymbolSendNode(selector, null);
+    return new UninitializedSymbolSendNode(selector, null, null);
   }
 
   public static GenericMessageSendNode createGeneric(final SSymbol selector,
@@ -160,21 +132,17 @@ public final class MessageSendNode {
       extends AbstractMessageSendNode {
 
     protected final SSymbol selector;
-    protected final AccessModifier minimalVisibility;
 
     protected AbstractUninitializedMessageSendNode(final SSymbol selector,
         final ExpressionNode[] arguments,
-        final AccessModifier minimalVisibility,
         final SourceSection source) {
       super(arguments, source);
       this.selector = selector;
-      this.minimalVisibility = minimalVisibility;
     }
 
     @Override
     public String toString() {
-      return "UniniMsgSend(" + selector.toString() + " >="
-          + minimalVisibility.toString().toLowerCase() + ")";
+      return "UninitMsgSend(" + selector.toString() + ")";
     }
 
     public SSymbol getSelector() {
@@ -215,7 +183,7 @@ public final class MessageSendNode {
         case  4: return specializeQuaternary(arguments);
       }
 
-      return makeGenericSend();
+      return makeOrdenarySend();
     }
 
     protected abstract PreevaluatedExpression makeSpecialSend();
@@ -256,7 +224,7 @@ public final class MessageSendNode {
                 argumentNodes[0], AbsPrimFactory.create(null)));
           }
       }
-      return makeGenericSend();
+      return makeOrdenarySend();
     }
 
     protected PreevaluatedExpression specializeBinary(final Object[] arguments) {
@@ -450,7 +418,7 @@ public final class MessageSendNode {
 
       }
 
-      return makeGenericSend();
+      return makeOrdenarySend();
     }
 
     protected PreevaluatedExpression specializeTernary(final Object[] arguments) {
@@ -492,7 +460,7 @@ public final class MessageSendNode {
               argumentNodes[0], argumentNodes[1], argumentNodes[2],
               ToArgumentsArrayNodeGen.create(null, null)));
       }
-      return makeGenericSend();
+      return makeOrdenarySend();
     }
 
     protected PreevaluatedExpression specializeQuaternary(
@@ -503,7 +471,7 @@ public final class MessageSendNode {
               (SBlock) arguments[3], argumentNodes[0], argumentNodes[1],
               argumentNodes[2], argumentNodes[3]));
       }
-      return makeGenericSend();
+      return makeOrdenarySend();
     }
   }
 
@@ -512,16 +480,23 @@ public final class MessageSendNode {
 
     protected UninitializedMessageSendNode(final SSymbol selector,
         final ExpressionNode[] arguments,
-        final AccessModifier minimalVisibility,
         final SourceSection source) {
-      super(selector, arguments, minimalVisibility, source);
+      super(selector, arguments, source);
     }
 
     @Override
-    protected PreevaluatedExpression makeSuperSend() {
+    protected PreevaluatedExpression makeSpecialSend() {
+      ISpecialSend rcvrNode = (ISpecialSend) argumentNodes[0];
+      AbstractDispatchNode dispatch;
+
+      if (rcvrNode.isSuperSend()) {
+        dispatch = SuperDispatchNode.create(selector, (ISuperReadNode) rcvrNode);
+      } else {
+        dispatch = new LexicallyBoundDispatchNode(selector, rcvrNode.getLexicalClass());
+      }
+
       GenericMessageSendNode node = new GenericMessageSendNode(selector,
-        argumentNodes, SuperDispatchNode.create(selector,
-              (ISuperReadNode) argumentNodes[0]), getSourceSection());
+        argumentNodes, dispatch, getSourceSection());
       return replace(node);
     }
   }
@@ -530,8 +505,8 @@ public final class MessageSendNode {
     extends AbstractUninitializedMessageSendNode {
 
     protected UninitializedSymbolSendNode(final SSymbol selector,
-        final SourceSection source) {
-      super(selector, new ExpressionNode[0], AccessModifier.PUBLIC, source);
+        final ClassDefinitionId classId, final SourceSection source) {
+      super(selector, new ExpressionNode[0], source);
     }
 
     @Override

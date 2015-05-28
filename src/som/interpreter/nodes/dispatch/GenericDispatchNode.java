@@ -1,6 +1,7 @@
 package som.interpreter.nodes.dispatch;
 
 import som.compiler.AccessModifier;
+import som.compiler.ClassBuilder.ClassDefinitionId;
 import som.interpreter.SArguments;
 import som.interpreter.Types;
 import som.vmobjects.SArray;
@@ -15,10 +16,14 @@ import com.oracle.truffle.api.nodes.IndirectCallNode;
 public final class GenericDispatchNode extends AbstractDispatchWithLookupNode {
   @Child private IndirectCallNode call;
   private final AccessModifier minimalVisibility;
+  private final ClassDefinitionId classId;
 
-  public GenericDispatchNode(final SSymbol selector, final AccessModifier minimalAccess) {
+  public GenericDispatchNode(final SSymbol selector,
+      final AccessModifier minimalAccess, final ClassDefinitionId classId) {
     super(selector);
+    assert minimalAccess.ordinal() >= AccessModifier.PROTECTED.ordinal() || classId != null;
     this.minimalVisibility = minimalAccess;
+    this.classId = classId;
     call = Truffle.getRuntime().createIndirectCallNode();
   }
 
@@ -27,7 +32,13 @@ public final class GenericDispatchNode extends AbstractDispatchWithLookupNode {
       final VirtualFrame frame, final Object[] arguments) {
     Object rcvr = arguments[0];
     SClass rcvrClass = Types.getClassOf(rcvr);
-    Dispatchable method = rcvrClass.lookupMessage(selector, minimalVisibility);
+    Dispatchable method;
+
+    if (classId != null) {
+      method = rcvrClass.lookupPrivate(selector, classId);
+    } else {
+      method = rcvrClass.lookupMessage(selector, minimalVisibility);
+    }
 
     CallTarget target;
     Object[] args;
