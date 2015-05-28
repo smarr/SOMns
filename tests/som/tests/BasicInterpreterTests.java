@@ -120,6 +120,8 @@ public class BasicInterpreterTests {
         {"SuperSends", "testSuperClassClause3B",   88, Long.class },
         {"SuperSends", "testSuperClassClause4A",   44, Long.class },
         {"SuperSends", "testSuperClassClause4B",   88, Long.class },
+        {"SuperSends", "testSuperInBlock1",        42, Long.class },
+        {"SuperSends", "testSuperInBlock2",        42, Long.class },
 
         {"OuterSends", "testOuterBindings1",   3, Long.class },
         {"OuterSends", "testOuterBindings2",   2, Long.class },
