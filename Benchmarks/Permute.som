@@ -1,8 +1,4 @@
-"
-
-$Id: Permute.som 31 2009-07-31 12:25:18Z michael.haupt $
-
-Copyright (c) 2001-2013 see AUTHORS file
+(* Copyright (c) 2001-2015 see AUTHORS file
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the 'Software'), to deal
@@ -21,17 +17,21 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
-"
-
-Permute = Benchmark (
-
+*)
+class PermuteSuite usingKernel: kernel andHarness: harness = (
+| private Array     = kernel Array. 
+  private Benchmark = harness Benchmark.
+|
+) (
+  class Permute = Benchmark (
     | count v |
-    
+  ) (
+
     benchmark = (
-        count := 0.
-        v     := Array new: 7.
-        self permute: 6.
-        ^ count
+      count := 0.
+      v     := Array new: 7.
+      self permute: 6.
+      ^ count
     )
     
     verifyResult: result = (
@@ -39,14 +39,14 @@ Permute = Benchmark (
     )
     
     permute: n = (
-        count := count + 1.
-        (n <> 0)
-            ifTrue: [
-                self permute: n - 1.
-                n downTo: 1 do: [ :i |
-                    self swap: n with: i.
-                    self permute: n - 1.
-                    self swap: n with: i ] ]
+      count := count + 1.
+      (n <> 0)
+        ifTrue: [
+          self permute: n - 1.
+          n downTo: 1 do: [ :i |
+            self swap: n with: i.
+            self permute: n - 1.
+            self swap: n with: i ] ]
     )
     
     swap: i with: j = (
@@ -55,5 +55,7 @@ Permute = Benchmark (
         v at: i put: (v at: j).
         v at: j put: tmp
     )
-    
+  )
+  
+  public newInstance = ( ^ Permute new )
 )
