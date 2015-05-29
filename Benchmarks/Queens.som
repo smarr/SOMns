@@ -1,9 +1,4 @@
-"
-
-$Id: Queens.som 31 2009-07-31 12:25:18Z michael.haupt $
-
-Copyright (c) 2001-2013 see AUTHORS file
-
+(* Copyright (c) 2001-2015 see AUTHORS file
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the 'Software'), to deal
 in the Software without restriction, including without limitation the rights
@@ -21,52 +16,57 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
-"
-
-Queens = Benchmark (
-
+*)
+class QueensSuite usingKernel: kernel andHarness: harness = (
+| private Array     = kernel Array.
+  private Benchmark = harness Benchmark.
+|
+)(
+  class Queens = Benchmark (
     | freeMaxs freeRows freeMins queenRows |
-    
+  )(
     benchmark = (
-        | result |
-        result := true.
-        1 to: 10 do: [ :i | result := result and: self queens ].
-        ^ result
+      | result |
+      result := true.
+      1 to: 10 do: [ :i | result := result and: self queens ].
+      ^ result
     )
-    
+
     verifyResult: result = (
       ^ result
     )
-    
+
     queens = (
-        freeRows  := Array new:  8 withAll: true.
-        freeMaxs  := Array new: 16 withAll: true.
-        freeMins  := Array new: 16 withAll: true.
-        queenRows := Array new:  8 withAll: -1.
-        ^ self placeQueen: 1
+      freeRows  := Array new:  8 withAll: true.
+      freeMaxs  := Array new: 16 withAll: true.
+      freeMins  := Array new: 16 withAll: true.
+      queenRows := Array new:  8 withAll: -1.
+      ^ self placeQueen: 1
     )
-    
+
     placeQueen: c = (
-        1 to: 8 do: [ :r | 
-            (self row: r column: c)
-                ifTrue: [
-                    queenRows at: r put: c.
-                    self row: r column: c put: false.
-                    (c = 8) ifTrue: [ ^true ].
-                    (self placeQueen: c + 1) ifTrue: [ ^true ].
-                    self row: r column: c put: true ] ].
-        ^false
+      1 to: 8 do: [ :r | 
+        (self row: r column: c)
+          ifTrue: [
+            queenRows at: r put: c.
+            self row: r column: c put: false.
+            (c = 8) ifTrue: [ ^true ].
+            (self placeQueen: c + 1) ifTrue: [ ^true ].
+            self row: r column: c put: true ] ].
+      ^false
     )
-    
+
     row: r column: c = (
-        ^(freeRows at: r) && (freeMaxs at: c + r) && (freeMins at: c - r + 8)
+      ^(freeRows at: r) && (freeMaxs at: c + r) && (freeMins at: c - r + 8)
     )
-    
+  
     row: r column: c put: v = (
-        freeRows at: r         put: v.
-        freeMaxs at: c + r     put: v.
-        freeMins at: c - r + 8 put: v.
+      freeRows at: r         put: v.
+      freeMaxs at: c + r     put: v.
+      freeMins at: c - r + 8 put: v.
     )
-    
+  )
+
+  public newInstance = ( ^ Queens new )
 )
 
