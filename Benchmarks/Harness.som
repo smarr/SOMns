@@ -57,16 +57,16 @@ class Harness usingPlatform: platform = (
       public maxRuntime      ::= nil.
       public printAll        ::= true.
       public numThreads      ::= 1.
-      public benchmarkClass  ::= nil.  
+      public benchmarkSuite  ::= nil.
+      public name            ::= nil.
     |
   )(
     
     public runBenchmark = (
       | result warmupBench |
-      benchmarkClass oneTimeSetup.
-      warmupBench := benchmarkClass new.
+      warmupBench := benchmarkSuite newInstance.
 
-      ('Starting ' + warmupBench name + ' benchmark ... ') print.
+      ('Starting ' + name + ' benchmark ... ') print.
 
       self doWarmup: warmupBench.
 
@@ -81,7 +81,7 @@ class Harness usingPlatform: platform = (
     
     doRunsSequential = (
       | result bench |
-      bench := benchmarkClass new.
+      bench := benchmarkSuite newInstance.
       result := self doRuns: bench.
       self reportBenchmark: bench result: result. 
       ^ result
@@ -99,7 +99,7 @@ class Harness usingPlatform: platform = (
         
         threads at: i put: ([:anI :theResults |
           | result bench |
-          bench := benchmarkClass new.
+          bench := benchmarkSuite newInstance.
           result := self doRuns: bench.
           self reportBenchmark: bench result: result.
           theResults at: anI put: result.] spawn: args).
@@ -166,7 +166,7 @@ class Harness usingPlatform: platform = (
     
     reportBenchmark: bench result: result = (
       | out |
-      out :=  bench name.
+      out :=  name.
       out := out + ': iterations='.
       out := out + numIterations.
       out := out + ' average: '.
@@ -179,7 +179,7 @@ class Harness usingPlatform: platform = (
     )
      
     print: bench run: runTime = (
-      (bench name + ': iterations=1' + ' runtime: ' + runTime + 'us') println
+      (name + ': iterations=1' + ' runtime: ' + runTime + 'us') println
     )
         
     printTotal = (
@@ -189,7 +189,8 @@ class Harness usingPlatform: platform = (
     
   processArguments: args for: run = (
     (* First argument is the BenchmarkHarness *)
-    run benchmarkClass: (self loadBenchmarkClass: (args at: 2)).
+    run name: (args at: 2).
+    run benchmarkSuite: (self loadBenchmarkSuite: (args at: 2)).
     args size > 2 ifTrue: [
       run numIterations: (args at: 3) asInteger.
       args size > 3 ifTrue: [
@@ -225,12 +226,12 @@ class Harness usingPlatform: platform = (
     '  num-threads    - number of threads executing, each doing num-iterations, default: 1' println.
   )
 
-  loadBenchmarkClass: className = (
+  loadBenchmarkSuite: className = (
     | file cls |
     file := 'core-lib/Benchmarks/' + className + '.som'.
     cls := system loadModule: file.
     cls ifNil: [
         self error: 'Failed loading benchmark: ' + className ].
-    ^ cls
+    ^ cls usingKernel: kernel andBenchmark: Benchmark.
   )
 )
