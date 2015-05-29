@@ -55,6 +55,7 @@ public abstract class IntegerPrims {
   }
 
   @GenerateNodeFactory
+  @Primitive("int:leftShift:")
   public abstract static class LeftShiftPrim extends ArithmeticPrim {
     private final BranchProfile overflow = BranchProfile.create();
 

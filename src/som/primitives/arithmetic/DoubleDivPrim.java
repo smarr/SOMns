@@ -2,6 +2,7 @@ package som.primitives.arithmetic;
 
 import java.math.BigInteger;
 
+import som.primitives.Primitive;
 import som.vm.NotYetImplementedException;
 import som.vmobjects.SAbstractObject;
 
@@ -11,6 +12,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 
 
 @GenerateNodeFactory
+@Primitive({"int:divideDouble:", "double:divideDouble:"})
 public abstract class DoubleDivPrim extends ArithmeticPrim {
   @Specialization
   public final double doDouble(final double left, final double right) {
