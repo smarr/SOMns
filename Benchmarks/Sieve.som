@@ -18,9 +18,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 *)
-class SieveSuite usingKernel: kernel andBenchmark: benchmark = (
-| private Benchmark = benchmark.
-  private kernel    = kernel.
+class BounceSuite usingKernel: kernel andHarness: harness = (
+| private Benchmark = harness Benchmark.
+  private Array     = kernel Array.
 |
 ) (
 
@@ -28,7 +28,7 @@ class SieveSuite usingKernel: kernel andBenchmark: benchmark = (
 
     benchmark = (
       | flags |
-      flags := kernel Array new: 5000.
+      flags := Array new: 5000.
       ^ self sieve: flags size: 5000.
     )
 

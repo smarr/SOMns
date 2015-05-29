@@ -25,7 +25,7 @@ class Harness usingPlatform: platform = (
   | private system = platform system. |
 )(
 
-  class Benchmark = ()(
+  public class Benchmark = ()(
     public innerBenchmarkLoop: innerIterations = (
       | i |
       i := 0.
@@ -182,7 +182,7 @@ class Harness usingPlatform: platform = (
       (name + ': iterations=1' + ' runtime: ' + runTime + 'us') println
     )
         
-    printTotal = (
+    public printTotal = (
       ('Total Runtime: ' + total asString + 'us') println.
     )
   )
@@ -232,6 +232,6 @@ class Harness usingPlatform: platform = (
     cls := system loadModule: file.
     cls ifNil: [
         self error: 'Failed loading benchmark: ' + className ].
-    ^ cls usingKernel: kernel andBenchmark: Benchmark.
+    ^ cls usingKernel: kernel andHarness: self.
   )
 )
