@@ -64,7 +64,6 @@ import static som.interpreter.SNodeFactory.createSequence;
 import static som.vm.Symbols.symbolFor;
 
 import java.io.Reader;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -1063,11 +1062,9 @@ public final class Parser {
        expect(Integer);
 
        SourceSection source = getSource(coord);
-       if (i < Long.MIN_VALUE || i > Long.MAX_VALUE) {
-         return new BigIntegerLiteralNode(BigInteger.valueOf(i), source);
-       } else {
-         return new IntegerLiteralNode(i, source);
-       }
+       // TODO: add support for parsing big integers
+       //  return new BigIntegerLiteralNode(BigInteger.valueOf(i), source);
+       return new IntegerLiteralNode(i, source);
     } catch (NumberFormatException e) {
       throw new ParseError("Could not parse integer. Expected a number but " +
                            "got '" + text + "'", NONE, this);
