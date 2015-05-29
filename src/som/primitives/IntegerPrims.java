@@ -5,9 +5,7 @@ import java.math.BigInteger;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.arithmetic.ArithmeticPrim;
-import som.vm.constants.Classes;
 import som.vmobjects.SArray;
-import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
@@ -42,18 +40,16 @@ public abstract class IntegerPrims {
   }
 
   @GenerateNodeFactory
-  public abstract static class FromStringPrim extends ArithmeticPrim {
-    protected final boolean receiverIsIntegerClass(final SClass receiver) {
-      return receiver == Classes.integerClass;
-    }
+  @Primitive("intFromString:")
+  public abstract static class FromStringPrim extends UnaryExpressionNode {
 
-    @Specialization(guards = "receiverIsIntegerClass(receiver)")
-    public final Object doSClass(final SClass receiver, final String argument) {
+    @Specialization
+    public final Object doSClass(final String argument) {
       return Long.parseLong(argument);
     }
 
-    @Specialization(guards = "receiverIsIntegerClass(receiver)")
-    public final Object doSClass(final SClass receiver, final SSymbol argument) {
+    @Specialization
+    public final Object doSClass(final SSymbol argument) {
       return Long.parseLong(argument.getString());
     }
   }
