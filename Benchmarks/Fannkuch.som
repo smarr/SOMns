@@ -1,6 +1,4 @@
-"
-Copyright (c) 2001-2013 see AUTHORS file
-
+(* Copyright (c) 2001-2015 see AUTHORS file
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the 'Software'), to deal
 in the Software without restriction, including without limitation the rights
@@ -18,110 +16,106 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
-"
 
-"Pfannkuchen are somehow known in Benchmarking. i.e., there is a Lisp story"
+Pfannkuchen are somehow known in Benchmarking. i.e., there is a Lisp story.
 
-" Original written for VisualWorks
-* The Computer Language Benchmarks Game
-   http://shootout.alioth.debian.org/
-   contributed by Paolo Bonzini *"
-
-Fannkuch = Benchmark (
-
-    | timesRotated perm atEnd |
-
-    pfannkuchen: anArray = (
-        | first complement a b k |
-        k := 0.
-        [ (first := anArray at: 1) = 1 ] whileFalse: [
-            k := k + 1.
-            complement := first + 1.
-
-            1 to: first / 2 do: [ :i |
-                a := anArray at: i.
-                b := anArray at: complement - i.
-                anArray at: i put: b.
-                anArray at: complement - i put: a.
-            ]
-        ].
-        ^k
+ Original written for VisualWorks
+ The Computer Language Benchmarks Game
+ http://shootout.alioth.debian.org/
+ contributed by Paolo Bonzini
+*)
+class FannkuchSuite usingKernel: kernel andHarness: harness = (
+| private Benchmark       = harness Benchmark.
+  private Array           = kernel Array.
+  private expectedResults = self createExpectedResults.
+|
+)(
+  class FannkuchBenchmark = Benchmark ()(
+    public innerBenchmarkLoop: innerIterations = (
+      | result |
+      result := (Fannkuch new: innerIterations) maxPfannkuchen.
+      ^ result = (expectedResults at: innerIterations)
     )
+  )
 
-    initialize: size = (
-        perm := (1 to: size).
-        timesRotated := Array new: size withAll: 0.
-        atEnd := false
+  class Fannkuch new: size = (
+  | perm          =  (1 to: size).
+    timesRotated ::= Array new: size withAll: 0.
+    atEnd        ::= false.
+  |
+  )(
+    pfannkuchen: anArray = (
+      | first complement a b k |
+      k := 0.
+      [ (first := anArray at: 1) = 1 ] whileFalse: [
+        k := k + 1.
+        complement := first + 1.
+
+        1 to: first / 2 do: [ :i |
+          a := anArray at: i.
+          b := anArray at: complement - i.
+          anArray at: i put: b.
+          anArray at: complement - i put: a.
+        ]
+      ].
+      ^k
     )
 
     makeNext = (
-        | temp remainder |
-        "* Generate the next permutation. *"
-        2 to: perm length do: [ :r |
-            "* Rotate the first r items to the left. *"
-            temp := perm at: 1.
-            1 to: r - 1 do: [ :i | perm at: i put: (perm at: i + 1) ].
-            perm at: r put: temp.
-            
-            timesRotated at: r put: ((timesRotated at: r) + 1) % r.
-            remainder := timesRotated at: r.
-            remainder = 0 ifFalse: [ ^self ].
+      | temp remainder |
+      (* Generate the next permutation. *)
+      2 to: perm size do: [ :r |
+        (* Rotate the first r items to the left. *)
+        temp := perm at: 1.
+        1 to: r - 1 do: [ :i | perm at: i put: (perm at: i + 1) ].
+        perm at: r put: temp.
 
-            "* After r rotations, the first r items are in their original positions.
-            Go on rotating the first r+1 items. *"
-        ].
+        timesRotated at: r put: ((timesRotated at: r) + 1) % r.
+        remainder := timesRotated at: r.
+        remainder = 0 ifFalse: [ ^ self ].
 
-        "* We are past the final permutation. *"
-        atEnd := true.
+        (* After r rotations, the first r items are in their original positions.
+           Go on rotating the first r+1 items. *)
+      ].
+
+      (* We are past the final permutation. *)
+      atEnd := true.
     )
 
-
-    maxPfannkuchen = (
-        | max permutation |
-        max := 0.
-        [self atEnd] whileFalse: [
-            permutation := self next.
-            max := max max: (self pfannkuchen: permutation)].
-        ^max
-    )
-
-    atEnd = (
-        ^atEnd
+    public maxPfannkuchen = (
+      | max permutation |
+      max := 0.
+      [atEnd] whileFalse: [
+        permutation := self next.
+        max := max max: (self pfannkuchen: permutation)].
+      ^ max
     )
 
     next = (
-        | result |
-        result := perm copy.
-        self makeNext.
-        ^result
+      | result |
+      result := perm copy.
+      self makeNext.
+      ^ result
     )
-
-    innerBenchmarkLoop: innerIterations = (
-        | result |
-        self initialize: innerIterations.
-        result := self maxPfannkuchen.
-        ^ result = (Fannkuch expectedResult: innerIterations)
-    )
-    
-    ----
+  )
+  
+  private createExpectedResults = (
     | results |
-    
-    expectedResult: problemSize = (
-      results isNil ifTrue: [
-        results := Array new: 12.
-        results at:  1 put:  0.
-        results at:  2 put:  1.
-        results at:  3 put:  2.
-        results at:  4 put:  4.
-        results at:  5 put:  7.
-        results at:  6 put: 10.
-        results at:  7 put: 16.
-        results at:  8 put: 22.
-        results at:  9 put: 30.
-        results at: 10 put: 38.
-        results at: 11 put: 51.
-        results at: 12 put: 65.
-      ].
-      ^ results at: problemSize
-    )
+    results := Array new: 12.
+    results at:  1 put:  0.
+    results at:  2 put:  1.
+    results at:  3 put:  2.
+    results at:  4 put:  4.
+    results at:  5 put:  7.
+    results at:  6 put: 10.
+    results at:  7 put: 16.
+    results at:  8 put: 22.
+    results at:  9 put: 30.
+    results at: 10 put: 38.
+    results at: 11 put: 51.
+    results at: 12 put: 65.
+    ^ results
+  )
+  
+  public newInstance = ( ^ FannkuchBenchmark new )
 )
