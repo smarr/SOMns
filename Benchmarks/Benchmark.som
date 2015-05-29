@@ -38,26 +38,6 @@ Benchmark = (
         harness printTotal.
     )
     
-    innerBenchmarkLoop: innerIterations = (
-        | i |
-        i := 0.
-        [ i < innerIterations ] whileTrue: [
-            (self verifyResult: self benchmark) ifFalse: [ ^ false ].
-            i := i + 1.
-        ].
-        ^ true
-    )
-    
-    benchmark  = ( self subclassResponsibility )
-    verifyResult: result = ( self subclassResponsibility )
-    name       = ( ^self class name asString )
-    
-    assert: expected equals: value = (
-      expected = value ifFalse: [
-        self error: 'Expected value (' + expected asString + ') differs from actual (' + value asString + ') benchmark result.'
-      ].
-      ^ true
-    )
     
     ----
     
