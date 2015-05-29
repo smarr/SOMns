@@ -1,8 +1,4 @@
-"
-
-$Id: Towers.som 31 2009-07-31 12:25:18Z michael.haupt $
-
-Copyright (c) 2001-2013 see AUTHORS file
+(* Copyright (c) 2001-2015 see AUTHORS file
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the 'Software'), to deal
@@ -21,68 +17,79 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
-"
 
-"Mmm... Hanoi..."
-
-Towers = Benchmark (
-
+Mmm... Hanoi...
+*)
+class TowersSuite usingKernel: kernel andHarness: harness = (
+| private Array     = kernel Array.
+  private Benchmark = harness Benchmark.
+|
+)(
+  class Towers = Benchmark (
     | piles movesdone |
-    
+  )(
     pushDisk: disk onPile: pile = (
-        | top |
-        
-        top := piles at: pile.
-        (top isNil not) && [ disk size >= top size ]
-            ifTrue: [ self error: 'Cannot put a big disk on a smaller one' ].
-        
-        disk next: top.
-        piles at: pile put: disk.
+      | top |
+      
+      top := piles at: pile.
+      (top isNil not) && [ disk size >= top size ]
+        ifTrue: [ self error: 'Cannot put a big disk on a smaller one' ].
+      
+      disk next: top.
+      piles at: pile put: disk.
     )
     
     popDiskFrom: pile = (
-        | top |
-        
-        top := piles at: pile.
-        top isNil
-            ifTrue: [
-                self error: 'Attempting to remove a disk from an empty pile' ].
-        
-        piles at: pile put: top next.
-        top next: nil.
-        ^top
+      | top |
+      
+      top := piles at: pile.
+      top isNil
+        ifTrue: [
+          self error: 'Attempting to remove a disk from an empty pile' ].
+      
+      piles at: pile put: top next.
+      top next: nil.
+      ^ top
     )
     
     moveTopDiskFrom: fromPile to: toPile = (
-        self pushDisk: (self popDiskFrom: fromPile) onPile: toPile.
-        movesdone := movesdone + 1.
+      self pushDisk: (self popDiskFrom: fromPile) onPile: toPile.
+      movesdone := movesdone + 1.
     )
     
     buildTowerAt: pile disks: disks = (
-        disks downTo: 0 do: [ :i |
-            self pushDisk: (TowersDisk new: i) onPile: pile ]
+      disks downTo: 0 do: [ :i |
+        self pushDisk: (TowersDisk new: i) onPile: pile ]
     )
     
     move: disks disksFrom: fromPile to: toPile = (
-        disks = 1
-            ifTrue: [ self moveTopDiskFrom: fromPile to: toPile ]
-            ifFalse: [ | otherPile |
-                otherPile := (6 - fromPile) - toPile.
-                self move: disks - 1 disksFrom: fromPile to: otherPile.
-                self moveTopDiskFrom: fromPile to: toPile.
-                self move: disks - 1 disksFrom: otherPile to: toPile. ]
+      disks = 1
+        ifTrue: [ self moveTopDiskFrom: fromPile to: toPile ]
+        ifFalse: [ | otherPile |
+          otherPile := (6 - fromPile) - toPile.
+          self move: disks - 1 disksFrom: fromPile to: otherPile.
+          self moveTopDiskFrom: fromPile to: toPile.
+          self move: disks - 1 disksFrom: otherPile to: toPile. ]
     )
     
     benchmark = (
-        piles := Array new: 4.
-        self buildTowerAt: 1 disks: 13.
-        movesdone := 0.
-        self move: 13 disksFrom: 1 to: 2.
-        ^ movesdone
+      piles := Array new: 4.
+      self buildTowerAt: 1 disks: 13.
+      movesdone := 0.
+      self move: 13 disksFrom: 1 to: 2.
+      ^ movesdone
     )
     
     verifyResult: result = (
       ^ self assert: 8191 equals: result
     )
-    
+  )
+  
+  class TowersDisk new: size = (
+    | public size ::= size.
+      public next
+    |
+  )()
+  
+  public newInstance = ( ^ Towers new. )
 )
