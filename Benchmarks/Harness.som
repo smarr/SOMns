@@ -53,8 +53,8 @@ class Harness usingPlatform: platform = (
     | seed ::= 74755. |
   ) (
     public next = (
-        seed := ((seed * 1309) + 13849) & 65535.
-        ^seed
+      seed := ((seed * 1309) + 13849) & 65535.
+      ^ seed
     )
     
     public test = (
