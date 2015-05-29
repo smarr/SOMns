@@ -1,8 +1,4 @@
-"
-
-$Id: Bounce.som 31 2009-07-31 12:25:18Z michael.haupt $
-
-Copyright (c) 2001-2013 see AUTHORS file
+(* Copyright (c) 2001-2015 see AUTHORS file
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the 'Software'), to deal
@@ -21,27 +17,61 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
-"
-
-Bounce = Benchmark (
+*)
+class BounceSuite usingKernel: kernel andHarness: harness = (
+| private Benchmark = harness Benchmark.
+  private Random    = harness Random.
+  private Array     = kernel Array.
+|
+) (
+  class Bounce = Benchmark ()(
 
     benchmark = (
-        | ballCount balls bounces random |
-        
-        random := Random new.
-        
-        ballCount := 100.
-        bounces   := 0.
-        balls     := Array new: ballCount withAll: [ Ball new: random ].
-        
-        1 to: 50 do: [ :i |
-            balls do: [ :ball |
-                (ball bounce) ifTrue: [ bounces := bounces + 1 ] ] ].
+      | ballCount balls bounces random |
+      
+      random := Random new.
+      
+      ballCount := 100.
+      bounces   := 0.
+      balls     := Array new: ballCount withAll: [ Ball new: random ].
+      
+      1 to: 50 do: [ :i |
+          balls do: [ :ball |
+              (ball bounce) ifTrue: [ bounces := bounces + 1 ] ] ].
 
-        ^ bounces
+      ^ bounces
     )
     
     verifyResult: result = (
       ^ self assert: 1331 equals: result
     )
+  )
+  
+  class Ball new: random = (
+    | x    ::= random next % 500.
+      y    ::= random next % 500.
+      xVel ::= (random next % 300) - 150.
+      yVel ::= (random next % 300) - 150.
+    |
+  ) (
+    public bounce = (
+      | xLimit yLimit bounced |
+      xLimit  := yLimit := 500.
+      bounced := false.
+    
+      x := x + xVel.
+      y := y + yVel.
+      (x > xLimit)
+          ifTrue: [ x := xLimit. xVel := 0 - xVel abs. bounced := true ].
+      (x < 0)
+          ifTrue: [ x := 0.      xVel := xVel abs.     bounced := true ].
+      (y > yLimit)
+          ifTrue: [ y := yLimit. yVel := 0 - yVel abs. bounced := true ].
+      (y < 0)
+          ifTrue: [ y := 0.      yVel := yVel abs.     bounced := true ].
+      ^ bounced
+    )
+  )
+  
+  public newInstance = ( ^ Bounce new )
 )
