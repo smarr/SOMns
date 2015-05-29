@@ -2,11 +2,14 @@ package som.primitives.arithmetic;
 
 import java.math.BigInteger;
 
+import som.primitives.Primitive;
+
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
 
 @GenerateNodeFactory
+@Primitive({"int:modulo:", "double:modulo:"})
 public abstract class ModuloPrim extends ArithmeticPrim {
 
   @Specialization
