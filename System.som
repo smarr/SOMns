@@ -35,9 +35,9 @@ class System usingVmMirror: vmMirror = (
   public printNewline: str   = ( vmMirror printNewline: str )
   
   'Time'
-  public time  = ( ^ vmMirror systemTime  )
-  public ticks = ( ^ vmMirror systemTicks ) (* returns the microseconds since start *)
+  public time  = ( ^ vmMirror systemTime: nil  )
+  public ticks = ( ^ vmMirror systemTicks: nil ) (* returns the microseconds since start *)
   
   (* Force Garbage Collection *)
-  public fullGC = ( vmMirror systemGC )
+  public fullGC = ( vmMirror systemGC: nil )
 )
