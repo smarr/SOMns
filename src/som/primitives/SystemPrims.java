@@ -9,7 +9,6 @@ import som.vm.Bootstrap;
 import som.vm.constants.Nil;
 import som.vmobjects.SArray;
 import som.vmobjects.SArray.ArrayType;
-import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
@@ -80,26 +79,29 @@ public final class SystemPrims {
   }
 
   @GenerateNodeFactory
+  @Primitive("systemGC:")
   public abstract static class FullGCPrim extends UnaryExpressionNode {
     @Specialization
-    public final Object doSObject(final SObject receiver) {
+    public final Object doSObject(final Object receiver) {
       System.gc();
       return true;
     }
   }
 
   @GenerateNodeFactory
+  @Primitive("systemTime:")
   public abstract static class TimePrim extends UnaryExpressionNode {
     @Specialization
-    public final long doSObject(final SObject receiver) {
+    public final long doSObject(final Object receiver) {
       return System.currentTimeMillis() - startTime;
     }
   }
 
   @GenerateNodeFactory
+  @Primitive("systemTicks:")
   public abstract static class TicksPrim extends UnaryExpressionNode {
     @Specialization
-    public final long doSObject(final SObject receiver) {
+    public final long doSObject(final Object receiver) {
       return System.nanoTime() / 1000L - startMicroTime;
     }
   }
