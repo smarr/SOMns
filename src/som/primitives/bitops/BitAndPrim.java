@@ -1,13 +1,17 @@
-package som.primitives.arithmetic;
+package som.primitives.bitops;
 
 import java.math.BigInteger;
+
+import som.interpreter.nodes.nary.BinaryExpressionNode;
+import som.primitives.Primitive;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
 
 @GenerateNodeFactory
-public abstract class LogicAndPrim extends ArithmeticPrim {
+@Primitive("int:bitAnd:")
+public abstract class BitAndPrim extends BinaryExpressionNode {
   @Specialization
   public final long doLong(final long left, final long right) {
     return left & right;
@@ -15,7 +19,7 @@ public abstract class LogicAndPrim extends ArithmeticPrim {
 
   @Specialization
   public final Object doBigInteger(final BigInteger left, final BigInteger right) {
-    return reduceToLongIfPossible(left.and(right));
+    return left.and(right);
   }
 
   @Specialization
