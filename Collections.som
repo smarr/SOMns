@@ -1,0 +1,283 @@
+(* Copyright (c) 2001-2015 see AUTHORS file
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the 'Software'), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*)
+class Collections usingVmMirror: vmMirror = (
+  public class Set = (
+    | private items = Vector new. |
+  ) (
+
+    public = otherSet = (
+      self size = otherSet size ifFalse: [^ false ].
+      
+      self do: [:item | (otherSet contains: item) ifFalse: [^ false]. ].
+      
+      ^ true.
+    )
+
+    public add: anObject = (
+      (self contains: anObject)
+        ifFalse: [ items append: anObject ]
+    )
+    
+    public addAll: aCollection = (
+      aCollection do: [:each |
+        self add: each]
+    )
+    
+    public union: aCollection = (
+      | new |
+      new := Set new.
+      new addAll: self.
+      new addAll: aCollection.
+      ^ new
+    )
+    
+    public intersection: aCollection = (
+      | new |
+      new := Set new.
+      self do: [:it | 
+          (aCollection contains: it) ifTrue: [ new add: it ]].
+      ^ new
+    )
+    
+    public - aCollection = ( "set difference"
+      | new |
+      new := Set new.
+      self do: [:it |
+          (aCollection contains: it) ifFalse: [ new add: it ]].
+      ^ new
+    )
+    
+    public contains: anObject = (
+      items do: [ :it | it == anObject ifTrue: [ ^ true ] ].
+      ^ false
+    )
+    
+    public remove: anObject = (
+      | newItems |
+      newItems := Vector new.
+      [ items isEmpty ]
+        whileFalse: [ | it |
+          it := items remove.
+          it = anObject ifFalse: [ newItems append: it ] ].
+      items := newItems
+    )
+    
+    (* Sets do not have the notion of ordering, but
+       for convenience we provide those accessors *)
+    public first = (
+      ^ items at: 1
+    )
+    
+    public isEmpty = (
+      ^ items isEmpty
+    )
+    
+    (* Iteration *)
+    public do: block = ( items do: block )
+    
+    'Collection'
+    public collect: block = ( | coll |
+      coll := Vector new.
+      self do: [ :e | coll append: (block value: e) ].
+      ^coll
+    )
+    
+    'Printing'
+    public println = (
+      '(' print.
+      self do: [ :it | '(' print. it print. ')' print ].
+      ')' println
+    )
+
+    public asString = (
+      | result |
+      result := 'a Set('.
+      items do: [:e | result := result + e asString + ', '].
+      result := result + ')'.
+      ^ result
+    )
+    
+    public size = (
+      ^ items size
+    )
+
+    public items: it = ( items := it )
+  )
+
+  public class Vector new: size = (
+  | private firstIdx ::= 1.
+    private lastIdx  ::= 1.
+    private storage  ::= Array new: size. |
+  ) (
+    'Accessing'
+    public at: index = ( ^ self checkIndex: index ifValid: [ storage at: index ] )
+    
+    public at: index put: value = (
+      ^ self checkIndex: index ifValid: [ storage at: index put: value ]
+    )
+    
+    public first = ( ^ (self size > 0) ifTrue: [storage at: 1] ifFalse: [nil] )
+    
+    'Iterating'
+    public do: block = (
+      firstIdx to: lastIdx - 1 do: [ :i | block value: (storage at: i) ]
+    )
+    
+    public doIndexes: block = (
+      firstIdx to: lastIdx - 1 do: block
+    )
+    
+    'Adding'
+    public , element = ( ^ self append: element )
+    
+    public append: element = (
+      (lastIdx >= storage size) ifTrue: [
+        (* Need to expand capacity first *)
+        | newStorage |
+        newStorage := Array new: (2 * storage size).
+        storage doIndexes: [ :i | newStorage at: i put: (storage at: i) ].
+        storage := newStorage. ].
+      
+      storage at: lastIdx put: element.
+      lastIdx := lastIdx + 1.
+      ^ self
+    )
+    
+    'Removing'
+    public remove = (
+      (lastIdx > firstIdx)
+        ifTrue:  [ lastIdx := lastIdx - 1. ^storage at: lastIdx ]
+        ifFalse: [
+          self error:
+            'Vector: Attempting to pop element from empty Vector' ]
+    )
+    
+    public remove: object = (
+      | newArray newLast found |
+      newArray := Array new: self capacity.
+      newLast := 1.
+      found := false.
+     
+      self do: [ :it |
+        (it == object)
+          ifTrue:  [ found := true ]
+          ifFalse: [
+            newArray at: newLast put: it.
+            newLast := newLast + 1.
+          ]
+      ].
+     
+      storage := newArray.
+      lastIdx := newLast.
+      firstIdx := 1.
+      ^ found
+    )
+   
+    public contains: anObject = (
+      ^ storage contains: anObject
+    )
+  
+    'Printing'
+    public println = (
+      '(' print.
+      self do: [ :it | '(' print. it print. ')' print ].
+      ')' println
+    )
+    
+    'Sizing'
+    public isEmpty  = ( ^ lastIdx = firstIdx   )
+    public size     = ( ^ lastIdx - firstIdx   )
+    public capacity = ( ^ storage size )
+    
+    'Conversion'
+    public asArray = ( | arr |
+      arr := Array new: self size.
+      self doIndexes: [ :i | arr at: i put: (self at: i) ].
+      ^arr
+    )
+    
+    checkIndex: index ifValid: block = (
+      ^ ((firstIdx <= index) && (index <= lastIdx)
+          ifTrue: [ block value ]
+          ifFalse: [
+            self error:
+                'Vector[' + firstIdx asString + '..' + lastIdx asString +
+                ']: Index ' + index asString + ' out of bounds' ])
+    )
+    
+    'DeltaBlue'
+    public removeFirst = (
+      self isEmpty ifTrue: [ self error: 'OrderedCollection is empty' ].
+      firstIdx := firstIdx + 1.
+      ^ storage at: firstIdx - 1
+    )
+    
+    'Conversion'
+    public asSet = (
+      ^ Set new addAll: self
+    )
+  ) (
+    public new = ( ^ self new: 50 )
+
+    public with: elem = (
+      | newVector |
+      newVector := self new: 1.
+      newVector append: elem.
+      ^ newVector
+    )  
+  )
+  
+  public class Dictionary = (
+  | private pairs = Set new. |
+  )(
+    public at: aKey put: aValue = (
+      (self containsKey: aKey)
+        ifTrue:  [ (self pairAt: aKey) value: aValue ]
+        ifFalse: [ pairs add: (Pair withKey: aKey andValue: aValue) ]
+    )
+
+    public at: aKey = (
+      pairs do: [ :p | p key = aKey ifTrue: [ ^p value ] ].
+      ^ nil
+    )
+
+    public containsKey: aKey = (
+      pairs do: [ :p | p key = aKey ifTrue: [ ^true ] ].
+      ^ false
+    )
+
+    public keys   = ( ^ pairs collect: [ :p | p key ] )
+    public values = ( ^ pairs collect: [ :p | p value ] )
+  
+    'Iteration'
+    public do: block = ( pairs do: block )
+  
+    private pairs: aSet = ( pairs := aSet )
+    private pairAt: aKey = (
+      pairs do: [ :p | p key = aKey ifTrue: [ ^p ] ].
+      ^ nil
+    )
+  
+    'Printing'
+    public print = ( '{' print. pairs do: [ :p | p print ]. '}' print )
+    public println = ( self print. '' println )    
+  )
+)
