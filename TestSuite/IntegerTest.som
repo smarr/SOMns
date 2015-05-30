@@ -27,6 +27,12 @@ THE SOFTWARE.
 
 IntegerTest = TestCase (
 
+  testBasicNumberCoercionToInteger = (
+    self assert: 5 equals: 25 sqrt.
+    self assert: 1 equals: (2 // 4) * 2.
+    self assert: 1 equals: 2 * (2 // 4).
+  )
+
   testEqualityAndIdentity = (
     | a b |
     a := 42.
