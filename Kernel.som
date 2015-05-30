@@ -518,4 +518,127 @@ class Kernel vmMirror: vmMirror = (
     print = ( '[' print. key print. '=>' print. value print. ']' print )
     println = ( self print. '' println )
   )
+  
+  public class Vector new: size = (
+  | private firstIdx ::= 1.
+    private lastIdx  ::= 1.
+    private storage  ::= Array new: size. |
+  ) (
+    'Accessing'
+    public at: index = ( ^ self checkIndex: index ifValid: [ storage at: index ] )
+    
+    public at: index put: value = (
+      ^ self checkIndex: index ifValid: [ storage at: index put: value ]
+    )
+    
+    public first = ( ^ (self size > 0) ifTrue: [storage at: 1] ifFalse: [nil] )
+    
+    'Iterating'
+    public do: block = (
+      firstIdx to: lastIdx - 1 do: [ :i | block value: (storage at: i) ]
+    )
+    
+    public doIndexes: block = (
+      firstIdx to: lastIdx - 1 do: block
+    )
+    
+    'Adding'
+    public , element = ( ^ self append: element )
+    
+    public append: element = (
+      (lastIdx >= storage size) ifTrue: [
+        (* Need to expand capacity first *)
+        | newStorage |
+        newStorage := Array new: (2 * storage size).
+        storage doIndexes: [ :i | newStorage at: i put: (storage at: i) ].
+        storage := newStorage. ].
+      
+      storage at: lastIdx put: element.
+      lastIdx := lastIdx + 1.
+      ^ self
+    )
+    
+    'Removing'
+    public remove = (
+      (lastIdx > firstIdx)
+        ifTrue:  [ lastIdx := lastIdx - 1. ^storage at: lastIdx ]
+        ifFalse: [
+          self error:
+            'Vector: Attempting to pop element from empty Vector' ]
+    )
+    
+    public remove: object = (
+      | newArray newLast found |
+      newArray := Array new: self capacity.
+      newLast := 1.
+      found := false.
+     
+      self do: [ :it |
+        (it == object)
+          ifTrue:  [ found := true ]
+          ifFalse: [
+            newArray at: newLast put: it.
+            newLast := newLast + 1.
+          ]
+      ].
+     
+      storage := newArray.
+      lastIdx := newLast.
+      firstIdx := 1.
+      ^ found
+    )
+   
+    public contains: anObject = (
+      ^ storage contains: anObject
+    )
+  
+    'Printing'
+    public println = (
+      '(' print.
+      self do: [ :it | '(' print. it print. ')' print ].
+      ')' println
+    )
+    
+    'Sizing'
+    public isEmpty  = ( ^ lastIdx = firstIdx   )
+    public size     = ( ^ lastIdx - firstIdx   )
+    public capacity = ( ^ storage size )
+    
+    'Conversion'
+    public asArray = ( | arr |
+      arr := Array new: self size.
+      self doIndexes: [ :i | arr at: i put: (self at: i) ].
+      ^arr
+    )
+    
+    checkIndex: index ifValid: block = (
+      ^ ((firstIdx <= index) && (index <= lastIdx)
+          ifTrue: [ block value ]
+          ifFalse: [
+            self error:
+                'Vector[' + firstIdx asString + '..' + lastIdx asString +
+                ']: Index ' + index asString + ' out of bounds' ])
+    )
+    
+    'DeltaBlue'
+    public removeFirst = (
+      self isEmpty ifTrue: [ self error: 'OrderedCollection is empty' ].
+      firstIdx := firstIdx + 1.
+      ^ storage at: firstIdx - 1
+    )
+    
+    'Conversion'
+    public asSet = (
+      ^ Set new addAll: self
+    )
+  ) : (
+    public new = ( ^ self new: 50 )
+
+    public with: elem = (
+      | newVector |
+      newVector := self new: 1.
+      newVector append: elem.
+      ^ newVector
+    )  
+  )
 )
