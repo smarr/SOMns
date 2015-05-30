@@ -25,25 +25,4 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 "
 
-SelfBlockTest = TestCase (
 
-  testEscapedBlock = (
-    self assert: 42 equals: self give42 value
-  )
-
-  give42 = (
-    ^[ self giveBlock value ]
-  )
-
-  giveBlock = (
-    ^self returnBlock value
-  )
-
-  returnBlock = (
-    ^[ self returnBlock2 value ]
-  )
-
-  returnBlock2 = (
-    ^[ 42 ]
-  )
-)

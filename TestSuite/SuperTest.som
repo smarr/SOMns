@@ -25,6 +25,18 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 "
 
+SuperTestSuperClass = TestCase (
+
+    give42 = (
+        ^42
+    )
+
+    something = (
+        ^ #super
+    )
+)
+
+
 SuperTest = SuperTestSuperClass (
 
   testSuper = (

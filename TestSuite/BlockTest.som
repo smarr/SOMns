@@ -1,5 +1,64 @@
-BlockTest = TestCase (
+class BlockTests usingPlatform: platform harness: harness = (
+  | private TestCase = harness TestCase.
+    private Array    = platform kernel Array.
+  |
+)(
+  (* This test verifies that SOM blocks are indeed closures. 
+     The test was found on Eliot Miranda's Cog Blog. *)
+
+  public class ClosureTest = TestCase (
+    public testClosureProperty = (
+      | factorial result facs |
+    
+      facs := Array new: 10.
+      facs at: 1 put: 1.
+      facs at: 2 put: 2.
+      facs at: 3 put: 6.
+      facs at: 4 put: 24.
+      facs at: 5 put: 120.
+      facs at: 6 put: 720.
+      facs at: 7 put: 5040.
+      facs at: 8 put: 40320.
+      facs at: 9 put: 362880.
+      facs at: 10 put: 3628800.
+
+      factorial := [ :n |
+          n = 1
+              ifTrue: [ 1 ]
+              ifFalse: [ (factorial value: n - 1) * n ] ].
+
+      result := (1 to: 10) collect: factorial.
+      result doIndexes: [ :i |
+        self assert: (facs at: i) equals: (result at: i) ]
+    )
+  )
+  
+  public class SelfBlockTest = TestCase (
+
+    public testEscapedBlock = (
+      self assert: 42 equals: self give42 value
+    )
+
+    give42 = (
+      ^[ self giveBlock value ]
+    )
+
+    giveBlock = (
+      ^self returnBlock value
+    )
+
+    returnBlock = (
+      ^[ self returnBlock2 value ]
+    )
+
+    returnBlock2 = (
+      ^[ 42 ]
+    )
+  )
+
+  public class BlockTest = TestCase (
     |escape_count escaped_block|
+  ) (
 
     simpleBlock = (
       ^[42]
@@ -29,13 +88,13 @@ BlockTest = TestCase (
       ^[^42]
     )
     
-    testSimpleBlocks = (
+    public testSimpleBlocks = (
       self assert: 42 equals: self simpleBlock value.
       self assert: 4  equals: (self incBlock value: 3).
       self assert: 43 equals: ((self adderBlock: 13) value: 30).
     )
     
-    testClosure = (
+    public testClosure = (
       | counter |
       counter := self counterBlock.
       self assert: 1 equals: counter value.
@@ -44,14 +103,14 @@ BlockTest = TestCase (
       self assert: 3 equals: counter value.
     )
     
-    testSelfInBlock = (
+    public testSelfInBlock = (
       | test_inst |
       test_inst := BlockTest new.
       self assert: test_inst equals: test_inst selfKeeper value.
       self assert: self      equals: self selfKeeper value.
     )
     
-    testEscapedBlock = (
+    public testEscapedBlock = (
       | escaping_block |
 
       escape_count := 0.
