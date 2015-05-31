@@ -408,11 +408,17 @@ public final class Parser {
     while (sym != Or) {
       slotDefinition(clsBuilder);
     }
+
+    comment();
+
     expect(Or);
   }
 
   private void slotDefinition(final ClassBuilder clsBuilder)
       throws ParseError, ClassDefinitionError {
+    comment();
+    if (sym == Or) { return; }
+
     SourceCoordinate coord = getCoordinate();
     AccessModifier acccessModifier = accessModifier();
 
