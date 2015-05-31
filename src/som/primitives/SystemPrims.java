@@ -4,6 +4,8 @@ import java.io.IOException;
 
 import som.VM;
 import som.compiler.ClassDefinition;
+import som.interpreter.Invokable;
+import som.interpreter.Method;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vm.Bootstrap;
 import som.vm.constants.Nil;
@@ -11,8 +13,12 @@ import som.vmobjects.SArray;
 import som.vmobjects.SArray.ArrayType;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.RootCallTarget;
+import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.FrameInstance;
+import com.oracle.truffle.api.frame.FrameInstanceVisitor;
 
 
 public final class SystemPrims {
@@ -66,6 +72,26 @@ public final class SystemPrims {
     public final Object doSObject(final String argument) {
       VM.println(argument);
       return argument;
+    }
+  }
+
+  @GenerateNodeFactory
+  @Primitive("printStackTrace:")
+  public abstract static class PrintStackTracePrim extends UnaryExpressionNode {
+    @Specialization
+    public final Object doSObject(final Object receiver) {
+      VM.println("Stack Trace");
+      Truffle.getRuntime().iterateFrames(new FrameInstanceVisitor<Method>() {
+        @Override
+        public Method visitFrame(final FrameInstance frameInstance) {
+          RootCallTarget ct = (RootCallTarget) frameInstance.getCallTarget();
+          Invokable m = (Invokable) ct.getRootNode();
+          VM.println(m.toString());
+          return null;
+        }
+      });
+
+      return receiver;
     }
   }
 
