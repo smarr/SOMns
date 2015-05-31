@@ -67,7 +67,7 @@ IntegerTest = TestCase (
     self assert: Integer equals:  1073741823 class.
     self assert: Integer equals:  1073741824 class.
     
-    "Let's test for size behavior and corresponding class"
+    (* Let's test for size behavior and corresponding class *)
     i := 1 << 30.
     self assert: Integer equals: i class.
     self assert: i > 0 description: 'should not overflow'.
