@@ -18,7 +18,12 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 *)
-class Collections usingVmMirror: vmMirror = (
+class Collections usingKernel: kernel = (
+| private Array  = kernel Array. 
+  private Pair   = kernel Pair.
+  private Vector = kernel Vector.
+|
+)(
   public class Set = (
     | private items = Vector new. |
   ) (
@@ -57,7 +62,7 @@ class Collections usingVmMirror: vmMirror = (
       ^ new
     )
     
-    public - aCollection = ( "set difference"
+    public - aCollection = ( (* set difference *)
       | new |
       new := Set new.
       self do: [:it |
