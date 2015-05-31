@@ -5,6 +5,7 @@ class Platform usingVmMirror: vmMirror = (
 | public kernel  = vmMirror kernelObject: nil.
   public system  = (vmMirror load: 'core-lib/System.som')  usingVmMirror: vmMirror.
   public mirrors = (vmMirror load: 'core-lib/Mirrors.som') usingVmMirror: vmMirror.
+  public collections = (vmMirror load: 'core-lib/Collections.som') usingKernel: kernel.
 |
   (Application usingPlatform: self) start
 )(
