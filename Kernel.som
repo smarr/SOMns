@@ -31,6 +31,7 @@ class Kernel vmMirror: vmMirror = (
   
     'Error recovering'
     protected doesNotUnderstand: selector arguments: arguments = (
+      vmMirror printStackTrace: nil.
       error: 'Method ' + selector + ' not found in class ' + (vmMirror mirrorClassName: self)
     )
     
