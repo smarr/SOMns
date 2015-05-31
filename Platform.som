@@ -2,7 +2,7 @@ class Platform usingVmMirror: vmMirror = (
   (* The Platform class defines the runtime system of SOMns. It loads all
      elements required for execution, and afterwards processes the command line
      arguments to start the application code. *)
-| public kernel  = vmMirror kernelObject: vmMirror.
+| public kernel  = vmMirror kernelObject: nil.
   public system  = (vmMirror load: 'core-lib/System.som')  usingVmMirror: vmMirror.
   public mirrors = (vmMirror load: 'core-lib/Mirrors.som') usingVmMirror: vmMirror.
 |
