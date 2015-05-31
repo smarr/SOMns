@@ -51,6 +51,7 @@ public class StringPrims {
   }
 
   @GenerateNodeFactory
+  @Primitive("string:substringFrom:to:")
   public abstract static class SubstringPrim extends TernaryExpressionNode {
     @Specialization
     public final String doString(final String receiver, final long start,

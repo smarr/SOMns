@@ -11,7 +11,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 
 
 @GenerateNodeFactory
-@Primitive({"value:sameAs:", "int:equals:", "double:equals:"})
+@Primitive({"value:sameAs:", "int:equals:", "double:equals:", "string:equals:"})
 public abstract class EqualsPrim extends BinaryExpressionNode {
   @Specialization
   public final boolean doBoolean(final boolean left, final boolean right) {

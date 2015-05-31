@@ -36,6 +36,7 @@ public final class ObjectPrims {
   }
 
   @GenerateNodeFactory
+  @Primitive("objClass:")
   public abstract static class ClassPrim extends UnaryExpressionNode {
     @Specialization
     public final SClass doSAbstractObject(final SAbstractObject receiver) {
@@ -44,6 +45,7 @@ public final class ObjectPrims {
 
     @Specialization
     public final SClass doObject(final Object receiver) {
+      CompilerAsserts.neverPartOfCompilation("Should specialize this if performance critical");
       return Types.getClassOf(receiver);
     }
   }
