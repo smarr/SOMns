@@ -26,16 +26,19 @@ package som.vmobjects;
 
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
 import som.compiler.AccessModifier;
 import som.compiler.ClassBuilder.ClassDefinitionId;
+import som.compiler.ClassDefinition.ClassSlotDefinition;
 import som.compiler.ClassDefinition.SlotDefinition;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.objectstorage.ObjectLayout;
 import som.vm.constants.Classes;
 
+import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
@@ -121,9 +124,34 @@ public final class SClass extends SObjectWithoutFields {
     }
   }
 
+  public boolean canUnderstand(final SSymbol selector) {
+    return dispatchables.containsKey(selector);
+  }
+
+  public SInvokable[] getMethods() {
+    ArrayList<SInvokable> methods = new ArrayList<SInvokable>();
+    for (Dispatchable disp : dispatchables.values()) {
+      if (disp instanceof SInvokable) {
+        methods.add((SInvokable) disp);
+      }
+    }
+    return methods.toArray(new SInvokable[methods.size()]);
+  }
+
   public void setDispatchables(final HashMap<SSymbol, Dispatchable> value) {
     transferToInterpreterAndInvalidate("SClass.setDispatchables");
     dispatchables = value;
+  }
+
+  public SClass[] getNestedClasses(final SObject instance) {
+    CompilerAsserts.neverPartOfCompilation("Not optimized, we do unrecorded invokes here");
+    ArrayList<SClass> classes = new ArrayList<SClass>();
+    for (Dispatchable disp : dispatchables.values()) {
+      if (disp instanceof ClassSlotDefinition) {
+        classes.add((SClass) disp.invoke(instance));
+      }
+    }
+    return classes.toArray(new SClass[classes.size()]);
   }
 
   @TruffleBoundary
