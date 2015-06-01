@@ -1,6 +1,10 @@
 package som.primitives;
 
+import java.util.ArrayList;
+
+import som.compiler.ClassDefinition;
 import som.interpreter.Types;
+import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.reflection.AbstractSymbolDispatch;
@@ -63,4 +67,65 @@ public abstract class MirrorPrims {
     }
   }
 
+  @GenerateNodeFactory
+  @Primitive("classDefinition:")
+  public abstract static class ClassDefinitionPrim extends UnaryExpressionNode {
+    @Specialization
+    public final Object getClassDefinition(final SClass rcvr) {
+      return rcvr.getClassDefinition();
+    }
+  }
+
+  @GenerateNodeFactory
+  @Primitive("classDefNestedClassDefinitions:")
+  public abstract static class NestedClassDefinitionsPrim extends UnaryExpressionNode {
+    @Specialization
+    public final Object getClassDefinition(final Object classDefHandle) {
+      assert classDefHandle instanceof ClassDefinition;
+      ClassDefinition def = (ClassDefinition) classDefHandle;
+      ClassDefinition[] nested = def.getNestedClassDefinitions();
+      return SArray.create(nested);
+    }
+  }
+
+  @GenerateNodeFactory
+  @Primitive("classDefName:")
+  public abstract static class ClassDefNamePrim extends UnaryExpressionNode {
+    @Specialization
+    public final SSymbol getName(final Object classDefHandle) {
+      assert classDefHandle instanceof ClassDefinition;
+      ClassDefinition def = (ClassDefinition) classDefHandle;
+      return def.getName();
+    }
+  }
+
+  @GenerateNodeFactory
+  @Primitive("classDefMethods:")
+  public abstract static class ClassDefMethodsPrim extends UnaryExpressionNode {
+    @Specialization
+    public final SArray getName(final Object classDefHandle) {
+      assert classDefHandle instanceof ClassDefinition;
+      ClassDefinition def = (ClassDefinition) classDefHandle;
+
+      ArrayList<SInvokable> methods = new ArrayList<SInvokable>();
+      for (Dispatchable disp : def.getInstanceDispatchables().values()) {
+        if (disp instanceof SInvokable) {
+          methods.add((SInvokable) disp);
+        }
+      }
+      return SArray.create(methods.toArray(new SInvokable[methods.size()]));
+    }
+  }
+
+  @GenerateNodeFactory
+  @Primitive("classDef:hasFactoryMethod:")
+  public abstract static class ClassDefHasFactoryMethodPrim extends BinaryExpressionNode {
+    @Specialization
+    public final boolean hasFactoryMethod(final Object classDefHandle,
+        final SSymbol selector) {
+      assert classDefHandle instanceof ClassDefinition;
+      ClassDefinition def = (ClassDefinition) classDefHandle;
+      return def.getFactoryMethods().containsKey(selector);
+    }
+  }
 }
