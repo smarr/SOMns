@@ -1,6 +1,7 @@
 package som.primitives;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 import som.VM;
 import som.compiler.ClassDefinition;
@@ -19,6 +20,7 @@ import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameInstance;
 import com.oracle.truffle.api.frame.FrameInstanceVisitor;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 public final class SystemPrims {
@@ -80,17 +82,37 @@ public final class SystemPrims {
   public abstract static class PrintStackTracePrim extends UnaryExpressionNode {
     @Specialization
     public final Object doSObject(final Object receiver) {
+      ArrayList<String> method   = new ArrayList<String>();
+      ArrayList<String> location = new ArrayList<String>();
+      int[] maxLengthMethod = {0};
       VM.println("Stack Trace");
       Truffle.getRuntime().iterateFrames(new FrameInstanceVisitor<Method>() {
         @Override
         public Method visitFrame(final FrameInstance frameInstance) {
           RootCallTarget ct = (RootCallTarget) frameInstance.getCallTarget();
           Invokable m = (Invokable) ct.getRootNode();
-          VM.println(m.toString());
+          SourceSection ss = m.getSourceSection();
+          if (ss != null) {
+            String id = ss.getIdentifier();
+            method.add(id);
+            maxLengthMethod[0] = Math.max(maxLengthMethod[0], id.length());
+            location.add(ss.getSource().getName() + ":" + ss.getStartLine());
+
+          } else {
+            String id = m.toString();
+            method.add(id);
+            maxLengthMethod[0] = Math.max(maxLengthMethod[0], id.length());
+            location.add("");
+          }
           return null;
         }
       });
 
+      for (int i = 0; i < method.size(); i++) {
+        VM.print(String.format("%1$-" + (maxLengthMethod[0] + 4) + "s",
+          method.get(i)));
+        VM.println(location.get(i));
+      }
       return receiver;
     }
   }
