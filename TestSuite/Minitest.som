@@ -579,7 +579,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
     )
 
     assert: anObject equals: expectedObject = (
-      (* Succeed if anObject = anotherObject. Preferrable to a simple
+      (* Succeed if anObject = anotherObject. Preferable to a simple
          'assert: [a = b]' in a test method because in case of a failure the 
          values compared are available for inspection as this method's
          arguments. *)
@@ -598,7 +598,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
     )
 
     assert: anObject equals: anotherObject descriptionBlock: messageBlock = (
-      (* Succeed if anObject = anotherObject. Preferrable to a simple
+      (* Succeed if anObject = anotherObject. Preferable to a simple
          'assert: [a = b]' in a test method because in case of a failure the
          values compared are available for inspection as this method's
          arguments. *)
@@ -618,7 +618,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
     )
 
     should: aBlock signal: anException = (
-      should: aBlock signal: anException description: 'Expected exception not signalled'
+      should: aBlock signal: anException description: 'Expected exception not signaled'
     )
 
     should: aBlock signal: anException description: failureMessage = (
