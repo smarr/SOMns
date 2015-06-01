@@ -335,7 +335,6 @@ OTHER DEALINGS IN THE SOFTWARE. *)
   private Set                = platform collections Set.
   
   private ObjectMirror = platform mirrors ObjectMirror.
-  private Message      = platform squeak Message.
 |)(
   class TestCase environment: testEnvironment selector: selector = (
     (* Represents a particular test (a method with the selector that begins with
@@ -384,8 +383,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
     )
     
     sendTestMessage = (
-      (Message selector: selector)
-        sendTo: testContextInstance
+      (ObjectMirror reflecting: testContextInstance) perform: selector
     )
 
     public runUnsafeUsing: tester = (
@@ -687,7 +685,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
       (* Returns a class metaobject represented by this environment specific
          for the given instance of the class corresponding to this environment's
          parent. *)
-      ^ (Message selector: classAccessorName) sendTo: parentObject
+      ^ (ObjectMirror reflecting: parentObject) perform: classAccessorName
     )
 
     public createInstanceIn: parentObject = (
