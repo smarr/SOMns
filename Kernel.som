@@ -604,9 +604,9 @@ class Kernel vmMirror: vmMirror = (
   
     'Printing'
     public println = (
-      '(' print.
+      'Vector[' print.
       self do: [ :it | '(' print. it print. ')' print ].
-      ')' println
+      ']' println
     )
     
     'Sizing'
