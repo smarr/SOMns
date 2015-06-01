@@ -331,7 +331,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
   private Dictionary         = platform collections Dictionary.
   private IdentityDictionary = platform collections IdentityDictionary.
   private IdentitySet        = platform collections IdentitySet.
-  private OrderedCollection  = platform collections OrderedCollection.
+  private Vector             = platform kernel Vector.
   private Set                = platform collections Set.
   
   private ObjectMirror = platform mirrors ObjectMirror.
@@ -489,8 +489,8 @@ OTHER DEALINGS IN THE SOFTWARE. *)
       testCasesIn: classMirror environment: environment = (
         (* Return a collection of TestCases describing test methods in the given class. *)
         | testCases |
-        testCases := OrderedCollection new.
         classMirror instanceSide methods do:
+        testCases := Vector new.
           [:each |
           (isTestMethod: each) ifTrue:
             [testCases add: 
@@ -504,7 +504,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
       (* Returns a test suite containing all test cases defined in all test
          context classes of the catalogued module. *)
       | allTestCases |
-      allTestCases := OrderedCollection new: testsByContextName size + 1 * 20.
+      allTestCases := Vector new: testsByContextName size + 1 * 20.
       testsByContextName do: [:each | allTestCases addAll: each testCases].
       ^TestSuite testCases: allTestCases
     )
@@ -673,14 +673,14 @@ OTHER DEALINGS IN THE SOFTWARE. *)
        test context. *)
     |
       public parent = parent.
-      nestedEnvironments = OrderedCollection new.
-      public testCases ::= OrderedCollection new.
+      nestedEnvironments = Vector new.
+      public testCases ::= Vector new.
       public classDeclarationMirror = mirror.
     |
   ) (
     'accessing'
     public addNestedEnvironment: environment = (
-      nestedEnvironments add: environment
+      nestedEnvironments append: environment
     )
 
     classIn: parentObject = (
@@ -934,7 +934,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
 
       coreEnvironmentsFor: testCase = (
         | result |
-        result := OrderedCollection new.
+        result := Vector new.
         testCase environment parentEnvironmentsDo:
           [:each |
           each isRoot ifFalse: [result add: each]].
@@ -990,10 +990,10 @@ OTHER DEALINGS IN THE SOFTWARE. *)
       (* This message must be sent to the tester once prior to running any
          tests. At this stage the tester instantiates shared state classes of
          the test module, which may potentially cause errors to be signaled. *)
-      errors := OrderedCollection new.
-      failures := OrderedCollection new.
-      successes := OrderedCollection new.
       testCaseStream := testSuite testCases readStream.
+      errors    := Vector new.
+      failures  := Vector new.
+      successes := Vector new.
       testsPerformed := 0.
       instanceManager createCoreInstances.
     )
@@ -1069,12 +1069,12 @@ OTHER DEALINGS IN THE SOFTWARE. *)
        same protocol. *)
     |
       public moduleInstance = moduleInstance.
-      nestedEnvironments = OrderedCollection new.
+      nestedEnvironments = Vector new.
     |
   ) (
     'accessing'
     public addNestedEnvironment: environment = (
-      nestedEnvironments add: environment
+      nestedEnvironments append: environment
     )
 
     'enumerating'
