@@ -93,7 +93,7 @@ public final class ClassDefinition {
 
   public void initializeClass(final SClass result, final SClass superClass) {
     result.setSuperClass(superClass);
-    result.setClassId(classId);
+    result.setClassDefinition(this);
 
     // build class class name
     String ccName = name.getString() + " class";
@@ -102,7 +102,7 @@ public final class ClassDefinition {
       // Initialize the class of the resulting class
       result.getSOMClass().setDispatchables(classScope.getDispatchables());
       result.getSOMClass().setName(Symbols.symbolFor(ccName));
-      result.getSOMClass().setClassId(classId);
+      result.getSOMClass().setClassDefinition(this);
       result.getSOMClass().setSuperClass(Classes.classClass);
     }
 
@@ -305,11 +305,16 @@ public final class ClassDefinition {
     }
   }
 
-  public ClassDefinition getEmbeddedClassDefinition(final String string) {
+  public ClassDefinition getNestedClassDefinition(final String string) {
     if (nestedClassDefinitions == null) {
       return null;
     }
     return nestedClassDefinitions.get(Symbols.symbolFor(string));
+  }
+
+  public ClassDefinition[] getNestedClassDefinitions() {
+    return nestedClassDefinitions.values().toArray(
+        new ClassDefinition[nestedClassDefinitions.size()]);
   }
 
   public AccessModifier getAccessModifier() {

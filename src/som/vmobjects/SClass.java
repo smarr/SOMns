@@ -32,6 +32,7 @@ import java.util.HashSet;
 
 import som.compiler.AccessModifier;
 import som.compiler.ClassBuilder.ClassDefinitionId;
+import som.compiler.ClassDefinition;
 import som.compiler.ClassDefinition.ClassSlotDefinition;
 import som.compiler.ClassDefinition.SlotDefinition;
 import som.interpreter.nodes.dispatch.Dispatchable;
@@ -53,7 +54,7 @@ public final class SClass extends SObjectWithoutFields {
 
   @CompilationFinal private ObjectLayout layoutForInstances;
 
-  @CompilationFinal private ClassDefinitionId classId;
+  @CompilationFinal private ClassDefinition classDef;
 
   protected final SAbstractObject enclosingObject;
 
@@ -87,16 +88,16 @@ public final class SClass extends SObjectWithoutFields {
     return name;
   }
 
-  public ClassDefinitionId getClassId() {
-    return classId;
+  public ClassDefinition getClassDefinition() {
+    return classDef;
   }
 
-  public void setClassId(final ClassDefinitionId classId) {
-    this.classId = classId;
+  public void setClassDefinition(final ClassDefinition classDef) {
+    this.classDef = classDef;
   }
 
   private boolean isBasedOn(final ClassDefinitionId classId) {
-    return this.getClassId() == classId;
+    return this.classDef.getClassId() == classId;
   }
 
   public SClass getClassCorrespondingTo(final ClassDefinitionId classId) {
