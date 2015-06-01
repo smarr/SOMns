@@ -152,7 +152,7 @@ class Collections usingKernel: kernel = (
     public size = ( ^ pairs size )
   
     'Iteration'
-    public do: block = ( pairs do: block )
+    public do: block = ( values do: block )
   
     private pairs: aSet = ( pairs := aSet )
     private pairAt: aKey = (
