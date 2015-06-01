@@ -319,30 +319,30 @@ public final class Bootstrap {
     assert platformModule != null && kernelModule != null;
 
     // these classes need to be defined by the Kernel module
-    ClassDefinition topDef   = kernelModule.getEmbeddedClassDefinition("Top");
-    ClassDefinition thingDef = kernelModule.getEmbeddedClassDefinition("Thing");
+    ClassDefinition topDef   = kernelModule.getNestedClassDefinition("Top");
+    ClassDefinition thingDef = kernelModule.getNestedClassDefinition("Thing");
     thingDef.addSyntheticInitializerWithoutSuperSendOnlyForThingClass();
-    ClassDefinition valueDef = kernelModule.getEmbeddedClassDefinition("Value");
-    ClassDefinition nilDef   = kernelModule.getEmbeddedClassDefinition("Nil");
+    ClassDefinition valueDef = kernelModule.getNestedClassDefinition("Value");
+    ClassDefinition nilDef   = kernelModule.getNestedClassDefinition("Nil");
 
-    ClassDefinition objectDef    = kernelModule.getEmbeddedClassDefinition("Object");
-    ClassDefinition classDef     = kernelModule.getEmbeddedClassDefinition("Class");
-    ClassDefinition metaclassDef = kernelModule.getEmbeddedClassDefinition("Metaclass");
+    ClassDefinition objectDef    = kernelModule.getNestedClassDefinition("Object");
+    ClassDefinition classDef     = kernelModule.getNestedClassDefinition("Class");
+    ClassDefinition metaclassDef = kernelModule.getNestedClassDefinition("Metaclass");
 
-    ClassDefinition arrayDef   = kernelModule.getEmbeddedClassDefinition("Array");
-    ClassDefinition symbolDef  = kernelModule.getEmbeddedClassDefinition("Symbol");
-    ClassDefinition integerDef = kernelModule.getEmbeddedClassDefinition("Integer");
-    ClassDefinition stringDef  = kernelModule.getEmbeddedClassDefinition("String");
-    ClassDefinition doubleDef  = kernelModule.getEmbeddedClassDefinition("Double");
+    ClassDefinition arrayDef   = kernelModule.getNestedClassDefinition("Array");
+    ClassDefinition symbolDef  = kernelModule.getNestedClassDefinition("Symbol");
+    ClassDefinition integerDef = kernelModule.getNestedClassDefinition("Integer");
+    ClassDefinition stringDef  = kernelModule.getNestedClassDefinition("String");
+    ClassDefinition doubleDef  = kernelModule.getNestedClassDefinition("Double");
 
-    ClassDefinition booleanDef = kernelModule.getEmbeddedClassDefinition("Boolean");
-    ClassDefinition trueDef    = kernelModule.getEmbeddedClassDefinition("True");
-    ClassDefinition falseDef   = kernelModule.getEmbeddedClassDefinition("False");
+    ClassDefinition booleanDef = kernelModule.getNestedClassDefinition("Boolean");
+    ClassDefinition trueDef    = kernelModule.getNestedClassDefinition("True");
+    ClassDefinition falseDef   = kernelModule.getNestedClassDefinition("False");
 
-    ClassDefinition blockDef  = kernelModule.getEmbeddedClassDefinition("Block");
-    ClassDefinition block1Def = kernelModule.getEmbeddedClassDefinition("Block1");
-    ClassDefinition block2Def = kernelModule.getEmbeddedClassDefinition("Block2");
-    ClassDefinition block3Def = kernelModule.getEmbeddedClassDefinition("Block3");
+    ClassDefinition blockDef  = kernelModule.getNestedClassDefinition("Block");
+    ClassDefinition block1Def = kernelModule.getNestedClassDefinition("Block1");
+    ClassDefinition block2Def = kernelModule.getNestedClassDefinition("Block2");
+    ClassDefinition block3Def = kernelModule.getNestedClassDefinition("Block3");
 
     // some basic assumptions about
     assert    topDef.getNumberOfSlots() == 0;
