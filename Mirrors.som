@@ -34,6 +34,12 @@ class Mirrors usingVmMirror: vmMirror = (
     public superclass = ( ^ vmMirror mirrorSuperclass: obj )
     public slots      = ( ^ vmMirror mirrorSlots: obj      )
 
+    public classDefinition = (
+      | classDefHandle |
+      classDefHandle := vmMirror classDefinition: classObject.
+      ^ ClassDefinitionMirror on: classDefHandle
+    )
+
     public methods = (
       | methods |
       methods := vmMirror objMethods: obj.
@@ -59,6 +65,31 @@ class Mirrors usingVmMirror: vmMirror = (
     public canUnderstand: aSymbol = (
       ^ vmMirror obj: obj respondsTo: aSymbol
     )
+  )
+  
+  private class ClassDefinitionMirror on: classDefHandle = (
+    | private classDefHandle = classDefHandle. |
+  )(
+    public name = ( ^ vmMirror classDefName: classDefHandle )
+    public methods = (
+      | methods |
+      methods := vmMirror classDefMethods: classDefHandle.
+      ^ methods collect: [:m | MethodMirror reflecting: m ]
+    )
+    
+    public classDefinition = ( ^ self )
+    
+    public nestedClassDefinitions = (
+      | classes |
+      classes := vmMirror classDefNestedClassDefinitions: classDefHandle.
+      ^ classes collect: [:c | ClassDefinitionMirror on: c ]
+    )
+    
+    public hasFactoryMethod: aSelector = (
+      ^ vmMirror classDef: classDefHandle hasFactoryMethod: aSelector
+    )
+
+    public factoryMethods = ( self notYetImplemented )
   )
   
   public class ObjectMirror reflecting: obj = (
