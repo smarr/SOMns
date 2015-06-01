@@ -21,30 +21,50 @@ THE SOFTWARE.
 class Mirrors usingVmMirror: vmMirror = (
   | private vmMirror = vmMirror. |
 )(
-  public class ClassMirror on: cls = (
-    | private cls = cls. |
+  public class ClassMirror reflecting: obj = (
+    (* obj is an instance, of which we want to reflect on its class *)
+    | private obj = obj. |
   )(
     (*:TODO: Not happy with the naming of the mirror methods yet, 
              they are not unambigious, about whether they apply to the object,
              or to the object class *)
-    public name       = ( ^ vmMirror mirrorAClassesName: cls  )
-    public classObject= ( ^ vmMirror mirrorClass: cls      )
-    public superclass = ( ^ vmMirror mirrorSuperclass: cls )
-    public slots      = ( ^ vmMirror mirrorSlots: cls      )
-    public methods    = ( ^ vmMirror mirrorMethods: cls    )
+    public name       = ( ^ vmMirror mirrorAClassesName: obj  )
+    public classObject= ( ^ vmMirror objClass: obj         )
+    public classMirror= ( ^ ClassMirror reflecting: classObject )
+    public superclass = ( ^ vmMirror mirrorSuperclass: obj )
+    public slots      = ( ^ vmMirror mirrorSlots: obj      )
 
-    public selectors  = ( ^ self methods collect: [:inv | inv signature ] )
+    public methods = (
+      | methods |
+      methods := vmMirror objMethods: obj.
+      ^ methods collect: [:m | MethodMirror reflecting: m ]
+    )
+
+    public nestedClasses = (
+      | classes |
+      classes := vmMirror objNestedClasses: obj.
+      ^ classes collect: [:c | ClassMirror reflecting: c ]
+    )
+
+    (*TODO: change, this is not how it works, or should be done:
+       public selectors  = ( ^ self methods collect: [:inv | inv signature ] ) *)
+    
+    (*TODO:old
     public hasMethod: aSymbol = (
       self methods do: [ :m |
         m signature = aSymbol ifTrue: [ ^true ] ].
       ^ false
+    )*)
+    
+    public canUnderstand: aSymbol = (
+      ^ vmMirror obj: obj respondsTo: aSymbol
     )
   )
   
-  public class ObjectMirror on: obj = (
+  public class ObjectMirror reflecting: obj = (
     | private obj = obj. |
   )(
-    public classMirror = ( ^ ClassMirror on: obj )
+    public classMirror = ( ^ ClassMirror reflecting: obj )
     
     public slotValue: name = ( ^ vmMirror slot: name on: obj )
     public slotValue: name put: val = ( ^ vmMirror slot: name on: obj put: val )
@@ -72,9 +92,11 @@ class Mirrors usingVmMirror: vmMirror = (
   public class SlotMirror = ()(
   )
   
-  public class MethodMirror = ()(
-    public selector = ( ^ vmMirror methodSelector: mthd )
-    public holder   = ( ^ vmMirror methodHolder:   mthd )
+  public class MethodMirror reflecting: mthd = (
+  | private mthd = mthd. |
+  )(
+    public name = ( ^ vmMirror methodName: mthd )
+    public holder = ( ^ vmMirror methodHolder:   mthd )
     
     public invokeOn: obj with: args = ( ^ vmMirror method: mthd invokeOn: obj with: args )
     
