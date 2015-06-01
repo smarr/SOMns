@@ -21,7 +21,7 @@ public abstract class MirrorPrims {
 
   @GenerateNodeFactory
   @Primitive("objNestedClasses:")
-  public abstract static class NestedClasses extends UnaryExpressionNode {
+  public abstract static class NestedClassesPrim extends UnaryExpressionNode {
     @Specialization
     public final SArray getNestedClasses(final SObject rcvr) {
       SClass[] classes = rcvr.getSOMClass().getNestedClasses(rcvr);
@@ -31,7 +31,7 @@ public abstract class MirrorPrims {
 
   @GenerateNodeFactory
   @Primitive("obj:respondsTo:")
-  public abstract static class RespondsTo extends BinaryExpressionNode {
+  public abstract static class RespondsToPrim extends BinaryExpressionNode {
     @Specialization
     public final boolean objectResondsTo(final Object rcvr, final SSymbol selector) {
       CompilerAsserts.neverPartOfCompilation("Uses Types.getClassOf, so, should be specialized in performance cirtical code");
@@ -41,7 +41,7 @@ public abstract class MirrorPrims {
 
   @GenerateNodeFactory
   @Primitive("objMethods:")
-  public abstract static class Methods extends UnaryExpressionNode {
+  public abstract static class MethodsPrim extends UnaryExpressionNode {
     @Specialization
     public final SArray getMethod(final Object rcvr) {
       CompilerAsserts.neverPartOfCompilation("Uses Types.getClassOf, so, should be specialized in performance cirtical code");
