@@ -3,6 +3,8 @@ package som.primitives;
 import som.interpreter.Types;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.primitives.reflection.AbstractSymbolDispatch;
+import som.primitives.reflection.AbstractSymbolDispatchNodeGen;
 import som.vmobjects.SArray;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
@@ -12,6 +14,7 @@ import som.vmobjects.SSymbol;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 
 
 public abstract class MirrorPrims {
@@ -46,4 +49,18 @@ public abstract class MirrorPrims {
       return SArray.create(invokables);
     }
   }
+
+  @GenerateNodeFactory
+  @Primitive("obj:perform:")
+  public abstract static class PerformPrim extends BinaryExpressionNode {
+    @Child protected AbstractSymbolDispatch dispatch;
+    public PerformPrim() { dispatch = AbstractSymbolDispatchNodeGen.create(); }
+
+    @Specialization
+    public final Object doPerform(final VirtualFrame frame, final Object rcvr,
+        final SSymbol selector) {
+      return dispatch.executeDispatch(frame, rcvr, selector, null);
+    }
+  }
+
 }
