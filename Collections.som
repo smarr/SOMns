@@ -148,6 +148,8 @@ class Collections usingKernel: kernel = (
 
     public keys   = ( ^ pairs collect: [ :p | p key ] )
     public values = ( ^ pairs collect: [ :p | p value ] )
+    
+    public size = ( ^ pairs size )
   
     'Iteration'
     public do: block = ( pairs do: block )
