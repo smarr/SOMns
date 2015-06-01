@@ -21,7 +21,6 @@ import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.objectstorage.FieldAccessorNode.AbstractWriteFieldNode;
 import som.interpreter.objectstorage.FieldAccessorNode.UninitializedReadFieldNode;
 import som.interpreter.objectstorage.FieldAccessorNode.UninitializedWriteFieldNode;
-import som.vm.NotYetImplementedException;
 import som.vm.Symbols;
 import som.vm.constants.Classes;
 import som.vm.constants.Nil;
@@ -32,6 +31,7 @@ import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CallTarget;
+import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.source.SourceSection;
@@ -202,7 +202,8 @@ public final class ClassDefinition {
 
     @Override
     public final Object invoke(final Object... arguments) {
-      throw new NotYetImplementedException();
+      CompilerAsserts.neverPartOfCompilation("call without proper call cache. Find better way if this is performance critical.");
+      return this.getCallTarget().call(arguments);
     }
 
     @Override
