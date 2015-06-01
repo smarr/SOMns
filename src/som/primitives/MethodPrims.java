@@ -19,6 +19,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 public final class MethodPrims {
 
   @GenerateNodeFactory
+  @Primitive("methodName:")
   public abstract static class SignaturePrim extends UnaryExpressionNode {
     @Specialization
     public final SAbstractObject doSMethod(final SInvokable receiver) {
