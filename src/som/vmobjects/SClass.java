@@ -117,7 +117,7 @@ public final class SClass extends SObjectWithoutFields {
       this.slots = slots;
     } else {
       assert slots.size() == layoutForInstances.getNumberOfFields();
-      assert slots.equals(slots);
+      assert slots.equals(this.slots);
     }
   }
 
