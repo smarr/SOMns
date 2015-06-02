@@ -295,11 +295,14 @@ class Kernel vmMirror: vmMirror = (
     
     public substringFrom: start to: end = (
       ((end <= self length) && (start > 0) && (start <= end))
-        ifTrue: [^self primSubstringFrom: start to: end]
+        ifTrue: [^ self primSubstringFrom: start to: end]
         ifFalse: [
-          self error: 'Attempting to index string out of its bounds (start: ' +
-                      start asString + ' end: ' + end asString + ' length: ' + 
-                      self length asString + ')' ]
+          | idx |
+          (end > self length) ifTrue: [idx := end].
+          (start < 0) || (start > end) ifTrue: [idx := start].
+          
+          IndexOutOfBounds signalWith: self index: idx.
+        ]
     )
 
     public beginsWith: prefix = (
@@ -490,7 +493,19 @@ class Kernel vmMirror: vmMirror = (
       block value.
       self restart
     )
+    
+    'Exception support'
+    public on: exception do: aBlock = (
+      ^ vmMirror exceptionDo: self catch: exception onException: aBlock
+    )
+    
+    public ensure: aBlock = (
+      ^ vmMirror exceptionDo: self ensure: aBlock
+    )
   
+    (* TODO: this feels still like old legacy, it's not how it works...
+             on the other hand, seeing the #whileTrue: semantics is useful.
+             so, replacing it directly with a primitive call isn't nice either *)
     'Restarting'
     public restart = ( ^ vmMirror blockRestart: self )
   )
@@ -568,8 +583,7 @@ class Kernel vmMirror: vmMirror = (
       (lastIdx > firstIdx)
         ifTrue:  [ lastIdx := lastIdx - 1. ^storage at: lastIdx ]
         ifFalse: [
-          self error:
-            'Vector: Attempting to pop element from empty Vector' ]
+          EmptyCollectionException signalWith: self idx: lastIdx ]
     )
     
     public remove: object = (
@@ -651,4 +665,24 @@ class Kernel vmMirror: vmMirror = (
       ^ newVector
     )  
   )
+  
+  public class Exception = ()(
+    public signal = ( vmMirror signalException: self )
+  ):(
+    public signal = (
+      ^ self new signal
+    )
+  )
+
+  public class IndexOutOfBounds signalWith: obj index: idx = Exception (
+    | public target = obj.
+      public index  = idx. |
+    self signal
+  )()
+  
+  public class EmptyCollectionException signalWith: obj index: idx = Exception (
+    | public target = obj.
+      public index  = idx. |
+    self signal
+  )()
 )
