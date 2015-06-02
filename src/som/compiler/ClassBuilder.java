@@ -59,6 +59,9 @@ public final class ClassBuilder {
   /** The method that is used for instantiating the object. */
   private final MethodBuilder primaryFactoryMethod;
 
+  private SourceSection primaryFactorySource;
+  private SourceSection initializerSource;
+
   private final ArrayList<ExpressionNode> slotAndInitExprs = new ArrayList<>();
 
   private SSymbol name;
@@ -199,12 +202,18 @@ public final class ClassBuilder {
    * Primary factor and initializer take the same arguments, and
    * the initializers name is derived from the factory method.
    */
-  public void setupInitializerBasedOnPrimaryFactory() {
+  public void setupInitializerBasedOnPrimaryFactory(final SourceSection sourceSection) {
+    primaryFactorySource = sourceSection;
+
     initializer.setSignature(getInitializerName(
         primaryFactoryMethod.getSignature()));
     for (String arg : primaryFactoryMethod.getArgumentNames()) {
       initializer.addArgumentIfAbsent(arg);
     }
+  }
+
+  public void setInitializerSource(final SourceSection sourceSection) {
+    initializerSource = sourceSection;
   }
 
   public void addMethod(final SInvokable meth) throws ClassDefinitionError {
@@ -326,7 +335,8 @@ public final class ClassBuilder {
 
   private Method assembleSuperclassResoltionMethod() {
     assert superclassResolution != null;
-    return superclassResolutionBuilder.assembleInvokable(superclassResolution, null);
+    return superclassResolutionBuilder.assembleInvokable(superclassResolution,
+        superclassResolution.getSourceSection());
   }
 
   private SInvokable assemblePrimaryFactoryMethod() {
@@ -342,7 +352,8 @@ public final class ClassBuilder {
         initializer.getSignature(), args, null);
 
     return primaryFactoryMethod.assemble(initializedObject,
-        AccessModifier.PUBLIC, Symbols.symbolFor("initialization"), null);
+        AccessModifier.PUBLIC, Symbols.symbolFor("initialization"),
+        primaryFactorySource);
   }
 
   private SInvokable assembleInitializationMethod() {
@@ -367,7 +378,7 @@ public final class ClassBuilder {
 
     ExpressionNode body = SNodeFactory.createSequence(allExprs, null);
     return initializer.assemble(body, AccessModifier.PROTECTED,
-        Symbols.symbolFor("initialization"), null);
+        Symbols.symbolFor("initialization"), initializerSource);
   }
 
   protected List<ExpressionNode> createPrimaryFactoryArgumentRead(

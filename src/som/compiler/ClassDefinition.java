@@ -34,6 +34,7 @@ import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 import com.sun.istack.internal.Nullable;
 
@@ -149,7 +150,7 @@ public final class ClassDefinition {
     private final SSymbol name;
     protected final AccessModifier modifier;
     private final boolean immutable;
-    private final SourceSection source;
+    protected final SourceSection source;
 
     @CompilationFinal
     protected CallTarget genericAccessTarget;
@@ -213,9 +214,11 @@ public final class ClassDefinition {
       CompilerDirectives.transferToInterpreterAndInvalidate();
 
       MethodBuilder builder = new MethodBuilder(true);
+      builder.setSignature(name);
       builder.addArgumentIfAbsent("self");
+
       SInvokable genericAccessMethod = builder.assemble(createNode(), modifier,
-          null, null);
+          null, source);
 
       genericAccessTarget = genericAccessMethod.getCallTarget();
       return genericAccessTarget;
@@ -259,11 +262,12 @@ public final class ClassDefinition {
       CompilerDirectives.transferToInterpreterAndInvalidate();
 
       MethodBuilder builder = new MethodBuilder(true);
+      builder.setSignature(Symbols.symbolFor(getName().getString() + ":"));
       builder.addArgumentIfAbsent("self");
       builder.addArgumentIfAbsent("value");
       SInvokable genericAccessMethod = builder.assemble(
           new SlotWriteNode(createWriteNode()), modifier,
-          null, null);
+          null, source);
 
       genericAccessTarget = genericAccessMethod.getCallTarget();
       return genericAccessTarget;
@@ -274,7 +278,6 @@ public final class ClassDefinition {
           new SlotReadNode(new UninitializedReadFieldNode(mainSlot));
       return node;
     }
-
   }
 
   /**
@@ -335,8 +338,10 @@ public final class ClassDefinition {
     builder.setSignature(init);
     builder.addArgumentIfAbsent("self");
 
-    SInvokable thingInitNew = builder.assemble(builder.getSelfRead(null),
-        AccessModifier.PROTECTED, Symbols.symbolFor("initializer"), null);
+    Source source = Source.fromNamedText("self", "Thing>>" + init.getString());
+    SourceSection ss = source.createSection(init.getString(), 0, 4);
+    SInvokable thingInitNew = builder.assemble(builder.getSelfRead(ss),
+        AccessModifier.PROTECTED, Symbols.symbolFor("initializer"), ss);
     instanceDispatchable.put(init, thingInitNew);
   }
 

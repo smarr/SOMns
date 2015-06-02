@@ -233,6 +233,7 @@ public final class Parser {
     clsBuilder.setName(symbolFor(className));
 
     MethodBuilder primaryFactory = clsBuilder.getPrimaryFactoryMethodBuilder();
+    SourceCoordinate coord = getCoordinate();
 
     // Newspeak-spec: this is not strictly sufficient for Newspeak
     //                it could also parse a binary selector here, I think
@@ -244,7 +245,7 @@ public final class Parser {
       primaryFactory.addArgumentIfAbsent("self");
       primaryFactory.setSignature(symbolFor("new"));
     }
-    clsBuilder.setupInitializerBasedOnPrimaryFactory();
+    clsBuilder.setupInitializerBasedOnPrimaryFactory(getSource(coord));
 
     expect(Equal, "Unexpected symbol %(found)s."
         + " Tried to parse the class declaration of " + className
@@ -264,10 +265,11 @@ public final class Parser {
 
   private void defaultSuperclassAndBody(final ClassBuilder clsBuilder)
       throws ParseError, ClassDefinitionError {
+    SourceCoordinate coord = getCoordinate();
     MethodBuilder def = clsBuilder.getClassInstantiationMethodBuilder();
     ExpressionNode selfRead = def.getSelfRead(null);
     AbstractMessageSendNode superClass = SNodeFactory.createMessageSend(
-        symbolFor("Object"), new ExpressionNode[] {selfRead}, null);
+        symbolFor("Object"), new ExpressionNode[] {selfRead}, getSource(coord));
     clsBuilder.setSuperClassResolution(superClass);
 
     clsBuilder.setSuperclassFactorySend(
@@ -366,6 +368,7 @@ public final class Parser {
     expect(NewTerm);
     classComment(clsBuilder);
 
+    SourceCoordinate coord = getCoordinate();
     if (sym == Or) {
       slotDeclarations(clsBuilder);
     }
@@ -373,6 +376,8 @@ public final class Parser {
     if (sym != EndTerm) {
       initExprs(clsBuilder);
     }
+
+    clsBuilder.setInitializerSource(getSource(coord));
     expect(EndTerm);
   }
 

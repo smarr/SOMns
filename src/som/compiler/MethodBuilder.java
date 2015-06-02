@@ -186,12 +186,14 @@ public final class MethodBuilder {
     // we have a few synthetic methods, for which we do not yet have a source section
     // TODO: improve that, have at least a hint to which elements in the code
     //       those synthetic elements related
-    if (ssBody == null) { return null; } // TODO: better solution see ^^^
+    assert ssBody != null;
 
     ClassBuilder holder = getEnclosingClassBuilder();
-    String cls = holder.isClassSide() ? "_class" : "";
+    String cls = holder != null && holder.isClassSide() ? "_class" : "";
+    String name = holder == null ? "_unknown_" : holder.getName().getString();
+
     SourceSection ssMethod = ssBody.getSource().createSection(
-        holder.getName().getString() + cls + ">>" + signature.toString(),
+        name + cls + ">>" + signature.toString(),
         ssBody.getStartLine(), ssBody.getStartColumn(),
         ssBody.getCharIndex(), ssBody.getCharLength());
     return ssMethod;
