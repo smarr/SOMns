@@ -139,7 +139,15 @@ public class BasicInterpreterTests {
         {"Initializers", "testInit1", 42, Long.class },
         {"Initializers", "testInit2", 42, Long.class },
 
-        {"DoesNotUnderstand", "test",  "Foo", SSymbol.class  },
+        {"DoesNotUnderstand", "test",  "Foo", SSymbol.class },
+
+        {"Exceptions", "testSignalOnDo",                  4, Long.class },
+        {"Exceptions", "testSignalOnDoMethod",            5, Long.class },
+        {"Exceptions", "testNestedSignalOnDo",           22, Long.class },
+        {"Exceptions", "testSignalOnDoMethod",            5, Long.class },
+        {"Exceptions", "testCustomExceptionSignalOnDo", 343, Long.class },
+        {"Exceptions", "testEnsure",                    444, Long.class },
+        {"Exceptions", "testEnsureWithSignal",           66, Long.class },
 
     });
   }
