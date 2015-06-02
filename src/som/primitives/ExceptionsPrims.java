@@ -32,7 +32,7 @@ public abstract class ExceptionsPrims {
       try {
         return dispatchBody.executeDispatch(frame, new Object[] {body});
       } catch (SomException e) {
-        if (e.getSomObject().getSOMClass() == exceptionClass) {
+        if (e.getSomObject().getSOMClass().isKindOf(exceptionClass)) {
           return dispatchHandler.executeDispatch(frame,
               new Object[] {exceptionHandler, e.getSomObject()});
         } else {

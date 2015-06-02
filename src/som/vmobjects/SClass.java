@@ -100,6 +100,12 @@ public final class SClass extends SObjectWithoutFields {
     return this.classDef.getClassId() == classId;
   }
 
+  public boolean isKindOf(final SClass clazz) {
+    if (this == clazz) { return true; }
+    if (this == Classes.topClass) { return false; }
+    return superclass.isKindOf(clazz);
+  }
+
   public SClass getClassCorrespondingTo(final ClassDefinitionId classId) {
     SClass cls = this;
     while (cls != null && !cls.isBasedOn(classId)) {
