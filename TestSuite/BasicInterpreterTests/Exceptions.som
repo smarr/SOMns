@@ -1,0 +1,62 @@
+class Exceptions = (
+| private Exception = kernel Exception. |
+)(
+  public class MyException signal: msg = Exception (
+    | public msg = msg. |
+    self signal.
+  )()
+) : (
+  
+  public testSignalOnDo = (
+    | b |
+    b := 1.
+
+    [ kernel Exception signal ]
+      on: kernel Exception
+      do: [:e | b := 4 ].
+
+    ^ b
+  )
+  
+  doThrow = (
+    kernel Exception signal.
+    ^ 44
+  )
+  
+  doCatch = (
+    [ ^ doThrow ]
+      on: kernel Exception
+      do: [:e | ^ 5 ]
+  )
+  
+  public testSignalOnDoMethod = (
+    ^ doCatch
+  )
+
+  public testNestedSignalOnDo = (
+    [ [ kernel Exception signal.
+         ^ 44 ]
+        on: kernel IndexOutOfBounds
+        do: [:e | ^ 33 ] ]
+      on: kernel Exception
+      do: [:e | ^ 22 ].
+    ^ 11
+  )
+  
+  public testCustomExceptionSignalOnDo = (
+    | exp |
+    exp := self new MyException.
+    [ exp signal: 343 ]
+      on: exp
+      do: [:e | ^ e msg ].
+    ^ 66
+  )
+  
+  public testEnsure = (
+    [ ^ 666 ] ensure: [ ^ 444 ]
+  )
+  
+  public testEnsureWithSignal = (
+    [ kernel Exception signal ] ensure: [ ^ 66 ]
+  )
+)
