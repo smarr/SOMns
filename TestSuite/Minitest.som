@@ -329,7 +329,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
 
   private Dictionary         = platform collections Dictionary.
   private IdentityDictionary = platform collections IdentityDictionary.
-  private IdentitySet        = platform collections IdentitySet.
+  (*TODO: readd, private IdentitySet        = platform collections IdentitySet. *)
   private Vector             = platform kernel Vector.
   private Set                = platform collections Set.
   
