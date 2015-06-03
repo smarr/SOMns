@@ -428,8 +428,8 @@ OTHER DEALINGS IN THE SOFTWARE. *)
            TestCatalog instance with information extracted from the module. *)
         | moduleMirror moduleEnvironment |
         moduleEnvironment := TopLevelTestEnvironment module: testModule.
-        moduleMirror := (ObjectMirror reflecting: testModule) getClass.
-        moduleMirror nestedClasses do:
+        moduleMirror := (ObjectMirror reflecting: testModule) classMirror.
+        moduleMirror classDefinition nestedClassDefinitions do:
           [:each | examineClass: each under: moduleEnvironment].
         moduleEnvironment withAllNestedEnvironmentsDo:
           [:each |
@@ -451,7 +451,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
              tests rely on this. *)
            ^ self ].
 
-        mirror instanceSide nestedClasses do: [:each |
+        mirror classDefinition nestedClassDefinitions do: [:each |
           examineClass: each under: thisEnvironment].
           
         (* If after all the examination thisEnvironment ends up with no test
@@ -474,7 +474,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
 
       'private'
       isTestContext: mirror = (
-        ^ mirror classSide methods includesMirrorNamed: testContextMarkerSelector
+        ^ mirror hasFactoryMethod: testContextMarkerSelector
       )
 
       isTestMethod: methodMirror = (
@@ -486,8 +486,8 @@ OTHER DEALINGS IN THE SOFTWARE. *)
       testCasesIn: classMirror environment: environment = (
         (* Return a collection of TestCases describing test methods in the given class. *)
         | testCases |
-        classMirror instanceSide methods do:
         testCases := Vector new.
+        classMirror methods do:
           [:each |
           (isTestMethod: each) ifTrue:
             [testCases append: 
@@ -700,7 +700,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
       (* The class accessor name is the selector of a message that can be sent
          to a class metaobject corresponding to the parent environment to obtain
          a class metaobject corresponding to this environment. *)
-      ^ classDeclarationMirror simpleName
+      ^ classDeclarationMirror name
     )
 
     public testSuite = (
@@ -941,8 +941,8 @@ OTHER DEALINGS IN THE SOFTWARE. *)
       understandsCleanUp: object = (
         (* Answer true if the object understands the #cleanUp message. *)
         | mirror |
-        mirror := (ObjectMirror reflecting: object) getClass.
-        ^mirror methods includesMirrorNamed: #cleanUp
+        mirror := (ObjectMirror reflecting: object) classMirror.
+        ^mirror canUnderstand: #cleanUp
       )
     )
 
