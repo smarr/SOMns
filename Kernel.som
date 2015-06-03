@@ -326,6 +326,20 @@ class Kernel vmMirror: vmMirror = (
       ].
       ^ true
     )
+    
+    public includes: aString = (
+      | l |    
+      l := aString length.
+      l > self length ifTrue: [ ^ false ].
+      l = self length ifTrue: [
+        ^ aString = self ].
+      
+      1 to: self length - l + 1 do: [:i |
+        (self primSubstringFrom: i to: i + l - 1) = aString ifTrue: [ ^ true ].
+      ].
+      
+      ^ false
+    )
 
     public asInteger = (
       ^ Integer fromString: self
