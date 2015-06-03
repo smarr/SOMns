@@ -402,6 +402,10 @@ OTHER DEALINGS IN THE SOFTWARE. *)
                   ifNotNil: [:it | it createFailureResultFor: self description: ex messageText]].
       ^ testSuccess
     )
+    
+    public asString = (
+      ^ 'TestCase(' + selector asString + ')'
+    )
   )
 
   public class TestCatalog forModule: testModule = (
