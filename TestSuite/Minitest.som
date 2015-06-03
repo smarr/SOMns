@@ -491,7 +491,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
         testCases := Vector new.
           [:each |
           (isTestMethod: each) ifTrue:
-            [testCases add: 
+            [testCases append: 
               (TestCase environment: environment selector: each name)]].
         ^testCases
       )
@@ -503,7 +503,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
          context classes of the catalogued module. *)
       | allTestCases |
       allTestCases := Vector new: testsByContextName size + 1 * 20.
-      testsByContextName do: [:each | allTestCases addAll: each testCases].
+      testsByContextName do: [:each | allTestCases appendAll: each testCases].
       ^TestSuite testCases: allTestCases
     )
 
@@ -1010,9 +1010,9 @@ OTHER DEALINGS IN THE SOFTWARE. *)
       case := testCaseStream next.
       result := case runUsing: self.
       testsPerformed := testsPerformed + 1.
-      result isError ifTrue: [errors add: result].
-      result isFailure ifTrue: [failures add: result].
-      result isSuccess ifTrue: [successes add: result].
+      result isError   ifTrue: [errors    append: result].
+      result isFailure ifTrue: [failures  append: result].
+      result isSuccess ifTrue: [successes append: result].
       ^result
     )
 
