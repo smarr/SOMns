@@ -142,12 +142,12 @@ class Collections usingKernel: kernel = (
     )
     
     public at: aKey ifAbsent: aBlock = (
-      | val |
-      val := at: aKey.
-      val ifNotNil: [ ^ val ].
+      | pair |
+      pair := pairAt: aKey.
+      pair ifNotNil: [ ^ pair value ].
 
       (* else *)
-      aBlock value
+      ^ aBlock value
     )
 
     public containsKey: aKey = (
