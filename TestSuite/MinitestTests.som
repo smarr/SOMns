@@ -3,9 +3,9 @@ class MinitestTests usingPlatform: platform testFramework: minitest = (
 |
   private Exception     = platform kernel Exception.
   private testFramework = minitest.
-  private TestContext = minitest TestContext.
-  private TestCatalog = minitest TestCatalog.
-  private Tester = minitest Tester.
+  private TestContext   = minitest TestContext.
+  private TestCatalog   = minitest TestCatalog.
+  private Tester        = minitest Tester.
 |
 ) (
   public class AssertionTests = TestContext (
