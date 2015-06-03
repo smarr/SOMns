@@ -128,7 +128,7 @@ class Collections usingKernel: kernel = (
   )
 
   public class Dictionary = (
-  | private pairs = Set new. |
+  | protected pairs = Set new. |
   )(
     public at: aKey put: aValue = (
       | pair |
@@ -166,7 +166,7 @@ class Collections usingKernel: kernel = (
     public do: block = ( values do: block )
   
     private pairs: aSet = ( pairs := aSet )
-    private pairAt: aKey = (
+    protected pairAt: aKey = (
       pairs do: [ :p | p key = aKey ifTrue: [ ^ p ] ].
       ^ nil
     )
@@ -174,5 +174,22 @@ class Collections usingKernel: kernel = (
     'Printing'
     public print = ( '{' print. pairs do: [ :p | p print ]. '}' print )
     public println = ( self print. '' println )    
+  )
+  
+  public class IdentityDictionary = Dictionary ()(
+    public at: aKey = (
+      pairs do: [ :p | p key == aKey ifTrue: [ ^ p value ] ].
+      ^ nil
+    )
+  
+    protected pairAt: aKey = (
+      pairs do: [ :p | p key == aKey ifTrue: [ ^ p ] ].
+      ^ nil
+    )
+    
+    public containsKey: aKey = (
+      pairs do: [ :p | p key == aKey ifTrue: [ ^ true ] ].
+      ^ false
+    )
   )
 )
