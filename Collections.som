@@ -131,9 +131,11 @@ class Collections usingKernel: kernel = (
   | private pairs = Set new. |
   )(
     public at: aKey put: aValue = (
-      (self containsKey: aKey)
-        ifTrue:  [ (self pairAt: aKey) value: aValue ]
-        ifFalse: [ pairs add: (Pair withKey: aKey andValue: aValue) ]
+      | pair |
+      pair := self pairAt: aKey.
+      pair
+        ifNil:    [ pairs add: (Pair withKey: aKey andValue: aValue) ]
+        ifNotNil: [:p | p value: aValue ]
     )
 
     public at: aKey = (
