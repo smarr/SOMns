@@ -585,8 +585,8 @@ OTHER DEALINGS IN THE SOFTWARE. *)
          values compared are available for inspection as this method's
          arguments. *)
       assert: anObject = expectedObject descriptionBlock: [
-        'Equality assertion failed; expected: ', expectedObject printString,
-        ', was: ', anObject printString
+        'Equality assertion failed; expected: ' + expectedObject asString +
+        ', was: ' + anObject asString
       ]
     )
 
