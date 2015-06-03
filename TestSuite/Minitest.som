@@ -745,10 +745,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
     public hasTestCasesTransitively = (
       (* True if either the class represented by this environment or any of its
          nested classes define any test methods. *)
-      ^ hasTestCases or:
-        [(nestedEnvironments
-          detect: [:some | some hasTestCasesTransitively]
-          ifNone: [nil]) notNil]
+      ^ hasTestCases or: [nestedEnvironments anySatisfy: [:some | some hasTestCasesTransitively ]]
     )
 
     public isRoot = (
