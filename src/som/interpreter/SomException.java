@@ -33,5 +33,4 @@ public final class SomException extends RuntimeException {
   public Throwable fillInStackTrace() {
       return null;
   }
-
 }
