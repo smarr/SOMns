@@ -400,7 +400,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
                ^ testContextInstance 
                   ifNil: [TestFailure case: self description: ex messageText]
                   ifNotNil: [:it | it createFailureResultFor: self description: ex messageText]].
-      ^testSuccess
+      ^ testSuccess
     )
   )
 
@@ -574,7 +574,9 @@ OTHER DEALINGS IN THE SOFTWARE. *)
     )
 
     assert: aBlockOrValue descriptionBlock: messageBlock = (
-      aBlockOrValue value ifFalse: [failWithMessage: messageBlock value]
+      aBlockOrValue value ifFalse: [
+        failWithMessage: messageBlock value.
+      ]
     )
 
     assert: anObject equals: expectedObject = (
@@ -770,7 +772,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
   ) (
     'testing'
     public isFailure = (
-      ^true
+      ^ true
     )
   )
 
