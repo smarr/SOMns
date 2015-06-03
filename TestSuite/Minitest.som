@@ -987,7 +987,6 @@ OTHER DEALINGS IN THE SOFTWARE. *)
       (* This message must be sent to the tester once prior to running any
          tests. At this stage the tester instantiates shared state classes of
          the test module, which may potentially cause errors to be signaled. *)
-      testCaseStream := testSuite testCases readStream.
       errors    := Vector new.
       failures  := Vector new.
       successes := Vector new.
@@ -997,16 +996,14 @@ OTHER DEALINGS IN THE SOFTWARE. *)
 
     public runAll = (
       prepare.
-      [[atEnd] whileFalse: [step]]
+      [testSuite testCases do: [:case | execute: case ]]
         ensure: [cleanUp]
     )
 
-    public step = (
+    public execute: case = (
       (* Execute one test case, add the result to the appropriate collection and
-         return it. This message should only be sent if the #atEnd message
-         returns false. *)
-      | case result |
-      case := testCaseStream next.
+         return it. *)
+      | result |
       result := case runUsing: self.
       testsPerformed := testsPerformed + 1.
       result isError   ifTrue: [errors    append: result].
