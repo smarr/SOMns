@@ -59,6 +59,7 @@ import static som.compiler.Symbol.Pound;
 import static som.compiler.Symbol.STString;
 import static som.compiler.Symbol.SlotMutableAssign;
 import static som.compiler.Symbol.Star;
+import static som.interpreter.SNodeFactory.createImplicitReceiverSend;
 import static som.interpreter.SNodeFactory.createMessageSend;
 import static som.interpreter.SNodeFactory.createSequence;
 import static som.vm.Symbols.symbolFor;
@@ -805,8 +806,7 @@ public final class Parser {
       throws ParseError, ClassDefinitionError {
     ExpressionNode exp;
     if (sym == Keyword) {
-      // TODO: the receiver needs to be an implicit receiver!!!
-      exp = keywordMessage(builder, builder.getSelfRead(null));
+      exp = keywordMessage(builder, builder.getSelfRead(null), false);
     } else {
       exp = primary(builder);
     }
@@ -902,16 +902,16 @@ public final class Parser {
       msg = binaryConsecutiveMessages(builder, msg);
 
       if (sym == Keyword) {
-        msg = keywordMessage(builder, msg);
+        msg = keywordMessage(builder, msg, true);
       }
     } else if (sym == OperatorSequence || symIn(binaryOpSyms)) {
       msg = binaryConsecutiveMessages(builder, receiver);
 
       if (sym == Keyword) {
-        msg = keywordMessage(builder, msg);
+        msg = keywordMessage(builder, msg, true);
       }
     } else {
-      msg = keywordMessage(builder, receiver);
+      msg = keywordMessage(builder, receiver, true);
     }
     return msg;
   }
@@ -948,7 +948,8 @@ public final class Parser {
   }
 
   private ExpressionNode keywordMessage(final MethodBuilder builder,
-      final ExpressionNode receiver) throws ParseError, ClassDefinitionError {
+      final ExpressionNode receiver, final boolean explicitRcvr)
+          throws ParseError, ClassDefinitionError {
     SourceCoordinate coord = getCoordinate();
     List<ExpressionNode> arguments = new ArrayList<ExpressionNode>();
     StringBuffer         kw        = new StringBuffer();
@@ -1009,10 +1010,15 @@ public final class Parser {
         return IntToDoInlinedLiteralsNodeGen.create(inlinedBody, loopIdx.getSlot(),
             arguments.get(2), source, arguments.get(0), arguments.get(1));
       }
-    }
 
-    return createMessageSend(msg, arguments.toArray(new ExpressionNode[0]),
-        source);
+    ExpressionNode[] args = arguments.toArray(new ExpressionNode[0]);
+    if (explicitRcvr) {
+      return createMessageSend(msg, args, source);
+    } else {
+      return createImplicitReceiverSend(msg, args,
+          builder.getCurrentMethodScope(),
+          builder.getEnclosingClassBuilder().getClassId(), source);
+    }
   }
 
   private ExpressionNode formula(final MethodBuilder builder)
