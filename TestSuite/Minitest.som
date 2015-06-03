@@ -357,7 +357,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
   ) (
     public runUsing: tester = (
       ^ [self runUnsafeUsing: tester]
-          on: Error
+          on: Exception
           do: [:ex | ^testContextInstance 
             ifNil: [TestError case: self exception: ex] 
             ifNotNil: [:it | it createErrorResultFor: self exception: ex]]

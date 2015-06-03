@@ -1,7 +1,7 @@
 class MinitestTests usingPlatform: platform testFramework: minitest = (
   (* Tests of the Minitest framework (that is, meta-tests). *)
 |
-  private Exception = platform squeak Exception.
+  private Exception     = platform kernel Exception.
   private testFramework = minitest.
   private TestContext = minitest TestContext.
   private TestCatalog = minitest TestCatalog.
