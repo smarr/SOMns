@@ -578,6 +578,11 @@ class Kernel vmMirror: vmMirror = (
       collection do: [:e | append: e ]
     )
     
+    public includes: element = (
+      do: [: e | e = element ifTrue: [ ^ true ]].
+      ^ false
+    )
+    
     'Removing'
     public remove = (
       (lastIdx > firstIdx)
@@ -614,6 +619,11 @@ class Kernel vmMirror: vmMirror = (
     public anySatisfy: aBlock = (
       do: [:it | (aBlock value: it) ifTrue: [^ true]].
       ^ false
+    )
+    
+    public detect: aBlock ifNone: defaultBlock = (
+      self do: [:e | (aBlock value: e) ifTrue: [ ^ e ]].
+      	^ defaultBlock value
     )
   
     'Printing'

@@ -140,6 +140,15 @@ class Collections usingKernel: kernel = (
       pairs do: [ :p | p key = aKey ifTrue: [ ^p value ] ].
       ^ nil
     )
+    
+    public at: aKey ifAbsent: aBlock = (
+      | val |
+      val := at: aKey.
+      val ifNotNil: [ ^ val ].
+
+      (* else *)
+      aBlock value
+    )
 
     public containsKey: aKey = (
       pairs do: [ :p | p key = aKey ifTrue: [ ^true ] ].
