@@ -63,7 +63,7 @@ class Kernel vmMirror: vmMirror = (
     public notNil = ( ^ true )
     public ifNil: aBlock = ( ^ self )
     public ifNotNil: aBlock = ( ^ aBlock value )
-    public ifNil: noGoBlock ifNotNil: goBlock = ( ^ goBlock value )
+    public ifNil: noGoBlock ifNotNil: goBlock = ( ^ goBlock value: self )
 
     'Debugging'
     public print    = ( self asString print )
