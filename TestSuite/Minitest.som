@@ -561,7 +561,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
 
     'private'
     failWithMessage: messageText = (
-      TestFailureException new signal: messageText
+      TestFailureException signal: messageText
     )
 
     'testing'
@@ -776,14 +776,12 @@ OTHER DEALINGS IN THE SOFTWARE. *)
     )
   )
 
-  class TestFailureException = Exception (
-    (* An exception thrown when an assertion fails inside a test. The description of the failure is the exception's message text. *)
-  ) (
-    'as yet unclassified'
-    public defaultAction = (
-      UnhandledError signalForException: self
-    )
-  )
+  class TestFailureException signal: msg = Exception (
+    (* An exception thrown when an assertion fails inside a test.
+       The description of the failure is the exception's message text. *)
+    | public messageText = msg. |
+    self signal.
+  ) ()
 
   class TestResult case: testCase = (
     (* The result of running a TestCase. An abstract class. *)
