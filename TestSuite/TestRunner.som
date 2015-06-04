@@ -49,7 +49,7 @@ class TestRunner usingPlatform: platform = (
     | modules result |
     modules := 'ArrayTest',
                'BlockTest',
-               'SetTest',
+               'CollectionTests',
                'CompilerReturnTest',
                'DoubleTest',
                'IntegerTest',
