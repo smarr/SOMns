@@ -1,80 +1,98 @@
-TestRunner = (
-  | suite passes inefficacies failures |
+class TestRunner usingPlatform: platform = (
+| private platform = platform.
+  private system   = platform system.
+  private minitest = (system loadModule: 'core-lib/TestSuite/Minitest.som') usingPlatform: platform.
+|
+)(
+  runAllTests: testModule = (
+    | tester catalog |
+    catalog := minitest TestCatalog forModule: testModule.
+    tester := minitest Tester testSuite: catalog allTests.
+    tester runAll.
+  
+    (* reporting *)
+    tester errors size > 0 ifTrue: [
+      'Errors' println.
+      '------\n' println.
+    
+      tester errors do: [:terr |
+        terr testCase environment classDeclarationMirror name asString print.
+          '>>#' print. terr testCase selector println.
+        '\t' print. terr exception println.
+      ].
 
-  initializeOn: aSuite = (
-    suite := aSuite.
+      '' println.
+    ].
+  
+    tester failures size > 0 ifTrue: [
+      'Failures' println.
+      '--------\n' println.
     
-    passes       := Vector new.
-    inefficacies := Vector new.
-    failures     := Vector new.
-  )
-  
-  hasInefficacies = ( ^ inefficacies size > 0 )
-  hasFailures     = ( ^ failures size > 0 )
-  
-  expectedPasses = ( ^ suite tests size )
-  actualPasses   = ( ^ passes size )
+      tester failures do: [:failure |
+        failure testCase environment classDeclarationMirror name asString print.
+          '>>#' print. failure testCase selector println.
+        '\t' print. failure description println.
+      ].
 
-  run = (
-    self reportPreRun.
-    self runAllTests.
-    self reportPostRun.
-    self overviewReport.
+      '' println.
+    ].
+  
+    'Total Number of Tests:      ' print.
+    (tester errors size + tester failures size + tester successes size) println.
+    'Number of Successful Tests: ' print.
+    tester successes size println.
+
+    ^ tester errors size + tester failures size = 0
   )
   
-  reportPreRun = (
-    ('TestSuite ' + suite name + ':') println.
-    ('Tests: ' + suite tests size asString) println.
-  )
-  
-  reportPostRun = (
-    self hasInefficacies ifTrue: [
-      ('Inefficacies: ' + inefficacies size asString) println
+  runAllKnownModules = (
+    | modules result |
+    modules := 'ArrayTest',
+               'BlockTest',
+               'SetTest',
+               'CompilerReturnTest',
+               'DoubleTest',
+               'IntegerTest',
+               'MinitestTests'.
+               
+               (*,
+               'ClassStructureTest',
+               
+               'DoesNotUnderstandTest',
+               
+               'ReflectionTests',
+               
+               'StringTest',
+               'SuperTest',
+               'SystemTest',
+               'VectorTest'.*)
+    
+    result := true.
+    modules do: [:m |
+      | testModule |
+      testModule := (system loadModule: 'core-lib/TestSuite/' + m + '.som') usingPlatform: platform testFramework: minitest.
+      m println.
+      result := result and: [runAllTests: testModule].
+      '' println.
     ].
-    self hasFailures ifTrue: [
-      ('Failures: ' + failures size asString) println
-    ].
+    ^ result
   )
 
-  runAllTests = (
-    suite tests do: [ :each |
-        each run: self ].
-  )
-  
-  overviewReport = (
-    ('Tests passed: ' + passes size asString) println.
+  public main: args = (
+    |  testModule |
     
-    (self hasFailures or: [self hasInefficacies]) ifTrue: [
-        '------------------------------' println ].
-    
-    self hasInefficacies ifTrue: [
-      ('Inefficacies: ' + inefficacies size asString) println.
-      inefficacies do: [:each |
-        ('    ' + each key asString) println.
-        ('        ' + each value asString) println ].
+    args size = 2 ifTrue: [
+      testModule := (system loadModule: (args at: 2)) usingPlatform: platform testFramework: minitest.
+      (runAllTests: testModule)
+        ifTrue: [^0] ifFalse: [^1]
     ].
     
-    self hasFailures ifTrue: [
-      ('Failures: ' + failures size asString) println.
-      failures do: [:each |
-        ('    ' + each key asString) println.
-        ('        ' + each value asString) println ].
+    args size = 1 ifTrue: [
+      runAllKnownModules
+        ifTrue: [^0] ifFalse: [^1]
     ].
-  )
-  
-  fail: aSignature because: aReason = (
-    | pair |
-    pair := Pair withKey: aSignature andValue: aReason.
-    failures append: pair.
-  )
-  
-  unsatisfied: aSignature because: aReason = (
-    | pair |
-    pair := Pair withKey: aSignature andValue: aReason.
-    inefficacies append: pair.
-  )
-  
-  passed: aSignature = (
-    passes append: aSignature
+
+    'TODO: add help text' println.
+    ^ 1
   )
 )
