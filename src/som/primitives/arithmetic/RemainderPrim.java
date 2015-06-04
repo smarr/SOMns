@@ -2,11 +2,14 @@ package som.primitives.arithmetic;
 
 import java.math.BigInteger;
 
+import som.primitives.Primitive;
+
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
 
 @GenerateNodeFactory
+@Primitive("int:reminder:")
 public abstract class RemainderPrim extends ArithmeticPrim {
   @Specialization
   public final double doDouble(final double left, final double right) {

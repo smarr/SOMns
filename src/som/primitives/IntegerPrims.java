@@ -24,6 +24,7 @@ public abstract class IntegerPrims {
   }
 
   @GenerateNodeFactory
+  @Primitive("intAs32BitSignedValue:")
   public abstract static class As32BitSignedValue extends UnaryExpressionNode {
     @Specialization
     public final long doLong(final long receiver) {
@@ -32,6 +33,7 @@ public abstract class IntegerPrims {
   }
 
   @GenerateNodeFactory
+  @Primitive("intAs32BitUnsignedValue:")
   public abstract static class As32BitUnsignedValue extends UnaryExpressionNode {
     @Specialization
     public final long doLong(final long receiver) {
@@ -80,6 +82,7 @@ public abstract class IntegerPrims {
   }
 
   @GenerateNodeFactory
+  @Primitive("int:unsignedRightShift:")
   public abstract static class UnsignedRightShiftPrim extends ArithmeticPrim {
     @Specialization
     public final long doLong(final long receiver, final long right) {

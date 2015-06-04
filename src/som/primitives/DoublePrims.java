@@ -11,6 +11,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 public abstract class DoublePrims  {
 
   @GenerateNodeFactory
+  @Primitive("doubleRound:")
   public abstract static class RoundPrim extends UnaryExpressionNode {
     @Specialization
     public final long doDouble(final double receiver) {
@@ -19,6 +20,7 @@ public abstract class DoublePrims  {
   }
 
   @GenerateNodeFactory
+  @Primitive("doublePositiveInfinity:")
   public abstract static class PositiveInfinityPrim extends UnaryExpressionNode {
     protected final boolean receiverIsDoubleClass(final SClass receiver) {
       return receiver == Classes.doubleClass;
