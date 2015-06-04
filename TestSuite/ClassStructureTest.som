@@ -1,79 +1,74 @@
-ClassStructureTest = TestCase (
-  
-  testClassIdentity = (
-    self assert: Array   equals: Array new class.
-    self assert: Integer equals: 1 class.
-    self assert: Integer equals: 10000000000 class.
-    self assert: Double  equals: (1 // 2) class.
-    self assert: Double  equals: 0.5 class.
-    self assert: Block1  equals: [42] class.
-    self assert: Object  equals: Object new class.
-    self assert: Set     equals: Set new class.
-    self assert: String  equals: 'foo' class.
-    self assert: Symbol  equals: #foo class.
-    self assert: True    equals: true class.
-    self assert: False   equals: false class.
-    self assert: Nil     equals: nil class.
+class ClassStructureTests usingPlatform: platform testFramework: minitest = (
+| private TestContext  = minitest TestContext.
+  private ObjectMirror = platform mirrors ObjectMirror. |
+)(
+  public class ClassA = (
+    | a b |
+  ) (
+    result = ( ^ 42 )
   )
-    
-  testThatCertainMethodsArePrimitives = (
-    | m |        
-    "This is a little fragile.
-     Index needs to be adapted with changing Class definition."
-    m := Object methods at: 1. 
-    "self expect: #class equals: m signature."
-    
-    self expect: Primitive equals: m class. "Class>>#name should be a primitive."
-        
-    m := Object methods at: 7.
-    "self expect: #asString equals: m signature."
 
-    self expect: Method equals: m class. "Class>>#asString should be a normal method."
-  )
-    
-  testAccessToInstanceFields = (
-    | o |
-    o := ClassC new.
-    o a: 333.
-    self assert: 333 equals: o a.
-    
-    o f: 333.
-    self assert: 333 equals: o f.
-  )
+  public class ClassB = ClassA (
+    | c d |
+  ) ( )
   
-  testAccessToClassFields = (
-    | arr |
-    ClassC setAllAndInc: 4.
-    arr := ClassC getAll.
-    1 to: 9 do: [:i |
-      self assert: i + (4 - 1) equals: (arr at: i).
-    ].
-    
-    "We do that here to make sure that class fields do not interfere with
-     other class properties."
-    self assert: ClassB    is: ClassC superclass.
-    self assert: Metaclass is: ClassC class class.
-    self assert: #ClassC   equals: ClassC name.
-  )
+  public class ClassC = ClassB (
+    | e f |
+  ) (
+    a      = ( ^ a )
+    a: val = ( a := val )
   
-  testMetaclasses = (
-    self assert: nil              is: Object superclass.
-    self assert: Integer          is: 1 class.
-    self assert: #'Integer class' is: 1 class class name.
-    self assert: Metaclass        is: 1 class class class.
-    
-    self assert: #'Metaclass class' is: Metaclass class name.
-    self assert: Metaclass          is: Metaclass class class.
-    
-    self assert: Object          is: 1 class superclass.
-    self assert: #'Object class' is: 1 class class superclass name.
-    self assert: Class           is: Object class superclass.
-    self assert: Metaclass       is: Class class class.
+    f      = ( ^ f )
+    f: val = ( f := val )
   )
+
+  public class ClassStructureTest = TestContext ()(
+
+    public testClassIdentity = (
+      self assert: #Array   equals: (ObjectMirror reflecting: Array new) className.
+      self assert: #Integer equals: (ObjectMirror reflecting: 1) className.
+      self assert: #Integer equals: (ObjectMirror reflecting: 10000000000) className.
+      self assert: #Double  equals: (ObjectMirror reflecting: (1 // 2)) className.
+      self assert: #Double  equals: (ObjectMirror reflecting: 0.5) className.
+      self assert: #Block1  equals: (ObjectMirror reflecting: [42]) className.
+      self assert: #Object  equals: (ObjectMirror reflecting: Object new) className.
+      self assert: #Set     equals: (ObjectMirror reflecting: Set new) className.
+      self assert: #String  equals: (ObjectMirror reflecting: 'foo') className.
+      self assert: #Symbol  equals: (ObjectMirror reflecting: #foo) className.
+      self assert: #True    equals: (ObjectMirror reflecting: true) className.
+      self assert: #False   equals: (ObjectMirror reflecting: false) className.
+      self assert: #Nil     equals: (ObjectMirror reflecting: nil) className.
+    )
+        
+    public testAccessToInstanceFields = (
+      | o |
+      o := ClassC new.
+      o a: 333.
+      self assert: 333 equals: o a.
+    
+      o f: 333.
+      self assert: 333 equals: o f.
+    )
   
-  testInstanceFields = (
-    self assert: 2 equals: ClassA fields length.
-    self assert: 4 equals: ClassB fields length.
-    self assert: 6 equals: ClassC fields length.
-  )
+    public testMetaclasses = (
+      self assert: nil              is: Object superclass.
+      self assert: Integer          is: 1 class.
+      self assert: #'Integer class' is: 1 class class name.
+      self assert: Metaclass        is: 1 class class class.
+    
+      self assert: #'Metaclass class' is: Metaclass class name.
+      self assert: Metaclass          is: Metaclass class class.
+    
+      self assert: Object          is: 1 class superclass.
+      self assert: #'Object class' is: 1 class class superclass name.
+      self assert: Class           is: Object class superclass.
+      self assert: Metaclass       is: Class class class.
+    )
+  
+    testInstanceFields = (
+      self assert: 2 equals: ClassA fields length.
+      self assert: 4 equals: ClassB fields length.
+      self assert: 6 equals: ClassC fields length.
+    )
+  ) : ( TEST_CONTEXT = () )
 )
