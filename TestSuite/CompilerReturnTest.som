@@ -1,8 +1,5 @@
-"
+(* Copyright (c) 2009-2015 see AUTHORS file
 
-$Id: CompilerReturnTest.som 30 2009-07-31 12:20:25Z michael.haupt $
-
-Copyright (c) 2009-2013 see AUTHORS file
 Software Architecture Group, Hasso Plattner Institute, Potsdam, Germany
 http://www.hpi.uni-potsdam.de/swa/
 
@@ -23,9 +20,12 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
-"
-
-CompilerReturnTest = TestCase (
+*)
+class CompilerReturnTests usingPlatform: platform testFramework: minitest = (
+| private TestContext = minitest TestContext.
+  private Array       = platform kernel Array. |
+) (
+  public class CompilerReturnTest = TestContext ()(
 
     return1 = ( ^self )
     return2 = (       )
@@ -33,17 +33,16 @@ CompilerReturnTest = TestCase (
     return3: arg = ( ^self )
     return4: arg = (       )
     
-    testExplicitAndImplicitReturns = (
+    public testExplicitAndImplicitReturns = (
       self assert: self is: self return1.
       self assert: self is: self return2.
       self assert: self is: (self return3: 23).
       self assert: self is: (self return4: 23).
     )
     
-    
-    "In SOM++, code after the #ifTrue: does not seem to be executed, if the
-     block expression ends with a dot."
-    testIfTrueWithDot = (
+    (* In SOM++, code after the #ifTrue: does not seem to be executed, if the
+       block expression ends with a dot. *)
+    public testIfTrueWithDot = (
       | arr |
       arr := Array new: 3.
       self usesIfTrueWithDot: arr.
@@ -51,26 +50,26 @@ CompilerReturnTest = TestCase (
     )
     
     assertArrayCorrectness: arr = (
-      self assert: 1 equals: (arr at: 1). "method was not executed"
-      self assert: 2 equals: (arr at: 2). "ifTrue was not executed"
-      self assert: 3 equals: (arr at: 3). "remainder was not executed"      
+      self assert: 1 equals: (arr at: 1). (* method was not executed *)
+      self assert: 2 equals: (arr at: 2). (* ifTrue was not executed *)
+      self assert: 3 equals: (arr at: 3). (* remainder was not executed *)      
     )
 
-    testIfTrueWithoutDot = (
+    public testIfTrueWithoutDot = (
       | arr |
       arr := Array new: 3.
       self usesIfTrueWithoutDot: arr.
       self assertArrayCorrectness: arr.
     )
     
-    testIfFalseWithDot = (
+    public testIfFalseWithDot = (
       | arr |
       arr := Array new: 3.
       self usesIfFalseWithDot: arr.
       self assertArrayCorrectness: arr.
     )
     
-    testIfFalseWithoutDot = (
+    public testIfFalseWithoutDot = (
       | arr |
       arr := Array new: 3.
       self usesIfFalseWithoutDot: arr.
@@ -78,26 +77,27 @@ CompilerReturnTest = TestCase (
     )
     
     usesIfTrueWithDot: arr = (
-        arr at: 1 put: 1.
-        (3 >= 1) ifTrue: [arr at: 2 put: 2. "WITH DOT"].
-        arr at: 3 put: 3.
+      arr at: 1 put: 1.
+      (3 >= 1) ifTrue: [arr at: 2 put: 2. ]. 'WITH DOT'. 
+      arr at: 3 put: 3.
     )
     
     usesIfTrueWithoutDot: arr = (
-        arr at: 1 put: 1.
-        (3 >= 1) ifTrue: [arr at: 2 put: 2 "WITHOUT DOT"].
-        arr at: 3 put: 3.
+      arr at: 1 put: 1.
+      (3 >= 1) ifTrue: [arr at: 2 put: 2 ]. 'WITHOUT DOT'.
+      arr at: 3 put: 3.
     )
     
     usesIfFalseWithDot: arr = (
-        arr at: 1 put: 1.
-        (3 >= 1) ifTrue: [arr at: 2 put: 2. "WITH DOT"].
-        arr at: 3 put: 3.
+      arr at: 1 put: 1.
+      (3 >= 1) ifTrue: [arr at: 2 put: 2. ]. 'WITH DOT'.
+      arr at: 3 put: 3.
     )
     
     usesIfFalseWithoutDot: arr = (
-        arr at: 1 put: 1.
-        (3 >= 1) ifTrue: [arr at: 2 put: 2 "WITHOUT DOT"].
-        arr at: 3 put: 3.
+      arr at: 1 put: 1.
+      (3 >= 1) ifTrue: [arr at: 2 put: 2 ]. 'WITHOUT DOT'.
+      arr at: 3 put: 3.
     )
+  ) : ( TEST_CONTEXT = () )
 )
