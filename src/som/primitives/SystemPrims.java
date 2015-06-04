@@ -82,6 +82,11 @@ public final class SystemPrims {
   public abstract static class PrintStackTracePrim extends UnaryExpressionNode {
     @Specialization
     public final Object doSObject(final Object receiver) {
+      printStackTrace();
+      return receiver;
+    }
+
+    public static void printStackTrace() {
       ArrayList<String> method   = new ArrayList<String>();
       ArrayList<String> location = new ArrayList<String>();
       int[] maxLengthMethod = {0};
@@ -113,7 +118,6 @@ public final class SystemPrims {
           method.get(i)));
         VM.println(location.get(i));
       }
-      return receiver;
     }
   }
 
