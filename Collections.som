@@ -71,7 +71,7 @@ class Collections usingKernel: kernel = (
     )
     
     public contains: anObject = (
-      items do: [ :it | it == anObject ifTrue: [ ^ true ] ].
+      items do: [ :it | it = anObject ifTrue: [ ^ true ] ].
       ^ false
     )
     
@@ -124,9 +124,16 @@ class Collections usingKernel: kernel = (
       ^ items size
     )
   )
+  
+  public class IdentitySet = Set ()(
+    public contains: anObject = (
+      items do: [ :it | it == anObject ifTrue: [ ^ true ] ].
+      ^ false
+    )
+  )
 
   public class Dictionary = (
-  | protected pairs = Set new. |
+  | protected pairs = IdentitySet new. |
   )(
     public at: aKey put: aValue = (
       | pair |
