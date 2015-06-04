@@ -3,6 +3,7 @@ package som.primitives;
 import java.math.BigInteger;
 
 import som.interpreter.nodes.nary.BinaryExpressionNode;
+import som.vm.constants.Nil;
 import som.vmobjects.SObjectWithoutFields;
 import som.vmobjects.SSymbol;
 
@@ -43,6 +44,15 @@ public abstract class EqualsPrim extends BinaryExpressionNode {
     return left == right;
   }
 
+  public static final boolean isNil(final SObjectWithoutFields obj) {
+    return obj == Nil.nilObject;
+  }
+
+  @Specialization(guards = "isNil(left)")
+  public final boolean isNil(final SObjectWithoutFields left, final SObjectWithoutFields right) {
+    return left == right;
+  }
+
   @Specialization
   public final boolean doLong(final long left, final double right) {
     return left == right;
@@ -73,7 +83,6 @@ public abstract class EqualsPrim extends BinaryExpressionNode {
   public final boolean doSSymbol(final SSymbol receiver, final String argument) {
     return receiver.getString().equals(argument);
   }
-
 
   @Specialization
   public final boolean doLong(final long left, final String right) {
