@@ -1,12 +1,12 @@
-class BlockTests usingPlatform: platform harness: harness = (
-  | private TestCase = harness TestCase.
-    private Array    = platform kernel Array.
+class BlockTests usingPlatform: platform testFramework: minitest = (
+  | private TestContext = minitest TestContext.
+    private Array       = platform kernel Array.
   |
 )(
   (* This test verifies that SOM blocks are indeed closures. 
      The test was found on Eliot Miranda's Cog Blog. *)
 
-  public class ClosureTest = TestCase (
+  public class ClosureTest = TestContext ()(
     public testClosureProperty = (
       | factorial result facs |
     
@@ -31,9 +31,9 @@ class BlockTests usingPlatform: platform harness: harness = (
       result doIndexes: [ :i |
         self assert: (facs at: i) equals: (result at: i) ]
     )
-  )
+  ) : ( TEST_CONTEXT = () )
   
-  public class SelfBlockTest = TestCase (
+  public class SelfBlockTest = TestContext ()(
 
     public testEscapedBlock = (
       self assert: 42 equals: self give42 value
@@ -54,10 +54,10 @@ class BlockTests usingPlatform: platform harness: harness = (
     returnBlock2 = (
       ^[ 42 ]
     )
-  )
+  ) : ( TEST_CONTEXT = () )
 
-  public class BlockTest = TestCase (
-    |escape_count escaped_block|
+  public class BlockTest = TestContext (
+    | escapeCount anEscapedBlock |
   ) (
 
     simpleBlock = (
@@ -68,19 +68,19 @@ class BlockTests usingPlatform: platform harness: harness = (
       ^[ :val | val + 1]
     )
 
-    "This requires a closure"
+    (* This requires a closure *)
     adderBlock: amount = (
       ^[ :val | amount + val]
     )
 
-    "Closure with mutable state in block"
+    (* Closure with mutable state in block *)
     counterBlock = (
       |count|
       count := 0.
       ^[count := count + 1. count]
     )
 
-    selfKeeper = (
+    public selfKeeper = (
       ^[self]
     )
 
@@ -99,36 +99,37 @@ class BlockTests usingPlatform: platform harness: harness = (
       counter := self counterBlock.
       self assert: 1 equals: counter value.
       self assert: 2 equals: counter value.
-      self assert: 1 equals: self counterBlock value. "make sure each copy is independent"
+      self assert: 1 equals: self counterBlock value. (* make sure each copy is independent *)
       self assert: 3 equals: counter value.
     )
     
     public testSelfInBlock = (
-      | test_inst |
-      test_inst := BlockTest new.
-      self assert: test_inst equals: test_inst selfKeeper value.
-      self assert: self      equals: self selfKeeper value.
+      | testInst |
+      testInst := BlockTest new.
+      self assert: testInst is: testInst selfKeeper value.
+      self assert: self     is: self selfKeeper value.
     )
     
     public testEscapedBlock = (
-      | escaping_block |
+      | escapingBlock |
 
-      escape_count := 0.
+      escapeCount := 0.
 
-      escaping_block := self escapingBlock.
+      escapingBlock := self escapingBlock.
       
-      self assert: 0 equals: escape_count.
-      self assert: 666 equals: escaping_block value.
-      self assert: 1 equals: escape_count.
+      self assert: 0 equals: escapeCount.
+      self assert: 666 equals: escapingBlock value.
+      self assert: 1 equals: escapeCount.
       
-      self assert: escaping_block is: escaped_block.
+      self assert: escapingBlock is: anEscapedBlock.
     )
 
     escapedBlock: block = (
-      escape_count := escape_count + 1.
-      escaped_block := block.
+      escapeCount := escapeCount + 1.
+      anEscapedBlock := block.
 
-      "return some dummy value to the object that sent 'value' to block"
+      (* return some dummy value to the object that sent 'value' to block *)
       ^666
     )
+  ) : ( TEST_CONTEXT = () )
 )
