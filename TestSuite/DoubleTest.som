@@ -1,8 +1,4 @@
-"
-
-$Id: DoubleTest.som 48 2009-08-12 12:57:20Z michael.haupt $
-
-Copyright (c) 2001-2013 see AUTHORS file
+(* Copyright (c) 2001-2015 see AUTHORS file
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the 'Software'), to deal
@@ -21,36 +17,41 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
-"
+*)
+class DoubleTests usingPlatform: platform testFramework: minitest = (
+| private TestContext = minitest TestContext.
+  private Double      = platform kernel Double. |
+)(
 
-DoubleTest = TestCase (
+  public class DoubleTest = TestContext ()(
 
-  testIntegerDivision = (
-    self assert: 1 equals: (4/3) + (4/5)
-  )
+    public testIntegerDivision = (
+      self assert: 1 equals: (4/3) + (4/5)
+    )
   
-  testDoubleDivision = (
-    self assert: 32 // 15 equals: (4//3) + (4//5)
-  )
+    public testDoubleDivision = (
+      self assert: 32 // 15 equals: (4//3) + (4//5)
+    )
   
-  testAsString = (
-    self assert: '0.5' equals: (1//2) asString.
-    self assert: '0.5' equals: 0.5 asString.
-  )
+    public testAsString = (
+      self assert: '0.5' equals: (1//2) asString.
+      self assert: '0.5' equals: 0.5 asString.
+    )
   
-  testEquals = (
-    self assert: (1.0 = 1).
-  )
+    public testEquals = (
+      self assert: (1.0 = 1).
+    )
   
-  testRound = (
-    self assert:   1 equals:     (5//10) round.
-    self assert:   1 equals:    (14//10) round.
-    self assert: 445 equals: (44534//100) round.
-  )
+    public testRound = (
+      self assert:   1 equals:     (5//10) round.
+      self assert:   1 equals:    (14//10) round.
+      self assert: 445 equals: (44534//100) round.
+    )
   
-  testInfinity = (
-    self assert: Double PositiveInfinity > 1.
-    self assert: Double PositiveInfinity equals: Double PositiveInfinity + 1.
-    self assert: Double PositiveInfinity equals: Double PositiveInfinity - 1.
-  )
+    public testInfinity = (
+      self assert: Double PositiveInfinity > 1.
+      self assert: Double PositiveInfinity equals: Double PositiveInfinity + 1.
+      self assert: Double PositiveInfinity equals: Double PositiveInfinity - 1.
+    )
+  ) : ( TEST_CONTEXT = () )
 )
