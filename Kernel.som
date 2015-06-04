@@ -269,7 +269,7 @@ class Kernel vmMirror: vmMirror = (
       [ i >= limit ] whileTrue: [ block value: i. i := i - 1.0 ]
     )
   ) : (  
-    public PositiveInfinity = ( ^ vmMirror doublePositiveInfinity )
+    public PositiveInfinity = ( ^ vmMirror doublePositiveInfinity: nil )
   )
   
   public class String = Value ()
