@@ -73,11 +73,12 @@ public abstract class IntegerPrims {
     }
 
     @Specialization
-    public final BigInteger doLongWithOverflow(final long receiver, final long right) {
+    public final Number doLongWithOverflow(final long receiver, final long right) {
       assert right >= 0;  // currently not defined for negative values of right
       assert right <= Integer.MAX_VALUE;
 
-      return BigInteger.valueOf(receiver).shiftLeft((int) right);
+      return reduceToLongIfPossible(
+          BigInteger.valueOf(receiver).shiftLeft((int) right));
     }
   }
 
