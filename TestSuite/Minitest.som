@@ -329,9 +329,8 @@ OTHER DEALINGS IN THE SOFTWARE. *)
 
   private Dictionary         = platform collections Dictionary.
   private IdentityDictionary = platform collections IdentityDictionary.
-  (*TODO: readd, private IdentitySet        = platform collections IdentitySet. *)
   private Vector             = platform kernel Vector.
-  private Set                = platform collections Set.
+  private IdentitySet        = platform collections IdentitySet.
   
   private ObjectMirror = platform mirrors ObjectMirror.
 |)(
@@ -921,7 +920,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
       the class tree and its fringe. They have to be instantiated once before running
       the suite and cleaned up after. *)
         | result |
-        result := Set new.
+        result := IdentitySet new.
         testSuite testCases do:
           [:each |
           each environment parentEnvironmentsDo:
