@@ -25,7 +25,7 @@ class Collections usingKernel: kernel = (
 |
 )(
   public class Set = (
-    | private items = Vector new. |
+    | public items ::= Vector new. |
   ) (
 
     public = otherSet = (
@@ -123,8 +123,6 @@ class Collections usingKernel: kernel = (
     public size = (
       ^ items size
     )
-
-    public items: it = ( items := it )
   )
 
   public class Dictionary = (
