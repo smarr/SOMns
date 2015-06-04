@@ -30,7 +30,7 @@ public abstract class SAbstractObject {
 
     // Lookup the invokable
     Dispatchable invokable = Types.getClassOf(arguments[0]).lookupMessage(
-        selector, AccessModifier.PUBLIC);
+        selector, AccessModifier.PROTECTED);
 
     return invokable.invoke(arguments);
   }
