@@ -582,6 +582,13 @@ OTHER DEALINGS IN THE SOFTWARE. *)
       ]
     )
 
+    assert: anObject is: expectedObject = (
+      assert: anObject == expectedObject descriptionBlock: [
+        'Object Equality assertion failed; expected: ' + expectedObject asString +
+        ', was: ' + anObject asString
+      ]
+    )
+
     assert: anObject equals: expectedObject = (
       (* Succeed if anObject = anotherObject. Preferable to a simple
          'assert: [a = b]' in a test method because in case of a failure the 
