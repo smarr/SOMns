@@ -49,23 +49,19 @@ class TestRunner usingPlatform: platform = (
     | modules result |
     modules := 'ArrayTest',
                'BlockTest',
+               'ClassStructureTest',
                'CollectionTests',
                'CompilerReturnTest',
+               'DoesNotUnderstandTest',
                'DoubleTest',
                'IntegerTest',
-               'MinitestTests'.
-               
-               (*,
-               'ClassStructureTest',
-               
-               'DoesNotUnderstandTest',
-               
-               'ReflectionTests',
-               
                'StringTest',
                'SuperTest',
                'SystemTest',
-               'VectorTest'.*)
+               'SymbolTest',
+               'MinitestTests'.
+               
+               (* 'ReflectionTests', *)
     
     result := true.
     modules do: [:m |
