@@ -95,6 +95,7 @@ class Mirrors usingVmMirror: vmMirror = (
   public class ObjectMirror reflecting: obj = (
     | private obj = obj. |
   )(
+    public className   = ( ^ vmMirror objClassName: obj  )
     public classMirror = ( ^ ClassMirror reflecting: obj )
     
     public slotValue: name = ( ^ vmMirror slot: name on: obj )
