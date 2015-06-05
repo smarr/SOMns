@@ -1,8 +1,5 @@
-"
+(* Copyright (c) 2007-2015 see AUTHORS file
 
-$Id: SymbolTest.som 30 2009-07-31 12:20:25Z michael.haupt $
-
-Copyright (c) 2007-2013 see AUTHORS file
 Software Architecture Group, Hasso Plattner Institute, Potsdam, Germany
 http://www.hpi.uni-potsdam.de/swa/
 
@@ -23,22 +20,25 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
-"
+*)
+class SymbolTests usingPlatform: platform testFramework: minitest = (
+| private TestContext  = minitest TestContext.
+  private ObjectMirror = platform mirrors ObjectMirror. |
+)(
+  public class SymbolTest = TestContext ()(
 
-SymbolTest = TestCase (
-
-  testConversion = (
-    self assert: 'gunk' equals: 'gunk' asSymbol asString.
-    self assert: 'oink' equals: #oink asString.
-  )
+    public testConversion = (
+      self assert: 'gunk' equals: 'gunk' asSymbol asString.
+      self assert: 'oink' equals: #oink asString.
+    )
   
-  testEquality = (
-    self assert: #oink is: 'oink' asSymbol.
-  )
+    public testEquality = (
+      self assert: #oink equals: 'oink' asSymbol.
+    )
   
-  testSymbolIsString = (
-    self assert: (#oink beginsWith: 'oink').
-    self assert: 100 equals: #'100' asInteger.
-    self assert: String equals: #foo class superclass
-  )
+    public testSymbolIsString = (
+      self assert: (#oink beginsWith: 'oink').
+      self assert: 100 equals: #'100' asInteger.
+    )
+  ) : ( TEST_CONTEXT = () )
 )

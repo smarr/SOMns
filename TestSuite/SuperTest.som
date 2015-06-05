@@ -1,8 +1,5 @@
-"
+(* Copyright (c) 2007-2015 see AUTHORS file
 
-$Id: SuperTest.som 30 2009-07-31 12:20:25Z michael.haupt $
-
-Copyright (c) 2007-2013 see AUTHORS file
 Software Architecture Group, Hasso Plattner Institute, Potsdam, Germany
 http://www.hpi.uni-potsdam.de/swa/
 
@@ -23,36 +20,32 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
-"
-
-SuperTestSuperClass = TestCase (
-
-    give42 = (
-        ^42
-    )
-
-    something = (
-        ^ #super
-    )
-)
-
-
-SuperTest = SuperTestSuperClass (
-
-  testSuper = (
-    self assert: 42 equals: self give42.
-    self assert: 42 equals: self blockGive42.
-  )
-
-  give42 = (
-    ^super give42
-  )
-
-  blockGive42 = (
-    ^[ super give42 ] value
+*)
+class ArrayTests usingPlatform: platform testFramework: minitest = (
+| private TestContext = minitest TestContext. |
+) (
+  public class SuperTestSuperClass = TestContext ()(
+    give42 = ( ^42 )
+    something = ( ^ #super )
   )
   
-  something = (
-    ^ #sub
-  )
+  public class SuperTest = SuperTestSuperClass ()(
+
+    public testSuper = (
+      self assert: 42 equals: self give42.
+      self assert: 42 equals: self blockGive42.
+    )
+
+    give42 = (
+      ^ super give42
+    )
+
+    blockGive42 = (
+      ^ [ super give42 ] value
+    )
+  
+    something = (
+      ^ #sub
+    )
+  ) : ( TEST_CONTEXT = () )
 )

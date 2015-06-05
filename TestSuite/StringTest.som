@@ -1,5 +1,4 @@
-"
-Copyright (c) 2001-2013 see AUTHORS file
+(* Copyright (c) 2001-2015 see AUTHORS file
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the 'Software'), to deal
@@ -18,62 +17,64 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
-"
+*)
+class StringTests usingPlatform: platform testFramework: minitest = (
+| private TestContext = minitest TestContext. |
+) (
+  public class StringTest = TestContext ()(
 
-StringTest = TestCase (
-
-  testEquality = (
-    | str1 str2 |
-    str1 := 'foo'.
-    str2 := 'bar'.
+    public testEquality = (
+      | str1 str2 |
+      str1 := 'foo'.
+      str2 := 'bar'.
     
-    self assert: str1 = str1.
-    self assert: str1 = 'foo'.
-    self assert: str1 = ('f' + 'oo').
-    self deny:   str1 = str2.
-    self assert: str2 = str2.
-  )
+      self assert: str1 = str1.
+      self assert: str1 = 'foo'.
+      self assert: str1 = ('f' + 'oo').
+      self deny:   str1 = str2.
+      self assert: str2 = str2.
+    )
   
-  testLength = (
-    self assert: 1 equals: 't' length.
-    self assert: 6 equals: ('foo' + 'bar') length.  
-  )
+    public testLength = (
+      self assert: 1 equals: 't' length.
+      self assert: 6 equals: ('foo' + 'bar') length.  
+    )
   
-  testCharAt = (
-    | str |
-    str := 'foobar'.
-    self assert: 'f' equals: (str charAt: 1).
-    self assert: 'o' equals: (str charAt: 2).
-    self assert: 'o' equals: (str charAt: 3).
-    self assert: 'b' equals: (str charAt: 4).
-    self assert: 'a' equals: (str charAt: 5).
-    self assert: 'r' equals: (str charAt: 6).
-  )
+    public testCharAt = (
+      | str |
+      str := 'foobar'.
+      self assert: 'f' equals: (str charAt: 1).
+      self assert: 'o' equals: (str charAt: 2).
+      self assert: 'o' equals: (str charAt: 3).
+      self assert: 'b' equals: (str charAt: 4).
+      self assert: 'a' equals: (str charAt: 5).
+      self assert: 'r' equals: (str charAt: 6).
+    )
   
-  testPrimSubstringFrom = (
-    | str |
-    str := 'foobar'.
-    self assert: 'foo'    equals: (str primSubstringFrom: 1 to: 3).
-    self assert: 'bar'    equals: (str primSubstringFrom: 4 to: 6).
-    self assert: 'foobar' equals: (str primSubstringFrom: 1 to: 6).
-    self assert: 'oob' equals: ('foobar' substringFrom: 2 to: 4).
-  )
+    public testPrimSubstringFrom = (
+      | str |
+      str := 'foobar'.
+      self assert: 'foo'    equals: (str substringFrom: 1 to: 3).
+      self assert: 'bar'    equals: (str substringFrom: 4 to: 6).
+      self assert: 'foobar' equals: (str substringFrom: 1 to: 6).
+      self assert: 'oob' equals: ('foobar' substringFrom: 2 to: 4).
+    )
   
-  testBeginsWith = (
-    self deny:   ('foo' beginsWith: 'oo').
-    self assert: ('foo' beginsWith: 'foo').
-  )
+    public testBeginsWith = (
+      self deny:   ('foo' beginsWith: 'oo').
+      self assert: ('foo' beginsWith: 'foo').
+    )
   
-  testEndsWith = (
-    self assert: ('foo' endsWith: 'foo').
-    self assert: ('foo' endsWith: 'oo').
-    self deny: ('f' endsWith: 'bar').
-    self deny: ('f' endsWith: 'foo').
-  )
+    public testEndsWith = (
+      self assert: ('foo' endsWith: 'foo').
+      self assert: ('foo' endsWith: 'oo').
+      self deny: ('f' endsWith: 'bar').
+      self deny: ('f' endsWith: 'foo').
+    )
   
-  testMultiLineString = (
-    "Test whether the parser will parse multi-line strings correctly."
-    self assert: '
+    public testMultiLineString = (
+      (* Test whether the parser will parse multi-line strings correctly. *)
+      self assert: '
 1234567890
 1234567890
 1234567890
@@ -84,61 +85,62 @@ StringTest = TestCase (
 1234567890
 1234567890
 1234567890'
-  )
+    )
   
-  testEscapeSequences = (
-    "Tests for escape sequences, not all of them are reliable represented as
-     proper strings. So, we do a simple equality test, and check substring or
-     length.
+    public testEscapeSequences = (
+      (* Tests for escape sequences, not all of them are reliable represented
+         as proper strings. So, we do a simple equality test, and check
+         substring or length.
     
-     \t	  a tab character
-     \b	  a backspace character
-     \n	  a newline character
-     \r	  a carriage return character
-     \f	  a formfeed character
-     \'	  a single quote character
-     \\	  backslash character
-    "
+         \t	  a tab character
+         \b	  a backspace character
+         \n	  a newline character
+         \r	  a carriage return character
+         \f	  a formfeed character
+         \'	  a single quote character
+         \\	  backslash character
+        *)
 
-    self assert: '\t' equals: '\t'.
-    self assert: 1 equals: '\t' length.
+      self assert: '\t' equals: '\t'.
+      self assert: 1 equals: '\t' length.
 
-    self assert: '\b' equals: '\b'.
-    self assert: 1 equals: '\b' length.
+      self assert: '\b' equals: '\b'.
+      self assert: 1 equals: '\b' length.
 
-    self assert: '\n' equals: '\n'.
-    self assert: 1 equals: '\n' length.
-    self deny: ('\n' endsWith: 'n').
+      self assert: '\n' equals: '\n'.
+      self assert: 1 equals: '\n' length.
+      self deny: ('\n' endsWith: 'n').
 
-    self assert: '\r' equals: '\r'.
-    self assert: 1 equals: '\n' length.
-    self deny: ('\r' endsWith: 'r').
+      self assert: '\r' equals: '\r'.
+      self assert: 1 equals: '\n' length.
+      self deny: ('\r' endsWith: 'r').
     
-    self assert: '\f' equals: '\f'.
-    self assert: 1 equals: '\f' length.
-    self deny: ('\f' endsWith: 'f').
+      self assert: '\f' equals: '\f'.
+      self assert: 1 equals: '\f' length.
+      self deny: ('\f' endsWith: 'f').
     
-    self assert: '\'' equals: '\''.
-    self assert: 1 equals: '\'' length.
+      self assert: '\'' equals: '\''.
+      self assert: 1 equals: '\'' length.
 
-    self assert: '\\' equals: '\\'.
-    self assert: 1 equals: '\\' length.
-  )
+      self assert: '\\' equals: '\\'.
+      self assert: 1 equals: '\\' length.
+    )
   
-  testHash = (
-    | str |
-    "Hash should be identical for strings that are identical,
-     whether given literal or composed at runtime"
-    self assert: 'foobar' hashcode equals: 'foobar' hashcode.
-    self assert: 'ssdf aksdf; kasd;fk a;dfk a;dfk a;d' hashcode
-         equals: 'ssdf aksdf; kasd;fk a;dfk a;dfk a;d' hashcode.
+    public testHash = (
+      | str |
+      (* Hash should be identical for strings that are identical,
+       whether given literal or composed at runtime *)
+      self assert: 'foobar' hashcode equals: 'foobar' hashcode.
+      self assert: 'ssdf aksdf; kasd;fk a;dfk a;dfk a;d' hashcode
+           equals: 'ssdf aksdf; kasd;fk a;dfk a;dfk a;d' hashcode.
     
-    str := 'foo' + 'bar'.
-    str := str + str.
-    self assert: 'foobarfoobar' hashcode equals: str hashcode.
+      str := 'foo' + 'bar'.
+      str := str + str.
+      self assert: 'foobarfoobar' hashcode equals: str hashcode.
     
-    str := 'dfadf fgsfg sfg sdfg sfg sfg' + '345243n 24n5 kwertlw erltnwrtln'.
-    self assert: 'dfadf fgsfg sfg sdfg sfg sfg345243n 24n5 kwertlw erltnwrtln' hashcode
-         equals: str hashcode.
-  )
+      str := 'dfadf fgsfg sfg sdfg sfg sfg' + '345243n 24n5 kwertlw erltnwrtln'.
+      self assert: 'dfadf fgsfg sfg sdfg sfg sfg345243n 24n5 kwertlw erltnwrtln' hashcode
+           equals: str hashcode.
+    )
+  ) : ( TEST_CONTEXT = () )
 )
