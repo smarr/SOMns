@@ -39,5 +39,5 @@ class System usingVmMirror: vmMirror = (
   public ticks = ( ^ vmMirror systemTicks: nil ) (* returns the microseconds since start *)
   
   (* Force Garbage Collection *)
-  public fullGC = ( vmMirror systemGC: nil )
+  public fullGC = ( ^ vmMirror systemGC: nil )
 )
