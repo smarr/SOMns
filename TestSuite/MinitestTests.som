@@ -113,6 +113,8 @@ class MinitestTests usingPlatform: platform testFramework: minitest = (
           public message = 'all good here'.
         |
         ) (
+          public isError   = ( ^ false )
+          public isFailure = ( ^ false )
           public isSuccess = ( ^ true )
         )
 
