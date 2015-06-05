@@ -146,6 +146,7 @@ class Kernel vmMirror: vmMirror = (
     public notNil   = ( ^ false )
 
     'Convenience'
+    public == other = ( ^ vmMirror object: self identicalTo: other )
     public ifNil: aBlock = ( ^ aBlock value )
     public ifNotNil: aBlock = ( ^ self )
     public ifNil: goBlock ifNotNil: noGoBlock = ( ^ goBlock value )
