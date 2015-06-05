@@ -22,7 +22,9 @@ class Harness usingPlatform: platform = (
 (*  The Harness can be invoked on the command line and should be passed a list
     of benchmarks to run (class names) as arguments. It will run each of them
     and output single as well as a total. *)
-  | private system = platform system. |
+| private system = platform system.
+  private platform = platform.
+|
 )(
 
   public class Benchmark = ()(
@@ -285,6 +287,6 @@ class Harness usingPlatform: platform = (
     cls := system loadModule: file.
     cls ifNil: [
         self error: 'Failed loading benchmark: ' + className ].
-    ^ cls usingKernel: kernel andHarness: self.
+    ^ cls usingPlatform: platform andHarness: self.
   )
 )
