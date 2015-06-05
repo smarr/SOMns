@@ -202,7 +202,7 @@ public class BasicInterpreterTests {
     new VM(true);
 
     Bootstrap.loadPlatformAndKernelModule(
-        "TestSuite/BasicInterpreterTests/" + testClass + ".som",
+        "core-lib/TestSuite/BasicInterpreterTests/" + testClass + ".som",
         VM.standardKernelFile);
     Bootstrap.initializeObjectSystem();
 
