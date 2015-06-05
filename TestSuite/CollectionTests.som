@@ -23,6 +23,123 @@ class CollectionTests usingPlatform: platform testFramework: minitest = (
   private Set         = platform collections Set.
   private Vector      = platform kernel Vector. |
 )(
+  public class ArrayTest = TestContext (
+    | a = Array new: 3. |
+    a at: 1 put: 'hello'.
+    a at: 2 put: #world.
+    a at: 3 put: 23.
+  )(
+    public testSize = (
+      self assert: 3 equals: a size
+    )
+  
+    public testAt = (
+      self assert: #world equals: (a at: 2).
+      self assert: 23     equals: (a at: 3).
+    )
+  
+    public testContains = (
+      self assert: (a contains: 23).
+      self deny:   (a contains: #notInThere).
+    )
+  
+    public testDo = (
+      | j |
+      j := 1.
+    
+      a do: [:i |
+        self assert: (a at: j) equals: i.
+        j := j + 1.
+      ]
+    )
+  
+    public testSumAndAverage = (
+      | arr |
+      arr := Array new: 3.
+      1 to: 3 do: [ :i | arr at: i put: i ].
+    
+      self assert: 6 equals: arr sum.
+      self assert: 2 equals: arr average.
+    )
+  
+    public testCopyFrom = (
+      | arr b |
+      arr := Array new: 5.
+      1 to: 5 do: [ :i | arr at: i put: i ].
+
+      b := arr copyFrom: 2 to: 4.
+      self assert: 2 equals: (b at: 1).
+      self assert: 3 equals: (b at: 2).
+      self assert: 4 equals: (b at: 3).
+    
+      b := arr copyFrom: 3.
+      self assert: 3 equals: (b at: 1).
+      self assert: 4 equals: (b at: 2).
+      self assert: 5 equals: (b at: 3).
+    )
+  
+    public testIndexOf = (
+      | arr |
+      arr := Array new: 6.
+      arr at: 1 put: #one.
+      arr at: 2 put: #two.
+      arr at: 3 put: #three.
+      arr at: 4 put: #four.
+      arr at: 5 put: #five.
+      arr at: 6 put: #one. 
+    
+      self assert: 2 equals: (arr indexOf: #two).
+      self assert: 4 equals: (arr indexOf: #four).
+      self assert: 5 equals: (arr indexOf: #five).
+    
+      self assert: nil equals: (arr indexOf: #notIncluded).
+    
+      self assert: 1 equals: (arr indexOf: #one).
+    )
+  
+    public testLastIndexOf = (
+      | arr |
+      arr := Array new: 6.
+      arr at: 1 put: #one.
+      arr at: 2 put: #two.
+      arr at: 3 put: #three.
+      arr at: 4 put: #four.
+      arr at: 5 put: #five.
+      arr at: 6 put: #one. 
+    
+      self assert: 2 equals: (arr lastIndexOf: #two).
+      self assert: 4 equals: (arr lastIndexOf: #four).
+      self assert: 5 equals: (arr lastIndexOf: #five).
+    
+      self assert: nil equals: (arr indexOf: #notIncluded).
+    
+      self assert: 6 equals: (arr lastIndexOf: #one).
+    )
+  
+    public testNewWithAll = (
+      | arr |
+      arr := Array new: 5 withAll: [1].
+      1 to: 5 do: [:i | self assert: 1 equals: (arr at: i)].
+    
+      arr := Array new: 5 withAll: 1.
+      1 to: 5 do: [:i | self assert: 1 equals: (arr at: i)].
+    )
+  
+    public testPutAllIntAndObjects = (
+      | arr o |
+      arr := Array new: 5 withAll: 5.
+      self assert: 5 equals: (arr at: 3).
+      arr at: 3 put: nil.
+      self assert: nil equals: (arr at: 3).
+    
+      o := Object new.
+      arr at: 2 put: o.
+      self assert: o is: (arr at: 2).
+    )
+  ) : (
+    TEST_CONTEXT = ()
+  )
+
   public class SetTest = TestContext ()(
     public testBasics = (
       | a b t |

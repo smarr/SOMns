@@ -47,8 +47,7 @@ class TestRunner usingPlatform: platform = (
   
   runAllKnownModules = (
     | modules result |
-    modules := 'ArrayTests',
-               'BlockTests',
+    modules := 'BlockTests',
                'ClassStructureTests',
                'CollectionTests',
                'CompilerReturnTests',
