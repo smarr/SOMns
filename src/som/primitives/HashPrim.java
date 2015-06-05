@@ -9,7 +9,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 
 
 @GenerateNodeFactory
-@Primitive("objHashcode:")
+@Primitive({"objHashcode:", "stringHashcode:"})
 public abstract class HashPrim extends UnaryExpressionNode {
   @Specialization
   public final long doString(final String receiver) {

@@ -38,6 +38,7 @@ public class StringPrims {
   }
 
   @GenerateNodeFactory
+  @Primitive("stringAsSymbol:")
   public abstract static class AsSymbolPrim extends UnaryExpressionNode {
     @Specialization
     public final SAbstractObject doString(final String receiver) {
