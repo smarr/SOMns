@@ -1,5 +1,4 @@
-"
-Copyright (c) 2001-2013 see AUTHORS file
+(* Copyright (c) 2001-2015 see AUTHORS file
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the 'Software'), to deal
@@ -18,65 +17,65 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
-"
+*)
+class AllBenchmarks usingPlatform: platform = (
+| private platform = platform.
+  private harness  = (platform system loadModule: 'core-lib/Benchmarks/Harness.som') usingPlatform: platform.
+  private system   = platform system.
+  private Run      = harness Run.
+  summedAverages ::= 0. |
+)(
+  class NoReportingRun = Run ()(
+    reportBenchmark: bench result: result = ()
 
-All = BenchmarkHarness (
-    | summedAverage |
+    public runBenchmark = (
+      total := total + self doRunsSequential
+    )
+  )
 
-    all = (
-        ^ Fibonacci, Dispatch, Bounce, Loop, Permute, Queens, List, Recurse,
-          Storage, Sieve, BubbleSort, QuickSort, Sum, Towers, TreeSort,
-          IntegerLoop, FieldLoop
-    )
-    
-    run: params = (
-        params length < 2
-            ifTrue:  [ self exec: 100 ]
-            ifFalse: [ self exec: (params at: 2) asInteger ]
-    )
-    
-    printUsage = (
-      './som.sh -cp Smalltalk Examples/Benchmarks/All.som [number-of-iterations]' println.
-      '' println.
-      '  number-of-iterations - the number of time each benchmark is executed, default: 1' println.
-    )
-    
-    initialize = (
-        super initialize.
-        summedAverage := 0.
-    )
-    
-    exec: iterations = (
-        'Start execution of all benchmarks. Iterations: ' print.
-        iterations println.
-        
-        self all do: [:cls |
-            self initialize.
-            self benchmarkClass: cls.
-            self printAll: false.
-            self maxRuntime: 3. "seconds"
-            self numIterations: iterations.
-            self warmUp: 10.
+  all = (
+    ^ (run: 'Fannkuch' numIter: 4),
+      (run: 'Fannkuch' numIter: 4)
+  )
+  
+  run: name numIter: numIter = (
+    | file cls suite run |
+    file  := 'core-lib/Benchmarks/' + name + '.som'.
+    cls   := system loadModule: file.
+    suite := cls usingPlatform: platform andHarness: harness.
 
-            self runBenchmark.
-        ].
-        self printTotal.
-    )
-    
-    reportBenchmark: bench result: total = (
-        '' println.
-        'Benchmark: ' print.
-        bench name println.
+    run   := NoReportingRun new.
+    run name: name.
+    run benchmarkSuite: suite.
+    run numIterations: numIter.
+    run printAll: false.
+    suite setupVerifiedRun: run.
+    ^ run
+  )
+  
+  runAll = (
+    all do: [:run |
+      run runBenchmark.
+      report: run.
+    ].
+  )
 
-        ('   Iterations: ' + numIterations + ' (elapsed time ' + (total // 1000) round
-            + ' ms)') println.
-        ('   AVERAGE: ' + ((total // numIterations) // 1000) round + ' ms') println.
-        
-        summedAverage := summedAverage + (total // numIterations).
-    )
+  report: run = (
+    '\nBenchmark: ' print. run name println.
+
+    ('   Iterations: ' + run numIterations + ' (elapsed time ' + (run total // 1000) round
+        + ' ms)') println.
+    ('   AVERAGE: ' + ((run total // run numIterations) // 1000) round + ' ms') println.
     
-    printTotal = (
-        ('Summed Average Runtime: ' + (summedAverage // 1000) round asString + ' ms') println.
-    )
+    summedAverages := summedAverages + (run total // run numIterations).
+  )
     
+  printTotal = (
+    ('Summed Average Runtime: ' + (summedAverage // 1000) round asString + ' ms') println.
+  )
+
+  public main: args = (
+    runAll.
+    ^ 0
+  )
 )

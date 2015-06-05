@@ -104,7 +104,7 @@ class Harness usingPlatform: platform = (
     )
   )
 
-  class Run = (
+  public class Run = (
     | public total           ::= 0.
       public numIterations   ::= 1.
       public warmUp          ::= 0.
@@ -241,7 +241,7 @@ class Harness usingPlatform: platform = (
       ('Total Runtime: ' + total asString + 'us') println.
     )
   )
-    
+
   processArguments: args for: run = (
     (* First argument is the BenchmarkHarness *)
     run name: (args at: 2).
