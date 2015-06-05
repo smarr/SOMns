@@ -691,7 +691,7 @@ class Kernel vmMirror: vmMirror = (
     )  
   )
   
-  public class Exception = ()(
+  public class Exception = Value ()(
     public signal = ( vmMirror signalException: self )
   ):(
     public signal = (
