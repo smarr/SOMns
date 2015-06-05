@@ -424,7 +424,7 @@ public final class Bootstrap {
     slot.setValueDuringBootstrap(obj, value);
   }
 
-  public static void executeApplication(final SObject vmMirror, final String[] args) {
+  public static void executeApplication(final SObject vmMirror) {
     // normally, the constructor method of the platform module is expected to
     // start the whole execution. And, it is not expected to return
     platformModule.instantiateObject(platformClass, vmMirror);

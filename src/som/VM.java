@@ -148,7 +148,7 @@ public final class VM {
     Bootstrap.loadPlatformAndKernelModule(vm.options.platformFile,
         vm.options.kernelFile);
     SObject vmMirror = Bootstrap.initializeObjectSystem();
-    Bootstrap.executeApplication(vmMirror, vm.options.args);
+    Bootstrap.executeApplication(vmMirror);
     return 0;
   }
 
