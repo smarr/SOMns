@@ -21,7 +21,10 @@ class Platform usingVmMirror: vmMirror = (
       ].
       
       app := system loadModule: (arguments at: 1).
-      errorCode := (app usingPlatform: platform) main: arguments.
+      
+      [ errorCode := (app usingPlatform: platform) main: arguments ]
+        on: kernel Exception
+        do: [:e | system error: e asString ].
       system exit: errorCode
     )
   )

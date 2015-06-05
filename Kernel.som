@@ -31,8 +31,10 @@ class Kernel vmMirror: vmMirror = (
   
     'Error recovering'
     protected doesNotUnderstand: selector arguments: arguments = (
-      vmMirror printStackTrace: nil.
-      error: 'Method ' + selector + ' not found in class ' + (vmMirror mirrorClassName: self)
+      (* vmMirror printStackTrace: nil.
+         error: 'Method ' + selector + ' not found in class ' + (vmMirror mirrorClassName: self).
+      *)
+      MessageNotUnderstood signalWith: self selector: selector arguments: arguments.
     )
     
     protected escapedBlock: block = (
@@ -713,4 +715,15 @@ class Kernel vmMirror: vmMirror = (
       public index  = idx. |
     self signal
   )()
+  
+  public class MessageNotUnderstood signalWith: obj selector: sel arguments: args = Exception (
+    | public target    = obj.
+      public selector  = sel.
+      public arguments = args. |
+    self signal.
+  )(
+    public asString = (
+      ^ 'MessageNotUnderstood(' + selector + ')'
+    )
+  )
 )
