@@ -47,17 +47,13 @@ class TestRunner usingPlatform: platform = (
   
   runAllKnownModules = (
     | modules result |
-    modules := 'BlockTests',
-               'ClassStructureTests',
+    modules := 'LanguageTests',
                'CollectionTests',
-               'CompilerReturnTests',
-               'DoesNotUnderstandTests',
                'DoubleTests',
                'IntegerTests',
                'StringTests',
-               'SuperTests',
-               'SystemTests',
                'SymbolTests',
+               'SystemTests',
                'MinitestTests'.
                
                (* 'ReflectionTests', *)

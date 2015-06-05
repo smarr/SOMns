@@ -1,0 +1,361 @@
+class LanguageTests usingPlatform: platform testFramework: minitest = (
+| private TestContext  = minitest TestContext.
+  private Array        = platform kernel Array.
+  private ObjectMirror = platform mirrors ObjectMirror.
+  private Set          = platform collections Set.
+|
+)(
+  (* This test verifies that SOM blocks are indeed closures. 
+     The test was found on Eliot Miranda's Cog Blog. *)
+
+  public class ClosureTest = TestContext ()(
+    public testClosureProperty = (
+      | factorial result facs |
+    
+      facs := Array new: 10.
+      facs at: 1 put: 1.
+      facs at: 2 put: 2.
+      facs at: 3 put: 6.
+      facs at: 4 put: 24.
+      facs at: 5 put: 120.
+      facs at: 6 put: 720.
+      facs at: 7 put: 5040.
+      facs at: 8 put: 40320.
+      facs at: 9 put: 362880.
+      facs at: 10 put: 3628800.
+
+      factorial := [ :n |
+          n = 1
+              ifTrue: [ 1 ]
+              ifFalse: [ (factorial value: n - 1) * n ] ].
+
+      result := (1 to: 10) collect: factorial.
+      result doIndexes: [ :i |
+        self assert: (facs at: i) equals: (result at: i) ]
+    )
+  ) : ( TEST_CONTEXT = () )
+  
+  public class SelfBlockTest = TestContext ()(
+
+    public testEscapedBlock = (
+      self assert: 42 equals: self give42 value
+    )
+
+    give42 = (
+      ^[ self giveBlock value ]
+    )
+
+    giveBlock = (
+      ^self returnBlock value
+    )
+
+    returnBlock = (
+      ^[ self returnBlock2 value ]
+    )
+
+    returnBlock2 = (
+      ^[ 42 ]
+    )
+  ) : ( TEST_CONTEXT = () )
+
+  public class BlockTest = TestContext (
+    | escapeCount anEscapedBlock |
+  ) (
+
+    simpleBlock = (
+      ^[42]
+    )
+
+    incBlock = (
+      ^[ :val | val + 1]
+    )
+
+    (* This requires a closure *)
+    adderBlock: amount = (
+      ^[ :val | amount + val]
+    )
+
+    (* Closure with mutable state in block *)
+    counterBlock = (
+      |count|
+      count := 0.
+      ^[count := count + 1. count]
+    )
+
+    public selfKeeper = (
+      ^[self]
+    )
+
+    escapingBlock = (
+      ^[^42]
+    )
+    
+    public testSimpleBlocks = (
+      self assert: 42 equals: self simpleBlock value.
+      self assert: 4  equals: (self incBlock value: 3).
+      self assert: 43 equals: ((self adderBlock: 13) value: 30).
+    )
+    
+    public testClosure = (
+      | counter |
+      counter := self counterBlock.
+      self assert: 1 equals: counter value.
+      self assert: 2 equals: counter value.
+      self assert: 1 equals: self counterBlock value. (* make sure each copy is independent *)
+      self assert: 3 equals: counter value.
+    )
+    
+    public testSelfInBlock = (
+      | testInst |
+      testInst := BlockTest new.
+      self assert: testInst is: testInst selfKeeper value.
+      self assert: self     is: self selfKeeper value.
+    )
+    
+    public testEscapedBlock = (
+      | escapingBlock |
+
+      escapeCount := 0.
+
+      escapingBlock := self escapingBlock.
+      
+      self assert: 0 equals: escapeCount.
+      self assert: 666 equals: escapingBlock value.
+      self assert: 1 equals: escapeCount.
+      
+      self assert: escapingBlock is: anEscapedBlock.
+    )
+
+    escapedBlock: block = (
+      escapeCount := escapeCount + 1.
+      anEscapedBlock := block.
+
+      (* return some dummy value to the object that sent 'value' to block *)
+      ^666
+    )
+  ) : ( TEST_CONTEXT = () )
+  
+  public class SuperTestSuperClass = TestContext ()(
+    give42 = ( ^42 )
+    something = ( ^ #super )
+  )
+  
+  public class SuperTest = SuperTestSuperClass ()(
+
+    public testSuper = (
+      self assert: 42 equals: self give42.
+      self assert: 42 equals: self blockGive42.
+    )
+
+    give42 = (
+      ^ super give42
+    )
+
+    blockGive42 = (
+      ^ [ super give42 ] value
+    )
+  
+    something = (
+      ^ #sub
+    )
+  ) : ( TEST_CONTEXT = () )
+  
+  public class CompilerReturnTest = TestContext ()(
+
+    return1 = ( ^self )
+    return2 = (       )
+    
+    return3: arg = ( ^self )
+    return4: arg = (       )
+    
+    public testExplicitAndImplicitReturns = (
+      self assert: self is: self return1.
+      self assert: self is: self return2.
+      self assert: self is: (self return3: 23).
+      self assert: self is: (self return4: 23).
+    )
+    
+    (* In SOM++, code after the #ifTrue: does not seem to be executed, if the
+       block expression ends with a dot. *)
+    public testIfTrueWithDot = (
+      | arr |
+      arr := Array new: 3.
+      self usesIfTrueWithDot: arr.
+      self assertArrayCorrectness: arr.
+    )
+    
+    assertArrayCorrectness: arr = (
+      self assert: 1 equals: (arr at: 1). (* method was not executed *)
+      self assert: 2 equals: (arr at: 2). (* ifTrue was not executed *)
+      self assert: 3 equals: (arr at: 3). (* remainder was not executed *)      
+    )
+
+    public testIfTrueWithoutDot = (
+      | arr |
+      arr := Array new: 3.
+      self usesIfTrueWithoutDot: arr.
+      self assertArrayCorrectness: arr.
+    )
+    
+    public testIfFalseWithDot = (
+      | arr |
+      arr := Array new: 3.
+      self usesIfFalseWithDot: arr.
+      self assertArrayCorrectness: arr.
+    )
+    
+    public testIfFalseWithoutDot = (
+      | arr |
+      arr := Array new: 3.
+      self usesIfFalseWithoutDot: arr.
+      self assertArrayCorrectness: arr.
+    )
+    
+    usesIfTrueWithDot: arr = (
+      arr at: 1 put: 1.
+      (3 >= 1) ifTrue: [arr at: 2 put: 2. ]. 'WITH DOT'. 
+      arr at: 3 put: 3.
+    )
+    
+    usesIfTrueWithoutDot: arr = (
+      arr at: 1 put: 1.
+      (3 >= 1) ifTrue: [arr at: 2 put: 2 ]. 'WITHOUT DOT'.
+      arr at: 3 put: 3.
+    )
+    
+    usesIfFalseWithDot: arr = (
+      arr at: 1 put: 1.
+      (3 >= 1) ifTrue: [arr at: 2 put: 2. ]. 'WITH DOT'.
+      arr at: 3 put: 3.
+    )
+    
+    usesIfFalseWithoutDot: arr = (
+      arr at: 1 put: 1.
+      (3 >= 1) ifTrue: [arr at: 2 put: 2 ]. 'WITHOUT DOT'.
+      arr at: 3 put: 3.
+    )
+  ) : ( TEST_CONTEXT = () )
+  
+  class DoesNotUnderstandMessage to: target selector: selector arguments: args = (
+    | public target   = target.
+      public selector = selector.
+      public arguments = args.
+    |
+  )()
+
+  public class DoesNotUnderstandTest = TestContext ()(
+
+    public testSimpleUnknownFoo = (
+      | result |
+      result := self foo.
+      self assert: self is: result target.
+      self assert: #foo equals: result selector.
+    )
+  
+    public testArguments = (
+      | result |
+      result := self foo.
+      self assert: 0 equals: result arguments size.
+
+      result := self foo: 1.
+      self assert: 1 equals: result arguments size.
+      self assert: 1 equals: (result arguments at: 1).
+    
+      result := self foo: 1 bar: 2 baz: 3.
+      self assert: 3 equals: result arguments size.
+      self assert: 1 equals: (result arguments at: 1).
+      self assert: 2 equals: (result arguments at: 2).
+      self assert: 3 equals: (result arguments at: 3).
+    )
+  
+    public testRepeat = (
+      | result |
+      result := Array new: 5.
+      1 to: result size do: [:i |
+        result at: i put: self foo.
+      
+        i > 1 ifTrue: [
+          self assert: (result at: i - 1) ~= (result at: i).
+        ]
+      ].
+    )
+  
+    doesNotUnderstand: selector arguments: arguments = (
+      ^ DoesNotUnderstandMessage to: self selector: selector arguments: arguments.
+    )
+  ) : ( TEST_CONTEXT = () )
+  
+  public class ClassA = (
+    | a b |
+  ) (
+    result = ( ^ 42 )
+  )
+
+  public class ClassB = ClassA (
+    | c d |
+  ) ( )
+  
+  public class ClassC = ClassB (
+    | e f |
+  ) (
+    public getA      = ( ^ a )
+    public setA: val = ( a := val )
+  
+    public getF      = ( ^ f )
+    public setF: val = ( f := val )
+  )
+
+  public class ClassStructureTest = TestContext ()(
+
+    public testClassIdentity = (
+      self assert: #Array   equals: (ObjectMirror reflecting: Array new) className.
+      self assert: #Integer equals: (ObjectMirror reflecting: 1) className.
+      self assert: #Integer equals: (ObjectMirror reflecting: 10000000000) className.
+      self assert: #Double  equals: (ObjectMirror reflecting: (1 // 2)) className.
+      self assert: #Double  equals: (ObjectMirror reflecting: 0.5) className.
+      self assert: #Block1  equals: (ObjectMirror reflecting: [42]) className.
+      self assert: #Object  equals: (ObjectMirror reflecting: Object new) className.
+      self assert: #Set     equals: (ObjectMirror reflecting: Set new) className.
+      self assert: #String  equals: (ObjectMirror reflecting: 'foo') className.
+      self assert: #Symbol  equals: (ObjectMirror reflecting: #foo) className.
+      self assert: #True    equals: (ObjectMirror reflecting: true) className.
+      self assert: #False   equals: (ObjectMirror reflecting: false) className.
+      self assert: #Nil     equals: (ObjectMirror reflecting: nil) className.
+    )
+        
+    public testAccessToInstanceFields = (
+      | o |
+      o := ClassC new.
+      o setA: 333.
+      self assert: 333 equals: o getA.
+    
+      o setF: 333.
+      self assert: 333 equals: o getF.
+    )
+  
+    (* TODO adapt
+    public testMetaclasses = (
+      self assert: nil              is: Object superclass.
+      self assert: Integer          is: 1 class.
+      self assert: #'Integer class' is: 1 class class name.
+      self assert: Metaclass        is: 1 class class class.
+    
+      self assert: #'Metaclass class' is: Metaclass class name.
+      self assert: Metaclass          is: Metaclass class class.
+    
+      self assert: Object          is: 1 class superclass.
+      self assert: #'Object class' is: 1 class class superclass name.
+      self assert: Class           is: Object class superclass.
+      self assert: Metaclass       is: Class class class.
+    ) *)
+  
+    
+    public testInstanceFields = (
+      (* TODO adapt
+      self assert: 2 equals: ClassA fields size.
+      self assert: 4 equals: ClassB fields size.
+      self assert: 6 equals: ClassC fields size.
+      *)
+    ) 
+  ) : ( TEST_CONTEXT = () )
+)
