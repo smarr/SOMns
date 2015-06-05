@@ -194,9 +194,12 @@ class MinitestTests usingPlatform: platform testFramework: minitest = (
       ) : (
         TEST_CONTEXT = ()
       )
-
-      class TestException1 = Exception ()()
-      class TestException2 = Exception ()()
+      
+      class GenericException = Exception (
+        | public messageText |
+      )()
+      class TestException1 = GenericException ()()
+      class TestException2 = GenericException ()()
     )
 
     assert: testResults containsSelector: selector = (

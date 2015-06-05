@@ -692,6 +692,9 @@ class Kernel vmMirror: vmMirror = (
   )
   
   public class Exception = Value ()(
+    (* Exception does not have any state on purpose.
+       It is good practice to have distinct exceptions for separate issues.
+       Thus, subclassing is encouraged. *)
     public signal = ( vmMirror signalException: self )
   ):(
     public signal = (
