@@ -34,8 +34,10 @@ class AllBenchmarks usingPlatform: platform = (
   )
 
   all = (
-    ^ (run: 'Fannkuch' numIter: 4),
-      (run: 'Fannkuch' numIter: 4)
+    ^ (run: 'Bounce'     numIter: 100),
+      (run: 'Fannkuch'   numIter:   4),
+      (run: 'List'       numIter: 100),
+      (run: 'Mandelbrot' numIter:   1)
   )
   
   run: name numIter: numIter = (

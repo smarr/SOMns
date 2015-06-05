@@ -45,7 +45,7 @@
 # 
 # http://benchmarksgame.alioth.debian.org/u64q/program.php?test=mandelbrot&lang=yarv&id=3
 *)
-class MandelbrotSuite usingKernel: kernel andHarness: harness = (
+class MandelbrotSuite usingPlatform: platform andHarness: harness = (
 | private Benchmark = harness Benchmark. |
 )(
   class Mandelbrot = Benchmark (
@@ -129,4 +129,5 @@ class MandelbrotSuite usingKernel: kernel andHarness: harness = (
   )
   
   public newInstance = ( ^ Mandelbrot new )
+  public setupVerifiedRun: run = ( run innerIterations: 750 )
 )
