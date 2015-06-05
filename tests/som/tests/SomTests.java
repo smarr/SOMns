@@ -30,40 +30,26 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
+import som.VM;
+import som.vm.Bootstrap;
+import som.vmobjects.SObject;
+
+
 @RunWith(Parameterized.class)
 public class SomTests {
 
   @Parameters
   public static Iterable<Object[]> data() {
     return Arrays.asList(new Object[][] {
-        {"Array"         },
-        {"Block"         },
-        {"ClassLoading"  },
-        {"ClassStructure"},
+        {"LanguageTests"   },
+        {"CollectionTests" },
+        {"DoubleTests"     },
+        {"IntegerTests"    },
 
-        {"Closure"       },
-        {"Coercion"      },
-        {"CompilerReturn"},
-        {"DoesNotUnderstand"},
-        {"Double"        },
-
-        {"Empty"         },
-        {"Global"        },
-        {"Hash"          },
-        {"Integer"       },
-
-        {"Preliminary"   },
-        {"Reflection"    },
-        {"SelfBlock"     },
-        {"Super"         },
-
-        {"Set"           },
-        {"String"        },
-        {"Symbol"        },
-        {"System"        },
-        {"Vector"        },
-
-        {"Thread"        }
+        {"StringTests"     },
+        {"SymbolTests"     },
+        {"SystemTests"     },
+        {"MinitestTests"   },
       });
   }
 
@@ -75,13 +61,14 @@ public class SomTests {
 
   @Test
   public void testSomeTest() {
-//    Bootstrap.loadPlatformAndKernelModule(VM.standardPlatformFile,
-//        VM.standardKernelFile);
-//    Bootstrap.initializeObjectSystem();
-//
-//    long exitCode = Bootstrap.executeApplication("TestSuite/TestHarness.som",
-//        new String[] {testName});
-//    assertEquals(0, exitCode);
-    assertEquals(0, 0);
+    VM vm = new VM(true);
+    vm.processVmArguments(new String[] {"core-lib/TestSuite/TestRunner.som",
+                                        "core-lib/TestSuite/" + testName + ".som"});
+    Bootstrap.loadPlatformAndKernelModule(VM.standardPlatformFile,
+        VM.standardKernelFile);
+    SObject vmMirror = Bootstrap.initializeObjectSystem();
+
+    Bootstrap.executeApplication(vmMirror);
+    assertEquals(0, vm.lastExitCode());
   }
 }
