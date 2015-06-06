@@ -753,13 +753,13 @@ class Kernel vmMirror: vmMirror = (
   )()
   
   public class MessageNotUnderstood signalWith: obj selector: sel arguments: args = Exception (
-    | public target    = obj.
+    | public receiver  = obj.
       public selector  = sel.
       public arguments = args. |
     self signal.
   )(
     public asString = (
-      ^ 'MessageNotUnderstood(' + selector + ')'
+      ^ 'MessageNotUnderstood(' + (vmMirror objClassName: receiver) + '>>#' + selector + ')'
     )
   )
 )
