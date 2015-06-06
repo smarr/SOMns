@@ -24,6 +24,7 @@ class Harness usingPlatform: platform = (
     and output single as well as a total. *)
 | private system = platform system.
   private platform = platform.
+  private ObjectMirror = platform mirrors ObjectMirror.
 |
 )(
 
@@ -273,7 +274,8 @@ class Harness usingPlatform: platform = (
   printUsage = (
     './som.sh core-lib/Benchmarks/Harness.som [benchmark] [num-iterations [warm-up [inner-iter [num-threads]]]' println.
     '' println.
-    '  benchmark      - benchmark class name (e.g., Queens, Fibonacci, Dispatch)' println.
+    '  benchmark      - benchmark class name (supports nested classes with ".") ' println.
+    '                   examples: Queens, Fibonacci, Sort.QuickSort, LanguageFeatures.Dispatch' println.
     '  num-iterations - number of times to execute benchmark, default: 1' println.
     '  warm-up        - number of times to execute benchmark before measuring, default: 0' println.
     '  inner-iter     - number of times the benchmark is executed in an inner loop, ' println.
@@ -281,12 +283,22 @@ class Harness usingPlatform: platform = (
     '  num-threads    - number of threads executing, each doing num-iterations, default: 1' println.
   )
 
-  loadBenchmarkSuite: className = (
+  loadModule: className = (
     | file cls |
     file := 'core-lib/Benchmarks/' + className + '.som'.
     cls := system loadModule: file.
     cls ifNil: [
         self error: 'Failed loading benchmark: ' + className ].
     ^ cls usingPlatform: platform andHarness: self.
+  )
+
+  loadBenchmarkSuite: className = (
+    | file module nested |
+    (className includes: '.')
+      ifFalse: [ ^ self loadModule: className ].
+    
+    nested := className split: '.'.
+    module := self loadModule: (nested at: 1).
+    ^ (ObjectMirror reflecting: module) perform: (nested at: 2) asSymbol
   )
 )

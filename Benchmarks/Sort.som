@@ -19,8 +19,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 *)
 class SortBenchmarks usingPlatform: platform andHarness: harness = (
-| private Benchmark = harness Benchmark. |
-
+| private Benchmark = harness Benchmark.
+  private Random    = harness Random.
+  private Array     = platform kernel Array. |
+)(
   class Sort = Benchmark (
     | smallest largest |
   ) (
@@ -36,9 +38,9 @@ class SortBenchmarks usingPlatform: platform andHarness: harness = (
     
     verifyResult: array = (
         ((array at: 1) <> smallest)
-            || ((array at: (array length)) <> largest)
-                ifTrue: [ self error: 'Array is not sorted. smallest: ' + smallest asString + ' largest: ' + largest asString + ' [1]: ' + (array at: 1) asString + ' [l]: ' + (array at: array length) asString ].
-        3 to: (array length) do: [ :i |
+            || ((array at: (array size)) <> largest)
+                ifTrue: [ self error: 'Array is not sorted. smallest: ' + smallest asString + ' largest: ' + largest asString + ' [1]: ' + (array at: 1) asString + ' [l]: ' + (array at: array size) asString ].
+        3 to: (array size) do: [ :i |
             (array at: i - 1) > (array at: i) 
                 ifTrue: [ self error: 'Array is not sorted. [' + i asString + ' - 1]: ' + (array at: i - 1) asString + ' [' + i asString + ']: ' + (array at: i) asString]. ].
         ^ true
@@ -55,9 +57,9 @@ class SortBenchmarks usingPlatform: platform andHarness: harness = (
     )
   ) 
 
-  class BubbleSort = Sort ()(
+  public class BubbleSort = Sort ()(
     sort: array = (
-      array length downTo: 1 do: [ :i |
+      array size downTo: 1 do: [ :i |
         1 to: i - 1 do: [ :j |
           | current next |
           current := array at: j.
@@ -70,9 +72,12 @@ class SortBenchmarks usingPlatform: platform andHarness: harness = (
     )
 
     dataSize = ( ^ 130 )
+  ) : (
+    public newInstance = ( ^ self new )
+    public setupVerifiedRun: run = ( run innerIterations: 1 )
   )
 
-  class QuickSort = Sort ()(
+  public class QuickSort = Sort ()(
     sort: array = (
       self sort: array low: 1 high: self dataSize.
       ^ array
@@ -102,6 +107,9 @@ class SortBenchmarks usingPlatform: platform andHarness: harness = (
     )
     
     dataSize = ( ^800 )
+  ) : (
+    public newInstance = ( ^ self new )
+    public setupVerifiedRun: run = ( run innerIterations: 1 )
   )
 
   class TreeNode new: val = (
@@ -128,7 +136,7 @@ class SortBenchmarks usingPlatform: platform andHarness: harness = (
     )
   )
 
-  class TreeSort = Sort ()(
+  public class TreeSort = Sort ()(
     sort: array = (
         | tree |
         array doIndexes: [ :i |
@@ -144,5 +152,8 @@ class SortBenchmarks usingPlatform: platform andHarness: harness = (
     )
     
     dataSize = ( ^ 1000 )
+  ) : (
+    public newInstance = ( ^ self new )
+    public setupVerifiedRun: run = ( run innerIterations: 1 )
   )
 )
