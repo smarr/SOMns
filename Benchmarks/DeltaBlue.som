@@ -824,5 +824,5 @@ class DeltaBlue usingPlatform: platform andHarness: harness = (
   )
 
   public newInstance = ( ^ DeltaBlue new )
-  public setupVerifiedRun: run = ( run innerIterations: 5000 )  
+  public setupVerifiedRun: run = ( run innerIterations: 20 )
 )
