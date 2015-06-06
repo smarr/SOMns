@@ -55,6 +55,7 @@ class AllBenchmarks usingPlatform: platform = (
     cls   := system loadModule: file.
     ^ cls usingPlatform: platform andHarness: harness.
   )
+
   run: name in: moduleName numIter: numIter = (
     | suite cls |
     suite := self loadModule: moduleName.
@@ -85,6 +86,7 @@ class AllBenchmarks usingPlatform: platform = (
       run runBenchmark.
       report: run.
     ].
+    printTotal.
   )
 
   report: run = (
@@ -98,7 +100,7 @@ class AllBenchmarks usingPlatform: platform = (
   )
     
   printTotal = (
-    ('Summed Average Runtime: ' + (summedAverage // 1000) round asString + ' ms') println.
+    ('\nSummed Average Runtime: ' + (summedAverages // 1000) round asString + ' ms') println.
   )
 
   public main: args = (
