@@ -22,6 +22,7 @@ class AllBenchmarks usingPlatform: platform = (
 | private platform = platform.
   private harness  = (platform system loadModule: 'core-lib/Benchmarks/Harness.som') usingPlatform: platform.
   private system   = platform system.
+  private ObjectMirror = platform mirrors ObjectMirror.
   private Run      = harness Run.
   summedAverages ::= 0. |
 )(
@@ -37,21 +38,45 @@ class AllBenchmarks usingPlatform: platform = (
     ^ (run: 'Bounce'     numIter: 100),
       (run: 'Fannkuch'   numIter:   4),
       (run: 'List'       numIter: 100),
-      (run: 'Mandelbrot' numIter:   1)
+      (run: 'Mandelbrot' numIter:   1),
+      (run: 'Permute'    numIter: 100),
+      (run: 'Queens'     numIter: 100),
+      (run: 'Sieve'      numIter: 100),
+      (run: 'Storage'    numIter: 100),
+      (run: 'Towers'     numIter: 100),
+      (run: 'BubbleSort' in: 'Sort' numIter: 100),
+      (run: 'QuickSort'  in: 'Sort' numIter: 100),
+      (run: 'TreeSort'   in: 'Sort' numIter: 100)
   )
   
-  run: name numIter: numIter = (
-    | file cls suite run |
+  loadModule: name = (
+    | file cls |
     file  := 'core-lib/Benchmarks/' + name + '.som'.
     cls   := system loadModule: file.
-    suite := cls usingPlatform: platform andHarness: harness.
+    ^ cls usingPlatform: platform andHarness: harness.
+  )
+  run: name in: moduleName numIter: numIter = (
+    | suite cls |
+    suite := self loadModule: moduleName.
+    cls := (ObjectMirror reflecting: suite) perform: name asSymbol.
+    
+    ^ self createRun: cls named: name numIter: numIter
+  )
 
-    run   := NoReportingRun new.
+  run: name numIter: numIter = (
+    | suite run |
+    suite := self loadModule: name.
+    ^ self createRun: suite named: name numIter: numIter.
+  )
+  
+  createRun: bench named: name numIter: numIter = (
+    | run |
+    run := NoReportingRun new.
     run name: name.
-    run benchmarkSuite: suite.
+    run benchmarkSuite: bench.
     run numIterations: numIter.
     run printAll: false.
-    suite setupVerifiedRun: run.
+    bench setupVerifiedRun: run.
     ^ run
   )
   
