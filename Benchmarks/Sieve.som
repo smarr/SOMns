@@ -18,9 +18,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 *)
-class SieveSuite usingKernel: kernel andHarness: harness = (
+class SieveSuite usingPlatform: platform andHarness: harness = (
 | private Benchmark = harness Benchmark.
-  private Array     = kernel Array.
+  private Array     = platform kernel Array.
 |
 ) (
 
@@ -54,4 +54,5 @@ class SieveSuite usingKernel: kernel andHarness: harness = (
   )
 
   public newInstance = ( ^ Sieve new )
+  public setupVerifiedRun: run = ( run innerIterations: 1 )
 )

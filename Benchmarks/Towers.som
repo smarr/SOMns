@@ -20,8 +20,8 @@ THE SOFTWARE.
 
 Mmm... Hanoi...
 *)
-class TowersSuite usingKernel: kernel andHarness: harness = (
-| private Array     = kernel Array.
+class TowersSuite usingPlatform: platform andHarness: harness = (
+| private Array     = platform kernel Array.
   private Benchmark = harness Benchmark.
 |
 )(
@@ -92,4 +92,5 @@ class TowersSuite usingKernel: kernel andHarness: harness = (
   )()
   
   public newInstance = ( ^ Towers new. )
+  public setupVerifiedRun: run = ( run innerIterations: 1 )
 )

@@ -18,8 +18,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 *)
-class PermuteSuite usingKernel: kernel andHarness: harness = (
-| private Array     = kernel Array. 
+class PermuteSuite usingPlatform: platform andHarness: harness = (
+| private Array     = platform kernel Array. 
   private Benchmark = harness Benchmark.
 |
 ) (
@@ -58,4 +58,5 @@ class PermuteSuite usingKernel: kernel andHarness: harness = (
   )
   
   public newInstance = ( ^ Permute new )
+  public setupVerifiedRun: run = ( run innerIterations: 1 )
 )
