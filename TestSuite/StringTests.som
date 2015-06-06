@@ -71,6 +71,51 @@ class StringTests usingPlatform: platform testFramework: minitest = (
       self deny: ('f' endsWith: 'bar').
       self deny: ('f' endsWith: 'foo').
     )
+    
+    public testIncludes = (
+      assert: ('foo' includes: 'o').
+      assert: ('foobar:' includes: ':').
+      assert: ('foobar:' includes: 'foo').
+      assert: ('foobar:' includes: 'foobar:').
+      assert: ('foobar:' includes: 'bar:').
+      
+      deny: ('foobar' includes: 'baz').
+      deny: ('foobar' includes: '1').
+    )
+    
+    public testSplit = (
+      | r |
+      r := 'foo.bar' split: '.'.
+      assert: 2     equals: r size.
+      assert: 'foo' equals: (r at: 1).
+      assert: 'bar' equals: (r at: 2).
+      
+      r := 'foo..bar' split: '.'.
+      assert: 3     equals: r size.
+      assert: 'foo' equals: (r at: 1).
+      assert: ''    equals: (r at: 2).
+      assert: 'bar' equals: (r at: 3).
+      
+      r := 'foo..bar' split: '..'.
+      assert: 2     equals: r size.
+      assert: 'foo' equals: (r at: 1).
+      assert: 'bar' equals: (r at: 2).
+      
+      r := 'foo' split: 'bar'.
+      assert: 1     equals: r size.
+      assert: 'foo' equals: (r at: 1).
+    )
+    
+    public testIndexOf = (
+      assert: 0   equals: ('foo' indexOf: 'b').
+      assert: 1   equals: ('foo' indexOf: 'f').
+      assert: 2   equals: ('foo' indexOf: 'o').
+      assert: 3   equals: ('foo' indexOf: 'o' startingAt: 3).
+      
+      assert: 0   equals: ('foo' indexOf: 'b' startingAt: 4).
+
+      assert: 2   equals: ('foo' indexOf: 'oo').
+    )
   
     public testMultiLineString = (
       (* Test whether the parser will parse multi-line strings correctly. *)

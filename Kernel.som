@@ -343,6 +343,42 @@ class Kernel vmMirror: vmMirror = (
       
       ^ false
     )
+    
+    public indexOf: aString = (
+      ^ self indexOf: aString startingAt: 1
+    )
+    
+    public indexOf: aString startingAt: start = (
+      | l |
+      l := aString length.
+      start + l > (self length + 1) ifTrue: [ ^ 0 ]. 
+
+      start to: self length do: [:i |
+        (self primSubstringFrom: i to: i + l - 1) = aString ifTrue: [ ^ i ].
+      ].
+      
+      ^ 0
+    )
+    
+    public split: split = (
+      | start newStart result |
+      self length < split length ifTrue: [ ^ Array new: self ].
+      start := 1.
+      result := Vector new.
+      
+      
+      [start > 0] whileTrue: [
+        newStart := self indexOf: split startingAt: start.
+        newStart = 0
+          ifTrue: [
+            result append: (self primSubstringFrom: start to: self length).
+            ^ result ]
+          ifFalse: [
+            result append: (self primSubstringFrom: start to: newStart - 1).
+            start := newStart + split length. ].
+      ].
+      ^ result
+    )
 
     public asInteger = (
       ^ Integer fromString: self
