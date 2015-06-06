@@ -82,7 +82,7 @@ class Harness usingPlatform: platform = (
     | private seed ::= seed. |
   ) (
     (* Robert Jenkins 32 bit integer hash function. *)
-    next = (
+    public next = (
       (* Original version, with complete set of conversions.
       
          seed := ((seed       + 2127912214 (* 0x7ed55d16 *))       + (seed as32BitUnsignedValue  << 12) as32BitSignedValue) as32BitSignedValue.

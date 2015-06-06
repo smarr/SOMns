@@ -1,157 +1,162 @@
-"https://github.com/Sable/Ostrich/blob/master/map-reduce/page-rank/js/pagerank.js"
-PageRank = Benchmark (
+(*  https://github.com/Sable/Ostrich/blob/master/map-reduce/page-rank/js/pagerank.js *)
+class PageRankSuite usingPlatform: platform andHarness: harness = (
+| private Array     = platform kernel Array.
+  private Double    = platform kernel Double.
+  private Vector    = platform kernel Vector.
+  private Benchmark = harness Benchmark.
+  private JenkinsRandom = harness JenkinsRandom.
+  private DFactor   = 0.85. (* damping factor *)
+  private expectedPageRanks = self createExpectedPageRanks.
+|
+)(
+  class PageRank = Benchmark (
   | firstResult |
-
-  " generates an array of random pages and their links "
-  generateRandomPagesN: n outLinks: outLinks divisor: divisor with: random  = (
-    | pages |
-    " matrix cell i,j means link from j->i "
-    pages := Array new: n * n withAll: 0.
+  )(
+    (* generates an array of random pages and their links *)
+    generateRandomPagesN: n outLinks: outLinks divisor: divisor with: random  = (
+      | pages |
+      (* matrix cell i,j means link from j->i *)
+      pages := Array new: n * n withAll: 0.
     
-    0 to: n - 1 do: [:i |
-      outLinks at: i + 1 put: 0.
-
-      0 to: n - 1 do: [:j |
-        (i <> j and: [(random next abs % divisor) = 0]) ifTrue: [
-          pages at: (i * n + j) + 1 put: 1.
-          outLinks at: i + 1 put: (outLinks at: i + 1) + 1
-        ]
-      ].
-
-      " the case with no outlinks is afunctioned "
-    (outLinks at: i + 1) = 0 ifTrue: [
-        | k |
-        k := random next abs % n.
-        [i = k] whileTrue: [
-          k := random next abs % n.
-        ].
-
-        pages at: (i * n + k) + 1 put: 1.
-        outLinks at: i + 1 put: 1
-      ]
-    ].
-    ^ pages
-  )
-
-  mapPageRanks: pages pageRanks: pageRanks maps: maps outLinks: outLinks n: n = (
-    0 to: n - 1 do: [:i |
-      | outboundRank |
-      outboundRank := (pageRanks at: i + 1) // (outLinks at: i + 1).
-      
-      0 to: n - 1 do: [:j |
-        maps at: (i * n + j) + 1
-            put: ((pages at: (i * n + j) + 1) = 0
-                   ifTrue:  [0.0]
-                   ifFalse: [(pages at: (i * n + j) + 1)  * outboundRank])
-      ]
-    ]
-  )
-
-  reducePageRanks: pageRanks maps: maps n: n = (
-    | dif |
-    dif := 0.0.
-
-    0 to: n - 1 do: [:j |
-      | oldRank newRank |
-      oldRank := pageRanks at: j + 1.
-      newRank := 0.0.
-      
       0 to: n - 1 do: [:i |
-        newRank := newRank + (maps at: (i * n + j) + 1)
-      ].
+        outLinks at: i + 1 put: 0.
 
-      newRank := ((1 - PageRank DFactor) // n) + (PageRank DFactor * newRank).
-      dif := (newRank - oldRank) abs > dif
-               ifTrue: [(newRank - oldRank) abs] ifFalse: [ dif ].
-      pageRanks at: j + 1 put: newRank
-    ].
-    ^ dif
-  )
-
-  innerBenchmarkLoop: innerIterations = (
-    | random |
-    random := JenkinsRandom new: 49734321.
-    "standard for verification"
-    "n := 5000
-     iter    := 10.
-     thresh  := 0.00000001.
-     divisor := 100000."
-    ^ self verify: (self runPageRankN: innerIterations iter: 10 thresh: 0.00000001 divisor: 100000 with: random)
-           inner:  innerIterations.
-  )
-
-  runPageRankN: n iter: iter thresh: thresh divisor: divisor with: random = (
-    | nbLinks maxDiff pageRanks maps outLinks t pages |
-    maxDiff   := Double PositiveInfinity.
-    pageRanks := Array new: n     withAll: 1.0 // n.
-    maps      := Array new: n * n withAll: 0.0.
-    outLinks  := Array new: n     withAll: 0.
-
-    pages := self generateRandomPagesN: n outLinks: outLinks divisor: divisor with: random.
-
-    nbLinks := 0.
-    0 to: n - 1 do: [:i |
-      1 to: n do: [:j |
-        nbLinks := nbLinks + (pages at: i * n + j)
-      ]
-    ].
-
-    t := 1.
-    [t <= iter and: [maxDiff >= thresh]] whileTrue: [
-      self mapPageRanks: pages pageRanks: pageRanks maps: maps outLinks: outLinks n: n.
-      maxDiff := self reducePageRanks: pageRanks maps: maps n: n.
-      t := t + 1
-    ].
-    
-    ^ pageRanks
-  )
-  
-  verify: pageRanks inner: innerIterations = (
-    innerIterations = 5000 " and: [iter = 10 and: [thresh = 0.00000001 and: [divisor = 100000]]]"
-      ifTrue: [
-        | expected |
-        expected := PageRank ExpectedPageRanks.
-        pageRanks length = expected length ifFalse: [
-          self error: 'Invalid length of page_ranks array'
-        ].
-      
-        pageRanks doIndexes: [:i | 
-          (pageRanks at: i) = (expected at: i) ifFalse: [
-            self error: 'ERROR: page_ranks[' + i asString + ']=' +
-                        (pageRanks at: i) + ' differs from the expected value: ' +
-                        (expected at: i)
+        0 to: n - 1 do: [:j |
+          (i <> j and: [(random next abs % divisor) = 0]) ifTrue: [
+            pages at: (i * n + j) + 1 put: 1.
+            outLinks at: i + 1 put: (outLinks at: i + 1) + 1
           ]
-        ] ]
-      ifFalse: [
-        ^ self checkBasedOnFirstResult: pageRanks inner: innerIterations
-      ].
-    ^ true
-  )
-  
-  checkBasedOnFirstResult: pageRanks inner: innerIterations = (
-    pageRanks length = innerIterations ifFalse: [ ^ false ].
+        ].
 
-    firstResult == nil ifTrue: [
-      firstResult := pageRanks.
-      ^ true
-    ] ifFalse: [
-      1 to: innerIterations do: [:i |
-        (firstResult at: i) = (pageRanks at: i) ifFalse: [
-          ^ false
+      (* the case with no outlinks is afunctioned *)
+      (outLinks at: i + 1) = 0 ifTrue: [
+          | k |
+          k := random next abs % n.
+          [i = k] whileTrue: [
+            k := random next abs % n.
+          ].
+
+          pages at: (i * n + k) + 1 put: 1.
+          outLinks at: i + 1 put: 1
+        ]
+      ].
+      ^ pages
+    )
+
+    mapPageRanks: pages pageRanks: pageRanks maps: maps outLinks: outLinks n: n = (
+      0 to: n - 1 do: [:i |
+        | outboundRank |
+        outboundRank := (pageRanks at: i + 1) // (outLinks at: i + 1).
+      
+        0 to: n - 1 do: [:j |
+          maps at: (i * n + j) + 1
+              put: ((pages at: (i * n + j) + 1) = 0
+                     ifTrue:  [0.0]
+                     ifFalse: [(pages at: (i * n + j) + 1)  * outboundRank])
         ]
       ]
-    ].
+    )
+
+    reducePageRanks: pageRanks maps: maps n: n = (
+      | dif |
+      dif := 0.0.
+
+      0 to: n - 1 do: [:j |
+        | oldRank newRank |
+        oldRank := pageRanks at: j + 1.
+        newRank := 0.0.
+      
+        0 to: n - 1 do: [:i |
+          newRank := newRank + (maps at: (i * n + j) + 1)
+        ].
+
+        newRank := ((1 - DFactor) // n) + (DFactor * newRank).
+        dif := (newRank - oldRank) abs > dif
+                 ifTrue: [(newRank - oldRank) abs] ifFalse: [ dif ].
+        pageRanks at: j + 1 put: newRank
+      ].
+      ^ dif
+    )
+
+    public innerBenchmarkLoop: innerIterations = (
+      | random |
+      random := JenkinsRandom new: 49734321.
+      (* standard for verification
+       n := 5000
+       iter    := 10.
+       thresh  := 0.00000001.
+       divisor := 100000. *)
+      ^ self verify: (self runPageRankN: innerIterations iter: 10 thresh: 0.00000001 divisor: 100000 with: random)
+             inner:  innerIterations.
+    )
+
+    runPageRankN: n iter: iter thresh: thresh divisor: divisor with: random = (
+      | nbLinks maxDiff pageRanks maps outLinks t pages |
+      maxDiff   := Double PositiveInfinity.
+      pageRanks := Array new: n     withAll: 1.0 // n.
+      maps      := Array new: n * n withAll: 0.0.
+      outLinks  := Array new: n     withAll: 0.
+
+      pages := self generateRandomPagesN: n outLinks: outLinks divisor: divisor with: random.
+
+      nbLinks := 0.
+      0 to: n - 1 do: [:i |
+        1 to: n do: [:j |
+          nbLinks := nbLinks + (pages at: i * n + j)
+        ]
+      ].
+
+      t := 1.
+      [t <= iter and: [maxDiff >= thresh]] whileTrue: [
+        self mapPageRanks: pages pageRanks: pageRanks maps: maps outLinks: outLinks n: n.
+        maxDiff := self reducePageRanks: pageRanks maps: maps n: n.
+        t := t + 1
+      ].
     
-    ^ true
+      ^ pageRanks
+    )
+  
+    verify: pageRanks inner: innerIterations = (
+      (* and: [iter = 10 and: [thresh = 0.00000001 and: [divisor = 100000]]] *)
+      innerIterations = 5000 
+        ifTrue: [
+          pageRanks size = expectedPageRanks size ifFalse: [
+            self error: 'Invalid size of page_ranks array'
+          ].
+      
+          pageRanks doIndexes: [:i | 
+            (pageRanks at: i) = (expected at: i) ifFalse: [
+              self error: 'ERROR: page_ranks[' + i asString + ']=' +
+                          (pageRanks at: i) + ' differs from the expected value: ' +
+                          (expected at: i)
+            ]
+          ] ]
+        ifFalse: [
+          ^ self checkBasedOnFirstResult: pageRanks inner: innerIterations
+        ].
+      ^ true
+    )
+  
+    checkBasedOnFirstResult: pageRanks inner: innerIterations = (
+      pageRanks size = innerIterations ifFalse: [ ^ false ].
+
+      firstResult == nil ifTrue: [
+        firstResult := pageRanks.
+        ^ true
+      ] ifFalse: [
+        1 to: innerIterations do: [:i |
+          (firstResult at: i) = (pageRanks at: i) ifFalse: [
+            ^ false
+          ]
+        ]
+      ].
+    
+      ^ true
+    )
   )
 
-  ----
-  | expected |
-  
-  DFactor = ( ^ 0.85 ) " damping factor"
-  ExpectedPageRanks = (
-    expected ifNotNil: [ ^ expected ].
-    
+  createExpectedPageRanks = (
+    | expected |
     expected := Vector new: 5000.
     expected,
        0.00005550000000000001, 0.000030000000000000004, 0.000030000000000000004,
@@ -1839,7 +1844,9 @@ PageRank = Benchmark (
        0.00007717500000000002, 0.00014624509687500003, 0.0009398635399813478,
        0.0014674101670753515, 0.00005550000000000001, 0.000030000000000000004,
        0.000030000000000000004.
-    expected := expected asArray.
-    ^ expected
+    ^ expected asArray.
   )
+  
+  public newInstance = ( ^ PageRank new )
+  public setupVerifiedRun: run = ( run innerIterations: 5000 )  
 )
