@@ -35,8 +35,7 @@ class AllBenchmarks usingPlatform: platform = (
   )
 
   all = (
-    ^ (run: 'Bounce'     numIter: 100),
-      (run: 'Fannkuch'   numIter:   4),
+    ^ (run: 'Fannkuch'   numIter:   4),
       (run: 'List'       numIter: 100),
       (run: 'Mandelbrot' numIter:   1),
       (run: 'Permute'    numIter: 100),
@@ -46,7 +45,31 @@ class AllBenchmarks usingPlatform: platform = (
       (run: 'Towers'     numIter: 100),
       (run: 'BubbleSort' in: 'Sort' numIter: 100),
       (run: 'QuickSort'  in: 'Sort' numIter: 100),
-      (run: 'TreeSort'   in: 'Sort' numIter: 100)
+      (run: 'TreeSort'   in: 'Sort' numIter: 100),
+
+      (run: 'Bounce'      numIter: 100),
+      (run: 'DeltaBlue'   numIter: 100),
+      (run: 'Richards'    numIter: 1),
+      (run: 'GCBench'     numIter: 5),
+      (run: 'Json'        numIter: 1),
+      (run: 'NBody'       numIter: 1),
+
+      (run: 'Fibonacci'            in: 'LanguageFeatures' numIter: 10),
+      (run: 'FieldLoop'            in: 'LanguageFeatures' numIter: 10),
+      (run: 'FieldWrite'           in: 'LanguageFeatures' numIter: 10),
+      (run: 'IntegerLoop'          in: 'LanguageFeatures' numIter: 10),
+      (run: 'Loop'                 in: 'LanguageFeatures' numIter: 10),
+      (run: 'NonLocalReturn'       in: 'LanguageFeatures' numIter: 10),
+      (run: 'Exceptions'           in: 'LanguageFeatures' numIter: 10),
+      (run: 'Recurse'              in: 'LanguageFeatures' numIter: 10),
+      (run: 'Sum'                  in: 'LanguageFeatures' numIter: 10),
+      (run: 'WhileLoop'            in: 'LanguageFeatures' numIter: 10),
+      (run: 'WhileLoopPoly'        in: 'LanguageFeatures' numIter: 10),
+      (run: 'VectorRead'           in: 'LanguageFeatures' numIter: 10),
+      
+      (run: 'Dispatch'             in: 'LanguageFeatures' numIter: 10),
+      (run: 'DispatchNoArg'        in: 'LanguageFeatures' numIter: 10),
+      (run: 'DispatchPerformNoArg' in: 'LanguageFeatures' numIter: 10)
   )
   
   loadModule: name = (
