@@ -78,7 +78,6 @@ import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.interpreter.nodes.MessageSendNode.AbstractUninitializedMessageSendNode;
 import som.interpreter.nodes.OuterObjectRead;
-import som.interpreter.nodes.literals.BigIntegerLiteralNode;
 import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.literals.BlockNode.BlockNodeWithContext;
 import som.interpreter.nodes.literals.BooleanLiteralNode.FalseLiteralNode;
@@ -969,6 +968,7 @@ public final class Parser {
 
     SourceSection source = getSource(coord);
 
+    if (false) {
     if (msg.getNumberOfSignatureArguments() == 2) {
       if (arguments.get(1) instanceof LiteralNode) {
         if ("ifTrue:".equals(msgStr)) {
@@ -1012,6 +1012,8 @@ public final class Parser {
         return IntToDoInlinedLiteralsNodeGen.create(inlinedBody, loopIdx.getSlot(),
             arguments.get(2), source, arguments.get(0), arguments.get(1));
       }
+    }
+    }
 
     ExpressionNode[] args = arguments.toArray(new ExpressionNode[0]);
     if (explicitRcvr) {
