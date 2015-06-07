@@ -37,6 +37,7 @@ import som.primitives.IntegerPrimsFactory.LeftShiftPrimFactory;
 import som.primitives.IntegerPrimsFactory.ToPrimFactory;
 import som.primitives.IntegerPrimsFactory.UnsignedRightShiftPrimFactory;
 import som.primitives.MethodPrimsFactory.InvokeOnPrimFactory;
+import som.primitives.SizeAndLengthPrimFactory;
 import som.primitives.UnequalsPrimFactory;
 import som.primitives.arithmetic.AdditionPrimFactory;
 import som.primitives.arithmetic.DividePrimFactory;
@@ -49,7 +50,6 @@ import som.primitives.arithmetic.MultiplicationPrimFactory;
 import som.primitives.arithmetic.RemainderPrimFactory;
 import som.primitives.arithmetic.SubtractionPrimFactory;
 import som.primitives.arrays.AtPrimFactory;
-import som.primitives.SizeAndLengthPrimFactory;
 import som.primitives.arrays.AtPutPrimFactory;
 import som.primitives.arrays.DoIndexesPrimFactory;
 import som.primitives.arrays.DoPrimFactory;
@@ -200,7 +200,7 @@ public final class MessageSendNode {
       Object receiver = args[0];
       switch (selector.getString()) {
         // eagerly but cautious:
-        case "length":
+        case "size":
           if (receiver instanceof SArray) {
             return replace(new EagerUnaryPrimitiveNode(selector,
                 argumentNodes[0], SizeAndLengthPrimFactory.create(null)));
