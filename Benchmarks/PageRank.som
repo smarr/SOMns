@@ -120,7 +120,9 @@ class PageRankSuite usingPlatform: platform andHarness: harness = (
       (* and: [iter = 10 and: [thresh = 0.00000001 and: [divisor = 100000]]] *)
       innerIterations = 5000 
         ifTrue: [
-          pageRanks size = expectedPageRanks size ifFalse: [
+          | expected |
+          expected := expectedPageRanks.
+          pageRanks size = expected size ifFalse: [
             self error: 'Invalid size of page_ranks array'
           ].
       
