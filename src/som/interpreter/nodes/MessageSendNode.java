@@ -367,10 +367,11 @@ public final class MessageSendNode {
           return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
               argumentNodes[1],
               UnequalsPrimFactory.create(null, null)));
-        case "~=":
-          return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
-              argumentNodes[1],
-              UnequalsPrimFactory.create(null, null)));
+// TODO: this is not a correct primitive, new an UnequalsUnequalsPrim...
+//        case "~=":
+//          return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
+//              argumentNodes[1],
+//              UnequalsPrimFactory.create(null, null)));
         case "==":
           return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
               argumentNodes[1],
