@@ -91,9 +91,12 @@ public final class MessageSendNode {
 
   public static GenericMessageSendNode createGeneric(final SSymbol selector,
       final ExpressionNode[] argumentNodes, final SourceSection source) {
-    throw new NotYetImplementedException();
-//    return new GenericMessageSendNode(selector, argumentNodes,
-//      new UninitializedDispatchNode(selector), source);
+    if (argumentNodes[0] instanceof ISpecialSend) {
+      throw new NotYetImplementedException();
+    } else {
+      return new GenericMessageSendNode(selector, argumentNodes,
+          new UninitializedDispatchNode(selector, AccessModifier.PUBLIC), source);
+    }
   }
 
   public abstract static class AbstractMessageSendNode extends ExpressionNode
