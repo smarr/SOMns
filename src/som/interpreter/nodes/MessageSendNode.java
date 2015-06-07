@@ -398,9 +398,9 @@ public final class MessageSendNode {
         case "&":
           return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
               argumentNodes[1],
+              BitAndPrimFactory.create(null, null)));
 
         // eagerly but cautious:
-              BitAndPrimFactory.create(null, null)));
         case "<<":
           if (arguments[0] instanceof Long) {
             return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
