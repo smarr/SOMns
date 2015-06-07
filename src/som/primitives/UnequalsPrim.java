@@ -3,7 +3,9 @@ package som.primitives;
 import java.math.BigInteger;
 
 import som.interpreter.nodes.nary.BinaryExpressionNode;
+import som.vm.constants.Nil;
 import som.vmobjects.SObject;
+import som.vmobjects.SObjectWithoutFields;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
@@ -40,6 +42,15 @@ public abstract class UnequalsPrim extends BinaryExpressionNode {
 
   @Specialization
   public final boolean doSSymbol(final SSymbol left, final SSymbol right) {
+    return left != right;
+  }
+
+  public static final boolean isNil(final SObjectWithoutFields obj) {
+    return obj == Nil.nilObject;
+  }
+
+  @Specialization(guards = "isNil(left)")
+  public final boolean isNil(final SObjectWithoutFields left, final Object right) {
     return left != right;
   }
 

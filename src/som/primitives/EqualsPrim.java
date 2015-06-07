@@ -49,7 +49,7 @@ public abstract class EqualsPrim extends BinaryExpressionNode {
   }
 
   @Specialization(guards = "isNil(left)")
-  public final boolean isNil(final SObjectWithoutFields left, final SObjectWithoutFields right) {
+  public final boolean isNil(final SObjectWithoutFields left, final Object right) {
     return left == right;
   }
 
