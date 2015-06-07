@@ -1,0 +1,152 @@
+class GraphSearchSuite usingPlatform: platform andHarness: harness = (
+| private Benchmark       = harness Benchmark.
+  private Array           = platform kernel Array.
+  private Vector          = platform kernel Vector.
+  private JenkinsRandom   = harness JenkinsRandom.
+  private MinNodes = 20.
+  private MaxNodes = 1 << 31.
+  private MinEdges = 2.
+  private MaxInitEdges = 4.
+  private MinWeight = 1.
+  private MaxWeight = 1.
+  
+  private ExpectedNoOfNodes = 3000000.
+  private ExpectedTotalCost = 26321966.
+|
+)(
+  class GraphSearch = Benchmark (
+  | graphNodes graphMask updatingGraphMask graphVisited cost graphEdges k firstCost |
+  )(
+    initializeGraph: noOfNodes with: random = (
+      | source graph totalEdges |
+      graphNodes        := Array new: noOfNodes.
+      graphMask         := Array new: noOfNodes withAll: false.
+      updatingGraphMask := Array new: noOfNodes withAll: false.
+      graphVisited      := Array new: noOfNodes withAll: false.
+      cost              := Array new: noOfNodes withAll: -1.
+
+      source := 1.
+
+      graph := Array new: noOfNodes withAll: [Vector new].
+
+      graph doIndexes: [:i |
+        | noOfEdges |
+        noOfEdges := (random next
+                         rem: MaxInitEdges - MinEdges + 1) abs + MinEdges.
+        1 to: noOfEdges do: [:j |
+          | nodeId weight |
+          nodeId := (random next rem: noOfNodes) abs + 1.
+          weight := (random next rem: (MaxWeight - MinWeight + 1)) abs + MinWeight.
+          (graph at: i)      append: (Edge newWith: nodeId and: weight).
+          (graph at: nodeId) append: (Edge newWith:      i and: weight).
+        ]
+      ].
+
+      totalEdges := 0.
+      graph doIndexes: [:i |
+        | noOfEdges |
+        noOfEdges := (graph at: i) size.
+        graphNodes at: i put: (Node newWith: totalEdges + 1 and: noOfEdges).
+        totalEdges := totalEdges + noOfEdges
+      ].
+
+      graphMask    at: source put: true.
+      graphVisited at: source put: true.
+
+      graphEdges := Array new: totalEdges withAll: 0.
+    
+      k := 1.
+      graph do: [:i |
+        i do: [:j |
+          graphEdges at: k put: j dest.
+          k := k + 1.
+        ]
+      ].
+      cost at: source put: 0.
+    )
+
+    public innerBenchmarkLoop: innerIterations = (
+      | noOfNodes random |
+      random := JenkinsRandom new: 49734321.
+      noOfNodes := ExpectedNoOfNodes / 1000 * innerIterations.
+
+      self initializeGraph: noOfNodes with: random.
+      self breadthFirstSearch: noOfNodes.
+      ^ self verify: cost inner: innerIterations
+    )
+
+    breadthFirstSearch: noOfNodes = (
+      | stop |
+      stop := true.
+      [stop] whileTrue: [
+        stop := false.
+      
+        1 to: noOfNodes do: [:tid |
+          (graphMask at: tid) ifTrue: [
+            graphMask at: tid put: false.
+            (graphNodes at: tid) starting 
+                to: ((graphNodes at: tid) noOfEdges + (graphNodes at: tid) starting) - 1
+                do: [:i |
+              | id |
+              id := graphEdges at: i.
+              (graphVisited at: id) ifFalse: [
+                cost at: id put: (cost at: tid) + 1.
+                updatingGraphMask at: id put: true.
+              ]
+            ]
+          ]
+        ].
+      
+        1 to: noOfNodes do: [:tid |
+          (updatingGraphMask at: tid) ifTrue: [
+            graphMask    at: tid put: true.
+            graphVisited at: tid put: true.
+            stop := true.
+            updatingGraphMask at: tid put: false
+          ]
+        ]
+      ]
+    )
+
+    verify: result inner: innerIterations = (
+      | totalCost |
+      cost size = (ExpectedNoOfNodes / 1000 * innerIterations)
+        ifFalse: [ ^ false ].
+
+      totalCost := 0.    
+      cost do: [:c | totalCost := totalCost + c].
+
+      cost size = ExpectedNoOfNodes
+        ifTrue:  [
+          totalCost = ExpectedTotalCost ifFalse: [
+            self error: 'ERROR: the total cost obtained for ' + cost size asString
+                + ' nodes is ' + totalCost asString + ' while the expected cost is '
+                + ExpectedTotalCost 
+          ]]
+        ifFalse: [
+          firstCost = nil
+            ifTrue: [
+              firstCost := totalCost.
+              ^ true ]
+            ifFalse: [
+              ^ firstCost = totalCost
+            ]
+        ].
+
+      ^ true
+    )
+  )
+  
+  class Edge newWith: dest and: weight = (
+    | public dest   = dest.
+      public weight = weight. |
+  )()
+  
+  class Node newWith: starting and: noOfEdges = (
+    | public starting  = starting.
+      public noOfEdges = noOfEdges. |
+  )()
+
+  public newInstance = ( ^ GraphSearch new )
+  public setupVerifiedRun: run = ( run innerIterations: 1000 )
+)
