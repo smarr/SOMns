@@ -8,6 +8,7 @@ import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 /**
@@ -31,6 +32,7 @@ public abstract class SuperDispatchNode extends AbstractDispatchNode {
 
     private UninitializedDispatchNode(final SSymbol selector,
         final ClassDefinitionId holderClass, final boolean classSide) {
+      CompilerAsserts.neverPartOfCompilation();
       this.selector    = selector;
       this.holderClass = holderClass;
       this.classSide   = classSide;
@@ -51,6 +53,8 @@ public abstract class SuperDispatchNode extends AbstractDispatchNode {
       // TODO: misses the handling of chain length!!!
 
       CompilerAsserts.neverPartOfCompilation("SuperDispatchNode.create2");
+      CompilerDirectives.transferToInterpreter();
+
       // TODO: integrate this with the normal specialization code, to reuse the DNU handling
       SClass rcvrClass = Types.getClassOf(rcvr);
       Dispatchable disp = getSuperClass(rcvrClass).lookupMessage(
@@ -72,6 +76,7 @@ public abstract class SuperDispatchNode extends AbstractDispatchNode {
     @Override
     public Object executeDispatch(
         final VirtualFrame frame, final Object[] arguments) {
+      CompilerAsserts.neverPartOfCompilation();
       return specialize(arguments[0]).
           executeDispatch(frame, arguments);
     }
