@@ -24,8 +24,6 @@
 
 package som.vmobjects;
 
-import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
-
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -47,9 +45,7 @@ import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.NodeFieldAccessor;
 import com.oracle.truffle.api.nodes.NodeUtil.FieldOffsetProvider;
 
-public class SObject extends SAbstractObject {
-
-  @CompilationFinal protected SClass clazz;
+public class SObject extends SObjectWithoutFields {
 
   public static final int NUM_PRIMITIVE_FIELDS = 5;
   public static final int NUM_OBJECT_FIELDS    = 5;
@@ -78,8 +74,8 @@ public class SObject extends SAbstractObject {
   private int numberOfFields;
 
   public SObject(final SClass instanceClass) {
+    super(instanceClass);
     numberOfFields = instanceClass.getNumberOfInstanceFields();
-    clazz          = instanceClass;
     setLayoutInitially(instanceClass.getLayoutForInstances());
   }
 
@@ -117,11 +113,9 @@ public class SObject extends SAbstractObject {
     return extensionObjFields;
   }
 
+  @Override
   public final void setClass(final SClass value) {
-    transferToInterpreterAndInvalidate("SObject.setClass");
-    assert value != null;
-
-    clazz = value;
+    super.setClass(value);
     setLayoutInitially(value.getLayoutForInstances());
   }
 
@@ -210,11 +204,6 @@ public class SObject extends SAbstractObject {
     assert layout.getNumberOfFields() == numberOfFields;
 
     setLayoutAndTransferFields(layout);
-  }
-
-  @Override
-  public final SClass getSOMClass() {
-    return clazz;
   }
 
   private static final long FIRST_OBJECT_FIELD_OFFSET = getFirstObjectFieldOffset();
