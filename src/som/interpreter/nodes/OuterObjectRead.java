@@ -9,6 +9,7 @@ import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.source.SourceSection;
+import com.oracle.truffle.api.utilities.ValueProfile;
 
 @NodeChild(value = "receiver", type = ExpressionNode.class)
 public abstract class OuterObjectRead
@@ -18,6 +19,9 @@ public abstract class OuterObjectRead
   private final ClassDefinitionId classDefId;
   private final ClassDefinitionId enclosingLexicalClassId;
 
+  private final ValueProfile rcvrType;
+  private final ValueProfile outerType;
+
   public OuterObjectRead(final int contextLevel,
       final ClassDefinitionId classDefId,
       final ClassDefinitionId enclosingLexicalClassId,
@@ -26,6 +30,8 @@ public abstract class OuterObjectRead
     this.contextLevel = contextLevel;
     this.classDefId = classDefId;
     this.enclosingLexicalClassId = enclosingLexicalClassId;
+    this.rcvrType  = ValueProfile.createClassProfile();
+    this.outerType = ValueProfile.createClassProfile();
   }
 
   public ClassDefinitionId getClassId() {
@@ -62,13 +68,13 @@ public abstract class OuterObjectRead
       return receiver;
     }
 
-    SClass cls = receiver.getSOMClass().getClassCorrespondingTo(classDefId);
+    SClass cls = rcvrType.profile(receiver).getSOMClass().getClassCorrespondingTo(classDefId);
     int ctxLevel = contextLevel - 1;
     SAbstractObject enclosing = cls.getEnclosingObject();
 
     while (ctxLevel > 0) {
       ctxLevel--;
-      enclosing = enclosing.getSOMClass().getEnclosingObject();
+      enclosing = outerType.profile(enclosing).getSOMClass().getEnclosingObject();
     }
     return enclosing;
   }
