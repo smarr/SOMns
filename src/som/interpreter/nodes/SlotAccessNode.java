@@ -9,6 +9,8 @@ import som.vm.constants.Nil;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject;
 
+import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
@@ -84,12 +86,18 @@ public abstract class SlotAccessNode extends ExpressionNode {
       }
     }
 
+    private void createClassInstantiationCallTarget() {
+      CompilerAsserts.neverPartOfCompilation();
+      Invokable invokable = classDefinition.getSuperclassResolutionInvokable();
+      classObjectInstantiation = insert(Truffle.getRuntime().createDirectCallNode(
+          invokable.createCallTarget()));
+    }
+
     private SClass instantiateClassObject(final VirtualFrame frame,
         final SObject rcvr) {
       if (classObjectInstantiation == null) {
-        Invokable invokable = classDefinition.getSuperclassResolutionInvokable();
-        classObjectInstantiation = Truffle.getRuntime().createDirectCallNode(
-            invokable.createCallTarget());
+        CompilerDirectives.transferToInterpreterAndInvalidate();
+        createClassInstantiationCallTarget();
       }
 
       SClass superClass = (SClass) classObjectInstantiation.call(frame,
