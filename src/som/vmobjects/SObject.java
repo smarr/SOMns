@@ -35,7 +35,6 @@ import som.interpreter.objectstorage.StorageLocation;
 import som.interpreter.objectstorage.StorageLocation.AbstractObjectStorageLocation;
 import som.interpreter.objectstorage.StorageLocation.GeneralizeStorageLocationException;
 import som.interpreter.objectstorage.StorageLocation.UninitalizedStorageLocationException;
-import som.vm.Bootstrap;
 import som.vm.constants.Nil;
 
 import com.oracle.truffle.api.CompilerAsserts;
@@ -71,32 +70,21 @@ public class SObject extends SObjectWithoutFields {
 
   private int primitiveUsedMap;
 
-  private int numberOfFields;
-
   public SObject(final SClass instanceClass) {
     super(instanceClass);
-    numberOfFields = instanceClass.getNumberOfInstanceFields();
     setLayoutInitially(instanceClass.getLayoutForInstances());
   }
 
   public SObject(final boolean incompleteDefinition) {
     assert incompleteDefinition; // used during bootstrap
-    numberOfFields = -1;
   }
 
   private void setLayoutInitially(final ObjectLayout layout) {
     field1 = field2 = field3 = field4 = field5 = Nil.nilObject;
 
     objectLayout   = layout;
-    assert objectLayout.getNumberOfFields() == numberOfFields || !Bootstrap.isObjectSystemInitialized();
-    numberOfFields = objectLayout.getNumberOfFields();
-
     extensionPrimFields = getExtendedPrimStorage();
     extensionObjFields  = getExtendedObjectStorage();
-  }
-
-  public final int getNumberOfFields() {
-    return numberOfFields;
   }
 
   public final ObjectLayout getObjectLayout() {
@@ -133,8 +121,8 @@ public class SObject extends SObjectWithoutFields {
   private HashMap<SlotDefinition, Object> getAllFields() {
     assert objectLayout != null;
 
-    HashMap<SlotDefinition, Object> fieldValues = new HashMap<>((int) (numberOfFields / 0.75f));
     HashMap<SlotDefinition, StorageLocation> locations = objectLayout.getStorageLocations();
+    HashMap<SlotDefinition, Object> fieldValues = new HashMap<>((int) (locations.size() / 0.75f));
 
     for (Entry<SlotDefinition, StorageLocation> loc : locations.entrySet()) {
       if (loc.getValue().isSet(this, true)) {
@@ -151,8 +139,6 @@ public class SObject extends SObjectWithoutFields {
     field1 = field2 = field3 = field4 = field5 = null;
     primField1 = primField2 = primField3 = primField4 = primField5 = Long.MIN_VALUE;
 
-    assert fieldValues.size() == numberOfFields;
-
     for (Entry<SlotDefinition, Object> entry : fieldValues.entrySet()) {
       if (entry.getValue() != null) {
         setField(entry.getKey(), entry.getValue());
@@ -164,7 +150,6 @@ public class SObject extends SObjectWithoutFields {
 
   public final boolean updateLayoutToMatchClass() {
     ObjectLayout layoutAtClass = clazz.getLayoutForInstances();
-    assert layoutAtClass.getNumberOfFields() == numberOfFields;
 
     if (objectLayout != layoutAtClass) {
       setLayoutAndTransferFields(layoutAtClass);
@@ -190,10 +175,7 @@ public class SObject extends SObjectWithoutFields {
 
   protected final void updateLayoutWithInitializedField(final SlotDefinition slot, final Class<?> type) {
     ObjectLayout layout = clazz.updateInstanceLayoutWithInitializedField(slot, type);
-
     assert objectLayout != layout;
-    assert layout.getNumberOfFields() == numberOfFields;
-
     setLayoutAndTransferFields(layout);
   }
 
@@ -201,8 +183,6 @@ public class SObject extends SObjectWithoutFields {
     ObjectLayout layout = clazz.updateInstanceLayoutWithGeneralizedField(slot);
 
     assert objectLayout != layout;
-    assert layout.getNumberOfFields() == numberOfFields;
-
     setLayoutAndTransferFields(layout);
   }
 
