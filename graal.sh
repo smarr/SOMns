@@ -27,4 +27,4 @@ fi
 
 $GRAAL_HOME/mxtool/mx $GRAAL_DEBUG_SWITCH --vm server vm $GRAAL_FLAGS \
    -Xbootclasspath/a:build/classes:libs/truffle.jar \
-   som.vm.Universe "$@"
+   som.VM --platform core-lib/Platform.som "$@"
