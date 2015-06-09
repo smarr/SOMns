@@ -44,22 +44,51 @@ import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.NodeFieldAccessor;
 import com.oracle.truffle.api.nodes.NodeUtil.FieldOffsetProvider;
 
-public class SObject extends SObjectWithoutFields {
+public abstract class SObject extends SObjectWithoutFields {
 
   public static final int NUM_PRIMITIVE_FIELDS = 5;
   public static final int NUM_OBJECT_FIELDS    = 5;
 
-  @SuppressWarnings("unused")  private long   primField1;
-  @SuppressWarnings("unused")  private long   primField2;
-  @SuppressWarnings("unused")  private long   primField3;
-  @SuppressWarnings("unused")  private long   primField4;
-  @SuppressWarnings("unused")  private long   primField5;
+  public final class SImmutableObject extends SObject {
+    @CompilationFinal
+    @SuppressWarnings("unused")  private long   primField1;
+    @CompilationFinal
+    @SuppressWarnings("unused")  private long   primField2;
+    @CompilationFinal
+    @SuppressWarnings("unused")  private long   primField3;
+    @CompilationFinal
+    @SuppressWarnings("unused")  private long   primField4;
+    @CompilationFinal
+    @SuppressWarnings("unused")  private long   primField5;
 
-  @SuppressWarnings("unused")  private Object field1;
-  @SuppressWarnings("unused")  private Object field2;
-  @SuppressWarnings("unused")  private Object field3;
-  @SuppressWarnings("unused")  private Object field4;
-  @SuppressWarnings("unused")  private Object field5;
+    @CompilationFinal
+    @SuppressWarnings("unused")  private Object field1;
+    @CompilationFinal
+    @SuppressWarnings("unused")  private Object field2;
+    @CompilationFinal
+    @SuppressWarnings("unused")  private Object field3;
+    @CompilationFinal
+    @SuppressWarnings("unused")  private Object field4;
+    @CompilationFinal
+    @SuppressWarnings("unused")  private Object field5;
+  }
+
+  public final class SMutableObject extends SObject {
+    @SuppressWarnings("unused")  private long   primField1;
+    @SuppressWarnings("unused")  private long   primField2;
+    @SuppressWarnings("unused")  private long   primField3;
+    @SuppressWarnings("unused")  private long   primField4;
+    @SuppressWarnings("unused")  private long   primField5;
+
+    @SuppressWarnings("unused")  private Object field1;
+    @SuppressWarnings("unused")  private Object field2;
+    @SuppressWarnings("unused")  private Object field3;
+    @SuppressWarnings("unused")  private Object field4;
+    @SuppressWarnings("unused")  private Object field5;
+
+    private int primitiveUsedMap;
+
+  }
 
   @SuppressWarnings("unused") @CompilationFinal private long[]   extensionPrimFields;
   @SuppressWarnings("unused") @CompilationFinal private Object[] extensionObjFields;
@@ -68,7 +97,6 @@ public class SObject extends SObjectWithoutFields {
   // to know in case the layout changed that we can update the instances lazily
   @CompilationFinal private ObjectLayout objectLayout;
 
-  private int primitiveUsedMap;
 
   public SObject(final SClass instanceClass) {
     super(instanceClass);
