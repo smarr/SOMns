@@ -19,8 +19,7 @@ public abstract class OuterObjectRead
   private final ClassDefinitionId classDefId;
   private final ClassDefinitionId enclosingLexicalClassId;
 
-  private final ValueProfile rcvrType;
-  private final ValueProfile outerType;
+  private final ValueProfile enclosingObj;
 
   public OuterObjectRead(final int contextLevel,
       final ClassDefinitionId classDefId,
@@ -30,8 +29,7 @@ public abstract class OuterObjectRead
     this.contextLevel = contextLevel;
     this.classDefId = classDefId;
     this.enclosingLexicalClassId = enclosingLexicalClassId;
-    this.rcvrType  = ValueProfile.createClassProfile();
-    this.outerType = ValueProfile.createClassProfile();
+    this.enclosingObj = ValueProfile.createIdentityProfile();
   }
 
   public ClassDefinitionId getClassId() {
@@ -65,17 +63,17 @@ public abstract class OuterObjectRead
   @ExplodeLoop
   private Object getEnclosingObject(final SObjectWithoutFields receiver) {
     if (contextLevel == 0) {
-      return receiver;
+      return enclosingObj.profile(receiver);
     }
 
-    SClass cls = rcvrType.profile(receiver).getSOMClass().getClassCorrespondingTo(classDefId);
+    SClass cls = receiver.getSOMClass().getClassCorrespondingTo(classDefId);
     int ctxLevel = contextLevel - 1;
     SObjectWithoutFields enclosing = cls.getEnclosingObject();
 
     while (ctxLevel > 0) {
       ctxLevel--;
-      enclosing = outerType.profile(enclosing).getSOMClass().getEnclosingObject();
+      enclosing = enclosing.getSOMClass().getEnclosingObject();
     }
-    return enclosing;
+    return enclosingObj.profile(enclosing);
   }
 }
