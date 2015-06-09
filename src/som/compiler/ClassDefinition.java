@@ -17,6 +17,8 @@ import som.interpreter.nodes.SlotAccessNode.SlotWriteNode;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
 import som.interpreter.nodes.dispatch.CachedSlotAccessNode;
 import som.interpreter.nodes.dispatch.CachedSlotAccessNode.CachedSlotWriteNode;
+import som.interpreter.nodes.dispatch.CachedSlotAccessNode.CheckedCachedSlotAccessNode;
+import som.interpreter.nodes.dispatch.CachedSlotAccessNode.CheckedCachedSlotWriteNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.objectstorage.FieldAccessorNode.AbstractWriteFieldNode;
 import som.interpreter.objectstorage.FieldAccessorNode.UninitializedReadFieldNode;
@@ -188,7 +190,11 @@ public final class ClassDefinition {
     public AbstractDispatchNode getDispatchNode(final Object rcvr,
         final Object rcvrClass, final AbstractDispatchNode next) {
       assert rcvrClass instanceof SClass;
-      return new CachedSlotAccessNode((SClass) rcvrClass, createNode(), next);
+      if (modifier == AccessModifier.PRIVATE) {
+        return new CachedSlotAccessNode(createNode());
+      } else {
+        return new CheckedCachedSlotAccessNode((SClass) rcvrClass, createNode(), next);
+      }
     }
 
     @Override
@@ -252,7 +258,11 @@ public final class ClassDefinition {
     public AbstractDispatchNode getDispatchNode(final Object rcvr,
         final Object rcvrClass, final AbstractDispatchNode next) {
       assert rcvrClass instanceof SClass;
-      return new CachedSlotWriteNode((SClass) rcvrClass, createWriteNode(), next);
+      if (modifier == AccessModifier.PRIVATE) {
+        return new CachedSlotWriteNode(createWriteNode());
+      } else {
+        return new CheckedCachedSlotWriteNode((SClass) rcvrClass, createWriteNode(), next);
+      }
     }
 
     @Override

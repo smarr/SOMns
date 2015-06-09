@@ -35,6 +35,7 @@ import som.interpreter.nodes.dispatch.CachedDispatchSimpleCheckNode;
 import som.interpreter.nodes.dispatch.CachedDispatchSimpleCheckNode.CachedDispatchFalseCheckNode;
 import som.interpreter.nodes.dispatch.CachedDispatchSimpleCheckNode.CachedDispatchTrueCheckNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
+import som.interpreter.nodes.dispatch.PrivateStaticBoundDispatchNode;
 import som.vm.constants.Classes;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
@@ -136,6 +137,11 @@ public final class SInvokable extends SAbstractObject implements Dispatchable {
   @Override
   public AbstractDispatchNode getDispatchNode(final Object rcvr,
       final Object rcvrClass, final AbstractDispatchNode next) {
+    // In case it's a private method, it is directly linked and doesn't need guards
+    if (accessModifier == AccessModifier.PRIVATE) {
+      return new PrivateStaticBoundDispatchNode(callTarget);
+    }
+
     if (rcvrClass instanceof SClass) {
       return new CachedDispatchSObjectCheckNode(
           (SClass) rcvrClass, callTarget, next);

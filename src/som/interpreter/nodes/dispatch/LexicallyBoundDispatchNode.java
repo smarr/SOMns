@@ -47,7 +47,7 @@ public final class LexicallyBoundDispatchNode extends AbstractDispatchWithLookup
       Dispatchable dispatchable = rcvrClass.lookupPrivate(selector, classForPrivateLookup);
 
       if (dispatchable != null && dispatchable.getAccessModifier() == AccessModifier.PRIVATE) {
-        System.out.println("TODO: We might replace the whole dispatch chain, and link this unconditionally");
+        return replace(dispatchable.getDispatchNode(rcvr, rcvrClass, null));
       }
 
       LexicallyBoundDispatchNode newChainEnd = new LexicallyBoundDispatchNode(
