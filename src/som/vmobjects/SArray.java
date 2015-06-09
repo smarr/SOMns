@@ -5,6 +5,8 @@ import java.util.Arrays;
 import som.vm.constants.Classes;
 import som.vm.constants.Nil;
 
+import com.oracle.truffle.api.utilities.ValueProfile;
+
 /**
  * SArrays are implemented using a Strategy-like approach.
  * The SArray objects are 'tagged' with a type, and the strategy behavior
@@ -42,34 +44,34 @@ public final class SArray extends SAbstractObject {
     return type;
   }
 
-  public int getEmptyStorage() {
+  public int getEmptyStorage(final ValueProfile storageType) {
     assert type == ArrayType.EMPTY;
-    return (int) storage;
+    return (int) storageType.profile(storage);
   }
 
-  public PartiallyEmptyArray getPartiallyEmptyStorage() {
+  public PartiallyEmptyArray getPartiallyEmptyStorage(final ValueProfile storageType) {
     assert type == ArrayType.PARTIAL_EMPTY;
-    return (PartiallyEmptyArray) storage;
+    return (PartiallyEmptyArray) storageType.profile(storage);
   }
 
-  public Object[] getObjectStorage() {
+  public Object[] getObjectStorage(final ValueProfile storageType) {
     assert type == ArrayType.OBJECT;
-    return (Object[]) storage;
+    return (Object[]) storageType.profile(storage);
   }
 
-  public long[] getLongStorage() {
+  public long[] getLongStorage(final ValueProfile storageType) {
     assert type == ArrayType.LONG;
-    return (long[]) storage;
+    return (long[]) storageType.profile(storage);
   }
 
-  public double[] getDoubleStorage() {
+  public double[] getDoubleStorage(final ValueProfile storageType) {
     assert type == ArrayType.DOUBLE;
-    return (double[]) storage;
+    return (double[]) storageType.profile(storage);
   }
 
-  public boolean[] getBooleanStorage() {
+  public boolean[] getBooleanStorage(final ValueProfile storageType) {
     assert type == ArrayType.BOOLEAN;
-    return (boolean[]) storage;
+    return (boolean[]) storageType.profile(storage);
   }
 
   /**
@@ -225,8 +227,10 @@ public final class SArray extends SAbstractObject {
     return storage;
   }
 
+  private static final ValueProfile storageType = ValueProfile.createClassProfile();
+
   public void ifFullTransitionPartiallyEmpty() {
-    PartiallyEmptyArray arr = getPartiallyEmptyStorage();
+    PartiallyEmptyArray arr = getPartiallyEmptyStorage(storageType);
 
     if (arr.isFull()) {
       if (arr.getType() == ArrayType.LONG) {
@@ -300,6 +304,8 @@ public final class SArray extends SAbstractObject {
     }
   }
 
+  private static final ValueProfile objectStorageType = ValueProfile.createClassProfile();
+
   /**
    * For internal use only, specifically, for SClass.
    * There we now, it is either empty, or of OBJECT type.
@@ -313,7 +319,7 @@ public final class SArray extends SAbstractObject {
     } else {
       // if this is not true, this method is used in a wrong context
       assert type == ArrayType.OBJECT;
-      Object[] s = getObjectStorage();
+      Object[] s = getObjectStorage(objectStorageType);
       newArr = Arrays.copyOf(s, s.length + 1);
       newArr[s.length] = value;
     }
