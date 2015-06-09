@@ -16,6 +16,7 @@ public final class ObjectLayout {
   private final int primitiveStorageLocationsUsed;
   private final int objectStorageLocationsUsed;
   private final int totalNumberOfStorageLocations;
+  private final boolean onlyImmutableFields;
 
   private final HashMap<SlotDefinition, StorageLocation> storageLocations;
   private final HashMap<SlotDefinition, Class<?>>        storageTypes;
@@ -44,6 +45,8 @@ public final class ObjectLayout {
     int nextFreePrimIdx = 0;
     int nextFreeObjIdx  = 0;
 
+    boolean onlyImmutable = true;
+
     for (Entry<SlotDefinition, Class<?>> entry : knownFieldTypes.entrySet()) {
       StorageLocation storage;
       if (entry.getValue() == Long.class) {
@@ -60,10 +63,16 @@ public final class ObjectLayout {
         storage = new UnwrittenStorageLocation(this);
       }
       storageLocations.put(entry.getKey(), storage);
+      onlyImmutable = onlyImmutable && entry.getKey().isImmutable();
     }
 
     primitiveStorageLocationsUsed = nextFreePrimIdx;
     objectStorageLocationsUsed    = nextFreeObjIdx;
+    onlyImmutableFields           = onlyImmutable;
+  }
+
+  public boolean hasOnlyImmutableFields() {
+    return onlyImmutableFields;
   }
 
   public boolean layoutForSameClass(final ObjectLayout other) {

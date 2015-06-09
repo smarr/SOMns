@@ -44,22 +44,69 @@ import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.NodeFieldAccessor;
 import com.oracle.truffle.api.nodes.NodeUtil.FieldOffsetProvider;
 
-public class SObject extends SObjectWithoutFields {
+public abstract class SObject extends SObjectWithoutFields {
 
   public static final int NUM_PRIMITIVE_FIELDS = 5;
   public static final int NUM_OBJECT_FIELDS    = 5;
 
-  @SuppressWarnings("unused")  private long   primField1;
-  @SuppressWarnings("unused")  private long   primField2;
-  @SuppressWarnings("unused")  private long   primField3;
-  @SuppressWarnings("unused")  private long   primField4;
-  @SuppressWarnings("unused")  private long   primField5;
+  public static final class SImmutableObject extends SObject {
 
-  @SuppressWarnings("unused")  private Object field1;
-  @SuppressWarnings("unused")  private Object field2;
-  @SuppressWarnings("unused")  private Object field3;
-  @SuppressWarnings("unused")  private Object field4;
-  @SuppressWarnings("unused")  private Object field5;
+    public SImmutableObject(final SClass instanceClass) {
+      super(instanceClass);
+      field1 = field2 = field3 = field4 = field5 = Nil.nilObject;
+    }
+
+    public SImmutableObject(final boolean incompleteDefinition) {
+      super(incompleteDefinition);
+    }
+
+    @SuppressWarnings("unused") @CompilationFinal private long   primField1;
+    @SuppressWarnings("unused") @CompilationFinal private long   primField2;
+    @SuppressWarnings("unused") @CompilationFinal private long   primField3;
+    @SuppressWarnings("unused") @CompilationFinal private long   primField4;
+    @SuppressWarnings("unused") @CompilationFinal private long   primField5;
+
+    @SuppressWarnings("unused") @CompilationFinal private Object field1;
+    @SuppressWarnings("unused") @CompilationFinal private Object field2;
+    @SuppressWarnings("unused") @CompilationFinal private Object field3;
+    @SuppressWarnings("unused") @CompilationFinal private Object field4;
+    @SuppressWarnings("unused") @CompilationFinal private Object field5;
+
+    @Override
+    protected void resetFields() {
+      field1 = field2 = field3 = field4 = field5 = null;
+      primField1 = primField2 = primField3 = primField4 = primField5 = Long.MIN_VALUE;
+    }
+  }
+
+  public static final class SMutableObject extends SObject {
+    @SuppressWarnings("unused")  private long   primField1;
+    @SuppressWarnings("unused")  private long   primField2;
+    @SuppressWarnings("unused")  private long   primField3;
+    @SuppressWarnings("unused")  private long   primField4;
+    @SuppressWarnings("unused")  private long   primField5;
+
+    @SuppressWarnings("unused")  private Object field1;
+    @SuppressWarnings("unused")  private Object field2;
+    @SuppressWarnings("unused")  private Object field3;
+    @SuppressWarnings("unused")  private Object field4;
+    @SuppressWarnings("unused")  private Object field5;
+
+    public SMutableObject(final SClass instanceClass) {
+      super(instanceClass);
+      field1 = field2 = field3 = field4 = field5 = Nil.nilObject;
+    }
+
+    public SMutableObject(final boolean incompleteDefinition) {
+      super(incompleteDefinition);
+    }
+
+    @Override
+    protected void resetFields() {
+      field1     = field2     = field3     = field4     = field5     = null;
+      primField1 = primField2 = primField3 = primField4 = primField5 = Long.MIN_VALUE;
+    }
+  }
 
   @SuppressWarnings("unused") @CompilationFinal private long[]   extensionPrimFields;
   @SuppressWarnings("unused") @CompilationFinal private Object[] extensionObjFields;
@@ -67,7 +114,6 @@ public class SObject extends SObjectWithoutFields {
   // we manage the layout entirely in the class, but need to keep a copy here
   // to know in case the layout changed that we can update the instances lazily
   @CompilationFinal private ObjectLayout objectLayout;
-
   private int primitiveUsedMap;
 
   public SObject(final SClass instanceClass) {
@@ -79,9 +125,17 @@ public class SObject extends SObjectWithoutFields {
     assert incompleteDefinition; // used during bootstrap
   }
 
-  private void setLayoutInitially(final ObjectLayout layout) {
-    field1 = field2 = field3 = field4 = field5 = Nil.nilObject;
+  public boolean isPrimitiveSet(final int mask) {
+    return (primitiveUsedMap & mask) != 0;
+  }
 
+  public void markPrimAsSet(final int mask) {
+    primitiveUsedMap |= mask;
+  }
+
+
+
+  private void setLayoutInitially(final ObjectLayout layout) {
     objectLayout   = layout;
     extensionPrimFields = getExtendedPrimStorage();
     extensionObjFields  = getExtendedObjectStorage();
@@ -134,10 +188,12 @@ public class SObject extends SObjectWithoutFields {
     return fieldValues;
   }
 
+  protected abstract void resetFields();
+
   @ExplodeLoop
   private void setAllFields(final HashMap<SlotDefinition, Object> fieldValues) {
-    field1 = field2 = field3 = field4 = field5 = null;
-    primField1 = primField2 = primField3 = primField4 = primField5 = Long.MIN_VALUE;
+    resetFields();
+    primitiveUsedMap = 0;
 
     for (Entry<SlotDefinition, Object> entry : fieldValues.entrySet()) {
       if (entry.getValue() != null) {
@@ -165,8 +221,6 @@ public class SObject extends SObjectWithoutFields {
     HashMap<SlotDefinition, Object> fieldValues = getAllFields();
 
     objectLayout        = layout;
-
-    primitiveUsedMap    = 0;
     extensionPrimFields = getExtendedPrimStorage();
     extensionObjFields  = getExtendedObjectStorage();
 
@@ -204,14 +258,6 @@ public class SObject extends SObjectWithoutFields {
   public static int getPrimitiveFieldMask(final int fieldIndex) {
     assert 0 <= fieldIndex && fieldIndex < 32; // this limits the number of object fields for the moment...
     return 1 << fieldIndex;
-  }
-
-  public final boolean isPrimitiveSet(final int mask) {
-    return (primitiveUsedMap & mask) != 0;
-  }
-
-  public final void markPrimAsSet(final int mask) {
-    primitiveUsedMap |= mask;
   }
 
   private StorageLocation getLocation(final SlotDefinition slot) {
@@ -259,7 +305,7 @@ public class SObject extends SObjectWithoutFields {
     try {
       final FieldOffsetProvider fieldOffsetProvider = getFieldOffsetProvider();
 
-      final Field firstField = SObject.class.getDeclaredField("field1");
+      final Field firstField = SMutableObject.class.getDeclaredField("field1");
       return fieldOffsetProvider.objectFieldOffset(firstField);
     } catch (NoSuchFieldException | IllegalAccessException e) {
       throw new RuntimeException(e);
@@ -271,7 +317,7 @@ public class SObject extends SObjectWithoutFields {
     try {
       final FieldOffsetProvider fieldOffsetProvider = getFieldOffsetProvider();
 
-      final Field firstField = SObject.class.getDeclaredField("primField1");
+      final Field firstField = SMutableObject.class.getDeclaredField("primField1");
       return fieldOffsetProvider.objectFieldOffset(firstField);
     } catch (NoSuchFieldException | IllegalAccessException e) {
       throw new RuntimeException(e);
@@ -312,8 +358,8 @@ public class SObject extends SObjectWithoutFields {
       IllegalAccessException {
     final FieldOffsetProvider fieldOffsetProvider = getFieldOffsetProvider();
 
-    final Field firstField  = SObject.class.getDeclaredField(field1);
-    final Field secondField = SObject.class.getDeclaredField(field2);
+    final Field firstField  = SMutableObject.class.getDeclaredField(field1);
+    final Field secondField = SMutableObject.class.getDeclaredField(field2);
     return fieldOffsetProvider.objectFieldOffset(secondField) - fieldOffsetProvider.objectFieldOffset(firstField);
   }
 }

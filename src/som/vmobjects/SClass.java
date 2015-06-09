@@ -197,6 +197,10 @@ public final class SClass extends SObjectWithoutFields {
     return layoutForInstances.getNumberOfFields() > 0;
   }
 
+  public boolean hasOnlyImmutableFields() {
+    return layoutForInstances.hasOnlyImmutableFields();
+  }
+
   public int getNumberOfInstanceFields() {
     return (layoutForInstances == null) ? 0 : layoutForInstances.getNumberOfFields();
   }

@@ -1,6 +1,6 @@
 package som.vm.constants;
 
-import som.vmobjects.SObject;
+import som.vmobjects.SObject.SImmutableObject;
 
 
 // TODO: this was orignially a lazy hack to pass the enclosing object to Objects
@@ -9,5 +9,5 @@ import som.vmobjects.SObject;
 public final class KernelObj {
   private KernelObj() { }
 
-  public static final SObject kernel = new SObject(true);
+  public static final SImmutableObject kernel = new SImmutableObject(true);
 }

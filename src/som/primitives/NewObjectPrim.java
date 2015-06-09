@@ -5,7 +5,8 @@ import som.interpreter.nodes.ISpecialSend;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
-import som.vmobjects.SObject;
+import som.vmobjects.SObject.SImmutableObject;
+import som.vmobjects.SObject.SMutableObject;
 import som.vmobjects.SObjectWithoutFields;
 
 import com.oracle.truffle.api.dsl.Specialization;
@@ -32,9 +33,14 @@ public abstract class NewObjectPrim extends UnaryExpressionNode implements ISpec
   @Override
   public boolean isSuperSend() { return false; }
 
-  @Specialization(guards = "receiver.hasFields()")
+  @Specialization(guards = {"receiver.hasFields()", "receiver.hasOnlyImmutableFields()" })
+  public final SAbstractObject doClassWithOnlyImmutableFields(final SClass receiver) {
+    return new SImmutableObject(receiver);
+  }
+
+  @Specialization(guards = {"receiver.hasFields()", "!receiver.hasOnlyImmutableFields()" })
   public final SAbstractObject doClassWithFields(final SClass receiver) {
-    return new SObject(receiver);
+    return new SMutableObject(receiver);
   }
 
   @Specialization(guards = "!receiver.hasFields()")
