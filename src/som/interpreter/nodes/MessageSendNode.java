@@ -162,30 +162,23 @@ public final class MessageSendNode {
     private PreevaluatedExpression specialize(final Object[] arguments) {
       TruffleCompiler.transferToInterpreterAndInvalidate("Specialize Message Node");
 
-      // first option is a super send, super sends are treated specially because
-      // the receiver class is lexically determined
-      if (isSpecialSend()) {
-        return makeSpecialSend();
-      }
-
-      // We treat super sends separately for simplicity, might not be the
-      // optimal solution, especially in cases were the knowledge of the
-      // receiver class also allows us to do more specific things, but for the
-      // moment  we will leave it at this.
-      // TODO: revisit, and also do more specific optimizations for super sends.
-
-
       // let's organize the specializations by number of arguments
-      // perhaps not the best, but one simple way to just get some order into
-      // the chaos.
-
+      // perhaps not the best, but simple
       switch (argumentNodes.length) {
         case  1: return specializeUnary(arguments);
         case  2: return specializeBinary(arguments);
         case  3: return specializeTernary(arguments);
         case  4: return specializeQuaternary(arguments);
       }
+      return makeSend();
+    }
 
+    protected PreevaluatedExpression makeSend() {
+      // first option is a super send, super sends are treated specially because
+      // the receiver class is lexically determined
+      if (isSpecialSend()) {
+        return makeSpecialSend();
+      }
       return makeOrdenarySend();
     }
 
@@ -227,7 +220,7 @@ public final class MessageSendNode {
                 argumentNodes[0], AbsPrimFactory.create(null)));
           }
       }
-      return makeOrdenarySend();
+      return makeSend();
     }
 
     protected PreevaluatedExpression specializeBinary(final Object[] arguments) {
@@ -421,8 +414,7 @@ public final class MessageSendNode {
           break;
 
       }
-
-      return makeOrdenarySend();
+      return makeSend();
     }
 
     protected PreevaluatedExpression specializeTernary(final Object[] arguments) {
@@ -464,7 +456,7 @@ public final class MessageSendNode {
               argumentNodes[0], argumentNodes[1], argumentNodes[2],
               ToArgumentsArrayNodeGen.create(null, null)));
       }
-      return makeOrdenarySend();
+      return makeSend();
     }
 
     protected PreevaluatedExpression specializeQuaternary(
@@ -475,7 +467,7 @@ public final class MessageSendNode {
               (SBlock) arguments[3], argumentNodes[0], argumentNodes[1],
               argumentNodes[2], argumentNodes[3]));
       }
-      return makeOrdenarySend();
+      return makeSend();
     }
   }
 
