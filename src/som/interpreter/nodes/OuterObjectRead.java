@@ -2,8 +2,8 @@ package som.interpreter.nodes;
 
 import som.compiler.ClassBuilder.ClassDefinitionId;
 import som.vm.constants.KernelObj;
-import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
+import som.vmobjects.SObjectWithoutFields;
 
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -47,30 +47,30 @@ public abstract class OuterObjectRead
   public boolean isSuperSend() { return false; }
 
   @Specialization
-  public Object doSAbstractObject(final SAbstractObject receiver) {
+  public Object doSObject(final SObjectWithoutFields receiver) {
     return getEnclosingObject(receiver);
   }
 
   public abstract Object executeEvaluated(Object receiver);
 
-  protected static final boolean notSAbstractObject(final Object receiver) {
-    return !(receiver instanceof SAbstractObject);
+  protected static final boolean notSObjectWithoutFields(final Object receiver) {
+    return !(receiver instanceof SObjectWithoutFields);
   }
 
-  @Specialization(guards = "notSAbstractObject(receiver)")
+  @Specialization(guards = "notSObjectWithoutFields(receiver)")
   public Object doObject(final Object receiver) {
     return KernelObj.kernel;
   }
 
   @ExplodeLoop
-  private Object getEnclosingObject(final SAbstractObject receiver) {
+  private Object getEnclosingObject(final SObjectWithoutFields receiver) {
     if (contextLevel == 0) {
       return receiver;
     }
 
     SClass cls = rcvrType.profile(receiver).getSOMClass().getClassCorrespondingTo(classDefId);
     int ctxLevel = contextLevel - 1;
-    SAbstractObject enclosing = cls.getEnclosingObject();
+    SObjectWithoutFields enclosing = cls.getEnclosingObject();
 
     while (ctxLevel > 0) {
       ctxLevel--;

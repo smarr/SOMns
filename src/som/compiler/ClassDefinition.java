@@ -24,10 +24,10 @@ import som.interpreter.objectstorage.FieldAccessorNode.UninitializedWriteFieldNo
 import som.vm.Symbols;
 import som.vm.constants.Classes;
 import som.vm.constants.Nil;
-import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
+import som.vmobjects.SObjectWithoutFields;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CallTarget;
@@ -136,7 +136,7 @@ public final class ClassDefinition {
     return classObject;
   }
 
-  public SClass instantiateClass(final SAbstractObject outer, final SClass superClass) {
+  public SClass instantiateClass(final SObjectWithoutFields outer, final SClass superClass) {
     SClass resultClass = new SClass(outer, Classes.metaclassClass);
     SClass result = new SClass(outer, resultClass);
     initializeClass(result, superClass);

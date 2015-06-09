@@ -56,18 +56,18 @@ public final class SClass extends SObjectWithoutFields {
 
   @CompilationFinal private ClassDefinition classDef;
 
-  protected final SAbstractObject enclosingObject;
+  protected final SObjectWithoutFields enclosingObject;
 
-  public SClass(final SAbstractObject enclosing) {
+  public SClass(final SObjectWithoutFields enclosing) {
     this.enclosingObject = enclosing;
   }
 
-  public SClass(final SAbstractObject enclosing, final SClass clazz) {
+  public SClass(final SObjectWithoutFields enclosing, final SClass clazz) {
     super(clazz);
     this.enclosingObject = enclosing;
   }
 
-  public SAbstractObject getEnclosingObject() {
+  public SObjectWithoutFields getEnclosingObject() {
     return enclosingObject;
   }
 
