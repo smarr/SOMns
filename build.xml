@@ -96,12 +96,11 @@
               </fileset>
             </batchtest>
         </junit>
-      
-        <!-- TODO: run TestHarness -->
-        <!--<java classname="som.vm.Universe" fork="true" failonerror="true">
+
+        <java classname="som.VM" fork="true" failonerror="true">
             <classpath refid="project.classpath" />
-                <arg line="-cp Smalltalk TestSuite/TestHarness.som - -ignore-inefficacies" />
-        </java>-->
+                <arg line="core-lib/TestSuite/TestRunner.som" />
+        </java>
     </target>
     <target name="tests" depends="test" />
 
