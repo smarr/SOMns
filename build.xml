@@ -89,6 +89,8 @@
 
     <target name="test" depends="compile" description="Execute tests">
         <junit haltonerror="false" haltonfailure="false">
+            <jvmarg value="-ea" />
+            <jvmarg value="-esa" />
             <classpath refid="project.classpath" />
             <batchtest fork="yes"><!--  todir="${reports.tests}" -->
               <fileset dir="tests">
@@ -99,7 +101,9 @@
 
         <java classname="som.VM" fork="true" failonerror="true">
             <classpath refid="project.classpath" />
-                <arg line="core-lib/TestSuite/TestRunner.som" />
+            <jvmarg value="-ea" />
+            <jvmarg value="-esa" />
+            <arg line="core-lib/TestSuite/TestRunner.som" />
         </java>
     </target>
     <target name="tests" depends="test" />
