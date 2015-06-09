@@ -150,7 +150,7 @@ public final class SClass extends SObjectWithoutFields {
     dispatchables = value;
   }
 
-  public SClass[] getNestedClasses(final SObject instance) {
+  public SClass[] getNestedClasses(final SObjectWithoutFields instance) {
     CompilerAsserts.neverPartOfCompilation("Not optimized, we do unrecorded invokes here");
     ArrayList<SClass> classes = new ArrayList<SClass>();
     for (Dispatchable disp : dispatchables.values()) {

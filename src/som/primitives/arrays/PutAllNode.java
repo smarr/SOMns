@@ -10,7 +10,7 @@ import som.vm.constants.Nil;
 import som.vmobjects.SArray;
 import som.vmobjects.SArray.ArrayType;
 import som.vmobjects.SBlock;
-import som.vmobjects.SObject;
+import som.vmobjects.SObjectWithoutFields;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
@@ -59,7 +59,7 @@ public abstract class PutAllNode extends BinaryExpressionNode
   }
 
   @Specialization(guards = {"valueIsNil(nil)"}, contains = {"doPutNilInEmptyArray"})
-  public SArray doPutNilInOtherArray(final SArray rcvr, final SObject nil,
+  public SArray doPutNilInOtherArray(final SArray rcvr, final SObjectWithoutFields nil,
       final long length) {
     rcvr.transitionToEmpty(length);
     return rcvr;

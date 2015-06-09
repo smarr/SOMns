@@ -6,7 +6,7 @@ import som.compiler.ClassBuilder.ClassDefinitionId;
 import som.interpreter.Types;
 import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
 import som.vmobjects.SClass;
-import som.vmobjects.SObject;
+import som.vmobjects.SObjectWithoutFields;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -53,7 +53,7 @@ public final class LexicallyBoundDispatchNode extends AbstractDispatchWithLookup
       LexicallyBoundDispatchNode newChainEnd = new LexicallyBoundDispatchNode(
           selector, classForPrivateLookup);
 
-      if (rcvr instanceof SObject) {
+      if (rcvr instanceof SObjectWithoutFields) {
         AbstractDispatchNode node;
         if (dispatchable != null) {
           node = dispatchable.getDispatchNode(rcvr, rcvrClass, newChainEnd);

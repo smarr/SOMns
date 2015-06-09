@@ -12,7 +12,7 @@ import som.primitives.reflection.AbstractSymbolDispatchNodeGen;
 import som.vmobjects.SArray;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
-import som.vmobjects.SObject;
+import som.vmobjects.SObjectWithoutFields;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerAsserts;
@@ -27,7 +27,7 @@ public abstract class MirrorPrims {
   @Primitive("objNestedClasses:")
   public abstract static class NestedClassesPrim extends UnaryExpressionNode {
     @Specialization
-    public final SArray getNestedClasses(final SObject rcvr) {
+    public final SArray getNestedClasses(final SObjectWithoutFields rcvr) {
       SClass[] classes = rcvr.getSOMClass().getNestedClasses(rcvr);
       return SArray.create(classes);
     }

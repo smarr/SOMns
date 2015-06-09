@@ -4,7 +4,6 @@ import java.math.BigInteger;
 
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.vm.constants.Nil;
-import som.vmobjects.SObject;
 import som.vmobjects.SObjectWithoutFields;
 import som.vmobjects.SSymbol;
 
@@ -80,7 +79,7 @@ public abstract class UnequalsPrim extends BinaryExpressionNode {
   }
 
   @Specialization
-  public final boolean doLong(final long left, final SObject right) {
+  public final boolean doLong(final long left, final SObjectWithoutFields right) {
     return true;
   }
 
@@ -95,7 +94,7 @@ public abstract class UnequalsPrim extends BinaryExpressionNode {
   }
 
   @Specialization
-  public final boolean doString(final String receiver, final SObject argument) {
+  public final boolean doString(final String receiver, final SObjectWithoutFields argument) {
     return true;
   }
 
@@ -105,7 +104,7 @@ public abstract class UnequalsPrim extends BinaryExpressionNode {
   }
 
   @Specialization
-  public final boolean doSSymbol(final SSymbol receiver, final SObject argument) {
+  public final boolean doSSymbol(final SSymbol receiver, final SObjectWithoutFields argument) {
     return true;
   }
 }

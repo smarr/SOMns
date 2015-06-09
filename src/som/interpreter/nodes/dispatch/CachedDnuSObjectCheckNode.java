@@ -1,7 +1,7 @@
 package som.interpreter.nodes.dispatch;
 
 import som.vmobjects.SClass;
-import som.vmobjects.SObject;
+import som.vmobjects.SObjectWithoutFields;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -18,7 +18,7 @@ public final class CachedDnuSObjectCheckNode extends AbstractCachedDnuNode {
 
   @Override
   public Object executeDispatch(final VirtualFrame frame, final Object[] arguments) {
-    SObject rcvr = (SObject) arguments[0];
+    SObjectWithoutFields rcvr = (SObjectWithoutFields) arguments[0];
     if (rcvr.getSOMClass() == expectedClass) {
       return performDnu(frame, arguments, rcvr);
     } else {
