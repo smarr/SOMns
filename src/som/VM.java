@@ -4,7 +4,7 @@ import java.util.Arrays;
 
 import som.interpreter.TruffleCompiler;
 import som.vm.Bootstrap;
-import som.vmobjects.SObject;
+import som.vmobjects.SObjectWithoutFields;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
@@ -147,7 +147,7 @@ public final class VM {
   public long execute() {
     Bootstrap.loadPlatformAndKernelModule(vm.options.platformFile,
         vm.options.kernelFile);
-    SObject vmMirror = Bootstrap.initializeObjectSystem();
+    SObjectWithoutFields vmMirror = Bootstrap.initializeObjectSystem();
     Bootstrap.executeApplication(vmMirror);
     return 0;
   }

@@ -32,7 +32,7 @@ import org.junit.runners.Parameterized.Parameters;
 
 import som.VM;
 import som.vm.Bootstrap;
-import som.vmobjects.SObject;
+import som.vmobjects.SObjectWithoutFields;
 
 
 @RunWith(Parameterized.class)
@@ -66,7 +66,7 @@ public class SomTests {
                                         "core-lib/TestSuite/" + testName + ".som"});
     Bootstrap.loadPlatformAndKernelModule(VM.standardPlatformFile,
         VM.standardKernelFile);
-    SObject vmMirror = Bootstrap.initializeObjectSystem();
+    SObjectWithoutFields vmMirror = Bootstrap.initializeObjectSystem();
 
     Bootstrap.executeApplication(vmMirror);
     assertEquals(0, vm.lastExitCode());

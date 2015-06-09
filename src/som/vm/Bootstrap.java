@@ -68,6 +68,7 @@ import som.vm.constants.Nil;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
+import som.vmobjects.SObjectWithoutFields;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerAsserts;
@@ -266,7 +267,7 @@ public final class Bootstrap {
     return prim;
   }
 
-  private static SObject constructVmMirror() {
+  private static SObjectWithoutFields constructVmMirror() {
     HashMap<SSymbol, Dispatchable> vmMirrorMethods = constructVmMirrorPrimitives();
     ClassScope scope = new ClassScope(null);
 
@@ -276,7 +277,7 @@ public final class Bootstrap {
     scope.setClassDefinition(vmMirrorDef, false);
 
     SClass vmMirrorClass = vmMirrorDef.instantiateClass(Nil.nilObject, Classes.topClass);
-    return new SObject(vmMirrorClass);
+    return new SObjectWithoutFields(vmMirrorClass);
   }
 
   /**
@@ -317,7 +318,7 @@ public final class Bootstrap {
     clazzClazz.setSuperClass(Classes.classClass);
   }
 
-  public static SObject initializeObjectSystem() {
+  public static SObjectWithoutFields initializeObjectSystem() {
     assert platformModule != null && kernelModule != null;
 
     // these classes need to be defined by the Kernel module
@@ -381,7 +382,7 @@ public final class Bootstrap {
     KernelObj.kernel.setClass(kernelClass);
 
     // create and initialize the vmMirror object
-    SObject vmMirror = constructVmMirror();
+    SObjectWithoutFields vmMirror = constructVmMirror();
 
     // initialize slots of kernel object
     // TODO: try to actually use the initializer expressions...
@@ -424,7 +425,7 @@ public final class Bootstrap {
     slot.setValueDuringBootstrap(obj, value);
   }
 
-  public static void executeApplication(final SObject vmMirror) {
+  public static void executeApplication(final SObjectWithoutFields vmMirror) {
     // normally, the constructor method of the platform module is expected to
     // start the whole execution. And, it is not expected to return
     platformModule.instantiateObject(platformClass, vmMirror);

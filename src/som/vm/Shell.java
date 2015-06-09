@@ -33,7 +33,7 @@ import som.compiler.AccessModifier;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.vm.constants.Nil;
 import som.vmobjects.SClass;
-import som.vmobjects.SObject;
+import som.vmobjects.SObjectWithoutFields;
 
 public class Shell {
 
@@ -42,7 +42,7 @@ public class Shell {
     String stmt;
     int counter;
     SClass myClass;
-    SObject myObject;
+    SObjectWithoutFields myObject;
     Object it;
 
     counter = 0;
@@ -71,7 +71,7 @@ public class Shell {
         // If success
         if (myClass != null) {
           // Create and push a new instance of our class on the stack
-          myObject = new SObject(myClass);
+          myObject = new SObjectWithoutFields(myClass);
 
           // Lookup the run: method
           Dispatchable shellMethod = myClass.
