@@ -21,9 +21,7 @@ public abstract class AbstractDispatchNode extends Node implements DispatchChain
 
     public AbstractCachedDispatchNode(final CallTarget methodCallTarget,
         final AbstractDispatchNode nextInCache) {
-      DirectCallNode cachedMethod = Truffle.getRuntime().createDirectCallNode(methodCallTarget);
-
-      this.cachedMethod = cachedMethod;
+      this.cachedMethod = Truffle.getRuntime().createDirectCallNode(methodCallTarget);
       this.nextInCache  = nextInCache;
     }
 
