@@ -2,7 +2,7 @@ package som.interpreter.nodes.dispatch;
 
 import som.interpreter.nodes.dispatch.AbstractDispatchNode.AbstractCachedDispatchNode;
 import som.vmobjects.SClass;
-import som.vmobjects.SObject;
+import som.vmobjects.SObjectWithoutFields;
 
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -21,7 +21,7 @@ public final class CachedDispatchSObjectCheckNode extends AbstractCachedDispatch
   @Override
   public Object executeDispatch(
       final VirtualFrame frame, final Object[] arguments) {
-    SObject rcvr = (SObject) arguments[0];
+    SObjectWithoutFields rcvr = (SObjectWithoutFields) arguments[0];
     if (rcvr.getSOMClass() == expectedClass) {
       return cachedMethod.call(frame, arguments);
     } else {
