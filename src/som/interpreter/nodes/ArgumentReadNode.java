@@ -8,6 +8,7 @@ import som.vm.NotYetImplementedException;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
+import com.oracle.truffle.api.utilities.ValueProfile;
 
 public abstract class ArgumentReadNode {
 
@@ -23,7 +24,7 @@ public abstract class ArgumentReadNode {
     }
 
     @Override
-    public final Object executeGeneric(final VirtualFrame frame) {
+    public Object executeGeneric(final VirtualFrame frame) {
       return SArguments.arg(frame, argumentIndex);
     }
 
@@ -43,11 +44,17 @@ public abstract class ArgumentReadNode {
   public static class LocalSelfReadNode extends LocalArgumentReadNode implements ISpecialSend {
 
     private final ClassDefinitionId lexicalClass;
+    private final ValueProfile rcvrClass = ValueProfile.createClassProfile();
 
     public LocalSelfReadNode(final ClassDefinitionId lexicalClass,
         final SourceSection source) {
       super(0, source);
       this.lexicalClass = lexicalClass;
+    }
+
+    @Override
+    public Object executeGeneric(final VirtualFrame frame) {
+      return rcvrClass.profile(SArguments.rcvr(frame));
     }
 
     @Override public boolean           isSuperSend()     { return false; }
@@ -75,7 +82,7 @@ public abstract class ArgumentReadNode {
     }
 
     @Override
-    public final Object executeGeneric(final VirtualFrame frame) {
+    public Object executeGeneric(final VirtualFrame frame) {
       return SArguments.arg(determineContext(frame), argumentIndex);
     }
 
@@ -122,10 +129,17 @@ public abstract class ArgumentReadNode {
       extends NonLocalArgumentReadNode implements ISpecialSend {
     private final ClassDefinitionId lexicalClass;
 
+    private final ValueProfile rcvrClass = ValueProfile.createClassProfile();
+
     public NonLocalSelfReadNode(final ClassDefinitionId lexicalClass,
         final int contextLevel, final SourceSection source) {
       super(0, contextLevel, source);
       this.lexicalClass = lexicalClass;
+    }
+
+    @Override
+    public Object executeGeneric(final VirtualFrame frame) {
+      return rcvrClass.profile(SArguments.rcvr(determineContext(frame)));
     }
 
     @Override public boolean           isSuperSend()     { return false; }
