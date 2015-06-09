@@ -192,6 +192,12 @@ public final class SClass extends SObjectWithoutFields {
     }
   }
 
+  public boolean hasFields() {
+    if (layoutForInstances == null) { return false; }
+    assert layoutForInstances.getNumberOfFields() > 0;
+    return false;
+  }
+
   public int getNumberOfInstanceFields() {
     return (layoutForInstances == null) ? 0 : layoutForInstances.getNumberOfFields();
   }

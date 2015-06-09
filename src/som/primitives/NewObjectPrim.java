@@ -6,6 +6,7 @@ import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject;
+import som.vmobjects.SObjectWithoutFields;
 
 import com.oracle.truffle.api.dsl.Specialization;
 
@@ -31,8 +32,13 @@ public abstract class NewObjectPrim extends UnaryExpressionNode implements ISpec
   @Override
   public boolean isSuperSend() { return false; }
 
-  @Specialization
-  public final SAbstractObject doSClass(final SClass receiver) {
+  @Specialization(guards = "receiver.hasFields()")
+  public final SAbstractObject doClassWithFields(final SClass receiver) {
     return new SObject(receiver);
+  }
+
+  @Specialization(guards = "!receiver.hasFields()")
+  public final SAbstractObject doClassWithoutFields(final SClass receiver) {
+    return new SObjectWithoutFields(receiver);
   }
 }
