@@ -9,6 +9,7 @@ import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
+import som.vmobjects.SObjectWithoutFields;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -69,7 +70,7 @@ public abstract class EqualsEqualsPrim extends BinaryExpressionNode {
   }
 
   @Specialization
-  public final boolean doSClass(final SClass left, final Object right) {
+  public final boolean doSObject(final SObjectWithoutFields left, final Object right) {
     return left == right;
   }
 
