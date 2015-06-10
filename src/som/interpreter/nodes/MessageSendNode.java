@@ -35,9 +35,11 @@ import som.primitives.DoublePrimsFactory.RoundPrimFactory;
 import som.primitives.EqualsEqualsPrimFactory;
 import som.primitives.EqualsPrimFactory;
 import som.primitives.IntegerPrimsFactory.AbsPrimNodeGen;
+import som.primitives.IntegerPrimsFactory.As32BitSignedValueFactory;
+import som.primitives.IntegerPrimsFactory.As32BitUnsignedValueFactory;
 import som.primitives.IntegerPrimsFactory.LeftShiftPrimFactory;
 import som.primitives.IntegerPrimsFactory.MaxIntPrimNodeGen;
-import som.primitives.IntegerPrimsFactory.ToPrimFactory;
+import som.primitives.IntegerPrimsFactory.ToPrimNodeGen;
 import som.primitives.IntegerPrimsFactory.UnsignedRightShiftPrimFactory;
 import som.primitives.MethodPrimsFactory.InvokeOnPrimFactory;
 import som.primitives.SizeAndLengthPrimFactory;
@@ -242,6 +244,19 @@ public final class MessageSendNode {
                 argumentNodes[0], RoundPrimFactory.create(null)));
           }
           break;
+
+        case "as32BitSignedValue":
+          if (receiver instanceof Double) {
+            return replace(new EagerUnaryPrimitiveNode(selector,
+                argumentNodes[0], As32BitSignedValueFactory.create(null)));
+          }
+          break;
+        case "as32BitUnsignedValue":
+          if (receiver instanceof Double) {
+            return replace(new EagerUnaryPrimitiveNode(selector,
+                argumentNodes[0], As32BitUnsignedValueFactory.create(null)));
+          }
+          break;
       }
       return makeSend();
     }
@@ -349,7 +364,7 @@ public final class MessageSendNode {
           if (arguments[0] instanceof Long) {
             return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
                 argumentNodes[1],
-                ToPrimFactory.create(null, null)));
+                ToPrimNodeGen.create(null, null)));
           }
           break;
 

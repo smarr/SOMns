@@ -90,7 +90,6 @@ public abstract class IntegerPrims {
     }
   }
 
-  @GenerateNodeFactory
   public abstract static class ToPrim extends BinaryExpressionNode {
     @Specialization
     public final SArray doLong(final long receiver, final long right) {
