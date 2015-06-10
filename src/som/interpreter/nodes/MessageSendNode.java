@@ -54,6 +54,7 @@ import som.primitives.arithmetic.LessThanPrimFactory;
 import som.primitives.arithmetic.ModuloPrimFactory;
 import som.primitives.arithmetic.MultiplicationPrimFactory;
 import som.primitives.arithmetic.RemainderPrimFactory;
+import som.primitives.arithmetic.SqrtPrimFactory;
 import som.primitives.arithmetic.SubtractionPrimFactory;
 import som.primitives.arrays.AtPrimFactory;
 import som.primitives.arrays.AtPutPrimFactory;
@@ -264,6 +265,11 @@ public final class MessageSendNode {
                 argumentNodes[0], As32BitUnsignedValueFactory.create(null)));
           }
           break;
+        case "sqrt":
+          if (receiver instanceof Number) {
+            return replace(new EagerUnaryPrimitiveNode(selector,
+                argumentNodes[0], SqrtPrimFactory.create(null)));
+          }
       }
       return makeSend();
     }
