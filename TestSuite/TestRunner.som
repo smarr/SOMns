@@ -54,6 +54,7 @@ class TestRunner usingPlatform: platform = (
                'StringTests',
                'SymbolTests',
                'SystemTests',
+               'BenchmarkHarnessTests',
                'MinitestTests'.
                
                (* 'ReflectionTests', *)

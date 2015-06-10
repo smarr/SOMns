@@ -1,0 +1,41 @@
+class LanguageTests usingPlatform: platform testFramework: minitest = (
+| private TestContext = minitest TestContext.
+  private harness     = (platform system loadModule: 'core-lib/Benchmarks/Harness.som') usingPlatform: platform.
+  private Random      = harness Random.
+  private JenkinsRandom = harness JenkinsRandom.
+|
+)(
+  public class RandomTest = TestContext ()(
+    public testSequenceOfNumbers = (
+      | rand |
+      rand := Random new.
+      assert: 22896 equals: rand next.
+      assert: 34761 equals: rand next.
+      assert: 34014 equals: rand next.
+      assert: 39231 equals: rand next.
+      assert: 52540 equals: rand next.
+      assert: 41445 equals: rand next.
+      assert:  1546 equals: rand next.
+      assert:  5947 equals: rand next.
+      assert: 65224 equals: rand next.
+    )
+  ) : ( TEST_CONTEXT = () )
+
+  public class JenkinsRandomTest = TestContext ()(
+    public testSequenceOfNumbers = (
+      | rand |
+      rand := JenkinsRandom new: 49734321.
+      assert: -1345591281 equals: rand next.
+      assert: -1516981560 equals: rand next.
+      assert:   419616523 equals: rand next.
+      assert:  -805570250 equals: rand next.
+      assert:  1296315377 equals: rand next.
+      assert:  1914610007 equals: rand next.
+      assert: -1925891300 equals: rand next.
+      assert:  1567309459 equals: rand next.
+      assert:    30344262 equals: rand next.
+      assert: -1594794131 equals: rand next.
+    )
+  
+  ) : ( TEST_CONTEXT = () )
+)

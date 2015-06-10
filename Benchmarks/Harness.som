@@ -59,23 +59,6 @@ class Harness usingPlatform: platform = (
       seed := ((seed * 1309) + 13849) & 65535.
       ^ seed
     )
-    
-    public test = (
-      (* TODO: move this to a proper test case *)
-      | fail |
-      'Testing random number generator ... ' print.
-      fail := [ 'FAILED:' println. ^nil ].
-      (self next <> 22896) ifTrue: fail.
-      (self next <> 34761) ifTrue: fail.
-      (self next <> 34014) ifTrue: fail.
-      (self next <> 39231) ifTrue: fail.
-      (self next <> 52540) ifTrue: fail.
-      (self next <> 41445) ifTrue: fail.
-      (self next <>  1546) ifTrue: fail.
-      (self next <>  5947) ifTrue: fail.
-      (self next <> 65224) ifTrue: fail.
-      'PASSED' println
-    )
   )
   
   public class JenkinsRandom new: seed = (
