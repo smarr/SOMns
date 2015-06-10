@@ -254,13 +254,13 @@ public final class MessageSendNode {
           break;
 
         case "as32BitSignedValue":
-          if (receiver instanceof Double) {
+          if (receiver instanceof Integer) {
             return replace(new EagerUnaryPrimitiveNode(selector,
                 argumentNodes[0], As32BitSignedValueFactory.create(null)));
           }
           break;
         case "as32BitUnsignedValue":
-          if (receiver instanceof Double) {
+          if (receiver instanceof Integer) {
             return replace(new EagerUnaryPrimitiveNode(selector,
                 argumentNodes[0], As32BitUnsignedValueFactory.create(null)));
           }
