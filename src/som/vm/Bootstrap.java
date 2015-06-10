@@ -299,8 +299,6 @@ public final class Bootstrap {
     SClass clazzClazz = new SClass(KernelObj.kernel);
 
     initializeClassAndItsClass(name, clazz, clazzClazz);
-
-    // Return the freshly allocated system class
     return clazz;
   }
 
