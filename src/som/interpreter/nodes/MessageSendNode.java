@@ -235,11 +235,13 @@ public final class MessageSendNode {
             // don't need to protect this with an eager wrapper
             return replace(PositiveInfinityPrimFactory.create(argumentNodes[0]));
           }
+          break;
         case "round":
           if (receiver instanceof Double) {
             return replace(new EagerUnaryPrimitiveNode(selector,
                 argumentNodes[0], RoundPrimFactory.create(null)));
           }
+          break;
       }
       return makeSend();
     }
@@ -439,7 +441,7 @@ public final class MessageSendNode {
                 argumentNodes[1],
                 MaxIntPrimNodeGen.create(null, null)));
           }
-
+          break;
       }
       return makeSend();
     }
