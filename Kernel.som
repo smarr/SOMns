@@ -27,7 +27,7 @@ class Kernel vmMirror: vmMirror = (
   private class Top = ()()
   
   public class Thing = Top ()(
-    private error: msg = ( vmMirror printNewline: 'ERROR: ' + msg. vmMirror exit: 1 )
+    protected error: msg = ( vmMirror printNewline: 'ERROR: ' + msg. vmMirror exit: 1 )
   
     'Error recovering'
     protected doesNotUnderstand: selector arguments: arguments = (
