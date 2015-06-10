@@ -174,9 +174,6 @@ class Kernel vmMirror: vmMirror = (
     public >>> argument= ( ^ vmMirror int: self unsignedRightShift: argument )
     public bitXor: argument = ( ^ vmMirror int: self bitXor: argument )
     
-    'Random numbers'
-    public atRandom = ( ^ vmMirror intAtRandom: self )
-    
     'Comparing'
     public =  argument = ( ^ vmMirror int: self equals: argument )
     public ~= argument = ( ^ (self = argument) not )
