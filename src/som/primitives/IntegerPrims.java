@@ -16,14 +16,6 @@ import com.oracle.truffle.api.utilities.BranchProfile;
 public abstract class IntegerPrims {
 
   @GenerateNodeFactory
-  public abstract static class RandomPrim extends UnaryExpressionNode {
-    @Specialization
-    public final long doLong(final long receiver) {
-      return (long) (receiver * Math.random());
-    }
-  }
-
-  @GenerateNodeFactory
   @Primitive("intAs32BitSignedValue:")
   public abstract static class As32BitSignedValue extends UnaryExpressionNode {
     @Specialization
