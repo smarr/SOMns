@@ -43,6 +43,7 @@ import som.primitives.IntegerPrimsFactory.ToPrimNodeGen;
 import som.primitives.IntegerPrimsFactory.UnsignedRightShiftPrimFactory;
 import som.primitives.MethodPrimsFactory.InvokeOnPrimFactory;
 import som.primitives.SizeAndLengthPrimFactory;
+import som.primitives.StringPrimsFactory.SubstringPrimFactory;
 import som.primitives.UnequalsPrimFactory;
 import som.primitives.arithmetic.AdditionPrimFactory;
 import som.primitives.arithmetic.DividePrimFactory;
@@ -204,6 +205,12 @@ public final class MessageSendNode {
         // eagerly but cautious:
         case "size":
           if (receiver instanceof SArray) {
+            return replace(new EagerUnaryPrimitiveNode(selector,
+                argumentNodes[0], SizeAndLengthPrimFactory.create(null)));
+          }
+          break;
+        case "length":
+          if (receiver instanceof String) {
             return replace(new EagerUnaryPrimitiveNode(selector,
                 argumentNodes[0], SizeAndLengthPrimFactory.create(null)));
           }
@@ -492,6 +499,13 @@ public final class MessageSendNode {
             return replace(IntDownToDoMessageNodeGen.create(this,
                 (SBlock) arguments[2], argumentNodes[0], argumentNodes[1],
                 argumentNodes[2]));
+          }
+          break;
+        case "substringFrom:to:":
+          if (arguments[0] instanceof String) {
+            return replace(new EagerTernaryPrimitiveNode(selector,
+                argumentNodes[0], argumentNodes[1], argumentNodes[2],
+                SubstringPrimFactory.create(null, null, null)));
           }
           break;
 
