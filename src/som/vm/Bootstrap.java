@@ -183,7 +183,6 @@ public final class Bootstrap {
 
   private static List<NodeFactory<? extends ExpressionNode>> getFactories() {
     List<NodeFactory<? extends ExpressionNode>> allFactories = new ArrayList<>();
-    allFactories.addAll(SystemPrimsFactory.getFactories());
     allFactories.addAll(AndMessageNodeFactory.getFactories());
     allFactories.addAll(WhilePrimitiveNodeFactory.getFactories());
     allFactories.addAll(BlockPrimsFactory.getFactories());
