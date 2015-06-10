@@ -30,10 +30,13 @@ import som.interpreter.nodes.specialized.whileloops.WhileWithStaticBlocksNode.Wh
 import som.interpreter.nodes.specialized.whileloops.WhileWithStaticBlocksNode.WhileTrueStaticBlocksNode;
 import som.primitives.BlockPrimsFactory.ValueNonePrimFactory;
 import som.primitives.BlockPrimsFactory.ValueOnePrimFactory;
+import som.primitives.DoublePrimsFactory.PositiveInfinityPrimFactory;
+import som.primitives.DoublePrimsFactory.RoundPrimFactory;
 import som.primitives.EqualsEqualsPrimFactory;
 import som.primitives.EqualsPrimFactory;
-import som.primitives.IntegerPrimsFactory.AbsPrimFactory;
+import som.primitives.IntegerPrimsFactory.AbsPrimNodeGen;
 import som.primitives.IntegerPrimsFactory.LeftShiftPrimFactory;
+import som.primitives.IntegerPrimsFactory.MaxIntPrimNodeGen;
 import som.primitives.IntegerPrimsFactory.ToPrimFactory;
 import som.primitives.IntegerPrimsFactory.UnsignedRightShiftPrimFactory;
 import som.primitives.MethodPrimsFactory.InvokeOnPrimFactory;
@@ -51,6 +54,7 @@ import som.primitives.arithmetic.RemainderPrimFactory;
 import som.primitives.arithmetic.SubtractionPrimFactory;
 import som.primitives.arrays.AtPrimFactory;
 import som.primitives.arrays.AtPutPrimFactory;
+import som.primitives.arrays.CopyPrimNodeGen;
 import som.primitives.arrays.DoIndexesPrimFactory;
 import som.primitives.arrays.DoPrimFactory;
 import som.primitives.arrays.NewPrimFactory;
@@ -217,7 +221,24 @@ public final class MessageSendNode {
         case "abs":
           if (receiver instanceof Long) {
             return replace(new EagerUnaryPrimitiveNode(selector,
-                argumentNodes[0], AbsPrimFactory.create(null)));
+                argumentNodes[0], AbsPrimNodeGen.create(null)));
+          }
+          break;
+        case "copy":
+          if (receiver instanceof SArray) {
+            return replace(new EagerUnaryPrimitiveNode(selector,
+                argumentNodes[0], CopyPrimNodeGen.create(null)));
+          }
+          break;
+        case "PositiveInfinity":
+          if (receiver == Classes.doubleClass) {
+            // don't need to protect this with an eager wrapper
+            return replace(PositiveInfinityPrimFactory.create(argumentNodes[0]));
+          }
+        case "round":
+          if (receiver instanceof Double) {
+            return replace(new EagerUnaryPrimitiveNode(selector,
+                argumentNodes[0], RoundPrimFactory.create(null)));
           }
       }
       return makeSend();
@@ -412,6 +433,12 @@ public final class MessageSendNode {
                 UnsignedRightShiftPrimFactory.create(null, null)));
           }
           break;
+        case "max:":
+          if (arguments[0] instanceof Long) {
+            return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
+                argumentNodes[1],
+                MaxIntPrimNodeGen.create(null, null)));
+          }
 
       }
       return makeSend();

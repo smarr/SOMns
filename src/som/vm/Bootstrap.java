@@ -55,7 +55,6 @@ import som.primitives.arithmetic.SqrtPrimFactory;
 import som.primitives.arithmetic.SubtractionPrimFactory;
 import som.primitives.arrays.AtPrimFactory;
 import som.primitives.arrays.AtPutPrimFactory;
-import som.primitives.arrays.CopyPrimFactory;
 import som.primitives.arrays.DoIndexesPrimFactory;
 import som.primitives.arrays.NewPrimFactory;
 import som.primitives.arrays.PutAllNodeFactory;
@@ -221,7 +220,6 @@ public final class Bootstrap {
     allFactories.add(SubtractionPrimFactory.getInstance());
     allFactories.add(AtPrimFactory.getInstance());
     allFactories.add(AtPutPrimFactory.getInstance());
-    allFactories.add(CopyPrimFactory.getInstance());
     allFactories.add(DoIndexesPrimFactory.getInstance());
     allFactories.add(NewPrimFactory.getInstance());
     allFactories.add(PutAllNodeFactory.getInstance());

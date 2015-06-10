@@ -91,7 +91,6 @@ public abstract class IntegerPrims {
     }
   }
 
-  @GenerateNodeFactory
   public abstract static class MaxIntPrim extends ArithmeticPrim {
     @Specialization
     public final long doLong(final long receiver, final long right) {
@@ -112,7 +111,6 @@ public abstract class IntegerPrims {
     }
   }
 
-  @GenerateNodeFactory
   public abstract static class AbsPrim extends UnaryExpressionNode {
     @Specialization
     public final long doLong(final long receiver) {
