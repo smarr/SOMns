@@ -71,6 +71,11 @@ public abstract class AdditionPrim extends ArithmeticPrim {
   }
 
   @Specialization
+  public final String doString(final String left, final long right) {
+    return left + right;
+  }
+
+  @Specialization
   public final String doString(final String left, final SClass right) {
     return left + right.getName().getString();
   }
