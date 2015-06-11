@@ -3,6 +3,7 @@ package som.primitives;
 import som.VM;
 import som.interpreter.Types;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.vm.constants.Nil;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
@@ -47,6 +48,20 @@ public final class ObjectPrims {
     public final SClass doObject(final Object receiver) {
       CompilerAsserts.neverPartOfCompilation("Should specialize this if performance critical");
       return Types.getClassOf(receiver);
+    }
+  }
+
+  public abstract static class IsNilNode extends UnaryExpressionNode {
+    @Specialization
+    public final boolean isNil(final Object receiver) {
+      return receiver == Nil.nilObject;
+    }
+  }
+
+  public abstract static class NotNilNode extends UnaryExpressionNode {
+    @Specialization
+    public final boolean isNil(final Object receiver) {
+      return receiver != Nil.nilObject;
     }
   }
 }

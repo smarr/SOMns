@@ -42,6 +42,8 @@ import som.primitives.IntegerPrimsFactory.MaxIntPrimNodeGen;
 import som.primitives.IntegerPrimsFactory.ToPrimNodeGen;
 import som.primitives.IntegerPrimsFactory.UnsignedRightShiftPrimFactory;
 import som.primitives.MethodPrimsFactory.InvokeOnPrimFactory;
+import som.primitives.ObjectPrimsFactory.IsNilNodeGen;
+import som.primitives.ObjectPrimsFactory.NotNilNodeGen;
 import som.primitives.SizeAndLengthPrimFactory;
 import som.primitives.StringPrimsFactory.SubstringPrimFactory;
 import som.primitives.UnequalsPrimFactory;
@@ -270,6 +272,10 @@ public final class MessageSendNode {
             return replace(new EagerUnaryPrimitiveNode(selector,
                 argumentNodes[0], SqrtPrimFactory.create(null)));
           }
+        case "isNil":
+          return replace(IsNilNodeGen.create(argumentNodes[0]));
+        case "notNil":
+          return replace(NotNilNodeGen.create(argumentNodes[0]));
       }
       return makeSend();
     }
