@@ -1,41 +1,40 @@
 #!/bin/bash
+## Script fast execution, fewest possible debug options
+
 BASE_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 if [ -z "$GRAAL_HOME" ]; then
-  GRAAL_HOME="$BASE_DIR/../graal"
-  if [ ! -d "$GRAAL_HOME" ]
-  then
+  if [ -d "$BASE_DIR/../graal" ]; then
+    GRAAL_HOME="$BASE_DIR/../graal"
+  elif [ -d "$BASE_DIR/../GraalVM" ]; then
     GRAAL_HOME="$BASE_DIR/../GraalVM"
-    if [ ! -d "$GRAAL_HOME" ]
-    then
-      echo "Please set GRAAL_HOME, could not be found automatically."
-      exit 1
-    fi
+  elif [ -d '/home/smarr/Projects/SOM/graal']; then
+    GRAAL_HOME='/home/smarr/Projects/SOM/graal'
+  elif [ -d '/Users/smarr/Projects/PostDoc/Truffle/graal' ]; then
+    GRAAL_HOME='/Users/smarr/Projects/PostDoc/Truffle/graal'
+  else
+    echo "Please set GRAAL_HOME, could not be found automatically."
+    exit 1
   fi
 fi
 
+STD_FLAGS="-G:-TraceTruffleInlining \
+           -G:-TraceTruffleCompilation \
+           -G:+TruffleCompilationExceptionsAreFatal "
+#-G:+TruffleSplitting 
+
 if [ -z "$GRAAL_FLAGS" ]; then
-  GRAAL_FLAGS='-G:-TraceTruffleInlining -G:-TraceTruffleCompilation -G:+TruffleSplitting -G:+TruffleCompilationExceptionsAreFatal'
+  GRAAL_FLAGS="$STD_FLAGS "
 fi
 
 if [ ! -z "$DBG" ]; then
   GRAAL_DEBUG_SWITCH='-d'
 fi
 
-#GRAAL_FLAGS='-ea -XX:+UnlockDiagnosticVMOptions -XX:+LogCompilation
-#      -G:+TraceTruffleExpansion -G:+TraceTruffleExpansionSource
-#      -XX:+TraceDeoptimization
-#      -G:-TruffleBackgroundCompilation
-#      -G:+TraceTruffleCompilationDetails'
+if [ ! -z "ASSERT" ]; then
+  USE_ASSERT="-esa -ea "
+fi
 
-#GRAAL_FLAGS="$GRAAL_FLAGS -G:TruffleCompileOnly=Ball>>#initialize "  #Random>>#next,Bounce>>#benchmark
-
-#GRAAL_FLAGS="$GRAAL_FLAGS -G:Dump=Truffle,TruffleTree "
-#GRAAL_FLAGS="$GRAAL_FLAGS -G:+TraceTruffleCompilation "
-#GRAAL_FLAGS="$GRAAL_FLAGS -XX:+UnlockDiagnosticVMOptions -XX:CompileCommand=print,*::callRoot "
-
-#GRAAL_FLAGS="$GRAAL_FLAGS -G:TruffleGraphMaxNodes=1500000 -G:TruffleInliningMaxCallerSize=10000 -G:TruffleInliningMaxCalleeSize=10000 -G:TruffleInliningTrivialSize=10000 -G:TruffleSplittingMaxCalleeSize=100000"
-
-ASSERT="-esa -ea "
-$GRAAL_HOME/mxtool/mx $GRAAL_DEBUG_SWITCH --vm server vm $GRAAL_FLAGS $GF -Xss160M $ASSERT \
+exec $GRAAL_HOME/mxtool/mx $GRAAL_DEBUG_SWITCH --vm server vm $GRAAL_FLAGS $GF \
+   -Xss160M $USE_ASSERT \
    -Xbootclasspath/a:build/classes:libs/truffle.jar \
    som.VM --platform core-lib/Platform.som "$@"
