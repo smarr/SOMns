@@ -107,6 +107,7 @@ public final class SClass extends SObjectWithoutFields {
   }
 
   public SClass getClassCorrespondingTo(final ClassDefinitionId classId) {
+    CompilerAsserts.neverPartOfCompilation("This should not be on the fast path, specialization/caching needed?");
     SClass cls = this;
     while (cls != null && !cls.isBasedOn(classId)) {
       cls = cls.getSuperClass();
