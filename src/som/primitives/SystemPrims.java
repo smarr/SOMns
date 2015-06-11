@@ -11,7 +11,6 @@ import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vm.Bootstrap;
 import som.vm.constants.Nil;
 import som.vmobjects.SArray;
-import som.vmobjects.SArray.ArrayType;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.RootCallTarget;
@@ -126,7 +125,7 @@ public final class SystemPrims {
   public abstract static class VMArgumentsPrim extends UnaryExpressionNode {
     @Specialization
     public final SArray getArguments(final Object receiver) {
-      return new SArray(ArrayType.OBJECT, VM.getArguments());
+      return new SArray(true, VM.getArguments());
     }
   }
 

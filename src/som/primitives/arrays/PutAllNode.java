@@ -8,14 +8,12 @@ import som.primitives.BlockPrims.ValuePrimitiveNode;
 import som.primitives.SizeAndLengthPrim;
 import som.vm.constants.Nil;
 import som.vmobjects.SArray;
-import som.vmobjects.SArray.ArrayType;
 import som.vmobjects.SBlock;
 import som.vmobjects.SObjectWithoutFields;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
-import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -24,7 +22,6 @@ import com.oracle.truffle.api.nodes.RootNode;
 
 
 @GenerateNodeFactory
-@ImportStatic(ArrayType.class)
 @NodeChild(value = "length", type = SizeAndLengthPrim.class, executeWith = "receiver")
 public abstract class PutAllNode extends BinaryExpressionNode
   implements ValuePrimitiveNode  {
@@ -51,7 +48,7 @@ public abstract class PutAllNode extends BinaryExpressionNode
            !(value instanceof SBlock);
   }
 
-  @Specialization(guards = {"isEmptyType(rcvr)", "valueIsNil(nil)"})
+  @Specialization(guards = {"rcvr.isEmptyType()", "valueIsNil(nil)"})
   public SArray doPutNilInEmptyArray(final SArray rcvr, final Object nil,
       final long length) {
     // NO OP
@@ -106,22 +103,22 @@ public abstract class PutAllNode extends BinaryExpressionNode
         long[] newStorage = new long[(int) length];
         newStorage[0] = (long) result;
         evalBlockForRemaining(frame, block, length, newStorage);
-        rcvr.transitionTo(ArrayType.LONG, newStorage);
+        rcvr.transitionTo(newStorage);
       } else if (result instanceof Double) {
         double[] newStorage = new double[(int) length];
         newStorage[0] = (double) result;
         evalBlockForRemaining(frame, block, length, newStorage);
-        rcvr.transitionTo(ArrayType.DOUBLE, newStorage);
+        rcvr.transitionTo(newStorage);
       } else if (result instanceof Boolean) {
         boolean[] newStorage = new boolean[(int) length];
         newStorage[0] = (boolean) result;
         evalBlockForRemaining(frame, block, length, newStorage);
-        rcvr.transitionTo(ArrayType.BOOLEAN, newStorage);
+        rcvr.transitionTo(newStorage);
       } else {
         Object[] newStorage = new Object[(int) length];
         newStorage[0] = result;
         evalBlockForRemaining(frame, block, length, newStorage);
-        rcvr.transitionTo(ArrayType.OBJECT, newStorage);
+        rcvr.transitionTo(newStorage);
       }
     } finally {
       if (CompilerDirectives.inInterpreter()) {

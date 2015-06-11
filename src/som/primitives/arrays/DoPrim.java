@@ -7,14 +7,12 @@ import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.primitives.BlockPrims.ValuePrimitiveNode;
 import som.vm.constants.Nil;
 import som.vmobjects.SArray;
-import som.vmobjects.SArray.ArrayType;
 import som.vmobjects.SArray.PartiallyEmptyArray;
 import som.vmobjects.SBlock;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
-import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
@@ -23,7 +21,6 @@ import com.oracle.truffle.api.utilities.ValueProfile;
 
 
 @GenerateNodeFactory
-@ImportStatic(ArrayType.class)
 public abstract class DoPrim extends BinaryExpressionNode
   implements ValuePrimitiveNode {
   private final ValueProfile storageType = ValueProfile.createClassProfile();
@@ -44,7 +41,7 @@ public abstract class DoPrim extends BinaryExpressionNode
     this.block.executeDispatch(frame, new Object[] {block, arg});
   }
 
-  @Specialization(guards = "isEmptyType(arr)")
+  @Specialization(guards = "arr.isEmptyType()")
   public final SArray doEmptyArray(final VirtualFrame frame,
       final SArray arr, final SBlock block) {
     int length = arr.getEmptyStorage(storageType);
@@ -63,7 +60,7 @@ public abstract class DoPrim extends BinaryExpressionNode
     return arr;
   }
 
-  @Specialization(guards = "isPartiallyEmptyType(arr)")
+  @Specialization(guards = "arr.isPartiallyEmptyType()")
   public final SArray doPartiallyEmptyArray(final VirtualFrame frame,
       final SArray arr, final SBlock block) {
     PartiallyEmptyArray storage = arr.getPartiallyEmptyStorage(storageType);
@@ -83,7 +80,7 @@ public abstract class DoPrim extends BinaryExpressionNode
     return arr;
   }
 
-  @Specialization(guards = "isObjectType(arr)")
+  @Specialization(guards = "arr.isObjectType()")
   public final SArray doObjectArray(final VirtualFrame frame,
       final SArray arr, final SBlock block) {
     Object[] storage = arr.getObjectStorage(storageType);
@@ -103,7 +100,7 @@ public abstract class DoPrim extends BinaryExpressionNode
     return arr;
   }
 
-  @Specialization(guards = "isLongType(arr)")
+  @Specialization(guards = "arr.isLongType()")
   public final SArray doLongArray(final VirtualFrame frame,
       final SArray arr, final SBlock block) {
     long[] storage = arr.getLongStorage(storageType);
@@ -123,7 +120,7 @@ public abstract class DoPrim extends BinaryExpressionNode
     return arr;
   }
 
-  @Specialization(guards = "isDoubleType(arr)")
+  @Specialization(guards = "arr.isDoubleType()")
   public final SArray doDoubleArray(final VirtualFrame frame,
       final SArray arr, final SBlock block) {
     double[] storage = arr.getDoubleStorage(storageType);
@@ -143,7 +140,7 @@ public abstract class DoPrim extends BinaryExpressionNode
     return arr;
   }
 
-  @Specialization(guards = "isBooleanType(arr)")
+  @Specialization(guards = "arr.isBooleanType()")
   public final SArray doBooleanArray(final VirtualFrame frame,
       final SArray arr, final SBlock block) {
     boolean[] storage = arr.getBooleanStorage(storageType);

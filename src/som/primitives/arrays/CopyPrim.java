@@ -2,45 +2,41 @@ package som.primitives.arrays;
 
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vmobjects.SArray;
-import som.vmobjects.SArray.ArrayType;
 
-import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.utilities.ValueProfile;
 
 
-@ImportStatic(ArrayType.class)
 public abstract class CopyPrim extends UnaryExpressionNode {
 
   private final ValueProfile storageType = ValueProfile.createClassProfile();
 
-  @Specialization(guards = "isEmptyType(receiver)")
+  @Specialization(guards = "receiver.isEmptyType()")
   public final SArray doEmptyArray(final SArray receiver) {
     return new SArray(receiver.getEmptyStorage(storageType));
   }
 
-  @Specialization(guards = "isPartiallyEmptyType(receiver)")
+  @Specialization(guards = "receiver.isPartiallyEmptyType()")
   public final SArray doPartiallyEmptyArray(final SArray receiver) {
-    return new SArray(ArrayType.PARTIAL_EMPTY,
-        receiver.getPartiallyEmptyStorage(storageType).copy());
+    return new SArray(true, receiver.getPartiallyEmptyStorage(storageType).copy());
   }
 
-  @Specialization(guards = "isObjectType(receiver)")
+  @Specialization(guards = "receiver.isObjectType()")
   public final SArray doObjectArray(final SArray receiver) {
     return SArray.create(receiver.getObjectStorage(storageType).clone());
   }
 
-  @Specialization(guards = "isLongType(receiver)")
+  @Specialization(guards = "receiver.isLongType()")
   public final SArray doLongArray(final SArray receiver) {
     return SArray.create(receiver.getLongStorage(storageType).clone());
   }
 
-  @Specialization(guards = "isDoubleType(receiver)")
+  @Specialization(guards = "receiver.isDoubleType()")
   public final SArray doDoubleArray(final SArray receiver) {
     return SArray.create(receiver.getDoubleStorage(storageType).clone());
   }
 
-  @Specialization(guards = "isBooleanType(receiver)")
+  @Specialization(guards = "receiver.isBooleanType()")
   public final SArray doBooleanArray(final SArray receiver) {
     return SArray.create(receiver.getBooleanStorage(storageType).clone());
   }
