@@ -45,8 +45,6 @@ import som.primitives.UnequalsPrimFactory;
 import som.primitives.arithmetic.AdditionPrimFactory;
 import som.primitives.arithmetic.DividePrimFactory;
 import som.primitives.arithmetic.DoubleDivPrimFactory;
-import som.primitives.arithmetic.GreaterThanPrimFactory;
-import som.primitives.arithmetic.LessThanOrEqualPrimFactory;
 import som.primitives.arithmetic.LessThanPrimFactory;
 import som.primitives.arithmetic.ModuloPrimFactory;
 import som.primitives.arithmetic.MultiplicationPrimFactory;
@@ -209,8 +207,6 @@ public final class Bootstrap {
     allFactories.add(BitAndPrimFactory.getInstance());
     allFactories.add(DividePrimFactory.getInstance());
     allFactories.add(DoubleDivPrimFactory.getInstance());
-    allFactories.add(GreaterThanPrimFactory.getInstance());
-    allFactories.add(LessThanOrEqualPrimFactory.getInstance());
     allFactories.add(LessThanPrimFactory.getInstance());
     allFactories.add(ModuloPrimFactory.getInstance());
     allFactories.add(MultiplicationPrimFactory.getInstance());

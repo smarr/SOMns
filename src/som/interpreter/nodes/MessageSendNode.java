@@ -50,8 +50,8 @@ import som.primitives.UnequalsPrimFactory;
 import som.primitives.arithmetic.AdditionPrimFactory;
 import som.primitives.arithmetic.DividePrimFactory;
 import som.primitives.arithmetic.DoubleDivPrimFactory;
-import som.primitives.arithmetic.GreaterThanPrimFactory;
-import som.primitives.arithmetic.LessThanOrEqualPrimFactory;
+import som.primitives.arithmetic.GreaterThanPrimNodeGen;
+import som.primitives.arithmetic.LessThanOrEqualPrimNodeGen;
 import som.primitives.arithmetic.LessThanPrimFactory;
 import som.primitives.arithmetic.ModuloPrimFactory;
 import som.primitives.arithmetic.MultiplicationPrimFactory;
@@ -395,11 +395,11 @@ public final class MessageSendNode {
         case "<=":
           return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
               argumentNodes[1],
-              LessThanOrEqualPrimFactory.create(null, null)));
+              LessThanOrEqualPrimNodeGen.create(null, null)));
         case ">":
           return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
               argumentNodes[1],
-              GreaterThanPrimFactory.create(null, null)));
+              GreaterThanPrimNodeGen.create(null, null)));
         case "+":
           return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
               argumentNodes[1],
