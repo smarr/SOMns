@@ -5,6 +5,7 @@ import som.vm.constants.KernelObj;
 import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithoutFields;
 
+import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
@@ -15,7 +16,9 @@ import com.oracle.truffle.api.utilities.ValueProfile;
 public abstract class OuterObjectRead
     extends ExpressionNode implements ISpecialSend {
 
-  private final int contextLevel;
+  protected static final int INLINE_CACHE_SIZE = 6;
+
+  protected final int contextLevel;
   private final ClassDefinitionId classDefId;
   private final ClassDefinitionId enclosingLexicalClassId;
 
@@ -44,9 +47,26 @@ public abstract class OuterObjectRead
   @Override
   public boolean isSuperSend() { return false; }
 
-  @Specialization
-  public Object doSObject(final SObjectWithoutFields receiver) {
-    return getEnclosingObject(receiver);
+  protected final SClass getLexicalClass(final SObjectWithoutFields rcvr) {
+    return rcvr.getSOMClass().getClassCorrespondingTo(classDefId);
+  }
+
+  @Specialization(guards = "contextLevel == 0")
+  public final Object doForOuterIsDirectClass(final SObjectWithoutFields receiver) {
+    return enclosingObj.profile(receiver);
+  }
+
+  @Specialization(limit = "INLINE_CACHE_SIZE",
+      guards = {"contextLevel != 0", "receiver.getSOMClass() == rcvrClass"})
+  public final Object doForFurtherOuter(final SObjectWithoutFields receiver,
+      @Cached("receiver.getSOMClass()") final SClass rcvrClass,
+      @Cached("getLexicalClass(receiver)") final SClass lexicalClass) {
+    return getEnclosingObject(receiver, lexicalClass);
+  }
+
+  @Specialization(guards = "contextLevel != 0", contains = "doForFurtherOuter")
+  public final Object fallback(final SObjectWithoutFields receiver) {
+    return getEnclosingObject(receiver, getLexicalClass(receiver));
   }
 
   public abstract Object executeEvaluated(Object receiver);
@@ -61,14 +81,10 @@ public abstract class OuterObjectRead
   }
 
   @ExplodeLoop
-  private Object getEnclosingObject(final SObjectWithoutFields receiver) {
-    if (contextLevel == 0) {
-      return enclosingObj.profile(receiver);
-    }
-
-    SClass cls = receiver.getSOMClass().getClassCorrespondingTo(classDefId);
-    int ctxLevel = contextLevel - 1;
-    SObjectWithoutFields enclosing = cls.getEnclosingObject();
+  private Object getEnclosingObject(final SObjectWithoutFields receiver,
+      final SClass lexicalClass) {
+    int ctxLevel = contextLevel - 1; // 0 is already covered with specialization
+    SObjectWithoutFields enclosing = lexicalClass.getEnclosingObject();
 
     while (ctxLevel > 0) {
       ctxLevel--;
