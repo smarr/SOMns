@@ -30,6 +30,7 @@ import som.interpreter.nodes.specialized.whileloops.WhileWithStaticBlocksNode.Wh
 import som.interpreter.nodes.specialized.whileloops.WhileWithStaticBlocksNode.WhileTrueStaticBlocksNode;
 import som.primitives.BlockPrimsFactory.ValueNonePrimFactory;
 import som.primitives.BlockPrimsFactory.ValueOnePrimFactory;
+import som.primitives.BlockPrimsFactory.ValueTwoPrimFactory;
 import som.primitives.DoublePrimsFactory.PositiveInfinityPrimFactory;
 import som.primitives.DoublePrimsFactory.RoundPrimFactory;
 import som.primitives.EqualsEqualsPrimFactory;
@@ -255,7 +256,6 @@ public final class MessageSendNode {
                 argumentNodes[0], RoundPrimFactory.create(null)));
           }
           break;
-
         case "as32BitSignedValue":
           if (receiver instanceof Integer) {
             return replace(new EagerUnaryPrimitiveNode(selector,
@@ -525,11 +525,17 @@ public final class MessageSendNode {
                 SubstringPrimFactory.create(null, null, null)));
           }
           break;
-
         case "invokeOn:with:":
           return replace(InvokeOnPrimFactory.create(
               argumentNodes[0], argumentNodes[1], argumentNodes[2],
               ToArgumentsArrayNodeGen.create(null, null)));
+        case "value:with:":
+          if (arguments[0] instanceof SBlock) {
+            return replace(new EagerTernaryPrimitiveNode(selector, argumentNodes[0],
+                argumentNodes[1], argumentNodes[2],
+                ValueTwoPrimFactory.create(null, null, null)));
+          }
+          break;
       }
       return makeSend();
     }
