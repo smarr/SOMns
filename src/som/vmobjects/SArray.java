@@ -202,20 +202,24 @@ public final class SArray extends SAbstractObject {
 
   private static final ValueProfile partiallyEmptyStorageType = ValueProfile.createClassProfile();
 
-  public void ifFullTransitionPartiallyEmpty() {
+  public void ifFullOrObjectTransitionPartiallyEmpty() {
     PartiallyEmptyArray arr = getPartiallyEmptyStorage(partiallyEmptyStorageType);
 
     if (arr.isFull()) {
       if (arr.getType() == PartiallyEmptyArray.Type.LONG) {
         storage = createLong(arr.getStorage());
+        return;
       } else if (arr.getType() == PartiallyEmptyArray.Type.DOUBLE) {
         storage = createDouble(arr.getStorage());
+        return;
       } else if (arr.getType() == PartiallyEmptyArray.Type.BOOLEAN) {
         storage = createBoolean(arr.getStorage());
-      } else {
-        arr.allocProfile.doesBecomeObject();
-        storage = arr.getStorage();
+        return;
       }
+    }
+    if (arr.getType() == PartiallyEmptyArray.Type.OBJECT) {
+      arr.allocProfile.doesBecomeObject();
+      storage = arr.getStorage();
     }
   }
 

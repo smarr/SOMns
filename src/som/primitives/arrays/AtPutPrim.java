@@ -117,7 +117,7 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
       storage.setType(PartiallyEmptyArray.Type.OBJECT);
     }
 
-    receiver.ifFullTransitionPartiallyEmpty();
+    receiver.ifFullOrObjectTransitionPartiallyEmpty();
     return value;
   }
 
@@ -130,7 +130,7 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
     if (storage.getType() != PartiallyEmptyArray.Type.DOUBLE) {
       storage.setType(PartiallyEmptyArray.Type.OBJECT);
     }
-    receiver.ifFullTransitionPartiallyEmpty();
+    receiver.ifFullOrObjectTransitionPartiallyEmpty();
     return value;
   }
 
@@ -143,7 +143,7 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
     if (storage.getType() != PartiallyEmptyArray.Type.BOOLEAN) {
       storage.setType(PartiallyEmptyArray.Type.OBJECT);
     }
-    receiver.ifFullTransitionPartiallyEmpty();
+    receiver.ifFullOrObjectTransitionPartiallyEmpty();
     return value;
   }
 
@@ -169,7 +169,7 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
     PartiallyEmptyArray storage = receiver.getPartiallyEmptyStorage(storageType);
     setValue(idx, value, storage);
     storage.setType(PartiallyEmptyArray.Type.OBJECT);
-    receiver.ifFullTransitionPartiallyEmpty();
+    receiver.ifFullOrObjectTransitionPartiallyEmpty();
     return value;
   }
 
