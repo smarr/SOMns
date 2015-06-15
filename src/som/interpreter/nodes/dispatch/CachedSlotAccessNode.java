@@ -4,6 +4,7 @@ import som.interpreter.nodes.SlotAccessNode;
 import som.interpreter.objectstorage.FieldAccessorNode.AbstractWriteFieldNode;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject;
+import som.vmobjects.SObjectWithoutFields;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 
@@ -40,11 +41,12 @@ public class CachedSlotAccessNode extends AbstractDispatchNode {
     @Override
     public Object executeDispatch(final VirtualFrame frame,
         final Object[] arguments) {
-      assert arguments[0] instanceof SObject;
-      SObject rcvr = (SObject) arguments[0];
+      assert arguments[0] instanceof SObjectWithoutFields;
+      SObjectWithoutFields rcvr = (SObjectWithoutFields) arguments[0];
 
       if (rcvr.getSOMClass() == rcvrClass) {
-        return access.doRead(frame, rcvr);
+        assert arguments[0] instanceof SObject;
+        return access.doRead(frame, (SObject) rcvr);
       } else {
         return nextInCache.executeDispatch(frame, arguments);
       }
@@ -95,11 +97,12 @@ public class CachedSlotAccessNode extends AbstractDispatchNode {
     @Override
     public Object executeDispatch(final VirtualFrame frame,
         final Object[] arguments) {
-      assert arguments[0] instanceof SObject;
-      SObject rcvr = (SObject) arguments[0];
+      assert arguments[0] instanceof SObjectWithoutFields;
+      SObjectWithoutFields rcvr = (SObjectWithoutFields) arguments[0];
 
       if (rcvr.getSOMClass() == rcvrClass) {
-        return write.write(rcvr, arguments[1]);
+        assert arguments[0] instanceof SObject;
+        return write.write((SObject) rcvr, arguments[1]);
       } else {
         return nextInCache.executeDispatch(frame, arguments);
       }
