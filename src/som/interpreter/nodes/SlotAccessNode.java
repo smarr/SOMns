@@ -14,6 +14,7 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
+import com.oracle.truffle.api.utilities.ValueProfile;
 
 
 public abstract class SlotAccessNode extends ExpressionNode {
@@ -26,6 +27,7 @@ public abstract class SlotAccessNode extends ExpressionNode {
     // TODO: may be, we can get rid of this completely?? could directly use AbstractReadFieldNode
     // TODO: we only got read support at the moment
     @Child protected AbstractReadFieldNode read;
+    private final ValueProfile rcvrClass = ValueProfile.createClassProfile();
 
     public SlotReadNode(final AbstractReadFieldNode read) {
       this.read = read;
@@ -38,12 +40,13 @@ public abstract class SlotAccessNode extends ExpressionNode {
 
     @Override
     public Object executeGeneric(final VirtualFrame frame) {
-      return read.read((SObject) SArguments.rcvr(frame));
+      return read.read((SObject) rcvrClass.profile(SArguments.rcvr(frame)));
     }
   }
 
   // TODO: try to remove, should only be used in getCallTarget version of mutator slots
   public static final class SlotWriteNode extends ExpressionNode {
+    private final ValueProfile rcvrClass = ValueProfile.createClassProfile();
     @Child protected AbstractWriteFieldNode write;
 
     public SlotWriteNode(final AbstractWriteFieldNode write) {
@@ -53,7 +56,7 @@ public abstract class SlotAccessNode extends ExpressionNode {
 
     @Override
     public Object executeGeneric(final VirtualFrame frame) {
-      return write.write((SObject) SArguments.rcvr(frame), SArguments.arg(frame, 1));
+      return write.write((SObject) rcvrClass.profile(SArguments.rcvr(frame)), SArguments.arg(frame, 1));
     }
   }
 
