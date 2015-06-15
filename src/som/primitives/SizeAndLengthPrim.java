@@ -17,7 +17,7 @@ public abstract class SizeAndLengthPrim extends UnaryExpressionNode {
 
   @Specialization(guards = "receiver.isEmptyType()")
   public final long doEmptySArray(final SArray receiver) {
-    return receiver.getEmptyStorage(storageType);
+    return receiver.getEmptyStorage(storageType).numberOfElements;
   }
 
   @Specialization(guards = "receiver.isPartiallyEmptyType()")

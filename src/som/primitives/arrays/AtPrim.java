@@ -19,7 +19,7 @@ public abstract class AtPrim extends BinaryExpressionNode {
   @Specialization(guards = "receiver.isEmptyType()")
   public final Object doEmptySArray(final SArray receiver, final long idx) {
     assert idx > 0;
-    assert idx <= receiver.getEmptyStorage(storageType);
+    assert idx <= receiver.getEmptyStorage(storageType).numberOfElements;
     return Nil.nilObject;
   }
 

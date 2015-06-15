@@ -23,21 +23,21 @@ public abstract class CopyPrim extends UnaryExpressionNode {
 
   @Specialization(guards = "receiver.isObjectType()")
   public final SArray doObjectArray(final SArray receiver) {
-    return SArray.create(receiver.getObjectStorage(storageType).clone());
+    return new SArray(receiver.getObjectStorage(storageType).clone());
   }
 
   @Specialization(guards = "receiver.isLongType()")
   public final SArray doLongArray(final SArray receiver) {
-    return SArray.create(receiver.getLongStorage(storageType).clone());
+    return new SArray(receiver.getLongStorage(storageType).clone());
   }
 
   @Specialization(guards = "receiver.isDoubleType()")
   public final SArray doDoubleArray(final SArray receiver) {
-    return SArray.create(receiver.getDoubleStorage(storageType).clone());
+    return new SArray(receiver.getDoubleStorage(storageType).clone());
   }
 
   @Specialization(guards = "receiver.isBooleanType()")
   public final SArray doBooleanArray(final SArray receiver) {
-    return SArray.create(receiver.getBooleanStorage(storageType).clone());
+    return new SArray(receiver.getBooleanStorage(storageType).clone());
   }
 }

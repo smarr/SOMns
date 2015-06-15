@@ -48,7 +48,7 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
       final long value) {
     long idx = index - 1;
     assert idx >= 0;
-    assert idx < receiver.getEmptyStorage(storageType);
+    assert idx < receiver.getEmptyStorage(storageType).numberOfElements;
 
     receiver.transitionFromEmptyToPartiallyEmptyWith(idx, value);
     return value;
@@ -59,7 +59,7 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
       final double value) {
     long idx = index - 1;
     assert idx >= 0;
-    assert idx < receiver.getEmptyStorage(storageType);
+    assert idx < receiver.getEmptyStorage(storageType).numberOfElements;
 
     receiver.transitionFromEmptyToPartiallyEmptyWith(idx, value);
     return value;
@@ -70,7 +70,7 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
       final boolean value) {
     long idx = index - 1;
     assert idx >= 0;
-    assert idx < receiver.getEmptyStorage(storageType);
+    assert idx < receiver.getEmptyStorage(storageType).numberOfElements;
 
     receiver.transitionFromEmptyToPartiallyEmptyWith(idx, value);
     return value;
@@ -81,7 +81,7 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
       final Object value) {
     long idx = index - 1;
     assert idx >= 0;
-    assert idx < receiver.getEmptyStorage(storageType);
+    assert idx < receiver.getEmptyStorage(storageType).numberOfElements;
 
     receiver.transitionFromEmptyToPartiallyEmptyWith(idx, value);
     return value;
@@ -92,7 +92,7 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
       final Object value) {
     long idx = index - 1;
     assert idx >= 0;
-    assert idx < receiver.getEmptyStorage(storageType);
+    assert idx < receiver.getEmptyStorage(storageType).numberOfElements;
     return value;
   }
 

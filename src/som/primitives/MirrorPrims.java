@@ -29,7 +29,7 @@ public abstract class MirrorPrims {
     @Specialization
     public final SArray getNestedClasses(final SObjectWithoutFields rcvr) {
       SClass[] classes = rcvr.getSOMClass().getNestedClasses(rcvr);
-      return SArray.create(classes);
+      return new SArray(classes);
     }
   }
 
@@ -50,7 +50,7 @@ public abstract class MirrorPrims {
     public final SArray getMethod(final Object rcvr) {
       CompilerAsserts.neverPartOfCompilation("Uses Types.getClassOf, so, should be specialized in performance cirtical code");
       SInvokable[] invokables = Types.getClassOf(rcvr).getMethods();
-      return SArray.create(invokables);
+      return new SArray(invokables);
     }
   }
 
@@ -84,7 +84,7 @@ public abstract class MirrorPrims {
       assert classDefHandle instanceof ClassDefinition;
       ClassDefinition def = (ClassDefinition) classDefHandle;
       ClassDefinition[] nested = def.getNestedClassDefinitions();
-      return SArray.create(nested);
+      return new SArray(nested);
     }
   }
 
@@ -113,7 +113,7 @@ public abstract class MirrorPrims {
           methods.add((SInvokable) disp);
         }
       }
-      return SArray.create(methods.toArray(new SInvokable[methods.size()]));
+      return new SArray(methods.toArray(new SInvokable[methods.size()]));
     }
   }
 

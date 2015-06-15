@@ -98,7 +98,7 @@ public abstract class IntegerPrims {
       for (int i = 0; i < cnt; i++) {
         arr[i] = i + receiver;
       }
-      return SArray.create(arr);
+      return new SArray(arr);
     }
   }
 

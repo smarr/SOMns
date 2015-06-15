@@ -2,6 +2,7 @@ package som.vmobjects;
 
 import java.util.Arrays;
 
+import som.primitives.arrays.NewPrim.AllocProfile;
 import som.vm.constants.Classes;
 import som.vm.constants.Nil;
 
@@ -17,31 +18,11 @@ import com.oracle.truffle.api.utilities.ValueProfile;
 public final class SArray extends SAbstractObject {
   public static final int FIRST_IDX = 0;
 
-  public static SArray create(final Object[] values) {
-    return new SArray(values);
-  }
-
-  public static SArray create(final long[] values) {
-    return new SArray(values);
-  }
-
-  public static SArray create(final double[] values) {
-    return new SArray(values);
-  }
-
-  public static SArray create(final boolean[] values) {
-    return new SArray(values);
-  }
-
-  public static SArray create(final int length) {
-    return new SArray(length);
-  }
-
   private Object storage;
 
-  public int getEmptyStorage(final ValueProfile storageType) {
+  public EmptyArray getEmptyStorage(final ValueProfile storageType) {
     assert isEmptyType();
-    return (int) storageType.profile(storage);
+    return (EmptyArray) storageType.profile(storage);
   }
 
   public PartiallyEmptyArray getPartiallyEmptyStorage(final ValueProfile storageType) {
@@ -73,23 +54,27 @@ public final class SArray extends SAbstractObject {
    * Creates and empty array, using the EMPTY strategy.
    * @param length
    */
-  public SArray(final long length) {
-    storage = (int) length;
+  public SArray(final long length, final AllocProfile allocProfile) {
+    storage = new EmptyArray((int) length, allocProfile);
   }
 
-  private SArray(final Object[] val) {
+  public SArray(final EmptyArray empty) {
+    storage = empty;
+  }
+
+  public SArray(final Object[] val) {
     storage = val;
   }
 
-  private SArray(final long[] val) {
+  public SArray(final long[] val) {
     storage = val;
   }
 
-  private SArray(final double[] val) {
+  public SArray(final double[] val) {
     storage = val;
   }
 
-  private SArray(final boolean[] val) {
+  public SArray(final boolean[] val) {
     storage = val;
   }
 
@@ -101,8 +86,9 @@ public final class SArray extends SAbstractObject {
   private void fromEmptyToParticalWithType(final PartiallyEmptyArray.Type type,
       final long idx, final Object val) {
     assert isEmptyType();
-    int length = (int) storage;
-    storage   = new PartiallyEmptyArray(type, length, idx, val);
+    EmptyArray empty = (EmptyArray) storage;
+    storage = new PartiallyEmptyArray(type, empty.numberOfElements, idx, val,
+        empty.allocProfile);
   }
 
   /**
@@ -125,14 +111,21 @@ public final class SArray extends SAbstractObject {
   }
 
   public void transitionToEmpty(final long length) {
-    storage = (int) length;
+    // TODO: the allocprofile should come from the AST node!!!
+    storage = new EmptyArray((int) length, new AllocProfile());
   }
 
   public void transitionTo(final Object newStorage) {
     storage = newStorage;
   }
 
+//  private static final ValueProfile emptyStorageType = ValueProfile.createClassProfile();
+
   public void transitionToObjectWithAll(final long length, final Object val) {
+    // TODO: this might need also to set the allocation profile AllocProfile
+//    if (isEmptyType()) {
+//      getEmptyStorage(emptyStorageType);
+//    }
     Object[] arr = new Object[(int) length];
     Arrays.fill(arr, val);
     storage = arr;
@@ -159,7 +152,7 @@ public final class SArray extends SAbstractObject {
   }
 
   public boolean isEmptyType() {
-    return storage instanceof Integer;
+    return storage instanceof EmptyArray;
   }
 
   public boolean isPartiallyEmptyType() {
@@ -207,10 +200,10 @@ public final class SArray extends SAbstractObject {
     return storage;
   }
 
-  private static final ValueProfile storageType = ValueProfile.createClassProfile();
+  private static final ValueProfile partiallyEmptyStorageType = ValueProfile.createClassProfile();
 
   public void ifFullTransitionPartiallyEmpty() {
-    PartiallyEmptyArray arr = getPartiallyEmptyStorage(storageType);
+    PartiallyEmptyArray arr = getPartiallyEmptyStorage(partiallyEmptyStorageType);
 
     if (arr.isFull()) {
       if (arr.getType() == PartiallyEmptyArray.Type.LONG) {
@@ -220,8 +213,19 @@ public final class SArray extends SAbstractObject {
       } else if (arr.getType() == PartiallyEmptyArray.Type.BOOLEAN) {
         storage = createBoolean(arr.getStorage());
       } else {
+        arr.allocProfile.doesBecomeObject();
         storage = arr.getStorage();
       }
+    }
+  }
+
+  public static final class EmptyArray {
+    public final int numberOfElements;
+    public final AllocProfile allocProfile;
+
+    public EmptyArray(final int numElements, final AllocProfile allocProfile) {
+      this.numberOfElements = numElements;
+      this.allocProfile     = allocProfile;
     }
   }
 
@@ -229,13 +233,14 @@ public final class SArray extends SAbstractObject {
     private final Object[] arr;
     private int emptyElements;
     private Type type;
+    private final AllocProfile allocProfile;
 
     public enum Type {
       EMPTY, PARTIAL_EMPTY, LONG, DOUBLE, BOOLEAN,  OBJECT;
     }
 
     public PartiallyEmptyArray(final Type type, final int length,
-        final long idx, final Object val) {
+        final long idx, final Object val, final AllocProfile allocProfile) {
       // can't specialize this here already,
       // because keeping track for nils would be to expensive
       arr = new Object[length];
@@ -243,12 +248,14 @@ public final class SArray extends SAbstractObject {
       emptyElements = length - 1;
       arr[(int) idx] = val;
       this.type = type;
+      this.allocProfile = allocProfile;
     }
 
     private PartiallyEmptyArray(final PartiallyEmptyArray old) {
       arr = old.arr.clone();
       emptyElements = old.emptyElements;
       type = old.type;
+      allocProfile = old.allocProfile; // TODO: this should probably get a separate alloc profile from the clone AST location
     }
 
     public Type getType() {
