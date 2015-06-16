@@ -9,8 +9,9 @@ import som.vm.constants.Nil;
 import som.vmobjects.SArray;
 import som.vmobjects.SClass;
 
-import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.Assumption;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
@@ -25,11 +26,18 @@ public abstract class NewPrim extends BinaryExpressionNode {
   public NewPrim(final NewPrim clone) { allocProfile = clone.allocProfile; }
 
   public static class AllocProfile {
+    @CompilationFinal public Assumption assumption;
     @CompilationFinal private boolean becomesObject;
+
+    public AllocProfile() {
+      assumption = Truffle.getRuntime().createAssumption();
+    }
+
     public boolean isBecomingObject() { return becomesObject; }
     public void doesBecomeObject() {
       if (!becomesObject) {
-        CompilerDirectives.transferToInterpreterAndInvalidate();
+        assumption.invalidate();
+        /* assumption = Truffle.getRuntime().createAssumption(); */
         becomesObject = true;
       }
     }
@@ -47,12 +55,15 @@ public abstract class NewPrim extends BinaryExpressionNode {
     return receiver == Classes.arrayClass;
   }
 
-  @Specialization(guards = {"isNotBecomingObject(receiver)", "receiverIsArrayClass(receiver)"})
+  @Specialization(assumptions = "allocProfile.assumption",
+      guards = {"isNotBecomingObject(receiver)", "receiverIsArrayClass(receiver)"})
   public final SArray doSpecializingArray(final SClass receiver, final long length) {
     return new SArray(length, allocProfile);
   }
 
-  @Specialization(guards = {"isBecomingObject(receiver)", "receiverIsArrayClass(receiver)"})
+  @Specialization(/* does not need the assumption, because it is not changing anymore.
+                     assumptions = "allocProfile.assumption", */
+      guards = {"isBecomingObject(receiver)", "receiverIsArrayClass(receiver)"})
   public final SArray doObjectArray(final SClass receiver, final long length) {
     Object[] storage = new Object[(int) length];
     Arrays.fill(storage, Nil.nilObject);
