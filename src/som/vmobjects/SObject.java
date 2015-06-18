@@ -161,12 +161,24 @@ public abstract class SObject extends SObjectWithoutFields {
     setLayoutInitially(value.getLayoutForInstances());
   }
 
+  private static final long[] emptyPrim = new long[0];
   private long[] getExtendedPrimStorage() {
-    return new long[objectLayout.getNumberOfUsedExtendedPrimStorageLocations()];
+    int numExtFields = objectLayout.getNumberOfUsedExtendedPrimStorageLocations();
+    if (numExtFields == 0) {
+      return emptyPrim;
+    } else {
+      return new long[numExtFields];
+    }
   }
 
+  private static final Object[] emptyObject = new Object[0];
   private Object[] getExtendedObjectStorage() {
-    Object[] storage = new Object[objectLayout.getNumberOfUsedExtendedObjectStorageLocations()];
+    int numExtFields = objectLayout.getNumberOfUsedExtendedObjectStorageLocations();
+    if (numExtFields == 0) {
+      return emptyObject;
+    }
+
+    Object[] storage = new Object[numExtFields];
     Arrays.fill(storage, Nil.nilObject);
     return storage;
   }
