@@ -85,6 +85,7 @@ public final class SArray extends SAbstractObject {
 
   private void fromEmptyToParticalWithType(final PartiallyEmptyArray.Type type,
       final long idx, final Object val) {
+    assert type != PartiallyEmptyArray.Type.OBJECT;
     assert isEmptyType();
     EmptyArray empty = (EmptyArray) storage;
     storage = new PartiallyEmptyArray(type, empty.numberOfElements, idx, val,
@@ -93,11 +94,9 @@ public final class SArray extends SAbstractObject {
 
   /**
    * Transition from the Empty, to the PartiallyEmpty state/strategy.
+   * We don't transition to Partial with Object, because, there is no more
+   * specialization that could be applied.
    */
-  public void transitionFromEmptyToPartiallyEmptyWith(final long idx, final Object val) {
-    fromEmptyToParticalWithType(PartiallyEmptyArray.Type.OBJECT, idx, val);
-  }
-
   public void transitionFromEmptyToPartiallyEmptyWith(final long idx, final long val) {
     fromEmptyToParticalWithType(PartiallyEmptyArray.Type.LONG, idx, val);
   }
@@ -240,7 +239,7 @@ public final class SArray extends SAbstractObject {
     private final AllocProfile allocProfile;
 
     public enum Type {
-      EMPTY, PARTIAL_EMPTY, LONG, DOUBLE, BOOLEAN,  OBJECT;
+      EMPTY, PARTIAL_EMPTY, LONG, DOUBLE, BOOLEAN, OBJECT;
     }
 
     public PartiallyEmptyArray(final Type type, final int length,

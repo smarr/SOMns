@@ -1,9 +1,12 @@
 package som.primitives.arrays;
 
+import java.util.Arrays;
+
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.primitives.Primitive;
 import som.vm.constants.Nil;
 import som.vmobjects.SArray;
+import som.vmobjects.SArray.EmptyArray;
 import som.vmobjects.SArray.PartiallyEmptyArray;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
@@ -76,14 +79,23 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
     return value;
   }
 
-  @Specialization(guards = {"receiver.isEmptyType()", "valueIsNotNil(value)", "valueNotLongDoubleBoolean(value)"})
+  @Specialization(guards = {"receiver.isEmptyType()", "valueIsNotNil(value)",
+      "valueNotLongDoubleBoolean(value)"})
   public final Object doEmptySArray(final SArray receiver, final long index,
       final Object value) {
-    long idx = index - 1;
-    assert idx >= 0;
-    assert idx < receiver.getEmptyStorage(storageType).numberOfElements;
+    final int idx = (int) index - 1;
+    EmptyArray oldStorage = receiver.getEmptyStorage(storageType);
 
-    receiver.transitionFromEmptyToPartiallyEmptyWith(idx, value);
+    assert idx >= 0;
+    assert idx < oldStorage.numberOfElements;
+
+    // if the value is an object, we transition directly to an Object array
+    oldStorage.allocProfile.doesBecomeObject();
+    Object[] newStorage = new Object[oldStorage.numberOfElements];
+    Arrays.fill(newStorage, Nil.nilObject);
+    newStorage[idx] = value;
+
+    receiver.transitionTo(newStorage);
     return value;
   }
 
