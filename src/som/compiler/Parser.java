@@ -1012,7 +1012,6 @@ public final class Parser {
             arguments.get(2), source, arguments.get(0), arguments.get(1));
       } else if ("downTo:do:".equals(msgStr) &&
           arguments.get(2) instanceof LiteralNode) {
-        System.out.println(".");
         Local loopIdx = builder.addLocal("i:" + source.getCharIndex());
         ExpressionNode inlinedBody = ((LiteralNode) arguments.get(2)).inline(builder, loopIdx);
         return IntDownToDoInlinedLiteralsNodeGen.create(inlinedBody, loopIdx.getSlot(),
