@@ -87,7 +87,7 @@ public abstract class ArgumentReadNode {
     }
 
     @Override
-    public void replaceWithLexicallyEmbeddedNode(
+    public final void replaceWithLexicallyEmbeddedNode(
         final InlinerForLexicallyEmbeddedMethods inliner) {
       ExpressionNode inlined;
       if (contextLevel == 1) {
@@ -108,11 +108,11 @@ public abstract class ArgumentReadNode {
     }
 
     @Override
-    public void replaceWithCopyAdaptedToEmbeddedOuterContext(
+    public final void replaceWithCopyAdaptedToEmbeddedOuterContext(
         final InlinerAdaptToEmbeddedOuterContext inliner) {
       // this should be the access to a block argument
       if (inliner.appliesTo(contextLevel)) {
-        assert !(this instanceof NonLocalSuperReadNode);
+        assert !(this instanceof NonLocalSuperReadNode) && !(this instanceof NonLocalSelfReadNode);
         ExpressionNode node = inliner.getReplacementForBlockArgument(argumentIndex, getSourceSection());
         replace(node);
         return;
@@ -147,15 +147,14 @@ public abstract class ArgumentReadNode {
     @Override public String            toString()        { return "NonLocalSelf"; }
 
     @Override
-    public void replaceWithLexicallyEmbeddedNode(
-        final InlinerForLexicallyEmbeddedMethods inliner) {
-      throw new NotYetImplementedException();
+    protected NonLocalArgumentReadNode createNonLocalNode() {
+      return new NonLocalSelfReadNode(lexicalClass, contextLevel - 1,
+          getSourceSection());
     }
 
     @Override
-    public void replaceWithCopyAdaptedToEmbeddedOuterContext(
-        final InlinerAdaptToEmbeddedOuterContext inliner) {
-      throw new NotYetImplementedException();
+    protected LocalArgumentReadNode createLocalNode() {
+      return new LocalSelfReadNode(lexicalClass, getSourceSection());
     }
   }
 

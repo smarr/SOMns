@@ -965,10 +965,8 @@ public final class Parser {
 
     String msgStr = kw.toString();
     SSymbol msg = symbolFor(msgStr);
-
     SourceSection source = getSource(coord);
 
-    if (false) {
     if (msg.getNumberOfSignatureArguments() == 2) {
       if (arguments.get(1) instanceof LiteralNode) {
         if ("ifTrue:".equals(msgStr)) {
@@ -1012,7 +1010,6 @@ public final class Parser {
         return IntToDoInlinedLiteralsNodeGen.create(inlinedBody, loopIdx.getSlot(),
             arguments.get(2), source, arguments.get(0), arguments.get(1));
       }
-    }
     }
 
     ExpressionNode[] args = arguments.toArray(new ExpressionNode[0]);
