@@ -2,7 +2,6 @@ package som.vmobjects;
 
 import java.util.Arrays;
 
-import som.primitives.arrays.NewPrim.AllocProfile;
 import som.vm.constants.Classes;
 import som.vm.constants.Nil;
 
@@ -20,9 +19,9 @@ public final class SArray extends SAbstractObject {
 
   private Object storage;
 
-  public EmptyArray getEmptyStorage(final ValueProfile storageType) {
+  public int getEmptyStorage(final ValueProfile storageType) {
     assert isEmptyType();
-    return (EmptyArray) storageType.profile(storage);
+    return (int) storageType.profile(storage);
   }
 
   public PartiallyEmptyArray getPartiallyEmptyStorage(final ValueProfile storageType) {
@@ -54,12 +53,8 @@ public final class SArray extends SAbstractObject {
    * Creates and empty array, using the EMPTY strategy.
    * @param length
    */
-  public SArray(final long length, final AllocProfile allocProfile) {
-    storage = new EmptyArray((int) length, allocProfile);
-  }
-
-  public SArray(final EmptyArray empty) {
-    storage = empty;
+  public SArray(final long length) {
+    storage = (int) length;
   }
 
   public SArray(final Object[] val) {
@@ -87,9 +82,7 @@ public final class SArray extends SAbstractObject {
       final long idx, final Object val) {
     assert type != PartiallyEmptyArray.Type.OBJECT;
     assert isEmptyType();
-    EmptyArray empty = (EmptyArray) storage;
-    storage = new PartiallyEmptyArray(type, empty.numberOfElements, idx, val,
-        empty.allocProfile);
+    storage = new PartiallyEmptyArray(type, (int) storage, idx, val);
   }
 
   /**
@@ -110,8 +103,7 @@ public final class SArray extends SAbstractObject {
   }
 
   public void transitionToEmpty(final long length) {
-    // TODO: the allocprofile should come from the AST node!!!
-    storage = new EmptyArray((int) length, new AllocProfile());
+    storage = (int) length;
   }
 
   public void transitionTo(final Object newStorage) {
@@ -121,10 +113,6 @@ public final class SArray extends SAbstractObject {
 //  private static final ValueProfile emptyStorageType = ValueProfile.createClassProfile();
 
   public void transitionToObjectWithAll(final long length, final Object val) {
-    // TODO: this might need also to set the allocation profile AllocProfile
-//    if (isEmptyType()) {
-//      getEmptyStorage(emptyStorageType);
-//    }
     Object[] arr = new Object[(int) length];
     Arrays.fill(arr, val);
     storage = arr;
@@ -151,7 +139,7 @@ public final class SArray extends SAbstractObject {
   }
 
   public boolean isEmptyType() {
-    return storage instanceof EmptyArray;
+    return storage instanceof Integer;
   }
 
   public boolean isPartiallyEmptyType() {
@@ -217,18 +205,7 @@ public final class SArray extends SAbstractObject {
       }
     }
     if (arr.getType() == PartiallyEmptyArray.Type.OBJECT) {
-      arr.allocProfile.doesBecomeObject();
       storage = arr.getStorage();
-    }
-  }
-
-  public static final class EmptyArray {
-    public final int numberOfElements;
-    public final AllocProfile allocProfile;
-
-    public EmptyArray(final int numElements, final AllocProfile allocProfile) {
-      this.numberOfElements = numElements;
-      this.allocProfile     = allocProfile;
     }
   }
 
@@ -236,14 +213,13 @@ public final class SArray extends SAbstractObject {
     private final Object[] arr;
     private int emptyElements;
     private Type type;
-    private final AllocProfile allocProfile;
 
     public enum Type {
       EMPTY, PARTIAL_EMPTY, LONG, DOUBLE, BOOLEAN, OBJECT;
     }
 
     public PartiallyEmptyArray(final Type type, final int length,
-        final long idx, final Object val, final AllocProfile allocProfile) {
+        final long idx, final Object val) {
       // can't specialize this here already,
       // because keeping track for nils would be to expensive
       arr = new Object[length];
@@ -251,14 +227,12 @@ public final class SArray extends SAbstractObject {
       emptyElements = length - 1;
       arr[(int) idx] = val;
       this.type = type;
-      this.allocProfile = allocProfile;
     }
 
     private PartiallyEmptyArray(final PartiallyEmptyArray old) {
       arr = old.arr.clone();
       emptyElements = old.emptyElements;
       type = old.type;
-      allocProfile = old.allocProfile; // TODO: this should probably get a separate alloc profile from the clone AST location
     }
 
     public Type getType() {

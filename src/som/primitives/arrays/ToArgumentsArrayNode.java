@@ -37,7 +37,7 @@ public abstract class ToArgumentsArrayNode extends ExpressionNode {
 
   @Specialization(guards = "somArray.isEmptyType()")
   public final Object[] doEmptyArray(final SArray somArray, final Object rcvr) {
-    Object[] result = new Object[somArray.getEmptyStorage(storageType).numberOfElements + 1];
+    Object[] result = new Object[somArray.getEmptyStorage(storageType) + 1];
     Arrays.fill(result, Nil.nilObject);
     result[SArguments.RCVR_IDX] = rcvr;
     return result;

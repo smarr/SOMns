@@ -6,7 +6,6 @@ import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.primitives.Primitive;
 import som.vm.constants.Nil;
 import som.vmobjects.SArray;
-import som.vmobjects.SArray.EmptyArray;
 import som.vmobjects.SArray.PartiallyEmptyArray;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
@@ -51,7 +50,7 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
       final long value) {
     long idx = index - 1;
     assert idx >= 0;
-    assert idx < receiver.getEmptyStorage(storageType).numberOfElements;
+    assert idx < receiver.getEmptyStorage(storageType);
 
     receiver.transitionFromEmptyToPartiallyEmptyWith(idx, value);
     return value;
@@ -62,7 +61,7 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
       final double value) {
     long idx = index - 1;
     assert idx >= 0;
-    assert idx < receiver.getEmptyStorage(storageType).numberOfElements;
+    assert idx < receiver.getEmptyStorage(storageType);
 
     receiver.transitionFromEmptyToPartiallyEmptyWith(idx, value);
     return value;
@@ -73,7 +72,7 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
       final boolean value) {
     long idx = index - 1;
     assert idx >= 0;
-    assert idx < receiver.getEmptyStorage(storageType).numberOfElements;
+    assert idx < receiver.getEmptyStorage(storageType);
 
     receiver.transitionFromEmptyToPartiallyEmptyWith(idx, value);
     return value;
@@ -84,14 +83,13 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
   public final Object doEmptySArray(final SArray receiver, final long index,
       final Object value) {
     final int idx = (int) index - 1;
-    EmptyArray oldStorage = receiver.getEmptyStorage(storageType);
+    int size = receiver.getEmptyStorage(storageType);
 
     assert idx >= 0;
-    assert idx < oldStorage.numberOfElements;
+    assert idx < size;
 
     // if the value is an object, we transition directly to an Object array
-    oldStorage.allocProfile.doesBecomeObject();
-    Object[] newStorage = new Object[oldStorage.numberOfElements];
+    Object[] newStorage = new Object[size];
     Arrays.fill(newStorage, Nil.nilObject);
     newStorage[idx] = value;
 
@@ -104,7 +102,7 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
       final Object value) {
     long idx = index - 1;
     assert idx >= 0;
-    assert idx < receiver.getEmptyStorage(storageType).numberOfElements;
+    assert idx < receiver.getEmptyStorage(storageType);
     return value;
   }
 

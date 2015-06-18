@@ -1,6 +1,5 @@
 package som.interpreter;
 
-import som.primitives.arrays.NewPrim.AllocProfile;
 import som.vmobjects.SArray;
 
 import com.oracle.truffle.api.frame.Frame;
@@ -32,11 +31,9 @@ public final class SArguments {
     assert arguments.length >= 1;  // <- that's the receiver
     Object[] argsArr = new Object[arguments.length - 1];
     if (argsArr.length == 0) {
-      return new SArray(0, emptyArrProfile);
+      return new SArray(0);
     }
     System.arraycopy(arguments, 1, argsArr, 0, argsArr.length);
     return new SArray(argsArr);
   }
-
-  private static final AllocProfile emptyArrProfile = new AllocProfile();
 }

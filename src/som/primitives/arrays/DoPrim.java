@@ -44,7 +44,7 @@ public abstract class DoPrim extends BinaryExpressionNode
   @Specialization(guards = "arr.isEmptyType()")
   public final SArray doEmptyArray(final VirtualFrame frame,
       final SArray arr, final SBlock block) {
-    int length = arr.getEmptyStorage(storageType).numberOfElements;
+    int length = arr.getEmptyStorage(storageType);
     try {
       if (SArray.FIRST_IDX < length) {
         execBlock(frame, block, Nil.nilObject);
