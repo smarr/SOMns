@@ -92,6 +92,7 @@ import som.interpreter.nodes.specialized.BooleanInlinedLiteralNode.AndInlinedLit
 import som.interpreter.nodes.specialized.BooleanInlinedLiteralNode.OrInlinedLiteralNode;
 import som.interpreter.nodes.specialized.IfInlinedLiteralNode;
 import som.interpreter.nodes.specialized.IfTrueIfFalseInlinedLiteralsNode;
+import som.interpreter.nodes.specialized.IntDownToDoInlinedLiteralsNodeGen;
 import som.interpreter.nodes.specialized.IntToDoInlinedLiteralsNodeGen;
 import som.interpreter.nodes.specialized.whileloops.WhileInlinedLiteralsNode;
 import som.vmobjects.SInvokable;
@@ -1008,6 +1009,13 @@ public final class Parser {
         Local loopIdx = builder.addLocal("i:" + source.getCharIndex());
         ExpressionNode inlinedBody = ((LiteralNode) arguments.get(2)).inline(builder, loopIdx);
         return IntToDoInlinedLiteralsNodeGen.create(inlinedBody, loopIdx.getSlot(),
+            arguments.get(2), source, arguments.get(0), arguments.get(1));
+      } else if ("downTo:do:".equals(msgStr) &&
+          arguments.get(2) instanceof LiteralNode) {
+        System.out.println(".");
+        Local loopIdx = builder.addLocal("i:" + source.getCharIndex());
+        ExpressionNode inlinedBody = ((LiteralNode) arguments.get(2)).inline(builder, loopIdx);
+        return IntDownToDoInlinedLiteralsNodeGen.create(inlinedBody, loopIdx.getSlot(),
             arguments.get(2), source, arguments.get(0), arguments.get(1));
       }
     }
