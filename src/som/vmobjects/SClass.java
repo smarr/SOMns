@@ -55,6 +55,8 @@ public final class SClass extends SObjectWithoutFields {
   @CompilationFinal private ObjectLayout layoutForInstances;
 
   @CompilationFinal private ClassDefinition classDef;
+  @CompilationFinal private boolean hasFields;
+  @CompilationFinal private boolean hasOnlyImmutableFields;
 
   protected final SObjectWithoutFields enclosingObject;
 
@@ -126,6 +128,8 @@ public final class SClass extends SObjectWithoutFields {
     if (layoutForInstances == null) {
       layoutForInstances = new ObjectLayout(slots, this);
       this.slots = slots;
+      this.hasFields = layoutForInstances.getNumberOfFields() > 0;
+      this.hasOnlyImmutableFields = layoutForInstances.hasOnlyImmutableFields();
     } else {
       assert slots.size() == layoutForInstances.getNumberOfFields();
       assert slots.equals(this.slots);
@@ -195,15 +199,11 @@ public final class SClass extends SObjectWithoutFields {
 
   public boolean hasFields() {
     if (layoutForInstances == null) { return false; }
-    return layoutForInstances.getNumberOfFields() > 0;
+    return hasFields;
   }
 
   public boolean hasOnlyImmutableFields() {
-    return layoutForInstances.hasOnlyImmutableFields();
-  }
-
-  public int getNumberOfInstanceFields() {
-    return (layoutForInstances == null) ? 0 : layoutForInstances.getNumberOfFields();
+    return hasOnlyImmutableFields;
   }
 
   public ObjectLayout getLayoutForInstances() {
