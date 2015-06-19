@@ -55,6 +55,7 @@ class AllBenchmarks usingPlatform: platform = (
       (run: 'NBody'       numIter: 1),
 
       (run: 'Fibonacci'            in: 'LanguageFeatures' numIter: 10),
+      (run: 'OuterConstLoop'       in: 'LanguageFeatures' numIter: 10),
       (run: 'FieldLoop'            in: 'LanguageFeatures' numIter: 10),
       (run: 'FieldWrite'           in: 'LanguageFeatures' numIter: 10),
       (run: 'IntegerLoop'          in: 'LanguageFeatures' numIter: 10),

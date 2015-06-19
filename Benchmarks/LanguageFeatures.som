@@ -24,6 +24,7 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
   private Vector          = platform kernel Vector.
   private Exception       = platform kernel Exception.
   private ObjectMirror    = platform mirrors ObjectMirror.
+  private one = 5555.
 |
 )(
   public class Fibonacci = Benchmark ()(
@@ -41,6 +42,24 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
   
     public verifyResult: result = (
       ^ 10946 = result
+    )
+  ) : (
+    public newInstance = ( ^ self new )
+    public setupVerifiedRun: run = ( run innerIterations: 1 )
+  )
+  
+  public class OuterConstLoop = Benchmark ()(
+    public benchmark = (
+      | result |
+      result := 0.
+      1 to: 100000 do: [:i | 
+        result := result + one.
+      ].
+      ^ result
+    )
+    
+    public verifyResult: result = (
+      ^ 555500000 = result
     )
   ) : (
     public newInstance = ( ^ self new )
