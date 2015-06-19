@@ -27,8 +27,6 @@ public class ResolvingImplicitReceiverSend extends AbstractMessageSendNode {
 
   @Override
   public Object doPreEvaluated(final VirtualFrame frame, final Object[] args) {
-    // TODO: now we got all the lexical information, and need to resolve the
-    //       receiver of this send
     PreevaluatedExpression newNode;
 
     // first check whether it is an outer send
