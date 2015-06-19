@@ -183,9 +183,6 @@ public final class MethodBuilder {
   }
 
   private SourceSection getSourceSectionForMethod(final SourceSection ssBody) {
-    // we have a few synthetic methods, for which we do not yet have a source section
-    // TODO: improve that, have at least a hint to which elements in the code
-    //       those synthetic elements related
     assert ssBody != null;
 
     ClassBuilder holder = getEnclosingClassBuilder();

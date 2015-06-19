@@ -588,7 +588,6 @@ public final class MessageSendNode {
 
     @Override
     public boolean isSpecialSend() {
-      // TODO: is is correct?
       return false;
     }
 
@@ -621,8 +620,6 @@ public final class MessageSendNode {
       return super.specializeBinary(arguments);
     }
   }
-
-/// TODO: currently, we do not only specialize the given stuff above, but also what has been classified as 'value' sends in the OMOP branch. Is that a problem?
 
   public static final class GenericMessageSendNode
       extends AbstractMessageSendNode {

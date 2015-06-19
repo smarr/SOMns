@@ -477,7 +477,7 @@ public final class Parser {
       throws ParseError, ClassDefinitionError {
     expect(NewTerm);
     comment();
-    // TODO: this needs to be fixed, this needs to only accept a access modifier and class
+
     while (canAcceptIdentifierWithOptionalEarlierIdentifier(
         new String[]{"private", "protected", "public"}, "class")) {
       nestedClassDeclaration(clsBuilder);
