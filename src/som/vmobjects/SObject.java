@@ -133,10 +133,8 @@ public abstract class SObject extends SObjectWithoutFields {
     primitiveUsedMap |= mask;
   }
 
-
-
   private void setLayoutInitially(final ObjectLayout layout) {
-    objectLayout   = layout;
+    objectLayout        = layout;
     extensionPrimFields = getExtendedPrimStorage();
     extensionObjFields  = getExtendedObjectStorage();
   }
