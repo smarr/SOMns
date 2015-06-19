@@ -50,7 +50,7 @@ public abstract class Variable {
     }
 
     public boolean isSelf() {
-      return "self".equals(name) || "$blockSelf".equals(name); // TODO: i think, $blockSelf should never be accessed by any program
+      return "self".equals(name);
     }
 
     @Override
