@@ -383,8 +383,7 @@ public final class Parser {
   }
 
   private void classComment(final ClassBuilder clsBuilder) throws ParseError {
-    // TODO: capture comment and add it to class
-    comment();
+    clsBuilder.setComment(comment());
   }
 
   private String comment() throws ParseError {

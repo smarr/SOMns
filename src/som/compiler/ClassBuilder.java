@@ -65,6 +65,8 @@ public final class ClassBuilder {
   private final ArrayList<ExpressionNode> slotAndInitExprs = new ArrayList<>();
 
   private SSymbol name;
+  private String  classComment;
+
   private final HashSet<SlotDefinition> slots = new HashSet<>();
   private final LinkedHashMap<SSymbol, Dispatchable> dispatchables = new LinkedHashMap<>();
   private final HashMap<SSymbol, SInvokable> factoryMethods = new HashMap<SSymbol, SInvokable>();
@@ -445,5 +447,9 @@ public final class ClassBuilder {
 
   public ClassDefinitionId getClassId() {
     return classId;
+  }
+
+  public void setComment(final String comment) {
+    classComment = comment;
   }
 }
