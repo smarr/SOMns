@@ -9,6 +9,7 @@ import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SObject.SMutableObject;
 import som.vmobjects.SObjectWithoutFields;
 
+import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
 
 
@@ -33,18 +34,22 @@ public abstract class NewObjectPrim extends UnaryExpressionNode implements ISpec
   @Override
   public boolean isSuperSend() { return false; }
 
-  @Specialization(guards = {"receiver.hasFields()", "receiver.hasOnlyImmutableFields()" })
-  public final SAbstractObject doClassWithOnlyImmutableFields(final SClass receiver) {
-    return new SImmutableObject(receiver);
+  @Specialization(guards = {"cachedRcvr.hasFields()",
+      "cachedRcvr.hasOnlyImmutableFields()" })
+  public final SAbstractObject doClassWithOnlyImmutableFields(
+      final SClass receiver, @Cached("receiver") final SClass cachedRcvr) {
+    return new SImmutableObject(cachedRcvr);
   }
 
-  @Specialization(guards = {"receiver.hasFields()", "!receiver.hasOnlyImmutableFields()" })
-  public final SAbstractObject doClassWithFields(final SClass receiver) {
-    return new SMutableObject(receiver);
+  @Specialization(guards = {"cachedRcvr.hasFields()", "!cachedRcvr.hasOnlyImmutableFields()" })
+  public final SAbstractObject doClassWithFields(final SClass receiver,
+      @Cached("receiver") final SClass cachedRcvr) {
+    return new SMutableObject(cachedRcvr);
   }
 
-  @Specialization(guards = "!receiver.hasFields()")
-  public final SAbstractObject doClassWithoutFields(final SClass receiver) {
-    return new SObjectWithoutFields(receiver);
+  @Specialization(guards = "!cachedRcvr.hasFields()")
+  public final SAbstractObject doClassWithoutFields(final SClass receiver,
+      @Cached("receiver") final SClass cachedRcvr) {
+    return new SObjectWithoutFields(cachedRcvr);
   }
 }
