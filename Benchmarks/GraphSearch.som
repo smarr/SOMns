@@ -31,8 +31,8 @@ class GraphSearchSuite usingPlatform: platform andHarness: harness = (
 
       graph doIndexes: [:i |
         | noOfEdges |
-        noOfEdges := (random next
-                         rem: MaxInitEdges - MinEdges + 1) abs + MinEdges.
+        noOfEdges := (random next rem: MaxInitEdges - MinEdges + 1) abs + MinEdges.
+        
         1 to: noOfEdges do: [:j |
           | nodeId weight |
           nodeId := (random next rem: noOfNodes) abs + 1.

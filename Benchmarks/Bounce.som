@@ -36,8 +36,8 @@ class BounceSuite usingPlatform: platform andHarness: harness = (
       balls     := Array new: ballCount withAll: [ Ball new: random ].
       
       1 to: 50 do: [ :i |
-          balls do: [ :ball |
-              (ball bounce) ifTrue: [ bounces := bounces + 1 ] ] ].
+        balls do: [ :ball |
+          ball bounce ifTrue: [ bounces := bounces + 1 ] ] ].
 
       ^ bounces
     )
@@ -61,14 +61,14 @@ class BounceSuite usingPlatform: platform andHarness: harness = (
     
       x := x + xVel.
       y := y + yVel.
-      (x > xLimit)
-          ifTrue: [ x := xLimit. xVel := 0 - xVel abs. bounced := true ].
-      (x < 0)
-          ifTrue: [ x := 0.      xVel := xVel abs.     bounced := true ].
-      (y > yLimit)
-          ifTrue: [ y := yLimit. yVel := 0 - yVel abs. bounced := true ].
-      (y < 0)
-          ifTrue: [ y := 0.      yVel := yVel abs.     bounced := true ].
+      x > xLimit ifTrue: [
+        x := xLimit. xVel := 0 - xVel abs. bounced := true ].
+      x < 0 ifTrue: [
+        x := 0.      xVel := xVel abs.     bounced := true ].
+      y > yLimit ifTrue: [
+        y := yLimit. yVel := 0 - yVel abs. bounced := true ].
+      y < 0 ifTrue: [
+        y := 0.      yVel := yVel abs.     bounced := true ].
       ^ bounced
     )
   )
