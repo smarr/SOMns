@@ -32,7 +32,7 @@ class TowersSuite usingPlatform: platform andHarness: harness = (
       | top |
       
       top := piles at: pile.
-      (top isNil not) && [ disk size >= top size ]
+      top notNil && [ disk size >= top size ]
         ifTrue: [ self error: 'Cannot put a big disk on a smaller one' ].
       
       disk next: top.
@@ -66,7 +66,7 @@ class TowersSuite usingPlatform: platform andHarness: harness = (
       disks = 1
         ifTrue: [ self moveTopDiskFrom: fromPile to: toPile ]
         ifFalse: [ | otherPile |
-          otherPile := (6 - fromPile) - toPile.
+          otherPile := 6 - fromPile - toPile.
           self move: disks - 1 disksFrom: fromPile to: otherPile.
           self moveTopDiskFrom: fromPile to: toPile.
           self move: disks - 1 disksFrom: otherPile to: toPile. ]
