@@ -86,7 +86,7 @@ class TowersSuite usingPlatform: platform andHarness: harness = (
   )
   
   class TowersDisk new: size = (
-    | public size ::= size.
+    | public size = size.
       public next
     |
   )()
