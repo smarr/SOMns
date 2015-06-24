@@ -198,8 +198,7 @@ class Harness usingPlatform: platform = (
           total > maxRuntime ifTrue: [
             numIterations := i.
             ^ total ]].
-    
-        system fullGC ].
+        ].
   
       ^ total
     )
