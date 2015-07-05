@@ -93,6 +93,7 @@ import som.interpreter.nodes.specialized.BooleanInlinedLiteralNode.OrInlinedLite
 import som.interpreter.nodes.specialized.IfInlinedLiteralNode;
 import som.interpreter.nodes.specialized.IfTrueIfFalseInlinedLiteralsNode;
 import som.interpreter.nodes.specialized.IntDownToDoInlinedLiteralsNodeGen;
+import som.interpreter.nodes.specialized.IntTimesRepeatLiteralNodeGen;
 import som.interpreter.nodes.specialized.IntToDoInlinedLiteralsNodeGen;
 import som.interpreter.nodes.specialized.whileloops.WhileInlinedLiteralsNode;
 import som.vmobjects.SInvokable;
@@ -993,6 +994,10 @@ public final class Parser {
         } else if ("and:".equals(msgStr) || "&&".equals(msgStr)) {
           ExpressionNode inlinedArg = ((LiteralNode) arguments.get(1)).inline(builder);
           return new AndInlinedLiteralNode(arguments.get(0), inlinedArg, arguments.get(1), source);
+        } else if ("timesRepeat:".equals(msgStr)) {
+          ExpressionNode inlinedBody = ((LiteralNode) arguments.get(1)).inline(builder);
+          return IntTimesRepeatLiteralNodeGen.create(inlinedBody,
+              arguments.get(1), source, arguments.get(0));
         }
       }
     } else if (msg.getNumberOfSignatureArguments() == 3) {
