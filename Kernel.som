@@ -591,10 +591,14 @@ class Kernel vmMirror: vmMirror = (
     private storage  ::= Array new: size. |
   ) (
     'Accessing'
-    public at: index = ( ^ self checkIndex: index ifValid: [ storage at: index ] )
+    public at: index = (
+      self checkIndex: index.
+      ^ storage at: index
+    )
     
     public at: index put: value = (
-      ^ self checkIndex: index ifValid: [ storage at: index put: value ]
+      self checkIndex: index.
+      storage at: index put: value.
     )
     
     public first = ( ^ (self size > 0) ifTrue: [storage at: 1] ifFalse: [nil] )
@@ -635,7 +639,7 @@ class Kernel vmMirror: vmMirror = (
     
     'Removing'
     public remove = (
-      (lastIdx > firstIdx)
+      lastIdx > firstIdx
         ifTrue:  [ lastIdx := lastIdx - 1. ^storage at: lastIdx ]
         ifFalse: [
           EmptyCollectionException signalWith: self idx: lastIdx ]
@@ -648,7 +652,7 @@ class Kernel vmMirror: vmMirror = (
       found := false.
      
       self do: [ :it |
-        (it == object)
+        it == object
           ifTrue:  [ found := true ]
           ifFalse: [
             newArray at: newLast put: it.
@@ -695,13 +699,11 @@ class Kernel vmMirror: vmMirror = (
       ^arr
     )
     
-    checkIndex: index ifValid: block = (
-      ^ ((firstIdx <= index) && (index <= lastIdx)
-          ifTrue: [ block value ]
-          ifFalse: [
-            self error:
-                'Vector[' + firstIdx asString + '..' + lastIdx asString +
-                ']: Index ' + index asString + ' out of bounds' ])
+    checkIndex: index = (
+      (firstIdx <= index) && (index <= lastIdx)
+        ifFalse: [
+          IndexOutOfBounds signalWith: self index: index
+        ].
     )
     
     'DeltaBlue'
