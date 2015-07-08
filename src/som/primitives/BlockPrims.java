@@ -1,7 +1,6 @@
 package som.primitives;
 
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
-import som.interpreter.nodes.dispatch.UninitializedValuePrimDispatchNode;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.QuaternaryExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
@@ -14,17 +13,29 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
+import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
-import com.oracle.truffle.api.nodes.NodeCost;
 
 
 public abstract class BlockPrims {
 
   public interface ValuePrimitiveNode {
     void adoptNewDispatchListHead(final AbstractDispatchNode node);
+  }
+
+  public static final int CHAIN_LENGTH = 6;
+
+  public static final DirectCallNode createDirectCallNode(final SBlock receiver) {
+    assert null != receiver.getMethod().getCallTarget();
+    return Truffle.getRuntime().createDirectCallNode(
+        receiver.getMethod().getCallTarget());
+  }
+
+  public static final IndirectCallNode create() {
+    return Truffle.getRuntime().createIndirectCallNode();
   }
 
   @GenerateNodeFactory
@@ -43,66 +54,41 @@ public abstract class BlockPrims {
   }
 
   @GenerateNodeFactory
+  @ImportStatic(BlockPrims.class)
   @Primitive("blockValue:")
-  public abstract static class ValueNonePrim extends UnaryExpressionNode
-      implements ValuePrimitiveNode {
-    @Child private AbstractDispatchNode dispatchNode;
-
-    public ValueNonePrim() {
-      super(null);
-      dispatchNode = new UninitializedValuePrimDispatchNode();
-    }
-
-    @Specialization
-    public final Object doSBlock(final VirtualFrame frame, final SBlock receiver) {
-      return dispatchNode.executeDispatch(frame, new Object[] {receiver});
-    }
+  public abstract static class ValueNonePrim extends UnaryExpressionNode {
 
     @Specialization
     public final boolean doBoolean(final boolean receiver) {
       return receiver;
     }
 
-    @Override
-    public final void adoptNewDispatchListHead(final AbstractDispatchNode node) {
-      dispatchNode = insert(node);
+    @Specialization(guards = "cached == receiver.getMethod()", limit = "CHAIN_LENGTH")
+    public final Object doCachedBlock(final VirtualFrame frame,
+        final SBlock receiver,
+        @Cached("createDirectCallNode(receiver)") final DirectCallNode call,
+        @Cached("receiver.getMethod()") final SInvokable cached) {
+      return call.call(frame, new Object[] {receiver});
     }
 
-    @Override
-    public NodeCost getCost() {
-      int dispatchChain = dispatchNode.lengthOfDispatchChain();
-      if (dispatchChain == 0) {
-        return NodeCost.UNINITIALIZED;
-      } else if (dispatchChain == 1) {
-        return NodeCost.MONOMORPHIC;
-      } else if (dispatchChain <= AbstractDispatchNode.INLINE_CACHE_SIZE) {
-        return NodeCost.POLYMORPHIC;
-      } else {
-        return NodeCost.MEGAMORPHIC;
-      }
+    @Specialization(contains = "doCachedBlock")
+    public final Object doGeneric(final VirtualFrame frame,
+        final SBlock receiver, @Cached("create()") final IndirectCallNode call) {
+      return receiver.getMethod().invoke(frame, call, new Object[] {receiver});
     }
   }
 
   @GenerateNodeFactory
+  @ImportStatic(BlockPrims.class)
   @Primitive("blockValue:with:")
   public abstract static class ValueOnePrim extends BinaryExpressionNode {
 
-    protected final DirectCallNode createDirectCallNode(final SBlock receiver) {
-      assert null != receiver.getMethod().getCallTarget();
-      return Truffle.getRuntime().createDirectCallNode(
-          receiver.getMethod().getCallTarget());
-    }
-
-    @Specialization(guards = "cached == receiver.getMethod()", limit = "6")
+    @Specialization(guards = "cached == receiver.getMethod()", limit = "CHAIN_LENGTH")
     public final Object doCachedBlock(final VirtualFrame frame,
         final SBlock receiver, final Object arg,
         @Cached("createDirectCallNode(receiver)") final DirectCallNode call,
         @Cached("receiver.getMethod()") final SInvokable cached) {
       return call.call(frame, new Object[] {receiver, arg});
-    }
-
-    protected final IndirectCallNode create() {
-      return Truffle.getRuntime().createIndirectCallNode();
     }
 
     @Specialization(contains = "doCachedBlock")
@@ -114,39 +100,23 @@ public abstract class BlockPrims {
   }
 
   @GenerateNodeFactory
+  @ImportStatic(BlockPrims.class)
   @Primitive("blockValue:with:with:")
-  public abstract static class ValueTwoPrim extends TernaryExpressionNode
-      implements ValuePrimitiveNode {
-    @Child private AbstractDispatchNode dispatchNode;
+  public abstract static class ValueTwoPrim extends TernaryExpressionNode {
 
-    public ValueTwoPrim() {
-      super(null);
-      dispatchNode = new UninitializedValuePrimDispatchNode();
+    @Specialization(guards = "cached == receiver.getMethod()", limit = "CHAIN_LENGTH")
+    public final Object doCachedBlock(final VirtualFrame frame,
+        final SBlock receiver, final Object arg1, final Object arg2,
+        @Cached("createDirectCallNode(receiver)") final DirectCallNode call,
+        @Cached("receiver.getMethod()") final SInvokable cached) {
+      return call.call(frame, new Object[] {receiver, arg1, arg2});
     }
 
-    @Specialization
-    public final Object doSBlock(final VirtualFrame frame,
-        final SBlock receiver, final Object arg1, final Object arg2) {
-      return dispatchNode.executeDispatch(frame, new Object[] {receiver, arg1, arg2});
-    }
-
-    @Override
-    public final void adoptNewDispatchListHead(final AbstractDispatchNode node) {
-      dispatchNode = insert(node);
-    }
-
-    @Override
-    public NodeCost getCost() {
-      int dispatchChain = dispatchNode.lengthOfDispatchChain();
-      if (dispatchChain == 0) {
-        return NodeCost.UNINITIALIZED;
-      } else if (dispatchChain == 1) {
-        return NodeCost.MONOMORPHIC;
-      } else if (dispatchChain <= AbstractDispatchNode.INLINE_CACHE_SIZE) {
-        return NodeCost.POLYMORPHIC;
-      } else {
-        return NodeCost.MEGAMORPHIC;
-      }
+    @Specialization(contains = "doCachedBlock")
+    public final Object doGeneric(final VirtualFrame frame,
+        final SBlock receiver, final Object arg1, final Object arg2,
+        @Cached("create()") final IndirectCallNode call) {
+      return receiver.getMethod().invoke(frame, call, new Object[] {receiver, arg1, arg2});
     }
   }
 
