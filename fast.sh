@@ -17,9 +17,7 @@ if [ -z "$GRAAL_HOME" ]; then
   fi
 fi
 
-STD_FLAGS="-G:-TraceTruffleInlining \
-           -G:-TraceTruffleCompilation \
-           -G:+TruffleCompilationExceptionsAreFatal "
+STD_FLAGS="-G:+TruffleCompilationExceptionsAreFatal -G:TruffleInliningMaxCallerSize=10000 "
 #-G:+TruffleSplitting 
 
 if [ ! -z "$T" ]; then
