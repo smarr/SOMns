@@ -26,6 +26,14 @@ if [ -z "$GRAAL_FLAGS" ]; then
   GRAAL_FLAGS="$STD_FLAGS "
 fi
 
+if [ ! -z "$IGV" ]; then
+  GRAAL_FLAGS="$GRAAL_FLAGS -G:Dump=Truffle,TruffleTree "
+fi
+
+if [ ! -z "$ONLY" ]; then
+  GRAAL_FLAGS="$GRAAL_FLAGS -G:TruffleCompileOnly=$ONLY "
+fi
+
 if [ ! -z "$DBG" ]; then
   GRAAL_DEBUG_SWITCH='-d'
 fi
