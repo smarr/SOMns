@@ -2,6 +2,7 @@ package som.interpreter.nodes.specialized;
 
 import som.interpreter.InlinerForLexicallyEmbeddedMethods;
 import som.interpreter.Invokable;
+import som.interpreter.SplitterForLexicallyEmbeddedCode;
 import som.interpreter.nodes.ExpressionNode;
 
 import com.oracle.truffle.api.CompilerAsserts;
@@ -107,4 +108,12 @@ public abstract class IntToDoInlinedLiteralsNode extends ExpressionNode {
     replace(node);
     // create loopIndex in new context...
   }
- }
+
+  @Override
+  public void replaceWithIndependentCopyForInlining(
+      final SplitterForLexicallyEmbeddedCode inliner) {
+    FrameSlot inlinedLoopIdx = inliner.getLocalFrameSlot(loopIndex.getIdentifier());
+    replace(IntToDoInlinedLiteralsNodeGen.create(body, inlinedLoopIdx,
+        bodyActualNode, getSourceSection(), getFrom(), getTo()));
+  }
+}
