@@ -22,6 +22,12 @@ STD_FLAGS="-G:-TraceTruffleInlining \
            -G:+TruffleCompilationExceptionsAreFatal "
 #-G:+TruffleSplitting 
 
+if [ ! -z "$T" ]; then
+  STD_FLAGS="$STD_FLAGS -G:+TraceTruffleCompilation -G:+TraceTruffleCompilationDetails "
+else
+  STD_FLAGS="$STD_FLAGS -G:-TraceTruffleInlining -G:-TraceTruffleCompilation "
+fi
+
 if [ -z "$GRAAL_FLAGS" ]; then
   GRAAL_FLAGS="$STD_FLAGS "
 fi
