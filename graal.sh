@@ -10,9 +10,9 @@ fi
 
 if [ -z "$GRAAL_FLAGS" ]; then
   
-  GRAAL_FLAGS='-G:-TraceTruffleInlining -G:-TraceTruffleCompilation \
+  GRAAL_FLAGS="-G:-TraceTruffleInlining -G:-TraceTruffleCompilation \
     -G:+TruffleSplittingNew -G:+TruffleCompilationExceptionsAreFatal \
-    -G:TruffleInliningMaxCallerSize=10000 '
+    -G:TruffleInliningMaxCallerSize=10000 "
   if [ "$GRAAL_HOME" = "/Users/smarr/Projects/PostDoc/Truffle/graal" ]; then
     echo Using Graal Development Flags
     GRAAL_FLAGS='-ea -XX:+UnlockDiagnosticVMOptions -XX:+LogCompilation
