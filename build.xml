@@ -3,6 +3,8 @@
     <property name="src.dir"     value="src"/>
     <property name="src_gen.dir" value="src_gen"/>
     <property name="lib.dir"     value="libs" />
+    <property name="truffle.dir" value="${lib.dir}/truffle" />
+    <property name="truffle.build" value="${truffle.dir}/build" />
 
     <property name="build.dir"   value="build"/>
     <property name="classes.dir" value="${build.dir}/classes"/>
@@ -12,9 +14,9 @@
     <path id="project.classpath">
         <pathelement location="${classes.dir}" />
         <pathelement location="tests/" />
-        <pathelement location="${lib.dir}/truffle.jar" />
         <pathelement location="${lib.dir}/junit-4.8.1.jar" />
-        <pathelement location="${lib.dir}/truffle-dsl-processor.jar" />
+        <pathelement location="${truffle.build}/truffle-api.jar" />
+        <pathelement location="${truffle.build}/truffle-dsl-processor.jar" />
     </path>
 
     <target name="clean" description="Remove build directories and generated code">
@@ -22,7 +24,6 @@
         <delete dir="${src_gen.dir}"/>
     </target>
     
-
     <target name="check-core-lib-available">
         <available file="core-lib/.git" property="core-lib.present"/>
     </target>
@@ -35,31 +36,24 @@
       </exec>
     </target>
     
-    
-    <target name="libs" depends="core-lib">
-        <exec executable="sh" outputproperty="truffle.version">
-            <arg value="-c"/>
-            <arg value="cat .graal-git-rev | tail -1 | cut -c12-19"/>
+    <!-- Work around for issue with non-existing env file -->
+    <target name="truffle-env">
+        <exec executable="touch">
+            <arg value="${truffle.dir}/mx.truffle/env"/>
         </exec>
-		<mkdir dir="${lib.dir}" />
-		<get src="${truffle.libs}/${truffle.version}/truffle.jar" usetimestamp="true"
-            dest="${lib.dir}/truffle.jar"/>
-	    <get src="${truffle.libs}/${truffle.version}/truffle-dsl-processor.jar"
-            usetimestamp="true"
-            dest="${lib.dir}/truffle-dsl-processor.jar"/>
-        <get src="http://kuiper.mirrorservice.org/sites/downloads.sourceforge.net/j/ju/junit/junit/4.8.1/junit-4.8.1.jar"
-            usetimestamp="true"
-		    dest="${lib.dir}/junit-4.8.1.jar" />
-            <!-- http://search.maven.org/remotecontent?filepath=junit/junit/4.8.1/junit-4.8.1.jar -->
     </target>
     
-    <target name="src-libs" depends="libs">
-		<get src="${truffle.libs}/truffle-dsl-processor.src.zip" 
-            usetimestamp="true" 
-            dest="${lib.dir}/truffle-dsl-processor.src.zip"/>
-		<get src="${truffle.libs}/truffle.src.zip" 
-            usetimestamp="true" 
-            dest="${lib.dir}/truffle.src.zip"/>
+    <target name="truffle-libs" depends="truffle-env">
+        <exec executable="./mx.sh" dir="${truffle.dir}">
+            <arg value="build"/>
+        </exec>
+    </target>
+    
+    <target name="libs" depends="core-lib,truffle-libs">
+        <!-- <get src="http://kuiper.mirrorservice.org/sites/downloads.sourceforge.net/j/ju/junit/junit/4.8.1/junit-4.8.1.jar"
+            usetimestamp="true"
+            dest="${lib.dir}/junit-4.8.1.jar" /> -->
+            <!-- http://search.maven.org/remotecontent?filepath=junit/junit/4.8.1/junit-4.8.1.jar -->
     </target>
 
     <target name="compile" depends="libs" description="Compile TruffleSOM">
@@ -84,7 +78,7 @@
         <jar destfile="${build.dir}/som.jar" basedir="${classes.dir}"></jar>
     </target>
     
-    <target name="develop" depends="libs,src-libs" description="Load all dependencies for development">
+    <target name="develop" depends="libs" description="Load all dependencies for development">
     </target>
 
     <target name="test" depends="compile" description="Execute tests">

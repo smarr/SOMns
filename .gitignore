@@ -1,6 +1,5 @@
 build
 src_gen
-libs
 mini-som.sh
 mini.sh
 rebench.conf
