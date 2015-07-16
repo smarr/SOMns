@@ -48,5 +48,5 @@ fi
 
 exec $GRAAL_HOME/mxtool/mx $GRAAL_DEBUG_SWITCH --vm server vm $GRAAL_FLAGS $GF \
    -Xss160M $USE_ASSERT \
-   -Xbootclasspath/a:build/classes:libs/truffle.jar \
+   -Xbootclasspath/a:build/classes:libs/truffle/build/truffle-api.jar \
    som.VM --platform core-lib/Platform.som "$@"

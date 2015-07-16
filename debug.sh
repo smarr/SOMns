@@ -61,5 +61,5 @@ GRAAL_FLAGS="$GRAAL_FLAGS -G:TruffleCompileOnly=RichardsBenchmarks>>#findTask:"
 #GRAAL_FLAGS="$GRAAL_FLAGS -G:TruffleGraphMaxNodes=1500000 -G:TruffleInliningMaxCallerSize=10000 -G:TruffleInliningMaxCalleeSize=10000 -G:TruffleInliningTrivialSize=10000 -G:TruffleSplittingMaxCalleeSize=100000"
 
 exec $GRAAL_HOME/mxtool/mx $GRAAL_DEBUG_SWITCH --vm server vm $GRAAL_FLAGS $ASSERT \
-   -Xbootclasspath/a:build/classes:libs/truffle.jar \
+   -Xbootclasspath/a:build/classes:libs/truffle/build/truffle-api.jar \
    som.VM --platform core-lib/Platform.som "$@"
