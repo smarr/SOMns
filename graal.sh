@@ -24,9 +24,13 @@ if [ -z "$GRAAL_FLAGS" ]; then
 fi
 
 if [ ! -z "$DBG" ]; then
-  GRAAL_DEBUG_SWITCH='-d'
+  # GRAAL_DEBUG_SWITCH='-d'
+  GRAAL_DEBUG_SWITCH="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8000"
 fi
 
-$GRAAL_HOME/mxtool/mx $GRAAL_DEBUG_SWITCH --vm server vm $GRAAL_FLAGS \
+# GRAAL="$GRAAL_HOME/mxtool/mx"
+GRAAL="$GRAAL_HOME/jdk1.8.0_45/product/bin/java -server -d64 "
+
+exec $GRAAL $GRAAL_DEBUG_SWITCH $GRAAL_FLAGS \
    -Xbootclasspath/a:build/classes:libs/truffle/build/truffle-api.jar \
    som.VM --platform core-lib/Platform.som "$@"
