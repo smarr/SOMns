@@ -7,7 +7,7 @@ if [ -z "$GRAAL_HOME" ]; then
     GRAAL_HOME="$BASE_DIR/../graal"
   elif [ -d "$BASE_DIR/../GraalVM" ]; then
     GRAAL_HOME="$BASE_DIR/../GraalVM"
-  elif [ -d '/home/smarr/Projects/SOM/graal']; then
+  elif [ -d '/home/smarr/Projects/SOM/graal' ]; then
     GRAAL_HOME='/home/smarr/Projects/SOM/graal'
   elif [ -d '/Users/smarr/Projects/PostDoc/Truffle/graal' ]; then
     GRAAL_HOME='/Users/smarr/Projects/PostDoc/Truffle/graal'
