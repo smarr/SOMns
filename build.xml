@@ -8,8 +8,6 @@
 
     <property name="build.dir"   value="build"/>
     <property name="classes.dir" value="${build.dir}/classes"/>
-    
-    <property name="truffle.libs" value="http://stefan-marr.de/downloads/truffle"/>
 
     <path id="project.classpath">
         <pathelement location="${classes.dir}" />
