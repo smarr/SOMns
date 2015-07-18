@@ -9,6 +9,6 @@
 			<attribute name="optional" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="libs/truffle/build/truffle-api.jar"/>
+	<classpathentry kind="lib" path="libs/truffle/build/truffle-api.jar" sourcepath="libs/truffle/build/truffle-api.src.zip"/>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>
