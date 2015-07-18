@@ -27,18 +27,18 @@ import com.oracle.truffle.api.unsafe.UnsafeAccessFactory;
 public abstract class StorageLocation {
   private static Unsafe loadUnsafe() {
     try {
-        return Unsafe.getUnsafe();
+      return Unsafe.getUnsafe();
     } catch (SecurityException e) {
       // can fail, is ok, just to the fallback below
     }
     try {
-        Field theUnsafeInstance = Unsafe.class.getDeclaredField("theUnsafe");
-        theUnsafeInstance.setAccessible(true);
-        return (Unsafe) theUnsafeInstance.get(Unsafe.class);
+      Field theUnsafeInstance = Unsafe.class.getDeclaredField("theUnsafe");
+      theUnsafeInstance.setAccessible(true);
+      return (Unsafe) theUnsafeInstance.get(Unsafe.class);
     } catch (Exception e) {
-        throw new RuntimeException("exception while trying to get Unsafe.theUnsafe via reflection:", e);
+      throw new RuntimeException("exception while trying to get Unsafe.theUnsafe via reflection:", e);
     }
-}
+  }
 
   private static final UnsafeAccess ua = Truffle.getRuntime().
       getCapability(UnsafeAccessFactory.class).createUnsafeAccess(loadUnsafe());
@@ -99,7 +99,6 @@ public abstract class StorageLocation {
       ObjectLayout layout, AbstractReadFieldNode next);
   public abstract AbstractWriteFieldNode getWriteNode(SlotDefinition slot,
       ObjectLayout layout, AbstractWriteFieldNode next);
-
 
   public final class GeneralizeStorageLocationException extends Exception {
     private static final long serialVersionUID = 4610497040788136337L;
