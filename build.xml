@@ -48,9 +48,9 @@
     </target>
     
     <target name="libs" depends="core-lib,truffle-libs">
-        <!-- <get src="http://kuiper.mirrorservice.org/sites/downloads.sourceforge.net/j/ju/junit/junit/4.8.1/junit-4.8.1.jar"
+        <get src="http://kuiper.mirrorservice.org/sites/downloads.sourceforge.net/j/ju/junit/junit/4.8.1/junit-4.8.1.jar"
             usetimestamp="true"
-            dest="${lib.dir}/junit-4.8.1.jar" /> -->
+            dest="${lib.dir}/junit-4.8.1.jar" />
             <!-- http://search.maven.org/remotecontent?filepath=junit/junit/4.8.1/junit-4.8.1.jar -->
     </target>
 
