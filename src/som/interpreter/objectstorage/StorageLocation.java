@@ -282,8 +282,6 @@ public abstract class StorageLocation {
       try {
         return readDouble(obj, assumptionValid);
       } catch (UnexpectedResultException e) {
-        CompilerAsserts.neverPartOfCompilation("StorageLocation");
-        TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized read node");
         return e.getResult();
       }
     }
@@ -296,7 +294,6 @@ public abstract class StorageLocation {
         // right, still need to pass in the correct location identifier, which can probably be `this`.
         return ua.getDouble(obj, offset, assumptionValid, null);
       } else {
-        CompilerAsserts.neverPartOfCompilation("StorageLocation");
         TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized read node");
         throw new UnexpectedResultException(Nil.nilObject);
       }
@@ -310,7 +307,6 @@ public abstract class StorageLocation {
         writeDouble(obj, (double) value);
       } else {
         assert value != Nil.nilObject;
-        CompilerAsserts.neverPartOfCompilation("StorageLocation");
         TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized read node");
         throw new GeneralizeStorageLocationException();
       }
@@ -348,8 +344,6 @@ public abstract class StorageLocation {
       try {
         return readLong(obj, assumptionValid);
       } catch (UnexpectedResultException e) {
-        CompilerAsserts.neverPartOfCompilation("StorageLocation");
-        TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized read node");
         return e.getResult();
       }
     }
@@ -361,7 +355,6 @@ public abstract class StorageLocation {
         // right, still need to pass in the correct location identifier
         return ua.getLong(obj, offset, assumptionValid, null);
       } else {
-        CompilerAsserts.neverPartOfCompilation("StorageLocation");
         TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized read node");
         throw new UnexpectedResultException(Nil.nilObject);
       }
@@ -373,7 +366,6 @@ public abstract class StorageLocation {
       if (value instanceof Long) {
         writeLong(obj, (long) value);
       } else {
-        CompilerAsserts.neverPartOfCompilation("StorageLocation");
         TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized write node");
         throw new GeneralizeStorageLocationException();
       }
@@ -420,8 +412,6 @@ public abstract class StorageLocation {
       try {
         return readLong(obj, assumptionValid);
       } catch (UnexpectedResultException e) {
-        CompilerAsserts.neverPartOfCompilation("StorageLocation");
-        TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized read node");
         return e.getResult();
       }
     }
@@ -432,7 +422,6 @@ public abstract class StorageLocation {
         // perhaps we should use the unsafe operations as for doubles
         return obj.getExtendedPrimFields()[extensionIndex];
       } else {
-        CompilerAsserts.neverPartOfCompilation("StorageLocation");
         TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized read node");
         throw new UnexpectedResultException(Nil.nilObject);
       }
@@ -445,7 +434,6 @@ public abstract class StorageLocation {
         writeLong(obj, (long) value);
       } else {
         assert value != Nil.nilObject;
-        CompilerAsserts.neverPartOfCompilation("StorageLocation");
         TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized write node");
         throw new GeneralizeStorageLocationException();
       }
@@ -483,8 +471,6 @@ public abstract class StorageLocation {
       try {
         return readDouble(obj, assumptionValid);
       } catch (UnexpectedResultException e) {
-        CompilerAsserts.neverPartOfCompilation("StorageLocation");
-        TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized read node");
         return e.getResult();
       }
     }
@@ -500,7 +486,6 @@ public abstract class StorageLocation {
             Unsafe.ARRAY_DOUBLE_BASE_OFFSET + Unsafe.ARRAY_DOUBLE_INDEX_SCALE * extensionIndex,
             true, null);
       } else {
-        CompilerAsserts.neverPartOfCompilation("StorageLocation");
         TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized read node");
         throw new UnexpectedResultException(Nil.nilObject);
       }
@@ -514,7 +499,6 @@ public abstract class StorageLocation {
         writeDouble(obj, (double) value);
       } else {
         assert value != Nil.nilObject;
-        CompilerAsserts.neverPartOfCompilation("StorageLocation");
         TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized write node");
         throw new GeneralizeStorageLocationException();
       }
