@@ -73,7 +73,7 @@ public final class SuperDispatchNode extends AbstractDispatchNode {
   @Override
   public Object executeDispatch(
       final VirtualFrame frame, final Object[] arguments) {
-    CompilerAsserts.neverPartOfCompilation();
+    CompilerDirectives.transferToInterpreter();
     return specialize(arguments[0]).
         executeDispatch(frame, arguments);
   }
