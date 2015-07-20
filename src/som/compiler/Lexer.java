@@ -411,6 +411,7 @@ public final class Lexer {
     }
     return comment.toString();
   }
+
   private void skipWhiteSpace() {
     while (Character.isWhitespace(currentChar())) {
       state.bufp++;
@@ -452,12 +453,4 @@ public final class Lexer {
   private boolean isIdentifierChar(final char c) {
     return Character.isLetterOrDigit(c) || c == '_';
   }
-
-  private boolean nextWordInBufferIs(final String text) {
-    if (!state.buf.startsWith(text, state.bufp)) {
-      return false;
-    }
-    return !isIdentifierChar(bufchar(state.bufp + text.length()));
-  }
-
 }
