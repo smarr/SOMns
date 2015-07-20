@@ -968,7 +968,27 @@ public final class Parser {
     SSymbol msg = symbolFor(msgStr);
     SourceSection source = getSource(coord);
 
-    if (msg.getNumberOfSignatureArguments() == 2) {
+      ExpressionNode node = inlineControlStructureIfPossible(builder, arguments,
+          msgStr, msg.getNumberOfSignatureArguments(), source);
+      if (node != null) {
+        return node;
+      }
+
+    ExpressionNode[] args = arguments.toArray(new ExpressionNode[0]);
+    if (explicitRcvr) {
+      return createMessageSend(msg, args, source);
+    } else {
+      return createImplicitReceiverSend(msg, args,
+          builder.getCurrentMethodScope(),
+          builder.getEnclosingClassBuilder().getClassId(), source);
+    }
+  }
+
+  protected ExpressionNode inlineControlStructureIfPossible(
+      final MethodBuilder builder, final List<ExpressionNode> arguments,
+      final String msgStr, final int numberOfArguments,
+      final SourceSection source) {
+    if (numberOfArguments == 2) {
       if (arguments.get(1) instanceof LiteralNode) {
         if ("ifTrue:".equals(msgStr)) {
           ExpressionNode inlinedBody = ((LiteralNode) arguments.get(1)).inline(builder);
@@ -1000,7 +1020,7 @@ public final class Parser {
               arguments.get(1), source, arguments.get(0));
         }
       }
-    } else if (msg.getNumberOfSignatureArguments() == 3) {
+    } else if (numberOfArguments == 3) {
       if ("ifTrue:ifFalse:".equals(msgStr) &&
           arguments.get(1) instanceof LiteralNode && arguments.get(2) instanceof LiteralNode) {
         ExpressionNode inlinedTrueNode  = ((LiteralNode) arguments.get(1)).inline(builder);
@@ -1022,15 +1042,7 @@ public final class Parser {
             arguments.get(2), source, arguments.get(0), arguments.get(1));
       }
     }
-
-    ExpressionNode[] args = arguments.toArray(new ExpressionNode[0]);
-    if (explicitRcvr) {
-      return createMessageSend(msg, args, source);
-    } else {
-      return createImplicitReceiverSend(msg, args,
-          builder.getCurrentMethodScope(),
-          builder.getEnclosingClassBuilder().getClassId(), source);
-    }
+    return null;
   }
 
   private ExpressionNode formula(final MethodBuilder builder)
