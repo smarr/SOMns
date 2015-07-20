@@ -240,7 +240,7 @@ public final class Parser {
     // Newspeak-spec: this is not strictly sufficient for Newspeak
     //                it could also parse a binary selector here, I think
     //                but, doesn't seem so useful, so, let's keep it simple
-    if (isIdentifier(sym) || sym == Keyword) {
+    if (sym == Identifier || sym == Keyword) {
       messagePattern(primaryFactory);
     } else {
       // in the standard case, the primary factory method is #new
@@ -713,7 +713,7 @@ public final class Parser {
   }
 
   private void locals(final MethodBuilder builder) throws ParseError {
-    while (isIdentifier(sym)) {
+    while (sym == Identifier) {
       builder.addLocalIfAbsent(identifier());
     }
   }
@@ -779,10 +779,10 @@ public final class Parser {
       throws ParseError, ClassDefinitionError {
     SourceCoordinate coord = getCoordinate();
 
-    if (!isIdentifier(sym)) {
+    if (sym != Identifier) {
       throw new ParseError("Assignments should always target variables or" +
                            " fields, but found instead a %(found)s",
-                           Symbol.Identifier, this);
+                           Identifier, this);
     }
     SSymbol identifier = assignment();
 
@@ -819,8 +819,8 @@ public final class Parser {
   }
 
   private boolean symIsMessageSend() {
-    return isIdentifier(sym) || sym == Keyword || sym == OperatorSequence
         || symIn(binaryOpSyms);
+    return sym == Identifier || sym == Keyword || sym == OperatorSequence
   }
 
   private ExpressionNode primary(final MethodBuilder builder)
@@ -894,11 +894,11 @@ public final class Parser {
   private ExpressionNode messages(final MethodBuilder builder,
       final ExpressionNode receiver) throws ParseError, ClassDefinitionError {
     ExpressionNode msg;
-    if (isIdentifier(sym)) {
       msg = unaryMessage(receiver);
 
-      while (isIdentifier(sym)) {
         msg = unaryMessage(msg);
+    if (sym == Identifier) {
+      while (sym == Identifier) {
       }
 
       msg = binaryConsecutiveMessages(builder, msg);
@@ -943,8 +943,8 @@ public final class Parser {
     // a binary operand can receive unaryMessages
     // Example: 2 * 3 asString
     //   is evaluated as 2 * (3 asString)
-    while (isIdentifier(sym)) {
       operand = unaryMessage(operand);
+    while (sym == Identifier) {
     }
     return operand;
   }
@@ -1211,10 +1211,6 @@ public final class Parser {
     Peek peek = lexer.peek();
     nextSym  = peek.nextSym;
     nextText = peek.nextText;
-  }
-
-  private static boolean isIdentifier(final Symbol sym) {
-    return sym == Identifier;
   }
 
   private static boolean printableSymbol(final Symbol sym) {
