@@ -196,6 +196,16 @@ public final class Lexer {
       match(Symbol.Period);
     } else if (currentChar() == '-') {
       match(Symbol.Minus);
+    } else if (currentChar() == '<') {
+      state.bufp++;
+      if (currentChar() == '-' && nextChar() == ':') {
+        state.bufp += 2;
+        state.set(Symbol.EventualSend, '\0', "<-:");
+      } else {
+        assert state.bufp != 0; // this case is not supported currently
+        state.bufp--;
+        lexOperator(); // can't just lex '<' here, because we need to lex '<>' as operator sequence.
+      }
     } else if (isOperator(currentChar())) {
       lexOperator();
     } else if (Character.isLetter(currentChar())) {

@@ -28,7 +28,7 @@ enum Symbol {
   NONE, Integer, Double, Not, And, Or, Star, Div, Mod, Plus, Minus, Equal, More, Less,
   Comma, At, Per, NewBlock, EndBlock, Colon, Period, Exit, Assign, NewTerm,
   EndTerm, Pound, STString,
-  BeginComment, EndComment, SlotMutableAssign,
+  BeginComment, EndComment, SlotMutableAssign, EventualSend,
   Identifier, Keyword,
   KeywordSequence, OperatorSequence
 }
