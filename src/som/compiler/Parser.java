@@ -37,6 +37,7 @@ import static som.compiler.Symbol.EndBlock;
 import static som.compiler.Symbol.EndComment;
 import static som.compiler.Symbol.EndTerm;
 import static som.compiler.Symbol.Equal;
+import static som.compiler.Symbol.EventualSend;
 import static som.compiler.Symbol.Exit;
 import static som.compiler.Symbol.Identifier;
 import static som.compiler.Symbol.Integer;
@@ -325,7 +326,7 @@ public final class Parser {
       String outer = identifier();
       OuterObjectRead self = meth.getOuterRead(outer, getSource(coord));
       if (sym == Identifier) {
-        return unaryMessage(self);
+        return unaryMessage(self, false);
       } else {
         return self;
       }
@@ -339,7 +340,7 @@ public final class Parser {
     } else {
       return meth.getImplicitReceiverSend(unarySelector(), getSource(coord));
     }
-    return unaryMessage(self);
+    return unaryMessage(self, false);
   }
 
   private void classBody(final ClassBuilder clsBuilder)
@@ -808,7 +809,7 @@ public final class Parser {
       throws ParseError, ClassDefinitionError {
     ExpressionNode exp;
     if (sym == Keyword) {
-      exp = keywordMessage(builder, builder.getSelfRead(null), false);
+      exp = keywordMessage(builder, builder.getSelfRead(null), false, false);
     } else {
       exp = primary(builder);
     }
@@ -819,8 +820,8 @@ public final class Parser {
   }
 
   private boolean symIsMessageSend() {
-        || symIn(binaryOpSyms);
     return sym == Identifier || sym == Keyword || sym == OperatorSequence
+        || symIn(binaryOpSyms) || sym == EventualSend;
   }
 
   private ExpressionNode primary(final MethodBuilder builder)
@@ -878,12 +879,13 @@ public final class Parser {
     String outer = identifier();
 
     ExpressionNode operand = builder.getOuterRead(outer, getSource(coord));
-    operand = binaryConsecutiveMessages(builder, operand);
+    operand = binaryConsecutiveMessages(builder, operand, false);
     return operand;
   }
 
   protected ExpressionNode binaryConsecutiveMessages(
-      final MethodBuilder builder, ExpressionNode operand) throws ParseError,
+      final MethodBuilder builder, ExpressionNode operand,
+      final boolean eventualSend) throws ParseError,
       ClassDefinitionError {
     while (sym == OperatorSequence || symIn(binaryOpSyms)) {
       operand = binaryMessage(builder, operand);
@@ -894,32 +896,38 @@ public final class Parser {
   private ExpressionNode messages(final MethodBuilder builder,
       final ExpressionNode receiver) throws ParseError, ClassDefinitionError {
     ExpressionNode msg;
-      msg = unaryMessage(receiver);
+    boolean evenutalSend = accept(EventualSend);
 
-        msg = unaryMessage(msg);
     if (sym == Identifier) {
+      msg = unaryMessage(receiver, evenutalSend);
+      evenutalSend = accept(EventualSend);
+
       while (sym == Identifier) {
+        msg = unaryMessage(msg, evenutalSend);
+        evenutalSend = accept(EventualSend);
       }
 
-      msg = binaryConsecutiveMessages(builder, msg);
+      msg = binaryConsecutiveMessages(builder, msg, evenutalSend);
+      evenutalSend = accept(EventualSend);
 
       if (sym == Keyword) {
-        msg = keywordMessage(builder, msg, true);
+        msg = keywordMessage(builder, msg, true, evenutalSend);
       }
     } else if (sym == OperatorSequence || symIn(binaryOpSyms)) {
-      msg = binaryConsecutiveMessages(builder, receiver);
+      msg = binaryConsecutiveMessages(builder, receiver, evenutalSend);
+      evenutalSend = accept(EventualSend);
 
       if (sym == Keyword) {
-        msg = keywordMessage(builder, msg, true);
+        msg = keywordMessage(builder, msg, true, evenutalSend);
       }
     } else {
-      msg = keywordMessage(builder, receiver, true);
+      msg = keywordMessage(builder, receiver, true, evenutalSend);
     }
     return msg;
   }
 
-  private AbstractMessageSendNode unaryMessage(final ExpressionNode receiver)
-      throws ParseError {
+  private AbstractMessageSendNode unaryMessage(final ExpressionNode receiver,
+      final boolean eventualSend) throws ParseError {
     SourceCoordinate coord = getCoordinate();
     SSymbol selector = unarySelector();
     return createMessageSend(selector, new ExpressionNode[] {receiver},
@@ -943,15 +951,20 @@ public final class Parser {
     // a binary operand can receive unaryMessages
     // Example: 2 * 3 asString
     //   is evaluated as 2 * (3 asString)
-      operand = unaryMessage(operand);
+    boolean evenutalSend = accept(EventualSend);
     while (sym == Identifier) {
+      operand = unaryMessage(operand, evenutalSend);
+      evenutalSend = accept(EventualSend);
     }
+
+    assert !evenutalSend; // this should not be true, because that means we steal it from the next operation (think here shouldn't be one, but still...)
     return operand;
   }
 
   private ExpressionNode keywordMessage(final MethodBuilder builder,
-      final ExpressionNode receiver, final boolean explicitRcvr)
-          throws ParseError, ClassDefinitionError {
+      final ExpressionNode receiver, final boolean explicitRcvr,
+      final boolean eventualSend) throws ParseError, ClassDefinitionError {
+    assert !(!explicitRcvr && eventualSend);
     SourceCoordinate coord = getCoordinate();
     List<ExpressionNode> arguments = new ArrayList<ExpressionNode>();
     StringBuffer         kw        = new StringBuffer();
@@ -968,11 +981,13 @@ public final class Parser {
     SSymbol msg = symbolFor(msgStr);
     SourceSection source = getSource(coord);
 
+    if (!eventualSend) {
       ExpressionNode node = inlineControlStructureIfPossible(builder, arguments,
           msgStr, msg.getNumberOfSignatureArguments(), source);
       if (node != null) {
         return node;
       }
+    }
 
     ExpressionNode[] args = arguments.toArray(new ExpressionNode[0]);
     if (explicitRcvr) {
@@ -1048,8 +1063,9 @@ public final class Parser {
   private ExpressionNode formula(final MethodBuilder builder)
       throws ParseError, ClassDefinitionError {
     ExpressionNode operand = binaryOperand(builder);
+    boolean evenutalSend = accept(EventualSend);
 
-    operand = binaryConsecutiveMessages(builder, operand);
+    operand = binaryConsecutiveMessages(builder, operand, evenutalSend);
     return operand;
   }
 
