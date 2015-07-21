@@ -2,6 +2,8 @@ package som.interpreter.nodes;
 
 import static som.interpreter.TruffleCompiler.transferToInterpreter;
 import som.compiler.Variable.Local;
+import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
+import som.interpreter.InlinerForLexicallyEmbeddedMethods;
 import som.interpreter.SplitterForLexicallyEmbeddedCode;
 import som.vm.constants.Nil;
 
@@ -25,6 +27,24 @@ public abstract class LocalVariableNode extends ExpressionNode {
 
   public final Object getSlotIdentifier() {
     return slot.getIdentifier();
+  }
+
+  @Override
+  public final void replaceWithLexicallyEmbeddedNode(
+      final InlinerForLexicallyEmbeddedMethods inliner) {
+    throw new RuntimeException("Normally, only uninitialized variable nodes should be encountered, because this is done at parse time");
+  }
+
+  @Override
+  public final void replaceWithCopyAdaptedToEmbeddedOuterContext(
+      final InlinerAdaptToEmbeddedOuterContext inliner) {
+    throw new RuntimeException("Normally, only uninitialized variable nodes should be encountered, because this is done at parse time");
+  }
+
+  @Override
+  public final void replaceWithIndependentCopyForInlining(final SplitterForLexicallyEmbeddedCode inliner) {
+    CompilerAsserts.neverPartOfCompilation("replaceWithIndependentCopyForInlining");
+    throw new RuntimeException("Should not be part of an uninitalized tree. And this should only be done with uninitialized trees.");
   }
 
   public abstract static class LocalVariableReadNode extends LocalVariableNode {
@@ -167,12 +187,6 @@ public abstract class LocalVariableNode extends ExpressionNode {
         transferToInterpreter("LocalVar.writeObjectToUninit");
         slot.setKind(FrameSlotKind.Object);
       }
-    }
-
-    @Override
-    public final void replaceWithIndependentCopyForInlining(final SplitterForLexicallyEmbeddedCode inliner) {
-      CompilerAsserts.neverPartOfCompilation("replaceWithIndependentCopyForInlining");
-      throw new RuntimeException("Should not be part of an uninitalized tree. And this should only be done with uninitialized trees.");
     }
   }
 }
