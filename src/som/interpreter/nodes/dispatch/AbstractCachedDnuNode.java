@@ -1,5 +1,6 @@
 package som.interpreter.nodes.dispatch;
 
+import som.VM;
 import som.compiler.AccessModifier;
 import som.interpreter.SArguments;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode.AbstractCachedDispatchNode;
@@ -15,10 +16,14 @@ public abstract class AbstractCachedDnuNode extends AbstractCachedDispatchNode {
   private final SSymbol selector;
 
   public static CallTarget getDnu(final SClass rcvrClass) {
-    return rcvrClass.lookupMessage(
+    Dispatchable disp = rcvrClass.lookupMessage(
         Symbols.symbolFor("doesNotUnderstand:arguments:"),
-        AccessModifier.PROTECTED).
-            getCallTarget();
+        AccessModifier.PROTECTED);
+
+    if (disp == null) {
+      VM.errorExit("Lookup of " + rcvrClass.getName().getString() + ">>#doesNotUnderstand:arguments: failed.");
+    }
+    return disp.getCallTarget();
   }
 
   public AbstractCachedDnuNode(final SClass rcvrClass,
