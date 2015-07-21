@@ -21,13 +21,17 @@
  */
 package som.interpreter.nodes;
 
+import java.lang.reflect.Field;
+
 import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
 import som.interpreter.InlinerForLexicallyEmbeddedMethods;
 import som.interpreter.SplitterForLexicallyEmbeddedCode;
 import som.interpreter.Types;
 
 import com.oracle.truffle.api.dsl.TypeSystemReference;
+import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.nodes.NodeUtil;
 import com.oracle.truffle.api.source.SourceSection;
 
 @TypeSystemReference(Types.class)
@@ -50,6 +54,19 @@ public abstract class SOMNode extends Node {
     // only a small subset of nodes needs to implement this method.
     // Most notably, nodes using FrameSlots, and block nodes with method
     // nodes.
+    assert assertNodeHasNoFrameSlots();
+  }
+
+  private boolean assertNodeHasNoFrameSlots() {
+    if (this.getClass().desiredAssertionStatus()) {
+      for (Field f : NodeUtil.getAllFields(getClass())) {
+        assert f.getType() != FrameSlot.class;
+        if (f.getType() == FrameSlot.class) {
+          return false;
+        }
+      }
+    }
+    return true;
   }
 
   /**
@@ -67,6 +84,7 @@ public abstract class SOMNode extends Node {
     // only a small subset of nodes needs to implement this method.
     // Most notably, nodes using FrameSlots, and block nodes with method
     // nodes.
+    assert assertNodeHasNoFrameSlots();
   }
 
   /**
@@ -82,11 +100,11 @@ public abstract class SOMNode extends Node {
     // only a small subset of nodes needs to implement this method.
     // Most notably, nodes using FrameSlots, and block nodes with method
     // nodes.
+    assert assertNodeHasNoFrameSlots();
   }
 
   /**
    * @return body of a node that just wraps the actual method body.
    */
   public abstract ExpressionNode getFirstMethodBodyNode();
-
 }
