@@ -103,6 +103,7 @@ import som.vmobjects.SSymbol;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
+
 public final class Parser {
 
   private final Lexer               lexer;
@@ -195,15 +196,15 @@ public final class Parser {
 
     @Override
     protected String expectedSymbolAsString() {
-        StringBuilder sb = new StringBuilder();
-        String deliminator = "";
+      StringBuilder sb = new StringBuilder();
+      String deliminator = "";
 
-        for (Symbol s : expectedSymbols) {
-            sb.append(deliminator);
-            sb.append(s);
-            deliminator = ", ";
-        }
-        return sb.toString();
+      for (Symbol s : expectedSymbols) {
+          sb.append(deliminator);
+          sb.append(s);
+          deliminator = ", ";
+      }
+      return sb.toString();
     }
   }
 
