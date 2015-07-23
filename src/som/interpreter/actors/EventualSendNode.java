@@ -1,9 +1,11 @@
 package som.interpreter.actors;
 
+import som.VM;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -20,6 +22,12 @@ public final class EventualSendNode extends AbstractMessageSendNode {
 
   @Override
   public SPromise doPreEvaluated(final VirtualFrame frame, final Object[] args) {
+    if (CompilerDirectives.inInterpreter()) {
+      // TODO: this can be done unconditionally in some uninitialized version
+      //       of EventualSendNode, which we probably should have at some point
+      VM.hasSendMessages();
+    }
+
     // TODO: should we specialize here? or in the processing actor?
     //       technically, I think it is safe to do and cache the lookup here
     //       but, it depends on how we do the actual send,

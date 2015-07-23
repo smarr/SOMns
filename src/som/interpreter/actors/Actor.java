@@ -29,6 +29,15 @@ public class Actor {
     isExecuting = false;
   }
 
+  /**
+   * This constructor should only be used for the main actor!
+   */
+  public Actor(final boolean isMainActor) {
+    this();
+    assert isMainActor;
+    isExecuting = true;
+  }
+
   public synchronized void enqueueMessage(final EventualMessage msg) {
     if (isExecuting) {
       mailbox.add(msg);
@@ -39,9 +48,10 @@ public class Actor {
   }
 
   /**
-   * This method is only to be called from the EventualMessage task.
+   * This method is only to be called from the EventualMessage task, and the
+   * main Actor in Bootstrap.executeApplication().
    */
-  /*package private/default*/ synchronized void enqueueNextMessageForProcessing() {
+  public synchronized void enqueueNextMessageForProcessing() {
     try {
       EventualMessage nextTask = mailbox.remove();
       assert isExecuting;

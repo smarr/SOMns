@@ -16,6 +16,7 @@ public final class VM {
   private final boolean avoidExitForTesting;
   private int lastExitCode = 0;
   private Options options;
+  private boolean usesActors;
 
   public VM(final boolean avoidExitForTesting) {
     this.avoidExitForTesting = avoidExitForTesting;
@@ -37,6 +38,14 @@ public final class VM {
 
   public int lastExitCode() {
     return lastExitCode;
+  }
+
+  public static boolean isUsingActors() {
+    return vm.usesActors;
+  }
+
+  public static void hasSendMessages() {
+    vm.usesActors = true;
   }
 
   public static String[] getArguments() {

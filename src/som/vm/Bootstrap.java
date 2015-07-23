@@ -10,6 +10,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import som.VM;
 import som.compiler.AccessModifier;
 import som.compiler.ClassBuilder.ClassDefinitionId;
 import som.compiler.ClassDefinition;
@@ -18,6 +19,7 @@ import som.compiler.MethodBuilder;
 import som.compiler.SourcecodeCompiler;
 import som.interpreter.LexicalScope.ClassScope;
 import som.interpreter.Primitive;
+import som.interpreter.actors.Actor;
 import som.interpreter.nodes.ArgumentReadNode.LocalArgumentReadNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
@@ -424,11 +426,21 @@ public final class Bootstrap {
   }
 
   public static void executeApplication(final SObjectWithoutFields vmMirror) {
+    Actor mainActor = new Actor(true);
+
     Object platform = platformModule.instantiateObject(platformClass, vmMirror);
     Dispatchable disp = platformClass.lookupMessage(
         Symbols.symbolFor("start"), AccessModifier.PUBLIC);
     Object returnCode = disp.invoke(platform);
-    System.exit((int) returnCode);
+
+
+    if (VM.isUsingActors()) {
+      mainActor.enqueueNextMessageForProcessing();
+      Thread.currentThread().suspend(); // TODO: is that guaranteed to not return?
+      System.err.println("This should never happen. suspend should not return");
+    } else {
+      System.exit((int) returnCode);
+    }
   }
 
   public static Object execute(final String selector) {
