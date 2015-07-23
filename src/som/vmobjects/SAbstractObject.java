@@ -40,5 +40,4 @@ public abstract class SAbstractObject {
     Object[] arguments = {receiver, block};
     return send("escapedBlock:", arguments);
   }
-
 }
