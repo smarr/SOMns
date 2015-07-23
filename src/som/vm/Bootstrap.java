@@ -424,9 +424,11 @@ public final class Bootstrap {
   }
 
   public static void executeApplication(final SObjectWithoutFields vmMirror) {
-    // normally, the constructor method of the platform module is expected to
-    // start the whole execution. And, it is not expected to return
-    platformModule.instantiateObject(platformClass, vmMirror);
+    Object platform = platformModule.instantiateObject(platformClass, vmMirror);
+    Dispatchable disp = platformClass.lookupMessage(
+        Symbols.symbolFor("start"), AccessModifier.PUBLIC);
+    Object returnCode = disp.invoke(platform);
+    System.exit((int) returnCode);
   }
 
   public static Object execute(final String selector) {
