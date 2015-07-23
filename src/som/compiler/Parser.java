@@ -885,10 +885,11 @@ public final class Parser {
 
   protected ExpressionNode binaryConsecutiveMessages(
       final MethodBuilder builder, ExpressionNode operand,
-      final boolean eventualSend) throws ParseError,
+      boolean eventualSend) throws ParseError,
       ClassDefinitionError {
     while (sym == OperatorSequence || symIn(binaryOpSyms)) {
-      operand = binaryMessage(builder, operand);
+      operand = binaryMessage(builder, operand, eventualSend);
+      eventualSend = accept(EventualSend);
     }
     return operand;
   }
@@ -931,17 +932,18 @@ public final class Parser {
     SourceCoordinate coord = getCoordinate();
     SSymbol selector = unarySelector();
     return createMessageSend(selector, new ExpressionNode[] {receiver},
-        getSource(coord));
+        eventualSend, getSource(coord));
   }
 
   private AbstractMessageSendNode binaryMessage(final MethodBuilder builder,
-      final ExpressionNode receiver) throws ParseError, ClassDefinitionError {
+      final ExpressionNode receiver, final boolean eventualSend)
+          throws ParseError, ClassDefinitionError {
     SourceCoordinate coord = getCoordinate();
     SSymbol msg = binarySelector();
     ExpressionNode operand = binaryOperand(builder);
 
     return createMessageSend(msg, new ExpressionNode[] {receiver, operand},
-        getSource(coord));
+        eventualSend, getSource(coord));
   }
 
   private ExpressionNode binaryOperand(final MethodBuilder builder)
