@@ -10,6 +10,7 @@ class Platform usingVmMirror: vmMirror = (
 |
   self start
 )(
+  (* start executes the application code and returns an integer as error code *)
   public start = (
     | arguments app errorCode |
     arguments := system arguments.
@@ -23,6 +24,6 @@ class Platform usingVmMirror: vmMirror = (
     [ errorCode := (app usingPlatform: self) main: arguments ]
       on: kernel Exception
       do: [:e | system error: e asString ].
-    system exit: errorCode
+    ^ errorCode
   )
 )
