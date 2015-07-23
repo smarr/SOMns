@@ -73,7 +73,6 @@ import som.compiler.ClassBuilder.ClassDefinitionError;
 import som.compiler.Lexer.Peek;
 import som.compiler.Lexer.SourceCoordinate;
 import som.compiler.Variable.Local;
-import som.interpreter.SNodeFactory;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
@@ -272,8 +271,8 @@ public final class Parser {
     SourceCoordinate coord = getCoordinate();
     MethodBuilder def = clsBuilder.getClassInstantiationMethodBuilder();
     ExpressionNode selfRead = def.getSelfRead(null);
-    AbstractMessageSendNode superClass = SNodeFactory.createMessageSend(
-        symbolFor("Object"), new ExpressionNode[] {selfRead}, getSource(coord));
+    AbstractMessageSendNode superClass = createMessageSend(symbolFor("Object"),
+        new ExpressionNode[] {selfRead}, false, getSource(coord));
     clsBuilder.setSuperClassResolution(superClass);
 
     clsBuilder.setSuperclassFactorySend(
