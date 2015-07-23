@@ -992,8 +992,9 @@ public final class Parser {
 
     ExpressionNode[] args = arguments.toArray(new ExpressionNode[0]);
     if (explicitRcvr) {
-      return createMessageSend(msg, args, source);
+      return createMessageSend(msg, args, eventualSend, source);
     } else {
+      assert !eventualSend;
       return createImplicitReceiverSend(msg, args,
           builder.getCurrentMethodScope(),
           builder.getEnclosingClassBuilder().getClassId(), source);

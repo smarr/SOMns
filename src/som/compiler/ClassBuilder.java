@@ -402,7 +402,7 @@ public final class ClassBuilder {
     ExpressionNode superNode = initializer.getSuperReadNode(null);
     ExpressionNode superFactorySend = SNodeFactory.createMessageSend(
         getInitializerName(symbolFor("new")),
-        new ExpressionNode[] {superNode}, null);
+        new ExpressionNode[] {superNode}, false, null);
     return superFactorySend;
   }
 

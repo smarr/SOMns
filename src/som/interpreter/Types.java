@@ -25,6 +25,8 @@ import java.math.BigInteger;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
+import som.interpreter.actors.SFarReference;
+import som.interpreter.actors.SPromise;
 import som.vm.constants.Classes;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray;
@@ -53,6 +55,8 @@ import com.oracle.truffle.api.dsl.TypeSystem;
                 SSymbol.class,
              SInvokable.class,
                  SArray.class,
+          SFarReference.class,
+               SPromise.class,
         SAbstractObject.class,
                Object[].class}) // Object[] is only for argument passing
 public class Types {

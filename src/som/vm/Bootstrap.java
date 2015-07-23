@@ -42,6 +42,9 @@ import som.primitives.SizeAndLengthPrimFactory;
 import som.primitives.StringPrimsFactory;
 import som.primitives.SystemPrimsFactory;
 import som.primitives.UnequalsPrimFactory;
+import som.primitives.actors.CreateActorPrimFactory;
+import som.primitives.actors.SetFarReferenceClassPrimFactory;
+import som.primitives.actors.SetPromiseClassPrimFactory;
 import som.primitives.arithmetic.AdditionPrimFactory;
 import som.primitives.arithmetic.DividePrimFactory;
 import som.primitives.arithmetic.DoubleDivPrimFactory;
@@ -218,6 +221,10 @@ public final class Bootstrap {
     allFactories.add(DoIndexesPrimFactory.getInstance());
     allFactories.add(NewPrimFactory.getInstance());
     allFactories.add(PutAllNodeFactory.getInstance());
+
+    allFactories.add(CreateActorPrimFactory.getInstance());
+    allFactories.add(SetFarReferenceClassPrimFactory.getInstance());
+    allFactories.add(SetPromiseClassPrimFactory.getInstance());
 
     return allFactories;
   }

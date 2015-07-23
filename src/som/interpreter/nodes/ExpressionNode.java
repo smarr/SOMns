@@ -26,6 +26,8 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 import som.interpreter.TypesGen;
+import som.interpreter.actors.SFarReference;
+import som.interpreter.actors.SPromise;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
@@ -116,5 +118,13 @@ public abstract class ExpressionNode extends SOMNode {
 
   public Object[] executeArgumentArray(final VirtualFrame frame) throws UnexpectedResultException {
     return TypesGen.expectObjectArray(executeGeneric(frame));
+  }
+
+  public SFarReference executeSFarReference(final VirtualFrame frame) throws UnexpectedResultException {
+    return TypesGen.expectSFarReference(executeGeneric(frame));
+  }
+
+  public SPromise executeSPromise(final VirtualFrame frame) throws UnexpectedResultException {
+    return TypesGen.expectSPromise(executeGeneric(frame));
   }
 }
