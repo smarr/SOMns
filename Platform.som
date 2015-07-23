@@ -5,27 +5,24 @@ class Platform usingVmMirror: vmMirror = (
 | public kernel  = vmMirror kernelObject: nil.
   public system  = (vmMirror load: 'core-lib/System.som')  usingVmMirror: vmMirror.
   public mirrors = (vmMirror load: 'core-lib/Mirrors.som') usingVmMirror: vmMirror.
+  public actors      = (vmMirror load: 'core-lib/Actors.som') usingVmMirror: vmMirror usingKernel: kernel.
   public collections = (vmMirror load: 'core-lib/Collections.som') usingKernel: kernel.
 |
-  (Application usingPlatform: self) start
+  self start
 )(
-  protected class Application usingPlatform: platform = (
-    | private platform = platform. |
-  )(
-    public start = (
-      | arguments app errorCode |
-      arguments := system arguments.
+  public start = (
+    | arguments app errorCode |
+    arguments := system arguments.
 
-      arguments size < 1 ifTrue: [
-        system error: 'No application specified for execution.'
-      ].
-      
-      app := system loadModule: (arguments at: 1).
-      
-      [ errorCode := (app usingPlatform: platform) main: arguments ]
-        on: kernel Exception
-        do: [:e | system error: e asString ].
-      system exit: errorCode
-    )
+    arguments size < 1 ifTrue: [
+      system error: 'No application specified for execution.'
+    ].
+    
+    app := system loadModule: (arguments at: 1).
+    
+    [ errorCode := (app usingPlatform: self) main: arguments ]
+      on: kernel Exception
+      do: [:e | system error: e asString ].
+    system exit: errorCode
   )
 )
