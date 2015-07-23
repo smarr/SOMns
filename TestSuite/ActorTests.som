@@ -1,0 +1,314 @@
+class ActorTests usingPlatform: platform testFramework: minitest = (
+| private TestContext = minitest TestContext.
+  private actors      = platform actors.
+  private Exception   = platform kernel Exception.
+  private ObjectMirror = platform mirrors ObjectMirror.
+|
+)(
+  class Bob meet: a = (
+    | private alice = a. |
+  ) (
+    answerFarRef   = ( ^ alice        )
+    answerNearRef  = ( ^ self         )
+    answerValue    = ( ^ 42           )
+    raiseException = ( ^ Error signal )
+  )
+
+  class DeepChain = () (
+    nestedResolutionWithDepth: n = (
+      ^ n > 0 ifTrue:  [ self <-: nestedResolutionWithDepth: n - 1 ]
+              ifFalse: [ 'done' ]
+    )
+  )
+
+  class Math = () (
+    factorial: n = (
+      n = 0 ifTrue: [ ^1 ].
+      ^ (self <-: factorial: n - 1) <-: * n
+    )
+
+    fibonacci: n = (
+      n = 0 ifTrue: [ ^ 0 ].
+      n = 1 ifTrue: [ ^ 1 ].
+      ^ (self <-: fibonacci: n - 1) <-: + (self <-: fibonacci: n - 2)
+    )
+
+    isPositive: n = ( ^ n > 0 )
+  )
+
+  class Ping = (
+    | other |
+  ) (
+    pong: n sum: m = (
+      n <= 0 ifTrue: [ ^ m ].
+      ^ other <-: ping: n - 1 sum: n + m
+    )
+
+    start = (
+      ^ other <-: ping: 10 sum: 0
+    )
+  )
+
+  class Pong = (
+    | other |
+  ) (
+    ping: n sum: m = (
+      ^ other <-: pong: n - 1 sum: n + m
+    )
+  )
+
+  class Recorder = (
+    | recording ::= ''. |
+  ) (
+    append: x = (
+      recording := recording , x.
+      ^ recording size
+    )
+
+    fail = (
+      Exception signal
+    )
+  )
+
+  class Cell new: val = (
+    | public val ::= val. |
+    'hehe' println.
+  )()
+
+  public class Tests = TestContext ()(
+    assert: promise resolvedWith: expectedResolution = (
+      | state actualResolution |
+      state := #unresolved.
+
+      (withTimeout: promise inMSecs: 300)
+        whenResolved: [:r | state := #resolved. actualResolution := r ]
+        catch:        [:e | state := #error.    actualResolution := e ].
+      (* is this sufficient? is it better to distinguish an error from a timeout? *)
+
+      state = #resolved
+        ifTrue: [ ^ assert: actualResolution equals: expectedResolution].
+      state = #error
+        ifTrue: [ ^ failWithMessage: 'Promise broken with error: ', actualResolution printString].
+      failWithMessage: 'Invalid state blocking on a promise: ', state.
+    )
+
+    assert: promise smashedWith: expectedErrorClass = (
+      | state actualResolution |
+      state := #unresolved.
+
+      (withTimeout: promise inMSecs: 300)
+        whenResolved: [:r | state := #resolved. actualResolution := r ]
+        catch:        [:e | state := #error.    actualResolution := e ].
+
+      state = #resolved
+        ifTrue: [ ^ failWithMessage: 'Promise resolved with: ', actualResolution printString ].
+      state = #error
+        ifTrue: [ ^ assert: actualResolution class equals: expectedErrorClass ].
+      failWithMessage: 'Invalid state blocking on a promise: ', state.
+    )
+    
+    public testFarReferenceCannotBeInstantiated = (
+      should: [actors FarReference new] signal: Exception
+    )
+    
+    public testCreateActorReturnsFarReference = (
+      | ref |
+      ref := (actors createActorFromValue: DeepChain).
+      assert: (ObjectMirror reflecting: ref) className equals: 'FarReference'.
+    )
+    
+    public testEventualSendReturnsPromise = (
+      | refCellClass cellPromise |
+      refCellClass := (actors createActorFromValue: Cell).
+      cellPromise  := refCellClass <-: new: 4.
+      refCellClass <-: new: 4.
+      refCellClass <-: new: 4.
+      refCellClass <-: new: 4.
+      1 to: 1000000000 do: [:i | 1 + 2+ 3+ 4+ 5+ 6 ].
+      assert: (ObjectMirror reflecting: cellPromise) className equals: 'Promise'.
+    )
+
+(*    public testDeeplyChainedResolution = (
+      (* A good implementation should handle this in constant rather than linear space. *)
+      | r |
+      r := (actors createActorFromValue: DeepChain) <-: new.
+      assert: (r <-: nestedResolutionWithDepth: 100000) resolvedWith: 'done'.
+    )*)
+(*
+    public testFactorial = (
+      | math |
+      math := (actors createActorFromValue: Math) <-: new.
+      assert: (math <-: factorial: 9) resolvedWith: 362880.
+    )
+
+    public testFibonacci = (
+      | math result |
+      math := (actors createActorFromValue: Math) <-: new.
+      result := waitFor: (math <-: fibonacci: 9).
+      assert: result equals: 34
+    )
+
+    public testFifo = (
+      | recorder r1 r2 r3 r4 |
+      recorder := (actors createActorFromValue: Recorder) <-: new.
+      r1 := recorder <-: append: 'a'.
+      r2 := recorder <-: append: 'b'.
+      r3 := recorder <-: append: 'c'.
+      r4 := recorder <-: append: 'd'.
+      assert: (recorder <-: recording) resolvedWith: 'abcd'.
+      assert: r1 resolvedWith: 1.
+      assert: r2 resolvedWith: 2.
+      assert: r3 resolvedWith: 3.
+      assert: r4 resolvedWith: 4.
+    )
+
+    public testFifoFailstop = (
+      | recorder recorderFork r1 r2 r3 r4 r5 |
+      recorder := (actors createActorFromValue: Recorder) <-: new.
+      recorderFork := recorder <-: yourself.
+              
+      r1 := recorder <-: append: 'a'.
+      r2 := recorder <-: append: 'b'.
+      r3 := recorder <-: fail.
+      r4 := recorder <-: append: 'c'.
+      r5 := recorder <-: append: 'd'.
+      assert: r3 smashedWith: Error. (* Do this first because our asserts are blocking and we need to register the error handler before the next turn. *)
+      assert: (recorderFork <-: recording) resolvedWith: 'abcd'.
+      assert: r1 resolvedWith: 1.
+      assert: r2 resolvedWith: 2.
+      assert: r4 smashedWith: Error.
+      assert: r5 smashedWith: Error.
+    )
+
+    public testIfTrue = (
+      | math tookTruePath result |
+      math := (actors createActorFromValue: Math) <-: new.
+      tookTruePath := false.
+      result := waitFor: ((math <-: isPositive: 9) <-: ifTrue: [tookTruePath := true. 7]).
+      assert: result equals: 7.
+      assert: tookTruePath.
+    )
+  
+    public testNestedResolutionOrder = (
+      | a b last x |
+      a := actors Resolver new.
+      b := actors Resolver new.
+      last := actors Resolver new.
+      x := List new.
+
+      a promise whenResolved: [x add: 'a1'].
+      b promise whenResolved: [x add: 'b2'].
+      'todo: fix the code, remove cascades, or add cascade support to SOMns' signal.
+      (* TODO: adapt
+      (a promise whenResolved: [x add: 'a3'])
+        whenResolved: [x add: 'a3a'];
+        whenResolved: [x add: 'a3b'].
+      (b promise whenResolved: [x add: 'b4'])
+        whenResolved: [x add: 'b4a'];
+        whenResolved: [x add: 'b4b'].
+      b resolve: a promise.
+      (a promise whenResolved: [x add: 'a5'])
+        whenResolved: [x add: 'a5a'];
+        whenResolved: [x add: 'a5b'].
+      (b promise whenResolved: [x add: 'b6'])
+        whenResolved: [x add: 'b6a'];
+        whenResolved: [x add: 'b6b'].
+      (a promise whenResolved: [x add: 'a7'])
+        whenResolved: [x add: 'a7a'];
+        whenResolved: [x add: 'a7b'].
+      (b promise whenResolved: [x add: 'b8'])
+        whenResolved: [x add: 'b8a'];
+        whenResolved: [x add: 'b8b'. last resolve: x asArray]. *)
+      a resolve: nil.
+
+      (* Needs review *)
+      'todo: rewrite code to avoid dynamic array, or add support to SOMns' signal.
+      (* TODO: fix code
+      assert: last promise resolvedWith: {#a1 . #a3 . #a5 . #a7 . #b2 . #b4 . #b6 . #b8 . #a3a . #a3b . #a5a . #a5b . #a7a . #a7b . #b4a . #b4b . #b6a . #b6b . #b8a . #b8b} *)
+    )
+
+    public testPingPong = (
+      | ping pong result |
+      ping := (actors createActorFromValue: Ping) <-: new.
+      pong := (actors createActorFromValue: Pong) <-: new.
+
+      ping <-: other: pong.
+      pong <-: other: ping.
+      assert: (ping <-: start) resolvedWith: 55.
+    )
+
+    public testPromiseGroup = (
+      | mathClass math r2 r3 r4 g1 g2 |
+      mathClass := actors createActorFromValue: Math.
+      
+      math := mathClass <-: new.
+      r2 := math <-: factorial: 2.
+      r3 := math <-: factorial: 3.
+      g1 := r2, r3.
+      r4 := math <-: factorial: 4.
+      g2 := r2, r3, r4.
+
+      waitFor: g1.
+      assert: r2 + r3 equals: 8.
+      waitFor: g2.
+      assert: r2 + r3 + r4 equals: 32.
+    )
+
+    public testTimer = (
+      | result |
+      (* Creating an actor this way is cheating. Closures are not value objects. *)
+      result := waitFor: (actors createActorFromValue: [
+        | resolver ticks repeating |
+        resolver := actors Resolver new.
+        ticks := 0.
+        repeating := Timer every: 20 do: [ticks := ticks + 1].
+        Timer after: 50 do: [repeating cancel. resolver resolve: ticks].
+        resolver promise
+      ]) <-: value.
+      assert: [result = 2].
+    )
+
+    public testTurnResultsInException = (
+      | bob |
+      bob := (actors createActorFromValue: Bob) <-: meet: self.
+      assert: (bob <-: raiseException) smashedWith: Error.
+    )
+
+    public testTurnResultsInFarRef= (
+      | bob |
+      bob := (actors createActorFromValue: Bob) <-: meet: self.
+      assert: bob <-: answerFarRef resolvedWith: self.
+    )
+
+    public testTurnResultsInNearRef= (
+      | bobP r |
+      bobP := (actors createActorFromValue: Bob) <-: meet: self.
+      r := bobP 
+        whenResolved: [:bob |
+          (bob <-: answerNearRef) 
+            whenResolved: [:bob2 | bob2 = bob ]].
+      assert: r resolvedWith: true.
+    )
+
+    public testTurnResultsInValue = (
+      | bob |
+      bob := (actors createActorFromValue: Bob) <-: meet: self. 
+      assert: (bob <-: answerValue) resolvedWith: 42.
+    )
+*)
+    waitFor: promise = (
+      | timedOut resolution |
+      timedOut := true.
+      'this is totally broken and needs to do something like the AT framework and test methods need to return futures' signal.
+      promise whenResolved: [:r |
+        resolution := r.
+        timedOut := false.
+        sem signal].
+      sem waitTimeoutMSecs: 200.
+      timedOut ifTrue: [failWithMessage: 'Timed out'].
+      ^resolution
+    )
+  ) : (
+    TEST_CONTEXT = ()
+  )
+)
