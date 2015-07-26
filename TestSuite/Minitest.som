@@ -562,8 +562,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
       ^TestSuccess case: testCase
     )
 
-    'private'
-    failWithMessage: messageText = (
+    private failWithMessage: messageText = (
       TestFailureException signal: messageText
     )
 
@@ -1002,6 +1001,8 @@ OTHER DEALINGS IN THE SOFTWARE. *)
     )
 
     public runAll = (
+      (* TODO: add support for async test cases *)
+      
       prepare.
       [testSuite testCases do: [:case | execute: case ]]
         ensure: [cleanUp]
