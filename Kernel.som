@@ -619,7 +619,7 @@ class Kernel vmMirror: vmMirror = (
       (lastIdx >= storage size) ifTrue: [
         (* Need to expand capacity first *)
         | newStorage |
-        newStorage := Array new: (2 * storage size).
+        newStorage := Array new: 2 * storage size.
         storage doIndexes: [ :i | newStorage at: i put: (storage at: i) ].
         storage := newStorage. ].
       
