@@ -699,6 +699,8 @@ class Kernel vmMirror: vmMirror = (
     'Printing'
     public println = (
       'Vector[' print.
+      firstIdx print. ', ' print.
+      lastIdx print. ': ' print.
       self do: [ :it | '(' print. it print. ')' print ].
       ']' println
     )
