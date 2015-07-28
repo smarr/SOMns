@@ -31,7 +31,7 @@ class MinitestTests usingPlatform: platform testFramework: minitest = (
           assert: 3 equals: 3
         )
       ) : (
-        TEST_CONTEXT = ( )
+        TEST_CONTEXT = ()
       )
 
       public class AssertTestContext = TestContext ()(
@@ -207,85 +207,89 @@ class MinitestTests usingPlatform: platform testFramework: minitest = (
     )
 
     resultForSelector: selector in: collection = (
-      ^collection
+      ^ collection
         detect: [:some | some testCase selector = selector]
         ifNone: [nil]
     )
 
-    public testAssertEquals = (
+    public testAsyncAssertEquals = (
       tester := Tester testSuite: (catalog testSuiteNamed: 'AssertEqualsTestContext').
-      tester runAll.
-      assert: tester errors size equals: 0.
-      assert: tester failures size equals: 2.
-      assert: tester failures containsSelector: #testAssertEqualsFail.
-      assert: tester failures containsSelector: #testAssertEqualsFailWithDescription.
-      assert: (resultForSelector: #testAssertEqualsFailWithDescription in: tester failures) description
-        equals: 'custom description'.
-      assert: tester successes size equals: 1.
-      assert: tester successes containsSelector: #testAssertEqualsPass.
+      ^ tester runAll whenResolved: [:r |
+          assert: tester errors size equals: 0.
+          assert: tester failures size equals: 2.
+          assert: tester failures containsSelector: #testAssertEqualsFail.
+          assert: tester failures containsSelector: #testAssertEqualsFailWithDescription.
+          assert: (resultForSelector: #testAssertEqualsFailWithDescription in: tester failures) description
+            equals: 'custom description'.
+          assert: tester successes size equals: 1.
+          assert: tester successes containsSelector: #testAssertEqualsPass.
+      ]
     )
 
-    public testAsserts = (
+    public testAsyncAsserts = (
       tester := Tester testSuite: (catalog testSuiteNamed: 'AssertTestContext').
-      tester runAll.
-      assert: tester errors size equals: 2.
-      assert: tester errors containsSelector: #testAssertErrorBlock.
-      assert: tester errors containsSelector: #testAssertErrorLiteral.
-      assert: tester failures size equals: 3.
-      assert: tester failures containsSelector: #testAssertFailBlock.
-      assert: tester failures containsSelector: #testAssertFailLiteralBoolean.
-      assert: tester failures containsSelector: #testAssertFailWithDescription.
-      assert: (resultForSelector: #testAssertFailWithDescription in: tester failures) description
-        equals: 'custom description'.
-      assert: tester successes size equals: 2.
-      assert: tester successes containsSelector: #testAssertPassBlock.
-      assert: tester successes containsSelector: #testAssertPassLiteralBoolean.
+      ^ tester runAll whenResolved: [:r |
+          assert: tester errors size equals: 2.
+          assert: tester errors containsSelector: #testAssertErrorBlock.
+          assert: tester errors containsSelector: #testAssertErrorLiteral.
+          assert: tester failures size equals: 3.
+          assert: tester failures containsSelector: #testAssertFailBlock.
+          assert: tester failures containsSelector: #testAssertFailLiteralBoolean.
+          assert: tester failures containsSelector: #testAssertFailWithDescription.
+          assert: (resultForSelector: #testAssertFailWithDescription in: tester failures) description
+            equals: 'custom description'.
+          assert: tester successes size equals: 2.
+          assert: tester successes containsSelector: #testAssertPassBlock.
+          assert: tester successes containsSelector: #testAssertPassLiteralBoolean.
+      ]
     )
 
-    public testDenials = (
+    public testAsyncDenials = (
       tester := Tester testSuite: (catalog testSuiteNamed: 'DenyTestContext').
-      tester runAll.
-      assert: tester errors size equals: 2.
-      assert: tester errors containsSelector: #testDenyErrorBlock.
-      assert: tester errors containsSelector: #testDenyErrorExpression.
-      assert: tester failures size equals: 3.
-      assert: tester failures containsSelector: #testDenyFailBlock.
-      assert: tester failures containsSelector: #testDenyFailExpression.
-      assert: tester failures containsSelector: #testDenyFailWithDescription.
-      assert: (resultForSelector: #testDenyFailWithDescription in: tester failures) description
-        equals: 'custom description'.
-      assert: tester successes size equals: 2.
-      assert: tester successes containsSelector: #testDenyPassBlock.
-      assert: tester successes containsSelector: #testDenyPassExpression.
+      ^ tester runAll whenResolved: [:r |
+          assert: tester errors size equals: 2.
+          assert: tester errors containsSelector: #testDenyErrorBlock.
+          assert: tester errors containsSelector: #testDenyErrorExpression.
+          assert: tester failures size equals: 3.
+          assert: tester failures containsSelector: #testDenyFailBlock.
+          assert: tester failures containsSelector: #testDenyFailExpression.
+          assert: tester failures containsSelector: #testDenyFailWithDescription.
+          assert: (resultForSelector: #testDenyFailWithDescription in: tester failures) description
+            equals: 'custom description'.
+          assert: tester successes size equals: 2.
+          assert: tester successes containsSelector: #testDenyPassBlock.
+          assert: tester successes containsSelector: #testDenyPassExpression.
+      ]
     )
 
-    public testResultCreation = (
+    public testAsyncResultCreation = (
       tester := Tester testSuite: (catalog testSuiteNamed: 'ResultCreationTestContext').
-      tester runAll.
+      ^ tester runAll whenResolved: [:r |  
+          assert: tester failures size equals: 1.
+          assert: tester failures first description = 'created here'.
   
-      assert: tester failures size equals: 1.
-      assert: tester failures first description = 'created here'.
-  
-      assert: tester errors size equals: 1.
-      assert: tester errors first exception messageText = 'created here'.
+          assert: tester errors size equals: 1.
+          assert: tester errors first exception messageText = 'created here'.
 
-      assert: tester successes size equals: 1.
-      assert: tester successes first message = 'all good here'.
+          assert: tester successes size equals: 1.
+          assert: tester successes first message = 'all good here'.
+      ]
     )
 
-    public testShouldShouldnt = (
+    public testAsyncShouldShouldnt = (
       tester := Tester testSuite: (catalog testSuiteNamed: 'ShouldShouldntTestContext').
-      tester runAll.
-      assert: tester errors size equals: 0.
-      assert: tester failures size equals: 2. '4.'.
-      (* assert: tester failures containsSelector: #testShouldFail.
-      assert: tester failures containsSelector: #testShouldFailWithDescription.*)
-      assert: tester failures containsSelector: #testShouldntFail.
-      assert: tester failures containsSelector: #testShouldntFailWithDescription.
-      assert: tester successes size equals: 2. '3.'.
-      assert: tester successes containsSelector: #testShouldPassExceptionSubclass.
-      assert: tester successes containsSelector: #testShouldPassSameExceptionClass.
-      'assert: tester successes containsSelector: #testShouldntPass'.
+      ^ tester runAll whenResolved: [:r |
+          assert: tester errors size equals: 0.
+          assert: tester failures size equals: 2. '4.'.
+          (* assert: tester failures containsSelector: #testShouldFail.
+          assert: tester failures containsSelector: #testShouldFailWithDescription.*)
+          assert: tester failures containsSelector: #testShouldntFail.
+          assert: tester failures containsSelector: #testShouldntFailWithDescription.
+          assert: tester successes size equals: 2. '3.'.
+          assert: tester successes containsSelector: #testShouldPassExceptionSubclass.
+          assert: tester successes containsSelector: #testShouldPassSameExceptionClass.
+          'assert: tester successes containsSelector: #testShouldntPass'.
+      ]
     )
   ) : (
     TEST_CONTEXT = ()
@@ -390,19 +394,21 @@ class MinitestTests usingPlatform: platform testFramework: minitest = (
     public testInstantiationCounts = (
       | tester |
       tester := Tester testSuite: catalog allTests.
-      tester runAll.
-      assert: guineaPig DirectlyNestedTestContextInstantiationCount equals: 3.
-      assert: guineaPig OuterSharedStateClassInstantiationCount equals: 1.
-      assert: guineaPig InnerSharedStateClassInstantiationCount equals: 1.
-      assert: guineaPig InnerTestContextInstantiationCount equals: 2.
+      ^ tester runAll whenResolved: [:r |
+          assert: guineaPig DirectlyNestedTestContextInstantiationCount equals: 3.
+          assert: guineaPig OuterSharedStateClassInstantiationCount equals: 1.
+          assert: guineaPig InnerSharedStateClassInstantiationCount equals: 1.
+          assert: guineaPig InnerTestContextInstantiationCount equals: 2.
+      ]
     )
 
-    public testSharedStateCleanUp = (
+    public testAsyncSharedStateCleanUp = (
       | tester |
       tester := Tester testSuite: catalog allTests.
-      tester runAll.
-      assert: guineaPig OuterSharedStateCleanedUp.
-      assert: guineaPig InnerSharedStateCleanedUp.
+      ^ tester runAll whenResolved: [:r |
+          assert: guineaPig OuterSharedStateCleanedUp description: 'Outer state not cleaned up'.
+          assert: guineaPig InnerSharedStateCleanedUp description: 'Inner state not cleaned up'.
+      ]
     )
 
     public testSuiteSizes = (
