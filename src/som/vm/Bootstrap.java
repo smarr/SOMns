@@ -439,7 +439,7 @@ public final class Bootstrap {
       Thread.currentThread().suspend(); // TODO: is that guaranteed to not return?
       System.err.println("This should never happen. suspend should not return");
     } else {
-      System.exit((int) returnCode);
+      System.exit((int) (long) returnCode);
     }
   }
 
