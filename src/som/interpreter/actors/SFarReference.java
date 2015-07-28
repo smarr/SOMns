@@ -28,7 +28,7 @@ public final class SFarReference extends SAbstractObject {
   }
 
   public static void setSOMClass(final SClass cls) {
-    assert farReferenceClass == null;
+    assert farReferenceClass == null || cls == null;
     farReferenceClass = cls;
   }
 

@@ -438,8 +438,11 @@ public final class Bootstrap {
 
     if (VM.isUsingActors()) {
       mainActor.enqueueNextMessageForProcessing();
+      VM.setMainThread(Thread.currentThread());
       Thread.currentThread().suspend(); // TODO: is that guaranteed to not return?
-      System.err.println("This should never happen. suspend should not return");
+      if (!VM.isAvoidingExit()) {
+        System.err.println("This should never happen. suspend should not return");
+      }
     } else {
       System.exit((int) (long) returnCode);
     }

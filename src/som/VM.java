@@ -3,6 +3,9 @@ package som;
 import java.util.Arrays;
 
 import som.interpreter.TruffleCompiler;
+import som.interpreter.actors.SFarReference;
+import som.interpreter.actors.SPromise;
+import som.interpreter.actors.SPromise.SResolver;
 import som.vm.Bootstrap;
 import som.vmobjects.SObjectWithoutFields;
 
@@ -17,6 +20,7 @@ public final class VM {
   private int lastExitCode = 0;
   private Options options;
   private boolean usesActors;
+  private Thread mainThread;
 
   public VM(final boolean avoidExitForTesting) {
     this.avoidExitForTesting = avoidExitForTesting;
@@ -63,6 +67,7 @@ public final class VM {
       System.exit(errorCode);
     } else {
       lastExitCode = errorCode;
+      mainThread.resume();
     }
   }
 
@@ -153,6 +158,18 @@ public final class VM {
     // Checkstyle: resume
   }
 
+  public static boolean isAvoidingExit() {
+    return vm.avoidExitForTesting;
+  }
+
+  public static void setMainThread(final Thread t) {
+    vm.mainThread = t;
+  }
+
+  public static Thread getMainThread() {
+    return vm.mainThread;
+  }
+
   public long execute() {
     Bootstrap.loadPlatformAndKernelModule(vm.options.platformFile,
         vm.options.kernelFile);
@@ -165,5 +182,14 @@ public final class VM {
     new VM();
     vm.processVmArguments(args);
     System.exit((int) vm.execute());
+  }
+
+  /** This is only meant to be used in unit tests. */
+  public static void resetClassReferences(final boolean callFromUnitTest) {
+    assert callFromUnitTest;
+    SFarReference.setSOMClass(null);
+    SPromise.setPairClass(null);
+    SPromise.setSOMClass(null);
+    SResolver.setSOMClass(null);
   }
 }

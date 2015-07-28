@@ -54,7 +54,7 @@ public final class SPromise extends SObjectWithoutFields {
   }
 
   public static void setSOMClass(final SClass cls) {
-    assert promiseClass == null;
+    assert promiseClass == null || cls == null;
     promiseClass = cls;
   }
 
@@ -126,8 +126,6 @@ public final class SPromise extends SObjectWithoutFields {
     }
   }
 
-
-
   public SPromise onException(final SClass exceptionClass, final SBlock block) {
     assert block.getMethod().getNumberOfArguments() == 2;
 
@@ -178,7 +176,7 @@ public final class SPromise extends SObjectWithoutFields {
     }
 
     public static void setSOMClass(final SClass cls) {
-      assert resolverClass == null;
+      assert resolverClass == null || cls == null;
       resolverClass = cls;
     }
 
@@ -208,6 +206,7 @@ public final class SPromise extends SObjectWithoutFields {
 
   @CompilationFinal public static SClass pairClass;
   public static void setPairClass(final SClass cls) {
+    assert pairClass == null || cls == null;
     pairClass = cls;
   }
 }

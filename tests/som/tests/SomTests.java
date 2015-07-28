@@ -69,6 +69,9 @@ public class SomTests {
     SObjectWithoutFields vmMirror = Bootstrap.initializeObjectSystem();
 
     Bootstrap.executeApplication(vmMirror);
+
+    VM.resetClassReferences(true);
+
     assertEquals(0, vm.lastExitCode());
   }
 }
