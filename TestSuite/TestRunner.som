@@ -1,6 +1,7 @@
 class TestRunner usingPlatform: platform = (
 | private platform = platform.
   private system   = platform system.
+  private actors   = platform actors.
   private minitest = (system loadModule: 'core-lib/TestSuite/Minitest.som') usingPlatform: platform.
 |
 )(
