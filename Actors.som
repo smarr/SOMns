@@ -23,9 +23,11 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel = (
   private Exception = kernel Exception.
 |
   (* the easiest way to get to this reference in the VM.
-     And, yes, looks dirty, but is rather ok. It's a Value after all. *)
-  vmMirror farReferenceClass: FarReference.
-  vmMirror promiseClass: Promise.
+     And, yes, looks dirty, but is rather ok. They are Values after all. *)
+  vmMirror actorsFarReferenceClass: FarReference.
+  vmMirror actorsPromiseClass:  Promise.
+  vmMirror actorsPairClass:     Pair.
+  vmMirror actorsResolverClass: Resolver. 
 )(
   public class FarReference = Value (
     (* This class cannot be instantiated directly *)
@@ -40,10 +42,82 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel = (
     )
     public notNil = ( ^ true )
   )
-  
-  public class Promise = Object ()()
-  
+
+  public class Promise = Object ()(
+    (* all whenResolved blocks are executed. *)
+    public whenResolved: aBlock = ( ^ vmMirror actorsWhen: self resolved: aBlock )
+    
+    (* all ensure blocks are executed. *)
+    public ensure: aBlock       = ( whenResolved: aBlock. onError: aBlock. )
+    
+    (* all onError blocks are executed. *)
+    public onError: errorBlock  = ( ^ vmMirror actorsFor: self onError: errorBlock )
+    
+    public whenResolved: aBlock onError: errorBlock = (
+      ^ vmMirror actorsWhen: self resolved: aBlock onError: errorBlock
+    )
+    
+    (* similar to exception handlers, only the first matching on:do: is executed.
+       registration order determines search order.
+       This seems to be also what the Bluebird JS lib is doing. *)
+    public on: exception do: errorBlock = (
+      vmMirror actorsFor: self on: exception do: errorBlock
+    )
+  )
+
+  public class Resolver = Value ()( (* Object or Value? *)
+    public resolve: value = ( vmMirror actorsResolve: self with: value )
+    public error:   value = ( self notYetImplemented )
+  ) 
+
+  class Pair with: promise and: resolver = Value (
+    (* A promise Pair is useful for explicitly creating dependencies between
+       asynchronous computations. *)
+    | public promise  = promise.
+      public resolver = resolver. |
+  )(
+    public resolve: value = (
+      resolver resolve: value.
+    )
+  )
+
+  public createPromisePair = (
+    ^ vmMirror actorsCreatePromisePair: nil.
+  )
+
   public createActorFromValue: aValue = (
     ^ vmMirror actorsCreateFromValue: aValue
+  )
+
+  (* Can't be part of kernel, don't have promises in the kernel... *)
+  private async: collection do: aBlock next: i prevPromise: prev 
+      completionResolver: resolver = (
+    prev whenResolved: [:res |
+      i <= collection size
+        ifTrue: [
+          | promise |
+          promise := aBlock value: (collection at: i).
+          async: collection do: aBlock next: i + 1 prevPromise: promise completionResolver: resolver ]
+        ifFalse: [
+          resolver resolve: collection ] ]
+  )
+  
+  public async: collection do: aBlock = (
+    | promisePair first |
+    promisePair := createPromisePair.
+
+    collection size > 0 ifTrue: [
+      first := aBlock value: (collection at: 1).
+    
+      async:                collection
+        do:                 aBlock
+        next:               2
+        prevPromise:        first 
+        completionResolver: promisePair resolver.
+    ] ifFalse: [
+      promisePair resolve: collection.
+    ]
+    
+    ^ promisePair promise.
   )
 )
