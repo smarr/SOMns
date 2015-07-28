@@ -333,8 +333,9 @@ OTHER DEALINGS IN THE SOFTWARE. *)
   private IdentitySet        = platform collections IdentitySet.
   
   private ObjectMirror = platform mirrors ObjectMirror.
+  private actors       = platform actors.
 |)(
-  class TestCase environment: testEnvironment selector: selector = (
+  class TestCase env: testEnvironment selector: selector = (
     (* Represents a particular test (a method with the selector that begins with
        'test') in a text context. This class, unlike SUnit's class by the same 
        name, is internal to the framework and is not intended to be subclassed
@@ -353,6 +354,8 @@ OTHER DEALINGS IN THE SOFTWARE. *)
       testContextInstance
     |
   ) (
+    public isAsync = ( ^ false )
+  
     public runUsing: tester = (
       ^ [self runUnsafeUsing: tester]
           on: Exception
@@ -381,7 +384,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
     )
     
     sendTestMessage = (
-      (ObjectMirror reflecting: testContextInstance) perform: selector
+      ^ (ObjectMirror reflecting: testContextInstance) perform: selector
     )
 
     public runUnsafeUsing: tester = (
@@ -404,6 +407,56 @@ OTHER DEALINGS IN THE SOFTWARE. *)
     
     public asString = (
       ^ 'TestCase(' + selector asString + ')'
+    )
+  ) : (
+    public environment: testEnvironment selector: selector = (
+      ^ ((selector beginsWith: 'testAsync')
+          ifTrue: [ AsyncTestCase ] ifFalse: [ TestCase ])
+            env: testEnvironment selector: selector
+    )
+  )
+  
+  class AsyncTestCase env: testEnvironment selector: selector
+    = TestCase env: testEnvironment selector: selector ()(
+    public isAsync = ( ^ true )
+    
+    public runUsing: tester = (
+      | promisePair |
+      instantiateTestContextUsing: tester.
+      promisePair := actors createPromisePair.
+      [[| promise testSuccess |
+          promise := sendTestMessage.
+          promise whenResolved: [:r |
+            (* At this point the test has been successful, so create the TestSuccess before it is removed. *)
+            testSuccess := testContextInstance createSuccessResultFor: self.
+            (* Clean up immediately after a successful test. This makes the test context instance
+            immediately garbage-collectable, which is an important property for large test suites. *)
+            cleanUp.
+            promisePair resolve: testSuccess ].
+          promise on: TestFailureException do: [:ex |
+            promisePair resolve: (testContextInstance 
+              ifNil:    [ TestFailure case: self description: ex messageText]
+              ifNotNil: [:it | it createFailureResultFor: self description: ex messageText])].
+          promise on: Exception do: [:ex |
+            promisePair resolve: (testContextInstance 
+              ifNil:    [ TestError case: self exception: ex ]
+              ifNotNil: [:it | it createErrorResultFor: self exception: ex ])]
+        ] on: TestFailureException
+          do: [:ex |
+            (* testContextInstance should never be nil at this point, but just in case. *)
+            promisePair resolve: (testContextInstance 
+              ifNil:    [ TestFailure case: self description: ex messageText ]
+              ifNotNil: [:it | it createFailureResultFor: self description: ex messageText ])]
+      ] on: Exception
+        do: [:ex | 
+          promisePair resolve: (testContextInstance 
+            ifNil:    [ TestError case: self exception: ex ]
+            ifNotNil: [:it | it createErrorResultFor: self exception: ex ])].
+      ^ promisePair promise
+    )
+
+    public asString = (
+      ^ 'Async' + super asString
     )
   )
 
@@ -1002,16 +1055,27 @@ OTHER DEALINGS IN THE SOFTWARE. *)
       testsPerformed := 0.
       instanceManager createCoreInstances.
     )
-
-    public runAll = (
-      (* TODO: add support for async test cases *)
+    
+    public runAllSynchronous = (
+      testSuite testCases do: [:case |
+        case isAsync ifFalse: [ executeSynchronous: case ] ]
+    )
+    
+    public runAllAsynchronous = (
+      | asyncCases |
+      asyncCases := testSuite testCases select: [:c | c isAsync ].
       
-      prepare.
-      [testSuite testCases do: [:case | execute: case ]]
-        ensure: [cleanUp]
+      ^ actors async: asyncCases do: [:case |
+          case isAsync ifTrue: [ executeAsynchronous: case ] ]
     )
 
-    public execute: case = (
+    public runAll = (
+      prepare.
+      runAllSynchronous.
+      ^ runAllAsynchronous ensure: [:r | cleanUp ]
+    )
+
+    public executeSynchronous: case = (
       (* Execute one test case, add the result to the appropriate collection and
          return it. *)
       | result |
@@ -1021,6 +1085,20 @@ OTHER DEALINGS IN THE SOFTWARE. *)
       result isFailure ifTrue: [failures  append: result].
       result isSuccess ifTrue: [successes append: result].
       ^result
+    )
+    
+    public executeAsynchronous: case = (
+      (* Execute one test case, add the result to the appropriate collection and
+         return it. *)
+      | result |
+      result := case runUsing: self.
+      ^ result whenResolved: [:r |
+        testsPerformed := testsPerformed + 1.
+        r isError   ifTrue: [errors    append: r].
+        r isFailure ifTrue: [failures  append: r].
+        r isSuccess ifTrue: [successes append: r].
+        r
+      ]
     )
 
     testSuite = (

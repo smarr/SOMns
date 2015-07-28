@@ -38,25 +38,28 @@ class TestRunner usingPlatform: platform = (
   )
   
   runAllTests: testModule = (
-    | tester catalog |
+    | tester catalog promisePair |
     catalog := minitest TestCatalog forModule: testModule.
     tester := minitest Tester testSuite: catalog allTests.
-    tester runAll.
-  
-    (* reporting *)
-    reportErrors:   tester errors.
-    reportFailures: tester failures.
+    
+    promisePair := actors createPromisePair.
 
-    'Total Number of Tests:      ' print.
-    (tester errors size + tester failures size + tester successes size) println.
-    'Number of Successful Tests: ' print.
-    tester successes size println.
+    tester runAll whenResolved: [:aTester |
+      reportErrors:   tester errors.
+      reportFailures: tester failures.
 
-    ^ tester errors size + tester failures size = 0
+      'Total Number of Tests:      ' print.
+      (tester errors size + tester failures size + tester successes size) println.
+      'Number of Successful Tests: ' print.
+      tester successes size println.
+      
+      promisePair resolver resolve: tester errors size + tester failures size = 0
+    ].
+    ^ promisePair promise
   )
   
   runAllKnownModules = (
-    | modules result |
+    | modules allSuccessful allTestsDonePromise |
     modules := 'LanguageTests',
                'CollectionTests',
                'DoubleTests',
@@ -69,29 +72,39 @@ class TestRunner usingPlatform: platform = (
                
                (* 'ReflectionTests', *)
     
-    result := true.
-    modules do: [:m |
+    allSuccessful := true.
+    allTestsDonePromise := actors async: modules do: [:m |
       | testModule |
-      testModule := (system loadModule: 'core-lib/TestSuite/' + m + '.som') usingPlatform: platform testFramework: minitest.
+      testModule := (system loadModule: 'core-lib/TestSuite/' + m + '.som')
+                      usingPlatform: platform testFramework: minitest.
       m println.
-      result := result and: [runAllTests: testModule].
-      '' println.
+      (runAllTests: testModule)
+        whenResolved: [:successful |
+        allSuccessful := allSuccessful and: successful.
+        '' println.
+      ]
     ].
-    ^ result
+    ^ allTestsDonePromise whenResolved: [:ms | allSuccessful ]
   )
 
   public main: args = (
-    |  testModule |
-    
+    | testModule |
     args size = 2 ifTrue: [
+      | fut |
       testModule := (system loadModule: (args at: 2)) usingPlatform: platform testFramework: minitest.
-      (runAllTests: testModule)
-        ifTrue: [^0] ifFalse: [^1]
+      fut := runAllTests: testModule.
+      fut whenResolved: [:testsPassed | 
+        testsPassed
+          ifTrue:  [ system exit: 0 ]
+          ifFalse: [ system exit: 1 ] ]
     ].
     
     args size = 1 ifTrue: [
       runAllKnownModules
-        ifTrue: [^0] ifFalse: [^1]
+        whenResolved: [:testsPassed | 
+          testsPassed
+            ifTrue:  [ system exit: 0 ]
+            ifFalse: [ system exit: 1 ] ]
     ].
 
     'TODO: add help text' println.
