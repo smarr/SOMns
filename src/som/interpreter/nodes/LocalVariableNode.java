@@ -121,19 +121,19 @@ public abstract class LocalVariableNode extends ExpressionNode {
 
     public abstract ExpressionNode getExp();
 
-    @Specialization(guards = "isBoolKind()")
+    @Specialization(guards = "isBoolKind(expValue)")
     public final boolean writeBoolean(final VirtualFrame frame, final boolean expValue) {
       frame.setBoolean(slot, expValue);
       return expValue;
     }
 
-    @Specialization(guards = "isLongKind()")
+    @Specialization(guards = "isLongKind(expValue)")
     public final long writeLong(final VirtualFrame frame, final long expValue) {
       frame.setLong(slot, expValue);
       return expValue;
     }
 
-    @Specialization(guards = "isDoubleKind()")
+    @Specialization(guards = "isDoubleKind(expValue)")
     public final double writeDouble(final VirtualFrame frame, final double expValue) {
       frame.setDouble(slot, expValue);
       return expValue;
@@ -146,7 +146,7 @@ public abstract class LocalVariableNode extends ExpressionNode {
       return expValue;
     }
 
-    protected final boolean isBoolKind() {
+    protected final boolean isBoolKind(final boolean expValue) { // uses expValue to make sure guard is not converted to assertion
       if (slot.getKind() == FrameSlotKind.Boolean) {
         return true;
       }
@@ -158,7 +158,7 @@ public abstract class LocalVariableNode extends ExpressionNode {
       return false;
     }
 
-    protected final boolean isLongKind() {
+    protected final boolean isLongKind(final long expValue) { // uses expValue to make sure guard is not converted to assertion
       if (slot.getKind() == FrameSlotKind.Long) {
         return true;
       }
@@ -170,7 +170,7 @@ public abstract class LocalVariableNode extends ExpressionNode {
       return false;
     }
 
-    protected final boolean isDoubleKind() {
+    protected final boolean isDoubleKind(final double expValue) { // uses expValue to make sure guard is not converted to assertion
       if (slot.getKind() == FrameSlotKind.Double) {
         return true;
       }
