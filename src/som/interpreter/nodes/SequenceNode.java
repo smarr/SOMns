@@ -48,4 +48,9 @@ public final class SequenceNode extends ExpressionNode {
       expressions[i].executeGeneric(frame);
     }
   }
+
+  @Override
+  public String toString() {
+    return "SeqNode[" + getSourceSection() + "]";
+  }
 }

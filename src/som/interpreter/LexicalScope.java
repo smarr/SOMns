@@ -52,6 +52,11 @@ public abstract class LexicalScope {
         this.classId = classId;
         this.contextLevel = contextLevel;
       }
+
+      @Override
+      public String toString() {
+        return "Class+Ctx[" + classId.toString() + ", " + contextLevel + "]";
+      }
     }
 
     public ClassIdAndContextLevel lookupSlotOrClass(final SSymbol selector, final int contextLevel) {
