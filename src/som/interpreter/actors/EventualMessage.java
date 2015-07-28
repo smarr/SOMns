@@ -48,5 +48,9 @@ public class EventualMessage extends RecursiveAction {
     return actorThreadLocal.get();
   }
 
+  public static void setMainActor(final Actor actor) {
+    actorThreadLocal.set(actor);
+  }
+
   private static final ThreadLocal<Actor> actorThreadLocal = new ThreadLocal<Actor>();
 }
