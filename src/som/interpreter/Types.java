@@ -50,13 +50,13 @@ import com.oracle.truffle.api.dsl.TypeSystem;
                  Thread.class,
                  SClass.class,
                 SObject.class,
+               SPromise.class,
    SObjectWithoutFields.class,
                  SBlock.class,
                 SSymbol.class,
              SInvokable.class,
                  SArray.class,
           SFarReference.class,
-               SPromise.class,
         SAbstractObject.class,
                Object[].class}) // Object[] is only for argument passing
 public class Types {

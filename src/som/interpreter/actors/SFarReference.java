@@ -2,7 +2,7 @@ package som.interpreter.actors;
 
 import som.compiler.AccessModifier;
 import som.interpreter.Types;
-import som.interpreter.actors.SPromise.Resolver;
+import som.interpreter.actors.SPromise.SResolver;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
@@ -44,7 +44,7 @@ public final class SFarReference extends SAbstractObject {
   public SPromise eventualSend(final Actor currentActor, final SSymbol selector,
       final Object[] args) {
     SPromise result   = new SPromise(currentActor);
-    Resolver resolver = new Resolver(result);
+    SResolver resolver = new SResolver(result);
 
     EventualMessage msg = new EventualMessage(actor, selector, args, resolver);
     actor.enqueueMessage(msg);
