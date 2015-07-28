@@ -8,7 +8,6 @@ class Platform usingVmMirror: vmMirror = (
   public actors      = (vmMirror load: 'core-lib/Actors.som') usingVmMirror: vmMirror usingKernel: kernel.
   public collections = (vmMirror load: 'core-lib/Collections.som') usingKernel: kernel.
 |
-  self start
 )(
   (* start executes the application code and returns an integer as error code *)
   public start = (
