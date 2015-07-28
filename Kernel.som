@@ -464,7 +464,7 @@ class Kernel vmMirror: vmMirror = (
     )
   
     'Collection'
-    public collect: aBlock = (
+    public collect: aBlock = ( (* also known as 'map' *)
       | result |
       result := Array new: self size.
       self doIndexes: [ :i | result at: i put: (aBlock value: (self at: i)) ].
@@ -612,6 +612,22 @@ class Kernel vmMirror: vmMirror = (
       firstIdx to: lastIdx - 1 do: block
     )
     
+    public collect: aBlock = ( (* also known as 'map' *)
+      | result |
+      result := Vector new: self size.
+      self doIndexes: [ :i |
+        result append: (aBlock value: (self at: i)) ].
+      ^ result
+    )
+    
+    public select: aBlock = (
+      | newCollection |
+      newCollection := Vector new: self size.
+      self do: [:each | (aBlock value: each)  
+                          ifTrue: [newCollection append: each]].
+      ^ newCollection
+    )
+
     'Adding'
     public , element = ( ^ self append: element )
     

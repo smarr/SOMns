@@ -189,5 +189,30 @@ class CollectionTests usingPlatform: platform testFramework: minitest = (
         j := j + 1.
       ].
     )
+    
+    public testSelect = (
+      | v result |
+      v := Vector new.
+      v append: #t. v append: 5. v append: 55. v append: #t.
+      
+      result := v select: [:e | e = #t ].
+      
+      assert: result size    equals: 2.
+      assert: (result at: 1) equals: #t.
+      assert: (result at: 2) equals: #t.
+    )
+    
+    public testCollect = (
+      | v result |
+      v := Vector new.
+      1 to: 5 do: [:i | v append: i ].
+      
+      result := v collect: [:e | e * 2 ].
+
+      assert: result size equals: 5.
+      1 to: 5 do: [:i |
+        assert: (result at: i) equals: i * 2.
+      ].
+    )    
   ) : ( TEST_CONTEXT = () )
 )
