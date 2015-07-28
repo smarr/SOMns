@@ -20,6 +20,7 @@ import som.compiler.SourcecodeCompiler;
 import som.interpreter.LexicalScope.ClassScope;
 import som.interpreter.Primitive;
 import som.interpreter.actors.Actor;
+import som.interpreter.actors.EventualMessage;
 import som.interpreter.nodes.ArgumentReadNode.LocalArgumentReadNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
