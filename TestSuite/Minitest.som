@@ -766,6 +766,9 @@ OTHER DEALINGS IN THE SOFTWARE. *)
        exception instance representing the error. *)
     | public exception ::= exception. |
   ) (
+    public description = (
+      ^ exception asString
+    )
     'testing'
     public isError = (
       ^ true

@@ -8,7 +8,7 @@ class TestRunner usingPlatform: platform = (
   printNameAndDescription: failureOrError = (
     failureOrError testCase environment classDeclarationMirror name asString print.
       '>>#' print. failureOrError testCase selector println.
-    '\t' print. failureOrError exception println.
+    '\t' print. failureOrError description println.
   )
   
   reportErrors: errors = (
