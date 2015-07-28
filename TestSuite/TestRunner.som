@@ -108,7 +108,6 @@ class TestRunner usingPlatform: platform = (
             ifFalse: [ system exit: 1 ] ]
     ].
 
-    'TODO: add help text' println.
-    ^ 1
+    ^ 0
   )
 )
