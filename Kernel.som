@@ -350,7 +350,7 @@ class Kernel vmMirror: vmMirror = (
       l := aString length.
       start + l > (self length + 1) ifTrue: [ ^ 0 ]. 
 
-      start to: self length do: [:i |
+      start to: self length - l + 1 do: [:i |
         (self primSubstringFrom: i to: i + l - 1) = aString ifTrue: [ ^ i ].
       ].
       
