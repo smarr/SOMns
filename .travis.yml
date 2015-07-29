@@ -3,6 +3,7 @@ jdk:
   - oraclejdk8
 sudo: false
 script:
-  - ant test
+  - ant
   - java -Xint -ea -esa -cp build/classes:libs/truffle/build/truffle-api.jar som.VM core-lib/TestSuite/TestRunner.som
   - ./som.sh core-lib/TestSuite/TestRunner.som
+  - ant test
