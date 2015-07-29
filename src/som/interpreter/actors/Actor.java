@@ -4,6 +4,9 @@ import java.util.ArrayDeque;
 import java.util.NoSuchElementException;
 import java.util.concurrent.ForkJoinPool;
 
+import som.interpreter.actors.SPromise.SResolver;
+import som.vmobjects.SSymbol;
+
 
 // design goals:
 //  - avoid 1-thread per actor
@@ -36,6 +39,17 @@ public class Actor {
     this();
     assert isMainActor;
     isExecuting = true;
+  }
+
+  public SPromise eventualSend(final Actor currentActor, final SSymbol selector,
+      final Object[] args) {
+    SPromise result   = new SPromise(currentActor);
+    SResolver resolver = new SResolver(result);
+
+    EventualMessage msg = new EventualMessage(this, selector, args, resolver);
+    enqueueMessage(msg);
+
+    return result;
   }
 
   public synchronized void enqueueMessage(final EventualMessage msg) {

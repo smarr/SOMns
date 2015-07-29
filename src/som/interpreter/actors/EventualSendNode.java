@@ -34,8 +34,18 @@ public final class EventualSendNode extends AbstractMessageSendNode {
     //       do we create a new root node that is queued, or is there something else?
     //       for the moment, the event loop will probably just use an indirect
     //       call node after the lookup.
-    SFarReference rcvr = (SFarReference) args[0];
-    return rcvr.eventualSend(
-        EventualMessage.getActorCurrentMessageIsExecutionOn(), selector, args);
+
+    Object rcvrObject = args[0];
+    if (rcvrObject instanceof SFarReference) {
+      SFarReference rcvr = (SFarReference) args[0];
+      return rcvr.eventualSend(
+          EventualMessage.getActorCurrentMessageIsExecutionOn(), selector, args);
+    } else if (rcvrObject instanceof SPromise) {
+      SPromise rcvr = (SPromise) rcvrObject;
+      return rcvr.whenResolved(selector, args);
+    } else {
+      Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
+      return current.eventualSend(current, selector, args);
+    }
   }
 }

@@ -14,7 +14,7 @@ import com.oracle.truffle.api.CompilerAsserts;
 public class EventualMessage extends RecursiveAction {
   private static final long serialVersionUID = -7994739264831630827L;
 
-  private final Actor    target;
+  private Actor target;
   private final SSymbol  selector;
   private final Object[] args;
   private final SResolver resolver;
@@ -26,6 +26,14 @@ public class EventualMessage extends RecursiveAction {
     this.args     = args;
     this.resolver = resolver;
     assert resolver != null;
+  }
+
+  public void setReceiverForEventualPromiseSend(final Object rcvr) {
+    args[0] = rcvr;
+  }
+
+  public void setTargetActorForEventualPromiseSend(final Actor target) {
+    this.target = target;
   }
 
   @Override

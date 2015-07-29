@@ -26,7 +26,7 @@ public final class SPromise extends SObjectWithoutFields {
   //                call backs here either. After resolving the future,
   //                whenResolved and whenBroken should only be accessed by the
   //                resolver actor
-  private ArrayList<SBlock>    whenResolved;
+  private ArrayList<Object>    whenResolved;
   private ArrayList<SResolver> whenResolvedResolvers;
 
   private ArrayList<SBlock>    onError;
@@ -68,6 +68,15 @@ public final class SPromise extends SObjectWithoutFields {
     return promise;
   }
 
+  public SPromise whenResolved(final SSymbol selector, final Object[] args) {
+    SPromise  promise  = new SPromise(EventualMessage.getActorCurrentMessageIsExecutionOn());
+    SResolver resolver = new SResolver(promise);
+
+    EventualMessage msg = new EventualMessage(null, selector, args, resolver);
+    registerWhenResolved(msg, resolver);
+    return promise;
+  }
+
   public SPromise onError(final SBlock block) {
     assert block.getMethod().getNumberOfArguments() == 2;
 
@@ -91,10 +100,10 @@ public final class SPromise extends SObjectWithoutFields {
     return promise;
   }
 
-  private synchronized void registerWhenResolved(final SBlock block,
+  private synchronized void registerWhenResolved(final Object callbackOrMsg,
       final SResolver resolver) {
     if (resolved) {
-      scheduleCallback(value, block, resolver);
+      scheduleCallback(value, callbackOrMsg, resolver);
     } else {
       if (errored) { // short cut, this promise will never be resolved
         return;
@@ -104,7 +113,7 @@ public final class SPromise extends SObjectWithoutFields {
         whenResolved          = new ArrayList<>(2);
         whenResolvedResolvers = new ArrayList<>(2);
       }
-      whenResolved.add(block);
+      whenResolved.add(callbackOrMsg);
       whenResolvedResolvers.add(resolver);
     }
   }
@@ -156,10 +165,24 @@ public final class SPromise extends SObjectWithoutFields {
     return promise;
   }
 
-  protected void scheduleCallback(final Object result, final SBlock callback, final SResolver resolver) {
+  protected void scheduleCallback(final Object result,
+      final Object callbackOrMsg, final SResolver resolver) {
     assert owner != null;
-    EventualMessage msg = new EventualMessage(owner, SResolver.valueSelector,
-        new Object[] {callback, result}, resolver);
+    EventualMessage msg;
+    if (callbackOrMsg instanceof SBlock) {
+      SBlock callback = (SBlock) callbackOrMsg;
+      msg = new EventualMessage(owner, SResolver.valueSelector,
+          new Object[] {callback, result}, resolver);
+    } else {
+      assert callbackOrMsg instanceof EventualMessage;
+      msg = (EventualMessage) callbackOrMsg;
+      msg.setReceiverForEventualPromiseSend(value);
+      if (value instanceof SFarReference) {
+        msg.setTargetActorForEventualPromiseSend(((SFarReference) value).getActor());
+      } else {
+        msg.setTargetActorForEventualPromiseSend(EventualMessage.getActorCurrentMessageIsExecutionOn());
+      }
+    }
     owner.enqueueMessage(msg);
   }
 
@@ -196,9 +219,9 @@ public final class SPromise extends SObjectWithoutFields {
 
       if (promise.whenResolved != null) {
         for (int i = 0; i < promise.whenResolved.size(); i++) {
-          SBlock    callback = promise.whenResolved.get(i);
+          Object callbackOrMsg = promise.whenResolved.get(i);
           SResolver resolver = promise.whenResolvedResolvers.get(i);
-          promise.scheduleCallback(result, callback, resolver);
+          promise.scheduleCallback(result, callbackOrMsg, resolver);
         }
       }
     }
