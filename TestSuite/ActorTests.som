@@ -15,19 +15,19 @@ class ActorTests usingPlatform: platform testFramework: minitest = (
   )
 
   class DeepChain = () (
-    nestedResolutionWithDepth: n = (
+    public nestedResolutionWithDepth: n = (
       ^ n > 0 ifTrue:  [ self <-: nestedResolutionWithDepth: n - 1 ]
               ifFalse: [ 'done' ]
     )
   )
 
   class Math = () (
-    factorial: n = (
-      n = 0 ifTrue: [ ^1 ].
+    public factorial: n = (
+      n = 0 ifTrue: [ ^ 1 ].
       ^ (self <-: factorial: n - 1) <-: * n
     )
 
-    fibonacci: n = (
+    public fibonacci: n = (
       n = 0 ifTrue: [ ^ 0 ].
       n = 1 ifTrue: [ ^ 1 ].
       ^ (self <-: fibonacci: n - 1) <-: + (self <-: fibonacci: n - 2)
@@ -58,14 +58,14 @@ class ActorTests usingPlatform: platform testFramework: minitest = (
   )
 
   class Recorder = (
-    | recording ::= ''. |
+    | public recording ::= ''. |
   ) (
-    append: x = (
-      recording := recording , x.
-      ^ recording size
+    public append: x = (
+      recording := recording + x.
+      ^ recording length
     )
 
-    fail = (
+    public fail = (
       Exception signal
     )
   )
