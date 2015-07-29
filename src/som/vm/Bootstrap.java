@@ -441,7 +441,9 @@ public final class Bootstrap {
       VM.setMainThread(Thread.currentThread());
       Thread.currentThread().suspend(); // TODO: is that guaranteed to not return?
       if (!VM.isAvoidingExit()) {
+        // Checkstyle: stop
         System.err.println("This should never happen. suspend should not return");
+        // Checkstyle: resume
       }
     } else {
       System.exit((int) (long) returnCode);
