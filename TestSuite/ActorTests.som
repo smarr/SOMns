@@ -120,10 +120,6 @@ class ActorTests usingPlatform: platform testFramework: minitest = (
       | refCellClass cellPromise |
       refCellClass := (actors createActorFromValue: Cell).
       cellPromise  := refCellClass <-: new: 4.
-      refCellClass <-: new: 4.
-      refCellClass <-: new: 4.
-      refCellClass <-: new: 4.
-      1 to: 1000000000 do: [:i | 1 + 2+ 3+ 4+ 5+ 6 ].
       assert: (ObjectMirror reflecting: cellPromise) className equals: 'Promise'.
     )
 
