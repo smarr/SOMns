@@ -8,10 +8,12 @@ import som.vmobjects.SObjectWithoutFields;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
+import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 
 
 @GenerateNodeFactory
+@ImportStatic(Nil.class)
 public abstract class UnequalsPrim extends BinaryExpressionNode {
 
   @Specialization
@@ -44,11 +46,7 @@ public abstract class UnequalsPrim extends BinaryExpressionNode {
     return left != right;
   }
 
-  public static final boolean isNil(final SObjectWithoutFields obj) {
-    return obj == Nil.nilObject;
-  }
-
-  @Specialization(guards = "isNil(left)")
+  @Specialization(guards = "valueIsNil(left)")
   public final boolean isNil(final SObjectWithoutFields left, final Object right) {
     return left != right;
   }

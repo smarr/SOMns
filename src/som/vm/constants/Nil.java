@@ -11,4 +11,12 @@ public final class Nil {
   static {
     nilObject = new SObjectWithoutFields();
   }
+
+  public static boolean valueIsNil(final Object value) {
+    return value == Nil.nilObject;
+  }
+
+  public static boolean valueIsNotNil(final Object value) {
+    return value != Nil.nilObject;
+  }
 }

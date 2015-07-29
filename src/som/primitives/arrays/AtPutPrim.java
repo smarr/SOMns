@@ -9,23 +9,17 @@ import som.vmobjects.SArray;
 import som.vmobjects.SArray.PartiallyEmptyArray;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
+import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.utilities.ValueProfile;
 
 
 @GenerateNodeFactory
+@ImportStatic(Nil.class)
 @Primitive("array:at:put:")
 public abstract class AtPutPrim extends TernaryExpressionNode {
 
   private final ValueProfile storageType = ValueProfile.createClassProfile();
-
-  protected static final boolean valueIsNil(final Object value) {
-    return value == Nil.nilObject;
-  }
-
-  protected static final boolean valueIsNotNil(final Object value) {
-    return value != Nil.nilObject;
-  }
 
   protected static final boolean valueIsNotLong(final Object value) {
     return !(value instanceof Long);

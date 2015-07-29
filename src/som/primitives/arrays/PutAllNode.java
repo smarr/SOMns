@@ -14,6 +14,7 @@ import som.vmobjects.SObjectWithoutFields;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
+import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -22,6 +23,7 @@ import com.oracle.truffle.api.nodes.RootNode;
 
 
 @GenerateNodeFactory
+@ImportStatic(Nil.class)
 @NodeChild(value = "length", type = SizeAndLengthPrim.class, executeWith = "receiver")
 public abstract class PutAllNode extends BinaryExpressionNode
   implements ValuePrimitiveNode  {
@@ -35,10 +37,6 @@ public abstract class PutAllNode extends BinaryExpressionNode
   @Override
   public void adoptNewDispatchListHead(final AbstractDispatchNode node) {
     block = insert(node);
-  }
-
-  protected static final boolean valueIsNil(final Object value) {
-    return value == Nil.nilObject;
   }
 
   protected static final boolean valueOfNoOtherSpecialization(final Object value) {
