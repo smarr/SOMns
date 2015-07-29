@@ -72,7 +72,6 @@ class ActorTests usingPlatform: platform testFramework: minitest = (
 
   class Cell new: val = (
     | public val ::= val. |
-    'hehe' println.
   )()
 
   public class Tests = TestContext ()(
