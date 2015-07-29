@@ -3,6 +3,7 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
   private Array        = platform kernel Array.
   private ObjectMirror = platform mirrors ObjectMirror.
   private Set          = platform collections Set.
+  private kernel       = platform kernel.
 |
 )(
   (* This test verifies that SOM blocks are indeed closures. 
@@ -357,5 +358,117 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
       self assert: 6 equals: ClassC fields size.
       *)
     ) 
+  ) : ( TEST_CONTEXT = () )
+  
+  public class ValueTests = TestContext ()(
+    class Mutable = (
+      | public mut ::= 0. |
+    )(
+      public class Immutable = (
+        | public imm = 0. |
+      )()
+    )
+    
+    class Immutable = (
+      | public imm = 0. |
+    )(
+      public class Immutable = (
+        | public imm = 0. |
+      )()
+    )
+  
+    public testIntegersAreValues = (
+      assert: (ObjectMirror reflecting:        0) isValue.
+      assert: (ObjectMirror reflecting: 1 << 100) isValue.
+      assert: (ObjectMirror reflecting:      -66) isValue.
+    )
+    
+    public testDoublesAreValues = (
+      assert: (ObjectMirror reflecting:  0.0) isValue.
+      assert: (ObjectMirror reflecting:  2.3) isValue.
+      assert: (ObjectMirror reflecting: -1.4) isValue.
+    )
+    
+    public testBooleansAreValues = (
+      assert: (ObjectMirror reflecting: true)  isValue.
+      assert: (ObjectMirror reflecting: false) isValue.
+    )
+    
+    public testNilIsValue = (
+      assert: (ObjectMirror reflecting: nil) isValue.
+    )
+    
+    public testStringsAreValues = (
+      assert: (ObjectMirror reflecting: 'asdasd') isValue.
+      assert: (ObjectMirror reflecting: 'asdasd' + 'sss') isValue.
+    )
+    
+    public testSymbolsAreValues = (
+      assert: (ObjectMirror reflecting: #fff) isValue.
+      assert: (ObjectMirror reflecting: 'asdasd' asSymbol) isValue.
+    )
+    
+    public testPlainObjectIsValue = (
+      assert: (ObjectMirror reflecting: Object new) isValue.
+    )
+    
+    public testValueIsValue = (
+      assert: (ObjectMirror reflecting: Value new) isValue.
+    )
+    
+    public testSomeClassesAreValues = (
+      self halt.
+      assert: (ObjectMirror reflecting: Set)          isValue description: 'Set'.
+      assert: (ObjectMirror reflecting: ObjectMirror) isValue description: 'ObjectMirror'.
+      assert: (ObjectMirror reflecting: Array)        isValue description: 'Array'.
+      assert: (ObjectMirror reflecting: TestContext)  isValue description: 'TestContext'.
+      assert: (ObjectMirror reflecting: Object)       isValue description: 'Object'.
+    )
+    
+    public testArraysArentValues = (
+      deny: (ObjectMirror reflecting: (Array new: 1)) isValue.
+      (* Empty arrays could be values, but aren't, by definition *)
+      deny: (ObjectMirror reflecting: (Array new: 0)) isValue.
+    )
+    
+    public testBlocksArentValues = (
+      | var |
+      (* Generally, blocks aren't values, because they could have lexical
+         scopes that are mutable.
+         And until we don't optimize that, let's make them all non-Values. *)
+      deny: (ObjectMirror reflecting: [0])       isValue.
+      deny: (ObjectMirror reflecting: [:r | r ]) isValue.
+      deny: (ObjectMirror reflecting: [var])     isValue.
+    )
+    
+    public testPairIsntValue = (
+      deny: (ObjectMirror reflecting: (kernel Pair withKey: 5 andValue: 4)) isValue.
+    )
+    
+    public testVectorsArentValues = (
+      deny: (ObjectMirror reflecting: kernel Vector new) isValue.
+    )
+    
+    public testExceptionIsValue = (
+      assert: (ObjectMirror reflecting: kernel Exception new) isValue.
+    )
+    
+    public testOuterScopeMutability = (
+      | m i |
+      m := Mutable new.
+      i := m Immutable new.
+      
+      deny: (ObjectMirror reflecting: m) isValue.
+      deny: (ObjectMirror reflecting: i) isValue.
+    )
+    
+    public testOuterScopeImmutability = (
+      | i ii |
+      i  := Immutable new.
+      ii := i Immutable new.
+      
+      assert: (ObjectMirror reflecting: i) isValue.
+      assert: (ObjectMirror reflecting: ii) isValue.
+    )
   ) : ( TEST_CONTEXT = () )
 )

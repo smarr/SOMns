@@ -119,6 +119,8 @@ class Mirrors usingVmMirror: vmMirror = (
               ifFalse: [ superCls := superCls superclass ] ].
           ^ false ]
     )
+    
+    public isValue = ( ^ vmMirror objIsValue: obj )
   )
   
   public class SlotMirror = ()(
