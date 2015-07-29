@@ -72,7 +72,11 @@ class ActorTests usingPlatform: platform testFramework: minitest = (
 
   class Cell new: val = (
     | public val ::= val. |
-  )()
+  )(
+    public valIsFarRef = (
+      ^ (ObjectMirror reflecting: val) className = 'FarReference'
+    )
+  )
 
   public class Tests = TestContext ()(
     assert: promise resolvedWith: expectedResolution = (
@@ -149,6 +153,36 @@ class ActorTests usingPlatform: platform testFramework: minitest = (
       
       promisePair resolve: 5.
       ^ assertPromise
+    )
+    
+    public testAsyncCellPassedAsFarRef = (
+      | cellLocal p promisePair |
+      cellLocal := Cell new: 0.
+      promisePair := actors createPromisePair.
+      
+      p := (actors createActorFromValue: Cell) <-: new: cellLocal.
+      p whenResolved: [:cellFRef |
+        | pIsFRef |
+        (cellFRef <-: valIsFarRef) whenResolved: [:isFRef |
+          assert: isFRef description: 'should be far reference'.
+          promisePair resolve: #done.
+        ]
+      ].
+      ^ promisePair promise
+    )
+    
+    public testAsyncCellReturnedDirect = (
+      | cellLocal promisePair p |
+      promisePair := actors createPromisePair.
+      cellLocal := Cell new: 0.
+      p := (actors createActorFromValue: Cell) <-: new: cellLocal.
+      p whenResolved: [:cellFRef |
+        (cellFRef <-: val) whenResolved: [:c |
+          assert: c is: cellLocal.
+          promisePair resolve: #done
+        ]
+      ].
+      ^ promisePair promise
     )
 
 (*    public testDeeplyChainedResolution = (
