@@ -40,6 +40,7 @@ import som.primitives.MethodPrimsFactory;
 import som.primitives.MethodPrimsFactory.InvokeOnPrimFactory;
 import som.primitives.MirrorPrimsFactory;
 import som.primitives.ObjectPrimsFactory;
+import som.primitives.ObjectPrimsFactory.IsValueFactory;
 import som.primitives.ObjectSystemPrimsFactory;
 import som.primitives.SizeAndLengthPrimFactory;
 import som.primitives.StringPrimsFactory;
@@ -148,7 +149,12 @@ public final class Bootstrap {
     ExpressionNode primNode;
     switch (numArgs) {
       case 1:
-        primNode = factory.createNode(args[0]);
+        if (factory == CreateActorPrimFactory.getInstance()) {
+          primNode = factory.createNode(args[0],
+              IsValueFactory.create(null));
+        } else {
+          primNode = factory.createNode(args[0]);
+        }
         break;
       case 2:
         // HACK for node class where we use `executeWith`
