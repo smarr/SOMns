@@ -122,6 +122,34 @@ class ActorTests usingPlatform: platform testFramework: minitest = (
       cellPromise  := refCellClass <-: new: 4.
       assert: (ObjectMirror reflecting: cellPromise) className equals: 'Promise'.
     )
+    
+    public testWhenResolvedOnPromiseReturnsPromise = (
+      | refCellClass cellPromise result |
+      refCellClass := (actors createActorFromValue: Cell).
+      cellPromise  := refCellClass <-: new: 5.
+      result := cellPromise whenResolved: [:r | 5].
+      assert: (ObjectMirror reflecting: result) className equals: 'Promise'.
+    )
+    
+    public testCreatePromise = (
+      | promisePair |
+      promisePair := actors createPromisePair.
+      assert: (ObjectMirror reflecting: promisePair promise)  className equals: 'Promise'.
+      assert: (ObjectMirror reflecting: promisePair resolver) className equals: 'Resolver'.
+    )
+    
+    public testAsyncWhenResolvedPromiseResolvesToBlockReturnValue = (
+      | promisePair wrPromise assertPromise |
+      promisePair := actors createPromisePair.
+      wrPromise := promisePair promise whenResolved: [:v | v].
+      
+      assertPromise := wrPromise whenResolved: [:val |
+        assert: val equals: 5.
+      ].
+      
+      promisePair resolve: 5.
+      ^ assertPromise
+    )
 
 (*    public testDeeplyChainedResolution = (
       (* A good implementation should handle this in constant rather than linear space. *)
