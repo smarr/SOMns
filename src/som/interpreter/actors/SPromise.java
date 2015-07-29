@@ -53,6 +53,11 @@ public final class SPromise extends SObjectWithoutFields {
     assert promiseClass != null;
   }
 
+  @Override
+  public boolean isValue() {
+    return false;
+  }
+
   public static void setSOMClass(final SClass cls) {
     assert promiseClass == null || cls == null;
     promiseClass = cls;
@@ -196,6 +201,11 @@ public final class SPromise extends SObjectWithoutFields {
       super(resolverClass);
       this.promise = promise;
       assert resolverClass != null;
+    }
+
+    @Override
+    public boolean isValue() {
+      return true;
     }
 
     public static void setSOMClass(final SClass cls) {

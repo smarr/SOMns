@@ -20,7 +20,7 @@ public class SObjectWithoutFields extends SAbstractObject {
   }
 
   @Override
-  public final boolean isValue() {
+  public boolean isValue() {
     return clazz.instancesAreValues();
   }
 
