@@ -36,6 +36,7 @@ public final class Classes {
     classClass     = new SClass(KernelObj.kernel);
     SClass classClassClass = new SClass(KernelObj.kernel);
     Bootstrap.initializeClassAndItsClass("Class", classClass, classClassClass);
+    classClass.setInstancesAreValues(true);
 
     // Allocate the rest of the system classes
     topClass        = Bootstrap.newEmptyClassWithItsClass("Top");

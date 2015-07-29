@@ -19,6 +19,11 @@ public class SObjectWithoutFields extends SAbstractObject {
     return clazz;
   }
 
+  @Override
+  public final boolean isValue() {
+    return clazz.instancesAreValues();
+  }
+
   public void setClass(final SClass value) {
     transferToInterpreterAndInvalidate("SObjectWithoutFields.setClass");
     assert value != null;

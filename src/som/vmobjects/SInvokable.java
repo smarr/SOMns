@@ -78,6 +78,11 @@ public final class SInvokable extends SAbstractObject implements Dispatchable {
   }
 
   @Override
+  public boolean isValue() {
+    return true;
+  }
+
+  @Override
   public RootCallTarget getCallTarget() {
     return callTarget;
   }

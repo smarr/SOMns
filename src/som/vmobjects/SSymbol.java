@@ -41,6 +41,11 @@ public final class SSymbol extends SAbstractObject {
     return Classes.symbolClass;
   }
 
+  @Override
+  public boolean isValue() {
+    return true;
+  }
+
   public String getString() {
     // Get the string associated to this symbol
     return string;

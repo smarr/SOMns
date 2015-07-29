@@ -58,4 +58,9 @@ public final class SBlock extends SAbstractObject {
   public SClass getSOMClass() {
     return blockClass;
   }
+
+  @Override
+  public boolean isValue() {
+    return false;
+  }
 }

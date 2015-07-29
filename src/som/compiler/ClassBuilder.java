@@ -70,6 +70,7 @@ public final class ClassBuilder {
   private final HashSet<SlotDefinition> slots = new HashSet<>();
   private final LinkedHashMap<SSymbol, Dispatchable> dispatchables = new LinkedHashMap<>();
   private final HashMap<SSymbol, SInvokable> factoryMethods = new HashMap<SSymbol, SInvokable>();
+  private boolean allSlotsAreImmutable = true;
 
   private final LinkedHashMap<SSymbol, ClassDefinition> embeddedClasses = new LinkedHashMap<>();
 
@@ -247,6 +248,10 @@ public final class ClassBuilder {
         source);
     slots.add(slot);
 
+    if (!immutable) {
+      allSlotsAreImmutable = false;
+    }
+
     dispatchables.put(name, slot);
     if (!immutable) {
       dispatchables.put(getSetterName(name),
@@ -300,12 +305,20 @@ public final class ClassBuilder {
     ClassDefinition clsDef = new ClassDefinition(name,
         primaryFactory.getSignature(), superclassResolution,
         slots, dispatchables, factoryMethods, embeddedClasses, classId,
-        accessModifier, instanceScope, classScope, source);
+        accessModifier, instanceScope, classScope, allSlotsAreImmutable,
+        outerScopeIsImmutable(), source);
     instanceScope.setClassDefinition(clsDef, false);
     classScope.setClassDefinition(clsDef, true);
 
     setHolders(clsDef);
     return clsDef;
+  }
+
+  private boolean outerScopeIsImmutable() {
+    if (outerBuilder == null) {
+      return true;
+    }
+    return outerBuilder.allSlotsAreImmutable && outerBuilder.outerScopeIsImmutable();
   }
 
   private void setHolders(final ClassDefinition clsDef) {

@@ -1,15 +1,19 @@
 package som.primitives;
 
+import java.math.BigInteger;
+
 import som.VM;
 import som.interpreter.Types;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vm.constants.Nil;
 import som.vmobjects.SAbstractObject;
+import som.vmobjects.SArray;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
+import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 
 
@@ -60,8 +64,58 @@ public final class ObjectPrims {
 
   public abstract static class NotNilNode extends UnaryExpressionNode {
     @Specialization
-    public final boolean isNil(final Object receiver) {
+    public final boolean isNotNil(final Object receiver) {
       return receiver != Nil.nilObject;
+    }
+  }
+
+  @GenerateNodeFactory
+  @Primitive("objIsValue:")
+  @ImportStatic(Nil.class)
+  public abstract static class IsValue extends UnaryExpressionNode {
+    @Specialization
+    public final boolean isValue(final boolean rcvr) {
+      return true;
+    }
+
+    @Specialization
+    public final boolean isValue(final long rcvr) {
+      return true;
+    }
+
+    @Specialization
+    public final boolean isValue(final BigInteger rcvr) {
+      return true;
+    }
+
+    @Specialization
+    public final boolean isValue(final double rcvr) {
+      return true;
+    }
+
+    @Specialization
+    public final boolean isValue(final String rcvr) {
+      return true;
+    }
+
+    @Specialization
+    public final boolean isValue(final SSymbol rcvr) {
+      return true;
+    }
+
+    @Specialization
+    public final boolean isValue(final SArray rcvr) {
+      return false;
+    }
+
+    @Specialization(guards = "valueIsNil(rcvr)")
+    public final boolean nilIsValue(final Object rcvr) {
+      return true;
+    }
+
+    @Specialization
+    public final boolean isValue(final SAbstractObject obj) {
+      return obj.isValue();
     }
   }
 }

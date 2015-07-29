@@ -276,7 +276,8 @@ public final class Bootstrap {
 
     ClassDefinition vmMirrorDef = new ClassDefinition(
         Symbols.symbolFor("VmMirror"), null, null, null, vmMirrorMethods, null,
-        null, new ClassDefinitionId(), AccessModifier.PUBLIC, scope, scope, null);
+        null, new ClassDefinitionId(), AccessModifier.PUBLIC, scope, scope,
+        true, true, null);
     scope.setClassDefinition(vmMirrorDef, false);
 
     SClass vmMirrorClass = vmMirrorDef.instantiateClass(Nil.nilObject, Classes.topClass);

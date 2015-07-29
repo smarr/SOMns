@@ -30,6 +30,11 @@ public final class SFarReference extends SAbstractObject {
     return farReferenceClass;
   }
 
+  @Override
+  public boolean isValue() {
+    return true;
+  }
+
   public static void setSOMClass(final SClass cls) {
     assert farReferenceClass == null || cls == null;
     farReferenceClass = cls;

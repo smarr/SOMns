@@ -57,6 +57,7 @@ public final class SClass extends SObjectWithoutFields {
   @CompilationFinal private ClassDefinition classDef;
   @CompilationFinal private boolean hasFields;
   @CompilationFinal private boolean hasOnlyImmutableFields;
+  @CompilationFinal private boolean instancesAreValues;
 
   protected final SObjectWithoutFields enclosingObject;
 
@@ -88,6 +89,10 @@ public final class SClass extends SObjectWithoutFields {
 
   public SSymbol getName() {
     return name;
+  }
+
+  public boolean instancesAreValues() {
+    return instancesAreValues;
   }
 
   public ClassDefinition getClassDefinition() {
@@ -134,6 +139,10 @@ public final class SClass extends SObjectWithoutFields {
       assert slots.size() == layoutForInstances.getNumberOfFields();
       assert slots.equals(this.slots);
     }
+  }
+
+  public void setInstancesAreValues(final boolean areValues) {
+    instancesAreValues = areValues;
   }
 
   public boolean canUnderstand(final SSymbol selector) {

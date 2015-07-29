@@ -59,6 +59,9 @@ public final class ClassDefinition {
   private final ClassScope     classScope;
   private final AccessModifier accessModifier;
 
+  private final boolean allSlotsAreImmutable;
+  private final boolean outerScopeIsImmutable;
+
   @Nullable
   private final LinkedHashMap<SSymbol, ClassDefinition> nestedClassDefinitions;
 
@@ -69,6 +72,7 @@ public final class ClassDefinition {
       final LinkedHashMap<SSymbol, ClassDefinition> nestedClassDefinitions,
       final ClassDefinitionId classId, final AccessModifier accessModifier,
       final ClassScope instanceScope, final ClassScope classScope,
+      final boolean allSlotsAreImmutable, final boolean outerScopeIsImmutable,
       final SourceSection sourceSection) {
     this.name = name;
     this.primaryFactoryName   = primaryFactoryName;
@@ -82,6 +86,9 @@ public final class ClassDefinition {
     this.instanceScope   = instanceScope;
     this.classScope      = classScope;
     this.slots           = slots;
+
+    this.allSlotsAreImmutable  = allSlotsAreImmutable;
+    this.outerScopeIsImmutable = outerScopeIsImmutable;
   }
 
   public SSymbol getName() {
@@ -103,10 +110,15 @@ public final class ClassDefinition {
 
     if (result.getSOMClass() != null) {
       // Initialize the class of the resulting class
-      result.getSOMClass().setDispatchables(classScope.getDispatchables());
-      result.getSOMClass().setName(Symbols.symbolFor(ccName));
-      result.getSOMClass().setClassDefinition(this);
-      result.getSOMClass().setSuperClass(Classes.classClass);
+      SClass classClass = result.getSOMClass();
+      classClass.setDispatchables(classScope.getDispatchables());
+      classClass.setName(Symbols.symbolFor(ccName));
+      classClass.setClassDefinition(this);
+      classClass.setSuperClass(Classes.classClass);
+
+      // they don't have slots, so only the outer context counts
+      assert Classes.classClass.instancesAreValues();
+      classClass.setInstancesAreValues(outerScopeIsImmutable);
     }
 
     // Initialize the resulting class
@@ -121,6 +133,9 @@ public final class ClassDefinition {
     }
     result.setSlots(instanceSlots);
     result.setDispatchables(instanceScope.getDispatchables());
+    result.setInstancesAreValues(
+        (superClass != null ? superClass.instancesAreValues() : true) &&
+        allSlotsAreImmutable && outerScopeIsImmutable);
   }
 
   public HashMap<SSymbol, SInvokable> getFactoryMethods() {

@@ -294,4 +294,9 @@ public final class SArray extends SAbstractObject {
   public SClass getSOMClass() {
     return Classes.arrayClass;
   }
+
+  @Override
+  public boolean isValue() {
+    return false;
+  }
 }
