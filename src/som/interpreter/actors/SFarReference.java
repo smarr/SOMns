@@ -25,6 +25,10 @@ public final class SFarReference extends SAbstractObject {
     return actor;
   }
 
+  public Object getValue() {
+    return value;
+  }
+
   @Override
   public SClass getSOMClass() {
     return farReferenceClass;

@@ -5,6 +5,7 @@ import java.util.NoSuchElementException;
 import java.util.concurrent.ForkJoinPool;
 
 import som.interpreter.actors.SPromise.SResolver;
+import som.primitives.ObjectPrims.IsValue;
 import som.vmobjects.SSymbol;
 
 
@@ -46,7 +47,19 @@ public class Actor {
     SPromise result   = new SPromise(currentActor);
     SResolver resolver = new SResolver(result);
 
-    EventualMessage msg = new EventualMessage(this, selector, args, resolver);
+    EventualMessage msg;
+    if (currentActor == this) {
+      msg = new EventualMessage(this, selector, args, resolver);
+    } else {
+      // TODO: i think we can ignore the receiver, that should already be ok
+      for (int i = 1; i < args.length; i++) {
+        Object o = args[i];
+        if (!IsValue.isObjectValue(o)) {
+          args[i] = new SFarReference(currentActor, o);
+        }
+      }
+      msg = new EventualMessage(this, selector, args, resolver);
+    }
     enqueueMessage(msg);
 
     return result;

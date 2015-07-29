@@ -117,5 +117,22 @@ public final class ObjectPrims {
     public final boolean isValue(final SAbstractObject obj) {
       return obj.isValue();
     }
+
+    public static boolean isObjectValue(final Object obj) {
+      CompilerAsserts.neverPartOfCompilation("This should only be used for prototyping, and then removed, because it is slow and duplicates code");
+      if (obj instanceof Boolean ||
+          obj instanceof Long ||
+          obj instanceof BigInteger ||
+          obj instanceof Double ||
+          obj instanceof String) {
+        return true;
+      }
+
+      if (Nil.valueIsNil(obj)) {
+        return true;
+      }
+
+      return ((SAbstractObject) obj).isValue();
+    }
   }
 }

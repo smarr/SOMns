@@ -207,10 +207,16 @@ public final class SPromise extends SObjectWithoutFields {
       throw new NotYetImplementedException(); // TODO: implement
     }
 
-    public void resolve(final Object result) {
+    public void resolve(Object result) {
       assert promise.value == null;
       assert !promise.resolved;
       assert !promise.errored;
+
+      if (result instanceof SFarReference) {
+        if (((SFarReference) result).getActor() == promise.owner) {
+          result = ((SFarReference) result).getValue();
+        }
+      }
 
       synchronized (promise) {
         promise.value    = result;
