@@ -133,12 +133,12 @@ class ActorTests usingPlatform: platform testFramework: minitest = (
       promisePair := actors createPromisePair.
       assert: (ObjectMirror reflecting: promisePair promise)  className equals: 'Promise'.
       assert: (ObjectMirror reflecting: promisePair resolver) className equals: 'Resolver'.
-    )
+    ) 
     
     public testAsyncWhenResolvedPromiseResolvesToBlockReturnValue = (
       | promisePair wrPromise assertPromise |
       promisePair := actors createPromisePair.
-      wrPromise := promisePair promise whenResolved: [:v | v].
+      wrPromise := promisePair promise whenResolved: [:v | v ].
       
       assertPromise := wrPromise whenResolved: [:val |
         assert: val equals: 5.
@@ -146,6 +146,14 @@ class ActorTests usingPlatform: platform testFramework: minitest = (
       
       promisePair resolve: 5.
       ^ assertPromise
+    )
+    
+    public testAsyncCellInstanceInActorIsFarRef = (
+      | p |
+      p := (actors createActorFromValue: Cell) <-: new: 4.
+      ^ p whenResolved: [:cellFRef |
+        assert: (ObjectMirror reflecting: cellFRef) className equals: 'FarReference'
+      ]
     )
     
     public testAsyncCellPassedAsFarRef = (
