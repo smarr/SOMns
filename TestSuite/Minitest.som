@@ -1066,7 +1066,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
       asyncCases := testSuite testCases select: [:c | c isAsync ].
       
       ^ actors async: asyncCases do: [:case |
-          case isAsync ifTrue: [ executeAsynchronous: case ] ]
+          executeAsynchronous: case ]
     )
 
     public runAll = (
