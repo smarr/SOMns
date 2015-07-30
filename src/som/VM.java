@@ -18,6 +18,7 @@ public final class VM {
   @CompilationFinal private static VM vm;
   private final boolean avoidExitForTesting;
   private int lastExitCode = 0;
+  private volatile boolean shouldExit = false;
   private Options options;
   private boolean usesActors;
   private Thread mainThread;
@@ -38,6 +39,10 @@ public final class VM {
     public String   platformFile = standardPlatformFile;
     public String   kernelFile   = standardKernelFile;
     public String[] args;
+  }
+
+  public static boolean shouldExit() {
+    return vm.shouldExit;
   }
 
   public int lastExitCode() {
@@ -67,7 +72,7 @@ public final class VM {
       System.exit(errorCode);
     } else {
       lastExitCode = errorCode;
-      mainThread.resume();
+      shouldExit = true;
     }
   }
 

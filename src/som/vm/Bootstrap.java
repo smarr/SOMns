@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ForkJoinPool;
 
 import som.VM;
 import som.compiler.AccessModifier;
@@ -446,10 +447,18 @@ public final class Bootstrap {
     if (VM.isUsingActors()) {
       mainActor.enqueueNextMessageForProcessing();
       VM.setMainThread(Thread.currentThread());
-      Thread.currentThread().suspend(); // TODO: is that guaranteed to not return?
-      if (!VM.isAvoidingExit()) {
+
+      int emptyFJPool = 0;
+      while (emptyFJPool < 10 || VM.shouldExit()) {
+        try { Thread.sleep(1000); } catch (InterruptedException e) { }
+        if (!ForkJoinPool.commonPool().hasQueuedSubmissions()) {
+          emptyFJPool++;
+        }
+      }
+
+      if (!VM.isAvoidingExit() || !VM.shouldExit()) {
         // Checkstyle: stop
-        System.err.println("This should never happen. suspend should not return");
+        System.err.println("This should never happen. The VM should not return under those conditions.");
         // Checkstyle: resume
       }
     } else {
