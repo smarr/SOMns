@@ -10,6 +10,7 @@ import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithoutFields;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.sun.istack.internal.NotNull;
 
@@ -35,6 +36,8 @@ public final class SPromise extends SObjectWithoutFields {
   private ArrayList<SClass>    onException;
   private ArrayList<SBlock>    onExceptionCallbacks;
   private ArrayList<SResolver> onExceptionResolvers;
+
+  private ArrayList<SPromise>  chainedPromises;
 
   private Object  value;
   private boolean resolved;
@@ -191,6 +194,14 @@ public final class SPromise extends SObjectWithoutFields {
     owner.enqueueMessage(msg);
   }
 
+  public synchronized void addChainedPromise(@NotNull final SPromise promise) {
+    assert promise != null;
+    if (chainedPromises == null) {
+      chainedPromises = new ArrayList<>(1);
+    }
+    chainedPromises.add(promise);
+  }
+
   public static final class SResolver extends SObjectWithoutFields {
     @CompilationFinal private static SClass resolverClass;
 
@@ -218,21 +229,62 @@ public final class SPromise extends SObjectWithoutFields {
     }
 
     public void resolve(Object result) {
+      CompilerAsserts.neverPartOfCompilation("This has so many possible cases, we definitely want to optimize this");
+
       assert promise.value == null;
       assert !promise.resolved;
       assert !promise.errored;
 
+      if (result == promise) {
+        // TODO: figure out whether this case is relevant
+        return;  // this might happen at least in AmbientTalk, but doesn't do anything
+      }
+
+      // actors should have always direct access to their own objects and
+      // thus, far references need to be unwrapped if they are returned back
+      // to the owner
       if (result instanceof SFarReference) {
         if (((SFarReference) result).getActor() == promise.owner) {
           result = ((SFarReference) result).getValue();
         }
       }
 
+      if (result instanceof SPromise) {
+        synchronized (result) {
+          ((SPromise) result).addChainedPromise(promise);
+        }
+        return;
+      }
+
+      assert !(result instanceof SFarReference);
+      assert !(result instanceof SPromise);
+
       synchronized (promise) {
         promise.value    = result;
         promise.resolved = true;
       }
 
+      scheduleAll(promise, result);
+
+      resolveChainedPromises(promise, result);
+    }
+
+    protected static void resolveChainedPromises(final SPromise promise,
+        final Object result) {
+      // TODO: we should change the implementation of chained promises to
+      //       always move all the handlers to the other promise, then we
+      //       don't need to worry about traversing the chain, which can
+      //       lead to a stack overflow.
+      // TODO: restore 10000 as parameter in testAsyncDeeplyChainedResolution
+      if (promise.chainedPromises != null) {
+        for (SPromise p : promise.chainedPromises) {
+          scheduleAll(p, result);
+          resolveChainedPromises(p, result);
+        }
+      }
+    }
+
+    protected static void scheduleAll(final SPromise promise, final Object result) {
       if (promise.whenResolved != null) {
         for (int i = 0; i < promise.whenResolved.size(); i++) {
           Object callbackOrMsg = promise.whenResolved.get(i);
