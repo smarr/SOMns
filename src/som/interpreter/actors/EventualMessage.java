@@ -11,7 +11,7 @@ import som.vmobjects.SSymbol;
 import com.oracle.truffle.api.CompilerAsserts;
 
 
-public class EventualMessage extends RecursiveAction {
+public final class EventualMessage extends RecursiveAction {
   private static final long serialVersionUID = -7994739264831630827L;
 
   private Actor target;
@@ -36,6 +36,10 @@ public class EventualMessage extends RecursiveAction {
     this.target = target;
   }
 
+  public boolean isReceiverSet() {
+    return args[0] != null;
+  }
+
   @Override
   protected void compute() {
     actorThreadLocal.set(target);
@@ -54,6 +58,8 @@ public class EventualMessage extends RecursiveAction {
     CompilerAsserts.neverPartOfCompilation("Not Optimized! But also not sure it can be part of compilation anyway");
 
     Object rcvrObj = args[0];
+    assert rcvrObj != null;
+
     Object result;
     if (rcvrObj instanceof SFarReference) {
       SFarReference rcvr = (SFarReference) args[0];

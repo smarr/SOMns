@@ -66,6 +66,8 @@ public class Actor {
   }
 
   public synchronized void enqueueMessage(final EventualMessage msg) {
+    assert msg.isReceiverSet();
+
     if (isExecuting) {
       mailbox.add(msg);
     } else {
