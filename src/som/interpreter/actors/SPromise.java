@@ -102,8 +102,10 @@ public final class SPromise extends SObjectWithoutFields {
     SPromise  promise  = new SPromise(EventualMessage.getActorCurrentMessageIsExecutionOn());
     SResolver resolver = new SResolver(promise);
 
-    registerWhenResolved(resolved, resolver);
-    registerOnError(error, resolver);
+    synchronized (this) {
+      registerWhenResolved(resolved, resolver);
+      registerOnError(error, resolver);
+    }
 
     return promise;
   }
@@ -250,7 +252,7 @@ public final class SPromise extends SObjectWithoutFields {
       }
 
       if (result instanceof SPromise) {
-        synchronized (result) {
+        synchronized (promise) {
           ((SPromise) result).addChainedPromise(promise);
         }
         return;
@@ -262,11 +264,10 @@ public final class SPromise extends SObjectWithoutFields {
       synchronized (promise) {
         promise.value    = result;
         promise.resolved = true;
+
+        scheduleAll(promise, result);
+        resolveChainedPromises(promise, result);
       }
-
-      scheduleAll(promise, result);
-
-      resolveChainedPromises(promise, result);
     }
 
     protected static void resolveChainedPromises(final SPromise promise,
