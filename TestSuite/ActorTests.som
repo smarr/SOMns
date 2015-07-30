@@ -177,21 +177,39 @@ class ActorTests usingPlatform: platform testFramework: minitest = (
       ].
       ^ promisePair promise
     )
+    
+    public testAsyncPromiseOfPromiseResolvesToFinalValue = (
+      | promisePair1 promisePair2 assertProm |
+      (* Chained promises should be flattened *)
+      promisePair1 := actors createPromisePair.
+      promisePair2 := actors createPromisePair.
+      
+      assertProm := promisePair1 promise whenResolved: [:r |
+        assert: r equals: 500.
+      ].
+      
+      (* This should not yet resolve the promise, instead, it should
+         essentially forward it to the 2nd promise and wait for its resolution. *)
+      promisePair1 resolve: promisePair2 promise.
+      
+      promisePair2 resolve: 500.
+      ^ assertProm
+    )
 
-(*    public testDeeplyChainedResolution = (
+    public testAsyncDeeplyChainedResolution = (
       (* A good implementation should handle this in constant rather than linear space. *)
       | r |
       r := (actors createActorFromValue: DeepChain) <-: new.
-      assert: (r <-: nestedResolutionWithDepth: 100000) resolvedWith: 'done'.
-    )*)
-(*
-    public testFactorial = (
-      | math |
-      math := (actors createActorFromValue: Math) <-: new.
-      assert: (math <-: factorial: 9) resolvedWith: 362880.
+      ^ assert: (r <-: nestedResolutionWithDepth: 1000) resolvedWith: 'done'.
     )
 
-    public testFibonacci = (
+    public testAsyncFactorial = (
+      | math |
+      math := (actors createActorFromValue: Math) <-: new.
+      ^ assert: (math <-: factorial: 9) resolvedWith: 362880.
+    )
+(*
+    public testAsyncFibonacci = (
       | math result |
       math := (actors createActorFromValue: Math) <-: new.
       result := waitFor: (math <-: fibonacci: 9).
