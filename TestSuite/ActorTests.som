@@ -37,22 +37,22 @@ class ActorTests usingPlatform: platform testFramework: minitest = (
   )
 
   class Ping = (
-    | other |
+    | public other |
   ) (
-    pong: n sum: m = (
+    public pong: n sum: m = (
       n <= 0 ifTrue: [ ^ m ].
       ^ other <-: ping: n - 1 sum: n + m
     )
 
-    start = (
+    public start = (
       ^ other <-: ping: 10 sum: 0
     )
   )
 
   class Pong = (
-    | other |
+    | public other |
   ) (
-    ping: n sum: m = (
+    public ping: n sum: m = (
       ^ other <-: pong: n - 1 sum: n + m
     )
   )
@@ -294,17 +294,17 @@ class ActorTests usingPlatform: platform testFramework: minitest = (
       (* TODO: fix code
       assert: last promise resolvedWith: {#a1 . #a3 . #a5 . #a7 . #b2 . #b4 . #b6 . #b8 . #a3a . #a3b . #a5a . #a5b . #a7a . #a7b . #b4a . #b4b . #b6a . #b6b . #b8a . #b8b} *)
     )
-
-    public testPingPong = (
+*)
+    public testAsyncPingPong = (
       | ping pong result |
       ping := (actors createActorFromValue: Ping) <-: new.
       pong := (actors createActorFromValue: Pong) <-: new.
 
       ping <-: other: pong.
       pong <-: other: ping.
-      assert: (ping <-: start) resolvedWith: 55.
+      ^ assert: (ping <-: start) resolvedWith: 55.
     )
-
+(*
     public testPromiseGroup = (
       | mathClass math r2 r3 r4 g1 g2 |
       mathClass := actors createActorFromValue: Math.
