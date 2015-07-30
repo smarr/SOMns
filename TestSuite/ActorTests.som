@@ -80,19 +80,12 @@ class ActorTests usingPlatform: platform testFramework: minitest = (
 
   public class Tests = TestContext ()(
     assert: promise resolvedWith: expectedResolution = (
-      | state actualResolution |
-      state := #unresolved.
-
-      (withTimeout: promise inMSecs: 300)
-        whenResolved: [:r | state := #resolved. actualResolution := r ]
-        catch:        [:e | state := #error.    actualResolution := e ].
-      (* is this sufficient? is it better to distinguish an error from a timeout? *)
-
-      state = #resolved
-        ifTrue: [ ^ assert: actualResolution equals: expectedResolution].
-      state = #error
-        ifTrue: [ ^ failWithMessage: 'Promise broken with error: ', actualResolution printString].
-      failWithMessage: 'Invalid state blocking on a promise: ', state.
+    (* TODO: add timeout support *)
+      ^ promise
+          whenResolved: [:actualResolution |
+            assert: actualResolution equals: expectedResolution ]
+          onError: [:actualResolution |
+            failWithMessage: 'Promise broken with error: ' + actualResolution asString ]
     )
 
     assert: promise smashedWith: expectedErrorClass = (
