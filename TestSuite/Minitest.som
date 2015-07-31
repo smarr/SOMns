@@ -330,6 +330,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
   private Dictionary         = platform collections Dictionary.
   private IdentityDictionary = platform collections IdentityDictionary.
   private Vector             = platform kernel Vector.
+  private Array              = platform kernel Array.
   private IdentitySet        = platform collections IdentitySet.
   
   private ObjectMirror = platform mirrors ObjectMirror.
@@ -460,8 +461,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
     )
   )
 
-  public class TestCatalog forModule: testModule = (
-
+  public class TestCatalog forModule: testModule select: testClass test: testCaseSelector = (
     (* A catalog of test suites defined by a given test module instance. A 
        catalog is created using the primary forModule: factory method. Each of
        test context classes of the module produces a TestSuite that lists all
@@ -470,7 +470,10 @@ OTHER DEALINGS IN THE SOFTWARE. *)
        can also return a TestSuite with the union of all the class-level
        TestSuites. *)
     | testModule = testModule.
-      testsByContextName = Dictionary new. |
+      testsByContextName = Dictionary new.
+      testClass = testClass. (* if set, filter out this class *)
+      testCaseSelector = testCaseSelector. (* if set, only run this test method *)
+    |
       Initializer new populate
   ) (
     class Initializer = (
@@ -485,12 +488,27 @@ OTHER DEALINGS IN THE SOFTWARE. *)
         | moduleMirror moduleEnvironment |
         moduleEnvironment := TopLevelTestEnvironment module: testModule.
         moduleMirror := (ObjectMirror reflecting: testModule) classMirror.
-        moduleMirror classDefinition nestedClassDefinitions do:
-          [:each | examineClass: each under: moduleEnvironment].
-        moduleEnvironment withAllNestedEnvironmentsDo:
-          [:each |
+        
+        testClass
+          ifNil:    [populateWithAllIn: moduleEnvironment using: moduleMirror]
+          ifNotNil: [populateSelected:  moduleEnvironment using: moduleMirror].
+        
+        moduleEnvironment withAllNestedEnvironmentsDo: [:each |
             each hasTestCases ifTrue:
               [testsByContextName at: each name put: each testSuite]]
+      )
+      
+      populateWithAllIn: moduleEnvironment using: moduleMirror = (
+        moduleMirror classDefinition 
+          nestedClassDefinitions do: [:each |
+            examineClass: each under: moduleEnvironment].
+      )
+      
+      populateSelected: moduleEnvironment using: moduleMirror = (
+        moduleMirror classDefinition 
+          nestedClassDefinitions do: [:each |
+            each name = testClass ifTrue: [
+              examineClass: each under: moduleEnvironment]]
       )
 
       examineClass: mirror under: parentEnvironment = (
@@ -528,18 +546,20 @@ OTHER DEALINGS IN THE SOFTWARE. *)
         ^ #TEST_CONTEXT
       )
 
-      'private'
-      isTestContext: mirror = (
+      private isTestContext: mirror = (
         ^ mirror hasFactoryMethod: testContextMarkerSelector
       )
 
-      isTestMethod: methodMirror = (
-        | selector |
+      private isTestMethod: methodMirror = (
+        | selector isTest |
         selector := methodMirror name.
-        ^(selector beginsWith: 'test') and: [(selector includes: ':') not]
+        
+        isTest := (selector beginsWith: 'test') and: [(selector includes: ':') not].
+        testCaseSelector ifNil: [ ^ isTest ].
+        ^ (isTest and: [selector = testCaseSelector])
       )
 
-      testCasesIn: classMirror environment: environment = (
+      private testCasesIn: classMirror environment: environment = (
         (* Return a collection of TestCases describing test methods in the given class. *)
         | testCases |
         testCases := Vector new.
@@ -570,6 +590,14 @@ OTHER DEALINGS IN THE SOFTWARE. *)
     public testSuiteNames = (
       (* Returns the (short) names of test context classes of the module. *)
       ^testsByContextName keys
+    )
+  ) : (
+    public forModule: module = (
+      ^ forModule: module select: nil test: nil
+    )
+    
+    public forModule: module select: testClass = (
+      ^ forModule: module select: testClass test: nil
     )
   )
 
@@ -1144,6 +1172,12 @@ OTHER DEALINGS IN THE SOFTWARE. *)
 
     public testModules: modules = (
       ^testCatalogs: (modules collect: [:each | TestCatalog forModule: each])
+    )
+    
+    public testCase: testCase = (
+      | suite |
+      suite := TestSuite testCases: (Array with: testCase).
+      ^ testSuite: suite
     )
   )
 

@@ -38,11 +38,8 @@ class TestRunner usingPlatform: platform = (
     ].
   )
   
-  runAllTests: testModule = (
-    | tester catalog promisePair |
-    catalog := minitest TestCatalog forModule: testModule.
-    tester := minitest Tester testSuite: catalog allTests.
-    
+  runTester: tester = (
+    | promisePair |
     promisePair := actors createPromisePair.
 
     tester runAll whenResolved: [:aTester |
@@ -53,10 +50,34 @@ class TestRunner usingPlatform: platform = (
       (tester errors size + tester failures size + tester successes size) println.
       'Number of Successful Tests: ' print.
       tester successes size println.
-      
-      promisePair resolver resolve: tester errors size + tester failures size = 0
+
+      promisePair resolve: tester errors size + tester failures size = 0
     ].
     ^ promisePair promise
+  )
+  
+  runAllTests: testModule = (
+    | tester catalog |
+    catalog := minitest TestCatalog forModule: testModule.
+    tester := minitest Tester testSuite: catalog allTests.
+    
+    ^ runTester: tester
+  )
+  
+  runTest: testId in: testModule = (
+    | tester catalog |
+    (testId includes: '.') ifTrue: [
+      | testNameElems |
+      testNameElems := testId split: '.'.
+      catalog := minitest TestCatalog
+        forModule: testModule select: (testNameElems at: 1) test: (testNameElems at: 2).
+    ] ifFalse: [
+      catalog := minitest TestCatalog
+        forModule: testModule select: testId
+    ].
+    tester  := minitest Tester testSuite: catalog allTests.
+    ^ runTester: tester
+    
   )
   
   runAllKnownModules = (
@@ -90,24 +111,30 @@ class TestRunner usingPlatform: platform = (
   )
 
   public main: args = (
-    | testModule |
-    args size = 2 ifTrue: [
-      | fut |
+    | testModule testsCompletedPromise |
+    args size >= 2 ifTrue: [
+
       testModule := (system loadModule: (args at: 2)) usingPlatform: platform testFramework: minitest.
-      fut := runAllTests: testModule.
-      fut whenResolved: [:testsPassed | 
-        testsPassed
-          ifTrue:  [ system exit: 0 ]
-          ifFalse: [ system exit: 1 ] ]
+
+      args size = 2 ifTrue: [
+        testsCompletedPromise := runAllTests: testModule ].
+
+      args size = 3 ifTrue: [
+        testsCompletedPromise := runTest: (args at: 3) in: testModule ].
+
+      args size > 3 ifTrue: [
+        (* TODO: add --help *)
+        'not currently supported' println.
+      ]
     ].
     
     args size = 1 ifTrue: [
-      runAllKnownModules
-        whenResolved: [:testsPassed | 
-          testsPassed
-            ifTrue:  [ system exit: 0 ]
-            ifFalse: [ system exit: 1 ] ]
-    ].
+      testsCompletedPromise := runAllKnownModules ].
+    
+    testsCompletedPromise whenResolved: [:testsPassed | 
+      testsPassed
+        ifTrue:  [ system exit: 0 ]
+        ifFalse: [ system exit: 1 ] ]
 
     ^ 0
   )
