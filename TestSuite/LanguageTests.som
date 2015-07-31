@@ -417,7 +417,6 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
     )
     
     public testSomeClassesAreValues = (
-      self halt.
       assert: (ObjectMirror reflecting: Set)          isValue description: 'Set'.
       assert: (ObjectMirror reflecting: ObjectMirror) isValue description: 'ObjectMirror'.
       assert: (ObjectMirror reflecting: Array)        isValue description: 'Array'.
