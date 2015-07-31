@@ -64,12 +64,9 @@ public class Actor {
     if (currentActor == this) {
       msg = new EventualMessage(this, selector, args, resolver);
     } else {
-      // TODO: i think we can ignore the receiver, that should already be ok
-      for (int i = 1; i < args.length; i++) {
-        Object o = args[i];
-        if (!IsValue.isObjectValue(o)) {
-          args[i] = new SFarReference(currentActor, o);
-        }
+      for (int i = 0; i < args.length; i++) {
+        args[i] = wrapForUse(args[i], currentActor);
+
       }
       msg = new EventualMessage(this, selector, args, resolver);
     }
@@ -78,13 +75,29 @@ public class Actor {
     return result;
   }
 
+  public Object wrapForUse(final Object o, final Actor owner) {
+    CompilerAsserts.neverPartOfCompilation("This should probably be optimized");
+    if (o instanceof SFarReference) {
+      if (((SFarReference) o).getActor() == this) {
+        return ((SFarReference) o).getValue();
+      }
+    } else if (!IsValue.isObjectValue(o)) {
+      if (this != owner) {
+        return new SFarReference(owner, o);
+      }
+    }
+    return o;
+  }
+
   public synchronized void enqueueMessage(final EventualMessage msg) {
     assert msg.isReceiverSet();
 
     if (isExecuting) {
       mailbox.add(msg);
+      System.out.println("enqueued task:" + msg.toString() + " on " + toString());
     } else {
-      ForkJoinPool.commonPool().submit(msg);
+      ForkJoinPool.commonPool().execute(msg);
+      System.out.println("submitted task:" + msg.toString() + " on " + toString());
       isExecuting = true;
     }
   }

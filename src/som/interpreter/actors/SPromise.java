@@ -245,11 +245,9 @@ public final class SPromise extends SObjectWithoutFields {
       // actors should have always direct access to their own objects and
       // thus, far references need to be unwrapped if they are returned back
       // to the owner
-      if (result instanceof SFarReference) {
-        if (((SFarReference) result).getActor() == promise.owner) {
-          result = ((SFarReference) result).getValue();
-        }
-      }
+      // if a reference is delivered to another actor, it needs to be wrapped
+      // in a far reference
+      result = promise.owner.wrapForUse(result, EventualMessage.getActorCurrentMessageIsExecutionOn());
 
       if (result instanceof SPromise) {
         synchronized (promise) {
