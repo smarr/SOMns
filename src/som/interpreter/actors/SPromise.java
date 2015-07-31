@@ -42,6 +42,7 @@ public final class SPromise extends SObjectWithoutFields {
   private Object  value;
   private boolean resolved;
   private boolean errored;
+  private boolean chained;
 
   // the owner of this promise, on which all call backs are scheduled
   private final Actor owner;
@@ -52,7 +53,7 @@ public final class SPromise extends SObjectWithoutFields {
     assert owner != null;
     this.owner = owner;
 
-    resolved     = false;
+    resolved = false;
     assert promiseClass != null;
   }
 
@@ -243,6 +244,7 @@ public final class SPromise extends SObjectWithoutFields {
       assert promise.value == null;
       assert !promise.resolved;
       assert !promise.errored;
+      assert !promise.chained;
 
       if (result == promise) {
         // TODO: figure out whether this case is relevant
@@ -258,6 +260,7 @@ public final class SPromise extends SObjectWithoutFields {
 
       if (result instanceof SPromise) {
         synchronized (promise) {
+          promise.chained = true;
           ((SPromise) result).addChainedPromise(promise);
         }
         return;
