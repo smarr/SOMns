@@ -110,7 +110,7 @@ public class Actor {
     try {
       EventualMessage nextTask = mailbox.remove();
       assert isExecuting;
-      ForkJoinPool.commonPool().submit(nextTask);
+      ForkJoinPool.commonPool().execute(nextTask);
       return;
     } catch (NoSuchElementException e) {
       isExecuting = false;
