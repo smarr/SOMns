@@ -266,7 +266,6 @@ public final class SPromise extends SObjectWithoutFields {
         return;
       }
 
-      assert !(result instanceof SFarReference);
       assert !(result instanceof SPromise);
 
       synchronized (promise) {
