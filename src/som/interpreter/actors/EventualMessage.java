@@ -61,17 +61,12 @@ public final class EventualMessage extends RecursiveAction {
     assert rcvrObj != null;
 
     Object result;
-    if (rcvrObj instanceof SFarReference) {
-      SFarReference rcvr = (SFarReference) args[0];
+    assert !(rcvrObj instanceof SFarReference);
 
-      // TODO: need to get hold of some AST/RootNode to start execution
-      //       do i want to cache the lookup?
-      result = rcvr.directSend(selector, args);
-    } else {
-      Dispatchable disp = Types.getClassOf(rcvrObj).
-          lookupMessage(selector, AccessModifier.PUBLIC);
-      result = disp.invoke(args);
-    }
+    Dispatchable disp = Types.getClassOf(rcvrObj).
+        lookupMessage(selector, AccessModifier.PUBLIC);
+    result = disp.invoke(args);
+
     resolver.resolve(result);
   }
 
