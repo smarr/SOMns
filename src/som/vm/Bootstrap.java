@@ -121,8 +121,8 @@ public final class Bootstrap {
       platformModule = loadModule(platformFilename);
       kernelModule   = loadModule(kernelFilename);
     } catch (IOException e) {
-      // TODO Auto-generated catch block
       e.printStackTrace();
+      VM.errorExit("Loading either the platform or kernel module failed.");
     }
   }
 
@@ -394,7 +394,6 @@ public final class Bootstrap {
     SObjectWithoutFields vmMirror = constructVmMirror();
 
     // initialize slots of kernel object
-    // TODO: try to actually use the initializer expressions...
     setSlot(KernelObj.kernel, "vmMirror",   vmMirror, kernelModule);
     setSlot(KernelObj.kernel, "ObjectSlot", Classes.objectClass, kernelModule);
     setSlot(KernelObj.kernel, "ValueSlot",  Classes.valueClass,  kernelModule);
