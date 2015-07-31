@@ -8,10 +8,10 @@ class ActorTests usingPlatform: platform testFramework: minitest = (
   class Bob meet: a = (
     | private alice = a. |
   ) (
-    answerFarRef   = ( ^ alice        )
-    answerNearRef  = ( ^ self         )
-    answerValue    = ( ^ 42           )
-    raiseException = ( ^ Error signal )
+    public answerFarRef   = ( ^ alice        )
+    public answerNearRef  = ( ^ self         )
+    public answerValue    = ( ^ 42           )
+    public raiseException = ( ^ Error signal )
   )
 
   class DeepChain = () (
