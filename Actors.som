@@ -63,6 +63,10 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel = (
     public on: exception do: errorBlock = (
       vmMirror actorsFor: self on: exception do: errorBlock
     )
+    
+    public , other = (
+      ^ (PromiseGroup for: self), other.
+    )
   )
 
   public class Resolver = Value ()( (* Object or Value? *)
@@ -80,6 +84,61 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel = (
       resolver resolve: value.
     )
   )
+
+  class PromiseGroup for: p head: h = (
+    (* A PromiseGroup represents a combined promise for a list of promises that is lazily initialized.*)
+    | public previous = h.
+      public promise  = p.
+      private lazyAll (* lazily initialized *)
+    |
+  ) (
+    public , other = (
+      ^ PromiseGroup for: other head: self.
+    )
+
+    public whenResolved: aBlock = ( ^ all whenResolved: aBlock )
+    public ensure: aBlock       = ( ^ all ensure: aBlock )
+    public onError: errorBlock  = ( ^ all onError: errorBlock )
+    public whenResolved: aBlock onError: errorBlock = (
+      ^ all whenResolved resolved: aBlock onError: errorBlock
+    )
+    public on: exception do: errorBlock = (
+      ^ all on: exception do: errorBlock
+    )
+    
+    all = (
+      (lazyAll == nil) ifTrue: [
+        | promisePair counter |
+        counter := 0.
+        promisePair := createPromisePair.
+        
+        do: [ :p |
+          counter := counter + 1.
+          p whenResolved: [:r |
+            ((counter := counter - 1) = 0) ifTrue: [ promisePair resolve: self. ].
+          ] onError: [ :ex |
+            promisePair error: ex.
+          ].
+        ].
+        lazyAll := promisePair promise
+      ].
+      ^ lazyAll
+    )
+    
+    do: block = (
+      | it |
+      it := self.
+      [ it == nil ] whileFalse: [
+        block value: it promise.
+        it := it previous.
+      ].
+    )
+  ) : (
+    public for: p = (
+      ^ PromiseGroup for: p head: nil
+    )
+  )
+
 
   public createPromisePair = (
     ^ vmMirror actorsCreatePromisePair: nil.

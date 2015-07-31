@@ -223,20 +223,20 @@ class ActorTests usingPlatform: platform testFramework: minitest = (
       ^ assert: (math <-: fibonacci: 9) resolvedWith: 34
     )
 
-    public testFifo = (
+    public testAsyncFifo = (
       | recorder r1 r2 r3 r4 |
       recorder := (actors createActorFromValue: Recorder) <-: new.
       r1 := recorder <-: append: 'a'.
       r2 := recorder <-: append: 'b'.
       r3 := recorder <-: append: 'c'.
       r4 := recorder <-: append: 'd'.
-      assert: (recorder <-: recording) resolvedWith: 'abcd'.
-      assert: r1 resolvedWith: 1.
-      assert: r2 resolvedWith: 2.
-      assert: r3 resolvedWith: 3.
-      assert: r4 resolvedWith: 4.
-    )
 
+    ^ (assert: (recorder <-: recording) resolvedWith: 'abcd'),
+      (assert: r1 resolvedWith: 1),
+      (assert: r2 resolvedWith: 2),
+      (assert: r3 resolvedWith: 3),
+      (assert: r4 resolvedWith: 4)
+    )  
     public testFifoFailstop = (
       | recorder recorderFork r1 r2 r3 r4 r5 |
       recorder := (actors createActorFromValue: Recorder) <-: new.
