@@ -9,6 +9,8 @@ import som.interpreter.actors.SPromise.SResolver;
 import som.primitives.ObjectPrims.IsValue;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.CompilerAsserts;
+
 
 // design goals:
 //  - avoid 1-thread per actor
@@ -59,6 +61,8 @@ public class Actor {
       final Object[] args) {
     SPromise result   = new SPromise(currentActor);
     SResolver resolver = new SResolver(result);
+
+    CompilerAsserts.neverPartOfCompilation("This needs to be optimized");
 
     EventualMessage msg;
     if (currentActor == this) {
