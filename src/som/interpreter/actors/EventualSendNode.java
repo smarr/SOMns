@@ -48,4 +48,9 @@ public final class EventualSendNode extends AbstractMessageSendNode {
       return current.eventualSend(current, selector, args);
     }
   }
+
+  @Override
+  public String toString() {
+    return "EventSend[" + selector.toString() + "]";
+  }
 }

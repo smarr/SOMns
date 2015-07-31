@@ -85,7 +85,7 @@ public final class EventualMessage extends RecursiveAction {
 
   @Override
   public String toString() {
-    return "EMsg(" + selector.toString() + ")";
+    return "EMsg(" + selector.toString() + ", " + Arrays.toString(args) + ")";
   }
 
   private static final ThreadLocal<Actor> actorThreadLocal = new ThreadLocal<Actor>();

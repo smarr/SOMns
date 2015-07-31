@@ -35,6 +35,11 @@ public final class SFarReference extends SAbstractObject {
   }
 
   @Override
+  public String toString() {
+    return "FarRef[" + value.toString() + ", " + actor.toString() + "]";
+  }
+
+  @Override
   public boolean isValue() {
     return true;
   }
