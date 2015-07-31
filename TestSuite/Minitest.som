@@ -1135,7 +1135,8 @@ OTHER DEALINGS IN THE SOFTWARE. *)
   ) : (
     testCatalogs: catalogs = (
       | suite |
-        (* Creating a new OrderedCollection is a hack that allows us to use #readStream in case testCases is translated to a Javascript Array *)
+      (* Creating a new OrderedCollection is a hack that allows us to use 
+         #readStream in case testCases is translated to a Javascript Array *)
       suite := TestSuite testCases: OrderedCollection new.
       catalogs do: [:each | suite := suite ++ each allTests].
       ^self testSuite: suite
