@@ -127,6 +127,27 @@ class ActorTests usingPlatform: platform testFramework: minitest = (
       result := cellPromise whenResolved: [:r | 5].
       assert: (ObjectMirror reflecting: result) className equals: 'Promise'.
     )
+
+    public testAsyncTurnResultsInFarRef= (
+      | bob |
+      bob := (actors createActorFromValue: Bob) <-: meet: self.
+      ^ assert: bob <-: answerFarRef resolvedWithObject: self.
+    )
+
+    public testAsyncTurnResultsInNearRef= (
+      | bobP r |
+      bobP := (actors createActorFromValue: Bob) <-: meet: self.
+      r := bobP whenResolved: [:bob |
+          (bob <-: answerNearRef) 
+            whenResolved: [:bob2 | bob2 == bob ]].
+      ^ assert: r resolvedWith: true.
+    )
+
+    public testAsyncTurnResultsInValue = (
+      | bob |
+      bob := (actors createActorFromValue: Bob) <-: meet: self. 
+      ^ assert: (bob <-: answerValue) resolvedWith: 42.
+    )
     
     public testCreatePromise = (
       | promisePair |
@@ -348,28 +369,6 @@ class ActorTests usingPlatform: platform testFramework: minitest = (
       | bob |
       bob := (actors createActorFromValue: Bob) <-: meet: self.
       assert: (bob <-: raiseException) smashedWith: Error.
-    )
-
-    public testTurnResultsInFarRef= (
-      | bob |
-      bob := (actors createActorFromValue: Bob) <-: meet: self.
-      assert: bob <-: answerFarRef resolvedWith: self.
-    )
-
-    public testTurnResultsInNearRef= (
-      | bobP r |
-      bobP := (actors createActorFromValue: Bob) <-: meet: self.
-      r := bobP 
-        whenResolved: [:bob |
-          (bob <-: answerNearRef) 
-            whenResolved: [:bob2 | bob2 = bob ]].
-      assert: r resolvedWith: true.
-    )
-
-    public testTurnResultsInValue = (
-      | bob |
-      bob := (actors createActorFromValue: Bob) <-: meet: self. 
-      assert: (bob <-: answerValue) resolvedWith: 42.
     )
 *)
     waitFor: promise = (
