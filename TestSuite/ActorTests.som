@@ -380,18 +380,6 @@ class ActorTests usingPlatform: platform testFramework: minitest = (
       assert: (bob <-: raiseException) smashedWith: Error.
     )
 *)
-    waitFor: promise = (
-      | timedOut resolution |
-      timedOut := true.
-      'this is totally broken and needs to do something like the AT framework and test methods need to return futures' signal.
-      promise whenResolved: [:r |
-        resolution := r.
-        timedOut := false.
-        sem signal].
-      sem waitTimeoutMSecs: 200.
-      timedOut ifTrue: [failWithMessage: 'Timed out'].
-      ^resolution
-    )
   ) : (
     TEST_CONTEXT = ()
   )
