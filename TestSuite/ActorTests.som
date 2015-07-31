@@ -102,24 +102,24 @@ class ActorTests usingPlatform: platform testFramework: minitest = (
         ifTrue: [ ^ assert: actualResolution class equals: expectedErrorClass ].
       failWithMessage: 'Invalid state blocking on a promise: ', state.
     )
-    
+
     public testFarReferenceCannotBeInstantiated = (
       should: [actors FarReference new] signal: Exception
     )
-    
+
     public testCreateActorReturnsFarReference = (
       | ref |
       ref := (actors createActorFromValue: DeepChain).
       assert: (ObjectMirror reflecting: ref) className equals: 'FarReference'.
     )
-    
+
     public testEventualSendReturnsPromise = (
       | refCellClass cellPromise |
       refCellClass := (actors createActorFromValue: Cell).
       cellPromise  := refCellClass <-: new: 4.
       assert: (ObjectMirror reflecting: cellPromise) className equals: 'Promise'.
     )
-    
+
     public testWhenResolvedOnPromiseReturnsPromise = (
       | refCellClass cellPromise result |
       refCellClass := (actors createActorFromValue: Cell).
