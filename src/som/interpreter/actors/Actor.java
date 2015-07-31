@@ -1,6 +1,7 @@
 package som.interpreter.actors;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.NoSuchElementException;
 import java.util.concurrent.ForkJoinPool;
 
@@ -25,21 +26,33 @@ import som.vmobjects.SSymbol;
 
 // TODO: figure out whether there is a simple look free design commonly used
 public class Actor {
-  private final ArrayDeque<EventualMessage> mailbox;
+  private final ArrayDeque<EventualMessage> mailbox = new ArrayDeque<>();
   private boolean isExecuting;
+  private final boolean isMain;
+  private final int id;
+
+  private static final ArrayList<Actor> actors = new ArrayList<Actor>();
 
   public Actor() {
-    mailbox     = new ArrayDeque<>();
     isExecuting = false;
+    isMain      = false;
+    synchronized (actors) {
+      actors.add(this);
+      id = actors.size() - 1;
+    }
   }
 
   /**
    * This constructor should only be used for the main actor!
    */
   public Actor(final boolean isMainActor) {
-    this();
     assert isMainActor;
     isExecuting = true;
+    isMain      = true;
+    synchronized (actors) {
+      actors.add(this);
+      id = actors.size() - 1;
+    }
   }
 
   public SPromise eventualSend(final Actor currentActor, final SSymbol selector,
@@ -89,5 +102,10 @@ public class Actor {
     } catch (NoSuchElementException e) {
       isExecuting = false;
     }
+  }
+
+  @Override
+  public String toString() {
+    return "Actor[" + (isMain ? "main" : id) + "]";
   }
 }
