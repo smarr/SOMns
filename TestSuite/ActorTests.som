@@ -222,7 +222,7 @@ class ActorTests usingPlatform: platform testFramework: minitest = (
       math := (actors createActorFromValue: Math) <-: new.
       ^ assert: (math <-: fibonacci: 9) resolvedWith: 34
     )
-
+*) 
     public testAsyncFifo = (
       | recorder r1 r2 r3 r4 |
       recorder := (actors createActorFromValue: Recorder) <-: new.
@@ -237,6 +237,7 @@ class ActorTests usingPlatform: platform testFramework: minitest = (
       (assert: r3 resolvedWith: 3),
       (assert: r4 resolvedWith: 4)
     )  
+(*
     public testFifoFailstop = (
       | recorder recorderFork r1 r2 r3 r4 r5 |
       recorder := (actors createActorFromValue: Recorder) <-: new.
@@ -263,7 +264,7 @@ class ActorTests usingPlatform: platform testFramework: minitest = (
       assert: result equals: 7.
       assert: tookTruePath.
     )
-  
+
     public testNestedResolutionOrder = (
       | a b last x |
       a := actors Resolver new.
