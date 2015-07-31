@@ -80,7 +80,8 @@ public final class SPromise extends SObjectWithoutFields {
     SPromise  promise  = new SPromise(EventualMessage.getActorCurrentMessageIsExecutionOn());
     SResolver resolver = new SResolver(promise);
 
-    EventualMessage msg = new EventualMessage(null, selector, args, resolver);
+    assert owner == EventualMessage.getActorCurrentMessageIsExecutionOn() : "think this should be true because the promise is an Object and owned by this specific actor";
+    EventualMessage msg = new EventualMessage(owner, selector, args, resolver);
     registerWhenResolved(msg, resolver);
     return promise;
   }
@@ -179,21 +180,27 @@ public final class SPromise extends SObjectWithoutFields {
       final Object callbackOrMsg, final SResolver resolver) {
     assert owner != null;
     EventualMessage msg;
+    Actor target;
     if (callbackOrMsg instanceof SBlock) {
       SBlock callback = (SBlock) callbackOrMsg;
       msg = new EventualMessage(owner, SResolver.valueSelector,
           new Object[] {callback, result}, resolver);
+      target = owner;
     } else {
       assert callbackOrMsg instanceof EventualMessage;
       msg = (EventualMessage) callbackOrMsg;
-      msg.setReceiverForEventualPromiseSend(result);
+
+      Actor sendingActor = msg.getTarget();
+      assert sendingActor != null;
+
       if (result instanceof SFarReference) {
-        msg.setTargetActorForEventualPromiseSend(((SFarReference) result).getActor());
+        target = ((SFarReference) result).getActor();
       } else {
-        msg.setTargetActorForEventualPromiseSend(EventualMessage.getActorCurrentMessageIsExecutionOn());
+        target = EventualMessage.getActorCurrentMessageIsExecutionOn();
       }
+      msg.setReceiverForEventualPromiseSend(result, target, sendingActor);
     }
-    owner.enqueueMessage(msg);
+    target.enqueueMessage(msg);
   }
 
   public synchronized void addChainedPromise(@NotNull final SPromise promise) {

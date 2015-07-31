@@ -1,5 +1,6 @@
 package som.interpreter.actors;
 
+import java.util.Arrays;
 import java.util.concurrent.RecursiveAction;
 
 import som.compiler.AccessModifier;
@@ -28,12 +29,17 @@ public final class EventualMessage extends RecursiveAction {
     assert resolver != null;
   }
 
-  public void setReceiverForEventualPromiseSend(final Object rcvr) {
-    args[0] = rcvr;
+  public void setReceiverForEventualPromiseSend(final Object rcvr, final Actor target, final Actor sendingActor) {
+    this.target = target;
+    args[0] = target.wrapForUse(rcvr, sendingActor);
+
+    for (int i = 1; i < args.length; i++) {
+      args[i] = target.wrapForUse(args[i], sendingActor);
+    }
   }
 
-  public void setTargetActorForEventualPromiseSend(final Actor target) {
-    this.target = target;
+  public Actor getTarget() {
+    return target;
   }
 
   public boolean isReceiverSet() {
