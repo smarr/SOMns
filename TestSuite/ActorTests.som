@@ -87,6 +87,15 @@ class ActorTests usingPlatform: platform testFramework: minitest = (
           onError: [:actualResolution |
             failWithMessage: 'Promise broken with error: ' + actualResolution asString ]
     )
+    
+    assert: promise resolvedWithObject: expectedResolution = (
+    (* TODO: add timeout support *)
+      ^ promise
+          whenResolved: [:actualResolution |
+            assert: actualResolution is: expectedResolution ]
+          onError: [:actualResolution |
+            failWithMessage: 'Promise broken with error: ' + actualResolution asString ]
+    )
 
     assert: promise smashedWith: expectedErrorClass = (
       | state actualResolution |
