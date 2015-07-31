@@ -220,8 +220,7 @@ class ActorTests usingPlatform: platform testFramework: minitest = (
     public testAsyncFibonacci = (
       | math result |
       math := (actors createActorFromValue: Math) <-: new.
-      result := waitFor: (math <-: fibonacci: 9).
-      assert: result equals: 34
+      ^ assert: (math <-: fibonacci: 9) resolvedWith: 34
     )
 
     public testFifo = (
