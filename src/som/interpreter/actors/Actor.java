@@ -98,10 +98,8 @@ public class Actor {
 
     if (isExecuting) {
       mailbox.add(msg);
-      System.out.println("enqueued task:" + msg.toString() + " on " + toString());
     } else {
       ForkJoinPool.commonPool().execute(msg);
-      System.out.println("submitted task:" + msg.toString() + " on " + toString());
       isExecuting = true;
     }
   }
