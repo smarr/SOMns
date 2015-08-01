@@ -27,13 +27,15 @@ class ActorTests usingPlatform: platform testFramework: minitest = (
       ^ (self <-: factorial: n - 1) <-: * n
     )
 
+(* Currently not supported because SOMns's addition doesn't unwrap promises.
+   Not sure this is essential/generally useful.
     public fibonacci: n = (
       n = 0 ifTrue: [ ^ 0 ].
       n = 1 ifTrue: [ ^ 1 ].
       ^ (self <-: fibonacci: n - 1) <-: + (self <-: fibonacci: n - 2)
     )
-
-    isPositive: n = ( ^ n > 0 )
+*)
+    public isPositive: n = ( ^ n > 0 )
   )
 
   class Ping = (
@@ -246,7 +248,9 @@ class ActorTests usingPlatform: platform testFramework: minitest = (
       math := (actors createActorFromValue: Math) <-: new.
       ^ assert: (math <-: factorial: 9) resolvedWith: 362880.
     )
-(*
+(*  Currently not supported because SOMns's addition doesn't unwrap promises.
+    Not sure this is essential/generally useful.
+    
     public testAsyncFibonacci = (
       | math result |
       math := (actors createActorFromValue: Math) <-: new.
