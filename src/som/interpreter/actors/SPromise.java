@@ -199,22 +199,30 @@ public final class SPromise extends SObjectWithoutFields {
 
   protected void scheduleCallbacksOnResolution(final Object result,
       final Object callbackOrMsg, final SResolver resolver) {
+    // when a promise is resolved, we need to schedule all the
+    // #whenResolved:/#onError:/... callbacks as well as all eventual sends
+    // to the promise
+
     assert owner != null;
     EventualMessage msg;
     Actor target;
     if (callbackOrMsg instanceof SBlock) {
+      // schedule the #whenResolved:/#onError:/... callback
       SBlock callback = (SBlock) callbackOrMsg;
       msg = new EventualMessage(owner, SResolver.valueSelector,
           new Object[] {callback, result}, resolver, EventualMessage.getActorCurrentMessageIsExecutionOn());
       target = owner;
     } else {
+      // schedule the eventual message to the promise value
       assert callbackOrMsg instanceof EventualMessage;
       msg = (EventualMessage) callbackOrMsg;
 
       if (result instanceof SFarReference) {
+        // for far references, we need to schedule the message on the owner of the referenced value
         target = ((SFarReference) result).getActor();
       } else {
-        target = EventualMessage.getActorCurrentMessageIsExecutionOn();
+        // otherwise, we schedule it on the promise's owner
+        target = owner;
       }
       msg.setReceiverForEventualPromiseSend(result, EventualMessage.getActorCurrentMessageIsExecutionOn());
     }
