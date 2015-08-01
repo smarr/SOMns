@@ -100,7 +100,7 @@ class ActorTests usingPlatform: platform testFramework: minitest = (
             failWithMessage: 'Promise broken with error: ' + actualResolution asString ]
     )
 
-    assert: promise smashedWith: expectedErrorClass = (
+    assert: promise erroredWith: expectedErrorClass = (
       | state actualResolution |
       state := #unresolved.
 
