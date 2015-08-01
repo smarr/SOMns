@@ -58,6 +58,20 @@ public final class SPromise extends SObjectWithoutFields {
   }
 
   @Override
+  public String toString() {
+    String r = "Promise[" + owner.toString();
+    if (resolved) {
+      r += ", resolved";
+    } else if (errored) {
+      r += ", errored";
+    } else {
+      assert chained;
+      r += ", chained";
+    }
+    return r + ", " + value.toString() + "]";
+  }
+
+  @Override
   public boolean isValue() {
     return false;
   }
