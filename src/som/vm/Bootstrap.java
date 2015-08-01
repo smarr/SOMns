@@ -459,6 +459,7 @@ public final class Bootstrap {
         // Checkstyle: stop
         System.err.println("This should never happen. The VM should not return under those conditions.");
         // Checkstyle: resume
+        System.exit(1);
       }
     } else {
       System.exit((int) (long) returnCode);
