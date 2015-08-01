@@ -66,13 +66,13 @@ public class Actor {
 
     EventualMessage msg;
     if (currentActor == this) {
-      msg = new EventualMessage(this, selector, args, resolver);
+      msg = new EventualMessage(this, selector, args, resolver, currentActor);
     } else {
       for (int i = 0; i < args.length; i++) {
         args[i] = wrapForUse(args[i], currentActor);
 
       }
-      msg = new EventualMessage(this, selector, args, resolver);
+      msg = new EventualMessage(this, selector, args, resolver, currentActor);
     }
     enqueueMessage(msg);
 

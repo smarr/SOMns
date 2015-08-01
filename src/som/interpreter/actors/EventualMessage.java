@@ -20,13 +20,17 @@ public final class EventualMessage extends RecursiveAction {
   private final Object[] args;
   private final SResolver resolver;
 
-  public EventualMessage(final Actor actor, final SSymbol selector,
-      final Object[] args, final SResolver resolver) {
-    this.target   = actor;
+  private Actor sender;
+
+  public EventualMessage(final Actor target, final SSymbol selector,
+      final Object[] args, final SResolver resolver, final Actor sender) {
+    this.target   = target;
     this.selector = selector;
     this.args     = args;
     this.resolver = resolver;
     assert resolver != null;
+
+    this.sender = sender;
   }
 
   public void setReceiverForEventualPromiseSend(final Object rcvr, final Actor target, final Actor sendingActor) {
@@ -63,6 +67,8 @@ public final class EventualMessage extends RecursiveAction {
   protected void executeMessage() {
     CompilerAsserts.neverPartOfCompilation("Not Optimized! But also not sure it can be part of compilation anyway");
 
+    assert sender != null;
+
     Object rcvrObj = args[0];
     assert rcvrObj != null;
 
@@ -86,7 +92,13 @@ public final class EventualMessage extends RecursiveAction {
 
   @Override
   public String toString() {
-    return "EMsg(" + selector.toString() + ", " + Arrays.toString(args) + ")";
+    String t;
+    if (target == null) {
+      t = "null";
+    } else {
+      t = target.toString();
+    }
+    return "EMsg(" + selector.toString() + ", " + Arrays.toString(args) +  ", " + t + ", sender: " + sender.toString() + ")";
   }
 
   private static final ThreadLocal<Actor> actorThreadLocal = new ThreadLocal<Actor>();

@@ -96,7 +96,7 @@ public final class SPromise extends SObjectWithoutFields {
     SResolver resolver = new SResolver(promise);
 
     assert owner == EventualMessage.getActorCurrentMessageIsExecutionOn() : "think this should be true because the promise is an Object and owned by this specific actor";
-    EventualMessage msg = new EventualMessage(owner, selector, args, resolver);
+    EventualMessage msg = new EventualMessage(owner, selector, args, resolver, null);
     registerWhenResolved(msg, resolver);
     return promise;
   }
@@ -199,7 +199,7 @@ public final class SPromise extends SObjectWithoutFields {
     if (callbackOrMsg instanceof SBlock) {
       SBlock callback = (SBlock) callbackOrMsg;
       msg = new EventualMessage(owner, SResolver.valueSelector,
-          new Object[] {callback, result}, resolver);
+          new Object[] {callback, result}, resolver, EventualMessage.getActorCurrentMessageIsExecutionOn());
       target = owner;
     } else {
       assert callbackOrMsg instanceof EventualMessage;
@@ -213,7 +213,7 @@ public final class SPromise extends SObjectWithoutFields {
       } else {
         target = EventualMessage.getActorCurrentMessageIsExecutionOn();
       }
-      msg.setReceiverForEventualPromiseSend(result, target, sendingActor);
+      msg.setReceiverForEventualPromiseSend(result, EventualMessage.getActorCurrentMessageIsExecutionOn());
     }
     target.enqueueMessage(msg);
   }
