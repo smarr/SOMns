@@ -102,7 +102,7 @@ public class Actor {
         if (orgProm.isSomehowResolved()) {
           orgProm.copyValueToRemotePromise(remote);
         } else {
-          ((SPromise) o).addChainedPromise(remote);
+          orgProm.addChainedPromise(remote);
         }
         return remote;
       }
