@@ -77,6 +77,11 @@ public final class EventualMessage extends RecursiveAction {
 
     Dispatchable disp = Types.getClassOf(rcvrObj).
         lookupMessage(selector, AccessModifier.PUBLIC);
+    if (disp == null) {
+      // TODO: this is only temporary, need to add proper #dnu support, and that's probably by integrating with the existing send implementation
+      VM.errorExit("Eventual send failed with #dnu: " + Types.getClassOf(rcvrObj).toString() + ">>" + selector.toString());
+    }
+
     result = disp.invoke(args);
 
     resolver.resolve(result);
