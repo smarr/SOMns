@@ -224,7 +224,7 @@ public final class SPromise extends SObjectWithoutFields {
         // otherwise, we schedule it on the promise's owner
         target = owner;
       }
-      msg.setReceiverForEventualPromiseSend(result, EventualMessage.getActorCurrentMessageIsExecutionOn());
+      msg.setReceiverForEventualPromiseSend(result, target, EventualMessage.getActorCurrentMessageIsExecutionOn());
     }
     target.enqueueMessage(msg);
   }

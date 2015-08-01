@@ -34,7 +34,8 @@ public final class EventualMessage extends RecursiveAction {
   }
 
   public void setReceiverForEventualPromiseSend(final Object rcvr, final Actor target, final Actor sendingActor) {
-    this.target = target;
+    this.target = target; // for sends to far references, we need to adjust the target
+    this.sender = sendingActor;
     args[0] = target.wrapForUse(rcvr, sendingActor);
 
     for (int i = 1; i < args.length; i++) {
