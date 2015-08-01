@@ -279,7 +279,7 @@ public final class SPromise extends SObjectWithoutFields {
       throw new NotYetImplementedException(); // TODO: implement
     }
 
-    public void resolve(Object result) {
+    public void resolve(final Object result) {
       CompilerAsserts.neverPartOfCompilation("This has so many possible cases, we definitely want to optimize this");
 
       assert !promise.isSomehowResolved() : "Not sure yet what to do with re-resolving of promises? just ignore it? Error?";
@@ -298,22 +298,7 @@ public final class SPromise extends SObjectWithoutFields {
         return;
       }
 
-      // actors should have always direct access to their own objects and
-      // thus, far references need to be unwrapped if they are returned back
-      // to the owner
-      // if a reference is delivered to another actor, it needs to be wrapped
-      // in a far reference
-      result = promise.owner.wrapForUse(result, EventualMessage.getActorCurrentMessageIsExecutionOn());
-
-      assert !(result instanceof SPromise);
-
-      synchronized (promise) {
-        promise.value    = result;
-        promise.resolved = true;
-
-        scheduleAll(promise, result);
-        resolveChainedPromises(promise, result);
-      }
+      resolveAndTriggerListeners(result, promise);
     }
 
     protected static void resolveChainedPromises(final SPromise promise,
@@ -325,9 +310,28 @@ public final class SPromise extends SObjectWithoutFields {
       // TODO: restore 10000 as parameter in testAsyncDeeplyChainedResolution
       if (promise.chainedPromises != null) {
         for (SPromise p : promise.chainedPromises) {
-          scheduleAll(p, result);
-          resolveChainedPromises(p, result);
+          resolveAndTriggerListeners(result, p);
+
         }
+      }
+    }
+
+    protected static void resolveAndTriggerListeners(final Object result,
+        final SPromise p) {
+      // actors should have always direct access to their own objects and
+      // thus, far references need to be unwrapped if they are returned back
+      // to the owner
+      // if a reference is delivered to another actor, it needs to be wrapped
+      // in a far reference
+      Object wrapped = p.owner.wrapForUse(result, EventualMessage.getActorCurrentMessageIsExecutionOn());
+
+      assert !(result instanceof SPromise);
+
+      synchronized (p) {
+        p.value = wrapped;
+        p.resolved = true;
+        scheduleAll(p, wrapped);
+        resolveChainedPromises(p, wrapped);
       }
     }
 
