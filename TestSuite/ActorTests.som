@@ -361,37 +361,6 @@ class ActorTests usingPlatform: platform testFramework: minitest = (
       ^ assert: (ping <-: start) resolvedWith: 55.
     )
 (*
-    public testPromiseGroup = (
-      | mathClass math r2 r3 r4 g1 g2 |
-      mathClass := actors createActorFromValue: Math.
-      
-      math := mathClass <-: new.
-      r2 := math <-: factorial: 2.
-      r3 := math <-: factorial: 3.
-      g1 := r2, r3.
-      r4 := math <-: factorial: 4.
-      g2 := r2, r3, r4.
-
-      waitFor: g1.
-      assert: r2 + r3 equals: 8.
-      waitFor: g2.
-      assert: r2 + r3 + r4 equals: 32.
-    )
-
-    public testTimer = (
-      | result |
-      (* Creating an actor this way is cheating. Closures are not value objects. *)
-      result := waitFor: (actors createActorFromValue: [
-        | resolver ticks repeating |
-        resolver := actors Resolver new.
-        ticks := 0.
-        repeating := Timer every: 20 do: [ticks := ticks + 1].
-        Timer after: 50 do: [repeating cancel. resolver resolve: ticks].
-        resolver promise
-      ]) <-: value.
-      assert: [result = 2].
-    )
-
     public testTurnResultsInException = (
       | bob |
       bob := (actors createActorFromValue: Bob) <-: meet: self.
