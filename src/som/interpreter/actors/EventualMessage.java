@@ -37,7 +37,12 @@ public final class EventualMessage extends RecursiveAction {
   public void setReceiverForEventualPromiseSend(final Object rcvr, final Actor target, final Actor sendingActor) {
     this.target = target; // for sends to far references, we need to adjust the target
     this.sender = sendingActor;
+
+    assert !(rcvr instanceof SFarReference) || ((SFarReference) rcvr).getActor() == target;
+
     args[0] = target.wrapForUse(rcvr, sendingActor);
+    assert !(args[0] instanceof SFarReference) : "this should not happen, because we need to redirect messages to the other actor, and normally we just unwrapped this";
+    assert !(args[0] instanceof SPromise);
 
     for (int i = 1; i < args.length; i++) {
       args[i] = target.wrapForUse(args[i], sendingActor);
@@ -76,6 +81,7 @@ public final class EventualMessage extends RecursiveAction {
 
     Object result;
     assert !(rcvrObj instanceof SFarReference);
+    assert !(rcvrObj instanceof SPromise);
 
     Dispatchable disp = Types.getClassOf(rcvrObj).
         lookupMessage(selector, AccessModifier.PUBLIC);
