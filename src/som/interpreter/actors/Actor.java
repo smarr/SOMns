@@ -66,6 +66,7 @@ public class Actor {
 
     EventualMessage msg;
     if (currentActor == this) {
+      // self send, no arg handling needed, they come straight from the same actor
       msg = new EventualMessage(this, selector, args, resolver, currentActor);
     } else {
       for (int i = 0; i < args.length; i++) {
