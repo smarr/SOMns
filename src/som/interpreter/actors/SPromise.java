@@ -226,6 +226,14 @@ public final class SPromise extends SObjectWithoutFields {
     chainedPromises.add(promise);
   }
 
+  public synchronized boolean isSomehowResolved() {
+    return resolved || errored || chained;
+  }
+
+  public synchronized boolean isResolved() {
+    return resolved;
+  }
+
   public static final class SResolver extends SObjectWithoutFields {
     @CompilationFinal private static SClass resolverClass;
 
@@ -256,9 +264,7 @@ public final class SPromise extends SObjectWithoutFields {
       CompilerAsserts.neverPartOfCompilation("This has so many possible cases, we definitely want to optimize this");
 
       assert promise.value == null;
-      assert !promise.resolved;
-      assert !promise.errored;
-      assert !promise.chained;
+      assert !promise.isSomehowResolved();
 
       if (result == promise) {
         // TODO: figure out whether this case is relevant
