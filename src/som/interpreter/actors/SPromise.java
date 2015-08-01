@@ -281,8 +281,8 @@ public final class SPromise extends SObjectWithoutFields {
     public void resolve(Object result) {
       CompilerAsserts.neverPartOfCompilation("This has so many possible cases, we definitely want to optimize this");
 
-      assert promise.value == null;
-      assert !promise.isSomehowResolved();
+      assert !promise.isSomehowResolved() : "Not sure yet what to do with re-resolving of promises? just ignore it? Error?";
+      assert promise.value == null        : "If it isn't resolved yet, it shouldn't have a value";
 
       if (result == promise) {
         // TODO: figure out whether this case is relevant
