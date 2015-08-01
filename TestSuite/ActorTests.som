@@ -203,7 +203,7 @@ class ActorTests usingPlatform: platform testFramework: minitest = (
       ].
       ^ promisePair promise
     )
-    
+
     public testAsyncCellReturnedDirect = (
       | cellLocal promisePair p |
       promisePair := actors createPromisePair.
@@ -217,7 +217,7 @@ class ActorTests usingPlatform: platform testFramework: minitest = (
       ].
       ^ promisePair promise
     )
-    
+
     public testAsyncPromiseOfPromiseResolvesToFinalValue = (
       | promisePair1 promisePair2 assertProm |
       (* Chained promises should be flattened *)
