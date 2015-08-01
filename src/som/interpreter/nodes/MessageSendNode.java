@@ -503,9 +503,8 @@ public final class MessageSendNode {
               (TypesGen.isLong(arguments[1]) ||
                   TypesGen.isDouble(arguments[1])) &&
               TypesGen.isSBlock(arguments[2])) {
-            return replace(IntToDoMessageNodeGen.create(this,
-                (SBlock) arguments[2], argumentNodes[0], argumentNodes[1],
-                argumentNodes[2]));
+            return replace(IntToDoMessageNodeGen.create(argumentNodes[0],
+                argumentNodes[1], argumentNodes[2]));
           }
           break;
         case "downTo:do:":
