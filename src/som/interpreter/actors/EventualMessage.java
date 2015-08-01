@@ -104,7 +104,9 @@ public final class EventualMessage extends RecursiveAction {
     } else {
       t = target.toString();
     }
-    return "EMsg(" + selector.toString() + ", " + Arrays.toString(args) +  ", " + t + ", sender: " + sender.toString() + ")";
+    return "EMsg(" + selector.toString() + ", "
+      + Arrays.toString(args) +  ", " + t
+      + ", sender: " + (sender == null ? "" : sender.toString()) + ")";
   }
 
   private static final ThreadLocal<Actor> actorThreadLocal = new ThreadLocal<Actor>();
