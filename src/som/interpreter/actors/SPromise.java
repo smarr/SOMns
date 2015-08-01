@@ -245,6 +245,7 @@ public final class SPromise extends SObjectWithoutFields {
     return resolved;
   }
 
+  /** REM: this method needs to be used with self synchronized. */
   void copyValueToRemotePromise(final SPromise remote) {
     remote.value    = value;
     remote.resolved = resolved;
