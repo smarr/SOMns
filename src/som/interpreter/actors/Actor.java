@@ -100,7 +100,7 @@ public class Actor {
       SPromise remote = new SPromise(this);
       synchronized (orgProm) {
         if (orgProm.isSomehowResolved()) {
-          remote.copyValueToRemotePromise(orgProm);
+          orgProm.copyValueToRemotePromise(remote);
         } else {
           ((SPromise) o).addChainedPromise(remote);
         }
