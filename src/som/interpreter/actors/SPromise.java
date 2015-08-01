@@ -289,13 +289,6 @@ public final class SPromise extends SObjectWithoutFields {
         return;  // this might happen at least in AmbientTalk, but doesn't do anything
       }
 
-      // actors should have always direct access to their own objects and
-      // thus, far references need to be unwrapped if they are returned back
-      // to the owner
-      // if a reference is delivered to another actor, it needs to be wrapped
-      // in a far reference
-      result = promise.owner.wrapForUse(result, EventualMessage.getActorCurrentMessageIsExecutionOn());
-
       if (result instanceof SPromise) {
         synchronized (promise) {
           promise.chained = true;
@@ -303,6 +296,13 @@ public final class SPromise extends SObjectWithoutFields {
         }
         return;
       }
+
+      // actors should have always direct access to their own objects and
+      // thus, far references need to be unwrapped if they are returned back
+      // to the owner
+      // if a reference is delivered to another actor, it needs to be wrapped
+      // in a far reference
+      result = promise.owner.wrapForUse(result, EventualMessage.getActorCurrentMessageIsExecutionOn());
 
       assert !(result instanceof SPromise);
 
