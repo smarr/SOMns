@@ -448,7 +448,7 @@ public final class Bootstrap {
       VM.setMainThread(Thread.currentThread());
 
       int emptyFJPool = 0;
-      while (emptyFJPool < 10 || VM.shouldExit()) {
+      while (emptyFJPool < 30 && !VM.shouldExit()) {
         try { Thread.sleep(1000); } catch (InterruptedException e) { }
         if (!ForkJoinPool.commonPool().hasQueuedSubmissions()) {
           emptyFJPool++;
