@@ -3,6 +3,7 @@ package som.interpreter.actors;
 import java.util.Arrays;
 import java.util.concurrent.RecursiveAction;
 
+import som.VM;
 import som.compiler.AccessModifier;
 import som.interpreter.Types;
 import som.interpreter.actors.SPromise.SResolver;
