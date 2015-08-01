@@ -64,11 +64,13 @@ public final class SPromise extends SObjectWithoutFields {
       r += ", resolved";
     } else if (errored) {
       r += ", errored";
-    } else {
+    } else if (chained) {
       assert chained;
       r += ", chained";
+    } else {
+      r += ", unresolved";
     }
-    return r + ", " + value.toString() + "]";
+    return r + (value == null ? "" : ", " + value.toString()) + "]";
   }
 
   @Override
