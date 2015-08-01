@@ -83,7 +83,7 @@ class ActorTests usingPlatform: platform testFramework: minitest = (
 
   public class Tests = TestContext ()(
     assert: promise resolvedWith: expectedResolution = (
-    (* TODO: add timeout support *)
+      (* TODO: add timeout support *)
       ^ promise
           whenResolved: [:actualResolution |
             assert: actualResolution equals: expectedResolution ]
@@ -92,7 +92,7 @@ class ActorTests usingPlatform: platform testFramework: minitest = (
     )
     
     assert: promise resolvedWithObject: expectedResolution = (
-    (* TODO: add timeout support *)
+      (* TODO: add timeout support *)
       ^ promise
           whenResolved: [:actualResolution |
             assert: actualResolution is: expectedResolution ]
