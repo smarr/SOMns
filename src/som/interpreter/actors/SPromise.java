@@ -129,7 +129,7 @@ public final class SPromise extends SObjectWithoutFields {
   private synchronized void registerWhenResolved(final Object callbackOrMsg,
       final SResolver resolver) {
     if (resolved) {
-      scheduleCallback(value, callbackOrMsg, resolver);
+      scheduleCallbacksOnResolution(value, callbackOrMsg, resolver);
     } else {
       if (errored) { // short cut, this promise will never be resolved
         return;
@@ -147,7 +147,7 @@ public final class SPromise extends SObjectWithoutFields {
   private synchronized void registerOnError(final SBlock block,
       final SResolver resolver) {
     if (errored) {
-      scheduleCallback(value, block, resolver);
+      scheduleCallbacksOnResolution(value, block, resolver);
     } else {
       if (resolved) { // short cut, this promise will never error, so, just return promise
         return;
@@ -171,7 +171,7 @@ public final class SPromise extends SObjectWithoutFields {
       if (errored) {
         if (value instanceof SAbstractObject) {
           if (((SAbstractObject) value).getSOMClass() == exceptionClass) {
-            scheduleCallback(value, block, resolver);
+            scheduleCallbacksOnResolution(value, block, resolver);
           }
         }
       } else {
@@ -191,7 +191,7 @@ public final class SPromise extends SObjectWithoutFields {
     return promise;
   }
 
-  protected void scheduleCallback(final Object result,
+  protected void scheduleCallbacksOnResolution(final Object result,
       final Object callbackOrMsg, final SResolver resolver) {
     assert owner != null;
     EventualMessage msg;
@@ -311,7 +311,7 @@ public final class SPromise extends SObjectWithoutFields {
         for (int i = 0; i < promise.whenResolved.size(); i++) {
           Object callbackOrMsg = promise.whenResolved.get(i);
           SResolver resolver = promise.whenResolvedResolvers.get(i);
-          promise.scheduleCallback(result, callbackOrMsg, resolver);
+          promise.scheduleCallbacksOnResolution(result, callbackOrMsg, resolver);
         }
       }
     }
