@@ -85,6 +85,26 @@ public class Actor {
       if (((SFarReference) o).getActor() == this) {
         return ((SFarReference) o).getValue();
       }
+    } else if (o instanceof SPromise) {
+      // promises cannot just be wrapped in far references, instead, other actors
+      // should get a new promise that is going to be resolved once the original
+      // promise gets resolved
+
+      SPromise orgProm = (SPromise) o;
+      // assert orgProm.getOwner() == owner; this can be another actor, which initialized a scheduled eventual send by resolving a promise, that's the promise pipelining...
+      if (orgProm.getOwner() == this) {
+        return orgProm;
+      }
+
+      SPromise remote = new SPromise(this);
+      synchronized (orgProm) {
+        if (orgProm.isSomehowResolved()) {
+          remote.copyValueToRemotePromise(orgProm);
+        } else {
+          ((SPromise) o).addChainedPromise(remote);
+        }
+        return remote;
+      }
     } else if (!IsValue.isObjectValue(o)) {
       if (this != owner) {
         return new SFarReference(owner, o);

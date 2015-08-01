@@ -76,6 +76,10 @@ public final class SPromise extends SObjectWithoutFields {
     return false;
   }
 
+  public Actor getOwner() {
+    return owner;
+  }
+
   public static void setSOMClass(final SClass cls) {
     assert promiseClass == null || cls == null;
     promiseClass = cls;
@@ -232,6 +236,13 @@ public final class SPromise extends SObjectWithoutFields {
 
   public synchronized boolean isResolved() {
     return resolved;
+  }
+
+  void copyValueToRemotePromise(final SPromise remote) {
+    remote.value    = value;
+    remote.resolved = resolved;
+    remote.errored  = errored;
+    remote.chained  = chained;
   }
 
   public static final class SResolver extends SObjectWithoutFields {
