@@ -16,6 +16,7 @@ public final class SFarReference extends SAbstractObject {
   public SFarReference(final Actor actor, final Object value) {
     this.actor = actor;
     this.value = value;
+    assert !(value instanceof SFarReference);
   }
 
   public Actor getActor() {
