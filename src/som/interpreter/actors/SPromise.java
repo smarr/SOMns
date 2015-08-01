@@ -211,9 +211,6 @@ public final class SPromise extends SObjectWithoutFields {
       assert callbackOrMsg instanceof EventualMessage;
       msg = (EventualMessage) callbackOrMsg;
 
-      Actor sendingActor = msg.getTarget();
-      assert sendingActor != null;
-
       if (result instanceof SFarReference) {
         target = ((SFarReference) result).getActor();
       } else {
