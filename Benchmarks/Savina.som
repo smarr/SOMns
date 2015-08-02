@@ -1,14 +1,14 @@
 class Savina usingPlatform: platform andHarness: harness = (
 | private Benchmark = harness Benchmark.
   private actors    = platform actors.
+  private Array     = platform kernel Array.
 |
 )(
-  public class PingPong = Benchmark (
+  public class PingPong new: numPings = Benchmark (
   | private completionPP = actors createPromisePair.
-    private NumPings     = 1000.
+    private NumPings     = numPings.
   |
   )(
-
     class Ping new: cnt with: pong = (
       | private pingsLeft ::= cnt.
         private pong = pong.
@@ -56,7 +56,7 @@ class Savina usingPlatform: platform andHarness: harness = (
       ^ result = NumPings
     )
   ) : (
-    public newInstance = ( ^ self new )
-    public setupVerifiedRun: run = ( run innerIterations: 1 )
+    public newInstance: problemSize = ( ^ self new: problemSize asInteger )
+    public setupVerifiedRun: run = ( run problemSize: 1 )
   )
 )

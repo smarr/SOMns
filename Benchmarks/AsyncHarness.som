@@ -30,23 +30,12 @@ class AsyncHarness usingPlatform: platform = (
 )(
 
   public class Benchmark = ()(
-    public innerBenchmarkLoop: innerIterations = (
-      | promPair iterProm |
-      promPair := actors createPromisePair.
-      
-      iterProm := actors async: 1 to: innerIterations do: [:i |
-        benchmark whenResolved: [:benchResult |
-          (verifyResult: benchResult) ifFalse: [
-            promPair resolve: false ] ] ].
-      iterProm whenResolved: [:r | promPair resolve: true ].
-      ^ promPair promise
-    )
 
     (* Needs to return a promise. *)
-    benchmark  = ( self subclassResponsibility )
+    public benchmark  = ( self subclassResponsibility )
     
     (* Needs to return a boolean *)
-    verifyResult: result = ( self subclassResponsibility )
+    public verifyResult: result = ( self subclassResponsibility )
 
     assert: expected equals: value = (
       expected = value ifFalse: [
@@ -62,7 +51,7 @@ class AsyncHarness usingPlatform: platform = (
     | public total           ::= 0.
       public numIterations   ::= 1.
       public warmUp          ::= 0.
-      public innerIterations ::= 1.
+      public problemSize     ::= 1.
       public maxRuntime      ::= nil.
       public printAll        ::= true.
       public numThreads      ::= 1.
@@ -72,30 +61,18 @@ class AsyncHarness usingPlatform: platform = (
   )(
     
     public runBenchmark = (
-      | result warmupBench |
-      warmupBench := benchmarkSuite newInstance.
+      | result |
 
       ('Starting ' + name + ' benchmark ... ') print.
 
-      ^ (self doWarmup: warmupBench) whenResolved: [:r |
-        self doRuns whenResolved: [:result |
-          total := total + result.
-          '' println
-        ]
-      ]
+      ^ self doWarmup whenResolved: [:r |
+          self doRuns whenResolved: [:result |
+            self reportBenchmark: result.
+            total := total + result.
+            '' println ] ]
     )
     
-    doRuns = (
-      | bench |
-      bench := benchmarkSuite newInstance.
-      
-      ^ (self doRuns: bench) whenResolved: [:result |
-        self reportBenchmark: bench result: result.
-        result
-      ]
-    )
-
-    doWarmup: bench = (
+    doWarmup = (
       | numIterationsTmp printAllTmp maxRuntimeTmp |
       warmUp > 0 ifFalse: [
         | pp |
@@ -113,7 +90,7 @@ class AsyncHarness usingPlatform: platform = (
       maxRuntime    := nil.
 
       ' warmup ...' print.
-      ^ (self doRuns: bench) whenResolved: [:r |
+      ^ (self doRuns) whenResolved: [:r |
         numIterations := numIterationsTmp.
         printAll      := printAllTmp.
         maxRuntime    := maxRuntimeTmp.
@@ -122,23 +99,26 @@ class AsyncHarness usingPlatform: platform = (
       ]
     )
     
-    doRuns: bench = (
+    doRuns = (
       | i total outerLoopP resultPP |
+      
       i := 0.
       total := 0.
       resultPP := actors createPromisePair.
   
       outerLoopP := actors async: 1 to: numIterations do: [:i |
-        | startTime endTime runTime |
+        | startTime endTime runTime bench |
+        bench := benchmarkSuite newInstance: problemSize.
         startTime := system ticks.
         
-        (bench innerBenchmarkLoop: innerIterations)
-          whenResolved: [:resultValid | 
-            resultValid ifFalse: [ self error: 'Benchmark failed with incorrect result' ].
+        bench benchmark whenResolved: [:benchResult |
+          (bench verifyResult: benchResult)
+            ifFalse: [ self error: 'Benchmark failed with incorrect result' ].
+
             endTime := system ticks.
   
             runTime := endTime - startTime.
-            printAll ifTrue: [ self print: bench run: runTime ].
+            printAll ifTrue: [ self printRun: runTime ].
   
             total := total + runTime.
             i := i + 1.
@@ -156,7 +136,7 @@ class AsyncHarness usingPlatform: platform = (
       ^ resultPP promise
     )
     
-    reportBenchmark: bench result: result = (
+    reportBenchmark: result = (
       | out |
       out :=  name.
       out := out + ': iterations='.
@@ -170,7 +150,7 @@ class AsyncHarness usingPlatform: platform = (
       out println.
     )
      
-    print: bench run: runTime = (
+    printRun: runTime = (
       (name + ': iterations=1' + ' runtime: ' + runTime + 'us') println
     )
         
@@ -189,7 +169,7 @@ class AsyncHarness usingPlatform: platform = (
         (* converted to microseconds i.e. ticks *)
         run warmUp: (args at: 4) asInteger * 1000 * 1000.
         args size > 4 ifTrue: [
-          run innerIterations: (args at: 5) asInteger.
+          run problemSize: (args at: 5).
           args size > 5 ifTrue: [
             run numThreads: (args at: 6) asInteger.
     ] ] ] ]
@@ -210,13 +190,13 @@ class AsyncHarness usingPlatform: platform = (
   )
 
   printUsage = (
-    './som.sh core-lib/Benchmarks/Harness.som [benchmark] [num-iterations [warm-up [inner-iter [num-threads]]]' println.
+    './som.sh core-lib/Benchmarks/Harness.som [benchmark] [num-iterations [warm-up [prob-size [num-threads]]]' println.
     '' println.
     '  benchmark      - benchmark class name (supports nested classes with ".") ' println.
     '                   examples: Queens, Fibonacci, Sort.QuickSort, LanguageFeatures.Dispatch' println.
     '  num-iterations - number of times to execute benchmark, default: 1' println.
     '  warm-up        - number of times to execute benchmark before measuring, default: 0' println.
-    '  inner-iter     - number of times the benchmark is executed in an inner loop, ' println.
+    '  prob-size      - problem size, a benchmark specific value/value range, ' println.
     '                   which is measured in total, default: 1' println.
     '  num-threads    - number of threads executing, each doing num-iterations, default: 1' println.
   )
