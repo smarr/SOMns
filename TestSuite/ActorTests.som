@@ -81,7 +81,7 @@ class ActorTests usingPlatform: platform testFramework: minitest = (
     )
   )
 
-  public class Tests = TestContext ()(
+  public class AsyncTestContext = TestContext ()(
     assert: promise resolvedWith: expectedResolution = (
       (* TODO: add timeout support *)
       ^ promise
@@ -90,7 +90,7 @@ class ActorTests usingPlatform: platform testFramework: minitest = (
           onError: [:actualResolution |
             failWithMessage: 'Promise broken with error: ' + actualResolution asString ]
     )
-    
+  
     assert: promise resolvedWithObject: expectedResolution = (
       (* TODO: add timeout support *)
       ^ promise
@@ -114,7 +114,9 @@ class ActorTests usingPlatform: platform testFramework: minitest = (
         ifTrue: [ ^ assert: actualResolution class equals: expectedErrorClass ].
       failWithMessage: 'Invalid state blocking on a promise: ', state.
     )
+  )
 
+  public class BasicsAndWrapping = AsyncTestContext ()(
     public testFarReferenceCannotBeInstantiated = (
       should: [actors FarReference new] signal: Exception
     )
@@ -123,6 +125,13 @@ class ActorTests usingPlatform: platform testFramework: minitest = (
       | ref |
       ref := (actors createActorFromValue: DeepChain).
       assert: (ObjectMirror reflecting: ref) className equals: 'FarReference'.
+    )
+
+    public testCreatePromise = (
+      | promisePair |
+      promisePair := actors createPromisePair.
+      assert: (ObjectMirror reflecting: promisePair promise)  className equals: 'Promise'.
+      assert: (ObjectMirror reflecting: promisePair resolver) className equals: 'Resolver'.
     )
 
     public testEventualSendReturnsPromise = (
@@ -161,26 +170,6 @@ class ActorTests usingPlatform: platform testFramework: minitest = (
       ^ assert: (bob <-: answerValue) resolvedWith: 42.
     )
     
-    public testCreatePromise = (
-      | promisePair |
-      promisePair := actors createPromisePair.
-      assert: (ObjectMirror reflecting: promisePair promise)  className equals: 'Promise'.
-      assert: (ObjectMirror reflecting: promisePair resolver) className equals: 'Resolver'.
-    ) 
-    
-    public testAsyncWhenResolvedPromiseResolvesToBlockReturnValue = (
-      | promisePair wrPromise assertPromise |
-      promisePair := actors createPromisePair.
-      wrPromise := promisePair promise whenResolved: [:v | v ].
-      
-      assertPromise := wrPromise whenResolved: [:val |
-        assert: val equals: 5.
-      ].
-      
-      promisePair resolve: 5.
-      ^ assertPromise
-    )
-    
     public testAsyncCellInstanceInActorIsFarRef = (
       | p |
       p := (actors createActorFromValue: Cell) <-: new: 4.
@@ -217,6 +206,24 @@ class ActorTests usingPlatform: platform testFramework: minitest = (
         ]
       ].
       ^ promisePair promise
+    )
+    
+  ) : (
+    TEST_CONTEXT = ()
+  )
+  
+  public class PromiseResolution = AsyncTestContext ()(
+    public testAsyncWhenResolvedPromiseResolvesToBlockReturnValue = (
+      | promisePair wrPromise assertPromise |
+      promisePair := actors createPromisePair.
+      wrPromise := promisePair promise whenResolved: [:v | v ].
+      
+      assertPromise := wrPromise whenResolved: [:val |
+        assert: val equals: 5.
+      ].
+      
+      promisePair resolve: 5.
+      ^ assertPromise
     )
 
     public testAsyncPromiseOfPromiseResolvesToFinalValue = (
