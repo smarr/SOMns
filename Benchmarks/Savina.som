@@ -59,4 +59,64 @@ class Savina usingPlatform: platform andHarness: harness = (
     public newInstance: problemSize = ( ^ self new: problemSize asInteger )
     public setupVerifiedRun: run = ( run problemSize: 1 )
   )
+  
+  public class ThreadRing new: numThreads = Benchmark (
+  | private N = numThreads.
+    private completionPP = actors createPromisePair.
+  |
+  )(
+    class ThreadRingActor new: id numActorsInRing: num = (
+    | private id = id.
+      private numActorsInRing = num.
+      private nextAct ::= nil.
+    |
+    )(
+      public ping: t = (
+        t > 0 ifTrue: [
+          nextAct <-: ping: t - 1
+        ] ifFalse: [
+          nextAct <-: exit: numActorsInRing
+        ]
+      )
+      
+      public exit: t = (
+        t > 0 ifTrue: [
+          nextAct <-: exit: t - 1
+        ] ifFalse: [
+          completionPP resolve: id.
+        ]
+      )
+      
+      public nextActor: actor = (
+        nextAct := actor
+      )
+    )
+    
+    public benchmark = (
+      | threadActors |
+      threadActors := Array new: N.
+      1 to: N do: [:i |
+        | threadActor |
+        threadActor := (actors createActorFromValue: ThreadRingActor)
+                         <-: new: i numActorsInRing: N.
+        threadActors at: i put: threadActor.
+      ].
+      
+      1 to: N do: [:i |
+        | nextActor |
+        nextActor := threadActors at: (i % N) + 1.
+        (threadActors at: i) <-: nextActor: nextActor.
+      ].
+      
+      (threadActors at: 1) <-: ping: N.
+      ^ completionPP promise
+    )
+    
+    public verifyResult: result = (
+      ^ result = 2
+    )
+  ) : (
+    public newInstance: problemSize = ( ^ self new: problemSize asInteger )
+    public setupVerifiedRun: run = ( run problemSize: 1 )
+  )
 )
