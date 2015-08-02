@@ -161,15 +161,17 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel = (
           resolver resolve: collection ] ]
   )
   
-  public async: collection do: aBlock = (
-    | promisePair first |
+  (* Iteration is done sequential but asynchronous. *)
+  public async: collection do: aBlockReturningAPromise = (
+    | promisePair |
     promisePair := createPromisePair.
 
     collection size > 0 ifTrue: [
-      first := aBlock value: (collection at: 1).
-    
+      | first |
+      first := aBlockReturningAPromise value: (collection at: 1).
+
       async:                collection
-        do:                 aBlock
+        do:                 aBlockReturningAPromise
         next:               2
         prevPromise:        first 
         completionResolver: promisePair resolver.
@@ -178,5 +180,40 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel = (
     ]
     
     ^ promisePair promise.
+  )
+
+  private async: intStart to: intEnd do: aBlock
+    prevPromise: prev completionResolver: resolver = (
+    prev whenResolved: [:res |
+      intStart <= intEnd ifTrue: [
+        | prom |
+        prom := aBlock value: intStart.
+        async: intStart + 1 to: intEnd
+           do: aBlock
+           prevPromise: prom
+           completionResolver: resolver
+      ] ifFalse: [
+        resolver resolve: intStart - 1
+      ]
+    ]
+  )
+
+  (* Iteration is done sequential but asynchronous. *)
+  public async: intStart to: intEnd do: aBlockReturningAPromise = (
+    | promisePair |
+    promisePair := createPromisePair.
+    
+    intStart <= intEnd ifTrue: [
+      | first |
+      first := aBlockReturningAPromise value: intStart.
+      
+      async: intStart + 1 to: intEnd
+         do: aBlockReturningAPromise 
+         prevPromise: first
+         completionResolver: promisePair resolver.
+    ] ifFalse: [
+      promisePair resolve: intStart
+    ].
+    ^ promisePair promise
   )
 )
