@@ -1,0 +1,62 @@
+class Savina usingPlatform: platform andHarness: harness = (
+| private Benchmark = harness Benchmark.
+  private actors    = platform actors.
+|
+)(
+  public class PingPong = Benchmark (
+  | private completionPP = actors createPromisePair.
+    private NumPings     = 1000.
+  |
+  )(
+
+    class Ping new: cnt with: pong = (
+      | private pingsLeft ::= cnt.
+        private pong = pong.
+      |
+    ) (
+      public start = (
+        pong <-: ping: self.
+        pingsLeft := pingsLeft - 1.
+      )
+    
+      public ping = (
+        pong <-: ping: self.
+        pingsLeft := pingsLeft - 1.
+      )
+    
+      public pong: sender = (
+        pingsLeft > 0
+          ifTrue:  [ self <-: ping ]
+          ifFalse: [ pong <-: stop ].
+      )
+    )
+  
+    class Pong = (
+      | private pongCount ::= 0. |
+    ) (
+      public ping: sender = (
+        sender <-: pong: self.
+        pongCount := pongCount + 1.
+      )
+    
+      public stop = (
+        completionPP resolve: pongCount
+      )
+    )
+    
+    public benchmark = (
+      | ping pong |
+      pong := (actors createActorFromValue: Pong) <-: new.
+      ping := (actors createActorFromValue: Ping) <-: new: NumPings with: pong.
+      ping <-: start.
+      ^ completionPP promise
+    )
+    
+    public verifyResult: result = (
+      ^ result = NumPings
+    )
+  ) : (
+    public newInstance = ( ^ self new )
+    public setupVerifiedRun: run = ( run innerIterations: 1 )
+  )
+)

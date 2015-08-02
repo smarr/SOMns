@@ -1,0 +1,242 @@
+(* Copyright (c) 2001-2015 see AUTHORS file
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the 'Software'), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*)
+class AsyncHarness usingPlatform: platform = (
+(*  The Harness can be invoked on the command line and should be passed a list
+    of benchmarks to run (class names) as arguments. It will run each of them
+    and output single as well as a total. *)
+| private actors = platform actors.
+  private system = platform system.
+  private platform = platform.
+  private ObjectMirror = platform mirrors ObjectMirror.
+|
+)(
+
+  public class Benchmark = ()(
+    public innerBenchmarkLoop: innerIterations = (
+      | promPair iterProm |
+      promPair := actors createPromisePair.
+      
+      iterProm := actors async: 1 to: innerIterations do: [:i |
+        benchmark whenResolved: [:benchResult |
+          (verifyResult: benchResult) ifFalse: [
+            promPair resolve: false ] ] ].
+      iterProm whenResolved: [:r | promPair resolve: true ].
+      ^ promPair promise
+    )
+
+    (* Needs to return a promise. *)
+    benchmark  = ( self subclassResponsibility )
+    
+    (* Needs to return a boolean *)
+    verifyResult: result = ( self subclassResponsibility )
+
+    assert: expected equals: value = (
+      expected = value ifFalse: [
+        self error: 'Expected value (' + expected asString + 
+                    ') differs from actual (' + value asString + 
+                    ') benchmark result.'
+      ].
+      ^ true
+    )
+  )
+
+  public class Run = (
+    | public total           ::= 0.
+      public numIterations   ::= 1.
+      public warmUp          ::= 0.
+      public innerIterations ::= 1.
+      public maxRuntime      ::= nil.
+      public printAll        ::= true.
+      public numThreads      ::= 1.
+      public benchmarkSuite  ::= nil.
+      public name            ::= nil.
+    |
+  )(
+    
+    public runBenchmark = (
+      | result warmupBench |
+      warmupBench := benchmarkSuite newInstance.
+
+      ('Starting ' + name + ' benchmark ... ') print.
+
+      ^ (self doWarmup: warmupBench) whenResolved: [:r |
+        self doRuns whenResolved: [:result |
+          total := total + result.
+          '' println
+        ]
+      ]
+    )
+    
+    doRuns = (
+      | bench |
+      bench := benchmarkSuite newInstance.
+      
+      ^ (self doRuns: bench) whenResolved: [:result |
+        self reportBenchmark: bench result: result.
+        result
+      ]
+    )
+
+    doWarmup: bench = (
+      | numIterationsTmp printAllTmp maxRuntimeTmp |
+      warmUp > 0 ifFalse: [
+        | pp |
+        pp := actors createPromisePair.
+        pp resolve: self.
+        '' println.
+        ^ pp promise ].
+
+      numIterationsTmp := numIterations.
+      printAllTmp      := printAll.
+      maxRuntimeTmp    := maxRuntime.
+
+      numIterations := warmUp.
+      printAll      := false.
+      maxRuntime    := nil.
+
+      ' warmup ...' print.
+      ^ (self doRuns: bench) whenResolved: [:r |
+        numIterations := numIterationsTmp.
+        printAll      := printAllTmp.
+        maxRuntime    := maxRuntimeTmp.
+
+        ' completed.' println
+      ]
+    )
+    
+    doRuns: bench = (
+      | i total outerLoopP resultPP |
+      i := 0.
+      total := 0.
+      resultPP := actors createPromisePair.
+  
+      outerLoopP := actors async: 1 to: numIterations do: [:i |
+        | startTime endTime runTime |
+        startTime := system ticks.
+        
+        (bench innerBenchmarkLoop: innerIterations)
+          whenResolved: [:resultValid | 
+            resultValid ifFalse: [ self error: 'Benchmark failed with incorrect result' ].
+            endTime := system ticks.
+  
+            runTime := endTime - startTime.
+            printAll ifTrue: [ self print: bench run: runTime ].
+  
+            total := total + runTime.
+            i := i + 1.
+  
+            maxRuntime ifNotNil: [
+              total > maxRuntime ifTrue: [
+                numIterations := i.
+                resultPP resolve: total ] ] ].
+      ].
+
+      outerLoopP whenResolved: [:r |
+        resultPP resolve: total.
+      ]
+
+      ^ resultPP promise
+    )
+    
+    reportBenchmark: bench result: result = (
+      | out |
+      out :=  name.
+      out := out + ': iterations='.
+      out := out + numIterations.
+      out := out + ' average: '.
+      out := out + (result / numIterations * numThreads).
+      out := out + 'us'.
+      out := out + ' total: '.
+      out := out + result.
+      out := out + 'us\n'.
+      out println.
+    )
+     
+    print: bench run: runTime = (
+      (name + ': iterations=1' + ' runtime: ' + runTime + 'us') println
+    )
+        
+    public printTotal = (
+      ('Total Runtime: ' + total asString + 'us') println.
+    )
+  )
+
+  processArguments: args for: run = (
+    (* First argument is the BenchmarkHarness *)
+    run name: (args at: 2).
+    run benchmarkSuite: (self loadBenchmarkSuite: (args at: 2)).
+    args size > 2 ifTrue: [
+      run numIterations: (args at: 3) asInteger.
+      args size > 3 ifTrue: [
+        (* converted to microseconds i.e. ticks *)
+        run warmUp: (args at: 4) asInteger * 1000 * 1000.
+        args size > 4 ifTrue: [
+          run innerIterations: (args at: 5) asInteger.
+          args size > 5 ifTrue: [
+            run numThreads: (args at: 6) asInteger.
+    ] ] ] ]
+  )
+
+  public main: args = (
+    | run |
+    args size < 2 ifTrue: [ self printUsage. ^ 1 ].
+    
+    run := Run new.
+    self processArguments: args for: run.
+
+    run runBenchmark ensure: [:r |
+      run printTotal.
+      system exit: 0
+    ].
+    ^ 0
+  )
+
+  printUsage = (
+    './som.sh core-lib/Benchmarks/Harness.som [benchmark] [num-iterations [warm-up [inner-iter [num-threads]]]' println.
+    '' println.
+    '  benchmark      - benchmark class name (supports nested classes with ".") ' println.
+    '                   examples: Queens, Fibonacci, Sort.QuickSort, LanguageFeatures.Dispatch' println.
+    '  num-iterations - number of times to execute benchmark, default: 1' println.
+    '  warm-up        - number of times to execute benchmark before measuring, default: 0' println.
+    '  inner-iter     - number of times the benchmark is executed in an inner loop, ' println.
+    '                   which is measured in total, default: 1' println.
+    '  num-threads    - number of threads executing, each doing num-iterations, default: 1' println.
+  )
+
+  loadModule: className = (
+    | file cls |
+    file := 'core-lib/Benchmarks/' + className + '.som'.
+    cls := system loadModule: file.
+    cls ifNil: [
+        self error: 'Failed loading benchmark: ' + className ].
+    ^ cls usingPlatform: platform andHarness: self.
+  )
+
+  loadBenchmarkSuite: className = (
+    | file module nested |
+    (className includes: '.')
+      ifFalse: [ ^ self loadModule: className ].
+    
+    nested := className split: '.'.
+    module := self loadModule: (nested at: 1).
+    ^ (ObjectMirror reflecting: module) perform: (nested at: 2) asSymbol
+  )
+)
