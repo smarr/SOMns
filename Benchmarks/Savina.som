@@ -191,7 +191,134 @@ class Savina usingPlatform: platform andHarness: harness = (
     public setupVerifiedRun: run = ( run problemSize: 1 )
   )
   
-  public class Chameneos = Benchmark ()( todo = () )
+  public class Chameneos meetings: numMeetings chameneos: numChameneos = Benchmark (
+  | private numMeetings  = numMeetings.
+    private numChameneos = numChameneos.
+    private completionPP = actors createPromisePair.
+    
+    private red    = Red    new.
+    private yellow = Yellow new.
+    private blue   = Blue   new.
+    private faded  = Faded  new.
+  |
+  )(
+    class Red = ()(
+      public complement: other = ( ^ other redComplement )
+      public redComplement     = ( ^ red    )
+      public yellowComplement  = ( ^ blue   )
+      public blueComplement    = ( ^ yellow )
+    )
+    class Yellow = ()(
+      public complement: other = ( ^ other yellowComplement )
+      public redComplement     = ( ^ blue   )
+      public yellowComplement  = ( ^ yellow )
+      public blueComplement    = ( ^ red    )
+    )
+    class Blue = ()(
+      public complement: other = ( ^ other blueComplement )
+      public redComplement     = ( ^ yellow )
+      public yellowComplement  = ( ^ red    )
+      public blueComplement    = ( ^ blue   )
+    )
+    class Faded = ()(
+      public complement: other = ( ^ faded )
+    )
+  
+    class ChameneosMallActor = (
+    | private waitingChameneo ::= nil.
+      private sumMeetings     ::= 0.
+      private numFaded        ::= 0.
+      private n               ::= numMeetings.
+    |
+      start.
+    )(
+      private color: anInt = (
+        | colorIdx |
+        colorIdx := anInt % 3.
+        colorIdx = 0 ifTrue: [ ^ red    ].
+        colorIdx = 1 ifTrue: [ ^ yellow ].
+        colorIdx = 2 ifTrue: [ ^ blue   ].
+      )
+
+      private start = (
+        0 to: numChameneos - 1 do: [:i |
+          | color |
+          color := color: i.
+          (actors createActorFromValue: ChameneosChameneoActor) <-: new: self color: color
+        ]
+      )
+
+      public meetingCount: count = (
+        numFaded := numFaded + 1.
+        sumMeetings := sumMeetings + count.
+        numFaded = numChameneos ifTrue: [ completionPP resolve: sumMeetings ]
+      )
+      
+      public meet: sender color: color = (
+        n > 0 ifTrue: [
+          waitingChameneo
+            ifNil: [ waitingChameneo := sender ]
+            ifNotNil: [
+              n := n - 1.
+              waitingChameneo <-: meet: sender color: color.
+              waitingChameneo := nil.
+            ]
+        ] ifFalse: [
+          sender <-: exit: self
+        ]
+      )
+    )
+    
+    class ChameneosChameneoActor new: mall color: color = (
+    | private mall       = mall.
+      private color    ::= color.
+      private meetings ::= 0.
+    |
+      start.
+    )(
+      private start = (
+        mall <-: meet: self color: color.
+      )
+
+      public meet: sender color: otherColor = (
+        | complement |
+        complement := color complement: otherColor.
+        meetings := meetings + 1.
+        sender <-: change: color.
+        mall   <-: meet: self color: color.
+      )
+      
+      public change: newColor = (
+        color := newColor.
+        meetings := meetings + 1.
+        mall <-: meet: self color: newColor.
+      )
+      
+      public exit: sender = (
+        color := faded.
+        sender <-: meetingCount: meetings
+      )
+    )
+    
+    public benchmark = (
+      | mallActor |
+      mallActor := (actors createActorFromValue: ChameneosMallActor) <-: new.
+      ^ completionPP promise
+    )
+    
+    public verifyResult: sumMeetings = (
+      ^ sumMeetings = (2 * numMeetings)
+    )
+  ) : (
+    public newInstance: problemSize = (
+      | problem |
+      problem := problemSize split: ':'.
+      ^ self meetings: (problem at: 1) asInteger
+            chameneos: (problem at: 2) asInteger
+    )
+    public setupVerifiedRun: run = ( run problemSize: '100:200000' )
+  )
+  
   public class Big = Benchmark ()( todo = () )
   
   public class ConcurrentDictionary = Benchmark ()( todo = () )
