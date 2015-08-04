@@ -135,7 +135,7 @@ class Savina usingPlatform: platform andHarness: harness = (
     public setupVerifiedRun: run = ( run problemSize: 1 )
   )
   
-  public class RadixSort numValues: numValues maxValue: maxValue seed: seed = (
+  public class RadixSort numValues: numValues maxValue: maxValue seed: seed = Benchmark (
   | private numValues = numValues. 
     private maxValue  = maxValue.  (* Needs to be a power of 2, I think *)
     private seed      = seed.      (* Should probably be a prime number *)
@@ -254,7 +254,7 @@ class Savina usingPlatform: platform andHarness: harness = (
     )
   )
   
-  public class Sieve new: limit local: numMaxLocalPrimes = (
+  public class Sieve new: limit local: numMaxLocalPrimes = Benchmark (
   | private limit = limit.
     private numMaxLocalPrimes = numMaxLocalPrimes.
     private completionPP = actors createPromisePair.
