@@ -253,4 +253,103 @@ class Savina usingPlatform: platform andHarness: harness = (
       run problemSize: '100:256:74755'
     )
   )
+  
+  public class Sieve new: limit local: numMaxLocalPrimes = (
+  | private limit = limit.
+    private numMaxLocalPrimes = numMaxLocalPrimes.
+    private completionPP = actors createPromisePair.
+  |
+  )(
+    class NumberProducerActor = ()(
+      public produceNumbersFor: filterActor = (
+        | candidate |
+        candidate := 3.
+        [candidate < limit] whileTrue: [
+          filterActor <-: filter: candidate.
+          candidate := candidate + 2
+        ].
+        
+        filterActor <-: exit.
+      )
+    )
+    
+    class PrimeFilterActor new: id initialPrime: initialPrime = (
+    | private id = id.
+      private initialPrime = initialPrime.
+      private nextFilterActor ::= nil.
+      private localPrimes = Array new: numMaxLocalPrimes withAll: 0.
+      private availableLocalPrimes ::= 1.
+    |
+      localPrimes at: 1 put: initialPrime.
+    )(
+      private handleNewPrim: newPrim = (
+        availableLocalPrimes < numMaxLocalPrimes
+          ifTrue: [
+            (* store locally if there is space *)
+            availableLocalPrimes := availableLocalPrimes + 1.
+            localPrimes at: availableLocalPrimes put: newPrim ]
+          ifFalse: [
+            (* create a new actor to store a new prime *)
+            nextFilterActor := (actors createActorFromValue: PrimeFilterActor)
+              <-: new: id + 1 initialPrime: newPrim
+          ]
+      )
+      
+      private isLocallyPrime: candidate = (
+        1 to: availableLocalPrimes do: [:i |
+          | remainder |
+          remainder := candidate % (localPrimes at: i).
+          remainder = 0 ifTrue: [ ^ false ]
+        ].
+        ^ true
+      )
+      
+      public filter: candidate = (
+        (isLocallyPrime: candidate)
+          ifTrue: [
+            nextFilterActor
+              ifNil:    [handleNewPrim: candidate]
+              ifNotNil: [nextFilterActor <-: filter: candidate]
+          ]
+      )
+      public exit = (
+        nextFilterActor
+          ifNil: [
+            | totalPrimes |
+            totalPrimes := ((id - 1) * numMaxLocalPrimes) + availableLocalPrimes.
+            completionPP resolve: totalPrimes ]
+          ifNotNil: [ nextFilterActor <-: exit ]
+      )
+    )
+   
+    public benchmark = (
+      | producerActor filterActor |
+      producerActor := (actors createActorFromValue: NumberProducerActor) <-: new.
+      filterActor   := (actors createActorFromValue: PrimeFilterActor)    <-: new: 1 initialPrime: 2.
+
+      producerActor <-: produceNumbersFor: filterActor.
+      
+      ^ completionPP promise
+    )
+    
+    public verifyResult: numberOfPrimes = (
+      limit = 100    ifTrue: [ ^ numberOfPrimes =   25 ].
+      limit = 1000   ifTrue: [ ^ numberOfPrimes =  168 ].
+      limit = 10000  ifTrue: [ ^ numberOfPrimes = 1229 ].
+      limit = 100000 ifTrue: [ ^ numberOfPrimes = 9592 ].
+      (* otherwise, we don't know. *)
+      ^ true 
+    )
+  ) : (
+    public newInstance: problemSize = (
+      | problem |
+      problem := problemSize split: ':'.
+      ^ self new: (problem at: 1) asInteger
+           local: (problem at: 2) asInteger
+    )
+    
+    public setupVerifiedRun: run = (
+      run problemSize: '100000:64'
+    )
+  )
 )
