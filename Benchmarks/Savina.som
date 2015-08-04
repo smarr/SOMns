@@ -75,6 +75,10 @@ class Savina usingPlatform: platform andHarness: harness = (
     public setupVerifiedRun: run = ( run problemSize: 1 )
   )
   
+  public class Counting = Benchmark ()( todo = () )
+  public class ForkJoinThroughput = Benchmark ()( todo = () )
+  public class ForkJoinActorCreation = Benchmark ()( todo = () )
+  
   public class ThreadRing new: numThreads = Benchmark (
   | private N = numThreads.
     private completionPP = actors createPromisePair.
@@ -134,6 +138,18 @@ class Savina usingPlatform: platform andHarness: harness = (
     public newInstance: problemSize = ( ^ self new: problemSize asInteger )
     public setupVerifiedRun: run = ( run problemSize: 1 )
   )
+  
+  public class Chameneos = Benchmark ()( todo = () )
+  public class Big = Benchmark ()( todo = () )
+  
+  public class ConcurrentDictionary = Benchmark ()( todo = () )
+  public class ConcurrentSortedLinkedList = Benchmark ()( todo = () )
+  public class ProducerConsumerBoundedBuffer = Benchmark ()( todo = () )
+  public class Philosophers = Benchmark ()( todo = () )
+  public class SleepingBarber = Benchmark ()( todo = () )
+  public class CigaretteSmokers = Benchmark ()( todo = () )
+  public class LogisticsMapSeries = Benchmark ()( todo = () )
+  public class BankTransaction = Benchmark ()( todo = () )
   
   public class RadixSort numValues: numValues maxValue: maxValue seed: seed = Benchmark (
   | private numValues = numValues. 
@@ -254,6 +270,8 @@ class Savina usingPlatform: platform andHarness: harness = (
     )
   )
   
+  public class FilterBank = Benchmark ()( todo = () )
+  
   public class Sieve new: limit local: numMaxLocalPrimes = Benchmark (
   | private limit = limit.
     private numMaxLocalPrimes = numMaxLocalPrimes.
@@ -352,4 +370,17 @@ class Savina usingPlatform: platform andHarness: harness = (
       run problemSize: '100000:64'
     )
   )
+  
+  public class UnbalancedBobwebbedTree = Benchmark ()( todo = () )
+  public class OnlineFacilityLocation = Benchmark ()( todo = () )
+  public class TrapezoidalApproximation = Benchmark ()( todo = () )
+  public class PrecisePiComputation = Benchmark ()( todo = () )
+  public class RecursiveMatricMultiplication = Benchmark ()( todo = () )
+  public class Quicksort = Benchmark ()( todo = () )
+  public class AllPairsShortestPath = Benchmark ()( todo = ( USES_SHARED_STATE ) )
+  
+  
+  public class SuccessiveOverRelaxation = Benchmark ()( todo = () )
+  public class AStarSearch = Benchmark ()( todo = () )
+  public class NQueens = Benchmark ()( todo = ( USES_SHARED_STATE ) )
 )
