@@ -2,6 +2,7 @@ class Savina usingPlatform: platform andHarness: harness = (
 | private Benchmark = harness Benchmark.
   private actors    = platform actors.
   private Array     = platform kernel Array.
+  private system    = platform system.
 |
 )(
   (* A simple PRNG, to be as portable as possible. *)
@@ -132,5 +133,124 @@ class Savina usingPlatform: platform andHarness: harness = (
   ) : (
     public newInstance: problemSize = ( ^ self new: problemSize asInteger )
     public setupVerifiedRun: run = ( run problemSize: 1 )
+  )
+  
+  public class RadixSort numValues: numValues maxValue: maxValue seed: seed = (
+  | private numValues = numValues. 
+    private maxValue  = maxValue.  (* Needs to be a power of 2, I think *)
+    private seed      = seed.      (* Should probably be a prime number *)
+    private completionPP = actors createPromisePair.
+  |
+  )(
+    class IntSourceActor = (
+    | private random = Random new: seed. |
+    ) (
+      public next: actor = (
+        1 to: numValues do: [:i |
+          | candidate |
+          candidate := (random next % maxValue) abs.
+          actor <-: value: candidate.
+        ]
+      )
+    )
+  
+    class SortActor new: radix next: nextActor = (
+    | private radix     = radix.
+      private next      = nextActor.
+      
+      private orderingArray = Array new: numValues withAll: 0.
+      private valuesSoFar ::= 0.
+      private j           ::= 1.
+    |
+    )(
+      public value: current = (
+        valuesSoFar := valuesSoFar + 1.
+        
+        (current & radix) = 0
+          ifTrue:  [
+           next <-: value: current ]
+          ifFalse: [
+            orderingArray at: j put: current.
+            j := j + 1
+          ].
+        
+        valuesSoFar = numValues ifTrue: [
+          1 to: j - 1 do: [:i |
+            next <-: value: (orderingArray at: i)
+          ].
+        ]
+      )
+    )
+    
+    class ValidationActor = (
+    | private sumSoFar    ::=  0.
+      private valuesSoFar ::=  0.
+      private prevValue   ::=  0.
+      private errorValue  ::= -1.
+      private errorIdx    ::= -1.
+    |
+    )(
+      public value: val = (
+        valuesSoFar := valuesSoFar + 1.
+        
+        (val < prevValue and: [errorValue < 0]) ifTrue: [
+          errorValue := val.
+          errorIdx   := valuesSoFar.
+          system error: 'ERROR: Value out of place: ' + errorValue + ' at index ' + errorIdx
+        ].
+        
+        prevValue := val.
+        sumSoFar := sumSoFar + prevValue.
+        
+        valuesSoFar = numValues ifTrue: [
+          errorValue >= 0
+            ifTrue:  [ system error: 'Value out of place: ' + errorValue + ' at index ' + errorIdx ].
+          completionPP resolve: sumSoFar
+        ]
+      )
+    )
+  
+    public benchmark = (
+      | validationActor sourceActor radix nextActor |
+      validationActor := (actors createActorFromValue: ValidationActor) <-: new.
+      sourceActor     := (actors createActorFromValue: IntSourceActor)  <-: new.
+      
+      radix := maxValue / 2.
+      nextActor := validationActor.
+      
+      [radix > 0] whileTrue: [
+        | sortActor |
+        sortActor := (actors createActorFromValue: SortActor) <-: new: radix next: nextActor.
+        
+        radix := radix / 2.
+        nextActor := sortActor
+      ].
+      
+      sourceActor <-: next: nextActor.
+      
+      ^ completionPP promise
+    )
+    
+    public verifyResult: result = (
+      (numValues = 100 and: [maxValue = 256 and: [seed = 74755]]) ifTrue: [
+        ^ result = 13606
+      ].
+      (numValues = 10000 and: [maxValue = 65536 and: [seed = 74755]]) ifTrue: [
+        ^ result = 329373752
+      ].
+      ^ true
+    )
+  ) : (
+    public newInstance: problemSize = (
+      | problem |
+      problem := problemSize split: ':'.
+      ^ self numValues: (problem at: 1) asInteger
+              maxValue: (problem at: 2) asInteger
+                  seed: (problem at: 3) asInteger
+    )
+    
+    public setupVerifiedRun: run = (
+      run problemSize: '100:256:74755'
+    )
   )
 )
