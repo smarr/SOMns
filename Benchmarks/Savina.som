@@ -74,8 +74,60 @@ class Savina usingPlatform: platform andHarness: harness = (
     public newInstance: problemSize = ( ^ self new: problemSize asInteger )
     public setupVerifiedRun: run = ( run problemSize: 1 )
   )
+
+  public class Counting new: limit = Benchmark (
+  | private limit = limit.
+    private completionPP = actors createPromisePair. |
+  )(
+    public class ProducerActor new: counter = (
+    | private counter = counter.
+      (* TODO: need to add a mutable field to ProducerActor to get a far reference, otherwise it is a Value.
+         TODO: we should probably not make all possible Values Values. Need to think about that.
+               perhaps we need to require explicit mixing in Value (and have a check that it is legal) *)
+      private mutableFieldHackToGetThisObjectAsFarReference ::= 0.
+    |
+    )(
+      public increment = (
+        1 to: limit do: [:i |
+          counter <-: increment ].
+        
+        counter <-: requestCount: self.
+      )
+      
+      public count: cnt = (
+        completionPP resolve: cnt = limit
+      )
+    )
+    
+    public class CountingActor = (
+    | private count ::= 0. |
+    ) (
+      public increment = (
+        count := count + 1.
+      )
+      
+      public requestCount: requester = (
+        requester <-: count: count
+      )
+    )
   
-  public class Counting = Benchmark ()( todo = () )
+    public benchmark = (
+      | counter producer |
+      counter  := (actors createActorFromValue: CountingActor) <-: new.
+      producer := (actors createActorFromValue: ProducerActor) <-: new: counter.
+      producer <-: increment.
+
+      ^ completionPP promise
+    )
+    
+    public verifyResult: isCorrect = (
+      ^ isCorrect
+    )
+  ) : (
+    public newInstance: problemSize = ( ^ self new: problemSize asInteger )
+    public setupVerifiedRun: run = ( run problemSize: 10000 )
+  )
+
   public class ForkJoinThroughput = Benchmark ()( todo = () )
   public class ForkJoinActorCreation = Benchmark ()( todo = () )
   
