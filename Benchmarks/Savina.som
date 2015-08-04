@@ -4,6 +4,20 @@ class Savina usingPlatform: platform andHarness: harness = (
   private Array     = platform kernel Array.
 |
 )(
+  (* A simple PRNG, to be as portable as possible. *)
+  public class Random new: seed = (
+    | private seed ::= seed. |
+  ) (
+    public next = (
+      seed := ((seed * 1309) + 13849) & 65535.
+      ^ seed
+    )
+  ) : (
+    public new = (
+      ^ new: 74755
+    )
+  )
+
   public class PingPong new: numPings = Benchmark (
   | private completionPP = actors createPromisePair.
     private NumPings     = numPings.
