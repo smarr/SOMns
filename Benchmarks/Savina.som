@@ -2,6 +2,7 @@ class Savina usingPlatform: platform andHarness: harness = (
 | private Benchmark = harness Benchmark.
   private actors    = platform actors.
   private Array     = platform kernel Array.
+  private Dictionary= platform collections Dictionary.
   private system    = platform system.
 |
 )(
@@ -425,8 +426,113 @@ class Savina usingPlatform: platform andHarness: harness = (
   )
   
   public class Big = Benchmark ()( todo = () )
+  public class ConcurrentDictionary numEntities: numEntities numMessages: numMessages writePercentage: writePercentage = Benchmark (
+  | private numMessages = numMessages.
+    private numEntities = numEntities.
+    private writePercentage = writePercentage.
+    private completionPP = actors createPromisePair.
+  |
+  )(
+    class Master = (
+    | private workers    = Array new: numEntities.
+      private dictionary = (actors createActorFromValue: DictionaryActor) <-: new.
+      private numWorkersTerminated ::= 0.
+    |
+      start.
+    )(
+      private start = (
+        workers doIndexes: [:i |
+          | worker |
+          worker := (actors createActorFromValue: Worker) <-: new: self dict: dictionary id: i.
+          workers at: i put: worker.
+          worker <-: doWork.
+        ]
+      )
+      
+      public endWork = (
+        numWorkersTerminated := numWorkersTerminated + 1.
+        numWorkersTerminated = numEntities ifTrue: [
+          dictionary <-: endWork.
+        ]
+      )
+    )
+    
+    class Worker new: master dict: dictionary id: id = (
+    | private messageCount ::= 0.
+      private random = Random new: id + numMessages + writePercentage.
+      private master = master.
+      private dictionary = dictionary.
+    |
+    )(
+      public doWork = (
+        messageCount := messageCount + 1.
+        messageCount <= numMessages
+          ifTrue: [
+            | rnd |
+            rnd := random next % 100.
+            rnd < writePercentage
+              ifTrue:  [ dictionary <-: write: self key: random next value: random next ]
+              ifFalse: [ dictionary <-: read: self key: random next ] ]
+          ifFalse: [ master <-: endWork ].
+      )
+      
+      public result: value = (
+        self doWork
+      )
+    )
+    
+    class DictionaryActor = (
+    | private dataMap = self createDataMap: 524287 / 1024. (* Integer.MAX_VALUE / 4_096 *)
+      private mutableFieldHackToGetThisObjectAsFarReference ::= 0. (* TODO: remove hack *)
+    |
+    )(
+      private createDataMap: dataLimit = (
+        | dict |
+        dict := Dictionary new.
+        1 to: dataLimit do: [:i |
+          dict at: i put: i
+        ].
+        ^ dict
+      )
+      
+      public write: sender key: key value: val = (
+        dataMap at: key put: val.
+        sender <-: result: val
+      )
+      
+      public read: sender key: key = (
+        sender <-: result: (dataMap at: key)
+      )
+      
+      public endWork = (
+        completionPP resolve: dataMap size
+      )
+    )
   
-  public class ConcurrentDictionary = Benchmark ()( todo = () )
+    public benchmark = (
+      | master |
+      master := (actors createActorFromValue: Master) <-: new.
+      ^ completionPP promise
+    )
+    
+    public verifyResult: result = (
+      ('---- result: ' + result asString) println.
+    )
+  ) : (
+    public newInstance: problemSize = (
+      | problem |
+      problem := problemSize split: ':'.
+      ^ self numEntities: (problem at: 1) asInteger
+             numMessages: (problem at: 2) asInteger
+         writePercentage: (problem at: 3) asInteger
+    )
+    
+    public setupVerifiedRun: run = (
+      run problemSize: '100:100:50'
+    )
+  )
+  
+  
   public class ConcurrentSortedLinkedList = Benchmark ()( todo = () )
   public class ProducerConsumerBoundedBuffer = Benchmark ()( todo = () )
   public class Philosophers = Benchmark ()( todo = () )
