@@ -240,6 +240,7 @@ class Kernel vmMirror: vmMirror = (
     public // argument = ( ^ vmMirror double: self divideDouble: argument )
     public % argument  = ( ^ vmMirror double: self modulo: argument )
     public abs         = ( ^ (self < 0.0) ifTrue: (0.0 - self) ifFalse: self )
+    public sin         = ( ^ vmMirror doubleSin:  self )
     public sqrt        = ( ^ vmMirror doubleSqrt: self )
     public negated     = ( ^ 0.0 - self )
     public round       = ( ^ vmMirror doubleRound: self )
