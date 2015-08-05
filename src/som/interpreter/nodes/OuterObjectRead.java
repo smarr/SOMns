@@ -48,7 +48,9 @@ public abstract class OuterObjectRead
   public boolean isSuperSend() { return false; }
 
   protected final SClass getLexicalClass(final SObjectWithoutFields rcvr) {
-    return rcvr.getSOMClass().getClassCorrespondingTo(classDefId);
+    SClass lexicalClass = rcvr.getSOMClass().getClassCorrespondingTo(classDefId);
+    assert lexicalClass != null;
+    return lexicalClass;
   }
 
   @Specialization(guards = "contextLevel == 0")
