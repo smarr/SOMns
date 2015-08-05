@@ -20,6 +20,8 @@ class Savina usingPlatform: platform andHarness: harness = (
     )
   )
 
+  (* === Savina Microbenchmarks === *)
+  
   public class PingPong new: numPings = Benchmark (
   | private completionPP = actors createPromisePair.
     private NumPings     = numPings.
@@ -426,6 +428,8 @@ class Savina usingPlatform: platform andHarness: harness = (
   )
   
   public class Big = Benchmark ()( todo = () )
+  (* === Savina Concurrency Benchmarks === *)
+
   public class ConcurrentDictionary numEntities: numEntities numMessages: numMessages writePercentage: writePercentage = Benchmark (
   | private numMessages = numMessages.
     private numEntities = numEntities.
@@ -540,6 +544,8 @@ class Savina usingPlatform: platform andHarness: harness = (
   public class CigaretteSmokers = Benchmark ()( todo = ( USE_MATH_RANDOM_WHICH_SEQUENTIALIZES ) )
   public class LogisticsMapSeries = Benchmark ()( todo = () )
   public class BankTransaction = Benchmark ()( todo = () )
+  
+  (* === Savina Parallelism Benchmarks === *)
   
   public class RadixSort numValues: numValues maxValue: maxValue seed: seed = Benchmark (
   | private numValues = numValues. 
