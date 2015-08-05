@@ -1,6 +1,7 @@
 package som.interpreter.actors;
 
 import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import som.vm.NotYetImplementedException;
 import som.vm.Symbols;
@@ -15,7 +16,7 @@ import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.sun.istack.internal.NotNull;
 
 
-public final class SPromise extends SObjectWithoutFields {
+public class SPromise extends SObjectWithoutFields {
   @CompilationFinal private static SClass promiseClass;
 
   // THREAD-SAFETY: these fields are subject to race conditions and should only
@@ -27,26 +28,25 @@ public final class SPromise extends SObjectWithoutFields {
   //                call backs here either. After resolving the future,
   //                whenResolved and whenBroken should only be accessed by the
   //                resolver actor
-  private ArrayList<Object>    whenResolved;
-  private ArrayList<SResolver> whenResolvedResolvers;
+  protected ArrayList<Object>    whenResolved;
+  protected ArrayList<SResolver> whenResolvedResolvers;
 
-  private ArrayList<SBlock>    onError;
-  private ArrayList<SResolver> onErrorResolvers;
+  protected ArrayList<SBlock>    onError;
+  protected ArrayList<SResolver> onErrorResolvers;
 
-  private ArrayList<SClass>    onException;
-  private ArrayList<SBlock>    onExceptionCallbacks;
-  private ArrayList<SResolver> onExceptionResolvers;
+  protected ArrayList<SClass>    onException;
+  protected ArrayList<SBlock>    onExceptionCallbacks;
+  protected ArrayList<SResolver> onExceptionResolvers;
 
-  private ArrayList<SPromise>  chainedPromises;
+  protected ArrayList<SPromise>  chainedPromises;
 
-  private Object  value;
-  private boolean resolved;
-  private boolean errored;
-  private boolean chained;
+  protected Object  value;
+  protected boolean resolved;
+  protected boolean errored;
+  protected boolean chained;
 
   // the owner of this promise, on which all call backs are scheduled
-  private final Actor owner;
-
+  protected final Actor owner;
 
   public SPromise(@NotNull final Actor owner) {
     super(promiseClass);
@@ -74,11 +74,11 @@ public final class SPromise extends SObjectWithoutFields {
   }
 
   @Override
-  public boolean isValue() {
+  public final boolean isValue() {
     return false;
   }
 
-  public Actor getOwner() {
+  public final Actor getOwner() {
     return owner;
   }
 
@@ -87,19 +87,19 @@ public final class SPromise extends SObjectWithoutFields {
     promiseClass = cls;
   }
 
-  public SPromise whenResolved(final SBlock block) {
+  public final SPromise whenResolved(final SBlock block) {
     assert block.getMethod().getNumberOfArguments() == 2;
     SPromise  promise  = new SPromise(EventualMessage.getActorCurrentMessageIsExecutionOn());
-    SResolver resolver = new SResolver(promise);
+    SResolver resolver = createResolver(promise, "wR:block");
 
     registerWhenResolved(block, resolver);
 
     return promise;
   }
 
-  public SPromise whenResolved(final SSymbol selector, final Object[] args) {
+  public final SPromise whenResolved(final SSymbol selector, final Object[] args) {
     SPromise  promise  = new SPromise(EventualMessage.getActorCurrentMessageIsExecutionOn());
-    SResolver resolver = new SResolver(promise);
+    SResolver resolver = createResolver(promise, "eventualSendToPromise:", selector);
 
     assert owner == EventualMessage.getActorCurrentMessageIsExecutionOn() : "think this should be true because the promise is an Object and owned by this specific actor";
     EventualMessage msg = new EventualMessage(owner, selector, args, resolver, null);
@@ -107,22 +107,22 @@ public final class SPromise extends SObjectWithoutFields {
     return promise;
   }
 
-  public SPromise onError(final SBlock block) {
+  public final SPromise onError(final SBlock block) {
     assert block.getMethod().getNumberOfArguments() == 2;
 
     SPromise  promise  = new SPromise(EventualMessage.getActorCurrentMessageIsExecutionOn());
-    SResolver resolver = new SResolver(promise);
+    SResolver resolver = createResolver(promise, "oE:block");
 
     registerOnError(block, resolver);
     return promise;
   }
 
-  public SPromise whenResolvedOrError(final SBlock resolved, final SBlock error) {
+  public final SPromise whenResolvedOrError(final SBlock resolved, final SBlock error) {
     assert resolved.getMethod().getNumberOfArguments() == 2;
     assert error.getMethod().getNumberOfArguments() == 2;
 
     SPromise  promise  = new SPromise(EventualMessage.getActorCurrentMessageIsExecutionOn());
-    SResolver resolver = new SResolver(promise);
+    SResolver resolver = createResolver(promise, "wROE:block:block");
 
     synchronized (this) {
       registerWhenResolved(resolved, resolver);
@@ -167,11 +167,11 @@ public final class SPromise extends SObjectWithoutFields {
     }
   }
 
-  public SPromise onException(final SClass exceptionClass, final SBlock block) {
+  public final SPromise onException(final SClass exceptionClass, final SBlock block) {
     assert block.getMethod().getNumberOfArguments() == 2;
 
     SPromise  promise  = new SPromise(EventualMessage.getActorCurrentMessageIsExecutionOn());
-    SResolver resolver = new SResolver(promise);
+    SResolver resolver = createResolver(promise, "oEx:class:block");
 
     synchronized (this) {
       if (errored) {
@@ -197,7 +197,7 @@ public final class SPromise extends SObjectWithoutFields {
     return promise;
   }
 
-  protected void scheduleCallbacksOnResolution(final Object result,
+  protected final void scheduleCallbacksOnResolution(final Object result,
       final Object callbackOrMsg, final SResolver resolver) {
     // when a promise is resolved, we need to schedule all the
     // #whenResolved:/#onError:/... callbacks as well as all eventual sends
@@ -229,7 +229,7 @@ public final class SPromise extends SObjectWithoutFields {
     target.enqueueMessage(msg);
   }
 
-  public synchronized void addChainedPromise(@NotNull final SPromise promise) {
+  public final synchronized void addChainedPromise(@NotNull final SPromise promise) {
     assert promise != null;
     if (chainedPromises == null) {
       chainedPromises = new ArrayList<>(1);
@@ -237,37 +237,82 @@ public final class SPromise extends SObjectWithoutFields {
     chainedPromises.add(promise);
   }
 
-  public synchronized boolean isSomehowResolved() {
+  public final synchronized boolean isSomehowResolved() {
     return resolved || errored || chained;
   }
 
-  public synchronized boolean isResolved() {
+  public final synchronized boolean isResolved() {
     return resolved;
   }
 
   /** REM: this method needs to be used with self synchronized. */
-  void copyValueToRemotePromise(final SPromise remote) {
+  final void copyValueToRemotePromise(final SPromise remote) {
     remote.value    = value;
     remote.resolved = resolved;
     remote.errored  = errored;
     remote.chained  = chained;
   }
 
-  public static final class SResolver extends SObjectWithoutFields {
-    @CompilationFinal private static SClass resolverClass;
+  public static final class SDebugPromise extends SPromise {
+    private static final AtomicInteger idGenerator = new AtomicInteger(0);
 
-    private final SPromise promise;
+    private final int id;
+
+    public SDebugPromise(final Actor owner) {
+      super(owner);
+      id = idGenerator.getAndIncrement();
+    }
+
+    @Override
+    public String toString() {
+      String r = "Promise[" + owner.toString();
+      if (resolved) {
+        r += ", resolved";
+      } else if (errored) {
+        r += ", errored";
+      } else if (chained) {
+        assert chained;
+        r += ", chained";
+      } else {
+        r += ", unresolved";
+      }
+      return r + (value == null ? "" : ", " + value.toString()) + ", id:" + id + "]";
+    }
+  }
+
+  public static SResolver createResolver(final SPromise promise,
+      final String debugNote, final Object extraObj) {
+    return createResolver(promise, debugNote + extraObj.toString());
+  }
+
+  public static SResolver createResolver(final SPromise promise, final String debugNote) {
+    if (SResolver.class.desiredAssertionStatus()) {
+      return new SResolver(promise);
+    } else {
+      return new SDebugResolver(promise, debugNote);
+    }
+  }
+
+  public static class SResolver extends SObjectWithoutFields {
+    @CompilationFinal private static SClass resolverClass;
     private static final SSymbol valueSelector = Symbols.symbolFor("value:");
 
-    public SResolver(final SPromise promise) {
+    protected final SPromise promise;
+
+    protected SResolver(final SPromise promise) {
       super(resolverClass);
       this.promise = promise;
       assert resolverClass != null;
     }
 
     @Override
-    public boolean isValue() {
+    public final boolean isValue() {
       return true;
+    }
+
+    @Override
+    public String toString() {
+      return "Resolver[" + promise.toString() + "]";
     }
 
     public static void setSOMClass(final SClass cls) {
@@ -275,11 +320,11 @@ public final class SPromise extends SObjectWithoutFields {
       resolverClass = cls;
     }
 
-    public void onError() {
+    public final void onError() {
       throw new NotYetImplementedException(); // TODO: implement
     }
 
-    public void resolve(final Object result) {
+    public final void resolve(final Object result) {
       CompilerAsserts.neverPartOfCompilation("This has so many possible cases, we definitely want to optimize this");
 
       assert !promise.isSomehowResolved() : "Not sure yet what to do with re-resolving of promises? just ignore it? Error?";
@@ -343,6 +388,20 @@ public final class SPromise extends SObjectWithoutFields {
           promise.scheduleCallbacksOnResolution(result, callbackOrMsg, resolver);
         }
       }
+    }
+  }
+
+  public static final class SDebugResolver extends SResolver {
+    private final String debugNote;
+
+    private SDebugResolver(final SPromise promise, final String debugNote) {
+      super(promise);
+      this.debugNote = debugNote;
+    }
+
+    @Override
+    public String toString() {
+      return "Resolver[" + debugNote + "|" + promise.toString() + "]";
     }
   }
 

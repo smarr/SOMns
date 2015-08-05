@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.NoSuchElementException;
 import java.util.concurrent.ForkJoinPool;
 
+import som.VM;
 import som.interpreter.actors.SPromise.SResolver;
 import som.primitives.ObjectPrims.IsValue;
 import som.vmobjects.SSymbol;
@@ -28,39 +29,42 @@ import com.oracle.truffle.api.CompilerAsserts;
 
 // TODO: figure out whether there is a simple look free design commonly used
 public class Actor {
+
+  public static Actor createActor(final boolean isMainActor) {
+    if (Actor.class.desiredAssertionStatus()) {
+      return new DebugActor(isMainActor);
+    } else {
+      return new Actor(isMainActor);
+    }
+  }
+
+  public static Actor createActor() {
+    if (Actor.class.desiredAssertionStatus()) {
+      return new DebugActor();
+    } else {
+      return new Actor();
+    }
+  }
+
   private final ArrayDeque<EventualMessage> mailbox = new ArrayDeque<>();
   private boolean isExecuting;
-  private final boolean isMain;
-  private final int id;
 
-  private static final ArrayList<Actor> actors = new ArrayList<Actor>();
-
-  public Actor() {
+  protected Actor() {
     isExecuting = false;
-    isMain      = false;
-    synchronized (actors) {
-      actors.add(this);
-      id = actors.size() - 1;
-    }
   }
 
   /**
    * This constructor should only be used for the main actor!
    */
-  public Actor(final boolean isMainActor) {
+  protected Actor(final boolean isMainActor) {
     assert isMainActor;
     isExecuting = true;
-    isMain      = true;
-    synchronized (actors) {
-      actors.add(this);
-      id = actors.size() - 1;
-    }
   }
 
   public SPromise eventualSend(final Actor currentActor, final SSymbol selector,
       final Object[] args) {
     SPromise result   = new SPromise(currentActor);
-    SResolver resolver = new SResolver(result);
+    SResolver resolver = SPromise.createResolver(result, "eventualSend:", selector);
 
     CompilerAsserts.neverPartOfCompilation("This needs to be optimized");
 
@@ -71,7 +75,6 @@ public class Actor {
     } else {
       for (int i = 0; i < args.length; i++) {
         args[i] = wrapForUse(args[i], currentActor);
-
       }
       msg = new EventualMessage(this, selector, args, resolver, currentActor);
     }
@@ -114,13 +117,19 @@ public class Actor {
     return o;
   }
 
+  protected void logMessageAddedToMailbox(final EventualMessage msg) { }
+  protected void logMessageBeingExecuted(final EventualMessage msg) { }
+  protected void logNoTaskForActor() { }
+
   public synchronized void enqueueMessage(final EventualMessage msg) {
     assert msg.isReceiverSet();
 
     if (isExecuting) {
       mailbox.add(msg);
+      logMessageAddedToMailbox(msg);
     } else {
       ForkJoinPool.commonPool().execute(msg);
+      logMessageBeingExecuted(msg);
       isExecuting = true;
     }
   }
@@ -134,14 +143,61 @@ public class Actor {
       EventualMessage nextTask = mailbox.remove();
       assert isExecuting;
       ForkJoinPool.commonPool().execute(nextTask);
+      logMessageBeingExecuted(nextTask);
       return;
     } catch (NoSuchElementException e) {
+      logNoTaskForActor();
       isExecuting = false;
     }
   }
 
   @Override
   public String toString() {
-    return "Actor[" + (isMain ? "main" : id) + "]";
+    return "Actor";
+  }
+
+  public static final class DebugActor extends Actor {
+    private static final ArrayList<Actor> actors = new ArrayList<Actor>();
+
+    private final boolean isMain;
+    private final int id;
+
+    public DebugActor() {
+      super();
+      isMain = false;
+      synchronized (actors) {
+        actors.add(this);
+        id = actors.size() - 1;
+      }
+    }
+
+    public DebugActor(final boolean isMainActor) {
+      super(isMainActor);
+      this.isMain = isMainActor;
+      synchronized (actors) {
+        actors.add(this);
+        id = actors.size() - 1;
+      }
+    }
+
+    @Override
+    protected void logMessageAddedToMailbox(final EventualMessage msg) {
+      VM.errorPrintln(toString() + ": queued task " + msg.toString());
+    }
+
+    @Override
+    protected void logMessageBeingExecuted(final EventualMessage msg) {
+      VM.errorPrintln(toString() + ": execute task " + msg.toString());
+    }
+
+    @Override
+    protected void logNoTaskForActor() {
+      VM.errorPrintln(toString() + ": no task");
+    }
+
+    @Override
+    public String toString() {
+      return "Actor[" + (isMain ? "main" : id) + "]";
+    }
   }
 }

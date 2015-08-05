@@ -436,7 +436,7 @@ public final class Bootstrap {
   }
 
   public static void executeApplication(final SObjectWithoutFields vmMirror) {
-    Actor mainActor = new Actor(true);
+    Actor mainActor = Actor.createActor(true);
     EventualMessage.setMainActor(mainActor);
 
     Object platform = platformModule.instantiateObject(platformClass, vmMirror);

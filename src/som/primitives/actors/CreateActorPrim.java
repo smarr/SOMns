@@ -18,7 +18,7 @@ public abstract class CreateActorPrim extends UnaryExpressionNode {
 
   @Specialization(guards = "isValue")
   public final SFarReference createActor(final Object value, final boolean isValue) {
-    Actor actor = new Actor();
+    Actor actor = Actor.createActor();
     SFarReference ref = new SFarReference(actor, value);
     return ref;
   }
