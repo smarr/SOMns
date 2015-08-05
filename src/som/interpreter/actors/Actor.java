@@ -31,7 +31,7 @@ import com.oracle.truffle.api.CompilerAsserts;
 public class Actor {
 
   public static Actor createActor(final boolean isMainActor) {
-    if (Actor.class.desiredAssertionStatus()) {
+    if (VM.DebugMode) {
       return new DebugActor(isMainActor);
     } else {
       return new Actor(isMainActor);
@@ -39,7 +39,7 @@ public class Actor {
   }
 
   public static Actor createActor() {
-    if (Actor.class.desiredAssertionStatus()) {
+    if (VM.DebugMode) {
       return new DebugActor();
     } else {
       return new Actor();

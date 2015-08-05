@@ -23,6 +23,8 @@ public final class VM {
   private boolean usesActors;
   private Thread mainThread;
 
+  public static boolean DebugMode = false;
+
   public VM(final boolean avoidExitForTesting) {
     this.avoidExitForTesting = avoidExitForTesting;
     vm = this;

@@ -3,6 +3,7 @@ package som.interpreter.actors;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import som.VM;
 import som.vm.NotYetImplementedException;
 import som.vm.Symbols;
 import som.vmobjects.SAbstractObject;
@@ -286,7 +287,7 @@ public class SPromise extends SObjectWithoutFields {
   }
 
   public static SResolver createResolver(final SPromise promise, final String debugNote) {
-    if (SResolver.class.desiredAssertionStatus()) {
+    if (VM.DebugMode) {
       return new SResolver(promise);
     } else {
       return new SDebugResolver(promise, debugNote);
