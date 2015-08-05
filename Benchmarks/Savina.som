@@ -239,14 +239,14 @@ class Savina usingPlatform: platform andHarness: harness = (
     public setupVerifiedRun: run = ( run problemSize: 1 )
   )
   
-  public class ThreadRing new: numThreads = Benchmark (
-  | private N = numThreads.
+  public class ThreadRing new: numActors numPings: numPings = Benchmark (
+  | private numActors = numActors.
+    private numPings  = numPings.
     private completionPP = actors createPromisePair.
   |
   )(
-    class ThreadRingActor new: id numActorsInRing: num = (
+    class ThreadRingActor new: id = (
     | private id = id.
-      private numActorsInRing = num.
       private nextAct ::= nil.
     |
     )(
@@ -254,7 +254,7 @@ class Savina usingPlatform: platform andHarness: harness = (
         t > 0 ifTrue: [
           nextAct <-: ping: t - 1
         ] ifFalse: [
-          nextAct <-: exit: numActorsInRing
+          nextAct <-: exit: numActors
         ]
       )
       
@@ -273,21 +273,20 @@ class Savina usingPlatform: platform andHarness: harness = (
     
     public benchmark = (
       | threadActors |
-      threadActors := Array new: N.
-      1 to: N do: [:i |
+      threadActors := Array new: numActors.
+      1 to: numActors do: [:i |
         | threadActor |
-        threadActor := (actors createActorFromValue: ThreadRingActor)
-                         <-: new: i numActorsInRing: N.
+        threadActor := (actors createActorFromValue: ThreadRingActor) <-: new: i.
         threadActors at: i put: threadActor.
       ].
       
-      1 to: N do: [:i |
+      1 to: numActors do: [:i |
         | nextActor |
-        nextActor := threadActors at: (i % N) + 1.
+        nextActor := threadActors at: (i % numActors) + 1.
         (threadActors at: i) <-: nextActor: nextActor.
       ].
       
-      (threadActors at: 1) <-: ping: N.
+      (threadActors at: 1) <-: ping: numPings.
       ^ completionPP promise
     )
     
@@ -295,8 +294,13 @@ class Savina usingPlatform: platform andHarness: harness = (
       ^ result = 2
     )
   ) : (
-    public newInstance: problemSize = ( ^ self new: problemSize asInteger )
-    public setupVerifiedRun: run = ( run problemSize: 1 )
+    public newInstance: problemSize = (
+      | problem |
+      problem := problemSize split: ':'.
+      ^ self new: (problem at: 1) asInteger
+        numPings: (problem at: 2) asInteger
+    )
+    public setupVerifiedRun: run = ( run problemSize: '30:300' )
   )
   
   public class Chameneos meetings: numMeetings chameneos: numChameneos = Benchmark (
