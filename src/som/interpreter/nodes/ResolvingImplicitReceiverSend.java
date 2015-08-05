@@ -27,8 +27,13 @@ public class ResolvingImplicitReceiverSend extends AbstractMessageSendNode {
 
   @Override
   public Object doPreEvaluated(final VirtualFrame frame, final Object[] args) {
-    PreevaluatedExpression newNode;
+    PreevaluatedExpression newNode = atomic(() -> specialize(args));
+    return newNode.
+        doPreEvaluated(frame, args);
+  }
 
+  protected PreevaluatedExpression specialize(final Object[] args) {
+    PreevaluatedExpression newNode;
     // first check whether it is an outer send
     // it it is, we get the context level of the outer send and rewrite to one
     ClassIdAndContextLevel result = currentScope.lookupSlotOrClass(selector);
@@ -47,8 +52,7 @@ public class ResolvingImplicitReceiverSend extends AbstractMessageSendNode {
           getSourceSection());
       replace((ExpressionNode) newNode);
     }
-
-    return newNode.doPreEvaluated(frame, args);
+    return newNode;
   }
 
   @Override
