@@ -273,6 +273,7 @@ public final class MessageSendNode {
             return replace(new EagerUnaryPrimitiveNode(selector,
                 argumentNodes[0], SqrtPrimFactory.create(null)));
           }
+          break;
         case "isNil":
           return replace(IsNilNodeGen.create(argumentNodes[0]));
         case "notNil":
