@@ -190,7 +190,51 @@ class Savina usingPlatform: platform andHarness: harness = (
     public setupVerifiedRun: run = ( run problemSize: '100:1000' )
   )
 
-  public class ForkJoinActorCreation = Benchmark ()( todo = () )
+  public class ForkJoinActorCreation new: numActors = Benchmark (
+  | private numActors = numActors. |
+  )(
+    class ForkJoinActor new: completionResolver = (
+    | (* TODO: should not need to this field. need it currently to get a far reference. remove it once we fixed that. *)
+      private mutableFieldHackToGetThisObjectAsFarReference ::= 0.  
+    |
+      completionResolver resolve: (performComputation: 37.2)
+    )()
+    
+    private performComputation: theta = (
+      | sint res |
+      sint := theta sin.
+      res := sint * sint.
+
+      res <= 0.0 ifTrue: [
+        system error: 'Benchmark calculated unrealistic res value ' + res asString ].
+      ^ res
+    )
+  
+    public benchmark = (
+      | promiseGroup |
+      promiseGroup := nil.
+      
+      numActors timesRepeat: [
+        | promisePair |
+        promisePair := actors createPromisePair.
+        promiseGroup
+          ifNil:    [ promiseGroup := promisePair promise ]
+          ifNotNil: [ promiseGroup := promiseGroup, promisePair promise ].
+        (actors createActorFromValue: ForkJoinActor) <-: new: promisePair resolver.
+      ].
+      ^ promiseGroup
+    )
+    
+    public verifyResult: resultVector = (
+      | expResult |
+      expResult := performComputation: 37.2.
+      resultVector do: [:r | r = expResult ifFalse: [ ^ false ] ].
+      ^ true
+    )
+  ) : (
+    public newInstance: problemSize = ( ^ self new: problemSize asInteger )
+    public setupVerifiedRun: run = ( run problemSize: 1 )
+  )
   
   public class ThreadRing new: numThreads = Benchmark (
   | private N = numThreads.
