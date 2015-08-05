@@ -536,8 +536,8 @@ class Savina usingPlatform: platform andHarness: harness = (
   public class ConcurrentSortedLinkedList = Benchmark ()( todo = () )
   public class ProducerConsumerBoundedBuffer = Benchmark ()( todo = () )
   public class Philosophers = Benchmark ()( todo = () )
-  public class SleepingBarber = Benchmark ()( todo = () )
-  public class CigaretteSmokers = Benchmark ()( todo = () )
+  public class SleepingBarber = Benchmark ()( todo = ( USE_MATH_RANDOM_WHICH_SEQUENTIALIZES ) )
+  public class CigaretteSmokers = Benchmark ()( todo = ( USE_MATH_RANDOM_WHICH_SEQUENTIALIZES ) )
   public class LogisticsMapSeries = Benchmark ()( todo = () )
   public class BankTransaction = Benchmark ()( todo = () )
   
@@ -771,6 +771,6 @@ class Savina usingPlatform: platform andHarness: harness = (
   
   
   public class SuccessiveOverRelaxation = Benchmark ()( todo = () )
-  public class AStarSearch = Benchmark ()( todo = () )
+  public class AStarSearch = Benchmark ()( todo = ( USES_A_GLOBAL_RANDOM_INSTANCE ) )
   public class NQueens = Benchmark ()( todo = ( USES_SHARED_STATE ) )
 )
