@@ -1,6 +1,7 @@
 package som.interpreter.nodes;
 
 import som.compiler.ClassBuilder.ClassDefinitionId;
+import som.compiler.ClassDefinition;
 import som.vm.constants.KernelObj;
 import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithoutFields;
@@ -48,7 +49,9 @@ public abstract class OuterObjectRead
   public boolean isSuperSend() { return false; }
 
   protected final SClass getLexicalClass(final SObjectWithoutFields rcvr) {
-    return rcvr.getSOMClass().getClassCorrespondingTo(classDefId);
+    SClass lexicalClass = rcvr.getSOMClass().getClassCorrespondingTo(classDefId);
+    assert lexicalClass != null;
+    return lexicalClass;
   }
 
   @Specialization(guards = "contextLevel == 0")
@@ -57,9 +60,9 @@ public abstract class OuterObjectRead
   }
 
   @Specialization(limit = "INLINE_CACHE_SIZE",
-      guards = {"contextLevel != 0", "receiver.getSOMClass() == rcvrClass"})
+      guards = {"contextLevel != 0", "receiver.getSOMClass().getClassDefinition() == rcvrClassDef"})
   public final Object doForFurtherOuter(final SObjectWithoutFields receiver,
-      @Cached("receiver.getSOMClass()") final SClass rcvrClass,
+      @Cached("receiver.getSOMClass().getClassDefinition()") final ClassDefinition rcvrClassDef,
       @Cached("getLexicalClass(receiver)") final SClass lexicalClass) {
     return getEnclosingObject(receiver, lexicalClass);
   }
@@ -83,6 +86,7 @@ public abstract class OuterObjectRead
   @ExplodeLoop
   private Object getEnclosingObject(final SObjectWithoutFields receiver,
       final SClass lexicalClass) {
+    assert lexicalClass != null;
     int ctxLevel = contextLevel - 1; // 0 is already covered with specialization
     SObjectWithoutFields enclosing = lexicalClass.getEnclosingObject();
 
