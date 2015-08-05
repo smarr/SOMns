@@ -135,7 +135,7 @@ class Savina usingPlatform: platform andHarness: harness = (
   )(
     class ThroughputActor new: completionResolver = (
     | private messagesProcessed  ::= 0.
-      private completionResolver ::= completionResolver.
+      private completionResolver = completionResolver.
     |
     )(
       private performComputation: theta = (
@@ -165,7 +165,7 @@ class Savina usingPlatform: platform andHarness: harness = (
         | promisePair |
         promisePair := actors createPromisePair.
         promiseGroup
-          ifNil: [ promiseGroup := promisePair promise ]
+          ifNil:    [ promiseGroup := promisePair promise ]
           ifNotNil: [ promiseGroup := promiseGroup, promisePair promise ].
         (actors createActorFromValue: ThroughputActor) <-: new: promisePair resolver
       ].
