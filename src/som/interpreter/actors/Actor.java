@@ -61,7 +61,7 @@ public class Actor {
     isExecuting = true;
   }
 
-  public SPromise eventualSend(final Actor currentActor, final SSymbol selector,
+  public final SPromise eventualSend(final Actor currentActor, final SSymbol selector,
       final Object[] args) {
     SPromise result   = new SPromise(currentActor);
     SResolver resolver = SPromise.createResolver(result, "eventualSend:", selector);
@@ -83,7 +83,7 @@ public class Actor {
     return result;
   }
 
-  public Object wrapForUse(final Object o, final Actor owner) {
+  public final Object wrapForUse(final Object o, final Actor owner) {
     CompilerAsserts.neverPartOfCompilation("This should probably be optimized");
     if (o instanceof SFarReference) {
       if (((SFarReference) o).getActor() == this) {
@@ -121,7 +121,7 @@ public class Actor {
   protected void logMessageBeingExecuted(final EventualMessage msg) { }
   protected void logNoTaskForActor() { }
 
-  public synchronized void enqueueMessage(final EventualMessage msg) {
+  public final synchronized void enqueueMessage(final EventualMessage msg) {
     assert msg.isReceiverSet();
 
     if (isExecuting) {
@@ -138,7 +138,7 @@ public class Actor {
    * This method is only to be called from the EventualMessage task, and the
    * main Actor in Bootstrap.executeApplication().
    */
-  public synchronized void enqueueNextMessageForProcessing() {
+  public final synchronized void enqueueNextMessageForProcessing() {
     try {
       EventualMessage nextTask = mailbox.remove();
       assert isExecuting;
