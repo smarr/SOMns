@@ -128,7 +128,68 @@ class Savina usingPlatform: platform andHarness: harness = (
     public setupVerifiedRun: run = ( run problemSize: 10000 )
   )
 
-  public class ForkJoinThroughput = Benchmark ()( todo = () )
+  public class ForkJoinThroughput new: numActors  totalMessages: numMessages = Benchmark (
+  | private numActors    = numActors.
+    private numMessages  = numMessages.
+  |
+  )(
+    class ThroughputActor new: completionResolver = (
+    | private messagesProcessed  ::= 0.
+      private completionResolver ::= completionResolver.
+    |
+    )(
+      private performComputation: theta = (
+        | sint res |
+        sint := theta sin.
+        res := sint * sint.
+        
+        (* defeat dead code elimination *)
+        res <= 0.0 ifTrue: [
+          system error: 'Benchmark calculated unrealistic res value ' + res asString ]
+      )
+     
+      public process = (
+        messagesProcessed := messagesProcessed + 1.
+        self performComputation: 37.2.
+        
+        messagesProcessed = numMessages ifTrue: [
+          completionResolver resolve: messagesProcessed
+        ]
+      )
+    )
+  
+    public benchmark = (
+      | benchActors promiseGroup |
+      promiseGroup := nil.
+      benchActors := Array new: numActors withAll: [
+        | promisePair |
+        promisePair := actors createPromisePair.
+        promiseGroup
+          ifNil: [ promiseGroup := promisePair promise ]
+          ifNotNil: [ promiseGroup := promiseGroup, promisePair promise ].
+        (actors createActorFromValue: ThroughputActor) <-: new: promisePair resolver
+      ].
+      
+      numMessages timesRepeat: [
+        benchActors do: [:a | a <-: process ] ].
+      
+      ^ promiseGroup
+    )
+    
+    public verifyResult: result = (
+      result do: [:n | n = numMessages ifFalse: [ ^ false ] ].
+      ^ true
+    )
+  ) : (
+    public newInstance: problemSize = (
+      | problem |
+      problem := problemSize split: ':'.
+      ^ self new: (problem at: 1) asInteger
+         totalMessages: (problem at: 2) asInteger
+    )
+    public setupVerifiedRun: run = ( run problemSize: '100:1000' )
+  )
+
   public class ForkJoinActorCreation = Benchmark ()( todo = () )
   
   public class ThreadRing new: numThreads = Benchmark (
