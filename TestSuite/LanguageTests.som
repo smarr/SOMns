@@ -361,21 +361,21 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
   ) : ( TEST_CONTEXT = () )
   
   public class ValueTests = TestContext ()(
-    class Mutable = (
-      | public mut ::= 0. |
+    class Mutable new: obj = (
+      | public mut ::= obj. |
     )(
-      public class Immutable = (
-        | public imm = 0. |
-      )()
-    )
+      public class Immutable new: obj = (
+        | public imm = obj. |
+      )() : ( public new = ( ^ self new: 0 ) )
+    ) : ( public new = ( ^ self new: 0 ) )
     
-    class Immutable = (
-      | public imm = 0. |
+    class Immutable new: obj = (
+      | public imm = obj. |
     )(
-      public class Immutable = (
-        | public imm = 0. |
-      )()
-    )
+      public class Immutable new: obj = (
+        | public imm = obj. |
+      )() : ( public new = ( ^ self new: 0 ) )
+    ) : ( public new = ( ^ self new: 0 ) )
   
     public testIntegersAreValues = (
       assert: (ObjectMirror reflecting:        0) isValue.
@@ -453,12 +453,12 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
     )
     
     public testOuterScopeMutability = (
-      | m i |
+      | m mi |
       m := Mutable new.
-      i := m Immutable new.
+      mi := m Immutable new.
       
       deny: (ObjectMirror reflecting: m) isValue.
-      deny: (ObjectMirror reflecting: i) isValue.
+      deny: (ObjectMirror reflecting: mi) isValue.
     )
     
     public testOuterScopeImmutability = (
@@ -468,6 +468,26 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
       
       assert: (ObjectMirror reflecting: i) isValue.
       assert: (ObjectMirror reflecting: ii) isValue.
+    )
+    
+    public testMutableObjectDeepInImmutbleConstruct = (
+      | i iim iii |
+      i  := Immutable new.
+      iim := i Immutable new: (Mutable new: 0).
+      iii := i Immutable new: Immutable new.
+      
+      assert: (ObjectMirror reflecting: i) isValue.
+      deny:   (ObjectMirror reflecting: iim) isValue.
+      assert: (ObjectMirror reflecting: iii) isValue.
+    )
+    
+    public testMutableObjectInOuterScope = (
+      | im imi |
+      im := Immutable new: (Mutable new: 0).
+      deny: (ObjectMirror reflecting: im) isValue.
+      
+      imi := im Immutable new: 0.
+      deny: (ObjectMirror reflecting: imi) isValue.
     )
   ) : ( TEST_CONTEXT = () )
   
