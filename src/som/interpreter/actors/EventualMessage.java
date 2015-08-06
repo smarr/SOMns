@@ -65,6 +65,7 @@ public final class EventualMessage extends RecursiveAction {
       executeMessage();
     } catch (Throwable t) {
       t.printStackTrace();
+      VM.errorExit("Some EventualMessage failed with Exception.");
     }
 
     actorThreadLocal.set(null);
