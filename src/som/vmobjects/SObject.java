@@ -356,7 +356,11 @@ public abstract class SObject extends SObjectWithoutFields {
     CompilerAsserts.neverPartOfCompilation("getObjectFieldLength()");
 
     try {
-      return getFieldDistance("field1", "field2");
+      long dist = getFieldDistance("field1", "field2");
+      // this can go wrong if the VM rearranges fields to fill holes in the
+      // memory layout of the object structure
+      assert dist == 4 || dist == 8 : "We expect these fields to be adjecent and either 32 or 64bit appart.";
+      return dist;
     } catch (NoSuchFieldException | IllegalAccessException e) {
       throw new RuntimeException(e);
     }
@@ -366,7 +370,11 @@ public abstract class SObject extends SObjectWithoutFields {
     CompilerAsserts.neverPartOfCompilation("getPrimFieldLength()");
 
     try {
-      return getFieldDistance("primField1", "primField2");
+      long dist = getFieldDistance("primField1", "primField2");
+      // this can go wrong if the VM rearranges fields to fill holes in the
+      // memory layout of the object structure
+      assert dist == 8 : "We expect these fields to be adjecent and 64bit appart.";
+      return dist;
     } catch (NoSuchFieldException | IllegalAccessException e) {
       throw new RuntimeException(e);
     }
