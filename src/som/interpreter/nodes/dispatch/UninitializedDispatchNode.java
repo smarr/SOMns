@@ -4,12 +4,14 @@ import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate
 import som.compiler.AccessModifier;
 import som.interpreter.Types;
 import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
+import som.interpreter.nodes.SOMNode;
 import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithoutFields;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.nodes.RootNode;
 
 
 public final class UninitializedDispatchNode extends AbstractDispatchWithLookupNode {
@@ -93,8 +95,16 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
 
   @Override
   public Object executeDispatch(final VirtualFrame frame, final Object[] arguments) {
-    return specialize(arguments).
-        executeDispatch(frame, arguments);
+    RootNode root = SOMNode.getRootNodeAndTryReallyHard(this);
+    assert root != null;
+
+    AbstractDispatchNode newNode;
+    // we modify a dispatch chain here, so, better grab the root node before we do anything
+    synchronized (root) {
+      newNode = specialize(arguments);
+    }
+
+    return newNode.executeDispatch(frame, arguments);
   }
 
   @Override
