@@ -470,4 +470,23 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
       assert: (ObjectMirror reflecting: ii) isValue.
     )
   ) : ( TEST_CONTEXT = () )
+  
+  public class OuterTests = TestContext ()(
+    class RadixSort = (
+    | private numValues = 3. |
+    )(  
+      public class SortActor = (
+      | public outerNumValues = numValues. |
+      )()
+    )
+  
+    public testOuterSendWithManyOuterInstances = (
+      | arr |
+      1 halt.
+      arr := Array new: 100 withAll: [RadixSort new].
+      arr do: [:rs |
+        assert: rs SortActor new outerNumValues equals: 3
+      ]
+    )
+  ) : ( TEST_CONTEXT = () )
 )
