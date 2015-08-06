@@ -76,16 +76,26 @@ public abstract class SlotAccessNode extends ExpressionNode {
 
     @Override
     public SClass doRead(final VirtualFrame frame, final SObject rcvr) {
-      Object cacheValue = read.read(rcvr);
+      // here we need to synchronize, because this is actually something that
+      // can happen concurrently, and we only want a single instance of the
+      // class object
+      Object cachedValue = read.read(rcvr);
+      if (cachedValue != Nil.nilObject) {
+        return (SClass) cachedValue;
+      }
 
-      // check whether cache is initialized with class object
-      if (cacheValue == Nil.nilObject) {
-        SClass classObject = instantiateClassObject(frame, rcvr);
-        write.write(rcvr, classObject);
-        return classObject;
-      } else {
-        assert cacheValue instanceof SClass;
-        return (SClass) cacheValue;
+      synchronized (rcvr) {
+        cachedValue = read.read(rcvr);
+
+        // check whether cache is initialized with class object
+        if (cachedValue == Nil.nilObject) {
+          SClass classObject = instantiateClassObject(frame, rcvr);
+          write.write(rcvr, classObject);
+          return classObject;
+        } else {
+          assert cachedValue instanceof SClass;
+          return (SClass) cachedValue;
+        }
       }
     }
 
