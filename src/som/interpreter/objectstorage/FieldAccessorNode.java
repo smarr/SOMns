@@ -288,7 +288,7 @@ public abstract class FieldAccessorNode extends Node {
         if (layout.layoutForSameClass(obj.getObjectLayout())) {
           writeAndRespecialize(obj, value, "update outdated read node", nextInCache);
         } else {
-          nextInCache.write(obj, (long) value);
+          nextInCache.write(obj, value);
         }
       }
       return value;
@@ -326,7 +326,7 @@ public abstract class FieldAccessorNode extends Node {
         if (layout.layoutForSameClass(obj.getObjectLayout())) {
           writeAndRespecialize(obj, value, "update outdated read node", nextInCache);
         } else {
-          nextInCache.write(obj, (double) value);
+          nextInCache.write(obj, value);
         }
       }
       return value;
