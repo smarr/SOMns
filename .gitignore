@@ -4,3 +4,5 @@ mini-som.sh
 mini.sh
 rebench.conf
 user-dict.txt
+libs/junit-*.jar
+libs/hamcrest-*.jar
