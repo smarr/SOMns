@@ -470,7 +470,7 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
       assert: (ObjectMirror reflecting: ii) isValue.
     )
     
-    public testMutableObjectDeepInImmutbleConstruct = (
+    public testMutableObjectDeepInImmutableConstruct = (
       | i iim iii |
       i  := Immutable new.
       iim := i Immutable new: (Mutable new: 0).
