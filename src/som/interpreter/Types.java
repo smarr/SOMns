@@ -22,8 +22,6 @@
 package som.interpreter;
 
 import java.math.BigInteger;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.ReentrantLock;
 
 import som.interpreter.actors.SFarReference;
 import som.interpreter.actors.SPromise;
@@ -45,9 +43,6 @@ import com.oracle.truffle.api.dsl.TypeSystem;
              BigInteger.class,
                  String.class,
                  double.class,
-          ReentrantLock.class,
-              Condition.class,
-                 Thread.class,
                  SClass.class,
                 SObject.class,
                SPromise.class,

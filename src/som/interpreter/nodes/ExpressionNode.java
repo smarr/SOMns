@@ -22,8 +22,6 @@
 package som.interpreter.nodes;
 
 import java.math.BigInteger;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.ReentrantLock;
 
 import som.interpreter.TypesGen;
 import som.interpreter.actors.SFarReference;
@@ -86,18 +84,6 @@ public abstract class ExpressionNode extends SOMNode {
 
   public SInvokable executeSInvokable(final VirtualFrame frame) throws UnexpectedResultException {
     return TypesGen.expectSInvokable(executeGeneric(frame));
-  }
-
-  public ReentrantLock executeReentrantLock(final VirtualFrame frame) throws UnexpectedResultException {
-    return TypesGen.expectReentrantLock(executeGeneric(frame));
-  }
-
-  public Condition executeCondition(final VirtualFrame frame) throws UnexpectedResultException {
-    return TypesGen.expectCondition(executeGeneric(frame));
-  }
-
-  public Thread executeThread(final VirtualFrame frame) throws UnexpectedResultException {
-    return TypesGen.expectThread(executeGeneric(frame));
   }
 
   public SObject executeSObject(final VirtualFrame frame) throws UnexpectedResultException {
