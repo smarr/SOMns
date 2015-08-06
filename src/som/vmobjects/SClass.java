@@ -219,7 +219,7 @@ public final class SClass extends SObjectWithoutFields {
     return layoutForInstances;
   }
 
-  public ObjectLayout updateInstanceLayoutWithInitializedField(
+  public synchronized ObjectLayout updateInstanceLayoutWithInitializedField(
       final SlotDefinition slot, final Class<?> type) {
     ObjectLayout updated = layoutForInstances.withInitializedField(slot, type);
 
@@ -230,7 +230,7 @@ public final class SClass extends SObjectWithoutFields {
     return layoutForInstances;
   }
 
-  public ObjectLayout updateInstanceLayoutWithGeneralizedField(
+  public synchronized ObjectLayout updateInstanceLayoutWithGeneralizedField(
       final SlotDefinition slot) {
     ObjectLayout updated = layoutForInstances.withGeneralizedField(slot);
 

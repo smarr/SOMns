@@ -218,19 +218,27 @@ public abstract class SObject extends SObjectWithoutFields {
     ObjectLayout layoutAtClass = clazz.getLayoutForInstances();
 
     if (objectLayout != layoutAtClass) {
-      setLayoutAndTransferFields(layoutAtClass);
+      setLayoutAndTransferFields();
       return true;
     } else {
       return false;
     }
   }
 
-  private void setLayoutAndTransferFields(final ObjectLayout layout) {
+  private synchronized void setLayoutAndTransferFields() {
     CompilerDirectives.transferToInterpreterAndInvalidate();
+
+    ObjectLayout layoutAtClass;
+    synchronized (clazz) {
+      layoutAtClass = clazz.getLayoutForInstances();
+      if (objectLayout == layoutAtClass) {
+        return;
+      }
+    }
 
     HashMap<SlotDefinition, Object> fieldValues = getAllFields();
 
-    objectLayout        = layout;
+    objectLayout        = layoutAtClass;
     extensionPrimFields = getExtendedPrimStorage();
     extensionObjFields  = getExtendedObjectStorage();
 
@@ -240,14 +248,14 @@ public abstract class SObject extends SObjectWithoutFields {
   protected final void updateLayoutWithInitializedField(final SlotDefinition slot, final Class<?> type) {
     ObjectLayout layout = clazz.updateInstanceLayoutWithInitializedField(slot, type);
     assert objectLayout != layout;
-    setLayoutAndTransferFields(layout);
+    setLayoutAndTransferFields();
   }
 
   protected final void updateLayoutWithGeneralizedField(final SlotDefinition slot) {
     ObjectLayout layout = clazz.updateInstanceLayoutWithGeneralizedField(slot);
 
     assert objectLayout != layout;
-    setLayoutAndTransferFields(layout);
+    setLayoutAndTransferFields();
   }
 
   private static final long FIRST_OBJECT_FIELD_OFFSET = getFirstObjectFieldOffset();
