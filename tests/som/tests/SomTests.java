@@ -31,6 +31,7 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 import som.VM;
+import som.interpreter.actors.Actor;
 import som.vm.Bootstrap;
 import som.vmobjects.SObjectWithoutFields;
 
@@ -62,13 +63,15 @@ public class SomTests {
   @Test
   public void testSomeTest() {
     VM vm = new VM(true);
+    Actor mainActor = Actor.initializeActorSystem();
+
     vm.processVmArguments(new String[] {"core-lib/TestSuite/TestRunner.som",
                                         "core-lib/TestSuite/" + testName + ".som"});
     Bootstrap.loadPlatformAndKernelModule(VM.standardPlatformFile,
         VM.standardKernelFile);
     SObjectWithoutFields vmMirror = Bootstrap.initializeObjectSystem();
 
-    Bootstrap.executeApplication(vmMirror);
+    Bootstrap.executeApplication(vmMirror, mainActor);
 
     VM.resetClassReferences(true);
 

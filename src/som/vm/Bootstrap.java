@@ -21,7 +21,6 @@ import som.compiler.SourcecodeCompiler;
 import som.interpreter.LexicalScope.ClassScope;
 import som.interpreter.Primitive;
 import som.interpreter.actors.Actor;
-import som.interpreter.actors.EventualMessage;
 import som.interpreter.nodes.ArgumentReadNode.LocalArgumentReadNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
@@ -435,15 +434,11 @@ public final class Bootstrap {
     slot.setValueDuringBootstrap(obj, value);
   }
 
-  public static void executeApplication(final SObjectWithoutFields vmMirror) {
-    Actor mainActor = Actor.createActor(true);
-    EventualMessage.setMainActor(mainActor);
-
+  public static void executeApplication(final SObjectWithoutFields vmMirror, final Actor mainActor) {
     Object platform = platformModule.instantiateObject(platformClass, vmMirror);
     Dispatchable disp = platformClass.lookupMessage(
         Symbols.symbolFor("start"), AccessModifier.PUBLIC);
     Object returnCode = disp.invoke(platform);
-
 
     if (VM.isUsingActors()) {
       mainActor.enqueueNextMessageForProcessing();

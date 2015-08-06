@@ -30,7 +30,16 @@ import com.oracle.truffle.api.CompilerAsserts;
 // TODO: figure out whether there is a simple look free design commonly used
 public class Actor {
 
-  public static Actor createActor(final boolean isMainActor) {
+  /**
+   * @return main actor
+   */
+  public static Actor initializeActorSystem() {
+    Actor mainActor = createActor(true);
+    EventualMessage.setMainActor(mainActor);
+    return mainActor;
+  }
+
+  private static Actor createActor(final boolean isMainActor) {
     if (VM.DebugMode) {
       return new DebugActor(isMainActor);
     } else {

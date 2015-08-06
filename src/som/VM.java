@@ -3,6 +3,7 @@ package som;
 import java.util.Arrays;
 
 import som.interpreter.TruffleCompiler;
+import som.interpreter.actors.Actor;
 import som.interpreter.actors.SFarReference;
 import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.SResolver;
@@ -180,8 +181,10 @@ public final class VM {
   public long execute() {
     Bootstrap.loadPlatformAndKernelModule(vm.options.platformFile,
         vm.options.kernelFile);
+
+    Actor mainActor = Actor.initializeActorSystem();
     SObjectWithoutFields vmMirror = Bootstrap.initializeObjectSystem();
-    Bootstrap.executeApplication(vmMirror);
+    Bootstrap.executeApplication(vmMirror, mainActor);
     return 0;
   }
 
