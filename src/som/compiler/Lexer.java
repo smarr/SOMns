@@ -198,7 +198,10 @@ public final class Lexer {
       match(Symbol.Minus);
     } else if (currentChar() == '<') {
       state.bufp++;
-      if (currentChar() == '-' && nextChar() == ':') {
+      if (currentChar() == ':') {
+        state.bufp++;
+        state.set(Symbol.MixinOperator, '\0', "<:");
+      } else if (currentChar() == '-' && nextChar() == ':') {
         state.bufp += 2;
         state.set(Symbol.EventualSend, '\0', "<-:");
       } else {
