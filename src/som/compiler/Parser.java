@@ -115,27 +115,26 @@ public final class Parser {
 
   private SourceSection             lastMethodsSourceSection;
 
-  // TODO: convert to array
-  private static final List<Symbol> singleOpSyms        = new ArrayList<Symbol>();
-  private static final List<Symbol> binaryOpSyms        = new ArrayList<Symbol>();
-  private static final List<Symbol> keywordSelectorSyms = new ArrayList<Symbol>();
-  private static final List<Symbol> literalSyms         = new ArrayList<Symbol>();
+  private static final Symbol[] singleOpSyms = new Symbol[] {Not, And, Or, Star,
+    Div, Mod, Plus, Equal, More, Less, Comma, At, Per, NONE};
 
-  static {
-    for (Symbol s : new Symbol[] {Not, And, Or, Star, Div, Mod, Plus, Equal,
-        More, Less, Comma, At, Per, NONE}) {
-      singleOpSyms.add(s);
+  private static final Symbol[] binaryOpSyms = new Symbol[] {Or, Comma, Minus,
+    Equal, Not, And, Or, Star, Div, Mod, Plus, Equal, More, Less, Comma, At,
+    Per, NONE};
+
+  private static final Symbol[] keywordSelectorSyms = new Symbol[] {Keyword,
+    KeywordSequence};
+
+  private static final Symbol[] literalSyms = new Symbol[] {Pound, STString,
+    Integer, Double, Minus};
+
+  private static boolean arrayContains(final Symbol[] arr, final Symbol sym) {
+    for (Symbol s : arr) {
+      if (s == sym) {
+        return true;
+      }
     }
-    for (Symbol s : new Symbol[] {Or, Comma, Minus, Equal, Not, And, Or, Star,
-        Div, Mod, Plus, Equal, More, Less, Comma, At, Per, NONE}) {
-      binaryOpSyms.add(s);
-    }
-    for (Symbol s : new Symbol[] {Keyword, KeywordSequence}) {
-      keywordSelectorSyms.add(s);
-    }
-    for (Symbol s : new Symbol[] {Pound, STString, Integer, Double}) {
-      literalSyms.add(s);
-    }
+    return false;
   }
 
   @Override
@@ -188,11 +187,11 @@ public final class Parser {
     }
   }
 
-  public static class ParseErrorWithSymbolList extends ParseError {
+  public static class ParseErrorWithSymbols extends ParseError {
     private static final long serialVersionUID = 561313162441723955L;
-    private final List<Symbol> expectedSymbols;
+    private final Symbol[] expectedSymbols;
 
-    ParseErrorWithSymbolList(final String message, final List<Symbol> expected,
+    ParseErrorWithSymbols(final String message, final Symbol[] expected,
         final Parser parser) {
       super(message, null, parser);
       this.expectedSymbols = expected;
@@ -523,8 +522,8 @@ public final class Parser {
     }
   }
 
-  private boolean symIn(final List<Symbol> ss) {
-    return ss.contains(sym);
+  private boolean symIn(final Symbol[] ss) {
+    return arrayContains(ss, sym);
   }
 
   private boolean canAcceptIdentifierWithOptionalEarlierIdentifier(
@@ -563,7 +562,7 @@ public final class Parser {
     return false;
   }
 
-  private boolean acceptOneOf(final List<Symbol> ss) {
+  private boolean acceptOneOf(final Symbol[] ss) {
     if (symIn(ss)) {
       getSymbolFromLexer();
       return true;
@@ -593,10 +592,10 @@ public final class Parser {
     expect(s, "Unexpected symbol. Expected %(expected)s, but found %(found)s");
   }
 
-  private boolean expectOneOf(final List<Symbol> ss) throws ParseError {
+  private boolean expectOneOf(final Symbol[] ss) throws ParseError {
     if (acceptOneOf(ss)) { return true; }
 
-    throw new ParseErrorWithSymbolList("Unexpected symbol. Expected one of " +
+    throw new ParseErrorWithSymbols("Unexpected symbol. Expected one of " +
         "%(expected)s, but found %(found)s", ss, this);
   }
 
