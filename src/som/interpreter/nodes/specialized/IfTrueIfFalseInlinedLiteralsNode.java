@@ -16,8 +16,6 @@ import com.oracle.truffle.api.utilities.ConditionProfile;
  *
  * Note, it is also applicable if one of the argument expressions is a proper
  * literal of some sort.
- *
- * @author Stefan Marr
  */
 public final class IfTrueIfFalseInlinedLiteralsNode extends ExpressionNode {
   private final ConditionProfile condProf = ConditionProfile.createCountingProfile();

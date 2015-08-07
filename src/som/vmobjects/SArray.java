@@ -11,8 +11,6 @@ import com.oracle.truffle.api.utilities.ValueProfile;
  * SArrays are implemented using a Strategy-like approach.
  * The SArray objects are 'tagged' with a type, and the strategy behavior
  * is implemented directly in the AST nodes.
- *
- * @author smarr
  */
 public final class SArray extends SAbstractObject {
   public static final int FIRST_IDX = 0;

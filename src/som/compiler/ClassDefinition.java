@@ -44,7 +44,6 @@ import com.sun.istack.internal.Nullable;
  * Produced by the Parser, contains all static information on a class that is
  * in the source. Is used to instantiate complete class objects at runtime,
  * which then also have the super class resolved.
- * @author Stefan Marr
  */
 public final class ClassDefinition {
   private final SSymbol       name;

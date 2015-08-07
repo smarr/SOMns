@@ -124,7 +124,6 @@ public final class ReturnNonLocalNode extends ContextualNode {
    * Normally, there are no local returns in SOM. However, after
    * inlining/embedding of blocks, we need this ReturnLocalNode to replace
    * previous non-local returns.
-   * @author Stefan Marr
    */
   private static final class ReturnLocalNode extends ExpressionNode {
     @Child private ExpressionNode expression;

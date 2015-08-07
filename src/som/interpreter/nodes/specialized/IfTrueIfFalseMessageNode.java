@@ -15,7 +15,6 @@ import com.oracle.truffle.api.utilities.ConditionProfile;
 /**
  * This node implements the correct message semantics and uses sends to the
  * blocks' methods instead of inlining the code directly.
- * @author smarr
  */
 public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode {
   private final ConditionProfile condProf = ConditionProfile.createCountingProfile();
