@@ -1141,11 +1141,12 @@ public final class Parser {
 
   private LiteralNode literalDouble(final boolean isNegative, final SourceCoordinate coord) throws ParseError {
     try {
-      double d = java.lang.Double.parseDouble(text);
+      String doubleText = text;
+      expect(Double);
+      double d = java.lang.Double.parseDouble(doubleText);
       if (isNegative) {
         d = 0.0 - d;
       }
-      expect(Double);
       SourceSection source = getSource(coord);
       return new DoubleLiteralNode(d, source);
     } catch (NumberFormatException e) {
