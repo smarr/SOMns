@@ -376,6 +376,18 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
         | public imm = obj. |
       )() : ( public new = ( ^ self new: 0 ) )
     ) : ( public new = ( ^ self new: 0 ) )
+    
+    class Mutable2 new: obj = (
+      | public mut ::= obj. |
+    )(
+      public class NoField = ()()
+    )
+    
+    class Immutable2 new: obj = (
+      | public imm = obj. |
+    )(
+      public class NoField = ()()
+    )
   
     public testIntegersAreValues = (
       assert: (ObjectMirror reflecting:        0) isValue.
@@ -488,6 +500,29 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
       
       imi := im Immutable new: 0.
       deny: (ObjectMirror reflecting: imi) isValue.
+    )
+    
+    public testInnerNoFieldHandling = (
+      | mm mmn  mi min  im imn  ii iin |
+      mm  := Mutable2 new: (Mutable new: 0).
+      mmn := mm NoField new.
+      deny: (ObjectMirror reflecting: mm)  isValue description: 'case mm'.
+      deny: (ObjectMirror reflecting: mmn) isValue description: 'case mm'.
+      
+      mi  := Mutable2 new: 0.
+      min := mi NoField new.
+      deny: (ObjectMirror reflecting: mi)  isValue description: 'case mi'.
+      deny: (ObjectMirror reflecting: min) isValue description: 'case min'.
+      
+      im  := Immutable2 new: (Mutable new: 0).
+      imn := im NoField new.
+      deny: (ObjectMirror reflecting: im)  isValue description: 'case im'.
+      deny: (ObjectMirror reflecting: imn) isValue description: 'case imn'.
+      
+      ii  := Immutable2 new: 0.
+      iin := ii NoField new.
+      assert: (ObjectMirror reflecting: ii)  isValue description: 'case ii'.
+      assert: (ObjectMirror reflecting: iin) isValue description: 'case iin'.
     )
   ) : ( TEST_CONTEXT = () )
   
