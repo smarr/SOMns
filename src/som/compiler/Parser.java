@@ -115,9 +115,11 @@ public final class Parser {
 
   private SourceSection             lastMethodsSourceSection;
 
+  // TODO: convert to array
   private static final List<Symbol> singleOpSyms        = new ArrayList<Symbol>();
   private static final List<Symbol> binaryOpSyms        = new ArrayList<Symbol>();
   private static final List<Symbol> keywordSelectorSyms = new ArrayList<Symbol>();
+  private static final List<Symbol> literalSyms         = new ArrayList<Symbol>();
 
   static {
     for (Symbol s : new Symbol[] {Not, And, Or, Star, Div, Mod, Plus, Equal,
@@ -130,6 +132,9 @@ public final class Parser {
     }
     for (Symbol s : new Symbol[] {Keyword, KeywordSequence}) {
       keywordSelectorSyms.add(s);
+    }
+    for (Symbol s : new Symbol[] {Pound, STString, Integer, Double}) {
+      literalSyms.add(s);
     }
   }
 
@@ -867,9 +872,13 @@ public final class Parser {
         }
       }
       default: {
-        return literal();
+        if (symIn(literalSyms)) {
+          return literal();
+        }
       }
     }
+    throw new ParseError("Unexpected symbol. Tried to parse a primary "
+        + "expression but found %(found)s", sym, this);
   }
 
   private ExpressionNode outerSend(final MethodBuilder builder)
@@ -1102,7 +1111,6 @@ public final class Parser {
     if (sym == Integer) {
       return literalInteger(isNegative, coord);
     } else {
-      assert sym == Double;
       return literalDouble(isNegative, coord);
     }
   }
