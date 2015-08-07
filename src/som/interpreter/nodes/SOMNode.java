@@ -32,7 +32,6 @@ import com.oracle.truffle.api.dsl.TypeSystemReference;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.NodeUtil;
-import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
 
 @TypeSystemReference(Types.class)
@@ -108,20 +107,4 @@ public abstract class SOMNode extends Node {
    * @return body of a node that just wraps the actual method body.
    */
   public abstract ExpressionNode getFirstMethodBodyNode();
-
-  public static final RootNode getRootNodeAndTryReallyHard(final Node node) {
-    int numAttempts = 0;
-
-    RootNode root = null;
-    while (root == null) {
-      root = node.getRootNode();
-      if (root == null && numAttempts > 3) {
-        try { Thread.sleep(10 * numAttempts * numAttempts); } catch (InterruptedException e) { }
-      }
-      numAttempts++;
-
-      assert numAttempts < 10 : "this should be plenty, now we give up";
-    }
-    return root;
-  }
 }

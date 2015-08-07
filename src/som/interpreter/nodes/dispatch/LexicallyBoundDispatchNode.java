@@ -5,7 +5,6 @@ import som.compiler.AccessModifier;
 import som.compiler.ClassBuilder.ClassDefinitionId;
 import som.interpreter.Types;
 import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
-import som.interpreter.nodes.SOMNode;
 import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithoutFields;
 import som.vmobjects.SSymbol;
@@ -99,7 +98,7 @@ public final class LexicallyBoundDispatchNode extends AbstractDispatchWithLookup
 
   @Override
   public Object executeDispatch(final VirtualFrame frame, final Object[] arguments) {
-    RootNode root = SOMNode.getRootNodeAndTryReallyHard(this);
+    RootNode root = getRootNode();
     assert root != null;
 
     AbstractDispatchNode newNode;
