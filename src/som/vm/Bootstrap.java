@@ -453,10 +453,8 @@ public final class Bootstrap {
       }
 
       if (!VM.isAvoidingExit() || !VM.shouldExit()) {
-        // Checkstyle: stop
-        System.err.println("This should never happen. The VM should not return under those conditions.");
-        // Checkstyle: resume
-        System.exit(1);
+        VM.errorExit("This should never happen. The VM should not return under those conditions.");
+        System.exit(1); // just in case it was disable for VM.errorExit
       }
     } else {
       System.exit((int) (long) returnCode);
