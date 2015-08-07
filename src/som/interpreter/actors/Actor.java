@@ -72,7 +72,7 @@ public class Actor {
 
   public final SPromise eventualSend(final Actor currentActor, final SSymbol selector,
       final Object[] args) {
-    SPromise result   = new SPromise(currentActor);
+    SPromise  result   = SPromise.createPromise(currentActor);
     SResolver resolver = SPromise.createResolver(result, "eventualSend:", selector);
 
     CompilerAsserts.neverPartOfCompilation("This needs to be optimized");
@@ -109,7 +109,7 @@ public class Actor {
         return orgProm;
       }
 
-      SPromise remote = new SPromise(this);
+      SPromise remote = SPromise.createPromise(this);
       synchronized (orgProm) {
         if (orgProm.isSomehowResolved()) {
           orgProm.copyValueToRemotePromise(remote);

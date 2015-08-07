@@ -39,7 +39,7 @@ public class PromisePrims {
     @Specialization
     public final SImmutableObject createPromisePair(final VirtualFrame frame,
         final Object nil, @Cached("create()") final DirectCallNode factory) {
-      SPromise promise = new SPromise(EventualMessage.getActorCurrentMessageIsExecutionOn());
+      SPromise promise   = SPromise.createPromise(EventualMessage.getActorCurrentMessageIsExecutionOn());
       SResolver resolver = SPromise.createResolver(promise, "ctorPPair");
       return (SImmutableObject) factory.call(frame, new Object[] {SPromise.pairClass, promise, resolver});
     }

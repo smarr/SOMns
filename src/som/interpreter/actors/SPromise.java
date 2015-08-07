@@ -20,6 +20,15 @@ import com.sun.istack.internal.NotNull;
 public class SPromise extends SObjectWithoutFields {
   @CompilationFinal private static SClass promiseClass;
 
+  public static SPromise createPromise(final Actor owner) {
+    if (VM.DebugMode) {
+      return new SDebugPromise(owner);
+    } else {
+      return new SPromise(owner);
+    }
+  }
+
+
   // THREAD-SAFETY: these fields are subject to race conditions and should only
   //                be accessed when under the SPromise(this) lock
   //                currently, we minimize locking by first setting the result
@@ -90,7 +99,7 @@ public class SPromise extends SObjectWithoutFields {
 
   public final SPromise whenResolved(final SBlock block) {
     assert block.getMethod().getNumberOfArguments() == 2;
-    SPromise  promise  = new SPromise(EventualMessage.getActorCurrentMessageIsExecutionOn());
+    SPromise  promise  = createPromise(EventualMessage.getActorCurrentMessageIsExecutionOn());
     SResolver resolver = createResolver(promise, "wR:block");
 
     registerWhenResolved(block, resolver);
@@ -99,7 +108,7 @@ public class SPromise extends SObjectWithoutFields {
   }
 
   public final SPromise whenResolved(final SSymbol selector, final Object[] args) {
-    SPromise  promise  = new SPromise(EventualMessage.getActorCurrentMessageIsExecutionOn());
+    SPromise  promise  = createPromise(EventualMessage.getActorCurrentMessageIsExecutionOn());
     SResolver resolver = createResolver(promise, "eventualSendToPromise:", selector);
 
     assert owner == EventualMessage.getActorCurrentMessageIsExecutionOn() : "think this should be true because the promise is an Object and owned by this specific actor";
@@ -111,7 +120,7 @@ public class SPromise extends SObjectWithoutFields {
   public final SPromise onError(final SBlock block) {
     assert block.getMethod().getNumberOfArguments() == 2;
 
-    SPromise  promise  = new SPromise(EventualMessage.getActorCurrentMessageIsExecutionOn());
+    SPromise  promise  = createPromise(EventualMessage.getActorCurrentMessageIsExecutionOn());
     SResolver resolver = createResolver(promise, "oE:block");
 
     registerOnError(block, resolver);
@@ -122,7 +131,7 @@ public class SPromise extends SObjectWithoutFields {
     assert resolved.getMethod().getNumberOfArguments() == 2;
     assert error.getMethod().getNumberOfArguments() == 2;
 
-    SPromise  promise  = new SPromise(EventualMessage.getActorCurrentMessageIsExecutionOn());
+    SPromise  promise  = createPromise(EventualMessage.getActorCurrentMessageIsExecutionOn());
     SResolver resolver = createResolver(promise, "wROE:block:block");
 
     synchronized (this) {
@@ -171,7 +180,7 @@ public class SPromise extends SObjectWithoutFields {
   public final SPromise onException(final SClass exceptionClass, final SBlock block) {
     assert block.getMethod().getNumberOfArguments() == 2;
 
-    SPromise  promise  = new SPromise(EventualMessage.getActorCurrentMessageIsExecutionOn());
+    SPromise  promise  = createPromise(EventualMessage.getActorCurrentMessageIsExecutionOn());
     SResolver resolver = createResolver(promise, "oEx:class:block");
 
     synchronized (this) {
@@ -254,12 +263,12 @@ public class SPromise extends SObjectWithoutFields {
     remote.chained  = chained;
   }
 
-  public static final class SDebugPromise extends SPromise {
+  protected static final class SDebugPromise extends SPromise {
     private static final AtomicInteger idGenerator = new AtomicInteger(0);
 
     private final int id;
 
-    public SDebugPromise(final Actor owner) {
+    protected SDebugPromise(final Actor owner) {
       super(owner);
       id = idGenerator.getAndIncrement();
     }
