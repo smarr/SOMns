@@ -84,15 +84,17 @@
     </target>
 
     <target name="test" depends="compile" description="Execute tests">
-        <junit haltonerror="false" haltonfailure="false" failureproperty="test.failed">
+        <junit haltonerror="false" haltonfailure="false" failureproperty="test.failed"
+            outputtoformatters="true">
             <jvmarg value="-ea" />
             <jvmarg value="-esa" />
             <classpath refid="project.classpath" />
-            <batchtest fork="yes"><!--  todir="${reports.tests}" -->
+            <batchtest fork="yes" filtertrace="false">
               <fileset dir="tests">
                   <include name="**/*Test*.java"/>
               </fileset>
             </batchtest>
+            <formatter type="brief" usefile="false"/>
         </junit>
 
         <java classname="som.VM" fork="true" failonerror="true">
