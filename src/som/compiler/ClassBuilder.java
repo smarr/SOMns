@@ -28,7 +28,6 @@ import static som.vm.Symbols.symbolFor;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -50,8 +49,10 @@ import com.oracle.truffle.api.source.SourceSection;
 public final class ClassBuilder {
 
   /** The method that is used to resolve the superclass at runtime. */
-  private final MethodBuilder superclassResolutionBuilder;
+  private final MethodBuilder superclassAndMixinResolutionBuilder;
   private ExpressionNode superclassResolution;
+  private final ArrayList<ExpressionNode> mixinResolvers = new ArrayList<>();
+  private SourceSection mixinResolversSource;
 
   /** The method that is used to initialize an instance. */
   private final MethodBuilder initializer;
@@ -67,7 +68,7 @@ public final class ClassBuilder {
   private SSymbol name;
   private String  classComment;
 
-  private final HashSet<SlotDefinition> slots = new HashSet<>();
+  private final HashMap<SSymbol, SlotDefinition> slots = new HashMap<>();
   private final LinkedHashMap<SSymbol, Dispatchable> dispatchables = new LinkedHashMap<>();
   private final HashMap<SSymbol, SInvokable> factoryMethods = new HashMap<SSymbol, SInvokable>();
   private boolean allSlotsAreImmutable = true;
@@ -78,6 +79,7 @@ public final class ClassBuilder {
 
   private ExpressionNode superclassFactorySend;
   private boolean   isSimpleNewSuperFactoySend;
+  private final ArrayList<ExpressionNode> mixinFactorySends = new ArrayList<>();
 
   private final AccessModifier accessModifier;
 
@@ -122,7 +124,7 @@ public final class ClassBuilder {
 
     this.initializer          = new MethodBuilder(this, this.instanceScope);
     this.primaryFactoryMethod = new MethodBuilder(this, this.classScope);
-    this.superclassResolutionBuilder = createSuperclassResolutionBuilder();
+    this.superclassAndMixinResolutionBuilder = createSuperclassResolutionBuilder();
 
     this.accessModifier = accessModifier;
   }
@@ -170,7 +172,15 @@ public final class ClassBuilder {
    * Expression to resolve the super class at runtime, used in the instantiation.
    */
   public void setSuperClassResolution(final ExpressionNode superClass) {
-    this.superclassResolution = superClass;
+    superclassResolution = superClass;
+  }
+
+  public void addMixinResolver(final ExpressionNode mixin) {
+    mixinResolvers.add(mixin);
+  }
+
+  public void setMixinResolverSource(final SourceSection mixin) {
+    mixinResolversSource = mixin;
   }
 
   /**
@@ -180,7 +190,7 @@ public final class ClassBuilder {
    * runtime class object.
    */
   public MethodBuilder getClassInstantiationMethodBuilder() {
-    return superclassResolutionBuilder;
+    return superclassAndMixinResolutionBuilder;
   }
 
   /**
@@ -246,7 +256,7 @@ public final class ClassBuilder {
 
     SlotDefinition slot = new SlotDefinition(name, acccessModifier, immutable,
         source);
-    slots.add(slot);
+    slots.put(name, slot);
 
     if (!immutable) {
       allSlotsAreImmutable = false;
@@ -292,7 +302,7 @@ public final class ClassBuilder {
     //     and then calls initiation
     //   - the initialization method, which class super, and then initializes the object
 
-    Method  superclassResolution = assembleSuperclassResoltionMethod();
+    Method superclassResolution = assembleSuperclassAndMixinResoltionMethod();
     SInvokable primaryFactory       = assemblePrimaryFactoryMethod();
     SInvokable initializationMethod = assembleInitializationMethod();
     factoryMethods.put(primaryFactory.getSignature(), primaryFactory);
@@ -348,10 +358,26 @@ public final class ClassBuilder {
     return definitionMethod;
   }
 
-  private Method assembleSuperclassResoltionMethod() {
+  private Method assembleSuperclassAndMixinResoltionMethod() {
+    ExpressionNode resolution;
+    SourceSection  source;
+    if (mixinResolvers.isEmpty()) {
+      resolution = superclassResolution;
+      source = superclassResolution.getSourceSection();
+    } else {
+      ExpressionNode[] exprs = new ExpressionNode[mixinResolvers.size() + 1];
+      exprs[0] = superclassResolution;
+      for (int i = 0; i < mixinResolvers.size(); i++) {
+        exprs[i + 1] = mixinResolvers.get(i);
+      }
+
+      resolution = SNodeFactory.createInternalObjectArray(exprs);
+      source = mixinResolversSource;
+    }
+
     assert superclassResolution != null;
-    return superclassResolutionBuilder.assembleInvokable(superclassResolution,
-        superclassResolution.getSourceSection());
+    return superclassAndMixinResolutionBuilder.assembleInvokable(resolution,
+        source);
   }
 
   private SInvokable assemblePrimaryFactoryMethod() {
@@ -434,6 +460,10 @@ public final class ClassBuilder {
     return "ClassBuilder(" + n + ")";
   }
 
+  public void addMixinFactorySend(final ExpressionNode mixinFactorySend) {
+    mixinFactorySends.add(mixinFactorySend);
+  }
+
   public void setSuperclassFactorySend(final ExpressionNode superFactorySend,
       final boolean isSimpleNewSuperFactoySend) {
     this.superclassFactorySend = superFactorySend;
@@ -455,7 +485,7 @@ public final class ClassBuilder {
     embeddedClasses.put(name, nestedClass);
     ClassSlotDefinition cacheSlot = new ClassSlotDefinition(name, nestedClass);
     dispatchables.put(name, cacheSlot);
-    slots.add(cacheSlot);
+    slots.put(name, cacheSlot);
   }
 
   public ClassDefinitionId getClassId() {

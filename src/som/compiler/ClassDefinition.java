@@ -1,7 +1,6 @@
 package som.compiler;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 
 import som.compiler.ClassBuilder.ClassDefinitionId;
@@ -48,9 +47,9 @@ import com.sun.istack.internal.Nullable;
 public final class ClassDefinition {
   private final SSymbol       name;
   private final SSymbol       primaryFactoryName;
-  private final Method        superclassResolution;
-  private final HashSet<SlotDefinition> slots;
-  private final HashMap<SSymbol, Dispatchable> instanceDispatchable;
+  private final Method        superclassMixinResolution;
+  private final HashMap<SSymbol, SlotDefinition> slots;
+  private final HashMap<SSymbol, Dispatchable> instanceDispatchables;
   private final HashMap<SSymbol, SInvokable> factoryMethods;
   private final SourceSection sourceSection;
   private final ClassDefinitionId classId;
@@ -65,8 +64,9 @@ public final class ClassDefinition {
   private final LinkedHashMap<SSymbol, ClassDefinition> nestedClassDefinitions;
 
   public ClassDefinition(final SSymbol name, final SSymbol primaryFactoryName,
-      final Method superclassResolution, final HashSet<SlotDefinition> slots,
-      final HashMap<SSymbol, Dispatchable> instanceDispatchable,
+      final Method superclassMixinResolution,
+      final HashMap<SSymbol, SlotDefinition> slots,
+      final HashMap<SSymbol, Dispatchable> instanceDispatchables,
       final HashMap<SSymbol, SInvokable>   factoryMethods,
       final LinkedHashMap<SSymbol, ClassDefinition> nestedClassDefinitions,
       final ClassDefinitionId classId, final AccessModifier accessModifier,
@@ -75,8 +75,8 @@ public final class ClassDefinition {
       final SourceSection sourceSection) {
     this.name = name;
     this.primaryFactoryName   = primaryFactoryName;
-    this.superclassResolution = superclassResolution;
-    this.instanceDispatchable = instanceDispatchable;
+    this.superclassMixinResolution = superclassMixinResolution;
+    this.instanceDispatchables = instanceDispatchables;
     this.factoryMethods  = factoryMethods;
     this.nestedClassDefinitions = nestedClassDefinitions;
     this.sourceSection   = sourceSection;
@@ -94,16 +94,71 @@ public final class ClassDefinition {
     return name;
   }
 
-  public Method getSuperclassResolutionInvokable() {
-    return superclassResolution;
+  public Method getSuperclassAndMixinResolutionInvokable() {
+    return superclassMixinResolution;
   }
 
   public ClassDefinitionId getClassId() { return classId; }
 
-  public void initializeClass(final SClass result, final SClass superClass) {
+  public void initializeClass(final SClass result, final Object superclassAndMixins) {
+    SClass superClass;
+    Object[] mixins;
+    if (superclassAndMixins == null || superclassAndMixins instanceof SClass) {
+      superClass = (SClass) superclassAndMixins;
+      mixins     = null;
+    } else {
+      mixins     = (Object[]) superclassAndMixins;
+      superClass = (SClass) mixins[0];
+      assert mixins.length > 1;
+    }
+
+    result.setName(name);
     result.setSuperClass(superClass);
     result.setClassDefinition(this);
+    initializeClassClass(result);
 
+    HashMap<SSymbol, SlotDefinition> instanceSlots = slots != null ? new HashMap<>(slots) : new HashMap<>();
+    addSlots(instanceSlots, superClass);
+
+    HashMap<SSymbol, Dispatchable> dispatchables;
+
+    if (mixins != null) {
+      dispatchables = new HashMap<>();
+      for (int i = 1; i < mixins.length; i++) {
+        SClass mixin = (SClass) mixins[i];
+        ClassDefinition cdef = mixin.getClassDefinition();
+        if (cdef.slots != null) {
+          instanceSlots.putAll(cdef.slots);
+        }
+        dispatchables.putAll(cdef.instanceDispatchables);
+      }
+      dispatchables.putAll(instanceScope.getDispatchables());
+    } else {
+      dispatchables = instanceScope.getDispatchables();
+    }
+
+    result.setSlots(instanceSlots);
+    result.setDispatchables(dispatchables);
+
+    // TODO: also need to add a check when kernel.Value is mixed in, that the resulting class is a value (structurally, and the dynamic enclosing scope)
+
+    // TODO: needs to be adapted for mixins!!!!
+    result.setInstancesAreValues(
+        (superClass != null ? superClass.instancesAreValues() : true) &&
+        allSlotsAreImmutable && outerScopeIsImmutable);
+  }
+
+  private void addSlots(final HashMap<SSymbol, SlotDefinition> instanceSlots,
+      final SClass clazz) {
+    if (clazz == null) { return; }
+
+    HashMap<SSymbol, SlotDefinition> slots = clazz.getInstanceSlots();
+    if (slots == null) { return; }
+
+    instanceSlots.putAll(slots);
+  }
+
+  private void initializeClassClass(final SClass result) {
     // build class class name
     String ccName = name.getString() + " class";
 
@@ -119,22 +174,6 @@ public final class ClassDefinition {
       assert Classes.classClass.instancesAreValues();
       classClass.setInstancesAreValues(outerScopeIsImmutable);
     }
-
-    // Initialize the resulting class
-    result.setName(name);
-
-    HashSet<SlotDefinition> instanceSlots = slots != null ? new HashSet<>(slots) : new HashSet<>();
-    if (superClass != null) {
-      HashSet<SlotDefinition> superSlots = superClass.getInstanceSlots();
-      if (superSlots != null) {
-        instanceSlots.addAll(superSlots);
-      }
-    }
-    result.setSlots(instanceSlots);
-    result.setDispatchables(instanceScope.getDispatchables());
-    result.setInstancesAreValues(
-        (superClass != null ? superClass.instancesAreValues() : true) &&
-        allSlotsAreImmutable && outerScopeIsImmutable);
   }
 
   public HashMap<SSymbol, SInvokable> getFactoryMethods() {
@@ -142,20 +181,21 @@ public final class ClassDefinition {
   }
 
   public HashMap<SSymbol, Dispatchable> getInstanceDispatchables() {
-    return instanceDispatchable;
+    return instanceDispatchables;
   }
 
-    CallTarget callTarget = superclassResolution.createCallTarget();
   public SClass instantiateModuleClass() {
+    CallTarget callTarget = superclassMixinResolution.createCallTarget();
     SClass superClass = (SClass) callTarget.call(Nil.nilObject);
     SClass classObject = instantiateClass(Nil.nilObject, superClass);
     return classObject;
   }
 
-  public SClass instantiateClass(final SObjectWithoutFields outer, final SClass superClass) {
+  public SClass instantiateClass(final SObjectWithoutFields outer,
+      final Object superclassAndMixins) {
     SClass resultClass = new SClass(outer, Classes.metaclassClass);
     SClass result = new SClass(outer, resultClass);
-    initializeClass(result, superClass);
+    initializeClass(result, superclassAndMixins);
     return result;
   }
 
@@ -366,7 +406,7 @@ public final class ClassDefinition {
     SourceSection ss = source.createSection(init.getString(), 0, 4);
     SInvokable thingInitNew = builder.assemble(builder.getSelfRead(ss),
         AccessModifier.PROTECTED, Symbols.symbolFor("initializer"), ss);
-    instanceDispatchable.put(init, thingInitNew);
+    instanceDispatchables.put(init, thingInitNew);
   }
 
   public Object instantiateObject(final Object... args) {

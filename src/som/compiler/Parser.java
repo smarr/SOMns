@@ -45,6 +45,7 @@ import static som.compiler.Symbol.Keyword;
 import static som.compiler.Symbol.KeywordSequence;
 import static som.compiler.Symbol.Less;
 import static som.compiler.Symbol.Minus;
+import static som.compiler.Symbol.MixinOperator;
 import static som.compiler.Symbol.Mod;
 import static som.compiler.Symbol.More;
 import static som.compiler.Symbol.NONE;
@@ -287,9 +288,42 @@ public final class Parser {
 
   private void explicitInheritanceListAndOrBody(final ClassBuilder clsBuilder)
       throws ParseError, ClassDefinitionError {
+    SourceCoordinate superAndMixinCoord = getCoordinate();
     inheritanceClause(clsBuilder);
-    // TODO: Newspeak-spec: mixinAppSuffix
+
+    final boolean hasMixins = sym == MixinOperator;
+
+    while (sym == MixinOperator) {
+      mixinApplication(clsBuilder);
+    }
+
+    if (hasMixins) {
+      clsBuilder.setMixinResolverSource(getSource(superAndMixinCoord));
+      SourceCoordinate initCoord = getCoordinate();
+      if (accept(Period)) {
+        // TODO: what else do we need to do here?
+        clsBuilder.setInitializerSource(getSource(initCoord));
+        return;
+      }
+    }
     classBody(clsBuilder);
+  }
+
+  private void mixinApplication(final ClassBuilder clsBuilder)
+      throws ParseError, ClassDefinitionError {
+    expect(MixinOperator);
+    ExpressionNode mixinResolution = inheritancePrefixAndSuperclass(clsBuilder);
+    clsBuilder.addMixinResolver(mixinResolution);
+
+    if (sym != NewTerm && sym != MixinOperator && sym != Period) {
+      // TODO: is this the correct builder/evaluation context? I think so.
+      ExpressionNode mixinFactorySend = messages(
+          clsBuilder.getInitializerMethodBuilder(),
+          clsBuilder.getInitializerMethodBuilder().getSuperReadNode(null));
+      clsBuilder.addMixinFactorySend(mixinFactorySend);
+    } else {
+      clsBuilder.addMixinFactorySend(null); // in the standard case we add null
+    }
   }
 
   private void inheritanceClause(final ClassBuilder clsBuilder)
@@ -297,7 +331,7 @@ public final class Parser {
     ExpressionNode superClassResolution = inheritancePrefixAndSuperclass(clsBuilder);
     clsBuilder.setSuperClassResolution(superClassResolution);
 
-    if (sym != NewTerm) {
+    if (sym != NewTerm && sym != MixinOperator) {
       // This factory method on the super class is actually called as
       // initializer of the super class after object creation.
       // The Newspeak spec isn't entirely straight forward on that, but it says

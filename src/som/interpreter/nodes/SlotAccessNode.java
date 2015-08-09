@@ -62,7 +62,7 @@ public abstract class SlotAccessNode extends ExpressionNode {
 
   public static final class ClassSlotAccessNode extends SlotAccessNode {
     private final ClassDefinition classDefinition;
-    @Child protected DirectCallNode classObjectInstantiation;
+    @Child protected DirectCallNode superclassAndMixinResolver;
 
     @Child protected AbstractReadFieldNode  read;
     @Child protected AbstractWriteFieldNode write;
@@ -99,23 +99,23 @@ public abstract class SlotAccessNode extends ExpressionNode {
       }
     }
 
-    private void createClassInstantiationCallTarget() {
+    private void createResolverCallTargets() {
       CompilerAsserts.neverPartOfCompilation();
-      Invokable invokable = classDefinition.getSuperclassResolutionInvokable();
-      classObjectInstantiation = insert(Truffle.getRuntime().createDirectCallNode(
+      Invokable invokable = classDefinition.getSuperclassAndMixinResolutionInvokable();
+      superclassAndMixinResolver = insert(Truffle.getRuntime().createDirectCallNode(
           invokable.createCallTarget()));
     }
 
     private SClass instantiateClassObject(final VirtualFrame frame,
         final SObject rcvr) {
-      if (classObjectInstantiation == null) {
+      if (superclassAndMixinResolver == null) {
         CompilerDirectives.transferToInterpreterAndInvalidate();
-        createClassInstantiationCallTarget();
+        createResolverCallTargets();
       }
 
-      SClass superClass = (SClass) classObjectInstantiation.call(frame,
+      Object superclassAndMixins = superclassAndMixinResolver.call(frame,
           new Object[] {rcvr});
-      SClass classObject = classDefinition.instantiateClass(rcvr, superClass);
+      SClass classObject = classDefinition.instantiateClass(rcvr, superclassAndMixins);
       return classObject;
     }
 

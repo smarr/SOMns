@@ -19,6 +19,7 @@ import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.FieldNode.FieldReadNode;
 import som.interpreter.nodes.FieldNode.FieldWriteNode;
 import som.interpreter.nodes.FieldNodeFactory.FieldWriteNodeGen;
+import som.interpreter.nodes.InternalObjectArrayNode;
 import som.interpreter.nodes.LocalVariableNode.LocalVariableWriteNode;
 import som.interpreter.nodes.LocalVariableNodeFactory.LocalVariableWriteNodeGen;
 import som.interpreter.nodes.MessageSendNode;
@@ -169,5 +170,10 @@ public final class SNodeFactory {
     assert classDefId != null;
     return new ResolvingImplicitReceiverSend(selector, arguments,
         currentScope, classDefId, source);
+  }
+
+  public static ExpressionNode createInternalObjectArray(
+      final ExpressionNode[] expressions) {
+    return new InternalObjectArrayNode(expressions);
   }
 }
