@@ -32,7 +32,7 @@ public final class SystemPrims {
       ClassDefinition module;
       try {
         module = Bootstrap.loadModule(moduleName);
-        return module.instantiateClass();
+        return module.instantiateModuleClass();
       } catch (IOException e) {
         // TODO convert to SOM exception when we support them
         e.printStackTrace();

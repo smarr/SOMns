@@ -423,7 +423,7 @@ public final class Bootstrap {
 
     objectSystemInitialized = true;
 
-    platformClass = platformModule.instantiateClass();
+    platformClass = platformModule.instantiateModuleClass();
     return vmMirror;
   }
 

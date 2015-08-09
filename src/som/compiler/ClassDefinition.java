@@ -145,8 +145,8 @@ public final class ClassDefinition {
     return instanceDispatchable;
   }
 
-  public SClass instantiateClass() {
     CallTarget callTarget = superclassResolution.createCallTarget();
+  public SClass instantiateModuleClass() {
     SClass superClass = (SClass) callTarget.call(Nil.nilObject);
     SClass classObject = instantiateClass(Nil.nilObject, superClass);
     return classObject;
