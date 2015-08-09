@@ -1,0 +1,114 @@
+class LanguageTests usingPlatform: platform testFramework: minitest = (
+| private TestContext  = minitest TestContext. |
+)(
+  public class BasicApplications = TestContext ()(
+
+    class MAWithoutAnInitSend = ()(
+      class Point            = (| public x public y |)()
+      class Colored color: c = (| public color = c. |)()
+      public class ColoredPoint x: x y: y color: c = Point <: Colored color: c.
+    )
+
+    class MAWithUnaryInitSend = ()(
+      class Point = (| public x public y |)()
+      class Colored color: c = (| public color = c. |)()
+      public class ColoredPoint x: x y: y color: c = Point new <: Colored color: c.
+    )
+
+    class MAWithKeywordInitSend = ()(
+      class Point x: x y: y  = (| public x = x. public y = y. |)()
+      class Colored color: c = (| public color = c. |)()
+      public class ColoredPoint x: x y: y color: c = Point x: x y: y <: Colored color: c.
+    )
+    
+    class MAWithoutInitSendAtSecondApplication = ()(
+      class Point x: x y: y = (| public x = x. public y = y. |)()
+      class Colored = (| public color |)()
+      public class ColoredPoint x: x y: y color: c = Point x: x y: y <: Colored.
+    )
+    
+    class MAUnarySendAtSecondApplication = ()(
+      class Point x: x y: y = (| public x = x. public y = y. |)()
+      class Colored = (| public color |)()
+      public class ColoredPoint x: x y: y color: c = Point x: x y: y <: Colored new.
+    )
+    
+    class MAWithClassBody = ()(
+      class X = (| public x |)()
+      class Y = (| public y |)()
+      public class M = X <: Y (| public z |)()
+    )
+    
+    public testWithoutInitSend = (
+      | sample p |
+      sample := MAWithoutAnInitSend new.
+      p := sample ColoredPoint x: 3 y: 4 color: 'red'.
+      assert: p x is: nil.
+      assert: p y is: nil.
+      assert: p color equals: 'red'.
+      p x: 3.
+      assert: p x equals: 3.
+      p y: 4.
+      assert: p y equals: 4.
+    )
+    
+    public testWithUnaryInitSend = (
+      | sample p |
+      sample := MAWithUnaryInitSend new.
+      p := sample ColoredPoint x: 3 y: 4 color: 'red'.
+      assert: p x is: nil.
+      assert: p y is: nil.
+      assert: p color equals: 'red'.
+      p x: 3.
+      assert: p x equals: 3.
+      p y: 4.
+      assert: p y equals: 4.
+    )
+    
+    public testWithKeywordInitSend = (
+      | sample p |
+      sample := MAWithKeywordInitSend new.
+      p := sample ColoredPoint x: 3 y: 4 color: 'red'.
+      assert: p x      equals: 3.
+      assert: p y      equals: 4.
+      assert: p color  equals: 'red'.
+    )
+
+    public testWithoutSendAtSecondApplication = (
+      | sample p |
+      sample := MAWithoutInitSendAtSecondApplication new.
+      p := sample ColoredPoint x: 3 y: 4 color: 'red'.
+      assert: p x equals: 3.
+      assert: p y equals: 4.
+      assert: p color is: nil.
+      p color: 'red'.
+      assert: p color equals: 'red'.
+    )
+    
+    public testUnarySendAtSecondApplication = (
+      | sample p |
+      sample := MAUnarySendAtSecondApplication new.
+      p := sample ColoredPoint x: 3 y: 4 color: 'red'.
+      assert: p x equals: 3.
+      assert: p y equals: 4.
+      assert: p color is: nil.
+      p color: 'red'.
+      assert: p color equals: 'red'.
+    )
+    
+    public testMixinWithBody = (
+      | sample m |
+      sample := MAWithClassBody new.
+      m := sample M new.
+      assert: m x is: nil.
+      assert: m y is: nil.
+      assert: m z is: nil.
+      
+      m x: 1. m y: 2. m z: 3.
+      assert: m x equals: 1.
+      assert: m y equals: 2.
+      assert: m z equals: 3.
+    )
+
+  ) : ( TEST_CONTEXT = () )
+)
