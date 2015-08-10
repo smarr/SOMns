@@ -68,23 +68,38 @@ public abstract class LocalVariableNode extends ExpressionNode {
       return Nil.nilObject;
     }
 
-    @Specialization(guards = "isInitialized()", rewriteOn = {FrameSlotTypeException.class})
+    protected boolean isBoolean(final VirtualFrame frame) {
+      return frame.isBoolean(slot);
+    }
+
+    protected boolean isLong(final VirtualFrame frame) {
+      return frame.isLong(slot);
+    }
+
+    protected boolean isDouble(final VirtualFrame frame) {
+      return frame.isDouble(slot);
+    }
+
+    protected boolean isObject(final VirtualFrame frame) {
+      return frame.isObject(slot);
+    }
+
+    @Specialization(guards = {"isInitialized()", "isBoolean(frame)"}, rewriteOn = {FrameSlotTypeException.class})
     public final boolean doBoolean(final VirtualFrame frame) throws FrameSlotTypeException {
       return frame.getBoolean(slot);
     }
 
-
-    @Specialization(guards = "isInitialized()", rewriteOn = {FrameSlotTypeException.class})
+    @Specialization(guards = {"isInitialized()", "isLong(frame)"}, rewriteOn = {FrameSlotTypeException.class})
     public final long doLong(final VirtualFrame frame) throws FrameSlotTypeException {
       return frame.getLong(slot);
     }
 
-    @Specialization(guards = "isInitialized()", rewriteOn = {FrameSlotTypeException.class})
+    @Specialization(guards = {"isInitialized()", "isDouble(frame)"}, rewriteOn = {FrameSlotTypeException.class})
     public final double doDouble(final VirtualFrame frame) throws FrameSlotTypeException {
       return frame.getDouble(slot);
     }
 
-    @Specialization(guards = "isInitialized()", rewriteOn = {FrameSlotTypeException.class})
+    @Specialization(guards = {"isInitialized()", "isObject(frame)"}, rewriteOn = {FrameSlotTypeException.class})
     public final Object doObject(final VirtualFrame frame) throws FrameSlotTypeException {
       return frame.getObject(slot);
     }
