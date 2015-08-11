@@ -93,6 +93,12 @@ public abstract class LexicalScope {
       this.outerClass      = outerClass;
     }
 
+    /** Create new and independent copy. */
+    public MethodScope split() {
+      FrameDescriptor splitDescriptor = frameDescriptor.copy();
+      return new MethodScope(splitDescriptor, outerMethod, outerClass);
+    }
+
     public FrameDescriptor getFrameDescriptor() {
       return frameDescriptor;
     }

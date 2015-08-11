@@ -2,6 +2,8 @@ package som.compiler;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map.Entry;
 
 import som.compiler.ClassBuilder.ClassDefinitionId;
 import som.interpreter.LexicalScope.ClassScope;
@@ -19,6 +21,7 @@ import som.interpreter.nodes.dispatch.CachedSlotAccessNode.CachedSlotWriteNode;
 import som.interpreter.nodes.dispatch.CachedSlotAccessNode.CheckedCachedSlotAccessNode;
 import som.interpreter.nodes.dispatch.CachedSlotAccessNode.CheckedCachedSlotWriteNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
+import som.interpreter.nodes.literals.NilLiteralNode;
 import som.interpreter.objectstorage.FieldAccessorNode.AbstractWriteFieldNode;
 import som.interpreter.objectstorage.FieldAccessorNode.UninitializedReadFieldNode;
 import som.interpreter.objectstorage.FieldAccessorNode.UninitializedWriteFieldNode;
@@ -27,6 +30,7 @@ import som.vm.constants.Classes;
 import som.vm.constants.Nil;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
+import som.vmobjects.SInvokable.SInitializer;
 import som.vmobjects.SObject;
 import som.vmobjects.SObjectWithoutFields;
 import som.vmobjects.SSymbol;
@@ -46,11 +50,18 @@ import com.sun.istack.internal.Nullable;
  */
 public final class ClassDefinition {
   private final SSymbol       name;
+
   private final SSymbol       primaryFactoryName;
+  private final List<ExpressionNode> initializerBody;
+  private final MethodBuilder initializerBuilder;
+  private final SourceSection initializerSource;
+
   private final Method        superclassMixinResolution;
+
   private final HashMap<SSymbol, SlotDefinition> slots;
   private final HashMap<SSymbol, Dispatchable> instanceDispatchables;
   private final HashMap<SSymbol, SInvokable> factoryMethods;
+
   private final SourceSection sourceSection;
   private final ClassDefinitionId classId;
   private final ClassScope     instanceScope;
@@ -64,6 +75,9 @@ public final class ClassDefinition {
   private final LinkedHashMap<SSymbol, ClassDefinition> nestedClassDefinitions;
 
   public ClassDefinition(final SSymbol name, final SSymbol primaryFactoryName,
+      final List<ExpressionNode> initializerBody,
+      final MethodBuilder initializerBuilder,
+      final SourceSection initializerSource,
       final Method superclassMixinResolution,
       final HashMap<SSymbol, SlotDefinition> slots,
       final HashMap<SSymbol, Dispatchable> instanceDispatchables,
@@ -74,11 +88,18 @@ public final class ClassDefinition {
       final boolean allSlotsAreImmutable, final boolean outerScopeIsImmutable,
       final SourceSection sourceSection) {
     this.name = name;
-    this.primaryFactoryName   = primaryFactoryName;
+
+    this.primaryFactoryName = primaryFactoryName;
+    this.initializerBody    = initializerBody;
+    this.initializerBuilder = initializerBuilder;
+    this.initializerSource  = initializerSource;
+
     this.superclassMixinResolution = superclassMixinResolution;
+
     this.instanceDispatchables = instanceDispatchables;
     this.factoryMethods  = factoryMethods;
     this.nestedClassDefinitions = nestedClassDefinitions;
+
     this.sourceSection   = sourceSection;
     this.classId         = classId;
     this.accessModifier  = accessModifier;
@@ -130,7 +151,15 @@ public final class ClassDefinition {
         if (cdef.slots != null) {
           instanceSlots.putAll(cdef.slots);
         }
-        dispatchables.putAll(cdef.instanceDispatchables);
+
+        for (Entry<SSymbol, Dispatchable> e : cdef.instanceDispatchables.entrySet()) {
+          if (!e.getValue().isInitializer()) {
+            dispatchables.put(e.getKey(), e.getValue());
+          }
+        }
+
+        SInitializer mixinInit = cdef.assembleMixinInitializer(i);
+        dispatchables.put(mixinInit.getSignature(), mixinInit);
       }
       dispatchables.putAll(instanceScope.getDispatchables());
     } else {
@@ -146,6 +175,20 @@ public final class ClassDefinition {
     result.setInstancesAreValues(
         (superClass != null ? superClass.instancesAreValues() : true) &&
         allSlotsAreImmutable && outerScopeIsImmutable);
+  }
+
+  private SInitializer assembleMixinInitializer(final int mixinId) {
+    ExpressionNode body;
+    if (initializerBody == null) {
+      body = new NilLiteralNode(null);
+    } else {
+      body = SNodeFactory.createSequence(initializerBody, null);
+    }
+
+    return initializerBuilder.splitBodyAndAssembleInitializerAs(
+        ClassBuilder.getInitializerName(primaryFactoryName, mixinId),
+        body, AccessModifier.PROTECTED, Symbols.INITIALIZER,
+        initializerSource);
   }
 
   private void addSlots(final HashMap<SSymbol, SlotDefinition> instanceSlots,
@@ -231,6 +274,11 @@ public final class ClassDefinition {
 
     public final boolean isImmutable() {
       return immutable;
+    }
+
+    @Override
+    public final boolean isInitializer() {
+      return false;
     }
 
     @Override
@@ -330,8 +378,7 @@ public final class ClassDefinition {
       builder.addArgumentIfAbsent("self");
       builder.addArgumentIfAbsent("value");
       SInvokable genericAccessMethod = builder.assemble(
-          new SlotWriteNode(createWriteNode()), modifier,
-          null, source);
+          new SlotWriteNode(createWriteNode()), modifier, null, source);
 
       genericAccessTarget = genericAccessMethod.getCallTarget();
       return genericAccessTarget;
@@ -404,7 +451,7 @@ public final class ClassDefinition {
 
     Source source = Source.fromNamedText("self", "Thing>>" + init.getString());
     SourceSection ss = source.createSection(init.getString(), 0, 4);
-    SInvokable thingInitNew = builder.assemble(builder.getSelfRead(ss),
+    SInvokable thingInitNew = builder.assembleInitializer(builder.getSelfRead(ss),
         AccessModifier.PROTECTED, Symbols.INITIALIZER, ss);
     instanceDispatchables.put(init, thingInitNew);
   }

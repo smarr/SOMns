@@ -74,6 +74,7 @@ import som.compiler.ClassBuilder.ClassDefinitionError;
 import som.compiler.Lexer.Peek;
 import som.compiler.Lexer.SourceCoordinate;
 import som.compiler.Variable.Local;
+import som.interpreter.SNodeFactory;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
@@ -294,8 +295,10 @@ public final class Parser {
 
     final boolean hasMixins = sym == MixinOperator;
 
+    int i = 0;
     while (sym == MixinOperator) {
-      mixinApplication(clsBuilder);
+      i++;
+      mixinApplication(clsBuilder, i);
     }
 
     if (hasMixins) {
@@ -310,21 +313,32 @@ public final class Parser {
     classBody(clsBuilder);
   }
 
-  private void mixinApplication(final ClassBuilder clsBuilder)
+  private void mixinApplication(final ClassBuilder clsBuilder, final int mixinId)
       throws ParseError, ClassDefinitionError {
     expect(MixinOperator);
     ExpressionNode mixinResolution = inheritancePrefixAndSuperclass(clsBuilder);
     clsBuilder.addMixinResolver(mixinResolution);
 
+    AbstractUninitializedMessageSendNode mixinFactorySend;
+    SSymbol uniqueInitName;
     if (sym != NewTerm && sym != MixinOperator && sym != Period) {
-      // TODO: is this the correct builder/evaluation context? I think so.
-      ExpressionNode mixinFactorySend = messages(
+      mixinFactorySend = (AbstractUninitializedMessageSendNode) messages(
           clsBuilder.getInitializerMethodBuilder(),
-          clsBuilder.getInitializerMethodBuilder().getSuperReadNode(null));
-      clsBuilder.addMixinFactorySend(mixinFactorySend);
+          clsBuilder.getInitializerMethodBuilder().getSelfRead(null));
+
+      uniqueInitName = ClassBuilder.getInitializerName(
+          mixinFactorySend.getSelector(), mixinId);
+      mixinFactorySend = (AbstractUninitializedMessageSendNode) MessageSendNode.adaptSymbol(
+          uniqueInitName, mixinFactorySend);
     } else {
-      clsBuilder.addMixinFactorySend(null); // in the standard case we add null
+      uniqueInitName = ClassBuilder.getInitializerName(Symbols.NEW, mixinId);
+      mixinFactorySend = (AbstractUninitializedMessageSendNode)
+          SNodeFactory.createMessageSend(uniqueInitName,
+              new ExpressionNode[] {clsBuilder.getInitializerMethodBuilder().getSelfRead(null)},
+              false, null);
     }
+
+    clsBuilder.addMixinFactorySend(mixinFactorySend);
   }
 
   private void inheritanceClause(final ClassBuilder clsBuilder)

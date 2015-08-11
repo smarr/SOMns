@@ -39,11 +39,13 @@ import som.interpreter.LexicalScope.ClassScope;
 import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.Method;
 import som.interpreter.SNodeFactory;
+import som.interpreter.SplitterForLexicallyEmbeddedCode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.OuterObjectRead;
 import som.interpreter.nodes.OuterObjectReadNodeGen;
 import som.interpreter.nodes.ReturnNonLocalNode;
 import som.vmobjects.SInvokable;
+import som.vmobjects.SInvokable.SInitializer;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.frame.FrameDescriptor;
@@ -158,27 +160,67 @@ public final class MethodBuilder {
     return needsToCatchNonLocalReturn && outerBuilder == null;
   }
 
+  public SInitializer assembleInitializer(final ExpressionNode body,
+      final AccessModifier accessModifier, final SSymbol category,
+      final SourceSection sourceSection) {
+    return assembleInitializerAs(signature, body, accessModifier, category, sourceSection);
+  }
+
+  public SInitializer splitBodyAndAssembleInitializerAs(final SSymbol signature,
+      final ExpressionNode body, final AccessModifier accessModifier,
+      final SSymbol category, final SourceSection sourceSection) {
+    MethodScope splitScope = currentScope.split();
+    ExpressionNode splitBody = SplitterForLexicallyEmbeddedCode.doInline(body, splitScope);
+    Method truffleMeth = assembleInvokable(splitBody, splitScope, sourceSection);
+
+    // TODO: not sure whether it is safe to use the embeddedBlockMethods here,
+    // because we just split the whole thing, those objects won't correspond to
+    // the concrete block methods anymore, but might not matter, because they
+    // are only used to do further splitting anyway
+    SInitializer meth = new SInitializer(signature, accessModifier, category,
+        truffleMeth, embeddedBlockMethods.toArray(new SInvokable[0]));
+
+    // the method's holder field is to be set later on!
+    return meth;
+  }
+
+
+  public SInitializer assembleInitializerAs(final SSymbol signature,
+      final ExpressionNode body, final AccessModifier accessModifier,
+      final SSymbol category, final SourceSection sourceSection) {
+    Method truffleMethod = assembleInvokable(body, sourceSection);
+    SInitializer meth = new SInitializer(signature, accessModifier, category,
+        truffleMethod, embeddedBlockMethods.toArray(new SInvokable[0]));
+
+    // the method's holder field is to be set later on!
+    return meth;
+  }
+
   public SInvokable assemble(final ExpressionNode body,
       final AccessModifier accessModifier, final SSymbol category,
       final SourceSection sourceSection) {
     Method truffleMethod = assembleInvokable(body, sourceSection);
-
     SInvokable meth = new SInvokable(signature, accessModifier, category,
         truffleMethod, embeddedBlockMethods.toArray(new SInvokable[0]));
 
-    // return the method - the holder field is to be set later on!
+    // the method's holder field is to be set later on!
     return meth;
   }
 
-  public Method assembleInvokable(ExpressionNode body,
+  public Method assembleInvokable(final ExpressionNode body,
+      final SourceSection sourceSection) {
+    return assembleInvokable(body, currentScope, sourceSection);
+  }
+
+  private Method assembleInvokable(ExpressionNode body, final MethodScope scope,
       final SourceSection sourceSection) {
     if (needsToCatchNonLocalReturn()) {
       body = createCatchNonLocalReturn(body, getFrameOnStackMarkerSlot());
     }
 
-    Method truffleMethod =
-        new Method(getSourceSectionForMethod(sourceSection),
-            body, currentScope, (ExpressionNode) body.deepCopy());
+    Method truffleMethod = new Method(getSourceSectionForMethod(sourceSection),
+        body, scope, (ExpressionNode) body.deepCopy());
+    scope.setMethod(truffleMethod);
     return truffleMethod;
   }
 

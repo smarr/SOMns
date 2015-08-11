@@ -313,7 +313,8 @@ public final class ClassBuilder {
     }
 
     ClassDefinition clsDef = new ClassDefinition(name,
-        primaryFactory.getSignature(), superclassResolution,
+        primaryFactory.getSignature(), slotAndInitExprs, initializer,
+        initializerSource, superclassResolution,
         slots, dispatchables, factoryMethods, embeddedClasses, classId,
         accessModifier, instanceScope, classScope, allSlotsAreImmutable,
         outerScopeIsImmutable(), source);
@@ -400,25 +401,29 @@ public final class ClassBuilder {
   private SInvokable assembleInitializationMethod() {
     if (isSimpleNewSuperFactoySend
         && slotAndInitExprs.size() == 0
-        && initializer.getSignature() == ClassBuilder.getInitializerName(symbolFor("new"))) {
+        && initializer.getSignature() == ClassBuilder.getInitializerName(Symbols.NEW)
+        && mixinFactorySends.size() == 0) {
       return null; // this is strictly an optimization, should work without it!
     }
 
     List<ExpressionNode> allExprs = new ArrayList<ExpressionNode>(1 + slotAndInitExprs.size());
-    // first do initializer send to super class
+    // first, do initializer send to super class
     allExprs.add(superclassFactorySend);
+
+    // second, do initializer sends for mixins
+    allExprs.addAll(mixinFactorySends);
 
     // then, evaluate the slot and init expressions
     allExprs.addAll(slotAndInitExprs);
 
-    if (slotAndInitExprs.size() > 0) {
+    if (mixinFactorySends.size() > 0 || slotAndInitExprs.size() > 0) {
       // we need to make sure that we return self, that's the SOM Newspeak
       // contract for initializers
       allExprs.add(initializer.getSelfRead(null));
     }
 
     ExpressionNode body = SNodeFactory.createSequence(allExprs, null);
-    return initializer.assemble(body, AccessModifier.PROTECTED,
+    return initializer.assembleInitializer(body, AccessModifier.PROTECTED,
         Symbols.INITIALIZATION, initializerSource);
   }
 
@@ -451,7 +456,12 @@ public final class ClassBuilder {
   }
 
   public static SSymbol getInitializerName(final SSymbol selector) {
-    return Symbols.symbolFor("initializer`" + selector.getString());
+    return symbolFor("initializer`" + selector.getString());
+  }
+
+  public static SSymbol getInitializerName(final SSymbol selector,
+      final int mixinId) {
+    return symbolFor("initializer`" + mixinId + "`" + selector.getString());
   }
 
   @Override

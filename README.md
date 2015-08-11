@@ -35,7 +35,7 @@ The overall goal is to be compliant with the specification, but include only
 absolutely necessary features. The current list of intended deviations from
 the specifications are as follows:
 
- - mixins are currently not yet supported
+ - the mixin support of slots is not yet complete, see deactivate tests in core-lib/TestSuite/MixinTests.som
 
  - simultaneous slots clauses are not supported (spec. 6.3.2)
 

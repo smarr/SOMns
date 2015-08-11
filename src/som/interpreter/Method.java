@@ -41,7 +41,6 @@ public final class Method extends Invokable {
     super(sourceSection, currentLexicalScope.getFrameDescriptor(),
         expressions, uninitialized);
     this.currentMethodScope = currentLexicalScope;
-    currentLexicalScope.setMethod(this);
   }
 
   @Override
@@ -61,6 +60,7 @@ public final class Method extends Invokable {
         uninitializedBody, inlinedCurrentScope);
     Method clone = new Method(getSourceSection(), inlinedBody,
         inlinedCurrentScope, uninitializedBody);
+    inlinedCurrentScope.setMethod(clone);
     return clone;
   }
 
@@ -75,6 +75,7 @@ public final class Method extends Invokable {
 
     Method clone = new Method(getSourceSection(), adaptedBody,
         currentAdaptedScope, uninitAdaptedBody);
+    currentAdaptedScope.setMethod(clone);
     return clone;
   }
 
@@ -89,6 +90,7 @@ public final class Method extends Invokable {
 
     Method clone = new Method(getSourceSection(),
         adaptedBody, currentAdaptedScope, uninitAdaptedBody);
+    currentAdaptedScope.setMethod(clone);
     return clone;
   }
 

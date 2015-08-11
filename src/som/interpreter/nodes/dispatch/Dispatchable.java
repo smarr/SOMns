@@ -21,4 +21,5 @@ public interface Dispatchable {
 
   String typeForErrors();
 
+  boolean isInitializer();
 }

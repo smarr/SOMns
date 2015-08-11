@@ -44,7 +44,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 
-public final class SInvokable extends SAbstractObject implements Dispatchable {
+public class SInvokable extends SAbstractObject implements Dispatchable {
 
   private final AccessModifier     accessModifier;
   private final SSymbol            category;
@@ -67,58 +67,77 @@ public final class SInvokable extends SAbstractObject implements Dispatchable {
     this.embeddedBlocks = embeddedBlocks;
   }
 
-  public SInvokable[] getEmbeddedBlocks() {
+  public static class SInitializer extends SInvokable {
+
+    public SInitializer(final SSymbol signature,
+        final AccessModifier accessModifier, final SSymbol category,
+        final Invokable invokable, final SInvokable[] embeddedBlocks) {
+      super(signature, accessModifier, category, invokable, embeddedBlocks);
+    }
+
+    @Override
+    public boolean isInitializer() {
+      return true;
+    }
+  }
+
+  public final SInvokable[] getEmbeddedBlocks() {
     return embeddedBlocks;
   }
 
   @Override
-  public SClass getSOMClass() {
+  public final SClass getSOMClass() {
     assert Classes.methodClass != null;
     return Classes.methodClass;
   }
 
   @Override
-  public boolean isValue() {
+  public final boolean isValue() {
     return true;
   }
 
   @Override
-  public RootCallTarget getCallTarget() {
+  public boolean isInitializer() {
+    return false;
+  }
+
+  @Override
+  public final RootCallTarget getCallTarget() {
     return callTarget;
   }
 
-  public Invokable getInvokable() {
+  public final Invokable getInvokable() {
     return invokable;
   }
 
-  public SSymbol getSignature() {
+  public final SSymbol getSignature() {
     return signature;
   }
 
-  public ClassDefinition getHolder() {
+  public final ClassDefinition getHolder() {
     return holder;
   }
 
-  public void setHolder(final ClassDefinition value) {
+  public final void setHolder(final ClassDefinition value) {
     transferToInterpreterAndInvalidate("SMethod.setHolder");
     holder = value;
   }
 
-  public int getNumberOfArguments() {
+  public final int getNumberOfArguments() {
     return getSignature().getNumberOfSignatureArguments();
   }
 
   @Override
-  public Object invoke(final Object... arguments) {
+  public final Object invoke(final Object... arguments) {
     return callTarget.call(arguments);
   }
 
-  public Object invoke(final VirtualFrame frame, final IndirectCallNode node, final Object... arguments) {
+  public final Object invoke(final VirtualFrame frame, final IndirectCallNode node, final Object... arguments) {
     return node.call(frame, callTarget, arguments);
   }
 
   @Override
-  public String toString() {
+  public final String toString() {
     if (holder == null) {
       return "Method(nil>>" + getSignature().toString() + ")";
     }
@@ -127,20 +146,20 @@ public final class SInvokable extends SAbstractObject implements Dispatchable {
   }
 
   @Override
-  public AccessModifier getAccessModifier() {
+  public final AccessModifier getAccessModifier() {
     return accessModifier;
   }
 
-  public SSymbol getCategory() {
+  public final SSymbol getCategory() {
     return category;
   }
 
-  public SourceSection getSourceSection() {
+  public final SourceSection getSourceSection() {
     return invokable.getSourceSection();
   }
 
   @Override
-  public AbstractDispatchNode getDispatchNode(final Object rcvr,
+  public final AbstractDispatchNode getDispatchNode(final Object rcvr,
       final Object rcvrClass, final AbstractDispatchNode next) {
     // In case it's a private method, it is directly linked and doesn't need guards
     if (accessModifier == AccessModifier.PRIVATE) {
@@ -161,7 +180,7 @@ public final class SInvokable extends SAbstractObject implements Dispatchable {
   }
 
   @Override
-  public String typeForErrors() {
+  public final String typeForErrors() {
     return "method";
   }
 }
