@@ -28,6 +28,7 @@ import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 import som.compiler.AccessModifier;
 import som.compiler.ClassBuilder.ClassDefinitionId;
@@ -49,7 +50,7 @@ public final class SClass extends SObjectWithoutFields {
   @CompilationFinal private SSymbol name;
 
   @CompilationFinal private HashMap<SSymbol, Dispatchable> dispatchables;
-  @CompilationFinal private HashMap<SSymbol, SlotDefinition> slots; // includes slots of superclasses
+  @CompilationFinal private HashSet<SlotDefinition> slots; // includes slots of super classes and mixins
 
   @CompilationFinal private ObjectLayout layoutForInstances;
 
@@ -77,7 +78,7 @@ public final class SClass extends SObjectWithoutFields {
     return superclass;
   }
 
-  public HashMap<SSymbol, SlotDefinition> getInstanceSlots() {
+  public HashSet<SlotDefinition> getInstanceSlots() {
     return slots;
   }
 
@@ -127,7 +128,7 @@ public final class SClass extends SObjectWithoutFields {
     name = value;
   }
 
-  public void setSlots(final HashMap<SSymbol, SlotDefinition> slots) {
+  public void setSlots(final HashSet<SlotDefinition> slots) {
     transferToInterpreterAndInvalidate("SClass.setInstanceFields");
     if (layoutForInstances == null) {
       layoutForInstances = new ObjectLayout(slots, this);

@@ -1,13 +1,13 @@
 package som.interpreter.objectstorage;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map.Entry;
 
 import som.compiler.ClassDefinition.SlotDefinition;
 import som.interpreter.objectstorage.StorageLocation.UnwrittenStorageLocation;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject;
-import som.vmobjects.SSymbol;
 
 
 public final class ObjectLayout {
@@ -21,14 +21,14 @@ public final class ObjectLayout {
   private final HashMap<SlotDefinition, StorageLocation> storageLocations;
   private final HashMap<SlotDefinition, Class<?>>        storageTypes;
 
-  public ObjectLayout(final HashMap<SSymbol, SlotDefinition> slots, final SClass forClass) {
+  public ObjectLayout(final HashSet<SlotDefinition> slots, final SClass forClass) {
     this(getInitialStorageTypes(slots), slots.size(), forClass);
   }
 
   private static HashMap<SlotDefinition, Class<?>> getInitialStorageTypes(
-      final HashMap<SSymbol, SlotDefinition> slots) {
+      final HashSet<SlotDefinition> slots) {
     HashMap<SlotDefinition, Class<?>> types = new HashMap<SlotDefinition, Class<?>>((int) (slots.size() / 0.75f));
-    for (SlotDefinition slot : slots.values()) {
+    for (SlotDefinition slot : slots) {
       types.put(slot, null);
     }
     return types;

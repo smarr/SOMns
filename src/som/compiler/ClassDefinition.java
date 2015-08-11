@@ -1,6 +1,7 @@
 package som.compiler;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map.Entry;
@@ -138,9 +139,10 @@ public final class ClassDefinition {
     result.setClassDefinition(this);
     initializeClassClass(result);
 
-    HashMap<SSymbol, SlotDefinition> instanceSlots = slots != null ? new HashMap<>(slots) : new HashMap<>();
+    HashSet<SlotDefinition> instanceSlots = new HashSet<>();
     addSlots(instanceSlots, superClass);
 
+    HashMap<SSymbol, SlotDefinition> mixinSlots = new HashMap<>();
     HashMap<SSymbol, Dispatchable> dispatchables;
 
     if (mixins != null) {
@@ -149,7 +151,7 @@ public final class ClassDefinition {
         SClass mixin = (SClass) mixins[i];
         ClassDefinition cdef = mixin.getClassDefinition();
         if (cdef.slots != null) {
-          instanceSlots.putAll(cdef.slots);
+          mixinSlots.putAll(cdef.slots);
         }
 
         for (Entry<SSymbol, Dispatchable> e : cdef.instanceDispatchables.entrySet()) {
@@ -161,9 +163,14 @@ public final class ClassDefinition {
         SInitializer mixinInit = cdef.assembleMixinInitializer(i);
         dispatchables.put(mixinInit.getSignature(), mixinInit);
       }
+      instanceSlots.addAll(mixinSlots.values());
       dispatchables.putAll(instanceScope.getDispatchables());
     } else {
       dispatchables = instanceScope.getDispatchables();
+    }
+
+    if (slots != null) {
+      instanceSlots.addAll(slots.values());
     }
 
     result.setSlots(instanceSlots);
@@ -191,14 +198,14 @@ public final class ClassDefinition {
         initializerSource);
   }
 
-  private void addSlots(final HashMap<SSymbol, SlotDefinition> instanceSlots,
+  private void addSlots(final HashSet<SlotDefinition> instanceSlots,
       final SClass clazz) {
     if (clazz == null) { return; }
 
-    HashMap<SSymbol, SlotDefinition> slots = clazz.getInstanceSlots();
+    HashSet<SlotDefinition> slots = clazz.getInstanceSlots();
     if (slots == null) { return; }
 
-    instanceSlots.putAll(slots);
+    instanceSlots.addAll(slots);
   }
 
   private void initializeClassClass(final SClass result) {
