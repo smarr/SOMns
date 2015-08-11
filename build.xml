@@ -80,9 +80,6 @@
         <jar destfile="${build.dir}/som.jar" basedir="${classes.dir}"></jar>
     </target>
     
-    <target name="develop" depends="libs" description="Load all dependencies for development">
-    </target>
-
     <target name="test" depends="compile" description="Execute tests">
         <junit haltonerror="false" haltonfailure="false" failureproperty="test.failed"
             outputtoformatters="true">
