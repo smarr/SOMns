@@ -300,8 +300,8 @@ public final class Bootstrap {
     SClass metaclassClassClass = new SClass(kernel); // class obj for "Metaclass class"
     metaclassClass.setClass(metaclassClassClass);
 
-    metaclassClass.setName(Symbols.symbolFor("Metaclass"));
-    metaclassClassClass.setName(Symbols.symbolFor("Metaclass class"));
+    metaclassClass.setName(Symbols.METACLASS);
+    metaclassClassClass.setName(Symbols.METACLASS_CLASS);
 
     // Connect the metaclass hierarchy
     metaclassClass.getSOMClass().setClass(metaclassClass);

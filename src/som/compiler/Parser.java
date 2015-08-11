@@ -97,6 +97,7 @@ import som.interpreter.nodes.specialized.IntDownToDoInlinedLiteralsNodeGen;
 import som.interpreter.nodes.specialized.IntTimesRepeatLiteralNodeGen;
 import som.interpreter.nodes.specialized.IntToDoInlinedLiteralsNodeGen;
 import som.interpreter.nodes.specialized.whileloops.WhileInlinedLiteralsNode;
+import som.vm.Symbols;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 
@@ -251,7 +252,7 @@ public final class Parser {
     } else {
       // in the standard case, the primary factory method is #new
       primaryFactory.addArgumentIfAbsent("self");
-      primaryFactory.setSignature(symbolFor("new"));
+      primaryFactory.setSignature(Symbols.NEW);
     }
     clsBuilder.setupInitializerBasedOnPrimaryFactory(getSource(coord));
 
@@ -276,7 +277,7 @@ public final class Parser {
     SourceCoordinate coord = getCoordinate();
     MethodBuilder def = clsBuilder.getClassInstantiationMethodBuilder();
     ExpressionNode selfRead = def.getSelfRead(null);
-    AbstractMessageSendNode superClass = createMessageSend(symbolFor("Object"),
+    AbstractMessageSendNode superClass = createMessageSend(Symbols.OBJECT,
         new ExpressionNode[] {selfRead}, false, getSource(coord));
     clsBuilder.setSuperClassResolution(superClass);
 

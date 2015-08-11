@@ -17,8 +17,7 @@ public abstract class AbstractCachedDnuNode extends AbstractCachedDispatchNode {
 
   public static CallTarget getDnu(final SClass rcvrClass) {
     Dispatchable disp = rcvrClass.lookupMessage(
-        Symbols.symbolFor("doesNotUnderstand:arguments:"),
-        AccessModifier.PROTECTED);
+        Symbols.DNU, AccessModifier.PROTECTED);
 
     if (disp == null) {
       VM.errorExit("Lookup of " + rcvrClass.getName().getString() + ">>#doesNotUnderstand:arguments: failed.");

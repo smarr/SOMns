@@ -397,7 +397,7 @@ public final class ClassDefinition {
   }
 
   public void addSyntheticInitializerWithoutSuperSendOnlyForThingClass() {
-    SSymbol init = ClassBuilder.getInitializerName(Symbols.symbolFor("new"));
+    SSymbol init = ClassBuilder.getInitializerName(Symbols.NEW);
     MethodBuilder builder = new MethodBuilder(true);
     builder.setSignature(init);
     builder.addArgumentIfAbsent("self");
@@ -405,7 +405,7 @@ public final class ClassDefinition {
     Source source = Source.fromNamedText("self", "Thing>>" + init.getString());
     SourceSection ss = source.createSection(init.getString(), 0, 4);
     SInvokable thingInitNew = builder.assemble(builder.getSelfRead(ss),
-        AccessModifier.PROTECTED, Symbols.symbolFor("initializer"), ss);
+        AccessModifier.PROTECTED, Symbols.INITIALIZER, ss);
     instanceDispatchables.put(init, thingInitNew);
   }
 

@@ -22,4 +22,15 @@ public final class Symbols {
   }
 
   private static final HashMap<String, SSymbol> symbolTable = new HashMap<>();
+
+  public static final SSymbol NEW             = symbolFor("new");
+  public static final SSymbol INITIALIZATION  = symbolFor("initialization");
+  public static final SSymbol INITIALIZER     = symbolFor("initializer");
+  public static final SSymbol DEF_CLASS       = symbolFor("`define`cls");
+  public static final SSymbol OBJECT          = symbolFor("Object");
+  public static final SSymbol DNU             = symbolFor("doesNotUnderstand:arguments:");
+  public static final SSymbol BLOCK_METHOD    = symbolFor("block method");
+  public static final SSymbol VMMIRROR        = symbolFor("VmMirror");
+  public static final SSymbol METACLASS       = symbolFor("Metaclass");
+  public static final SSymbol METACLASS_CLASS = symbolFor("Metaclass class");
 }

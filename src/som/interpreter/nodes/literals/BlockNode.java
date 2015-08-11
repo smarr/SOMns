@@ -73,7 +73,7 @@ public class BlockNode extends LiteralNode {
 
   private void replaceAdapted(final Invokable adaptedForContext) {
     SInvokable adapted = new SInvokable(blockMethod.getSignature(),
-        AccessModifier.BLOCK_METHOD, Symbols.symbolFor("block method"),
+        AccessModifier.BLOCK_METHOD, Symbols.BLOCK_METHOD,
         adaptedForContext, blockMethod.getEmbeddedBlocks());
     replace(createNode(adapted));
   }

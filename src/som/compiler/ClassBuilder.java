@@ -353,7 +353,7 @@ public final class ClassBuilder {
     }
     // self is going to be the enclosing object
     definitionMethod.addArgumentIfAbsent("self");
-    definitionMethod.setSignature(Symbols.symbolFor("`define`cls"));
+    definitionMethod.setSignature(Symbols.DEF_CLASS);
 
     return definitionMethod;
   }
@@ -393,7 +393,7 @@ public final class ClassBuilder {
         initializer.getSignature(), args, null);
 
     return primaryFactoryMethod.assemble(initializedObject,
-        AccessModifier.PUBLIC, Symbols.symbolFor("initialization"),
+        AccessModifier.PUBLIC, Symbols.INITIALIZATION,
         primaryFactorySource);
   }
 
@@ -419,7 +419,7 @@ public final class ClassBuilder {
 
     ExpressionNode body = SNodeFactory.createSequence(allExprs, null);
     return initializer.assemble(body, AccessModifier.PROTECTED,
-        Symbols.symbolFor("initialization"), initializerSource);
+        Symbols.INITIALIZATION, initializerSource);
   }
 
   protected List<ExpressionNode> createPrimaryFactoryArgumentRead(
@@ -440,7 +440,7 @@ public final class ClassBuilder {
   public ExpressionNode createStandardSuperFactorySend() {
     ExpressionNode superNode = initializer.getSuperReadNode(null);
     ExpressionNode superFactorySend = SNodeFactory.createMessageSend(
-        getInitializerName(symbolFor("new")),
+        getInitializerName(Symbols.NEW),
         new ExpressionNode[] {superNode}, false, null);
     return superFactorySend;
   }
