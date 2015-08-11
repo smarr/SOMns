@@ -1,7 +1,7 @@
 class SuperSends = ()(
   public class TestSuperClassClause1 = ()(
   	public class SuperHierarchy = ()(
-  		public class Inner1 new: x = ( | v = x. |) (
+  		public class Inner1 new: x = (| v = x. |)(
   			public foo = ( ^ v + 42 )
   		)
       public makeInnerInstance = ( ^ (Inner1 new: 1) foo )
