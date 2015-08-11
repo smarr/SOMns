@@ -284,4 +284,116 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
       description: 'The use of an arbitrary factory method is not supported. SOMns currently only supports the use of the primary factory method.'
     )
   ) : ( TEST_CONTEXT = () )
+  
+  public class ConflictHandling = TestContext ()(
+    class X  = (| public x |)( public setX: val = ( x := val. ) )
+    class X2 = (| public x |)()
+    class Y  = (| public y |)( public foo = ( y := 4. ))
+    class Y2 = (| public y |)( public foo = ( y := 8. ))
+    
+    class ConflictingSlots = Object <: X <: X2 ()()
+
+    class ConflictingSlotsImmutable = Object <: X (| public x = 1. |)()
+    
+    class ConflictingMethods = Object <: Y <: Y2.
+    
+    class Initializer1 = ()(
+      class X  = (| public x ::= 3. |)()
+      class X2 = (| public x ::= 4. |)()
+      public class C = Object <: X <: X2.
+    )
+    
+    class Initializer2 = ()(
+      class X  = (| public x | x := 5. )()
+      class X2 = (| public x | x := 6. )()
+      public class C = Object <: X <: X2.
+    )
+    
+    class Initializer3 = ()(
+      class X  = (| public c ::= 0. public x ::= cnt. |)( private cnt = ( c := c + 1. ^ c ) )
+      class X2 = (| public x ::= cnt. |)()
+      public class C = Object <: X <: X2.
+    )
+    
+    class MixinsAreNotTraits = ()(
+      class X = ()( public x = ( ^ 1 ) )
+      class XX = Object <: X.
+      public class XXX = Object <: XX.
+    )
+    
+    public testConflictingSlots = (
+      | c |
+      c := ConflictingSlots new.
+      assert: c x is: nil.
+      c x: 4.
+      assert: c x equals: 4.
+      c setX: 5.
+      assert: c x equals: 5.
+    )
+
+    public testDEACTIVATED = (
+      (* TODO Currently, the tests below are deactivated because we haven't 
+              yet implemented proper message send semantics for slots.
+              Instead, we do an early binding of the slot definition to
+              the access nodes, which is incorrect for mixins with conflicting
+              slots. A method in a mixin which slot was not used in the resulting
+              class will cause an assertion because the slot definition isn't known
+              in the object layout. And we cannot just use the name there because
+              inheritance allows to have multiple slots with the same name, I think. *)
+      'Process DEACTIVATED tests. ' println.
+    )
+
+    (* TODO: this is currently not safe, because there is actually no setter.
+             but, I am not verifying that at any point, so, there is an
+             assertion failing on looking up a write location...*)    
+    public DEACTIVATEDtestConflictingSlotsImmutable = (
+      | c |
+      c := ConflictingSlotsImmutable new.
+      assert: c x is: nil.
+
+      c x: 4.  (* this should give a DNU *)
+      assert: c x equals: 4.
+      
+      c setX: 5.
+      assert: c x equals: 5.
+    )
+    
+    public DEACTIVATEDtestConflictingMethods = (
+      | c |
+      c := ConflictingMethods new.
+      assert: c y is: nil.
+      c foo.
+      assert: c y equals: 8.
+    )
+    
+    public DEACTIVATEDtestInitializer1 = (
+      | i c |
+      i := Initializer1 new.
+      c := i C new.
+      assert: c x equals: 4.
+    )
+    
+    public DEACTIVATEDtestInitializer2 = (
+      | i c |
+      i := Initializer2 new.
+      c := i C new.
+      assert: c x equals: 6.
+    )
+    
+    public DEACTIVATEDtestInitializer3 = (
+      | i c |
+      i := Initializer3 new.
+      c := i C new.
+      assert: c c equals: 2.
+    )
+    
+    public testMixinsAreNotTraits = (
+      | m x |
+      m := MixinsAreNotTraits new.
+      x := m XXX new.
+      
+      should: [ x x ] signal: MessageNotUnderstood description: '#x is only defined in X not in XX, which is mixed into XXX.'
+    )
+    
+  ) : ( TEST_CONTEXT = () )
 )
