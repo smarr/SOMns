@@ -845,4 +845,23 @@ class Kernel vmMirror: vmMirror = (
       ^ 'MessageNotUnderstood(' + (vmMirror objClassName: receiver) + '>>#' + selector + ')'
     )
   )
+
+  (* Exception signaled when a Value is instantiated referring to a mutable object. *)
+  public class NotAValue signalWith: aClass = Exception (
+    | public class = aClass. | 
+    (* We can't refer here to the object that is instantiated, because we do not
+       want to expose illegal objects.
+    
+    WARNING: it is still possible that illegal objects escape, because
+             initializers can do what ever they want, and we check afterwards. *)
+    self signal.
+  )(
+    public asString = (
+      ^ 'NotAValue(' + (vmMirror mirrorAClassesName: class) + ')'
+    )
+  )
+  
+  private signalNotAValueWith: aClass = (
+    NotAValue signalWith: aClass
+  )
 )
