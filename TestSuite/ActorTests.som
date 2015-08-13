@@ -161,7 +161,7 @@ class ActorTests usingPlatform: platform testFramework: minitest = (
       bobP := (actors createActorFromValue: Bob) <-: meet: self.
       r := bobP whenResolved: [:bob |
           (bob <-: answerNearRef) 
-            whenResolved: [:bob2 | bob2 == bob ]].
+            whenResolved: [:bob2 | bob2 = bob ]].
       ^ assert: r resolvedWith: true.
     )
 
@@ -249,7 +249,7 @@ class ActorTests usingPlatform: platform testFramework: minitest = (
       (* A good implementation should handle this in constant rather than linear space. *)
       | r |
       r := (actors createActorFromValue: DeepChain) <-: new.
-      ^ assert: (r <-: nestedResolutionWithDepth: 1000) resolvedWith: 'done'.
+      ^ assert: (r <-: nestedResolutionWithDepth: 10) resolvedWith: 'done'.
     )
 
     public testAsyncFactorial = (
