@@ -286,7 +286,7 @@ public final class Bootstrap {
         Symbols.VMMIRROR, null, null, null, null, null, null,
         vmMirrorMethods, null,
         null, new ClassDefinitionId(), AccessModifier.PUBLIC, scope, scope,
-        true, true, null);
+        true, true, true, null);
     scope.setClassDefinition(vmMirrorDef, false);
 
     SClass vmMirrorClass = vmMirrorDef.instantiateClass(Nil.nilObject, Classes.topClass);
@@ -366,7 +366,7 @@ public final class Bootstrap {
 
        topDef.initializeClass(Classes.topClass, null);  // Top doesn't have a super class
      thingDef.initializeClass(Classes.thingClass,  Classes.topClass);
-     valueDef.initializeClass(Classes.valueClass,  Classes.thingClass);
+     valueDef.initializeClass(Classes.valueClass,  Classes.thingClass, true);
     objectDef.initializeClass(Classes.objectClass, Classes.thingClass);
      classDef.initializeClass(Classes.classClass,  Classes.objectClass);
  metaclassDef.initializeClass(Classes.metaclassClass, Classes.classClass);

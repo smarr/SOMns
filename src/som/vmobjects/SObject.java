@@ -54,28 +54,39 @@ public abstract class SObject extends SObjectWithoutFields {
     public SImmutableObject(final SClass instanceClass) {
       super(instanceClass);
       field1 = field2 = field3 = field4 = field5 = Nil.nilObject;
+      isValue = instanceClass.declaredAsValue();
     }
 
-    public SImmutableObject(final boolean incompleteDefinition) {
+    public SImmutableObject(final boolean incompleteDefinition,
+        final boolean isKernelObj) {
       super(incompleteDefinition);
+      assert isKernelObj;
+      isValue = true;
     }
 
-    @SuppressWarnings("unused") @CompilationFinal private long   primField1;
-    @SuppressWarnings("unused") @CompilationFinal private long   primField2;
-    @SuppressWarnings("unused") @CompilationFinal private long   primField3;
-    @SuppressWarnings("unused") @CompilationFinal private long   primField4;
-    @SuppressWarnings("unused") @CompilationFinal private long   primField5;
+    @CompilationFinal protected long   primField1;
+    @CompilationFinal protected long   primField2;
+    @CompilationFinal protected long   primField3;
+    @CompilationFinal protected long   primField4;
+    @CompilationFinal protected long   primField5;
 
-    @SuppressWarnings("unused") @CompilationFinal private Object field1;
-    @SuppressWarnings("unused") @CompilationFinal private Object field2;
-    @SuppressWarnings("unused") @CompilationFinal private Object field3;
-    @SuppressWarnings("unused") @CompilationFinal private Object field4;
-    @SuppressWarnings("unused") @CompilationFinal private Object field5;
+    @CompilationFinal public Object field1;
+    @CompilationFinal public Object field2;
+    @CompilationFinal public Object field3;
+    @CompilationFinal public Object field4;
+    @CompilationFinal public Object field5;
+
+    @CompilationFinal protected boolean isValue;
 
     @Override
     protected void resetFields() {
       field1 = field2 = field3 = field4 = field5 = null;
       primField1 = primField2 = primField3 = primField4 = primField5 = Long.MIN_VALUE;
+    }
+
+    @Override
+    public boolean isValue() {
+      return isValue;
     }
   }
 
@@ -92,6 +103,11 @@ public abstract class SObject extends SObjectWithoutFields {
     @SuppressWarnings("unused")  private Object field4;
     @SuppressWarnings("unused")  private Object field5;
 
+    // this field exists because HotSpot reorders fields, and we need to keep
+    // the layouts in sync to avoid having to manage different offsets for
+    // SMutableObject and SImmuableObject
+    @SuppressWarnings("unused") private boolean isValueOfSImmutableObjectSync;
+
     public SMutableObject(final SClass instanceClass) {
       super(instanceClass);
       field1 = field2 = field3 = field4 = field5 = Nil.nilObject;
@@ -105,6 +121,11 @@ public abstract class SObject extends SObjectWithoutFields {
     protected void resetFields() {
       field1     = field2     = field3     = field4     = field5     = null;
       primField1 = primField2 = primField3 = primField4 = primField5 = Long.MIN_VALUE;
+    }
+
+    @Override
+    public boolean isValue() {
+      return false;
     }
   }
 

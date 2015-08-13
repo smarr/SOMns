@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map.Entry;
 
+import som.VM;
 import som.compiler.ClassBuilder.ClassDefinitionId;
 import som.interpreter.LexicalScope.ClassScope;
 import som.interpreter.Method;
@@ -40,6 +41,7 @@ import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 import com.sun.istack.internal.Nullable;
@@ -71,6 +73,7 @@ public final class ClassDefinition {
 
   private final boolean allSlotsAreImmutable;
   private final boolean outerScopeIsImmutable;
+  private final boolean isModule;
 
   @Nullable
   private final LinkedHashMap<SSymbol, ClassDefinition> nestedClassDefinitions;
@@ -87,6 +90,7 @@ public final class ClassDefinition {
       final ClassDefinitionId classId, final AccessModifier accessModifier,
       final ClassScope instanceScope, final ClassScope classScope,
       final boolean allSlotsAreImmutable, final boolean outerScopeIsImmutable,
+      final boolean isModule,
       final SourceSection sourceSection) {
     this.name = name;
 
@@ -110,6 +114,8 @@ public final class ClassDefinition {
 
     this.allSlotsAreImmutable  = allSlotsAreImmutable;
     this.outerScopeIsImmutable = outerScopeIsImmutable;
+    this.isModule = isModule;
+    assert !isModule || (allSlotsAreImmutable && outerScopeIsImmutable);
   }
 
   public SSymbol getName() {
@@ -123,6 +129,11 @@ public final class ClassDefinition {
   public ClassDefinitionId getClassId() { return classId; }
 
   public void initializeClass(final SClass result, final Object superclassAndMixins) {
+    initializeClass(result, superclassAndMixins, false);
+  }
+
+  public void initializeClass(final SClass result,
+      final Object superclassAndMixins, final boolean isValueClass) {
     SClass superClass;
     Object[] mixins;
     if (superclassAndMixins == null || superclassAndMixins instanceof SClass) {
@@ -145,10 +156,15 @@ public final class ClassDefinition {
     HashMap<SSymbol, SlotDefinition> mixinSlots = new HashMap<>();
     HashMap<SSymbol, Dispatchable> dispatchables;
 
+    boolean mixinsIncludeValue = false;
     if (mixins != null) {
       dispatchables = new HashMap<>();
       for (int i = 1; i < mixins.length; i++) {
         SClass mixin = (SClass) mixins[i];
+        if (mixin == Classes.valueClass) {
+          mixinsIncludeValue = true;
+        }
+
         ClassDefinition cdef = mixin.getClassDefinition();
         if (cdef.slots != null) {
           mixinSlots.putAll(cdef.slots);
@@ -176,12 +192,37 @@ public final class ClassDefinition {
     result.setSlots(instanceSlots);
     result.setDispatchables(dispatchables);
 
-    // TODO: also need to add a check when kernel.Value is mixed in, that the resulting class is a value (structurally, and the dynamic enclosing scope)
+    checkAndDeclareAsValue(result, superClass, mixinsIncludeValue, isValueClass);
+  }
 
-    // TODO: needs to be adapted for mixins!!!!
-    result.setInstancesAreValues(
-        (superClass != null ? superClass.instancesAreValues() : true) &&
-        allSlotsAreImmutable && outerScopeIsImmutable);
+  private void checkAndDeclareAsValue(final SClass result,
+      final SClass superClass, final boolean mixinsIncludeValue,
+      final boolean isValueClass) {
+    boolean superIsValue    = superClass == null ? false : superClass.declaredAsValue();
+    boolean declaredAsValue = superIsValue || mixinsIncludeValue || isValueClass;
+
+    // the layout determines that for us already
+    boolean onlyImmutableSlots = result.hasOnlyImmutableFields();
+
+    if (declaredAsValue && !allSlotsAreImmutable) {
+      reportErrorAndExit(": The class ", " is declared as value, but also declared mutable slots");
+    }
+    if (declaredAsValue && !onlyImmutableSlots) {
+      reportErrorAndExit(": The class ", " is declared as Value, but superclass or mixins have mutable slots.");
+    }
+    if (declaredAsValue && !outerScopeIsImmutable) {
+      reportErrorAndExit(": The class ", " cannot be a Value, because its enclosing object has mutable fields.");
+    }
+
+    result.setDeclaredAsValue(declaredAsValue && allSlotsAreImmutable &&
+        outerScopeIsImmutable && onlyImmutableSlots);
+  }
+
+  @TruffleBoundary
+  private void reportErrorAndExit(final String msgPart1, final String msgPart2) {
+    String line = sourceSection.getSource().getName() + ":" +
+        sourceSection.getStartLine() + ":" + sourceSection.getStartColumn();
+    VM.errorExit(line + msgPart1 + name.getString() + msgPart2);
   }
 
   private SInitializer assembleMixinInitializer(final int mixinId) {
@@ -219,10 +260,7 @@ public final class ClassDefinition {
       classClass.setName(Symbols.symbolFor(ccName));
       classClass.setClassDefinition(this);
       classClass.setSuperClass(Classes.classClass);
-
-      // they don't have slots, so only the outer context counts
-      assert Classes.classClass.instancesAreValues();
-      classClass.setInstancesAreValues(outerScopeIsImmutable);
+      classClass.setDeclaredAsValue(isModule);
     }
   }
 

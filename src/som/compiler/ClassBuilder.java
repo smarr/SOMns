@@ -38,6 +38,7 @@ import som.interpreter.LexicalScope.ClassScope;
 import som.interpreter.Method;
 import som.interpreter.SNodeFactory;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.IsValueCheckNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.primitives.NewObjectPrimNodeGen;
 import som.vm.Symbols;
@@ -164,6 +165,10 @@ public final class ClassBuilder {
     return name;
   }
 
+  public boolean isModule() {
+    return outerBuilder == null;
+  }
+
   public AccessModifier getAccessModifier() {
     return accessModifier;
   }
@@ -254,6 +259,12 @@ public final class ClassBuilder {
           " A second slot with the same name is not possible.", source);
     }
 
+    if (isModule() && !immutable) {
+      throw new ClassDefinitionError("The class " + this.name.getString() +
+          " is a module and thus can only have immutable slots. However," +
+          name.getString() + " is defined as mutable.", source);
+    }
+
     SlotDefinition slot = new SlotDefinition(name, acccessModifier, immutable,
         source);
     slots.put(name, slot);
@@ -267,7 +278,6 @@ public final class ClassBuilder {
       dispatchables.put(getSetterName(name),
           new SlotMutator(name, acccessModifier, immutable, source, slot));
     }
-
 
     if (init != null) {
       ExpressionNode self = initializer.getSelfRead(source);
@@ -317,7 +327,7 @@ public final class ClassBuilder {
         initializerSource, superclassResolution,
         slots, dispatchables, factoryMethods, embeddedClasses, classId,
         accessModifier, instanceScope, classScope, allSlotsAreImmutable,
-        outerScopeIsImmutable(), source);
+        outerScopeIsImmutable(), isModule(), source);
     instanceScope.setClassDefinition(clsDef, false);
     classScope.setClassDefinition(clsDef, true);
 
@@ -419,7 +429,9 @@ public final class ClassBuilder {
     if (mixinFactorySends.size() > 0 || slotAndInitExprs.size() > 0) {
       // we need to make sure that we return self, that's the SOM Newspeak
       // contract for initializers
-      allExprs.add(initializer.getSelfRead(null));
+      // and we need to make sure that a potential Value class verifies
+      // that it actually is a value
+      allExprs.add(new IsValueCheckNode(initializer.getSelfRead(null)));
     }
 
     ExpressionNode body = SNodeFactory.createSequence(allExprs, null);
