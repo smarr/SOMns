@@ -115,7 +115,6 @@ public final class ClassDefinition {
     this.allSlotsAreImmutable  = allSlotsAreImmutable;
     this.outerScopeIsImmutable = outerScopeIsImmutable;
     this.isModule = isModule;
-    assert !isModule || (allSlotsAreImmutable && outerScopeIsImmutable);
   }
 
   public SSymbol getName() {

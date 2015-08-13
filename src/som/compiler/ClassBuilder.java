@@ -277,12 +277,6 @@ public final class ClassBuilder {
           " A second slot with the same name is not possible.", source);
     }
 
-    if (isModule() && !immutable) {
-      throw new ClassDefinitionError("The class " + this.name.getString() +
-          " is a module and thus can only have immutable slots. However," +
-          name.getString() + " is defined as mutable.", source);
-    }
-
     SlotDefinition slot = new SlotDefinition(name, acccessModifier, immutable,
         source);
     slots.put(name, slot);
