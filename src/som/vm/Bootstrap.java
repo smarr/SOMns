@@ -289,7 +289,7 @@ public final class Bootstrap {
         true, true, true, null);
     scope.setClassDefinition(vmMirrorDef, false);
 
-    SClass vmMirrorClass = vmMirrorDef.instantiateClass(Nil.nilObject, Classes.topClass);
+    SClass vmMirrorClass = vmMirrorDef.instantiateClass(Nil.nilObject, new SClass[] {Classes.topClass, Classes.valueClass});
     return new SObjectWithoutFields(vmMirrorClass);
   }
 
@@ -394,6 +394,7 @@ public final class Bootstrap {
 
     // create and initialize the vmMirror object
     SObjectWithoutFields vmMirror = constructVmMirror();
+    assert vmMirror.isValue();
 
     // initialize slots of kernel object
     setSlot(KernelObj.kernel, "vmMirror",   vmMirror, kernelModule);
