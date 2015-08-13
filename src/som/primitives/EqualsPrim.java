@@ -2,6 +2,7 @@ package som.primitives;
 
 import java.math.BigInteger;
 
+import som.interpreter.actors.SFarReference;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.vm.constants.Nil;
 import som.vmobjects.SObjectWithoutFields;
@@ -44,6 +45,14 @@ public abstract class EqualsPrim extends BinaryExpressionNode {
   @Specialization
   public final boolean doSSymbol(final SSymbol left, final SSymbol right) {
     return left == right;
+  }
+
+  @Specialization
+  public final boolean doFarReferences(final SFarReference left, final SFarReference right) {
+    // TODO: this is not yet complete, the value compare should be perhaps more than
+    //       identity
+    return left == right ||
+        (left.getActor() == right.getActor() && left.getValue() == right.getValue());
   }
 
   @Specialization(guards = "valueIsNil(left)")
