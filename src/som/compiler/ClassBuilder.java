@@ -48,6 +48,7 @@ import som.vmobjects.SSymbol;
 import com.oracle.truffle.api.source.SourceSection;
 
 public final class ClassBuilder {
+  // TODO: if performance critical, optimize class builder by initializing structures lazily
 
   /** The method that is used to resolve the superclass at runtime. */
   private final MethodBuilder superclassAndMixinResolutionBuilder;
