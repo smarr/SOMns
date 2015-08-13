@@ -50,6 +50,9 @@ import com.oracle.truffle.api.source.SourceSection;
 public final class ClassBuilder {
   // TODO: if performance critical, optimize class builder by initializing structures lazily
 
+  public static final ClassDefinitionId NilClassId    = new ClassDefinitionId(Symbols.Nil);
+  public static final ClassDefinitionId KernelClassId = new ClassDefinitionId(Symbols.Kernel);
+
   /** The method that is used to resolve the superclass at runtime. */
   private final MethodBuilder superclassAndMixinResolutionBuilder;
   private ExpressionNode superclassResolution;
@@ -118,7 +121,7 @@ public final class ClassBuilder {
   public ClassBuilder(final ClassBuilder outerBuilder,
       final AccessModifier accessModifier, final SSymbol name) {
     this.name         = name;
-    this.classId      = new ClassDefinitionId(name);
+    this.classId      = getClassDefinitionId(name);
 
     this.classSide    = false;
     this.outerBuilder = outerBuilder;
@@ -133,6 +136,22 @@ public final class ClassBuilder {
     this.superclassAndMixinResolutionBuilder = createSuperclassResolutionBuilder();
 
     this.accessModifier = accessModifier;
+  }
+
+  private ClassDefinitionId getClassDefinitionId(final SSymbol name) {
+    if (isModule() && name == Symbols.Kernel) {
+      return KernelClassId;
+    } else if (isBuildingNil(name)) {
+      return NilClassId;
+    }
+    return new ClassDefinitionId(name);
+  }
+
+  private boolean isBuildingNil(final SSymbol name) {
+    return outerBuilder != null &&
+        outerBuilder.isModule() &&
+        outerBuilder.name == Symbols.Kernel &&
+        name == Symbols.Nil;
   }
 
   public static class ClassDefinitionError extends Exception {

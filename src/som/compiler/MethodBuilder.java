@@ -370,10 +370,17 @@ public final class MethodBuilder {
       return getReadNode(selector.getString(), source);
     }
 
+    ClassDefinitionId classId;
+    if (getEnclosingClassBuilder() == null) {
+      classId = ClassBuilder.NilClassId;
+    } else {
+      classId = getEnclosingClassBuilder().getClassId();
+    }
+
     // otherwise, it is an implicit receiver send
     return SNodeFactory.createImplicitReceiverSend(selector,
         new ExpressionNode[] {getSelfRead(null)},
-        getCurrentMethodScope(), getEnclosingClassBuilder().getClassId(), source);
+        getCurrentMethodScope(), classId, source);
   }
 
   public ExpressionNode getSetterSend(final SSymbol identifier,

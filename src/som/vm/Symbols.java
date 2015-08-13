@@ -33,4 +33,7 @@ public final class Symbols {
   public static final SSymbol VMMIRROR        = symbolFor("VmMirror");
   public static final SSymbol METACLASS       = symbolFor("Metaclass");
   public static final SSymbol METACLASS_CLASS = symbolFor("Metaclass class");
+
+  public static final SSymbol Nil             = symbolFor("Nil");
+  public static final SSymbol Kernel          = symbolFor("Kernel");
 }
