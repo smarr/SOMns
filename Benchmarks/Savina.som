@@ -1,4 +1,4 @@
-class Savina usingPlatform: platform andHarness: harness = (
+class Savina usingPlatform: platform andHarness: harness = Value (
 | private Benchmark = harness Benchmark.
   private actors    = platform actors.
   private Array     = platform kernel Array.

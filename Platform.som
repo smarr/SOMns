@@ -1,4 +1,4 @@
-class Platform usingVmMirror: vmMirror = (
+class Platform usingVmMirror: vmMirror = Value (
   (* The Platform class defines the runtime system of SOMns. It loads all
      elements required for execution, and afterwards processes the command line
      arguments to start the application code. *)
