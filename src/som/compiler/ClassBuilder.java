@@ -432,7 +432,7 @@ public final class ClassBuilder {
       // contract for initializers
       // and we need to make sure that a potential Value class verifies
       // that it actually is a value
-      allExprs.add(new IsValueCheckNode(initializer.getSelfRead(null)));
+      allExprs.add(IsValueCheckNode.create(initializer.getSelfRead(null)));
     }
 
     ExpressionNode body = SNodeFactory.createSequence(allExprs, null);
