@@ -26,7 +26,7 @@ class Mirrors usingVmMirror: vmMirror = (
     | private obj = obj. |
   )(
     (*:TODO: Not happy with the naming of the mirror methods yet, 
-             they are not unambigious, about whether they apply to the object,
+             they are not unambiguous, about whether they apply to the object,
              or to the object class *)
     public name       = ( ^ vmMirror mirrorAClassesName: obj  )
     public classObject= ( ^ vmMirror objClass: obj         )
