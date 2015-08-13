@@ -75,7 +75,7 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel = (
     public error:   value = ( self notYetImplemented )
   ) 
 
-  class Pair with: promise and: resolver = Value (
+  class Pair with: promise and: resolver = (
     (* A promise Pair is useful for explicitly creating dependencies between
        asynchronous computations. *)
     | public promise  = promise.
