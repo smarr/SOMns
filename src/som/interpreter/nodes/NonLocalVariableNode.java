@@ -52,22 +52,38 @@ public abstract class NonLocalVariableNode extends ContextualNode {
       return Nil.nilObject;
     }
 
-    @Specialization(guards = "isInitialized()", rewriteOn = {FrameSlotTypeException.class})
+    protected boolean isBoolean(final VirtualFrame frame) {
+      return determineContext(frame).isBoolean(slot);
+    }
+
+    protected boolean isLong(final VirtualFrame frame) {
+      return determineContext(frame).isLong(slot);
+    }
+
+    protected boolean isDouble(final VirtualFrame frame) {
+      return determineContext(frame).isDouble(slot);
+    }
+
+    protected boolean isObject(final VirtualFrame frame) {
+      return determineContext(frame).isObject(slot);
+    }
+
+    @Specialization(guards = {"isInitialized()", "isBoolean(frame)"}, rewriteOn = {FrameSlotTypeException.class})
     public final boolean doBoolean(final VirtualFrame frame) throws FrameSlotTypeException {
       return determineContext(frame).getBoolean(slot);
     }
 
-    @Specialization(guards = "isInitialized()", rewriteOn = {FrameSlotTypeException.class})
+    @Specialization(guards = {"isInitialized()", "isLong(frame)"}, rewriteOn = {FrameSlotTypeException.class})
     public final long doLong(final VirtualFrame frame) throws FrameSlotTypeException {
       return determineContext(frame).getLong(slot);
     }
 
-    @Specialization(guards = "isInitialized()", rewriteOn = {FrameSlotTypeException.class})
+    @Specialization(guards = {"isInitialized()", "isDouble(frame)"}, rewriteOn = {FrameSlotTypeException.class})
     public final double doDouble(final VirtualFrame frame) throws FrameSlotTypeException {
       return determineContext(frame).getDouble(slot);
     }
 
-    @Specialization(guards = "isInitialized()", rewriteOn = {FrameSlotTypeException.class})
+    @Specialization(guards = {"isInitialized()", "isObject(frame)"}, rewriteOn = {FrameSlotTypeException.class})
     public final Object doObject(final VirtualFrame frame) throws FrameSlotTypeException {
       return determineContext(frame).getObject(slot);
     }
