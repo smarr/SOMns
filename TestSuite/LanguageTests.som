@@ -4,6 +4,8 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
   private ObjectMirror = platform mirrors ObjectMirror.
   private Set          = platform collections Set.
   private kernel       = platform kernel.
+  private NotAValue    = platform kernel NotAValue.
+  private langTestsModule = self.
 |
 )(
   (* This test verifies that SOM blocks are indeed closures. 
@@ -378,10 +380,10 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
       )() : ( public new = ( ^ self new: 0 ) )
     ) : ( public new = ( ^ self new: 0 ) )
     
-    class Immutable new: obj = (
+    class Immutable new: obj = Value (
       | public imm = obj. |
     )(
-      public class Immutable new: obj = (
+      public class Immutable new: obj = Value (
         | public imm = obj. |
       )() : ( public new = ( ^ self new: 0 ) )
     ) : ( public new = ( ^ self new: 0 ) )
@@ -392,12 +394,34 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
       public class NoField = ()()
     )
     
-    class Immutable2 new: obj = (
+    class Immutable2 new: obj = Value (
       | public imm = obj. |
     )(
-      public class NoField = ()()
+      public class NoField = Value ()()
     )
-  
+
+    class ImmutableObject = ()()
+    class ImmutableValue  = Value ()()
+    class ImmutableObjectWithValueMixin = Object <: Value ()()
+    
+    public testOnlyExplicitValuesAreValues = (
+      deny:   (ObjectMirror reflecting: ImmutableObject new) isValue.
+      assert: (ObjectMirror reflecting: ImmutableValue  new) isValue description: 'ImmutableValue has explicit superclass Value'.
+      assert: (ObjectMirror reflecting: ImmutableObjectWithValueMixin new) isValue description: 'ImmutableObjectWithValueMixin has Value mixin'.
+    )
+    
+    public testImmutableButNotAValueDoesNothing = (
+      | m |
+      m := Mutable new: 0.
+      shouldnt: [m Immutable new: 0] signal: NotAValue
+    )
+    
+    public testInitValueWithMutable = (
+      | m |
+      m := Mutable new: 0.
+      should: [Immutable new: m] signal: NotAValue
+    )
+
     public testIntegersAreValues = (
       assert: (ObjectMirror reflecting:        0) isValue.
       assert: (ObjectMirror reflecting: 1 << 100) isValue.
@@ -429,20 +453,29 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
       assert: (ObjectMirror reflecting: 'asdasd' asSymbol) isValue.
     )
     
-    public testPlainObjectIsValue = (
-      assert: (ObjectMirror reflecting: Object new) isValue.
+    public testPlainObjectIsNotValue = (
+      deny: (ObjectMirror reflecting: Object new) isValue.
     )
     
     public testValueIsValue = (
       assert: (ObjectMirror reflecting: Value new) isValue.
     )
     
-    public testSomeClassesAreValues = (
-      assert: (ObjectMirror reflecting: Set)          isValue description: 'Set'.
-      assert: (ObjectMirror reflecting: ObjectMirror) isValue description: 'ObjectMirror'.
-      assert: (ObjectMirror reflecting: Array)        isValue description: 'Array'.
-      assert: (ObjectMirror reflecting: TestContext)  isValue description: 'TestContext'.
+    public testModuleIsValueImplicitly = (
+      assert: (ObjectMirror reflecting: langTestsModule) isValue
+    )
+    
+    public testClassesAreValuesIffTheirEnclosingObjectIsAValue = (
+      (* some kernel classes *)
+      | m mm |
       assert: (ObjectMirror reflecting: Object)       isValue description: 'Object'.
+      assert: (ObjectMirror reflecting: Array)        isValue description: 'Array'.
+      assert: (ObjectMirror reflecting: ObjectMirror) isValue description: 'ObjectMirror'.
+      assert: (ObjectMirror reflecting: Set)          isValue description: 'Set'.
+      assert: (ObjectMirror reflecting: TestContext)  isValue description: 'TestContext'.
+      
+      m := Mutable new: 0.
+      deny: (ObjectMirror reflecting: m Immutable) isValue description: 'm Immutable not a Value'
     )
     
     public testArraysArentValues = (
@@ -469,8 +502,8 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
       deny: (ObjectMirror reflecting: kernel Vector new) isValue.
     )
     
-    public testExceptionIsValue = (
-      assert: (ObjectMirror reflecting: kernel Exception new) isValue.
+    public testExceptionIsNotAValue = (
+      deny: (ObjectMirror reflecting: kernel Exception new) isValue.
     )
     
     public testOuterScopeMutability = (
@@ -492,27 +525,17 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
     )
     
     public testMutableObjectDeepInImmutableConstruct = (
-      | i iim iii |
+      | i iii |
       i  := Immutable new.
-      iim := i Immutable new: (Mutable new: 0).
+      should: [i Immutable new: (Mutable new: 0)] signal: NotAValue.
       iii := i Immutable new: Immutable new.
       
       assert: (ObjectMirror reflecting: i) isValue.
-      deny:   (ObjectMirror reflecting: iim) isValue.
       assert: (ObjectMirror reflecting: iii) isValue.
     )
     
-    public testMutableObjectInOuterScope = (
-      | im imi |
-      im := Immutable new: (Mutable new: 0).
-      deny: (ObjectMirror reflecting: im) isValue.
-      
-      imi := im Immutable new: 0.
-      deny: (ObjectMirror reflecting: imi) isValue.
-    )
-    
     public testInnerNoFieldHandling = (
-      | mm mmn  mi min  im imn  ii iin |
+      | mm mmn  mi min  ii iin |
       mm  := Mutable2 new: (Mutable new: 0).
       mmn := mm NoField new.
       deny: (ObjectMirror reflecting: mm)  isValue description: 'case mm'.
@@ -523,10 +546,7 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
       deny: (ObjectMirror reflecting: mi)  isValue description: 'case mi'.
       deny: (ObjectMirror reflecting: min) isValue description: 'case min'.
       
-      im  := Immutable2 new: (Mutable new: 0).
-      imn := im NoField new.
-      deny: (ObjectMirror reflecting: im)  isValue description: 'case im'.
-      deny: (ObjectMirror reflecting: imn) isValue description: 'case imn'.
+      should: [Immutable2 new: (Mutable new: 0)] signal: NotAValue.
       
       ii  := Immutable2 new: 0.
       iin := ii NoField new.
