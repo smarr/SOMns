@@ -399,6 +399,12 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
     )(
       public class NoField = Value ()()
     )
+    
+    class Immutable3 = Value (
+      | public imm = 0. |
+    )(
+      public class NoField = ()()
+    )
 
     class ImmutableObject = ()()
     class ImmutableValue  = Value ()()
@@ -408,6 +414,12 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
       deny:   (ObjectMirror reflecting: ImmutableObject new) isValue.
       assert: (ObjectMirror reflecting: ImmutableValue  new) isValue description: 'ImmutableValue has explicit superclass Value'.
       assert: (ObjectMirror reflecting: ImmutableObjectWithValueMixin new) isValue description: 'ImmutableObjectWithValueMixin has Value mixin'.
+    )
+    
+    public testObjWithoutFieldsIsNotValue = (
+      | i |
+      i := Immutable3 new.
+      deny: (ObjectMirror reflecting: i NoField new) isValue.
     )
     
     public testImmutableButNotAValueDoesNothing = (
@@ -462,7 +474,11 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
     )
     
     public testModuleIsValueImplicitly = (
-      assert: (ObjectMirror reflecting: langTestsModule) isValue
+      | langTestsModuleClass |
+      langTestsModuleClass := (ObjectMirror reflecting: langTestsModule) classMirror classObject.
+      assert: (ObjectMirror reflecting: langTestsModuleClass) isValue.
+      (* But there are no implications for its objects *)
+      deny: (ObjectMirror reflecting: langTestsModule) isValue
     )
     
     public testClassesAreValuesIffTheirEnclosingObjectIsAValue = (
