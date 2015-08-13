@@ -227,20 +227,19 @@ public final class Parser {
     return lexer.getStartCoordinate();
   }
 
-  public void moduleDeclaration(final ClassBuilder clsBuilder)
-      throws ParseError, ClassDefinitionError {
+  public ClassBuilder moduleDeclaration() throws ParseError, ClassDefinitionError {
     comment();
-    classDeclaration(clsBuilder);
+    return classDeclaration(null, AccessModifier.PUBLIC);
   }
 
-  private void classDeclaration(final ClassBuilder clsBuilder)
-      throws ParseError, ClassDefinitionError {
+  private ClassBuilder classDeclaration(final ClassBuilder outerBuilder,
+      final AccessModifier accessModifier) throws ParseError, ClassDefinitionError {
     expectIdentifier("class", "Found unexpected token %(found)s. " +
       "Tried parsing a class declaration and expected 'class' instead.");
     String className = text;
     expect(Identifier);
 
-    clsBuilder.setName(symbolFor(className));
+    ClassBuilder clsBuilder = new ClassBuilder(outerBuilder, accessModifier, symbolFor(className));
 
     MethodBuilder primaryFactory = clsBuilder.getPrimaryFactoryMethodBuilder();
     SourceCoordinate coord = getCoordinate();
@@ -262,6 +261,7 @@ public final class Parser {
         + " and expect '=' before the (optional) inheritance declaration.");
 
     inheritanceListAndOrBody(clsBuilder);
+    return clsBuilder;
   }
 
   private void inheritanceListAndOrBody(final ClassBuilder clsBuilder)
@@ -549,8 +549,7 @@ public final class Parser {
       throws ParseError, ClassDefinitionError {
     SourceCoordinate coord = getCoordinate();
     AccessModifier accessModifier = accessModifier();
-    ClassBuilder nestedCls = new ClassBuilder(clsBuilder, accessModifier);
-    classDeclaration(nestedCls);
+    ClassBuilder nestedCls = classDeclaration(clsBuilder, accessModifier);
     clsBuilder.addNestedClass(nestedCls.assemble(getSource(coord)));
   }
 

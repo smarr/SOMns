@@ -62,14 +62,14 @@ public final class SourcecodeCompiler {
   }
 
   private static ClassDefinition compile(final Parser parser) {
-    ClassBuilder clsBuilder = new ClassBuilder(AccessModifier.PUBLIC);
     SourceCoordinate coord = parser.getCoordinate();
 
     try {
-      parser.moduleDeclaration(clsBuilder);
+      ClassBuilder clsBuilder = parser.moduleDeclaration();
+      return clsBuilder.assemble(parser.getSource(coord));
     } catch (ParseError | ClassDefinitionError pe) {
       VM.errorExit(pe.toString());
+      return null;
     }
-    return clsBuilder.assemble(parser.getSource(coord));
   }
 }

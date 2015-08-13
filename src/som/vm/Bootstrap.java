@@ -285,7 +285,7 @@ public final class Bootstrap {
     ClassDefinition vmMirrorDef = new ClassDefinition(
         Symbols.VMMIRROR, null, null, null, null, null, null,
         vmMirrorMethods, null,
-        null, new ClassDefinitionId(), AccessModifier.PUBLIC, scope, scope,
+        null, new ClassDefinitionId(Symbols.VMMIRROR), AccessModifier.PUBLIC, scope, scope,
         true, true, true, null);
     scope.setClassDefinition(vmMirrorDef, false);
 

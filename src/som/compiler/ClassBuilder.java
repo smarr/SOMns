@@ -67,7 +67,7 @@ public final class ClassBuilder {
 
   private final ArrayList<ExpressionNode> slotAndInitExprs = new ArrayList<>();
 
-  private SSymbol name;
+  private final SSymbol name;
   private String  classComment;
 
   private final HashMap<SSymbol, SlotDefinition> slots = new HashMap<>();
@@ -90,7 +90,7 @@ public final class ClassBuilder {
 
   private final ClassBuilder outerBuilder;
 
-  private final ClassDefinitionId classId = new ClassDefinitionId();
+  private final ClassDefinitionId classId;
 
   /**
    * A unique id to identify the class definition. Having the Id distinct from
@@ -103,19 +103,23 @@ public final class ClassBuilder {
    * it is not really possible to do it differently at the moment.
    */
   public static final class ClassDefinitionId {
-    private SSymbol name; // for debugging
+    private final SSymbol name;
+
+    public ClassDefinitionId(final SSymbol name) {
+      this.name = name;
+    }
+
     @Override
     public String toString() {
       return "ClassDefId(" + name + ")";
     }
   };
 
-  public ClassBuilder(final AccessModifier accessModifier) {
-    this(null, accessModifier);
-  }
-
   public ClassBuilder(final ClassBuilder outerBuilder,
-      final AccessModifier accessModifier) {
+      final AccessModifier accessModifier, final SSymbol name) {
+    this.name         = name;
+    this.classId      = new ClassDefinitionId(name);
+
     this.classSide    = false;
     this.outerBuilder = outerBuilder;
 
@@ -154,12 +158,6 @@ public final class ClassBuilder {
 
   public ClassBuilder getOuterBuilder() {
     return outerBuilder;
-  }
-
-  public void setName(final SSymbol name) {
-    assert this.name == null;
-    this.name = name;
-    this.classId.name = name;
   }
 
   public SSymbol getName() {
