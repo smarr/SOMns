@@ -18,7 +18,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 *)
-class Kernel vmMirror: vmMirror = (
+class Kernel vmMirror: vmMirror = Object <: Value (
 | private vmMirror   = vmMirror.
   private ObjectSlot = Object.
   private ValueSlot  = Value.
