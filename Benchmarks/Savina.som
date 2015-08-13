@@ -22,9 +22,8 @@ class Savina usingPlatform: platform andHarness: harness = Value (
 
   (* === Savina Microbenchmarks === *)
   
-  public class PingPong new: numPings = Benchmark (
-  | private completionPP = actors createPromisePair.
-    private NumPings     = numPings.
+  public class PingPong new: numPings = Benchmark <: Value (
+  | private NumPings     = numPings.
   |
   )(
     class Ping new: cnt with: pong = (
@@ -49,8 +48,10 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       )
     )
   
-    class Pong = (
-      | private pongCount ::= 0. |
+    class Pong new: completionRes = (
+    | private pongCount ::= 0.
+      private completionRes = completionRes.
+    |
     ) (
       public ping: sender = (
         sender <-: pong: self.
@@ -58,13 +59,14 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       )
     
       public stop = (
-        completionPP resolve: pongCount
+        completionRes resolve: pongCount
       )
     )
     
     public benchmark = (
-      | ping pong |
-      pong := (actors createActorFromValue: Pong) <-: new.
+      | ping pong completionPP |
+      completionPP := actors createPromisePair.
+      pong := (actors createActorFromValue: Pong) <-: new: completionPP resolver.
       ping := (actors createActorFromValue: Ping) <-: new: NumPings with: pong.
       ping <-: start.
       ^ completionPP promise
@@ -78,16 +80,12 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     public setupVerifiedRun: run = ( run problemSize: 1 )
   )
 
-  public class Counting new: limit = Benchmark (
-  | private limit = limit.
-    private completionPP = actors createPromisePair. |
+  public class Counting new: limit = Benchmark <: Value (
+  | private limit = limit. |
   )(
-    public class ProducerActor new: counter = (
+    public class ProducerActor new: counter resolver: completionRes = (
     | private counter = counter.
-      (* TODO: need to add a mutable field to ProducerActor to get a far reference, otherwise it is a Value.
-         TODO: we should probably not make all possible Values Values. Need to think about that.
-               perhaps we need to require explicit mixing in Value (and have a check that it is legal) *)
-      private mutableFieldHackToGetThisObjectAsFarReference ::= 0.
+      private completionRes = completionRes.
     |
     )(
       public increment = (
@@ -98,7 +96,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       )
       
       public count: cnt = (
-        completionPP resolve: cnt = limit
+        completionRes resolve: cnt = limit
       )
     )
     
@@ -115,9 +113,10 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     )
   
     public benchmark = (
-      | counter producer |
+      | counter producer completionPP |
+      completionPP := actors createPromisePair.
       counter  := (actors createActorFromValue: CountingActor) <-: new.
-      producer := (actors createActorFromValue: ProducerActor) <-: new: counter.
+      producer := (actors createActorFromValue: ProducerActor) <-: new: counter resolver: completionPP resolver.
       producer <-: increment.
 
       ^ completionPP promise
@@ -193,13 +192,10 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     public setupVerifiedRun: run = ( run problemSize: '100:1000' )
   )
 
-  public class ForkJoinActorCreation new: numActors = Benchmark (
+  public class ForkJoinActorCreation new: numActors = Benchmark <: Value (
   | private numActors = numActors. |
   )(
     class ForkJoinActor new: completionResolver = (
-    | (* TODO: should not need to this field. need it currently to get a far reference. remove it once we fixed that. *)
-      private mutableFieldHackToGetThisObjectAsFarReference ::= 0.  
-    |
       completionResolver resolve: (performComputation: 37.2)
     )()
     
@@ -239,15 +235,15 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     public setupVerifiedRun: run = ( run problemSize: 1 )
   )
   
-  public class ThreadRing new: numActors numPings: numPings = Benchmark (
+  public class ThreadRing new: numActors numPings: numPings = Benchmark <: Value(
   | private numActors = numActors.
     private numPings  = numPings.
-    private completionPP = actors createPromisePair.
   |
   )(
-    class ThreadRingActor new: id = (
+    class ThreadRingActor new: id resolver: completionRes = (
     | private id = id.
       private nextAct ::= nil.
+      private completionRes = completionRes.
     |
     )(
       public ping: t = (
@@ -262,7 +258,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         t > 0 ifTrue: [
           nextAct <-: exit: t - 1
         ] ifFalse: [
-          completionPP resolve: id.
+          completionRes resolve: id.
         ]
       )
       
@@ -272,7 +268,8 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     )
     
     public benchmark = (
-      | threadActors |
+      | threadActors completionPP |
+      completionPP := actors createPromisePair.
       threadActors := Array new: numActors.
       1 to: numActors do: [:i |
         | threadActor |
@@ -303,10 +300,9 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     public setupVerifiedRun: run = ( run problemSize: '30:300' )
   )
   
-  public class Chameneos meetings: numMeetings chameneos: numChameneos = Benchmark (
+  public class Chameneos meetings: numMeetings chameneos: numChameneos = Benchmark <: Value (
   | private numMeetings  = numMeetings.
     private numChameneos = numChameneos.
-    private completionPP = actors createPromisePair.
     
     private red    = Red    new.
     private yellow = Yellow new.
@@ -314,33 +310,34 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     private faded  = Faded  new.
   |
   )(
-    class Red = ()(
+    class Red = Value ()(
       public complement: other = ( ^ other redComplement )
       public redComplement     = ( ^ red    )
       public yellowComplement  = ( ^ blue   )
       public blueComplement    = ( ^ yellow )
     )
-    class Yellow = ()(
+    class Yellow = Value ()(
       public complement: other = ( ^ other yellowComplement )
       public redComplement     = ( ^ blue   )
       public yellowComplement  = ( ^ yellow )
       public blueComplement    = ( ^ red    )
     )
-    class Blue = ()(
+    class Blue = Value ()(
       public complement: other = ( ^ other blueComplement )
       public redComplement     = ( ^ yellow )
       public yellowComplement  = ( ^ red    )
       public blueComplement    = ( ^ blue   )
     )
-    class Faded = ()(
+    class Faded = Value ()(
       public complement: other = ( ^ faded )
     )
   
-    class ChameneosMallActor = (
+    class ChameneosMallActor new: complementRes = (
     | private waitingChameneo ::= nil.
       private sumMeetings     ::= 0.
       private numFaded        ::= 0.
       private n               ::= numMeetings.
+      private complementRes   = complementRes.
     |
       start.
     )(
@@ -363,7 +360,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       public meetingCount: count = (
         numFaded := numFaded + 1.
         sumMeetings := sumMeetings + count.
-        numFaded = numChameneos ifTrue: [ completionPP resolve: sumMeetings ]
+        numFaded = numChameneos ifTrue: [ completionRes resolve: sumMeetings ]
       )
       
       public meet: sender color: color = (
@@ -413,8 +410,9 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     )
     
     public benchmark = (
-      | mallActor |
-      mallActor := (actors createActorFromValue: ChameneosMallActor) <-: new.
+      | mallActor completionPP |
+      completionPP := actors createPromisePair.
+      mallActor := (actors createActorFromValue: ChameneosMallActor) <-: new: completionPP resolver.
       ^ completionPP promise
     )
     
@@ -434,16 +432,15 @@ class Savina usingPlatform: platform andHarness: harness = Value (
   public class Big = Benchmark ()( todo = () )
   (* === Savina Concurrency Benchmarks === *)
 
-  public class ConcurrentDictionary numEntities: numEntities numMessages: numMessages writePercentage: writePercentage = Benchmark (
+  public class ConcurrentDictionary numEntities: numEntities numMessages: numMessages writePercentage: writePercentage = Benchmark <: Value (
   | private numMessages = numMessages.
     private numEntities = numEntities.
     private writePercentage = writePercentage.
-    private completionPP = actors createPromisePair.
   |
   )(
-    class Master = (
+    class Master new: completionRes = (
     | private workers    = Array new: numEntities.
-      private dictionary = (actors createActorFromValue: DictionaryActor) <-: new.
+      private dictionary = (actors createActorFromValue: DictionaryActor) <-: new: completionRes.
       private numWorkersTerminated ::= 0.
     |
       start.
@@ -489,9 +486,9 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       )
     )
     
-    class DictionaryActor = (
-    | private dataMap = self createDataMap: 524287 / 1024. (* Integer.MAX_VALUE / 4_096 *)
-      private mutableFieldHackToGetThisObjectAsFarReference ::= 0. (* TODO: remove hack *)
+    class DictionaryActor new: completionRes = (
+    | private dataMap = self createDataMap: 524287 / 1024. (* Integer.MAX_VALUE / 4_096 TODO: this is not the same constant as originally! *)
+      private resolver = resolver.
     |
     )(
       private createDataMap: dataLimit = (
@@ -513,13 +510,14 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       )
       
       public endWork = (
-        completionPP resolve: dataMap size
+        completionRes resolve: dataMap size
       )
     )
   
     public benchmark = (
-      | master |
-      master := (actors createActorFromValue: Master) <-: new.
+      | master completionPP |
+      completionPP := actors createPromisePair.
+      master := (actors createActorFromValue: Master) <-: new: completionPP resolver.
       ^ completionPP promise
     )
     
@@ -539,9 +537,9 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       run problemSize: '100:100:50'
     )
   )
-  
-  
+
   public class ConcurrentSortedLinkedList = Benchmark ()( todo = () )
+
   public class ProducerConsumerBoundedBuffer = Benchmark ()( todo = () )
   public class Philosophers = Benchmark ()( todo = () )
   public class SleepingBarber = Benchmark ()( todo = ( USE_MATH_RANDOM_WHICH_SEQUENTIALIZES ) )
@@ -551,11 +549,10 @@ class Savina usingPlatform: platform andHarness: harness = Value (
   
   (* === Savina Parallelism Benchmarks === *)
   
-  public class RadixSort numValues: numValues maxValue: maxValue seed: seed = Benchmark (
+  public class RadixSort numValues: numValues maxValue: maxValue seed: seed = Benchmark <: Value (
   | private numValues = numValues. 
     private maxValue  = maxValue.  (* Needs to be a power of 2, I think *)
     private seed      = seed.      (* Should probably be a prime number *)
-    private completionPP = actors createPromisePair.
   |
   )(
     class IntSourceActor = (
@@ -598,12 +595,13 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       )
     )
     
-    class ValidationActor = (
+    class ValidationActor new: completionRes = (
     | private sumSoFar    ::=  0.
       private valuesSoFar ::=  0.
       private prevValue   ::=  0.
       private errorValue  ::= -1.
       private errorIdx    ::= -1.
+      private completionRes = completionRes.
     |
     )(
       public value: val = (
@@ -621,14 +619,15 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         valuesSoFar = numValues ifTrue: [
           errorValue >= 0
             ifTrue:  [ system error: 'Value out of place: ' + errorValue + ' at index ' + errorIdx ].
-          completionPP resolve: sumSoFar
+          completionRes resolve: sumSoFar
         ]
       )
     )
   
     public benchmark = (
-      | validationActor sourceActor radix nextActor |
-      validationActor := (actors createActorFromValue: ValidationActor) <-: new.
+      | validationActor sourceActor radix nextActor completionPP |
+      completionPP := actors createPromisePair.
+      validationActor := (actors createActorFromValue: ValidationActor) <-: new: completionPP resolver.
       sourceActor     := (actors createActorFromValue: IntSourceActor)  <-: new.
       
       radix := maxValue / 2.
@@ -672,10 +671,9 @@ class Savina usingPlatform: platform andHarness: harness = Value (
   
   public class FilterBank = Benchmark ()( todo = () )
   
-  public class Sieve new: limit local: numMaxLocalPrimes = Benchmark (
+  public class Sieve new: limit local: numMaxLocalPrimes = Benchmark <: Value (
   | private limit = limit.
     private numMaxLocalPrimes = numMaxLocalPrimes.
-    private completionPP = actors createPromisePair.
   |
   )(
     class NumberProducerActor = ()(
@@ -691,12 +689,13 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       )
     )
     
-    class PrimeFilterActor new: id initialPrime: initialPrime = (
+    class PrimeFilterActor new: id initialPrime: initialPrime resolver: completionRes = (
     | private id = id.
       private initialPrime = initialPrime.
       private nextFilterActor ::= nil.
       private localPrimes = Array new: numMaxLocalPrimes withAll: 0.
       private availableLocalPrimes ::= 1.
+      private completionRes = completionRes.
     |
       localPrimes at: 1 put: initialPrime.
     )(
@@ -709,7 +708,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
           ifFalse: [
             (* create a new actor to store a new prime *)
             nextFilterActor := (actors createActorFromValue: PrimeFilterActor)
-              <-: new: id + 1 initialPrime: newPrim
+              <-: new: id + 1 initialPrime: newPrim resolver: completionRes
           ]
       )
       
@@ -741,9 +740,10 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     )
    
     public benchmark = (
-      | producerActor filterActor |
+      | producerActor filterActor completionPP |
+      completionPP := actors createPromisePair.
       producerActor := (actors createActorFromValue: NumberProducerActor) <-: new.
-      filterActor   := (actors createActorFromValue: PrimeFilterActor)    <-: new: 1 initialPrime: 2.
+      filterActor   := (actors createActorFromValue: PrimeFilterActor)    <-: new: 1 initialPrime: 2 resolver: completionPP resolver.
 
       producerActor <-: produceNumbersFor: filterActor.
       
