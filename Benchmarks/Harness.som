@@ -68,11 +68,11 @@ class Harness usingPlatform: platform = (
     public next = (
       (* Original version, with complete set of conversions. *)
       
-         seed := ((seed       + 2127912214)       + (seed  << 12) as32BitSignedValue) as32BitSignedValue.
+         seed := ((seed       + 2127912214)       + (seed as32BitUnsignedValue  << 12) as32BitSignedValue) as32BitSignedValue.
          seed := ((seed bitXor: 3345072700) bitXor: (seed as32BitUnsignedValue >>> 19)) as32BitSignedValue.
-         seed := ((seed       +  374761393)       + (seed  <<  5) as32BitSignedValue) as32BitSignedValue.
-         seed := ((seed       + 3550635116) bitXor: (seed  <<  9) as32BitSignedValue) as32BitSignedValue.
-         seed := ((seed       + 4251993797)       + (seed  <<  3) as32BitSignedValue) as32BitSignedValue.
+         seed := ((seed       +  374761393)       + (seed as32BitUnsignedValue  <<  5) as32BitSignedValue) as32BitSignedValue.
+         seed := ((seed       + 3550635116) bitXor: (seed as32BitUnsignedValue  <<  9) as32BitSignedValue) as32BitSignedValue.
+         seed := ((seed       + 4251993797)       + (seed as32BitUnsignedValue  <<  3) as32BitSignedValue) as32BitSignedValue.
          seed := ((seed bitXor: 3042594569) bitXor: (seed as32BitUnsignedValue >>> 16)) as32BitSignedValue.
       
       (*   Optimized version, without semantically unnecessary conversions.
