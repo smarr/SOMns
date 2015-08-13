@@ -70,7 +70,10 @@ class AllBenchmarks usingPlatform: platform = (
       
       (run: 'Dispatch'             in: 'LanguageFeatures' numIter: 10),
       (run: 'DispatchNoArg'        in: 'LanguageFeatures' numIter: 10),
-      (run: 'DispatchPerformNoArg' in: 'LanguageFeatures' numIter: 10)
+      (run: 'DispatchPerformNoArg' in: 'LanguageFeatures' numIter: 10),
+    
+      (run: 'PageRank'    numIter:  1),
+      (run: 'GraphSearch' numIter:  1)
   )
   
   loadModule: name = (
