@@ -82,7 +82,7 @@ class ActorTests usingPlatform: platform testFramework: minitest = Value (
     )
   )
 
-  public class AsyncTestContext = TestContext ()(
+  public class AsyncTestContext = TestContext <: Value ()(
     assert: promise resolvedWith: expectedResolution = (
       (* TODO: add timeout support *)
       ^ promise
@@ -186,7 +186,6 @@ class ActorTests usingPlatform: platform testFramework: minitest = Value (
       
       p := (actors createActorFromValue: Cell) <-: new: cellLocal.
       p whenResolved: [:cellFRef |
-        | pIsFRef |
         (cellFRef <-: valIsFarRef) whenResolved: [:isFRef |
           assert: isFRef description: 'should be far reference'.
           promisePair resolve: #done.
