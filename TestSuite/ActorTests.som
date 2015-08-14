@@ -1,4 +1,4 @@
-class ActorTests usingPlatform: platform testFramework: minitest = (
+class ActorTests usingPlatform: platform testFramework: minitest = Value (
 | private TestContext = minitest TestContext.
   private actors      = platform actors.
   private Exception   = platform kernel Exception.
