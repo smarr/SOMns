@@ -130,7 +130,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     public setupVerifiedRun: run = ( run problemSize: 10000 )
   )
 
-  public class ForkJoinThroughput new: numActors  totalMessages: numMessages = Benchmark (
+  public class ForkJoinThroughput new: numActors  totalMessages: numMessages = Benchmark <: Value (
   | private numActors    = numActors.
     private numMessages  = numMessages.
   |
@@ -273,7 +273,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       threadActors := Array new: numActors.
       1 to: numActors do: [:i |
         | threadActor |
-        threadActor := (actors createActorFromValue: ThreadRingActor) <-: new: i.
+        threadActor := (actors createActorFromValue: ThreadRingActor) <-: new: i resolver: completionPP resolver.
         threadActors at: i put: threadActor.
       ].
       
@@ -332,12 +332,12 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       public complement: other = ( ^ faded )
     )
   
-    class ChameneosMallActor new: complementRes = (
+    class ChameneosMallActor new: completionRes = (
     | private waitingChameneo ::= nil.
       private sumMeetings     ::= 0.
       private numFaded        ::= 0.
       private n               ::= numMeetings.
-      private complementRes   = complementRes.
+      private completionRes   = completionRes.
     |
       start.
     )(
@@ -488,7 +488,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     
     class DictionaryActor new: completionRes = (
     | private dataMap = self createDataMap: 524287 / 1024. (* Integer.MAX_VALUE / 4_096 TODO: this is not the same constant as originally! *)
-      private resolver = resolver.
+      private completionRes = completionRes.
     |
     )(
       private createDataMap: dataLimit = (
