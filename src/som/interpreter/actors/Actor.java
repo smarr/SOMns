@@ -6,6 +6,7 @@ import java.util.NoSuchElementException;
 import java.util.concurrent.ForkJoinPool;
 
 import som.VM;
+import som.interpreter.actors.EventualMessage.DirectMessage;
 import som.interpreter.actors.SPromise.SResolver;
 import som.primitives.ObjectPrims.IsValue;
 import som.vmobjects.SSymbol;
@@ -77,17 +78,8 @@ public class Actor {
 
     CompilerAsserts.neverPartOfCompilation("This needs to be optimized");
 
-    EventualMessage msg;
-    if (currentActor == this) {
-      // self send, no arg handling needed, they come straight from the same actor
-      msg = new EventualMessage(this, selector, args, resolver, currentActor);
-    } else {
-      for (int i = 0; i < args.length; i++) {
-        args[i] = wrapForUse(args[i], currentActor);
-      }
-      msg = new EventualMessage(this, selector, args, resolver, currentActor);
-    }
-    enqueueMessage(msg);
+    DirectMessage msg = new DirectMessage(this, selector, args, currentActor, resolver);
+    msg.getTarget().enqueueMessage(msg);
 
     return result;
   }
@@ -131,8 +123,7 @@ public class Actor {
   protected void logNoTaskForActor() { }
 
   public final synchronized void enqueueMessage(final EventualMessage msg) {
-    assert msg.isReceiverSet();
-
+    assert msg.getTarget() == this;
     if (isExecuting) {
       mailbox.add(msg);
       logMessageAddedToMailbox(msg);

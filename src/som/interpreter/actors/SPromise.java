@@ -4,8 +4,9 @@ import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import som.VM;
+import som.interpreter.actors.EventualMessage.PromiseCallbackMessage;
+import som.interpreter.actors.EventualMessage.PromiseSendMessage;
 import som.vm.NotYetImplementedException;
-import som.vm.Symbols;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
@@ -112,7 +113,7 @@ public class SPromise extends SObjectWithoutFields {
     SResolver resolver = createResolver(promise, "eventualSendToPromise:", selector);
 
     assert owner == EventualMessage.getActorCurrentMessageIsExecutionOn() : "think this should be true because the promise is an Object and owned by this specific actor";
-    EventualMessage msg = new EventualMessage(owner, selector, args, resolver, null);
+    EventualMessage msg = new PromiseSendMessage(selector, args, owner, resolver);
     registerWhenResolved(msg, resolver);
     return promise;
   }
@@ -215,28 +216,21 @@ public class SPromise extends SObjectWithoutFields {
 
     assert owner != null;
     EventualMessage msg;
-    Actor target;
+
     if (callbackOrMsg instanceof SBlock) {
       // schedule the #whenResolved:/#onError:/... callback
       SBlock callback = (SBlock) callbackOrMsg;
-      msg = new EventualMessage(owner, SResolver.valueSelector,
-          new Object[] {callback, result}, resolver, EventualMessage.getActorCurrentMessageIsExecutionOn());
-      target = owner;
+      msg = new PromiseCallbackMessage(owner, callback, resolver);
+      ((PromiseCallbackMessage) msg).setPromiseValue(result, EventualMessage.getActorCurrentMessageIsExecutionOn());
     } else {
       // schedule the eventual message to the promise value
-      assert callbackOrMsg instanceof EventualMessage;
-      msg = (EventualMessage) callbackOrMsg;
+      assert callbackOrMsg instanceof PromiseSendMessage;
+      msg = (PromiseSendMessage) callbackOrMsg;
 
-      if (result instanceof SFarReference) {
-        // for far references, we need to schedule the message on the owner of the referenced value
-        target = ((SFarReference) result).getActor();
-      } else {
-        // otherwise, we schedule it on the promise's owner
-        target = owner;
-      }
-      msg.setReceiverForEventualPromiseSend(result, target, EventualMessage.getActorCurrentMessageIsExecutionOn());
+      ((PromiseSendMessage) msg).determineAndSetTarget(result, owner,
+          EventualMessage.getActorCurrentMessageIsExecutionOn());
     }
-    target.enqueueMessage(msg);
+    msg.getTarget().enqueueMessage(msg);
   }
 
   public final synchronized void addChainedPromise(@NotNull final SPromise promise) {
@@ -305,7 +299,6 @@ public class SPromise extends SObjectWithoutFields {
 
   public static class SResolver extends SObjectWithoutFields {
     @CompilationFinal private static SClass resolverClass;
-    private static final SSymbol valueSelector = Symbols.symbolFor("value:");
 
     protected final SPromise promise;
 
@@ -366,7 +359,6 @@ public class SPromise extends SObjectWithoutFields {
       if (promise.chainedPromises != null) {
         for (SPromise p : promise.chainedPromises) {
           resolveAndTriggerListeners(result, p);
-
         }
       }
     }
@@ -378,15 +370,16 @@ public class SPromise extends SObjectWithoutFields {
       // to the owner
       // if a reference is delivered to another actor, it needs to be wrapped
       // in a far reference
-      Object wrapped = p.owner.wrapForUse(result, EventualMessage.getActorCurrentMessageIsExecutionOn());
+      Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
+      Object wrapped = p.owner.wrapForUse(result, current);
 
       assert !(result instanceof SPromise);
 
       synchronized (p) {
         p.value = wrapped;
         p.resolved = true;
-        scheduleAll(p, wrapped);
-        resolveChainedPromises(p, wrapped);
+        scheduleAll(p, result);
+        resolveChainedPromises(p, result);
       }
     }
 
