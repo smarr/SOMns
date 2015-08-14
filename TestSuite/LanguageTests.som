@@ -486,11 +486,9 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
       | m mm |
       assert: (ObjectMirror reflecting: Object)       isValue description: 'Object'.
       assert: (ObjectMirror reflecting: Array)        isValue description: 'Array'.
-      
-      (* Not currently in modules that are Values themselves *)
-      deny: (ObjectMirror reflecting: ObjectMirror) isValue description: 'ObjectMirror'. 
-      deny: (ObjectMirror reflecting: Set)          isValue description: 'Set'.
-      deny: (ObjectMirror reflecting: TestContext)  isValue description: 'TestContext'.
+      assert: (ObjectMirror reflecting: ObjectMirror) isValue description: 'ObjectMirror'. 
+      assert: (ObjectMirror reflecting: Set)          isValue description: 'Set'.
+      assert: (ObjectMirror reflecting: TestContext)  isValue description: 'TestContext'.
       
       m := Mutable new: 0.
       deny: (ObjectMirror reflecting: m Immutable) isValue description: 'm Immutable not a Value'

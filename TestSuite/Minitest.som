@@ -1,4 +1,4 @@
-class Minitest usingPlatform: platform = (
+class Minitest usingPlatform: platform = Value (
 (* Minitest is the unit testing framework of Newspeak.
 
 Users familiar with SUnit should note that Minitest is not an SUnit port or
