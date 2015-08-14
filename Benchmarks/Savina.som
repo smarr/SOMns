@@ -544,7 +544,176 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     )
   )
 
-  public class ConcurrentSortedLinkedList = Benchmark ()( todo = () )
+  public class ConcurrentSortedLinkedList numWorkers: w numMessagesPerWorker: mw writePercentage: wp sizePercentage: sp = Benchmark <: Value (
+  | private numWorkers           = w.
+    private numMessagesPerWorker = mw.
+    private writePercentage      = wp.
+    private sizePercentage       = sp.
+  |)(
+    class Master new: completionRes = (
+    | private workers    = Array new: numWorkers.
+      private sortedList = (actors createActorFromValue: SortedList) <-: new: completionRes.
+      private numWorkersTerminated ::= 0.
+    |
+      workers doIndexes: [:i |
+        workers at: i put: ((actors createActorFromValue: Worker) <-: new: self sortedList: sortedList id: i).
+        (workers at: i) <-: doWork.
+      ]
+    )(
+      public endWork = (
+        numWorkersTerminated := numWorkersTerminated + 1.
+        numWorkersTerminated = numWorkers ifTrue: [
+          sortedList <-: endWork
+        ]
+      )
+    )
+    
+    class Worker new: master sortedList: sortedList id: id = (
+    | private master = master.
+      private sortedList = sortedList.
+      private messageCount ::= 0.
+      private random = Random new: id + numMessagesPerWorker + writePercentage + sizePercentage.
+    |)(
+      public endWork = (
+        messageCount := messageCount + 1.
+        master <-: endWork.
+      )
+
+      public doWork = (
+        messageCount := messageCount + 1.
+        messageCount <= numMessagesPerWorker
+          ifTrue: [
+            | anInt |
+            anInt := random next % 100.
+            anInt < sizePercentage
+              ifTrue: [ sortedList <-: size: self.
+                        ^ self ].
+            anInt < (sizePercentage + writePercentage)
+              ifTrue: [ sortedList <-: write: random next sender: self.
+                        ^ self].
+            sortedList <-: contains: random next sender: self ]
+          ifFalse: [
+            master <-: endWork
+          ]
+      )
+      
+      public result: val = (
+        self doWork
+      )
+    )
+    
+    class SortedList new: completionRes = (
+    | private completionRes = completionRes.
+      private dataList = SortedLinkedList new.
+    |)(
+      public write: anInt sender: sender = (
+        dataList add: anInt.
+        sender <-: result: anInt
+      )
+      
+      public contains: anInt sender: sender = (
+        | result |
+        result := dataList contains: anInt.
+        sender <-: result: result.
+      )
+      
+      public size: sender = (
+        sender <-: result: dataList size
+      )
+      
+      public endWork = (
+        completionRes resolve: dataList size
+      )
+    )
+    
+    class SortedLinkedList = (
+    | private head ::= nil.
+      private iterator ::= nil.
+    |)(
+      class Node new: i = (
+      | public item ::= i.
+        public next ::= nil.
+      |)()
+      
+      public isEmpty = ( ^ head isNil )
+      
+      public add: item = (
+        | newNode after before |
+        newNode := Node new: item.
+        head ifNil: [
+          head := newNode.
+          ^ self ].
+
+        item < head item ifTrue: [
+          newNode next: head.
+          head := newNode.
+          ^ self ].
+        
+        after  := head next.
+        before := head.
+        
+        [ after notNil and: [ item >= after item] ] whileTrue: [
+          before := after.
+          after  := after next.
+        ].
+        
+        newNode next: before next.
+        before next: newNode.
+      )
+      
+      public contains: item = (
+        | n |
+        n := head.
+        [ n notNil ] whileTrue: [
+          item = n item ifTrue: [ ^ true ].
+          n := n next.
+        ].
+        ^ false
+      )
+      
+      public size = (
+        | r n |
+        r := 0.
+        n := head.
+        [ n notNil ] whileTrue: [
+          r := r + 1.
+          n := n next
+        ].
+        ^ r
+      )
+    )
+  
+    public benchmark = (
+      | master completionPP |
+      completionPP := actors createPromisePair.
+      master := (actors createActorFromValue: Master) <-: new: completionPP resolver.
+      ^ completionPP promise
+    )
+    
+    public verifyResult: result = (
+      (numWorkers = 10 and: [numMessagesPerWorker =  500 and: [writePercentage = 10 and: [sizePercentage = 1]]]) ifTrue: [ ^ result =  476 ].
+      (numWorkers = 10 and: [numMessagesPerWorker = 1000 and: [writePercentage = 10 and: [sizePercentage = 1]]]) ifTrue: [ ^ result =  992 ].
+      (numWorkers = 20 and: [numMessagesPerWorker = 1000 and: [writePercentage = 10 and: [sizePercentage = 1]]]) ifTrue: [ ^ result = 1959 ].
+      (numWorkers = 20 and: [numMessagesPerWorker = 2000 and: [writePercentage = 10 and: [sizePercentage = 1]]]) ifTrue: [ ^ result = 3956 ].
+      
+      (* otherwise, warn that we don't know whether it is correct. *)
+      ('---- result: ' + result asString + ' dont have a hardcoded verification result for this config yet') println.
+      ^ false
+    )
+  ) : (
+    public newInstance: problemSize = (
+      | problem |
+      problem := problemSize split: ':'.
+      ^ self        numWorkers: (problem at: 1) asInteger
+          numMessagesPerWorker: (problem at: 2) asInteger
+               writePercentage: (problem at: 3) asInteger
+                sizePercentage: (problem at: 4) asInteger
+    )
+    
+    public setupVerifiedRun: run = (
+      run problemSize: '20:8000:10:1'
+    )
+  )
 
   public class ProducerConsumerBoundedBuffer = Benchmark ()( todo = () )
   public class Philosophers = Benchmark ()( todo = () )
