@@ -2,6 +2,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
 | private Benchmark = harness Benchmark.
   private actors    = platform actors.
   private Array     = platform kernel Array.
+  private Vector    = platform kernel Vector.
   private Dictionary= platform collections Dictionary.
   private system    = platform system.
 |
@@ -715,7 +716,163 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     )
   )
 
-  public class ProducerConsumerBoundedBuffer = Benchmark ()( todo = () )
+  public class ProducerConsumerBoundedBuffer bufferSize: bs numProducers: np numConsumers: nc numItemsPerProducer: ni = Benchmark <: Value (
+  | private bufferSize   = bs.
+    private numProducers = np.
+    private numConsumers = nc.
+    private numItemsPerProducer = ni.
+    private prodCost     = 25.
+    private consCost     = 25.
+  |)(
+    class Data new: datum from: sender = Value (
+    | public datum  = datum.
+      public sender = sender.|)()
+    
+    class ManagerActor new: completionRes = (
+    | private adjustedBufferSize = bufferSize - numProducers.
+      private availableProducers = Vector new.
+      private availableConsumers = Vector new.
+      private pendingData        = Vector new.
+      private numTerminatedProducers ::= 0.
+      private producers          = Array new: numProducers.
+      private consumers          = Array new: numConsumers.
+      private completionRes      = completionRes.
+      private dataSum ::= 0.0.
+    |
+      producers doIndexes: [:i |
+        | producer |
+        producer := (actors createActorFromValue: ProducerActor) <-: new: i manager: self.
+        producers at: i put: producer.
+        producer <-: produceData.
+      ].
+      consumers doIndexes: [:i |
+        | consumer |
+        consumer := (actors createActorFromValue: ConsumerActor) <-: new: i manager: self.
+        consumers at: i put: consumer.
+        availableConsumers append: consumer.
+      ]
+    )(
+      public data: datum from: producer = (
+        dataSum := dataSum + datum.
+        availableConsumers isEmpty
+          ifTrue:  [ pendingData append: (Data new: datum from: producer) ]
+          ifFalse: [ availableConsumers removeFirst <-: data: datum from: producer ].
+        
+        pendingData size >= adjustedBufferSize
+          ifTrue:  [ availableProducers append: producer ]
+          ifFalse: [ producer <-: produceData ]
+      )
+      
+      public consume: consumer = (
+        pendingData isEmpty
+          ifTrue: [
+            availableConsumers append: consumer.
+            tryExit ]
+          ifFalse: [
+            | data |
+            data := pendingData removeFirst.
+            consumer <-: data: data datum from: data sender.
+            availableProducers isEmpty ifFalse: [
+              availableProducers removeFirst <-: produceData ] ].
+      )
+      
+      public producerExit = (
+        numTerminatedProducers := numTerminatedProducers + 1.
+        tryExit
+      )
+      
+      private tryExit = (
+        (numTerminatedProducers = numProducers and: [availableConsumers size = numConsumers])
+          ifTrue: [
+            consumers do: [:c | c <-: exit ].
+            completionRes resolve: dataSum ].
+      )
+    )
+    
+    class ProducerActor new: id manager: manager = (
+    | private prodItem ::= 0.0.
+      private itemsProduced ::= 0.
+      private manager = manager.
+    |)(
+      private prodData = (
+        prodItem := processItem: prodItem cost: prodCost.
+        manager <-: data: prodItem from: self.
+        itemsProduced := itemsProduced + 1.
+      )
+      
+      public produceData = (
+        itemsProduced < numItemsPerProducer
+          ifTrue:  [ self prodData ]
+          ifFalse: [ manager <-: producerExit ]
+      )
+    )
+    
+    class ConsumerActor new: id manager: manager = (
+    | private consItem ::= 0.0.
+      private manager = manager.
+    |)(
+      private consumeDataItem: dataToConsume = (
+        consItem := processItem: consItem + dataToConsume cost: consCost.
+      )
+      
+      public data: datum from: sender = (
+        consumeDataItem: datum.
+        manager <-: consume: self
+      )
+      
+      public exit = ()
+    )
+    
+    private processItem: curTerm cost: cost = (
+      | res random |
+      res    := curTerm.
+      random := Random new: cost.
+      
+      cost > 0
+        ifTrue: [
+          cost timesRepeat: [
+            100 timesRepeat: [
+              res := res + (random next abs + 0.01) log ] ] ]
+        ifFalse: [
+          res := res + (random next abs + 0.01) log ].
+      
+      ^ res
+    )
+  
+    public benchmark = (
+      | manager completionPP |
+      completionPP := actors createPromisePair.
+      manager := (actors createActorFromValue: ManagerActor) <-: new: completionPP resolver.
+      ^ completionPP promise
+    )
+    
+    public verifyResult: result = (
+      (bufferSize = 40 and: [numProducers = 10 and: [numConsumers = 10 and: [numItemsPerProducer =  60]]]) ifTrue: [^ result round =  461187197].
+      (bufferSize = 40 and: [numProducers = 10 and: [numConsumers = 10 and: [numItemsPerProducer =  80]]]) ifTrue: [^ result round =  816528152].
+      (bufferSize = 40 and: [numProducers = 20 and: [numConsumers = 20 and: [numItemsPerProducer =  80]]]) ifTrue: [^ result round = 1633056304].
+      (bufferSize = 50 and: [numProducers = 20 and: [numConsumers = 20 and: [numItemsPerProducer = 100]]]) ifTrue: [^ result round = 2545350104].
+      (bufferSize = 50 and: [numProducers = 40 and: [numConsumers = 40 and: [numItemsPerProducer = 100]]]) ifTrue: [^ result round = 5090700207].
+       
+      (* otherwise, warn that we don't know whether it is correct. *)
+      ('---- result: ' + result asString + ' dont have a hardcoded verification result for this config yet') println.
+      ^ false
+    )
+  ) : (
+    public newInstance: problemSize = (
+      | problem |
+      problem := problemSize split: ':'.
+      
+      ^ self bufferSize: (problem at: 1) asInteger
+           numProducers: (problem at: 2) asInteger
+           numConsumers: (problem at: 3) asInteger
+    numItemsPerProducer: (problem at: 4) asInteger
+    )
+    
+    public setupVerifiedRun: run = (
+      run problemSize: '50:40:40:1000'
+    )
+  )
+
   public class Philosophers = Benchmark ()( todo = () )
   public class SleepingBarber = Benchmark ()( todo = ( USE_MATH_RANDOM_WHICH_SEQUENTIALIZES ) )
   public class CigaretteSmokers = Benchmark ()( todo = ( USE_MATH_RANDOM_WHICH_SEQUENTIALIZES ) )
