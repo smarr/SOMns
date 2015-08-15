@@ -964,8 +964,10 @@ public final class Parser {
         evenutalSend = accept(EventualSend);
       }
 
-      msg = binaryConsecutiveMessages(builder, msg, evenutalSend);
-      evenutalSend = accept(EventualSend);
+      if (sym == OperatorSequence || symIn(binaryOpSyms)) {
+        msg = binaryConsecutiveMessages(builder, msg, evenutalSend);
+        evenutalSend = accept(EventualSend);
+      }
 
       if (sym == Keyword) {
         msg = keywordMessage(builder, msg, true, evenutalSend);
