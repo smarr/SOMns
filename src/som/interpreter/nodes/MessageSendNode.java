@@ -55,6 +55,7 @@ import som.primitives.arithmetic.GreaterThanOrEqualPrimNodeGen;
 import som.primitives.arithmetic.GreaterThanPrimNodeGen;
 import som.primitives.arithmetic.LessThanOrEqualPrimNodeGen;
 import som.primitives.arithmetic.LessThanPrimFactory;
+import som.primitives.arithmetic.LogPrimFactory;
 import som.primitives.arithmetic.ModuloPrimFactory;
 import som.primitives.arithmetic.MultiplicationPrimFactory;
 import som.primitives.arithmetic.RemainderPrimFactory;

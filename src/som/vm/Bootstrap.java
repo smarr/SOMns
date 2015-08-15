@@ -53,6 +53,7 @@ import som.primitives.arithmetic.AdditionPrimFactory;
 import som.primitives.arithmetic.DividePrimFactory;
 import som.primitives.arithmetic.DoubleDivPrimFactory;
 import som.primitives.arithmetic.LessThanPrimFactory;
+import som.primitives.arithmetic.LogPrimFactory;
 import som.primitives.arithmetic.ModuloPrimFactory;
 import som.primitives.arithmetic.MultiplicationPrimFactory;
 import som.primitives.arithmetic.RemainderPrimFactory;
@@ -226,6 +227,7 @@ public final class Bootstrap {
     allFactories.add(ModuloPrimFactory.getInstance());
     allFactories.add(MultiplicationPrimFactory.getInstance());
     allFactories.add(RemainderPrimFactory.getInstance());
+    allFactories.add(LogPrimFactory.getInstance());
     allFactories.add(SinPrimFactory.getInstance());
     allFactories.add(SqrtPrimFactory.getInstance());
     allFactories.add(SubtractionPrimFactory.getInstance());
