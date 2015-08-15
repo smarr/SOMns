@@ -276,6 +276,12 @@ public final class MessageSendNode {
                 argumentNodes[0], SinPrimFactory.create(null)));
           }
           break;
+        case "log":
+          if (receiver instanceof Double) {
+            return replace(new EagerUnaryPrimitiveNode(selector,
+                argumentNodes[0], LogPrimFactory.create(null)));
+          }
+          break;
         case "sqrt":
           if (receiver instanceof Number) {
             return replace(new EagerUnaryPrimitiveNode(selector,
