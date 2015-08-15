@@ -59,5 +59,16 @@ class DoubleTests usingPlatform: platform testFramework: minitest = (
       assert: 1.5707963267948966 sin equals: 1.0.
       assert: 3.2 sin < 0
     )
+    
+    public testAbs = (
+      assert:  1.5 abs equals: 1.5.
+      assert: -1.5 abs equals: 1.5.
+    )
+    
+    public testLog = (
+      assert: 1.0 log               equals: 0.0.
+      assert: 2.718281828459045 log equals: 1.0.
+    )
+
   ) : ( TEST_CONTEXT = () )
 )
