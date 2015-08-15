@@ -241,6 +241,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     public % argument  = ( ^ vmMirror double: self modulo: argument )
     public abs         = ( ^ (self < 0.0) ifTrue: (0.0 - self) ifFalse: self )
     public sin         = ( ^ vmMirror doubleSin:  self )
+    public log         = ( ^ vmMirror doubleLog:  self )
     public sqrt        = ( ^ vmMirror doubleSqrt: self )
     public negated     = ( ^ 0.0 - self )
     public round       = ( ^ vmMirror doubleRound: self )
