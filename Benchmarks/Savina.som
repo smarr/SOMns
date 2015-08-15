@@ -692,6 +692,9 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     )
     
     public verifyResult: result = (
+      (numWorkers = 10 and: [numMessagesPerWorker =   20 and: [writePercentage = 10 and: [sizePercentage = 1]]]) ifTrue: [ ^ result =   18 ].
+      (numWorkers = 10 and: [numMessagesPerWorker =  100 and: [writePercentage = 10 and: [sizePercentage = 1]]]) ifTrue: [ ^ result =  106 ].
+      (numWorkers = 10 and: [numMessagesPerWorker =  300 and: [writePercentage = 10 and: [sizePercentage = 1]]]) ifTrue: [ ^ result =  292 ].
       (numWorkers = 10 and: [numMessagesPerWorker =  500 and: [writePercentage = 10 and: [sizePercentage = 1]]]) ifTrue: [ ^ result =  476 ].
       (numWorkers = 10 and: [numMessagesPerWorker = 1000 and: [writePercentage = 10 and: [sizePercentage = 1]]]) ifTrue: [ ^ result =  992 ].
       (numWorkers = 20 and: [numMessagesPerWorker = 1000 and: [writePercentage = 10 and: [sizePercentage = 1]]]) ifTrue: [ ^ result = 1959 ].
