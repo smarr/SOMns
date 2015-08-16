@@ -3,9 +3,7 @@ package som.primitives.arithmetic;
 import java.math.BigInteger;
 
 import som.primitives.Primitive;
-import som.vm.NotYetImplementedException;
 
-import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
@@ -36,7 +34,6 @@ public abstract class DividePrim extends ArithmeticPrim {
 
   @Specialization
   public final Object doLong(final long left, final double right) {
-    CompilerAsserts.neverPartOfCompilation("DividePrim");
-    throw new NotYetImplementedException(); // TODO: need to implement the "//" case here directly... : resendAsDouble("//", left, (SDouble) rightObj, frame.pack());
+    return (long) (left / right);
   }
 }
