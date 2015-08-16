@@ -186,11 +186,14 @@ class IntegerTests usingPlatform: platform testFramework: minitest = (
     )
 
     public testDivision = (
-      self assert:  1 equals: (  1/  1).                       
-      self assert:  1 equals: (  3/  2).   
-      self assert: -2 equals: (  4/ -2).      
-      self assert: -2 equals: ( -6/  3).      
-      self assert:  3 equals: (-12/ -4).      
+      self assert:  1 equals: (  1/  1).
+      self assert:  1 equals: (  3/  2).
+      self assert: -2 equals: (  4/ -2).
+      self assert: -2 equals: ( -6/  3).
+      self assert:  3 equals: (-12/ -4).
+
+      self assert:  3 equals: 7 / 2.0.
+      self assert:  2 equals: 7 / 3.5.
     )
 
     public testDouble = (
