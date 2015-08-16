@@ -1108,11 +1108,110 @@ class Savina usingPlatform: platform andHarness: harness = Value (
   
   public class UnbalancedBobwebbedTree = Benchmark ()( todo = () )
   public class OnlineFacilityLocation = Benchmark ()( todo = () )
-  public class TrapezoidalApproximation = Benchmark ()( todo = () )
   public class PrecisePiComputation = Benchmark ()( todo = () )
   public class RecursiveMatricMultiplication = Benchmark ()( todo = () )
   public class Quicksort = Benchmark ()( todo = () )
   public class AllPairsShortestPath = Benchmark ()( todo = ( USES_SHARED_STATE ) )
+
+  public class TrapezoidalApproximation numWorkers: w numPieces: n left: l right: r = Benchmark <: Value (
+  | private numWorkers = w.
+    private numPieces  = n.
+    private left       = l.
+    private right      = r.
+    private precision  = (r - l) // n.
+  |)(
+    class Master new: completionRes = (
+    | private workers = Array new: numWorkers withAll: ((actors createActorFromValue: Worker) <-: new: self).
+      private completionRes    = completionRes.
+      private numTermsReceived ::= 0.
+      private resultArea       ::= 0.0.
+    |)(
+      public result: result = (
+        numTermsReceived := numTermsReceived + 1.
+        resultArea := resultArea + result.
+        
+        numTermsReceived = numWorkers ifTrue: [
+          completionRes resolve: resultArea ]
+      )
+      
+      public work: l and: r and: h = (
+        | workerRange |
+        workerRange := (r - l) // numWorkers.
+        workers doIndexes: [:i |
+          | wl wr |
+          wl := workerRange * (i - 1) + l.
+          wr := wl + workerRange.
+          (workers at: i) <-: work: l and: r and: h
+        ]
+      )
+    )
+    
+    class Worker new: master = (
+    | private master = master.
+    |)(
+      public work: l and: r and: h = (
+        | n accumArea |
+        n := (r - l) / h.
+        accumArea := 0.0.
+        
+        0 to: n - 1 do: [:i |
+          | lx rx ly ry area |
+          lx := (i * h) + l.
+          rx := lx + h.
+          
+          ly := fx: lx.
+          ry := fx: rx.
+          
+          area := 0.5 * (ly + ry) * h.
+          accumArea := accumArea + area.
+        ].
+        
+        master <-: result: accumArea
+      )
+      
+      private fx: x = (
+        | a b c d r |
+        a := ((x * x * x) - 1.0) sin.
+        b := x + 1.0.
+        c := a // b.
+        d := ((2.0 * x) exp + 1.0) sqrt.
+        r := c * d.
+        ^ r
+      )
+    )
+    
+    public benchmark = (
+      | master completionPP |
+      completionPP := actors createPromisePair.
+      master := (actors createActorFromValue: Master) <-: new: completionPP resolver.
+      master <-: work: left and: right and: precision.
+      ^ completionPP promise
+    )
+    
+    public verifyResult: result = (
+      (numWorkers = 100 and: [numPieces =  2500 and: [left = 1 and: [right = 5]]]) ifTrue: [ ^ result = 41.09037687472329 ].
+      (numWorkers = 100 and: [numPieces =  5000 and: [left = 1 and: [right = 5]]]) ifTrue: [ ^ result = 41.09352993029936 ].
+      (numWorkers = 100 and: [numPieces = 10000 and: [left = 1 and: [right = 5]]]) ifTrue: [ ^ result = 41.0943179572127  ].
+    
+      (* otherwise, warn that we don't know whether it is correct. *)
+      ('---- result: ' + result asString + ' dont have a hardcoded verification result for this config yet') println.
+      ^ false
+    )
+  ) : (
+    public newInstance: problemSize = (
+      | problem |
+      problem := problemSize split: ':'.
+      ^ self numWorkers: (problem at: 1) asInteger
+              numPieces: (problem at: 2) asInteger
+                   left: (problem at: 3) asInteger
+                  right: (problem at: 4) asInteger
+    )
+    
+    public setupVerifiedRun: run = (
+      run problemSize: '100:10000000:1:5'
+    )
+  )
+  
   
   
   public class SuccessiveOverRelaxation = Benchmark ()( todo = () )
