@@ -51,6 +51,7 @@ import som.primitives.UnequalsPrimFactory;
 import som.primitives.arithmetic.AdditionPrimFactory;
 import som.primitives.arithmetic.DividePrimFactory;
 import som.primitives.arithmetic.DoubleDivPrimFactory;
+import som.primitives.arithmetic.ExpPrimFactory;
 import som.primitives.arithmetic.GreaterThanOrEqualPrimNodeGen;
 import som.primitives.arithmetic.GreaterThanPrimNodeGen;
 import som.primitives.arithmetic.LessThanOrEqualPrimNodeGen;
@@ -274,6 +275,12 @@ public final class MessageSendNode {
           if (receiver instanceof Double) {
             return replace(new EagerUnaryPrimitiveNode(selector,
                 argumentNodes[0], SinPrimFactory.create(null)));
+          }
+          break;
+        case "exp":
+          if (receiver instanceof Double) {
+            return replace(new EagerUnaryPrimitiveNode(selector,
+                argumentNodes[0], ExpPrimFactory.create(null)));
           }
           break;
         case "log":
