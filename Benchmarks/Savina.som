@@ -523,6 +523,8 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     )
     
     public verifyResult: result = (
+      (numEntities =  20 and: [numMessages = 100  and: [writePercentage = 20]]) ifTrue: [ ^ result =  904 ].
+      (numEntities =  20 and: [numMessages = 100  and: [writePercentage = 50]]) ifTrue: [ ^ result = 1560 ].
       (numEntities = 100 and: [numMessages = 100  and: [writePercentage = 50]]) ifTrue: [ ^ result = 4759 ].
       (numEntities =  10 and: [numMessages = 1000 and: [writePercentage = 50]]) ifTrue: [ ^ result = 4816 ].
       (numEntities =  20 and: [numMessages = 1000 and: [writePercentage = 50]]) ifTrue: [ ^ result = 7265 ].
