@@ -1,11 +1,19 @@
 package som.interpreter.actors;
 
 import som.VM;
+import som.compiler.ClassBuilder.ClassDefinitionId;
+import som.compiler.MethodBuilder;
+import som.interpreter.Method;
+import som.interpreter.nodes.ArgumentReadNode.LocalArgumentReadNode;
+import som.interpreter.nodes.ArgumentReadNode.LocalSelfReadNode;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
+import som.vm.Symbols;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -14,10 +22,28 @@ public final class EventualSendNode extends AbstractMessageSendNode {
 
   protected final SSymbol selector;
 
+  protected final RootCallTarget onReceive;
+
+  private static final ClassDefinitionId fakeId = new ClassDefinitionId(Symbols.symbolFor("--fake--"));
+
   public EventualSendNode(final SSymbol selector,
       final ExpressionNode[] arguments, final SourceSection source) {
     super(arguments, source);
     this.selector = selector;
+
+    MethodBuilder eventualInvoke = new MethodBuilder(true);
+    ExpressionNode[] args = new ExpressionNode[arguments.length];
+    args[0] = new LocalSelfReadNode(fakeId, null);
+    for (int i = 1; i < arguments.length; i++) {
+      args[i] = new LocalArgumentReadNode(i, null);
+    }
+    AbstractMessageSendNode invoke = MessageSendNode.createMessageSend(selector, args, source);
+
+    Method m = new Method(source, invoke,
+        eventualInvoke.getCurrentMethodScope(),
+        (ExpressionNode) invoke.deepCopy());
+
+    onReceive = m.createCallTarget();
   }
 
   @Override
@@ -42,7 +68,7 @@ public final class EventualSendNode extends AbstractMessageSendNode {
           EventualMessage.getActorCurrentMessageIsExecutionOn(), selector, args);
     } else if (rcvrObject instanceof SPromise) {
       SPromise rcvr = (SPromise) rcvrObject;
-      return rcvr.whenResolved(selector, args);
+      return rcvr.whenResolved(selector, args, onReceive);
     } else {
       Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
       return current.eventualSend(current, selector, args);

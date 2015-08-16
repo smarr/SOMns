@@ -13,6 +13,7 @@ import som.vmobjects.SBlock;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.RootCallTarget;
 
 
 public abstract class EventualMessage extends RecursiveAction {
@@ -20,7 +21,7 @@ public abstract class EventualMessage extends RecursiveAction {
   private static final SSymbol VALUE_SELECTOR = Symbols.symbolFor("value:");
 
   protected final Object[]  args;
-  private   final SResolver resolver;
+  protected final SResolver resolver;
 
   protected EventualMessage(final Object[] args,
       final SResolver resolver) {
@@ -105,6 +106,7 @@ public abstract class EventualMessage extends RecursiveAction {
   /** A message send after a promise got resolved. */
   private abstract static class PromiseMessage extends EventualMessage {
     private static final long serialVersionUID = -6246726751425824082L;
+
     protected final Actor originalSender; // initial owner of the arguments
 
     public PromiseMessage(final Object[] arguments, final Actor originalSender,
@@ -121,15 +123,17 @@ public abstract class EventualMessage extends RecursiveAction {
   public static final class PromiseSendMessage extends PromiseMessage {
     private static final long serialVersionUID = 2637873418047151001L;
 
+    protected final RootCallTarget onReceive;
     private final SSymbol selector;
     private Actor target;
     private Actor finalSender;
 
     protected PromiseSendMessage(final SSymbol selector,
         final Object[] arguments, final Actor originalSender,
-        final SResolver resolver) {
+        final SResolver resolver, final RootCallTarget onReceive) {
       super(arguments, originalSender, resolver);
-      this.selector = selector;
+      this.selector  = selector;
+      this.onReceive = onReceive;
     }
 
     public void determineAndSetTarget(final Object rcvr, final Actor target, final Actor sendingActor) {
@@ -150,6 +154,22 @@ public abstract class EventualMessage extends RecursiveAction {
     @Override
     protected Actor getTarget() {
       return target;
+    }
+
+    @Override
+    protected void executeMessage() {
+      CompilerAsserts.neverPartOfCompilation("Not Optimized! But also not sure it can be part of compilation anyway");
+
+      Object rcvrObj = args[0];
+      assert rcvrObj != null;
+
+      Object result;
+      assert !(rcvrObj instanceof SFarReference);
+      assert !(rcvrObj instanceof SPromise);
+
+      result = onReceive.call(args);
+
+      resolver.resolve(result);
     }
 
     @Override
@@ -204,7 +224,7 @@ public abstract class EventualMessage extends RecursiveAction {
   protected abstract SSymbol getSelector();
 
   @Override
-  protected void compute() {
+  protected final void compute() {
     Actor target = getTarget();
     actorThreadLocal.set(target);
 

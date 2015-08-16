@@ -15,6 +15,7 @@ import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.RootCallTarget;
 import com.sun.istack.internal.NotNull;
 
 
@@ -108,12 +109,12 @@ public class SPromise extends SObjectWithoutFields {
     return promise;
   }
 
-  public final SPromise whenResolved(final SSymbol selector, final Object[] args) {
+  public final SPromise whenResolved(final SSymbol selector, final Object[] args, final RootCallTarget onResolve) {
     SPromise  promise  = createPromise(EventualMessage.getActorCurrentMessageIsExecutionOn());
     SResolver resolver = createResolver(promise, "eventualSendToPromise:", selector);
 
     assert owner == EventualMessage.getActorCurrentMessageIsExecutionOn() : "think this should be true because the promise is an Object and owned by this specific actor";
-    EventualMessage msg = new PromiseSendMessage(selector, args, owner, resolver);
+    EventualMessage msg = new PromiseSendMessage(selector, args, owner, resolver, onResolve);
     registerWhenResolved(msg, resolver);
     return promise;
   }
