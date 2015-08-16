@@ -69,6 +69,10 @@ class DoubleTests usingPlatform: platform testFramework: minitest = (
       assert: 1.0 log               equals: 0.0.
       assert: 2.718281828459045 log equals: 1.0.
     )
-
+    
+    public testExp = (
+      assert: 1.0 exp equals: 2.718281828459045.
+      assert: 0.0 exp equals: 1.0.
+    )
   ) : ( TEST_CONTEXT = () )
 )
