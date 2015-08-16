@@ -43,6 +43,7 @@ public class SomTests {
   public static Iterable<Object[]> data() {
     return Arrays.asList(new Object[][] {
         {"LanguageTests"   },
+        {"MixinTests"      },
         {"CollectionTests" },
         {"DoubleTests"     },
         {"IntegerTests"    },
@@ -50,6 +51,8 @@ public class SomTests {
         {"StringTests"     },
         {"SymbolTests"     },
         {"SystemTests"     },
+        {"BenchmarkHarnessTests"},
+        {"ActorTests"      },
         {"MinitestTests"   },
       });
   }
