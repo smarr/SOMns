@@ -104,7 +104,7 @@ public abstract class EventualMessage extends RecursiveAction {
   }
 
   /** A message send after a promise got resolved. */
-  private abstract static class PromiseMessage extends EventualMessage {
+  public abstract static class PromiseMessage extends EventualMessage {
     private static final long serialVersionUID = -6246726751425824082L;
 
     protected final Actor originalSender; // initial owner of the arguments
@@ -114,6 +114,8 @@ public abstract class EventualMessage extends RecursiveAction {
       super(arguments, resolver);
       this.originalSender = originalSender;
     }
+
+    public abstract void resolve(final Object rcvr, final Actor target, final Actor sendingActor);
   }
 
   /**
@@ -136,7 +138,12 @@ public abstract class EventualMessage extends RecursiveAction {
       this.onReceive = onReceive;
     }
 
-    public void determineAndSetTarget(final Object rcvr, final Actor target, final Actor sendingActor) {
+    @Override
+    public void resolve(final Object rcvr, final Actor target, final Actor sendingActor) {
+      determineAndSetTarget(rcvr, target, sendingActor);
+    }
+
+    private void determineAndSetTarget(final Object rcvr, final Actor target, final Actor sendingActor) {
       CompilerAsserts.neverPartOfCompilation("not optimized for compilation");
 
       args[0] = rcvr;
@@ -194,13 +201,18 @@ public abstract class EventualMessage extends RecursiveAction {
       super(new Object[] {callback, null}, owner, resolver);
     }
 
+    @Override
+    public void resolve(final Object rcvr, final Actor target, final Actor sendingActor) {
+      setPromiseValue(rcvr, sendingActor);
+    }
+
     /**
      * The value the promise was resolved to on which this callback is
      * registered on.
      *
      * @param resolvingActor - the owner of the value, the promise was resolved to.
      */
-    public void setPromiseValue(final Object value, final Actor resolvingActor) {
+    private void setPromiseValue(final Object value, final Actor resolvingActor) {
       args[1] = originalSender.wrapForUse(value, resolvingActor);
     }
 
