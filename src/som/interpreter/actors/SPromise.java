@@ -96,12 +96,14 @@ public class SPromise extends SObjectWithoutFields {
     promiseClass = cls;
   }
 
-  public final SPromise whenResolved(final SBlock block) {
+  public final SPromise whenResolved(final SBlock block,
+      final RootCallTarget blockCallTarget) {
     assert block.getMethod().getNumberOfArguments() == 2;
     SPromise  promise  = createPromise(EventualMessage.getActorCurrentMessageIsExecutionOn());
     SResolver resolver = createResolver(promise, "wR:block");
 
-    PromiseCallbackMessage msg = new PromiseCallbackMessage(owner, block, resolver);
+    PromiseCallbackMessage msg = new PromiseCallbackMessage(owner, block,
+        resolver, blockCallTarget);
     registerWhenResolved(msg);
 
     return promise;
@@ -117,26 +119,28 @@ public class SPromise extends SObjectWithoutFields {
     return promise;
   }
 
-  public final SPromise onError(final SBlock block) {
+  public final SPromise onError(final SBlock block, final RootCallTarget blockCallTarget) {
     assert block.getMethod().getNumberOfArguments() == 2;
 
     SPromise  promise  = createPromise(EventualMessage.getActorCurrentMessageIsExecutionOn());
     SResolver resolver = createResolver(promise, "oE:block");
 
-    PromiseCallbackMessage msg = new PromiseCallbackMessage(owner, block, resolver);
+    PromiseCallbackMessage msg = new PromiseCallbackMessage(owner, block, resolver, blockCallTarget);
     registerOnError(msg);
     return promise;
   }
 
-  public final SPromise whenResolvedOrError(final SBlock resolved, final SBlock error) {
+  public final SPromise whenResolvedOrError(final SBlock resolved,
+      final SBlock error, final RootCallTarget resolverTarget,
+      final RootCallTarget errorTarget) {
     assert resolved.getMethod().getNumberOfArguments() == 2;
     assert error.getMethod().getNumberOfArguments() == 2;
 
     SPromise  promise  = createPromise(EventualMessage.getActorCurrentMessageIsExecutionOn());
     SResolver resolver = createResolver(promise, "wROE:block:block");
 
-    PromiseCallbackMessage onResolved = new PromiseCallbackMessage(owner, resolved, resolver);
-    PromiseCallbackMessage onError    = new PromiseCallbackMessage(owner, error, resolver);
+    PromiseCallbackMessage onResolved = new PromiseCallbackMessage(owner, resolved, resolver, resolverTarget);
+    PromiseCallbackMessage onError    = new PromiseCallbackMessage(owner, error, resolver, errorTarget);
 
     synchronized (this) {
       registerWhenResolved(onResolved);
@@ -175,13 +179,14 @@ public class SPromise extends SObjectWithoutFields {
     }
   }
 
-  public final SPromise onException(final SClass exceptionClass, final SBlock block) {
+  public final SPromise onException(final SClass exceptionClass,
+      final SBlock block, final RootCallTarget blockCallTarget) {
     assert block.getMethod().getNumberOfArguments() == 2;
 
     SPromise  promise  = createPromise(EventualMessage.getActorCurrentMessageIsExecutionOn());
     SResolver resolver = createResolver(promise, "oEx:class:block");
 
-    PromiseCallbackMessage msg = new PromiseCallbackMessage(owner, block, resolver);
+    PromiseCallbackMessage msg = new PromiseCallbackMessage(owner, block, resolver, blockCallTarget);
 
     synchronized (this) {
       if (errored) {

@@ -107,15 +107,33 @@ public abstract class EventualMessage extends RecursiveAction {
   public abstract static class PromiseMessage extends EventualMessage {
     private static final long serialVersionUID = -6246726751425824082L;
 
+    protected final RootCallTarget onReceive;
     protected final Actor originalSender; // initial owner of the arguments
 
     public PromiseMessage(final Object[] arguments, final Actor originalSender,
-        final SResolver resolver) {
+        final SResolver resolver, final RootCallTarget onReceive) {
       super(arguments, resolver);
       this.originalSender = originalSender;
+      this.onReceive = onReceive;
     }
 
     public abstract void resolve(final Object rcvr, final Actor target, final Actor sendingActor);
+
+    @Override
+    protected final void executeMessage() {
+      CompilerAsserts.neverPartOfCompilation("Not Optimized! But also not sure it can be part of compilation anyway");
+
+      Object rcvrObj = args[0];
+      assert rcvrObj != null;
+
+      Object result;
+      assert !(rcvrObj instanceof SFarReference);
+      assert !(rcvrObj instanceof SPromise);
+
+      result = onReceive.call(args);
+
+      resolver.resolve(result);
+    }
   }
 
   /**
@@ -125,7 +143,6 @@ public abstract class EventualMessage extends RecursiveAction {
   public static final class PromiseSendMessage extends PromiseMessage {
     private static final long serialVersionUID = 2637873418047151001L;
 
-    protected final RootCallTarget onReceive;
     private final SSymbol selector;
     private Actor target;
     private Actor finalSender;
@@ -133,9 +150,8 @@ public abstract class EventualMessage extends RecursiveAction {
     protected PromiseSendMessage(final SSymbol selector,
         final Object[] arguments, final Actor originalSender,
         final SResolver resolver, final RootCallTarget onReceive) {
-      super(arguments, originalSender, resolver);
-      this.selector  = selector;
-      this.onReceive = onReceive;
+      super(arguments, originalSender, resolver, onReceive);
+      this.selector = selector;
     }
 
     @Override
@@ -164,22 +180,6 @@ public abstract class EventualMessage extends RecursiveAction {
     }
 
     @Override
-    protected void executeMessage() {
-      CompilerAsserts.neverPartOfCompilation("Not Optimized! But also not sure it can be part of compilation anyway");
-
-      Object rcvrObj = args[0];
-      assert rcvrObj != null;
-
-      Object result;
-      assert !(rcvrObj instanceof SFarReference);
-      assert !(rcvrObj instanceof SPromise);
-
-      result = onReceive.call(args);
-
-      resolver.resolve(result);
-    }
-
-    @Override
     public String toString() {
       String t;
       if (target == null) {
@@ -197,8 +197,8 @@ public abstract class EventualMessage extends RecursiveAction {
     private static final long serialVersionUID = 4682874999398510325L;
 
     public PromiseCallbackMessage(final Actor owner, final SBlock callback,
-        final SResolver resolver) {
-      super(new Object[] {callback, null}, owner, resolver);
+        final SResolver resolver, final RootCallTarget onReceive) {
+      super(new Object[] {callback, null}, owner, resolver, onReceive);
     }
 
     @Override

@@ -35,7 +35,10 @@ public class BlockNode extends LiteralNode {
       // we don't support more than 3 arguments
       default : this.blockClass = Classes.blockClass;
     }
+  }
 
+  public SInvokable getBlockMethod() {
+    return blockMethod;
   }
 
   @Override

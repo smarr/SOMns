@@ -13,12 +13,15 @@ import som.primitives.Primitive;
 import som.vm.Symbols;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
+import som.vmobjects.SInvokable;
 import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -66,37 +69,59 @@ public class PromisePrims {
   @GenerateNodeFactory
   @Primitive("actorsWhen:resolved:")
   public abstract static class WhenResolvedPrim extends BinaryExpressionNode {
-    @Specialization
+    @Specialization(guards = "blockMethod == callback.getMethod()", limit = "6")
+    public final SPromise whenResolved(final SPromise promise,
+        final SBlock callback,
+        @Cached("callback.getMethod()") final SInvokable blockMethod,
+        @Cached("callback.getMethod().getCallTarget()") final RootCallTarget blockCallTarget) {
+      return promise.whenResolved(callback, blockCallTarget);
+    }
+
+    @Fallback
     public final SPromise whenResolved(final SPromise promise, final SBlock callback) {
-      return promise.whenResolved(callback);
+      return promise.whenResolved(callback, callback.getMethod().getCallTarget());
     }
   }
 
+  // TODO: should we add this for the literal case? which should be very common?
+
+
+  // TODO: should I add a literal version of OnErrorPrim??
   @GenerateNodeFactory
   @Primitive("actorsFor:onError:")
   public abstract static class OnErrorPrim extends BinaryExpressionNode {
-    @Specialization
-    public final SPromise onError(final SPromise promise, final SBlock callback) {
-      return promise.onError(callback);
+    @Specialization(guards = "blockMethod == callback.getMethod()")
+    public final SPromise onError(final SPromise promise,
+        final SBlock callback,
+        @Cached("callback.getMethod()") final SInvokable blockMethod,
+        @Cached("callback.getMethod().getCallTarget()") final RootCallTarget blockCallTarget) {
+      return promise.onError(callback, blockCallTarget);
     }
   }
 
   @GenerateNodeFactory
   @Primitive("actorsFor:on:do:")
   public abstract static class OnExceptionDoPrim extends TernaryExpressionNode {
-    @Specialization
-    public final SPromise onExceptionDo(final SPromise promise, final SClass exceptionClass, final SBlock callback) {
-      return promise.onException(exceptionClass, callback);
+    @Specialization(guards = "blockMethod == callback.getMethod()")
+    public final SPromise onExceptionDo(final SPromise promise,
+        final SClass exceptionClass, final SBlock callback,
+        @Cached("callback.getMethod()") final SInvokable blockMethod,
+        @Cached("callback.getMethod().getCallTarget()") final RootCallTarget blockCallTarget) {
+      return promise.onException(exceptionClass, callback, blockCallTarget);
     }
   }
 
   @GenerateNodeFactory
   @Primitive("actorsWhen:resolved:onError:")
   public abstract static class WhenResolvedOnErrorPrim extends TernaryExpressionNode {
-    @Specialization
-    public final SPromise whenResolvedOnError(final SPromise promise, final SBlock resolved, final SBlock error) {
-      return promise.whenResolvedOrError(resolved, error);
+    @Specialization(guards = {"resolvedMethod == resolved.getMethod()", "errorMethod == error.getMethod()"})
+    public final SPromise whenResolvedOnError(final SPromise promise,
+        final SBlock resolved, final SBlock error,
+        @Cached("resolved.getMethod()") final SInvokable resolvedMethod,
+        @Cached("resolved.getMethod().getCallTarget()") final RootCallTarget resolvedTarget,
+        @Cached("error.getMethod()") final SInvokable errorMethod,
+        @Cached("error.getMethod().getCallTarget()") final RootCallTarget errorTarget) {
+      return promise.whenResolvedOrError(resolved, error, resolvedTarget, errorTarget);
     }
   }
-
 }
