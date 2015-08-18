@@ -12,6 +12,7 @@ import som.primitives.ObjectPrims.IsValue;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
 
 // design goals:
@@ -128,11 +129,22 @@ public class Actor {
       mailbox.add(msg);
       logMessageAddedToMailbox(msg);
     } else {
-      ForkJoinPool.commonPool().execute(msg);
+      executeOnPool(msg);
       logMessageBeingExecuted(msg);
       isExecuting = true;
     }
   }
+
+  @TruffleBoundary
+  public static void executeOnPool(final EventualMessage msg) {
+    actorPool.execute(msg);
+  }
+
+  public static boolean isPoolIdle() {
+    return !actorPool.hasQueuedSubmissions() && actorPool.getActiveThreadCount() == 0;
+  }
+
+  private static final ForkJoinPool actorPool = new ForkJoinPool();
 
   /**
    * This method is only to be called from the EventualMessage task, and the
@@ -142,7 +154,7 @@ public class Actor {
     try {
       EventualMessage nextTask = mailbox.remove();
       assert isExecuting;
-      ForkJoinPool.commonPool().execute(nextTask);
+      executeOnPool(nextTask);
       logMessageBeingExecuted(nextTask);
       return;
     } catch (NoSuchElementException e) {

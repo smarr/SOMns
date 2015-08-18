@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ForkJoinPool;
 
 import som.VM;
 import som.compiler.AccessModifier;
@@ -453,8 +452,7 @@ public final class Bootstrap {
       int emptyFJPool = 0;
       while (emptyFJPool < 30 && !VM.shouldExit()) {
         try { Thread.sleep(1000); } catch (InterruptedException e) { }
-        ForkJoinPool pool = ForkJoinPool.commonPool();
-        if (!pool.hasQueuedSubmissions() && pool.getActiveThreadCount() == 0) {
+        if (Actor.isPoolIdle()) {
           emptyFJPool++;
         }
       }
