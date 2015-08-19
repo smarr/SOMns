@@ -15,6 +15,7 @@ import som.vmobjects.SObjectWithoutFields;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.RootCallTarget;
 import com.sun.istack.internal.NotNull;
 
@@ -336,6 +337,8 @@ public class SPromise extends SObjectWithoutFields {
       resolveAndTriggerListeners(result, promise);
     }
 
+    // TODO: solve the TODO and then remove the TruffleBoundary, this might even need to go into a node
+    @TruffleBoundary
     protected static void resolveChainedPromises(final SPromise promise,
         final Object result) {
       // TODO: we should change the implementation of chained promises to

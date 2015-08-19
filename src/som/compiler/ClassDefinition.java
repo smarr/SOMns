@@ -130,6 +130,8 @@ public final class ClassDefinition {
     initializeClass(result, superclassAndMixins, false);
   }
 
+  // TODO: remove the TruffleBoundary once we optimized this, i.e., added class shapes
+  @TruffleBoundary
   public void initializeClass(final SClass result,
       final Object superclassAndMixins, final boolean isValueClass) {
     VM.needsToBeOptimized("We need a shape for the class that can be reused, " +
