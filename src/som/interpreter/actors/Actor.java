@@ -4,6 +4,8 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.NoSuchElementException;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
+import java.util.concurrent.ForkJoinWorkerThread;
 
 import som.VM;
 import som.interpreter.actors.EventualMessage.DirectMessage;
@@ -148,7 +150,23 @@ public class Actor {
     return !actorPool.hasQueuedSubmissions() && actorPool.getActiveThreadCount() == 0;
   }
 
-  private static final ForkJoinPool actorPool = new ForkJoinPool();
+
+  private static final class ActorProcessingThreadFactor implements ForkJoinWorkerThreadFactory {
+    @Override
+    public ForkJoinWorkerThread newThread(final ForkJoinPool pool) {
+      return new ActorProcessingThread(pool);
+    }
+  }
+
+  public static final class ActorProcessingThread extends ForkJoinWorkerThread {
+    protected ActorProcessingThread(final ForkJoinPool pool) {
+      super(pool);
+    }
+  }
+
+  private static final ForkJoinPool actorPool = new ForkJoinPool(
+      Runtime.getRuntime().availableProcessors(),
+      new ActorProcessingThreadFactor(), null, true);
 
   /**
    * This method is only to be called from the EventualMessage task, and the
