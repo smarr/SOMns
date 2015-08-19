@@ -159,6 +159,8 @@ public class Actor {
   }
 
   public static final class ActorProcessingThread extends ForkJoinWorkerThread {
+    protected Actor currentlyExecutingActor;
+
     protected ActorProcessingThread(final ForkJoinPool pool) {
       super(pool);
     }

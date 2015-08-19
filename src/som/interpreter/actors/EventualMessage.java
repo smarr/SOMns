@@ -6,6 +6,7 @@ import java.util.concurrent.RecursiveAction;
 import som.VM;
 import som.compiler.AccessModifier;
 import som.interpreter.Types;
+import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.interpreter.actors.SPromise.SResolver;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.vm.Symbols;
@@ -238,7 +239,7 @@ public abstract class EventualMessage extends RecursiveAction {
   @Override
   protected final void compute() {
     Actor target = getTarget();
-    actorThreadLocal.set(target);
+    setCurrentActor(target);
 
     try {
       executeMessage();
@@ -247,7 +248,7 @@ public abstract class EventualMessage extends RecursiveAction {
       VM.errorExit("Some EventualMessage failed with Exception.");
     }
 
-    actorThreadLocal.set(null);
+    setCurrentActor(null);
     target.enqueueNextMessageForProcessing();
   }
 
@@ -274,12 +275,21 @@ public abstract class EventualMessage extends RecursiveAction {
   }
 
   public static Actor getActorCurrentMessageIsExecutionOn() {
-    return actorThreadLocal.get();
+    Thread t = Thread.currentThread();
+    if (t instanceof ActorProcessingThread) {
+      return ((ActorProcessingThread) t).currentlyExecutingActor;
+    }
+    return mainActor;
+  }
+
+  private static void setCurrentActor(final Actor actor) {
+    ActorProcessingThread t = (ActorProcessingThread) Thread.currentThread();
+    t.currentlyExecutingActor = actor;
   }
 
   public static void setMainActor(final Actor actor) {
-    actorThreadLocal.set(actor);
+    mainActor = actor;
   }
 
-  private static final ThreadLocal<Actor> actorThreadLocal = new ThreadLocal<Actor>();
+  private static Actor mainActor;
 }
