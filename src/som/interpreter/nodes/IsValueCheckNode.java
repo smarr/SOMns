@@ -8,6 +8,7 @@ import som.vm.Symbols;
 import som.vm.constants.KernelObj;
 import som.vmobjects.SObject.SImmutableObject;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 
@@ -67,6 +68,9 @@ public abstract class IsValueCheckNode extends UnaryExpressionNode {
         return rcvr;
       }
 
+      // TODO: don't think this is a complete solution, we need to do something else here
+      //       perhaps write the node, and then also use a send node...
+      CompilerDirectives.transferToInterpreter();
       VM.needsToBeOptimized("Should be optimized or on slowpath");
 
       // the value object was not constructed properly.
