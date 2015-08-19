@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
+import som.VM;
 import som.compiler.AccessModifier;
 import som.compiler.ClassBuilder.ClassDefinitionId;
 import som.compiler.ClassDefinition;
@@ -123,7 +124,7 @@ public final class SClass extends SObjectWithoutFields {
   }
 
   public SClass getClassCorrespondingTo(final ClassDefinitionId classId) {
-    CompilerAsserts.neverPartOfCompilation("This should not be on the fast path, specialization/caching needed?");
+    VM.needsToBeOptimized("This should not be on the fast path, specialization/caching needed?");
     SClass cls = this;
     while (cls != null && !cls.isBasedOn(classId)) {
       cls = cls.getSuperClass();
