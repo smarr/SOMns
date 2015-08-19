@@ -100,9 +100,7 @@ class AsyncHarness usingPlatform: platform = Value (
     )
     
     doRuns = (
-      | i total outerLoopP resultPP |
-      
-      i := 0.
+      | total outerLoopP resultPP |
       total := 0.
       resultPP := actors createPromisePair.
   
@@ -121,11 +119,9 @@ class AsyncHarness usingPlatform: platform = Value (
             printAll ifTrue: [ self printRun: runTime ].
   
             total := total + runTime.
-            i := i + 1.
   
             maxRuntime ifNotNil: [
               total > maxRuntime ifTrue: [
-                numIterations := i.
                 resultPP resolve: total ] ] ].
       ].
 
