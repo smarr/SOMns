@@ -87,6 +87,10 @@ public class Actor {
 
   public final Object wrapForUse(final Object o, final Actor owner) {
     CompilerAsserts.neverPartOfCompilation("This should probably be optimized");
+    if (this == owner) {
+      return o;
+    }
+
     if (o instanceof SFarReference) {
       if (((SFarReference) o).getActor() == this) {
         return ((SFarReference) o).getValue();
