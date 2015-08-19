@@ -1,7 +1,7 @@
 package som.interpreter.nodes.dispatch;
 
 import som.compiler.AccessModifier;
-import som.compiler.ClassBuilder.ClassDefinitionId;
+import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.interpreter.Types;
 import som.interpreter.nodes.ISuperReadNode;
 import som.vmobjects.SClass;
@@ -18,26 +18,26 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 public final class SuperDispatchNode extends AbstractDispatchNode {
 
   private final SSymbol selector;
-  private final ClassDefinitionId holderClass;
+  private final MixinDefinitionId holderMixin;
   private final boolean classSide;
 
   public static SuperDispatchNode create(final SSymbol selector,
       final ISuperReadNode superNode) {
     CompilerAsserts.neverPartOfCompilation("SuperDispatchNode.create1");
-    return new SuperDispatchNode(selector, superNode.getLexicalClass(),
+    return new SuperDispatchNode(selector, superNode.getEnclosingMixinId(),
         superNode.isClassSide());
   }
 
   private SuperDispatchNode(final SSymbol selector,
-      final ClassDefinitionId holderClass, final boolean classSide) {
+      final MixinDefinitionId holderMixin, final boolean classSide) {
     CompilerAsserts.neverPartOfCompilation();
     this.selector    = selector;
-    this.holderClass = holderClass;
+    this.holderMixin = holderMixin;
     this.classSide   = classSide;
   }
 
   private SClass getSuperClass(final SClass rcvrClass) {
-    SClass cls = rcvrClass.getClassCorrespondingTo(holderClass);
+    SClass cls = rcvrClass.getClassCorrespondingTo(holderMixin);
     SClass superClass = cls.getSuperClass();
 
     if (classSide) {
@@ -62,7 +62,7 @@ public final class SuperDispatchNode extends AbstractDispatchNode {
       throw new RuntimeException("Currently #dnu with super sent is not yet implemented. ");
     }
 
-    SuperDispatchNode next = new SuperDispatchNode(selector, holderClass, classSide);
+    SuperDispatchNode next = new SuperDispatchNode(selector, holderMixin, classSide);
 
     // The reason that his is a checking dispatch is because the superclass
     // hierarchy is dynamic, and it is perfectly possible that super sends

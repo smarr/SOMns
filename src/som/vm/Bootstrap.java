@@ -12,12 +12,12 @@ import java.util.Map;
 
 import som.VM;
 import som.compiler.AccessModifier;
-import som.compiler.ClassBuilder.ClassDefinitionId;
-import som.compiler.ClassDefinition;
-import som.compiler.ClassDefinition.SlotDefinition;
+import som.compiler.MixinBuilder.MixinDefinitionId;
+import som.compiler.MixinDefinition;
+import som.compiler.MixinDefinition.SlotDefinition;
 import som.compiler.MethodBuilder;
 import som.compiler.SourcecodeCompiler;
-import som.interpreter.LexicalScope.ClassScope;
+import som.interpreter.LexicalScope.MixinScope;
 import som.interpreter.Primitive;
 import som.interpreter.actors.Actor;
 import som.interpreter.nodes.ArgumentReadNode.LocalArgumentReadNode;
@@ -85,12 +85,12 @@ import com.oracle.truffle.api.dsl.NodeFactory;
 
 public final class Bootstrap {
 
-  private static final Map<String, ClassDefinition> loadedModules = new LinkedHashMap<>();
+  private static final Map<String, MixinDefinition> loadedModules = new LinkedHashMap<>();
 
   @CompilationFinal
-  public static ClassDefinition platformModule;
+  public static MixinDefinition platformModule;
   @CompilationFinal
-  public static ClassDefinition kernelModule;
+  public static MixinDefinition kernelModule;
 
   @CompilationFinal
   public static SClass platformClass;
@@ -102,7 +102,7 @@ public final class Bootstrap {
     return objectSystemInitialized;
   }
 
-  public static ClassDefinition loadModule(final String filename)
+  public static MixinDefinition loadModule(final String filename)
       throws IOException {
     File file = new File(filename);
 
@@ -110,7 +110,7 @@ public final class Bootstrap {
       return loadedModules.get(file.getAbsolutePath());
     }
 
-    ClassDefinition module = SourcecodeCompiler.compileModule(file);
+    MixinDefinition module = SourcecodeCompiler.compileModule(file);
     loadedModules.put(file.getAbsolutePath(), module);
 
     return module;
@@ -283,14 +283,14 @@ public final class Bootstrap {
 
   private static SObjectWithoutFields constructVmMirror() {
     HashMap<SSymbol, Dispatchable> vmMirrorMethods = constructVmMirrorPrimitives();
-    ClassScope scope = new ClassScope(null);
+    MixinScope scope = new MixinScope(null);
 
-    ClassDefinition vmMirrorDef = new ClassDefinition(
+    MixinDefinition vmMirrorDef = new MixinDefinition(
         Symbols.VMMIRROR, null, null, null, null, null, null,
         vmMirrorMethods, null,
-        null, new ClassDefinitionId(Symbols.VMMIRROR), AccessModifier.PUBLIC, scope, scope,
+        null, new MixinDefinitionId(Symbols.VMMIRROR), AccessModifier.PUBLIC, scope, scope,
         true, true, true, null);
-    scope.setClassDefinition(vmMirrorDef, false);
+    scope.setMixinDefinition(vmMirrorDef, false);
 
     SClass vmMirrorClass = vmMirrorDef.instantiateClass(Nil.nilObject, new SClass[] {Classes.topClass, Classes.valueClass});
     return new SObjectWithoutFields(vmMirrorClass);
@@ -336,30 +336,30 @@ public final class Bootstrap {
     assert platformModule != null && kernelModule != null;
 
     // these classes need to be defined by the Kernel module
-    ClassDefinition topDef   = kernelModule.getNestedClassDefinition("Top");
-    ClassDefinition thingDef = kernelModule.getNestedClassDefinition("Thing");
+    MixinDefinition topDef   = kernelModule.getNestedMixinDefinition("Top");
+    MixinDefinition thingDef = kernelModule.getNestedMixinDefinition("Thing");
     thingDef.addSyntheticInitializerWithoutSuperSendOnlyForThingClass();
-    ClassDefinition valueDef = kernelModule.getNestedClassDefinition("Value");
-    ClassDefinition nilDef   = kernelModule.getNestedClassDefinition("Nil");
+    MixinDefinition valueDef = kernelModule.getNestedMixinDefinition("Value");
+    MixinDefinition nilDef   = kernelModule.getNestedMixinDefinition("Nil");
 
-    ClassDefinition objectDef    = kernelModule.getNestedClassDefinition("Object");
-    ClassDefinition classDef     = kernelModule.getNestedClassDefinition("Class");
-    ClassDefinition metaclassDef = kernelModule.getNestedClassDefinition("Metaclass");
+    MixinDefinition objectDef    = kernelModule.getNestedMixinDefinition("Object");
+    MixinDefinition classDef     = kernelModule.getNestedMixinDefinition("Class");
+    MixinDefinition metaclassDef = kernelModule.getNestedMixinDefinition("Metaclass");
 
-    ClassDefinition arrayDef   = kernelModule.getNestedClassDefinition("Array");
-    ClassDefinition symbolDef  = kernelModule.getNestedClassDefinition("Symbol");
-    ClassDefinition integerDef = kernelModule.getNestedClassDefinition("Integer");
-    ClassDefinition stringDef  = kernelModule.getNestedClassDefinition("String");
-    ClassDefinition doubleDef  = kernelModule.getNestedClassDefinition("Double");
+    MixinDefinition arrayDef   = kernelModule.getNestedMixinDefinition("Array");
+    MixinDefinition symbolDef  = kernelModule.getNestedMixinDefinition("Symbol");
+    MixinDefinition integerDef = kernelModule.getNestedMixinDefinition("Integer");
+    MixinDefinition stringDef  = kernelModule.getNestedMixinDefinition("String");
+    MixinDefinition doubleDef  = kernelModule.getNestedMixinDefinition("Double");
 
-    ClassDefinition booleanDef = kernelModule.getNestedClassDefinition("Boolean");
-    ClassDefinition trueDef    = kernelModule.getNestedClassDefinition("True");
-    ClassDefinition falseDef   = kernelModule.getNestedClassDefinition("False");
+    MixinDefinition booleanDef = kernelModule.getNestedMixinDefinition("Boolean");
+    MixinDefinition trueDef    = kernelModule.getNestedMixinDefinition("True");
+    MixinDefinition falseDef   = kernelModule.getNestedMixinDefinition("False");
 
-    ClassDefinition blockDef  = kernelModule.getNestedClassDefinition("Block");
-    ClassDefinition block1Def = kernelModule.getNestedClassDefinition("Block1");
-    ClassDefinition block2Def = kernelModule.getNestedClassDefinition("Block2");
-    ClassDefinition block3Def = kernelModule.getNestedClassDefinition("Block3");
+    MixinDefinition blockDef  = kernelModule.getNestedMixinDefinition("Block");
+    MixinDefinition block1Def = kernelModule.getNestedMixinDefinition("Block1");
+    MixinDefinition block2Def = kernelModule.getNestedMixinDefinition("Block2");
+    MixinDefinition block3Def = kernelModule.getNestedMixinDefinition("Block3");
 
     // some basic assumptions about
     assert    topDef.getNumberOfSlots() == 0;
@@ -433,7 +433,7 @@ public final class Bootstrap {
   }
 
   private static void setSlot(final SObject obj, final String slotName,
-      final Object value, final ClassDefinition classDef) {
+      final Object value, final MixinDefinition classDef) {
     SlotDefinition slot = (SlotDefinition) classDef.getInstanceDispatchables().get(
         Symbols.symbolFor(slotName));
     slot.setValueDuringBootstrap(obj, value);

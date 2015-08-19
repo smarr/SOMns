@@ -1,6 +1,6 @@
 package som.interpreter.nodes;
 
-import som.compiler.ClassBuilder.ClassDefinitionId;
+import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
 import som.interpreter.InlinerForLexicallyEmbeddedMethods;
 import som.interpreter.SArguments;
@@ -43,13 +43,13 @@ public abstract class ArgumentReadNode {
 
   public static class LocalSelfReadNode extends LocalArgumentReadNode implements ISpecialSend {
 
-    private final ClassDefinitionId lexicalClass;
+    private final MixinDefinitionId mixin;
     private final ValueProfile rcvrClass = ValueProfile.createClassProfile();
 
-    public LocalSelfReadNode(final ClassDefinitionId lexicalClass,
+    public LocalSelfReadNode(final MixinDefinitionId mixin,
         final SourceSection source) {
       super(0, source);
-      this.lexicalClass = lexicalClass;
+      this.mixin = mixin;
     }
 
     @Override
@@ -57,9 +57,9 @@ public abstract class ArgumentReadNode {
       return rcvrClass.profile(SArguments.rcvr(frame));
     }
 
-    @Override public boolean           isSuperSend()     { return false; }
-    @Override public ClassDefinitionId getLexicalClass() { return lexicalClass; }
-    @Override public String            toString()        { return "LocalSelf"; }
+    @Override public boolean           isSuperSend() { return false; }
+    @Override public MixinDefinitionId getEnclosingMixinId()  { return mixin; }
+    @Override public String            toString()    { return "LocalSelf"; }
 
     @Override
     public void replaceWithLexicallyEmbeddedNode(
@@ -127,14 +127,14 @@ public abstract class ArgumentReadNode {
 
   public static final class NonLocalSelfReadNode
       extends NonLocalArgumentReadNode implements ISpecialSend {
-    private final ClassDefinitionId lexicalClass;
+    private final MixinDefinitionId mixin;
 
     private final ValueProfile rcvrClass = ValueProfile.createClassProfile();
 
-    public NonLocalSelfReadNode(final ClassDefinitionId lexicalClass,
+    public NonLocalSelfReadNode(final MixinDefinitionId mixin,
         final int contextLevel, final SourceSection source) {
       super(0, contextLevel, source);
-      this.lexicalClass = lexicalClass;
+      this.mixin = mixin;
     }
 
     @Override
@@ -142,38 +142,38 @@ public abstract class ArgumentReadNode {
       return rcvrClass.profile(SArguments.rcvr(determineContext(frame)));
     }
 
-    @Override public boolean           isSuperSend()     { return false; }
-    @Override public ClassDefinitionId getLexicalClass() { return lexicalClass; }
-    @Override public String            toString()        { return "NonLocalSelf"; }
+    @Override public boolean           isSuperSend() { return false; }
+    @Override public MixinDefinitionId getEnclosingMixinId()  { return mixin; }
+    @Override public String            toString()    { return "NonLocalSelf"; }
 
     @Override
     protected NonLocalArgumentReadNode createNonLocalNode() {
-      return new NonLocalSelfReadNode(lexicalClass, contextLevel - 1,
+      return new NonLocalSelfReadNode(mixin, contextLevel - 1,
           getSourceSection());
     }
 
     @Override
     protected LocalArgumentReadNode createLocalNode() {
-      return new LocalSelfReadNode(lexicalClass, getSourceSection());
+      return new LocalSelfReadNode(mixin, getSourceSection());
     }
   }
 
   public static final class LocalSuperReadNode extends LocalArgumentReadNode
       implements ISuperReadNode {
 
-    private final ClassDefinitionId holderClass;
+    private final MixinDefinitionId holderMixin;
     private final boolean classSide;
 
-    public LocalSuperReadNode(final ClassDefinitionId holderClass,
+    public LocalSuperReadNode(final MixinDefinitionId holderMixin,
         final boolean classSide, final SourceSection source) {
       super(SArguments.RCVR_IDX, source);
-      this.holderClass = holderClass;
+      this.holderMixin = holderMixin;
       this.classSide   = classSide;
     }
 
     @Override
-    public ClassDefinitionId getLexicalClass() {
-      return holderClass;
+    public MixinDefinitionId getEnclosingMixinId() {
+      return holderMixin;
     }
 
     @Override
@@ -185,31 +185,31 @@ public abstract class ArgumentReadNode {
   public static final class NonLocalSuperReadNode extends
       NonLocalArgumentReadNode implements ISuperReadNode {
 
-    private final ClassDefinitionId holderClass;
+    private final MixinDefinitionId holderMixin;
     private final boolean classSide;
 
     public NonLocalSuperReadNode(final int contextLevel,
-        final ClassDefinitionId holderClass, final boolean classSide,
+        final MixinDefinitionId holderMixin, final boolean classSide,
         final SourceSection source) {
       super(SArguments.RCVR_IDX, contextLevel, source);
-      this.holderClass = holderClass;
+      this.holderMixin = holderMixin;
       this.classSide   = classSide;
     }
 
     @Override
-    public ClassDefinitionId getLexicalClass() {
-      return holderClass;
+    public MixinDefinitionId getEnclosingMixinId() {
+      return holderMixin;
     }
 
     @Override
     protected NonLocalArgumentReadNode createNonLocalNode() {
-      return new NonLocalSuperReadNode(contextLevel - 1, holderClass,
+      return new NonLocalSuperReadNode(contextLevel - 1, holderMixin,
           classSide, getSourceSection());
     }
 
     @Override
     protected LocalArgumentReadNode createLocalNode() {
-      return new LocalSuperReadNode(holderClass, classSide, getSourceSection());
+      return new LocalSuperReadNode(holderMixin, classSide, getSourceSection());
     }
 
     @Override

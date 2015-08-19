@@ -31,10 +31,10 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-import som.compiler.ClassDefinition.ClassSlotDefinition;
-import som.compiler.ClassDefinition.SlotDefinition;
-import som.compiler.ClassDefinition.SlotMutator;
-import som.interpreter.LexicalScope.ClassScope;
+import som.compiler.MixinDefinition.ClassSlotDefinition;
+import som.compiler.MixinDefinition.SlotDefinition;
+import som.compiler.MixinDefinition.SlotMutator;
+import som.interpreter.LexicalScope.MixinScope;
 import som.interpreter.Method;
 import som.interpreter.SNodeFactory;
 import som.interpreter.nodes.ExpressionNode;
@@ -47,8 +47,8 @@ import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.source.SourceSection;
 
-public final class ClassBuilder {
-  // TODO: if performance critical, optimize class builder by initializing structures lazily
+public final class MixinBuilder {
+  // TODO: if performance critical, optimize mixin builder by initializing structures lazily
 
   /** The method that is used to resolve the superclass at runtime. */
   private final MethodBuilder superclassAndMixinResolutionBuilder;
@@ -68,14 +68,14 @@ public final class ClassBuilder {
   private final ArrayList<ExpressionNode> slotAndInitExprs = new ArrayList<>();
 
   private final SSymbol name;
-  private String  classComment;
+  private String mixinComment;
 
   private final HashMap<SSymbol, SlotDefinition> slots = new HashMap<>();
   private final LinkedHashMap<SSymbol, Dispatchable> dispatchables = new LinkedHashMap<>();
   private final HashMap<SSymbol, SInvokable> factoryMethods = new HashMap<SSymbol, SInvokable>();
   private boolean allSlotsAreImmutable = true;
 
-  private final LinkedHashMap<SSymbol, ClassDefinition> embeddedClasses = new LinkedHashMap<>();
+  private final LinkedHashMap<SSymbol, MixinDefinition> embeddedMixins = new LinkedHashMap<>();
 
   private boolean classSide;
 
@@ -85,48 +85,48 @@ public final class ClassBuilder {
 
   private final AccessModifier accessModifier;
 
-  private final ClassScope   instanceScope;
-  private final ClassScope   classScope;
+  private final MixinScope instanceScope;
+  private final MixinScope classScope;
 
-  private final ClassBuilder outerBuilder;
+  private final MixinBuilder outerBuilder;
 
-  private final ClassDefinitionId classId;
+  private final MixinDefinitionId mixinId;
 
   /**
-   * A unique id to identify the class definition. Having the Id distinct from
+   * A unique id to identify the mixin definition. Having the Id distinct from
    * the actual definition allows us to make the definition immutable and
    * construct it only after the parsing is completed.
    * Currently, this is necessary because we want the immutability, and at the
-   * same time need a way to identify a class later on in super sends.
+   * same time need a way to identify a mixin later on in super sends.
    *
    * Since the class object initialization method needs to support super,
    * it is not really possible to do it differently at the moment.
    */
-  public static final class ClassDefinitionId {
+  public static final class MixinDefinitionId {
     private final SSymbol name;
 
-    public ClassDefinitionId(final SSymbol name) {
+    public MixinDefinitionId(final SSymbol name) {
       this.name = name;
     }
 
     @Override
     public String toString() {
-      return "ClassDefId(" + name + ")";
+      return "MixinDefId(" + name + ")";
     }
   };
 
-  public ClassBuilder(final ClassBuilder outerBuilder,
+  public MixinBuilder(final MixinBuilder outerBuilder,
       final AccessModifier accessModifier, final SSymbol name) {
     this.name         = name;
-    this.classId      = new ClassDefinitionId(name);
+    this.mixinId      = new MixinDefinitionId(name);
 
     this.classSide    = false;
     this.outerBuilder = outerBuilder;
 
     // classes can only be defined on the instance side,
     // so, both time the instance scope
-    this.instanceScope = new ClassScope(outerBuilder != null ? outerBuilder.getInstanceScope() : null);
-    this.classScope    = new ClassScope(outerBuilder != null ? outerBuilder.getInstanceScope() : null);
+    this.instanceScope = new MixinScope(outerBuilder != null ? outerBuilder.getInstanceScope() : null);
+    this.classScope    = new MixinScope(outerBuilder != null ? outerBuilder.getInstanceScope() : null);
 
     this.initializer          = new MethodBuilder(this, this.instanceScope);
     this.primaryFactoryMethod = new MethodBuilder(this, this.classScope);
@@ -135,12 +135,12 @@ public final class ClassBuilder {
     this.accessModifier = accessModifier;
   }
 
-  public static class ClassDefinitionError extends Exception {
+  public static class MixinDefinitionError extends Exception {
     private static final long serialVersionUID = 9200967710874738189L;
     private final String message;
     private final SourceSection source;
 
-    ClassDefinitionError(final String message, final SourceSection source) {
+    MixinDefinitionError(final String message, final SourceSection source) {
       this.message = message;
       this.source = source;
     }
@@ -152,11 +152,11 @@ public final class ClassBuilder {
     }
   }
 
-  public ClassScope getInstanceScope() {
+  public MixinScope getInstanceScope() {
     return instanceScope;
   }
 
-  public ClassBuilder getOuterBuilder() {
+  public MixinBuilder getOuterBuilder() {
     return outerBuilder;
   }
 
@@ -233,12 +233,12 @@ public final class ClassBuilder {
     initializerSource = sourceSection;
   }
 
-  public void addMethod(final SInvokable meth) throws ClassDefinitionError {
+  public void addMethod(final SInvokable meth) throws MixinDefinitionError {
     SSymbol name = meth.getSignature();
     if (!classSide) {
       Dispatchable existing = dispatchables.get(name);
       if (existing != null) {
-        throw new ClassDefinitionError("The class " + this.name.getString()
+        throw new MixinDefinitionError("The class " + this.name.getString()
             + " already contains a " + existing.typeForErrors() + " named "
             + name.getString() + ". Can't define a method with the same name.",
             meth.getSourceSection());
@@ -251,9 +251,9 @@ public final class ClassBuilder {
 
   public void addSlot(final SSymbol name, final AccessModifier acccessModifier,
       final boolean immutable, final ExpressionNode init,
-      final SourceSection source) throws ClassDefinitionError {
+      final SourceSection source) throws MixinDefinitionError {
     if (dispatchables.containsKey(name)) {
-      throw new ClassDefinitionError("The class " + this.name.getString() +
+      throw new MixinDefinitionError("The class " + this.name.getString() +
           " already defines a slot with the name '" + name.getString() + "'." +
           " A second slot with the same name is not possible.", source);
     }
@@ -286,7 +286,7 @@ public final class ClassBuilder {
     return classSide;
   }
 
-  public ClassScope getScopeForCurrentParserPosition() {
+  public MixinScope getScopeForCurrentParserPosition() {
     if (classSide) {
       return classScope;
     } else {
@@ -298,8 +298,8 @@ public final class ClassBuilder {
     classSide = true;
   }
 
-  public ClassDefinition assemble(final SourceSection source) {
-    // to prepare the class definition we need to assemble:
+  public MixinDefinition assemble(final SourceSection source) {
+    // to prepare the mixin definition we need to assemble:
     //   - the class instantiation method, which resolves super
     //   - the primary factory method, which allocates the object,
     //     and then calls initiation
@@ -315,14 +315,14 @@ public final class ClassBuilder {
           initializationMethod.getSignature(), initializationMethod);
     }
 
-    ClassDefinition clsDef = new ClassDefinition(name,
+    MixinDefinition clsDef = new MixinDefinition(name,
         primaryFactory.getSignature(), slotAndInitExprs, initializer,
         initializerSource, superclassResolution,
-        slots, dispatchables, factoryMethods, embeddedClasses, classId,
+        slots, dispatchables, factoryMethods, embeddedMixins, mixinId,
         accessModifier, instanceScope, classScope, allSlotsAreImmutable,
         outerScopeIsImmutable(), isModule(), source);
-    instanceScope.setClassDefinition(clsDef, false);
-    classScope.setClassDefinition(clsDef, true);
+    instanceScope.setMixinDefinition(clsDef, false);
+    classScope.setMixinDefinition(clsDef, true);
 
     setHolders(clsDef);
     return clsDef;
@@ -335,7 +335,7 @@ public final class ClassBuilder {
     return outerBuilder.allSlotsAreImmutable && outerBuilder.outerScopeIsImmutable();
   }
 
-  private void setHolders(final ClassDefinition clsDef) {
+  private void setHolders(final MixinDefinition clsDef) {
     for (Dispatchable disp : dispatchables.values()) {
       if (disp instanceof SInvokable) {
         ((SInvokable) disp).setHolder(clsDef);
@@ -386,7 +386,7 @@ public final class ClassBuilder {
 
   private SInvokable assemblePrimaryFactoryMethod() {
     // first create new Object
-    ExpressionNode newObject = NewObjectPrimNodeGen.create(classId,
+    ExpressionNode newObject = NewObjectPrimNodeGen.create(mixinId,
         primaryFactoryMethod.getSelfRead(null));
 
     List<ExpressionNode> args = createPrimaryFactoryArgumentRead(newObject);
@@ -404,7 +404,7 @@ public final class ClassBuilder {
   private SInvokable assembleInitializationMethod() {
     if (isSimpleNewSuperFactoySend
         && slotAndInitExprs.size() == 0
-        && initializer.getSignature() == ClassBuilder.getInitializerName(Symbols.NEW)
+        && initializer.getSignature() == MixinBuilder.getInitializerName(Symbols.NEW)
         && mixinFactorySends.size() == 0) {
       return null; // this is strictly an optimization, should work without it!
     }
@@ -472,7 +472,7 @@ public final class ClassBuilder {
   @Override
   public String toString() {
     String n = name != null ? name.getString() : "";
-    return "ClassBuilder(" + n + ")";
+    return "MixinBuilder(" + n + ")";
   }
 
   public void addMixinFactorySend(final ExpressionNode mixinFactorySend) {
@@ -485,29 +485,29 @@ public final class ClassBuilder {
     this.isSimpleNewSuperFactoySend = isSimpleNewSuperFactoySend;
   }
 
-  public void addNestedClass(final ClassDefinition nestedClass)
-      throws ClassDefinitionError {
-    SSymbol name = nestedClass.getName();
+  public void addNestedMixin(final MixinDefinition nestedMixin)
+      throws MixinDefinitionError {
+    SSymbol name = nestedMixin.getName();
     Dispatchable disp = dispatchables.get(name);
     if (disp != null) {
-      throw new ClassDefinitionError("The class " + this.name.getString() +
+      throw new MixinDefinitionError("The class " + this.name.getString() +
           " already defines a " + disp.typeForErrors() + " with the name '" +
           name.getString() + "'." +
           " Defining an inner class with the same name is not possible.",
-          nestedClass.getSourceSection());
+          nestedMixin.getSourceSection());
     }
 
-    embeddedClasses.put(name, nestedClass);
-    ClassSlotDefinition cacheSlot = new ClassSlotDefinition(name, nestedClass);
+    embeddedMixins.put(name, nestedMixin);
+    ClassSlotDefinition cacheSlot = new ClassSlotDefinition(name, nestedMixin);
     dispatchables.put(name, cacheSlot);
     slots.put(name, cacheSlot);
   }
 
-  public ClassDefinitionId getClassId() {
-    return classId;
+  public MixinDefinitionId getMixinId() {
+    return mixinId;
   }
 
   public void setComment(final String comment) {
-    classComment = comment;
+    mixinComment = comment;
   }
 }

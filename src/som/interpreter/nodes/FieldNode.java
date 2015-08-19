@@ -21,7 +21,7 @@
  */
 package som.interpreter.nodes;
 
-import som.compiler.ClassDefinition.SlotDefinition;
+import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.objectstorage.FieldAccessorNode.AbstractReadFieldNode;
 import som.interpreter.objectstorage.FieldAccessorNode.AbstractWriteFieldNode;
 import som.interpreter.objectstorage.FieldAccessorNode.UninitializedReadFieldNode;

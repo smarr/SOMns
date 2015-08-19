@@ -1,6 +1,6 @@
 package som.interpreter.objectstorage;
 
-import som.compiler.ClassDefinition.SlotDefinition;
+import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.TruffleCompiler;
 import som.interpreter.TypesGen;
 import som.interpreter.objectstorage.StorageLocation.AbstractObjectStorageLocation;

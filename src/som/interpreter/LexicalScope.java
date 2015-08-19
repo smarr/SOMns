@@ -2,9 +2,9 @@ package som.interpreter;
 
 import java.util.HashMap;
 
-import som.compiler.ClassBuilder.ClassDefinitionId;
-import som.compiler.ClassDefinition;
-import som.interpreter.LexicalScope.ClassScope.ClassIdAndContextLevel;
+import som.compiler.MixinBuilder.MixinDefinitionId;
+import som.compiler.MixinDefinition;
+import som.interpreter.LexicalScope.MixinScope.MixinIdAndContextLevel;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.vmobjects.SSymbol;
 
@@ -18,14 +18,14 @@ public abstract class LexicalScope {
   // TODO: figure out whether we can use this lexical scope also for the
   //       super sends. seems like we currently have two similar ways to solve
   //       similar problems, instead of a single one
-  public static final class ClassScope extends LexicalScope {
-    private final ClassScope outerClass;
+  public static final class MixinScope extends LexicalScope {
+    private final MixinScope outerMixin;
     private HashMap<SSymbol, Dispatchable> slotsClassesAndMethods;
 
-    @CompilationFinal private ClassDefinition classDefinition;
+    @CompilationFinal private MixinDefinition mixinDefinition;
 
-    public ClassScope(final ClassScope outerClass) {
-      this.outerClass = outerClass;
+    public MixinScope(final MixinScope outerMixin) {
+      this.outerMixin = outerMixin;
     }
 
     public HashMap<SSymbol, Dispatchable> getDispatchables() {
@@ -33,70 +33,70 @@ public abstract class LexicalScope {
     }
 
     @SuppressWarnings("unchecked")
-    public void setClassDefinition(final ClassDefinition def, final boolean classSide) {
+    public void setMixinDefinition(final MixinDefinition def, final boolean classSide) {
       assert def != null;
-      classDefinition = def;
+      mixinDefinition = def;
 
       if (classSide) {
-        HashMap<SSymbol, ? extends Dispatchable> disps = classDefinition.getFactoryMethods();
+        HashMap<SSymbol, ? extends Dispatchable> disps = mixinDefinition.getFactoryMethods();
         slotsClassesAndMethods = (HashMap<SSymbol, Dispatchable>) disps;
       } else {
-        slotsClassesAndMethods = classDefinition.getInstanceDispatchables();
+        slotsClassesAndMethods = mixinDefinition.getInstanceDispatchables();
       }
     }
 
-    public static final class ClassIdAndContextLevel {
-      public final ClassDefinitionId classId;
+    public static final class MixinIdAndContextLevel {
+      public final MixinDefinitionId mixinId;
       public final int contextLevel;
-      ClassIdAndContextLevel(final ClassDefinitionId classId, final int contextLevel) {
-        this.classId = classId;
+      MixinIdAndContextLevel(final MixinDefinitionId mixinId, final int contextLevel) {
+        this.mixinId = mixinId;
         this.contextLevel = contextLevel;
       }
 
       @Override
       public String toString() {
-        return "Class+Ctx[" + classId.toString() + ", " + contextLevel + "]";
+        return "Mixin+Ctx[" + mixinId.toString() + ", " + contextLevel + "]";
       }
     }
 
-    public ClassIdAndContextLevel lookupSlotOrClass(final SSymbol selector, final int contextLevel) {
-      assert classDefinition != null;
+    public MixinIdAndContextLevel lookupSlotOrClass(final SSymbol selector, final int contextLevel) {
+      assert mixinDefinition != null;
       if (slotsClassesAndMethods.containsKey(selector)) {
-        return new ClassIdAndContextLevel(classDefinition.getClassId(), contextLevel);
+        return new MixinIdAndContextLevel(mixinDefinition.getMixinId(), contextLevel);
       }
 
-      if (outerClass != null) {
-        return outerClass.lookupSlotOrClass(selector, contextLevel + 1);
+      if (outerMixin != null) {
+        return outerMixin.lookupSlotOrClass(selector, contextLevel + 1);
       }
       return null;
     }
 
     @Override
     public String toString() {
-      String clsName = classDefinition != null
-          ? classDefinition.getName().getString() : "";
-      return "ClassScope(" + clsName + ")";
+      String clsName = mixinDefinition != null
+          ? mixinDefinition.getName().getString() : "";
+      return "MixinScope(" + clsName + ")";
     }
   }
 
   public static final class MethodScope extends LexicalScope {
     private final FrameDescriptor frameDescriptor;
     private final MethodScope     outerMethod;
-    private final ClassScope      outerClass;
+    private final MixinScope      outerMixin;
 
     @CompilationFinal private Method method;
 
     public MethodScope(final FrameDescriptor frameDescriptor,
-        final MethodScope outerMethod, final ClassScope outerClass) {
+        final MethodScope outerMethod, final MixinScope outerMixin) {
       this.frameDescriptor = frameDescriptor;
       this.outerMethod     = outerMethod;
-      this.outerClass      = outerClass;
+      this.outerMixin      = outerMixin;
     }
 
     /** Create new and independent copy. */
     public MethodScope split() {
       FrameDescriptor splitDescriptor = frameDescriptor.copy();
-      return new MethodScope(splitDescriptor, outerMethod, outerClass);
+      return new MethodScope(splitDescriptor, outerMethod, outerMixin);
     }
 
     public FrameDescriptor getFrameDescriptor() {
@@ -136,20 +136,20 @@ public abstract class LexicalScope {
       return "MethodScope(" + frameDescriptor.toString() + ")";
     }
 
-    public ClassIdAndContextLevel lookupSlotOrClass(final SSymbol selector) {
-      return getEnclosingClass().lookupSlotOrClass(selector, 0);
+    public MixinIdAndContextLevel lookupSlotOrClass(final SSymbol selector) {
+      return getEnclosingMixin().lookupSlotOrClass(selector, 0);
     }
 
-    public ClassScope getEnclosingClass() {
+    public MixinScope getEnclosingMixin() {
       if (outerMethod == null) {
-        return outerClass;
+        return outerMixin;
       } else {
-        return outerMethod.getEnclosingClass();
+        return outerMethod.getEnclosingMixin();
       }
     }
 
-    public ClassScope getHolderScope() {
-      return outerClass;
+    public MixinScope getHolderScope() {
+      return outerMixin;
     }
   }
 }

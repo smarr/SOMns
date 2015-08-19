@@ -1,7 +1,7 @@
 package som.interpreter.actors;
 
 import som.VM;
-import som.compiler.ClassBuilder.ClassDefinitionId;
+import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.compiler.MethodBuilder;
 import som.interpreter.Method;
 import som.interpreter.nodes.ArgumentReadNode.LocalArgumentReadNode;
@@ -24,7 +24,7 @@ public final class EventualSendNode extends AbstractMessageSendNode {
 
   protected final RootCallTarget onReceive;
 
-  private static final ClassDefinitionId fakeId = new ClassDefinitionId(Symbols.symbolFor("--fake--"));
+  private static final MixinDefinitionId fakeId = new MixinDefinitionId(Symbols.symbolFor("--fake--"));
 
   public EventualSendNode(final SSymbol selector,
       final ExpressionNode[] arguments, final SourceSection source) {

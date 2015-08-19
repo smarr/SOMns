@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import som.VM;
-import som.compiler.ClassDefinition;
+import som.compiler.MixinDefinition;
 import som.interpreter.Invokable;
 import som.interpreter.Method;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
@@ -29,7 +29,7 @@ public final class SystemPrims {
   public abstract static class LoadPrim extends UnaryExpressionNode {
     @Specialization
     public final Object doSObject(final String moduleName) {
-      ClassDefinition module;
+      MixinDefinition module;
       try {
         module = Bootstrap.loadModule(moduleName);
         return module.instantiateModuleClass();

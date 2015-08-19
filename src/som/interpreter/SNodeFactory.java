@@ -2,8 +2,8 @@ package som.interpreter;
 
 import java.util.List;
 
-import som.compiler.ClassBuilder.ClassDefinitionId;
-import som.compiler.ClassDefinition.SlotDefinition;
+import som.compiler.MixinBuilder.MixinDefinitionId;
+import som.compiler.MixinDefinition.SlotDefinition;
 import som.compiler.Variable.Argument;
 import som.compiler.Variable.Local;
 import som.interpreter.LexicalScope.MethodScope;
@@ -42,7 +42,6 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
 
-
 public final class SNodeFactory {
 
   public static CatchNonLocalReturnNode createCatchNonLocalReturn(
@@ -75,20 +74,20 @@ public final class SNodeFactory {
   }
 
   public static ExpressionNode createSelfRead(final int contextLevel,
-      final ClassDefinitionId holderClass, final SourceSection source) {
+      final MixinDefinitionId holderMixin, final SourceSection source) {
     if (contextLevel == 0) {
-      return new LocalSelfReadNode(holderClass, source);
+      return new LocalSelfReadNode(holderMixin, source);
     } else {
-      return new NonLocalSelfReadNode(holderClass, contextLevel, source);
+      return new NonLocalSelfReadNode(holderMixin, contextLevel, source);
     }
   }
 
   public static ExpressionNode createSuperRead(final int contextLevel,
-        final ClassDefinitionId holderClass, final boolean classSide, final SourceSection source) {
+        final MixinDefinitionId holderMixin, final boolean classSide, final SourceSection source) {
     if (contextLevel == 0) {
-      return new LocalSuperReadNode(holderClass, classSide, source);
+      return new LocalSuperReadNode(holderMixin, classSide, source);
     } else {
-      return new NonLocalSuperReadNode(contextLevel, holderClass, classSide, source);
+      return new NonLocalSuperReadNode(contextLevel, holderMixin, classSide, source);
     }
   }
 
@@ -165,11 +164,11 @@ public final class SNodeFactory {
 
   public static ExpressionNode createImplicitReceiverSend(
       final SSymbol selector, final ExpressionNode[] arguments,
-      final MethodScope currentScope, final ClassDefinitionId classDefId,
+      final MethodScope currentScope, final MixinDefinitionId mixinDefId,
       final SourceSection source) {
-    assert classDefId != null;
+    assert mixinDefId != null;
     return new ResolvingImplicitReceiverSend(selector, arguments,
-        currentScope, classDefId, source);
+        currentScope, mixinDefId, source);
   }
 
   public static ExpressionNode createInternalObjectArray(

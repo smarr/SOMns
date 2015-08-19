@@ -1,6 +1,6 @@
 package som.primitives;
 
-import som.compiler.ClassBuilder.ClassDefinitionId;
+import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.interpreter.nodes.ISpecialSend;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vmobjects.SAbstractObject;
@@ -19,15 +19,15 @@ import com.oracle.truffle.api.dsl.Specialization;
 // @GenerateNodeFactory
 //    @Primitive("instantiate:")
 public abstract class NewObjectPrim extends UnaryExpressionNode implements ISpecialSend {
-  private final ClassDefinitionId classId;
+  private final MixinDefinitionId mixinId;
 
-  public NewObjectPrim(final ClassDefinitionId classId) {
-    this.classId = classId;
+  public NewObjectPrim(final MixinDefinitionId mixinId) {
+    this.mixinId = mixinId;
   }
 
   @Override
-  public ClassDefinitionId getLexicalClass() {
-    return classId;
+  public MixinDefinitionId getEnclosingMixinId() {
+    return mixinId;
   }
 
   @Override

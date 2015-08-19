@@ -2,7 +2,7 @@ package som.interpreter.objectstorage;
 
 import java.lang.reflect.Field;
 
-import som.compiler.ClassDefinition.SlotDefinition;
+import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.TruffleCompiler;
 import som.interpreter.objectstorage.FieldAccessorNode.AbstractReadFieldNode;
 import som.interpreter.objectstorage.FieldAccessorNode.AbstractWriteFieldNode;

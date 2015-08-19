@@ -1,8 +1,8 @@
 package som.interpreter.nodes;
 
-import som.compiler.ClassBuilder.ClassDefinitionId;
-import som.interpreter.LexicalScope.ClassScope.ClassIdAndContextLevel;
+import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.interpreter.LexicalScope.MethodScope;
+import som.interpreter.LexicalScope.MixinScope.MixinIdAndContextLevel;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.vmobjects.SSymbol;
 
@@ -14,7 +14,7 @@ public class ResolvingImplicitReceiverSend extends AbstractMessageSendNode {
 
   private final SSymbol     selector;
   private final MethodScope currentScope;
-  private final ClassDefinitionId classDefId;
+  private final MixinDefinitionId mixinId;
 
   // this is only a helper field, used to handle the specialization race
   private PreevaluatedExpression replacedBy;
@@ -22,11 +22,11 @@ public class ResolvingImplicitReceiverSend extends AbstractMessageSendNode {
 
   public ResolvingImplicitReceiverSend(final SSymbol selector,
       final ExpressionNode[] arguments, final MethodScope currentScope,
-      final ClassDefinitionId classDefId, final SourceSection source) {
+      final MixinDefinitionId mixinId, final SourceSection source) {
     super(arguments, source);
     this.selector     = selector;
     this.currentScope = currentScope;
-    this.classDefId   = classDefId;
+    this.mixinId      = mixinId;
   }
 
   @Override
@@ -42,13 +42,13 @@ public class ResolvingImplicitReceiverSend extends AbstractMessageSendNode {
   protected PreevaluatedExpression specialize(final Object[] args) {
     // first check whether it is an outer send
     // it it is, we get the context level of the outer send and rewrite to one
-    ClassIdAndContextLevel result = currentScope.lookupSlotOrClass(selector);
+    MixinIdAndContextLevel result = currentScope.lookupSlotOrClass(selector);
     if (result != null) {
       if (replacedBy == null) {
         assert result.contextLevel >= 0;
 
         newReceiverNode = OuterObjectReadNodeGen.create(result.contextLevel,
-            classDefId, result.classId, getSourceSection(), argumentNodes[0]);
+            mixinId, result.mixinId, getSourceSection(), argumentNodes[0]);
         ExpressionNode[] msgArgNodes = argumentNodes.clone();
         msgArgNodes[0] = newReceiverNode;
 

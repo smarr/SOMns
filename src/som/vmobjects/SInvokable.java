@@ -27,7 +27,7 @@ package som.vmobjects;
 
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
 import som.compiler.AccessModifier;
-import som.compiler.ClassDefinition;
+import som.compiler.MixinDefinition;
 import som.interpreter.Invokable;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
 import som.interpreter.nodes.dispatch.CachedDispatchSObjectCheckNode;
@@ -53,7 +53,7 @@ public class SInvokable extends SAbstractObject implements Dispatchable {
   private final SSymbol            signature;
   private final SInvokable[]       embeddedBlocks;
 
-  @CompilationFinal private ClassDefinition holder;
+  @CompilationFinal private MixinDefinition holder;
 
   public SInvokable(final SSymbol signature,
       final AccessModifier accessModifier, final SSymbol category,
@@ -114,11 +114,11 @@ public class SInvokable extends SAbstractObject implements Dispatchable {
     return signature;
   }
 
-  public final ClassDefinition getHolder() {
+  public final MixinDefinition getHolder() {
     return holder;
   }
 
-  public final void setHolder(final ClassDefinition value) {
+  public final void setHolder(final MixinDefinition value) {
     transferToInterpreterAndInvalidate("SMethod.setHolder");
     holder = value;
   }

@@ -2,7 +2,7 @@ package som.interpreter.nodes.dispatch;
 
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
 import som.compiler.AccessModifier;
-import som.compiler.ClassBuilder.ClassDefinitionId;
+import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.interpreter.Types;
 import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
 import som.vmobjects.SClass;
@@ -19,12 +19,12 @@ import com.oracle.truffle.api.nodes.RootNode;
  * self sends (i.e., outer sends with a degree k=0.).
  */
 public final class LexicallyBoundDispatchNode extends AbstractDispatchWithLookupNode {
-  private final ClassDefinitionId classForPrivateLookup;
+  private final MixinDefinitionId mixinForPrivateLookup;
 
   public LexicallyBoundDispatchNode(final SSymbol selector,
-      final ClassDefinitionId classForPrivateLookup) {
+      final MixinDefinitionId mixinForPrivateLookup) {
     super(selector);
-    this.classForPrivateLookup = classForPrivateLookup;
+    this.mixinForPrivateLookup = mixinForPrivateLookup;
   }
 
   // TODO: refactor, needs to be folded with the normal UninitializedDispatchNode
@@ -45,14 +45,14 @@ public final class LexicallyBoundDispatchNode extends AbstractDispatchWithLookup
 
     if (chainDepth < INLINE_CACHE_SIZE) {
       SClass rcvrClass = Types.getClassOf(rcvr);
-      Dispatchable dispatchable = rcvrClass.lookupPrivate(selector, classForPrivateLookup);
+      Dispatchable dispatchable = rcvrClass.lookupPrivate(selector, mixinForPrivateLookup);
 
       if (dispatchable != null && dispatchable.getAccessModifier() == AccessModifier.PRIVATE) {
         return replace(dispatchable.getDispatchNode(rcvr, rcvrClass, null));
       }
 
       LexicallyBoundDispatchNode newChainEnd = new LexicallyBoundDispatchNode(
-          selector, classForPrivateLookup);
+          selector, mixinForPrivateLookup);
 
       if (rcvr instanceof SObjectWithoutFields) {
         AbstractDispatchNode node;
@@ -66,7 +66,7 @@ public final class LexicallyBoundDispatchNode extends AbstractDispatchWithLookup
           return replace(node);
         } else {
           SObjectCheckDispatchNode checkNode = new SObjectCheckDispatchNode(node,
-              new LexicallyBoundDispatchNode(selector, classForPrivateLookup));
+              new LexicallyBoundDispatchNode(selector, mixinForPrivateLookup));
           return replace(checkNode);
         }
       } else {
@@ -90,7 +90,7 @@ public final class LexicallyBoundDispatchNode extends AbstractDispatchWithLookup
     // thus, this callsite is considered to be megamorphic, and we generalize
     // it.
     GenericDispatchNode genericReplacement = new GenericDispatchNode(selector,
-        AccessModifier.PRIVATE, classForPrivateLookup);
+        AccessModifier.PRIVATE, mixinForPrivateLookup);
     sendNode.replaceDispatchListHead(genericReplacement);
     return genericReplacement;
 

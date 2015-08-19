@@ -32,10 +32,10 @@ import java.util.HashSet;
 
 import som.VM;
 import som.compiler.AccessModifier;
-import som.compiler.ClassBuilder.ClassDefinitionId;
-import som.compiler.ClassDefinition;
-import som.compiler.ClassDefinition.ClassSlotDefinition;
-import som.compiler.ClassDefinition.SlotDefinition;
+import som.compiler.MixinBuilder.MixinDefinitionId;
+import som.compiler.MixinDefinition;
+import som.compiler.MixinDefinition.ClassSlotDefinition;
+import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.objectstorage.ObjectLayout;
 import som.vm.constants.Classes;
@@ -55,7 +55,7 @@ public final class SClass extends SObjectWithoutFields {
 
   @CompilationFinal private ObjectLayout layoutForInstances;
 
-  @CompilationFinal private ClassDefinition classDef;
+  @CompilationFinal private MixinDefinition mixinDef;
   @CompilationFinal private boolean hasFields;
   @CompilationFinal private boolean hasOnlyImmutableFields;
   @CompilationFinal private boolean declaredAsValue;
@@ -105,16 +105,16 @@ public final class SClass extends SObjectWithoutFields {
     this.declaredAsValue = declaredAsValue;
   }
 
-  public ClassDefinition getClassDefinition() {
-    return classDef;
+  public MixinDefinition getMixinDefinition() {
+    return mixinDef;
   }
 
-  public void setClassDefinition(final ClassDefinition classDef) {
-    this.classDef = classDef;
+  public void setMixinDefinition(final MixinDefinition mixinDef) {
+    this.mixinDef = mixinDef;
   }
 
-  private boolean isBasedOn(final ClassDefinitionId classId) {
-    return this.classDef.getClassId() == classId;
+  private boolean isBasedOn(final MixinDefinitionId mixinId) {
+    return this.mixinDef.getMixinId() == mixinId;
   }
 
   public boolean isKindOf(final SClass clazz) {
@@ -123,10 +123,10 @@ public final class SClass extends SObjectWithoutFields {
     return superclass.isKindOf(clazz);
   }
 
-  public SClass getClassCorrespondingTo(final ClassDefinitionId classId) {
+  public SClass getClassCorrespondingTo(final MixinDefinitionId mixinId) {
     VM.needsToBeOptimized("This should not be on the fast path, specialization/caching needed?");
     SClass cls = this;
-    while (cls != null && !cls.isBasedOn(classId)) {
+    while (cls != null && !cls.isBasedOn(mixinId)) {
       cls = cls.getSuperClass();
     }
     return cls;
@@ -183,8 +183,8 @@ public final class SClass extends SObjectWithoutFields {
 
   @TruffleBoundary
   public Dispatchable lookupPrivate(final SSymbol selector,
-      final ClassDefinitionId classId) {
-    SClass cls = getClassCorrespondingTo(classId);
+      final MixinDefinitionId mixinId) {
+    SClass cls = getClassCorrespondingTo(mixinId);
     if (cls != null) {
       Dispatchable disp = cls.dispatchables.get(selector);
       if (disp != null && disp.getAccessModifier() == AccessModifier.PRIVATE) {

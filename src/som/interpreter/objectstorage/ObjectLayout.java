@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map.Entry;
 
-import som.compiler.ClassDefinition.SlotDefinition;
+import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.objectstorage.StorageLocation.UnwrittenStorageLocation;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject;

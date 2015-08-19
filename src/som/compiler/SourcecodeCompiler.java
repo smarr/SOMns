@@ -29,7 +29,7 @@ import java.io.FileReader;
 import java.io.IOException;
 
 import som.VM;
-import som.compiler.ClassBuilder.ClassDefinitionError;
+import som.compiler.MixinBuilder.MixinDefinitionError;
 import som.compiler.Lexer.SourceCoordinate;
 import som.compiler.Parser.ParseError;
 import som.vm.NotYetImplementedException;
@@ -41,14 +41,14 @@ import com.oracle.truffle.api.source.Source;
 public final class SourcecodeCompiler {
 
   @TruffleBoundary
-  public static ClassDefinition compileModule(final File file)
+  public static MixinDefinition compileModule(final File file)
       throws IOException {
     FileReader stream = new FileReader(file);
 
     Source source = Source.fromFileName(file.getPath());
     Parser parser = new Parser(stream, file.length(), source);
 
-    ClassDefinition result = compile(parser);
+    MixinDefinition result = compile(parser);
     return result;
   }
 
@@ -61,13 +61,13 @@ public final class SourcecodeCompiler {
 //    return result;
   }
 
-  private static ClassDefinition compile(final Parser parser) {
+  private static MixinDefinition compile(final Parser parser) {
     SourceCoordinate coord = parser.getCoordinate();
 
     try {
-      ClassBuilder clsBuilder = parser.moduleDeclaration();
-      return clsBuilder.assemble(parser.getSource(coord));
-    } catch (ParseError | ClassDefinitionError pe) {
+      MixinBuilder mxnBuilder = parser.moduleDeclaration();
+      return mxnBuilder.assemble(parser.getSource(coord));
+    } catch (ParseError | MixinDefinitionError pe) {
       VM.errorExit(pe.toString());
       return null;
     }

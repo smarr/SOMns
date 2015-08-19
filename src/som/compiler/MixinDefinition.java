@@ -7,8 +7,8 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import som.VM;
-import som.compiler.ClassBuilder.ClassDefinitionId;
-import som.interpreter.LexicalScope.ClassScope;
+import som.compiler.MixinBuilder.MixinDefinitionId;
+import som.interpreter.LexicalScope.MixinScope;
 import som.interpreter.Method;
 import som.interpreter.SNodeFactory;
 import som.interpreter.nodes.ExpressionNode;
@@ -45,12 +45,13 @@ import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 import com.sun.istack.internal.Nullable;
 
+
 /**
- * Produced by the Parser, contains all static information on a class that is
+ * Produced by the Parser, contains all static information on a mixin that is
  * in the source. Is used to instantiate complete class objects at runtime,
  * which then also have the super class resolved.
  */
-public final class ClassDefinition {
+public final class MixinDefinition {
   private final SSymbol       name;
 
   private final SSymbol       primaryFactoryName;
@@ -65,9 +66,9 @@ public final class ClassDefinition {
   private final HashMap<SSymbol, SInvokable> factoryMethods;
 
   private final SourceSection sourceSection;
-  private final ClassDefinitionId classId;
-  private final ClassScope     instanceScope;
-  private final ClassScope     classScope;
+  private final MixinDefinitionId mixinId;
+  private final MixinScope     instanceScope;
+  private final MixinScope     classScope;
   private final AccessModifier accessModifier;
 
   private final boolean allSlotsAreImmutable;
@@ -75,9 +76,9 @@ public final class ClassDefinition {
   private final boolean isModule;
 
   @Nullable
-  private final LinkedHashMap<SSymbol, ClassDefinition> nestedClassDefinitions;
+  private final LinkedHashMap<SSymbol, MixinDefinition> nestedMixinDefinitions;
 
-  public ClassDefinition(final SSymbol name, final SSymbol primaryFactoryName,
+  public MixinDefinition(final SSymbol name, final SSymbol primaryFactoryName,
       final List<ExpressionNode> initializerBody,
       final MethodBuilder initializerBuilder,
       final SourceSection initializerSource,
@@ -85,9 +86,9 @@ public final class ClassDefinition {
       final HashMap<SSymbol, SlotDefinition> slots,
       final HashMap<SSymbol, Dispatchable> instanceDispatchables,
       final HashMap<SSymbol, SInvokable>   factoryMethods,
-      final LinkedHashMap<SSymbol, ClassDefinition> nestedClassDefinitions,
-      final ClassDefinitionId classId, final AccessModifier accessModifier,
-      final ClassScope instanceScope, final ClassScope classScope,
+      final LinkedHashMap<SSymbol, MixinDefinition> nestedMixinDefinitions,
+      final MixinDefinitionId mixinId, final AccessModifier accessModifier,
+      final MixinScope instanceScope, final MixinScope classScope,
       final boolean allSlotsAreImmutable, final boolean outerScopeIsImmutable,
       final boolean isModule,
       final SourceSection sourceSection) {
@@ -102,10 +103,10 @@ public final class ClassDefinition {
 
     this.instanceDispatchables = instanceDispatchables;
     this.factoryMethods  = factoryMethods;
-    this.nestedClassDefinitions = nestedClassDefinitions;
+    this.nestedMixinDefinitions = nestedMixinDefinitions;
 
     this.sourceSection   = sourceSection;
-    this.classId         = classId;
+    this.mixinId         = mixinId;
     this.accessModifier  = accessModifier;
     this.instanceScope   = instanceScope;
     this.classScope      = classScope;
@@ -124,7 +125,7 @@ public final class ClassDefinition {
     return superclassMixinResolution;
   }
 
-  public ClassDefinitionId getClassId() { return classId; }
+  public MixinDefinitionId getMixinId() { return mixinId; }
 
   public void initializeClass(final SClass result, final Object superclassAndMixins) {
     initializeClass(result, superclassAndMixins, false);
@@ -151,7 +152,7 @@ public final class ClassDefinition {
 
     result.setName(name);
     result.setSuperClass(superClass);
-    result.setClassDefinition(this);
+    result.setMixinDefinition(this);
     initializeClassClass(result);
 
     HashSet<SlotDefinition> instanceSlots = new HashSet<>();
@@ -169,7 +170,7 @@ public final class ClassDefinition {
           mixinsIncludeValue = true;
         }
 
-        ClassDefinition cdef = mixin.getClassDefinition();
+        MixinDefinition cdef = mixin.getMixinDefinition();
         if (cdef.slots != null) {
           mixinSlots.putAll(cdef.slots);
         }
@@ -238,7 +239,7 @@ public final class ClassDefinition {
     }
 
     return initializerBuilder.splitBodyAndAssembleInitializerAs(
-        ClassBuilder.getInitializerName(primaryFactoryName, mixinId),
+        MixinBuilder.getInitializerName(primaryFactoryName, mixinId),
         body, AccessModifier.PROTECTED, Symbols.INITIALIZER,
         initializerSource);
   }
@@ -262,7 +263,7 @@ public final class ClassDefinition {
       SClass classClass = result.getSOMClass();
       classClass.setDispatchables(classScope.getDispatchables());
       classClass.setName(Symbols.symbolFor(ccName));
-      classClass.setClassDefinition(this);
+      classClass.setMixinDefinition(this);
       classClass.setSuperClass(Classes.classClass);
       classClass.setDeclaredAsValue(isModule);
     }
@@ -441,22 +442,22 @@ public final class ClassDefinition {
   }
 
   /**
-   * For the class slots that are generated based on class definitions, we
+   * For the class slots that are generated based on mixin definitions, we
    * use a separate class to provide a different accessor node.
    */
   public static final class ClassSlotDefinition extends SlotDefinition {
-    private final ClassDefinition classDefinition;
+    private final MixinDefinition mixinDefinition;
 
     public ClassSlotDefinition(final SSymbol name,
-        final ClassDefinition classDefinition) {
-      super(name, classDefinition.getAccessModifier(), true,
-          classDefinition.getSourceSection());
-      this.classDefinition = classDefinition;
+        final MixinDefinition mixinDefinition) {
+      super(name, mixinDefinition.getAccessModifier(), true,
+          mixinDefinition.getSourceSection());
+      this.mixinDefinition = mixinDefinition;
     }
 
     @Override
     protected SlotAccessNode createNode() {
-      ClassSlotAccessNode node = new ClassSlotAccessNode(classDefinition,
+      ClassSlotAccessNode node = new ClassSlotAccessNode(mixinDefinition,
           new UninitializedReadFieldNode(this),
           new UninitializedWriteFieldNode(this));
       return node;
@@ -468,16 +469,16 @@ public final class ClassDefinition {
     }
   }
 
-  public ClassDefinition getNestedClassDefinition(final String string) {
-    if (nestedClassDefinitions == null) {
+  public MixinDefinition getNestedMixinDefinition(final String string) {
+    if (nestedMixinDefinitions == null) {
       return null;
     }
-    return nestedClassDefinitions.get(Symbols.symbolFor(string));
+    return nestedMixinDefinitions.get(Symbols.symbolFor(string));
   }
 
-  public ClassDefinition[] getNestedClassDefinitions() {
-    return nestedClassDefinitions.values().toArray(
-        new ClassDefinition[nestedClassDefinitions.size()]);
+  public MixinDefinition[] getNestedMixinDefinitions() {
+    return nestedMixinDefinitions.values().toArray(
+        new MixinDefinition[nestedMixinDefinitions.size()]);
   }
 
   public AccessModifier getAccessModifier() {
@@ -493,7 +494,7 @@ public final class ClassDefinition {
   }
 
   public void addSyntheticInitializerWithoutSuperSendOnlyForThingClass() {
-    SSymbol init = ClassBuilder.getInitializerName(Symbols.NEW);
+    SSymbol init = MixinBuilder.getInitializerName(Symbols.NEW);
     MethodBuilder builder = new MethodBuilder(true);
     builder.setSignature(init);
     builder.addArgumentIfAbsent("self");

@@ -1,7 +1,7 @@
 package som.interpreter.nodes.dispatch;
 
 import som.compiler.AccessModifier;
-import som.compiler.ClassBuilder.ClassDefinitionId;
+import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.interpreter.SArguments;
 import som.interpreter.Types;
 import som.vmobjects.SArray;
@@ -16,14 +16,14 @@ import com.oracle.truffle.api.nodes.IndirectCallNode;
 public final class GenericDispatchNode extends AbstractDispatchWithLookupNode {
   @Child private IndirectCallNode call;
   private final AccessModifier minimalVisibility;
-  private final ClassDefinitionId classId;
+  private final MixinDefinitionId mixinId;
 
   public GenericDispatchNode(final SSymbol selector,
-      final AccessModifier minimalAccess, final ClassDefinitionId classId) {
+      final AccessModifier minimalAccess, final MixinDefinitionId mixinId) {
     super(selector);
-    assert minimalAccess.ordinal() >= AccessModifier.PROTECTED.ordinal() || classId != null;
+    assert minimalAccess.ordinal() >= AccessModifier.PROTECTED.ordinal() || mixinId != null;
     this.minimalVisibility = minimalAccess;
-    this.classId = classId;
+    this.mixinId = mixinId;
     call = Truffle.getRuntime().createIndirectCallNode();
   }
 
@@ -34,8 +34,8 @@ public final class GenericDispatchNode extends AbstractDispatchWithLookupNode {
     SClass rcvrClass = Types.getClassOf(rcvr);
     Dispatchable method;
 
-    if (classId != null) {
-      method = rcvrClass.lookupPrivate(selector, classId);
+    if (mixinId != null) {
+      method = rcvrClass.lookupPrivate(selector, mixinId);
     } else {
       method = rcvrClass.lookupMessage(selector, minimalVisibility);
     }

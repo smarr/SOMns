@@ -3,7 +3,7 @@ package som.primitives;
 import java.util.ArrayList;
 
 import som.VM;
-import som.compiler.ClassDefinition;
+import som.compiler.MixinDefinition;
 import som.interpreter.Types;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
@@ -72,7 +72,7 @@ public abstract class MirrorPrims {
   public abstract static class ClassDefinitionPrim extends UnaryExpressionNode {
     @Specialization
     public final Object getClassDefinition(final SClass rcvr) {
-      return rcvr.getClassDefinition();
+      return rcvr.getMixinDefinition();
     }
   }
 
@@ -80,10 +80,10 @@ public abstract class MirrorPrims {
   @Primitive("classDefNestedClassDefinitions:")
   public abstract static class NestedClassDefinitionsPrim extends UnaryExpressionNode {
     @Specialization
-    public final Object getClassDefinition(final Object classDefHandle) {
-      assert classDefHandle instanceof ClassDefinition;
-      ClassDefinition def = (ClassDefinition) classDefHandle;
-      ClassDefinition[] nested = def.getNestedClassDefinitions();
+    public final Object getClassDefinition(final Object mixinHandle) {
+      assert mixinHandle instanceof MixinDefinition;
+      MixinDefinition def = (MixinDefinition) mixinHandle;
+      MixinDefinition[] nested = def.getNestedMixinDefinitions();
       return new SArray(nested);
     }
   }
@@ -92,9 +92,9 @@ public abstract class MirrorPrims {
   @Primitive("classDefName:")
   public abstract static class ClassDefNamePrim extends UnaryExpressionNode {
     @Specialization
-    public final SSymbol getName(final Object classDefHandle) {
-      assert classDefHandle instanceof ClassDefinition;
-      ClassDefinition def = (ClassDefinition) classDefHandle;
+    public final SSymbol getName(final Object mixinHandle) {
+      assert mixinHandle instanceof MixinDefinition;
+      MixinDefinition def = (MixinDefinition) mixinHandle;
       return def.getName();
     }
   }
@@ -103,9 +103,9 @@ public abstract class MirrorPrims {
   @Primitive("classDefMethods:")
   public abstract static class ClassDefMethodsPrim extends UnaryExpressionNode {
     @Specialization
-    public final SArray getName(final Object classDefHandle) {
-      assert classDefHandle instanceof ClassDefinition;
-      ClassDefinition def = (ClassDefinition) classDefHandle;
+    public final SArray getName(final Object mixinHandle) {
+      assert mixinHandle instanceof MixinDefinition;
+      MixinDefinition def = (MixinDefinition) mixinHandle;
 
       ArrayList<SInvokable> methods = new ArrayList<SInvokable>();
       for (Dispatchable disp : def.getInstanceDispatchables().values()) {
@@ -121,10 +121,10 @@ public abstract class MirrorPrims {
   @Primitive("classDef:hasFactoryMethod:")
   public abstract static class ClassDefHasFactoryMethodPrim extends BinaryExpressionNode {
     @Specialization
-    public final boolean hasFactoryMethod(final Object classDefHandle,
+    public final boolean hasFactoryMethod(final Object mixinHandle,
         final SSymbol selector) {
-      assert classDefHandle instanceof ClassDefinition;
-      ClassDefinition def = (ClassDefinition) classDefHandle;
+      assert mixinHandle instanceof MixinDefinition;
+      MixinDefinition def = (MixinDefinition) mixinHandle;
       return def.getFactoryMethods().containsKey(selector);
     }
   }

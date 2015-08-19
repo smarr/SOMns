@@ -31,11 +31,11 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-import som.compiler.ClassBuilder.ClassDefinitionError;
-import som.compiler.ClassBuilder.ClassDefinitionId;
+import som.compiler.MixinBuilder.MixinDefinitionError;
+import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.compiler.Variable.Argument;
 import som.compiler.Variable.Local;
-import som.interpreter.LexicalScope.ClassScope;
+import som.interpreter.LexicalScope.MixinScope;
 import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.Method;
 import som.interpreter.SNodeFactory;
@@ -55,7 +55,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 public final class MethodBuilder {
 
-  private final ClassBuilder  directOuterClass; // to get to an indirect outer, use outerBuilder
+  private final MixinBuilder  directOuterMixin; // to get to an indirect outer, use outerBuilder
   private final MethodBuilder outerBuilder;
   private final boolean       blockMethod;
 
@@ -74,7 +74,7 @@ public final class MethodBuilder {
   private final List<SInvokable> embeddedBlockMethods;
 
 
-  public MethodBuilder(final ClassBuilder holder, final ClassScope clsScope) {
+  public MethodBuilder(final MixinBuilder holder, final MixinScope clsScope) {
     this(holder, clsScope, null, false);
   }
 
@@ -84,12 +84,12 @@ public final class MethodBuilder {
   }
 
   public MethodBuilder(final MethodBuilder outerBuilder) {
-    this(outerBuilder.directOuterClass, outerBuilder.getHolderScope(), outerBuilder, true);
+    this(outerBuilder.directOuterMixin, outerBuilder.getHolderScope(), outerBuilder, true);
   }
 
-  private MethodBuilder(final ClassBuilder holder, final ClassScope clsScope,
+  private MethodBuilder(final MixinBuilder holder, final MixinScope clsScope,
       final MethodBuilder outerBuilder, final boolean isBlockMethod) {
-    this.directOuterClass = holder;
+    this.directOuterMixin = holder;
     this.outerBuilder = outerBuilder;
     this.blockMethod  = isBlockMethod;
 
@@ -115,7 +115,7 @@ public final class MethodBuilder {
     return currentScope;
   }
 
-  public ClassScope getHolderScope() {
+  public MixinScope getHolderScope() {
     return currentScope.getHolderScope();
   }
 
@@ -227,7 +227,7 @@ public final class MethodBuilder {
   private SourceSection getSourceSectionForMethod(final SourceSection ssBody) {
     assert ssBody != null;
 
-    ClassBuilder holder = getEnclosingClassBuilder();
+    MixinBuilder holder = getEnclosingMixinBuilder();
     String cls = holder != null && holder.isClassSide() ? "_class" : "";
     String name = holder == null ? "_unknown_" : holder.getName().getString();
 
@@ -329,17 +329,17 @@ public final class MethodBuilder {
   }
 
   public ExpressionNode getSuperReadNode(final SourceSection source) {
-    ClassBuilder holder = getEnclosingClassBuilder();
+    MixinBuilder holder = getEnclosingMixinBuilder();
     Variable self = getVariable("self");
     return self.getSuperReadNode(getOuterSelfContextLevel(),
-        holder.getClassId(), holder.isClassSide(), source);
+        holder.getMixinId(), holder.isClassSide(), source);
   }
 
   public ExpressionNode getSelfRead(final SourceSection source) {
-    ClassBuilder holder = getEnclosingClassBuilder();
-    ClassDefinitionId classId = holder == null ? null : holder.getClassId();
+    MixinBuilder holder = getEnclosingMixinBuilder();
+    MixinDefinitionId mixinId = holder == null ? null : holder.getMixinId();
     return getVariable("self").
-        getSelfReadNode(getContextLevel("self"), classId, source);
+        getSelfReadNode(getContextLevel("self"), mixinId, source);
   }
 
   public ExpressionNode getReadNode(final String variableName,
@@ -370,14 +370,14 @@ public final class MethodBuilder {
       return getReadNode(selector.getString(), source);
     }
 
-    if (getEnclosingClassBuilder() == null) {
+    if (getEnclosingMixinBuilder() == null) {
       // this is normally only for the inheritance clauses for modules the case
       return SNodeFactory.createMessageSend(selector, new ExpressionNode[] {getSelfRead(null)}, false, source);
     } else {
       // otherwise, it is an implicit receiver send
       return SNodeFactory.createImplicitReceiverSend(selector,
           new ExpressionNode[] {getSelfRead(null)},
-          getCurrentMethodScope(), getEnclosingClassBuilder().getClassId(), source);
+          getCurrentMethodScope(), getEnclosingMixinBuilder().getMixinId(), source);
     }
 
 
@@ -395,9 +395,9 @@ public final class MethodBuilder {
 
     // otherwise, it is a setter send.
     return SNodeFactory.createImplicitReceiverSend(
-        ClassBuilder.getSetterName(identifier),
+        MixinBuilder.getSetterName(identifier),
         new ExpressionNode[] {getSelfRead(source), exp},
-        getCurrentMethodScope(), getEnclosingClassBuilder().getClassId(), source);
+        getCurrentMethodScope(), getEnclosingMixinBuilder().getMixinId(), source);
   }
 
   protected Local getLocal(final String varName) {
@@ -422,34 +422,34 @@ public final class MethodBuilder {
         getOuterSelfContextLevel(), source);
   }
 
-  public ClassBuilder getEnclosingClassBuilder() {
-    if (this.directOuterClass == null) {
+  public MixinBuilder getEnclosingMixinBuilder() {
+    if (this.directOuterMixin == null) {
       if (outerBuilder == null) {
         return null;
       } else {
-        return outerBuilder.getEnclosingClassBuilder();
+        return outerBuilder.getEnclosingMixinBuilder();
       }
     } else {
-      return directOuterClass;
+      return directOuterMixin;
     }
   }
 
   public OuterObjectRead getOuterRead(final String outerName,
-      final SourceSection source) throws ClassDefinitionError {
-    ClassBuilder enclosing = getEnclosingClassBuilder();
-    ClassDefinitionId lexicalSelfClassId = enclosing.getClassId();
+      final SourceSection source) throws MixinDefinitionError {
+    MixinBuilder enclosing = getEnclosingMixinBuilder();
+    MixinDefinitionId lexicalSelfMixinId = enclosing.getMixinId();
     int ctxLevel = 0;
     while (!outerName.equals(enclosing.getName().getString())) {
       ctxLevel++;
       enclosing = enclosing.getOuterBuilder();
       if (enclosing == null) {
-        throw new ClassDefinitionError("Outer send `outer " + outerName
+        throw new MixinDefinitionError("Outer send `outer " + outerName
             + "` could not be resolved", source);
       }
     }
 
-    return OuterObjectReadNodeGen.create(ctxLevel, lexicalSelfClassId,
-        enclosing.getClassId(), source, getSelfRead(source));
+    return OuterObjectReadNodeGen.create(ctxLevel, lexicalSelfMixinId,
+        enclosing.getMixinId(), source, getSelfRead(source));
   }
 
   /**
@@ -466,7 +466,7 @@ public final class MethodBuilder {
 
   @Override
   public String toString() {
-    return "MethodBuilder(" + getEnclosingClassBuilder().getName().getString() +
+    return "MethodBuilder(" + getEnclosingMixinBuilder().getName().getString() +
         ">>" + signature.toString() + ")";
   }
 }

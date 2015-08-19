@@ -1,7 +1,6 @@
 package som.interpreter.nodes;
 
 import som.compiler.AccessModifier;
-import som.compiler.ClassBuilder.ClassDefinitionId;
 import som.interpreter.TruffleCompiler;
 import som.interpreter.TypesGen;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
@@ -101,7 +100,7 @@ public final class MessageSendNode {
   }
 
   public static AbstractMessageSendNode createForPerformNodes(final SSymbol selector) {
-    return new UninitializedSymbolSendNode(selector, null, null);
+    return new UninitializedSymbolSendNode(selector, null);
   }
 
   public static GenericMessageSendNode createGeneric(final SSymbol selector,
@@ -590,7 +589,7 @@ public final class MessageSendNode {
       if (rcvrNode.isSuperSend()) {
         dispatch = SuperDispatchNode.create(selector, (ISuperReadNode) rcvrNode);
       } else {
-        dispatch = new LexicallyBoundDispatchNode(selector, rcvrNode.getLexicalClass());
+        dispatch = new LexicallyBoundDispatchNode(selector, rcvrNode.getEnclosingMixinId());
       }
 
       GenericMessageSendNode node = new GenericMessageSendNode(selector,
@@ -602,8 +601,7 @@ public final class MessageSendNode {
   private static final class UninitializedSymbolSendNode
     extends AbstractUninitializedMessageSendNode {
 
-    protected UninitializedSymbolSendNode(final SSymbol selector,
-        final ClassDefinitionId classId, final SourceSection source) {
+    protected UninitializedSymbolSendNode(final SSymbol selector, final SourceSection source) {
       super(selector, new ExpressionNode[0], source);
     }
 

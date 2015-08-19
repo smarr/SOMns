@@ -76,7 +76,7 @@ public abstract class IsValueCheckNode extends UnaryExpressionNode {
       // the value object was not constructed properly.
       Dispatchable disp = KernelObj.kernel.getSOMClass().lookupPrivate(
           Symbols.symbolFor("signalNotAValueWith:"),
-          KernelObj.kernel.getSOMClass().getClassDefinition().getClassId());
+          KernelObj.kernel.getSOMClass().getMixinDefinition().getMixinId());
       return disp.invoke(KernelObj.kernel, rcvr.getSOMClass());
     }
 

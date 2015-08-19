@@ -1,6 +1,6 @@
 package som.interpreter.nodes;
 
-import som.compiler.ClassDefinition;
+import som.compiler.MixinDefinition;
 import som.interpreter.Invokable;
 import som.interpreter.SArguments;
 import som.interpreter.objectstorage.FieldAccessorNode.AbstractReadFieldNode;
@@ -61,17 +61,17 @@ public abstract class SlotAccessNode extends ExpressionNode {
   }
 
   public static final class ClassSlotAccessNode extends SlotAccessNode {
-    private final ClassDefinition classDefinition;
+    private final MixinDefinition mixinDef;
     @Child protected DirectCallNode superclassAndMixinResolver;
 
     @Child protected AbstractReadFieldNode  read;
     @Child protected AbstractWriteFieldNode write;
 
-    public ClassSlotAccessNode(final ClassDefinition classDefinition,
+    public ClassSlotAccessNode(final MixinDefinition mixinDef,
         final AbstractReadFieldNode read, final AbstractWriteFieldNode write) {
       this.read = read;
       this.write = write;
-      this.classDefinition = classDefinition;
+      this.mixinDef = mixinDef;
     }
 
     @Override
@@ -101,7 +101,7 @@ public abstract class SlotAccessNode extends ExpressionNode {
 
     private void createResolverCallTargets() {
       CompilerAsserts.neverPartOfCompilation();
-      Invokable invokable = classDefinition.getSuperclassAndMixinResolutionInvokable();
+      Invokable invokable = mixinDef.getSuperclassAndMixinResolutionInvokable();
       superclassAndMixinResolver = insert(Truffle.getRuntime().createDirectCallNode(
           invokable.createCallTarget()));
     }
@@ -115,7 +115,7 @@ public abstract class SlotAccessNode extends ExpressionNode {
 
       Object superclassAndMixins = superclassAndMixinResolver.call(frame,
           new Object[] {rcvr});
-      SClass classObject = classDefinition.instantiateClass(rcvr, superclassAndMixins);
+      SClass classObject = mixinDef.instantiateClass(rcvr, superclassAndMixins);
       return classObject;
     }
 

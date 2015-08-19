@@ -1,9 +1,9 @@
 package som.interpreter.nodes;
 
-import som.compiler.ClassBuilder.ClassDefinitionId;
+import som.compiler.MixinBuilder.MixinDefinitionId;
 
 
 public interface ISpecialSend {
   boolean isSuperSend();
-  ClassDefinitionId getLexicalClass();
+  MixinDefinitionId getEnclosingMixinId();
 }

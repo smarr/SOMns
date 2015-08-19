@@ -6,7 +6,7 @@ import static som.interpreter.SNodeFactory.createSelfRead;
 import static som.interpreter.SNodeFactory.createSuperRead;
 import static som.interpreter.SNodeFactory.createVariableWrite;
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
-import som.compiler.ClassBuilder.ClassDefinitionId;
+import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.interpreter.nodes.ExpressionNode;
 
 import com.oracle.truffle.api.frame.FrameSlot;
@@ -28,14 +28,14 @@ public abstract class Variable {
       final SourceSection source);
 
   public final ExpressionNode getSelfReadNode(final int contextLevel,
-      final ClassDefinitionId holderClass,
+      final MixinDefinitionId holderMixin,
       final SourceSection source) {
     assert this instanceof Argument;
-    return createSelfRead(contextLevel, holderClass, source);
+    return createSelfRead(contextLevel, holderMixin, source);
   }
 
   public final ExpressionNode getSuperReadNode(final int contextLevel,
-      final ClassDefinitionId holderClass, final boolean classSide,
+      final MixinDefinitionId holderClass, final boolean classSide,
       final SourceSection source) {
     assert this instanceof Argument;
     return createSuperRead(contextLevel, holderClass, classSide, source);
