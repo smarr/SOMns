@@ -23,6 +23,7 @@ package som.interpreter;
 
 import java.math.BigInteger;
 
+import som.VM;
 import som.interpreter.actors.SFarReference;
 import som.interpreter.actors.SPromise;
 import som.vm.constants.Classes;
@@ -35,7 +36,6 @@ import som.vmobjects.SObject;
 import som.vmobjects.SObjectWithoutFields;
 import som.vmobjects.SSymbol;
 
-import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.dsl.TypeSystem;
 
 @TypeSystem({   boolean.class,
@@ -57,7 +57,8 @@ import com.oracle.truffle.api.dsl.TypeSystem;
 public class Types {
 
   public static SClass getClassOf(final Object obj) {
-    CompilerAsserts.neverPartOfCompilation();
+    VM.needsToBeOptimized("If this is reached on a fast path, it indicates "
+        + "that it doesn't use the correct nodes or unoptimized code");
     assert obj != null;
 
     if (obj instanceof SAbstractObject) {

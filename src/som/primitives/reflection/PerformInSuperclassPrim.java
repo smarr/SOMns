@@ -1,5 +1,6 @@
 package som.primitives.reflection;
 
+import som.VM;
 import som.compiler.AccessModifier;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
@@ -22,7 +23,7 @@ public abstract class PerformInSuperclassPrim extends TernaryExpressionNode {
   @Specialization
   public final Object doSAbstractObject(final VirtualFrame frame,
       final SAbstractObject receiver, final SSymbol selector, final SClass  clazz) {
-    CompilerAsserts.neverPartOfCompilation("PerformInSuperclassPrim");
+    VM.needsToBeOptimized("PerformInSuperclassPrim");
     Dispatchable invokable = clazz.lookupMessage(selector, AccessModifier.PUBLIC);
     return call.call(frame, invokable.getCallTarget(), new Object[] {receiver});
   }

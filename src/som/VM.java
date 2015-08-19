@@ -10,6 +10,7 @@ import som.interpreter.actors.SPromise.SResolver;
 import som.vm.Bootstrap;
 import som.vmobjects.SObjectWithoutFields;
 
+import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
@@ -25,6 +26,10 @@ public final class VM {
   private Thread mainThread;
 
   public static boolean DebugMode = false;
+
+  public static void needsToBeOptimized(final String msg) {
+    CompilerAsserts.neverPartOfCompilation(msg);
+  }
 
   public VM(final boolean avoidExitForTesting) {
     this.avoidExitForTesting = avoidExitForTesting;

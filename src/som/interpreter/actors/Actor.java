@@ -13,7 +13,6 @@ import som.interpreter.actors.SPromise.SResolver;
 import som.primitives.ObjectPrims.IsValue;
 import som.vmobjects.SSymbol;
 
-import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
 
@@ -79,7 +78,7 @@ public class Actor {
     SPromise  result   = SPromise.createPromise(currentActor);
     SResolver resolver = SPromise.createResolver(result, "eventualSend:", selector);
 
-    CompilerAsserts.neverPartOfCompilation("This needs to be optimized");
+    VM.needsToBeOptimized("This needs to be optimized");
 
     DirectMessage msg = new DirectMessage(this, selector, args, currentActor, resolver);
     msg.getTarget().enqueueMessage(msg);
@@ -88,7 +87,8 @@ public class Actor {
   }
 
   public final Object wrapForUse(final Object o, final Actor owner) {
-    CompilerAsserts.neverPartOfCompilation("This should probably be optimized");
+    VM.needsToBeOptimized("This should probably be optimized");
+
     if (this == owner) {
       return o;
     }

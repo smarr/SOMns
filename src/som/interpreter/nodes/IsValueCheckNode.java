@@ -1,5 +1,6 @@
 package som.interpreter.nodes;
 
+import som.VM;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.ObjectPrims.IsValue;
@@ -7,7 +8,6 @@ import som.vm.Symbols;
 import som.vm.constants.KernelObj;
 import som.vmobjects.SObject.SImmutableObject;
 
-import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 
@@ -67,7 +67,7 @@ public abstract class IsValueCheckNode extends UnaryExpressionNode {
         return rcvr;
       }
 
-      CompilerAsserts.neverPartOfCompilation("Should be optimized or on slowpath");
+      VM.needsToBeOptimized("Should be optimized or on slowpath");
 
       // the value object was not constructed properly.
       Dispatchable disp = KernelObj.kernel.getSOMClass().lookupPrivate(
@@ -77,7 +77,7 @@ public abstract class IsValueCheckNode extends UnaryExpressionNode {
     }
 
     private boolean allFieldsContainValues(final SImmutableObject rcvr) {
-      CompilerAsserts.neverPartOfCompilation("Should be optimized or on slowpath");
+      VM.needsToBeOptimized("Should be optimized or on slowpath");
 
       if (rcvr.field1 == null) {
         return true;

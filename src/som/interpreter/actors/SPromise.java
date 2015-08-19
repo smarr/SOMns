@@ -14,7 +14,6 @@ import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithoutFields;
 import som.vmobjects.SSymbol;
 
-import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.RootCallTarget;
 import com.sun.istack.internal.NotNull;
@@ -316,7 +315,7 @@ public class SPromise extends SObjectWithoutFields {
     }
 
     public final void resolve(final Object result) {
-      CompilerAsserts.neverPartOfCompilation("This has so many possible cases, we definitely want to optimize this");
+      VM.needsToBeOptimized("This has so many possible cases, we definitely want to optimize this");
 
       assert !promise.isSomehowResolved() : "Not sure yet what to do with re-resolving of promises? just ignore it? Error?";
       assert promise.value == null        : "If it isn't resolved yet, it shouldn't have a value";

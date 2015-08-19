@@ -1,5 +1,6 @@
 package som.primitives;
 
+import som.VM;
 import som.interpreter.Types;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vmobjects.SAbstractObject;
@@ -27,7 +28,7 @@ public class ClassPrims {
   public abstract static class ClassNamePrim extends UnaryExpressionNode {
     @Specialization
     public final SAbstractObject doSClass(final Object receiver) {
-      CompilerAsserts.neverPartOfCompilation("should specialize, to avoid Types.getClassOf()");
+      VM.needsToBeOptimized("should specialize, to avoid Types.getClassOf()");
       return Types.getClassOf(receiver).getName();
     }
   }

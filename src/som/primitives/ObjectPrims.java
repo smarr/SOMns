@@ -11,7 +11,6 @@ import som.vmobjects.SArray;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
 
-import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -24,7 +23,7 @@ public final class ObjectPrims {
   public abstract static class ObjectClassNamePrim extends UnaryExpressionNode {
     @Specialization
     public final SSymbol getName(final Object obj) {
-      CompilerAsserts.neverPartOfCompilation("Not yet optimized, need add specializations to remove Types.getClassOf");
+      VM.needsToBeOptimized("Not yet optimized, need add specializations to remove Types.getClassOf");
       return Types.getClassOf(obj).getName();
     }
   }
@@ -50,7 +49,7 @@ public final class ObjectPrims {
 
     @Specialization
     public final SClass doObject(final Object receiver) {
-      CompilerAsserts.neverPartOfCompilation("Should specialize this if performance critical");
+      VM.needsToBeOptimized("Should specialize this if performance critical");
       return Types.getClassOf(receiver);
     }
   }
@@ -119,7 +118,7 @@ public final class ObjectPrims {
     }
 
     public static boolean isObjectValue(final Object obj) {
-      CompilerAsserts.neverPartOfCompilation("This should only be used for prototyping, and then removed, because it is slow and duplicates code");
+      VM.needsToBeOptimized("This should only be used for prototyping, and then removed, because it is slow and duplicates code");
       if (obj instanceof Boolean ||
           obj instanceof Long ||
           obj instanceof BigInteger ||

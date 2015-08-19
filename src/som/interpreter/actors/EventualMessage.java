@@ -13,7 +13,6 @@ import som.vm.Symbols;
 import som.vmobjects.SBlock;
 import som.vmobjects.SSymbol;
 
-import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.RootCallTarget;
 
 
@@ -76,7 +75,7 @@ public abstract class EventualMessage extends RecursiveAction {
 
   protected static Actor determineTargetAndWrapArguments(final Object[] arguments,
       Actor target, final Actor currentSender, final Actor originalSender) {
-    CompilerAsserts.neverPartOfCompilation("not optimized for compilation");
+    VM.needsToBeOptimized("not optimized for compilation");
 
     // target: the owner of the promise that just got resolved
     // however, if a promise gets resolved to a far reference
@@ -122,7 +121,7 @@ public abstract class EventualMessage extends RecursiveAction {
 
     @Override
     protected final void executeMessage() {
-      CompilerAsserts.neverPartOfCompilation("Not Optimized! But also not sure it can be part of compilation anyway");
+      VM.needsToBeOptimized("Not Optimized! But also not sure it can be part of compilation anyway");
 
       Object rcvrObj = args[0];
       assert rcvrObj != null;
@@ -161,7 +160,7 @@ public abstract class EventualMessage extends RecursiveAction {
     }
 
     private void determineAndSetTarget(final Object rcvr, final Actor target, final Actor sendingActor) {
-      CompilerAsserts.neverPartOfCompilation("not optimized for compilation");
+      VM.needsToBeOptimized("not optimized for compilation");
 
       args[0] = rcvr;
       Actor finalTarget = determineTargetAndWrapArguments(args, target, sendingActor, originalSender);
@@ -253,7 +252,7 @@ public abstract class EventualMessage extends RecursiveAction {
   }
 
   protected void executeMessage() {
-    CompilerAsserts.neverPartOfCompilation("Not Optimized! But also not sure it can be part of compilation anyway");
+    VM.needsToBeOptimized("Not Optimized! But also not sure it can be part of compilation anyway");
 
     Object rcvrObj = args[0];
     assert rcvrObj != null;

@@ -38,7 +38,6 @@ import som.vmobjects.SObjectWithoutFields;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CallTarget;
-import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
@@ -133,6 +132,10 @@ public final class ClassDefinition {
 
   public void initializeClass(final SClass result,
       final Object superclassAndMixins, final boolean isValueClass) {
+    VM.needsToBeOptimized("We need a shape for the class that can be reused, " +
+      "we can't do code generation on the fly, we need stable methods for " +
+      "compilation. And we also need the id of such species/shape for reads/writes");
+
     SClass superClass;
     Object[] mixins;
     if (superclassAndMixins == null || superclassAndMixins instanceof SClass) {
@@ -355,7 +358,7 @@ public final class ClassDefinition {
 
     @Override
     public final Object invoke(final Object... arguments) {
-      CompilerAsserts.neverPartOfCompilation("call without proper call cache. Find better way if this is performance critical.");
+      VM.needsToBeOptimized("call without proper call cache. Find better way if this is performance critical.");
       return this.getCallTarget().call(arguments);
     }
 
