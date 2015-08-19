@@ -25,10 +25,13 @@ public final class VM {
   private boolean usesActors;
   private Thread mainThread;
 
-  public static boolean DebugMode = false;
+  public static final boolean DebugMode = false;
+  public static final boolean FailOnMissingOptimizations = false;
 
   public static void needsToBeOptimized(final String msg) {
-    CompilerAsserts.neverPartOfCompilation(msg);
+    if (FailOnMissingOptimizations) {
+      CompilerAsserts.neverPartOfCompilation(msg);
+    }
   }
 
   public VM(final boolean avoidExitForTesting) {
