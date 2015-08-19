@@ -385,6 +385,8 @@ public final class MethodBuilder {
 
   public ExpressionNode getSetterSend(final SSymbol identifier,
       final ExpressionNode exp, final SourceSection source) {
+    // TODO: we probably need here a sanity check and perhaps a parser error
+    //       if we try to assign to an argument
     // write directly to local variables (excluding arguments)
     Local variable = getLocal(identifier.getString());
     if (variable != null) {
