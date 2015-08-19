@@ -360,6 +360,7 @@ public final class Parser {
       SSymbol initializerName = ClassBuilder.getInitializerName(
           ((AbstractUninitializedMessageSendNode) superFactorySend).getSelector());
 
+      // TODO: the false we pass here, should that be conditional on the superFactorSend being a #new send?
       clsBuilder.setSuperclassFactorySend(
           MessageSendNode.adaptSymbol(
               initializerName,
