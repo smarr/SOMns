@@ -455,7 +455,6 @@ public final class MixinDefinition {
 
     protected AbstractWriteFieldNode createWriteNode() {
       AbstractWriteFieldNode node = new UninitializedWriteFieldNode(mainSlot);
-          new SlotReadNode(new UninitializedReadFieldNode(mainSlot));
       return node;
     }
   }
