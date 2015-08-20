@@ -63,6 +63,7 @@ public abstract class SlotAccessNode extends ExpressionNode {
   public static final class ClassSlotAccessNode extends SlotAccessNode {
     private final MixinDefinition mixinDef;
     @Child protected DirectCallNode superclassAndMixinResolver;
+    @Child protected ClassInstantiationNode instantiation;
 
     @Child protected AbstractReadFieldNode  read;
     @Child protected AbstractWriteFieldNode write;
@@ -72,6 +73,7 @@ public abstract class SlotAccessNode extends ExpressionNode {
       this.read = read;
       this.write = write;
       this.mixinDef = mixinDef;
+      this.instantiation = ClassInstantiationNodeGen.create(mixinDef);
     }
 
     @Override
@@ -115,7 +117,7 @@ public abstract class SlotAccessNode extends ExpressionNode {
 
       Object superclassAndMixins = superclassAndMixinResolver.call(frame,
           new Object[] {rcvr});
-      SClass classObject = mixinDef.instantiateClass(rcvr, superclassAndMixins);
+      SClass classObject = instantiation.execute(rcvr, superclassAndMixins);
       return classObject;
     }
 
