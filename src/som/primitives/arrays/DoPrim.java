@@ -1,9 +1,10 @@
 package som.primitives.arrays;
 
 import som.interpreter.Invokable;
-import som.interpreter.nodes.dispatch.BlockDispatchNode;
-import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
+import som.interpreter.nodes.dispatch.AbstractDispatchNode;
+import som.interpreter.nodes.dispatch.UninitializedValuePrimDispatchNode;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
+import som.primitives.BlockPrims.ValuePrimitiveNode;
 import som.vm.constants.Nil;
 import som.vmobjects.SArray;
 import som.vmobjects.SArray.PartiallyEmptyArray;
@@ -20,14 +21,20 @@ import com.oracle.truffle.api.utilities.ValueProfile;
 
 
 @GenerateNodeFactory
-public abstract class DoPrim extends BinaryExpressionNode {
+public abstract class DoPrim extends BinaryExpressionNode
+  implements ValuePrimitiveNode {
   private final ValueProfile storageType = ValueProfile.createClassProfile();
 
-  @Child private BlockDispatchNode block;
+  @Child private AbstractDispatchNode block;
 
   public DoPrim() {
     super(null);
-    block = BlockDispatchNodeGen.create();
+    block = new UninitializedValuePrimDispatchNode();
+  }
+
+  @Override
+  public void adoptNewDispatchListHead(final AbstractDispatchNode node) {
+    block = insert(node);
   }
 
   private void execBlock(final VirtualFrame frame, final SBlock block, final Object arg) {

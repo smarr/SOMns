@@ -1,9 +1,10 @@
 package som.primitives.arrays;
 
 import som.interpreter.Invokable;
-import som.interpreter.nodes.dispatch.BlockDispatchNode;
-import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
+import som.interpreter.nodes.dispatch.AbstractDispatchNode;
+import som.interpreter.nodes.dispatch.UninitializedValuePrimDispatchNode;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
+import som.primitives.BlockPrims.ValuePrimitiveNode;
 import som.primitives.SizeAndLengthPrim;
 import som.primitives.SizeAndLengthPrimFactory;
 import som.vmobjects.SArray;
@@ -19,13 +20,14 @@ import com.oracle.truffle.api.nodes.RootNode;
 
 
 @GenerateNodeFactory
-public abstract class DoIndexesPrim extends BinaryExpressionNode {
-  @Child protected BlockDispatchNode block;
-  @Child protected SizeAndLengthPrim length;
+public abstract class DoIndexesPrim extends BinaryExpressionNode
+    implements ValuePrimitiveNode {
+  @Child private AbstractDispatchNode block;
+  @Child private SizeAndLengthPrim length;
 
   public DoIndexesPrim() {
     super(null);
-    block = BlockDispatchNodeGen.create();
+    block = new UninitializedValuePrimDispatchNode();
     length = SizeAndLengthPrimFactory.create(null);
   }
 
@@ -65,5 +67,10 @@ public abstract class DoIndexesPrim extends BinaryExpressionNode {
     if (current != null) {
       ((Invokable) current).propagateLoopCountThroughoutMethodScope(count);
     }
+  }
+
+  @Override
+  public void adoptNewDispatchListHead(final AbstractDispatchNode node) {
+    block = insert(node);
   }
 }
