@@ -361,7 +361,7 @@ public final class MixinDefinition {
 
     @Override
     public final Object invoke(final Object... arguments) {
-      VM.needsToBeOptimized("call without proper call cache. Find better way if this is performance critical.");
+      VM.callerNeedsToBeOptimized("call without proper call cache. Find better way if this is performance critical.");
       return this.getCallTarget().call(arguments);
     }
 

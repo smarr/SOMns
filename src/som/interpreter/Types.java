@@ -57,7 +57,7 @@ import com.oracle.truffle.api.dsl.TypeSystem;
 public class Types {
 
   public static SClass getClassOf(final Object obj) {
-    VM.needsToBeOptimized("If this is reached on a fast path, it indicates "
+    VM.callerNeedsToBeOptimized("If this is reached on a fast path, it indicates "
         + "that it doesn't use the correct nodes or unoptimized code");
     assert obj != null;
 

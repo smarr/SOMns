@@ -124,7 +124,7 @@ public final class SClass extends SObjectWithoutFields {
   }
 
   public SClass getClassCorrespondingTo(final MixinDefinitionId mixinId) {
-    VM.needsToBeOptimized("This should not be on the fast path, specialization/caching needed?");
+    VM.callerNeedsToBeOptimized("This should not be on the fast path, specialization/caching needed?");
     SClass cls = this;
     while (cls != null && !cls.isBasedOn(mixinId)) {
       cls = cls.getSuperClass();

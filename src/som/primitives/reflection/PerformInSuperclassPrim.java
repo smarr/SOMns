@@ -8,7 +8,6 @@ import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
 
-import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -23,7 +22,7 @@ public abstract class PerformInSuperclassPrim extends TernaryExpressionNode {
   @Specialization
   public final Object doSAbstractObject(final VirtualFrame frame,
       final SAbstractObject receiver, final SSymbol selector, final SClass  clazz) {
-    VM.needsToBeOptimized("PerformInSuperclassPrim");
+    VM.thisMethodNeedsToBeOptimized("PerformInSuperclassPrim");
     Dispatchable invokable = clazz.lookupMessage(selector, AccessModifier.PUBLIC);
     return call.call(frame, invokable.getCallTarget(), new Object[] {receiver});
   }

@@ -71,7 +71,7 @@ public abstract class IsValueCheckNode extends UnaryExpressionNode {
       // TODO: don't think this is a complete solution, we need to do something else here
       //       perhaps write the node, and then also use a send node...
       CompilerDirectives.transferToInterpreter();
-      VM.needsToBeOptimized("Should be optimized or on slowpath");
+      VM.thisMethodNeedsToBeOptimized("Should be optimized or on slowpath");
 
       // the value object was not constructed properly.
       Dispatchable disp = KernelObj.kernel.getSOMClass().lookupPrivate(
@@ -81,7 +81,7 @@ public abstract class IsValueCheckNode extends UnaryExpressionNode {
     }
 
     private boolean allFieldsContainValues(final SImmutableObject rcvr) {
-      VM.needsToBeOptimized("Should be optimized or on slowpath");
+      VM.thisMethodNeedsToBeOptimized("Should be optimized or on slowpath");
 
       if (rcvr.field1 == null) {
         return true;

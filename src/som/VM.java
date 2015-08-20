@@ -28,7 +28,13 @@ public final class VM {
   public static final boolean DebugMode = false;
   public static final boolean FailOnMissingOptimizations = false;
 
-  public static void needsToBeOptimized(final String msg) {
+  public static void thisMethodNeedsToBeOptimized(final String msg) {
+    if (FailOnMissingOptimizations) {
+      CompilerAsserts.neverPartOfCompilation(msg);
+    }
+  }
+
+  public static void callerNeedsToBeOptimized(final String msg) {
     if (FailOnMissingOptimizations) {
       CompilerAsserts.neverPartOfCompilation(msg);
     }

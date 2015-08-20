@@ -316,7 +316,7 @@ public class SPromise extends SObjectWithoutFields {
     }
 
     public final void resolve(final Object result) {
-      VM.needsToBeOptimized("This has so many possible cases, we definitely want to optimize this");
+      VM.thisMethodNeedsToBeOptimized("This has so many possible cases, we definitely want to optimize this");
 
       assert !promise.isSomehowResolved() : "Not sure yet what to do with re-resolving of promises? just ignore it? Error?";
       assert promise.value == null        : "If it isn't resolved yet, it shouldn't have a value";

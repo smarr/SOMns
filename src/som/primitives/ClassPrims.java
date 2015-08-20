@@ -6,7 +6,6 @@ import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
 
-import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
@@ -28,7 +27,7 @@ public class ClassPrims {
   public abstract static class ClassNamePrim extends UnaryExpressionNode {
     @Specialization
     public final SAbstractObject doSClass(final Object receiver) {
-      VM.needsToBeOptimized("should specialize, to avoid Types.getClassOf()");
+      VM.thisMethodNeedsToBeOptimized("should specialize, to avoid Types.getClassOf()");
       return Types.getClassOf(receiver).getName();
     }
   }

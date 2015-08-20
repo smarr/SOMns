@@ -38,7 +38,7 @@ public abstract class MirrorPrims {
   public abstract static class RespondsToPrim extends BinaryExpressionNode {
     @Specialization
     public final boolean objectResondsTo(final Object rcvr, final SSymbol selector) {
-      VM.needsToBeOptimized("Uses Types.getClassOf, so, should be specialized in performance cirtical code");
+      VM.thisMethodNeedsToBeOptimized("Uses Types.getClassOf, so, should be specialized in performance cirtical code");
       return Types.getClassOf(rcvr).canUnderstand(selector);
     }
   }
@@ -48,7 +48,7 @@ public abstract class MirrorPrims {
   public abstract static class MethodsPrim extends UnaryExpressionNode {
     @Specialization
     public final SArray getMethod(final Object rcvr) {
-      VM.needsToBeOptimized("Uses Types.getClassOf, so, should be specialized in performance cirtical code");
+      VM.thisMethodNeedsToBeOptimized("Uses Types.getClassOf, so, should be specialized in performance cirtical code");
       SInvokable[] invokables = Types.getClassOf(rcvr).getMethods();
       return new SArray(invokables);
     }

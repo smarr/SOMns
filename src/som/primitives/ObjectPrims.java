@@ -23,7 +23,7 @@ public final class ObjectPrims {
   public abstract static class ObjectClassNamePrim extends UnaryExpressionNode {
     @Specialization
     public final SSymbol getName(final Object obj) {
-      VM.needsToBeOptimized("Not yet optimized, need add specializations to remove Types.getClassOf");
+      VM.thisMethodNeedsToBeOptimized("Not yet optimized, need add specializations to remove Types.getClassOf");
       return Types.getClassOf(obj).getName();
     }
   }
@@ -49,7 +49,7 @@ public final class ObjectPrims {
 
     @Specialization
     public final SClass doObject(final Object receiver) {
-      VM.needsToBeOptimized("Should specialize this if performance critical");
+      VM.thisMethodNeedsToBeOptimized("Should specialize this if performance critical");
       return Types.getClassOf(receiver);
     }
   }
@@ -118,7 +118,7 @@ public final class ObjectPrims {
     }
 
     public static boolean isObjectValue(final Object obj) {
-      VM.needsToBeOptimized("This should only be used for prototyping, and then removed, because it is slow and duplicates code");
+      VM.callerNeedsToBeOptimized("This should only be used for prototyping, and then removed, because it is slow and duplicates code");
       if (obj instanceof Boolean ||
           obj instanceof Long ||
           obj instanceof BigInteger ||

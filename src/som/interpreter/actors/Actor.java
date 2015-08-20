@@ -78,7 +78,7 @@ public class Actor {
     SPromise  result   = SPromise.createPromise(currentActor);
     SResolver resolver = SPromise.createResolver(result, "eventualSend:", selector);
 
-    VM.needsToBeOptimized("This needs to be optimized");
+    VM.thisMethodNeedsToBeOptimized("This needs to be optimized");
 
     DirectMessage msg = new DirectMessage(this, selector, args, currentActor, resolver);
     msg.getTarget().enqueueMessage(msg);
@@ -87,7 +87,7 @@ public class Actor {
   }
 
   public final Object wrapForUse(final Object o, final Actor owner) {
-    VM.needsToBeOptimized("This should probably be optimized");
+    VM.thisMethodNeedsToBeOptimized("This should probably be optimized");
 
     if (this == owner) {
       return o;

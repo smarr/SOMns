@@ -27,7 +27,7 @@ public abstract class PerformWithArgumentsInSuperclassPrim extends QuaternaryExp
   public final Object doSAbstractObject(final VirtualFrame frame,
       final Object receiver, final SSymbol selector,
       final Object[] argArr, final SClass clazz) {
-    VM.needsToBeOptimized("PerformWithArgumentsInSuperclassPrim.doSAbstractObject()");
+    VM.thisMethodNeedsToBeOptimized("PerformWithArgumentsInSuperclassPrim.doSAbstractObject()");
     Dispatchable invokable = clazz.lookupMessage(selector, AccessModifier.PUBLIC);
     return call.call(frame, invokable.getCallTarget(),
         mergeReceiverWithArguments(receiver, argArr));

@@ -75,7 +75,7 @@ public abstract class EventualMessage extends RecursiveAction {
 
   protected static Actor determineTargetAndWrapArguments(final Object[] arguments,
       Actor target, final Actor currentSender, final Actor originalSender) {
-    VM.needsToBeOptimized("not optimized for compilation");
+    VM.thisMethodNeedsToBeOptimized("not optimized for compilation");
 
     // target: the owner of the promise that just got resolved
     // however, if a promise gets resolved to a far reference
@@ -121,7 +121,7 @@ public abstract class EventualMessage extends RecursiveAction {
 
     @Override
     protected final void executeMessage() {
-      VM.needsToBeOptimized("Not Optimized! But also not sure it can be part of compilation anyway");
+      VM.thisMethodNeedsToBeOptimized("Not Optimized! But also not sure it can be part of compilation anyway");
 
       Object rcvrObj = args[0];
       assert rcvrObj != null;
@@ -160,7 +160,7 @@ public abstract class EventualMessage extends RecursiveAction {
     }
 
     private void determineAndSetTarget(final Object rcvr, final Actor target, final Actor sendingActor) {
-      VM.needsToBeOptimized("not optimized for compilation");
+      VM.thisMethodNeedsToBeOptimized("not optimized for compilation");
 
       args[0] = rcvr;
       Actor finalTarget = determineTargetAndWrapArguments(args, target, sendingActor, originalSender);
@@ -252,7 +252,7 @@ public abstract class EventualMessage extends RecursiveAction {
   }
 
   protected void executeMessage() {
-    VM.needsToBeOptimized("Not Optimized! But also not sure it can be part of compilation anyway");
+    VM.thisMethodNeedsToBeOptimized("Not Optimized! But also not sure it can be part of compilation anyway");
 
     Object rcvrObj = args[0];
     assert rcvrObj != null;
