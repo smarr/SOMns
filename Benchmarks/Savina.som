@@ -699,6 +699,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       (numWorkers = 10 and: [numMessagesPerWorker =  300 and: [writePercentage = 10 and: [sizePercentage = 1]]]) ifTrue: [ ^ result =  292 ].
       (numWorkers = 10 and: [numMessagesPerWorker =  500 and: [writePercentage = 10 and: [sizePercentage = 1]]]) ifTrue: [ ^ result =  476 ].
       (numWorkers = 10 and: [numMessagesPerWorker = 1000 and: [writePercentage = 10 and: [sizePercentage = 1]]]) ifTrue: [ ^ result =  992 ].
+      (numWorkers = 10 and: [numMessagesPerWorker = 1500 and: [writePercentage = 10 and: [sizePercentage = 1]]]) ifTrue: [ ^ result = 1496 ].
       (numWorkers = 20 and: [numMessagesPerWorker = 1000 and: [writePercentage = 10 and: [sizePercentage = 1]]]) ifTrue: [ ^ result = 1959 ].
       (numWorkers = 20 and: [numMessagesPerWorker = 2000 and: [writePercentage = 10 and: [sizePercentage = 1]]]) ifTrue: [ ^ result = 3956 ].
       
