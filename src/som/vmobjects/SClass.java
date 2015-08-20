@@ -37,14 +37,17 @@ import som.compiler.MixinDefinition;
 import som.compiler.MixinDefinition.ClassSlotDefinition;
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.nodes.dispatch.Dispatchable;
+import som.interpreter.objectstorage.ClassFactory;
 import som.interpreter.objectstorage.ObjectLayout;
 import som.vm.constants.Classes;
 
-import com.oracle.truffle.api.CompilerAsserts;
-import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
+
+// TODO: should we move more of that out of SClass and use the corresponding
+//       ClassFactory?
+// TODO: optimize lookup based on ClassFactory, not just for slots
 public final class SClass extends SObjectWithoutFields {
 
   @CompilationFinal private SClass superclass;
@@ -53,12 +56,12 @@ public final class SClass extends SObjectWithoutFields {
   @CompilationFinal private HashMap<SSymbol, Dispatchable> dispatchables;
   @CompilationFinal private HashSet<SlotDefinition> slots; // includes slots of super classes and mixins
 
-  @CompilationFinal private ObjectLayout layoutForInstances;
-
   @CompilationFinal private MixinDefinition mixinDef;
   @CompilationFinal private boolean hasFields;
   @CompilationFinal private boolean hasOnlyImmutableFields;
   @CompilationFinal private boolean declaredAsValue;
+
+  @CompilationFinal private ClassFactory factory;
 
   protected final SObjectWithoutFields enclosingObject;
 
@@ -77,6 +80,14 @@ public final class SClass extends SObjectWithoutFields {
 
   public SClass getSuperClass() {
     return superclass;
+  }
+
+  public ClassFactory getFactory() {
+    return factory;
+  }
+
+  public ObjectLayout getLayoutForInstances() {
+    return factory.getInstanceLayout();
   }
 
   public HashSet<SlotDefinition> getInstanceSlots() {
@@ -101,16 +112,23 @@ public final class SClass extends SObjectWithoutFields {
     return enclosingObject.isValue();
   }
 
-  public void setDeclaredAsValue(final boolean declaredAsValue) {
-    this.declaredAsValue = declaredAsValue;
-  }
-
   public MixinDefinition getMixinDefinition() {
     return mixinDef;
   }
 
-  public void setMixinDefinition(final MixinDefinition mixinDef) {
-    this.mixinDef = mixinDef;
+  public void initializeStructure(final MixinDefinition mixinDef,
+      final HashSet<SlotDefinition> slots, final boolean hasOnlyImmutableFields,
+      final HashMap<SSymbol, Dispatchable> dispatchables,
+      final boolean declaredAsValue, final ClassFactory classFactory) {
+    assert slots == null || slots.size() > 0;
+
+    this.mixinDef  = mixinDef;
+    this.slots     = slots;
+    this.hasFields = slots != null;
+    this.hasOnlyImmutableFields = hasOnlyImmutableFields;
+    this.dispatchables   = dispatchables;
+    this.declaredAsValue = declaredAsValue;
+    this.factory = classFactory;
   }
 
   private boolean isBasedOn(final MixinDefinitionId mixinId) {
@@ -138,20 +156,8 @@ public final class SClass extends SObjectWithoutFields {
     name = value;
   }
 
-  public void setSlots(final HashSet<SlotDefinition> slots) {
-    transferToInterpreterAndInvalidate("SClass.setInstanceFields");
-    if (layoutForInstances == null) {
-      layoutForInstances = new ObjectLayout(slots, this);
-      this.slots = slots;
-      this.hasFields = layoutForInstances.getNumberOfFields() > 0;
-      this.hasOnlyImmutableFields = layoutForInstances.hasOnlyImmutableFields();
-    } else {
-      assert slots.size() == layoutForInstances.getNumberOfFields();
-      assert slots.equals(this.slots);
-    }
-  }
-
   public boolean canUnderstand(final SSymbol selector) {
+    VM.callerNeedsToBeOptimized("Should not be called on fast path");
     return dispatchables.containsKey(selector);
   }
 
@@ -165,13 +171,8 @@ public final class SClass extends SObjectWithoutFields {
     return methods.toArray(new SInvokable[methods.size()]);
   }
 
-  public void setDispatchables(final HashMap<SSymbol, Dispatchable> value) {
-    transferToInterpreterAndInvalidate("SClass.setDispatchables");
-    dispatchables = value;
-  }
-
   public SClass[] getNestedClasses(final SObjectWithoutFields instance) {
-    CompilerAsserts.neverPartOfCompilation("Not optimized, we do unrecorded invokes here");
+    VM.thisMethodNeedsToBeOptimized("Not optimized, we do unrecorded invokes here");
     ArrayList<SClass> classes = new ArrayList<SClass>();
     for (Dispatchable disp : dispatchables.values()) {
       if (disp instanceof ClassSlotDefinition) {
@@ -213,38 +214,11 @@ public final class SClass extends SObjectWithoutFields {
   }
 
   public boolean hasFields() {
-    if (layoutForInstances == null) { return false; }
     return hasFields;
   }
 
   public boolean hasOnlyImmutableFields() {
     return hasOnlyImmutableFields;
-  }
-
-  public ObjectLayout getLayoutForInstances() {
-    return layoutForInstances;
-  }
-
-  public synchronized ObjectLayout updateInstanceLayoutWithInitializedField(
-      final SlotDefinition slot, final Class<?> type) {
-    ObjectLayout updated = layoutForInstances.withInitializedField(slot, type);
-
-    if (updated != layoutForInstances) {
-      CompilerDirectives.transferToInterpreterAndInvalidate();
-      layoutForInstances = updated;
-    }
-    return layoutForInstances;
-  }
-
-  public synchronized ObjectLayout updateInstanceLayoutWithGeneralizedField(
-      final SlotDefinition slot) {
-    ObjectLayout updated = layoutForInstances.withGeneralizedField(slot);
-
-    if (updated != layoutForInstances) {
-      CompilerDirectives.transferToInterpreterAndInvalidate();
-      layoutForInstances = updated;
-    }
-    return layoutForInstances;
   }
 
   @Override

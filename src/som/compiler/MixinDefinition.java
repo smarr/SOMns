@@ -1,5 +1,6 @@
 package som.compiler;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -24,6 +25,7 @@ import som.interpreter.nodes.dispatch.CachedSlotAccessNode.CheckedCachedSlotAcce
 import som.interpreter.nodes.dispatch.CachedSlotAccessNode.CheckedCachedSlotWriteNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.nodes.literals.NilLiteralNode;
+import som.interpreter.objectstorage.ClassFactory;
 import som.interpreter.objectstorage.FieldAccessorNode.AbstractWriteFieldNode;
 import som.interpreter.objectstorage.FieldAccessorNode.UninitializedReadFieldNode;
 import som.interpreter.objectstorage.FieldAccessorNode.UninitializedWriteFieldNode;
@@ -47,9 +49,10 @@ import com.sun.istack.internal.Nullable;
 
 
 /**
- * Produced by the Parser, contains all static information on a mixin that is
- * in the source. Is used to instantiate complete class objects at runtime,
- * which then also have the super class resolved.
+ * Produced by a {@link MixinBuilder}, contains all static information on a
+ * mixin that is in the source. Is used to instantiate a {@link ClassFactory}
+ * at runtime, which then also has the super class and mixins resolved to be
+ * used to instantiate {@link SClass} objects.
  */
 public final class MixinDefinition {
   private final SSymbol       name;
@@ -131,39 +134,73 @@ public final class MixinDefinition {
     initializeClass(result, superclassAndMixins, false);
   }
 
-  // TODO: remove the TruffleBoundary once we optimized this, i.e., added class shapes
-  @TruffleBoundary
   public void initializeClass(final SClass result,
-      final Object superclassAndMixins, final boolean isValueClass) {
-    VM.needsToBeOptimized("We need a shape for the class that can be reused, " +
-      "we can't do code generation on the fly, we need stable methods for " +
-      "compilation. And we also need the id of such species/shape for reads/writes");
+      final Object superclassAndMixins, final boolean isTheValueClass) {
+    VM.callerNeedsToBeOptimized("This is supposed to result in a cacheable object, and thus is only the fallback case.");
+    ClassFactory factory = createClassFactory(superclassAndMixins, isTheValueClass);
+    factory.initializeClass(result);
+  }
 
+  public ClassFactory createClassFactory(final Object superclassAndMixins, final boolean isTheValueClass) {
+    VM.callerNeedsToBeOptimized("This is supposed to result in a cacheable object, and thus is only the fallback case.");
+
+    // decode superclass and mixins
     SClass superClass;
-    Object[] mixins;
+    SClass[] mixins;
     if (superclassAndMixins == null || superclassAndMixins instanceof SClass) {
       superClass = (SClass) superclassAndMixins;
-      mixins     = null;
+      mixins     = new SClass[] {superClass};
     } else {
-      mixins     = (Object[]) superclassAndMixins;
-      superClass = (SClass) mixins[0];
+      mixins     = Arrays.copyOf((Object[]) superclassAndMixins,
+                                 ((Object[]) superclassAndMixins).length,
+                                 SClass[].class);
+      superClass = mixins[0];
+
       assert mixins.length > 1;
     }
 
-    result.setName(name);
-    result.setSuperClass(superClass);
-    result.setMixinDefinition(this);
-    initializeClassClass(result);
-
     HashSet<SlotDefinition> instanceSlots = new HashSet<>();
     addSlots(instanceSlots, superClass);
+    HashMap<SSymbol, Dispatchable> dispatchables = new HashMap<>();
 
-    HashMap<SSymbol, SlotDefinition> mixinSlots = new HashMap<>();
-    HashMap<SSymbol, Dispatchable> dispatchables;
+    boolean mixinsIncludeValue = determineSlotsAndDispatchables(mixins,
+        instanceSlots, dispatchables);
+    if (instanceSlots.isEmpty()) {
+      instanceSlots = null; // let's not hang on to the empty one
+    }
 
+    boolean hasOnlyImmutableFields = hasOnlyImmutableFields(instanceSlots);
+    boolean instancesAreValues = checkAndConfirmIsValue(superClass,
+        mixinsIncludeValue, isTheValueClass, hasOnlyImmutableFields);
+
+    ClassFactory factory = new ClassFactory(name, classScope, this,
+        instanceSlots, dispatchables, isModule, mixins, hasOnlyImmutableFields,
+        instancesAreValues);
+
+    return factory;
+  }
+
+  protected boolean hasOnlyImmutableFields(final HashSet<SlotDefinition> instanceSlots) {
+    if (instanceSlots == null) {
+      return true;
+    }
+
+    boolean hasOnlyImmutableFields = true;
+    for (SlotDefinition s : instanceSlots) {
+      if (!s.immutable) {
+        hasOnlyImmutableFields = false;
+        break;
+      }
+    }
+    return hasOnlyImmutableFields;
+  }
+
+  private boolean determineSlotsAndDispatchables(final Object[] mixins,
+      final HashSet<SlotDefinition> instanceSlots,
+      final HashMap<SSymbol, Dispatchable> dispatchables) {
     boolean mixinsIncludeValue = false;
     if (mixins != null) {
-      dispatchables = new HashMap<>();
+      HashMap<SSymbol, SlotDefinition> mixinSlots = new HashMap<>();
       for (int i = 1; i < mixins.length; i++) {
         SClass mixin = (SClass) mixins[i];
         if (mixin == Classes.valueClass) {
@@ -186,41 +223,37 @@ public final class MixinDefinition {
       }
       instanceSlots.addAll(mixinSlots.values());
       dispatchables.putAll(instanceScope.getDispatchables());
+
+      if (slots != null) {
+        instanceSlots.addAll(slots.values());
+      }
     } else {
-      dispatchables = instanceScope.getDispatchables();
+      dispatchables.putAll(instanceScope.getDispatchables());
     }
 
     if (slots != null) {
       instanceSlots.addAll(slots.values());
     }
-
-    result.setSlots(instanceSlots);
-    result.setDispatchables(dispatchables);
-
-    checkAndDeclareAsValue(result, superClass, mixinsIncludeValue, isValueClass);
+    return mixinsIncludeValue;
   }
 
-  private void checkAndDeclareAsValue(final SClass result,
-      final SClass superClass, final boolean mixinsIncludeValue,
-      final boolean isValueClass) {
+  private boolean checkAndConfirmIsValue(final SClass superClass,
+      final boolean mixinsIncludeValue, final boolean isValueClass, final boolean hasOnlyImmutableFields) {
     boolean superIsValue    = superClass == null ? false : superClass.declaredAsValue();
     boolean declaredAsValue = superIsValue || mixinsIncludeValue || isValueClass;
-
-    // the layout determines that for us already
-    boolean onlyImmutableSlots = result.hasOnlyImmutableFields();
 
     if (declaredAsValue && !allSlotsAreImmutable) {
       reportErrorAndExit(": The class ", " is declared as value, but also declared mutable slots");
     }
-    if (declaredAsValue && !onlyImmutableSlots) {
+    if (declaredAsValue && !hasOnlyImmutableFields) {
       reportErrorAndExit(": The class ", " is declared as Value, but superclass or mixins have mutable slots.");
     }
     if (declaredAsValue && !outerScopeIsImmutable) {
       reportErrorAndExit(": The class ", " cannot be a Value, because its enclosing object has mutable fields.");
     }
 
-    result.setDeclaredAsValue(declaredAsValue && allSlotsAreImmutable &&
-        outerScopeIsImmutable && onlyImmutableSlots);
+    return declaredAsValue && allSlotsAreImmutable && outerScopeIsImmutable &&
+        hasOnlyImmutableFields;
   }
 
   @TruffleBoundary
@@ -254,21 +287,6 @@ public final class MixinDefinition {
     instanceSlots.addAll(slots);
   }
 
-  private void initializeClassClass(final SClass result) {
-    // build class class name
-    String ccName = name.getString() + " class";
-
-    if (result.getSOMClass() != null) {
-      // Initialize the class of the resulting class
-      SClass classClass = result.getSOMClass();
-      classClass.setDispatchables(classScope.getDispatchables());
-      classClass.setName(Symbols.symbolFor(ccName));
-      classClass.setMixinDefinition(this);
-      classClass.setSuperClass(Classes.classClass);
-      classClass.setDeclaredAsValue(isModule);
-    }
-  }
-
   public HashMap<SSymbol, SInvokable> getFactoryMethods() {
     return factoryMethods;
   }
@@ -278,6 +296,7 @@ public final class MixinDefinition {
   }
 
   public SClass instantiateModuleClass() {
+    VM.callerNeedsToBeOptimized("only meant for code loading, which is supposed to be on the slowpath");
     CallTarget callTarget = superclassMixinResolution.createCallTarget();
     SClass superClass = (SClass) callTarget.call(Nil.nilObject);
     SClass classObject = instantiateClass(Nil.nilObject, superClass);

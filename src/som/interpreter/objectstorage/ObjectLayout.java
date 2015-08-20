@@ -6,12 +6,11 @@ import java.util.Map.Entry;
 
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.objectstorage.StorageLocation.UnwrittenStorageLocation;
-import som.vmobjects.SClass;
 import som.vmobjects.SObject;
 
 
 public final class ObjectLayout {
-  private final SClass forClass;
+  private final ClassFactory forClasses;
 
   private final int primitiveStorageLocationsUsed;
   private final int objectStorageLocationsUsed;
@@ -21,8 +20,8 @@ public final class ObjectLayout {
   private final HashMap<SlotDefinition, StorageLocation> storageLocations;
   private final HashMap<SlotDefinition, Class<?>>        storageTypes;
 
-  public ObjectLayout(final HashSet<SlotDefinition> slots, final SClass forClass) {
-    this(getInitialStorageTypes(slots), slots.size(), forClass);
+  public ObjectLayout(final HashSet<SlotDefinition> slots, final ClassFactory forClasses) {
+    this(getInitialStorageTypes(slots), slots.size(), forClasses);
   }
 
   private static HashMap<SlotDefinition, Class<?>> getInitialStorageTypes(
@@ -35,8 +34,8 @@ public final class ObjectLayout {
   }
 
   public ObjectLayout(final HashMap<SlotDefinition, Class<?>> knownFieldTypes,
-      final int numberOfFields, final SClass forClass) {
-    this.forClass = forClass;
+      final int numberOfFields, final ClassFactory forClasses) {
+    this.forClasses = forClasses;
 
     storageTypes = knownFieldTypes;
     totalNumberOfStorageLocations = numberOfFields;
@@ -76,7 +75,7 @@ public final class ObjectLayout {
   }
 
   public boolean layoutForSameClass(final ObjectLayout other) {
-    return forClass == other.forClass;
+    return forClasses == other.forClasses;
   }
 
   public int getNumberOfFields() {
@@ -118,7 +117,7 @@ public final class ObjectLayout {
       final Class<?> specType) {
     HashMap<SlotDefinition, Class<?>> withChangedField = new HashMap<>(storageTypes);
     withChangedField.put(slot, specType);
-    return new ObjectLayout(withChangedField, totalNumberOfStorageLocations, forClass);
+    return new ObjectLayout(withChangedField, totalNumberOfStorageLocations, forClasses);
   }
 
   public StorageLocation getStorageLocation(final SlotDefinition slot) {

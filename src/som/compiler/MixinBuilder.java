@@ -47,6 +47,11 @@ import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.source.SourceSection;
 
+
+/**
+ * MixinBuilders are used by the parser to accumulate all information to create
+ * a {@link MixinDefinition}.
+ */
 public final class MixinBuilder {
   // TODO: if performance critical, optimize mixin builder by initializing structures lazily
 
