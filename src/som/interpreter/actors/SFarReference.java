@@ -5,6 +5,7 @@ import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.RootCallTarget;
 
 
 public final class SFarReference extends SAbstractObject {
@@ -48,7 +49,7 @@ public final class SFarReference extends SAbstractObject {
   }
 
   public SPromise eventualSend(final Actor currentActor, final SSymbol selector,
-      final Object[] args) {
-    return actor.eventualSend(currentActor, selector, args);
+      final Object[] args, final RootCallTarget onReceive) {
+    return actor.eventualSend(currentActor, selector, args, onReceive);
   }
 }

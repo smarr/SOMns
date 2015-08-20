@@ -1,12 +1,13 @@
 package som.interpreter.actors;
 
 import som.VM;
-import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.compiler.MethodBuilder;
+import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.interpreter.Method;
 import som.interpreter.nodes.ArgumentReadNode.LocalArgumentReadNode;
 import som.interpreter.nodes.ArgumentReadNode.LocalSelfReadNode;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.InternalObjectArrayNode;
 import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.vm.Symbols;
@@ -14,27 +15,28 @@ import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.RootCallTarget;
-import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.dsl.NodeChild;
+import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.source.SourceSection;
 
 
-public final class EventualSendNode extends AbstractMessageSendNode {
+@NodeChild(value = "arguments", type = InternalObjectArrayNode.class)
+public abstract class EventualSendNode extends ExpressionNode {
 
   protected final SSymbol selector;
-
   protected final RootCallTarget onReceive;
 
   private static final MixinDefinitionId fakeId = new MixinDefinitionId(Symbols.symbolFor("--fake--"));
 
   public EventualSendNode(final SSymbol selector,
-      final ExpressionNode[] arguments, final SourceSection source) {
-    super(arguments, source);
+      final int numArgs, final SourceSection source) {
+    super(source);
     this.selector = selector;
 
     MethodBuilder eventualInvoke = new MethodBuilder(true);
-    ExpressionNode[] args = new ExpressionNode[arguments.length];
+    ExpressionNode[] args = new ExpressionNode[numArgs];
     args[0] = new LocalSelfReadNode(fakeId, null);
-    for (int i = 1; i < arguments.length; i++) {
+    for (int i = 1; i < numArgs; i++) {
       args[i] = new LocalArgumentReadNode(i, null);
     }
     AbstractMessageSendNode invoke = MessageSendNode.createMessageSend(selector, args, source);
@@ -46,33 +48,39 @@ public final class EventualSendNode extends AbstractMessageSendNode {
     onReceive = m.createCallTarget();
   }
 
-  @Override
-  public SPromise doPreEvaluated(final VirtualFrame frame, final Object[] args) {
+  protected static final boolean markVmHasSendMessage() {
+    // no arguments, should be compiled to assertion and only executed once
     if (CompilerDirectives.inInterpreter()) {
-      // TODO: this can be done unconditionally in some uninitialized version
-      //       of EventualSendNode, which we probably should have at some point
       VM.hasSendMessages();
     }
+    return true;
+  }
 
-    // TODO: should we specialize here? or in the processing actor?
-    //       technically, I think it is safe to do and cache the lookup here
-    //       but, it depends on how we do the actual send,
-    //       do we create a new root node that is queued, or is there something else?
-    //       for the moment, the event loop will probably just use an indirect
-    //       call node after the lookup.
+  protected static final boolean isFarRefRcvr(final Object[] args) {
+    return args[0] instanceof SFarReference;
+  }
 
-    Object rcvrObject = args[0];
-    if (rcvrObject instanceof SFarReference) {
-      SFarReference rcvr = (SFarReference) args[0];
-      return rcvr.eventualSend(
-          EventualMessage.getActorCurrentMessageIsExecutionOn(), selector, args);
-    } else if (rcvrObject instanceof SPromise) {
-      SPromise rcvr = (SPromise) rcvrObject;
-      return rcvr.whenResolved(selector, args, onReceive);
-    } else {
-      Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
-      return current.eventualSend(current, selector, args);
-    }
+  protected static final boolean isPromiseRcvr(final Object[] args) {
+    return args[0] instanceof SPromise;
+  }
+
+  @Specialization(guards = {"markVmHasSendMessage()", "isFarRefRcvr(args)"})
+  public final SPromise toFarRef(final Object[] args) {
+    SFarReference rcvr = (SFarReference) args[0];
+    return rcvr.eventualSend(EventualMessage.getActorCurrentMessageIsExecutionOn(),
+        selector, args, onReceive);
+  }
+
+  @Specialization(guards = "isPromiseRcvr(args)")
+  public final SPromise toPromise(final Object[] args) {
+    SPromise rcvr = (SPromise) args[0];
+    return rcvr.whenResolved(selector, args, onReceive);
+  }
+
+  @Specialization(guards = {"!isFarRefRcvr(args)", "!isPromiseRcvr(args)"})
+  public final SPromise toNearRef(final Object[] args) {
+    Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
+    return current.eventualSend(current, selector, args, onReceive);
   }
 
   @Override

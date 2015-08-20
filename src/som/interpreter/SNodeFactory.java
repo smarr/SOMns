@@ -7,7 +7,7 @@ import som.compiler.MixinDefinition.SlotDefinition;
 import som.compiler.Variable.Argument;
 import som.compiler.Variable.Local;
 import som.interpreter.LexicalScope.MethodScope;
-import som.interpreter.actors.EventualSendNode;
+import som.interpreter.actors.EventualSendNodeGen;
 import som.interpreter.nodes.ArgumentReadNode.LocalArgumentReadNode;
 import som.interpreter.nodes.ArgumentReadNode.LocalSelfReadNode;
 import som.interpreter.nodes.ArgumentReadNode.LocalSuperReadNode;
@@ -121,11 +121,11 @@ public final class SNodeFactory {
     }
   }
 
-  public static AbstractMessageSendNode createMessageSend(final SSymbol msg,
+  public static ExpressionNode createMessageSend(final SSymbol msg,
       final ExpressionNode[] exprs, final boolean eventualSend,
       final SourceSection source) {
     if (eventualSend) {
-      return new EventualSendNode(msg, exprs, source);
+      return EventualSendNodeGen.create(msg, exprs.length, source, new InternalObjectArrayNode(exprs));
     } else {
       return MessageSendNode.createMessageSend(msg, exprs, source);
     }

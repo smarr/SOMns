@@ -14,6 +14,7 @@ import som.primitives.ObjectPrims.IsValue;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.RootCallTarget;
 
 
 // design goals:
@@ -74,13 +75,14 @@ public class Actor {
   }
 
   public final SPromise eventualSend(final Actor currentActor, final SSymbol selector,
-      final Object[] args) {
+      final Object[] args, final RootCallTarget onReceive) {
     SPromise  result   = SPromise.createPromise(currentActor);
     SResolver resolver = SPromise.createResolver(result, "eventualSend:", selector);
 
     VM.thisMethodNeedsToBeOptimized("This needs to be optimized");
 
-    DirectMessage msg = new DirectMessage(this, selector, args, currentActor, resolver);
+    DirectMessage msg = new DirectMessage(this, selector, args, currentActor,
+        resolver, onReceive);
     msg.getTarget().enqueueMessage(msg);
 
     return result;
@@ -149,7 +151,6 @@ public class Actor {
   public static boolean isPoolIdle() {
     return !actorPool.hasQueuedSubmissions() && actorPool.getActiveThreadCount() == 0;
   }
-
 
   private static final class ActorProcessingThreadFactor implements ForkJoinWorkerThreadFactory {
     @Override

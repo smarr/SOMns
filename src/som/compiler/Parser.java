@@ -70,14 +70,13 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 
-import som.compiler.MixinBuilder.MixinDefinitionError;
 import som.compiler.Lexer.Peek;
 import som.compiler.Lexer.SourceCoordinate;
+import som.compiler.MixinBuilder.MixinDefinitionError;
 import som.compiler.Variable.Local;
 import som.interpreter.SNodeFactory;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageSendNode;
-import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.interpreter.nodes.MessageSendNode.AbstractUninitializedMessageSendNode;
 import som.interpreter.nodes.OuterObjectRead;
 import som.interpreter.nodes.literals.BlockNode;
@@ -278,7 +277,7 @@ public final class Parser {
     SourceCoordinate coord = getCoordinate();
     MethodBuilder def = mxnBuilder.getClassInstantiationMethodBuilder();
     ExpressionNode selfRead = def.getSelfRead(null);
-    AbstractMessageSendNode superClass = createMessageSend(Symbols.OBJECT,
+    ExpressionNode superClass = createMessageSend(Symbols.OBJECT,
         new ExpressionNode[] {selfRead}, false, getSource(coord));
     mxnBuilder.setSuperClassResolution(superClass);
 
@@ -986,7 +985,7 @@ public final class Parser {
     return msg;
   }
 
-  private AbstractMessageSendNode unaryMessage(final ExpressionNode receiver,
+  private ExpressionNode unaryMessage(final ExpressionNode receiver,
       final boolean eventualSend) throws ParseError {
     SourceCoordinate coord = getCoordinate();
     SSymbol selector = unarySelector();
@@ -994,7 +993,7 @@ public final class Parser {
         eventualSend, getSource(coord));
   }
 
-  private AbstractMessageSendNode binaryMessage(final MethodBuilder builder,
+  private ExpressionNode binaryMessage(final MethodBuilder builder,
       final ExpressionNode receiver, final boolean eventualSend)
           throws ParseError, MixinDefinitionError {
     SourceCoordinate coord = getCoordinate();

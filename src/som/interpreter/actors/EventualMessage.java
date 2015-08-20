@@ -4,11 +4,8 @@ import java.util.Arrays;
 import java.util.concurrent.RecursiveAction;
 
 import som.VM;
-import som.compiler.AccessModifier;
-import som.interpreter.Types;
 import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.interpreter.actors.SPromise.SResolver;
-import som.interpreter.nodes.dispatch.Dispatchable;
 import som.vm.Symbols;
 import som.vmobjects.SBlock;
 import som.vmobjects.SSymbol;
@@ -22,11 +19,13 @@ public abstract class EventualMessage extends RecursiveAction {
 
   protected final Object[]  args;
   protected final SResolver resolver;
+  protected final RootCallTarget onReceive;
 
   protected EventualMessage(final Object[] args,
-      final SResolver resolver) {
+      final SResolver resolver, final RootCallTarget onReceive) {
     this.args     = args;
     this.resolver = resolver;
+    this.onReceive = onReceive;
 
     assert resolver != null;
   }
@@ -45,8 +44,9 @@ public abstract class EventualMessage extends RecursiveAction {
     private final Actor   sender;
 
     public DirectMessage(final Actor target, final SSymbol selector,
-        final Object[] arguments, final Actor sender, final SResolver resolver) {
-      super(arguments, resolver);
+        final Object[] arguments, final Actor sender, final SResolver resolver,
+        final RootCallTarget onReceive) {
+      super(arguments, resolver, onReceive);
       this.selector = selector;
       this.sender   = sender;
       this.target   = determineTargetAndWrapArguments(arguments, target, sender, sender);
@@ -107,33 +107,15 @@ public abstract class EventualMessage extends RecursiveAction {
   public abstract static class PromiseMessage extends EventualMessage {
     private static final long serialVersionUID = -6246726751425824082L;
 
-    protected final RootCallTarget onReceive;
     protected final Actor originalSender; // initial owner of the arguments
 
     public PromiseMessage(final Object[] arguments, final Actor originalSender,
         final SResolver resolver, final RootCallTarget onReceive) {
-      super(arguments, resolver);
+      super(arguments, resolver, onReceive);
       this.originalSender = originalSender;
-      this.onReceive = onReceive;
     }
 
     public abstract void resolve(final Object rcvr, final Actor target, final Actor sendingActor);
-
-    @Override
-    protected final void executeMessage() {
-      VM.thisMethodNeedsToBeOptimized("Not Optimized! But also not sure it can be part of compilation anyway");
-
-      Object rcvrObj = args[0];
-      assert rcvrObj != null;
-
-      Object result;
-      assert !(rcvrObj instanceof SFarReference);
-      assert !(rcvrObj instanceof SPromise);
-
-      result = onReceive.call(args);
-
-      resolver.resolve(result);
-    }
   }
 
   /**
@@ -251,7 +233,7 @@ public abstract class EventualMessage extends RecursiveAction {
     target.enqueueNextMessageForProcessing();
   }
 
-  protected void executeMessage() {
+  protected final void executeMessage() {
     VM.thisMethodNeedsToBeOptimized("Not Optimized! But also not sure it can be part of compilation anyway");
 
     Object rcvrObj = args[0];
@@ -261,14 +243,7 @@ public abstract class EventualMessage extends RecursiveAction {
     assert !(rcvrObj instanceof SFarReference);
     assert !(rcvrObj instanceof SPromise);
 
-    Dispatchable disp = Types.getClassOf(rcvrObj).
-        lookupMessage(getSelector(), AccessModifier.PUBLIC);
-    if (disp == null) {
-      // TODO: this is only temporary, need to add proper #dnu support, and that's probably by integrating with the existing send implementation
-      VM.errorExit("Eventual send failed with #dnu: " + Types.getClassOf(rcvrObj).toString() + ">>" + getSelector().toString());
-    }
-
-    result = disp.invoke(args);
+    result = onReceive.call(args);
 
     resolver.resolve(result);
   }
