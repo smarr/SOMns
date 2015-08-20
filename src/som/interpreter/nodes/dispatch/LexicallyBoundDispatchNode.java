@@ -90,7 +90,8 @@ public final class LexicallyBoundDispatchNode extends AbstractDispatchWithLookup
     // thus, this callsite is considered to be megamorphic, and we generalize
     // it.
     GenericDispatchNode genericReplacement = new GenericDispatchNode(selector,
-        AccessModifier.PRIVATE, mixinForPrivateLookup);
+        (mixinForPrivateLookup == null) ? AccessModifier.PROTECTED : AccessModifier.PRIVATE,
+        mixinForPrivateLookup);
     sendNode.replaceDispatchListHead(genericReplacement);
     return genericReplacement;
 
