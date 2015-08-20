@@ -42,7 +42,6 @@ import som.interpreter.objectstorage.ObjectLayout;
 import som.vm.constants.Classes;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
 
 // TODO: should we move more of that out of SClass and use the corresponding
@@ -182,9 +181,10 @@ public final class SClass extends SObjectWithoutFields {
     return classes.toArray(new SClass[classes.size()]);
   }
 
-  @TruffleBoundary
   public Dispatchable lookupPrivate(final SSymbol selector,
       final MixinDefinitionId mixinId) {
+    VM.callerNeedsToBeOptimized("should never be called on fast path");
+
     SClass cls = getClassCorrespondingTo(mixinId);
     if (cls != null) {
       Dispatchable disp = cls.dispatchables.get(selector);
@@ -195,10 +195,10 @@ public final class SClass extends SObjectWithoutFields {
     return lookupMessage(selector, AccessModifier.PROTECTED);
   }
 
-  @TruffleBoundary
   public Dispatchable lookupMessage(final SSymbol selector,
       final AccessModifier hasAtLeast) {
     assert hasAtLeast.ordinal() >= AccessModifier.PROTECTED.ordinal();
+    VM.callerNeedsToBeOptimized("should never be called on fast path");
 
     Dispatchable disp = dispatchables.get(selector);
 
