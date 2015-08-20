@@ -22,7 +22,8 @@ public final class CachedDispatchSObjectCheckNode extends AbstractCachedDispatch
   public Object executeDispatch(
       final VirtualFrame frame, final Object[] arguments) {
     SObjectWithoutFields rcvr = (SObjectWithoutFields) arguments[0];
-    if (rcvr.getSOMClass().getFactory() == expectedClassFactory) {
+
+    if (rcvr.getFactory() == expectedClassFactory) {
       return cachedMethod.call(frame, arguments);
     } else {
       return nextInCache.executeDispatch(frame, arguments);

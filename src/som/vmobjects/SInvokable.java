@@ -168,7 +168,7 @@ public class SInvokable extends SAbstractObject implements Dispatchable {
 
     if (rcvrClass instanceof SClass) {
       return new CachedDispatchSObjectCheckNode(
-          ((SClass) rcvrClass).getFactory(), callTarget, next);
+          ((SClass) rcvrClass).getClassFactory(), callTarget, next);
     } else if (rcvr == Boolean.TRUE) {
       return new CachedDispatchTrueCheckNode(callTarget, next);
     } else if (rcvr == Boolean.FALSE) {

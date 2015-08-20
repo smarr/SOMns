@@ -267,13 +267,13 @@ public abstract class SObject extends SObjectWithoutFields {
   }
 
   protected final void updateLayoutWithInitializedField(final SlotDefinition slot, final Class<?> type) {
-    ObjectLayout layout = clazz.getFactory().updateInstanceLayoutWithInitializedField(slot, type);
+    ObjectLayout layout = factory.updateInstanceLayoutWithInitializedField(slot, type);
     assert objectLayout != layout;
     setLayoutAndTransferFields();
   }
 
   protected final void updateLayoutWithGeneralizedField(final SlotDefinition slot) {
-    ObjectLayout layout = clazz.getFactory().updateInstanceLayoutWithGeneralizedField(slot);
+    ObjectLayout layout = factory.updateInstanceLayoutWithGeneralizedField(slot);
 
     assert objectLayout != layout;
     setLayoutAndTransferFields();

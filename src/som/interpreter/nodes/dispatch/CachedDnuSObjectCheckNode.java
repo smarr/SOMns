@@ -14,13 +14,14 @@ public final class CachedDnuSObjectCheckNode extends AbstractCachedDnuNode {
   public CachedDnuSObjectCheckNode(final SClass rcvrClass,
       final SSymbol selector, final AbstractDispatchNode nextInCache) {
     super(rcvrClass, selector, nextInCache);
-    expectedClassFactory = rcvrClass.getFactory();
+    expectedClassFactory = rcvrClass.getClassFactory();
   }
 
   @Override
   public Object executeDispatch(final VirtualFrame frame, final Object[] arguments) {
     SObjectWithoutFields rcvr = (SObjectWithoutFields) arguments[0];
-    if (rcvr.getSOMClass().getFactory() == expectedClassFactory) {
+
+    if (rcvr.getFactory() == expectedClassFactory) {
       return performDnu(frame, arguments, rcvr);
     } else {
       return nextInCache.executeDispatch(frame, arguments);

@@ -44,7 +44,7 @@ public class CachedSlotAccessNode extends AbstractDispatchNode {
       assert arguments[0] instanceof SObjectWithoutFields;
       SObjectWithoutFields rcvr = (SObjectWithoutFields) arguments[0];
 
-      if (rcvr.getSOMClass().getFactory() == rcvrFactory) {
+      if (rcvr.getFactory() == rcvrFactory) {
         assert arguments[0] instanceof SObject;
         return access.doRead(frame, (SObject) rcvr);
       } else {
@@ -101,7 +101,7 @@ public class CachedSlotAccessNode extends AbstractDispatchNode {
       assert arguments[0] instanceof SObjectWithoutFields;
       SObjectWithoutFields rcvr = (SObjectWithoutFields) arguments[0];
 
-      if (rcvr.getSOMClass().getFactory() == rcvrFactory) {
+      if (rcvr.getFactory() == rcvrFactory) {
         assert arguments[0] instanceof SObject;
         return write.write((SObject) rcvr, arguments[1]);
       } else {

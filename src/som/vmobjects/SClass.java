@@ -81,7 +81,7 @@ public final class SClass extends SObjectWithoutFields {
     return superclass;
   }
 
-  public ClassFactory getFactory() {
+  public ClassFactory getClassFactory() {
     return factory;
   }
 
