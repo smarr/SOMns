@@ -1,8 +1,8 @@
 package som.interpreter.nodes.dispatch;
 
 import som.interpreter.nodes.SlotAccessNode;
+import som.interpreter.objectstorage.ClassFactory;
 import som.interpreter.objectstorage.FieldAccessorNode.AbstractWriteFieldNode;
-import som.vmobjects.SClass;
 import som.vmobjects.SObject;
 import som.vmobjects.SObjectWithoutFields;
 
@@ -28,14 +28,14 @@ public class CachedSlotAccessNode extends AbstractDispatchNode {
   public static final class CheckedCachedSlotAccessNode extends CachedSlotAccessNode {
     @Child protected AbstractDispatchNode nextInCache;
 
-    private final SClass rcvrClass;
+    private final ClassFactory rcvrFactory;
 
-    public CheckedCachedSlotAccessNode(final SClass rcvrClass,
+    public CheckedCachedSlotAccessNode(final ClassFactory rcvrFactory,
       final SlotAccessNode access,
       final AbstractDispatchNode nextInCache) {
       super(access);
       this.nextInCache = nextInCache;
-      this.rcvrClass = rcvrClass;
+      this.rcvrFactory = rcvrFactory;
     }
 
     @Override
@@ -44,7 +44,7 @@ public class CachedSlotAccessNode extends AbstractDispatchNode {
       assert arguments[0] instanceof SObjectWithoutFields;
       SObjectWithoutFields rcvr = (SObjectWithoutFields) arguments[0];
 
-      if (rcvr.getSOMClass() == rcvrClass) {
+      if (rcvr.getSOMClass().getFactory() == rcvrFactory) {
         assert arguments[0] instanceof SObject;
         return access.doRead(frame, (SObject) rcvr);
       } else {
@@ -84,13 +84,14 @@ public class CachedSlotAccessNode extends AbstractDispatchNode {
   }
 
   public static final class CheckedCachedSlotWriteNode extends CachedSlotWriteNode {
-    private final SClass rcvrClass;
+    private final ClassFactory rcvrFactory;
     @Child protected AbstractDispatchNode nextInCache;
 
-    public CheckedCachedSlotWriteNode(final SClass rcvrClass, final AbstractWriteFieldNode write,
+    public CheckedCachedSlotWriteNode(final ClassFactory rcvrFactory,
+        final AbstractWriteFieldNode write,
         final AbstractDispatchNode nextInCache) {
       super(write);
-      this.rcvrClass   = rcvrClass;
+      this.rcvrFactory = rcvrFactory;
       this.nextInCache = nextInCache;
     }
 
@@ -100,7 +101,7 @@ public class CachedSlotAccessNode extends AbstractDispatchNode {
       assert arguments[0] instanceof SObjectWithoutFields;
       SObjectWithoutFields rcvr = (SObjectWithoutFields) arguments[0];
 
-      if (rcvr.getSOMClass() == rcvrClass) {
+      if (rcvr.getSOMClass().getFactory() == rcvrFactory) {
         assert arguments[0] instanceof SObject;
         return write.write((SObject) rcvr, arguments[1]);
       } else {
