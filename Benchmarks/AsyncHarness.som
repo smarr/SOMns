@@ -74,7 +74,7 @@ class AsyncHarness usingPlatform: platform = Value (
     
     doWarmup = (
       | numIterationsTmp printAllTmp maxRuntimeTmp |
-      warmUp > 0 ifFalse: [
+      warmUp = 0 ifTrue: [
         | pp |
         pp := actors createPromisePair.
         pp resolve: self.
