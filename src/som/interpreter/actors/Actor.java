@@ -74,12 +74,11 @@ public class Actor {
     isExecuting = true;
   }
 
-  public final SPromise eventualSend(final Actor currentActor, final SSymbol selector,
-      final Object[] args, final RootCallTarget onReceive) {
+  public final SPromise eventualSend(final Actor currentActor,
+      final SSymbol selector, final Object[] args,
+      final RootCallTarget onReceive) {
     SPromise  result   = SPromise.createPromise(currentActor);
     SResolver resolver = SPromise.createResolver(result, "eventualSend:", selector);
-
-    VM.thisMethodNeedsToBeOptimized("This needs to be optimized");
 
     DirectMessage msg = new DirectMessage(this, selector, args, currentActor,
         resolver, onReceive);
