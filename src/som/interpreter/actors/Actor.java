@@ -8,13 +8,9 @@ import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
 import java.util.concurrent.ForkJoinWorkerThread;
 
 import som.VM;
-import som.interpreter.actors.EventualMessage.DirectMessage;
-import som.interpreter.actors.SPromise.SResolver;
 import som.primitives.ObjectPrims.IsValue;
-import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.RootCallTarget;
 
 
 // design goals:
@@ -72,19 +68,6 @@ public class Actor {
   protected Actor(final boolean isMainActor) {
     assert isMainActor;
     isExecuting = true;
-  }
-
-  public final SPromise eventualSend(final Actor currentActor,
-      final SSymbol selector, final Object[] args,
-      final RootCallTarget onReceive) {
-    SPromise  result   = SPromise.createPromise(currentActor);
-    SResolver resolver = SPromise.createResolver(result, "eventualSend:", selector);
-
-    DirectMessage msg = new DirectMessage(this, selector, args, currentActor,
-        resolver, onReceive);
-    msg.getTarget().enqueueMessage(msg);
-
-    return result;
   }
 
   public final Object wrapForUse(final Object o, final Actor owner) {

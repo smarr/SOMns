@@ -49,6 +49,15 @@ public final class SequenceNode extends ExpressionNode {
     }
   }
 
+  public boolean isResultUsed(final ExpressionNode child) {
+    for (int i = 0; i < expressions.length - 1; i++) {
+      if (expressions[i] == child) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   @Override
   public String toString() {
     return "SeqNode[" + getSourceSection() + "]";

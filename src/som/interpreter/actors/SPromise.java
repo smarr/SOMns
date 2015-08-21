@@ -6,12 +6,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import som.VM;
 import som.interpreter.actors.EventualMessage.PromiseCallbackMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
-import som.interpreter.actors.EventualMessage.PromiseSendMessage;
 import som.vm.NotYetImplementedException;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
-import som.vmobjects.SSymbol;
 import som.vmobjects.SObjectWithClass;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
@@ -109,16 +107,6 @@ public class SPromise extends SObjectWithClass {
     return promise;
   }
 
-  public final SPromise whenResolved(final SSymbol selector, final Object[] args, final RootCallTarget onResolve) {
-    SPromise  promise  = createPromise(EventualMessage.getActorCurrentMessageIsExecutionOn());
-    SResolver resolver = createResolver(promise, "eventualSendToPromise:", selector);
-
-    assert owner == EventualMessage.getActorCurrentMessageIsExecutionOn() : "think this should be true because the promise is an Object and owned by this specific actor";
-    PromiseSendMessage msg = new PromiseSendMessage(selector, args, owner, resolver, onResolve);
-    registerWhenResolved(msg);
-    return promise;
-  }
-
   public final SPromise onError(final SBlock block, final RootCallTarget blockCallTarget) {
     assert block.getMethod().getNumberOfArguments() == 2;
 
@@ -150,7 +138,7 @@ public class SPromise extends SObjectWithClass {
     return promise;
   }
 
-  private synchronized void registerWhenResolved(final PromiseMessage callbackOrMsg) {
+  protected synchronized void registerWhenResolved(final PromiseMessage callbackOrMsg) {
     if (resolved) {
       scheduleCallbacksOnResolution(value, callbackOrMsg);
     } else {

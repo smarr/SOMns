@@ -26,8 +26,6 @@ public abstract class EventualMessage extends RecursiveAction {
     this.args     = args;
     this.resolver = resolver;
     this.onReceive = onReceive;
-
-    assert resolver != null;
   }
 
   /**
@@ -247,7 +245,9 @@ public abstract class EventualMessage extends RecursiveAction {
 
     result = onReceive.call(args);
 
-    resolver.resolve(result);
+    if (resolver != null) {
+      resolver.resolve(result);
+    }
   }
 
   public static Actor getActorCurrentMessageIsExecutionOn() {
