@@ -120,9 +120,7 @@ public class Actor {
         return remote;
       }
     } else if (!IsValue.isObjectValue(o)) {
-      if (this != owner) {
-        return new SFarReference(owner, o);
-      }
+      return new SFarReference(owner, o);
     }
     return o;
   }
