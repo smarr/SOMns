@@ -162,8 +162,7 @@ class AsyncHarness usingPlatform: platform = Value (
     args size > 2 ifTrue: [
       run numIterations: (args at: 3) asInteger.
       args size > 3 ifTrue: [
-        (* converted to microseconds i.e. ticks *)
-        run warmUp: (args at: 4) asInteger * 1000 * 1000.
+        run warmUp: (args at: 4) asInteger.
         args size > 4 ifTrue: [
           run problemSize: (args at: 5).
           args size > 5 ifTrue: [
