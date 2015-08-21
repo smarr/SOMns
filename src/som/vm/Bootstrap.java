@@ -12,10 +12,10 @@ import java.util.Map;
 
 import som.VM;
 import som.compiler.AccessModifier;
+import som.compiler.MethodBuilder;
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.compiler.MixinDefinition;
 import som.compiler.MixinDefinition.SlotDefinition;
-import som.compiler.MethodBuilder;
 import som.compiler.SourcecodeCompiler;
 import som.interpreter.LexicalScope.MixinScope;
 import som.interpreter.Primitive;
