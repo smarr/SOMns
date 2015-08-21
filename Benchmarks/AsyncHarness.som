@@ -90,7 +90,7 @@ class AsyncHarness usingPlatform: platform = Value (
       maxRuntime    := nil.
 
       ' warmup ...' print.
-      ^ (self doRuns) whenResolved: [:r |
+      ^ self doRuns whenResolved: [:r |
         numIterations := numIterationsTmp.
         printAll      := printAllTmp.
         maxRuntime    := maxRuntimeTmp.
