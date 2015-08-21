@@ -49,9 +49,11 @@ public abstract class EventualMessage extends RecursiveAction {
       super(arguments, resolver, onReceive);
       this.selector = selector;
       this.sender   = sender;
-      this.target   = determineTargetAndWrapArguments(arguments, target, sender, sender);
+      this.target   = target;
 
       assert target != null;
+      assert !(args[0] instanceof SFarReference) : "needs to be guaranted by call to this constructor";
+      assert !(args[0] instanceof SPromise);
     }
 
     @Override

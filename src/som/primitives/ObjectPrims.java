@@ -72,6 +72,8 @@ public final class ObjectPrims {
   @Primitive("objIsValue:")
   @ImportStatic(Nil.class)
   public abstract static class IsValue extends UnaryExpressionNode {
+    public abstract boolean executeEvaluated(Object rcvr);
+
     @Specialization
     public final boolean isValue(final boolean rcvr) {
       return true;

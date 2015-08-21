@@ -13,10 +13,12 @@ import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.vm.Symbols;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.source.SourceSection;
 
 
@@ -25,6 +27,7 @@ public abstract class EventualSendNode extends ExpressionNode {
 
   protected final SSymbol selector;
   protected final RootCallTarget onReceive;
+  @Children protected final WrapReferenceNode[] wrapArgs;
 
   private static final MixinDefinitionId fakeId = new MixinDefinitionId(Symbols.symbolFor("--fake--"));
 
@@ -33,6 +36,12 @@ public abstract class EventualSendNode extends ExpressionNode {
     super(source);
     this.selector = selector;
 
+    onReceive = createOnReceiveCallTarget(selector, numArgs, source);
+    wrapArgs  = createArgWrapper(numArgs);
+  }
+
+  private static RootCallTarget createOnReceiveCallTarget(final SSymbol selector,
+      final int numArgs, final SourceSection source) {
     MethodBuilder eventualInvoke = new MethodBuilder(true);
     ExpressionNode[] args = new ExpressionNode[numArgs];
     args[0] = new LocalSelfReadNode(fakeId, null);
@@ -45,7 +54,15 @@ public abstract class EventualSendNode extends ExpressionNode {
         eventualInvoke.getCurrentMethodScope(),
         (ExpressionNode) invoke.deepCopy());
 
-    onReceive = m.createCallTarget();
+    return m.createCallTarget();
+  }
+
+  private static WrapReferenceNode[] createArgWrapper(final int numArgs) {
+    WrapReferenceNode[] wrapper = new WrapReferenceNode[numArgs];
+    for (int i = 0; i < numArgs; i++) {
+      wrapper[i] = WrapReferenceNodeGen.create();
+    }
+    return wrapper;
   }
 
   protected static final boolean markVmHasSendMessage() {
@@ -64,10 +81,23 @@ public abstract class EventualSendNode extends ExpressionNode {
     return args[0] instanceof SPromise;
   }
 
+  @ExplodeLoop
   @Specialization(guards = {"markVmHasSendMessage()", "isFarRefRcvr(args)"})
   public final SPromise toFarRef(final Object[] args) {
+    CompilerAsserts.compilationConstant(args.length);
+
     SFarReference rcvr = (SFarReference) args[0];
-    return rcvr.eventualSend(EventualMessage.getActorCurrentMessageIsExecutionOn(),
+    Actor target = rcvr.getActor();
+    Actor owner  = EventualMessage.getActorCurrentMessageIsExecutionOn();
+
+    for (int i = 0; i < args.length; i++) {
+      args[i] = wrapArgs[i].execute(args[i], target, owner);
+    }
+
+    assert !(args[0] instanceof SFarReference) : "This should not happen for this specialization, but it is handled in determineTargetAndWrapArguments(.)";
+    assert !(args[0] instanceof SPromise) : "Should not happen either, but just to be sure";
+
+    return target.eventualSend(owner,
         selector, args, onReceive);
   }
 
