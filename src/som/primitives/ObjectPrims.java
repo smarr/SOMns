@@ -4,11 +4,17 @@ import java.math.BigInteger;
 
 import som.VM;
 import som.interpreter.Types;
+import som.interpreter.actors.SPromise;
+import som.interpreter.actors.SPromise.SResolver;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vm.constants.Nil;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray;
+import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
+import som.vmobjects.SObject.SImmutableObject;
+import som.vmobjects.SObject.SMutableObject;
+import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
@@ -115,8 +121,38 @@ public final class ObjectPrims {
     }
 
     @Specialization
-    public final boolean isValue(final SAbstractObject obj) {
-      return obj.isValue();
+    public final boolean isValue(final SClass rcvr) {
+      return rcvr.isValue();
+    }
+
+    @Specialization
+    public final boolean isValue(final SMutableObject rcvr) {
+      return rcvr.isValue();
+    }
+
+    @Specialization
+    public final boolean isValue(final SImmutableObject rcvr) {
+      return rcvr.isValue();
+    }
+
+    @Specialization
+    public final boolean isValue(final SPromise rcvr) {
+      return false;
+    }
+
+    @Specialization
+    public final boolean isValue(final SResolver rcvr) {
+      return true;
+    }
+
+    @Specialization
+    public final boolean isValue(final SObjectWithoutFields rcvr) {
+      return rcvr.isValue();
+    }
+
+    @Specialization
+    public final boolean isValue(final SBlock rcvr) {
+      return false;
     }
 
     public static boolean isObjectValue(final Object obj) {
