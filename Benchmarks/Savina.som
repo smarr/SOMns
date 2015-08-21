@@ -525,6 +525,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     public verifyResult: result = (
       (numEntities =  20 and: [numMessages = 100  and: [writePercentage = 20]]) ifTrue: [ ^ result =  904 ].
       (numEntities =  20 and: [numMessages = 100  and: [writePercentage = 50]]) ifTrue: [ ^ result = 1560 ].
+      (numEntities =  20 and: [numMessages = 1000 and: [writePercentage = 20]]) ifTrue: [ ^ result = 3671 ].
       (numEntities = 100 and: [numMessages = 100  and: [writePercentage = 50]]) ifTrue: [ ^ result = 4759 ].
       (numEntities =  10 and: [numMessages = 1000 and: [writePercentage = 50]]) ifTrue: [ ^ result = 4816 ].
       (numEntities =  20 and: [numMessages = 1000 and: [writePercentage = 50]]) ifTrue: [ ^ result = 7265 ].
@@ -858,6 +859,8 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       (bufferSize = 40 and: [numProducers = 20 and: [numConsumers = 20 and: [numItemsPerProducer =  80]]]) ifTrue: [^ result round = 1633056304].
       (bufferSize = 50 and: [numProducers = 20 and: [numConsumers = 20 and: [numItemsPerProducer = 100]]]) ifTrue: [^ result round = 2545350104].
       (bufferSize = 50 and: [numProducers = 40 and: [numConsumers = 40 and: [numItemsPerProducer = 100]]]) ifTrue: [^ result round = 5090700207].
+      (bufferSize = 40 and: [numProducers = 10 and: [numConsumers = 10 and: [numItemsPerProducer = 600]]]) ifTrue: [^ result round = 45438279572].
+      
        
       (* otherwise, warn that we don't know whether it is correct. *)
       ('---- result: ' + result asString + ' dont have a hardcoded verification result for this config yet') println.
