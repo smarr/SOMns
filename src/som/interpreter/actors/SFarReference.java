@@ -2,10 +2,8 @@ package som.interpreter.actors;
 
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
-import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
-import com.oracle.truffle.api.RootCallTarget;
 
 
 public final class SFarReference extends SAbstractObject {
@@ -46,10 +44,5 @@ public final class SFarReference extends SAbstractObject {
   public static void setSOMClass(final SClass cls) {
     assert farReferenceClass == null || cls == null;
     farReferenceClass = cls;
-  }
-
-  public SPromise eventualSend(final Actor currentActor, final SSymbol selector,
-      final Object[] args, final RootCallTarget onReceive) {
-    return actor.eventualSend(currentActor, selector, args, onReceive);
   }
 }
