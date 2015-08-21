@@ -40,6 +40,7 @@ import som.vmobjects.SObjectWithoutFields;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CallTarget;
+import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
@@ -124,6 +125,9 @@ public final class MixinDefinition {
     return name;
   }
 
+  // TODO: does this really have to be an invokable?
+  //       could it just be the AST, that is than directly used in
+  //       the ClassSlotAccessNode?
   public Method getSuperclassAndMixinResolutionInvokable() {
     return superclassMixinResolution;
   }
@@ -142,6 +146,7 @@ public final class MixinDefinition {
   }
 
   public ClassFactory createClassFactory(final Object superclassAndMixins, final boolean isTheValueClass) {
+    CompilerAsserts.neverPartOfCompilation();
     VM.callerNeedsToBeOptimized("This is supposed to result in a cacheable object, and thus is only the fallback case.");
 
     // decode superclass and mixins
@@ -525,6 +530,7 @@ public final class MixinDefinition {
   }
 
   public Object instantiateObject(final Object... args) {
+    VM.callerNeedsToBeOptimized("Only supposed to be used from Bootstrap.");
     assert args[0] instanceof SClass;
     SClass classObj = (SClass) args[0];
     Dispatchable factory = classObj.getSOMClass().lookupMessage(
