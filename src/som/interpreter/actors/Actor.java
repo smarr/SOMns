@@ -131,7 +131,7 @@ public class Actor {
   public final synchronized void enqueueMessage(final EventualMessage msg) {
     assert msg.getTarget() == this;
     if (isExecuting) {
-      mailbox.add(msg);
+      mailbox.addLast(msg);
       logMessageAddedToMailbox(msg);
     } else {
       executeOnPool(msg);
