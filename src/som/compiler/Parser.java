@@ -1021,6 +1021,9 @@ public final class Parser {
     return operand;
   }
 
+  // TODO: if the eventual send is not consumed by an expression (assignment, etc)
+  //       we don't need to create a promise
+
   private ExpressionNode keywordMessage(final MethodBuilder builder,
       final ExpressionNode receiver, final boolean explicitRcvr,
       final boolean eventualSend) throws ParseError, MixinDefinitionError {
