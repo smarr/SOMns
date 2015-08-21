@@ -2,7 +2,7 @@ package som.interpreter.nodes.dispatch;
 
 import som.interpreter.objectstorage.ClassFactory;
 import som.vmobjects.SClass;
-import som.vmobjects.SObjectWithoutFields;
+import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -19,7 +19,7 @@ public final class CachedDnuSObjectCheckNode extends AbstractCachedDnuNode {
 
   @Override
   public Object executeDispatch(final VirtualFrame frame, final Object[] arguments) {
-    SObjectWithoutFields rcvr = (SObjectWithoutFields) arguments[0];
+    SObjectWithClass rcvr = (SObjectWithClass) arguments[0];
 
     if (rcvr.getFactory() == expectedClassFactory) {
       return performDnu(frame, arguments, rcvr);

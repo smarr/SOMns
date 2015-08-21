@@ -8,7 +8,7 @@ import som.interpreter.actors.SFarReference;
 import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.SResolver;
 import som.vm.Bootstrap;
-import som.vmobjects.SObjectWithoutFields;
+import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;

@@ -1,6 +1,6 @@
 package som.vm.constants;
 
-import som.vmobjects.SObjectWithoutFields;
+import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 
 
 public final class Nil {

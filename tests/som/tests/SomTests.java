@@ -33,7 +33,7 @@ import org.junit.runners.Parameterized.Parameters;
 import som.VM;
 import som.interpreter.actors.Actor;
 import som.vm.Bootstrap;
-import som.vmobjects.SObjectWithoutFields;
+import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 
 
 @RunWith(Parameterized.class)

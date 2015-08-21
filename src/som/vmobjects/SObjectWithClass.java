@@ -6,16 +6,16 @@ import som.interpreter.objectstorage.ClassFactory;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 
 
-public class SObjectWithoutFields extends SAbstractObject {
+public abstract class SObjectWithClass extends SAbstractObject {
   @CompilationFinal protected SClass       clazz;
   @CompilationFinal protected ClassFactory factory;
 
-  public SObjectWithoutFields(final SClass clazz) {
+  public SObjectWithClass(final SClass clazz) {
     this.clazz   = clazz;
     this.factory = clazz.getClassFactory();
   }
 
-  public SObjectWithoutFields() { }
+  public SObjectWithClass() { }
 
   @Override
   public final SClass getSOMClass() {
@@ -26,15 +26,23 @@ public class SObjectWithoutFields extends SAbstractObject {
     return factory;
   }
 
-  @Override
-  public boolean isValue() {
-    return clazz.declaredAsValue();
-  }
-
   public void setClass(final SClass value) {
     transferToInterpreterAndInvalidate("SObjectWithoutFields.setClass");
     assert value != null;
     clazz   = value;
     factory = value.getClassFactory();
+  }
+
+  public static final class SObjectWithoutFields extends SObjectWithClass {
+    public SObjectWithoutFields(final SClass clazz) {
+      super(clazz);
+    }
+
+    public SObjectWithoutFields() { super(); }
+
+    @Override
+    public boolean isValue() {
+      return clazz.declaredAsValue();
+    }
   }
 }

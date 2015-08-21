@@ -32,7 +32,6 @@ import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
-import som.vmobjects.SObjectWithoutFields;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -88,10 +87,6 @@ public abstract class ExpressionNode extends SOMNode {
 
   public SObject executeSObject(final VirtualFrame frame) throws UnexpectedResultException {
     return TypesGen.expectSObject(executeGeneric(frame));
-  }
-
-  public SObjectWithoutFields executeSObjectWithoutFields(final VirtualFrame frame) throws UnexpectedResultException {
-    return TypesGen.expectSObjectWithoutFields(executeGeneric(frame));
   }
 
   public SArray executeSArray(final VirtualFrame frame) throws UnexpectedResultException {

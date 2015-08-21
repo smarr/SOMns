@@ -5,7 +5,7 @@ import som.compiler.AccessModifier;
 import som.interpreter.Types;
 import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
 import som.vmobjects.SClass;
-import som.vmobjects.SObjectWithoutFields;
+import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -51,7 +51,7 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
       UninitializedDispatchNode newChainEnd = new UninitializedDispatchNode(
           selector, minimalVisibility);
 
-      if (rcvr instanceof SObjectWithoutFields) {
+      if (rcvr instanceof SObjectWithClass) {
         AbstractDispatchNode node;
         if (dispatchable != null) {
           node = dispatchable.getDispatchNode(rcvr, rcvrClass, newChainEnd);

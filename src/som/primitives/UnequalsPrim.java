@@ -4,7 +4,7 @@ import java.math.BigInteger;
 
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.vm.constants.Nil;
-import som.vmobjects.SObjectWithoutFields;
+import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
@@ -47,7 +47,7 @@ public abstract class UnequalsPrim extends BinaryExpressionNode {
   }
 
   @Specialization(guards = "valueIsNil(left)")
-  public final boolean isNil(final SObjectWithoutFields left, final Object right) {
+  public final boolean isNil(final SObjectWithClass left, final Object right) {
     return left != right;
   }
 
@@ -77,7 +77,7 @@ public abstract class UnequalsPrim extends BinaryExpressionNode {
   }
 
   @Specialization
-  public final boolean doLong(final long left, final SObjectWithoutFields right) {
+  public final boolean doLong(final long left, final SObjectWithClass right) {
     return true;
   }
 
@@ -92,7 +92,7 @@ public abstract class UnequalsPrim extends BinaryExpressionNode {
   }
 
   @Specialization
-  public final boolean doString(final String receiver, final SObjectWithoutFields argument) {
+  public final boolean doString(final String receiver, final SObjectWithClass argument) {
     return true;
   }
 
@@ -102,7 +102,7 @@ public abstract class UnequalsPrim extends BinaryExpressionNode {
   }
 
   @Specialization
-  public final boolean doSSymbol(final SSymbol receiver, final SObjectWithoutFields argument) {
+  public final boolean doSSymbol(final SSymbol receiver, final SObjectWithClass argument) {
     return true;
   }
 }

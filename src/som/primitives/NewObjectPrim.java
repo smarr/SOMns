@@ -7,7 +7,7 @@ import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SObject.SMutableObject;
-import som.vmobjects.SObjectWithoutFields;
+import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 
 import com.oracle.truffle.api.dsl.Specialization;
 

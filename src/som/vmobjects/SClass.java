@@ -47,7 +47,7 @@ import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 // TODO: should we move more of that out of SClass and use the corresponding
 //       ClassFactory?
 // TODO: optimize lookup based on ClassFactory, not just for slots
-public final class SClass extends SObjectWithoutFields {
+public final class SClass extends SObjectWithClass {
 
   @CompilationFinal private SClass superclass;
   @CompilationFinal private SSymbol name;
@@ -62,18 +62,18 @@ public final class SClass extends SObjectWithoutFields {
 
   @CompilationFinal private ClassFactory factory;
 
-  protected final SObjectWithoutFields enclosingObject;
+  protected final SObjectWithClass enclosingObject;
 
-  public SClass(final SObjectWithoutFields enclosing) {
+  public SClass(final SObjectWithClass enclosing) {
     this.enclosingObject = enclosing;
   }
 
-  public SClass(final SObjectWithoutFields enclosing, final SClass clazz) {
+  public SClass(final SObjectWithClass enclosing, final SClass clazz) {
     super(clazz);
     this.enclosingObject = enclosing;
   }
 
-  public SObjectWithoutFields getEnclosingObject() {
+  public SObjectWithClass getEnclosingObject() {
     return enclosingObject;
   }
 
@@ -170,7 +170,7 @@ public final class SClass extends SObjectWithoutFields {
     return methods.toArray(new SInvokable[methods.size()]);
   }
 
-  public SClass[] getNestedClasses(final SObjectWithoutFields instance) {
+  public SClass[] getNestedClasses(final SObjectWithClass instance) {
     VM.thisMethodNeedsToBeOptimized("Not optimized, we do unrecorded invokes here");
     ArrayList<SClass> classes = new ArrayList<SClass>();
     for (Dispatchable disp : dispatchables.values()) {

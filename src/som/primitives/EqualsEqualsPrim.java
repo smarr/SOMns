@@ -4,7 +4,7 @@ import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
-import som.vmobjects.SObjectWithoutFields;
+import som.vmobjects.SObjectWithClass;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -30,7 +30,7 @@ public abstract class EqualsEqualsPrim extends BinaryExpressionNode {
   }
 
   @Specialization
-  public final boolean doSObject(final SObjectWithoutFields left, final Object right) {
+  public final boolean doSObject(final SObjectWithClass left, final Object right) {
     return left == right;
   }
 }

@@ -33,7 +33,7 @@ import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
-import som.vmobjects.SObjectWithoutFields;
+import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.TypeSystem;
@@ -46,7 +46,7 @@ import com.oracle.truffle.api.dsl.TypeSystem;
                  SClass.class,
                 SObject.class,
                SPromise.class,
-   SObjectWithoutFields.class,
+       SObjectWithClass.class,
                  SBlock.class,
                 SSymbol.class,
              SInvokable.class,

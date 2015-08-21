@@ -4,7 +4,7 @@ import som.compiler.MixinDefinition;
 import som.interpreter.objectstorage.ClassFactory;
 import som.vm.constants.Classes;
 import som.vmobjects.SClass;
-import som.vmobjects.SObjectWithoutFields;
+import som.vmobjects.SObjectWithClass;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.dsl.Cached;
@@ -22,7 +22,7 @@ public abstract class ClassInstantiationNode extends Node {
     this.mixinDef = mixinDef;
   }
 
-  public abstract SClass execute(final SObjectWithoutFields outerObj,
+  public abstract SClass execute(final SObjectWithClass outerObj,
       final Object superclassAndMixins);
 
   protected final ClassFactory createClassFactory(final Object superclassAndMixins) {
@@ -59,7 +59,7 @@ public abstract class ClassInstantiationNode extends Node {
   }
 
   @Specialization(guards = {"sameSuperAndMixins(superclassAndMixins, cachedSuperMixins)"})
-  public SClass instantiateClass(final SObjectWithoutFields outerObj,
+  public SClass instantiateClass(final SObjectWithClass outerObj,
       final Object superclassAndMixins,
       @Cached("superclassAndMixins") final Object cachedSuperMixins,
       @Cached("createClassFactory(superclassAndMixins)") final ClassFactory factory) {
@@ -70,7 +70,7 @@ public abstract class ClassInstantiationNode extends Node {
   }
 
   @Fallback
-  public SClass instantiateClass(final SObjectWithoutFields outerObj,
+  public SClass instantiateClass(final SObjectWithClass outerObj,
       final Object superclassAndMixins) {
     return instantiateClass(outerObj, superclassAndMixins, null, mixinDef.createClassFactory(superclassAndMixins, false));
   }

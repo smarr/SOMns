@@ -11,8 +11,8 @@ import som.vm.NotYetImplementedException;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
-import som.vmobjects.SObjectWithoutFields;
 import som.vmobjects.SSymbol;
+import som.vmobjects.SObjectWithClass;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
@@ -20,7 +20,7 @@ import com.oracle.truffle.api.RootCallTarget;
 import com.sun.istack.internal.NotNull;
 
 
-public class SPromise extends SObjectWithoutFields {
+public class SPromise extends SObjectWithClass {
   @CompilationFinal private static SClass promiseClass;
 
   public static SPromise createPromise(final Actor owner) {
@@ -285,7 +285,7 @@ public class SPromise extends SObjectWithoutFields {
     }
   }
 
-  public static class SResolver extends SObjectWithoutFields {
+  public static class SResolver extends SObjectWithClass {
     @CompilationFinal private static SClass resolverClass;
 
     protected final SPromise promise;

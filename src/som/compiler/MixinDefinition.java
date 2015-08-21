@@ -36,7 +36,7 @@ import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SInvokable.SInitializer;
 import som.vmobjects.SObject;
-import som.vmobjects.SObjectWithoutFields;
+import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CallTarget;
@@ -308,7 +308,7 @@ public final class MixinDefinition {
     return classObject;
   }
 
-  public SClass instantiateClass(final SObjectWithoutFields outer,
+  public SClass instantiateClass(final SObjectWithClass outer,
       final Object superclassAndMixins) {
     SClass resultClass = new SClass(outer, Classes.metaclassClass);
     SClass result = new SClass(outer, resultClass);

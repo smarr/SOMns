@@ -4,7 +4,7 @@ import som.interpreter.nodes.SlotAccessNode;
 import som.interpreter.objectstorage.ClassFactory;
 import som.interpreter.objectstorage.FieldAccessorNode.AbstractWriteFieldNode;
 import som.vmobjects.SObject;
-import som.vmobjects.SObjectWithoutFields;
+import som.vmobjects.SObjectWithClass;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 
@@ -41,8 +41,8 @@ public class CachedSlotAccessNode extends AbstractDispatchNode {
     @Override
     public Object executeDispatch(final VirtualFrame frame,
         final Object[] arguments) {
-      assert arguments[0] instanceof SObjectWithoutFields;
-      SObjectWithoutFields rcvr = (SObjectWithoutFields) arguments[0];
+      assert arguments[0] instanceof SObjectWithClass;
+      SObjectWithClass rcvr = (SObjectWithClass) arguments[0];
 
       if (rcvr.getFactory() == rcvrFactory) {
         assert arguments[0] instanceof SObject;
@@ -98,8 +98,8 @@ public class CachedSlotAccessNode extends AbstractDispatchNode {
     @Override
     public Object executeDispatch(final VirtualFrame frame,
         final Object[] arguments) {
-      assert arguments[0] instanceof SObjectWithoutFields;
-      SObjectWithoutFields rcvr = (SObjectWithoutFields) arguments[0];
+      assert arguments[0] instanceof SObjectWithClass;
+      SObjectWithClass rcvr = (SObjectWithClass) arguments[0];
 
       if (rcvr.getFactory() == rcvrFactory) {
         assert arguments[0] instanceof SObject;

@@ -6,7 +6,7 @@ import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.interpreter.Types;
 import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
 import som.vmobjects.SClass;
-import som.vmobjects.SObjectWithoutFields;
+import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -54,7 +54,7 @@ public final class LexicallyBoundDispatchNode extends AbstractDispatchWithLookup
       LexicallyBoundDispatchNode newChainEnd = new LexicallyBoundDispatchNode(
           selector, mixinForPrivateLookup);
 
-      if (rcvr instanceof SObjectWithoutFields) {
+      if (rcvr instanceof SObjectWithClass) {
         AbstractDispatchNode node;
         if (dispatchable != null) {
           node = dispatchable.getDispatchNode(rcvr, rcvrClass, newChainEnd);
