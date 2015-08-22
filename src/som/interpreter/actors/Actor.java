@@ -111,6 +111,7 @@ public class Actor {
   protected void logMessageBeingExecuted(final EventualMessage msg) { }
   protected void logNoTaskForActor() { }
 
+  @TruffleBoundary
   public final synchronized void enqueueMessage(final EventualMessage msg) {
     assert msg.getTarget() == this;
     if (isExecuting) {
@@ -155,6 +156,7 @@ public class Actor {
    * This method is only to be called from the EventualMessage task, and the
    * main Actor in Bootstrap.executeApplication().
    */
+  @TruffleBoundary
   public final synchronized void enqueueNextMessageForProcessing() {
     try {
       EventualMessage nextTask = mailbox.remove();
