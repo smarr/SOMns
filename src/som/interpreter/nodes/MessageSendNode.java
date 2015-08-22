@@ -105,7 +105,7 @@ public final class MessageSendNode {
 
   public static GenericMessageSendNode createGeneric(final SSymbol selector,
       final ExpressionNode[] argumentNodes, final SourceSection source) {
-    if (argumentNodes[0] instanceof ISpecialSend) {
+    if (argumentNodes != null && argumentNodes[0] instanceof ISpecialSend) {
       throw new NotYetImplementedException();
     } else {
       return new GenericMessageSendNode(selector, argumentNodes,

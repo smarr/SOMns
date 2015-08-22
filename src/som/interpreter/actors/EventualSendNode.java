@@ -1,26 +1,21 @@
 package som.interpreter.actors;
 
 import som.VM;
-import som.compiler.MethodBuilder;
-import som.compiler.MixinBuilder.MixinDefinitionId;
-import som.interpreter.Method;
 import som.interpreter.actors.EventualMessage.DirectMessage;
 import som.interpreter.actors.EventualMessage.PromiseSendMessage;
 import som.interpreter.actors.SPromise.SResolver;
-import som.interpreter.nodes.ArgumentReadNode.LocalArgumentReadNode;
-import som.interpreter.nodes.ArgumentReadNode.LocalSelfReadNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.InternalObjectArrayNode;
 import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.interpreter.nodes.SequenceNode;
-import som.vm.Symbols;
 import som.vm.constants.Nil;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.RootCallTarget;
+import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
@@ -35,8 +30,6 @@ public abstract class EventualSendNode extends ExpressionNode {
   protected final RootCallTarget onReceive;
   @Children protected final WrapReferenceNode[] wrapArgs;
 
-  private static final MixinDefinitionId fakeId = new MixinDefinitionId(Symbols.symbolFor("--fake--"));
-
   public EventualSendNode(final SSymbol selector,
       final int numArgs, final SourceSection source) {
     super(source);
@@ -48,19 +41,11 @@ public abstract class EventualSendNode extends ExpressionNode {
 
   private static RootCallTarget createOnReceiveCallTarget(final SSymbol selector,
       final int numArgs, final SourceSection source) {
-    MethodBuilder eventualInvoke = new MethodBuilder(true);
-    ExpressionNode[] args = new ExpressionNode[numArgs];
-    args[0] = new LocalSelfReadNode(fakeId, null);
-    for (int i = 1; i < numArgs; i++) {
-      args[i] = new LocalArgumentReadNode(i, null);
-    }
-    AbstractMessageSendNode invoke = MessageSendNode.createMessageSend(selector, args, source);
 
-    Method m = new Method(source, invoke,
-        eventualInvoke.getCurrentMethodScope(),
-        (ExpressionNode) invoke.deepCopy());
+    AbstractMessageSendNode invoke = MessageSendNode.createGeneric(selector, null, source);
+    ReceivedMessage receivedMsg = new ReceivedMessage(invoke);
 
-    return m.createCallTarget();
+    return Truffle.getRuntime().createCallTarget(receivedMsg);
   }
 
   private static WrapReferenceNode[] createArgWrapper(final int numArgs) {

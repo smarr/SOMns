@@ -5,6 +5,7 @@ import java.util.concurrent.RecursiveAction;
 
 import som.VM;
 import som.interpreter.actors.Actor.ActorProcessingThread;
+import som.interpreter.actors.ReceivedMessage.ReceivedCallback;
 import som.interpreter.actors.SPromise.SResolver;
 import som.vm.Symbols;
 import som.vmobjects.SBlock;
@@ -26,6 +27,7 @@ public abstract class EventualMessage extends RecursiveAction {
     this.args     = args;
     this.resolver = resolver;
     this.onReceive = onReceive;
+    assert onReceive.getRootNode() instanceof ReceivedMessage || onReceive.getRootNode() instanceof ReceivedCallback;
   }
 
   /**
@@ -239,15 +241,11 @@ public abstract class EventualMessage extends RecursiveAction {
     Object rcvrObj = args[0];
     assert rcvrObj != null;
 
-    Object result;
     assert !(rcvrObj instanceof SFarReference);
     assert !(rcvrObj instanceof SPromise);
 
-    result = onReceive.call(args);
-
-    if (resolver != null) {
-      resolver.resolve(result);
-    }
+    assert onReceive.getRootNode() instanceof ReceivedMessage || onReceive.getRootNode() instanceof ReceivedCallback;
+    onReceive.call(this);
   }
 
   public static Actor getActorCurrentMessageIsExecutionOn() {

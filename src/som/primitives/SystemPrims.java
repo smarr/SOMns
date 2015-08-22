@@ -94,6 +94,12 @@ public final class SystemPrims {
         @Override
         public Method visitFrame(final FrameInstance frameInstance) {
           RootCallTarget ct = (RootCallTarget) frameInstance.getCallTarget();
+
+          // TODO: do we need to handle other kinds of root nodes?
+          if (!(ct.getRootNode() instanceof Invokable)) {
+             return null;
+          }
+
           Invokable m = (Invokable) ct.getRootNode();
           SourceSection ss = m.getSourceSection();
           if (ss != null) {

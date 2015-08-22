@@ -3,9 +3,11 @@ package som.primitives.actors;
 import som.VM;
 import som.compiler.AccessModifier;
 import som.interpreter.actors.EventualMessage;
+import som.interpreter.actors.ReceivedMessage.ReceivedCallback;
 import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.SResolver;
 import som.interpreter.nodes.dispatch.Dispatchable;
+import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
@@ -23,12 +25,13 @@ import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
+import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 
 
-public class PromisePrims {
+public final class PromisePrims {
 
   @GenerateNodeFactory
   @Primitive("actorsCreatePromisePair:")
@@ -66,20 +69,27 @@ public class PromisePrims {
     }
   }
 
+  public static RootCallTarget createReceived(final SBlock callback) {
+    RootCallTarget target = callback.getMethod().getCallTarget();
+    ReceivedCallback node = new ReceivedCallback(target);
+    return Truffle.getRuntime().createCallTarget(node);
+  }
+
   @GenerateNodeFactory
+  @ImportStatic(PromisePrims.class)
   @Primitive("actorsWhen:resolved:")
   public abstract static class WhenResolvedPrim extends BinaryExpressionNode {
     @Specialization(guards = "blockMethod == callback.getMethod()", limit = "6")
     public final SPromise whenResolved(final SPromise promise,
         final SBlock callback,
         @Cached("callback.getMethod()") final SInvokable blockMethod,
-        @Cached("callback.getMethod().getCallTarget()") final RootCallTarget blockCallTarget) {
+        @Cached("createReceived(callback)") final RootCallTarget blockCallTarget) {
       return promise.whenResolved(callback, blockCallTarget);
     }
 
     @Fallback
     public final SPromise whenResolved(final SPromise promise, final SBlock callback) {
-      return promise.whenResolved(callback, callback.getMethod().getCallTarget());
+      return promise.whenResolved(callback, createReceived(callback));
     }
   }
 
@@ -88,39 +98,42 @@ public class PromisePrims {
 
   // TODO: should I add a literal version of OnErrorPrim??
   @GenerateNodeFactory
+  @ImportStatic(PromisePrims.class)
   @Primitive("actorsFor:onError:")
   public abstract static class OnErrorPrim extends BinaryExpressionNode {
     @Specialization(guards = "blockMethod == callback.getMethod()")
     public final SPromise onError(final SPromise promise,
         final SBlock callback,
         @Cached("callback.getMethod()") final SInvokable blockMethod,
-        @Cached("callback.getMethod().getCallTarget()") final RootCallTarget blockCallTarget) {
+        @Cached("createReceived(callback)") final RootCallTarget blockCallTarget) {
       return promise.onError(callback, blockCallTarget);
     }
   }
 
   @GenerateNodeFactory
+  @ImportStatic(PromisePrims.class)
   @Primitive("actorsFor:on:do:")
   public abstract static class OnExceptionDoPrim extends TernaryExpressionNode {
     @Specialization(guards = "blockMethod == callback.getMethod()")
     public final SPromise onExceptionDo(final SPromise promise,
         final SClass exceptionClass, final SBlock callback,
         @Cached("callback.getMethod()") final SInvokable blockMethod,
-        @Cached("callback.getMethod().getCallTarget()") final RootCallTarget blockCallTarget) {
+        @Cached("createReceived(callback)") final RootCallTarget blockCallTarget) {
       return promise.onException(exceptionClass, callback, blockCallTarget);
     }
   }
 
   @GenerateNodeFactory
+  @ImportStatic(PromisePrims.class)
   @Primitive("actorsWhen:resolved:onError:")
   public abstract static class WhenResolvedOnErrorPrim extends TernaryExpressionNode {
     @Specialization(guards = {"resolvedMethod == resolved.getMethod()", "errorMethod == error.getMethod()"})
     public final SPromise whenResolvedOnError(final SPromise promise,
         final SBlock resolved, final SBlock error,
         @Cached("resolved.getMethod()") final SInvokable resolvedMethod,
-        @Cached("resolved.getMethod().getCallTarget()") final RootCallTarget resolvedTarget,
+        @Cached("createReceived(resolved)") final RootCallTarget resolvedTarget,
         @Cached("error.getMethod()") final SInvokable errorMethod,
-        @Cached("error.getMethod().getCallTarget()") final RootCallTarget errorTarget) {
+        @Cached("createReceived(error)") final RootCallTarget errorTarget) {
       return promise.whenResolvedOrError(resolved, error, resolvedTarget, errorTarget);
     }
   }
