@@ -304,8 +304,8 @@ public final class Bootstrap {
     SClass metaclassClassClass = new SClass(kernel); // class obj for "Metaclass class"
     metaclassClass.setClass(metaclassClassClass);
 
-    metaclassClass.setName(Symbols.METACLASS);
-    metaclassClassClass.setName(Symbols.METACLASS_CLASS);
+    metaclassClass.initializeClass(Symbols.METACLASS, null);
+    metaclassClassClass.initializeClass(Symbols.METACLASS_CLASS, null);
 
     // Connect the metaclass hierarchy
     metaclassClass.getSOMClass().setClass(metaclassClass);
@@ -322,14 +322,13 @@ public final class Bootstrap {
 
   public static void initializeClassAndItsClass(final String name,
       final SClass clazz, final SClass clazzClazz) {
-    clazz.setName(Symbols.symbolFor(name));
+    clazz.initializeClass(Symbols.symbolFor(name), null);
 
     // Setup the metaclass hierarchy
-    clazzClazz.setName(Symbols.symbolFor(name + " class"));
-    clazz.setClass(clazzClazz);
+    clazzClazz.initializeClass(Symbols.symbolFor(name + " class"), Classes.classClass);
 
+    clazz.setClass(clazzClazz);
     clazzClazz.setClass(metaclassClass);
-    clazzClazz.setSuperClass(Classes.classClass);
   }
 
   public static SObjectWithoutFields initializeObjectSystem() {

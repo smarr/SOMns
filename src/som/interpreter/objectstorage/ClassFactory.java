@@ -89,8 +89,7 @@ public final class ClassFactory {
   }
 
   public void initializeClass(final SClass result) {
-    result.setName(className);
-    result.setSuperClass(superclassAndMixins[0]);
+    result.initializeClass(className, superclassAndMixins[0]);
     result.initializeStructure(mixinDef, instanceSlots, hasOnlyImmutableFields,
         dispatchables, isValueClass, this);
     initializeClassClass(result);
@@ -100,8 +99,7 @@ public final class ClassFactory {
     // Initialize the class of the resulting class
     if (result.getSOMClass() != null) {
       SClass classClass = result.getSOMClass();
-      classClass.setName(classClassName);
-      classClass.setSuperClass(Classes.classClass);
+      classClass.initializeClass(classClassName, Classes.classClass);
       classClass.initializeStructure(mixinDef, null, true, classScope.getDispatchables(), isModule, null);
     }
   }

@@ -24,8 +24,6 @@
 
 package som.vmobjects;
 
-import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -93,9 +91,10 @@ public final class SClass extends SObjectWithClass {
     return slots;
   }
 
-  public void setSuperClass(final SClass value) {
-    transferToInterpreterAndInvalidate("SClass.setSuperClass");
-    superclass = value;
+  public void initializeClass(final SSymbol name, final SClass superclass) {
+    assert (this.name == null || this.name == name) && (this.superclass == null || this.superclass == superclass) : "Should only be initialized once";
+    this.name = name;
+    this.superclass = superclass;
   }
 
   public SSymbol getName() {
@@ -147,12 +146,6 @@ public final class SClass extends SObjectWithClass {
       cls = cls.getSuperClass();
     }
     return cls;
-  }
-
-  public void setName(final SSymbol value) {
-    transferToInterpreterAndInvalidate("SClass.setName");
-    assert name == null || name == value; // should not reset it, let's get the initialization right instead
-    name = value;
   }
 
   public boolean canUnderstand(final SSymbol selector) {
