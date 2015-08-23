@@ -16,14 +16,11 @@ import som.vmobjects.SSymbol;
 import com.oracle.truffle.api.CompilerDirectives;
 
 
-// TODO: better called factory?
+/**
+ * A ClassFactory creates instances for classes with a concrete super class
+ * and a specific set of mixins.
+ */
 public final class ClassFactory {
-  // needs:
-  //  - class body mixin
-  //  - super class
-  //  - mixin ids
-  //  - initializer code
-  /// - whether it is a value class
 
   // TODO: the initializer, and value class check node, can be simplified, it only needs to be added when the flag is set
   //       because now with the ClassBuilder approach, we cache the result
