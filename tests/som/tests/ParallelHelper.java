@@ -31,16 +31,15 @@ public final class ParallelHelper {
             threadsInitialized.await();
 
             task.run();
-
-            threadsDone.countDown();
           } catch (Throwable t) {
             exceptions.add(t);
           }
+          threadsDone.countDown();
         });
       }
-
-      assertTrue(threadsDone.await(10, TimeUnit.SECONDS));
+      boolean allArrivedWithinTime = threadsDone.await(10, TimeUnit.SECONDS);
       assertTrue("Failed parallel test with: " + exceptions, exceptions.isEmpty());
+      assertTrue(allArrivedWithinTime);
     } finally {
       threadPool.shutdownNow();
     }
