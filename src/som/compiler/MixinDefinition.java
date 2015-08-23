@@ -369,7 +369,7 @@ public final class MixinDefinition {
       if (modifier == AccessModifier.PRIVATE) {
         return new CachedSlotAccessNode(createNode());
       } else {
-        return new CheckedCachedSlotAccessNode(((SClass) rcvrClass).getClassFactory(), createNode(), next);
+        return new CheckedCachedSlotAccessNode(((SClass) rcvrClass).getInstanceFactory(), createNode(), next);
       }
     }
 
@@ -437,7 +437,7 @@ public final class MixinDefinition {
       if (modifier == AccessModifier.PRIVATE) {
         return new CachedSlotWriteNode(createWriteNode());
       } else {
-        return new CheckedCachedSlotWriteNode(((SClass) rcvrClass).getClassFactory(), createWriteNode(), next);
+        return new CheckedCachedSlotWriteNode(((SClass) rcvrClass).getInstanceFactory(), createWriteNode(), next);
       }
     }
 

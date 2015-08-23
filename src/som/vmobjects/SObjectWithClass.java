@@ -1,18 +1,19 @@
 package som.vmobjects;
 
-import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
 import som.interpreter.objectstorage.ClassFactory;
 
+import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 
 
 public abstract class SObjectWithClass extends SAbstractObject {
   @CompilationFinal protected SClass       clazz;
-  @CompilationFinal protected ClassFactory factory;
+  @CompilationFinal protected ClassFactory classGroup; // the factory by which clazz was created
 
-  public SObjectWithClass(final SClass clazz) {
+  public SObjectWithClass(final SClass clazz, final ClassFactory classGroup) {
     this.clazz   = clazz;
-    this.factory = clazz.getClassFactory();
+    this.classGroup = classGroup;
+    assert clazz.getInstanceFactory() == classGroup;
   }
 
   public SObjectWithClass() { }
@@ -23,19 +24,19 @@ public abstract class SObjectWithClass extends SAbstractObject {
   }
 
   public final ClassFactory getFactory() {
-    return factory;
+    return classGroup;
   }
 
   public void setClass(final SClass value) {
-    transferToInterpreterAndInvalidate("SObjectWithoutFields.setClass");
+    CompilerAsserts.neverPartOfCompilation("Only meant to be used in object system initalization");
     assert value != null;
-    clazz   = value;
-    factory = value.getClassFactory();
+    clazz      = value;
+    classGroup = value.getInstanceFactory();
   }
 
   public static final class SObjectWithoutFields extends SObjectWithClass {
-    public SObjectWithoutFields(final SClass clazz) {
-      super(clazz);
+    public SObjectWithoutFields(final SClass clazz, final ClassFactory factory) {
+      super(clazz, factory);
     }
 
     public SObjectWithoutFields() { super(); }

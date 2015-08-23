@@ -58,7 +58,7 @@ public final class SClass extends SObjectWithClass {
   @CompilationFinal private boolean hasOnlyImmutableFields;
   @CompilationFinal private boolean declaredAsValue;
 
-  @CompilationFinal private ClassFactory factory;
+  @CompilationFinal private ClassFactory instanceClassGroup; // the factory for this object
 
   protected final SObjectWithClass enclosingObject;
 
@@ -67,7 +67,7 @@ public final class SClass extends SObjectWithClass {
   }
 
   public SClass(final SObjectWithClass enclosing, final SClass clazz) {
-    super(clazz);
+    super(clazz, clazz.getInstanceFactory());
     this.enclosingObject = enclosing;
   }
 
@@ -79,12 +79,13 @@ public final class SClass extends SObjectWithClass {
     return superclass;
   }
 
-  public ClassFactory getClassFactory() {
-    return factory;
+  public ClassFactory getInstanceFactory() {
+    assert classGroup == null || classGroup != instanceClassGroup;
+    return instanceClassGroup;
   }
 
   public ObjectLayout getLayoutForInstances() {
-    return factory.getInstanceLayout();
+    return instanceClassGroup.getInstanceLayout();
   }
 
   public HashSet<SlotDefinition> getInstanceSlots() {
@@ -126,7 +127,7 @@ public final class SClass extends SObjectWithClass {
     this.hasOnlyImmutableFields = hasOnlyImmutableFields;
     this.dispatchables   = dispatchables;
     this.declaredAsValue = declaredAsValue;
-    this.factory = classFactory;
+    this.instanceClassGroup = classFactory;
   }
 
   private boolean isBasedOn(final MixinDefinitionId mixinId) {

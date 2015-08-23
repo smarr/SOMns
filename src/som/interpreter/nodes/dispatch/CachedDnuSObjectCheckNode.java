@@ -14,7 +14,7 @@ public final class CachedDnuSObjectCheckNode extends AbstractCachedDnuNode {
   public CachedDnuSObjectCheckNode(final SClass rcvrClass,
       final SSymbol selector, final AbstractDispatchNode nextInCache) {
     super(rcvrClass, selector, nextInCache);
-    expectedClassFactory = rcvrClass.getClassFactory();
+    expectedClassFactory = rcvrClass.getInstanceFactory();
   }
 
   @Override

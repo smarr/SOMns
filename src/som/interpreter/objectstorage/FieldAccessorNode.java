@@ -94,7 +94,7 @@ public abstract class FieldAccessorNode extends Node {
     }
 
     protected final AbstractReadFieldNode respecializedNodeOrNext(final SObject obj) {
-      if (layout.layoutForSameClass(obj.getObjectLayout())) {
+      if (layout.layoutForSameClasses(obj.getObjectLayout())) {
         return specialize(obj, "update outdated read node", nextInCache);
       } else {
         return nextInCache;
@@ -271,7 +271,7 @@ public abstract class FieldAccessorNode extends Node {
       if (hasExpectedLayout(obj)) {
         storage.writeLong(obj, value);
       } else {
-        if (layout.layoutForSameClass(obj.getObjectLayout())) {
+        if (layout.layoutForSameClasses(obj.getObjectLayout())) {
           writeAndRespecialize(obj, value, "update outdated write node", nextInCache);
         } else {
           nextInCache.write(obj, value);
@@ -285,7 +285,7 @@ public abstract class FieldAccessorNode extends Node {
       if (value instanceof Long) {
         write(obj, (long) value);
       } else {
-        if (layout.layoutForSameClass(obj.getObjectLayout())) {
+        if (layout.layoutForSameClasses(obj.getObjectLayout())) {
           writeAndRespecialize(obj, value, "update outdated read node", nextInCache);
         } else {
           nextInCache.write(obj, value);
@@ -309,7 +309,7 @@ public abstract class FieldAccessorNode extends Node {
       if (hasExpectedLayout(obj)) {
         storage.writeDouble(obj, value);
       } else {
-        if (layout.layoutForSameClass(obj.getObjectLayout())) {
+        if (layout.layoutForSameClasses(obj.getObjectLayout())) {
           writeAndRespecialize(obj, value, "update outdated read node", nextInCache);
         } else {
           nextInCache.write(obj, value);
@@ -323,7 +323,7 @@ public abstract class FieldAccessorNode extends Node {
       if (value instanceof Double) {
         write(obj, (double) value);
       } else {
-        if (layout.layoutForSameClass(obj.getObjectLayout())) {
+        if (layout.layoutForSameClasses(obj.getObjectLayout())) {
           writeAndRespecialize(obj, value, "update outdated read node", nextInCache);
         } else {
           nextInCache.write(obj, value);
@@ -347,7 +347,7 @@ public abstract class FieldAccessorNode extends Node {
       if (hasExpectedLayout(obj)) {
         storage.write(obj, value);
       } else {
-        if (layout.layoutForSameClass(obj.getObjectLayout())) {
+        if (layout.layoutForSameClasses(obj.getObjectLayout())) {
           writeAndRespecialize(obj, value, "update outdated read node", nextInCache);
         } else {
           nextInCache.write(obj, value);

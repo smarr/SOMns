@@ -56,7 +56,7 @@ public class SPromise extends SObjectWithClass {
   protected final Actor owner;
 
   public SPromise(@NotNull final Actor owner) {
-    super(promiseClass);
+    super(promiseClass, promiseClass.getInstanceFactory());
     assert owner != null;
     this.owner = owner;
 
@@ -279,7 +279,7 @@ public class SPromise extends SObjectWithClass {
     protected final SPromise promise;
 
     protected SResolver(final SPromise promise) {
-      super(resolverClass);
+      super(resolverClass, resolverClass.getInstanceFactory());
       this.promise = promise;
       assert resolverClass != null;
     }

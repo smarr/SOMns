@@ -74,7 +74,7 @@ public final class ObjectLayout {
     return onlyImmutableFields;
   }
 
-  public boolean layoutForSameClass(final ObjectLayout other) {
+  public boolean layoutForSameClasses(final ObjectLayout other) {
     return forClasses == other.forClasses;
   }
 

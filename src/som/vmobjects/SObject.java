@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.Map.Entry;
 
 import som.compiler.MixinDefinition.SlotDefinition;
+import som.interpreter.objectstorage.ClassFactory;
 import som.interpreter.objectstorage.ObjectLayout;
 import som.interpreter.objectstorage.StorageLocation;
 import som.interpreter.objectstorage.StorageLocation.AbstractObjectStorageLocation;
@@ -51,8 +52,8 @@ public abstract class SObject extends SObjectWithClass {
 
   public static final class SImmutableObject extends SObject {
 
-    public SImmutableObject(final SClass instanceClass) {
-      super(instanceClass);
+    public SImmutableObject(final SClass instanceClass, final ClassFactory factory, final ObjectLayout layout) {
+      super(instanceClass, factory, layout);
       field1 = field2 = field3 = field4 = field5 = Nil.nilObject;
       isValue = instanceClass.declaredAsValue();
     }
@@ -108,8 +109,8 @@ public abstract class SObject extends SObjectWithClass {
     // SMutableObject and SImmuableObject
     @SuppressWarnings("unused") private boolean isValueOfSImmutableObjectSync;
 
-    public SMutableObject(final SClass instanceClass) {
-      super(instanceClass);
+    public SMutableObject(final SClass instanceClass, final ClassFactory factory, final ObjectLayout layout) {
+      super(instanceClass, factory, layout);
       field1 = field2 = field3 = field4 = field5 = Nil.nilObject;
     }
 
@@ -137,9 +138,10 @@ public abstract class SObject extends SObjectWithClass {
   @CompilationFinal private ObjectLayout objectLayout;
   private int primitiveUsedMap;
 
-  public SObject(final SClass instanceClass) {
-    super(instanceClass);
-    setLayoutInitially(instanceClass.getLayoutForInstances());
+  public SObject(final SClass instanceClass, final ClassFactory factory, final ObjectLayout layout) {
+    super(instanceClass, factory);
+    assert factory.getInstanceLayout() == layout;
+    setLayoutInitially(layout);
   }
 
   public SObject(final boolean incompleteDefinition) {
@@ -155,9 +157,10 @@ public abstract class SObject extends SObjectWithClass {
   }
 
   private void setLayoutInitially(final ObjectLayout layout) {
+    CompilerAsserts.partialEvaluationConstant(layout);
     objectLayout        = layout;
-    extensionPrimFields = getExtendedPrimStorage();
-    extensionObjFields  = getExtendedObjectStorage();
+    extensionPrimFields = getExtendedPrimStorage(layout);
+    extensionObjFields  = getExtendedObjectStorage(layout);
   }
 
   public final ObjectLayout getObjectLayout() {
@@ -176,13 +179,15 @@ public abstract class SObject extends SObjectWithClass {
 
   @Override
   public final void setClass(final SClass value) {
+    CompilerAsserts.neverPartOfCompilation("Only meant to be used in object system initalization");
     super.setClass(value);
     setLayoutInitially(value.getLayoutForInstances());
   }
 
   private static final long[] emptyPrim = new long[0];
-  private long[] getExtendedPrimStorage() {
-    int numExtFields = objectLayout.getNumberOfUsedExtendedPrimStorageLocations();
+  private long[] getExtendedPrimStorage(final ObjectLayout layout) {
+    int numExtFields = layout.getNumberOfUsedExtendedPrimStorageLocations();
+    CompilerAsserts.partialEvaluationConstant(numExtFields);
     if (numExtFields == 0) {
       return emptyPrim;
     } else {
@@ -191,8 +196,9 @@ public abstract class SObject extends SObjectWithClass {
   }
 
   private static final Object[] emptyObject = new Object[0];
-  private Object[] getExtendedObjectStorage() {
-    int numExtFields = objectLayout.getNumberOfUsedExtendedObjectStorageLocations();
+  private Object[] getExtendedObjectStorage(final ObjectLayout layout) {
+    int numExtFields = layout.getNumberOfUsedExtendedObjectStorageLocations();
+    CompilerAsserts.partialEvaluationConstant(numExtFields);
     if (numExtFields == 0) {
       return emptyObject;
     }
@@ -260,20 +266,20 @@ public abstract class SObject extends SObjectWithClass {
     HashMap<SlotDefinition, Object> fieldValues = getAllFields();
 
     objectLayout        = layoutAtClass;
-    extensionPrimFields = getExtendedPrimStorage();
-    extensionObjFields  = getExtendedObjectStorage();
+    extensionPrimFields = getExtendedPrimStorage(layoutAtClass);
+    extensionObjFields  = getExtendedObjectStorage(layoutAtClass);
 
     setAllFields(fieldValues);
   }
 
   protected final void updateLayoutWithInitializedField(final SlotDefinition slot, final Class<?> type) {
-    ObjectLayout layout = factory.updateInstanceLayoutWithInitializedField(slot, type);
+    ObjectLayout layout = classGroup.updateInstanceLayoutWithInitializedField(slot, type);
     assert objectLayout != layout;
     setLayoutAndTransferFields();
   }
 
   protected final void updateLayoutWithGeneralizedField(final SlotDefinition slot) {
-    ObjectLayout layout = factory.updateInstanceLayoutWithGeneralizedField(slot);
+    ObjectLayout layout = classGroup.updateInstanceLayoutWithGeneralizedField(slot);
 
     assert objectLayout != layout;
     setLayoutAndTransferFields();

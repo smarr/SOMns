@@ -293,7 +293,7 @@ public final class Bootstrap {
     scope.setMixinDefinition(vmMirrorDef, false);
 
     SClass vmMirrorClass = vmMirrorDef.instantiateClass(Nil.nilObject, new SClass[] {Classes.topClass, Classes.valueClass});
-    return new SObjectWithoutFields(vmMirrorClass);
+    return new SObjectWithoutFields(vmMirrorClass, vmMirrorClass.getInstanceFactory());
   }
 
   /**
