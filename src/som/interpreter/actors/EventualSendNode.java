@@ -43,7 +43,7 @@ public abstract class EventualSendNode extends ExpressionNode {
       final int numArgs, final SourceSection source) {
 
     AbstractMessageSendNode invoke = MessageSendNode.createGeneric(selector, null, source);
-    ReceivedMessage receivedMsg = new ReceivedMessage(invoke);
+    ReceivedMessage receivedMsg = new ReceivedMessage(invoke, selector);
 
     return Truffle.getRuntime().createCallTarget(receivedMsg);
   }

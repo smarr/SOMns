@@ -2,6 +2,7 @@ package som.interpreter.actors;
 
 import som.interpreter.SArguments;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
+import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
@@ -13,9 +14,11 @@ import com.oracle.truffle.api.nodes.RootNode;
 public final class ReceivedMessage extends RootNode {
 
   @Child protected AbstractMessageSendNode onReceive;
+  private final SSymbol selector;
 
-  public ReceivedMessage(final AbstractMessageSendNode onRecieve) {
+  public ReceivedMessage(final AbstractMessageSendNode onRecieve, final SSymbol selector) {
     this.onReceive = onRecieve;
+    this.selector  = selector;
   }
 
   @Override
@@ -28,6 +31,11 @@ public final class ReceivedMessage extends RootNode {
       msg.resolver.resolve(result);
     }
     return null;
+  }
+
+  @Override
+  public String toString() {
+    return "RcvdMsg(" + selector.toString() + ")";
   }
 
   public static final class ReceivedCallback extends RootNode {
