@@ -39,13 +39,15 @@ public class SPromise extends SObjectWithClass {
   //                call backs here either. After resolving the future,
   //                whenResolved and whenBroken should only be accessed by the
   //                resolver actor
-  protected ArrayList<PromiseMessage> whenResolved;
+  protected PromiseMessage whenResolved;
+  protected ArrayList<PromiseMessage> whenResolvedExt;
   protected ArrayList<PromiseMessage> onError;
 
   protected ArrayList<SClass>         onException;
   protected ArrayList<PromiseMessage> onExceptionCallbacks;
 
-  protected ArrayList<SPromise>  chainedPromises;
+  protected SPromise chainedPromise;
+  protected ArrayList<SPromise>  chainedPromiseExt;
 
   protected Object  value;
   protected boolean resolved;
@@ -138,19 +140,28 @@ public class SPromise extends SObjectWithClass {
     return promise;
   }
 
-  protected synchronized void registerWhenResolved(final PromiseMessage callbackOrMsg) {
+  protected synchronized void registerWhenResolved(final PromiseMessage msg) {
     if (resolved) {
-      scheduleCallbacksOnResolution(value, callbackOrMsg);
+      scheduleCallbacksOnResolution(value, msg);
     } else {
       if (errored) { // short cut, this promise will never be resolved
         return;
       }
 
       if (whenResolved == null) {
-        whenResolved = new ArrayList<>(2);
+        whenResolved = msg;
+      } else {
+        registerMoreWhenResolved(msg);
       }
-      whenResolved.add(callbackOrMsg);
     }
+  }
+
+  @TruffleBoundary
+  private void registerMoreWhenResolved(final PromiseMessage msg) {
+    if (whenResolvedExt == null) {
+      whenResolvedExt = new ArrayList<>(2);
+    }
+    whenResolvedExt.add(msg);
   }
 
   private synchronized void registerOnError(final PromiseMessage msg) {
@@ -211,10 +222,19 @@ public class SPromise extends SObjectWithClass {
 
   public final synchronized void addChainedPromise(@NotNull final SPromise promise) {
     assert promise != null;
-    if (chainedPromises == null) {
-      chainedPromises = new ArrayList<>(1);
+    if (chainedPromise == null) {
+      chainedPromise = promise;
+    } else {
+      addMoreChainedPromises(promise);
     }
-    chainedPromises.add(promise);
+  }
+
+  @TruffleBoundary
+  private void addMoreChainedPromises(final SPromise promise) {
+    if (chainedPromiseExt == null) {
+      chainedPromiseExt = new ArrayList<>(2);
+    }
+    chainedPromiseExt.add(promise);
   }
 
   public final synchronized boolean isSomehowResolved() {
@@ -334,8 +354,16 @@ public class SPromise extends SObjectWithClass {
       //       don't need to worry about traversing the chain, which can
       //       lead to a stack overflow.
       // TODO: restore 10000 as parameter in testAsyncDeeplyChainedResolution
-      if (promise.chainedPromises != null) {
-        for (SPromise p : promise.chainedPromises) {
+      if (promise.chainedPromise != null) {
+        resolveAndTriggerListeners(result, promise.chainedPromise);
+        resolveMoreChainedPromises(promise, result);
+      }
+    }
+
+    @TruffleBoundary
+    private static void resolveMoreChainedPromises(final SPromise promise, final Object result) {
+      if (promise.chainedPromiseExt != null) {
+        for (SPromise p : promise.chainedPromiseExt) {
           resolveAndTriggerListeners(result, p);
         }
       }
@@ -363,8 +391,16 @@ public class SPromise extends SObjectWithClass {
 
     protected static void scheduleAll(final SPromise promise, final Object result) {
       if (promise.whenResolved != null) {
-        for (int i = 0; i < promise.whenResolved.size(); i++) {
-          PromiseMessage callbackOrMsg = promise.whenResolved.get(i);
+        promise.scheduleCallbacksOnResolution(result, promise.whenResolved);
+        scheduleExtensions(promise, result);
+      }
+    }
+
+    @TruffleBoundary
+    private static void scheduleExtensions(final SPromise promise, final Object result) {
+      if (promise.whenResolvedExt != null) {
+        for (int i = 0; i < promise.whenResolvedExt.size(); i++) {
+          PromiseMessage callbackOrMsg = promise.whenResolvedExt.get(i);
           promise.scheduleCallbacksOnResolution(result, callbackOrMsg);
         }
       }
