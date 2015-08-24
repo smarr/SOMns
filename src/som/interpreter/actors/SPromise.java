@@ -345,7 +345,9 @@ public class SPromise extends SObjectWithClass {
       //       lead to a stack overflow.
       // TODO: restore 10000 as parameter in testAsyncDeeplyChainedResolution
       if (promise.chainedPromise != null) {
-        resolveAndTriggerListeners(result, promise.chainedPromise);
+        Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
+        Object wrapped = promise.chainedPromise.owner.wrapForUse(result, current);
+        resolveAndTriggerListeners(result, wrapped, promise.chainedPromise);
         resolveMoreChainedPromises(promise, result);
       }
     }
@@ -353,22 +355,17 @@ public class SPromise extends SObjectWithClass {
     @TruffleBoundary
     private static void resolveMoreChainedPromises(final SPromise promise, final Object result) {
       if (promise.chainedPromiseExt != null) {
+        Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
+
         for (SPromise p : promise.chainedPromiseExt) {
-          resolveAndTriggerListeners(result, p);
+          Object wrapped = p.owner.wrapForUse(result, current);
+          resolveAndTriggerListeners(result, wrapped, p);
         }
       }
     }
 
     protected static void resolveAndTriggerListeners(final Object result,
-        final SPromise p) {
-      // actors should have always direct access to their own objects and
-      // thus, far references need to be unwrapped if they are returned back
-      // to the owner
-      // if a reference is delivered to another actor, it needs to be wrapped
-      // in a far reference
-      Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
-      Object wrapped = p.owner.wrapForUse(result, current);
-
+        final Object wrapped, final SPromise p) {
       assert !(result instanceof SPromise);
 
       synchronized (p) {

@@ -44,9 +44,16 @@ public abstract class ResolvePromiseNode extends BinaryExpressionNode {
     return !(result instanceof SPromise);
   }
 
+  @Child protected WrapReferenceNode wrapper = WrapReferenceNodeGen.create();
+
   @Specialization(guards = {"hackGuardToTellTheVMThatWeExecuteMessages()", "notAPromise(result)"})
   public SResolver normalResolution(final SResolver resolver, final Object result) {
-     SResolver.resolveAndTriggerListeners(result, resolver.getPromise());
-     return resolver;
+    SPromise promise = resolver.getPromise();
+
+    Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
+    Object wrapped = wrapper.execute(result, promise.owner, current);
+
+    SResolver.resolveAndTriggerListeners(result, wrapped, promise);
+    return resolver;
   }
 }
