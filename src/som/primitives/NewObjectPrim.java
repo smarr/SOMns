@@ -43,7 +43,7 @@ public abstract class NewObjectPrim extends UnaryExpressionNode implements ISpec
       "receiver.getInstanceFactory().getInstanceLayout() == layout"})
   public final SAbstractObject doClassWithOnlyImmutableFields(final SClass receiver,
       @Cached("receiver.getInstanceFactory()") final ClassFactory factory,
-      @Cached("factory.getInstanceLayout()") final ObjectLayout layout) {
+      @Cached("receiver.getInstanceFactory().getInstanceLayout()") final ObjectLayout layout) {
     return new SImmutableObject(receiver, factory, layout);
   }
 
