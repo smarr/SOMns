@@ -94,6 +94,7 @@ public final class UninitializedDispatchNode extends AbstractDispatchWithLookupN
 
   @Override
   public Object executeDispatch(final VirtualFrame frame, final Object[] arguments) {
+    transferToInterpreterAndInvalidate("Initialize a dispatch node.");
     RootNode root = getRootNode();
     assert root != null;
 

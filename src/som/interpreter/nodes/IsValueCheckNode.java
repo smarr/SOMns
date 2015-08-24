@@ -1,6 +1,7 @@
 package som.interpreter.nodes;
 
 import som.VM;
+import som.interpreter.TruffleCompiler;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.ObjectPrims.IsValue;
@@ -36,6 +37,7 @@ public abstract class IsValueCheckNode extends UnaryExpressionNode {
     }
 
     private void specialize(final VirtualFrame frame, final Object receiver) {
+      TruffleCompiler.transferToInterpreterAndInvalidate("Need to specialize node");
       if (!(receiver instanceof SImmutableObject)) {
         // can remove ourselves, this node is only used in initializers,
         // which are by definition monomorphic
