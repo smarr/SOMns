@@ -1,6 +1,5 @@
 package som.primitives.actors;
 
-import som.VM;
 import som.compiler.AccessModifier;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.ReceivedMessage.ReceivedCallback;
@@ -19,7 +18,6 @@ import som.vmobjects.SInvokable;
 import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SSymbol;
 
-import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Cached;
@@ -51,22 +49,6 @@ public final class PromisePrims {
     }
 
     private static final SSymbol withAndFactory = Symbols.symbolFor("with:and:");
-  }
-
-  @GenerateNodeFactory
-  @Primitive("actorsResolve:with:")
-  public abstract static class ResolvePrim extends BinaryExpressionNode {
-    @Specialization
-    public final SResolver resolve(final SResolver resolver, final Object value) {
-      if (CompilerDirectives.inInterpreter()) {
-        // TODO: this can be done unconditionally in some uninitialized version
-        //       of EventualSendNode, which we probably should have at some point
-        VM.hasSendMessages();
-      }
-
-      resolver.resolve(value);
-      return resolver;
-    }
   }
 
   public static RootCallTarget createReceived(final SBlock callback) {

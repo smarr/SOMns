@@ -14,11 +14,13 @@ import com.oracle.truffle.api.nodes.RootNode;
 public final class ReceivedMessage extends RootNode {
 
   @Child protected AbstractMessageSendNode onReceive;
+  @Child protected ResolvePromiseNode resolve;
   private final SSymbol selector;
 
   public ReceivedMessage(final AbstractMessageSendNode onRecieve, final SSymbol selector) {
     this.onReceive = onRecieve;
     this.selector  = selector;
+    this.resolve = ResolvePromiseNodeFactory.create(null, null);
   }
 
   @Override
@@ -28,7 +30,7 @@ public final class ReceivedMessage extends RootNode {
     Object result = onReceive.doPreEvaluated(frame, msg.args);
 
     if (msg.resolver != null) {
-      msg.resolver.resolve(result);
+      resolve.executeEvaluated(msg.resolver, result);
     }
     return null;
   }
@@ -40,9 +42,11 @@ public final class ReceivedMessage extends RootNode {
 
   public static final class ReceivedCallback extends RootNode {
     @Child protected DirectCallNode onReceive;
+    @Child protected ResolvePromiseNode resolve;
 
     public ReceivedCallback(final RootCallTarget onReceive) {
       this.onReceive = Truffle.getRuntime().createDirectCallNode(onReceive);
+      this.resolve = ResolvePromiseNodeFactory.create(null, null);
     }
 
     @Override
@@ -52,7 +56,7 @@ public final class ReceivedMessage extends RootNode {
       Object result = onReceive.call(frame, msg.args);
 
       if (msg.resolver != null) {
-        msg.resolver.resolve(result);
+        resolve.executeEvaluated(msg.resolver, result);
       }
       return null;
     }

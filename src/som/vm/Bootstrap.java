@@ -20,6 +20,7 @@ import som.compiler.SourcecodeCompiler;
 import som.interpreter.LexicalScope.MixinScope;
 import som.interpreter.Primitive;
 import som.interpreter.actors.Actor;
+import som.interpreter.actors.ResolvePromiseNodeFactory;
 import som.interpreter.nodes.ArgumentReadNode.LocalArgumentReadNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
@@ -239,6 +240,7 @@ public final class Bootstrap {
     allFactories.add(PutAllNodeFactory.getInstance());
 
     allFactories.add(CreateActorPrimFactory.getInstance());
+    allFactories.add(ResolvePromiseNodeFactory.getInstance());
 
     return allFactories;
   }

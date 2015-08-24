@@ -304,6 +304,10 @@ public class SPromise extends SObjectWithClass {
       assert resolverClass != null;
     }
 
+    public final SPromise getPromise() {
+      return promise;
+    }
+
     @Override
     public final boolean isValue() {
       return true;
@@ -323,26 +327,10 @@ public class SPromise extends SObjectWithClass {
       throw new NotYetImplementedException(); // TODO: implement
     }
 
-    public final void resolve(final Object result) {
-      VM.thisMethodNeedsToBeOptimized("This has so many possible cases, we definitely want to optimize this");
-
+    public final boolean assertNotResolved() {
       assert !promise.isSomehowResolved() : "Not sure yet what to do with re-resolving of promises? just ignore it? Error?";
       assert promise.value == null        : "If it isn't resolved yet, it shouldn't have a value";
-
-      if (result == promise) {
-        // TODO: figure out whether this case is relevant
-        return;  // this might happen at least in AmbientTalk, but doesn't do anything
-      }
-
-      if (result instanceof SPromise) {
-        synchronized (promise) {
-          promise.chained = true;
-          ((SPromise) result).addChainedPromise(promise);
-        }
-        return;
-      }
-
-      resolveAndTriggerListeners(result, promise);
+      return true;
     }
 
     // TODO: solve the TODO and then remove the TruffleBoundary, this might even need to go into a node
