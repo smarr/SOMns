@@ -140,7 +140,7 @@ public abstract class SObject extends SObjectWithClass {
 
   public SObject(final SClass instanceClass, final ClassFactory factory, final ObjectLayout layout) {
     super(instanceClass, factory);
-    assert factory.getInstanceLayout() == layout;
+    assert factory.getInstanceLayout() == layout || layout.layoutForSameClasses(factory.getInstanceLayout());
     setLayoutInitially(layout);
   }
 
