@@ -30,7 +30,7 @@ public abstract class ResolvePromiseNode extends BinaryExpressionNode {
     return resolver;
   }
 
-  @Specialization(guards = "resolver.getPromise() != result")
+  @Specialization(guards = {"hackGuardToTellTheVMThatWeExecuteMessages()", "resolver.getPromise() != result"})
   public SResolver chainedPromise(final SResolver resolver, final SPromise result) {
     assert resolver.assertNotResolved();
     SPromise promise = resolver.getPromise();
@@ -44,7 +44,7 @@ public abstract class ResolvePromiseNode extends BinaryExpressionNode {
     return !(result instanceof SPromise);
   }
 
-  @Specialization(guards = "notAPromise(result)")
+  @Specialization(guards = {"hackGuardToTellTheVMThatWeExecuteMessages()", "notAPromise(result)"})
   public SResolver normalResolution(final SResolver resolver, final Object result) {
      SResolver.resolveAndTriggerListeners(result, resolver.getPromise());
      return resolver;
