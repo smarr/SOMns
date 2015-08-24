@@ -222,6 +222,8 @@ public class SPromise extends SObjectWithClass {
 
   public final synchronized void addChainedPromise(@NotNull final SPromise promise) {
     assert promise != null;
+    promise.chained = true;
+
     if (chainedPromise == null) {
       chainedPromise = promise;
     } else {
