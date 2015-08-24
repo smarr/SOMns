@@ -30,6 +30,9 @@ public abstract class EventualMessage extends RecursiveAction {
     assert onReceive.getRootNode() instanceof ReceivedMessage || onReceive.getRootNode() instanceof ReceivedCallback;
   }
 
+  protected abstract Actor   getTarget();
+  protected abstract SSymbol getSelector();
+
   /**
    * A message to a known receiver that is to be executed on the actor owning
    * the receiver.
@@ -215,9 +218,6 @@ public abstract class EventualMessage extends RecursiveAction {
       return "PCallbackMsg(" + Arrays.toString(args) + ")";
     }
   }
-
-  protected abstract Actor   getTarget();
-  protected abstract SSymbol getSelector();
 
   @Override
   protected final void compute() {
