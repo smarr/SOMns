@@ -40,8 +40,13 @@ public abstract class StorageLocation {
     }
   }
 
-  private static final UnsafeAccess ua = Truffle.getRuntime().
-      getCapability(UnsafeAccessFactory.class).createUnsafeAccess(loadUnsafe());
+  private static final UnsafeAccess ua;
+  static {
+    UnsafeAccessFactory factory = Truffle.getRuntime().
+        getCapability(UnsafeAccessFactory.class);
+    assert factory != null : "This seems to be an incompatible version of Truffle. UnsafeAcceessFactory is not available anymore";
+    ua = factory.createUnsafeAccess(loadUnsafe());
+  }
 
   public interface LongStorageLocation {
     long readLong(final SObject obj, boolean assumptionValid)
