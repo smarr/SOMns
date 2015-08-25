@@ -136,7 +136,26 @@ public final class PromisePrims {
         @Cached("createReceived(resolved)") final RootCallTarget resolvedTarget,
         @Cached("error.getMethod()") final SInvokable errorMethod,
         @Cached("createReceived(error)") final RootCallTarget errorTarget) {
-      return promise.whenResolvedOrError(resolved, error, resolvedTarget, errorTarget);
+      return whenResolvedOrError(promise, resolved, error, resolvedTarget, errorTarget);
+    }
+
+    protected static final SPromise whenResolvedOrError(final SPromise rcvr,
+        final SBlock resolved, final SBlock error,
+        final RootCallTarget resolverTarget, final RootCallTarget errorTarget) {
+      assert resolved.getMethod().getNumberOfArguments() == 2;
+      assert error.getMethod().getNumberOfArguments() == 2;
+
+      SPromise  promise  = SPromise.createPromise(EventualMessage.getActorCurrentMessageIsExecutionOn());
+      SResolver resolver = SPromise.createResolver(promise, "wROE:block:block");
+
+      PromiseCallbackMessage onResolved = new PromiseCallbackMessage(rcvr.getOwner(), resolved, resolver, resolverTarget);
+      PromiseCallbackMessage onError    = new PromiseCallbackMessage(rcvr.getOwner(), error, resolver, errorTarget);
+
+      synchronized (rcvr) {
+        rcvr.registerWhenResolved(onResolved);
+        rcvr.registerOnError(onError);
+      }
+      return promise;
     }
   }
 }
