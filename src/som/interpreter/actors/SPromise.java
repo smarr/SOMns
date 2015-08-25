@@ -108,23 +108,11 @@ public class SPromise extends SObjectWithClass {
     return promise;
   }
 
-  public synchronized void registerWhenResolved(final PromiseMessage msg,
-      final Actor current) {
-    if (resolved) {
-      scheduleCallbacksOnResolution(value, msg, current);
+  final void registerWhenResolvedUnsynced(final PromiseMessage msg) {
+    if (whenResolved == null) {
+      whenResolved = msg;
     } else {
-      if (errored) {
-        // short cut on error, this promise will never error, so,
-        // just return promise, don't use isSomehowResolved(), because the other
-        // case are not correct
-        return;
-      }
-
-      if (whenResolved == null) {
-        whenResolved = msg;
-      } else {
-        registerMoreWhenResolved(msg);
-      }
+      registerMoreWhenResolved(msg);
     }
   }
 
@@ -221,6 +209,21 @@ public class SPromise extends SObjectWithClass {
 
   public final synchronized boolean isResolved() {
     return resolved;
+  }
+
+  /** Internal Helper, only to be used properly synchronized. */
+  final boolean isResolvedUnsync() {
+    return resolved;
+  }
+
+  /** Internal Helper, only to be used properly synchronized. */
+  final boolean isErroredUnsync() {
+    return errored;
+  }
+
+  /** Internal Helper, only to be used properly synchronized. */
+  final Object getValueUnsync() {
+    return value;
   }
 
   /** REM: this method needs to be used with self synchronized. */

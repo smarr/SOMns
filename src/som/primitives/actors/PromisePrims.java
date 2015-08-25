@@ -5,6 +5,7 @@ import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.EventualMessage.PromiseCallbackMessage;
 import som.interpreter.actors.ReceivedMessage.ReceivedCallback;
+import som.interpreter.actors.RegisterOnPromiseNode.RegisterWhenResolved;
 import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.SResolver;
 import som.interpreter.nodes.dispatch.Dispatchable;
@@ -63,21 +64,24 @@ public final class PromisePrims {
   @ImportStatic(PromisePrims.class)
   @Primitive("actorsWhen:resolved:")
   public abstract static class WhenResolvedPrim extends BinaryExpressionNode {
+    @Child protected RegisterWhenResolved registerNode = new RegisterWhenResolved();
+
     @Specialization(guards = "blockMethod == callback.getMethod()", limit = "6")
     public final SPromise whenResolved(final SPromise promise,
         final SBlock callback,
         @Cached("callback.getMethod()") final SInvokable blockMethod,
         @Cached("createReceived(callback)") final RootCallTarget blockCallTarget) {
-      return whenResolved(promise, callback, blockCallTarget);
+      return whenResolved(promise, callback, blockCallTarget, registerNode);
     }
 
     @Fallback
     public final SPromise whenResolved(final SPromise promise, final SBlock callback) {
-      return whenResolved(promise, callback, createReceived(callback));
+      return whenResolved(promise, callback, createReceived(callback), registerNode);
     }
 
     protected static final SPromise whenResolved(final SPromise rcvr,
-        final SBlock block, final RootCallTarget blockCallTarget) {
+        final SBlock block, final RootCallTarget blockCallTarget,
+        final RegisterWhenResolved registerNode) {
       assert block.getMethod().getNumberOfArguments() == 2;
 
       Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
@@ -86,7 +90,7 @@ public final class PromisePrims {
 
       PromiseCallbackMessage msg = new PromiseCallbackMessage(rcvr.getOwner(),
           block, resolver, blockCallTarget);
-      rcvr.registerWhenResolved(msg, current);
+      registerNode.register(rcvr, msg, current);
 
       return promise;
     }
@@ -133,6 +137,8 @@ public final class PromisePrims {
   @ImportStatic(PromisePrims.class)
   @Primitive("actorsWhen:resolved:onError:")
   public abstract static class WhenResolvedOnErrorPrim extends TernaryExpressionNode {
+    @Child protected RegisterWhenResolved registerNode = new RegisterWhenResolved();
+
     @Specialization(guards = {"resolvedMethod == resolved.getMethod()", "errorMethod == error.getMethod()"})
     public final SPromise whenResolvedOnError(final SPromise promise,
         final SBlock resolved, final SBlock error,
@@ -140,12 +146,14 @@ public final class PromisePrims {
         @Cached("createReceived(resolved)") final RootCallTarget resolvedTarget,
         @Cached("error.getMethod()") final SInvokable errorMethod,
         @Cached("createReceived(error)") final RootCallTarget errorTarget) {
-      return whenResolvedOrError(promise, resolved, error, resolvedTarget, errorTarget);
+      return whenResolvedOrError(promise, resolved, error, resolvedTarget,
+          errorTarget, registerNode);
     }
 
     protected static final SPromise whenResolvedOrError(final SPromise rcvr,
         final SBlock resolved, final SBlock error,
-        final RootCallTarget resolverTarget, final RootCallTarget errorTarget) {
+        final RootCallTarget resolverTarget, final RootCallTarget errorTarget,
+        final RegisterWhenResolved registerNode) {
       assert resolved.getMethod().getNumberOfArguments() == 2;
       assert error.getMethod().getNumberOfArguments() == 2;
 
@@ -157,7 +165,7 @@ public final class PromisePrims {
       PromiseCallbackMessage onError    = new PromiseCallbackMessage(rcvr.getOwner(), error, resolver, errorTarget);
 
       synchronized (rcvr) {
-        rcvr.registerWhenResolved(onResolved, current);
+        registerNode.register(rcvr, onResolved, current);
         rcvr.registerOnError(onError, current);
       }
       return promise;

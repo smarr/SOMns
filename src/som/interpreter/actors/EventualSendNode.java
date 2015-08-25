@@ -3,6 +3,7 @@ package som.interpreter.actors;
 import som.VM;
 import som.interpreter.actors.EventualMessage.DirectMessage;
 import som.interpreter.actors.EventualMessage.PromiseSendMessage;
+import som.interpreter.actors.RegisterOnPromiseNode.RegisterWhenResolved;
 import som.interpreter.actors.SPromise.SResolver;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.InternalObjectArrayNode;
@@ -16,6 +17,7 @@ import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
@@ -123,27 +125,34 @@ public abstract class EventualSendNode extends ExpressionNode {
     target.enqueueMessage(msg);
   }
 
+  protected static RegisterWhenResolved createRegisterNode() {
+    return new RegisterWhenResolved();
+  }
+
   @Specialization(guards = {"isResultUsed()", "isPromiseRcvr(args)"})
-  public final SPromise toPromiseWithResultPromise(final Object[] args) {
+  public final SPromise toPromiseWithResultPromise(final Object[] args,
+      @Cached("createRegisterNode()") final RegisterWhenResolved registerNode) {
     SPromise rcvr = (SPromise) args[0];
     SPromise  promise  = SPromise.createPromise(EventualMessage.getActorCurrentMessageIsExecutionOn());
     SResolver resolver = SPromise.createResolver(promise, "eventualSendToPromise:", selector);
 
-    sendPromiseMessage(args, rcvr, resolver);
+    sendPromiseMessage(args, rcvr, resolver, registerNode);
     return promise;
   }
 
   @Specialization(guards = {"!isResultUsed()", "isPromiseRcvr(args)"})
-  public final Object toPromiseWithoutResultPromise(final Object[] args) {
-    sendPromiseMessage(args, (SPromise) args[0], null);
+  public final Object toPromiseWithoutResultPromise(final Object[] args,
+      @Cached("createRegisterNode()") final RegisterWhenResolved registerNode) {
+    sendPromiseMessage(args, (SPromise) args[0], null, registerNode);
     return Nil.nilObject;
   }
 
   private void sendPromiseMessage(final Object[] args, final SPromise rcvr,
-      final SResolver resolver) {
+      final SResolver resolver, final RegisterWhenResolved register) {
     assert rcvr.getOwner() == EventualMessage.getActorCurrentMessageIsExecutionOn() : "think this should be true because the promise is an Object and owned by this specific actor";
     PromiseSendMessage msg = new PromiseSendMessage(selector, args, rcvr.getOwner(), resolver, onReceive);
-    rcvr.registerWhenResolved(msg, rcvr.getOwner());
+
+    register.register(rcvr, msg, rcvr.getOwner());
   }
 
   @Specialization(guards = {"isResultUsed()", "!isFarRefRcvr(args)", "!isPromiseRcvr(args)"})
