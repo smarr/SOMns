@@ -57,7 +57,7 @@ public class SPromise extends SObjectWithClass {
   // the owner of this promise, on which all call backs are scheduled
   protected final Actor owner;
 
-  public SPromise(@NotNull final Actor owner) {
+  protected SPromise(@NotNull final Actor owner) {
     super(promiseClass, promiseClass.getInstanceFactory());
     assert owner != null;
     this.owner = owner;
@@ -268,9 +268,9 @@ public class SPromise extends SObjectWithClass {
 
   public static SResolver createResolver(final SPromise promise, final String debugNote) {
     if (VM.DebugMode) {
-      return new SResolver(promise);
-    } else {
       return new SDebugResolver(promise, debugNote);
+    } else {
+      return new SResolver(promise);
     }
   }
 
