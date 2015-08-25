@@ -2,6 +2,7 @@ package som.primitives.actors;
 
 import som.compiler.AccessModifier;
 import som.interpreter.actors.EventualMessage;
+import som.interpreter.actors.EventualMessage.PromiseCallbackMessage;
 import som.interpreter.actors.ReceivedMessage.ReceivedCallback;
 import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.SResolver;
@@ -66,12 +67,26 @@ public final class PromisePrims {
         final SBlock callback,
         @Cached("callback.getMethod()") final SInvokable blockMethod,
         @Cached("createReceived(callback)") final RootCallTarget blockCallTarget) {
-      return promise.whenResolved(callback, blockCallTarget);
+      return whenResolved(promise, callback, blockCallTarget);
     }
 
     @Fallback
     public final SPromise whenResolved(final SPromise promise, final SBlock callback) {
-      return promise.whenResolved(callback, createReceived(callback));
+      return whenResolved(promise, callback, createReceived(callback));
+    }
+
+    protected static final SPromise whenResolved(final SPromise rcvr,
+        final SBlock block, final RootCallTarget blockCallTarget) {
+      assert block.getMethod().getNumberOfArguments() == 2;
+
+      SPromise  promise  = SPromise.createPromise(EventualMessage.getActorCurrentMessageIsExecutionOn());
+      SResolver resolver = SPromise.createResolver(promise, "wR:block");
+
+      PromiseCallbackMessage msg = new PromiseCallbackMessage(rcvr.getOwner(),
+          block, resolver, blockCallTarget);
+      rcvr.registerWhenResolved(msg);
+
+      return promise;
     }
   }
 

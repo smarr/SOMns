@@ -96,19 +96,6 @@ public class SPromise extends SObjectWithClass {
     promiseClass = cls;
   }
 
-  public final SPromise whenResolved(final SBlock block,
-      final RootCallTarget blockCallTarget) {
-    assert block.getMethod().getNumberOfArguments() == 2;
-    SPromise  promise  = createPromise(EventualMessage.getActorCurrentMessageIsExecutionOn());
-    SResolver resolver = createResolver(promise, "wR:block");
-
-    PromiseCallbackMessage msg = new PromiseCallbackMessage(owner, block,
-        resolver, blockCallTarget);
-    registerWhenResolved(msg);
-
-    return promise;
-  }
-
   public final SPromise onError(final SBlock block, final RootCallTarget blockCallTarget) {
     assert block.getMethod().getNumberOfArguments() == 2;
 
@@ -140,7 +127,7 @@ public class SPromise extends SObjectWithClass {
     return promise;
   }
 
-  protected synchronized void registerWhenResolved(final PromiseMessage msg) {
+  public synchronized void registerWhenResolved(final PromiseMessage msg) {
     if (resolved) {
       scheduleCallbacksOnResolution(value, msg);
     } else {
