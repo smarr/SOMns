@@ -1,0 +1,133 @@
+#!/usr/bin/env python2.7
+import argparse
+import sys
+import os
+
+BASE_DIR    = os.path.dirname(os.path.realpath(__file__))
+GRAAL_HOME  = os.getenv('GRAAL_HOME',  None)
+GRAAL_FLAGS = os.getenv('GRAAL_FLAGS', None)
+
+graal_locations = [BASE_DIR + '/../graal',
+                   BASE_DIR + '/../GraalVM',
+                   '/home/smarr/Projects/SOM/graal',
+                   '/Users/smarr/Projects/PostDoc/Truffle/graal']
+
+parser = argparse.ArgumentParser(
+    description='Helper script to run SOMns with/without Graal')
+
+parser.add_argument('-d', '--debug', help='wait for debugger to attach',
+                    dest='debug', action='store_true', default=False)
+parser.add_argument('-i', '--igv', help='dump compilation details to IGV',
+                    dest='igv', action='store_true', default=False)
+parser.add_argument('-l', '--low-level', help='enable low-level optimization output',
+                    dest='low_level', action='store_true', default=False)
+parser.add_argument('-p', '--profile', help='enable profiling after warmup',
+                    dest='profile', action='store_true', default=False)
+parser.add_argument('-w', '--perf-warnings', help='enable performance warnings',
+                    dest='perf_warnings', action='store_true', default=False)
+
+parser.add_argument('-o', '--only', help='only compile give methods, comma separated list',
+                    dest='only_compile', default=None)
+parser.add_argument('-v', '--visual-vm', help='connect to VisualVM for profiling',
+                    dest='visual_vm', action='store_true', default=False)
+
+parser.add_argument('-A', '--no-assert', help='execute with assertions disabled',
+                    dest='assert_', action='store_false', default=True)
+parser.add_argument('-B', '--no-background', help='disable background compilation',
+                    dest='background_compilation', action='store_false', default=True)
+parser.add_argument('-C', '--no-compilation', help='disable Truffle compilation',
+                    dest='no_compilation', action='store_true', default=False)
+parser.add_argument('-G', '--interpreter', help='run without Graal',
+                    dest='interpreter', action='store_true', default=False)
+parser.add_argument('-T', '--no-trace', help='do not print truffle compilation info',
+                    dest='no_trace', action='store_false', default=True)
+
+parser.add_argument('-vv', '--verbose', action='store_true', default=False,
+                    dest='verbose', help="print command-line before executing")
+
+parser.add_argument('args', nargs=argparse.REMAINDER,
+                    help='arguments passed to SOMns')
+args = parser.parse_args()
+
+PERF_WARINGS_FLAGS = ['-G:+TruffleCompilationExceptionsAreFatal',
+                      '-G:+TraceTrufflePerformanceWarnings',
+                      '-G:+TraceTruffleCompilation',
+                      '-G:+TraceTruffleCompilationDetails',
+                      '-G:+TraceTruffleExpansionSource']
+DBG_FLAGS       = ['-Xdebug',
+                   '-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8000']
+IGV_FLAGS       = ['-G:Dump=Truffle,TruffleTree']
+PROFILE_FLAGS   = ['-XX:JVMCICounterSize=5000', '-G:+ProfileCompiledMethods',
+                   '-G:BenchmarkDynamicCounters=out,warmup,total']
+VISUAL_VM_FLAGS = ['-agentpath:/Users/smarr/Downloads/visualvm_138/profiler/lib/deployed/jdk16/mac/libprofilerinterface.jnilib=/Users/smarr/Downloads/visualvm_138/profiler/lib,5140']
+ASSERT_FLAGS    = ['-esa', '-ea']
+LOW_FLAGS       = ['-XX:+UnlockDiagnosticVMOptions', '-XX:+LogCompilation',
+                   '-XX:+TraceDeoptimization']
+ONLY_COMPILE    = "-G:TruffleCompileOnly=%s"
+BG_COMP_FLAG    = ['-G:-TruffleBackgroundCompilation']
+NO_TRACE_FLAGS  = ['-G:-TraceTruffleInlining', '-G:-TraceTruffleCompilation']
+INTERP_FLAGS    = ['-Xint']
+
+JAVA_BIN  = 'jdk1.8.0_45/product/bin/java'
+JAVA_ARGS = ['-server', '-d64']
+
+java_bin = None
+if args.interpreter:
+    java_bin = "java"
+elif GRAAL_HOME:
+    java_bin = GRAAL_HOME + '/' + JAVA_BIN
+else:
+    for d in graal_locations:
+        if os.path.isdir(d):
+            java_bin = d + '/' + JAVA_BIN
+    if not java_bin:
+        print "Graal couldn't be found. Please set GRAAL_HOME"
+        sys.exit(1)
+
+SOM_ARGS = ['-Xbootclasspath/a:build/classes:libs/truffle/build/truffle-api.jar',
+            'som.VM', '--platform', 'core-lib/Platform.som']
+
+# == Hotspot -XX:CompileCommand=print,*::callRoot
+# Splitting
+# -G:+TruffleSplitting
+# -G:+TruffleSplittingNew
+
+# == Compiler Settings
+# -G:TruffleGraphMaxNodes=1500000
+# -G:TruffleInliningMaxCallerSize=10000
+# -G:TruffleInliningMaxCalleeSize=10000
+# -G:TruffleInliningTrivialSize=10000
+# -G:TruffleSplittingMaxCalleeSize=100000"
+
+if GRAAL_FLAGS:
+    flags = [GRAAL_FLAGS]
+else:
+    flags = []
+
+# Handle executable names
+if sys.argv[0].endswith('fast'):
+    args.assert_ = False
+    args.no_trace = True
+if sys.argv[0].endswith('debug'):
+    args.perf_warnings = True
+    args.background_compilation = False
+
+if args.debug:          flags += DBG_FLAGS
+if not args.interpreter and args.igv: flags += IGV_FLAGS
+if args.low_level:      flags += LOW_FLAGS
+if not args.interpreter and args.profile:        flags += PROFILE_FLAGS
+if not args.interpreter and args.perf_warnings:  flags += PERF_WARINGS_FLAGS
+if not args.interpreter and args.only_compile:   flags.append(ONLY_COMPILE % only_compile)
+if not args.interpreter and args.visual_vm:      flags += VISUAL_VM_FLAGS
+if args.assert_:        flags += ASSERT_FLAGS
+if not args.interpreter and not args.background_compilation: flags += BG_COMP_FLAG
+if not args.interpreter and args.no_compilation: flags.append(ONLY_COMPILE % '__FAKE_METHOD_NON_EXISTING__')
+if args.interpreter:    flags += INTERP_FLAGS
+if not args.interpreter and args.no_trace:       flags += NO_TRACE_FLAGS
+
+all_args = JAVA_ARGS + flags + SOM_ARGS + args.args
+
+if args.verbose:
+    print "CMD: " + java_bin + ' ' + ' '.join(all_args)
+
+os.execvp(java_bin, all_args)
