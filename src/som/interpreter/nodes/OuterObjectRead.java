@@ -1,6 +1,7 @@
 package som.interpreter.nodes;
 
 import som.compiler.MixinBuilder.MixinDefinitionId;
+import som.interpreter.objectstorage.ClassFactory;
 import som.vm.constants.KernelObj;
 import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithClass;
@@ -16,7 +17,7 @@ import com.oracle.truffle.api.utilities.ValueProfile;
 public abstract class OuterObjectRead
     extends ExpressionNode implements ISpecialSend {
 
-  protected static final int INLINE_CACHE_SIZE = 6;
+  protected static final int INLINE_CACHE_SIZE = 3;
 
   protected final int contextLevel;
   private final MixinDefinitionId mixinId;
@@ -53,6 +54,13 @@ public abstract class OuterObjectRead
     return lexicalClass;
   }
 
+  protected static final SClass getEnclosingClass(final SObjectWithClass rcvr,
+      final int superclassIdx) {
+    SClass lexicalClass = rcvr.getSOMClass().getClassCorrespondingTo(superclassIdx);
+    assert lexicalClass != null;
+    return lexicalClass;
+  }
+
   @Specialization(guards = "contextLevel == 0")
   public final Object doForOuterIsDirectClass(final SObjectWithClass receiver) {
     return enclosingObj.profile(receiver);
@@ -66,7 +74,18 @@ public abstract class OuterObjectRead
     return getEnclosingObject(receiver, lexicalClass);
   }
 
-  @Specialization(guards = "contextLevel != 0", contains = "doForFurtherOuter")
+  protected final int getIdx(final SObjectWithClass rcvr) {
+    return rcvr.getSOMClass().getIdxForClassCorrespondingTo(mixinId);
+  }
+
+  @Specialization(guards = {"contextLevel != 0", "getEnclosingClass(receiver, superclassIdx).getInstanceFactory() == factory"}, contains = "doForFurtherOuter")
+  public final Object fixedLookup(final SObjectWithClass receiver,
+      @Cached("getIdx(receiver)") final int superclassIdx,
+      @Cached("getEnclosingClass(receiver).getInstanceFactory()") final ClassFactory factory) {
+    return getEnclosingObject(receiver, getEnclosingClass(receiver, superclassIdx));
+  }
+
+  @Specialization(guards = {"contextLevel != 0"}, contains = "fixedLookup")
   public final Object fallback(final SObjectWithClass receiver) {
     return getEnclosingObject(receiver, getEnclosingClass(receiver));
   }

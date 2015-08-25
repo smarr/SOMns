@@ -40,6 +40,7 @@ import som.interpreter.objectstorage.ObjectLayout;
 import som.vm.constants.Classes;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
 
 
 // TODO: should we move more of that out of SClass and use the corresponding
@@ -147,6 +148,26 @@ public final class SClass extends SObjectWithClass {
       cls = cls.getSuperClass();
     }
     return cls;
+  }
+
+  @ExplodeLoop
+  public SClass getClassCorrespondingTo(final int superclassIdx) {
+    SClass cls = this;
+    for (int i = 0; i < superclassIdx; i++) {
+      cls = cls.getSuperClass();
+    }
+    return cls;
+  }
+
+  public int getIdxForClassCorrespondingTo(final MixinDefinitionId mixinId) {
+    VM.callerNeedsToBeOptimized("This should not be on the fast path, specialization/caching needed?");
+    SClass cls = this;
+    int i = 0;
+    while (cls != null && !cls.isBasedOn(mixinId)) {
+      cls = cls.getSuperClass();
+      i++;
+    }
+    return i;
   }
 
   public boolean canUnderstand(final SSymbol selector) {
