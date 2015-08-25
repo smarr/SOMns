@@ -110,6 +110,9 @@ public abstract class EventualMessage extends RecursiveAction {
 
   /** A message send after a promise got resolved. */
   public abstract static class PromiseMessage extends EventualMessage {
+    public static final int PROMISE_RCVR_IDX  = 0;
+    public static final int PROMISE_VALUE_IDX = 1;
+
     private static final long serialVersionUID = -6246726751425824082L;
 
     protected final Actor originalSender; // initial owner of the arguments
@@ -131,8 +134,8 @@ public abstract class EventualMessage extends RecursiveAction {
     private static final long serialVersionUID = 2637873418047151001L;
 
     private final SSymbol selector;
-    private Actor target;
-    private Actor finalSender;
+    protected Actor target;
+    protected Actor finalSender;
 
     protected PromiseSendMessage(final SSymbol selector,
         final Object[] arguments, final Actor originalSender,
