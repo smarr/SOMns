@@ -144,7 +144,7 @@ public class SPromise extends SObjectWithClass {
     if (resolved) {
       scheduleCallbacksOnResolution(value, msg);
     } else {
-      if (errored) { // short cut, this promise will never be resolved
+      if (isSomehowResolved()) { // short cut, this promise will never be resolved
         return;
       }
 
@@ -168,11 +168,11 @@ public class SPromise extends SObjectWithClass {
     if (errored) {
       scheduleCallbacksOnResolution(value, msg);
     } else {
-      if (resolved) { // short cut, this promise will never error, so, just return promise
+      if (isSomehowResolved()) { // short cut, this promise will never error, so, just return promise
         return;
       }
       if (onError == null) {
-        onError          = new ArrayList<>(1);
+        onError = new ArrayList<>(1);
       }
       onError.add(msg);
     }
