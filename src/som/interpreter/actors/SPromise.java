@@ -96,20 +96,22 @@ public class SPromise extends SObjectWithClass {
     promiseClass = cls;
   }
 
-  public final SPromise onError(final SBlock block, final RootCallTarget blockCallTarget) {
+  public final SPromise onError(final SBlock block,
+      final RootCallTarget blockCallTarget, final Actor current) {
     assert block.getMethod().getNumberOfArguments() == 2;
 
-    SPromise  promise  = createPromise(EventualMessage.getActorCurrentMessageIsExecutionOn());
+    SPromise  promise  = createPromise(current);
     SResolver resolver = createResolver(promise, "oE:block");
 
     PromiseCallbackMessage msg = new PromiseCallbackMessage(owner, block, resolver, blockCallTarget);
-    registerOnError(msg);
+    registerOnError(msg, current);
     return promise;
   }
 
-  public synchronized void registerWhenResolved(final PromiseMessage msg) {
+  public synchronized void registerWhenResolved(final PromiseMessage msg,
+      final Actor current) {
     if (resolved) {
-      scheduleCallbacksOnResolution(value, msg);
+      scheduleCallbacksOnResolution(value, msg, current);
     } else {
       if (errored) {
         // short cut on error, this promise will never error, so,
@@ -134,9 +136,10 @@ public class SPromise extends SObjectWithClass {
     whenResolvedExt.add(msg);
   }
 
-  public synchronized void registerOnError(final PromiseMessage msg) {
+  public synchronized void registerOnError(final PromiseMessage msg,
+      final Actor current) {
     if (errored) {
-      scheduleCallbacksOnResolution(value, msg);
+      scheduleCallbacksOnResolution(value, msg, current);
     } else {
       if (resolved) {
         // short cut on resolved, this promise will never error, so,
@@ -152,10 +155,10 @@ public class SPromise extends SObjectWithClass {
   }
 
   public final SPromise onException(final SClass exceptionClass,
-      final SBlock block, final RootCallTarget blockCallTarget) {
+      final SBlock block, final RootCallTarget blockCallTarget, final Actor current) {
     assert block.getMethod().getNumberOfArguments() == 2;
 
-    SPromise  promise  = createPromise(EventualMessage.getActorCurrentMessageIsExecutionOn());
+    SPromise  promise  = createPromise(current);
     SResolver resolver = createResolver(promise, "oEx:class:block");
 
     PromiseCallbackMessage msg = new PromiseCallbackMessage(owner, block, resolver, blockCallTarget);
@@ -164,7 +167,7 @@ public class SPromise extends SObjectWithClass {
       if (errored) {
         if (value instanceof SAbstractObject) {
           if (((SAbstractObject) value).getSOMClass() == exceptionClass) {
-            scheduleCallbacksOnResolution(value, msg);
+            scheduleCallbacksOnResolution(value, msg, current);
           }
         }
       } else {
@@ -183,13 +186,13 @@ public class SPromise extends SObjectWithClass {
   }
 
   protected final void scheduleCallbacksOnResolution(final Object result,
-      final PromiseMessage msg) {
+      final PromiseMessage msg, final Actor current) {
     // when a promise is resolved, we need to schedule all the
     // #whenResolved:/#onError:/... callbacks msgs as well as all eventual send
     // msgs to the promise
 
     assert owner != null;
-    msg.resolve(result, owner, EventualMessage.getActorCurrentMessageIsExecutionOn());
+    msg.resolve(result, owner, current);
     msg.getTarget().enqueueMessage(msg);
   }
 
@@ -311,57 +314,58 @@ public class SPromise extends SObjectWithClass {
     // TODO: solve the TODO and then remove the TruffleBoundary, this might even need to go into a node
     @TruffleBoundary
     protected static void resolveChainedPromises(final SPromise promise,
-        final Object result) {
+        final Object result, final Actor current) {
       // TODO: we should change the implementation of chained promises to
       //       always move all the handlers to the other promise, then we
       //       don't need to worry about traversing the chain, which can
       //       lead to a stack overflow.
       // TODO: restore 10000 as parameter in testAsyncDeeplyChainedResolution
       if (promise.chainedPromise != null) {
-        Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
         Object wrapped = promise.chainedPromise.owner.wrapForUse(result, current);
-        resolveAndTriggerListeners(result, wrapped, promise.chainedPromise);
-        resolveMoreChainedPromises(promise, result);
+        resolveAndTriggerListeners(result, wrapped, promise.chainedPromise, current);
+        resolveMoreChainedPromises(promise, result, current);
       }
     }
 
     @TruffleBoundary
-    private static void resolveMoreChainedPromises(final SPromise promise, final Object result) {
+    private static void resolveMoreChainedPromises(final SPromise promise,
+        final Object result, final Actor current) {
       if (promise.chainedPromiseExt != null) {
-        Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
 
         for (SPromise p : promise.chainedPromiseExt) {
           Object wrapped = p.owner.wrapForUse(result, current);
-          resolveAndTriggerListeners(result, wrapped, p);
+          resolveAndTriggerListeners(result, wrapped, p, current);
         }
       }
     }
 
     protected static void resolveAndTriggerListeners(final Object result,
-        final Object wrapped, final SPromise p) {
+        final Object wrapped, final SPromise p, final Actor current) {
       assert !(result instanceof SPromise);
 
       synchronized (p) {
         p.value = wrapped;
         p.resolved = true;
-        scheduleAll(p, result);
-        resolveChainedPromises(p, result);
+        scheduleAll(p, result, current);
+        resolveChainedPromises(p, result, current);
       }
     }
 
-    protected static void scheduleAll(final SPromise promise, final Object result) {
+    protected static void scheduleAll(final SPromise promise,
+        final Object result, final Actor current) {
       if (promise.whenResolved != null) {
-        promise.scheduleCallbacksOnResolution(result, promise.whenResolved);
-        scheduleExtensions(promise, result);
+        promise.scheduleCallbacksOnResolution(result, promise.whenResolved, current);
+        scheduleExtensions(promise, result, current);
       }
     }
 
     @TruffleBoundary
-    private static void scheduleExtensions(final SPromise promise, final Object result) {
+    private static void scheduleExtensions(final SPromise promise,
+        final Object result, final Actor current) {
       if (promise.whenResolvedExt != null) {
         for (int i = 0; i < promise.whenResolvedExt.size(); i++) {
           PromiseMessage callbackOrMsg = promise.whenResolvedExt.get(i);
-          promise.scheduleCallbacksOnResolution(result, callbackOrMsg);
+          promise.scheduleCallbacksOnResolution(result, callbackOrMsg, current);
         }
       }
     }

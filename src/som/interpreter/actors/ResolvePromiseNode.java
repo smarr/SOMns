@@ -53,7 +53,7 @@ public abstract class ResolvePromiseNode extends BinaryExpressionNode {
     Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
     Object wrapped = wrapper.execute(result, promise.owner, current);
 
-    SResolver.resolveAndTriggerListeners(result, wrapped, promise);
+    SResolver.resolveAndTriggerListeners(result, wrapped, promise, current);
     return resolver;
   }
 }

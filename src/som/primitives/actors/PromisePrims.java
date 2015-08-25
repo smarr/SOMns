@@ -1,6 +1,7 @@
 package som.primitives.actors;
 
 import som.compiler.AccessModifier;
+import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.EventualMessage.PromiseCallbackMessage;
 import som.interpreter.actors.ReceivedMessage.ReceivedCallback;
@@ -79,12 +80,13 @@ public final class PromisePrims {
         final SBlock block, final RootCallTarget blockCallTarget) {
       assert block.getMethod().getNumberOfArguments() == 2;
 
-      SPromise  promise  = SPromise.createPromise(EventualMessage.getActorCurrentMessageIsExecutionOn());
+      Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
+      SPromise  promise  = SPromise.createPromise(current);
       SResolver resolver = SPromise.createResolver(promise, "wR:block");
 
       PromiseCallbackMessage msg = new PromiseCallbackMessage(rcvr.getOwner(),
           block, resolver, blockCallTarget);
-      rcvr.registerWhenResolved(msg);
+      rcvr.registerWhenResolved(msg, current);
 
       return promise;
     }
@@ -108,7 +110,8 @@ public final class PromisePrims {
         final SBlock callback,
         @Cached("callback.getMethod()") final SInvokable blockMethod,
         @Cached("createReceived(callback)") final RootCallTarget blockCallTarget) {
-      return promise.onError(callback, blockCallTarget);
+      Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
+      return promise.onError(callback, blockCallTarget, current);
     }
   }
 
@@ -121,7 +124,8 @@ public final class PromisePrims {
         final SClass exceptionClass, final SBlock callback,
         @Cached("callback.getMethod()") final SInvokable blockMethod,
         @Cached("createReceived(callback)") final RootCallTarget blockCallTarget) {
-      return promise.onException(exceptionClass, callback, blockCallTarget);
+      Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
+      return promise.onException(exceptionClass, callback, blockCallTarget, current);
     }
   }
 
@@ -145,15 +149,16 @@ public final class PromisePrims {
       assert resolved.getMethod().getNumberOfArguments() == 2;
       assert error.getMethod().getNumberOfArguments() == 2;
 
-      SPromise  promise  = SPromise.createPromise(EventualMessage.getActorCurrentMessageIsExecutionOn());
+      Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
+      SPromise  promise  = SPromise.createPromise(current);
       SResolver resolver = SPromise.createResolver(promise, "wROE:block:block");
 
       PromiseCallbackMessage onResolved = new PromiseCallbackMessage(rcvr.getOwner(), resolved, resolver, resolverTarget);
       PromiseCallbackMessage onError    = new PromiseCallbackMessage(rcvr.getOwner(), error, resolver, errorTarget);
 
       synchronized (rcvr) {
-        rcvr.registerWhenResolved(onResolved);
-        rcvr.registerOnError(onError);
+        rcvr.registerWhenResolved(onResolved, current);
+        rcvr.registerOnError(onError, current);
       }
       return promise;
     }

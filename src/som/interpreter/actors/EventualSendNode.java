@@ -143,7 +143,7 @@ public abstract class EventualSendNode extends ExpressionNode {
       final SResolver resolver) {
     assert rcvr.getOwner() == EventualMessage.getActorCurrentMessageIsExecutionOn() : "think this should be true because the promise is an Object and owned by this specific actor";
     PromiseSendMessage msg = new PromiseSendMessage(selector, args, rcvr.getOwner(), resolver, onReceive);
-    rcvr.registerWhenResolved(msg);
+    rcvr.registerWhenResolved(msg, rcvr.getOwner());
   }
 
   @Specialization(guards = {"isResultUsed()", "!isFarRefRcvr(args)", "!isPromiseRcvr(args)"})
