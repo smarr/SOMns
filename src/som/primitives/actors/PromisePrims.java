@@ -91,7 +91,12 @@ public final class PromisePrims {
   }
 
   // TODO: should we add this for the literal case? which should be very common?
-
+  public abstract static class WhenResolvedLiteralBlockNode extends BinaryExpressionNode {
+    private final RootCallTarget blockCallTarget;
+    public WhenResolvedLiteralBlockNode(final BlockNode blockNode) {
+      blockCallTarget = blockNode.getBlockMethod().getCallTarget();
+    }
+  }
 
   // TODO: should I add a literal version of OnErrorPrim??
   @GenerateNodeFactory
