@@ -127,7 +127,7 @@ public final class ObjectPrims {
 
     @Specialization
     public final boolean isValue(final SMutableObject rcvr) {
-      return rcvr.isValue();
+      return false;
     }
 
     @Specialization
