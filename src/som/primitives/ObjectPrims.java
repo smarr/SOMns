@@ -7,6 +7,7 @@ import som.interpreter.Types;
 import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.SResolver;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.primitives.ObjectPrimsFactory.IsValueFactory;
 import som.vm.constants.Nil;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray;
@@ -17,6 +18,7 @@ import som.vmobjects.SObject.SMutableObject;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -80,6 +82,10 @@ public final class ObjectPrims {
   public abstract static class IsValue extends UnaryExpressionNode {
     public abstract boolean executeEvaluated(Object rcvr);
 
+    public static IsValue createSubNode() {
+      return IsValueFactory.create(null);
+    }
+
     @Specialization
     public final boolean isValue(final boolean rcvr) {
       return true;
@@ -121,8 +127,9 @@ public final class ObjectPrims {
     }
 
     @Specialization
-    public final boolean isValue(final SClass rcvr) {
-      return rcvr.isValue();
+    public final boolean isValue(final SClass rcvr,
+        @Cached("createSubNode()") final IsValue enclosingObj) {
+      return enclosingObj.executeEvaluated(rcvr.getEnclosingObject());
     }
 
     @Specialization
@@ -147,7 +154,7 @@ public final class ObjectPrims {
 
     @Specialization
     public final boolean isValue(final SObjectWithoutFields rcvr) {
-      return rcvr.isValue();
+      return rcvr.getSOMClass().declaredAsValue();
     }
 
     @Specialization
