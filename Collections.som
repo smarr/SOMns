@@ -138,9 +138,9 @@ class Collections usingKernel: kernel = Value (
     public at: aKey put: aValue = (
       | pair |
       pair := self pairAt: aKey.
-      pair
-        ifNil:    [ pairs add: (Pair withKey: aKey andValue: aValue) ]
-        ifNotNil: [:p | p value: aValue ]
+      pair isNil
+        ifTrue:  [ pairs add: (Pair withKey: aKey andValue: aValue) ]
+        ifFalse: [ pair value: aValue ]
     )
 
     public at: aKey = (
