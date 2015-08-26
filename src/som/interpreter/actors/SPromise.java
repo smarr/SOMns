@@ -19,6 +19,10 @@ import com.sun.istack.internal.NotNull;
 
 
 public class SPromise extends SObjectWithClass {
+  private enum Resolution {
+    UNRESOLVED, ERRORNOUS, SUCCESSFUL, CHAINED
+  }
+
   @CompilationFinal private static SClass promiseClass;
 
   public static SPromise createPromise(final Actor owner) {
@@ -50,9 +54,7 @@ public class SPromise extends SObjectWithClass {
   protected ArrayList<SPromise>  chainedPromiseExt;
 
   protected Object  value;
-  protected boolean resolved;
-  protected boolean errored;
-  protected boolean chained;
+  protected Resolution resolutionState;
 
   // the owner of this promise, on which all call backs are scheduled
   protected final Actor owner;
@@ -62,23 +64,14 @@ public class SPromise extends SObjectWithClass {
     assert owner != null;
     this.owner = owner;
 
-    resolved = false;
+    resolutionState = Resolution.UNRESOLVED;
     assert promiseClass != null;
   }
 
   @Override
   public String toString() {
     String r = "Promise[" + owner.toString();
-    if (resolved) {
-      r += ", resolved";
-    } else if (errored) {
-      r += ", errored";
-    } else if (chained) {
-      assert chained;
-      r += ", chained";
-    } else {
-      r += ", unresolved";
-    }
+    r += ", " + resolutionState.name();
     return r + (value == null ? "" : ", " + value.toString()) + "]";
   }
 
@@ -126,10 +119,10 @@ public class SPromise extends SObjectWithClass {
 
   public synchronized void registerOnError(final PromiseMessage msg,
       final Actor current) {
-    if (errored) {
+    if (resolutionState == Resolution.ERRORNOUS) {
       scheduleCallbacksOnResolution(value, msg, current);
     } else {
-      if (resolved) {
+      if (resolutionState == Resolution.SUCCESSFUL) {
         // short cut on resolved, this promise will never error, so,
         // just return promise, don't use isSomehowResolved(), because the other
         // case are not correct
@@ -152,14 +145,14 @@ public class SPromise extends SObjectWithClass {
     PromiseCallbackMessage msg = new PromiseCallbackMessage(owner, block, resolver, blockCallTarget);
 
     synchronized (this) {
-      if (errored) {
+      if (resolutionState == Resolution.ERRORNOUS) {
         if (value instanceof SAbstractObject) {
           if (((SAbstractObject) value).getSOMClass() == exceptionClass) {
             scheduleCallbacksOnResolution(value, msg, current);
           }
         }
       } else {
-        if (resolved) { // short cut, this promise will never error, so, just return promise
+        if (resolutionState == Resolution.SUCCESSFUL) { // short cut, this promise will never error, so, just return promise
           return promise;
         }
         if (onException == null) {
@@ -186,7 +179,7 @@ public class SPromise extends SObjectWithClass {
 
   public final synchronized void addChainedPromise(@NotNull final SPromise promise) {
     assert promise != null;
-    promise.chained = true;
+    promise.resolutionState = Resolution.CHAINED;
 
     if (chainedPromise == null) {
       chainedPromise = promise;
@@ -204,21 +197,17 @@ public class SPromise extends SObjectWithClass {
   }
 
   public final synchronized boolean isSomehowResolved() {
-    return resolved || errored || chained;
-  }
-
-  public final synchronized boolean isResolved() {
-    return resolved;
+    return resolutionState != Resolution.UNRESOLVED;
   }
 
   /** Internal Helper, only to be used properly synchronized. */
   final boolean isResolvedUnsync() {
-    return resolved;
+    return resolutionState == Resolution.SUCCESSFUL;
   }
 
   /** Internal Helper, only to be used properly synchronized. */
   final boolean isErroredUnsync() {
-    return errored;
+    return resolutionState == Resolution.ERRORNOUS;
   }
 
   /** Internal Helper, only to be used properly synchronized. */
@@ -228,10 +217,8 @@ public class SPromise extends SObjectWithClass {
 
   /** REM: this method needs to be used with self synchronized. */
   final void copyValueToRemotePromise(final SPromise remote) {
-    remote.value    = value;
-    remote.resolved = resolved;
-    remote.errored  = errored;
-    remote.chained  = chained;
+    remote.value = value;
+    remote.resolutionState = resolutionState;
   }
 
   protected static final class SDebugPromise extends SPromise {
@@ -247,16 +234,7 @@ public class SPromise extends SObjectWithClass {
     @Override
     public String toString() {
       String r = "Promise[" + owner.toString();
-      if (resolved) {
-        r += ", resolved";
-      } else if (errored) {
-        r += ", errored";
-      } else if (chained) {
-        assert chained;
-        r += ", chained";
-      } else {
-        r += ", unresolved";
-      }
+      r += ", " + resolutionState.name();
       return r + (value == null ? "" : ", " + value.toString()) + ", id:" + id + "]";
     }
   }
@@ -348,7 +326,7 @@ public class SPromise extends SObjectWithClass {
 
       synchronized (p) {
         p.value = wrapped;
-        p.resolved = true;
+        p.resolutionState = Resolution.SUCCESSFUL;
         scheduleAll(p, result, current);
         resolveChainedPromises(p, result, current);
       }
