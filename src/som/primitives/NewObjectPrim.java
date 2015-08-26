@@ -37,9 +37,10 @@ public abstract class NewObjectPrim extends UnaryExpressionNode implements ISpec
   @Override
   public boolean isSuperSend() { return false; }
 
-  @Specialization(guards = {"receiver.hasFields()",
-      "receiver.hasOnlyImmutableFields()",
+  @Specialization(guards = {
       "receiver.getInstanceFactory() == factory",
+      "factory.hasSlots()",
+      "factory.hasOnlyImmutableFields()",
       "receiver.getInstanceFactory().getInstanceLayout() == layout"})
   public final SAbstractObject doClassWithOnlyImmutableFields(final SClass receiver,
       @Cached("receiver.getInstanceFactory()") final ClassFactory factory,
@@ -47,9 +48,10 @@ public abstract class NewObjectPrim extends UnaryExpressionNode implements ISpec
     return new SImmutableObject(receiver, factory, layout);
   }
 
-  @Specialization(guards = {"receiver.hasFields()",
-      "!receiver.hasOnlyImmutableFields()",
+  @Specialization(guards = {
       "receiver.getInstanceFactory() == factory",
+      "factory.hasSlots()",
+      "!factory.hasOnlyImmutableFields()",
       "receiver.getInstanceFactory().getInstanceLayout() == layout"})
   public final SAbstractObject doClassWithFields(
       final SClass receiver,
@@ -58,8 +60,9 @@ public abstract class NewObjectPrim extends UnaryExpressionNode implements ISpec
     return new SMutableObject(receiver, factory, layout);
   }
 
-  @Specialization(guards = {"!receiver.hasFields()",
-      "receiver.getInstanceFactory() == factory"})
+  @Specialization(guards = {
+      "receiver.getInstanceFactory() == factory",
+      "!factory.hasSlots()"})
   public final SAbstractObject doClassWithoutFields(final SClass receiver,
       @Cached("receiver.getInstanceFactory()") final ClassFactory factory) {
     return new SObjectWithoutFields(receiver, factory);
@@ -67,8 +70,9 @@ public abstract class NewObjectPrim extends UnaryExpressionNode implements ISpec
 
   @Fallback
   public final SAbstractObject fallback(final SClass receiver) {
-    if (receiver.hasFields()) {
-      if (receiver.hasOnlyImmutableFields()) {
+    ClassFactory factory = receiver.getInstanceFactory();
+    if (factory.hasSlots()) {
+      if (factory.hasOnlyImmutableFields()) {
         return doClassWithOnlyImmutableFields(receiver, receiver.getInstanceFactory(), receiver.getInstanceFactory().getInstanceLayout());
       } else {
         return doClassWithFields(receiver, receiver.getInstanceFactory(), receiver.getInstanceFactory().getInstanceLayout());

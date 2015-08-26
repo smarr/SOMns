@@ -85,9 +85,17 @@ public final class ClassFactory {
     return instanceLayout;
   }
 
+  public boolean hasSlots() {
+    return instanceSlots != null;
+  }
+
+  public boolean hasOnlyImmutableFields() {
+    return hasOnlyImmutableFields;
+  }
+
   public void initializeClass(final SClass result) {
     result.initializeClass(className, superclassAndMixins[0]);
-    result.initializeStructure(mixinDef, instanceSlots, hasOnlyImmutableFields,
+    result.initializeStructure(mixinDef, instanceSlots,
         dispatchables, isValueClass, this);
     initializeClassClass(result);
   }
@@ -97,7 +105,7 @@ public final class ClassFactory {
     if (result.getSOMClass() != null) {
       SClass classClass = result.getSOMClass();
       classClass.initializeClass(classClassName, Classes.classClass);
-      classClass.initializeStructure(mixinDef, null, true, classScope.getDispatchables(), isModule, null);
+      classClass.initializeStructure(mixinDef, null, classScope.getDispatchables(), isModule, null);
     }
   }
 

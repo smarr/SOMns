@@ -55,8 +55,6 @@ public final class SClass extends SObjectWithClass {
   @CompilationFinal private HashSet<SlotDefinition> slots; // includes slots of super classes and mixins
 
   @CompilationFinal private MixinDefinition mixinDef;
-  @CompilationFinal private boolean hasFields;
-  @CompilationFinal private boolean hasOnlyImmutableFields;
   @CompilationFinal private boolean declaredAsValue;
 
   @CompilationFinal private ClassFactory instanceClassGroup; // the factory for this object
@@ -117,15 +115,13 @@ public final class SClass extends SObjectWithClass {
   }
 
   public void initializeStructure(final MixinDefinition mixinDef,
-      final HashSet<SlotDefinition> slots, final boolean hasOnlyImmutableFields,
+      final HashSet<SlotDefinition> slots,
       final HashMap<SSymbol, Dispatchable> dispatchables,
       final boolean declaredAsValue, final ClassFactory classFactory) {
     assert slots == null || slots.size() > 0;
 
     this.mixinDef  = mixinDef;
     this.slots     = slots;
-    this.hasFields = slots != null;
-    this.hasOnlyImmutableFields = hasOnlyImmutableFields;
     this.dispatchables   = dispatchables;
     this.declaredAsValue = declaredAsValue;
     this.instanceClassGroup = classFactory;
@@ -226,14 +222,6 @@ public final class SClass extends SObjectWithClass {
     } else {
       return superclass.lookupMessage(selector, hasAtLeast);
     }
-  }
-
-  public boolean hasFields() {
-    return hasFields;
-  }
-
-  public boolean hasOnlyImmutableFields() {
-    return hasOnlyImmutableFields;
   }
 
   @Override
