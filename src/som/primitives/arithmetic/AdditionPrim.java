@@ -6,6 +6,7 @@ import som.primitives.Primitive;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.ExactMath;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -36,16 +37,19 @@ public abstract class AdditionPrim extends ArithmeticPrim {
   }
 
   @Specialization
+  @TruffleBoundary
   public final String doString(final String left, final String right) {
     return left + right;
   }
 
   @Specialization
+  @TruffleBoundary
   public final String doSSymbol(final SSymbol left, final SSymbol right) {
     return left.getString() + right.getString();
   }
 
   @Specialization
+  @TruffleBoundary
   public final String doSSymbol(final SSymbol left, final String right) {
     return left.getString() + right;
   }
@@ -71,16 +75,19 @@ public abstract class AdditionPrim extends ArithmeticPrim {
   }
 
   @Specialization
+  @TruffleBoundary
   public final String doString(final String left, final long right) {
     return left + right;
   }
 
   @Specialization
+  @TruffleBoundary
   public final String doString(final String left, final SClass right) {
     return left + right.getName().getString();
   }
 
   @Specialization
+  @TruffleBoundary
   public final String doString(final String left, final SSymbol right) {
     return left + right.getString();
   }
