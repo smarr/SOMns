@@ -94,7 +94,7 @@ class Harness usingPlatform: platform = (
       public numIterations   ::= 1.
       public warmUp          ::= 0.
       public innerIterations ::= 1.
-      public maxRuntime      ::= nil.
+      public maxRuntime      ::= 0.
       public printAll        ::= true.
       public numThreads      ::= 1.
       public benchmarkSuite  ::= nil.
@@ -164,7 +164,7 @@ class Harness usingPlatform: platform = (
 
       numIterations := warmUp.
       printAll      := false.
-      maxRuntime    := nil.
+      maxRuntime    := 0.
 
       ' warmup ...' print.
       self doRuns: bench.
@@ -194,7 +194,7 @@ class Harness usingPlatform: platform = (
         total := total + runTime.
         i := i + 1.
     
-        maxRuntime ifNotNil: [
+        maxRuntime > 0 ifTrue: [
           total > maxRuntime ifTrue: [
             numIterations := i.
             ^ total ]].
