@@ -96,7 +96,6 @@ class Harness usingPlatform: platform = (
       public innerIterations ::= 1.
       public maxRuntime      ::= 0.
       public printAll        ::= true.
-      public numThreads      ::= 1.
       public benchmarkSuite  ::= nil.
       public name            ::= nil.
     |
@@ -109,47 +108,10 @@ class Harness usingPlatform: platform = (
       ('Starting ' + name + ' benchmark ... ') print.
 
       self doWarmup: warmupBench.
-
-      numThreads = 1
-        ifTrue:  [ result := self doRunsSequential ]
-        ifFalse: [ result := self doRunsParallel   ].
-          
-      total := total + result.
+      self doRuns: benchmarkSuite newInstance.
+      self reportBenchmark.
       
       '' println
-    )
-    
-    doRunsSequential = (
-      | result bench |
-      bench := benchmarkSuite newInstance.
-      result := self doRuns: bench.
-      self reportBenchmark: bench result: result. 
-      ^ result
-    )
-    
-    doRunsParallel = (
-      | threads results |
-      threads := Array new: numThreads.
-      results := Array new: numThreads withAll: 0.
-      
-      1 to: numThreads do: [:i |
-        | args |
-        (* use arguments array to make sure there are no races *)
-        args := Array with: i with: results. 
-        
-        threads at: i put: ([:anI :theResults |
-          | result bench |
-          bench := benchmarkSuite newInstance.
-          result := self doRuns: bench.
-          self reportBenchmark: bench result: result.
-          theResults at: anI put: result.] spawn: args).
-      ].
-      
-      1 to: numThreads do: [:i |
-        (threads at: i) join
-      ].
-      
-      ^ results sum
     )
     
     doWarmup: bench = (
@@ -174,47 +136,37 @@ class Harness usingPlatform: platform = (
       maxRuntime    := maxRuntimeTmp.
 
       ' completed.' println.
+      total := 0.
+    )
+    
+    private measure: bench = (
+      | startTime endTime runTime |
+      startTime := system ticks.
+      (bench innerBenchmarkLoop: innerIterations) ifFalse: [
+        self error: 'Benchmark failed with incorrect result'. ].
+      endTime := system ticks.
+  
+      runTime := endTime - startTime.
+      printAll ifTrue: [ self print: bench run: runTime ].
+  
+      total := total + runTime.
     )
     
     doRuns: bench = (
-      | i total |
-      i := 0.
-      total := 0.
-  
-      [ i < numIterations ] whileTrue: [
-        | startTime endTime runTime |
-        startTime := system ticks.
-        (bench innerBenchmarkLoop: innerIterations) ifFalse: [
-          self error: 'Benchmark failed with incorrect result'. ].
-        endTime := system ticks.
-    
-        runTime := endTime - startTime.
-        printAll ifTrue: [ self print: bench run: runTime ].
-    
-        total := total + runTime.
-        i := i + 1.
+      1 to: numIterations do: [:i |
+        self measure: bench.
     
         maxRuntime > 0 ifTrue: [
           total > maxRuntime ifTrue: [
             numIterations := i.
-            ^ total ]].
+            ^ self ]].
         ].
-  
-      ^ total
     )
     
-    reportBenchmark: bench result: result = (
-      | out |
-      out :=  name.
-      out := out + ': iterations='.
-      out := out + numIterations.
-      out := out + ' average: '.
-      out := out + (result / numIterations * numThreads).
-      out := out + 'us'.
-      out := out + ' total: '.
-      out := out + result.
-      out := out + 'us\n'.
-      out println.
+    reportBenchmark = (
+      (name + ': iterations=' + numIterations + 
+       ' average: ' + (total / numIterations) + 'us total: ' + total + 
+       'us\n') println.
     )
      
     print: bench run: runTime = (
@@ -236,9 +188,7 @@ class Harness usingPlatform: platform = (
         run warmUp: (args at: 4) asInteger.
         args size > 4 ifTrue: [
           run innerIterations: (args at: 5) asInteger.
-          args size > 5 ifTrue: [
-            run numThreads: (args at: 6) asInteger.
-    ] ] ] ]
+    ] ] ]
   )
 
   public main: args = (
@@ -262,7 +212,6 @@ class Harness usingPlatform: platform = (
     '  warm-up        - number of times to execute benchmark before measuring, default: 0' println.
     '  inner-iter     - number of times the benchmark is executed in an inner loop, ' println.
     '                   which is measured in total, default: 1' println.
-    '  num-threads    - number of threads executing, each doing num-iterations, default: 1' println.
   )
 
   loadModule: className = (
