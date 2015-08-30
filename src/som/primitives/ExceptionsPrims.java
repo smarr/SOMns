@@ -1,12 +1,11 @@
 package som.primitives;
 
 import som.interpreter.SomException;
-import som.interpreter.nodes.dispatch.AbstractDispatchNode;
-import som.interpreter.nodes.dispatch.UninitializedValuePrimDispatchNode;
+import som.interpreter.nodes.dispatch.BlockDispatchNode;
+import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
-import som.primitives.BlockPrims.ValuePrimitiveNode;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
@@ -19,7 +18,6 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
-import com.oracle.truffle.api.nodes.NodeCost;
 
 
 public abstract class ExceptionsPrims {
@@ -77,7 +75,6 @@ public abstract class ExceptionsPrims {
     }
   }
 
-
   @GenerateNodeFactory
   @Primitive("signalException:")
   public abstract static class SignalPrim extends UnaryExpressionNode {
@@ -89,10 +86,10 @@ public abstract class ExceptionsPrims {
 
   @GenerateNodeFactory
   @Primitive("exceptionDo:ensure:")
-  public abstract static class EnsurePrim extends BinaryExpressionNode implements ValuePrimitiveNode {
+  public abstract static class EnsurePrim extends BinaryExpressionNode {
 
-    @Child private AbstractDispatchNode dispatchBody    = new UninitializedValuePrimDispatchNode();
-    @Child private AbstractDispatchNode dispatchHandler = new UninitializedValuePrimDispatchNode();
+    @Child protected BlockDispatchNode dispatchBody    = BlockDispatchNodeGen.create();
+    @Child protected BlockDispatchNode dispatchHandler = BlockDispatchNodeGen.create();
 
     @Specialization
     public final Object doException(final VirtualFrame frame, final SBlock body,
@@ -104,28 +101,5 @@ public abstract class ExceptionsPrims {
             new Object[] {ensureHandler});
       }
     }
-
-    @Override
-    public final void adoptNewDispatchListHead(final AbstractDispatchNode node) {
-      throw new RuntimeException("This is not supported. Need to use a "
-          + "different way, perhaps the DSL instead. but the "
-          + "ValuePrimitiveNode interface doesn't work for two blocks.");
-    }
-
-    @Override
-    public NodeCost getCost() {
-      int dispatchChain = dispatchBody.lengthOfDispatchChain();
-      if (dispatchChain == 0) {
-        return NodeCost.UNINITIALIZED;
-      } else if (dispatchChain == 1) {
-        return NodeCost.MONOMORPHIC;
-      } else if (dispatchChain <= AbstractDispatchNode.INLINE_CACHE_SIZE) {
-        return NodeCost.POLYMORPHIC;
-      } else {
-        return NodeCost.MEGAMORPHIC;
-      }
-    }
   }
-
-
 }

@@ -1,6 +1,5 @@
 package som.primitives;
 
-import som.interpreter.nodes.dispatch.AbstractDispatchNode;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.QuaternaryExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
@@ -22,9 +21,6 @@ import com.oracle.truffle.api.nodes.IndirectCallNode;
 
 public abstract class BlockPrims {
 
-  public interface ValuePrimitiveNode {
-    void adoptNewDispatchListHead(final AbstractDispatchNode node);
-  }
 
   public static final int CHAIN_LENGTH = 6;
 
