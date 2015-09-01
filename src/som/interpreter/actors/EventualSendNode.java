@@ -11,7 +11,6 @@ import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
@@ -29,33 +28,42 @@ public abstract class EventualSendNode extends ExpressionNode {
     this.selector = selector;
   }
 
-  protected static final boolean markVmHasSendMessage() {
+  @Child protected RegisterWhenResolved registerNode = new RegisterWhenResolved();
+
+  @Specialization
+  public final SPromise send(final Object[] args) {
     // no arguments, should be compiled to assertion and only executed once
     if (CompilerDirectives.inInterpreter()) {
       VM.hasSendMessages();
     }
-    return true;
-  }
 
-  protected static final boolean isFarRefRcvr(final Object[] args) {
-    return args[0] instanceof SFarReference;
-  }
+    if (args[0] instanceof SFarReference) {
+      Actor owner = EventualMessage.getActorCurrentMessageIsExecutionOn();
 
-  protected static final boolean isPromiseRcvr(final Object[] args) {
-    return args[0] instanceof SPromise;
-  }
+      SPromise  result   = SPromise.createPromise(owner);
+      SResolver resolver = SPromise.createResolver(result, "eventualSend:", selector);
 
+      sendDirectMessage(args, owner, resolver);
 
-  @Specialization(guards = {"markVmHasSendMessage()", "isFarRefRcvr(args)"})
-  public final SPromise toFarRefWithResultPromise(final Object[] args) {
-    Actor owner = EventualMessage.getActorCurrentMessageIsExecutionOn();
+      return result;
+    } else if (args[0] instanceof SPromise) {
+      SPromise rcvr = (SPromise) args[0];
+      SPromise  promise  = SPromise.createPromise(EventualMessage.getActorCurrentMessageIsExecutionOn());
+      SResolver resolver = SPromise.createResolver(promise, "eventualSendToPromise:", selector);
 
-    SPromise  result   = SPromise.createPromise(owner);
-    SResolver resolver = SPromise.createResolver(result, "eventualSend:", selector);
+      sendPromiseMessage(args, rcvr, resolver, registerNode);
+      return promise;
+    } else {
+      Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
+      SPromise  result   = SPromise.createPromise(current);
+      SResolver resolver = SPromise.createResolver(result, "eventualSend:", selector);
 
-    sendDirectMessage(args, owner, resolver);
+      DirectMessage msg = new DirectMessage(current, selector, args, current,
+          resolver);
+      current.enqueueMessage(msg);
 
-    return result;
+      return result;
+    }
   }
 
   @ExplodeLoop
@@ -79,20 +87,6 @@ public abstract class EventualSendNode extends ExpressionNode {
     target.enqueueMessage(msg);
   }
 
-  protected static RegisterWhenResolved createRegisterNode() {
-    return new RegisterWhenResolved();
-  }
-
-  @Specialization(guards = {"isPromiseRcvr(args)"})
-  public final SPromise toPromiseWithResultPromise(final Object[] args,
-      @Cached("createRegisterNode()") final RegisterWhenResolved registerNode) {
-    SPromise rcvr = (SPromise) args[0];
-    SPromise  promise  = SPromise.createPromise(EventualMessage.getActorCurrentMessageIsExecutionOn());
-    SResolver resolver = SPromise.createResolver(promise, "eventualSendToPromise:", selector);
-
-    sendPromiseMessage(args, rcvr, resolver, registerNode);
-    return promise;
-  }
 
   private void sendPromiseMessage(final Object[] args, final SPromise rcvr,
       final SResolver resolver, final RegisterWhenResolved register) {
@@ -100,19 +94,6 @@ public abstract class EventualSendNode extends ExpressionNode {
     PromiseSendMessage msg = new PromiseSendMessage(selector, args, rcvr.getOwner(), resolver);
 
     register.register(rcvr, msg, rcvr.getOwner());
-  }
-
-  @Specialization(guards = {"!isFarRefRcvr(args)", "!isPromiseRcvr(args)"})
-  public final SPromise toNearRefWithResultPromise(final Object[] args) {
-    Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
-    SPromise  result   = SPromise.createPromise(current);
-    SResolver resolver = SPromise.createResolver(result, "eventualSend:", selector);
-
-    DirectMessage msg = new DirectMessage(current, selector, args, current,
-        resolver);
-    current.enqueueMessage(msg);
-
-    return result;
   }
 
   @Override
