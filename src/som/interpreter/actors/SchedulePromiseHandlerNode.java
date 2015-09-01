@@ -1,6 +1,5 @@
 package som.interpreter.actors;
 
-import som.VM;
 import som.interpreter.actors.EventualMessage.PromiseCallbackMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.interpreter.actors.EventualMessage.PromiseSendMessage;
@@ -19,19 +18,18 @@ public abstract class SchedulePromiseHandlerNode extends Node {
 
   @Specialization
   public final void schedule(final SPromise promise,
-      final PromiseCallbackMessage msg, final Actor current) {
+      final PromiseMessage message, final Actor current) {
     assert promise.getOwner() != null;
 
-    msg.args[PromiseMessage.PROMISE_VALUE_IDX] =
-        msg.originalSender.wrapForUse(promise.getValueUnsync(), current);
-    msg.originalSender.enqueueMessage(msg);
-  }
+    if (message instanceof PromiseCallbackMessage) {
+      PromiseCallbackMessage msg = (PromiseCallbackMessage) message;
+      msg.args[PromiseMessage.PROMISE_VALUE_IDX] =
+          msg.originalSender.wrapForUse(promise.getValueUnsync(), current);
+      msg.originalSender.enqueueMessage(msg);
+      return;
+    }
 
-  @Specialization
-  public final void schedule(final SPromise promise,
-      final PromiseSendMessage msg, final Actor current) {
-    VM.thisMethodNeedsToBeOptimized("Still needs to get out the extra cases and the wrapping");
-    assert promise.getOwner() != null;
+    PromiseSendMessage msg = (PromiseSendMessage) message;
 
     Actor finalTarget = promise.getOwner();
 
