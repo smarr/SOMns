@@ -30,11 +30,8 @@ class Harness usingPlatform: platform = (
 
   public class Benchmark = ()(
     public innerBenchmarkLoop: innerIterations = (
-      | i |
-      i := 0.
-      [ i < innerIterations ] whileTrue: [
+      1 to: innerIterations do: [:i |
         (self verifyResult: self benchmark) ifFalse: [ ^ false ].
-        i := i + 1.
       ].
       ^ true
     )
