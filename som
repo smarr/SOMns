@@ -32,7 +32,7 @@ parser.add_argument('-v', '--visual-vm', help='connect to VisualVM for profiling
                     dest='visual_vm', action='store_true', default=False)
 
 parser.add_argument('-A', '--no-assert', help='execute with assertions disabled',
-                    dest='assert_', action='store_false', default=True)
+                    dest='assert', action='store_false', default=True)
 parser.add_argument('-B', '--no-background', help='disable background compilation',
                     dest='background_compilation', action='store_false', default=True)
 parser.add_argument('-C', '--no-compilation', help='disable Truffle compilation',
@@ -52,25 +52,6 @@ parser.add_argument('-vv', '--verbose', action='store_true', default=False,
 parser.add_argument('args', nargs=argparse.REMAINDER,
                     help='arguments passed to SOMns')
 args = parser.parse_args()
-
-PERF_WARINGS_FLAGS = ['-G:+TruffleCompilationExceptionsAreFatal',
-                      '-G:+TraceTrufflePerformanceWarnings',
-                      '-G:+TraceTruffleCompilation',
-                      '-G:+TraceTruffleCompilationDetails',
-                      '-G:+TraceTruffleExpansionSource']
-DBG_FLAGS       = ['-Xdebug',
-                   '-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8000']
-IGV_FLAGS       = ['-G:Dump=Truffle,TruffleTree']
-PROFILE_FLAGS   = ['-XX:JVMCICounterSize=5000', '-G:+ProfileCompiledMethods',
-                   '-G:BenchmarkDynamicCounters=out,warmup,total']
-VISUAL_VM_FLAGS = ['-agentpath:/Users/smarr/Downloads/visualvm_138/profiler/lib/deployed/jdk16/mac/libprofilerinterface.jnilib=/Users/smarr/Downloads/visualvm_138/profiler/lib,5140']
-ASSERT_FLAGS    = ['-esa', '-ea']
-LOW_FLAGS       = ['-XX:+UnlockDiagnosticVMOptions', '-XX:+LogCompilation',
-                   '-XX:+TraceDeoptimization']
-ONLY_COMPILE    = "-G:TruffleCompileOnly=%s"
-BG_COMP_FLAG    = ['-G:-TruffleBackgroundCompilation']
-NO_TRACE_FLAGS  = ['-G:-TraceTruffleInlining', '-G:-TraceTruffleCompilation']
-INTERP_FLAGS    = ['-Xint']
 
 JAVA_BIN  = 'jdk1.8.0_45/product/bin/java'
 JAVA_ARGS = ['-server', '-d64']
@@ -110,25 +91,45 @@ else:
 
 # Handle executable names
 if sys.argv[0].endswith('fast'):
-    args.assert_ = False
+    args.assert = False
     args.no_trace = True
 if sys.argv[0].endswith('debug'):
     args.perf_warnings = True
     args.background_compilation = False
 
-if args.debug:          flags += DBG_FLAGS
-if not args.interpreter and args.igv: flags += IGV_FLAGS
-if args.low_level:      flags += LOW_FLAGS
-if not args.interpreter and args.profile:        flags += PROFILE_FLAGS
-if not args.interpreter and args.perf_warnings:  flags += PERF_WARINGS_FLAGS
-if not args.interpreter and args.only_compile:   flags.append(ONLY_COMPILE % only_compile)
-if not args.interpreter and args.visual_vm:      flags += VISUAL_VM_FLAGS
-if args.assert_:        flags += ASSERT_FLAGS
-if not args.interpreter and not args.background_compilation: flags += BG_COMP_FLAG
-if not args.interpreter and args.no_compilation: flags.append(ONLY_COMPILE % '__FAKE_METHOD_NON_EXISTING__')
-if args.interpreter:    flags += INTERP_FLAGS
-if not args.interpreter and args.no_trace:       flags += NO_TRACE_FLAGS
-if not args.interpreter and not args.graph_pe:   flags += ['-G:-GraphPE']
+if args.debug:
+    flags += ['-Xdebug',
+              '-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8000']
+if not args.interpreter and args.igv:
+    flags += ['-G:Dump=Truffle,TruffleTree']
+if args.low_level:
+    flags += ['-XX:+UnlockDiagnosticVMOptions', '-XX:+LogCompilation',
+              '-XX:+TraceDeoptimization']
+if not args.interpreter and args.profile:
+    flags += ['-XX:JVMCICounterSize=5000', '-G:+ProfileCompiledMethods',
+              '-G:BenchmarkDynamicCounters=out,warmup,total']
+if not args.interpreter and args.perf_warnings:
+    flags += ['-G:+TruffleCompilationExceptionsAreFatal',
+              '-G:+TraceTrufflePerformanceWarnings',
+              '-G:+TraceTruffleCompilation',
+              '-G:+TraceTruffleCompilationDetails',
+              '-G:+TraceTruffleExpansionSource']
+if not args.interpreter and args.only_compile:
+    flags.append("-G:TruffleCompileOnly=%s" % only_compile)
+if not args.interpreter and args.visual_vm:
+    flags += ['-agentpath:/Users/smarr/Downloads/visualvm_138/profiler/lib/deployed/jdk16/mac/libprofilerinterface.jnilib=/Users/smarr/Downloads/visualvm_138/profiler/lib,5140']
+if args.assert:
+    flags += ['-esa', '-ea']
+if not args.interpreter and not args.background_compilation:
+    flags += ['-G:-TruffleBackgroundCompilation']
+if not args.interpreter and args.no_compilation:
+    flags.append(ONLY_COMPILE % '__FAKE_METHOD_NON_EXISTING__')
+if args.interpreter:
+    flags += ['-Xint']
+if not args.interpreter and args.no_trace:
+    flags += ['-G:-TraceTruffleInlining', '-G:-TraceTruffleCompilation']
+if not args.interpreter and not args.graph_pe:
+    flags += ['-G:-GraphPE']
 
 all_args = JAVA_ARGS + flags + SOM_ARGS + args.args
 
