@@ -5,7 +5,6 @@ import som.interpreter.actors.EventualMessage.PromiseCallbackMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.interpreter.actors.EventualMessage.PromiseSendMessage;
 
-import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.Node;
 
@@ -16,34 +15,27 @@ import com.oracle.truffle.api.nodes.Node;
  */
 public abstract class SchedulePromiseHandlerNode extends Node {
 
-  protected static final WrapReferenceNode createWrapper() {
-    return WrapReferenceNodeGen.create();
-  }
-
   public abstract void execute(final SPromise promise, final PromiseMessage msg, final Actor current);
 
   @Specialization
   public final void schedule(final SPromise promise,
-      final PromiseCallbackMessage msg, final Actor current,
-      @Cached("createWrapper()") final WrapReferenceNode wrapper) {
+      final PromiseCallbackMessage msg, final Actor current) {
     assert promise.getOwner() != null;
 
-    msg.args[PromiseMessage.PROMISE_VALUE_IDX] = wrapper.execute(
-        promise.getValueUnsync(), msg.originalSender, current);
+    msg.args[PromiseMessage.PROMISE_VALUE_IDX] =
+        msg.originalSender.wrapForUse(promise.getValueUnsync(), current);
     msg.originalSender.enqueueMessage(msg);
   }
 
   @Specialization
   public final void schedule(final SPromise promise,
-      final PromiseSendMessage msg, final Actor current,
-      @Cached("createWrapper()") final WrapReferenceNode rcvrWrapper) {
+      final PromiseSendMessage msg, final Actor current) {
     VM.thisMethodNeedsToBeOptimized("Still needs to get out the extra cases and the wrapping");
     assert promise.getOwner() != null;
 
     Actor finalTarget = promise.getOwner();
 
-    Object receiver = rcvrWrapper.execute(promise.getValueUnsync(),
-        finalTarget, current);
+    Object receiver = finalTarget.wrapForUse(promise.getValueUnsync(), current);
     assert !(receiver instanceof SPromise) : "TODO: handle this case as well?? Is it possible? didn't think about it";
 
     // TODO: might want to handle that in a specialization

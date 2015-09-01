@@ -30,7 +30,6 @@ public abstract class EventualSendNode extends ExpressionNode {
 
   protected final SSymbol selector;
   protected final RootCallTarget onReceive;
-  @Children protected final WrapReferenceNode[] wrapArgs;
 
   public EventualSendNode(final SSymbol selector,
       final int numArgs, final SourceSection source) {
@@ -38,7 +37,6 @@ public abstract class EventualSendNode extends ExpressionNode {
     this.selector = selector;
 
     onReceive = createOnReceiveCallTarget(selector, numArgs, source);
-    wrapArgs  = createArgWrapper(numArgs);
   }
 
   private static RootCallTarget createOnReceiveCallTarget(final SSymbol selector,
@@ -48,14 +46,6 @@ public abstract class EventualSendNode extends ExpressionNode {
     ReceivedMessage receivedMsg = new ReceivedMessage(invoke, selector);
 
     return Truffle.getRuntime().createCallTarget(receivedMsg);
-  }
-
-  private static WrapReferenceNode[] createArgWrapper(final int numArgs) {
-    WrapReferenceNode[] wrapper = new WrapReferenceNode[numArgs];
-    for (int i = 0; i < numArgs; i++) {
-      wrapper[i] = WrapReferenceNodeGen.create();
-    }
-    return wrapper;
   }
 
   protected static final boolean markVmHasSendMessage() {
@@ -113,7 +103,7 @@ public abstract class EventualSendNode extends ExpressionNode {
     Actor target = rcvr.getActor();
 
     for (int i = 0; i < args.length; i++) {
-      args[i] = wrapArgs[i].execute(args[i], target, owner);
+      args[i] = target.wrapForUse(args[i], owner);
     }
 
     assert !(args[0] instanceof SFarReference) : "This should not happen for this specialization, but it is handled in determineTargetAndWrapArguments(.)";

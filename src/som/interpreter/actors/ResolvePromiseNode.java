@@ -16,44 +16,32 @@ public abstract class ResolvePromiseNode extends BinaryExpressionNode {
 
   public abstract Object executeEvaluated(final SResolver receiver, Object argument);
 
-  // The DSL should check this guard only on node creation, and other wise turn it into an assertion
-  protected static boolean hackGuardToTellTheVMThatWeExecuteMessages() {
+  @Specialization
+  public SResolver resolution(final SResolver resolver, final Object result) {
     if (CompilerDirectives.inInterpreter()) {
       // we need to set this flag once, this should be reasonably OK
       VM.hasSendMessages();
     }
-    return true;
-  }
 
-  @Specialization(guards = {"hackGuardToTellTheVMThatWeExecuteMessages()", "resolver.getPromise() == result"})
-  public SResolver selfResolution(final SResolver resolver, final SPromise result) {
-    return resolver;
-  }
+    if (result instanceof SPromise) {
+      if (resolver.getPromise() == result) {
+        return resolver;
+      }
 
-  @Specialization(guards = {"hackGuardToTellTheVMThatWeExecuteMessages()", "resolver.getPromise() != result"})
-  public SResolver chainedPromise(final SResolver resolver, final SPromise result) {
-    assert resolver.assertNotResolved();
-    SPromise promise = resolver.getPromise();
-    synchronized (promise) { // TODO: is this really deadlock free?
-      result.addChainedPromise(promise);
+      assert resolver.assertNotResolved();
+      SPromise promise = resolver.getPromise();
+      synchronized (promise) { // TODO: is this really deadlock free?
+        ((SPromise) result).addChainedPromise(promise);
+      }
+      return resolver;
+    } else {
+      SPromise promise = resolver.getPromise();
+
+      Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
+      Object wrapped = promise.owner.wrapForUse(result, current);
+
+      SResolver.resolveAndTriggerListeners(result, wrapped, promise, current);
+      return resolver;
     }
-    return resolver;
-  }
-
-  protected static boolean notAPromise(final Object result) {
-    return !(result instanceof SPromise);
-  }
-
-  @Child protected WrapReferenceNode wrapper = WrapReferenceNodeGen.create();
-
-  @Specialization(guards = {"hackGuardToTellTheVMThatWeExecuteMessages()", "notAPromise(result)"})
-  public SResolver normalResolution(final SResolver resolver, final Object result) {
-    SPromise promise = resolver.getPromise();
-
-    Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
-    Object wrapped = wrapper.execute(result, promise.owner, current);
-
-    SResolver.resolveAndTriggerListeners(result, wrapped, promise, current);
-    return resolver;
   }
 }
