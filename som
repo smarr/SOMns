@@ -65,6 +65,7 @@ else:
     for d in graal_locations:
         if os.path.isdir(d):
             java_bin = d + '/' + JAVA_BIN
+            break
     if not java_bin:
         print "Graal couldn't be found. Please set GRAAL_HOME"
         sys.exit(1)
