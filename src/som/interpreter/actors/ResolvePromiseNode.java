@@ -17,7 +17,7 @@ public abstract class ResolvePromiseNode extends BinaryExpressionNode {
   public abstract Object executeEvaluated(final SResolver receiver, Object argument);
 
   @Specialization
-  public SResolver resolution(final SResolver resolver, final Object result) {
+  public final SResolver resolution(final SResolver resolver, final Object result) {
     if (CompilerDirectives.inInterpreter()) {
       // we need to set this flag once, this should be reasonably OK
       VM.hasSendMessages();
