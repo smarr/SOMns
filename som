@@ -79,11 +79,9 @@ SOM_ARGS = ['-Xbootclasspath/a:build/classes:libs/truffle/build/truffle-api.jar'
 # -G:+TruffleSplittingNew
 
 # == Compiler Settings
-# -G:TruffleGraphMaxNodes=1500000
-# -G:TruffleInliningMaxCallerSize=10000
-# -G:TruffleInliningMaxCalleeSize=10000
-# -G:TruffleInliningTrivialSize=10000
-# -G:TruffleSplittingMaxCalleeSize=100000"
+TWEAK_INLINING = ['-G:TruffleCompilationThreshold=191',
+                  '-G:TruffleInliningMaxCallerSize=10000',
+                  '-G:TruffleSplittingMaxCalleeSize=100000']
 
 if GRAAL_FLAGS:
     flags = [GRAAL_FLAGS]
