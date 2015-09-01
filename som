@@ -7,10 +7,11 @@ BASE_DIR    = os.path.dirname(os.path.realpath(__file__))
 GRAAL_HOME  = os.getenv('GRAAL_HOME',  None)
 GRAAL_FLAGS = os.getenv('GRAAL_FLAGS', None)
 
-graal_locations = [BASE_DIR + '/../graal',
+GRAAL_LOCATIONS = [BASE_DIR + '/../graal',
                    BASE_DIR + '/../GraalVM',
                    '/home/smarr/Projects/SOM/graal',
                    '/Users/smarr/Projects/PostDoc/Truffle/graal']
+JDK_VERSIONS = ['jdk1.8.0_60', 'jdk1.8.0_45']
 
 parser = argparse.ArgumentParser(
     description='Helper script to run SOMns with/without Graal')
@@ -53,22 +54,38 @@ parser.add_argument('args', nargs=argparse.REMAINDER,
                     help='arguments passed to SOMns')
 args = parser.parse_args()
 
-JAVA_BIN  = 'jdk1.8.0_45/product/bin/java'
+
+
+JAVA_BIN  = '/product/bin/java'
 JAVA_ARGS = ['-server', '-d64']
 
-java_bin = None
+graal_home = None
 if args.interpreter:
-    java_bin = "java"
+    graal_home = "java"
 elif GRAAL_HOME:
-    java_bin = GRAAL_HOME + '/' + JAVA_BIN
+    graal_home = GRAAL_HOME
 else:
-    for d in graal_locations:
+    for d in GRAAL_LOCATIONS:
         if os.path.isdir(d):
-            java_bin = d + '/' + JAVA_BIN
+            graal_home = d
             break
-    if not java_bin:
+    if not graal_home:
         print "Graal couldn't be found. Please set GRAAL_HOME"
         sys.exit(1)
+
+java_bin = graal_home
+
+for v in JDK_VERSIONS:
+    p = graal_home + '/' + v
+    if os.path.isdir(p):
+        java_bin = p + JAVA_BIN
+        break
+
+if java_bin is graal_home or not os.path.isfile(java_bin):
+  print "No compatible JDK build found, is this script outdated?"
+  sys.exit(1)
+
+
 
 SOM_ARGS = ['-Xbootclasspath/a:build/classes:libs/truffle/build/truffle-api.jar',
             'som.VM', '--platform', 'core-lib/Platform.som']
