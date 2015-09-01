@@ -7,21 +7,14 @@ import som.interpreter.actors.RegisterOnPromiseNode.RegisterWhenResolved;
 import som.interpreter.actors.SPromise.SResolver;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.InternalObjectArrayNode;
-import som.interpreter.nodes.MessageSendNode;
-import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
-import som.interpreter.nodes.SequenceNode;
-import som.vm.constants.Nil;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.RootCallTarget;
-import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
-import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
 
@@ -29,23 +22,11 @@ import com.oracle.truffle.api.source.SourceSection;
 public abstract class EventualSendNode extends ExpressionNode {
 
   protected final SSymbol selector;
-  protected final RootCallTarget onReceive;
 
   public EventualSendNode(final SSymbol selector,
       final int numArgs, final SourceSection source) {
     super(source);
     this.selector = selector;
-
-    onReceive = createOnReceiveCallTarget(selector, numArgs, source);
-  }
-
-  private static RootCallTarget createOnReceiveCallTarget(final SSymbol selector,
-      final int numArgs, final SourceSection source) {
-
-    AbstractMessageSendNode invoke = MessageSendNode.createGeneric(selector, null, source);
-    ReceivedMessage receivedMsg = new ReceivedMessage(invoke, selector);
-
-    return Truffle.getRuntime().createCallTarget(receivedMsg);
   }
 
   protected static final boolean markVmHasSendMessage() {
@@ -64,16 +45,8 @@ public abstract class EventualSendNode extends ExpressionNode {
     return args[0] instanceof SPromise;
   }
 
-  protected final boolean isResultUsed() {
-    Node parent = getParent();
-    assert parent != null;
-    if (parent instanceof SequenceNode) {
-      return ((SequenceNode) parent).isResultUsed(this);
-    }
-    return true;
-  }
 
-  @Specialization(guards = {"isResultUsed()", "markVmHasSendMessage()", "isFarRefRcvr(args)"})
+  @Specialization(guards = {"markVmHasSendMessage()", "isFarRefRcvr(args)"})
   public final SPromise toFarRefWithResultPromise(final Object[] args) {
     Actor owner = EventualMessage.getActorCurrentMessageIsExecutionOn();
 
@@ -83,15 +56,6 @@ public abstract class EventualSendNode extends ExpressionNode {
     sendDirectMessage(args, owner, resolver);
 
     return result;
-  }
-
-  @Specialization(guards = {"!isResultUsed()", "markVmHasSendMessage()", "isFarRefRcvr(args)"})
-  public final Object toFarRefWithoutResultPromise(final Object[] args) {
-    Actor owner = EventualMessage.getActorCurrentMessageIsExecutionOn();
-
-    sendDirectMessage(args, owner, null);
-
-    return Nil.nilObject;
   }
 
   @ExplodeLoop
@@ -111,7 +75,7 @@ public abstract class EventualSendNode extends ExpressionNode {
 
 
     DirectMessage msg = new DirectMessage(target, selector, args, owner,
-        resolver, onReceive);
+        resolver);
     target.enqueueMessage(msg);
   }
 
@@ -119,7 +83,7 @@ public abstract class EventualSendNode extends ExpressionNode {
     return new RegisterWhenResolved();
   }
 
-  @Specialization(guards = {"isResultUsed()", "isPromiseRcvr(args)"})
+  @Specialization(guards = {"isPromiseRcvr(args)"})
   public final SPromise toPromiseWithResultPromise(final Object[] args,
       @Cached("createRegisterNode()") final RegisterWhenResolved registerNode) {
     SPromise rcvr = (SPromise) args[0];
@@ -130,41 +94,25 @@ public abstract class EventualSendNode extends ExpressionNode {
     return promise;
   }
 
-  @Specialization(guards = {"!isResultUsed()", "isPromiseRcvr(args)"})
-  public final Object toPromiseWithoutResultPromise(final Object[] args,
-      @Cached("createRegisterNode()") final RegisterWhenResolved registerNode) {
-    sendPromiseMessage(args, (SPromise) args[0], null, registerNode);
-    return Nil.nilObject;
-  }
-
   private void sendPromiseMessage(final Object[] args, final SPromise rcvr,
       final SResolver resolver, final RegisterWhenResolved register) {
     assert rcvr.getOwner() == EventualMessage.getActorCurrentMessageIsExecutionOn() : "think this should be true because the promise is an Object and owned by this specific actor";
-    PromiseSendMessage msg = new PromiseSendMessage(selector, args, rcvr.getOwner(), resolver, onReceive);
+    PromiseSendMessage msg = new PromiseSendMessage(selector, args, rcvr.getOwner(), resolver);
 
     register.register(rcvr, msg, rcvr.getOwner());
   }
 
-  @Specialization(guards = {"isResultUsed()", "!isFarRefRcvr(args)", "!isPromiseRcvr(args)"})
+  @Specialization(guards = {"!isFarRefRcvr(args)", "!isPromiseRcvr(args)"})
   public final SPromise toNearRefWithResultPromise(final Object[] args) {
     Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
     SPromise  result   = SPromise.createPromise(current);
     SResolver resolver = SPromise.createResolver(result, "eventualSend:", selector);
 
     DirectMessage msg = new DirectMessage(current, selector, args, current,
-        resolver, onReceive);
+        resolver);
     current.enqueueMessage(msg);
 
     return result;
-  }
-
-  @Specialization(guards = {"!isResultUsed()", "!isFarRefRcvr(args)", "!isPromiseRcvr(args)"})
-  public final Object toNearRefWithoutResultPromise(final Object[] args) {
-    Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
-    DirectMessage msg = new DirectMessage(current, selector, args, current,
-        null, onReceive);
-    current.enqueueMessage(msg);
-    return Nil.nilObject;
   }
 
   @Override

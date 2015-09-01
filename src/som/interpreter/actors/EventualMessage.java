@@ -4,14 +4,17 @@ import java.util.Arrays;
 import java.util.concurrent.RecursiveAction;
 
 import som.VM;
+import som.compiler.AccessModifier;
+import som.interpreter.Types;
 import som.interpreter.actors.Actor.ActorProcessingThread;
-import som.interpreter.actors.ReceivedMessage.ReceivedCallback;
 import som.interpreter.actors.SPromise.SResolver;
+import som.interpreter.nodes.dispatch.Dispatchable;
 import som.vm.Symbols;
 import som.vmobjects.SBlock;
 import som.vmobjects.SSymbol;
 
-import com.oracle.truffle.api.RootCallTarget;
+import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.nodes.IndirectCallNode;
 
 
 public abstract class EventualMessage extends RecursiveAction {
@@ -20,14 +23,10 @@ public abstract class EventualMessage extends RecursiveAction {
 
   protected final Object[]  args;
   protected final SResolver resolver;
-  protected final RootCallTarget onReceive;
 
-  protected EventualMessage(final Object[] args,
-      final SResolver resolver, final RootCallTarget onReceive) {
+  protected EventualMessage(final Object[] args, final SResolver resolver) {
     this.args     = args;
     this.resolver = resolver;
-    this.onReceive = onReceive;
-    assert onReceive.getRootNode() instanceof ReceivedMessage || onReceive.getRootNode() instanceof ReceivedCallback;
   }
 
   protected abstract Actor   getTarget();
@@ -47,9 +46,8 @@ public abstract class EventualMessage extends RecursiveAction {
     private final Actor   sender;
 
     public DirectMessage(final Actor target, final SSymbol selector,
-        final Object[] arguments, final Actor sender, final SResolver resolver,
-        final RootCallTarget onReceive) {
-      super(arguments, resolver, onReceive);
+        final Object[] arguments, final Actor sender, final SResolver resolver) {
+      super(arguments, resolver);
       this.selector = selector;
       this.sender   = sender;
       this.target   = target;
@@ -67,6 +65,22 @@ public abstract class EventualMessage extends RecursiveAction {
     @Override
     protected SSymbol getSelector() {
       return selector;
+    }
+
+    @Override
+    protected void executeMessage() {
+      VM.thisMethodNeedsToBeOptimized("Not Optimized! But also not sure it can be part of compilation anyway");
+
+      Object rcvrObj = args[0];
+      assert rcvrObj != null;
+
+      assert !(rcvrObj instanceof SFarReference);
+      assert !(rcvrObj instanceof SPromise);
+
+      Dispatchable disp = Types.getClassOf(rcvrObj).lookupMessage(selector, AccessModifier.PUBLIC);
+
+      Object result = disp.invoke(args);
+      resolve.resolution(resolver, result);
     }
 
     @Override
@@ -118,8 +132,8 @@ public abstract class EventualMessage extends RecursiveAction {
     protected final Actor originalSender; // initial owner of the arguments
 
     public PromiseMessage(final Object[] arguments, final Actor originalSender,
-        final SResolver resolver, final RootCallTarget onReceive) {
-      super(arguments, resolver, onReceive);
+        final SResolver resolver) {
+      super(arguments, resolver);
       this.originalSender = originalSender;
     }
 
@@ -139,8 +153,8 @@ public abstract class EventualMessage extends RecursiveAction {
 
     protected PromiseSendMessage(final SSymbol selector,
         final Object[] arguments, final Actor originalSender,
-        final SResolver resolver, final RootCallTarget onReceive) {
-      super(arguments, originalSender, resolver, onReceive);
+        final SResolver resolver) {
+      super(arguments, originalSender, resolver);
       this.selector = selector;
     }
 
@@ -180,6 +194,22 @@ public abstract class EventualMessage extends RecursiveAction {
       return "PSendMsg(" + Arrays.toString(args) +  ", " + t
         + ", sender: " + (finalSender == null ? "" : finalSender.toString()) + ")";
     }
+
+    @Override
+    protected void executeMessage() {
+      VM.thisMethodNeedsToBeOptimized("Not Optimized! But also not sure it can be part of compilation anyway");
+
+      Object rcvrObj = args[0];
+      assert rcvrObj != null;
+
+      assert !(rcvrObj instanceof SFarReference);
+      assert !(rcvrObj instanceof SPromise);
+
+      Dispatchable disp = Types.getClassOf(rcvrObj).lookupMessage(selector, AccessModifier.PUBLIC);
+
+      Object result = disp.invoke(args);
+      resolve.resolution(resolver, result);
+    }
   }
 
   /** The callback message to be send after a promise is resolved. */
@@ -187,8 +217,8 @@ public abstract class EventualMessage extends RecursiveAction {
     private static final long serialVersionUID = 4682874999398510325L;
 
     public PromiseCallbackMessage(final Actor owner, final SBlock callback,
-        final SResolver resolver, final RootCallTarget onReceive) {
-      super(new Object[] {callback, null}, owner, resolver, onReceive);
+        final SResolver resolver) {
+      super(new Object[] {callback, null}, owner, resolver);
     }
 
     @Override
@@ -220,6 +250,17 @@ public abstract class EventualMessage extends RecursiveAction {
     public String toString() {
       return "PCallbackMsg(" + Arrays.toString(args) + ")";
     }
+
+    @Override
+    protected void executeMessage() {
+      VM.thisMethodNeedsToBeOptimized("Not Optimized! But also not sure it can be part of compilation anyway");
+
+      SBlock rcvrObj = (SBlock) args[0];
+      assert rcvrObj != null;
+
+      Object result = rcvrObj.getMethod().invoke(args);
+      resolve.resolution(resolver, result);
+    }
   }
 
   @Override
@@ -238,18 +279,10 @@ public abstract class EventualMessage extends RecursiveAction {
     target.enqueueNextMessageForProcessing();
   }
 
-  protected final void executeMessage() {
-    VM.thisMethodNeedsToBeOptimized("Not Optimized! But also not sure it can be part of compilation anyway");
+  private static final ResolvePromiseNode resolve = ResolvePromiseNodeFactory.create(null, null);
+  private static final IndirectCallNode indirectCall = Truffle.getRuntime().createIndirectCallNode();
 
-    Object rcvrObj = args[0];
-    assert rcvrObj != null;
-
-    assert !(rcvrObj instanceof SFarReference);
-    assert !(rcvrObj instanceof SPromise);
-
-    assert onReceive.getRootNode() instanceof ReceivedMessage || onReceive.getRootNode() instanceof ReceivedCallback;
-    onReceive.call(this);
-  }
+  protected abstract void executeMessage();
 
   public static Actor getActorCurrentMessageIsExecutionOn() {
     Thread t = Thread.currentThread();

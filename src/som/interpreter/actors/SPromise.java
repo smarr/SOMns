@@ -14,7 +14,6 @@ import som.vmobjects.SObjectWithClass;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.RootCallTarget;
 import com.sun.istack.internal.NotNull;
 
 
@@ -89,14 +88,13 @@ public class SPromise extends SObjectWithClass {
     promiseClass = cls;
   }
 
-  public final SPromise onError(final SBlock block,
-      final RootCallTarget blockCallTarget, final Actor current) {
+  public final SPromise onError(final SBlock block, final Actor current) {
     assert block.getMethod().getNumberOfArguments() == 2;
 
     SPromise  promise  = createPromise(current);
     SResolver resolver = createResolver(promise, "oE:block");
 
-    PromiseCallbackMessage msg = new PromiseCallbackMessage(owner, block, resolver, blockCallTarget);
+    PromiseCallbackMessage msg = new PromiseCallbackMessage(owner, block, resolver);
     registerOnError(msg, current);
     return promise;
   }
@@ -136,13 +134,13 @@ public class SPromise extends SObjectWithClass {
   }
 
   public final SPromise onException(final SClass exceptionClass,
-      final SBlock block, final RootCallTarget blockCallTarget, final Actor current) {
+      final SBlock block, final Actor current) {
     assert block.getMethod().getNumberOfArguments() == 2;
 
     SPromise  promise  = createPromise(current);
     SResolver resolver = createResolver(promise, "oEx:class:block");
 
-    PromiseCallbackMessage msg = new PromiseCallbackMessage(owner, block, resolver, blockCallTarget);
+    PromiseCallbackMessage msg = new PromiseCallbackMessage(owner, block, resolver);
 
     synchronized (this) {
       if (resolutionState == Resolution.ERRORNOUS) {
