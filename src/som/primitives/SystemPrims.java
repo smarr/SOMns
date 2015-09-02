@@ -11,8 +11,10 @@ import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vm.Bootstrap;
 import som.vm.constants.Nil;
 import som.vmobjects.SArray;
+import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
@@ -23,6 +25,18 @@ import com.oracle.truffle.api.source.SourceSection;
 
 
 public final class SystemPrims {
+
+  @CompilationFinal public static SObjectWithClass SystemModule;
+
+  @GenerateNodeFactory
+  @Primitive("systemModuleObject:")
+  public abstract static class SystemModuleObjectPrim extends UnaryExpressionNode {
+    @Specialization
+    public final Object set(final SObjectWithClass system) {
+      SystemModule = system;
+      return system;
+    }
+  }
 
   @GenerateNodeFactory
   @Primitive("load:")

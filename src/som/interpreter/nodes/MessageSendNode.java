@@ -46,6 +46,8 @@ import som.primitives.ObjectPrimsFactory.IsNilNodeGen;
 import som.primitives.ObjectPrimsFactory.NotNilNodeGen;
 import som.primitives.SizeAndLengthPrimFactory;
 import som.primitives.StringPrimsFactory.SubstringPrimFactory;
+import som.primitives.SystemPrims;
+import som.primitives.SystemPrimsFactory.TicksPrimFactory;
 import som.primitives.UnequalsPrimFactory;
 import som.primitives.arithmetic.AdditionPrimFactory;
 import som.primitives.arithmetic.DividePrimFactory;
@@ -298,6 +300,10 @@ public final class MessageSendNode {
           return replace(IsNilNodeGen.create(argumentNodes[0]));
         case "notNil":
           return replace(NotNilNodeGen.create(argumentNodes[0]));
+        case "ticks":
+          if (receiver == SystemPrims.SystemModule) {
+            return replace(TicksPrimFactory.create(argumentNodes[0]));
+          }
       }
       return makeSend();
     }
