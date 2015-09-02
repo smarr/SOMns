@@ -135,6 +135,8 @@ if not args.interpreter and args.visual_vm:
     flags += ['-agentpath:/Users/smarr/Downloads/visualvm_138/profiler/lib/deployed/jdk16/mac/libprofilerinterface.jnilib=/Users/smarr/Downloads/visualvm_138/profiler/lib,5140']
 if args.assert_:
     flags += ['-esa', '-ea']
+else:
+    flags += ['-dsa', '-da']
 if not args.interpreter and not args.background_compilation:
     flags += ['-G:-TruffleBackgroundCompilation']
 if not args.interpreter and args.no_compilation:
