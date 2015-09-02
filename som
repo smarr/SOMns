@@ -31,6 +31,8 @@ parser.add_argument('-o', '--only', help='only compile give methods, comma separ
                     dest='only_compile', default=None)
 parser.add_argument('-v', '--visual-vm', help='connect to VisualVM for profiling',
                     dest='visual_vm', action='store_true', default=False)
+parser.add_argument('-t', '--num-threads', help='number of threads to be used',
+                    dest='threads', default=None)
 
 parser.add_argument('-A', '--no-assert', help='execute with assertions disabled',
                     dest='assert_', action='store_false', default=True)
@@ -147,6 +149,8 @@ if not args.interpreter and args.no_trace:
     flags += ['-G:-TraceTruffleInlining', '-G:-TraceTruffleCompilation']
 if not args.interpreter and not args.graph_pe:
     flags += ['-G:-GraphPE']
+if args.threads:
+    flags += ['-Dsom.threads=%s' % args.threads ]
 
 all_args = JAVA_ARGS + flags + SOM_ARGS + args.args
 

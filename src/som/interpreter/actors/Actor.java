@@ -8,6 +8,7 @@ import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
 import java.util.concurrent.ForkJoinWorkerThread;
 
 import som.VM;
+import som.VmSettings;
 import som.primitives.ObjectPrims.IsValue;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
@@ -149,7 +150,7 @@ public class Actor {
   }
 
   private static final ForkJoinPool actorPool = new ForkJoinPool(
-      Runtime.getRuntime().availableProcessors(),
+      VmSettings.NUM_THREADS,
       new ActorProcessingThreadFactor(), null, true);
 
   /**
