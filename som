@@ -143,8 +143,6 @@ if not args.interpreter and not args.background_compilation:
     flags += ['-G:-TruffleBackgroundCompilation']
 if not args.interpreter and args.no_compilation:
     flags.append(ONLY_COMPILE % '__FAKE_METHOD_NON_EXISTING__')
-if args.interpreter:
-    flags += ['-Xint']
 if not args.interpreter and args.no_trace:
     flags += ['-G:-TraceTruffleInlining', '-G:-TraceTruffleCompilation']
 if not args.interpreter and not args.graph_pe:
