@@ -19,7 +19,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 *)
 class System usingVmMirror: vmMirror = Value (
-  | private vmMirror = vmMirror. |
+| private vmMirror = vmMirror. |
+  vmMirror systemModuleObject: self.
 )(
   'Exiting'
   public exit: error  = ( vmMirror exit: error )
