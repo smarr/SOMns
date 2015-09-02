@@ -146,9 +146,8 @@ class SortBenchmarks usingPlatform: platform andHarness: harness = (
         ^ tree
     )
     
-    verifyResult: tree = (
-       tree check ifFalse: [ self error: 'Invalid result, tree not sorted' ].
-       ^ true.
+    public verifyResult: tree = (
+       ^ tree check
     )
     
     dataSize = ( ^ 1000 )
