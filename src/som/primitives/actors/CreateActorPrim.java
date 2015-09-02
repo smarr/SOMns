@@ -16,6 +16,8 @@ import com.oracle.truffle.api.dsl.Specialization;
 @NodeChild(value = "isValue", type = IsValue.class, executeWith = "receiver")
 public abstract class CreateActorPrim extends UnaryExpressionNode {
 
+  // TODO: force inlining on AST level
+
   @Specialization(guards = "isValue")
   public final SFarReference createActor(final Object value, final boolean isValue) {
     Actor actor = Actor.createActor();
