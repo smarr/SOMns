@@ -66,10 +66,12 @@
           <classpath refid="project.classpath" />
           <compilerarg line="-s ${src_gen.dir}" />
           <compilerarg line="-XDignore.symbol.file" />
+          <compilerarg line="-Xlint:all" />
         </javac>
         <javac includeantruntime="false" srcdir="${src_gen.dir}" destdir="${classes.dir}" debug="true">
           <classpath refid="project.classpath" />
           <compilerarg line="-s ${src_gen.dir}" />
+          <compilerarg line="-Xlint:all" />
         </javac>
         <javac includeantruntime="false" srcdir="tests/" destdir="${classes.dir}" debug="true">
           <classpath refid="project.classpath" />
