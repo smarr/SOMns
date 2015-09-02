@@ -57,7 +57,7 @@ args = parser.parse_args()
 
 
 JAVA_BIN  = '/product/bin/java'
-JAVA_ARGS = ['-server', '-d64']
+JAVA_ARGS = ['-d64']
 
 if args.interpreter:
     java_bin = "java"
