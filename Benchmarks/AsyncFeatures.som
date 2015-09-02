@@ -1,0 +1,76 @@
+class AsyncFeatures usingPlatform: platform andHarness: harness = (
+| private Benchmark = harness Benchmark.
+  private actors    = platform actors.
+|
+)(
+  public class SendDirect new: iterations = Benchmark (
+  | private iterations = iterations.
+    private cnt ::= 0.
+    private completionPP = actors createPromisePair.
+  |
+  )(
+    public count = (
+      cnt := cnt + 1.
+      cnt = iterations
+        ifTrue:  [ completionPP resolve: cnt ]
+        ifFalse: [ self <-: count ]
+    )
+    
+    public benchmark = (
+      self <-: count.
+      ^ completionPP promise
+    )
+    public verifyResult: result = (
+      ^ result = iterations
+    )
+  ) : (
+    public newInstance: problemSize = ( ^ self new: problemSize asInteger )
+    public setupVerifiedRun: run = ( run problemSize: 1000 )
+  )
+  
+  class Base new: iterations resolver: completionRes = (
+  | private iterations = iterations.
+    private completionRes = completionRes.
+    private cnt ::= 0. |
+  )(
+    public count = (
+      cnt := cnt + 1.
+      cnt = iterations
+        ifTrue:  [ completionRes resolve: cnt ]
+        ifFalse: [ self <-: count ]
+    )
+  )
+  
+  class A new: iterations resolver: completionRes = Base new: iterations resolver: completionRes ()(
+    public a1 = () public a2 = () public a3 = () public a4 = () public a5 = ()
+    public b1 = () public b2 = () public b3 = () public b4 = () public b5 = ()
+  )
+  
+  class B new: iterations resolver: completionRes = A new: iterations resolver: completionRes ()()
+  class C new: iterations resolver: completionRes = B new: iterations resolver: completionRes ()()
+  
+  class D new: iterations resolver: completionRes = C new: iterations resolver: completionRes ()(
+    public c1 = () public c2 = () public c3 = () public c4 = () public c5 = ()
+    public d1 = () public d2 = () public d3 = () public d4 = () public d5 = ()
+  )
+  
+  class E new: iterations resolver: completionRes = D new: iterations resolver: completionRes ()()
+  
+  public class SendDirectComplexLookup new: iterations = Benchmark (
+  | private iterations = iterations.
+  |  
+  )(
+    public benchmark = (
+      | completionPP |
+      completionPP := actors createPromisePair.
+      (E new: iterations resolver: completionPP resolver) <-: count.
+      ^ completionPP promise
+    )
+    public verifyResult: result = (
+      ^ result = iterations
+    )
+  ) : (
+    public newInstance: problemSize = ( ^ self new: problemSize asInteger )
+    public setupVerifiedRun: run = ( run problemSize: 1000 )
+  )
+)
