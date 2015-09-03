@@ -3,7 +3,6 @@ package som.interpreter.nodes;
 import som.compiler.AccessModifier;
 import som.interpreter.TruffleCompiler;
 import som.interpreter.TypesGen;
-import som.interpreter.actors.SPromise;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
 import som.interpreter.nodes.dispatch.DispatchChain.Cost;
 import som.interpreter.nodes.dispatch.GenericDispatchNode;
@@ -54,7 +53,6 @@ import som.primitives.UnequalsPrimFactory;
 import som.primitives.actors.ActorClasses;
 import som.primitives.actors.CreateActorPrimFactory;
 import som.primitives.actors.PromisePrimsFactory.CreatePromisePairPrimFactory;
-import som.primitives.actors.PromisePrimsFactory.WhenResolvedPrimFactory;
 import som.primitives.arithmetic.AdditionPrimFactory;
 import som.primitives.arithmetic.DividePrimFactory;
 import som.primitives.arithmetic.DoubleDivPrimFactory;
@@ -313,7 +311,6 @@ public final class MessageSendNode {
           break;
         case "createPromisePair":
           if (receiver == ActorClasses.ActorModule) {
-            System.out.println("crtPrm");
             return replace(CreatePromisePairPrimFactory.create(argumentNodes[0]));
           }
           break;
@@ -430,21 +427,19 @@ public final class MessageSendNode {
 
         case "createActorFromValue:": {
           if (arguments[0] == ActorClasses.ActorModule) {
-            System.out.println("crtVal");
             return replace(CreateActorPrimFactory.create(argumentNodes[0],
                 argumentNodes[1], IsValueFactory.create(null)));
           }
           break;
         }
-        case "whenResolved:": {
-          if (arguments[0] instanceof SPromise) {
-            System.out.println("whenRes.");
-            return replace(new EagerBinaryPrimitiveNode(selector,
-                argumentNodes[0], argumentNodes[1],
-                WhenResolvedPrimFactory.create(null, null)));
-          }
-          break;
-        }
+//        case "whenResolved:": {
+//          if (arguments[0] instanceof SPromise) {
+//            return replace(new EagerBinaryPrimitiveNode(selector,
+//                argumentNodes[0], argumentNodes[1],
+//                WhenResolvedPrimFactory.create(null, null)));
+//          }
+//          break;
+//        }
 
         // TODO: find a better way for primitives, use annotation or something
         case "<":
