@@ -3,6 +3,7 @@ package som.interpreter.nodes;
 import som.compiler.AccessModifier;
 import som.interpreter.TruffleCompiler;
 import som.interpreter.TypesGen;
+import som.interpreter.actors.SPromise;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
 import som.interpreter.nodes.dispatch.DispatchChain.Cost;
 import som.interpreter.nodes.dispatch.GenericDispatchNode;
@@ -43,12 +44,17 @@ import som.primitives.IntegerPrimsFactory.ToPrimNodeGen;
 import som.primitives.IntegerPrimsFactory.UnsignedRightShiftPrimFactory;
 import som.primitives.MethodPrimsFactory.InvokeOnPrimFactory;
 import som.primitives.ObjectPrimsFactory.IsNilNodeGen;
+import som.primitives.ObjectPrimsFactory.IsValueFactory;
 import som.primitives.ObjectPrimsFactory.NotNilNodeGen;
 import som.primitives.SizeAndLengthPrimFactory;
 import som.primitives.StringPrimsFactory.SubstringPrimFactory;
 import som.primitives.SystemPrims;
 import som.primitives.SystemPrimsFactory.TicksPrimFactory;
 import som.primitives.UnequalsPrimFactory;
+import som.primitives.actors.ActorClasses;
+import som.primitives.actors.CreateActorPrimFactory;
+import som.primitives.actors.PromisePrimsFactory.CreatePromisePairPrimFactory;
+import som.primitives.actors.PromisePrimsFactory.WhenResolvedPrimFactory;
 import som.primitives.arithmetic.AdditionPrimFactory;
 import som.primitives.arithmetic.DividePrimFactory;
 import som.primitives.arithmetic.DoubleDivPrimFactory;
@@ -304,6 +310,13 @@ public final class MessageSendNode {
           if (receiver == SystemPrims.SystemModule) {
             return replace(TicksPrimFactory.create(argumentNodes[0]));
           }
+          break;
+        case "createPromisePair":
+          if (receiver == ActorClasses.ActorModule) {
+            System.out.println("crtPrm");
+            return replace(CreatePromisePairPrimFactory.create(argumentNodes[0]));
+          }
+          break;
       }
       return makeSend();
     }
@@ -414,6 +427,24 @@ public final class MessageSendNode {
                 ToPrimNodeGen.create(null, null)));
           }
           break;
+
+        case "createActorFromValue:": {
+          if (arguments[0] == ActorClasses.ActorModule) {
+            System.out.println("crtVal");
+            return replace(CreateActorPrimFactory.create(argumentNodes[0],
+                argumentNodes[1], IsValueFactory.create(null)));
+          }
+          break;
+        }
+        case "whenResolved:": {
+          if (arguments[0] instanceof SPromise) {
+            System.out.println("whenRes.");
+            return replace(new EagerBinaryPrimitiveNode(selector,
+                argumentNodes[0], argumentNodes[1],
+                WhenResolvedPrimFactory.create(null, null)));
+          }
+          break;
+        }
 
         // TODO: find a better way for primitives, use annotation or something
         case "<":

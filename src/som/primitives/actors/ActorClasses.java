@@ -6,7 +6,9 @@ import som.interpreter.actors.SPromise.SResolver;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.Primitive;
 import som.vmobjects.SClass;
+import som.vmobjects.SObject.SImmutableObject;
 
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
@@ -48,6 +50,18 @@ public final class ActorClasses {
     @Specialization
     public final SClass setClass(final SClass value) {
       SResolver.setSOMClass(value);
+      return value;
+    }
+  }
+
+  @CompilationFinal public static SImmutableObject ActorModule;
+
+  @GenerateNodeFactory
+  @Primitive("actorsModule:")
+  public abstract static class SetModulePrim extends UnaryExpressionNode {
+    @Specialization
+    public final SImmutableObject setClass(final SImmutableObject value) {
+      ActorModule = value;
       return value;
     }
   }

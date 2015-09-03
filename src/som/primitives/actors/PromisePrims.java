@@ -24,7 +24,6 @@ import som.vmobjects.SSymbol;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Cached;
-import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -38,14 +37,20 @@ public final class PromisePrims {
   @Primitive("actorsCreatePromisePair:")
   public abstract static class CreatePromisePairPrim extends UnaryExpressionNode {
 
-    protected final DirectCallNode create() {
+    @Child protected DirectCallNode factory;
+
+    protected static final DirectCallNode create() {
       Dispatchable disp = SPromise.pairClass.getSOMClass().lookupMessage(withAndFactory, AccessModifier.PUBLIC);
       return Truffle.getRuntime().createDirectCallNode(disp.getCallTarget());
     }
 
     @Specialization
-    public final SImmutableObject createPromisePair(final VirtualFrame frame,
-        final Object nil, @Cached("create()") final DirectCallNode factory) {
+    public final SImmutableObject createPromisePair(final VirtualFrame frame, final Object nil) {
+      if (factory == null) {
+        // do lazy initialization, because pairClass is not yet known when creating the node for the primitive
+        factory = create();
+      }
+
       SPromise promise   = SPromise.createPromise(EventualMessage.getActorCurrentMessageIsExecutionOn());
       SResolver resolver = SPromise.createResolver(promise, "ctorPPair");
       return (SImmutableObject) factory.call(frame, new Object[] {SPromise.pairClass, promise, resolver});
@@ -74,8 +79,8 @@ public final class PromisePrims {
       return whenResolved(promise, callback, blockCallTarget, registerNode);
     }
 
-    @Fallback
-    public final SPromise whenResolved(final SPromise promise, final SBlock callback) {
+    @Specialization(contains = "whenResolved")
+    public final SPromise whenResolvedUncached(final SPromise promise, final SBlock callback) {
       return whenResolved(promise, callback, createReceived(callback), registerNode);
     }
 
