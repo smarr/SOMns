@@ -37,20 +37,14 @@ public final class PromisePrims {
   @Primitive("actorsCreatePromisePair:")
   public abstract static class CreatePromisePairPrim extends UnaryExpressionNode {
 
-    @Child protected DirectCallNode factory;
-
     protected static final DirectCallNode create() {
       Dispatchable disp = SPromise.pairClass.getSOMClass().lookupMessage(withAndFactory, AccessModifier.PUBLIC);
       return Truffle.getRuntime().createDirectCallNode(disp.getCallTarget());
     }
 
     @Specialization
-    public final SImmutableObject createPromisePair(final VirtualFrame frame, final Object nil) {
-      if (factory == null) {
-        // do lazy initialization, because pairClass is not yet known when creating the node for the primitive
-        factory = create();
-      }
-
+    public final SImmutableObject createPromisePair(final VirtualFrame frame,
+        final Object nil, @Cached("create()") final DirectCallNode factory) {
       SPromise promise   = SPromise.createPromise(EventualMessage.getActorCurrentMessageIsExecutionOn());
       SResolver resolver = SPromise.createResolver(promise, "ctorPPair");
       return (SImmutableObject) factory.call(frame, new Object[] {SPromise.pairClass, promise, resolver});
