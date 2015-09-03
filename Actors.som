@@ -148,7 +148,7 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel = Value (
   )
 
   public createActorFromValue: aValue = (
-    ^ vmMirror actorsCreateFromValue: aValue
+    ^ vmMirror actors: nil createFromValue: aValue
   )
 
   (* Can't be part of kernel, don't have promises in the kernel... *)
