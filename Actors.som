@@ -29,6 +29,7 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel = Value (
   vmMirror actorsPromiseClass:  Promise.
   vmMirror actorsPairClass:     Pair.
   vmMirror actorsResolverClass: Resolver. 
+  vmMirror actorsModule: self.
 )(
   public class FarReference = Value (
     (* This class cannot be instantiated directly *)
