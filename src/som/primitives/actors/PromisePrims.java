@@ -65,7 +65,7 @@ public final class PromisePrims {
   public abstract static class WhenResolvedPrim extends BinaryExpressionNode {
     @Child protected RegisterWhenResolved registerNode = new RegisterWhenResolved();
 
-    @Specialization(guards = "blockMethod == callback.getMethod()", limit = "6")
+    @Specialization(guards = "blockMethod == callback.getMethod()", limit = "10")
     public final SPromise whenResolved(final SPromise promise,
         final SBlock callback,
         @Cached("callback.getMethod()") final SInvokable blockMethod,
