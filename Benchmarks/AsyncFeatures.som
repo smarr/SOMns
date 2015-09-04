@@ -73,4 +73,124 @@ class AsyncFeatures usingPlatform: platform andHarness: harness = (
     public newInstance: problemSize = ( ^ self new: problemSize asInteger )
     public setupVerifiedRun: run = ( run problemSize: 1000 )
   )
+
+  public class SendWithManyArgs new: iterations = Benchmark (
+  | private iterations = iterations.
+    private cnt ::= 0.
+    private completionPP = actors createPromisePair.
+    private obj ::= Object new.
+  |
+  )(
+    public rcv: a1 a2: a2 a3: a3 a4: a4 a5: a5 a6: a6 a7: a7 a8: a8 a9: a9 a0: a0 = (
+      cnt := cnt + 1.
+      cnt = iterations
+        ifTrue:  [ completionPP resolve: cnt ]
+        ifFalse: [ self <-: rcv: a1 a2: a2 a3: obj
+         a4: a4 a5: a5 a6: a6 + cnt a7: a7 + cnt a8: a8 + cnt a9: a9 a0: a0. self ]
+    )
+    
+    public benchmark = (
+      self <-: rcv: actors a2: Object new a3: obj a4: Benchmark a5: actors a6: 0 a7: 7 a8: 8 a9: #eee a0: '33'.
+      ^ completionPP promise
+    )
+    public verifyResult: result = (
+      ^ result = iterations
+    )
+  ) : (
+    public newInstance: problemSize = ( ^ self new: problemSize asInteger )
+    public setupVerifiedRun: run = ( run problemSize: 1000 )
+  )
+  
+  public class SendManyToPromise new: iterations = Benchmark (
+  | private iterations = iterations.
+    private cnt ::= 0.
+    private completionPP = actors createPromisePair.
+  |)(
+    public getSelf = ( ^ self )
+
+    public count = (
+      cnt := cnt + 1.
+      cnt = iterations ifTrue: [
+        completionPP resolve: cnt ]
+    )
+
+    public benchmark = (
+      | prom |
+      prom := self <-: getSelf.
+      1 to: iterations do: [:i |
+        prom <-: count ].
+      ^ completionPP promise
+    )
+
+    public verifyResult: result = (
+      ^ result = iterations
+    )
+  ) : (
+    public newInstance: problemSize = ( ^ self new: problemSize asInteger )
+    public setupVerifiedRun: run = ( run problemSize: 1000 )
+  )
+  
+  public class WhenResolved new: iterations = Benchmark (
+  | private iterations = iterations.
+    private cnt ::= 0.
+    private completionPP = actors createPromisePair.
+  |)(
+    public getSelf = ( ^ self )
+    
+    public count = (
+      | p |
+      p := self <-: getSelf.
+      p whenResolved: [:s |
+        cnt := cnt + 1.
+        cnt = iterations
+          ifTrue:  [ completionPP resolve: cnt ]
+          ifFalse: [ self count ]
+      ]
+    )
+    
+    public benchmark = (
+      self count.
+      ^ completionPP promise
+    )
+    
+    public verifyResult: result = (
+      ^ result = iterations
+    )
+  ) : (
+    public newInstance: problemSize = ( ^ self new: problemSize asInteger )
+    public setupVerifiedRun: run = ( run problemSize: 1000 )
+  )
+  
+  public class ManyWhenResolved new: iterations = Benchmark (
+  | private iterations = iterations.
+    private cnt ::= 0.
+    private completionPP = actors createPromisePair.
+  |)(
+    public getSelf = ( ^ self )
+
+    public count = (
+      cnt := cnt + 1.
+      cnt = iterations ifTrue: [
+        completionPP resolve: cnt ]
+    )
+
+    public benchmark = (
+      | prom |
+      prom := self <-: getSelf.
+      1 to: iterations do: [:i |
+        prom whenResolved: [:s | self count ] ].
+      ^ completionPP promise
+    )
+
+    public verifyResult: result = (
+      ^ result = iterations
+    )
+  ) : (
+    public newInstance: problemSize = ( ^ self new: problemSize asInteger )
+    public setupVerifiedRun: run = ( run problemSize: 1000 )
+  )
+  
+  (* TODO a benchmark for promises resolved with promises. not yet optimized *)
+  public class PromiseChain new: iterations = Benchmark (
+  )()  
 )
