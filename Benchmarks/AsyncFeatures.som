@@ -13,7 +13,7 @@ class AsyncFeatures usingPlatform: platform andHarness: harness = (
       cnt := cnt + 1.
       cnt = iterations
         ifTrue:  [ completionPP resolve: cnt ]
-        ifFalse: [ self <-: count ]
+        ifFalse: [ self <-: count. self ]
     )
     
     public benchmark = (
@@ -37,7 +37,7 @@ class AsyncFeatures usingPlatform: platform andHarness: harness = (
       cnt := cnt + 1.
       cnt = iterations
         ifTrue:  [ completionRes resolve: cnt ]
-        ifFalse: [ self <-: count ]
+        ifFalse: [ self <-: count. self ]
     )
   )
   
