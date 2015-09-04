@@ -152,12 +152,7 @@ public final class Bootstrap {
     ExpressionNode primNode;
     switch (numArgs) {
       case 1:
-        if (factory == CreateActorPrimFactory.getInstance()) {
-          primNode = factory.createNode(args[0],
-              IsValueFactory.create(null));
-        } else {
-          primNode = factory.createNode(args[0]);
-        }
+        primNode = factory.createNode(args[0]);
         break;
       case 2:
         // HACK for node class where we use `executeWith`
@@ -167,6 +162,9 @@ public final class Bootstrap {
 //        } else if (factory == SpawnWithArgsPrimFactory.getInstance()) {
 //          primNode = factory.createNode(args[0], args[1],
 //              ToArgumentsArrayNodeGen.create(null, null));
+        } else if (factory == CreateActorPrimFactory.getInstance()) {
+          primNode = factory.createNode(args[0], args[1],
+              IsValueFactory.create(null));
         } else {
           primNode = factory.createNode(args[0], args[1]);
         }
