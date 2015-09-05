@@ -192,5 +192,40 @@ class AsyncFeatures usingPlatform: platform andHarness: harness = (
   
   (* TODO a benchmark for promises resolved with promises. not yet optimized *)
   public class PromiseChain new: iterations = Benchmark (
-  )()  
+  )()
+  
+  
+  public class SplitAsyncMethod new: iterations = Benchmark (
+  | private iterations = iterations.
+    private cnt ::= 0.
+    private completionPP = actors createPromisePair.
+  |
+  )(
+    public calculate: a and: b = (
+      | r |
+      r := a * b + b + b - a.
+      r := r * r.
+      r := r - (a * a * b).
+
+      cnt := cnt + 1.
+      cnt = iterations
+        ifTrue:  [ completionPP resolve: cnt ].
+      
+      ^  r
+    )
+      
+    public benchmark = (
+      1 to: iterations / 2 do: [:i |
+        self <-: calculate: 2 and: 4.
+        self <-: calculate: 1.22 and: 3.33.
+      ].
+      ^ completionPP promise
+    )
+    public verifyResult: result = (
+      ^ result = iterations
+    )
+  ) : (
+    public newInstance: problemSize = ( ^ self new: problemSize asInteger )
+    public setupVerifiedRun: run = ( run problemSize: 1000 )
+  )
 )
