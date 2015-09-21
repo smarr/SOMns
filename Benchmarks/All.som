@@ -30,7 +30,7 @@ class AllBenchmarks usingPlatform: platform = (
     reportBenchmark: bench result: result = ()
 
     public runBenchmark = (
-      total := total + self doRunsSequential
+      self doRuns: benchmarkSuite newInstance
     )
   )
 
