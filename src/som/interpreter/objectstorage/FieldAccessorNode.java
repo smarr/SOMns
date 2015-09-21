@@ -133,7 +133,8 @@ public abstract class FieldAccessorNode extends Node {
       if (assumption) {
         return storage.readLong(obj, assumption);
       } else {
-        return respecializedNodeOrNext(obj).readLong(obj);
+        return respecializedNodeOrNext(obj).
+            readLong(obj);
       }
     }
 
