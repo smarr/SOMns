@@ -29,11 +29,16 @@ public abstract class ClassInstantiationNode extends Node {
     return mixinDef.createClassFactory(superclassAndMixins, false);
   }
 
+  // TODO: do we need to specialize this guard?
   @ExplodeLoop
   protected final boolean sameSuperAndMixins(final Object superclassAndMixins, final Object cached) {
     if (!(cached instanceof Object[])) {
+      assert cached instanceof SClass;
+      assert superclassAndMixins instanceof SClass;
+
       // TODO: identity comparison? is that stable enough? otherwise, need also to make sure isValue is the same, I think
-      return cached == superclassAndMixins;
+      return cached == superclassAndMixins
+          || ((SClass) cached).getInstanceFactory() == ((SClass) superclassAndMixins).getInstanceFactory();
     }
 
     if (!(superclassAndMixins instanceof Object[])) {
@@ -47,11 +52,10 @@ public abstract class ClassInstantiationNode extends Node {
     CompilerAsserts.compilationConstant(cachedArr.length);
 
     for (int i = 0; i < cachedArr.length; i++) {
-      // TODO: is this really correct? I think, we are comparing here SClass identities
-      //       which might not be as stable as we hope, perhaps better to check their
-      //       respective class factories? !!! TODO!!! XXX
-      //    -> in that case, i == 0 needs also to check isValue, I think!
-      if (cachedArr[i] != supMixArr[i]) {
+      // TODO: is this really correct?
+      //    -> does i == 0 need also to check isValue?
+      if (cachedArr[i] != supMixArr[i] &&
+          ((SClass) cachedArr[i]).getInstanceFactory() == ((SClass) supMixArr[i]).getInstanceFactory()) {
         return false;
       }
     }
