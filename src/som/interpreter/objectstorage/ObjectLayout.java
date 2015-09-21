@@ -135,4 +135,9 @@ public final class ObjectLayout {
     if (requiredExtensionFields < 0) { return 0;  }
     return requiredExtensionFields;
   }
+
+  @Override
+  public String toString() {
+    return "ObjLyt[" + forClasses.getClassName().getString() + "]";
+  }
 }

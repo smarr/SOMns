@@ -81,6 +81,10 @@ public final class ClassFactory {
     this.instanceLayout = (instanceSlots == null) ? null : new ObjectLayout(instanceSlots, this);
   }
 
+  public SSymbol getClassName() {
+    return className;
+  }
+
   public ObjectLayout getInstanceLayout() {
     return instanceLayout;
   }
@@ -129,5 +133,10 @@ public final class ClassFactory {
       instanceLayout = updated;
     }
     return instanceLayout;
+  }
+
+  @Override
+  public String toString() {
+    return "ClsFct[" + className.getString() + "]";
   }
 }
