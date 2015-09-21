@@ -149,6 +149,7 @@ public class BasicInterpreterTests {
         {"Exceptions", "testEnsure",                    444, Long.class },
         {"Exceptions", "testEnsureWithSignal",           66, Long.class },
 
+        {"FieldAccess", "inheritanceOfLocalClass", 33, Long.class },
     });
   }
 
