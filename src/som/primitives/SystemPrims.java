@@ -133,7 +133,7 @@ public final class SystemPrims {
       });
 
       for (int i = method.size() - 1; i >= 0; i--) {
-        VM.print(String.format("%1$-" + (maxLengthMethod[0] + 4) + "s",
+        VM.print(String.format("\t%1$-" + (maxLengthMethod[0] + 4) + "s",
           method.get(i)));
         VM.println(location.get(i));
       }
