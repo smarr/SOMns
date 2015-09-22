@@ -37,6 +37,7 @@ import som.interpreter.nodes.dispatch.CachedDispatchSimpleCheckNode.CachedDispat
 import som.interpreter.nodes.dispatch.CachedDispatchSimpleCheckNode.CachedDispatchTrueCheckNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.nodes.dispatch.PrivateStaticBoundDispatchNode;
+import som.interpreter.objectstorage.ClassFactory;
 import som.vm.constants.Classes;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
@@ -168,13 +169,13 @@ public class SInvokable extends SAbstractObject implements Dispatchable {
     }
 
     if (rcvrClass instanceof SClass) {
-      SClass cls = (SClass) rcvrClass;
+      ClassFactory instanceFactory = ((SClass) rcvrClass).getInstanceFactory();
       if (rcvr instanceof SObject) {
         return new CachedDispatchSObjectCheckNode(
-            cls.getLayoutForInstances(), callTarget, next);
+            instanceFactory, callTarget, next);
       } else {
         return new CachedDispatchSObjectWithoutFieldsCheckNode(
-            cls.getInstanceFactory(), callTarget, next);
+            instanceFactory, callTarget, next);
       }
     } else if (rcvr == Boolean.TRUE) {
       return new CachedDispatchTrueCheckNode(callTarget, next);

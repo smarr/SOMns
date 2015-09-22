@@ -2,8 +2,6 @@ package som.interpreter.nodes.dispatch;
 
 import som.interpreter.nodes.dispatch.AbstractDispatchNode.AbstractCachedDispatchNode;
 import som.interpreter.objectstorage.ClassFactory;
-import som.interpreter.objectstorage.ObjectLayout;
-import som.vmobjects.SObject;
 import som.vmobjects.SObjectWithClass;
 
 import com.oracle.truffle.api.CallTarget;
@@ -12,20 +10,20 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 
 public final class CachedDispatchSObjectCheckNode extends AbstractCachedDispatchNode {
 
-  private final ObjectLayout expectedLayout;
+  private final ClassFactory expectedClassFactory;
 
-  public CachedDispatchSObjectCheckNode(final ObjectLayout layout,
+  public CachedDispatchSObjectCheckNode(final ClassFactory rcvrFactory,
       final CallTarget callTarget, final AbstractDispatchNode nextInCache) {
     super(callTarget, nextInCache);
-    this.expectedLayout = layout;
+    this.expectedClassFactory = rcvrFactory;
   }
 
   @Override
   public Object executeDispatch(
       final VirtualFrame frame, final Object[] arguments) {
-    Object rcvr = arguments[0];
+    SObjectWithClass rcvr = (SObjectWithClass) arguments[0];
 
-    if (rcvr instanceof SObject && ((SObject) rcvr).getObjectLayout() == expectedLayout) {
+    if (rcvr.getFactory() == expectedClassFactory) {
       return cachedMethod.call(frame, arguments);
     } else {
       return nextInCache.executeDispatch(frame, arguments);

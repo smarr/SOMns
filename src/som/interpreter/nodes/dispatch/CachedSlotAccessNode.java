@@ -1,9 +1,10 @@
 package som.interpreter.nodes.dispatch;
 
 import som.interpreter.nodes.SlotAccessNode;
+import som.interpreter.objectstorage.ClassFactory;
 import som.interpreter.objectstorage.FieldAccessorNode.AbstractWriteFieldNode;
-import som.interpreter.objectstorage.ObjectLayout;
 import som.vmobjects.SObject;
+import som.vmobjects.SObjectWithClass;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 
@@ -27,23 +28,25 @@ public class CachedSlotAccessNode extends AbstractDispatchNode {
   public static final class CheckedCachedSlotAccessNode extends CachedSlotAccessNode {
     @Child protected AbstractDispatchNode nextInCache;
 
-    private final ObjectLayout layout;
+    private final ClassFactory rcvrFactory;
 
-    public CheckedCachedSlotAccessNode(final ObjectLayout layout,
+    public CheckedCachedSlotAccessNode(final ClassFactory rcvrFactory,
       final SlotAccessNode access,
       final AbstractDispatchNode nextInCache) {
       super(access);
       this.nextInCache = nextInCache;
-      this.layout = layout;
+      this.rcvrFactory = rcvrFactory;
     }
 
     @Override
     public Object executeDispatch(final VirtualFrame frame,
         final Object[] arguments) {
-      SObject rcvr = (SObject) arguments[0];
+      assert arguments[0] instanceof SObjectWithClass;
+      SObjectWithClass rcvr = (SObjectWithClass) arguments[0];
 
-      if (rcvr.getObjectLayout() == layout) {
-        return access.doRead(frame, rcvr);
+      if (rcvr.getFactory() == rcvrFactory) {
+        assert arguments[0] instanceof SObject;
+        return access.doRead(frame, (SObject) rcvr);
       } else {
         return nextInCache.executeDispatch(frame, arguments);
       }
@@ -81,24 +84,26 @@ public class CachedSlotAccessNode extends AbstractDispatchNode {
   }
 
   public static final class CheckedCachedSlotWriteNode extends CachedSlotWriteNode {
-    private final ObjectLayout layout;
+    private final ClassFactory rcvrFactory;
     @Child protected AbstractDispatchNode nextInCache;
 
-    public CheckedCachedSlotWriteNode(final ObjectLayout layout,
+    public CheckedCachedSlotWriteNode(final ClassFactory rcvrFactory,
         final AbstractWriteFieldNode write,
         final AbstractDispatchNode nextInCache) {
       super(write);
-      this.layout = layout;
+      this.rcvrFactory = rcvrFactory;
       this.nextInCache = nextInCache;
     }
 
     @Override
     public Object executeDispatch(final VirtualFrame frame,
         final Object[] arguments) {
-      SObject rcvr = (SObject) arguments[0];
+      assert arguments[0] instanceof SObjectWithClass;
+      SObjectWithClass rcvr = (SObjectWithClass) arguments[0];
 
-      if (rcvr.getObjectLayout() == layout) {
-        return write.write(rcvr, arguments[1]);
+      if (rcvr.getFactory() == rcvrFactory) {
+        assert arguments[0] instanceof SObject;
+        return write.write((SObject) rcvr, arguments[1]);
       } else {
         return nextInCache.executeDispatch(frame, arguments);
       }
