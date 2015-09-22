@@ -129,9 +129,8 @@ public abstract class FieldAccessorNode extends Node {
 
     @Override
     public long readLong(final SObject obj) throws UnexpectedResultException {
-      boolean assumption = hasExpectedLayout(obj);
-      if (assumption) {
-        return storage.readLong(obj, assumption);
+      if (hasExpectedLayout(obj)) {
+        return storage.readLong(obj);
       } else {
         return respecializedNodeOrNext(obj).
             readLong(obj);
@@ -159,9 +158,8 @@ public abstract class FieldAccessorNode extends Node {
 
     @Override
     public double readDouble(final SObject obj) throws UnexpectedResultException {
-      boolean assumption = hasExpectedLayout(obj);
-      if (assumption) {
-        return storage.readDouble(obj, assumption);
+      if (hasExpectedLayout(obj)) {
+        return storage.readDouble(obj);
       } else {
         return respecializedNodeOrNext(obj).readDouble(obj);
       }
@@ -188,9 +186,8 @@ public abstract class FieldAccessorNode extends Node {
 
     @Override
     public Object read(final SObject obj) {
-      boolean assumption = hasExpectedLayout(obj);
-      if (assumption) {
-        return storage.read(obj, assumption);
+      if (hasExpectedLayout(obj)) {
+        return storage.read(obj);
       } else {
         return respecializedNodeOrNext(obj).read(obj);
       }

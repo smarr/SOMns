@@ -216,8 +216,8 @@ public abstract class SObject extends SObjectWithClass {
     HashMap<SlotDefinition, Object> fieldValues = new HashMap<>((int) (locations.size() / 0.75f));
 
     for (Entry<SlotDefinition, StorageLocation> loc : locations.entrySet()) {
-      if (loc.getValue().isSet(this, true)) {
-        fieldValues.put(loc.getKey(), loc.getValue().read(this, true));
+      if (loc.getValue().isSet(this)) {
+        fieldValues.put(loc.getKey(), loc.getValue().read(this));
       } else {
         fieldValues.put(loc.getKey(), null);
       }
@@ -314,7 +314,7 @@ public abstract class SObject extends SObjectWithClass {
   public final Object getField(final SlotDefinition slot) {
     CompilerAsserts.neverPartOfCompilation("getField");
     StorageLocation location = getLocation(slot);
-    return location.read(this, true);
+    return location.read(this);
   }
 
   public final void setField(final SlotDefinition slot, final Object value) {

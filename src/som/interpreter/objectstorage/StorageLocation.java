@@ -18,10 +18,7 @@ import som.vmobjects.SObject;
 import sun.misc.Unsafe;
 
 import com.oracle.truffle.api.CompilerAsserts;
-import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
-import com.oracle.truffle.api.unsafe.UnsafeAccess;
-import com.oracle.truffle.api.unsafe.UnsafeAccessFactory;
 
 
 public abstract class StorageLocation {
@@ -40,23 +37,15 @@ public abstract class StorageLocation {
     }
   }
 
-  private static final UnsafeAccess ua;
-  static {
-    UnsafeAccessFactory factory = Truffle.getRuntime().
-        getCapability(UnsafeAccessFactory.class);
-    assert factory != null : "This seems to be an incompatible version of Truffle. UnsafeAcceessFactory is not available anymore";
-    ua = factory.createUnsafeAccess(loadUnsafe());
-  }
+  private static final Unsafe unsafe = loadUnsafe();
 
   public interface LongStorageLocation {
-    long readLong(final SObject obj, boolean assumptionValid)
-        throws UnexpectedResultException;
+    long readLong(final SObject obj) throws UnexpectedResultException;
     void writeLong(final SObject obj, final long value);
   }
 
   public interface DoubleStorageLocation {
-    double readDouble(final SObject obj, boolean assumptionValid)
-        throws UnexpectedResultException;
+    double readDouble(final SObject obj) throws UnexpectedResultException;
     void   writeDouble(final SObject obj, final double value);
   }
 
@@ -96,8 +85,8 @@ public abstract class StorageLocation {
     this.layout = layout;
   }
 
-  public abstract boolean isSet(SObject obj, boolean assumptionValid);
-  public abstract Object  read(SObject obj,  boolean assumptionValid);
+  public abstract boolean isSet(SObject obj);
+  public abstract Object  read(SObject obj);
   public abstract void    write(SObject obj, Object value) throws GeneralizeStorageLocationException, UninitalizedStorageLocationException;
 
   public abstract AbstractReadFieldNode  getReadNode(SlotDefinition slot,
@@ -119,12 +108,12 @@ public abstract class StorageLocation {
     }
 
     @Override
-    public boolean isSet(final SObject obj, final boolean assumptionValid) {
+    public boolean isSet(final SObject obj) {
       return false;
     }
 
     @Override
-    public Object read(final SObject obj, final boolean assumptionValid) {
+    public Object read(final SObject obj) {
       CompilerAsserts.neverPartOfCompilation("StorageLocation");
       return Nil.nilObject;
     }
@@ -184,26 +173,20 @@ public abstract class StorageLocation {
     }
 
     @Override
-    public boolean isSet(final SObject obj, final boolean assumptionValid) {
-      assert read(obj, assumptionValid) != null;
+    public boolean isSet(final SObject obj) {
+      assert read(obj) != null;
       return true;
     }
 
     @Override
-    public Object read(final SObject obj, final boolean assumptionValid) {
-      // TODO: for the moment Graal doesn't seem to get the optimizations
-      // right, still need to pass in the correct location identifier,
-      // which can probably be `this`.
-      return ua.getObject(obj, fieldOffset, assumptionValid, null);
+    public Object read(final SObject obj) {
+      return unsafe.getObject(obj, fieldOffset);
     }
 
     @Override
     public void write(final SObject obj, final Object value) {
       assert value != null;
-
-      // TODO: for the moment Graal doesn't seem to get the optimizations
-      // right, still need to pass in the correct location identifier, which can probably be `this`.
-      ua.putObject(obj, fieldOffset, value, null);
+      unsafe.putObject(obj, fieldOffset, value);
     }
   }
 
@@ -218,13 +201,13 @@ public abstract class StorageLocation {
     }
 
     @Override
-    public boolean isSet(final SObject obj, final boolean assumptionValid) {
-      assert read(obj, assumptionValid) != null;
+    public boolean isSet(final SObject obj) {
+      assert read(obj) != null;
       return true;
     }
 
     @Override
-    public Object read(final SObject obj, final boolean assumptionValid) {
+    public Object read(final SObject obj) {
       Object[] arr = obj.getExtensionObjFields();
 
 //      return CompilerDirectives.unsafeCast(
@@ -258,8 +241,7 @@ public abstract class StorageLocation {
     }
 
     @Override
-    public final boolean isSet(final SObject obj,
-        final boolean assumptionValid) {
+    public final boolean isSet(final SObject obj) {
       return obj.isPrimitiveSet(mask);
     }
 
@@ -283,21 +265,18 @@ public abstract class StorageLocation {
     }
 
     @Override
-    public Object read(final SObject obj, final boolean assumptionValid) {
+    public Object read(final SObject obj) {
       try {
-        return readDouble(obj, assumptionValid);
+        return readDouble(obj);
       } catch (UnexpectedResultException e) {
         return e.getResult();
       }
     }
 
     @Override
-    public double readDouble(final SObject obj, final boolean assumptionValid)
-        throws UnexpectedResultException {
-      if (isSet(obj, assumptionValid)) {
-        // TODO: for the moment Graal doesn't seem to get the optimizations
-        // right, still need to pass in the correct location identifier, which can probably be `this`.
-        return ua.getDouble(obj, offset, assumptionValid, null);
+    public double readDouble(final SObject obj) throws UnexpectedResultException {
+      if (isSet(obj)) {
+        return unsafe.getDouble(obj, offset);
       } else {
         TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized read node");
         throw new UnexpectedResultException(Nil.nilObject);
@@ -319,7 +298,7 @@ public abstract class StorageLocation {
 
     @Override
     public void writeDouble(final SObject obj, final double value) {
-      ua.putDouble(obj, offset, value, null);
+      unsafe.putDouble(obj, offset, value);
       markAsSet(obj);
     }
 
@@ -345,20 +324,18 @@ public abstract class StorageLocation {
     }
 
     @Override
-    public Object read(final SObject obj, final boolean assumptionValid) {
+    public Object read(final SObject obj) {
       try {
-        return readLong(obj, assumptionValid);
+        return readLong(obj);
       } catch (UnexpectedResultException e) {
         return e.getResult();
       }
     }
 
     @Override
-    public long readLong(final SObject obj, final boolean assumptionValid) throws UnexpectedResultException {
-      if (isSet(obj, assumptionValid)) {
-        // TODO: for the moment Graal doesn't seem to get the optimizations
-        // right, still need to pass in the correct location identifier
-        return ua.getLong(obj, offset, assumptionValid, null);
+    public long readLong(final SObject obj) throws UnexpectedResultException {
+      if (isSet(obj)) {
+        return unsafe.getLong(obj, offset);
       } else {
         TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized read node");
         throw new UnexpectedResultException(Nil.nilObject);
@@ -378,7 +355,7 @@ public abstract class StorageLocation {
 
     @Override
     public void writeLong(final SObject obj, final long value) {
-      ua.putLong(obj, offset, value, null);
+      unsafe.putLong(obj, offset, value);
       markAsSet(obj);
     }
 
@@ -413,17 +390,17 @@ public abstract class StorageLocation {
     }
 
     @Override
-    public Object read(final SObject obj, final boolean assumptionValid) {
+    public Object read(final SObject obj) {
       try {
-        return readLong(obj, assumptionValid);
+        return readLong(obj);
       } catch (UnexpectedResultException e) {
         return e.getResult();
       }
     }
 
     @Override
-    public long readLong(final SObject obj, final boolean assumptionValid) throws UnexpectedResultException {
-      if (isSet(obj, assumptionValid)) {
+    public long readLong(final SObject obj) throws UnexpectedResultException {
+      if (isSet(obj)) {
         // perhaps we should use the unsafe operations as for doubles
         return obj.getExtendedPrimFields()[extensionIndex];
       } else {
@@ -472,24 +449,20 @@ public abstract class StorageLocation {
     }
 
     @Override
-    public Object read(final SObject obj, final boolean assumptionValid) {
+    public Object read(final SObject obj) {
       try {
-        return readDouble(obj, assumptionValid);
+        return readDouble(obj);
       } catch (UnexpectedResultException e) {
         return e.getResult();
       }
     }
 
     @Override
-    public double readDouble(final SObject obj, final boolean assumptionValid)
-        throws UnexpectedResultException {
-      if (isSet(obj, assumptionValid)) {
+    public double readDouble(final SObject obj) throws UnexpectedResultException {
+      if (isSet(obj)) {
         long[] arr = obj.getExtendedPrimFields();
-        // TODO: for the moment Graal doesn't seem to get the optimizations
-        // right, still need to pass in the correct location identifier, which can probably be `this`.
-        return ua.getDouble(arr,
-            Unsafe.ARRAY_DOUBLE_BASE_OFFSET + Unsafe.ARRAY_DOUBLE_INDEX_SCALE * extensionIndex,
-            true, null);
+        return unsafe.getDouble(arr,
+            (long) Unsafe.ARRAY_DOUBLE_BASE_OFFSET + Unsafe.ARRAY_DOUBLE_INDEX_SCALE * extensionIndex);
       } else {
         TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized read node");
         throw new UnexpectedResultException(Nil.nilObject);
@@ -512,12 +485,9 @@ public abstract class StorageLocation {
     @Override
     public void writeDouble(final SObject obj, final double value) {
       final long[] arr = obj.getExtendedPrimFields();
-
-      // TODO: for the moment Graal doesn't seem to get the optimizations
-      // right, still need to pass in the correct location identifier, which can probably be `this`.
-      ua.putDouble(arr,
-          Unsafe.ARRAY_DOUBLE_BASE_OFFSET + Unsafe.ARRAY_DOUBLE_INDEX_SCALE * this.extensionIndex,
-          value, null);
+      unsafe.putDouble(arr,
+          (long) Unsafe.ARRAY_DOUBLE_BASE_OFFSET + Unsafe.ARRAY_DOUBLE_INDEX_SCALE * this.extensionIndex,
+          value);
 
       markAsSet(obj);
     }
