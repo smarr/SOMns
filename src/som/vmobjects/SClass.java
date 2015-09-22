@@ -37,15 +37,16 @@ import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.objectstorage.ClassFactory;
 import som.interpreter.objectstorage.ObjectLayout;
+import som.vm.Bootstrap;
 import som.vm.constants.Classes;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 
 
 // TODO: should we move more of that out of SClass and use the corresponding
 //       ClassFactory?
-// TODO: optimize lookup based on ClassFactory, not just for slots
 public final class SClass extends SObjectWithClass {
 
   @CompilationFinal private SClass superclass;
@@ -79,7 +80,9 @@ public final class SClass extends SObjectWithClass {
   }
 
   public ClassFactory getInstanceFactory() {
-    assert classGroup == null || classGroup != instanceClassGroup;
+    assert classGroup != null               || !Bootstrap.isObjectSystemInitialized();
+    assert instanceClassGroup != null       || !Bootstrap.isObjectSystemInitialized();
+    assert classGroup != instanceClassGroup || !Bootstrap.isObjectSystemInitialized();
     return instanceClassGroup;
   }
 
@@ -125,6 +128,7 @@ public final class SClass extends SObjectWithClass {
     this.dispatchables   = dispatchables;
     this.declaredAsValue = declaredAsValue;
     this.instanceClassGroup = classFactory;
+    assert instanceClassGroup != null || !Bootstrap.isObjectSystemInitialized();
   }
 
   private boolean isBasedOn(final MixinDefinitionId mixinId) {

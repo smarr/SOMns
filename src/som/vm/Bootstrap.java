@@ -300,8 +300,8 @@ public final class Bootstrap {
    * Allocate the metaclass class.
    */
   public static SClass newMetaclassClass(final SObject kernel) {
-    SClass metaclassClass      = new SClass(kernel); // class obj for "Metaclass"
-    SClass metaclassClassClass = new SClass(kernel); // class obj for "Metaclass class"
+    SClass metaclassClass      = new SClass(kernel);
+    SClass metaclassClassClass = new SClass(kernel);
     metaclassClass.setClass(metaclassClassClass);
 
     metaclassClass.initializeClass(Symbols.METACLASS, null);
@@ -371,6 +371,7 @@ public final class Bootstrap {
      valueDef.initializeClass(Classes.valueClass,  Classes.thingClass, true);
     objectDef.initializeClass(Classes.objectClass, Classes.thingClass);
      classDef.initializeClass(Classes.classClass,  Classes.objectClass);
+
  metaclassDef.initializeClass(Classes.metaclassClass, Classes.classClass);
        nilDef.initializeClass(Classes.nilClass,    Classes.valueClass);
 
@@ -390,6 +391,28 @@ public final class Bootstrap {
     block3Def.initializeClass(Classes.blockClass3, Classes.blockClass2);
 
     Nil.nilObject.setClass(Classes.nilClass);
+
+    // fix up the metaclassClass group
+    Classes.topClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
+  Classes.thingClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
+  Classes.valueClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
+ Classes.objectClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
+  Classes.classClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
+  Classes.metaclassClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
+  Classes.nilClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
+  Classes.arrayClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
+  Classes.integerClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
+  Classes.stringClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
+  Classes.doubleClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
+  Classes.symbolClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
+  Classes.booleanClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
+  Classes.trueClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
+  Classes.falseClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
+  Classes.blockClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
+  Classes.blockClass1.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
+  Classes.blockClass2.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
+  Classes.blockClass3.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
+
 
     SClass kernelClass = kernelModule.instantiateClass(Nil.nilObject, Classes.objectClass);
     KernelObj.kernel.setClass(kernelClass);

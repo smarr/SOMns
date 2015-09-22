@@ -67,7 +67,14 @@ public abstract class ClassInstantiationNode extends Node {
       final Object superclassAndMixins,
       @Cached("superclassAndMixins") final Object cachedSuperMixins,
       @Cached("createClassFactory(superclassAndMixins)") final ClassFactory factory) {
+    return instantiate(outerObj, factory);
+  }
+
+  public static SClass instantiate(final SObjectWithClass outerObj,
+      final ClassFactory factory) {
     SClass resultClass = new SClass(outerObj, Classes.metaclassClass);
+    factory.getClassClassFactory().initializeClass(resultClass);
+
     SClass result = new SClass(outerObj, resultClass);
     factory.initializeClass(result);
     return result;

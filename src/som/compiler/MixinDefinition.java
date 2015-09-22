@@ -12,6 +12,7 @@ import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.interpreter.LexicalScope.MixinScope;
 import som.interpreter.Method;
 import som.interpreter.SNodeFactory;
+import som.interpreter.nodes.ClassInstantiationNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.FieldNode.FieldWriteNode;
 import som.interpreter.nodes.SlotAccessNode;
@@ -142,6 +143,10 @@ public final class MixinDefinition {
       final Object superclassAndMixins, final boolean isTheValueClass) {
     VM.callerNeedsToBeOptimized("This is supposed to result in a cacheable object, and thus is only the fallback case.");
     ClassFactory factory = createClassFactory(superclassAndMixins, isTheValueClass);
+    if (result.getSOMClass() != null) {
+      factory.getClassClassFactory().initializeClass(result.getSOMClass());
+    }
+    result.setClassGroup(factory.getClassClassFactory());
     factory.initializeClass(result);
   }
 
@@ -178,11 +183,19 @@ public final class MixinDefinition {
     boolean instancesAreValues = checkAndConfirmIsValue(superClass,
         mixinsIncludeValue, isTheValueClass, hasOnlyImmutableFields);
 
-    ClassFactory factory = new ClassFactory(name, classScope, this,
-        instanceSlots, dispatchables, isModule, mixins, hasOnlyImmutableFields,
-        instancesAreValues);
+    ClassFactory classClassFactory = new ClassFactory(
+        Symbols.symbolFor(name.getString() + " class"), this, null,
+        classScope.getDispatchables(), isModule,
+        new SClass[] {Classes.classClass}, true,
+        // TODO: not passing a ClassFactory of the meta class here is incorrect,
+        // might not matter in practice
+        null);
 
-    return factory;
+    ClassFactory classFactory = new ClassFactory(name, this,
+        instanceSlots, dispatchables, instancesAreValues, mixins,
+        hasOnlyImmutableFields, classClassFactory);
+
+    return classFactory;
   }
 
   protected boolean hasOnlyImmutableFields(final HashSet<SlotDefinition> instanceSlots) {
@@ -310,10 +323,8 @@ public final class MixinDefinition {
 
   public SClass instantiateClass(final SObjectWithClass outer,
       final Object superclassAndMixins) {
-    SClass resultClass = new SClass(outer, Classes.metaclassClass);
-    SClass result = new SClass(outer, resultClass);
-    initializeClass(result, superclassAndMixins);
-    return result;
+    ClassFactory factory = createClassFactory(superclassAndMixins, false);
+    return ClassInstantiationNode.instantiate(outer, factory);
   }
 
   // TODO: need to rename this, it doesn't really fulfill this role anymore

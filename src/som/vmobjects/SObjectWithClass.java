@@ -1,6 +1,7 @@
 package som.vmobjects;
 
 import som.interpreter.objectstorage.ClassFactory;
+import som.vm.Bootstrap;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
@@ -11,7 +12,7 @@ public abstract class SObjectWithClass extends SAbstractObject {
   @CompilationFinal protected ClassFactory classGroup; // the factory by which clazz was created
 
   public SObjectWithClass(final SClass clazz, final ClassFactory classGroup) {
-    this.clazz   = clazz;
+    this.clazz      = clazz;
     this.classGroup = classGroup;
     assert clazz.getInstanceFactory() == classGroup;
   }
@@ -24,6 +25,7 @@ public abstract class SObjectWithClass extends SAbstractObject {
   }
 
   public final ClassFactory getFactory() {
+    assert classGroup != null;
     return classGroup;
   }
 
@@ -32,6 +34,12 @@ public abstract class SObjectWithClass extends SAbstractObject {
     assert value != null;
     clazz      = value;
     classGroup = value.getInstanceFactory();
+    assert classGroup != null || !Bootstrap.isObjectSystemInitialized();
+  }
+
+  public void setClassGroup(final ClassFactory factory) {
+    classGroup = factory;
+    assert factory.getClassName() == clazz.getName();
   }
 
   public static final class SObjectWithoutFields extends SObjectWithClass {
