@@ -29,4 +29,28 @@ public final class CachedDispatchSObjectCheckNode extends AbstractCachedDispatch
       return nextInCache.executeDispatch(frame, arguments);
     }
   }
+
+  public static final class CachedDispatchSObjectWithoutFieldsCheckNode extends AbstractCachedDispatchNode {
+
+    private final ClassFactory expectedClassFactory;
+
+    public CachedDispatchSObjectWithoutFieldsCheckNode(
+        final ClassFactory rcvrFactory, final CallTarget callTarget,
+        final AbstractDispatchNode nextInCache) {
+      super(callTarget, nextInCache);
+      this.expectedClassFactory = rcvrFactory;
+    }
+
+    @Override
+    public Object executeDispatch(
+        final VirtualFrame frame, final Object[] arguments) {
+      SObjectWithClass rcvr = (SObjectWithClass) arguments[0];
+
+      if (rcvr.getFactory() == expectedClassFactory) {
+        return cachedMethod.call(frame, arguments);
+      } else {
+        return nextInCache.executeDispatch(frame, arguments);
+      }
+    }
+  }
 }

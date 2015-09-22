@@ -31,11 +31,13 @@ import som.compiler.MixinDefinition;
 import som.interpreter.Invokable;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
 import som.interpreter.nodes.dispatch.CachedDispatchSObjectCheckNode;
+import som.interpreter.nodes.dispatch.CachedDispatchSObjectCheckNode.CachedDispatchSObjectWithoutFieldsCheckNode;
 import som.interpreter.nodes.dispatch.CachedDispatchSimpleCheckNode;
 import som.interpreter.nodes.dispatch.CachedDispatchSimpleCheckNode.CachedDispatchFalseCheckNode;
 import som.interpreter.nodes.dispatch.CachedDispatchSimpleCheckNode.CachedDispatchTrueCheckNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.nodes.dispatch.PrivateStaticBoundDispatchNode;
+import som.interpreter.objectstorage.ClassFactory;
 import som.vm.constants.Classes;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
@@ -167,8 +169,14 @@ public class SInvokable extends SAbstractObject implements Dispatchable {
     }
 
     if (rcvrClass instanceof SClass) {
-      return new CachedDispatchSObjectCheckNode(
-          ((SClass) rcvrClass).getInstanceFactory(), callTarget, next);
+      ClassFactory instanceFactory = ((SClass) rcvrClass).getInstanceFactory();
+      if (rcvr instanceof SObject) {
+        return new CachedDispatchSObjectCheckNode(
+            instanceFactory, callTarget, next);
+      } else {
+        return new CachedDispatchSObjectWithoutFieldsCheckNode(
+            instanceFactory, callTarget, next);
+      }
     } else if (rcvr == Boolean.TRUE) {
       return new CachedDispatchTrueCheckNode(callTarget, next);
     } else if (rcvr == Boolean.FALSE) {
