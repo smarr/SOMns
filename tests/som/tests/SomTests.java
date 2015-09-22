@@ -53,6 +53,7 @@ public class SomTests {
         {"SystemTests"     },
         {"BenchmarkHarnessTests"},
         {"ActorTests"      },
+        {"RegressionTests" },
         {"MinitestTests"   },
       });
   }
