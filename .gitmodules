@@ -4,3 +4,6 @@
 [submodule "libs/truffle"]
 	path = libs/truffle
 	url = https://github.com/smarr/Truffle.git
+[submodule "libs/mxtool"]
+	path = libs/mxtool
+	url = git@github.com:smarr/mxtool.git
