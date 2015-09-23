@@ -24,6 +24,12 @@
         <delete dir="${src_gen.dir}"/>
     </target>
     
+    <target name="clobber" description="Do clean, and also clean truffle build" depends="clean">
+        <exec executable="../mxtool/mx" dir="${truffle.dir}">
+            <arg value="clean"/>
+        </exec>
+    </target>
+    
     <target name="check-core-lib-available">
         <available file="core-lib/.git" property="core-lib.present"/>
     </target>
