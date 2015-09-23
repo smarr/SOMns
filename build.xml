@@ -41,16 +41,9 @@
         <arg value="--init" />
       </exec>
     </target>
-    
-    <!-- Work around for issue with non-existing env file -->
-    <target name="truffle-env">
-        <exec executable="touch">
-            <arg value="${truffle.dir}/mx.truffle/env"/>
-        </exec>
-    </target>
-    
-    <target name="truffle-libs" depends="truffle-env">
-        <exec executable="./mx.sh" dir="${truffle.dir}">
+
+    <target name="truffle-libs" >
+        <exec executable="../mxtool/mx" dir="${truffle.dir}">
             <arg value="build"/>
         </exec>
     </target>
