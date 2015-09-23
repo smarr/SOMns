@@ -42,8 +42,6 @@ import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
-import com.oracle.truffle.api.nodes.NodeFieldAccessor;
-import com.oracle.truffle.api.nodes.NodeUtil.FieldOffsetProvider;
 
 public abstract class SObject extends SObjectWithClass {
 
@@ -348,11 +346,9 @@ public abstract class SObject extends SObjectWithClass {
   private static long getFirstObjectFieldOffset() {
     CompilerAsserts.neverPartOfCompilation("SObject.getFirstObjectFieldOffset()");
     try {
-      final FieldOffsetProvider fieldOffsetProvider = getFieldOffsetProvider();
-
       final Field firstField = SMutableObject.class.getDeclaredField("field1");
-      return fieldOffsetProvider.objectFieldOffset(firstField);
-    } catch (NoSuchFieldException | IllegalAccessException e) {
+      return StorageLocation.getFieldOffset(firstField);
+    } catch (NoSuchFieldException e) {
       throw new RuntimeException(e);
     }
   }
@@ -360,23 +356,11 @@ public abstract class SObject extends SObjectWithClass {
   private static long getFirstPrimFieldOffset() {
     CompilerAsserts.neverPartOfCompilation("SObject.getFirstPrimFieldOffset()");
     try {
-      final FieldOffsetProvider fieldOffsetProvider = getFieldOffsetProvider();
-
       final Field firstField = SMutableObject.class.getDeclaredField("primField1");
-      return fieldOffsetProvider.objectFieldOffset(firstField);
-    } catch (NoSuchFieldException | IllegalAccessException e) {
+      return StorageLocation.getFieldOffset(firstField);
+    } catch (NoSuchFieldException e) {
       throw new RuntimeException(e);
     }
-  }
-
-  private static FieldOffsetProvider getFieldOffsetProvider()
-      throws NoSuchFieldException, IllegalAccessException {
-    final Field fieldOffsetProviderField =
-        NodeFieldAccessor.class.getDeclaredField("unsafeFieldOffsetProvider");
-    fieldOffsetProviderField.setAccessible(true);
-    final FieldOffsetProvider fieldOffsetProvider =
-        (FieldOffsetProvider) fieldOffsetProviderField.get(null);
-    return fieldOffsetProvider;
   }
 
   private static long getObjectFieldLength() {
@@ -409,10 +393,8 @@ public abstract class SObject extends SObjectWithClass {
 
   private static long getFieldDistance(final String field1, final String field2) throws NoSuchFieldException,
       IllegalAccessException {
-    final FieldOffsetProvider fieldOffsetProvider = getFieldOffsetProvider();
-
     final Field firstField  = SMutableObject.class.getDeclaredField(field1);
     final Field secondField = SMutableObject.class.getDeclaredField(field2);
-    return fieldOffsetProvider.objectFieldOffset(secondField) - fieldOffsetProvider.objectFieldOffset(firstField);
+    return StorageLocation.getFieldOffset(secondField) - StorageLocation.getFieldOffset(firstField);
   }
 }
