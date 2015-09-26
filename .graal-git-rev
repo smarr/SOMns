@@ -1,4 +1,4 @@
 This version is used with the following version of the Graal repo:
-  https://github.com/smarr/GraalVM.git
+  https://github.com/smarr/GraalBasic.git
 
-  git-rev: 017a2b8fa754cdf2d131a66cec87826c1cc76de0
+  git-rev: 8cfa5394e9dc0e2aae9a21133ae6d16ad61f51ba
