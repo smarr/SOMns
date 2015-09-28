@@ -9,11 +9,42 @@ class Savina usingPlatform: platform andHarness: harness = Value (
 )(
   (* A simple PRNG, to be as portable as possible. *)
   public class Random new: seed = (
-    | private seed ::= seed. |
+    | private seed ::= seed.
+      private gotNextGaussian  ::= false.
+      private nextNextGaussian ::= 0.0. |
   ) (
     public next = (
       seed := ((seed * 1309) + 13849) & 65535.
       ^ seed
+    )
+    
+    (* Returns a double uniformly distributed in the range of [0.0, 1.0) *)
+    public nextDouble = (
+      ^ next // 65536
+    )
+    
+    (* Returns a double normally distributed with mean 0.0 
+       and standard deviation of 1.0 *)
+    public nextGaussian = (
+      | v1 v2 s multiplier |
+      gotNextGaussian ifTrue: [
+        gotNextGaussian := false.
+        ^ nextNextGaussian ].
+      
+      v1 := (2.0 * nextDouble) - 1.0.
+      v2 := (2.0 * nextDouble) - 1.0.
+      s  := (v1 * v1) + (v2 * v2).
+      
+      [s >= 1.0 or: [s = 0.0]] whileTrue: [
+        v1 := (2.0 * nextDouble) - 1.0.
+        v2 := (2.0 * nextDouble) - 1.0.
+        s  := (v1 * v1) + (v2 * v2).
+      ].
+      
+      multiplier := (-2.0 * s log // s) sqrt.
+      nextNextGaussian := v2 * multiplier.
+      gotNextGaussian := true.
+      ^ v1 * multiplier
     )
   ) : (
     public new = (
