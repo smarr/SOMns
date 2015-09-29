@@ -1152,12 +1152,184 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     )
   )
   
-  public class UnbalancedBobwebbedTree = Benchmark ()( todo = () )
-  public class OnlineFacilityLocation = Benchmark ()( todo = () )
-  public class PrecisePiComputation = Benchmark ()( todo = () )
-  public class RecursiveMatricMultiplication = Benchmark ()( todo = () )
-  public class Quicksort = Benchmark ()( todo = () )
-  public class AllPairsShortestPath = Benchmark ()( todo = ( USES_SHARED_STATE ) )
+  (* Compared to the Savina original benchmarks, this does not contain code for
+     'urgent' nodes, which seemed broken in the original, at least I did not
+     see that it was used. This version also uses explicit messages to
+     have deterministic termination after the traversals is complete.
+     It does not do an extra traversal for termination, since we already
+     got the upward traversal after #traverse *)
+  public class UnbalancedCobwebbedTree binomial: numChildren avgCompSize: avg stdevCompSize: stdev = Benchmark <: Value (
+  | private numChildren   = numChildren.
+    private avgCompSize   = avg.
+    private stdevCompSize = stdev.
+    private MaxNodes      = 2000. (*00*)
+  |)(
+    class RootActor new: completionRes = (
+    | private ran = Random new.
+      private height ::= 1.
+      private size   ::= 1.
+      private children = Array new: numChildren.
+      private hasGrantChildren = Array new: numChildren withAll: false.
+      private traversedChildren ::= 0.
+      private startedTraversal ::= false.
+      private completionRes = completionRes.
+    |)(
+      public generateTree = (
+        | computationSize i j |
+        height := height + 1.
+        computationSize := getNextNormal: avgCompSize with: stdevCompSize.
+
+        1 to: numChildren do: [:i |
+          | nodeActor |
+          nodeActor := (actors createActorFromValue: NodeActor)
+             <-: parent: self root: self height: height id: size + 1 computation: computationSize.
+          children at: i put: nodeActor.
+        ].
+        
+        size := size + numChildren.
+        
+        children do: [:c | c <-: tryGeneratedChildren ]
+      )
+      
+      public shouldGenerateChildren: child height: childHeight = (
+        size + numChildren <= MaxNodes
+          ifTrue: [
+            | moreChildren |
+            moreChildren := ran nextBoolean.
+            moreChildren ifTrue: [
+              | childComp randomInt |
+              childComp := getNextNormal: avgCompSize with: stdevCompSize.
+              child <-: generateChildren: size computation: childComp.
+              size := size + numChildren.
+              
+              childHeight + 1 > height ifTrue: [ height := childHeight + 1 ].
+            ] ifFalse: [
+              childHeight > height ifTrue: [ height := childHeight ] ] ]
+          ifFalse: [
+            startedTraversal ifFalse: [
+              startedTraversal := true.
+              traverse ] ]
+      )
+      
+      public traversed = (
+        traversedChildren := traversedChildren + 1.
+        traversedChildren = numChildren ifTrue: [
+          completionRes resolve: height * size.
+        ]
+      )
+      
+      public updateGrant: childId = (
+        hasGrantChildren at: childId put: true
+      )
+
+      private getNextNormal: pMean with: pDev = (
+        | result |
+        result := 0.
+        [ result <= 0 ] whileTrue: [
+          | tempDouble |
+          tempDouble := ran nextGaussian * pDev + pMean.
+          result := tempDouble round
+        ].
+        ^ result
+      )
+      
+      private traverse = (
+        children do: [:c | c <-: traverse ].
+      )
+    )
+    
+    class NodeActor parent: parent root: root height: height id: id computation: compSize = (
+    | private hasChildren ::= false.
+      private traversedChildren ::= 0.
+      private children = Array new: numChildren.
+      private hasGrantChildren = Array new: numChildren withAll: false.
+      private dummy = 400. (*00*)
+      
+      private myParent   = parent.
+      private myRoot     = root.
+      private myHeight   = height.
+      private myId       = id.
+      private myCompSize = compSize.
+    |)(
+      public tryGeneratedChildren = (
+        loop: 100 with: dummy.
+        myRoot <-: shouldGenerateChildren: self height: myHeight.
+      )
+      
+      public generateChildren: currentId computation: compSize = (
+        | myArrayId childrenHeight idValue |
+        myArrayId := myId % numChildren.
+        myParent <-: updateGrant: myArrayId.
+        childrenHeight := myHeight + 1.
+        idValue := currentId.
+        
+        1 to: numChildren do: [:i |
+          | node |
+          node := (actors createActorFromValue: NodeActor) <-: parent: self root: myRoot height: childrenHeight id: idValue + 1 computation: compSize.
+          children at: i put: node.
+        ].
+        
+        hasChildren := true.
+        
+        children do: [:c | c <-: tryGeneratedChildren ].
+      )
+
+      public updateGrant: childId = (
+        hasGrantChildren at: childId put: true
+      )
+      
+      public traverse = (
+        traversedChildren := 0.
+        loop: myCompSize with: dummy.
+        hasChildren
+          ifTrue:  [ children do: [:c | c <-: traverse ] ]
+          ifFalse: [ myParent <-: traversed ].
+      )
+      
+      public traversed = (
+        traversedChildren := traversedChildren + 1.
+        traversedChildren = numChildren ifTrue: [
+          myParent <-: traversed.
+        ]
+      )
+
+      private loop: busywait with: dummy = (
+        | test |
+        test := 0.
+        0 to: dummy * busywait do: [:k |
+          test := test + 1.
+        ].
+        ^ test
+      )
+    )
+    
+    public benchmark = (
+      | rootActor completionPP |
+      completionPP := actors createPromisePair.
+      rootActor := (actors createActorFromValue: RootActor) <-: new: completionPP resolver.
+      rootActor <-: generateTree.
+      ^ completionPP promise
+    )
+    
+    public verifyResult: result = (
+      (* Benchmark behavior is partially non-deterministic because of races
+         during tree creation, I think. So, I don't know how to verify the
+         result. *)
+      ^ true
+    )
+  ) : (
+    public newInstance: problemSize = (
+      | problem |
+      problem := problemSize split: ':'.
+      ^ self    binomial: (problem at: 1) asInteger
+             avgCompSize: (problem at: 2) asInteger
+           stdevCompSize: (problem at: 3) asInteger
+    )
+    
+    public setupVerifiedRun: run = (
+      run problemSize: '10:500:100'
+    )
+  )
 
   public class TrapezoidalApproximation numWorkers: w numPieces: n left: l right: r = Benchmark <: Value (
   | private numWorkers = w.
