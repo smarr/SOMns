@@ -22,10 +22,11 @@ class Collections usingKernel: kernel = Value (
 | private Array  = kernel Array. 
   private Pair   = kernel Pair.
   private Vector = kernel Vector.
+  private initialSize = 10.
 |
 )(
-  public class Set = (
-    | public items ::= Vector new. |
+  public class Set new: size = (
+  | public items ::= Vector new: size. |
   ) (
 
     public = otherSet = (
@@ -123,17 +124,21 @@ class Collections usingKernel: kernel = Value (
     public size = (
       ^ items size
     )
+  ) : (
+    public new = ( ^ self new: initialSize )
   )
   
-  public class IdentitySet = Set ()(
+  public class IdentitySet new: size = Set new: size ()(
     public contains: anObject = (
       items do: [ :it | it == anObject ifTrue: [ ^ true ] ].
       ^ false
     )
+  ) : (
+    public new = ( ^ self new: initialSize )
   )
 
-  public class Dictionary = (
-  | protected pairs = IdentitySet new. |
+  public class Dictionary new: size = (
+  | protected pairs = IdentitySet new: size. |
   )(
     public at: aKey put: aValue = (
       | pair |
@@ -179,9 +184,11 @@ class Collections usingKernel: kernel = Value (
     'Printing'
     public print = ( '{' print. pairs do: [ :p | p print ]. '}' print )
     public println = ( self print. '' println )    
+  ) : (
+    public new = ( ^ self new: initialSize )
   )
   
-  public class IdentityDictionary = Dictionary ()(
+  public class IdentityDictionary new: size = Dictionary new: size ()(
     public at: aKey = (
       pairs do: [ :p | p key == aKey ifTrue: [ ^ p value ] ].
       ^ nil
@@ -196,5 +203,7 @@ class Collections usingKernel: kernel = Value (
       pairs do: [ :p | p key == aKey ifTrue: [ ^ true ] ].
       ^ false
     )
+  ) : (
+    public new = ( ^ self new: initialSize )
   )
 )
