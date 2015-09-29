@@ -1,5 +1,6 @@
 package som.interpreter.nodes.specialized;
 
+import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
 import som.interpreter.InlinerForLexicallyEmbeddedMethods;
 import som.interpreter.Invokable;
 import som.interpreter.SplitterForLexicallyEmbeddedCode;
@@ -115,5 +116,11 @@ public abstract class IntToDoInlinedLiteralsNode extends ExpressionNode {
     FrameSlot inlinedLoopIdx = inliner.getLocalFrameSlot(loopIndex.getIdentifier());
     replace(IntToDoInlinedLiteralsNodeGen.create(body, inlinedLoopIdx,
         bodyActualNode, getSourceSection(), getFrom(), getTo()));
+  }
+
+  @Override
+  public void replaceWithCopyAdaptedToEmbeddedOuterContext(
+      final InlinerAdaptToEmbeddedOuterContext inliner) {
+    // NOOP: This node has a FrameSlot, but it is local, so does not need to be updated.
   }
 }
