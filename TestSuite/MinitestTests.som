@@ -378,12 +378,12 @@ class MinitestTests usingPlatform: platform testFramework: minitest = (
     )
 
     public testCatalogContentsForDirectlyNested = (
-      assert: (catalog testSuiteNames includes: 'DirectlyNestedTestContext').
+      assert: (catalog testSuiteNames contains: 'DirectlyNestedTestContext').
       assert: (catalog testSuiteNamed: 'DirectlyNestedTestContext') size equals: 3.
     )
 
     public testCatalogContentsForInnerContext = (
-      assert: (catalog testSuiteNames includes: 'InnerTestContext').
+      assert: (catalog testSuiteNames contains: 'InnerTestContext').
       assert: (catalog testSuiteNamed: 'InnerTestContext') size equals: 2.
     )
 

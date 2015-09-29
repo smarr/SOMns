@@ -651,11 +651,6 @@ class Kernel vmMirror: vmMirror = Object <: Value (
       collection do: [:e | append: e ]
     )
     
-    public includes: element = (
-      do: [: e | e = element ifTrue: [ ^ true ]].
-      ^ false
-    )
-    
     'Removing'
     public remove = (
       lastIdx > firstIdx
