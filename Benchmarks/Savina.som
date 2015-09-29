@@ -18,9 +18,18 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       ^ seed
     )
     
+    (* Returns an integer within the range of [0, bound) *)
+    public next: bound = (
+      ^ next % bound
+    )
+    
     (* Returns a double uniformly distributed in the range of [0.0, 1.0) *)
     public nextDouble = (
       ^ next // 65536
+    )
+    
+    public nextBoolean = (
+      ^ next < 32768
     )
     
     (* Returns a double normally distributed with mean 0.0 
