@@ -220,4 +220,33 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel = Value (
     ].
     ^ promisePair promise
   )
+  
+  private async: conditionBlock whileTrue: bodyBlockReturningAPromise prevPromise: prev completionResolver: resolver = (
+    prev whenResolved: [:res |
+      conditionBlock value ifTrue: [
+        | current |
+        current := bodyBlockReturningAPromise value.
+        async: conditionBlock whileTrue: bodyBlockReturningAPromise prevPromise: current completionResolver: resolver
+      ] ifFalse: [
+        resolver resolve: nil
+      ]
+    ]
+  )
+  
+  public async: conditionBlock whileTrue: bodyBlockReturningAPromise = (
+    | promisePair |
+    promisePair := createPromisePair.
+    
+    conditionBlock value ifTrue: [
+      | prevPromise |
+      prevPromise := bodyBlockReturningAPromise value.
+      async: conditionBlock
+        whileTrue: bodyBlockReturningAPromise 
+        prevPromise: prevPromise
+        completionResolver: promisePair resolver
+    ] ifFalse: [
+      promisePair resolve: nil
+    ].
+    ^ promisePair promise
+  )
 )

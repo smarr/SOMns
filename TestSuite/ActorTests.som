@@ -406,14 +406,45 @@ class ActorTests usingPlatform: platform testFramework: minitest = Value (
         p := actors createPromisePair.
         p resolve: i.
         v append: i.
-        p promise
-      ].
+        p promise ].
       
       ^ prom whenResolved: [:r |
         assert: v size equals: 10.
         1 to: 10 do: [:i |
-          assert: (v at: i) equals: i
-        ]
+          assert: (v at: i) equals: i ] ]
+    )
+    
+    public testAsyncWhileTrue = (
+      | cnt prom |
+      cnt := 0.
+      
+      prom := actors async: [cnt < 10] whileTrue: [
+        | p |
+        cnt := cnt + 1.
+        p := actors createPromisePair.
+        p resolve: cnt.
+        p promise ].
+
+      ^ prom whenResolved: [:r | 
+        assert: cnt equals: 10.
+      ]
+    )
+    
+    public testAsyncWhileTrueCond = (
+      | cnt prom cntCond |
+      cnt := 0.
+      cntCond := 0.
+      
+      prom := actors async: [cntCond := cntCond + 1. cnt < 10] whileTrue: [
+        | p |
+        cnt := cnt + 1.
+        p := actors createPromisePair.
+        p resolve: cnt.
+        p promise ].
+
+      ^ prom whenResolved: [:r | 
+        assert: cnt equals: 10.
+        assert: cntCond equals: 11.
       ]
     )
   ) : (
