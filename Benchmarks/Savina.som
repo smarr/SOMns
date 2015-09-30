@@ -1431,8 +1431,347 @@ class Savina usingPlatform: platform andHarness: harness = Value (
   )
   
   
+  public class SuccessiveOverRelaxation = Benchmark ()( todo = ( USES_SHARED_ARRAYS ) )
+
+  (* This benchmark uses originally shared grid nodes.
+     The interesting property is that the updates are conceptually safe even
+     when they are racy. The benchmark just tries to establish the parent
+     relationship. However, we actually need the information about whether we
+     succeeded with the update to determine which actor should continue
+     processing the updated node.
   
-  public class SuccessiveOverRelaxation = Benchmark ()( todo = () )
-  public class AStarSearch = Benchmark ()( todo = ( USES_A_GLOBAL_RANDOM_INSTANCE ) )
+     For this version, we will use Grid actors that actually hold the grid nodes
+     to avoid sequentializing the access during the search phase.
+  
+     Note further, that the #search:target: method is much more complex since
+     it is needs to be fully asynchronous.
+     The #initializeData method is also more complex. I unrolled the loop to
+     avoid the complexity of having to handle the asynchronicity there as well.
+  
+     Another critical difference is that we do not calculate the distance from
+     root, because it is not used. And pretty annoying to implement properly
+     synchronized. Which it isn't in the original code either.
+     Also, FarRefs are not polymorphic with local refs, which makes this very
+     strange.
+   *)
+  public class AStarSearch numWorkers: numWorkers gridSize: gridSize = Benchmark <: Value (
+  | private numWorkers = numWorkers.
+    private gridSize   = gridSize.
+    private threshold  = 1024. |
+  )(
+    class GridNode id: id i: i j: j k: k = (
+    | public id = id.
+      public i  = i.
+      public j  = j.
+      public k  = k.
+      private neighbors = Vector new.
+      public parentInPath ::= nil.
+      public distanceFromRoot ::= 0.
+    | 
+      clearParentAndDistance.
+    )(
+      public clearParentAndDistance = (
+        parentInPath     := nil.
+        distanceFromRoot := id = 1 ifTrue: [0] ifFalse: [-1].
+      )
+
+      private addNeighbor: node = (
+        node == self ifTrue: [ ^ false ].
+        neighbors do: [:n | n == node ifTrue: [ ^ false ] ].
+
+        neighbors append: node.
+        ^ true
+      )
+      
+      public addNeighborsA: a b: b c: c d: d e: e f: f addA: addA addB: addB addC: addC addD: addD addE: addE addF: addF = (
+        | addedNeighbor |
+        addedNeighbor := false.
+  
+        addA ifTrue: [ (addNeighbor: a) ifTrue: [ addedNeighbor := true ] ].
+        addB ifTrue: [ (addNeighbor: b) ifTrue: [ addedNeighbor := true ] ].
+        addC ifTrue: [ (addNeighbor: c) ifTrue: [ addedNeighbor := true ] ].
+        addD ifTrue: [ (addNeighbor: d) ifTrue: [ addedNeighbor := true ] ].
+        addE ifTrue: [ (addNeighbor: e) ifTrue: [ addedNeighbor := true ] ].
+        (addedNeighbor not or: [addF])
+          ifTrue: [ addNeighbor: f ].
+      )
+      
+      public numNeighbors = (
+        ^ neighbors size
+      )
+      
+      public neighbor: id = (
+        ^ neighbors at: id
+      )
+      
+      public setParent: node = (
+        parentInPath == nil ifFalse: [ ^ false ].
+        
+        parentInPath := node.
+        
+        (* node could be a far reference here, not sure how to get this right:
+           distanceFromRoot := node distanceFromRoot + (distanceFrom: node). *)
+        ^ true
+      )
+      
+      private distanceFrom: node = (
+        (* Not implemented!
+         | iDiff jDiff kDiff |
+        iDiff := i - node i.
+        jDiff := j - node j.
+        kDiff := k - node k.
+        ^ ((iDiff * iDiff) + (jDiff * jDiff) + (kDiff * kDiff)) sqrt round *)
+        ^ self
+      )
+    )
+  
+    class Master new: completionRes = (
+    | private workers = Array new: numWorkers withAll: [(actors createActorFromValue: Worker) <-: new: self].
+      private numWorkersTerminated ::= 0.
+      private numWorkSent          ::= 0.
+      private numWorkCompleted     ::= 0.
+      private allNodes = Array new: gridSize * gridSize * gridSize.
+      private completionRes = completionRes.
+    |
+      initializeData whenResolved: [:r | sendWork: originNode target: targetNode ]
+    )(
+      private originNode = (
+        ^ allNodes at: 1
+      )
+      
+      private targetNode = (
+        | axisVal targetId |
+        axisVal := (0.8 * gridSize) round.
+        targetId := (axisVal * gridSize * gridSize) + (axisVal * gridSize) + axisVal + 1.
+        ^ allNodes at: targetId
+      )
+      
+      private sendWork: origin target: target = (
+        | workerIdx |
+        workerIdx := numWorkSent % numWorkers + 1.
+        numWorkSent := numWorkSent + 1.
+        (workers at: workerIdx) <-: work: origin target: target.
+      )
+      
+      private createGridNodes: gridActors = (
+        | id gs1 |
+        gs1 := gridSize - 1. (* for offset-based numbers *)
+        id := 1.
+        ^ actors async: 0 to: gs1 do: [:i |
+          | gridActor |
+          gridActor := gridActors at: (i / 3) + 1.
+          
+          actors async: 0 to: gs1 do: [:j |
+            actors async: 0 to: gs1 do: [:k |
+              (gridActor <-: id: id i: i j: j k: k) whenResolved: [:gridNode |
+                allNodes at: id put: gridNode.
+                id := id + 1 ] ] ] ].
+      )
+      
+      private setNeighbors = (
+        | random id gs1 g2 |
+        gs1 := gridSize - 1. (* for offset-based numbers *)
+        g2 := gridSize * gridSize.
+        
+        random := Random new.
+        id := 1.
+        
+        (* We unrolled this loop to avoid having to rewrite it with #whenResolved callbacks.
+           This is certainly not nice code, and not idiomatic either...
+        
+        | iterCount neighborCount |
+        iterCount     := 0.
+        neighborCount := 0.
+        
+         0 to: 1 do: [:i |
+          0 to: 1 do: [:j |
+            0 to: 1 do: [:k |
+              iterCount := iterCount + 1.
+              iterCount = 1 or: [iterCount = 8] ifFalse: [
+                | addNeighbor |
+                addNeighbor := (iterCount = 7 and: [neighborCount = 0]) or: [random nextBoolean].
+                addNeighbor ifTrue: [
+                  | newI newJ newK newId newNode |
+                  newI := (gridSize - 1) min: (gridNode i + i).
+                  newJ := (gridSize - 1) min: (gridNode j + j).
+                  newK := (gridSize - 1) min: (gridNode k + k).
+                  newId := (gridSize * gridSize * newI) + (gridSize * newJ) + newK + 1.
+                  newNode := allNodes at: newId.
+                
+                  (gridNode addNeighbor: newNode)
+                    ifTrue: [ neighborCount := neighborCount + 1 ] ] ] ] ] ] ]. *)
+        
+        0 to: gs1 do: [:i |
+          0 to: gs1 do: [:j |
+            0 to: gs1 do: [:k |
+              (allNodes at: id) <-: addNeighborsA: (allNodes at: (g2 * (gs1 min: i    ))
+                                                         + (gridSize * (gs1 min: j    ))
+                                                         +             (gs1 min: k + 1) + 1)
+                                                b: (allNodes at: (g2 * (gs1 min: i    ))
+                                                         + (gridSize * (gs1 min: j + 1))
+                                                         +             (gs1 min: k    ) + 1)
+                                                c: (allNodes at: (g2 * (gs1 min: i    ))
+                                                         + (gridSize * (gs1 min: j + 1))
+                                                         +             (gs1 min: k + 1) + 1)
+                                                d: (allNodes at: (g2 * (gs1 min: i + 1))
+                                                         + (gridSize * (gs1 min: j    ))
+                                                         +             (gs1 min: k    ) + 1)
+                                                e: (allNodes at: (g2 * (gs1 min: i + 1))
+                                                         + (gridSize * (gs1 min: j    ))
+                                                         +             (gs1 min: k + 1) + 1)
+                                                f: (allNodes at: (g2 * (gs1 min: i + 1))
+                                                         + (gridSize * (gs1 min: j + 1))
+                                                         +             (gs1 min: k    ) + 1)
+                                                addA: random nextBoolean
+                                                addB: random nextBoolean
+                                                addC: random nextBoolean
+                                                addD: random nextBoolean
+                                                addE: random nextBoolean
+                                                addF: random nextBoolean.
+              id := id + 1 ] ] ]
+      )
+
+      private initializeData = (
+        | gridActors |
+        gridActors := Array new: (gridSize / 3) + 1 withAll: [actors createActorFromValue: GridNode].
+        
+        ^ (createGridNodes: gridActors) whenResolved: [:r |
+          setNeighbors.
+          allNodes do: [:gridNode |
+            (* This does not need synchronization, because we rely on the fact
+               that message order is guaranteed from the same sending actor,
+               and that the addNeighbors* message doesn't do any message sending
+               either. *)
+            gridNode <-: clearParentAndDistance ] ]
+      )
+      
+      public work: origin target: target = (
+        sendWork: origin target: target
+      )
+      
+      public received = (
+        numWorkCompleted := numWorkCompleted + 1.
+        numWorkCompleted = numWorkSent ifTrue: [
+          requestWorkersToStop ]
+      )
+      
+      public done = (
+        requestWorkersToStop
+      )
+      
+      public stop = (
+        numWorkersTerminated := numWorkersTerminated + 1.
+        numWorkersTerminated = numWorkers ifTrue: [
+          completionRes resolve: validate
+        ]
+      )
+      
+      private validate = (
+        | parentNode nextProm next loop |
+        loop := actors createPromisePair.
+        parentNode := targetNode.
+        
+        nextProm := parentNode <-: parentInPath.
+        nextProm whenResolved: [:next |
+          | n |
+          n := next.
+          loop resolve: (actors async: [(n == nil) not] whileTrue: [
+            parentNode := n.
+            (parentNode <-: parentInPath) whenResolved: [:nn | n := nn] ]) ].
+        
+        ^ loop promise whenResolved: [:r | parentNode == originNode]
+      )
+      
+      private requestWorkersToStop = (
+        workers do: [:w | w <-: stop ]
+      )
+    )
+
+    class Worker new: master = (
+    | private master = master.
+      private random = Random new. |
+    )(
+      private busyLoop = (
+        1 to: 100 do: [:i | random next ]
+      )
+    
+      public work: origin target: target = (
+        (search: origin target: target)
+          whenResolved: [:r | master <-: received ]
+      )
+
+      public stop = (
+        master <-: stop
+      )
+      
+      private search: origin target: target = (
+        | workQueue nodesProcessed continue outerLoopProm |
+        workQueue := Vector new.
+        workQueue append: origin.
+        continue := true.
+        
+        nodesProcessed := 0.
+        
+        outerLoopProm := actors async: [
+          workQueue isEmpty not and: [nodesProcessed < threshold and: continue]] whileTrue: [
+          | loopNode numNeighbors outerIterationDone |
+          outerIterationDone := actors createPromisePair.
+          nodesProcessed := nodesProcessed + 1.
+          busyLoop.
+          
+          loopNode := workQueue removeFirst.
+          (loopNode <-: numNeighbors) whenResolved: [:numNeighbors |
+            | i whileCompletionPromise |
+            i := 1.
+
+            whileCompletionPromise := actors async: [i <= numNeighbors and: continue] whileTrue: [
+              | iterationDone |
+              iterationDone := actors createPromisePair.
+              
+              (loopNode <-: neighbor: i) whenResolved: [:loopNeighbor |
+                (loopNeighbor <-: setParent: loopNode)
+                  whenResolved: [:success |
+                    success ifTrue: [
+                      loopNeighbor == target ifTrue: [
+                        master <-: done.
+                        continue := false
+                      ] ifFalse: [
+                        workQueue append: loopNeighbor ] ].
+                    i := i + 1.
+                    iterationDone resolve: nil ] ].
+              iterationDone promise ].
+            outerIterationDone resolve: whileCompletionPromise ].
+          outerIterationDone promise ].
+        
+        ^ outerLoopProm whenResolved: [:r |
+          [workQueue isEmpty] whileFalse: [
+            master <-: work: workQueue removeFirst target: target ] ]
+      )
+    )
+  
+    public benchmark = (
+      | completionPP |
+      completionPP := actors createPromisePair.
+      (actors createActorFromValue: Master) <-: new: completionPP resolver.
+      ^ completionPP promise
+    )
+    
+    public verifyResult: aBool = (
+      ^ aBool
+    )
+  ) : (
+    public newInstance: problemSize = (
+      | problem |
+      problem := problemSize split: ':'.
+      ^ self numWorkers: (problem at: 1) asInteger
+               gridSize: (problem at: 2) asInteger
+    )
+    
+    public setupVerifiedRun: run = (
+      self todo.
+      run problemSize: '100:100'
+    )
+  )
+
   public class NQueens = Benchmark ()( todo = ( USES_SHARED_STATE ) )
 )
