@@ -43,6 +43,16 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel = Value (
       ^ false.
     )
     public notNil = ( ^ true )
+
+    public == other = (
+      (* Experimental! Not clear whether this is correct for a capability model.
+         Should I be able to distinguish remote objects? Seems like an
+         information leak. But I need it for a benchmark, and for convenience. *)
+      ^ vmMirror object: self identicalTo: other
+    )
+    public ~= other = (
+      ^ (self == other) not
+    )
   )
 
   public class Promise = Object ()(
