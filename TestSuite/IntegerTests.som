@@ -264,5 +264,12 @@ class IntegerTests usingPlatform: platform testFramework: minitest = (
       self assert: 9223372036854775807 equals:    -1 >>> 1.
       self assert: 9223372036854775296 equals: -1024 >>> 1.
     )
+    
+    public testMinMax = (
+      assert: (0 min: 1) equals: 0.
+      assert: (1 min: 0) equals: 0.
+      assert: (1 max: 0) equals: 1.
+      assert: (0 max: 1) equals: 1.
+    )
   ) : ( TEST_CONTEXT = () )
 )

@@ -225,8 +225,12 @@ class Kernel vmMirror: vmMirror = Object <: Value (
       ^ range
     )
 
+    public min: otherInt = (
+      self < otherInt ifTrue: [ ^ self ] ifFalse: [ ^ otherInt ]
+    )
+
     public max: otherInt = (
-      (self < otherInt) ifTrue: [ ^ otherInt ] ifFalse: [ ^ self ]
+      self < otherInt ifTrue: [ ^ otherInt ] ifFalse: [ ^ self ]
     )
   ) : (  
     public fromString: aString = ( ^ vmMirror intFromString: aString )
