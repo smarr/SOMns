@@ -22,6 +22,9 @@ public final class SFarReference extends SAbstractObject {
     return actor;
   }
 
+  /**
+   * @return the object the far reference is pointing to
+   */
   public Object getValue() {
     return value;
   }
