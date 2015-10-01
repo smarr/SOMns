@@ -170,9 +170,13 @@ public class BasicInterpreterTests {
 
   protected void assertEqualsSOMValue(final Object expectedResult, final Object actualResult) {
     if (resultType == Long.class) {
-      long expected = (int) expectedResult;
-      long actual   = (long) actualResult;
-      assertEquals(expected, actual);
+      if (actualResult instanceof Long) {
+        long expected = (int)  expectedResult;
+        long actual   = (long) actualResult;
+        assertEquals(expected, actual);
+      } else {
+        fail("Expected integer result, but got: " + actualResult.toString());
+      }
       return;
     }
 
