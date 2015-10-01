@@ -1,5 +1,6 @@
 package som.compiler;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -45,6 +46,7 @@ import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 import com.sun.istack.internal.Nullable;
@@ -150,9 +152,94 @@ public final class MixinDefinition {
     factory.initializeClass(result);
   }
 
+  // TODO: do we need to specialize this guard?
+  @ExplodeLoop
+  public static boolean sameSuperAndMixins(final Object superclassAndMixins, final Object cached) {
+    if (!(cached instanceof Object[])) {
+      if (!(cached instanceof SClass)) {
+        @SuppressWarnings("unused") int i = 0;
+      }
+      assert cached instanceof SClass;
+      assert superclassAndMixins instanceof SClass;
+
+      // TODO: identity comparison? is that stable enough? otherwise, need also
+      // to make sure isValue is the same, I think
+      boolean result = sameClassConstruction(superclassAndMixins, cached);
+      return result;
+    }
+
+    if (!(superclassAndMixins instanceof Object[])) {
+      return false;
+    }
+
+    Object[] supMixArr = (Object[]) superclassAndMixins;
+    Object[] cachedArr = (Object[]) cached;
+
+    assert supMixArr.length == cachedArr.length; // should be based on lexical
+                                                 // info and be compilation
+                                                 // constant
+    CompilerAsserts.compilationConstant(cachedArr.length);
+
+    for (int i = 0; i < cachedArr.length; i++) {
+      // TODO: is this really correct?
+      // -> does i == 0 need also to check isValue?
+      if (sameClassConstruction(cachedArr[i], supMixArr[i])) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  protected static boolean sameClassConstruction(final Object a, final Object b) {
+    VM.callerNeedsToBeOptimized("This is recursive, and probably should be specialized to be compilable");
+    if (a == b) {
+      return true;
+    }
+
+    if (a == null || b == null) {
+      return false;
+    }
+
+    SClass aC = (SClass) a;
+    SClass bC = (SClass) b;
+    if (aC.getInstanceFactory() == bC.getInstanceFactory()) {
+      return true;
+    }
+
+    return sameClassConstruction(aC.getSuperClass(), bC.getSuperClass());
+  }
+
+  private final ArrayList<ClassFactory> cache = new ArrayList<>(2);
+
+  private ClassFactory getCached(final Object superclassAndMixins) {
+    if (superclassAndMixins == null) {
+      return null;
+    }
+
+    for (ClassFactory cf : cache) {
+      SClass[] cached = cf.getSuperclassAndMixins();
+      Object comp;
+      if (cached.length == 1) {
+        comp = cached[0];
+      } else {
+        comp = cached;
+      }
+      if (sameSuperAndMixins(superclassAndMixins, comp)) {
+        System.err.println("ClassFactory cached hit");
+        return cf;
+      }
+    }
+    return null;
+  }
+
   public ClassFactory createClassFactory(final Object superclassAndMixins, final boolean isTheValueClass) {
     CompilerAsserts.neverPartOfCompilation();
     VM.callerNeedsToBeOptimized("This is supposed to result in a cacheable object, and thus is only the fallback case.");
+
+    ClassFactory cached = getCached(superclassAndMixins);
+    if (cached != null) {
+      return cached;
+    }
 
     // decode superclass and mixins
     SClass superClass;
@@ -194,6 +281,8 @@ public final class MixinDefinition {
     ClassFactory classFactory = new ClassFactory(name, this,
         instanceSlots, dispatchables, instancesAreValues, mixins,
         hasOnlyImmutableFields, classClassFactory);
+
+    cache.add(classFactory);
 
     return classFactory;
   }

@@ -98,6 +98,10 @@ public final class ClassFactory {
     return hasOnlyImmutableFields;
   }
 
+  public SClass[] getSuperclassAndMixins() {
+    return superclassAndMixins;
+  }
+
   public void initializeClass(final SClass result) {
     result.initializeClass(className, superclassAndMixins[0]);
     result.initializeStructure(mixinDef, instanceSlots,
