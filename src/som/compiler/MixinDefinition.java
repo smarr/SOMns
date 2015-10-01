@@ -225,7 +225,6 @@ public final class MixinDefinition {
         comp = cached;
       }
       if (sameSuperAndMixins(superclassAndMixins, comp)) {
-        System.err.println("ClassFactory cached hit");
         return cf;
       }
     }
