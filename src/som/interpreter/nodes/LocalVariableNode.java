@@ -117,6 +117,11 @@ public abstract class LocalVariableNode extends ExpressionNode {
     protected final boolean isUninitialized() {
       return slot.getKind() == FrameSlotKind.Illegal;
     }
+
+    @Override
+    public String toString() {
+      return this.getClass().getSimpleName() + "[" + (String) getSlotIdentifier() + "]";
+    }
   }
 
   @NodeChild(value = "exp", type = ExpressionNode.class)
@@ -202,6 +207,11 @@ public abstract class LocalVariableNode extends ExpressionNode {
         transferToInterpreter("LocalVar.writeObjectToUninit");
         slot.setKind(FrameSlotKind.Object);
       }
+    }
+
+    @Override
+    public String toString() {
+      return this.getClass().getSimpleName() + "[" + (String) getSlotIdentifier() + "]";
     }
   }
 }
