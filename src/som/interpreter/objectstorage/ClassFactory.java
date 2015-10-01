@@ -28,7 +28,7 @@ public final class ClassFactory {
 //  we could create a special slot-access dispatch node in the message dispatch chain, that will only check the layout, not the class
 //
 //      the problem there would be that we probably can't remove old layouts from chains, as we do now
-//      the benefit is that we can already during createion use the layout, and
+//      the benefit is that we can already during creation use the layout, and
 //      reuse it
 //      and the logic to determine whether all slots are immutable
 //      and all new objects always use the initialized shapes
