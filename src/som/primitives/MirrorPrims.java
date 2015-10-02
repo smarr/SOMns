@@ -10,7 +10,8 @@ import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.reflection.AbstractSymbolDispatch;
 import som.primitives.reflection.AbstractSymbolDispatchNodeGen;
-import som.vmobjects.SArray;
+import som.vmobjects.SArray.SImmutableArray;
+import som.vmobjects.SArray.SMutableArray;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObjectWithClass;
@@ -27,9 +28,9 @@ public abstract class MirrorPrims {
   @Primitive("objNestedClasses:")
   public abstract static class NestedClassesPrim extends UnaryExpressionNode {
     @Specialization
-    public final SArray getNestedClasses(final SObjectWithClass rcvr) {
+    public final SMutableArray getNestedClasses(final SObjectWithClass rcvr) {
       SClass[] classes = rcvr.getSOMClass().getNestedClasses(rcvr);
-      return new SArray(classes);
+      return new SMutableArray(classes);
     }
   }
 
@@ -47,10 +48,10 @@ public abstract class MirrorPrims {
   @Primitive("objMethods:")
   public abstract static class MethodsPrim extends UnaryExpressionNode {
     @Specialization
-    public final SArray getMethod(final Object rcvr) {
+    public final SImmutableArray getMethod(final Object rcvr) {
       VM.thisMethodNeedsToBeOptimized("Uses Types.getClassOf, so, should be specialized in performance cirtical code");
       SInvokable[] invokables = Types.getClassOf(rcvr).getMethods();
-      return new SArray(invokables);
+      return new SImmutableArray(invokables);
     }
   }
 
@@ -84,7 +85,7 @@ public abstract class MirrorPrims {
       assert mixinHandle instanceof MixinDefinition;
       MixinDefinition def = (MixinDefinition) mixinHandle;
       MixinDefinition[] nested = def.getNestedMixinDefinitions();
-      return new SArray(nested);
+      return new SImmutableArray(nested);
     }
   }
 
@@ -103,7 +104,7 @@ public abstract class MirrorPrims {
   @Primitive("classDefMethods:")
   public abstract static class ClassDefMethodsPrim extends UnaryExpressionNode {
     @Specialization
-    public final SArray getName(final Object mixinHandle) {
+    public final SImmutableArray getName(final Object mixinHandle) {
       assert mixinHandle instanceof MixinDefinition;
       MixinDefinition def = (MixinDefinition) mixinHandle;
 
@@ -113,7 +114,7 @@ public abstract class MirrorPrims {
           methods.add((SInvokable) disp);
         }
       }
-      return new SArray(methods.toArray(new SInvokable[methods.size()]));
+      return new SImmutableArray(methods.toArray(new SInvokable[methods.size()]));
     }
   }
 

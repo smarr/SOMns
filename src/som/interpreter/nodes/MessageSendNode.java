@@ -73,6 +73,7 @@ import som.primitives.arrays.AtPutPrimFactory;
 import som.primitives.arrays.CopyPrimNodeGen;
 import som.primitives.arrays.DoIndexesPrimFactory;
 import som.primitives.arrays.DoPrimFactory;
+import som.primitives.arrays.NewImmutableArrayNodeGen;
 import som.primitives.arrays.NewPrimFactory;
 import som.primitives.arrays.PutAllNodeFactory;
 import som.primitives.arrays.ToArgumentsArrayNodeGen;
@@ -588,6 +589,12 @@ public final class MessageSendNode {
                 ValueTwoPrimFactory.create(null, null, null)));
           }
           break;
+        case "new:withAll:":
+          if (arguments[0] == Classes.valueArrayClass) {
+            return replace(new EagerTernaryPrimitiveNode(selector, argumentNodes[0],
+                argumentNodes[1], argumentNodes[2],
+                NewImmutableArrayNodeGen.create(null, null, null)));
+          }
       }
       return makeSend();
     }

@@ -5,7 +5,7 @@ import java.math.BigInteger;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.arithmetic.ArithmeticPrim;
-import som.vmobjects.SArray;
+import som.vmobjects.SArray.SMutableArray;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
@@ -92,13 +92,13 @@ public abstract class IntegerPrims {
 
   public abstract static class ToPrim extends BinaryExpressionNode {
     @Specialization
-    public final SArray doLong(final long receiver, final long right) {
+    public final SMutableArray doLong(final long receiver, final long right) {
       int cnt = (int) right - (int) receiver + 1;
       long[] arr = new long[cnt];
       for (int i = 0; i < cnt; i++) {
         arr[i] = i + receiver;
       }
-      return new SArray(arr);
+      return new SMutableArray(arr);
     }
   }
 

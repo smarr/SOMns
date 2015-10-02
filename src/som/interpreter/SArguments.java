@@ -1,6 +1,6 @@
 package som.interpreter;
 
-import som.vmobjects.SArray;
+import som.vmobjects.SArray.SImmutableArray;
 
 import com.oracle.truffle.api.frame.Frame;
 
@@ -25,15 +25,15 @@ public final class SArguments {
    * arguments and excludes the receiver. This is used for instance for
    * #doesNotUnderstand (#dnu)
    */
-  public static SArray getArgumentsWithoutReceiver(final Object[] arguments) {
+  public static SImmutableArray getArgumentsWithoutReceiver(final Object[] arguments) {
     // the code and magic numbers below are based on the following assumption
     assert RCVR_IDX == 0;
     assert arguments.length >= 1;  // <- that's the receiver
     Object[] argsArr = new Object[arguments.length - 1];
     if (argsArr.length == 0) {
-      return new SArray(0);
+      return new SImmutableArray(0);
     }
     System.arraycopy(arguments, 1, argsArr, 0, argsArr.length);
-    return new SArray(argsArr);
+    return new SImmutableArray(argsArr);
   }
 }

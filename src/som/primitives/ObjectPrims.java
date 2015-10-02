@@ -10,7 +10,8 @@ import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.ObjectPrimsFactory.IsValueFactory;
 import som.vm.constants.Nil;
 import som.vmobjects.SAbstractObject;
-import som.vmobjects.SArray;
+import som.vmobjects.SArray.SImmutableArray;
+import som.vmobjects.SArray.SMutableArray;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject.SImmutableObject;
@@ -117,8 +118,13 @@ public final class ObjectPrims {
     }
 
     @Specialization
-    public final boolean isValue(final SArray rcvr) {
+    public final boolean isValue(final SMutableArray rcvr) {
       return false;
+    }
+
+    @Specialization
+    public final boolean isValue(final SImmutableArray rcvr) {
+      return true;
     }
 
     @Specialization(guards = "valueIsNil(rcvr)")

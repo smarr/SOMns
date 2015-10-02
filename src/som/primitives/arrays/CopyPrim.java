@@ -1,7 +1,7 @@
 package som.primitives.arrays;
 
 import som.interpreter.nodes.nary.UnaryExpressionNode;
-import som.vmobjects.SArray;
+import som.vmobjects.SArray.SMutableArray;
 
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.utilities.ValueProfile;
@@ -12,32 +12,32 @@ public abstract class CopyPrim extends UnaryExpressionNode {
   private final ValueProfile storageType = ValueProfile.createClassProfile();
 
   @Specialization(guards = "receiver.isEmptyType()")
-  public final SArray doEmptyArray(final SArray receiver) {
-    return new SArray(receiver.getEmptyStorage(storageType));
+  public final SMutableArray doEmptyArray(final SMutableArray receiver) {
+    return new SMutableArray(receiver.getEmptyStorage(storageType));
   }
 
   @Specialization(guards = "receiver.isPartiallyEmptyType()")
-  public final SArray doPartiallyEmptyArray(final SArray receiver) {
-    return new SArray(true, receiver.getPartiallyEmptyStorage(storageType).copy());
+  public final SMutableArray doPartiallyEmptyArray(final SMutableArray receiver) {
+    return new SMutableArray(receiver.getPartiallyEmptyStorage(storageType).copy());
   }
 
   @Specialization(guards = "receiver.isObjectType()")
-  public final SArray doObjectArray(final SArray receiver) {
-    return new SArray(receiver.getObjectStorage(storageType).clone());
+  public final SMutableArray doObjectArray(final SMutableArray receiver) {
+    return new SMutableArray(receiver.getObjectStorage(storageType).clone());
   }
 
   @Specialization(guards = "receiver.isLongType()")
-  public final SArray doLongArray(final SArray receiver) {
-    return new SArray(receiver.getLongStorage(storageType).clone());
+  public final SMutableArray doLongArray(final SMutableArray receiver) {
+    return new SMutableArray(receiver.getLongStorage(storageType).clone());
   }
 
   @Specialization(guards = "receiver.isDoubleType()")
-  public final SArray doDoubleArray(final SArray receiver) {
-    return new SArray(receiver.getDoubleStorage(storageType).clone());
+  public final SMutableArray doDoubleArray(final SMutableArray receiver) {
+    return new SMutableArray(receiver.getDoubleStorage(storageType).clone());
   }
 
   @Specialization(guards = "receiver.isBooleanType()")
-  public final SArray doBooleanArray(final SArray receiver) {
-    return new SArray(receiver.getBooleanStorage(storageType).clone());
+  public final SMutableArray doBooleanArray(final SMutableArray receiver) {
+    return new SMutableArray(receiver.getBooleanStorage(storageType).clone());
   }
 }

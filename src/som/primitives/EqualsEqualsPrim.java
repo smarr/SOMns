@@ -2,7 +2,7 @@ package som.primitives;
 
 import som.interpreter.actors.SFarReference;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.vmobjects.SArray;
+import som.vmobjects.SArray.SMutableArray;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObjectWithClass;
@@ -21,7 +21,7 @@ public abstract class EqualsEqualsPrim extends BinaryExpressionNode {
   }
 
   @Specialization
-  public final boolean doArray(final SArray left, final Object right) {
+  public final boolean doArray(final SMutableArray left, final Object right) {
     return left == right;
   }
 

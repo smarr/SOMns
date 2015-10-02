@@ -14,7 +14,9 @@ public final class Classes {
 
   public static final SClass  nilClass;
   public static final SClass  integerClass;
+  public static final SClass  arrayReadMixinClass;
   public static final SClass  arrayClass;
+  public static final SClass  valueArrayClass;
   public static final SClass  methodClass;
   public static final SClass  symbolClass;
   public static final SClass  stringClass;
@@ -43,7 +45,9 @@ public final class Classes {
     objectClass     = Bootstrap.newEmptyClassWithItsClass("Object");
     valueClass      = Bootstrap.newEmptyClassWithItsClass("Value");
     nilClass        = Bootstrap.newEmptyClassWithItsClass("Nil");
+    arrayReadMixinClass = Bootstrap.newEmptyClassWithItsClass("ArrayReadMixin");
     arrayClass      = Bootstrap.newEmptyClassWithItsClass("Array");
+    valueArrayClass = Bootstrap.newEmptyClassWithItsClass("ValueArray");
     symbolClass     = Bootstrap.newEmptyClassWithItsClass("Symbol");
     methodClass     = Bootstrap.newEmptyClassWithItsClass("Method");
     integerClass    = Bootstrap.newEmptyClassWithItsClass("Integer");

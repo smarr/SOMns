@@ -10,7 +10,7 @@ import som.interpreter.Method;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vm.Bootstrap;
 import som.vm.constants.Nil;
-import som.vmobjects.SArray;
+import som.vmobjects.SArray.SImmutableArray;
 import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
 
@@ -144,8 +144,8 @@ public final class SystemPrims {
   @Primitive("vmArguments:")
   public abstract static class VMArgumentsPrim extends UnaryExpressionNode {
     @Specialization
-    public final SArray getArguments(final Object receiver) {
-      return new SArray(true, VM.getArguments());
+    public final SImmutableArray getArguments(final Object receiver) {
+      return new SImmutableArray(VM.getArguments());
     }
   }
 

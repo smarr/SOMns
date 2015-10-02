@@ -345,7 +345,9 @@ public final class Bootstrap {
     MixinDefinition classDef     = kernelModule.getNestedMixinDefinition("Class");
     MixinDefinition metaclassDef = kernelModule.getNestedMixinDefinition("Metaclass");
 
+    MixinDefinition arrayReadMixinDef = kernelModule.getNestedMixinDefinition("ArrayReadMixin");
     MixinDefinition arrayDef   = kernelModule.getNestedMixinDefinition("Array");
+    MixinDefinition valueArrayDef = kernelModule.getNestedMixinDefinition("ValueArray");
     MixinDefinition symbolDef  = kernelModule.getNestedMixinDefinition("Symbol");
     MixinDefinition integerDef = kernelModule.getNestedMixinDefinition("Integer");
     MixinDefinition stringDef  = kernelModule.getNestedMixinDefinition("String");
@@ -375,7 +377,9 @@ public final class Bootstrap {
  metaclassDef.initializeClass(Classes.metaclassClass, Classes.classClass);
        nilDef.initializeClass(Classes.nilClass,    Classes.valueClass);
 
-     arrayDef.initializeClass(Classes.arrayClass,   Classes.objectClass);
+arrayReadMixinDef.initializeClass(Classes.arrayReadMixinClass, Classes.objectClass);
+     arrayDef.initializeClass(Classes.arrayClass,   new SClass[] {Classes.objectClass, Classes.arrayReadMixinClass});
+valueArrayDef.initializeClass(Classes.valueArrayClass, new SClass[] {Classes.valueClass, Classes.arrayReadMixinClass});
    integerDef.initializeClass(Classes.integerClass, Classes.valueClass);
     stringDef.initializeClass(Classes.stringClass,  Classes.valueClass);
     doubleDef.initializeClass(Classes.doubleClass,  Classes.valueClass);
@@ -400,7 +404,9 @@ public final class Bootstrap {
   Classes.classClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
   Classes.metaclassClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
   Classes.nilClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
+  Classes.arrayReadMixinClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
   Classes.arrayClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
+  Classes.valueArrayClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
   Classes.integerClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
   Classes.stringClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
   Classes.doubleClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
@@ -442,7 +448,9 @@ public final class Bootstrap {
     setSlot(KernelObj.kernel, "Class",     Classes.classClass,     kernelModule);
     setSlot(KernelObj.kernel, "String",    Classes.stringClass,    kernelModule);
     setSlot(KernelObj.kernel, "Symbol",    Classes.symbolClass,    kernelModule);
+    setSlot(KernelObj.kernel, "ArrayReadMixin", Classes.arrayReadMixinClass, kernelModule);
     setSlot(KernelObj.kernel, "Array",     Classes.arrayClass,     kernelModule);
+    setSlot(KernelObj.kernel, "ValueArray", Classes.valueArrayClass, kernelModule);
     setSlot(KernelObj.kernel, "Block",     Classes.blockClass,     kernelModule);
     setSlot(KernelObj.kernel, "Block1",    Classes.blockClass1,    kernelModule);
     setSlot(KernelObj.kernel, "Block2",    Classes.blockClass2,    kernelModule);
