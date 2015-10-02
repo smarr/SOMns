@@ -15,50 +15,59 @@ import com.oracle.truffle.api.utilities.ValueProfile;
 public abstract class SArray extends SAbstractObject {
   public static final int FIRST_IDX = 0;
 
-  protected abstract Object getStorage();
+  protected Object storage;
+
+  public SArray(final long length) {
+    storage = (int) length;
+  }
+
+  public SArray(final Object storage) {
+    assert !(storage instanceof Long);
+    this.storage = storage;
+  }
 
   public int getEmptyStorage(final ValueProfile storageType) {
     assert isEmptyType();
-    return (int) storageType.profile(getStorage());
+    return (int) storageType.profile(storage);
   }
 
   public PartiallyEmptyArray getPartiallyEmptyStorage(final ValueProfile storageType) {
     assert isPartiallyEmptyType();
-    return (PartiallyEmptyArray) storageType.profile(getStorage());
+    return (PartiallyEmptyArray) storageType.profile(storage);
   }
 
   public Object[] getObjectStorage(final ValueProfile storageType) {
     assert isObjectType();
-    return (Object[]) storageType.profile(getStorage());
+    return (Object[]) storageType.profile(storage);
   }
 
   public long[] getLongStorage(final ValueProfile storageType) {
     assert isLongType();
-    return (long[]) storageType.profile(getStorage());
+    return (long[]) storageType.profile(storage);
   }
 
   public double[] getDoubleStorage(final ValueProfile storageType) {
     assert isDoubleType();
-    return (double[]) storageType.profile(getStorage());
+    return (double[]) storageType.profile(storage);
   }
 
   public boolean[] getBooleanStorage(final ValueProfile storageType) {
     assert isBooleanType();
-    return (boolean[]) storageType.profile(getStorage());
+    return (boolean[]) storageType.profile(storage);
   }
 
   public boolean isEmptyType() {
-    return getStorage() instanceof Integer;
+    return storage instanceof Integer;
   }
 
   public boolean isPartiallyEmptyType() {
-    return getStorage() instanceof PartiallyEmptyArray;
+    return storage instanceof PartiallyEmptyArray;
   }
 
-  public boolean isObjectType()  { return getStorage() instanceof Object[]; }
-  public boolean isLongType()    { return getStorage() instanceof long[];   }
-  public boolean isDoubleType()  { return getStorage() instanceof double[]; }
-  public boolean isBooleanType() { return getStorage() instanceof boolean[]; }
+  public boolean isObjectType()  { return storage instanceof Object[]; }
+  public boolean isLongType()    { return storage instanceof long[];   }
+  public boolean isDoubleType()  { return storage instanceof double[]; }
+  public boolean isBooleanType() { return storage instanceof boolean[]; }
 
 
   private static long[] createLong(final Object[] arr) {
@@ -150,19 +159,17 @@ public abstract class SArray extends SAbstractObject {
   private static final ValueProfile objectStorageType = ValueProfile.createClassProfile();
 
   public static final class SMutableArray extends SArray {
-    private Object storage;
 
     /**
      * Creates and empty array, using the EMPTY strategy.
      * @param length
      */
     public SMutableArray(final long length) {
-      storage = (int) length;
+      super(length);
     }
 
     public SMutableArray(final Object storage) {
-      this.storage = storage;
-      assert !(storage instanceof Long);
+      super(storage);
     }
 
     /**
@@ -195,16 +202,11 @@ public abstract class SArray extends SAbstractObject {
       return false;
     }
 
-    @Override
-    protected Object getStorage() {
-      return storage;
-    }
-
     private void fromEmptyToParticalWithType(final PartiallyEmptyArray.Type type,
         final long idx, final Object val) {
       assert type != PartiallyEmptyArray.Type.OBJECT;
       assert isEmptyType();
-      this.storage = new PartiallyEmptyArray(type, (int) getStorage(), idx, val);
+      this.storage = new PartiallyEmptyArray(type, (int) storage, idx, val);
     }
 
     /**
@@ -286,15 +288,13 @@ public abstract class SArray extends SAbstractObject {
   }
 
   public static final class SImmutableArray extends SArray {
-    private final Object storage;
 
     public SImmutableArray(final long length) {
-      storage = (int) length;
+      super(length);
     }
 
     public SImmutableArray(final Object storage) {
-      assert !(storage instanceof Long);
-      this.storage = storage;
+      super(storage);
     }
 
     @Override
@@ -305,11 +305,6 @@ public abstract class SArray extends SAbstractObject {
     @Override
     public boolean isValue() {
       return true;
-    }
-
-    @Override
-    protected Object getStorage() {
-      return storage;
     }
   }
 }
