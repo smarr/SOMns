@@ -28,7 +28,9 @@ public abstract class BlockDispatchNode extends Node {
   }
 
   protected static final SInvokable getMethod(final Object[] arguments) {
-    return ((SBlock) arguments[0]).getMethod();
+    SInvokable method = ((SBlock) arguments[0]).getMethod();
+    assert method.getNumberOfArguments() == arguments.length;
+    return method;
   }
 
   protected static final DirectCallNode createCallNode(final Object[] arguments) {
