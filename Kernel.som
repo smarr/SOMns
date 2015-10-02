@@ -407,7 +407,75 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     public print    = ( '#' print. super print )
   )
   
-  public class Array = Object ()
+  public class ArrayReadMixin = ()(
+    public first = ( ^ at: 1 )
+    public last  = ( ^ at: size )
+    
+    'Iterating'
+    public do: block            = ( self doIndexes: [ :i |
+                                      block value: (self at: i) ] )
+    public doIndexes: block     = ( 1 to: self size do: [:i |
+                                      block value: i. ] )
+    public from: start to: end do: block = ( | i |
+                                             start to: end do: [:i |
+                                               block value: (self at: i) ] )
+
+    public inject: sub into: aBlock = ( | next |
+      next := sub.
+      self do: [ :e | next := aBlock value: next with: e ].
+      ^ next
+    )
+
+    'Numerical'
+    public sum     = ( ^ self inject: 0 into: [ :sub :elem | sub + elem ] )
+    public average = ( ^ self sum / self size )
+
+    'Filter'
+    public select: aBlock = (
+      | newCollection |
+      newCollection := Vector new: self size.
+      self do: [:each | (aBlock value: each)  
+                          ifTrue: [newCollection append: each]].
+      ^ newCollection
+    )
+  
+    public reject: aBlock = (
+      ^ self select: [:element | (aBlock value: element) == false ]
+    )
+  
+    public union: aCollection = (
+      | new |
+      new := Set new.
+      new addAll: self.
+      new addAll: aCollection.
+      ^ new
+    )
+    
+    'Containment/inclusion check'
+    public contains: element = ( self do: [ :e | e = element ifTrue: [ ^ true ] ].
+                          ^ false )
+    public indexOf: element = (
+      self doIndexes: [ :i | (self at: i) = element ifTrue: [ ^ i ]].
+      ^ nil
+    )
+  
+    public lastIndexOf: element = (
+      self size downTo: 1 do: [: i | (self at: i) = element ifTrue: [ ^ i ]].
+      ^ nil
+    )
+    
+    'Collection'
+    public collect: aBlock = ( (* also known as 'map', we use it for 
+      ValueArray and Array, and both times create a Array, because we can't be
+      sure that the block will return a Value *)
+      | result |
+      result := Array new: self size.
+      self doIndexes: [ :i | result at: i put: (aBlock value: (self at: i)) ].
+      ^ result
+    )
+  )
+  
+  public class Array = Object <: ArrayReadMixin ()
   (
     'Accessing'
     public at: index            = ( ^ vmMirror array: self at: index )
@@ -415,19 +483,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     public size                 = ( ^ vmMirror arraySize: self )
     public putAll: block        = ( self doIndexes: [ :i |
                                       self at: i put: block value ] )
-    public first = ( ^ self at: 1 )
-    public last  = ( ^ self at: self size )
 
-    'Iterating'
-    public do: block            = ( self doIndexes: [ :i |
-                                      block value: (self at: i) ] )
-    public doIndexes: block     = ( 1 to: self size do: [:i |
-                                      block value: i. ] )
-
-    public from: start to: end do: block = ( | i |
-                                             start to: end do: [:i |
-                                               block value: (self at: i) ] )
-  
     'Copying (inclusively)'
     public copyFrom: start to: end = ( | result i |
       result := Array new: end - start + 1.
@@ -453,57 +509,6 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     )
 
     public copy = ( ^ self copyFrom: 1 )
-  
-    'Numerical'
-    public sum     = ( ^ self inject: 0 into: [ :sub :elem | sub + elem ] )
-    public average = ( ^ self sum / self size )
-                              
-    'Containment check'
-    public contains: element = ( self do: [ :e | e = element ifTrue: [ ^ true ] ].
-                          ^ false )
-    public indexOf: element = (
-      self doIndexes: [ :i | (self at: i) = element ifTrue: [ ^ i ]].
-      ^ nil
-    )
-  
-    public lastIndexOf: element = (
-      self size downTo: 1 do: [: i | (self at: i) = element ifTrue: [ ^ i ]].
-      ^ nil
-    )
-  
-    'Collection'
-    public collect: aBlock = ( (* also known as 'map' *)
-      | result |
-      result := Array new: self size.
-      self doIndexes: [ :i | result at: i put: (aBlock value: (self at: i)) ].
-      ^ result
-    )
-
-    public inject: sub into: aBlock = ( | next |
-      next := sub.
-      self do: [ :e | next := aBlock value: next with: e ].
-      ^ next
-    )
-  
-    public reject: aBlock = (
-      ^ self select: [:element | (aBlock value: element) == false ]
-    )
-  
-    public select: aBlock = (
-      | newCollection |
-      newCollection := Vector new: self size.
-      self do: [:each | (aBlock value: each)  
-                          ifTrue: [newCollection append: each]].
-      ^ newCollection
-    )
-  
-    public union: aCollection = (
-      | new |
-      new := Set new.
-      new addAll: self.
-      new addAll: aCollection.
-      ^ new
-    )
   ) : (
     'Allocation'
     public new                      = ( ^ self new: 0 )
@@ -534,6 +539,18 @@ class Kernel vmMirror: vmMirror = Object <: Value (
       arr at: 3 put: c.
       ^ arr
     )
+  )
+  
+  public class ValueArray new: size withAll: aBlock = Value <: ArrayReadMixin (
+    (* Conceptually: 1 to: size do: [:i | at: i put: (aBlock value: i) ] *)
+  )(
+    'Accessing'
+    public  at: index            = ( ^ vmMirror array: self at: index )
+    public size                  = ( ^ vmMirror arraySize: self )
+
+    public copy = ( ^ self )
+  ):(
+    public new: size withAll: aBlock = ( vmMirror valueArrayNew: size withAll: aBlock )
   )
   
   public class Block = Object ()
