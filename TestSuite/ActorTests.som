@@ -208,6 +208,24 @@ class ActorTests usingPlatform: platform testFramework: minitest = Value (
       ^ promisePair promise
     )
     
+    public testIdentityOfFarRefs = (
+      | pC1 pC2 c1 c2 pp |
+      pp := actors createPromisePair.
+      
+      pC1 := (actors createActorFromValue: Cell) <-: new: 4.
+      pC2 := (actors createActorFromValue: Cell) <-: new: 5.
+      
+      pC1 whenResolved: [:cellFRef |
+        c1 := cellFRef.
+        pC2 whenResolved: [:c2FRef |
+          deny: c2FRef == c1.
+          assert: c1 == cellFRef.
+        ].
+        pp resolve: nil
+      ].
+      ^ pp promise
+    )
+    
   ) : (
     TEST_CONTEXT = ()
   )
