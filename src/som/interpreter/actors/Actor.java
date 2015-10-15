@@ -1,8 +1,6 @@
 package som.interpreter.actors;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.NoSuchElementException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
 import java.util.concurrent.ForkJoinWorkerThread;
@@ -14,21 +12,23 @@ import som.primitives.ObjectPrims.IsValue;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
 
-// design goals:
-//  - avoid 1-thread per actor
-//  - have a low-overhead and safe scheduling system
-//  - use an executor or fork/join pool for execution
-//  - each actor should only have at max. one active task
-
-
-//  algorithmic sketch
-//   - enqueue message in actor queue
-//   - check whether we need to submit it to the pool
-//   - could perhaps be a simple boolean flag?
-//   - at the end of a turn, we take the next message, and
-//   - submit a new task to the pool
-
-// TODO: figure out whether there is a simple look free design commonly used
+/**
+ * Represent's a language level actor
+ *
+ * design goals:
+ * - avoid 1-thread per actor
+ * - have a low-overhead and safe scheduling system
+ * - use an executor or fork/join pool for execution
+ * - each actor should only have at max. one active task
+ *
+ * algorithmic sketch
+ *  - enqueue message in actor queue
+ *  - execution is done by a special ExecAllMessages task
+ *    - this task is submitted to the f/j pool
+ *    - once it is executing, it goes to the actor,
+ *    - grabs the current mailbox
+ *    - and sequentially executes all messages
+ */
 public class Actor {
 
   /**
@@ -56,11 +56,18 @@ public class Actor {
     }
   }
 
-  private final ArrayDeque<EventualMessage> mailbox = new ArrayDeque<>();
+  /** Buffer for incoming messages. */
+  private ArrayList<EventualMessage> mailbox = new ArrayList<>();
+
+  /** Flag to indicate whether there is currently a F/J task executing. */
   private boolean isExecuting;
+
+  /** Is scheduled on the pool, and executes messages to this actor. */
+  private final ExecAllMessages executor;
 
   protected Actor() {
     isExecuting = false;
+    executor = new ExecAllMessages(this);
   }
 
   /**
@@ -69,6 +76,7 @@ public class Actor {
   protected Actor(final boolean isMainActor) {
     assert isMainActor;
     isExecuting = true;
+    executor = new ExecAllMessages(this);
   }
 
   public final Object wrapForUse(final Object o, final Actor owner) {
@@ -112,24 +120,100 @@ public class Actor {
   protected void logMessageBeingExecuted(final EventualMessage msg) { }
   protected void logNoTaskForActor() { }
 
+  /**
+   * Send the give message to the actor.
+   *
+   * This is the main method to be used in this API.
+   */
   @TruffleBoundary
-  public final synchronized void enqueueMessage(final EventualMessage msg) {
+  public final synchronized void send(final EventualMessage msg) {
     assert msg.getTarget() == this;
-    if (isExecuting) {
-      mailbox.addLast(msg);
-      logMessageAddedToMailbox(msg);
-    } else {
-      executeOnPool(msg);
-      logMessageBeingExecuted(msg);
+    mailbox.add(msg);
+    logMessageAddedToMailbox(msg);
+
+    if (!isExecuting) {
       isExecuting = true;
+      executeOnPool();
+    }
+  }
+
+  /**
+   * WARNING: This method should only be called from the main thread.
+   * It expects the main thread to stop executing the actor's messages and
+   * will schedule all coming messages on the normal pool.
+   */
+  public final synchronized void relinuqishMainThreadAndMoveExecutionToPool() {
+    if (mailbox.size() > 0) {
+      executeOnPool();
+    }
+  }
+
+  /**
+   * Is scheduled on the fork/join pool and executes messages for a specific
+   * actor.
+   */
+  private static final class ExecAllMessages implements Runnable {
+    private final Actor actor;
+    private ArrayList<EventualMessage> current;
+    private ArrayList<EventualMessage> emptyUnused;
+
+    public ExecAllMessages(final Actor actor) {
+      this.actor = actor;
+    }
+
+    @Override
+    public void run() {
+      ActorProcessingThread t = (ActorProcessingThread) Thread.currentThread();
+      t.currentlyExecutingActor = actor;
+
+      // grab current mailbox from actor
+      if (emptyUnused == null) {
+        emptyUnused = new ArrayList<>();
+      }
+
+      while (getCurrentMessagesOrCompleteExecution()) {
+        processCurrentMessages();
+      }
+
+      t.currentlyExecutingActor = null;
+    }
+
+    private void processCurrentMessages() {
+      int size = current.size();
+      for (int i = 0; i < size; i++) {
+        EventualMessage msg = current.get(i);
+        actor.logMessageBeingExecuted(msg);
+        msg.execute();
+      }
+      current.clear();
+      emptyUnused = current;
+    }
+
+    private boolean getCurrentMessagesOrCompleteExecution() {
+      synchronized (actor) {
+        current = actor.mailbox;
+        if (current.isEmpty()) {
+          // complete execution after all messages are processed
+          actor.isExecuting = false;
+          return false;
+        }
+        actor.mailbox = emptyUnused;
+      }
+      return true;
     }
   }
 
   @TruffleBoundary
-  public static void executeOnPool(final EventualMessage msg) {
-    actorPool.execute(msg);
+  private void executeOnPool() {
+    actorPool.execute(executor);
   }
 
+  /**
+   * @return true, if there are no scheduled submissions,
+   *         and no active threads in the pool, false otherwise.
+   *         This is only best effort, it does not look at the actor's
+   *         message queues.
+   */
   public static boolean isPoolIdle() {
     return !actorPool.hasQueuedSubmissions() && actorPool.getActiveThreadCount() == 0;
   }
@@ -152,24 +236,6 @@ public class Actor {
   private static final ForkJoinPool actorPool = new ForkJoinPool(
       VmSettings.NUM_THREADS,
       new ActorProcessingThreadFactor(), null, true);
-
-  /**
-   * This method is only to be called from the EventualMessage task, and the
-   * main Actor in Bootstrap.executeApplication().
-   */
-  @TruffleBoundary
-  public final synchronized void enqueueNextMessageForProcessing() {
-    try {
-      EventualMessage nextTask = mailbox.remove();
-      assert isExecuting;
-      executeOnPool(nextTask);
-      logMessageBeingExecuted(nextTask);
-      return;
-    } catch (NoSuchElementException e) {
-      logNoTaskForActor();
-      isExecuting = false;
-    }
-  }
 
   @Override
   public String toString() {

@@ -122,7 +122,7 @@ public abstract class EventualSendNode extends ExpressionNode {
 
     DirectMessage msg = new DirectMessage(target, selector, args, owner,
         resolver, onReceive);
-    target.enqueueMessage(msg);
+    target.send(msg);
   }
 
   protected static RegisterWhenResolved createRegisterNode() {
@@ -163,7 +163,7 @@ public abstract class EventualSendNode extends ExpressionNode {
 
     DirectMessage msg = new DirectMessage(current, selector, args, current,
         resolver, onReceive);
-    current.enqueueMessage(msg);
+    current.send(msg);
 
     return result;
   }
@@ -173,7 +173,7 @@ public abstract class EventualSendNode extends ExpressionNode {
     Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
     DirectMessage msg = new DirectMessage(current, selector, args, current,
         null, onReceive);
-    current.enqueueMessage(msg);
+    current.send(msg);
     return Nil.nilObject;
   }
 

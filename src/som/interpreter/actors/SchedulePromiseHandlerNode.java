@@ -30,7 +30,7 @@ public abstract class SchedulePromiseHandlerNode extends Node {
 
     msg.args[PromiseMessage.PROMISE_VALUE_IDX] = wrapper.execute(
         promise.getValueUnsync(), msg.originalSender, current);
-    msg.originalSender.enqueueMessage(msg);
+    msg.originalSender.send(msg);
   }
 
   @Specialization
@@ -67,6 +67,6 @@ public abstract class SchedulePromiseHandlerNode extends Node {
     msg.target      = finalTarget; // for sends to far references, we need to adjust the target
     msg.finalSender = current;
 
-    finalTarget.enqueueMessage(msg);
+    finalTarget.send(msg);
   }
 }

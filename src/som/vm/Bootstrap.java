@@ -476,7 +476,7 @@ valueArrayDef.initializeClass(Classes.valueArrayClass, new SClass[] {Classes.val
     Object returnCode = disp.invoke(platform);
 
     if (VM.isUsingActors()) {
-      mainActor.enqueueNextMessageForProcessing();
+      mainActor.relinuqishMainThreadAndMoveExecutionToPool();
       VM.setMainThread(Thread.currentThread());
 
       int emptyFJPool = 0;

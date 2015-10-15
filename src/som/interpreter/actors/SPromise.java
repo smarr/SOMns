@@ -174,7 +174,7 @@ public class SPromise extends SObjectWithClass {
 
     assert owner != null;
     msg.resolve(result, owner, current);
-    msg.getTarget().enqueueMessage(msg);
+    msg.getTarget().send(msg);
   }
 
   public final synchronized void addChainedPromise(@NotNull final SPromise promise) {

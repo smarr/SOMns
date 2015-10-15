@@ -1,7 +1,6 @@
 package som.interpreter.actors;
 
 import java.util.Arrays;
-import java.util.concurrent.RecursiveAction;
 
 import som.VM;
 import som.interpreter.actors.Actor.ActorProcessingThread;
@@ -14,8 +13,7 @@ import som.vmobjects.SSymbol;
 import com.oracle.truffle.api.RootCallTarget;
 
 
-public abstract class EventualMessage extends RecursiveAction {
-  private static final long serialVersionUID = -7994739264831630827L;
+public abstract class EventualMessage {
   private static final SSymbol VALUE_SELECTOR = Symbols.symbolFor("value:");
 
   protected final Object[]  args;
@@ -40,8 +38,6 @@ public abstract class EventualMessage extends RecursiveAction {
    * ARGUMENTS: are wrapped eagerly on message creation
    */
   public static final class DirectMessage extends EventualMessage {
-    private static final long serialVersionUID = 7758943685874210766L;
-
     private final SSymbol selector;
     private final Actor   target;
     private final Actor   sender;
@@ -113,8 +109,6 @@ public abstract class EventualMessage extends RecursiveAction {
     public static final int PROMISE_RCVR_IDX  = 0;
     public static final int PROMISE_VALUE_IDX = 1;
 
-    private static final long serialVersionUID = -6246726751425824082L;
-
     protected final Actor originalSender; // initial owner of the arguments
 
     public PromiseMessage(final Object[] arguments, final Actor originalSender,
@@ -131,8 +125,6 @@ public abstract class EventualMessage extends RecursiveAction {
    * after the promise is resolved.
    */
   public static final class PromiseSendMessage extends PromiseMessage {
-    private static final long serialVersionUID = 2637873418047151001L;
-
     private final SSymbol selector;
     protected Actor target;
     protected Actor finalSender;
@@ -184,7 +176,6 @@ public abstract class EventualMessage extends RecursiveAction {
 
   /** The callback message to be send after a promise is resolved. */
   public static final class PromiseCallbackMessage extends PromiseMessage {
-    private static final long serialVersionUID = 4682874999398510325L;
 
     public PromiseCallbackMessage(final Actor owner, final SBlock callback,
         final SResolver resolver, final RootCallTarget onReceive) {
@@ -222,20 +213,13 @@ public abstract class EventualMessage extends RecursiveAction {
     }
   }
 
-  @Override
-  protected final void compute() {
-    Actor target = getTarget();
-    setCurrentActor(target);
-
+  protected final void execute() {
     try {
       executeMessage();
     } catch (Throwable t) {
       t.printStackTrace();
       VM.errorExit("Some EventualMessage failed with Exception.");
     }
-
-    setCurrentActor(null);
-    target.enqueueNextMessageForProcessing();
   }
 
   protected final void executeMessage() {
