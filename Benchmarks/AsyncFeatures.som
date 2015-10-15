@@ -73,8 +73,60 @@ class AsyncFeatures usingPlatform: platform andHarness: harness = (
     public newInstance: problemSize = ( ^ self new: problemSize asInteger )
     public setupVerifiedRun: run = ( run problemSize: 1000 )
   )
+  
+  public class SendWith2Args new: iterations = Benchmark (
+  | private iterations = iterations.
+    private cnt ::= 0.
+    private completionPP = actors createPromisePair.
+    private obj ::= Object new.
+  |
+  )(
+    public rcv: a1 a2: a2 = (
+      cnt := cnt + 1.
+      cnt = iterations
+        ifTrue:  [ completionPP resolve: cnt ]
+        ifFalse: [ self <-: rcv: a1 a2: a2. self ]
+    )
+    
+    public benchmark = (
+      self <-: rcv: actors a2: Object new.
+      ^ completionPP promise
+    )
+    public verifyResult: result = (
+      ^ result = iterations
+    )
+  ) : (
+    public newInstance: problemSize = ( ^ self new: problemSize asInteger )
+    public setupVerifiedRun: run = ( run problemSize: 1000 )
+  )
+  
+  public class SendWith5Args new: iterations = Benchmark (
+  | private iterations = iterations.
+    private cnt ::= 0.
+    private completionPP = actors createPromisePair.
+    private obj ::= Object new.
+  |
+  )(
+    public rcv: a1 a2: a2 a3: a3 a4: a4 a5: a5 = (
+      cnt := cnt + 1.
+      cnt = iterations
+        ifTrue:  [ completionPP resolve: cnt ]
+        ifFalse: [ self <-: rcv: a1 a2: a2 a3: obj a4: a4 a5: a5. self ]
+    )
+    
+    public benchmark = (
+      self <-: rcv: actors a2: Object new a3: obj a4: Benchmark a5: actors.
+      ^ completionPP promise
+    )
+    public verifyResult: result = (
+      ^ result = iterations
+    )
+  ) : (
+    public newInstance: problemSize = ( ^ self new: problemSize asInteger )
+    public setupVerifiedRun: run = ( run problemSize: 1000 )
+  )
 
-  public class SendWithManyArgs new: iterations = Benchmark (
+  public class SendWith10Args new: iterations = Benchmark (
   | private iterations = iterations.
     private cnt ::= 0.
     private completionPP = actors createPromisePair.
