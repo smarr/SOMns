@@ -145,6 +145,8 @@ public class Actor {
   public final synchronized void relinuqishMainThreadAndMoveExecutionToPool() {
     if (mailbox.size() > 0) {
       executeOnPool();
+    } else {
+      isExecuting = false;
     }
   }
 
