@@ -291,7 +291,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         t > 0 ifTrue: [
           nextAct <-: ping: t - 1
         ] ifFalse: [
-          nextAct <-: exit: numActors
+          nextAct <-: exit: numActors - 1
         ]
       )
       
@@ -329,7 +329,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     )
     
     public verifyResult: result = (
-      ^ result = 2
+      ^ result = 1
     )
   ) : (
     public newInstance: problemSize = (
