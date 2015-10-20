@@ -477,6 +477,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
   | private numMessages = numMessages.
     private numEntities = numEntities.
     private writePercentage = writePercentage.
+    private dataLimit = 512. (* 524287 / 1024,  Integer.MAX_VALUE / 4_096 TODO: this is not the same constant as originally! *)
   |
   )(
     class Master new: completionRes = (
@@ -517,8 +518,8 @@ class Savina usingPlatform: platform andHarness: harness = Value (
             | rnd |
             rnd := random next % 100.
             rnd < writePercentage
-              ifTrue:  [ dictionary <-: write: self key: random next value: random next ]
-              ifFalse: [ dictionary <-: read: self key: random next ] ]
+              ifTrue:  [ dictionary <-: write: self key: random next % dataLimit value: random next ]
+              ifFalse: [ dictionary <-: read: self key: random next % dataLimit ] ]
           ifFalse: [ master <-: endWork ].
       )
       
@@ -528,14 +529,14 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     )
     
     class DictionaryActor new: completionRes = (
-    | private dataMap = self createDataMap: 524287 / 1024. (* Integer.MAX_VALUE / 4_096 TODO: this is not the same constant as originally! *)
+    | private dataMap = self createDataMap: dataLimit.
       private completionRes = completionRes.
     |
     )(
       private createDataMap: dataLimit = (
         | dict |
-        dict := Dictionary new.
-        1 to: dataLimit do: [:i |
+        dict := Dictionary new: dataLimit.
+        0 to: dataLimit - 1 do: [:i |
           dict at: i put: i
         ].
         ^ dict
@@ -563,16 +564,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     )
     
     public verifyResult: result = (
-      (numEntities =  20 and: [numMessages = 100  and: [writePercentage = 20]]) ifTrue: [ ^ result =  904 ].
-      (numEntities =  20 and: [numMessages = 100  and: [writePercentage = 50]]) ifTrue: [ ^ result = 1560 ].
-      (numEntities =  20 and: [numMessages = 1000 and: [writePercentage = 20]]) ifTrue: [ ^ result = 3671 ].
-      (numEntities = 100 and: [numMessages = 100  and: [writePercentage = 50]]) ifTrue: [ ^ result = 4759 ].
-      (numEntities =  10 and: [numMessages = 1000 and: [writePercentage = 50]]) ifTrue: [ ^ result = 4816 ].
-      (numEntities =  20 and: [numMessages = 1000 and: [writePercentage = 50]]) ifTrue: [ ^ result = 7265 ].
-
-      (* otherwise, warn that we don't know whether it is correct. *)
-      ('---- result: ' + result asString + ' dont have a hardcoded verification result for this config yet') println.
-      ^ false
+      ^ result = dataLimit
     )
   ) : (
     public newInstance: problemSize = (
