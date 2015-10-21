@@ -871,10 +871,9 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         ifTrue: [
           cost timesRepeat: [
             100 timesRepeat: [
-              res := res + (random next abs + 0.01) log ] ] ]
+              res := res + (random nextDouble abs + 0.01) log ] ] ]
         ifFalse: [
-          res := res + (random next abs + 0.01) log ].
-      
+          res := res + (random nextDouble abs + 0.01) log ].
       ^ res
     )
   
@@ -886,14 +885,13 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     )
     
     public verifyResult: result = (
-      (bufferSize = 40 and: [numProducers = 10 and: [numConsumers = 10 and: [numItemsPerProducer =  60]]]) ifTrue: [^ result round =  461187197].
-      (bufferSize = 40 and: [numProducers = 10 and: [numConsumers = 10 and: [numItemsPerProducer =  80]]]) ifTrue: [^ result round =  816528152].
-      (bufferSize = 40 and: [numProducers = 20 and: [numConsumers = 20 and: [numItemsPerProducer =  80]]]) ifTrue: [^ result round = 1633056304].
-      (bufferSize = 50 and: [numProducers = 20 and: [numConsumers = 20 and: [numItemsPerProducer = 100]]]) ifTrue: [^ result round = 2545350104].
-      (bufferSize = 50 and: [numProducers = 40 and: [numConsumers = 40 and: [numItemsPerProducer = 100]]]) ifTrue: [^ result round = 5090700207].
-      (bufferSize = 40 and: [numProducers = 10 and: [numConsumers = 10 and: [numItemsPerProducer = 600]]]) ifTrue: [^ result round = 45438279572].
-      
-       
+      (bufferSize = 40 and: [numProducers = 10 and: [numConsumers = 10 and: [numItemsPerProducer =  60]]]) ifTrue: [^ result round =   -43522486].
+      (bufferSize = 40 and: [numProducers = 10 and: [numConsumers = 10 and: [numItemsPerProducer =  80]]]) ifTrue: [^ result round =   -77056204].
+      (bufferSize = 40 and: [numProducers = 20 and: [numConsumers = 20 and: [numItemsPerProducer =  80]]]) ifTrue: [^ result round =  -154112409].
+      (bufferSize = 50 and: [numProducers = 20 and: [numConsumers = 20 and: [numItemsPerProducer = 100]]]) ifTrue: [^ result round =  -240206069].
+      (bufferSize = 50 and: [numProducers = 40 and: [numConsumers = 40 and: [numItemsPerProducer = 100]]]) ifTrue: [^ result round =  -480412139].
+      (bufferSize = 40 and: [numProducers = 10 and: [numConsumers = 10 and: [numItemsPerProducer = 600]]]) ifTrue: [^ result round = -4288035081].
+
       (* otherwise, warn that we don't know whether it is correct. *)
       ('---- result: ' + result asString + ' dont have a hardcoded verification result for this config yet') println.
       ^ false
