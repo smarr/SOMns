@@ -1018,13 +1018,12 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     )
     
     public verifyResult: result = (
-      (numValues = 100 and: [maxValue = 256 and: [seed = 74755]]) ifTrue: [
-        ^ result = 13606
-      ].
-      (numValues = 10000 and: [maxValue = 65536 and: [seed = 74755]]) ifTrue: [
-        ^ result = 329373752
-      ].
-      ^ true
+      (numValues =   100 and: [maxValue =   256 and: [seed = 74755]]) ifTrue: [ ^ result = 13606 ].
+      (numValues = 10000 and: [maxValue = 65536 and: [seed = 74755]]) ifTrue: [ ^ result = 329373752 ].
+      (numValues = 50000 and: [maxValue = 65536 and: [seed = 74755]]) ifTrue: [ ^ result = 1642300184 ].
+
+      ('---- result: ' + result asString + ' dont have a hardcoded verification result for this config yet') println.
+      ^ false
     )
   ) : (
     public newInstance: problemSize = (
