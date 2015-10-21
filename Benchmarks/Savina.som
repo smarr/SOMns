@@ -64,7 +64,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
   (* === Savina Microbenchmarks === *)
   
   public class PingPong new: numPings = Benchmark <: Value (
-  | private NumPings     = numPings.
+  | private NumPings = numPings.
   |
   )(
     class Ping new: cnt with: pong = (
