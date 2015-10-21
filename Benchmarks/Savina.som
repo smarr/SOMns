@@ -1348,9 +1348,9 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         workerRange := (r - l) // numWorkers.
         workers doIndexes: [:i |
           | wl wr |
-          wl := workerRange * (i - 1) + l.
+          wl := (workerRange * (i - 1.0)) + l.
           wr := wl + workerRange.
-          (workers at: i) <-: work: l and: r and: h
+          (workers at: i) <-: work: wl and: wr and: h
         ]
       )
     )
@@ -1360,7 +1360,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     |)(
       public work: l and: r and: h = (
         | n accumArea |
-        n := (r - l) / h.
+        n := (r - l) // h.
         accumArea := 0.0.
         
         0 to: n - 1 do: [:i |
@@ -1383,7 +1383,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         a := ((x * x * x) - 1.0) sin.
         b := x + 1.0.
         c := a // b.
-        d := ((2.0 * x) exp + 1.0) sqrt.
+        d := (1.0 + (2.0 * x) sqrt exp) sqrt.
         r := c * d.
         ^ r
       )
@@ -1398,12 +1398,16 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     )
     
     public verifyResult: result = (
-      (numWorkers = 100 and: [numPieces =  2500 and: [left = 1 and: [right = 5]]]) ifTrue: [ ^ result = 41.09037687472329 ].
-      (numWorkers = 100 and: [numPieces =  5000 and: [left = 1 and: [right = 5]]]) ifTrue: [ ^ result = 41.09352993029936 ].
-      (numWorkers = 100 and: [numPieces = 10000 and: [left = 1 and: [right = 5]]]) ifTrue: [ ^ result = 41.0943179572127  ].
+      | r |
+      r := (result * 100000000) round.
+      (numWorkers = 100 and: [numPieces =    2500 and: [left = 1 and: [right = 5]]]) ifTrue: [ ^ r = 27107880 ].
+      (numWorkers = 100 and: [numPieces =    5000 and: [left = 1 and: [right = 5]]]) ifTrue: [ ^ r = 27108026 ].
+      (numWorkers = 100 and: [numPieces =   10000 and: [left = 1 and: [right = 5]]]) ifTrue: [ ^ r = 27108063 ].
+      (numWorkers = 100 and: [numPieces =  100000 and: [left = 1 and: [right = 5]]]) ifTrue: [ ^ r = 27108075 ].
+      (numWorkers = 100 and: [numPieces = 1000000 and: [left = 1 and: [right = 5]]]) ifTrue: [ ^ r = 27108075 ].
     
       (* otherwise, warn that we don't know whether it is correct. *)
-      ('---- result: ' + result asString + ' dont have a hardcoded verification result for this config yet') println.
+      ('---- result: ' + r asString + ' dont have a hardcoded verification result for this config yet') println.
       ^ false
     )
   ) : (
@@ -1412,8 +1416,8 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       problem := problemSize split: ':'.
       ^ self numWorkers: (problem at: 1) asInteger
               numPieces: (problem at: 2) asInteger
-                   left: (problem at: 3) asInteger
-                  right: (problem at: 4) asInteger
+                   left: (problem at: 3) asInteger * 1.0
+                  right: (problem at: 4) asInteger * 1.0
     )
     
     public setupVerifiedRun: run = (
