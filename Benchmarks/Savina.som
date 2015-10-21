@@ -1147,11 +1147,11 @@ class Savina usingPlatform: platform andHarness: harness = Value (
      have deterministic termination after the traversals is complete.
      It does not do an extra traversal for termination, since we already
      got the upward traversal after #traverse *)
-  public class UnbalancedCobwebbedTree binomial: numChildren avgCompSize: avg stdevCompSize: stdev = Benchmark <: Value (
+  public class UnbalancedCobwebbedTree nodes: maxNodes binomial: numChildren avgCompSize: avg stdevCompSize: stdev = Benchmark <: Value (
   | private numChildren   = numChildren.
     private avgCompSize   = avg.
     private stdevCompSize = stdev.
-    private MaxNodes      = 2000. (*00*)
+    private maxNodes      = maxNodes.
   |)(
     class RootActor new: completionRes = (
     | private ran = Random new.
@@ -1160,6 +1160,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       private children = Array new: numChildren.
       private hasGrantChildren = Array new: numChildren withAll: false.
       private traversedChildren ::= 0.
+      private subtreeSize       ::= 0.
       private startedTraversal ::= false.
       private completionRes = completionRes.
     |)(
@@ -1181,7 +1182,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       )
       
       public shouldGenerateChildren: child height: childHeight = (
-        size + numChildren <= MaxNodes
+        size + numChildren <= maxNodes
           ifTrue: [
             | moreChildren |
             moreChildren := ran nextBoolean.
@@ -1200,10 +1201,12 @@ class Savina usingPlatform: platform andHarness: harness = Value (
               traverse ] ]
       )
       
-      public traversed = (
+      public traversed: treeSize = (
         traversedChildren := traversedChildren + 1.
+        subtreeSize := subtreeSize + treeSize.
+
         traversedChildren = numChildren ifTrue: [
-          completionRes resolve: height * size.
+          completionRes resolve: subtreeSize.
         ]
       )
       
@@ -1230,9 +1233,10 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     class NodeActor parent: parent root: root height: height id: id computation: compSize = (
     | private hasChildren ::= false.
       private traversedChildren ::= 0.
+      private subtreeSize ::= 0.
       private children = Array new: numChildren.
       private hasGrantChildren = Array new: numChildren withAll: false.
-      private dummy = 400. (*00*)
+      private busyLoopRan = Random new.
       
       private myParent   = parent.
       private myRoot     = root.
@@ -1241,7 +1245,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       private myCompSize = compSize.
     |)(
       public tryGeneratedChildren = (
-        loop: 100 with: dummy.
+        loop: avgCompSize / 50 with: busyLoopRan.
         myRoot <-: shouldGenerateChildren: self height: myHeight.
       )
       
@@ -1269,26 +1273,26 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       
       public traverse = (
         traversedChildren := 0.
-        loop: myCompSize with: dummy.
+        loop: myCompSize with: busyLoopRan.
         hasChildren
           ifTrue:  [ children do: [:c | c <-: traverse ] ]
-          ifFalse: [ myParent <-: traversed ].
+          ifFalse: [ myParent <-: traversed: 1 ].
       )
       
-      public traversed = (
+      public traversed: treeSize = (
+        subtreeSize := subtreeSize + treeSize.
         traversedChildren := traversedChildren + 1.
         traversedChildren = numChildren ifTrue: [
-          myParent <-: traversed.
+          myParent <-: traversed: subtreeSize + 1.
         ]
       )
 
-      private loop: busywait with: dummy = (
-        | test |
-        test := 0.
-        0 to: dummy * busywait do: [:k |
-          test := test + 1.
+      private loop: times with: ran = (
+        | result |
+        1 to: times do: [:k |
+          result := ran next
         ].
-        ^ test
+        ^ result
       )
     )
     
@@ -1301,22 +1305,20 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     )
     
     public verifyResult: result = (
-      (* Benchmark behavior is partially non-deterministic because of races
-         during tree creation, I think. So, I don't know how to verify the
-         result. *)
-      ^ true
+      ^ result = (maxNodes - numChildren)
     )
   ) : (
     public newInstance: problemSize = (
       | problem |
       problem := problemSize split: ':'.
-      ^ self    binomial: (problem at: 1) asInteger
-             avgCompSize: (problem at: 2) asInteger
-           stdevCompSize: (problem at: 3) asInteger
+      ^ self   nodes: (problem at: 1) asInteger
+            binomial: (problem at: 2) asInteger
+         avgCompSize: (problem at: 3) asInteger
+       stdevCompSize: (problem at: 4) asInteger
     )
     
     public setupVerifiedRun: run = (
-      run problemSize: '10:500:100'
+      run problemSize: '200000:10:500:100'
     )
   )
 
