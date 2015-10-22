@@ -88,7 +88,7 @@ else:
       print "No compatible JDK build found, is this script outdated?"
       sys.exit(1)
 
-SOM_ARGS = ['-Xbootclasspath/a:build/classes:libs/truffle/build/truffle-api.jar',
+SOM_ARGS = ['-Xbootclasspath/a:build/classes:libs/truffle/mxbuild/dists/truffle-api.jar',
             'som.VM', '--platform', 'core-lib/Platform.som']
 
 # == Hotspot -XX:CompileCommand=print,*::callRoot
