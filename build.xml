@@ -4,7 +4,7 @@
     <property name="src_gen.dir" value="src_gen"/>
     <property name="lib.dir"     value="libs" />
     <property name="truffle.dir" value="${lib.dir}/truffle" />
-    <property name="truffle.build" value="${truffle.dir}/build" />
+    <property name="truffle.build" value="${truffle.dir}/mxbuild/dists" />
     <property name="junit.version" value="4.12" />
 
     <property name="build.dir"   value="build"/>
