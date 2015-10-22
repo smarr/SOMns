@@ -42,6 +42,8 @@ parser.add_argument('-C', '--no-compilation', help='disable Truffle compilation'
                     dest='no_compilation', action='store_true', default=False)
 parser.add_argument('-G', '--interpreter', help='run without Graal',
                     dest='interpreter', action='store_true', default=False)
+parser.add_argument('-X', '--java-interpreter', help='run without Graal, and only the Java interpreter',
+                    dest='java_interpreter', action='store_true', default=False)
 parser.add_argument('-T', '--no-trace', help='do not print truffle compilation info',
                     dest='no_trace', action='store_false', default=True)
 parser.add_argument('--no-graph-pe', help='disable Graph PE',
@@ -60,6 +62,9 @@ args = parser.parse_args()
 
 JAVA_BIN  = '/product/bin/java'
 JAVA_ARGS = ['-d64']
+
+if args.java_interpreter:
+    args.interpreter = True
 
 if args.interpreter:
     java_bin = "java"
@@ -149,6 +154,8 @@ if not args.interpreter and not args.graph_pe:
     flags += ['-Djvmci.option.GraphPE=false']
 if args.threads:
     flags += ['-Dsom.threads=%s' % args.threads ]
+if args.java_interpreter:
+    flags += ['-Xint']
 
 all_args = JAVA_ARGS + flags + SOM_ARGS + args.args
 
