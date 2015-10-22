@@ -4,6 +4,6 @@ jdk:
 sudo: false
 script:
   - ant
-  - java -Xint -ea -esa -cp build/classes:libs/truffle/build/truffle-api.jar som.VM core-lib/TestSuite/TestRunner.som
   - ./som -G core-lib/TestSuite/TestRunner.som
+  - ./som -X core-lib/TestSuite/TestRunner.som
   - ant test
