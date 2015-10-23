@@ -1289,6 +1289,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
 
       private loop: times with: ran = (
         | result |
+        result := 0.
         1 to: times do: [:k |
           result := ran next
         ].
