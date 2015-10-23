@@ -1,6 +1,7 @@
 package som.interpreter.actors;
 
 import som.interpreter.SArguments;
+import som.interpreter.SomLanguage;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.vmobjects.SSymbol;
 
@@ -18,6 +19,7 @@ public final class ReceivedMessage extends RootNode {
   private final SSymbol selector;
 
   public ReceivedMessage(final AbstractMessageSendNode onRecieve, final SSymbol selector) {
+    super(SomLanguage.class, null, null);
     this.onReceive = onRecieve;
     this.selector  = selector;
     this.resolve = ResolvePromiseNodeFactory.create(null, null);
@@ -45,6 +47,7 @@ public final class ReceivedMessage extends RootNode {
     @Child protected ResolvePromiseNode resolve;
 
     public ReceivedCallback(final RootCallTarget onReceive) {
+      super(SomLanguage.class, null, null);
       this.onReceive = Truffle.getRuntime().createDirectCallNode(onReceive);
       this.resolve = ResolvePromiseNodeFactory.create(null, null);
     }

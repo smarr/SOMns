@@ -22,7 +22,7 @@ public abstract class Invokable extends RootNode {
       final FrameDescriptor frameDescriptor,
       final ExpressionNode expressionOrSequence,
       final ExpressionNode uninitialized) {
-    super(sourceSection, frameDescriptor);
+    super(SomLanguage.class, sourceSection, frameDescriptor);
     this.uninitializedBody    = uninitialized;
     this.expressionOrSequence = expressionOrSequence;
   }
