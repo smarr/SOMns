@@ -74,6 +74,17 @@ Build Status
 
 The current build status is: [![Build Status](https://travis-ci.org/smarr/SOMns.png?branch=master)](https://travis-ci.org/smarr/SOMns)
 
+Academic Work
+-------------
+
+SOMns is designed as platform for research on concurrent programming models,
+and their interactions. Here, we collect related papers:
+
+ - [Optimizing Communicating Event-Loop Languages with
+    Truffle](http://stefan-marr.de/2015/10/optimizing-communicating-event-loop-languages-with-truffle/),
+    Stefan Marr, Hanspeter Mössenböck; Presentation at the AGERE!’15 Workshop, co-located with SPLASH’15.
+
+
  [SOM]: http://som-st.github.io/
  [TSOM]:https://github.com/SOM-st/TruffleSOM
  [SOAI]:http://lafo.ssw.uni-linz.ac.at/papers/2012_DLS_SelfOptimizingASTInterpreters.pdf
