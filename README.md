@@ -63,7 +63,7 @@ Then, TruffleSOM can be build with Ant:
 
 Afterwards, the simple Hello World program is executed with:
 
-    ./som.sh core-lib/Hello.som
+    ./som core-lib/Hello.som
 
 Information on previous authors are included in the AUTHORS file. This code is
 distributed under the MIT License. Please see the LICENSE file for details.
