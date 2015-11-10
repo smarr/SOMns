@@ -1,6 +1,5 @@
 package som.interpreter.nodes;
 
-import static som.interpreter.TruffleCompiler.transferToInterpreter;
 import som.compiler.Variable.Local;
 import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
 import som.interpreter.InlinerForLexicallyEmbeddedMethods;
@@ -161,7 +160,7 @@ public abstract class LocalVariableNode extends ExpressionNode {
 
     @Specialization(contains = {"writeBoolean", "writeLong", "writeDouble"})
     public final Object writeGeneric(final VirtualFrame frame, final Object expValue) {
-      ensureObjectKind();
+      slot.setKind(FrameSlotKind.Object);
       frame.setObject(slot, expValue);
       return expValue;
     }
@@ -171,7 +170,6 @@ public abstract class LocalVariableNode extends ExpressionNode {
         return true;
       }
       if (slot.getKind() == FrameSlotKind.Illegal) {
-        transferToInterpreter("LocalVar.writeBoolToUninit");
         slot.setKind(FrameSlotKind.Boolean);
         return true;
       }
@@ -183,7 +181,6 @@ public abstract class LocalVariableNode extends ExpressionNode {
         return true;
       }
       if (slot.getKind() == FrameSlotKind.Illegal) {
-        transferToInterpreter("LocalVar.writeIntToUninit");
         slot.setKind(FrameSlotKind.Long);
         return true;
       }
@@ -195,18 +192,10 @@ public abstract class LocalVariableNode extends ExpressionNode {
         return true;
       }
       if (slot.getKind() == FrameSlotKind.Illegal) {
-        transferToInterpreter("LocalVar.writeDoubleToUninit");
         slot.setKind(FrameSlotKind.Double);
         return true;
       }
       return false;
-    }
-
-    protected final void ensureObjectKind() {
-      if (slot.getKind() != FrameSlotKind.Object) {
-        transferToInterpreter("LocalVar.writeObjectToUninit");
-        slot.setKind(FrameSlotKind.Object);
-      }
     }
 
     @Override
