@@ -1,5 +1,6 @@
 class ActorTests usingPlatform: platform testFramework: minitest = Value (
 | private TestContext = minitest TestContext.
+  private AsyncTestContext = minitest AsyncTestContext.
   private actors      = platform actors.
   private Exception   = platform kernel Exception.
   private Vector      = platform kernel Vector.
@@ -79,41 +80,6 @@ class ActorTests usingPlatform: platform testFramework: minitest = Value (
   )(
     public valIsFarRef = (
       ^ (ObjectMirror reflecting: val) className = 'FarReference'
-    )
-  )
-
-  public class AsyncTestContext = TestContext <: Value ()(
-    assert: promise resolvedWith: expectedResolution = (
-      (* TODO: add timeout support *)
-      ^ promise
-          whenResolved: [:actualResolution |
-            assert: actualResolution equals: expectedResolution ]
-          onError: [:actualResolution |
-            failWithMessage: 'Promise broken with error: ' + actualResolution asString ]
-    )
-  
-    assert: promise resolvedWithObject: expectedResolution = (
-      (* TODO: add timeout support *)
-      ^ promise
-          whenResolved: [:actualResolution |
-            assert: actualResolution is: expectedResolution ]
-          onError: [:actualResolution |
-            failWithMessage: 'Promise broken with error: ' + actualResolution asString ]
-    )
-
-    assert: promise erroredWith: expectedErrorClass = (
-      | state actualResolution |
-      state := #unresolved.
-
-      (withTimeout: promise inMSecs: 300)
-        whenResolved: [:r | state := #resolved. actualResolution := r ]
-        catch:        [:e | state := #error.    actualResolution := e ].
-
-      state = #resolved
-        ifTrue: [ ^ failWithMessage: 'Promise resolved with: ', actualResolution printString ].
-      state = #error
-        ifTrue: [ ^ assert: actualResolution class equals: expectedErrorClass ].
-      failWithMessage: 'Invalid state blocking on a promise: ', state.
     )
   )
 

@@ -745,6 +745,41 @@ OTHER DEALINGS IN THE SOFTWARE. *)
       asYetUnimplemented
     )
   )
+  
+  public class AsyncTestContext = TestContext <: Value ()(
+    assert: promise resolvedWith: expectedResolution = (
+      (* TODO: add timeout support *)
+      ^ promise
+          whenResolved: [:actualResolution |
+            assert: actualResolution equals: expectedResolution ]
+          onError: [:actualResolution |
+            failWithMessage: 'Promise broken with error: ' + actualResolution asString ]
+    )
+  
+    assert: promise resolvedWithObject: expectedResolution = (
+      (* TODO: add timeout support *)
+      ^ promise
+          whenResolved: [:actualResolution |
+            assert: actualResolution is: expectedResolution ]
+          onError: [:actualResolution |
+            failWithMessage: 'Promise broken with error: ' + actualResolution asString ]
+    )
+
+    assert: promise erroredWith: expectedErrorClass = (
+      | state actualResolution |
+      state := #unresolved.
+
+      (withTimeout: promise inMSecs: 300)
+        whenResolved: [:r | state := #resolved. actualResolution := r ]
+        catch:        [:e | state := #error.    actualResolution := e ].
+
+      state = #resolved
+        ifTrue: [ ^ failWithMessage: 'Promise resolved with: ', actualResolution printString ].
+      state = #error
+        ifTrue: [ ^ assert: actualResolution class equals: expectedErrorClass ].
+      failWithMessage: 'Invalid state blocking on a promise: ', state.
+    )
+  )
 
   class TestEnvironment parent: parent classDeclarationMirror: mirror = (
     (* Describes a class nested inside a test module. The class can be either a
