@@ -132,11 +132,15 @@ public final class SystemPrims {
         }
       });
 
+      StringBuilder sb = new StringBuilder();
       for (int i = method.size() - 1; i >= 0; i--) {
-        VM.print(String.format("\t%1$-" + (maxLengthMethod[0] + 4) + "s",
+        sb.append(String.format("\t%1$-" + (maxLengthMethod[0] + 4) + "s",
           method.get(i)));
-        VM.println(location.get(i));
+        sb.append(location.get(i));
+        sb.append('\n');
       }
+
+      VM.print(sb.toString());
     }
   }
 
