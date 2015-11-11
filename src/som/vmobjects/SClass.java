@@ -153,7 +153,7 @@ public final class SClass extends SObjectWithClass {
   @ExplodeLoop
   public SClass getClassCorrespondingTo(final int superclassIdx) {
     SClass cls = this;
-    for (int i = 0; i < superclassIdx; i++) {
+    for (int i = 0; i < superclassIdx && cls != null; i++) {
       cls = cls.getSuperClass();
     }
     return cls;

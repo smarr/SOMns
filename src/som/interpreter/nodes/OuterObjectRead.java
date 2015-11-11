@@ -54,10 +54,9 @@ public abstract class OuterObjectRead
     return lexicalClass;
   }
 
-  protected static final SClass getEnclosingClass(final SObjectWithClass rcvr,
+  protected static final SClass getEnclosingClassWithPotentialFailure(final SObjectWithClass rcvr,
       final int superclassIdx) {
     SClass lexicalClass = rcvr.getSOMClass().getClassCorrespondingTo(superclassIdx);
-    assert lexicalClass != null;
     return lexicalClass;
   }
 
@@ -78,11 +77,22 @@ public abstract class OuterObjectRead
     return rcvr.getSOMClass().getIdxForClassCorrespondingTo(mixinId);
   }
 
-  @Specialization(guards = {"contextLevel != 0", "getEnclosingClass(receiver, superclassIdx).getInstanceFactory() == factory"}, contains = "doForFurtherOuter")
+  protected boolean isSameEnclosingGroup(final SObjectWithClass receiver,
+      final int superclassIdx, final ClassFactory factory) {
+    SClass current = getEnclosingClassWithPotentialFailure(receiver, superclassIdx);
+    if (current == null) {
+      return false;
+    }
+    return current.getInstanceFactory() == factory;
+  }
+
+  @Specialization(guards = {"contextLevel != 0", "isSameEnclosingGroup(receiver, superclassIdx, factory)"},
+      contains = "doForFurtherOuter")
   public final Object fixedLookup(final SObjectWithClass receiver,
       @Cached("getIdx(receiver)") final int superclassIdx,
       @Cached("getEnclosingClass(receiver).getInstanceFactory()") final ClassFactory factory) {
-    return getEnclosingObject(receiver, getEnclosingClass(receiver, superclassIdx));
+    assert factory != null;
+    return getEnclosingObject(receiver, getEnclosingClassWithPotentialFailure(receiver, superclassIdx));
   }
 
   @Specialization(guards = {"contextLevel != 0"}, contains = "fixedLookup")
