@@ -1,7 +1,9 @@
 package som.interpreter.nodes;
 
 import som.compiler.MixinBuilder.MixinDefinitionId;
+import som.interpreter.actors.SFarReference;
 import som.interpreter.objectstorage.ClassFactory;
+import som.primitives.actors.ActorClasses;
 import som.vm.constants.KernelObj;
 import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithClass;
@@ -103,12 +105,18 @@ public abstract class OuterObjectRead
   public abstract Object executeEvaluated(Object receiver);
 
   protected static final boolean notSObjectWithClass(final Object receiver) {
-    return !(receiver instanceof SObjectWithClass);
+    return !(receiver instanceof SObjectWithClass) && !(receiver instanceof SFarReference);
   }
 
   @Specialization(guards = "notSObjectWithClass(receiver)")
   public Object doObject(final Object receiver) {
     return KernelObj.kernel;
+  }
+
+  @Specialization
+  public Object doFarReference(final SFarReference receiver) {
+    assert ActorClasses.ActorModule != null;
+    return ActorClasses.ActorModule;
   }
 
   @ExplodeLoop
