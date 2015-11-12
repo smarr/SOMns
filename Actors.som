@@ -38,10 +38,12 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel = Value (
     protected doesNotUnderstand: selector arguments: arguments = (
       error: 'Cannot immediate-send ' + selector + ' to a far reference, they only accept eventual-sends.'.
     )
+
     public isNil = (
       (* far reference can never have a nil target. nil is a value object. *)
       ^ false.
     )
+
     public notNil = ( ^ true )
 
     public == other = (
@@ -50,6 +52,7 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel = Value (
          information leak. But I need it for a benchmark, and for convenience. *)
       ^ vmMirror object: self identicalTo: other
     )
+
     public ~= other = (
       ^ (self == other) not
     )
