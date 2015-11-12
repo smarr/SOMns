@@ -1,0 +1,215 @@
+class TransferObjectTests usingPlatform: platform testFramework: minitest = Value (
+| private TestContext      = minitest TestContext.
+  private AsyncTestContext = minitest AsyncTestContext.
+  private NotAValue        = platform kernel NotAValue.
+  private TransferObject   = platform kernel TransferObject.
+  private actors           = platform actors.
+  private ObjectMirror     = platform mirrors ObjectMirror.
+|
+)(
+  class EmptyTO = TransferObject ()()
+  
+  class Mutable = Object (| public i ::= 0. |)(
+    public class T = TransferObject ()()
+  )
+
+  public class Instantiation = TestContext ()(
+    (* Transfer objects can only be lexically embedded into Value objects.
+      
+       The reason for that design is to avoid unexpected 'syntax' behavior
+       turning the outer object to a far reference would mean that a sequential
+       program depending on the outer object breaks.
+    
+     - outer object is Value -> can be instantiated
+     - outer object is Object -> instantiation should fail with NotAValue exception
+    *)
+  
+    public testCreateTransferObjectAndLexicalContextIsValue = (
+      shouldnt: [EmptyTO new] signal: NotAValue
+    )
+    
+    public testCreateTOAndLexicalContextIsMutable = (
+      | m |
+      m := Mutable new.
+      should: [m T new] signal: NotAValue.
+    )
+  ) : (
+    TEST_CONTEXT = ()
+  )
+
+  class Transfer3 a: a b: b c: c = TransferObject (
+  | public a ::= a.
+    public b ::= b.
+    public c ::= c.
+  |)()
+  
+  class SimpleValue val: val = Value (
+  | public value = val. |
+  )()
+  
+  class Receiver = (
+  | private obj ::= nil. |
+  )(
+    public getNewObj = (
+      obj := Object new.
+      ^ obj
+    )
+  
+    public is123Values: t3 = (
+      (t3 a = 1 and: [t3 b = 2 and: [t3 c = 3]]) ifFalse: [ ^ -3 ].
+      ^ t3 a + t3 b * t3 c
+    )
+    
+    public correctSimpleValues: t3 = (
+      t3 a =  t3 b ifTrue: [^ false].
+      t3 a <> t3 c ifTrue: [^ false].
+      ^ t3 a val = (t3 b val).
+    )
+    
+    public gotFarRefs: t3 = (
+      t3 a =  t3 b ifTrue: [^ false].
+      t3 a ~= t3 c ifTrue: [^ false].
+      ^ (isFarRef: t3 a) and: [(isFarRef: t3 b) and: [(isFarRef: t3 c)]]
+    )
+    
+    public gotMixed: t3 = (
+      t3 a value = 33 ifFalse: [^ false].
+      (isFarRef: t3 b) ifFalse: [^ false].
+      (isFarRef: t3 c) ifTrue: [^ false].
+      ^ t3 c == obj
+    )
+    
+    private isFarRef: o = (
+      ^ (ObjectMirror reflecting: o) className = 'FarReference'
+    )
+  )
+
+  public class BasicTransmission = AsyncTestContext ()(
+    (* - pass simple TransferObj (TO) with values
+         -> confirm values are directly usable
+
+       - pass simple TO with all direct references
+         -> confirm refs became far references 
+
+       - pass simple TO with values and direct reference
+         -> confirm values are directly usable
+         -> confirm ref became far reference *)
+
+    public testAsyncPassWithNumberValues = (
+      | a t |
+      a := (actors createActorFromValue: Receiver) <-: new.
+      t := Transfer3 a: 1 b: 2 c: 3.
+      ^ assert: (a <-: is123Values: t) resolvedWith: 9.
+    )
+    
+    public testAsyncPassWithSimpleValues = (
+      | v1 v2 a t |
+      v1 := SimpleValue val: 42.
+      v2 := SimpleValue val: 42.
+      a := (actors createActorFromValue: Receiver) <-: new.
+      t := Transfer3 a: v1 b: v2 c: v1.
+      
+      deny: v1 = v2 description: 'it is unexpected for this test that #= does deep equality'.
+      
+      ^ assert: (a <-: correctSimpleValues: t) resolvedWith: true.
+    )
+    
+    public testAsyncPassObjRef = (
+      | a t o1 o2 |
+      o1 := Object new.
+      o2 := Object new.
+      deny: o1 == o2 description: 'these need to be two different objects'.
+
+      a := (actors createActorFromValue: Receiver) <-: new.
+      t := Transfer3 a: o1 b: o2 c: o3.
+      ^ assert: (a <-: gotFarRefs: t) resolvedWith: 9.
+    )
+    
+    public testAsyncPassMixed = (
+      | t pp a |
+      pp := actors createPromisePair.
+      a := (actors createActorFromValue: Receiver) <-: new.
+      (a <-: getNewObj) whenResolved: [:objFR |
+        t := Transfer3 a: (SimpleValue val: 33) b: Object new c: objFR.
+        pp resolve: (assert: ( a <-: gotMixed: t ) resolvedWith: true)
+      ].
+
+      ^ pp promise
+    )
+  ) : (
+    TEST_CONTEXT = () 
+  )
+    
+  class CplxReceiver = ()(
+    public nestedTransferObjects: t = (
+      | t2 t3 |
+      t a = 1 ifFalse: [^ false].
+      (isFarRef: t b) ifTrue:  [^ false].
+      (isFarRef: t c) ifFalse: [^ false].
+      
+      t2 := t b.
+      t2 a = 2 ifFalse: [^ false].
+      (isFarRef: t2 b) ifTrue:  [^ false].
+      (isFarRef: t2 c) ifFalse: [^ false].
+      
+      t3 := t2 b.
+      t3 a = 3 ifFalse: [^ false].
+      (isFarRef: t3 b) ifTrue:  [^ false].
+      (isFarRef: t3 c) ifFalse: [^ false].
+      ^ t3 b = nil
+    )
+    
+    public simpleRecursiveStructure: t = (
+      t == t a ifFalse: [^ false].
+      t ~= t b ifFalse: [^ false].
+      t b ~= (t b b) ifFalse: [^ false].
+      ^ t b b b == t
+    )
+    
+    private isFarRef: o = (
+      ^ (ObjectMirror reflecting: o) className = 'FarReference'
+    )
+  )
+  
+  public class ComplexTObjectGraphs = AsyncTestContext ()(
+  (* - pass nested TObjs
+       confirm on each nesting level
+       -> direct refs became far refs
+       -> values remain values
+       -> far refs became direct refs
+  
+     - test loops/recursion in Tobj structures
+       -> multiple references to same Tobj should be only one copy
+       -> recursive structures should not get copying algorithm into loop
+       *)
+
+    public testAsyncNestedTObjects = (
+      | t1 t2 t3 |
+      t1 := Transfer3 a: 1 b: nil c: Object new.
+      t2 := Transfer3 a: 2 b: nil c: Object new.
+      t3 := Transfer3 a: 3 b: nil c: Object new.
+      t1 b: t2.
+      t2 b: t3.
+      
+      a := (actors createActorFromValue: CplxReceiver) <-: new.
+      ^ assert: (a <-: nestedTransferObjects: t1) resolvedWith: true
+    )
+    
+    public testRecursiveStructure = (
+      | t1 t2 t3 a |
+      t1 := Transfer3 a: 1 b: nil c: Object new.
+      t2 := Transfer3 a: 2 b: nil c: Object new.
+      t3 := Transfer3 a: 3 b: nil c: Object new.
+      t1 a: t1.
+      
+      t1 b: t2.
+      t2 b: t3.
+      t3 b: t1.
+      
+      a := (actors createActorFromValue: CplxReceiver) <-: new.
+      ^ assert: (a <-: simpleRecursiveStructure: t1) resolvedWith: true
+    )
+  ) : (
+    TEST_CONTEXT = ()
+  )
+)

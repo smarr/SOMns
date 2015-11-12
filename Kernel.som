@@ -87,6 +87,20 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     public copy = ( ^ self )
   )
   
+  (* Transfer objects are handled almost identically to normal objects.
+     They are mutable. The main difference to normal objects is that they are
+     passed by copy when send to other actors.
+     Thus, transfer objects are useful to pass structured data to other
+     objects that cannot be guaranteed to satisfy the semantics of Values.
+     When sent in a message, transfer objects are deeply copied.
+     The deep copy ends when reaching Values, normal Objects, or far references.
+     References to values are left unchanged.
+     References to objects are turned into far references.
+     Far references are replaced with direct references when the receiving actor
+     is the owner of the far-referenced object.
+  *)
+  public class TransferObject = Object ()()
+  
   public class Class = Object ()
   (
     'Allocation'
