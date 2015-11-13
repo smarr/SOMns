@@ -121,8 +121,8 @@ class TransferObjectTests usingPlatform: platform testFramework: minitest = Valu
       deny: o1 == o2 description: 'these need to be two different objects'.
 
       a := (actors createActorFromValue: Receiver) <-: new.
-      t := Transfer3 a: o1 b: o2 c: o3.
-      ^ assert: (a <-: gotFarRefs: t) resolvedWith: 9.
+      t := Transfer3 a: o1 b: o2 c: o1.
+      ^ assert: (a <-: gotFarRefs: t) resolvedWith: true.
     )
     
     public testAsyncPassMixed = (
@@ -184,7 +184,7 @@ class TransferObjectTests usingPlatform: platform testFramework: minitest = Valu
        *)
 
     public testAsyncNestedTObjects = (
-      | t1 t2 t3 |
+      | t1 t2 t3 a |
       t1 := Transfer3 a: 1 b: nil c: Object new.
       t2 := Transfer3 a: 2 b: nil c: Object new.
       t3 := Transfer3 a: 3 b: nil c: Object new.
