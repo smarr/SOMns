@@ -5,6 +5,7 @@ import java.math.BigInteger;
 import som.interpreter.actors.SFarReference;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.vm.constants.Nil;
+import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
 
@@ -60,6 +61,11 @@ public abstract class EqualsPrim extends BinaryExpressionNode {
     return left == right;
   }
 
+  @Specialization(guards = {"left.isValue()", "right.isValue()"})
+  public final boolean doValues(final SImmutableObject left, final SImmutableObject right) {
+    return left == right;
+  }
+
   @Specialization
   public final boolean doLong(final long left, final double right) {
     return left == right;
@@ -84,7 +90,6 @@ public abstract class EqualsPrim extends BinaryExpressionNode {
   public final boolean doString(final String receiver, final SSymbol argument) {
     return receiver.equals(argument.getString());
   }
-
 
   @Specialization
   public final boolean doSSymbol(final SSymbol receiver, final String argument) {
