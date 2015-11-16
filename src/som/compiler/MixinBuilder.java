@@ -406,10 +406,12 @@ public final class MixinBuilder {
         primaryFactorySource);
   }
 
+  private static final SSymbol StandardInitializer = MixinBuilder.getInitializerName(Symbols.NEW);
+
   private SInvokable assembleInitializationMethod() {
     if (isSimpleNewSuperFactoySend
         && slotAndInitExprs.size() == 0
-        && initializer.getSignature() == MixinBuilder.getInitializerName(Symbols.NEW)
+        && initializer.getSignature() == StandardInitializer
         && mixinFactorySends.size() == 0) {
       return null; // this is strictly an optimization, should work without it!
     }
