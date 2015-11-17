@@ -894,7 +894,20 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     )
   )
   
+  public class TransferObjectsCannotBeValues signalWith: aClass = Exception (
+    | public class = aClass. |
+    self signal.
+  )(
+    public asString = (
+      ^ 'TransferObjectsCannotBeValues(' + (vmMirror mirrorAClassesName: class) + ')'
+    )
+  )
+  
   private signalNotAValueWith: aClass = (
     NotAValue signalWith: aClass
+  )
+  
+  private signalTOCannotBeValues: aClass = (
+    TransferObjectsCannotBeValues signalWith: aClass
   )
 )
