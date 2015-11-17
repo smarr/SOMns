@@ -2,6 +2,7 @@ class TransferObjectTests usingPlatform: platform testFramework: minitest = Valu
 | private TestContext      = minitest TestContext.
   private AsyncTestContext = minitest AsyncTestContext.
   private NotAValue        = platform kernel NotAValue.
+  private TransferObjectsCannotBeValues = platform kernel TransferObjectsCannotBeValues.
   private TransferObject   = platform kernel TransferObject.
   private actors           = platform actors.
   private ObjectMirror     = platform mirrors ObjectMirror.
@@ -12,6 +13,9 @@ class TransferObjectTests usingPlatform: platform testFramework: minitest = Valu
   class Mutable = Object (| public i ::= 0. |)(
     public class T = TransferObject ()()
   )
+  
+  class TObjValue = TransferObject <: Value ()()
+  class ValueTObj = Value <: TransferObject ()()
 
   public class Instantiation = TestContext ()(
     (* Transfer objects can only be lexically embedded into Value objects.
@@ -22,6 +26,7 @@ class TransferObjectTests usingPlatform: platform testFramework: minitest = Valu
     
      - outer object is Value -> can be instantiated
      - outer object is Object -> instantiation should fail with NotAValue exception
+     - TransferObjects can't be Values, can't instantiate it
     *)
   
     public testCreateTransferObjectAndLexicalContextIsValue = (
@@ -32,6 +37,11 @@ class TransferObjectTests usingPlatform: platform testFramework: minitest = Valu
       | m |
       m := Mutable new.
       should: [m T new] signal: NotAValue.
+    )
+    
+    public testCreateTOWithValueDefinition = (
+      should: [TObjValue new] signal: TransferObjectsCannotBeValues.
+      should: [ValueTObj new] signal: TransferObjectsCannotBeValues.
     )
   ) : (
     TEST_CONTEXT = ()
