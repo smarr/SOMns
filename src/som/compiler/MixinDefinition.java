@@ -137,7 +137,8 @@ public final class MixinDefinition {
 
   public MixinDefinitionId getMixinId() { return mixinId; }
 
-  public void initializeClass(final SClass result, final Object superclassAndMixins) {
+  public void initializeClass(final SClass result,
+      final Object superclassAndMixins) {
     initializeClass(result, superclassAndMixins, false, false);
   }
 
