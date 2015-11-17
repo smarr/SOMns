@@ -50,8 +50,8 @@ public abstract class SObject extends SObjectWithClass {
 
   public static final class SImmutableObject extends SObject {
 
-    public SImmutableObject(final SClass instanceClass, final ClassFactory factory, final ObjectLayout layout) {
-      super(instanceClass, factory, layout);
+    public SImmutableObject(final SClass instanceClass, final ClassFactory classGroup, final ObjectLayout layout) {
+      super(instanceClass, classGroup, layout);
       field1 = field2 = field3 = field4 = field5 = Nil.nilObject;
       isValue = instanceClass.declaredAsValue();
     }
