@@ -2,17 +2,19 @@ package som.interpreter.nodes;
 
 import som.VM;
 import som.interpreter.TruffleCompiler;
-import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.ObjectPrims.IsValue;
-import som.vm.Symbols;
 import som.vm.constants.KernelObj;
 import som.vmobjects.SObject.SImmutableObject;
 
-import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 
+/**
+ * This node is used for the instantiation of objects to check whether all
+ * fields have been initialized to values, in case, the object is declared
+ * as a Value.
+ */
 public abstract class IsValueCheckNode extends UnaryExpressionNode {
 
   public static IsValueCheckNode create(final ExpressionNode self) {
@@ -32,32 +34,33 @@ public abstract class IsValueCheckNode extends UnaryExpressionNode {
 
     @Override
     public Object executeEvaluated(final VirtualFrame frame, final Object receiver) {
-      specialize(frame, receiver);
-      return receiver;
+      return specialize(frame, receiver);
     }
 
-    private void specialize(final VirtualFrame frame, final Object receiver) {
+    private Object specialize(final VirtualFrame frame, final Object receiver) {
       TruffleCompiler.transferToInterpreterAndInvalidate("Need to specialize node");
       if (!(receiver instanceof SImmutableObject)) {
         // can remove ourselves, this node is only used in initializers,
         // which are by definition monomorphic
         replace(self);
-        return;
+        return receiver;
       }
 
       SImmutableObject rcvr = (SImmutableObject) receiver;
-      // this is initialized to true if the class is declared as value
-      if (!rcvr.isValue()) {
-        replace(self);
-        return;
-      }
 
-      replace(new CheckNode(self)).executeEvaluated(frame, receiver);
+      if (rcvr.isValue()) {
+        return replace(new ValueCheckNode(self)).
+            executeEvaluated(frame, receiver);
+      } else {
+        // neither transfer object nor value, so nothing to check
+        replace(self);
+        return receiver;
+      }
     }
   }
 
-  private static final class CheckNode extends IsValueCheckNode {
-    public CheckNode(final ExpressionNode self) {
+  private static final class ValueCheckNode extends IsValueCheckNode {
+    public ValueCheckNode(final ExpressionNode self) {
       super(self);
     }
 
