@@ -69,17 +69,7 @@ public abstract class IsValueCheckNode extends UnaryExpressionNode {
       if (allFieldsContainValues) {
         return rcvr;
       }
-
-      // TODO: don't think this is a complete solution, we need to do something else here
-      //       perhaps write the node, and then also use a send node...
-      CompilerDirectives.transferToInterpreter();
-      VM.thisMethodNeedsToBeOptimized("Should be optimized or on slowpath");
-
-      // the value object was not constructed properly.
-      Dispatchable disp = KernelObj.kernel.getSOMClass().lookupPrivate(
-          Symbols.symbolFor("signalNotAValueWith:"),
-          KernelObj.kernel.getSOMClass().getMixinDefinition().getMixinId());
-      return disp.invoke(KernelObj.kernel, rcvr.getSOMClass());
+      return KernelObj.signalException("signalNotAValueWith:", receiver);
     }
 
     private boolean allFieldsContainValues(final SImmutableObject rcvr) {
