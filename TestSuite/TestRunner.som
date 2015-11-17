@@ -93,6 +93,7 @@ class TestRunner usingPlatform: platform = (
                'BenchmarkHarnessTests',
                'ActorTests',
                'RegressionTests',
+               'TransferObjectTests',
                'MinitestTests'.
                
                (* 'ReflectionTests', *)
