@@ -78,6 +78,9 @@ public final class ObjectPrims {
     }
   }
 
+  /**
+   * A node that checks whether a given object is a Value.
+   */
   @GenerateNodeFactory
   @Primitive("objIsValue:")
   @ImportStatic(Nil.class)
