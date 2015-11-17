@@ -1,4 +1,4 @@
-class LanguageTests usingPlatform: platform testFramework: minitest = (
+class LanguageTests usingPlatform: platform testFramework: minitest = Value (
 | private TestContext  = minitest TestContext.
   private Array        = platform kernel Array.
   private ObjectMirror = platform mirrors ObjectMirror.
@@ -371,7 +371,7 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
     ) 
   ) : ( TEST_CONTEXT = () )
   
-  public class ValueTests = TestContext ()(
+  public class ValueTests = TestContext <: Value ()(
     class Mutable new: obj = (
       | public mut ::= obj. |
     )(
@@ -473,12 +473,11 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
       assert: (ObjectMirror reflecting: Value new) isValue.
     )
     
-    public testModuleIsValueImplicitly = (
+    public testModuleIsValue = (
       | langTestsModuleClass |
       langTestsModuleClass := (ObjectMirror reflecting: langTestsModule) classMirror classObject.
       assert: (ObjectMirror reflecting: langTestsModuleClass) isValue.
-      (* But there are no implications for its objects *)
-      deny: (ObjectMirror reflecting: langTestsModule) isValue
+      assert: (ObjectMirror reflecting: langTestsModule) isValue
     )
     
     public testClassesAreValuesIffTheirEnclosingObjectIsAValue = (
