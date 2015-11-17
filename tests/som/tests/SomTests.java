@@ -54,6 +54,7 @@ public class SomTests {
         {"BenchmarkHarnessTests"},
         {"ActorTests"      },
         {"RegressionTests" },
+        {"TransferObjectTests"},
         {"MinitestTests"   },
       });
   }

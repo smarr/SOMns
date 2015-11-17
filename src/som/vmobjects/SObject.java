@@ -63,6 +63,19 @@ public abstract class SObject extends SObjectWithClass {
       isValue = true;
     }
 
+    /**
+     * Copy constructor.
+     */
+    private SImmutableObject(final SImmutableObject old) {
+      super(old);
+      this.primField1 = old.primField1;
+      this.primField2 = old.primField2;
+      this.primField3 = old.primField3;
+      this.primField4 = old.primField4;
+      this.primField5 = old.primField5;
+      this.isValue    = old.isValue;
+    }
+
     @CompilationFinal protected long   primField1;
     @CompilationFinal protected long   primField2;
     @CompilationFinal protected long   primField3;
@@ -86,6 +99,12 @@ public abstract class SObject extends SObjectWithClass {
     @Override
     public boolean isValue() {
       return isValue;
+    }
+
+    @Override
+    public SObject cloneBasics() {
+      assert !isValue : "There should not be any need to clone a value";
+      return new SImmutableObject(this);
     }
   }
 
@@ -116,6 +135,15 @@ public abstract class SObject extends SObjectWithClass {
       super(incompleteDefinition);
     }
 
+    protected SMutableObject(final SMutableObject old) {
+      super(old);
+      this.primField1 = old.primField1;
+      this.primField2 = old.primField2;
+      this.primField3 = old.primField3;
+      this.primField4 = old.primField4;
+      this.primField5 = old.primField5;
+    }
+
     @Override
     protected void resetFields() {
       field1     = field2     = field3     = field4     = field5     = null;
@@ -125,6 +153,11 @@ public abstract class SObject extends SObjectWithClass {
     @Override
     public boolean isValue() {
       return false;
+    }
+
+    @Override
+    public SObject cloneBasics() {
+      return new SMutableObject(this);
     }
   }
 
@@ -145,6 +178,35 @@ public abstract class SObject extends SObjectWithClass {
   public SObject(final boolean incompleteDefinition) {
     assert incompleteDefinition; // used during bootstrap
   }
+
+  /** Copy Constructor. */
+  protected SObject(final SObject old) {
+    super(old);
+    this.objectLayout = old.objectLayout;
+
+    this.primitiveUsedMap = old.primitiveUsedMap;
+
+    // TODO: these tests should be compilation constant based on the object layout, check whether this needs to be optimized
+    // we copy the content here, because we know they are all values
+    if (old.extensionPrimFields != emptyPrim) {
+      assert old.extensionPrimFields != null : "should always be initialized";
+      this.extensionPrimFields = old.extensionPrimFields.clone();
+    }
+
+    // do not want to copy the content for the obj extension array, because
+    // transfer should handle each of them.
+    if (old.extensionObjFields != emptyObject) {
+      assert old.extensionObjFields != null : "should always be initialized";
+      this.extensionObjFields = new Object[old.extensionObjFields.length];
+    }
+  }
+
+  /**
+   * @return new object of the same type, initialized with same primitive
+   * values, object layout etc. Object fields are not cloned. No deep copying
+   * either. This method is used for cloning transfer objects.
+   */
+  public abstract SObject cloneBasics();
 
   public boolean isPrimitiveSet(final int mask) {
     return (primitiveUsedMap & mask) != 0;

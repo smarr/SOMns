@@ -1,6 +1,7 @@
 package som.interpreter.actors;
 
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
 import java.util.concurrent.ForkJoinWorkerThread;
@@ -8,6 +9,7 @@ import java.util.concurrent.ForkJoinWorkerThread;
 import som.VM;
 import som.VmSettings;
 import som.primitives.ObjectPrims.IsValue;
+import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
@@ -79,7 +81,8 @@ public class Actor {
     executor = new ExecAllMessages(this);
   }
 
-  public final Object wrapForUse(final Object o, final Actor owner) {
+  public final Object wrapForUse(final Object o, final Actor owner,
+      final Map<SObject, SObject> transferedObjects) {
     VM.thisMethodNeedsToBeOptimized("This should probably be optimized");
 
     if (this == owner) {
@@ -111,7 +114,12 @@ public class Actor {
         return remote;
       }
     } else if (!IsValue.isObjectValue(o)) {
-      return new SFarReference(owner, o);
+      if (o instanceof SObject && ((SObject) o).getSOMClass().isTransferObject()) {
+        return TransferObject.transfer(((SObject) o), owner, this,
+            transferedObjects);
+      } else {
+        return new SFarReference(owner, o);
+      }
     }
     return o;
   }

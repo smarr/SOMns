@@ -16,12 +16,15 @@ public final class ObjectLayout {
   private final int objectStorageLocationsUsed;
   private final int totalNumberOfStorageLocations;
   private final boolean onlyImmutableFields;
+  private final boolean isTransferObject;
 
   private final HashMap<SlotDefinition, StorageLocation> storageLocations;
   private final HashMap<SlotDefinition, Class<?>>        storageTypes;
 
-  public ObjectLayout(final HashSet<SlotDefinition> slots, final ClassFactory forClasses) {
-    this(getInitialStorageTypes(slots), slots.size(), forClasses);
+  public ObjectLayout(final HashSet<SlotDefinition> slots,
+      final ClassFactory forClasses, final boolean isTransferObject) {
+    this(getInitialStorageTypes(slots), slots.size(), forClasses,
+        isTransferObject);
   }
 
   private static HashMap<SlotDefinition, Class<?>> getInitialStorageTypes(
@@ -34,8 +37,10 @@ public final class ObjectLayout {
   }
 
   public ObjectLayout(final HashMap<SlotDefinition, Class<?>> knownFieldTypes,
-      final int numberOfFields, final ClassFactory forClasses) {
+      final int numberOfFields, final ClassFactory forClasses,
+      final boolean isTransferObject) {
     this.forClasses = forClasses;
+    this.isTransferObject = isTransferObject;
 
     storageTypes = knownFieldTypes;
     totalNumberOfStorageLocations = numberOfFields;
@@ -117,7 +122,8 @@ public final class ObjectLayout {
       final Class<?> specType) {
     HashMap<SlotDefinition, Class<?>> withChangedField = new HashMap<>(storageTypes);
     withChangedField.put(slot, specType);
-    return new ObjectLayout(withChangedField, totalNumberOfStorageLocations, forClasses);
+    return new ObjectLayout(withChangedField, totalNumberOfStorageLocations,
+        forClasses, isTransferObject);
   }
 
   public StorageLocation getStorageLocation(final SlotDefinition slot) {

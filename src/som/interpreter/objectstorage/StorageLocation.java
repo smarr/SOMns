@@ -90,6 +90,12 @@ public abstract class StorageLocation {
   }
 
   public abstract boolean isSet(SObject obj);
+
+  /**
+   * @return true, if it is an object location, false otherwise.
+   */
+  public abstract boolean isObjectLocation();
+
   public abstract Object  read(SObject obj);
   public abstract void    write(SObject obj, Object value) throws GeneralizeStorageLocationException, UninitalizedStorageLocationException;
 
@@ -113,6 +119,11 @@ public abstract class StorageLocation {
 
     @Override
     public boolean isSet(final SObject obj) {
+      return false;
+    }
+
+    @Override
+    public boolean isObjectLocation() {
       return false;
     }
 
@@ -147,6 +158,11 @@ public abstract class StorageLocation {
   public abstract static class AbstractObjectStorageLocation extends StorageLocation {
     public AbstractObjectStorageLocation(final ObjectLayout layout) {
       super(layout);
+    }
+
+    @Override
+    public final boolean isObjectLocation() {
+      return true;
     }
 
     @Override
@@ -247,6 +263,11 @@ public abstract class StorageLocation {
     @Override
     public final boolean isSet(final SObject obj) {
       return obj.isPrimitiveSet(mask);
+    }
+
+    @Override
+    public final boolean isObjectLocation() {
+      return false;
     }
 
     protected final void markAsSet(final SObject obj) {

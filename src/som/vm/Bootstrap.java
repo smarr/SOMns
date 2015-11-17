@@ -339,6 +339,7 @@ public final class Bootstrap {
     MixinDefinition thingDef = kernelModule.getNestedMixinDefinition("Thing");
     thingDef.addSyntheticInitializerWithoutSuperSendOnlyForThingClass();
     MixinDefinition valueDef = kernelModule.getNestedMixinDefinition("Value");
+    MixinDefinition transferDef = kernelModule.getNestedMixinDefinition("TransferObject");
     MixinDefinition nilDef   = kernelModule.getNestedMixinDefinition("Nil");
 
     MixinDefinition objectDef    = kernelModule.getNestedMixinDefinition("Object");
@@ -363,16 +364,18 @@ public final class Bootstrap {
     MixinDefinition block3Def = kernelModule.getNestedMixinDefinition("Block3");
 
     // some basic assumptions about
-    assert    topDef.getNumberOfSlots() == 0;
-    assert  thingDef.getNumberOfSlots() == 0;
-    assert objectDef.getNumberOfSlots() == 0;
-    assert  valueDef.getNumberOfSlots() == 0;
+    assert      topDef.getNumberOfSlots() == 0;
+    assert    thingDef.getNumberOfSlots() == 0;
+    assert   objectDef.getNumberOfSlots() == 0;
+    assert    valueDef.getNumberOfSlots() == 0;
+    assert transferDef.getNumberOfSlots() == 0;
 
        topDef.initializeClass(Classes.topClass, null);  // Top doesn't have a super class
      thingDef.initializeClass(Classes.thingClass,  Classes.topClass);
-     valueDef.initializeClass(Classes.valueClass,  Classes.thingClass, true);
+     valueDef.initializeClass(Classes.valueClass,  Classes.thingClass, true, false);
     objectDef.initializeClass(Classes.objectClass, Classes.thingClass);
      classDef.initializeClass(Classes.classClass,  Classes.objectClass);
+  transferDef.initializeClass(Classes.transferClass, Classes.objectClass, false, true);
 
  metaclassDef.initializeClass(Classes.metaclassClass, Classes.classClass);
        nilDef.initializeClass(Classes.nilClass,    Classes.valueClass);
@@ -401,6 +404,7 @@ valueArrayDef.initializeClass(Classes.valueArrayClass, new SClass[] {Classes.val
   Classes.thingClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
   Classes.valueClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
  Classes.objectClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
+Classes.transferClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
   Classes.classClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
   Classes.metaclassClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
   Classes.nilClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
@@ -437,6 +441,7 @@ valueArrayDef.initializeClass(Classes.valueArrayClass, new SClass[] {Classes.val
     setSlot(KernelObj.kernel, "Thing",     Classes.thingClass,     kernelModule);
     setSlot(KernelObj.kernel, "Object",    Classes.objectClass,    kernelModule);
     setSlot(KernelObj.kernel, "Value",     Classes.valueClass,     kernelModule);
+    setSlot(KernelObj.kernel, "TransferObject", Classes.transferClass, kernelModule);
     setSlot(KernelObj.kernel, "Class",     Classes.classClass,     kernelModule);
     setSlot(KernelObj.kernel, "Metaclass", Classes.metaclassClass, kernelModule);
     setSlot(KernelObj.kernel, "Boolean",   Classes.booleanClass,   kernelModule);

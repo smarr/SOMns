@@ -3,6 +3,7 @@ package som.interpreter.nodes;
 import som.compiler.MixinDefinition;
 import som.interpreter.objectstorage.ClassFactory;
 import som.vm.constants.Classes;
+import som.vm.constants.KernelObj;
 import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithClass;
 
@@ -24,7 +25,7 @@ public abstract class ClassInstantiationNode extends Node {
       final Object superclassAndMixins);
 
   protected final ClassFactory createClassFactory(final Object superclassAndMixins) {
-    return mixinDef.createClassFactory(superclassAndMixins, false);
+    return mixinDef.createClassFactory(superclassAndMixins, false, false);
   }
 
   protected boolean sameSuperAndMixins(final Object superclassAndMixins, final Object cached) {
@@ -46,12 +47,23 @@ public abstract class ClassInstantiationNode extends Node {
 
     SClass result = new SClass(outerObj, resultClass);
     factory.initializeClass(result);
+
+    if (factory.isDeclaredAsValue() && factory.isTransferObject()) {
+      // REM: cast is fine here, because we never return anyway
+      return (SClass) KernelObj.signalException("signalTOCannotBeValues:", result);
+    }
+
+    if ((factory.isTransferObject() || factory.isDeclaredAsValue()) &&
+        !outerObj.isValue()) {
+      return (SClass) KernelObj.signalException("signalNotAValueWith:", result);
+    }
     return result;
   }
 
   @Fallback
   public SClass instantiateClass(final SObjectWithClass outerObj,
       final Object superclassAndMixins) {
-    return instantiateClass(outerObj, superclassAndMixins, null, mixinDef.createClassFactory(superclassAndMixins, false));
+    return instantiateClass(outerObj, superclassAndMixins, null,
+        mixinDef.createClassFactory(superclassAndMixins, false, false));
   }
 }

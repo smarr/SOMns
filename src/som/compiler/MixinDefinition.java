@@ -138,13 +138,15 @@ public final class MixinDefinition {
   public MixinDefinitionId getMixinId() { return mixinId; }
 
   public void initializeClass(final SClass result, final Object superclassAndMixins) {
-    initializeClass(result, superclassAndMixins, false);
+    initializeClass(result, superclassAndMixins, false, false);
   }
 
   public void initializeClass(final SClass result,
-      final Object superclassAndMixins, final boolean isTheValueClass) {
+      final Object superclassAndMixins, final boolean isTheValueClass,
+      final boolean isTheTransferObjectClass) {
     VM.callerNeedsToBeOptimized("This is supposed to result in a cacheable object, and thus is only the fallback case.");
-    ClassFactory factory = createClassFactory(superclassAndMixins, isTheValueClass);
+    ClassFactory factory = createClassFactory(superclassAndMixins,
+        isTheValueClass, isTheTransferObjectClass);
     if (result.getSOMClass() != null) {
       factory.getClassClassFactory().initializeClass(result.getSOMClass());
     }
@@ -231,7 +233,8 @@ public final class MixinDefinition {
     return null;
   }
 
-  public ClassFactory createClassFactory(final Object superclassAndMixins, final boolean isTheValueClass) {
+  public ClassFactory createClassFactory(final Object superclassAndMixins,
+      final boolean isTheValueClass, final boolean isTheTransferObjectClass) {
     CompilerAsserts.neverPartOfCompilation();
     VM.callerNeedsToBeOptimized("This is supposed to result in a cacheable object, and thus is only the fallback case.");
 
@@ -259,8 +262,11 @@ public final class MixinDefinition {
     addSlots(instanceSlots, superClass);
     HashMap<SSymbol, Dispatchable> dispatchables = new HashMap<>();
 
-    boolean mixinsIncludeValue = determineSlotsAndDispatchables(mixins,
+    boolean[] mixinInfo = determineSlotsAndDispatchables(mixins,
         instanceSlots, dispatchables);
+    boolean mixinsIncludeValue = mixinInfo[0];
+    boolean mixinsIncludeTransferObject = mixinInfo[1];
+
     if (instanceSlots.isEmpty()) {
       instanceSlots = null; // let's not hang on to the empty one
     }
@@ -268,18 +274,21 @@ public final class MixinDefinition {
     boolean hasOnlyImmutableFields = hasOnlyImmutableFields(instanceSlots);
     boolean instancesAreValues = checkAndConfirmIsValue(superClass,
         mixinsIncludeValue, isTheValueClass, hasOnlyImmutableFields);
+    boolean instancesAreTransferObjects = checkIsTransferObject(superClass,
+        mixinsIncludeTransferObject, isTheTransferObjectClass);
 
     ClassFactory classClassFactory = new ClassFactory(
         Symbols.symbolFor(name.getString() + " class"), this, null,
-        classScope.getDispatchables(), isModule,
+        classScope.getDispatchables(), isModule, false,
         new SClass[] {Classes.classClass}, true,
         // TODO: not passing a ClassFactory of the meta class here is incorrect,
         // might not matter in practice
         null);
 
     ClassFactory classFactory = new ClassFactory(name, this,
-        instanceSlots, dispatchables, instancesAreValues, mixins,
-        hasOnlyImmutableFields, classClassFactory);
+        instanceSlots, dispatchables, instancesAreValues,
+        instancesAreTransferObjects, mixins, hasOnlyImmutableFields,
+        classClassFactory);
 
     cache.add(classFactory);
 
@@ -301,16 +310,20 @@ public final class MixinDefinition {
     return hasOnlyImmutableFields;
   }
 
-  private boolean determineSlotsAndDispatchables(final Object[] mixins,
+  private boolean[] determineSlotsAndDispatchables(final Object[] mixins,
       final HashSet<SlotDefinition> instanceSlots,
       final HashMap<SSymbol, Dispatchable> dispatchables) {
     boolean mixinsIncludeValue = false;
+    boolean mixinsIncludeTransferObject = false;
+
     if (mixins != null) {
       HashMap<SSymbol, SlotDefinition> mixinSlots = new HashMap<>();
       for (int i = 1; i < mixins.length; i++) {
         SClass mixin = (SClass) mixins[i];
         if (mixin == Classes.valueClass) {
           mixinsIncludeValue = true;
+        } else if (mixin == Classes.transferClass) {
+          mixinsIncludeTransferObject = true;
         }
 
         MixinDefinition cdef = mixin.getMixinDefinition();
@@ -340,7 +353,7 @@ public final class MixinDefinition {
     if (slots != null) {
       instanceSlots.addAll(slots.values());
     }
-    return mixinsIncludeValue;
+    return new boolean[] {mixinsIncludeValue, mixinsIncludeTransferObject};
   }
 
   private boolean checkAndConfirmIsValue(final SClass superClass,
@@ -360,6 +373,14 @@ public final class MixinDefinition {
 
     return declaredAsValue && allSlotsAreImmutable && outerScopeIsImmutable &&
         hasOnlyImmutableFields;
+  }
+
+  private boolean checkIsTransferObject(final SClass superClass,
+      final boolean mixinsIncludeTransferObject, final boolean isTransferObjectClass) {
+    boolean superIsValue    = superClass == null ? false : superClass.isTransferObject();
+    boolean declaredAsValue = superIsValue || mixinsIncludeTransferObject || isTransferObjectClass;
+
+    return declaredAsValue;
   }
 
   @TruffleBoundary
@@ -411,7 +432,7 @@ public final class MixinDefinition {
 
   public SClass instantiateClass(final SObjectWithClass outer,
       final Object superclassAndMixins) {
-    ClassFactory factory = createClassFactory(superclassAndMixins, false);
+    ClassFactory factory = createClassFactory(superclassAndMixins, false, false);
     return ClassInstantiationNode.instantiate(outer, factory);
   }
 

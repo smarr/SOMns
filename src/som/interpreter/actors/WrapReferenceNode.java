@@ -2,6 +2,7 @@ package som.interpreter.actors;
 
 import som.primitives.ObjectPrims.IsValue;
 import som.primitives.ObjectPrimsFactory.IsValueFactory;
+import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.Node;
@@ -59,8 +60,18 @@ public abstract class WrapReferenceNode extends Node {
     return obj;
   }
 
-  @Specialization(guards = {"isNeitherFarRefNorPromise(obj)", "!isValue(obj)"})
+  protected final boolean isTransferObj(final Object obj) {
+    // TODO: optimize?
+    return obj instanceof SObject && ((SObject) obj).getSOMClass().isTransferObject();
+  }
+
+  @Specialization(guards = {"isNeitherFarRefNorPromise(obj)", "!isValue(obj)", "!isTransferObj(obj)"})
   public Object isNotValueObject(final Object obj, final Actor target, final Actor owner) {
     return new SFarReference(owner, obj);
+  }
+
+  @Specialization(guards = {"isTransferObj(obj)"})
+  public Object isTransferObject(final SObject obj, final Actor target, final Actor owner) {
+    return TransferObject.transfer(obj, owner, target, null);
   }
 }

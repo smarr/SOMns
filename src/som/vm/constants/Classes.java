@@ -9,6 +9,7 @@ public final class Classes {
   public static final SClass  thingClass;
   public static final SClass  objectClass;
   public static final SClass  valueClass;
+  public static final SClass  transferClass;
   public static final SClass  classClass;
   public static final SClass  metaclassClass;
 
@@ -44,6 +45,7 @@ public final class Classes {
     thingClass      = Bootstrap.newEmptyClassWithItsClass("Thing");
     objectClass     = Bootstrap.newEmptyClassWithItsClass("Object");
     valueClass      = Bootstrap.newEmptyClassWithItsClass("Value");
+    transferClass   = Bootstrap.newEmptyClassWithItsClass("TransferObject");
     nilClass        = Bootstrap.newEmptyClassWithItsClass("Nil");
     arrayReadMixinClass = Bootstrap.newEmptyClassWithItsClass("ArrayReadMixin");
     arrayClass      = Bootstrap.newEmptyClassWithItsClass("Array");

@@ -19,6 +19,12 @@ public abstract class SObjectWithClass extends SAbstractObject {
 
   public SObjectWithClass() { }
 
+  /** Copy Constructor. */
+  protected SObjectWithClass(final SObjectWithClass old) {
+    this.clazz      = old.clazz;
+    this.classGroup = old.classGroup;
+  }
+
   @Override
   public final SClass getSOMClass() {
     return clazz;

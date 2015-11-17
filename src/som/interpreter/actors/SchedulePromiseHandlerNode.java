@@ -61,7 +61,7 @@ public abstract class SchedulePromiseHandlerNode extends Node {
 
     // TODO: break that out into nodes
     for (int i = 1; i < msg.args.length; i++) {
-      msg.args[i] = finalTarget.wrapForUse(msg.args[i], msg.originalSender);
+      msg.args[i] = finalTarget.wrapForUse(msg.args[i], msg.originalSender, null);
     }
 
     msg.target      = finalTarget; // for sends to far references, we need to adjust the target

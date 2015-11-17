@@ -36,6 +36,7 @@ public final class ClassFactory {
   // identity criteria
   private final SClass[] superclassAndMixins;
   private final boolean  isDeclaredAsValue;
+  private final boolean  isTransferObject;
 
   // properties of this group of classes
   private final SSymbol className;
@@ -56,7 +57,9 @@ public final class ClassFactory {
   public ClassFactory(final SSymbol name, final MixinDefinition mixinDef,
       final HashSet<SlotDefinition> instanceSlots,
       final HashMap<SSymbol, Dispatchable> dispatchables,
-      final boolean declaredAsValue, final SClass[] superclassAndMixins,
+      final boolean declaredAsValue,
+      final boolean isTransferObject,
+      final SClass[] superclassAndMixins,
       final boolean hasOnlyImmutableFields,
       final ClassFactory classClassFactory) {
     assert instanceSlots == null || instanceSlots.size() > 0;
@@ -66,15 +69,24 @@ public final class ClassFactory {
     this.instanceSlots = instanceSlots;
     this.dispatchables = dispatchables;
     this.isDeclaredAsValue = declaredAsValue;
+    this.isTransferObject  = isTransferObject;
 
     this.hasOnlyImmutableFields = hasOnlyImmutableFields;
 
     this.superclassAndMixins = superclassAndMixins;
 
     VM.callerNeedsToBeOptimized("instanceLayout should only be accessed on slow path. (and ClassFactory should only be instantiated on slowpath, too)");
-    this.instanceLayout = (instanceSlots == null) ? null : new ObjectLayout(instanceSlots, this);
+    this.instanceLayout = (instanceSlots == null) ? null : new ObjectLayout(instanceSlots, this, isTransferObject);
 
     this.classClassFactory = classClassFactory;
+  }
+
+  public boolean isDeclaredAsValue() {
+    return isDeclaredAsValue;
+  }
+
+  public boolean isTransferObject() {
+    return isTransferObject;
   }
 
   public SSymbol getClassName() {
@@ -105,7 +117,7 @@ public final class ClassFactory {
   public void initializeClass(final SClass result) {
     result.initializeClass(className, superclassAndMixins[0]);
     result.initializeStructure(mixinDef, instanceSlots,
-        dispatchables, isDeclaredAsValue, this);
+        dispatchables, isDeclaredAsValue, isTransferObject, this);
   }
 
   public synchronized ObjectLayout updateInstanceLayoutWithInitializedField(

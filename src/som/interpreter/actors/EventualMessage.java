@@ -82,7 +82,7 @@ public abstract class EventualMessage {
     // however, if a promise gets resolved to a far reference
     // we need to redirect the message to the owner of that far reference
 
-    Object receiver = target.wrapForUse(arguments[0], currentSender);
+    Object receiver = target.wrapForUse(arguments[0], currentSender, null);
     assert !(receiver instanceof SPromise) : "TODO: handle this case as well?? Is it possible? didn't think about it";
 
     if (receiver instanceof SFarReference) {
@@ -98,7 +98,7 @@ public abstract class EventualMessage {
     assert !(receiver instanceof SPromise);
 
     for (int i = 1; i < arguments.length; i++) {
-      arguments[i] = target.wrapForUse(arguments[i], originalSender);
+      arguments[i] = target.wrapForUse(arguments[i], originalSender, null);
     }
 
     return target;
@@ -194,7 +194,7 @@ public abstract class EventualMessage {
      * @param resolvingActor - the owner of the value, the promise was resolved to.
      */
     private void setPromiseValue(final Object value, final Actor resolvingActor) {
-      args[1] = originalSender.wrapForUse(value, resolvingActor);
+      args[1] = originalSender.wrapForUse(value, resolvingActor, null);
     }
 
     @Override

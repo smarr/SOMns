@@ -57,6 +57,7 @@ public final class SClass extends SObjectWithClass {
 
   @CompilationFinal private MixinDefinition mixinDef;
   @CompilationFinal private boolean declaredAsValue;
+  @CompilationFinal private boolean isTransferObject; // is a kind of TransferObject (subclass or TObj directly)
 
   @CompilationFinal private ClassFactory instanceClassGroup; // the factory for this object
 
@@ -108,6 +109,10 @@ public final class SClass extends SObjectWithClass {
     return declaredAsValue;
   }
 
+  public boolean isTransferObject() {
+    return isTransferObject;
+  }
+
   @Override
   public boolean isValue() {
     return enclosingObject.isValue();
@@ -120,13 +125,15 @@ public final class SClass extends SObjectWithClass {
   public void initializeStructure(final MixinDefinition mixinDef,
       final HashSet<SlotDefinition> slots,
       final HashMap<SSymbol, Dispatchable> dispatchables,
-      final boolean declaredAsValue, final ClassFactory classFactory) {
+      final boolean declaredAsValue, final boolean isTransferObject,
+      final ClassFactory classFactory) {
     assert slots == null || slots.size() > 0;
 
     this.mixinDef  = mixinDef;
     this.slots     = slots;
     this.dispatchables   = dispatchables;
     this.declaredAsValue = declaredAsValue;
+    this.isTransferObject = isTransferObject;
     this.instanceClassGroup = classFactory;
     assert instanceClassGroup != null || !Bootstrap.isObjectSystemInitialized();
   }
