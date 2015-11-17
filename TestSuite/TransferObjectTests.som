@@ -73,7 +73,7 @@ class TransferObjectTests usingPlatform: platform testFramework: minitest = Valu
     public correctSimpleValues: t3 = (
       t3 a =  t3 b ifTrue: [^ false].
       t3 a <> t3 c ifTrue: [^ false].
-      ^ t3 a val = (t3 b val).
+      ^ t3 a value = (t3 b value).
     )
     
     public gotFarRefs: t3 = (
@@ -112,7 +112,7 @@ class TransferObjectTests usingPlatform: platform testFramework: minitest = Valu
       ^ assert: (a <-: is123Values: t) resolvedWith: 9.
     )
     
-    public testAsyncPassWithSimpleValues = (
+   public testAsyncPassWithSimpleValues = (
       | v1 v2 a t |
       v1 := SimpleValue val: 42.
       v2 := SimpleValue val: 42.
