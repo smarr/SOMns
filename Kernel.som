@@ -555,6 +555,8 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     )
   )
   
+  public class TransferArray new: size = Array new: size <: TransferObject ()()
+  
   public class ValueArray new: size withAll: aBlock = Value <: ArrayReadMixin (
     (* Conceptually: 1 to: size do: [:i | at: i put: (aBlock value: i) ] *)
   )(

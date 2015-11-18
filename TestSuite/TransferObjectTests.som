@@ -4,6 +4,7 @@ class TransferObjectTests usingPlatform: platform testFramework: minitest = Valu
   private NotAValue        = platform kernel NotAValue.
   private TransferObjectsCannotBeValues = platform kernel TransferObjectsCannotBeValues.
   private TransferObject   = platform kernel TransferObject.
+  private TransferArray    = platform kernel TransferArray.
   private actors           = platform actors.
   private ObjectMirror     = platform mirrors ObjectMirror.
 |
@@ -218,6 +219,76 @@ class TransferObjectTests usingPlatform: platform testFramework: minitest = Valu
       
       a := (actors createActorFromValue: CplxReceiver) <-: new.
       ^ assert: (a <-: simpleRecursiveStructure: t1) resolvedWith: true
+    )
+  ) : (
+    TEST_CONTEXT = ()
+  )
+  
+  class ArrayRcvr = ()(
+    public addAllValues: tarr = (
+      ^ tarr sum
+    )
+    
+    public countFarRefs: tarr = (
+      | cnt |
+      cnt := 0.
+      
+      tarr do: [:f | (isFarRef: f) ifTrue: [ cnt := cnt + 1 ]].
+      
+      ^ cnt
+    )
+    
+    public checkArrWithValuesAndLoops: tarr = (
+      | t |
+      t := tarr at: 1.
+      (isFarRef: t) ifTrue: [ ^ false ].
+      
+      (isFarRef: (tarr at: 2)) ifFalse: [ ^ false ].
+      4 = (tarr at: 3) ifFalse: [ ^ false ].
+      (tarr at: 4) == tarr ifFalse: [ ^ false ].
+      
+      t b = 5 ifFalse: [ ^ false ].
+      (isFarRef: t c) ifFalse: [ ^ false ].
+      t c == (tarr at: 2) ifTrue: [ ^ false ].
+      
+      ^ t a == tarr
+    )
+    
+    private isFarRef: o = (
+      ^ (ObjectMirror reflecting: o) className = 'FarReference'
+    )
+  )
+  
+  public class TransferArrayTest = AsyncTestContext ()(
+    public testAsyncTArrWithValues = (
+      | tarr a |
+      tarr := TransferArray new: 10.
+      tarr doIndexes: [:i | tarr at: i put: i * 2 ].
+      a := (actors createActorFromValue: ArrayRcvr) <-: new.
+      ^ assert: (a <-: addAllValues: tarr) resolvedWith: 110
+    )
+    
+    public testAsyncTArrObjectTurnsFarRef = (
+      | tarr a |
+      tarr := TransferArray new: 10.
+      tarr doIndexes: [:i | tarr at: i put: Object new ].
+
+      a := (actors createActorFromValue: ArrayRcvr) <-: new.
+      ^ assert: (a <-: countFarRefs: tarr) resolvedWith: 10
+    )
+    
+    public testAsyncTArrWithValuesAndLoops = (
+      | t a tarr |
+      tarr := TransferArray new: 10.
+      t := Transfer3 a: tarr b: 5 c: Object new.
+      
+      tarr at: 1 put: t.
+      tarr at: 2 put: Object new.
+      tarr at: 3 put: 4.
+      tarr at: 4 put: tarr.
+      
+      a := (actors createActorFromValue: ArrayRcvr) <-: new.
+      ^ assert: (a <-: checkArrWithValuesAndLoops: tarr) resolvedWith: true
     )
   ) : (
     TEST_CONTEXT = ()
