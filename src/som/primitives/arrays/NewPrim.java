@@ -21,7 +21,7 @@ public abstract class NewPrim extends BinaryExpressionNode {
   }
 
   @Specialization(guards = {"receiverIsArrayClass(receiver)"})
-  public final SMutableArray createArray(final SClass receiver, final long length) {
+  public static final SMutableArray createArray(final SClass receiver, final long length) {
     return new SMutableArray(length);
   }
 
@@ -30,7 +30,7 @@ public abstract class NewPrim extends BinaryExpressionNode {
   }
 
   @Specialization(guards = {"receiverIsValueArrayClass(receiver)"})
-  public final SImmutableArray createValueArray(final SClass receiver, final long length) {
+  public static final SImmutableArray createValueArray(final SClass receiver, final long length) {
     return new SImmutableArray(length);
   }
 
