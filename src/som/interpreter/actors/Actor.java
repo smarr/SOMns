@@ -9,6 +9,8 @@ import java.util.concurrent.ForkJoinWorkerThread;
 import som.VM;
 import som.VmSettings;
 import som.primitives.ObjectPrims.IsValue;
+import som.vmobjects.SAbstractObject;
+import som.vmobjects.SArray.STransferArray;
 import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
@@ -82,7 +84,7 @@ public class Actor {
   }
 
   public final Object wrapForUse(final Object o, final Actor owner,
-      final Map<SObject, SObject> transferedObjects) {
+      final Map<SAbstractObject, SAbstractObject> transferedObjects) {
     VM.thisMethodNeedsToBeOptimized("This should probably be optimized");
 
     if (this == owner) {
@@ -114,8 +116,11 @@ public class Actor {
         return remote;
       }
     } else if (!IsValue.isObjectValue(o)) {
-      if (o instanceof SObject && ((SObject) o).getSOMClass().isTransferObject()) {
-        return TransferObject.transfer(((SObject) o), owner, this,
+      if ((o instanceof SObject && ((SObject) o).getSOMClass().isTransferObject())) {
+        return TransferObject.transfer((SObject) o, owner, this,
+            transferedObjects);
+      } else if (o instanceof STransferArray) {
+        return TransferObject.transfer((STransferArray) o, owner, this,
             transferedObjects);
       } else {
         return new SFarReference(owner, o);

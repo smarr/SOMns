@@ -5,6 +5,7 @@ import som.primitives.Primitive;
 import som.vm.constants.Classes;
 import som.vmobjects.SArray.SImmutableArray;
 import som.vmobjects.SArray.SMutableArray;
+import som.vmobjects.SArray.STransferArray;
 import som.vmobjects.SClass;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
@@ -31,5 +32,14 @@ public abstract class NewPrim extends BinaryExpressionNode {
   @Specialization(guards = {"receiverIsValueArrayClass(receiver)"})
   public final SImmutableArray createValueArray(final SClass receiver, final long length) {
     return new SImmutableArray(length);
+  }
+
+  protected static final boolean receiverIsTransferArrayClass(final SClass rcvr) {
+    return rcvr == Classes.transferArrayClass;
+  }
+
+  @Specialization(guards = {"receiverIsTransferArrayClass(rcvr)"})
+  protected static final STransferArray createTransferArray(final SClass rcvr, final long length) {
+    return new STransferArray(length);
   }
 }

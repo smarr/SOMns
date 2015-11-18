@@ -349,6 +349,7 @@ public final class Bootstrap {
     MixinDefinition arrayReadMixinDef = kernelModule.getNestedMixinDefinition("ArrayReadMixin");
     MixinDefinition arrayDef   = kernelModule.getNestedMixinDefinition("Array");
     MixinDefinition valueArrayDef = kernelModule.getNestedMixinDefinition("ValueArray");
+    MixinDefinition transferArrayDef = kernelModule.getNestedMixinDefinition("TransferArray");
     MixinDefinition symbolDef  = kernelModule.getNestedMixinDefinition("Symbol");
     MixinDefinition integerDef = kernelModule.getNestedMixinDefinition("Integer");
     MixinDefinition stringDef  = kernelModule.getNestedMixinDefinition("String");
@@ -383,6 +384,7 @@ public final class Bootstrap {
 arrayReadMixinDef.initializeClass(Classes.arrayReadMixinClass, Classes.objectClass);
      arrayDef.initializeClass(Classes.arrayClass,   new SClass[] {Classes.objectClass, Classes.arrayReadMixinClass});
 valueArrayDef.initializeClass(Classes.valueArrayClass, new SClass[] {Classes.valueClass, Classes.arrayReadMixinClass});
+transferArrayDef.initializeClass(Classes.transferArrayClass, new SClass[] {Classes.arrayClass, Classes.transferClass});
    integerDef.initializeClass(Classes.integerClass, Classes.valueClass);
     stringDef.initializeClass(Classes.stringClass,  Classes.valueClass);
     doubleDef.initializeClass(Classes.doubleClass,  Classes.valueClass);
@@ -411,6 +413,7 @@ Classes.transferClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInst
   Classes.arrayReadMixinClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
   Classes.arrayClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
   Classes.valueArrayClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
+  Classes.transferArrayClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
   Classes.integerClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
   Classes.stringClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
   Classes.doubleClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
@@ -456,6 +459,7 @@ Classes.transferClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInst
     setSlot(KernelObj.kernel, "ArrayReadMixin", Classes.arrayReadMixinClass, kernelModule);
     setSlot(KernelObj.kernel, "Array",     Classes.arrayClass,     kernelModule);
     setSlot(KernelObj.kernel, "ValueArray", Classes.valueArrayClass, kernelModule);
+    setSlot(KernelObj.kernel, "TransferArray", Classes.transferArrayClass, kernelModule);
     setSlot(KernelObj.kernel, "Block",     Classes.blockClass,     kernelModule);
     setSlot(KernelObj.kernel, "Block1",    Classes.blockClass1,    kernelModule);
     setSlot(KernelObj.kernel, "Block2",    Classes.blockClass2,    kernelModule);

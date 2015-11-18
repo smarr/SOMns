@@ -2,9 +2,11 @@ package som.vmobjects;
 
 import java.util.Arrays;
 
+import som.vm.NotYetImplementedException;
 import som.vm.constants.Classes;
 import som.vm.constants.Nil;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.utilities.ValueProfile;
 
 /**
@@ -69,6 +71,10 @@ public abstract class SArray extends SAbstractObject {
   public boolean isDoubleType()  { return storage instanceof double[]; }
   public boolean isBooleanType() { return storage instanceof boolean[]; }
 
+  public boolean isSomePrimitiveType() {
+    return isLongType() || isDoubleType() || isBooleanType();
+  }
+
 
   private static long[] createLong(final Object[] arr) {
     long[] storage = new long[arr.length];
@@ -94,7 +100,7 @@ public abstract class SArray extends SAbstractObject {
     return storage;
   }
 
-  private static final ValueProfile partiallyEmptyStorageType = ValueProfile.createClassProfile();
+  public static final ValueProfile PartiallyEmptyStorageType = ValueProfile.createClassProfile();
 
 
   public static final class PartiallyEmptyArray {
@@ -156,9 +162,9 @@ public abstract class SArray extends SAbstractObject {
     }
   }
 
-  private static final ValueProfile objectStorageType = ValueProfile.createClassProfile();
+  public static final ValueProfile ObjectStorageType = ValueProfile.createClassProfile();
 
-  public static final class SMutableArray extends SArray {
+  public static class SMutableArray extends SArray {
 
     /**
      * Creates and empty array, using the EMPTY strategy.
@@ -185,7 +191,7 @@ public abstract class SArray extends SAbstractObject {
       } else {
         // if this is not true, this method is used in a wrong context
         assert isObjectType();
-        Object[] s = getObjectStorage(objectStorageType);
+        Object[] s = getObjectStorage(ObjectStorageType);
         newArr = Arrays.copyOf(s, s.length + 1);
         newArr[s.length] = value;
       }
@@ -198,7 +204,7 @@ public abstract class SArray extends SAbstractObject {
     }
 
     @Override
-    public boolean isValue() {
+    public final boolean isValue() {
       return false;
     }
 
@@ -214,50 +220,50 @@ public abstract class SArray extends SAbstractObject {
      * We don't transition to Partial with Object, because, there is no more
      * specialization that could be applied.
      */
-    public void transitionFromEmptyToPartiallyEmptyWith(final long idx, final long val) {
+    public final void transitionFromEmptyToPartiallyEmptyWith(final long idx, final long val) {
       fromEmptyToParticalWithType(PartiallyEmptyArray.Type.LONG, idx, val);
     }
 
-    public void transitionFromEmptyToPartiallyEmptyWith(final long idx, final double val) {
+    public final void transitionFromEmptyToPartiallyEmptyWith(final long idx, final double val) {
       fromEmptyToParticalWithType(PartiallyEmptyArray.Type.DOUBLE, idx, val);
     }
 
-    public void transitionFromEmptyToPartiallyEmptyWith(final long idx, final boolean val) {
+    public final void transitionFromEmptyToPartiallyEmptyWith(final long idx, final boolean val) {
       fromEmptyToParticalWithType(PartiallyEmptyArray.Type.BOOLEAN, idx, val);
     }
 
-    public void transitionToEmpty(final long length) {
+    public final void transitionToEmpty(final long length) {
       this.storage = (int) length;
     }
 
-    public void transitionTo(final Object newStorage) {
+    public final void transitionTo(final Object newStorage) {
       this.storage = newStorage;
     }
 
 //    private static final ValueProfile emptyStorageType = ValueProfile.createClassProfile();
 
-    public void transitionToObjectWithAll(final long length, final Object val) {
+    public final void transitionToObjectWithAll(final long length, final Object val) {
       Object[] arr = new Object[(int) length];
       Arrays.fill(arr, val);
       final Object storage = arr;
       this.storage = storage;
     }
 
-    public void transitionToLongWithAll(final long length, final long val) {
+    public final void transitionToLongWithAll(final long length, final long val) {
       long[] arr = new long[(int) length];
       Arrays.fill(arr, val);
       final Object storage = arr;
       this.storage = storage;
     }
 
-    public void transitionToDoubleWithAll(final long length, final double val) {
+    public final void transitionToDoubleWithAll(final long length, final double val) {
       double[] arr = new double[(int) length];
       Arrays.fill(arr, val);
       final Object storage = arr;
       this.storage = storage;
     }
 
-    public void transitionToBooleanWithAll(final long length, final boolean val) {
+    public final void transitionToBooleanWithAll(final long length, final boolean val) {
       boolean[] arr = new boolean[(int) length];
       if (val) {
         Arrays.fill(arr, true);
@@ -266,8 +272,8 @@ public abstract class SArray extends SAbstractObject {
       this.storage = storage;
     }
 
-    public void ifFullOrObjectTransitionPartiallyEmpty() {
-      PartiallyEmptyArray arr = getPartiallyEmptyStorage(partiallyEmptyStorageType);
+    public final void ifFullOrObjectTransitionPartiallyEmpty() {
+      PartiallyEmptyArray arr = getPartiallyEmptyStorage(PartiallyEmptyStorageType);
 
       if (arr.isFull()) {
         if (arr.getType() == PartiallyEmptyArray.Type.LONG) {
@@ -289,13 +295,8 @@ public abstract class SArray extends SAbstractObject {
 
   public static final class SImmutableArray extends SArray {
 
-    public SImmutableArray(final long length) {
-      super(length);
-    }
-
-    public SImmutableArray(final Object storage) {
-      super(storage);
-    }
+    public SImmutableArray(final long length) { super(length); }
+    public SImmutableArray(final Object storage) { super(storage); }
 
     @Override
     public SClass getSOMClass() {
@@ -303,8 +304,41 @@ public abstract class SArray extends SAbstractObject {
     }
 
     @Override
-    public boolean isValue() {
-      return true;
+    public boolean isValue() { return true; }
+  }
+
+  public static final class STransferArray extends SMutableArray {
+    public STransferArray(final long length) { super(length); }
+    public STransferArray(final Object storage) { super(storage); }
+    public STransferArray(final STransferArray old) { super(cloneStorage(old)); }
+
+    private static Object cloneStorage(final STransferArray old) {
+      if (old.isEmptyType()) {
+        return old.storage;
+      } else if (old.isBooleanType()) {
+        return ((boolean[]) old.storage).clone();
+      } else if (old.isDoubleType()) {
+        return ((double[]) old.storage).clone();
+      } else if (old.isLongType()) {
+        return ((long[]) old.storage).clone();
+      } else if (old.isObjectType()) {
+        return ((Object[]) old.storage).clone();
+      } else if (old.isPartiallyEmptyType()) {
+        return ((PartiallyEmptyArray) old.storage).copy();
+      } else {
+        CompilerDirectives.transferToInterpreter();
+        assert false : "Support for some storage type missing?";
+        throw new NotYetImplementedException();
+      }
+    }
+
+    public STransferArray cloneBasics() {
+      return new STransferArray(this);
+    }
+
+    @Override
+    public SClass getSOMClass() {
+      return Classes.transferArrayClass;
     }
   }
 }

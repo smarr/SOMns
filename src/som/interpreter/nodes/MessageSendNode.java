@@ -329,7 +329,9 @@ public final class MessageSendNode {
           }
           break;
         case "new:":
-          if (arguments[0] == Classes.arrayClass) {
+          if (arguments[0] == Classes.arrayClass ||
+              arguments[0] == Classes.valueArrayClass ||
+              arguments[0] == Classes.transferArrayClass) {
             return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
                 argumentNodes[1],
                 NewPrimFactory.create(null, null)));
