@@ -2,6 +2,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
 | private Benchmark = harness Benchmark.
   private actors    = platform actors.
   private Array     = platform kernel Array.
+  private TransferArray= platform kernel TransferArray.
   private Vector    = platform kernel Vector.
   private Dictionary= platform collections Dictionary.
   private system    = platform system.
@@ -470,7 +471,92 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     public setupVerifiedRun: run = ( run problemSize: '100:200000' )
   )
   
-  public class Big = Benchmark ()( todo = () )
+  (* Does not send the unnecessary exit messages because of using the promise
+     for completion. *)
+  public class BigContention numWorkers: numWorkers numMessages: numMessages = Benchmark <: Value (
+  | private numMessages = numMessages.
+    private numWorkers  = numWorkers.
+  |
+  )(
+    class BigActor new: id sink: sinkActor = (
+    | private numPings  ::= 0.
+      private expPinger ::= -1.
+      public  neighbors ::= nil.
+      private random    = Random new: id.
+      private id        = id.
+      private sinkActor = sinkActor.
+    |)(
+      public ping: sender = (
+        (neighbors at: sender) <-: pong: id.
+      )
+
+      public pong: sender = (
+        sender = expPinger ifFalse: [
+          error: 'ERROR: expected: ' + expPinger asString + ' but received from ' + sender asString ].
+        
+        numPings = numMessages
+          ifTrue:  [ sinkActor <-: exit ]
+          ifFalse: [
+            sendPing.
+            numPings := numPings + 1 ]
+      )
+
+      private sendPing = (
+        | target |
+        target := (random next: neighbors size) + 1.
+        expPinger := target.
+        (neighbors at: target) <-: ping: id
+      )
+    )
+    
+    class SinkActor new: completionRes = (
+      | private numMessages ::= 0.
+        public  neighbors   ::= nil.
+        private completionRes = completionRes.
+      |)(
+      public exit = (
+        numMessages := numMessages + 1.
+        numMessages = numWorkers ifTrue: [ completionRes resolve: numMessages ]
+      )
+    )
+
+    public benchmark = (
+      | sinkActor bigActors unwrapPromise completionPP |
+      completionPP := actors createPromisePair.
+      sinkActor := (actors createActorFromValue: SinkActor) <-: new: completionPP resolver.
+      
+      bigActors := TransferArray new: numWorkers.
+      bigActors doIndexes: [:i |
+        bigActors at: i put: ((actors createActorFromValue: BigActor) <-: new: i sink: sinkActor)].
+      
+      (* TODO: why do I unwrap those?
+      unwrapPromise := actors async: 1 to: numWorkers do: [:i |
+        (bigActors at: i) whenResolved: [:farRef | bigActors at: i put: farRef] ].
+      unwrapPromise whenResolved: [:r | ]. *)
+
+      sinkActor <-: neighbors: bigActors.
+      bigActors do: [:n | n <-: neighbors: bigActors ].
+      bigActors do: [:n | n <-: pong: -1 ]
+
+      ^ completionPP promise
+    )
+    
+    public verifyResult: result = (
+      ^ result = numWorkers
+    )
+  ) : (
+    public newInstance: problemSize = (
+      | problem |
+      problem := problemSize split: ':'.
+      ^ self numWorkers: (problem at: 1) asInteger
+            numMessages: (problem at: 2) asInteger
+    )
+    
+    public setupVerifiedRun: run = (
+      run problemSize: '20000:120'
+    )
+  )
+
   (* === Savina Concurrency Benchmarks === *)
 
   public class ConcurrentDictionary numEntities: numEntities numMessages: numMessages writePercentage: writePercentage = Benchmark <: Value (
