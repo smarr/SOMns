@@ -92,7 +92,8 @@ public class SPromise extends SObjectWithClass {
   public final synchronized SPromise getChainedPromiseFor(final Actor target) {
     SPromise remote = SPromise.createPromise(target);
     if (isSomehowResolved()) {
-      copyValueToRemotePromise(remote);
+      remote.value = value;
+      remote.resolutionState = resolutionState;
     } else {
       addChainedPromise(remote);
     }
@@ -223,12 +224,6 @@ public class SPromise extends SObjectWithClass {
   /** Internal Helper, only to be used properly synchronized. */
   final Object getValueUnsync() {
     return value;
-  }
-
-  /** REM: this method needs to be used with self synchronized. */
-  final void copyValueToRemotePromise(final SPromise remote) {
-    remote.value = value;
-    remote.resolutionState = resolutionState;
   }
 
   protected static final class SDebugPromise extends SPromise {
