@@ -169,7 +169,7 @@ public abstract class EventualMessage {
       } else {
         t = target.toString();
       }
-      return "PSendMsg(" + Arrays.toString(args) +  ", " + t
+      return "PSendMsg(" + selector.toString() + " " + Arrays.toString(args) +  ", " + t
         + ", sender: " + (finalSender == null ? "" : finalSender.toString()) + ")";
     }
   }
