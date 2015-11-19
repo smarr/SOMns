@@ -187,14 +187,14 @@ public class SPromise extends SObjectWithClass {
     msg.getTarget().send(msg);
   }
 
-  public final synchronized void addChainedPromise(@NotNull final SPromise promise) {
-    assert promise != null;
-    promise.resolutionState = Resolution.CHAINED;
+  public final synchronized void addChainedPromise(@NotNull final SPromise remote) {
+    assert remote != null;
+    remote.resolutionState = Resolution.CHAINED;
 
     if (chainedPromise == null) {
-      chainedPromise = promise;
+      chainedPromise = remote;
     } else {
-      addMoreChainedPromises(promise);
+      addMoreChainedPromises(remote);
     }
   }
 
