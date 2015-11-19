@@ -35,15 +35,7 @@ public abstract class WrapReferenceNode extends Node {
 
   @Specialization(guards = "promise.getOwner() != target")
   public SPromise promiseNotOwnedByTarget(final SPromise promise, final Actor target, final Actor owner) {
-    SPromise remote = SPromise.createPromise(target);
-    synchronized (promise) {
-      if (promise.isSomehowResolved()) {
-        promise.copyValueToRemotePromise(remote);
-      } else {
-        promise.addChainedPromise(remote);
-      }
-      return remote;
-    }
+    return promise.getChainedPromiseFor(target);
   }
 
   protected static final boolean isNeitherFarRefNorPromise(final Object obj) {

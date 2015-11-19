@@ -105,16 +105,7 @@ public class Actor {
       if (orgProm.getOwner() == this) {
         return orgProm;
       }
-
-      SPromise remote = SPromise.createPromise(this);
-      synchronized (orgProm) {
-        if (orgProm.isSomehowResolved()) {
-          orgProm.copyValueToRemotePromise(remote);
-        } else {
-          orgProm.addChainedPromise(remote);
-        }
-        return remote;
-      }
+      return orgProm.getChainedPromiseFor(this);
     } else if (!IsValue.isObjectValue(o)) {
       if ((o instanceof SObject && ((SObject) o).getSOMClass().isTransferObject())) {
         return TransferObject.transfer((SObject) o, owner, this,

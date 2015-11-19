@@ -89,6 +89,16 @@ public class SPromise extends SObjectWithClass {
     promiseClass = cls;
   }
 
+  public final synchronized SPromise getChainedPromiseFor(final Actor target) {
+    SPromise remote = SPromise.createPromise(target);
+    if (isSomehowResolved()) {
+      copyValueToRemotePromise(remote);
+    } else {
+      addChainedPromise(remote);
+    }
+    return remote;
+  }
+
   public final SPromise onError(final SBlock block,
       final RootCallTarget blockCallTarget, final Actor current) {
     assert block.getMethod().getNumberOfArguments() == 2;
