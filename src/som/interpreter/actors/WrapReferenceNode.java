@@ -54,8 +54,8 @@ public abstract class WrapReferenceNode extends Node {
   }
 
   protected final boolean isTransferObj(final Object obj) {
-    // TODO: optimize?
-    return obj instanceof SObject && ((SObject) obj).getSOMClass().isTransferObject();
+    // TODO: optimize!
+    return TransferObject.isTransferObject(obj);
   }
 
   @Specialization(guards = {"isNeitherFarRefNorPromise(obj)", "!isValue(obj)", "!isTransferObj(obj)"})

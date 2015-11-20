@@ -16,11 +16,34 @@ import som.vmobjects.SArray;
 import som.vmobjects.SArray.PartiallyEmptyArray;
 import som.vmobjects.SArray.STransferArray;
 import som.vmobjects.SObject;
+import som.vmobjects.SObjectWithClass;
+import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 
 import com.oracle.truffle.api.CompilerDirectives;
 
 
 public final class TransferObject {
+
+  public static boolean isTransferObject(final Object obj) {
+    if (obj instanceof STransferArray) {
+      return true;
+    }
+    if (obj instanceof SObjectWithClass) {
+      return ((SObjectWithClass) obj).getSOMClass().isTransferObject();
+    } else {
+      return false;
+    }
+  }
+
+  public static SObjectWithoutFields transfer(final SObjectWithoutFields obj,
+      final Actor orgin, final Actor target,
+      final Map<SAbstractObject, SAbstractObject> transferedObjects) {
+    SObjectWithoutFields newObj = obj.cloneBasics();
+    if (transferedObjects != null) {
+      transferedObjects.put(obj, newObj);
+    }
+    return newObj;
+  }
 
   public static SObject transfer(final SObject obj, final Actor origin,
       final Actor target,

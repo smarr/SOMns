@@ -54,6 +54,11 @@ public abstract class SObjectWithClass extends SAbstractObject {
     }
 
     public SObjectWithoutFields() { super(); }
+    public SObjectWithoutFields(final SObjectWithoutFields old) { super(old); }
+
+    public SObjectWithoutFields cloneBasics() {
+      return new SObjectWithoutFields(this);
+    }
 
     @Override
     public boolean isValue() {

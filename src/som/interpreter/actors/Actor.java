@@ -12,6 +12,7 @@ import som.primitives.ObjectPrims.IsValue;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray.STransferArray;
 import som.vmobjects.SObject;
+import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
@@ -107,11 +108,15 @@ public class Actor {
       }
       return orgProm.getChainedPromiseFor(this);
     } else if (!IsValue.isObjectValue(o)) {
+      // Corresponds to TransferObject.isTransferObject()
       if ((o instanceof SObject && ((SObject) o).getSOMClass().isTransferObject())) {
         return TransferObject.transfer((SObject) o, owner, this,
             transferedObjects);
       } else if (o instanceof STransferArray) {
         return TransferObject.transfer((STransferArray) o, owner, this,
+            transferedObjects);
+      } else if (o instanceof SObjectWithoutFields && ((SObjectWithoutFields) o).getSOMClass().isTransferObject()) {
+        return TransferObject.transfer((SObjectWithoutFields) o, owner, this,
             transferedObjects);
       } else {
         return new SFarReference(owner, o);
