@@ -529,14 +529,19 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       bigActors doIndexes: [:i |
         bigActors at: i put: ((actors createActorFromValue: BigActor) <-: new: i sink: sinkActor)].
       
-      (* TODO: why do I unwrap those?
+      (* we unwrap the promises here to avoid sending chained promises to all
+         the actors. If the promise is not yet resolved (a race condition)
+         they will end up chained, which is also expensive, especially since
+         there need to be send n * m messages instead 2n for the original one
+         and the callback *)
       unwrapPromise := actors async: 1 to: numWorkers do: [:i |
         (bigActors at: i) whenResolved: [:farRef | bigActors at: i put: farRef] ].
-      unwrapPromise whenResolved: [:r | ]. *)
 
-      sinkActor <-: neighbors: bigActors.
-      bigActors do: [:n | n <-: neighbors: bigActors ].
-      bigActors do: [:n | n <-: pong: -1 ]
+      unwrapPromise whenResolved: [:r |
+        sinkActor <-: neighbors: bigActors.
+        bigActors do: [:n | n <-: neighbors: bigActors ].
+        bigActors do: [:n | n <-: pong: -1 ]
+      ].
 
       ^ completionPP promise
     )
