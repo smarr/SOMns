@@ -1006,7 +1006,130 @@ class Savina usingPlatform: platform andHarness: harness = Value (
   public class Philosophers = Benchmark ()( todo = () )
   public class SleepingBarber = Benchmark ()( todo = ( USE_MATH_RANDOM_WHICH_SEQUENTIALIZES ) )
   public class CigaretteSmokers = Benchmark ()( todo = ( USE_MATH_RANDOM_WHICH_SEQUENTIALIZES ) )
-  public class LogisticsMapSeries = Benchmark ()( todo = () )
+
+  public class LogisticsMapSeries numTerms: terms numSeries: series startRate: rate = Benchmark (
+  | private numTerms  = terms.
+    private numSeries = series.
+    private startRate = rate.
+    private increment = 0.0025.
+  |)(
+    class Master new: completionRes = (
+    | private computers = Array new: numSeries.
+      private workers   = Array new: numSeries.
+      
+      private numWorkRequested ::= 0.
+      private numWorkReceived  ::= 0.
+      private termsSum         ::= 0.0.
+
+      private completionRes    = completionRes.
+    |
+      computers doIndexes: [:i |
+        | rate i0 |
+        i0 := i - 1.
+        rate := startRate + (i0 * increment).
+        computers at: i put: ((actors createActorFromValue: RateComputer) <-: new: rate) ].
+      workers doIndexes: [:i |
+        | rateComputer startTerm i0 |
+        i0 := i - 1.
+        rateComputer := computers at: i.
+        startTerm    := i0 * increment.
+        workers at: i put: ((actors createActorFromValue: SeriesWorker) <-: new: i master: self rateComputer: rateComputer startTerm: startTerm) ].
+    )(
+      public start = (
+        1 to: numTerms do: [:i |
+          workers do: [:w | w <-: nextTerm ] ].
+        
+        workers do: [:w |
+          w <-: getTerm.
+          numWorkRequested := numWorkRequested + 1 ]
+      )
+      
+      public result: term = (
+        termsSum := termsSum + term.
+        numWorkReceived := numWorkReceived + 1.
+        
+        numWorkRequested = numWorkReceived ifTrue: [
+          (* don't need to tell them to stop. will be GCed automatically. *)
+          completionRes resolve: termsSum ]
+      )
+    )
+    
+    class SeriesWorker new: id master: master rateComputer: computer startTerm: startTerm = (
+    | private curTerm ::= startTerm.
+      private master   = master.
+      private computer = computer.
+      private waitingForReply ::= false.
+      private waitingNextTerm ::= 0.
+      private waitingGetTerm  ::= false.
+    |)(
+      public nextTerm = (
+        waitingForReply
+          ifTrue:  [ waitingNextTerm := waitingNextTerm + 1 ]
+          ifFalse: [
+            computer <-: compute: self term: curTerm.
+            waitingForReply := true ]
+      )
+      
+      public result: term = (
+        waitingNextTerm > 0
+          ifTrue: [
+            waitingNextTerm := waitingNextTerm - 1.
+            computer <-: compute: self term: term ]
+          ifFalse: [
+            curTerm := term.
+            waitingForReply := false.
+            waitingGetTerm ifTrue: [
+              master <-: result: term ] ]
+      )
+
+      public getTerm = (
+        waitingForReply
+          ifTrue:  [ waitingGetTerm := true ]
+          ifFalse: [ master <-: result: curTerm ]
+      )
+    )
+
+    class RateComputer new: rate = (
+    | private rate = rate. |
+    )(
+      public compute: sender term: term = (
+        | res |
+        res := rate * term * (1 - term).
+        sender <-: result: res
+      )
+    )
+  
+    public benchmark = (
+      | master completionPP |
+      completionPP := actors createPromisePair.
+      master := (actors createActorFromValue: Master) <-: new: completionPP resolver.
+      master <-: start.
+      ^ completionPP promise
+    )
+    public verifyResult: result = (
+      | r |
+      r := (result * 1000000) round.
+      (numSeries = 10 and: [startRate = 3.46]) ifTrue: [ ^ r = 6387835 ].
+      (numSeries = 20 and: [startRate = 3.46]) ifTrue: [ ^ r = 11022424 ].
+      
+      ('---- result: ' + r asString + ' dont have a hardcoded verification result for this config yet') println.
+      ^ false
+    )
+  ) : (
+    public newInstance: problemSize = (
+      | problem |
+      problem := problemSize split: ':'.
+      
+      ^ self numTerms: (problem at: 1) asInteger
+            numSeries: (problem at: 2) asInteger
+            startRate: (problem at: 3) asInteger // 100
+    )
+    
+    public setupVerifiedRun: run = (
+      run problemSize: '25000:10:346'
+    )
+  )
+
   public class BankTransaction = Benchmark ()( todo = () )
   
   (* === Savina Parallelism Benchmarks === *)
