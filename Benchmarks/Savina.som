@@ -1130,7 +1130,127 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     )
   )
 
-  public class BankTransaction = Benchmark ()( todo = () )
+  public class BankTransaction numAccounts: acc numTransactions: tran = Benchmark (
+  | private numAccounts     = acc.
+    private numTransactions = tran. 
+  |)(
+    class Teller new: completionRes = (
+    | private accounts = Array new: numAccounts.
+      private numCompletedBankings ::= 0.
+      private randomGen = Random new.
+      private completionRes = completionRes.
+      private transferredAmount ::= 0.0.
+    |
+      accounts doIndexes: [:i |
+        accounts at: i put: ((actors createActorFromValue: Account) <-: new: i)]
+    )(
+      public start = (
+        1 to: numTransactions do: [:i | generateWork ]
+      )
+      
+      public reply: amount = (
+        transferredAmount := transferredAmount + amount.
+        numCompletedBankings := numCompletedBankings + 1.
+        numCompletedBankings = numTransactions ifTrue: [
+          completionRes resolve: transferredAmount.
+        ]
+      )
+
+      private generateWork = (
+        | srcAccountId loopId destAccountId srcAccount destAccount amount |
+        srcAccountId := randomGen next: numAccounts / 10 * 8.
+        loopId := randomGen next: numAccounts - srcAccountId.
+        loopId = 0 ifTrue: [ loopId := loopId + 1 ].
+        destAccountId := srcAccountId + loopId.
+        
+        srcAccount  := accounts at: srcAccountId + 1.
+        destAccount := accounts at: destAccountId + 1.
+        amount := (randomGen nextDouble abs) * 1000.
+
+        srcAccount <-: credit: amount to: destAccount reply: self 
+      )
+    )
+
+    class Account new: id = (
+    | private balance ::= 0.0.
+      private lastSender ::= nil.
+      private waitingForReply ::= false.
+      private requests = Vector new.
+    |
+    )(
+      class Request credit: amount to: destAccount reply: sender = (
+      | public amount = amount.
+        public destAccount = destAccount.
+        public sender = sender.
+      |)()
+
+      public debit: amount from: sender = (
+        balance := balance + amount.
+        sender <-: reply: amount.
+      )
+      
+      private processCredit: amount to: destAccount reply: sender = (
+        balance := balance - amount.
+        destAccount <-: debit: amount from: self.
+    
+        lastSender := sender.
+      )
+
+      public credit: amount to: destAccount reply: sender = (
+        waitingForReply
+          ifTrue: [ requests append: (
+            Request credit: amount to: destAccount reply: sender) ]
+          ifFalse: [
+            waitingForReply := true.
+            processCredit: amount to: destAccount reply: sender
+          ]
+      )
+      
+      public reply: amount = (
+        lastSender <-: reply: amount.
+        requests isEmpty
+          ifTrue: [ waitingForReply := false ]
+          ifFalse: [
+            | req |
+            req := requests removeFirst.
+            processCredit: req amount to: req destAccount reply: req sender
+          ].
+      )
+    )
+
+    public benchmark = (
+      | master completionPP |
+      completionPP := actors createPromisePair.
+      master := (actors createActorFromValue: Teller) <-: new: completionPP resolver.
+      master <-: start.
+      ^ completionPP promise
+    )
+    
+    public verifyResult: result = (
+      | r |
+      r := result round.
+      
+      numTransactions =  10000 ifTrue: [ ^ r = 4975454   ].
+      numTransactions =  50000 ifTrue: [ ^ r = 25057792  ].
+      numTransactions = 100000 ifTrue: [ ^ r = 50038643  ].
+      numTransactions = 500000 ifTrue: [ ^ r = 250052558 ].
+
+      ('---- result: ' + r asString + ' dont have a hardcoded verification result for this config yet') println.
+      ^ false
+    )
+  ) : (
+    public newInstance: problemSize = (
+      | problem |
+      problem := problemSize split: ':'.
+      
+      ^ self numAccounts: (problem at: 1) asInteger
+         numTransactions: (problem at: 2) asInteger
+    )
+    
+    public setupVerifiedRun: run = (
+      run problemSize: '1000:50000'
+    )
+  )
   
   (* === Savina Parallelism Benchmarks === *)
   
