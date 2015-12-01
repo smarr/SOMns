@@ -32,7 +32,7 @@ public abstract class ResolvePromiseNode extends BinaryExpressionNode {
 
   @Specialization(guards = {"hackGuardToTellTheVMThatWeExecuteMessages()", "resolver.getPromise() != result"})
   public SResolver chainedPromise(final SResolver resolver, final SPromise result) {
-    assert resolver.assertNotResolved();
+    assert resolver.assertNotCompleted();
     SPromise promise = resolver.getPromise();
     synchronized (promise) { // TODO: is this really deadlock free?
       result.addChainedPromise(promise);
@@ -53,7 +53,7 @@ public abstract class ResolvePromiseNode extends BinaryExpressionNode {
     Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
     Object wrapped = wrapper.execute(result, promise.owner, current);
 
-    SResolver.resolveAndTriggerListeners(result, wrapped, promise, current);
+    SResolver.resolveAndTriggerListenersUnsynced(result, wrapped, promise, current);
     return resolver;
   }
 }

@@ -91,7 +91,7 @@ public class SPromise extends SObjectWithClass {
 
   public final synchronized SPromise getChainedPromiseFor(final Actor target) {
     SPromise remote = SPromise.createPromise(target);
-    if (isSomehowResolved()) {
+    if (isCompleted()) {
       remote.value = value;
       remote.resolutionState = resolutionState;
     } else {
@@ -207,8 +207,17 @@ public class SPromise extends SObjectWithClass {
     chainedPromiseExt.add(promise);
   }
 
-  public final synchronized boolean isSomehowResolved() {
-    return resolutionState != Resolution.UNRESOLVED;
+  /**
+   * @return true, if it has a valid value, either successful or errornous
+   */
+  public final synchronized boolean isCompleted() {
+    return resolutionState == Resolution.SUCCESSFUL || resolutionState == Resolution.ERRORNOUS;
+  }
+
+  public final boolean assertNotCompleted() {
+    assert !isCompleted() : "Not sure yet what to do with re-resolving of promises? just ignore it? Error?";
+    assert value == null  : "If it isn't resolved yet, it shouldn't have a value";
+    return true;
   }
 
   /** Internal Helper, only to be used properly synchronized. */
@@ -291,15 +300,13 @@ public class SPromise extends SObjectWithClass {
       throw new NotYetImplementedException(); // TODO: implement
     }
 
-    public final boolean assertNotResolved() {
-      assert !promise.isSomehowResolved() : "Not sure yet what to do with re-resolving of promises? just ignore it? Error?";
-      assert promise.value == null        : "If it isn't resolved yet, it shouldn't have a value";
-      return true;
+    public final boolean assertNotCompleted() {
+      return promise.assertNotCompleted();
     }
 
     // TODO: solve the TODO and then remove the TruffleBoundary, this might even need to go into a node
     @TruffleBoundary
-    protected static void resolveChainedPromises(final SPromise promise,
+    protected static void resolveChainedPromisesUnsync(final SPromise promise,
         final Object result, final Actor current) {
       // TODO: we should change the implementation of chained promises to
       //       always move all the handlers to the other promise, then we
@@ -308,36 +315,49 @@ public class SPromise extends SObjectWithClass {
       // TODO: restore 10000 as parameter in testAsyncDeeplyChainedResolution
       if (promise.chainedPromise != null) {
         Object wrapped = promise.chainedPromise.owner.wrapForUse(result, current, null);
-        resolveAndTriggerListeners(result, wrapped, promise.chainedPromise, current);
-        resolveMoreChainedPromises(promise, result, current);
+        resolveAndTriggerListenersUnsynced(result, wrapped, promise.chainedPromise, current);
+        resolveMoreChainedPromisesUnsynced(promise, result, current);
       }
     }
 
     @TruffleBoundary
-    private static void resolveMoreChainedPromises(final SPromise promise,
+    private static void resolveMoreChainedPromisesUnsynced(final SPromise promise,
         final Object result, final Actor current) {
       if (promise.chainedPromiseExt != null) {
 
         for (SPromise p : promise.chainedPromiseExt) {
           Object wrapped = p.owner.wrapForUse(result, current, null);
-          resolveAndTriggerListeners(result, wrapped, p, current);
+          resolveAndTriggerListenersUnsynced(result, wrapped, p, current);
         }
       }
     }
 
-    protected static void resolveAndTriggerListeners(final Object result,
+    protected static void resolveAndTriggerListenersUnsynced(final Object result,
         final Object wrapped, final SPromise p, final Actor current) {
       assert !(result instanceof SPromise);
 
-      synchronized (p) {
-        p.value = wrapped;
-        p.resolutionState = Resolution.SUCCESSFUL;
-        scheduleAll(p, result, current);
-        resolveChainedPromises(p, result, current);
+      // LOCKING NOTE: we need a synchronization unit that is not the promise,
+      //               because otherwise we might end up in a deadlock, but we still need to group the
+      //               scheduling of messages and the propagation of the resolution state, otherwise
+      //               we might see message ordering issues
+      synchronized (wrapped) {
+        // LOCKING NOTE: We can split the scheduling out of the synchronized
+        // because after resolving the promise, all clients will schedule their
+        // callbacks/msg themselves
+        synchronized (p) {
+          assert p.assertNotCompleted();
+          // TODO: is this correct? can we just resolve chained promises like this? this means, their state changes twice. I guess it is ok, not sure about synchronization thought. They are created as 'chained', and then there is the resolute propagation accross chained promisses
+          // TODO use a special constructor to create chained promises???
+          p.value = wrapped;
+          p.resolutionState = Resolution.SUCCESSFUL;
+        }
+
+        scheduleAllUnsync(p, result, current);
+        resolveChainedPromisesUnsync(p, result, current);
       }
     }
 
-    protected static void scheduleAll(final SPromise promise,
+    protected static void scheduleAllUnsync(final SPromise promise,
         final Object result, final Actor current) {
       if (promise.whenResolved != null) {
         promise.scheduleCallbacksOnResolution(result, promise.whenResolved, current);
