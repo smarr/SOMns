@@ -152,6 +152,7 @@ public class Actor {
    * will schedule all coming messages on the normal pool.
    */
   public final synchronized void relinuqishMainThreadAndMoveExecutionToPool() {
+    assert isExecuting;
     if (mailbox.size() > 0) {
       executeOnPool();
     } else {
@@ -202,6 +203,7 @@ public class Actor {
 
     private boolean getCurrentMessagesOrCompleteExecution() {
       synchronized (actor) {
+        assert actor.isExecuting;
         current = actor.mailbox;
         if (current.isEmpty()) {
           // complete execution after all messages are processed
