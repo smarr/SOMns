@@ -1017,7 +1017,7 @@ public final class Parser {
       evenutalSend = accept(EventualSend);
     }
 
-    assert !evenutalSend; // this should not be true, because that means we steal it from the next operation (think here shouldn't be one, but still...)
+    assert !evenutalSend : "eventualSend should not be true, because that means we steal it from the next operation (think here shouldn't be one, but still...)";
     return operand;
   }
 
