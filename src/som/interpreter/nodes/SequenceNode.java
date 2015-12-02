@@ -52,15 +52,13 @@ public final class SequenceNode extends ExpressionNode {
 
   @Override
   public boolean isResultUsed(final ExpressionNode child) {
-    for (int i = 0; i < expressions.length - 1; i++) {
-      if (expressions[i] == child) {
-        Node parent = getParent();
-        assert parent != null;
-        if (parent instanceof ExpressionNode) {
-          return ((ExpressionNode) parent).isResultUsed(this);
-        }
-        return false;
+    if (expressions[expressions.length - 1] == child) {
+      Node parent = getParent();
+      assert parent != null;
+      if (parent instanceof ExpressionNode) {
+        return ((ExpressionNode) parent).isResultUsed(this);
       }
+      return true;
     }
     return false;
   }
