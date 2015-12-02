@@ -9,20 +9,18 @@ import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
-import com.oracle.truffle.api.nodes.RootNode;
 
 
-public final class ReceivedMessage extends RootNode {
+public final class ReceivedMessage extends ReceivedRootNode {
 
   @Child protected AbstractMessageSendNode onReceive;
-  @Child protected ResolvePromiseNode resolve;
+
   private final SSymbol selector;
 
   public ReceivedMessage(final AbstractMessageSendNode onRecieve, final SSymbol selector) {
     super(SomLanguage.class, null, null);
     this.onReceive = onRecieve;
     this.selector  = selector;
-    this.resolve = ResolvePromiseNodeFactory.create(null, null);
   }
 
   @Override
@@ -31,9 +29,7 @@ public final class ReceivedMessage extends RootNode {
 
     Object result = onReceive.doPreEvaluated(frame, msg.args);
 
-    if (msg.resolver != null) {
-      resolve.executeEvaluated(msg.resolver, result);
-    }
+    resolvePromise(msg.resolver, result);
     return null;
   }
 
@@ -42,14 +38,12 @@ public final class ReceivedMessage extends RootNode {
     return "RcvdMsg(" + selector.toString() + ")";
   }
 
-  public static final class ReceivedCallback extends RootNode {
+  public static final class ReceivedCallback extends ReceivedRootNode {
     @Child protected DirectCallNode onReceive;
-    @Child protected ResolvePromiseNode resolve;
 
     public ReceivedCallback(final RootCallTarget onReceive) {
       super(SomLanguage.class, null, null);
       this.onReceive = Truffle.getRuntime().createDirectCallNode(onReceive);
-      this.resolve = ResolvePromiseNodeFactory.create(null, null);
     }
 
     @Override
@@ -58,9 +52,7 @@ public final class ReceivedMessage extends RootNode {
 
       Object result = onReceive.call(frame, msg.args);
 
-      if (msg.resolver != null) {
-        resolve.executeEvaluated(msg.resolver, result);
-      }
+      resolvePromise(msg.resolver, result);
       return null;
     }
   }
