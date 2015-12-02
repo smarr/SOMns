@@ -20,6 +20,7 @@ import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
 
 public final class TransferObject {
@@ -35,6 +36,7 @@ public final class TransferObject {
     }
   }
 
+  @TruffleBoundary
   public static SObjectWithoutFields transfer(final SObjectWithoutFields obj,
       final Actor orgin, final Actor target,
       final Map<SAbstractObject, SAbstractObject> transferedObjects) {
@@ -45,6 +47,7 @@ public final class TransferObject {
     return newObj;
   }
 
+  @TruffleBoundary
   public static SObject transfer(final SObject obj, final Actor origin,
       final Actor target,
       final Map<SAbstractObject, SAbstractObject> transferedObjects) {
@@ -80,6 +83,7 @@ public final class TransferObject {
     return newObj;
   }
 
+  @TruffleBoundary
   public static STransferArray transfer(final STransferArray arr,
       final Actor origin, final Actor target,
       final Map<SAbstractObject, SAbstractObject> transferedObjects) {
