@@ -123,4 +123,9 @@ public abstract class IntToDoInlinedLiteralsNode extends ExpressionNode {
       final InlinerAdaptToEmbeddedOuterContext inliner) {
     // NOOP: This node has a FrameSlot, but it is local, so does not need to be updated.
   }
+
+  @Override
+  public boolean isResultUsed(final ExpressionNode child) {
+    return false;
+  }
 }

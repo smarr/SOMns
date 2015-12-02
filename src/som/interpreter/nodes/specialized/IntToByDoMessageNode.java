@@ -95,4 +95,9 @@ public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode
       ((Invokable) current).propagateLoopCountThroughoutMethodScope(count);
     }
   }
+
+  @Override
+  public boolean isResultUsed(final ExpressionNode child) {
+    return false;
+  }
 }

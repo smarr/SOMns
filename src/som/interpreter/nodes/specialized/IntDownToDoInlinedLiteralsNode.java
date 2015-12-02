@@ -115,4 +115,9 @@ public abstract class IntDownToDoInlinedLiteralsNode extends ExpressionNode {
     replace(IntDownToDoInlinedLiteralsNodeGen.create(body, inlinedLoopIdx,
         bodyActualNode, getSourceSection(), getFrom(), getTo()));
   }
+
+  @Override
+  public boolean isResultUsed(final ExpressionNode child) {
+    return false;
+  }
 }

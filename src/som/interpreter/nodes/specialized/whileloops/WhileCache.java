@@ -1,5 +1,6 @@
 package som.interpreter.nodes.specialized.whileloops;
 
+import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.vm.constants.Nil;
 import som.vmobjects.SBlock;
@@ -59,5 +60,10 @@ public abstract class WhileCache extends BinaryExpressionNode {
       loopConditionResult = obj2bool(conditionResult);
     }
     return Nil.nilObject;
+  }
+
+  @Override
+  public boolean isResultUsed(final ExpressionNode child) {
+    return false;
   }
 }

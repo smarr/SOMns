@@ -1,6 +1,7 @@
 package som.primitives.arrays;
 
 import som.interpreter.Invokable;
+import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
@@ -166,5 +167,10 @@ public abstract class DoPrim extends BinaryExpressionNode {
     if (current != null) {
       ((Invokable) current).propagateLoopCountThroughoutMethodScope(count);
     }
+  }
+
+  @Override
+  public boolean isResultUsed(final ExpressionNode child) {
+    return false;
   }
 }

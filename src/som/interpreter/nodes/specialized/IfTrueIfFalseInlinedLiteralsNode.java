@@ -62,4 +62,13 @@ public final class IfTrueIfFalseInlinedLiteralsNode extends ExpressionNode {
       return falseNode.executeGeneric(frame);
     }
   }
+
+  @Override
+  public boolean isResultUsed(final ExpressionNode child) {
+    Node parent = getParent();
+    if (parent instanceof ExpressionNode) {
+      return ((ExpressionNode) parent).isResultUsed(this);
+    }
+    return true;
+  }
 }

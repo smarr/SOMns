@@ -108,4 +108,8 @@ public abstract class ExpressionNode extends SOMNode {
   public SPromise executeSPromise(final VirtualFrame frame) throws UnexpectedResultException {
     return TypesGen.expectSPromise(executeGeneric(frame));
   }
+
+  public boolean isResultUsed(final ExpressionNode child) {
+    return true;
+  }
 }

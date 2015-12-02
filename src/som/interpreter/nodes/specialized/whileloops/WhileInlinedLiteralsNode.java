@@ -39,7 +39,6 @@ public final class WhileInlinedLiteralsNode extends ExpressionNode {
     this.bodyActualNode      = originalBodyNode;
   }
 
-
   private boolean evaluateCondition(final VirtualFrame frame) {
     try {
       return conditionNode.executeBoolean(frame);
@@ -81,5 +80,10 @@ public final class WhileInlinedLiteralsNode extends ExpressionNode {
     if (current != null) {
       ((Invokable) current).propagateLoopCountThroughoutMethodScope(count);
     }
+  }
+
+  @Override
+  public boolean isResultUsed(final ExpressionNode child) {
+    return false;
   }
 }

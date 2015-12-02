@@ -9,7 +9,6 @@ import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.InternalObjectArrayNode;
 import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
-import som.interpreter.nodes.SequenceNode;
 import som.vm.constants.Nil;
 import som.vmobjects.SSymbol;
 
@@ -75,10 +74,15 @@ public abstract class EventualSendNode extends ExpressionNode {
   }
 
   protected final boolean isResultUsed() {
+    return isResultUsed(null);
+  }
+
+  @Override
+  public boolean isResultUsed(final ExpressionNode child) {
     Node parent = getParent();
     assert parent != null;
-    if (parent instanceof SequenceNode) {
-      return ((SequenceNode) parent).isResultUsed(this);
+    if (parent instanceof ExpressionNode) {
+      return ((ExpressionNode) parent).isResultUsed(this);
     }
     return true;
   }

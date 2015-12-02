@@ -54,4 +54,13 @@ public final class IfInlinedLiteralNode extends ExpressionNode {
       return Nil.nilObject;
     }
   }
+
+  @Override
+  public boolean isResultUsed(final ExpressionNode child) {
+    Node parent = getParent();
+    if (parent instanceof ExpressionNode) {
+      return ((ExpressionNode) parent).isResultUsed(this);
+    }
+    return true;
+  }
 }

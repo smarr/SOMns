@@ -1,6 +1,7 @@
 package som.interpreter.nodes.specialized.whileloops;
 
 import som.interpreter.Invokable;
+import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.vm.constants.Nil;
 import som.vmobjects.SBlock;
@@ -79,5 +80,10 @@ public abstract class AbstractWhileNode extends BinaryExpressionNode {
     if (current != null) {
       ((Invokable) current).propagateLoopCountThroughoutMethodScope(count);
     }
+  }
+
+  @Override
+  public boolean isResultUsed(final ExpressionNode child) {
+    return false;
   }
 }

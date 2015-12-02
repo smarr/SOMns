@@ -63,4 +63,9 @@ public abstract class IntTimesRepeatLiteralNode extends ExpressionNode {
       ((Invokable) current).propagateLoopCountThroughoutMethodScope(count);
     }
   }
+
+  @Override
+  public boolean isResultUsed(final ExpressionNode child) {
+    return false;
+  }
 }

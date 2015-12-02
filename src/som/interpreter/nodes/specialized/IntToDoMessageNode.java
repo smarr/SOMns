@@ -1,6 +1,7 @@
 package som.interpreter.nodes.specialized;
 
 import som.interpreter.Invokable;
+import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
@@ -72,5 +73,10 @@ public abstract class IntToDoMessageNode extends TernaryExpressionNode {
     if (current != null) {
       ((Invokable) current).propagateLoopCountThroughoutMethodScope(count);
     }
+  }
+
+  @Override
+  public boolean isResultUsed(final ExpressionNode child) {
+    return false;
   }
 }

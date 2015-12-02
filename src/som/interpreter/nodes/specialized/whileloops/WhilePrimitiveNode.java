@@ -1,5 +1,6 @@
 package som.interpreter.nodes.specialized.whileloops;
 
+import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.vmobjects.SBlock;
 import som.vmobjects.SObjectWithClass;
@@ -36,5 +37,10 @@ public abstract class WhilePrimitiveNode extends BinaryExpressionNode {
 
   public abstract static class WhileFalsePrimitiveNode extends WhilePrimitiveNode {
     public WhileFalsePrimitiveNode() { super(false); }
+  }
+
+  @Override
+  public boolean isResultUsed(final ExpressionNode child) {
+    return false;
   }
 }

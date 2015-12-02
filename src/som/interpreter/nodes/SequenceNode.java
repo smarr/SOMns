@@ -23,6 +23,7 @@ package som.interpreter.nodes;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.NodeCost;
 import com.oracle.truffle.api.nodes.NodeInfo;
 import com.oracle.truffle.api.source.SourceSection;
@@ -49,13 +50,19 @@ public final class SequenceNode extends ExpressionNode {
     }
   }
 
+  @Override
   public boolean isResultUsed(final ExpressionNode child) {
     for (int i = 0; i < expressions.length - 1; i++) {
       if (expressions[i] == child) {
+        Node parent = getParent();
+        assert parent != null;
+        if (parent instanceof ExpressionNode) {
+          return ((ExpressionNode) parent).isResultUsed(this);
+        }
         return false;
       }
     }
-    return true;
+    return false;
   }
 
   @Override
