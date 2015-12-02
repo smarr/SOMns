@@ -15,9 +15,8 @@ import som.interpreter.nodes.nary.EagerTernaryPrimitiveNode;
 import som.interpreter.nodes.nary.EagerUnaryPrimitiveNode;
 import som.interpreter.nodes.specialized.AndMessageNodeFactory;
 import som.interpreter.nodes.specialized.AndMessageNodeFactory.AndBoolMessageNodeFactory;
-import som.interpreter.nodes.specialized.IfFalseMessageNodeGen;
+import som.interpreter.nodes.specialized.IfMessageNodeGen;
 import som.interpreter.nodes.specialized.IfTrueIfFalseMessageNodeGen;
-import som.interpreter.nodes.specialized.IfTrueMessageNodeGen;
 import som.interpreter.nodes.specialized.IntDownToDoMessageNodeGen;
 import som.interpreter.nodes.specialized.IntToByDoMessageNodeGen;
 import som.interpreter.nodes.specialized.IntToDoMessageNodeGen;
@@ -413,12 +412,10 @@ public final class MessageSendNode {
           break;
 
         case "ifTrue:":
-          return replace(IfTrueMessageNodeGen.create(arguments[0],
-              arguments[1], getSourceSection(),
+          return replace(IfMessageNodeGen.create(true, getSourceSection(),
               argumentNodes[0], argumentNodes[1]));
         case "ifFalse:":
-          return replace(IfFalseMessageNodeGen.create(arguments[0],
-              arguments[1], getSourceSection(),
+          return replace(IfMessageNodeGen.create(false, getSourceSection(),
               argumentNodes[0], argumentNodes[1]));
         case "to:":
           if (arguments[0] instanceof Long) {
