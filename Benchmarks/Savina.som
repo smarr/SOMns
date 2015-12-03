@@ -2104,5 +2104,152 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     )
   )
 
-  public class NQueens = Benchmark ()( todo = ( USES_SHARED_STATE ) )
+  public class NQueens numWorkers: workers size: size threshold: threshold = Benchmark (
+  | private numWorkers = workers.
+    private size       = size.
+    private threshold  = threshold.
+  |)(
+    public class Master new: completionRes = (
+    | private workers = Array new: numWorkers.
+      private messageCounter ::= 0.
+      private resultCounter  ::= 0.
+      private numWorkSent    ::= 0.
+      private numWorkCompleted ::= 0.
+      private completionRes = completionRes.
+    |
+      1 to: numWorkers do: [:i |
+        workers at: i put: ((actors createActorFromValue: Worker) <-: new: self)].
+      
+      send: (TransferArray new: 0) depth: 0
+    )(
+      private send: arr depth: depth = (
+        messageCounter := messageCounter + 1.
+        (workers at: messageCounter) <-: work: arr depth: depth.
+        messageCounter := messageCounter % numWorkers.
+        numWorkSent := numWorkSent + 1.
+      )
+      
+      public work: arr depth: depth = (
+        send: arr depth: depth
+      )
+      
+      public result = (
+        resultCounter := resultCounter + 1.
+      )
+      
+      public done = (
+        numWorkCompleted := numWorkCompleted + 1.
+        numWorkCompleted = numWorkSent ifTrue: [
+          completionRes resolve: resultCounter
+        ]
+      )
+    )
+    
+    public class Worker new: master = (
+    | private master = master. |
+    )(
+      public work: arr depth: depth = (
+        nqueensKernelPar: arr depth: depth.
+        master <-: done
+      )
+      
+      private nqueensKernelPar: arr depth: depth = (
+        size = depth ifTrue: [
+          master <-: result.
+          ^ self
+        ].
+        
+        depth >= threshold ifTrue: [
+          nqueensKernelSeq: arr depth: depth.
+          ^ self
+        ].
+        
+        distributeWork: arr depth: depth
+      )
+      
+      private distributeWork: arr depth: depth = (
+        | newDepth |
+        newDepth := depth + 1.
+      
+        0 to: size - 1 do: [:i |
+          | b |
+          b := TransferArray new: newDepth withAll: 0.
+          arr copyFrom: 1 to: depth to: b.
+          b at: newDepth put: i.
+          (board: b valid: newDepth) ifTrue: [
+            master <-: work: b depth: newDepth ] ]
+      )
+      
+      private nqueensKernelSeq: arr depth: depth = (
+        | b newDepth |
+        size = depth ifTrue: [
+          master <-: result.
+          ^ self ].
+        
+        newDepth := depth + 1.
+        b := TransferArray new: newDepth.
+        0 to: size - 1 do: [:i |
+          arr copyFrom: 1 to: depth to: b.
+          b at: newDepth put: i.
+          (board: b valid: newDepth) ifTrue: [
+            nqueensKernelSeq: b depth: newDepth ] ]
+      )
+      
+      private board: arr valid: n = (
+        1 to: n do: [:i |
+          | p |
+          p := arr at: i.
+          i + 1 to: n do: [:j |
+            | q |
+            q := arr at: j.
+            (q = p or: [q = (p - (j - i)) or: [q = (p + (j - i))]]) ifTrue: [ ^ false ] ] ].
+        ^ true
+      )
+    )
+    
+    public benchmark = (
+      | master completionPP |
+      completionPP := actors createPromisePair.
+      master := (actors createActorFromValue: Master) <-: new: completionPP resolver.
+      ^ completionPP promise
+    )
+    
+    public verifyResult: result = (
+      size =  1 ifTrue: [ ^ result = 1           ].
+      size =  2 ifTrue: [ ^ result = 0           ].
+      size =  3 ifTrue: [ ^ result = 0           ].
+      size =  4 ifTrue: [ ^ result = 2           ].
+      size =  5 ifTrue: [ ^ result = 10          ].
+      size =  6 ifTrue: [ ^ result = 4           ].
+      size =  7 ifTrue: [ ^ result = 40          ].
+      size =  8 ifTrue: [ ^ result = 92          ].
+      size =  9 ifTrue: [ ^ result = 352         ].
+      size = 10 ifTrue: [ ^ result = 724         ].
+      size = 11 ifTrue: [ ^ result = 2680        ].
+      size = 12 ifTrue: [ ^ result = 14200       ].
+      size = 13 ifTrue: [ ^ result = 73712       ].
+      size = 14 ifTrue: [ ^ result = 365596      ].
+      size = 15 ifTrue: [ ^ result = 2279184     ].
+      size = 16 ifTrue: [ ^ result = 14772512    ].
+      size = 17 ifTrue: [ ^ result = 95815104    ].
+      size = 18 ifTrue: [ ^ result = 666090624   ].
+      size = 19 ifTrue: [ ^ result = 4968057848  ].
+      size = 20 ifTrue: [ ^ result = 39029188884 ].
+
+      ('---- result: ' + result asString + ' dont have a hardcoded verification result for this config yet') println.
+      ^ false
+    )
+  ) : (
+    public newInstance: problemSize = (
+      | problem |
+      problem := problemSize split: ':'.
+      ^ self numWorkers: (problem at: 1) asInteger
+                   size: (problem at: 2) asInteger
+              threshold: (problem at: 3) asInteger
+    )
+    
+    public setupVerifiedRun: run = (
+      run problemSize: '20:12:4'
+    )
+  )
 )
