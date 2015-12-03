@@ -17,6 +17,7 @@
         <pathelement location="${lib.dir}/hamcrest-core-1.3.jar" />
         <pathelement location="${truffle.build}/truffle-api.jar" />
         <pathelement location="${truffle.build}/truffle-dsl-processor.jar" />
+        <pathelement location="${truffle.build}/truffle-tck.jar" />
     </path>
 
     <target name="clean" description="Remove build directories and generated code">
