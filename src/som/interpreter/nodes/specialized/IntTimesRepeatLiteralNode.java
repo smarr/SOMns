@@ -5,6 +5,7 @@ import som.interpreter.nodes.ExpressionNode;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -21,6 +22,7 @@ public abstract class IntTimesRepeatLiteralNode extends ExpressionNode {
   // In case we need to revert from this optimistic optimization, keep the
   // original node around
   private final ExpressionNode bodyActualNode;
+  @CompilationFinal private double loopFrequency;
 
   public abstract ExpressionNode getRepCnt();
 
@@ -46,10 +48,12 @@ public abstract class IntTimesRepeatLiteralNode extends ExpressionNode {
   }
 
   protected final void doLooping(final VirtualFrame frame, final long repCnt) {
-    double probability = repCnt / (repCnt + 1.0);
+    if (CompilerDirectives.inInterpreter()) {
+      loopFrequency = Math.max(loopFrequency, repCnt / (repCnt + 1.0));
+    }
 
     for (long i = repCnt;
-        CompilerDirectives.injectBranchProbability(probability, i > 0);
+        CompilerDirectives.injectBranchProbability(loopFrequency, i > 0);
         i--) {
       body.executeGeneric(frame);
     }

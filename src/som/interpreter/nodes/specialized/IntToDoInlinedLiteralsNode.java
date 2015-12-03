@@ -8,6 +8,7 @@ import som.interpreter.nodes.ExpressionNode;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.NodeChildren;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -30,6 +31,7 @@ public abstract class IntToDoInlinedLiteralsNode extends ExpressionNode {
   private final ExpressionNode bodyActualNode;
 
   private final FrameSlot loopIndex;
+  @CompilationFinal private double loopFrequency;
 
   public abstract ExpressionNode getFrom();
   public abstract ExpressionNode getTo();
@@ -81,9 +83,12 @@ public abstract class IntToDoInlinedLiteralsNode extends ExpressionNode {
       body.executeGeneric(frame);
     }
 
-    double probability = (to - from) / (to - from + 1.0);
+    if (CompilerDirectives.inInterpreter()) {
+      loopFrequency = Math.max(0.0, Math.max(loopFrequency, (to - from) / (to - from + 1.0)));
+    }
+
     for (long i = from + 1;
-        CompilerDirectives.injectBranchProbability(probability, i <= to);
+        CompilerDirectives.injectBranchProbability(loopFrequency, i <= to);
         i++) {
       frame.setLong(loopIndex, i);
       body.executeGeneric(frame);
