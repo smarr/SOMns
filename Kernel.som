@@ -508,7 +508,14 @@ class Kernel vmMirror: vmMirror = Object <: Value (
       ^ result
     )
   
-    public copyFrom: start = ( ^self copyFrom: start to: self size )
+    public copyFrom: start = ( ^ self copyFrom: start to: self size )
+    
+    (* Copy range to other collection *)
+    public copyFrom: start to: end to: collection = (
+      start to: end do: [:i |
+        collection at: i put: (self at: i)  (* TODO: look up bug??? self should not be necessary here *)
+      ]
+    )
   
     public replaceFrom: start to: stop with: replacement startingAt: repStart = (
       (* This destructively replaces elements from start to stop in the
