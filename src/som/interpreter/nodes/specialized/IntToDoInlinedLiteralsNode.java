@@ -80,7 +80,11 @@ public abstract class IntToDoInlinedLiteralsNode extends ExpressionNode {
       frame.setLong(loopIndex, from);
       body.executeGeneric(frame);
     }
-    for (long i = from + 1; i <= to; i++) {
+
+    double probability = (to - from) / (to - from + 1.0);
+    for (long i = from + 1;
+        CompilerDirectives.injectBranchProbability(probability, i <= to);
+        i++) {
       frame.setLong(loopIndex, i);
       body.executeGeneric(frame);
     }

@@ -46,7 +46,11 @@ public abstract class IntTimesRepeatLiteralNode extends ExpressionNode {
   }
 
   protected final void doLooping(final VirtualFrame frame, final long repCnt) {
-    for (long i = repCnt; i > 0; i--) {
+    double probability = repCnt / (repCnt + 1.0);
+
+    for (long i = repCnt;
+        CompilerDirectives.injectBranchProbability(probability, i > 0);
+        i--) {
       body.executeGeneric(frame);
     }
   }
