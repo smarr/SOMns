@@ -9,6 +9,7 @@ import som.interpreter.Invokable;
 import som.interpreter.Method;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vm.Bootstrap;
+import som.vm.constants.Classes;
 import som.vm.constants.Nil;
 import som.vmobjects.SArray.SImmutableArray;
 import som.vmobjects.SObjectWithClass;
@@ -149,7 +150,7 @@ public final class SystemPrims {
   public abstract static class VMArgumentsPrim extends UnaryExpressionNode {
     @Specialization
     public final SImmutableArray getArguments(final Object receiver) {
-      return new SImmutableArray(VM.getArguments());
+      return new SImmutableArray(VM.getArguments(), Classes.valueArrayClass);
     }
   }
 

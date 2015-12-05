@@ -10,6 +10,7 @@ import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.reflection.AbstractSymbolDispatch;
 import som.primitives.reflection.AbstractSymbolDispatchNodeGen;
+import som.vm.constants.Classes;
 import som.vmobjects.SArray.SImmutableArray;
 import som.vmobjects.SArray.SMutableArray;
 import som.vmobjects.SClass;
@@ -30,7 +31,7 @@ public abstract class MirrorPrims {
     @Specialization
     public final SMutableArray getNestedClasses(final SObjectWithClass rcvr) {
       SClass[] classes = rcvr.getSOMClass().getNestedClasses(rcvr);
-      return new SMutableArray(classes);
+      return new SMutableArray(classes, Classes.arrayClass);
     }
   }
 
@@ -51,7 +52,7 @@ public abstract class MirrorPrims {
     public final SImmutableArray getMethod(final Object rcvr) {
       VM.thisMethodNeedsToBeOptimized("Uses Types.getClassOf, so, should be specialized in performance cirtical code");
       SInvokable[] invokables = Types.getClassOf(rcvr).getMethods();
-      return new SImmutableArray(invokables);
+      return new SImmutableArray(invokables, Classes.valueArrayClass);
     }
   }
 
@@ -85,7 +86,7 @@ public abstract class MirrorPrims {
       assert mixinHandle instanceof MixinDefinition;
       MixinDefinition def = (MixinDefinition) mixinHandle;
       MixinDefinition[] nested = def.getNestedMixinDefinitions();
-      return new SImmutableArray(nested);
+      return new SImmutableArray(nested, Classes.valueArrayClass);
     }
   }
 
@@ -114,7 +115,8 @@ public abstract class MirrorPrims {
           methods.add((SInvokable) disp);
         }
       }
-      return new SImmutableArray(methods.toArray(new SInvokable[methods.size()]));
+      return new SImmutableArray(methods.toArray(new SInvokable[methods.size()]),
+          Classes.valueArrayClass);
     }
   }
 

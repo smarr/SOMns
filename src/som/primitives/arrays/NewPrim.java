@@ -18,28 +18,22 @@ public abstract class NewPrim extends BinaryExpressionNode {
 
   protected static final boolean receiverIsArrayClass(final SClass receiver) {
     return receiver == Classes.arrayClass;
+
   }
 
-  @Specialization(guards = {"receiverIsArrayClass(receiver)"})
+  @Specialization(guards = {"receiver.isArray()", "!receiver.isTransferObject()", "!receiver.declaredAsValue()"})
   public static final SMutableArray createArray(final SClass receiver, final long length) {
-    return new SMutableArray(length);
+    return new SMutableArray(length, receiver);
   }
 
-  protected static final boolean receiverIsValueArrayClass(final SClass receiver) {
-    return receiver == Classes.valueArrayClass;
-  }
-
-  @Specialization(guards = {"receiverIsValueArrayClass(receiver)"})
+  @Specialization(guards = {"receiver.isArray()", "receiver.declaredAsValue()"})
   public static final SImmutableArray createValueArray(final SClass receiver, final long length) {
-    return new SImmutableArray(length);
+    return new SImmutableArray(length, receiver);
   }
 
-  protected static final boolean receiverIsTransferArrayClass(final SClass rcvr) {
-    return rcvr == Classes.transferArrayClass;
-  }
-
-  @Specialization(guards = {"receiverIsTransferArrayClass(rcvr)"})
-  protected static final STransferArray createTransferArray(final SClass rcvr, final long length) {
-    return new STransferArray(length);
+  @Specialization(guards = {"receiver.isArray()", "receiver.isTransferObject()"})
+  protected static final STransferArray createTransferArray(
+      final SClass receiver, final long length) {
+    return new STransferArray(length, receiver);
   }
 }

@@ -37,6 +37,7 @@ public final class ClassFactory {
   private final SClass[] superclassAndMixins;
   private final boolean  isDeclaredAsValue;
   private final boolean  isTransferObject;
+  private final boolean  isArray;
 
   // properties of this group of classes
   private final SSymbol className;
@@ -59,6 +60,7 @@ public final class ClassFactory {
       final HashMap<SSymbol, Dispatchable> dispatchables,
       final boolean declaredAsValue,
       final boolean isTransferObject,
+      final boolean isArray,
       final SClass[] superclassAndMixins,
       final boolean hasOnlyImmutableFields,
       final ClassFactory classClassFactory) {
@@ -70,6 +72,7 @@ public final class ClassFactory {
     this.dispatchables = dispatchables;
     this.isDeclaredAsValue = declaredAsValue;
     this.isTransferObject  = isTransferObject;
+    this.isArray           = isArray;
 
     this.hasOnlyImmutableFields = hasOnlyImmutableFields;
 
@@ -117,7 +120,7 @@ public final class ClassFactory {
   public void initializeClass(final SClass result) {
     result.initializeClass(className, superclassAndMixins[0]);
     result.initializeStructure(mixinDef, instanceSlots,
-        dispatchables, isDeclaredAsValue, isTransferObject, this);
+        dispatchables, isDeclaredAsValue, isTransferObject, isArray, this);
   }
 
   public synchronized ObjectLayout updateInstanceLayoutWithInitializedField(

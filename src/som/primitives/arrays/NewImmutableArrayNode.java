@@ -32,13 +32,13 @@ public abstract class NewImmutableArrayNode extends TernaryExpressionNode {
   public SImmutableArray create(final VirtualFrame frame,
       final SClass valueArrayClass, final long size, final SBlock block) {
     if (size <= 0) {
-      return new SImmutableArray(0);
+      return new SImmutableArray(0, valueArrayClass);
     }
 
     try {
       Object newStorage = ArraySetAllStrategy.evaluateFirstDetermineStorageAndEvaluateRest(
           frame, block, size, this.block, isValue);
-      return new SImmutableArray(newStorage);
+      return new SImmutableArray(newStorage, valueArrayClass);
     } finally {
       if (CompilerDirectives.inInterpreter()) {
         reportLoopCount(size);

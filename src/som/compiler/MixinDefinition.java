@@ -139,15 +139,15 @@ public final class MixinDefinition {
 
   public void initializeClass(final SClass result,
       final Object superclassAndMixins) {
-    initializeClass(result, superclassAndMixins, false, false);
+    initializeClass(result, superclassAndMixins, false, false, false);
   }
 
   public void initializeClass(final SClass result,
       final Object superclassAndMixins, final boolean isTheValueClass,
-      final boolean isTheTransferObjectClass) {
+      final boolean isTheTransferObjectClass, final boolean isTheArrayClass) {
     VM.callerNeedsToBeOptimized("This is supposed to result in a cacheable object, and thus is only the fallback case.");
     ClassFactory factory = createClassFactory(superclassAndMixins,
-        isTheValueClass, isTheTransferObjectClass);
+        isTheValueClass, isTheTransferObjectClass, isTheArrayClass);
     if (result.getSOMClass() != null) {
       factory.getClassClassFactory().initializeClass(result.getSOMClass());
     }
@@ -235,7 +235,8 @@ public final class MixinDefinition {
   }
 
   public ClassFactory createClassFactory(final Object superclassAndMixins,
-      final boolean isTheValueClass, final boolean isTheTransferObjectClass) {
+      final boolean isTheValueClass, final boolean isTheTransferObjectClass,
+      final boolean isTheArrayClass) {
     CompilerAsserts.neverPartOfCompilation();
     VM.callerNeedsToBeOptimized("This is supposed to result in a cacheable object, and thus is only the fallback case.");
 
@@ -277,10 +278,11 @@ public final class MixinDefinition {
         mixinsIncludeValue, isTheValueClass, hasOnlyImmutableFields);
     boolean instancesAreTransferObjects = checkIsTransferObject(superClass,
         mixinsIncludeTransferObject, isTheTransferObjectClass);
+    boolean instancesAreArrays = checkIsArray(superClass, isTheArrayClass);
 
     ClassFactory classClassFactory = new ClassFactory(
         Symbols.symbolFor(name.getString() + " class"), this, null,
-        classScope.getDispatchables(), isModule, false,
+        classScope.getDispatchables(), isModule, false, false,
         new SClass[] {Classes.classClass}, true,
         // TODO: not passing a ClassFactory of the meta class here is incorrect,
         // might not matter in practice
@@ -288,7 +290,8 @@ public final class MixinDefinition {
 
     ClassFactory classFactory = new ClassFactory(name, this,
         instanceSlots, dispatchables, instancesAreValues,
-        instancesAreTransferObjects, mixins, hasOnlyImmutableFields,
+        instancesAreTransferObjects, instancesAreArrays,
+        mixins, hasOnlyImmutableFields,
         classClassFactory);
 
     cache.add(classFactory);
@@ -384,6 +387,11 @@ public final class MixinDefinition {
     return declaredAsValue;
   }
 
+  private boolean checkIsArray(final SClass superClass, final boolean isTheArrayClass) {
+    boolean superIsArray = superClass == null ? false : superClass.isArray();
+    return isTheArrayClass || superIsArray;
+  }
+
   @TruffleBoundary
   private void reportErrorAndExit(final String msgPart1, final String msgPart2) {
     String line = sourceSection.getSource().getName() + ":" +
@@ -433,7 +441,8 @@ public final class MixinDefinition {
 
   public SClass instantiateClass(final SObjectWithClass outer,
       final Object superclassAndMixins) {
-    ClassFactory factory = createClassFactory(superclassAndMixins, false, false);
+    ClassFactory factory = createClassFactory(superclassAndMixins,
+        false, false, false);
     return ClassInstantiationNode.instantiate(outer, factory);
   }
 

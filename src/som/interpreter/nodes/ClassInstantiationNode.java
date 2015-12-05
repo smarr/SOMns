@@ -25,7 +25,7 @@ public abstract class ClassInstantiationNode extends Node {
       final Object superclassAndMixins);
 
   protected final ClassFactory createClassFactory(final Object superclassAndMixins) {
-    return mixinDef.createClassFactory(superclassAndMixins, false, false);
+    return mixinDef.createClassFactory(superclassAndMixins, false, false, false);
   }
 
   protected boolean sameSuperAndMixins(final Object superclassAndMixins, final Object cached) {
@@ -64,6 +64,6 @@ public abstract class ClassInstantiationNode extends Node {
   public SClass instantiateClass(final SObjectWithClass outerObj,
       final Object superclassAndMixins) {
     return instantiateClass(outerObj, superclassAndMixins, null,
-        mixinDef.createClassFactory(superclassAndMixins, false, false));
+        mixinDef.createClassFactory(superclassAndMixins, false, false, false));
   }
 }

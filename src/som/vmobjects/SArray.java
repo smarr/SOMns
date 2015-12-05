@@ -3,7 +3,6 @@ package som.vmobjects;
 import java.util.Arrays;
 
 import som.vm.NotYetImplementedException;
-import som.vm.constants.Classes;
 import som.vm.constants.Nil;
 
 import com.oracle.truffle.api.CompilerDirectives;
@@ -18,14 +17,22 @@ public abstract class SArray extends SAbstractObject {
   public static final int FIRST_IDX = 0;
 
   protected Object storage;
+  protected final SClass clazz;
 
-  public SArray(final long length) {
+  public SArray(final long length, final SClass clazz) {
     storage = (int) length;
+    this.clazz = clazz;
   }
 
-  public SArray(final Object storage) {
+  public SArray(final Object storage, final SClass clazz) {
     assert !(storage instanceof Long);
     this.storage = storage;
+    this.clazz   = clazz;
+  }
+
+  @Override
+  public final SClass getSOMClass() {
+    return clazz;
   }
 
   public int getEmptyStorage(final ValueProfile storageType) {
@@ -170,12 +177,12 @@ public abstract class SArray extends SAbstractObject {
      * Creates and empty array, using the EMPTY strategy.
      * @param length
      */
-    public SMutableArray(final long length) {
-      super(length);
+    public SMutableArray(final long length, final SClass clazz) {
+      super(length, clazz);
     }
 
-    public SMutableArray(final Object storage) {
-      super(storage);
+    public SMutableArray(final Object storage, final SClass clazz) {
+      super(storage, clazz);
     }
 
     /**
@@ -195,12 +202,7 @@ public abstract class SArray extends SAbstractObject {
         newArr = Arrays.copyOf(s, s.length + 1);
         newArr[s.length] = value;
       }
-      return new SMutableArray(newArr);
-    }
-
-    @Override
-    public SClass getSOMClass() {
-      return Classes.arrayClass;
+      return new SMutableArray(newArr, clazz);
     }
 
     @Override
@@ -295,22 +297,17 @@ public abstract class SArray extends SAbstractObject {
 
   public static final class SImmutableArray extends SArray {
 
-    public SImmutableArray(final long length) { super(length); }
-    public SImmutableArray(final Object storage) { super(storage); }
-
-    @Override
-    public SClass getSOMClass() {
-      return Classes.valueArrayClass;
-    }
+    public SImmutableArray(final long length, final SClass clazz) { super(length, clazz); }
+    public SImmutableArray(final Object storage, final SClass clazz) { super(storage, clazz); }
 
     @Override
     public boolean isValue() { return true; }
   }
 
   public static final class STransferArray extends SMutableArray {
-    public STransferArray(final long length) { super(length); }
-    public STransferArray(final Object storage) { super(storage); }
-    public STransferArray(final STransferArray old) { super(cloneStorage(old)); }
+    public STransferArray(final long length, final SClass clazz) { super(length, clazz); }
+    public STransferArray(final Object storage, final SClass clazz) { super(storage, clazz); }
+    public STransferArray(final STransferArray old, final SClass clazz) { super(cloneStorage(old), clazz); }
 
     private static Object cloneStorage(final STransferArray old) {
       if (old.isEmptyType()) {
@@ -333,12 +330,7 @@ public abstract class SArray extends SAbstractObject {
     }
 
     public STransferArray cloneBasics() {
-      return new STransferArray(this);
-    }
-
-    @Override
-    public SClass getSOMClass() {
-      return Classes.transferArrayClass;
+      return new STransferArray(this, clazz);
     }
   }
 }

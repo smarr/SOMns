@@ -58,6 +58,7 @@ public final class SClass extends SObjectWithClass {
   @CompilationFinal private MixinDefinition mixinDef;
   @CompilationFinal private boolean declaredAsValue;
   @CompilationFinal private boolean isTransferObject; // is a kind of TransferObject (subclass or TObj directly)
+  @CompilationFinal private boolean isArray; // is a subclass of Array
 
   @CompilationFinal private ClassFactory instanceClassGroup; // the factory for this object
 
@@ -113,6 +114,10 @@ public final class SClass extends SObjectWithClass {
     return isTransferObject;
   }
 
+  public boolean isArray() {
+    return isArray;
+  }
+
   @Override
   public boolean isValue() {
     return enclosingObject.isValue();
@@ -126,6 +131,7 @@ public final class SClass extends SObjectWithClass {
       final HashSet<SlotDefinition> slots,
       final HashMap<SSymbol, Dispatchable> dispatchables,
       final boolean declaredAsValue, final boolean isTransferObject,
+      final boolean isArray,
       final ClassFactory classFactory) {
     assert slots == null || slots.size() > 0;
 
@@ -134,6 +140,7 @@ public final class SClass extends SObjectWithClass {
     this.dispatchables   = dispatchables;
     this.declaredAsValue = declaredAsValue;
     this.isTransferObject = isTransferObject;
+    this.isArray          = isArray;
     this.instanceClassGroup = classFactory;
     assert instanceClassGroup != null || !Bootstrap.isObjectSystemInitialized();
   }

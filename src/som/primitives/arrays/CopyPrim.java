@@ -13,31 +13,37 @@ public abstract class CopyPrim extends UnaryExpressionNode {
 
   @Specialization(guards = "receiver.isEmptyType()")
   public final SMutableArray doEmptyArray(final SMutableArray receiver) {
-    return new SMutableArray(receiver.getEmptyStorage(storageType));
+    assert !receiver.getSOMClass().isTransferObject() : "Not yet supported, need to instantiate another class";
+    return new SMutableArray(receiver.getEmptyStorage(storageType), receiver.getSOMClass());
   }
 
   @Specialization(guards = "receiver.isPartiallyEmptyType()")
   public final SMutableArray doPartiallyEmptyArray(final SMutableArray receiver) {
-    return new SMutableArray(receiver.getPartiallyEmptyStorage(storageType).copy());
+    assert !receiver.getSOMClass().isTransferObject() : "Not yet supported, need to instantiate another class";
+    return new SMutableArray(receiver.getPartiallyEmptyStorage(storageType).copy(), receiver.getSOMClass());
   }
 
   @Specialization(guards = "receiver.isObjectType()")
   public final SMutableArray doObjectArray(final SMutableArray receiver) {
-    return new SMutableArray(receiver.getObjectStorage(storageType).clone());
+    assert !receiver.getSOMClass().isTransferObject() : "Not yet supported, need to instantiate another class";
+    return new SMutableArray(receiver.getObjectStorage(storageType).clone(), receiver.getSOMClass());
   }
 
   @Specialization(guards = "receiver.isLongType()")
   public final SMutableArray doLongArray(final SMutableArray receiver) {
-    return new SMutableArray(receiver.getLongStorage(storageType).clone());
+    assert !receiver.getSOMClass().isTransferObject() : "Not yet supported, need to instantiate another class";
+    return new SMutableArray(receiver.getLongStorage(storageType).clone(), receiver.getSOMClass());
   }
 
   @Specialization(guards = "receiver.isDoubleType()")
   public final SMutableArray doDoubleArray(final SMutableArray receiver) {
-    return new SMutableArray(receiver.getDoubleStorage(storageType).clone());
+    assert !receiver.getSOMClass().isTransferObject() : "Not yet supported, need to instantiate another class";
+    return new SMutableArray(receiver.getDoubleStorage(storageType).clone(), receiver.getSOMClass());
   }
 
   @Specialization(guards = "receiver.isBooleanType()")
   public final SMutableArray doBooleanArray(final SMutableArray receiver) {
-    return new SMutableArray(receiver.getBooleanStorage(storageType).clone());
+    assert !receiver.getSOMClass().isTransferObject() : "Not yet supported, need to instantiate another class";
+    return new SMutableArray(receiver.getBooleanStorage(storageType).clone(), receiver.getSOMClass());
   }
 }

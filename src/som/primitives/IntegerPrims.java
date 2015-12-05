@@ -5,6 +5,7 @@ import java.math.BigInteger;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.arithmetic.ArithmeticPrim;
+import som.vm.constants.Classes;
 import som.vmobjects.SArray.SMutableArray;
 import som.vmobjects.SSymbol;
 
@@ -98,7 +99,7 @@ public abstract class IntegerPrims {
       for (int i = 0; i < cnt; i++) {
         arr[i] = i + receiver;
       }
-      return new SMutableArray(arr);
+      return new SMutableArray(arr, Classes.arrayClass);
     }
   }
 

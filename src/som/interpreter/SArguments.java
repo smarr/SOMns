@@ -1,5 +1,6 @@
 package som.interpreter;
 
+import som.vm.constants.Classes;
 import som.vmobjects.SArray.SImmutableArray;
 
 import com.oracle.truffle.api.frame.Frame;
@@ -31,9 +32,9 @@ public final class SArguments {
     assert arguments.length >= 1;  // <- that's the receiver
     Object[] argsArr = new Object[arguments.length - 1];
     if (argsArr.length == 0) {
-      return new SImmutableArray(0);
+      return new SImmutableArray(0, Classes.valueArrayClass);
     }
     System.arraycopy(arguments, 1, argsArr, 0, argsArr.length);
-    return new SImmutableArray(argsArr);
+    return new SImmutableArray(argsArr, Classes.valueArrayClass);
   }
 }

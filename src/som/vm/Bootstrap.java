@@ -373,18 +373,18 @@ public final class Bootstrap {
 
        topDef.initializeClass(Classes.topClass, null);  // Top doesn't have a super class
      thingDef.initializeClass(Classes.thingClass,  Classes.topClass);
-     valueDef.initializeClass(Classes.valueClass,  Classes.thingClass, true, false);
+     valueDef.initializeClass(Classes.valueClass,  Classes.thingClass, true, false, false);
     objectDef.initializeClass(Classes.objectClass, Classes.thingClass);
      classDef.initializeClass(Classes.classClass,  Classes.objectClass);
-  transferDef.initializeClass(Classes.transferClass, Classes.objectClass, false, true);
+  transferDef.initializeClass(Classes.transferClass, Classes.objectClass, false, true, false);
 
  metaclassDef.initializeClass(Classes.metaclassClass, Classes.classClass);
        nilDef.initializeClass(Classes.nilClass,    Classes.valueClass);
 
 arrayReadMixinDef.initializeClass(Classes.arrayReadMixinClass, Classes.objectClass);
-     arrayDef.initializeClass(Classes.arrayClass,   new SClass[] {Classes.objectClass, Classes.arrayReadMixinClass});
-valueArrayDef.initializeClass(Classes.valueArrayClass, new SClass[] {Classes.valueClass, Classes.arrayReadMixinClass});
-transferArrayDef.initializeClass(Classes.transferArrayClass, new SClass[] {Classes.arrayClass, Classes.transferClass});
+     arrayDef.initializeClass(Classes.arrayClass,   new SClass[] {Classes.objectClass, Classes.arrayReadMixinClass}, false, false, true);
+valueArrayDef.initializeClass(Classes.valueArrayClass, new SClass[] {Classes.valueClass, Classes.arrayReadMixinClass}, false, false, true);
+transferArrayDef.initializeClass(Classes.transferArrayClass, new SClass[] {Classes.arrayClass, Classes.transferClass}, false, false, true);
    integerDef.initializeClass(Classes.integerClass, Classes.valueClass);
     stringDef.initializeClass(Classes.stringClass,  Classes.valueClass);
     doubleDef.initializeClass(Classes.doubleClass,  Classes.valueClass);

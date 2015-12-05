@@ -84,6 +84,7 @@ import som.vm.NotYetImplementedException;
 import som.vm.constants.Classes;
 import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
+import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerAsserts;
@@ -330,9 +331,7 @@ public final class MessageSendNode {
           }
           break;
         case "new:":
-          if (arguments[0] == Classes.arrayClass ||
-              arguments[0] == Classes.valueArrayClass ||
-              arguments[0] == Classes.transferArrayClass) {
+          if (arguments[0] instanceof SClass && ((SClass) arguments[0]).isArray()) {
             return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
                 argumentNodes[1],
                 NewPrimFactory.create(null, null)));
