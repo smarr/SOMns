@@ -9,7 +9,6 @@ import som.interpreter.objectstorage.StorageLocation;
 import som.interpreter.objectstorage.StorageLocation.GeneralizeStorageLocationException;
 import som.interpreter.objectstorage.StorageLocation.UninitalizedStorageLocationException;
 import som.vm.NotYetImplementedException;
-import som.vm.constants.Classes;
 import som.vm.constants.Nil;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray;
@@ -51,7 +50,7 @@ public final class TransferObject {
   public static SObject transfer(final SObject obj, final Actor origin,
       final Actor target,
       final Map<SAbstractObject, SAbstractObject> transferedObjects) {
-    assert obj.getSOMClass().isKindOf(Classes.transferClass) : "only TransferObjects should be handled here";
+    assert obj.getSOMClass().isTransferObject() : "only TransferObjects should be handled here";
     assert !obj.isValue() : "TransferObjects can't be Values";
 
     ObjectLayout layout = obj.getObjectLayout();
