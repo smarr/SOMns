@@ -22,8 +22,9 @@ class CollectionTests usingPlatform: platform testFramework: minitest = (
 | private TestContext = minitest TestContext.
   private Set         = platform collections Set.
   private Array       = platform kernel Array.
-  private Vector      = platform kernel Vector. |
-)(
+  private Vector      = platform kernel Vector.
+  private ObjectMirror= platform mirrors ObjectMirror.
+|)(
   public class ArrayTest = TestContext (
     | a = Array new: 3. |
     a at: 1 put: 'hello'.
@@ -136,6 +137,68 @@ class CollectionTests usingPlatform: platform testFramework: minitest = (
       o := Object new.
       arr at: 2 put: o.
       self assert: o is: (arr at: 2).
+    )
+  ) : (
+    TEST_CONTEXT = ()
+  )
+  
+  public class ArrayInheritanceTest = TestContext ()(
+    class MyArray new: size = Array new: size ()()
+    
+    class CustomMethodsArray new: size = Array new: size ()(
+      public add1And2 = (
+        ^ (at: 1) + (at: 2)
+      )
+    )
+    
+    class CustomFieldsArray new: size = Array new: size (
+    | public foo ::= 0.
+      public bar ::= #bar.
+    |)()
+
+    public testBasicMyArray = (
+      | arr |
+      arr := MyArray new: 10.
+      assert: arr size equals: 10.
+      assert: #MyArray equals: (ObjectMirror reflecting: arr) className.
+    )
+    
+    public testCopyMyArray = (
+      | arr cpy |
+      arr := MyArray new: 2.
+      arr at: 1 put: 11.
+      arr at: 2 put: 22.
+      
+      cpy := arr copy.
+      assert: #MyArray equals: (ObjectMirror reflecting: arr) className.
+      deny: cpy == arr.
+      assert: 11 equals: (cpy at: 1).
+      assert: 22 equals: (cpy at: 2).
+    )
+    
+    public testCustomMethods = (
+      | arr |
+      arr := CustomMethodsArray new: 3.
+      arr at: 1 put: 33.
+      arr at: 2 put: 17.
+      
+      assert: 50 equals: arr add1And2.
+    )
+    
+    public testDEACTIVATEDCustomFields = (
+      | arr |
+      (*
+      arr := CustomFieldsArray new: 10.
+      assert: 0    equals: arr foo.
+      assert: #bar equals: arr bar.
+
+      arr foo: 4.
+      arr bar: #barbar.
+
+      assert: 4    equals: arr foo.
+      assert: #barbar equals: arr bar. *)
+      'Process DEACTIVATED tests.' println.
+      ^ self
     )
   ) : (
     TEST_CONTEXT = ()
