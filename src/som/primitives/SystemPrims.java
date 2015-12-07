@@ -1,5 +1,6 @@
 package som.primitives;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -7,6 +8,7 @@ import som.VM;
 import som.compiler.MixinDefinition;
 import som.interpreter.Invokable;
 import som.interpreter.Method;
+import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vm.Bootstrap;
 import som.vm.constants.Classes;
@@ -39,20 +41,35 @@ public final class SystemPrims {
     }
   }
 
+  public static final Object loadModule(final String path) {
+    MixinDefinition module;
+    try {
+      module = Bootstrap.loadModule(path);
+      return module.instantiateModuleClass();
+    } catch (IOException e) {
+      // TODO convert to SOM exception when we support them
+      e.printStackTrace();
+    }
+    return Nil.nilObject;
+  }
+
   @GenerateNodeFactory
   @Primitive("load:")
   public abstract static class LoadPrim extends UnaryExpressionNode {
     @Specialization
     public final Object doSObject(final String moduleName) {
-      MixinDefinition module;
-      try {
-        module = Bootstrap.loadModule(moduleName);
-        return module.instantiateModuleClass();
-      } catch (IOException e) {
-        // TODO convert to SOM exception when we support them
-        e.printStackTrace();
-      }
-      return Nil.nilObject;
+      return loadModule(moduleName);
+    }
+  }
+
+  @GenerateNodeFactory
+  @Primitive("load:nextTo:")
+  public abstract static class LoadNextToPrim extends BinaryExpressionNode {
+    @Specialization
+    public final Object load(final String filename, final SObjectWithClass moduleObj) {
+      String path = moduleObj.getSOMClass().getMixinDefinition().getSourceSection().getSource().getPath();
+      File file = new File(path);
+      return loadModule(file.getParent() + File.separator + filename);
     }
   }
 
