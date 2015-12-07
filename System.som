@@ -30,6 +30,7 @@ class System usingVmMirror: vmMirror = Value (
   'VM'
   public arguments    = ( ^ vmMirror vmArguments: nil )
   public loadModule: filename = ( ^ vmMirror load: filename )
+  public loadModule: filename nextTo: moduleObj = ( ^ vmMirror load: filename nextTo: moduleObj )
   
   'Printing'
   public printString: string = ( vmMirror printString: string )

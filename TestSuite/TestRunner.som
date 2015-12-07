@@ -2,7 +2,7 @@ class TestRunner usingPlatform: platform = (
 | private platform = platform.
   private system   = platform system.
   private actors   = platform actors.
-  private minitest = (system loadModule: 'core-lib/TestSuite/Minitest.som') usingPlatform: platform.
+  private minitest = (system loadModule: 'Minitest.som' nextTo: self) usingPlatform: platform.
 |
 )(
 
@@ -101,7 +101,7 @@ class TestRunner usingPlatform: platform = (
     allSuccessful := true.
     allTestsDonePromise := actors async: modules do: [:m |
       | testModule |
-      testModule := (system loadModule: 'core-lib/TestSuite/' + m + '.som')
+      testModule := (system loadModule: m + '.som' nextTo: self)
                       usingPlatform: platform testFramework: minitest.
       m println.
       (runAllTests: testModule)

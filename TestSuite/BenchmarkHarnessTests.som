@@ -1,6 +1,6 @@
 class LanguageTests usingPlatform: platform testFramework: minitest = (
 | private TestContext = minitest TestContext.
-  private harness     = (platform system loadModule: 'core-lib/Benchmarks/Harness.som') usingPlatform: platform.
+  private harness     = (platform system loadModule: '../Benchmarks/Harness.som' nextTo: self) usingPlatform: platform.
   private Random      = harness Random.
   private JenkinsRandom = harness JenkinsRandom.
 |

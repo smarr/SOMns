@@ -20,7 +20,7 @@ THE SOFTWARE.
 *)
 class AllBenchmarks usingPlatform: platform = (
 | private platform = platform.
-  private harness  = (platform system loadModule: 'core-lib/Benchmarks/Harness.som') usingPlatform: platform.
+  private harness  = (platform system loadModule: 'Harness.som' nextTo: self) usingPlatform: platform.
   private system   = platform system.
   private ObjectMirror = platform mirrors ObjectMirror.
   private Run      = harness Run.
@@ -78,8 +78,8 @@ class AllBenchmarks usingPlatform: platform = (
   
   loadModule: name = (
     | file cls |
-    file  := 'core-lib/Benchmarks/' + name + '.som'.
-    cls   := system loadModule: file.
+    file  := name + '.som'.
+    cls   := system loadModule: file nextTo: self.
     ^ cls usingPlatform: platform andHarness: harness.
   )
 

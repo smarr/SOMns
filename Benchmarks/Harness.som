@@ -213,8 +213,8 @@ class Harness usingPlatform: platform = (
 
   loadModule: className = (
     | file cls |
-    file := 'core-lib/Benchmarks/' + className + '.som'.
-    cls := system loadModule: file.
+    file := className + '.som'.
+    cls := system loadModule: file nextTo: self.
     cls ifNil: [
         self error: 'Failed loading benchmark: ' + className ].
     ^ cls usingPlatform: platform andHarness: self.

@@ -3,10 +3,10 @@ class Platform usingVmMirror: vmMirror = Value (
      elements required for execution, and afterwards processes the command line
      arguments to start the application code. *)
 | public kernel  = vmMirror kernelObject: nil.
-  public system  = (vmMirror load: 'core-lib/System.som')  usingVmMirror: vmMirror.
-  public mirrors = (vmMirror load: 'core-lib/Mirrors.som') usingVmMirror: vmMirror.
-  public actors      = (vmMirror load: 'core-lib/Actors.som') usingVmMirror: vmMirror usingKernel: kernel.
-  public collections = (vmMirror load: 'core-lib/Collections.som') usingKernel: kernel.
+  public system  = (vmMirror load: 'System.som' nextTo: self)  usingVmMirror: vmMirror.
+  public mirrors = (vmMirror load: 'Mirrors.som' nextTo: self) usingVmMirror: vmMirror.
+  public actors      = (vmMirror load: 'Actors.som' nextTo: self) usingVmMirror: vmMirror usingKernel: kernel.
+  public collections = (vmMirror load: 'Collections.som' nextTo: self) usingKernel: kernel.
 |
 )(
   (* start executes the application code and returns an integer as error code *)
