@@ -17,5 +17,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/com.oracle.truffle.dsl.processor"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/com.oracle.truffle.object"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/com.oracle.truffle.object.basic"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/com.oracle.truffle.tck"/>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>
