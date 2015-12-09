@@ -41,7 +41,7 @@ public final class SystemPrims {
     }
   }
 
-  public static final Object loadModule(final String path) {
+  public static Object loadModule(final String path) {
     MixinDefinition module;
     try {
       module = Bootstrap.loadModule(path);
