@@ -769,10 +769,9 @@ class Kernel vmMirror: vmMirror = Object <: Value (
           IndexOutOfBounds signalWith: self index: index
         ].
     )
-    
-    'DeltaBlue'
+
     public removeFirst = (
-      self isEmpty ifTrue: [ self error: 'OrderedCollection is empty' ].
+      self isEmpty ifTrue: [ self error: 'Vector is empty' ].
       firstIdx := firstIdx + 1.
       ^ storage at: firstIdx - 1
     )
