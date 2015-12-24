@@ -279,14 +279,14 @@ public abstract class FieldAccessorNode extends Node {
     }
 
     protected final void writeAndRespecialize(final SObject obj, final Object value,
-        final String reason, final AbstractWriteFieldNode next) {
+        final String reason, final AbstractWriteFieldNode next, final boolean locationWasSet) {
       TruffleCompiler.transferToInterpreterAndInvalidate(reason);
 
       obj.setField(slot, value);
 
       final ObjectLayout layout = obj.getObjectLayout();
       final StorageLocation location = layout.getStorageLocation(slot);
-      AbstractWriteFieldNode newNode = location.getWriteNode(slot, layout, next, location.isSet(obj));
+      AbstractWriteFieldNode newNode = location.getWriteNode(slot, layout, next, locationWasSet);
       replace(newNode, reason);
     }
   }
@@ -300,7 +300,7 @@ public abstract class FieldAccessorNode extends Node {
     public Object write(final SObject obj, final Object value) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       writeAndRespecialize(obj, value, "initialize write field node",
-          new UninitializedWriteFieldNode(slot));
+          new UninitializedWriteFieldNode(slot), false);
       return value;
     }
   }
@@ -337,7 +337,7 @@ public abstract class FieldAccessorNode extends Node {
         storage.writeLongSet(obj, value);
       } else {
         if (layout.layoutForSameClasses(obj.getObjectLayout())) {
-          writeAndRespecialize(obj, value, "update outdated write node", nextInCache);
+          writeAndRespecialize(obj, value, "update outdated write node", nextInCache, storage.isSet(obj));
         } else {
           nextInCache.write(obj, value);
         }
@@ -351,7 +351,7 @@ public abstract class FieldAccessorNode extends Node {
         write(obj, (long) value);
       } else {
         if (layout.layoutForSameClasses(obj.getObjectLayout())) {
-          writeAndRespecialize(obj, value, "update outdated read node", nextInCache);
+          writeAndRespecialize(obj, value, "update outdated read node", nextInCache, storage.isSet(obj));
         } else {
           nextInCache.write(obj, value);
         }
@@ -376,7 +376,7 @@ public abstract class FieldAccessorNode extends Node {
         storage.markAsSet(obj);
       } else {
         if (layout.layoutForSameClasses(obj.getObjectLayout())) {
-          writeAndRespecialize(obj, value, "update outdated write node", nextInCache);
+          writeAndRespecialize(obj, value, "update outdated write node", nextInCache, false);
         } else {
           nextInCache.write(obj, value);
         }
@@ -390,7 +390,7 @@ public abstract class FieldAccessorNode extends Node {
         write(obj, (long) value);
       } else {
         if (layout.layoutForSameClasses(obj.getObjectLayout())) {
-          writeAndRespecialize(obj, value, "update outdated read node", nextInCache);
+          writeAndRespecialize(obj, value, "update outdated read node", nextInCache, storage.isSet(obj));
         } else {
           nextInCache.write(obj, value);
         }
@@ -414,7 +414,7 @@ public abstract class FieldAccessorNode extends Node {
         storage.writeDoubleSet(obj, value);
       } else {
         if (layout.layoutForSameClasses(obj.getObjectLayout())) {
-          writeAndRespecialize(obj, value, "update outdated read node", nextInCache);
+          writeAndRespecialize(obj, value, "update outdated read node", nextInCache, storage.isSet(obj));
         } else {
           nextInCache.write(obj, value);
         }
@@ -428,7 +428,7 @@ public abstract class FieldAccessorNode extends Node {
         write(obj, (double) value);
       } else {
         if (layout.layoutForSameClasses(obj.getObjectLayout())) {
-          writeAndRespecialize(obj, value, "update outdated read node", nextInCache);
+          writeAndRespecialize(obj, value, "update outdated read node", nextInCache, storage.isSet(obj));
         } else {
           nextInCache.write(obj, value);
         }
@@ -453,7 +453,7 @@ public abstract class FieldAccessorNode extends Node {
         storage.markAsSet(obj);
       } else {
         if (layout.layoutForSameClasses(obj.getObjectLayout())) {
-          writeAndRespecialize(obj, value, "update outdated read node", nextInCache);
+          writeAndRespecialize(obj, value, "update outdated read node", nextInCache, false);
         } else {
           nextInCache.write(obj, value);
         }
@@ -467,7 +467,7 @@ public abstract class FieldAccessorNode extends Node {
         write(obj, (double) value);
       } else {
         if (layout.layoutForSameClasses(obj.getObjectLayout())) {
-          writeAndRespecialize(obj, value, "update outdated read node", nextInCache);
+          writeAndRespecialize(obj, value, "update outdated read node", nextInCache, storage.isSet(obj));
         } else {
           nextInCache.write(obj, value);
         }
@@ -491,7 +491,7 @@ public abstract class FieldAccessorNode extends Node {
         storage.write(obj, value);
       } else {
         if (layout.layoutForSameClasses(obj.getObjectLayout())) {
-          writeAndRespecialize(obj, value, "update outdated read node", nextInCache);
+          writeAndRespecialize(obj, value, "update outdated read node", nextInCache, false);
         } else {
           nextInCache.write(obj, value);
         }
