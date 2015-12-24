@@ -305,7 +305,8 @@ public abstract class FieldAccessorNode extends Node {
     public Object write(final SObject obj, final Object value) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       writeAndRespecialize(obj, value, "initialize write field node",
-          new UninitializedWriteFieldNode(slot), false);
+          new UninitializedWriteFieldNode(slot),
+          obj.getObjectLayout().getStorageLocation(slot).isSet(obj));
       return value;
     }
   }
