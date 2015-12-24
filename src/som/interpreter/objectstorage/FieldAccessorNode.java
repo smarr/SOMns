@@ -268,6 +268,11 @@ public abstract class FieldAccessorNode extends Node {
 
     public abstract Object write(SObject obj, Object value);
 
+    @Override
+    public final String toString() {
+      return getClass().getSimpleName() + "[" + slot.getName().getString() + "]";
+    }
+
     public long write(final SObject obj, final long value) {
       write(obj, (Object) value);
       return value;

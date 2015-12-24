@@ -144,5 +144,10 @@ public abstract class FieldNode extends ExpressionNode {
         final Object value) {
       return executeEvaluated(frame, self, value);
     }
+
+    @Override
+    public final String toString() {
+      return "FieldWriteNode[slot=" + write.getSlot().getName().getString() + "]";
+    }
   }
 }
