@@ -6,19 +6,22 @@ import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.TruffleCompiler;
 import som.interpreter.objectstorage.FieldAccessorNode.AbstractReadFieldNode;
 import som.interpreter.objectstorage.FieldAccessorNode.AbstractWriteFieldNode;
-import som.interpreter.objectstorage.FieldAccessorNode.ReadDoubleFieldNode;
-import som.interpreter.objectstorage.FieldAccessorNode.ReadLongFieldNode;
 import som.interpreter.objectstorage.FieldAccessorNode.ReadObjectFieldNode;
+import som.interpreter.objectstorage.FieldAccessorNode.ReadSetDoubleFieldNode;
+import som.interpreter.objectstorage.FieldAccessorNode.ReadSetLongFieldNode;
+import som.interpreter.objectstorage.FieldAccessorNode.ReadSetOrUnsetDoubleFieldNode;
+import som.interpreter.objectstorage.FieldAccessorNode.ReadSetOrUnsetLongFieldNode;
 import som.interpreter.objectstorage.FieldAccessorNode.ReadUnwrittenFieldNode;
-import som.interpreter.objectstorage.FieldAccessorNode.WriteDoubleFieldNode;
-import som.interpreter.objectstorage.FieldAccessorNode.WriteLongFieldNode;
 import som.interpreter.objectstorage.FieldAccessorNode.WriteObjectFieldNode;
+import som.interpreter.objectstorage.FieldAccessorNode.WriteSetDoubleFieldNode;
+import som.interpreter.objectstorage.FieldAccessorNode.WriteSetLongFieldNode;
+import som.interpreter.objectstorage.FieldAccessorNode.WriteSetOrUnsetDoubleFieldNode;
+import som.interpreter.objectstorage.FieldAccessorNode.WriteSetOrUnsetLongFieldNode;
 import som.vm.constants.Nil;
 import som.vmobjects.SObject;
 import sun.misc.Unsafe;
 
 import com.oracle.truffle.api.CompilerAsserts;
-import com.oracle.truffle.api.nodes.UnexpectedResultException;
 
 
 public abstract class StorageLocation {
@@ -44,13 +47,17 @@ public abstract class StorageLocation {
   }
 
   public interface LongStorageLocation {
-    long readLong(final SObject obj) throws UnexpectedResultException;
-    void writeLong(final SObject obj, final long value);
+    boolean isSet(SObject obj);
+    void markAsSet(SObject obj);
+    long readLongSet(final SObject obj);
+    void writeLongSet(final SObject obj, final long value);
   }
 
   public interface DoubleStorageLocation {
-    double readDouble(final SObject obj) throws UnexpectedResultException;
-    void   writeDouble(final SObject obj, final double value);
+    boolean isSet(SObject obj);
+    void markAsSet(SObject obj);
+    double readDoubleSet(final SObject obj);
+    void   writeDoubleSet(final SObject obj, final double value);
   }
 
   public static StorageLocation createForLong(final ObjectLayout layout,
@@ -100,9 +107,9 @@ public abstract class StorageLocation {
   public abstract void    write(SObject obj, Object value) throws GeneralizeStorageLocationException, UninitalizedStorageLocationException;
 
   public abstract AbstractReadFieldNode  getReadNode(SlotDefinition slot,
-      ObjectLayout layout, AbstractReadFieldNode next);
+      ObjectLayout layout, AbstractReadFieldNode next, boolean isSet);
   public abstract AbstractWriteFieldNode getWriteNode(SlotDefinition slot,
-      ObjectLayout layout, AbstractWriteFieldNode next);
+      ObjectLayout layout, AbstractWriteFieldNode next, boolean isSet);
 
   public final class GeneralizeStorageLocationException extends Exception {
     private static final long serialVersionUID = 4610497040788136337L;
@@ -141,14 +148,14 @@ public abstract class StorageLocation {
 
     @Override
     public AbstractReadFieldNode getReadNode(final SlotDefinition slot,
-        final ObjectLayout layout, final AbstractReadFieldNode next) {
+        final ObjectLayout layout, final AbstractReadFieldNode next, final boolean isSet) {
       CompilerAsserts.neverPartOfCompilation("StorageLocation");
       return new ReadUnwrittenFieldNode(slot, layout, next);
     }
 
     @Override
     public AbstractWriteFieldNode getWriteNode(final SlotDefinition slot,
-        final ObjectLayout layout, final AbstractWriteFieldNode next) {
+        final ObjectLayout layout, final AbstractWriteFieldNode next, final boolean isSet) {
       CompilerAsserts.neverPartOfCompilation("StorageLocation");
       throw new RuntimeException("we should not get here, should we?");
       // return new UninitializedWriteFieldNode(fieldIndex);
@@ -170,14 +177,14 @@ public abstract class StorageLocation {
 
     @Override
     public final AbstractReadFieldNode getReadNode(final SlotDefinition slot,
-        final ObjectLayout layout, final AbstractReadFieldNode next) {
+        final ObjectLayout layout, final AbstractReadFieldNode next, final boolean isSet) {
       CompilerAsserts.neverPartOfCompilation("StorageLocation");
       return new ReadObjectFieldNode(slot, layout, next);
     }
 
     @Override
     public final AbstractWriteFieldNode getWriteNode(final SlotDefinition slot,
-        final ObjectLayout layout, final AbstractWriteFieldNode next) {
+        final ObjectLayout layout, final AbstractWriteFieldNode next, final boolean isSet) {
       CompilerAsserts.neverPartOfCompilation("StorageLocation");
       return new WriteObjectFieldNode(slot, layout, next);
     }
@@ -270,7 +277,7 @@ public abstract class StorageLocation {
       return false;
     }
 
-    protected final void markAsSet(final SObject obj) {
+    public final void markAsSet(final SObject obj) {
       obj.markPrimAsSet(mask);
     }
   }
@@ -291,21 +298,16 @@ public abstract class StorageLocation {
 
     @Override
     public Object read(final SObject obj) {
-      try {
-        return readDouble(obj);
-      } catch (UnexpectedResultException e) {
-        return e.getResult();
+      if (isSet(obj)) {
+        return readDoubleSet(obj);
+      } else {
+        return Nil.nilObject;
       }
     }
 
     @Override
-    public double readDouble(final SObject obj) throws UnexpectedResultException {
-      if (isSet(obj)) {
-        return unsafe.getDouble(obj, offset);
-      } else {
-        TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized read node");
-        throw new UnexpectedResultException(Nil.nilObject);
-      }
+    public double readDoubleSet(final SObject obj) {
+      return unsafe.getDouble(obj, offset);
     }
 
     @Override
@@ -313,7 +315,8 @@ public abstract class StorageLocation {
         throws GeneralizeStorageLocationException {
       assert value != null;
       if (value instanceof Double) {
-        writeDouble(obj, (double) value);
+        writeDoubleSet(obj, (double) value);
+        markAsSet(obj);
       } else {
         assert value != Nil.nilObject;
         TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized read node");
@@ -322,23 +325,30 @@ public abstract class StorageLocation {
     }
 
     @Override
-    public void writeDouble(final SObject obj, final double value) {
+    public void writeDoubleSet(final SObject obj, final double value) {
       unsafe.putDouble(obj, offset, value);
-      markAsSet(obj);
     }
 
     @Override
     public AbstractReadFieldNode getReadNode(final SlotDefinition slot,
-        final ObjectLayout layout, final AbstractReadFieldNode next) {
+        final ObjectLayout layout, final AbstractReadFieldNode next, final boolean isSet) {
       CompilerAsserts.neverPartOfCompilation("StorageLocation");
-      return new ReadDoubleFieldNode(slot, layout, next);
+      if (isSet) {
+        return new ReadSetDoubleFieldNode(slot, layout, next);
+      } else {
+        return new ReadSetOrUnsetDoubleFieldNode(slot, layout, next);
+      }
     }
 
     @Override
     public AbstractWriteFieldNode getWriteNode(final SlotDefinition slot,
-        final ObjectLayout layout, final AbstractWriteFieldNode next) {
+        final ObjectLayout layout, final AbstractWriteFieldNode next, final boolean isSet) {
       CompilerAsserts.neverPartOfCompilation("StorageLocation");
-      return new WriteDoubleFieldNode(slot, layout, next);
+      if (isSet) {
+        return new WriteSetDoubleFieldNode(slot, layout, next);
+      } else {
+        return new WriteSetOrUnsetDoubleFieldNode(slot, layout, next);
+      }
     }
   }
 
@@ -350,28 +360,24 @@ public abstract class StorageLocation {
 
     @Override
     public Object read(final SObject obj) {
-      try {
-        return readLong(obj);
-      } catch (UnexpectedResultException e) {
-        return e.getResult();
+      if (isSet(obj)) {
+        return readLongSet(obj);
+      } else {
+        return Nil.nilObject;
       }
     }
 
     @Override
-    public long readLong(final SObject obj) throws UnexpectedResultException {
-      if (isSet(obj)) {
-        return unsafe.getLong(obj, offset);
-      } else {
-        TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized read node");
-        throw new UnexpectedResultException(Nil.nilObject);
-      }
+    public long readLongSet(final SObject obj) {
+      return unsafe.getLong(obj, offset);
     }
 
     @Override
     public void write(final SObject obj, final Object value) throws GeneralizeStorageLocationException {
       assert value != null;
       if (value instanceof Long) {
-        writeLong(obj, (long) value);
+        writeLongSet(obj, (long) value);
+        markAsSet(obj);
       } else {
         TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized write node");
         throw new GeneralizeStorageLocationException();
@@ -379,23 +385,30 @@ public abstract class StorageLocation {
     }
 
     @Override
-    public void writeLong(final SObject obj, final long value) {
+    public void writeLongSet(final SObject obj, final long value) {
       unsafe.putLong(obj, offset, value);
-      markAsSet(obj);
     }
 
     @Override
     public AbstractReadFieldNode getReadNode(final SlotDefinition slot,
-        final ObjectLayout layout, final AbstractReadFieldNode next) {
+        final ObjectLayout layout, final AbstractReadFieldNode next, final boolean isSet) {
       CompilerAsserts.neverPartOfCompilation("StorageLocation");
-      return new ReadLongFieldNode(slot, layout, next);
+      if (isSet) {
+        return new ReadSetLongFieldNode(slot, layout, next);
+      } else {
+        return new ReadSetOrUnsetLongFieldNode(slot, layout, next);
+      }
     }
 
     @Override
     public AbstractWriteFieldNode getWriteNode(final SlotDefinition slot,
-        final ObjectLayout layout, final AbstractWriteFieldNode next) {
+        final ObjectLayout layout, final AbstractWriteFieldNode next, final boolean isSet) {
       CompilerAsserts.neverPartOfCompilation("StorageLocation");
-      return new WriteLongFieldNode(slot, layout, next);
+      if (isSet) {
+        return new WriteSetLongFieldNode(slot, layout, next);
+      } else {
+        return new WriteSetOrUnsetLongFieldNode(slot, layout, next);
+      }
     }
   }
 
@@ -416,29 +429,24 @@ public abstract class StorageLocation {
 
     @Override
     public Object read(final SObject obj) {
-      try {
-        return readLong(obj);
-      } catch (UnexpectedResultException e) {
-        return e.getResult();
+      if (isSet(obj)) {
+        return readLongSet(obj);
+      } else {
+        return Nil.nilObject;
       }
     }
 
     @Override
-    public long readLong(final SObject obj) throws UnexpectedResultException {
-      if (isSet(obj)) {
-        // perhaps we should use the unsafe operations as for doubles
-        return obj.getExtendedPrimFields()[extensionIndex];
-      } else {
-        TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized read node");
-        throw new UnexpectedResultException(Nil.nilObject);
-      }
+    public long readLongSet(final SObject obj) {
+      return obj.getExtendedPrimFields()[extensionIndex];
     }
 
     @Override
     public void write(final SObject obj, final Object value) throws GeneralizeStorageLocationException {
       assert value != null;
       if (value instanceof Long) {
-        writeLong(obj, (long) value);
+        writeLongSet(obj, (long) value);
+        markAsSet(obj);
       } else {
         assert value != Nil.nilObject;
         TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized write node");
@@ -447,23 +455,30 @@ public abstract class StorageLocation {
     }
 
     @Override
-    public void writeLong(final SObject obj, final long value) {
+    public void writeLongSet(final SObject obj, final long value) {
       obj.getExtendedPrimFields()[extensionIndex] = value;
-      markAsSet(obj);
     }
 
     @Override
     public AbstractReadFieldNode getReadNode(final SlotDefinition slot,
-        final ObjectLayout layout, final AbstractReadFieldNode next) {
+        final ObjectLayout layout, final AbstractReadFieldNode next, final boolean isSet) {
       CompilerAsserts.neverPartOfCompilation("StorageLocation");
-      return new ReadLongFieldNode(slot, layout, next);
+      if (isSet) {
+        return new ReadSetLongFieldNode(slot, layout, next);
+      } else {
+        return new ReadSetOrUnsetLongFieldNode(slot, layout, next);
+      }
     }
 
     @Override
     public AbstractWriteFieldNode getWriteNode(final SlotDefinition slot,
-        final ObjectLayout layout, final AbstractWriteFieldNode next) {
+        final ObjectLayout layout, final AbstractWriteFieldNode next, final boolean isSet) {
       CompilerAsserts.neverPartOfCompilation("StorageLocation");
-      return new WriteLongFieldNode(slot, layout, next);
+      if (isSet) {
+        return new WriteSetLongFieldNode(slot, layout, next);
+      } else {
+        return new WriteSetOrUnsetLongFieldNode(slot, layout, next);
+      }
     }
   }
 
@@ -475,23 +490,18 @@ public abstract class StorageLocation {
 
     @Override
     public Object read(final SObject obj) {
-      try {
-        return readDouble(obj);
-      } catch (UnexpectedResultException e) {
-        return e.getResult();
+      if (isSet(obj)) {
+        return readDoubleSet(obj);
+      } else {
+        return Nil.nilObject;
       }
     }
 
     @Override
-    public double readDouble(final SObject obj) throws UnexpectedResultException {
-      if (isSet(obj)) {
-        long[] arr = obj.getExtendedPrimFields();
-        return unsafe.getDouble(arr,
-            (long) Unsafe.ARRAY_DOUBLE_BASE_OFFSET + Unsafe.ARRAY_DOUBLE_INDEX_SCALE * extensionIndex);
-      } else {
-        TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized read node");
-        throw new UnexpectedResultException(Nil.nilObject);
-      }
+    public double readDoubleSet(final SObject obj) {
+      long[] arr = obj.getExtendedPrimFields();
+      return unsafe.getDouble(arr,
+          (long) Unsafe.ARRAY_DOUBLE_BASE_OFFSET + Unsafe.ARRAY_DOUBLE_INDEX_SCALE * extensionIndex);
     }
 
     @Override
@@ -499,7 +509,8 @@ public abstract class StorageLocation {
         throws GeneralizeStorageLocationException {
       assert value != null;
       if (value instanceof Double) {
-        writeDouble(obj, (double) value);
+        writeDoubleSet(obj, (double) value);
+        markAsSet(obj);
       } else {
         assert value != Nil.nilObject;
         TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized write node");
@@ -508,27 +519,33 @@ public abstract class StorageLocation {
     }
 
     @Override
-    public void writeDouble(final SObject obj, final double value) {
+    public void writeDoubleSet(final SObject obj, final double value) {
       final long[] arr = obj.getExtendedPrimFields();
       unsafe.putDouble(arr,
           (long) Unsafe.ARRAY_DOUBLE_BASE_OFFSET + Unsafe.ARRAY_DOUBLE_INDEX_SCALE * this.extensionIndex,
           value);
-
-      markAsSet(obj);
     }
 
     @Override
     public AbstractReadFieldNode getReadNode(final SlotDefinition slot,
-        final ObjectLayout layout, final AbstractReadFieldNode next) {
+        final ObjectLayout layout, final AbstractReadFieldNode next, final boolean isSet) {
       CompilerAsserts.neverPartOfCompilation("StorageLocation");
-      return new ReadDoubleFieldNode(slot, layout, next);
+      if (isSet) {
+        return new ReadSetDoubleFieldNode(slot, layout, next);
+      } else {
+        return new ReadSetOrUnsetDoubleFieldNode(slot, layout, next);
+      }
     }
 
     @Override
     public AbstractWriteFieldNode getWriteNode(final SlotDefinition slot,
-        final ObjectLayout layout, final AbstractWriteFieldNode next) {
+        final ObjectLayout layout, final AbstractWriteFieldNode next, final boolean isSet) {
       CompilerAsserts.neverPartOfCompilation("StorageLocation");
-      return new WriteDoubleFieldNode(slot, layout, next);
+      if (isSet) {
+        return new WriteSetDoubleFieldNode(slot, layout, next);
+      } else {
+        return new WriteSetOrUnsetDoubleFieldNode(slot, layout, next);
+      }
     }
   }
 }

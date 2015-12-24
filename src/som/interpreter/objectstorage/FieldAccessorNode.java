@@ -60,7 +60,7 @@ public abstract class FieldAccessorNode extends Node {
       final ObjectLayout    layout   = obj.getObjectLayout();
       final StorageLocation location = layout.getStorageLocation(slot);
 
-      AbstractReadFieldNode newNode = location.getReadNode(slot, layout, next);
+      AbstractReadFieldNode newNode = location.getReadNode(slot, layout, next, location.isSet(obj));
       return replace(newNode, reason);
     }
   }
@@ -118,10 +118,10 @@ public abstract class FieldAccessorNode extends Node {
     }
   }
 
-  public static final class ReadLongFieldNode extends ReadSpecializedFieldNode {
+  public static final class ReadSetLongFieldNode extends ReadSpecializedFieldNode {
     private final LongStorageLocation storage;
 
-    public ReadLongFieldNode(final SlotDefinition slot,
+    public ReadSetLongFieldNode(final SlotDefinition slot,
         final ObjectLayout layout, final AbstractReadFieldNode next) {
       super(slot, layout, next);
       this.storage = (LongStorageLocation) layout.getStorageLocation(slot);
@@ -129,8 +129,8 @@ public abstract class FieldAccessorNode extends Node {
 
     @Override
     public long readLong(final SObject obj) throws UnexpectedResultException {
-      if (hasExpectedLayout(obj)) {
-        return storage.readLong(obj);
+      if (hasExpectedLayout(obj) && storage.isSet(obj)) {
+        return storage.readLongSet(obj);
       } else {
         return respecializedNodeOrNext(obj).
             readLong(obj);
@@ -147,10 +147,72 @@ public abstract class FieldAccessorNode extends Node {
     }
   }
 
-  public static final class ReadDoubleFieldNode extends ReadSpecializedFieldNode {
+  public static final class ReadSetOrUnsetLongFieldNode extends ReadSpecializedFieldNode {
+    private final LongStorageLocation storage;
+
+    public ReadSetOrUnsetLongFieldNode(final SlotDefinition slot,
+        final ObjectLayout layout, final AbstractReadFieldNode next) {
+      super(slot, layout, next);
+      this.storage = (LongStorageLocation) layout.getStorageLocation(slot);
+    }
+
+    @Override
+    public long readLong(final SObject obj) throws UnexpectedResultException {
+      if (hasExpectedLayout(obj)) {
+        if (storage.isSet(obj)) {
+          return storage.readLongSet(obj);
+        } else {
+          CompilerDirectives.transferToInterpreter();
+          throw new UnexpectedResultException(Nil.nilObject);
+        }
+      } else {
+        return respecializedNodeOrNext(obj).
+            readLong(obj);
+      }
+    }
+
+    @Override
+    public Object read(final SObject obj) {
+      try {
+        return readLong(obj);
+      } catch (UnexpectedResultException e) {
+        return e.getResult();
+      }
+    }
+  }
+
+  public static final class ReadSetDoubleFieldNode extends ReadSpecializedFieldNode {
     private final DoubleStorageLocation storage;
 
-    public ReadDoubleFieldNode(final SlotDefinition slot,
+    public ReadSetDoubleFieldNode(final SlotDefinition slot,
+        final ObjectLayout layout, final AbstractReadFieldNode next) {
+      super(slot, layout, next);
+      this.storage = (DoubleStorageLocation) layout.getStorageLocation(slot);
+    }
+
+    @Override
+    public double readDouble(final SObject obj) throws UnexpectedResultException {
+      if (hasExpectedLayout(obj) && storage.isSet(obj)) {
+        return storage.readDoubleSet(obj);
+      } else {
+        return respecializedNodeOrNext(obj).readDouble(obj);
+      }
+    }
+
+    @Override
+    public Object read(final SObject obj) {
+      try {
+        return readDouble(obj);
+      } catch (UnexpectedResultException e) {
+        return e.getResult();
+      }
+    }
+  }
+
+  public static final class ReadSetOrUnsetDoubleFieldNode extends ReadSpecializedFieldNode {
+    private final DoubleStorageLocation storage;
+
+    public ReadSetOrUnsetDoubleFieldNode(final SlotDefinition slot,
         final ObjectLayout layout, final AbstractReadFieldNode next) {
       super(slot, layout, next);
       this.storage = (DoubleStorageLocation) layout.getStorageLocation(slot);
@@ -159,7 +221,12 @@ public abstract class FieldAccessorNode extends Node {
     @Override
     public double readDouble(final SObject obj) throws UnexpectedResultException {
       if (hasExpectedLayout(obj)) {
-        return storage.readDouble(obj);
+        if (storage.isSet(obj)) {
+          return storage.readDoubleSet(obj);
+        } else {
+          CompilerDirectives.transferToInterpreter();
+          throw new UnexpectedResultException(Nil.nilObject);
+        }
       } else {
         return respecializedNodeOrNext(obj).readDouble(obj);
       }
@@ -219,7 +286,7 @@ public abstract class FieldAccessorNode extends Node {
 
       final ObjectLayout layout = obj.getObjectLayout();
       final StorageLocation location = layout.getStorageLocation(slot);
-      AbstractWriteFieldNode newNode = location.getWriteNode(slot, layout, next);
+      AbstractWriteFieldNode newNode = location.getWriteNode(slot, layout, next, location.isSet(obj));
       replace(newNode, reason);
     }
   }
@@ -255,10 +322,10 @@ public abstract class FieldAccessorNode extends Node {
     }
   }
 
-  public static final class WriteLongFieldNode extends WriteSpecializedFieldNode {
+  public static final class WriteSetLongFieldNode extends WriteSpecializedFieldNode {
     private final LongStorageLocation storage;
 
-    public WriteLongFieldNode(final SlotDefinition slot,
+    public WriteSetLongFieldNode(final SlotDefinition slot,
         final ObjectLayout layout, final AbstractWriteFieldNode next) {
       super(slot, layout, next);
       this.storage = (LongStorageLocation) layout.getStorageLocation(slot);
@@ -266,8 +333,8 @@ public abstract class FieldAccessorNode extends Node {
 
     @Override
     public long write(final SObject obj, final long value) {
-      if (hasExpectedLayout(obj)) {
-        storage.writeLong(obj, value);
+      if (hasExpectedLayout(obj) && storage.isSet(obj)) {
+        storage.writeLongSet(obj, value);
       } else {
         if (layout.layoutForSameClasses(obj.getObjectLayout())) {
           writeAndRespecialize(obj, value, "update outdated write node", nextInCache);
@@ -293,10 +360,87 @@ public abstract class FieldAccessorNode extends Node {
     }
   }
 
-  public static final class WriteDoubleFieldNode extends WriteSpecializedFieldNode {
+  public static final class WriteSetOrUnsetLongFieldNode extends WriteSpecializedFieldNode {
+    private final LongStorageLocation storage;
+
+    public WriteSetOrUnsetLongFieldNode(final SlotDefinition slot,
+        final ObjectLayout layout, final AbstractWriteFieldNode next) {
+      super(slot, layout, next);
+      this.storage = (LongStorageLocation) layout.getStorageLocation(slot);
+    }
+
+    @Override
+    public long write(final SObject obj, final long value) {
+      if (hasExpectedLayout(obj)) {
+        storage.writeLongSet(obj, value);
+        storage.markAsSet(obj);
+      } else {
+        if (layout.layoutForSameClasses(obj.getObjectLayout())) {
+          writeAndRespecialize(obj, value, "update outdated write node", nextInCache);
+        } else {
+          nextInCache.write(obj, value);
+        }
+      }
+      return value;
+    }
+
+    @Override
+    public Object write(final SObject obj, final Object value) {
+      if (value instanceof Long) {
+        write(obj, (long) value);
+      } else {
+        if (layout.layoutForSameClasses(obj.getObjectLayout())) {
+          writeAndRespecialize(obj, value, "update outdated read node", nextInCache);
+        } else {
+          nextInCache.write(obj, value);
+        }
+      }
+      return value;
+    }
+  }
+
+  public static final class WriteSetDoubleFieldNode extends WriteSpecializedFieldNode {
     private final DoubleStorageLocation storage;
 
-    public WriteDoubleFieldNode(final SlotDefinition slot,
+    public WriteSetDoubleFieldNode(final SlotDefinition slot,
+        final ObjectLayout layout, final AbstractWriteFieldNode next) {
+      super(slot, layout, next);
+      this.storage = (DoubleStorageLocation) layout.getStorageLocation(slot);
+    }
+
+    @Override
+    public double write(final SObject obj, final double value) {
+      if (hasExpectedLayout(obj) && storage.isSet(obj)) {
+        storage.writeDoubleSet(obj, value);
+      } else {
+        if (layout.layoutForSameClasses(obj.getObjectLayout())) {
+          writeAndRespecialize(obj, value, "update outdated read node", nextInCache);
+        } else {
+          nextInCache.write(obj, value);
+        }
+      }
+      return value;
+    }
+
+    @Override
+    public Object write(final SObject obj, final Object value) {
+      if (value instanceof Double) {
+        write(obj, (double) value);
+      } else {
+        if (layout.layoutForSameClasses(obj.getObjectLayout())) {
+          writeAndRespecialize(obj, value, "update outdated read node", nextInCache);
+        } else {
+          nextInCache.write(obj, value);
+        }
+      }
+      return value;
+    }
+  }
+
+  public static final class WriteSetOrUnsetDoubleFieldNode extends WriteSpecializedFieldNode {
+    private final DoubleStorageLocation storage;
+
+    public WriteSetOrUnsetDoubleFieldNode(final SlotDefinition slot,
         final ObjectLayout layout, final AbstractWriteFieldNode next) {
       super(slot, layout, next);
       this.storage = (DoubleStorageLocation) layout.getStorageLocation(slot);
@@ -305,7 +449,8 @@ public abstract class FieldAccessorNode extends Node {
     @Override
     public double write(final SObject obj, final double value) {
       if (hasExpectedLayout(obj)) {
-        storage.writeDouble(obj, value);
+        storage.writeDoubleSet(obj, value);
+        storage.markAsSet(obj);
       } else {
         if (layout.layoutForSameClasses(obj.getObjectLayout())) {
           writeAndRespecialize(obj, value, "update outdated read node", nextInCache);
