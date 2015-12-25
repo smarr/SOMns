@@ -42,6 +42,7 @@ import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
+import com.oracle.truffle.api.profiles.IntValueProfile;
 
 public abstract class SObject extends SObjectWithClass {
 
@@ -212,6 +213,10 @@ public abstract class SObject extends SObjectWithClass {
     return (primitiveUsedMap & mask) != 0;
   }
 
+  public boolean isPrimitiveSet(final int mask, final IntValueProfile markProfile) {
+    return (markProfile.profile(primitiveUsedMap) & mask) != 0;
+  }
+
   public void markPrimAsSet(final int mask) {
     primitiveUsedMap |= mask;
   }
@@ -268,6 +273,8 @@ public abstract class SObject extends SObjectWithClass {
     return storage;
   }
 
+  private static final IntValueProfile primMarkProfile = IntValueProfile.createIdentityProfile();
+
   @ExplodeLoop
   private HashMap<SlotDefinition, Object> getAllFields() {
     assert objectLayout != null;
@@ -276,7 +283,7 @@ public abstract class SObject extends SObjectWithClass {
     HashMap<SlotDefinition, Object> fieldValues = new HashMap<>((int) (locations.size() / 0.75f));
 
     for (Entry<SlotDefinition, StorageLocation> loc : locations.entrySet()) {
-      if (loc.getValue().isSet(this)) {
+      if (loc.getValue().isSet(this, primMarkProfile)) {
         fieldValues.put(loc.getKey(), loc.getValue().read(this));
       } else {
         fieldValues.put(loc.getKey(), null);

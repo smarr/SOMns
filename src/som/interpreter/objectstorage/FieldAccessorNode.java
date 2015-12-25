@@ -12,6 +12,7 @@ import som.vmobjects.SObject;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
+import com.oracle.truffle.api.profiles.IntValueProfile;
 
 
 public abstract class FieldAccessorNode extends Node {
@@ -34,6 +35,7 @@ public abstract class FieldAccessorNode extends Node {
   }
 
   public abstract static class AbstractReadFieldNode extends FieldAccessorNode {
+    private static final IntValueProfile primMarkProfile = IntValueProfile.createIdentityProfile();
     public AbstractReadFieldNode(final SlotDefinition slot) {
       super(slot);
     }
@@ -60,7 +62,7 @@ public abstract class FieldAccessorNode extends Node {
       final ObjectLayout    layout   = obj.getObjectLayout();
       final StorageLocation location = layout.getStorageLocation(slot);
 
-      AbstractReadFieldNode newNode = location.getReadNode(slot, layout, next, location.isSet(obj));
+      AbstractReadFieldNode newNode = location.getReadNode(slot, layout, next, location.isSet(obj, primMarkProfile));
       return replace(newNode, reason);
     }
   }
@@ -120,6 +122,7 @@ public abstract class FieldAccessorNode extends Node {
 
   public static final class ReadSetLongFieldNode extends ReadSpecializedFieldNode {
     private final LongStorageLocation storage;
+    private final IntValueProfile primMarkProfile = IntValueProfile.createIdentityProfile();
 
     public ReadSetLongFieldNode(final SlotDefinition slot,
         final ObjectLayout layout, final AbstractReadFieldNode next) {
@@ -129,7 +132,7 @@ public abstract class FieldAccessorNode extends Node {
 
     @Override
     public long readLong(final SObject obj) throws UnexpectedResultException {
-      if (hasExpectedLayout(obj) && storage.isSet(obj)) {
+      if (hasExpectedLayout(obj) && storage.isSet(obj, primMarkProfile)) {
         return storage.readLongSet(obj);
       } else {
         return respecializedNodeOrNext(obj).
@@ -149,6 +152,7 @@ public abstract class FieldAccessorNode extends Node {
 
   public static final class ReadSetOrUnsetLongFieldNode extends ReadSpecializedFieldNode {
     private final LongStorageLocation storage;
+    private final IntValueProfile primMarkProfile = IntValueProfile.createIdentityProfile();
 
     public ReadSetOrUnsetLongFieldNode(final SlotDefinition slot,
         final ObjectLayout layout, final AbstractReadFieldNode next) {
@@ -159,7 +163,7 @@ public abstract class FieldAccessorNode extends Node {
     @Override
     public long readLong(final SObject obj) throws UnexpectedResultException {
       if (hasExpectedLayout(obj)) {
-        if (storage.isSet(obj)) {
+        if (storage.isSet(obj, primMarkProfile)) {
           return storage.readLongSet(obj);
         } else {
           CompilerDirectives.transferToInterpreter();
@@ -183,6 +187,7 @@ public abstract class FieldAccessorNode extends Node {
 
   public static final class ReadSetDoubleFieldNode extends ReadSpecializedFieldNode {
     private final DoubleStorageLocation storage;
+    private final IntValueProfile primMarkProfile = IntValueProfile.createIdentityProfile();
 
     public ReadSetDoubleFieldNode(final SlotDefinition slot,
         final ObjectLayout layout, final AbstractReadFieldNode next) {
@@ -192,7 +197,7 @@ public abstract class FieldAccessorNode extends Node {
 
     @Override
     public double readDouble(final SObject obj) throws UnexpectedResultException {
-      if (hasExpectedLayout(obj) && storage.isSet(obj)) {
+      if (hasExpectedLayout(obj) && storage.isSet(obj, primMarkProfile)) {
         return storage.readDoubleSet(obj);
       } else {
         return respecializedNodeOrNext(obj).readDouble(obj);
@@ -211,6 +216,7 @@ public abstract class FieldAccessorNode extends Node {
 
   public static final class ReadSetOrUnsetDoubleFieldNode extends ReadSpecializedFieldNode {
     private final DoubleStorageLocation storage;
+    private final IntValueProfile primMarkProfile = IntValueProfile.createIdentityProfile();
 
     public ReadSetOrUnsetDoubleFieldNode(final SlotDefinition slot,
         final ObjectLayout layout, final AbstractReadFieldNode next) {
@@ -221,7 +227,7 @@ public abstract class FieldAccessorNode extends Node {
     @Override
     public double readDouble(final SObject obj) throws UnexpectedResultException {
       if (hasExpectedLayout(obj)) {
-        if (storage.isSet(obj)) {
+        if (storage.isSet(obj, primMarkProfile)) {
           return storage.readDoubleSet(obj);
         } else {
           CompilerDirectives.transferToInterpreter();
@@ -297,6 +303,7 @@ public abstract class FieldAccessorNode extends Node {
   }
 
   public static final class UninitializedWriteFieldNode extends AbstractWriteFieldNode {
+    private static final IntValueProfile primMarkProfile = IntValueProfile.createIdentityProfile();
     public UninitializedWriteFieldNode(final SlotDefinition slot) {
       super(slot);
     }
@@ -306,7 +313,7 @@ public abstract class FieldAccessorNode extends Node {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       writeAndRespecialize(obj, value, "initialize write field node",
           new UninitializedWriteFieldNode(slot),
-          obj.getObjectLayout().getStorageLocation(slot).isSet(obj));
+          obj.getObjectLayout().getStorageLocation(slot).isSet(obj, primMarkProfile));
       return value;
     }
   }
@@ -330,6 +337,7 @@ public abstract class FieldAccessorNode extends Node {
 
   public static final class WriteSetLongFieldNode extends WriteSpecializedFieldNode {
     private final LongStorageLocation storage;
+    private final IntValueProfile primMarkProfile = IntValueProfile.createIdentityProfile();
 
     public WriteSetLongFieldNode(final SlotDefinition slot,
         final ObjectLayout layout, final AbstractWriteFieldNode next) {
@@ -339,11 +347,11 @@ public abstract class FieldAccessorNode extends Node {
 
     @Override
     public long write(final SObject obj, final long value) {
-      if (hasExpectedLayout(obj) && storage.isSet(obj)) {
+      if (hasExpectedLayout(obj) && storage.isSet(obj, primMarkProfile)) {
         storage.writeLongSet(obj, value);
       } else {
         if (layout.layoutForSameClasses(obj.getObjectLayout())) {
-          writeAndRespecialize(obj, value, "update outdated write node", nextInCache, storage.isSet(obj));
+          writeAndRespecialize(obj, value, "update outdated write node", nextInCache, storage.isSet(obj, primMarkProfile));
         } else {
           nextInCache.write(obj, value);
         }
@@ -357,7 +365,7 @@ public abstract class FieldAccessorNode extends Node {
         write(obj, (long) value);
       } else {
         if (layout.layoutForSameClasses(obj.getObjectLayout())) {
-          writeAndRespecialize(obj, value, "update outdated read node", nextInCache, storage.isSet(obj));
+          writeAndRespecialize(obj, value, "update outdated read node", nextInCache, storage.isSet(obj, primMarkProfile));
         } else {
           nextInCache.write(obj, value);
         }
@@ -368,6 +376,7 @@ public abstract class FieldAccessorNode extends Node {
 
   public static final class WriteSetOrUnsetLongFieldNode extends WriteSpecializedFieldNode {
     private final LongStorageLocation storage;
+    private final IntValueProfile primMarkProfile = IntValueProfile.createIdentityProfile();
 
     public WriteSetOrUnsetLongFieldNode(final SlotDefinition slot,
         final ObjectLayout layout, final AbstractWriteFieldNode next) {
@@ -396,7 +405,7 @@ public abstract class FieldAccessorNode extends Node {
         write(obj, (long) value);
       } else {
         if (layout.layoutForSameClasses(obj.getObjectLayout())) {
-          writeAndRespecialize(obj, value, "update outdated read node", nextInCache, storage.isSet(obj));
+          writeAndRespecialize(obj, value, "update outdated read node", nextInCache, storage.isSet(obj, primMarkProfile));
         } else {
           nextInCache.write(obj, value);
         }
@@ -407,6 +416,7 @@ public abstract class FieldAccessorNode extends Node {
 
   public static final class WriteSetDoubleFieldNode extends WriteSpecializedFieldNode {
     private final DoubleStorageLocation storage;
+    private final IntValueProfile primMarkProfile = IntValueProfile.createIdentityProfile();
 
     public WriteSetDoubleFieldNode(final SlotDefinition slot,
         final ObjectLayout layout, final AbstractWriteFieldNode next) {
@@ -416,11 +426,11 @@ public abstract class FieldAccessorNode extends Node {
 
     @Override
     public double write(final SObject obj, final double value) {
-      if (hasExpectedLayout(obj) && storage.isSet(obj)) {
+      if (hasExpectedLayout(obj) && storage.isSet(obj, primMarkProfile)) {
         storage.writeDoubleSet(obj, value);
       } else {
         if (layout.layoutForSameClasses(obj.getObjectLayout())) {
-          writeAndRespecialize(obj, value, "update outdated read node", nextInCache, storage.isSet(obj));
+          writeAndRespecialize(obj, value, "update outdated read node", nextInCache, storage.isSet(obj, primMarkProfile));
         } else {
           nextInCache.write(obj, value);
         }
@@ -434,7 +444,7 @@ public abstract class FieldAccessorNode extends Node {
         write(obj, (double) value);
       } else {
         if (layout.layoutForSameClasses(obj.getObjectLayout())) {
-          writeAndRespecialize(obj, value, "update outdated read node", nextInCache, storage.isSet(obj));
+          writeAndRespecialize(obj, value, "update outdated read node", nextInCache, storage.isSet(obj, primMarkProfile));
         } else {
           nextInCache.write(obj, value);
         }
@@ -445,6 +455,7 @@ public abstract class FieldAccessorNode extends Node {
 
   public static final class WriteSetOrUnsetDoubleFieldNode extends WriteSpecializedFieldNode {
     private final DoubleStorageLocation storage;
+    private final IntValueProfile primMarkProfile = IntValueProfile.createIdentityProfile();
 
     public WriteSetOrUnsetDoubleFieldNode(final SlotDefinition slot,
         final ObjectLayout layout, final AbstractWriteFieldNode next) {
@@ -473,7 +484,7 @@ public abstract class FieldAccessorNode extends Node {
         write(obj, (double) value);
       } else {
         if (layout.layoutForSameClasses(obj.getObjectLayout())) {
-          writeAndRespecialize(obj, value, "update outdated read node", nextInCache, storage.isSet(obj));
+          writeAndRespecialize(obj, value, "update outdated read node", nextInCache, storage.isSet(obj, primMarkProfile));
         } else {
           nextInCache.write(obj, value);
         }

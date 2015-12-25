@@ -22,6 +22,7 @@ import som.vmobjects.SObject;
 import sun.misc.Unsafe;
 
 import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.profiles.IntValueProfile;
 
 
 public abstract class StorageLocation {
@@ -47,14 +48,14 @@ public abstract class StorageLocation {
   }
 
   public interface LongStorageLocation {
-    boolean isSet(SObject obj);
+    boolean isSet(SObject obj, IntValueProfile primMarkProfile);
     void markAsSet(SObject obj);
     long readLongSet(final SObject obj);
     void writeLongSet(final SObject obj, final long value);
   }
 
   public interface DoubleStorageLocation {
-    boolean isSet(SObject obj);
+    boolean isSet(SObject obj, IntValueProfile primMarkProfile);
     void markAsSet(SObject obj);
     double readDoubleSet(final SObject obj);
     void   writeDoubleSet(final SObject obj, final double value);
@@ -96,7 +97,7 @@ public abstract class StorageLocation {
     this.layout = layout;
   }
 
-  public abstract boolean isSet(SObject obj);
+  public abstract boolean isSet(SObject obj, IntValueProfile primMarkProfile);
 
   /**
    * @return true, if it is an object location, false otherwise.
@@ -125,7 +126,7 @@ public abstract class StorageLocation {
     }
 
     @Override
-    public boolean isSet(final SObject obj) {
+    public boolean isSet(final SObject obj, final IntValueProfile primMarkProfile) {
       return false;
     }
 
@@ -200,7 +201,7 @@ public abstract class StorageLocation {
     }
 
     @Override
-    public boolean isSet(final SObject obj) {
+    public boolean isSet(final SObject obj, final IntValueProfile primMarkProfile) {
       assert read(obj) != null;
       return true;
     }
@@ -228,7 +229,7 @@ public abstract class StorageLocation {
     }
 
     @Override
-    public boolean isSet(final SObject obj) {
+    public boolean isSet(final SObject obj, final IntValueProfile primMarkProfile) {
       assert read(obj) != null;
       return true;
     }
@@ -268,8 +269,8 @@ public abstract class StorageLocation {
     }
 
     @Override
-    public final boolean isSet(final SObject obj) {
-      return obj.isPrimitiveSet(mask);
+    public final boolean isSet(final SObject obj, final IntValueProfile primMarkProfile) {
+      return obj.isPrimitiveSet(mask, primMarkProfile);
     }
 
     @Override
@@ -292,13 +293,14 @@ public abstract class StorageLocation {
 
   public static final class DoubleDirectStoreLocation extends PrimitiveDirectStoreLocation
       implements DoubleStorageLocation {
+    private final IntValueProfile primMarkProfile = IntValueProfile.createIdentityProfile();
     public DoubleDirectStoreLocation(final ObjectLayout layout, final int primField) {
       super(layout, primField);
     }
 
     @Override
     public Object read(final SObject obj) {
-      if (isSet(obj)) {
+      if (isSet(obj, primMarkProfile)) {
         return readDoubleSet(obj);
       } else {
         return Nil.nilObject;
@@ -354,13 +356,14 @@ public abstract class StorageLocation {
 
   public static final class LongDirectStoreLocation extends PrimitiveDirectStoreLocation
       implements LongStorageLocation {
+    private final IntValueProfile primMarkProfile = IntValueProfile.createIdentityProfile();
     public LongDirectStoreLocation(final ObjectLayout layout, final int primField) {
       super(layout, primField);
     }
 
     @Override
     public Object read(final SObject obj) {
-      if (isSet(obj)) {
+      if (isSet(obj, primMarkProfile)) {
         return readLongSet(obj);
       } else {
         return Nil.nilObject;
@@ -423,13 +426,14 @@ public abstract class StorageLocation {
 
   public static final class LongArrayStoreLocation extends PrimitiveArrayStoreLocation
       implements LongStorageLocation {
+    private final IntValueProfile primMarkProfile = IntValueProfile.createIdentityProfile();
     public LongArrayStoreLocation(final ObjectLayout layout, final int primField) {
       super(layout, primField);
     }
 
     @Override
     public Object read(final SObject obj) {
-      if (isSet(obj)) {
+      if (isSet(obj, primMarkProfile)) {
         return readLongSet(obj);
       } else {
         return Nil.nilObject;
@@ -488,9 +492,11 @@ public abstract class StorageLocation {
       super(layout, primField);
     }
 
+    private final IntValueProfile primMarkProfile = IntValueProfile.createIdentityProfile();
+
     @Override
     public Object read(final SObject obj) {
-      if (isSet(obj)) {
+      if (isSet(obj, primMarkProfile)) {
         return readDoubleSet(obj);
       } else {
         return Nil.nilObject;
