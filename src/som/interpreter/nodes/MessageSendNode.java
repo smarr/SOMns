@@ -88,6 +88,7 @@ import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.NodeCost;
@@ -138,7 +139,7 @@ public final class MessageSendNode {
     }
 
     @Override
-    public final Object executeGeneric(final VirtualFrame frame) {
+    public Object executeGeneric(final VirtualFrame frame) {
       Object[] arguments = evaluateArguments(frame);
       return doPreEvaluated(frame, arguments);
     }
@@ -176,8 +177,17 @@ public final class MessageSendNode {
     }
 
     @Override
+    public final Object executeGeneric(final VirtualFrame frame) {
+      // This is a branch never taken, none of the code here should be compiled.
+      CompilerDirectives.transferToInterpreter();
+      return super.executeGeneric(frame);
+    }
+
+    @Override
     public final Object doPreEvaluated(final VirtualFrame frame,
         final Object[] arguments) {
+      // This is a branch never taken, none of the code here should be compiled.
+      CompilerDirectives.transferToInterpreter();
       return specialize(arguments).
           doPreEvaluated(frame, arguments);
     }

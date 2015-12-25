@@ -33,12 +33,17 @@ public abstract class IsValueCheckNode extends UnaryExpressionNode {
     }
 
     @Override
+    public Object executeGeneric(final VirtualFrame frame) {
+      TruffleCompiler.transferToInterpreterAndInvalidate("Need to specialize node");
+      return super.executeGeneric(frame);
+    }
+
+    @Override
     public Object executeEvaluated(final VirtualFrame frame, final Object receiver) {
       return specialize(frame, receiver);
     }
 
     private Object specialize(final VirtualFrame frame, final Object receiver) {
-      TruffleCompiler.transferToInterpreterAndInvalidate("Need to specialize node");
       if (!(receiver instanceof SImmutableObject)) {
         // can remove ourselves, this node is only used in initializers,
         // which are by definition monomorphic
@@ -118,7 +123,7 @@ public abstract class IsValueCheckNode extends UnaryExpressionNode {
   }
 
   @Override
-  public final Object executeGeneric(final VirtualFrame frame) {
+  public Object executeGeneric(final VirtualFrame frame) {
     return executeEvaluated(frame, self.executeGeneric(frame));
   }
 }

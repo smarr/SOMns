@@ -33,8 +33,6 @@ public abstract class InvokeOnCache extends Node implements DispatchChain {
     }
 
     private InvokeOnCache specialize(final SInvokable invokable) {
-      transferToInterpreterAndInvalidate("Initialize a dispatch node.");
-
       if (depth < INLINE_CACHE_SIZE) {
         CachedDispatchNode specialized = new CachedDispatchNode(invokable,
             new UninitializedDispatchNode(depth + 1),
@@ -50,6 +48,7 @@ public abstract class InvokeOnCache extends Node implements DispatchChain {
     @Override
     public Object executeDispatch(final VirtualFrame frame,
         final SInvokable invokable, final Object[] arguments) {
+      transferToInterpreterAndInvalidate("Initialize a dispatch node.");
       return specialize(invokable).
           executeDispatch(frame, invokable, arguments);
     }

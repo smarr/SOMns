@@ -6,11 +6,12 @@ import som.interpreter.LexicalScope.MixinScope.MixinIdAndContextLevel;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
 
-public class ResolvingImplicitReceiverSend extends AbstractMessageSendNode {
+public final class ResolvingImplicitReceiverSend extends AbstractMessageSendNode {
 
   private final SSymbol     selector;
   private final MethodScope currentScope;
@@ -30,7 +31,14 @@ public class ResolvingImplicitReceiverSend extends AbstractMessageSendNode {
   }
 
   @Override
+  public Object executeGeneric(final VirtualFrame frame) {
+    CompilerDirectives.transferToInterpreter();
+    return super.executeGeneric(frame);
+  }
+
+  @Override
   public Object doPreEvaluated(final VirtualFrame frame, final Object[] args) {
+    CompilerDirectives.transferToInterpreter();
     // this specialize method is designed to be execute only once and
     // tracks its replacement nodes to avoid re-specialization in case of
     // re-execution

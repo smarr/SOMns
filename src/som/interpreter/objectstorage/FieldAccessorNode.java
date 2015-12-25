@@ -51,6 +51,7 @@ public abstract class FieldAccessorNode extends Node {
     }
 
     protected final Object specializeAndRead(final SObject obj, final String reason, final AbstractReadFieldNode next) {
+      TruffleCompiler.transferToInterpreterAndInvalidate(reason);
       return specialize(obj, reason, next).read(obj);
     }
 
@@ -97,6 +98,7 @@ public abstract class FieldAccessorNode extends Node {
 
     protected final AbstractReadFieldNode respecializedNodeOrNext(final SObject obj) {
       if (layout.layoutForSameClasses(obj.getObjectLayout())) {
+        CompilerDirectives.transferToInterpreter();
         return specialize(obj, "update outdated read node", nextInCache);
       } else {
         return nextInCache;
@@ -351,6 +353,7 @@ public abstract class FieldAccessorNode extends Node {
         storage.writeLongSet(obj, value);
       } else {
         if (layout.layoutForSameClasses(obj.getObjectLayout())) {
+          CompilerDirectives.transferToInterpreter();
           writeAndRespecialize(obj, value, "update outdated write node", nextInCache, storage.isSet(obj, primMarkProfile));
         } else {
           nextInCache.write(obj, value);
@@ -365,6 +368,7 @@ public abstract class FieldAccessorNode extends Node {
         write(obj, (long) value);
       } else {
         if (layout.layoutForSameClasses(obj.getObjectLayout())) {
+          CompilerDirectives.transferToInterpreter();
           writeAndRespecialize(obj, value, "update outdated read node", nextInCache, storage.isSet(obj, primMarkProfile));
         } else {
           nextInCache.write(obj, value);
@@ -391,6 +395,7 @@ public abstract class FieldAccessorNode extends Node {
         storage.markAsSet(obj);
       } else {
         if (layout.layoutForSameClasses(obj.getObjectLayout())) {
+          CompilerDirectives.transferToInterpreter();
           writeAndRespecialize(obj, value, "update outdated write node", nextInCache, false);
         } else {
           nextInCache.write(obj, value);
@@ -405,6 +410,7 @@ public abstract class FieldAccessorNode extends Node {
         write(obj, (long) value);
       } else {
         if (layout.layoutForSameClasses(obj.getObjectLayout())) {
+          CompilerDirectives.transferToInterpreter();
           writeAndRespecialize(obj, value, "update outdated read node", nextInCache, storage.isSet(obj, primMarkProfile));
         } else {
           nextInCache.write(obj, value);
@@ -430,6 +436,7 @@ public abstract class FieldAccessorNode extends Node {
         storage.writeDoubleSet(obj, value);
       } else {
         if (layout.layoutForSameClasses(obj.getObjectLayout())) {
+          CompilerDirectives.transferToInterpreter();
           writeAndRespecialize(obj, value, "update outdated read node", nextInCache, storage.isSet(obj, primMarkProfile));
         } else {
           nextInCache.write(obj, value);
@@ -444,6 +451,7 @@ public abstract class FieldAccessorNode extends Node {
         write(obj, (double) value);
       } else {
         if (layout.layoutForSameClasses(obj.getObjectLayout())) {
+          CompilerDirectives.transferToInterpreter();
           writeAndRespecialize(obj, value, "update outdated read node", nextInCache, storage.isSet(obj, primMarkProfile));
         } else {
           nextInCache.write(obj, value);
@@ -470,6 +478,7 @@ public abstract class FieldAccessorNode extends Node {
         storage.markAsSet(obj);
       } else {
         if (layout.layoutForSameClasses(obj.getObjectLayout())) {
+          CompilerDirectives.transferToInterpreter();
           writeAndRespecialize(obj, value, "update outdated read node", nextInCache, false);
         } else {
           nextInCache.write(obj, value);
@@ -484,6 +493,7 @@ public abstract class FieldAccessorNode extends Node {
         write(obj, (double) value);
       } else {
         if (layout.layoutForSameClasses(obj.getObjectLayout())) {
+          CompilerDirectives.transferToInterpreter();
           writeAndRespecialize(obj, value, "update outdated read node", nextInCache, storage.isSet(obj, primMarkProfile));
         } else {
           nextInCache.write(obj, value);
@@ -508,6 +518,7 @@ public abstract class FieldAccessorNode extends Node {
         storage.write(obj, value);
       } else {
         if (layout.layoutForSameClasses(obj.getObjectLayout())) {
+          CompilerDirectives.transferToInterpreter();
           writeAndRespecialize(obj, value, "update outdated read node", nextInCache, false);
         } else {
           nextInCache.write(obj, value);
