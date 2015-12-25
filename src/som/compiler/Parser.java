@@ -1000,6 +1000,18 @@ public final class Parser {
     SSymbol msg = binarySelector();
     ExpressionNode operand = binaryOperand(builder);
 
+    if (!eventualSend) {
+      List<ExpressionNode> arguments = new ArrayList<ExpressionNode>();
+      arguments.add(receiver);
+      arguments.add(operand);
+      SourceSection source = getSource(coord);
+      ExpressionNode node = inlineControlStructureIfPossible(builder, arguments,
+          msg.getString(), msg.getNumberOfSignatureArguments(), source);
+      if (node != null) {
+        return node;
+      }
+    }
+
     return createMessageSend(msg, new ExpressionNode[] {receiver, operand},
         eventualSend, getSource(coord));
   }
