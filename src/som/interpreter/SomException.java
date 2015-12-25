@@ -33,4 +33,9 @@ public final class SomException extends RuntimeException {
   public Throwable fillInStackTrace() {
       return null;
   }
+
+  @Override
+  public String toString() {
+    return "SomException[" + somObj.toString() + "]";
+  }
 }
