@@ -22,8 +22,14 @@ parser.add_argument('-i', '--igv', help='dump compilation details to IGV',
                     dest='igv', action='store_true', default=False)
 parser.add_argument('-l', '--low-level', help='enable low-level optimization output',
                     dest='low_level', action='store_true', default=False)
+
 parser.add_argument('-p', '--profile', help='enable profiling after warmup',
                     dest='profile', action='store_true', default=False)
+parser.add_argument('-a', '--profile-allocations', help='enable profiling after warmup, and profile allocations',
+                    dest='profile_allocations', action='store_true', default=False)
+parser.add_argument('-pt', '--profile-times', help='enable profiling after certain time intervals',
+                    dest='profile_timed', action='store_true', default=False)
+
 parser.add_argument('-w', '--perf-warnings', help='enable performance warnings',
                     dest='perf_warnings', action='store_true', default=False)
 
@@ -131,9 +137,16 @@ if not args.interpreter and args.igv:
 if args.low_level:
     flags += ['-XX:+UnlockDiagnosticVMOptions', '-XX:+LogCompilation',
               '-XX:+TraceDeoptimization']
-if not args.interpreter and args.profile:
+if not args.interpreter and (args.profile or args.profile_allocations or args.profile_timed):
     flags += ['-XX:JVMCICounterSize=5000', '-Dgraal.option.ProfileCompiledMethods=true',
-              '-Dgraal.option.BenchmarkDynamicCounters=out,warmup,total']
+              '-DProfileCompiledMethodsPhase.WITH_SECTION_HEADER=true']
+    if args.profile_allocations:
+        flags += ['-Dgraal.option.ProfileAllocations=true']
+    if args.profile_timed:
+        flags += ['-Dgraal.option.TimedDynamicCounters=1000']
+    if args.profile:
+        flags += ['-Dgraal.option.BenchmarkDynamicCounters=out,completed,total']
+        
 if not args.interpreter and args.perf_warnings:
     flags += ['-Dgraal.option.TruffleCompilationExceptionsAreFatal=true',
               '-Dgraal.option.TraceTrufflePerformanceWarnings=true',
