@@ -109,6 +109,16 @@ public abstract class OuterObjectRead
     return !(receiver instanceof SObjectWithClass) && !(receiver instanceof SFarReference);
   }
 
+  protected static final boolean notSObjectWithClassClass(final Class<?> rcvrClass) {
+    return !rcvrClass.isAssignableFrom(SObjectWithClass.class) && !rcvrClass.isAssignableFrom(SFarReference.class);
+  }
+
+  @Specialization(guards = {"receiver.getClass() == rcvrClass",
+      "notSObjectWithClassClass(rcvrClass)"})
+  public Object doObject(final Object receiver, @Cached("receiver.getClass()") final Class<?> rcvrClass) {
+    return KernelObj.kernel;
+  }
+
   @Specialization(guards = "notSObjectWithClass(receiver)")
   public Object doObject(final Object receiver) {
     return KernelObj.kernel;
