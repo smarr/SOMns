@@ -16,7 +16,6 @@ import som.interpreter.nodes.ArgumentReadNode.NonLocalSelfReadNode;
 import som.interpreter.nodes.ArgumentReadNode.NonLocalSuperReadNode;
 import som.interpreter.nodes.ContextualNode;
 import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.FieldNode.FieldReadNode;
 import som.interpreter.nodes.FieldNode.FieldWriteNode;
 import som.interpreter.nodes.FieldNodeFactory.FieldWriteNodeGen;
 import som.interpreter.nodes.InternalObjectArrayNode;
@@ -47,11 +46,6 @@ public final class SNodeFactory {
   public static CatchNonLocalReturnNode createCatchNonLocalReturn(
       final ExpressionNode methodBody, final FrameSlot frameOnStackMarker) {
     return new CatchNonLocalReturnNode(methodBody, frameOnStackMarker);
-  }
-
-  public static FieldReadNode createFieldRead(final ExpressionNode self,
-      final SlotDefinition slot, final SourceSection source) {
-    return new FieldReadNode(self, slot, source);
   }
 
   public static FieldWriteNode createFieldWrite(final ExpressionNode self,
