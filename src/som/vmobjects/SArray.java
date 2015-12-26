@@ -6,7 +6,7 @@ import som.vm.NotYetImplementedException;
 import som.vm.constants.Nil;
 
 import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.utilities.ValueProfile;
+import com.oracle.truffle.api.profiles.ValueProfile;
 
 /**
  * SArrays are implemented using a Strategy-like approach.

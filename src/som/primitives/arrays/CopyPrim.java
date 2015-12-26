@@ -4,7 +4,7 @@ import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vmobjects.SArray.SMutableArray;
 
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.utilities.ValueProfile;
+import com.oracle.truffle.api.profiles.ValueProfile;
 
 
 public abstract class CopyPrim extends UnaryExpressionNode {

@@ -10,7 +10,8 @@ import som.vmobjects.SArray;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.NodeChildren;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.utilities.ValueProfile;
+import com.oracle.truffle.api.profiles.ValueProfile;
+
 
 @NodeChildren({
   @NodeChild("somArray"),

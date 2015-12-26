@@ -7,8 +7,9 @@ import som.interpreter.SArguments;
 import som.vm.NotYetImplementedException;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
-import com.oracle.truffle.api.utilities.ValueProfile;
+
 
 public abstract class ArgumentReadNode {
 
