@@ -499,7 +499,7 @@ public final class MixinDefinition {
       if (modifier == AccessModifier.PRIVATE) {
         return new CachedSlotAccessNode(createNode());
       } else {
-        return new CheckedCachedSlotAccessNode(((SClass) rcvrClass).getInstanceFactory(), createNode(), next);
+        return new CheckedCachedSlotAccessNode(((SClass) rcvrClass).getLayoutForInstances(), createNode(), next);
       }
     }
 
