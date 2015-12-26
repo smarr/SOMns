@@ -9,12 +9,14 @@ import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CallTarget;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 
 public abstract class AbstractCachedDnuNode extends AbstractCachedDispatchNode {
   private final SSymbol selector;
 
+  @TruffleBoundary
   public static CallTarget getDnu(final SClass rcvrClass) {
     Dispatchable disp = rcvrClass.lookupMessage(
         Symbols.DNU, AccessModifier.PROTECTED);
