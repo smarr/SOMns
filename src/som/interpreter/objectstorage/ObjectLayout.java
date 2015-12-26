@@ -8,9 +8,14 @@ import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.objectstorage.StorageLocation.UnwrittenStorageLocation;
 import som.vmobjects.SObject;
 
+import com.oracle.truffle.api.Assumption;
+import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.nodes.InvalidAssumptionException;
+
 
 public final class ObjectLayout {
   private final ClassFactory forClasses;
+  private final Assumption latestLayoutForClass;
 
   private final int primitiveStorageLocationsUsed;
   private final int objectStorageLocationsUsed;
@@ -39,6 +44,7 @@ public final class ObjectLayout {
   public ObjectLayout(final HashMap<SlotDefinition, Class<?>> knownFieldTypes,
       final int numberOfFields, final ClassFactory forClasses,
       final boolean isTransferObject) {
+    this.latestLayoutForClass = Truffle.getRuntime().createAssumption();
     this.forClasses = forClasses;
     this.isTransferObject = isTransferObject;
 
@@ -73,6 +79,10 @@ public final class ObjectLayout {
     primitiveStorageLocationsUsed = nextFreePrimIdx;
     objectStorageLocationsUsed    = nextFreeObjIdx;
     onlyImmutableFields           = onlyImmutable;
+  }
+
+  public void checkIsLatest() throws InvalidAssumptionException {
+    latestLayoutForClass.check();
   }
 
   public boolean hasOnlyImmutableFields() {
@@ -120,6 +130,9 @@ public final class ObjectLayout {
 
   protected ObjectLayout cloneWithChanged(final SlotDefinition slot,
       final Class<?> specType) {
+    // we create a new updated layout, and invalidate the old one
+    latestLayoutForClass.invalidate();
+
     HashMap<SlotDefinition, Class<?>> withChangedField = new HashMap<>(storageTypes);
     withChangedField.put(slot, specType);
     return new ObjectLayout(withChangedField, totalNumberOfStorageLocations,

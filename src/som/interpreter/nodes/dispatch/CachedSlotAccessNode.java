@@ -7,7 +7,9 @@ import som.interpreter.objectstorage.ObjectLayout;
 import som.vmobjects.SObject;
 import som.vmobjects.SObjectWithClass;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 
 
 public class CachedSlotAccessNode extends AbstractDispatchNode {
@@ -39,14 +41,24 @@ public class CachedSlotAccessNode extends AbstractDispatchNode {
       this.expectedLayout = rcvrLayout;
     }
 
+    // TODO: when we have this layout check here, do we need it later in the access node?
+    //       do we need to move the logic for dropping specializations for old layouts here?
+
     @Override
     public Object executeDispatch(final VirtualFrame frame,
         final Object[] arguments) {
-      if (arguments[0] instanceof SObject &&
-          ((SObject) arguments[0]).getObjectLayout() == expectedLayout) {
-        return access.doRead(frame, ((SObject) arguments[0]));
-      } else {
-        return nextInCache.executeDispatch(frame, arguments);
+      try {
+        expectedLayout.checkIsLatest();
+
+        if (arguments[0] instanceof SObject &&
+            ((SObject) arguments[0]).getObjectLayout() == expectedLayout) {
+          return access.doRead(frame, ((SObject) arguments[0]));
+        } else {
+          return nextInCache.executeDispatch(frame, arguments);
+        }
+      } catch (InvalidAssumptionException e) {
+        CompilerDirectives.transferToInterpreter();
+        return replace(nextInCache).executeDispatch(frame, arguments);
       }
     }
 
