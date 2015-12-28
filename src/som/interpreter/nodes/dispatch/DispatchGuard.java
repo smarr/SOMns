@@ -96,8 +96,8 @@ public abstract class DispatchGuard {
 
     @Override
     public boolean entryMatches(final Object obj) throws InvalidAssumptionException {
-      return obj instanceof SObjectWithoutFields &&
-          ((SObjectWithoutFields) obj).getFactory() == expected;
+      return obj instanceof SClass &&
+          ((SClass) obj).getFactory() == expected;
     }
   }
 
