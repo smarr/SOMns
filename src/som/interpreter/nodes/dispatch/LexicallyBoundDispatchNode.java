@@ -10,11 +10,11 @@ import com.oracle.truffle.api.nodes.DirectCallNode;
  * Private methods are special, they are linked unconditionally to the call site.
  * Thus, we don't need to check at the dispatch whether they apply or not.
  */
-public final class PrivateStaticBoundDispatchNode extends AbstractDispatchNode {
+public final class LexicallyBoundDispatchNode extends AbstractDispatchNode {
 
   @Child private DirectCallNode cachedMethod;
 
-  public PrivateStaticBoundDispatchNode(final CallTarget methodCallTarget) {
+  public LexicallyBoundDispatchNode(final CallTarget methodCallTarget) {
     cachedMethod = Truffle.getRuntime().createDirectCallNode(methodCallTarget);
   }
 

@@ -33,7 +33,7 @@ import som.interpreter.nodes.dispatch.AbstractDispatchNode;
 import som.interpreter.nodes.dispatch.CachedDispatchNode;
 import som.interpreter.nodes.dispatch.DispatchGuard;
 import som.interpreter.nodes.dispatch.Dispatchable;
-import som.interpreter.nodes.dispatch.PrivateStaticBoundDispatchNode;
+import som.interpreter.nodes.dispatch.LexicallyBoundDispatchNode;
 import som.vm.constants.Classes;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
@@ -161,7 +161,7 @@ public class SInvokable extends SAbstractObject implements Dispatchable {
       final AbstractDispatchNode next) {
     // In case it's a private method, it is directly linked and doesn't need guards
     if (accessModifier == AccessModifier.PRIVATE) {
-      return new PrivateStaticBoundDispatchNode(callTarget);
+      return new LexicallyBoundDispatchNode(callTarget);
     }
 
     DispatchGuard guard = DispatchGuard.create(rcvr);
