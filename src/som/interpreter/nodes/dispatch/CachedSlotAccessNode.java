@@ -1,18 +1,18 @@
 package som.interpreter.nodes.dispatch;
 
 import som.interpreter.nodes.SlotAccessNode;
-import som.interpreter.objectstorage.ClassFactory;
 import som.interpreter.objectstorage.FieldAccessorNode.AbstractWriteFieldNode;
-import som.interpreter.objectstorage.ObjectLayout;
 import som.vmobjects.SObject;
-import som.vmobjects.SObjectWithClass;
+import som.vmobjects.SObject.SImmutableObject;
+import som.vmobjects.SObject.SMutableObject;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 
 
-public class CachedSlotAccessNode extends AbstractDispatchNode {
+
+public abstract class CachedSlotAccessNode extends AbstractDispatchNode {
 
   @Child protected SlotAccessNode access;
 
@@ -20,25 +20,51 @@ public class CachedSlotAccessNode extends AbstractDispatchNode {
     this.access = access;
   }
 
-  @Override
-  public Object executeDispatch(final VirtualFrame frame,
-      final Object[] arguments) {
-    assert arguments[0] instanceof SObject;
-    SObject rcvr = (SObject) arguments[0];
-    return access.doRead(frame, rcvr);
+  public static final class LexicallyBoundMutableSlotRead extends CachedSlotAccessNode {
+
+    public LexicallyBoundMutableSlotRead(final SlotAccessNode access) {
+      super(access);
+    }
+
+    @Override
+    public Object executeDispatch(final VirtualFrame frame,
+        final Object[] arguments) {
+      SMutableObject rcvr = (SMutableObject) arguments[0];
+      return access.doRead(frame, rcvr);
+    }
+
+    @Override
+    public int lengthOfDispatchChain() { return 1; }
   }
 
-  public static final class CheckedCachedSlotAccessNode extends CachedSlotAccessNode {
+  public static final class LexicallyBoundImmutableSlotRead extends CachedSlotAccessNode {
+
+    public LexicallyBoundImmutableSlotRead(final SlotAccessNode access) {
+      super(access);
+    }
+
+    @Override
+    public Object executeDispatch(final VirtualFrame frame,
+        final Object[] arguments) {
+      SImmutableObject rcvr = (SImmutableObject) arguments[0];
+      return access.doRead(frame, rcvr);
+    }
+
+    @Override
+    public int lengthOfDispatchChain() { return 1; }
+  }
+
+
+  public static final class CachedSlotRead extends CachedSlotAccessNode {
     @Child protected AbstractDispatchNode nextInCache;
 
-    private final ObjectLayout expectedLayout;
+    private final DispatchGuard           guard;
 
-    public CheckedCachedSlotAccessNode(final ObjectLayout rcvrLayout,
-      final SlotAccessNode access,
-      final AbstractDispatchNode nextInCache) {
+    public CachedSlotRead(final SlotAccessNode access,
+        final DispatchGuard guard, final AbstractDispatchNode nextInCache) {
       super(access);
+      this.guard       = guard;
       this.nextInCache = nextInCache;
-      this.expectedLayout = rcvrLayout;
     }
 
     // TODO: when we have this layout check here, do we need it later in the access node?
@@ -48,10 +74,8 @@ public class CachedSlotAccessNode extends AbstractDispatchNode {
     public Object executeDispatch(final VirtualFrame frame,
         final Object[] arguments) {
       try {
-        expectedLayout.checkIsLatest();
-
-        if (arguments[0] instanceof SObject &&
-            ((SObject) arguments[0]).getObjectLayout() == expectedLayout) {
+        // TODO: make sure this cast is always eliminated, otherwise, we need two versions mut/immut
+        if (guard.entryMatches(arguments[0])) {
           return access.doRead(frame, ((SObject) arguments[0]));
         } else {
           return nextInCache.executeDispatch(frame, arguments);
@@ -68,54 +92,52 @@ public class CachedSlotAccessNode extends AbstractDispatchNode {
     }
   }
 
-  @Override
-  public int lengthOfDispatchChain() { return 1; }
-
-  public static class CachedSlotWriteNode extends AbstractDispatchNode {
+  public static final class LexicallyBoundMutableSlotWrite
+    extends AbstractDispatchNode {
 
     @Child protected AbstractWriteFieldNode write;
 
-    public CachedSlotWriteNode(final AbstractWriteFieldNode write) {
+    public LexicallyBoundMutableSlotWrite(final AbstractWriteFieldNode write) {
       this.write = write;
     }
 
     @Override
     public Object executeDispatch(final VirtualFrame frame,
         final Object[] arguments) {
-      assert arguments[0] instanceof SObject;
-      SObject rcvr = (SObject) arguments[0];
+      SMutableObject rcvr = (SMutableObject) arguments[0];
       return write.write(rcvr, arguments[1]);
     }
 
     @Override
-    public int lengthOfDispatchChain() {
-      return 1;
-    }
+    public int lengthOfDispatchChain() { return 1; }
   }
 
-  public static final class CheckedCachedSlotWriteNode extends CachedSlotWriteNode {
-    private final ClassFactory rcvrFactory;
-    @Child protected AbstractDispatchNode nextInCache;
+  public static final class CachedSlotWrite extends AbstractDispatchNode {
+    @Child protected AbstractDispatchNode   nextInCache;
+    @Child protected AbstractWriteFieldNode write;
 
-    public CheckedCachedSlotWriteNode(final ClassFactory rcvrFactory,
-        final AbstractWriteFieldNode write,
+    private final DispatchGuard             guard;
+
+    public CachedSlotWrite(final AbstractWriteFieldNode write,
+        final DispatchGuard guard,
         final AbstractDispatchNode nextInCache) {
-      super(write);
-      this.rcvrFactory = rcvrFactory;
+      this.write = write;
+      this.guard = guard;
       this.nextInCache = nextInCache;
     }
 
     @Override
     public Object executeDispatch(final VirtualFrame frame,
         final Object[] arguments) {
-      assert arguments[0] instanceof SObjectWithClass;
-      SObjectWithClass rcvr = (SObjectWithClass) arguments[0];
-
-      if (rcvr.getFactory() == rcvrFactory) {
-        assert arguments[0] instanceof SObject;
-        return write.write((SObject) rcvr, arguments[1]);
-      } else {
-        return nextInCache.executeDispatch(frame, arguments);
+      try {
+        if (guard.entryMatches(arguments[0])) {
+          return write.write((SMutableObject) arguments[0], arguments[1]);
+        } else {
+          return nextInCache.executeDispatch(frame, arguments);
+        }
+      } catch (InvalidAssumptionException e) {
+        CompilerDirectives.transferToInterpreter();
+        return replace(nextInCache).executeDispatch(frame, arguments);
       }
     }
 

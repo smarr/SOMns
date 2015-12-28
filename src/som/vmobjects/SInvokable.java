@@ -30,14 +30,10 @@ import som.compiler.AccessModifier;
 import som.compiler.MixinDefinition;
 import som.interpreter.Invokable;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
-import som.interpreter.nodes.dispatch.CachedDispatchSObjectCheckNode;
-import som.interpreter.nodes.dispatch.CachedDispatchSObjectCheckNode.CachedDispatchSObjectWithoutFieldsCheckNode;
-import som.interpreter.nodes.dispatch.CachedDispatchSimpleCheckNode;
-import som.interpreter.nodes.dispatch.CachedDispatchSimpleCheckNode.CachedDispatchFalseCheckNode;
-import som.interpreter.nodes.dispatch.CachedDispatchSimpleCheckNode.CachedDispatchTrueCheckNode;
+import som.interpreter.nodes.dispatch.CachedDispatchNode;
+import som.interpreter.nodes.dispatch.DispatchGuard;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.nodes.dispatch.PrivateStaticBoundDispatchNode;
-import som.interpreter.objectstorage.ClassFactory;
 import som.vm.constants.Classes;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
@@ -162,29 +158,14 @@ public class SInvokable extends SAbstractObject implements Dispatchable {
 
   @Override
   public final AbstractDispatchNode getDispatchNode(final Object rcvr,
-      final Object rcvrClass, final AbstractDispatchNode next) {
+      final AbstractDispatchNode next) {
     // In case it's a private method, it is directly linked and doesn't need guards
     if (accessModifier == AccessModifier.PRIVATE) {
       return new PrivateStaticBoundDispatchNode(callTarget);
     }
 
-    if (rcvrClass instanceof SClass) {
-      ClassFactory instanceFactory = ((SClass) rcvrClass).getInstanceFactory();
-      if (rcvr instanceof SObject) {
-        return new CachedDispatchSObjectCheckNode(
-            instanceFactory, callTarget, next);
-      } else {
-        return new CachedDispatchSObjectWithoutFieldsCheckNode(
-            instanceFactory, callTarget, next);
-      }
-    } else if (rcvr == Boolean.TRUE) {
-      return new CachedDispatchTrueCheckNode(callTarget, next);
-    } else if (rcvr == Boolean.FALSE) {
-      return new CachedDispatchFalseCheckNode(callTarget, next);
-    } else {
-      assert rcvrClass instanceof Class;
-      return new CachedDispatchSimpleCheckNode((Class<?>) rcvrClass, callTarget, next);
-    }
+    DispatchGuard guard = DispatchGuard.create(rcvr);
+    return new CachedDispatchNode(callTarget, guard, next);
   }
 
   @Override

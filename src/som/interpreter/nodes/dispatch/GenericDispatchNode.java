@@ -14,14 +14,16 @@ import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 
-public final class GenericDispatchNode extends AbstractDispatchWithLookupNode {
+
+public final class GenericDispatchNode extends AbstractDispatchNode {
   @Child private IndirectCallNode call;
   private final AccessModifier minimalVisibility;
   private final MixinDefinitionId mixinId;
+  private final SSymbol selector;
 
   public GenericDispatchNode(final SSymbol selector,
       final AccessModifier minimalAccess, final MixinDefinitionId mixinId) {
-    super(selector);
+    this.selector = selector;
     assert minimalAccess.ordinal() >= AccessModifier.PROTECTED.ordinal() || mixinId != null;
     this.minimalVisibility = minimalAccess;
     this.mixinId = mixinId;
@@ -45,7 +47,7 @@ public final class GenericDispatchNode extends AbstractDispatchWithLookupNode {
       // Won't use DNU caching here, because it is already a megamorphic node
       SArray argumentsArray = SArguments.getArgumentsWithoutReceiver(arguments);
       args = new Object[] {arguments[0], selector, argumentsArray};
-      target = AbstractCachedDnuNode.getDnu(rcvrClass);
+      target = CachedDnuNode.getDnu(rcvrClass);
     }
     return call.call(frame, target, args);
   }

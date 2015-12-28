@@ -11,8 +11,7 @@ import com.oracle.truffle.api.CallTarget;
  */
 public interface Dispatchable {
 
-  AbstractDispatchNode getDispatchNode(Object rcvr, Object rcvrClass,
-      AbstractDispatchNode newChainEnd);
+  AbstractDispatchNode getDispatchNode(Object rcvr, AbstractDispatchNode newChainEnd);
 
   AccessModifier getAccessModifier();
   Object invoke(final Object... arguments);

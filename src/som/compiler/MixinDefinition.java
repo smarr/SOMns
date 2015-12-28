@@ -21,10 +21,12 @@ import som.interpreter.nodes.SlotAccessNode.ClassSlotAccessNode;
 import som.interpreter.nodes.SlotAccessNode.SlotReadNode;
 import som.interpreter.nodes.SlotAccessNode.SlotWriteNode;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
-import som.interpreter.nodes.dispatch.CachedSlotAccessNode;
-import som.interpreter.nodes.dispatch.CachedSlotAccessNode.CachedSlotWriteNode;
-import som.interpreter.nodes.dispatch.CachedSlotAccessNode.CheckedCachedSlotAccessNode;
-import som.interpreter.nodes.dispatch.CachedSlotAccessNode.CheckedCachedSlotWriteNode;
+import som.interpreter.nodes.dispatch.CachedSlotAccessNode.CachedSlotRead;
+import som.interpreter.nodes.dispatch.CachedSlotAccessNode.CachedSlotWrite;
+import som.interpreter.nodes.dispatch.CachedSlotAccessNode.LexicallyBoundImmutableSlotRead;
+import som.interpreter.nodes.dispatch.CachedSlotAccessNode.LexicallyBoundMutableSlotRead;
+import som.interpreter.nodes.dispatch.CachedSlotAccessNode.LexicallyBoundMutableSlotWrite;
+import som.interpreter.nodes.dispatch.DispatchGuard;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.nodes.literals.NilLiteralNode;
 import som.interpreter.objectstorage.ClassFactory;
@@ -38,6 +40,7 @@ import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SInvokable.SInitializer;
 import som.vmobjects.SObject;
+import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
 
@@ -494,12 +497,17 @@ public final class MixinDefinition {
 
     @Override
     public AbstractDispatchNode getDispatchNode(final Object rcvr,
-        final Object rcvrClass, final AbstractDispatchNode next) {
-      assert rcvrClass instanceof SClass;
+        final AbstractDispatchNode next) {
       if (modifier == AccessModifier.PRIVATE) {
-        return new CachedSlotAccessNode(createNode());
+        // TODO: we actually should try to remove SImmuableObject, and use a caching node
+        //       the caching node could also be more beneficial, because we can cache for all immutable fields, and if rcvr identidy check fails, we can do the load, but then still use the cached value
+        if (rcvr instanceof SImmutableObject) {
+          return new LexicallyBoundImmutableSlotRead(createNode());
+        } else {
+          return new LexicallyBoundMutableSlotRead(createNode());
+        }
       } else {
-        return new CheckedCachedSlotAccessNode(((SClass) rcvrClass).getLayoutForInstances(), createNode(), next);
+        return new CachedSlotRead(createNode(), DispatchGuard.create(rcvr), next);
       }
     }
 
@@ -562,12 +570,12 @@ public final class MixinDefinition {
 
     @Override
     public AbstractDispatchNode getDispatchNode(final Object rcvr,
-        final Object rcvrClass, final AbstractDispatchNode next) {
-      assert rcvrClass instanceof SClass;
+        final AbstractDispatchNode next) {
       if (modifier == AccessModifier.PRIVATE) {
-        return new CachedSlotWriteNode(createWriteNode());
+        return new LexicallyBoundMutableSlotWrite(createWriteNode());
       } else {
-        return new CheckedCachedSlotWriteNode(((SClass) rcvrClass).getInstanceFactory(), createWriteNode(), next);
+        return new CachedSlotWrite(createWriteNode(),
+            DispatchGuard.create(rcvr), next);
       }
     }
 

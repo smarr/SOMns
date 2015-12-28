@@ -7,8 +7,6 @@ import som.interpreter.actors.SPromise;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
 import som.interpreter.nodes.dispatch.DispatchChain.Cost;
 import som.interpreter.nodes.dispatch.GenericDispatchNode;
-import som.interpreter.nodes.dispatch.LexicallyBoundDispatchNode;
-import som.interpreter.nodes.dispatch.SuperDispatchNode;
 import som.interpreter.nodes.dispatch.UninitializedDispatchNode;
 import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.nary.EagerBinaryPrimitiveNode;
@@ -119,7 +117,8 @@ public final class MessageSendNode {
       throw new NotYetImplementedException();
     } else {
       return new GenericMessageSendNode(selector, argumentNodes,
-          new UninitializedDispatchNode(selector, AccessModifier.PUBLIC), source);
+          UninitializedDispatchNode.createRcvrSend(selector, AccessModifier.PUBLIC),
+          source);
     }
   }
 
@@ -220,7 +219,7 @@ public final class MessageSendNode {
     private GenericMessageSendNode makeOrdenarySend() {
       GenericMessageSendNode send = new GenericMessageSendNode(selector,
           argumentNodes,
-          new UninitializedDispatchNode(selector, AccessModifier.PUBLIC),
+          UninitializedDispatchNode.createRcvrSend(selector, AccessModifier.PUBLIC),
           getSourceSection());
       return replace(send);
     }
@@ -636,9 +635,9 @@ public final class MessageSendNode {
       AbstractDispatchNode dispatch;
 
       if (rcvrNode.isSuperSend()) {
-        dispatch = SuperDispatchNode.create(selector, (ISuperReadNode) rcvrNode);
+        dispatch = UninitializedDispatchNode.createSuper(selector, (ISuperReadNode) rcvrNode);
       } else {
-        dispatch = new LexicallyBoundDispatchNode(selector, rcvrNode.getEnclosingMixinId());
+        dispatch = UninitializedDispatchNode.createLexicallyBound(selector, rcvrNode.getEnclosingMixinId());
       }
 
       GenericMessageSendNode node = new GenericMessageSendNode(selector,
