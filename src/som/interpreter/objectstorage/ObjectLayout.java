@@ -81,6 +81,10 @@ public final class ObjectLayout {
     onlyImmutableFields           = onlyImmutable;
   }
 
+  public boolean isValid() {
+    return latestLayoutForClass.isValid();
+  }
+
   public void checkIsLatest() throws InvalidAssumptionException {
     latestLayoutForClass.check();
   }
