@@ -511,11 +511,11 @@ public final class MixinDefinition {
     @Override
     public final Object invoke(final Object... arguments) {
       VM.callerNeedsToBeOptimized("call without proper call cache. Find better way if this is performance critical.");
-      return this.getCallTarget().call(arguments);
+      return this.getCallTarget(null).call(arguments);
     }
 
     @Override
-    public CallTarget getCallTarget() {
+    public CallTarget getCallTarget(final Object rcvr) {
       if (genericAccessTarget != null) { return genericAccessTarget; }
 
       CompilerDirectives.transferToInterpreterAndInvalidate();
@@ -565,7 +565,7 @@ public final class MixinDefinition {
     }
 
     @Override
-    public CallTarget getCallTarget() {
+    public CallTarget getCallTarget(final Object rcvr) {
       if (genericAccessTarget != null) { return genericAccessTarget; }
 
       CompilerDirectives.transferToInterpreterAndInvalidate();

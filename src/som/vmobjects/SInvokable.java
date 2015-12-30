@@ -100,6 +100,10 @@ public class SInvokable extends SAbstractObject implements Dispatchable {
   }
 
   @Override
+  public final RootCallTarget getCallTarget(final Object rcvr) {
+    return callTarget;
+  }
+
   public final RootCallTarget getCallTarget() {
     return callTarget;
   }

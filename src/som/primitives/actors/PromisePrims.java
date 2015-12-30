@@ -38,8 +38,9 @@ public final class PromisePrims {
   public abstract static class CreatePromisePairPrim extends UnaryExpressionNode {
 
     protected static final DirectCallNode create() {
-      Dispatchable disp = SPromise.pairClass.getSOMClass().lookupMessage(withAndFactory, AccessModifier.PUBLIC);
-      return Truffle.getRuntime().createDirectCallNode(disp.getCallTarget());
+      Dispatchable disp = SPromise.pairClass.getSOMClass().lookupMessage(
+          withAndFactory, AccessModifier.PUBLIC);
+      return Truffle.getRuntime().createDirectCallNode(disp.getCallTarget(null));
     }
 
     @Specialization

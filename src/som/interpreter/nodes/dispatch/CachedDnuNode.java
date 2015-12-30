@@ -63,7 +63,7 @@ public final class CachedDnuNode extends AbstractDispatchNode {
     if (disp == null) {
       VM.errorExit("Lookup of " + rcvrClass.getName().getString() + ">>#doesNotUnderstand:arguments: failed.");
     }
-    return disp.getCallTarget();
+    return disp.getCallTarget(null);
   }
 
   @Override

@@ -41,7 +41,7 @@ public final class GenericDispatchNode extends AbstractDispatchNode {
     Object[] args;
 
     if (method != null) {
-      target = method.getCallTarget();
+      target = method.getCallTarget(rcvr);
       args = arguments;
     } else {
       // Won't use DNU caching here, because it is already a megamorphic node
