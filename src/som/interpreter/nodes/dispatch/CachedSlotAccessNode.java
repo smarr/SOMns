@@ -31,9 +31,6 @@ public abstract class CachedSlotAccessNode extends AbstractDispatchNode {
       assert nextInCache != null;
     }
 
-    // TODO: when we have this layout check here, do we need it later in the access node?
-    //       do we need to move the logic for dropping specializations for old layouts here?
-
     @Override
     public Object executeDispatch(final VirtualFrame frame,
         final Object[] arguments) {
