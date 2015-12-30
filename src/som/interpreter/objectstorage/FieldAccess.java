@@ -40,18 +40,11 @@ public abstract class FieldAccess extends Node {
   }
 
   public abstract static class AbstractFieldRead extends FieldAccess {
-    private static final IntValueProfile primMarkProfile = IntValueProfile.createIdentityProfile();
     public AbstractFieldRead(final SlotDefinition slot) {
       super(slot);
     }
 
     public abstract Object read(VirtualFrame frame, SObject obj) throws InvalidAssumptionException;
-
-//    @Override
-//    public final Object executeGeneric(final VirtualFrame frame) {
-//      VM.thisMethodNeedsToBeOptimized("I think this should not be reached from compiled code. At least I think so. The cast here might be a performance issue. Otherwise, it might be fine.");
-//      return read(frame, (SObject) SArguments.rcvr(frame));
-//    }
   }
 
   public static final class ReadUnwrittenFieldNode extends AbstractFieldRead {
