@@ -21,8 +21,6 @@ import som.interpreter.nodes.SlotAccessNode.SlotWriteNode;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
 import som.interpreter.nodes.dispatch.CachedSlotAccessNode.CachedSlotRead;
 import som.interpreter.nodes.dispatch.CachedSlotAccessNode.CachedSlotWrite;
-import som.interpreter.nodes.dispatch.CachedSlotAccessNode.LexicallyBoundImmutableSlotRead;
-import som.interpreter.nodes.dispatch.CachedSlotAccessNode.LexicallyBoundMutableSlotRead;
 import som.interpreter.nodes.dispatch.CachedSlotAccessNode.LexicallyBoundMutableSlotWrite;
 import som.interpreter.nodes.dispatch.DispatchGuard;
 import som.interpreter.nodes.dispatch.Dispatchable;
@@ -494,19 +492,10 @@ public final class MixinDefinition {
     }
 
     @Override
-    public AbstractDispatchNode getDispatchNode(final Object rcvr,
+    public AbstractDispatchNode getDispatchNode(final Object receiver,
         final AbstractDispatchNode next) {
-      if (modifier == AccessModifier.PRIVATE) {
-        // TODO: we actually should try to remove SImmuableObject, and use a caching node
-        //       the caching node could also be more beneficial, because we can cache for all immutable fields, and if rcvr identidy check fails, we can do the load, but then still use the cached value
-        if (rcvr instanceof SImmutableObject) {
-          return new LexicallyBoundImmutableSlotRead(createNode());
-        } else {
-          return new LexicallyBoundMutableSlotRead(createNode());
-        }
-      } else {
-        return new CachedSlotRead(createNode(), DispatchGuard.create(rcvr), next);
-      }
+      SObject rcvr = (SObject) receiver;
+      return new CachedSlotRead(createNode(rcvr), DispatchGuard.create(rcvr), next);
     }
 
     @Override
