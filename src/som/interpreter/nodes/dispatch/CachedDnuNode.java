@@ -5,6 +5,7 @@ import som.compiler.AccessModifier;
 import som.interpreter.SArguments;
 import som.vm.Symbols;
 import som.vmobjects.SClass;
+import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CallTarget;
@@ -63,7 +64,7 @@ public final class CachedDnuNode extends AbstractDispatchNode {
     if (disp == null) {
       VM.errorExit("Lookup of " + rcvrClass.getName().getString() + ">>#doesNotUnderstand:arguments: failed.");
     }
-    return disp.getCallTarget(null);
+    return ((SInvokable) disp).getCallTarget();
   }
 
   @Override

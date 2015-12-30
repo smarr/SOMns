@@ -87,9 +87,9 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode {
       final boolean receiver, final SBlock trueBlock, final SBlock falseBlock) {
     CompilerAsserts.neverPartOfCompilation("IfTrueIfFalseMessageNode.10");
     if (condProf.profile(receiver)) {
-      return trueBlock.getMethod().invoke(frame, call, trueBlock);
+      return trueBlock.getMethod().invoke(call, frame, trueBlock);
     } else {
-      return falseBlock.getMethod().invoke(frame, call, falseBlock);
+      return falseBlock.getMethod().invoke(call, frame, falseBlock);
     }
   }
 
@@ -120,7 +120,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode {
       return trueValue;
     } else {
       CompilerAsserts.neverPartOfCompilation("IfTrueIfFalseMessageNode.20");
-      return falseBlock.getMethod().invoke(frame, call, falseBlock);
+      return falseBlock.getMethod().invoke(call, frame, falseBlock);
     }
   }
 
@@ -129,7 +129,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode {
       final boolean receiver, final SBlock trueBlock, final Object falseValue) {
     if (condProf.profile(receiver)) {
       CompilerAsserts.neverPartOfCompilation("IfTrueIfFalseMessageNode.30");
-      return trueBlock.getMethod().invoke(frame, call, trueBlock);
+      return trueBlock.getMethod().invoke(call, frame, trueBlock);
     } else {
       return falseValue;
     }

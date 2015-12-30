@@ -21,20 +21,27 @@
  */
 package som.interpreter.nodes;
 
+import som.compiler.AccessModifier;
 import som.interpreter.FrameOnStackMarker;
 import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
 import som.interpreter.InlinerForLexicallyEmbeddedMethods;
 import som.interpreter.ReturnException;
 import som.interpreter.SArguments;
 import som.interpreter.SplitterForLexicallyEmbeddedCode;
-import som.vmobjects.SAbstractObject;
+import som.interpreter.Types;
+import som.vm.Symbols;
 import som.vmobjects.SBlock;
+import som.vmobjects.SInvokable;
+import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.FrameUtil;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.profiles.BranchProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -42,7 +49,6 @@ import com.oracle.truffle.api.source.SourceSection;
 public final class ReturnNonLocalNode extends ContextualNode {
 
   @Child private ExpressionNode expression;
-  private final BranchProfile blockEscaped;
   private final FrameSlot frameOnStackMarker;
 
   public ReturnNonLocalNode(final ExpressionNode expression,
@@ -52,7 +58,6 @@ public final class ReturnNonLocalNode extends ContextualNode {
     super(outerSelfContextLevel, source);
     assert outerSelfContextLevel > 0;
     this.expression = expression;
-    this.blockEscaped = BranchProfile.create();
     this.frameOnStackMarker = frameOnStackMarker;
   }
 
@@ -66,6 +71,9 @@ public final class ReturnNonLocalNode extends ContextualNode {
     return (FrameOnStackMarker) FrameUtil.getObjectSafe(ctx, frameOnStackMarker);
   }
 
+  private static final SSymbol escapedBlock = Symbols.symbolFor("escapedBlock:");
+  private static final IndirectCallNode call = Truffle.getRuntime().createIndirectCallNode();
+
   @Override
   public Object executeGeneric(final VirtualFrame frame) {
     Object result = expression.executeGeneric(frame);
@@ -76,10 +84,17 @@ public final class ReturnNonLocalNode extends ContextualNode {
     if (marker.isOnStack()) {
       throw new ReturnException(result, marker);
     } else {
-      blockEscaped.enter();
+      CompilerDirectives.transferToInterpreter();
+      // TODO: this should never be a performance relevant path... do caching if necessary
+
       SBlock block = (SBlock) SArguments.rcvr(frame);
       Object self = SArguments.rcvr(ctx);
-      return SAbstractObject.sendEscapedBlock(self, block);
+
+      // Lookup the invokable
+      SInvokable invokable = (SInvokable) Types.getClassOf(self).lookupMessage(
+          escapedBlock, AccessModifier.PROTECTED);
+
+      return invokable.invoke(call, frame, new Object[] {self, block});
     }
   }
 

@@ -40,7 +40,7 @@ public final class PromisePrims {
     protected static final DirectCallNode create() {
       Dispatchable disp = SPromise.pairClass.getSOMClass().lookupMessage(
           withAndFactory, AccessModifier.PUBLIC);
-      return Truffle.getRuntime().createDirectCallNode(disp.getCallTarget(null));
+      return Truffle.getRuntime().createDirectCallNode(((SInvokable) disp).getCallTarget());
     }
 
     @Specialization

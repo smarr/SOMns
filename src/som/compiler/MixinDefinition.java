@@ -17,7 +17,6 @@ import som.interpreter.nodes.ClassInstantiationNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.FieldNode.FieldWriteNode;
 import som.interpreter.nodes.SlotAccessNode.ClassSlotAccessNode;
-import som.interpreter.nodes.SlotAccessNode.SlotWriteNode;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
 import som.interpreter.nodes.dispatch.CachedSlotAccessNode.CachedSlotRead;
 import som.interpreter.nodes.dispatch.CachedSlotAccessNode.CachedSlotWrite;
@@ -29,6 +28,7 @@ import som.interpreter.objectstorage.ClassFactory;
 import som.interpreter.objectstorage.FieldAccess;
 import som.interpreter.objectstorage.FieldAccess.AbstractFieldRead;
 import som.interpreter.objectstorage.FieldAccess.AbstractWriteFieldNode;
+import som.interpreter.objectstorage.FieldAccess.UninitializedWriteFieldNode;
 import som.vm.Symbols;
 import som.vm.constants.Classes;
 import som.vm.constants.Nil;
@@ -36,16 +36,16 @@ import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SInvokable.SInitializer;
 import som.vmobjects.SObject;
-import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerAsserts;
-import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
+import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 import com.sun.istack.internal.Nullable;
@@ -509,26 +509,11 @@ public final class MixinDefinition {
     }
 
     @Override
-    public final Object invoke(final Object... arguments) {
+    public Object invoke(final IndirectCallNode call, final VirtualFrame frame, final Object... arguments) {
       VM.callerNeedsToBeOptimized("call without proper call cache. Find better way if this is performance critical.");
-      return this.getCallTarget(null).call(arguments);
-    }
-
-    @Override
-    public CallTarget getCallTarget(final Object rcvr) {
-      if (genericAccessTarget != null) { return genericAccessTarget; }
-
-      CompilerDirectives.transferToInterpreterAndInvalidate();
-
-      MethodBuilder builder = new MethodBuilder(true);
-      builder.setSignature(name);
-      builder.addArgumentIfAbsent("self");
-
-      SInvokable genericAccessMethod = builder.assemble(createNode(), modifier,
-          null, source);
-
-      genericAccessTarget = genericAccessMethod.getCallTarget();
-      return genericAccessTarget;
+      assert arguments.length == 1;
+      SObject rcvr = (SObject) arguments[0];
+      return rcvr.getField(this);
     }
 
     protected AbstractFieldRead createNode(final SObject rcvr) {
@@ -565,20 +550,12 @@ public final class MixinDefinition {
     }
 
     @Override
-    public CallTarget getCallTarget(final Object rcvr) {
-      if (genericAccessTarget != null) { return genericAccessTarget; }
-
-      CompilerDirectives.transferToInterpreterAndInvalidate();
-
-      MethodBuilder builder = new MethodBuilder(true);
-      builder.setSignature(Symbols.symbolFor(getName().getString() + ":"));
-      builder.addArgumentIfAbsent("self");
-      builder.addArgumentIfAbsent("value");
-      SInvokable genericAccessMethod = builder.assemble(
-          new SlotWriteNode(createWriteNode()), modifier, null, source);
-
-      genericAccessTarget = genericAccessMethod.getCallTarget();
-      return genericAccessTarget;
+    public Object invoke(final IndirectCallNode call, final VirtualFrame frame,
+        final Object... arguments) {
+      VM.callerNeedsToBeOptimized("call without proper call cache. Find better way if this is performance critical.");
+      SObject rcvr = (SObject) arguments[0];
+      rcvr.setField(this, arguments[1]);
+      return rcvr;
     }
 
     protected AbstractWriteFieldNode createWriteNode() {
@@ -607,6 +584,33 @@ public final class MixinDefinition {
           FieldAccess.createRead(this, rcvr),
           new UninitializedWriteFieldNode(this));
       return node;
+    }
+
+    @Override
+    public Object invoke(final IndirectCallNode call, final VirtualFrame frame,
+        final Object... arguments) {
+      VM.callerNeedsToBeOptimized("this should not be on the compiled-code path");
+      assert arguments.length == 1;
+      SObject rcvr = (SObject) arguments[0];
+      Object result = rcvr.getField(this);
+      assert result != null;
+      if (result != Nil.nilObject) {
+        return result;
+      }
+
+      // There is no cached value yet, so, we need to actually create the class object
+      synchronized (rcvr) {
+        result = rcvr.getField(this);
+        if (result != Nil.nilObject) {
+          return result;
+        }
+        // ok, now it is for sure not initialized yet, instantiate class
+        Object superclassAndMixins = mixinDefinition.
+            getSuperclassAndMixinResolutionInvokable().createCallTarget().call(rcvr);
+        SClass clazz = mixinDefinition.instantiateClass(rcvr, superclassAndMixins);
+        rcvr.setField(this, clazz);
+        return clazz;
+      }
     }
 
     @Override
@@ -656,7 +660,7 @@ public final class MixinDefinition {
     VM.callerNeedsToBeOptimized("Only supposed to be used from Bootstrap.");
     assert args[0] instanceof SClass;
     SClass classObj = (SClass) args[0];
-    Dispatchable factory = classObj.getSOMClass().lookupMessage(
+    SInvokable factory = (SInvokable) classObj.getSOMClass().lookupMessage(
         primaryFactoryName, AccessModifier.PUBLIC);
     return factory.invoke(args);
   }

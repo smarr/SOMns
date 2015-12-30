@@ -37,19 +37,15 @@ public final class GenericDispatchNode extends AbstractDispatchNode {
     SClass rcvrClass = Types.getClassOf(rcvr);
     Dispatchable method = doLookup(rcvrClass);
 
-    CallTarget target;
-    Object[] args;
-
     if (method != null) {
-      target = method.getCallTarget(rcvr);
-      args = arguments;
+      return method.invoke(call, frame, arguments);
     } else {
       // Won't use DNU caching here, because it is already a megamorphic node
       SArray argumentsArray = SArguments.getArgumentsWithoutReceiver(arguments);
-      args = new Object[] {arguments[0], selector, argumentsArray};
-      target = CachedDnuNode.getDnu(rcvrClass);
+      Object[] args = new Object[] {arguments[0], selector, argumentsArray};
+      CallTarget target = CachedDnuNode.getDnu(rcvrClass);
+      return call.call(frame, target, args);
     }
-    return call.call(frame, target, args);
   }
 
   @TruffleBoundary

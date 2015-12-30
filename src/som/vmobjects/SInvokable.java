@@ -99,11 +99,6 @@ public class SInvokable extends SAbstractObject implements Dispatchable {
     return false;
   }
 
-  @Override
-  public final RootCallTarget getCallTarget(final Object rcvr) {
-    return callTarget;
-  }
-
   public final RootCallTarget getCallTarget() {
     return callTarget;
   }
@@ -129,12 +124,12 @@ public class SInvokable extends SAbstractObject implements Dispatchable {
     return getSignature().getNumberOfSignatureArguments();
   }
 
-  @Override
   public final Object invoke(final Object... arguments) {
     return callTarget.call(arguments);
   }
 
-  public final Object invoke(final VirtualFrame frame, final IndirectCallNode node, final Object... arguments) {
+  @Override
+  public final Object invoke(final IndirectCallNode node, final VirtualFrame frame, final Object... arguments) {
     return node.call(frame, callTarget, arguments);
   }
 

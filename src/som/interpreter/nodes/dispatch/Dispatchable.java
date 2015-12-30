@@ -2,7 +2,8 @@ package som.interpreter.nodes.dispatch;
 
 import som.compiler.AccessModifier;
 
-import com.oracle.truffle.api.CallTarget;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.IndirectCallNode;
 
 
 /**
@@ -14,9 +15,7 @@ public interface Dispatchable {
   AbstractDispatchNode getDispatchNode(Object rcvr, AbstractDispatchNode newChainEnd);
 
   AccessModifier getAccessModifier();
-  Object invoke(final Object... arguments);
-
-  CallTarget getCallTarget(Object rcvr);
+  Object invoke(IndirectCallNode node, VirtualFrame frame, Object... arguments);
 
   String typeForErrors();
 

@@ -1,8 +1,8 @@
 package som.vm.constants;
 
 import som.VM;
-import som.interpreter.nodes.dispatch.Dispatchable;
 import som.vm.Symbols;
+import som.vmobjects.SInvokable;
 import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SObjectWithClass;
 
@@ -19,7 +19,7 @@ public final class KernelObj {
     VM.thisMethodNeedsToBeOptimized("Should be optimized or on slowpath");
 
     // the value object was not constructed properly.
-    Dispatchable disp = KernelObj.kernel.getSOMClass().lookupPrivate(
+    SInvokable disp = (SInvokable) KernelObj.kernel.getSOMClass().lookupPrivate(
         Symbols.symbolFor(selector),
         KernelObj.kernel.getSOMClass().getMixinDefinition().getMixinId());
     return disp.invoke(KernelObj.kernel, rcvr.getSOMClass());

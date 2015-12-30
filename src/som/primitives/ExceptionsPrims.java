@@ -63,10 +63,10 @@ public abstract class ExceptionsPrims {
     public final Object doExceptionUncached(final VirtualFrame frame, final SBlock body,
         final SClass exceptionClass, final SBlock exceptionHandler) {
       try {
-        return body.getMethod().invoke(frame, indirect, new Object[] {body});
+        return body.getMethod().invoke(indirect, frame, new Object[] {body});
       } catch (SomException e) {
         if (e.getSomObject().getSOMClass().isKindOf(exceptionClass)) {
-          return exceptionHandler.getMethod().invoke(frame, indirect,
+          return exceptionHandler.getMethod().invoke(indirect, frame,
               new Object[] {exceptionHandler, e.getSomObject()});
         } else {
           throw e;

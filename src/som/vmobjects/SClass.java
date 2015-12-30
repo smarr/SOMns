@@ -204,7 +204,7 @@ public final class SClass extends SObjectWithClass {
     ArrayList<SClass> classes = new ArrayList<SClass>();
     for (Dispatchable disp : dispatchables.values()) {
       if (disp instanceof ClassSlotDefinition) {
-        classes.add((SClass) disp.invoke(instance));
+        classes.add((SClass) disp.invoke(null, null, instance));
       }
     }
     return classes.toArray(new SClass[classes.size()]);

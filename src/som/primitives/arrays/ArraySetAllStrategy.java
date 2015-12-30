@@ -2,13 +2,13 @@ package som.primitives.arrays;
 
 import som.VM;
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
-import som.interpreter.nodes.dispatch.Dispatchable;
 import som.primitives.ObjectPrims.IsValue;
 import som.vm.Symbols;
 import som.vm.constants.Classes;
 import som.vm.constants.KernelObj;
 import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
+import som.vmobjects.SInvokable;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
@@ -34,7 +34,7 @@ public final class ArraySetAllStrategy {
     VM.thisMethodNeedsToBeOptimized("Should be optimized or on slowpath");
 
     // the value object was not constructed properly.
-    Dispatchable disp = KernelObj.kernel.getSOMClass().lookupPrivate(
+    SInvokable disp = (SInvokable) KernelObj.kernel.getSOMClass().lookupPrivate(
         Symbols.symbolFor("signalNotAValueWith:"),
         KernelObj.kernel.getSOMClass().getMixinDefinition().getMixinId());
     return disp.invoke(KernelObj.kernel, Classes.valueArrayClass);

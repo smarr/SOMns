@@ -480,7 +480,7 @@ Classes.transferClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInst
 
   public static void executeApplication(final SObjectWithoutFields vmMirror, final Actor mainActor) {
     Object platform = platformModule.instantiateObject(platformClass, vmMirror);
-    Dispatchable disp = platformClass.lookupMessage(
+    SInvokable disp = (SInvokable) platformClass.lookupMessage(
         Symbols.symbolFor("start"), AccessModifier.PUBLIC);
     Object returnCode = disp.invoke(platform);
 
@@ -506,7 +506,7 @@ Classes.transferClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInst
   }
 
   public static Object execute(final String selector) {
-    Dispatchable method = platformClass.getSOMClass().lookupMessage(
+    SInvokable method = (SInvokable) platformClass.getSOMClass().lookupMessage(
         Symbols.symbolFor(selector), AccessModifier.PUBLIC);
     return method.invoke(platformClass);
   }
