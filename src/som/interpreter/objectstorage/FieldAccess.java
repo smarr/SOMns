@@ -2,7 +2,6 @@ package som.interpreter.objectstorage;
 
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.TruffleCompiler;
-import som.interpreter.TypesGen;
 import som.interpreter.objectstorage.StorageLocation.AbstractObjectStorageLocation;
 import som.interpreter.objectstorage.StorageLocation.DoubleStorageLocation;
 import som.interpreter.objectstorage.StorageLocation.LongStorageLocation;
@@ -10,271 +9,174 @@ import som.vm.constants.Nil;
 import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import com.oracle.truffle.api.profiles.IntValueProfile;
 
 
-public abstract class FieldAccessorNode extends Node {
+public abstract class FieldAccess extends Node {
+  private static final IntValueProfile staticPrimMarkProfile = IntValueProfile.createIdentityProfile();
+
   protected final SlotDefinition slot;
 
-  public static AbstractReadFieldNode createRead(final SlotDefinition slot) {
-    return new UninitializedReadFieldNode(slot);
+  public final SlotDefinition getSlot() {
+    return slot;
+  }
+
+  public static AbstractFieldRead createRead(final SlotDefinition slot, final SObject rcvr) {
+    ObjectLayout layout = rcvr.getObjectLayout();
+    final StorageLocation location = layout.getStorageLocation(slot);
+    return location.getReadNode(slot, layout, location.isSet(rcvr, staticPrimMarkProfile));
   }
 
   public static AbstractWriteFieldNode createWrite(final SlotDefinition slot) {
     return new UninitializedWriteFieldNode(slot);
   }
 
-  private FieldAccessorNode(final SlotDefinition slot) {
+  private FieldAccess(final SlotDefinition slot) {
+    super(null);
     this.slot = slot;
   }
 
-  public final SlotDefinition getSlot() {
-    return slot;
-  }
-
-  public abstract static class AbstractReadFieldNode extends FieldAccessorNode {
+  public abstract static class AbstractFieldRead extends FieldAccess {
     private static final IntValueProfile primMarkProfile = IntValueProfile.createIdentityProfile();
-    public AbstractReadFieldNode(final SlotDefinition slot) {
+    public AbstractFieldRead(final SlotDefinition slot) {
       super(slot);
     }
 
-    public abstract Object read(SObject obj);
+    public abstract Object read(VirtualFrame frame, SObject obj) throws InvalidAssumptionException;
 
-    public long readLong(final SObject obj) throws UnexpectedResultException {
-      return TypesGen.expectLong(read(obj));
-    }
-
-    public double readDouble(final SObject obj) throws UnexpectedResultException {
-      return TypesGen.expectDouble(read(obj));
-    }
-
-    protected final Object specializeAndRead(final SObject obj, final String reason, final AbstractReadFieldNode next) {
-      TruffleCompiler.transferToInterpreterAndInvalidate(reason);
-      return specialize(obj, reason, next).read(obj);
-    }
-
-    protected final AbstractReadFieldNode specialize(final SObject obj,
-        final String reason, final AbstractReadFieldNode next) {
-      TruffleCompiler.transferToInterpreterAndInvalidate(reason);
-      obj.updateLayoutToMatchClass();
-
-      final ObjectLayout    layout   = obj.getObjectLayout();
-      final StorageLocation location = layout.getStorageLocation(slot);
-
-      AbstractReadFieldNode newNode = location.getReadNode(slot, layout, next, location.isSet(obj, primMarkProfile));
-      return replace(newNode, reason);
-    }
+//    @Override
+//    public final Object executeGeneric(final VirtualFrame frame) {
+//      VM.thisMethodNeedsToBeOptimized("I think this should not be reached from compiled code. At least I think so. The cast here might be a performance issue. Otherwise, it might be fine.");
+//      return read(frame, (SObject) SArguments.rcvr(frame));
+//    }
   }
 
-  public static final class UninitializedReadFieldNode extends AbstractReadFieldNode {
-
-    public UninitializedReadFieldNode(final SlotDefinition slot) {
+  public static final class ReadUnwrittenFieldNode extends AbstractFieldRead {
+    public ReadUnwrittenFieldNode(final SlotDefinition slot) {
       super(slot);
     }
 
     @Override
-    public Object read(final SObject obj) {
-      CompilerDirectives.transferToInterpreterAndInvalidate();
-      return specializeAndRead(obj, "uninitalized node", new UninitializedReadFieldNode(slot));
+    public Object read(final VirtualFrame frame, final SObject obj) {
+      assert obj.getObjectLayout().isValid();
+      return Nil.nilObject;
     }
   }
 
-  public abstract static class ReadSpecializedFieldNode extends AbstractReadFieldNode {
-    protected final ObjectLayout layout;
-    @Child private AbstractReadFieldNode nextInCache;
-
-    public ReadSpecializedFieldNode(final SlotDefinition slot,
-        final ObjectLayout layout, final AbstractReadFieldNode next) {
-      super(slot);
-      this.layout = layout;
-      nextInCache = next;
-    }
-
-    protected final boolean hasExpectedLayout(final SObject obj) {
-      return layout == obj.getObjectLayout();
-    }
-
-    protected final AbstractReadFieldNode respecializedNodeOrNext(final SObject obj) {
-      if (layout.layoutForSameClasses(obj.getObjectLayout())) {
-        CompilerDirectives.transferToInterpreter();
-        return specialize(obj, "update outdated read node", nextInCache);
-      } else {
-        return nextInCache;
-      }
-    }
-  }
-
-  public static final class ReadUnwrittenFieldNode extends ReadSpecializedFieldNode {
-    public ReadUnwrittenFieldNode(final SlotDefinition slot,
-        final ObjectLayout layout, final AbstractReadFieldNode next) {
-      super(slot, layout, next);
-    }
-
-    @Override
-    public Object read(final SObject obj) {
-      if (hasExpectedLayout(obj)) {
-        return Nil.nilObject;
-      } else {
-        return respecializedNodeOrNext(obj).read(obj);
-      }
-    }
-  }
-
-  public static final class ReadSetLongFieldNode extends ReadSpecializedFieldNode {
+  public static final class ReadSetLongFieldNode extends AbstractFieldRead {
     private final LongStorageLocation storage;
     private final IntValueProfile primMarkProfile = IntValueProfile.createIdentityProfile();
 
     public ReadSetLongFieldNode(final SlotDefinition slot,
-        final ObjectLayout layout, final AbstractReadFieldNode next) {
-      super(slot, layout, next);
+        final ObjectLayout layout) {
+      super(slot);
       this.storage = (LongStorageLocation) layout.getStorageLocation(slot);
     }
 
     @Override
-    public long readLong(final SObject obj) throws UnexpectedResultException {
-      if (hasExpectedLayout(obj) && storage.isSet(obj, primMarkProfile)) {
+    public Object read(final VirtualFrame frame, final SObject obj) throws InvalidAssumptionException {
+      if (storage.isSet(obj, primMarkProfile)) {
+        assert obj.getObjectLayout().isValid();
         return storage.readLongSet(obj);
       } else {
-        return respecializedNodeOrNext(obj).
-            readLong(obj);
-      }
-    }
-
-    @Override
-    public Object read(final SObject obj) {
-      try {
-        return readLong(obj);
-      } catch (UnexpectedResultException e) {
-        return e.getResult();
+        throw new InvalidAssumptionException();
       }
     }
   }
 
-  public static final class ReadSetOrUnsetLongFieldNode extends ReadSpecializedFieldNode {
+  public static final class ReadSetOrUnsetLongFieldNode extends AbstractFieldRead {
     private final LongStorageLocation storage;
     private final IntValueProfile primMarkProfile = IntValueProfile.createIdentityProfile();
 
     public ReadSetOrUnsetLongFieldNode(final SlotDefinition slot,
-        final ObjectLayout layout, final AbstractReadFieldNode next) {
-      super(slot, layout, next);
+        final ObjectLayout layout) {
+      super(slot);
       this.storage = (LongStorageLocation) layout.getStorageLocation(slot);
     }
 
     @Override
-    public long readLong(final SObject obj) throws UnexpectedResultException {
-      if (hasExpectedLayout(obj)) {
-        if (storage.isSet(obj, primMarkProfile)) {
-          return storage.readLongSet(obj);
-        } else {
-          CompilerDirectives.transferToInterpreter();
-          throw new UnexpectedResultException(Nil.nilObject);
-        }
+    public Object read(final VirtualFrame frame, final SObject obj) {
+      if (storage.isSet(obj, primMarkProfile)) {
+        assert obj.getObjectLayout().isValid();
+        return storage.readLongSet(obj);
       } else {
-        return respecializedNodeOrNext(obj).
-            readLong(obj);
-      }
-    }
-
-    @Override
-    public Object read(final SObject obj) {
-      try {
-        return readLong(obj);
-      } catch (UnexpectedResultException e) {
-        return e.getResult();
+        return Nil.nilObject;
       }
     }
   }
 
-  public static final class ReadSetDoubleFieldNode extends ReadSpecializedFieldNode {
+  public static final class ReadSetDoubleFieldNode extends AbstractFieldRead {
     private final DoubleStorageLocation storage;
     private final IntValueProfile primMarkProfile = IntValueProfile.createIdentityProfile();
 
     public ReadSetDoubleFieldNode(final SlotDefinition slot,
-        final ObjectLayout layout, final AbstractReadFieldNode next) {
-      super(slot, layout, next);
+        final ObjectLayout layout) {
+      super(slot);
       this.storage = (DoubleStorageLocation) layout.getStorageLocation(slot);
     }
 
     @Override
-    public double readDouble(final SObject obj) throws UnexpectedResultException {
-      if (hasExpectedLayout(obj) && storage.isSet(obj, primMarkProfile)) {
+    public Object read(final VirtualFrame frame, final SObject obj)
+        throws InvalidAssumptionException {
+      if (storage.isSet(obj, primMarkProfile)) {
+        assert obj.getObjectLayout().isValid();
         return storage.readDoubleSet(obj);
       } else {
-        return respecializedNodeOrNext(obj).readDouble(obj);
-      }
-    }
-
-    @Override
-    public Object read(final SObject obj) {
-      try {
-        return readDouble(obj);
-      } catch (UnexpectedResultException e) {
-        return e.getResult();
+        throw new InvalidAssumptionException();
       }
     }
   }
 
-  public static final class ReadSetOrUnsetDoubleFieldNode extends ReadSpecializedFieldNode {
+  public static final class ReadSetOrUnsetDoubleFieldNode extends AbstractFieldRead {
     private final DoubleStorageLocation storage;
     private final IntValueProfile primMarkProfile = IntValueProfile.createIdentityProfile();
 
     public ReadSetOrUnsetDoubleFieldNode(final SlotDefinition slot,
-        final ObjectLayout layout, final AbstractReadFieldNode next) {
-      super(slot, layout, next);
+        final ObjectLayout layout) {
+      super(slot);
       this.storage = (DoubleStorageLocation) layout.getStorageLocation(slot);
     }
 
     @Override
-    public double readDouble(final SObject obj) throws UnexpectedResultException {
-      if (hasExpectedLayout(obj)) {
-        if (storage.isSet(obj, primMarkProfile)) {
-          return storage.readDoubleSet(obj);
-        } else {
-          CompilerDirectives.transferToInterpreter();
-          throw new UnexpectedResultException(Nil.nilObject);
-        }
+    public Object read(final VirtualFrame frame, final SObject obj) {
+      if (storage.isSet(obj, primMarkProfile)) {
+        assert obj.getObjectLayout().isValid();
+        return storage.readDoubleSet(obj);
       } else {
-        return respecializedNodeOrNext(obj).readDouble(obj);
-      }
-    }
-
-    @Override
-    public Object read(final SObject obj) {
-      try {
-        return readDouble(obj);
-      } catch (UnexpectedResultException e) {
-        return e.getResult();
+        return Nil.nilObject;
       }
     }
   }
 
-  public static final class ReadObjectFieldNode extends ReadSpecializedFieldNode {
+  public static final class ReadObjectFieldNode extends AbstractFieldRead {
     private final AbstractObjectStorageLocation storage;
 
     public ReadObjectFieldNode(final SlotDefinition slot,
-        final ObjectLayout layout, final AbstractReadFieldNode next) {
-      super(slot, layout, next);
+        final ObjectLayout layout) {
+      super(slot);
       this.storage = (AbstractObjectStorageLocation) layout.getStorageLocation(slot);
     }
 
     @Override
-    public Object read(final SObject obj) {
-      if (hasExpectedLayout(obj)) {
-        return storage.read(obj);
-      } else {
-        return respecializedNodeOrNext(obj).read(obj);
-      }
+    public Object read(final VirtualFrame frame, final SObject obj) {
+      return storage.read(obj);
     }
   }
 
-  public abstract static class AbstractWriteFieldNode extends FieldAccessorNode {
+  public abstract static class AbstractWriteFieldNode extends Node {
+    protected final SlotDefinition slot;
     public AbstractWriteFieldNode(final SlotDefinition slot) {
-      super(slot);
+      this.slot = slot;
     }
 
     public abstract Object write(SObject obj, Object value);
+
+    public SlotDefinition getSlot() {
+      return slot;
+    }
 
     @Override
     public final String toString() {
@@ -294,6 +196,7 @@ public abstract class FieldAccessorNode extends Node {
     protected final void writeAndRespecialize(final SObject obj, final Object value,
         final String reason, final AbstractWriteFieldNode next, final boolean locationWasSet) {
       TruffleCompiler.transferToInterpreterAndInvalidate(reason);
+      obj.updateLayoutToMatchClass();
 
       obj.setField(slot, value);
 
@@ -313,6 +216,19 @@ public abstract class FieldAccessorNode extends Node {
     @Override
     public Object write(final SObject obj, final Object value) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
+
+      Node i = this;
+      int chainDepth = 0;
+      while (i.getParent() instanceof AbstractWriteFieldNode) {
+        i = i.getParent();
+        chainDepth++;
+      }
+
+      if (chainDepth > /* MaxChainLength */ 16) {
+        // TODO: support generic read node
+//        throw new RuntimeException("Megamorphic write node, this should not happen!");
+      }
+
       writeAndRespecialize(obj, value, "initialize write field node",
           new UninitializedWriteFieldNode(slot),
           obj.getObjectLayout().getStorageLocation(slot).isSet(obj, primMarkProfile));
@@ -332,8 +248,10 @@ public abstract class FieldAccessorNode extends Node {
       nextInCache = next;
     }
 
+    // TODO: remove redundant guards
+
     protected final boolean hasExpectedLayout(final SObject obj) {
-      return layout == obj.getObjectLayout();
+      return layout.isValid() && layout == obj.getObjectLayout();
     }
   }
 

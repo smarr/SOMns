@@ -22,8 +22,8 @@
 package som.interpreter.nodes;
 
 import som.compiler.MixinDefinition.SlotDefinition;
-import som.interpreter.objectstorage.FieldAccessorNode.AbstractWriteFieldNode;
-import som.interpreter.objectstorage.FieldAccessorNode.UninitializedWriteFieldNode;
+import som.interpreter.objectstorage.FieldAccess.AbstractWriteFieldNode;
+import som.interpreter.objectstorage.FieldAccess.UninitializedWriteFieldNode;
 import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.dsl.NodeChild;

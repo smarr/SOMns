@@ -1,9 +1,8 @@
 package som.interpreter.nodes.dispatch;
 
-import som.interpreter.nodes.SlotAccessNode;
-import som.interpreter.objectstorage.FieldAccessorNode.AbstractWriteFieldNode;
+import som.interpreter.objectstorage.FieldAccess.AbstractFieldRead;
+import som.interpreter.objectstorage.FieldAccess.AbstractWriteFieldNode;
 import som.vmobjects.SObject;
-import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SObject.SMutableObject;
 
 import com.oracle.truffle.api.CompilerDirectives;
@@ -11,60 +10,25 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 
 
-
 public abstract class CachedSlotAccessNode extends AbstractDispatchNode {
 
-  @Child protected SlotAccessNode access;
+  @Child protected AbstractFieldRead read;
 
-  public CachedSlotAccessNode(final SlotAccessNode access) {
-    this.access = access;
+  public CachedSlotAccessNode(final AbstractFieldRead read) {
+    this.read = read;
   }
-
-  public static final class LexicallyBoundMutableSlotRead extends CachedSlotAccessNode {
-
-    public LexicallyBoundMutableSlotRead(final SlotAccessNode access) {
-      super(access);
-    }
-
-    @Override
-    public Object executeDispatch(final VirtualFrame frame,
-        final Object[] arguments) {
-      SMutableObject rcvr = (SMutableObject) arguments[0];
-      return access.doRead(frame, rcvr);
-    }
-
-    @Override
-    public int lengthOfDispatchChain() { return 1; }
-  }
-
-  public static final class LexicallyBoundImmutableSlotRead extends CachedSlotAccessNode {
-
-    public LexicallyBoundImmutableSlotRead(final SlotAccessNode access) {
-      super(access);
-    }
-
-    @Override
-    public Object executeDispatch(final VirtualFrame frame,
-        final Object[] arguments) {
-      SImmutableObject rcvr = (SImmutableObject) arguments[0];
-      return access.doRead(frame, rcvr);
-    }
-
-    @Override
-    public int lengthOfDispatchChain() { return 1; }
-  }
-
 
   public static final class CachedSlotRead extends CachedSlotAccessNode {
     @Child protected AbstractDispatchNode nextInCache;
 
     private final DispatchGuard           guard;
 
-    public CachedSlotRead(final SlotAccessNode access,
+    public CachedSlotRead(final AbstractFieldRead read,
         final DispatchGuard guard, final AbstractDispatchNode nextInCache) {
-      super(access);
+      super(read);
       this.guard       = guard;
       this.nextInCache = nextInCache;
+      assert nextInCache != null;
     }
 
     // TODO: when we have this layout check here, do we need it later in the access node?
@@ -76,13 +40,14 @@ public abstract class CachedSlotAccessNode extends AbstractDispatchNode {
       try {
         // TODO: make sure this cast is always eliminated, otherwise, we need two versions mut/immut
         if (guard.entryMatches(arguments[0])) {
-          return access.doRead(frame, ((SObject) arguments[0]));
+          return read.read(frame, ((SObject) arguments[0]));
         } else {
           return nextInCache.executeDispatch(frame, arguments);
         }
       } catch (InvalidAssumptionException e) {
         CompilerDirectives.transferToInterpreter();
-        return replace(nextInCache).executeDispatch(frame, arguments);
+        return replace(nextInCache).
+            executeDispatch(frame, arguments);
       }
     }
 

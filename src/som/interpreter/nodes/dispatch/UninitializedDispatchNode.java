@@ -8,6 +8,7 @@ import som.interpreter.nodes.ISuperReadNode;
 import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
 import som.vm.NotYetImplementedException;
 import som.vmobjects.SClass;
+import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
@@ -98,7 +99,7 @@ public final class UninitializedDispatchNode {
       Object receiver = arguments[0];
       if (receiver instanceof SObject) {
         SObject rcvr = (SObject) receiver;
-        if (rcvr.updateLayoutToMatchClass()) {
+        if (rcvr.updateLayoutToMatchClass() && first != this) { // if first is this, short cut and directly continue...
           return first.executeDispatch(frame, arguments);
         }
       }
@@ -172,7 +173,11 @@ public final class UninitializedDispatchNode {
     @Override
     protected AbstractUninitialized createNewChainEnd(final Object rcvr,
         final SClass rcvrClass, final Dispatchable result) {
-      if (result != null && result.getAccessModifier() == AccessModifier.PRIVATE) {
+      if (result instanceof SInvokable && result.getAccessModifier() == AccessModifier.PRIVATE) {
+        // This is an optimization. For lexical dispatches to methods,
+        // we don't need guards. So, there is no future failure,
+        // and no uninit node needed. For slots however, we need the guard on
+        // the object layout, which can change...
         return null;
       }
       return new UninitializedLexicallyBound(selector, mixinForPrivateLookup);

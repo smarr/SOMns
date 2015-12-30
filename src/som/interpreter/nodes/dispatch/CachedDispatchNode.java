@@ -32,7 +32,8 @@ public final class CachedDispatchNode extends AbstractDispatchNode {
       }
     } catch (InvalidAssumptionException e) {
       CompilerDirectives.transferToInterpreter();
-      return replace(nextInCache).executeDispatch(frame, arguments);
+      return replace(nextInCache).
+          executeDispatch(frame, arguments);
     }
   }
 

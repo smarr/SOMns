@@ -148,10 +148,10 @@ public abstract class StorageLocation {
     }
 
     @Override
-    public AbstractReadFieldNode getReadNode(final SlotDefinition slot,
-        final ObjectLayout layout, final AbstractReadFieldNode next, final boolean isSet) {
+    public AbstractFieldRead getReadNode(final SlotDefinition slot,
+        final ObjectLayout layout, final boolean isSet) {
       CompilerAsserts.neverPartOfCompilation("StorageLocation");
-      return new ReadUnwrittenFieldNode(slot, layout, next);
+      return new ReadUnwrittenFieldNode(slot);
     }
 
     @Override
@@ -177,10 +177,10 @@ public abstract class StorageLocation {
     public abstract void write(final SObject obj, final Object value);
 
     @Override
-    public final AbstractReadFieldNode getReadNode(final SlotDefinition slot,
-        final ObjectLayout layout, final AbstractReadFieldNode next, final boolean isSet) {
+    public final AbstractFieldRead getReadNode(final SlotDefinition slot,
+        final ObjectLayout layout, final boolean isSet) {
       CompilerAsserts.neverPartOfCompilation("StorageLocation");
-      return new ReadObjectFieldNode(slot, layout, next);
+      return new ReadObjectFieldNode(slot, layout);
     }
 
     @Override
@@ -332,13 +332,13 @@ public abstract class StorageLocation {
     }
 
     @Override
-    public AbstractReadFieldNode getReadNode(final SlotDefinition slot,
-        final ObjectLayout layout, final AbstractReadFieldNode next, final boolean isSet) {
+    public AbstractFieldRead getReadNode(final SlotDefinition slot,
+        final ObjectLayout layout, final boolean isSet) {
       CompilerAsserts.neverPartOfCompilation("StorageLocation");
       if (isSet) {
-        return new ReadSetDoubleFieldNode(slot, layout, next);
+        return new ReadSetDoubleFieldNode(slot, layout);
       } else {
-        return new ReadSetOrUnsetDoubleFieldNode(slot, layout, next);
+        return new ReadSetOrUnsetDoubleFieldNode(slot, layout);
       }
     }
 
@@ -393,13 +393,13 @@ public abstract class StorageLocation {
     }
 
     @Override
-    public AbstractReadFieldNode getReadNode(final SlotDefinition slot,
-        final ObjectLayout layout, final AbstractReadFieldNode next, final boolean isSet) {
+    public AbstractFieldRead getReadNode(final SlotDefinition slot,
+        final ObjectLayout layout, final boolean isSet) {
       CompilerAsserts.neverPartOfCompilation("StorageLocation");
       if (isSet) {
-        return new ReadSetLongFieldNode(slot, layout, next);
+        return new ReadSetLongFieldNode(slot, layout);
       } else {
-        return new ReadSetOrUnsetLongFieldNode(slot, layout, next);
+        return new ReadSetOrUnsetLongFieldNode(slot, layout);
       }
     }
 
@@ -464,13 +464,13 @@ public abstract class StorageLocation {
     }
 
     @Override
-    public AbstractReadFieldNode getReadNode(final SlotDefinition slot,
-        final ObjectLayout layout, final AbstractReadFieldNode next, final boolean isSet) {
+    public AbstractFieldRead getReadNode(final SlotDefinition slot,
+        final ObjectLayout layout, final boolean isSet) {
       CompilerAsserts.neverPartOfCompilation("StorageLocation");
       if (isSet) {
-        return new ReadSetLongFieldNode(slot, layout, next);
+        return new ReadSetLongFieldNode(slot, layout);
       } else {
-        return new ReadSetOrUnsetLongFieldNode(slot, layout, next);
+        return new ReadSetOrUnsetLongFieldNode(slot, layout);
       }
     }
 
@@ -533,13 +533,13 @@ public abstract class StorageLocation {
     }
 
     @Override
-    public AbstractReadFieldNode getReadNode(final SlotDefinition slot,
-        final ObjectLayout layout, final AbstractReadFieldNode next, final boolean isSet) {
+    public AbstractFieldRead getReadNode(final SlotDefinition slot,
+        final ObjectLayout layout, final boolean isSet) {
       CompilerAsserts.neverPartOfCompilation("StorageLocation");
       if (isSet) {
-        return new ReadSetDoubleFieldNode(slot, layout, next);
+        return new ReadSetDoubleFieldNode(slot, layout);
       } else {
-        return new ReadSetOrUnsetDoubleFieldNode(slot, layout, next);
+        return new ReadSetOrUnsetDoubleFieldNode(slot, layout);
       }
     }
 

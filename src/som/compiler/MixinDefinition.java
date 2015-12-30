@@ -16,9 +16,7 @@ import som.interpreter.SNodeFactory;
 import som.interpreter.nodes.ClassInstantiationNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.FieldNode.FieldWriteNode;
-import som.interpreter.nodes.SlotAccessNode;
 import som.interpreter.nodes.SlotAccessNode.ClassSlotAccessNode;
-import som.interpreter.nodes.SlotAccessNode.SlotReadNode;
 import som.interpreter.nodes.SlotAccessNode.SlotWriteNode;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
 import som.interpreter.nodes.dispatch.CachedSlotAccessNode.CachedSlotRead;
@@ -30,9 +28,9 @@ import som.interpreter.nodes.dispatch.DispatchGuard;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.nodes.literals.NilLiteralNode;
 import som.interpreter.objectstorage.ClassFactory;
-import som.interpreter.objectstorage.FieldAccessorNode.AbstractWriteFieldNode;
-import som.interpreter.objectstorage.FieldAccessorNode.UninitializedReadFieldNode;
-import som.interpreter.objectstorage.FieldAccessorNode.UninitializedWriteFieldNode;
+import som.interpreter.objectstorage.FieldAccess;
+import som.interpreter.objectstorage.FieldAccess.AbstractFieldRead;
+import som.interpreter.objectstorage.FieldAccess.AbstractWriteFieldNode;
 import som.vm.Symbols;
 import som.vm.constants.Classes;
 import som.vm.constants.Nil;
@@ -544,10 +542,8 @@ public final class MixinDefinition {
       return genericAccessTarget;
     }
 
-    protected SlotAccessNode createNode() {
-      SlotReadNode node = new SlotReadNode(
-          new UninitializedReadFieldNode(this));
-      return node;
+    protected AbstractFieldRead createNode(final SObject rcvr) {
+      return FieldAccess.createRead(this, rcvr);
     }
 
     public void setValueDuringBootstrap(final SObject obj, final Object value) {
@@ -617,9 +613,9 @@ public final class MixinDefinition {
     }
 
     @Override
-    protected SlotAccessNode createNode() {
+    protected AbstractFieldRead createNode(final SObject rcvr) {
       ClassSlotAccessNode node = new ClassSlotAccessNode(mixinDefinition,
-          new UninitializedReadFieldNode(this),
+          FieldAccess.createRead(this, rcvr),
           new UninitializedWriteFieldNode(this));
       return node;
     }
