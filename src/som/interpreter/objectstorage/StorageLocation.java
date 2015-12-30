@@ -4,19 +4,19 @@ import java.lang.reflect.Field;
 
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.TruffleCompiler;
-import som.interpreter.objectstorage.FieldAccessorNode.AbstractReadFieldNode;
-import som.interpreter.objectstorage.FieldAccessorNode.AbstractWriteFieldNode;
-import som.interpreter.objectstorage.FieldAccessorNode.ReadObjectFieldNode;
-import som.interpreter.objectstorage.FieldAccessorNode.ReadSetDoubleFieldNode;
-import som.interpreter.objectstorage.FieldAccessorNode.ReadSetLongFieldNode;
-import som.interpreter.objectstorage.FieldAccessorNode.ReadSetOrUnsetDoubleFieldNode;
-import som.interpreter.objectstorage.FieldAccessorNode.ReadSetOrUnsetLongFieldNode;
-import som.interpreter.objectstorage.FieldAccessorNode.ReadUnwrittenFieldNode;
-import som.interpreter.objectstorage.FieldAccessorNode.WriteObjectFieldNode;
-import som.interpreter.objectstorage.FieldAccessorNode.WriteSetDoubleFieldNode;
-import som.interpreter.objectstorage.FieldAccessorNode.WriteSetLongFieldNode;
-import som.interpreter.objectstorage.FieldAccessorNode.WriteSetOrUnsetDoubleFieldNode;
-import som.interpreter.objectstorage.FieldAccessorNode.WriteSetOrUnsetLongFieldNode;
+import som.interpreter.objectstorage.FieldAccess.AbstractFieldRead;
+import som.interpreter.objectstorage.FieldAccess.AbstractWriteFieldNode;
+import som.interpreter.objectstorage.FieldAccess.ReadObjectFieldNode;
+import som.interpreter.objectstorage.FieldAccess.ReadSetDoubleFieldNode;
+import som.interpreter.objectstorage.FieldAccess.ReadSetLongFieldNode;
+import som.interpreter.objectstorage.FieldAccess.ReadSetOrUnsetDoubleFieldNode;
+import som.interpreter.objectstorage.FieldAccess.ReadSetOrUnsetLongFieldNode;
+import som.interpreter.objectstorage.FieldAccess.ReadUnwrittenFieldNode;
+import som.interpreter.objectstorage.FieldAccess.WriteObjectFieldNode;
+import som.interpreter.objectstorage.FieldAccess.WriteSetDoubleFieldNode;
+import som.interpreter.objectstorage.FieldAccess.WriteSetLongFieldNode;
+import som.interpreter.objectstorage.FieldAccess.WriteSetOrUnsetDoubleFieldNode;
+import som.interpreter.objectstorage.FieldAccess.WriteSetOrUnsetLongFieldNode;
 import som.vm.constants.Nil;
 import som.vmobjects.SObject;
 import sun.misc.Unsafe;
@@ -107,8 +107,8 @@ public abstract class StorageLocation {
   public abstract Object  read(SObject obj);
   public abstract void    write(SObject obj, Object value) throws GeneralizeStorageLocationException, UninitalizedStorageLocationException;
 
-  public abstract AbstractReadFieldNode  getReadNode(SlotDefinition slot,
-      ObjectLayout layout, AbstractReadFieldNode next, boolean isSet);
+  public abstract AbstractFieldRead getReadNode(SlotDefinition slot,
+      ObjectLayout layout, boolean isSet);
   public abstract AbstractWriteFieldNode getWriteNode(SlotDefinition slot,
       ObjectLayout layout, AbstractWriteFieldNode next, boolean isSet);
 
