@@ -157,7 +157,7 @@ public class SInvokable extends SAbstractObject implements Dispatchable {
 
   @Override
   public final AbstractDispatchNode getDispatchNode(final Object rcvr,
-      final AbstractDispatchNode next) {
+      final Object firstArg, final AbstractDispatchNode next) {
     // In case it's a private method, it is directly linked and doesn't need guards
     if (accessModifier == AccessModifier.PRIVATE) {
       return new LexicallyBoundDispatchNode(callTarget);

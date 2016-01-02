@@ -39,13 +39,15 @@ public final class UninitializedDispatchNode {
       assert rcvr != null;
 
       if (chainDepth < INLINE_CACHE_SIZE) {
-        return insertSpecialization(rcvr);
+        Object firstArg = arguments.length > 1 ? arguments[1] : null;
+        return insertSpecialization(rcvr, firstArg);
       } else {
         return generalizeChain((GenericMessageSendNode) first.getParent());
       }
     }
 
-    protected final AbstractDispatchNode insertSpecialization(final Object rcvr) {
+    protected final AbstractDispatchNode insertSpecialization(final Object rcvr,
+        final Object firstArg) {
       SClass rcvrClass = Types.getClassOf(rcvr);
       Dispatchable dispatchable = doLookup(rcvrClass);
 
@@ -56,7 +58,7 @@ public final class UninitializedDispatchNode {
         node = new CachedDnuNode(rcvrClass, selector,
             DispatchGuard.create(rcvr), newChainEnd);
       } else {
-        node = dispatchable.getDispatchNode(rcvr, newChainEnd);
+        node = dispatchable.getDispatchNode(rcvr, firstArg, newChainEnd);
       }
 
       return replace(node);

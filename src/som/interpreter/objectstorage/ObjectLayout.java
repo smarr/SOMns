@@ -5,7 +5,11 @@ import java.util.HashSet;
 import java.util.Map.Entry;
 
 import som.compiler.MixinDefinition.SlotDefinition;
+import som.interpreter.objectstorage.StorageLocation.AbstractObjectStorageLocation;
+import som.interpreter.objectstorage.StorageLocation.DoubleStorageLocation;
+import som.interpreter.objectstorage.StorageLocation.LongStorageLocation;
 import som.interpreter.objectstorage.StorageLocation.UnwrittenStorageLocation;
+import som.vm.NotYetImplementedException;
 import som.vmobjects.SObject;
 
 import com.oracle.truffle.api.Assumption;
@@ -89,6 +93,10 @@ public final class ObjectLayout {
     latestLayoutForClass.check();
   }
 
+  Assumption getAssumption() {
+    return latestLayoutForClass;
+  }
+
   public boolean hasOnlyImmutableFields() {
     return onlyImmutableFields;
   }
@@ -159,8 +167,35 @@ public final class ObjectLayout {
     return requiredExtensionFields;
   }
 
+  private String fieldsAndLocations() {
+    String s = "";
+    for (Entry<SlotDefinition, StorageLocation> e : storageLocations.entrySet()) {
+      if (!s.equals("")) {
+        s += ", ";
+      }
+
+      StorageLocation loc = e.getValue();
+      String type;
+      if (loc instanceof UnwrittenStorageLocation) {
+        type = "unwritten";
+      } else if (loc instanceof LongStorageLocation) {
+        type = "long";
+      } else if (loc instanceof DoubleStorageLocation) {
+        type = "double";
+      } else if (loc instanceof AbstractObjectStorageLocation) {
+        type = "object";
+      } else {
+        throw new NotYetImplementedException(); // should not be reached
+      }
+      s += e.getKey().getName().getString() + ":" + type;
+    }
+    return s;
+  }
+
   @Override
   public String toString() {
-    return "ObjLyt[" + forClasses.getClassName().getString() + "]";
+    return "ObjLyt[" + forClasses.getClassName().getString()
+        + ", " + (latestLayoutForClass.isValid() ? "valid" : "invalid") + "; "
+        + fieldsAndLocations() + "]";
   }
 }

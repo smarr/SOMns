@@ -1,7 +1,7 @@
 package som.interpreter.nodes.dispatch;
 
 import som.interpreter.objectstorage.FieldAccess.AbstractFieldRead;
-import som.interpreter.objectstorage.FieldAccess.AbstractWriteFieldNode;
+import som.interpreter.objectstorage.FieldWriteNode.AbstractFieldWriteNode;
 import som.vmobjects.SObject;
 import som.vmobjects.SObject.SMutableObject;
 
@@ -54,33 +54,13 @@ public abstract class CachedSlotAccessNode extends AbstractDispatchNode {
     }
   }
 
-  public static final class LexicallyBoundMutableSlotWrite
-    extends AbstractDispatchNode {
-
-    @Child protected AbstractWriteFieldNode write;
-
-    public LexicallyBoundMutableSlotWrite(final AbstractWriteFieldNode write) {
-      this.write = write;
-    }
-
-    @Override
-    public Object executeDispatch(final VirtualFrame frame,
-        final Object[] arguments) {
-      SMutableObject rcvr = (SMutableObject) arguments[0];
-      return write.write(rcvr, arguments[1]);
-    }
-
-    @Override
-    public int lengthOfDispatchChain() { return 1; }
-  }
-
   public static final class CachedSlotWrite extends AbstractDispatchNode {
     @Child protected AbstractDispatchNode   nextInCache;
-    @Child protected AbstractWriteFieldNode write;
+    @Child protected AbstractFieldWriteNode write;
 
     private final DispatchGuard             guard;
 
-    public CachedSlotWrite(final AbstractWriteFieldNode write,
+    public CachedSlotWrite(final AbstractFieldWriteNode write,
         final DispatchGuard guard,
         final AbstractDispatchNode nextInCache) {
       this.write = write;

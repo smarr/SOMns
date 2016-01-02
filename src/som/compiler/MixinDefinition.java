@@ -15,20 +15,19 @@ import som.interpreter.Method;
 import som.interpreter.SNodeFactory;
 import som.interpreter.nodes.ClassInstantiationNode;
 import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.FieldNode.FieldWriteNode;
 import som.interpreter.nodes.SlotAccessNode.ClassSlotAccessNode;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
 import som.interpreter.nodes.dispatch.CachedSlotAccessNode.CachedSlotRead;
 import som.interpreter.nodes.dispatch.CachedSlotAccessNode.CachedSlotWrite;
-import som.interpreter.nodes.dispatch.CachedSlotAccessNode.LexicallyBoundMutableSlotWrite;
 import som.interpreter.nodes.dispatch.DispatchGuard;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.nodes.literals.NilLiteralNode;
 import som.interpreter.objectstorage.ClassFactory;
 import som.interpreter.objectstorage.FieldAccess;
+import som.interpreter.objectstorage.FieldWriteNode;
 import som.interpreter.objectstorage.FieldAccess.AbstractFieldRead;
-import som.interpreter.objectstorage.FieldAccess.AbstractWriteFieldNode;
-import som.interpreter.objectstorage.FieldAccess.UninitializedWriteFieldNode;
+import som.interpreter.objectstorage.FieldWriteNode.AbstractFieldWriteNode;
+import som.interpreter.objectstorage.InitializerFieldWrite;
 import som.vm.Symbols;
 import som.vm.constants.Classes;
 import som.vm.constants.Nil;
@@ -493,7 +492,7 @@ public final class MixinDefinition {
 
     @Override
     public AbstractDispatchNode getDispatchNode(final Object receiver,
-        final AbstractDispatchNode next) {
+        final Object firstArg, final AbstractDispatchNode next) {
       SObject rcvr = (SObject) receiver;
       return new CachedSlotRead(createNode(rcvr), DispatchGuard.create(rcvr), next);
     }
@@ -503,7 +502,7 @@ public final class MixinDefinition {
       return "slot";
     }
 
-    public FieldWriteNode getWriteNode(final ExpressionNode receiver,
+    public InitializerFieldWrite getInitializerWriteNode(final ExpressionNode receiver,
         final ExpressionNode val, final SourceSection source) {
       return SNodeFactory.createFieldWrite(receiver, val, this, source);
     }
@@ -540,13 +539,9 @@ public final class MixinDefinition {
 
     @Override
     public AbstractDispatchNode getDispatchNode(final Object rcvr,
-        final AbstractDispatchNode next) {
-      if (modifier == AccessModifier.PRIVATE) {
-        return new LexicallyBoundMutableSlotWrite(createWriteNode());
-      } else {
-        return new CachedSlotWrite(createWriteNode(),
-            DispatchGuard.create(rcvr), next);
-      }
+        final Object firstArg, final AbstractDispatchNode next) {
+      return new CachedSlotWrite(createWriteNode((SObject) rcvr, firstArg),
+          DispatchGuard.create(rcvr), next);
     }
 
     @Override
@@ -558,9 +553,9 @@ public final class MixinDefinition {
       return rcvr;
     }
 
-    protected AbstractWriteFieldNode createWriteNode() {
-      AbstractWriteFieldNode node = new UninitializedWriteFieldNode(mainSlot);
-      return node;
+    protected AbstractFieldWriteNode createWriteNode(final SObject rcvr,
+        final Object firstArg) {
+      return FieldWriteNode.createWrite(mainSlot, rcvr, firstArg);
     }
   }
 
@@ -582,7 +577,7 @@ public final class MixinDefinition {
     protected AbstractFieldRead createNode(final SObject rcvr) {
       ClassSlotAccessNode node = new ClassSlotAccessNode(mixinDefinition,
           FieldAccess.createRead(this, rcvr),
-          new UninitializedWriteFieldNode(this));
+          FieldWriteNode.createWriteObject(this, rcvr));
       return node;
     }
 

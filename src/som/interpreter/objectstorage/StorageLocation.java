@@ -5,18 +5,12 @@ import java.lang.reflect.Field;
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.TruffleCompiler;
 import som.interpreter.objectstorage.FieldAccess.AbstractFieldRead;
-import som.interpreter.objectstorage.FieldAccess.AbstractWriteFieldNode;
 import som.interpreter.objectstorage.FieldAccess.ReadObjectFieldNode;
 import som.interpreter.objectstorage.FieldAccess.ReadSetDoubleFieldNode;
 import som.interpreter.objectstorage.FieldAccess.ReadSetLongFieldNode;
 import som.interpreter.objectstorage.FieldAccess.ReadSetOrUnsetDoubleFieldNode;
 import som.interpreter.objectstorage.FieldAccess.ReadSetOrUnsetLongFieldNode;
 import som.interpreter.objectstorage.FieldAccess.ReadUnwrittenFieldNode;
-import som.interpreter.objectstorage.FieldAccess.WriteObjectFieldNode;
-import som.interpreter.objectstorage.FieldAccess.WriteSetDoubleFieldNode;
-import som.interpreter.objectstorage.FieldAccess.WriteSetLongFieldNode;
-import som.interpreter.objectstorage.FieldAccess.WriteSetOrUnsetDoubleFieldNode;
-import som.interpreter.objectstorage.FieldAccess.WriteSetOrUnsetLongFieldNode;
 import som.vm.constants.Nil;
 import som.vmobjects.SObject;
 import sun.misc.Unsafe;
@@ -109,8 +103,6 @@ public abstract class StorageLocation {
 
   public abstract AbstractFieldRead getReadNode(SlotDefinition slot,
       ObjectLayout layout, boolean isSet);
-  public abstract AbstractWriteFieldNode getWriteNode(SlotDefinition slot,
-      ObjectLayout layout, AbstractWriteFieldNode next, boolean isSet);
 
   public final class GeneralizeStorageLocationException extends Exception {
     private static final long serialVersionUID = 4610497040788136337L;
@@ -153,14 +145,6 @@ public abstract class StorageLocation {
       CompilerAsserts.neverPartOfCompilation("StorageLocation");
       return new ReadUnwrittenFieldNode(slot);
     }
-
-    @Override
-    public AbstractWriteFieldNode getWriteNode(final SlotDefinition slot,
-        final ObjectLayout layout, final AbstractWriteFieldNode next, final boolean isSet) {
-      CompilerAsserts.neverPartOfCompilation("StorageLocation");
-      throw new RuntimeException("we should not get here, should we?");
-      // return new UninitializedWriteFieldNode(fieldIndex);
-    }
   }
 
   public abstract static class AbstractObjectStorageLocation extends StorageLocation {
@@ -181,13 +165,6 @@ public abstract class StorageLocation {
         final ObjectLayout layout, final boolean isSet) {
       CompilerAsserts.neverPartOfCompilation("StorageLocation");
       return new ReadObjectFieldNode(slot, layout);
-    }
-
-    @Override
-    public final AbstractWriteFieldNode getWriteNode(final SlotDefinition slot,
-        final ObjectLayout layout, final AbstractWriteFieldNode next, final boolean isSet) {
-      CompilerAsserts.neverPartOfCompilation("StorageLocation");
-      return new WriteObjectFieldNode(slot, layout, next);
     }
   }
 
@@ -341,17 +318,6 @@ public abstract class StorageLocation {
         return new ReadSetOrUnsetDoubleFieldNode(slot, layout);
       }
     }
-
-    @Override
-    public AbstractWriteFieldNode getWriteNode(final SlotDefinition slot,
-        final ObjectLayout layout, final AbstractWriteFieldNode next, final boolean isSet) {
-      CompilerAsserts.neverPartOfCompilation("StorageLocation");
-      if (isSet) {
-        return new WriteSetDoubleFieldNode(slot, layout, next);
-      } else {
-        return new WriteSetOrUnsetDoubleFieldNode(slot, layout, next);
-      }
-    }
   }
 
   public static final class LongDirectStoreLocation extends PrimitiveDirectStoreLocation
@@ -400,17 +366,6 @@ public abstract class StorageLocation {
         return new ReadSetLongFieldNode(slot, layout);
       } else {
         return new ReadSetOrUnsetLongFieldNode(slot, layout);
-      }
-    }
-
-    @Override
-    public AbstractWriteFieldNode getWriteNode(final SlotDefinition slot,
-        final ObjectLayout layout, final AbstractWriteFieldNode next, final boolean isSet) {
-      CompilerAsserts.neverPartOfCompilation("StorageLocation");
-      if (isSet) {
-        return new WriteSetLongFieldNode(slot, layout, next);
-      } else {
-        return new WriteSetOrUnsetLongFieldNode(slot, layout, next);
       }
     }
   }
@@ -473,17 +428,6 @@ public abstract class StorageLocation {
         return new ReadSetOrUnsetLongFieldNode(slot, layout);
       }
     }
-
-    @Override
-    public AbstractWriteFieldNode getWriteNode(final SlotDefinition slot,
-        final ObjectLayout layout, final AbstractWriteFieldNode next, final boolean isSet) {
-      CompilerAsserts.neverPartOfCompilation("StorageLocation");
-      if (isSet) {
-        return new WriteSetLongFieldNode(slot, layout, next);
-      } else {
-        return new WriteSetOrUnsetLongFieldNode(slot, layout, next);
-      }
-    }
   }
 
   public static final class DoubleArrayStoreLocation extends PrimitiveArrayStoreLocation
@@ -540,17 +484,6 @@ public abstract class StorageLocation {
         return new ReadSetDoubleFieldNode(slot, layout);
       } else {
         return new ReadSetOrUnsetDoubleFieldNode(slot, layout);
-      }
-    }
-
-    @Override
-    public AbstractWriteFieldNode getWriteNode(final SlotDefinition slot,
-        final ObjectLayout layout, final AbstractWriteFieldNode next, final boolean isSet) {
-      CompilerAsserts.neverPartOfCompilation("StorageLocation");
-      if (isSet) {
-        return new WriteSetDoubleFieldNode(slot, layout, next);
-      } else {
-        return new WriteSetOrUnsetDoubleFieldNode(slot, layout, next);
       }
     }
   }

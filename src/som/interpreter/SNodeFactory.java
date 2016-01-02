@@ -16,8 +16,6 @@ import som.interpreter.nodes.ArgumentReadNode.NonLocalSelfReadNode;
 import som.interpreter.nodes.ArgumentReadNode.NonLocalSuperReadNode;
 import som.interpreter.nodes.ContextualNode;
 import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.FieldNode.FieldWriteNode;
-import som.interpreter.nodes.FieldNodeFactory.FieldWriteNodeGen;
 import som.interpreter.nodes.InternalObjectArrayNode;
 import som.interpreter.nodes.LocalVariableNode.LocalVariableWriteNode;
 import som.interpreter.nodes.LocalVariableNodeFactory.LocalVariableWriteNodeGen;
@@ -32,6 +30,8 @@ import som.interpreter.nodes.UninitializedVariableNode.UninitializedVariableWrit
 import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.literals.BlockNode.BlockNodeWithContext;
 import som.interpreter.nodes.literals.NilLiteralNode;
+import som.interpreter.objectstorage.InitializerFieldWrite;
+import som.interpreter.objectstorage.InitializerFieldWriteNodeGen;
 import som.vm.NotYetImplementedException;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
@@ -48,9 +48,9 @@ public final class SNodeFactory {
     return new CatchNonLocalReturnNode(methodBody, frameOnStackMarker);
   }
 
-  public static FieldWriteNode createFieldWrite(final ExpressionNode self,
+  public static InitializerFieldWrite createFieldWrite(final ExpressionNode self,
       final ExpressionNode exp, final SlotDefinition slot, final SourceSection source) {
-    return FieldWriteNodeGen.create(slot, source, self, exp);
+    return InitializerFieldWriteNodeGen.create(slot, source, self, exp);
   }
 
   public static ContextualNode createLocalVarRead(final Local variable,

@@ -2,9 +2,8 @@ package som.interpreter.nodes;
 
 import som.compiler.MixinDefinition;
 import som.interpreter.Invokable;
-import som.interpreter.SArguments;
 import som.interpreter.objectstorage.FieldAccess.AbstractFieldRead;
-import som.interpreter.objectstorage.FieldAccess.AbstractWriteFieldNode;
+import som.interpreter.objectstorage.FieldWriteNode.AbstractFieldWriteNode;
 import som.vm.constants.Nil;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject;
@@ -15,26 +14,10 @@ import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.InvalidAssumptionException;
-import com.oracle.truffle.api.profiles.ValueProfile;
 
 
 public abstract class SlotAccessNode {
 
-  // TODO: try to remove, should only be used in getCallTarget version of mutator slots
-  public static final class SlotWriteNode extends ExpressionNode {
-    private final ValueProfile rcvrClass = ValueProfile.createClassProfile();
-    @Child protected AbstractWriteFieldNode write;
-
-    public SlotWriteNode(final AbstractWriteFieldNode write) {
-      super(null);
-      this.write = write;
-    }
-
-    @Override
-    public Object executeGeneric(final VirtualFrame frame) {
-      return write.write((SObject) rcvrClass.profile(SArguments.rcvr(frame)), SArguments.arg(frame, 1));
-    }
-  }
 
   public static final class ClassSlotAccessNode extends AbstractFieldRead {
     private final MixinDefinition mixinDef;
@@ -42,10 +25,10 @@ public abstract class SlotAccessNode {
     @Child protected ClassInstantiationNode instantiation;
 
     private final AbstractFieldRead  read;
-    @Child protected AbstractWriteFieldNode write;
+    @Child protected AbstractFieldWriteNode write;
 
     public ClassSlotAccessNode(final MixinDefinition mixinDef,
-        final AbstractFieldRead read, final AbstractWriteFieldNode write) {
+        final AbstractFieldRead read, final AbstractFieldWriteNode write) {
       super(null);
       this.read = read;
       this.write = write;

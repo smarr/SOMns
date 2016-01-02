@@ -279,7 +279,7 @@ public final class MixinBuilder {
 
     if (init != null) {
       ExpressionNode self = initializer.getSelfRead(source);
-      slotAndInitExprs.add(slot.getWriteNode(self, init, source));
+      slotAndInitExprs.add(slot.getInitializerWriteNode(self, init, source));
     }
   }
 

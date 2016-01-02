@@ -12,7 +12,7 @@ import com.oracle.truffle.api.nodes.IndirectCallNode;
  */
 public interface Dispatchable {
 
-  AbstractDispatchNode getDispatchNode(Object rcvr, AbstractDispatchNode newChainEnd);
+  AbstractDispatchNode getDispatchNode(Object rcvr, Object firstArg, AbstractDispatchNode newChainEnd);
 
   AccessModifier getAccessModifier();
   Object invoke(IndirectCallNode node, VirtualFrame frame, Object... arguments);
