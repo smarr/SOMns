@@ -2,7 +2,7 @@ package som.interpreter.nodes.dispatch;
 
 import som.interpreter.objectstorage.FieldAccess.AbstractFieldRead;
 import som.interpreter.objectstorage.FieldWriteNode.AbstractFieldWriteNode;
-import som.vmobjects.SObject;
+import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SObject.SMutableObject;
 
 import com.oracle.truffle.api.CompilerDirectives;
@@ -18,7 +18,7 @@ public abstract class CachedSlotAccessNode extends AbstractDispatchNode {
     this.read = read;
   }
 
-  public static final class CachedSlotRead extends CachedSlotAccessNode {
+  public abstract static class CachedSlotRead extends CachedSlotAccessNode {
     @Child protected AbstractDispatchNode nextInCache;
 
     private final DispatchGuard           guard;
@@ -37,7 +37,7 @@ public abstract class CachedSlotAccessNode extends AbstractDispatchNode {
       try {
         // TODO: make sure this cast is always eliminated, otherwise, we need two versions mut/immut
         if (guard.entryMatches(arguments[0])) {
-          return read.read(frame, ((SObject) arguments[0]));
+          return read(frame, arguments[0]);
         } else {
           return nextInCache.executeDispatch(frame, arguments);
         }
@@ -48,9 +48,37 @@ public abstract class CachedSlotAccessNode extends AbstractDispatchNode {
       }
     }
 
+    protected abstract Object read(final VirtualFrame frame, final Object rcvr) throws InvalidAssumptionException;
+
     @Override
     public int lengthOfDispatchChain() {
       return 1 + nextInCache.lengthOfDispatchChain();
+    }
+  }
+
+  public static final class CachedImmutableSlotRead extends CachedSlotRead {
+
+    public CachedImmutableSlotRead(final AbstractFieldRead read,
+        final DispatchGuard guard, final AbstractDispatchNode nextInCache) {
+      super(read, guard, nextInCache);
+    }
+
+    @Override
+    protected Object read(final VirtualFrame frame, final Object rcvr) throws InvalidAssumptionException {
+      return read.read(frame, (SImmutableObject) rcvr);
+    }
+  }
+
+  public static final class CachedMutableSlotRead extends CachedSlotRead {
+
+    public CachedMutableSlotRead(final AbstractFieldRead read,
+        final DispatchGuard guard, final AbstractDispatchNode nextInCache) {
+      super(read, guard, nextInCache);
+    }
+
+    @Override
+    protected Object read(final VirtualFrame frame, final Object rcvr) throws InvalidAssumptionException {
+      return read.read(frame, (SMutableObject) rcvr);
     }
   }
 
