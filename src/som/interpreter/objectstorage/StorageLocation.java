@@ -214,13 +214,6 @@ public abstract class StorageLocation {
     @Override
     public Object read(final SObject obj) {
       Object[] arr = obj.getExtensionObjFields();
-
-//      return CompilerDirectives.unsafeCast(
-//          // TODO: for the moment Graal doesn't seem to get the optimizations
-//          // right, still need to pass in the correct location identifier, which can probably be `this`.
-//          arr[extensionIndex],
-////          CompilerDirectives.unsafeGetObject(arr, absoluteIndex, assumptionValid, null),
-//          Object.class, true, true);
       return arr[extensionIndex];
     }
 
@@ -228,10 +221,6 @@ public abstract class StorageLocation {
     public void write(final SObject obj, final Object value) {
       assert value != null;
       Object[] arr = obj.getExtensionObjFields();
-
-//      // TODO: for the moment Graal doesn't seem to get the optimizations
-//      // right, still need to pass in the correct location identifier, which can probably be `this`.
-//      CompilerDirectives.unsafePutObject(arr, absoluteIndex, value, null);
       arr[extensionIndex] = value;
     }
   }
