@@ -11,6 +11,7 @@ import som.vmobjects.SObject;
 import com.oracle.truffle.api.Assumption;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.NodeChildren;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -151,6 +152,13 @@ public abstract class InitializerFieldWrite extends ExpressionNode {
       @Cached("getUnwrittenOrPrimitiveLocation(cachedLayout)") final StorageLocation location) {
     CompilerAsserts.neverPartOfCompilation("should never be part of a compiled AST.");
     rcvr.setField(slot, value);
+    return value;
+  }
+
+  @Fallback
+  public final Object writeFallback(final Object rcvr, final Object value) {
+    CompilerAsserts.neverPartOfCompilation("should never be part of a compiled AST.");
+    ((SObject) rcvr).setField(slot, value);
     return value;
   }
 }
