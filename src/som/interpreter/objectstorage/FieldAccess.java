@@ -2,8 +2,7 @@ package som.interpreter.objectstorage;
 
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.objectstorage.StorageLocation.AbstractObjectStorageLocation;
-import som.interpreter.objectstorage.StorageLocation.DoubleStorageLocation;
-import som.interpreter.objectstorage.StorageLocation.LongStorageLocation;
+import som.interpreter.objectstorage.StorageLocation.PrimitiveStorageLocation;
 import som.vm.constants.Nil;
 import som.vmobjects.SObject;
 
@@ -53,85 +52,42 @@ public abstract class FieldAccess extends Node {
     }
   }
 
-  public static final class ReadSetLongFieldNode extends AbstractFieldRead {
-    private final LongStorageLocation storage;
+  public static final class ReadSetPrimitiveSlot extends AbstractFieldRead {
+    private final PrimitiveStorageLocation storage;
     private final IntValueProfile primMarkProfile = IntValueProfile.createIdentityProfile();
 
-    public ReadSetLongFieldNode(final SlotDefinition slot,
+    public ReadSetPrimitiveSlot(final SlotDefinition slot,
         final ObjectLayout layout) {
       super(slot);
-      this.storage = (LongStorageLocation) layout.getStorageLocation(slot);
+      this.storage = (PrimitiveStorageLocation) layout.getStorageLocation(slot);
     }
 
     @Override
     public Object read(final VirtualFrame frame, final SObject obj) throws InvalidAssumptionException {
       if (storage.isSet(obj, primMarkProfile)) {
         assert obj.getObjectLayout().isValid();
-        return storage.readLongSet(obj);
+        return storage.readSet(obj);
       } else {
         throw new InvalidAssumptionException();
       }
     }
   }
 
-  public static final class ReadSetOrUnsetLongFieldNode extends AbstractFieldRead {
-    private final LongStorageLocation storage;
+  public static final class ReadSetOrUnsetPrimitiveSlot extends AbstractFieldRead {
+    private final PrimitiveStorageLocation storage;
     private final IntValueProfile primMarkProfile = IntValueProfile.createIdentityProfile();
 
-    public ReadSetOrUnsetLongFieldNode(final SlotDefinition slot,
+    public ReadSetOrUnsetPrimitiveSlot(final SlotDefinition slot,
         final ObjectLayout layout) {
       super(slot);
-      this.storage = (LongStorageLocation) layout.getStorageLocation(slot);
+      this.storage = (PrimitiveStorageLocation) layout.getStorageLocation(slot);
     }
 
     @Override
     public Object read(final VirtualFrame frame, final SObject obj) {
       if (storage.isSet(obj, primMarkProfile)) {
         assert obj.getObjectLayout().isValid();
-        return storage.readLongSet(obj);
-      } else {
-        return Nil.nilObject;
-      }
-    }
-  }
-
-  public static final class ReadSetDoubleFieldNode extends AbstractFieldRead {
-    private final DoubleStorageLocation storage;
-    private final IntValueProfile primMarkProfile = IntValueProfile.createIdentityProfile();
-
-    public ReadSetDoubleFieldNode(final SlotDefinition slot,
-        final ObjectLayout layout) {
-      super(slot);
-      this.storage = (DoubleStorageLocation) layout.getStorageLocation(slot);
-    }
-
-    @Override
-    public Object read(final VirtualFrame frame, final SObject obj)
-        throws InvalidAssumptionException {
-      if (storage.isSet(obj, primMarkProfile)) {
-        assert obj.getObjectLayout().isValid();
-        return storage.readDoubleSet(obj);
-      } else {
-        throw new InvalidAssumptionException();
-      }
-    }
-  }
-
-  public static final class ReadSetOrUnsetDoubleFieldNode extends AbstractFieldRead {
-    private final DoubleStorageLocation storage;
-    private final IntValueProfile primMarkProfile = IntValueProfile.createIdentityProfile();
-
-    public ReadSetOrUnsetDoubleFieldNode(final SlotDefinition slot,
-        final ObjectLayout layout) {
-      super(slot);
-      this.storage = (DoubleStorageLocation) layout.getStorageLocation(slot);
-    }
-
-    @Override
-    public Object read(final VirtualFrame frame, final SObject obj) {
-      if (storage.isSet(obj, primMarkProfile)) {
-        assert obj.getObjectLayout().isValid();
-        return storage.readDoubleSet(obj);
+        return storage.readSet(obj);
       } else {
         return Nil.nilObject;
       }
