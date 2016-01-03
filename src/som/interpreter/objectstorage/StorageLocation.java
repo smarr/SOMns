@@ -6,8 +6,10 @@ import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.TruffleCompiler;
 import som.interpreter.objectstorage.FieldAccess.AbstractFieldRead;
 import som.interpreter.objectstorage.FieldAccess.ReadObjectFieldNode;
-import som.interpreter.objectstorage.FieldAccess.ReadSetOrUnsetPrimitiveSlot;
-import som.interpreter.objectstorage.FieldAccess.ReadSetPrimitiveSlot;
+import som.interpreter.objectstorage.FieldAccess.ReadSetDoubleFieldNode;
+import som.interpreter.objectstorage.FieldAccess.ReadSetLongFieldNode;
+import som.interpreter.objectstorage.FieldAccess.ReadSetOrUnsetDoubleFieldNode;
+import som.interpreter.objectstorage.FieldAccess.ReadSetOrUnsetLongFieldNode;
 import som.interpreter.objectstorage.FieldAccess.ReadUnwrittenFieldNode;
 import som.vm.constants.Nil;
 import som.vmobjects.SObject;
@@ -245,9 +247,6 @@ public abstract class StorageLocation {
     public final void markAsSet(final SObject obj) {
       obj.markPrimAsSet(mask);
     }
-
-    public abstract Object readSet(SObject obj);
-    public abstract void   writeSet(SObject obj, Object value);
   }
 
   public abstract static class PrimitiveDirectStoreLocation extends PrimitiveStorageLocation {
@@ -255,18 +254,6 @@ public abstract class StorageLocation {
     public PrimitiveDirectStoreLocation(final ObjectLayout layout, final int primField) {
       super(layout, primField);
       offset = SObject.getPrimitiveFieldOffset(primField);
-    }
-
-    @Override
-    public final AbstractFieldRead getReadNode(final SlotDefinition slot,
-        final ObjectLayout layout, final boolean isSet) {
-      assert layout.isValid();
-      CompilerAsserts.neverPartOfCompilation("StorageLocation");
-      if (isSet) {
-        return new ReadSetPrimitiveSlot(slot, layout);
-      } else {
-        return new ReadSetOrUnsetPrimitiveSlot(slot, layout);
-      }
     }
   }
 
@@ -292,16 +279,6 @@ public abstract class StorageLocation {
     }
 
     @Override
-    public Object readSet(final SObject obj) {
-      return readDoubleSet(obj);
-    }
-
-    @Override
-    public void writeSet(final SObject obj, final Object value) {
-      writeDoubleSet(obj, (double) value);
-    }
-
-    @Override
     public void write(final SObject obj, final Object value)
         throws GeneralizeStorageLocationException {
       assert value != null;
@@ -318,6 +295,17 @@ public abstract class StorageLocation {
     @Override
     public void writeDoubleSet(final SObject obj, final double value) {
       unsafe.putDouble(obj, offset, value);
+    }
+
+    @Override
+    public AbstractFieldRead getReadNode(final SlotDefinition slot,
+        final ObjectLayout layout, final boolean isSet) {
+      CompilerAsserts.neverPartOfCompilation("StorageLocation");
+      if (isSet) {
+        return new ReadSetDoubleFieldNode(slot, layout);
+      } else {
+        return new ReadSetOrUnsetDoubleFieldNode(slot, layout);
+      }
     }
   }
 
@@ -343,16 +331,6 @@ public abstract class StorageLocation {
     }
 
     @Override
-    public Object readSet(final SObject obj) {
-      return readLongSet(obj);
-    }
-
-    @Override
-    public void writeSet(final SObject obj, final Object value) {
-      writeLongSet(obj, (long) value);
-    }
-
-    @Override
     public void write(final SObject obj, final Object value) throws GeneralizeStorageLocationException {
       assert value != null;
       if (value instanceof Long) {
@@ -368,6 +346,17 @@ public abstract class StorageLocation {
     public void writeLongSet(final SObject obj, final long value) {
       unsafe.putLong(obj, offset, value);
     }
+
+    @Override
+    public AbstractFieldRead getReadNode(final SlotDefinition slot,
+        final ObjectLayout layout, final boolean isSet) {
+      CompilerAsserts.neverPartOfCompilation("StorageLocation");
+      if (isSet) {
+        return new ReadSetLongFieldNode(slot, layout);
+      } else {
+        return new ReadSetOrUnsetLongFieldNode(slot, layout);
+      }
+    }
   }
 
   public abstract static class PrimitiveArrayStoreLocation extends PrimitiveStorageLocation {
@@ -376,18 +365,6 @@ public abstract class StorageLocation {
       super(layout, primField);
       extensionIndex = primField - SObject.NUM_PRIMITIVE_FIELDS;
       assert extensionIndex >= 0;
-    }
-
-    @Override
-    public AbstractFieldRead getReadNode(final SlotDefinition slot,
-        final ObjectLayout layout, final boolean isSet) {
-      assert layout.isValid();
-      CompilerAsserts.neverPartOfCompilation("StorageLocation");
-      if (isSet) {
-        return new ReadSetPrimitiveSlot(slot, layout);
-      } else {
-        return new ReadSetOrUnsetPrimitiveSlot(slot, layout);
-      }
     }
   }
 
@@ -413,16 +390,6 @@ public abstract class StorageLocation {
     }
 
     @Override
-    public Object readSet(final SObject obj) {
-      return readLongSet(obj);
-    }
-
-    @Override
-    public void writeSet(final SObject obj, final Object value) {
-      writeLongSet(obj, (long) value);
-    }
-
-    @Override
     public void write(final SObject obj, final Object value) throws GeneralizeStorageLocationException {
       assert value != null;
       if (value instanceof Long) {
@@ -438,6 +405,17 @@ public abstract class StorageLocation {
     @Override
     public void writeLongSet(final SObject obj, final long value) {
       obj.getExtendedPrimFields()[extensionIndex] = value;
+    }
+
+    @Override
+    public AbstractFieldRead getReadNode(final SlotDefinition slot,
+        final ObjectLayout layout, final boolean isSet) {
+      CompilerAsserts.neverPartOfCompilation("StorageLocation");
+      if (isSet) {
+        return new ReadSetLongFieldNode(slot, layout);
+      } else {
+        return new ReadSetOrUnsetLongFieldNode(slot, layout);
+      }
     }
   }
 
@@ -466,16 +444,6 @@ public abstract class StorageLocation {
     }
 
     @Override
-    public Object readSet(final SObject obj) {
-      return readDoubleSet(obj);
-    }
-
-    @Override
-    public void writeSet(final SObject obj, final Object value) {
-      writeDoubleSet(obj, (double) value);
-    }
-
-    @Override
     public void write(final SObject obj, final Object value)
         throws GeneralizeStorageLocationException {
       assert value != null;
@@ -495,6 +463,17 @@ public abstract class StorageLocation {
       unsafe.putDouble(arr,
           (long) Unsafe.ARRAY_DOUBLE_BASE_OFFSET + Unsafe.ARRAY_DOUBLE_INDEX_SCALE * this.extensionIndex,
           value);
+    }
+
+    @Override
+    public AbstractFieldRead getReadNode(final SlotDefinition slot,
+        final ObjectLayout layout, final boolean isSet) {
+      CompilerAsserts.neverPartOfCompilation("StorageLocation");
+      if (isSet) {
+        return new ReadSetDoubleFieldNode(slot, layout);
+      } else {
+        return new ReadSetOrUnsetDoubleFieldNode(slot, layout);
+      }
     }
   }
 }
