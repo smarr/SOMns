@@ -7,8 +7,6 @@ import som.interpreter.objectstorage.StorageLocation.LongStorageLocation;
 import som.vm.constants.Nil;
 import som.vmobjects.SObject;
 
-import com.oracle.truffle.api.dsl.Cached;
-import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 import com.oracle.truffle.api.nodes.Node;
@@ -55,44 +53,6 @@ public abstract class FieldAccess extends Node {
     }
   }
 
-  // Caching levels:
-  //  - receiver identity
-  //  - value identity
-  //  - normal read
-
-  public abstract static class ReadImmutableSlot extends AbstractFieldRead {
-
-    protected final StorageLocation location;
-
-    public ReadImmutableSlot(final SlotDefinition slot, final ObjectLayout layout) {
-      super(slot);
-      assert slot.isImmutable();
-      this.location = layout.getStorageLocation(slot);
-    }
-
-    public abstract Object execute(SObject obj);
-
-    @Override
-    public final Object read(final VirtualFrame frame, final SObject obj) throws InvalidAssumptionException {
-      return execute(obj);
-    }
-
-    @Specialization(guards = "rcvr == cachedRcvr")
-    public final Object sameRcvr(final SObject rcvr, @Cached("rcvr") final SObject cachedRcvr, @Cached("location.read(rcvr)") final Object val) {
-      return val;
-    }
-
-    @Specialization(guards = "location.read(rcvr) == val", contains = "sameRcvr")
-    public final Object sameValue(final SObject rcvr, @Cached("location.read(rcvr)") final Object val) {
-      return val;
-    }
-
-    @Specialization(contains = "sameValue")
-    public final Object normalRead(final SObject rcvr) {
-//      CompilerAsserts.neverPartOfCompilation("not sure, but I hope this is never part of compilation for any of my benchmarks");
-      return location.read(rcvr);
-    }
-  }
   public static final class ReadSetLongFieldNode extends AbstractFieldRead {
     private final LongStorageLocation storage;
     private final IntValueProfile primMarkProfile = IntValueProfile.createIdentityProfile();
@@ -100,7 +60,6 @@ public abstract class FieldAccess extends Node {
     public ReadSetLongFieldNode(final SlotDefinition slot,
         final ObjectLayout layout) {
       super(slot);
-      assert !slot.isImmutable();
       this.storage = (LongStorageLocation) layout.getStorageLocation(slot);
     }
 
@@ -122,7 +81,6 @@ public abstract class FieldAccess extends Node {
     public ReadSetOrUnsetLongFieldNode(final SlotDefinition slot,
         final ObjectLayout layout) {
       super(slot);
-      assert !slot.isImmutable();
       this.storage = (LongStorageLocation) layout.getStorageLocation(slot);
     }
 
@@ -144,7 +102,6 @@ public abstract class FieldAccess extends Node {
     public ReadSetDoubleFieldNode(final SlotDefinition slot,
         final ObjectLayout layout) {
       super(slot);
-      assert !slot.isImmutable();
       this.storage = (DoubleStorageLocation) layout.getStorageLocation(slot);
     }
 
@@ -167,7 +124,6 @@ public abstract class FieldAccess extends Node {
     public ReadSetOrUnsetDoubleFieldNode(final SlotDefinition slot,
         final ObjectLayout layout) {
       super(slot);
-      assert !slot.isImmutable();
       this.storage = (DoubleStorageLocation) layout.getStorageLocation(slot);
     }
 
@@ -188,7 +144,6 @@ public abstract class FieldAccess extends Node {
     public ReadObjectFieldNode(final SlotDefinition slot,
         final ObjectLayout layout) {
       super(slot);
-      assert !slot.isImmutable();
       this.storage = (AbstractObjectStorageLocation) layout.getStorageLocation(slot);
     }
 

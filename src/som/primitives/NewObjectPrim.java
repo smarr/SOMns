@@ -7,7 +7,8 @@ import som.interpreter.objectstorage.ClassFactory;
 import som.interpreter.objectstorage.ObjectLayout;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
-import som.vmobjects.SObject;
+import som.vmobjects.SObject.SImmutableObject;
+import som.vmobjects.SObject.SMutableObject;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 
 import com.oracle.truffle.api.dsl.Cached;
@@ -39,13 +40,24 @@ public abstract class NewObjectPrim extends UnaryExpressionNode implements ISpec
   @Specialization(guards = {
       "receiver.getInstanceFactory() == factory",
       "factory.hasSlots()",
+      "factory.hasOnlyImmutableFields()",
+      "receiver.getInstanceFactory().getInstanceLayout() == layout"})
+  public final SAbstractObject doClassWithOnlyImmutableFields(final SClass receiver,
+      @Cached("receiver.getInstanceFactory()") final ClassFactory factory,
+      @Cached("receiver.getInstanceFactory().getInstanceLayout()") final ObjectLayout layout) {
+    return new SImmutableObject(receiver, factory, layout);
+  }
+
+  @Specialization(guards = {
+      "receiver.getInstanceFactory() == factory",
+      "factory.hasSlots()",
       "!factory.hasOnlyImmutableFields()",
       "receiver.getInstanceFactory().getInstanceLayout() == layout"})
   public final SAbstractObject doClassWithFields(
       final SClass receiver,
       @Cached("receiver.getInstanceFactory()") final ClassFactory factory,
       @Cached("factory.getInstanceLayout()") final ObjectLayout layout) {
-    return new SObject(receiver, factory, layout);
+    return new SMutableObject(receiver, factory, layout);
   }
 
   @Specialization(guards = {
@@ -60,7 +72,11 @@ public abstract class NewObjectPrim extends UnaryExpressionNode implements ISpec
   public final SAbstractObject fallback(final SClass receiver) {
     ClassFactory factory = receiver.getInstanceFactory();
     if (factory.hasSlots()) {
-      return doClassWithFields(receiver, receiver.getInstanceFactory(), receiver.getInstanceFactory().getInstanceLayout());
+      if (factory.hasOnlyImmutableFields()) {
+        return doClassWithOnlyImmutableFields(receiver, receiver.getInstanceFactory(), receiver.getInstanceFactory().getInstanceLayout());
+      } else {
+        return doClassWithFields(receiver, receiver.getInstanceFactory(), receiver.getInstanceFactory().getInstanceLayout());
+      }
     } else {
       return doClassWithoutFields(receiver, receiver.getInstanceFactory());
     }

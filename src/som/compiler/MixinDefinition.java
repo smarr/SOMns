@@ -17,7 +17,8 @@ import som.interpreter.nodes.ClassInstantiationNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.SlotAccessNode.ClassSlotAccessNode;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
-import som.interpreter.nodes.dispatch.CachedSlotAccessNode.CachedSlotRead;
+import som.interpreter.nodes.dispatch.CachedSlotAccessNode.CachedImmutableSlotRead;
+import som.interpreter.nodes.dispatch.CachedSlotAccessNode.CachedMutableSlotRead;
 import som.interpreter.nodes.dispatch.CachedSlotAccessNode.CachedSlotWrite;
 import som.interpreter.nodes.dispatch.DispatchGuard;
 import som.interpreter.nodes.dispatch.Dispatchable;
@@ -35,6 +36,8 @@ import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SInvokable.SInitializer;
 import som.vmobjects.SObject;
+import som.vmobjects.SObject.SImmutableObject;
+import som.vmobjects.SObject.SMutableObject;
 import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
 
@@ -494,7 +497,12 @@ public final class MixinDefinition {
     public AbstractDispatchNode getDispatchNode(final Object receiver,
         final Object firstArg, final AbstractDispatchNode next) {
       SObject rcvr = (SObject) receiver;
-      return new CachedSlotRead(createNode(rcvr), DispatchGuard.create(rcvr), next);
+      if (rcvr instanceof SMutableObject) {
+        return new CachedMutableSlotRead(createNode(rcvr), DispatchGuard.create(rcvr), next);
+      } else {
+        assert rcvr instanceof SImmutableObject;
+        return new CachedImmutableSlotRead(createNode(rcvr), DispatchGuard.create(rcvr), next);
+      }
     }
 
     @Override

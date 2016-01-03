@@ -5,7 +5,7 @@ import som.interpreter.TruffleCompiler;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.ObjectPrims.IsValue;
 import som.vm.constants.KernelObj;
-import som.vmobjects.SObject;
+import som.vmobjects.SObject.SImmutableObject;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 
@@ -44,14 +44,14 @@ public abstract class IsValueCheckNode extends UnaryExpressionNode {
     }
 
     private Object specialize(final VirtualFrame frame, final Object receiver) {
-      if (!(receiver instanceof SObject)) {
+      if (!(receiver instanceof SImmutableObject)) {
         // can remove ourselves, this node is only used in initializers,
         // which are by definition monomorphic
         replace(self);
         return receiver;
       }
 
-      SObject rcvr = (SObject) receiver;
+      SImmutableObject rcvr = (SImmutableObject) receiver;
 
       if (rcvr.isValue()) {
         return replace(new ValueCheckNode(self)).
@@ -71,7 +71,7 @@ public abstract class IsValueCheckNode extends UnaryExpressionNode {
 
     @Override
     public Object executeEvaluated(final VirtualFrame frame, final Object receiver) {
-      SObject rcvr = (SObject) receiver;
+      SImmutableObject rcvr = (SImmutableObject) receiver;
 
       boolean allFieldsContainValues = allFieldsContainValues(rcvr);
       if (allFieldsContainValues) {
@@ -80,7 +80,7 @@ public abstract class IsValueCheckNode extends UnaryExpressionNode {
       return KernelObj.signalException("signalNotAValueWith:", receiver);
     }
 
-    private boolean allFieldsContainValues(final SObject rcvr) {
+    private boolean allFieldsContainValues(final SImmutableObject rcvr) {
       VM.thisMethodNeedsToBeOptimized("Should be optimized or on slowpath");
 
       if (rcvr.field1 == null) {
