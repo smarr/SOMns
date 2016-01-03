@@ -47,14 +47,14 @@ public final class FieldWriteNode  {
     if (location instanceof UnwrittenStorageLocation) {
       return new WriteUnwritten(slot);
     } else {
-      return new WriteObject(slot, (AbstractObjectStorageLocation) location);
+      return new WriteObject(slot, location);
     }
   }
 
   public static AbstractFieldWriteNode createWriteObject(final SlotDefinition slot, final SObject obj) {
     StorageLocation loc = obj.getObjectLayout().getStorageLocation(slot);
     if (loc instanceof AbstractObjectStorageLocation) {
-      return new WriteObject(slot, (AbstractObjectStorageLocation) loc);
+      return new WriteObject(slot, loc);
     } else {
       assert loc instanceof UnwrittenStorageLocation;
       return new WriteUnwritten(slot);
@@ -211,10 +211,10 @@ public final class FieldWriteNode  {
   }
 
   private static final class WriteObject extends AbstractFieldWriteNode {
-    private final AbstractObjectStorageLocation location;
+    private final StorageLocation location;
 
     WriteObject(final SlotDefinition slot,
-        final AbstractObjectStorageLocation location) {
+        final StorageLocation location) {
       super(slot);
       this.location = location;
     }

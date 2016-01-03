@@ -64,17 +64,17 @@ public final class ObjectLayout {
     for (Entry<SlotDefinition, Class<?>> entry : knownFieldTypes.entrySet()) {
       StorageLocation storage;
       if (entry.getValue() == Long.class) {
-        storage = StorageLocation.createForLong(this, nextFreePrimIdx);
+        storage = StorageLocation.createForLong(this, entry.getKey(), nextFreePrimIdx);
         nextFreePrimIdx++;
       } else if (entry.getValue() == Double.class) {
-        storage = StorageLocation.createForDouble(this, nextFreePrimIdx);
+        storage = StorageLocation.createForDouble(this, entry.getKey(), nextFreePrimIdx);
         nextFreePrimIdx++;
       } else if (entry.getValue() == Object.class) {
-        storage = StorageLocation.createForObject(this, nextFreeObjIdx);
+        storage = StorageLocation.createForObject(this, entry.getKey(), nextFreeObjIdx);
         nextFreeObjIdx++;
       } else {
         assert entry.getValue() == null;
-        storage = new UnwrittenStorageLocation(this);
+        storage = new UnwrittenStorageLocation(this, entry.getKey());
       }
       storageLocations.put(entry.getKey(), storage);
       onlyImmutable = onlyImmutable && entry.getKey().isImmutable();

@@ -25,7 +25,7 @@ public abstract class FieldAccess extends Node {
   public static AbstractFieldRead createRead(final SlotDefinition slot, final SObject rcvr) {
     ObjectLayout layout = rcvr.getObjectLayout();
     final StorageLocation location = layout.getStorageLocation(slot);
-    return location.getReadNode(slot, layout, location.isSet(rcvr, staticPrimMarkProfile));
+    return location.getReadNode(location.isSet(rcvr, staticPrimMarkProfile));
   }
 
   private FieldAccess(final SlotDefinition slot) {

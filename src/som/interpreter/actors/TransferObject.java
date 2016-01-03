@@ -6,8 +6,6 @@ import java.util.Map;
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.objectstorage.ObjectLayout;
 import som.interpreter.objectstorage.StorageLocation;
-import som.interpreter.objectstorage.StorageLocation.GeneralizeStorageLocationException;
-import som.interpreter.objectstorage.StorageLocation.UninitalizedStorageLocationException;
 import som.vm.NotYetImplementedException;
 import som.vm.constants.Nil;
 import som.vmobjects.SAbstractObject;
@@ -71,12 +69,7 @@ public final class TransferObject {
         if (trnfObj == null) {
           trnfObj = target.wrapForUse(orgObj, origin, transferMap);
         }
-        try {
-          location.write(newObj, trnfObj);
-        } catch (GeneralizeStorageLocationException
-            | UninitalizedStorageLocationException e) {
-          assert false : "this should never be reached, because we only write initialized slots";
-        }
+        location.write(newObj, trnfObj);
       }
     }
     return newObj;

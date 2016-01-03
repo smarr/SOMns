@@ -34,8 +34,6 @@ import som.interpreter.objectstorage.ClassFactory;
 import som.interpreter.objectstorage.ObjectLayout;
 import som.interpreter.objectstorage.StorageLocation;
 import som.interpreter.objectstorage.StorageLocation.AbstractObjectStorageLocation;
-import som.interpreter.objectstorage.StorageLocation.GeneralizeStorageLocationException;
-import som.interpreter.objectstorage.StorageLocation.UninitalizedStorageLocationException;
 import som.vm.constants.Nil;
 
 import com.oracle.truffle.api.CompilerAsserts;
@@ -384,19 +382,20 @@ public abstract class SObject extends SObjectWithClass {
     return location.read(this);
   }
 
+  public final void writeUninitializedSlot(final SlotDefinition slot, final Object value) {
+    updateLayoutWithInitializedField(slot, value.getClass());
+    setFieldAfterLayoutChange(slot, value);
+  }
+
+  public final void writeAndGeneralizeSlot(final SlotDefinition slot, final Object value) {
+    updateLayoutWithGeneralizedField(slot);
+    setFieldAfterLayoutChange(slot, value);
+  }
+
   public final void writeSlot(final SlotDefinition slot, final Object value) {
     CompilerAsserts.neverPartOfCompilation("setField");
     StorageLocation location = getLocation(slot);
-
-    try {
-      location.write(this, value);
-    } catch (UninitalizedStorageLocationException e) {
-      updateLayoutWithInitializedField(slot, value.getClass());
-      setFieldAfterLayoutChange(slot, value);
-    } catch (GeneralizeStorageLocationException e) {
-      updateLayoutWithGeneralizedField(slot);
-      setFieldAfterLayoutChange(slot, value);
-    }
+    location.write(this, value);
   }
 
   private void setFieldAfterLayoutChange(final SlotDefinition slot,
@@ -404,12 +403,7 @@ public abstract class SObject extends SObjectWithClass {
     CompilerAsserts.neverPartOfCompilation("SObject.setFieldAfterLayoutChange(..)");
 
     StorageLocation location = getLocation(slot);
-    try {
-      location.write(this, value);
-    } catch (GeneralizeStorageLocationException
-        | UninitalizedStorageLocationException e) {
-      throw new RuntimeException("This should not happen, we just prepared this field for the new value.");
-    }
+    location.write(this, value);
   }
 
   private static long getFirstObjectFieldOffset() {
