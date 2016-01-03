@@ -3,8 +3,7 @@ package som.interpreter.nodes.dispatch;
 import som.interpreter.objectstorage.ClassFactory;
 import som.interpreter.objectstorage.ObjectLayout;
 import som.vmobjects.SClass;
-import som.vmobjects.SObject.SImmutableObject;
-import som.vmobjects.SObject.SMutableObject;
+import som.vmobjects.SObject;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 
 import com.oracle.truffle.api.nodes.InvalidAssumptionException;
@@ -32,12 +31,8 @@ public abstract class DispatchGuard {
       return new CheckSClass(((SClass) obj).getFactory());
     }
 
-    if (obj instanceof SMutableObject) {
-      return new CheckSMutableObject(((SMutableObject) obj).getObjectLayout());
-    }
-
-    if (obj instanceof SImmutableObject) {
-      return new CheckSImmutableObject(((SImmutableObject) obj).getObjectLayout());
+    if (obj instanceof SObject) {
+      return new CheckSObject(((SObject) obj).getObjectLayout());
     }
 
     return new CheckClass(obj.getClass());
@@ -101,35 +96,19 @@ public abstract class DispatchGuard {
     }
   }
 
-  private static final class CheckSMutableObject extends DispatchGuard {
+  private static final class CheckSObject extends DispatchGuard {
 
     private final ObjectLayout expected;
 
-    public CheckSMutableObject(final ObjectLayout expected) {
+    public CheckSObject(final ObjectLayout expected) {
       this.expected = expected;
     }
 
     @Override
     public boolean entryMatches(final Object obj) throws InvalidAssumptionException {
       expected.checkIsLatest();
-      return obj instanceof SMutableObject &&
-          ((SMutableObject) obj).getObjectLayout() == expected;
-    }
-  }
-
-  private static final class CheckSImmutableObject extends DispatchGuard {
-
-    private final ObjectLayout expected;
-
-    public CheckSImmutableObject(final ObjectLayout expected) {
-      this.expected = expected;
-    }
-
-    @Override
-    public boolean entryMatches(final Object obj) throws InvalidAssumptionException {
-      expected.checkIsLatest();
-      return obj instanceof SImmutableObject &&
-          ((SImmutableObject) obj).getObjectLayout() == expected;
+      return obj instanceof SObject &&
+          ((SObject) obj).getObjectLayout() == expected;
     }
   }
 }

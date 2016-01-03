@@ -15,8 +15,7 @@ import som.vmobjects.SArray.SImmutableArray;
 import som.vmobjects.SArray.SMutableArray;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
-import som.vmobjects.SObject.SImmutableObject;
-import som.vmobjects.SObject.SMutableObject;
+import som.vmobjects.SObject;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import som.vmobjects.SSymbol;
 
@@ -148,12 +147,7 @@ public final class ObjectPrims {
     }
 
     @Specialization
-    public final boolean isValue(final SMutableObject rcvr) {
-      return false;
-    }
-
-    @Specialization
-    public final boolean isValue(final SImmutableObject rcvr) {
+    public final boolean isValue(final SObject rcvr) {
       return rcvr.isValue();
     }
 

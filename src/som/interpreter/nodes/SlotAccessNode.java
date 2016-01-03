@@ -24,7 +24,7 @@ public abstract class SlotAccessNode {
     @Child protected DirectCallNode superclassAndMixinResolver;
     @Child protected ClassInstantiationNode instantiation;
 
-    private final AbstractFieldRead  read;
+    @Child protected AbstractFieldRead      read;
     @Child protected AbstractFieldWriteNode write;
 
     public ClassSlotAccessNode(final MixinDefinition mixinDef,

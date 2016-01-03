@@ -11,6 +11,7 @@ import som.interpreter.objectstorage.FieldAccess.ReadSetLongFieldNode;
 import som.interpreter.objectstorage.FieldAccess.ReadSetOrUnsetDoubleFieldNode;
 import som.interpreter.objectstorage.FieldAccess.ReadSetOrUnsetLongFieldNode;
 import som.interpreter.objectstorage.FieldAccess.ReadUnwrittenFieldNode;
+import som.interpreter.objectstorage.FieldAccessFactory.ReadImmutableSlotNodeGen;
 import som.vm.constants.Nil;
 import som.vmobjects.SObject;
 import sun.misc.Unsafe;
@@ -164,6 +165,10 @@ public abstract class StorageLocation {
     public final AbstractFieldRead getReadNode(final SlotDefinition slot,
         final ObjectLayout layout, final boolean isSet) {
       CompilerAsserts.neverPartOfCompilation("StorageLocation");
+      if (slot.isImmutable()) {
+        return ReadImmutableSlotNodeGen.create(slot, layout);
+      }
+
       return new ReadObjectFieldNode(slot, layout);
     }
   }
@@ -301,6 +306,10 @@ public abstract class StorageLocation {
     public AbstractFieldRead getReadNode(final SlotDefinition slot,
         final ObjectLayout layout, final boolean isSet) {
       CompilerAsserts.neverPartOfCompilation("StorageLocation");
+      if (slot.isImmutable()) {
+        return ReadImmutableSlotNodeGen.create(slot, layout);
+      }
+
       if (isSet) {
         return new ReadSetDoubleFieldNode(slot, layout);
       } else {
@@ -351,6 +360,10 @@ public abstract class StorageLocation {
     public AbstractFieldRead getReadNode(final SlotDefinition slot,
         final ObjectLayout layout, final boolean isSet) {
       CompilerAsserts.neverPartOfCompilation("StorageLocation");
+      if (slot.isImmutable()) {
+        return ReadImmutableSlotNodeGen.create(slot, layout);
+      }
+
       if (isSet) {
         return new ReadSetLongFieldNode(slot, layout);
       } else {
@@ -411,6 +424,10 @@ public abstract class StorageLocation {
     public AbstractFieldRead getReadNode(final SlotDefinition slot,
         final ObjectLayout layout, final boolean isSet) {
       CompilerAsserts.neverPartOfCompilation("StorageLocation");
+      if (slot.isImmutable()) {
+        return ReadImmutableSlotNodeGen.create(slot, layout);
+      }
+
       if (isSet) {
         return new ReadSetLongFieldNode(slot, layout);
       } else {
@@ -469,6 +486,10 @@ public abstract class StorageLocation {
     public AbstractFieldRead getReadNode(final SlotDefinition slot,
         final ObjectLayout layout, final boolean isSet) {
       CompilerAsserts.neverPartOfCompilation("StorageLocation");
+      if (slot.isImmutable()) {
+        return ReadImmutableSlotNodeGen.create(slot, layout);
+      }
+
       if (isSet) {
         return new ReadSetDoubleFieldNode(slot, layout);
       } else {

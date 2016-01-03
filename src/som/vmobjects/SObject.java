@@ -44,144 +44,30 @@ import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.profiles.IntValueProfile;
 
-public abstract class SObject extends SObjectWithClass {
+public final class SObject extends SObjectWithClass {
 
   public static final int NUM_PRIMITIVE_FIELDS = 5;
   public static final int NUM_OBJECT_FIELDS    = 5;
 
-  public static final class SImmutableObject extends SObject {
-
-    public SImmutableObject(final SClass instanceClass, final ClassFactory classGroup, final ObjectLayout layout) {
-      super(instanceClass, classGroup, layout);
-      field1 = field2 = field3 = field4 = field5 = Nil.nilObject;
-      isValue = instanceClass.declaredAsValue();
-    }
-
-    public SImmutableObject(final boolean incompleteDefinition,
-        final boolean isKernelObj) {
-      super(incompleteDefinition);
-      assert isKernelObj;
-      isValue = true;
-    }
-
-    /**
-     * Copy constructor.
-     */
-    private SImmutableObject(final SImmutableObject old) {
-      super(old);
-      this.primField1 = old.primField1;
-      this.primField2 = old.primField2;
-      this.primField3 = old.primField3;
-      this.primField4 = old.primField4;
-      this.primField5 = old.primField5;
-      this.isValue    = old.isValue;
-    }
-
-    @CompilationFinal protected long   primField1;
-    @CompilationFinal protected long   primField2;
-    @CompilationFinal protected long   primField3;
-    @CompilationFinal protected long   primField4;
-    @CompilationFinal protected long   primField5;
-
-    @CompilationFinal public Object field1;
-    @CompilationFinal public Object field2;
-    @CompilationFinal public Object field3;
-    @CompilationFinal public Object field4;
-    @CompilationFinal public Object field5;
-
-    @CompilationFinal protected boolean isValue;
-
-    @Override
-    protected void resetFields() {
-      field1 = field2 = field3 = field4 = field5 = null;
-      primField1 = primField2 = primField3 = primField4 = primField5 = Long.MIN_VALUE;
-    }
-
-    @Override
-    public boolean isValue() {
-      return isValue;
-    }
-
-    @Override
-    public SObject cloneBasics() {
-      assert !isValue : "There should not be any need to clone a value";
-      return new SImmutableObject(this);
-    }
-  }
-
-  public static final class SMutableObject extends SObject {
-    @SuppressWarnings("unused")  private long   primField1;
-    @SuppressWarnings("unused")  private long   primField2;
-    @SuppressWarnings("unused")  private long   primField3;
-    @SuppressWarnings("unused")  private long   primField4;
-    @SuppressWarnings("unused")  private long   primField5;
-
-    @SuppressWarnings("unused")  private Object field1;
-    @SuppressWarnings("unused")  private Object field2;
-    @SuppressWarnings("unused")  private Object field3;
-    @SuppressWarnings("unused")  private Object field4;
-    @SuppressWarnings("unused")  private Object field5;
-
-    // this field exists because HotSpot reorders fields, and we need to keep
-    // the layouts in sync to avoid having to manage different offsets for
-    // SMutableObject and SImmuableObject
-    @SuppressWarnings("unused") private boolean isValueOfSImmutableObjectSync;
-
-    public SMutableObject(final SClass instanceClass, final ClassFactory factory, final ObjectLayout layout) {
-      super(instanceClass, factory, layout);
-      field1 = field2 = field3 = field4 = field5 = Nil.nilObject;
-    }
-
-    public SMutableObject(final boolean incompleteDefinition) {
-      super(incompleteDefinition);
-    }
-
-    protected SMutableObject(final SMutableObject old) {
-      super(old);
-      this.primField1 = old.primField1;
-      this.primField2 = old.primField2;
-      this.primField3 = old.primField3;
-      this.primField4 = old.primField4;
-      this.primField5 = old.primField5;
-    }
-
-    @Override
-    protected void resetFields() {
-      field1     = field2     = field3     = field4     = field5     = null;
-      primField1 = primField2 = primField3 = primField4 = primField5 = Long.MIN_VALUE;
-    }
-
-    @Override
-    public boolean isValue() {
-      return false;
-    }
-
-    @Override
-    public SObject cloneBasics() {
-      return new SMutableObject(this);
-    }
-  }
-
-  @SuppressWarnings("unused") @CompilationFinal private long[]   extensionPrimFields;
-  @SuppressWarnings("unused") @CompilationFinal private Object[] extensionObjFields;
-
-  // we manage the layout entirely in the class, but need to keep a copy here
-  // to know in case the layout changed that we can update the instances lazily
-  @CompilationFinal private ObjectLayout objectLayout;
-  private int primitiveUsedMap;
-
-  public SObject(final SClass instanceClass, final ClassFactory factory, final ObjectLayout layout) {
-    super(instanceClass, factory);
-    assert factory.getInstanceLayout() == layout || layout.layoutForSameClasses(factory.getInstanceLayout());
+  public SObject(final SClass instanceClass, final ClassFactory classGroup, final ObjectLayout layout) {
+    super(instanceClass, classGroup);
+    assert classGroup.getInstanceLayout() == layout || layout.layoutForSameClasses(classGroup.getInstanceLayout());
     setLayoutInitially(layout);
+    field1 = field2 = field3 = field4 = field5 = Nil.nilObject;
+    isValue = instanceClass.declaredAsValue();
   }
 
-  public SObject(final boolean incompleteDefinition) {
+  public SObject(final boolean incompleteDefinition,
+      final boolean isKernelObj) {
     assert incompleteDefinition; // used during bootstrap
+    assert isKernelObj;
+    isValue = true;
   }
 
-  /** Copy Constructor. */
-  protected SObject(final SObject old) {
+  /**
+   * Copy constructor.
+   */
+  private SObject(final SObject old) {
     super(old);
     this.objectLayout = old.objectLayout;
 
@@ -200,6 +86,41 @@ public abstract class SObject extends SObjectWithClass {
       assert old.extensionObjFields != null : "should always be initialized";
       this.extensionObjFields = new Object[old.extensionObjFields.length];
     }
+
+    this.primField1 = old.primField1;
+    this.primField2 = old.primField2;
+    this.primField3 = old.primField3;
+    this.primField4 = old.primField4;
+    this.primField5 = old.primField5;
+    this.isValue    = old.isValue;
+  }
+
+  @SuppressWarnings("unused")  private long   primField1;
+  @SuppressWarnings("unused")  private long   primField2;
+  @SuppressWarnings("unused")  private long   primField3;
+  @SuppressWarnings("unused")  private long   primField4;
+  @SuppressWarnings("unused")  private long   primField5;
+
+  @SuppressWarnings("unused")  public Object field1;
+  @SuppressWarnings("unused")  public Object field2;
+  @SuppressWarnings("unused")  public Object field3;
+  @SuppressWarnings("unused")  public Object field4;
+  @SuppressWarnings("unused")  public Object field5;
+
+  private final boolean isValue;
+
+  // TODO: remove these fields, and do it with normal object 'slot'
+  @SuppressWarnings("unused") @CompilationFinal private long[]   extensionPrimFields;
+  @SuppressWarnings("unused") @CompilationFinal private Object[] extensionObjFields;
+
+  private void resetFields() {
+    field1     = field2     = field3     = field4     = field5     = null;
+    primField1 = primField2 = primField3 = primField4 = primField5 = Long.MIN_VALUE;
+  }
+
+  @Override
+  public boolean isValue() {
+    return isValue;
   }
 
   /**
@@ -207,7 +128,15 @@ public abstract class SObject extends SObjectWithClass {
    * values, object layout etc. Object fields are not cloned. No deep copying
    * either. This method is used for cloning transfer objects.
    */
-  public abstract SObject cloneBasics();
+  public SObject cloneBasics() {
+    assert !isValue : "There should not be any need to clone a value";
+    return new SObject(this);
+  }
+
+  // we manage the layout entirely in the class, but need to keep a copy here
+  // to know in case the layout changed that we can update the instances lazily
+  @CompilationFinal private ObjectLayout objectLayout;
+  private int primitiveUsedMap;
 
   public boolean isPrimitiveSet(final int mask) {
     return (primitiveUsedMap & mask) != 0;
@@ -228,22 +157,22 @@ public abstract class SObject extends SObjectWithClass {
     extensionObjFields  = getExtendedObjectStorage(layout);
   }
 
-  public final ObjectLayout getObjectLayout() {
+  public ObjectLayout getObjectLayout() {
     // TODO: should I really remove it, or should I update the layout?
     // assert clazz.getLayoutForInstances() == objectLayout;
     return objectLayout;
   }
 
-  public final long[] getExtendedPrimFields() {
+  public long[] getExtendedPrimFields() {
     return extensionPrimFields;
   }
 
-  public final Object[] getExtensionObjFields() {
+  public Object[] getExtensionObjFields() {
     return extensionObjFields;
   }
 
   @Override
-  public final void setClass(final SClass value) {
+  public void setClass(final SClass value) {
     CompilerAsserts.neverPartOfCompilation("Only meant to be used in object system initalization");
     super.setClass(value);
     setLayoutInitially(value.getLayoutForInstances());
@@ -273,7 +202,7 @@ public abstract class SObject extends SObjectWithClass {
     return storage;
   }
 
-  private static final IntValueProfile primMarkProfile = IntValueProfile.createIdentityProfile();
+  public static final IntValueProfile primMarkProfile = IntValueProfile.createIdentityProfile();
 
   @ExplodeLoop
   private HashMap<SlotDefinition, Object> getAllFields() {
@@ -292,8 +221,6 @@ public abstract class SObject extends SObjectWithClass {
     return fieldValues;
   }
 
-  protected abstract void resetFields();
-
   @ExplodeLoop
   private void setAllFields(final HashMap<SlotDefinition, Object> fieldValues) {
     resetFields();
@@ -308,7 +235,7 @@ public abstract class SObject extends SObjectWithClass {
     }
   }
 
-  public final boolean updateLayoutToMatchClass() {
+  public boolean updateLayoutToMatchClass() {
     ObjectLayout layoutAtClass = clazz.getLayoutForInstances();
 
     if (objectLayout != layoutAtClass) {
@@ -339,13 +266,13 @@ public abstract class SObject extends SObjectWithClass {
     setAllFields(fieldValues);
   }
 
-  protected final void updateLayoutWithInitializedField(final SlotDefinition slot, final Class<?> type) {
+  private void updateLayoutWithInitializedField(final SlotDefinition slot, final Class<?> type) {
     ObjectLayout layout = classGroup.updateInstanceLayoutWithInitializedField(slot, type);
     assert objectLayout != layout;
     setLayoutAndTransferFields();
   }
 
-  protected final void updateLayoutWithGeneralizedField(final SlotDefinition slot) {
+  private void updateLayoutWithGeneralizedField(final SlotDefinition slot) {
     ObjectLayout layout = classGroup.updateInstanceLayoutWithGeneralizedField(slot);
 
     assert objectLayout != layout;
@@ -378,15 +305,16 @@ public abstract class SObject extends SObjectWithClass {
     return location;
   }
 
-  public final Object getField(final SlotDefinition slot) {
+  public Object getField(final SlotDefinition slot) {
     CompilerAsserts.neverPartOfCompilation("getField");
     StorageLocation location = getLocation(slot);
     return location.read(this);
   }
 
-  public final void setField(final SlotDefinition slot, final Object value) {
+  public void setField(final SlotDefinition slot, final Object value) {
     CompilerAsserts.neverPartOfCompilation("setField");
     StorageLocation location = getLocation(slot);
+    assert objectLayout.isValid();
 
     try {
       location.write(this, value);
@@ -415,7 +343,7 @@ public abstract class SObject extends SObjectWithClass {
   private static long getFirstObjectFieldOffset() {
     CompilerAsserts.neverPartOfCompilation("SObject.getFirstObjectFieldOffset()");
     try {
-      final Field firstField = SMutableObject.class.getDeclaredField("field1");
+      final Field firstField = SObject.class.getDeclaredField("field1");
       return StorageLocation.getFieldOffset(firstField);
     } catch (NoSuchFieldException e) {
       throw new RuntimeException(e);
@@ -425,7 +353,7 @@ public abstract class SObject extends SObjectWithClass {
   private static long getFirstPrimFieldOffset() {
     CompilerAsserts.neverPartOfCompilation("SObject.getFirstPrimFieldOffset()");
     try {
-      final Field firstField = SMutableObject.class.getDeclaredField("primField1");
+      final Field firstField = SObject.class.getDeclaredField("primField1");
       return StorageLocation.getFieldOffset(firstField);
     } catch (NoSuchFieldException e) {
       throw new RuntimeException(e);
@@ -462,8 +390,8 @@ public abstract class SObject extends SObjectWithClass {
 
   private static long getFieldDistance(final String field1, final String field2) throws NoSuchFieldException,
       IllegalAccessException {
-    final Field firstField  = SMutableObject.class.getDeclaredField(field1);
-    final Field secondField = SMutableObject.class.getDeclaredField(field2);
+    final Field firstField  = SObject.class.getDeclaredField(field1);
+    final Field secondField = SObject.class.getDeclaredField(field2);
     return StorageLocation.getFieldOffset(secondField) - StorageLocation.getFieldOffset(firstField);
   }
 }

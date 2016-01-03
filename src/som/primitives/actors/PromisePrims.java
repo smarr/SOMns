@@ -18,7 +18,7 @@ import som.vm.Symbols;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
-import som.vmobjects.SObject.SImmutableObject;
+import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.RootCallTarget;
@@ -44,11 +44,11 @@ public final class PromisePrims {
     }
 
     @Specialization
-    public final SImmutableObject createPromisePair(final VirtualFrame frame,
+    public final SObject createPromisePair(final VirtualFrame frame,
         final Object nil, @Cached("create()") final DirectCallNode factory) {
       SPromise promise   = SPromise.createPromise(EventualMessage.getActorCurrentMessageIsExecutionOn());
       SResolver resolver = SPromise.createResolver(promise, "ctorPPair");
-      return (SImmutableObject) factory.call(frame, new Object[] {SPromise.pairClass, promise, resolver});
+      return (SObject) factory.call(frame, new Object[] {SPromise.pairClass, promise, resolver});
     }
 
     private static final SSymbol withAndFactory = Symbols.symbolFor("with:and:");
