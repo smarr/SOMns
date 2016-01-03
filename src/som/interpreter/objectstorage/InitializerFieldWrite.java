@@ -224,14 +224,14 @@ public abstract class InitializerFieldWrite extends ExpressionNode {
       @Cached("cachedLayout.getAssumption()") final Assumption isLatestLayout,
       @Cached("getUnwrittenOrPrimitiveLocation(cachedLayout)") final StorageLocation location) {
     CompilerAsserts.neverPartOfCompilation("should never be part of a compiled AST.");
-    rcvr.setField(slot, value);
+    rcvr.writeSlot(slot, value);
     return value;
   }
 
   @Fallback
   public final Object writeFallback(final Object rcvr, final Object value) {
     CompilerAsserts.neverPartOfCompilation("should never be part of a compiled AST.");
-    ((SObject) rcvr).setField(slot, value);
+    ((SObject) rcvr).writeSlot(slot, value);
     return value;
   }
 }

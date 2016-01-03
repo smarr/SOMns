@@ -520,7 +520,7 @@ public final class MixinDefinition {
       VM.callerNeedsToBeOptimized("call without proper call cache. Find better way if this is performance critical.");
       assert arguments.length == 1;
       SObject rcvr = (SObject) arguments[0];
-      return rcvr.getField(this);
+      return rcvr.readSlot(this);
     }
 
     protected AbstractFieldRead createNode(final SObject rcvr) {
@@ -528,7 +528,7 @@ public final class MixinDefinition {
     }
 
     public void setValueDuringBootstrap(final SObject obj, final Object value) {
-      obj.setField(this, value);
+      obj.writeSlot(this, value);
     }
   }
 
@@ -557,7 +557,7 @@ public final class MixinDefinition {
         final Object... arguments) {
       VM.callerNeedsToBeOptimized("call without proper call cache. Find better way if this is performance critical.");
       SObject rcvr = (SObject) arguments[0];
-      rcvr.setField(this, arguments[1]);
+      rcvr.writeSlot(this, arguments[1]);
       return rcvr;
     }
 
@@ -595,7 +595,7 @@ public final class MixinDefinition {
       VM.callerNeedsToBeOptimized("this should not be on the compiled-code path");
       assert arguments.length == 1;
       SObject rcvr = (SObject) arguments[0];
-      Object result = rcvr.getField(this);
+      Object result = rcvr.readSlot(this);
       assert result != null;
       if (result != Nil.nilObject) {
         return result;
@@ -603,7 +603,7 @@ public final class MixinDefinition {
 
       // There is no cached value yet, so, we need to actually create the class object
       synchronized (rcvr) {
-        result = rcvr.getField(this);
+        result = rcvr.readSlot(this);
         if (result != Nil.nilObject) {
           return result;
         }
@@ -611,7 +611,7 @@ public final class MixinDefinition {
         Object superclassAndMixins = mixinDefinition.
             getSuperclassAndMixinResolutionInvokable().createCallTarget().call(rcvr);
         SClass clazz = mixinDefinition.instantiateClass(rcvr, superclassAndMixins);
-        rcvr.setField(this, clazz);
+        rcvr.writeSlot(this, clazz);
         return clazz;
       }
     }

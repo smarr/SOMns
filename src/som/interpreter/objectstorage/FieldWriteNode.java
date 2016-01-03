@@ -100,7 +100,7 @@ public final class FieldWriteNode  {
         // write the value using the fall back, this is slow, I hope this
         // is never going to be on the fast path, because the object layout
         // is changed and this node should be removed from the dispatch chain
-        obj.setField(slot, value);
+        obj.writeSlot(slot, value);
         return value;
       }
     }
@@ -138,7 +138,7 @@ public final class FieldWriteNode  {
         // write the value using the fall back, this is slow, I hope this
         // is never going to be on the fast path, because the object layout
         // is changed and this node should be removed from the dispatch chain
-        obj.setField(slot, value);
+        obj.writeSlot(slot, value);
         return value;
       }
     }
@@ -169,7 +169,7 @@ public final class FieldWriteNode  {
         // write the value using the fall back, this is slow, I hope this
         // is never going to be on the fast path, because the object layout
         // is changed and this node should be removed from the dispatch chain
-        obj.setField(slot, value);
+        obj.writeSlot(slot, value);
       }
       return value;
     }
@@ -204,7 +204,7 @@ public final class FieldWriteNode  {
         // write the value using the fall back, this is slow, I hope this
         // is never going to be on the fast path, because the object layout
         // is changed and this node should be removed from the dispatch chain
-        obj.setField(slot, value);
+        obj.writeSlot(slot, value);
       }
       return value;
     }
@@ -234,7 +234,7 @@ public final class FieldWriteNode  {
     @Override
     public Object write(final SObject obj, final Object value) {
       CompilerAsserts.neverPartOfCompilation("Should never be part of a compiled AST.");
-      obj.setField(slot, value);
+      obj.writeSlot(slot, value);
       return value;
     }
   }

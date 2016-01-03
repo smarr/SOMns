@@ -301,9 +301,9 @@ public abstract class SObject extends SObjectWithClass {
 
     for (Entry<SlotDefinition, Object> entry : fieldValues.entrySet()) {
       if (entry.getValue() != null) {
-        setField(entry.getKey(), entry.getValue());
+        writeSlot(entry.getKey(), entry.getValue());
       } else if (getLocation(entry.getKey()) instanceof AbstractObjectStorageLocation) {
-        setField(entry.getKey(), Nil.nilObject);
+        writeSlot(entry.getKey(), Nil.nilObject);
       }
     }
   }
@@ -378,13 +378,13 @@ public abstract class SObject extends SObjectWithClass {
     return location;
   }
 
-  public final Object getField(final SlotDefinition slot) {
+  public final Object readSlot(final SlotDefinition slot) {
     CompilerAsserts.neverPartOfCompilation("getField");
     StorageLocation location = getLocation(slot);
     return location.read(this);
   }
 
-  public final void setField(final SlotDefinition slot, final Object value) {
+  public final void writeSlot(final SlotDefinition slot, final Object value) {
     CompilerAsserts.neverPartOfCompilation("setField");
     StorageLocation location = getLocation(slot);
 
