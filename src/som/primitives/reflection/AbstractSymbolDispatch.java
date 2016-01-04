@@ -21,6 +21,12 @@ import com.oracle.truffle.api.nodes.Node;
 public abstract class AbstractSymbolDispatch extends Node {
   public static final int INLINE_CACHE_SIZE = 6;
 
+  // TODO: think about how we can add a specialization for slot accesses, especially Caching Class lost stuff. Slot access are very expensive when uncached, we should avoid that, because we create nodes, every single time
+
+  // Is this an issue of the Dispatchable interface?
+  // should a dispatchable have something like invoke()? do we need to get the
+  // call target in the generic case, our do we just 'dispatch' the 'action'?
+
   public abstract Object executeDispatch(VirtualFrame frame, Object receiver,
       SSymbol selector, Object argsArr);
 
