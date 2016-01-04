@@ -124,6 +124,11 @@ class Collections usingKernel: kernel = Value (
     public size = (
       ^ items size
     )
+    
+    (* preserves capacity *)
+    public removeAll = (
+      items removeAll
+    )
   ) : (
     public new = ( ^ self new: initialSize )
   )
@@ -180,7 +185,12 @@ class Collections usingKernel: kernel = Value (
       pairs do: [ :p | p key = aKey ifTrue: [ ^ p ] ].
       ^ nil
     )
-  
+
+    (* preserves capacity *)
+    public removeAll = (
+      pairs removeAll
+    )
+
     'Printing'
     public print = ( '{' print. pairs do: [ :p | p print ]. '}' print )
     public println = ( self print. '' println )    

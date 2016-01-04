@@ -285,6 +285,14 @@ class CollectionTests usingPlatform: platform testFramework: minitest = (
       1 to: 5 do: [:i |
         assert: (result at: i) equals: i * 2.
       ].
-    )    
+    )
+    
+    public testRemoveAllPreservesCapacity = (
+      | v |
+      v := Vector new: 5.
+      self assert: 5 equals: v capacity.
+      v removeAll.
+      self assert: 5 equals: v capacity.
+    )
   ) : ( TEST_CONTEXT = () )
 )

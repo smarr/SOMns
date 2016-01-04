@@ -727,6 +727,11 @@ class Kernel vmMirror: vmMirror = Object <: Value (
       firstIdx := 1.
       ^ found
     )
+    
+    (* Preserves capacity *)
+    public removeAll = (
+      storage := Array new: storage size.
+    )
    
     public contains: anObject = (
       ^ storage contains: anObject
