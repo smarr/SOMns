@@ -652,7 +652,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
       storage at: index put: value.
     )
     
-    public first = ( ^ (self size > 0) ifTrue: [storage at: 1] ifFalse: [nil] )
+    public first = ( ^ isEmpty ifTrue: [nil] ifFalse: [storage at: firstIdx] )
     
     'Iterating'
     public do: block = (
