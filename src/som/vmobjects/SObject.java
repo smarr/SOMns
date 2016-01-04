@@ -47,6 +47,8 @@ public abstract class SObject extends SObjectWithClass {
   public static final int NUM_PRIMITIVE_FIELDS = 5;
   public static final int NUM_OBJECT_FIELDS    = 5;
 
+  // TODO: when we got the possibility that we can hint to the compiler that a
+  //       read is from a final field, we should remove this
   public static final class SImmutableObject extends SObject {
 
     public SImmutableObject(final SClass instanceClass, final ClassFactory classGroup, final ObjectLayout layout) {
@@ -160,6 +162,9 @@ public abstract class SObject extends SObjectWithClass {
     }
   }
 
+  // TODO: if there is the possibility that we can hint that a read is from a
+  //       final field, we should reconsider removing these and store them in
+  //       normal object fields
   @SuppressWarnings("unused") @CompilationFinal private long[]   extensionPrimFields;
   @SuppressWarnings("unused") @CompilationFinal private Object[] extensionObjFields;
 
