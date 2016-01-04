@@ -4,13 +4,12 @@ import java.lang.reflect.Field;
 
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.TruffleCompiler;
-import som.interpreter.objectstorage.FieldAccess.AbstractFieldRead;
-import som.interpreter.objectstorage.FieldAccess.ReadObjectFieldNode;
-import som.interpreter.objectstorage.FieldAccess.ReadSetDoubleFieldNode;
-import som.interpreter.objectstorage.FieldAccess.ReadSetLongFieldNode;
-import som.interpreter.objectstorage.FieldAccess.ReadSetOrUnsetDoubleFieldNode;
-import som.interpreter.objectstorage.FieldAccess.ReadSetOrUnsetLongFieldNode;
-import som.interpreter.objectstorage.FieldAccess.ReadUnwrittenFieldNode;
+import som.interpreter.objectstorage.FieldReadNode.ReadObjectFieldNode;
+import som.interpreter.objectstorage.FieldReadNode.ReadSetDoubleFieldNode;
+import som.interpreter.objectstorage.FieldReadNode.ReadSetLongFieldNode;
+import som.interpreter.objectstorage.FieldReadNode.ReadSetOrUnsetDoubleFieldNode;
+import som.interpreter.objectstorage.FieldReadNode.ReadSetOrUnsetLongFieldNode;
+import som.interpreter.objectstorage.FieldReadNode.ReadUnwrittenFieldNode;
 import som.vm.constants.Nil;
 import som.vmobjects.SObject;
 import sun.misc.Unsafe;
@@ -100,7 +99,7 @@ public abstract class StorageLocation {
   public abstract Object read(SObject obj);
   public abstract void   write(SObject obj, Object value);
 
-  public abstract AbstractFieldRead getReadNode(boolean isSet);
+  public abstract FieldReadNode getReadNode(boolean isSet);
 
   public static final class UnwrittenStorageLocation extends StorageLocation {
 
@@ -131,7 +130,7 @@ public abstract class StorageLocation {
     }
 
     @Override
-    public AbstractFieldRead getReadNode(final boolean isSet) {
+    public FieldReadNode getReadNode(final boolean isSet) {
       return new ReadUnwrittenFieldNode(slot);
     }
   }
@@ -147,7 +146,7 @@ public abstract class StorageLocation {
     }
 
     @Override
-    public final AbstractFieldRead getReadNode(final boolean isSet) {
+    public final FieldReadNode getReadNode(final boolean isSet) {
       return new ReadObjectFieldNode(slot, layout);
     }
   }
@@ -283,7 +282,7 @@ public abstract class StorageLocation {
     }
 
     @Override
-    public AbstractFieldRead getReadNode(final boolean isSet) {
+    public FieldReadNode getReadNode(final boolean isSet) {
       if (isSet) {
         return new ReadSetDoubleFieldNode(slot, layout);
       } else {
@@ -332,7 +331,7 @@ public abstract class StorageLocation {
     }
 
     @Override
-    public AbstractFieldRead getReadNode(final boolean isSet) {
+    public FieldReadNode getReadNode(final boolean isSet) {
       if (isSet) {
         return new ReadSetLongFieldNode(slot, layout);
       } else {
@@ -392,7 +391,7 @@ public abstract class StorageLocation {
     }
 
     @Override
-    public AbstractFieldRead getReadNode(final boolean isSet) {
+    public FieldReadNode getReadNode(final boolean isSet) {
       if (isSet) {
         return new ReadSetLongFieldNode(slot, layout);
       } else {
@@ -448,7 +447,7 @@ public abstract class StorageLocation {
     }
 
     @Override
-    public AbstractFieldRead getReadNode(final boolean isSet) {
+    public FieldReadNode getReadNode(final boolean isSet) {
       if (isSet) {
         return new ReadSetDoubleFieldNode(slot, layout);
       } else {

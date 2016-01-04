@@ -13,7 +13,7 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.profiles.IntValueProfile;
 
 
-public abstract class FieldAccess extends Node {
+public abstract class FieldReadNode extends Node {
   private static final IntValueProfile staticPrimMarkProfile = IntValueProfile.createIdentityProfile();
 
   protected final SlotDefinition slot;
@@ -22,26 +22,20 @@ public abstract class FieldAccess extends Node {
     return slot;
   }
 
-  public static AbstractFieldRead createRead(final SlotDefinition slot, final SObject rcvr) {
+  public static FieldReadNode createRead(final SlotDefinition slot, final SObject rcvr) {
     ObjectLayout layout = rcvr.getObjectLayout();
     final StorageLocation location = layout.getStorageLocation(slot);
     return location.getReadNode(location.isSet(rcvr, staticPrimMarkProfile));
   }
 
-  private FieldAccess(final SlotDefinition slot) {
+  protected FieldReadNode(final SlotDefinition slot) {
     super(null);
     this.slot = slot;
   }
 
-  public abstract static class AbstractFieldRead extends FieldAccess {
-    public AbstractFieldRead(final SlotDefinition slot) {
-      super(slot);
-    }
+  public abstract Object read(VirtualFrame frame, SObject obj) throws InvalidAssumptionException;
 
-    public abstract Object read(VirtualFrame frame, SObject obj) throws InvalidAssumptionException;
-  }
-
-  public static final class ReadUnwrittenFieldNode extends AbstractFieldRead {
+  public static final class ReadUnwrittenFieldNode extends FieldReadNode {
     public ReadUnwrittenFieldNode(final SlotDefinition slot) {
       super(slot);
     }
@@ -53,7 +47,7 @@ public abstract class FieldAccess extends Node {
     }
   }
 
-  public static final class ReadSetLongFieldNode extends AbstractFieldRead {
+  public static final class ReadSetLongFieldNode extends FieldReadNode {
     private final LongStorageLocation storage;
     private final IntValueProfile primMarkProfile = IntValueProfile.createIdentityProfile();
 
@@ -74,7 +68,7 @@ public abstract class FieldAccess extends Node {
     }
   }
 
-  public static final class ReadSetOrUnsetLongFieldNode extends AbstractFieldRead {
+  public static final class ReadSetOrUnsetLongFieldNode extends FieldReadNode {
     private final LongStorageLocation storage;
     private final IntValueProfile primMarkProfile = IntValueProfile.createIdentityProfile();
 
@@ -95,7 +89,7 @@ public abstract class FieldAccess extends Node {
     }
   }
 
-  public static final class ReadSetDoubleFieldNode extends AbstractFieldRead {
+  public static final class ReadSetDoubleFieldNode extends FieldReadNode {
     private final DoubleStorageLocation storage;
     private final IntValueProfile primMarkProfile = IntValueProfile.createIdentityProfile();
 
@@ -117,7 +111,7 @@ public abstract class FieldAccess extends Node {
     }
   }
 
-  public static final class ReadSetOrUnsetDoubleFieldNode extends AbstractFieldRead {
+  public static final class ReadSetOrUnsetDoubleFieldNode extends FieldReadNode {
     private final DoubleStorageLocation storage;
     private final IntValueProfile primMarkProfile = IntValueProfile.createIdentityProfile();
 
@@ -138,7 +132,7 @@ public abstract class FieldAccess extends Node {
     }
   }
 
-  public static final class ReadObjectFieldNode extends AbstractFieldRead {
+  public static final class ReadObjectFieldNode extends FieldReadNode {
     private final AbstractObjectStorageLocation storage;
 
     public ReadObjectFieldNode(final SlotDefinition slot,

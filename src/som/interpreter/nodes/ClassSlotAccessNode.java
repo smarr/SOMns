@@ -2,7 +2,7 @@ package som.interpreter.nodes;
 
 import som.compiler.MixinDefinition;
 import som.interpreter.Invokable;
-import som.interpreter.objectstorage.FieldAccess.AbstractFieldRead;
+import som.interpreter.objectstorage.FieldReadNode;
 import som.interpreter.objectstorage.FieldWriteNode.AbstractFieldWriteNode;
 import som.vm.constants.Nil;
 import som.vmobjects.SClass;
@@ -15,17 +15,17 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 
-public final class ClassSlotAccessNode extends AbstractFieldRead {
+public final class ClassSlotAccessNode extends FieldReadNode {
   private final MixinDefinition mixinDef;
   @Child protected DirectCallNode superclassAndMixinResolver;
   @Child protected ClassInstantiationNode instantiation;
 
-  private final AbstractFieldRead  read;
+  private final FieldReadNode  read;
   @Child protected AbstractFieldWriteNode write;
 
   public ClassSlotAccessNode(final MixinDefinition mixinDef,
-      final AbstractFieldRead read, final AbstractFieldWriteNode write) {
-    super(null);
+      final FieldReadNode read, final AbstractFieldWriteNode write) {
+    super(read.getSlot());
     this.read = read;
     this.write = write;
     this.mixinDef = mixinDef;

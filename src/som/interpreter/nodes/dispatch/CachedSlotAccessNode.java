@@ -1,6 +1,6 @@
 package som.interpreter.nodes.dispatch;
 
-import som.interpreter.objectstorage.FieldAccess.AbstractFieldRead;
+import som.interpreter.objectstorage.FieldReadNode;
 import som.interpreter.objectstorage.FieldWriteNode.AbstractFieldWriteNode;
 import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SObject.SMutableObject;
@@ -12,9 +12,9 @@ import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 
 public abstract class CachedSlotAccessNode extends AbstractDispatchNode {
 
-  @Child protected AbstractFieldRead read;
+  @Child protected FieldReadNode read;
 
-  public CachedSlotAccessNode(final AbstractFieldRead read) {
+  public CachedSlotAccessNode(final FieldReadNode read) {
     this.read = read;
   }
 
@@ -23,7 +23,7 @@ public abstract class CachedSlotAccessNode extends AbstractDispatchNode {
 
     private final DispatchGuard           guard;
 
-    public CachedSlotRead(final AbstractFieldRead read,
+    public CachedSlotRead(final FieldReadNode read,
         final DispatchGuard guard, final AbstractDispatchNode nextInCache) {
       super(read);
       this.guard       = guard;
@@ -58,7 +58,7 @@ public abstract class CachedSlotAccessNode extends AbstractDispatchNode {
 
   public static final class CachedImmutableSlotRead extends CachedSlotRead {
 
-    public CachedImmutableSlotRead(final AbstractFieldRead read,
+    public CachedImmutableSlotRead(final FieldReadNode read,
         final DispatchGuard guard, final AbstractDispatchNode nextInCache) {
       super(read, guard, nextInCache);
     }
@@ -71,7 +71,7 @@ public abstract class CachedSlotAccessNode extends AbstractDispatchNode {
 
   public static final class CachedMutableSlotRead extends CachedSlotRead {
 
-    public CachedMutableSlotRead(final AbstractFieldRead read,
+    public CachedMutableSlotRead(final FieldReadNode read,
         final DispatchGuard guard, final AbstractDispatchNode nextInCache) {
       super(read, guard, nextInCache);
     }

@@ -24,8 +24,7 @@ import som.interpreter.nodes.dispatch.DispatchGuard;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.nodes.literals.NilLiteralNode;
 import som.interpreter.objectstorage.ClassFactory;
-import som.interpreter.objectstorage.FieldAccess;
-import som.interpreter.objectstorage.FieldAccess.AbstractFieldRead;
+import som.interpreter.objectstorage.FieldReadNode;
 import som.interpreter.objectstorage.FieldWriteNode;
 import som.interpreter.objectstorage.FieldWriteNode.AbstractFieldWriteNode;
 import som.interpreter.objectstorage.InitializerFieldWrite;
@@ -523,8 +522,8 @@ public final class MixinDefinition {
       return rcvr.readSlot(this);
     }
 
-    protected AbstractFieldRead createNode(final SObject rcvr) {
-      return FieldAccess.createRead(this, rcvr);
+    protected FieldReadNode createNode(final SObject rcvr) {
+      return FieldReadNode.createRead(this, rcvr);
     }
 
     public void setValueDuringBootstrap(final SObject obj, final Object value) {
@@ -582,9 +581,9 @@ public final class MixinDefinition {
     }
 
     @Override
-    protected AbstractFieldRead createNode(final SObject rcvr) {
+    protected FieldReadNode createNode(final SObject rcvr) {
       ClassSlotAccessNode node = new ClassSlotAccessNode(mixinDefinition,
-          FieldAccess.createRead(this, rcvr),
+          FieldReadNode.createRead(this, rcvr),
           FieldWriteNode.createWriteObject(this, rcvr));
       return node;
     }
