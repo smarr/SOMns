@@ -25,6 +25,7 @@ import com.oracle.truffle.api.source.SourceSection;
   @NodeChild(value = "self",  type = ExpressionNode.class),
   @NodeChild(value = "value", type = ExpressionNode.class)})
 public abstract class InitializerFieldWrite extends ExpressionNode {
+  protected static final int LIMIT = 6;
 
   protected final SlotDefinition slot;
 
@@ -79,7 +80,7 @@ public abstract class InitializerFieldWrite extends ExpressionNode {
           "location != null",
           "cachedLayout == rcvr.getObjectLayout()",
           "location.isSet(rcvr, primMarkProfile)"},
-      limit = "1")
+      limit = "LIMIT")
   public final long longValueSet(final SImmutableObject rcvr, final long value,
       @Cached("createProfile()") final IntValueProfile primMarkProfile,
       @Cached("rcvr.getObjectLayout()") final ObjectLayout cachedLayout,
@@ -93,7 +94,8 @@ public abstract class InitializerFieldWrite extends ExpressionNode {
       assumptions = {"isLatestLayout"},
       guards   = {"location != null",
                   "cachedLayout == rcvr.getObjectLayout()"},
-      contains = "longValueSet")
+      contains = "longValueSet",
+      limit = "LIMIT")
   public final long longValueSetOrUnset(final SImmutableObject rcvr, final long value,
       @Cached("rcvr.getObjectLayout()") final ObjectLayout cachedLayout,
       @Cached("cachedLayout.getAssumption()") final Assumption isLatestLayout,
@@ -109,7 +111,7 @@ public abstract class InitializerFieldWrite extends ExpressionNode {
           "location != null",
           "cachedLayout == rcvr.getObjectLayout()",
           "location.isSet(rcvr, primMarkProfile)"},
-      limit = "1")
+      limit = "LIMIT")
   public final long longValueSet(final SMutableObject rcvr, final long value,
       @Cached("createProfile()") final IntValueProfile primMarkProfile,
       @Cached("rcvr.getObjectLayout()") final ObjectLayout cachedLayout,
@@ -123,7 +125,8 @@ public abstract class InitializerFieldWrite extends ExpressionNode {
       assumptions = {"isLatestLayout"},
       guards   = {"location != null",
                   "cachedLayout == rcvr.getObjectLayout()"},
-      contains = "longValueSet")
+      contains = "longValueSet",
+      limit    = "LIMIT")
   public final long longValueSetOrUnset(final SMutableObject rcvr, final long value,
       @Cached("rcvr.getObjectLayout()") final ObjectLayout cachedLayout,
       @Cached("cachedLayout.getAssumption()") final Assumption isLatestLayout,
@@ -138,7 +141,7 @@ public abstract class InitializerFieldWrite extends ExpressionNode {
       guards = {"location != null",
                 "cachedLayout == rcvr.getObjectLayout()",
                 "location.isSet(rcvr, primMarkProfile)"},
-      limit = "1")
+      limit  = "LIMIT")
   public final double doubleValueSet(final SMutableObject rcvr, final double value,
       @Cached("createProfile()") final IntValueProfile primMarkProfile,
       @Cached("rcvr.getObjectLayout()") final ObjectLayout cachedLayout,
@@ -152,7 +155,8 @@ public abstract class InitializerFieldWrite extends ExpressionNode {
       assumptions = {"isLatestLayout"},
       guards   = {"location != null",
                   "cachedLayout == rcvr.getObjectLayout()"},
-      contains = "doubleValueSet")
+      contains = "doubleValueSet",
+      limit    = "LIMIT")
   public final double doubleValueSetOrUnset(final SMutableObject rcvr, final double value,
       @Cached("rcvr.getObjectLayout()") final ObjectLayout cachedLayout,
       @Cached("cachedLayout.getAssumption()") final Assumption isLatestLayout,
@@ -167,7 +171,7 @@ public abstract class InitializerFieldWrite extends ExpressionNode {
       guards = {"location != null",
                 "cachedLayout == rcvr.getObjectLayout()",
                 "location.isSet(rcvr, primMarkProfile)"},
-      limit = "1")
+      limit  = "LIMIT")
   public final double doubleValueSet(final SImmutableObject rcvr, final double value,
       @Cached("createProfile()") final IntValueProfile primMarkProfile,
       @Cached("rcvr.getObjectLayout()") final ObjectLayout cachedLayout,
@@ -181,7 +185,8 @@ public abstract class InitializerFieldWrite extends ExpressionNode {
       assumptions = {"isLatestLayout"},
       guards   = {"location != null",
                   "cachedLayout == rcvr.getObjectLayout()"},
-      contains = "doubleValueSet")
+      contains = "doubleValueSet",
+      limit    = "LIMIT")
   public final double doubleValueSetOrUnset(final SImmutableObject rcvr, final double value,
       @Cached("rcvr.getObjectLayout()") final ObjectLayout cachedLayout,
       @Cached("cachedLayout.getAssumption()") final Assumption isLatestLayout,
@@ -194,7 +199,8 @@ public abstract class InitializerFieldWrite extends ExpressionNode {
   @Specialization(
       assumptions = {"isLatestLayout"},
       guards   = {"location != null",
-                  "cachedLayout == rcvr.getObjectLayout()"})
+                  "cachedLayout == rcvr.getObjectLayout()"},
+      limit    = "LIMIT")
   public final Object objectValue(final SImmutableObject rcvr, final Object value,
       @Cached("rcvr.getObjectLayout()") final ObjectLayout cachedLayout,
       @Cached("cachedLayout.getAssumption()") final Assumption isLatestLayout,
@@ -206,7 +212,8 @@ public abstract class InitializerFieldWrite extends ExpressionNode {
   @Specialization(
       assumptions = {"isLatestLayout"},
       guards   = {"location != null",
-                  "cachedLayout == rcvr.getObjectLayout()"})
+                  "cachedLayout == rcvr.getObjectLayout()"},
+      limit    = "LIMIT")
   public final Object objectValue(final SMutableObject rcvr, final Object value,
       @Cached("rcvr.getObjectLayout()") final ObjectLayout cachedLayout,
       @Cached("cachedLayout.getAssumption()") final Assumption isLatestLayout,
@@ -218,7 +225,8 @@ public abstract class InitializerFieldWrite extends ExpressionNode {
   @Specialization(
       assumptions = {"isLatestLayout"},
       guards   = {"location != null",
-                  "cachedLayout == rcvr.getObjectLayout()"})
+                  "cachedLayout == rcvr.getObjectLayout()"},
+      limit    = "LIMIT")
   public final Object unwrittenOrGeneralizingValue(final SObject rcvr, final Object value,
       @Cached("rcvr.getObjectLayout()") final ObjectLayout cachedLayout,
       @Cached("cachedLayout.getAssumption()") final Assumption isLatestLayout,
