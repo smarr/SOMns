@@ -24,6 +24,7 @@ class CollectionTests usingPlatform: platform testFramework: minitest = (
   private Array       = platform kernel Array.
   private Vector      = platform kernel Vector.
   private ObjectMirror= platform mirrors ObjectMirror.
+  private IndexOutOfBounds = platform kernel IndexOutOfBounds.
 |)(
   public class ArrayTest = TestContext (
     | a = Array new: 3. |
@@ -236,8 +237,9 @@ class CollectionTests usingPlatform: platform testFramework: minitest = (
     )
   
     public testAt = (
-      self assert: #world equals: (a at: 2).
-      self assert:     23 equals: (a at: 3).
+      self assert: 'hello' equals: (a at: 1).
+      self assert: #world  equals: (a at: 2).
+      self assert:     23  equals: (a at: 3).
     )
   
     public testContains = (
@@ -251,6 +253,13 @@ class CollectionTests usingPlatform: platform testFramework: minitest = (
         self assert: i equals: (a at: j).
         j := j + 1.
       ].
+    )
+    
+    public testIndexOutOfBoundsOutside = (
+      self should: [ a at: 0 ] signal: IndexOutOfBounds description: '0 is not a proper index, because we are 1-based'.
+
+      self assert: a size equals: 3.
+      self should: [ a at: 4 ] signal: IndexOutOfBounds description: '4 is not a proper index, because size is 3'.
     )
     
     public testSelect = (

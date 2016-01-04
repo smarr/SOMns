@@ -764,7 +764,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     )
     
     checkIndex: index = (
-      (firstIdx <= index) && (index <= lastIdx)
+      (firstIdx <= index) && (index < lastIdx)
         ifFalse: [
           IndexOutOfBounds signalWith: self index: index
         ].
