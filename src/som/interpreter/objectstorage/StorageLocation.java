@@ -181,12 +181,10 @@ public abstract class StorageLocation {
 
   public static final class ObjectArrayStorageLocation extends AbstractObjectStorageLocation {
     private final int extensionIndex;
-//    private final int absoluteIndex;
     public ObjectArrayStorageLocation(final ObjectLayout layout,
         final SlotDefinition slot, final int objFieldIdx) {
       super(layout, slot);
       extensionIndex = objFieldIdx - SObject.NUM_OBJECT_FIELDS;
-//      absoluteIndex = Unsafe.ARRAY_OBJECT_BASE_OFFSET + Unsafe.ARRAY_OBJECT_INDEX_SCALE * extensionIndex;
     }
 
     @Override
