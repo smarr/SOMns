@@ -22,6 +22,7 @@
 package som.interpreter.nodes;
 
 import java.lang.reflect.Field;
+import java.util.Arrays;
 
 import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
 import som.interpreter.InlinerForLexicallyEmbeddedMethods;
@@ -31,7 +32,6 @@ import som.interpreter.Types;
 import com.oracle.truffle.api.dsl.TypeSystemReference;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.nodes.NodeUtil;
 import com.oracle.truffle.api.source.SourceSection;
 
 @TypeSystemReference(Types.class)
@@ -57,9 +57,23 @@ public abstract class SOMNode extends Node {
     assert assertNodeHasNoFrameSlots();
   }
 
+  private static Field[] getAllFields(final Class<? extends Object> clazz) {
+    Field[] declaredFields = clazz.getDeclaredFields();
+    if (clazz.getSuperclass() != null) {
+      return concatArrays(getAllFields(clazz.getSuperclass()), declaredFields);
+    }
+    return declaredFields;
+  }
+
+  private static <T> T[] concatArrays(final T[] first, final T[] second) {
+    T[] result = Arrays.copyOf(first, first.length + second.length);
+    System.arraycopy(second, 0, result, first.length, second.length);
+    return result;
+  }
+
   private boolean assertNodeHasNoFrameSlots() {
     if (this.getClass().desiredAssertionStatus()) {
-      for (Field f : NodeUtil.getAllFields(getClass())) {
+      for (Field f : getAllFields(getClass())) {
         assert f.getType() != FrameSlot.class;
         if (f.getType() == FrameSlot.class) {
           return false;
