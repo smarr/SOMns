@@ -38,6 +38,12 @@ public final class ParallelHelper {
         });
       }
       boolean allArrivedWithinTime = threadsDone.await(10, TimeUnit.SECONDS);
+      if (!exceptions.isEmpty()) {
+        for (Throwable e : exceptions) {
+          e.printStackTrace();
+        }
+      }
+
       assertTrue("Failed parallel test with: " + exceptions, exceptions.isEmpty());
       assertTrue(allArrivedWithinTime);
     } finally {
