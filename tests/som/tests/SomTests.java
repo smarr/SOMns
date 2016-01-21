@@ -23,6 +23,7 @@ package som.tests;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.IOException;
 import java.util.Arrays;
 
 import org.junit.Test;
@@ -31,9 +32,6 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 import som.VM;
-import som.interpreter.actors.Actor;
-import som.vm.Bootstrap;
-import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 
 
 @RunWith(Parameterized.class)
@@ -66,17 +64,14 @@ public class SomTests {
   }
 
   @Test
-  public void testSomeTest() {
-    VM vm = new VM(true);
-    Actor mainActor = Actor.initializeActorSystem();
+  public void testSomeTest() throws IOException {
+    String[] args = new String[] {
+        "core-lib/TestSuite/TestRunner.som",
+        "core-lib/TestSuite/" + testName + ".som"};
+    VM vm = new VM(args, true);
+    vm.initalize();
 
-    vm.processVmArguments(new String[] {"core-lib/TestSuite/TestRunner.som",
-                                        "core-lib/TestSuite/" + testName + ".som"});
-    Bootstrap.loadPlatformAndKernelModule(VM.standardPlatformFile,
-        VM.standardKernelFile);
-    SObjectWithoutFields vmMirror = Bootstrap.initializeObjectSystem();
-
-    Bootstrap.executeApplication(vmMirror, mainActor);
+    vm.execute();
 
     VM.resetClassReferences(true);
 

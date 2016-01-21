@@ -84,26 +84,35 @@ import com.oracle.truffle.api.dsl.GeneratedBy;
 import com.oracle.truffle.api.dsl.NodeFactory;
 
 
-public final class Bootstrap {
-
-  private static final Map<String, MixinDefinition> loadedModules = new LinkedHashMap<>();
+public final class ObjectSystem {
 
   @CompilationFinal
-  public static MixinDefinition platformModule;
-  @CompilationFinal
-  public static MixinDefinition kernelModule;
+  private static ObjectSystem last;
+
+  private final Map<String, MixinDefinition> loadedModules;
+
+  private final MixinDefinition platformModule;
+  private final MixinDefinition kernelModule;
 
   @CompilationFinal
-  public static SClass platformClass;
+  private SClass platformClass;  // is only set after completion of initialize()
 
   @CompilationFinal
-  private static boolean objectSystemInitialized = false;
+  private boolean initialized = false;
 
-  public static boolean isObjectSystemInitialized() {
-    return objectSystemInitialized;
+  public ObjectSystem(final String platformFilename,
+      final String kernelFilename) throws IOException {
+    last = this;
+    loadedModules  = new LinkedHashMap<>();
+    platformModule = loadModule(platformFilename);
+    kernelModule   = loadModule(kernelFilename);
   }
 
-  public static MixinDefinition loadModule(final String filename)
+  public static boolean isInitialized() {
+    return last.initialized;
+  }
+
+  public MixinDefinition loadModule(final String filename)
       throws IOException {
     File file = new File(filename);
 
@@ -115,17 +124,6 @@ public final class Bootstrap {
     loadedModules.put(file.getAbsolutePath(), module);
 
     return module;
-  }
-
-  public static void loadPlatformAndKernelModule(final String platformFilename,
-      final String kernelFilename) {
-    try {
-      platformModule = loadModule(platformFilename);
-      kernelModule   = loadModule(kernelFilename);
-    } catch (IOException e) {
-      e.printStackTrace();
-      VM.errorExit("Loading either the platform or kernel module failed.");
-    }
   }
 
   private static SInvokable constructVmMirrorPrimitive(
@@ -331,7 +329,7 @@ public final class Bootstrap {
     clazzClazz.setClass(metaclassClass);
   }
 
-  public static SObjectWithoutFields initializeObjectSystem() {
+  public SObjectWithoutFields initialize() {
     assert platformModule != null && kernelModule != null;
 
     // these classes need to be defined by the Kernel module
@@ -465,7 +463,7 @@ Classes.transferClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInst
     setSlot(KernelObj.kernel, "Block2",    Classes.blockClass2,    kernelModule);
     setSlot(KernelObj.kernel, "Block3",    Classes.blockClass3,    kernelModule);
 
-    objectSystemInitialized = true;
+    initialized = true;
 
     platformClass = platformModule.instantiateModuleClass();
     return vmMirror;
@@ -478,7 +476,7 @@ Classes.transferClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInst
     slot.setValueDuringBootstrap(obj, value);
   }
 
-  public static void executeApplication(final SObjectWithoutFields vmMirror, final Actor mainActor) {
+  public void executeApplication(final SObjectWithoutFields vmMirror, final Actor mainActor) {
     Object platform = platformModule.instantiateObject(platformClass, vmMirror);
     SInvokable disp = (SInvokable) platformClass.lookupMessage(
         Symbols.symbolFor("start"), AccessModifier.PUBLIC);
@@ -505,7 +503,7 @@ Classes.transferClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInst
     }
   }
 
-  public static Object execute(final String selector) {
+  public Object execute(final String selector) {
     SInvokable method = (SInvokable) platformClass.getSOMClass().lookupMessage(
         Symbols.symbolFor(selector), AccessModifier.PUBLIC);
     return method.invoke(platformClass);

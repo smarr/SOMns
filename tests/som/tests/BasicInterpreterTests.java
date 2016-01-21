@@ -24,6 +24,7 @@ package som.tests;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+import java.io.IOException;
 import java.util.Arrays;
 
 import org.junit.Test;
@@ -33,7 +34,6 @@ import org.junit.runners.Parameterized.Parameters;
 
 import som.VM;
 import som.interpreter.Types;
-import som.vm.Bootstrap;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
 
@@ -206,30 +206,29 @@ public class BasicInterpreterTests {
   }
 
   @Test
-  public void testBasicInterpreterBehavior() {
-    new VM(true);
-    bootstrapInterpreter();
+  public void testBasicInterpreterBehavior() throws IOException {
+    VM vm = new VM(getVMArguments(), true);
+    vm.initalize();
 
-    Object actualResult = Bootstrap.execute(testSelector);
+    Object actualResult = vm.execute(testSelector);
     assertEqualsSOMValue(expectedResult, actualResult);
   }
 
   @Test
-  public void testInParallel() throws InterruptedException {
-    new VM(true);
-    bootstrapInterpreter();
+  public void testInParallel() throws InterruptedException, IOException {
+    VM vm = new VM(getVMArguments(), true);
+    vm.initalize();
 
     ParallelHelper.executeNTimesInParallel(() -> {
-      Object actualResult = Bootstrap.execute(testSelector);
+      Object actualResult = vm.execute(testSelector);
       assertEqualsSOMValue(expectedResult, actualResult);
     });
   }
 
-  protected void bootstrapInterpreter() {
-    Bootstrap.loadPlatformAndKernelModule(
-        "core-lib/TestSuite/BasicInterpreterTests/" + testClass + ".som",
-        VM.standardKernelFile);
-    Bootstrap.initializeObjectSystem();
+  protected String[] getVMArguments() {
+    return new String[] {
+        "--platform",
+        "core-lib/TestSuite/BasicInterpreterTests/" + testClass + ".som" };
   }
 
   @Override

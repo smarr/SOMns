@@ -10,7 +10,6 @@ import som.interpreter.Invokable;
 import som.interpreter.Method;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
-import som.vm.Bootstrap;
 import som.vm.constants.Classes;
 import som.vm.constants.Nil;
 import som.vmobjects.SArray.SImmutableArray;
@@ -44,7 +43,7 @@ public final class SystemPrims {
   public static Object loadModule(final String path) {
     MixinDefinition module;
     try {
-      module = Bootstrap.loadModule(path);
+      module = VM.loadModule(path);
       return module.instantiateModuleClass();
     } catch (IOException e) {
       // TODO convert to SOM exception when we support them

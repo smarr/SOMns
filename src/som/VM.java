@@ -1,13 +1,14 @@
 package som;
 
-import java.util.Arrays;
+import java.io.IOException;
 
+import som.compiler.MixinDefinition;
 import som.interpreter.TruffleCompiler;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.SFarReference;
 import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.SResolver;
-import som.vm.Bootstrap;
+import som.vm.ObjectSystem;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 
 import com.oracle.truffle.api.CompilerAsserts;
@@ -18,12 +19,20 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 public final class VM {
 
   @CompilationFinal private static VM vm;
+
   private final boolean avoidExitForTesting;
+  private final ObjectSystem objectSystem;
+
   private int lastExitCode = 0;
   private volatile boolean shouldExit = false;
   private final VMOptions options;
   private boolean usesActors;
   private Thread mainThread;
+
+  @CompilationFinal
+  private SObjectWithoutFields vmMirror;
+  @CompilationFinal
+  private Actor mainActor;
 
   public static final boolean DebugMode = false;
   public static final boolean FailOnMissingOptimizations = false;
@@ -44,9 +53,11 @@ public final class VM {
     vm = this;
     this.avoidExitForTesting = avoidExitForTesting;
     options = new VMOptions(args);
+    objectSystem = new ObjectSystem(options.platformFile, options.kernelFile);
 
-  public VM() {
-    this(false);
+    if (options.showUsage) {
+      printUsageAndExit();
+    }
   }
 
   public VM(final String[] args) throws IOException {
@@ -156,20 +167,36 @@ public final class VM {
     return vm.mainThread;
   }
 
-  public long execute() {
-    Bootstrap.loadPlatformAndKernelModule(vm.options.platformFile,
-        vm.options.kernelFile);
+  public void initalize() {
+    assert vmMirror  == null : "VM seems to be initialized already";
+    assert mainActor == null : "VM seems to be initialized already";
 
-    Actor mainActor = Actor.initializeActorSystem();
-    SObjectWithoutFields vmMirror = Bootstrap.initializeObjectSystem();
-    Bootstrap.executeApplication(vmMirror, mainActor);
-    return 0;
+    mainActor = Actor.initializeActorSystem();
+    vmMirror  = objectSystem.initialize();
+  }
+
+  public Object execute(final String selector) {
+    return objectSystem.execute(selector);
+  }
+
+  public void execute() {
+    objectSystem.executeApplication(vmMirror, mainActor);
   }
 
   public static void main(final String[] args) {
-    new VM();
-    vm.processVmArguments(args);
-    System.exit((int) vm.execute());
+    try {
+      new VM(args);
+    } catch (IOException e) {
+      e.printStackTrace();
+      VM.errorExit("Loading either the platform or kernel module failed.");
+    }
+
+    vm.execute();
+    System.exit(vm.lastExitCode);
+  }
+
+  public static MixinDefinition loadModule(final String filename) throws IOException {
+    return vm.objectSystem.loadModule(filename);
   }
 
   /** This is only meant to be used in unit tests. */

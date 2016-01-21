@@ -37,11 +37,10 @@ import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.objectstorage.ClassFactory;
 import som.interpreter.objectstorage.ObjectLayout;
-import som.vm.Bootstrap;
+import som.vm.ObjectSystem;
 import som.vm.constants.Classes;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 
 
@@ -82,9 +81,9 @@ public final class SClass extends SObjectWithClass {
   }
 
   public ClassFactory getInstanceFactory() {
-    assert classGroup != null               || !Bootstrap.isObjectSystemInitialized();
-    assert instanceClassGroup != null       || !Bootstrap.isObjectSystemInitialized();
-    assert classGroup != instanceClassGroup || !Bootstrap.isObjectSystemInitialized();
+    assert classGroup != null               || !ObjectSystem.isInitialized();
+    assert instanceClassGroup != null       || !ObjectSystem.isInitialized();
+    assert classGroup != instanceClassGroup || !ObjectSystem.isInitialized();
     return instanceClassGroup;
   }
 
@@ -142,7 +141,7 @@ public final class SClass extends SObjectWithClass {
     this.isTransferObject = isTransferObject;
     this.isArray          = isArray;
     this.instanceClassGroup = classFactory;
-    assert instanceClassGroup != null || !Bootstrap.isObjectSystemInitialized();
+    assert instanceClassGroup != null || !ObjectSystem.isInitialized();
   }
 
   private boolean isBasedOn(final MixinDefinitionId mixinId) {

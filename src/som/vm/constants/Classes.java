@@ -1,6 +1,6 @@
 package som.vm.constants;
 
-import som.vm.Bootstrap;
+import som.vm.ObjectSystem;
 import som.vmobjects.SClass;
 
 
@@ -36,35 +36,35 @@ public final class Classes {
   // These classes can be statically preinitialized.
   static {
     // Allocate the Metaclass classes
-    metaclassClass = Bootstrap.newMetaclassClass(KernelObj.kernel);
+    metaclassClass = ObjectSystem.newMetaclassClass(KernelObj.kernel);
     classClass     = new SClass(KernelObj.kernel);
     SClass classClassClass = new SClass(KernelObj.kernel);
-    Bootstrap.initializeClassAndItsClass("Class", classClass, classClassClass);
+    ObjectSystem.initializeClassAndItsClass("Class", classClass, classClassClass);
 
     // Allocate the rest of the system classes
-    topClass        = Bootstrap.newEmptyClassWithItsClass("Top");
-    thingClass      = Bootstrap.newEmptyClassWithItsClass("Thing");
-    objectClass     = Bootstrap.newEmptyClassWithItsClass("Object");
-    valueClass      = Bootstrap.newEmptyClassWithItsClass("Value");
-    transferClass   = Bootstrap.newEmptyClassWithItsClass("TransferObject");
-    nilClass        = Bootstrap.newEmptyClassWithItsClass("Nil");
-    arrayReadMixinClass = Bootstrap.newEmptyClassWithItsClass("ArrayReadMixin");
-    arrayClass      = Bootstrap.newEmptyClassWithItsClass("Array");
-    valueArrayClass = Bootstrap.newEmptyClassWithItsClass("ValueArray");
-    transferArrayClass = Bootstrap.newEmptyClassWithItsClass("TransferArray");
-    symbolClass     = Bootstrap.newEmptyClassWithItsClass("Symbol");
-    methodClass     = Bootstrap.newEmptyClassWithItsClass("Method");
-    integerClass    = Bootstrap.newEmptyClassWithItsClass("Integer");
-    stringClass     = Bootstrap.newEmptyClassWithItsClass("String");
-    doubleClass     = Bootstrap.newEmptyClassWithItsClass("Double");
+    topClass        = ObjectSystem.newEmptyClassWithItsClass("Top");
+    thingClass      = ObjectSystem.newEmptyClassWithItsClass("Thing");
+    objectClass     = ObjectSystem.newEmptyClassWithItsClass("Object");
+    valueClass      = ObjectSystem.newEmptyClassWithItsClass("Value");
+    transferClass   = ObjectSystem.newEmptyClassWithItsClass("TransferObject");
+    nilClass        = ObjectSystem.newEmptyClassWithItsClass("Nil");
+    arrayReadMixinClass = ObjectSystem.newEmptyClassWithItsClass("ArrayReadMixin");
+    arrayClass      = ObjectSystem.newEmptyClassWithItsClass("Array");
+    valueArrayClass = ObjectSystem.newEmptyClassWithItsClass("ValueArray");
+    transferArrayClass = ObjectSystem.newEmptyClassWithItsClass("TransferArray");
+    symbolClass     = ObjectSystem.newEmptyClassWithItsClass("Symbol");
+    methodClass     = ObjectSystem.newEmptyClassWithItsClass("Method");
+    integerClass    = ObjectSystem.newEmptyClassWithItsClass("Integer");
+    stringClass     = ObjectSystem.newEmptyClassWithItsClass("String");
+    doubleClass     = ObjectSystem.newEmptyClassWithItsClass("Double");
 
-    booleanClass = Bootstrap.newEmptyClassWithItsClass("Boolean");
-    trueClass    = Bootstrap.newEmptyClassWithItsClass("True");
-    falseClass   = Bootstrap.newEmptyClassWithItsClass("False");
+    booleanClass = ObjectSystem.newEmptyClassWithItsClass("Boolean");
+    trueClass    = ObjectSystem.newEmptyClassWithItsClass("True");
+    falseClass   = ObjectSystem.newEmptyClassWithItsClass("False");
 
-    blockClass  = Bootstrap.newEmptyClassWithItsClass("Block");
-    blockClass1 = Bootstrap.newEmptyClassWithItsClass("Block1");
-    blockClass2 = Bootstrap.newEmptyClassWithItsClass("Block2");
-    blockClass3 = Bootstrap.newEmptyClassWithItsClass("Block3");
+    blockClass  = ObjectSystem.newEmptyClassWithItsClass("Block");
+    blockClass1 = ObjectSystem.newEmptyClassWithItsClass("Block1");
+    blockClass2 = ObjectSystem.newEmptyClassWithItsClass("Block2");
+    blockClass3 = ObjectSystem.newEmptyClassWithItsClass("Block3");
   }
 }

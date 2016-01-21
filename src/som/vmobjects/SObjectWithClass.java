@@ -1,7 +1,7 @@
 package som.vmobjects;
 
 import som.interpreter.objectstorage.ClassFactory;
-import som.vm.Bootstrap;
+import som.vm.ObjectSystem;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
@@ -40,7 +40,7 @@ public abstract class SObjectWithClass extends SAbstractObject {
     assert value != null;
     clazz      = value;
     classGroup = value.getInstanceFactory();
-    assert classGroup != null || !Bootstrap.isObjectSystemInitialized();
+    assert classGroup != null || !ObjectSystem.isInitialized();
   }
 
   public void setClassGroup(final ClassFactory factory) {
