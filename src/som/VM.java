@@ -190,7 +190,7 @@ public final class VM {
       e.printStackTrace();
       VM.errorExit("Loading either the platform or kernel module failed.");
     }
-
+    vm.initalize();
     vm.execute();
     System.exit(vm.lastExitCode);
   }
