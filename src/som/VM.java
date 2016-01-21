@@ -21,7 +21,7 @@ public final class VM {
   private final boolean avoidExitForTesting;
   private int lastExitCode = 0;
   private volatile boolean shouldExit = false;
-  private Options options;
+  private final VMOptions options;
   private boolean usesActors;
   private Thread mainThread;
 
@@ -40,22 +40,17 @@ public final class VM {
     }
   }
 
-  public VM(final boolean avoidExitForTesting) {
-    this.avoidExitForTesting = avoidExitForTesting;
+  public VM(final String[] args, final boolean avoidExitForTesting) throws IOException {
     vm = this;
-  }
+    this.avoidExitForTesting = avoidExitForTesting;
+    options = new VMOptions(args);
 
   public VM() {
     this(false);
   }
 
-  public static final String standardPlatformFile = "core-lib/Platform.som";
-  public static final String standardKernelFile   = "core-lib/Kernel.som";
-
-  public static class Options {
-    public String   platformFile = standardPlatformFile;
-    public String   kernelFile   = standardKernelFile;
-    public String[] args;
+  public VM(final String[] args) throws IOException {
+    this(args, false);
   }
 
   public static boolean shouldExit() {
@@ -99,45 +94,14 @@ public final class VM {
     exit(1);
   }
 
-  public Options processVmArguments(final String[] arguments) {
-    vm.options = new Options();
-
-    int currentArg = 0;
-
-    // parse optional --platform and --kernel, need to be the first arguments
-    boolean parsedArgument = true;
-
-    while (parsedArgument) {
-      if (currentArg >= arguments.length) {
-        return vm.options;
-      } else {
-        if (arguments[currentArg].equals("--platform")) {
-          vm.options.platformFile = arguments[currentArg + 1];
-          currentArg += 2;
-        } else if (arguments[currentArg].equals("--kernel")) {
-          vm.options.kernelFile = arguments[currentArg + 1];
-          currentArg += 2;
-        } else {
-          parsedArgument = false;
-        }
-      }
-    }
-
-    // store remaining arguments
-    if (currentArg < arguments.length) {
-      vm.options.args = Arrays.copyOfRange(arguments, currentArg, arguments.length);
-    }
-    return vm.options;
-  }
-
-  protected void printUsageAndExit() {
+  private void printUsageAndExit() {
     // Checkstyle: stop
     System.out.println("VM arguments, need to come before any application arguments:");
     System.out.println("");
     System.out.println("  --platform file-name   SOM Platform module to be loaded");
-    System.out.println("                         file-name defaults to '" + standardPlatformFile + "'");
+    System.out.println("                         file-name defaults to '" + VMOptions.STANDARD_PLATFORM_FILE + "'");
     System.out.println("  --kernel file-name     SOM Kernel module to be loaded");
-    System.out.println("                         file-name defaults to '" + standardKernelFile + "'");
+    System.out.println("                         file-name defaults to '" + VMOptions.STANDARD_KERNEL_FILE + "'");
     // Checkstyle: resume
 
     if (!avoidExitForTesting) {

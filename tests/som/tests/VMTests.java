@@ -6,22 +6,21 @@ import static org.junit.Assert.assertNull;
 
 import org.junit.Test;
 
-import som.VM;
-import som.VM.Options;
+import som.VMOptions;
 
 
 public class VMTests {
 
   @Test
   public void testProcessArgumentsNothing() {
-    Options opts = (new VM(true)).processVmArguments(new String[0]);
-    assertEquals(opts.platformFile, VM.standardPlatformFile);
+    VMOptions opts = new VMOptions(new String[0]);
+    assertEquals(opts.platformFile, VMOptions.STANDARD_PLATFORM_FILE);
     assertNull(opts.args);
   }
 
   @Test
   public void testProcessArgumentsWithPlatformFile() {
-    Options opts = (new VM(true)).processVmArguments(
+    VMOptions opts = new VMOptions(
         new String[] {"--platform", "foo.som"});
     assertEquals(opts.platformFile, "foo.som");
     assertNull(opts.args);
@@ -29,7 +28,7 @@ public class VMTests {
 
   @Test
   public void testProcessArgumentsWithKernelFile() {
-    Options opts = (new VM(true)).processVmArguments(
+    VMOptions opts = new VMOptions(
         new String[] {"--kernel", "foo.som"});
     assertEquals(opts.kernelFile, "foo.som");
     assertNull(opts.args);
@@ -37,17 +36,17 @@ public class VMTests {
 
   @Test
   public void testProcessArgumentsWithAppFile() {
-    Options opts = (new VM(true)).processVmArguments(
+    VMOptions opts = new VMOptions(
         new String[] {"app.som"});
-    assertEquals(opts.platformFile, VM.standardPlatformFile);
+    assertEquals(opts.platformFile, VMOptions.STANDARD_PLATFORM_FILE);
     assertArrayEquals(opts.args, new String[] {"app.som"});
   }
 
   @Test
   public void testProcessArgumentsWithAppFileAndArgs() {
-    Options opts = (new VM(true)).processVmArguments(
+    VMOptions opts = new VMOptions(
         new String[] {"app.som", "Foo", "1", "2"});
-    assertEquals(opts.platformFile, VM.standardPlatformFile);
+    assertEquals(opts.platformFile, VMOptions.STANDARD_PLATFORM_FILE);
     assertArrayEquals(opts.args, new String[] {"app.som", "Foo", "1", "2"});
   }
 }
