@@ -139,6 +139,13 @@ public final class Parser {
     return false;
   }
 
+  public static MixinDefinition parseModule(final Source source) throws ParseError, MixinDefinitionError {
+    Parser parser = new Parser(source.getReader(), source.getLength(), source);
+    SourceCoordinate coord = parser.getCoordinate();
+    MixinBuilder moduleBuilder = parser.moduleDeclaration();
+    return moduleBuilder.assemble(parser.getSource(coord));
+  }
+
   @Override
   public String toString() {
     return "Parser(" + source.getName() + ", " + this.getCoordinate().toString() + ")";

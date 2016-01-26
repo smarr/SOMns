@@ -3,8 +3,6 @@ package som.interpreter;
 import java.io.IOException;
 
 import som.VM;
-import som.compiler.Lexer.SourceCoordinate;
-import som.compiler.MixinBuilder;
 import som.compiler.MixinBuilder.MixinDefinitionError;
 import som.compiler.MixinDefinition;
 import som.compiler.Parser;
@@ -93,12 +91,8 @@ public final class SomLanguage extends TruffleLanguage<VM> {
       return createStartCallTarget();
     }
 
-    Parser parser = new Parser(code.getReader(), code.getLength(), code);
-    SourceCoordinate coord = parser.getCoordinate();
-
     try {
-      MixinBuilder moduleBuilder = parser.moduleDeclaration();
-      MixinDefinition moduleDef = moduleBuilder.assemble(parser.getSource(coord));
+      MixinDefinition moduleDef = Parser.parseModule(code);
       ParseResult result = new ParseResult(moduleDef.instantiateModuleClass());
       return Truffle.getRuntime().createCallTarget(result);
     } catch (ParseError | MixinDefinitionError e) {
