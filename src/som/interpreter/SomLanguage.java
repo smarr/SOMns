@@ -30,6 +30,8 @@ public final class SomLanguage extends TruffleLanguage<VM> {
 
   public static final String MIME_TYPE = "application/x-newspeak-som-ns";
   public static final String CMD_ARGS  = "command-line-arguments";
+  public static final String FILE_EXTENSION = "som";
+  public static final String DOT_FILE_EXTENSION = "." + FILE_EXTENSION;
 
   public static final SomLanguage INSTANCE = new SomLanguage();
 
