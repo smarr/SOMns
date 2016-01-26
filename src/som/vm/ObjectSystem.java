@@ -498,7 +498,7 @@ Classes.transferClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInst
         VM.errorExit("This should never happen. The VM should not return under those conditions.");
         System.exit(1); // just in case it was disable for VM.errorExit
       }
-    } else {
+    } else if (!VM.isAvoidingExit()) {
       System.exit((int) (long) returnCode);
     }
   }
