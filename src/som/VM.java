@@ -3,6 +3,7 @@ package som;
 import java.io.IOException;
 
 import som.compiler.MixinDefinition;
+import som.interpreter.SomLanguage;
 import som.interpreter.TruffleCompiler;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.SFarReference;
@@ -14,6 +15,8 @@ import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.vm.PolyglotEngine;
+import com.oracle.truffle.api.vm.PolyglotEngine.Builder;
 
 
 public final class VM {
@@ -184,14 +187,14 @@ public final class VM {
   }
 
   public static void main(final String[] args) {
+    Builder builder = PolyglotEngine.newBuilder();
+    builder.config(SomLanguage.MIME_TYPE, SomLanguage.CMD_ARGS, args);
+    PolyglotEngine engine = builder.build();
     try {
-      new VM(args);
+      engine.eval(SomLanguage.START);
     } catch (IOException e) {
-      e.printStackTrace();
-      VM.errorExit("Loading either the platform or kernel module failed.");
+      throw new RuntimeException("This should never happen", e);
     }
-    vm.initalize();
-    vm.execute();
     System.exit(vm.lastExitCode);
   }
 
