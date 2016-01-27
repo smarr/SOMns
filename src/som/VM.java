@@ -59,7 +59,7 @@ public final class VM {
     objectSystem = new ObjectSystem(options.platformFile, options.kernelFile);
 
     if (options.showUsage) {
-      printUsageAndExit();
+      VMOptions.printUsageAndExit();
     }
   }
 
@@ -106,21 +106,6 @@ public final class VM {
     TruffleCompiler.transferToInterpreter("errorExit");
     errorPrintln("Runtime Error: " + message);
     exit(1);
-  }
-
-  private void printUsageAndExit() {
-    // Checkstyle: stop
-    System.out.println("VM arguments, need to come before any application arguments:");
-    System.out.println("");
-    System.out.println("  --platform file-name   SOM Platform module to be loaded");
-    System.out.println("                         file-name defaults to '" + VMOptions.STANDARD_PLATFORM_FILE + "'");
-    System.out.println("  --kernel file-name     SOM Kernel module to be loaded");
-    System.out.println("                         file-name defaults to '" + VMOptions.STANDARD_KERNEL_FILE + "'");
-    // Checkstyle: resume
-
-    if (!avoidExitForTesting) {
-      System.exit(1);
-    }
   }
 
   @TruffleBoundary

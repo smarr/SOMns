@@ -46,4 +46,14 @@ public class VMOptions {
       return null;
     }
   }
+
+  public static void printUsageAndExit() {
+    VM.println("VM arguments, need to come before any application arguments:");
+    VM.println("");
+    VM.println("  --platform file-name   SOM Platform module to be loaded");
+    VM.println("                         file-name defaults to '" + VMOptions.STANDARD_PLATFORM_FILE + "'");
+    VM.println("  --kernel file-name     SOM Kernel module to be loaded");
+    VM.println("                         file-name defaults to '" + VMOptions.STANDARD_KERNEL_FILE + "'");
+    VM.exit(1);
+  }
 }
