@@ -54,7 +54,7 @@ public final class SomLanguage extends TruffleLanguage<VM> {
   protected VM createContext(final Env env) {
     VM vm;
     try {
-      vm = new VM((String[]) env.getConfig().get(MIME_TYPE).get(CMD_ARGS), true);
+      vm = new VM((String[]) env.getConfig().get(CMD_ARGS), true);
     } catch (IOException e) {
       throw new RuntimeException("Failed accessing kernel or platform code of SOMns.", e);
     }
