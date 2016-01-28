@@ -19,5 +19,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/com.oracle.truffle.object.basic"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/com.oracle.truffle.tck"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/com.oracle.truffle.api.profiles"/>
+	<classpathentry kind="src" path="/com.oracle.truffle.tools"/>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>
