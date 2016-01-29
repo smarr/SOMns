@@ -61,6 +61,7 @@ import static som.compiler.Symbol.Pound;
 import static som.compiler.Symbol.STString;
 import static som.compiler.Symbol.SlotMutableAssign;
 import static som.compiler.Symbol.Star;
+import static som.compiler.Tags.UNSPECIFIED_INVOKE;
 import static som.interpreter.SNodeFactory.createImplicitReceiverSend;
 import static som.interpreter.SNodeFactory.createMessageSend;
 import static som.interpreter.SNodeFactory.createSequence;
@@ -285,11 +286,12 @@ public final class Parser {
     MethodBuilder def = mxnBuilder.getClassInstantiationMethodBuilder();
     ExpressionNode selfRead = def.getSelfRead(null);
     ExpressionNode superClass = createMessageSend(Symbols.OBJECT,
-        new ExpressionNode[] {selfRead}, false, getSource(coord));
+        new ExpressionNode[] {selfRead}, false, getSource(coord, UNSPECIFIED_INVOKE));
     mxnBuilder.setSuperClassResolution(superClass);
 
     mxnBuilder.setSuperclassFactorySend(
-        mxnBuilder.createStandardSuperFactorySend(), true);
+        mxnBuilder.createStandardSuperFactorySend(
+            getSource(coord, UNSPECIFIED_INVOKE)), true);
 
     classBody(mxnBuilder);
   }
@@ -322,6 +324,8 @@ public final class Parser {
   private void mixinApplication(final MixinBuilder mxnBuilder, final int mixinId)
       throws ParseError, MixinDefinitionError {
     expect(MixinOperator);
+    SourceCoordinate coord = getCoordinate();
+
     ExpressionNode mixinResolution = inheritancePrefixAndSuperclass(mxnBuilder);
     mxnBuilder.addMixinResolver(mixinResolution);
 
@@ -341,7 +345,7 @@ public final class Parser {
       mixinFactorySend = (AbstractUninitializedMessageSendNode)
           SNodeFactory.createMessageSend(uniqueInitName,
               new ExpressionNode[] {mxnBuilder.getInitializerMethodBuilder().getSelfRead(null)},
-              false, null);
+              false, getSource(coord, UNSPECIFIED_INVOKE));
     }
 
     mxnBuilder.addMixinFactorySend(mixinFactorySend);
@@ -373,7 +377,8 @@ public final class Parser {
               (AbstractUninitializedMessageSendNode) superFactorySend), false);
     } else {
       mxnBuilder.setSuperclassFactorySend(
-          mxnBuilder.createStandardSuperFactorySend(), true);
+          mxnBuilder.createStandardSuperFactorySend(
+              getSource(getCoordinate(), UNSPECIFIED_INVOKE)), true);
     }
   }
 
@@ -398,7 +403,7 @@ public final class Parser {
     } else if (acceptIdentifier("self")) {
       self = meth.getSelfRead(getSource(coord));
     } else {
-      return meth.getImplicitReceiverSend(unarySelector(), getSource(coord));
+      return meth.getImplicitReceiverSend(unarySelector(), coord, this);
     }
     return unaryMessage(self, false);
   }
@@ -654,11 +659,11 @@ public final class Parser {
         "%(expected)s, but found %(found)s", ss, this);
   }
 
-  SourceSection getSource(final SourceCoordinate coord) {
+  SourceSection getSource(final SourceCoordinate coord, final String... tags) {
     assert lexer.getNumberOfCharactersRead() - coord.charIndex >= 0;
     return source.createSection("method", coord.startLine,
         coord.startColumn, coord.charIndex,
-        lexer.getNumberOfCharactersRead() - coord.charIndex);
+        lexer.getNumberOfCharactersRead() - coord.charIndex, tags);
   }
 
   private void methodDeclaration(final MixinBuilder mxnBuilder,
@@ -904,7 +909,7 @@ public final class Parser {
         }
 
         SSymbol selector = unarySelector();
-        return builder.getImplicitReceiverSend(selector, getSource(coord));
+        return builder.getImplicitReceiverSend(selector, coord, this);
       }
       case NewTerm: {
         return nestedTerm(builder);
@@ -997,7 +1002,19 @@ public final class Parser {
     SourceCoordinate coord = getCoordinate();
     SSymbol selector = unarySelector();
     return createMessageSend(selector, new ExpressionNode[] {receiver},
-        eventualSend, getSource(coord));
+        eventualSend, getSource(coord, UNSPECIFIED_INVOKE));
+  }
+
+  private ExpressionNode tryInliningBinaryMessage(final MethodBuilder builder,
+      final ExpressionNode receiver, final SourceCoordinate coord, final SSymbol msg,
+      final ExpressionNode operand) {
+    List<ExpressionNode> arguments = new ArrayList<ExpressionNode>();
+    arguments.add(receiver);
+    arguments.add(operand);
+    SourceSection source = getSource(coord);
+    ExpressionNode node = inlineControlStructureIfPossible(builder, arguments,
+        msg.getString(), msg.getNumberOfSignatureArguments(), source);
+    return node;
   }
 
   private ExpressionNode binaryMessage(final MethodBuilder builder,
@@ -1008,19 +1025,14 @@ public final class Parser {
     ExpressionNode operand = binaryOperand(builder);
 
     if (!eventualSend) {
-      List<ExpressionNode> arguments = new ArrayList<ExpressionNode>();
-      arguments.add(receiver);
-      arguments.add(operand);
-      SourceSection source = getSource(coord);
-      ExpressionNode node = inlineControlStructureIfPossible(builder, arguments,
-          msg.getString(), msg.getNumberOfSignatureArguments(), source);
+      ExpressionNode node = tryInliningBinaryMessage(builder, receiver, coord,
+          msg, operand);
       if (node != null) {
         return node;
       }
     }
-
     return createMessageSend(msg, new ExpressionNode[] {receiver, operand},
-        eventualSend, getSource(coord));
+        eventualSend, getSource(coord, UNSPECIFIED_INVOKE));
   }
 
   private ExpressionNode binaryOperand(final MethodBuilder builder)
@@ -1061,16 +1073,17 @@ public final class Parser {
 
     String msgStr = kw.toString();
     SSymbol msg = symbolFor(msgStr);
-    SourceSection source = getSource(coord);
+
 
     if (!eventualSend) {
       ExpressionNode node = inlineControlStructureIfPossible(builder, arguments,
-          msgStr, msg.getNumberOfSignatureArguments(), source);
+          msgStr, msg.getNumberOfSignatureArguments(), getSource(coord));
       if (node != null) {
         return node;
       }
     }
 
+    SourceSection source = getSource(coord, UNSPECIFIED_INVOKE);
     ExpressionNode[] args = arguments.toArray(new ExpressionNode[0]);
     if (explicitRcvr) {
       return createMessageSend(msg, args, eventualSend, source);
