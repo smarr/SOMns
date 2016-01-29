@@ -41,8 +41,8 @@ public final class Lexer {
   }
 
   private static class LexerState {
-    public LexerState() { }
-    public LexerState(final LexerState old) {
+    LexerState() { }
+    LexerState(final LexerState old) {
       lineNumber = old.lineNumber;
       charsRead  = old.charsRead;
       buf        = old.buf;

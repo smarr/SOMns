@@ -39,7 +39,7 @@ public final class SomLanguage extends TruffleLanguage<VM> {
 
     private final SClass moduleClass;
 
-    public ParseResult(final SClass moduleClass) {
+    ParseResult(final SClass moduleClass) {
       super(SomLanguage.class, null, null);
       this.moduleClass = moduleClass;
     }
