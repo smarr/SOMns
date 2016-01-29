@@ -17,6 +17,7 @@ import dym.nodes.CountingNode;
 import dym.nodes.InvocationProfilingNode;
 import dym.profiles.Counter;
 import dym.profiles.InvocationProfile;
+import dym.profiles.MethodCallsiteProbe;
 
 
 /**
@@ -100,7 +101,6 @@ public class DynamicMetrics extends TruffleInstrument {
     int i = 0;
   }
 
-
   private EventNode createInvocationCountingNode(final EventContext context) {
     SourceSection source = context.getInstrumentedSourceSection();
     InvocationProfile counter = methodInvocationCounter.computeIfAbsent(
@@ -115,11 +115,4 @@ public class DynamicMetrics extends TruffleInstrument {
     return new CountingNode(probe);
   }
 
-  public static class MethodCallsiteProbe extends Counter {
-
-    public MethodCallsiteProbe(final SourceSection source) {
-      super(source);
-    }
-
-  }
 }
