@@ -1,11 +1,7 @@
 package dym;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-
-import som.interpreter.Types;
-import som.vmobjects.SClass;
 
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.instrumentation.EventContext;
@@ -16,6 +12,11 @@ import com.oracle.truffle.api.instrumentation.SourceSectionFilter.Builder;
 import com.oracle.truffle.api.instrumentation.TruffleInstrument;
 import com.oracle.truffle.api.instrumentation.TruffleInstrument.Registration;
 import com.oracle.truffle.api.source.SourceSection;
+
+import dym.nodes.CountingNode;
+import dym.nodes.InvocationProfilingNode;
+import dym.profiles.Counter;
+import dym.profiles.InvocationProfile;
 
 
 /**
@@ -112,94 +113,6 @@ public class DynamicMetrics extends TruffleInstrument {
     MethodCallsiteProbe probe = methodCallsiteProbes.computeIfAbsent(
         source, src -> new MethodCallsiteProbe(src));
     return new CountingNode(probe);
-  }
-
-  public static class Counter {
-    private final SourceSection source;
-    private int invocationCount;
-
-    Counter(final SourceSection source) {
-      this.source = source;
-    }
-
-    public void inc() {
-      invocationCount += 1;
-    }
-
-    public int getValue() {
-      return invocationCount;
-    }
-
-    @Override
-    public String toString() {
-      return "Cnt[" + invocationCount + ", " + source.getIdentifier() + "]";
-    }
-  }
-
-  public static class InvocationProfile extends Counter {
-
-    private final Map<Arguments, Integer> argumentTypes;
-
-    InvocationProfile(final SourceSection source) {
-      super(source);
-      argumentTypes = new HashMap<>();
-    }
-
-    public void profileArguments(final Object[] args) {
-      argumentTypes.merge(
-          new Arguments(args), 1, (old, one) -> old + one);
-    }
-
-  }
-
-  private static final class Arguments {
-
-    private final Class<?>[] argJavaTypes;
-
-    // TODO: do we need this, or is the first sufficient?
-    //       this makes it language specific...
-    private final SClass[]   argSomTypes;
-
-    private Arguments(final Object[] arguments) {
-      this.argJavaTypes = getJavaTypes(arguments);
-      this.argSomTypes  = getSomTypes(arguments);
-    }
-
-    private static Class<?>[] getJavaTypes(final Object[] args) {
-      return Arrays.stream(args).
-          map(e -> e.getClass()).
-          toArray(Class<?>[]::new);
-    }
-
-    private static SClass[] getSomTypes(final Object[] args) {
-      return Arrays.stream(args).
-          map(e -> Types.getClassOf(e)).
-          toArray(SClass[]::new);
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-      if (super.equals(obj)) {
-        return true;
-      }
-      if (!(obj instanceof Arguments)) {
-        return false;
-      }
-
-      Arguments o = (Arguments) obj;
-
-      return Arrays.equals(argJavaTypes, o.argJavaTypes)
-          || Arrays.equals(argSomTypes,  o.argSomTypes);
-    }
-
-    @Override
-    public int hashCode() {
-      final int prime = 31;
-      int result = 1;
-      result = prime * result + Arrays.hashCode(argJavaTypes);
-      result = prime * result + Arrays.hashCode(argSomTypes);
-      return result;
-    }
   }
 
   public static class MethodCallsiteProbe extends Counter {
