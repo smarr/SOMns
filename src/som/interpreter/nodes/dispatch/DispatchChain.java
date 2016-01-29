@@ -6,7 +6,7 @@ import com.oracle.truffle.api.nodes.NodeCost;
 public interface DispatchChain {
   int lengthOfDispatchChain();
 
-  public static class Cost {
+  class Cost {
     public static NodeCost getCost(final DispatchChain chain) {
       int dispatchChain = chain.lengthOfDispatchChain();
       if (dispatchChain == 0) {

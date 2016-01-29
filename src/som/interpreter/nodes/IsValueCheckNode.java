@@ -28,7 +28,7 @@ public abstract class IsValueCheckNode extends UnaryExpressionNode {
   }
 
   private static final class UninitializedNode extends IsValueCheckNode {
-    public UninitializedNode(final ExpressionNode self) {
+    UninitializedNode(final ExpressionNode self) {
       super(self);
     }
 
@@ -65,7 +65,7 @@ public abstract class IsValueCheckNode extends UnaryExpressionNode {
   }
 
   private static final class ValueCheckNode extends IsValueCheckNode {
-    public ValueCheckNode(final ExpressionNode self) {
+    ValueCheckNode(final ExpressionNode self) {
       super(self);
     }
 

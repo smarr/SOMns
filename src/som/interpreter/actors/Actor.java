@@ -169,7 +169,7 @@ public class Actor {
     private ArrayList<EventualMessage> current;
     private ArrayList<EventualMessage> emptyUnused;
 
-    public ExecAllMessages(final Actor actor) {
+    ExecAllMessages(final Actor actor) {
       this.actor = actor;
     }
 
