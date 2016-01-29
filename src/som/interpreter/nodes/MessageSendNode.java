@@ -620,6 +620,7 @@ public final class MessageSendNode {
     }
   }
 
+  @Instrumentable(factory = MessageSendNodeWrapper.class)
   private static final class UninitializedMessageSendNode
       extends AbstractUninitializedMessageSendNode {
 

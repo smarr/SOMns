@@ -1,5 +1,6 @@
 package som.interpreter.nodes.nary;
 
+import som.instrumentation.BinaryNodeWrapper;
 import som.interpreter.TruffleCompiler;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageSendNode;
@@ -8,8 +9,11 @@ import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.UnsupportedSpecializationException;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.Instrumentable;
+import com.oracle.truffle.api.source.SourceSection;
 
 
+@Instrumentable(factory = BinaryNodeWrapper.class)
 public final class EagerBinaryPrimitiveNode extends BinaryExpressionNode {
 
   @Child private ExpressionNode receiver;
@@ -23,7 +27,15 @@ public final class EagerBinaryPrimitiveNode extends BinaryExpressionNode {
       final ExpressionNode receiver,
       final ExpressionNode argument,
       final BinaryExpressionNode primitive) {
-    super(null);
+    this(selector, receiver, argument, primitive, null);
+  }
+
+  public EagerBinaryPrimitiveNode(final SSymbol selector,
+      final ExpressionNode receiver,
+      final ExpressionNode argument,
+      final BinaryExpressionNode primitive,
+      final SourceSection source) {
+    super(source);
     this.receiver  = receiver;
     this.argument  = argument;
     this.primitive = primitive;

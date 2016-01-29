@@ -24,12 +24,17 @@ public abstract class Invokable extends RootNode {
       final ExpressionNode expressionOrSequence,
       final ExpressionNode uninitialized) {
     super(SomLanguage.class, sourceSection, frameDescriptor);
-    this.uninitializedBody    = uninitialized;
     this.expressionOrSequence = expressionOrSequence;
+    this.uninitializedBody    = uninitialized;
+  }
+
+  protected Invokable(final SourceSection source) {
+    super(SomLanguage.class, source, null);
+    uninitializedBody = null;
   }
 
   @Override
-  public final Object execute(final VirtualFrame frame) {
+  public Object execute(final VirtualFrame frame) {
     return expressionOrSequence.executeGeneric(frame);
   }
 
