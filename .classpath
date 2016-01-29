@@ -8,7 +8,7 @@
 			<attribute name="optional" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="libs/junit-4.12.jar"/>
+	<classpathentry kind="lib" path="libs/junit-4.12.jar" sourcepath="libs/junit-4.12-sources.jar"/>
 	<classpathentry kind="lib" path="libs/hamcrest-core-1.3.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/com.oracle.truffle.api"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/com.oracle.truffle.api.dsl"/>
