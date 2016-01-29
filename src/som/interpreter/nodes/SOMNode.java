@@ -31,6 +31,7 @@ import som.interpreter.Types;
 
 import com.oracle.truffle.api.dsl.TypeSystemReference;
 import com.oracle.truffle.api.frame.FrameSlot;
+import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -121,4 +122,12 @@ public abstract class SOMNode extends Node {
    * @return body of a node that just wraps the actual method body.
    */
   public abstract ExpressionNode getFirstMethodBodyNode();
+
+  public static Node unwrapIfNecessary(final Node node) {
+    if (node instanceof WrapperNode) {
+      return ((WrapperNode) node).getDelegateNode();
+    } else {
+      return node;
+    }
+  }
 }
