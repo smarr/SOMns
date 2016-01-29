@@ -38,6 +38,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import com.oracle.truffle.api.source.SourceSection;
 
+
 public abstract class ExpressionNode extends SOMNode {
 
   public ExpressionNode(final SourceSection sourceSection) {
