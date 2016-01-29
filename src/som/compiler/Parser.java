@@ -706,7 +706,7 @@ public final class Parser {
   }
 
   private void keywordPattern(final MethodBuilder builder) throws ParseError {
-    StringBuffer kw = new StringBuffer();
+    StringBuilder kw = new StringBuilder();
     do {
       kw.append(keyword());
       builder.addArgumentIfAbsent(argument());
@@ -1061,7 +1061,7 @@ public final class Parser {
     assert !(!explicitRcvr && eventualSend);
     SourceCoordinate coord = getCoordinate();
     List<ExpressionNode> arguments = new ArrayList<ExpressionNode>();
-    StringBuffer         kw        = new StringBuffer();
+    StringBuilder        kw        = new StringBuilder();
 
     arguments.add(receiver);
 
