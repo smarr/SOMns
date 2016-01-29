@@ -348,7 +348,7 @@ public final class MessageSendNode {
           if (arguments[0] instanceof SClass && ((SClass) arguments[0]).isArray()) {
             return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
                 argumentNodes[1],
-                NewPrimFactory.create(null, null)));
+                NewPrimFactory.create(null, null, null), getSourceSection().cloneWithTags(NEW_ARRAY)));
           }
           break;
         case "doIndexes:":
