@@ -1,5 +1,6 @@
 package som.vm;
 
+import static som.compiler.Tags.NEW_ARRAY;
 import static som.vm.constants.Classes.metaclassClass;
 
 import java.io.File;
@@ -82,6 +83,8 @@ import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.dsl.GeneratedBy;
 import com.oracle.truffle.api.dsl.NodeFactory;
+import com.oracle.truffle.api.source.Source;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 public final class ObjectSystem {
@@ -163,6 +166,10 @@ public final class ObjectSystem {
         } else if (factory == CreateActorPrimFactory.getInstance()) {
           primNode = factory.createNode(args[0], args[1],
               IsValueFactory.create(null));
+        } else if (factory == NewPrimFactory.getInstance()) {
+          SourceSection source = Source.fromNamedText("primitive", "array new").
+              createSection("primitive array new", 1).cloneWithTags(NEW_ARRAY);
+          primNode = factory.createNode(source, args[0], args[1]);
         } else {
           primNode = factory.createNode(args[0], args[1]);
         }

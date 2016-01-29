@@ -10,15 +10,19 @@ import som.vmobjects.SClass;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 @GenerateNodeFactory
 @Primitive("array:new:")
 public abstract class NewPrim extends BinaryExpressionNode {
 
+  public NewPrim(final SourceSection source) {
+    super(source);
+  }
+
   protected static final boolean receiverIsArrayClass(final SClass receiver) {
     return receiver == Classes.arrayClass;
-
   }
 
   @Specialization(guards = {"receiver.isArray()", "!receiver.isTransferObject()", "!receiver.declaredAsValue()"})
