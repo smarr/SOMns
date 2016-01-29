@@ -1,6 +1,9 @@
 package som.interpreter.nodes;
 
+import static som.compiler.Tags.NEW_ARRAY;
+import static som.interpreter.nodes.SOMNode.unwrapIfNecessary;
 import som.compiler.AccessModifier;
+import som.instrumentation.MessageSendNodeWrapper;
 import som.interpreter.TruffleCompiler;
 import som.interpreter.TypesGen;
 import som.interpreter.actors.SPromise;
@@ -88,6 +91,7 @@ import som.vmobjects.SSymbol;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.Instrumentable;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.NodeCost;
 import com.oracle.truffle.api.source.SourceSection;
@@ -113,7 +117,8 @@ public final class MessageSendNode {
 
   public static GenericMessageSendNode createGeneric(final SSymbol selector,
       final ExpressionNode[] argumentNodes, final SourceSection source) {
-    if (argumentNodes != null && argumentNodes[0] instanceof ISpecialSend) {
+    if (argumentNodes != null &&
+        unwrapIfNecessary(argumentNodes[0]) instanceof ISpecialSend) {
       throw new NotYetImplementedException();
     } else {
       return new GenericMessageSendNode(selector, argumentNodes,
@@ -134,7 +139,7 @@ public final class MessageSendNode {
     }
 
     public boolean isSpecialSend() {
-      return argumentNodes[0] instanceof ISpecialSend;
+      return unwrapIfNecessary(argumentNodes[0]) instanceof ISpecialSend;
     }
 
     @Override
@@ -365,31 +370,31 @@ public final class MessageSendNode {
                 argumentNodes[0], argumentNodes[1],
                 PutAllNodeFactory.create(null, null, SizeAndLengthPrimFactory.create(null))));
         case "whileTrue:": {
-          if (argumentNodes[1] instanceof BlockNode &&
-              argumentNodes[0] instanceof BlockNode) {
-            BlockNode argBlockNode = (BlockNode) argumentNodes[1];
+          if (unwrapIfNecessary(argumentNodes[1]) instanceof BlockNode &&
+              unwrapIfNecessary(argumentNodes[0]) instanceof BlockNode) {
+            BlockNode argBlockNode = (BlockNode) unwrapIfNecessary(argumentNodes[1]);
             SBlock    argBlock     = (SBlock)    arguments[1];
             return replace(new WhileTrueStaticBlocksNode(
-                (BlockNode) argumentNodes[0], argBlockNode,
+                (BlockNode) unwrapIfNecessary(argumentNodes[0]), argBlockNode,
                 (SBlock) arguments[0],
                 argBlock, getSourceSection()));
           }
           break; // use normal send
         }
         case "whileFalse:":
-          if (argumentNodes[1] instanceof BlockNode &&
-              argumentNodes[0] instanceof BlockNode) {
-            BlockNode argBlockNode = (BlockNode) argumentNodes[1];
+          if (unwrapIfNecessary(argumentNodes[1]) instanceof BlockNode &&
+              unwrapIfNecessary(argumentNodes[0]) instanceof BlockNode) {
+            BlockNode argBlockNode = (BlockNode) unwrapIfNecessary(argumentNodes[1]);
             SBlock    argBlock     = (SBlock)    arguments[1];
             return replace(new WhileFalseStaticBlocksNode(
-                (BlockNode) argumentNodes[0], argBlockNode,
+                (BlockNode) unwrapIfNecessary(argumentNodes[0]), argBlockNode,
                 (SBlock) arguments[0], argBlock, getSourceSection()));
           }
           break; // use normal send
         case "and:":
         case "&&":
           if (arguments[0] instanceof Boolean) {
-            if (argumentNodes[1] instanceof BlockNode) {
+            if (unwrapIfNecessary(argumentNodes[1]) instanceof BlockNode) {
               return replace(AndMessageNodeFactory.create((SBlock) arguments[1],
                   getSourceSection(), argumentNodes[0], argumentNodes[1]));
             } else if (arguments[1] instanceof Boolean) {
@@ -401,7 +406,7 @@ public final class MessageSendNode {
         case "or:":
         case "||":
           if (arguments[0] instanceof Boolean) {
-            if (argumentNodes[1] instanceof BlockNode) {
+            if (unwrapIfNecessary(argumentNodes[1]) instanceof BlockNode) {
               return replace(OrMessageNodeGen.create((SBlock) arguments[1],
                   getSourceSection(),
                   argumentNodes[0], argumentNodes[1]));
@@ -632,7 +637,7 @@ public final class MessageSendNode {
 
     @Override
     protected PreevaluatedExpression makeSpecialSend() {
-      ISpecialSend rcvrNode = (ISpecialSend) argumentNodes[0];
+      ISpecialSend rcvrNode = (ISpecialSend) unwrapIfNecessary(argumentNodes[0]);
       AbstractDispatchNode dispatch;
 
       if (rcvrNode.isSuperSend()) {
