@@ -181,7 +181,7 @@ public final class MessageSendNode {
     }
 
     @Override
-    public final Object executeGeneric(final VirtualFrame frame) {
+    public Object executeGeneric(final VirtualFrame frame) {
       // This is a branch never taken, none of the code here should be compiled.
       CompilerDirectives.transferToInterpreter();
       return super.executeGeneric(frame);
