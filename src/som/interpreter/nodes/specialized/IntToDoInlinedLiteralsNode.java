@@ -48,7 +48,6 @@ public abstract class IntToDoInlinedLiteralsNode extends ExpressionNode {
     loopIndex.setKind(FrameSlotKind.Long);
   }
 
-
   @Specialization
   public final long doIntToDo(final VirtualFrame frame, final long from, final long to) {
     if (CompilerDirectives.inInterpreter()) {

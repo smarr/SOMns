@@ -379,8 +379,6 @@ public final class MethodBuilder {
           new ExpressionNode[] {getSelfRead(null)},
           getCurrentMethodScope(), getEnclosingMixinBuilder().getMixinId(), source);
     }
-
-
   }
 
   public ExpressionNode getSetterSend(final SSymbol identifier,
