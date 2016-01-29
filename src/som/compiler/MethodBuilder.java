@@ -24,6 +24,8 @@
  */
 package som.compiler;
 
+import static som.compiler.Tags.ROOT_TAG;
+import static som.compiler.Tags.UNSPECIFIED_INVOKE;
 import static som.interpreter.SNodeFactory.createCatchNonLocalReturn;
 import static som.interpreter.SNodeFactory.createNonLocalReturn;
 
@@ -31,12 +33,13 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import som.compiler.Lexer.SourceCoordinate;
 import som.compiler.MixinBuilder.MixinDefinitionError;
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.compiler.Variable.Argument;
 import som.compiler.Variable.Local;
-import som.interpreter.LexicalScope.MixinScope;
 import som.interpreter.LexicalScope.MethodScope;
+import som.interpreter.LexicalScope.MixinScope;
 import som.interpreter.Method;
 import som.interpreter.SNodeFactory;
 import som.interpreter.SplitterForLexicallyEmbeddedCode;
@@ -234,7 +237,7 @@ public final class MethodBuilder {
     SourceSection ssMethod = ssBody.getSource().createSection(
         name + cls + ">>" + signature.toString(),
         ssBody.getStartLine(), ssBody.getStartColumn(),
-        ssBody.getCharIndex(), ssBody.getCharLength());
+        ssBody.getCharIndex(), ssBody.getCharLength(), ROOT_TAG);
     return ssMethod;
   }
 
@@ -355,21 +358,22 @@ public final class MethodBuilder {
   }
 
   public ExpressionNode getImplicitReceiverSend(final SSymbol selector,
-      final SourceSection source) {
+      final SourceCoordinate coord, final Parser parser) {
     // we need to handle super and self special here
     if ("super".equals(selector.getString())) {
-      return getSuperReadNode(source);
+      return getSuperReadNode(parser.getSource(coord));
     }
     if ("self".equals(selector.getString())) {
-      return getSelfRead(source);
+      return getSelfRead(parser.getSource(coord));
     }
 
     // first look up local or argument variables
     Variable variable = getVariable(selector.getString());
     if (variable != null) {
-      return getReadNode(selector.getString(), source);
+      return getReadNode(selector.getString(), parser.getSource(coord));
     }
 
+    SourceSection source = parser.getSource(coord, UNSPECIFIED_INVOKE);
     if (getEnclosingMixinBuilder() == null) {
       // this is normally only for the inheritance clauses for modules the case
       return SNodeFactory.createMessageSend(selector, new ExpressionNode[] {getSelfRead(null)}, false, source);

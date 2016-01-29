@@ -24,6 +24,7 @@
  */
 package som.compiler;
 
+import static som.compiler.Tags.NEW_OBJECT;
 import static som.vm.Symbols.symbolFor;
 
 import java.util.ArrayList;
@@ -391,7 +392,9 @@ public final class MixinBuilder {
 
   private SInvokable assemblePrimaryFactoryMethod() {
     // first create new Object
-    ExpressionNode newObject = NewObjectPrimNodeGen.create(mixinId,
+
+    ExpressionNode newObject = NewObjectPrimNodeGen.create(
+        primaryFactorySource.cloneWithTags(NEW_OBJECT), mixinId,
         primaryFactoryMethod.getSelfRead(null));
 
     List<ExpressionNode> args = createPrimaryFactoryArgumentRead(newObject);
@@ -454,11 +457,11 @@ public final class MixinBuilder {
     return args;
   }
 
-  public ExpressionNode createStandardSuperFactorySend() {
+  public ExpressionNode createStandardSuperFactorySend(final SourceSection source) {
     ExpressionNode superNode = initializer.getSuperReadNode(null);
+    SSymbol init = getInitializerName(Symbols.NEW);
     ExpressionNode superFactorySend = SNodeFactory.createMessageSend(
-        getInitializerName(Symbols.NEW),
-        new ExpressionNode[] {superNode}, false, null);
+        init, new ExpressionNode[] {superNode}, false, source);
     return superFactorySend;
   }
 
