@@ -2,7 +2,9 @@ package som.tests;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
@@ -16,6 +18,7 @@ public class VMTests {
     VMOptions opts = new VMOptions(new String[0]);
     assertEquals(opts.platformFile, VMOptions.STANDARD_PLATFORM_FILE);
     assertNull(opts.args);
+    assertFalse(opts.enableInstrumentation);
   }
 
   @Test
@@ -48,5 +51,11 @@ public class VMTests {
         new String[] {"app.som", "Foo", "1", "2"});
     assertEquals(opts.platformFile, VMOptions.STANDARD_PLATFORM_FILE);
     assertArrayEquals(opts.args, new String[] {"app.som", "Foo", "1", "2"});
+  }
+
+  @Test
+  public void testEnableInstrumentation() {
+    VMOptions opts = new VMOptions(new String[] {"--enable-instrumentation"});
+    assertTrue(opts.enableInstrumentation);
   }
 }

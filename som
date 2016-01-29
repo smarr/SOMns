@@ -59,7 +59,8 @@ parser.add_argument('-T', '--no-trace', help='do not print truffle compilation i
 parser.add_argument('--no-graph-pe', help='disable Graph PE',
                     dest='graph_pe', action='store_false', default=True)
 
-
+parser.add_argument('--enable-instrumentation', help="enable SOMns' support for instrumentation",
+                    dest="enable_instrumentation", action='store_true', default=False)
 
 parser.add_argument('-vv', '--verbose', action='store_true', default=False,
                     dest='verbose', help="print command-line before executing")
@@ -75,6 +76,10 @@ args = parser.parse_args()
 
 JAVA_BIN  = '/product/bin/java'
 JAVA_ARGS = ['-d64']
+
+# TODO: remove if instrumentation on Graal is supported
+if args.enable_instrumentation:
+    args.interpreter = True
 
 if args.java_interpreter:
     args.interpreter = True
@@ -109,6 +114,7 @@ else:
 SOM_ARGS = ['-Xbootclasspath/a:'
              + BASE_DIR + '/build/classes:'
              + BASE_DIR + '/libs/truffle/mxbuild/dists/truffle-api.jar',
+            '-cp', BASE_DIR + '/libs/truffle/mxbuild/dists/truffle-debug.jar',
             'som.VM',
             '--platform', BASE_DIR + '/core-lib/Platform.som',
             '--kernel', BASE_DIR + '/core-lib/Kernel.som']
@@ -128,6 +134,8 @@ if GRAAL_FLAGS:
 else:
     flags = []
 
+flags += ['-Dtruffle.profiling.enabled=true']
+
 # Handle executable names
 if sys.argv[0].endswith('fast'):
     args.assert_ = False
@@ -138,7 +146,7 @@ if sys.argv[0].endswith('debug'):
 
 if args.debug:
     flags += ['-Xdebug',
-              '-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8000']
+              '-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8010']
 if not args.interpreter and (args.igv or args.igv_to_file):
     flags += ['-Dgraal.Dump=Truffle,TruffleTree']
 if not args.interpreter and args.igv_to_file:
@@ -187,6 +195,9 @@ if args.java_interpreter:
     flags += ['-Xint']
 if args.print_graal_options:
     flags += ['-Dgraal.PrintFlags=true']
+
+if args.enable_instrumentation:
+    SOM_ARGS += ['--enable-instrumentation']
 
 all_args = JAVA_ARGS + flags + SOM_ARGS + args.args
 

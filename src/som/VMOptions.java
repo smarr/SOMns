@@ -10,6 +10,8 @@ public class VMOptions {
   public String   platformFile = STANDARD_PLATFORM_FILE;
   public String   kernelFile   = STANDARD_KERNEL_FILE;
   public final String[] args;
+  public boolean  enableInstrumentation;
+
   public final boolean showUsage;
 
   public VMOptions(final String[] args) {
@@ -33,6 +35,9 @@ public class VMOptions {
         } else if (arguments[currentArg].equals("--kernel")) {
           kernelFile = arguments[currentArg + 1];
           currentArg += 2;
+        } else if (arguments[currentArg].equals("--enable-instrumentation")) {
+          enableInstrumentation = true;
+          currentArg += 1;
         } else {
           parsedArgument = false;
         }
@@ -50,10 +55,13 @@ public class VMOptions {
   public static void printUsageAndExit() {
     VM.println("VM arguments, need to come before any application arguments:");
     VM.println("");
-    VM.println("  --platform file-name   SOM Platform module to be loaded");
-    VM.println("                         file-name defaults to '" + VMOptions.STANDARD_PLATFORM_FILE + "'");
-    VM.println("  --kernel file-name     SOM Kernel module to be loaded");
-    VM.println("                         file-name defaults to '" + VMOptions.STANDARD_KERNEL_FILE + "'");
+    VM.println("  --platform file-name      SOM Platform module to be loaded");
+    VM.println("                            file-name defaults to '" + VMOptions.STANDARD_PLATFORM_FILE + "'");
+    VM.println("  --kernel file-name        SOM Kernel module to be loaded");
+    VM.println("                            file-name defaults to '" + VMOptions.STANDARD_KERNEL_FILE + "'");
+    VM.println("");
+    VM.println("  --enable-instrumentation  Allows instrumentation of programs for instance for profiling");
+    VM.println("                            Note: specific tools will enable this.");
     VM.exit(1);
   }
 }
