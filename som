@@ -68,6 +68,9 @@ parser.add_argument('--print-graal-options', action='store_true', default=False,
                     dest='print_graal_options', help="print all Graal options")
 
 
+parser.add_argument('-D', help="define a Java property",
+                    dest="java_properties", action='append')
+
 parser.add_argument('args', nargs=argparse.REMAINDER,
                     help='arguments passed to SOMns')
 args = parser.parse_args()
@@ -195,6 +198,8 @@ if args.java_interpreter:
     flags += ['-Xint']
 if args.print_graal_options:
     flags += ['-Dgraal.PrintFlags=true']
+
+flags += ['-D' + property for property in args.java_properties]
 
 if args.enable_instrumentation:
     SOM_ARGS += ['--enable-instrumentation']
