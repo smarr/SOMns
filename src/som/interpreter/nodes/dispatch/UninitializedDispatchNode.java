@@ -14,6 +14,7 @@ import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
@@ -90,7 +91,9 @@ public final class UninitializedDispatchNode {
       int chainDepth = 0;
       while (i.getParent() instanceof AbstractDispatchNode) {
         i = i.getParent();
-        chainDepth++;
+        if (!(i instanceof WrapperNode)) {
+          chainDepth++;
+        }
       }
       AbstractDispatchNode first = (AbstractDispatchNode) i;
 
