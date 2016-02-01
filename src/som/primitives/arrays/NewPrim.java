@@ -1,6 +1,5 @@
 package som.primitives.arrays;
 
-import som.instrumentation.BinaryNodeWrapper;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.primitives.Primitive;
 import som.vm.constants.Classes;
@@ -11,13 +10,11 @@ import som.vmobjects.SClass;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.instrumentation.Instrumentable;
 import com.oracle.truffle.api.source.SourceSection;
 
 
 @GenerateNodeFactory
 @Primitive("array:new:")
-@Instrumentable(factory = BinaryNodeWrapper.class)
 public abstract class NewPrim extends BinaryExpressionNode {
 
   public NewPrim(final SourceSection source) {

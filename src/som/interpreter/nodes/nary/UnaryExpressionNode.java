@@ -5,8 +5,11 @@ import som.interpreter.nodes.PreevaluatedExpression;
 
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.Instrumentable;
 import com.oracle.truffle.api.source.SourceSection;
 
+
+@Instrumentable(factory = UnaryExpressionNodeWrapper.class)
 @NodeChild(value = "receiver", type = ExpressionNode.class)
 public abstract class UnaryExpressionNode extends ExpressionNode
     implements PreevaluatedExpression {

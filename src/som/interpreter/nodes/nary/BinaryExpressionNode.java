@@ -6,12 +6,14 @@ import som.interpreter.nodes.PreevaluatedExpression;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.NodeChildren;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.Instrumentable;
 import com.oracle.truffle.api.source.SourceSection;
 
 
 @NodeChildren({
   @NodeChild(value = "receiver", type = ExpressionNode.class),
   @NodeChild(value = "argument", type = ExpressionNode.class)})
+@Instrumentable(factory = BinaryExpressionNodeWrapper.class)
 public abstract class BinaryExpressionNode extends ExpressionNode
     implements PreevaluatedExpression {
 
