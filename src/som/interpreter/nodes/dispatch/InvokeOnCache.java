@@ -28,7 +28,7 @@ public abstract class InvokeOnCache extends Node implements DispatchChain {
 
   private static final class UninitializedDispatchNode extends InvokeOnCache {
 
-    public UninitializedDispatchNode(final int depth) {
+    UninitializedDispatchNode(final int depth) {
       super(depth);
     }
 
@@ -72,7 +72,7 @@ public abstract class InvokeOnCache extends Node implements DispatchChain {
     @Child private DirectCallNode callNode;
     @Child private InvokeOnCache nextInCache;
 
-    public CachedDispatchNode(final SInvokable invokable,
+    CachedDispatchNode(final SInvokable invokable,
         final InvokeOnCache nextInCache, final int depth) {
       super(depth);
       this.invokable = invokable;
@@ -100,7 +100,7 @@ public abstract class InvokeOnCache extends Node implements DispatchChain {
 
     @Child private IndirectCallNode callNode;
 
-    public GenericDispatchNode() {
+    GenericDispatchNode() {
       super(0);
       callNode = Truffle.getRuntime().createIndirectCallNode();
     }
