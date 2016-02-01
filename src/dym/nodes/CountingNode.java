@@ -3,7 +3,6 @@ package dym.nodes;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.EventNode;
 
-import dym.DynamicMetrics;
 import dym.profiles.Counter;
 
 
