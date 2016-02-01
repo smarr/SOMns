@@ -118,12 +118,18 @@
     return result;
   }
   
+  function nodeFromTemplate(tplId) {
+    var tpl = document.getElementById(tplId);
+    var result = tpl.cloneNode(true);
+    result.removeAttribute("id");
+    return result;
+  }
+  
   function showSource(s, sections) {
     var annotationArray = sourceToArray(s.sourceText);
     annotateArray(annotationArray, s.id, sections);
-    
-    tpl = document.getElementById("file");
-    newFileElement = tpl.cloneNode(true);
+
+    newFileElement = nodeFromTemplate("file");
     newFileElement.setAttribute("id", s.id);
     newFileElement.getElementsByClassName("filename")[0].textContent  = s.shortName;
     newFileElement.getElementsByClassName("source-file")[0].innerHTML = arrayToString(annotationArray);
