@@ -117,7 +117,7 @@ public final class MessageSendNode {
       throw new NotYetImplementedException();
     } else {
       return new GenericMessageSendNode(selector, argumentNodes,
-          UninitializedDispatchNode.createRcvrSend(selector, AccessModifier.PUBLIC),
+          UninitializedDispatchNode.createRcvrSend(source, selector, AccessModifier.PUBLIC),
           source);
     }
   }
@@ -131,6 +131,12 @@ public final class MessageSendNode {
         final SourceSection source) {
       super(source);
       this.argumentNodes = arguments;
+    }
+
+    protected AbstractMessageSendNode(final SourceSection source) {
+      super(source);
+      // default constructor for instrumentation wrapper nodes
+      this.argumentNodes = null;
     }
 
     public boolean isSpecialSend() {
@@ -219,7 +225,8 @@ public final class MessageSendNode {
     private GenericMessageSendNode makeOrdenarySend() {
       GenericMessageSendNode send = new GenericMessageSendNode(selector,
           argumentNodes,
-          UninitializedDispatchNode.createRcvrSend(selector, AccessModifier.PUBLIC),
+          UninitializedDispatchNode.createRcvrSend(
+              getSourceSection(), selector, AccessModifier.PUBLIC),
           getSourceSection());
       return replace(send);
     }
@@ -627,6 +634,7 @@ public final class MessageSendNode {
         final ExpressionNode[] arguments,
         final SourceSection source) {
       super(selector, arguments, source);
+      assert source != null;
     }
 
     @Override
@@ -635,9 +643,11 @@ public final class MessageSendNode {
       AbstractDispatchNode dispatch;
 
       if (rcvrNode.isSuperSend()) {
-        dispatch = UninitializedDispatchNode.createSuper(selector, (ISuperReadNode) rcvrNode);
+        dispatch = UninitializedDispatchNode.createSuper(
+            getSourceSection(), selector, (ISuperReadNode) rcvrNode);
       } else {
-        dispatch = UninitializedDispatchNode.createLexicallyBound(selector, rcvrNode.getEnclosingMixinId());
+        dispatch = UninitializedDispatchNode.createLexicallyBound(
+            getSourceSection(), selector, rcvrNode.getEnclosingMixinId());
       }
 
       GenericMessageSendNode node = new GenericMessageSendNode(selector,

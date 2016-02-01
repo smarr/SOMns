@@ -17,6 +17,7 @@ public final class CachedDispatchNode extends AbstractDispatchNode {
 
   public CachedDispatchNode(final CallTarget methodCallTarget,
       final DispatchGuard guard, final AbstractDispatchNode nextInCache) {
+    super(nextInCache.getSourceSection());
     this.cachedMethod = Truffle.getRuntime().createDirectCallNode(methodCallTarget);
     this.guard        = guard;
     this.nextInCache  = nextInCache;
