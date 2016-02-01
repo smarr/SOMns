@@ -3,11 +3,15 @@ package dym.profiles;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import som.interpreter.Types;
 import som.vmobjects.SClass;
 
 import com.oracle.truffle.api.source.SourceSection;
+import com.oracle.truffle.api.utilities.JSONHelper;
+import com.oracle.truffle.api.utilities.JSONHelper.JSONArrayBuilder;
+import com.oracle.truffle.api.utilities.JSONHelper.JSONObjectBuilder;
 
 public class InvocationProfile extends Counter {
 
@@ -71,5 +75,33 @@ public class InvocationProfile extends Counter {
       result = prime * result + Arrays.hashCode(argSomTypes);
       return result;
     }
+
+    public JSONObjectBuilder toJson() {
+      JSONObjectBuilder result = JSONHelper.object();
+
+      JSONArrayBuilder javaTypes = JSONHelper.array();
+      for (Class<?> c : argJavaTypes) {
+        javaTypes.add(c.getSimpleName());
+      }
+
+      result.add("javaTypes", javaTypes);
+
+      JSONArrayBuilder somTypes = JSONHelper.array();
+      for (SClass c : argSomTypes) {
+        somTypes.add(c.getName().getString());
+      }
+      result.add("somTypes", somTypes);
+      return result;
+    }
+  }
+
+  public JSONArrayBuilder toJson() {
+    JSONArrayBuilder result = JSONHelper.array();
+    for (Entry<Arguments, Integer> e : argumentTypes.entrySet()) {
+      JSONObjectBuilder invocations = e.getKey().toJson();
+      invocations.add("invocations", e.getValue());
+      result.add(invocations);
+    }
+    return result;
   }
 }
