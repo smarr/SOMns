@@ -47,7 +47,7 @@ public abstract class DispatchGuard {
 
     private final Class<?> expected;
 
-    public CheckClass(final Class<?> expectedClass) {
+    CheckClass(final Class<?> expectedClass) {
       this.expected = expectedClass;
     }
 
@@ -75,7 +75,7 @@ public abstract class DispatchGuard {
 
     private final ClassFactory expected;
 
-    public CheckObjectWithoutFields(final ClassFactory expected) {
+    CheckObjectWithoutFields(final ClassFactory expected) {
       this.expected = expected;
     }
 
@@ -90,7 +90,7 @@ public abstract class DispatchGuard {
 
     private final ClassFactory expected;
 
-    public CheckSClass(final ClassFactory expected) {
+    CheckSClass(final ClassFactory expected) {
       this.expected = expected;
     }
 
@@ -105,7 +105,7 @@ public abstract class DispatchGuard {
 
     private final ObjectLayout expected;
 
-    public CheckSMutableObject(final ObjectLayout expected) {
+    CheckSMutableObject(final ObjectLayout expected) {
       this.expected = expected;
     }
 
@@ -121,7 +121,7 @@ public abstract class DispatchGuard {
 
     private final ObjectLayout expected;
 
-    public CheckSImmutableObject(final ObjectLayout expected) {
+    CheckSImmutableObject(final ObjectLayout expected) {
       this.expected = expected;
     }
 
