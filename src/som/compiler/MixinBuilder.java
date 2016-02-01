@@ -402,7 +402,7 @@ public final class MixinBuilder {
     // This is a bet on initializer methods being constructed well,
     // so that they return self
     ExpressionNode initializedObject = SNodeFactory.createMessageSend(
-        initializer.getSignature(), args, null);
+        initializer.getSignature(), args, primaryFactorySource);
 
     return primaryFactoryMethod.assemble(initializedObject,
         AccessModifier.PUBLIC, Symbols.INITIALIZATION,

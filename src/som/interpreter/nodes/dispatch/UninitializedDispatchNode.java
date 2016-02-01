@@ -16,6 +16,7 @@ import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 public final class UninitializedDispatchNode {
@@ -24,7 +25,8 @@ public final class UninitializedDispatchNode {
 
     protected final SSymbol selector;
 
-    protected AbstractUninitialized(final SSymbol selector) {
+    protected AbstractUninitialized(final SourceSection source, final SSymbol selector) {
+      super(source);
       this.selector = selector;
     }
 
@@ -52,6 +54,9 @@ public final class UninitializedDispatchNode {
       Dispatchable dispatchable = doLookup(rcvrClass);
 
       AbstractUninitialized newChainEnd = createNewChainEnd(rcvr, rcvrClass, dispatchable);
+      if (newChainEnd == null) {
+        newChainEnd = this; // TODO: this is a hack to pass always a source section to the getDispatchNode method
+      }
 
       AbstractDispatchNode node;
       if (dispatchable == null) {
@@ -69,7 +74,8 @@ public final class UninitializedDispatchNode {
       // the chain is longer than the maximum defined by INLINE_CACHE_SIZE and
       // thus, this callsite is considered to be megamorphic, and we generalize
       // it.
-      GenericDispatchNode genericReplacement = new GenericDispatchNode(selector,
+      GenericDispatchNode genericReplacement = new GenericDispatchNode(
+          getSourceSection(), selector,
           getMinimalVisibility(), getMixinForPrivateLockupOrNull());
       sendNode.replaceDispatchListHead(genericReplacement);
       return genericReplacement;
@@ -126,9 +132,9 @@ public final class UninitializedDispatchNode {
   private static final class UninitializedReceiverSend extends AbstractUninitialized {
     private final AccessModifier minimalVisibility;
 
-    UninitializedReceiverSend(final SSymbol selector,
+    UninitializedReceiverSend(final SourceSection source, final SSymbol selector,
         final AccessModifier minimalVisibility) {
-      super(selector);
+      super(source, selector);
       assert minimalVisibility == AccessModifier.PROTECTED
           || minimalVisibility == AccessModifier.PUBLIC;
       this.minimalVisibility = minimalVisibility;
@@ -140,7 +146,8 @@ public final class UninitializedDispatchNode {
       if (result != null) {
         assert result.getAccessModifier() != AccessModifier.PRIVATE;
       }
-      return new UninitializedReceiverSend(selector, minimalVisibility);
+      return new UninitializedReceiverSend(
+          getSourceSection(), selector, minimalVisibility);
     }
 
     @Override
@@ -166,9 +173,9 @@ public final class UninitializedDispatchNode {
   private static final class UninitializedLexicallyBound extends AbstractUninitialized {
     private final MixinDefinitionId mixinForPrivateLookup;
 
-    UninitializedLexicallyBound(final SSymbol selector,
+    UninitializedLexicallyBound(final SourceSection source, final SSymbol selector,
         final MixinDefinitionId mixinForPrivateLookup) {
-      super(selector);
+      super(source, selector);
       this.mixinForPrivateLookup = mixinForPrivateLookup;
     }
 
@@ -182,7 +189,8 @@ public final class UninitializedDispatchNode {
         // the object layout, which can change...
         return null;
       }
-      return new UninitializedLexicallyBound(selector, mixinForPrivateLookup);
+      return new UninitializedLexicallyBound(
+          getSourceSection(), selector, mixinForPrivateLookup);
     }
 
     @Override
@@ -212,9 +220,9 @@ public final class UninitializedDispatchNode {
     private final MixinDefinitionId holderMixin;
     private final boolean classSide;
 
-    UninitializedSuper(final SSymbol selector,
+    UninitializedSuper(final SourceSection source, final SSymbol selector,
       final MixinDefinitionId holderMixin, final boolean classSide) {
-      super(selector);
+      super(source, selector);
       this.holderMixin = holderMixin;
       this.classSide   = classSide;
     }
@@ -239,7 +247,7 @@ public final class UninitializedDispatchNode {
     @Override
     protected AbstractUninitialized createNewChainEnd(final Object rcvr,
         final SClass rcvrClass, final Dispatchable result) {
-      return new UninitializedSuper(selector, holderMixin, classSide);
+      return new UninitializedSuper(getSourceSection(), selector, holderMixin, classSide);
     }
 
     @Override
@@ -262,20 +270,21 @@ public final class UninitializedDispatchNode {
     }
   }
 
-  public static AbstractDispatchNode createSuper(final SSymbol selector,
-      final ISuperReadNode superNode) {
+  public static AbstractDispatchNode createSuper(final SourceSection source,
+      final SSymbol selector, final ISuperReadNode superNode) {
     CompilerAsserts.neverPartOfCompilation("SuperDispatchNode.create1");
-    return new UninitializedSuper(selector, superNode.getEnclosingMixinId(),
-        superNode.isClassSide());
+    return new UninitializedSuper(source, selector,
+        superNode.getEnclosingMixinId(), superNode.isClassSide());
   }
 
   public static AbstractDispatchNode createLexicallyBound(
-      final SSymbol selector, final MixinDefinitionId mixinId) {
-    return new UninitializedLexicallyBound(selector, mixinId);
+      final SourceSection source, final SSymbol selector,
+      final MixinDefinitionId mixinId) {
+    return new UninitializedLexicallyBound(source, selector, mixinId);
   }
 
-  public static AbstractDispatchNode createRcvrSend(final SSymbol selector,
-      final AccessModifier minimalVisibility) {
-    return new UninitializedReceiverSend(selector, minimalVisibility);
+  public static AbstractDispatchNode createRcvrSend(final SourceSection source,
+      final SSymbol selector, final AccessModifier minimalVisibility) {
+    return new UninitializedReceiverSend(source, selector, minimalVisibility);
   }
 }

@@ -8,13 +8,15 @@ import som.vmobjects.SObject.SMutableObject;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.InvalidAssumptionException;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 public abstract class CachedSlotAccessNode extends AbstractDispatchNode {
 
   @Child protected FieldReadNode read;
 
-  public CachedSlotAccessNode(final FieldReadNode read) {
+  public CachedSlotAccessNode(final SourceSection source, final FieldReadNode read) {
+    super(source);
     this.read = read;
   }
 
@@ -23,9 +25,9 @@ public abstract class CachedSlotAccessNode extends AbstractDispatchNode {
 
     private final DispatchGuard           guard;
 
-    public CachedSlotRead(final FieldReadNode read,
+    public CachedSlotRead(final SourceSection source, final FieldReadNode read,
         final DispatchGuard guard, final AbstractDispatchNode nextInCache) {
-      super(read);
+      super(source, read);
       this.guard       = guard;
       this.nextInCache = nextInCache;
       assert nextInCache != null;
@@ -58,9 +60,9 @@ public abstract class CachedSlotAccessNode extends AbstractDispatchNode {
 
   public static final class CachedImmutableSlotRead extends CachedSlotRead {
 
-    public CachedImmutableSlotRead(final FieldReadNode read,
+    public CachedImmutableSlotRead(final SourceSection source, final FieldReadNode read,
         final DispatchGuard guard, final AbstractDispatchNode nextInCache) {
-      super(read, guard, nextInCache);
+      super(source, read, guard, nextInCache);
     }
 
     @Override
@@ -71,9 +73,9 @@ public abstract class CachedSlotAccessNode extends AbstractDispatchNode {
 
   public static final class CachedMutableSlotRead extends CachedSlotRead {
 
-    public CachedMutableSlotRead(final FieldReadNode read,
+    public CachedMutableSlotRead(final SourceSection source, final FieldReadNode read,
         final DispatchGuard guard, final AbstractDispatchNode nextInCache) {
-      super(read, guard, nextInCache);
+      super(source, read, guard, nextInCache);
     }
 
     @Override
@@ -91,6 +93,7 @@ public abstract class CachedSlotAccessNode extends AbstractDispatchNode {
     public CachedSlotWrite(final AbstractFieldWriteNode write,
         final DispatchGuard guard,
         final AbstractDispatchNode nextInCache) {
+      super(nextInCache.getSourceSection());
       this.write = write;
       this.guard = guard;
       this.nextInCache = nextInCache;

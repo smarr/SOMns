@@ -13,6 +13,7 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 public final class GenericDispatchNode extends AbstractDispatchNode {
@@ -21,8 +22,9 @@ public final class GenericDispatchNode extends AbstractDispatchNode {
   private final MixinDefinitionId mixinId;
   private final SSymbol selector;
 
-  public GenericDispatchNode(final SSymbol selector,
+  public GenericDispatchNode(final SourceSection source, final SSymbol selector,
       final AccessModifier minimalAccess, final MixinDefinitionId mixinId) {
+    super(source);
     this.selector = selector;
     assert minimalAccess.ordinal() >= AccessModifier.PROTECTED.ordinal() || mixinId != null;
     this.minimalVisibility = minimalAccess;

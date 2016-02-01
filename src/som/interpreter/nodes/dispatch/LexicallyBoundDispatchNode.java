@@ -4,6 +4,7 @@ import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 /**
@@ -14,7 +15,8 @@ public final class LexicallyBoundDispatchNode extends AbstractDispatchNode {
 
   @Child private DirectCallNode cachedMethod;
 
-  public LexicallyBoundDispatchNode(final CallTarget methodCallTarget) {
+  public LexicallyBoundDispatchNode(final SourceSection source, final CallTarget methodCallTarget) {
+    super(source);
     cachedMethod = Truffle.getRuntime().createDirectCallNode(methodCallTarget);
   }
 

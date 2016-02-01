@@ -158,9 +158,10 @@ public class SInvokable extends SAbstractObject implements Dispatchable {
   @Override
   public final AbstractDispatchNode getDispatchNode(final Object rcvr,
       final Object firstArg, final AbstractDispatchNode next) {
+    assert next != null : "Pass the old node, just need the source section";
     // In case it's a private method, it is directly linked and doesn't need guards
     if (accessModifier == AccessModifier.PRIVATE) {
-      return new LexicallyBoundDispatchNode(callTarget);
+      return new LexicallyBoundDispatchNode(next.getSourceSection(), callTarget);
     }
 
     DispatchGuard guard = DispatchGuard.create(rcvr);
