@@ -4,6 +4,22 @@
   <script>
   var data = {};
   
+  function loadAndProcessFile(f) {
+    var reader = new FileReader();
+    reader.onload = (function(theFile) {
+
+      function receivedFile(e) {
+        var o = JSON.parse(e.target.result);
+        data[theFile.name] = o;
+        processData(o);
+      }
+      
+      return receivedFile;
+    })(f);
+    
+    reader.readAsText(f);
+  }
+  
   function handleFileSelect(evt) {
     evt.stopPropagation();
     evt.preventDefault();
@@ -13,22 +29,8 @@
     // files is a FileList of File objects. List some properties.
     var output = [];
     for (var i = 0; i < files.length; i++) {
-      var f = files[i];
-      var reader = new FileReader();
-      reader.onload = (function(theFile) {
-
-        function receivedFile(e) {
-          var o = JSON.parse(e.target.result);
-          data[theFile.name] = o;
-          processData(o);
-        }
-        
-        return receivedFile;
-      })(f);
-      
-      reader.readAsText(f);
+      loadAndProcessFile(files[i]);
     }
-    document.getElementById('file-drop').innerHTML = '<ul>' + output.join('') + '</ul>';
   }
   
   function sourceToArray(source) {
@@ -148,6 +150,30 @@
     fileDrop.addEventListener('dragover', handleDragOver,   false);
     fileDrop.addEventListener('drop',     handleFileSelect, false);
   }
+  
+  function blobToFile(blob, name) {
+    blob.lastModifiedDate = new Date();
+    blob.name = name;
+    return blob;
+  }
+  
+  function getFileObjectFromPath(pathOrUrl, callback) {
+    var request = new XMLHttpRequest();
+    request.open("GET", pathOrUrl);
+    request.responseType = "blob";
+    request.addEventListener('load', function () {
+      callback(blobToFile(request.response, pathOrUrl));
+    });
+    request.send();
+  }  
+
+  function loadStandardFile() {
+    getFileObjectFromPath("dynamic-metrics.json",
+      function(file) {
+        loadAndProcessFile(file);
+      });
+  }
+  
   </script>
   <style>
   #file-drop {
@@ -181,6 +207,7 @@
 <body onload="init()">
 <div id="file-drop">
   Drop JSON file produced by DynamicMetrics tool.
+  <a onclick="loadStandardFile()">Or, click here to load ../dynamic-metrics.json</a>
 </div>
 
 <div id="files"></div>
