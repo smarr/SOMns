@@ -61,6 +61,7 @@ import static som.compiler.Symbol.Pound;
 import static som.compiler.Symbol.STString;
 import static som.compiler.Symbol.SlotMutableAssign;
 import static som.compiler.Symbol.Star;
+import static som.compiler.Tags.CONTROL_FLOW_CONDITION;
 import static som.compiler.Tags.UNSPECIFIED_INVOKE;
 import static som.interpreter.SNodeFactory.createImplicitReceiverSend;
 import static som.interpreter.SNodeFactory.createMessageSend;
@@ -1102,20 +1103,26 @@ public final class Parser {
     if (numberOfArguments == 2) {
       if (arguments.get(1) instanceof LiteralNode) {
         if ("ifTrue:".equals(msgStr)) {
+          ExpressionNode condition = arguments.get(0);
+          condition.addTagsToSourceSection(CONTROL_FLOW_CONDITION);
           ExpressionNode inlinedBody = ((LiteralNode) arguments.get(1)).inline(builder);
-          return new IfInlinedLiteralNode(arguments.get(0), true, inlinedBody,
+          return new IfInlinedLiteralNode(condition, true, inlinedBody,
               arguments.get(1), source);
         } else if ("ifFalse:".equals(msgStr)) {
+          ExpressionNode condition = arguments.get(0);
+          condition.addTagsToSourceSection(CONTROL_FLOW_CONDITION);
           ExpressionNode inlinedBody = ((LiteralNode) arguments.get(1)).inline(builder);
-          return new IfInlinedLiteralNode(arguments.get(0), false, inlinedBody,
+          return new IfInlinedLiteralNode(condition, false, inlinedBody,
               arguments.get(1), source);
         } else if ("whileTrue:".equals(msgStr)) {
           ExpressionNode inlinedCondition = ((LiteralNode) arguments.get(0)).inline(builder);
+          inlinedCondition.addTagsToSourceSection(CONTROL_FLOW_CONDITION);
           ExpressionNode inlinedBody      = ((LiteralNode) arguments.get(1)).inline(builder);
           return new WhileInlinedLiteralsNode(inlinedCondition, inlinedBody,
               true, arguments.get(0), arguments.get(1), source);
         } else if ("whileFalse:".equals(msgStr)) {
           ExpressionNode inlinedCondition = ((LiteralNode) arguments.get(0)).inline(builder);
+          inlinedCondition.addTagsToSourceSection(CONTROL_FLOW_CONDITION);
           ExpressionNode inlinedBody      = ((LiteralNode) arguments.get(1)).inline(builder);
           return new WhileInlinedLiteralsNode(inlinedCondition, inlinedBody,
               false, arguments.get(0), arguments.get(1), source);
@@ -1134,9 +1141,11 @@ public final class Parser {
     } else if (numberOfArguments == 3) {
       if ("ifTrue:ifFalse:".equals(msgStr) &&
           arguments.get(1) instanceof LiteralNode && arguments.get(2) instanceof LiteralNode) {
+        ExpressionNode condition = arguments.get(0);
+        condition.addTagsToSourceSection(CONTROL_FLOW_CONDITION);
         ExpressionNode inlinedTrueNode  = ((LiteralNode) arguments.get(1)).inline(builder);
         ExpressionNode inlinedFalseNode = ((LiteralNode) arguments.get(2)).inline(builder);
-        return new IfTrueIfFalseInlinedLiteralsNode(arguments.get(0),
+        return new IfTrueIfFalseInlinedLiteralsNode(condition,
             inlinedTrueNode, inlinedFalseNode, arguments.get(1), arguments.get(2),
             source);
       } else if ("to:do:".equals(msgStr) &&
