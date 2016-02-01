@@ -12,6 +12,7 @@ import som.interpreter.nodes.dispatch.DispatchChain.Cost;
 import som.interpreter.nodes.dispatch.GenericDispatchNode;
 import som.interpreter.nodes.dispatch.UninitializedDispatchNode;
 import som.interpreter.nodes.literals.BlockNode;
+import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.EagerBinaryPrimitiveNode;
 import som.interpreter.nodes.nary.EagerTernaryPrimitiveNode;
 import som.interpreter.nodes.nary.EagerUnaryPrimitiveNode;
@@ -92,6 +93,7 @@ import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Instrumentable;
+import com.oracle.truffle.api.instrumentation.InstrumentationHandler;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.NodeCost;
 import com.oracle.truffle.api.source.SourceSection;
@@ -353,9 +355,12 @@ public final class MessageSendNode {
           break;
         case "new:":
           if (arguments[0] instanceof SClass && ((SClass) arguments[0]).isArray()) {
-            return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
+            BinaryExpressionNode newArrNode = NewPrimFactory.create(getSourceSection().cloneWithTags(NEW_ARRAY), null, null);
+            PreevaluatedExpression result = replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
                 argumentNodes[1],
-                NewPrimFactory.create(null, null, null), getSourceSection().cloneWithTags(NEW_ARRAY)));
+                newArrNode, getSourceSection()));
+            InstrumentationHandler.insertInstrumentationWrapper(newArrNode);
+            return result;
           }
           break;
         case "doIndexes:":
