@@ -7,3 +7,4 @@ script:
   - ./som -G core-lib/TestSuite/TestRunner.som
   - ./som -X core-lib/TestSuite/TestRunner.som
   - ant test
+  - ant checkstyle-jar && ant checkstyle
