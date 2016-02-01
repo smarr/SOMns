@@ -1,0 +1,195 @@
+<html>
+<head>
+  <title>Dynamic Metrics</title>
+  <script>
+  var data = {};
+  
+  function handleFileSelect(evt) {
+    evt.stopPropagation();
+    evt.preventDefault();
+
+    var files = evt.dataTransfer.files; // FileList object.
+
+    // files is a FileList of File objects. List some properties.
+    var output = [];
+    for (var i = 0; i < files.length; i++) {
+      var f = files[i];
+      var reader = new FileReader();
+      reader.onload = (function(theFile) {
+
+        function receivedFile(e) {
+          var o = JSON.parse(e.target.result);
+          data[theFile.name] = o;
+          processData(o);
+        }
+        
+        return receivedFile;
+      })(f);
+      
+      reader.readAsText(f);
+    }
+    document.getElementById('file-drop').innerHTML = '<ul>' + output.join('') + '</ul>';
+  }
+  
+  function sourceToArray(source) {
+    arr = new Array(source.length);
+    for (var i = 0; i < source.length; i++) {
+      arr[i] = source[i];
+    }
+    return arr;
+  }
+  
+  function Begin(section) {
+    this.section = section;
+    this.type    = Begin;
+  }
+  Begin.prototype.toString = function () {
+    return '<span id="' + this.section.id + '" class="' + this.section.tags.join(" ") + '">';
+  };
+  function End(section) {
+    this.section = section;
+    this.type    = End;
+  }
+  End.prototype.toString = function () {
+    return '</span>';
+  };
+  function Annotation(char) {
+    this.char   = char;
+    this.before = [];
+    this.after  = [];
+  }
+  Annotation.prototype.toString = function() {
+    this.before.sort(function (a, b) {
+      if (a.section.id == "ss-34") {  // value <> v
+        var oo = 9;
+      }
+      
+      if (a.section.type != b.section.type) {
+        if (a.section.type == Begin) {
+          return -1;
+        } else {
+          return 1;
+        }
+      }
+
+      if (a.section.length == b.section.length) {
+        return 0;
+      }
+
+      if (a.section.length < b.section.length) {
+        return (a.section.type == Begin) ? 1 : -1;
+      } else {
+        return (a.section.type == Begin) ? -1 : 1;
+      }
+    });
+    
+    var result = this.before.join("");
+    result += this.char;
+    result += this.after.join("");
+    return result;
+  };
+
+  function ensureItIsAnnotation(arr, idx) {
+    if (!(arr[idx] instanceof Annotation)) {
+      arr[idx] = new Annotation(arr[idx]);
+    }
+    return arr[idx];
+  }
+  
+  function annotateArray(arr, sourceId, sections) {
+    for (var sId in sections) {
+      var s = sections[sId];
+      if (s.sourceId == sourceId) {
+        var start = ensureItIsAnnotation(arr, s.firstIndex),
+            end   = ensureItIsAnnotation(arr, s.firstIndex + s.length);
+        start.before.push(new Begin(s));
+        end.before.push(new End(s));
+      }
+    }
+  }
+  
+  function arrayToString(arr) {
+    var result = "";
+    for (var i = 0; i < arr.length; i++) {
+      result += arr[i].toString();
+    }
+    return result;
+  }
+  
+  function showSource(s, sections) {
+    var annotationArray = sourceToArray(s.sourceText);
+    annotateArray(annotationArray, s.id, sections);
+    
+    tpl = document.getElementById("file");
+    newFileElement = tpl.cloneNode(true);
+    newFileElement.setAttribute("id", s.id);
+    newFileElement.getElementsByClassName("filename")[0].textContent  = s.shortName;
+    newFileElement.getElementsByClassName("source-file")[0].innerHTML = arrayToString(annotationArray);
+    
+    files = document.getElementById("files");
+    files.appendChild(newFileElement);
+  }
+  
+  function processData(o) {
+    for (var sId in o.sources) {
+      showSource(o.sources[sId], o.sections);
+    };
+  }
+
+  function handleDragOver(evt) {
+    evt.stopPropagation();
+    evt.preventDefault();
+    evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
+  }
+
+  function init() {
+    // Init drag and drop
+    var fileDrop = document.getElementById('file-drop');
+    fileDrop.addEventListener('dragover', handleDragOver,   false);
+    fileDrop.addEventListener('drop',     handleFileSelect, false);
+  }
+  </script>
+  <style>
+  #file-drop {
+    border: 5px #ccc dashed;
+    font-size: 3em;
+    font-weight: bold;
+    width: 100%;
+    padding: 2em;
+    text-align: center;
+    font-family:sans-serif;
+  }
+  
+  #templates { display: none; }
+
+  .filename  { font-family: sans-serif; }
+  .source-file {
+    font-family: monospace;
+    white-space: pre;
+  }
+
+  /* Profiling Tags */
+  .ROOT {}
+  .UNSPECIFIED_INVOKE { font-style: italic; }
+  .INVOKE_WITH_LOOKUP { font-style: italic; }
+  .NEW_OBJECT { font-weight: bold; }
+  .NEW_ARRAY { font-weight: bold; }
+  .FIELD_READ { font-style: italic; color: #00a; }
+  
+  </style>
+</head>
+<body onload="init()">
+<div id="file-drop">
+  Drop JSON file produced by DynamicMetrics tool.
+</div>
+
+<div id="files"></div>
+  
+<div id="templates">
+  <div id="file">
+    <div class="filename"></div>
+    <div class="source-file"></div>
+  </div>
+</div>
+</body>
+</html>
