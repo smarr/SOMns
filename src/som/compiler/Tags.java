@@ -4,6 +4,15 @@ package som.compiler;
 public class Tags {
   public static final String ROOT_TAG = "ROOT";
   public static final String UNSPECIFIED_INVOKE = "UNSPECIFIED_INVOKE"; // this is some form of invoke in the source, unclear what it is during program execution
+
   public static final String NEW_OBJECT = "NEW_OBJECT";
   public static final String NEW_ARRAY  = "NEW_ARRAY";
+
+  public static final String CONTROL_FLOW_CONDITION  = "CONTROL_FLOW_CONDITION"; // a condition expression that results in a control-flow change
+
+  public static final String FIELD_READ         = "FIELD_READ";
+  public static final String FIELD_WRITE        = "FIELD_WRITE";
+  public static final String ARRAY_READ         = "ARRAY_READ";
+  public static final String ARRAY_WRITE        = "ARRAY_WRITE";
+  public static final String LOOP_BODY          = "LOOP_BODY";
 }
