@@ -39,7 +39,7 @@ public class InvocationProfile extends Counter {
     private static Class<?>[] getJavaTypes(final Object[] args) {
       return Arrays.stream(args).
           map(e -> e.getClass()).
-          toArray(Class<?>[]::new);
+          toArray(Class[]::new);  // remove the <?> because of checkstyle issue
     }
 
     private static SClass[] getSomTypes(final Object[] args) {
