@@ -138,10 +138,38 @@
     files.appendChild(newFileElement);
   }
   
+  function showInvocationProfile(profileData, rootSpan) {
+    if (profileData.length < 1) {
+      return;
+    }
+    
+    var profiles = nodeFromTemplate("invocation-profiles");
+    
+    for (var i = 0; i < profileData.length; i++) {
+      var profile = nodeFromTemplate("invocation-profile");
+      profile.getElementsByClassName("counter")[0].textContent = profileData[i].invocations;
+      profile.getElementsByClassName("types")[0].textContent = profileData[i].somTypes.join(", ");
+      profiles.appendChild(profile);
+    }
+    
+    rootSpan.insertBefore(profiles, rootSpan.firstChild);
+  }
+  
   function processData(o) {
     for (var sId in o.sources) {
       showSource(o.sources[sId], o.sections);
     };
+    
+    for (var ssId in o.sections) {
+      showSectionData(o.sections[ssId]);
+    };
+  }
+  
+  function showSectionData(section) {
+    if (section.data && section.data.methodInvocationProfile) {
+      showInvocationProfile(section.data.methodInvocationProfile,
+        document.getElementById(section.id));
+    }
   }
 
   function handleDragOver(evt) {
@@ -199,10 +227,16 @@
     font-family: monospace;
     white-space: pre;
   }
+  
+  .invocation-profile  { font-size: 0.8em; display: block; }
+  .invocation-profiles { white-space: normal; }
 
   /* Profiling Tags */
   .ROOT {}
+  .ROOT::before { content: "\1F332";}
+  .ROOT::before + .invocation-profiles { display: block; } /* TODO: this does not work yet */
   .UNSPECIFIED_INVOKE { font-style: italic; }
+  .CONTROL_FLOW_CONDITION { color: #800; }
   .INVOKE_WITH_LOOKUP { font-style: italic; }
   .NEW_OBJECT { font-weight: bold; }
   .NEW_ARRAY { font-weight: bold; }
@@ -223,6 +257,10 @@
     <div class="filename"></div>
     <div class="source-file"></div>
   </div>
+  <div id="invocation-profiles" class="invocation-profiles"></div>
+  <span id="invocation-profile" class="invocation-profile">
+    <span class="counter"></span>:  <span class="types"></span>
+  </span>
 </div>
 </body>
 </html>
