@@ -584,7 +584,9 @@ public final class Parser {
     // Newspeak-spec: this is not conform with Newspeak,
     //                as the category is normally not optional
     if (sym == STString) {
+      SourceCoordinate coord = getCoordinate();
       categoryName = string();
+      syntaxAnnotations.add(getSource(coord, Tags.SYNTAX_COMMENT));
     } else {
       categoryName = "";
     }
@@ -620,20 +622,20 @@ public final class Parser {
   }
 
   private boolean acceptIdentifier(final String identifier, final String... tags) {
-    SourceCoordinate coord = getCoordinate();
     if (sym == Identifier && identifier.equals(text)) {
-      accept(Identifier);
-      if (tags.length > 0) {
-        syntaxAnnotations.add(getSource(coord, tags));
-      }
+      accept(Identifier, tags);
       return true;
     }
     return false;
   }
 
-  private boolean accept(final Symbol s) {
+  private boolean accept(final Symbol s, final String... tags) {
+    SourceCoordinate coord = getCoordinate();
     if (sym == s) {
       getSymbolFromLexer();
+      if (tags.length > 0) {
+        syntaxAnnotations.add(getSource(coord, tags));
+      }
       return true;
     }
     return false;
@@ -655,11 +657,7 @@ public final class Parser {
   }
 
   private void expect(final Symbol s, final String msg, final String... tags) throws ParseError {
-    SourceCoordinate coord = getCoordinate();
-    if (accept(s)) {
-      if (tags.length > 0) {
-        syntaxAnnotations.add(getSource(coord, tags));
-      }
+    if (accept(s, tags)) {
       return;
     }
 
@@ -809,7 +807,7 @@ public final class Parser {
     while (true) {
       comment();
 
-      if (accept(Exit)) {
+      if (accept(Exit, Tags.SYNTAX_KEYWORD)) {
         expressions.add(result(builder));
         return createSequence(expressions, getSource(coord));
       } else if (sym == EndBlock) {
@@ -978,7 +976,7 @@ public final class Parser {
       MixinDefinitionError {
     while (sym == OperatorSequence || symIn(binaryOpSyms)) {
       operand = binaryMessage(builder, operand, eventualSend);
-      eventualSend = accept(EventualSend);
+      eventualSend = accept(EventualSend, Tags.SYNTAX_KEYWORD);
     }
     return operand;
   }
@@ -986,20 +984,20 @@ public final class Parser {
   private ExpressionNode messages(final MethodBuilder builder,
       final ExpressionNode receiver) throws ParseError, MixinDefinitionError {
     ExpressionNode msg;
-    boolean evenutalSend = accept(EventualSend);
+    boolean evenutalSend = accept(EventualSend, Tags.SYNTAX_KEYWORD);
 
     if (sym == Identifier) {
       msg = unaryMessage(receiver, evenutalSend);
-      evenutalSend = accept(EventualSend);
+      evenutalSend = accept(EventualSend, Tags.SYNTAX_KEYWORD);
 
       while (sym == Identifier) {
         msg = unaryMessage(msg, evenutalSend);
-        evenutalSend = accept(EventualSend);
+        evenutalSend = accept(EventualSend, Tags.SYNTAX_KEYWORD);
       }
 
       if (sym == OperatorSequence || symIn(binaryOpSyms)) {
         msg = binaryConsecutiveMessages(builder, msg, evenutalSend);
-        evenutalSend = accept(EventualSend);
+        evenutalSend = accept(EventualSend, Tags.SYNTAX_KEYWORD);
       }
 
       if (sym == Keyword) {
@@ -1007,7 +1005,7 @@ public final class Parser {
       }
     } else if (sym == OperatorSequence || symIn(binaryOpSyms)) {
       msg = binaryConsecutiveMessages(builder, receiver, evenutalSend);
-      evenutalSend = accept(EventualSend);
+      evenutalSend = accept(EventualSend, Tags.SYNTAX_KEYWORD);
 
       if (sym == Keyword) {
         msg = keywordMessage(builder, msg, true, evenutalSend);
@@ -1063,10 +1061,10 @@ public final class Parser {
     // a binary operand can receive unaryMessages
     // Example: 2 * 3 asString
     //   is evaluated as 2 * (3 asString)
-    boolean evenutalSend = accept(EventualSend);
+    boolean evenutalSend = accept(EventualSend, Tags.SYNTAX_KEYWORD);
     while (sym == Identifier) {
       operand = unaryMessage(operand, evenutalSend);
-      evenutalSend = accept(EventualSend);
+      evenutalSend = accept(EventualSend, Tags.SYNTAX_KEYWORD);
     }
 
     assert !evenutalSend : "eventualSend should not be true, because that means we steal it from the next operation (think here shouldn't be one, but still...)";
@@ -1094,7 +1092,6 @@ public final class Parser {
 
     String msgStr = kw.toString();
     SSymbol msg = symbolFor(msgStr);
-
 
     if (!eventualSend) {
       ExpressionNode node = inlineControlStructureIfPossible(builder, arguments,
