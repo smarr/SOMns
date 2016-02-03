@@ -1,15 +1,13 @@
 package som.interpreter.nodes.specialized.whileloops;
 
-import som.interpreter.Invokable;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.specialized.SomLoop;
 import som.vm.constants.Nil;
 
-import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.UnsupportedSpecializationException;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -65,21 +63,10 @@ public final class WhileInlinedLiteralsNode extends ExpressionNode {
       }
     } finally {
       if (CompilerDirectives.inInterpreter()) {
-        reportLoopCount(iterationCount);
+        SomLoop.reportLoopCount(iterationCount, this);
       }
     }
     return Nil.nilObject;
-  }
-
-  protected void reportLoopCount(final long count) {
-    CompilerAsserts.neverPartOfCompilation("reportLoopCount");
-    Node current = getParent();
-    while (current != null && !(current instanceof RootNode)) {
-      current = current.getParent();
-    }
-    if (current != null) {
-      ((Invokable) current).propagateLoopCountThroughoutMethodScope(count);
-    }
   }
 
   @Override

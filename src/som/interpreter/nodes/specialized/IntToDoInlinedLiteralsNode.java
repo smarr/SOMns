@@ -2,11 +2,9 @@ package som.interpreter.nodes.specialized;
 
 import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
 import som.interpreter.InlinerForLexicallyEmbeddedMethods;
-import som.interpreter.Invokable;
 import som.interpreter.SplitterForLexicallyEmbeddedCode;
 import som.interpreter.nodes.ExpressionNode;
 
-import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.dsl.NodeChild;
@@ -15,8 +13,6 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
 
 @NodeChildren({
@@ -54,7 +50,7 @@ public abstract class IntToDoInlinedLiteralsNode extends ExpressionNode {
       try {
         doLooping(frame, from, to);
       } finally {
-        reportLoopCount((int) to - from);
+        SomLoop.reportLoopCount((int) to - from, this);
       }
     } else {
       doLooping(frame, from, to);
@@ -68,7 +64,7 @@ public abstract class IntToDoInlinedLiteralsNode extends ExpressionNode {
       try {
         doLooping(frame, from, (long) to);
       } finally {
-        reportLoopCount((int) to - from);
+        SomLoop.reportLoopCount((int) to - from, this);
       }
     } else {
       doLooping(frame, from, (long) to);
@@ -93,20 +89,6 @@ public abstract class IntToDoInlinedLiteralsNode extends ExpressionNode {
       body.executeGeneric(frame);
     }
   }
-
-  private void reportLoopCount(final long count) {
-    if (count < 1) { return; }
-
-    CompilerAsserts.neverPartOfCompilation("reportLoopCount");
-    Node current = getParent();
-    while (current != null && !(current instanceof RootNode)) {
-      current = current.getParent();
-    }
-    if (current != null) {
-      ((Invokable) current).propagateLoopCountThroughoutMethodScope(count);
-    }
-  }
-
 
   @Override
   public void replaceWithLexicallyEmbeddedNode(

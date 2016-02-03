@@ -1,16 +1,12 @@
 package som.interpreter.nodes.specialized;
 
-import som.interpreter.Invokable;
 import som.interpreter.nodes.ExpressionNode;
 
-import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
 
 
@@ -39,7 +35,7 @@ public abstract class IntTimesRepeatLiteralNode extends ExpressionNode {
       try {
         doLooping(frame, repCnt);
       } finally {
-        reportLoopCount((int) repCnt);
+        SomLoop.reportLoopCount((int) repCnt, this);
       }
     } else {
       doLooping(frame, repCnt);
@@ -56,19 +52,6 @@ public abstract class IntTimesRepeatLiteralNode extends ExpressionNode {
         CompilerDirectives.injectBranchProbability(loopFrequency, i > 0);
         i--) {
       body.executeGeneric(frame);
-    }
-  }
-
-  private void reportLoopCount(final long count) {
-    if (count < 1) { return; }
-
-    CompilerAsserts.neverPartOfCompilation("reportLoopCount");
-    Node current = getParent();
-    while (current != null && !(current instanceof RootNode)) {
-      current = current.getParent();
-    }
-    if (current != null) {
-      ((Invokable) current).propagateLoopCountThroughoutMethodScope(count);
     }
   }
 

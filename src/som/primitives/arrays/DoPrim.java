@@ -1,22 +1,19 @@
 package som.primitives.arrays;
 
-import som.interpreter.Invokable;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
+import som.interpreter.nodes.specialized.SomLoop;
 import som.vm.constants.Nil;
 import som.vmobjects.SArray;
 import som.vmobjects.SArray.PartiallyEmptyArray;
 import som.vmobjects.SBlock;
 
-import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.profiles.ValueProfile;
 
 
@@ -48,7 +45,7 @@ public abstract class DoPrim extends BinaryExpressionNode {
       }
     } finally {
       if (CompilerDirectives.inInterpreter()) {
-        reportLoopCount(length);
+        SomLoop.reportLoopCount(length, this);
       }
     }
     return arr;
@@ -68,7 +65,7 @@ public abstract class DoPrim extends BinaryExpressionNode {
       }
     } finally {
       if (CompilerDirectives.inInterpreter()) {
-        reportLoopCount(length);
+        SomLoop.reportLoopCount(length, this);
       }
     }
     return arr;
@@ -88,7 +85,7 @@ public abstract class DoPrim extends BinaryExpressionNode {
       }
     } finally {
       if (CompilerDirectives.inInterpreter()) {
-        reportLoopCount(length);
+        SomLoop.reportLoopCount(length, this);
       }
     }
     return arr;
@@ -108,7 +105,7 @@ public abstract class DoPrim extends BinaryExpressionNode {
       }
     } finally {
       if (CompilerDirectives.inInterpreter()) {
-        reportLoopCount(length);
+        SomLoop.reportLoopCount(length, this);
       }
     }
     return arr;
@@ -128,7 +125,7 @@ public abstract class DoPrim extends BinaryExpressionNode {
       }
     } finally {
       if (CompilerDirectives.inInterpreter()) {
-        reportLoopCount(length);
+        SomLoop.reportLoopCount(length, this);
       }
     }
     return arr;
@@ -148,25 +145,10 @@ public abstract class DoPrim extends BinaryExpressionNode {
       }
     } finally {
       if (CompilerDirectives.inInterpreter()) {
-        reportLoopCount(length);
+        SomLoop.reportLoopCount(length, this);
       }
     }
     return arr;
-  }
-
-  protected final void reportLoopCount(final long count) {
-    if (count == 0) {
-      return;
-    }
-
-    CompilerAsserts.neverPartOfCompilation("reportLoopCount");
-    Node current = getParent();
-    while (current != null && !(current instanceof RootNode)) {
-      current = current.getParent();
-    }
-    if (current != null) {
-      ((Invokable) current).propagateLoopCountThroughoutMethodScope(count);
-    }
   }
 
   @Override
