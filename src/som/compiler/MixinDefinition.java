@@ -16,6 +16,7 @@ import som.interpreter.SNodeFactory;
 import som.interpreter.nodes.ClassInstantiationNode;
 import som.interpreter.nodes.ClassSlotAccessNode;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.SOMNode;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
 import som.interpreter.nodes.dispatch.CachedSlotAccessNode.CachedImmutableSlotRead;
 import som.interpreter.nodes.dispatch.CachedSlotAccessNode.CachedMutableSlotRead;
@@ -496,6 +497,7 @@ public final class MixinDefinition {
     public AbstractDispatchNode getDispatchNode(final Object receiver,
         final Object firstArg, final AbstractDispatchNode next) {
       assert next.getSourceSection() != null;
+      SourceSection source = SOMNode.cloneAndAddTags(next.getSourceSection(), getTags());
       SObject rcvr = (SObject) receiver;
       if (rcvr instanceof SMutableObject) {
         return new CachedMutableSlotRead(source, createNode(rcvr), DispatchGuard.create(rcvr), next);
@@ -525,6 +527,10 @@ public final class MixinDefinition {
 
     protected FieldReadNode createNode(final SObject rcvr) {
       return FieldReadNode.createRead(this, rcvr);
+    }
+
+    protected String[] getTags() {
+      return new String[] {Tags.FIELD_READ};
     }
 
     public void setValueDuringBootstrap(final SObject obj, final Object value) {
@@ -587,6 +593,12 @@ public final class MixinDefinition {
           FieldReadNode.createRead(this, rcvr),
           FieldWriteNode.createWriteObject(this, rcvr));
       return node;
+    }
+
+    // TODO
+    @Override
+    protected String[] getTags() {
+      return new String[] {};
     }
 
     @Override
