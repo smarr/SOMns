@@ -1,12 +1,7 @@
 package dym;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import som.compiler.Tags;
 
@@ -18,11 +13,7 @@ import com.oracle.truffle.api.instrumentation.SourceSectionFilter;
 import com.oracle.truffle.api.instrumentation.SourceSectionFilter.Builder;
 import com.oracle.truffle.api.instrumentation.TruffleInstrument;
 import com.oracle.truffle.api.instrumentation.TruffleInstrument.Registration;
-import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
-import com.oracle.truffle.api.utilities.JSONHelper;
-import com.oracle.truffle.api.utilities.JSONHelper.JSONArrayBuilder;
-import com.oracle.truffle.api.utilities.JSONHelper.JSONObjectBuilder;
 
 import dym.nodes.ControlFlowProfileNode;
 import dym.nodes.CountingNode;
@@ -60,7 +51,6 @@ public class DynamicMetrics extends TruffleInstrument {
   public static final String ARRAY_READ         = "ARRAY_READ";
   public static final String ARRAY_WRITE        = "ARRAY_WRITE";
   public static final String LOOP_BODY          = "LOOP_BODY";
-
 
   private final Map<SourceSection, InvocationProfile> methodInvocationCounter;
   private int methodStackDepth;
@@ -145,9 +135,12 @@ public class DynamicMetrics extends TruffleInstrument {
 
   @Override
   protected void onDispose(final Env env) {
-    @SuppressWarnings("unused")
-    int i = 0;
-    json();
+    String outputFile = System.getProperty("dm.output", "dynamic-metrics.json");
+    Map<String, Map<SourceSection, ? extends JsonSerializable>> data = collectData();
+    JsonWriter.fileOut(data, outputFile);
+
+    String metricsFolder = System.getProperty("dm.metrics", "metrics");
+    MetricsCsvWriter.fileOut(data, metricsFolder);
   }
 
   private EventNode createInvocationCountingNode(final EventContext context) {
@@ -164,101 +157,14 @@ public class DynamicMetrics extends TruffleInstrument {
     return new CountingNode(probe);
   }
 
-  private void json() {
-    Set<SourceSection> allSections = new HashSet<>(methodInvocationCounter.keySet());
-    allSections.addAll(methodInvocationCounter.keySet());
-    allSections.addAll(methodCallsiteProbes.keySet());
-    allSections.addAll(instantiationCounter.keySet());
-    allSections.addAll(fieldAccessCounter.keySet());
-    allSections.addAll(controlFlowProfiles.keySet());
-
-    Set<Source> allSources = new HashSet<>();
-    allSections.forEach(ss -> allSources.add(ss.getSource()));
-
-    Map<Source, String> sourceToId = createIdMap(allSources, "s-");
-    Map<SourceSection, String> sectionToId = createIdMap(allSections, "ss-");
-
-    JSONObjectBuilder allSourcesJson = JSONHelper.object();
-    for (Source s : allSources) {
-      String id = sourceToId.get(s);
-      assert id != null && !id.equals("");
-      allSourcesJson.add(id, sourceToJson(s, id));
-    }
-
-    JSONObjectBuilder allSectionsJson = JSONHelper.object();
-    for (SourceSection ss : allSections) {
-      allSectionsJson.add(sectionToId.get(ss), sectionToJson(ss, sectionToId.get(ss), sourceToId));
-    }
-
-    JSONObjectBuilder root = JSONHelper.object();
-    root.add("sources", allSourcesJson);
-    root.add("sections", allSectionsJson);
-
-    try {
-      String cwd = new File(".").getCanonicalPath();
-      String jsonFilename = cwd + File.separator + "dynamic-metrics.json";
-
-      System.out.println("[DynamicMetrics] Create output file: " + jsonFilename);
-
-      try (PrintWriter jsonFile = new PrintWriter(jsonFilename)) {
-        jsonFile.println(root.toString());
-      }
-    } catch (IOException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
+  private Map<String, Map<SourceSection, ? extends JsonSerializable>> collectData() {
+    Map<String, Map<SourceSection, ? extends JsonSerializable>> data = new HashMap<>();
+    data.put("methodInvocationProfile", methodInvocationCounter);
+    data.put("methodCallsite",          methodCallsiteProbes);
+    data.put("instantiationCount",      instantiationCounter);
+    data.put("fieldAccessCount",        fieldAccessCounter);
+    data.put("branchProfile",           controlFlowProfiles);
+    return data;
   }
 
-  private JSONObjectBuilder collectDataForSection(final SourceSection section) {
-    JSONObjectBuilder result = JSONHelper.object();
-    InvocationProfile profile = methodInvocationCounter.get(section);
-    if (profile != null) {
-      result.add("methodInvocationProfile", profile.toJson());
-    }
-    return result;
-  }
-
-  private JSONObjectBuilder sectionToJson(final SourceSection ss, final String id, final Map<Source, String> sourceToId) {
-    JSONObjectBuilder builder = JSONHelper.object();
-
-    builder.add("id", id);
-    builder.add("firstIndex", ss.getCharIndex());
-    builder.add("length", ss.getCharLength());
-    builder.add("identifier", ss.getIdentifier());
-    builder.add("description", ss.getShortDescription());
-    builder.add("sourceId", sourceToId.get(ss.getSource()));
-
-
-    if (ss.getTags() != null && ss.getTags().length > 0) {
-      JSONArrayBuilder arr = JSONHelper.array();
-      for (String tag : ss.getTags()) {
-        arr.add(tag);
-      }
-      builder.add("tags", arr);
-    }
-    builder.add("data", collectDataForSection(ss));
-
-    return builder;
-  }
-
-  private JSONObjectBuilder sourceToJson(final Source s, final String id) {
-    JSONObjectBuilder builder = JSONHelper.object();
-    builder.add("id", id);
-    builder.add("sourceText", s.getCode());
-    builder.add("mimeType", s.getMimeType());
-    builder.add("name", s.getName());
-    builder.add("shortName", s.getShortName());
-    return builder;
-  }
-
-  private <U> Map<U, String> createIdMap(final Set<U> set, final String idPrefix) {
-    Map<U, String> eToId = new HashMap<>();
-
-    int i = 0;
-    for (U e : set) {
-      eToId.put(e, idPrefix + i);
-      i += 1;
-    }
-    return eToId;
-  }
 }
