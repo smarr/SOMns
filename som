@@ -191,7 +191,8 @@ if args.java_interpreter:
 if args.print_graal_options:
     flags += ['-Dgraal.PrintFlags=true']
 
-flags += ['-D' + property for property in args.java_properties]
+if args.java_properties:
+    flags += ['-D' + property for property in args.java_properties]
 
 all_args = JAVA_ARGS + flags + SOM_ARGS + args.args
 
