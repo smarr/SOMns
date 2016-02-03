@@ -32,8 +32,6 @@ import som.VM;
 import som.compiler.MixinBuilder.MixinDefinitionError;
 import som.compiler.Lexer.SourceCoordinate;
 import som.compiler.Parser.ParseError;
-import som.vm.NotYetImplementedException;
-import som.vmobjects.SClass;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.source.Source;
@@ -50,15 +48,6 @@ public final class SourcecodeCompiler {
 
     MixinDefinition result = compile(parser);
     return result;
-  }
-
-  @TruffleBoundary
-  public static SClass compileClass(final String stmt, final SClass systemClass) {
-    throw new NotYetImplementedException();
-//    Parser parser = new Parser(new StringReader(stmt), stmt.length(), null, universe);
-//
-//    SClass result = compile(parser, systemClass, universe);
-//    return result;
   }
 
   private static MixinDefinition compile(final Parser parser) {
