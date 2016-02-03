@@ -1,22 +1,19 @@
 package som.primitives.arrays;
 
-import som.interpreter.Invokable;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
+import som.interpreter.nodes.specialized.SomLoop;
 import som.primitives.SizeAndLengthPrim;
 import som.primitives.SizeAndLengthPrimFactory;
 import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
 
-import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.nodes.RootNode;
 
 
 @GenerateNodeFactory
@@ -51,20 +48,8 @@ public abstract class DoIndexesPrim extends BinaryExpressionNode {
       }
     } finally {
       if (CompilerDirectives.inInterpreter()) {
-        reportLoopCount(length);
+        SomLoop.reportLoopCount(length, this);
       }
-    }
-  }
-
-  protected final void reportLoopCount(final long count) {
-    assert count >= 0;
-    CompilerAsserts.neverPartOfCompilation("reportLoopCount");
-    Node current = getParent();
-    while (current != null && !(current instanceof RootNode)) {
-      current = current.getParent();
-    }
-    if (current != null) {
-      ((Invokable) current).propagateLoopCountThroughoutMethodScope(count);
     }
   }
 
