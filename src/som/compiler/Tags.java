@@ -15,4 +15,10 @@ public class Tags {
   public static final String ARRAY_READ         = "ARRAY_READ";
   public static final String ARRAY_WRITE        = "ARRAY_WRITE";
   public static final String LOOP_BODY          = "LOOP_BODY";
+
+  // Syntax annotations
+  public static final String SYNTAX_KEYWORD = "SYNTAX_KEYWORD";
+  public static final String SYNTAX_LITERAL = "SYNTAX_LITERAL";
+  public static final String SYNTAX_COMMENT = "SYNTAX_COMMENT";
+  public static final String SYNTAX_IDENTIFIER = "SYNTAX_IDENTIFIER";
 }
