@@ -70,7 +70,9 @@ import static som.vm.Symbols.symbolFor;
 
 import java.io.Reader;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import som.compiler.Lexer.Peek;
 import som.compiler.Lexer.SourceCoordinate;
@@ -118,6 +120,7 @@ public final class Parser {
   private String                    nextText;
 
   private SourceSection             lastMethodsSourceSection;
+  private final Set<SourceSection>  syntaxAnnotations;
 
   private static final Symbol[] singleOpSyms = new Symbol[] {Not, And, Or, Star,
     Div, Mod, Plus, Equal, More, Less, Comma, At, Per, NONE};
@@ -229,6 +232,12 @@ public final class Parser {
     lexer = new Lexer(reader, fileSize);
     nextSym = NONE;
     getSymbolFromLexer();
+
+    this.syntaxAnnotations = new HashSet<>();
+  }
+
+  Set<SourceSection> getSyntaxAnnotations() {
+    return syntaxAnnotations;
   }
 
   SourceCoordinate getCoordinate() {
@@ -243,9 +252,9 @@ public final class Parser {
   private MixinBuilder classDeclaration(final MixinBuilder outerBuilder,
       final AccessModifier accessModifier) throws ParseError, MixinDefinitionError {
     expectIdentifier("class", "Found unexpected token %(found)s. " +
-      "Tried parsing a class declaration and expected 'class' instead.");
+      "Tried parsing a class declaration and expected 'class' instead.", Tags.SYNTAX_KEYWORD);
     String mixinName = text;
-    expect(Identifier);
+    expect(Identifier, "Expected valid class name, but found %(found)s", Tags.SYNTAX_IDENTIFIER);
 
     MixinBuilder mxnBuilder = new MixinBuilder(outerBuilder, accessModifier, symbolFor(mixinName));
 
@@ -388,7 +397,7 @@ public final class Parser {
     MethodBuilder meth = mxnBuilder.getClassInstantiationMethodBuilder();
     SourceCoordinate coord = getCoordinate();
 
-    if (acceptIdentifier("outer")) {
+    if (acceptIdentifier("outer", Tags.SYNTAX_KEYWORD)) {
       String outer = identifier();
       OuterObjectRead self = meth.getOuterRead(outer, getSource(coord));
       if (sym == Identifier) {
@@ -399,9 +408,9 @@ public final class Parser {
     }
 
     ExpressionNode self;
-    if (acceptIdentifier("super")) {
+    if (acceptIdentifier("super", Tags.SYNTAX_KEYWORD)) {
       self = meth.getSuperReadNode(getSource(coord));
-    } else if (acceptIdentifier("self")) {
+    } else if (acceptIdentifier("self", Tags.SYNTAX_KEYWORD)) {
       self = meth.getSelfRead(getSource(coord));
     } else {
       return meth.getImplicitReceiverSend(unarySelector(), coord, this);
@@ -457,6 +466,8 @@ public final class Parser {
   private String comment() throws ParseError {
     if (sym != BeginComment) { return ""; }
 
+    SourceCoordinate coord = getCoordinate();
+
     expect(BeginComment);
 
     String comment = "";
@@ -469,6 +480,7 @@ public final class Parser {
       }
     }
     expect(EndComment);
+    syntaxAnnotations.add(getSource(coord, Tags.SYNTAX_COMMENT));
     return comment;
   }
 
@@ -517,9 +529,9 @@ public final class Parser {
 
   private AccessModifier accessModifier() {
     if (sym == Identifier) {
-      if (acceptIdentifier("private"))   { return AccessModifier.PRIVATE;   }
-      if (acceptIdentifier("protected")) { return AccessModifier.PROTECTED; }
-      if (acceptIdentifier("public"))    { return AccessModifier.PUBLIC;    }
+      if (acceptIdentifier("private",   Tags.SYNTAX_KEYWORD)) { return AccessModifier.PRIVATE;   }
+      if (acceptIdentifier("protected", Tags.SYNTAX_KEYWORD)) { return AccessModifier.PROTECTED; }
+      if (acceptIdentifier("public",    Tags.SYNTAX_KEYWORD)) { return AccessModifier.PUBLIC;    }
     }
     return AccessModifier.PROTECTED;
   }
@@ -607,9 +619,13 @@ public final class Parser {
     return nextSym == Identifier && identifier.equals(nextText);
   }
 
-  private boolean acceptIdentifier(final String identifier) {
+  private boolean acceptIdentifier(final String identifier, final String... tags) {
+    SourceCoordinate coord = getCoordinate();
     if (sym == Identifier && identifier.equals(text)) {
       accept(Identifier);
+      if (tags.length > 0) {
+        syntaxAnnotations.add(getSource(coord, tags));
+      }
       return true;
     }
     return false;
@@ -631,20 +647,21 @@ public final class Parser {
     return false;
   }
 
-  private void expectIdentifier(final String identifier, final String msg)
+  private void expectIdentifier(final String identifier, final String msg, final String... tags)
       throws ParseError {
-    if (acceptIdentifier(identifier)) { return; }
+    if (acceptIdentifier(identifier, tags)) { return; }
 
     throw new ParseError(msg, Identifier, this);
   }
 
-  private void expectIdentifier(final String identifier) throws ParseError {
-    expectIdentifier(identifier, "Unexpected token. Expected '" + identifier +
-        "', but found %(found)s");
-  }
-
-  private void expect(final Symbol s, final String msg) throws ParseError {
-    if (accept(s)) { return; }
+  private void expect(final Symbol s, final String msg, final String... tags) throws ParseError {
+    SourceCoordinate coord = getCoordinate();
+    if (accept(s)) {
+      if (tags.length > 0) {
+        syntaxAnnotations.add(getSource(coord, tags));
+      }
+      return;
+    }
 
     throw new ParseError(msg, s, this);
   }
@@ -896,13 +913,13 @@ public final class Parser {
         SourceCoordinate coord = getCoordinate();
         // Parse true, false, and nil as keyword-like constructs
         // (cf. Newspeak spec on reserved words)
-        if (acceptIdentifier("true")) {
+        if (acceptIdentifier("true", Tags.SYNTAX_LITERAL)) {
           return new TrueLiteralNode(getSource(coord));
         }
-        if (acceptIdentifier("false")) {
+        if (acceptIdentifier("false", Tags.SYNTAX_LITERAL)) {
           return new FalseLiteralNode(getSource(coord));
         }
-        if (acceptIdentifier("nil")) {
+        if (acceptIdentifier("nil", Tags.SYNTAX_LITERAL)) {
           return new NilLiteralNode(getSource(coord));
         }
         if ("outer".equals(text)) {
@@ -944,7 +961,10 @@ public final class Parser {
   private ExpressionNode outerSend(final MethodBuilder builder)
       throws ParseError, MixinDefinitionError {
     SourceCoordinate coord = getCoordinate();
-    expectIdentifier("outer");
+    expectIdentifier("outer",
+        "Unexpected token. Expected 'outer' keyword, but found %(found)s",
+        Tags.SYNTAX_KEYWORD);
+
     String outer = identifier();
 
     ExpressionNode operand = builder.getOuterRead(outer, getSource(coord));

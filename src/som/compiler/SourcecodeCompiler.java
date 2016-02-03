@@ -27,16 +27,27 @@ package som.compiler;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 import som.VM;
-import som.compiler.MixinBuilder.MixinDefinitionError;
 import som.compiler.Lexer.SourceCoordinate;
+import som.compiler.MixinBuilder.MixinDefinitionError;
 import som.compiler.Parser.ParseError;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.source.Source;
+import com.oracle.truffle.api.source.SourceSection;
 
 public final class SourcecodeCompiler {
+
+  // here we track information on a source that is not kept in the AST
+  private static final Map<Source, Set<SourceSection>> syntaxSections = new HashMap<>();
+
+  public static Set<SourceSection> getSyntaxAnnotations(final Source source) {
+    return syntaxSections.get(source);
+  }
 
   @TruffleBoundary
   public static MixinDefinition compileModule(final File file)
@@ -47,6 +58,8 @@ public final class SourcecodeCompiler {
     Parser parser = new Parser(stream, file.length(), source);
 
     MixinDefinition result = compile(parser);
+    assert !syntaxSections.containsKey(source);
+    syntaxSections.put(source, parser.getSyntaxAnnotations());
     return result;
   }
 
