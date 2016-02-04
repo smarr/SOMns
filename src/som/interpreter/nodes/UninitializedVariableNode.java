@@ -16,9 +16,11 @@ import som.interpreter.nodes.NonLocalVariableNodeFactory.NonLocalVariableWriteNo
 
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.Instrumentable;
 import com.oracle.truffle.api.source.SourceSection;
 
 
+@Instrumentable(factory = UninitializedVariableNodeWrapper.class)
 public abstract class UninitializedVariableNode extends ContextualNode {
   protected final Local variable;
 
@@ -26,6 +28,24 @@ public abstract class UninitializedVariableNode extends ContextualNode {
       final int contextLevel, final SourceSection source) {
     super(contextLevel, source);
     this.variable = variable;
+  }
+
+  protected UninitializedVariableNode(
+      final UninitializedVariableNode wrappedNode) {
+    super(wrappedNode.contextLevel, wrappedNode.getSourceSection());
+    this.variable = wrappedNode.variable;
+  }
+
+  @Override
+  public void replaceWithCopyAdaptedToEmbeddedOuterContext(
+      final InlinerAdaptToEmbeddedOuterContext inliner) {
+    throw new UnsupportedOperationException("for wrapping, we don't yet have splitting support");
+  }
+
+  @Override
+  public void replaceWithLexicallyEmbeddedNode(
+      final InlinerForLexicallyEmbeddedMethods inliner) {
+    throw new UnsupportedOperationException("for wrapping, we don't yet have splitting support");
   }
 
   public static final class UninitializedVariableReadNode extends UninitializedVariableNode {
