@@ -15,9 +15,11 @@ import com.oracle.truffle.api.instrumentation.TruffleInstrument;
 import com.oracle.truffle.api.instrumentation.TruffleInstrument.Registration;
 import com.oracle.truffle.api.source.SourceSection;
 
+import dym.nodes.AllocationProfilingNode;
 import dym.nodes.ControlFlowProfileNode;
 import dym.nodes.CountingNode;
 import dym.nodes.InvocationProfilingNode;
+import dym.profiles.AllocationProfile;
 import dym.profiles.BranchProfile;
 import dym.profiles.Counter;
 import dym.profiles.InvocationProfile;
@@ -57,7 +59,7 @@ public class DynamicMetrics extends TruffleInstrument {
   private int maxStackDepth;
 
   private final Map<SourceSection, MethodCallsiteProbe> methodCallsiteProbes;
-  private final Map<SourceSection, Counter> instantiationCounter;
+  private final Map<SourceSection, ? extends Counter> instantiationCounter;
   private final Map<SourceSection, Counter> fieldAccessCounter;
   private final Map<SourceSection, BranchProfile> controlFlowProfiles;
   private final Map<SourceSection, Counter> literalReadCounter;
@@ -105,7 +107,17 @@ public class DynamicMetrics extends TruffleInstrument {
         });
 
     filters = SourceSectionFilter.newBuilder();
-    filters.tagIs(NEW_OBJECT, NEW_ARRAY);
+    filters.tagIs(NEW_OBJECT);
+    instrumenter.attachFactory(
+        filters.build(),
+        (final EventContext context) -> {
+          AllocationProfile profile = (AllocationProfile) instantiationCounter.computeIfAbsent(
+              context.getInstrumentedSourceSection(), src -> new AllocationProfile(src));
+          return new AllocationProfilingNode(profile);
+        });
+
+    filters = SourceSectionFilter.newBuilder();
+    filters.tagIs(NEW_ARRAY);
     instrumenter.attachFactory(
         filters.build(),
         (final EventContext context) -> {
