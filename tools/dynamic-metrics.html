@@ -1,5 +1,15 @@
 <html>
 <head>
+  <!-- Latest compiled and minified CSS -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous" />
+  <!-- Optional theme -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+ 
+  <!-- Latest compiled and minified JavaScript -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+
+
   <title>Dynamic Metrics</title>
   <script>
   var data = {};
@@ -125,14 +135,27 @@
     return result;
   }
   
-  function showSource(s, sections) {
+  function showSource(s, sections, first) {
     var annotationArray = sourceToArray(s.sourceText);
     annotateArray(annotationArray, s.id, sections);
 
+    tabListEntry = nodeFromTemplate("tab-list-entry");
+    if (first) {
+      $(tabListEntry).addClass("active");
+    }
+    var aElem = $(tabListEntry).find("a");
+    aElem.attr("href", "#" + s.id);
+    aElem.text(s.shortName);
+    $("#tabs").append(tabListEntry);
+
+
     newFileElement = nodeFromTemplate("file");
     newFileElement.setAttribute("id", s.id);
-    newFileElement.getElementsByClassName("filename")[0].textContent  = s.shortName;
     newFileElement.getElementsByClassName("source-file")[0].innerHTML = arrayToString(annotationArray);
+
+    if (first) {
+      $(newFileElement).addClass("active");
+    }
     
     files = document.getElementById("files");
     files.appendChild(newFileElement);
@@ -156,8 +179,10 @@
   }
   
   function processData(o) {
+    var first = true;
     for (var sId in o.sources) {
-      showSource(o.sources[sId], o.sections);
+      showSource(o.sources[sId], o.sections, first);
+      first = false;
     };
     
     for (var ssId in o.sections) {
@@ -212,10 +237,8 @@
   <style>
   #file-drop {
     border: 5px #ccc dashed;
-    font-size: 3em;
     font-weight: bold;
     width: 100%;
-    padding: 2em;
     text-align: center;
     font-family:sans-serif;
   }
@@ -259,13 +282,18 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
   <a onclick="loadStandardFile()">Or, click here to load ../dynamic-metrics.json</a>
 </div>
 
-<div id="files"></div>
-  
+<div id="content">
+<ul id="tabs" class="nav nav-tabs" data-tabs="tabs"></ul>
+<div id="files" class="tab-content"></div>
+</div>
+
 <div id="templates">
-  <div id="file">
+  <li id="tab-list-entry"><a href="#tab-id" data-toggle="tab">Label</a></li>
+  <div id="file" class="tab-pane">
     <div class="filename"></div>
     <div class="source-file"></div>
   </div>
+
   <div id="invocation-profiles" class="invocation-profiles"></div>
   <span id="invocation-profile" class="invocation-profile">
     <span class="counter"></span>:  <span class="types"></span>
