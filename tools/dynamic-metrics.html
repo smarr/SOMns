@@ -263,7 +263,9 @@
   .INVOKE_WITH_LOOKUP { font-style: italic; }
   .NEW_OBJECT { font-weight: bold; }
   .NEW_ARRAY { font-weight: bold; }
-  .FIELD_READ { font-style: italic; color: #00a; }
+  .FIELD_READ, .FIELD_WRITE { font-style: italic; color: #194a87; }
+  .ARRAY_READ, .ARRAY_WRITE { color: #f00; }
+
 
   /* Syntax Highlighting 
 http://emilis.info/other/extended_tango/
@@ -273,6 +275,8 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
   .SYNTAX_KEYWORD { color: #303436; }
   .SYNTAX_IDENTIFIER { color: #194a87; }
   .SYNTAX_LITERAL { color: #4f9b00; }
+  .SYNTAX_ARGUMENT, .LOCAL_ARG_READ { color: #194a87; }
+  .SYNTAX_LOCAL_VARIABLE, .LOCAL_VAR_READ, .LOCAL_VAR_WRITE { color: #194a87; }
   
   </style>
 </head>
