@@ -60,6 +60,7 @@ public class DynamicMetrics extends TruffleInstrument {
   private final Map<SourceSection, Counter> instantiationCounter;
   private final Map<SourceSection, Counter> fieldAccessCounter;
   private final Map<SourceSection, BranchProfile> controlFlowProfiles;
+  private final Map<SourceSection, Counter> literalReadCounter;
 
   public DynamicMetrics() {
     methodInvocationCounter = new HashMap<>();
@@ -67,6 +68,7 @@ public class DynamicMetrics extends TruffleInstrument {
     instantiationCounter    = new HashMap<>();
     fieldAccessCounter      = new HashMap<>();
     controlFlowProfiles     = new HashMap<>();
+    literalReadCounter      = new HashMap<>();
 
     assert "DefaultTruffleRuntime".equals(
         Truffle.getRuntime().getClass().getSimpleName())
@@ -113,7 +115,17 @@ public class DynamicMetrics extends TruffleInstrument {
         });
 
     filters = SourceSectionFilter.newBuilder();
-    filters.tagIs(FIELD_READ); // TODO: FIELD_WRITE
+    filters.tagIs(Tags.SYNTAX_LITERAL);
+    instrumenter.attachFactory(
+        filters.build(),
+        (final EventContext context) -> {
+          Counter counter = literalReadCounter.computeIfAbsent(
+              context.getInstrumentedSourceSection(), src -> new Counter(src));
+          return new CountingNode(counter);
+        });
+
+    filters = SourceSectionFilter.newBuilder();
+    filters.tagIs(FIELD_READ, FIELD_WRITE);
     instrumenter.attachFactory(
         filters.build(),
         (final EventContext context) -> {
@@ -164,6 +176,7 @@ public class DynamicMetrics extends TruffleInstrument {
     data.put("instantiationCount",      instantiationCounter);
     data.put("fieldAccessCount",        fieldAccessCounter);
     data.put("branchProfile",           controlFlowProfiles);
+    data.put("literalReads",            literalReadCounter);
     return data;
   }
 

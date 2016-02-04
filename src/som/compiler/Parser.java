@@ -1239,7 +1239,7 @@ public final class Parser {
        }
        expect(Integer);
 
-       SourceSection source = getSource(coord);
+       SourceSection source = getSource(coord, Tags.SYNTAX_LITERAL);
        // TODO: add support for parsing big integers
        //  return new BigIntegerLiteralNode(BigInteger.valueOf(i), source);
        return new IntegerLiteralNode(i, source);
@@ -1257,7 +1257,7 @@ public final class Parser {
       if (isNegative) {
         d = 0.0 - d;
       }
-      SourceSection source = getSource(coord);
+      SourceSection source = getSource(coord, Tags.SYNTAX_LITERAL);
       return new DoubleLiteralNode(d, source);
     } catch (NumberFormatException e) {
       throw new ParseError("Could not parse double. Expected a number but " +
@@ -1277,14 +1277,14 @@ public final class Parser {
       symb = selector();
     }
 
-    return new SymbolLiteralNode(symb, getSource(coord));
+    return new SymbolLiteralNode(symb, getSource(coord, Tags.SYNTAX_LITERAL));
   }
 
   private LiteralNode literalString() throws ParseError {
     SourceCoordinate coord = getCoordinate();
     String s = string();
 
-    return new StringLiteralNode(s, getSource(coord));
+    return new StringLiteralNode(s, getSource(coord, Tags.SYNTAX_LITERAL));
   }
 
   private SSymbol selector() throws ParseError {
