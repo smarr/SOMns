@@ -554,7 +554,10 @@ public final class MixinDefinition {
     @Override
     public AbstractDispatchNode getDispatchNode(final Object rcvr,
         final Object firstArg, final AbstractDispatchNode next) {
-      return new CachedSlotWrite(createWriteNode((SObject) rcvr, firstArg),
+      SourceSection source = SOMNode.cloneAndAddTags(
+          next.getSourceSection(), Tags.FIELD_WRITE);
+      return new CachedSlotWrite(source,
+          createWriteNode((SObject) rcvr, firstArg),
           DispatchGuard.create(rcvr), next);
     }
 
