@@ -7,12 +7,14 @@ import som.interpreter.SArguments;
 import som.vm.NotYetImplementedException;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.Instrumentable;
 import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
 
 public abstract class ArgumentReadNode {
 
+  @Instrumentable(factory = LocalArgumentReadNodeWrapper.class)
   public static class LocalArgumentReadNode extends ExpressionNode {
     protected final int argumentIndex;
 
@@ -22,6 +24,12 @@ public abstract class ArgumentReadNode {
         this instanceof LocalSelfReadNode ||
         this instanceof LocalSuperReadNode;
       this.argumentIndex = argumentIndex;
+    }
+
+    // For Wrapper use only
+    protected LocalArgumentReadNode(final LocalArgumentReadNode wrappedNode) {
+      super(wrappedNode.getSourceSection());
+      this.argumentIndex = wrappedNode.argumentIndex;
     }
 
     @Override
