@@ -13,6 +13,16 @@
   <title>Dynamic Metrics</title>
   <script>
   var data = {};
+
+  function countNumberOfLines(str) {
+    var cnt = 1;
+    for (var i = 0; i < str.length; i++) {
+      if (str[i] == "\n") {
+        cnt += 1;
+      }
+    }
+    return cnt;
+  }
   
   function loadAndProcessFile(f) {
     var reader = new FileReader();
@@ -135,6 +145,14 @@
     return result;
   }
   
+  function createLineNumbers(cnt) {
+    var result = "1";
+    for (var i = 2; i <= cnt; i += 1) {
+      result = result + "\n" + i
+    }
+    return result;
+  }
+
   function showSource(s, sections, first) {
     var annotationArray = sourceToArray(s.sourceText);
     annotateArray(annotationArray, s.id, sections);
@@ -151,6 +169,7 @@
 
     newFileElement = nodeFromTemplate("file");
     newFileElement.setAttribute("id", s.id);
+    newFileElement.getElementsByClassName("line-numbers")[0].innerHTML = createLineNumbers(countNumberOfLines(s.sourceText));
     newFileElement.getElementsByClassName("source-file")[0].innerHTML = arrayToString(annotationArray);
 
     if (first) {
@@ -246,9 +265,16 @@
   #templates { display: none; }
 
   .filename  { font-family: sans-serif; }
-  .source-file {
+  .source-file, .line-numbers {
     font-family: monospace;
     white-space: pre;
+  }
+  .line-numbers {
+    float: left;
+    text-align: right;
+    padding-left: 0.5em;
+    color: #ccc;
+    padding-right: 0.5em;
   }
   
   .invocation-profile  { font-size: 0.8em; display: block; }
@@ -294,7 +320,7 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
 <div id="templates">
   <li id="tab-list-entry"><a href="#tab-id" data-toggle="tab">Label</a></li>
   <div id="file" class="tab-pane">
-    <div class="filename"></div>
+    <div class="line-numbers"></div>
     <div class="source-file"></div>
   </div>
 
