@@ -194,7 +194,29 @@
       profiles.appendChild(profile);
     }
     
-    rootSpan.insertBefore(profiles, rootSpan.firstChild);
+    var html = $(profiles).html();
+
+//     rootSpan.insertBefore(profiles, rootSpan.firstChild);
+    $(rootSpan).attr("data-toggle", "popover");
+    $(rootSpan).attr("data-trigger", "focus hover");
+    $(rootSpan).attr("title", "Invocation Profile");
+    $(rootSpan).attr("data-content", html);
+    $(rootSpan).attr("data-html", "true");
+    $(rootSpan).attr("data-placement", "auto top");
+    $(rootSpan).popover();
+  }
+
+  function showAccessProfile(profileData, rootSpan) {
+    if (profileData.count < 1) {
+      return;
+    }
+
+    $(rootSpan).attr("data-toggle", "popover");
+    $(rootSpan).attr("data-trigger", "focus hover");
+//     $(rootSpan).attr("title", "");
+    $(rootSpan).attr("data-content", "Accesses: " + profileData.count);
+    $(rootSpan).attr("data-placement", "auto top");
+    $(rootSpan).popover();
   }
   
   function processData(o) {
@@ -212,6 +234,11 @@
   function showSectionData(section) {
     if (section.data && section.data.methodInvocationProfile) {
       showInvocationProfile(section.data.methodInvocationProfile,
+        document.getElementById(section.id));
+    }
+
+    if (section.data && section.data.localsAccesses) {
+      showAccessProfile(section.data.localsAccesses,
         document.getElementById(section.id));
     }
   }
