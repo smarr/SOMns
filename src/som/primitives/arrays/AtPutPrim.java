@@ -2,6 +2,8 @@ package som.primitives.arrays;
 
 import java.util.Arrays;
 
+import som.compiler.Tags;
+import som.interpreter.nodes.SOMNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.primitives.Primitive;
 import som.vm.constants.Nil;
@@ -12,6 +14,7 @@ import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.profiles.ValueProfile;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 @GenerateNodeFactory
@@ -20,6 +23,10 @@ import com.oracle.truffle.api.profiles.ValueProfile;
 public abstract class AtPutPrim extends TernaryExpressionNode {
 
   private final ValueProfile storageType = ValueProfile.createClassProfile();
+
+  protected AtPutPrim(final SourceSection source) {
+    super(SOMNode.cloneAndAddTags(source, Tags.ARRAY_WRITE));
+  }
 
   protected static final boolean valueIsNotLong(final Object value) {
     return !(value instanceof Long);

@@ -1,6 +1,5 @@
 package som.interpreter.nodes;
 
-import static som.compiler.Tags.NEW_ARRAY;
 import static som.interpreter.nodes.SOMNode.unwrapIfNecessary;
 import som.compiler.AccessModifier;
 import som.instrumentation.MessageSendNodeWrapper;
@@ -16,6 +15,7 @@ import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.EagerBinaryPrimitiveNode;
 import som.interpreter.nodes.nary.EagerTernaryPrimitiveNode;
 import som.interpreter.nodes.nary.EagerUnaryPrimitiveNode;
+import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.specialized.AndMessageNodeFactory;
 import som.interpreter.nodes.specialized.AndMessageNodeFactory.AndBoolMessageNodeFactory;
 import som.interpreter.nodes.specialized.IfMessageNodeGen;
@@ -515,13 +515,18 @@ public final class MessageSendNode {
       return makeSend();
     }
 
+    private PreevaluatedExpression makeEagerTernaryPrim(final TernaryExpressionNode prim) {
+      PreevaluatedExpression result = replace(new EagerTernaryPrimitiveNode(selector, argumentNodes[0],
+          argumentNodes[1], argumentNodes[2], prim));
+      InstrumentationHandler.insertInstrumentationWrapper(prim);
+      return result;
+    }
+
     protected PreevaluatedExpression specializeTernary(final Object[] arguments) {
       switch (selector.getString()) {
         case "at:put:":
           if (arguments[0] instanceof SArray) {
-            return replace(new EagerTernaryPrimitiveNode(selector, argumentNodes[0],
-                argumentNodes[1], argumentNodes[2],
-                AtPutPrimFactory.create(null, null, null)));
+            return makeEagerTernaryPrim(AtPutPrimFactory.create(getSourceSection(), null, null, null));
           }
           break;
         case "ifTrue:ifFalse:":
