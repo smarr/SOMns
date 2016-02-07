@@ -122,7 +122,7 @@ public class DynamicMetrics extends TruffleInstrument {
         filters.build(),
         (final EventContext context) -> {
           Counter counter = instantiationCounter.computeIfAbsent(
-              context.getInstrumentedSourceSection(), src -> new Counter(src));
+              context.getInstrumentedSourceSection(), Counter::new);
           return new CountingNode(counter);
         });
 
@@ -132,7 +132,7 @@ public class DynamicMetrics extends TruffleInstrument {
         filters.build(),
         (final EventContext context) -> {
           Counter counter = literalReadCounter.computeIfAbsent(
-              context.getInstrumentedSourceSection(), src -> new Counter(src));
+              context.getInstrumentedSourceSection(), Counter::new);
           return new CountingNode(counter);
         });
 
@@ -142,7 +142,7 @@ public class DynamicMetrics extends TruffleInstrument {
         filters.build(),
         (final EventContext context) -> {
           Counter counter = fieldAccessCounter.computeIfAbsent(
-              context.getInstrumentedSourceSection(), src -> new Counter(src));
+              context.getInstrumentedSourceSection(), Counter::new);
           return new CountingNode(counter);
         });
 
@@ -152,7 +152,7 @@ public class DynamicMetrics extends TruffleInstrument {
         filters.build(),
         (final EventContext context) -> {
           BranchProfile profile = controlFlowProfiles.computeIfAbsent(
-              context.getInstrumentedSourceSection(), src -> new BranchProfile(src));
+              context.getInstrumentedSourceSection(), BranchProfile::new);
           return new ControlFlowProfileNode(profile);
         });
   }
