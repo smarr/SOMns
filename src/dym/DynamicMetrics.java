@@ -63,6 +63,8 @@ public class DynamicMetrics extends TruffleInstrument {
   private final Map<SourceSection, Counter> fieldAccessCounter;
   private final Map<SourceSection, BranchProfile> controlFlowProfiles;
   private final Map<SourceSection, Counter> literalReadCounter;
+  private final Map<SourceSection, Counter> localsAccessCounter;
+  private final Map<SourceSection, Counter> basicOperationCounter;
 
   public DynamicMetrics() {
     methodInvocationCounter = new HashMap<>();
@@ -71,6 +73,8 @@ public class DynamicMetrics extends TruffleInstrument {
     fieldAccessCounter      = new HashMap<>();
     controlFlowProfiles     = new HashMap<>();
     literalReadCounter      = new HashMap<>();
+    localsAccessCounter     = new HashMap<>();
+    basicOperationCounter   = new HashMap<>();
 
     assert "DefaultTruffleRuntime".equals(
         Truffle.getRuntime().getClass().getSimpleName())
@@ -137,11 +141,31 @@ public class DynamicMetrics extends TruffleInstrument {
         });
 
     filters = SourceSectionFilter.newBuilder();
+    filters.tagIs(Tags.BASIC_PRIMITIVE_OPERATION);
+    instrumenter.attachFactory(
+        filters.build(),
+        (final EventContext context) -> {
+          Counter counter = basicOperationCounter.computeIfAbsent(
+              context.getInstrumentedSourceSection(), Counter::new);
+          return new CountingNode(counter);
+        });
+
+    filters = SourceSectionFilter.newBuilder();
     filters.tagIs(FIELD_READ, FIELD_WRITE);
     instrumenter.attachFactory(
         filters.build(),
         (final EventContext context) -> {
           Counter counter = fieldAccessCounter.computeIfAbsent(
+              context.getInstrumentedSourceSection(), Counter::new);
+          return new CountingNode(counter);
+        });
+
+    filters = SourceSectionFilter.newBuilder();
+    filters.tagIs(Tags.LOCAL_ARG_READ, Tags.LOCAL_VAR_READ, Tags.LOCAL_VAR_WRITE);
+    instrumenter.attachFactory(
+        filters.build(),
+        (final EventContext context) -> {
+          Counter counter = localsAccessCounter.computeIfAbsent(
               context.getInstrumentedSourceSection(), Counter::new);
           return new CountingNode(counter);
         });
@@ -189,6 +213,8 @@ public class DynamicMetrics extends TruffleInstrument {
     data.put("fieldAccessCount",        fieldAccessCounter);
     data.put("branchProfile",           controlFlowProfiles);
     data.put("literalReads",            literalReadCounter);
+    data.put("localsAccesses",          localsAccessCounter);
+    data.put("basicOperations",         basicOperationCounter);
     return data;
   }
 
