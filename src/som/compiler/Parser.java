@@ -689,9 +689,10 @@ public final class Parser {
 
   SourceSection getSource(final SourceCoordinate coord, final String... tags) {
     assert lexer.getNumberOfCharactersRead() - coord.charIndex >= 0;
-    return source.createSection("method", coord.startLine,
+    SourceSection ss = source.createSection("method", coord.startLine,
         coord.startColumn, coord.charIndex,
-        lexer.getNumberOfCharactersRead() - coord.charIndex, tags);
+        Math.max(lexer.getNumberOfNonWhiteCharsRead() - coord.charIndex, 0), tags);
+    return ss;
   }
 
   private void methodDeclaration(final MixinBuilder mxnBuilder,
