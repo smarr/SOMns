@@ -150,15 +150,14 @@ public final class ObjectSystem {
     }
 
     ExpressionNode primNode;
+    SourceSection source = Source.fromNamedText("primitive",
+        factory.getClass().getSimpleName()).
+            createSection(factory.getClass().getSimpleName(), 1);
     switch (numArgs) {
       case 1:
         primNode = factory.createNode(args[0]);
         break;
       case 2:
-        SourceSection source = Source.fromNamedText("primitive",
-            factory.getClass().getSimpleName()).
-                createSection(factory.getClass().getSimpleName(), 1);
-
         // HACK for node class where we use `executeWith`
         if (factory == PutAllNodeFactory.getInstance()) {
           primNode = factory.createNode(source, args[0], args[1],
@@ -178,6 +177,8 @@ public final class ObjectSystem {
         if (factory == InvokeOnPrimFactory.getInstance()) {
           primNode = factory.createNode(args[0], args[1], args[2],
               ToArgumentsArrayNodeGen.create(null, null));
+        } else if (factory == AtPutPrimFactory.getInstance()) {
+          primNode = factory.createNode(source, args[0], args[1], args[2]);
         } else {
           primNode = factory.createNode(args[0], args[1], args[2]);
         }
