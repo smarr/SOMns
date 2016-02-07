@@ -162,8 +162,6 @@ public final class Lexer {
       return state.sym;
     }
 
-    state.startCoord = new SourceCoordinate(state);
-
     do {
       if (!hasMoreInput()) {
         state.set(Symbol.NONE);
@@ -172,6 +170,8 @@ public final class Lexer {
       skipWhiteSpace();
     }
     while (endOfBuffer() || Character.isWhitespace(currentChar()));
+
+    state.startCoord = new SourceCoordinate(state);
 
     if (currentChar() == '\'') {
       lexString();
