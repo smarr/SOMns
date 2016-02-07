@@ -48,7 +48,7 @@ public class InlinerForLexicallyEmbeddedMethods implements NodeVisitor {
 
   public UninitializedVariableReadNode getLocalRead(final Object slotIdentifier, final SourceSection source) {
     String inlinedId = getEmbeddedSlotId(slotIdentifier);
-    builder.addLocalIfAbsent(inlinedId);
+    builder.addLocalIfAbsent(inlinedId, source);
     return (UninitializedVariableReadNode) builder.getReadNode(inlinedId, source);
   }
 
@@ -58,10 +58,11 @@ public class InlinerForLexicallyEmbeddedMethods implements NodeVisitor {
     return inlinedId;
   }
 
-  public FrameSlot addLocalSlot(final Object orgSlotId) {
+  public FrameSlot addLocalSlot(final Object orgSlotId,
+      final SourceSection source) {
     String id = getEmbeddedSlotId(orgSlotId);
     assert builder.getEmbeddedLocal(id) == null;
-    return builder.addLocal(id).getSlot();
+    return builder.addLocal(id, source).getSlot();
   }
 
   public FrameSlot getLocalSlot(final Object orgSlotId) {
@@ -78,7 +79,7 @@ public class InlinerForLexicallyEmbeddedMethods implements NodeVisitor {
       final ExpressionNode valExp,
       final SourceSection source) {
     String inlinedId = getEmbeddedSlotId(slotIdentifier);
-    builder.addLocalIfAbsent(inlinedId);
+    builder.addLocalIfAbsent(inlinedId, source);
     return (UninitializedVariableWriteNode) builder.getWriteNode(inlinedId,
         valExp, source);
   }

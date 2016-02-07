@@ -1167,15 +1167,15 @@ public final class Parser {
             source);
       } else if ("to:do:".equals(msgStr) &&
           arguments.get(2) instanceof LiteralNode) {
-        Local loopIdx = builder.addLocal("i:" + source.getCharIndex());
+        Local loopIdx = builder.addLocal("i:" + source.getCharIndex(), source);
         ExpressionNode inlinedBody = ((LiteralNode) arguments.get(2)).inline(builder, loopIdx);
-        return IntToDoInlinedLiteralsNodeGen.create(inlinedBody, loopIdx.getSlot(),
+        return IntToDoInlinedLiteralsNodeGen.create(inlinedBody, loopIdx.getSlot(), loopIdx.source,
             arguments.get(2), source, arguments.get(0), arguments.get(1));
       } else if ("downTo:do:".equals(msgStr) &&
           arguments.get(2) instanceof LiteralNode) {
-        Local loopIdx = builder.addLocal("i:" + source.getCharIndex());
+        Local loopIdx = builder.addLocal("i:" + source.getCharIndex(), source);
         ExpressionNode inlinedBody = ((LiteralNode) arguments.get(2)).inline(builder, loopIdx);
-        return IntDownToDoInlinedLiteralsNodeGen.create(inlinedBody, loopIdx.getSlot(),
+        return IntDownToDoInlinedLiteralsNodeGen.create(inlinedBody, loopIdx.getSlot(), loopIdx.source,
             arguments.get(2), source, arguments.get(0), arguments.get(1));
       }
     }

@@ -90,10 +90,10 @@ public abstract class CachedSlotAccessNode extends AbstractDispatchNode {
 
     private final DispatchGuard             guard;
 
-    public CachedSlotWrite(final AbstractFieldWriteNode write,
-        final DispatchGuard guard,
+    public CachedSlotWrite(final SourceSection source,
+        final AbstractFieldWriteNode write, final DispatchGuard guard,
         final AbstractDispatchNode nextInCache) {
-      super(nextInCache.getSourceSection());
+      super(source);
       this.write = write;
       this.guard = guard;
       this.nextInCache = nextInCache;
