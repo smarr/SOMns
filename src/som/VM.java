@@ -58,6 +58,9 @@ public final class VM {
   }
 
   public static boolean instrumentationEnabled() {
+    if (vm == null || vm.options == null) { // TODO: remove work around and make this work properly
+      return false;
+    }
     return vm.options.enableInstrumentation;
   }
 
