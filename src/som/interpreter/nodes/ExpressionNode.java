@@ -35,10 +35,12 @@ import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.Instrumentable;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import com.oracle.truffle.api.source.SourceSection;
 
 
+@Instrumentable(factory = ExpressionNodeWrapper.class)
 public abstract class ExpressionNode extends SOMNode {
 
   public ExpressionNode(final SourceSection sourceSection) {

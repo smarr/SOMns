@@ -16,11 +16,9 @@ import som.interpreter.nodes.NonLocalVariableNodeFactory.NonLocalVariableWriteNo
 
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.instrumentation.Instrumentable;
 import com.oracle.truffle.api.source.SourceSection;
 
 
-@Instrumentable(factory = UninitializedVariableNodeWrapper.class)
 public abstract class UninitializedVariableNode extends ContextualNode {
   protected final Local variable;
 
