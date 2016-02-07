@@ -259,19 +259,22 @@ public final class Parser {
     MixinBuilder mxnBuilder = new MixinBuilder(outerBuilder, accessModifier, symbolFor(mixinName));
 
     MethodBuilder primaryFactory = mxnBuilder.getPrimaryFactoryMethodBuilder();
-    SourceCoordinate coord = getCoordinate();
 
+    SourceSection sourceSect;
     // Newspeak-spec: this is not strictly sufficient for Newspeak
     //                it could also parse a binary selector here, I think
     //                but, doesn't seem so useful, so, let's keep it simple
     if (sym == Identifier || sym == Keyword) {
+      SourceCoordinate coord = getCoordinate();
       messagePattern(primaryFactory);
+      sourceSect = getSource(coord);
     } else {
       // in the standard case, the primary factory method is #new
       primaryFactory.addArgumentIfAbsent("self");
       primaryFactory.setSignature(Symbols.NEW);
+      sourceSect = getEmptySource();
     }
-    mxnBuilder.setupInitializerBasedOnPrimaryFactory(getSource(coord));
+    mxnBuilder.setupInitializerBasedOnPrimaryFactory(sourceSect);
 
     expect(Equal, "Unexpected symbol %(found)s."
         + " Tried to parse the class declaration of " + mixinName
@@ -292,16 +295,15 @@ public final class Parser {
 
   private void defaultSuperclassAndBody(final MixinBuilder mxnBuilder)
       throws ParseError, MixinDefinitionError {
-    SourceCoordinate coord = getCoordinate();
     MethodBuilder def = mxnBuilder.getClassInstantiationMethodBuilder();
     ExpressionNode selfRead = def.getSelfRead(null);
     ExpressionNode superClass = createMessageSend(Symbols.OBJECT,
-        new ExpressionNode[] {selfRead}, false, getSource(coord, UNSPECIFIED_INVOKE));
+        new ExpressionNode[] {selfRead}, false, getEmptySource(UNSPECIFIED_INVOKE));
     mxnBuilder.setSuperClassResolution(superClass);
 
     mxnBuilder.setSuperclassFactorySend(
         mxnBuilder.createStandardSuperFactorySend(
-            getSource(coord, UNSPECIFIED_INVOKE)), true);
+            getEmptySource(UNSPECIFIED_INVOKE)), true);
 
     classBody(mxnBuilder);
   }
@@ -388,7 +390,7 @@ public final class Parser {
     } else {
       mxnBuilder.setSuperclassFactorySend(
           mxnBuilder.createStandardSuperFactorySend(
-              getSource(getCoordinate(), UNSPECIFIED_INVOKE)), true);
+              getEmptySource(UNSPECIFIED_INVOKE)), true);
     }
   }
 
@@ -446,16 +448,20 @@ public final class Parser {
     expect(NewTerm);
     classComment(mxnBuilder);
 
+    boolean empty = true;
     SourceCoordinate coord = getCoordinate();
     if (sym == Or) {
       slotDeclarations(mxnBuilder);
+      empty = false;
     }
 
     if (sym != EndTerm) {
       initExprs(mxnBuilder);
+      empty = false;
     }
 
-    mxnBuilder.setInitializerSource(getSource(coord));
+    SourceSection sourceSect = empty ? getEmptySource() : getSource(coord);
+    mxnBuilder.setInitializerSource(sourceSect);
     expect(EndTerm);
   }
 
@@ -675,6 +681,12 @@ public final class Parser {
         "%(expected)s, but found %(found)s", ss, this);
   }
 
+  SourceSection getEmptySource(final String... tags) {
+    SourceCoordinate coord = getCoordinate();
+    return source.createSection("method", coord.startLine, coord.startColumn,
+        coord.charIndex, 0, tags);
+  }
+
   SourceSection getSource(final SourceCoordinate coord, final String... tags) {
     assert lexer.getNumberOfCharactersRead() - coord.charIndex >= 0;
     return source.createSection("method", coord.startLine,
@@ -815,7 +827,7 @@ public final class Parser {
       } else if (sym == EndTerm) {
         // the end of the method has been found (EndTerm) - make it implicitly
         // return "self"
-        ExpressionNode self = builder.getSelfRead(getSource(getCoordinate()));
+        ExpressionNode self = builder.getSelfRead(getEmptySource());
         expressions.add(self);
         return createSequence(expressions, getSource(coord));
       }
