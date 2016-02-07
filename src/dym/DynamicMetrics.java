@@ -59,7 +59,8 @@ public class DynamicMetrics extends TruffleInstrument {
   private int maxStackDepth;
 
   private final Map<SourceSection, MethodCallsiteProbe> methodCallsiteProbes;
-  private final Map<SourceSection, ? extends Counter> instantiationCounter;
+  private final Map<SourceSection, AllocationProfile> newObjectCounter;
+  private final Map<SourceSection, Counter> newArrayCounter;
   private final Map<SourceSection, Counter> fieldAccessCounter;
   private final Map<SourceSection, BranchProfile> controlFlowProfiles;
   private final Map<SourceSection, Counter> literalReadCounter;
@@ -69,7 +70,8 @@ public class DynamicMetrics extends TruffleInstrument {
   public DynamicMetrics() {
     methodInvocationCounter = new HashMap<>();
     methodCallsiteProbes    = new HashMap<>();
-    instantiationCounter    = new HashMap<>();
+    newObjectCounter        = new HashMap<>();
+    newArrayCounter         = new HashMap<>();
     fieldAccessCounter      = new HashMap<>();
     controlFlowProfiles     = new HashMap<>();
     literalReadCounter      = new HashMap<>();
@@ -115,7 +117,7 @@ public class DynamicMetrics extends TruffleInstrument {
     instrumenter.attachFactory(
         filters.build(),
         (final EventContext context) -> {
-          AllocationProfile profile = (AllocationProfile) instantiationCounter.computeIfAbsent(
+          AllocationProfile profile = newObjectCounter.computeIfAbsent(
               context.getInstrumentedSourceSection(), AllocationProfile::new);
           return new AllocationProfilingNode(profile);
         });
@@ -125,7 +127,7 @@ public class DynamicMetrics extends TruffleInstrument {
     instrumenter.attachFactory(
         filters.build(),
         (final EventContext context) -> {
-          Counter counter = instantiationCounter.computeIfAbsent(
+          Counter counter = newArrayCounter.computeIfAbsent(
               context.getInstrumentedSourceSection(), Counter::new);
           return new CountingNode(counter);
         });
@@ -209,7 +211,8 @@ public class DynamicMetrics extends TruffleInstrument {
     Map<String, Map<SourceSection, ? extends JsonSerializable>> data = new HashMap<>();
     data.put("methodInvocationProfile", methodInvocationCounter);
     data.put("methodCallsite",          methodCallsiteProbes);
-    data.put("instantiationCount",      instantiationCounter);
+    data.put("newObjectCount",          newObjectCounter);
+    data.put("newArrayCount",           newArrayCounter);
     data.put("fieldAccessCount",        fieldAccessCounter);
     data.put("branchProfile",           controlFlowProfiles);
     data.put("literalReads",            literalReadCounter);
