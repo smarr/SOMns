@@ -23,17 +23,21 @@ package som.interpreter.nodes;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
 import som.interpreter.InlinerForLexicallyEmbeddedMethods;
 import som.interpreter.SplitterForLexicallyEmbeddedCode;
 import som.interpreter.Types;
 
+import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.dsl.TypeSystemReference;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
+
 
 @TypeSystemReference(Types.class)
 public abstract class SOMNode extends Node {
@@ -129,5 +133,22 @@ public abstract class SOMNode extends Node {
     } else {
       return node;
     }
+  }
+
+  public void addTagsToSourceSection(final String... tags) {
+    SourceSection newTagged = cloneAndAddTags(getSourceSection(), tags);
+    clearSourceSection();
+    assignSourceSection(newTagged);
+  }
+
+  public static SourceSection cloneAndAddTags(final SourceSection source, final String... tags) {
+    CompilerAsserts.neverPartOfCompilation("SOMNode.addTagsToSourceSection");
+    String[] originalTags = source.getTags();
+    if (originalTags == null) {
+      originalTags = new String[0];
+    }
+    Set<String> newTags = new HashSet<String>(Arrays.asList(originalTags));
+    newTags.addAll(Arrays.asList(tags));
+    return source.cloneWithTags(newTags.toArray(new String[0]));
   }
 }
