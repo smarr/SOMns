@@ -270,7 +270,7 @@ public final class Parser {
       sourceSect = getSource(coord);
     } else {
       // in the standard case, the primary factory method is #new
-      primaryFactory.addArgumentIfAbsent("self");
+      primaryFactory.addArgumentIfAbsent("self", getEmptySource(Tags.SYNTAX_ARGUMENT));
       primaryFactory.setSignature(Symbols.NEW);
       sourceSect = getEmptySource();
     }
@@ -710,7 +710,7 @@ public final class Parser {
   }
 
   private void messagePattern(final MethodBuilder builder) throws ParseError {
-    builder.addArgumentIfAbsent("self");
+    builder.addArgumentIfAbsent("self", getEmptySource(Tags.SYNTAX_ARGUMENT));
     switch (sym) {
       case Identifier:
         unaryPattern(builder);
@@ -730,14 +730,17 @@ public final class Parser {
 
   private void binaryPattern(final MethodBuilder builder) throws ParseError {
     builder.setSignature(binarySelector());
-    builder.addArgumentIfAbsent(argument());
+
+    SourceCoordinate coord = getCoordinate();
+    builder.addArgumentIfAbsent(argument(), getSource(coord, Tags.SYNTAX_ARGUMENT));
   }
 
   private void keywordPattern(final MethodBuilder builder) throws ParseError {
     StringBuilder kw = new StringBuilder();
     do {
       kw.append(keyword());
-      builder.addArgumentIfAbsent(argument());
+      SourceCoordinate coord = getCoordinate();
+      builder.addArgumentIfAbsent(argument(), getSource(coord, Tags.SYNTAX_ARGUMENT));
     }
     while (sym == Keyword);
 
@@ -792,7 +795,10 @@ public final class Parser {
   }
 
   private String argument() throws ParseError {
-    return identifier();
+    SourceCoordinate coord = getCoordinate();
+    String id = identifier();
+    syntaxAnnotations.add(getSource(coord, Tags.SYNTAX_ARGUMENT));
+    return id;
   }
 
   private ExpressionNode blockContents(final MethodBuilder builder)
@@ -807,7 +813,11 @@ public final class Parser {
 
   private void locals(final MethodBuilder builder) throws ParseError {
     while (sym == Identifier) {
-      builder.addLocalIfAbsent(identifier());
+      SourceCoordinate coord = getCoordinate();
+      String id = identifier();
+      SourceSection source = getSource(coord, Tags.SYNTAX_LOCAL_VARIABLE);
+      builder.addLocalIfAbsent(id, source);
+      syntaxAnnotations.add(source);
     }
   }
 
@@ -1327,7 +1337,7 @@ public final class Parser {
     expect(NewBlock);
     SourceCoordinate coord = getCoordinate();
 
-    builder.addArgumentIfAbsent("$blockSelf");
+    builder.addArgumentIfAbsent("$blockSelf", getSource(coord, Tags.SYNTAX_ARGUMENT));
 
     if (sym == Colon) {
       blockPattern(builder);
@@ -1359,7 +1369,8 @@ public final class Parser {
   private void blockArguments(final MethodBuilder builder) throws ParseError {
     do {
       expect(Colon);
-      builder.addArgumentIfAbsent(argument());
+      SourceCoordinate coord = getCoordinate();
+      builder.addArgumentIfAbsent(argument(), getSource(coord, Tags.SYNTAX_ARGUMENT));
     }
     while (sym == Colon);
   }
