@@ -954,7 +954,6 @@ public final class Parser {
         return nestedTerm(builder);
       }
       case NewBlock: {
-        SourceCoordinate coord = getCoordinate();
         MethodBuilder bgenc = new MethodBuilder(builder);
 
         ExpressionNode blockBody = nestedBlock(bgenc);
@@ -964,9 +963,9 @@ public final class Parser {
         builder.addEmbeddedBlockMethod(blockMethod);
 
         if (bgenc.requiresContext()) {
-          return new BlockNodeWithContext(blockMethod, getSource(coord));
+          return new BlockNodeWithContext(blockMethod, lastMethodsSourceSection);
         } else {
-          return new BlockNode(blockMethod, getSource(coord));
+          return new BlockNode(blockMethod, lastMethodsSourceSection);
         }
       }
       default: {
