@@ -116,7 +116,7 @@ public class DynamicMetrics extends TruffleInstrument {
         filters.build(),
         (final EventContext context) -> {
           AllocationProfile profile = (AllocationProfile) instantiationCounter.computeIfAbsent(
-              context.getInstrumentedSourceSection(), src -> new AllocationProfile(src));
+              context.getInstrumentedSourceSection(), AllocationProfile::new);
           return new AllocationProfilingNode(profile);
         });
 
