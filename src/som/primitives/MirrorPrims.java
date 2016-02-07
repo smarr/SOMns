@@ -6,7 +6,7 @@ import som.VM;
 import som.compiler.MixinDefinition;
 import som.interpreter.Types;
 import som.interpreter.nodes.dispatch.Dispatchable;
-import som.interpreter.nodes.nary.BinaryExpressionNode;
+import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.reflection.AbstractSymbolDispatch;
 import som.primitives.reflection.AbstractSymbolDispatchNodeGen;
@@ -21,6 +21,7 @@ import som.vmobjects.SSymbol;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 public abstract class MirrorPrims {
@@ -37,7 +38,11 @@ public abstract class MirrorPrims {
 
   @GenerateNodeFactory
   @Primitive("obj:respondsTo:")
-  public abstract static class RespondsToPrim extends BinaryExpressionNode {
+  public abstract static class RespondsToPrim extends BinaryComplexOperation {
+    protected RespondsToPrim(final SourceSection source) {
+      super(source);
+    }
+
     @Specialization
     public final boolean objectResondsTo(final Object rcvr, final SSymbol selector) {
       VM.thisMethodNeedsToBeOptimized("Uses Types.getClassOf, so, should be specialized in performance cirtical code");
@@ -58,9 +63,12 @@ public abstract class MirrorPrims {
 
   @GenerateNodeFactory
   @Primitive("obj:perform:")
-  public abstract static class PerformPrim extends BinaryExpressionNode {
+  public abstract static class PerformPrim extends BinaryComplexOperation {
     @Child protected AbstractSymbolDispatch dispatch;
-    public PerformPrim() { dispatch = AbstractSymbolDispatchNodeGen.create(); }
+    public PerformPrim(final SourceSection source) {
+      super(source);
+      dispatch = AbstractSymbolDispatchNodeGen.create();
+    }
 
     @Specialization
     public final Object doPerform(final VirtualFrame frame, final Object rcvr,
@@ -122,7 +130,12 @@ public abstract class MirrorPrims {
 
   @GenerateNodeFactory
   @Primitive("classDef:hasFactoryMethod:")
-  public abstract static class ClassDefHasFactoryMethodPrim extends BinaryExpressionNode {
+  public abstract static class ClassDefHasFactoryMethodPrim extends BinaryComplexOperation {
+
+    protected ClassDefHasFactoryMethodPrim(final SourceSection source) {
+      super(source);
+    }
+
     @Specialization
     public final boolean hasFactoryMethod(final Object mixinHandle,
         final SSymbol selector) {

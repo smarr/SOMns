@@ -1,6 +1,7 @@
 package som.interpreter.nodes.specialized;
 
-import som.interpreter.nodes.nary.BinaryExpressionNode;
+import som.interpreter.nodes.nary.BinaryBasicOperation;
+import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 
@@ -11,7 +12,7 @@ import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 
 
-public abstract class OrMessageNode extends BinaryExpressionNode {
+public abstract class OrMessageNode extends BinaryComplexOperation {
   private final SInvokable blockMethod;
   @Child private DirectCallNode blockValueSend;
 
@@ -42,7 +43,7 @@ public abstract class OrMessageNode extends BinaryExpressionNode {
     }
   }
 
-  public abstract static class OrBoolMessageNode extends BinaryExpressionNode {
+  public abstract static class OrBoolMessageNode extends BinaryBasicOperation {
     public OrBoolMessageNode(final SourceSection source) { super(source); }
     @Specialization
     public final boolean doOr(final VirtualFrame frame, final boolean receiver,

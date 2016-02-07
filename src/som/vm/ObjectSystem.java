@@ -1,6 +1,5 @@
 package som.vm;
 
-import static som.compiler.Tags.NEW_ARRAY;
 import static som.vm.constants.Classes.metaclassClass;
 
 import java.io.File;
@@ -156,22 +155,22 @@ public final class ObjectSystem {
         primNode = factory.createNode(args[0]);
         break;
       case 2:
+        SourceSection source = Source.fromNamedText("primitive",
+            factory.getClass().getSimpleName()).
+                createSection(factory.getClass().getSimpleName(), 1);
+
         // HACK for node class where we use `executeWith`
         if (factory == PutAllNodeFactory.getInstance()) {
-          primNode = factory.createNode(args[0], args[1],
+          primNode = factory.createNode(source, args[0], args[1],
               SizeAndLengthPrimFactory.create(null));
 //        } else if (factory == SpawnWithArgsPrimFactory.getInstance()) {
 //          primNode = factory.createNode(args[0], args[1],
 //              ToArgumentsArrayNodeGen.create(null, null));
         } else if (factory == CreateActorPrimFactory.getInstance()) {
-          primNode = factory.createNode(args[0], args[1],
+          primNode = factory.createNode(source, args[0], args[1],
               IsValueFactory.create(null));
-        } else if (factory == NewPrimFactory.getInstance()) {
-          SourceSection source = Source.fromNamedText("primitive", "array new").
-              createSection("primitive array new", 1).cloneWithTags(NEW_ARRAY);
-          primNode = factory.createNode(source, args[0], args[1]);
         } else {
-          primNode = factory.createNode(args[0], args[1]);
+          primNode = factory.createNode(source, args[0], args[1]);
         }
         break;
       case 3:

@@ -8,7 +8,7 @@ import som.VM;
 import som.compiler.MixinDefinition;
 import som.interpreter.Invokable;
 import som.interpreter.Method;
-import som.interpreter.nodes.nary.BinaryExpressionNode;
+import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vm.constants.Classes;
 import som.vm.constants.Nil;
@@ -63,7 +63,11 @@ public final class SystemPrims {
 
   @GenerateNodeFactory
   @Primitive("load:nextTo:")
-  public abstract static class LoadNextToPrim extends BinaryExpressionNode {
+  public abstract static class LoadNextToPrim extends BinaryComplexOperation {
+    protected LoadNextToPrim(final SourceSection source) {
+      super(source);
+    }
+
     @Specialization
     public final Object load(final String filename, final SObjectWithClass moduleObj) {
       String path = moduleObj.getSOMClass().getMixinDefinition().getSourceSection().getSource().getPath();

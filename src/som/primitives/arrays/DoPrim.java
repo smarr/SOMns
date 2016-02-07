@@ -3,7 +3,7 @@ package som.primitives.arrays;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
-import som.interpreter.nodes.nary.BinaryExpressionNode;
+import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.specialized.SomLoop;
 import som.vm.constants.Nil;
 import som.vmobjects.SArray;
@@ -15,16 +15,17 @@ import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.profiles.ValueProfile;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 @GenerateNodeFactory
-public abstract class DoPrim extends BinaryExpressionNode {
+public abstract class DoPrim extends BinaryComplexOperation {
   private final ValueProfile storageType = ValueProfile.createClassProfile();
 
   @Child private BlockDispatchNode block;
 
-  public DoPrim() {
-    super(null);
+  public DoPrim(final SourceSection source) {
+    super(source);
     block = BlockDispatchNodeGen.create();
   }
 

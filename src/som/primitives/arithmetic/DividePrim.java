@@ -6,11 +6,14 @@ import som.primitives.Primitive;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 @GenerateNodeFactory
 @Primitive("int:divideBy:")
 public abstract class DividePrim extends ArithmeticPrim {
+  protected DividePrim(final SourceSection source) { super(source); }
+
   @Specialization
   public final long doLong(final long left, final long right) {
     return left / right;

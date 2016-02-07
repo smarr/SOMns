@@ -6,11 +6,13 @@ import som.primitives.Primitive;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 @GenerateNodeFactory
 @Primitive({"int:modulo:", "double:modulo:"})
 public abstract class ModuloPrim extends ArithmeticPrim {
+  protected ModuloPrim(final SourceSection source) { super(source); }
 
   @Specialization
   public final double doDouble(final double left, final double right) {

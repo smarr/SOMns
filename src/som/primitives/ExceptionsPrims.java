@@ -3,7 +3,7 @@ package som.primitives;
 import som.interpreter.SomException;
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
-import som.interpreter.nodes.nary.BinaryExpressionNode;
+import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vmobjects.SAbstractObject;
@@ -18,6 +18,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 public abstract class ExceptionsPrims {
@@ -86,10 +87,14 @@ public abstract class ExceptionsPrims {
 
   @GenerateNodeFactory
   @Primitive("exceptionDo:ensure:")
-  public abstract static class EnsurePrim extends BinaryExpressionNode {
+  public abstract static class EnsurePrim extends BinaryComplexOperation {
 
     @Child protected BlockDispatchNode dispatchBody    = BlockDispatchNodeGen.create();
     @Child protected BlockDispatchNode dispatchHandler = BlockDispatchNodeGen.create();
+
+    protected EnsurePrim(final SourceSection source) {
+      super(source);
+    }
 
     @Specialization
     public final Object doException(final VirtualFrame frame, final SBlock body,

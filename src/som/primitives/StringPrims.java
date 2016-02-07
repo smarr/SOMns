@@ -1,6 +1,6 @@
 package som.primitives;
 
-import som.interpreter.nodes.nary.BinaryExpressionNode;
+import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vm.Symbols;
@@ -9,13 +9,18 @@ import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 public class StringPrims {
 
   @GenerateNodeFactory
   @Primitive("string:concat:")
-  public abstract static class ConcatPrim extends BinaryExpressionNode {
+  public abstract static class ConcatPrim extends BinaryComplexOperation {
+    protected ConcatPrim(final SourceSection source) {
+      super(source);
+    }
+
     @Specialization
     public final String doString(final String receiver, final String argument) {
       return receiver + argument;

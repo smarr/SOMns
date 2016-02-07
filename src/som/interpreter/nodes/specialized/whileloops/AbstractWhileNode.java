@@ -1,7 +1,7 @@
 package som.interpreter.nodes.specialized.whileloops;
 
 import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.nary.BinaryExpressionNode;
+import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.specialized.SomLoop;
 import som.vm.constants.Nil;
 import som.vmobjects.SBlock;
@@ -14,7 +14,7 @@ import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 
 
-public abstract class AbstractWhileNode extends BinaryExpressionNode {
+public abstract class AbstractWhileNode extends BinaryComplexOperation {
   @Child protected DirectCallNode conditionValueSend;
   @Child protected DirectCallNode bodyValueSend;
 

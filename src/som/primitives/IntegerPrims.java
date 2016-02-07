@@ -2,7 +2,7 @@ package som.primitives;
 
 import java.math.BigInteger;
 
-import som.interpreter.nodes.nary.BinaryExpressionNode;
+import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.arithmetic.ArithmeticPrim;
 import som.vm.constants.Classes;
@@ -12,6 +12,7 @@ import som.vmobjects.SSymbol;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.profiles.BranchProfile;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 public abstract class IntegerPrims {
@@ -52,6 +53,8 @@ public abstract class IntegerPrims {
   @GenerateNodeFactory
   @Primitive("int:leftShift:")
   public abstract static class LeftShiftPrim extends ArithmeticPrim {
+    protected LeftShiftPrim(final SourceSection source) { super(source); }
+
     private final BranchProfile overflow = BranchProfile.create();
 
     @Specialization(rewriteOn = ArithmeticException.class)
@@ -78,6 +81,8 @@ public abstract class IntegerPrims {
   @GenerateNodeFactory
   @Primitive("int:unsignedRightShift:")
   public abstract static class UnsignedRightShiftPrim extends ArithmeticPrim {
+    protected UnsignedRightShiftPrim(final SourceSection source) { super(source); }
+
     @Specialization
     public final long doLong(final long receiver, final long right) {
       return receiver >>> right;
@@ -85,13 +90,20 @@ public abstract class IntegerPrims {
   }
 
   public abstract static class MaxIntPrim extends ArithmeticPrim {
+    protected MaxIntPrim(final SourceSection source) { super(source); }
+
     @Specialization
     public final long doLong(final long receiver, final long right) {
       return Math.max(receiver, right);
     }
   }
 
-  public abstract static class ToPrim extends BinaryExpressionNode {
+  public abstract static class ToPrim extends BinaryComplexOperation {
+
+    protected ToPrim(final SourceSection source) {
+      super(source);
+    }
+
     @Specialization
     public final SMutableArray doLong(final long receiver, final long right) {
       int cnt = (int) right - (int) receiver + 1;

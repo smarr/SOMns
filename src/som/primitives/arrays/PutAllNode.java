@@ -2,7 +2,7 @@ package som.primitives.arrays;
 
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
-import som.interpreter.nodes.nary.BinaryExpressionNode;
+import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.specialized.SomLoop;
 import som.primitives.SizeAndLengthPrim;
 import som.vm.constants.Nil;
@@ -16,16 +16,17 @@ import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 @GenerateNodeFactory
 @ImportStatic(Nil.class)
 @NodeChild(value = "length", type = SizeAndLengthPrim.class, executeWith = "receiver")
-public abstract class PutAllNode extends BinaryExpressionNode {
+public abstract class PutAllNode extends BinaryComplexOperation {
   @Child protected BlockDispatchNode block;
 
-  public PutAllNode() {
-    super(null);
+  public PutAllNode(final SourceSection source) {
+    super(source);
     block = BlockDispatchNodeGen.create();
   }
 

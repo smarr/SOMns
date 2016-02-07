@@ -1,7 +1,7 @@
 package som.primitives;
 
 import som.interpreter.actors.SFarReference;
-import som.interpreter.nodes.nary.BinaryExpressionNode;
+import som.interpreter.nodes.nary.BinaryBasicOperation;
 import som.vmobjects.SArray.SMutableArray;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
@@ -9,11 +9,16 @@ import som.vmobjects.SObjectWithClass;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 @GenerateNodeFactory
 @Primitive("object:identicalTo:")
-public abstract class EqualsEqualsPrim extends BinaryExpressionNode {
+public abstract class EqualsEqualsPrim extends BinaryBasicOperation {
+
+  protected EqualsEqualsPrim(final SourceSection source) {
+    super(source);
+  }
 
   @Specialization
   public final boolean doSBlock(final SBlock left, final Object right) {

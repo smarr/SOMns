@@ -1,6 +1,7 @@
 package som.interpreter.nodes.specialized;
 
-import som.interpreter.nodes.nary.BinaryExpressionNode;
+import som.interpreter.nodes.nary.BinaryBasicOperation;
+import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 
@@ -13,7 +14,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 
 @GenerateNodeFactory
-public abstract class AndMessageNode extends BinaryExpressionNode {
+public abstract class AndMessageNode extends BinaryComplexOperation {
 
   private final SInvokable blockMethod;
   @Child private DirectCallNode blockValueSend;
@@ -46,7 +47,7 @@ public abstract class AndMessageNode extends BinaryExpressionNode {
   }
 
   @GenerateNodeFactory
-  public abstract static class AndBoolMessageNode extends BinaryExpressionNode {
+  public abstract static class AndBoolMessageNode extends BinaryBasicOperation {
 
     public AndBoolMessageNode(final SourceSection source) {
       super(source);

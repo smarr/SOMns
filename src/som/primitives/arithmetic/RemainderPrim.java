@@ -6,11 +6,14 @@ import som.primitives.Primitive;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 @GenerateNodeFactory
 @Primitive("int:reminder:")
 public abstract class RemainderPrim extends ArithmeticPrim {
+  protected RemainderPrim(final SourceSection source) { super(source); }
+
   @Specialization
   public final double doDouble(final double left, final double right) {
     return left % right;

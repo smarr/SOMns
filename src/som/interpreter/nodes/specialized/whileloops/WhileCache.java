@@ -1,7 +1,7 @@
 package som.interpreter.nodes.specialized.whileloops;
 
 import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.nary.BinaryExpressionNode;
+import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.vm.constants.Nil;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
@@ -11,15 +11,17 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.source.SourceSection;
 
 
-public abstract class WhileCache extends BinaryExpressionNode {
+public abstract class WhileCache extends BinaryComplexOperation {
 
   public static final int INLINE_CACHE_SIZE = 6;
 
   protected final boolean predicateBool;
 
-  public WhileCache(final boolean predicateBool) {
+  public WhileCache(final SourceSection source, final boolean predicateBool) {
+    super(source);
     this.predicateBool = predicateBool;
   }
 

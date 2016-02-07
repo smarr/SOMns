@@ -1,6 +1,6 @@
 package som.primitives;
 
-import som.interpreter.nodes.nary.BinaryExpressionNode;
+import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.nary.QuaternaryExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
@@ -17,6 +17,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 public abstract class BlockPrims {
@@ -77,7 +78,9 @@ public abstract class BlockPrims {
   @GenerateNodeFactory
   @ImportStatic(BlockPrims.class)
   @Primitive("blockValue:with:")
-  public abstract static class ValueOnePrim extends BinaryExpressionNode {
+  public abstract static class ValueOnePrim extends BinaryComplexOperation {
+
+    protected ValueOnePrim(final SourceSection source) { super(source); }
 
     @Specialization(guards = "cached == receiver.getMethod()", limit = "CHAIN_LENGTH")
     public final Object doCachedBlock(final VirtualFrame frame,

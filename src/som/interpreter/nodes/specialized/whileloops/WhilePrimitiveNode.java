@@ -1,28 +1,29 @@
 package som.interpreter.nodes.specialized.whileloops;
 
 import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.nary.BinaryExpressionNode;
+import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.vmobjects.SBlock;
 import som.vmobjects.SObjectWithClass;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 @GenerateNodeFactory
-public abstract class WhilePrimitiveNode extends BinaryExpressionNode {
+public abstract class WhilePrimitiveNode extends BinaryComplexOperation {
   final boolean predicateBool;
   @Child protected WhileCache whileNode;
 
-  protected WhilePrimitiveNode(final boolean predicateBool) {
-    super(null);
+  protected WhilePrimitiveNode(final SourceSection source, final boolean predicateBool) {
+    super(source);
     this.predicateBool = predicateBool;
-    this.whileNode = WhileCacheNodeGen.create(predicateBool, null, null);
+    this.whileNode = WhileCacheNodeGen.create(source, predicateBool, null, null);
   }
 
   protected WhilePrimitiveNode(final WhilePrimitiveNode node) {
-    this(node.predicateBool);
+    this(node.getSourceSection(), node.predicateBool);
   }
 
   @Specialization
@@ -32,11 +33,11 @@ public abstract class WhilePrimitiveNode extends BinaryExpressionNode {
   }
 
   public abstract static class WhileTruePrimitiveNode extends WhilePrimitiveNode {
-    public WhileTruePrimitiveNode() { super(true); }
+    public WhileTruePrimitiveNode(final SourceSection source) { super(source, true); }
   }
 
   public abstract static class WhileFalsePrimitiveNode extends WhilePrimitiveNode {
-    public WhileFalsePrimitiveNode() { super(false); }
+    public WhileFalsePrimitiveNode(final SourceSection source) { super(source, false); }
   }
 
   @Override

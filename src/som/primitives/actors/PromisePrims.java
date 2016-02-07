@@ -10,7 +10,7 @@ import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.SResolver;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.nodes.literals.BlockNode;
-import som.interpreter.nodes.nary.BinaryExpressionNode;
+import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.Primitive;
@@ -29,6 +29,7 @@ import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 public final class PromisePrims {
@@ -63,8 +64,12 @@ public final class PromisePrims {
   @GenerateNodeFactory
   @ImportStatic(PromisePrims.class)
   @Primitive("actorsWhen:resolved:")
-  public abstract static class WhenResolvedPrim extends BinaryExpressionNode {
+  public abstract static class WhenResolvedPrim extends BinaryComplexOperation {
     @Child protected RegisterWhenResolved registerNode = new RegisterWhenResolved();
+
+    protected WhenResolvedPrim(final SourceSection source) {
+      super(source);
+    }
 
     @Specialization(guards = "blockMethod == callback.getMethod()", limit = "10")
     public final SPromise whenResolved(final SPromise promise,
@@ -97,9 +102,10 @@ public final class PromisePrims {
   }
 
   // TODO: should we add this for the literal case? which should be very common?
-  public abstract static class WhenResolvedLiteralBlockNode extends BinaryExpressionNode {
+  public abstract static class WhenResolvedLiteralBlockNode extends BinaryComplexOperation {
     private final RootCallTarget blockCallTarget;
-    public WhenResolvedLiteralBlockNode(final BlockNode blockNode) {
+    public WhenResolvedLiteralBlockNode(final SourceSection source, final BlockNode blockNode) {
+      super(source);
       blockCallTarget = blockNode.getBlockMethod().getCallTarget();
     }
   }
@@ -108,7 +114,11 @@ public final class PromisePrims {
   @GenerateNodeFactory
   @ImportStatic(PromisePrims.class)
   @Primitive("actorsFor:onError:")
-  public abstract static class OnErrorPrim extends BinaryExpressionNode {
+  public abstract static class OnErrorPrim extends BinaryComplexOperation {
+    protected OnErrorPrim(final SourceSection source) {
+      super(source);
+    }
+
     @Specialization(guards = "blockMethod == callback.getMethod()")
     public final SPromise onError(final SPromise promise,
         final SBlock callback,

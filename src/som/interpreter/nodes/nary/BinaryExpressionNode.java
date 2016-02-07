@@ -21,9 +21,6 @@ public abstract class BinaryExpressionNode extends ExpressionNode
     super(source);
   }
 
-  // for nodes that are not representing source code
-  public BinaryExpressionNode() { super(null); }
-
   public abstract Object executeEvaluated(final VirtualFrame frame,
       final Object receiver, Object argument);
 

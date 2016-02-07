@@ -1,6 +1,8 @@
 package som.primitives.arrays;
 
-import som.interpreter.nodes.nary.BinaryExpressionNode;
+import som.compiler.Tags;
+import som.interpreter.nodes.SOMNode;
+import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.primitives.Primitive;
 import som.vm.constants.Classes;
 import som.vmobjects.SArray.SImmutableArray;
@@ -15,10 +17,10 @@ import com.oracle.truffle.api.source.SourceSection;
 
 @GenerateNodeFactory
 @Primitive("array:new:")
-public abstract class NewPrim extends BinaryExpressionNode {
+public abstract class NewPrim extends BinaryComplexOperation {
 
   public NewPrim(final SourceSection source) {
-    super(source);
+    super(SOMNode.cloneAndAddTags(source, Tags.NEW_ARRAY));
   }
 
   protected static final boolean receiverIsArrayClass(final SClass receiver) {

@@ -1,6 +1,6 @@
 package som.interpreter.nodes.specialized;
 
-import som.interpreter.nodes.nary.BinaryExpressionNode;
+import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.vm.constants.Nil;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
@@ -15,7 +15,7 @@ import com.oracle.truffle.api.profiles.ConditionProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
 
-public abstract class IfMessageNode extends BinaryExpressionNode {
+public abstract class IfMessageNode extends BinaryComplexOperation {
 
   protected final ConditionProfile condProf = ConditionProfile.createCountingProfile();
   private final boolean expected;
