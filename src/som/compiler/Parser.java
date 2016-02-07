@@ -749,12 +749,12 @@ public final class Parser {
 
   private ExpressionNode methodBlock(final MethodBuilder builder)
       throws ParseError, MixinDefinitionError {
-    expect(NewTerm);
     SourceCoordinate coord = getCoordinate();
-    ExpressionNode methodBody = blockContents(builder);
-    lastMethodsSourceSection = getSource(coord);
-    expect(EndTerm);
+    expect(NewTerm);
 
+    ExpressionNode methodBody = blockContents(builder);
+    expect(EndTerm);
+    lastMethodsSourceSection = getSource(coord);
     return methodBody;
   }
 
@@ -1334,8 +1334,9 @@ public final class Parser {
 
   private ExpressionNode nestedBlock(final MethodBuilder builder)
       throws ParseError, MixinDefinitionError {
-    expect(NewBlock);
     SourceCoordinate coord = getCoordinate();
+    expect(NewBlock);
+
 
     builder.addArgumentIfAbsent("$blockSelf", getSource(coord, Tags.SYNTAX_ARGUMENT));
 
@@ -1354,9 +1355,8 @@ public final class Parser {
 
     ExpressionNode expressions = blockContents(builder);
 
-    lastMethodsSourceSection = getSource(coord);
-
     expect(EndBlock);
+    lastMethodsSourceSection = getSource(coord);
 
     return expressions;
   }
