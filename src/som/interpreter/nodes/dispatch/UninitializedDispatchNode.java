@@ -15,6 +15,7 @@ import som.vmobjects.SSymbol;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
+import com.oracle.truffle.api.instrumentation.InstrumentationHandler;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
@@ -67,7 +68,12 @@ public final class UninitializedDispatchNode {
         node = dispatchable.getDispatchNode(rcvr, firstArg, newChainEnd);
       }
 
-      return replace(node);
+      replace(node);
+      String[] tags = node.getSourceSection().getTags();
+      if (tags != null && tags.length > 0) {
+        InstrumentationHandler.insertInstrumentationWrapper(node);
+      }
+      return node;
     }
 
     protected final AbstractDispatchNode generalizeChain(
