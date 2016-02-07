@@ -17,6 +17,10 @@ public class RootMarkerNode extends ExpressionNode {
     this.body = body;
   }
 
+  protected RootMarkerNode(final RootMarkerNode wrappedNode) {
+    this(wrappedNode.getSourceSection(), wrappedNode.body);
+  }
+
   protected RootMarkerNode(final SourceSection sourceSection) {
     super(sourceSection);
   }
