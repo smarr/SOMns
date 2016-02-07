@@ -443,8 +443,8 @@ public final class MessageSendNode {
 
         case "createActorFromValue:": {
           if (arguments[0] == ActorClasses.ActorModule) {
-            return replace(CreateActorPrimFactory.create(argumentNodes[0],
-                argumentNodes[1], IsValueFactory.create(null)));
+            return replace(CreateActorPrimFactory.create(getSourceSection(),
+                argumentNodes[0], argumentNodes[1], IsValueFactory.create(null)));
           }
           break;
         }
