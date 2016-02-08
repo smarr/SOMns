@@ -45,6 +45,10 @@ public final class SourcecodeCompiler {
   // here we track information on a source that is not kept in the AST
   private static final Map<Source, Set<SourceSection>> syntaxSections = new HashMap<>();
 
+  public static void resetSyntaxSections() {
+    syntaxSections.clear();
+  }
+
   public static Set<SourceSection> getSyntaxAnnotations(final Source source) {
     return syntaxSections.get(source);
   }

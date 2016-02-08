@@ -3,6 +3,7 @@ package som;
 import java.io.IOException;
 
 import som.compiler.MixinDefinition;
+import som.compiler.SourcecodeCompiler;
 import som.interpreter.SomLanguage;
 import som.interpreter.TruffleCompiler;
 import som.interpreter.actors.Actor;
@@ -227,5 +228,6 @@ public final class VM {
     SPromise.setPairClass(null);
     SPromise.setSOMClass(null);
     SResolver.setSOMClass(null);
+    SourcecodeCompiler.resetSyntaxSections();
   }
 }
