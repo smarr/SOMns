@@ -214,6 +214,7 @@ public class BasicInterpreterTests {
     VM vm = getInitializedVM();
 
     Object actualResult = vm.execute(testSelector);
+    VM.resetClassReferences(true);
     assertEqualsSOMValue(expectedResult, actualResult);
   }
 
