@@ -16,10 +16,16 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 public abstract class AbstractSymbolDispatch extends Node {
   public static final int INLINE_CACHE_SIZE = 6;
+
+  protected AbstractSymbolDispatch(final SourceSection source) {
+    super(source);
+    assert source != null;
+  }
 
   // TODO: think about how we can add a specialization for slot accesses, especially Caching Class lost stuff. Slot access are very expensive when uncached, we should avoid that, because we create nodes, every single time
 
@@ -30,8 +36,9 @@ public abstract class AbstractSymbolDispatch extends Node {
   public abstract Object executeDispatch(VirtualFrame frame, Object receiver,
       SSymbol selector, Object argsArr);
 
-  public static final AbstractMessageSendNode createForPerformNodes(final SSymbol selector) {
-    return MessageSendNode.createForPerformNodes(selector);
+  public final AbstractMessageSendNode createForPerformNodes(
+      final SSymbol selector) {
+    return MessageSendNode.createForPerformNodes(selector, getSourceSection());
   }
 
   public static final ToArgumentsArrayNode createArgArrayNode() {

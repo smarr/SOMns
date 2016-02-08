@@ -113,8 +113,9 @@ public final class MessageSendNode {
         node.getSourceSection());
   }
 
-  public static AbstractMessageSendNode createForPerformNodes(final SSymbol selector) {
-    return new UninitializedSymbolSendNode(selector, null);
+  public static AbstractMessageSendNode createForPerformNodes(
+      final SSymbol selector, final SourceSection source) {
+    return new UninitializedSymbolSendNode(selector, source);
   }
 
   public static GenericMessageSendNode createGeneric(final SSymbol selector,
@@ -627,6 +628,7 @@ public final class MessageSendNode {
 
     protected UninitializedSymbolSendNode(final SSymbol selector, final SourceSection source) {
       super(selector, new ExpressionNode[0], source);
+      assert source != null;
     }
 
     @Override

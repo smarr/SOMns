@@ -17,6 +17,7 @@ public abstract class ResolvePromiseNode extends BinaryComplexOperation {
 
   protected ResolvePromiseNode(final SourceSection source) {
     super(source);
+    assert source != null;
   }
 
   public abstract Object executeEvaluated(final SResolver receiver, Object argument);

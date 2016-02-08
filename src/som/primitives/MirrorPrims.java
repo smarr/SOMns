@@ -67,7 +67,7 @@ public abstract class MirrorPrims {
     @Child protected AbstractSymbolDispatch dispatch;
     public PerformPrim(final SourceSection source) {
       super(source);
-      dispatch = AbstractSymbolDispatchNodeGen.create();
+      dispatch = AbstractSymbolDispatchNodeGen.create(source);
     }
 
     @Specialization

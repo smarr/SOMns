@@ -16,14 +16,15 @@ public abstract class ReceivedRootNode extends RootNode {
   protected ReceivedRootNode(final Class<? extends TruffleLanguage<?>> language,
       final SourceSection sourceSection, final FrameDescriptor frameDescriptor) {
     super(language, sourceSection, frameDescriptor);
+    assert sourceSection != null;
   }
 
   protected final void resolvePromise(final SResolver resolver, final Object result) {
     if (resolve == null) {
       if (resolver == null) {
-        this.resolve = insert(new NullResolver(null));
+        this.resolve = insert(new NullResolver(getSourceSection()));
       } else {
-        this.resolve = insert(ResolvePromiseNodeFactory.create(null, null, null));
+        this.resolve = insert(ResolvePromiseNodeFactory.create(getSourceSection(), null, null));
       }
     }
 
