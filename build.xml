@@ -134,25 +134,4 @@
     </target>
 
     <target name="tests" depends="unit-tests,som-tests" />
-
-    <path id="pit.path">
-		<path refid="project.classpath" />
-        <pathelement location="${lib.dir}/pitest-1.1.8.jar" />
-        <pathelement location="${lib.dir}/pitest-ant-1.1.8.jar" />
-	</path>
-
-	<taskdef name="pitest" classname="org.pitest.ant.PitestTask" classpathref="pit.path" />
-	
-    <target name="pit">
-		<!-- <pathconvert property="classpathProp" refid="pit.path"/>
-		<echo>Classpath is ${classpathProp}</echo> -->
-		
-	    <pitest
-	        pitClasspath="pit.path"
-	        classPath="project.classpath"
-	        targetClasses="som.*"
-	        targetTests="som.tests.*"
-	        reportDir="pathToWhereYouWantOutput"
-	        sourceDir="${src.dir}" />
-	</target>
 </project>
