@@ -27,6 +27,7 @@ import static org.junit.Assert.fail;
 import java.io.IOException;
 import java.util.Arrays;
 
+import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -214,7 +215,6 @@ public class BasicInterpreterTests {
     VM vm = getInitializedVM();
 
     Object actualResult = vm.execute(testSelector);
-    VM.resetClassReferences(true);
     assertEqualsSOMValue(expectedResult, actualResult);
   }
 
@@ -226,6 +226,11 @@ public class BasicInterpreterTests {
       Object actualResult = vm.execute(testSelector);
       assertEqualsSOMValue(expectedResult, actualResult);
     });
+  }
+
+  @After
+  public void resetVM() {
+    VM.resetClassReferences(true);
   }
 
   protected VM getInitializedVM() throws IOException {

@@ -26,6 +26,7 @@ import static org.junit.Assert.assertEquals;
 import java.io.IOException;
 import java.util.Arrays;
 
+import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -83,8 +84,11 @@ public class SomTests {
 
     vm.execute();
 
-    VM.resetClassReferences(true);
-
     assertEquals(0, vm.lastExitCode());
+  }
+
+  @After
+  public void resetVM() {
+    VM.resetClassReferences(true);
   }
 }
