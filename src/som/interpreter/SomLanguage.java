@@ -110,7 +110,7 @@ public final class SomLanguage extends TruffleLanguage<VM> {
 
   @Override
   protected Object getLanguageGlobal(final VM context) {
-    throw new NotYetImplementedException();
+    return context;
   }
 
   @Override

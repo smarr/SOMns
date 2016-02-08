@@ -1,5 +1,6 @@
 package som.tests;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -44,6 +45,21 @@ public class SomPolyglotTests {
   }
 
   @Test
+  public void startEngineForTesting() throws IOException {
+    Builder builder = PolyglotEngine.newBuilder();
+    builder.config(SomLanguage.MIME_TYPE, SomLanguage.CMD_ARGS, new String[] {
+        "--platform", "core-lib/TestSuite/BasicInterpreterTests/Arrays.som"});
+    PolyglotEngine engine = builder.build();
+
+    engine.getInstruments().values().forEach(i -> i.setEnabled(false));
+
+    Value v = engine.getLanguages().get(SomLanguage.MIME_TYPE).getGlobalObject();
+    VM vm = (VM) v.get();
+    Object result = vm.execute("testEmptyToInts");
+    assertEquals((long) 3, result);
+  }
+
+  @Test
   public void executeHelloWorldWithTruffleProfiler() throws IOException {
     String[] args = new String[] {"core-lib/Hello.som"};
 
@@ -51,6 +67,11 @@ public class SomPolyglotTests {
     builder.config(SomLanguage.MIME_TYPE, SomLanguage.CMD_ARGS, args);
     PolyglotEngine vm = builder.build();
     Instrument profiler = vm.getInstruments().get(TruffleProfiler.ID);
+
+    if (profiler == null) {
+      return;
+    }
+
     assertTrue(profiler.isEnabled());
     Value result = vm.eval(SomLanguage.START);
     assertTrue(profiler.isEnabled());
@@ -66,6 +87,11 @@ public class SomPolyglotTests {
     builder.config(SomLanguage.MIME_TYPE, SomLanguage.CMD_ARGS, args);
     PolyglotEngine vm = builder.build();
     Instrument profiler = vm.getInstruments().get(TruffleProfiler.ID);
+
+    if (profiler == null) {
+      return;
+    }
+
     assertTrue(profiler.isEnabled());
     profiler.setEnabled(false);
     Value result = vm.eval(SomLanguage.START);

@@ -33,9 +33,13 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 import som.VM;
+import som.interpreter.SomLanguage;
 import som.interpreter.Types;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
+
+import com.oracle.truffle.api.vm.PolyglotEngine;
+import com.oracle.truffle.api.vm.PolyglotEngine.Builder;
 
 @RunWith(Parameterized.class)
 public class BasicInterpreterTests {
@@ -207,8 +211,7 @@ public class BasicInterpreterTests {
 
   @Test
   public void testBasicInterpreterBehavior() throws IOException {
-    VM vm = new VM(getVMArguments(), true);
-    vm.initalize();
+    VM vm = getInitializedVM();
 
     Object actualResult = vm.execute(testSelector);
     assertEqualsSOMValue(expectedResult, actualResult);
@@ -216,13 +219,22 @@ public class BasicInterpreterTests {
 
   @Test
   public void testInParallel() throws InterruptedException, IOException {
-    VM vm = new VM(getVMArguments(), true);
-    vm.initalize();
+    VM vm = getInitializedVM();
 
     ParallelHelper.executeNTimesInParallel(() -> {
       Object actualResult = vm.execute(testSelector);
       assertEqualsSOMValue(expectedResult, actualResult);
     });
+  }
+
+  protected VM getInitializedVM() throws IOException {
+    Builder builder = PolyglotEngine.newBuilder();
+    builder.config(SomLanguage.MIME_TYPE, SomLanguage.CMD_ARGS, getVMArguments());
+    PolyglotEngine engine = builder.build();
+
+    engine.getInstruments().values().forEach(i -> i.setEnabled(false));
+
+    return (VM) engine.getLanguages().get(SomLanguage.MIME_TYPE).getGlobalObject().get();
   }
 
   protected String[] getVMArguments() {
