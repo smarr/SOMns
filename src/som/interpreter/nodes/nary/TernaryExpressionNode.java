@@ -6,6 +6,7 @@ import som.interpreter.nodes.PreevaluatedExpression;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.NodeChildren;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.Instrumentable;
 import com.oracle.truffle.api.source.SourceSection;
 
 
@@ -13,6 +14,7 @@ import com.oracle.truffle.api.source.SourceSection;
   @NodeChild(value = "receiver",  type = ExpressionNode.class),
   @NodeChild(value = "firstArg",  type = ExpressionNode.class),
   @NodeChild(value = "secondArg", type = ExpressionNode.class)})
+@Instrumentable(factory = TernaryExpressionNodeWrapper.class)
 public abstract class TernaryExpressionNode extends ExpressionNode
     implements PreevaluatedExpression {
 
