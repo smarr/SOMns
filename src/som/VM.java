@@ -15,6 +15,8 @@ import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.instrumentation.InstrumentationHandler;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.vm.PolyglotEngine;
 import com.oracle.truffle.api.vm.PolyglotEngine.Builder;
 import com.oracle.truffle.api.vm.PolyglotEngine.Instrument;
@@ -62,6 +64,15 @@ public final class VM {
       return false;
     }
     return vm.options.enableInstrumentation;
+  }
+
+  public static void insertInstrumentationWrapper(final Node node) {
+    if (VM.instrumentationEnabled()) {
+      String[] tags = node.getSourceSection().getTags();
+      if (tags != null && tags.length > 0) {
+        InstrumentationHandler.insertInstrumentationWrapper(node);
+      }
+    }
   }
 
   public VM(final String[] args, final boolean avoidExitForTesting) throws IOException {

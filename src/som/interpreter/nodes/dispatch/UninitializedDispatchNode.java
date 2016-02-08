@@ -1,5 +1,6 @@
 package som.interpreter.nodes.dispatch;
 
+import som.VM;
 import som.compiler.AccessModifier;
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.interpreter.TruffleCompiler;
@@ -15,7 +16,6 @@ import som.vmobjects.SSymbol;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
-import com.oracle.truffle.api.instrumentation.InstrumentationHandler;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
@@ -69,10 +69,7 @@ public final class UninitializedDispatchNode {
       }
 
       replace(node);
-      String[] tags = node.getSourceSection().getTags();
-      if (tags != null && tags.length > 0) {
-        InstrumentationHandler.insertInstrumentationWrapper(node);
-      }
+      VM.insertInstrumentationWrapper(node);
       return node;
     }
 

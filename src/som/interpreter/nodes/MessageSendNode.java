@@ -1,6 +1,7 @@
 package som.interpreter.nodes;
 
 import static som.interpreter.nodes.SOMNode.unwrapIfNecessary;
+import som.VM;
 import som.compiler.AccessModifier;
 import som.instrumentation.MessageSendNodeWrapper;
 import som.interpreter.TruffleCompiler;
@@ -93,7 +94,6 @@ import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Instrumentable;
-import com.oracle.truffle.api.instrumentation.InstrumentationHandler;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.NodeCost;
 import com.oracle.truffle.api.source.SourceSection;
@@ -347,7 +347,7 @@ public final class MessageSendNode {
     private PreevaluatedExpression makeEagerBinaryPrim(final BinaryExpressionNode prim) {
       PreevaluatedExpression result = replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
           argumentNodes[1], prim));
-      InstrumentationHandler.insertInstrumentationWrapper(prim);
+      VM.insertInstrumentationWrapper(prim);
       return result;
     }
 
@@ -518,7 +518,7 @@ public final class MessageSendNode {
     private PreevaluatedExpression makeEagerTernaryPrim(final TernaryExpressionNode prim) {
       PreevaluatedExpression result = replace(new EagerTernaryPrimitiveNode(selector, argumentNodes[0],
           argumentNodes[1], argumentNodes[2], prim));
-      InstrumentationHandler.insertInstrumentationWrapper(prim);
+      VM.insertInstrumentationWrapper(prim);
       return result;
     }
 
