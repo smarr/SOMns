@@ -1,5 +1,6 @@
 package dym.profiles;
 
+import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 
@@ -9,6 +10,7 @@ import com.oracle.truffle.api.source.SourceSection;
 public class AllocationProfile extends Counter {
 
   private int numFields;
+  private SClass type;
 
   public AllocationProfile(final SourceSection source) {
     super(source);
@@ -26,10 +28,19 @@ public class AllocationProfile extends Counter {
 
     if (numFields == -1) {
       numFields = objFields;
-    } else if (numFields != objFields) {
+      type = obj.getSOMClass();
+    } else if (numFields != objFields || type != obj.getSOMClass()) {
       throw new RuntimeException("This is unexpected. " +
           "Are ther multiple classes allocated here? Might be, inheritance? " +
           "TODO: Add support for polymorphic allocation sites.");
     }
+  }
+
+  public int getNumberOfObjectFields() {
+    return numFields;
+  }
+
+  public SClass getSOMClass() {
+    return type;
   }
 }
