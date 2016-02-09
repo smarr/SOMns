@@ -16,10 +16,12 @@ import com.oracle.truffle.api.instrumentation.TruffleInstrument.Registration;
 import com.oracle.truffle.api.source.SourceSection;
 
 import dym.nodes.AllocationProfilingNode;
+import dym.nodes.ArrayAllocationProfilingNode;
 import dym.nodes.ControlFlowProfileNode;
 import dym.nodes.CountingNode;
 import dym.nodes.InvocationProfilingNode;
 import dym.profiles.AllocationProfile;
+import dym.profiles.ArrayCreationProfile;
 import dym.profiles.BranchProfile;
 import dym.profiles.Counter;
 import dym.profiles.InvocationProfile;
@@ -60,7 +62,7 @@ public class DynamicMetrics extends TruffleInstrument {
 
   private final Map<SourceSection, MethodCallsiteProbe> methodCallsiteProbes;
   private final Map<SourceSection, AllocationProfile> newObjectCounter;
-  private final Map<SourceSection, Counter> newArrayCounter;
+  private final Map<SourceSection, ArrayCreationProfile> newArrayCounter;
   private final Map<SourceSection, Counter> fieldAccessCounter;
   private final Map<SourceSection, BranchProfile> controlFlowProfiles;
   private final Map<SourceSection, Counter> literalReadCounter;
@@ -127,9 +129,9 @@ public class DynamicMetrics extends TruffleInstrument {
     instrumenter.attachFactory(
         filters.build(),
         (final EventContext context) -> {
-          Counter counter = newArrayCounter.computeIfAbsent(
-              context.getInstrumentedSourceSection(), Counter::new);
-          return new CountingNode(counter);
+          ArrayCreationProfile profile = newArrayCounter.computeIfAbsent(
+              context.getInstrumentedSourceSection(), ArrayCreationProfile::new);
+          return new ArrayAllocationProfilingNode(profile);
         });
 
     filters = SourceSectionFilter.newBuilder();
@@ -139,7 +141,7 @@ public class DynamicMetrics extends TruffleInstrument {
         (final EventContext context) -> {
           Counter counter = literalReadCounter.computeIfAbsent(
               context.getInstrumentedSourceSection(), Counter::new);
-          return new CountingNode(counter);
+          return new CountingNode<>(counter);
         });
 
     filters = SourceSectionFilter.newBuilder();
@@ -149,7 +151,7 @@ public class DynamicMetrics extends TruffleInstrument {
         (final EventContext context) -> {
           Counter counter = basicOperationCounter.computeIfAbsent(
               context.getInstrumentedSourceSection(), Counter::new);
-          return new CountingNode(counter);
+          return new CountingNode<>(counter);
         });
 
     filters = SourceSectionFilter.newBuilder();
@@ -159,7 +161,7 @@ public class DynamicMetrics extends TruffleInstrument {
         (final EventContext context) -> {
           Counter counter = fieldAccessCounter.computeIfAbsent(
               context.getInstrumentedSourceSection(), Counter::new);
-          return new CountingNode(counter);
+          return new CountingNode<>(counter);
         });
 
     filters = SourceSectionFilter.newBuilder();
@@ -169,7 +171,7 @@ public class DynamicMetrics extends TruffleInstrument {
         (final EventContext context) -> {
           Counter counter = localsAccessCounter.computeIfAbsent(
               context.getInstrumentedSourceSection(), Counter::new);
-          return new CountingNode(counter);
+          return new CountingNode<>(counter);
         });
 
     filters = SourceSectionFilter.newBuilder();
@@ -204,7 +206,7 @@ public class DynamicMetrics extends TruffleInstrument {
     SourceSection source = context.getInstrumentedSourceSection();
     MethodCallsiteProbe probe = methodCallsiteProbes.computeIfAbsent(
         source, src -> new MethodCallsiteProbe(src));
-    return new CountingNode(probe);
+    return new CountingNode<>(probe);
   }
 
   private Map<String, Map<SourceSection, ? extends JsonSerializable>> collectData() {
