@@ -10,7 +10,7 @@ import dym.profiles.InvocationProfile;
 /**
  * Counts invocations and reports method enter/exit to track stack level.
  */
-public class InvocationProfilingNode extends CountingNode {
+public class InvocationProfilingNode extends CountingNode<InvocationProfile> {
 
   private final DynamicMetrics meter;
 
@@ -23,7 +23,7 @@ public class InvocationProfilingNode extends CountingNode {
   @Override
   protected void onEnter(final VirtualFrame frame) {
     super.onEnter(frame);
-    ((InvocationProfile) counter).profileArguments(frame.getArguments());
+    counter.profileArguments(frame.getArguments());
     meter.enterMethod();
   }
 
