@@ -24,7 +24,7 @@ public class InvocationProfile extends Counter {
 
   public void profileArguments(final Object[] args) {
     argumentTypes.merge(
-        new Arguments(args), 1, (old, one) -> old + one);
+        new Arguments(args), 1, Integer::sum);
   }
 
   private static final class Arguments {
@@ -95,6 +95,7 @@ public class InvocationProfile extends Counter {
     }
   }
 
+  @Override
   public JSONArrayBuilder toJson() {
     JSONArrayBuilder result = JSONHelper.array();
     for (Entry<Arguments, Integer> e : argumentTypes.entrySet()) {
