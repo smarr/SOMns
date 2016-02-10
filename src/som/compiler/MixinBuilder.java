@@ -77,7 +77,7 @@ public final class MixinBuilder {
   private final ArrayList<ExpressionNode> slotAndInitExprs = new ArrayList<>();
 
   private final SSymbol name;
-  private String mixinComment;
+  @SuppressWarnings("unused") private String mixinComment;
 
   private final HashMap<SSymbol, SlotDefinition> slots = new HashMap<>();
   private final LinkedHashMap<SSymbol, Dispatchable> dispatchables = new LinkedHashMap<>();

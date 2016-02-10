@@ -17,7 +17,7 @@ public abstract class BooleanInlinedLiteralNode extends ExpressionNode {
 
   // In case we need to revert from this optimistic optimization, keep the
   // original nodes around
-  private final ExpressionNode argumentAcutalNode;
+  @SuppressWarnings("unused") private final ExpressionNode argumentAcutalNode;
 
   public BooleanInlinedLiteralNode(
       final ExpressionNode receiverNode,

@@ -17,7 +17,7 @@ public abstract class IntTimesRepeatLiteralNode extends ExpressionNode {
 
   // In case we need to revert from this optimistic optimization, keep the
   // original node around
-  private final ExpressionNode bodyActualNode;
+  @SuppressWarnings("unused") private final ExpressionNode bodyActualNode;
   @CompilationFinal private double loopFrequency;
 
   public abstract ExpressionNode getRepCnt();

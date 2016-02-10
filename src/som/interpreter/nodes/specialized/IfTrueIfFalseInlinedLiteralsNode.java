@@ -26,8 +26,8 @@ public final class IfTrueIfFalseInlinedLiteralsNode extends ExpressionNode {
 
   // In case we need to revert from this optimistic optimization, keep the
   // original nodes around
-  private final ExpressionNode trueActualNode;
-  private final ExpressionNode falseActualNode;
+  @SuppressWarnings("unused") private final ExpressionNode trueActualNode;
+  @SuppressWarnings("unused") private final ExpressionNode falseActualNode;
 
   public IfTrueIfFalseInlinedLiteralsNode(
       final ExpressionNode conditionNode,

@@ -21,7 +21,7 @@ public final class IfInlinedLiteralNode extends ExpressionNode {
 
   // In case we need to revert from this optimistic optimization, keep the
   // original nodes around
-  private final ExpressionNode bodyActualNode;
+  @SuppressWarnings("unused") private final ExpressionNode bodyActualNode;
 
   public IfInlinedLiteralNode(
       final ExpressionNode conditionNode,
