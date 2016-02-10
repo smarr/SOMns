@@ -2,6 +2,7 @@ package dym;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 import som.compiler.Tags;
 
@@ -102,113 +103,53 @@ public class DynamicMetrics extends TruffleInstrument {
     assert methodStackDepth >= 0;
   }
 
+  private <N extends EventNode, PRO extends Counter>
+    void addInstrumentation(final Instrumenter instrumenter,
+      final Map<SourceSection, PRO> storageMap,
+      final Function<SourceSection, PRO> pCtor,
+      final Function<PRO, N> nCtor,
+      final String... tags) {
+    Builder filters = SourceSectionFilter.newBuilder();
+    filters.tagIs(tags);
+    instrumenter.attachFactory(filters.build(),
+        (final EventContext ctx) -> {
+          PRO p = storageMap.computeIfAbsent(ctx.getInstrumentedSourceSection(),
+              pCtor);
+          return nCtor.apply(p);
+        });
+  }
+
   @Override
   protected void onCreate(final Env env, final Instrumenter instrumenter) {
-    Builder filters = SourceSectionFilter.newBuilder();
-    filters.tagIs(ROOT_TAG);
-    instrumenter.attachFactory(
-        filters.build(),
-        (final EventContext context) -> {
-          return createInvocationCountingNode(context);
-        });
+    addInstrumentation(instrumenter, methodInvocationCounter, InvocationProfile::new,
+        p -> new InvocationProfilingNode(this, p), ROOT_TAG);
 
-    filters = SourceSectionFilter.newBuilder();
-    filters.tagIs(UNSPECIFIED_INVOKE);
-    instrumenter.attachFactory(
-        filters.build(),
-        (final EventContext context) -> {
-          return createMethodCallsiteNode(context);
-        });
+    addInstrumentation(instrumenter, methodCallsiteProbes, MethodCallsiteProbe::new,
+        CountingNode<Counter>::new, UNSPECIFIED_INVOKE);
 
-    filters = SourceSectionFilter.newBuilder();
-    filters.tagIs(NEW_OBJECT);
-    instrumenter.attachFactory(
-        filters.build(),
-        (final EventContext context) -> {
-          AllocationProfile profile = newObjectCounter.computeIfAbsent(
-              context.getInstrumentedSourceSection(), AllocationProfile::new);
-          return new AllocationProfilingNode(profile);
-        });
+    addInstrumentation(instrumenter, newObjectCounter, AllocationProfile::new,
+        AllocationProfilingNode::new, NEW_OBJECT);
+    addInstrumentation(instrumenter, newArrayCounter, ArrayCreationProfile::new,
+        ArrayAllocationProfilingNode::new, NEW_ARRAY);
 
-    filters = SourceSectionFilter.newBuilder();
-    filters.tagIs(NEW_ARRAY);
-    instrumenter.attachFactory(
-        filters.build(),
-        (final EventContext context) -> {
-          ArrayCreationProfile profile = newArrayCounter.computeIfAbsent(
-              context.getInstrumentedSourceSection(), ArrayCreationProfile::new);
-          return new ArrayAllocationProfilingNode(profile);
-        });
+    addInstrumentation(instrumenter, literalReadCounter, Counter::new,
+        CountingNode<Counter>::new, Tags.SYNTAX_LITERAL);
 
-    filters = SourceSectionFilter.newBuilder();
-    filters.tagIs(Tags.SYNTAX_LITERAL);
-    instrumenter.attachFactory(
-        filters.build(),
-        (final EventContext context) -> {
-          Counter counter = literalReadCounter.computeIfAbsent(
-              context.getInstrumentedSourceSection(), Counter::new);
-          return new CountingNode<>(counter);
-        });
+    addInstrumentation(instrumenter, basicOperationCounter, Counter::new,
+        CountingNode<Counter>::new, Tags.BASIC_PRIMITIVE_OPERATION);
 
-    filters = SourceSectionFilter.newBuilder();
-    filters.tagIs(Tags.BASIC_PRIMITIVE_OPERATION);
-    instrumenter.attachFactory(
-        filters.build(),
-        (final EventContext context) -> {
-          Counter counter = basicOperationCounter.computeIfAbsent(
-              context.getInstrumentedSourceSection(), Counter::new);
-          return new CountingNode<>(counter);
-        });
+    addInstrumentation(instrumenter, fieldReadProfiles, ReadValueProfile::new,
+        FieldReadProfilingNode::new, Tags.FIELD_READ);
+    addInstrumentation(instrumenter, localsReadProfiles, ReadValueProfile::new,
+        FieldReadProfilingNode::new, Tags.LOCAL_ARG_READ, Tags.LOCAL_VAR_READ);
 
-    filters = SourceSectionFilter.newBuilder();
-    filters.tagIs(FIELD_READ);
-    instrumenter.attachFactory(
-        filters.build(),
-        (final EventContext context) -> {
-          ReadValueProfile p = fieldReadProfiles.computeIfAbsent(
-              context.getInstrumentedSourceSection(), ReadValueProfile::new);
-          return new FieldReadProfilingNode(p);
-        });
+    addInstrumentation(instrumenter, fieldWriteProfiles, Counter::new,
+        CountingNode<Counter>::new, Tags.FIELD_WRITE);
+    addInstrumentation(instrumenter, localsWriteProfiles, Counter::new,
+        CountingNode<Counter>::new, Tags.LOCAL_VAR_WRITE);
 
-    filters = SourceSectionFilter.newBuilder();
-    filters.tagIs(FIELD_WRITE);
-    instrumenter.attachFactory(
-        filters.build(),
-        (final EventContext context) -> {
-          Counter counter = fieldWriteProfiles.computeIfAbsent(
-              context.getInstrumentedSourceSection(), Counter::new);
-          return new CountingNode<>(counter);
-        });
-
-    filters = SourceSectionFilter.newBuilder();
-    filters.tagIs(Tags.LOCAL_ARG_READ, Tags.LOCAL_VAR_READ);
-    instrumenter.attachFactory(
-        filters.build(),
-        (final EventContext context) -> {
-          ReadValueProfile counter = localsReadProfiles.computeIfAbsent(
-              context.getInstrumentedSourceSection(), ReadValueProfile::new);
-          return new FieldReadProfilingNode(counter);
-        });
-
-    filters = SourceSectionFilter.newBuilder();
-    filters.tagIs(Tags.LOCAL_VAR_WRITE);
-    instrumenter.attachFactory(
-        filters.build(),
-        (final EventContext context) -> {
-          Counter counter = localsWriteProfiles.computeIfAbsent(
-              context.getInstrumentedSourceSection(), Counter::new);
-          return new CountingNode<>(counter);
-        });
-
-    filters = SourceSectionFilter.newBuilder();
-    filters.tagIs(Tags.CONTROL_FLOW_CONDITION);
-    instrumenter.attachFactory(
-        filters.build(),
-        (final EventContext context) -> {
-          BranchProfile profile = controlFlowProfiles.computeIfAbsent(
-              context.getInstrumentedSourceSection(), BranchProfile::new);
-          return new ControlFlowProfileNode(profile);
-        });
+    addInstrumentation(instrumenter, controlFlowProfiles, BranchProfile::new,
+        ControlFlowProfileNode::new, Tags.CONTROL_FLOW_CONDITION);
   }
 
   @Override
@@ -219,20 +160,7 @@ public class DynamicMetrics extends TruffleInstrument {
 
     String metricsFolder = System.getProperty("dm.metrics", "metrics");
     MetricsCsvWriter.fileOut(data, metricsFolder);
-  }
 
-  private EventNode createInvocationCountingNode(final EventContext context) {
-    SourceSection source = context.getInstrumentedSourceSection();
-    InvocationProfile counter = methodInvocationCounter.computeIfAbsent(
-        source, src -> new InvocationProfile(src));
-    return new InvocationProfilingNode(this, counter);
-  }
-
-  private EventNode createMethodCallsiteNode(final EventContext context) {
-    SourceSection source = context.getInstrumentedSourceSection();
-    MethodCallsiteProbe probe = methodCallsiteProbes.computeIfAbsent(
-        source, src -> new MethodCallsiteProbe(src));
-    return new CountingNode<>(probe);
   }
 
   private Map<String, Map<SourceSection, ? extends JsonSerializable>> collectData() {
