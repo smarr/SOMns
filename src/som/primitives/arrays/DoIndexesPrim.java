@@ -38,7 +38,9 @@ public abstract class DoIndexesPrim extends BinaryComplexOperation {
 
   private void loop(final VirtualFrame frame, final SBlock block, final int length) {
     try {
-      assert SArray.FIRST_IDX == 0;
+      int expectedFirstIdx = 0; // this code is written with this expectation
+      assert SArray.FIRST_IDX == expectedFirstIdx;
+
       if (SArray.FIRST_IDX < length) {
         this.block.executeDispatch(frame, new Object[] {
             block, (long) SArray.FIRST_IDX + 1}); // +1 because it is going to the smalltalk level
