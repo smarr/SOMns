@@ -5,16 +5,13 @@ import com.oracle.truffle.api.utilities.JSONHelper;
 import com.oracle.truffle.api.utilities.JSONHelper.JSONObjectBuilder;
 import com.oracle.truffle.api.utilities.JSONHelper.JSONStringBuilder;
 
-import dym.JsonSerializable;
 
-
-public class BranchProfile implements JsonSerializable {
-  private final SourceSection source;
+public class BranchProfile extends Counter {
   private long trueCount;
   private long falseCount;
 
   public BranchProfile(final SourceSection source) {
-    this.source = source;
+    super(source);
   }
 
   public void profile(final boolean branchValue) {
