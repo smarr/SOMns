@@ -19,6 +19,7 @@ import dym.nodes.AllocationProfilingNode;
 import dym.nodes.ArrayAllocationProfilingNode;
 import dym.nodes.ControlFlowProfileNode;
 import dym.nodes.CountingNode;
+import dym.nodes.FieldReadProfilingNode;
 import dym.nodes.InvocationProfilingNode;
 import dym.profiles.AllocationProfile;
 import dym.profiles.ArrayCreationProfile;
@@ -26,6 +27,7 @@ import dym.profiles.BranchProfile;
 import dym.profiles.Counter;
 import dym.profiles.InvocationProfile;
 import dym.profiles.MethodCallsiteProbe;
+import dym.profiles.ReadValueProfile;
 
 
 /**
@@ -63,10 +65,12 @@ public class DynamicMetrics extends TruffleInstrument {
   private final Map<SourceSection, MethodCallsiteProbe> methodCallsiteProbes;
   private final Map<SourceSection, AllocationProfile> newObjectCounter;
   private final Map<SourceSection, ArrayCreationProfile> newArrayCounter;
-  private final Map<SourceSection, Counter> fieldAccessCounter;
+  private final Map<SourceSection, ReadValueProfile> fieldReadProfiles;
+  private final Map<SourceSection, Counter> fieldWriteProfiles;
   private final Map<SourceSection, BranchProfile> controlFlowProfiles;
   private final Map<SourceSection, Counter> literalReadCounter;
-  private final Map<SourceSection, Counter> localsAccessCounter;
+  private final Map<SourceSection, ReadValueProfile> localsReadProfiles;
+  private final Map<SourceSection, Counter> localsWriteProfiles;
   private final Map<SourceSection, Counter> basicOperationCounter;
 
   public DynamicMetrics() {
@@ -74,10 +78,12 @@ public class DynamicMetrics extends TruffleInstrument {
     methodCallsiteProbes    = new HashMap<>();
     newObjectCounter        = new HashMap<>();
     newArrayCounter         = new HashMap<>();
-    fieldAccessCounter      = new HashMap<>();
+    fieldReadProfiles       = new HashMap<>();
+    fieldWriteProfiles      = new HashMap<>();
     controlFlowProfiles     = new HashMap<>();
     literalReadCounter      = new HashMap<>();
-    localsAccessCounter     = new HashMap<>();
+    localsReadProfiles      = new HashMap<>();
+    localsWriteProfiles     = new HashMap<>();
     basicOperationCounter   = new HashMap<>();
 
     assert "DefaultTruffleRuntime".equals(
@@ -155,21 +161,41 @@ public class DynamicMetrics extends TruffleInstrument {
         });
 
     filters = SourceSectionFilter.newBuilder();
-    filters.tagIs(FIELD_READ, FIELD_WRITE);
+    filters.tagIs(FIELD_READ);
     instrumenter.attachFactory(
         filters.build(),
         (final EventContext context) -> {
-          Counter counter = fieldAccessCounter.computeIfAbsent(
+          ReadValueProfile p = fieldReadProfiles.computeIfAbsent(
+              context.getInstrumentedSourceSection(), ReadValueProfile::new);
+          return new FieldReadProfilingNode(p);
+        });
+
+    filters = SourceSectionFilter.newBuilder();
+    filters.tagIs(FIELD_WRITE);
+    instrumenter.attachFactory(
+        filters.build(),
+        (final EventContext context) -> {
+          Counter counter = fieldWriteProfiles.computeIfAbsent(
               context.getInstrumentedSourceSection(), Counter::new);
           return new CountingNode<>(counter);
         });
 
     filters = SourceSectionFilter.newBuilder();
-    filters.tagIs(Tags.LOCAL_ARG_READ, Tags.LOCAL_VAR_READ, Tags.LOCAL_VAR_WRITE);
+    filters.tagIs(Tags.LOCAL_ARG_READ, Tags.LOCAL_VAR_READ);
     instrumenter.attachFactory(
         filters.build(),
         (final EventContext context) -> {
-          Counter counter = localsAccessCounter.computeIfAbsent(
+          ReadValueProfile counter = localsReadProfiles.computeIfAbsent(
+              context.getInstrumentedSourceSection(), ReadValueProfile::new);
+          return new FieldReadProfilingNode(counter);
+        });
+
+    filters = SourceSectionFilter.newBuilder();
+    filters.tagIs(Tags.LOCAL_VAR_WRITE);
+    instrumenter.attachFactory(
+        filters.build(),
+        (final EventContext context) -> {
+          Counter counter = localsWriteProfiles.computeIfAbsent(
               context.getInstrumentedSourceSection(), Counter::new);
           return new CountingNode<>(counter);
         });
@@ -215,10 +241,12 @@ public class DynamicMetrics extends TruffleInstrument {
     data.put("methodCallsite",          methodCallsiteProbes);
     data.put("newObjectCount",          newObjectCounter);
     data.put("newArrayCount",           newArrayCounter);
-    data.put("fieldAccessCount",        fieldAccessCounter);
+    data.put("fieldReads",              fieldReadProfiles);
+    data.put("fieldWrites",             fieldWriteProfiles);
     data.put("branchProfile",           controlFlowProfiles);
     data.put("literalReads",            literalReadCounter);
-    data.put("localsAccesses",          localsAccessCounter);
+    data.put("localReads",              localsReadProfiles);
+    data.put("localWrites",             localsWriteProfiles);
     data.put("basicOperations",         basicOperationCounter);
     return data;
   }
