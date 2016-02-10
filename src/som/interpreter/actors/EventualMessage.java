@@ -243,11 +243,6 @@ public abstract class EventualMessage {
     return mainActor;
   }
 
-  private static void setCurrentActor(final Actor actor) {
-    ActorProcessingThread t = (ActorProcessingThread) Thread.currentThread();
-    t.currentlyExecutingActor = actor;
-  }
-
   public static void setMainActor(final Actor actor) {
     mainActor = actor;
   }
