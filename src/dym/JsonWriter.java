@@ -19,6 +19,18 @@ import com.oracle.truffle.api.utilities.JSONHelper.JSONObjectBuilder;
 
 public final class JsonWriter {
 
+  public static final String METHOD_INVOCATION_PROFILE = "methodInvocationProfile";
+  public static final String METHOD_CALLSITE           = "methodCallsite";
+  public static final String NEW_OBJECT_COUNT          = "newObjectCount";
+  public static final String NEW_ARRAY_COUNT           = "newArrayCount";
+  public static final String FIELD_READS      = "fieldReads";
+  public static final String FIELD_WRITES     = "fieldWrites";
+  public static final String BRANCH_PROFILES  = "branchProfile";
+  public static final String LITERAL_READS    = "literalReads";
+  public static final String LOCAL_READS      = "localReads";
+  public static final String LOCAL_WRITES     = "localWrites";
+  public static final String BASIC_OPERATIONS = "basicOperations";
+
   private final Map<String, Map<SourceSection, ? extends JsonSerializable>> data;
   private final String outputFile;
 

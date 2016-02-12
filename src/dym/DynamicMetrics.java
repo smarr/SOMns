@@ -165,17 +165,17 @@ public class DynamicMetrics extends TruffleInstrument {
 
   private Map<String, Map<SourceSection, ? extends JsonSerializable>> collectData() {
     Map<String, Map<SourceSection, ? extends JsonSerializable>> data = new HashMap<>();
-    data.put("methodInvocationProfile", methodInvocationCounter);
-    data.put("methodCallsite",          methodCallsiteProbes);
-    data.put("newObjectCount",          newObjectCounter);
-    data.put("newArrayCount",           newArrayCounter);
-    data.put("fieldReads",              fieldReadProfiles);
-    data.put("fieldWrites",             fieldWriteProfiles);
-    data.put("branchProfile",           controlFlowProfiles);
-    data.put("literalReads",            literalReadCounter);
-    data.put("localReads",              localsReadProfiles);
-    data.put("localWrites",             localsWriteProfiles);
-    data.put("basicOperations",         basicOperationCounter);
+    data.put(JsonWriter.METHOD_INVOCATION_PROFILE, methodInvocationCounter);
+    data.put(JsonWriter.METHOD_CALLSITE,          methodCallsiteProbes);
+    data.put(JsonWriter.NEW_OBJECT_COUNT,         newObjectCounter);
+    data.put(JsonWriter.NEW_ARRAY_COUNT,          newArrayCounter);
+    data.put(JsonWriter.FIELD_READS,              fieldReadProfiles);
+    data.put(JsonWriter.FIELD_WRITES,             fieldWriteProfiles);
+    data.put(JsonWriter.BRANCH_PROFILES,          controlFlowProfiles);
+    data.put(JsonWriter.LITERAL_READS,            literalReadCounter);
+    data.put(JsonWriter.LOCAL_READS,              localsReadProfiles);
+    data.put(JsonWriter.LOCAL_WRITES,             localsWriteProfiles);
+    data.put(JsonWriter.BASIC_OPERATIONS,         basicOperationCounter);
     return data;
   }
 
