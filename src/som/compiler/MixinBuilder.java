@@ -24,7 +24,6 @@
  */
 package som.compiler;
 
-import static som.compiler.Tags.NEW_OBJECT;
 import static som.vm.Symbols.symbolFor;
 
 import java.util.ArrayList;
@@ -394,8 +393,7 @@ public final class MixinBuilder {
     // first create new Object
 
     ExpressionNode newObject = NewObjectPrimNodeGen.create(
-        primaryFactorySource.cloneWithTags(NEW_OBJECT), mixinId,
-        primaryFactoryMethod.getSelfRead(null));
+        mixinId, primaryFactoryMethod.getSelfRead(null));
 
     List<ExpressionNode> args = createPrimaryFactoryArgumentRead(newObject);
 
