@@ -495,7 +495,6 @@ public final class MixinDefinition {
     @Override
     public AbstractDispatchNode getDispatchNode(final Object receiver,
         final Object firstArg, final AbstractDispatchNode next) {
-      assert next.getSourceSection() != null;
       SObject rcvr = (SObject) receiver;
       if (rcvr instanceof SMutableObject) {
         return new CachedMutableSlotRead(source, createNode(rcvr), DispatchGuard.create(rcvr), next);
