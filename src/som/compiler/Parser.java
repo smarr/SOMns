@@ -663,7 +663,7 @@ public final class Parser {
     assert lexer.getNumberOfCharactersRead() - coord.charIndex >= 0;
     SourceSection ss = source.createSection("method", coord.startLine,
         coord.startColumn, coord.charIndex,
-        Math.max(lexer.getNumberOfNonWhiteCharsRead() - coord.charIndex, 0), tags);
+        Math.max(lexer.getNumberOfNonWhiteCharsRead() - coord.charIndex, 0)); // TODO: add tags
     return ss;
   }
 

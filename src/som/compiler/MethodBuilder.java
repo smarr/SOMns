@@ -24,7 +24,6 @@
  */
 package som.compiler;
 
-import static som.compiler.Tags.ROOT_TAG;
 import static som.compiler.Tags.UNSPECIFIED_INVOKE;
 import static som.interpreter.SNodeFactory.createCatchNonLocalReturn;
 import static som.interpreter.SNodeFactory.createNonLocalReturn;
@@ -237,7 +236,7 @@ public final class MethodBuilder {
     SourceSection ssMethod = ssBody.getSource().createSection(
         name + cls + ">>" + signature.toString(),
         ssBody.getStartLine(), ssBody.getStartColumn(),
-        ssBody.getCharIndex(), ssBody.getCharLength(), ROOT_TAG);
+        ssBody.getCharIndex(), ssBody.getCharLength()); // TODO: add tag ROOT_TAG
     return ssMethod;
   }
 
