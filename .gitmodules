@@ -7,3 +7,6 @@
 [submodule "libs/mx"]
 	path = libs/mx
 	url = https://github.com/smarr/mx.git
+[submodule "libs/websocket"]
+	path = libs/websocket
+	url = https://github.com/smarr/Java-WebSocket.git
