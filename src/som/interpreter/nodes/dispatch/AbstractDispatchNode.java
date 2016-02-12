@@ -8,10 +8,17 @@ import com.oracle.truffle.api.source.SourceSection;
 public abstract class AbstractDispatchNode
     extends Node implements DispatchChain {
   public static final int INLINE_CACHE_SIZE = 6;
+  protected final SourceSection sourceSection;
 
   protected AbstractDispatchNode(final SourceSection source) {
-    super(source);
     assert source != null;
+    super();
+    this.sourceSection = source;
+  }
+
+  @Override
+  public final SourceSection getSourceSection() {
+    return sourceSection;
   }
 
   public abstract Object executeDispatch(
