@@ -23,4 +23,8 @@ public class ReadValueProfile extends Counter {
   public void profileValueType(final SClass valueType) {
     typesOfReadValue.merge(valueType, 1, Integer::sum);
   }
+
+  public Map<SClass, Integer> getTypeProfile() {
+    return typesOfReadValue;
+  }
 }
