@@ -6,12 +6,15 @@ import java.io.PrintWriter;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import som.vmobjects.SClass;
+
 import com.oracle.truffle.api.source.SourceSection;
 
 import dym.profiles.AllocationProfile;
 import dym.profiles.ArrayCreationProfile;
 import dym.profiles.InvocationProfile;
 import dym.profiles.MethodCallsiteProbe;
+import dym.profiles.ReadValueProfile;
 
 
 public final class MetricsCsvWriter {
@@ -39,6 +42,8 @@ public final class MetricsCsvWriter {
     methodCallsites();
     newObjectCount();
     newArrayCount();
+    fieldReads();
+    localReads();
   }
 
   private void methodActivations() {
@@ -111,6 +116,52 @@ public final class MetricsCsvWriter {
           file.print(e.getValue());
           file.print("\t");
           file.print(e.getKey());
+          file.println();
+        }
+      }
+    } catch (FileNotFoundException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private void fieldReads() {
+    @SuppressWarnings("unchecked")
+    Map<SourceSection, ReadValueProfile> profiles = (Map<SourceSection, ReadValueProfile>) data.get("fieldReads");
+
+    try (PrintWriter file = new PrintWriter(metricsFolder + File.separator + "field-reads.csv")) {
+      file.println("Source Section\tRead Type\tCount");
+
+      for (ReadValueProfile p : profiles.values()) {
+        String abbrv = getSourceSectionAbbrv(p.getSourceSection());
+        for (Entry<SClass, Integer> e : p.getTypeProfile().entrySet()) {
+          file.print(abbrv);
+          file.print("\t");
+          file.print(e.getKey().getName().getString());
+          file.print("\t");
+          file.print(e.getValue());
+          file.println();
+        }
+      }
+    } catch (FileNotFoundException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private void localReads() {
+    @SuppressWarnings("unchecked")
+    Map<SourceSection, ReadValueProfile> profiles = (Map<SourceSection, ReadValueProfile>) data.get("localReads");
+
+    try (PrintWriter file = new PrintWriter(metricsFolder + File.separator + "local-reads.csv")) {
+      file.println("Source Section\tRead Type\tCount");
+
+      for (ReadValueProfile p : profiles.values()) {
+        String abbrv = getSourceSectionAbbrv(p.getSourceSection());
+        for (Entry<SClass, Integer> e : p.getTypeProfile().entrySet()) {
+          file.print(abbrv);
+          file.print("\t");
+          file.print(e.getKey().getName().getString());
+          file.print("\t");
+          file.print(e.getValue());
           file.println();
         }
       }
