@@ -206,6 +206,9 @@
     $(rootSpan).popover();
   }
 
+  var accessProfiles = new Array(),
+    maxAccessCount = -1;
+
   function showAccessProfile(profileData, rootSpan) {
     if (profileData.count < 1) {
       return;
@@ -217,6 +220,28 @@
     $(rootSpan).attr("data-content", "Accesses: " + profileData.count);
     $(rootSpan).attr("data-placement", "auto top");
     $(rootSpan).popover();
+
+    // collect data for histogram of variable accesses
+    maxAccessCount = Math.max(maxAccessCount, profileData.count);
+    profileData.spanId = rootSpan.id;
+    accessProfiles.push(profileData);
+  }
+
+  function showHistogramOfAccess() {
+    var numBins = 6,
+      binSize = Math.ceil(Math.log(maxAccessCount) / numBins)
+      bins = new Array(numBins);
+    bins.fill(0);
+    
+    accessProfiles.forEach(function(profileData) {
+      var bin = Math.floor(Math.log(profileData.count) / binSize);
+      bins[bin] += 1;
+      $("#" + profileData.spanId).addClass("bucket-" + bin);
+    });
+
+    // generateGraph();
+  }
+
   }
   
   function processData(o) {
@@ -229,6 +254,11 @@
     for (var ssId in o.sections) {
       showSectionData(o.sections[ssId]);
     };
+
+    showHistogramOfAccess();
+
+    // TODO: remove: activate Mandelbrot tab
+    $('.nav-tabs a[href="#s-2"]').tab('show');
   }
   
   function showSectionData(section) {
@@ -237,8 +267,11 @@
         document.getElementById(section.id));
     }
 
-    if (section.data && section.data.localsAccesses) {
-      showAccessProfile(section.data.localsAccesses,
+    if (section.data && (section.data.localReads != null || section.data.localWrites != null)) {
+      if (section.data.localReads != null && section.data.localWrites != null) {
+        throw "this is unexpected, adapt program";
+      }
+      showAccessProfile(section.data.localReads || section.data.localWrites,
         document.getElementById(section.id));
     }
   }
@@ -331,6 +364,13 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
   .SYNTAX_ARGUMENT, .LOCAL_ARG_READ { color: #194a87; }
   .SYNTAX_LOCAL_VARIABLE, .LOCAL_VAR_READ, .LOCAL_VAR_WRITE { color: #194a87; }
   
+
+  .bucket-0 { background-color: #fff; }
+  .bucket-1 { background-color: #ffcccc; }
+  .bucket-2 { background-color: #f78787; }
+  .bucket-3 { background-color: #ef2929; }
+  .bucket-4 { background-color: #cc0000; filter: color: #fff; }
+  .bucket-5 { background-color: #a40000; filter: color: #fff; }
   </style>
 </head>
 <body onload="init()">
