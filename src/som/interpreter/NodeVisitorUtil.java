@@ -9,7 +9,7 @@ import com.oracle.truffle.api.nodes.NodeVisitor;
 public final class NodeVisitorUtil {
 
   private static final class DummyParent extends Node {
-    private DummyParent() { super(null); }
+    private DummyParent() { super(); }
     @Child private ExpressionNode child;
 
     private void adopt(final ExpressionNode child) {

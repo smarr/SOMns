@@ -28,7 +28,7 @@ public abstract class FieldReadNode extends Node {
   }
 
   protected FieldReadNode(final SlotDefinition slot) {
-    super(null);
+    super();
     this.slot = slot;
   }
 
