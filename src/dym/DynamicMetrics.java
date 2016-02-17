@@ -19,6 +19,7 @@ import com.oracle.truffle.api.instrumentation.SourceSectionFilter;
 import com.oracle.truffle.api.instrumentation.SourceSectionFilter.Builder;
 import com.oracle.truffle.api.instrumentation.TruffleInstrument;
 import com.oracle.truffle.api.instrumentation.TruffleInstrument.Registration;
+import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
 
 import dym.nodes.AllocationProfilingNode;
@@ -133,10 +134,21 @@ public class DynamicMetrics extends TruffleInstrument {
         });
   }
 
+  private void addRootTagInstrumentation(final Instrumenter instrumenter) {
+    Builder filters = SourceSectionFilter.newBuilder();
+    filters.tagIs(ROOT_TAG);
+    instrumenter.attachFactory(filters.build(), (final EventContext ctx) -> {
+      RootNode root = ctx.getInstrumentedNode().getRootNode();
+      assert root instanceof Invokable : "TODO: make language independent";
+      InvocationProfile p = methodInvocationCounter.computeIfAbsent(
+          ctx.getInstrumentedSourceSection(), ss -> new InvocationProfile(ss, (Invokable) root));
+      return new InvocationProfilingNode(this, p);
+    });
+  }
+
   @Override
   protected void onCreate(final Env env, final Instrumenter instrumenter) {
-    addInstrumentation(instrumenter, methodInvocationCounter, InvocationProfile::new,
-        p -> new InvocationProfilingNode(this, p), ROOT_TAG);
+    addRootTagInstrumentation(instrumenter);
 
     addInstrumentation(instrumenter, methodCallsiteProbes, MethodCallsiteProbe::new,
         CountingNode<Counter>::new, UNSPECIFIED_INVOKE);
