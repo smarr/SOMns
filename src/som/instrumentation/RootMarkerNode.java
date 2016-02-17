@@ -17,8 +17,11 @@ public class RootMarkerNode extends ExpressionNode {
     this.body = body;
   }
 
+  /**
+   * To be used only by the generated wrapper.
+   */
   protected RootMarkerNode(final RootMarkerNode wrappedNode) {
-    this(wrappedNode.getSourceSection(), wrappedNode.body);
+    this(wrappedNode.getSourceSection(), null);
   }
 
   protected RootMarkerNode(final SourceSection sourceSection) {
