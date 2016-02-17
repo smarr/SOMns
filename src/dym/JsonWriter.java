@@ -30,6 +30,7 @@ public final class JsonWriter {
   public static final String LOCAL_READS      = "localReads";
   public static final String LOCAL_WRITES     = "localWrites";
   public static final String BASIC_OPERATIONS = "basicOperations";
+  public static final String LOOPS            = "loops";
 
   private final Map<String, Map<SourceSection, ? extends JsonSerializable>> data;
   private final String outputFile;

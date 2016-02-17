@@ -1,6 +1,8 @@
 package som.interpreter.nodes.specialized.whileloops;
 
+import som.compiler.Tags;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.SOMNode;
 import som.interpreter.nodes.specialized.SomLoop;
 import som.vm.constants.Nil;
 
@@ -29,7 +31,7 @@ public final class WhileInlinedLiteralsNode extends ExpressionNode {
       final ExpressionNode originalConditionNode,
       final ExpressionNode originalBodyNode,
       final SourceSection sourceSection) {
-    super(sourceSection);
+    super(SOMNode.cloneAndAddTags(sourceSection, Tags.LOOP_BODY));
     this.conditionNode = inlinedConditionNode;
     this.bodyNode      = inlinedBodyNode;
     this.expectedBool  = expectedBool;

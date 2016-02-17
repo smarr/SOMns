@@ -79,6 +79,7 @@ public class DynamicMetrics extends TruffleInstrument {
   private final Map<SourceSection, ReadValueProfile> localsReadProfiles;
   private final Map<SourceSection, Counter> localsWriteProfiles;
   private final Map<SourceSection, Counter> basicOperationCounter;
+  private final Map<SourceSection, Counter> loopProfiles;
 
   private final StructuralProbe structuralProbe;
 
@@ -98,6 +99,7 @@ public class DynamicMetrics extends TruffleInstrument {
     localsReadProfiles      = new HashMap<>();
     localsWriteProfiles     = new HashMap<>();
     basicOperationCounter   = new HashMap<>();
+    loopProfiles            = new HashMap<>();
 
     assert "DefaultTruffleRuntime".equals(
         Truffle.getRuntime().getClass().getSimpleName())
@@ -162,6 +164,9 @@ public class DynamicMetrics extends TruffleInstrument {
 
     addInstrumentation(instrumenter, controlFlowProfiles, BranchProfile::new,
         ControlFlowProfileNode::new, Tags.CONTROL_FLOW_CONDITION);
+
+    addInstrumentation(instrumenter, loopProfiles, Counter::new,
+        CountingNode<Counter>::new, Tags.LOOP_BODY);
   }
 
   @Override
@@ -188,6 +193,7 @@ public class DynamicMetrics extends TruffleInstrument {
     data.put(JsonWriter.LOCAL_READS,              localsReadProfiles);
     data.put(JsonWriter.LOCAL_WRITES,             localsWriteProfiles);
     data.put(JsonWriter.BASIC_OPERATIONS,         basicOperationCounter);
+    data.put(JsonWriter.LOOPS,                    loopProfiles);
     return data;
   }
 
