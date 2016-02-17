@@ -4,7 +4,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+import som.VM;
+import som.compiler.MixinDefinition;
 import som.compiler.Tags;
+import som.interpreter.Invokable;
+import som.interpreter.nodes.dispatch.Dispatchable;
+import som.vmobjects.SInvokable;
 
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.instrumentation.EventContext;
@@ -29,6 +34,7 @@ import dym.profiles.Counter;
 import dym.profiles.InvocationProfile;
 import dym.profiles.MethodCallsiteProbe;
 import dym.profiles.ReadValueProfile;
+import dym.profiles.StructuralProbe;
 
 
 /**
@@ -74,7 +80,13 @@ public class DynamicMetrics extends TruffleInstrument {
   private final Map<SourceSection, Counter> localsWriteProfiles;
   private final Map<SourceSection, Counter> basicOperationCounter;
 
+  private final StructuralProbe structuralProbe;
+
   public DynamicMetrics() {
+    // TODO: avoid this major hack, there should be some event interface
+    //       or a way from the polyglot engine to obtain a reference
+    structuralProbe = VM.getStructuralProbe();
+
     methodInvocationCounter = new HashMap<>();
     methodCallsiteProbes    = new HashMap<>();
     newObjectCounter        = new HashMap<>();
@@ -159,7 +171,7 @@ public class DynamicMetrics extends TruffleInstrument {
     JsonWriter.fileOut(data, outputFile);
 
     String metricsFolder = System.getProperty("dm.metrics", "metrics");
-    MetricsCsvWriter.fileOut(data, metricsFolder);
+    MetricsCsvWriter.fileOut(data, metricsFolder, structuralProbe);
 
   }
 

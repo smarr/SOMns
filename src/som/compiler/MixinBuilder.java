@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import som.VM;
 import som.compiler.MixinDefinition.ClassSlotDefinition;
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.compiler.MixinDefinition.SlotMutator;
@@ -334,6 +335,8 @@ public final class MixinBuilder {
     classScope.setMixinDefinition(clsDef, true);
 
     setHolders(clsDef);
+
+    VM.reportNewMixin(clsDef);
     return clsDef;
   }
 

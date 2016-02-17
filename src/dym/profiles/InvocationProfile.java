@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import som.interpreter.Invokable;
 import som.interpreter.Types;
 import som.vmobjects.SClass;
 
@@ -15,11 +16,17 @@ import com.oracle.truffle.api.utilities.JSONHelper.JSONObjectBuilder;
 
 public class InvocationProfile extends Counter {
 
+  private final Invokable method;
   private final Map<Arguments, Integer> argumentTypes;
 
-  public InvocationProfile(final SourceSection source) {
+  public InvocationProfile(final SourceSection source, final Invokable method) {
     super(source);
     argumentTypes = new HashMap<>();
+    this.method   = method;
+  }
+
+  public Invokable getMethod() {
+    return method;
   }
 
   public void profileArguments(final Object[] args) {

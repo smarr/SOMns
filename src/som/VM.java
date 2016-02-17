@@ -11,6 +11,7 @@ import som.interpreter.actors.SFarReference;
 import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.SResolver;
 import som.vm.ObjectSystem;
+import som.vmobjects.SInvokable;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 
 import com.oracle.truffle.api.CompilerAsserts;
@@ -24,12 +25,14 @@ import com.oracle.truffle.api.vm.PolyglotEngine.Instrument;
 import com.oracle.truffle.tools.TruffleProfiler;
 
 import dym.DynamicMetrics;
+import dym.profiles.StructuralProbe;
 
 
 public final class VM {
 
   @CompilationFinal private static PolyglotEngine engine;
   @CompilationFinal private static VM vm;
+  @CompilationFinal private static StructuralProbe structuralProbes;
 
   private final boolean avoidExitForTesting;
   private final ObjectSystem objectSystem;
@@ -74,6 +77,18 @@ public final class VM {
         InstrumentationHandler.insertInstrumentationWrapper(node);
       }
     }
+  }
+
+  public static StructuralProbe getStructuralProbe() {
+    return structuralProbes;
+  }
+
+  public static void reportNewMixin(final MixinDefinition m) {
+    structuralProbes.recordNewClass(m);
+  }
+
+  public static void reportNewMethod(final SInvokable m) {
+    structuralProbes.recordNewMethod(m);
   }
 
   public VM(final String[] args, final boolean avoidExitForTesting) throws IOException {
@@ -197,6 +212,10 @@ public final class VM {
   }
 
   public static void main(final String[] args) {
+    // TODO: fix hack, we need this early, and we want tool/polyglot engine support for the events...
+    structuralProbes = new StructuralProbe();
+
+
     Builder builder = PolyglotEngine.newBuilder();
     builder.config(SomLanguage.MIME_TYPE, SomLanguage.CMD_ARGS, args);
     engine = builder.build();

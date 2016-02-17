@@ -3,10 +3,15 @@ package dym;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import som.compiler.MixinDefinition;
+import som.interpreter.nodes.dispatch.Dispatchable;
 import som.vmobjects.SClass;
+import som.vmobjects.SInvokable;
+import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -15,24 +20,28 @@ import dym.profiles.ArrayCreationProfile;
 import dym.profiles.InvocationProfile;
 import dym.profiles.MethodCallsiteProbe;
 import dym.profiles.ReadValueProfile;
+import dym.profiles.StructuralProbe;
 
 
 public final class MetricsCsvWriter {
 
   private final Map<String, Map<SourceSection, ? extends JsonSerializable>> data;
   private final String metricsFolder;
+  private final StructuralProbe structuralProbe; // TODO: not sure, we should probably not depend on the probe here
 
   private MetricsCsvWriter(
       final Map<String, Map<SourceSection, ? extends JsonSerializable>> data,
-      final String metricsFolder) {
+      final String metricsFolder, final StructuralProbe probe) {
     this.data          = data;
     this.metricsFolder = metricsFolder;
+    this.structuralProbe = probe;
   }
 
   public static void fileOut(
       final Map<String, Map<SourceSection, ? extends JsonSerializable>> data,
-      final String metricsFolder) {
-    new MetricsCsvWriter(data, metricsFolder).createCsvFiles();
+      final String metricsFolder,
+      final StructuralProbe structuralProbe) { // TODO: remove direct StructuralProbe passing hack
+    new MetricsCsvWriter(data, metricsFolder, structuralProbe).createCsvFiles();
   }
 
   private void createCsvFiles() {
@@ -44,6 +53,7 @@ public final class MetricsCsvWriter {
     newArrayCount();
     fieldReads();
     localReads();
+    usedClassesAndMethods();
   }
 
   private void methodActivations() {
@@ -178,5 +188,76 @@ public final class MetricsCsvWriter {
       result = source.getSource().getShortName() + " pos=" + source.getCharIndex() + " len=" + source.getCharLength();
     }
     return result;
+  }
+
+  private int methodInvocationCount(final SInvokable method, final Collection<InvocationProfile> profiles) {
+    InvocationProfile profile = null;
+
+    for (InvocationProfile p : profiles) {
+      if (p.getMethod() == method.getInvokable()) {
+        profile = p;
+        break;
+      }
+    }
+
+    if (profile == null) {
+      return 0;
+    } else {
+      return profile.getValue();
+    }
+  }
+
+  private int numExecutedMethods(final MixinDefinition mixin, final Collection<InvocationProfile> profiles) {
+    int numMethodsExecuted = 0;
+    Map<SSymbol, Dispatchable> disps = mixin.getInstanceDispatchables();
+    for (Dispatchable d : disps.values()) {
+      if (d instanceof SInvokable) {
+        int invokeCount = methodInvocationCount(((SInvokable) d), profiles);
+        if (invokeCount > 0) {
+          numMethodsExecuted += 1;
+        }
+      }
+    }
+    return numMethodsExecuted;
+  }
+
+  private void usedClassesAndMethods() {
+    @SuppressWarnings("unchecked")
+    Map<SourceSection, InvocationProfile> profiles = (Map<SourceSection, InvocationProfile>) data.get(JsonWriter.METHOD_INVOCATION_PROFILE);
+
+    try (PrintWriter file = new PrintWriter(metricsFolder + File.separator + "defined-classes.csv")) {
+      file.println("Class Name\tMethods Executed");
+
+      for (MixinDefinition clazz : structuralProbe.getClasses()) {
+        file.print(clazz.getName().getString());
+        // TODO: get fully qualified name
+        file.print("\t");
+        file.print(numExecutedMethods(clazz, profiles.values()));
+        file.println();
+      }
+    } catch (FileNotFoundException e) {
+      throw new RuntimeException(e);
+    }
+
+
+    try (PrintWriter file = new PrintWriter(metricsFolder + File.separator + "defined-methods.csv")) {
+      file.println("Name\tExecuted\tExecution Count");
+
+      for (SInvokable i : structuralProbe.getMethods()) {
+        file.print(i.toString());
+        file.print("\t");
+
+        int numInvokations = methodInvocationCount(i, profiles.values());
+
+        if (numInvokations == 0) {
+          file.println("false\t0");
+        } else {
+          file.print("true\t");
+          file.println(numInvokations);
+        }
+      }
+    } catch (FileNotFoundException e) {
+      throw new RuntimeException(e);
+    }
   }
 }

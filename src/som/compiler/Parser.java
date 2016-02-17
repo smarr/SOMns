@@ -74,6 +74,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import som.VM;
 import som.compiler.Lexer.Peek;
 import som.compiler.Lexer.SourceCoordinate;
 import som.compiler.MixinBuilder.MixinDefinitionError;
@@ -707,6 +708,8 @@ public final class Parser {
     expect(Equal, "Unexpected symbol %(found)s. Tried to parse method declaration and expect '=' between message pattern, and method body.");
     ExpressionNode body = methodBlock(builder);
     SInvokable meth = builder.assemble(body, accessModifier, category, getSource(coord));
+
+    VM.reportNewMethod(meth);
     mxnBuilder.addMethod(meth);
   }
 
