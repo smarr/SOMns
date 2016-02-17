@@ -150,8 +150,8 @@ if sys.argv[0].endswith('debug'):
 if args.debug:
     flags += ['-Xdebug',
               '-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8010']
-if not args.interpreter and (args.igv or args.igv_to_file):
-    flags += ['-Dgraal.Dump=Truffle,TruffleTree']
+if (args.igv or args.igv_to_file):   # not args.interpreter and 
+    flags += ['-Dgraal.Dump=:1,Truffle:1,TruffleTree']
 if not args.interpreter and args.igv_to_file:
     flags += ['-Dgraal.PrintIdealGraphFile=true']
 if args.low_level:
