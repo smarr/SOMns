@@ -13,7 +13,7 @@ import som.vmobjects.SInvokable;
 
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.instrumentation.EventContext;
-import com.oracle.truffle.api.instrumentation.EventNode;
+import com.oracle.truffle.api.instrumentation.ExecutionEventNode;
 import com.oracle.truffle.api.instrumentation.Instrumenter;
 import com.oracle.truffle.api.instrumentation.SourceSectionFilter;
 import com.oracle.truffle.api.instrumentation.SourceSectionFilter.Builder;
@@ -46,7 +46,7 @@ import dym.profiles.StructuralProbe;
  *   - designed for single-threaded use only
  *   - designed for use in interpreted mode only
  */
-@Registration(id = DynamicMetrics.ID, autostart = false)
+@Registration(id = DynamicMetrics.ID)
 public class DynamicMetrics extends TruffleInstrument {
 
   public static final String ID       = "dym-dynamic-metrics";
@@ -118,7 +118,7 @@ public class DynamicMetrics extends TruffleInstrument {
     assert methodStackDepth >= 0;
   }
 
-  private <N extends EventNode, PRO extends Counter>
+  private <N extends ExecutionEventNode, PRO extends Counter>
     void addInstrumentation(final Instrumenter instrumenter,
       final Map<SourceSection, PRO> storageMap,
       final Function<SourceSection, PRO> pCtor,
@@ -147,7 +147,8 @@ public class DynamicMetrics extends TruffleInstrument {
   }
 
   @Override
-  protected void onCreate(final Env env, final Instrumenter instrumenter) {
+  protected void onCreate(final Env env) {
+    Instrumenter instrumenter = env.getInstrumenter();
     addRootTagInstrumentation(instrumenter);
 
     addInstrumentation(instrumenter, methodCallsiteProbes, MethodCallsiteProbe::new,

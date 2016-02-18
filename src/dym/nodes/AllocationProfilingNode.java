@@ -3,12 +3,12 @@ package dym.nodes;
 import som.vmobjects.SObjectWithClass;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.instrumentation.EventNode;
+import com.oracle.truffle.api.instrumentation.ExecutionEventNode;
 
 import dym.profiles.AllocationProfile;
 
 
-public class AllocationProfilingNode extends EventNode {
+public class AllocationProfilingNode extends ExecutionEventNode {
   protected final AllocationProfile profile;
 
   public AllocationProfilingNode(final AllocationProfile profile) {

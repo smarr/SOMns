@@ -370,7 +370,7 @@ public final class MixinBuilder {
     // self is going to be the enclosing object
     definitionMethod.addArgumentIfAbsent("self",
         Source.fromNamedText("self read", "super-class-resolution").
-        createSection("self read", 1).cloneWithTags(Tags.SYNTAX_ARGUMENT));
+        createSection("self read", 1).withTags(Tags.SYNTAX_ARGUMENT));
     definitionMethod.setSignature(Symbols.DEF_CLASS);
 
     return definitionMethod;
@@ -402,7 +402,7 @@ public final class MixinBuilder {
     // first create new Object
 
     ExpressionNode newObject = NewObjectPrimNodeGen.create(
-        primaryFactorySource.cloneWithTags(NEW_OBJECT), mixinId,
+        primaryFactorySource.withTags(NEW_OBJECT), mixinId,
         primaryFactoryMethod.getSelfRead(null));
 
     List<ExpressionNode> args = createPrimaryFactoryArgumentRead(newObject);

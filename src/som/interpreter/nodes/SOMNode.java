@@ -149,6 +149,6 @@ public abstract class SOMNode extends Node {
     }
     Set<String> newTags = new HashSet<String>(Arrays.asList(originalTags));
     newTags.addAll(Arrays.asList(tags));
-    return source.cloneWithTags(newTags.toArray(new String[0]));
+    return source.withTags(newTags.toArray(new String[0]));
   }
 }

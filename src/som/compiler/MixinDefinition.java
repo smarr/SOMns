@@ -667,7 +667,7 @@ public final class MixinDefinition {
     builder.setSignature(init);
     builder.addArgumentIfAbsent("self",
         Source.fromNamedText("self read", "super-class-resolution").
-        createSection("self read", 1).cloneWithTags(Tags.SYNTAX_ARGUMENT));
+        createSection("self read", 1).withTags(Tags.SYNTAX_ARGUMENT));
 
     Source source = Source.fromNamedText("self", "Thing>>" + init.getString());
     SourceSection ss = source.createSection(init.getString(), 0, 4);

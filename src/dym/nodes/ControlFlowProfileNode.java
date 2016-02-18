@@ -1,12 +1,12 @@
 package dym.nodes;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.instrumentation.EventNode;
+import com.oracle.truffle.api.instrumentation.ExecutionEventNode;
 
 import dym.profiles.BranchProfile;
 
 
-public class ControlFlowProfileNode extends EventNode {
+public class ControlFlowProfileNode extends ExecutionEventNode {
   protected final BranchProfile profile;
 
   public ControlFlowProfileNode(final BranchProfile profile) {

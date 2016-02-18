@@ -59,7 +59,7 @@ public abstract class Variable {
     public ExpressionNode getReadNode(final int contextLevel,
         final SourceSection source) {
       transferToInterpreterAndInvalidate("Variable.getReadNode");
-      return createArgumentRead(this, contextLevel, source.cloneWithTags(Tags.LOCAL_ARG_READ));
+      return createArgumentRead(this, contextLevel, source.withTags(Tags.LOCAL_ARG_READ));
     }
   }
 
@@ -75,7 +75,7 @@ public abstract class Variable {
     public ExpressionNode getReadNode(final int contextLevel,
         final SourceSection source) {
       transferToInterpreterAndInvalidate("Variable.getReadNode");
-      return createLocalVarRead(this, contextLevel, source.cloneWithTags(Tags.LOCAL_VAR_READ));
+      return createLocalVarRead(this, contextLevel, source.withTags(Tags.LOCAL_VAR_READ));
     }
 
     public FrameSlot getSlot() {
@@ -94,7 +94,7 @@ public abstract class Variable {
     public ExpressionNode getWriteNode(final int contextLevel,
         final ExpressionNode valueExpr, final SourceSection source) {
       transferToInterpreterAndInvalidate("Variable.getWriteNode");
-      return createVariableWrite(this, contextLevel, valueExpr, source.cloneWithTags(Tags.LOCAL_VAR_WRITE));
+      return createVariableWrite(this, contextLevel, valueExpr, source.withTags(Tags.LOCAL_VAR_WRITE));
     }
   }
 }

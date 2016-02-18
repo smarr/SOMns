@@ -1,12 +1,12 @@
 package dym.nodes;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.instrumentation.EventNode;
+import com.oracle.truffle.api.instrumentation.ExecutionEventNode;
 
 import dym.profiles.Counter;
 
 
-public class CountingNode<T extends Counter> extends EventNode {
+public class CountingNode<T extends Counter> extends ExecutionEventNode {
 
   protected final T counter;
 
