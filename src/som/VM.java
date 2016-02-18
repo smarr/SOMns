@@ -93,6 +93,10 @@ public final class VM {
 
   public VM(final String[] args, final boolean avoidExitForTesting) throws IOException {
     vm = this;
+
+    // TODO: fix hack, we need this early, and we want tool/polyglot engine support for the events...
+    structuralProbes = new StructuralProbe();
+
     this.avoidExitForTesting = avoidExitForTesting;
     options = new VMOptions(args);
     objectSystem = new ObjectSystem(options.platformFile, options.kernelFile);
@@ -212,10 +216,6 @@ public final class VM {
   }
 
   public static void main(final String[] args) {
-    // TODO: fix hack, we need this early, and we want tool/polyglot engine support for the events...
-    structuralProbes = new StructuralProbe();
-
-
     Builder builder = PolyglotEngine.newBuilder();
     builder.config(SomLanguage.MIME_TYPE, SomLanguage.CMD_ARGS, args);
     engine = builder.build();
