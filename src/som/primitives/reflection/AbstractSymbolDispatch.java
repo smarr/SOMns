@@ -22,9 +22,17 @@ import com.oracle.truffle.api.source.SourceSection;
 public abstract class AbstractSymbolDispatch extends Node {
   public static final int INLINE_CACHE_SIZE = 6;
 
+  private final SourceSection sourceSection;
+
   protected AbstractSymbolDispatch(final SourceSection source) {
-    super(source);
+    super();
     assert source != null;
+    this.sourceSection = source;
+  }
+
+  @Override
+  public final SourceSection getSourceSection() {
+    return sourceSection;
   }
 
   // TODO: think about how we can add a specialization for slot accesses, especially Caching Class lost stuff. Slot access are very expensive when uncached, we should avoid that, because we create nodes, every single time

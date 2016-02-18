@@ -32,6 +32,7 @@ import som.interpreter.SplitterForLexicallyEmbeddedCode;
 import som.interpreter.Types;
 
 import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.dsl.TypeSystemReference;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
@@ -42,8 +43,16 @@ import com.oracle.truffle.api.source.SourceSection;
 @TypeSystemReference(Types.class)
 public abstract class SOMNode extends Node {
 
+  @CompilationFinal SourceSection sourceSection;
+
   public SOMNode(final SourceSection sourceSection) {
-    super(sourceSection);
+    super();
+    this.sourceSection = sourceSection;
+  }
+
+  @Override
+  public final SourceSection getSourceSection() {
+    return sourceSection;
   }
 
   /**
@@ -136,9 +145,7 @@ public abstract class SOMNode extends Node {
   }
 
   public void addTagsToSourceSection(final String... tags) {
-    SourceSection newTagged = cloneAndAddTags(getSourceSection(), tags);
-    clearSourceSection();
-    assignSourceSection(newTagged);
+    sourceSection = cloneAndAddTags(getSourceSection(), tags);
   }
 
   public static SourceSection cloneAndAddTags(final SourceSection source, final String... tags) {

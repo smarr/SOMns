@@ -13,9 +13,17 @@ public abstract class AbstractDispatchNode
     extends Node implements DispatchChain {
   public static final int INLINE_CACHE_SIZE = 6;
 
+  private final SourceSection sourceSection;
+
   protected AbstractDispatchNode(final SourceSection source) {
-    super(source);
+    super();
     assert source != null;
+    this.sourceSection = source;
+  }
+
+  @Override
+  public final SourceSection getSourceSection() {
+    return sourceSection;
   }
 
   public abstract Object executeDispatch(
