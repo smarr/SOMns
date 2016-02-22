@@ -1,28 +1,36 @@
 package dym.nodes;
 
+import som.interpreter.ReturnException;
+import som.vm.NotYetImplementedException;
+
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.EventContext;
 import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
 import com.oracle.truffle.api.nodes.Node;
 
-import dym.profiles.PrimitiveOperationProfile;
+import dym.profiles.OperationProfile;
 
 
 /**
  * This is for primitive operations only, this mean they cannot cause recursion.
  */
-public class PrimitiveOperationProfilingNode extends CountingNode<PrimitiveOperationProfile> {
+public final class OperationProfilingNode<T extends OperationProfile> extends CountingNode<T> {
 
   private final EventContext context;
 
-  public PrimitiveOperationProfilingNode(
-      final PrimitiveOperationProfile profile, final EventContext context) {
+  public OperationProfilingNode(
+      final T profile, final EventContext context) {
     super(profile);
     this.context = context;
   }
 
-  public PrimitiveOperationProfile getProfile() {
+  public T getProfile() {
     return counter;
+  }
+
+  @Override
+  protected void onEnter(final VirtualFrame frame) {
+    counter.enterMainNode();
   }
 
   @Override
@@ -32,7 +40,12 @@ public class PrimitiveOperationProfilingNode extends CountingNode<PrimitiveOpera
 
   @Override
   protected void onReturnExceptional(final VirtualFrame frame, final Throwable e) {
-    counter.profileReturn(e);
+    // TODO: make language independent
+    if (e instanceof ReturnException) {
+      counter.profileReturn(((ReturnException) e).result());
+    } else {
+      throw new NotYetImplementedException();
+    }
   }
 
   public int registerSubexpressionAndGetIdx(final Node subExpr) {
