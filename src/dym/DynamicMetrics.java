@@ -1,6 +1,9 @@
 package dym;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -14,11 +17,14 @@ import som.vmobjects.SInvokable;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.instrumentation.EventContext;
 import com.oracle.truffle.api.instrumentation.ExecutionEventNode;
+import com.oracle.truffle.api.instrumentation.ExecutionEventNodeFactory;
 import com.oracle.truffle.api.instrumentation.Instrumenter;
 import com.oracle.truffle.api.instrumentation.SourceSectionFilter;
 import com.oracle.truffle.api.instrumentation.SourceSectionFilter.Builder;
 import com.oracle.truffle.api.instrumentation.TruffleInstrument;
 import com.oracle.truffle.api.instrumentation.TruffleInstrument.Registration;
+import com.oracle.truffle.api.nodes.GraphPrintVisitor;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -28,13 +34,16 @@ import dym.nodes.ControlFlowProfileNode;
 import dym.nodes.CountingNode;
 import dym.nodes.FieldReadProfilingNode;
 import dym.nodes.InvocationProfilingNode;
+import dym.nodes.PrimitiveOperationProfilingNode;
 import dym.profiles.AllocationProfile;
 import dym.profiles.ArrayCreationProfile;
 import dym.profiles.BranchProfile;
 import dym.profiles.Counter;
 import dym.profiles.InvocationProfile;
 import dym.profiles.MethodCallsiteProbe;
+import dym.profiles.PrimitiveOperationProfile;
 import dym.profiles.ReadValueProfile;
+import dym.profiles.ReportResultNode;
 import dym.profiles.StructuralProbe;
 
 
@@ -79,7 +88,7 @@ public class DynamicMetrics extends TruffleInstrument {
   private final Map<SourceSection, Counter> literalReadCounter;
   private final Map<SourceSection, ReadValueProfile> localsReadProfiles;
   private final Map<SourceSection, Counter> localsWriteProfiles;
-  private final Map<SourceSection, Counter> basicOperationCounter;
+  private final Map<SourceSection, PrimitiveOperationProfile> basicOperationCounter;
   private final Map<SourceSection, Counter> loopProfiles;
 
   private final StructuralProbe structuralProbe;
@@ -120,12 +129,18 @@ public class DynamicMetrics extends TruffleInstrument {
 
   private <N extends ExecutionEventNode, PRO extends Counter>
     void addInstrumentation(final Instrumenter instrumenter,
-      final Map<SourceSection, PRO> storageMap,
-      final Function<SourceSection, PRO> pCtor,
-      final Function<PRO, N> nCtor,
-      final String... tags) {
+        final Map<SourceSection, PRO> storageMap,
+        final String[] tagsIs,
+        final String[] tagsIsNot,
+        final Function<SourceSection, PRO> pCtor,
+        final Function<PRO, N> nCtor) {
     Builder filters = SourceSectionFilter.newBuilder();
-    filters.tagIs(tags);
+    if (tagsIs != null && tagsIs.length > 0) {
+      filters.tagIs(tagsIs);
+    }
+    if (tagsIsNot != null && tagsIsNot.length > 0) {
+      filters.tagIsNot(tagsIsNot);
+    }
     instrumenter.attachFactory(filters.build(),
         (final EventContext ctx) -> {
           PRO p = storageMap.computeIfAbsent(ctx.getInstrumentedSourceSection(),
@@ -146,40 +161,93 @@ public class DynamicMetrics extends TruffleInstrument {
     });
   }
 
+  private static int numberOfChildren(final Node node) {
+    int i = 0;
+    for (@SuppressWarnings("unused") Node child : node.getChildren()) {
+      i += 1;
+    }
+    return i;
+  }
+
+  private ExecutionEventNodeFactory addPrimitiveInstrumentation(final Instrumenter instrumenter) {
+    Builder filters = SourceSectionFilter.newBuilder();
+    filters.tagIs(Tags.BASIC_PRIMITIVE_OPERATION);
+    filters.tagIsNot(Tags.EAGERLY_WRAPPED);
+
+    ExecutionEventNodeFactory primExpFactory = (final EventContext ctx) -> {
+      int numSubExpr = numberOfChildren(ctx.getInstrumentedNode());
+
+      PrimitiveOperationProfile p = basicOperationCounter.computeIfAbsent(
+        ctx.getInstrumentedSourceSection(),
+        (final SourceSection src) -> new PrimitiveOperationProfile(src, numSubExpr));
+      return new PrimitiveOperationProfilingNode(p, ctx);
+    };
+
+    instrumenter.attachFactory(filters.build(), primExpFactory);
+    return primExpFactory;
+  }
+
+  private void addPrimitiveSubexpressionInstrumentation(
+      final Instrumenter instrumenter,
+      final ExecutionEventNodeFactory basicPrimInstrFactory) {
+    Builder filters = SourceSectionFilter.newBuilder();
+    filters.tagIs(Tags.BASIC_PRIMITIVE_ARGUMENT);
+    filters.tagIsNot(Tags.EAGERLY_WRAPPED);
+
+    instrumenter.attachFactory(filters.build(), (final EventContext ctx) -> {
+      ExecutionEventNode parent = ctx.findParentEventNode(basicPrimInstrFactory);
+
+      PrimitiveOperationProfilingNode p = (PrimitiveOperationProfilingNode) parent;
+      int idx = p.registerSubexpressionAndGetIdx(ctx.getInstrumentedNode());
+      return new ReportResultNode(p.getProfile(), idx);
+    });
+  }
+
   @Override
   protected void onCreate(final Env env) {
     Instrumenter instrumenter = env.getInstrumenter();
     addRootTagInstrumentation(instrumenter);
 
-    addInstrumentation(instrumenter, methodCallsiteProbes, MethodCallsiteProbe::new,
-        CountingNode<Counter>::new, UNSPECIFIED_INVOKE);
+    addInstrumentation(instrumenter, methodCallsiteProbes,
+        new String[] {UNSPECIFIED_INVOKE}, new String[] {Tags.EAGERLY_WRAPPED},
+        MethodCallsiteProbe::new, CountingNode<Counter>::new);
 
-    addInstrumentation(instrumenter, newObjectCounter, AllocationProfile::new,
-        AllocationProfilingNode::new, NEW_OBJECT);
-    addInstrumentation(instrumenter, newArrayCounter, ArrayCreationProfile::new,
-        ArrayAllocationProfilingNode::new, NEW_ARRAY);
+    addInstrumentation(instrumenter, newObjectCounter,
+        new String[] {NEW_OBJECT}, new String[] {},
+        AllocationProfile::new, AllocationProfilingNode::new);
+    addInstrumentation(instrumenter, newArrayCounter,
+        new String[] {NEW_ARRAY}, new String[] {},
+        ArrayCreationProfile::new, ArrayAllocationProfilingNode::new);
 
-    addInstrumentation(instrumenter, literalReadCounter, Counter::new,
-        CountingNode<Counter>::new, Tags.SYNTAX_LITERAL);
+    addInstrumentation(instrumenter, literalReadCounter,
+        new String[] {Tags.SYNTAX_LITERAL}, new String[] {},
+        Counter::new, CountingNode<Counter>::new);
 
-    addInstrumentation(instrumenter, basicOperationCounter, Counter::new,
-        CountingNode<Counter>::new, Tags.BASIC_PRIMITIVE_OPERATION);
+    ExecutionEventNodeFactory basicPrimInstrFact = addPrimitiveInstrumentation(instrumenter);
+    addPrimitiveSubexpressionInstrumentation(instrumenter, basicPrimInstrFact);
 
-    addInstrumentation(instrumenter, fieldReadProfiles, ReadValueProfile::new,
-        FieldReadProfilingNode::new, Tags.FIELD_READ);
-    addInstrumentation(instrumenter, localsReadProfiles, ReadValueProfile::new,
-        FieldReadProfilingNode::new, Tags.LOCAL_ARG_READ, Tags.LOCAL_VAR_READ);
+    addInstrumentation(instrumenter, fieldReadProfiles,
+        new String[] {Tags.FIELD_READ}, new String[] {},
+        ReadValueProfile::new,
+        FieldReadProfilingNode::new);
+    addInstrumentation(instrumenter, localsReadProfiles,
+        new String[] {Tags.LOCAL_ARG_READ, Tags.LOCAL_VAR_READ}, new String[] {},
+        ReadValueProfile::new, FieldReadProfilingNode::new);
 
-    addInstrumentation(instrumenter, fieldWriteProfiles, Counter::new,
-        CountingNode<Counter>::new, Tags.FIELD_WRITE);
-    addInstrumentation(instrumenter, localsWriteProfiles, Counter::new,
-        CountingNode<Counter>::new, Tags.LOCAL_VAR_WRITE);
+    addInstrumentation(instrumenter, fieldWriteProfiles,
+        new String[] {Tags.FIELD_WRITE}, new String[] {},
+        Counter::new, CountingNode<Counter>::new);
+    addInstrumentation(instrumenter, localsWriteProfiles,
+        new String[] {Tags.LOCAL_VAR_WRITE}, new String[] {},
+        Counter::new, CountingNode<Counter>::new);
 
-    addInstrumentation(instrumenter, controlFlowProfiles, BranchProfile::new,
-        ControlFlowProfileNode::new, Tags.CONTROL_FLOW_CONDITION);
+    addInstrumentation(instrumenter, controlFlowProfiles,
+        new String[] {Tags.CONTROL_FLOW_CONDITION}, new String[] {},
+        BranchProfile::new, ControlFlowProfileNode::new);
 
-    addInstrumentation(instrumenter, loopProfiles, Counter::new,
-        CountingNode<Counter>::new, Tags.LOOP_BODY);
+    addInstrumentation(instrumenter, loopProfiles,
+        new String[] {Tags.LOOP_BODY}, new String[] {},
+        Counter::new, CountingNode<Counter>::new);
   }
 
   @Override
