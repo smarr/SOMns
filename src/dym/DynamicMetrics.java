@@ -34,16 +34,21 @@ import dym.nodes.ControlFlowProfileNode;
 import dym.nodes.CountingNode;
 import dym.nodes.FieldReadProfilingNode;
 import dym.nodes.InvocationProfilingNode;
-import dym.nodes.PrimitiveOperationProfilingNode;
+import dym.nodes.LoopIterationReportNode;
+import dym.nodes.LoopProfilingNode;
+import dym.nodes.OperationProfilingNode;
+import dym.nodes.ReportResultNode;
 import dym.profiles.AllocationProfile;
 import dym.profiles.ArrayCreationProfile;
 import dym.profiles.BranchProfile;
 import dym.profiles.Counter;
 import dym.profiles.InvocationProfile;
+import dym.profiles.LoopProfile;
 import dym.profiles.MethodCallsiteProbe;
+import dym.profiles.OperationProfile;
 import dym.profiles.PrimitiveOperationProfile;
 import dym.profiles.ReadValueProfile;
-import dym.profiles.ReportResultNode;
+import dym.profiles.RecursiveOperationProfile;
 import dym.profiles.StructuralProbe;
 
 
@@ -74,7 +79,8 @@ public class DynamicMetrics extends TruffleInstrument {
   private final Map<SourceSection, ReadValueProfile> localsReadProfiles;
   private final Map<SourceSection, Counter> localsWriteProfiles;
   private final Map<SourceSection, PrimitiveOperationProfile> basicOperationCounter;
-  private final Map<SourceSection, Counter> loopProfiles;
+  private final Map<SourceSection, RecursiveOperationProfile> recursiveOperationCounter;
+  private final Map<SourceSection, LoopProfile> loopProfiles;
 
   private final StructuralProbe structuralProbe;
 
@@ -94,6 +100,7 @@ public class DynamicMetrics extends TruffleInstrument {
     localsReadProfiles      = new HashMap<>();
     localsWriteProfiles     = new HashMap<>();
     basicOperationCounter   = new HashMap<>();
+    recursiveOperationCounter = new HashMap<>();
     loopProfiles            = new HashMap<>();
 
     assert "DefaultTruffleRuntime".equals(
@@ -113,7 +120,7 @@ public class DynamicMetrics extends TruffleInstrument {
   }
 
   private <N extends ExecutionEventNode, PRO extends Counter>
-    void addInstrumentation(final Instrumenter instrumenter,
+    ExecutionEventNodeFactory addInstrumentation(final Instrumenter instrumenter,
         final Map<SourceSection, PRO> storageMap,
         final String[] tagsIs,
         final String[] tagsIsNot,
@@ -126,12 +133,14 @@ public class DynamicMetrics extends TruffleInstrument {
     if (tagsIsNot != null && tagsIsNot.length > 0) {
       filters.tagIsNot(tagsIsNot);
     }
-    instrumenter.attachFactory(filters.build(),
-        (final EventContext ctx) -> {
-          PRO p = storageMap.computeIfAbsent(ctx.getInstrumentedSourceSection(),
-              pCtor);
-          return nCtor.apply(p);
-        });
+
+    ExecutionEventNodeFactory factory = (final EventContext ctx) -> {
+      PRO p = storageMap.computeIfAbsent(ctx.getInstrumentedSourceSection(), pCtor);
+      return nCtor.apply(p);
+    };
+
+    instrumenter.attachFactory(filters.build(), factory);
+    return factory;
   }
 
   private void addRootTagInstrumentation(final Instrumenter instrumenter) {
@@ -165,24 +174,47 @@ public class DynamicMetrics extends TruffleInstrument {
       PrimitiveOperationProfile p = basicOperationCounter.computeIfAbsent(
         ctx.getInstrumentedSourceSection(),
         (final SourceSection src) -> new PrimitiveOperationProfile(src, numSubExpr));
-      return new PrimitiveOperationProfilingNode(p, ctx);
+      return new OperationProfilingNode<PrimitiveOperationProfile>(p, ctx);
     };
 
     instrumenter.attachFactory(filters.build(), primExpFactory);
     return primExpFactory;
   }
 
-  private void addPrimitiveSubexpressionInstrumentation(
+  private ExecutionEventNodeFactory addRecursivePrimitiveInstrumentation(final Instrumenter instrumenter) {
+    Builder filters = SourceSectionFilter.newBuilder();
+    filters.tagIs(Tags.COMPLEX_PRIMITIVE_OPERATION);
+    filters.tagIsNot(Tags.EAGERLY_WRAPPED);
+
+    ExecutionEventNodeFactory primExpFactory = (final EventContext ctx) -> {
+      int numSubExpr = numberOfChildren(ctx.getInstrumentedNode());
+
+      RecursiveOperationProfile p = recursiveOperationCounter.computeIfAbsent(
+        ctx.getInstrumentedSourceSection(),
+        (final SourceSection src) -> new RecursiveOperationProfile(src, numSubExpr));
+      return new OperationProfilingNode<RecursiveOperationProfile>(p, ctx);
+    };
+
+    instrumenter.attachFactory(filters.build(), primExpFactory);
+    return primExpFactory;
+  }
+
+  @SuppressWarnings("unchecked")
+  private void addSubexpressionInstrumentation(
       final Instrumenter instrumenter,
-      final ExecutionEventNodeFactory basicPrimInstrFactory) {
+      final ExecutionEventNodeFactory factoryA,
+      final ExecutionEventNodeFactory factoryB) {
     Builder filters = SourceSectionFilter.newBuilder();
     filters.tagIs(Tags.PRIMITIVE_ARGUMENT);
     filters.tagIsNot(Tags.EAGERLY_WRAPPED);
 
     instrumenter.attachFactory(filters.build(), (final EventContext ctx) -> {
-      ExecutionEventNode parent = ctx.findParentEventNode(basicPrimInstrFactory);
+      ExecutionEventNode parent = ctx.findDirectParentEventNode(factoryA);
+      if (parent == null) {
+        parent = ctx.findDirectParentEventNode(factoryB);
+      }
 
-      PrimitiveOperationProfilingNode p = (PrimitiveOperationProfilingNode) parent;
+      OperationProfilingNode<? extends OperationProfile> p = (OperationProfilingNode<?>) parent;
       int idx = p.registerSubexpressionAndGetIdx(ctx.getInstrumentedNode());
       return new ReportResultNode(p.getProfile(), idx);
     });
@@ -209,7 +241,8 @@ public class DynamicMetrics extends TruffleInstrument {
         Counter::new, CountingNode<Counter>::new);
 
     ExecutionEventNodeFactory basicPrimInstrFact = addPrimitiveInstrumentation(instrumenter);
-    addPrimitiveSubexpressionInstrumentation(instrumenter, basicPrimInstrFact);
+    ExecutionEventNodeFactory recPrimInstrFact   = addRecursivePrimitiveInstrumentation(instrumenter);
+    addSubexpressionInstrumentation(instrumenter, basicPrimInstrFact, recPrimInstrFact);
 
     addInstrumentation(instrumenter, fieldReadProfiles,
         new String[] {Tags.FIELD_READ}, new String[] {},
@@ -230,9 +263,24 @@ public class DynamicMetrics extends TruffleInstrument {
         new String[] {Tags.CONTROL_FLOW_CONDITION}, new String[] {},
         BranchProfile::new, ControlFlowProfileNode::new);
 
-    addInstrumentation(instrumenter, loopProfiles,
-        new String[] {Tags.LOOP_BODY}, new String[] {},
-        Counter::new, CountingNode<Counter>::new);
+    ExecutionEventNodeFactory loopProfileFactory = addInstrumentation(instrumenter, loopProfiles,
+        new String[] {Tags.LOOP_NODE}, new String[] {},
+        LoopProfile::new, LoopProfilingNode::new);
+
+    addLoopBodyInstrumentation(instrumenter, loopProfileFactory);
+  }
+
+  private void addLoopBodyInstrumentation(
+      final Instrumenter instrumenter,
+      final ExecutionEventNodeFactory loopProfileFactory) {
+    Builder filters = SourceSectionFilter.newBuilder();
+    filters.tagIs(Tags.LOOP_BODY);
+
+    instrumenter.attachFactory(filters.build(), (final EventContext ctx) -> {
+      ExecutionEventNode parent = ctx.findDirectParentEventNode(loopProfileFactory);
+      LoopProfilingNode p = (LoopProfilingNode) parent;
+      return new LoopIterationReportNode(p.getProfile());
+    });
   }
 
   @Override
