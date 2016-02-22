@@ -1,8 +1,6 @@
 package dym.profiles;
 
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -11,35 +9,39 @@ import com.oracle.truffle.api.source.SourceSection;
  * This is for primitive operations only, the cannot be recursive, so, we do
  * the simples possible thing.
  */
-public class PrimitiveOperationProfile extends Counter {
+public final class PrimitiveOperationProfile extends OperationProfile {
 
-  private int numKnownSubexpressions;
-
-  // TODO: do in a language independent way
   private final Object[] argumentsForCurrentExecution;
-  private final Map<Arguments, Integer> argumentTypes;
 
   public PrimitiveOperationProfile(final SourceSection source,
       final int numSubexpressions) {
-    super(source);
+    super(source, numSubexpressions);
     argumentsForCurrentExecution = new Object[numSubexpressions];
-    argumentTypes = new HashMap<>();
-    numKnownSubexpressions = 1; // the return value is stored in 0
   }
 
-  public int registerSubexpressionAndGetIdx() {
-    numKnownSubexpressions += 1;
-    return numKnownSubexpressions - 1;
-  }
+  @Override
+  public void enterMainNode() { }
 
+  @Override
   public void profileArgument(final int argIdx, final Object value) {
     argumentsForCurrentExecution[argIdx] = value;
   }
 
+  private boolean isDataComplete() {
+    return numKnownSubexpressions == argumentsForCurrentExecution.length;
+  }
+
+  @Override
   public void profileReturn(final Object returnValue) {
-    argumentsForCurrentExecution[0] = returnValue;
-    argumentTypes.merge(
-        new Arguments(argumentsForCurrentExecution), 1, Integer::sum);
+    // because of the self-optimizing nature of Truffle, we might get to
+    // profile a node only after it and all it subnodes actually completed
+    // executing, because we determine specializations based on actual arguments
+    // so, the final results might be off by one, but this should not be
+    // critical
+    if (isDataComplete()) {
+      argumentsForCurrentExecution[0] = returnValue;
+      recordArguments(argumentsForCurrentExecution);
+    }
     Arrays.fill(argumentsForCurrentExecution, null);
   }
 }
