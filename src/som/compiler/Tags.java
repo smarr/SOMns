@@ -4,6 +4,7 @@ package som.compiler;
 public class Tags {
   public static final String ROOT_TAG = "ROOT";
   public static final String UNSPECIFIED_INVOKE = "UNSPECIFIED_INVOKE"; // this is some form of invoke in the source, unclear what it is during program execution
+  public static final String CACHED_VIRTUAL_INVOKE = "CACHED_VIRTUAL_INVOKE"; // a virtual invoke where the lookup was cached
 
   public static final String NEW_OBJECT = "NEW_OBJECT";
   public static final String NEW_ARRAY  = "NEW_ARRAY";
@@ -19,6 +20,7 @@ public class Tags {
 
   public static final String ARRAY_READ         = "ARRAY_READ";
   public static final String ARRAY_WRITE        = "ARRAY_WRITE";
+  public static final String LOOP_NODE          = "LOOP_NODE";
   public static final String LOOP_BODY          = "LOOP_BODY";
 
   public static final String BASIC_PRIMITIVE_OPERATION   = "BASIC_PRIMITIVE_OPERATION";
