@@ -17,20 +17,28 @@ public abstract class Invokable extends RootNode {
 
   @Child protected ExpressionNode  expressionOrSequence;
 
+  private final SourceSection sourceSection;
   protected final ExpressionNode uninitializedBody;
 
   public Invokable(final SourceSection sourceSection,
       final FrameDescriptor frameDescriptor,
       final ExpressionNode expressionOrSequence,
       final ExpressionNode uninitialized) {
-    super(SomLanguage.class, sourceSection, frameDescriptor);
+    super(SomLanguage.class, frameDescriptor);
     this.expressionOrSequence = expressionOrSequence;
     this.uninitializedBody    = uninitialized;
+    this.sourceSection = sourceSection;
   }
 
   protected Invokable(final SourceSection source) {
-    super(SomLanguage.class, source, null);
+    super(SomLanguage.class, null);
     uninitializedBody = null;
+    sourceSection = source;
+  }
+
+  @Override
+  public SourceSection getSourceSection() {
+    return sourceSection;
   }
 
   @Override

@@ -12,11 +12,18 @@ import com.oracle.truffle.api.source.SourceSection;
 public abstract class ReceivedRootNode extends RootNode {
 
   @Child protected ResolvePromiseNode resolve;
+  private final SourceSection sourceSection;
 
   protected ReceivedRootNode(final Class<? extends TruffleLanguage<?>> language,
       final SourceSection sourceSection, final FrameDescriptor frameDescriptor) {
-    super(language, sourceSection, frameDescriptor);
+    super(language, frameDescriptor);
     assert sourceSection != null;
+    this.sourceSection = sourceSection;
+  }
+
+  @Override
+  public SourceSection getSourceSection() {
+    return sourceSection;
   }
 
   protected final void resolvePromise(final SResolver resolver, final Object result) {
