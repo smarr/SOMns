@@ -47,6 +47,12 @@ public abstract class Tagging {
     updateTags(node, add, empty);
   }
 
+  public static SourceSection cloneAndUpdateTagsIfSourceNode(final SourceSection source,
+      final String[] add, final String[] remove) {
+    if (source == null) { return null; }
+    return cloneAndUpdateTags(source, add, remove);
+  }
+
   public static SourceSection cloneAndUpdateTags(final SourceSection source,
       final String[] add, final String[] remove) {
     String[] updatedTags = updatedTags(source.getTags(), add, remove);
