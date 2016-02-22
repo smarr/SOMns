@@ -3,6 +3,7 @@ package som.interpreter.nodes;
 import static som.interpreter.nodes.SOMNode.unwrapIfNecessary;
 import som.VM;
 import som.compiler.AccessModifier;
+import som.compiler.Tags;
 import som.instrumentation.MessageSendNodeWrapper;
 import som.interpreter.TruffleCompiler;
 import som.interpreter.TypesGen;
@@ -17,6 +18,7 @@ import som.interpreter.nodes.nary.EagerBinaryPrimitiveNode;
 import som.interpreter.nodes.nary.EagerTernaryPrimitiveNode;
 import som.interpreter.nodes.nary.EagerUnaryPrimitiveNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
+import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.interpreter.nodes.specialized.AndMessageNodeFactory;
 import som.interpreter.nodes.specialized.AndMessageNodeFactory.AndBoolMessageNodeFactory;
 import som.interpreter.nodes.specialized.IfMessageNodeGen;
@@ -95,8 +97,11 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Instrumentable;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.NodeCost;
 import com.oracle.truffle.api.source.SourceSection;
+
+import dym.Tagging;
 
 
 public final class MessageSendNode {
@@ -239,106 +244,106 @@ public final class MessageSendNode {
       return replace(send);
     }
 
+    private PreevaluatedExpression makeEagerUnaryPrim(final UnaryExpressionNode prim) {
+      assert prim.getSourceSection() != null;
+
+      Tagging.addTags(argumentNodes[0], Tags.BASIC_PRIMITIVE_ARGUMENT);
+
+      PreevaluatedExpression result = replace(new EagerUnaryPrimitiveNode(
+          prim.getSourceSection(), selector, argumentNodes[0], prim));
+      Tagging.addTags(prim, Tags.EAGERLY_WRAPPED);
+      VM.insertInstrumentationWrapper((Node) result);
+      VM.insertInstrumentationWrapper(argumentNodes[0]);
+      return result;
+    }
+
     protected PreevaluatedExpression specializeUnary(final Object[] args) {
       Object receiver = args[0];
       switch (selector.getString()) {
         // eagerly but cautious:
         case "size":
           if (receiver instanceof SArray) {
-            return replace(new EagerUnaryPrimitiveNode(selector,
-                argumentNodes[0], SizeAndLengthPrimFactory.create(null)));
+            return makeEagerUnaryPrim(SizeAndLengthPrimFactory.create(getSourceSection(), null));
           }
           break;
         case "length":
           if (receiver instanceof String) {
-            return replace(new EagerUnaryPrimitiveNode(selector,
-                argumentNodes[0], SizeAndLengthPrimFactory.create(null)));
+            return makeEagerUnaryPrim(SizeAndLengthPrimFactory.create(getSourceSection(), null));
           }
           break;
         case "value":
           if (receiver instanceof SBlock || receiver instanceof Boolean) {
-            return replace(new EagerUnaryPrimitiveNode(selector,
-                argumentNodes[0], ValueNonePrimFactory.create(null)));
+            return makeEagerUnaryPrim(ValueNonePrimFactory.create(getSourceSection(), null));
           }
           break;
         case "not":
           if (receiver instanceof Boolean) {
-            return replace(new EagerUnaryPrimitiveNode(selector,
-                argumentNodes[0], NotMessageNodeFactory.create(getSourceSection(), null)));
+            return makeEagerUnaryPrim(NotMessageNodeFactory.create(getSourceSection(), null));
           }
           break;
         case "abs":
           if (receiver instanceof Long) {
-            return replace(new EagerUnaryPrimitiveNode(selector,
-                argumentNodes[0], AbsPrimNodeGen.create(null)));
+            return makeEagerUnaryPrim(AbsPrimNodeGen.create(getSourceSection(), null));
           }
           break;
         case "copy":
           if (receiver instanceof SArray) {
-            return replace(new EagerUnaryPrimitiveNode(selector,
-                argumentNodes[0], CopyPrimNodeGen.create(null)));
+            return makeEagerUnaryPrim(CopyPrimNodeGen.create(getSourceSection(), null));
           }
           break;
         case "PositiveInfinity":
           if (receiver == Classes.doubleClass) {
             // don't need to protect this with an eager wrapper
-            return replace(PositiveInfinityPrimFactory.create(argumentNodes[0]));
+            return replace(PositiveInfinityPrimFactory.create(getSourceSection(), argumentNodes[0]));
           }
           break;
         case "round":
           if (receiver instanceof Double) {
-            return replace(new EagerUnaryPrimitiveNode(selector,
-                argumentNodes[0], RoundPrimFactory.create(null)));
+            return makeEagerUnaryPrim(RoundPrimFactory.create(getSourceSection(), null));
           }
           break;
         case "as32BitSignedValue":
           if (receiver instanceof Long) {
-            return replace(new EagerUnaryPrimitiveNode(selector,
-                argumentNodes[0], As32BitSignedValueFactory.create(null)));
+            return makeEagerUnaryPrim(As32BitSignedValueFactory.create(getSourceSection(), null));
           }
           break;
         case "as32BitUnsignedValue":
           if (receiver instanceof Long) {
-            return replace(new EagerUnaryPrimitiveNode(selector,
-                argumentNodes[0], As32BitUnsignedValueFactory.create(null)));
+            return makeEagerUnaryPrim(As32BitUnsignedValueFactory.create(getSourceSection(), null));
           }
           break;
         case "sin":
           if (receiver instanceof Double) {
-            return replace(new EagerUnaryPrimitiveNode(selector,
-                argumentNodes[0], SinPrimFactory.create(null)));
+            return makeEagerUnaryPrim(SinPrimFactory.create(getSourceSection(), null));
           }
           break;
         case "exp":
           if (receiver instanceof Double) {
-            return replace(new EagerUnaryPrimitiveNode(selector,
-                argumentNodes[0], ExpPrimFactory.create(null)));
+            return makeEagerUnaryPrim(ExpPrimFactory.create(getSourceSection(), null));
           }
           break;
         case "log":
           if (receiver instanceof Double) {
-            return replace(new EagerUnaryPrimitiveNode(selector,
-                argumentNodes[0], LogPrimFactory.create(null)));
+            return makeEagerUnaryPrim(LogPrimFactory.create(getSourceSection(), null));
           }
           break;
         case "sqrt":
           if (receiver instanceof Number) {
-            return replace(new EagerUnaryPrimitiveNode(selector,
-                argumentNodes[0], SqrtPrimFactory.create(null)));
+            return makeEagerUnaryPrim(SqrtPrimFactory.create(getSourceSection(), null));
           }
           break;
         case "isNil":
-          return replace(IsNilNodeGen.create(argumentNodes[0]));
+          return replace(IsNilNodeGen.create(getSourceSection(), argumentNodes[0]));
         case "notNil":
-          return replace(NotNilNodeGen.create(argumentNodes[0]));
+          return replace(NotNilNodeGen.create(getSourceSection(), argumentNodes[0]));
         case "ticks":
           if (receiver == SystemPrims.SystemModule) {
-            return replace(TicksPrimFactory.create(argumentNodes[0]));
+            return replace(TicksPrimFactory.create(getSourceSection(), argumentNodes[0]));
           }
           break;
         case "createPromisePair":
           if (receiver == ActorClasses.ActorModule) {
-            return replace(CreatePromisePairPrimFactory.create(argumentNodes[0]));
+            return replace(CreatePromisePairPrimFactory.create(getSourceSection(), argumentNodes[0]));
           }
           break;
       }
@@ -445,7 +450,7 @@ public final class MessageSendNode {
         case "createActorFromValue:": {
           if (arguments[0] == ActorClasses.ActorModule) {
             return replace(CreateActorPrimFactory.create(getSourceSection(),
-                argumentNodes[0], argumentNodes[1], IsValueFactory.create(null)));
+                argumentNodes[0], argumentNodes[1], IsValueFactory.create(getSourceSection(), null)));
           }
           break;
         }
@@ -561,7 +566,7 @@ public final class MessageSendNode {
           }
           break;
         case "invokeOn:with:":
-          return replace(InvokeOnPrimFactory.create(
+          return replace(InvokeOnPrimFactory.create(getSourceSection(),
               argumentNodes[0], argumentNodes[1], argumentNodes[2],
               ToArgumentsArrayNodeGen.create(null, null)));
         case "value:with:":
