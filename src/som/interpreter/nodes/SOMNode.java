@@ -42,7 +42,7 @@ import dym.Tagging.Tagged;
 @TypeSystemReference(Types.class)
 public abstract class SOMNode extends Node implements Tagged {
 
-  @CompilationFinal SourceSection sourceSection;
+  @CompilationFinal protected SourceSection sourceSection;
 
   public SOMNode(final SourceSection sourceSection) {
     super();
@@ -50,7 +50,7 @@ public abstract class SOMNode extends Node implements Tagged {
   }
 
   @Override
-  public final SourceSection getSourceSection() {
+  public SourceSection getSourceSection() {
     return sourceSection;
   }
 
