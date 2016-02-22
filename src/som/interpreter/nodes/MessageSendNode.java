@@ -247,7 +247,7 @@ public final class MessageSendNode {
     private PreevaluatedExpression makeEagerUnaryPrim(final UnaryExpressionNode prim) {
       assert prim.getSourceSection() != null;
 
-      Tagging.addTags(argumentNodes[0], Tags.BASIC_PRIMITIVE_ARGUMENT);
+      Tagging.addTags(argumentNodes[0], Tags.PRIMITIVE_ARGUMENT);
 
       PreevaluatedExpression result = replace(new EagerUnaryPrimitiveNode(
           prim.getSourceSection(), selector, argumentNodes[0], prim));
@@ -353,8 +353,8 @@ public final class MessageSendNode {
     private PreevaluatedExpression makeEagerBinaryPrim(final BinaryExpressionNode prim) {
       assert prim.getSourceSection() != null;
 
-      Tagging.addTags(argumentNodes[0], Tags.BASIC_PRIMITIVE_ARGUMENT);
-      Tagging.addTags(argumentNodes[1], Tags.BASIC_PRIMITIVE_ARGUMENT);
+      Tagging.addTags(argumentNodes[0], Tags.PRIMITIVE_ARGUMENT);
+      Tagging.addTags(argumentNodes[1], Tags.PRIMITIVE_ARGUMENT);
 
       PreevaluatedExpression result = replace(new EagerBinaryPrimitiveNode(
           prim.getSourceSection(), selector, argumentNodes[0], argumentNodes[1], prim));

@@ -58,22 +58,7 @@ import dym.profiles.StructuralProbe;
 @Registration(id = DynamicMetrics.ID)
 public class DynamicMetrics extends TruffleInstrument {
 
-  public static final String ID       = "dym-dynamic-metrics";
-
-  // Tags used by the DynamicMetrics tool
-  public static final String ROOT_TAG           = "ROOT";
-  public static final String UNSPECIFIED_INVOKE = "UNSPECIFIED_INVOKE"; // this is some form of invoke in the source, unclear what it is during program execution
-  public static final String INVOKE_WITH_LOOKUP = "INVOKE_WITH_LOOKUP";
-  public static final String NEW_OBJECT         = "NEW_OBJECT";
-  public static final String NEW_ARRAY          = "NEW_ARRAY";
-  public static final String CONTROL_FLOW_CONDITION  = "CONTROL_FLOW_CONDITION"; // a condition expression that results in a control-flow change
-
-  // TODO
-  public static final String FIELD_READ         = "FIELD_READ";
-  public static final String FIELD_WRITE        = "FIELD_WRITE";
-  public static final String ARRAY_READ         = "ARRAY_READ";
-  public static final String ARRAY_WRITE        = "ARRAY_WRITE";
-  public static final String LOOP_BODY          = "LOOP_BODY";
+  public static final String ID = "dym-dynamic-metrics";
 
   private final Map<SourceSection, InvocationProfile> methodInvocationCounter;
   private int methodStackDepth;
@@ -151,7 +136,7 @@ public class DynamicMetrics extends TruffleInstrument {
 
   private void addRootTagInstrumentation(final Instrumenter instrumenter) {
     Builder filters = SourceSectionFilter.newBuilder();
-    filters.tagIs(ROOT_TAG);
+    filters.tagIs(Tags.ROOT_TAG);
     instrumenter.attachFactory(filters.build(), (final EventContext ctx) -> {
       RootNode root = ctx.getInstrumentedNode().getRootNode();
       assert root instanceof Invokable : "TODO: make language independent";
@@ -191,7 +176,7 @@ public class DynamicMetrics extends TruffleInstrument {
       final Instrumenter instrumenter,
       final ExecutionEventNodeFactory basicPrimInstrFactory) {
     Builder filters = SourceSectionFilter.newBuilder();
-    filters.tagIs(Tags.BASIC_PRIMITIVE_ARGUMENT);
+    filters.tagIs(Tags.PRIMITIVE_ARGUMENT);
     filters.tagIsNot(Tags.EAGERLY_WRAPPED);
 
     instrumenter.attachFactory(filters.build(), (final EventContext ctx) -> {
@@ -209,14 +194,14 @@ public class DynamicMetrics extends TruffleInstrument {
     addRootTagInstrumentation(instrumenter);
 
     addInstrumentation(instrumenter, methodCallsiteProbes,
-        new String[] {UNSPECIFIED_INVOKE}, new String[] {Tags.EAGERLY_WRAPPED},
+        new String[] {Tags.UNSPECIFIED_INVOKE}, new String[] {Tags.EAGERLY_WRAPPED},
         MethodCallsiteProbe::new, CountingNode<Counter>::new);
 
     addInstrumentation(instrumenter, newObjectCounter,
-        new String[] {NEW_OBJECT}, new String[] {},
+        new String[] {Tags.NEW_OBJECT}, new String[] {},
         AllocationProfile::new, AllocationProfilingNode::new);
     addInstrumentation(instrumenter, newArrayCounter,
-        new String[] {NEW_ARRAY}, new String[] {},
+        new String[] {Tags.NEW_ARRAY}, new String[] {},
         ArrayCreationProfile::new, ArrayAllocationProfilingNode::new);
 
     addInstrumentation(instrumenter, literalReadCounter,
