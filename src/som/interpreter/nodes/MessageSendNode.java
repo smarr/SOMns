@@ -388,7 +388,7 @@ public final class MessageSendNode {
           }
           break;
         case "putAll:":
-          return makeEagerBinaryPrim(PutAllNodeFactory.create(getSourceSection(), null, null, SizeAndLengthPrimFactory.create(null)));
+          return makeEagerBinaryPrim(PutAllNodeFactory.create(getSourceSection(), null, null, SizeAndLengthPrimFactory.create(null, null)));
         case "whileTrue:": {
           if (unwrapIfNecessary(argumentNodes[1]) instanceof BlockNode &&
               unwrapIfNecessary(argumentNodes[0]) instanceof BlockNode) {
