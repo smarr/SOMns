@@ -351,9 +351,17 @@ public final class MessageSendNode {
     }
 
     private PreevaluatedExpression makeEagerBinaryPrim(final BinaryExpressionNode prim) {
-      PreevaluatedExpression result = replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
-          argumentNodes[1], prim));
-      VM.insertInstrumentationWrapper(prim);
+      assert prim.getSourceSection() != null;
+
+      Tagging.addTags(argumentNodes[0], Tags.BASIC_PRIMITIVE_ARGUMENT);
+      Tagging.addTags(argumentNodes[1], Tags.BASIC_PRIMITIVE_ARGUMENT);
+
+      PreevaluatedExpression result = replace(new EagerBinaryPrimitiveNode(
+          prim.getSourceSection(), selector, argumentNodes[0], argumentNodes[1], prim));
+      Tagging.addTags(prim, Tags.EAGERLY_WRAPPED);
+      VM.insertInstrumentationWrapper((Node) result);
+      VM.insertInstrumentationWrapper(argumentNodes[0]);
+      VM.insertInstrumentationWrapper(argumentNodes[1]);
       return result;
     }
 
