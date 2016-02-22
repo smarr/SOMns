@@ -16,7 +16,6 @@ import som.interpreter.SNodeFactory;
 import som.interpreter.nodes.ClassInstantiationNode;
 import som.interpreter.nodes.ClassSlotAccessNode;
 import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.SOMNode;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
 import som.interpreter.nodes.dispatch.CachedSlotAccessNode.CachedImmutableSlotRead;
 import som.interpreter.nodes.dispatch.CachedSlotAccessNode.CachedMutableSlotRead;
@@ -51,6 +50,8 @@ import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 import com.sun.istack.internal.Nullable;
+
+import dym.Tagging;
 
 
 /**
@@ -497,7 +498,7 @@ public final class MixinDefinition {
     public AbstractDispatchNode getDispatchNode(final Object receiver,
         final Object firstArg, final AbstractDispatchNode next) {
       assert next.getSourceSection() != null;
-      SourceSection source = SOMNode.cloneAndAddTags(next.getSourceSection(), getTags());
+      SourceSection source = Tagging.getSourceSectionWithTags(next, getTags());
       SObject rcvr = (SObject) receiver;
       if (rcvr instanceof SMutableObject) {
         return new CachedMutableSlotRead(source, createNode(rcvr), DispatchGuard.create(rcvr), next);
@@ -554,8 +555,7 @@ public final class MixinDefinition {
     @Override
     public AbstractDispatchNode getDispatchNode(final Object rcvr,
         final Object firstArg, final AbstractDispatchNode next) {
-      SourceSection source = SOMNode.cloneAndAddTags(
-          next.getSourceSection(), Tags.FIELD_WRITE);
+      SourceSection source = Tagging.getSourceSectionWithTags(next, Tags.FIELD_WRITE);
       return new CachedSlotWrite(source,
           createWriteNode((SObject) rcvr, firstArg),
           DispatchGuard.create(rcvr), next);

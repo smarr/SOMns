@@ -9,6 +9,8 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import com.oracle.truffle.api.source.SourceSection;
 
+import dym.Tagging;
+
 
 public abstract class BooleanInlinedLiteralNode extends ExpressionNode {
 
@@ -28,7 +30,7 @@ public abstract class BooleanInlinedLiteralNode extends ExpressionNode {
     this.receiverNode = receiverNode;
     this.argumentNode = inlinedArgumentNode;
     this.argumentAcutalNode = originalArgumentNode;
-    addTagsToSourceSection(CONTROL_FLOW_CONDITION);
+    Tagging.addTags(this, CONTROL_FLOW_CONDITION);
   }
 
   protected final boolean evaluateReceiver(final VirtualFrame frame) {

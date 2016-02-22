@@ -2,7 +2,6 @@ package som.interpreter.nodes.specialized.whileloops;
 
 import som.compiler.Tags;
 import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.SOMNode;
 import som.interpreter.nodes.specialized.SomLoop;
 import som.vm.constants.Nil;
 
@@ -12,6 +11,8 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import com.oracle.truffle.api.source.SourceSection;
+
+import dym.Tagging;
 
 
 public final class WhileInlinedLiteralsNode extends ExpressionNode {
@@ -31,7 +32,7 @@ public final class WhileInlinedLiteralsNode extends ExpressionNode {
       final ExpressionNode originalConditionNode,
       final ExpressionNode originalBodyNode,
       final SourceSection sourceSection) {
-    super(SOMNode.cloneAndAddTags(sourceSection, Tags.LOOP_BODY));
+    super(Tagging.cloneAndAddTags(sourceSection, Tags.LOOP_BODY));
     this.conditionNode = inlinedConditionNode;
     this.bodyNode      = inlinedBodyNode;
     this.expectedBool  = expectedBool;

@@ -1,9 +1,10 @@
 package som.interpreter.nodes.nary;
 
 import som.compiler.Tags;
-import som.interpreter.nodes.SOMNode;
 
 import com.oracle.truffle.api.source.SourceSection;
+
+import dym.Tagging;
 
 
 /**
@@ -14,6 +15,6 @@ import com.oracle.truffle.api.source.SourceSection;
  */
 public abstract class BinaryComplexOperation extends BinaryExpressionNode {
   protected BinaryComplexOperation(final SourceSection source) {
-    super(SOMNode.cloneAndAddTags(source, Tags.COMPLEX_PRIMITIVE_OPERATION));
+    super(Tagging.cloneAndAddTags(source, Tags.COMPLEX_PRIMITIVE_OPERATION));
   }
 }

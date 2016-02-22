@@ -23,15 +23,12 @@ package som.interpreter.nodes;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 
 import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
 import som.interpreter.InlinerForLexicallyEmbeddedMethods;
 import som.interpreter.SplitterForLexicallyEmbeddedCode;
 import som.interpreter.Types;
 
-import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.dsl.TypeSystemReference;
 import com.oracle.truffle.api.frame.FrameSlot;
@@ -39,9 +36,11 @@ import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
+import dym.Tagging.Tagged;
+
 
 @TypeSystemReference(Types.class)
-public abstract class SOMNode extends Node {
+public abstract class SOMNode extends Node implements Tagged {
 
   @CompilationFinal SourceSection sourceSection;
 
@@ -53,6 +52,11 @@ public abstract class SOMNode extends Node {
   @Override
   public final SourceSection getSourceSection() {
     return sourceSection;
+  }
+
+  @Override
+  public void updateTags(final SourceSection sourceSection) {
+    this.sourceSection = sourceSection;
   }
 
   /**
@@ -142,20 +146,5 @@ public abstract class SOMNode extends Node {
     } else {
       return node;
     }
-  }
-
-  public void addTagsToSourceSection(final String... tags) {
-    sourceSection = cloneAndAddTags(getSourceSection(), tags);
-  }
-
-  public static SourceSection cloneAndAddTags(final SourceSection source, final String... tags) {
-    CompilerAsserts.neverPartOfCompilation("SOMNode.addTagsToSourceSection");
-    String[] originalTags = source.getTags();
-    if (originalTags == null) {
-      originalTags = new String[0];
-    }
-    Set<String> newTags = new HashSet<String>(Arrays.asList(originalTags));
-    newTags.addAll(Arrays.asList(tags));
-    return source.withTags(newTags.toArray(new String[0]));
   }
 }

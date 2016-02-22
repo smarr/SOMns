@@ -109,6 +109,8 @@ import som.vmobjects.SSymbol;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
+import dym.Tagging;
+
 
 public final class Parser {
 
@@ -1146,25 +1148,25 @@ public final class Parser {
       if (arguments.get(1) instanceof LiteralNode) {
         if ("ifTrue:".equals(msgStr)) {
           ExpressionNode condition = arguments.get(0);
-          condition.addTagsToSourceSection(CONTROL_FLOW_CONDITION);
+          Tagging.addTags(condition, CONTROL_FLOW_CONDITION);
           ExpressionNode inlinedBody = ((LiteralNode) arguments.get(1)).inline(builder);
           return new IfInlinedLiteralNode(condition, true, inlinedBody,
               arguments.get(1), source);
         } else if ("ifFalse:".equals(msgStr)) {
           ExpressionNode condition = arguments.get(0);
-          condition.addTagsToSourceSection(CONTROL_FLOW_CONDITION);
+          Tagging.addTags(condition, CONTROL_FLOW_CONDITION);
           ExpressionNode inlinedBody = ((LiteralNode) arguments.get(1)).inline(builder);
           return new IfInlinedLiteralNode(condition, false, inlinedBody,
               arguments.get(1), source);
         } else if ("whileTrue:".equals(msgStr)) {
           ExpressionNode inlinedCondition = ((LiteralNode) arguments.get(0)).inline(builder);
-          inlinedCondition.addTagsToSourceSection(CONTROL_FLOW_CONDITION);
+          Tagging.addTags(inlinedCondition, CONTROL_FLOW_CONDITION);
           ExpressionNode inlinedBody      = ((LiteralNode) arguments.get(1)).inline(builder);
           return new WhileInlinedLiteralsNode(inlinedCondition, inlinedBody,
               true, arguments.get(0), arguments.get(1), source);
         } else if ("whileFalse:".equals(msgStr)) {
           ExpressionNode inlinedCondition = ((LiteralNode) arguments.get(0)).inline(builder);
-          inlinedCondition.addTagsToSourceSection(CONTROL_FLOW_CONDITION);
+          Tagging.addTags(inlinedCondition, CONTROL_FLOW_CONDITION);
           ExpressionNode inlinedBody      = ((LiteralNode) arguments.get(1)).inline(builder);
           return new WhileInlinedLiteralsNode(inlinedCondition, inlinedBody,
               false, arguments.get(0), arguments.get(1), source);
@@ -1184,7 +1186,7 @@ public final class Parser {
       if ("ifTrue:ifFalse:".equals(msgStr) &&
           arguments.get(1) instanceof LiteralNode && arguments.get(2) instanceof LiteralNode) {
         ExpressionNode condition = arguments.get(0);
-        condition.addTagsToSourceSection(CONTROL_FLOW_CONDITION);
+        Tagging.addTags(condition, CONTROL_FLOW_CONDITION);
         ExpressionNode inlinedTrueNode  = ((LiteralNode) arguments.get(1)).inline(builder);
         ExpressionNode inlinedFalseNode = ((LiteralNode) arguments.get(2)).inline(builder);
         return new IfTrueIfFalseInlinedLiteralsNode(condition,

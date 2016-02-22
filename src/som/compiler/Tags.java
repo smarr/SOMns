@@ -23,6 +23,8 @@ public class Tags {
 
   public static final String BASIC_PRIMITIVE_OPERATION   = "BASIC_PRIMITIVE_OPERATION";
   public static final String COMPLEX_PRIMITIVE_OPERATION = "COMPLEX_PRIMITIVE_OPERATION";
+  public static final String BASIC_PRIMITIVE_ARGUMENT    = "BASIC_PRIMITIVE_ARGUMENT";
+  public static final String EAGERLY_WRAPPED = "EAGERLY_WRAPPED";
 
 
   // Syntax annotations

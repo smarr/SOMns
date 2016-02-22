@@ -1,7 +1,6 @@
 package som.primitives.arrays;
 
 import som.compiler.Tags;
-import som.interpreter.nodes.SOMNode;
 import som.interpreter.nodes.nary.BinaryBasicOperation;
 import som.primitives.Primitive;
 import som.vm.constants.Nil;
@@ -12,6 +11,8 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
+import dym.Tagging;
+
 
 @GenerateNodeFactory
 @Primitive("array:at:")
@@ -20,7 +21,7 @@ public abstract class AtPrim extends BinaryBasicOperation {
   private final ValueProfile storageType = ValueProfile.createClassProfile();
 
   protected AtPrim(final SourceSection source) {
-    super(SOMNode.cloneAndAddTags(source, Tags.ARRAY_READ));
+    super(Tagging.cloneAndAddTags(source, Tags.ARRAY_READ));
   }
 
   @Specialization(guards = "receiver.isEmptyType()")
