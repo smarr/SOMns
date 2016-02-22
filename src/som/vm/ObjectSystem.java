@@ -155,19 +155,19 @@ public final class ObjectSystem {
             createSection(factory.getClass().getSimpleName(), 1);
     switch (numArgs) {
       case 1:
-        primNode = factory.createNode(args[0]);
+        primNode = factory.createNode(source, args[0]);
         break;
       case 2:
         // HACK for node class where we use `executeWith`
         if (factory == PutAllNodeFactory.getInstance()) {
           primNode = factory.createNode(source, args[0], args[1],
-              SizeAndLengthPrimFactory.create(null));
+              SizeAndLengthPrimFactory.create(null, null));
 //        } else if (factory == SpawnWithArgsPrimFactory.getInstance()) {
 //          primNode = factory.createNode(args[0], args[1],
 //              ToArgumentsArrayNodeGen.create(null, null));
         } else if (factory == CreateActorPrimFactory.getInstance()) {
           primNode = factory.createNode(source, args[0], args[1],
-              IsValueFactory.create(null));
+              IsValueFactory.create(null, null));
         } else {
           primNode = factory.createNode(source, args[0], args[1]);
         }

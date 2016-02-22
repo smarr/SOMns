@@ -442,7 +442,7 @@ public final class MixinBuilder {
       // contract for initializers
       // and we need to make sure that a potential Value class verifies
       // that it actually is a value
-      allExprs.add(IsValueCheckNode.create(initializer.getSelfRead(null)));
+      allExprs.add(IsValueCheckNode.create(null, initializer.getSelfRead(null)));
     }
 
     ExpressionNode body = SNodeFactory.createSequence(allExprs, null);

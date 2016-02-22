@@ -25,7 +25,7 @@ public abstract class DoIndexesPrim extends BinaryComplexOperation {
   public DoIndexesPrim(final SourceSection source) {
     super(source);
     block = BlockDispatchNodeGen.create();
-    length = SizeAndLengthPrimFactory.create(null);
+    length = SizeAndLengthPrimFactory.create(null, null);
   }
 
   @Specialization

@@ -40,7 +40,7 @@ public final class SomLanguage extends TruffleLanguage<VM> {
     private final SClass moduleClass;
 
     ParseResult(final SClass moduleClass) {
-      super(SomLanguage.class, null, null);
+      super(SomLanguage.class, null);
       this.moduleClass = moduleClass;
     }
 
@@ -70,7 +70,7 @@ public final class SomLanguage extends TruffleLanguage<VM> {
     private final FindContextNode<VM> contextNode;
 
     protected StartInterpretation() {
-      super(SomLanguage.class, null, null);
+      super(SomLanguage.class, null);
       contextNode = new FindContextNode<VM>(SomLanguage.class);
     }
 

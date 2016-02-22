@@ -8,6 +8,7 @@ import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.UnsupportedSpecializationException;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 public class EagerUnaryPrimitiveNode extends UnaryExpressionNode {
@@ -17,9 +18,9 @@ public class EagerUnaryPrimitiveNode extends UnaryExpressionNode {
 
   private final SSymbol selector;
 
-  public EagerUnaryPrimitiveNode(final SSymbol selector,
+  public EagerUnaryPrimitiveNode(final SourceSection source, final SSymbol selector,
       final ExpressionNode receiver, final UnaryExpressionNode primitive) {
-    super(null);
+    super(source);
     this.receiver  = receiver;
     this.primitive = primitive;
     this.selector = selector;

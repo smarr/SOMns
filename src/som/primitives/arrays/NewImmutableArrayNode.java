@@ -19,7 +19,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 public abstract class NewImmutableArrayNode extends TernaryExpressionNode {
 
   @Child protected BlockDispatchNode block = BlockDispatchNodeGen.create();
-  @Child protected IsValue isValue = IsValueFactory.create(null);
+  @Child protected IsValue isValue = IsValueFactory.create(null, null);
 
   public static boolean isValueArrayClass(final SClass valueArrayClass) {
     return Classes.valueArrayClass == valueArrayClass;

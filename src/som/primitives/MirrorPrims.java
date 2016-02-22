@@ -29,6 +29,8 @@ public abstract class MirrorPrims {
   @GenerateNodeFactory
   @Primitive("objNestedClasses:")
   public abstract static class NestedClassesPrim extends UnaryExpressionNode {
+    public NestedClassesPrim(final SourceSection source) { super(source); }
+
     @Specialization
     public final SMutableArray getNestedClasses(final SObjectWithClass rcvr) {
       SClass[] classes = rcvr.getSOMClass().getNestedClasses(rcvr);
@@ -53,6 +55,8 @@ public abstract class MirrorPrims {
   @GenerateNodeFactory
   @Primitive("objMethods:")
   public abstract static class MethodsPrim extends UnaryExpressionNode {
+    public MethodsPrim(final SourceSection source) { super(source); }
+
     @Specialization
     public final SImmutableArray getMethod(final Object rcvr) {
       VM.thisMethodNeedsToBeOptimized("Uses Types.getClassOf, so, should be specialized in performance cirtical code");
@@ -80,6 +84,8 @@ public abstract class MirrorPrims {
   @GenerateNodeFactory
   @Primitive("classDefinition:")
   public abstract static class ClassDefinitionPrim extends UnaryExpressionNode {
+    public ClassDefinitionPrim(final SourceSection source) { super(source); }
+
     @Specialization
     public final Object getClassDefinition(final SClass rcvr) {
       return rcvr.getMixinDefinition();
@@ -89,6 +95,8 @@ public abstract class MirrorPrims {
   @GenerateNodeFactory
   @Primitive("classDefNestedClassDefinitions:")
   public abstract static class NestedClassDefinitionsPrim extends UnaryExpressionNode {
+    public NestedClassDefinitionsPrim(final SourceSection source) { super(source); }
+
     @Specialization
     public final Object getClassDefinition(final Object mixinHandle) {
       assert mixinHandle instanceof MixinDefinition;
@@ -101,6 +109,8 @@ public abstract class MirrorPrims {
   @GenerateNodeFactory
   @Primitive("classDefName:")
   public abstract static class ClassDefNamePrim extends UnaryExpressionNode {
+    public ClassDefNamePrim(final SourceSection source) { super(source); }
+
     @Specialization
     public final SSymbol getName(final Object mixinHandle) {
       assert mixinHandle instanceof MixinDefinition;
@@ -112,6 +122,8 @@ public abstract class MirrorPrims {
   @GenerateNodeFactory
   @Primitive("classDefMethods:")
   public abstract static class ClassDefMethodsPrim extends UnaryExpressionNode {
+    public ClassDefMethodsPrim(final SourceSection source) { super(source); }
+
     @Specialization
     public final SImmutableArray getName(final Object mixinHandle) {
       assert mixinHandle instanceof MixinDefinition;

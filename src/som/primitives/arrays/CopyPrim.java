@@ -5,9 +5,11 @@ import som.vmobjects.SArray.SMutableArray;
 
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.profiles.ValueProfile;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 public abstract class CopyPrim extends UnaryExpressionNode {
+  public CopyPrim(final SourceSection source) { super(source); }
 
   private final ValueProfile storageType = ValueProfile.createClassProfile();
 

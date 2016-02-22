@@ -79,6 +79,8 @@ public abstract class ExceptionsPrims {
   @GenerateNodeFactory
   @Primitive("signalException:")
   public abstract static class SignalPrim extends UnaryExpressionNode {
+    public SignalPrim(final SourceSection source) { super(source); }
+
     @Specialization
     public final Object doSignal(final SAbstractObject exceptionObject) {
       throw new SomException(exceptionObject);

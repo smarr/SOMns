@@ -44,6 +44,8 @@ public final class PromisePrims {
       return Truffle.getRuntime().createDirectCallNode(((SInvokable) disp).getCallTarget());
     }
 
+    public CreatePromisePairPrim(final SourceSection source) { super(source); }
+
     @Specialization
     public final SImmutableObject createPromisePair(final VirtualFrame frame,
         final Object nil, @Cached("create()") final DirectCallNode factory) {

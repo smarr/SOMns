@@ -42,7 +42,7 @@ public abstract class WrapReferenceNode extends Node {
     return !(obj instanceof SFarReference) && !(obj instanceof SPromise);
   }
 
-  @Child protected IsValue isValue = IsValueFactory.create(null);
+  @Child protected IsValue isValue = IsValueFactory.create(null, null);
 
   protected final boolean isValue(final Object obj) {
     return isValue.executeEvaluated(obj);

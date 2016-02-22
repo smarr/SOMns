@@ -20,6 +20,8 @@ public abstract class IntegerPrims {
   @GenerateNodeFactory
   @Primitive("intAs32BitSignedValue:")
   public abstract static class As32BitSignedValue extends UnaryExpressionNode {
+    public As32BitSignedValue(final SourceSection source) { super(source); }
+
     @Specialization
     public final long doLong(final long receiver) {
       return (int) receiver;
@@ -29,6 +31,8 @@ public abstract class IntegerPrims {
   @GenerateNodeFactory
   @Primitive("intAs32BitUnsignedValue:")
   public abstract static class As32BitUnsignedValue extends UnaryExpressionNode {
+    public As32BitUnsignedValue(final SourceSection source) { super(source); }
+
     @Specialization
     public final long doLong(final long receiver) {
       return Integer.toUnsignedLong((int) receiver);
@@ -38,6 +42,7 @@ public abstract class IntegerPrims {
   @GenerateNodeFactory
   @Primitive("intFromString:")
   public abstract static class FromStringPrim extends UnaryExpressionNode {
+    public FromStringPrim(final SourceSection source) { super(source); }
 
     @Specialization
     public final Object doSClass(final String argument) {
@@ -116,6 +121,8 @@ public abstract class IntegerPrims {
   }
 
   public abstract static class AbsPrim extends UnaryExpressionNode {
+    public AbsPrim(final SourceSection source) { super(source); }
+
     @Specialization
     public final long doLong(final long receiver) {
       return Math.abs(receiver);

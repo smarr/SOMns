@@ -38,7 +38,7 @@ public abstract class BlockPrims {
   @GenerateNodeFactory
   @Primitive("blockRestart:")
   public abstract static class RestartPrim extends UnaryExpressionNode {
-    public RestartPrim() { super(null); }
+    public RestartPrim(final SourceSection source) { super(source); }
 
     @Specialization
     public SAbstractObject doSBlock(final SBlock receiver) {
@@ -54,6 +54,7 @@ public abstract class BlockPrims {
   @ImportStatic(BlockPrims.class)
   @Primitive("blockValue:")
   public abstract static class ValueNonePrim extends UnaryExpressionNode {
+    public ValueNonePrim(final SourceSection source) { super(source); }
 
     @Specialization
     public final boolean doBoolean(final boolean receiver) {
