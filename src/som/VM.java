@@ -72,6 +72,7 @@ public final class VM {
 
   public static void insertInstrumentationWrapper(final Node node) {
     if (VM.instrumentationEnabled()) {
+      assert node.getSourceSection() != null : "Node needs source section";
       String[] tags = node.getSourceSection().getTags();
       if (tags != null && tags.length > 0) {
         InstrumentationHandler.insertInstrumentationWrapper(node);

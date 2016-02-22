@@ -23,6 +23,7 @@ public abstract class ArgumentReadNode {
       assert argumentIndex > 0 ||
         this instanceof LocalSelfReadNode ||
         this instanceof LocalSuperReadNode;
+      assert source != null;
       this.argumentIndex = argumentIndex;
     }
 
