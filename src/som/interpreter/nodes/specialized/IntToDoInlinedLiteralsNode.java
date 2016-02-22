@@ -1,5 +1,6 @@
 package som.interpreter.nodes.specialized;
 
+import som.compiler.Tags;
 import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
 import som.interpreter.InlinerForLexicallyEmbeddedMethods;
 import som.interpreter.SplitterForLexicallyEmbeddedCode;
@@ -14,6 +15,8 @@ import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
+
+import dym.Tagging;
 
 @NodeChildren({
   @NodeChild(value = "from",  type = ExpressionNode.class),
@@ -37,7 +40,7 @@ public abstract class IntToDoInlinedLiteralsNode extends ExpressionNode {
       final FrameSlot loopIndex, final SourceSection loopIndexSource,
       final ExpressionNode originalBody,
       final SourceSection sourceSection) {
-    super(sourceSection);
+    super(Tagging.cloneAndAddTags(sourceSection, Tags.LOOP_NODE));
     this.body           = body;
     this.loopIndex      = loopIndex;
     this.loopIndexSource = loopIndexSource;

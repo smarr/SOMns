@@ -1,5 +1,6 @@
 package som.interpreter.nodes.specialized;
 
+import som.compiler.Tags;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.vmobjects.SBlock;
@@ -11,6 +12,8 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 
+import dym.Tagging;
+
 
 public abstract class IntDownToDoMessageNode extends TernaryExpressionNode {
 
@@ -19,14 +22,14 @@ public abstract class IntDownToDoMessageNode extends TernaryExpressionNode {
 
   public IntDownToDoMessageNode(final ExpressionNode orignialNode,
       final SBlock block) {
-    super(orignialNode.getSourceSection());
+    super(Tagging.cloneAndAddTags(orignialNode.getSourceSection(), Tags.LOOP_NODE));
     blockMethod = block.getMethod();
     valueSend = Truffle.getRuntime().createDirectCallNode(
                     blockMethod.getCallTarget());
   }
 
   public IntDownToDoMessageNode(final IntDownToDoMessageNode node) {
-    super(node.getSourceSection());
+    super(Tagging.cloneAndAddTags(node.getSourceSection(), Tags.LOOP_NODE));
     this.blockMethod = node.blockMethod;
     this.valueSend   = node.valueSend;
   }

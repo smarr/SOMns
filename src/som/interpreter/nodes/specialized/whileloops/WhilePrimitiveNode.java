@@ -1,5 +1,6 @@
 package som.interpreter.nodes.specialized.whileloops;
 
+import som.compiler.Tags;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.vmobjects.SBlock;
@@ -10,6 +11,8 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
+import dym.Tagging;
+
 
 @GenerateNodeFactory
 public abstract class WhilePrimitiveNode extends BinaryComplexOperation {
@@ -17,7 +20,7 @@ public abstract class WhilePrimitiveNode extends BinaryComplexOperation {
   @Child protected WhileCache whileNode;
 
   protected WhilePrimitiveNode(final SourceSection source, final boolean predicateBool) {
-    super(source);
+    super(Tagging.cloneAndAddTags(source, Tags.LOOP_NODE));
     this.predicateBool = predicateBool;
     this.whileNode = WhileCacheNodeGen.create(source, predicateBool, null, null);
   }

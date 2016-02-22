@@ -32,7 +32,7 @@ public final class WhileInlinedLiteralsNode extends ExpressionNode {
       final ExpressionNode originalConditionNode,
       final ExpressionNode originalBodyNode,
       final SourceSection sourceSection) {
-    super(Tagging.cloneAndAddTags(sourceSection, Tags.LOOP_BODY));
+    super(Tagging.cloneAndAddTags(sourceSection, Tags.LOOP_NODE));
     this.conditionNode = inlinedConditionNode;
     this.bodyNode      = inlinedBodyNode;
     this.expectedBool  = expectedBool;

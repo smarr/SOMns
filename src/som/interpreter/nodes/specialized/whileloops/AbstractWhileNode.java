@@ -1,5 +1,6 @@
 package som.interpreter.nodes.specialized.whileloops;
 
+import som.compiler.Tags;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.specialized.SomLoop;
@@ -13,6 +14,8 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 
+import dym.Tagging;
+
 
 public abstract class AbstractWhileNode extends BinaryComplexOperation {
   @Child protected DirectCallNode conditionValueSend;
@@ -22,7 +25,7 @@ public abstract class AbstractWhileNode extends BinaryComplexOperation {
 
   public AbstractWhileNode(final SBlock rcvr, final SBlock arg,
       final boolean predicateBool, final SourceSection source) {
-    super(source);
+    super(Tagging.cloneAndAddTags(source, Tags.LOOP_NODE));
 
     CallTarget callTargetCondition = rcvr.getMethod().getCallTarget();
     conditionValueSend = Truffle.getRuntime().createDirectCallNode(

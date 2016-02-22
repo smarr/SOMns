@@ -1,5 +1,6 @@
 package som.primitives;
 
+import som.compiler.Tags;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vmobjects.SArray;
 import som.vmobjects.SSymbol;
@@ -9,11 +10,18 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
+import dym.Tagging;
+
 
 @GenerateNodeFactory
 @Primitive({"arraySize:", "stringLength:"})
 public abstract class SizeAndLengthPrim extends UnaryExpressionNode {
-  public SizeAndLengthPrim(final SourceSection source) { super(source); }
+  private static final String[] basicTags = new String[] {Tags.BASIC_PRIMITIVE_OPERATION};
+  private static final String[] basicConflictingTags = new String[] {Tags.UNSPECIFIED_INVOKE};
+
+  public SizeAndLengthPrim(final SourceSection source) {
+    super(Tagging.cloneAndUpdateTagsIfSourceNode(source, basicTags, basicConflictingTags));
+  }
 
   private final ValueProfile storageType = ValueProfile.createClassProfile();
 

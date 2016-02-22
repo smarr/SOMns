@@ -1,5 +1,6 @@
 package som.interpreter.nodes.specialized;
 
+import som.compiler.Tags;
 import som.interpreter.nodes.ExpressionNode;
 
 import com.oracle.truffle.api.CompilerDirectives;
@@ -8,6 +9,8 @@ import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
+
+import dym.Tagging;
 
 
 @NodeChild(value = "repCnt",  type = ExpressionNode.class)
@@ -24,7 +27,7 @@ public abstract class IntTimesRepeatLiteralNode extends ExpressionNode {
 
   public IntTimesRepeatLiteralNode(final ExpressionNode body,
       final ExpressionNode originalBody, final SourceSection sourceSection) {
-    super(sourceSection);
+    super(Tagging.cloneAndAddTags(sourceSection, Tags.LOOP_NODE));
     this.body           = body;
     this.bodyActualNode = originalBody;
   }

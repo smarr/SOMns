@@ -1,5 +1,6 @@
 package som.interpreter.nodes.specialized.whileloops;
 
+import som.compiler.Tags;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.vm.constants.Nil;
@@ -13,6 +14,8 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
+import dym.Tagging;
+
 
 public abstract class WhileCache extends BinaryComplexOperation {
 
@@ -21,7 +24,7 @@ public abstract class WhileCache extends BinaryComplexOperation {
   protected final boolean predicateBool;
 
   public WhileCache(final SourceSection source, final boolean predicateBool) {
-    super(source);
+    super(Tagging.cloneAndAddTags(source, Tags.LOOP_NODE));
     this.predicateBool = predicateBool;
   }
 

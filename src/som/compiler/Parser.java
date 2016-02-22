@@ -1162,12 +1162,14 @@ public final class Parser {
           ExpressionNode inlinedCondition = ((LiteralNode) arguments.get(0)).inline(builder);
           Tagging.addTags(inlinedCondition, CONTROL_FLOW_CONDITION);
           ExpressionNode inlinedBody      = ((LiteralNode) arguments.get(1)).inline(builder);
+          Tagging.addTags(inlinedBody, Tags.LOOP_BODY);
           return new WhileInlinedLiteralsNode(inlinedCondition, inlinedBody,
               true, arguments.get(0), arguments.get(1), source);
         } else if ("whileFalse:".equals(msgStr)) {
           ExpressionNode inlinedCondition = ((LiteralNode) arguments.get(0)).inline(builder);
           Tagging.addTags(inlinedCondition, CONTROL_FLOW_CONDITION);
           ExpressionNode inlinedBody      = ((LiteralNode) arguments.get(1)).inline(builder);
+          Tagging.addTags(inlinedBody, Tags.LOOP_BODY);
           return new WhileInlinedLiteralsNode(inlinedCondition, inlinedBody,
               false, arguments.get(0), arguments.get(1), source);
         } else if ("or:".equals(msgStr) || "||".equals(msgStr)) {
@@ -1178,6 +1180,7 @@ public final class Parser {
           return new AndInlinedLiteralNode(arguments.get(0), inlinedArg, arguments.get(1), source);
         } else if ("timesRepeat:".equals(msgStr)) {
           ExpressionNode inlinedBody = ((LiteralNode) arguments.get(1)).inline(builder);
+          Tagging.addTags(inlinedBody, Tags.LOOP_BODY);
           return IntTimesRepeatLiteralNodeGen.create(inlinedBody,
               arguments.get(1), source, arguments.get(0));
         }
@@ -1196,12 +1199,14 @@ public final class Parser {
           arguments.get(2) instanceof LiteralNode) {
         Local loopIdx = builder.addLocal("i:" + source.getCharIndex(), source);
         ExpressionNode inlinedBody = ((LiteralNode) arguments.get(2)).inline(builder, loopIdx);
+        Tagging.addTags(inlinedBody, Tags.LOOP_BODY);
         return IntToDoInlinedLiteralsNodeGen.create(inlinedBody, loopIdx.getSlot(), loopIdx.source,
             arguments.get(2), source, arguments.get(0), arguments.get(1));
       } else if ("downTo:do:".equals(msgStr) &&
           arguments.get(2) instanceof LiteralNode) {
         Local loopIdx = builder.addLocal("i:" + source.getCharIndex(), source);
         ExpressionNode inlinedBody = ((LiteralNode) arguments.get(2)).inline(builder, loopIdx);
+        Tagging.addTags(inlinedBody, Tags.LOOP_BODY);
         return IntDownToDoInlinedLiteralsNodeGen.create(inlinedBody, loopIdx.getSlot(), loopIdx.source,
             arguments.get(2), source, arguments.get(0), arguments.get(1));
       }

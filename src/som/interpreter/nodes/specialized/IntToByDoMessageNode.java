@@ -1,5 +1,6 @@
 package som.interpreter.nodes.specialized;
 
+import som.compiler.Tags;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.PreevaluatedExpression;
 import som.interpreter.nodes.nary.QuaternaryExpressionNode;
@@ -12,6 +13,8 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 
+import dym.Tagging;
+
 
 public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode
     implements PreevaluatedExpression {
@@ -21,14 +24,14 @@ public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode
 
   public IntToByDoMessageNode(final ExpressionNode orignialNode,
       final SBlock block) {
-    super(orignialNode.getSourceSection());
+    super(Tagging.cloneAndAddTags(orignialNode.getSourceSection(), Tags.LOOP_NODE));
     blockMethod = block.getMethod();
     valueSend = Truffle.getRuntime().createDirectCallNode(
                     blockMethod.getCallTarget());
   }
 
   public IntToByDoMessageNode(final IntToByDoMessageNode node) {
-    super(node.getSourceSection());
+    super(Tagging.cloneAndAddTags(node.getSourceSection(), Tags.LOOP_NODE));
     this.blockMethod = node.blockMethod;
     this.valueSend   = node.valueSend;
   }
