@@ -140,19 +140,18 @@ public final class ObjectSystem {
     // ignore the implicit vmMirror argument
     final int numArgs = signature.getNumberOfSignatureArguments() - 1;
 
+    Source s = Source.fromNamedText("primitive", factory.getClass().getSimpleName());
     MethodBuilder prim = new MethodBuilder(true);
     ExpressionNode[] args = new ExpressionNode[numArgs];
 
     for (int i = 0; i < numArgs; i++) {
       // we do not pass the vmMirror, makes it easier to use the same primitives
       // as replacements on the node level
-      args[i] = new LocalArgumentReadNode(i + 1, null);
+      args[i] = new LocalArgumentReadNode(i + 1, s.createSection(factory.getClass().getSimpleName(), 1));
     }
 
     ExpressionNode primNode;
-    SourceSection source = Source.fromNamedText("primitive",
-        factory.getClass().getSimpleName()).
-            createSection(factory.getClass().getSimpleName(), 1);
+    SourceSection source = s.createSection(factory.getClass().getSimpleName(), 1);
     switch (numArgs) {
       case 1:
         primNode = factory.createNode(source, args[0]);

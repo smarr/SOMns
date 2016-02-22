@@ -299,7 +299,7 @@ public final class Parser {
   private void defaultSuperclassAndBody(final MixinBuilder mxnBuilder)
       throws ParseError, MixinDefinitionError {
     MethodBuilder def = mxnBuilder.getClassInstantiationMethodBuilder();
-    ExpressionNode selfRead = def.getSelfRead(null);
+    ExpressionNode selfRead = def.getSelfRead(getEmptySource());
     ExpressionNode superClass = createMessageSend(Symbols.OBJECT,
         new ExpressionNode[] {selfRead}, false, getEmptySource(UNSPECIFIED_INVOKE));
     mxnBuilder.setSuperClassResolution(superClass);
@@ -349,7 +349,7 @@ public final class Parser {
     if (sym != NewTerm && sym != MixinOperator && sym != Period) {
       mixinFactorySend = (AbstractUninitializedMessageSendNode) messages(
           mxnBuilder.getInitializerMethodBuilder(),
-          mxnBuilder.getInitializerMethodBuilder().getSelfRead(null));
+          mxnBuilder.getInitializerMethodBuilder().getSelfRead(getSource(coord)));
 
       uniqueInitName = MixinBuilder.getInitializerName(
           mixinFactorySend.getSelector(), mixinId);
@@ -359,7 +359,7 @@ public final class Parser {
       uniqueInitName = MixinBuilder.getInitializerName(Symbols.NEW, mixinId);
       mixinFactorySend = (AbstractUninitializedMessageSendNode)
           SNodeFactory.createMessageSend(uniqueInitName,
-              new ExpressionNode[] {mxnBuilder.getInitializerMethodBuilder().getSelfRead(null)},
+              new ExpressionNode[] {mxnBuilder.getInitializerMethodBuilder().getSelfRead(getSource(coord))},
               false, getSource(coord, UNSPECIFIED_INVOKE));
     }
 
@@ -380,7 +380,7 @@ public final class Parser {
       // used to create the proper initialize method, on which we rely here.
       ExpressionNode superFactorySend = messages(
           mxnBuilder.getInitializerMethodBuilder(),
-          mxnBuilder.getInitializerMethodBuilder().getSuperReadNode(null));
+          mxnBuilder.getInitializerMethodBuilder().getSuperReadNode(getEmptySource()));
 
       SSymbol initializerName = MixinBuilder.getInitializerName(
           ((AbstractUninitializedMessageSendNode) superFactorySend).getSelector());
@@ -917,7 +917,7 @@ public final class Parser {
       throws ParseError, MixinDefinitionError {
     ExpressionNode exp;
     if (sym == Keyword) {
-      exp = keywordMessage(builder, builder.getSelfRead(null), false, false);
+      exp = keywordMessage(builder, builder.getSelfRead(getEmptySource()), false, false);
     } else {
       exp = primary(builder);
     }

@@ -55,6 +55,7 @@ import som.vmobjects.SSymbol;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.source.SourceSection;
+import com.sun.istack.internal.NotNull;
 
 
 public final class MethodBuilder {
@@ -334,14 +335,16 @@ public final class MethodBuilder {
     return null;
   }
 
-  public ExpressionNode getSuperReadNode(final SourceSection source) {
+  public ExpressionNode getSuperReadNode(@NotNull final SourceSection source) {
+    assert source != null;
     MixinBuilder holder = getEnclosingMixinBuilder();
     Variable self = getVariable("self");
     return self.getSuperReadNode(getOuterSelfContextLevel(),
         holder.getMixinId(), holder.isClassSide(), source);
   }
 
-  public ExpressionNode getSelfRead(final SourceSection source) {
+  public ExpressionNode getSelfRead(@NotNull final SourceSection source) {
+    assert source != null;
     MixinBuilder holder = getEnclosingMixinBuilder();
     MixinDefinitionId mixinId = holder == null ? null : holder.getMixinId();
     return getVariable("self").
@@ -380,11 +383,11 @@ public final class MethodBuilder {
     SourceSection source = parser.getSource(coord, UNSPECIFIED_INVOKE);
     if (getEnclosingMixinBuilder() == null) {
       // this is normally only for the inheritance clauses for modules the case
-      return SNodeFactory.createMessageSend(selector, new ExpressionNode[] {getSelfRead(null)}, false, source);
+      return SNodeFactory.createMessageSend(selector, new ExpressionNode[] {getSelfRead(source)}, false, source);
     } else {
       // otherwise, it is an implicit receiver send
       return SNodeFactory.createImplicitReceiverSend(selector,
-          new ExpressionNode[] {getSelfRead(null)},
+          new ExpressionNode[] {getSelfRead(source)},
           getCurrentMethodScope(), getEnclosingMixinBuilder().getMixinId(), source);
     }
   }
