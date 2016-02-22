@@ -2,18 +2,21 @@ package som.interpreter.nodes.dispatch;
 
 import som.instrumentation.DispatchNodeWrapper;
 
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Instrumentable;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
+import dym.Tagging.Tagged;
+
 
 @Instrumentable(factory = DispatchNodeWrapper.class)
 public abstract class AbstractDispatchNode
-    extends Node implements DispatchChain {
+    extends Node implements DispatchChain, Tagged {
   public static final int INLINE_CACHE_SIZE = 6;
 
-  private final SourceSection sourceSection;
+  @CompilationFinal private SourceSection sourceSection;
 
   protected AbstractDispatchNode(final SourceSection source) {
     super();
@@ -30,8 +33,13 @@ public abstract class AbstractDispatchNode
   }
 
   @Override
-  public final SourceSection getSourceSection() {
+  public SourceSection getSourceSection() {
     return sourceSection;
+  }
+
+  @Override
+  public void updateTags(final SourceSection sourceSection) {
+    this.sourceSection = sourceSection;
   }
 
   public abstract Object executeDispatch(
