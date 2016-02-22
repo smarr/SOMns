@@ -17,8 +17,7 @@ public final class DispatchNodeWrapper implements
   @Override
   public WrapperNode createWrapper(final AbstractDispatchNode delegateNode,
       final ProbeNode probeNode) {
-    return new DispatchWrapper(delegateNode.getSourceSection(),
-        delegateNode, probeNode);
+    return new DispatchWrapper(delegateNode, probeNode);
   }
 
   private static final class DispatchWrapper extends AbstractDispatchNode
@@ -27,9 +26,9 @@ public final class DispatchNodeWrapper implements
     @Child private AbstractDispatchNode delegateNode;
     @Child private ProbeNode            probeNode;
 
-    private DispatchWrapper(final SourceSection source,
-        final AbstractDispatchNode delegateNode, final ProbeNode probeNode) {
-      super(source);
+    private DispatchWrapper(final AbstractDispatchNode delegateNode,
+        final ProbeNode probeNode) {
+      super(delegateNode);
       this.delegateNode = delegateNode;
       this.probeNode = probeNode;
     }
@@ -52,6 +51,11 @@ public final class DispatchNodeWrapper implements
     @Override
     public int lengthOfDispatchChain() {
       return delegateNode.lengthOfDispatchChain();
+    }
+
+    @Override
+    public SourceSection getSourceSection() {
+      return delegateNode.getSourceSection();
     }
 
     @Override

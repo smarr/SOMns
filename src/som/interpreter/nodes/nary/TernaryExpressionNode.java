@@ -22,7 +22,14 @@ public abstract class TernaryExpressionNode extends ExpressionNode
     super(sourceSection);
   }
 
-  public TernaryExpressionNode() { this(null); }
+  /**
+   * For wrapper nodes only.
+   */
+  protected TernaryExpressionNode(final TernaryExpressionNode wrappedNode) {
+    super(wrappedNode);
+  }
+
+  public TernaryExpressionNode() { this((SourceSection) null); }
 
   public abstract Object executeEvaluated(final VirtualFrame frame,
       final Object receiver, final Object firstArg, final Object secondArg);

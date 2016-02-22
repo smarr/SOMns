@@ -604,6 +604,13 @@ public final class MessageSendNode {
       assert source != null;
     }
 
+    /**
+     * For wrapper use only.
+     */
+    protected UninitializedMessageSendNode(final UninitializedMessageSendNode wrappedNode) {
+      super(wrappedNode.selector, null, null);
+    }
+
     @Override
     protected PreevaluatedExpression makeSpecialSend() {
       ISpecialSend rcvrNode = (ISpecialSend) unwrapIfNecessary(argumentNodes[0]);

@@ -33,6 +33,16 @@ public final class ResolvingImplicitReceiverSend extends AbstractMessageSendNode
     this.mixinId      = mixinId;
   }
 
+  /**
+   * For wrapped nodes only.
+   */
+  protected ResolvingImplicitReceiverSend(final ResolvingImplicitReceiverSend wrappedNode) {
+    super(null, null);
+    this.selector     = wrappedNode.selector;
+    this.currentScope = wrappedNode.currentScope;
+    this.mixinId      = wrappedNode.mixinId;
+  }
+
   @Override
   public Object executeGeneric(final VirtualFrame frame) {
     CompilerDirectives.transferToInterpreter();

@@ -9,6 +9,7 @@ import com.oracle.truffle.api.instrumentation.InstrumentableFactory;
 import com.oracle.truffle.api.instrumentation.ProbeNode;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.NodeCost;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 public class MessageSendNodeWrapper
@@ -28,7 +29,7 @@ public class MessageSendNodeWrapper
 
     private MessageSendWrapper(final AbstractMessageSendNode delegate,
         final ProbeNode probe) {
-      super(null, delegate.getSourceSection());
+      super(null, null);
       this.delegate = delegate;
       this.probe    = probe;
     }
@@ -72,6 +73,11 @@ public class MessageSendNodeWrapper
         probe.onReturnExceptional(frame, t);
         throw t;
       }
+    }
+
+    @Override
+    public SourceSection getSourceSection() {
+      return delegate.getSourceSection();
     }
   }
 }

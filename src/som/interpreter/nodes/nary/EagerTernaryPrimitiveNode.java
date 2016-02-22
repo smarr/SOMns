@@ -9,6 +9,7 @@ import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.UnsupportedSpecializationException;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 public final class EagerTernaryPrimitiveNode extends TernaryExpressionNode {
@@ -26,7 +27,7 @@ public final class EagerTernaryPrimitiveNode extends TernaryExpressionNode {
       final ExpressionNode argument1,
       final ExpressionNode argument2,
       final TernaryExpressionNode primitive) {
-    super(null);
+    super((SourceSection) null);
     this.receiver  = receiver;
     this.argument1 = argument1;
     this.argument2 = argument2;

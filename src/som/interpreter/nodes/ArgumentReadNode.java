@@ -28,7 +28,7 @@ public abstract class ArgumentReadNode {
 
     // For Wrapper use only
     protected LocalArgumentReadNode(final LocalArgumentReadNode wrappedNode) {
-      super(wrappedNode.getSourceSection());
+      super(wrappedNode);
       this.argumentIndex = wrappedNode.argumentIndex;
     }
 

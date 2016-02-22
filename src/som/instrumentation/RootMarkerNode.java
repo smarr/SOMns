@@ -21,7 +21,7 @@ public class RootMarkerNode extends ExpressionNode {
    * To be used only by the generated wrapper.
    */
   protected RootMarkerNode(final RootMarkerNode wrappedNode) {
-    this(wrappedNode.getSourceSection(), null);
+    this(null, null);
   }
 
   protected RootMarkerNode(final SourceSection sourceSection) {

@@ -194,7 +194,7 @@ public final class ReturnNonLocalNode extends ContextualNode {
 
     public CatchNonLocalReturnNode(final ExpressionNode methodBody,
         final FrameSlot frameOnStackMarker) {
-      super(null);
+      super((SourceSection) null);
       this.methodBody = methodBody;
       this.nonLocalReturnHandler = BranchProfile.create();
       this.frameOnStackMarker    = frameOnStackMarker;

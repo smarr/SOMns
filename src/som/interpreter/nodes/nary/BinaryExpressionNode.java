@@ -21,6 +21,13 @@ public abstract class BinaryExpressionNode extends ExpressionNode
     super(source);
   }
 
+  /**
+   * For wrapped nodes only.
+   */
+  protected BinaryExpressionNode(final BinaryExpressionNode wrappedNode) {
+    super(wrappedNode);
+  }
+
   public abstract Object executeEvaluated(final VirtualFrame frame,
       final Object receiver, Object argument);
 

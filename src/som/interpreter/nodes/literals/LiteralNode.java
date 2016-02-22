@@ -41,6 +41,13 @@ public abstract class LiteralNode extends ExpressionNode
     super(source);
   }
 
+  /**
+   * For use by wrapping only.
+   */
+  protected LiteralNode(final LiteralNode wrappedNode) {
+    super(wrappedNode);
+  }
+
   @Override
   public final Object doPreEvaluated(final VirtualFrame frame,
       final Object[] arguments) {

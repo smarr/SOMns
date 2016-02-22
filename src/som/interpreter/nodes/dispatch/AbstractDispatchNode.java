@@ -21,6 +21,14 @@ public abstract class AbstractDispatchNode
     this.sourceSection = source;
   }
 
+  /**
+   * For wrapped nodes only.
+   */
+  protected AbstractDispatchNode(final AbstractDispatchNode wrappedNode) {
+    super();
+    this.sourceSection = null;
+  }
+
   @Override
   public final SourceSection getSourceSection() {
     return sourceSection;

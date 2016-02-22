@@ -18,8 +18,12 @@ public abstract class UnaryExpressionNode extends ExpressionNode
     super(source);
   }
 
-  // For nodes that are not representing source code
-  public UnaryExpressionNode() { super(null); }
+  /**
+   * For use by wrapper nodes only.
+   */
+  protected UnaryExpressionNode(final UnaryExpressionNode node) {
+    super(node);
+  }
 
   public abstract Object executeEvaluated(final VirtualFrame frame,
       final Object receiver);

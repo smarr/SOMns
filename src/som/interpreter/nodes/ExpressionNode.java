@@ -47,6 +47,13 @@ public abstract class ExpressionNode extends SOMNode {
     super(sourceSection);
   }
 
+  /**
+   * Use for wrapping node only.
+   */
+  protected ExpressionNode(final ExpressionNode wrappedNode) {
+    super(null);
+  }
+
   public abstract Object executeGeneric(final VirtualFrame frame);
 
   @Override
