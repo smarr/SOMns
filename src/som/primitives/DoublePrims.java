@@ -1,6 +1,6 @@
 package som.primitives;
 
-import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.interpreter.nodes.nary.UnaryBasicOperation;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -11,7 +11,7 @@ public abstract class DoublePrims  {
 
   @GenerateNodeFactory
   @Primitive("doubleRound:")
-  public abstract static class RoundPrim extends UnaryExpressionNode {
+  public abstract static class RoundPrim extends UnaryBasicOperation {
     public RoundPrim(final SourceSection source) { super(source); }
 
     @Specialization
@@ -22,7 +22,7 @@ public abstract class DoublePrims  {
 
   @GenerateNodeFactory
   @Primitive("doublePositiveInfinity:")
-  public abstract static class PositiveInfinityPrim extends UnaryExpressionNode {
+  public abstract static class PositiveInfinityPrim extends UnaryBasicOperation {
     public PositiveInfinityPrim(final SourceSection source) { super(source); }
 
     @Specialization

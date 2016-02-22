@@ -3,7 +3,7 @@ package som.primitives;
 import java.math.BigInteger;
 
 import som.interpreter.nodes.nary.BinaryComplexOperation;
-import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.interpreter.nodes.nary.UnaryBasicOperation;
 import som.primitives.arithmetic.ArithmeticPrim;
 import som.vm.constants.Classes;
 import som.vmobjects.SArray.SMutableArray;
@@ -19,7 +19,7 @@ public abstract class IntegerPrims {
 
   @GenerateNodeFactory
   @Primitive("intAs32BitSignedValue:")
-  public abstract static class As32BitSignedValue extends UnaryExpressionNode {
+  public abstract static class As32BitSignedValue extends UnaryBasicOperation {
     public As32BitSignedValue(final SourceSection source) { super(source); }
 
     @Specialization
@@ -30,7 +30,7 @@ public abstract class IntegerPrims {
 
   @GenerateNodeFactory
   @Primitive("intAs32BitUnsignedValue:")
-  public abstract static class As32BitUnsignedValue extends UnaryExpressionNode {
+  public abstract static class As32BitUnsignedValue extends UnaryBasicOperation {
     public As32BitUnsignedValue(final SourceSection source) { super(source); }
 
     @Specialization
@@ -41,7 +41,7 @@ public abstract class IntegerPrims {
 
   @GenerateNodeFactory
   @Primitive("intFromString:")
-  public abstract static class FromStringPrim extends UnaryExpressionNode {
+  public abstract static class FromStringPrim extends UnaryBasicOperation {
     public FromStringPrim(final SourceSection source) { super(source); }
 
     @Specialization
@@ -120,7 +120,7 @@ public abstract class IntegerPrims {
     }
   }
 
-  public abstract static class AbsPrim extends UnaryExpressionNode {
+  public abstract static class AbsPrim extends UnaryBasicOperation {
     public AbsPrim(final SourceSection source) { super(source); }
 
     @Specialization

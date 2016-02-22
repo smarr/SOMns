@@ -7,6 +7,7 @@ import som.interpreter.Types;
 import som.interpreter.actors.SFarReference;
 import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.SResolver;
+import som.interpreter.nodes.nary.UnaryBasicOperation;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.ObjectPrimsFactory.IsValueFactory;
 import som.vm.constants.Nil;
@@ -70,7 +71,7 @@ public final class ObjectPrims {
     }
   }
 
-  public abstract static class IsNilNode extends UnaryExpressionNode {
+  public abstract static class IsNilNode extends UnaryBasicOperation {
     public IsNilNode(final SourceSection source) { super(source); }
 
     @Specialization
@@ -79,7 +80,7 @@ public final class ObjectPrims {
     }
   }
 
-  public abstract static class NotNilNode extends UnaryExpressionNode {
+  public abstract static class NotNilNode extends UnaryBasicOperation {
     public NotNilNode(final SourceSection source) { super(source); }
 
     @Specialization

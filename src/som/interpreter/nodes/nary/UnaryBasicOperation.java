@@ -1,0 +1,22 @@
+package som.interpreter.nodes.nary;
+
+import som.compiler.Tags;
+
+import com.oracle.truffle.api.source.SourceSection;
+
+import dym.Tagging;
+
+
+/**
+ * Nodes of this type represent basic operations such as arithmetics and
+ * comparisons. Basic means here, that these nodes are mapping to one or only
+ * a few basic operations in an ideal native code mapping.
+ */
+public abstract class UnaryBasicOperation extends UnaryExpressionNode {
+  private static final String[] basicTags = new String[] {Tags.BASIC_PRIMITIVE_OPERATION};
+  private static final String[] basicConflictingTags = new String[] {Tags.UNSPECIFIED_INVOKE};
+
+  protected UnaryBasicOperation(final SourceSection source) {
+    super(Tagging.cloneAndUpdateTags(source, basicTags, basicConflictingTags));
+  }
+}

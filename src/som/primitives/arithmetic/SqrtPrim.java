@@ -2,7 +2,7 @@ package som.primitives.arithmetic;
 
 import java.math.BigInteger;
 
-import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.interpreter.nodes.nary.UnaryBasicOperation;
 import som.primitives.Primitive;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
@@ -13,7 +13,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 @GenerateNodeFactory
 @Primitive({"intSqrt:", "doubleSqrt:"})
-public abstract class SqrtPrim extends UnaryExpressionNode {
+public abstract class SqrtPrim extends UnaryBasicOperation {
   public SqrtPrim(final SourceSection source) { super(source); }
 
   private final BranchProfile longReturn   = BranchProfile.create();

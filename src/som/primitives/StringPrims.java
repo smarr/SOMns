@@ -2,7 +2,7 @@ package som.primitives;
 
 import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
-import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.interpreter.nodes.nary.UnaryBasicOperation;
 import som.vm.Symbols;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SSymbol;
@@ -44,7 +44,7 @@ public class StringPrims {
 
   @GenerateNodeFactory
   @Primitive("stringAsSymbol:")
-  public abstract static class AsSymbolPrim extends UnaryExpressionNode {
+  public abstract static class AsSymbolPrim extends UnaryBasicOperation {
     public AsSymbolPrim(final SourceSection source) { super(source); }
 
     @Specialization

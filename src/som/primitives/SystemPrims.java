@@ -9,6 +9,7 @@ import som.compiler.MixinDefinition;
 import som.interpreter.Invokable;
 import som.interpreter.Method;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
+import som.interpreter.nodes.nary.UnaryBasicOperation;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vm.constants.Classes;
 import som.vm.constants.Nil;
@@ -202,7 +203,7 @@ public final class SystemPrims {
 
   @GenerateNodeFactory
   @Primitive("systemTime:")
-  public abstract static class TimePrim extends UnaryExpressionNode {
+  public abstract static class TimePrim extends UnaryBasicOperation {
     public TimePrim(final SourceSection source) { super(source); }
 
     @Specialization
@@ -213,7 +214,7 @@ public final class SystemPrims {
 
   @GenerateNodeFactory
   @Primitive("systemTicks:")
-  public abstract static class TicksPrim extends UnaryExpressionNode {
+  public abstract static class TicksPrim extends UnaryBasicOperation {
     public TicksPrim(final SourceSection source) { super(source); }
 
     @Specialization

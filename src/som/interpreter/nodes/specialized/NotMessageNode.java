@@ -1,6 +1,6 @@
 package som.interpreter.nodes.specialized;
 
-import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.interpreter.nodes.nary.UnaryBasicOperation;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -9,7 +9,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 
 @GenerateNodeFactory
-public abstract class NotMessageNode extends UnaryExpressionNode {
+public abstract class NotMessageNode extends UnaryBasicOperation {
   public NotMessageNode(final SourceSection source) { super(source); }
   public NotMessageNode() { this(null); }  // only for the primitive version
   @Specialization
