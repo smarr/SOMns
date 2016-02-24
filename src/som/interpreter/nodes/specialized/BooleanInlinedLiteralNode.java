@@ -26,11 +26,10 @@ public abstract class BooleanInlinedLiteralNode extends ExpressionNode {
       final ExpressionNode inlinedArgumentNode,
       final ExpressionNode originalArgumentNode,
       final SourceSection sourceSection) {
-    super(sourceSection);
+    super(Tagging.cloneAndAddTags(sourceSection, CONTROL_FLOW_CONDITION));
     this.receiverNode = receiverNode;
     this.argumentNode = inlinedArgumentNode;
     this.argumentAcutalNode = originalArgumentNode;
-    Tagging.addTags(this, CONTROL_FLOW_CONDITION);
   }
 
   protected final boolean evaluateReceiver(final VirtualFrame frame) {
