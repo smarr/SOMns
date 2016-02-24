@@ -106,6 +106,7 @@ import som.vm.Symbols;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.debug.Debugger;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -1048,7 +1049,7 @@ public final class Parser {
     SourceCoordinate coord = getCoordinate();
     SSymbol selector = unarySelector();
     return createMessageSend(selector, new ExpressionNode[] {receiver},
-        eventualSend, getSource(coord, UNSPECIFIED_INVOKE));
+        eventualSend, getSource(coord, UNSPECIFIED_INVOKE, Debugger.HALT_TAG, Debugger.CALL_TAG));
   }
 
   private ExpressionNode tryInliningBinaryMessage(final MethodBuilder builder,
@@ -1078,7 +1079,7 @@ public final class Parser {
       }
     }
     return createMessageSend(msg, new ExpressionNode[] {receiver, operand},
-        eventualSend, getSource(coord, UNSPECIFIED_INVOKE));
+        eventualSend, getSource(coord, UNSPECIFIED_INVOKE, Debugger.HALT_TAG, Debugger.CALL_TAG));
   }
 
   private ExpressionNode binaryOperand(final MethodBuilder builder)
@@ -1128,7 +1129,7 @@ public final class Parser {
       }
     }
 
-    SourceSection source = getSource(coord, UNSPECIFIED_INVOKE);
+    SourceSection source = getSource(coord, UNSPECIFIED_INVOKE, Debugger.HALT_TAG, Debugger.CALL_TAG);
     ExpressionNode[] args = arguments.toArray(new ExpressionNode[0]);
     if (explicitRcvr) {
       return createMessageSend(msg, args, eventualSend, source);
