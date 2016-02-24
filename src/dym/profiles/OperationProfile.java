@@ -1,21 +1,23 @@
 package dym.profiles;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
 
 import com.oracle.truffle.api.source.SourceSection;
 
 
-public abstract class OperationProfile extends Counter {
+public final class OperationProfile extends Counter {
 
-  protected int numKnownSubexpressions;
+  private final Deque<Object[]> argumentsForExecutions;
   protected final int numSubexpressions;
   protected final Map<Arguments, Integer> argumentTypes;
 
   public OperationProfile(final SourceSection source, final int numSubexpressions) {
     super(source);
     this.numSubexpressions = numSubexpressions;
-    numKnownSubexpressions = 1; // the return value is stored in 0
+    argumentsForExecutions = new ArrayDeque<>();
     argumentTypes = new HashMap<>();
   }
 
@@ -24,14 +26,33 @@ public abstract class OperationProfile extends Counter {
         new Arguments(args), 1, Integer::sum);
   }
 
-  public int registerSubexpressionAndGetIdx() {
-    numKnownSubexpressions += 1;
-    return numKnownSubexpressions - 1;
+  public void enterMainNode() {
+    argumentsForExecutions.push(new Object[numSubexpressions]);
   }
 
-  public abstract void enterMainNode();
+  public void profileArgument(final int argIdx, final Object value) {
+    // because of the self-optimizing nature of Truffle, we might get to
+    // profile a node only after it and all it subnodes actually completed
+    // executing, because we determine specializations based on actual arguments
+    // so, the final results might be off by one, but this should not be
+    // critical
+    // Example: the `+` is problematic in `def length: 1 + self.length()`
+    if (!argumentsForExecutions.isEmpty()) {
+      argumentsForExecutions.peek()[argIdx] = value;
+    }
+  }
 
-  public abstract void profileArgument(int argIdx, Object value);
-
-  public abstract void profileReturn(Object returnValue);
+  public void profileReturn(final Object returnValue) {
+    // because of the self-optimizing nature of Truffle, we might get to
+    // profile a node only after it and all it subnodes actually completed
+    // executing, because we determine specializations based on actual arguments
+    // so, the final results might be off by one, but this should not be
+    // critical
+    // Example: the `+` is problematic in `def length: 1 + self.length()`
+    if (!argumentsForExecutions.isEmpty()) {
+      Object[] arguments = argumentsForExecutions.pop();
+      arguments[0] = returnValue;
+      recordArguments(arguments);
+    }
+  }
 }

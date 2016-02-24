@@ -1,5 +1,6 @@
 package dym.nodes;
 
+import som.compiler.Tags;
 import som.interpreter.ReturnException;
 import som.vm.NotYetImplementedException;
 
@@ -8,23 +9,24 @@ import com.oracle.truffle.api.instrumentation.EventContext;
 import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
 import com.oracle.truffle.api.nodes.Node;
 
+import dym.Tagging.Tagged;
 import dym.profiles.OperationProfile;
 
 
 /**
  * This is for primitive operations only, this mean they cannot cause recursion.
  */
-public final class OperationProfilingNode<T extends OperationProfile> extends CountingNode<T> {
+public final class OperationProfilingNode extends CountingNode<OperationProfile> {
 
   private final EventContext context;
 
   public OperationProfilingNode(
-      final T profile, final EventContext context) {
+      final OperationProfile profile, final EventContext context) {
     super(profile);
     this.context = context;
   }
 
-  public T getProfile() {
+  public OperationProfile getProfile() {
     return counter;
   }
 
@@ -49,19 +51,29 @@ public final class OperationProfilingNode<T extends OperationProfile> extends Co
   }
 
   public int registerSubexpressionAndGetIdx(final Node subExpr) {
-    assert isSubexpressionOfInstrumentedNode(subExpr) : "subExpr does not seem to be a subexrpression of this node, a bug, a data race?";
-    return counter.registerSubexpressionAndGetIdx();
+    int idx = getChildIdx(subExpr);
+    assert idx >= 0 : "Subexpression was not found. Something seems to be wrong with the instrumentation.";
+    return idx + 1; // + 1 is used to represent the index of the storage array used to hold the result. Return value is at 0 index.
   }
 
-  private boolean isSubexpressionOfInstrumentedNode(final Node subExpr) {
+  private int getChildIdx(final Node subExpr) {
+    int taggedIdx = 0;
     for (Node n : context.getInstrumentedNode().getChildren()) {
       if (n == subExpr) {
-        return true;
+        assert n instanceof Tagged;
+        assert ((Tagged) n).getSourceSection().hasTag(Tags.PRIMITIVE_ARGUMENT);
+        return taggedIdx;
       }
       if (n instanceof WrapperNode && ((WrapperNode) n).getDelegateNode() == subExpr) {
-        return true;
+        assert n instanceof Tagged;
+        assert ((Tagged) n).getSourceSection().hasTag(Tags.PRIMITIVE_ARGUMENT);
+        return taggedIdx;
+      }
+
+      if (n instanceof Tagged && ((Tagged) n).getSourceSection().hasTag(Tags.PRIMITIVE_ARGUMENT)) {
+        taggedIdx += 1;
       }
     }
-    return false;
+    return -1;
   }
 }
