@@ -16,10 +16,14 @@ public class VMOptions {
 
   public VMOptions(final String[] args) {
     this.args = processVmArguments(args);
-    showUsage = args.length == 0;
+    showUsage = args != null && args.length == 0;
   }
 
   private String[] processVmArguments(final String[] arguments) {
+    if (arguments == null) {
+      return null;
+    }
+
     int currentArg = 0;
 
     // parse optional --platform and --kernel, need to be the first arguments
