@@ -27,6 +27,9 @@ parser.add_argument('-l', '--low-level', help='enable low-level optimization out
 parser.add_argument('-ti', '--trace-invalidation', help='trace assumption invalidation and transfers to interpreter',
                     dest='trace_invalidation', action='store_true', default=False)
 
+parser.add_argument('-r', '--repl', help='start a Truffle REPL',
+                    dest='truffle_repl', action='store_true', default=False)
+
 parser.add_argument('-p', '--profile', help='enable profiling after warmup',
                     dest='profile', action='store_true', default=False)
 parser.add_argument('-a', '--profile-allocations', help='enable profiling after warmup, and profile allocations',
@@ -114,11 +117,17 @@ else:
       print "No compatible JDK build found, is this script outdated?"
       sys.exit(1)
 
+if args.truffle_repl:
+  mainClass = 'som.Repl'
+else:
+  mainClass = 'som.VM'
+
 SOM_ARGS = ['-Xbootclasspath/a:'
              + BASE_DIR + '/build/classes:'
-             + BASE_DIR + '/libs/truffle/mxbuild/dists/truffle-api.jar',
-            '-cp', BASE_DIR + '/libs/truffle/mxbuild/dists/truffle-debug.jar',
-            'som.VM',
+             + BASE_DIR + '/libs/truffle/mxbuild/dists/truffle-api.jar:'
+             + BASE_DIR + '/libs/truffle/mxbuild/dists/truffle-debug.jar:'
+             + BASE_DIR + '/libs/jline-2.11.jar',
+            mainClass,
             '--platform', BASE_DIR + '/core-lib/Platform.som',
             '--kernel', BASE_DIR + '/core-lib/Kernel.som']
 

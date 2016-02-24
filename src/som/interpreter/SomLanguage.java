@@ -62,8 +62,8 @@ public final class SomLanguage extends TruffleLanguage<VM> {
     return vm;
   }
 
-  public static final Source START = Source.fromNamedText(
-      "", "Don't Parse, just start execution with command line arguments").withMimeType(MIME_TYPE);
+  // Marker source used to start execution with command line arguments
+  public static final Source START = Source.fromNamedText("", "START").withMimeType(MIME_TYPE);
 
   private static class StartInterpretation extends RootNode {
 
@@ -89,7 +89,7 @@ public final class SomLanguage extends TruffleLanguage<VM> {
   @Override
   protected CallTarget parse(final Source code, final Node context,
       final String... argumentNames) throws IOException {
-    if (code == START) {
+    if (code == START || (code.getLength() == 0 && code.getName().equals("START"))) {
       return createStartCallTarget();
     }
 
