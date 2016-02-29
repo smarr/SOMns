@@ -18,4 +18,8 @@ public class CountingNode<T extends Counter> extends ExecutionEventNode {
   protected void onEnter(final VirtualFrame frame) {
     counter.inc();
   }
+
+  public T getProfile() {
+    return counter;
+  }
 }
