@@ -177,7 +177,6 @@ public class DynamicMetrics extends TruffleInstrument {
     return primExpFactory;
   }
 
-  @SuppressWarnings("unchecked")
   private void addSubexpressionInstrumentation(final Instrumenter instrumenter,
       final ExecutionEventNodeFactory factory) {
     Builder filters = SourceSectionFilter.newBuilder();
@@ -187,6 +186,7 @@ public class DynamicMetrics extends TruffleInstrument {
     instrumenter.attachFactory(filters.build(), (final EventContext ctx) -> {
       ExecutionEventNode parent = ctx.findDirectParentEventNode(factory);
 
+      @SuppressWarnings("unchecked")
       OperationProfilingNode p = (OperationProfilingNode) parent;
       int idx = p.registerSubexpressionAndGetIdx(ctx.getInstrumentedNode());
       return new ReportResultNode(p.getProfile(), idx);
