@@ -23,6 +23,7 @@ import com.oracle.truffle.api.instrumentation.SourceSectionFilter;
 import com.oracle.truffle.api.instrumentation.SourceSectionFilter.Builder;
 import com.oracle.truffle.api.instrumentation.TruffleInstrument;
 import com.oracle.truffle.api.instrumentation.TruffleInstrument.Registration;
+import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.GraphPrintVisitor;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
@@ -30,6 +31,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import dym.nodes.AllocationProfilingNode;
 import dym.nodes.ArrayAllocationProfilingNode;
+import dym.nodes.CallTargetNode;
 import dym.nodes.ControlFlowProfileNode;
 import dym.nodes.CountingNode;
 import dym.nodes.FieldReadProfilingNode;
@@ -37,6 +39,7 @@ import dym.nodes.InvocationProfilingNode;
 import dym.nodes.LoopIterationReportNode;
 import dym.nodes.LoopProfilingNode;
 import dym.nodes.OperationProfilingNode;
+import dym.nodes.ReportReceiverNode;
 import dym.nodes.ReportResultNode;
 import dym.profiles.AllocationProfile;
 import dym.profiles.ArrayCreationProfile;
@@ -193,6 +196,37 @@ public class DynamicMetrics extends TruffleInstrument {
     });
   }
 
+  private void addReceiverInstrumentation(final Instrumenter instrumenter,
+      final ExecutionEventNodeFactory virtInvokeFactory) {
+    Builder filters = SourceSectionFilter.newBuilder();
+    filters.tagIs(Tags.VIRTUAL_INVOKE_RECEIVER);
+
+    instrumenter.attachFactory(filters.build(), (final EventContext ctx) -> {
+      ExecutionEventNode parent = ctx.findDirectParentEventNode(virtInvokeFactory);
+
+      @SuppressWarnings("unchecked")
+      CountingNode<CallsiteProfile> p = (CountingNode<CallsiteProfile>) parent;
+      CallsiteProfile profile = p.getProfile();
+      return new ReportReceiverNode(profile);
+    });
+  }
+
+  private void addCalltargetInstrumentation(final Instrumenter instrumenter,
+      final ExecutionEventNodeFactory virtInvokeFactory) {
+    Builder filters = SourceSectionFilter.newBuilder();
+    filters.tagIs(Tags.CACHED_VIRTUAL_INVOKE);
+
+    instrumenter.attachFactory(filters.build(), (final EventContext ctx) -> {
+      ExecutionEventNode parent = ctx.findParentEventNode(virtInvokeFactory);
+      DirectCallNode disp = (DirectCallNode) ctx.getInstrumentedNode();
+
+      @SuppressWarnings("unchecked")
+      CountingNode<CallsiteProfile> p = (CountingNode<CallsiteProfile>) parent;
+      CallsiteProfile profile = p.getProfile();
+      return new CallTargetNode(profile, (Invokable) disp.getCurrentRootNode());
+    });
+  }
+
   @Override
   protected void onCreate(final Env env) {
     Instrumenter instrumenter = env.getInstrumenter();
@@ -202,6 +236,8 @@ public class DynamicMetrics extends TruffleInstrument {
         instrumenter, methodCallsiteProfiles,
         new String[] {Tags.VIRTUAL_INVOKE}, new String[] {},
         CallsiteProfile::new, CountingNode<CallsiteProfile>::new);
+    addReceiverInstrumentation(instrumenter, virtInvokeFacoty);
+    addCalltargetInstrumentation(instrumenter, virtInvokeFacoty);
 
     addInstrumentation(instrumenter, newObjectCounter,
         new String[] {Tags.NEW_OBJECT}, new String[] {},
