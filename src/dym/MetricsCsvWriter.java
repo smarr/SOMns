@@ -18,7 +18,7 @@ import com.oracle.truffle.api.source.SourceSection;
 import dym.profiles.AllocationProfile;
 import dym.profiles.ArrayCreationProfile;
 import dym.profiles.InvocationProfile;
-import dym.profiles.MethodCallsiteProbe;
+import dym.profiles.CallsiteProfile;
 import dym.profiles.ReadValueProfile;
 import dym.profiles.StructuralProbe;
 
@@ -74,11 +74,12 @@ public final class MetricsCsvWriter {
 
   private void methodCallsites() {
     @SuppressWarnings("unchecked")
-    Map<SourceSection, MethodCallsiteProbe> profiles = (Map<SourceSection, MethodCallsiteProbe>) data.get("methodCallsite");
+    Map<SourceSection, CallsiteProfile> profiles = (Map<SourceSection, CallsiteProfile>) data.get("methodCallsite");
+
 
     try (PrintWriter file = new PrintWriter(metricsFolder + File.separator + "method-callsites.csv")) {
       file.println("Source Section\tCall Count");
-      for (MethodCallsiteProbe p : profiles.values()) {
+      for (CallsiteProfile p : profiles.values()) {
         String abbrv = getSourceSectionAbbrv(p.getSourceSection());
         file.print(abbrv);
         file.print("\t");
