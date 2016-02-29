@@ -41,10 +41,10 @@ import dym.nodes.ReportResultNode;
 import dym.profiles.AllocationProfile;
 import dym.profiles.ArrayCreationProfile;
 import dym.profiles.BranchProfile;
+import dym.profiles.CallsiteProfile;
 import dym.profiles.Counter;
 import dym.profiles.InvocationProfile;
 import dym.profiles.LoopProfile;
-import dym.profiles.MethodCallsiteProbe;
 import dym.profiles.OperationProfile;
 import dym.profiles.ReadValueProfile;
 import dym.profiles.StructuralProbe;
@@ -67,7 +67,7 @@ public class DynamicMetrics extends TruffleInstrument {
   private int methodStackDepth;
   private int maxStackDepth;
 
-  private final Map<SourceSection, MethodCallsiteProbe> methodCallsiteProbes;
+  private final Map<SourceSection, CallsiteProfile> methodCallsiteProfiles;
   private final Map<SourceSection, AllocationProfile> newObjectCounter;
   private final Map<SourceSection, ArrayCreationProfile> newArrayCounter;
   private final Map<SourceSection, ReadValueProfile> fieldReadProfiles;
@@ -87,7 +87,7 @@ public class DynamicMetrics extends TruffleInstrument {
     structuralProbe = VM.getStructuralProbe();
 
     methodInvocationCounter = new HashMap<>();
-    methodCallsiteProbes    = new HashMap<>();
+    methodCallsiteProfiles  = new HashMap<>();
     newObjectCounter        = new HashMap<>();
     newArrayCounter         = new HashMap<>();
     fieldReadProfiles       = new HashMap<>();
@@ -198,9 +198,10 @@ public class DynamicMetrics extends TruffleInstrument {
     Instrumenter instrumenter = env.getInstrumenter();
     addRootTagInstrumentation(instrumenter);
 
-    addInstrumentation(instrumenter, methodCallsiteProbes,
-        new String[] {Tags.UNSPECIFIED_INVOKE}, new String[] {Tags.EAGERLY_WRAPPED},
-        MethodCallsiteProbe::new, CountingNode<Counter>::new);
+    ExecutionEventNodeFactory virtInvokeFacoty = addInstrumentation(
+        instrumenter, methodCallsiteProfiles,
+        new String[] {Tags.VIRTUAL_INVOKE}, new String[] {},
+        CallsiteProfile::new, CountingNode<CallsiteProfile>::new);
 
     addInstrumentation(instrumenter, newObjectCounter,
         new String[] {Tags.NEW_OBJECT}, new String[] {},
@@ -269,7 +270,7 @@ public class DynamicMetrics extends TruffleInstrument {
   private Map<String, Map<SourceSection, ? extends JsonSerializable>> collectData() {
     Map<String, Map<SourceSection, ? extends JsonSerializable>> data = new HashMap<>();
     data.put(JsonWriter.METHOD_INVOCATION_PROFILE, methodInvocationCounter);
-    data.put(JsonWriter.METHOD_CALLSITE,          methodCallsiteProbes);
+    data.put(JsonWriter.METHOD_CALLSITE,          methodCallsiteProfiles);
     data.put(JsonWriter.NEW_OBJECT_COUNT,         newObjectCounter);
     data.put(JsonWriter.NEW_ARRAY_COUNT,          newArrayCounter);
     data.put(JsonWriter.FIELD_READS,              fieldReadProfiles);
