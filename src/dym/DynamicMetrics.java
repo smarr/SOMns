@@ -301,6 +301,29 @@ public class DynamicMetrics extends TruffleInstrument {
     String metricsFolder = System.getProperty("dm.metrics", "metrics");
     MetricsCsvWriter.fileOut(data, metricsFolder, structuralProbe);
 
+    outputAllTruffleMethodsToIGV();
+  }
+
+  private void outputAllTruffleMethodsToIGV() {
+    GraphPrintVisitor graphPrinter = new GraphPrintVisitor();
+
+    List<MixinDefinition> classes = new ArrayList<MixinDefinition>(structuralProbe.getClasses());
+    Collections.sort(classes, (final MixinDefinition a, final MixinDefinition b) -> a.getName().getString().compareTo(b.getName().getString()));
+
+    for (MixinDefinition mixin : classes) {
+      graphPrinter.beginGroup(mixin.getName().getString());
+
+      for (Dispatchable disp : mixin.getInstanceDispatchables().values()) {
+        if (disp instanceof SInvokable) {
+          SInvokable i = (SInvokable) disp;
+          graphPrinter.beginGraph(i.toString()).visit(i.getCallTarget().getRootNode());
+        }
+      }
+      graphPrinter.endGroup();
+    }
+
+    graphPrinter.printToNetwork(true);
+    graphPrinter.close();
   }
 
   private Map<String, Map<SourceSection, ? extends JsonSerializable>> collectData() {
