@@ -14,9 +14,11 @@ import som.vmobjects.SClass;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 public abstract class NewImmutableArrayNode extends TernaryExpressionNode {
+  public NewImmutableArrayNode(final SourceSection source) { super(source); }
 
   @Child protected BlockDispatchNode block = BlockDispatchNodeGen.create();
   @Child protected IsValue isValue = IsValueFactory.create(null, null);

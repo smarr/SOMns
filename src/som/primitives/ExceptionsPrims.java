@@ -35,6 +35,8 @@ public abstract class ExceptionsPrims {
           block.getMethod().getCallTarget());
     }
 
+    public ExceptionDoOnPrim(final SourceSection source) { super(source); }
+
     public static final boolean sameBlock(final SBlock block, final SInvokable method) {
       return block.getMethod() == method;
     }

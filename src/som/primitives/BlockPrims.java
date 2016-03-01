@@ -80,7 +80,6 @@ public abstract class BlockPrims {
   @ImportStatic(BlockPrims.class)
   @Primitive("blockValue:with:")
   public abstract static class ValueOnePrim extends BinaryComplexOperation {
-
     protected ValueOnePrim(final SourceSection source) { super(source); }
 
     @Specialization(guards = "cached == receiver.getMethod()", limit = "CHAIN_LENGTH")
@@ -103,6 +102,7 @@ public abstract class BlockPrims {
   @ImportStatic(BlockPrims.class)
   @Primitive("blockValue:with:with:")
   public abstract static class ValueTwoPrim extends TernaryExpressionNode {
+    public ValueTwoPrim(final SourceSection source) { super(source); }
 
     @Specialization(guards = "cached == receiver.getMethod()", limit = "CHAIN_LENGTH")
     public final Object doCachedBlock(final VirtualFrame frame,

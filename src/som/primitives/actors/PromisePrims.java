@@ -135,6 +135,8 @@ public final class PromisePrims {
   @ImportStatic(PromisePrims.class)
   @Primitive("actorsFor:on:do:")
   public abstract static class OnExceptionDoPrim extends TernaryExpressionNode {
+    public OnExceptionDoPrim(final SourceSection source) { super(source); }
+
     @Specialization(guards = "blockMethod == callback.getMethod()")
     public final SPromise onExceptionDo(final SPromise promise,
         final SClass exceptionClass, final SBlock callback,
@@ -150,6 +152,8 @@ public final class PromisePrims {
   @Primitive("actorsWhen:resolved:onError:")
   public abstract static class WhenResolvedOnErrorPrim extends TernaryExpressionNode {
     @Child protected RegisterWhenResolved registerNode = new RegisterWhenResolved();
+
+    public WhenResolvedOnErrorPrim(final SourceSection source) { super(source); }
 
     @Specialization(guards = {"resolvedMethod == resolved.getMethod()", "errorMethod == error.getMethod()"})
     public final SPromise whenResolvedOnError(final SPromise promise,

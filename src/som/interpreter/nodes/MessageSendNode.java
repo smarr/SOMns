@@ -538,8 +538,9 @@ public final class MessageSendNode {
     }
 
     private PreevaluatedExpression makeEagerTernaryPrim(final TernaryExpressionNode prim) {
-      PreevaluatedExpression result = replace(new EagerTernaryPrimitiveNode(selector, argumentNodes[0],
       VM.insertInstrumentationWrapper(this);
+      PreevaluatedExpression result = replace(new EagerTernaryPrimitiveNode(
+          prim.getSourceSection(), selector, argumentNodes[0],
           argumentNodes[1], argumentNodes[2], prim));
       VM.insertInstrumentationWrapper(prim);
       return result;
@@ -549,12 +550,13 @@ public final class MessageSendNode {
       switch (selector.getString()) {
         case "at:put:":
           if (arguments[0] instanceof SArray) {
-            return makeEagerTernaryPrim(AtPutPrimFactory.create(getSourceSection(), null, null, null));
+            return makeEagerTernaryPrim(AtPutPrimFactory.create(
+                getSourceSection(), null, null, null));
           }
           break;
         case "ifTrue:ifFalse:":
-          return replace(IfTrueIfFalseMessageNodeGen.create(arguments[0],
-              arguments[1], arguments[2], argumentNodes[0],
+          return replace(IfTrueIfFalseMessageNodeGen.create(getSourceSection(),
+              arguments[0], arguments[1], arguments[2], argumentNodes[0],
               argumentNodes[1], argumentNodes[2]));
         case "to:do:":
           if (TypesGen.isLong(arguments[0]) &&
@@ -577,9 +579,8 @@ public final class MessageSendNode {
           break;
         case "substringFrom:to:":
           if (arguments[0] instanceof String) {
-            return replace(new EagerTernaryPrimitiveNode(selector,
-                argumentNodes[0], argumentNodes[1], argumentNodes[2],
-                SubstringPrimFactory.create(null, null, null)));
+            return makeEagerTernaryPrim(SubstringPrimFactory.create(
+                getSourceSection(), null, null, null));
           }
           break;
         case "invokeOn:with:":
@@ -588,16 +589,14 @@ public final class MessageSendNode {
               ToArgumentsArrayNodeGen.create(null, null)));
         case "value:with:":
           if (arguments[0] instanceof SBlock) {
-            return replace(new EagerTernaryPrimitiveNode(selector, argumentNodes[0],
-                argumentNodes[1], argumentNodes[2],
-                ValueTwoPrimFactory.create(null, null, null)));
+            return makeEagerTernaryPrim(ValueTwoPrimFactory.create(
+                getSourceSection(), null, null, null));
           }
           break;
         case "new:withAll:":
           if (arguments[0] == Classes.valueArrayClass) {
-            return replace(new EagerTernaryPrimitiveNode(selector, argumentNodes[0],
-                argumentNodes[1], argumentNodes[2],
-                NewImmutableArrayNodeGen.create(null, null, null)));
+            return makeEagerTernaryPrim(NewImmutableArrayNodeGen.create(
+                getSourceSection(), null, null, null));
           }
       }
       return makeSend();

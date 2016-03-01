@@ -29,8 +29,6 @@ public abstract class TernaryExpressionNode extends ExpressionNode
     super(wrappedNode);
   }
 
-  public TernaryExpressionNode() { this((SourceSection) null); }
-
   public abstract Object executeEvaluated(final VirtualFrame frame,
       final Object receiver, final Object firstArg, final Object secondArg);
 

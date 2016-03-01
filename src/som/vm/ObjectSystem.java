@@ -174,12 +174,10 @@ public final class ObjectSystem {
       case 3:
         // HACK for node class where we use `executeWith`
         if (factory == InvokeOnPrimFactory.getInstance()) {
-          primNode = factory.createNode(args[0], args[1], args[2],
+          primNode = factory.createNode(source, args[0], args[1], args[2],
               ToArgumentsArrayNodeGen.create(null, null));
-        } else if (factory == AtPutPrimFactory.getInstance()) {
-          primNode = factory.createNode(source, args[0], args[1], args[2]);
         } else {
-          primNode = factory.createNode(args[0], args[1], args[2]);
+          primNode = factory.createNode(source, args[0], args[1], args[2]);
         }
         break;
       case 4:

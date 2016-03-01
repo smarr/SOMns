@@ -23,12 +23,13 @@ public final class EagerTernaryPrimitiveNode extends TernaryExpressionNode {
   private final SSymbol selector;
 
   public EagerTernaryPrimitiveNode(
+      final SourceSection source,
       final SSymbol selector,
       final ExpressionNode receiver,
       final ExpressionNode argument1,
       final ExpressionNode argument2,
       final TernaryExpressionNode primitive) {
-    super((SourceSection) null);
+    super(source);
     this.receiver  = receiver;
     this.argument1 = argument1;
     this.argument2 = argument2;
