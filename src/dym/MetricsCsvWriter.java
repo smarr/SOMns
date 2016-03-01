@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import som.compiler.MixinDefinition;
+import som.interpreter.Invokable;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
@@ -17,8 +18,8 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import dym.profiles.AllocationProfile;
 import dym.profiles.ArrayCreationProfile;
-import dym.profiles.InvocationProfile;
 import dym.profiles.CallsiteProfile;
+import dym.profiles.InvocationProfile;
 import dym.profiles.ReadValueProfile;
 import dym.profiles.StructuralProbe;
 
@@ -76,14 +77,29 @@ public final class MetricsCsvWriter {
     @SuppressWarnings("unchecked")
     Map<SourceSection, CallsiteProfile> profiles = (Map<SourceSection, CallsiteProfile>) data.get("methodCallsite");
 
-
     try (PrintWriter file = new PrintWriter(metricsFolder + File.separator + "method-callsites.csv")) {
-      file.println("Source Section\tCall Count");
+      file.println("Source Section\tCall Count\tNum Rcvrs\tNum Targets");
       for (CallsiteProfile p : profiles.values()) {
+        if (data.get(JsonWriter.FIELD_READS).containsKey(p.getSourceSection()) ||
+            data.get(JsonWriter.FIELD_WRITES).containsKey(p.getSourceSection()) ||
+            data.get(JsonWriter.CLASS_READS).containsKey(p.getSourceSection())) {
+          continue;  // filter out field reads, writes, and accesses to class objects
+        }
+
         String abbrv = getSourceSectionAbbrv(p.getSourceSection());
         file.print(abbrv);
         file.print("\t");
-        file.println(p.getValue());
+        file.print(p.getValue());
+        file.print("\t");
+
+        Map<SClass, Integer> receivers = p.getReceivers();
+//        int numRcvrsRecorded = receivers.values().stream().reduce(0, Integer::sum);
+        file.print(receivers.values().size());
+
+        Map<Invokable, Integer> calltargets = p.getCallTargets();
+//        int numCalltargetsInvoked = calltargets.values().stream().reduce(0, Integer::sum);
+        file.print("\t");
+        file.println(calltargets.values().size());
       }
     } catch (FileNotFoundException e) {
       throw new RuntimeException(e);
