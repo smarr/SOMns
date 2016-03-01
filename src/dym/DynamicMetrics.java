@@ -77,6 +77,7 @@ public class DynamicMetrics extends TruffleInstrument {
   private final Map<SourceSection, ArrayCreationProfile> newArrayCounter;
   private final Map<SourceSection, ReadValueProfile> fieldReadProfiles;
   private final Map<SourceSection, Counter> fieldWriteProfiles;
+  private final Map<SourceSection, Counter> classReadProfiles;
   private final Map<SourceSection, BranchProfile> controlFlowProfiles;
   private final Map<SourceSection, Counter> literalReadCounter;
   private final Map<SourceSection, ReadValueProfile> localsReadProfiles;
@@ -97,6 +98,7 @@ public class DynamicMetrics extends TruffleInstrument {
     newArrayCounter         = new HashMap<>();
     fieldReadProfiles       = new HashMap<>();
     fieldWriteProfiles      = new HashMap<>();
+    classReadProfiles       = new HashMap<>();
     controlFlowProfiles     = new HashMap<>();
     literalReadCounter      = new HashMap<>();
     localsReadProfiles      = new HashMap<>();
@@ -275,6 +277,9 @@ public class DynamicMetrics extends TruffleInstrument {
     addInstrumentation(instrumenter, fieldWriteProfiles,
         new String[] {Tags.FIELD_WRITE}, new String[] {},
         Counter::new, CountingNode<Counter>::new);
+    addInstrumentation(instrumenter, classReadProfiles,
+        new String[] {Tags.CLASS_READ}, new String[] {},
+        Counter::new, CountingNode<Counter>::new);
     addInstrumentation(instrumenter, localsWriteProfiles,
         new String[] {Tags.LOCAL_VAR_WRITE}, new String[] {},
         Counter::new, CountingNode<Counter>::new);
@@ -345,6 +350,7 @@ public class DynamicMetrics extends TruffleInstrument {
     data.put(JsonWriter.NEW_ARRAY_COUNT,          newArrayCounter);
     data.put(JsonWriter.FIELD_READS,              fieldReadProfiles);
     data.put(JsonWriter.FIELD_WRITES,             fieldWriteProfiles);
+    data.put(JsonWriter.CLASS_READS,              classReadProfiles);
     data.put(JsonWriter.BRANCH_PROFILES,          controlFlowProfiles);
     data.put(JsonWriter.LITERAL_READS,            literalReadCounter);
     data.put(JsonWriter.LOCAL_READS,              localsReadProfiles);
