@@ -27,4 +27,12 @@ public class CallsiteProfile extends Counter {
   public void recordInvocationTarget(final Invokable invokable) {
     callTargetMap.merge(invokable, 1, Integer::sum);
   }
+
+  public Map<Invokable, Integer> getCallTargets() {
+    return callTargetMap;
+  }
+
+  public Map<SClass, Integer> getReceivers() {
+    return receiverMap;
+  }
 }
