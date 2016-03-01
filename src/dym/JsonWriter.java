@@ -25,6 +25,7 @@ public final class JsonWriter {
   public static final String NEW_ARRAY_COUNT           = "newArrayCount";
   public static final String FIELD_READS      = "fieldReads";
   public static final String FIELD_WRITES     = "fieldWrites";
+  public static final String CLASS_READS      = "classReads";
   public static final String BRANCH_PROFILES  = "branchProfile";
   public static final String LITERAL_READS    = "literalReads";
   public static final String LOCAL_READS      = "localReads";

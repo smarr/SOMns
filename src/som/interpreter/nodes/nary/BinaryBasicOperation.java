@@ -14,7 +14,7 @@ import dym.Tagging;
  */
 public abstract class BinaryBasicOperation extends BinaryExpressionNode {
   private static final String[] basicTags = new String[] {Tags.BASIC_PRIMITIVE_OPERATION};
-  private static final String[] basicConflictingTags = new String[] {Tags.UNSPECIFIED_INVOKE};
+  private static final String[] basicConflictingTags = new String[] {Tags.UNSPECIFIED_INVOKE, Tags.VIRTUAL_INVOKE};
 
   protected BinaryBasicOperation(final SourceSection source) {
     super(Tagging.cloneAndUpdateTags(source, basicTags, basicConflictingTags));

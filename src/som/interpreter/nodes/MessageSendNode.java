@@ -236,15 +236,22 @@ public final class MessageSendNode {
     protected abstract PreevaluatedExpression makeSpecialSend();
 
     private GenericMessageSendNode makeOrdenarySend() {
+      VM.insertInstrumentationWrapper(this);
+
+      Tagging.addTags(argumentNodes[0], Tags.VIRTUAL_INVOKE_RECEIVER);
       GenericMessageSendNode send = new GenericMessageSendNode(selector,
           argumentNodes,
           UninitializedDispatchNode.createRcvrSend(
               getSourceSection(), selector, AccessModifier.PUBLIC),
           getSourceSection());
-      return replace(send);
+      replace(send);
+      VM.insertInstrumentationWrapper(send);
+      VM.insertInstrumentationWrapper(argumentNodes[0]);
+      return send;
     }
 
     private PreevaluatedExpression makeEagerUnaryPrim(final UnaryExpressionNode prim) {
+      VM.insertInstrumentationWrapper(this);
       assert prim.getSourceSection() != null;
 
       Tagging.addTags(argumentNodes[0], Tags.PRIMITIVE_ARGUMENT);
@@ -351,6 +358,7 @@ public final class MessageSendNode {
     }
 
     private PreevaluatedExpression makeEagerBinaryPrim(final BinaryExpressionNode prim) {
+      VM.insertInstrumentationWrapper(this);
       assert prim.getSourceSection() != null;
 
       Tagging.addTags(argumentNodes[0], Tags.PRIMITIVE_ARGUMENT);
@@ -531,6 +539,7 @@ public final class MessageSendNode {
 
     private PreevaluatedExpression makeEagerTernaryPrim(final TernaryExpressionNode prim) {
       PreevaluatedExpression result = replace(new EagerTernaryPrimitiveNode(selector, argumentNodes[0],
+      VM.insertInstrumentationWrapper(this);
           argumentNodes[1], argumentNodes[2], prim));
       VM.insertInstrumentationWrapper(prim);
       return result;
@@ -626,7 +635,10 @@ public final class MessageSendNode {
 
     @Override
     protected PreevaluatedExpression makeSpecialSend() {
+      VM.insertInstrumentationWrapper(this);
+
       ISpecialSend rcvrNode = (ISpecialSend) unwrapIfNecessary(argumentNodes[0]);
+      Tagging.addTags(argumentNodes[0], Tags.VIRTUAL_INVOKE_RECEIVER);
       AbstractDispatchNode dispatch;
 
       if (rcvrNode.isSuperSend()) {
@@ -639,7 +651,10 @@ public final class MessageSendNode {
 
       GenericMessageSendNode node = new GenericMessageSendNode(selector,
         argumentNodes, dispatch, getSourceSection());
-      return replace(node);
+      replace(node);
+      VM.insertInstrumentationWrapper(node);
+      VM.insertInstrumentationWrapper(argumentNodes[0]);
+      return node;
     }
   }
 
@@ -693,10 +708,13 @@ public final class MessageSendNode {
 
     @Child private AbstractDispatchNode dispatchNode;
 
+    private static final String[] VIRTUAL_INVOKE = new String[] {Tags.VIRTUAL_INVOKE};
+    private static final String[] NOT_A = new String[] {Tags.UNSPECIFIED_INVOKE};
+
     private GenericMessageSendNode(final SSymbol selector,
         final ExpressionNode[] arguments,
         final AbstractDispatchNode dispatchNode, final SourceSection source) {
-      super(arguments, source);
+      super(arguments, Tagging.cloneAndUpdateTags(source, VIRTUAL_INVOKE, NOT_A));
       this.selector = selector;
       this.dispatchNode = dispatchNode;
     }

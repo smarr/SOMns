@@ -552,10 +552,14 @@ public final class MixinDefinition {
       this.mainSlot = mainSlot;
     }
 
+    private static final String[] WRITE_TAGS    = new String[] {Tags.FIELD_WRITE};
+    private static final String[] NO_WRITE_TAGS = new String[] {Tags.UNSPECIFIED_INVOKE, Tags.VIRTUAL_INVOKE};
+
     @Override
     public AbstractDispatchNode getDispatchNode(final Object rcvr,
         final Object firstArg, final AbstractDispatchNode next) {
-      SourceSection source = Tagging.getSourceSectionWithTags(next, Tags.FIELD_WRITE);
+      SourceSection source = Tagging.cloneAndUpdateTags(
+          next.getSourceSection(), WRITE_TAGS, NO_WRITE_TAGS);
       return new CachedSlotWrite(source,
           createWriteNode((SObject) rcvr, firstArg),
           DispatchGuard.create(rcvr), next);
@@ -598,10 +602,9 @@ public final class MixinDefinition {
       return node;
     }
 
-    // TODO
     @Override
     protected String[] getTags() {
-      return new String[] {};
+      return new String[] {Tags.CLASS_READ};
     }
 
     @Override

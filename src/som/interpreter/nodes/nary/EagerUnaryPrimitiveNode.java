@@ -1,5 +1,6 @@
 package som.interpreter.nodes.nary;
 
+import som.VM;
 import som.interpreter.TruffleCompiler;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageSendNode;
@@ -45,8 +46,13 @@ public class EagerUnaryPrimitiveNode extends UnaryExpressionNode {
   }
 
   private GenericMessageSendNode makeGenericSend() {
+    VM.insertInstrumentationWrapper(this);
+
     GenericMessageSendNode node = MessageSendNode.createGeneric(selector,
         new ExpressionNode[] {receiver}, getSourceSection());
-    return replace(node);
+    replace(node);
+    VM.insertInstrumentationWrapper(node);
+    VM.insertInstrumentationWrapper(receiver);
+    return node;
   }
 }

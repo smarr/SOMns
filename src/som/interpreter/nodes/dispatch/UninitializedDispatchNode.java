@@ -52,6 +52,8 @@ public final class UninitializedDispatchNode {
 
     protected final AbstractDispatchNode insertSpecialization(final Object rcvr,
         final Object firstArg) {
+      VM.insertInstrumentationWrapper(this);
+
       SClass rcvrClass = Types.getClassOf(rcvr);
       Dispatchable dispatchable = doLookup(rcvrClass);
 

@@ -64,6 +64,11 @@ public abstract class Tagging {
     return cloneAndUpdateTags(source, add, empty);
   }
 
+  public static SourceSection cloneAndRemoveTags(final SourceSection source,
+      final String... remove) {
+    return cloneAndUpdateTags(source, empty, remove);
+  }
+
   private static void updateTagsForTaggedNode(final Tagged node,
       final String[] add, final String[] remove) {
     assert !(node instanceof WrapperNode);

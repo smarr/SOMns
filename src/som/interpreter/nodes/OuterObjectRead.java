@@ -1,6 +1,7 @@
 package som.interpreter.nodes;
 
 import som.compiler.MixinBuilder.MixinDefinitionId;
+import som.compiler.Tags;
 import som.interpreter.actors.SFarReference;
 import som.interpreter.objectstorage.ClassFactory;
 import som.primitives.actors.ActorClasses;
@@ -14,6 +15,8 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
+
+import dym.Tagging;
 
 
 @NodeChild(value = "receiver", type = ExpressionNode.class)
@@ -32,7 +35,7 @@ public abstract class OuterObjectRead
       final MixinDefinitionId mixinId,
       final MixinDefinitionId enclosingMixinId,
       final SourceSection sourceSection) {
-    super(sourceSection);
+    super(Tagging.cloneAndRemoveTags(sourceSection, Tags.UNSPECIFIED_INVOKE, Tags.CONTROL_FLOW_CONDITION));
     this.contextLevel = contextLevel;
     this.mixinId = mixinId;
     this.enclosingMixinId = enclosingMixinId;
