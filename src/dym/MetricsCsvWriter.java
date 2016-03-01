@@ -108,7 +108,7 @@ public final class MetricsCsvWriter {
 
   private void newObjectCount() {
     @SuppressWarnings("unchecked")
-    Map<SourceSection, AllocationProfile> profiles = (Map<SourceSection, AllocationProfile>) data.get("newObjectCount");
+    Map<SourceSection, AllocationProfile> profiles = (Map<SourceSection, AllocationProfile>) data.get(JsonWriter.NEW_OBJECT_COUNT);
 
     try (PrintWriter file = new PrintWriter(metricsFolder + File.separator + "new-objects.csv")) {
       file.println("Source Section\tNew Objects\tNumber of Fields\tClass");
@@ -130,7 +130,7 @@ public final class MetricsCsvWriter {
 
   private void newArrayCount() {
     @SuppressWarnings("unchecked")
-    Map<SourceSection, ArrayCreationProfile> profiles = (Map<SourceSection, ArrayCreationProfile>) data.get("newArrayCount");
+    Map<SourceSection, ArrayCreationProfile> profiles = (Map<SourceSection, ArrayCreationProfile>) data.get(JsonWriter.NEW_ARRAY_COUNT);
 
     try (PrintWriter file = new PrintWriter(metricsFolder + File.separator + "new-arrays.csv")) {
       file.println("Source Section\tNew Arrays\tSize");
@@ -153,7 +153,7 @@ public final class MetricsCsvWriter {
 
   private void fieldReads() {
     @SuppressWarnings("unchecked")
-    Map<SourceSection, ReadValueProfile> profiles = (Map<SourceSection, ReadValueProfile>) data.get("fieldReads");
+    Map<SourceSection, ReadValueProfile> profiles = (Map<SourceSection, ReadValueProfile>) data.get(JsonWriter.FIELD_READS);
 
     try (PrintWriter file = new PrintWriter(metricsFolder + File.separator + "field-reads.csv")) {
       file.println("Source Section\tRead Type\tCount");
@@ -176,7 +176,7 @@ public final class MetricsCsvWriter {
 
   private void localReads() {
     @SuppressWarnings("unchecked")
-    Map<SourceSection, ReadValueProfile> profiles = (Map<SourceSection, ReadValueProfile>) data.get("localReads");
+    Map<SourceSection, ReadValueProfile> profiles = (Map<SourceSection, ReadValueProfile>) data.get(JsonWriter.LOCAL_READS);
 
     try (PrintWriter file = new PrintWriter(metricsFolder + File.separator + "local-reads.csv")) {
       file.println("Source Section\tRead Type\tCount");
