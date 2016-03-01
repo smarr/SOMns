@@ -36,6 +36,8 @@ import dym.nodes.ControlFlowProfileNode;
 import dym.nodes.CountingNode;
 import dym.nodes.FieldReadProfilingNode;
 import dym.nodes.InvocationProfilingNode;
+import dym.nodes.LateCallTargetNode;
+import dym.nodes.LateReportResultNode;
 import dym.nodes.LoopIterationReportNode;
 import dym.nodes.LoopProfilingNode;
 import dym.nodes.OperationProfilingNode;
@@ -189,6 +191,10 @@ public class DynamicMetrics extends TruffleInstrument {
     instrumenter.attachFactory(filters.build(), (final EventContext ctx) -> {
       ExecutionEventNode parent = ctx.findDirectParentEventNode(factory);
 
+      if (parent == null) {
+        return new LateReportResultNode(ctx, factory);
+      }
+
       @SuppressWarnings("unchecked")
       OperationProfilingNode p = (OperationProfilingNode) parent;
       int idx = p.registerSubexpressionAndGetIdx(ctx.getInstrumentedNode());
@@ -218,12 +224,17 @@ public class DynamicMetrics extends TruffleInstrument {
 
     instrumenter.attachFactory(filters.build(), (final EventContext ctx) -> {
       ExecutionEventNode parent = ctx.findParentEventNode(virtInvokeFactory);
-      DirectCallNode disp = (DirectCallNode) ctx.getInstrumentedNode();
+      InstrumentableDirectCallNode disp = (InstrumentableDirectCallNode) ctx.getInstrumentedNode();
+
+      if (parent == null) {
+        return new LateCallTargetNode(ctx, virtInvokeFactory);
+      }
 
       @SuppressWarnings("unchecked")
       CountingNode<CallsiteProfile> p = (CountingNode<CallsiteProfile>) parent;
       CallsiteProfile profile = p.getProfile();
-      return new CallTargetNode(profile, (Invokable) disp.getCurrentRootNode());
+      RootCallTarget root = (RootCallTarget) disp.getCallTarget();
+      return new CallTargetNode(profile, (Invokable) root.getRootNode());
     });
   }
 

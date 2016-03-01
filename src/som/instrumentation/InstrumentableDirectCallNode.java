@@ -28,8 +28,18 @@ public class InstrumentableDirectCallNode extends DirectCallNode {
   }
 
   @Override
+  public SourceSection getSourceSection() {
+    return sourceSection;
+  }
+
+  @Override
   public Object call(final VirtualFrame frame, final Object[] arguments) {
     return callNode.call(frame, arguments);
+  }
+
+  @Override
+  public CallTarget getCallTarget() {
+    return callNode.getCallTarget();
   }
 
   @Override

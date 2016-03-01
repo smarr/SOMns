@@ -16,12 +16,15 @@ public class ReportResultNode extends ExecutionEventNode {
   }
 
   @Override
-  protected void onReturnValue(final VirtualFrame frame, final Object result) {
+  public void onEnter(final VirtualFrame frame) {  }
+
+  @Override
+  public void onReturnValue(final VirtualFrame frame, final Object result) {
     profile.profileArgument(argIdx, result);
   }
 
   @Override
-  protected void onReturnExceptional(final VirtualFrame frame, final Throwable exception) {
+  public void onReturnExceptional(final VirtualFrame frame, final Throwable exception) {
     profile.profileArgument(argIdx, exception);
   }
 }

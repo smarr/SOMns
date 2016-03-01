@@ -69,7 +69,7 @@ public final class ResolvingImplicitReceiverSend extends AbstractMessageSendNode
         assert result.contextLevel >= 0;
 
         newReceiverNode = OuterObjectReadNodeGen.create(result.contextLevel,
-            mixinId, result.mixinId, getSourceSection(), argumentNodes[0]);
+            mixinId, result.mixinId, sourceSection, argumentNodes[0]);
         ExpressionNode[] msgArgNodes = argumentNodes.clone();
         msgArgNodes[0] = newReceiverNode;
 

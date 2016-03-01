@@ -19,7 +19,17 @@ public class CallTargetNode extends ExecutionEventNode {
   }
 
   @Override
-  protected void onEnter(final VirtualFrame frame) {
+  public void onEnter(final VirtualFrame frame) {
     profile.recordInvocationTarget(invokable);
+  }
+
+  @Override
+  public void onReturnValue(final VirtualFrame frame, final Object result) {
+
+  }
+
+  @Override
+  public void onReturnExceptional(final VirtualFrame frame, final Throwable exception) {
+
   }
 }
