@@ -35,7 +35,7 @@ import dym.nodes.ArrayAllocationProfilingNode;
 import dym.nodes.CallTargetNode;
 import dym.nodes.ControlFlowProfileNode;
 import dym.nodes.CountingNode;
-import dym.nodes.FieldReadProfilingNode;
+import dym.nodes.ReadProfilingNode;
 import dym.nodes.InvocationProfilingNode;
 import dym.nodes.LateCallTargetNode;
 import dym.nodes.LateReportResultNode;
@@ -270,10 +270,10 @@ public class DynamicMetrics extends TruffleInstrument {
     addInstrumentation(instrumenter, fieldReadProfiles,
         new String[] {Tags.FIELD_READ}, new String[] {},
         ReadValueProfile::new,
-        FieldReadProfilingNode::new);
+        ReadProfilingNode::new);
     addInstrumentation(instrumenter, localsReadProfiles,
         new String[] {Tags.LOCAL_ARG_READ, Tags.LOCAL_VAR_READ}, new String[] {},
-        ReadValueProfile::new, FieldReadProfilingNode::new);
+        ReadValueProfile::new, ReadProfilingNode::new);
 
     addInstrumentation(instrumenter, fieldWriteProfiles,
         new String[] {Tags.FIELD_WRITE}, new String[] {},

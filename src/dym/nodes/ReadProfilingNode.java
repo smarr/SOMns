@@ -7,9 +7,9 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import dym.profiles.ReadValueProfile;
 
 
-public class FieldReadProfilingNode extends CountingNode<ReadValueProfile> {
+public class ReadProfilingNode extends CountingNode<ReadValueProfile> {
 
-  public FieldReadProfilingNode(final ReadValueProfile profile) {
+  public ReadProfilingNode(final ReadValueProfile profile) {
     super(profile);
   }
 
