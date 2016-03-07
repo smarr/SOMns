@@ -1,6 +1,7 @@
 package som.interpreter.nodes;
 
 import som.compiler.MixinBuilder.MixinDefinitionId;
+import som.compiler.Tags;
 import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
 import som.interpreter.InlinerForLexicallyEmbeddedMethods;
 import som.interpreter.SArguments;
@@ -11,15 +12,20 @@ import com.oracle.truffle.api.instrumentation.Instrumentable;
 import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
+import dym.Tagging;
+
 
 public abstract class ArgumentReadNode {
+
+  private static final String[] ARG   = new String[] {Tags.LOCAL_ARG_READ};
+  private static final String[] NOT_A = new String[] {Tags.UNSPECIFIED_INVOKE};
 
   @Instrumentable(factory = LocalArgumentReadNodeWrapper.class)
   public static class LocalArgumentReadNode extends ExpressionNode {
     protected final int argumentIndex;
 
     public LocalArgumentReadNode(final int argumentIndex, final SourceSection source) {
-      super(source);
+      super(Tagging.cloneAndUpdateTags(source, ARG, NOT_A));
       assert argumentIndex > 0 ||
         this instanceof LocalSelfReadNode ||
         this instanceof LocalSuperReadNode;
@@ -83,7 +89,7 @@ public abstract class ArgumentReadNode {
 
     public NonLocalArgumentReadNode(final int argumentIndex,
         final int contextLevel, final SourceSection source) {
-      super(contextLevel, source);
+      super(contextLevel, Tagging.cloneAndUpdateTags(source, ARG, NOT_A));
       assert contextLevel > 0;
       assert argumentIndex > 0 ||
         this instanceof NonLocalSelfReadNode ||
