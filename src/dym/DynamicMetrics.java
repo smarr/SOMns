@@ -175,17 +175,28 @@ public class DynamicMetrics extends TruffleInstrument {
     return i;
   }
 
-  private ExecutionEventNodeFactory addOperationInstrumentation(final Instrumenter instrumenter) {
+  private static String getOperation(final Node node) {
+    if (node instanceof OperationNode) {
+      return ((OperationNode) node).getOperation();
+    }
+    throw new NotYetImplementedException();
+  }
+
+  private ExecutionEventNodeFactory addOperationInstrumentation(
+      final Instrumenter instrumenter) {
     Builder filters = SourceSectionFilter.newBuilder();
     filters.tagIs(Tags.COMPLEX_PRIMITIVE_OPERATION, Tags.BASIC_PRIMITIVE_OPERATION);
     filters.tagIsNot(Tags.EAGERLY_WRAPPED);
 
     ExecutionEventNodeFactory primExpFactory = (final EventContext ctx) -> {
       int numSubExpr = numberOfChildren(ctx.getInstrumentedNode());
+      String operation = getOperation(ctx.getInstrumentedNode());
+      String[] tags = ctx.getInstrumentedSourceSection().getTags();
 
       OperationProfile p = operationProfiles.computeIfAbsent(
         ctx.getInstrumentedSourceSection(),
-        (final SourceSection src) -> new OperationProfile(src, numSubExpr));
+        (final SourceSection src) -> new OperationProfile(
+            src, operation, tags, numSubExpr));
       return new OperationProfilingNode(p, ctx);
     };
 

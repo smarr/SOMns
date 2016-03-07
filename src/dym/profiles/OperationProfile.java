@@ -6,19 +6,26 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.oracle.truffle.api.source.SourceSection;
+import com.sun.istack.internal.NotNull;
 
 
 public final class OperationProfile extends Counter {
 
+  private final String operation;
+  private final String[] tags;
   private final Deque<Object[]> argumentsForExecutions;
   protected final int numSubexpressions;
   protected final Map<Arguments, Integer> argumentTypes;
 
-  public OperationProfile(final SourceSection source, final int numSubexpressions) {
+  public OperationProfile(final SourceSection source,
+      @NotNull final String operation, final String[] tags, final int numSubexpressions) {
     super(source);
     this.numSubexpressions = numSubexpressions;
+    this.operation         = operation;
+    this.tags              = tags;
     argumentsForExecutions = new ArrayDeque<>();
     argumentTypes = new HashMap<>();
+    assert operation != null;
   }
 
   protected void recordArguments(final Object[] args) {
@@ -27,7 +34,20 @@ public final class OperationProfile extends Counter {
   }
 
   public void enterMainNode() {
+    inc();
     argumentsForExecutions.push(new Object[numSubexpressions]);
+  }
+
+  public String getOperation() {
+    return operation;
+  }
+
+  public String[] getTags() {
+    return tags;
+  }
+
+  public Map<Arguments, Integer> getArgumentTypes() {
+    return argumentTypes;
   }
 
   public void profileArgument(final int argIdx, final Object value) {
@@ -54,5 +74,10 @@ public final class OperationProfile extends Counter {
       arguments[0] = returnValue;
       recordArguments(arguments);
     }
+  }
+
+  @Override
+  public String toString() {
+    return "OpProf(" + operation + ")" + InvocationProfile.argumentsMapToString(argumentTypes);
   }
 }
