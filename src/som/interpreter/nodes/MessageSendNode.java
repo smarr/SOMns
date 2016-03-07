@@ -365,7 +365,7 @@ public final class MessageSendNode {
       Tagging.addTags(argumentNodes[1], Tags.PRIMITIVE_ARGUMENT);
 
       PreevaluatedExpression result = replace(new EagerBinaryPrimitiveNode(
-          prim.getSourceSection(), selector, argumentNodes[0], argumentNodes[1], prim));
+          selector, argumentNodes[0], argumentNodes[1], prim, prim.getSourceSection()));
       Tagging.addTags(prim, Tags.EAGERLY_WRAPPED);
       VM.insertInstrumentationWrapper((Node) result);
       VM.insertInstrumentationWrapper(argumentNodes[0]);

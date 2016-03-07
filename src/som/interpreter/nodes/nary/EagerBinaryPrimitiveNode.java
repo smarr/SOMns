@@ -20,15 +20,6 @@ public final class EagerBinaryPrimitiveNode extends BinaryExpressionNode {
 
   private final SSymbol selector;
 
-  public EagerBinaryPrimitiveNode(
-      final SourceSection source,
-      final SSymbol selector,
-      final ExpressionNode receiver,
-      final ExpressionNode argument,
-      final BinaryExpressionNode primitive) {
-    this(selector, receiver, argument, primitive, source);
-  }
-
   public EagerBinaryPrimitiveNode(final SSymbol selector,
       final ExpressionNode receiver,
       final ExpressionNode argument,
