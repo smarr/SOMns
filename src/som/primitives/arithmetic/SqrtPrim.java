@@ -2,6 +2,7 @@ package som.primitives.arithmetic;
 
 import java.math.BigInteger;
 
+import som.compiler.Tags;
 import som.interpreter.nodes.nary.UnaryBasicOperation;
 import som.primitives.Primitive;
 
@@ -10,11 +11,15 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.profiles.BranchProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
+import dym.Tagging;
+
 
 @GenerateNodeFactory
 @Primitive({"intSqrt:", "doubleSqrt:"})
 public abstract class SqrtPrim extends UnaryBasicOperation {
-  public SqrtPrim(final SourceSection source) { super(source); }
+  public SqrtPrim(final SourceSection source) {
+    super(Tagging.cloneAndAddTags(source, Tags.OP_ARITHMETIC));
+  }
 
   private final BranchProfile longReturn   = BranchProfile.create();
   private final BranchProfile doubleReturn = BranchProfile.create();

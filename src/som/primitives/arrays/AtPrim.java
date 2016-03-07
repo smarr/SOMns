@@ -20,8 +20,11 @@ public abstract class AtPrim extends BinaryBasicOperation {
 
   private final ValueProfile storageType = ValueProfile.createClassProfile();
 
+  private static final String[] ARR_READ = new String[] {Tags.ARRAY_READ};
+  private static final String[] NOT_A     = new String[] {Tags.UNSPECIFIED_INVOKE};
+
   protected AtPrim(final SourceSection source) {
-    super(Tagging.cloneAndAddTags(source, Tags.ARRAY_READ));
+    super(Tagging.cloneAndUpdateTags(source, ARR_READ, NOT_A));
   }
 
   @Specialization(guards = "receiver.isEmptyType()")

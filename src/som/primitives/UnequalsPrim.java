@@ -2,7 +2,6 @@ package som.primitives;
 
 import java.math.BigInteger;
 
-import som.interpreter.nodes.nary.BinaryBasicOperation;
 import som.vm.constants.Nil;
 import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
@@ -15,7 +14,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 @GenerateNodeFactory
 @ImportStatic(Nil.class)
-public abstract class UnequalsPrim extends BinaryBasicOperation {
+public abstract class UnequalsPrim extends ComparisonPrim {
 
   protected UnequalsPrim(final SourceSection source) { super(source); }
 

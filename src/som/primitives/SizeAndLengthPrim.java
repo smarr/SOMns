@@ -16,7 +16,7 @@ import dym.Tagging;
 @GenerateNodeFactory
 @Primitive({"arraySize:", "stringLength:"})
 public abstract class SizeAndLengthPrim extends UnaryExpressionNode {
-  private static final String[] basicTags = new String[] {Tags.BASIC_PRIMITIVE_OPERATION};
+  private static final String[] basicTags = new String[] {Tags.BASIC_PRIMITIVE_OPERATION, Tags.OP_LENGTH};
   private static final String[] basicConflictingTags = new String[] {Tags.UNSPECIFIED_INVOKE};
 
   public SizeAndLengthPrim(final SourceSection source) {

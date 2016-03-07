@@ -1,7 +1,7 @@
 package som.primitives.arrays;
 
 import som.compiler.Tags;
-import som.interpreter.nodes.nary.BinaryComplexOperation;
+import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.primitives.Primitive;
 import som.vm.constants.Classes;
 import som.vmobjects.SArray.SImmutableArray;
@@ -18,7 +18,7 @@ import dym.Tagging;
 
 @GenerateNodeFactory
 @Primitive("array:new:")
-public abstract class NewPrim extends BinaryComplexOperation {
+public abstract class NewPrim extends BinaryExpressionNode {
 
   public NewPrim(final SourceSection source) {
     super(Tagging.cloneAndAddTags(source, Tags.NEW_ARRAY));

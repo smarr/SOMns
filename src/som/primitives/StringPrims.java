@@ -1,5 +1,6 @@
 package som.primitives;
 
+import som.compiler.Tags;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryBasicOperation;
@@ -11,6 +12,8 @@ import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.source.SourceSection;
 
+import dym.Tagging;
+
 
 public class StringPrims {
 
@@ -18,7 +21,7 @@ public class StringPrims {
   @Primitive("string:concat:")
   public abstract static class ConcatPrim extends BinaryComplexOperation {
     protected ConcatPrim(final SourceSection source) {
-      super(source);
+      super(Tagging.cloneAndAddTags(source, Tags.STRING_ACCESS));
     }
 
     @Specialization
@@ -45,7 +48,7 @@ public class StringPrims {
   @GenerateNodeFactory
   @Primitive("stringAsSymbol:")
   public abstract static class AsSymbolPrim extends UnaryBasicOperation {
-    public AsSymbolPrim(final SourceSection source) { super(source); }
+    public AsSymbolPrim(final SourceSection source) { super(Tagging.cloneAndAddTags(source, Tags.STRING_ACCESS)); }
 
     @Specialization
     public final SAbstractObject doString(final String receiver) {
@@ -61,7 +64,10 @@ public class StringPrims {
   @GenerateNodeFactory
   @Primitive("string:substringFrom:to:")
   public abstract static class SubstringPrim extends TernaryExpressionNode {
-    public SubstringPrim(final SourceSection source) { super(source); }
+    private static final String[] STRING_PRIM = new String[] {Tags.COMPLEX_PRIMITIVE_OPERATION, Tags.STRING_ACCESS};
+    private static final String[] NOT_A = new String[] {Tags.UNSPECIFIED_INVOKE};
+
+    public SubstringPrim(final SourceSection source) { super(Tagging.cloneAndUpdateTags(source, STRING_PRIM, NOT_A)); }
 
     @Specialization
     public final String doString(final String receiver, final long start,

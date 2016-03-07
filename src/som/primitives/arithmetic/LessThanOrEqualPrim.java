@@ -2,11 +2,13 @@ package som.primitives.arithmetic;
 
 import java.math.BigInteger;
 
+import som.primitives.ComparisonPrim;
+
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.source.SourceSection;
 
 
-public abstract class LessThanOrEqualPrim extends ArithmeticPrim {
+public abstract class LessThanOrEqualPrim extends ComparisonPrim {
   protected LessThanOrEqualPrim(final SourceSection source) { super(source); }
 
   @Specialization

@@ -2,6 +2,7 @@ package som.primitives.arithmetic;
 
 import java.math.BigInteger;
 
+import som.primitives.ComparisonPrim;
 import som.primitives.Primitive;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
@@ -11,7 +12,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 @GenerateNodeFactory
 @Primitive({"int:lessThan:", "double:lessThan:"})
-public abstract class LessThanPrim extends ArithmeticPrim {
+public abstract class LessThanPrim extends ComparisonPrim {
   protected LessThanPrim(final SourceSection source) { super(source); }
 
   @Specialization

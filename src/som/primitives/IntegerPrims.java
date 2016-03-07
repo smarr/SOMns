@@ -2,8 +2,10 @@ package som.primitives;
 
 import java.math.BigInteger;
 
+import som.compiler.Tags;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.nary.UnaryBasicOperation;
+import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.arithmetic.ArithmeticPrim;
 import som.vm.constants.Classes;
 import som.vmobjects.SArray.SMutableArray;
@@ -13,6 +15,8 @@ import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.profiles.BranchProfile;
 import com.oracle.truffle.api.source.SourceSection;
+
+import dym.Tagging;
 
 
 public abstract class IntegerPrims {
@@ -41,8 +45,12 @@ public abstract class IntegerPrims {
 
   @GenerateNodeFactory
   @Primitive("intFromString:")
-  public abstract static class FromStringPrim extends UnaryBasicOperation {
-    public FromStringPrim(final SourceSection source) { super(source); }
+  public abstract static class FromStringPrim extends UnaryExpressionNode {
+    private static final String[] COMP_PRIM = new String[] {Tags.COMPLEX_PRIMITIVE_OPERATION, Tags.STRING_ACCESS};
+    private static final String[] NOT_A = new String[] {Tags.UNSPECIFIED_INVOKE};
+    public FromStringPrim(final SourceSection source) {
+      super(Tagging.cloneAndUpdateTags(source, COMP_PRIM, NOT_A));
+    }
 
     @Specialization
     public final Object doSClass(final String argument) {
@@ -121,7 +129,9 @@ public abstract class IntegerPrims {
   }
 
   public abstract static class AbsPrim extends UnaryBasicOperation {
-    public AbsPrim(final SourceSection source) { super(source); }
+    public AbsPrim(final SourceSection source) {
+      super(Tagging.cloneAndAddTags(source, Tags.OP_ARITHMETIC));
+    }
 
     @Specialization
     public final long doLong(final long receiver) {

@@ -1,6 +1,7 @@
 package som.interpreter.nodes;
 
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
+import som.compiler.Tags;
 import som.compiler.Variable.Local;
 import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
 import som.interpreter.InlinerForLexicallyEmbeddedMethods;
@@ -17,6 +18,8 @@ import som.interpreter.nodes.NonLocalVariableNodeFactory.NonLocalVariableWriteNo
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
+
+import dym.Tagging;
 
 
 public abstract class UninitializedVariableNode extends ContextualNode {
@@ -47,9 +50,12 @@ public abstract class UninitializedVariableNode extends ContextualNode {
   }
 
   public static final class UninitializedVariableReadNode extends UninitializedVariableNode {
+    private static final String[] VAR   = new String[] {Tags.LOCAL_VAR_READ};
+    private static final String[] NOT_A = new String[] {Tags.UNSPECIFIED_INVOKE};
+
     public UninitializedVariableReadNode(final Local variable,
         final int contextLevel, final SourceSection source) {
-      super(variable, contextLevel, source);
+      super(variable, contextLevel, Tagging.cloneAndUpdateTags(source, VAR, NOT_A));
     }
 
     public UninitializedVariableReadNode(final UninitializedVariableReadNode node,
@@ -119,10 +125,13 @@ public abstract class UninitializedVariableNode extends ContextualNode {
   public static final class UninitializedVariableWriteNode extends UninitializedVariableNode {
     @Child private ExpressionNode exp;
 
+    private static final String[] VAR   = new String[] {Tags.LOCAL_VAR_WRITE};
+    private static final String[] NOT_A = new String[] {Tags.UNSPECIFIED_INVOKE};
+
     public UninitializedVariableWriteNode(final Local variable,
         final int contextLevel, final ExpressionNode exp,
         final SourceSection source) {
-      super(variable, contextLevel, source);
+      super(variable, contextLevel, Tagging.cloneAndUpdateTags(source, VAR, NOT_A));
       this.exp = exp;
     }
 

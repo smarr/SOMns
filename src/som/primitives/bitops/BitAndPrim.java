@@ -2,8 +2,8 @@ package som.primitives.bitops;
 
 import java.math.BigInteger;
 
-import som.interpreter.nodes.nary.BinaryBasicOperation;
 import som.primitives.Primitive;
+import som.primitives.arithmetic.ArithmeticPrim;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -12,7 +12,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 @GenerateNodeFactory
 @Primitive("int:bitAnd:")
-public abstract class BitAndPrim extends BinaryBasicOperation {
+public abstract class BitAndPrim extends ArithmeticPrim {
 
   protected BitAndPrim(final SourceSection source) {
     super(source);

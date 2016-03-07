@@ -25,8 +25,11 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
 
   private final ValueProfile storageType = ValueProfile.createClassProfile();
 
+  private static final String[] ARR_WRITE = new String[] {Tags.ARRAY_WRITE, Tags.BASIC_PRIMITIVE_OPERATION};
+  private static final String[] NOT_A     = new String[] {Tags.UNSPECIFIED_INVOKE};
+
   protected AtPutPrim(final SourceSection source) {
-    super(Tagging.cloneAndAddTags(source, Tags.ARRAY_WRITE));
+    super(Tagging.cloneAndUpdateTags(source, ARR_WRITE, NOT_A));
   }
 
   protected static final boolean valueIsNotLong(final Object value) {

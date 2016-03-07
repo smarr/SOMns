@@ -1,5 +1,6 @@
 package som.primitives;
 
+import som.compiler.Tags;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.nary.QuaternaryExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
@@ -19,9 +20,13 @@ import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 
+import dym.Tagging;
+
 
 public abstract class BlockPrims {
 
+  private static final String[] VALUE = new String[] {Tags.COMPLEX_PRIMITIVE_OPERATION, Tags.OP_CLOSURE_APPLICATION};
+  private static final String[] VALUE_NOT_A = new String[] {Tags.UNSPECIFIED_INVOKE};
 
   public static final int CHAIN_LENGTH = 6;
 
@@ -54,7 +59,9 @@ public abstract class BlockPrims {
   @ImportStatic(BlockPrims.class)
   @Primitive("blockValue:")
   public abstract static class ValueNonePrim extends UnaryExpressionNode {
-    public ValueNonePrim(final SourceSection source) { super(source); }
+    public ValueNonePrim(final SourceSection source) {
+      super(Tagging.cloneAndUpdateTags(source, VALUE, VALUE_NOT_A));
+    }
 
     @Specialization
     public final boolean doBoolean(final boolean receiver) {
@@ -80,7 +87,9 @@ public abstract class BlockPrims {
   @ImportStatic(BlockPrims.class)
   @Primitive("blockValue:with:")
   public abstract static class ValueOnePrim extends BinaryComplexOperation {
-    protected ValueOnePrim(final SourceSection source) { super(source); }
+    protected ValueOnePrim(final SourceSection source) {
+      super(Tagging.cloneAndUpdateTags(source, VALUE, VALUE_NOT_A));
+    }
 
     @Specialization(guards = "cached == receiver.getMethod()", limit = "CHAIN_LENGTH")
     public final Object doCachedBlock(final VirtualFrame frame,
@@ -102,7 +111,10 @@ public abstract class BlockPrims {
   @ImportStatic(BlockPrims.class)
   @Primitive("blockValue:with:with:")
   public abstract static class ValueTwoPrim extends TernaryExpressionNode {
-    public ValueTwoPrim(final SourceSection source) { super(source); }
+
+    public ValueTwoPrim(final SourceSection source) {
+      super(Tagging.cloneAndUpdateTags(source, VALUE, VALUE_NOT_A));
+    }
 
     @Specialization(guards = "cached == receiver.getMethod()", limit = "CHAIN_LENGTH")
     public final Object doCachedBlock(final VirtualFrame frame,

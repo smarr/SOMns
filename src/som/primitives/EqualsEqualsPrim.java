@@ -1,7 +1,6 @@
 package som.primitives;
 
 import som.interpreter.actors.SFarReference;
-import som.interpreter.nodes.nary.BinaryBasicOperation;
 import som.vmobjects.SArray.SMutableArray;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
@@ -14,7 +13,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 @GenerateNodeFactory
 @Primitive("object:identicalTo:")
-public abstract class EqualsEqualsPrim extends BinaryBasicOperation {
+public abstract class EqualsEqualsPrim extends ComparisonPrim {
 
   protected EqualsEqualsPrim(final SourceSection source) {
     super(source);

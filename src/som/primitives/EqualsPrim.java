@@ -3,7 +3,6 @@ package som.primitives;
 import java.math.BigInteger;
 
 import som.interpreter.actors.SFarReference;
-import som.interpreter.nodes.nary.BinaryBasicOperation;
 import som.vm.constants.Nil;
 import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SObjectWithClass;
@@ -18,7 +17,7 @@ import com.oracle.truffle.api.source.SourceSection;
 @GenerateNodeFactory
 @ImportStatic(Nil.class)
 @Primitive({"value:sameAs:", "int:equals:", "double:equals:", "string:equals:"})
-public abstract class EqualsPrim extends BinaryBasicOperation {
+public abstract class EqualsPrim extends ComparisonPrim {
 
   protected EqualsPrim(final SourceSection source) { super(source); }
 
