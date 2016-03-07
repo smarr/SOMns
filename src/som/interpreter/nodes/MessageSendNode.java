@@ -719,7 +719,7 @@ public final class MessageSendNode {
     @Child private AbstractDispatchNode dispatchNode;
 
     private static final String[] VIRTUAL_INVOKE = new String[] {Tags.VIRTUAL_INVOKE};
-    private static final String[] NOT_A = new String[] {Tags.UNSPECIFIED_INVOKE};
+    private static final String[] NOT_A = new String[] {Tags.UNSPECIFIED_INVOKE, Tags.COMPLEX_PRIMITIVE_OPERATION, Tags.BASIC_PRIMITIVE_OPERATION};
 
     private GenericMessageSendNode(final SSymbol selector,
         final ExpressionNode[] arguments,
