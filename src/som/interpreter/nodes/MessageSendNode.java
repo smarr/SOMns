@@ -539,10 +539,21 @@ public final class MessageSendNode {
 
     private PreevaluatedExpression makeEagerTernaryPrim(final TernaryExpressionNode prim) {
       VM.insertInstrumentationWrapper(this);
+      assert prim.getSourceSection() != null;
+
+      Tagging.addTags(argumentNodes[0], Tags.PRIMITIVE_ARGUMENT);
+      Tagging.addTags(argumentNodes[1], Tags.PRIMITIVE_ARGUMENT);
+      Tagging.addTags(argumentNodes[2], Tags.PRIMITIVE_ARGUMENT);
+
       PreevaluatedExpression result = replace(new EagerTernaryPrimitiveNode(
           prim.getSourceSection(), selector, argumentNodes[0],
           argumentNodes[1], argumentNodes[2], prim));
-      VM.insertInstrumentationWrapper(prim);
+
+      Tagging.addTags(prim, Tags.EAGERLY_WRAPPED);
+      VM.insertInstrumentationWrapper((Node) result);
+      VM.insertInstrumentationWrapper(argumentNodes[0]);
+      VM.insertInstrumentationWrapper(argumentNodes[1]);
+      VM.insertInstrumentationWrapper(argumentNodes[2]);
       return result;
     }
 
