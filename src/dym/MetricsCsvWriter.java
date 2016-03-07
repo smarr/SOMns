@@ -8,8 +8,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import som.compiler.MixinDefinition;
+import som.compiler.Tags;
 import som.interpreter.Invokable;
 import som.interpreter.nodes.dispatch.Dispatchable;
+import som.vm.NotYetImplementedException;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
@@ -17,9 +19,13 @@ import som.vmobjects.SSymbol;
 import com.oracle.truffle.api.source.SourceSection;
 
 import dym.profiles.AllocationProfile;
+import dym.profiles.Arguments;
 import dym.profiles.ArrayCreationProfile;
+import dym.profiles.BranchProfile;
 import dym.profiles.CallsiteProfile;
+import dym.profiles.Counter;
 import dym.profiles.InvocationProfile;
+import dym.profiles.OperationProfile;
 import dym.profiles.ReadValueProfile;
 import dym.profiles.StructuralProbe;
 
@@ -29,20 +35,23 @@ public final class MetricsCsvWriter {
   private final Map<String, Map<SourceSection, ? extends JsonSerializable>> data;
   private final String metricsFolder;
   private final StructuralProbe structuralProbe; // TODO: not sure, we should probably not depend on the probe here
+  private final int maxStackHeight;
 
   private MetricsCsvWriter(
       final Map<String, Map<SourceSection, ? extends JsonSerializable>> data,
-      final String metricsFolder, final StructuralProbe probe) {
+      final String metricsFolder, final StructuralProbe probe, final int maxStackHeight) {
     this.data          = data;
     this.metricsFolder = metricsFolder;
     this.structuralProbe = probe;
+    this.maxStackHeight = maxStackHeight;
   }
 
   public static void fileOut(
       final Map<String, Map<SourceSection, ? extends JsonSerializable>> data,
       final String metricsFolder,
-      final StructuralProbe structuralProbe) { // TODO: remove direct StructuralProbe passing hack
-    new MetricsCsvWriter(data, metricsFolder, structuralProbe).createCsvFiles();
+      final StructuralProbe structuralProbe, // TODO: remove direct StructuralProbe passing hack
+      final int maxStackHeight) {
+    new MetricsCsvWriter(data, metricsFolder, structuralProbe, maxStackHeight).createCsvFiles();
   }
 
   private void createCsvFiles() {
@@ -52,14 +61,138 @@ public final class MetricsCsvWriter {
     methodCallsites();
     newObjectCount();
     newArrayCount();
-    fieldReads();
-    localReads();
+    fieldAccesses();
+    localAccesses();
     usedClassesAndMethods();
+    generalStats();
+    branchProfiles();
+    operationProfiles();
+  }
+
+  private void generalStats() {
+    try (PrintWriter file = new PrintWriter(metricsFolder + File.separator + "general-stats.csv")) {
+      file.println("Max Stack Height");
+      file.println(maxStackHeight);
+    } catch (FileNotFoundException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private boolean hasTag(final String[] tags, final String tag) {
+    for (String t : tags) {
+      if (t.equals(tag)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private String typeCategory(final String typeName) {
+    switch (typeName) {
+      case "Integer":
+        return "int";
+      case "Double":
+        return "float";
+      case "String":
+        return "str";
+      case "Symbol":
+        return "Symbol"; // TODO: keep this?
+      case "Array":
+        return "arr";
+      case "True":
+      case "False":
+        return "bool";
+      default:
+        return "ref";
+    }
+  }
+
+  private String operationType(final OperationProfile p, final Arguments a) {
+    String[] tags = p.getTags();
+    if (hasTag(tags, Tags.OP_ARITHMETIC)) {
+      if (p.getOperation().equals("not")) {
+        assert "bool".equals(typeCategory(a.getArgType(0)));
+        assert "bool".equals(typeCategory(a.getArgType(1)));
+        return "bool";
+      } else if (p.getOperation().equals("abs") || p.getOperation().equals("sqrt")) {
+        return typeCategory(a.getArgType(1));
+      }
+
+      String left  = typeCategory(a.getArgType(1));
+      String right = typeCategory(a.getArgType(2));
+      if (left.equals(right)) {
+        return left;
+      }
+      String result = typeCategory(a.getArgType(0));
+      if (result.equals(right)) {
+        return right;
+      } else if (result.equals(left)) {
+        return left;
+      }
+      throw new NotYetImplementedException();
+    } else if (hasTag(tags, Tags.OP_COMPARISON)) {
+      String left  = typeCategory(a.getArgType(1));
+      String right = typeCategory(a.getArgType(2));
+      if (left.equals(right)) {
+        return left;
+      }
+      if (left.equals("ref") || right.equals("ref")) {
+        return "ref";
+      }
+      throw new NotYetImplementedException();
+    } else if (hasTag(tags, Tags.ARRAY_READ) || hasTag(tags, Tags.ARRAY_WRITE)) {
+      assert a.argTypeIs(1, "Array");
+      assert a.argTypeIs(2, "Integer");
+      if (hasTag(tags, Tags.ARRAY_READ)) {
+        return typeCategory(a.getArgType(0));
+      } else {
+        return typeCategory(a.getArgType(3));
+      }
+    } else if (hasTag(tags, Tags.OP_CLOSURE_APPLICATION)) {
+      return typeCategory(a.getArgType(0));
+    } else if (hasTag(tags, Tags.OP_LENGTH)) {
+      return typeCategory(a.getArgType(1));
+    } else if (hasTag(tags, Tags.STRING_ACCESS)) {
+      return "str";
+    }
+    throw new NotYetImplementedException();
+  }
+
+  private void operationProfiles() {
+    @SuppressWarnings("unchecked")
+    Map<SourceSection, OperationProfile> ops = (Map<SourceSection, OperationProfile>) data.get(JsonWriter.OPERATIONS);
+    try (PrintWriter file = new PrintWriter(metricsFolder + File.separator + "operations.csv")) {
+      file.println("Source Section\tOperation\tCategory\tType\tInvocations");
+
+      for (Entry<SourceSection, OperationProfile> e : ops.entrySet()) {
+        for (Entry<Arguments, Integer> a : e.getValue().getArgumentTypes().entrySet()) {
+          file.print(getSourceSectionAbbrv(e.getKey()));
+          file.print("\t");
+          file.print(e.getValue().getOperation());
+          file.print("\t");
+          file.print(String.join(" ", e.getValue().getTags()));
+          file.print("\t");
+          file.print(operationType(e.getValue(), a.getKey()));  // a.getKey().getOperationType()
+          file.print("\t");
+          file.println(a.getValue());
+        }
+
+        file.print(getSourceSectionAbbrv(e.getKey()));
+        file.print("\t");
+        file.print(e.getValue().getOperation());
+        file.print("\t");
+        file.print(String.join(" ", e.getValue().getTags()));
+        file.print("\tTOTAL\t");
+        file.println(e.getValue().getValue());
+      }
+    } catch (FileNotFoundException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   private void methodActivations() {
     @SuppressWarnings("unchecked")
-    Map<SourceSection, InvocationProfile> profiles = (Map<SourceSection, InvocationProfile>) data.get("methodInvocationProfile");
+    Map<SourceSection, InvocationProfile> profiles = (Map<SourceSection, InvocationProfile>) data.get(JsonWriter.METHOD_INVOCATION_PROFILE);
 
     try (PrintWriter file = new PrintWriter(metricsFolder + File.separator + "method-activations.csv")) {
       file.println("Source Identifier\tActivation Count");
@@ -75,7 +208,7 @@ public final class MetricsCsvWriter {
 
   private void methodCallsites() {
     @SuppressWarnings("unchecked")
-    Map<SourceSection, CallsiteProfile> profiles = (Map<SourceSection, CallsiteProfile>) data.get("methodCallsite");
+    Map<SourceSection, CallsiteProfile> profiles = (Map<SourceSection, CallsiteProfile>) data.get(JsonWriter.METHOD_CALLSITE);
 
     try (PrintWriter file = new PrintWriter(metricsFolder + File.separator + "method-callsites.csv")) {
       file.println("Source Section\tCall Count\tNum Rcvrs\tNum Targets");
@@ -151,46 +284,76 @@ public final class MetricsCsvWriter {
     }
   }
 
-  private void fieldReads() {
+  private void fieldAccesses() {
     @SuppressWarnings("unchecked")
-    Map<SourceSection, ReadValueProfile> profiles = (Map<SourceSection, ReadValueProfile>) data.get(JsonWriter.FIELD_READS);
+    Map<SourceSection, ReadValueProfile> reads = (Map<SourceSection, ReadValueProfile>) data.get(JsonWriter.FIELD_READS);
+    @SuppressWarnings("unchecked")
+    Map<SourceSection, ReadValueProfile> writes = (Map<SourceSection, ReadValueProfile>) data.get(JsonWriter.FIELD_WRITES);
 
-    try (PrintWriter file = new PrintWriter(metricsFolder + File.separator + "field-reads.csv")) {
-      file.println("Source Section\tRead Type\tCount");
+    try (PrintWriter file = new PrintWriter(metricsFolder + File.separator + "field-accesses.csv")) {
+      file.println("Source Section\tAccess Type\tData Type\tCount");
 
-      for (ReadValueProfile p : profiles.values()) {
+      for (ReadValueProfile p : reads.values()) {
         String abbrv = getSourceSectionAbbrv(p.getSourceSection());
         for (Entry<SClass, Integer> e : p.getTypeProfile().entrySet()) {
           file.print(abbrv);
-          file.print("\t");
+          file.print("\tread\t");
           file.print(e.getKey().getName().getString());
           file.print("\t");
           file.print(e.getValue());
           file.println();
         }
+
+        file.print(abbrv);
+        file.print("\tread\tALL\t");
+        file.print(p.getValue());
+        file.println();
+      }
+
+      for (Counter p : writes.values()) {
+        String abbrv = getSourceSectionAbbrv(p.getSourceSection());
+        file.print(abbrv);
+        file.print("\twrite\tALL\t");
+        file.print(p.getValue());
+        file.println();
       }
     } catch (FileNotFoundException e) {
       throw new RuntimeException(e);
     }
   }
 
-  private void localReads() {
+  private void localAccesses() {
     @SuppressWarnings("unchecked")
-    Map<SourceSection, ReadValueProfile> profiles = (Map<SourceSection, ReadValueProfile>) data.get(JsonWriter.LOCAL_READS);
+    Map<SourceSection, ReadValueProfile> reads = (Map<SourceSection, ReadValueProfile>) data.get(JsonWriter.LOCAL_READS);
+    @SuppressWarnings("unchecked")
+    Map<SourceSection, Counter> writes = (Map<SourceSection, Counter>) data.get(JsonWriter.LOCAL_WRITES);
 
-    try (PrintWriter file = new PrintWriter(metricsFolder + File.separator + "local-reads.csv")) {
-      file.println("Source Section\tRead Type\tCount");
+    try (PrintWriter file = new PrintWriter(metricsFolder + File.separator + "local-accesses.csv")) {
+      file.println("Source Section\tAccess Type\tData Type\tCount");
 
-      for (ReadValueProfile p : profiles.values()) {
+      for (ReadValueProfile p : reads.values()) {
         String abbrv = getSourceSectionAbbrv(p.getSourceSection());
         for (Entry<SClass, Integer> e : p.getTypeProfile().entrySet()) {
           file.print(abbrv);
-          file.print("\t");
+          file.print("\tread\t");
           file.print(e.getKey().getName().getString());
           file.print("\t");
           file.print(e.getValue());
           file.println();
         }
+
+        file.print(abbrv);
+        file.print("\tread\tALL\t");
+        file.print(p.getValue());
+        file.println();
+      }
+
+      for (Counter p : writes.values()) {
+        String abbrv = getSourceSectionAbbrv(p.getSourceSection());
+        file.print(abbrv);
+        file.print("\twrite\tALL\t");
+        file.print(p.getValue());
+        file.println();
       }
     } catch (FileNotFoundException e) {
       throw new RuntimeException(e);
@@ -272,6 +435,27 @@ public final class MetricsCsvWriter {
           file.print("true\t");
           file.println(numInvokations);
         }
+      }
+    } catch (FileNotFoundException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private void branchProfiles() {
+    @SuppressWarnings("unchecked")
+    Map<SourceSection, BranchProfile> branches = (Map<SourceSection, BranchProfile>) data.get(JsonWriter.BRANCH_PROFILES);
+
+    try (PrintWriter file = new PrintWriter(metricsFolder + File.separator + "branches.csv")) {
+      file.println("Source Section\tTrueCnt\tFalseCnt\tTotal");
+
+      for (Entry<SourceSection, BranchProfile> e : branches.entrySet()) {
+        file.print(getSourceSectionAbbrv(e.getKey()));
+        file.print("\t");
+        file.print(e.getValue().getTrueCount());
+        file.print("\t");
+        file.print(e.getValue().getFalseCount());
+        file.print("\t");
+        file.println(e.getValue().getValue());
       }
     } catch (FileNotFoundException e) {
       throw new RuntimeException(e);

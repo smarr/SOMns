@@ -24,6 +24,14 @@ public class BranchProfile extends Counter {
     }
   }
 
+  public long getTrueCount() {
+    return trueCount;
+  }
+
+  public long getFalseCount() {
+    return falseCount;
+  }
+
   @Override
   public JSONStringBuilder toJson() {
     JSONObjectBuilder result = JSONHelper.object();

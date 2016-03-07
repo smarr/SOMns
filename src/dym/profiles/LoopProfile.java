@@ -2,6 +2,7 @@ package dym.profiles;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -25,5 +26,21 @@ public class LoopProfile extends Counter {
   public void recordLoopExit() {
     loopIterations.merge(currentIterations, 1, Integer::sum);
     currentIterations = 0;
+  }
+
+  @Override
+  public String toString() {
+    return "LoopProf" + mapToString();
+  }
+
+  private String mapToString() {
+    String result = "[";
+    for (Entry<Integer, Integer> e : loopIterations.entrySet()) {
+      if (!result.equals("[")) {
+        result += "; ";
+      }
+      result += e.getKey() + "=" + e.getValue();
+    }
+    return result + "]";
   }
 }

@@ -335,7 +335,7 @@ public class DynamicMetrics extends TruffleInstrument {
     JsonWriter.fileOut(data, outputFile);
 
     String metricsFolder = System.getProperty("dm.metrics", "metrics");
-    MetricsCsvWriter.fileOut(data, metricsFolder, structuralProbe);
+    MetricsCsvWriter.fileOut(data, metricsFolder, structuralProbe, maxStackDepth);
 
     outputAllTruffleMethodsToIGV();
   }

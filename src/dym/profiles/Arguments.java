@@ -9,7 +9,8 @@ import com.oracle.truffle.api.utilities.JSONHelper;
 import com.oracle.truffle.api.utilities.JSONHelper.JSONArrayBuilder;
 import com.oracle.truffle.api.utilities.JSONHelper.JSONObjectBuilder;
 
-final class Arguments {
+
+public final class Arguments {
 
   private final Class<?>[] argJavaTypes;
 
@@ -49,6 +50,14 @@ final class Arguments {
         || Arrays.equals(argSomTypes,  o.argSomTypes);
   }
 
+  public boolean argTypeIs(final int idx, final String name) {
+    return argSomTypes[idx].getName().getString().equals(name);
+  }
+
+  public String getArgType(final int idx) {
+    return argSomTypes[idx].getName().getString();
+  }
+
   @Override
   public int hashCode() {
     final int prime = 31;
@@ -73,6 +82,19 @@ final class Arguments {
       somTypes.add(c.getName().getString());
     }
     result.add("somTypes", somTypes);
+    return result;
+  }
+
+  @Override
+  public String toString() {
+    String result = "";
+    for (SClass c : argSomTypes) {
+      if (result.equals("")) {
+        result = c.getName().getString();
+      } else {
+        result += ", " + c.getName().getString();
+      }
+    }
     return result;
   }
 }

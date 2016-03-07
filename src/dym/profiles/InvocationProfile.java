@@ -41,4 +41,20 @@ public class InvocationProfile extends Counter {
     }
     return result;
   }
+
+  @Override
+  public String toString() {
+    return "InvProf" + argumentsMapToString(argumentTypes);
+  }
+
+  public static String argumentsMapToString(final Map<Arguments, Integer> args) {
+    String result = "[";
+    for (Entry<Arguments, Integer> e : args.entrySet()) {
+      if (!result.equals("[")) {
+        result += "; ";
+      }
+      result += e.getKey().toString() + "=" + e.getValue();
+    }
+    return result + "]";
+  }
 }
