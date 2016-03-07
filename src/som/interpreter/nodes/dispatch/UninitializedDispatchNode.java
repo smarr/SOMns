@@ -3,6 +3,7 @@ package som.interpreter.nodes.dispatch;
 import som.VM;
 import som.compiler.AccessModifier;
 import som.compiler.MixinBuilder.MixinDefinitionId;
+import som.compiler.Tags;
 import som.interpreter.TruffleCompiler;
 import som.interpreter.Types;
 import som.interpreter.nodes.ISuperReadNode;
@@ -19,6 +20,8 @@ import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
+
+import dym.Tagging;
 
 
 public final class UninitializedDispatchNode {
@@ -293,6 +296,12 @@ public final class UninitializedDispatchNode {
 
   public static AbstractDispatchNode createRcvrSend(final SourceSection source,
       final SSymbol selector, final AccessModifier minimalVisibility) {
-    return new UninitializedReceiverSend(source, selector, minimalVisibility);
+    return new UninitializedReceiverSend(Tagging.cloneAndRemoveTags(source,
+        Tags.UNSPECIFIED_INVOKE, Tags.CACHED_VIRTUAL_INVOKE, Tags.VIRTUAL_INVOKE,
+        Tags.NEW_ARRAY, Tags.NEW_OBJECT, Tags.CONTROL_FLOW_CONDITION,
+        Tags.FIELD_READ, Tags.FIELD_WRITE, Tags.CLASS_READ, Tags.LOCAL_ARG_READ,
+        Tags.LOCAL_VAR_READ, Tags.LOCAL_VAR_WRITE, Tags.BASIC_PRIMITIVE_OPERATION,
+        Tags.COMPLEX_PRIMITIVE_OPERATION, Tags.CONTROL_FLOW_CONDITION),
+        selector, minimalVisibility);
   }
 }
