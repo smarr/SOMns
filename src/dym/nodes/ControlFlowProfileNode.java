@@ -14,6 +14,11 @@ public class ControlFlowProfileNode extends ExecutionEventNode {
   }
 
   @Override
+  protected void onEnter(final VirtualFrame frame) {
+    profile.inc();
+  }
+
+  @Override
   protected void onReturnValue(final VirtualFrame frame, final Object result) {
     profile.profile((boolean) result);
   }
