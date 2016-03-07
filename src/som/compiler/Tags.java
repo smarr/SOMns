@@ -32,6 +32,12 @@ public class Tags {
   public static final String PRIMITIVE_ARGUMENT          = "PRIMITIVE_ARGUMENT";
   public static final String EAGERLY_WRAPPED = "EAGERLY_WRAPPED";
 
+  public static final String STRING_ACCESS = "STRING_ACCESS"; // some operation that somehow accesses a string
+
+  public static final String OP_CLOSURE_APPLICATION = "OP_CLOSURE_APPLICATION";
+  public static final String OP_ARITHMETIC = "OP_ARITHMETIC";
+  public static final String OP_COMPARISON = "OP_COMPARISON";
+  public static final String OP_LENGTH = "OP_LENGTH";
 
   // Syntax annotations
   public static final String SYNTAX_KEYWORD = "SYNTAX_KEYWORD";
