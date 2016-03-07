@@ -12,7 +12,9 @@ import som.compiler.MixinDefinition;
 import som.compiler.Tags;
 import som.instrumentation.InstrumentableDirectCallNode;
 import som.interpreter.Invokable;
+import som.interpreter.nodes.OperationNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
+import som.vm.NotYetImplementedException;
 import som.vmobjects.SInvokable;
 
 import com.oracle.truffle.api.RootCallTarget;
@@ -35,13 +37,13 @@ import dym.nodes.ArrayAllocationProfilingNode;
 import dym.nodes.CallTargetNode;
 import dym.nodes.ControlFlowProfileNode;
 import dym.nodes.CountingNode;
-import dym.nodes.ReadProfilingNode;
 import dym.nodes.InvocationProfilingNode;
 import dym.nodes.LateCallTargetNode;
 import dym.nodes.LateReportResultNode;
 import dym.nodes.LoopIterationReportNode;
 import dym.nodes.LoopProfilingNode;
 import dym.nodes.OperationProfilingNode;
+import dym.nodes.ReadProfilingNode;
 import dym.nodes.ReportReceiverNode;
 import dym.nodes.ReportResultNode;
 import dym.profiles.AllocationProfile;
@@ -69,22 +71,25 @@ public class DynamicMetrics extends TruffleInstrument {
 
   public static final String ID = "dym-dynamic-metrics";
 
-  private final Map<SourceSection, InvocationProfile> methodInvocationCounter;
   private int methodStackDepth;
   private int maxStackDepth;
 
-  private final Map<SourceSection, CallsiteProfile> methodCallsiteProfiles;
-  private final Map<SourceSection, AllocationProfile> newObjectCounter;
+  private final Map<SourceSection, InvocationProfile>    methodInvocationCounter;
+  private final Map<SourceSection, CallsiteProfile>      methodCallsiteProfiles;
+  private final Map<SourceSection, OperationProfile>     operationProfiles;
+
+  private final Map<SourceSection, AllocationProfile>    newObjectCounter;
   private final Map<SourceSection, ArrayCreationProfile> newArrayCounter;
-  private final Map<SourceSection, ReadValueProfile> fieldReadProfiles;
-  private final Map<SourceSection, Counter> fieldWriteProfiles;
-  private final Map<SourceSection, Counter> classReadProfiles;
-  private final Map<SourceSection, BranchProfile> controlFlowProfiles;
-  private final Map<SourceSection, Counter> literalReadCounter;
-  private final Map<SourceSection, ReadValueProfile> localsReadProfiles;
-  private final Map<SourceSection, Counter> localsWriteProfiles;
-  private final Map<SourceSection, OperationProfile> operationProfiles;
-  private final Map<SourceSection, LoopProfile> loopProfiles;
+
+  private final Map<SourceSection, BranchProfile>        controlFlowProfiles;
+  private final Map<SourceSection, LoopProfile>          loopProfiles;
+
+  private final Map<SourceSection, ReadValueProfile>     fieldReadProfiles;
+  private final Map<SourceSection, Counter>              fieldWriteProfiles;
+  private final Map<SourceSection, Counter>              classReadProfiles;
+  private final Map<SourceSection, Counter>              literalReadCounter;
+  private final Map<SourceSection, ReadValueProfile>     localsReadProfiles;
+  private final Map<SourceSection, Counter>              localsWriteProfiles;
 
   private final StructuralProbe structuralProbe;
 
@@ -95,17 +100,20 @@ public class DynamicMetrics extends TruffleInstrument {
 
     methodInvocationCounter = new HashMap<>();
     methodCallsiteProfiles  = new HashMap<>();
+    operationProfiles       = new HashMap<>();
+
     newObjectCounter        = new HashMap<>();
     newArrayCounter         = new HashMap<>();
+
+    controlFlowProfiles     = new HashMap<>();
+    loopProfiles            = new HashMap<>();
+
     fieldReadProfiles       = new HashMap<>();
     fieldWriteProfiles      = new HashMap<>();
     classReadProfiles       = new HashMap<>();
-    controlFlowProfiles     = new HashMap<>();
     literalReadCounter      = new HashMap<>();
     localsReadProfiles      = new HashMap<>();
     localsWriteProfiles     = new HashMap<>();
-    operationProfiles       = new HashMap<>();
-    loopProfiles            = new HashMap<>();
 
     assert "DefaultTruffleRuntime".equals(
         Truffle.getRuntime().getClass().getSimpleName())
