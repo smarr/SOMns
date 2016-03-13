@@ -25,6 +25,7 @@ import dym.profiles.BranchProfile;
 import dym.profiles.CallsiteProfile;
 import dym.profiles.Counter;
 import dym.profiles.InvocationProfile;
+import dym.profiles.LoopProfile;
 import dym.profiles.OperationProfile;
 import dym.profiles.ReadValueProfile;
 import dym.profiles.StructuralProbe;
@@ -67,6 +68,7 @@ public final class MetricsCsvWriter {
     generalStats();
     branchProfiles();
     operationProfiles();
+    loopProfiles();
   }
 
   private void generalStats() {
@@ -455,6 +457,31 @@ public final class MetricsCsvWriter {
         file.print("\t");
         file.print(e.getValue().getFalseCount());
         file.print("\t");
+        file.println(e.getValue().getValue());
+      }
+    } catch (FileNotFoundException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private void loopProfiles() {
+    @SuppressWarnings("unchecked")
+    Map<SourceSection, LoopProfile> loops = (Map<SourceSection, LoopProfile>) data.get(JsonWriter.LOOPS);
+
+    try (PrintWriter file = new PrintWriter(metricsFolder + File.separator + "loops.csv")) {
+      file.println("Source Section\tLoop Activations\tNum Iterations");
+
+      for (Entry<SourceSection, LoopProfile> e : loops.entrySet()) {
+        for (Entry<Integer, Integer> l : e.getValue().getIterations().entrySet()) {
+          file.print(getSourceSectionAbbrv(e.getKey()));
+          file.print("\t");
+          file.print(l.getKey());
+          file.print("\t");
+          file.println(l.getValue());
+        }
+
+        file.print(getSourceSectionAbbrv(e.getKey()));
+        file.print("\tTOTAL\t");
         file.println(e.getValue().getValue());
       }
     } catch (FileNotFoundException e) {

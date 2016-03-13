@@ -28,6 +28,10 @@ public class LoopProfile extends Counter {
     currentIterations = 0;
   }
 
+  public Map<Integer, Integer> getIterations() {
+    return loopIterations;
+  }
+
   @Override
   public String toString() {
     return "LoopProf" + mapToString();
