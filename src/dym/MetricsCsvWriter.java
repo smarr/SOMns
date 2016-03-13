@@ -408,11 +408,13 @@ public final class MetricsCsvWriter {
     Map<SourceSection, InvocationProfile> profiles = (Map<SourceSection, InvocationProfile>) data.get(JsonWriter.METHOD_INVOCATION_PROFILE);
 
     try (PrintWriter file = new PrintWriter(metricsFolder + File.separator + "defined-classes.csv")) {
-      file.println("Class Name\tMethods Executed");
+      file.println("Class Name\tSource Section\tMethods Executed");
 
       for (MixinDefinition clazz : structuralProbe.getClasses()) {
         file.print(clazz.getName().getString());
         // TODO: get fully qualified name
+        file.print("\t");
+        file.print(getSourceSectionAbbrv(clazz.getSourceSection()));
         file.print("\t");
         file.print(numExecutedMethods(clazz, profiles.values()));
         file.println();
