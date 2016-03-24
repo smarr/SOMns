@@ -24,7 +24,9 @@ public abstract class IntegerPrims {
   @GenerateNodeFactory
   @Primitive("intAs32BitSignedValue:")
   public abstract static class As32BitSignedValue extends UnaryBasicOperation {
-    public As32BitSignedValue(final SourceSection source) { super(source); }
+    public As32BitSignedValue(final SourceSection source) {
+      super(Tagging.cloneAndAddTags(source, Tags.OP_ARITHMETIC));
+    }
 
     @Specialization
     public final long doLong(final long receiver) {
@@ -35,7 +37,9 @@ public abstract class IntegerPrims {
   @GenerateNodeFactory
   @Primitive("intAs32BitUnsignedValue:")
   public abstract static class As32BitUnsignedValue extends UnaryBasicOperation {
-    public As32BitUnsignedValue(final SourceSection source) { super(source); }
+    public As32BitUnsignedValue(final SourceSection source) {
+      super(Tagging.cloneAndAddTags(source, Tags.OP_ARITHMETIC));
+    }
 
     @Specialization
     public final long doLong(final long receiver) {

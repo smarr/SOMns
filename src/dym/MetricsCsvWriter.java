@@ -118,6 +118,11 @@ public final class MetricsCsvWriter {
         return "bool";
       } else if (p.getOperation().equals("abs") || p.getOperation().equals("sqrt")) {
         return typeCategory(a.getArgType(1));
+      } else if (p.getOperation().equals("as32BitUnsignedValue") ||
+          p.getOperation().equals("as32BitSignedValue")) {
+        assert "int".equals(typeCategory(a.getArgType(0)));
+        assert "int".equals(typeCategory(a.getArgType(1)));
+        return "int";
       }
 
       String left  = typeCategory(a.getArgType(1));
