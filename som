@@ -11,7 +11,7 @@ GRAAL_LOCATIONS = [BASE_DIR + '/../graal/jvmci',
                    BASE_DIR + '/../GraalVM/jvmci',
                    '/home/smarr/Projects/SOM/graal/jvmci',
                    '/Users/smarr/Projects/SOM/graal/jvmci']
-JDK_VERSIONS = ['jdk1.8.0_66', 'jdk1.8.0_65', 'jdk1.8.0_60', 'jdk1.8.0_45']
+JDK_VERSIONS = ['jdk1.8.0_72', 'jdk1.8.0_66', 'jdk1.8.0_65', 'jdk1.8.0_60', 'jdk1.8.0_45']
 
 parser = argparse.ArgumentParser(
     description='Helper script to run SOMns with/without Graal')
