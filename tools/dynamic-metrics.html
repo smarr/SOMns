@@ -313,9 +313,18 @@
         loadAndProcessFile(file);
       });
   }
+
+  var heatmapStyleNode = null;
+  function toggleHeatMap() {
+    if (heatmapStyleNode == null) {
+      heatmapStyleNode = $("#style-heatmap").detach();
+    } else {
+      $("#style-main").after(heatmapStyleNode);
+    }
+  }
   
   </script>
-  <style>
+  <style id="style-main">
   #file-drop {
     border: 5px #ccc dashed;
     font-weight: bold;
@@ -365,8 +374,10 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
   .SYNTAX_LITERAL { color: #4f9b00; }
   .SYNTAX_ARGUMENT, .LOCAL_ARG_READ { color: #194a87; }
   .SYNTAX_LOCAL_VARIABLE, .LOCAL_VAR_READ, .LOCAL_VAR_WRITE { color: #194a87; }
+  </style>  
   
 
+  <style id="style-heatmap">
   .bucket-0 { background-color: #fff; }
   .bucket-1 { background-color: #ffcccc; }
   .bucket-2 { background-color: #f78787; }
@@ -456,6 +467,19 @@ var dbg = new Debugger();
     <span class="counter"></span>:  <span class="types"></span>
   </span>
 </div></div>
+
+
+<div id="tool-menu" style="
+  /* border: 1px solid black; height: 100px; */ width: 90px;
+  position: absolute;
+  right:  0px;
+  top:   72px; /* 5.15em;*/
+  /* display: none; */
+">
+<label><input type="checkbox" id="cb-heatmap" value="on" checked="checked" onchange="toggleHeatMap();"> Heat Map</label>
 </div>
+
+<!-- REM: https://github.com/earmbrust/bootstrap-window -->
+
 </body>
 </html>
