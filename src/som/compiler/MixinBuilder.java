@@ -380,7 +380,7 @@ public final class MixinBuilder {
         exprs[i + 1] = mixinResolvers.get(i);
       }
 
-      resolution = SNodeFactory.createInternalObjectArray(exprs);
+      resolution = SNodeFactory.createInternalObjectArray(exprs, mixinResolversSource);
       source = mixinResolversSource;
     }
 
@@ -432,10 +432,10 @@ public final class MixinBuilder {
       // contract for initializers
       // and we need to make sure that a potential Value class verifies
       // that it actually is a value
-      allExprs.add(IsValueCheckNode.create(initializer.getSelfRead(null)));
+      allExprs.add(IsValueCheckNode.create(initializer.getSelfRead(initializerSource)));
     }
 
-    ExpressionNode body = SNodeFactory.createSequence(allExprs, null);
+    ExpressionNode body = SNodeFactory.createSequence(allExprs, initializerSource);
     return initializer.assembleInitializer(body, AccessModifier.PROTECTED,
         Symbols.INITIALIZATION, initializerSource);
   }

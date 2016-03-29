@@ -10,6 +10,7 @@ public final class NilLiteralNode extends LiteralNode {
 
   public NilLiteralNode(final SourceSection source) {
     super(source);
+    assert source != null;
   }
 
   @Override

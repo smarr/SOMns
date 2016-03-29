@@ -119,7 +119,7 @@ public final class SNodeFactory {
       final ExpressionNode[] exprs, final boolean eventualSend,
       final SourceSection source) {
     if (eventualSend) {
-      return EventualSendNodeGen.create(msg, exprs.length, source, new InternalObjectArrayNode(exprs));
+      return EventualSendNodeGen.create(msg, exprs.length, source, new InternalObjectArrayNode(exprs, source));
     } else {
       return MessageSendNode.createMessageSend(msg, exprs, source);
     }
@@ -166,7 +166,7 @@ public final class SNodeFactory {
   }
 
   public static ExpressionNode createInternalObjectArray(
-      final ExpressionNode[] expressions) {
-    return new InternalObjectArrayNode(expressions);
+      final ExpressionNode[] expressions, final SourceSection source) {
+    return new InternalObjectArrayNode(expressions, source);
   }
 }

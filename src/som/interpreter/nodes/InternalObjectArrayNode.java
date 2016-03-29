@@ -4,14 +4,15 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.NodeCost;
 import com.oracle.truffle.api.nodes.NodeInfo;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 @NodeInfo(cost = NodeCost.NONE)
 public final class InternalObjectArrayNode extends ExpressionNode {
   @Children private final ExpressionNode[] expressions;
 
-  public InternalObjectArrayNode(final ExpressionNode[] expressions) {
-    super(null);
+  public InternalObjectArrayNode(final ExpressionNode[] expressions, final SourceSection source) {
+    super(source);
     this.expressions = expressions;
   }
 

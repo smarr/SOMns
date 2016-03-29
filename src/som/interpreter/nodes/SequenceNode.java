@@ -34,6 +34,7 @@ public final class SequenceNode extends ExpressionNode {
 
   public SequenceNode(final ExpressionNode[] expressions, final SourceSection source) {
     super(source);
+    assert source != null;
     this.expressions = expressions;
   }
 
