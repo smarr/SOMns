@@ -234,21 +234,7 @@ public final class MessageSendNode {
     }
 
     protected abstract PreevaluatedExpression makeSpecialSend();
-
-    private GenericMessageSendNode makeOrdenarySend() {
-      VM.insertInstrumentationWrapper(this);
-
-      Tagging.addTags(argumentNodes[0], Tags.VIRTUAL_INVOKE_RECEIVER);
-      GenericMessageSendNode send = new GenericMessageSendNode(selector,
-          argumentNodes,
-          UninitializedDispatchNode.createRcvrSend(
-              getSourceSection(), selector, AccessModifier.PUBLIC),
-          getSourceSection());
-      replace(send);
-      VM.insertInstrumentationWrapper(send);
-      VM.insertInstrumentationWrapper(argumentNodes[0]);
-      return send;
-    }
+    protected abstract GenericMessageSendNode makeOrdenarySend();
 
     private PreevaluatedExpression makeEagerUnaryPrim(final UnaryExpressionNode prim) {
       VM.insertInstrumentationWrapper(this);
@@ -644,6 +630,22 @@ public final class MessageSendNode {
     }
 
     @Override
+    protected GenericMessageSendNode makeOrdenarySend() {
+      VM.insertInstrumentationWrapper(this);
+
+      Tagging.addTags(argumentNodes[0], Tags.VIRTUAL_INVOKE_RECEIVER);
+      GenericMessageSendNode send = new GenericMessageSendNode(selector,
+          argumentNodes,
+          UninitializedDispatchNode.createRcvrSend(
+              getSourceSection(), selector, AccessModifier.PUBLIC),
+          getSourceSection());
+      replace(send);
+      VM.insertInstrumentationWrapper(send);
+      VM.insertInstrumentationWrapper(argumentNodes[0]);
+      return send;
+    }
+
+    @Override
     protected PreevaluatedExpression makeSpecialSend() {
       VM.insertInstrumentationWrapper(this);
 
@@ -679,6 +681,17 @@ public final class MessageSendNode {
     @Override
     public boolean isSpecialSend() {
       return false;
+    }
+
+    @Override
+    protected GenericMessageSendNode makeOrdenarySend() {
+      // TODO: figure out what to do with reflective sends and how to instrument them.
+      GenericMessageSendNode send = new GenericMessageSendNode(selector,
+          argumentNodes,
+          UninitializedDispatchNode.createRcvrSend(
+              getSourceSection(), selector, AccessModifier.PUBLIC),
+          getSourceSection());
+      return replace(send);
     }
 
     @Override
