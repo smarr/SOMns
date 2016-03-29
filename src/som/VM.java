@@ -70,6 +70,12 @@ public final class VM {
     return vm.options.enableInstrumentation;
   }
 
+  public static boolean enabledDynamicMetricsTool() {
+    // TODO: this should use some type of configuration flag/command-line parameter
+    // and it needs to depend on VM.instrumentationEnabled(), but this is a problem with initialization order
+    return true;
+  }
+
   public static void insertInstrumentationWrapper(final Node node) {
     if (VM.instrumentationEnabled()) {
       assert node.getSourceSection() != null : "Node needs source section";
@@ -225,7 +231,7 @@ public final class VM {
       truffleProfiler.setEnabled(false); // we don't want it at the moment
     }
 
-    if (instrumentationEnabled()) {
+    if (enabledDynamicMetricsTool()) {
       engine.getInstruments().get(DynamicMetrics.ID).setEnabled(true);
     }
     try {
