@@ -70,6 +70,7 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 
+import som.VM;
 import som.compiler.Lexer.Peek;
 import som.compiler.Lexer.SourceCoordinate;
 import som.compiler.MixinBuilder.MixinDefinitionError;
@@ -100,6 +101,8 @@ import som.interpreter.nodes.specialized.whileloops.WhileInlinedLiteralsNode;
 import som.vm.Symbols;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
+import tools.highlight.Tags.ArgumentTag;
+import tools.highlight.Tags.LocalVariableTag;
 
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
@@ -763,7 +766,10 @@ public final class Parser {
   }
 
   private String argument() throws ParseError {
-    return identifier();
+    SourceCoordinate coord = getCoordinate();
+    String id = identifier();
+    VM.reportSyntaxElement(ArgumentTag.class, getSource(coord));
+    return id;
   }
 
   private ExpressionNode blockContents(final MethodBuilder builder)
@@ -778,7 +784,9 @@ public final class Parser {
 
   private void locals(final MethodBuilder builder) throws ParseError {
     while (sym == Identifier) {
+      SourceCoordinate coord = getCoordinate();
       builder.addLocalIfAbsent(identifier());
+      VM.reportSyntaxElement(LocalVariableTag.class, getSource(coord));
     }
   }
 
