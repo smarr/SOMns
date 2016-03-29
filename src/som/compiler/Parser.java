@@ -61,7 +61,6 @@ import static som.compiler.Symbol.Pound;
 import static som.compiler.Symbol.STString;
 import static som.compiler.Symbol.SlotMutableAssign;
 import static som.compiler.Symbol.Star;
-import static som.compiler.Tags.UNSPECIFIED_INVOKE;
 import static som.interpreter.SNodeFactory.createImplicitReceiverSend;
 import static som.interpreter.SNodeFactory.createMessageSend;
 import static som.interpreter.SNodeFactory.createSequence;
@@ -282,16 +281,15 @@ public final class Parser {
 
   private void defaultSuperclassAndBody(final MixinBuilder mxnBuilder)
       throws ParseError, MixinDefinitionError {
-    SourceCoordinate coord = getCoordinate();
+    SourceSection source = getSource(getCoordinate());
     MethodBuilder def = mxnBuilder.getClassInstantiationMethodBuilder();
     ExpressionNode selfRead = def.getSelfRead(null);
     ExpressionNode superClass = createMessageSend(Symbols.OBJECT,
-        new ExpressionNode[] {selfRead}, false, getSource(coord, UNSPECIFIED_INVOKE));
+        new ExpressionNode[] {selfRead}, false, source);
     mxnBuilder.setSuperClassResolution(superClass);
 
     mxnBuilder.setSuperclassFactorySend(
-        mxnBuilder.createStandardSuperFactorySend(
-            getSource(coord, UNSPECIFIED_INVOKE)), true);
+        mxnBuilder.createStandardSuperFactorySend(source), true);
 
     classBody(mxnBuilder);
   }
@@ -345,7 +343,7 @@ public final class Parser {
       mixinFactorySend = (AbstractUninitializedMessageSendNode)
           SNodeFactory.createMessageSend(uniqueInitName,
               new ExpressionNode[] {mxnBuilder.getInitializerMethodBuilder().getSelfRead(null)},
-              false, getSource(coord, UNSPECIFIED_INVOKE));
+              false, getSource(coord));
     }
 
     mxnBuilder.addMixinFactorySend(mixinFactorySend);
@@ -378,7 +376,7 @@ public final class Parser {
     } else {
       mxnBuilder.setSuperclassFactorySend(
           mxnBuilder.createStandardSuperFactorySend(
-              getSource(getCoordinate(), UNSPECIFIED_INVOKE)), true);
+              getSource(getCoordinate())), true);
     }
   }
 
@@ -403,7 +401,7 @@ public final class Parser {
     } else if (acceptIdentifier("self")) {
       self = meth.getSelfRead(getSource(coord));
     } else {
-      return meth.getImplicitReceiverSend(unarySelector(), coord, this);
+      return meth.getImplicitReceiverSend(unarySelector(), getSource(coord));
     }
     return unaryMessage(self, false);
   }
@@ -659,7 +657,7 @@ public final class Parser {
         "%(expected)s, but found %(found)s", ss, this);
   }
 
-  SourceSection getSource(final SourceCoordinate coord, final String... tags) {
+  SourceSection getSource(final SourceCoordinate coord) {
     assert lexer.getNumberOfCharactersRead() - coord.charIndex >= 0;
     SourceSection ss = source.createSection("method", coord.startLine,
         coord.startColumn, coord.charIndex,
@@ -910,7 +908,7 @@ public final class Parser {
         }
 
         SSymbol selector = unarySelector();
-        return builder.getImplicitReceiverSend(selector, coord, this);
+        return builder.getImplicitReceiverSend(selector, getSource(coord));
       }
       case NewTerm: {
         return nestedTerm(builder);
@@ -1002,7 +1000,7 @@ public final class Parser {
     SourceCoordinate coord = getCoordinate();
     SSymbol selector = unarySelector();
     return createMessageSend(selector, new ExpressionNode[] {receiver},
-        eventualSend, getSource(coord, UNSPECIFIED_INVOKE));
+        eventualSend, getSource(coord));
   }
 
   private ExpressionNode tryInliningBinaryMessage(final MethodBuilder builder,
@@ -1032,7 +1030,7 @@ public final class Parser {
       }
     }
     return createMessageSend(msg, new ExpressionNode[] {receiver, operand},
-        eventualSend, getSource(coord, UNSPECIFIED_INVOKE));
+        eventualSend, getSource(coord));
   }
 
   private ExpressionNode binaryOperand(final MethodBuilder builder)
@@ -1083,7 +1081,7 @@ public final class Parser {
       }
     }
 
-    SourceSection source = getSource(coord, UNSPECIFIED_INVOKE);
+    SourceSection source = getSource(coord);
     ExpressionNode[] args = arguments.toArray(new ExpressionNode[0]);
     if (explicitRcvr) {
       return createMessageSend(msg, args, eventualSend, source);
