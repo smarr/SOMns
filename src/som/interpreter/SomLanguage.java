@@ -17,7 +17,6 @@ import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.impl.FindContextNode;
-import com.oracle.truffle.api.instrument.Visualizer;
 import com.oracle.truffle.api.instrument.WrapperNode;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
@@ -115,11 +114,6 @@ public final class SomLanguage extends TruffleLanguage<VM> {
 
   @Override
   protected boolean isObjectOfLanguage(final Object object) {
-    throw new NotYetImplementedException();
-  }
-
-  @Override
-  protected Visualizer getVisualizer() {
     throw new NotYetImplementedException();
   }
 
