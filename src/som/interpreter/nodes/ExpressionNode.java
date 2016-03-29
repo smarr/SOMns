@@ -34,8 +34,10 @@ import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Instrumentable;
+import com.oracle.truffle.api.instrumentation.StandardTags.RootTag;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -43,8 +45,33 @@ import com.oracle.truffle.api.source.SourceSection;
 @Instrumentable(factory = ExpressionNodeWrapper.class)
 public abstract class ExpressionNode extends SOMNode {
 
+  /**
+   * Indicates that this is the subnode of a RootNode,
+   * possibly only {@link som.interpreter.Method}.
+   * TODO: figure out whether we leave out primitives.
+   */
+  @CompilationFinal private boolean isRootExpression;
+
   public ExpressionNode(final SourceSection sourceSection) {
     super(sourceSection);
+  }
+
+  /**
+   * Mark the node as being a root expression: {@link RootTag}.
+   */
+  public void markAsRootExpression() {
+    assert !isRootExpression;
+    assert getSourceSection() != null;
+    isRootExpression = true;
+  }
+
+  @Override
+  protected boolean isTaggedWith(final Class<?> tag) {
+    if (tag == RootTag.class) {
+      return isRootExpression;
+    } else {
+      return super.isTaggedWith(tag);
+    }
   }
 
   public abstract Object executeGeneric(final VirtualFrame frame);

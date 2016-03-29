@@ -42,6 +42,7 @@ public final class Method extends Invokable {
     super(sourceSection, currentLexicalScope.getFrameDescriptor(),
         expressions, uninitialized);
     this.currentMethodScope = currentLexicalScope;
+    expressions.markAsRootExpression();
   }
 
   @Override
