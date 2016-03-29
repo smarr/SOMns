@@ -5,6 +5,8 @@ import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
 import som.interpreter.InlinerForLexicallyEmbeddedMethods;
 import som.interpreter.SArguments;
 import som.vm.NotYetImplementedException;
+import tools.highlight.Tags.ArgumentTag;
+import tools.highlight.Tags.KeywordTag;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.profiles.ValueProfile;
@@ -37,6 +39,15 @@ public abstract class ArgumentReadNode {
     }
 
     @Override
+    protected boolean isTaggedWith(final Class<?> tag) {
+      if (tag == ArgumentTag.class) {
+        return true;
+      } else {
+        return super.isTaggedWith(tag);
+      }
+    }
+
+    @Override
     public String toString() {
       return "LocalArg(" + argumentIndex + ")";
     }
@@ -66,6 +77,15 @@ public abstract class ArgumentReadNode {
     public void replaceWithLexicallyEmbeddedNode(
         final InlinerForLexicallyEmbeddedMethods inliner) {
       throw new NotYetImplementedException();
+    }
+
+    @Override
+    protected boolean isTaggedWith(final Class<?> tag) {
+      if (tag == KeywordTag.class) {
+        return true;
+      } else {
+        return super.isTaggedWith(tag);
+      }
     }
   }
 
@@ -124,6 +144,15 @@ public abstract class ArgumentReadNode {
         return;
       }
     }
+
+    @Override
+    protected boolean isTaggedWith(final Class<?> tag) {
+      if (tag == ArgumentTag.class) {
+        return true;
+      } else {
+        return super.isTaggedWith(tag);
+      }
+    }
   }
 
   public static final class NonLocalSelfReadNode
@@ -157,6 +186,15 @@ public abstract class ArgumentReadNode {
     protected LocalArgumentReadNode createLocalNode() {
       return new LocalSelfReadNode(mixin, getSourceSection());
     }
+
+    @Override
+    protected boolean isTaggedWith(final Class<?> tag) {
+      if (tag == KeywordTag.class) {
+        return true;
+      } else {
+        return super.isTaggedWith(tag);
+      }
+    }
   }
 
   public static final class LocalSuperReadNode extends LocalArgumentReadNode
@@ -180,6 +218,15 @@ public abstract class ArgumentReadNode {
     @Override
     public boolean isClassSide() {
       return classSide;
+    }
+
+    @Override
+    protected boolean isTaggedWith(final Class<?> tag) {
+      if (tag == KeywordTag.class) {
+        return true;
+      } else {
+        return super.isTaggedWith(tag);
+      }
     }
   }
 
@@ -216,6 +263,15 @@ public abstract class ArgumentReadNode {
     @Override
     public boolean isClassSide() {
       return classSide;
+    }
+
+    @Override
+    protected boolean isTaggedWith(final Class<?> tag) {
+      if (tag == KeywordTag.class) {
+        return true;
+      } else {
+        return super.isTaggedWith(tag);
+      }
     }
   }
 }
