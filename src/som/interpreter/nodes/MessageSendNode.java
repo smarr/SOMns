@@ -1,6 +1,7 @@
 package som.interpreter.nodes;
 
 import som.compiler.AccessModifier;
+import som.instrumentation.MessageSendNodeWrapper;
 import som.interpreter.TruffleCompiler;
 import som.interpreter.TypesGen;
 import som.interpreter.actors.SPromise;
@@ -88,6 +89,7 @@ import som.vmobjects.SSymbol;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.Instrumentable;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.NodeCost;
 import com.oracle.truffle.api.source.SourceSection;
@@ -627,6 +629,7 @@ public final class MessageSendNode {
     }
   }
 
+  @Instrumentable(factory = MessageSendNodeWrapper.class)
   private static final class UninitializedMessageSendNode
       extends AbstractUninitializedMessageSendNode {
 
