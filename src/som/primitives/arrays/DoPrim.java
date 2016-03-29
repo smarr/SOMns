@@ -26,6 +26,7 @@ public abstract class DoPrim extends BinaryComplexOperation {
 
   public DoPrim(final SourceSection source) {
     super(source);
+    // TODO: tag properly, it is a loop and an access
     block = BlockDispatchNodeGen.create();
   }
 

@@ -24,6 +24,7 @@ public abstract class DoIndexesPrim extends BinaryComplexOperation {
 
   public DoIndexesPrim(final SourceSection source) {
     super(source);
+    // TODO: tag properly, this is a loop, but without array access
     block = BlockDispatchNodeGen.create();
     length = SizeAndLengthPrimFactory.create(null, null);
   }

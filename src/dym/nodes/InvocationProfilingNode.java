@@ -12,6 +12,8 @@ import dym.profiles.InvocationProfile;
  */
 public class InvocationProfilingNode extends CountingNode<InvocationProfile> {
 
+  // TODO: profile return value
+
   private final DynamicMetrics meter;
 
   public InvocationProfilingNode(final DynamicMetrics meter,

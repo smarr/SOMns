@@ -26,7 +26,7 @@ public abstract class PutAllNode extends BinaryComplexOperation {
   @Child protected BlockDispatchNode block;
 
   public PutAllNode(final SourceSection source) {
-    super(source);
+    super(source); // TODO: tag properly, it is a loop, and array access
     block = BlockDispatchNodeGen.create();
   }
 
