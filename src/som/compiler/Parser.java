@@ -1179,7 +1179,7 @@ public final class Parser {
         } else if ("and:".equals(msgStr) || "&&".equals(msgStr)) {
           ExpressionNode inlinedArg = ((LiteralNode) arguments.get(1)).inline(builder);
           return new AndInlinedLiteralNode(arguments.get(0), inlinedArg, arguments.get(1), source);
-        } else if ("timesRepeat:".equals(msgStr)) {
+        } else if (!VM.enabledDynamicMetricsTool() && "timesRepeat:".equals(msgStr)) {
           ExpressionNode inlinedBody = ((LiteralNode) arguments.get(1)).inline(builder);
           Tagging.addTags(inlinedBody, Tags.LOOP_BODY);
           return IntTimesRepeatLiteralNodeGen.create(inlinedBody,
@@ -1196,14 +1196,14 @@ public final class Parser {
         return new IfTrueIfFalseInlinedLiteralsNode(condition,
             inlinedTrueNode, inlinedFalseNode, arguments.get(1), arguments.get(2),
             source);
-      } else if ("to:do:".equals(msgStr) &&
+      } else if (!VM.enabledDynamicMetricsTool() && "to:do:".equals(msgStr) &&
           arguments.get(2) instanceof LiteralNode) {
         Local loopIdx = builder.addLocal("i:" + source.getCharIndex(), source);
         ExpressionNode inlinedBody = ((LiteralNode) arguments.get(2)).inline(builder, loopIdx);
         Tagging.addTags(inlinedBody, Tags.LOOP_BODY);
         return IntToDoInlinedLiteralsNodeGen.create(inlinedBody, loopIdx.getSlot(), loopIdx.source,
             arguments.get(2), source, arguments.get(0), arguments.get(1));
-      } else if ("downTo:do:".equals(msgStr) &&
+      } else if (!VM.enabledDynamicMetricsTool() && "downTo:do:".equals(msgStr) &&
           arguments.get(2) instanceof LiteralNode) {
         Local loopIdx = builder.addLocal("i:" + source.getCharIndex(), source);
         ExpressionNode inlinedBody = ((LiteralNode) arguments.get(2)).inline(builder, loopIdx);

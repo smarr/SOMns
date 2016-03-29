@@ -280,7 +280,7 @@ public final class MessageSendNode {
           }
           break;
         case "copy":
-          if (receiver instanceof SArray) {
+          if (!VM.enabledDynamicMetricsTool() && receiver instanceof SArray) {
             return makeEagerUnaryPrim(CopyPrimNodeGen.create(getSourceSection(), null));
           }
           break;
@@ -372,17 +372,20 @@ public final class MessageSendNode {
           }
           break;
         case "doIndexes:":
-          if (arguments[0] instanceof SArray) {
+          if (!VM.enabledDynamicMetricsTool() && arguments[0] instanceof SArray) {
             return makeEagerBinaryPrim(DoIndexesPrimFactory.create(getSourceSection(), null, null));
           }
           break;
         case "do:":
-          if (arguments[0] instanceof SArray) {
+          if (!VM.enabledDynamicMetricsTool() && arguments[0] instanceof SArray) {
             return makeEagerBinaryPrim(DoPrimFactory.create(getSourceSection(), null, null));
           }
           break;
         case "putAll:":
-          return makeEagerBinaryPrim(PutAllNodeFactory.create(getSourceSection(), null, null, SizeAndLengthPrimFactory.create(null, null)));
+          if (!VM.enabledDynamicMetricsTool()) {
+            return makeEagerBinaryPrim(PutAllNodeFactory.create(getSourceSection(), null, null, SizeAndLengthPrimFactory.create(null, null)));
+          }
+          break;
         case "whileTrue:": {
           if (unwrapIfNecessary(argumentNodes[1]) instanceof BlockNode &&
               unwrapIfNecessary(argumentNodes[0]) instanceof BlockNode) {
@@ -444,7 +447,7 @@ public final class MessageSendNode {
           return replace(IfMessageNodeGen.create(false, getSourceSection(),
               argumentNodes[0], argumentNodes[1]));
         case "to:":
-          if (arguments[0] instanceof Long) {
+          if (!VM.enabledDynamicMetricsTool() && arguments[0] instanceof Long) {
             return makeEagerBinaryPrim(ToPrimNodeGen.create(getSourceSection(), null, null));
           }
           break;
@@ -515,7 +518,7 @@ public final class MessageSendNode {
           }
           break;
         case "max:":
-          if (arguments[0] instanceof Long) {
+          if (!VM.enabledDynamicMetricsTool() && arguments[0] instanceof Long) {
             return makeEagerBinaryPrim(MaxIntPrimNodeGen.create(getSourceSection(), null, null));
           }
           break;
@@ -556,7 +559,8 @@ public final class MessageSendNode {
               arguments[0], arguments[1], arguments[2], argumentNodes[0],
               argumentNodes[1], argumentNodes[2]));
         case "to:do:":
-          if (TypesGen.isLong(arguments[0]) &&
+          if (!VM.enabledDynamicMetricsTool() &&
+              TypesGen.isLong(arguments[0]) &&
               (TypesGen.isLong(arguments[1]) ||
                   TypesGen.isDouble(arguments[1])) &&
               TypesGen.isSBlock(arguments[2])) {
@@ -565,7 +569,8 @@ public final class MessageSendNode {
           }
           break;
         case "downTo:do:":
-          if (TypesGen.isLong(arguments[0]) &&
+          if (!VM.enabledDynamicMetricsTool() &&
+              TypesGen.isLong(arguments[0]) &&
               (TypesGen.isLong(arguments[1]) ||
                   TypesGen.isDouble(arguments[1])) &&
               TypesGen.isSBlock(arguments[2])) {
@@ -591,7 +596,7 @@ public final class MessageSendNode {
           }
           break;
         case "new:withAll:":
-          if (arguments[0] == Classes.valueArrayClass) {
+          if (!VM.enabledDynamicMetricsTool() && arguments[0] == Classes.valueArrayClass) {
             return makeEagerTernaryPrim(NewImmutableArrayNodeGen.create(
                 getSourceSection(), null, null, null));
           }
@@ -603,9 +608,12 @@ public final class MessageSendNode {
         final Object[] arguments) {
       switch (selector.getString()) {
         case "to:by:do:":
-          return replace(IntToByDoMessageNodeGen.create(this,
-              (SBlock) arguments[3], argumentNodes[0], argumentNodes[1],
-              argumentNodes[2], argumentNodes[3]));
+          if (!VM.enabledDynamicMetricsTool()) {
+            return replace(IntToByDoMessageNodeGen.create(this,
+                (SBlock) arguments[3], argumentNodes[0], argumentNodes[1],
+                argumentNodes[2], argumentNodes[3]));
+          }
+          break;
       }
       return makeSend();
     }
