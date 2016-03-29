@@ -45,7 +45,7 @@ public abstract class SOMNode extends Node {
   }
 
   @Override
-  public final SourceSection getSourceSection() {
+  public SourceSection getSourceSection() {
     return sourceSection;
   }
 
