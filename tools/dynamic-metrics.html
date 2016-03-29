@@ -9,6 +9,8 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
 
+  <!-- Debugger Icons -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css" />
 
   <title>Dynamic Metrics</title>
   <script>
@@ -384,6 +386,64 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
 <div id="files" class="tab-content"></div>
 </div>
 
+
+<div id="debugger" style="
+  border: 1px solid black; width: 150px; height: 100px;
+  position: absolute;
+  right:  0px;
+  top:   72px; /* 5.15em;*/
+  display: none;
+">
+<div>DEBUGGER</div>
+<script>
+function Debugger() {
+  this.socket = new WebSocket("ws://localhost:8887");
+}
+Debugger.prototype.resume = function() {
+  this.socket.send("resume");
+}
+Debugger.prototype.pause = function() {
+  this.socket.send("pause");
+}
+Debugger.prototype.stop = function() {
+  this.socket.send("stop");
+}
+
+Debugger.prototype.stepInto = function() {
+  this.socket.send({action:'stepInto'});
+}
+Debugger.prototype.stepOver = function() {
+  this.socket.send("stepOver");
+}
+Debugger.prototype.return = function() {
+  this.socket.send("return");
+}
+
+var dbg = new Debugger();
+</script>
+
+<div>
+<div class="btn-toolbar" role="toolbar" aria-label="Debugger Controls">
+  <div class="btn-group btn-group-xs" role="group" aria-label="Basic Controls">
+    <button type="button" class="btn btn-default" onclick="dbg.resume();"><i class="fa fa-play"></i></button>
+    <button type="button" class="btn btn-default" onclick="dbg.pause();"><i class="fa fa-pause"></i></button>
+    <button type="button" class="btn btn-default" onclick="dbg.stop();"><i class="fa fa-stop"></i></button>
+  </div>
+
+  <div class="btn-group btn-group-xs" role="group" aria-label="Stepping">
+    <button type="button" class="btn btn-default" onclick="dbg.stepInto();"><i class="fa fa-share" style="transform: rotate(90deg);"></i></button>
+    <button type="button" class="btn btn-default" onclick="dbg.stepOver();"><i class="fa fa-share"></i></button>
+    <button type="button" class="btn btn-default" onclick="dbg.return();"><i class="fa fa-reply" style="transform: scaleY(-1);"></i></button>
+  </div>
+</div>
+
+<div id="debugger-log">
+</div>
+
+<!-- Unicode Icons: incompletely supported
+  &#9654; &#9205; &#9208; &#9209; &#11175; &#10556; &#11154;-->
+</div>
+
 <div id="templates">
   <li id="tab-list-entry"><a href="#tab-id" data-toggle="tab">Label</a></li>
   <div id="file" class="tab-pane">
@@ -395,6 +455,7 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
   <span id="invocation-profile" class="invocation-profile">
     <span class="counter"></span>:  <span class="types"></span>
   </span>
+</div></div>
 </div>
 </body>
 </html>
