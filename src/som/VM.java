@@ -11,10 +11,12 @@ import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.SResolver;
 import som.vm.ObjectSystem;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
+import tools.highlight.Tags;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.api.vm.PolyglotEngine;
 import com.oracle.truffle.api.vm.PolyglotEngine.Builder;
 
@@ -65,6 +67,10 @@ public final class VM {
 
   public VM(final String[] args) throws IOException {
     this(args, false);
+  }
+
+  public static void reportSyntaxElement(final Class<? extends Tags> type,
+      final SourceSection source) {
   }
 
   public static boolean shouldExit() {
