@@ -21,5 +21,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/com.oracle.truffle.api.profiles"/>
 	<classpathentry kind="src" path="/com.oracle.truffle.tools"/>
 	<classpathentry kind="src" path="/com.oracle.truffle.api.instrumentation"/>
+	<classpathentry kind="src" path="/com.oracle.truffle.tools.debug.shell"/>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>
