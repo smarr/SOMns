@@ -10,6 +10,15 @@ import som.compiler.Parser.ParseError;
 import som.vm.NotYetImplementedException;
 import som.vm.constants.Nil;
 import som.vmobjects.SClass;
+import tools.highlight.Tags.ArgumentTag;
+import tools.highlight.Tags.CommentTag;
+import tools.highlight.Tags.DelimiterClosingTag;
+import tools.highlight.Tags.DelimiterOpeningTag;
+import tools.highlight.Tags.IdentifierTag;
+import tools.highlight.Tags.KeywordTag;
+import tools.highlight.Tags.LiteralTag;
+import tools.highlight.Tags.LocalVariableTag;
+import tools.highlight.Tags.StatementSeparatorTag;
 
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.Truffle;
@@ -27,7 +36,10 @@ import com.oracle.truffle.api.source.Source;
 
 @TruffleLanguage.Registration(name = "SOMns", version = "0.1.0",
                               mimeType = "application/x-newspeak-som-ns")
-@ProvidedTags({RootTag.class})
+@ProvidedTags({RootTag.class, KeywordTag.class, LiteralTag.class,
+  CommentTag.class, IdentifierTag.class, ArgumentTag.class,
+  LocalVariableTag.class, StatementSeparatorTag.class,
+  DelimiterOpeningTag.class, DelimiterClosingTag.class})
 public final class SomLanguage extends TruffleLanguage<VM> {
 
   public static final String MIME_TYPE = "application/x-newspeak-som-ns";
