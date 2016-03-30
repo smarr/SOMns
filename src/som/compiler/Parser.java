@@ -103,6 +103,7 @@ import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 import tools.highlight.Tags;
 import tools.highlight.Tags.ArgumentTag;
+import tools.highlight.Tags.CommentTag;
 import tools.highlight.Tags.DelimiterClosingTag;
 import tools.highlight.Tags.DelimiterOpeningTag;
 import tools.highlight.Tags.IdentifierTag;
@@ -465,6 +466,8 @@ public final class Parser {
   private String comment() throws ParseError {
     if (sym != BeginComment) { return ""; }
 
+    SourceCoordinate coord = getCoordinate();
+
     expect(BeginComment, null);
 
     String comment = "";
@@ -477,6 +480,7 @@ public final class Parser {
       }
     }
     expect(EndComment, null);
+    VM.reportSyntaxElement(CommentTag.class, getSource(coord));
     return comment;
   }
 
@@ -580,7 +584,9 @@ public final class Parser {
     // Newspeak-spec: this is not conform with Newspeak,
     //                as the category is normally not optional
     if (sym == STString) {
+      SourceCoordinate coord = getCoordinate();
       categoryName = string();
+      VM.reportSyntaxElement(CommentTag.class, getSource(coord));
     } else {
       categoryName = "";
     }
