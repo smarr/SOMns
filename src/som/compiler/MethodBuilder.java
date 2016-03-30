@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import som.VM;
 import som.compiler.MixinBuilder.MixinDefinitionError;
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.compiler.Variable.Argument;
@@ -203,6 +204,7 @@ public final class MethodBuilder {
     SInvokable meth = new SInvokable(signature, accessModifier, category,
         truffleMethod, embeddedBlockMethods.toArray(new SInvokable[0]));
 
+    VM.reportParsedRootNode(truffleMethod);
     // the method's holder field is to be set later on!
     return meth;
   }
