@@ -25,6 +25,7 @@ import som.compiler.MethodBuilder;
 import som.compiler.Variable.Local;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.PreevaluatedExpression;
+import tools.highlight.Tags.LiteralTag;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.NodeCost;
@@ -48,5 +49,14 @@ public abstract class LiteralNode extends ExpressionNode
   public ExpressionNode inline(final MethodBuilder builder,
       final Local... blockArguments) {
     return this;
+  }
+
+  @Override
+  protected boolean isTaggedWith(final Class<?> tag) {
+    if (tag == LiteralTag.class) {
+      return true;
+    } else {
+      return super.isTaggedWith(tag);
+    }
   }
 }

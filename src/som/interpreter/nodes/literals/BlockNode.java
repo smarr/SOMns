@@ -14,6 +14,7 @@ import som.vm.constants.Classes;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
+import tools.highlight.Tags.LiteralTag;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
@@ -34,6 +35,15 @@ public class BlockNode extends LiteralNode {
 
       // we don't support more than 3 arguments
       default : this.blockClass = Classes.blockClass;
+    }
+  }
+
+  @Override
+  protected boolean isTaggedWith(final Class<?> tag) {
+    if (LiteralTag.class == tag) {
+      return false; // Blocks should not be indicated as literals, looks strange.
+    } else {
+      return super.isTaggedWith(tag);
     }
   }
 
