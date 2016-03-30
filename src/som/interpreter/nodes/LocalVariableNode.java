@@ -5,6 +5,7 @@ import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
 import som.interpreter.InlinerForLexicallyEmbeddedMethods;
 import som.interpreter.SplitterForLexicallyEmbeddedCode;
 import som.vm.constants.Nil;
+import tools.highlight.Tags.LocalVariableTag;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.dsl.NodeChild;
@@ -44,6 +45,15 @@ public abstract class LocalVariableNode extends ExpressionNode {
   public final void replaceWithIndependentCopyForInlining(final SplitterForLexicallyEmbeddedCode inliner) {
     CompilerAsserts.neverPartOfCompilation("replaceWithIndependentCopyForInlining");
     throw new RuntimeException("Should not be part of an uninitalized tree. And this should only be done with uninitialized trees.");
+  }
+
+  @Override
+  protected final boolean isTaggedWith(final Class<?> tag) {
+    if (tag == LocalVariableTag.class) {
+      return true;
+    } else {
+      return super.isTaggedWith(tag);
+    }
   }
 
   public abstract static class LocalVariableReadNode extends LocalVariableNode {

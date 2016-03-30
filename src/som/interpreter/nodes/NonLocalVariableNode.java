@@ -4,6 +4,7 @@ import static som.interpreter.TruffleCompiler.transferToInterpreter;
 import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
 import som.interpreter.InlinerForLexicallyEmbeddedMethods;
 import som.vm.constants.Nil;
+import tools.highlight.Tags.LocalVariableTag;
 
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -34,6 +35,15 @@ public abstract class NonLocalVariableNode extends ContextualNode {
   public final void replaceWithCopyAdaptedToEmbeddedOuterContext(
       final InlinerAdaptToEmbeddedOuterContext inliner) {
     throw new RuntimeException("Normally, only uninitialized variable nodes should be encountered, because this is done at parse time");
+  }
+
+  @Override
+  protected final boolean isTaggedWith(final Class<?> tag) {
+    if (tag == LocalVariableTag.class) {
+      return true;
+    } else {
+      return super.isTaggedWith(tag);
+    }
   }
 
   public abstract static class NonLocalVariableReadNode extends NonLocalVariableNode {
