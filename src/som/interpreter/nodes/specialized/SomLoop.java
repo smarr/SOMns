@@ -7,7 +7,7 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 
 
-public class SomLoop {
+public abstract class SomLoop {
 
   public static void reportLoopCount(final long count, final Node loopNode) {
     if (count < 1) { return; }
