@@ -649,7 +649,9 @@ public final class MixinDefinition {
     SSymbol init = MixinBuilder.getInitializerName(Symbols.NEW);
     MethodBuilder builder = new MethodBuilder(true);
     builder.setSignature(init);
-    builder.addArgumentIfAbsent("self");
+    builder.addArgumentIfAbsent("self",
+        Source.fromNamedText("self read", "super-class-resolution").
+        createSection("self read", 1));
 
     Source source = Source.fromNamedText("self", "Thing>>" + init.getString());
     SourceSection ss = source.createSection(init.getString(), 0, 4);

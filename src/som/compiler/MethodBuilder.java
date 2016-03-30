@@ -28,6 +28,7 @@ import static som.interpreter.SNodeFactory.createCatchNonLocalReturn;
 import static som.interpreter.SNodeFactory.createNonLocalReturn;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -105,9 +106,10 @@ public final class MethodBuilder {
     embeddedBlockMethods = new ArrayList<SInvokable>();
   }
 
-  public String[] getArgumentNames() {
-    return arguments.keySet().toArray(new String[arguments.size()]);
+  public Collection<Argument> getArguments() {
+    return arguments.values();
   }
+
   public void addEmbeddedBlockMethod(final SInvokable blockMethod) {
     embeddedBlockMethods.add(blockMethod);
   }
@@ -245,33 +247,34 @@ public final class MethodBuilder {
     signature = sig;
   }
 
-  private void addArgument(final String arg) {
+  private void addArgument(final String arg, final SourceSection source) {
     if (("self".equals(arg) || "$blockSelf".equals(arg)) && arguments.size() > 0) {
       throw new IllegalStateException("The self argument always has to be the first argument of a method");
     }
 
-    Argument argument = new Argument(arg, arguments.size());
+    Argument argument = new Argument(arg, arguments.size(), source);
     arguments.put(arg, argument);
   }
 
-  public void addArgumentIfAbsent(final String arg) {
+  public void addArgumentIfAbsent(final String arg, final SourceSection source) {
     if (arguments.containsKey(arg)) {
       return;
     }
 
-    addArgument(arg);
+    addArgument(arg, source);
   }
 
-  public void addLocalIfAbsent(final String local) {
+  public void addLocalIfAbsent(final String local, final SourceSection source) {
     if (locals.containsKey(local)) {
       return;
     }
 
-    addLocal(local);
+    addLocal(local, source);
   }
 
-  public Local addLocal(final String local) {
-    Local l = new Local(local, currentScope.getFrameDescriptor().addFrameSlot(local));
+  public Local addLocal(final String local, final SourceSection source) {
+    Local l = new Local(
+        local, currentScope.getFrameDescriptor().addFrameSlot(local), source);
     assert !locals.containsKey(local);
     locals.put(local, l);
     return l;
@@ -374,11 +377,11 @@ public final class MethodBuilder {
 
     if (getEnclosingMixinBuilder() == null) {
       // this is normally only for the inheritance clauses for modules the case
-      return SNodeFactory.createMessageSend(selector, new ExpressionNode[] {getSelfRead(null)}, false, source);
+      return SNodeFactory.createMessageSend(selector, new ExpressionNode[] {getSelfRead(source)}, false, source);
     } else {
       // otherwise, it is an implicit receiver send
       return SNodeFactory.createImplicitReceiverSend(selector,
-          new ExpressionNode[] {getSelfRead(null)},
+          new ExpressionNode[] {getSelfRead(source)},
           getCurrentMethodScope(), getEnclosingMixinBuilder().getMixinId(), source);
     }
   }

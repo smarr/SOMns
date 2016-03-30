@@ -27,6 +27,7 @@ package som.compiler;
 import static som.vm.Symbols.symbolFor;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -34,6 +35,7 @@ import java.util.List;
 import som.compiler.MixinDefinition.ClassSlotDefinition;
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.compiler.MixinDefinition.SlotMutator;
+import som.compiler.Variable.Argument;
 import som.interpreter.LexicalScope.MixinScope;
 import som.interpreter.Method;
 import som.interpreter.SNodeFactory;
@@ -45,6 +47,7 @@ import som.vm.Symbols;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 
+import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
 
@@ -229,8 +232,8 @@ public final class MixinBuilder {
 
     initializer.setSignature(getInitializerName(
         primaryFactoryMethod.getSignature()));
-    for (String arg : primaryFactoryMethod.getArgumentNames()) {
-      initializer.addArgumentIfAbsent(arg);
+    for (Argument arg : primaryFactoryMethod.getArguments()) {
+      initializer.addArgumentIfAbsent(arg.name, arg.source);
     }
   }
 
@@ -361,7 +364,9 @@ public final class MixinBuilder {
           outerBuilder.getInstanceScope());
     }
     // self is going to be the enclosing object
-    definitionMethod.addArgumentIfAbsent("self");
+    definitionMethod.addArgumentIfAbsent("self",
+        Source.fromNamedText("self read", "super-class-resolution").
+        createSection("self read", 1));
     definitionMethod.setSignature(Symbols.DEF_CLASS);
 
     return definitionMethod;
@@ -393,7 +398,7 @@ public final class MixinBuilder {
     // first create new Object
 
     ExpressionNode newObject = NewObjectPrimNodeGen.create(
-        mixinId, primaryFactoryMethod.getSelfRead(null));
+        mixinId, primaryFactoryMethod.getSelfRead(primaryFactorySource));
 
     List<ExpressionNode> args = createPrimaryFactoryArgumentRead(newObject);
 
@@ -443,20 +448,20 @@ public final class MixinBuilder {
   protected List<ExpressionNode> createPrimaryFactoryArgumentRead(
       final ExpressionNode objectInstantiationExpr) {
     // then, call the initializer on it
-    String[] arguments = primaryFactoryMethod.getArgumentNames();
-    List<ExpressionNode> args = new ArrayList<>(arguments.length);
+    Collection<Argument> arguments = primaryFactoryMethod.getArguments();
+    List<ExpressionNode> args = new ArrayList<>(arguments.size());
     args.add(objectInstantiationExpr);
 
-    for (String arg : arguments) {
-      if (!"self".equals(arg)) { // already have self as the newly instantiated object
-        args.add(primaryFactoryMethod.getReadNode(arg, null));
+    for (Argument arg : arguments) {
+      if (!"self".equals(arg.name)) { // already have self as the newly instantiated object
+        args.add(primaryFactoryMethod.getReadNode(arg.name, arg.source));
       }
     }
     return args;
   }
 
   public ExpressionNode createStandardSuperFactorySend(final SourceSection source) {
-    ExpressionNode superNode = initializer.getSuperReadNode(null);
+    ExpressionNode superNode = initializer.getSuperReadNode(source);
     SSymbol init = getInitializerName(Symbols.NEW);
     ExpressionNode superFactorySend = SNodeFactory.createMessageSend(
         init, new ExpressionNode[] {superNode}, false, source);

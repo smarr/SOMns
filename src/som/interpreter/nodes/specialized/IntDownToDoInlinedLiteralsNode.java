@@ -25,16 +25,18 @@ public abstract class IntDownToDoInlinedLiteralsNode extends ExpressionNode {
   private final ExpressionNode bodyActualNode;
 
   private final FrameSlot loopIndex;
+  private final SourceSection loopIndexSource;
 
   public abstract ExpressionNode getFrom();
   public abstract ExpressionNode getTo();
 
   public IntDownToDoInlinedLiteralsNode(final ExpressionNode body,
-      final FrameSlot loopIndex, final ExpressionNode originalBody,
-      final SourceSection sourceSection) {
+      final FrameSlot loopIndex, final SourceSection loopIndexSource,
+      final ExpressionNode originalBody, final SourceSection sourceSection) {
     super(sourceSection);
     this.body           = body;
     this.loopIndex      = loopIndex;
+    this.loopIndexSource = loopIndexSource;
     this.bodyActualNode = originalBody;
 
     // and, we can already tell the loop index that it is going to be long
@@ -85,8 +87,8 @@ public abstract class IntDownToDoInlinedLiteralsNode extends ExpressionNode {
   public void replaceWithLexicallyEmbeddedNode(
       final InlinerForLexicallyEmbeddedMethods inliner) {
     IntDownToDoInlinedLiteralsNode node = IntDownToDoInlinedLiteralsNodeGen.create(body,
-        inliner.addLocalSlot(loopIndex.getIdentifier()),
-        bodyActualNode, getSourceSection(), getFrom(), getTo());
+        inliner.addLocalSlot(loopIndex.getIdentifier(), loopIndexSource),
+        loopIndexSource, bodyActualNode, getSourceSection(), getFrom(), getTo());
     replace(node);
     // create loopIndex in new context...
   }
@@ -96,7 +98,7 @@ public abstract class IntDownToDoInlinedLiteralsNode extends ExpressionNode {
       final SplitterForLexicallyEmbeddedCode inliner) {
     FrameSlot inlinedLoopIdx = inliner.getLocalFrameSlot(loopIndex.getIdentifier());
     replace(IntDownToDoInlinedLiteralsNodeGen.create(body, inlinedLoopIdx,
-        bodyActualNode, getSourceSection(), getFrom(), getTo()));
+        loopIndexSource, bodyActualNode, getSourceSection(), getFrom(), getTo()));
   }
 
   @Override

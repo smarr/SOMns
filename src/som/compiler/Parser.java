@@ -268,7 +268,7 @@ public final class Parser {
       messagePattern(primaryFactory);
     } else {
       // in the standard case, the primary factory method is #new
-      primaryFactory.addArgumentIfAbsent("self");
+      primaryFactory.addArgumentIfAbsent("self", getEmptySource());
       primaryFactory.setSignature(Symbols.NEW);
     }
     mxnBuilder.setupInitializerBasedOnPrimaryFactory(getSource(coord));
@@ -293,9 +293,9 @@ public final class Parser {
 
   private void defaultSuperclassAndBody(final MixinBuilder mxnBuilder)
       throws ParseError, MixinDefinitionError {
-    SourceSection source = getSource(getCoordinate());
+    SourceSection source = getEmptySource();
     MethodBuilder def = mxnBuilder.getClassInstantiationMethodBuilder();
-    ExpressionNode selfRead = def.getSelfRead(null);
+    ExpressionNode selfRead = def.getSelfRead(source);
     ExpressionNode superClass = createMessageSend(Symbols.OBJECT,
         new ExpressionNode[] {selfRead}, false, source);
     mxnBuilder.setSuperClassResolution(superClass);
@@ -344,7 +344,7 @@ public final class Parser {
     if (sym != NewTerm && sym != MixinOperator && sym != Period) {
       mixinFactorySend = (AbstractUninitializedMessageSendNode) messages(
           mxnBuilder.getInitializerMethodBuilder(),
-          mxnBuilder.getInitializerMethodBuilder().getSelfRead(null));
+          mxnBuilder.getInitializerMethodBuilder().getSelfRead(getSource(coord)));
 
       uniqueInitName = MixinBuilder.getInitializerName(
           mixinFactorySend.getSelector(), mixinId);
@@ -354,7 +354,7 @@ public final class Parser {
       uniqueInitName = MixinBuilder.getInitializerName(Symbols.NEW, mixinId);
       mixinFactorySend = (AbstractUninitializedMessageSendNode)
           SNodeFactory.createMessageSend(uniqueInitName,
-              new ExpressionNode[] {mxnBuilder.getInitializerMethodBuilder().getSelfRead(null)},
+              new ExpressionNode[] {mxnBuilder.getInitializerMethodBuilder().getSelfRead(getSource(coord))},
               false, getSource(coord));
     }
 
@@ -375,7 +375,7 @@ public final class Parser {
       // used to create the proper initialize method, on which we rely here.
       ExpressionNode superFactorySend = messages(
           mxnBuilder.getInitializerMethodBuilder(),
-          mxnBuilder.getInitializerMethodBuilder().getSuperReadNode(null));
+          mxnBuilder.getInitializerMethodBuilder().getSuperReadNode(getEmptySource()));
 
       SSymbol initializerName = MixinBuilder.getInitializerName(
           ((AbstractUninitializedMessageSendNode) superFactorySend).getSelector());
@@ -388,7 +388,7 @@ public final class Parser {
     } else {
       mxnBuilder.setSuperclassFactorySend(
           mxnBuilder.createStandardSuperFactorySend(
-              getSource(getCoordinate())), true);
+              getEmptySource()), true);
     }
   }
 
@@ -685,6 +685,12 @@ public final class Parser {
         "%(expected)s, but found %(found)s", ss, this);
   }
 
+  SourceSection getEmptySource() {
+    SourceCoordinate coord = getCoordinate();
+    return source.createSection("method", coord.startLine, coord.startColumn,
+        coord.charIndex, 0);
+  }
+
   SourceSection getSource(final SourceCoordinate coord) {
     assert lexer.getNumberOfCharactersRead() - coord.charIndex >= 0;
     SourceSection ss = source.createSection("method", coord.startLine,
@@ -711,7 +717,7 @@ public final class Parser {
   }
 
   private void messagePattern(final MethodBuilder builder) throws ParseError {
-    builder.addArgumentIfAbsent("self");
+    builder.addArgumentIfAbsent("self", getEmptySource());
     switch (sym) {
       case Identifier:
         unaryPattern(builder);
@@ -731,14 +737,16 @@ public final class Parser {
 
   private void binaryPattern(final MethodBuilder builder) throws ParseError {
     builder.setSignature(binarySelector());
-    builder.addArgumentIfAbsent(argument());
+    SourceCoordinate coord = getCoordinate();
+    builder.addArgumentIfAbsent(argument(), getSource(coord));
   }
 
   private void keywordPattern(final MethodBuilder builder) throws ParseError {
     StringBuilder kw = new StringBuilder();
     do {
       kw.append(keyword());
-      builder.addArgumentIfAbsent(argument());
+      SourceCoordinate coord = getCoordinate();
+      builder.addArgumentIfAbsent(argument(), getSource(coord));
     }
     while (sym == Keyword);
 
@@ -812,8 +820,10 @@ public final class Parser {
   private void locals(final MethodBuilder builder) throws ParseError {
     while (sym == Identifier) {
       SourceCoordinate coord = getCoordinate();
-      builder.addLocalIfAbsent(identifier());
-      VM.reportSyntaxElement(LocalVariableTag.class, getSource(coord));
+      String id = identifier();
+      SourceSection source = getSource(coord);
+      builder.addLocalIfAbsent(id, source);
+      VM.reportSyntaxElement(LocalVariableTag.class, source);
     }
   }
 
@@ -833,7 +843,7 @@ public final class Parser {
       } else if (sym == EndTerm) {
         // the end of the method has been found (EndTerm) - make it implicitly
         // return "self"
-        ExpressionNode self = builder.getSelfRead(getSource(getCoordinate()));
+        ExpressionNode self = builder.getSelfRead(getEmptySource());
         expressions.add(self);
         return createSequence(expressions, getSource(coord));
       }
@@ -907,7 +917,7 @@ public final class Parser {
       throws ParseError, MixinDefinitionError {
     ExpressionNode exp;
     if (sym == Keyword) {
-      exp = keywordMessage(builder, builder.getSelfRead(null), false, false);
+      exp = keywordMessage(builder, builder.getSelfRead(getEmptySource()), false, false);
     } else {
       exp = primary(builder);
     }
@@ -1107,7 +1117,6 @@ public final class Parser {
     String msgStr = kw.toString();
     SSymbol msg = symbolFor(msgStr);
 
-
     if (!eventualSend) {
       ExpressionNode node = inlineControlStructureIfPossible(builder, arguments,
           msgStr, msg.getNumberOfSignatureArguments(), getSource(coord));
@@ -1174,15 +1183,15 @@ public final class Parser {
             source);
       } else if ("to:do:".equals(msgStr) &&
           arguments.get(2) instanceof LiteralNode) {
-        Local loopIdx = builder.addLocal("i:" + source.getCharIndex());
+        Local loopIdx = builder.addLocal("i:" + source.getCharIndex(), source);
         ExpressionNode inlinedBody = ((LiteralNode) arguments.get(2)).inline(builder, loopIdx);
-        return IntToDoInlinedLiteralsNodeGen.create(inlinedBody, loopIdx.getSlot(),
+        return IntToDoInlinedLiteralsNodeGen.create(inlinedBody, loopIdx.getSlot(), loopIdx.source,
             arguments.get(2), source, arguments.get(0), arguments.get(1));
       } else if ("downTo:do:".equals(msgStr) &&
           arguments.get(2) instanceof LiteralNode) {
-        Local loopIdx = builder.addLocal("i:" + source.getCharIndex());
+        Local loopIdx = builder.addLocal("i:" + source.getCharIndex(), source);
         ExpressionNode inlinedBody = ((LiteralNode) arguments.get(2)).inline(builder, loopIdx);
-        return IntDownToDoInlinedLiteralsNodeGen.create(inlinedBody, loopIdx.getSlot(),
+        return IntDownToDoInlinedLiteralsNodeGen.create(inlinedBody, loopIdx.getSlot(), loopIdx.source,
             arguments.get(2), source, arguments.get(0), arguments.get(1));
       }
     }
@@ -1323,7 +1332,7 @@ public final class Parser {
     expect(NewBlock, DelimiterOpeningTag.class);
 
 
-    builder.addArgumentIfAbsent("$blockSelf");
+    builder.addArgumentIfAbsent("$blockSelf", getEmptySource());
 
     if (sym == Colon) {
       blockPattern(builder);
@@ -1354,7 +1363,8 @@ public final class Parser {
   private void blockArguments(final MethodBuilder builder) throws ParseError {
     do {
       expect(Colon, KeywordTag.class);
-      builder.addArgumentIfAbsent(argument());
+      SourceCoordinate coord = getCoordinate();
+      builder.addArgumentIfAbsent(argument(), getSource(coord));
     }
     while (sym == Colon);
   }

@@ -14,9 +14,11 @@ import com.oracle.truffle.api.source.SourceSection;
 
 public abstract class Variable {
   public final String name;
+  public final SourceSection source;
 
-  Variable(final String name) {
-    this.name = name;
+  Variable(final String name, final SourceSection source) {
+    this.name   = name;
+    this.source = source;
   }
 
   @Override
@@ -44,8 +46,8 @@ public abstract class Variable {
   public static final class Argument extends Variable {
     public final int index;
 
-    Argument(final String name, final int index) {
-      super(name);
+    Argument(final String name, final int index, final SourceSection source) {
+      super(name, source);
       this.index = index;
     }
 
@@ -64,8 +66,8 @@ public abstract class Variable {
   public static final class Local extends Variable {
     private final FrameSlot slot;
 
-    Local(final String name, final FrameSlot slot) {
-      super(name);
+    Local(final String name, final FrameSlot slot, final SourceSection source) {
+      super(name, source);
       this.slot = slot;
     }
 
@@ -85,7 +87,7 @@ public abstract class Variable {
     }
 
     public Local cloneForInlining(final FrameSlot inlinedSlot) {
-      Local local = new Local(name, inlinedSlot);
+      Local local = new Local(name, inlinedSlot, source);
       return local;
     }
 
