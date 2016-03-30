@@ -761,7 +761,7 @@ public final class Parser {
   }
 
   private SSymbol binarySelector() throws ParseError {
-    String s = new String(text);
+    String s = text;
 
     // Checkstyle: stop
     if (accept(Or, null)) {
@@ -780,13 +780,13 @@ public final class Parser {
   }
 
   private String identifier() throws ParseError {
-    String s = new String(text);
+    String s = text;
     expect(Identifier, null);
     return s;
   }
 
   private String keyword() throws ParseError {
-    String s = new String(text);
+    String s = text;
     expect(Keyword, null);
 
     return s;
@@ -1305,14 +1305,14 @@ public final class Parser {
   }
 
   private SSymbol keywordSelector() throws ParseError {
-    String s = new String(text);
+    String s = text;
     expectOneOf(keywordSelectorSyms, null);
     SSymbol symb = symbolFor(s);
     return symb;
   }
 
   private String string() throws ParseError {
-    String s = new String(text);
+    String s = text;
     expect(STString, null);
     return s;
   }
