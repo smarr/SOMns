@@ -1,0 +1,538 @@
+<html>
+<head>
+  <!-- Latest compiled and minified CSS -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous" />
+  <!-- Optional theme -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+ 
+  <!-- Latest compiled and minified JavaScript -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+
+  <!-- Debugger Icons -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css" />
+
+  <!-- use d3 for some visualization -->
+<!--   <script src="//d3js.org/d3.v3.min.js"></script>
+  <script src="//d3js.org/d3.v3.js"></script>-->
+
+
+  <title>Dynamic Metrics</title>
+  <script>
+  var data = {};
+
+  function countNumberOfLines(str) {
+    var cnt = 1;
+    for (var i = 0; i < str.length; i++) {
+      if (str[i] == "\n") {
+        cnt += 1;
+      }
+    }
+    return cnt;
+  }
+  
+  function loadAndProcessFile(f) {
+    var reader = new FileReader();
+    reader.onload = (function(theFile) {
+
+      function receivedFile(e) {
+        var o = JSON.parse(e.target.result);
+        data[theFile.name] = o;
+        processData(o);
+      }
+      
+      return receivedFile;
+    })(f);
+    
+    reader.readAsText(f);
+  }
+  
+  function handleFileSelect(evt) {
+    evt.stopPropagation();
+    evt.preventDefault();
+
+    var files = evt.dataTransfer.files; // FileList object.
+
+    // files is a FileList of File objects. List some properties.
+    var output = [];
+    for (var i = 0; i < files.length; i++) {
+      loadAndProcessFile(files[i]);
+    }
+  }
+  
+  function sourceToArray(source) {
+    arr = new Array(source.length);
+    for (var i = 0; i < source.length; i++) {
+      arr[i] = source[i];
+    }
+    return arr;
+  }
+  
+  function Begin(section) {
+    this.section = section;
+    this.type    = Begin;
+  }
+  Begin.prototype.toString = function () {
+    return '<span id="' + this.section.id + '" class="' + this.section.tags.join(" ") + '">';
+  };
+  function End(section) {
+    this.section = section;
+    this.type    = End;
+  }
+  End.prototype.toString = function () {
+    return '</span>';
+  };
+  function Annotation(char) {
+    this.char   = char;
+    this.before = [];
+    this.after  = [];
+  }
+  Annotation.prototype.toString = function() {
+    this.before.sort(function (a, b) {
+      if (a.section.id == "ss-34") {  // value <> v
+        var oo = 9;
+      }
+      
+      if (a.section.type != b.section.type) {
+        if (a.section.type == Begin) {
+          return -1;
+        } else {
+          return 1;
+        }
+      }
+
+      if (a.section.length == b.section.length) {
+        return 0;
+      }
+
+      if (a.section.length < b.section.length) {
+        return (a.section.type == Begin) ? 1 : -1;
+      } else {
+        return (a.section.type == Begin) ? -1 : 1;
+      }
+    });
+    
+    var result = this.before.join("");
+    result += this.char;
+    result += this.after.join("");
+    return result;
+  };
+
+  function ensureItIsAnnotation(arr, idx) {
+    if (!(arr[idx] instanceof Annotation)) {
+      arr[idx] = new Annotation(arr[idx]);
+    }
+    return arr[idx];
+  }
+  
+  function annotateArray(arr, sourceId, sections) {
+    for (var sId in sections) {
+      var s = sections[sId];
+      if (s.sourceId == sourceId) {
+        var start = ensureItIsAnnotation(arr, s.firstIndex),
+            end   = ensureItIsAnnotation(arr, s.firstIndex + s.length);
+        start.before.push(new Begin(s));
+        end.before.push(new End(s));
+      }
+    }
+  }
+  
+  function arrayToString(arr) {
+    var result = "";
+    for (var i = 0; i < arr.length; i++) {
+      result += arr[i].toString();
+    }
+    return result;
+  }
+  
+  function nodeFromTemplate(tplId) {
+    var tpl = document.getElementById(tplId);
+    var result = tpl.cloneNode(true);
+    result.removeAttribute("id");
+    return result;
+  }
+  
+  function createLineNumbers(cnt) {
+    var result = "1";
+    for (var i = 2; i <= cnt; i += 1) {
+      result = result + "\n" + i
+    }
+    return result;
+  }
+
+  function showSource(s, sections, first) {
+    var annotationArray = sourceToArray(s.sourceText);
+    annotateArray(annotationArray, s.id, sections);
+
+    tabListEntry = nodeFromTemplate("tab-list-entry");
+    if (first) {
+      $(tabListEntry).addClass("active");
+    }
+    var aElem = $(tabListEntry).find("a");
+    aElem.attr("href", "#" + s.id);
+    aElem.text(s.shortName);
+    $("#tabs").append(tabListEntry);
+
+
+    newFileElement = nodeFromTemplate("file");
+    newFileElement.setAttribute("id", s.id);
+    newFileElement.getElementsByClassName("line-numbers")[0].innerHTML = createLineNumbers(countNumberOfLines(s.sourceText));
+    newFileElement.getElementsByClassName("source-file")[0].innerHTML = arrayToString(annotationArray);
+
+    if (first) {
+      $(newFileElement).addClass("active");
+    }
+    
+    files = document.getElementById("files");
+    files.appendChild(newFileElement);
+  }
+  
+  function showInvocationProfile(profileData, rootSpan) {
+    if (profileData.length < 1) {
+      return;
+    }
+    
+    var profiles = nodeFromTemplate("invocation-profiles");
+    
+    for (var i = 0; i < profileData.length; i++) {
+      var profile = nodeFromTemplate("invocation-profile");
+      profile.getElementsByClassName("counter")[0].textContent = profileData[i].invocations;
+      profile.getElementsByClassName("types")[0].textContent = profileData[i].somTypes.join(", ");
+      profiles.appendChild(profile);
+    }
+    
+    var html = $(profiles).html();
+
+//     rootSpan.insertBefore(profiles, rootSpan.firstChild);
+    $(rootSpan).attr("data-toggle", "popover");
+    $(rootSpan).attr("data-trigger", "focus hover");
+    $(rootSpan).attr("title", "Invocation Profile");
+    $(rootSpan).attr("data-content", html);
+    $(rootSpan).attr("data-html", "true");
+    $(rootSpan).attr("data-placement", "auto top");
+    $(rootSpan).popover();
+  }
+
+  var accessProfiles = new Array(),
+    maxAccessCount = -1;
+
+  function showAccessProfile(profileData, rootSpan) {
+    if (profileData.count < 1) {
+      return;
+    }
+
+    $(rootSpan).attr("data-toggle", "popover");
+    $(rootSpan).attr("data-trigger", "focus hover");
+//     $(rootSpan).attr("title", "");
+    $(rootSpan).attr("data-content", "Accesses: " + profileData.count);
+    $(rootSpan).attr("data-placement", "auto top");
+    $(rootSpan).popover();
+
+    // collect data for histogram of variable accesses
+    maxAccessCount = Math.max(maxAccessCount, profileData.count);
+    profileData.spanId = rootSpan.id;
+    accessProfiles.push(profileData);
+  }
+
+  function showHistogramOfAccess() {
+    var numBins = 6,
+      binSize = Math.ceil(Math.log(maxAccessCount) / numBins)
+      bins = new Array(numBins);
+    bins.fill(0);
+    
+    accessProfiles.forEach(function(profileData) {
+      var bin = Math.floor(Math.log(profileData.count) / binSize);
+      bins[bin] += 1;
+      $("#" + profileData.spanId).addClass("bucket-" + bin);
+    });
+
+    // generateGraph();
+  }
+
+  function generateGraph() {
+    // A formatter for counts.
+    var formatCount = d3.format(",.0f");
+    var margin = {top: 10, right: 30, bottom: 30, left: 30},
+        width = 960 - margin.left - margin.right,
+        height = 500 - margin.top - margin.bottom;
+
+    var x = d3.scale.linear()
+      .domain([0, d3.max(accessProfiles, function(profileData) { return profileData.count; })])
+      .range([0, width]);
+    // Generate a histogram using 10 uniformly-spaced bins.
+    var hist = d3.layout.histogram()
+        .bins(10)
+        .value(function(profileData) { return profileData.count; });
+    var data = hist(accessProfiles);
+
+    var y = d3.scale.linear()
+        .domain([0, d3.max(data, function(d) { return d.y; })])
+        .range([height, 0]);
+
+    var xAxis = d3.svg.axis()
+        .scale(x)
+        .orient("bottom");
+
+    var svg = d3.select("body").append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    var bar = svg.selectAll(".bar")
+        .data(data)
+        .enter().append("g")
+        .attr("class", "bar")
+        .attr("transform", function(d) { return "translate(" + x(d.x) + "," + y(d.y) + ")"; });
+    bar.append("rect")
+        .attr("x", 1)
+        .attr("width", x(data[0].dx) - 1)
+        .attr("height", function(d) { return height - y(d.y); });
+    bar.append("text")
+        .attr("dy", ".75em")
+        .attr("y", 6)
+        .attr("x", x(data[0].dx) / 2)
+        .attr("text-anchor", "middle")
+        .text(function(d) { return formatCount(d.y); });
+    svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis);
+  }
+  
+  function processData(o) {
+    var first = true;
+    for (var sId in o.sources) {
+      showSource(o.sources[sId], o.sections, first);
+      first = false;
+    };
+    
+    for (var ssId in o.sections) {
+      showSectionData(o.sections[ssId]);
+    };
+
+    showHistogramOfAccess();
+
+    // TODO: remove: activate Mandelbrot tab
+    $('.nav-tabs a[href="#s-2"]').tab('show');
+  }
+  
+  function showSectionData(section) {
+    if (section.data && section.data.methodInvocationProfile) {
+      showInvocationProfile(section.data.methodInvocationProfile,
+        document.getElementById(section.id));
+    }
+
+    if (section.data && (section.data.localReads != null || section.data.localWrites != null)) {
+      if (section.data.localReads != null && section.data.localWrites != null) {
+        throw "this is unexpected, adapt program";
+      }
+      showAccessProfile(section.data.localReads || section.data.localWrites,
+        document.getElementById(section.id));
+    }
+  }
+
+  function handleDragOver(evt) {
+    evt.stopPropagation();
+    evt.preventDefault();
+    evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
+  }
+
+  function init() {
+    // Init drag and drop
+    var fileDrop = document.getElementById('file-drop');
+    fileDrop.addEventListener('dragover', handleDragOver,   false);
+    fileDrop.addEventListener('drop',     handleFileSelect, false);
+  }
+  
+  function blobToFile(blob, name) {
+    blob.lastModifiedDate = new Date();
+    blob.name = name;
+    return blob;
+  }
+  
+  function getFileObjectFromPath(pathOrUrl, callback) {
+    var request = new XMLHttpRequest();
+    request.open("GET", pathOrUrl);
+    request.responseType = "blob";
+    request.addEventListener('load', function () {
+      callback(blobToFile(request.response, pathOrUrl));
+    });
+    request.send();
+  }  
+
+  function loadStandardFile() {
+    getFileObjectFromPath("highlight.json",
+      function(file) {
+        loadAndProcessFile(file);
+      });
+  }
+
+  var heatmapStyleNode = null;
+  function toggleHeatMap() {
+    if (heatmapStyleNode == null) {
+      heatmapStyleNode = $("#style-heatmap").detach();
+    } else {
+      $("#style-main").after(heatmapStyleNode);
+    }
+  }
+  
+  </script>
+  <style id="style-main">
+  #file-drop {
+    border: 5px #ccc dashed;
+    font-weight: bold;
+    width: 100%;
+    text-align: center;
+    font-family:sans-serif;
+  }
+  
+  #templates { display: none; }
+
+  .filename  { font-family: sans-serif; }
+  .source-file, .line-numbers {
+    font-family: monospace;
+    white-space: pre;
+  }
+  .line-numbers {
+    float: left;
+    text-align: right;
+    padding-left: 0.5em;
+    color: #ccc;
+    padding-right: 0.5em;
+  }
+  
+  .invocation-profile  { font-size: 0.8em; display: block; }
+  .invocation-profiles { white-space: normal; }
+
+  /* Profiling Tags */
+  .ROOT {}
+  .ROOT::before { content: "\1F332";}
+  .ROOT::before + .invocation-profiles { display: block; } /* TODO: this does not work yet */
+  .UNSPECIFIED_INVOKE { font-style: italic; }
+  .CONTROL_FLOW_CONDITION { color: #800; }
+  .INVOKE_WITH_LOOKUP { font-style: italic; }
+  .NEW_OBJECT { font-weight: bold; }
+  .NEW_ARRAY { font-weight: bold; }
+  .FIELD_READ, .FIELD_WRITE { font-style: italic; color: #194a87; }
+  .ARRAY_READ, .ARRAY_WRITE { color: #f00; }
+
+
+  /* Syntax Highlighting 
+http://emilis.info/other/extended_tango/
+https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
+  */
+  .CommentTag { color: #555753; }
+  .KeywordTag { color: #725000; }
+  .IdentifierTag { color: #194a87; }
+  .LiteralTag { color: #4f9b00; }
+  .ArgumentTag, .LOCAL_ARG_READ { color: #194a87; }
+  .SYNTAX_LOCAL_VARIABLE, .LOCAL_VAR_READ, .LOCAL_VAR_WRITE { color: #194a87; }
+  </style>  
+  
+
+  <style id="style-heatmap">
+  .bucket-0 { background-color: #fff; }
+  .bucket-1 { background-color: #ffcccc; }
+  .bucket-2 { background-color: #f78787; }
+  .bucket-3 { background-color: #ef2929; }
+  .bucket-4 { background-color: #cc0000; filter: color: #fff; }
+  .bucket-5 { background-color: #a40000; filter: color: #fff; }
+  </style>
+</head>
+<body onload="init()">
+<div id="file-drop">
+  Drop JSON file produced by DynamicMetrics tool.
+  <a onclick="loadStandardFile()">Or, click here to load highlight.json</a>
+</div>
+
+<div id="content">
+<ul id="tabs" class="nav nav-tabs" data-tabs="tabs"></ul>
+<div id="files" class="tab-content"></div>
+</div>
+
+
+<div id="debugger" style="
+  border: 1px solid black; width: 150px; height: 100px;
+  position: absolute;
+  right:  0px;
+  top:   72px; /* 5.15em;*/
+  display: none;
+">
+<div>DEBUGGER</div>
+<script>
+function Debugger() {
+  this.socket = new WebSocket("ws://localhost:8887");
+}
+Debugger.prototype.resume = function() {
+  this.socket.send("resume");
+}
+Debugger.prototype.pause = function() {
+  this.socket.send("pause");
+}
+Debugger.prototype.stop = function() {
+  this.socket.send("stop");
+}
+
+Debugger.prototype.stepInto = function() {
+  this.socket.send({action:'stepInto'});
+}
+Debugger.prototype.stepOver = function() {
+  this.socket.send("stepOver");
+}
+Debugger.prototype.return = function() {
+  this.socket.send("return");
+}
+
+var dbg = new Debugger();
+</script>
+
+<div>
+<div class="btn-toolbar" role="toolbar" aria-label="Debugger Controls">
+  <div class="btn-group btn-group-xs" role="group" aria-label="Basic Controls">
+    <button type="button" class="btn btn-default" onclick="dbg.resume();"><i class="fa fa-play"></i></button>
+    <button type="button" class="btn btn-default" onclick="dbg.pause();"><i class="fa fa-pause"></i></button>
+    <button type="button" class="btn btn-default" onclick="dbg.stop();"><i class="fa fa-stop"></i></button>
+  </div>
+
+  <div class="btn-group btn-group-xs" role="group" aria-label="Stepping">
+    <button type="button" class="btn btn-default" onclick="dbg.stepInto();"><i class="fa fa-share" style="transform: rotate(90deg);"></i></button>
+    <button type="button" class="btn btn-default" onclick="dbg.stepOver();"><i class="fa fa-share"></i></button>
+    <button type="button" class="btn btn-default" onclick="dbg.return();"><i class="fa fa-reply" style="transform: scaleY(-1);"></i></button>
+  </div>
+</div>
+
+<div id="debugger-log">
+</div>
+
+<!-- Unicode Icons: incompletely supported
+  &#9654; &#9205; &#9208; &#9209; &#11175; &#10556; &#11154;-->
+</div>
+
+<div id="templates">
+  <li id="tab-list-entry"><a href="#tab-id" data-toggle="tab">Label</a></li>
+  <div id="file" class="tab-pane">
+    <div class="line-numbers"></div>
+    <div class="source-file"></div>
+  </div>
+
+  <div id="invocation-profiles" class="invocation-profiles"></div>
+  <span id="invocation-profile" class="invocation-profile">
+    <span class="counter"></span>:  <span class="types"></span>
+  </span>
+</div></div>
+
+
+<div id="tool-menu" style="
+  /* border: 1px solid black; height: 100px; */ width: 90px;
+  position: absolute;
+  right:  0px;
+  top:   72px; /* 5.15em;*/
+  /* display: none; */
+">
+<label><input type="checkbox" id="cb-heatmap" value="on" checked="checked" onchange="toggleHeatMap();"> Heat Map</label>
+</div>
+
+<!-- REM: https://github.com/earmbrust/bootstrap-window -->
+
+</body>
+</html>
