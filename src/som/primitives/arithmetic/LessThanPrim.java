@@ -6,11 +6,14 @@ import som.primitives.Primitive;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 @GenerateNodeFactory
 @Primitive({"int:lessThan:", "double:lessThan:"})
 public abstract class LessThanPrim extends ArithmeticPrim {
+  protected LessThanPrim(final SourceSection source) { super(source); }
+
   @Specialization
   public final boolean doLong(final long left, final long right) {
     return left < right;

@@ -14,6 +14,7 @@ import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.NodeChildren;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 public final class MethodPrims {
@@ -21,6 +22,8 @@ public final class MethodPrims {
   @GenerateNodeFactory
   @Primitive("methodName:")
   public abstract static class SignaturePrim extends UnaryExpressionNode {
+    public SignaturePrim(final SourceSection source) { super(source); }
+
     @Specialization
     public final SAbstractObject doSMethod(final SInvokable receiver) {
       return receiver.getSignature();
@@ -38,11 +41,11 @@ public final class MethodPrims {
     implements PreevaluatedExpression {
     @Child private InvokeOnCache callNode;
 
-    public InvokeOnPrim() {
-      super(null);
+    public InvokeOnPrim(final SourceSection source) {
+      super(source);
       callNode = InvokeOnCache.create();
     }
-    public InvokeOnPrim(final InvokeOnPrim node) { this(); }
+    public InvokeOnPrim(final InvokeOnPrim node) { this(node.sourceSection); }
 
     public abstract Object executeEvaluated(final VirtualFrame frame,
         final SInvokable receiver, final Object target, final SArray somArr);

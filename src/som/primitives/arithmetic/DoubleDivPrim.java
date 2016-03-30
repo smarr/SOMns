@@ -9,11 +9,14 @@ import som.vmobjects.SAbstractObject;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 @GenerateNodeFactory
 @Primitive({"int:divideDouble:", "double:divideDouble:"})
 public abstract class DoubleDivPrim extends ArithmeticPrim {
+  protected DoubleDivPrim(final SourceSection source) { super(source); }
+
   @Specialization
   public final double doDouble(final double left, final double right) {
     return left / right;

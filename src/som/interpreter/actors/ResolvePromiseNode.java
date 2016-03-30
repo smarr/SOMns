@@ -8,11 +8,13 @@ import som.primitives.Primitive;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 @GenerateNodeFactory
 @Primitive("actorsResolve:with:")
 public abstract class ResolvePromiseNode extends BinaryExpressionNode {
+  protected ResolvePromiseNode(final SourceSection source) { super(source); }
 
   public abstract Object executeEvaluated(final SResolver receiver, Object argument);
 

@@ -10,11 +10,14 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.ExactMath;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 @GenerateNodeFactory
 @Primitive({"int:add:", "double:add:"})
 public abstract class AdditionPrim extends ArithmeticPrim {
+  protected AdditionPrim(final SourceSection source) { super(source); }
+
   @Specialization(rewriteOn = ArithmeticException.class)
   public final long doLong(final long left, final long argument) {
     return ExactMath.addExact(left, argument);

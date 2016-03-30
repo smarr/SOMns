@@ -17,6 +17,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 public abstract class BlockPrims {
@@ -37,7 +38,7 @@ public abstract class BlockPrims {
   @GenerateNodeFactory
   @Primitive("blockRestart:")
   public abstract static class RestartPrim extends UnaryExpressionNode {
-    public RestartPrim() { super(null); }
+    public RestartPrim(final SourceSection source) { super(source); }
 
     @Specialization
     public SAbstractObject doSBlock(final SBlock receiver) {
@@ -53,6 +54,7 @@ public abstract class BlockPrims {
   @ImportStatic(BlockPrims.class)
   @Primitive("blockValue:")
   public abstract static class ValueNonePrim extends UnaryExpressionNode {
+    public ValueNonePrim(final SourceSection source) { super(source); }
 
     @Specialization
     public final boolean doBoolean(final boolean receiver) {
@@ -78,6 +80,7 @@ public abstract class BlockPrims {
   @ImportStatic(BlockPrims.class)
   @Primitive("blockValue:with:")
   public abstract static class ValueOnePrim extends BinaryExpressionNode {
+    protected ValueOnePrim(final SourceSection source) { super(source); }
 
     @Specialization(guards = "cached == receiver.getMethod()", limit = "CHAIN_LENGTH")
     public final Object doCachedBlock(final VirtualFrame frame,
@@ -99,6 +102,7 @@ public abstract class BlockPrims {
   @ImportStatic(BlockPrims.class)
   @Primitive("blockValue:with:with:")
   public abstract static class ValueTwoPrim extends TernaryExpressionNode {
+    public ValueTwoPrim(final SourceSection source) { super(source); }
 
     @Specialization(guards = "cached == receiver.getMethod()", limit = "CHAIN_LENGTH")
     public final Object doCachedBlock(final VirtualFrame frame,

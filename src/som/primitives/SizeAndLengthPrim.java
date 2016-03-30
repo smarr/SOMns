@@ -7,6 +7,7 @@ import som.vmobjects.SSymbol;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.profiles.ValueProfile;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 @GenerateNodeFactory
@@ -14,6 +15,8 @@ import com.oracle.truffle.api.profiles.ValueProfile;
 public abstract class SizeAndLengthPrim extends UnaryExpressionNode {
 
   private final ValueProfile storageType = ValueProfile.createClassProfile();
+
+  public SizeAndLengthPrim(final SourceSection source) { super(source); }
 
   @Specialization(guards = "receiver.isEmptyType()")
   public final long doEmptySArray(final SArray receiver) {

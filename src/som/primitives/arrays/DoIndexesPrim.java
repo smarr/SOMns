@@ -14,6 +14,7 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 @GenerateNodeFactory
@@ -21,10 +22,10 @@ public abstract class DoIndexesPrim extends BinaryExpressionNode {
   @Child protected BlockDispatchNode block;
   @Child protected SizeAndLengthPrim length;
 
-  public DoIndexesPrim() {
-    super(null);
+  public DoIndexesPrim(final SourceSection source) {
+    super(source);
     block = BlockDispatchNodeGen.create();
-    length = SizeAndLengthPrimFactory.create(null);
+    length = SizeAndLengthPrimFactory.create(null, null);
   }
 
   @Specialization

@@ -15,6 +15,7 @@ import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.profiles.ValueProfile;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 @GenerateNodeFactory
@@ -23,8 +24,8 @@ public abstract class DoPrim extends BinaryExpressionNode {
 
   @Child private BlockDispatchNode block;
 
-  public DoPrim() {
-    super(null);
+  public DoPrim(final SourceSection source) {
+    super(source);
     block = BlockDispatchNodeGen.create();
   }
 

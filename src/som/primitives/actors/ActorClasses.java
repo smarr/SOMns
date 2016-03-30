@@ -11,12 +11,15 @@ import som.vmobjects.SObject.SImmutableObject;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 public final class ActorClasses {
   @GenerateNodeFactory
   @Primitive("actorsFarReferenceClass:")
   public abstract static class SetFarReferenceClassPrim extends UnaryExpressionNode {
+    public SetFarReferenceClassPrim(final SourceSection source) { super(source); }
+
     @Specialization
     public final SClass setClass(final SClass value) {
       SFarReference.setSOMClass(value);
@@ -27,6 +30,8 @@ public final class ActorClasses {
   @GenerateNodeFactory
   @Primitive("actorsPromiseClass:")
   public abstract static class SetPromiseClassPrim extends UnaryExpressionNode {
+    public SetPromiseClassPrim(final SourceSection source) { super(source); }
+
     @Specialization
     public final SClass setClass(final SClass value) {
       SPromise.setSOMClass(value);
@@ -37,6 +42,8 @@ public final class ActorClasses {
   @GenerateNodeFactory
   @Primitive("actorsPairClass:")
   public abstract static class SetPairClassPrim extends UnaryExpressionNode {
+    public SetPairClassPrim(final SourceSection source) { super(source); }
+
     @Specialization
     public final SClass setClass(final SClass value) {
       SPromise.setPairClass(value);
@@ -47,6 +54,8 @@ public final class ActorClasses {
   @GenerateNodeFactory
   @Primitive("actorsResolverClass:")
   public abstract static class SetResolverClassPrim extends UnaryExpressionNode {
+    public SetResolverClassPrim(final SourceSection source) { super(source); }
+
     @Specialization
     public final SClass setClass(final SClass value) {
       SResolver.setSOMClass(value);
@@ -59,6 +68,8 @@ public final class ActorClasses {
   @GenerateNodeFactory
   @Primitive("actorsModule:")
   public abstract static class SetModulePrim extends UnaryExpressionNode {
+    public SetModulePrim(final SourceSection source) { super(source); }
+
     @Specialization
     public final SImmutableObject setClass(final SImmutableObject value) {
       ActorModule = value;

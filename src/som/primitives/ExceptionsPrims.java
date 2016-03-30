@@ -18,6 +18,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 public abstract class ExceptionsPrims {
@@ -33,6 +34,8 @@ public abstract class ExceptionsPrims {
       return Truffle.getRuntime().createDirectCallNode(
           block.getMethod().getCallTarget());
     }
+
+    public ExceptionDoOnPrim(final SourceSection source) { super(source); }
 
     public static final boolean sameBlock(final SBlock block, final SInvokable method) {
       return block.getMethod() == method;
@@ -78,6 +81,8 @@ public abstract class ExceptionsPrims {
   @GenerateNodeFactory
   @Primitive("signalException:")
   public abstract static class SignalPrim extends UnaryExpressionNode {
+    public SignalPrim(final SourceSection source) { super(source); }
+
     @Specialization
     public final Object doSignal(final SAbstractObject exceptionObject) {
       throw new SomException(exceptionObject);
@@ -90,6 +95,8 @@ public abstract class ExceptionsPrims {
 
     @Child protected BlockDispatchNode dispatchBody    = BlockDispatchNodeGen.create();
     @Child protected BlockDispatchNode dispatchHandler = BlockDispatchNodeGen.create();
+
+    protected EnsurePrim(final SourceSection source) { super(source); }
 
     @Specialization
     public final Object doException(final VirtualFrame frame, final SBlock body,

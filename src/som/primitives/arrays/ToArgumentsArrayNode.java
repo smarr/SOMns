@@ -11,6 +11,7 @@ import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.NodeChildren;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.profiles.ValueProfile;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 @NodeChildren({
@@ -19,7 +20,7 @@ import com.oracle.truffle.api.profiles.ValueProfile;
 public abstract class ToArgumentsArrayNode extends ExpressionNode {
   private final ValueProfile storageType = ValueProfile.createClassProfile();
 
-  public ToArgumentsArrayNode() { super(null); }
+  public ToArgumentsArrayNode() { super((SourceSection) null); }
 
   public static final boolean isNull(final Object somArray) {
     return somArray == null;

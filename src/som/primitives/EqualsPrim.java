@@ -12,12 +12,15 @@ import som.vmobjects.SSymbol;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 @GenerateNodeFactory
 @ImportStatic(Nil.class)
 @Primitive({"value:sameAs:", "int:equals:", "double:equals:", "string:equals:"})
 public abstract class EqualsPrim extends BinaryExpressionNode {
+  protected EqualsPrim(final SourceSection source) { super(source); }
+
   @Specialization
   public final boolean doBoolean(final boolean left, final boolean right) {
     return left == right;

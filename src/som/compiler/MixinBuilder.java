@@ -398,7 +398,8 @@ public final class MixinBuilder {
     // first create new Object
 
     ExpressionNode newObject = NewObjectPrimNodeGen.create(
-        mixinId, primaryFactoryMethod.getSelfRead(primaryFactorySource));
+        primaryFactorySource, mixinId,
+        primaryFactoryMethod.getSelfRead(primaryFactorySource));
 
     List<ExpressionNode> args = createPrimaryFactoryArgumentRead(newObject);
 
@@ -437,7 +438,8 @@ public final class MixinBuilder {
       // contract for initializers
       // and we need to make sure that a potential Value class verifies
       // that it actually is a value
-      allExprs.add(IsValueCheckNode.create(initializer.getSelfRead(initializerSource)));
+      allExprs.add(IsValueCheckNode.create(
+          initializerSource, initializer.getSelfRead(initializerSource)));
     }
 
     ExpressionNode body = SNodeFactory.createSequence(allExprs, initializerSource);

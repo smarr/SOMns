@@ -82,6 +82,8 @@ import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.dsl.GeneratedBy;
 import com.oracle.truffle.api.dsl.NodeFactory;
+import com.oracle.truffle.api.source.Source;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 public final class ObjectSystem {
@@ -138,42 +140,44 @@ public final class ObjectSystem {
     // ignore the implicit vmMirror argument
     final int numArgs = signature.getNumberOfSignatureArguments() - 1;
 
+    Source s = Source.fromNamedText("primitive", factory.getClass().getSimpleName());
     MethodBuilder prim = new MethodBuilder(true);
     ExpressionNode[] args = new ExpressionNode[numArgs];
 
     for (int i = 0; i < numArgs; i++) {
       // we do not pass the vmMirror, makes it easier to use the same primitives
       // as replacements on the node level
-      args[i] = new LocalArgumentReadNode(i + 1, null);
+      args[i] = new LocalArgumentReadNode(i + 1, s.createSection(factory.getClass().getSimpleName(), 1));
     }
 
     ExpressionNode primNode;
+    SourceSection source = s.createSection(factory.getClass().getSimpleName(), 1);
     switch (numArgs) {
       case 1:
-        primNode = factory.createNode(args[0]);
+        primNode = factory.createNode(source, args[0]);
         break;
       case 2:
         // HACK for node class where we use `executeWith`
         if (factory == PutAllNodeFactory.getInstance()) {
-          primNode = factory.createNode(args[0], args[1],
-              SizeAndLengthPrimFactory.create(null));
+          primNode = factory.createNode(source, args[0], args[1],
+              SizeAndLengthPrimFactory.create(null, null));
 //        } else if (factory == SpawnWithArgsPrimFactory.getInstance()) {
 //          primNode = factory.createNode(args[0], args[1],
 //              ToArgumentsArrayNodeGen.create(null, null));
         } else if (factory == CreateActorPrimFactory.getInstance()) {
-          primNode = factory.createNode(args[0], args[1],
-              IsValueFactory.create(null));
+          primNode = factory.createNode(source, args[0], args[1],
+              IsValueFactory.create(null, null));
         } else {
-          primNode = factory.createNode(args[0], args[1]);
+          primNode = factory.createNode(source, args[0], args[1]);
         }
         break;
       case 3:
         // HACK for node class where we use `executeWith`
         if (factory == InvokeOnPrimFactory.getInstance()) {
-          primNode = factory.createNode(args[0], args[1], args[2],
+          primNode = factory.createNode(source, args[0], args[1], args[2],
               ToArgumentsArrayNodeGen.create(null, null));
         } else {
-          primNode = factory.createNode(args[0], args[1], args[2]);
+          primNode = factory.createNode(source, args[0], args[1], args[2]);
         }
         break;
       case 4:

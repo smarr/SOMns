@@ -24,6 +24,7 @@ import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 public final class ObjectPrims {
@@ -31,6 +32,8 @@ public final class ObjectPrims {
   @GenerateNodeFactory
   @Primitive("objClassName:")
   public abstract static class ObjectClassNamePrim extends UnaryExpressionNode {
+    public ObjectClassNamePrim(final SourceSection source) { super(source); }
+
     @Specialization
     public final SSymbol getName(final Object obj) {
       VM.thisMethodNeedsToBeOptimized("Not yet optimized, need add specializations to remove Types.getClassOf");
@@ -41,7 +44,8 @@ public final class ObjectPrims {
   @GenerateNodeFactory
   @Primitive("halt:")
   public abstract static class HaltPrim extends UnaryExpressionNode {
-    public HaltPrim() { super(null); }
+    public HaltPrim(final SourceSection source) { super(source); }
+
     @Specialization
     public final Object doSAbstractObject(final Object receiver) {
       VM.errorPrintln("BREAKPOINT");
@@ -52,6 +56,8 @@ public final class ObjectPrims {
   @GenerateNodeFactory
   @Primitive("objClass:")
   public abstract static class ClassPrim extends UnaryExpressionNode {
+    public ClassPrim(final SourceSection source) { super(source); }
+
     @Specialization
     public final SClass doSAbstractObject(final SAbstractObject receiver) {
       return receiver.getSOMClass();
@@ -65,6 +71,8 @@ public final class ObjectPrims {
   }
 
   public abstract static class IsNilNode extends UnaryExpressionNode {
+    public IsNilNode(final SourceSection source) { super(source); }
+
     @Specialization
     public final boolean isNil(final Object receiver) {
       return receiver == Nil.nilObject;
@@ -72,6 +80,8 @@ public final class ObjectPrims {
   }
 
   public abstract static class NotNilNode extends UnaryExpressionNode {
+    public NotNilNode(final SourceSection source) { super(source); }
+
     @Specialization
     public final boolean isNotNil(final Object receiver) {
       return receiver != Nil.nilObject;
@@ -85,10 +95,12 @@ public final class ObjectPrims {
   @Primitive("objIsValue:")
   @ImportStatic(Nil.class)
   public abstract static class IsValue extends UnaryExpressionNode {
+    public IsValue(final SourceSection source) { super(source); }
+
     public abstract boolean executeEvaluated(Object rcvr);
 
     public static IsValue createSubNode() {
-      return IsValueFactory.create(null);
+      return IsValueFactory.create(null, null);
     }
 
     @Specialization

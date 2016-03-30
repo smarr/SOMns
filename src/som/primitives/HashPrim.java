@@ -6,11 +6,14 @@ import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 @GenerateNodeFactory
 @Primitive({"objHashcode:", "stringHashcode:"})
 public abstract class HashPrim extends UnaryExpressionNode {
+  public HashPrim(final SourceSection source) { super(source); }
+
   @Specialization
   public final long doString(final String receiver) {
     return receiver.hashCode();

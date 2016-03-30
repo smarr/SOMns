@@ -11,6 +11,7 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 public abstract class WhileCache extends BinaryExpressionNode {
@@ -19,7 +20,8 @@ public abstract class WhileCache extends BinaryExpressionNode {
 
   protected final boolean predicateBool;
 
-  public WhileCache(final boolean predicateBool) {
+  public WhileCache(final SourceSection source, final boolean predicateBool) {
+    super(source);
     this.predicateBool = predicateBool;
   }
 

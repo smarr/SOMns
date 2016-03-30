@@ -9,6 +9,7 @@ import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 public class StringPrims {
@@ -16,6 +17,8 @@ public class StringPrims {
   @GenerateNodeFactory
   @Primitive("string:concat:")
   public abstract static class ConcatPrim extends BinaryExpressionNode {
+    protected ConcatPrim(final SourceSection source) { super(source); }
+
     @Specialization
     public final String doString(final String receiver, final String argument) {
       return receiver + argument;
@@ -40,6 +43,8 @@ public class StringPrims {
   @GenerateNodeFactory
   @Primitive("stringAsSymbol:")
   public abstract static class AsSymbolPrim extends UnaryExpressionNode {
+    public AsSymbolPrim(final SourceSection source) { super(source); }
+
     @Specialization
     public final SAbstractObject doString(final String receiver) {
       return Symbols.symbolFor(receiver);
@@ -54,6 +59,8 @@ public class StringPrims {
   @GenerateNodeFactory
   @Primitive("string:substringFrom:to:")
   public abstract static class SubstringPrim extends TernaryExpressionNode {
+    public SubstringPrim(final SourceSection source) { super(source); }
+
     @Specialization
     public final String doString(final String receiver, final long start,
         final long end) {

@@ -16,6 +16,7 @@ import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 @GenerateNodeFactory
@@ -24,8 +25,8 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 public abstract class PutAllNode extends BinaryExpressionNode {
   @Child protected BlockDispatchNode block;
 
-  public PutAllNode() {
-    super(null);
+  public PutAllNode(final SourceSection source) {
+    super(source);
     block = BlockDispatchNodeGen.create();
   }
 

@@ -12,6 +12,7 @@ import som.vmobjects.SSymbol;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.profiles.BranchProfile;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 public abstract class IntegerPrims {
@@ -19,6 +20,8 @@ public abstract class IntegerPrims {
   @GenerateNodeFactory
   @Primitive("intAs32BitSignedValue:")
   public abstract static class As32BitSignedValue extends UnaryExpressionNode {
+    public As32BitSignedValue(final SourceSection source) { super(source); }
+
     @Specialization
     public final long doLong(final long receiver) {
       return (int) receiver;
@@ -28,6 +31,8 @@ public abstract class IntegerPrims {
   @GenerateNodeFactory
   @Primitive("intAs32BitUnsignedValue:")
   public abstract static class As32BitUnsignedValue extends UnaryExpressionNode {
+    public As32BitUnsignedValue(final SourceSection source) { super(source); }
+
     @Specialization
     public final long doLong(final long receiver) {
       return Integer.toUnsignedLong((int) receiver);
@@ -37,6 +42,7 @@ public abstract class IntegerPrims {
   @GenerateNodeFactory
   @Primitive("intFromString:")
   public abstract static class FromStringPrim extends UnaryExpressionNode {
+    public FromStringPrim(final SourceSection source) { super(source); }
 
     @Specialization
     public final Object doSClass(final String argument) {
@@ -52,6 +58,8 @@ public abstract class IntegerPrims {
   @GenerateNodeFactory
   @Primitive("int:leftShift:")
   public abstract static class LeftShiftPrim extends ArithmeticPrim {
+    protected LeftShiftPrim(final SourceSection source) { super(source); }
+
     private final BranchProfile overflow = BranchProfile.create();
 
     @Specialization(rewriteOn = ArithmeticException.class)
@@ -78,6 +86,8 @@ public abstract class IntegerPrims {
   @GenerateNodeFactory
   @Primitive("int:unsignedRightShift:")
   public abstract static class UnsignedRightShiftPrim extends ArithmeticPrim {
+    protected UnsignedRightShiftPrim(final SourceSection source) { super(source); }
+
     @Specialization
     public final long doLong(final long receiver, final long right) {
       return receiver >>> right;
@@ -85,6 +95,8 @@ public abstract class IntegerPrims {
   }
 
   public abstract static class MaxIntPrim extends ArithmeticPrim {
+    protected MaxIntPrim(final SourceSection source) { super(source); }
+
     @Specialization
     public final long doLong(final long receiver, final long right) {
       return Math.max(receiver, right);
@@ -92,6 +104,8 @@ public abstract class IntegerPrims {
   }
 
   public abstract static class ToPrim extends BinaryExpressionNode {
+    protected ToPrim(final SourceSection source) { super(source); }
+
     @Specialization
     public final SMutableArray doLong(final long receiver, final long right) {
       int cnt = (int) right - (int) receiver + 1;
@@ -104,6 +118,8 @@ public abstract class IntegerPrims {
   }
 
   public abstract static class AbsPrim extends UnaryExpressionNode {
+    public AbsPrim(final SourceSection source) { super(source); }
+
     @Specialization
     public final long doLong(final long receiver) {
       return Math.abs(receiver);

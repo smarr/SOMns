@@ -29,6 +29,7 @@ import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 public final class PromisePrims {
@@ -42,6 +43,8 @@ public final class PromisePrims {
           withAndFactory, AccessModifier.PUBLIC);
       return Truffle.getRuntime().createDirectCallNode(((SInvokable) disp).getCallTarget());
     }
+
+    public CreatePromisePairPrim(final SourceSection source) { super(source); }
 
     @Specialization
     public final SImmutableObject createPromisePair(final VirtualFrame frame,
@@ -65,6 +68,10 @@ public final class PromisePrims {
   @Primitive("actorsWhen:resolved:")
   public abstract static class WhenResolvedPrim extends BinaryExpressionNode {
     @Child protected RegisterWhenResolved registerNode = new RegisterWhenResolved();
+
+    protected WhenResolvedPrim(final SourceSection source) {
+      super(source);
+    }
 
     @Specialization(guards = "blockMethod == callback.getMethod()", limit = "10")
     public final SPromise whenResolved(final SPromise promise,
@@ -99,7 +106,8 @@ public final class PromisePrims {
   // TODO: should we add this for the literal case? which should be very common?
   public abstract static class WhenResolvedLiteralBlockNode extends BinaryExpressionNode {
     private final RootCallTarget blockCallTarget;
-    public WhenResolvedLiteralBlockNode(final BlockNode blockNode) {
+    public WhenResolvedLiteralBlockNode(final SourceSection source, final BlockNode blockNode) {
+      super(source);
       blockCallTarget = blockNode.getBlockMethod().getCallTarget();
     }
   }
@@ -109,6 +117,8 @@ public final class PromisePrims {
   @ImportStatic(PromisePrims.class)
   @Primitive("actorsFor:onError:")
   public abstract static class OnErrorPrim extends BinaryExpressionNode {
+    protected OnErrorPrim(final SourceSection source) { super(source); }
+
     @Specialization(guards = "blockMethod == callback.getMethod()")
     public final SPromise onError(final SPromise promise,
         final SBlock callback,
@@ -123,6 +133,8 @@ public final class PromisePrims {
   @ImportStatic(PromisePrims.class)
   @Primitive("actorsFor:on:do:")
   public abstract static class OnExceptionDoPrim extends TernaryExpressionNode {
+    public OnExceptionDoPrim(final SourceSection source) { super(source); }
+
     @Specialization(guards = "blockMethod == callback.getMethod()")
     public final SPromise onExceptionDo(final SPromise promise,
         final SClass exceptionClass, final SBlock callback,
@@ -138,6 +150,8 @@ public final class PromisePrims {
   @Primitive("actorsWhen:resolved:onError:")
   public abstract static class WhenResolvedOnErrorPrim extends TernaryExpressionNode {
     @Child protected RegisterWhenResolved registerNode = new RegisterWhenResolved();
+
+    public WhenResolvedOnErrorPrim(final SourceSection source) { super(source); }
 
     @Specialization(guards = {"resolvedMethod == resolved.getMethod()", "errorMethod == error.getMethod()"})
     public final SPromise whenResolvedOnError(final SPromise promise,

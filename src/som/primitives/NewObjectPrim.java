@@ -14,6 +14,7 @@ import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 // This isn't a primitive anymore, because we do all this in the magic of the
@@ -25,7 +26,8 @@ import com.oracle.truffle.api.dsl.Specialization;
 public abstract class NewObjectPrim extends UnaryExpressionNode implements ISpecialSend {
   private final MixinDefinitionId mixinId;
 
-  public NewObjectPrim(final MixinDefinitionId mixinId) {
+  public NewObjectPrim(final SourceSection source, final MixinDefinitionId mixinId) {
+    super(source);
     this.mixinId = mixinId;
   }
 

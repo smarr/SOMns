@@ -9,12 +9,14 @@ import som.primitives.Primitive;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 @GenerateNodeFactory
 @Primitive("actors:createFromValue:")
 @NodeChild(value = "isValue", type = IsValue.class, executeWith = "receiver")
 public abstract class CreateActorPrim extends BinaryExpressionNode {
+  protected CreateActorPrim(final SourceSection source) { super(source); }
 
   @Specialization(guards = "isValue")
   public final SFarReference createActor(final Object nil, final Object value, final boolean isValue) {

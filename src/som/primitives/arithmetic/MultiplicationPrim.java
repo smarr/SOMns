@@ -7,11 +7,14 @@ import som.primitives.Primitive;
 import com.oracle.truffle.api.ExactMath;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 @GenerateNodeFactory
 @Primitive({"int:multiply:", "double:multiply:"})
 public abstract class MultiplicationPrim extends ArithmeticPrim {
+  protected MultiplicationPrim(final SourceSection source) { super(source); }
+
   @Specialization(rewriteOn = ArithmeticException.class)
   public final long doLong(final long left, final long right) {
     return ExactMath.multiplyExact(left, right);

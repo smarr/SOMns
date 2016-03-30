@@ -33,6 +33,8 @@ public final class SystemPrims {
   @GenerateNodeFactory
   @Primitive("systemModuleObject:")
   public abstract static class SystemModuleObjectPrim extends UnaryExpressionNode {
+    public SystemModuleObjectPrim(final SourceSection source) { super(source); }
+
     @Specialization
     public final Object set(final SObjectWithClass system) {
       SystemModule = system;
@@ -55,6 +57,8 @@ public final class SystemPrims {
   @GenerateNodeFactory
   @Primitive("load:")
   public abstract static class LoadPrim extends UnaryExpressionNode {
+    public LoadPrim(final SourceSection source) { super(source); }
+
     @Specialization
     public final Object doSObject(final String moduleName) {
       return loadModule(moduleName);
@@ -64,6 +68,8 @@ public final class SystemPrims {
   @GenerateNodeFactory
   @Primitive("load:nextTo:")
   public abstract static class LoadNextToPrim extends BinaryExpressionNode {
+    protected LoadNextToPrim(final SourceSection source) { super(source); }
+
     @Specialization
     public final Object load(final String filename, final SObjectWithClass moduleObj) {
       String path = moduleObj.getSOMClass().getMixinDefinition().getSourceSection().getSource().getPath();
@@ -75,6 +81,8 @@ public final class SystemPrims {
   @GenerateNodeFactory
   @Primitive("exit:")
   public abstract static class ExitPrim extends UnaryExpressionNode {
+    public ExitPrim(final SourceSection source) { super(source); }
+
     @Specialization
     public final Object doSObject(final long error) {
       VM.exit((int) error);
@@ -85,6 +93,8 @@ public final class SystemPrims {
   @GenerateNodeFactory
   @Primitive("printString:")
   public abstract static class PrintStringPrim extends UnaryExpressionNode {
+    public PrintStringPrim(final SourceSection source) { super(source); }
+
     @Specialization
     public final Object doSObject(final String argument) {
       VM.print(argument);
@@ -100,6 +110,8 @@ public final class SystemPrims {
   @GenerateNodeFactory
   @Primitive("printNewline:")
   public abstract static class PrintInclNewlinePrim extends UnaryExpressionNode {
+    public PrintInclNewlinePrim(final SourceSection source) { super(source); }
+
     @Specialization
     public final Object doSObject(final String argument) {
       VM.println(argument);
@@ -110,6 +122,8 @@ public final class SystemPrims {
   @GenerateNodeFactory
   @Primitive("printStackTrace:")
   public abstract static class PrintStackTracePrim extends UnaryExpressionNode {
+    public PrintStackTracePrim(final SourceSection source) { super(source); }
+
     @Specialization
     public final Object doSObject(final Object receiver) {
       printStackTrace();
@@ -164,6 +178,8 @@ public final class SystemPrims {
   @GenerateNodeFactory
   @Primitive("vmArguments:")
   public abstract static class VMArgumentsPrim extends UnaryExpressionNode {
+    public VMArgumentsPrim(final SourceSection source) { super(source); }
+
     @Specialization
     public final SImmutableArray getArguments(final Object receiver) {
       return new SImmutableArray(VM.getArguments(), Classes.valueArrayClass);
@@ -173,6 +189,8 @@ public final class SystemPrims {
   @GenerateNodeFactory
   @Primitive("systemGC:")
   public abstract static class FullGCPrim extends UnaryExpressionNode {
+    public FullGCPrim(final SourceSection source) { super(source); }
+
     @Specialization
     public final Object doSObject(final Object receiver) {
       System.gc();
@@ -183,6 +201,8 @@ public final class SystemPrims {
   @GenerateNodeFactory
   @Primitive("systemTime:")
   public abstract static class TimePrim extends UnaryExpressionNode {
+    public TimePrim(final SourceSection source) { super(source); }
+
     @Specialization
     public final long doSObject(final Object receiver) {
       return System.currentTimeMillis() - startTime;
@@ -192,6 +212,8 @@ public final class SystemPrims {
   @GenerateNodeFactory
   @Primitive("systemTicks:")
   public abstract static class TicksPrim extends UnaryExpressionNode {
+    public TicksPrim(final SourceSection source) { super(source); }
+
     @Specialization
     public final long doSObject(final Object receiver) {
       return System.nanoTime() / 1000L - startMicroTime;

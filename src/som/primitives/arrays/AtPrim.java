@@ -8,6 +8,7 @@ import som.vmobjects.SArray;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.profiles.ValueProfile;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 @GenerateNodeFactory
@@ -15,6 +16,8 @@ import com.oracle.truffle.api.profiles.ValueProfile;
 public abstract class AtPrim extends BinaryExpressionNode {
 
   private final ValueProfile storageType = ValueProfile.createClassProfile();
+
+  protected AtPrim(final SourceSection source) { super(source); }
 
   @Specialization(guards = "receiver.isEmptyType()")
   public final Object doEmptySArray(final SArray receiver, final long idx) {

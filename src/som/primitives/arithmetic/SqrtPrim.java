@@ -8,13 +8,13 @@ import som.primitives.Primitive;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.profiles.BranchProfile;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 @GenerateNodeFactory
 @Primitive({"intSqrt:", "doubleSqrt:"})
 public abstract class SqrtPrim extends UnaryExpressionNode {
-
-  public SqrtPrim() { super(null); }
+  public SqrtPrim(final SourceSection source) { super(source); }
 
   private final BranchProfile longReturn   = BranchProfile.create();
   private final BranchProfile doubleReturn = BranchProfile.create();

@@ -3,9 +3,12 @@ package som.primitives.arithmetic;
 import java.math.BigInteger;
 
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 public abstract class GreaterThanPrim extends ArithmeticPrim {
+  protected GreaterThanPrim(final SourceSection source) { super(source); }
+
   @Specialization
   public final boolean doLong(final long left, final long right) {
     return left > right;

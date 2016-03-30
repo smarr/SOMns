@@ -11,7 +11,7 @@ import com.oracle.truffle.api.source.SourceSection;
 @GenerateNodeFactory
 public abstract class NotMessageNode extends UnaryExpressionNode {
   public NotMessageNode(final SourceSection source) { super(source); }
-  public NotMessageNode() { this(null); }  // only for the primitive version
+
   @Specialization
   public final boolean doNot(final VirtualFrame frame, final boolean receiver) {
     return !receiver;

@@ -8,6 +8,7 @@ import som.vm.constants.KernelObj;
 import som.vmobjects.SObject.SImmutableObject;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.source.SourceSection;
 
 
 /**
@@ -17,19 +18,20 @@ import com.oracle.truffle.api.frame.VirtualFrame;
  */
 public abstract class IsValueCheckNode extends UnaryExpressionNode {
 
-  public static IsValueCheckNode create(final ExpressionNode self) {
-    return new UninitializedNode(self);
+  public static IsValueCheckNode create(final SourceSection source, final ExpressionNode self) {
+    return new UninitializedNode(source, self);
   }
 
   @Child protected ExpressionNode self;
 
-  protected IsValueCheckNode(final ExpressionNode self) {
+  protected IsValueCheckNode(final SourceSection source, final ExpressionNode self) {
+    super(source);
     this.self = self;
   }
 
   private static final class UninitializedNode extends IsValueCheckNode {
-    UninitializedNode(final ExpressionNode self) {
-      super(self);
+    UninitializedNode(final SourceSection source, final ExpressionNode self) {
+      super(source, self);
     }
 
     @Override
@@ -54,7 +56,7 @@ public abstract class IsValueCheckNode extends UnaryExpressionNode {
       SImmutableObject rcvr = (SImmutableObject) receiver;
 
       if (rcvr.isValue()) {
-        return replace(new ValueCheckNode(self)).
+        return replace(new ValueCheckNode(sourceSection, self)).
             executeEvaluated(frame, receiver);
       } else {
         // neither transfer object nor value, so nothing to check
@@ -65,8 +67,8 @@ public abstract class IsValueCheckNode extends UnaryExpressionNode {
   }
 
   private static final class ValueCheckNode extends IsValueCheckNode {
-    ValueCheckNode(final ExpressionNode self) {
-      super(self);
+    ValueCheckNode(final SourceSection source, final ExpressionNode self) {
+      super(source, self);
     }
 
     @Override
