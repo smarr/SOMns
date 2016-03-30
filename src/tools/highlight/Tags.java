@@ -27,4 +27,16 @@ public abstract class Tags {
   public final class LocalVariableTag extends Tags {
     private LocalVariableTag() { }
   }
+
+  public final class StatementSeparatorTag extends Tags {
+    private StatementSeparatorTag() { }
+  }
+
+  public final class DelimiterOpeningTag extends Tags {
+    private DelimiterOpeningTag() { }
+  }
+
+  public final class DelimiterClosingTag extends Tags {
+    private DelimiterClosingTag() { }
+  }
 }
