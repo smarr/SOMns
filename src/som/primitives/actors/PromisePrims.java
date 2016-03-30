@@ -105,7 +105,7 @@ public final class PromisePrims {
 
   // TODO: should we add this for the literal case? which should be very common?
   public abstract static class WhenResolvedLiteralBlockNode extends BinaryExpressionNode {
-    private final RootCallTarget blockCallTarget;
+    @SuppressWarnings("unused") private final RootCallTarget blockCallTarget;
     public WhenResolvedLiteralBlockNode(final SourceSection source, final BlockNode blockNode) {
       super(source);
       blockCallTarget = blockNode.getBlockMethod().getCallTarget();
