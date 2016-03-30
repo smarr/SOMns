@@ -46,6 +46,15 @@ public final class Primitive extends Invokable {
     propagateLoopCount(count);
   }
 
+  /**
+   * Primitive operations are not instrumentable. They are not user-level
+   * behavior, and thus, are supposed to remain opaque.
+   */
+  @Override
+  protected boolean isInstrumentable() {
+    return false;
+  }
+
   private static Method getNextMethodOnStack() {
     return Truffle.getRuntime().iterateFrames(new FrameInstanceVisitor<Method>() {
         @Override
