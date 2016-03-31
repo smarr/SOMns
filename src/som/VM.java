@@ -21,6 +21,7 @@ import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.api.vm.PolyglotEngine;
 import com.oracle.truffle.api.vm.PolyglotEngine.Builder;
+import com.oracle.truffle.api.vm.PolyglotEngine.Instrument;
 import com.oracle.truffle.tools.TruffleProfiler;
 import com.oracle.truffle.tools.debug.shell.client.SimpleREPLClient;
 import com.oracle.truffle.tools.debug.shell.server.REPLServer;
@@ -211,7 +212,12 @@ public final class VM {
   private static void startExecution(final Builder builder, final VMOptions options) {
     engine = builder.build();
     try {
-      engine.getInstruments().get(TruffleProfiler.ID).setEnabled(options.profilingEnabled);
+      Instrument profiler = engine.getInstruments().get(TruffleProfiler.ID);
+      if (options.profilingEnabled && profiler == null) {
+        VM.errorPrintln("Truffle profiler not available. Might be a class path issue");
+      } else if (profiler != null) {
+        profiler.setEnabled(options.profilingEnabled);
+      }
       engine.getInstruments().get(Highlight.ID).setEnabled(options.highlightingEnabled);
       engine.eval(SomLanguage.START);
       engine.dispose();
