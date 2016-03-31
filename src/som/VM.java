@@ -22,6 +22,8 @@ import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.api.vm.PolyglotEngine;
 import com.oracle.truffle.api.vm.PolyglotEngine.Builder;
 import com.oracle.truffle.tools.TruffleProfiler;
+import com.oracle.truffle.tools.debug.shell.client.SimpleREPLClient;
+import com.oracle.truffle.tools.debug.shell.server.REPLServer;
 
 
 public final class VM {
@@ -192,6 +194,21 @@ public final class VM {
     builder.config(SomLanguage.MIME_TYPE, SomLanguage.CMD_ARGS, args);
     VMOptions options = new VMOptions(args);
 
+    if (options.debuggerEnabled) {
+      startDebugger(builder);
+    } else {
+      startExecution(builder, options);
+    }
+  }
+
+  private static void startDebugger(final Builder builder) {
+    SimpleREPLClient client = new SimpleREPLClient();
+    REPLServer server = new REPLServer(client, builder);
+    server.start();
+    client.start(server);
+  }
+
+  private static void startExecution(final Builder builder, final VMOptions options) {
     engine = builder.build();
     try {
       engine.getInstruments().get(TruffleProfiler.ID).setEnabled(options.profilingEnabled);

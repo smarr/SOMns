@@ -51,6 +51,8 @@ profile.add_argument('-tp', '--truffle-profile', help='enable Graal-level profil
 tools = parser.add_argument_group('Tools', 'Additional Tools')
 tools.add_argument('-hl', '--highlight', nargs=1, help='enable highlight tool and define output file',
                     dest='highlight_file', default=False, metavar='highlight-file')
+tools.add_argument('-td', '--truffle-debugger', help='start Truffle debugger',
+                    dest='truffle_debugger', action='store_true', default=False)
 
 
 parser.add_argument('-o', '--only', help='only compile give methods, comma separated list',
@@ -123,7 +125,8 @@ else:
 SOM_ARGS = ['-Xbootclasspath/a:'
              + BASE_DIR + '/build/classes:'
              + BASE_DIR + '/libs/truffle/mxbuild/dists/truffle-api.jar:'
-             + BASE_DIR + '/libs/truffle/mxbuild/dists/truffle-debug.jar',
+             + BASE_DIR + '/libs/truffle/mxbuild/dists/truffle-debug.jar:'
+             + BASE_DIR + '/libs/jline-2.11.jar',
             'som.VM',
             '--platform', BASE_DIR + '/core-lib/Platform.som',
             '--kernel', BASE_DIR + '/core-lib/Kernel.som']
@@ -177,6 +180,9 @@ if args.truffle_profile:
 if args.highlight_file:
     flags += ['-Dhl.output=' + args.highlight_file[0]]
     SOM_ARGS += ['--highlight']
+
+if args.truffle_debugger:
+    SOM_ARGS += ['--debug']
 
 if not args.interpreter and args.perf_warnings:
     flags += ['-Dgraal.TruffleCompilationExceptionsAreFatal=true',
