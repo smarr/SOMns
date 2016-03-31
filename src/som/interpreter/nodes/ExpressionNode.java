@@ -58,6 +58,13 @@ public abstract class ExpressionNode extends SOMNode {
   }
 
   /**
+   * Use for wrapping node only.
+   */
+  protected ExpressionNode(final ExpressionNode wrappedNode) {
+    super(null);
+  }
+
+  /**
    * Mark the node as being a root expression: {@link RootTag}.
    */
   public void markAsRootExpression() {
