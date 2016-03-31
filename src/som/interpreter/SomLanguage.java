@@ -26,7 +26,6 @@ import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.impl.FindContextNode;
-import com.oracle.truffle.api.instrument.WrapperNode;
 import com.oracle.truffle.api.instrumentation.ProvidedTags;
 import com.oracle.truffle.api.instrumentation.StandardTags.CallTag;
 import com.oracle.truffle.api.instrumentation.StandardTags.RootTag;
@@ -137,11 +136,6 @@ public final class SomLanguage extends TruffleLanguage<VM> {
 
   @Override
   protected boolean isInstrumentable(final Node node) {
-    throw new NotYetImplementedException();
-  }
-
-  @Override
-  protected WrapperNode createWrapperNode(final Node node) {
     throw new NotYetImplementedException();
   }
 
