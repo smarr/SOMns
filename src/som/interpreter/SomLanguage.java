@@ -28,7 +28,9 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.impl.FindContextNode;
 import com.oracle.truffle.api.instrument.WrapperNode;
 import com.oracle.truffle.api.instrumentation.ProvidedTags;
+import com.oracle.truffle.api.instrumentation.StandardTags.CallTag;
 import com.oracle.truffle.api.instrumentation.StandardTags.RootTag;
+import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.Source;
@@ -36,7 +38,8 @@ import com.oracle.truffle.api.source.Source;
 
 @TruffleLanguage.Registration(name = "SOMns", version = "0.1.0",
                               mimeType = "application/x-newspeak-som-ns")
-@ProvidedTags({RootTag.class, KeywordTag.class, LiteralTag.class,
+@ProvidedTags({RootTag.class, StatementTag.class, CallTag.class,
+  KeywordTag.class, LiteralTag.class,
   CommentTag.class, IdentifierTag.class, ArgumentTag.class,
   LocalVariableTag.class, StatementSeparatorTag.class,
   DelimiterOpeningTag.class, DelimiterClosingTag.class})
