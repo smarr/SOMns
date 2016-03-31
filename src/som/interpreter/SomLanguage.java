@@ -135,11 +135,6 @@ public final class SomLanguage extends TruffleLanguage<VM> {
   }
 
   @Override
-  protected boolean isInstrumentable(final Node node) {
-    throw new NotYetImplementedException();
-  }
-
-  @Override
   protected Object evalInContext(final Source source, final Node node,
       final MaterializedFrame mFrame) throws IOException {
     throw new NotYetImplementedException();
