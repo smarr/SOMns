@@ -18,37 +18,43 @@ parser = argparse.ArgumentParser(
 
 parser.add_argument('-d', '--debug', help='wait for debugger to attach',
                     dest='debug', action='store_true', default=False)
-parser.add_argument('-i', '--igv', help='dump compilation details to IGV',
-                    dest='igv', action='store_true', default=False)
-parser.add_argument('-if', '--igv-to-file', help='dump compilation details to file to be loaded by IGV',
-                    dest='igv_to_file', action='store_true', default=False)
-parser.add_argument('-l', '--low-level', help='enable low-level optimization output',
-                    dest='low_level', action='store_true', default=False)
-parser.add_argument('-ti', '--trace-invalidation', help='trace assumption invalidation and transfers to interpreter',
-                    dest='trace_invalidation', action='store_true', default=False)
-
-parser.add_argument('-gp', '--graal-profile', help='enable Graal-level profiling after warmup',
-                    dest='graal_profile', action='store_true', default=False)
-parser.add_argument('-ga', '--graal-profile-allocations', help='enable Graal-level profiling after warmup, and profile allocations',
-                    dest='graal_profile_allocations', action='store_true', default=False)
-parser.add_argument('-gi', '--graal-profile-intervals', help='enable Graal-level profiling after certain time intervals',
-                    dest='graal_profile_timed', action='store_true', default=False)
-parser.add_argument('-tp', '--truffle-profile', help='enable Graal-level profiling after warmup',
-                    dest='truffle_profile', action='store_true', default=False)
-                    
-parser.add_argument('-hl', '--highlight', nargs=1, help='enable highlight tool and define output file',
-                    dest='highlight_file', default=False, metavar='highlight-file')
-
-parser.add_argument('-w', '--perf-warnings', help='enable performance warnings',
-                    dest='perf_warnings', action='store_true', default=False)
-
-parser.add_argument('-o', '--only', help='only compile give methods, comma separated list',
-                    dest='only_compile', default=None)
-parser.add_argument('-v', '--visual-vm', help='connect to VisualVM for profiling',
-                    dest='visual_vm', action='store_true', default=False)
 parser.add_argument('-t', '--num-threads', help='number of threads to be used',
                     dest='threads', default=None)
 
+
+explore = parser.add_argument_group('Explore', 'Investigate Execution')
+explore.add_argument('-i', '--igv', help='dump compilation details to IGV',
+                    dest='igv', action='store_true', default=False)
+explore.add_argument('-if', '--igv-to-file', help='dump compilation details to file to be loaded by IGV',
+                    dest='igv_to_file', action='store_true', default=False)
+explore.add_argument('-l', '--low-level', help='enable low-level optimization output',
+                    dest='low_level', action='store_true', default=False)
+explore.add_argument('-ti', '--trace-invalidation', help='trace assumption invalidation and transfers to interpreter',
+                    dest='trace_invalidation', action='store_true', default=False)
+explore.add_argument('-w', '--perf-warnings', help='enable performance warnings',
+                    dest='perf_warnings', action='store_true', default=False)
+explore.add_argument('-v', '--visual-vm', help='connect to VisualVM for profiling',
+                    dest='visual_vm', action='store_true', default=False)
+
+
+profile = parser.add_argument_group('Profile', 'Profile Execution')
+profile.add_argument('-gp', '--graal-profile', help='enable Graal-level profiling after warmup',
+                    dest='graal_profile', action='store_true', default=False)
+profile.add_argument('-ga', '--graal-profile-allocations', help='enable Graal-level profiling after warmup, and profile allocations',
+                    dest='graal_profile_allocations', action='store_true', default=False)
+profile.add_argument('-gi', '--graal-profile-intervals', help='enable Graal-level profiling after certain time intervals',
+                    dest='graal_profile_timed', action='store_true', default=False)
+profile.add_argument('-tp', '--truffle-profile', help='enable Graal-level profiling after warmup',
+                    dest='truffle_profile', action='store_true', default=False)
+                    
+
+tools = parser.add_argument_group('Tools', 'Additional Tools')
+tools.add_argument('-hl', '--highlight', nargs=1, help='enable highlight tool and define output file',
+                    dest='highlight_file', default=False, metavar='highlight-file')
+
+
+parser.add_argument('-o', '--only', help='only compile give methods, comma separated list',
+                    dest='only_compile', default=None)
 parser.add_argument('-A', '--no-assert', help='execute with assertions disabled',
                     dest='assert_', action='store_false', default=True)
 parser.add_argument('-B', '--no-background', help='disable background compilation',
