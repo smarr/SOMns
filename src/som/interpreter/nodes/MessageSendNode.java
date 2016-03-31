@@ -93,6 +93,7 @@ import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Instrumentable;
+import com.oracle.truffle.api.instrumentation.StandardTags;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.NodeCost;
 import com.oracle.truffle.api.source.SourceSection;
@@ -143,6 +144,14 @@ public final class MessageSendNode {
       super(source);
       // default constructor for instrumentation wrapper nodes
       this.argumentNodes = null;
+    }
+
+    @Override
+    protected boolean isTaggedWith(final Class<?> tag) {
+      if (tag == StandardTags.CallTag.class) {
+        return true;
+      }
+      return super.isTaggedWith(tag);
     }
 
     public boolean isSpecialSend() {

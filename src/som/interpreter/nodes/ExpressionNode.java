@@ -38,6 +38,7 @@ import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Instrumentable;
 import com.oracle.truffle.api.instrumentation.StandardTags.RootTag;
+import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -67,7 +68,9 @@ public abstract class ExpressionNode extends SOMNode {
 
   @Override
   protected boolean isTaggedWith(final Class<?> tag) {
-    if (tag == RootTag.class) {
+    if (tag == StatementTag.class) {
+      return true;
+    } else if (tag == RootTag.class) {
       return isRootExpression;
     } else {
       return super.isTaggedWith(tag);
