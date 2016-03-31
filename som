@@ -33,6 +33,11 @@ parser.add_argument('-ga', '--graal-profile-allocations', help='enable Graal-lev
                     dest='graal_profile_allocations', action='store_true', default=False)
 parser.add_argument('-gi', '--graal-profile-intervals', help='enable Graal-level profiling after certain time intervals',
                     dest='graal_profile_timed', action='store_true', default=False)
+parser.add_argument('-tp', '--truffle-profile', help='enable Graal-level profiling after warmup',
+                    dest='truffle_profile', action='store_true', default=False)
+                    
+parser.add_argument('-hl', '--highlight', nargs=1, help='enable highlight tool and define output file',
+                    dest='highlight_file', default=False, metavar='highlight-file')
 
 parser.add_argument('-w', '--perf-warnings', help='enable performance warnings',
                     dest='perf_warnings', action='store_true', default=False)
@@ -111,7 +116,8 @@ else:
 
 SOM_ARGS = ['-Xbootclasspath/a:'
              + BASE_DIR + '/build/classes:'
-             + BASE_DIR + '/libs/truffle/mxbuild/dists/truffle-api.jar',
+             + BASE_DIR + '/libs/truffle/mxbuild/dists/truffle-api.jar:'
+             + BASE_DIR + '/libs/truffle/mxbuild/dists/truffle-debug.jar',
             'som.VM',
             '--platform', BASE_DIR + '/core-lib/Platform.som',
             '--kernel', BASE_DIR + '/core-lib/Kernel.som']
@@ -158,7 +164,14 @@ if not args.interpreter and (args.graal_profile or args.graal_profile_allocation
         flags += ['-Dgraal.TimedDynamicCounters=1000']
     if args.graal_profile:
         flags += ['-Dgraal.BenchmarkDynamicCounters=out,completed,total']
-        
+
+if args.truffle_profile:
+    flags += ['-Dtruffle.profiling.enabled=true']
+    SOM_ARGS += ['--profile']
+if args.highlight_file:
+    flags += ['-Dhl.output=' + args.highlight_file[0]]
+    SOM_ARGS += ['--highlight']
+
 if not args.interpreter and args.perf_warnings:
     flags += ['-Dgraal.TruffleCompilationExceptionsAreFatal=true',
               '-Dgraal.TraceTrufflePerformanceWarnings=true',
