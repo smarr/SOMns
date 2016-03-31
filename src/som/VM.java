@@ -26,6 +26,7 @@ import com.oracle.truffle.tools.TruffleProfiler;
 
 public final class VM {
 
+  @CompilationFinal private static PolyglotEngine engine;
   @CompilationFinal private static VM vm;
 
   private final boolean avoidExitForTesting;
@@ -109,6 +110,7 @@ public final class VM {
     TruffleCompiler.transferToInterpreter("exit");
     // Exit from the Java system
     if (!avoidExitForTesting) {
+      engine.dispose();
       System.exit(errorCode);
     } else {
       lastExitCode = errorCode;
@@ -188,9 +190,9 @@ public final class VM {
   public static void main(final String[] args) {
     Builder builder = PolyglotEngine.newBuilder();
     builder.config(SomLanguage.MIME_TYPE, SomLanguage.CMD_ARGS, args);
-    PolyglotEngine engine = builder.build();
     VMOptions options = new VMOptions(args);
 
+    engine = builder.build();
     try {
       engine.getInstruments().get(TruffleProfiler.ID).setEnabled(options.profilingEnabled);
       engine.getInstruments().get(Highlight.ID).setEnabled(options.highlightingEnabled);
