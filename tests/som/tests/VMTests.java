@@ -2,7 +2,9 @@ package som.tests;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
@@ -48,5 +50,25 @@ public class VMTests {
         new String[] {"app.som", "Foo", "1", "2"});
     assertEquals(opts.platformFile, VMOptions.STANDARD_PLATFORM_FILE);
     assertArrayEquals(opts.args, new String[] {"app.som", "Foo", "1", "2"});
+  }
+
+  @Test
+  public void testProfileFlag() {
+    VMOptions opts = new VMOptions(
+        new String[] {"--profile"});
+    assertEquals(opts.platformFile, VMOptions.STANDARD_PLATFORM_FILE);
+    assertTrue(opts.profilingEnabled);
+    assertFalse(opts.highlightingEnabled);
+    assertNull(opts.args);
+  }
+
+  @Test
+  public void testHighlightFlag() {
+    VMOptions opts = new VMOptions(
+        new String[] {"--highlight"});
+    assertEquals(opts.platformFile, VMOptions.STANDARD_PLATFORM_FILE);
+    assertTrue(opts.highlightingEnabled);
+    assertFalse(opts.profilingEnabled);
+    assertNull(opts.args);
   }
 }

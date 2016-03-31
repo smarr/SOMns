@@ -21,6 +21,7 @@ import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.api.vm.PolyglotEngine;
 import com.oracle.truffle.api.vm.PolyglotEngine.Builder;
+import com.oracle.truffle.tools.TruffleProfiler;
 
 
 public final class VM {
@@ -188,8 +189,13 @@ public final class VM {
     Builder builder = PolyglotEngine.newBuilder();
     builder.config(SomLanguage.MIME_TYPE, SomLanguage.CMD_ARGS, args);
     PolyglotEngine engine = builder.build();
+    VMOptions options = new VMOptions(args);
+
     try {
+      engine.getInstruments().get(TruffleProfiler.ID).setEnabled(options.profilingEnabled);
+      engine.getInstruments().get(Highlight.ID).setEnabled(options.highlightingEnabled);
       engine.eval(SomLanguage.START);
+      engine.dispose();
     } catch (IOException e) {
       throw new RuntimeException("This should never happen", e);
     }
