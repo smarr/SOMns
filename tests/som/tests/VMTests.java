@@ -71,4 +71,14 @@ public class VMTests {
     assertFalse(opts.profilingEnabled);
     assertNull(opts.args);
   }
+
+  @Test
+  public void testDebugFlag() {
+    VMOptions opts = new VMOptions(
+        new String[] {"--debug"});
+    assertEquals(opts.platformFile, VMOptions.STANDARD_PLATFORM_FILE);
+    assertTrue(opts.debuggerEnabled);
+    assertFalse(opts.profilingEnabled);
+    assertNull(opts.args);
+  }
 }

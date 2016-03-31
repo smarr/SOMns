@@ -11,6 +11,7 @@ public class VMOptions {
   public String   kernelFile   = STANDARD_KERNEL_FILE;
   public final String[] args;
   public final boolean showUsage;
+  public boolean debuggerEnabled;
   public boolean profilingEnabled;
   public boolean highlightingEnabled;
 
@@ -35,6 +36,9 @@ public class VMOptions {
         } else if (arguments[currentArg].equals("--kernel")) {
           kernelFile = arguments[currentArg + 1];
           currentArg += 2;
+        } else if (arguments[currentArg].equals("--debug")) {
+          debuggerEnabled = true;
+          currentArg += 1;
         } else if (arguments[currentArg].equals("--profile")) {
           profilingEnabled = true;
           currentArg += 1;
@@ -62,6 +66,8 @@ public class VMOptions {
     VM.println("                         file-name defaults to '" + VMOptions.STANDARD_PLATFORM_FILE + "'");
     VM.println("  --kernel file-name     SOM Kernel module to be loaded");
     VM.println("                         file-name defaults to '" + VMOptions.STANDARD_KERNEL_FILE + "'");
+    VM.println("");
+    VM.println("  --debug                Run in Truffle Debugger/REPL");
     VM.println("");
     VM.println("  --profile              Enable the TruffleProfiler");
     VM.println("  --highlight            Enable the Highlight tool"); // TODO: this should take a parameter at some point, but for that we need to be able to access config options from tools
