@@ -27,12 +27,12 @@ parser.add_argument('-l', '--low-level', help='enable low-level optimization out
 parser.add_argument('-ti', '--trace-invalidation', help='trace assumption invalidation and transfers to interpreter',
                     dest='trace_invalidation', action='store_true', default=False)
 
-parser.add_argument('-p', '--profile', help='enable profiling after warmup',
-                    dest='profile', action='store_true', default=False)
-parser.add_argument('-a', '--profile-allocations', help='enable profiling after warmup, and profile allocations',
-                    dest='profile_allocations', action='store_true', default=False)
-parser.add_argument('-pt', '--profile-times', help='enable profiling after certain time intervals',
-                    dest='profile_timed', action='store_true', default=False)
+parser.add_argument('-gp', '--graal-profile', help='enable Graal-level profiling after warmup',
+                    dest='graal_profile', action='store_true', default=False)
+parser.add_argument('-ga', '--graal-profile-allocations', help='enable Graal-level profiling after warmup, and profile allocations',
+                    dest='graal_profile_allocations', action='store_true', default=False)
+parser.add_argument('-gi', '--graal-profile-intervals', help='enable Graal-level profiling after certain time intervals',
+                    dest='graal_profile_timed', action='store_true', default=False)
 
 parser.add_argument('-w', '--perf-warnings', help='enable performance warnings',
                     dest='perf_warnings', action='store_true', default=False)
@@ -149,14 +149,14 @@ if not args.interpreter and args.igv_to_file:
 if args.low_level:
     flags += ['-XX:+UnlockDiagnosticVMOptions', '-XX:+LogCompilation',
               '-XX:+TraceDeoptimization']
-if not args.interpreter and (args.profile or args.profile_allocations or args.profile_timed):
+if not args.interpreter and (args.graal_profile or args.graal_profile_allocations or args.graal_profile_timed):
     flags += ['-XX:JVMCICounterSize=5000', '-Dgraal.ProfileCompiledMethods=true',
               '-DProfileCompiledMethodsPhase.WITH_SECTION_HEADER=true']
-    if args.profile_allocations:
+    if args.graal_profile_allocations:
         flags += ['-Dgraal.ProfileAllocations=true']
-    if args.profile_timed:
+    if args.graal_profile_timed:
         flags += ['-Dgraal.TimedDynamicCounters=1000']
-    if args.profile:
+    if args.graal_profile:
         flags += ['-Dgraal.BenchmarkDynamicCounters=out,completed,total']
         
 if not args.interpreter and args.perf_warnings:
