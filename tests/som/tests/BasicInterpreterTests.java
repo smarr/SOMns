@@ -105,9 +105,9 @@ public class BasicInterpreterTests {
         {"Lookup", "testImplicitSend",                               42, Long.class, null },
         {"Lookup", "testSiblingLookupA",                             42, Long.class, null },
         {"Lookup", "testSiblingLookupB",                             43, Long.class, null },
-        {"Lookup", "testNesting1",                                   91, Long.class, null },
-        {"Lookup", "testNesting2",                                  182, Long.class, null },
-        {"Lookup", "testNesting3",                                  364, Long.class, null },
+        {"Lookup", "testNesting1",                                   91, Long.class, UNSAFE_OM },
+        {"Lookup", "testNesting2",                                  182, Long.class, UNSAFE_OM },
+        {"Lookup", "testNesting3",                                  364, Long.class, UNSAFE_OM },
 /* DEACTIVATE until fixed, for debugging, repeat the test entry multiple times here.
         {"Lookup", "testInner18",                                   999, Long.class },
 */
