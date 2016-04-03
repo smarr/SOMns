@@ -35,8 +35,8 @@ import tools.highlight.JsonWriter;
 import tools.highlight.Tags;
 
 
-@Registration(id = Debugger.ID)
-public class Debugger extends TruffleInstrument {
+@Registration(id = WebDebugger.ID)
+public class WebDebugger extends TruffleInstrument {
 
   public static final String ID = "web-debugger";
 
@@ -51,10 +51,10 @@ public class Debugger extends TruffleInstrument {
   private final static Map<Source, String> sourceId = new HashMap<>();
   private final static Map<SourceSection, String> sourceSectionId = new HashMap<>();
 
-  private static Debugger debugger;
+  private static WebDebugger debugger;
   private static WebSocket client;
 
-  public Debugger() {
+  public WebDebugger() {
     debugger = this;
   }
 

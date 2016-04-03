@@ -24,7 +24,7 @@ import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.SResolver;
 import som.vm.ObjectSystem;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
-import tools.debugger.Debugger;
+import tools.debugger.WebDebugger;
 import tools.highlight.Highlight;
 import tools.highlight.Tags;
 
@@ -81,16 +81,16 @@ public final class VM {
   public static void reportSyntaxElement(final Class<? extends Tags> type,
       final SourceSection source) {
     Highlight.reportNonAstSyntax(type, source);
-    Debugger.reportSyntaxElement(type, source);
+    WebDebugger.reportSyntaxElement(type, source);
   }
 
   public static void reportParsedRootNode(final RootNode rootNode) {
     Highlight.reportParsedRootNode(rootNode);
-    Debugger.reportRootNodeAfterParsing(rootNode);
+    WebDebugger.reportRootNodeAfterParsing(rootNode);
   }
 
   public static void reportLoadedSource(final Source source) {
-    Debugger.reportLoadedSource(source);
+    WebDebugger.reportLoadedSource(source);
   }
 
   public static boolean shouldExit() {
@@ -227,7 +227,7 @@ public final class VM {
         profiler.setEnabled(options.profilingEnabled);
       }
       engine.getInstruments().get(Highlight.ID).setEnabled(options.highlightingEnabled);
-      engine.getInstruments().get(Debugger.ID).setEnabled(true);
+      engine.getInstruments().get(WebDebugger.ID).setEnabled(true);
       engine.eval(SomLanguage.START);
       engine.dispose();
     } catch (IOException e) {
