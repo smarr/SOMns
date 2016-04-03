@@ -38,7 +38,7 @@
       function receivedFile(e) {
         var o = JSON.parse(e.target.result);
         data[theFile.name] = o;
-        processData(o);
+        displaySources(o);
       }
       
       return receivedFile;
@@ -153,9 +153,9 @@
   }
   
   function createLineNumbers(cnt) {
-    var result = "1";
+    var result = "<span class='ln' onclick='toggleBreakpoint(1, this);'>1</span>";
     for (var i = 2; i <= cnt; i += 1) {
-      result = result + "\n" + i
+      result = result + "\n<span class='ln' onclick='toggleBreakpoint("+ i +", this);'>" + i + "</span>"
     }
     return result;
   }
@@ -298,12 +298,89 @@
         .attr("transform", "translate(0," + height + ")")
         .call(xAxis);
   }
+
+  function getActiveSourceId() {
+    return $(".tab-pane.active").attr("id");
+  }
+
+var firstSource = true; // global, to remember whether we showed already sources
+var sourceObjects = {};
+var breakpoints = {};
+
+  function getSource(id) {
+    for (fname in sourceObjects) {
+      if (sourceObjects[fname].id == id) {
+        return sourceObjects[fname];
+      }
+    }
+    return null;
+  }
+
   
-  function processData(o) {
-    var first = true;
+
+  function Breakpoint(source, line, lineNumSpan) {
+    this.source = source;
+    this.line   = line;
+    var bpId = "bp:" + source.id + ":" + line;
+    this.entry = nodeFromTemplate("breakpoint-tpl");
+    this.entry.setAttribute("id", bpId);
+    
+    var tds = $(this.entry).find("td");
+    tds[0].innerHTML = source.shortName;
+    tds[1].innerHTML = line;
+    
+    this.checkbox = $(this.entry).find("input");
+    this.checkbox.attr("id", bpId + "chk");
+
+    var list = document.getElementById("breakpoint-list");
+    list.appendChild(this.entry);
+
+    this.lineNumSpan = $(lineNumSpan);
+    this.lineNumSpan.addClass("breakpoint-active");
+  }
+  
+  Breakpoint.prototype.toggle = function () {
+    var oldState = this.isEnabled();
+
+    // flip checkbox in debugger view
+    this.checkbox.prop('checked', !oldState);
+    
+    // flip marker in source view
+    if (oldState) {
+      $(this.lineNumSpan).removeClass("breakpoint-active");
+    } else {
+      $(this.lineNumSpan).addClass("breakpoint-active");
+    }
+
+    dbg.updateBreakpoint(this);
+  };
+
+  Breakpoint.prototype.isEnabled = function () {
+    return this.checkbox.prop('checked');
+  }
+
+  function toggleBreakpoint(line, clickedSpan) {
+    var sourceId = getActiveSourceId();
+    var source   = getSource(sourceId);
+    if (!breakpoints[source]) {
+      breakpoints[source] = {};
+    }
+    if (!breakpoints[source][line]) {
+      breakpoints[source][line] = new Breakpoint(source, line, clickedSpan);
+      dbg.updateBreakpoint(breakpoints[source][line]);
+    } else {
+      breakpoints[source][line].toggle();
+    }
+  }
+  
+  function displaySources(o) {
     for (var sId in o.sources) {
-      showSource(o.sources[sId], o.sections, first);
-      first = false;
+      if (sourceObjects[o.sources[sId].name]) {
+        continue;
+      }
+      showSource(o.sources[sId], o.sections, firstSource);
+      sourceObjects[o.sources[sId].name] = o.sources[sId];
+      firstSource = false;
     };
     
     for (var ssId in o.sections) {
@@ -337,7 +414,93 @@
     evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
   }
 
+  function dbgLog(msg) {
+    var tzoffset = (new Date()).getTimezoneOffset() * 60000; // offset in milliseconds
+    var localISOTime = (new Date(Date.now() - tzoffset)).toISOString().slice(0,-1);
+
+    $("#debugger-log").html(localISOTime + ": " + msg + "<br/>" + $("#debugger-log").html());
+  }
+  function Debugger() {
+    this.socket = connect();
+  }
+
+  function connect() {
+    var socket = new WebSocket("ws://localhost:8889");
+    socket.onopen = function(e) {
+      dbgLog("[WS] open");
+      $("#dbg-connect-btn").html("Connected");
+
+    };
+    socket.onclose = function(e) {
+      dbgLog("[WS] close");
+      $("#dbg-connect-btn").html("Reconnect");
+    };
+    socket.onerror   = function(e) {
+      dbgLog("[WS] error");
+    };
+    socket.onmessage = function(e) {
+      dbgLog("[WS] msg");
+      var data = JSON.parse(e.data);
+      
+      switch (data.type) {
+        case "source":
+          displaySources(data);
+          break;
+      }
+    };
+    return socket;
+  }
+
+  Debugger.prototype.connectBtn = function() {
+    var CONNECTING = 0,
+      OPEN = 1,
+      CLOSING = 2,
+      CLOSED = 3;
+    
+    if (this.socket.readyState == CLOSED) {
+      // reconnect
+      this.socket = connect();
+    }
+  }
+
+  Debugger.prototype.resume = function() {
+    this.socket.send("resume");
+  }
+  Debugger.prototype.pause = function() {
+    this.socket.send("pause");
+  }
+  Debugger.prototype.stop = function() {
+    this.socket.send("stop");
+  }
+
+  Debugger.prototype.stepInto = function() {
+    this.socket.send({action:'stepInto'});
+  }
+  Debugger.prototype.stepOver = function() {
+    this.socket.send("stepOver");
+  }
+  Debugger.prototype.return = function() {
+    this.socket.send("return");
+  }
+
+  Debugger.prototype.updateBreakpoint = function (breakpoint) {
+    dbgLog("updateBreakpoint")
+    this.socket.send(JSON.stringify({
+      action:     "updateBreakpoint",
+      sourceId:   breakpoint.source.id,
+      sourceName: breakpoint.source.name,
+      line:       breakpoint.line,
+      enabled:    breakpoint.isEnabled()}));
+  }
+
+  function initializeDebugger() {
+    dbg = new Debugger();
+  }
+
   function init() {
+    // Connect to debugger server
+    initializeDebugger();
+    
     // Init drag and drop
     var fileDrop = document.getElementById('file-drop');
     fileDrop.addEventListener('dragover', handleDragOver,   false);
@@ -400,6 +563,9 @@
     color: #ccc;
     padding-right: 0.5em;
   }
+  .ln {
+    cursor: pointer;
+  }
   
   .invocation-profile  { font-size: 0.8em; display: block; }
   .invocation-profiles { white-space: normal; }
@@ -416,6 +582,7 @@
   .FIELD_READ, .FIELD_WRITE { font-style: italic; color: #194a87; }
   .ARRAY_READ, .ARRAY_WRITE { color: #f00; }
 
+  .breakpoint-active { background-color: #a40000; }
 
   /* Syntax Highlighting 
 http://emilis.info/other/extended_tango/
@@ -451,43 +618,18 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
 </div>
 
 
-<div id="debugger" style="
-  border: 1px solid black; width: 150px; height: 100px;
+<div class="panel panel-default" style="
+  /* width: 222px; height: 100px;*/
   position: absolute;
   right:  0px;
   top:   72px; /* 5.15em;*/
-  display: none;
 ">
-<div>DEBUGGER</div>
-<script>
-function Debugger() {
-  this.socket = new WebSocket("ws://localhost:8887");
-}
-Debugger.prototype.resume = function() {
-  this.socket.send("resume");
-}
-Debugger.prototype.pause = function() {
-  this.socket.send("pause");
-}
-Debugger.prototype.stop = function() {
-  this.socket.send("stop");
-}
-
-Debugger.prototype.stepInto = function() {
-  this.socket.send({action:'stepInto'});
-}
-Debugger.prototype.stepOver = function() {
-  this.socket.send("stepOver");
-}
-Debugger.prototype.return = function() {
-  this.socket.send("return");
-}
-
-var dbg = new Debugger();
-</script>
-
-<div>
+<div id="debugger" class="panel-body">
 <div class="btn-toolbar" role="toolbar" aria-label="Debugger Controls">
+  <div class="btn-group btn-group-xs" role="group" aria-label="Basic Controls">
+    <button id="dbg-connect-btn" type="button" class="btn btn-default" onclick="dbg.connectBtn();">Connecting</button>
+  </div>
+
   <div class="btn-group btn-group-xs" role="group" aria-label="Basic Controls">
     <button type="button" class="btn btn-default" onclick="dbg.resume();"><i class="fa fa-play"></i></button>
     <button type="button" class="btn btn-default" onclick="dbg.pause();"><i class="fa fa-pause"></i></button>
@@ -501,12 +643,27 @@ var dbg = new Debugger();
   </div>
 </div>
 
-<div id="debugger-log">
+
+<table class="table" id="breakpoints" style="font-size: 75%;">
+<!--   <thead>
+  <tr><th>File</th><th>Line</th><th></th></tr>
+  </thead> -->
+  <tbody id="breakpoint-list">
+<!--   <tr>
+    <td>ShortName</td>
+    <td>nn</td>
+    <td><input type="checkbox" id="b-XX" value="on" checked="checked" onchange=""></td>
+  </tr> -->
+  </tbody>
+</table>
+
+
+<div id="debugger-log" class="panel-footer" style="font-size: 75%">
 </div>
 
 <!-- Unicode Icons: incompletely supported
   &#9654; &#9205; &#9208; &#9209; &#11175; &#10556; &#11154;-->
-</div>
+</div></div>
 
 <div id="templates">
   <li id="tab-list-entry"><a href="#tab-id" data-toggle="tab">Label</a></li>
@@ -519,6 +676,14 @@ var dbg = new Debugger();
   <span id="invocation-profile" class="invocation-profile">
     <span class="counter"></span>:  <span class="types"></span>
   </span>
+  
+  <table>
+  <tr id="breakpoint-tpl">
+    <td>ShortName</td>
+    <td>nn</td>
+    <td><input type="checkbox" id="b-XX" value="on" checked="checked" onchange=""></td>
+  </tr>
+  </table>
 </div></div>
 
 
