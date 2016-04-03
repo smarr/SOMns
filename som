@@ -126,7 +126,9 @@ SOM_ARGS = ['-Xbootclasspath/a:'
              + BASE_DIR + '/build/classes:'
              + BASE_DIR + '/libs/truffle/mxbuild/dists/truffle-api.jar:'
              + BASE_DIR + '/libs/truffle/mxbuild/dists/truffle-debug.jar:'
-             + BASE_DIR + '/libs/jline-2.11.jar',
+             + BASE_DIR + '/libs/jline-2.11.jar:'
+             + BASE_DIR + '/libs/websocket/dist/websocket.jar:'
+             + BASE_DIR + '/libs/minimal-json/build/minimal-json.jar',
             'som.VM',
             '--platform', BASE_DIR + '/core-lib/Platform.som',
             '--kernel', BASE_DIR + '/core-lib/Kernel.som']

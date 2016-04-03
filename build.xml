@@ -16,6 +16,8 @@
         <pathelement location="tests/" />
         <pathelement location="${lib.dir}/junit-${junit.version}.jar" />
         <pathelement location="${lib.dir}/hamcrest-core-1.3.jar" />
+        <pathelement location="${lib.dir}/websocket/dist/websocket.jar" />
+        <pathelement location="${lib.dir}/minimal-json/build/minimal-json.jar" />
         <pathelement location="${truffle.build}/truffle-api.jar" />
         <pathelement location="${truffle.build}/truffle-debug.jar" />
         <pathelement location="${truffle.build}/truffle-dsl-processor.jar" />
@@ -51,7 +53,17 @@
         </exec>
     </target>
     
-    <target name="libs" depends="core-lib,truffle-libs">
+    <target name="websocket-lib" depends="core-lib">
+        <!-- depends on core-lib to initialize all submodules -->
+        <subant buildpath="libs/websocket" target="jar" failonerror="true" />
+    </target>
+    
+    <target name="minimal-json-lib" depends="core-lib">
+        <!-- depends on core-lib to initialize all submodules -->
+        <subant buildpath="libs/minimal-json" target="jar" failonerror="true" />
+    </target>
+    
+    <target name="libs" depends="core-lib,truffle-libs,websocket-lib,minimal-json-lib">
         <get src="https://repo1.maven.org/maven2/junit/junit/${junit.version}/junit-${junit.version}.jar"
             usetimestamp="true"
             dest="${lib.dir}/junit-${junit.version}.jar" />
