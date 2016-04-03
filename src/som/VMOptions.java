@@ -12,6 +12,7 @@ public class VMOptions {
   public final String[] args;
   public final boolean showUsage;
   public boolean debuggerEnabled;
+  public boolean webDebuggerEnabled;
   public boolean profilingEnabled;
   public boolean highlightingEnabled;
 
@@ -38,6 +39,9 @@ public class VMOptions {
           currentArg += 2;
         } else if (arguments[currentArg].equals("--debug")) {
           debuggerEnabled = true;
+          currentArg += 1;
+        } else if (arguments[currentArg].equals("--web-debug")) {
+          webDebuggerEnabled = true;
           currentArg += 1;
         } else if (arguments[currentArg].equals("--profile")) {
           profilingEnabled = true;
@@ -68,6 +72,7 @@ public class VMOptions {
     VM.println("                         file-name defaults to '" + VMOptions.STANDARD_KERNEL_FILE + "'");
     VM.println("");
     VM.println("  --debug                Run in Truffle Debugger/REPL");
+    VM.println("  --web-debug            Start web debugger");
     VM.println("");
     VM.println("  --profile              Enable the TruffleProfiler");
     VM.println("  --highlight            Enable the Highlight tool"); // TODO: this should take a parameter at some point, but for that we need to be able to access config options from tools

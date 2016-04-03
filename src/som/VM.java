@@ -5,7 +5,6 @@ import java.io.IOException;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.debug.Debugger;
 import com.oracle.truffle.api.debug.ExecutionEvent;
 import com.oracle.truffle.api.debug.SuspendedEvent;
 import com.oracle.truffle.api.nodes.RootNode;
@@ -246,8 +245,11 @@ public final class VM {
   };
 
   private static void startExecution(final Builder builder, final VMOptions options) {
-    builder.onEvent(onExec).onEvent(onHalted);
+    if (options.webDebuggerEnabled) {
+      builder.onEvent(onExec).onEvent(onHalted);
+    }
     engine = builder.build();
+
     try {
       Instrument profiler = engine.getInstruments().get(TruffleProfiler.ID);
       if (options.profilingEnabled && profiler == null) {
@@ -256,7 +258,11 @@ public final class VM {
         profiler.setEnabled(options.profilingEnabled);
       }
       engine.getInstruments().get(Highlight.ID).setEnabled(options.highlightingEnabled);
-      engine.getInstruments().get(WebDebugger.ID).setEnabled(true);
+
+      if (options.webDebuggerEnabled) {
+        engine.getInstruments().get(WebDebugger.ID).setEnabled(true);
+      }
+
       engine.eval(SomLanguage.START);
       engine.dispose();
     } catch (IOException e) {

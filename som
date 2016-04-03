@@ -53,7 +53,8 @@ tools.add_argument('-hl', '--highlight', nargs=1, help='enable highlight tool an
                     dest='highlight_file', default=False, metavar='highlight-file')
 tools.add_argument('-td', '--truffle-debugger', help='start Truffle debugger',
                     dest='truffle_debugger', action='store_true', default=False)
-
+tools.add_argument('-wd', '--web-debugger', help='start Web debugger',
+                    dest='web_debugger', action='store_true', default=False)
 
 parser.add_argument('-o', '--only', help='only compile give methods, comma separated list',
                     dest='only_compile', default=None)
@@ -185,6 +186,8 @@ if args.highlight_file:
 
 if args.truffle_debugger:
     SOM_ARGS += ['--debug']
+if args.web_debugger:
+    SOM_ARGS += ['--web-debug']
 
 if not args.interpreter and args.perf_warnings:
     flags += ['-Dgraal.TruffleCompilationExceptionsAreFatal=true',
