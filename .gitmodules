@@ -10,3 +10,6 @@
 [submodule "libs/websocket"]
 	path = libs/websocket
 	url = https://github.com/smarr/Java-WebSocket.git
+[submodule "libs/minimal-json"]
+	path = libs/minimal-json
+	url = https://github.com/smarr/minimal-json.git
