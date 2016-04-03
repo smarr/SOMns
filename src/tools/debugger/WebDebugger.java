@@ -21,9 +21,13 @@ import org.java_websocket.server.WebSocketServer;
 
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonObject;
+import com.oracle.truffle.api.debug.Debugger;
+import com.oracle.truffle.api.debug.ExecutionEvent;
+import com.oracle.truffle.api.debug.SuspendedEvent;
 import com.oracle.truffle.api.instrumentation.TruffleInstrument;
 import com.oracle.truffle.api.instrumentation.TruffleInstrument.Registration;
 import com.oracle.truffle.api.nodes.RootNode;
+import com.oracle.truffle.api.source.LineLocation;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 import com.sun.net.httpserver.HttpExchange;
@@ -35,6 +39,10 @@ import tools.highlight.JsonWriter;
 import tools.highlight.Tags;
 
 
+/**
+ * The WebDebugger connects the Truffle debugging facilities with a HTML5
+ * application using WebSockets and JSON.
+ */
 @Registration(id = WebDebugger.ID)
 public class WebDebugger extends TruffleInstrument {
 
@@ -54,6 +62,7 @@ public class WebDebugger extends TruffleInstrument {
 
   private static WebDebugger debugger;
   private static WebSocket client;
+  private static Debugger truffleDebugger;
 
   public WebDebugger() {
     debugger = this;
@@ -113,6 +122,15 @@ public class WebDebugger extends TruffleInstrument {
 
   public static void reportRootNodeAfterParsing(final RootNode rootNode) {
 
+  }
+
+  public static void reportExecutionEvent(final ExecutionEvent e) {
+    truffleDebugger = e.getDebugger();
+    // TODO: prepare step and continue???
+  }
+
+  public static void reportSuspendedEvent(final SuspendedEvent e) {
+    System.out.println(e.getNode().getSourceSection().toString());
   }
 
   @Override
@@ -201,7 +219,8 @@ public class WebDebugger extends TruffleInstrument {
     if (webSocketServer == null) {
       clientConnected = new CompletableFuture<WebSocket>();
       InetSocketAddress addess = new InetSocketAddress(port);
-      webSocketServer = new WebSocketHandler(addess, (CompletableFuture<WebSocket>) clientConnected);
+      webSocketServer = new WebSocketHandler(
+          addess, (CompletableFuture<WebSocket>) clientConnected);
       webSocketServer.start();
     }
   }
@@ -209,7 +228,7 @@ public class WebDebugger extends TruffleInstrument {
   private static class WebSocketHandler extends WebSocketServer {
     private final static int NUM_THREADS = 1;
 
-    private CompletableFuture<WebSocket> clientConnected;
+    private final CompletableFuture<WebSocket> clientConnected;
 
     WebSocketHandler(final InetSocketAddress address,
         final CompletableFuture<WebSocket> clientConnected) {
@@ -241,35 +260,25 @@ public class WebDebugger extends TruffleInstrument {
           boolean enabled   = msg.getBoolean("enabled", false);
           System.out.println(sourceId + ":" + lineNumber + " " + enabled);
 
-
-
           Source source = idSources.get(sourceId);
           LineLocation line = source.createLineLocation(lineNumber);
 
           try {
-            assert VM.debugger != null : "debugger has not be initialized yet";
-            VM.debugger.setLineBreakpoint(0, line, false);
+            assert truffleDebugger != null : "debugger has not be initialized yet";
+            truffleDebugger.setLineBreakpoint(0, line, false);
           } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
           }
-
           return;
       }
 
-
       System.out.println("not supported: onMessage: " + message);
-      // TODO Auto-generated method stub
-//      throw new NotYetImplementedException();
     }
 
     @Override
     public void onError(final WebSocket conn, final Exception ex) {
       System.out.println("error:");
       ex.printStackTrace();
-      // TODO Auto-generated method stub
-//      throw new NotYetImplementedException();
     }
-
   }
 }
