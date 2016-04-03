@@ -47,6 +47,7 @@ public final class SourcecodeCompiler {
     Parser parser = new Parser(stream, file.length(), source);
 
     MixinDefinition result = compile(parser);
+    VM.reportLoadedSource(source);
     return result;
   }
 
