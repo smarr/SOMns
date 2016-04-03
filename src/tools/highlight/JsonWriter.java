@@ -43,8 +43,26 @@ public final class JsonWriter {
     new JsonWriter(outputFile, sourceSectionTags).createJsonFile();
   }
 
+  public static String createJson(final String type,
+      final Map<SourceSection, Set<Class<? extends Tags>>> sourceSectionTags) {
+    return new JsonWriter(sourceSectionTags).createJsonString(type);
+  }
+
+  public static String createJson(final String type,
+      final Map<SourceSection, Set<Class<? extends Tags>>> sourceSectionTags,
+      final Map<Source, String> sourceToId,
+      final Map<SourceSection, String> sectionToId) {
+    return new JsonWriter(sourceSectionTags).createJsonString(
+        type, sourceToId, sectionToId);
+  }
+
   private final String outputFile;
   private final Map<SourceSection, Set<Class<? extends Tags>>> sourceSectionTags;
+
+  private JsonWriter(
+      final Map<SourceSection, Set<Class<? extends Tags>>> sourceSectionTags) {
+    this(null, sourceSectionTags);
+  }
 
   private JsonWriter(final String outputFile,
       final Map<SourceSection, Set<Class<? extends Tags>>> sourceSectionTags) {
@@ -53,6 +71,20 @@ public final class JsonWriter {
   }
 
   public void createJsonFile() {
+    try {
+      try (PrintWriter jsonFile = new PrintWriter(new File(outputFile))) {
+        jsonFile.println(createJsonString(null));
+      }
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public String createJsonString(final String type) {
+    return createJsonString(type, null, null);
+  }
+  public String createJsonString(final String type,
+      Map<Source, String> sourceToId, Map<SourceSection, String> sectionToId) {
     Set<SourceSection> allSections = sourceSectionTags.keySet();
 
     Set<Source> allSources = new HashSet<>();
@@ -66,8 +98,12 @@ public final class JsonWriter {
 //      }
 //    }
 
-    Map<Source, String>        sourceToId  = createIdMap(allSources, "s-");
-    Map<SourceSection, String> sectionToId = createIdMap(allSections, "ss-");
+    if (sourceToId == null) {
+      sourceToId  = createIdMap(allSources, "s-");
+    }
+    if (sectionToId == null) {
+      sectionToId = createIdMap(allSections, "ss-");
+    }
 
     JSONObjectBuilder allSourcesJson = JSONHelper.object();
     for (Source s : allSources) {
@@ -82,16 +118,14 @@ public final class JsonWriter {
     }
 
     JSONObjectBuilder root = JSONHelper.object();
+    if (type != null) {
+      root.add("type", type);
+    }
+
     root.add("sources", allSourcesJson);
     root.add("sections", allSectionsJson);
 
-    try {
-      try (PrintWriter jsonFile = new PrintWriter(new File(outputFile))) {
-        jsonFile.println(root.toString());
-      }
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+    return root.toString();
   }
 
   private <U> Map<U, String> createIdMap(final Set<U> set, final String idPrefix) {
