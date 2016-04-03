@@ -48,7 +48,8 @@ public class WebDebugger extends TruffleInstrument {
 
   private static int nextSourceId = 0;
   private static int nextSourceSectionId = 0;
-  private final static Map<Source, String> sourceId = new HashMap<>();
+  private final static Map<Source, String> sourcesId = new HashMap<>();
+  private final static Map<String, Source> idSources = new HashMap<>();
   private final static Map<SourceSection, String> sourceSectionId = new HashMap<>();
 
   private static WebDebugger debugger;
@@ -65,10 +66,12 @@ public class WebDebugger extends TruffleInstrument {
     Set<Class<? extends Tags>> tags = sections.computeIfAbsent(source, s -> new HashSet<>(2));
     tags.add(type);
 
-    sourceId.computeIfAbsent(source.getSource(), s -> {
+    sourcesId.computeIfAbsent(source.getSource(), src -> {
       int n = nextSourceId;
       nextSourceId += 1;
-      return "s-" + n;
+      String id = "s-" + n;
+      idSources.put(id, src);
+      return id;
     });
 
     sourceSectionId.computeIfAbsent(source, s -> {
@@ -105,7 +108,7 @@ public class WebDebugger extends TruffleInstrument {
   }
 
   private static String createSourceAndSectionMessage(final Source source) {
-    return JsonWriter.createJson("source", loadedSources.get(source), sourceId, sourceSectionId);
+    return JsonWriter.createJson("source", loadedSources.get(source), sourcesId, sourceSectionId);
   }
 
   public static void reportRootNodeAfterParsing(final RootNode rootNode) {
@@ -237,6 +240,20 @@ public class WebDebugger extends TruffleInstrument {
           int lineNumber    = msg.getInt("line", -1);
           boolean enabled   = msg.getBoolean("enabled", false);
           System.out.println(sourceId + ":" + lineNumber + " " + enabled);
+
+
+
+          Source source = idSources.get(sourceId);
+          LineLocation line = source.createLineLocation(lineNumber);
+
+          try {
+            assert VM.debugger != null : "debugger has not be initialized yet";
+            VM.debugger.setLineBreakpoint(0, line, false);
+          } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+          }
+
           return;
       }
 
