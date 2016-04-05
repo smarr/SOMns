@@ -1,15 +1,16 @@
 package som.primitives.arrays;
 
-import som.interpreter.nodes.nary.UnaryExpressionNode;
-import som.vmobjects.SArray.SMutableArray;
-
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.vmobjects.SArray.SMutableArray;
+
 
 public abstract class CopyPrim extends UnaryExpressionNode {
-  public CopyPrim(final SourceSection source) { super(source); }
+  public CopyPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+  public CopyPrim(final SourceSection source) { super(false, source); }
 
   private final ValueProfile storageType = ValueProfile.createClassProfile();
 

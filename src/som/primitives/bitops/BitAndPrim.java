@@ -2,18 +2,19 @@ package som.primitives.bitops;
 
 import java.math.BigInteger;
 
-import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.primitives.Primitive;
-
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.primitives.Primitive;
+import som.primitives.arithmetic.ArithmeticPrim;
+
 
 @GenerateNodeFactory
 @Primitive("int:bitAnd:")
-public abstract class BitAndPrim extends BinaryExpressionNode {
-  protected BitAndPrim(final SourceSection source) { super(source); }
+public abstract class BitAndPrim extends ArithmeticPrim {
+  protected BitAndPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+  protected BitAndPrim(final SourceSection source) { super(false, source); }
 
   @Specialization
   public final long doLong(final long left, final long right) {

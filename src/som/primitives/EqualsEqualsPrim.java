@@ -1,21 +1,21 @@
 package som.primitives;
 
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.interpreter.actors.SFarReference;
-import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.vmobjects.SArray.SMutableArray;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObjectWithClass;
 
-import com.oracle.truffle.api.dsl.GenerateNodeFactory;
-import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.source.SourceSection;
-
 
 @GenerateNodeFactory
 @Primitive("object:identicalTo:")
-public abstract class EqualsEqualsPrim extends BinaryExpressionNode {
-  protected EqualsEqualsPrim(final SourceSection source) { super(source); }
+public abstract class EqualsEqualsPrim extends ComparisonPrim {
+  protected EqualsEqualsPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+  protected EqualsEqualsPrim(final SourceSection source) { super(false, source); }
 
   @Specialization
   public final boolean doSBlock(final SBlock left, final Object right) {

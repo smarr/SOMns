@@ -1,15 +1,16 @@
 package som.interpreter.nodes.specialized.whileloops;
 
-import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.specialized.SomLoop;
-import som.vm.constants.Nil;
-
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.UnsupportedSpecializationException;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import com.oracle.truffle.api.source.SourceSection;
+
+import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.specialized.SomLoop;
+import som.vm.constants.Nil;
+import tools.dym.Tags.LoopNode;
 
 
 public final class WhileInlinedLiteralsNode extends ExpressionNode {
@@ -35,6 +36,15 @@ public final class WhileInlinedLiteralsNode extends ExpressionNode {
     this.expectedBool  = expectedBool;
     this.conditionActualNode = originalConditionNode;
     this.bodyActualNode      = originalBodyNode;
+  }
+
+  @Override
+  protected boolean isTaggedWith(final Class<?> tag) {
+    if (tag == LoopNode.class) {
+      return true;
+    } else {
+      return super.isTaggedWith(tag);
+    }
   }
 
   private boolean evaluateCondition(final VirtualFrame frame) {

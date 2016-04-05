@@ -1,11 +1,5 @@
 package som.interpreter.nodes.specialized.whileloops;
 
-import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.interpreter.nodes.specialized.SomLoop;
-import som.vm.constants.Nil;
-import som.vmobjects.SBlock;
-
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.Truffle;
@@ -13,8 +7,15 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.nary.BinaryComplexOperation;
+import som.interpreter.nodes.specialized.SomLoop;
+import som.vm.constants.Nil;
+import som.vmobjects.SBlock;
+import tools.dym.Tags.LoopNode;
 
-public abstract class AbstractWhileNode extends BinaryExpressionNode {
+
+public abstract class AbstractWhileNode extends BinaryComplexOperation {
   @Child protected DirectCallNode conditionValueSend;
   @Child protected DirectCallNode bodyValueSend;
 
@@ -22,7 +23,7 @@ public abstract class AbstractWhileNode extends BinaryExpressionNode {
 
   public AbstractWhileNode(final SBlock rcvr, final SBlock arg,
       final boolean predicateBool, final SourceSection source) {
-    super(source);
+    super(false, source);
 
     CallTarget callTargetCondition = rcvr.getMethod().getCallTarget();
     conditionValueSend = Truffle.getRuntime().createDirectCallNode(
@@ -33,6 +34,15 @@ public abstract class AbstractWhileNode extends BinaryExpressionNode {
         callTargetBody);
 
     this.predicateBool = predicateBool;
+  }
+
+  @Override
+  protected boolean isTaggedWith(final Class<?> tag) {
+    if (tag == LoopNode.class) {
+      return true;
+    } else {
+      return super.isTaggedWith(tag);
+    }
   }
 
   @Override

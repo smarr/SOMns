@@ -1,32 +1,34 @@
 package som.primitives.arrays;
 
-import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.dispatch.BlockDispatchNode;
-import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
-import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.interpreter.nodes.specialized.SomLoop;
-import som.primitives.SizeAndLengthPrim;
-import som.primitives.SizeAndLengthPrimFactory;
-import som.vmobjects.SArray;
-import som.vmobjects.SBlock;
-
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.dispatch.BlockDispatchNode;
+import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
+import som.interpreter.nodes.nary.BinaryComplexOperation;
+import som.interpreter.nodes.specialized.SomLoop;
+import som.primitives.SizeAndLengthPrim;
+import som.primitives.SizeAndLengthPrimFactory;
+import som.vmobjects.SArray;
+import som.vmobjects.SBlock;
+
 
 @GenerateNodeFactory
-public abstract class DoIndexesPrim extends BinaryExpressionNode {
+public abstract class DoIndexesPrim extends BinaryComplexOperation {
   @Child protected BlockDispatchNode block;
   @Child protected SizeAndLengthPrim length;
 
-  public DoIndexesPrim(final SourceSection source) {
-    super(source);
+  public DoIndexesPrim(final boolean eagWrap, final SourceSection source) {
+    super(eagWrap, source);
+    // TODO: tag properly, this is a loop, but without array access
     block = BlockDispatchNodeGen.create();
     length = SizeAndLengthPrimFactory.create(null, null);
   }
+  public DoIndexesPrim(final SourceSection source) { this(false, source); }
 
   @Specialization
   public final SArray doArray(final VirtualFrame frame,

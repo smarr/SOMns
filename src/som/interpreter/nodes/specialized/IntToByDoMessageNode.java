@@ -1,16 +1,17 @@
 package som.interpreter.nodes.specialized;
 
-import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.PreevaluatedExpression;
-import som.interpreter.nodes.nary.QuaternaryExpressionNode;
-import som.vmobjects.SBlock;
-import som.vmobjects.SInvokable;
-
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
+
+import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.PreevaluatedExpression;
+import som.interpreter.nodes.nary.QuaternaryExpressionNode;
+import som.vmobjects.SBlock;
+import som.vmobjects.SInvokable;
+import tools.dym.Tags.LoopNode;
 
 
 public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode
@@ -31,6 +32,15 @@ public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode
     super(node.getSourceSection());
     this.blockMethod = node.blockMethod;
     this.valueSend   = node.valueSend;
+  }
+
+  @Override
+  protected boolean isTaggedWith(final Class<?> tag) {
+    if (tag == LoopNode.class) {
+      return true;
+    } else {
+      return super.isTaggedWith(tag);
+    }
   }
 
   @Override

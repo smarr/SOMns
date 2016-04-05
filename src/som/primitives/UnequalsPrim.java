@@ -2,21 +2,21 @@ package som.primitives;
 
 import java.math.BigInteger;
 
-import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.vm.constants.Nil;
-import som.vmobjects.SObjectWithClass;
-import som.vmobjects.SSymbol;
-
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.vm.constants.Nil;
+import som.vmobjects.SObjectWithClass;
+import som.vmobjects.SSymbol;
+
 
 @GenerateNodeFactory
 @ImportStatic(Nil.class)
-public abstract class UnequalsPrim extends BinaryExpressionNode {
-  protected UnequalsPrim(final SourceSection source) { super(source); }
+public abstract class UnequalsPrim extends ComparisonPrim {
+  protected UnequalsPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+  protected UnequalsPrim(final SourceSection source) { super(false, source); }
 
   @Specialization
   public final boolean doBoolean(final boolean left, final boolean right) {

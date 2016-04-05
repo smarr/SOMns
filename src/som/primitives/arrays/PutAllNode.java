@@ -1,15 +1,5 @@
 package som.primitives.arrays;
 
-import som.interpreter.nodes.dispatch.BlockDispatchNode;
-import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
-import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.interpreter.nodes.specialized.SomLoop;
-import som.primitives.SizeAndLengthPrim;
-import som.vm.constants.Nil;
-import som.vmobjects.SArray.SMutableArray;
-import som.vmobjects.SBlock;
-import som.vmobjects.SObjectWithClass;
-
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.ImportStatic;
@@ -18,16 +8,30 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.interpreter.nodes.dispatch.BlockDispatchNode;
+import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
+import som.interpreter.nodes.nary.BinaryComplexOperation;
+import som.interpreter.nodes.specialized.SomLoop;
+import som.primitives.SizeAndLengthPrim;
+import som.vm.constants.Nil;
+import som.vmobjects.SArray.SMutableArray;
+import som.vmobjects.SBlock;
+import som.vmobjects.SObjectWithClass;
+
 
 @GenerateNodeFactory
 @ImportStatic(Nil.class)
 @NodeChild(value = "length", type = SizeAndLengthPrim.class, executeWith = "receiver")
-public abstract class PutAllNode extends BinaryExpressionNode {
+public abstract class PutAllNode extends BinaryComplexOperation {
   @Child protected BlockDispatchNode block;
 
-  public PutAllNode(final SourceSection source) {
-    super(source);
+  public PutAllNode(final boolean eagWrap, final SourceSection source) {
+    super(eagWrap, source); // TODO: tag properly, it is a loop, and array access
     block = BlockDispatchNodeGen.create();
+  }
+
+  public PutAllNode(final SourceSection source) {
+    this(false, source);
   }
 
   protected static final boolean valueOfNoOtherSpecialization(final Object value) {

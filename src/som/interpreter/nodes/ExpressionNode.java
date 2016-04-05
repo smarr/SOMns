@@ -23,6 +23,14 @@ package som.interpreter.nodes;
 
 import java.math.BigInteger;
 
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.Instrumentable;
+import com.oracle.truffle.api.instrumentation.StandardTags.RootTag;
+import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
+import com.oracle.truffle.api.nodes.UnexpectedResultException;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.interpreter.TypesGen;
 import som.interpreter.actors.SFarReference;
 import som.interpreter.actors.SPromise;
@@ -33,25 +41,40 @@ import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
-
-import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.instrumentation.Instrumentable;
-import com.oracle.truffle.api.instrumentation.StandardTags.RootTag;
-import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
-import com.oracle.truffle.api.nodes.UnexpectedResultException;
-import com.oracle.truffle.api.source.SourceSection;
+import tools.dym.Tags.ControlFlowCondition;
+import tools.dym.Tags.LoopBody;
+import tools.dym.Tags.PrimitiveArgument;
+import tools.dym.Tags.VirtualInvokeReceiver;
 
 
 @Instrumentable(factory = ExpressionNodeWrapper.class)
 public abstract class ExpressionNode extends SOMNode {
+
+  @CompilationFinal private byte tagMark;
 
   /**
    * Indicates that this is the subnode of a RootNode,
    * possibly only {@link som.interpreter.Method}.
    * TODO: figure out whether we leave out primitives.
    */
-  @CompilationFinal private boolean isRootExpression;
+  private final static byte ROOT_EXPR = 1;
+
+  /**
+   * Indicates that this node is a root of a loop body.
+   */
+  private final static byte LOOP_BODY = 1 << 1;
+
+  /**
+   * Indicates that this node is a root for a control flow condition
+   */
+  private final static byte CONTROL_FLOW_CONDITION = 1 << 2;
+
+  /**
+   * Indicates that this node is an argument to a primitive.
+   */
+  private final static byte PRIMITIVE_ARGUMENT = 1 << 3;
+
+  private final static byte VIRTUAL_INVOKE_RECEIVER = 1 << 4;
 
   public ExpressionNode(final SourceSection sourceSection) {
     super(sourceSection);
@@ -64,13 +87,50 @@ public abstract class ExpressionNode extends SOMNode {
     super(null);
   }
 
+  private boolean isTagged(final byte mask) {
+    return (tagMark & mask) != 0;
+  }
+
+  private void tagWith(final byte mask) {
+    tagMark |= mask;
+  }
+
   /**
    * Mark the node as being a root expression: {@link RootTag}.
    */
   public void markAsRootExpression() {
-    assert !isRootExpression;
+    assert !isTagged(ROOT_EXPR);
+    assert !isTagged(LOOP_BODY);
+    assert !isTagged(PRIMITIVE_ARGUMENT);
+    assert !isTagged(CONTROL_FLOW_CONDITION);
     assert getSourceSection() != null;
-    isRootExpression = true;
+    tagWith(ROOT_EXPR);
+  }
+
+  public void markAsLoopBody() {
+    assert !isTagged(LOOP_BODY);
+    assert !isTagged(ROOT_EXPR);
+    assert !isTagged(CONTROL_FLOW_CONDITION);
+    assert getSourceSection() != null;
+    tagWith(LOOP_BODY);
+  }
+
+  public void markAsControlFlowCondition() {
+    assert !isTagged(LOOP_BODY);
+    assert !isTagged(ROOT_EXPR);
+    assert !isTagged(CONTROL_FLOW_CONDITION);
+    assert getSourceSection() != null;
+    tagWith(CONTROL_FLOW_CONDITION);
+  }
+
+  public void markAsPrimitiveArgument() {
+    assert getSourceSection() != null;
+    tagWith(PRIMITIVE_ARGUMENT);
+  }
+
+  public void markAsVirtualInvokeReceiver() {
+    assert getSourceSection() != null;
+    tagWith(VIRTUAL_INVOKE_RECEIVER);
   }
 
   @Override
@@ -78,7 +138,15 @@ public abstract class ExpressionNode extends SOMNode {
     if (tag == StatementTag.class) {
       return true;
     } else if (tag == RootTag.class) {
-      return isRootExpression;
+      return isTagged(ROOT_EXPR);
+    } else if (tag == LoopBody.class) {
+      return isTagged(LOOP_BODY);
+    } else if (tag == ControlFlowCondition.class) {
+      return isTagged(CONTROL_FLOW_CONDITION);
+    } else if (tag == PrimitiveArgument.class) {
+      return isTagged(PRIMITIVE_ARGUMENT);
+    } else if (tag == VirtualInvokeReceiver.class) {
+      return isTagged(VIRTUAL_INVOKE_RECEIVER);
     } else {
       return super.isTaggedWith(tag);
     }

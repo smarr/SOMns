@@ -1,23 +1,34 @@
 package som.primitives;
 
-import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.interpreter.nodes.nary.TernaryExpressionNode;
-import som.interpreter.nodes.nary.UnaryExpressionNode;
-import som.vm.Symbols;
-import som.vmobjects.SAbstractObject;
-import som.vmobjects.SSymbol;
-
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.source.SourceSection;
+
+import som.interpreter.nodes.nary.BinaryComplexOperation;
+import som.interpreter.nodes.nary.TernaryExpressionNode;
+import som.interpreter.nodes.nary.UnaryBasicOperation;
+import som.vm.Symbols;
+import som.vmobjects.SAbstractObject;
+import som.vmobjects.SSymbol;
+import tools.dym.Tags.ComplexPrimitiveOperation;
+import tools.dym.Tags.StringAccess;
 
 
 public class StringPrims {
 
   @GenerateNodeFactory
   @Primitive("string:concat:")
-  public abstract static class ConcatPrim extends BinaryExpressionNode {
-    protected ConcatPrim(final SourceSection source) { super(source); }
+  public abstract static class ConcatPrim extends BinaryComplexOperation {
+    protected ConcatPrim(final SourceSection source) { super(false, source); }
+
+    @Override
+    protected boolean isTaggedWith(final Class<?> tag) {
+      if (tag == StringAccess.class) {
+        return true;
+      } else {
+        return super.isTaggedWith(tag);
+      }
+    }
 
     @Specialization
     public final String doString(final String receiver, final String argument) {
@@ -42,8 +53,17 @@ public class StringPrims {
 
   @GenerateNodeFactory
   @Primitive("stringAsSymbol:")
-  public abstract static class AsSymbolPrim extends UnaryExpressionNode {
-    public AsSymbolPrim(final SourceSection source) { super(source); }
+  public abstract static class AsSymbolPrim extends UnaryBasicOperation {
+    public AsSymbolPrim(final SourceSection source) { super(false, source); }
+
+    @Override
+    protected boolean isTaggedWith(final Class<?> tag) {
+      if (tag == StringAccess.class) {
+        return true;
+      } else {
+        return super.isTaggedWith(tag);
+      }
+    }
 
     @Specialization
     public final SAbstractObject doString(final String receiver) {
@@ -59,7 +79,19 @@ public class StringPrims {
   @GenerateNodeFactory
   @Primitive("string:substringFrom:to:")
   public abstract static class SubstringPrim extends TernaryExpressionNode {
-    public SubstringPrim(final SourceSection source) { super(source); }
+    public SubstringPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+    public SubstringPrim(final SourceSection source) { super(false, source); }
+
+    @Override
+    protected boolean isTaggedWith(final Class<?> tag) {
+      if (tag == StringAccess.class) {
+        return true;
+      } else if (tag == ComplexPrimitiveOperation.class) {
+        return true;
+      } else {
+        return super.isTaggedWith(tag);
+      }
+    }
 
     @Specialization
     public final String doString(final String receiver, final long start,

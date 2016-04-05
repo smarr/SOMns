@@ -1,5 +1,18 @@
 package som.interpreter.nodes;
 
+import static som.interpreter.nodes.SOMNode.unwrapIfNecessary;
+
+import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.Instrumentable;
+import com.oracle.truffle.api.instrumentation.StandardTags;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
+import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.nodes.NodeCost;
+import com.oracle.truffle.api.source.SourceSection;
+
+import som.VM;
 import som.compiler.AccessModifier;
 import som.instrumentation.MessageSendNodeWrapper;
 import som.interpreter.TruffleCompiler;
@@ -88,15 +101,7 @@ import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
-
-import com.oracle.truffle.api.CompilerAsserts;
-import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.instrumentation.Instrumentable;
-import com.oracle.truffle.api.instrumentation.StandardTags;
-import com.oracle.truffle.api.nodes.ExplodeLoop;
-import com.oracle.truffle.api.nodes.NodeCost;
-import com.oracle.truffle.api.source.SourceSection;
+import tools.dym.Tags.VirtualInvoke;
 
 
 public final class MessageSendNode {
@@ -120,7 +125,8 @@ public final class MessageSendNode {
 
   public static GenericMessageSendNode createGeneric(final SSymbol selector,
       final ExpressionNode[] argumentNodes, final SourceSection source) {
-    if (argumentNodes != null && argumentNodes[0] instanceof ISpecialSend) {
+    if (argumentNodes != null &&
+        unwrapIfNecessary(argumentNodes[0]) instanceof ISpecialSend) {
       throw new NotYetImplementedException();
     } else {
       return new GenericMessageSendNode(selector, argumentNodes,
@@ -155,7 +161,7 @@ public final class MessageSendNode {
     }
 
     public boolean isSpecialSend() {
-      return argumentNodes[0] instanceof ISpecialSend;
+      return unwrapIfNecessary(argumentNodes[0]) instanceof ISpecialSend;
     }
 
     @Override
@@ -197,7 +203,7 @@ public final class MessageSendNode {
     }
 
     @Override
-    public final Object executeGeneric(final VirtualFrame frame) {
+    public Object executeGeneric(final VirtualFrame frame) {
       // This is a branch never taken, none of the code here should be compiled.
       CompilerDirectives.transferToInterpreter();
       return super.executeGeneric(frame);
@@ -236,20 +242,17 @@ public final class MessageSendNode {
     }
 
     protected abstract PreevaluatedExpression makeSpecialSend();
-
-    private GenericMessageSendNode makeOrdenarySend() {
-      GenericMessageSendNode send = new GenericMessageSendNode(selector,
-          argumentNodes,
-          UninitializedDispatchNode.createRcvrSend(
-              getSourceSection(), selector, AccessModifier.PUBLIC),
-          getSourceSection());
-      return replace(send);
-    }
+    protected abstract GenericMessageSendNode makeOrdenarySend();
 
     private PreevaluatedExpression makeEagerUnaryPrim(final UnaryExpressionNode prim) {
+      VM.insertInstrumentationWrapper(this);
       assert prim.getSourceSection() != null;
+
+      argumentNodes[0].markAsPrimitiveArgument();
       PreevaluatedExpression result = replace(new EagerUnaryPrimitiveNode(
           prim.getSourceSection(), selector, argumentNodes[0], prim));
+      VM.insertInstrumentationWrapper((Node) result);
+      VM.insertInstrumentationWrapper(argumentNodes[0]);
       return result;
     }
 
@@ -259,32 +262,32 @@ public final class MessageSendNode {
         // eagerly but cautious:
         case "size":
           if (receiver instanceof SArray) {
-            return makeEagerUnaryPrim(SizeAndLengthPrimFactory.create(getSourceSection(), null));
+            return makeEagerUnaryPrim(SizeAndLengthPrimFactory.create(true, getSourceSection(), null));
           }
           break;
         case "length":
           if (receiver instanceof String) {
-            return makeEagerUnaryPrim(SizeAndLengthPrimFactory.create(getSourceSection(), null));
+            return makeEagerUnaryPrim(SizeAndLengthPrimFactory.create(true, getSourceSection(), null));
           }
           break;
         case "value":
           if (receiver instanceof SBlock || receiver instanceof Boolean) {
-            return makeEagerUnaryPrim(ValueNonePrimFactory.create(getSourceSection(), null));
+            return makeEagerUnaryPrim(ValueNonePrimFactory.create(true, getSourceSection(), null));
           }
           break;
         case "not":
           if (receiver instanceof Boolean) {
-            return makeEagerUnaryPrim(NotMessageNodeFactory.create(getSourceSection(), null));
+            return makeEagerUnaryPrim(NotMessageNodeFactory.create(true, getSourceSection(), null));
           }
           break;
         case "abs":
           if (receiver instanceof Long) {
-            return makeEagerUnaryPrim(AbsPrimNodeGen.create(getSourceSection(), null));
+            return makeEagerUnaryPrim(AbsPrimNodeGen.create(true, getSourceSection(), null));
           }
           break;
         case "copy":
-          if (receiver instanceof SArray) {
-            return makeEagerUnaryPrim(CopyPrimNodeGen.create(getSourceSection(), null));
+          if (!VM.enabledDynamicMetricsTool() && receiver instanceof SArray) {
+            return makeEagerUnaryPrim(CopyPrimNodeGen.create(true, getSourceSection(), null));
           }
           break;
         case "PositiveInfinity":
@@ -295,37 +298,37 @@ public final class MessageSendNode {
           break;
         case "round":
           if (receiver instanceof Double) {
-            return makeEagerUnaryPrim(RoundPrimFactory.create(getSourceSection(), null));
+            return makeEagerUnaryPrim(RoundPrimFactory.create(true, getSourceSection(), null));
           }
           break;
         case "as32BitSignedValue":
           if (receiver instanceof Long) {
-            return makeEagerUnaryPrim(As32BitSignedValueFactory.create(getSourceSection(), null));
+            return makeEagerUnaryPrim(As32BitSignedValueFactory.create(true, getSourceSection(), null));
           }
           break;
         case "as32BitUnsignedValue":
           if (receiver instanceof Long) {
-            return makeEagerUnaryPrim(As32BitUnsignedValueFactory.create(getSourceSection(), null));
+            return makeEagerUnaryPrim(As32BitUnsignedValueFactory.create(true, getSourceSection(), null));
           }
           break;
         case "sin":
           if (receiver instanceof Double) {
-            return makeEagerUnaryPrim(SinPrimFactory.create(getSourceSection(), null));
+            return makeEagerUnaryPrim(SinPrimFactory.create(true, getSourceSection(), null));
           }
           break;
         case "exp":
           if (receiver instanceof Double) {
-            return makeEagerUnaryPrim(ExpPrimFactory.create(getSourceSection(), null));
+            return makeEagerUnaryPrim(ExpPrimFactory.create(true, getSourceSection(), null));
           }
           break;
         case "log":
           if (receiver instanceof Double) {
-            return makeEagerUnaryPrim(LogPrimFactory.create(getSourceSection(), null));
+            return makeEagerUnaryPrim(LogPrimFactory.create(true, getSourceSection(), null));
           }
           break;
         case "sqrt":
           if (receiver instanceof Number) {
-            return makeEagerUnaryPrim(SqrtPrimFactory.create(getSourceSection(), null));
+            return makeEagerUnaryPrim(SqrtPrimFactory.create(true, getSourceSection(), null));
           }
           break;
         case "isNil":
@@ -347,9 +350,17 @@ public final class MessageSendNode {
     }
 
     private PreevaluatedExpression makeEagerBinaryPrim(final BinaryExpressionNode prim) {
+      VM.insertInstrumentationWrapper(this);
       assert prim.getSourceSection() != null;
+
+      argumentNodes[0].markAsPrimitiveArgument();
+      argumentNodes[1].markAsPrimitiveArgument();
+
       PreevaluatedExpression result = replace(new EagerBinaryPrimitiveNode(
           selector, argumentNodes[0], argumentNodes[1], prim, prim.getSourceSection()));
+      VM.insertInstrumentationWrapper((Node) result);
+      VM.insertInstrumentationWrapper(argumentNodes[0]);
+      VM.insertInstrumentationWrapper(argumentNodes[1]);
       return result;
     }
 
@@ -357,52 +368,55 @@ public final class MessageSendNode {
       switch (selector.getString()) {
         case "at:":
           if (arguments[0] instanceof SArray) {
-            return makeEagerBinaryPrim(AtPrimFactory.create(getSourceSection(), null, null));
+            return makeEagerBinaryPrim(AtPrimFactory.create(true, getSourceSection(), null, null));
           }
           break;
         case "new:":
           if (arguments[0] instanceof SClass && ((SClass) arguments[0]).isArray()) {
-            return makeEagerBinaryPrim(NewPrimFactory.create(getSourceSection(), null, null));
+            return makeEagerBinaryPrim(NewPrimFactory.create(true, getSourceSection(), null, null));
           }
           break;
         case "doIndexes:":
-          if (arguments[0] instanceof SArray) {
-            return makeEagerBinaryPrim(DoIndexesPrimFactory.create(getSourceSection(), null, null));
+          if (!VM.enabledDynamicMetricsTool() && arguments[0] instanceof SArray) {
+            return makeEagerBinaryPrim(DoIndexesPrimFactory.create(true, getSourceSection(), null, null));
           }
           break;
         case "do:":
-          if (arguments[0] instanceof SArray) {
-            return makeEagerBinaryPrim(DoPrimFactory.create(getSourceSection(), null, null));
+          if (!VM.enabledDynamicMetricsTool() && arguments[0] instanceof SArray) {
+            return makeEagerBinaryPrim(DoPrimFactory.create(true, getSourceSection(), null, null));
           }
           break;
         case "putAll:":
-          return makeEagerBinaryPrim(PutAllNodeFactory.create(getSourceSection(), null, null, SizeAndLengthPrimFactory.create(null, null)));
+          if (!VM.enabledDynamicMetricsTool()) {
+            return makeEagerBinaryPrim(PutAllNodeFactory.create(true, getSourceSection(), null, null, SizeAndLengthPrimFactory.create(null, null)));
+          }
+          break;
         case "whileTrue:": {
-          if (argumentNodes[1] instanceof BlockNode &&
-              argumentNodes[0] instanceof BlockNode) {
-            BlockNode argBlockNode = (BlockNode) argumentNodes[1];
+          if (unwrapIfNecessary(argumentNodes[1]) instanceof BlockNode &&
+              unwrapIfNecessary(argumentNodes[0]) instanceof BlockNode) {
+            BlockNode argBlockNode = (BlockNode) unwrapIfNecessary(argumentNodes[1]);
             SBlock    argBlock     = (SBlock)    arguments[1];
             return replace(new WhileTrueStaticBlocksNode(
-                (BlockNode) argumentNodes[0], argBlockNode,
+                (BlockNode) unwrapIfNecessary(argumentNodes[0]), argBlockNode,
                 (SBlock) arguments[0],
                 argBlock, getSourceSection()));
           }
           break; // use normal send
         }
         case "whileFalse:":
-          if (argumentNodes[1] instanceof BlockNode &&
-              argumentNodes[0] instanceof BlockNode) {
-            BlockNode argBlockNode = (BlockNode) argumentNodes[1];
+          if (unwrapIfNecessary(argumentNodes[1]) instanceof BlockNode &&
+              unwrapIfNecessary(argumentNodes[0]) instanceof BlockNode) {
+            BlockNode argBlockNode = (BlockNode) unwrapIfNecessary(argumentNodes[1]);
             SBlock    argBlock     = (SBlock)    arguments[1];
             return replace(new WhileFalseStaticBlocksNode(
-                (BlockNode) argumentNodes[0], argBlockNode,
+                (BlockNode) unwrapIfNecessary(argumentNodes[0]), argBlockNode,
                 (SBlock) arguments[0], argBlock, getSourceSection()));
           }
           break; // use normal send
         case "and:":
         case "&&":
           if (arguments[0] instanceof Boolean) {
-            if (argumentNodes[1] instanceof BlockNode) {
+            if (unwrapIfNecessary(argumentNodes[1]) instanceof BlockNode) {
               return replace(AndMessageNodeFactory.create((SBlock) arguments[1],
                   getSourceSection(), argumentNodes[0], argumentNodes[1]));
             } else if (arguments[1] instanceof Boolean) {
@@ -414,7 +428,7 @@ public final class MessageSendNode {
         case "or:":
         case "||":
           if (arguments[0] instanceof Boolean) {
-            if (argumentNodes[1] instanceof BlockNode) {
+            if (unwrapIfNecessary(argumentNodes[1]) instanceof BlockNode) {
               return replace(OrMessageNodeGen.create((SBlock) arguments[1],
                   getSourceSection(),
                   argumentNodes[0], argumentNodes[1]));
@@ -428,7 +442,7 @@ public final class MessageSendNode {
 
         case "value:":
           if (arguments[0] instanceof SBlock) {
-            return makeEagerBinaryPrim(ValueOnePrimFactory.create(getSourceSection(), null, null));
+            return makeEagerBinaryPrim(ValueOnePrimFactory.create(true, getSourceSection(), null, null));
           }
           break;
         case "ifTrue:":
@@ -438,8 +452,8 @@ public final class MessageSendNode {
           return replace(IfMessageNodeGen.create(false, getSourceSection(),
               argumentNodes[0], argumentNodes[1]));
         case "to:":
-          if (arguments[0] instanceof Long) {
-            return makeEagerBinaryPrim(ToPrimNodeGen.create(getSourceSection(), null, null));
+          if (!VM.enabledDynamicMetricsTool() && arguments[0] instanceof Long) {
+            return makeEagerBinaryPrim(ToPrimNodeGen.create(true, getSourceSection(), null, null));
           }
           break;
 
@@ -453,64 +467,64 @@ public final class MessageSendNode {
         case "whenResolved:": {
           if (arguments[0] instanceof SPromise) {
             return makeEagerBinaryPrim(WhenResolvedPrimFactory.create(
-                getSourceSection(), null, null));
+                true, getSourceSection(), null, null));
           }
           break;
         }
 
         // TODO: find a better way for primitives, use annotation or something
         case "<":
-          return makeEagerBinaryPrim(LessThanPrimFactory.create(getSourceSection(), null, null));
+          return makeEagerBinaryPrim(LessThanPrimFactory.create(true, getSourceSection(), null, null));
         case "<=":
-          return makeEagerBinaryPrim(LessThanOrEqualPrimNodeGen.create(getSourceSection(), null, null));
+          return makeEagerBinaryPrim(LessThanOrEqualPrimNodeGen.create(true, getSourceSection(), null, null));
         case ">":
-          return makeEagerBinaryPrim(GreaterThanPrimNodeGen.create(getSourceSection(), null, null));
+          return makeEagerBinaryPrim(GreaterThanPrimNodeGen.create(true, getSourceSection(), null, null));
         case ">=":
-          return makeEagerBinaryPrim(GreaterThanOrEqualPrimNodeGen.create(getSourceSection(), null, null));
+          return makeEagerBinaryPrim(GreaterThanOrEqualPrimNodeGen.create(true, getSourceSection(), null, null));
         case "+":
-          return makeEagerBinaryPrim(AdditionPrimFactory.create(getSourceSection(), null, null));
+          return makeEagerBinaryPrim(AdditionPrimFactory.create(true, getSourceSection(), null, null));
         case "-":
-          return makeEagerBinaryPrim(SubtractionPrimFactory.create(getSourceSection(), null, null));
+          return makeEagerBinaryPrim(SubtractionPrimFactory.create(true, getSourceSection(), null, null));
         case "*":
-          return makeEagerBinaryPrim(MultiplicationPrimFactory.create(getSourceSection(), null, null));
+          return makeEagerBinaryPrim(MultiplicationPrimFactory.create(true, getSourceSection(), null, null));
         case "=":
-          return makeEagerBinaryPrim(EqualsPrimFactory.create(getSourceSection(), null, null));
+          return makeEagerBinaryPrim(EqualsPrimFactory.create(true, getSourceSection(), null, null));
         case "<>":
-          return makeEagerBinaryPrim(UnequalsPrimFactory.create(getSourceSection(), null, null));
+          return makeEagerBinaryPrim(UnequalsPrimFactory.create(true, getSourceSection(), null, null));
 // TODO: this is not a correct primitive, new an UnequalsUnequalsPrim...
 //        case "~=":
 //          return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
 //              argumentNodes[1],
 //              UnequalsPrimFactory.create(null, null)));
         case "==":
-          return makeEagerBinaryPrim(EqualsEqualsPrimFactory.create(getSourceSection(), null, null));
+          return makeEagerBinaryPrim(EqualsEqualsPrimFactory.create(true, getSourceSection(), null, null));
         case "bitXor:":
-          return makeEagerBinaryPrim(BitXorPrimFactory.create(getSourceSection(), null, null));
+          return makeEagerBinaryPrim(BitXorPrimFactory.create(true, getSourceSection(), null, null));
         case "//":
-          return makeEagerBinaryPrim(DoubleDivPrimFactory.create(getSourceSection(), null, null));
+          return makeEagerBinaryPrim(DoubleDivPrimFactory.create(true, getSourceSection(), null, null));
         case "%":
-          return makeEagerBinaryPrim(ModuloPrimFactory.create(getSourceSection(), null, null));
+          return makeEagerBinaryPrim(ModuloPrimFactory.create(true, getSourceSection(), null, null));
         case "rem:":
-          return makeEagerBinaryPrim(RemainderPrimFactory.create(getSourceSection(), null, null));
+          return makeEagerBinaryPrim(RemainderPrimFactory.create(true, getSourceSection(), null, null));
         case "/":
-          return makeEagerBinaryPrim(DividePrimFactory.create(getSourceSection(), null, null));
+          return makeEagerBinaryPrim(DividePrimFactory.create(true, getSourceSection(), null, null));
         case "&":
-          return makeEagerBinaryPrim(BitAndPrimFactory.create(getSourceSection(), null, null));
+          return makeEagerBinaryPrim(BitAndPrimFactory.create(true, getSourceSection(), null, null));
 
         // eagerly but cautious:
         case "<<":
           if (arguments[0] instanceof Long) {
-            return makeEagerBinaryPrim(LeftShiftPrimFactory.create(getSourceSection(), null, null));
+            return makeEagerBinaryPrim(LeftShiftPrimFactory.create(true, getSourceSection(), null, null));
           }
           break;
         case ">>>":
           if (arguments[0] instanceof Long) {
-            return makeEagerBinaryPrim(UnsignedRightShiftPrimFactory.create(getSourceSection(), null, null));
+            return makeEagerBinaryPrim(UnsignedRightShiftPrimFactory.create(true, getSourceSection(), null, null));
           }
           break;
         case "max:":
-          if (arguments[0] instanceof Long) {
-            return makeEagerBinaryPrim(MaxIntPrimNodeGen.create(getSourceSection(), null, null));
+          if (!VM.enabledDynamicMetricsTool() && arguments[0] instanceof Long) {
+            return makeEagerBinaryPrim(MaxIntPrimNodeGen.create(true, getSourceSection(), null, null));
           }
           break;
       }
@@ -518,10 +532,21 @@ public final class MessageSendNode {
     }
 
     private PreevaluatedExpression makeEagerTernaryPrim(final TernaryExpressionNode prim) {
+      VM.insertInstrumentationWrapper(this);
       assert prim.getSourceSection() != null;
+
+      argumentNodes[0].markAsPrimitiveArgument();
+      argumentNodes[1].markAsPrimitiveArgument();
+      argumentNodes[2].markAsPrimitiveArgument();
+
       PreevaluatedExpression result = replace(new EagerTernaryPrimitiveNode(
           prim.getSourceSection(), selector, argumentNodes[0],
           argumentNodes[1], argumentNodes[2], prim));
+
+      VM.insertInstrumentationWrapper((Node) result);
+      VM.insertInstrumentationWrapper(argumentNodes[0]);
+      VM.insertInstrumentationWrapper(argumentNodes[1]);
+      VM.insertInstrumentationWrapper(argumentNodes[2]);
       return result;
     }
 
@@ -530,7 +555,7 @@ public final class MessageSendNode {
         case "at:put:":
           if (arguments[0] instanceof SArray) {
             return makeEagerTernaryPrim(AtPutPrimFactory.create(
-                getSourceSection(), null, null, null));
+                true, getSourceSection(), null, null, null));
           }
           break;
         case "ifTrue:ifFalse:":
@@ -538,7 +563,8 @@ public final class MessageSendNode {
               arguments[0], arguments[1], arguments[2], argumentNodes[0],
               argumentNodes[1], argumentNodes[2]));
         case "to:do:":
-          if (TypesGen.isLong(arguments[0]) &&
+          if (!VM.enabledDynamicMetricsTool() &&
+              TypesGen.isLong(arguments[0]) &&
               (TypesGen.isLong(arguments[1]) ||
                   TypesGen.isDouble(arguments[1])) &&
               TypesGen.isSBlock(arguments[2])) {
@@ -547,7 +573,8 @@ public final class MessageSendNode {
           }
           break;
         case "downTo:do:":
-          if (TypesGen.isLong(arguments[0]) &&
+          if (!VM.enabledDynamicMetricsTool() &&
+              TypesGen.isLong(arguments[0]) &&
               (TypesGen.isLong(arguments[1]) ||
                   TypesGen.isDouble(arguments[1])) &&
               TypesGen.isSBlock(arguments[2])) {
@@ -559,7 +586,7 @@ public final class MessageSendNode {
         case "substringFrom:to:":
           if (arguments[0] instanceof String) {
             return makeEagerTernaryPrim(SubstringPrimFactory.create(
-                getSourceSection(), null, null, null));
+                true, getSourceSection(), null, null, null));
           }
           break;
         case "invokeOn:with:":
@@ -569,13 +596,13 @@ public final class MessageSendNode {
         case "value:with:":
           if (arguments[0] instanceof SBlock) {
             return makeEagerTernaryPrim(ValueTwoPrimFactory.create(
-                getSourceSection(), null, null, null));
+                true, getSourceSection(), null, null, null));
           }
           break;
         case "new:withAll:":
-          if (arguments[0] == Classes.valueArrayClass) {
+          if (!VM.enabledDynamicMetricsTool() && arguments[0] == Classes.valueArrayClass) {
             return makeEagerTernaryPrim(NewImmutableArrayNodeGen.create(
-                getSourceSection(), null, null, null));
+                true, getSourceSection(), null, null, null));
           }
       }
       return makeSend();
@@ -585,9 +612,12 @@ public final class MessageSendNode {
         final Object[] arguments) {
       switch (selector.getString()) {
         case "to:by:do:":
-          return replace(IntToByDoMessageNodeGen.create(this,
-              (SBlock) arguments[3], argumentNodes[0], argumentNodes[1],
-              argumentNodes[2], argumentNodes[3]));
+          if (!VM.enabledDynamicMetricsTool()) {
+            return replace(IntToByDoMessageNodeGen.create(this,
+                (SBlock) arguments[3], argumentNodes[0], argumentNodes[1],
+                argumentNodes[2], argumentNodes[3]));
+          }
+          break;
       }
       return makeSend();
     }
@@ -604,9 +634,35 @@ public final class MessageSendNode {
       assert source != null;
     }
 
+    /**
+     * For wrapper use only.
+     */
+    protected UninitializedMessageSendNode(final UninitializedMessageSendNode wrappedNode) {
+      super(wrappedNode.selector, null, null);
+    }
+
+    @Override
+    protected GenericMessageSendNode makeOrdenarySend() {
+      VM.insertInstrumentationWrapper(this);
+
+      argumentNodes[0].markAsVirtualInvokeReceiver();
+      GenericMessageSendNode send = new GenericMessageSendNode(selector,
+          argumentNodes,
+          UninitializedDispatchNode.createRcvrSend(
+              getSourceSection(), selector, AccessModifier.PUBLIC),
+          getSourceSection());
+      replace(send);
+      VM.insertInstrumentationWrapper(send);
+      VM.insertInstrumentationWrapper(argumentNodes[0]);
+      return send;
+    }
+
     @Override
     protected PreevaluatedExpression makeSpecialSend() {
-      ISpecialSend rcvrNode = (ISpecialSend) argumentNodes[0];
+      VM.insertInstrumentationWrapper(this);
+
+      ISpecialSend rcvrNode = (ISpecialSend) unwrapIfNecessary(argumentNodes[0]);
+      argumentNodes[0].markAsVirtualInvokeReceiver();
       AbstractDispatchNode dispatch;
 
       if (rcvrNode.isSuperSend()) {
@@ -619,7 +675,10 @@ public final class MessageSendNode {
 
       GenericMessageSendNode node = new GenericMessageSendNode(selector,
         argumentNodes, dispatch, getSourceSection());
-      return replace(node);
+      replace(node);
+      VM.insertInstrumentationWrapper(node);
+      VM.insertInstrumentationWrapper(argumentNodes[0]);
+      return node;
     }
   }
 
@@ -628,11 +687,23 @@ public final class MessageSendNode {
 
     protected UninitializedSymbolSendNode(final SSymbol selector, final SourceSection source) {
       super(selector, new ExpressionNode[0], source);
+      assert source != null;
     }
 
     @Override
     public boolean isSpecialSend() {
       return false;
+    }
+
+    @Override
+    protected GenericMessageSendNode makeOrdenarySend() {
+      // TODO: figure out what to do with reflective sends and how to instrument them.
+      GenericMessageSendNode send = new GenericMessageSendNode(selector,
+          argumentNodes,
+          UninitializedDispatchNode.createRcvrSend(
+              getSourceSection(), selector, AccessModifier.PUBLIC),
+          getSourceSection());
+      return replace(send);
     }
 
     @Override
@@ -678,6 +749,15 @@ public final class MessageSendNode {
       super(arguments, source);
       this.selector = selector;
       this.dispatchNode = dispatchNode;
+    }
+
+    @Override
+    protected boolean isTaggedWith(final Class<?> tag) {
+      if (tag == VirtualInvoke.class) {
+        return true;
+      } else {
+        return super.isTaggedWith(tag);
+      }
     }
 
     @Override

@@ -1,18 +1,31 @@
 package som.primitives;
 
-import som.interpreter.nodes.nary.UnaryExpressionNode;
-
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.source.SourceSection;
+
+import som.interpreter.nodes.nary.UnaryBasicOperation;
+import som.interpreter.nodes.nary.UnaryExpressionNode;
+import tools.dym.Tags.OpArithmetic;
+import tools.highlight.Tags.LiteralTag;
 
 
 public abstract class DoublePrims  {
 
   @GenerateNodeFactory
   @Primitive("doubleRound:")
-  public abstract static class RoundPrim extends UnaryExpressionNode {
-    public RoundPrim(final SourceSection source) { super(source); }
+  public abstract static class RoundPrim extends UnaryBasicOperation {
+    public RoundPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+    public RoundPrim(final SourceSection source) { super(false, source); }
+
+    @Override
+    protected boolean isTaggedWith(final Class<?> tag) {
+      if (tag == OpArithmetic.class) {
+        return true;
+      } else {
+        return super.isTaggedWith(tag);
+      }
+    }
 
     @Specialization
     public final long doDouble(final double receiver) {
@@ -23,7 +36,16 @@ public abstract class DoublePrims  {
   @GenerateNodeFactory
   @Primitive("doublePositiveInfinity:")
   public abstract static class PositiveInfinityPrim extends UnaryExpressionNode {
-    public PositiveInfinityPrim(final SourceSection source) { super(source); }
+    public PositiveInfinityPrim(final SourceSection source) { super(false, source); }
+
+    @Override
+    protected boolean isTaggedWith(final Class<?> tag) {
+      if (tag == LiteralTag.class) {
+        return true;
+      } else {
+        return super.isTaggedWith(tag);
+      }
+    }
 
     @Specialization
     public final double doSClass(final Object receiver) {

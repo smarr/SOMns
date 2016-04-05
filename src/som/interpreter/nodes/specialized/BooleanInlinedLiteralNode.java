@@ -1,12 +1,13 @@
 package som.interpreter.nodes.specialized;
 
-import som.interpreter.nodes.ExpressionNode;
-
 import com.oracle.truffle.api.dsl.UnsupportedSpecializationException;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import com.oracle.truffle.api.source.SourceSection;
+
+import som.interpreter.nodes.ExpressionNode;
+import tools.dym.Tags.ControlFlowCondition;
 
 
 public abstract class BooleanInlinedLiteralNode extends ExpressionNode {
@@ -27,6 +28,15 @@ public abstract class BooleanInlinedLiteralNode extends ExpressionNode {
     this.receiverNode = receiverNode;
     this.argumentNode = inlinedArgumentNode;
     this.argumentAcutalNode = originalArgumentNode;
+  }
+
+  @Override
+  protected boolean isTaggedWith(final Class<?> tag) {
+    if (tag == ControlFlowCondition.class) {
+      return true;
+    } else {
+      return super.isTaggedWith(tag);
+    }
   }
 
   protected final boolean evaluateReceiver(final VirtualFrame frame) {

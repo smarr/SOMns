@@ -1,9 +1,5 @@
 package som.interpreter.nodes.specialized;
 
-import som.interpreter.nodes.nary.TernaryExpressionNode;
-import som.vmobjects.SBlock;
-import som.vmobjects.SInvokable;
-
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -12,6 +8,10 @@ import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.profiles.ConditionProfile;
 import com.oracle.truffle.api.source.SourceSection;
+
+import som.interpreter.nodes.nary.TernaryExpressionNode;
+import som.vmobjects.SBlock;
+import som.vmobjects.SInvokable;
 
 
 /**
@@ -31,7 +31,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode {
 
   public IfTrueIfFalseMessageNode(final SourceSection source, final Object rcvr, final Object arg1,
       final Object arg2) {
-    super(source);
+    super(false, source);
 
     if (arg1 instanceof SBlock) {
       SBlock trueBlock = (SBlock) arg1;
@@ -55,7 +55,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode {
   }
 
   public IfTrueIfFalseMessageNode(final IfTrueIfFalseMessageNode node) {
-    super(node.sourceSection);
+    super(false, node.sourceSection);
 
     trueMethod = node.trueMethod;
     if (node.trueMethod != null) {

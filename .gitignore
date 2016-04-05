@@ -5,3 +5,5 @@ mini.sh
 rebench.conf
 user-dict.txt
 libs/*.jar
+*.json
+nbproject

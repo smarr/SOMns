@@ -1,14 +1,14 @@
 package som.primitives;
 
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.VM;
 import som.interpreter.Types;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
-
-import com.oracle.truffle.api.dsl.GenerateNodeFactory;
-import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.source.SourceSection;
 
 
 public class ClassPrims {
@@ -17,7 +17,7 @@ public class ClassPrims {
   @GenerateNodeFactory
   @Primitive("mirrorAClassesName:")
   public abstract static class NamePrim extends UnaryExpressionNode {
-    public NamePrim(final SourceSection source) { super(source); }
+    public NamePrim(final SourceSection source) { super(false, source); }
 
     @Specialization
     public final SAbstractObject doSClass(final SClass receiver) {
@@ -28,7 +28,7 @@ public class ClassPrims {
   @GenerateNodeFactory
   @Primitive("mirrorClassName:")
   public abstract static class ClassNamePrim extends UnaryExpressionNode {
-    public ClassNamePrim(final SourceSection source) { super(source); }
+    public ClassNamePrim(final SourceSection source) { super(false, source); }
 
     @Specialization
     public final SAbstractObject doSClass(final Object receiver) {
@@ -39,7 +39,7 @@ public class ClassPrims {
 
   @GenerateNodeFactory
   public abstract static class SuperClassPrim extends UnaryExpressionNode {
-    public SuperClassPrim(final SourceSection source) { super(source); }
+    public SuperClassPrim(final SourceSection source) { super(false, source); }
 
     @Specialization
     public final SAbstractObject doSClass(final SClass receiver) {

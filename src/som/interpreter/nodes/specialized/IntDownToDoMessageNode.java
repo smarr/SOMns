@@ -1,15 +1,16 @@
 package som.interpreter.nodes.specialized;
 
-import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.nary.TernaryExpressionNode;
-import som.vmobjects.SBlock;
-import som.vmobjects.SInvokable;
-
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
+
+import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.nary.TernaryExpressionNode;
+import som.vmobjects.SBlock;
+import som.vmobjects.SInvokable;
+import tools.dym.Tags.LoopNode;
 
 
 public abstract class IntDownToDoMessageNode extends TernaryExpressionNode {
@@ -19,16 +20,25 @@ public abstract class IntDownToDoMessageNode extends TernaryExpressionNode {
 
   public IntDownToDoMessageNode(final ExpressionNode orignialNode,
       final SBlock block) {
-    super(orignialNode.getSourceSection());
+    super(false, orignialNode.getSourceSection());
     blockMethod = block.getMethod();
     valueSend = Truffle.getRuntime().createDirectCallNode(
                     blockMethod.getCallTarget());
   }
 
   public IntDownToDoMessageNode(final IntDownToDoMessageNode node) {
-    super(node.getSourceSection());
+    super(false, node.getSourceSection());
     this.blockMethod = node.blockMethod;
     this.valueSend   = node.valueSend;
+  }
+
+  @Override
+  protected boolean isTaggedWith(final Class<?> tag) {
+    if (tag == LoopNode.class) {
+      return true;
+    } else {
+      return super.isTaggedWith(tag);
+    }
   }
 
   protected final boolean isSameBlockLong(final SBlock block) {

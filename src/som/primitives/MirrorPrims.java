@@ -2,11 +2,16 @@ package som.primitives;
 
 import java.util.ArrayList;
 
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.VM;
 import som.compiler.MixinDefinition;
 import som.interpreter.Types;
 import som.interpreter.nodes.dispatch.Dispatchable;
-import som.interpreter.nodes.nary.BinaryExpressionNode;
+import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.reflection.AbstractSymbolDispatch;
 import som.primitives.reflection.AbstractSymbolDispatchNodeGen;
@@ -18,18 +23,13 @@ import som.vmobjects.SInvokable;
 import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
 
-import com.oracle.truffle.api.dsl.GenerateNodeFactory;
-import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.source.SourceSection;
-
 
 public abstract class MirrorPrims {
 
   @GenerateNodeFactory
   @Primitive("objNestedClasses:")
   public abstract static class NestedClassesPrim extends UnaryExpressionNode {
-    public NestedClassesPrim(final SourceSection source) { super(source); }
+    public NestedClassesPrim(final SourceSection source) { super(false, source); }
 
     @Specialization
     public final SMutableArray getNestedClasses(final SObjectWithClass rcvr) {
@@ -40,8 +40,8 @@ public abstract class MirrorPrims {
 
   @GenerateNodeFactory
   @Primitive("obj:respondsTo:")
-  public abstract static class RespondsToPrim extends BinaryExpressionNode {
-    protected RespondsToPrim(final SourceSection source) { super(source); }
+  public abstract static class RespondsToPrim extends BinaryComplexOperation {
+    protected RespondsToPrim(final SourceSection source) { super(false, source); }
 
     @Specialization
     public final boolean objectResondsTo(final Object rcvr, final SSymbol selector) {
@@ -53,7 +53,7 @@ public abstract class MirrorPrims {
   @GenerateNodeFactory
   @Primitive("objMethods:")
   public abstract static class MethodsPrim extends UnaryExpressionNode {
-    public MethodsPrim(final SourceSection source) { super(source); }
+    public MethodsPrim(final SourceSection source) { super(false, source); }
 
     @Specialization
     public final SImmutableArray getMethod(final Object rcvr) {
@@ -65,11 +65,10 @@ public abstract class MirrorPrims {
 
   @GenerateNodeFactory
   @Primitive("obj:perform:")
-  public abstract static class PerformPrim extends BinaryExpressionNode {
+  public abstract static class PerformPrim extends BinaryComplexOperation {
     @Child protected AbstractSymbolDispatch dispatch;
-
     public PerformPrim(final SourceSection source) {
-      super(source);
+      super(false, source);
       dispatch = AbstractSymbolDispatchNodeGen.create(source);
     }
 
@@ -83,7 +82,7 @@ public abstract class MirrorPrims {
   @GenerateNodeFactory
   @Primitive("classDefinition:")
   public abstract static class ClassDefinitionPrim extends UnaryExpressionNode {
-    public ClassDefinitionPrim(final SourceSection source) { super(source); }
+    public ClassDefinitionPrim(final SourceSection source) { super(false, source); }
 
     @Specialization
     public final Object getClassDefinition(final SClass rcvr) {
@@ -94,7 +93,7 @@ public abstract class MirrorPrims {
   @GenerateNodeFactory
   @Primitive("classDefNestedClassDefinitions:")
   public abstract static class NestedClassDefinitionsPrim extends UnaryExpressionNode {
-    public NestedClassDefinitionsPrim(final SourceSection source) { super(source); }
+    public NestedClassDefinitionsPrim(final SourceSection source) { super(false, source); }
 
     @Specialization
     public final Object getClassDefinition(final Object mixinHandle) {
@@ -108,7 +107,7 @@ public abstract class MirrorPrims {
   @GenerateNodeFactory
   @Primitive("classDefName:")
   public abstract static class ClassDefNamePrim extends UnaryExpressionNode {
-    public ClassDefNamePrim(final SourceSection source) { super(source); }
+    public ClassDefNamePrim(final SourceSection source) { super(false, source); }
 
     @Specialization
     public final SSymbol getName(final Object mixinHandle) {
@@ -121,7 +120,7 @@ public abstract class MirrorPrims {
   @GenerateNodeFactory
   @Primitive("classDefMethods:")
   public abstract static class ClassDefMethodsPrim extends UnaryExpressionNode {
-    public ClassDefMethodsPrim(final SourceSection source) { super(source); }
+    public ClassDefMethodsPrim(final SourceSection source) { super(false, source); }
 
     @Specialization
     public final SImmutableArray getName(final Object mixinHandle) {
@@ -141,8 +140,8 @@ public abstract class MirrorPrims {
 
   @GenerateNodeFactory
   @Primitive("classDef:hasFactoryMethod:")
-  public abstract static class ClassDefHasFactoryMethodPrim extends BinaryExpressionNode {
-    protected ClassDefHasFactoryMethodPrim(final SourceSection source) { super(source); }
+  public abstract static class ClassDefHasFactoryMethodPrim extends BinaryComplexOperation {
+    protected ClassDefHasFactoryMethodPrim(final SourceSection source) { super(false, source); }
 
     @Specialization
     public final boolean hasFactoryMethod(final Object mixinHandle,

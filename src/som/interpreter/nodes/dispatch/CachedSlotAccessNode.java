@@ -1,14 +1,17 @@
 package som.interpreter.nodes.dispatch;
 
-import som.interpreter.objectstorage.FieldReadNode;
-import som.interpreter.objectstorage.FieldWriteNode.AbstractFieldWriteNode;
-import som.vmobjects.SObject.SImmutableObject;
-import som.vmobjects.SObject.SMutableObject;
-
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 import com.oracle.truffle.api.source.SourceSection;
+
+import som.interpreter.objectstorage.FieldReadNode;
+import som.interpreter.objectstorage.FieldWriteNode.AbstractFieldWriteNode;
+import som.vmobjects.SObject.SImmutableObject;
+import som.vmobjects.SObject.SMutableObject;
+import tools.dym.Tags.ClassRead;
+import tools.dym.Tags.FieldRead;
+import tools.dym.Tags.FieldWrite;
 
 
 public abstract class CachedSlotAccessNode extends AbstractDispatchNode {
@@ -20,14 +23,19 @@ public abstract class CachedSlotAccessNode extends AbstractDispatchNode {
     this.read = read;
   }
 
+  public enum SlotAccess { FIELD_READ, CLASS_READ }
+
   public abstract static class CachedSlotRead extends CachedSlotAccessNode {
     @Child protected AbstractDispatchNode nextInCache;
 
     private final DispatchGuard           guard;
+    private final SlotAccess              type;
 
-    public CachedSlotRead(final SourceSection source, final FieldReadNode read,
+    public CachedSlotRead(final SlotAccess type,
+        final SourceSection source, final FieldReadNode read,
         final DispatchGuard guard, final AbstractDispatchNode nextInCache) {
       super(source, read);
+      this.type        = type;
       this.guard       = guard;
       this.nextInCache = nextInCache;
       assert nextInCache != null;
@@ -56,13 +64,25 @@ public abstract class CachedSlotAccessNode extends AbstractDispatchNode {
     public int lengthOfDispatchChain() {
       return 1 + nextInCache.lengthOfDispatchChain();
     }
+
+    @Override
+    protected boolean isTaggedWith(final Class<?> tag) {
+      if (tag == ClassRead.class) {
+        return type == SlotAccess.CLASS_READ;
+      } else if (tag == FieldRead.class) {
+        return type == SlotAccess.FIELD_READ;
+      } else {
+        return super.isTaggedWith(tag);
+      }
+    }
   }
 
   public static final class CachedImmutableSlotRead extends CachedSlotRead {
 
-    public CachedImmutableSlotRead(final SourceSection source, final FieldReadNode read,
+    public CachedImmutableSlotRead(final SlotAccess type,
+        final SourceSection source, final FieldReadNode read,
         final DispatchGuard guard, final AbstractDispatchNode nextInCache) {
-      super(source, read, guard, nextInCache);
+      super(type, source, read, guard, nextInCache);
     }
 
     @Override
@@ -73,9 +93,10 @@ public abstract class CachedSlotAccessNode extends AbstractDispatchNode {
 
   public static final class CachedMutableSlotRead extends CachedSlotRead {
 
-    public CachedMutableSlotRead(final SourceSection source, final FieldReadNode read,
+    public CachedMutableSlotRead(final SlotAccess type,
+        final SourceSection source, final FieldReadNode read,
         final DispatchGuard guard, final AbstractDispatchNode nextInCache) {
-      super(source, read, guard, nextInCache);
+      super(type, source, read, guard, nextInCache);
     }
 
     @Override
@@ -111,6 +132,15 @@ public abstract class CachedSlotAccessNode extends AbstractDispatchNode {
       } catch (InvalidAssumptionException e) {
         CompilerDirectives.transferToInterpreter();
         return replace(nextInCache).executeDispatch(frame, arguments);
+      }
+    }
+
+    @Override
+    protected boolean isTaggedWith(final Class<?> tag) {
+      if (tag == FieldWrite.class) {
+        return true;
+      } else {
+        return super.isTaggedWith(tag);
       }
     }
 

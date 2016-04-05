@@ -28,13 +28,13 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
-import som.VM;
-import som.compiler.MixinBuilder.MixinDefinitionError;
-import som.compiler.Lexer.SourceCoordinate;
-import som.compiler.Parser.ParseError;
-
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.source.Source;
+
+import som.VM;
+import som.compiler.Lexer.SourceCoordinate;
+import som.compiler.MixinBuilder.MixinDefinitionError;
+import som.compiler.Parser.ParseError;
 
 public final class SourcecodeCompiler {
 

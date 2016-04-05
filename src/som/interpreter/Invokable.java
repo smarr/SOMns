@@ -1,16 +1,16 @@
 package som.interpreter;
 
-import som.compiler.MethodBuilder;
-import som.compiler.Variable.Local;
-import som.interpreter.LexicalScope.MethodScope;
-import som.interpreter.nodes.ExpressionNode;
-
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
+
+import som.compiler.MethodBuilder;
+import som.compiler.Variable.Local;
+import som.interpreter.LexicalScope.MethodScope;
+import som.interpreter.nodes.ExpressionNode;
 
 
 public abstract class Invokable extends RootNode {
@@ -24,12 +24,12 @@ public abstract class Invokable extends RootNode {
       final ExpressionNode expressionOrSequence,
       final ExpressionNode uninitialized) {
     super(SomLanguage.class, sourceSection, frameDescriptor);
-    this.uninitializedBody    = uninitialized;
     this.expressionOrSequence = expressionOrSequence;
+    this.uninitializedBody    = uninitialized;
   }
 
   @Override
-  public final Object execute(final VirtualFrame frame) {
+  public Object execute(final VirtualFrame frame) {
     return expressionOrSequence.executeGeneric(frame);
   }
 

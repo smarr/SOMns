@@ -1,14 +1,14 @@
 package som.interpreter.nodes;
 
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.VM;
 import som.interpreter.TruffleCompiler;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.ObjectPrims.IsValue;
 import som.vm.constants.KernelObj;
 import som.vmobjects.SObject.SImmutableObject;
-
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.source.SourceSection;
 
 
 /**
@@ -25,7 +25,7 @@ public abstract class IsValueCheckNode extends UnaryExpressionNode {
   @Child protected ExpressionNode self;
 
   protected IsValueCheckNode(final SourceSection source, final ExpressionNode self) {
-    super(source);
+    super(false, source);
     this.self = self;
   }
 

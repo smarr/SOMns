@@ -26,6 +26,7 @@ public abstract class AbstractSymbolDispatch extends Node {
 
   protected AbstractSymbolDispatch(final SourceSection source) {
     super();
+    assert source != null;
     this.sourceSection = source;
   }
 

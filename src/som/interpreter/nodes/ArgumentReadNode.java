@@ -1,20 +1,23 @@
 package som.interpreter.nodes;
 
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.Instrumentable;
+import com.oracle.truffle.api.profiles.ValueProfile;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
 import som.interpreter.InlinerForLexicallyEmbeddedMethods;
 import som.interpreter.SArguments;
 import som.vm.NotYetImplementedException;
+import tools.dym.Tags.LocalArgRead;
 import tools.highlight.Tags.ArgumentTag;
 import tools.highlight.Tags.KeywordTag;
-
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.profiles.ValueProfile;
-import com.oracle.truffle.api.source.SourceSection;
 
 
 public abstract class ArgumentReadNode {
 
+  @Instrumentable(factory = LocalArgumentReadNodeWrapper.class)
   public static class LocalArgumentReadNode extends ExpressionNode {
     protected final int argumentIndex;
 
@@ -23,7 +26,14 @@ public abstract class ArgumentReadNode {
       assert argumentIndex > 0 ||
         this instanceof LocalSelfReadNode ||
         this instanceof LocalSuperReadNode;
+      assert source != null;
       this.argumentIndex = argumentIndex;
+    }
+
+    // For Wrapper use only
+    protected LocalArgumentReadNode(final LocalArgumentReadNode wrappedNode) {
+      super(wrappedNode);
+      this.argumentIndex = wrappedNode.argumentIndex;
     }
 
     @Override
@@ -41,6 +51,8 @@ public abstract class ArgumentReadNode {
     @Override
     protected boolean isTaggedWith(final Class<?> tag) {
       if (tag == ArgumentTag.class) {
+        return true;
+      } else if (tag == LocalArgRead.class) {
         return true;
       } else {
         return super.isTaggedWith(tag);
@@ -148,6 +160,8 @@ public abstract class ArgumentReadNode {
     @Override
     protected boolean isTaggedWith(final Class<?> tag) {
       if (tag == ArgumentTag.class) {
+        return true;
+      } else if (tag == LocalArgRead.class) {
         return true;
       } else {
         return super.isTaggedWith(tag);

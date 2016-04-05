@@ -4,18 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import som.VM;
-import som.compiler.MixinDefinition;
-import som.interpreter.Invokable;
-import som.interpreter.Method;
-import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.interpreter.nodes.nary.UnaryExpressionNode;
-import som.vm.constants.Classes;
-import som.vm.constants.Nil;
-import som.vmobjects.SArray.SImmutableArray;
-import som.vmobjects.SObjectWithClass;
-import som.vmobjects.SSymbol;
-
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
@@ -25,6 +13,19 @@ import com.oracle.truffle.api.frame.FrameInstance;
 import com.oracle.truffle.api.frame.FrameInstanceVisitor;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.VM;
+import som.compiler.MixinDefinition;
+import som.interpreter.Invokable;
+import som.interpreter.Method;
+import som.interpreter.nodes.nary.BinaryComplexOperation;
+import som.interpreter.nodes.nary.UnaryBasicOperation;
+import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.vm.constants.Classes;
+import som.vm.constants.Nil;
+import som.vmobjects.SArray.SImmutableArray;
+import som.vmobjects.SObjectWithClass;
+import som.vmobjects.SSymbol;
+
 
 public final class SystemPrims {
 
@@ -33,7 +34,7 @@ public final class SystemPrims {
   @GenerateNodeFactory
   @Primitive("systemModuleObject:")
   public abstract static class SystemModuleObjectPrim extends UnaryExpressionNode {
-    public SystemModuleObjectPrim(final SourceSection source) { super(source); }
+    public SystemModuleObjectPrim(final SourceSection source) { super(false, source); }
 
     @Specialization
     public final Object set(final SObjectWithClass system) {
@@ -57,7 +58,7 @@ public final class SystemPrims {
   @GenerateNodeFactory
   @Primitive("load:")
   public abstract static class LoadPrim extends UnaryExpressionNode {
-    public LoadPrim(final SourceSection source) { super(source); }
+    public LoadPrim(final SourceSection source) { super(false, source); }
 
     @Specialization
     public final Object doSObject(final String moduleName) {
@@ -67,8 +68,8 @@ public final class SystemPrims {
 
   @GenerateNodeFactory
   @Primitive("load:nextTo:")
-  public abstract static class LoadNextToPrim extends BinaryExpressionNode {
-    protected LoadNextToPrim(final SourceSection source) { super(source); }
+  public abstract static class LoadNextToPrim extends BinaryComplexOperation {
+    protected LoadNextToPrim(final SourceSection source) { super(false, source); }
 
     @Specialization
     public final Object load(final String filename, final SObjectWithClass moduleObj) {
@@ -81,7 +82,7 @@ public final class SystemPrims {
   @GenerateNodeFactory
   @Primitive("exit:")
   public abstract static class ExitPrim extends UnaryExpressionNode {
-    public ExitPrim(final SourceSection source) { super(source); }
+    public ExitPrim(final SourceSection source) { super(false, source); }
 
     @Specialization
     public final Object doSObject(final long error) {
@@ -93,7 +94,7 @@ public final class SystemPrims {
   @GenerateNodeFactory
   @Primitive("printString:")
   public abstract static class PrintStringPrim extends UnaryExpressionNode {
-    public PrintStringPrim(final SourceSection source) { super(source); }
+    public PrintStringPrim(final SourceSection source) { super(false, source); }
 
     @Specialization
     public final Object doSObject(final String argument) {
@@ -110,7 +111,7 @@ public final class SystemPrims {
   @GenerateNodeFactory
   @Primitive("printNewline:")
   public abstract static class PrintInclNewlinePrim extends UnaryExpressionNode {
-    public PrintInclNewlinePrim(final SourceSection source) { super(source); }
+    public PrintInclNewlinePrim(final SourceSection source) { super(false, source); }
 
     @Specialization
     public final Object doSObject(final String argument) {
@@ -122,7 +123,7 @@ public final class SystemPrims {
   @GenerateNodeFactory
   @Primitive("printStackTrace:")
   public abstract static class PrintStackTracePrim extends UnaryExpressionNode {
-    public PrintStackTracePrim(final SourceSection source) { super(source); }
+    public PrintStackTracePrim(final SourceSection source) { super(false, source); }
 
     @Specialization
     public final Object doSObject(final Object receiver) {
@@ -178,7 +179,7 @@ public final class SystemPrims {
   @GenerateNodeFactory
   @Primitive("vmArguments:")
   public abstract static class VMArgumentsPrim extends UnaryExpressionNode {
-    public VMArgumentsPrim(final SourceSection source) { super(source); }
+    public VMArgumentsPrim(final SourceSection source) { super(false, source); }
 
     @Specialization
     public final SImmutableArray getArguments(final Object receiver) {
@@ -189,7 +190,7 @@ public final class SystemPrims {
   @GenerateNodeFactory
   @Primitive("systemGC:")
   public abstract static class FullGCPrim extends UnaryExpressionNode {
-    public FullGCPrim(final SourceSection source) { super(source); }
+    public FullGCPrim(final SourceSection source) { super(false, source); }
 
     @Specialization
     public final Object doSObject(final Object receiver) {
@@ -200,8 +201,8 @@ public final class SystemPrims {
 
   @GenerateNodeFactory
   @Primitive("systemTime:")
-  public abstract static class TimePrim extends UnaryExpressionNode {
-    public TimePrim(final SourceSection source) { super(source); }
+  public abstract static class TimePrim extends UnaryBasicOperation {
+    public TimePrim(final SourceSection source) { super(false, source); }
 
     @Specialization
     public final long doSObject(final Object receiver) {
@@ -211,8 +212,8 @@ public final class SystemPrims {
 
   @GenerateNodeFactory
   @Primitive("systemTicks:")
-  public abstract static class TicksPrim extends UnaryExpressionNode {
-    public TicksPrim(final SourceSection source) { super(source); }
+  public abstract static class TicksPrim extends UnaryBasicOperation {
+    public TicksPrim(final SourceSection source) { super(false, source); }
 
     @Specialization
     public final long doSObject(final Object receiver) {

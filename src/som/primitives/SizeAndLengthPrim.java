@@ -1,22 +1,32 @@
 package som.primitives;
 
-import som.interpreter.nodes.nary.UnaryExpressionNode;
-import som.vmobjects.SArray;
-import som.vmobjects.SSymbol;
-
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.interpreter.nodes.nary.UnaryBasicOperation;
+import som.vmobjects.SArray;
+import som.vmobjects.SSymbol;
+import tools.dym.Tags.OpLength;
+
 
 @GenerateNodeFactory
 @Primitive({"arraySize:", "stringLength:"})
-public abstract class SizeAndLengthPrim extends UnaryExpressionNode {
-
+public abstract class SizeAndLengthPrim extends UnaryBasicOperation {
   private final ValueProfile storageType = ValueProfile.createClassProfile();
 
-  public SizeAndLengthPrim(final SourceSection source) { super(source); }
+  public SizeAndLengthPrim(final boolean eagerlyWrapped, final SourceSection source) { super(eagerlyWrapped, source); }
+  public SizeAndLengthPrim(final SourceSection source) { super(false, source); }
+
+  @Override
+  protected boolean isTaggedWith(final Class<?> tag) {
+    if (tag == OpLength.class) {
+      return true;
+    } else {
+      return super.isTaggedWith(tag);
+    }
+  }
 
   @Specialization(guards = "receiver.isEmptyType()")
   public final long doEmptySArray(final SArray receiver) {

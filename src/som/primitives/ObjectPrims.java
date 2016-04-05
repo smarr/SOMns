@@ -2,11 +2,18 @@ package som.primitives;
 
 import java.math.BigInteger;
 
+import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
+import com.oracle.truffle.api.dsl.ImportStatic;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.VM;
 import som.interpreter.Types;
 import som.interpreter.actors.SFarReference;
 import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.SResolver;
+import som.interpreter.nodes.nary.UnaryBasicOperation;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.ObjectPrimsFactory.IsValueFactory;
 import som.vm.constants.Nil;
@@ -19,12 +26,7 @@ import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SObject.SMutableObject;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import som.vmobjects.SSymbol;
-
-import com.oracle.truffle.api.dsl.Cached;
-import com.oracle.truffle.api.dsl.GenerateNodeFactory;
-import com.oracle.truffle.api.dsl.ImportStatic;
-import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.source.SourceSection;
+import tools.dym.Tags.OpComparison;
 
 
 public final class ObjectPrims {
@@ -32,7 +34,7 @@ public final class ObjectPrims {
   @GenerateNodeFactory
   @Primitive("objClassName:")
   public abstract static class ObjectClassNamePrim extends UnaryExpressionNode {
-    public ObjectClassNamePrim(final SourceSection source) { super(source); }
+    public ObjectClassNamePrim(final SourceSection source) { super(false, source); }
 
     @Specialization
     public final SSymbol getName(final Object obj) {
@@ -44,7 +46,7 @@ public final class ObjectPrims {
   @GenerateNodeFactory
   @Primitive("halt:")
   public abstract static class HaltPrim extends UnaryExpressionNode {
-    public HaltPrim(final SourceSection source) { super(source); }
+    public HaltPrim(final SourceSection source) { super(false, source); }
 
     @Specialization
     public final Object doSAbstractObject(final Object receiver) {
@@ -56,7 +58,7 @@ public final class ObjectPrims {
   @GenerateNodeFactory
   @Primitive("objClass:")
   public abstract static class ClassPrim extends UnaryExpressionNode {
-    public ClassPrim(final SourceSection source) { super(source); }
+    public ClassPrim(final SourceSection source) { super(false, source); }
 
     @Specialization
     public final SClass doSAbstractObject(final SAbstractObject receiver) {
@@ -70,8 +72,17 @@ public final class ObjectPrims {
     }
   }
 
-  public abstract static class IsNilNode extends UnaryExpressionNode {
-    public IsNilNode(final SourceSection source) { super(source); }
+  public abstract static class IsNilNode extends UnaryBasicOperation {
+    public IsNilNode(final SourceSection source) { super(false, source); }
+
+    @Override
+    protected boolean isTaggedWith(final Class<?> tag) {
+      if (tag == OpComparison.class) {
+        return true;
+      } else {
+        return super.isTaggedWith(tag);
+      }
+    }
 
     @Specialization
     public final boolean isNil(final Object receiver) {
@@ -79,8 +90,17 @@ public final class ObjectPrims {
     }
   }
 
-  public abstract static class NotNilNode extends UnaryExpressionNode {
-    public NotNilNode(final SourceSection source) { super(source); }
+  public abstract static class NotNilNode extends UnaryBasicOperation {
+    public NotNilNode(final SourceSection source) { super(false, source); }
+
+    @Override
+    protected boolean isTaggedWith(final Class<?> tag) {
+      if (tag == OpComparison.class) {
+        return true;
+      } else {
+        return super.isTaggedWith(tag);
+      }
+    }
 
     @Specialization
     public final boolean isNotNil(final Object receiver) {
@@ -95,7 +115,7 @@ public final class ObjectPrims {
   @Primitive("objIsValue:")
   @ImportStatic(Nil.class)
   public abstract static class IsValue extends UnaryExpressionNode {
-    public IsValue(final SourceSection source) { super(source); }
+    public IsValue(final SourceSection source) { super(false, source); }
 
     public abstract boolean executeEvaluated(Object rcvr);
 

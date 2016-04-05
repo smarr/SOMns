@@ -1,9 +1,5 @@
 package som.interpreter.nodes.specialized;
 
-import som.interpreter.InlinerForLexicallyEmbeddedMethods;
-import som.interpreter.SplitterForLexicallyEmbeddedCode;
-import som.interpreter.nodes.ExpressionNode;
-
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.NodeChildren;
@@ -12,6 +8,12 @@ import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
+
+import som.interpreter.InlinerForLexicallyEmbeddedMethods;
+import som.interpreter.SplitterForLexicallyEmbeddedCode;
+import som.interpreter.nodes.ExpressionNode;
+import tools.dym.Tags.LoopNode;
+
 
 @NodeChildren({
   @NodeChild(value = "from",  type = ExpressionNode.class),
@@ -43,6 +45,14 @@ public abstract class IntDownToDoInlinedLiteralsNode extends ExpressionNode {
     loopIndex.setKind(FrameSlotKind.Long);
   }
 
+  @Override
+  protected boolean isTaggedWith(final Class<?> tag) {
+    if (tag == LoopNode.class) {
+      return true;
+    } else {
+      return super.isTaggedWith(tag);
+    }
+  }
 
   @Specialization
   public final long doIntToDo(final VirtualFrame frame, final long from, final long to) {

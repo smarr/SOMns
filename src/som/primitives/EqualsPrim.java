@@ -2,24 +2,24 @@ package som.primitives;
 
 import java.math.BigInteger;
 
-import som.interpreter.actors.SFarReference;
-import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.vm.constants.Nil;
-import som.vmobjects.SObject.SImmutableObject;
-import som.vmobjects.SObjectWithClass;
-import som.vmobjects.SSymbol;
-
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.interpreter.actors.SFarReference;
+import som.vm.constants.Nil;
+import som.vmobjects.SObject.SImmutableObject;
+import som.vmobjects.SObjectWithClass;
+import som.vmobjects.SSymbol;
+
 
 @GenerateNodeFactory
 @ImportStatic(Nil.class)
 @Primitive({"value:sameAs:", "int:equals:", "double:equals:", "string:equals:"})
-public abstract class EqualsPrim extends BinaryExpressionNode {
-  protected EqualsPrim(final SourceSection source) { super(source); }
+public abstract class EqualsPrim extends ComparisonPrim {
+  protected EqualsPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+  protected EqualsPrim(final SourceSection source) { super(false, source); }
 
   @Specialization
   public final boolean doBoolean(final boolean left, final boolean right) {

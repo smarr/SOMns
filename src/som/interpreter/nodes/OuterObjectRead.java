@@ -1,5 +1,12 @@
 package som.interpreter.nodes;
 
+import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.NodeChild;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
+import com.oracle.truffle.api.profiles.ValueProfile;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.interpreter.actors.SFarReference;
 import som.interpreter.objectstorage.ClassFactory;
@@ -7,13 +14,6 @@ import som.primitives.actors.ActorClasses;
 import som.vm.constants.KernelObj;
 import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithClass;
-
-import com.oracle.truffle.api.dsl.Cached;
-import com.oracle.truffle.api.dsl.NodeChild;
-import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.nodes.ExplodeLoop;
-import com.oracle.truffle.api.profiles.ValueProfile;
-import com.oracle.truffle.api.source.SourceSection;
 
 
 @NodeChild(value = "receiver", type = ExpressionNode.class)

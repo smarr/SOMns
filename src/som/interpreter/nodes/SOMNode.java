@@ -24,15 +24,17 @@ package som.interpreter.nodes;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 
+import com.oracle.truffle.api.dsl.TypeSystemReference;
+import com.oracle.truffle.api.frame.FrameSlot;
+import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
+import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
 import som.interpreter.InlinerForLexicallyEmbeddedMethods;
 import som.interpreter.SplitterForLexicallyEmbeddedCode;
 import som.interpreter.Types;
 
-import com.oracle.truffle.api.dsl.TypeSystemReference;
-import com.oracle.truffle.api.frame.FrameSlot;
-import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.source.SourceSection;
 
 @TypeSystemReference(Types.class)
 public abstract class SOMNode extends Node {
@@ -129,4 +131,23 @@ public abstract class SOMNode extends Node {
    * @return body of a node that just wraps the actual method body.
    */
   public abstract ExpressionNode getFirstMethodBodyNode();
+
+  public static Node unwrapIfNecessary(final Node node) {
+    if (node instanceof WrapperNode) {
+      return ((WrapperNode) node).getDelegateNode();
+    } else {
+      return node;
+    }
+  }
+
+  public static Node getParentIgnoringWrapper(final Node node) {
+    assert !(node instanceof WrapperNode) : "A correct usage will not see nodes that are wrappers. This is to detect bugs";
+
+    Node parent = node.getParent();
+    if (parent instanceof WrapperNode) {
+      return parent.getParent();
+    } else {
+      return node;
+    }
+  }
 }

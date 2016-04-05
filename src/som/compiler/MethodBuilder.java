@@ -32,6 +32,11 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import com.oracle.truffle.api.frame.FrameDescriptor;
+import com.oracle.truffle.api.frame.FrameSlot;
+import com.oracle.truffle.api.source.SourceSection;
+import com.sun.istack.internal.NotNull;
+
 import som.VM;
 import som.compiler.MixinBuilder.MixinDefinitionError;
 import som.compiler.MixinBuilder.MixinDefinitionId;
@@ -49,10 +54,6 @@ import som.interpreter.nodes.ReturnNonLocalNode;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SInvokable.SInitializer;
 import som.vmobjects.SSymbol;
-
-import com.oracle.truffle.api.frame.FrameDescriptor;
-import com.oracle.truffle.api.frame.FrameSlot;
-import com.oracle.truffle.api.source.SourceSection;
 
 
 public final class MethodBuilder {
@@ -333,14 +334,16 @@ public final class MethodBuilder {
     return null;
   }
 
-  public ExpressionNode getSuperReadNode(final SourceSection source) {
+  public ExpressionNode getSuperReadNode(@NotNull final SourceSection source) {
+    assert source != null;
     MixinBuilder holder = getEnclosingMixinBuilder();
     Variable self = getVariable("self");
     return self.getSuperReadNode(getOuterSelfContextLevel(),
         holder.getMixinId(), holder.isClassSide(), source);
   }
 
-  public ExpressionNode getSelfRead(final SourceSection source) {
+  public ExpressionNode getSelfRead(@NotNull final SourceSection source) {
+    assert source != null;
     MixinBuilder holder = getEnclosingMixinBuilder();
     MixinDefinitionId mixinId = holder == null ? null : holder.getMixinId();
     return getVariable("self").
@@ -349,6 +352,7 @@ public final class MethodBuilder {
 
   public ExpressionNode getReadNode(final String variableName,
       final SourceSection source) {
+    assert source != null;
     Variable variable = getVariable(variableName);
     return variable.getReadNode(getContextLevel(variableName), source);
   }

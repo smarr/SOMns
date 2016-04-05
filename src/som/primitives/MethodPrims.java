@@ -1,5 +1,12 @@
 package som.primitives;
 
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
+import com.oracle.truffle.api.dsl.NodeChild;
+import com.oracle.truffle.api.dsl.NodeChildren;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.PreevaluatedExpression;
 import som.interpreter.nodes.dispatch.InvokeOnCache;
@@ -9,20 +16,13 @@ import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray;
 import som.vmobjects.SInvokable;
 
-import com.oracle.truffle.api.dsl.GenerateNodeFactory;
-import com.oracle.truffle.api.dsl.NodeChild;
-import com.oracle.truffle.api.dsl.NodeChildren;
-import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.source.SourceSection;
-
 
 public final class MethodPrims {
 
   @GenerateNodeFactory
   @Primitive("methodName:")
   public abstract static class SignaturePrim extends UnaryExpressionNode {
-    public SignaturePrim(final SourceSection source) { super(source); }
+    public SignaturePrim(final SourceSection source) { super(false, source); }
 
     @Specialization
     public final SAbstractObject doSMethod(final SInvokable receiver) {

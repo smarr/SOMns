@@ -6,6 +6,9 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.VM;
+import som.instrumentation.InstrumentableDirectCallNode;
+
 
 /**
  * Private methods are special, they are linked unconditionally to the call site.
@@ -18,6 +21,11 @@ public final class LexicallyBoundDispatchNode extends AbstractDispatchNode {
   public LexicallyBoundDispatchNode(final SourceSection source, final CallTarget methodCallTarget) {
     super(source);
     cachedMethod = Truffle.getRuntime().createDirectCallNode(methodCallTarget);
+    if (VM.enabledDynamicMetricsTool()) {
+      this.cachedMethod = insert(
+          new InstrumentableDirectCallNode(cachedMethod, source));
+      VM.insertInstrumentationWrapper(cachedMethod);
+    }
   }
 
   @Override

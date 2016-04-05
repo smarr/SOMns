@@ -1,6 +1,11 @@
 package som.interpreter.nodes;
 
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
+
+import com.oracle.truffle.api.frame.FrameSlot;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.compiler.Variable.Local;
 import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
 import som.interpreter.InlinerForLexicallyEmbeddedMethods;
@@ -13,10 +18,8 @@ import som.interpreter.nodes.NonLocalVariableNode.NonLocalVariableReadNode;
 import som.interpreter.nodes.NonLocalVariableNode.NonLocalVariableWriteNode;
 import som.interpreter.nodes.NonLocalVariableNodeFactory.NonLocalVariableReadNodeGen;
 import som.interpreter.nodes.NonLocalVariableNodeFactory.NonLocalVariableWriteNodeGen;
-
-import com.oracle.truffle.api.frame.FrameSlot;
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.source.SourceSection;
+import tools.dym.Tags.LocalVarRead;
+import tools.dym.Tags.LocalVarWrite;
 
 
 public abstract class UninitializedVariableNode extends ContextualNode {
@@ -28,7 +31,26 @@ public abstract class UninitializedVariableNode extends ContextualNode {
     this.variable = variable;
   }
 
+  protected UninitializedVariableNode(
+      final UninitializedVariableNode wrappedNode) {
+    super(wrappedNode.contextLevel, wrappedNode.getSourceSection());
+    this.variable = wrappedNode.variable;
+  }
+
+  @Override
+  public void replaceWithCopyAdaptedToEmbeddedOuterContext(
+      final InlinerAdaptToEmbeddedOuterContext inliner) {
+    throw new UnsupportedOperationException("for wrapping, we don't yet have splitting support");
+  }
+
+  @Override
+  public void replaceWithLexicallyEmbeddedNode(
+      final InlinerForLexicallyEmbeddedMethods inliner) {
+    throw new UnsupportedOperationException("for wrapping, we don't yet have splitting support");
+  }
+
   public static final class UninitializedVariableReadNode extends UninitializedVariableNode {
+
     public UninitializedVariableReadNode(final Local variable,
         final int contextLevel, final SourceSection source) {
       super(variable, contextLevel, source);
@@ -38,6 +60,15 @@ public abstract class UninitializedVariableNode extends ContextualNode {
         final FrameSlot inlinedVarSlot) {
       this(node.variable.cloneForInlining(inlinedVarSlot), node.contextLevel,
           node.getSourceSection());
+    }
+
+    @Override
+    protected boolean isTaggedWith(final Class<?> tag) {
+      if (tag == LocalVarRead.class) {
+        return true;
+      } else {
+        return super.isTaggedWith(tag);
+      }
     }
 
     @Override
@@ -112,6 +143,15 @@ public abstract class UninitializedVariableNode extends ContextualNode {
         final FrameSlot inlinedVarSlot) {
       this(node.variable.cloneForInlining(inlinedVarSlot),
           node.contextLevel, node.exp, node.getSourceSection());
+    }
+
+    @Override
+    protected boolean isTaggedWith(final Class<?> tag) {
+      if (tag == LocalVarWrite.class) {
+        return true;
+      } else {
+        return super.isTaggedWith(tag);
+      }
     }
 
     @Override

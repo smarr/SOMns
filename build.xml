@@ -114,7 +114,7 @@
         <jar destfile="${build.dir}/som.jar" basedir="${classes.dir}"></jar>
     </target>
     
-    <target name="test" depends="compile" description="Execute tests">
+    <target name="unit-tests" depends="compile" description="Execute tests">
         <junit haltonerror="false" haltonfailure="false" failureproperty="test.failed"
             outputtoformatters="true">
             <jvmarg value="-ea" />
@@ -136,6 +136,17 @@
         </java>
         <fail message="Basic tests failed." if="test.failed" />
     </target>
-    <target name="tests" depends="test" />
 
+    <target name="som-tests" depends="compile">
+      <exec executable="./som" failonerror="true">
+        <arg value="-G" />
+        <arg value="core-lib/TestSuite/TestRunner.som" />
+      </exec>
+      <exec executable="./som" failonerror="true">
+        <arg value="-X" />
+        <arg value="core-lib/TestSuite/TestRunner.som" />
+      </exec>
+    </target>
+
+    <target name="tests" depends="unit-tests,som-tests" />
 </project>

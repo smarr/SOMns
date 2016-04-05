@@ -1,13 +1,5 @@
 package som.primitives;
 
-import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.interpreter.nodes.nary.QuaternaryExpressionNode;
-import som.interpreter.nodes.nary.TernaryExpressionNode;
-import som.interpreter.nodes.nary.UnaryExpressionNode;
-import som.vmobjects.SAbstractObject;
-import som.vmobjects.SBlock;
-import som.vmobjects.SInvokable;
-
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Cached;
@@ -19,10 +11,18 @@ import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.interpreter.nodes.nary.BinaryComplexOperation;
+import som.interpreter.nodes.nary.QuaternaryExpressionNode;
+import som.interpreter.nodes.nary.TernaryExpressionNode;
+import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.vmobjects.SAbstractObject;
+import som.vmobjects.SBlock;
+import som.vmobjects.SInvokable;
+import tools.dym.Tags.ComplexPrimitiveOperation;
+import tools.dym.Tags.OpClosureApplication;
+
 
 public abstract class BlockPrims {
-
-
   public static final int CHAIN_LENGTH = 6;
 
   public static final DirectCallNode createDirectCallNode(final SBlock receiver) {
@@ -38,7 +38,7 @@ public abstract class BlockPrims {
   @GenerateNodeFactory
   @Primitive("blockRestart:")
   public abstract static class RestartPrim extends UnaryExpressionNode {
-    public RestartPrim(final SourceSection source) { super(source); }
+    public RestartPrim(final SourceSection source) { super(false, source); }
 
     @Specialization
     public SAbstractObject doSBlock(final SBlock receiver) {
@@ -54,7 +54,19 @@ public abstract class BlockPrims {
   @ImportStatic(BlockPrims.class)
   @Primitive("blockValue:")
   public abstract static class ValueNonePrim extends UnaryExpressionNode {
-    public ValueNonePrim(final SourceSection source) { super(source); }
+    public ValueNonePrim(final boolean eagerlyWrapped, final SourceSection source) { super(eagerlyWrapped, source); }
+    public ValueNonePrim(final SourceSection source) { super(false, source); }
+
+    @Override
+    protected boolean isTaggedWith(final Class<?> tag) {
+      if (tag == ComplexPrimitiveOperation.class) {
+        return true;
+      } else if (tag == OpClosureApplication.class) {
+        return true;
+      } else {
+        return super.isTaggedWith(tag);
+      }
+    }
 
     @Specialization
     public final boolean doBoolean(final boolean receiver) {
@@ -79,8 +91,18 @@ public abstract class BlockPrims {
   @GenerateNodeFactory
   @ImportStatic(BlockPrims.class)
   @Primitive("blockValue:with:")
-  public abstract static class ValueOnePrim extends BinaryExpressionNode {
-    protected ValueOnePrim(final SourceSection source) { super(source); }
+  public abstract static class ValueOnePrim extends BinaryComplexOperation {
+    protected ValueOnePrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+    protected ValueOnePrim(final SourceSection source) { super(false, source); }
+
+    @Override
+    protected boolean isTaggedWith(final Class<?> tag) {
+      if (tag == OpClosureApplication.class) {
+        return true;
+      } else {
+        return super.isTaggedWith(tag);
+      }
+    }
 
     @Specialization(guards = "cached == receiver.getMethod()", limit = "CHAIN_LENGTH")
     public final Object doCachedBlock(final VirtualFrame frame,
@@ -102,7 +124,19 @@ public abstract class BlockPrims {
   @ImportStatic(BlockPrims.class)
   @Primitive("blockValue:with:with:")
   public abstract static class ValueTwoPrim extends TernaryExpressionNode {
-    public ValueTwoPrim(final SourceSection source) { super(source); }
+    public ValueTwoPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+    public ValueTwoPrim(final SourceSection source) { super(false, source); }
+
+    @Override
+    protected boolean isTaggedWith(final Class<?> tag) {
+      if (tag == ComplexPrimitiveOperation.class) {
+        return true;
+      } else if (tag == OpClosureApplication.class) {
+        return true;
+      } else {
+        return super.isTaggedWith(tag);
+      }
+    }
 
     @Specialization(guards = "cached == receiver.getMethod()", limit = "CHAIN_LENGTH")
     public final Object doCachedBlock(final VirtualFrame frame,

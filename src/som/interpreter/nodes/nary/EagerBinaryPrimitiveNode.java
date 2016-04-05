@@ -1,17 +1,20 @@
 package som.interpreter.nodes.nary;
 
-import som.interpreter.TruffleCompiler;
-import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.MessageSendNode;
-import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
-import som.vmobjects.SSymbol;
-
 import com.oracle.truffle.api.dsl.UnsupportedSpecializationException;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.VM;
+import som.interpreter.TruffleCompiler;
+import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.MessageSendNode;
+import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
+import som.interpreter.nodes.OperationNode;
+import som.vmobjects.SSymbol;
 
-public final class EagerBinaryPrimitiveNode extends BinaryExpressionNode {
+
+public final class EagerBinaryPrimitiveNode extends BinaryExpressionNode
+    implements OperationNode {
 
   @Child private ExpressionNode receiver;
   @Child private ExpressionNode argument;
@@ -24,11 +27,16 @@ public final class EagerBinaryPrimitiveNode extends BinaryExpressionNode {
       final ExpressionNode argument,
       final BinaryExpressionNode primitive,
       final SourceSection source) {
-    super(source);
+    super(false, source);
     this.receiver  = receiver;
     this.argument  = argument;
     this.primitive = primitive;
     this.selector = selector;
+  }
+
+  @Override
+  public String getOperation() {
+    return selector.getString();
   }
 
   @Override
@@ -52,8 +60,13 @@ public final class EagerBinaryPrimitiveNode extends BinaryExpressionNode {
   }
 
   private GenericMessageSendNode makeGenericSend() {
+    VM.insertInstrumentationWrapper(this);
+
     GenericMessageSendNode node = MessageSendNode.createGeneric(selector,
         new ExpressionNode[] {receiver, argument}, getSourceSection());
-    return replace(node);
+    replace(node);
+    VM.insertInstrumentationWrapper(node);
+    VM.insertInstrumentationWrapper(receiver);
+    return node;
   }
 }

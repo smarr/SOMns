@@ -1,5 +1,15 @@
 package som.primitives.actors;
 
+import com.oracle.truffle.api.RootCallTarget;
+import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
+import com.oracle.truffle.api.dsl.ImportStatic;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.DirectCallNode;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.compiler.AccessModifier;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
@@ -10,7 +20,7 @@ import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.SResolver;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.nodes.literals.BlockNode;
-import som.interpreter.nodes.nary.BinaryExpressionNode;
+import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.Primitive;
@@ -20,16 +30,6 @@ import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SSymbol;
-
-import com.oracle.truffle.api.RootCallTarget;
-import com.oracle.truffle.api.Truffle;
-import com.oracle.truffle.api.dsl.Cached;
-import com.oracle.truffle.api.dsl.GenerateNodeFactory;
-import com.oracle.truffle.api.dsl.ImportStatic;
-import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.DirectCallNode;
-import com.oracle.truffle.api.source.SourceSection;
 
 
 public final class PromisePrims {
@@ -44,7 +44,7 @@ public final class PromisePrims {
       return Truffle.getRuntime().createDirectCallNode(((SInvokable) disp).getCallTarget());
     }
 
-    public CreatePromisePairPrim(final SourceSection source) { super(source); }
+    public CreatePromisePairPrim(final SourceSection source) { super(false, source); }
 
     @Specialization
     public final SImmutableObject createPromisePair(final VirtualFrame frame,
@@ -66,12 +66,11 @@ public final class PromisePrims {
   @GenerateNodeFactory
   @ImportStatic(PromisePrims.class)
   @Primitive("actorsWhen:resolved:")
-  public abstract static class WhenResolvedPrim extends BinaryExpressionNode {
+  public abstract static class WhenResolvedPrim extends BinaryComplexOperation {
     @Child protected RegisterWhenResolved registerNode = new RegisterWhenResolved();
 
-    protected WhenResolvedPrim(final SourceSection source) {
-      super(source);
-    }
+    protected WhenResolvedPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+    protected WhenResolvedPrim(final SourceSection source) { super(false, source); }
 
     @Specialization(guards = "blockMethod == callback.getMethod()", limit = "10")
     public final SPromise whenResolved(final SPromise promise,
@@ -104,10 +103,10 @@ public final class PromisePrims {
   }
 
   // TODO: should we add this for the literal case? which should be very common?
-  public abstract static class WhenResolvedLiteralBlockNode extends BinaryExpressionNode {
+  public abstract static class WhenResolvedLiteralBlockNode extends BinaryComplexOperation {
     @SuppressWarnings("unused") private final RootCallTarget blockCallTarget;
     public WhenResolvedLiteralBlockNode(final SourceSection source, final BlockNode blockNode) {
-      super(source);
+      super(false, source);
       blockCallTarget = blockNode.getBlockMethod().getCallTarget();
     }
   }
@@ -116,8 +115,8 @@ public final class PromisePrims {
   @GenerateNodeFactory
   @ImportStatic(PromisePrims.class)
   @Primitive("actorsFor:onError:")
-  public abstract static class OnErrorPrim extends BinaryExpressionNode {
-    protected OnErrorPrim(final SourceSection source) { super(source); }
+  public abstract static class OnErrorPrim extends BinaryComplexOperation {
+    protected OnErrorPrim(final SourceSection source) { super(false, source); }
 
     @Specialization(guards = "blockMethod == callback.getMethod()")
     public final SPromise onError(final SPromise promise,
@@ -133,7 +132,7 @@ public final class PromisePrims {
   @ImportStatic(PromisePrims.class)
   @Primitive("actorsFor:on:do:")
   public abstract static class OnExceptionDoPrim extends TernaryExpressionNode {
-    public OnExceptionDoPrim(final SourceSection source) { super(source); }
+    public OnExceptionDoPrim(final SourceSection source) { super(false, source); }
 
     @Specialization(guards = "blockMethod == callback.getMethod()")
     public final SPromise onExceptionDo(final SPromise promise,
@@ -151,7 +150,7 @@ public final class PromisePrims {
   public abstract static class WhenResolvedOnErrorPrim extends TernaryExpressionNode {
     @Child protected RegisterWhenResolved registerNode = new RegisterWhenResolved();
 
-    public WhenResolvedOnErrorPrim(final SourceSection source) { super(source); }
+    public WhenResolvedOnErrorPrim(final SourceSection source) { super(false, source); }
 
     @Specialization(guards = {"resolvedMethod == resolved.getMethod()", "errorMethod == error.getMethod()"})
     public final SPromise whenResolvedOnError(final SPromise promise,

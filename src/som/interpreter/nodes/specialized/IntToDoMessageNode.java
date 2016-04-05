@@ -1,10 +1,5 @@
 package som.interpreter.nodes.specialized;
 
-import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.nary.TernaryExpressionNode;
-import som.vmobjects.SBlock;
-import som.vmobjects.SInvokable;
-
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Cached;
@@ -13,6 +8,12 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.nary.TernaryExpressionNode;
+import som.vmobjects.SBlock;
+import som.vmobjects.SInvokable;
+import tools.dym.Tags.LoopNode;
+
 
 public abstract class IntToDoMessageNode extends TernaryExpressionNode {
 
@@ -20,8 +21,15 @@ public abstract class IntToDoMessageNode extends TernaryExpressionNode {
     return Truffle.getRuntime().createDirectCallNode(blockMethod.getCallTarget());
   }
 
-  protected IntToDoMessageNode(final SourceSection source) {
-    super(source);
+  protected IntToDoMessageNode(final SourceSection source) { super(false, source); }
+
+  @Override
+  protected boolean isTaggedWith(final Class<?> tag) {
+    if (tag == LoopNode.class) {
+      return true;
+    } else {
+      return super.isTaggedWith(tag);
+    }
   }
 
   @Specialization(guards = "block.getMethod() == blockMethod")

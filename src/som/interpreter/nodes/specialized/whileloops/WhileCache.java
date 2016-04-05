@@ -1,11 +1,5 @@
 package som.interpreter.nodes.specialized.whileloops;
 
-import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.vm.constants.Nil;
-import som.vmobjects.SBlock;
-import som.vmobjects.SInvokable;
-
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Cached;
@@ -13,16 +7,31 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.nary.BinaryComplexOperation;
+import som.vm.constants.Nil;
+import som.vmobjects.SBlock;
+import som.vmobjects.SInvokable;
+import tools.dym.Tags.LoopNode;
 
-public abstract class WhileCache extends BinaryExpressionNode {
 
+public abstract class WhileCache extends BinaryComplexOperation {
   public static final int INLINE_CACHE_SIZE = 6;
 
   protected final boolean predicateBool;
 
   public WhileCache(final SourceSection source, final boolean predicateBool) {
-    super(source);
+    super(false, source);
     this.predicateBool = predicateBool;
+  }
+
+  @Override
+  protected boolean isTaggedWith(final Class<?> tag) {
+    if (tag == LoopNode.class) {
+      return true;
+    } else {
+      return super.isTaggedWith(tag);
+    }
   }
 
   @Specialization(limit = "INLINE_CACHE_SIZE",

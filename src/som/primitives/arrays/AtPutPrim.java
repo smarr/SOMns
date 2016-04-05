@@ -2,27 +2,40 @@ package som.primitives.arrays;
 
 import java.util.Arrays;
 
-import som.interpreter.nodes.nary.TernaryExpressionNode;
-import som.primitives.Primitive;
-import som.vm.constants.Nil;
-import som.vmobjects.SArray.PartiallyEmptyArray;
-import som.vmobjects.SArray.SMutableArray;
-
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.interpreter.nodes.nary.TernaryExpressionNode;
+import som.primitives.Primitive;
+import som.vm.constants.Nil;
+import som.vmobjects.SArray.PartiallyEmptyArray;
+import som.vmobjects.SArray.SMutableArray;
+import tools.dym.Tags.ArrayWrite;
+import tools.dym.Tags.BasicPrimitiveOperation;
+
 
 @GenerateNodeFactory
 @ImportStatic(Nil.class)
 @Primitive("array:at:put:")
 public abstract class AtPutPrim extends TernaryExpressionNode {
-
   private final ValueProfile storageType = ValueProfile.createClassProfile();
 
-  protected AtPutPrim(final SourceSection source) { super(source); }
+  protected AtPutPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+  protected AtPutPrim(final SourceSection source) { super(false, source); }
+
+  @Override
+  protected boolean isTaggedWith(final Class<?> tag) {
+    if (tag == BasicPrimitiveOperation.class) {
+      return true;
+    } else if (tag == ArrayWrite.class) {
+      return true;
+    } else {
+      return super.isTaggedWith(tag);
+    }
+  }
 
   protected static final boolean valueIsNotLong(final Object value) {
     return !(value instanceof Long);

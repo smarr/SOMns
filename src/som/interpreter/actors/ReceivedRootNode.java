@@ -1,12 +1,12 @@
 package som.interpreter.actors;
 
-import som.interpreter.actors.SPromise.SResolver;
-
 import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
+
+import som.interpreter.actors.SPromise.SResolver;
 
 
 public abstract class ReceivedRootNode extends RootNode {
@@ -16,6 +16,7 @@ public abstract class ReceivedRootNode extends RootNode {
   protected ReceivedRootNode(final Class<? extends TruffleLanguage<?>> language,
       final SourceSection sourceSection, final FrameDescriptor frameDescriptor) {
     super(language, sourceSection, frameDescriptor);
+    assert sourceSection != null;
   }
 
   protected final void resolvePromise(final SResolver resolver, final Object result) {

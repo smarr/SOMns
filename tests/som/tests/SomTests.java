@@ -26,12 +26,17 @@ import static org.junit.Assert.assertEquals;
 import java.io.IOException;
 import java.util.Arrays;
 
+import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 import som.VM;
+import som.interpreter.SomLanguage;
+
+import com.oracle.truffle.api.vm.PolyglotEngine;
+import com.oracle.truffle.api.vm.PolyglotEngine.Builder;
 
 
 @RunWith(Parameterized.class)
@@ -68,13 +73,22 @@ public class SomTests {
     String[] args = new String[] {
         "core-lib/TestSuite/TestRunner.som",
         "core-lib/TestSuite/" + testName + ".som"};
-    VM vm = new VM(args, true);
-    vm.initalize();
+
+    Builder builder = PolyglotEngine.newBuilder();
+    builder.config(SomLanguage.MIME_TYPE, SomLanguage.CMD_ARGS, args);
+    PolyglotEngine engine = builder.build();
+
+    engine.getInstruments().values().forEach(i -> i.setEnabled(false));
+
+    VM vm = (VM) engine.getLanguages().get(SomLanguage.MIME_TYPE).getGlobalObject().get();
 
     vm.execute();
 
-    VM.resetClassReferences(true);
-
     assertEquals(0, vm.lastExitCode());
+  }
+
+  @After
+  public void resetVM() {
+    VM.resetClassReferences(true);
   }
 }

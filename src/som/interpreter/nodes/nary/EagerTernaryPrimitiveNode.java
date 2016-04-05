@@ -1,18 +1,21 @@
 package som.interpreter.nodes.nary;
 
+import com.oracle.truffle.api.dsl.UnsupportedSpecializationException;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.source.SourceSection;
+
+import som.VM;
 import som.interpreter.TruffleCompiler;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
+import som.interpreter.nodes.OperationNode;
 import som.vmobjects.SSymbol;
 
-import com.oracle.truffle.api.dsl.UnsupportedSpecializationException;
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.source.SourceSection;
 
-
-public final class EagerTernaryPrimitiveNode extends TernaryExpressionNode {
+public final class EagerTernaryPrimitiveNode extends TernaryExpressionNode
+    implements OperationNode {
 
   @Child private ExpressionNode receiver;
   @Child private ExpressionNode argument1;
@@ -28,12 +31,17 @@ public final class EagerTernaryPrimitiveNode extends TernaryExpressionNode {
       final ExpressionNode argument1,
       final ExpressionNode argument2,
       final TernaryExpressionNode primitive) {
-    super(source);
+    super(false, source);
     this.receiver  = receiver;
     this.argument1 = argument1;
     this.argument2 = argument2;
     this.primitive = primitive;
     this.selector = selector;
+  }
+
+  @Override
+  public String getOperation() {
+    return selector.getString();
   }
 
   @Override
@@ -58,9 +66,14 @@ public final class EagerTernaryPrimitiveNode extends TernaryExpressionNode {
   }
 
   private AbstractMessageSendNode makeGenericSend() {
+    VM.insertInstrumentationWrapper(this);
+
     GenericMessageSendNode node = MessageSendNode.createGeneric(selector,
         new ExpressionNode[] {receiver, argument1, argument2},
         getSourceSection());
-    return replace(node);
+    replace(node);
+    VM.insertInstrumentationWrapper(node);
+    VM.insertInstrumentationWrapper(receiver);
+    return node;
   }
 }

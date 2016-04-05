@@ -1,10 +1,5 @@
 package som.interpreter.nodes.specialized;
 
-import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.vm.constants.Nil;
-import som.vmobjects.SBlock;
-import som.vmobjects.SInvokable;
-
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -14,14 +9,20 @@ import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.profiles.ConditionProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.interpreter.nodes.nary.BinaryComplexOperation;
+import som.vm.constants.Nil;
+import som.vmobjects.SBlock;
+import som.vmobjects.SInvokable;
+import tools.dym.Tags.ControlFlowCondition;
 
-public abstract class IfMessageNode extends BinaryExpressionNode {
+
+public abstract class IfMessageNode extends BinaryComplexOperation {
 
   protected final ConditionProfile condProf = ConditionProfile.createCountingProfile();
   private final boolean expected;
 
   public IfMessageNode(final boolean expected, final SourceSection source) {
-    super(source);
+    super(false, source);
     this.expected = expected;
   }
 
@@ -31,6 +32,15 @@ public abstract class IfMessageNode extends BinaryExpressionNode {
 
   protected static IndirectCallNode createIndirect() {
     return Truffle.getRuntime().createIndirectCallNode();
+  }
+
+  @Override
+  protected boolean isTaggedWith(final Class<?> tag) {
+    if (tag == ControlFlowCondition.class) {
+      return true;
+    } else {
+      return super.isTaggedWith(tag);
+    }
   }
 
   @Specialization(guards = {"arg.getMethod() == method"})

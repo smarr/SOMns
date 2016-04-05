@@ -1,23 +1,33 @@
 package som.primitives.arrays;
 
-import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.primitives.Primitive;
-import som.vm.constants.Nil;
-import som.vmobjects.SArray;
-
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.interpreter.nodes.nary.BinaryBasicOperation;
+import som.primitives.Primitive;
+import som.vm.constants.Nil;
+import som.vmobjects.SArray;
+import tools.dym.Tags.ArrayRead;
+
 
 @GenerateNodeFactory
 @Primitive("array:at:")
-public abstract class AtPrim extends BinaryExpressionNode {
-
+public abstract class AtPrim extends BinaryBasicOperation {
   private final ValueProfile storageType = ValueProfile.createClassProfile();
 
-  protected AtPrim(final SourceSection source) { super(source); }
+  protected AtPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+  protected AtPrim(final SourceSection source) { super(false, source); }
+
+  @Override
+  protected boolean isTaggedWith(final Class<?> tag) {
+    if (tag == ArrayRead.class) {
+      return true;
+    } else {
+      return super.isTaggedWith(tag);
+    }
+  }
 
   @Specialization(guards = "receiver.isEmptyType()")
   public final Object doEmptySArray(final SArray receiver, final long idx) {

@@ -1,16 +1,5 @@
 package som.primitives;
 
-import som.interpreter.SomException;
-import som.interpreter.nodes.dispatch.BlockDispatchNode;
-import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
-import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.interpreter.nodes.nary.TernaryExpressionNode;
-import som.interpreter.nodes.nary.UnaryExpressionNode;
-import som.vmobjects.SAbstractObject;
-import som.vmobjects.SBlock;
-import som.vmobjects.SClass;
-import som.vmobjects.SInvokable;
-
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
@@ -19,6 +8,17 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
+
+import som.interpreter.SomException;
+import som.interpreter.nodes.dispatch.BlockDispatchNode;
+import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
+import som.interpreter.nodes.nary.BinaryComplexOperation;
+import som.interpreter.nodes.nary.TernaryExpressionNode;
+import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.vmobjects.SAbstractObject;
+import som.vmobjects.SBlock;
+import som.vmobjects.SClass;
+import som.vmobjects.SInvokable;
 
 
 public abstract class ExceptionsPrims {
@@ -35,7 +35,7 @@ public abstract class ExceptionsPrims {
           block.getMethod().getCallTarget());
     }
 
-    public ExceptionDoOnPrim(final SourceSection source) { super(source); }
+    public ExceptionDoOnPrim(final SourceSection source) { super(false, source); }
 
     public static final boolean sameBlock(final SBlock block, final SInvokable method) {
       return block.getMethod() == method;
@@ -81,7 +81,7 @@ public abstract class ExceptionsPrims {
   @GenerateNodeFactory
   @Primitive("signalException:")
   public abstract static class SignalPrim extends UnaryExpressionNode {
-    public SignalPrim(final SourceSection source) { super(source); }
+    public SignalPrim(final SourceSection source) { super(false, source); }
 
     @Specialization
     public final Object doSignal(final SAbstractObject exceptionObject) {
@@ -91,12 +91,12 @@ public abstract class ExceptionsPrims {
 
   @GenerateNodeFactory
   @Primitive("exceptionDo:ensure:")
-  public abstract static class EnsurePrim extends BinaryExpressionNode {
+  public abstract static class EnsurePrim extends BinaryComplexOperation {
 
     @Child protected BlockDispatchNode dispatchBody    = BlockDispatchNodeGen.create();
     @Child protected BlockDispatchNode dispatchHandler = BlockDispatchNodeGen.create();
 
-    protected EnsurePrim(final SourceSection source) { super(source); }
+    protected EnsurePrim(final SourceSection source) { super(false, source); }
 
     @Specialization
     public final Object doException(final VirtualFrame frame, final SBlock body,

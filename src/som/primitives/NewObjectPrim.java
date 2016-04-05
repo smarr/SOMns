@@ -1,5 +1,10 @@
 package som.primitives;
 
+import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.Fallback;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.interpreter.nodes.ISpecialSend;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
@@ -10,11 +15,7 @@ import som.vmobjects.SClass;
 import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SObject.SMutableObject;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
-
-import com.oracle.truffle.api.dsl.Cached;
-import com.oracle.truffle.api.dsl.Fallback;
-import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.source.SourceSection;
+import tools.dym.Tags.NewObject;
 
 
 // This isn't a primitive anymore, because we do all this in the magic of the
@@ -27,13 +28,22 @@ public abstract class NewObjectPrim extends UnaryExpressionNode implements ISpec
   private final MixinDefinitionId mixinId;
 
   public NewObjectPrim(final SourceSection source, final MixinDefinitionId mixinId) {
-    super(source);
+    super(false, source);
     this.mixinId = mixinId;
   }
 
   @Override
   public MixinDefinitionId getEnclosingMixinId() {
     return mixinId;
+  }
+
+  @Override
+  protected boolean isTaggedWith(final Class<?> tag) {
+    if (tag == NewObject.class) {
+      return true;
+    } else {
+      return super.isTaggedWith(tag);
+    }
   }
 
   @Override

@@ -21,17 +21,17 @@
  */
 package som.interpreter;
 
-import som.interpreter.LexicalScope.MethodScope;
-import som.interpreter.nodes.ExpressionNode;
-
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.nodes.LoopNode;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.NodeUtil;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.interpreter.LexicalScope.MethodScope;
+import som.interpreter.nodes.ExpressionNode;
 
-public final class Method extends Invokable {
+
+public class Method extends Invokable {
 
   private final MethodScope currentMethodScope;
 
@@ -46,14 +46,14 @@ public final class Method extends Invokable {
   }
 
   @Override
-  public String toString() {
+  public final String toString() {
     SourceSection ss = getSourceSection();
     final String id = ss == null ? "" : ss.getIdentifier();
     return "Method " + id + "\t@" + Integer.toHexString(hashCode());
   }
 
   @Override
-  public Invokable cloneWithNewLexicalContext(final MethodScope outerMethodScope) {
+  public final Invokable cloneWithNewLexicalContext(final MethodScope outerMethodScope) {
     FrameDescriptor inlinedFrameDescriptor = getFrameDescriptor().copy();
     MethodScope     inlinedCurrentScope = new MethodScope(
         inlinedFrameDescriptor, outerMethodScope,
@@ -66,7 +66,7 @@ public final class Method extends Invokable {
     return clone;
   }
 
-  public Invokable cloneAndAdaptToEmbeddedOuterContext(
+  public final Invokable cloneAndAdaptToEmbeddedOuterContext(
       final InlinerForLexicallyEmbeddedMethods inliner) {
     MethodScope currentAdaptedScope = new MethodScope(
         getFrameDescriptor().copy(), inliner.getCurrentMethodScope(),
@@ -81,7 +81,7 @@ public final class Method extends Invokable {
     return clone;
   }
 
-  public Invokable cloneAndAdaptToSomeOuterContextBeingEmbedded(
+  public final Invokable cloneAndAdaptToSomeOuterContextBeingEmbedded(
       final InlinerAdaptToEmbeddedOuterContext inliner) {
     MethodScope currentAdaptedScope = new MethodScope(
         getFrameDescriptor().copy(), inliner.getCurrentMethodScope(),
@@ -97,7 +97,7 @@ public final class Method extends Invokable {
   }
 
   @Override
-  public void propagateLoopCountThroughoutMethodScope(final long count) {
+  public final void propagateLoopCountThroughoutMethodScope(final long count) {
     assert count >= 0;
     currentMethodScope.propagateLoopCountThroughoutMethodScope(count);
     LoopNode.reportLoopCount(expressionOrSequence,
@@ -105,7 +105,7 @@ public final class Method extends Invokable {
   }
 
   @Override
-  public Node deepCopy() {
+  public final Node deepCopy() {
     return cloneWithNewLexicalContext(currentMethodScope.getOuterMethodScopeOrNull());
   }
 }

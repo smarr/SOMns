@@ -8,6 +8,17 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map.Entry;
 
+import com.oracle.truffle.api.CallTarget;
+import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
+import com.oracle.truffle.api.nodes.IndirectCallNode;
+import com.oracle.truffle.api.source.Source;
+import com.oracle.truffle.api.source.SourceSection;
+import com.sun.istack.internal.Nullable;
+
 import som.VM;
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.interpreter.LexicalScope.MixinScope;
@@ -20,6 +31,7 @@ import som.interpreter.nodes.dispatch.AbstractDispatchNode;
 import som.interpreter.nodes.dispatch.CachedSlotAccessNode.CachedImmutableSlotRead;
 import som.interpreter.nodes.dispatch.CachedSlotAccessNode.CachedMutableSlotRead;
 import som.interpreter.nodes.dispatch.CachedSlotAccessNode.CachedSlotWrite;
+import som.interpreter.nodes.dispatch.CachedSlotAccessNode.SlotAccess;
 import som.interpreter.nodes.dispatch.DispatchGuard;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.nodes.literals.NilLiteralNode;
@@ -39,17 +51,6 @@ import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SObject.SMutableObject;
 import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
-
-import com.oracle.truffle.api.CallTarget;
-import com.oracle.truffle.api.CompilerAsserts;
-import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.ExplodeLoop;
-import com.oracle.truffle.api.nodes.IndirectCallNode;
-import com.oracle.truffle.api.source.Source;
-import com.oracle.truffle.api.source.SourceSection;
-import com.sun.istack.internal.Nullable;
 
 
 /**
@@ -495,12 +496,15 @@ public final class MixinDefinition {
     @Override
     public AbstractDispatchNode getDispatchNode(final Object receiver,
         final Object firstArg, final AbstractDispatchNode next) {
+      assert next.getSourceSection() == source;
       SObject rcvr = (SObject) receiver;
       if (rcvr instanceof SMutableObject) {
-        return new CachedMutableSlotRead(source, createNode(rcvr), DispatchGuard.create(rcvr), next);
+        return new CachedMutableSlotRead(getAccessType(),
+            source, createNode(rcvr), DispatchGuard.create(rcvr), next);
       } else {
         assert rcvr instanceof SImmutableObject;
-        return new CachedImmutableSlotRead(source, createNode(rcvr), DispatchGuard.create(rcvr), next);
+        return new CachedImmutableSlotRead(getAccessType(),
+            source, createNode(rcvr), DispatchGuard.create(rcvr), next);
       }
     }
 
@@ -526,6 +530,10 @@ public final class MixinDefinition {
       return FieldReadNode.createRead(this, rcvr);
     }
 
+    protected SlotAccess getAccessType() {
+      return SlotAccess.FIELD_READ;
+    }
+
     public void setValueDuringBootstrap(final SObject obj, final Object value) {
       obj.writeSlot(this, value);
     }
@@ -547,6 +555,7 @@ public final class MixinDefinition {
     @Override
     public AbstractDispatchNode getDispatchNode(final Object rcvr,
         final Object firstArg, final AbstractDispatchNode next) {
+      assert next.getSourceSection() == source;
       return new CachedSlotWrite(createWriteNode((SObject) rcvr, firstArg),
           DispatchGuard.create(rcvr), next);
     }
@@ -586,6 +595,11 @@ public final class MixinDefinition {
           FieldReadNode.createRead(this, rcvr),
           FieldWriteNode.createWriteObject(this, rcvr));
       return node;
+    }
+
+    @Override
+    protected SlotAccess getAccessType() {
+      return SlotAccess.CLASS_READ;
     }
 
     @Override

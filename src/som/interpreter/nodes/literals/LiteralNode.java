@@ -21,23 +21,32 @@
  */
 package som.interpreter.nodes.literals;
 
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.Instrumentable;
+import com.oracle.truffle.api.nodes.NodeCost;
+import com.oracle.truffle.api.nodes.NodeInfo;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.compiler.MethodBuilder;
 import som.compiler.Variable.Local;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.PreevaluatedExpression;
 import tools.highlight.Tags.LiteralTag;
 
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.NodeCost;
-import com.oracle.truffle.api.nodes.NodeInfo;
-import com.oracle.truffle.api.source.SourceSection;
-
 @NodeInfo(cost = NodeCost.NONE)
+@Instrumentable(factory = LiteralNodeWrapper.class)
 public abstract class LiteralNode extends ExpressionNode
     implements PreevaluatedExpression {
 
   public LiteralNode(final SourceSection source) {
     super(source);
+  }
+
+  /**
+   * For use by wrapping only.
+   */
+  protected LiteralNode(final LiteralNode wrappedNode) {
+    super(wrappedNode);
   }
 
   @Override

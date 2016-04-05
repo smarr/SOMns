@@ -7,6 +7,9 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 
+import som.VM;
+import som.instrumentation.InstrumentableDirectCallNode;
+
 
 public final class CachedDispatchNode extends AbstractDispatchNode {
 
@@ -18,9 +21,14 @@ public final class CachedDispatchNode extends AbstractDispatchNode {
   public CachedDispatchNode(final CallTarget methodCallTarget,
       final DispatchGuard guard, final AbstractDispatchNode nextInCache) {
     super(nextInCache.getSourceSection());
-    this.cachedMethod = Truffle.getRuntime().createDirectCallNode(methodCallTarget);
     this.guard        = guard;
     this.nextInCache  = nextInCache;
+    this.cachedMethod = Truffle.getRuntime().createDirectCallNode(methodCallTarget);
+    if (VM.enabledDynamicMetricsTool()) {
+      this.cachedMethod = insert(new InstrumentableDirectCallNode(cachedMethod,
+          nextInCache.getSourceSection()));
+      VM.insertInstrumentationWrapper(cachedMethod);
+    }
   }
 
   @Override

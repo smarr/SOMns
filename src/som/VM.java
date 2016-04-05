@@ -7,6 +7,8 @@ import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.debug.ExecutionEvent;
 import com.oracle.truffle.api.debug.SuspendedEvent;
+import com.oracle.truffle.api.instrumentation.InstrumentationHandler;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
@@ -18,6 +20,8 @@ import com.oracle.truffle.tools.TruffleProfiler;
 import com.oracle.truffle.tools.debug.shell.client.SimpleREPLClient;
 import com.oracle.truffle.tools.debug.shell.server.REPLServer;
 
+import dym.DynamicMetrics;
+import dym.profiles.StructuralProbe;
 import som.compiler.MixinDefinition;
 import som.interpreter.SomLanguage;
 import som.interpreter.TruffleCompiler;
@@ -26,6 +30,7 @@ import som.interpreter.actors.SFarReference;
 import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.SResolver;
 import som.vm.ObjectSystem;
+import som.vmobjects.SInvokable;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import tools.debugger.WebDebugger;
 import tools.highlight.Highlight;
@@ -36,6 +41,8 @@ public final class VM {
 
   @CompilationFinal private static PolyglotEngine engine;
   @CompilationFinal private static VM vm;
+  @CompilationFinal private static VMOptions vmOptions;
+  @CompilationFinal private static StructuralProbe structuralProbes;
 
   public static PolyglotEngine getEngine() {
     return engine;
@@ -70,10 +77,42 @@ public final class VM {
     }
   }
 
+  public static boolean enabledDynamicMetricsTool() {
+    return vmOptions.dynamicMetricsEnabled;
+  }
+
+  public static void insertInstrumentationWrapper(final Node node) {
+    if (vmOptions.anyInstrumentationEnabled) {
+      assert node.getSourceSection() != null : "Node needs source section";
+      // TODO: a way to check whether the node needs actually wrapping?
+//      String[] tags = node.getSourceSection().getTags();
+//      if (tags != null && tags.length > 0) {
+        InstrumentationHandler.insertInstrumentationWrapper(node);
+//      }
+    }
+  }
+
+  public static StructuralProbe getStructuralProbe() {
+    return structuralProbes;
+  }
+
+  public static void reportNewMixin(final MixinDefinition m) {
+    structuralProbes.recordNewClass(m);
+  }
+
+  public static void reportNewMethod(final SInvokable m) {
+    structuralProbes.recordNewMethod(m);
+  }
+
   public VM(final String[] args, final boolean avoidExitForTesting) throws IOException {
     vm = this;
+
+    // TODO: fix hack, we need this early, and we want tool/polyglot engine support for the events...
+    structuralProbes = new StructuralProbe();
+
     this.avoidExitForTesting = avoidExitForTesting;
     options = new VMOptions(args);
+    vmOptions = options;
     objectSystem = new ObjectSystem(options.platformFile, options.kernelFile);
 
     if (options.showUsage) {
@@ -212,12 +251,12 @@ public final class VM {
   public static void main(final String[] args) {
     Builder builder = PolyglotEngine.newBuilder();
     builder.config(SomLanguage.MIME_TYPE, SomLanguage.CMD_ARGS, args);
-    VMOptions options = new VMOptions(args);
+    vmOptions = new VMOptions(args);
 
-    if (options.debuggerEnabled) {
+    if (vmOptions.debuggerEnabled) {
       startDebugger(builder);
     } else {
-      startExecution(builder, options);
+      startExecution(builder);
     }
   }
 
@@ -244,23 +283,27 @@ public final class VM {
     }
   };
 
-  private static void startExecution(final Builder builder, final VMOptions options) {
-    if (options.webDebuggerEnabled) {
+  private static void startExecution(final Builder builder) {
+    if (vmOptions.webDebuggerEnabled) {
       builder.onEvent(onExec).onEvent(onHalted);
     }
     engine = builder.build();
 
     try {
       Instrument profiler = engine.getInstruments().get(TruffleProfiler.ID);
-      if (options.profilingEnabled && profiler == null) {
+      if (vmOptions.profilingEnabled && profiler == null) {
         VM.errorPrintln("Truffle profiler not available. Might be a class path issue");
       } else if (profiler != null) {
-        profiler.setEnabled(options.profilingEnabled);
+        profiler.setEnabled(vmOptions.profilingEnabled);
       }
-      engine.getInstruments().get(Highlight.ID).setEnabled(options.highlightingEnabled);
+      engine.getInstruments().get(Highlight.ID).setEnabled(vmOptions.highlightingEnabled);
 
-      if (options.webDebuggerEnabled) {
+      if (vmOptions.webDebuggerEnabled) {
         engine.getInstruments().get(WebDebugger.ID).setEnabled(true);
+      }
+
+      if (vmOptions.dynamicMetricsEnabled) {
+        engine.getInstruments().get(DynamicMetrics.ID).setEnabled(true);
       }
 
       engine.eval(SomLanguage.START);

@@ -5,9 +5,12 @@ import java.math.BigInteger;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.primitives.ComparisonPrim;
 
-public abstract class LessThanOrEqualPrim extends ArithmeticPrim {
-  protected LessThanOrEqualPrim(final SourceSection source) { super(source); }
+
+public abstract class LessThanOrEqualPrim extends ComparisonPrim {
+  protected LessThanOrEqualPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+  protected LessThanOrEqualPrim(final SourceSection source) { super(false, source); }
 
   @Specialization
   public final boolean doLong(final long left, final long right) {

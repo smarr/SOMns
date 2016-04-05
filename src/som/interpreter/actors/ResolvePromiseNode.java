@@ -1,20 +1,20 @@
 package som.interpreter.actors;
 
-import som.VM;
-import som.interpreter.actors.SPromise.SResolver;
-import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.primitives.Primitive;
-
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.VM;
+import som.interpreter.actors.SPromise.SResolver;
+import som.interpreter.nodes.nary.BinaryComplexOperation;
+import som.primitives.Primitive;
+
 
 @GenerateNodeFactory
 @Primitive("actorsResolve:with:")
-public abstract class ResolvePromiseNode extends BinaryExpressionNode {
-  protected ResolvePromiseNode(final SourceSection source) { super(source); }
+public abstract class ResolvePromiseNode extends BinaryComplexOperation {
+  protected ResolvePromiseNode(final SourceSection source) { super(false, source); }
 
   public abstract Object executeEvaluated(final SResolver receiver, Object argument);
 

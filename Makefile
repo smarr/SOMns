@@ -11,4 +11,7 @@ build/som.jar:
 	ant jar
 
 test:
-	ant test
+	ant tests
+
+upload-tools:
+	scp tools/*.html tools/*.json ts:www-truffle/dynamic-metrics/

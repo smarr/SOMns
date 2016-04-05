@@ -1,5 +1,10 @@
 package som.primitives.arrays;
 
+import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
@@ -11,14 +16,10 @@ import som.vmobjects.SArray.SImmutableArray;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 
-import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.source.SourceSection;
-
 
 public abstract class NewImmutableArrayNode extends TernaryExpressionNode {
-  public NewImmutableArrayNode(final SourceSection source) { super(source); }
+  public NewImmutableArrayNode(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+  public NewImmutableArrayNode(final SourceSection source) { super(false, source); }
 
   @Child protected BlockDispatchNode block = BlockDispatchNodeGen.create();
   @Child protected IsValue isValue = IsValueFactory.create(null, null);

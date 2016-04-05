@@ -1,6 +1,7 @@
 package som.interpreter.nodes;
 
 import som.compiler.MixinBuilder.MixinDefinitionId;
+import som.instrumentation.MessageSendNodeWrapper;
 import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.LexicalScope.MixinScope.MixinIdAndContextLevel;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
@@ -8,9 +9,11 @@ import som.vmobjects.SSymbol;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.Instrumentable;
 import com.oracle.truffle.api.source.SourceSection;
 
 
+@Instrumentable(factory = MessageSendNodeWrapper.class)
 public final class ResolvingImplicitReceiverSend extends AbstractMessageSendNode {
 
   private final SSymbol     selector;
@@ -28,6 +31,16 @@ public final class ResolvingImplicitReceiverSend extends AbstractMessageSendNode
     this.selector     = selector;
     this.currentScope = currentScope;
     this.mixinId      = mixinId;
+  }
+
+  /**
+   * For wrapped nodes only.
+   */
+  protected ResolvingImplicitReceiverSend(final ResolvingImplicitReceiverSend wrappedNode) {
+    super(null, null);
+    this.selector     = wrappedNode.selector;
+    this.currentScope = wrappedNode.currentScope;
+    this.mixinId      = wrappedNode.mixinId;
   }
 
   @Override
@@ -56,7 +69,7 @@ public final class ResolvingImplicitReceiverSend extends AbstractMessageSendNode
         assert result.contextLevel >= 0;
 
         newReceiverNode = OuterObjectReadNodeGen.create(result.contextLevel,
-            mixinId, result.mixinId, getSourceSection(), argumentNodes[0]);
+            mixinId, result.mixinId, sourceSection, argumentNodes[0]);
         ExpressionNode[] msgArgNodes = argumentNodes.clone();
         msgArgNodes[0] = newReceiverNode;
 

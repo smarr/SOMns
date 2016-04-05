@@ -1,5 +1,8 @@
 package som.interpreter.nodes.literals;
 
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.compiler.AccessModifier;
 import som.compiler.MethodBuilder;
 import som.compiler.Variable.Local;
@@ -15,9 +18,6 @@ import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import tools.highlight.Tags.LiteralTag;
-
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.source.SourceSection;
 
 public class BlockNode extends LiteralNode {
 

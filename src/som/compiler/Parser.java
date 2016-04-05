@@ -68,7 +68,12 @@ import static som.vm.Symbols.symbolFor;
 
 import java.io.Reader;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
+import com.oracle.truffle.api.source.Source;
+import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
 import som.compiler.Lexer.Peek;
@@ -112,9 +117,6 @@ import tools.highlight.Tags.LiteralTag;
 import tools.highlight.Tags.LocalVariableTag;
 import tools.highlight.Tags.StatementSeparatorTag;
 
-import com.oracle.truffle.api.source.Source;
-import com.oracle.truffle.api.source.SourceSection;
-
 
 public final class Parser {
 
@@ -127,6 +129,7 @@ public final class Parser {
   private String                    nextText;
 
   private SourceSection             lastMethodsSourceSection;
+  private final Set<SourceSection>  syntaxAnnotations;
 
   private static final Symbol[] singleOpSyms = new Symbol[] {Not, And, Or, Star,
     Div, Mod, Plus, Equal, More, Less, Comma, At, Per, NONE};
@@ -238,6 +241,12 @@ public final class Parser {
     lexer = new Lexer(reader, fileSize);
     nextSym = NONE;
     getSymbolFromLexer();
+
+    this.syntaxAnnotations = new HashSet<>();
+  }
+
+  Set<SourceSection> getSyntaxAnnotations() {
+    return syntaxAnnotations;
   }
 
   SourceCoordinate getCoordinate() {
@@ -713,6 +722,8 @@ public final class Parser {
         KeywordTag.class);
     ExpressionNode body = methodBlock(builder);
     SInvokable meth = builder.assemble(body, accessModifier, category, getSource(coord));
+
+    VM.reportNewMethod(meth);
     mxnBuilder.addMethod(meth);
   }
 
@@ -1144,21 +1155,29 @@ public final class Parser {
     if (numberOfArguments == 2) {
       if (arguments.get(1) instanceof LiteralNode) {
         if ("ifTrue:".equals(msgStr)) {
+          ExpressionNode condition = arguments.get(0);
+          condition.markAsControlFlowCondition();
           ExpressionNode inlinedBody = ((LiteralNode) arguments.get(1)).inline(builder);
-          return new IfInlinedLiteralNode(arguments.get(0), true, inlinedBody,
+          return new IfInlinedLiteralNode(condition, true, inlinedBody,
               arguments.get(1), source);
         } else if ("ifFalse:".equals(msgStr)) {
+          ExpressionNode condition = arguments.get(0);
+          condition.markAsControlFlowCondition();
           ExpressionNode inlinedBody = ((LiteralNode) arguments.get(1)).inline(builder);
-          return new IfInlinedLiteralNode(arguments.get(0), false, inlinedBody,
+          return new IfInlinedLiteralNode(condition, false, inlinedBody,
               arguments.get(1), source);
         } else if ("whileTrue:".equals(msgStr)) {
           ExpressionNode inlinedCondition = ((LiteralNode) arguments.get(0)).inline(builder);
+          inlinedCondition.markAsControlFlowCondition();
           ExpressionNode inlinedBody      = ((LiteralNode) arguments.get(1)).inline(builder);
+          inlinedBody.markAsLoopBody();
           return new WhileInlinedLiteralsNode(inlinedCondition, inlinedBody,
               true, arguments.get(0), arguments.get(1), source);
         } else if ("whileFalse:".equals(msgStr)) {
           ExpressionNode inlinedCondition = ((LiteralNode) arguments.get(0)).inline(builder);
+          inlinedCondition.markAsControlFlowCondition();
           ExpressionNode inlinedBody      = ((LiteralNode) arguments.get(1)).inline(builder);
+          inlinedBody.markAsLoopBody();
           return new WhileInlinedLiteralsNode(inlinedCondition, inlinedBody,
               false, arguments.get(0), arguments.get(1), source);
         } else if ("or:".equals(msgStr) || "||".equals(msgStr)) {
@@ -1167,8 +1186,9 @@ public final class Parser {
         } else if ("and:".equals(msgStr) || "&&".equals(msgStr)) {
           ExpressionNode inlinedArg = ((LiteralNode) arguments.get(1)).inline(builder);
           return new AndInlinedLiteralNode(arguments.get(0), inlinedArg, arguments.get(1), source);
-        } else if ("timesRepeat:".equals(msgStr)) {
+        } else if (!VM.enabledDynamicMetricsTool() && "timesRepeat:".equals(msgStr)) {
           ExpressionNode inlinedBody = ((LiteralNode) arguments.get(1)).inline(builder);
+          inlinedBody.markAsLoopBody();
           return IntTimesRepeatLiteralNodeGen.create(inlinedBody,
               arguments.get(1), source, arguments.get(0));
         }
@@ -1176,21 +1196,25 @@ public final class Parser {
     } else if (numberOfArguments == 3) {
       if ("ifTrue:ifFalse:".equals(msgStr) &&
           arguments.get(1) instanceof LiteralNode && arguments.get(2) instanceof LiteralNode) {
+        ExpressionNode condition = arguments.get(0);
+        condition.markAsControlFlowCondition();
         ExpressionNode inlinedTrueNode  = ((LiteralNode) arguments.get(1)).inline(builder);
         ExpressionNode inlinedFalseNode = ((LiteralNode) arguments.get(2)).inline(builder);
-        return new IfTrueIfFalseInlinedLiteralsNode(arguments.get(0),
+        return new IfTrueIfFalseInlinedLiteralsNode(condition,
             inlinedTrueNode, inlinedFalseNode, arguments.get(1), arguments.get(2),
             source);
-      } else if ("to:do:".equals(msgStr) &&
+      } else if (!VM.enabledDynamicMetricsTool() && "to:do:".equals(msgStr) &&
           arguments.get(2) instanceof LiteralNode) {
         Local loopIdx = builder.addLocal("i:" + source.getCharIndex(), source);
         ExpressionNode inlinedBody = ((LiteralNode) arguments.get(2)).inline(builder, loopIdx);
+        inlinedBody.markAsLoopBody();
         return IntToDoInlinedLiteralsNodeGen.create(inlinedBody, loopIdx.getSlot(), loopIdx.source,
             arguments.get(2), source, arguments.get(0), arguments.get(1));
-      } else if ("downTo:do:".equals(msgStr) &&
+      } else if (!VM.enabledDynamicMetricsTool() && "downTo:do:".equals(msgStr) &&
           arguments.get(2) instanceof LiteralNode) {
         Local loopIdx = builder.addLocal("i:" + source.getCharIndex(), source);
         ExpressionNode inlinedBody = ((LiteralNode) arguments.get(2)).inline(builder, loopIdx);
+        inlinedBody.markAsLoopBody();
         return IntDownToDoInlinedLiteralsNodeGen.create(inlinedBody, loopIdx.getSlot(), loopIdx.source,
             arguments.get(2), source, arguments.get(0), arguments.get(1));
       }

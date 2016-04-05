@@ -32,6 +32,10 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import com.oracle.truffle.api.source.Source;
+import com.oracle.truffle.api.source.SourceSection;
+
+import som.VM;
 import som.compiler.MixinDefinition.ClassSlotDefinition;
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.compiler.MixinDefinition.SlotMutator;
@@ -46,9 +50,6 @@ import som.primitives.NewObjectPrimNodeGen;
 import som.vm.Symbols;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
-
-import com.oracle.truffle.api.source.Source;
-import com.oracle.truffle.api.source.SourceSection;
 
 
 /**
@@ -333,6 +334,8 @@ public final class MixinBuilder {
     classScope.setMixinDefinition(clsDef, true);
 
     setHolders(clsDef);
+
+    VM.reportNewMixin(clsDef);
     return clsDef;
   }
 

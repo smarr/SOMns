@@ -2,17 +2,18 @@ package som.primitives.arithmetic;
 
 import java.math.BigInteger;
 
-import som.primitives.Primitive;
-
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.source.SourceSection;
+
+import som.primitives.Primitive;
 
 
 @GenerateNodeFactory
 @Primitive("int:divideBy:")
 public abstract class DividePrim extends ArithmeticPrim {
-  protected DividePrim(final SourceSection source) { super(source); }
+  protected DividePrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+  protected DividePrim(final SourceSection source) { super(false, source); }
 
   @Specialization
   public final long doLong(final long left, final long right) {

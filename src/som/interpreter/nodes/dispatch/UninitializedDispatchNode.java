@@ -1,5 +1,13 @@
 package som.interpreter.nodes.dispatch;
 
+import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
+import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.nodes.RootNode;
+import com.oracle.truffle.api.source.SourceSection;
+
+import som.VM;
 import som.compiler.AccessModifier;
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.interpreter.TruffleCompiler;
@@ -11,12 +19,6 @@ import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
-
-import com.oracle.truffle.api.CompilerAsserts;
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.nodes.RootNode;
-import com.oracle.truffle.api.source.SourceSection;
 
 
 public final class UninitializedDispatchNode {
@@ -50,6 +52,8 @@ public final class UninitializedDispatchNode {
 
     protected final AbstractDispatchNode insertSpecialization(final Object rcvr,
         final Object firstArg) {
+      VM.insertInstrumentationWrapper(this);
+
       SClass rcvrClass = Types.getClassOf(rcvr);
       Dispatchable dispatchable = doLookup(rcvrClass);
 
@@ -66,7 +70,9 @@ public final class UninitializedDispatchNode {
         node = dispatchable.getDispatchNode(rcvr, firstArg, newChainEnd);
       }
 
-      return replace(node);
+      replace(node);
+      VM.insertInstrumentationWrapper(node);
+      return node;
     }
 
     protected final AbstractDispatchNode generalizeChain(
@@ -90,7 +96,9 @@ public final class UninitializedDispatchNode {
       int chainDepth = 0;
       while (i.getParent() instanceof AbstractDispatchNode) {
         i = i.getParent();
-        chainDepth++;
+        if (!(i instanceof WrapperNode)) {
+          chainDepth++;
+        }
       }
       AbstractDispatchNode first = (AbstractDispatchNode) i;
 
