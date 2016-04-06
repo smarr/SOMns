@@ -117,7 +117,7 @@ public class BasicInterpreterTests {
         {"Lookup", "testInner18",                                   999, Long.class },
 */
 
-        {"Lookup", "testImplicitReceiverSendToPrivateMethod",        55, Long.class, null },
+        {"Lookup", "testImplicitReceiverSendToPrivateMethod",        55, Long.class, UNSAFE_OM },
         {"Lookup", "testSelfSendToPrivateMethod",                    55, Long.class, UNSAFE_OM },
         {"Lookup", "testImplicitReceiverSendToPrivateMethodFromSubclass", 55, Long.class, UNSAFE_OM },
         {"Lookup", "testSelfSendToPrivateMethodFromSubclass",        55, Long.class, UNSAFE_OM },
