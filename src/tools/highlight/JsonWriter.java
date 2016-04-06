@@ -151,16 +151,23 @@ public final class JsonWriter {
 
   private JSONObjectBuilder sectionToJson(final SourceSection ss,
       final String id, final Map<Source, String> sourceToId) {
+    return sectionToJson(ss, id, sourceToId, sourceSectionTags.get(ss));
+  }
+
+  public static JSONObjectBuilder sectionToJson(final SourceSection ss,
+      final String id, final Map<Source, String> sourceToId,
+      final Set<Class<? extends Tags>> tags) {
     JSONObjectBuilder builder = JSONHelper.object();
 
     builder.add("id", id);
     builder.add("firstIndex", ss.getCharIndex());
     builder.add("length", ss.getCharLength());
     builder.add("identifier", ss.getIdentifier());
+    builder.add("line", ss.getStartLine());
+    builder.add("column", ss.getStartColumn());
     builder.add("description", ss.getShortDescription());
     builder.add("sourceId", sourceToId.get(ss.getSource()));
 
-    Set<Class<? extends Tags>> tags = sourceSectionTags.get(ss);
     if (tags.size() > 0) {
       JSONArrayBuilder arr = JSONHelper.array();
       for (Class<? extends Tags> tagClass : tags) {
@@ -169,7 +176,6 @@ public final class JsonWriter {
       builder.add("tags", arr);
     }
 //    builder.add("data", collectDataForSection(ss));
-
     return builder;
   }
 }
