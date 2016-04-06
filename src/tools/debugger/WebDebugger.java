@@ -9,7 +9,9 @@ import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -21,16 +23,24 @@ import org.java_websocket.server.WebSocketServer;
 
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonObject;
+import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.debug.Breakpoint;
 import com.oracle.truffle.api.debug.Debugger;
 import com.oracle.truffle.api.debug.ExecutionEvent;
 import com.oracle.truffle.api.debug.SuspendedEvent;
+import com.oracle.truffle.api.frame.FrameInstance;
+import com.oracle.truffle.api.frame.FrameSlot;
+import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.instrumentation.TruffleInstrument;
 import com.oracle.truffle.api.instrumentation.TruffleInstrument.Registration;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.LineLocation;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
+import com.oracle.truffle.api.utilities.JSONHelper;
+import com.oracle.truffle.api.utilities.JSONHelper.JSONArrayBuilder;
+import com.oracle.truffle.api.utilities.JSONHelper.JSONObjectBuilder;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
@@ -99,11 +109,7 @@ public class WebDebugger extends TruffleInstrument {
       return;
     }
 
-    assert debugger != null;
-    assert debugger.webSocketServer != null;
-    assert client != null;
-
-    assert client.isOpen();
+    ensureConnectionIsAvailable();
 
     if (!notReady.isEmpty()) {
       for (Source s : notReady) {
@@ -115,6 +121,14 @@ public class WebDebugger extends TruffleInstrument {
 
     String json = createSourceAndSectionMessage(source);
     client.send(json);
+  }
+
+  private static void ensureConnectionIsAvailable() {
+    assert debugger != null;
+    assert debugger.webSocketServer != null;
+    assert client != null;
+
+    assert client.isOpen();
   }
 
   private static String createSourceAndSectionMessage(final Source source) {
@@ -130,9 +144,100 @@ public class WebDebugger extends TruffleInstrument {
     // TODO: prepare step and continue???
   }
 
-  public static void reportSuspendedEvent(final SuspendedEvent e) {
-    System.out.println(e.getNode().getSourceSection().toString());
+
+  private static int nextSuspendEventId = 0;
+  private static final Map<String, SuspendedEvent> suspendEvents  = new HashMap<>();
+  private static final Map<String, CompletableFuture<Object>> suspendFutures = new HashMap<>();
+
+
+  private static String getNextSuspendEventId() {
+    int id = nextSuspendEventId;
+    nextSuspendEventId += 1;
+    return "se-" + id;
   }
+
+  public static void reportSuspendedEvent(final SuspendedEvent e) {
+    // e.getNode().getSourceSection().toString()
+    System.out.print(".");
+
+
+    JSONObjectBuilder builder  = JSONHelper.object();
+    builder.add("type", "suspendEvent");
+
+    JSONArrayBuilder stackJson = JSONHelper.array();
+    List<FrameInstance> stack = e.getStack();
+
+
+    for (int stackIndex = 0; stackIndex < stack.size(); stackIndex++) {
+      final Node callNode = stackIndex == 0 ? e.getNode() : stack.get(stackIndex).getCallNode();
+      stackJson.add(createFrame(callNode, stack.get(stackIndex)));
+    }
+    builder.add("stack", stackJson);
+    builder.add("topFrame", createTopFrameJson(e.getFrame(), e.getNode().getRootNode()));
+
+    String id = getNextSuspendEventId();
+    builder.add("id", id);
+
+    CompletableFuture<Object> future = new CompletableFuture<>();
+    suspendEvents.put(id, e);
+    suspendFutures.put(id, future);
+
+    ensureConnectionIsAvailable();
+
+    client.send(builder.toString());
+    System.out.println(builder.toString());
+
+    try {
+      future.get();
+    } catch (InterruptedException | ExecutionException e1) {
+      System.out.println("[DEBUGGER] Future failed:");
+      e1.printStackTrace();
+    }
+  }
+
+  private static JSONObjectBuilder createTopFrameJson(final MaterializedFrame frame, final RootNode root) {
+    JSONArrayBuilder arguments = JSONHelper.array();
+    for (Object o : frame.getArguments()) {
+      arguments.add(o.toString());
+    }
+
+    JSONObjectBuilder slots = JSONHelper.object();
+    for (FrameSlot slot : root.getFrameDescriptor().getSlots()) {
+      Object value = frame.getValue(slot);
+      slots.add(slot.getIdentifier().toString(),
+          Objects.toString(value));
+    }
+
+    JSONObjectBuilder frameJson = JSONHelper.object();
+    frameJson.add("arguments", arguments);
+    frameJson.add("slots", slots);
+    return frameJson;
+  }
+
+
+  private static JSONObjectBuilder createFrame(final Node node, final FrameInstance stackFrame) {
+    JSONObjectBuilder frame = JSONHelper.object();
+    if (node != null && node.getEncapsulatingSourceSection() != null) {
+      frame.add("sourceSection", JsonWriter.sectionToJson(
+          node.getEncapsulatingSourceSection(),
+          sourceSectionId.get(node.getEncapsulatingSourceSection()),
+          sourcesId, new HashSet<>())); // TODO: add tags
+    }
+
+    RootCallTarget rct = (RootCallTarget) stackFrame.getCallTarget();
+    SourceSection rootSource = rct.getRootNode().getSourceSection();
+    String methodName;
+    if (rootSource != null) {
+      methodName = rootSource.getIdentifier();
+    } else {
+      methodName = rct.toString();
+    }
+    frame.add("methodName", methodName);
+
+    // TODO: stack frame content, or on demand?
+    // stackFrame.getFrame(FrameAccess.READ_ONLY, true);
+    return frame;
+}
 
   @Override
   protected void onCreate(final Env env) {
