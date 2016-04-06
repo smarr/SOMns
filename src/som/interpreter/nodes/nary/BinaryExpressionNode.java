@@ -30,7 +30,7 @@ public abstract class BinaryExpressionNode extends ExpressionNode
    */
   protected BinaryExpressionNode(final BinaryExpressionNode wrappedNode) {
     super(wrappedNode);
-    assert wrappedNode.eagerlyWrapped : "I think this should be true.";
+    assert !wrappedNode.eagerlyWrapped : "I think this should be true.";
     this.eagerlyWrapped = false;
   }
 

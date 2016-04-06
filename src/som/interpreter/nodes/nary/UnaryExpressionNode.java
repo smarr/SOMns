@@ -28,7 +28,7 @@ public abstract class UnaryExpressionNode extends ExpressionNode
    */
   protected UnaryExpressionNode(final UnaryExpressionNode wrappedNode) {
     super(wrappedNode);
-    assert wrappedNode.eagerlyWrapped : "I think this should be true.";
+    assert !wrappedNode.eagerlyWrapped : "I think this should be true.";
     this.eagerlyWrapped = false;
   }
 

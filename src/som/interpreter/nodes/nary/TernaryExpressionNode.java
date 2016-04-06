@@ -32,7 +32,7 @@ public abstract class TernaryExpressionNode extends ExpressionNode
    */
   protected TernaryExpressionNode(final TernaryExpressionNode wrappedNode) {
     super(wrappedNode);
-    assert wrappedNode.eagerlyWrapped : "I think this should be true.";
+    assert !wrappedNode.eagerlyWrapped : "I think this should be true.";
     this.eagerlyWrapped = false;
   }
 
