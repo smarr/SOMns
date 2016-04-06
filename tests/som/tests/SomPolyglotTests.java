@@ -8,16 +8,17 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Test;
-
-import som.VM;
-import som.interpreter.SomLanguage;
 
 import com.oracle.truffle.api.vm.PolyglotEngine;
 import com.oracle.truffle.api.vm.PolyglotEngine.Builder;
 import com.oracle.truffle.api.vm.PolyglotEngine.Instrument;
 import com.oracle.truffle.api.vm.PolyglotEngine.Value;
 import com.oracle.truffle.tools.TruffleProfiler;
+
+import som.VM;
+import som.interpreter.SomLanguage;
 
 
 public class SomPolyglotTests {
@@ -68,9 +69,9 @@ public class SomPolyglotTests {
     PolyglotEngine vm = builder.build();
     Instrument profiler = vm.getInstruments().get(TruffleProfiler.ID);
 
-    if (profiler == null) {
-      return;
-    }
+    Assume.assumeNotNull(profiler);
+    profiler.setEnabled(true);
+
 
     assertTrue(profiler.isEnabled());
     Value result = vm.eval(SomLanguage.START);
@@ -88,10 +89,9 @@ public class SomPolyglotTests {
     PolyglotEngine vm = builder.build();
     Instrument profiler = vm.getInstruments().get(TruffleProfiler.ID);
 
-    if (profiler == null) {
-      return;
-    }
+    Assume.assumeNotNull(profiler);
 
+    profiler.setEnabled(true);
     assertTrue(profiler.isEnabled());
     profiler.setEnabled(false);
     Value result = vm.eval(SomLanguage.START);
