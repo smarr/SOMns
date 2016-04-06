@@ -217,7 +217,6 @@ public class BasicInterpreterTests {
 
   @Test
   public void testBasicInterpreterBehavior() throws IOException {
-    Assume.assumeTrue(ignoreForParallelExecutionReason, ignoreForParallelExecutionReason == null);
     VM vm = getInitializedVM();
 
     Object actualResult = vm.execute(testSelector);
@@ -226,6 +225,7 @@ public class BasicInterpreterTests {
 
   @Test
   public void testInParallel() throws InterruptedException, IOException {
+    Assume.assumeTrue(ignoreForParallelExecutionReason, ignoreForParallelExecutionReason == null);
     VM vm = getInitializedVM();
 
     ParallelHelper.executeNTimesInParallel(() -> {
