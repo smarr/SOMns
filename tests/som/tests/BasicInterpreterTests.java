@@ -113,9 +113,7 @@ public class BasicInterpreterTests {
         {"Lookup", "testNesting1",                                   91, Long.class, UNSAFE_OM },
         {"Lookup", "testNesting2",                                  182, Long.class, UNSAFE_OM },
         {"Lookup", "testNesting3",                                  364, Long.class, UNSAFE_OM },
-/* DEACTIVATE until fixed, for debugging, repeat the test entry multiple times here.
-        {"Lookup", "testInner18",                                   999, Long.class },
-*/
+        {"Lookup", "testInner18",                                   999, Long.class, "ignored until issue #9 is fixed. For debugging, repeat the test entry multiple times here" },
 
         {"Lookup", "testImplicitReceiverSendToPrivateMethod",        55, Long.class, UNSAFE_OM },
         {"Lookup", "testSelfSendToPrivateMethod",                    55, Long.class, UNSAFE_OM },
