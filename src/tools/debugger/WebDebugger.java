@@ -145,7 +145,7 @@ public class WebDebugger extends TruffleInstrument {
       port = 8888;
       initializeHttpServer(port);
       System.out.println("[DEBUGGER] Started HTTP Server");
-      System.out.println("[DEBUGGER]   URL: http://localhost:" + port);
+      System.out.println("[DEBUGGER]   URL: http://localhost:" + port + "/index.html");
     } catch (IOException e) {
       e.printStackTrace();
       System.out.println("Failed starting WebSocket and/or HTTP Server");
