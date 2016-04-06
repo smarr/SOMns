@@ -38,6 +38,10 @@ public abstract class BinaryExpressionNode extends ExpressionNode
   protected boolean isTaggedWith(final Class<?> tag) {
     if (tag == EagerlyWrapped.class) {
       return eagerlyWrapped;
+    } else if (eagerlyWrapped) {
+      // an eagerly wrapped node itself should not handle anything,
+      // should be covered by the eager wrapper, I think
+      return false;
     } else {
       return super.isTaggedWith(tag);
     }
