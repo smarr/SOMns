@@ -32,9 +32,9 @@ public abstract class CachedSlotAccessNode extends AbstractDispatchNode {
     private final SlotAccess              type;
 
     public CachedSlotRead(final SlotAccess type,
-        final SourceSection source, final FieldReadNode read,
+        final FieldReadNode read,
         final DispatchGuard guard, final AbstractDispatchNode nextInCache) {
-      super(source, read);
+      super(nextInCache.sourceSection, read);
       this.type        = type;
       this.guard       = guard;
       this.nextInCache = nextInCache;
@@ -80,9 +80,9 @@ public abstract class CachedSlotAccessNode extends AbstractDispatchNode {
   public static final class CachedImmutableSlotRead extends CachedSlotRead {
 
     public CachedImmutableSlotRead(final SlotAccess type,
-        final SourceSection source, final FieldReadNode read,
+        final FieldReadNode read,
         final DispatchGuard guard, final AbstractDispatchNode nextInCache) {
-      super(type, source, read, guard, nextInCache);
+      super(type, read, guard, nextInCache);
     }
 
     @Override
@@ -94,9 +94,9 @@ public abstract class CachedSlotAccessNode extends AbstractDispatchNode {
   public static final class CachedMutableSlotRead extends CachedSlotRead {
 
     public CachedMutableSlotRead(final SlotAccess type,
-        final SourceSection source, final FieldReadNode read,
+        final FieldReadNode read,
         final DispatchGuard guard, final AbstractDispatchNode nextInCache) {
-      super(type, source, read, guard, nextInCache);
+      super(type, read, guard, nextInCache);
     }
 
     @Override

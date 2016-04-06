@@ -496,15 +496,14 @@ public final class MixinDefinition {
     @Override
     public AbstractDispatchNode getDispatchNode(final Object receiver,
         final Object firstArg, final AbstractDispatchNode next) {
-      assert next.getSourceSection() == source;
       SObject rcvr = (SObject) receiver;
       if (rcvr instanceof SMutableObject) {
         return new CachedMutableSlotRead(getAccessType(),
-            source, createNode(rcvr), DispatchGuard.create(rcvr), next);
+            createNode(rcvr), DispatchGuard.create(rcvr), next);
       } else {
         assert rcvr instanceof SImmutableObject;
         return new CachedImmutableSlotRead(getAccessType(),
-            source, createNode(rcvr), DispatchGuard.create(rcvr), next);
+            createNode(rcvr), DispatchGuard.create(rcvr), next);
       }
     }
 
@@ -555,7 +554,6 @@ public final class MixinDefinition {
     @Override
     public AbstractDispatchNode getDispatchNode(final Object rcvr,
         final Object firstArg, final AbstractDispatchNode next) {
-      assert next.getSourceSection() == source;
       return new CachedSlotWrite(createWriteNode((SObject) rcvr, firstArg),
           DispatchGuard.create(rcvr), next);
     }
