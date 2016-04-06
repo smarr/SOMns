@@ -27,16 +27,17 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-import som.VM;
-import som.interpreter.SomLanguage;
-
 import com.oracle.truffle.api.vm.PolyglotEngine;
 import com.oracle.truffle.api.vm.PolyglotEngine.Builder;
+
+import som.VM;
+import som.interpreter.SomLanguage;
 
 
 @RunWith(Parameterized.class)
@@ -45,31 +46,35 @@ public class SomTests {
   @Parameters(name = "{0} [{index}]")
   public static Iterable<Object[]> data() {
     return Arrays.asList(new Object[][] {
-        {"LanguageTests"   },
-        {"MixinTests"      },
-        {"CollectionTests" },
-        {"DoubleTests"     },
-        {"IntegerTests"    },
+        {"LanguageTests",    null},
+        {"MixinTests",       null},
+        {"CollectionTests",  null},
+        {"DoubleTests",      null },
+        {"IntegerTests",     null },
 
-        {"StringTests"     },
-        {"SymbolTests"     },
-        {"SystemTests"     },
-        {"BenchmarkHarnessTests"},
-        {"ActorTests"      },
-        {"RegressionTests" },
-        {"TransferObjectTests"},
-//        {"MinitestTests"   }, // XXX: TEMPORARARILY DISABLED, see issue #10 Failing MinitestTests in JUnit Harness, caching causes comparison of Exception object with old one to fail
+        {"StringTests",      null },
+        {"SymbolTests",      null },
+        {"SystemTests",      null },
+        {"BenchmarkHarnessTests", null },
+        {"ActorTests",       null },
+        {"RegressionTests",  null },
+        {"TransferObjectTests", null },
+        {"MinitestTests", "DISABLED, see issue #10 Failing MinitestTests in JUnit Harness, caching causes comparison of Exception object with old one to fail" },
       });
   }
 
-  private String testName;
+  private final String testName;
+  private final String ignoreReason;
 
-  public SomTests(final String testName) {
-    this.testName = testName;
+  public SomTests(final String testName, final String ignoreReason) {
+    this.testName     = testName;
+    this.ignoreReason = ignoreReason;
   }
 
   @Test
   public void testSomeTest() throws IOException {
+    Assume.assumeTrue(ignoreReason, ignoreReason == null);
+
     String[] args = new String[] {
         "core-lib/TestSuite/TestRunner.som",
         "core-lib/TestSuite/" + testName + ".som"};
