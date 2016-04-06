@@ -21,6 +21,7 @@ import org.java_websocket.server.WebSocketServer;
 
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonObject;
+import com.oracle.truffle.api.debug.Breakpoint;
 import com.oracle.truffle.api.debug.Debugger;
 import com.oracle.truffle.api.debug.ExecutionEvent;
 import com.oracle.truffle.api.debug.SuspendedEvent;
@@ -263,11 +264,18 @@ public class WebDebugger extends TruffleInstrument {
           Source source = idSources.get(sourceId);
           LineLocation line = source.createLineLocation(lineNumber);
 
-          try {
-            assert truffleDebugger != null : "debugger has not be initialized yet";
-            truffleDebugger.setLineBreakpoint(0, line, false);
-          } catch (IOException e) {
-            e.printStackTrace();
+          assert truffleDebugger != null : "debugger has not be initialized yet";
+          Breakpoint bp = truffleDebugger.getBreakpoint(line);
+
+          if (enabled && bp == null) {
+            try {
+              System.out.println("SetLineBreakpoint line:" + line);
+              truffleDebugger.setLineBreakpoint(0, line, false);
+            } catch (IOException e) {
+              e.printStackTrace();
+            }
+          } else if (bp != null) {
+            bp.setEnabled(enabled);
           }
           return;
       }
