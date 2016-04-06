@@ -424,6 +424,50 @@ var breakpoints = {};
     this.socket = connect();
   }
 
+  function showFrame(frame, i, list) {
+    var stackEntry = frame.methodName;
+    if (frame.sourceSection) {
+      stackEntry += ":" + frame.sourceSection.line + ":" + frame.sourceSection.column;
+    }
+    var entry = nodeFromTemplate("stack-frame-tpl");
+    entry.setAttribute("id", "frame-" + i);
+    
+    var tds = $(entry).find("td");
+    tds[0].innerHTML = stackEntry;
+    list.appendChild(entry);
+  }
+
+  function showVar(name, value, list) {
+    var entry = nodeFromTemplate("frame-state-tpl");
+    var t = $(entry).find("th");
+    t.html(name);
+    t = $(entry).find("td");
+    t.html(value);
+    list.appendChild(entry);
+  }
+
+  function displaySuspendEvent(data) {
+    var list = document.getElementById("stack-frames");
+    while (list.lastChild) {
+      list.removeChild(list.lastChild)
+    }
+
+    for (var i = 0; i < data.stack.length; i++) {
+      showFrame(data.stack[i], i, list);
+    }
+
+    list = document.getElementById("frame-state");
+    while (list.lastChild) {
+      list.removeChild(list.lastChild)
+    }
+
+    showVar("Arguments", data.topFrame.arguments.join(", "), list);
+
+    for (var varName in data.topFrame.slots) {
+      showVar(varName, data.topFrame.slots[varName], list);
+    }
+  }
+
   function connect() {
     var socket = new WebSocket("ws://localhost:8889");
     socket.onopen = function(e) {
@@ -445,6 +489,9 @@ var breakpoints = {};
       switch (data.type) {
         case "source":
           displaySources(data);
+          break;
+        case "suspendEvent":
+          displaySuspendEvent(data);
           break;
       }
     };
@@ -584,6 +631,8 @@ var breakpoints = {};
 
   .breakpoint-active { background-color: #a40000; }
 
+  .table>tbody>tr>td, .table>tbody>tr>th {padding:0; border:0}
+
   /* Syntax Highlighting 
 http://emilis.info/other/extended_tango/
 https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
@@ -657,6 +706,15 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
   </tbody>
 </table>
 
+<table class="table" style="font-size: 75%">
+<tbody id="frame-state">
+</tbody>
+</table>
+
+<table class="table" id="stacktrace" style="font-size: 75%">
+<tbody id="stack-frames">
+</tbody>
+</table>
 
 <div id="debugger-log" class="panel-footer" style="font-size: 75%">
 </div>
@@ -682,6 +740,19 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
     <td>ShortName</td>
     <td>nn</td>
     <td><input type="checkbox" id="b-XX" value="on" checked="checked" onchange=""></td>
+  </tr>
+  </table>
+
+  <table>
+  <tr id="stack-frame-tpl">
+    <td>MethodName</td>
+  </tr>
+  </table>
+
+  <table>
+  <tr id="frame-state-tpl">
+    <th scope="row">name</th>
+    <td>value</td>
   </tr>
   </table>
 </div></div>
