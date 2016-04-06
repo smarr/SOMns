@@ -57,24 +57,27 @@ public abstract class ExpressionNode extends SOMNode {
    * possibly only {@link som.interpreter.Method}.
    * TODO: figure out whether we leave out primitives.
    */
-  private final static byte ROOT_EXPR = 1;
+  private static final byte ROOT_EXPR = 1;
 
   /**
    * Indicates that this node is a root of a loop body.
    */
-  private final static byte LOOP_BODY = 1 << 1;
+  private static final byte LOOP_BODY = 1 << 1;
 
   /**
-   * Indicates that this node is a root for a control flow condition
+   * Indicates that this node is a root for a control flow condition.
    */
-  private final static byte CONTROL_FLOW_CONDITION = 1 << 2;
+  private static final byte CONTROL_FLOW_CONDITION = 1 << 2;
 
   /**
    * Indicates that this node is an argument to a primitive.
    */
-  private final static byte PRIMITIVE_ARGUMENT = 1 << 3;
+  private static final byte PRIMITIVE_ARGUMENT = 1 << 3;
 
-  private final static byte VIRTUAL_INVOKE_RECEIVER = 1 << 4;
+  /**
+   * Indicates that this node determines a receiver for an invoke.
+   */
+  private static final byte VIRTUAL_INVOKE_RECEIVER = 1 << 4;
 
   public ExpressionNode(final SourceSection sourceSection) {
     super(sourceSection);

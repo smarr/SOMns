@@ -287,7 +287,7 @@ public class DynamicMetrics extends TruffleInstrument {
     });
   }
 
-  private static Class<?>[] NO_TAGS = new Class<?>[0];
+  private static final Class<?>[] NO_TAGS = new Class<?>[0];
 
   @Override
   protected void onCreate(final Env env) {

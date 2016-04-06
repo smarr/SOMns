@@ -267,7 +267,7 @@ public final class VM {
     client.start(server);
   }
 
-  private final static EventConsumer<ExecutionEvent> onExec =
+  private static final EventConsumer<ExecutionEvent> onExec =
       new EventConsumer<ExecutionEvent>(ExecutionEvent.class) {
     @Override
     protected void on(final ExecutionEvent event) {
@@ -275,7 +275,7 @@ public final class VM {
     }
   };
 
-  private final static EventConsumer<SuspendedEvent> onHalted =
+  private static final EventConsumer<SuspendedEvent> onHalted =
       new EventConsumer<SuspendedEvent>(SuspendedEvent.class) {
     @Override
     protected void on(final SuspendedEvent e) {

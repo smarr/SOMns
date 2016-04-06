@@ -52,13 +52,13 @@ public class WebDebugger extends TruffleInstrument {
   private WebSocketHandler webSocketServer;
   private Future<WebSocket> clientConnected;
 
-  private final static Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> loadedSources = new HashMap<>();
+  private static final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> loadedSources = new HashMap<>();
 
   private static int nextSourceId = 0;
   private static int nextSourceSectionId = 0;
-  private final static Map<Source, String> sourcesId = new HashMap<>();
-  private final static Map<String, Source> idSources = new HashMap<>();
-  private final static Map<SourceSection, String> sourceSectionId = new HashMap<>();
+  private static final Map<Source, String> sourcesId = new HashMap<>();
+  private static final Map<String, Source> idSources = new HashMap<>();
+  private static final Map<SourceSection, String> sourceSectionId = new HashMap<>();
 
   private static WebDebugger debugger;
   private static WebSocket client;
@@ -90,7 +90,7 @@ public class WebDebugger extends TruffleInstrument {
     });
   }
 
-  private final static ArrayList<Source> notReady = new ArrayList<>();
+  private static final ArrayList<Source> notReady = new ArrayList<>();
 
   public static void reportLoadedSource(final Source source) {
     if (debugger == null || debugger.webSocketServer == null || client == null) {
@@ -226,7 +226,7 @@ public class WebDebugger extends TruffleInstrument {
   }
 
   private static class WebSocketHandler extends WebSocketServer {
-    private final static int NUM_THREADS = 1;
+    private static final int NUM_THREADS = 1;
 
     private final CompletableFuture<WebSocket> clientConnected;
 
