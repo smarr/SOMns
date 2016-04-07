@@ -468,6 +468,7 @@ var breakpoints = {};
 
     dbg.currentDomNode   = ss;
     dbg.currentSectionId = ssId;
+    dbg.lastSuspendEventId = data.id;
   }
 
   function connect() {
@@ -511,8 +512,9 @@ var breakpoints = {};
       this.socket = connect();
     }
 
-    this.currentSectionId = null;
-    this.currentDomNode = null;
+    this.currentSectionId   = null;
+    this.currentDomNode     = null;
+    this.lastSuspendEventId = null;
   }
 
   Debugger.prototype.resume = function() {
@@ -526,7 +528,10 @@ var breakpoints = {};
   }
 
   Debugger.prototype.stepInto = function() {
-    this.socket.send({action:'stepInto'});
+    $(this.currentDomNode).removeClass("DbgCurrentNode");
+    this.socket.send(JSON.stringify({
+      action:'stepInto',
+      suspendEvent: this.lastSuspendEventId}));
   }
   Debugger.prototype.stepOver = function() {
     this.socket.send("stepOver");

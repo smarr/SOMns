@@ -431,6 +431,13 @@ public class WebDebugger extends TruffleInstrument {
             bp.setEnabled(enabled);
           }
           return;
+        case "stepInto":
+          String id = msg.getString("suspendEvent", null);
+          SuspendedEvent event = suspendEvents.get(id);
+          assert event != null : "didn't find SuspendEvent";
+          event.prepareStepInto(1);
+          suspendFutures.get(id).complete(new Object());
+          return;
       }
 
       System.out.println("not supported: onMessage: " + message);
