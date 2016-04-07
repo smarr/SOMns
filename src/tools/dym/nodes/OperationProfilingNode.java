@@ -1,15 +1,15 @@
-package dym.nodes;
+package tools.dym.nodes;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.EventContext;
 import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
 import com.oracle.truffle.api.nodes.Node;
 
-import dym.DynamicMetrics;
-import dym.profiles.OperationProfile;
 import som.interpreter.ReturnException;
 import som.vm.NotYetImplementedException;
+import tools.dym.DynamicMetrics;
 import tools.dym.Tags.PrimitiveArgument;
+import tools.dym.profiles.OperationProfile;
 
 
 /**

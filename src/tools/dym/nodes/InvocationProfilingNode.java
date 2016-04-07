@@ -1,10 +1,10 @@
-package dym.nodes;
+package tools.dym.nodes;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.NodeCost;
 
-import dym.DynamicMetrics;
-import dym.profiles.InvocationProfile;
+import tools.dym.DynamicMetrics;
+import tools.dym.profiles.InvocationProfile;
 
 
 /**

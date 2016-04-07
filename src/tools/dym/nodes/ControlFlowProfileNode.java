@@ -1,9 +1,9 @@
-package dym.nodes;
+package tools.dym.nodes;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.ExecutionEventNode;
 
-import dym.profiles.BranchProfile;
+import tools.dym.profiles.BranchProfile;
 
 
 public class ControlFlowProfileNode extends ExecutionEventNode {

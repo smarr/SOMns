@@ -1,11 +1,11 @@
-package dym.profiles;
+package tools.dym.profiles;
 
 import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.api.utilities.JSONHelper;
 import com.oracle.truffle.api.utilities.JSONHelper.JSONObjectBuilder;
 import com.oracle.truffle.api.utilities.JSONHelper.JSONStringBuilder;
 
-import dym.JsonSerializable;
+import tools.dym.JsonSerializable;
 
 public class Counter implements JsonSerializable {
   protected final SourceSection source;

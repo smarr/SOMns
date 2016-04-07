@@ -1,12 +1,11 @@
-package dym.nodes;
+package tools.dym.nodes;
 
 import som.primitives.SizeAndLengthPrim;
 import som.primitives.SizeAndLengthPrimFactory;
 import som.vmobjects.SArray;
+import tools.dym.profiles.ArrayCreationProfile;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
-
-import dym.profiles.ArrayCreationProfile;
 
 
 public class ArrayAllocationProfilingNode extends CountingNode<ArrayCreationProfile> {

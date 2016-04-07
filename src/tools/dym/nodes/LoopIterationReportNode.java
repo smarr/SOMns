@@ -1,9 +1,9 @@
-package dym.nodes;
+package tools.dym.nodes;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.ExecutionEventNode;
 
-import dym.profiles.LoopProfile;
+import tools.dym.profiles.LoopProfile;
 
 
 public class LoopIterationReportNode extends ExecutionEventNode {

@@ -1,10 +1,9 @@
-package dym.nodes;
+package tools.dym.nodes;
 
 import som.interpreter.Types;
+import tools.dym.profiles.ReadValueProfile;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
-
-import dym.profiles.ReadValueProfile;
 
 
 public class ReadProfilingNode extends CountingNode<ReadValueProfile> {

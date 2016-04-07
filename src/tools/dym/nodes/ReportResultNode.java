@@ -1,9 +1,9 @@
-package dym.nodes;
+package tools.dym.nodes;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.ExecutionEventNode;
 
-import dym.profiles.OperationProfile;
+import tools.dym.profiles.OperationProfile;
 
 
 public class ReportResultNode extends ExecutionEventNode {

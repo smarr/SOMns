@@ -1,39 +1,35 @@
-package dym.nodes;
+package tools.dym.nodes;
 
-import som.instrumentation.InstrumentableDirectCallNode;
-import som.interpreter.Invokable;
-
-import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.EventContext;
 import com.oracle.truffle.api.instrumentation.ExecutionEventNode;
 import com.oracle.truffle.api.instrumentation.ExecutionEventNodeFactory;
 
-import dym.profiles.CallsiteProfile;
 
-
-public class LateCallTargetNode extends ExecutionEventNode {
+/**
+ * This node will try to specialize itself at a later point, hopefully
+ * the other relevant nodes are already available then.
+ */
+public class LateReportResultNode extends ExecutionEventNode {
   private final EventContext ctx;
   private final ExecutionEventNodeFactory factory;
 
-  public LateCallTargetNode(final EventContext ctx, final ExecutionEventNodeFactory factory) {
-    this.ctx = ctx;
+  public LateReportResultNode(final EventContext ctx, final ExecutionEventNodeFactory factory) {
+    this.ctx     = ctx;
     this.factory = factory;
   }
 
   private ExecutionEventNode specialize() {
-    ExecutionEventNode parent = ctx.findParentEventNode(factory);
-    InstrumentableDirectCallNode disp = (InstrumentableDirectCallNode) ctx.getInstrumentedNode();
+    ExecutionEventNode parent = ctx.findDirectParentEventNode(factory);
 
     if (parent == null) {
       return this;
     }
 
     @SuppressWarnings("unchecked")
-    CountingNode<CallsiteProfile> p = (CountingNode<CallsiteProfile>) parent;
-    CallsiteProfile profile = p.getProfile();
-    RootCallTarget root = (RootCallTarget) disp.getCallTarget();
-    return replace(new CallTargetNode(profile, (Invokable) root.getRootNode()));
+    OperationProfilingNode p = (OperationProfilingNode) parent;
+    int idx = p.registerSubexpressionAndGetIdx(ctx.getInstrumentedNode());
+    return replace(new ReportResultNode(p.getProfile(), idx));
   }
 
   @Override
@@ -42,7 +38,7 @@ public class LateCallTargetNode extends ExecutionEventNode {
     if (node == this) {
       return;
     } else {
-      ((CallTargetNode) node).onEnter(frame);
+      ((ReportResultNode) node).onEnter(frame);
     }
   }
 
@@ -52,7 +48,7 @@ public class LateCallTargetNode extends ExecutionEventNode {
     if (node == this) {
       return;
     } else {
-      ((CallTargetNode) node).onReturnValue(frame, result);
+      ((ReportResultNode) node).onReturnValue(frame, result);
     }
   }
 
@@ -62,7 +58,7 @@ public class LateCallTargetNode extends ExecutionEventNode {
     if (node == this) {
       return;
     } else {
-      ((CallTargetNode) node).onReturnExceptional(frame, exception);
+      ((ReportResultNode) node).onReturnExceptional(frame, exception);
     }
   }
 }

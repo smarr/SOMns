@@ -1,11 +1,10 @@
-package dym.nodes;
+package tools.dym.nodes;
 
 import som.interpreter.Invokable;
+import tools.dym.profiles.CallsiteProfile;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.ExecutionEventNode;
-
-import dym.profiles.CallsiteProfile;
 
 
 public class CallTargetNode extends ExecutionEventNode {

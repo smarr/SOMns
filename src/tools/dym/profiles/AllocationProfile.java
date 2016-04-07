@@ -1,4 +1,4 @@
-package dym.profiles;
+package tools.dym.profiles;
 
 import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithClass;

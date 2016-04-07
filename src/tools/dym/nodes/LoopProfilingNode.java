@@ -1,8 +1,8 @@
-package dym.nodes;
+package tools.dym.nodes;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 
-import dym.profiles.LoopProfile;
+import tools.dym.profiles.LoopProfile;
 
 
 public class LoopProfilingNode extends CountingNode<LoopProfile> {

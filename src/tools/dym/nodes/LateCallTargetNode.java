@@ -1,35 +1,38 @@
-package dym.nodes;
+package tools.dym.nodes;
 
+import som.instrumentation.InstrumentableDirectCallNode;
+import som.interpreter.Invokable;
+import tools.dym.profiles.CallsiteProfile;
+
+import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.EventContext;
 import com.oracle.truffle.api.instrumentation.ExecutionEventNode;
 import com.oracle.truffle.api.instrumentation.ExecutionEventNodeFactory;
 
 
-/**
- * This node will try to specialize itself at a later point, hopefully
- * the other relevant nodes are already available then.
- */
-public class LateReportResultNode extends ExecutionEventNode {
+public class LateCallTargetNode extends ExecutionEventNode {
   private final EventContext ctx;
   private final ExecutionEventNodeFactory factory;
 
-  public LateReportResultNode(final EventContext ctx, final ExecutionEventNodeFactory factory) {
-    this.ctx     = ctx;
+  public LateCallTargetNode(final EventContext ctx, final ExecutionEventNodeFactory factory) {
+    this.ctx = ctx;
     this.factory = factory;
   }
 
   private ExecutionEventNode specialize() {
-    ExecutionEventNode parent = ctx.findDirectParentEventNode(factory);
+    ExecutionEventNode parent = ctx.findParentEventNode(factory);
+    InstrumentableDirectCallNode disp = (InstrumentableDirectCallNode) ctx.getInstrumentedNode();
 
     if (parent == null) {
       return this;
     }
 
     @SuppressWarnings("unchecked")
-    OperationProfilingNode p = (OperationProfilingNode) parent;
-    int idx = p.registerSubexpressionAndGetIdx(ctx.getInstrumentedNode());
-    return replace(new ReportResultNode(p.getProfile(), idx));
+    CountingNode<CallsiteProfile> p = (CountingNode<CallsiteProfile>) parent;
+    CallsiteProfile profile = p.getProfile();
+    RootCallTarget root = (RootCallTarget) disp.getCallTarget();
+    return replace(new CallTargetNode(profile, (Invokable) root.getRootNode()));
   }
 
   @Override
@@ -38,7 +41,7 @@ public class LateReportResultNode extends ExecutionEventNode {
     if (node == this) {
       return;
     } else {
-      ((ReportResultNode) node).onEnter(frame);
+      ((CallTargetNode) node).onEnter(frame);
     }
   }
 
@@ -48,7 +51,7 @@ public class LateReportResultNode extends ExecutionEventNode {
     if (node == this) {
       return;
     } else {
-      ((ReportResultNode) node).onReturnValue(frame, result);
+      ((CallTargetNode) node).onReturnValue(frame, result);
     }
   }
 
@@ -58,7 +61,7 @@ public class LateReportResultNode extends ExecutionEventNode {
     if (node == this) {
       return;
     } else {
-      ((ReportResultNode) node).onReturnExceptional(frame, exception);
+      ((CallTargetNode) node).onReturnExceptional(frame, exception);
     }
   }
 }

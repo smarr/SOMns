@@ -1,4 +1,4 @@
-package dym.profiles;
+package tools.dym.profiles;
 
 import java.util.HashMap;
 import java.util.Map;

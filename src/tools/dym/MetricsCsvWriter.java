@@ -1,4 +1,4 @@
-package dym;
+package tools.dym;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -10,17 +10,6 @@ import java.util.Set;
 
 import com.oracle.truffle.api.source.SourceSection;
 
-import dym.profiles.AllocationProfile;
-import dym.profiles.Arguments;
-import dym.profiles.ArrayCreationProfile;
-import dym.profiles.BranchProfile;
-import dym.profiles.CallsiteProfile;
-import dym.profiles.Counter;
-import dym.profiles.InvocationProfile;
-import dym.profiles.LoopProfile;
-import dym.profiles.OperationProfile;
-import dym.profiles.ReadValueProfile;
-import dym.profiles.StructuralProbe;
 import som.compiler.MixinDefinition;
 import som.interpreter.Invokable;
 import som.interpreter.nodes.dispatch.Dispatchable;
@@ -35,6 +24,17 @@ import tools.dym.Tags.OpClosureApplication;
 import tools.dym.Tags.OpComparison;
 import tools.dym.Tags.OpLength;
 import tools.dym.Tags.StringAccess;
+import tools.dym.profiles.AllocationProfile;
+import tools.dym.profiles.Arguments;
+import tools.dym.profiles.ArrayCreationProfile;
+import tools.dym.profiles.BranchProfile;
+import tools.dym.profiles.CallsiteProfile;
+import tools.dym.profiles.Counter;
+import tools.dym.profiles.InvocationProfile;
+import tools.dym.profiles.LoopProfile;
+import tools.dym.profiles.OperationProfile;
+import tools.dym.profiles.ReadValueProfile;
+import tools.dym.profiles.StructuralProbe;
 
 
 public final class MetricsCsvWriter {
