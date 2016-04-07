@@ -248,7 +248,7 @@ public final class MessageSendNode {
       VM.insertInstrumentationWrapper(this);
       assert prim.getSourceSection() != null;
 
-      argumentNodes[0].markAsPrimitiveArgument();
+      unwrapIfNecessary(argumentNodes[0]).markAsPrimitiveArgument();
       PreevaluatedExpression result = replace(new EagerUnaryPrimitiveNode(
           prim.getSourceSection(), selector, argumentNodes[0], prim));
       VM.insertInstrumentationWrapper((Node) result);
@@ -353,8 +353,8 @@ public final class MessageSendNode {
       VM.insertInstrumentationWrapper(this);
       assert prim.getSourceSection() != null;
 
-      argumentNodes[0].markAsPrimitiveArgument();
-      argumentNodes[1].markAsPrimitiveArgument();
+      unwrapIfNecessary(argumentNodes[0]).markAsPrimitiveArgument();
+      unwrapIfNecessary(argumentNodes[1]).markAsPrimitiveArgument();
 
       PreevaluatedExpression result = replace(new EagerBinaryPrimitiveNode(
           selector, argumentNodes[0], argumentNodes[1], prim, prim.getSourceSection()));
@@ -535,9 +535,9 @@ public final class MessageSendNode {
       VM.insertInstrumentationWrapper(this);
       assert prim.getSourceSection() != null;
 
-      argumentNodes[0].markAsPrimitiveArgument();
-      argumentNodes[1].markAsPrimitiveArgument();
-      argumentNodes[2].markAsPrimitiveArgument();
+      unwrapIfNecessary(argumentNodes[0]).markAsPrimitiveArgument();
+      unwrapIfNecessary(argumentNodes[1]).markAsPrimitiveArgument();
+      unwrapIfNecessary(argumentNodes[2]).markAsPrimitiveArgument();
 
       PreevaluatedExpression result = replace(new EagerTernaryPrimitiveNode(
           prim.getSourceSection(), selector, argumentNodes[0],
@@ -644,8 +644,8 @@ public final class MessageSendNode {
     @Override
     protected GenericMessageSendNode makeOrdenarySend() {
       VM.insertInstrumentationWrapper(this);
-
-      argumentNodes[0].markAsVirtualInvokeReceiver();
+      ExpressionNode rcvr = unwrapIfNecessary(argumentNodes[0]);
+      rcvr.markAsVirtualInvokeReceiver();
       GenericMessageSendNode send = new GenericMessageSendNode(selector,
           argumentNodes,
           UninitializedDispatchNode.createRcvrSend(
@@ -653,6 +653,7 @@ public final class MessageSendNode {
           getSourceSection());
       replace(send);
       VM.insertInstrumentationWrapper(send);
+      assert unwrapIfNecessary(argumentNodes[0]) == rcvr : "for some reason these are not the same anymore. race?";
       VM.insertInstrumentationWrapper(argumentNodes[0]);
       return send;
     }
@@ -662,7 +663,7 @@ public final class MessageSendNode {
       VM.insertInstrumentationWrapper(this);
 
       ISpecialSend rcvrNode = (ISpecialSend) unwrapIfNecessary(argumentNodes[0]);
-      argumentNodes[0].markAsVirtualInvokeReceiver();
+      ((ExpressionNode) rcvrNode).markAsVirtualInvokeReceiver();
       AbstractDispatchNode dispatch;
 
       if (rcvrNode.isSuperSend()) {
