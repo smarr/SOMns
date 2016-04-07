@@ -452,7 +452,7 @@ var breakpoints = {};
       var sourceFile = $(pane).find(".source-file");
 
       // remove all spans
-      sourceFile.find("span").replaceWith($(".html()"));
+      sourceFile.find("span").replaceWith($(".html"));
 
       // apply new spans
       var source = getSource(data.sourceId);
