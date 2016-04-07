@@ -31,6 +31,8 @@ import com.oracle.truffle.api.instrumentation.TruffleInstrument.Registration;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
 
+import tools.Tagging;
+
 
 /**
  * <p>
@@ -95,21 +97,7 @@ public final class Highlight extends TruffleInstrument {
 
     Map<SourceSection, Set<Class<? extends Tags>>> sourceSectionsAndTags = nonAstSourceSections;
 
-    for (RootNode root : rootNodes) {
-      root.accept(node -> {
-        @SuppressWarnings("rawtypes")  Set t = env.getInstrumenter().queryTags(node);
-        @SuppressWarnings("unchecked") Set<Class<? extends Tags>> tags = t;
-
-        if (tags.size() > 0) {
-          if (sourceSectionsAndTags.containsKey(node.getSourceSection())) {
-            sourceSectionsAndTags.get(node.getSourceSection()).addAll(tags);
-          } else {
-            sourceSectionsAndTags.put(node.getSourceSection(), new HashSet<>(tags));
-          }
-        }
-        return true;
-      });
-    }
+    Tagging.collectSourceSectionsAndTags(rootNodes, sourceSectionsAndTags, env.getInstrumenter());
     JsonWriter.fileOut(outputFile, nonAstSourceSections);
   }
 }
