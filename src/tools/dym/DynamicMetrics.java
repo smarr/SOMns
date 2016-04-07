@@ -353,6 +353,7 @@ public class DynamicMetrics extends TruffleInstrument {
 
     instrumenter.attachFactory(filters.build(), (final EventContext ctx) -> {
       ExecutionEventNode parent = ctx.findDirectParentEventNode(loopProfileFactory);
+      assert parent != null : "Direct parent does not seem to be set up properly with event node and/or wrapping";
       LoopProfilingNode p = (LoopProfilingNode) parent;
       return new LoopIterationReportNode(p.getProfile());
     });
