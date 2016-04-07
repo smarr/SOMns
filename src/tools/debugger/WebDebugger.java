@@ -296,6 +296,11 @@ public class WebDebugger extends TruffleInstrument {
           exchange.sendResponseHeaders(200, f.length());
           copy(f, exchange.getResponseBody());
           return;
+        case "/source.js":
+          File js = new File("/Users/smarr/Projects/SOM/SOMns/tools/source.js");
+          exchange.sendResponseHeaders(200, js.length());
+          copy(js, exchange.getResponseBody());
+          return;
         case "/favicon.ico":
           exchange.sendResponseHeaders(404, 0);
           return;
