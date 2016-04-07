@@ -7,6 +7,7 @@ import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.debug.ExecutionEvent;
 import com.oracle.truffle.api.debug.SuspendedEvent;
+import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
 import com.oracle.truffle.api.instrumentation.InstrumentationHandler;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
@@ -20,8 +21,6 @@ import com.oracle.truffle.tools.TruffleProfiler;
 import com.oracle.truffle.tools.debug.shell.client.SimpleREPLClient;
 import com.oracle.truffle.tools.debug.shell.server.REPLServer;
 
-import dym.DynamicMetrics;
-import dym.profiles.StructuralProbe;
 import som.compiler.MixinDefinition;
 import som.interpreter.SomLanguage;
 import som.interpreter.TruffleCompiler;
@@ -33,6 +32,8 @@ import som.vm.ObjectSystem;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import tools.debugger.WebDebugger;
+import tools.dym.DynamicMetrics;
+import tools.dym.profiles.StructuralProbe;
 import tools.highlight.Highlight;
 import tools.highlight.Tags;
 
@@ -83,7 +84,7 @@ public final class VM {
 
   public static void insertInstrumentationWrapper(final Node node) {
     if (vmOptions.anyInstrumentationEnabled) {
-      assert node.getSourceSection() != null : "Node needs source section";
+      assert node.getSourceSection() != null || (node instanceof WrapperNode) : "Node needs source section, or needs to be wrapper";
       // TODO: a way to check whether the node needs actually wrapping?
 //      String[] tags = node.getSourceSection().getTags();
 //      if (tags != null && tags.length > 0) {
