@@ -31,6 +31,7 @@ import com.oracle.truffle.api.debug.SuspendedEvent;
 import com.oracle.truffle.api.frame.FrameInstance;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.MaterializedFrame;
+import com.oracle.truffle.api.instrumentation.Instrumenter;
 import com.oracle.truffle.api.instrumentation.TruffleInstrument;
 import com.oracle.truffle.api.instrumentation.TruffleInstrument.Registration;
 import com.oracle.truffle.api.nodes.Node;
@@ -46,6 +47,7 @@ import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 
 import som.vm.NotYetImplementedException;
+import tools.Tagging;
 import tools.highlight.JsonWriter;
 import tools.highlight.Tags;
 
@@ -63,13 +65,17 @@ public class WebDebugger extends TruffleInstrument {
   private WebSocketHandler webSocketServer;
   private Future<WebSocket> clientConnected;
 
-  private static final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> loadedSources = new HashMap<>();
+  private static Instrumenter instrumenter;
+
+  private static final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> loadedSourcesTags = new HashMap<>();
 
   private static int nextSourceId = 0;
   private static int nextSourceSectionId = 0;
+
   private static final Map<Source, String> sourcesId = new HashMap<>();
   private static final Map<String, Source> idSources = new HashMap<>();
   private static final Map<SourceSection, String> sourceSectionId = new HashMap<>();
+  private static final Map<Source, Set<RootNode>> rootNodes = new HashMap<>();
 
   private static WebDebugger debugger;
   private static WebSocket client;
@@ -81,20 +87,28 @@ public class WebDebugger extends TruffleInstrument {
 
   public static void reportSyntaxElement(final Class<? extends Tags> type,
       final SourceSection source) {
-    Map<SourceSection, Set<Class<? extends Tags>>> sections = loadedSources.computeIfAbsent(
+    Map<SourceSection, Set<Class<? extends Tags>>> sections = loadedSourcesTags.computeIfAbsent(
         source.getSource(), s -> new HashMap<>());
     Set<Class<? extends Tags>> tags = sections.computeIfAbsent(source, s -> new HashSet<>(2));
     tags.add(type);
 
-    sourcesId.computeIfAbsent(source.getSource(), src -> {
+    createSourceId(source.getSource());
+
+    createSourceSectionId(source);
+  }
+
+  private static String createSourceId(final Source source) {
+    return sourcesId.computeIfAbsent(source, src -> {
       int n = nextSourceId;
       nextSourceId += 1;
       String id = "s-" + n;
       idSources.put(id, src);
       return id;
     });
+  }
 
-    sourceSectionId.computeIfAbsent(source, s -> {
+  private static String createSourceSectionId(final SourceSection source) {
+    return sourceSectionId.computeIfAbsent(source, s -> {
       int n = nextSourceSectionId;
       nextSourceSectionId += 1;
       return "ss-" + n;
@@ -132,11 +146,15 @@ public class WebDebugger extends TruffleInstrument {
   }
 
   private static String createSourceAndSectionMessage(final Source source) {
-    return JsonWriter.createJson("source", loadedSources.get(source), sourcesId, sourceSectionId);
+    return JsonWriter.createJson("source", loadedSourcesTags.get(source), sourcesId, sourceSectionId);
   }
 
   public static void reportRootNodeAfterParsing(final RootNode rootNode) {
-
+    assert rootNode.getSourceSection() != null : "RootNode without source section";
+    Set<RootNode> roots = rootNodes.computeIfAbsent(
+        rootNode.getSourceSection().getSource(), s -> new HashSet<>());
+    assert !roots.contains(rootNode) : "This method was parsed twice? should not happen";
+    roots.add(rootNode);
   }
 
   public static void reportExecutionEvent(final ExecutionEvent e) {
@@ -156,24 +174,45 @@ public class WebDebugger extends TruffleInstrument {
     return "se-" + id;
   }
 
-  public static void reportSuspendedEvent(final SuspendedEvent e) {
-    // e.getNode().getSourceSection().toString()
-    System.out.print(".");
+  private static JSONObjectBuilder createJsonForSourceSections(final Source source) {
+    Set<SourceSection> sections = new HashSet<>();
 
+    Map<SourceSection, Set<Class<? extends Tags>>> tagsForSections = loadedSourcesTags.get(source);
+    Tagging.collectSourceSectionsAndTags(rootNodes.get(source), tagsForSections, instrumenter);
+
+    for (SourceSection section : tagsForSections.keySet()) {
+      if (section.getSource() == source) {
+        sections.add(section);
+        createSourceSectionId(section);
+      }
+    }
+
+    return JsonWriter.createJsonForSourceSections(sourcesId, sourceSectionId, sections, tagsForSections);
+  }
+
+  public static void reportSuspendedEvent(final SuspendedEvent e) {
+    Node     suspendedNode = e.getNode();
+    RootNode suspendedRoot = suspendedNode.getRootNode();
+    Source suspendedSource = suspendedRoot.getSourceSection().getSource();
 
     JSONObjectBuilder builder  = JSONHelper.object();
     builder.add("type", "suspendEvent");
+
+    // first add the source info, because this builds up also tag info
+    builder.add("sourceId", sourcesId.get(suspendedSource));
+    builder.add("sections", createJsonForSourceSections(suspendedSource));
 
     JSONArrayBuilder stackJson = JSONHelper.array();
     List<FrameInstance> stack = e.getStack();
 
 
     for (int stackIndex = 0; stackIndex < stack.size(); stackIndex++) {
-      final Node callNode = stackIndex == 0 ? e.getNode() : stack.get(stackIndex).getCallNode();
+      final Node callNode = stackIndex == 0 ? suspendedNode : stack.get(stackIndex).getCallNode();
       stackJson.add(createFrame(callNode, stack.get(stackIndex)));
     }
     builder.add("stack", stackJson);
-    builder.add("topFrame", createTopFrameJson(e.getFrame(), e.getNode().getRootNode()));
+
+    builder.add("topFrame", createTopFrameJson(e.getFrame(), suspendedRoot));
 
     String id = getNextSuspendEventId();
     builder.add("id", id);
@@ -214,14 +253,16 @@ public class WebDebugger extends TruffleInstrument {
     return frameJson;
   }
 
-
   private static JSONObjectBuilder createFrame(final Node node, final FrameInstance stackFrame) {
     JSONObjectBuilder frame = JSONHelper.object();
-    if (node != null && node.getEncapsulatingSourceSection() != null) {
-      frame.add("sourceSection", JsonWriter.sectionToJson(
-          node.getEncapsulatingSourceSection(),
-          sourceSectionId.get(node.getEncapsulatingSourceSection()),
-          sourcesId, new HashSet<>())); // TODO: add tags
+    if (node != null) {
+      SourceSection section = node.getEncapsulatingSourceSection();
+      if (section != null) {
+        Map<SourceSection, Set<Class<? extends Tags>>> tagsForSections = loadedSourcesTags.get(section.getSource());
+        frame.add("sourceSection", JsonWriter.sectionToJson(
+            section, createSourceSectionId(section), sourcesId,
+            (tagsForSections == null) ? null : tagsForSections.get(section)));
+      }
     }
 
     RootCallTarget rct = (RootCallTarget) stackFrame.getCallTarget();
@@ -241,6 +282,8 @@ public class WebDebugger extends TruffleInstrument {
 
   @Override
   protected void onCreate(final Env env) {
+    instrumenter = env.getInstrumenter();
+
     // Checkstyle: stop
     try {
       System.out.println("[DEBUGGER] Initialize HTTP and WebSocket Server for Debugger");
