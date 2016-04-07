@@ -132,9 +132,10 @@ public abstract class SOMNode extends Node {
    */
   public abstract ExpressionNode getFirstMethodBodyNode();
 
-  public static Node unwrapIfNecessary(final Node node) {
+  @SuppressWarnings("unchecked")
+  public static <T extends Node> T unwrapIfNecessary(final T node) {
     if (node instanceof WrapperNode) {
-      return ((WrapperNode) node).getDelegateNode();
+      return (T) ((WrapperNode) node).getDelegateNode();
     } else {
       return node;
     }
