@@ -79,6 +79,12 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
   .LiteralTag { color: #4f9b00; }
   .ArgumentTag, .LocalArgRead { color: #194a87; }
   .LocalVariableTag, .LocalVarRead, .LocalVarWrite { color: #194a87; }
+
+  .affix {
+    position: fixed;
+    top:   72px;
+    right:  0px;
+  }
   </style>  
   
 
@@ -103,12 +109,7 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
 </div>
 
 
-<div class="panel panel-default" style="
-  /* width: 222px; height: 100px;*/
-  position: absolute;
-  right:  0px;
-  top:   72px; /* 5.15em;*/
-">
+<div class="panel panel-default" data-spy="affix" style="background-color:rgba(255, 255, 255, 0.5);">
 <div id="debugger" class="panel-body">
 <div class="btn-toolbar" role="toolbar" aria-label="Debugger Controls">
   <div class="btn-group btn-group-xs" role="group" aria-label="Basic Controls">
