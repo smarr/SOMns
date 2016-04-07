@@ -460,6 +460,14 @@ var breakpoints = {};
       annotateArray(annotationArray, source.id, data.sections);
       sourceFile.html(arrayToString(annotationArray));
     }
+
+    // highlight current node
+    var ssId = data.stack[0].sourceSection.id;
+    var ss = document.getElementById(ssId);
+    $(ss).addClass("DbgCurrentNode");
+
+    dbg.currentDomNode   = ss;
+    dbg.currentSectionId = ssId;
   }
 
   function connect() {
@@ -502,6 +510,9 @@ var breakpoints = {};
       // reconnect
       this.socket = connect();
     }
+
+    this.currentSectionId = null;
+    this.currentDomNode = null;
   }
 
   Debugger.prototype.resume = function() {
