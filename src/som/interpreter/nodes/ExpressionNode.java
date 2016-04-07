@@ -26,14 +26,17 @@ import java.math.BigInteger;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Instrumentable;
+import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
 import com.oracle.truffle.api.instrumentation.StandardTags.RootTag;
 import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.TypesGen;
 import som.interpreter.actors.SFarReference;
 import som.interpreter.actors.SPromise;
+import som.vm.NotYetImplementedException;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
@@ -134,6 +137,18 @@ public abstract class ExpressionNode extends SOMNode {
   public void markAsVirtualInvokeReceiver() {
     assert getSourceSection() != null;
     tagWith(VIRTUAL_INVOKE_RECEIVER);
+  }
+
+  @Override
+  protected void onReplace(final Node newNode, final CharSequence reason) {
+    if (newNode instanceof WrapperNode) { return; }
+
+    if (newNode instanceof ExpressionNode) {
+      ExpressionNode n = (ExpressionNode) newNode;
+      n.tagMark = tagMark;
+    } else {
+      throw new NotYetImplementedException();
+    }
   }
 
   @Override

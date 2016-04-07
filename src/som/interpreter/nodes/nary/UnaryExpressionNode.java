@@ -1,8 +1,11 @@
 package som.interpreter.nodes.nary;
 
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Instrumentable;
+import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.nodes.ExpressionNode;
@@ -15,7 +18,7 @@ import tools.dym.Tags.EagerlyWrapped;
 public abstract class UnaryExpressionNode extends ExpressionNode
     implements PreevaluatedExpression {
 
-  private final boolean eagerlyWrapped;
+  @CompilationFinal private boolean eagerlyWrapped;
 
   public UnaryExpressionNode(final boolean eagerlyWrapped,
       final SourceSection source) {
@@ -43,6 +46,14 @@ public abstract class UnaryExpressionNode extends ExpressionNode
     } else {
       return super.isTaggedWith(tag);
     }
+  }
+
+  @Override
+  protected void onReplace(final Node newNode, final CharSequence reason) {
+    if (newNode instanceof WrapperNode) { return; }
+    UnaryExpressionNode n = (UnaryExpressionNode) newNode;
+    n.eagerlyWrapped = eagerlyWrapped;
+    super.onReplace(newNode, reason);
   }
 
   public abstract Object executeEvaluated(final VirtualFrame frame,
