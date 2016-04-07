@@ -51,16 +51,19 @@
   .invocation-profiles { white-space: normal; }
 
   /* Profiling Tags */
-  .ROOT {}
-  .ROOT::before { content: "\1F332";}
-  .ROOT::before + .invocation-profiles { display: block; } /* TODO: this does not work yet */
-  .UNSPECIFIED_INVOKE { font-style: italic; }
-  .CONTROL_FLOW_CONDITION { color: #800; }
-  .INVOKE_WITH_LOOKUP { font-style: italic; }
-  .NEW_OBJECT { font-weight: bold; }
-  .NEW_ARRAY { font-weight: bold; }
-  .FIELD_READ, .FIELD_WRITE { font-style: italic; color: #194a87; }
-  .ARRAY_READ, .ARRAY_WRITE { color: #f00; }
+  .RootTag {}
+  .RootTag::before { content: "\1F332";}
+  .RootTag::before + .invocation-profiles { display: block; } /* TODO: this does not work yet */
+  .LoopBody::before { content: "\21BB";}
+  .ControlFlowCondition::before { content: "\2928";}
+
+  .UnspecifiedInvoke { font-style: italic; }
+  .ControlFlowCondition { color: #800; }
+  .VirtualInvoke, .CachedVirtualInvoke { font-style: italic; }
+  .NewObject { font-weight: bold; }
+  .NewArray { font-weight: bold; }
+  .FieldRead, .FieldWrite { font-style: italic; color: #194a87; }
+  .ArrayRead, .ArrayWrite { color: #f00; }
 
   .breakpoint-active { background-color: #a40000; }
 
@@ -74,8 +77,8 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
   .KeywordTag { color: #725000; }
   .IdentifierTag { color: #194a87; }
   .LiteralTag { color: #4f9b00; }
-  .ArgumentTag, .LOCAL_ARG_READ { color: #194a87; }
-  .LocalVariableTag { color: #194a87; }
+  .ArgumentTag, .LocalArgRead { color: #194a87; }
+  .LocalVariableTag, .LocalVarRead, .LocalVarWrite { color: #194a87; }
   </style>  
   
 
