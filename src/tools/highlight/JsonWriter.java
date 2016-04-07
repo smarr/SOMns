@@ -112,10 +112,8 @@ public final class JsonWriter {
       allSourcesJson.add(id, sourceToJson(s, id));
     }
 
-    JSONObjectBuilder allSectionsJson = JSONHelper.object();
-    for (SourceSection ss : allSections) {
-      allSectionsJson.add(sectionToId.get(ss), sectionToJson(ss, sectionToId.get(ss), sourceToId));
-    }
+    JSONObjectBuilder allSectionsJson = createJsonForSourceSections(sourceToId,
+        sectionToId, allSections, sourceSectionTags);
 
     JSONObjectBuilder root = JSONHelper.object();
     if (type != null) {
@@ -126,6 +124,18 @@ public final class JsonWriter {
     root.add("sections", allSectionsJson);
 
     return root.toString();
+  }
+
+  public static JSONObjectBuilder createJsonForSourceSections(
+      final Map<Source, String> sourceToId,
+      final Map<SourceSection, String> sectionToId,
+      final Set<SourceSection> allSections,
+      final Map<SourceSection, Set<Class<? extends Tags>>> tags) {
+    JSONObjectBuilder allSectionsJson = JSONHelper.object();
+    for (SourceSection ss : allSections) {
+      allSectionsJson.add(sectionToId.get(ss), sectionToJson(ss, sectionToId.get(ss), sourceToId, tags));
+    }
+    return allSectionsJson;
   }
 
   private <U> Map<U, String> createIdMap(final Set<U> set, final String idPrefix) {
@@ -149,9 +159,10 @@ public final class JsonWriter {
     return builder;
   }
 
-  private JSONObjectBuilder sectionToJson(final SourceSection ss,
-      final String id, final Map<Source, String> sourceToId) {
-    return sectionToJson(ss, id, sourceToId, sourceSectionTags.get(ss));
+  private static JSONObjectBuilder sectionToJson(final SourceSection ss,
+      final String id, final Map<Source, String> sourceToId,
+      final Map<SourceSection, Set<Class<? extends Tags>>> tags) {
+    return sectionToJson(ss, id, sourceToId, tags.get(ss));
   }
 
   public static JSONObjectBuilder sectionToJson(final SourceSection ss,
