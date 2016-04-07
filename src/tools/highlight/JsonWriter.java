@@ -168,7 +168,7 @@ public final class JsonWriter {
     builder.add("description", ss.getShortDescription());
     builder.add("sourceId", sourceToId.get(ss.getSource()));
 
-    if (tags.size() > 0) {
+    if (tags != null && tags.size() > 0) {
       JSONArrayBuilder arr = JSONHelper.array();
       for (Class<? extends Tags> tagClass : tags) {
         arr.add(tagClass.getSimpleName());
