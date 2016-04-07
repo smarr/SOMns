@@ -2,24 +2,6 @@ package som.interpreter;
 
 import java.io.IOException;
 
-import som.VM;
-import som.compiler.MixinBuilder.MixinDefinitionError;
-import som.compiler.MixinDefinition;
-import som.compiler.Parser;
-import som.compiler.Parser.ParseError;
-import som.vm.NotYetImplementedException;
-import som.vm.constants.Nil;
-import som.vmobjects.SClass;
-import tools.highlight.Tags.ArgumentTag;
-import tools.highlight.Tags.CommentTag;
-import tools.highlight.Tags.DelimiterClosingTag;
-import tools.highlight.Tags.DelimiterOpeningTag;
-import tools.highlight.Tags.IdentifierTag;
-import tools.highlight.Tags.KeywordTag;
-import tools.highlight.Tags.LiteralTag;
-import tools.highlight.Tags.LocalVariableTag;
-import tools.highlight.Tags.StatementSeparatorTag;
-
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.TruffleLanguage;
@@ -30,9 +12,53 @@ import com.oracle.truffle.api.instrumentation.ProvidedTags;
 import com.oracle.truffle.api.instrumentation.StandardTags.CallTag;
 import com.oracle.truffle.api.instrumentation.StandardTags.RootTag;
 import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
+import com.oracle.truffle.api.nodes.LoopNode;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.Source;
+
+import som.VM;
+import som.compiler.MixinBuilder.MixinDefinitionError;
+import som.compiler.MixinDefinition;
+import som.compiler.Parser;
+import som.compiler.Parser.ParseError;
+import som.vm.NotYetImplementedException;
+import som.vm.constants.Nil;
+import som.vmobjects.SClass;
+import tools.dym.Tags.ArrayRead;
+import tools.dym.Tags.ArrayWrite;
+import tools.dym.Tags.BasicPrimitiveOperation;
+import tools.dym.Tags.CachedVirtualInvoke;
+import tools.dym.Tags.ClassRead;
+import tools.dym.Tags.ComplexPrimitiveOperation;
+import tools.dym.Tags.ControlFlowCondition;
+import tools.dym.Tags.EagerlyWrapped;
+import tools.dym.Tags.FieldRead;
+import tools.dym.Tags.FieldWrite;
+import tools.dym.Tags.LocalArgRead;
+import tools.dym.Tags.LocalVarRead;
+import tools.dym.Tags.LocalVarWrite;
+import tools.dym.Tags.LoopBody;
+import tools.dym.Tags.NewArray;
+import tools.dym.Tags.NewObject;
+import tools.dym.Tags.OpArithmetic;
+import tools.dym.Tags.OpClosureApplication;
+import tools.dym.Tags.OpComparison;
+import tools.dym.Tags.OpLength;
+import tools.dym.Tags.PrimitiveArgument;
+import tools.dym.Tags.StringAccess;
+import tools.dym.Tags.UnspecifiedInvoke;
+import tools.dym.Tags.VirtualInvoke;
+import tools.dym.Tags.VirtualInvokeReceiver;
+import tools.highlight.Tags.ArgumentTag;
+import tools.highlight.Tags.CommentTag;
+import tools.highlight.Tags.DelimiterClosingTag;
+import tools.highlight.Tags.DelimiterOpeningTag;
+import tools.highlight.Tags.IdentifierTag;
+import tools.highlight.Tags.KeywordTag;
+import tools.highlight.Tags.LiteralTag;
+import tools.highlight.Tags.LocalVariableTag;
+import tools.highlight.Tags.StatementSeparatorTag;
 
 
 @TruffleLanguage.Registration(name = "SOMns", version = "0.1.0",
@@ -41,7 +67,17 @@ import com.oracle.truffle.api.source.Source;
   KeywordTag.class, LiteralTag.class,
   CommentTag.class, IdentifierTag.class, ArgumentTag.class,
   LocalVariableTag.class, StatementSeparatorTag.class,
-  DelimiterOpeningTag.class, DelimiterClosingTag.class})
+  DelimiterOpeningTag.class, DelimiterClosingTag.class,
+
+  UnspecifiedInvoke.class, CachedVirtualInvoke.class, VirtualInvoke.class,
+  VirtualInvokeReceiver.class, NewObject.class, NewArray.class,
+  ControlFlowCondition.class, FieldRead.class, FieldWrite.class, ClassRead.class,
+  LocalVarRead.class, LocalVarWrite.class, LocalArgRead.class, ArrayRead.class,
+  ArrayWrite.class, LoopNode.class, LoopBody.class, BasicPrimitiveOperation.class,
+  ComplexPrimitiveOperation.class, PrimitiveArgument.class, EagerlyWrapped.class,
+  StringAccess.class, OpClosureApplication.class, OpArithmetic.class,
+  OpComparison.class, OpLength.class
+})
 public final class SomLanguage extends TruffleLanguage<VM> {
 
   public static final String MIME_TYPE = "application/x-newspeak-som-ns";
