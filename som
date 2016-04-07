@@ -55,6 +55,9 @@ tools.add_argument('-td', '--truffle-debugger', help='start Truffle debugger',
                     dest='truffle_debugger', action='store_true', default=False)
 tools.add_argument('-wd', '--web-debugger', help='start Web debugger',
                     dest='web_debugger', action='store_true', default=False)
+tools.add_argument('-dm', '--dynamic-metrics', help='Capture Dynamic Metrics',
+                    dest='dynamic_metrics', action='store_true', default=False)
+
 
 parser.add_argument('-o', '--only', help='only compile give methods, comma separated list',
                     dest='only_compile', default=None)
@@ -92,6 +95,9 @@ args = parser.parse_args()
 
 JAVA_BIN  = '/product/bin/java'
 JAVA_ARGS = ['-d64']
+
+if args.dynamic_metrics:
+    args.interpreter = True
 
 if args.java_interpreter:
     args.interpreter = True
@@ -188,6 +194,8 @@ if args.truffle_debugger:
     SOM_ARGS += ['--debug']
 if args.web_debugger:
     SOM_ARGS += ['--web-debug']
+if args.dynamic_metrics:
+    SOM_ARGS += ['--dynamic-metrics']
 
 if not args.interpreter and args.perf_warnings:
     flags += ['-Dgraal.TruffleCompilationExceptionsAreFatal=true',
