@@ -2,6 +2,7 @@ package som.interpreter.nodes.nary;
 
 import com.oracle.truffle.api.dsl.UnsupportedSpecializationException;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
@@ -10,12 +11,11 @@ import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
-import som.interpreter.nodes.OperationNode;
 import som.vmobjects.SSymbol;
+import tools.dym.Tags.EagerlyWrapped;
 
 
-public final class EagerTernaryPrimitiveNode extends TernaryExpressionNode
-    implements OperationNode {
+public final class EagerTernaryPrimitiveNode extends EagerPrimitive {
 
   @Child private ExpressionNode receiver;
   @Child private ExpressionNode argument1;
@@ -31,12 +31,49 @@ public final class EagerTernaryPrimitiveNode extends TernaryExpressionNode
       final ExpressionNode argument1,
       final ExpressionNode argument2,
       final TernaryExpressionNode primitive) {
-    super(false, source);
+    super(source);
+    assert source == primitive.getSourceSection();
     this.receiver  = receiver;
     this.argument1 = argument1;
     this.argument2 = argument2;
     this.primitive = primitive;
     this.selector = selector;
+  }
+
+  @Override
+  protected boolean isTaggedWith(final Class<?> tag) {
+    assert !(primitive instanceof WrapperNode);
+
+    if (tag == EagerlyWrapped.class) {
+      return false;
+    } else {
+      return primitive.isTaggedWith(tag);
+    }
+  }
+
+  @Override
+  public void markAsRootExpression() {
+    primitive.markAsRootExpression();
+  }
+
+  @Override
+  public void markAsLoopBody() {
+    primitive.markAsLoopBody();
+  }
+
+  @Override
+  public void markAsControlFlowCondition() {
+    primitive.markAsControlFlowCondition();
+  }
+
+  @Override
+  public void markAsPrimitiveArgument() {
+    primitive.markAsPrimitiveArgument();
+  }
+
+  @Override
+  public void markAsVirtualInvokeReceiver() {
+    primitive.markAsVirtualInvokeReceiver();
   }
 
   @Override
@@ -53,7 +90,6 @@ public final class EagerTernaryPrimitiveNode extends TernaryExpressionNode
     return executeEvaluated(frame, rcvr, arg1, arg2);
   }
 
-  @Override
   public Object executeEvaluated(final VirtualFrame frame,
     final Object receiver, final Object argument1, final Object argument2) {
     try {
@@ -63,6 +99,12 @@ public final class EagerTernaryPrimitiveNode extends TernaryExpressionNode
       return makeGenericSend().doPreEvaluated(frame,
           new Object[] {receiver, argument1, argument2});
     }
+  }
+
+  @Override
+  public Object doPreEvaluated(final VirtualFrame frame,
+      final Object[] arguments) {
+    return executeEvaluated(frame, arguments[0], arguments[1], arguments[2]);
   }
 
   private AbstractMessageSendNode makeGenericSend() {
@@ -75,5 +117,10 @@ public final class EagerTernaryPrimitiveNode extends TernaryExpressionNode
     VM.insertInstrumentationWrapper(node);
     VM.insertInstrumentationWrapper(receiver);
     return node;
+  }
+
+  @Override
+  protected void setTags(final byte tagMark) {
+    primitive.tagMark = tagMark;
   }
 }
