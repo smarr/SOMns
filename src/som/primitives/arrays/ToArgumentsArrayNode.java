@@ -3,7 +3,7 @@ package som.primitives.arrays;
 import java.util.Arrays;
 
 import som.interpreter.SArguments;
-import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.vm.constants.Nil;
 import som.vmobjects.SArray;
 
@@ -17,7 +17,7 @@ import com.oracle.truffle.api.source.SourceSection;
 @NodeChildren({
   @NodeChild("somArray"),
   @NodeChild("receiver")})
-public abstract class ToArgumentsArrayNode extends ExpressionNode {
+public abstract class ToArgumentsArrayNode extends ExprWithTagsNode {
   private final ValueProfile storageType = ValueProfile.createClassProfile();
 
   public ToArgumentsArrayNode() { super((SourceSection) null); }

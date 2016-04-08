@@ -23,20 +23,14 @@ package som.interpreter.nodes;
 
 import java.math.BigInteger;
 
-import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Instrumentable;
-import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
-import com.oracle.truffle.api.instrumentation.StandardTags.RootTag;
-import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
-import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.TypesGen;
 import som.interpreter.actors.SFarReference;
 import som.interpreter.actors.SPromise;
-import som.vm.NotYetImplementedException;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
@@ -44,43 +38,10 @@ import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
-import tools.dym.Tags.ControlFlowCondition;
-import tools.dym.Tags.LoopBody;
-import tools.dym.Tags.PrimitiveArgument;
-import tools.dym.Tags.VirtualInvokeReceiver;
 
 
 @Instrumentable(factory = ExpressionNodeWrapper.class)
 public abstract class ExpressionNode extends SOMNode {
-
-  @CompilationFinal private byte tagMark;
-
-  /**
-   * Indicates that this is the subnode of a RootNode,
-   * possibly only {@link som.interpreter.Method}.
-   * TODO: figure out whether we leave out primitives.
-   */
-  private static final byte ROOT_EXPR = 1;
-
-  /**
-   * Indicates that this node is a root of a loop body.
-   */
-  private static final byte LOOP_BODY = 1 << 1;
-
-  /**
-   * Indicates that this node is a root for a control flow condition.
-   */
-  private static final byte CONTROL_FLOW_CONDITION = 1 << 2;
-
-  /**
-   * Indicates that this node is an argument to a primitive.
-   */
-  private static final byte PRIMITIVE_ARGUMENT = 1 << 3;
-
-  /**
-   * Indicates that this node determines a receiver for an invoke.
-   */
-  private static final byte VIRTUAL_INVOKE_RECEIVER = 1 << 4;
 
   public ExpressionNode(final SourceSection sourceSection) {
     super(sourceSection);
@@ -93,82 +54,15 @@ public abstract class ExpressionNode extends SOMNode {
     super(null);
   }
 
-  private boolean isTagged(final byte mask) {
-    return (tagMark & mask) != 0;
-  }
+  public void markAsRootExpression() { throw new UnsupportedOperationException(); }
 
-  private void tagWith(final byte mask) {
-    tagMark |= mask;
-  }
+  public void markAsLoopBody()  { throw new UnsupportedOperationException(); }
 
-  /**
-   * Mark the node as being a root expression: {@link RootTag}.
-   */
-  public void markAsRootExpression() {
-    assert !isTagged(ROOT_EXPR);
-    assert !isTagged(LOOP_BODY);
-    assert !isTagged(PRIMITIVE_ARGUMENT);
-    assert !isTagged(CONTROL_FLOW_CONDITION);
-    assert getSourceSection() != null;
-    tagWith(ROOT_EXPR);
-  }
+  public void markAsControlFlowCondition()  { throw new UnsupportedOperationException(); }
 
-  public void markAsLoopBody() {
-    assert !isTagged(LOOP_BODY);
-    assert !isTagged(ROOT_EXPR);
-    assert !isTagged(CONTROL_FLOW_CONDITION);
-    assert getSourceSection() != null;
-    tagWith(LOOP_BODY);
-  }
+  public void markAsPrimitiveArgument()  { throw new UnsupportedOperationException(); }
 
-  public void markAsControlFlowCondition() {
-    assert !isTagged(LOOP_BODY);
-    assert !isTagged(ROOT_EXPR);
-    assert !isTagged(CONTROL_FLOW_CONDITION);
-    assert getSourceSection() != null;
-    tagWith(CONTROL_FLOW_CONDITION);
-  }
-
-  public void markAsPrimitiveArgument() {
-    assert getSourceSection() != null;
-    tagWith(PRIMITIVE_ARGUMENT);
-  }
-
-  public void markAsVirtualInvokeReceiver() {
-    assert getSourceSection() != null;
-    tagWith(VIRTUAL_INVOKE_RECEIVER);
-  }
-
-  @Override
-  protected void onReplace(final Node newNode, final CharSequence reason) {
-    if (newNode instanceof WrapperNode) { return; }
-
-    if (newNode instanceof ExpressionNode) {
-      ExpressionNode n = (ExpressionNode) newNode;
-      n.tagMark = tagMark;
-    } else {
-      throw new NotYetImplementedException();
-    }
-  }
-
-  @Override
-  protected boolean isTaggedWith(final Class<?> tag) {
-    if (tag == StatementTag.class) {
-      return true;
-    } else if (tag == RootTag.class) {
-      return isTagged(ROOT_EXPR);
-    } else if (tag == LoopBody.class) {
-      return isTagged(LOOP_BODY);
-    } else if (tag == ControlFlowCondition.class) {
-      return isTagged(CONTROL_FLOW_CONDITION);
-    } else if (tag == PrimitiveArgument.class) {
-      return isTagged(PRIMITIVE_ARGUMENT);
-    } else if (tag == VirtualInvokeReceiver.class) {
-      return isTagged(VIRTUAL_INVOKE_RECEIVER);
-    } else {
-      return super.isTaggedWith(tag);
-    }
-  }
+  public void markAsVirtualInvokeReceiver()  { throw new UnsupportedOperationException(); }
 
   public abstract Object executeGeneric(final VirtualFrame frame);
 

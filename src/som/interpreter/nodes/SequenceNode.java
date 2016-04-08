@@ -28,8 +28,10 @@ import com.oracle.truffle.api.nodes.NodeCost;
 import com.oracle.truffle.api.nodes.NodeInfo;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.interpreter.nodes.nary.ExprWithTagsNode;
+
 @NodeInfo(cost = NodeCost.NONE)
-public final class SequenceNode extends ExpressionNode {
+public final class SequenceNode extends ExprWithTagsNode {
   @Children private final ExpressionNode[] expressions;
 
   public SequenceNode(final ExpressionNode[] expressions, final SourceSection source) {

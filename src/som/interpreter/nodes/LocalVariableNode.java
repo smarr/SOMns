@@ -13,11 +13,12 @@ import som.compiler.Variable.Local;
 import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
 import som.interpreter.InlinerForLexicallyEmbeddedMethods;
 import som.interpreter.SplitterForLexicallyEmbeddedCode;
+import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.vm.constants.Nil;
 import tools.highlight.Tags.LocalVariableTag;
 
 
-public abstract class LocalVariableNode extends ExpressionNode {
+public abstract class LocalVariableNode extends ExprWithTagsNode {
   protected final FrameSlot slot;
 
   private LocalVariableNode(final FrameSlot slot, final SourceSection source) {

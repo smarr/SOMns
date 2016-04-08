@@ -8,12 +8,13 @@ import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.interpreter.nodes.specialized.SomLoop;
 import som.vm.constants.Nil;
 import tools.dym.Tags.LoopNode;
 
 
-public final class WhileInlinedLiteralsNode extends ExpressionNode {
+public final class WhileInlinedLiteralsNode extends ExprWithTagsNode {
 
   @Child private ExpressionNode conditionNode;
   @Child private ExpressionNode bodyNode;

@@ -2,6 +2,7 @@ package som.interpreter.objectstorage;
 
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.interpreter.objectstorage.StorageLocation.AbstractObjectStorageLocation;
 import som.interpreter.objectstorage.StorageLocation.DoubleStorageLocation;
 import som.interpreter.objectstorage.StorageLocation.LongStorageLocation;
@@ -24,7 +25,7 @@ import com.oracle.truffle.api.source.SourceSection;
 @NodeChildren({
   @NodeChild(value = "self",  type = ExpressionNode.class),
   @NodeChild(value = "value", type = ExpressionNode.class)})
-public abstract class InitializerFieldWrite extends ExpressionNode {
+public abstract class InitializerFieldWrite extends ExprWithTagsNode {
   protected static final int LIMIT = 6;
 
   protected final SlotDefinition slot;

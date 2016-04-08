@@ -30,6 +30,7 @@ import som.interpreter.nodes.UninitializedVariableNode.UninitializedVariableWrit
 import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.literals.BlockNode.BlockNodeWithContext;
 import som.interpreter.nodes.literals.NilLiteralNode;
+import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.interpreter.objectstorage.InitializerFieldWrite;
 import som.interpreter.objectstorage.InitializerFieldWriteNodeGen;
 import som.vm.NotYetImplementedException;
@@ -137,7 +138,7 @@ public final class SNodeFactory {
     return new ReturnNonLocalNode(exp, markerSlot, contextLevel, source);
   }
 
-  public static final class NotImplemented extends ExpressionNode {
+  public static final class NotImplemented extends ExprWithTagsNode {
     private final String msg;
 
     public NotImplemented(final String msg, final SourceSection source) {

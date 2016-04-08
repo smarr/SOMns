@@ -1,6 +1,7 @@
 package som.interpreter.nodes.specialized;
 
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.nary.ExprWithTagsNode;
 
 import com.oracle.truffle.api.dsl.UnsupportedSpecializationException;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -17,7 +18,7 @@ import com.oracle.truffle.api.source.SourceSection;
  * Note, it is also applicable if one of the argument expressions is a proper
  * literal of some sort.
  */
-public final class IfTrueIfFalseInlinedLiteralsNode extends ExpressionNode {
+public final class IfTrueIfFalseInlinedLiteralsNode extends ExprWithTagsNode {
   private final ConditionProfile condProf = ConditionProfile.createCountingProfile();
 
   @Child private ExpressionNode conditionNode;

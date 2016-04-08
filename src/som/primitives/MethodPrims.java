@@ -10,6 +10,7 @@ import com.oracle.truffle.api.source.SourceSection;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.PreevaluatedExpression;
 import som.interpreter.nodes.dispatch.InvokeOnCache;
+import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.arrays.ToArgumentsArrayNode;
 import som.vmobjects.SAbstractObject;
@@ -37,7 +38,7 @@ public final class MethodPrims {
     @NodeChild(value = "somArr", type = ExpressionNode.class),
     @NodeChild(value = "argArr", type = ToArgumentsArrayNode.class,
                executeWith = {"somArr", "target"})})
-  public abstract static class InvokeOnPrim extends ExpressionNode
+  public abstract static class InvokeOnPrim extends ExprWithTagsNode
     implements PreevaluatedExpression {
     @Child private InvokeOnCache callNode;
 

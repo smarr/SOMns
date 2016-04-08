@@ -9,6 +9,7 @@ import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
 import som.interpreter.InlinerForLexicallyEmbeddedMethods;
 import som.interpreter.SArguments;
+import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.vm.NotYetImplementedException;
 import tools.dym.Tags.LocalArgRead;
 import tools.highlight.Tags.ArgumentTag;
@@ -18,7 +19,7 @@ import tools.highlight.Tags.KeywordTag;
 public abstract class ArgumentReadNode {
 
   @Instrumentable(factory = LocalArgumentReadNodeWrapper.class)
-  public static class LocalArgumentReadNode extends ExpressionNode {
+  public static class LocalArgumentReadNode extends ExprWithTagsNode {
     protected final int argumentIndex;
 
     public LocalArgumentReadNode(final int argumentIndex, final SourceSection source) {

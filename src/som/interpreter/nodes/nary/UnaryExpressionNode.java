@@ -15,7 +15,7 @@ import tools.dym.Tags.EagerlyWrapped;
 
 @Instrumentable(factory = UnaryExpressionNodeWrapper.class)
 @NodeChild(value = "receiver", type = ExpressionNode.class)
-public abstract class UnaryExpressionNode extends ExpressionNode
+public abstract class UnaryExpressionNode extends ExprWithTagsNode
     implements PreevaluatedExpression {
 
   @CompilationFinal private boolean eagerlyWrapped;

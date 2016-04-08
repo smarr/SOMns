@@ -13,7 +13,7 @@ import com.oracle.truffle.api.source.SourceSection;
   @NodeChild(value = "firstArg",  type = ExpressionNode.class),
   @NodeChild(value = "secondArg", type = ExpressionNode.class),
   @NodeChild(value = "thirdArg",  type = ExpressionNode.class)})
-public abstract class QuaternaryExpressionNode extends ExpressionNode {
+public abstract class QuaternaryExpressionNode extends ExprWithTagsNode {
 
   public QuaternaryExpressionNode(final SourceSection sourceSection) {
     super(sourceSection);

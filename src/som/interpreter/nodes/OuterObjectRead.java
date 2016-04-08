@@ -9,6 +9,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.interpreter.actors.SFarReference;
+import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.interpreter.objectstorage.ClassFactory;
 import som.primitives.actors.ActorClasses;
 import som.vm.constants.KernelObj;
@@ -18,7 +19,7 @@ import som.vmobjects.SObjectWithClass;
 
 @NodeChild(value = "receiver", type = ExpressionNode.class)
 public abstract class OuterObjectRead
-    extends ExpressionNode implements ISpecialSend {
+    extends ExprWithTagsNode implements ISpecialSend {
 
   protected static final int INLINE_CACHE_SIZE = 3;
 

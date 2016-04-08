@@ -7,10 +7,11 @@ import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.nary.ExprWithTagsNode;
 import tools.dym.Tags.ControlFlowCondition;
 
 
-public abstract class BooleanInlinedLiteralNode extends ExpressionNode {
+public abstract class BooleanInlinedLiteralNode extends ExprWithTagsNode {
 
   @Child protected ExpressionNode receiverNode;
   @Child protected ExpressionNode argumentNode;

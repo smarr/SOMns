@@ -9,6 +9,7 @@ import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.InternalObjectArrayNode;
 import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
+import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.vm.constants.Nil;
 import som.vmobjects.SSymbol;
 
@@ -25,7 +26,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 
 @NodeChild(value = "arguments", type = InternalObjectArrayNode.class)
-public abstract class EventualSendNode extends ExpressionNode {
+public abstract class EventualSendNode extends ExprWithTagsNode {
 
   protected final SSymbol selector;
   protected final RootCallTarget onReceive;

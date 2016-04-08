@@ -1,6 +1,7 @@
 package som.interpreter.nodes.specialized;
 
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.vm.constants.Nil;
 
 import com.oracle.truffle.api.dsl.UnsupportedSpecializationException;
@@ -11,7 +12,7 @@ import com.oracle.truffle.api.profiles.ConditionProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
 
-public final class IfInlinedLiteralNode extends ExpressionNode {
+public final class IfInlinedLiteralNode extends ExprWithTagsNode {
   private final ConditionProfile condProf = ConditionProfile.createCountingProfile();
 
   @Child private ExpressionNode conditionNode;

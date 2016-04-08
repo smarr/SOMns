@@ -27,6 +27,7 @@ import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.EagerBinaryPrimitiveNode;
 import som.interpreter.nodes.nary.EagerTernaryPrimitiveNode;
 import som.interpreter.nodes.nary.EagerUnaryPrimitiveNode;
+import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.interpreter.nodes.specialized.AndMessageNodeFactory;
@@ -135,7 +136,7 @@ public final class MessageSendNode {
     }
   }
 
-  public abstract static class AbstractMessageSendNode extends ExpressionNode
+  public abstract static class AbstractMessageSendNode extends ExprWithTagsNode
       implements PreevaluatedExpression {
 
     @Children protected final ExpressionNode[] argumentNodes;

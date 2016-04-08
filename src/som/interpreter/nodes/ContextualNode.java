@@ -24,6 +24,7 @@ package som.interpreter.nodes;
 import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
 import som.interpreter.InlinerForLexicallyEmbeddedMethods;
 import som.interpreter.SArguments;
+import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.vmobjects.SBlock;
 
 import com.oracle.truffle.api.frame.MaterializedFrame;
@@ -33,7 +34,7 @@ import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
 
-public abstract class ContextualNode extends ExpressionNode {
+public abstract class ContextualNode extends ExprWithTagsNode {
 
   protected final int contextLevel;
   private final ValueProfile frameType;

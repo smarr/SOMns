@@ -31,11 +31,12 @@ import som.compiler.MethodBuilder;
 import som.compiler.Variable.Local;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.PreevaluatedExpression;
+import som.interpreter.nodes.nary.ExprWithTagsNode;
 import tools.highlight.Tags.LiteralTag;
 
 @NodeInfo(cost = NodeCost.NONE)
 @Instrumentable(factory = LiteralNodeWrapper.class)
-public abstract class LiteralNode extends ExpressionNode
+public abstract class LiteralNode extends ExprWithTagsNode
     implements PreevaluatedExpression {
 
   public LiteralNode(final SourceSection source) {

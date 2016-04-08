@@ -8,11 +8,12 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.nary.ExprWithTagsNode;
 import tools.dym.Tags.LoopNode;
 
 
 @NodeChild(value = "repCnt",  type = ExpressionNode.class)
-public abstract class IntTimesRepeatLiteralNode extends ExpressionNode {
+public abstract class IntTimesRepeatLiteralNode extends ExprWithTagsNode {
 
   @Child protected ExpressionNode body;
 

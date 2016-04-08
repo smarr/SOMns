@@ -14,12 +14,13 @@ import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
 import som.interpreter.InlinerForLexicallyEmbeddedMethods;
 import som.interpreter.SplitterForLexicallyEmbeddedCode;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.nary.ExprWithTagsNode;
 import tools.dym.Tags.LoopNode;
 
 @NodeChildren({
   @NodeChild(value = "from",  type = ExpressionNode.class),
   @NodeChild(value = "to",  type = ExpressionNode.class)})
-public abstract class IntToDoInlinedLiteralsNode extends ExpressionNode {
+public abstract class IntToDoInlinedLiteralsNode extends ExprWithTagsNode {
 
   @Child protected ExpressionNode body;
 

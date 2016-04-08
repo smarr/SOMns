@@ -21,19 +21,6 @@
  */
 package som.interpreter.nodes;
 
-import som.compiler.AccessModifier;
-import som.interpreter.FrameOnStackMarker;
-import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
-import som.interpreter.InlinerForLexicallyEmbeddedMethods;
-import som.interpreter.ReturnException;
-import som.interpreter.SArguments;
-import som.interpreter.SplitterForLexicallyEmbeddedCode;
-import som.interpreter.Types;
-import som.vm.Symbols;
-import som.vmobjects.SBlock;
-import som.vmobjects.SInvokable;
-import som.vmobjects.SSymbol;
-
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.FrameSlot;
@@ -44,6 +31,20 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.profiles.BranchProfile;
 import com.oracle.truffle.api.source.SourceSection;
+
+import som.compiler.AccessModifier;
+import som.interpreter.FrameOnStackMarker;
+import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
+import som.interpreter.InlinerForLexicallyEmbeddedMethods;
+import som.interpreter.ReturnException;
+import som.interpreter.SArguments;
+import som.interpreter.SplitterForLexicallyEmbeddedCode;
+import som.interpreter.Types;
+import som.interpreter.nodes.nary.ExprWithTagsNode;
+import som.vm.Symbols;
+import som.vmobjects.SBlock;
+import som.vmobjects.SInvokable;
+import som.vmobjects.SSymbol;
 
 
 public final class ReturnNonLocalNode extends ContextualNode {
@@ -142,7 +143,7 @@ public final class ReturnNonLocalNode extends ContextualNode {
    * inlining/embedding of blocks, we need this ReturnLocalNode to replace
    * previous non-local returns.
    */
-  private static final class ReturnLocalNode extends ExpressionNode {
+  private static final class ReturnLocalNode extends ExprWithTagsNode {
     @Child private ExpressionNode expression;
     private final FrameSlot frameOnStackMarker;
 
@@ -186,7 +187,7 @@ public final class ReturnNonLocalNode extends ContextualNode {
     }
   }
 
-  public static final class CatchNonLocalReturnNode extends ExpressionNode {
+  public static final class CatchNonLocalReturnNode extends ExprWithTagsNode {
     @Child protected ExpressionNode methodBody;
     private final BranchProfile nonLocalReturnHandler;
     private final BranchProfile doCatch;
