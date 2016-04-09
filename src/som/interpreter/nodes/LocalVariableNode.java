@@ -15,6 +15,8 @@ import som.interpreter.InlinerForLexicallyEmbeddedMethods;
 import som.interpreter.SplitterForLexicallyEmbeddedCode;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.vm.constants.Nil;
+import tools.dym.Tags.LocalVarRead;
+import tools.dym.Tags.LocalVarWrite;
 import tools.highlight.Tags.LocalVariableTag;
 
 
@@ -49,7 +51,7 @@ public abstract class LocalVariableNode extends ExprWithTagsNode {
   }
 
   @Override
-  protected final boolean isTaggedWith(final Class<?> tag) {
+  protected boolean isTaggedWith(final Class<?> tag) {
     if (tag == LocalVariableTag.class) {
       return true;
     } else {
@@ -126,6 +128,15 @@ public abstract class LocalVariableNode extends ExprWithTagsNode {
 
     protected final boolean isUninitialized() {
       return slot.getKind() == FrameSlotKind.Illegal;
+    }
+
+    @Override
+    protected final boolean isTaggedWith(final Class<?> tag) {
+      if (tag == LocalVarRead.class) {
+        return true;
+      } else {
+        return super.isTaggedWith(tag);
+      }
     }
 
     @Override
@@ -207,6 +218,15 @@ public abstract class LocalVariableNode extends ExprWithTagsNode {
         return true;
       }
       return false;
+    }
+
+    @Override
+    protected final boolean isTaggedWith(final Class<?> tag) {
+      if (tag == LocalVarWrite.class) {
+        return true;
+      } else {
+        return super.isTaggedWith(tag);
+      }
     }
 
     @Override

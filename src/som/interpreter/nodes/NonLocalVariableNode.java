@@ -13,6 +13,8 @@ import com.oracle.truffle.api.source.SourceSection;
 import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
 import som.interpreter.InlinerForLexicallyEmbeddedMethods;
 import som.vm.constants.Nil;
+import tools.dym.Tags.LocalVarRead;
+import tools.dym.Tags.LocalVarWrite;
 import tools.highlight.Tags.LocalVariableTag;
 
 
@@ -39,7 +41,7 @@ public abstract class NonLocalVariableNode extends ContextualNode {
   }
 
   @Override
-  protected final boolean isTaggedWith(final Class<?> tag) {
+  protected boolean isTaggedWith(final Class<?> tag) {
     if (tag == LocalVariableTag.class) {
       return true;
     } else {
@@ -111,6 +113,15 @@ public abstract class NonLocalVariableNode extends ContextualNode {
 
     protected final boolean isUninitialized() {
       return slot.getKind() == FrameSlotKind.Illegal;
+    }
+
+    @Override
+    protected boolean isTaggedWith(final Class<?> tag) {
+      if (tag == LocalVarRead.class) {
+        return true;
+      } else {
+        return super.isTaggedWith(tag);
+      }
     }
   }
 
@@ -191,6 +202,15 @@ public abstract class NonLocalVariableNode extends ContextualNode {
       if (slot.getKind() != FrameSlotKind.Object) {
         transferToInterpreter("LocalVar.writeObjectToUninit");
         slot.setKind(FrameSlotKind.Object);
+      }
+    }
+
+    @Override
+    protected final boolean isTaggedWith(final Class<?> tag) {
+      if (tag == LocalVarWrite.class) {
+        return true;
+      } else {
+        return super.isTaggedWith(tag);
       }
     }
   }
