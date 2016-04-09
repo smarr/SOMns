@@ -7,7 +7,6 @@ import com.oracle.truffle.api.instrumentation.Instrumentable;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 
-import som.vm.NotYetImplementedException;
 import tools.dym.Tags.CachedVirtualInvoke;
 
 
@@ -54,31 +53,31 @@ public class InstrumentableDirectCallNode extends DirectCallNode {
 
   @Override
   public boolean isInlinable() {
-    throw new NotYetImplementedException();
+    return callNode.isInlinable();
   }
 
   @Override
   public boolean isInliningForced() {
-    throw new NotYetImplementedException();
+    return callNode.isInliningForced();
   }
 
   @Override
   public void forceInlining() {
-    throw new NotYetImplementedException();
+    callNode.forceInlining();
   }
 
   @Override
   public boolean isCallTargetCloningAllowed() {
-    throw new NotYetImplementedException();
+    return callNode.isCallTargetCloningAllowed();
   }
 
   @Override
   public boolean cloneCallTarget() {
-    throw new NotYetImplementedException();
+    return callNode.cloneCallTarget();
   }
 
   @Override
   public CallTarget getClonedCallTarget() {
-    throw new NotYetImplementedException();
+    return callNode.getClonedCallTarget();
   }
 }

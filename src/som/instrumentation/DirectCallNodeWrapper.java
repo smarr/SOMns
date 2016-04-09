@@ -1,7 +1,5 @@
 package som.instrumentation;
 
-import som.vm.NotYetImplementedException;
-
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.InstrumentableFactory;
@@ -64,32 +62,32 @@ public class DirectCallNodeWrapper implements InstrumentableFactory<DirectCallNo
 
     @Override
     public boolean isInlinable() {
-      throw new NotYetImplementedException();
+      return delegate.isInlinable();
     }
 
     @Override
     public boolean isInliningForced() {
-      throw new NotYetImplementedException();
+      return delegate.isInliningForced();
     }
 
     @Override
     public void forceInlining() {
-      throw new NotYetImplementedException();
+      delegate.forceInlining();
     }
 
     @Override
     public boolean isCallTargetCloningAllowed() {
-      throw new NotYetImplementedException();
+      return delegate.isCallTargetCloningAllowed();
     }
 
     @Override
     public boolean cloneCallTarget() {
-      throw new NotYetImplementedException();
+      return delegate.cloneCallTarget();
     }
 
     @Override
     public CallTarget getClonedCallTarget() {
-      throw new NotYetImplementedException();
+      return delegate.getClonedCallTarget();
     }
   }
 }
