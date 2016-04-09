@@ -116,6 +116,8 @@ public final class EagerTernaryPrimitiveNode extends EagerPrimitive {
     replace(node);
     VM.insertInstrumentationWrapper(node);
     VM.insertInstrumentationWrapper(receiver);
+    VM.insertInstrumentationWrapper(argument1);
+    VM.insertInstrumentationWrapper(argument2);
     return node;
   }
 

@@ -115,6 +115,7 @@ public final class EagerBinaryPrimitiveNode extends EagerPrimitive {
     replace(node);
     VM.insertInstrumentationWrapper(node);
     VM.insertInstrumentationWrapper(receiver);
+    VM.insertInstrumentationWrapper(argument);
     return node;
   }
 
