@@ -3,6 +3,7 @@ package som.interpreter.nodes.nary;
 import com.oracle.truffle.api.dsl.UnsupportedSpecializationException;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
@@ -10,6 +11,7 @@ import som.interpreter.TruffleCompiler;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
+import som.vm.NotYetImplementedException;
 import som.vmobjects.SSymbol;
 import tools.dym.Tags.EagerlyWrapped;
 
@@ -122,5 +124,14 @@ public final class EagerBinaryPrimitiveNode extends EagerPrimitive {
   @Override
   protected void setTags(final byte tagMark) {
     primitive.tagMark = tagMark;
+  }
+
+  @Override
+  protected void onReplace(final Node newNode, final CharSequence reason) {
+    if (newNode instanceof ExprWithTagsNode) {
+      ((ExprWithTagsNode) newNode).tagMark = primitive.tagMark;
+    } else {
+      throw new NotYetImplementedException();
+    }
   }
 }
