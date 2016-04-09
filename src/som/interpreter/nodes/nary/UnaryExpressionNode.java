@@ -46,7 +46,9 @@ public abstract class UnaryExpressionNode extends ExprWithTagsNode
 
   @Override
   protected void onReplace(final Node newNode, final CharSequence reason) {
-    if (newNode instanceof WrapperNode) { return; }
+    if (newNode instanceof WrapperNode ||
+        !(newNode instanceof UnaryExpressionNode)) { return; }
+
     UnaryExpressionNode n = (UnaryExpressionNode) newNode;
     n.eagerlyWrapped = eagerlyWrapped;
     super.onReplace(newNode, reason);

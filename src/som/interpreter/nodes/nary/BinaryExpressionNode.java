@@ -48,7 +48,9 @@ public abstract class BinaryExpressionNode extends ExprWithTagsNode
 
   @Override
   protected void onReplace(final Node newNode, final CharSequence reason) {
-    if (newNode instanceof WrapperNode) { return; }
+    if (newNode instanceof WrapperNode ||
+        !(newNode instanceof BinaryExpressionNode)) { return; }
+
     BinaryExpressionNode n = (BinaryExpressionNode) newNode;
     n.eagerlyWrapped = eagerlyWrapped;
     super.onReplace(newNode, reason);

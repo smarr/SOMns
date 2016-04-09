@@ -50,7 +50,9 @@ public abstract class TernaryExpressionNode extends ExprWithTagsNode
 
   @Override
   protected void onReplace(final Node newNode, final CharSequence reason) {
-    if (newNode instanceof WrapperNode) { return; }
+    if (newNode instanceof WrapperNode ||
+        !(newNode instanceof TernaryExpressionNode)) { return; }
+
     TernaryExpressionNode n = (TernaryExpressionNode) newNode;
     n.eagerlyWrapped = eagerlyWrapped;
     super.onReplace(newNode, reason);
