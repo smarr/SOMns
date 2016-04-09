@@ -1,10 +1,10 @@
 package tools.dym.nodes;
 
-import som.interpreter.Invokable;
-import tools.dym.profiles.CallsiteProfile;
-
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.ExecutionEventNode;
+
+import som.interpreter.Invokable;
+import tools.dym.profiles.CallsiteProfile;
 
 
 public class CallTargetNode extends ExecutionEventNode {
@@ -23,12 +23,8 @@ public class CallTargetNode extends ExecutionEventNode {
   }
 
   @Override
-  public void onReturnValue(final VirtualFrame frame, final Object result) {
-
-  }
+  public void onReturnValue(final VirtualFrame frame, final Object result) { }
 
   @Override
-  public void onReturnExceptional(final VirtualFrame frame, final Throwable exception) {
-
-  }
+  public void onReturnExceptional(final VirtualFrame frame, final Throwable exception) { }
 }
