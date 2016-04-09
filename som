@@ -163,6 +163,10 @@ if sys.argv[0].endswith('debug'):
     args.perf_warnings = True
     args.background_compilation = False
 
+if not args.interpreter:
+    # Make sure everything gets compiled
+    flags += ['-Dgraal.TruffleTimeThreshold=10000000']
+
 if args.debug:
     flags += ['-Xdebug',
               '-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8000']
