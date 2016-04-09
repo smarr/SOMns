@@ -214,7 +214,7 @@ public final class MetricsCsvWriter {
     try (PrintWriter file = new PrintWriter(metricsFolder + File.separator + "method-activations.csv")) {
       file.println("Source Identifier\tActivation Count");
       for (InvocationProfile p : profiles.values()) {
-        file.print(p.getSourceSection().getIdentifier()); //TODO: probably need something more precise
+        file.print(p.getMethod().getRootNode().getSourceSection().getIdentifier()); //TODO: probably need something more precise
         file.print("\t");
         file.println(p.getValue());
       }
