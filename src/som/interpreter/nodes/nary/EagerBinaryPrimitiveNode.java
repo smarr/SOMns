@@ -31,11 +31,6 @@ public final class EagerBinaryPrimitiveNode extends EagerPrimitive {
       final SourceSection source) {
     super(source);
     assert source == primitive.getSourceSection();
-    if (source.toString().startsWith("source=Kernel.som pos=12811 len=3 line=364 col=46 identifier=method code=- 1")) {
-      @SuppressWarnings("unused")
-      int i = 0;
-    }
-
     this.receiver  = receiver;
     this.argument  = argument;
     this.primitive = primitive;
@@ -94,7 +89,6 @@ public final class EagerBinaryPrimitiveNode extends EagerPrimitive {
   public Object executeEvaluated(final VirtualFrame frame,
     final Object receiver, final Object argument) {
     try {
-      assert !(primitive instanceof WrapperNode);
       return primitive.executeEvaluated(frame, receiver, argument);
     } catch (UnsupportedSpecializationException e) {
       TruffleCompiler.transferToInterpreterAndInvalidate("Eager Primitive with unsupported specialization.");
