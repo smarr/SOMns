@@ -2,10 +2,10 @@ package tools.dym.nodes;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.EventContext;
-import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
 import com.oracle.truffle.api.nodes.Node;
 
 import som.interpreter.ReturnException;
+import som.interpreter.nodes.SOMNode;
 import som.vm.NotYetImplementedException;
 import tools.dym.DynamicMetrics;
 import tools.dym.Tags.PrimitiveArgument;
@@ -59,16 +59,12 @@ public final class OperationProfilingNode extends CountingNode<OperationProfile>
   private int getChildIdx(final Node subExpr) {
     int taggedIdx = 0;
     for (Node n : context.getInstrumentedNode().getChildren()) {
-      if (n == subExpr) {
-        assert DynamicMetrics.isTaggedWith(n, PrimitiveArgument.class);
-        return taggedIdx;
-      }
-      if (n instanceof WrapperNode && ((WrapperNode) n).getDelegateNode() == subExpr) {
-        assert DynamicMetrics.isTaggedWith(n, PrimitiveArgument.class);
-        return taggedIdx;
-      }
+      Node child = SOMNode.unwrapIfNecessary(n);
 
-      if (DynamicMetrics.isTaggedWith(n, PrimitiveArgument.class)) {
+      if (child == subExpr) {
+        assert DynamicMetrics.isTaggedWith(child, PrimitiveArgument.class);
+        return taggedIdx;
+      } else if (DynamicMetrics.isTaggedWith(child, PrimitiveArgument.class)) {
         taggedIdx += 1;
       }
     }
