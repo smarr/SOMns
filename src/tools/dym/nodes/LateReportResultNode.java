@@ -1,5 +1,6 @@
 package tools.dym.nodes;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.EventContext;
 import com.oracle.truffle.api.instrumentation.ExecutionEventNode;
@@ -34,6 +35,7 @@ public class LateReportResultNode extends ExecutionEventNode {
 
   @Override
   protected void onEnter(final VirtualFrame frame) {
+    CompilerDirectives.transferToInterpreter();
     ExecutionEventNode node = specialize();
     if (node == this) {
       return;
@@ -44,6 +46,7 @@ public class LateReportResultNode extends ExecutionEventNode {
 
   @Override
   protected void onReturnValue(final VirtualFrame frame, final Object result) {
+    CompilerDirectives.transferToInterpreter();
     ExecutionEventNode node = specialize();
     if (node == this) {
       return;
@@ -54,6 +57,7 @@ public class LateReportResultNode extends ExecutionEventNode {
 
   @Override
   protected void onReturnExceptional(final VirtualFrame frame, final Throwable exception) {
+    CompilerDirectives.transferToInterpreter();
     ExecutionEventNode node = specialize();
     if (node == this) {
       return;

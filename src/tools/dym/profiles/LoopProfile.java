@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.source.SourceSection;
 
 
@@ -23,6 +24,7 @@ public class LoopProfile extends Counter {
     assert currentIterations >= 0 : "TODO: handle overflow";
   }
 
+  @TruffleBoundary
   public void recordLoopExit() {
     loopIterations.merge(currentIterations, 1, Integer::sum);
     currentIterations = 0;

@@ -3,10 +3,11 @@ package tools.dym.profiles;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.interpreter.Invokable;
 import som.vmobjects.SClass;
-
-import com.oracle.truffle.api.source.SourceSection;
 
 
 public class CallsiteProfile extends Counter {
@@ -20,10 +21,12 @@ public class CallsiteProfile extends Counter {
     receiverMap   = new HashMap<>();
   }
 
+  @TruffleBoundary
   public void recordReceiverType(final SClass rcvrClass) {
     receiverMap.merge(rcvrClass, 1, Integer::sum);
   }
 
+  @TruffleBoundary
   public void recordInvocationTarget(final Invokable invokable) {
     callTargetMap.merge(invokable, 1, Integer::sum);
   }

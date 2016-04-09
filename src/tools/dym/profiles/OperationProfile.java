@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.source.SourceSection;
 import com.sun.istack.internal.NotNull;
 
@@ -51,6 +52,7 @@ public final class OperationProfile extends Counter {
     return argumentTypes;
   }
 
+  @TruffleBoundary
   public void profileArgument(final int argIdx, final Object value) {
     // because of the self-optimizing nature of Truffle, we might get to
     // profile a node only after it and all it subnodes actually completed
@@ -63,6 +65,7 @@ public final class OperationProfile extends Counter {
     }
   }
 
+  @TruffleBoundary
   public void profileReturn(final Object returnValue) {
     // because of the self-optimizing nature of Truffle, we might get to
     // profile a node only after it and all it subnodes actually completed

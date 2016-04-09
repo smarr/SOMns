@@ -4,12 +4,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import som.interpreter.Invokable;
-
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.api.utilities.JSONHelper;
 import com.oracle.truffle.api.utilities.JSONHelper.JSONArrayBuilder;
 import com.oracle.truffle.api.utilities.JSONHelper.JSONObjectBuilder;
+
+import som.interpreter.Invokable;
 
 public class InvocationProfile extends Counter {
 
@@ -26,6 +27,7 @@ public class InvocationProfile extends Counter {
     return method;
   }
 
+  @TruffleBoundary
   public void profileArguments(final Object[] args) {
     argumentTypes.merge(
         new Arguments(args), 1, Integer::sum);
