@@ -1,6 +1,7 @@
 package som;
 
 import java.io.IOException;
+import java.util.Map;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
@@ -291,20 +292,21 @@ public final class VM {
     engine = builder.build();
 
     try {
-      Instrument profiler = engine.getInstruments().get(TruffleProfiler.ID);
+      Map<String, Instrument> instruments = engine.getInstruments();
+      Instrument profiler = instruments.get(TruffleProfiler.ID);
       if (vmOptions.profilingEnabled && profiler == null) {
         VM.errorPrintln("Truffle profiler not available. Might be a class path issue");
       } else if (profiler != null) {
         profiler.setEnabled(vmOptions.profilingEnabled);
       }
-      engine.getInstruments().get(Highlight.ID).setEnabled(vmOptions.highlightingEnabled);
+      instruments.get(Highlight.ID).setEnabled(vmOptions.highlightingEnabled);
 
       if (vmOptions.webDebuggerEnabled) {
-        engine.getInstruments().get(WebDebugger.ID).setEnabled(true);
+        instruments.get(WebDebugger.ID).setEnabled(true);
       }
 
       if (vmOptions.dynamicMetricsEnabled) {
-        engine.getInstruments().get(DynamicMetrics.ID).setEnabled(true);
+        instruments.get(DynamicMetrics.ID).setEnabled(true);
       }
 
       engine.eval(SomLanguage.START);
