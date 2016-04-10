@@ -15,11 +15,11 @@ public abstract class BinaryComplexOperation extends BinaryExpressionNode {
   protected BinaryComplexOperation(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
 
   @Override
-  protected boolean isTaggedWith(final Class<?> tag) {
+  protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
     if (tag == ComplexPrimitiveOperation.class) {
       return true;
     } else {
-      return super.isTaggedWith(tag);
+      return super.isTaggedWithIgnoringEagerness(tag);
     }
   }
 }

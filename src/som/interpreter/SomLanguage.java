@@ -31,7 +31,6 @@ import tools.dym.Tags.CachedVirtualInvoke;
 import tools.dym.Tags.ClassRead;
 import tools.dym.Tags.ComplexPrimitiveOperation;
 import tools.dym.Tags.ControlFlowCondition;
-import tools.dym.Tags.EagerlyWrapped;
 import tools.dym.Tags.FieldRead;
 import tools.dym.Tags.FieldWrite;
 import tools.dym.Tags.LocalArgRead;
@@ -74,7 +73,7 @@ import tools.highlight.Tags.StatementSeparatorTag;
   ControlFlowCondition.class, FieldRead.class, FieldWrite.class, ClassRead.class,
   LocalVarRead.class, LocalVarWrite.class, LocalArgRead.class, ArrayRead.class,
   ArrayWrite.class, LoopNode.class, LoopBody.class, BasicPrimitiveOperation.class,
-  ComplexPrimitiveOperation.class, PrimitiveArgument.class, EagerlyWrapped.class,
+  ComplexPrimitiveOperation.class, PrimitiveArgument.class,
   StringAccess.class, OpClosureApplication.class, OpArithmetic.class,
   OpComparison.class, OpLength.class
 })

@@ -24,11 +24,11 @@ public abstract class IntToDoMessageNode extends TernaryExpressionNode {
   protected IntToDoMessageNode(final SourceSection source) { super(false, source); }
 
   @Override
-  protected boolean isTaggedWith(final Class<?> tag) {
+  protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
     if (tag == LoopNode.class) {
       return true;
     } else {
-      return super.isTaggedWith(tag);
+      return super.isTaggedWithIgnoringEagerness(tag);
     }
   }
 

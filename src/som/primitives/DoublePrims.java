@@ -19,11 +19,11 @@ public abstract class DoublePrims  {
     public RoundPrim(final SourceSection source) { super(false, source); }
 
     @Override
-    protected boolean isTaggedWith(final Class<?> tag) {
+    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
       if (tag == OpArithmetic.class) {
         return true;
       } else {
-        return super.isTaggedWith(tag);
+        return super.isTaggedWithIgnoringEagerness(tag);
       }
     }
 
@@ -39,11 +39,11 @@ public abstract class DoublePrims  {
     public PositiveInfinityPrim(final SourceSection source) { super(false, source); }
 
     @Override
-    protected boolean isTaggedWith(final Class<?> tag) {
+    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
       if (tag == LiteralTag.class) {
         return true;
       } else {
-        return super.isTaggedWith(tag);
+        return super.isTaggedWithIgnoringEagerness(tag);
       }
     }
 

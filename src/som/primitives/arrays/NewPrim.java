@@ -21,11 +21,11 @@ public abstract class NewPrim extends BinaryExpressionNode {
   public NewPrim(final SourceSection source) { super(false, source); }
 
   @Override
-  protected boolean isTaggedWith(final Class<?> tag) {
+  protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
     if (tag == NewArray.class) {
       return true;
     } else {
-      return super.isTaggedWith(tag);
+      return super.isTaggedWithIgnoringEagerness(tag);
     }
   }
 

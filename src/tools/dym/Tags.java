@@ -90,10 +90,6 @@ public abstract class Tags {
     private PrimitiveArgument() { }
   }
 
-  public final class EagerlyWrapped extends Tags {
-    private EagerlyWrapped() { }
-  }
-
   // some operation that somehow accesses a string
   public final class StringAccess extends Tags {
     private StringAccess() { }

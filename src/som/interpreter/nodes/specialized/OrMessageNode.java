@@ -32,13 +32,13 @@ public abstract class OrMessageNode extends BinaryComplexOperation {
   }
 
   @Override
-  protected boolean isTaggedWith(final Class<?> tag) {
+  protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
     if (tag == ControlFlowCondition.class) {
       return true;
     } else if (tag == OpComparison.class) {
       return true;
     } else {
-      return super.isTaggedWith(tag);
+      return super.isTaggedWithIgnoringEagerness(tag);
     }
   }
 
@@ -60,11 +60,11 @@ public abstract class OrMessageNode extends BinaryComplexOperation {
     public OrBoolMessageNode(final SourceSection source) { super(false, source); }
 
     @Override
-    protected boolean isTaggedWith(final Class<?> tag) {
+    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
       if (tag == OpComparison.class) {
         return true;
       } else {
-        return super.isTaggedWith(tag);
+        return super.isTaggedWithIgnoringEagerness(tag);
       }
     }
 

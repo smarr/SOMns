@@ -13,7 +13,6 @@ import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
 import som.vm.NotYetImplementedException;
 import som.vmobjects.SSymbol;
-import tools.dym.Tags.EagerlyWrapped;
 
 
 public final class EagerUnaryPrimitiveNode extends EagerPrimitive {
@@ -35,12 +34,7 @@ public final class EagerUnaryPrimitiveNode extends EagerPrimitive {
   @Override
   protected boolean isTaggedWith(final Class<?> tag) {
     assert !(primitive instanceof WrapperNode);
-
-    if (tag == EagerlyWrapped.class) {
-      return false;
-    } else {
-      return primitive.isTaggedWith(tag);
-    }
+    return primitive.isTaggedWithIgnoringEagerness(tag);
   }
 
   @Override

@@ -76,11 +76,11 @@ public final class ObjectPrims {
     public IsNilNode(final SourceSection source) { super(false, source); }
 
     @Override
-    protected boolean isTaggedWith(final Class<?> tag) {
+    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
       if (tag == OpComparison.class) {
         return true;
       } else {
-        return super.isTaggedWith(tag);
+        return super.isTaggedWithIgnoringEagerness(tag);
       }
     }
 
@@ -94,11 +94,11 @@ public final class ObjectPrims {
     public NotNilNode(final SourceSection source) { super(false, source); }
 
     @Override
-    protected boolean isTaggedWith(final Class<?> tag) {
+    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
       if (tag == OpComparison.class) {
         return true;
       } else {
-        return super.isTaggedWith(tag);
+        return super.isTaggedWithIgnoringEagerness(tag);
       }
     }
 

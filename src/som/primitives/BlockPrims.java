@@ -58,13 +58,13 @@ public abstract class BlockPrims {
     public ValueNonePrim(final SourceSection source) { super(false, source); }
 
     @Override
-    protected boolean isTaggedWith(final Class<?> tag) {
+    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
       if (tag == ComplexPrimitiveOperation.class) {
         return true;
       } else if (tag == OpClosureApplication.class) {
         return true;
       } else {
-        return super.isTaggedWith(tag);
+        return super.isTaggedWithIgnoringEagerness(tag);
       }
     }
 
@@ -96,11 +96,11 @@ public abstract class BlockPrims {
     protected ValueOnePrim(final SourceSection source) { super(false, source); }
 
     @Override
-    protected boolean isTaggedWith(final Class<?> tag) {
+    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
       if (tag == OpClosureApplication.class) {
         return true;
       } else {
-        return super.isTaggedWith(tag);
+        return super.isTaggedWithIgnoringEagerness(tag);
       }
     }
 
@@ -128,13 +128,13 @@ public abstract class BlockPrims {
     public ValueTwoPrim(final SourceSection source) { super(false, source); }
 
     @Override
-    protected boolean isTaggedWith(final Class<?> tag) {
+    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
       if (tag == ComplexPrimitiveOperation.class) {
         return true;
       } else if (tag == OpClosureApplication.class) {
         return true;
       } else {
-        return super.isTaggedWith(tag);
+        return super.isTaggedWithIgnoringEagerness(tag);
       }
     }
 

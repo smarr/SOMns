@@ -35,11 +35,11 @@ public abstract class IfMessageNode extends BinaryComplexOperation {
   }
 
   @Override
-  protected boolean isTaggedWith(final Class<?> tag) {
+  protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
     if (tag == ControlFlowCondition.class) {
       return true;
     } else {
-      return super.isTaggedWith(tag);
+      return super.isTaggedWithIgnoringEagerness(tag);
     }
   }
 

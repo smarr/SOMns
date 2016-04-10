@@ -14,11 +14,11 @@ public abstract class UnaryBasicOperation extends UnaryExpressionNode {
   protected UnaryBasicOperation(final boolean eagerlyWrapped, final SourceSection source) { super(eagerlyWrapped, source); }
 
   @Override
-  protected boolean isTaggedWith(final Class<?> tag) {
+  protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
     if (tag == BasicPrimitiveOperation.class) {
       return true;
     } else {
-      return super.isTaggedWith(tag);
+      return super.isTaggedWithIgnoringEagerness(tag);
     }
   }
 }

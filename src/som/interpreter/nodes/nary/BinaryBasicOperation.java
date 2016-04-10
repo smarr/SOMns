@@ -15,11 +15,11 @@ public abstract class BinaryBasicOperation extends BinaryExpressionNode {
       final SourceSection source) { super(eagerlyWrapped, source); }
 
   @Override
-  protected boolean isTaggedWith(final Class<?> tag) {
+  protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
     if (tag == BasicPrimitiveOperation.class) {
       return true;
     } else {
-      return super.isTaggedWith(tag);
+      return super.isTaggedWithIgnoringEagerness(tag);
     }
   }
 }

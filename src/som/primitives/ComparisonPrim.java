@@ -10,11 +10,11 @@ public abstract class ComparisonPrim extends BinaryBasicOperation {
   protected ComparisonPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
 
   @Override
-  protected boolean isTaggedWith(final Class<?> tag) {
+  protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
     if (tag == OpComparison.class) {
       return true;
     } else {
-      return super.isTaggedWith(tag);
+      return super.isTaggedWithIgnoringEagerness(tag);
     }
   }
 }

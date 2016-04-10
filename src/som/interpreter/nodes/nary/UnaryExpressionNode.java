@@ -10,7 +10,6 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.PreevaluatedExpression;
-import tools.dym.Tags.EagerlyWrapped;
 
 
 @Instrumentable(factory = UnaryExpressionNodeWrapper.class)
@@ -35,12 +34,20 @@ public abstract class UnaryExpressionNode extends ExprWithTagsNode
     this.eagerlyWrapped = false;
   }
 
+  /**
+   * This method is used by eager wrapper or if this node is not eagerly
+   * wrapped.
+   */
+  protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+    return super.isTaggedWith(tag);
+  }
+
   @Override
-  protected boolean isTaggedWith(final Class<?> tag) {
-    if (tag == EagerlyWrapped.class) {
-      return eagerlyWrapped;
+  protected final boolean isTaggedWith(final Class<?> tag) {
+    if (eagerlyWrapped) {
+      return false;
     } else {
-      return super.isTaggedWith(tag);
+      return isTaggedWithIgnoringEagerness(tag);
     }
   }
 

@@ -38,7 +38,6 @@ import tools.dym.Tags.CachedVirtualInvoke;
 import tools.dym.Tags.ClassRead;
 import tools.dym.Tags.ComplexPrimitiveOperation;
 import tools.dym.Tags.ControlFlowCondition;
-import tools.dym.Tags.EagerlyWrapped;
 import tools.dym.Tags.FieldRead;
 import tools.dym.Tags.FieldWrite;
 import tools.dym.Tags.LocalArgRead;
@@ -213,7 +212,6 @@ public class DynamicMetrics extends TruffleInstrument {
       final Instrumenter instrumenter) {
     Builder filters = SourceSectionFilter.newBuilder();
     filters.tagIs(ComplexPrimitiveOperation.class, BasicPrimitiveOperation.class);
-    filters.tagIsNot(EagerlyWrapped.class);
 
     ExecutionEventNodeFactory primExpFactory = (final EventContext ctx) -> {
       int numSubExpr = numberOfChildren(ctx.getInstrumentedNode());
@@ -235,7 +233,6 @@ public class DynamicMetrics extends TruffleInstrument {
       final ExecutionEventNodeFactory factory) {
     Builder filters = SourceSectionFilter.newBuilder();
     filters.tagIs(PrimitiveArgument.class);
-    filters.tagIsNot(EagerlyWrapped.class);
 
     instrumenter.attachFactory(filters.build(), (final EventContext ctx) -> {
       ExecutionEventNode parent = ctx.findDirectParentEventNode(factory);

@@ -20,11 +20,11 @@ public abstract class SizeAndLengthPrim extends UnaryBasicOperation {
   public SizeAndLengthPrim(final SourceSection source) { super(false, source); }
 
   @Override
-  protected boolean isTaggedWith(final Class<?> tag) {
+  protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
     if (tag == OpLength.class) {
       return true;
     } else {
-      return super.isTaggedWith(tag);
+      return super.isTaggedWithIgnoringEagerness(tag);
     }
   }
 

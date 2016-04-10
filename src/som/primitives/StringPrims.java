@@ -22,11 +22,11 @@ public class StringPrims {
     protected ConcatPrim(final SourceSection source) { super(false, source); }
 
     @Override
-    protected boolean isTaggedWith(final Class<?> tag) {
+    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
       if (tag == StringAccess.class) {
         return true;
       } else {
-        return super.isTaggedWith(tag);
+        return super.isTaggedWithIgnoringEagerness(tag);
       }
     }
 
@@ -57,11 +57,11 @@ public class StringPrims {
     public AsSymbolPrim(final SourceSection source) { super(false, source); }
 
     @Override
-    protected boolean isTaggedWith(final Class<?> tag) {
+    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
       if (tag == StringAccess.class) {
         return true;
       } else {
-        return super.isTaggedWith(tag);
+        return super.isTaggedWithIgnoringEagerness(tag);
       }
     }
 
@@ -83,13 +83,13 @@ public class StringPrims {
     public SubstringPrim(final SourceSection source) { super(false, source); }
 
     @Override
-    protected boolean isTaggedWith(final Class<?> tag) {
+    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
       if (tag == StringAccess.class) {
         return true;
       } else if (tag == ComplexPrimitiveOperation.class) {
         return true;
       } else {
-        return super.isTaggedWith(tag);
+        return super.isTaggedWithIgnoringEagerness(tag);
       }
     }
 
