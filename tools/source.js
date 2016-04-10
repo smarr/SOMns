@@ -332,7 +332,7 @@ var breakpoints = {};
 
   Breakpoint.prototype.isEnabled = function () {
     return this.checkbox.prop('checked');
-  }
+  };
 
   function toggleBreakpoint(line, clickedSpan) {
     var sourceId = getActiveSourceId();
@@ -356,11 +356,11 @@ var breakpoints = {};
       showSource(o.sources[sId], o.sections, firstSource);
       sourceObjects[o.sources[sId].name] = o.sources[sId];
       firstSource = false;
-    };
+    }
     
     for (var ssId in o.sections) {
       showSectionData(o.sections[ssId]);
-    };
+    }
 
     showHistogramOfAccess();
 
@@ -511,40 +511,40 @@ var breakpoints = {};
     this.currentSectionId   = null;
     this.currentDomNode     = null;
     this.lastSuspendEventId = null;
-  }
+  };
 
   Debugger.prototype.resume = function() {
     this.socket.send("resume");
-  }
+  };
   Debugger.prototype.pause = function() {
     this.socket.send("pause");
-  }
+  };
   Debugger.prototype.stop = function() {
     this.socket.send("stop");
-  }
+  };
 
   Debugger.prototype.stepInto = function() {
     $(this.currentDomNode).removeClass("DbgCurrentNode");
     this.socket.send(JSON.stringify({
       action:'stepInto',
       suspendEvent: this.lastSuspendEventId}));
-  }
+  };
   Debugger.prototype.stepOver = function() {
     this.socket.send("stepOver");
-  }
+  };
   Debugger.prototype.return = function() {
     this.socket.send("return");
-  }
+  };
 
   Debugger.prototype.updateBreakpoint = function (breakpoint) {
-    dbgLog("updateBreakpoint")
+    dbgLog("updateBreakpoint");
     this.socket.send(JSON.stringify({
       action:     "updateBreakpoint",
       sourceId:   breakpoint.source.id,
       sourceName: breakpoint.source.name,
       line:       breakpoint.line,
       enabled:    breakpoint.isEnabled()}));
-  }
+  };
 
   function initializeDebugger() {
     dbg = new Debugger();
