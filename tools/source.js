@@ -32,6 +32,53 @@ function CountingProfile() {
   this.count = 0;
 }
 
+function Actor(id, name, typeName) {
+  this.id       = id;
+  this.name     = name;
+  this.typeName = typeName;
+}
+
+function MessageHistory(messages, actors) {
+  this.messages = messages; // per actor
+  this.actors   = actors;
+}
+
+function Message(id, sender, receiver) {
+  this.id       = id;
+  this.sender   = sender;
+  this.receiver = receiver;
+}
+
+function createMockupActorHistory() {
+  var actors = {
+    a1 : new Actor("a1", "Master",   "Master"),
+    a2 : new Actor("a2", "Producer", "Producer"),
+    a3 : new Actor("a3", "Sort 1",   "Sort"),
+    a4 : new Actor("a4", "Sort 2",   "Sort"),
+    a5 : new Actor("a5", "Sort 3",   "Sort"),
+    a6 : new Actor("a6", "Sort 4",   "Sort"),
+    a7 : new Actor("a7", "Validator", "Validator")};
+
+  var messages = {};
+  messages.a2 = [new Message("ma2-0", "a1", "a2")];
+
+  function create1000Messages(sender, rcvr) {
+    var messages = [];
+    for (var i = 0; i < 1000; i += 1) {
+      messages.push(new Message("m-" + rcvr + "-" + i, sender, rcvr));
+    }
+    return messages;
+  }
+  messages.a3 = create1000Messages("a2", "a3");
+  messages.a4 = create1000Messages("a3", "a4");
+  messages.a5 = create1000Messages("a4", "a5");
+  messages.a6 = create1000Messages("a5", "a6");
+  messages.a7 = create1000Messages("a6", "a7");
+  messages.a1 = [new Message("final", "a7", "a1")];
+
+  return new MessageHistory(messages, actors);
+}
+
 function countNumberOfLines(str) {
   var cnt = 1;
   for (var i = 0; i < str.length; i++) {
