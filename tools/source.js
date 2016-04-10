@@ -68,10 +68,6 @@ var data = {};
   }
   Annotation.prototype.toString = function() {
     this.before.sort(function (a, b) {
-      if (a.section.id == "ss-34") {  // value <> v
-        var oo = 9;
-      }
-      
       if (a.section.type != b.section.type) {
         if (a.section.type == Begin) {
           return -1;
