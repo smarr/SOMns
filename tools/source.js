@@ -9,7 +9,7 @@ var data = {};
     }
     return cnt;
   }
-  
+
   function loadAndProcessFile(f) {
     var reader = new FileReader();
     reader.onload = (function(theFile) {
@@ -19,10 +19,10 @@ var data = {};
         data[theFile.name] = o;
         displaySources(o);
       }
-      
+
       return receivedFile;
     })(f);
-    
+
     reader.readAsText(f);
   }
   
@@ -38,7 +38,7 @@ var data = {};
       loadAndProcessFile(files[i]);
     }
   }
-  
+
   function sourceToArray(source) {
     var arr = new Array(source.length);
     for (var i = 0; i < source.length; i++) {
@@ -46,7 +46,7 @@ var data = {};
     }
     return arr;
   }
-  
+
   function Begin(section) {
     this.section = section;
     this.type    = Begin;
@@ -86,7 +86,7 @@ var data = {};
         return (a.section.type == Begin) ? -1 : 1;
       }
     });
-    
+
     var result = this.before.join("");
     result += this.char;
     result += this.after.join("");
@@ -99,7 +99,7 @@ var data = {};
     }
     return arr[idx];
   }
-  
+
   function annotateArray(arr, sourceId, sections) {
     for (var sId in sections) {
       var s = sections[sId];
@@ -111,7 +111,7 @@ var data = {};
       }
     }
   }
-  
+
   function arrayToString(arr) {
     var result = "";
     for (var i = 0; i < arr.length; i++) {
@@ -119,14 +119,14 @@ var data = {};
     }
     return result;
   }
-  
+
   function nodeFromTemplate(tplId) {
     var tpl = document.getElementById(tplId);
     var result = tpl.cloneNode(true);
     result.removeAttribute("id");
     return result;
   }
-  
+
   function createLineNumbers(cnt) {
     var result = "<span class='ln' onclick='toggleBreakpoint(1, this);'>1</span>";
     for (var i = 2; i <= cnt; i += 1) {
@@ -157,25 +157,25 @@ var data = {};
     if (first) {
       $(newFileElement).addClass("active");
     }
-    
+
     var files = document.getElementById("files");
     files.appendChild(newFileElement);
   }
-  
+
   function showInvocationProfile(profileData, rootSpan) {
     if (profileData.length < 1) {
       return;
     }
-    
+
     var profiles = nodeFromTemplate("invocation-profiles");
-    
+
     for (var i = 0; i < profileData.length; i++) {
       var profile = nodeFromTemplate("invocation-profile");
       profile.getElementsByClassName("counter")[0].textContent = profileData[i].invocations;
       profile.getElementsByClassName("types")[0].textContent = profileData[i].somTypes.join(", ");
       profiles.appendChild(profile);
     }
-    
+
     var html = $(profiles).html();
 
 //     rootSpan.insertBefore(profiles, rootSpan.firstChild);
@@ -214,7 +214,7 @@ var data = {};
       binSize = Math.ceil(Math.log(maxAccessCount) / numBins),
       bins = new Array(numBins);
     bins.fill(0);
-    
+
     accessProfiles.forEach(function(profileData) {
       var bin = Math.floor(Math.log(profileData.count) / binSize);
       bins[bin] += 1;
@@ -291,7 +291,7 @@ var breakpoints = {};
     return null;
   }
 
-  
+
 
   function Breakpoint(source, line, lineNumSpan) {
     this.source = source;
@@ -299,11 +299,11 @@ var breakpoints = {};
     var bpId = "bp:" + source.id + ":" + line;
     this.entry = nodeFromTemplate("breakpoint-tpl");
     this.entry.setAttribute("id", bpId);
-    
+
     var tds = $(this.entry).find("td");
     tds[0].innerHTML = source.shortName;
     tds[1].innerHTML = line;
-    
+
     this.checkbox = $(this.entry).find("input");
     this.checkbox.attr("id", bpId + "chk");
 
@@ -313,13 +313,13 @@ var breakpoints = {};
     this.lineNumSpan = $(lineNumSpan);
     this.lineNumSpan.addClass("breakpoint-active");
   }
-  
+
   Breakpoint.prototype.toggle = function () {
     var oldState = this.isEnabled();
 
     // flip checkbox in debugger view
     this.checkbox.prop('checked', !oldState);
-    
+
     // flip marker in source view
     if (oldState) {
       $(this.lineNumSpan).removeClass("breakpoint-active");
@@ -347,7 +347,7 @@ var breakpoints = {};
       breakpoints[source][line].toggle();
     }
   }
-  
+
   function displaySources(o) {
     for (var sId in o.sources) {
       if (sourceObjects[o.sources[sId].name]) {
@@ -357,7 +357,7 @@ var breakpoints = {};
       sourceObjects[o.sources[sId].name] = o.sources[sId];
       firstSource = false;
     }
-    
+
     for (var ssId in o.sections) {
       showSectionData(o.sections[ssId]);
     }
@@ -367,7 +367,7 @@ var breakpoints = {};
     // TODO: remove: activate Mandelbrot tab
     $('.nav-tabs a[href="#s-2"]').tab('show');
   }
-  
+
   function showSectionData(section) {
     if (section.data && section.data.methodInvocationProfile) {
       showInvocationProfile(section.data.methodInvocationProfile,
@@ -406,7 +406,7 @@ var breakpoints = {};
     }
     var entry = nodeFromTemplate("stack-frame-tpl");
     entry.setAttribute("id", "frame-" + i);
-    
+
     var tds = $(entry).find("td");
     tds[0].innerHTML = stackEntry;
     list.appendChild(entry);
@@ -484,7 +484,7 @@ var breakpoints = {};
     socket.onmessage = function(e) {
       dbgLog("[WS] msg");
       var data = JSON.parse(e.data);
-      
+
       switch (data.type) {
         case "source":
           displaySources(data);
@@ -502,7 +502,7 @@ var breakpoints = {};
       OPEN = 1,
       CLOSING = 2,
       CLOSED = 3;
-    
+
     if (this.socket.readyState == CLOSED) {
       // reconnect
       this.socket = connect();
@@ -553,19 +553,19 @@ var breakpoints = {};
   function init() {
     // Connect to debugger server
     initializeDebugger();
-    
+
     // Init drag and drop
     var fileDrop = document.getElementById('file-drop');
     fileDrop.addEventListener('dragover', handleDragOver,   false);
     fileDrop.addEventListener('drop',     handleFileSelect, false);
   }
-  
+
   function blobToFile(blob, name) {
     blob.lastModifiedDate = new Date();
     blob.name = name;
     return blob;
   }
-  
+
   function getFileObjectFromPath(pathOrUrl, callback) {
     var request = new XMLHttpRequest();
     request.open("GET", pathOrUrl);
@@ -574,7 +574,7 @@ var breakpoints = {};
       callback(blobToFile(request.response, pathOrUrl));
     });
     request.send();
-  }  
+  }
 
   function loadStandardFile() {
     getFileObjectFromPath("highlight.json",
