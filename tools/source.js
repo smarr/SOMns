@@ -316,16 +316,14 @@ var firstSource = true; // global, to remember whether we showed already sources
 var sourceObjects = {};
 var breakpoints = {};
 
-  function getSource(id) {
-    for (var fname in sourceObjects) {
-      if (sourceObjects[fname].id == id) {
-        return sourceObjects[fname];
-      }
+function getSource(id) {
+  for (var fname in sourceObjects) {
+    if (sourceObjects[fname].id == id) {
+      return sourceObjects[fname];
     }
-    return null;
   }
-
-
+  return null;
+}
 
 function Breakpoint(source, line, lineNumSpan) {
   this.source = source;
