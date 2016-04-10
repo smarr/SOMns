@@ -6,7 +6,7 @@
     <property name="truffle.dir" value="${lib.dir}/truffle" />
     <property name="truffle.build" value="${truffle.dir}/mxbuild/dists" />
     <property name="junit.version" value="4.12" />
-    <property name="checkstyle.version" value="6.15" />
+    <property name="checkstyle.version" value="6.17" />
 
     <property name="build.dir"   value="build"/>
     <property name="classes.dir" value="${build.dir}/classes"/>
@@ -76,7 +76,7 @@
     </target>
 
     <target name="checkstyle-jar">
-        <get src="http://netcologne.dl.sourceforge.net/project/checkstyle/checkstyle/${checkstyle.version}/checkstyle-${checkstyle.version}-all.jar"
+        <get src="http://iweb.dl.sourceforge.net/project/checkstyle/checkstyle/${checkstyle.version}/checkstyle-${checkstyle.version}-all.jar"
             usetimestamp="true"
             dest="${lib.dir}/checkstyle-${checkstyle.version}-all.jar" />
     </target>
