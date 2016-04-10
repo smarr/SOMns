@@ -578,6 +578,7 @@ Debugger.prototype.updateBreakpoint = function (breakpoint) {
     enabled:    breakpoint.isEnabled()}));
 };
 
+var dbg;
 function initializeDebugger() {
   dbg = new Debugger();
 }
