@@ -221,7 +221,7 @@ public final class SystemPrims {
     }
   }
 
-  {
+  static {
     startMicroTime = System.nanoTime() / 1000L;
     startTime = startMicroTime / 1000L;
   }
