@@ -40,7 +40,7 @@ var data = {};
   }
   
   function sourceToArray(source) {
-    arr = new Array(source.length);
+    var arr = new Array(source.length);
     for (var i = 0; i < source.length; i++) {
       arr[i] = source[i];
     }
@@ -139,7 +139,7 @@ var data = {};
     var annotationArray = sourceToArray(s.sourceText);
     annotateArray(annotationArray, s.id, sections);
 
-    tabListEntry = nodeFromTemplate("tab-list-entry");
+    var tabListEntry = nodeFromTemplate("tab-list-entry");
     if (first) {
       $(tabListEntry).addClass("active");
     }
@@ -149,7 +149,7 @@ var data = {};
     $("#tabs").append(tabListEntry);
 
 
-    newFileElement = nodeFromTemplate("file");
+    var newFileElement = nodeFromTemplate("file");
     newFileElement.setAttribute("id", s.id);
     newFileElement.getElementsByClassName("line-numbers")[0].innerHTML = createLineNumbers(countNumberOfLines(s.sourceText));
     newFileElement.getElementsByClassName("source-file")[0].innerHTML = arrayToString(annotationArray);
@@ -158,7 +158,7 @@ var data = {};
       $(newFileElement).addClass("active");
     }
     
-    files = document.getElementById("files");
+    var files = document.getElementById("files");
     files.appendChild(newFileElement);
   }
   
@@ -211,7 +211,7 @@ var data = {};
 
   function showHistogramOfAccess() {
     var numBins = 6,
-      binSize = Math.ceil(Math.log(maxAccessCount) / numBins)
+      binSize = Math.ceil(Math.log(maxAccessCount) / numBins),
       bins = new Array(numBins);
     bins.fill(0);
     
@@ -283,7 +283,7 @@ var sourceObjects = {};
 var breakpoints = {};
 
   function getSource(id) {
-    for (fname in sourceObjects) {
+    for (var fname in sourceObjects) {
       if (sourceObjects[fname].id == id) {
         return sourceObjects[fname];
       }
