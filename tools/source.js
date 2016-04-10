@@ -2,6 +2,36 @@
 
 var data = {};
 
+/**
+ * Dummy definition for IDE support. These objects are
+ * generally read from the web socket connection.
+ * @constructor
+ */
+function SourceSection() {
+  this.firstIndex = 0;
+  this.sourceText = "";
+  this.shortName  = "";
+}
+
+/**
+ * Dummy definition for IDE support. These objects are
+ * generally read from the web socket connection.
+ * @constructor
+ */
+function InvocationProfile() {
+  this.invocations = 0;
+  this.somTypes = [];
+}
+
+/**
+ * Dummy definition for IDE support. These objects are
+ * generally read from the web socket connection.
+ * @constructor
+ */
+function CountingProfile() {
+  this.count = 0;
+}
+
 function countNumberOfLines(str) {
   var cnt = 1;
   for (var i = 0; i < str.length; i++) {
