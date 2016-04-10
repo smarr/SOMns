@@ -188,7 +188,7 @@ var data = {};
     $(rootSpan).popover();
   }
 
-  var accessProfiles = new Array(),
+  var accessProfiles = [],
     maxAccessCount = -1;
 
   function showAccessProfile(profileData, rootSpan) {
