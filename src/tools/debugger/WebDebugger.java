@@ -353,6 +353,7 @@ public class WebDebugger extends TruffleInstrument {
           return;
         case "/favicon.ico":
           exchange.sendResponseHeaders(404, 0);
+          exchange.close();
           return;
       }
 
