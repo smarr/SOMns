@@ -337,17 +337,19 @@ public class WebDebugger extends TruffleInstrument {
     @Override
     public void handle(final HttpExchange exchange) throws IOException {
       log("[REQ] " + exchange.getRequestURI().toString());
-      switch (exchange.getRequestURI().toString()) {
-        case "/":
+      String rootFolder = "/Users/smarr/Projects/SOM/SOMns/tools";
+      String requestedFile = exchange.getRequestURI().toString();
+      if (requestedFile.equals("/")) {
+        requestedFile = "/index.html";
+      }
+
+      switch (requestedFile) {
         case "/index.html":
-          File f = new File("/Users/smarr/Projects/SOM/SOMns/tools/index.html");
+        case "/source.js":
+        case "/visualizations.js":
+          File f = new File(rootFolder + requestedFile);
           exchange.sendResponseHeaders(200, f.length());
           copy(f, exchange.getResponseBody());
-          return;
-        case "/source.js":
-          File js = new File("/Users/smarr/Projects/SOM/SOMns/tools/source.js");
-          exchange.sendResponseHeaders(200, js.length());
-          copy(js, exchange.getResponseBody());
           return;
         case "/favicon.ico":
           exchange.sendResponseHeaders(404, 0);
