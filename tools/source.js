@@ -390,8 +390,8 @@ var breakpoints = {};
   }
 
   function dbgLog(msg) {
-    var tzoffset = (new Date()).getTimezoneOffset() * 60000; // offset in milliseconds
-    var localISOTime = (new Date(Date.now() - tzoffset)).toISOString().slice(0,-1);
+    var tzOffset = (new Date()).getTimezoneOffset() * 60000; // offset in milliseconds
+    var localISOTime = (new Date(Date.now() - tzOffset)).toISOString().slice(0,-1);
 
     $("#debugger-log").html(localISOTime + ": " + msg + "<br/>" + $("#debugger-log").html());
   }
