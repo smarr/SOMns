@@ -76,7 +76,9 @@ public final class JsonWriter {
     builder.add("description", ss.getShortDescription());
     builder.add("sourceId", sourceToId.get(ss.getSource()));
 
+    // Checkstyle: stop
     System.out.println("TODO: add tags!");
+    // Checkstyle: resume
 //    if (ss.getTags() != null && ss.getTags().length > 0) {
 //      JSONArrayBuilder arr = JSONHelper.array();
 //      for (String tag : ss.getTags()) {
