@@ -160,9 +160,6 @@ public final class MixinDefinition {
   @ExplodeLoop
   public static boolean sameSuperAndMixins(final Object superclassAndMixins, final Object cached) {
     if (!(cached instanceof Object[])) {
-      if (!(cached instanceof SClass)) {
-        @SuppressWarnings("unused") int i = 0;
-      }
       assert cached instanceof SClass;
       assert superclassAndMixins instanceof SClass;
 
