@@ -224,14 +224,19 @@ public class WebDebugger extends TruffleInstrument {
     ensureConnectionIsAvailable();
 
     client.send(builder.toString());
-    System.out.println(builder.toString());
 
     try {
       future.get();
     } catch (InterruptedException | ExecutionException e1) {
-      System.out.println("[DEBUGGER] Future failed:");
+      log("[DEBUGGER] Future failed:");
       e1.printStackTrace();
     }
+  }
+
+  private static void log(final String str) {
+    // Checkstyle: stop
+    System.out.println(str);
+    // Checkstyle: resume
   }
 
   private static JSONObjectBuilder createTopFrameJson(final MaterializedFrame frame, final RootNode root) {
@@ -331,7 +336,7 @@ public class WebDebugger extends TruffleInstrument {
 
     @Override
     public void handle(final HttpExchange exchange) throws IOException {
-      System.out.println("[REQ] " + exchange.getRequestURI().toString());
+      log("[REQ] " + exchange.getRequestURI().toString());
       switch (exchange.getRequestURI().toString()) {
         case "/":
         case "/index.html":
@@ -349,7 +354,7 @@ public class WebDebugger extends TruffleInstrument {
           return;
       }
 
-      System.out.println("[REQ] not yet implemented");
+      log("[REQ] not yet implemented");
       throw new NotYetImplementedException();
     }
 
@@ -398,7 +403,7 @@ public class WebDebugger extends TruffleInstrument {
     @Override
     public void onClose(final WebSocket conn, final int code, final String reason,
         final boolean remote) {
-      System.out.println("onClose: code=" + code + " " + reason);
+      log("onClose: code=" + code + " " + reason);
     }
 
     @Override
@@ -407,12 +412,12 @@ public class WebDebugger extends TruffleInstrument {
 
       switch(msg.getString("action", null)) {
         case "updateBreakpoint":
-          System.out.println("UPDATE BREAKPOINT");
+          log("UPDATE BREAKPOINT");
           String sourceId   = msg.getString("sourceId", null);
           String sourceName = msg.getString("sourceName", null);
           int lineNumber    = msg.getInt("line", -1);
           boolean enabled   = msg.getBoolean("enabled", false);
-          System.out.println(sourceId + ":" + lineNumber + " " + enabled);
+          log(sourceId + ":" + lineNumber + " " + enabled);
 
           Source source = idSources.get(sourceId);
           LineLocation line = source.createLineLocation(lineNumber);
@@ -422,7 +427,7 @@ public class WebDebugger extends TruffleInstrument {
 
           if (enabled && bp == null) {
             try {
-              System.out.println("SetLineBreakpoint line:" + line);
+              log("SetLineBreakpoint line:" + line);
               truffleDebugger.setLineBreakpoint(0, line, false);
             } catch (IOException e) {
               e.printStackTrace();
@@ -440,12 +445,12 @@ public class WebDebugger extends TruffleInstrument {
           return;
       }
 
-      System.out.println("not supported: onMessage: " + message);
+      log("not supported: onMessage: " + message);
     }
 
     @Override
     public void onError(final WebSocket conn, final Exception ex) {
-      System.out.println("error:");
+      log("error:");
       ex.printStackTrace();
     }
   }
