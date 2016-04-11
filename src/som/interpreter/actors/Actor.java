@@ -127,7 +127,6 @@ public class Actor {
   private static final class ExecAllMessages implements Runnable {
     private final Actor actor;
     private ArrayList<EventualMessage> current;
-    private ArrayList<EventualMessage> emptyUnused;
 
     ExecAllMessages(final Actor actor) {
       this.actor = actor;
@@ -137,11 +136,6 @@ public class Actor {
     public void run() {
       ActorProcessingThread t = (ActorProcessingThread) Thread.currentThread();
       t.currentlyExecutingActor = actor;
-
-      // grab current mailbox from actor
-      if (emptyUnused == null) {
-        emptyUnused = new ArrayList<>();
-      }
 
       while (getCurrentMessagesOrCompleteExecution()) {
         processCurrentMessages();
@@ -157,8 +151,6 @@ public class Actor {
         actor.logMessageBeingExecuted(msg);
         msg.execute();
       }
-      current.clear();
-      emptyUnused = current;
     }
 
     private boolean getCurrentMessagesOrCompleteExecution() {
@@ -170,7 +162,7 @@ public class Actor {
           actor.isExecuting = false;
           return false;
         }
-        actor.mailbox = emptyUnused;
+        actor.mailbox = new ArrayList<>(actor.mailbox.size());
       }
       return true;
     }
