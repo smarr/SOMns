@@ -126,6 +126,8 @@ public final class EagerTernaryPrimitiveNode extends EagerPrimitive {
   protected void onReplace(final Node newNode, final CharSequence reason) {
     if (newNode instanceof ExprWithTagsNode) {
       ((ExprWithTagsNode) newNode).tagMark = primitive.tagMark;
+    } else if (newNode instanceof WrapperNode) {
+      assert ((WrapperNode) newNode).getDelegateNode() == this : "Wrapping should not also do specialization or other changes, I think";
     } else {
       throw new NotYetImplementedException();
     }
