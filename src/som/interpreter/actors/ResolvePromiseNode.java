@@ -1,11 +1,9 @@
 package som.interpreter.actors;
 
-import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.source.SourceSection;
 
-import som.VM;
 import som.interpreter.actors.SPromise.SResolver;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.primitives.Primitive;
@@ -18,21 +16,12 @@ public abstract class ResolvePromiseNode extends BinaryComplexOperation {
 
   public abstract Object executeEvaluated(final SResolver receiver, Object argument);
 
-  // The DSL should check this guard only on node creation, and other wise turn it into an assertion
-  protected static boolean hackGuardToTellTheVMThatWeExecuteMessages() {
-    if (CompilerDirectives.inInterpreter()) {
-      // we need to set this flag once, this should be reasonably OK
-      VM.hasSendMessages();
-    }
-    return true;
-  }
-
-  @Specialization(guards = {"hackGuardToTellTheVMThatWeExecuteMessages()", "resolver.getPromise() == result"})
+  @Specialization(guards = {"resolver.getPromise() == result"})
   public SResolver selfResolution(final SResolver resolver, final SPromise result) {
     return resolver;
   }
 
-  @Specialization(guards = {"hackGuardToTellTheVMThatWeExecuteMessages()", "resolver.getPromise() != result"})
+  @Specialization(guards = {"resolver.getPromise() != result"})
   public SResolver chainedPromise(final SResolver resolver, final SPromise result) {
     assert resolver.assertNotCompleted();
     SPromise promise = resolver.getPromise();
@@ -48,7 +37,7 @@ public abstract class ResolvePromiseNode extends BinaryComplexOperation {
 
   @Child protected WrapReferenceNode wrapper = WrapReferenceNodeGen.create();
 
-  @Specialization(guards = {"hackGuardToTellTheVMThatWeExecuteMessages()", "notAPromise(result)"})
+  @Specialization(guards = {"notAPromise(result)"})
   public SResolver normalResolution(final SResolver resolver, final Object result) {
     SPromise promise = resolver.getPromise();
 

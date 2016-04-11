@@ -2,6 +2,7 @@ package som;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
@@ -55,9 +56,8 @@ public final class VM {
 
   private int lastExitCode = 0;
   private volatile boolean shouldExit = false;
+  private volatile CompletableFuture<Object> vmMainCompletion = null;
   private final VMOptions options;
-  private boolean usesActors;
-  private Thread mainThread;
 
   @CompilationFinal
   private SObjectWithoutFields vmMirror;
@@ -145,20 +145,16 @@ public final class VM {
     WebDebugger.reportSuspendedEvent(e);
   }
 
+  public static void setVMMainCompletion(final CompletableFuture<Object> future) {
+    vm.vmMainCompletion = future;
+  }
+
   public static boolean shouldExit() {
     return vm.shouldExit;
   }
 
   public int lastExitCode() {
     return lastExitCode;
-  }
-
-  public static boolean isUsingActors() {
-    return vm.usesActors;
-  }
-
-  public static void hasSendMessages() {
-    vm.usesActors = true;
   }
 
   public static String[] getArguments() {
@@ -179,6 +175,8 @@ public final class VM {
       lastExitCode = errorCode;
       shouldExit = true;
     }
+
+    vmMainCompletion.complete(errorCode);
   }
 
   public static void errorExit(final String message) {
@@ -226,19 +224,11 @@ public final class VM {
     return vm.avoidExitForTesting;
   }
 
-  public static void setMainThread(final Thread t) {
-    vm.mainThread = t;
-  }
-
-  public static Thread getMainThread() {
-    return vm.mainThread;
-  }
-
   public void initalize() {
     assert vmMirror  == null : "VM seems to be initialized already";
     assert mainActor == null : "VM seems to be initialized already";
 
-    mainActor = Actor.initializeActorSystem();
+    mainActor = Actor.createActor();
     vmMirror  = objectSystem.initialize();
   }
 

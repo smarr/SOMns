@@ -3,6 +3,11 @@ package som.interpreter.actors;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.RootCallTarget;
+import com.sun.istack.internal.NotNull;
+
 import som.VM;
 import som.interpreter.actors.EventualMessage.PromiseCallbackMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
@@ -11,11 +16,6 @@ import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithClass;
-
-import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.RootCallTarget;
-import com.sun.istack.internal.NotNull;
 
 
 public class SPromise extends SObjectWithClass {
@@ -226,7 +226,7 @@ public class SPromise extends SObjectWithClass {
   }
 
   /** Internal Helper, only to be used properly synchronized. */
-  final boolean isErroredUnsync() {
+  public final boolean isErroredUnsync() {
     return resolutionState == Resolution.ERRORNOUS;
   }
 

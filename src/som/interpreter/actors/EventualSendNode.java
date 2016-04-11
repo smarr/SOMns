@@ -1,8 +1,21 @@
 package som.interpreter.actors;
 
-import som.VM;
+import java.util.concurrent.CompletableFuture;
+
+import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.RootCallTarget;
+import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.NodeChild;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
+import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.interpreter.actors.EventualMessage.DirectMessage;
 import som.interpreter.actors.EventualMessage.PromiseSendMessage;
+import som.interpreter.actors.ReceivedMessage.ReceivedMessageForVMMain;
 import som.interpreter.actors.RegisterOnPromiseNode.RegisterWhenResolved;
 import som.interpreter.actors.SPromise.SResolver;
 import som.interpreter.nodes.ExpressionNode;
@@ -12,17 +25,6 @@ import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.vm.constants.Nil;
 import som.vmobjects.SSymbol;
-
-import com.oracle.truffle.api.CompilerAsserts;
-import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.RootCallTarget;
-import com.oracle.truffle.api.Truffle;
-import com.oracle.truffle.api.dsl.Cached;
-import com.oracle.truffle.api.dsl.NodeChild;
-import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.nodes.ExplodeLoop;
-import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.source.SourceSection;
 
 
 @NodeChild(value = "arguments", type = InternalObjectArrayNode.class)
@@ -50,20 +52,21 @@ public abstract class EventualSendNode extends ExprWithTagsNode {
     return Truffle.getRuntime().createCallTarget(receivedMsg);
   }
 
+  public static RootCallTarget createOnReceiveCallTargetForVMMain(final SSymbol selector,
+      final int numArgs, final SourceSection source, final CompletableFuture<Object> future) {
+
+    AbstractMessageSendNode invoke = MessageSendNode.createGeneric(selector, null, source);
+    ReceivedMessage receivedMsg = new ReceivedMessageForVMMain(invoke, selector, future);
+
+    return Truffle.getRuntime().createCallTarget(receivedMsg);
+  }
+
   private static WrapReferenceNode[] createArgWrapper(final int numArgs) {
     WrapReferenceNode[] wrapper = new WrapReferenceNode[numArgs];
     for (int i = 0; i < numArgs; i++) {
       wrapper[i] = WrapReferenceNodeGen.create();
     }
     return wrapper;
-  }
-
-  protected static final boolean markVmHasSendMessage() {
-    // no arguments, should be compiled to assertion and only executed once
-    if (CompilerDirectives.inInterpreter()) {
-      VM.hasSendMessages();
-    }
-    return true;
   }
 
   protected static final boolean isFarRefRcvr(final Object[] args) {
@@ -88,7 +91,7 @@ public abstract class EventualSendNode extends ExprWithTagsNode {
     return true;
   }
 
-  @Specialization(guards = {"isResultUsed()", "markVmHasSendMessage()", "isFarRefRcvr(args)"})
+  @Specialization(guards = {"isResultUsed()", "isFarRefRcvr(args)"})
   public final SPromise toFarRefWithResultPromise(final Object[] args) {
     Actor owner = EventualMessage.getActorCurrentMessageIsExecutionOn();
 
@@ -100,7 +103,7 @@ public abstract class EventualSendNode extends ExprWithTagsNode {
     return result;
   }
 
-  @Specialization(guards = {"!isResultUsed()", "markVmHasSendMessage()", "isFarRefRcvr(args)"})
+  @Specialization(guards = {"!isResultUsed()", "isFarRefRcvr(args)"})
   public final Object toFarRefWithoutResultPromise(final Object[] args) {
     Actor owner = EventualMessage.getActorCurrentMessageIsExecutionOn();
 

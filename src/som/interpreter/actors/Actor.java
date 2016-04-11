@@ -6,6 +6,8 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
 import java.util.concurrent.ForkJoinWorkerThread;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+
 import som.VM;
 import som.VmSettings;
 import som.primitives.ObjectPrims.IsValue;
@@ -13,8 +15,6 @@ import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray.STransferArray;
 import som.vmobjects.SObject;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
-
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
 
 /**
@@ -36,23 +36,6 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
  */
 public class Actor {
 
-  /**
-   * @return main actor
-   */
-  public static Actor initializeActorSystem() {
-    Actor mainActor = createActor(true);
-    EventualMessage.setMainActor(mainActor);
-    return mainActor;
-  }
-
-  private static Actor createActor(final boolean isMainActor) {
-    if (VM.DebugMode) {
-      return new DebugActor(isMainActor);
-    } else {
-      return new Actor(isMainActor);
-    }
-  }
-
   public static Actor createActor() {
     if (VM.DebugMode) {
       return new DebugActor();
@@ -72,15 +55,6 @@ public class Actor {
 
   protected Actor() {
     isExecuting = false;
-    executor = new ExecAllMessages(this);
-  }
-
-  /**
-   * This constructor should only be used for the main actor!
-   */
-  protected Actor(final boolean isMainActor) {
-    assert isMainActor;
-    isExecuting = true;
     executor = new ExecAllMessages(this);
   }
 
@@ -143,20 +117,6 @@ public class Actor {
     if (!isExecuting) {
       isExecuting = true;
       executeOnPool();
-    }
-  }
-
-  /**
-   * WARNING: This method should only be called from the main thread.
-   * It expects the main thread to stop executing the actor's messages and
-   * will schedule all coming messages on the normal pool.
-   */
-  public final synchronized void relinuqishMainThreadAndMoveExecutionToPool() {
-    assert isExecuting;
-    if (mailbox.size() > 0) {
-      executeOnPool();
-    } else {
-      isExecuting = false;
     }
   }
 
@@ -264,15 +224,6 @@ public class Actor {
     public DebugActor() {
       super();
       isMain = false;
-      synchronized (actors) {
-        actors.add(this);
-        id = actors.size() - 1;
-      }
-    }
-
-    public DebugActor(final boolean isMainActor) {
-      super(isMainActor);
-      this.isMain = isMainActor;
       synchronized (actors) {
         actors.add(this);
         id = actors.size() - 1;

@@ -1,17 +1,19 @@
 package som.interpreter.actors;
 
-import som.interpreter.SArguments;
-import som.interpreter.SomLanguage;
-import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
-import som.vmobjects.SSymbol;
+import java.util.concurrent.CompletableFuture;
 
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 
+import som.interpreter.SArguments;
+import som.interpreter.SomLanguage;
+import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
+import som.vmobjects.SSymbol;
 
-public final class ReceivedMessage extends ReceivedRootNode {
+
+public class ReceivedMessage extends ReceivedRootNode {
 
   @Child protected AbstractMessageSendNode onReceive;
 
@@ -37,6 +39,25 @@ public final class ReceivedMessage extends ReceivedRootNode {
   @Override
   public String toString() {
     return "RcvdMsg(" + selector.toString() + ")";
+  }
+
+  public static final class ReceivedMessageForVMMain extends ReceivedMessage {
+    private final CompletableFuture<Object> future;
+
+    public ReceivedMessageForVMMain(final AbstractMessageSendNode onReceive,
+        final SSymbol selector, final CompletableFuture<Object> future) {
+      super(onReceive, selector);
+      this.future = future;
+    }
+
+    @Override
+    public Object execute(final VirtualFrame frame) {
+      EventualMessage msg = (EventualMessage) SArguments.rcvr(frame);
+
+      Object result = onReceive.doPreEvaluated(frame, msg.args);
+      future.complete(result);
+      return result;
+    }
   }
 
   public static final class ReceivedCallback extends ReceivedRootNode {

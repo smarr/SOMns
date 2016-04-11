@@ -2,6 +2,8 @@ package som.interpreter.actors;
 
 import java.util.Arrays;
 
+import com.oracle.truffle.api.RootCallTarget;
+
 import som.VM;
 import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.interpreter.actors.ReceivedMessage.ReceivedCallback;
@@ -9,8 +11,6 @@ import som.interpreter.actors.SPromise.SResolver;
 import som.vm.Symbols;
 import som.vmobjects.SBlock;
 import som.vmobjects.SSymbol;
-
-import com.oracle.truffle.api.RootCallTarget;
 
 
 public abstract class EventualMessage {
@@ -237,15 +237,6 @@ public abstract class EventualMessage {
 
   public static Actor getActorCurrentMessageIsExecutionOn() {
     Thread t = Thread.currentThread();
-    if (t instanceof ActorProcessingThread) {
-      return ((ActorProcessingThread) t).currentlyExecutingActor;
-    }
-    return mainActor;
+    return ((ActorProcessingThread) t).currentlyExecutingActor;
   }
-
-  public static void setMainActor(final Actor actor) {
-    mainActor = actor;
-  }
-
-  private static Actor mainActor;
 }

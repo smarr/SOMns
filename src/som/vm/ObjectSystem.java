@@ -9,6 +9,15 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+
+import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.dsl.GeneratedBy;
+import com.oracle.truffle.api.dsl.NodeFactory;
+import com.oracle.truffle.api.source.Source;
+import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
 import som.compiler.AccessModifier;
@@ -20,7 +29,10 @@ import som.compiler.SourcecodeCompiler;
 import som.interpreter.LexicalScope.MixinScope;
 import som.interpreter.Primitive;
 import som.interpreter.actors.Actor;
+import som.interpreter.actors.EventualMessage.DirectMessage;
+import som.interpreter.actors.EventualSendNode;
 import som.interpreter.actors.ResolvePromiseNodeFactory;
+import som.interpreter.actors.SPromise;
 import som.interpreter.nodes.ArgumentReadNode.LocalArgumentReadNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
@@ -77,13 +89,6 @@ import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import som.vmobjects.SSymbol;
-
-import com.oracle.truffle.api.CompilerAsserts;
-import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
-import com.oracle.truffle.api.dsl.GeneratedBy;
-import com.oracle.truffle.api.dsl.NodeFactory;
-import com.oracle.truffle.api.source.Source;
-import com.oracle.truffle.api.source.SourceSection;
 
 
 public final class ObjectSystem {
@@ -480,30 +485,69 @@ Classes.transferClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInst
     slot.setValueDuringBootstrap(obj, value);
   }
 
-  public void executeApplication(final SObjectWithoutFields vmMirror, final Actor mainActor) {
-    Object platform = platformModule.instantiateObject(platformClass, vmMirror);
-    SInvokable disp = (SInvokable) platformClass.lookupMessage(
-        Symbols.symbolFor("start"), AccessModifier.PUBLIC);
-    Object returnCode = disp.invoke(platform);
+  private static void handlePromiseResult(final SPromise promise) {
+    int emptyFJPool = 0;
+    while (emptyFJPool < 60) {
+      if (promise.isCompleted() || VM.shouldExit()) {
+        if (VM.isAvoidingExit()) {
+          return;
+        }
 
-    if (VM.isUsingActors()) {
-      mainActor.relinuqishMainThreadAndMoveExecutionToPool();
-      VM.setMainThread(Thread.currentThread());
-
-      int emptyFJPool = 0;
-      while (emptyFJPool < 30 && !VM.shouldExit()) {
-        try { Thread.sleep(1000); } catch (InterruptedException e) { }
-        if (Actor.isPoolIdle()) {
-          emptyFJPool++;
+        if (promise.isErroredUnsync()) {
+          System.exit(1);
+        } else {
+          System.exit(0);
         }
       }
 
-      if (!VM.isAvoidingExit() || !VM.shouldExit()) {
-        VM.errorExit("This should never happen. The VM should not return under those conditions.");
-        System.exit(1); // just in case it was disable for VM.errorExit
+      try { Thread.sleep(1000); } catch (InterruptedException e) { }
+      if (Actor.isPoolIdle()) {
+        emptyFJPool++;
+      } else {
+        emptyFJPool = 0;
       }
-    } else if (!VM.isAvoidingExit()) {
-      System.exit((int) (long) returnCode);
+    }
+
+    assert !VM.shouldExit();
+    VM.errorExit("This should never happen. The VM should not return under those conditions.");
+    System.exit(1); // just in case it was disable for VM.errorExit
+  }
+
+  public void executeApplication(final SObjectWithoutFields vmMirror, final Actor mainActor) {
+    Object platform = platformModule.instantiateObject(platformClass, vmMirror);
+
+    SourceSection source = Source.fromNamedText("",
+        "ObjectSystem.executeApplication").createSection("start", 1);
+    SSymbol start = Symbols.symbolFor("start");
+
+    CompletableFuture<Object> future = new CompletableFuture<>();
+    VM.setVMMainCompletion(future);
+
+    DirectMessage msg = new DirectMessage(mainActor, start,
+        new Object[] {platform}, mainActor,
+        null, EventualSendNode.createOnReceiveCallTargetForVMMain(start, 1, source, future));
+    mainActor.send(msg);
+
+    try {
+      Object result = future.get();
+
+      if (result instanceof Long || result instanceof Integer) {
+        int exitCode = (result instanceof Long) ? (int) (long) result : (int) result;
+        if (VM.isAvoidingExit()) {
+          return;
+        } else {
+          System.exit(exitCode);
+        }
+      } else if (result instanceof SPromise) {
+        handlePromiseResult((SPromise) result);
+        return;
+      } else {
+        throw new NotYetImplementedException();
+      }
+    } catch (InterruptedException | ExecutionException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+      System.exit(0);
     }
   }
 
