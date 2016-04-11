@@ -1,6 +1,6 @@
 'use strict';
 
-var path, circle, nodes, links, lastNodeId, force, colors;
+var path, circle, nodes, links, force, colors;
 
 function start() {
   // set up SVG for D3
@@ -16,49 +16,6 @@ function start() {
 
   var msgHist = createMockupActorHistory();
 
-  /*
-   function createMockupActorHistory() {
-   var actors = {
-   a1 : new Actor("a1", "Master",   "Master"),
-   a2 : new Actor("a2", "Producer", "Producer"),
-   a3 : new Actor("a3", "Sort 1",   "Sort"),
-   a4 : new Actor("a4", "Sort 2",   "Sort"),
-   a5 : new Actor("a5", "Sort 3",   "Sort"),
-   a6 : new Actor("a6", "Sort 4",   "Sort"),
-   a7 : new Actor("a7", "Validator", "Validator")};
-
-   var messages = {};
-   messages.a2 = [new Message("ma2-0", "a1", "a2")];
-
-   function create1000Messages(sender, rcvr) {
-   var messages = [];
-   for (var i = 0; i < 1000; i += 1) {
-   messages.push(new Message("m-" + rcvr + "-" + i, sender, rcvr));
-   }
-   return messages;
-   }
-   messages.a3 = create1000Messages("a2", "a3");
-   messages.a4 = create1000Messages("a3", "a4");
-   messages.a5 = create1000Messages("a4", "a5");
-   messages.a6 = create1000Messages("a5", "a6");
-   messages.a7 = create1000Messages("a6", "a7");
-   messages.a1 = [new Message("final", "a7", "a1")];
-
-   return new MessageHistory(messages, actors);
-   }
-   */
-
-  // function Message(id, sender, receiver) {
-  //   this.id       = id;
-  //   this.sender   = sender;
-  //   this.receiver = receiver;
-  // }
-  // function Actor(id, name, typeName) {
-  //   this.id       = id;
-  //   this.name     = name;
-  //   this.typeName = typeName;
-  // }
-
   function hasSelfSends(actorId, messages) {
     for (var i in messages) {
       if (messages[i].sender == "actorId") {
@@ -71,56 +28,77 @@ function start() {
   var horizontalDistance = 100,
     verticalDistance = 100;
 
+  function hashAtInc(hash, idx, inc) {
+    if (hash.hasOwnProperty(idx)) {
+      hash[idx] += inc;
+    } else {
+      hash[idx] = inc;
+    }
+  }
+
   function determineNodes(msgHist) {
     var actorsPerType = {};
-    var nodes = [];
+    var nodes = {};
     for (var aId in msgHist.actors) {
       var actor = msgHist.actors[aId];
-      if (actorsPerType.hasOwnProperty(actor.typeName)) {
-        actorsPerType[actor.typeName] += 1;
-      } else {
-        actorsPerType[actor.typeName] = 0;
-      }
+      hashAtInc(actorsPerType, actor.typeName, 1);
 
       var selfSends = hasSelfSends(aId, msgHist.messages);
       var node = {
-        id: actor.name,
+        id: actor.id,
+        name: actor.name,
         reflexive: selfSends,
         x: horizontalDistance + horizontalDistance * actorsPerType[actor.typeName],
         y: verticalDistance * Object.keys(actorsPerType).length,
         type: actor.typeName
       };
 
-      nodes.push(node);
+      nodes[aId] = node;
     }
     return nodes;
+  }
+
+  function mapToArray(map) {
+    var arr = [];
+    for (var i in map) {
+      arr.push(map[i]);
+    }
+    return arr;
   }
 
   // set up initial nodes and links
   //  - nodes are known by 'id', not by index in array.
   //  - reflexive edges are indicated on the node (as a bold black circle).
   //  - links are always source < target; edge directions are set by 'left' and 'right'.
-  nodes = determineNodes(msgHist);
+  var nodeMap = determineNodes(msgHist);
+  nodes = mapToArray(nodeMap);
 
-  // nodes = [
-  //   {id: "Master", reflexive: false,     x: 100, y: 0,   type: "Master"},   // 0
-  //   {id: "Producer", reflexive: false,   x: 100, y: 100, type: "Producer"}, // 1
-  //   {id: "Sort 1", reflexive: false,     x: 100, y: 200, type: "Sort"}, // 2
-  //   {id: "Sort 2", reflexive: false,     x: 200, y: 200, type: "Sort"}, // 3
-  //   {id: "Sort 3", reflexive: false,     x: 300, y: 200, type: "Sort"},
-  //   {id: "Sort 4", reflexive: false,     x: 400, y: 200, type: "Sort"},
-  //   {id: "Validator", reflexive: false,  x: 100, y: 300, type: "Validator"},
-  // ];
-  lastNodeId = 5;
-  links = [
-    {source: nodes[0], target: nodes[1], left: false, right: true, messageCount: 1 },
-    {source: nodes[1], target: nodes[2], left: false, right: true, messageCount: 1000 },
-    {source: nodes[2], target: nodes[3], left: false, right: true, messageCount: 1000 },
-    {source: nodes[3], target: nodes[4], left: false, right: true, messageCount: 1000 },
-    {source: nodes[4], target: nodes[5], left: false, right: true, messageCount: 1000 },
-    {source: nodes[5], target: nodes[6], left: false, right: true, messageCount: 1000 },
-    {source: nodes[6], target: nodes[0], left: false, right: true, messageCount: 1 },
-  ];
+  function determineLinks(msgHist, nodeMap) {
+    var msgSends = {};
+
+    for (var aId in msgHist.messages) {
+      for (var msg of msgHist.messages[aId]) {
+        if (!msgSends.hasOwnProperty(msg.sender)) {
+          msgSends[msg.sender] = {};
+        }
+        hashAtInc(msgSends[msg.sender], msg.receiver, 1);
+      }
+    }
+
+    var links = [];
+    for (var sendId in msgSends) {
+      for (var rcvrId in msgSends[sendId]) {
+        links.push({
+          source: nodeMap[sendId],
+          target: nodeMap[rcvrId],
+          left: false, right: true,
+          messageCount: msgSends[sendId][rcvrId]
+        });
+      }
+    }
+    return links;
+  }
+  links = determineLinks(msgHist, nodeMap);
 
   // init D3 force layout
   force = d3.layout.force()
@@ -251,7 +229,7 @@ function restart() {
     .attr('x', 8)
     .attr('y', 4)
     .attr('class', 'id')
-    .text(function(d) { return d.id; });
+    .text(function(d) { return d.name; });
 
   // remove old nodes
   circle.exit().remove();
