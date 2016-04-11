@@ -177,11 +177,10 @@ class AsyncHarness usingPlatform: platform = Value (
     run := Run new.
     self processArguments: args for: run.
 
-    run runBenchmark ensure: [:r |
+    ^ run runBenchmark ensure: [:r |
       run printTotal.
       system exit: 0
-    ].
-    ^ 0
+    ]
   )
 
   printUsage = (

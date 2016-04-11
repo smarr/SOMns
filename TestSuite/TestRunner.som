@@ -134,11 +134,9 @@ class TestRunner usingPlatform: platform = (
     args size = 1 ifTrue: [
       testsCompletedPromise := runAllKnownModules ].
     
-    testsCompletedPromise whenResolved: [:testsPassed | 
+    ^ testsCompletedPromise whenResolved: [:testsPassed | 
       testsPassed
         ifTrue:  [ system exit: 0 ]
         ifFalse: [ system exit: 1 ] ]
-
-    ^ 0
   )
 )
