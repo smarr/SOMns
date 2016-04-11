@@ -188,7 +188,7 @@ public class Actor {
    *         message queues.
    */
   public static boolean isPoolIdle() {
-    return !actorPool.hasQueuedSubmissions() && actorPool.getActiveThreadCount() == 0;
+    return actorPool.isQuiescent();
   }
 
   private static final class ActorProcessingThreadFactor implements ForkJoinWorkerThreadFactory {
