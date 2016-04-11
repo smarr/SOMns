@@ -156,11 +156,11 @@ public abstract class EventualSendNode extends ExprWithTagsNode {
   }
 
   private void sendPromiseMessage(final Object[] args, final SPromise rcvr,
-      final SResolver resolver, final RegisterWhenResolved register) {
+      final SResolver resolver, final RegisterWhenResolved registerNode) {
     assert rcvr.getOwner() == EventualMessage.getActorCurrentMessageIsExecutionOn() : "think this should be true because the promise is an Object and owned by this specific actor";
     PromiseSendMessage msg = new PromiseSendMessage(selector, args, rcvr.getOwner(), resolver, onReceive);
 
-    register.register(rcvr, msg, rcvr.getOwner());
+    registerNode.register(rcvr, msg, rcvr.getOwner());
   }
 
   @Specialization(guards = {"isResultUsed()", "!isFarRefRcvr(args)", "!isPromiseRcvr(args)"})
