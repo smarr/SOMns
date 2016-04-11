@@ -2,6 +2,7 @@
 import argparse
 import sys
 import os
+import shlex
 
 BASE_DIR    = os.path.dirname(os.path.realpath(__file__))
 GRAAL_HOME  = os.getenv('GRAAL_HOME',  None)
@@ -151,7 +152,7 @@ TWEAK_INLINING = ['-Dgraal.TruffleCompilationThreshold=191',
                   '-Dgraal.TruffleSplittingMaxCalleeSize=100000']
 
 if GRAAL_FLAGS:
-    flags = [GRAAL_FLAGS]
+    flags = shlex.split(str.strip(GRAAL_FLAGS))
 else:
     flags = []
 
