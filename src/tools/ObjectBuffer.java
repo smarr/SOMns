@@ -40,6 +40,8 @@ public class ObjectBuffer<T> implements Iterable<T> {
   }
 
   public void append(final T item) {
+    assert item != null;
+
     if (currentIdx >= bufferSize) {
       currentIdx = 0;
       numEntries += 1;
