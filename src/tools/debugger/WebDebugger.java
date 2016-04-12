@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -46,7 +47,11 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 
+import som.interpreter.actors.Actor;
+import som.interpreter.actors.EventualMessage;
+import som.interpreter.actors.SFarReference;
 import som.vm.NotYetImplementedException;
+import tools.ObjectBuffer;
 import tools.Tagging;
 import tools.highlight.JsonWriter;
 import tools.highlight.Tags;
@@ -283,7 +288,97 @@ public class WebDebugger extends TruffleInstrument {
     // TODO: stack frame content, or on demand?
     // stackFrame.getFrame(FrameAccess.READ_ONLY, true);
     return frame;
-}
+  }
+
+  @Override
+  protected void onDispose(final Env env) {
+    ensureConnectionIsAvailable();
+
+    log("[ACTORS] send message history");
+
+    ObjectBuffer<ObjectBuffer<SFarReference>> actorsPerThread = Actor.getAllCreateActors();
+    ObjectBuffer<ObjectBuffer<ObjectBuffer<EventualMessage>>> messagesPerThread = Actor.getAllProcessedMessages();
+
+    Map<SFarReference, String> actorsToIds = createActorMap(actorsPerThread);
+    Map<Actor, String> actorObjsToIds = new HashMap<>(actorsToIds.size());
+    for (Entry<SFarReference, String> e : actorsToIds.entrySet()) {
+      Actor a = e.getKey().getActor();
+      assert !actorObjsToIds.containsKey(a);
+      actorObjsToIds.put(a, e.getValue());
+    }
+
+    JSONArrayBuilder actors = JSONHelper.array();
+    for (Entry<SFarReference, String> e : actorsToIds.entrySet()) {
+      actors.add(JsonSerializer.toJson(e.getValue(), e.getKey()));
+    }
+
+    int mId = 0;
+    JSONObjectBuilder messages = JSONHelper.object();
+
+    Map<Actor, Set<JSONObjectBuilder>> perReceiver = new HashMap<>();
+    for (ObjectBuffer<ObjectBuffer<EventualMessage>> perThread : messagesPerThread) {
+      for (ObjectBuffer<EventualMessage> perBatch : perThread) {
+        for (EventualMessage m : perBatch) {
+          perReceiver.computeIfAbsent(m.getTarget(), a -> new HashSet<>());
+
+          JSONObjectBuilder jsonM = JSONHelper.object();
+          jsonM.add("id", "m-" + mId);
+          mId += 1;
+          assert actorObjsToIds.containsKey(m.getSender());
+          assert actorObjsToIds.containsKey(m.getTarget());
+          jsonM.add("sender", actorObjsToIds.get(m.getSender()));
+          jsonM.add("receiver", actorObjsToIds.get(m.getTarget()));
+          perReceiver.get(m.getTarget()).add(jsonM);
+        }
+      }
+    }
+
+    for (Entry<Actor, Set<JSONObjectBuilder>> e : perReceiver.entrySet()) {
+      JSONArrayBuilder arr = JSONHelper.array();
+      for (JSONObjectBuilder m : e.getValue()) {
+        arr.add(m);
+      }
+      messages.add(actorObjsToIds.get(e.getKey()), arr);
+    }
+
+    JSONObjectBuilder history = JSONHelper.object();
+    history.add("messages", messages); // TODO
+    history.add("actors", actors);
+
+    JSONObjectBuilder msg = JSONHelper.object();
+    msg.add("type", "messageHistory");
+    msg.add("messageHistory", history);
+
+    String m = msg.toString();
+    log("[ACTORS] Message length: " + m.length());
+    client.send(m);
+    log("[ACTORS] Message sent?");
+    try {
+      Thread.sleep(150000);
+    } catch (InterruptedException e1) {
+      // TODO Auto-generated catch block
+      e1.printStackTrace();
+    }
+    log("[ACTORS] Message sent waiting completed");
+
+//    log("[ACTORS] " + msg.toString());
+    client.close();
+  }
+
+  private Map<SFarReference, String> createActorMap(
+      final ObjectBuffer<ObjectBuffer<SFarReference>> actorsPerThread) {
+    HashMap<SFarReference, String> map = new HashMap<>();
+    int numActors = 0;
+
+    for (ObjectBuffer<SFarReference> perThread : actorsPerThread) {
+      for (SFarReference a : perThread) {
+        assert !map.containsKey(a);
+        map.put(a, "a-" + numActors);
+        numActors += 1;
+      }
+    }
+    return map;
+  }
 
   @Override
   protected void onCreate(final Env env) {
