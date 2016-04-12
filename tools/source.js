@@ -572,6 +572,10 @@ function connect() {
       case "suspendEvent":
         displaySuspendEvent(data);
         break;
+      case "messageHistory":
+        // dbgLog(e.data);
+        displayMessageHistory(data.messageHistory);
+        break;
     }
   };
   return socket;

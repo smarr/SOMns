@@ -3,10 +3,102 @@
 
 var path, circle, nodes, links, force, colors;
 
-function start() {
-  // set up SVG for D3
-  var width  = 360,
-    height = 350;
+var horizontalDistance = 100,
+  verticalDistance = 100;
+
+// set up SVG for D3
+var width = 360,
+  height  = 350;
+
+function hasSelfSends(actorId, messages) {
+  for (var i in messages) {
+    if (messages[i].sender == "actorId") {
+      return true;
+    }
+  }
+  return false;
+}
+
+function hashAtInc(hash, idx, inc) {
+  if (hash.hasOwnProperty(idx)) {
+    hash[idx] += inc;
+  } else {
+    hash[idx] = inc;
+  }
+}
+
+function determineNodes(msgHist) {
+  var actorsPerType = {};
+  var nodes = {};
+  for (var aId in msgHist.actors) {
+    var actor = msgHist.actors[aId];
+    hashAtInc(actorsPerType, actor.typeName, 1);
+
+    var selfSends = hasSelfSends(actor.id, msgHist.messages);
+    var node = {
+      id: actor.id,
+      name: actor.name,
+      reflexive: selfSends,
+      x: horizontalDistance + horizontalDistance * actorsPerType[actor.typeName],
+      y: verticalDistance * Object.keys(actorsPerType).length,
+      type: actor.typeName
+    };
+
+    nodes[actor.id] = node;
+  }
+  return nodes;
+}
+
+function mapToArray(map) {
+  var arr = [];
+  for (var i in map) {
+    arr.push(map[i]);
+  }
+  return arr;
+}
+
+var maxMessageCount = 0;
+
+function determineLinks(msgHist, nodeMap) {
+  var msgSends = {};
+
+  dbgLog("[DetLinks] #msg: " + Object.keys(msgHist.messages).length);
+  for (var aId in msgHist.messages) {
+    for (var msg of msgHist.messages[aId]) {
+      if (!msgSends.hasOwnProperty(msg.sender)) {
+        msgSends[msg.sender] = {};
+      }
+      hashAtInc(msgSends[msg.sender], msg.receiver, 1);
+    }
+  }
+
+  dbgLog("[DetLinks] completed ");
+
+  var links = [];
+  for (var sendId in msgSends) {
+    for (var rcvrId in msgSends[sendId]) {
+      maxMessageCount = Math.max(maxMessageCount, msgSends[sendId][rcvrId]);
+      if (nodeMap[sendId] === undefined) {
+        dbgLog("WAT? unknown sendId: " + sendId);
+      }
+      if (nodeMap[rcvrId] === undefined) {
+        dbgLog("WAT? unknown rcvrId: " + rcvrId);
+      }
+      links.push({
+        source: nodeMap[sendId],
+        target: nodeMap[rcvrId],
+        left: false, right: true,
+        messageCount: msgSends[sendId][rcvrId]
+      });
+    }
+  }
+  return links;
+}
+
+/**
+ * @param {MessageHistory} msgHist
+ */
+function displayMessageHistory(msgHist) {
   colors = d3.scale.category10();
 
   var svg = d3.select('#graph-canvas')
@@ -15,58 +107,6 @@ function start() {
     .attr('width', width)
     .attr('height', height);
 
-  var msgHist = createMockupActorHistory();
-
-  function hasSelfSends(actorId, messages) {
-    for (var i in messages) {
-      if (messages[i].sender == "actorId") {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  var horizontalDistance = 100,
-    verticalDistance = 100;
-
-  function hashAtInc(hash, idx, inc) {
-    if (hash.hasOwnProperty(idx)) {
-      hash[idx] += inc;
-    } else {
-      hash[idx] = inc;
-    }
-  }
-
-  function determineNodes(msgHist) {
-    var actorsPerType = {};
-    var nodes = {};
-    for (var aId in msgHist.actors) {
-      var actor = msgHist.actors[aId];
-      hashAtInc(actorsPerType, actor.typeName, 1);
-
-      var selfSends = hasSelfSends(aId, msgHist.messages);
-      var node = {
-        id: actor.id,
-        name: actor.name,
-        reflexive: selfSends,
-        x: horizontalDistance + horizontalDistance * actorsPerType[actor.typeName],
-        y: verticalDistance * Object.keys(actorsPerType).length,
-        type: actor.typeName
-      };
-
-      nodes[aId] = node;
-    }
-    return nodes;
-  }
-
-  function mapToArray(map) {
-    var arr = [];
-    for (var i in map) {
-      arr.push(map[i]);
-    }
-    return arr;
-  }
-
   // set up initial nodes and links
   //  - nodes are known by 'id', not by index in array.
   //  - reflexive edges are indicated on the node (as a bold black circle).
@@ -74,31 +114,6 @@ function start() {
   var nodeMap = determineNodes(msgHist);
   nodes = mapToArray(nodeMap);
 
-  function determineLinks(msgHist, nodeMap) {
-    var msgSends = {};
-
-    for (var aId in msgHist.messages) {
-      for (var msg of msgHist.messages[aId]) {
-        if (!msgSends.hasOwnProperty(msg.sender)) {
-          msgSends[msg.sender] = {};
-        }
-        hashAtInc(msgSends[msg.sender], msg.receiver, 1);
-      }
-    }
-
-    var links = [];
-    for (var sendId in msgSends) {
-      for (var rcvrId in msgSends[sendId]) {
-        links.push({
-          source: nodeMap[sendId],
-          target: nodeMap[rcvrId],
-          left: false, right: true,
-          messageCount: msgSends[sendId][rcvrId]
-        });
-      }
-    }
-    return links;
-  }
   links = determineLinks(msgHist, nodeMap);
 
   // init D3 force layout
@@ -111,11 +126,7 @@ function start() {
     .on('tick', tick);
 
   force.linkStrength(function(link) {
-    if (link.messageCount === 1000) {
-      return 1;
-    } else {
-      return 0.001;
-    }
+    return link.messageCount / maxMessageCount;
   });
 
   // define arrow markers for graph links
