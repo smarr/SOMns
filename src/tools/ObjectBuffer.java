@@ -21,12 +21,10 @@ public class ObjectBuffer<T> implements Iterable<T> {
   @SuppressWarnings("unchecked")
   private static class Entry<T> {
     private final T[] buffer;
-    private final Entry<T> prev;
     private Entry<T> next;
 
     Entry(final int bufferSize, final Entry<T> prev) {
       buffer = (T[]) new Object[bufferSize];
-      this.prev = prev;
       this.next = null;
 
       if (prev != null) {
