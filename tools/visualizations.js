@@ -1,3 +1,4 @@
+/* jshint -W097 */
 'use strict';
 
 var path, circle, nodes, links, force, colors;
