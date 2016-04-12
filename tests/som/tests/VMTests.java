@@ -9,6 +9,7 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 
 import som.VMOptions;
+import som.VmSettings;
 
 
 public class VMTests {
@@ -54,6 +55,8 @@ public class VMTests {
 
   @Test
   public void testProfileFlag() {
+    enableInstrumentation();
+
     VMOptions opts = new VMOptions(
         new String[] {"--profile"});
     assertEquals(opts.platformFile, VMOptions.STANDARD_PLATFORM_FILE);
@@ -64,6 +67,8 @@ public class VMTests {
 
   @Test
   public void testHighlightFlag() {
+    enableInstrumentation();
+
     VMOptions opts = new VMOptions(
         new String[] {"--highlight"});
     assertEquals(opts.platformFile, VMOptions.STANDARD_PLATFORM_FILE);
@@ -74,11 +79,17 @@ public class VMTests {
 
   @Test
   public void testDebugFlag() {
+    enableInstrumentation();
+
     VMOptions opts = new VMOptions(
         new String[] {"--debug"});
     assertEquals(opts.platformFile, VMOptions.STANDARD_PLATFORM_FILE);
     assertTrue(opts.debuggerEnabled);
     assertFalse(opts.profilingEnabled);
     assertNull(opts.args);
+  }
+
+  public static void enableInstrumentation() {
+    System.setProperty(VmSettings.INSTRUMENTATION_PROP, "true");
   }
 }
