@@ -28,7 +28,9 @@ public abstract class EventualMessage {
     assert onReceive.getRootNode() instanceof ReceivedMessage || onReceive.getRootNode() instanceof ReceivedCallback;
   }
 
-  protected abstract Actor   getTarget();
+  public abstract Actor getTarget();
+  public abstract Actor getSender();
+
   protected abstract SSymbol getSelector();
 
   /**
@@ -56,8 +58,15 @@ public abstract class EventualMessage {
     }
 
     @Override
-    protected Actor getTarget() {
+    public Actor getTarget() {
+      assert target != null;
       return target;
+    }
+
+    @Override
+    public Actor getSender() {
+      assert sender != null;
+      return sender;
     }
 
     @Override
@@ -118,6 +127,12 @@ public abstract class EventualMessage {
     }
 
     public abstract void resolve(final Object rcvr, final Actor target, final Actor sendingActor);
+
+    @Override
+    public final Actor getSender() {
+      assert originalSender != null;
+      return originalSender;
+    }
   }
 
   /**
@@ -157,7 +172,8 @@ public abstract class EventualMessage {
     }
 
     @Override
-    protected Actor getTarget() {
+    public Actor getTarget() {
+      assert target != null;
       return target;
     }
 
@@ -203,7 +219,8 @@ public abstract class EventualMessage {
     }
 
     @Override
-    protected Actor getTarget() {
+    public Actor getTarget() {
+      assert originalSender != null;
       return originalSender;
     }
 
