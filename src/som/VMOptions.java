@@ -20,14 +20,16 @@ public class VMOptions {
   @CompilationFinal public boolean dynamicMetricsEnabled;
   @CompilationFinal public boolean highlightingEnabled;
 
-  public final boolean anyInstrumentationEnabled;
-
   public VMOptions(final String[] args) {
     this.args = processVmArguments(args);
     showUsage = args.length == 0;
-    this.anyInstrumentationEnabled =
-        debuggerEnabled || webDebuggerEnabled || profilingEnabled ||
-        dynamicMetricsEnabled || highlightingEnabled;
+    if (!VmSettings.INSTRUMENTATION &&
+        (debuggerEnabled || webDebuggerEnabled || profilingEnabled ||
+        dynamicMetricsEnabled || highlightingEnabled)) {
+      throw new IllegalStateException(
+          "Instrumentation is not enabled, but one of the tools is used. " +
+          "Please set -D" + VmSettings.INSTRUMENTATION_PROP + "=true");
+    }
   }
 
   private String[] processVmArguments(final String[] arguments) {

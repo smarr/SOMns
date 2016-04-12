@@ -76,6 +76,7 @@ import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
+import som.VmSettings;
 import som.compiler.Lexer.Peek;
 import som.compiler.Lexer.SourceCoordinate;
 import som.compiler.MixinBuilder.MixinDefinitionError;
@@ -1186,7 +1187,7 @@ public final class Parser {
         } else if ("and:".equals(msgStr) || "&&".equals(msgStr)) {
           ExpressionNode inlinedArg = ((LiteralNode) arguments.get(1)).inline(builder);
           return new AndInlinedLiteralNode(arguments.get(0), inlinedArg, arguments.get(1), source);
-        } else if (!VM.enabledDynamicMetricsTool() && "timesRepeat:".equals(msgStr)) {
+        } else if (!VmSettings.DYNAMIC_METRICS && "timesRepeat:".equals(msgStr)) {
           ExpressionNode inlinedBody = ((LiteralNode) arguments.get(1)).inline(builder);
           inlinedBody.markAsLoopBody();
           return IntTimesRepeatLiteralNodeGen.create(inlinedBody,
@@ -1203,14 +1204,14 @@ public final class Parser {
         return new IfTrueIfFalseInlinedLiteralsNode(condition,
             inlinedTrueNode, inlinedFalseNode, arguments.get(1), arguments.get(2),
             source);
-      } else if (!VM.enabledDynamicMetricsTool() && "to:do:".equals(msgStr) &&
+      } else if (!VmSettings.DYNAMIC_METRICS && "to:do:".equals(msgStr) &&
           arguments.get(2) instanceof LiteralNode) {
         Local loopIdx = builder.addLocal("i:" + source.getCharIndex(), source);
         ExpressionNode inlinedBody = ((LiteralNode) arguments.get(2)).inline(builder, loopIdx);
         inlinedBody.markAsLoopBody();
         return IntToDoInlinedLiteralsNodeGen.create(inlinedBody, loopIdx.getSlot(), loopIdx.source,
             arguments.get(2), source, arguments.get(0), arguments.get(1));
-      } else if (!VM.enabledDynamicMetricsTool() && "downTo:do:".equals(msgStr) &&
+      } else if (!VmSettings.DYNAMIC_METRICS && "downTo:do:".equals(msgStr) &&
           arguments.get(2) instanceof LiteralNode) {
         Local loopIdx = builder.addLocal("i:" + source.getCharIndex(), source);
         ExpressionNode inlinedBody = ((LiteralNode) arguments.get(2)).inline(builder, loopIdx);

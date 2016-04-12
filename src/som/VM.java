@@ -44,7 +44,6 @@ public final class VM {
 
   @CompilationFinal private static PolyglotEngine engine;
   @CompilationFinal private static VM vm;
-  @CompilationFinal private static VMOptions vmOptions;
   @CompilationFinal private static StructuralProbe structuralProbes;
 
   public static PolyglotEngine getEngine() {
@@ -64,27 +63,20 @@ public final class VM {
   @CompilationFinal
   private Actor mainActor;
 
-  public static final boolean DebugMode = false;
-  public static final boolean FailOnMissingOptimizations = false;
-
   public static void thisMethodNeedsToBeOptimized(final String msg) {
-    if (FailOnMissingOptimizations) {
+    if (VmSettings.FAIL_ON_MISSING_OPTIMIZATIONS) {
       CompilerAsserts.neverPartOfCompilation(msg);
     }
   }
 
   public static void callerNeedsToBeOptimized(final String msg) {
-    if (FailOnMissingOptimizations) {
+    if (VmSettings.FAIL_ON_MISSING_OPTIMIZATIONS) {
       CompilerAsserts.neverPartOfCompilation(msg);
     }
   }
 
-  public static boolean enabledDynamicMetricsTool() {
-    return vmOptions.dynamicMetricsEnabled;
-  }
-
   public static void insertInstrumentationWrapper(final Node node) {
-    if (vmOptions.anyInstrumentationEnabled) {
+    if (VmSettings.INSTRUMENTATION) {
       assert node.getSourceSection() != null || (node instanceof WrapperNode) : "Node needs source section, or needs to be wrapper";
       // TODO: a way to check whether the node needs actually wrapping?
 //      String[] tags = node.getSourceSection().getTags();
@@ -114,7 +106,6 @@ public final class VM {
 
     this.avoidExitForTesting = avoidExitForTesting;
     options = new VMOptions(args);
-    vmOptions = options;
     objectSystem = new ObjectSystem(options.platformFile, options.kernelFile);
 
     if (options.showUsage) {
@@ -243,12 +234,12 @@ public final class VM {
   public static void main(final String[] args) {
     Builder builder = PolyglotEngine.newBuilder();
     builder.config(SomLanguage.MIME_TYPE, SomLanguage.CMD_ARGS, args);
-    vmOptions = new VMOptions(args);
+    VMOptions vmOptions = new VMOptions(args);
 
     if (vmOptions.debuggerEnabled) {
       startDebugger(builder);
     } else {
-      startExecution(builder);
+      startExecution(builder, vmOptions);
     }
   }
 
@@ -275,7 +266,8 @@ public final class VM {
     }
   };
 
-  private static void startExecution(final Builder builder) {
+  private static void startExecution(final Builder builder,
+      final VMOptions vmOptions) {
     if (vmOptions.webDebuggerEnabled) {
       builder.onEvent(onExec).onEvent(onHalted);
     }

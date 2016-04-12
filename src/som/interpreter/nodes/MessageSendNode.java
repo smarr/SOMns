@@ -13,6 +13,7 @@ import com.oracle.truffle.api.nodes.NodeCost;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
+import som.VmSettings;
 import som.compiler.AccessModifier;
 import som.instrumentation.MessageSendNodeWrapper;
 import som.interpreter.TruffleCompiler;
@@ -287,7 +288,7 @@ public final class MessageSendNode {
           }
           break;
         case "copy":
-          if (!VM.enabledDynamicMetricsTool() && receiver instanceof SArray) {
+          if (!VmSettings.DYNAMIC_METRICS && receiver instanceof SArray) {
             return makeEagerUnaryPrim(CopyPrimNodeGen.create(true, getSourceSection(), null));
           }
           break;
@@ -378,17 +379,17 @@ public final class MessageSendNode {
           }
           break;
         case "doIndexes:":
-          if (!VM.enabledDynamicMetricsTool() && arguments[0] instanceof SArray) {
+          if (!VmSettings.DYNAMIC_METRICS && arguments[0] instanceof SArray) {
             return makeEagerBinaryPrim(DoIndexesPrimFactory.create(true, getSourceSection(), null, null));
           }
           break;
         case "do:":
-          if (!VM.enabledDynamicMetricsTool() && arguments[0] instanceof SArray) {
+          if (!VmSettings.DYNAMIC_METRICS && arguments[0] instanceof SArray) {
             return makeEagerBinaryPrim(DoPrimFactory.create(true, getSourceSection(), null, null));
           }
           break;
         case "putAll:":
-          if (!VM.enabledDynamicMetricsTool()) {
+          if (!VmSettings.DYNAMIC_METRICS) {
             return makeEagerBinaryPrim(PutAllNodeFactory.create(true, getSourceSection(), null, null, SizeAndLengthPrimFactory.create(null, null)));
           }
           break;
@@ -453,7 +454,7 @@ public final class MessageSendNode {
           return replace(IfMessageNodeGen.create(false, getSourceSection(),
               argumentNodes[0], argumentNodes[1]));
         case "to:":
-          if (!VM.enabledDynamicMetricsTool() && arguments[0] instanceof Long) {
+          if (!VmSettings.DYNAMIC_METRICS && arguments[0] instanceof Long) {
             return makeEagerBinaryPrim(ToPrimNodeGen.create(true, getSourceSection(), null, null));
           }
           break;
@@ -524,7 +525,7 @@ public final class MessageSendNode {
           }
           break;
         case "max:":
-          if (!VM.enabledDynamicMetricsTool() && arguments[0] instanceof Long) {
+          if (!VmSettings.DYNAMIC_METRICS && arguments[0] instanceof Long) {
             return makeEagerBinaryPrim(MaxIntPrimNodeGen.create(true, getSourceSection(), null, null));
           }
           break;
@@ -564,7 +565,7 @@ public final class MessageSendNode {
               arguments[0], arguments[1], arguments[2], argumentNodes[0],
               argumentNodes[1], argumentNodes[2]));
         case "to:do:":
-          if (!VM.enabledDynamicMetricsTool() &&
+          if (!VmSettings.DYNAMIC_METRICS &&
               TypesGen.isLong(arguments[0]) &&
               (TypesGen.isLong(arguments[1]) ||
                   TypesGen.isDouble(arguments[1])) &&
@@ -574,7 +575,7 @@ public final class MessageSendNode {
           }
           break;
         case "downTo:do:":
-          if (!VM.enabledDynamicMetricsTool() &&
+          if (!VmSettings.DYNAMIC_METRICS &&
               TypesGen.isLong(arguments[0]) &&
               (TypesGen.isLong(arguments[1]) ||
                   TypesGen.isDouble(arguments[1])) &&
@@ -601,7 +602,7 @@ public final class MessageSendNode {
           }
           break;
         case "new:withAll:":
-          if (!VM.enabledDynamicMetricsTool() && arguments[0] == Classes.valueArrayClass) {
+          if (!VmSettings.DYNAMIC_METRICS && arguments[0] == Classes.valueArrayClass) {
             return makeEagerTernaryPrim(NewImmutableArrayNodeGen.create(
                 true, getSourceSection(), null, null, null));
           }
@@ -613,7 +614,7 @@ public final class MessageSendNode {
         final Object[] arguments) {
       switch (selector.getString()) {
         case "to:by:do:":
-          if (!VM.enabledDynamicMetricsTool()) {
+          if (!VmSettings.DYNAMIC_METRICS) {
             return replace(IntToByDoMessageNodeGen.create(this,
                 (SBlock) arguments[3], argumentNodes[0], argumentNodes[1],
                 argumentNodes[2], argumentNodes[3]));

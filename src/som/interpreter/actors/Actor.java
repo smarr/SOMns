@@ -38,7 +38,7 @@ import tools.ObjectBuffer;
 public class Actor {
 
   public static Actor createActor() {
-    if (VM.DebugMode) {
+    if (VmSettings.DEBUG_MODE) {
       return new DebugActor();
     } else {
       return new Actor();

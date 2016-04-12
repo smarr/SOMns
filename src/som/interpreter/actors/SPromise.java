@@ -8,7 +8,7 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.RootCallTarget;
 import com.sun.istack.internal.NotNull;
 
-import som.VM;
+import som.VmSettings;
 import som.interpreter.actors.EventualMessage.PromiseCallbackMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.vm.NotYetImplementedException;
@@ -26,7 +26,7 @@ public class SPromise extends SObjectWithClass {
   @CompilationFinal private static SClass promiseClass;
 
   public static SPromise createPromise(final Actor owner) {
-    if (VM.DebugMode) {
+    if (VmSettings.DEBUG_MODE) {
       return new SDebugPromise(owner);
     } else {
       return new SPromise(owner);
@@ -259,7 +259,7 @@ public class SPromise extends SObjectWithClass {
   }
 
   public static SResolver createResolver(final SPromise promise, final String debugNote) {
-    if (VM.DebugMode) {
+    if (VmSettings.DEBUG_MODE) {
       return new SDebugResolver(promise, debugNote);
     } else {
       return new SResolver(promise);
