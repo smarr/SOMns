@@ -15,6 +15,7 @@ import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray.STransferArray;
 import som.vmobjects.SObject;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
+import tools.ObjectBuffer;
 
 
 /**
@@ -45,7 +46,7 @@ public class Actor {
   }
 
   /** Buffer for incoming messages. */
-  private ArrayList<EventualMessage> mailbox = new ArrayList<>();
+  private ObjectBuffer<EventualMessage> mailbox = new ObjectBuffer<>(16);
 
   /** Flag to indicate whether there is currently a F/J task executing. */
   private boolean isExecuting;
@@ -111,7 +112,7 @@ public class Actor {
   @TruffleBoundary
   public final synchronized void send(final EventualMessage msg) {
     assert msg.getTarget() == this;
-    mailbox.add(msg);
+    mailbox.append(msg);
     logMessageAddedToMailbox(msg);
 
     if (!isExecuting) {
@@ -126,7 +127,7 @@ public class Actor {
    */
   private static final class ExecAllMessages implements Runnable {
     private final Actor actor;
-    private ArrayList<EventualMessage> current;
+    private ObjectBuffer<EventualMessage> current;
 
     ExecAllMessages(final Actor actor) {
       this.actor = actor;
@@ -145,9 +146,7 @@ public class Actor {
     }
 
     private void processCurrentMessages() {
-      int size = current.size();
-      for (int i = 0; i < size; i++) {
-        EventualMessage msg = current.get(i);
+      for (EventualMessage msg : current) {
         actor.logMessageBeingExecuted(msg);
         msg.execute();
       }
@@ -162,7 +161,7 @@ public class Actor {
           actor.isExecuting = false;
           return false;
         }
-        actor.mailbox = new ArrayList<>(actor.mailbox.size());
+        actor.mailbox = new ObjectBuffer<>(actor.mailbox.size());
       }
       return true;
     }
