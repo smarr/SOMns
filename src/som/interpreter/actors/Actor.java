@@ -45,6 +45,14 @@ public class Actor {
     }
   }
 
+  public static void traceActorsExceptMainOne(final SFarReference actorFarRef) {
+    Thread current = Thread.currentThread();
+    if (current instanceof ActorProcessingThread) {
+      ActorProcessingThread t = (ActorProcessingThread) current;
+      t.createdActors.append(actorFarRef);
+    }
+  }
+
   /** Buffer for incoming messages. */
   private ObjectBuffer<EventualMessage> mailbox = new ObjectBuffer<>(16);
 
@@ -139,16 +147,19 @@ public class Actor {
       t.currentlyExecutingActor = actor;
 
       while (getCurrentMessagesOrCompleteExecution()) {
-        processCurrentMessages();
+        processCurrentMessages(t);
       }
 
       t.currentlyExecutingActor = null;
     }
 
-    private void processCurrentMessages() {
+    private void processCurrentMessages(final ActorProcessingThread currentThread) {
       for (EventualMessage msg : current) {
         actor.logMessageBeingExecuted(msg);
         msg.execute();
+      }
+      if (VmSettings.ACTOR_TRACING) {
+        currentThread.processedMessages.append(current);
       }
     }
 
@@ -182,6 +193,22 @@ public class Actor {
     return actorPool.isQuiescent();
   }
 
+  public static ObjectBuffer<ObjectBuffer<SFarReference>> getAllCreateActors() {
+    return createdActorsPerThread;
+  }
+
+  public static ObjectBuffer<ObjectBuffer<ObjectBuffer<EventualMessage>>> getAllProcessedMessages() {
+    return messagesProcessedPerThread;
+  }
+
+  /** Access to this data structure needs to be synchronized. */
+  private static final ObjectBuffer<ObjectBuffer<SFarReference>> createdActorsPerThread =
+      VmSettings.ACTOR_TRACING ? new ObjectBuffer<>(VmSettings.NUM_THREADS) : null;
+
+  /** Access to this data structure needs to be synchronized. Typically via {@link createdActorsPerThread} */
+  private static final ObjectBuffer<ObjectBuffer<ObjectBuffer<EventualMessage>>> messagesProcessedPerThread =
+      VmSettings.ACTOR_TRACING ? new ObjectBuffer<>(VmSettings.NUM_THREADS) : null;
+
   private static final class ActorProcessingThreadFactor implements ForkJoinWorkerThreadFactory {
     @Override
     public ForkJoinWorkerThread newThread(final ForkJoinPool pool) {
@@ -191,9 +218,24 @@ public class Actor {
 
   public static final class ActorProcessingThread extends ForkJoinWorkerThread {
     protected Actor currentlyExecutingActor;
+    protected final ObjectBuffer<SFarReference> createdActors;
+    protected final ObjectBuffer<ObjectBuffer<EventualMessage>> processedMessages;
 
     protected ActorProcessingThread(final ForkJoinPool pool) {
       super(pool);
+      if (VmSettings.ACTOR_TRACING) {
+        createdActors = new ObjectBuffer<>(128);
+        processedMessages = new ObjectBuffer<>(128);
+
+        // publish the thread local buffer for later querying
+        synchronized (createdActorsPerThread) {
+          createdActorsPerThread.append(createdActors);
+          messagesProcessedPerThread.append(processedMessages);
+        }
+      } else {
+        createdActors = null;
+        processedMessages = null;
+      }
     }
   }
 
@@ -207,6 +249,7 @@ public class Actor {
   }
 
   public static final class DebugActor extends Actor {
+    // TODO: remove this tracking, the new one should be more efficient
     private static final ArrayList<Actor> actors = new ArrayList<Actor>();
 
     private final boolean isMain;

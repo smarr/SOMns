@@ -119,6 +119,11 @@ public final class ObjectSystem {
     return last.initialized;
   }
 
+  public SClass getPlatformClass() {
+    assert platformClass != null;
+    return platformClass;
+  }
+
   public MixinDefinition loadModule(final String filename)
       throws IOException {
     File file = new File(filename);

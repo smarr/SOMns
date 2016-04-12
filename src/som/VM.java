@@ -33,6 +33,7 @@ import som.interpreter.actors.SPromise.SResolver;
 import som.vm.ObjectSystem;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
+import tools.ObjectBuffer;
 import tools.debugger.WebDebugger;
 import tools.dym.DynamicMetrics;
 import tools.dym.profiles.StructuralProbe;
@@ -221,6 +222,15 @@ public final class VM {
 
     mainActor = Actor.createActor();
     vmMirror  = objectSystem.initialize();
+
+    if (VmSettings.ACTOR_TRACING) {
+      ObjectBuffer<ObjectBuffer<SFarReference>> actors = Actor.getAllCreateActors();
+      SFarReference mainActorRef = new SFarReference(mainActor, objectSystem.getPlatformClass());
+
+      ObjectBuffer<SFarReference> main = new ObjectBuffer<>(1);
+      main.append(mainActorRef);
+      actors.append(main);
+    }
   }
 
   public Object execute(final String selector) {
