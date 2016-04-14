@@ -437,7 +437,7 @@ public class WebDebugger extends TruffleInstrument {
     public void onMessage(final WebSocket conn, final String message) {
       JsonObject msg = Json.parse(message).asObject();
 
-      switch(msg.getString("action", null)) {
+      switch (msg.getString("action", null)) {
         case "updateBreakpoint":
           log("UPDATE BREAKPOINT");
           String sourceId   = msg.getString("sourceId", null);
@@ -464,35 +464,22 @@ public class WebDebugger extends TruffleInstrument {
             bp.setEnabled(enabled);
           }
           return;
-        case "stepInto": {
+        case "stepInto":
+        case "stepOver":
+        case "return":
+        case "resume":
+        case "stop": {
           String id = msg.getString("suspendEvent", null);
           SuspendedEvent event = suspendEvents.get(id);
           assert event != null : "didn't find SuspendEvent";
-          event.prepareStepInto(1);
-          suspendFutures.get(id).complete(new Object());
-          return;
-        }
-        case "stepOver": {
-          String id = msg.getString("suspendEvent", null);
-          SuspendedEvent event = suspendEvents.get(id);
-          assert event != null : "didn't find SuspendEvent";
-          event.prepareStepOver(1);
-          suspendFutures.get(id).complete(new Object());
-          return;
-        }
-        case "return": {
-          String id = msg.getString("suspendEvent", null);
-          SuspendedEvent event = suspendEvents.get(id);
-          assert event != null : "didn't find SuspendEvent";
-          event.prepareStepOut();
-          suspendFutures.get(id).complete(new Object());
-          return;
-        }
-        case "resume": {
-          String id = msg.getString("suspendEvent", null);
-          SuspendedEvent event = suspendEvents.get(id);
-          assert event != null : "didn't find SuspendEvent";
-          event.prepareContinue();
+
+          switch (msg.getString("action", null)) {
+            case "stepInto": event.prepareStepInto(1); break;
+            case "stepOver": event.prepareStepOver(1); break;
+            case "return":   event.prepareStepOut();   break;
+            case "resume":   event.prepareContinue();  break;
+            case "stop":     event.prepareKill();      break;
+          }
           suspendFutures.get(id).complete(new Object());
           return;
         }
