@@ -440,6 +440,9 @@ public class WebDebugger extends TruffleInstrument {
 
       switch (requestedFile) {
         case "/index.html":
+        case "/view.js":
+        case "/vm-connection.js":
+        case "/controller.js":
         case "/source.js":
         case "/visualizations.js":
           File f = new File(rootFolder + requestedFile);
