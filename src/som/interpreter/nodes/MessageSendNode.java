@@ -739,6 +739,7 @@ public final class MessageSendNode {
     }
   }
 
+  @Instrumentable(factory = MessageSendNodeWrapper.class)
   public static final class GenericMessageSendNode
       extends AbstractMessageSendNode {
 
