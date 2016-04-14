@@ -529,7 +529,8 @@ public class WebDebugger extends TruffleInstrument {
           if (enabled && bp == null) {
             try {
               log("SetLineBreakpoint line:" + line);
-              truffleDebugger.setLineBreakpoint(0, line, false);
+              Breakpoint newBp = truffleDebugger.setLineBreakpoint(0, line, false);
+              assert newBp != null;
             } catch (IOException e) {
               e.printStackTrace();
             }
