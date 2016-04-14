@@ -1,10 +1,6 @@
 package tools.debugger;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,12 +15,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import org.java_websocket.WebSocket;
-import org.java_websocket.handshake.ClientHandshake;
-import org.java_websocket.server.WebSocketServer;
 
-import com.eclipsesource.json.Json;
-import com.eclipsesource.json.JsonObject;
-import com.oracle.truffle.api.debug.Breakpoint;
 import com.oracle.truffle.api.debug.Debugger;
 import com.oracle.truffle.api.debug.ExecutionEvent;
 import com.oracle.truffle.api.debug.SuspendedEvent;
@@ -36,20 +27,16 @@ import com.oracle.truffle.api.instrumentation.TruffleInstrument;
 import com.oracle.truffle.api.instrumentation.TruffleInstrument.Registration;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
-import com.oracle.truffle.api.source.LineLocation;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.api.utilities.JSONHelper;
 import com.oracle.truffle.api.utilities.JSONHelper.JSONArrayBuilder;
 import com.oracle.truffle.api.utilities.JSONHelper.JSONObjectBuilder;
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.SFarReference;
-import som.vm.NotYetImplementedException;
 import tools.ObjectBuffer;
 import tools.highlight.Tags;
 
@@ -74,7 +61,7 @@ public class WebDebugger extends TruffleInstrument {
 
   private static WebDebugger debugger;
   private static WebSocket client;
-  private static Debugger truffleDebugger;
+  static Debugger truffleDebugger;
 
   public WebDebugger() {
     debugger = this;
@@ -121,8 +108,6 @@ public class WebDebugger extends TruffleInstrument {
     assert client.isOpen();
   }
 
-
-
   public static void reportRootNodeAfterParsing(final RootNode rootNode) {
     assert rootNode.getSourceSection() != null : "RootNode without source section";
     Set<RootNode> roots = rootNodes.computeIfAbsent(
@@ -136,10 +121,9 @@ public class WebDebugger extends TruffleInstrument {
     // TODO: prepare step and continue???
   }
 
-
   private static int nextSuspendEventId = 0;
-  private static final Map<String, SuspendedEvent> suspendEvents  = new HashMap<>();
-  private static final Map<String, CompletableFuture<Object>> suspendFutures = new HashMap<>();
+  static final Map<String, SuspendedEvent> suspendEvents  = new HashMap<>();
+  static final Map<String, CompletableFuture<Object>> suspendFutures = new HashMap<>();
 
 
   private static String getNextSuspendEventId() {
@@ -191,7 +175,7 @@ public class WebDebugger extends TruffleInstrument {
     }
   }
 
-  private static void log(final String str) {
+  static void log(final String str) {
     // Checkstyle: stop
     System.out.println(str);
     // Checkstyle: resume
@@ -347,57 +331,9 @@ public class WebDebugger extends TruffleInstrument {
     if (httpServer == null) {
       InetSocketAddress address = new InetSocketAddress(port);
       httpServer = HttpServer.create(address, 0);
-      httpServer.createContext("/", new WebHandler());
+      httpServer.createContext("/", new WebResourceHandler());
       httpServer.setExecutor(null);
       httpServer.start();
-    }
-  }
-
-  private static class WebHandler implements HttpHandler {
-
-    @Override
-    public void handle(final HttpExchange exchange) throws IOException {
-      log("[REQ] " + exchange.getRequestURI().toString());
-      String rootFolder = "/Users/smarr/Projects/SOM/SOMns/tools";
-      String requestedFile = exchange.getRequestURI().toString();
-      if (requestedFile.equals("/")) {
-        requestedFile = "/index.html";
-      }
-
-      switch (requestedFile) {
-        case "/index.html":
-        case "/view.js":
-        case "/vm-connection.js":
-        case "/controller.js":
-        case "/source.js":
-        case "/visualizations.js":
-          File f = new File(rootFolder + requestedFile);
-          exchange.sendResponseHeaders(200, f.length());
-          copy(f, exchange.getResponseBody());
-          return;
-        case "/favicon.ico":
-          exchange.sendResponseHeaders(404, 0);
-          exchange.close();
-          return;
-      }
-
-      log("[REQ] not yet implemented");
-      throw new NotYetImplementedException();
-    }
-
-    private static void copy(final File f, final OutputStream out) throws IOException {
-      byte[] buf = new byte[8192];
-
-      InputStream in = new FileInputStream(f);
-
-      int c = 0;
-      while ((c = in.read(buf, 0, buf.length)) > 0) {
-        out.write(buf, 0, c);
-//        out.flush();
-      }
-
-      out.close();
-      in.close();
     }
   }
 
@@ -408,90 +344,6 @@ public class WebDebugger extends TruffleInstrument {
       webSocketServer = new WebSocketHandler(
           addess, (CompletableFuture<WebSocket>) clientConnected);
       webSocketServer.start();
-    }
-  }
-
-  private static class WebSocketHandler extends WebSocketServer {
-    private static final int NUM_THREADS = 1;
-
-    private final CompletableFuture<WebSocket> clientConnected;
-
-    WebSocketHandler(final InetSocketAddress address,
-        final CompletableFuture<WebSocket> clientConnected) {
-      super(address, NUM_THREADS);
-      this.clientConnected = clientConnected;
-    }
-
-    @Override
-    public void onOpen(final WebSocket conn, final ClientHandshake handshake) {
-      clientConnected.complete(conn);
-    }
-
-    @Override
-    public void onClose(final WebSocket conn, final int code, final String reason,
-        final boolean remote) {
-      log("onClose: code=" + code + " " + reason);
-    }
-
-    @Override
-    public void onMessage(final WebSocket conn, final String message) {
-      JsonObject msg = Json.parse(message).asObject();
-
-      switch (msg.getString("action", null)) {
-        case "updateBreakpoint":
-          log("UPDATE BREAKPOINT");
-          String sourceId   = msg.getString("sourceId", null);
-          String sourceName = msg.getString("sourceName", null);
-          int lineNumber    = msg.getInt("line", -1);
-          boolean enabled   = msg.getBoolean("enabled", false);
-          log(sourceId + ":" + lineNumber + " " + enabled);
-
-          Source source = JsonSerializer.getSource(sourceId);
-          LineLocation line = source.createLineLocation(lineNumber);
-
-          assert truffleDebugger != null : "debugger has not be initialized yet";
-          Breakpoint bp = truffleDebugger.getBreakpoint(line);
-
-          if (enabled && bp == null) {
-            try {
-              log("SetLineBreakpoint line:" + line);
-              Breakpoint newBp = truffleDebugger.setLineBreakpoint(0, line, false);
-              assert newBp != null;
-            } catch (IOException e) {
-              e.printStackTrace();
-            }
-          } else if (bp != null) {
-            bp.setEnabled(enabled);
-          }
-          return;
-        case "stepInto":
-        case "stepOver":
-        case "return":
-        case "resume":
-        case "stop": {
-          String id = msg.getString("suspendEvent", null);
-          SuspendedEvent event = suspendEvents.get(id);
-          assert event != null : "didn't find SuspendEvent";
-
-          switch (msg.getString("action", null)) {
-            case "stepInto": event.prepareStepInto(1); break;
-            case "stepOver": event.prepareStepOver(1); break;
-            case "return":   event.prepareStepOut();   break;
-            case "resume":   event.prepareContinue();  break;
-            case "stop":     event.prepareKill();      break;
-          }
-          suspendFutures.get(id).complete(new Object());
-          return;
-        }
-      }
-
-      log("not supported: onMessage: " + message);
-    }
-
-    @Override
-    public void onError(final WebSocket conn, final Exception ex) {
-      log("error:");
-      ex.printStackTrace();
     }
   }
 }
