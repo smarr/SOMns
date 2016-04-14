@@ -160,19 +160,6 @@ Debugger.prototype.getBreakpoint = function (source, line, clickedSpan) {
   return bp;
 };
 
-function showFrame(frame, i, list) {
-  var stackEntry = frame.methodName;
-  if (frame.sourceSection) {
-    stackEntry += ":" + frame.sourceSection.line + ":" + frame.sourceSection.column;
-  }
-  var entry = nodeFromTemplate("stack-frame-tpl");
-  entry.setAttribute("id", "frame-" + i);
-
-  var tds = $(entry).find("td");
-  tds[0].innerHTML = stackEntry;
-  list.appendChild(entry);
-}
-
 Debugger.prototype.setSuspended = function(eventId) {
   console.assert(!this.suspended);
   this.suspended = true;
