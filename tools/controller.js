@@ -6,7 +6,7 @@
 /**
  * The controller binds the domain model and the views, and mediates their
  * interaction.
- * 
+ *
  * @param {Debugger} dbg
  * @param {View} view
  * @param {VmConnection} vmConnection
@@ -49,6 +49,7 @@ Controller.prototype.onReceivedSource = function (msg) {
 
 Controller.prototype.onExecutionSuspension = function (msg) {
   this.dbg.setSuspended(msg.id);
+  this.view.switchDebuggerToSuspendedState();
 
   var dbg = this.dbg;
   this.view.displaySuspendEvent(msg, function (id) {return dbg.getSource(id);});
@@ -73,4 +74,35 @@ Controller.prototype.onToggleBreakpoint = function (line, clickedSpan) {
 
   this.vmConnection.updateBreakpoint(breakpoint);
   this.view.toggleBreakpoint(breakpoint);
+};
+
+Controller.prototype.resumeExecution = function () {
+  this.vmConnection.sendDebuggerAction('resume', this.dbg.lastSuspendEventId);
+  this.view.onContinueExecution();
+};
+
+Controller.prototype.pauseExecution = function () {
+
+};
+
+Controller.prototype.stopExecution = function () {
+
+};
+
+Controller.prototype.stepInto = function () {
+  this.dbg.setResumed();
+  this.view.onContinueExecution();
+  this.vmConnection.sendDebuggerAction('stepInto', this.dbg.lastSuspendEventId);
+};
+
+Controller.prototype.stepOver = function () {
+  this.dbg.setResumed();
+  this.view.onContinueExecution();
+  this.vmConnection.sendDebuggerAction('stepOver', this.dbg.lastSuspendEventId);
+};
+
+Controller.prototype.returnFromExecution = function () {
+  this.dbg.setResumed();
+  this.view.onContinueExecution();
+  this.vmConnection.sendDebuggerAction('return', this.dbg.lastSuspendEventId);
 };

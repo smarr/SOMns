@@ -256,6 +256,7 @@ function toggleHeatMap() {
 function View() {
   this.currentSectionId = null;
   this.currentDomNode   = null;
+  this.debuggerButtonJQNodes = null;
 }
 
 View.prototype.onConnect = function () {
@@ -397,3 +398,44 @@ View.prototype.toggleBreakpoint = function (breakpoint) {
   }
 };
 
+View.prototype.lazyFindDebuggerButtons = function () {
+  if (!this.debuggerButtonJQNodes) {
+    this.debuggerButtonJQNodes = {};
+    this.debuggerButtonJQNodes.resume = $(document.getElementById("dbg-btn-resume"));
+    this.debuggerButtonJQNodes.pause  = $(document.getElementById("dbg-btn-pause"));
+    this.debuggerButtonJQNodes.stop   = $(document.getElementById("dbg-btn-stop"));
+
+    this.debuggerButtonJQNodes.stepInto = $(document.getElementById("dbg-btn-step-into"));
+    this.debuggerButtonJQNodes.stepOver = $(document.getElementById("dbg-btn-step-over"));
+    this.debuggerButtonJQNodes.return   = $(document.getElementById("dbg-btn-return"));
+  }
+};
+
+View.prototype.switchDebuggerToSuspendedState = function () {
+  this.lazyFindDebuggerButtons();
+
+  this.debuggerButtonJQNodes.resume.removeClass("disabled");
+  this.debuggerButtonJQNodes.pause.addClass("disabled");
+  this.debuggerButtonJQNodes.stop.removeClass("disabled");
+
+  this.debuggerButtonJQNodes.stepInto.removeClass("disabled");
+  this.debuggerButtonJQNodes.stepOver.removeClass("disabled");
+  this.debuggerButtonJQNodes.return.removeClass("disabled");
+};
+
+View.prototype.switchDebuggerToResumedState = function () {
+  this.lazyFindDebuggerButtons();
+
+  this.debuggerButtonJQNodes.resume.addClass("disabled");
+  this.debuggerButtonJQNodes.pause.removeClass("disabled");
+  this.debuggerButtonJQNodes.stop.removeClass("disabled");
+
+  this.debuggerButtonJQNodes.stepInto.addClass("disabled");
+  this.debuggerButtonJQNodes.stepOver.addClass("disabled");
+  this.debuggerButtonJQNodes.return.addClass("disabled");
+};
+
+View.prototype.onContinueExecution = function () {
+  this.switchDebuggerToResumedState();
+  $(this.currentDomNode).removeClass("DbgCurrentNode");
+};

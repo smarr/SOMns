@@ -538,13 +538,38 @@ public class WebDebugger extends TruffleInstrument {
             bp.setEnabled(enabled);
           }
           return;
-        case "stepInto":
+        case "stepInto": {
           String id = msg.getString("suspendEvent", null);
           SuspendedEvent event = suspendEvents.get(id);
           assert event != null : "didn't find SuspendEvent";
           event.prepareStepInto(1);
           suspendFutures.get(id).complete(new Object());
           return;
+        }
+        case "stepOver": {
+          String id = msg.getString("suspendEvent", null);
+          SuspendedEvent event = suspendEvents.get(id);
+          assert event != null : "didn't find SuspendEvent";
+          event.prepareStepOver(1);
+          suspendFutures.get(id).complete(new Object());
+          return;
+        }
+        case "return": {
+          String id = msg.getString("suspendEvent", null);
+          SuspendedEvent event = suspendEvents.get(id);
+          assert event != null : "didn't find SuspendEvent";
+          event.prepareStepOut();
+          suspendFutures.get(id).complete(new Object());
+          return;
+        }
+        case "resume": {
+          String id = msg.getString("suspendEvent", null);
+          SuspendedEvent event = suspendEvents.get(id);
+          assert event != null : "didn't find SuspendEvent";
+          event.prepareContinue();
+          suspendFutures.get(id).complete(new Object());
+          return;
+        }
       }
 
       log("not supported: onMessage: " + message);

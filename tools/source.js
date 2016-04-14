@@ -176,43 +176,40 @@ function showFrame(frame, i, list) {
 Debugger.prototype.setSuspended = function(eventId) {
   console.assert(!this.suspended);
   this.suspended = true;
-  this.lastSuspendEventId = data.id;
+  this.lastSuspendEventId = eventId;
+};
+
+Debugger.prototype.setResumed = function () {
+  console.assert(this.suspended);
+  this.suspended = false;
 };
 
 Debugger.prototype.updateUIForContinuingExecution = function() {
-  $(this.currentDomNode).removeClass("DbgCurrentNode");
+
 };
 
 Debugger.prototype.resume = function() {
   console.assert(this.suspended);
 
   this.updateUIForContinuingExecution();
-  this.socket.send(JSON.stringify({
-    action:'resume',
-    suspendEvent: this.lastSuspendEventId}));
+
 };
 Debugger.prototype.pause = function() {
   console.assert(!this.suspended);
 
-  this.socket.send(JSON.stringify({
-    action:'pause',
-    suspendEvent: this.lastSuspendEventId}));
+
 };
 Debugger.prototype.stop = function() {
   console.assert(!this.suspended);
 
-  this.socket.send(JSON.stringify({
-    action:'stop',
-    suspendEvent: this.lastSuspendEventId}));
+
 };
 
 Debugger.prototype.stepInto = function() {
   console.assert(this.suspended);
 
   this.updateUIForContinuingExecution();
-  this.socket.send(JSON.stringify({
-    action:'stepInto',
-    suspendEvent: this.lastSuspendEventId}));
+
 };
 Debugger.prototype.stepOver = function() {
   console.assert(this.suspended);
@@ -224,9 +221,7 @@ Debugger.prototype.stepOver = function() {
 Debugger.prototype.return = function() {
   console.assert(this.suspended);
 
-  this.socket.send(JSON.stringify({
-    action:'return',
-    suspendEvent: this.lastSuspendEventId}));
+
 };
 
 

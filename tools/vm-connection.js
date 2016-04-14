@@ -75,3 +75,8 @@ VmConnection.prototype.updateBreakpoint = function (breakpoint) {
     enabled:    breakpoint.isEnabled()}));
 };
 
+VmConnection.prototype.sendDebuggerAction = function (action, lastSuspendEventId) {
+  this.socket.send(JSON.stringify({
+    action: action,
+    suspendEvent: lastSuspendEventId}));
+};
