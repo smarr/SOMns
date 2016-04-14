@@ -171,46 +171,6 @@ Debugger.prototype.setResumed = function () {
   this.suspended = false;
 };
 
-Debugger.prototype.updateUIForContinuingExecution = function() {
-
-};
-
-Debugger.prototype.resume = function() {
-  console.assert(this.suspended);
-
-  this.updateUIForContinuingExecution();
-
-};
-Debugger.prototype.pause = function() {
-  console.assert(!this.suspended);
-
-
-};
-Debugger.prototype.stop = function() {
-  console.assert(!this.suspended);
-
-
-};
-
-Debugger.prototype.stepInto = function() {
-  console.assert(this.suspended);
-
-  this.updateUIForContinuingExecution();
-
-};
-Debugger.prototype.stepOver = function() {
-  console.assert(this.suspended);
-
-  this.socket.send(JSON.stringify({
-    action:'stepOver',
-    suspendEvent: this.lastSuspendEventId}));
-};
-Debugger.prototype.return = function() {
-  console.assert(this.suspended);
-
-
-};
-
 
 /* globals View, Controller, VmConnection */
 var ctrl;
