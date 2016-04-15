@@ -256,6 +256,7 @@ public final class VM {
   private static void startDebugger(final Builder builder) {
     SimpleREPLClient client = new SimpleREPLClient();
     REPLServer server = new REPLServer(client, builder);
+    engine = server.getEngine();
     server.start();
     client.start(server);
   }
