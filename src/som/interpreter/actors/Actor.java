@@ -7,6 +7,7 @@ import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
 import java.util.concurrent.ForkJoinWorkerThread;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.impl.Accessor;
 
 import som.VM;
 import som.VmSettings;
@@ -223,6 +224,7 @@ public class Actor {
 
     protected ActorProcessingThread(final ForkJoinPool pool) {
       super(pool);
+
       if (VmSettings.ACTOR_TRACING) {
         createdActors = new ObjectBuffer<>(128);
         processedMessages = new ObjectBuffer<>(128);
@@ -236,6 +238,13 @@ public class Actor {
         createdActors = null;
         processedMessages = null;
       }
+    }
+
+    @Override
+    public void run() {
+      Accessor.initializeThreadForUseWithPolglotEngine(VM.getEngine());
+
+      super.run();
     }
   }
 
