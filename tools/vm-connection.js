@@ -66,13 +66,30 @@ VmConnection.prototype.disconnect = function () {
   console.assert(this.isConnected());
 };
 
-VmConnection.prototype.updateBreakpoint = function (breakpoint) {
-  this.socket.send(JSON.stringify({
-    action:     "updateBreakpoint",
+function bpToJson(breakpoint) {
+  return {
     sourceId:   breakpoint.source.id,
     sourceName: breakpoint.source.name,
     line:       breakpoint.line,
-    enabled:    breakpoint.isEnabled()}));
+    enabled:    breakpoint.isEnabled()};
+}
+
+VmConnection.prototype.sendInitialBreakpoints = function (breakpoints) {
+  var bps = [];
+  for (var bp of breakpoints) {
+    bps.push(bpToJson(bp));
+  }
+  this.socket.send(JSON.stringify({
+    action: "initialBreakpoints",
+    breakpoints: bps
+  }));
+};
+
+VmConnection.prototype.updateBreakpoint = function (breakpoint) {
+  this.socket.send(JSON.stringify({
+    action: "updateBreakpoint",
+    breakpoint: bpToJson(breakpoint)
+  }));
 };
 
 VmConnection.prototype.sendDebuggerAction = function (action, lastSuspendEventId) {

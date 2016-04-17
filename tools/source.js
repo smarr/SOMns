@@ -160,6 +160,19 @@ Debugger.prototype.getBreakpoint = function (source, line, clickedSpan) {
   return bp;
 };
 
+Debugger.prototype.getEnabledBreakpoints = function () {
+  var bps = [];
+  for (var lines of this.breakpoints.values()) {
+    for (var line in lines) {
+      var bp = lines[line];
+      if (bp.isEnabled()) {
+        bps.push(bp);
+      }
+    }
+  }
+  return bps;
+};
+
 Debugger.prototype.setSuspended = function(eventId) {
   console.assert(!this.suspended);
   this.suspended = true;
