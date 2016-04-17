@@ -30,6 +30,7 @@ Controller.prototype.toggleConnection = function() {
 
 Controller.prototype.onConnect = function () {
   dbgLog("[WS] open");
+  this.dbg.suspended = false;
   this.view.onConnect();
   var bps = this.dbg.getEnabledBreakpoints();
   dbgLog("Send breakpoints: " + bps.length);
