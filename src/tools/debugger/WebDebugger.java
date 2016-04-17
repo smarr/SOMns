@@ -49,7 +49,7 @@ public class WebDebugger extends TruffleInstrument {
 
   private HttpServer httpServer;
   private WebSocketHandler webSocketServer;
-  private Future<WebSocket> clientConnected;
+  private static Future<WebSocket> clientConnected;
 
   private static Instrumenter instrumenter;
 
@@ -115,7 +115,16 @@ public class WebDebugger extends TruffleInstrument {
 
   public static void reportExecutionEvent(final ExecutionEvent e) {
     truffleDebugger = e.getDebugger();
-    // TODO: prepare step and continue???
+
+    assert clientConnected != null;
+    log("[DEBUGGER] Waiting for debugger to connect.");
+    try {
+      client = clientConnected.get();
+    } catch (InterruptedException | ExecutionException ex) {
+      // TODO Auto-generated catch block
+      ex.printStackTrace();
+    }
+    log("[DEBUGGER] Debugger connected.");
   }
 
   private static int nextSuspendEventId = 0;
@@ -249,20 +258,9 @@ public class WebDebugger extends TruffleInstrument {
       System.out.println("Failed starting WebSocket and/or HTTP Server");
     }
 
-    assert clientConnected != null;
-    System.out.println("[DEBUGGER] Waiting for debugger to connect.");
-    try {
-      client = clientConnected.get();
-//      System.out.println("SLEEEP");
-//      Thread.sleep(Long.MAX_VALUE);
-    } catch (InterruptedException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    } catch (ExecutionException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
-    System.out.println("[DEBUGGER] Debugger connected.");
+    // now we continue execution, but we wait for the future in the execution
+    // event
+
     // Checkstyle: resume
   }
 
