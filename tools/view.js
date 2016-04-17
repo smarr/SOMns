@@ -101,12 +101,13 @@ function annotateArray(arr, sourceId, sections) {
 
 function showSource(s, sections) {
   var tabListEntry = document.getElementById(s.id),
-    aElem = null;
+    aElem = document.getElementById("a" + s.id);
   if (tabListEntry) {
-    aElem = $(tabListEntry).find("a");
-    if (aElem.text() !== s.shortName) {
+    if (aElem.innerText !== s.shortName) {
       $(tabListEntry).remove();
+      $(aElem).remove();
       tabListEntry = null;
+      aElem = null;
     } else {
       return; // source is already there, so, I think, we don't need to update it
     }
@@ -117,11 +118,16 @@ function showSource(s, sections) {
 
   tabListEntry = nodeFromTemplate("tab-list-entry");
 
-  aElem = $(tabListEntry).find("a");
-  aElem.attr("href", "#" + s.id);
-  aElem.text(s.shortName);
-  $("#tabs").append(tabListEntry);
+  if (aElem === null) {
+    // create the tab "header/handle"
+    aElem = $(tabListEntry).find("a");
+    aElem.attr("href", "#" + s.id);
+    aElem.attr("id", "a" + s.id);
+    aElem.text(s.shortName);
+    $("#tabs").append(tabListEntry);
+  }
 
+  // create tab pane
   var newFileElement = nodeFromTemplate("file");
   newFileElement.setAttribute("id", s.id);
   newFileElement.getElementsByClassName("line-numbers")[0].innerHTML = createLineNumbers(countNumberOfLines(s.sourceText));
