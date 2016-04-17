@@ -3,20 +3,28 @@ package tools.debugger;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.frame.FrameInstance;
+import com.oracle.truffle.api.frame.FrameSlot;
+import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.instrumentation.Instrumenter;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.api.utilities.JSONHelper;
+import com.oracle.truffle.api.utilities.JSONHelper.JSONArrayBuilder;
 import com.oracle.truffle.api.utilities.JSONHelper.JSONObjectBuilder;
 
+import som.interpreter.actors.Actor;
+import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.SFarReference;
 import som.vmobjects.SClass;
+import tools.ObjectBuffer;
 import tools.Tagging;
 import tools.highlight.JsonWriter;
 import tools.highlight.Tags;
@@ -122,5 +130,72 @@ public final class JsonSerializer {
     // TODO: stack frame content, or on demand?
     // stackFrame.getFrame(FrameAccess.READ_ONLY, true);
     return frame;
+  }
+
+  public static JSONObjectBuilder createTopFrameJson(final MaterializedFrame frame, final RootNode root) {
+    JSONArrayBuilder arguments = JSONHelper.array();
+    for (Object o : frame.getArguments()) {
+      arguments.add(o.toString());
+    }
+
+    JSONObjectBuilder slots = JSONHelper.object();
+    for (FrameSlot slot : root.getFrameDescriptor().getSlots()) {
+      Object value = frame.getValue(slot);
+      slots.add(slot.getIdentifier().toString(),
+          Objects.toString(value));
+    }
+
+    JSONObjectBuilder frameJson = JSONHelper.object();
+    frameJson.add("arguments", arguments);
+    frameJson.add("slots", slots);
+    return frameJson;
+  }
+
+  public static JSONObjectBuilder createMessageHistoryJson(
+      final ObjectBuffer<ObjectBuffer<ObjectBuffer<EventualMessage>>> messagesPerThread,
+      final Map<SFarReference, String> actorsToIds,
+      final Map<Actor, String> actorObjsToIds) {
+    JSONArrayBuilder actors = JSONHelper.array();
+    for (Entry<SFarReference, String> e : actorsToIds.entrySet()) {
+      actors.add(toJson(e.getValue(), e.getKey()));
+    }
+
+    int mId = 0;
+    JSONObjectBuilder messages = JSONHelper.object();
+
+    Map<Actor, Set<JSONObjectBuilder>> perReceiver = new HashMap<>();
+    for (ObjectBuffer<ObjectBuffer<EventualMessage>> perThread : messagesPerThread) {
+      for (ObjectBuffer<EventualMessage> perBatch : perThread) {
+        for (EventualMessage m : perBatch) {
+          perReceiver.computeIfAbsent(m.getTarget(), a -> new HashSet<>());
+
+          JSONObjectBuilder jsonM = JSONHelper.object();
+          jsonM.add("id", "m-" + mId);
+          mId += 1;
+          assert actorObjsToIds.containsKey(m.getSender());
+          assert actorObjsToIds.containsKey(m.getTarget());
+          jsonM.add("sender", actorObjsToIds.get(m.getSender()));
+          jsonM.add("receiver", actorObjsToIds.get(m.getTarget()));
+          perReceiver.get(m.getTarget()).add(jsonM);
+        }
+      }
+    }
+
+    for (Entry<Actor, Set<JSONObjectBuilder>> e : perReceiver.entrySet()) {
+      JSONArrayBuilder arr = JSONHelper.array();
+      for (JSONObjectBuilder m : e.getValue()) {
+        arr.add(m);
+      }
+      messages.add(actorObjsToIds.get(e.getKey()), arr);
+    }
+
+    JSONObjectBuilder history = JSONHelper.object();
+    history.add("messages", messages); // TODO
+    history.add("actors", actors);
+
+    JSONObjectBuilder msg = JSONHelper.object();
+    msg.add("type", "messageHistory");
+    msg.add("messageHistory", history);
+    return msg;
   }
 }
