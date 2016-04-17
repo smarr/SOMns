@@ -174,6 +174,18 @@ Debugger.prototype.getEnabledBreakpoints = function () {
   return bps;
 };
 
+Debugger.prototype.getEnabledBreakpointsForSource = function (sourceName) {
+  var bps = [];
+  var lines = this.breakpoints[sourceName];
+  for (var line in lines) {
+    var bp = lines[line];
+    if (bp.isEnabled()) {
+      bps.push(bp);
+    }
+  }
+  return bps;
+};
+
 Debugger.prototype.setSuspended = function(eventId) {
   console.assert(!this.suspended);
   this.suspended = true;

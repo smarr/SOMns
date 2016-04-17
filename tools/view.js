@@ -397,7 +397,7 @@ View.prototype.ensureBreakpointListEntry = function (breakpoint) {
   list.appendChild(entry);
 };
 
-View.prototype.toggleBreakpoint = function (breakpoint) {
+View.prototype.updateBreakpoint = function (breakpoint) {
   this.ensureBreakpointListEntry(breakpoint);
 
   var lineNumSpan = $(breakpoint.lineNumSpan),

@@ -48,6 +48,14 @@ Controller.prototype.onError = function () {
 Controller.prototype.onReceivedSource = function (msg) {
   this.dbg.addSources(msg);
   this.view.displaySources(msg);
+
+  for (var sId in msg.sources) {
+    var source = msg.sources[sId];
+    var bps = this.dbg.getEnabledBreakpointsForSource(source.name);
+    for (var bp of bps) {
+      this.view.updateBreakpoint(bp);
+    }
+  }
 };
 
 Controller.prototype.onExecutionSuspension = function (msg) {
@@ -76,7 +84,7 @@ Controller.prototype.onToggleBreakpoint = function (line, clickedSpan) {
   breakpoint.toggle();
 
   this.vmConnection.updateBreakpoint(breakpoint);
-  this.view.toggleBreakpoint(breakpoint);
+  this.view.updateBreakpoint(breakpoint);
 };
 
 Controller.prototype.resumeExecution = function () {
