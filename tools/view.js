@@ -372,11 +372,24 @@ View.prototype.displaySuspendEvent = function (data, getSource) {
 
   // highlight current node
   var ssId = data.stack[0].sourceSection.id;
+  var sourceId = data.stack[0].sourceSection.sourceId;
   var ss = document.getElementById(ssId);
   $(ss).addClass("DbgCurrentNode");
 
   this.currentDomNode   = ss;
   this.currentSectionId = ssId;
+  this.showSourceById(sourceId);
+
+  // scroll to the statement
+  $('html, body').animate({
+    scrollTop: $(ss).offset().top
+  }, 300);
+};
+
+View.prototype.showSourceById = function (sourceId) {
+  if (this.getActiveSourceId() !== sourceId) {
+    $(document.getElementById("a" + sourceId)).tab('show');
+  }
 };
 
 View.prototype.getActiveSourceId = function () {
