@@ -129,7 +129,7 @@ function Debugger() {
   this.suspended = false;
   this.lastSuspendEventId = null;
   this.sourceObjects = {};
-  this.breakpoints = new Map();
+  this.breakpoints = {};
 }
 
 Debugger.prototype.getSource = function (id) {
@@ -148,21 +148,22 @@ Debugger.prototype.addSources = function (msg) {
 };
 
 Debugger.prototype.getBreakpoint = function (source, line, clickedSpan) {
-  if (!this.breakpoints.has(source)) {
-    this.breakpoints.set(source, {});
+  if (!this.breakpoints[source.name]) {
+    this.breakpoints[source.name] = {};
   }
 
-  var bp = this.breakpoints.get(source)[line];
+  var bp = this.breakpoints[source.name][line];
   if (!bp) {
     bp = new Breakpoint(source, line, clickedSpan);
-    this.breakpoints.get(source)[line] = bp;
+    this.breakpoints[source.name][line] = bp;
   }
   return bp;
 };
 
 Debugger.prototype.getEnabledBreakpoints = function () {
   var bps = [];
-  for (var lines of this.breakpoints.values()) {
+  for (var sourceName in this.breakpoints) {
+    var lines = this.breakpoints[sourceName];
     for (var line in lines) {
       var bp = lines[line];
       if (bp.isEnabled()) {
