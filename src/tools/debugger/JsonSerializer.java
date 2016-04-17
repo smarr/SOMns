@@ -2,12 +2,14 @@ package tools.debugger;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 
 import com.oracle.truffle.api.RootCallTarget;
+import com.oracle.truffle.api.debug.SuspendedEvent;
 import com.oracle.truffle.api.frame.FrameInstance;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.MaterializedFrame;
@@ -197,5 +199,29 @@ public final class JsonSerializer {
     msg.add("type", "messageHistory");
     msg.add("messageHistory", history);
     return msg;
+  }
+
+  public static JSONObjectBuilder createSuspendedEventJson(
+      final SuspendedEvent e, final Node suspendedNode, final RootNode suspendedRoot,
+      final Source suspendedSource, final String id, final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> tags, final Instrumenter instrumenter, final Map<Source, Set<RootNode>> roots) {
+    JSONObjectBuilder builder  = JSONHelper.object();
+    builder.add("type", "suspendEvent");
+
+    // first add the source info, because this builds up also tag info
+    builder.add("sourceId", getExistingSourceId(suspendedSource));
+    builder.add("sections", createJsonForSourceSections(suspendedSource, tags, instrumenter, roots));
+
+    JSONArrayBuilder stackJson = JSONHelper.array();
+    List<FrameInstance> stack = e.getStack();
+
+
+    for (int stackIndex = 0; stackIndex < stack.size(); stackIndex++) {
+      final Node callNode = stackIndex == 0 ? suspendedNode : stack.get(stackIndex).getCallNode();
+      stackJson.add(createFrame(callNode, stack.get(stackIndex), tags));
+    }
+    builder.add("stack", stackJson);
+    builder.add("topFrame", createTopFrameJson(e.getFrame(), suspendedRoot));
+    builder.add("id", id);
+    return builder;
   }
 }

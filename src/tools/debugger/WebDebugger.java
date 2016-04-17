@@ -5,7 +5,6 @@ import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -18,7 +17,6 @@ import org.java_websocket.WebSocket;
 import com.oracle.truffle.api.debug.Debugger;
 import com.oracle.truffle.api.debug.ExecutionEvent;
 import com.oracle.truffle.api.debug.SuspendedEvent;
-import com.oracle.truffle.api.frame.FrameInstance;
 import com.oracle.truffle.api.instrumentation.Instrumenter;
 import com.oracle.truffle.api.instrumentation.TruffleInstrument;
 import com.oracle.truffle.api.instrumentation.TruffleInstrument.Registration;
@@ -26,8 +24,6 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
-import com.oracle.truffle.api.utilities.JSONHelper;
-import com.oracle.truffle.api.utilities.JSONHelper.JSONArrayBuilder;
 import com.oracle.truffle.api.utilities.JSONHelper.JSONObjectBuilder;
 import com.sun.net.httpserver.HttpServer;
 
@@ -143,27 +139,10 @@ public class WebDebugger extends TruffleInstrument {
     RootNode suspendedRoot = suspendedNode.getRootNode();
     Source suspendedSource = suspendedRoot.getSourceSection().getSource();
 
-    JSONObjectBuilder builder  = JSONHelper.object();
-    builder.add("type", "suspendEvent");
-
-    // first add the source info, because this builds up also tag info
-    builder.add("sourceId", JsonSerializer.getExistingSourceId(suspendedSource));
-    builder.add("sections", JsonSerializer.createJsonForSourceSections(suspendedSource, loadedSourcesTags, instrumenter, rootNodes));
-
-    JSONArrayBuilder stackJson = JSONHelper.array();
-    List<FrameInstance> stack = e.getStack();
-
-
-    for (int stackIndex = 0; stackIndex < stack.size(); stackIndex++) {
-      final Node callNode = stackIndex == 0 ? suspendedNode : stack.get(stackIndex).getCallNode();
-      stackJson.add(JsonSerializer.createFrame(callNode, stack.get(stackIndex), loadedSourcesTags));
-    }
-    builder.add("stack", stackJson);
-
-    builder.add("topFrame", JsonSerializer.createTopFrameJson(e.getFrame(), suspendedRoot));
-
     String id = getNextSuspendEventId();
-    builder.add("id", id);
+
+    JSONObjectBuilder builder = JsonSerializer.createSuspendedEventJson(e, suspendedNode,
+        suspendedRoot, suspendedSource, id, WebDebugger.loadedSourcesTags, WebDebugger.instrumenter, WebDebugger.rootNodes);
 
     CompletableFuture<Object> future = new CompletableFuture<>();
     suspendEvents.put(id, e);
