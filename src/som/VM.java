@@ -51,6 +51,10 @@ public final class VM {
     return engine;
   }
 
+  public static void setEngine(final PolyglotEngine e) {
+    engine = e;
+  }
+
   private final boolean avoidExitForTesting;
   private final ObjectSystem objectSystem;
 
