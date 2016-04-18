@@ -11,12 +11,12 @@ import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameInstance;
 import com.oracle.truffle.api.frame.FrameInstanceVisitor;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
 import som.compiler.MixinDefinition;
 import som.interpreter.Invokable;
-import som.interpreter.Method;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.nary.UnaryBasicOperation;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
@@ -136,9 +136,10 @@ public final class SystemPrims {
       ArrayList<String> location = new ArrayList<String>();
       int[] maxLengthMethod = {0};
       VM.println("Stack Trace");
-      Truffle.getRuntime().iterateFrames(new FrameInstanceVisitor<Method>() {
+      Truffle.getRuntime().iterateFrames(new FrameInstanceVisitor<Object>() {
         @Override
-        public Method visitFrame(final FrameInstance frameInstance) {
+        public Object visitFrame(final FrameInstance frameInstance) {
+          Node callNode = frameInstance.getCallNode();
           RootCallTarget ct = (RootCallTarget) frameInstance.getCallTarget();
 
           // TODO: do we need to handle other kinds of root nodes?
@@ -152,7 +153,8 @@ public final class SystemPrims {
             String id = ss.getIdentifier();
             method.add(id);
             maxLengthMethod[0] = Math.max(maxLengthMethod[0], id.length());
-            location.add(ss.getSource().getName() + ":" + ss.getStartLine());
+            SourceSection nodeSS = callNode.getEncapsulatingSourceSection();
+            location.add(nodeSS.getSource().getName() + ":" + nodeSS.getStartLine() + ":" + nodeSS.getStartColumn());
 
           } else {
             String id = m.toString();
@@ -165,7 +167,8 @@ public final class SystemPrims {
       });
 
       StringBuilder sb = new StringBuilder();
-      for (int i = method.size() - 1; i >= 0; i--) {
+      final int skipDnuFrames = 2;
+      for (int i = method.size() - 1; i >= skipDnuFrames; i--) {
         sb.append(String.format("\t%1$-" + (maxLengthMethod[0] + 4) + "s",
           method.get(i)));
         sb.append(location.get(i));
