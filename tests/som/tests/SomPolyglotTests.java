@@ -41,6 +41,8 @@ public class SomPolyglotTests {
     Builder builder = PolyglotEngine.newBuilder();
     builder.config(SomLanguage.MIME_TYPE, SomLanguage.CMD_ARGS, args);
     PolyglotEngine vm = builder.build();
+    VM.setEngine(vm);
+
     Value result = vm.eval(SomLanguage.START);
     assertNotNull(result);
   }
@@ -51,6 +53,7 @@ public class SomPolyglotTests {
     builder.config(SomLanguage.MIME_TYPE, SomLanguage.CMD_ARGS, new String[] {
         "--platform", "core-lib/TestSuite/BasicInterpreterTests/Arrays.som"});
     PolyglotEngine engine = builder.build();
+    VM.setEngine(engine);
 
     engine.getInstruments().values().forEach(i -> i.setEnabled(false));
 
@@ -67,6 +70,8 @@ public class SomPolyglotTests {
     Builder builder = PolyglotEngine.newBuilder();
     builder.config(SomLanguage.MIME_TYPE, SomLanguage.CMD_ARGS, args);
     PolyglotEngine vm = builder.build();
+    VM.setEngine(vm);
+
     Instrument profiler = vm.getInstruments().get(TruffleProfiler.ID);
 
     Assume.assumeNotNull(profiler);
@@ -87,6 +92,8 @@ public class SomPolyglotTests {
     Builder builder = PolyglotEngine.newBuilder();
     builder.config(SomLanguage.MIME_TYPE, SomLanguage.CMD_ARGS, args);
     PolyglotEngine vm = builder.build();
+    VM.setEngine(vm);
+
     Instrument profiler = vm.getInstruments().get(TruffleProfiler.ID);
 
     Assume.assumeNotNull(profiler);
