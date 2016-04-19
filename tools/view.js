@@ -31,22 +31,22 @@ function Annotation(char) {
 }
 Annotation.prototype.toString = function() {
   this.before.sort(function (a, b) {
-    if (a.section.type != b.section.type) {
-      if (a.section.type == Begin) {
+    if (a.section.type !== b.section.type) {
+      if (a.section.type === Begin) {
         return -1;
       } else {
         return 1;
       }
     }
 
-    if (a.section.length == b.section.length) {
+    if (a.section.length === b.section.length) {
       return 0;
     }
 
     if (a.section.length < b.section.length) {
-      return (a.section.type == Begin) ? 1 : -1;
+      return (a.section.type === Begin) ? 1 : -1;
     } else {
-      return (a.section.type == Begin) ? -1 : 1;
+      return (a.section.type === Begin) ? -1 : 1;
     }
   });
 
@@ -97,6 +97,16 @@ function annotateArray(arr, sourceId, sections) {
       end.before.push(new End(s));
     }
   }
+}
+
+function countNumberOfLines(str) {
+  var cnt = 1;
+  for (var i = 0; i < str.length; i++) {
+    if (str[i] === "\n") {
+      cnt += 1;
+    }
+  }
+  return cnt;
 }
 
 function showSource(s, sections) {
@@ -161,6 +171,9 @@ function showInvocationProfile(profileData, rootSpan) {
   $(rootSpan).attr("data-placement", "auto top");
   $(rootSpan).popover();
 }
+
+var accessProfiles = [],
+  maxAccessCount = -1;
 
 function showAccessProfile(profileData, rootSpan) {
   if (profileData.count < 1) {
@@ -247,7 +260,7 @@ function generateGraph() {
 
 var heatmapStyleNode = null;
 function toggleHeatMap() {
-  if (heatmapStyleNode == null) {
+  if (heatmapStyleNode === null) {
     heatmapStyleNode = $("#style-heatmap").detach();
   } else {
     $("#style-main").after(heatmapStyleNode);
@@ -303,8 +316,8 @@ View.prototype.showSectionData = function (section) {
       document.getElementById(section.id));
   }
 
-  if (section.data && (section.data.localReads != null || section.data.localWrites != null)) {
-    if (section.data.localReads != null && section.data.localWrites != null) {
+  if (section.data && (section.data.localReads !== null || section.data.localWrites !== null)) {
+    if (section.data.localReads !== null && section.data.localWrites !== null) {
       throw "this is unexpected, adapt program";
     }
     showAccessProfile(section.data.localReads || section.data.localWrites,

@@ -50,16 +50,6 @@ function Message(id, sender, receiver) {
   this.receiver = receiver;
 }
 
-function countNumberOfLines(str) {
-  var cnt = 1;
-  for (var i = 0; i < str.length; i++) {
-    if (str[i] == "\n") {
-      cnt += 1;
-    }
-  }
-  return cnt;
-}
-
 function loadAndProcessFile(f) {
   var reader = new FileReader();
   reader.onload = (function(theFile) {
@@ -91,10 +81,6 @@ function handleFileSelect(e) {
     loadAndProcessFile(files[i]);
   }
 }
-
-
-var accessProfiles = [],
-  maxAccessCount = -1;
 
 function Breakpoint(source, line, lineNumSpan) {
   this.source      = source;
