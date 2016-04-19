@@ -59,7 +59,7 @@ function mapToArray(map) {
 
 var maxMessageCount = 0;
 
-function determineLinks(msgHist, nodeMap) {
+function countMessagesSenderToReceiver(msgHist, nodeMap) {
   var msgSends = {};
 
   dbgLog("[DetLinks] #msg: " + Object.keys(msgHist.messages).length);
@@ -71,7 +71,10 @@ function determineLinks(msgHist, nodeMap) {
       hashAtInc(msgSends[msg.sender], msg.receiver, 1);
     }
   }
+  return msgSends;
+}
 
+function createLinksData(msgSends, nodeMap) {
   dbgLog("[DetLinks] completed ");
 
   var links = [];
@@ -93,6 +96,11 @@ function determineLinks(msgHist, nodeMap) {
     }
   }
   return links;
+}
+
+function determineLinks(msgHist, nodeMap) {
+  var msgSends = countMessagesSenderToReceiver(msgHist, nodeMap);
+  return createLinksData(msgSends, nodeMap);
 }
 
 /**
