@@ -3,6 +3,6 @@ jdk:
   - oraclejdk8
 sudo: false
 install:
-  - git clone https://github.com/smarr/SOMns.git && cd SOMns && ant jar
+  - git clone --depth 1 https://github.com/smarr/SOMns.git && (cd SOMns && ant jar)
 script:
   - SOMns/som TestSuite/TestRunner.som
