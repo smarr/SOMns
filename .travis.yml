@@ -5,4 +5,4 @@ sudo: false
 install:
   - git clone --depth 1 https://github.com/smarr/SOMns.git && (cd SOMns && ant jar)
 script:
-  - SOMns/som TestSuite/TestRunner.som
+  - SOMns/som -G TestSuite/TestRunner.som
