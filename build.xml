@@ -87,9 +87,8 @@
             dest="${lib.dir}/checkstyle-${checkstyle.version}-all.jar" />
     </target>
     
-    <taskdef resource="com/puppycrawl/tools/checkstyle/ant/checkstyle-ant-task.properties" classpath="${lib.dir}/checkstyle-${checkstyle.version}-all.jar" />
-    
     <target name="checkstyle" depends="checkstyle-jar" description="Check Code with Checkstyle">
+        <taskdef resource="com/puppycrawl/tools/checkstyle/ant/checkstyle-ant-task.properties" classpath="${lib.dir}/checkstyle-${checkstyle.version}-all.jar" />
         <checkstyle config=".checkstyle_checks.xml">
           <fileset dir="src" includes="**/*.java"/>
           <formatter type="plain"/>
