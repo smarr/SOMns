@@ -152,11 +152,6 @@ SOM_ARGS = [BOOT_CLASSPATH,
             '--platform', BASE_DIR + '/core-lib/Platform.som',
             '--kernel', BASE_DIR + '/core-lib/Kernel.som']
 
-# == Hotspot -XX:CompileCommand=print,*::callRoot
-# Splitting
-# -G:+TruffleSplitting
-# -G:+TruffleSplittingNew
-
 # == Compiler Settings
 TWEAK_INLINING = ['-Dgraal.TruffleCompilationThreshold=191',
                   '-Dgraal.TruffleInliningMaxCallerSize=10000',
