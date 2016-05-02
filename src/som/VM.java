@@ -23,6 +23,7 @@ import com.oracle.truffle.tools.TruffleProfiler;
 import com.oracle.truffle.tools.debug.shell.client.SimpleREPLClient;
 import com.oracle.truffle.tools.debug.shell.server.REPLServer;
 
+import coveralls.truffle.Coverage;
 import som.compiler.MixinDefinition;
 import som.interpreter.SomLanguage;
 import som.interpreter.TruffleCompiler;
@@ -300,6 +301,15 @@ public final class VM {
 
       if (vmOptions.webDebuggerEnabled) {
         instruments.get(WebDebugger.ID).setEnabled(true);
+      }
+
+      if (vmOptions.coverageEnabled) {
+        Instrument coveralls = instruments.get(Coverage.ID);
+        coveralls.setEnabled(true);
+        Coverage cov = coveralls.lookup(Coverage.class);
+        cov.setRepoToken(vmOptions.coverallsRepoToken);
+        cov.setServiceName("travis-ci");
+        cov.includeTravisData(true);
       }
 
       if (vmOptions.dynamicMetricsEnabled) {

@@ -13,3 +13,6 @@
 [submodule "libs/minimal-json"]
 	path = libs/minimal-json
 	url = https://github.com/smarr/minimal-json.git
+[submodule "libs/coveralls-truffle"]
+	path = libs/coveralls-truffle
+	url = https://github.com/smarr/CoverallsTruffle.git
