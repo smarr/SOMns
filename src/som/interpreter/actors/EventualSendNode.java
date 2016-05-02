@@ -9,6 +9,7 @@ import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.instrumentation.Instrumentable;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
@@ -28,6 +29,7 @@ import som.vmobjects.SSymbol;
 
 
 @NodeChild(value = "arguments", type = InternalObjectArrayNode.class)
+@Instrumentable(factory = EventualSendNodeWrapper.class)
 public abstract class EventualSendNode extends ExprWithTagsNode {
 
   protected final SSymbol selector;
@@ -41,6 +43,16 @@ public abstract class EventualSendNode extends ExprWithTagsNode {
 
     onReceive = createOnReceiveCallTarget(selector, numArgs, source);
     wrapArgs  = createArgWrapper(numArgs);
+  }
+
+  /**
+   * Use for wrapping node only.
+   */
+  protected EventualSendNode(final EventualSendNode wrappedNode) {
+    super((SourceSection) null);
+    selector  = null;
+    onReceive = null;
+    wrapArgs  = null;
   }
 
   private static RootCallTarget createOnReceiveCallTarget(final SSymbol selector,
