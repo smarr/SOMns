@@ -1,6 +1,7 @@
 package som.interpreter.nodes;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
@@ -127,5 +128,13 @@ public abstract class IsValueCheckNode extends UnaryExpressionNode {
   @Override
   public Object executeGeneric(final VirtualFrame frame) {
     return executeEvaluated(frame, self.executeGeneric(frame));
+  }
+
+  @Override
+  protected final boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+    if (tag == StatementTag.class) {
+      return false;
+    }
+    return super.isTaggedWithIgnoringEagerness(tag);
   }
 }
