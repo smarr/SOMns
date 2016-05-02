@@ -2,7 +2,11 @@ language: java
 jdk:
   - oraclejdk8
 sudo: false
+env:
+  global:
+    - secure: "7VbxZPqprUoep2OhcaG3/DD/UaA67ewcx5dY4GhJY3J802zyrdFC8eslLqe1owcnMGdKUfRJeM4glXuxLeuWzVenSOneyMVZabINps7w6+c1wHagBavcUlwOs9y/lN68u/WOj8r+IMPkCQiGd16noeftFLh+hZ9W/gfzQgQHvmaj+OrToIzUle9qn4uiITm6/GVdFlC7lquXUl9ydVyVqf2VWyLgLaxPQxf6JfC9nY3qv3UIK0jKu+HfDlyE+hIIZ7hOiVMr9Kvi6fz8uQ+mofC8hUn9O+wPf2GSQ9QuxV94stPMRfwZjCgEwaAe6kY4EACljodUQ7otzsojKqWSMruoyZR5CaWPv/s/C6n05grx3UBBdQcIqIPFsgqHppVUv/hO9V2AUFvl5fYIYhvulJ/HTziCYE5s5UFzN8G/POuKwcTd0/R1GIhNurVZZJx8XDL7KRmrvaPcZ2WR6FR5I640tcNjFhL5JULDNrs5UYL9iEg5uGx+V+wHh9FtVaWUEE8S69QrFqRSjxOFpRb1I3CHplUsoNh7l0AZgklfIUvLs3uF5QH2kp4vCYe+8Wm4Uc9BYN6On3w8YYkLXilef8RTBIIMByRPCtwapy5gORGRy16ZPtwxRZDbAFUyBbPug3vUFvLw8uK3kpwC59lKKcYOvnqqrckQgD8KpeMzESg="
 install:
   - git clone --depth 1 https://github.com/smarr/SOMns.git && (cd SOMns && ant jar)
 script:
   - SOMns/som -G TestSuite/TestRunner.som
+  - SOMns/som -G --coveralls $COVERALLS_REPO_TOKEN TestSuite/TestRunner.som
