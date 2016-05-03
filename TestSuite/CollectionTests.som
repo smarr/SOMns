@@ -222,6 +222,27 @@ class CollectionTests usingPlatform: platform testFramework: minitest = (
       self deny: a == t.        (* different objects *)
       self assert: a equals: t. (* but with equal value *)
     )
+    
+    public testAddAll = (
+      | a v |
+      a := Set new.
+      a add: #a.
+      a add: #b.
+      
+      v := Vector new: 4.
+      v append: #c.
+      v append: #a.
+      v append: #b.
+      v append: #d.
+      
+      a addAll: v.
+      
+      self assert: 4 equals: a size.
+      self assert: (a contains: #a).
+      self assert: (a contains: #b).
+      self assert: (a contains: #c).
+      self assert: (a contains: #d).
+    )
   ) : ( TEST_CONTEXT = () )
   
   public class VectorTest = TestContext (
