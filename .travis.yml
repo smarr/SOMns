@@ -9,4 +9,4 @@ install:
   - git clone --depth 1 https://github.com/smarr/SOMns.git && (cd SOMns && ant jar)
 script:
   - SOMns/som -G TestSuite/TestRunner.som
-  - SOMns/som -G --coveralls $COVERALLS_REPO_TOKEN TestSuite/TestRunner.som
+  - SOMns/som -G -k Kernel.som -p Platform.som --coveralls $COVERALLS_REPO_TOKEN TestSuite/TestRunner.som
