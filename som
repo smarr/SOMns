@@ -21,6 +21,10 @@ parser.add_argument('-d', '--debug', help='wait for debugger to attach',
                     dest='debug', action='store_true', default=False)
 parser.add_argument('-t', '--num-threads', help='number of threads to be used',
                     dest='threads', default=None)
+parser.add_argument('-p', '--platform', help='SOM Platform file, default: core-lib/Platform.som',
+                    dest='som_platform', default=BASE_DIR + '/core-lib/Platform.som')
+parser.add_argument('-k', '--kernel', help='SOM Kernel file, default: core-lib/Kernel.som',
+                    dest='som_kernel', default=BASE_DIR + '/core-lib/Kernel.som')
 
 
 explore = parser.add_argument_group('Explore', 'Investigate Execution')
@@ -147,10 +151,8 @@ BOOT_CLASSPATH = ('-Xbootclasspath/a:'
 if args.coveralls_repo_token:
     BOOT_CLASSPATH += ':' + BASE_DIR + '/libs/coveralls-truffle/coveralls-truffle.jar'
 
-SOM_ARGS = [BOOT_CLASSPATH,
-            'som.VM',
-            '--platform', BASE_DIR + '/core-lib/Platform.som',
-            '--kernel', BASE_DIR + '/core-lib/Kernel.som']
+SOM_ARGS = [BOOT_CLASSPATH, 'som.VM',
+            '--platform', args.som_platform, '--kernel', args.som_kernel]
 
 # == Compiler Settings
 TWEAK_INLINING = ['-Dgraal.TruffleCompilationThreshold=191',
