@@ -21,6 +21,7 @@ THE SOFTWARE.
 class CollectionTests usingPlatform: platform testFramework: minitest = (
 | private TestContext = minitest TestContext.
   private Set         = platform collections Set.
+  private Dictionary  = platform collections Dictionary.
   private Array       = platform kernel Array.
   private Vector      = platform kernel Vector.
   private ObjectMirror= platform mirrors ObjectMirror.
@@ -335,5 +336,43 @@ class CollectionTests usingPlatform: platform testFramework: minitest = (
       v removeAll.
       self assert: 5 equals: v capacity.
     )
+  ) : ( TEST_CONTEXT = () )
+  
+  public class DictionaryTest = TestContext ()(
+    public testAtAndAtPut = (
+      | dict |
+      dict := Dictionary new.
+      self assert: (dict at: #ff) equals: nil.
+      
+      dict at: #ff put: 33.
+      self assert: (dict at: #ff) equals: 33.
+
+      dict at: #ff put: 44.
+      self assert: (dict at: #ff) equals: 44.
+    )
+    
+    public testContainsKey = (
+      | dict |
+      dict := Dictionary new.
+      
+      self deny: (dict containsKey: #ff).
+      dict at: #ff put: 0.
+      self assert: (dict containsKey: #ff).
+    )
+    
+    public testKeysAndValues = (
+      | dict |
+      dict := Dictionary new.
+      self assert: dict keys size   equals: 0.
+      self assert: dict values size equals: 0.
+      
+      dict at: #ee put: 55.
+      self assert: dict keys size   equals: 1.
+      self assert: dict values size equals: 1.
+      
+      self assert: (dict keys contains: #ee).
+      self assert: (dict values contains: 55).
+    )
+    
   ) : ( TEST_CONTEXT = () )
 )
