@@ -388,5 +388,15 @@ class CollectionTests usingPlatform: platform testFramework: minitest = (
       dict at: o put: 44.
       self assert: (dict at: o) equals: 44.
     )
+    
+    public testIdentDictContainsKey = (
+      | dict o |
+      dict := IdentityDictionary new.
+      o := Object new.
+      
+      self deny: (dict containsKey: o).
+      dict at: o put: 0.
+      self assert: (dict containsKey: o).
+    )
   ) : ( TEST_CONTEXT = () )
 )
