@@ -243,6 +243,26 @@ class CollectionTests usingPlatform: platform testFramework: minitest = (
       self assert: (a contains: #c).
       self assert: (a contains: #d).
     )
+    
+    public testUnion = (
+      | a b c |
+      a := Set new.
+      b := Set new.
+      a add: #a.
+      a add: #b.
+      b add: #c.
+      b add: #b.
+      
+      c := a union: b.
+
+      self deny: c == a.
+      self deny: c == b.
+      
+      self assert: 3 equals: c size.
+      self assert: (c contains: #a).
+      self assert: (c contains: #b).
+      self assert: (c contains: #c).
+    )
   ) : ( TEST_CONTEXT = () )
   
   public class VectorTest = TestContext (
