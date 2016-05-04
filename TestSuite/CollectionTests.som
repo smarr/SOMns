@@ -22,6 +22,7 @@ class CollectionTests usingPlatform: platform testFramework: minitest = (
 | private TestContext = minitest TestContext.
   private Set         = platform collections Set.
   private Dictionary  = platform collections Dictionary.
+  private IdentityDictionary = platform collections IdentityDictionary.
   private Array       = platform kernel Array.
   private Vector      = platform kernel Vector.
   private ObjectMirror= platform mirrors ObjectMirror.
@@ -374,5 +375,18 @@ class CollectionTests usingPlatform: platform testFramework: minitest = (
       self assert: (dict values contains: 55).
     )
     
+    
+    public testIdentDictAtAndAtPut = (
+      | dict o |
+      dict := IdentityDictionary new.
+      o := Object new.
+      self assert: (dict at: o) equals: nil.
+      
+      dict at: o put: 33.
+      self assert: (dict at: o) equals: 33.
+
+      dict at: o put: 44.
+      self assert: (dict at: o) equals: 44.
+    )
   ) : ( TEST_CONTEXT = () )
 )
