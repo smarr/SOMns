@@ -317,7 +317,7 @@ class Collections usingKernel: kernel = Value (
       ^ values
     )
   ) : (
-    public new = ( ^ self new: initialSize )
+    public new = ( ^ self new: initialCapacity )
   )
   
   public class IdentityDictionary new: size = Dictionary new: size ()(
