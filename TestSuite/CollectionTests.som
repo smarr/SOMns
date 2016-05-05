@@ -413,5 +413,15 @@ class CollectionTests usingPlatform: platform testFramework: minitest = (
       dict at: o put: 0.
       self assert: (dict containsKey: o).
     )
+    
+    public testLargerDict = (
+      | dict |
+      dict := Dictionary new.
+      1 to: 100000 do: [:i |
+        dict at: i put: i ].
+      
+      self assert: dict size equals: 100000.
+      self assert: dict values size equals: 100000.
+    )
   ) : ( TEST_CONTEXT = () )
 )

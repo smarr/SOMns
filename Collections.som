@@ -257,7 +257,10 @@ class Collections usingKernel: kernel = Value (
 
     private splitBucket: oldStorage bucket: i head: head = (
       | loHead loTail hiHead hiTail current |
-      
+      loHead := nil. loTail := nil.
+      hiHead := nil. hiTail := nil.
+      current := head.
+
       [current notNil] whileTrue: [
         (current hash & oldStorage size) = 0
           ifTrue: [
