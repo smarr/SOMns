@@ -297,7 +297,6 @@ class Collections usingKernel: kernel = Value (
         | current |
         current := b.
         [ current notNil ] whileTrue: [
-          current print. ' ' print. current value println.
           block value: current value.
           current := current next ] ].
     )
