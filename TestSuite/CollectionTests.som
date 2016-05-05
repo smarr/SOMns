@@ -375,6 +375,21 @@ class CollectionTests usingPlatform: platform testFramework: minitest = (
       self assert: (dict values contains: 55).
     )
     
+    public testRemoveAll = (
+      | dict |
+      dict := Dictionary new.
+      
+      self assert: dict size equals: 0 description: 'Empty after creation'.
+
+      dict at: #ee put: 55.
+      dict at: #e1 put: 55.
+      dict at: #e2 put: 55.
+
+      self assert: dict size equals: 3 description: 'After inserting 3 elements'.
+      
+      dict removeAll.
+      self assert: dict size equals: 0 description: 'Empty after removing all'.
+    )
     
     public testIdentDictAtAndAtPut = (
       | dict o |

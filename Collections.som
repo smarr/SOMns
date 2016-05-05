@@ -145,7 +145,7 @@ class Collections usingKernel: kernel = Value (
 
   public class Dictionary new: size = (
   | protected buckets ::= Array new: size.
-    protected size_   ::= size.
+    protected size_   ::= 0.
   |)(
     protected class Entry new: hash key: key value: val next: next = (
     | public hash  = hash.
@@ -280,9 +280,12 @@ class Collections usingKernel: kernel = Value (
         buckets at: i + oldStorage size put: hiHead ]
     )
 
-    public size   = ( ^ size_ )
-    public isSize = ( ^ size_ = 0 )
-    public removeAll = ( buckets = Array new: buckets size )
+    public size      = ( ^ size_ )
+    public isEmpty   = ( ^ size_ = 0 )
+    public removeAll = (
+      buckets := Array new: buckets size.
+      size_ := 0.
+    )
     
     public keys = (
       | keys |
