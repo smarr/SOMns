@@ -68,6 +68,29 @@ Afterwards, the simple Hello World program is executed with:
 Information on previous authors are included in the AUTHORS file. This code is
 distributed under the MIT License. Please see the LICENSE file for details.
 
+Setup Development Environment
+-----------------------------
+1. Install JDK 1.8 and Eclipse Mars (or later)
+
+2. Download the project from Github https://github.com/smarr/SOMns
+
+3. Configure in Eclipse SOMns project
+In option Run Configurations go to Java Application/SOMns and select tab Arguments, then copy:
+
+In Program arguments:
+core-lib/Benchmarks/Harness.som Mandelbrot 1 0 500
+
+In VM arguments:
+-ea -esa
+
+4. Run `ant` on the command line, or via Eclipse, to make sure that all libraries are loaded and available.
+
+5. Start Truffle service
+$ cd libs/truffle/
+$ ../mx/mx eclipseinit
+
+6. Test SOMns with Mandelbrot file
+$ ./som -G core-lib/Benchmarks/Harness.som Mandelbrot 2 0 500
 
 Build Status
 ------------
