@@ -40,8 +40,7 @@ public abstract class DoubleDivPrim extends ArithmeticPrim {
   }
 
   @Specialization
-  public final SAbstractObject doLong(final long left, final double right) {
-    CompilerAsserts.neverPartOfCompilation("DoubleDiv101");
-    throw new NotYetImplementedException(); // TODO: need to implement the "/" case here directly... : return resendAsDouble("/", left, (SDouble) rightObj, frame.pack());
+  public final double doLong(final long left, final double right) {
+    return left / right;
   }
 }
