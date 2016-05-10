@@ -259,6 +259,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     public // argument = ( ^ vmMirror double: self divideDouble: argument )
     public % argument  = ( ^ vmMirror double: self modulo: argument )
     public abs         = ( ^ (self < 0.0) ifTrue: (0.0 - self) ifFalse: self )
+    public cos         = ( ^ vmMirror doubleCos:  self )
     public sin         = ( ^ vmMirror doubleSin:  self )
     public exp         = ( ^ vmMirror doubleExp:  self )
     public log         = ( ^ vmMirror doubleLog:  self )
