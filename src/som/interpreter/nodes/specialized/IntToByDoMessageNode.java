@@ -64,7 +64,7 @@ public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode
       if (receiver <= limit) {
         valueSend.call(frame, new Object[] {block, receiver});
       }
-      for (long i = receiver + 1; i <= limit; i += step) {
+      for (long i = receiver + step; i <= limit; i += step) {
         valueSend.call(frame, new Object[] {block, i});
       }
     } finally {
@@ -81,7 +81,7 @@ public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode
       if (receiver <= limit) {
         valueSend.call(frame, new Object[] {block, receiver});
       }
-      for (long i = receiver + 1; i <= limit; i += step) {
+      for (long i = receiver + step; i <= limit; i += step) {
         valueSend.call(frame, new Object[] {block, i});
       }
     } finally {
