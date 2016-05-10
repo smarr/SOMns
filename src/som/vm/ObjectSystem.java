@@ -42,6 +42,7 @@ import som.interpreter.nodes.specialized.whileloops.WhilePrimitiveNodeFactory;
 import som.primitives.AsStringPrimFactory;
 import som.primitives.BlockPrimsFactory;
 import som.primitives.ClassPrimsFactory;
+import som.primitives.CosPrimFactory;
 import som.primitives.DoublePrimsFactory;
 import som.primitives.EqualsEqualsPrimFactory;
 import som.primitives.EqualsPrimFactory;
@@ -240,6 +241,7 @@ public final class ObjectSystem {
     allFactories.add(RemainderPrimFactory.getInstance());
     allFactories.add(ExpPrimFactory.getInstance());
     allFactories.add(LogPrimFactory.getInstance());
+    allFactories.add(CosPrimFactory.getInstance());
     allFactories.add(SinPrimFactory.getInstance());
     allFactories.add(SqrtPrimFactory.getInstance());
     allFactories.add(SubtractionPrimFactory.getInstance());
