@@ -212,6 +212,7 @@ if args.web_debugger:
     SOM_ARGS += ['--web-debug']
 if args.dynamic_metrics:
     SOM_ARGS += ['--dynamic-metrics']
+    flags += ['-Dsom.dynamicMetrics=true']
 
 if args.actor_tracing:
     flags += ['-Dsom.actorTracing=true']
@@ -219,6 +220,9 @@ if args.actor_tracing:
 if (args.truffle_profile or args.truffle_debugger or args.web_debugger or
     args.dynamic_metrics or args.highlight_file or args.coveralls_repo_token):
     flags += ['-Dsom.instrumentation=true']
+
+if (args.truffle_debugger or args.web_debugger):
+    flags += ['-Dsom.truffleDebugger=true']
 
 if not args.interpreter and args.perf_warnings:
     flags += ['-Dgraal.TruffleCompilationExceptionsAreFatal=true',
