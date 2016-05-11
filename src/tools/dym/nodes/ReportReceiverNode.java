@@ -23,7 +23,7 @@ public class ReportReceiverNode extends ExecutionEventNode {
   @TruffleBoundary
   private void profileResult(final Object result) {
     // TODO: make language independent
-    profile.recordReceiverType(Types.getClassOf(result));
+    profile.recordReceiverType(Types.getClassOf(result).getInstanceFactory());
   }
 
   @Override

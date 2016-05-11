@@ -21,6 +21,6 @@ public class ReadProfilingNode extends CountingNode<ReadValueProfile> {
   @TruffleBoundary
   private void profileResult(final Object result) {
     // TODO: we could potentially specialize the getClassOf
-    counter.profileValueType(Types.getClassOf(result));
+    counter.profileValueType(Types.getClassOf(result).getInstanceFactory());
   }
 }

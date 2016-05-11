@@ -13,8 +13,8 @@ import com.oracle.truffle.api.source.SourceSection;
 import som.compiler.MixinDefinition;
 import som.interpreter.Invokable;
 import som.interpreter.nodes.dispatch.Dispatchable;
+import som.interpreter.objectstorage.ClassFactory;
 import som.vm.NotYetImplementedException;
-import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 import tools.dym.Tags.ArrayRead;
@@ -250,7 +250,7 @@ public final class MetricsCsvWriter {
         file.print(p.getValue());
         file.print("\t");
 
-        Map<SClass, Integer> receivers = p.getReceivers();
+        Map<ClassFactory, Integer> receivers = p.getReceivers();
 //        int numRcvrsRecorded = receivers.values().stream().reduce(0, Integer::sum);
         file.print(receivers.values().size());
 
@@ -279,7 +279,7 @@ public final class MetricsCsvWriter {
         file.print("\t");
         file.print(p.getNumberOfObjectFields());
         file.print("\t");
-        file.println(p.getSOMClass().getName().getString());
+        file.println(p.getTypeName());
       }
     } catch (FileNotFoundException e) {
       throw new RuntimeException(e);
@@ -320,10 +320,10 @@ public final class MetricsCsvWriter {
 
       for (ReadValueProfile p : reads.values()) {
         String abbrv = getSourceSectionAbbrv(p.getSourceSection());
-        for (Entry<SClass, Integer> e : p.getTypeProfile().entrySet()) {
+        for (Entry<ClassFactory, Integer> e : p.getTypeProfile().entrySet()) {
           file.print(abbrv);
           file.print("\tread\t");
-          file.print(e.getKey().getName().getString());
+          file.print(e.getKey().getClassName().getString());
           file.print("\t");
           file.print(e.getValue());
           file.println();
@@ -358,10 +358,10 @@ public final class MetricsCsvWriter {
 
       for (ReadValueProfile p : reads.values()) {
         String abbrv = getSourceSectionAbbrv(p.getSourceSection());
-        for (Entry<SClass, Integer> e : p.getTypeProfile().entrySet()) {
+        for (Entry<ClassFactory, Integer> e : p.getTypeProfile().entrySet()) {
           file.print(abbrv);
           file.print("\tread\t");
-          file.print(e.getKey().getName().getString());
+          file.print(e.getKey().getClassName().getString());
           file.print("\t");
           file.print(e.getValue());
           file.println();

@@ -7,13 +7,13 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.Invokable;
-import som.vmobjects.SClass;
+import som.interpreter.objectstorage.ClassFactory;
 
 
 public class CallsiteProfile extends Counter {
 
   private final Map<Invokable, Integer> callTargetMap;
-  private final Map<SClass, Integer>     receiverMap;
+  private final Map<ClassFactory, Integer>     receiverMap;
 
   public CallsiteProfile(final SourceSection source) {
     super(source);
@@ -22,7 +22,7 @@ public class CallsiteProfile extends Counter {
   }
 
   @TruffleBoundary
-  public void recordReceiverType(final SClass rcvrClass) {
+  public void recordReceiverType(final ClassFactory rcvrClass) {
     receiverMap.merge(rcvrClass, 1, Integer::sum);
   }
 
@@ -35,7 +35,7 @@ public class CallsiteProfile extends Counter {
     return callTargetMap;
   }
 
-  public Map<SClass, Integer> getReceivers() {
+  public Map<ClassFactory, Integer> getReceivers() {
     return receiverMap;
   }
 }
