@@ -278,6 +278,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     
     'Converting'
     public asString    = ( ^ vmMirror doubleAsString: self )
+    public asInteger   = ( ^ vmMirror doubleAsInteger: self )
     
     'Iterating'
     public to: limit do: block = (
