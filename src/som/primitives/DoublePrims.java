@@ -34,6 +34,27 @@ public abstract class DoublePrims  {
   }
 
   @GenerateNodeFactory
+  @Primitive("doubleAsInteger:")
+  public abstract static class AsIntPrim extends UnaryBasicOperation {
+    public AsIntPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+    public AsIntPrim(final SourceSection source) { super(false, source); }
+
+    @Override
+    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+      if (tag == OpArithmetic.class) {
+        return true;
+      } else {
+        return super.isTaggedWithIgnoringEagerness(tag);
+      }
+    }
+
+    @Specialization
+    public final long doDouble(final double receiver) {
+      return (long) receiver;
+    }
+  }
+
+  @GenerateNodeFactory
   @Primitive("doublePositiveInfinity:")
   public abstract static class PositiveInfinityPrim extends UnaryExpressionNode {
     public PositiveInfinityPrim(final SourceSection source) { super(false, source); }
