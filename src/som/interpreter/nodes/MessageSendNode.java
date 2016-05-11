@@ -48,6 +48,8 @@ import som.interpreter.nodes.specialized.whileloops.WhileWithStaticBlocksNode.Wh
 import som.primitives.BlockPrimsFactory.ValueNonePrimFactory;
 import som.primitives.BlockPrimsFactory.ValueOnePrimFactory;
 import som.primitives.BlockPrimsFactory.ValueTwoPrimFactory;
+import som.primitives.CosPrimFactory;
+import som.primitives.DoublePrimsFactory.AsIntPrimFactory;
 import som.primitives.DoublePrimsFactory.PositiveInfinityPrimFactory;
 import som.primitives.DoublePrimsFactory.RoundPrimFactory;
 import som.primitives.EqualsEqualsPrimFactory;
@@ -299,6 +301,11 @@ public final class MessageSendNode {
             return replace(PositiveInfinityPrimFactory.create(getSourceSection(), argumentNodes[0]));
           }
           break;
+        case "asInteger":
+          if (receiver instanceof Double) {
+            return makeEagerUnaryPrim(AsIntPrimFactory.create(true, getSourceSection(), null));
+          }
+          break;
         case "round":
           if (receiver instanceof Double) {
             return makeEagerUnaryPrim(RoundPrimFactory.create(true, getSourceSection(), null));
@@ -317,6 +324,11 @@ public final class MessageSendNode {
         case "sin":
           if (receiver instanceof Double) {
             return makeEagerUnaryPrim(SinPrimFactory.create(true, getSourceSection(), null));
+          }
+          break;
+        case "cos":
+          if (receiver instanceof Double) {
+            return makeEagerUnaryPrim(CosPrimFactory.create(true, getSourceSection(), null));
           }
           break;
         case "exp":
