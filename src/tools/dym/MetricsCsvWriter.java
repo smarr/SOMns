@@ -122,7 +122,11 @@ public final class MetricsCsvWriter {
         assert "bool".equals(typeCategory(a.getArgType(0)));
         assert "bool".equals(typeCategory(a.getArgType(1)));
         return "bool";
-      } else if (p.getOperation().equals("abs") || p.getOperation().equals("sqrt")) {
+      } else if (p.getOperation().equals("abs") ||
+          p.getOperation().equals("sqrt") ||
+          p.getOperation().equals("sin") ||
+          p.getOperation().equals("cos") ||
+          p.getOperation().equals("asInteger")) {
         return typeCategory(a.getArgType(1));
       } else if (p.getOperation().equals("as32BitUnsignedValue") ||
           p.getOperation().equals("as32BitSignedValue")) {
@@ -151,6 +155,10 @@ public final class MetricsCsvWriter {
       }
       if (left.equals("ref") || right.equals("ref")) {
         return "ref";
+      }
+      if (left.equals("float") && right.equals("int") ||
+          left.equals("int") && right.equals("float")) {
+        return "float";
       }
       throw new NotYetImplementedException();
     } else if (tags.contains(ArrayRead.class) || tags.contains(ArrayWrite.class)) {
