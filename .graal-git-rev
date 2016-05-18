@@ -6,4 +6,4 @@ SCRIPT=`head -n 6 .graal-git-rev; echo ''; echo '# current revision'; echo ' '`
 echo "${SCRIPT}GIT-REV="`git --git-dir ../graal/.git rev-parse HEAD` > .graal-git-rev; exit 0
 
 # current revision
- GIT-REV=78f3e350d68b9f2ec85a522088be096775daa964
+ GIT-REV=7f382da9d406064205ddfd7a8ee6e2ff43eab87f
