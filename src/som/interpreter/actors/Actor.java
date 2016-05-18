@@ -242,7 +242,8 @@ public class Actor {
 
     @Override
     public void run() {
-      Accessor.initializeThreadForUseWithPolglotEngine(VM.getEngine());
+      // TODO: figure out whether everything still works without this hack
+      // Accessor.initializeThreadForUseWithPolglotEngine(VM.getEngine());
 
       super.run();
     }

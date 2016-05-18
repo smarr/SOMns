@@ -120,9 +120,10 @@ public final class SomLanguage extends TruffleLanguage<VM> {
 
     private final FindContextNode<VM> contextNode;
 
-    protected StartInterpretation() {
+    @SuppressWarnings("unchecked")
+    protected StartInterpretation(final Node findContextNode) {
       super(SomLanguage.class, null, null);
-      contextNode = new FindContextNode<VM>(SomLanguage.class);
+      contextNode = (FindContextNode<VM>) findContextNode;
     }
 
     @Override
@@ -134,7 +135,7 @@ public final class SomLanguage extends TruffleLanguage<VM> {
   }
 
   private CallTarget createStartCallTarget() {
-    return Truffle.getRuntime().createCallTarget(new StartInterpretation());
+    return Truffle.getRuntime().createCallTarget(new StartInterpretation(createFindContextNode()));
   }
 
   @Override
