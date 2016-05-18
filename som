@@ -5,6 +5,7 @@ import os
 import shlex
 
 BASE_DIR    = os.path.dirname(os.path.realpath(__file__))
+JVMCI_BIN   = os.getenv('JVMCI_BIN',  None)
 GRAAL_HOME  = os.getenv('GRAAL_HOME',  None)
 GRAAL_FLAGS = os.getenv('GRAAL_FLAGS', None)
 
@@ -102,10 +103,7 @@ parser.add_argument('args', nargs=argparse.REMAINDER,
                     help='arguments passed to SOMns')
 args = parser.parse_args()
 
-
-
-JAVA_BIN  = '/product/bin/java'
-JAVA_ARGS = ['-d64']
+JAVA_BIN = '/product/bin/java'
 
 if args.dynamic_metrics:
     args.interpreter = True
@@ -115,7 +113,11 @@ if args.java_interpreter:
 
 if args.interpreter:
     java_bin = "java"
+elif JVMCI_BIN:
+    java_bin = JVMCI_BIN
+    JAVA_ARGS = ['-d64', '-server']
 else:
+    JAVA_ARGS = ['-d64']
     # determine graal binary
     if GRAAL_HOME:
         graal_home = GRAAL_HOME
