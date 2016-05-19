@@ -104,7 +104,8 @@ parser.add_argument('args', nargs=argparse.REMAINDER,
                     help='arguments passed to SOMns')
 args = parser.parse_args()
 
-JAVA_BIN = '/product/bin/java'
+JAVA_BIN  = '/product/bin/java'
+JAVA_ARGS = ['-d64']
 
 if args.dynamic_metrics:
     args.interpreter = True
@@ -116,9 +117,8 @@ if args.interpreter:
     java_bin = "java"
 elif JVMCI_BIN:
     java_bin = JVMCI_BIN
-    JAVA_ARGS = ['-d64', '-server']
+    JAVA_ARGS += ['-server']
 else:
-    JAVA_ARGS = ['-d64']
     # determine graal binary
     if GRAAL_HOME:
         graal_home = GRAAL_HOME
