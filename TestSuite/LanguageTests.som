@@ -587,4 +587,21 @@ class LanguageTests usingPlatform: platform testFramework: minitest = Value (
       ]
     )
   ) : ( TEST_CONTEXT = () )
+  
+  (* Test Regression with non-local variables *)
+  public class NonLocalVarAccess = TestContext ()(
+  
+    public testWriteDifferentTypes = (
+      | value |
+      1 to: 10 do: [:i |
+        value := 0.
+        self collection do: [:i | value := value + i].
+        value := value // 4.
+      ].
+
+      assert: value equals: 3.75
+    )
+    
+    private collection = ( ^ Array with: 7 with: 8 )
+  ) : ( TEST_CONTEXT = () )
 )
