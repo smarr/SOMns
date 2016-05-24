@@ -127,19 +127,19 @@ public abstract class NonLocalVariableNode extends ContextualNode {
       this(node.contextLevel, node.slot, node.getSourceSection());
     }
 
-    @Specialization(guards = "isBoolKind()")
+    @Specialization(guards = "isBoolKind(frame)")
     public final boolean writeBoolean(final VirtualFrame frame, final boolean expValue) {
       determineContext(frame).setBoolean(slot, expValue);
       return expValue;
     }
 
-    @Specialization(guards = "isLongKind()")
+    @Specialization(guards = "isLongKind(frame)")
     public final long writeLong(final VirtualFrame frame, final long expValue) {
       determineContext(frame).setLong(slot, expValue);
       return expValue;
     }
 
-    @Specialization(guards = "isDoubleKind()")
+    @Specialization(guards = "isDoubleKind(frame)")
     public final double writeDouble(final VirtualFrame frame, final double expValue) {
       determineContext(frame).setDouble(slot, expValue);
       return expValue;
@@ -152,7 +152,7 @@ public abstract class NonLocalVariableNode extends ContextualNode {
       return expValue;
     }
 
-    protected final boolean isBoolKind() {
+    protected final boolean isBoolKind(final VirtualFrame frame) {
       if (slot.getKind() == FrameSlotKind.Boolean) {
         return true;
       }
@@ -164,7 +164,7 @@ public abstract class NonLocalVariableNode extends ContextualNode {
       return false;
     }
 
-    protected final boolean isLongKind() {
+    protected final boolean isLongKind(final VirtualFrame frame) {
       if (slot.getKind() == FrameSlotKind.Long) {
         return true;
       }
@@ -176,7 +176,7 @@ public abstract class NonLocalVariableNode extends ContextualNode {
       return false;
     }
 
-    protected final boolean isDoubleKind() {
+    protected final boolean isDoubleKind(final VirtualFrame frame) {
       if (slot.getKind() == FrameSlotKind.Double) {
         return true;
       }
