@@ -116,12 +116,6 @@ public abstract class LocalVariableNode extends ExprWithTagsNode {
       return frame.getObject(slot);
     }
 
-//    @Generic
-//    public final Object doGeneric(final VirtualFrame frame) {
-//      assert isInitialized();
-//      return FrameUtil.getObjectSafe(frame, slot);
-//    }
-
     protected final boolean isUninitialized(final VirtualFrame frame) {
       return slot.getKind() == FrameSlotKind.Illegal;
     }

@@ -101,12 +101,6 @@ public abstract class NonLocalVariableNode extends ContextualNode {
       return determineContext(frame).getObject(slot);
     }
 
-//    @Generic
-//    public final Object doGeneric(final VirtualFrame frame) {
-//      assert isInitialized();
-//      return FrameUtil.getObjectSafe(determineContext(frame), slot);
-//    }
-
     protected final boolean isUninitialized(final VirtualFrame frame) {
       return slot.getKind() == FrameSlotKind.Illegal;
     }
