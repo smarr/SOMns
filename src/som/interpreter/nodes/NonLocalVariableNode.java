@@ -60,8 +60,8 @@ public abstract class NonLocalVariableNode extends ContextualNode {
       this(node.contextLevel, node.slot, node.getSourceSection());
     }
 
-    @Specialization(guards = "isUninitialized()")
-    public final Object doNil() {
+    @Specialization(guards = "isUninitialized(frame)")
+    public final Object doNil(final VirtualFrame frame) {
       return Nil.nilObject;
     }
 
@@ -111,7 +111,7 @@ public abstract class NonLocalVariableNode extends ContextualNode {
       return slot.getKind() != FrameSlotKind.Illegal;
     }
 
-    protected final boolean isUninitialized() {
+    protected final boolean isUninitialized(final VirtualFrame frame) {
       return slot.getKind() == FrameSlotKind.Illegal;
     }
 
