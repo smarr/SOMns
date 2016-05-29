@@ -36,7 +36,6 @@ public final class OperationProfile extends Counter {
   }
 
   public void enterMainNode() {
-    inc();
     argumentsForExecutions.push(new Object[numSubexpressions]);
   }
 

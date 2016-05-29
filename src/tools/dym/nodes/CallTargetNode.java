@@ -1,25 +1,24 @@
 package tools.dym.nodes;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.instrumentation.ExecutionEventNode;
 
 import som.interpreter.Invokable;
 import tools.dym.profiles.CallsiteProfile;
 
 
-public class CallTargetNode extends ExecutionEventNode {
+public class CallTargetNode extends CountingNode<CallsiteProfile> {
 
-  protected final CallsiteProfile profile;
   protected final Invokable invokable; // TODO: should I try harder to get SInvokable?
 
   public CallTargetNode(final CallsiteProfile profile, final Invokable invokable) {
-    this.profile = profile;
+    super(profile);
     this.invokable = invokable;
   }
 
   @Override
   public void onEnter(final VirtualFrame frame) {
-    profile.recordInvocationTarget(invokable);
+    super.onEnter(frame);
+    counter.recordInvocationTarget(invokable);
   }
 
   @Override

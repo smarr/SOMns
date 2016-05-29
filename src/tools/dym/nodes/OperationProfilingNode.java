@@ -32,6 +32,7 @@ public final class OperationProfilingNode extends CountingNode<OperationProfile>
 
   @Override
   protected void onEnter(final VirtualFrame frame) {
+    super.onEnter(frame);
     counter.enterMainNode();
   }
 
