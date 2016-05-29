@@ -186,32 +186,26 @@ public final class MetricsCsvWriter {
   private void operationProfiles() {
     @SuppressWarnings("unchecked")
     Map<SourceSection, OperationProfile> ops = (Map<SourceSection, OperationProfile>) data.get(JsonWriter.OPERATIONS);
-    try (PrintWriter file = new PrintWriter(metricsFolder + File.separator + "operations.csv")) {
-      file.println("Source Section\tOperation\tCategory\tType\tInvocations");
+    try (CsvWriter file = new CsvWriter(metricsFolder, "operations.csv",
+        "Source Section", "Operation", "Category", "Type", "Invocations")) {
 
       for (Entry<SourceSection, OperationProfile> e : ops.entrySet()) {
         for (Entry<Arguments, Integer> a : e.getValue().getArgumentTypes().entrySet()) {
-          file.print(getSourceSectionAbbrv(e.getKey()));
-          file.print("\t");
-          file.print(e.getValue().getOperation());
-          file.print("\t");
-          file.print(String.join(" ", toNameArray(e.getValue().getTags())));
-          file.print("\t");
-          file.print(operationType(e.getValue(), a.getKey()));  // a.getKey().getOperationType()
-          file.print("\t");
-          file.println(a.getValue());
+          file.write(
+              getSourceSectionAbbrv(e.getKey()),
+              e.getValue().getOperation(),
+              String.join(" ", toNameArray(e.getValue().getTags())),
+              operationType(e.getValue(), a.getKey()),  // a.getKey().getOperationType()
+              a.getValue());
         }
 
-        file.print(getSourceSectionAbbrv(e.getKey()));
-        file.print("\t");
-        file.print(e.getValue().getOperation());
-        file.print("\t");
-        file.print(String.join(" ", toNameArray(e.getValue().getTags())));
-        file.print("\tTOTAL\t");
-        file.println(e.getValue().getValue());
+        file.write(
+            getSourceSectionAbbrv(e.getKey()),
+            e.getValue().getOperation(),
+            String.join(" ", toNameArray(e.getValue().getTags())),
+            "TOTAL",
+            e.getValue().getValue());
       }
-    } catch (FileNotFoundException e) {
-      throw new RuntimeException(e);
     }
   }
 
@@ -219,15 +213,13 @@ public final class MetricsCsvWriter {
     @SuppressWarnings("unchecked")
     Map<SourceSection, InvocationProfile> profiles = (Map<SourceSection, InvocationProfile>) data.get(JsonWriter.METHOD_INVOCATION_PROFILE);
 
-    try (PrintWriter file = new PrintWriter(metricsFolder + File.separator + "method-activations.csv")) {
-      file.println("Source Identifier\tActivation Count");
+    try (CsvWriter file = new CsvWriter(metricsFolder, "method-activations.csv",
+        "Source Identifier", "Activation Count")) {
       for (InvocationProfile p : profiles.values()) {
-        file.print(p.getMethod().getRootNode().getSourceSection().getIdentifier()); //TODO: probably need something more precise
-        file.print("\t");
-        file.println(p.getValue());
+        file.write(
+            p.getMethod().getRootNode().getSourceSection().getIdentifier(), //TODO: probably need something more precise
+            p.getValue());
       }
-    } catch (FileNotFoundException e) {
-      throw new RuntimeException(e);
     }
   }
 
@@ -235,8 +227,8 @@ public final class MetricsCsvWriter {
     @SuppressWarnings("unchecked")
     Map<SourceSection, CallsiteProfile> profiles = (Map<SourceSection, CallsiteProfile>) data.get(JsonWriter.METHOD_CALLSITE);
 
-    try (PrintWriter file = new PrintWriter(metricsFolder + File.separator + "method-callsites.csv")) {
-      file.println("Source Section\tCall Count\tNum Rcvrs\tNum Targets");
+    try (CsvWriter file = new CsvWriter(metricsFolder, "method-callsites.csv",
+        "Source Section", "Call Count", "Num Rcvrs", "Num Targets")) {
       for (CallsiteProfile p : profiles.values()) {
         if (data.get(JsonWriter.FIELD_READS).containsKey(p.getSourceSection()) ||
             data.get(JsonWriter.FIELD_WRITES).containsKey(p.getSourceSection()) ||
@@ -245,22 +237,18 @@ public final class MetricsCsvWriter {
         }
 
         String abbrv = getSourceSectionAbbrv(p.getSourceSection());
-        file.print(abbrv);
-        file.print("\t");
-        file.print(p.getValue());
-        file.print("\t");
 
         Map<ClassFactory, Integer> receivers = p.getReceivers();
-//        int numRcvrsRecorded = receivers.values().stream().reduce(0, Integer::sum);
-        file.print(receivers.values().size());
-
+//      int numRcvrsRecorded = receivers.values().stream().reduce(0, Integer::sum);
         Map<Invokable, Integer> calltargets = p.getCallTargets();
-//        int numCalltargetsInvoked = calltargets.values().stream().reduce(0, Integer::sum);
-        file.print("\t");
-        file.println(calltargets.values().size());
+//      int numCalltargetsInvoked = calltargets.values().stream().reduce(0, Integer::sum);
+
+        file.write(
+            abbrv,
+            p.getValue(),
+            receivers.values().size(),
+            calltargets.values().size());
       }
-    } catch (FileNotFoundException e) {
-      throw new RuntimeException(e);
     }
   }
 
@@ -268,21 +256,12 @@ public final class MetricsCsvWriter {
     @SuppressWarnings("unchecked")
     Map<SourceSection, AllocationProfile> profiles = (Map<SourceSection, AllocationProfile>) data.get(JsonWriter.NEW_OBJECT_COUNT);
 
-    try (PrintWriter file = new PrintWriter(metricsFolder + File.separator + "new-objects.csv")) {
-      file.println("Source Section\tNew Objects\tNumber of Fields\tClass");
-
+    try (CsvWriter file = new CsvWriter(metricsFolder, "new-objects.csv",
+        "Source Section", "New Objects", "Number of Fields", "Class")) {
       for (AllocationProfile p : profiles.values()) {
         String abbrv = getSourceSectionAbbrv(p.getSourceSection());
-        file.print(abbrv);
-        file.print("\t");
-        file.print(p.getValue());
-        file.print("\t");
-        file.print(p.getNumberOfObjectFields());
-        file.print("\t");
-        file.println(p.getTypeName());
+        file.write(abbrv, p.getValue(), p.getNumberOfObjectFields(), p.getTypeName());
       }
-    } catch (FileNotFoundException e) {
-      throw new RuntimeException(e);
     }
   }
 
@@ -290,22 +269,14 @@ public final class MetricsCsvWriter {
     @SuppressWarnings("unchecked")
     Map<SourceSection, ArrayCreationProfile> profiles = (Map<SourceSection, ArrayCreationProfile>) data.get(JsonWriter.NEW_ARRAY_COUNT);
 
-    try (PrintWriter file = new PrintWriter(metricsFolder + File.separator + "new-arrays.csv")) {
-      file.println("Source Section\tNew Arrays\tSize");
-
+    try (CsvWriter file = new CsvWriter(metricsFolder, "new-arrays.csv",
+        "Source Section", "New Arrays", "Size")) {
       for (ArrayCreationProfile p : profiles.values()) {
         String abbrv = getSourceSectionAbbrv(p.getSourceSection());
         for (Entry<Long, Long> e : p.getSizes().entrySet()) {
-          file.print(abbrv);
-          file.print("\t");
-          file.print(e.getValue());
-          file.print("\t");
-          file.print(e.getKey());
-          file.println();
+          file.write(abbrv, e.getValue(), e.getKey());
         }
       }
-    } catch (FileNotFoundException e) {
-      throw new RuntimeException(e);
     }
   }
 
@@ -315,35 +286,22 @@ public final class MetricsCsvWriter {
     @SuppressWarnings("unchecked")
     Map<SourceSection, ReadValueProfile> writes = (Map<SourceSection, ReadValueProfile>) data.get(JsonWriter.FIELD_WRITES);
 
-    try (PrintWriter file = new PrintWriter(metricsFolder + File.separator + "field-accesses.csv")) {
-      file.println("Source Section\tAccess Type\tData Type\tCount");
+    try (CsvWriter file = new CsvWriter(metricsFolder, "field-accesses.csv",
+        "Source Section", "Access Type", "Data Type", "Count")) {
 
       for (ReadValueProfile p : reads.values()) {
         String abbrv = getSourceSectionAbbrv(p.getSourceSection());
         for (Entry<ClassFactory, Integer> e : p.getTypeProfile().entrySet()) {
-          file.print(abbrv);
-          file.print("\tread\t");
-          file.print(e.getKey().getClassName().getString());
-          file.print("\t");
-          file.print(e.getValue());
-          file.println();
+          file.write(abbrv, "read", e.getKey().getClassName().getString(), e.getValue());
         }
 
-        file.print(abbrv);
-        file.print("\tread\tALL\t");
-        file.print(p.getValue());
-        file.println();
+        file.write(abbrv, "read", "ALL", p.getValue());
       }
 
       for (Counter p : writes.values()) {
         String abbrv = getSourceSectionAbbrv(p.getSourceSection());
-        file.print(abbrv);
-        file.print("\twrite\tALL\t");
-        file.print(p.getValue());
-        file.println();
+        file.write(abbrv, "write", "ALL", p.getValue());
       }
-    } catch (FileNotFoundException e) {
-      throw new RuntimeException(e);
     }
   }
 
@@ -353,35 +311,25 @@ public final class MetricsCsvWriter {
     @SuppressWarnings("unchecked")
     Map<SourceSection, Counter> writes = (Map<SourceSection, Counter>) data.get(JsonWriter.LOCAL_WRITES);
 
-    try (PrintWriter file = new PrintWriter(metricsFolder + File.separator + "local-accesses.csv")) {
-      file.println("Source Section\tAccess Type\tData Type\tCount");
-
+    try (CsvWriter file = new CsvWriter(metricsFolder, "local-accesses.csv",
+        "Source Section", "Access Type", "Data Type", "Count")) {
       for (ReadValueProfile p : reads.values()) {
         String abbrv = getSourceSectionAbbrv(p.getSourceSection());
         for (Entry<ClassFactory, Integer> e : p.getTypeProfile().entrySet()) {
-          file.print(abbrv);
-          file.print("\tread\t");
-          file.print(e.getKey().getClassName().getString());
-          file.print("\t");
-          file.print(e.getValue());
-          file.println();
+          file.write(
+              abbrv,
+              "read",
+              e.getKey().getClassName().getString(),
+              e.getValue());
         }
 
-        file.print(abbrv);
-        file.print("\tread\tALL\t");
-        file.print(p.getValue());
-        file.println();
+        file.write(abbrv, "read", "ALL", p.getValue());
       }
 
       for (Counter p : writes.values()) {
         String abbrv = getSourceSectionAbbrv(p.getSourceSection());
-        file.print(abbrv);
-        file.print("\twrite\tALL\t");
-        file.print(p.getValue());
-        file.println();
+        file.write(abbrv, "write", "ALL", p.getValue());
       }
-    } catch (FileNotFoundException e) {
-      throw new RuntimeException(e);
     }
   }
 
@@ -430,41 +378,25 @@ public final class MetricsCsvWriter {
     @SuppressWarnings("unchecked")
     Map<SourceSection, InvocationProfile> profiles = (Map<SourceSection, InvocationProfile>) data.get(JsonWriter.METHOD_INVOCATION_PROFILE);
 
-    try (PrintWriter file = new PrintWriter(metricsFolder + File.separator + "defined-classes.csv")) {
-      file.println("Class Name\tSource Section\tMethods Executed");
+    try (CsvWriter file = new CsvWriter(metricsFolder, "defined-classes.csv",
+        "Class Name", "Source Section", "Methods Executed")) {
 
       for (MixinDefinition clazz : structuralProbe.getClasses()) {
-        file.print(clazz.getName().getString());
-        // TODO: get fully qualified name
-        file.print("\t");
-        file.print(getSourceSectionAbbrv(clazz.getSourceSection()));
-        file.print("\t");
-        file.print(numExecutedMethods(clazz, profiles.values()));
-        file.println();
+        file.write(
+            clazz.getName().getString(), // TODO: get fully qualified name
+            getSourceSectionAbbrv(clazz.getSourceSection()),
+            numExecutedMethods(clazz, profiles.values()));
       }
-    } catch (FileNotFoundException e) {
-      throw new RuntimeException(e);
     }
 
-
-    try (PrintWriter file = new PrintWriter(metricsFolder + File.separator + "defined-methods.csv")) {
-      file.println("Name\tExecuted\tExecution Count");
+    try (CsvWriter file = new CsvWriter(metricsFolder, "defined-methods.csv",
+        "Name", "Executed", "Execution Count")) {
 
       for (SInvokable i : structuralProbe.getMethods()) {
-        file.print(i.toString());
-        file.print("\t");
-
         int numInvokations = methodInvocationCount(i, profiles.values());
-
-        if (numInvokations == 0) {
-          file.println("false\t0");
-        } else {
-          file.print("true\t");
-          file.println(numInvokations);
-        }
+        String executed = (numInvokations == 0) ? "false" : "true";
+        file.write(i.toString(), executed, numInvokations);
       }
-    } catch (FileNotFoundException e) {
-      throw new RuntimeException(e);
     }
   }
 
@@ -472,20 +404,15 @@ public final class MetricsCsvWriter {
     @SuppressWarnings("unchecked")
     Map<SourceSection, BranchProfile> branches = (Map<SourceSection, BranchProfile>) data.get(JsonWriter.BRANCH_PROFILES);
 
-    try (PrintWriter file = new PrintWriter(metricsFolder + File.separator + "branches.csv")) {
-      file.println("Source Section\tTrueCnt\tFalseCnt\tTotal");
-
+    try (CsvWriter file = new CsvWriter(metricsFolder, "branches.csv",
+        "Source Section", "TrueCnt", "FalseCnt", "Total")) {
       for (Entry<SourceSection, BranchProfile> e : branches.entrySet()) {
-        file.print(getSourceSectionAbbrv(e.getKey()));
-        file.print("\t");
-        file.print(e.getValue().getTrueCount());
-        file.print("\t");
-        file.print(e.getValue().getFalseCount());
-        file.print("\t");
-        file.println(e.getValue().getValue());
+        file.write(
+            getSourceSectionAbbrv(e.getKey()),
+            e.getValue().getTrueCount(),
+            e.getValue().getFalseCount(),
+            e.getValue().getValue());
       }
-    } catch (FileNotFoundException e) {
-      throw new RuntimeException(e);
     }
   }
 
@@ -493,24 +420,22 @@ public final class MetricsCsvWriter {
     @SuppressWarnings("unchecked")
     Map<SourceSection, LoopProfile> loops = (Map<SourceSection, LoopProfile>) data.get(JsonWriter.LOOPS);
 
-    try (PrintWriter file = new PrintWriter(metricsFolder + File.separator + "loops.csv")) {
-      file.println("Source Section\tLoop Activations\tNum Iterations");
+    try (CsvWriter file = new CsvWriter(metricsFolder, "loops.csv",
+        "Source Section", "Loop Activations", "Num Iterations")) {
 
       for (Entry<SourceSection, LoopProfile> e : loops.entrySet()) {
         for (Entry<Integer, Integer> l : e.getValue().getIterations().entrySet()) {
-          file.print(getSourceSectionAbbrv(e.getKey()));
-          file.print("\t");
-          file.print(l.getKey());
-          file.print("\t");
-          file.println(l.getValue());
+          file.write(
+              getSourceSectionAbbrv(e.getKey()),
+              l.getKey(),
+              l.getValue());
         }
 
-        file.print(getSourceSectionAbbrv(e.getKey()));
-        file.print("\tTOTAL\t");
-        file.println(e.getValue().getValue());
+        file.write(
+            getSourceSectionAbbrv(e.getKey()),
+            "TOTAL",
+            e.getValue().getValue());
       }
-    } catch (FileNotFoundException e) {
-      throw new RuntimeException(e);
     }
   }
 }
