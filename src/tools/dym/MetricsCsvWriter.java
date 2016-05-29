@@ -4,9 +4,12 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -189,8 +192,8 @@ public final class MetricsCsvWriter {
     try (CsvWriter file = new CsvWriter(metricsFolder, "operations.csv",
         "Source Section", "Operation", "Category", "Type", "Invocations")) {
 
-      for (Entry<SourceSection, OperationProfile> e : ops.entrySet()) {
-        for (Entry<Arguments, Integer> a : e.getValue().getArgumentTypes().entrySet()) {
+      for (Entry<SourceSection, OperationProfile> e : sortSS(ops)) {
+        for (Entry<Arguments, Integer> a : sortArg(e.getValue().getArgumentTypes())) {
           file.write(
               getSourceSectionAbbrv(e.getKey()),
               e.getValue().getOperation(),
@@ -215,10 +218,10 @@ public final class MetricsCsvWriter {
 
     try (CsvWriter file = new CsvWriter(metricsFolder, "method-activations.csv",
         "Source Identifier", "Activation Count")) {
-      for (InvocationProfile p : profiles.values()) {
+      for (Entry<SourceSection, InvocationProfile> e : sortSS(profiles)) {
         file.write(
-            p.getMethod().getRootNode().getSourceSection().getIdentifier(), //TODO: probably need something more precise
-            p.getValue());
+            e.getValue().getMethod().getRootNode().getSourceSection().getIdentifier(), //TODO: probably need something more precise
+            e.getValue().getValue());
       }
     }
   }
@@ -229,7 +232,8 @@ public final class MetricsCsvWriter {
 
     try (CsvWriter file = new CsvWriter(metricsFolder, "method-callsites.csv",
         "Source Section", "Call Count", "Num Rcvrs", "Num Targets")) {
-      for (CallsiteProfile p : profiles.values()) {
+      for (Entry<SourceSection, CallsiteProfile> e : sortSS(profiles)) {
+        CallsiteProfile p = e.getValue();
         if (data.get(JsonWriter.FIELD_READS).containsKey(p.getSourceSection()) ||
             data.get(JsonWriter.FIELD_WRITES).containsKey(p.getSourceSection()) ||
             data.get(JsonWriter.CLASS_READS).containsKey(p.getSourceSection())) {
@@ -258,7 +262,8 @@ public final class MetricsCsvWriter {
 
     try (CsvWriter file = new CsvWriter(metricsFolder, "new-objects.csv",
         "Source Section", "New Objects", "Number of Fields", "Class")) {
-      for (AllocationProfile p : profiles.values()) {
+      for (Entry<SourceSection, AllocationProfile> e : sortSS(profiles)) {
+        AllocationProfile p = e.getValue();
         String abbrv = getSourceSectionAbbrv(p.getSourceSection());
         file.write(abbrv, p.getValue(), p.getNumberOfObjectFields(), p.getTypeName());
       }
@@ -271,9 +276,10 @@ public final class MetricsCsvWriter {
 
     try (CsvWriter file = new CsvWriter(metricsFolder, "new-arrays.csv",
         "Source Section", "New Arrays", "Size")) {
-      for (ArrayCreationProfile p : profiles.values()) {
+      for (Entry<SourceSection, ArrayCreationProfile> ee : sortSS(profiles)) {
+        ArrayCreationProfile p = ee.getValue();
         String abbrv = getSourceSectionAbbrv(p.getSourceSection());
-        for (Entry<Long, Long> e : p.getSizes().entrySet()) {
+        for (Entry<Integer, Integer> e : sortInt(p.getSizes())) {
           file.write(abbrv, e.getValue(), e.getKey());
         }
       }
@@ -284,21 +290,23 @@ public final class MetricsCsvWriter {
     @SuppressWarnings("unchecked")
     Map<SourceSection, ReadValueProfile> reads = (Map<SourceSection, ReadValueProfile>) data.get(JsonWriter.FIELD_READS);
     @SuppressWarnings("unchecked")
-    Map<SourceSection, ReadValueProfile> writes = (Map<SourceSection, ReadValueProfile>) data.get(JsonWriter.FIELD_WRITES);
+    Map<SourceSection, Counter> writes = (Map<SourceSection, Counter>) data.get(JsonWriter.FIELD_WRITES);
 
     try (CsvWriter file = new CsvWriter(metricsFolder, "field-accesses.csv",
         "Source Section", "Access Type", "Data Type", "Count")) {
 
-      for (ReadValueProfile p : reads.values()) {
+      for (Entry<SourceSection, ReadValueProfile> ee : sortSS(reads)) {
+        ReadValueProfile p = ee.getValue();
         String abbrv = getSourceSectionAbbrv(p.getSourceSection());
-        for (Entry<ClassFactory, Integer> e : p.getTypeProfile().entrySet()) {
+        for (Entry<ClassFactory, Integer> e : sortCF(p.getTypeProfile())) {
           file.write(abbrv, "read", e.getKey().getClassName().getString(), e.getValue());
         }
 
         file.write(abbrv, "read", "ALL", p.getValue());
       }
 
-      for (Counter p : writes.values()) {
+      for (Entry<SourceSection, Counter> e : sortSS(writes)) {
+        Counter p = e.getValue();
         String abbrv = getSourceSectionAbbrv(p.getSourceSection());
         file.write(abbrv, "write", "ALL", p.getValue());
       }
@@ -313,9 +321,10 @@ public final class MetricsCsvWriter {
 
     try (CsvWriter file = new CsvWriter(metricsFolder, "local-accesses.csv",
         "Source Section", "Access Type", "Data Type", "Count")) {
-      for (ReadValueProfile p : reads.values()) {
+      for (Entry<SourceSection, ReadValueProfile> ee : sortSS(reads)) {
+        ReadValueProfile p = ee.getValue();
         String abbrv = getSourceSectionAbbrv(p.getSourceSection());
-        for (Entry<ClassFactory, Integer> e : p.getTypeProfile().entrySet()) {
+        for (Entry<ClassFactory, Integer> e : sortCF(p.getTypeProfile())) {
           file.write(
               abbrv,
               "read",
@@ -326,7 +335,8 @@ public final class MetricsCsvWriter {
         file.write(abbrv, "read", "ALL", p.getValue());
       }
 
-      for (Counter p : writes.values()) {
+      for (Entry<SourceSection, Counter> e : sortSS(writes)) {
+        Counter p = e.getValue();
         String abbrv = getSourceSectionAbbrv(p.getSourceSection());
         file.write(abbrv, "write", "ALL", p.getValue());
       }
@@ -381,7 +391,7 @@ public final class MetricsCsvWriter {
     try (CsvWriter file = new CsvWriter(metricsFolder, "defined-classes.csv",
         "Class Name", "Source Section", "Methods Executed")) {
 
-      for (MixinDefinition clazz : structuralProbe.getClasses()) {
+      for (MixinDefinition clazz : sortMD(structuralProbe.getClasses())) {
         file.write(
             clazz.getName().getString(), // TODO: get fully qualified name
             getSourceSectionAbbrv(clazz.getSourceSection()),
@@ -392,7 +402,7 @@ public final class MetricsCsvWriter {
     try (CsvWriter file = new CsvWriter(metricsFolder, "defined-methods.csv",
         "Name", "Executed", "Execution Count")) {
 
-      for (SInvokable i : structuralProbe.getMethods()) {
+      for (SInvokable i : sortInv(structuralProbe.getMethods())) {
         int numInvokations = methodInvocationCount(i, profiles.values());
         String executed = (numInvokations == 0) ? "false" : "true";
         file.write(i.toString(), executed, numInvokations);
@@ -406,7 +416,7 @@ public final class MetricsCsvWriter {
 
     try (CsvWriter file = new CsvWriter(metricsFolder, "branches.csv",
         "Source Section", "TrueCnt", "FalseCnt", "Total")) {
-      for (Entry<SourceSection, BranchProfile> e : branches.entrySet()) {
+      for (Entry<SourceSection, BranchProfile> e : sortSS(branches)) {
         file.write(
             getSourceSectionAbbrv(e.getKey()),
             e.getValue().getTrueCount(),
@@ -423,8 +433,8 @@ public final class MetricsCsvWriter {
     try (CsvWriter file = new CsvWriter(metricsFolder, "loops.csv",
         "Source Section", "Loop Activations", "Num Iterations")) {
 
-      for (Entry<SourceSection, LoopProfile> e : loops.entrySet()) {
-        for (Entry<Integer, Integer> l : e.getValue().getIterations().entrySet()) {
+      for (Entry<SourceSection, LoopProfile> e : sortSS(loops)) {
+        for (Entry<Integer, Integer> l : sortInt(e.getValue().getIterations())) {
           file.write(
               getSourceSectionAbbrv(e.getKey()),
               l.getKey(),
@@ -437,5 +447,57 @@ public final class MetricsCsvWriter {
             e.getValue().getValue());
       }
     }
+  }
+
+  private static int compare(final SourceSection a, final SourceSection b) {
+    if (a == b) {
+      return 0;
+    }
+
+    if (a.getSource() != b.getSource()) {
+      return a.getSource().getName().compareTo(b.getSource().getName());
+    }
+
+    if (a.getCharIndex() != b.getCharIndex()) {
+      return a.getCharIndex() - b.getCharIndex();
+    }
+
+    return b.getCharEndIndex() - a.getCharEndIndex();
+  }
+
+  private static SortedSet<MixinDefinition> sortMD(final Set<MixinDefinition> set) {
+    TreeSet<MixinDefinition> sortedSet = new TreeSet<>((a, b) -> a.getName().getString().compareTo(b.getName().getString()));
+    sortedSet.addAll(set);
+    return sortedSet;
+  }
+
+  private static SortedSet<SInvokable> sortInv(final Set<SInvokable> set) {
+    TreeSet<SInvokable> sortedSet = new TreeSet<>((a, b) -> a.toString().compareTo(b.toString()));
+    sortedSet.addAll(set);
+    return sortedSet;
+  }
+
+  private static <V> SortedSet<Entry<SourceSection, V>> sortSS(final Map<SourceSection, V> map) {
+    return sort(map, (a, b) -> compare(a.getKey(), b.getKey()));
+  }
+
+  private static <V> SortedSet<Entry<Integer, V>> sortInt(final Map<Integer, V> map) {
+    return sort(map, (a, b) -> a.getKey().compareTo(b.getKey()));
+  }
+
+  private static <V> SortedSet<Entry<Arguments, V>> sortArg(final Map<Arguments, V> map) {
+    return sort(map, (a, b) -> a.getKey().toString().compareTo(b.getKey().toString()));
+  }
+
+  private static <V> SortedSet<Entry<ClassFactory, V>> sortCF(final Map<ClassFactory, V> map) {
+    return sort(map, (a, b) -> a.getKey().getClassName().getString().compareTo(
+        b.getKey().getClassName().getString()));
+  }
+
+  private static <K, V> SortedSet<Entry<K, V>> sort(final Map<K, V> map,
+      final Comparator<Entry<K, V>> comparator) {
+    SortedSet<Entry<K, V>> sortedSet = new TreeSet<>(comparator);
+    sortedSet.addAll(map.entrySet());
+    return sortedSet;
   }
 }
