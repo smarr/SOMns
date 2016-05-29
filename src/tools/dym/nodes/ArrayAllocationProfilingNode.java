@@ -1,11 +1,11 @@
 package tools.dym.nodes;
 
+import com.oracle.truffle.api.frame.VirtualFrame;
+
 import som.primitives.SizeAndLengthPrim;
 import som.primitives.SizeAndLengthPrimFactory;
 import som.vmobjects.SArray;
 import tools.dym.profiles.ArrayCreationProfile;
-
-import com.oracle.truffle.api.frame.VirtualFrame;
 
 
 public class ArrayAllocationProfilingNode extends CountingNode<ArrayCreationProfile> {
@@ -19,6 +19,6 @@ public class ArrayAllocationProfilingNode extends CountingNode<ArrayCreationProf
 
   @Override
   protected void onReturnValue(final VirtualFrame frame, final Object result) {
-    counter.profileArraySize(size.executeEvaluated((SArray) result));
+    counter.profileArraySize((int) size.executeEvaluated((SArray) result));
   }
 }
