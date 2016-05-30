@@ -557,15 +557,46 @@ public final class MetricsCsvWriter {
     return b.getCharEndIndex() - a.getCharEndIndex();
   }
 
+  private static int compare(final MixinDefinition a, final MixinDefinition b) {
+    if (a == null && b == null) {
+      return 0;
+    } else if (a == null) {
+      return -1;
+    } else if (b == null) {
+      return 1;
+    }
+
+    return a.toString().compareTo(b.toString());
+  }
+
   private static SortedSet<MixinDefinition> sortMD(final Set<MixinDefinition> set) {
-    TreeSet<MixinDefinition> sortedSet = new TreeSet<>((a, b) -> a.getName().getString().compareTo(b.getName().getString()));
+    TreeSet<MixinDefinition> sortedSet = new TreeSet<>((a, b) -> compare(a, b));
     sortedSet.addAll(set);
+    assert sortedSet.size() == set.size();
     return sortedSet;
   }
 
+  private static int compare(final SInvokable a, final SInvokable b) {
+    if (a.getHolder() == b.getHolder()) {
+      int result = a.toString().compareTo(b.toString());
+      if (result == 0 && a != b) {
+        assert a.getHolder() != null : "TODO: need to handle this case";
+        if (a.getHolder().getInstanceDispatchables().values().contains(a)) {
+          return -1;
+        } else {
+          return 1;
+        }
+      }
+      return result;
+    }
+
+    return compare(a.getHolder(), b.getHolder());
+  }
+
   private static SortedSet<SInvokable> sortInv(final Set<SInvokable> set) {
-    TreeSet<SInvokable> sortedSet = new TreeSet<>((a, b) -> a.toString().compareTo(b.toString()));
+    TreeSet<SInvokable> sortedSet = new TreeSet<>((a, b) -> compare(a, b));
     sortedSet.addAll(set);
+    assert sortedSet.size() == set.size();
     return sortedSet;
   }
 
@@ -581,15 +612,24 @@ public final class MetricsCsvWriter {
     return sort(map, (a, b) -> a.getKey().toString().compareTo(b.getKey().toString()));
   }
 
+  private static int compare(final ClassFactory a, final ClassFactory b) {
+    if (a == b) {
+      return 0;
+    }
+    int cmp = a.toString().compareTo(b.toString());
+    assert cmp != 0 : "Need to add that case";
+    return cmp;
+  }
+
   private static <V> SortedSet<Entry<ClassFactory, V>> sortCF(final Map<ClassFactory, V> map) {
-    return sort(map, (a, b) -> a.getKey().getClassName().getString().compareTo(
-        b.getKey().getClassName().getString()));
+    return sort(map, (a, b) -> compare(a.getKey(), b.getKey()));
   }
 
   private static <K, V> SortedSet<Entry<K, V>> sort(final Map<K, V> map,
       final Comparator<Entry<K, V>> comparator) {
     SortedSet<Entry<K, V>> sortedSet = new TreeSet<>(comparator);
     sortedSet.addAll(map.entrySet());
+    assert sortedSet.size() == map.size();
     return sortedSet;
   }
 }
