@@ -3,14 +3,14 @@ package som.interpreter.objectstorage;
 import java.util.HashMap;
 import java.util.HashSet;
 
+import com.oracle.truffle.api.CompilerDirectives;
+
 import som.VM;
 import som.compiler.MixinDefinition;
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
-
-import com.oracle.truffle.api.CompilerDirectives;
 
 
 /**
@@ -147,6 +147,10 @@ public final class ClassFactory {
 
   @Override
   public String toString() {
-    return "ClsFct[" + className.getString() + "]";
+    String s = "";
+    for (SClass sc : superclassAndMixins) {
+      s += ", " + sc.getName().getString();
+    }
+    return "ClsFct[" + className.getString() + s + "]";
   }
 }

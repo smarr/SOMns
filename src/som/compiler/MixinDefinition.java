@@ -677,4 +677,9 @@ public final class MixinDefinition {
         primaryFactoryName, AccessModifier.PUBLIC);
     return factory.invoke(args);
   }
+
+  @Override
+  public String toString() {
+    return name.getString() + "[" + sourceSection.getShortDescription() + "]";
+  }
 }
