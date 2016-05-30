@@ -1,8 +1,10 @@
 package tools.dym;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -18,6 +20,7 @@ import com.oracle.truffle.api.instrumentation.Instrumenter;
 import com.oracle.truffle.api.instrumentation.SourceSectionFilter;
 import com.oracle.truffle.api.instrumentation.SourceSectionFilter.Builder;
 import com.oracle.truffle.api.instrumentation.StandardTags.RootTag;
+import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
 import com.oracle.truffle.api.instrumentation.TruffleInstrument;
 import com.oracle.truffle.api.instrumentation.TruffleInstrument.Registration;
 import com.oracle.truffle.api.nodes.GraphPrintVisitor;
@@ -363,9 +366,38 @@ public class DynamicMetrics extends TruffleInstrument {
     JsonWriter.fileOut(data, outputFile);
 
     String metricsFolder = System.getProperty("dm.metrics", "metrics");
-    MetricsCsvWriter.fileOut(data, metricsFolder, structuralProbe, maxStackDepth);
+    MetricsCsvWriter.fileOut(data, metricsFolder, structuralProbe,
+        maxStackDepth, getAllStatementsAlsoNotExecuted());
 
     outputAllTruffleMethodsToIGV();
+  }
+
+  private List<SourceSection> getAllStatementsAlsoNotExecuted() {
+    Collection<RootCallTarget> collection = Truffle.getRuntime().getCallTargets();
+    List<SourceSection> allSourceSections = new ArrayList<>();
+
+    for (RootCallTarget  rootCallTarget: collection) {
+      RootNode root = rootCallTarget.getRootNode(); // AST node
+      Map<SourceSection, Set<Class<?>>> sourceSectionsAndTags = new HashMap<>();
+
+      root.accept(node -> {
+        Set<Class<?>> tags = instrumenter.queryTags(node);
+
+        if (tags.contains(StatementTag.class)) {
+          if (sourceSectionsAndTags.containsKey(node.getSourceSection())) {
+            sourceSectionsAndTags.get(node.getSourceSection()).addAll(tags);
+          } else {
+            sourceSectionsAndTags.put(node.getSourceSection(),
+                new HashSet<>(tags));
+          }
+        }
+        return true;
+      });
+
+      allSourceSections.addAll(sourceSectionsAndTags.keySet());
+    }
+
+    return allSourceSections;
   }
 
   private void outputAllTruffleMethodsToIGV() {

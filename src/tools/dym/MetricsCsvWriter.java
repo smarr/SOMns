@@ -1,16 +1,17 @@
 package tools.dym;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.compiler.MixinDefinition;
@@ -46,22 +47,26 @@ public final class MetricsCsvWriter {
   private final String metricsFolder;
   private final StructuralProbe structuralProbe; // TODO: not sure, we should probably not depend on the probe here
   private final int maxStackHeight;
+  private final List<SourceSection> allStatements;
 
   private MetricsCsvWriter(
       final Map<String, Map<SourceSection, ? extends JsonSerializable>> data,
-      final String metricsFolder, final StructuralProbe probe, final int maxStackHeight) {
+      final String metricsFolder, final StructuralProbe probe,
+      final int maxStackHeight, final List<SourceSection> allStatements) {
     this.data          = data;
     this.metricsFolder = metricsFolder;
     this.structuralProbe = probe;
     this.maxStackHeight = maxStackHeight;
+    this.allStatements  = allStatements;
   }
 
   public static void fileOut(
       final Map<String, Map<SourceSection, ? extends JsonSerializable>> data,
       final String metricsFolder,
       final StructuralProbe structuralProbe, // TODO: remove direct StructuralProbe passing hack
-      final int maxStackHeight) {
-    new MetricsCsvWriter(data, metricsFolder, structuralProbe, maxStackHeight).createCsvFiles();
+      final int maxStackHeight, final List<SourceSection> allStatements) {
+    new MetricsCsvWriter(data, metricsFolder, structuralProbe, maxStackHeight,
+        allStatements).createCsvFiles();
   }
 
   private void createCsvFiles() {
@@ -80,14 +85,101 @@ public final class MetricsCsvWriter {
     loopProfiles();
   }
 
-  private void generalStats() {
-    try (PrintWriter file = new PrintWriter(metricsFolder + File.separator + "general-stats.csv")) {
-      file.println("Max Stack Height");
-      file.println(maxStackHeight);
-    } catch (FileNotFoundException e) {
-      throw new RuntimeException(e);
+  private static void processCoverage(final long counterVal,
+      final SourceSection sourceSection, final Map<Source, Long[]> coverageMap) {
+    Long[] array;
+    Source src = sourceSection.getSource();
+    if (coverageMap.containsKey(src)) {
+      array = coverageMap.get(src);
+    } else if (src.getLineCount() == 0) {
+      return;
+    } else {
+      array = new Long[src.getLineCount()];
+      coverageMap.put(src, array);
+    }
+
+    int line = sourceSection.getStartLine() - 1;
+    if (array[line] == null) {
+      array[line] = counterVal;
+    } else {
+      array[line] = Math.max(counterVal, array[line]);
     }
   }
+
+  private void extractCoverageFromData(final Map<Source, Long[]> coverageMap) {
+    for (Entry<String, Map<SourceSection, ? extends JsonSerializable>> e : data.entrySet()) {
+      for (Entry<SourceSection, ? extends JsonSerializable> ee : e.getValue().entrySet()) {
+        if (ee.getValue() instanceof Counter) {
+          Counter c = (Counter) ee.getValue();
+          processCoverage(c.getValue(), c.getSourceSection(), coverageMap);
+        }
+      }
+    }
+  }
+
+  private Map<Source, Long[]> getCoverageMap() {
+    Map<Source, Long[]> coverageMap = new HashMap<>();
+
+    // cover executed lines
+    extractCoverageFromData(coverageMap);
+
+    // cover not executed lines
+    for (SourceSection sourceSection : allStatements) {
+      processCoverage(0, sourceSection, coverageMap);
+    }
+    return coverageMap;
+  }
+
+  private static final class CovStats {
+    final int linesLoaded;
+    final int linesExecuted;
+    final int linesWithStatements;
+
+    CovStats(final int linesLoaded, final int linesExecuted,
+        final int linesWithStatements) {
+      this.linesLoaded = linesLoaded;
+      this.linesExecuted = linesExecuted;
+      this.linesWithStatements = linesWithStatements;
+    }
+  }
+
+  private CovStats getCoverageStats(final Map<Source, Long[]> coverageMap) {
+    int linesLoaded = 0;
+    int linesExecuted = 0;
+    int linesWithStatements = 0;
+
+    for (Entry<Source, Long[]> e : coverageMap.entrySet()) {
+      Long[] lines = e.getValue();
+      linesLoaded += lines.length;
+
+      for (Long l : lines) {
+        if (l != null) {
+          linesWithStatements += 1;
+
+          long val = l;
+          if (val > 0) {
+            linesExecuted += 1;
+          }
+        }
+      }
+    }
+
+    return new CovStats(linesLoaded, linesExecuted, linesWithStatements);
+  }
+
+  private void generalStats() {
+    CovStats stats = getCoverageStats(getCoverageMap());
+
+
+    try (CsvWriter file = new CsvWriter(metricsFolder, "general-stats.csv",
+        "Statistic", "Value")) {
+      file.write("Max Stack Height", maxStackHeight);
+      file.write("Lines Loaded",          stats.linesLoaded);
+      file.write("Lines Executed",        stats.linesExecuted);
+      file.write("Lines With Statements", stats.linesWithStatements);
+    }
+  }
+
 
   private boolean hasTag(final Set<Class<?>> tags, final Class<?> tag) {
     for (Class<?> t : tags) {
