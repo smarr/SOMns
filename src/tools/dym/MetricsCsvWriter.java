@@ -1,6 +1,7 @@
 package tools.dym;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -277,7 +278,9 @@ public final class MetricsCsvWriter {
   }
 
   private static String[] toNameArray(final Set<Class<?>> tags) {
-    return tags.stream().map(c -> c.getSimpleName()).toArray(size -> new String[size]);
+    String[] tagArr = tags.stream().map(c -> c.getSimpleName()).toArray(size -> new String[size]);
+    Arrays.sort(tagArr);
+    return tagArr;
   }
 
   private void operationProfiles() {
