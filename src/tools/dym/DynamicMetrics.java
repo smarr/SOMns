@@ -31,12 +31,14 @@ import com.oracle.truffle.api.source.SourceSection;
 import som.VM;
 import som.compiler.MixinDefinition;
 import som.instrumentation.InstrumentableDirectCallNode;
+import som.instrumentation.InstrumentableDirectCallNode.InstrumentableBlockApplyNode;
 import som.interpreter.Invokable;
 import som.interpreter.nodes.OperationNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.vm.NotYetImplementedException;
 import som.vmobjects.SInvokable;
 import tools.dym.Tags.BasicPrimitiveOperation;
+import tools.dym.Tags.CachedClosureInvoke;
 import tools.dym.Tags.CachedVirtualInvoke;
 import tools.dym.Tags.ClassRead;
 import tools.dym.Tags.ComplexPrimitiveOperation;
@@ -50,16 +52,19 @@ import tools.dym.Tags.LoopBody;
 import tools.dym.Tags.LoopNode;
 import tools.dym.Tags.NewArray;
 import tools.dym.Tags.NewObject;
+import tools.dym.Tags.OpClosureApplication;
 import tools.dym.Tags.PrimitiveArgument;
 import tools.dym.Tags.VirtualInvoke;
 import tools.dym.Tags.VirtualInvokeReceiver;
 import tools.dym.nodes.AllocationProfilingNode;
 import tools.dym.nodes.ArrayAllocationProfilingNode;
 import tools.dym.nodes.CallTargetNode;
+import tools.dym.nodes.ClosureTargetNode;
 import tools.dym.nodes.ControlFlowProfileNode;
 import tools.dym.nodes.CountingNode;
 import tools.dym.nodes.InvocationProfilingNode;
 import tools.dym.nodes.LateCallTargetNode;
+import tools.dym.nodes.LateClosureTargetNode;
 import tools.dym.nodes.LateReportResultNode;
 import tools.dym.nodes.LoopIterationReportNode;
 import tools.dym.nodes.LoopProfilingNode;
@@ -71,6 +76,7 @@ import tools.dym.profiles.AllocationProfile;
 import tools.dym.profiles.ArrayCreationProfile;
 import tools.dym.profiles.BranchProfile;
 import tools.dym.profiles.CallsiteProfile;
+import tools.dym.profiles.ClosureApplicationProfile;
 import tools.dym.profiles.Counter;
 import tools.dym.profiles.InvocationProfile;
 import tools.dym.profiles.LoopProfile;
@@ -98,6 +104,7 @@ public class DynamicMetrics extends TruffleInstrument {
 
   private final Map<SourceSection, InvocationProfile>    methodInvocationCounter;
   private final Map<SourceSection, CallsiteProfile>      methodCallsiteProfiles;
+  private final Map<SourceSection, ClosureApplicationProfile> closureProfiles;
   private final Map<SourceSection, OperationProfile>     operationProfiles;
 
   private final Map<SourceSection, AllocationProfile>    newObjectCounter;
@@ -129,6 +136,7 @@ public class DynamicMetrics extends TruffleInstrument {
 
     methodInvocationCounter = new HashMap<>();
     methodCallsiteProfiles  = new HashMap<>();
+    closureProfiles         = new HashMap<>();
     operationProfiles       = new HashMap<>();
 
     newObjectCounter        = new HashMap<>();
@@ -287,6 +295,27 @@ public class DynamicMetrics extends TruffleInstrument {
     });
   }
 
+  private void addClosureTargetInstrumentation(final Instrumenter instrumenter,
+      final ExecutionEventNodeFactory factory) {
+    Builder filters = SourceSectionFilter.newBuilder();
+    filters.tagIs(CachedClosureInvoke.class);
+
+    instrumenter.attachFactory(filters.build(), (final EventContext ctx) -> {
+      ExecutionEventNode parent = ctx.findParentEventNode(factory);
+      InstrumentableBlockApplyNode disp = (InstrumentableBlockApplyNode) ctx.getInstrumentedNode();
+
+      if (parent == null) {
+        return new LateClosureTargetNode(ctx, factory);
+      }
+
+      @SuppressWarnings("unchecked")
+      CountingNode<ClosureApplicationProfile> p = (CountingNode<ClosureApplicationProfile>) parent;
+      ClosureApplicationProfile profile = p.getProfile();
+      RootCallTarget root = (RootCallTarget) disp.getCallTarget();
+      return new ClosureTargetNode(profile, (Invokable) root.getRootNode());
+    });
+  }
+
   private static final Class<?>[] NO_TAGS = new Class<?>[0];
 
   @Override
@@ -301,6 +330,12 @@ public class DynamicMetrics extends TruffleInstrument {
         CallsiteProfile::new, CountingNode<CallsiteProfile>::new);
     addReceiverInstrumentation(instrumenter, virtInvokeFactory);
     addCalltargetInstrumentation(instrumenter, virtInvokeFactory);
+
+    ExecutionEventNodeFactory closureApplicationFactory = addInstrumentation(
+        instrumenter, closureProfiles,
+        new Class<?>[] {OpClosureApplication.class}, NO_TAGS,
+        ClosureApplicationProfile::new, CountingNode<ClosureApplicationProfile>::new);
+    addClosureTargetInstrumentation(instrumenter, closureApplicationFactory);
 
     addInstrumentation(instrumenter, newObjectCounter,
         new Class<?>[] {NewObject.class}, NO_TAGS,
@@ -426,6 +461,7 @@ public class DynamicMetrics extends TruffleInstrument {
     Map<String, Map<SourceSection, ? extends JsonSerializable>> data = new HashMap<>();
     data.put(JsonWriter.METHOD_INVOCATION_PROFILE, methodInvocationCounter);
     data.put(JsonWriter.METHOD_CALLSITE,          methodCallsiteProfiles);
+    data.put(JsonWriter.CLOSURE_APPLICATIONS,     closureProfiles);
     data.put(JsonWriter.NEW_OBJECT_COUNT,         newObjectCounter);
     data.put(JsonWriter.NEW_ARRAY_COUNT,          newArrayCounter);
     data.put(JsonWriter.FIELD_READS,              fieldReadProfiles);

@@ -7,28 +7,49 @@ import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
-import som.interpreter.nodes.nary.BinaryComplexOperation;
+import som.VM;
+import som.VmSettings;
+import som.instrumentation.InstrumentableDirectCallNode.InstrumentableBlockApplyNode;
+import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.QuaternaryExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
-import tools.dym.Tags.ComplexPrimitiveOperation;
 import tools.dym.Tags.OpClosureApplication;
 
 
 public abstract class BlockPrims {
   public static final int CHAIN_LENGTH = 6;
 
-  public static final DirectCallNode createDirectCallNode(final SBlock receiver) {
+  /** Dummy Node to work around restrictions that a node that is going to
+   * be instrumented, needs to have a parent. */
+  private static final class DummyParent extends Node {
+    @Child private Node child;
+    private DummyParent(final Node node) { this.child = insert(node); }
+  }
+
+  public static final DirectCallNode createDirectCallNode(final SBlock receiver,
+      final SourceSection sourceSection) {
     assert null != receiver.getMethod().getCallTarget();
-    return Truffle.getRuntime().createDirectCallNode(
+    DirectCallNode callNode = Truffle.getRuntime().createDirectCallNode(
         receiver.getMethod().getCallTarget());
+
+    if (VmSettings.DYNAMIC_METRICS) {
+      callNode = new InstrumentableBlockApplyNode(callNode, sourceSection);
+      new DummyParent(callNode);
+      VM.insertInstrumentationWrapper(callNode);
+      assert callNode.getParent() instanceof WrapperNode;
+      callNode = (DirectCallNode) callNode.getParent();
+    }
+    return callNode;
   }
 
   public static final IndirectCallNode create() {
@@ -59,9 +80,7 @@ public abstract class BlockPrims {
 
     @Override
     protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
-      if (tag == ComplexPrimitiveOperation.class) {
-        return true;
-      } else if (tag == OpClosureApplication.class) {
+      if (tag == OpClosureApplication.class) {
         return true;
       } else {
         return super.isTaggedWithIgnoringEagerness(tag);
@@ -76,7 +95,7 @@ public abstract class BlockPrims {
     @Specialization(guards = "cached == receiver.getMethod()", limit = "CHAIN_LENGTH")
     public final Object doCachedBlock(final VirtualFrame frame,
         final SBlock receiver,
-        @Cached("createDirectCallNode(receiver)") final DirectCallNode call,
+        @Cached("createDirectCallNode(receiver, getSourceSection())") final DirectCallNode call,
         @Cached("receiver.getMethod()") final SInvokable cached) {
       return call.call(frame, new Object[] {receiver});
     }
@@ -91,7 +110,7 @@ public abstract class BlockPrims {
   @GenerateNodeFactory
   @ImportStatic(BlockPrims.class)
   @Primitive("blockValue:with:")
-  public abstract static class ValueOnePrim extends BinaryComplexOperation {
+  public abstract static class ValueOnePrim extends BinaryExpressionNode {
     protected ValueOnePrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
     protected ValueOnePrim(final SourceSection source) { super(false, source); }
 
@@ -107,7 +126,7 @@ public abstract class BlockPrims {
     @Specialization(guards = "cached == receiver.getMethod()", limit = "CHAIN_LENGTH")
     public final Object doCachedBlock(final VirtualFrame frame,
         final SBlock receiver, final Object arg,
-        @Cached("createDirectCallNode(receiver)") final DirectCallNode call,
+        @Cached("createDirectCallNode(receiver, getSourceSection())") final DirectCallNode call,
         @Cached("receiver.getMethod()") final SInvokable cached) {
       return call.call(frame, new Object[] {receiver, arg});
     }
@@ -129,9 +148,7 @@ public abstract class BlockPrims {
 
     @Override
     protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
-      if (tag == ComplexPrimitiveOperation.class) {
-        return true;
-      } else if (tag == OpClosureApplication.class) {
+      if (tag == OpClosureApplication.class) {
         return true;
       } else {
         return super.isTaggedWithIgnoringEagerness(tag);
@@ -141,7 +158,7 @@ public abstract class BlockPrims {
     @Specialization(guards = "cached == receiver.getMethod()", limit = "CHAIN_LENGTH")
     public final Object doCachedBlock(final VirtualFrame frame,
         final SBlock receiver, final Object arg1, final Object arg2,
-        @Cached("createDirectCallNode(receiver)") final DirectCallNode call,
+        @Cached("createDirectCallNode(receiver, getSourceSection())") final DirectCallNode call,
         @Cached("receiver.getMethod()") final SInvokable cached) {
       return call.call(frame, new Object[] {receiver, arg1, arg2});
     }

@@ -27,6 +27,7 @@ import som.vmobjects.SClass;
 import tools.dym.Tags.ArrayRead;
 import tools.dym.Tags.ArrayWrite;
 import tools.dym.Tags.BasicPrimitiveOperation;
+import tools.dym.Tags.CachedClosureInvoke;
 import tools.dym.Tags.CachedVirtualInvoke;
 import tools.dym.Tags.ClassRead;
 import tools.dym.Tags.ComplexPrimitiveOperation;
@@ -68,7 +69,8 @@ import tools.highlight.Tags.StatementSeparatorTag;
   LocalVariableTag.class, StatementSeparatorTag.class,
   DelimiterOpeningTag.class, DelimiterClosingTag.class,
 
-  UnspecifiedInvoke.class, CachedVirtualInvoke.class, VirtualInvoke.class,
+  UnspecifiedInvoke.class, CachedVirtualInvoke.class,
+  CachedClosureInvoke.class, VirtualInvoke.class,
   VirtualInvokeReceiver.class, NewObject.class, NewArray.class,
   ControlFlowCondition.class, FieldRead.class, FieldWrite.class, ClassRead.class,
   LocalVarRead.class, LocalVarWrite.class, LocalArgRead.class, ArrayRead.class,

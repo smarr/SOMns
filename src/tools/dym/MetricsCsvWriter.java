@@ -33,6 +33,7 @@ import tools.dym.profiles.Arguments;
 import tools.dym.profiles.ArrayCreationProfile;
 import tools.dym.profiles.BranchProfile;
 import tools.dym.profiles.CallsiteProfile;
+import tools.dym.profiles.ClosureApplicationProfile;
 import tools.dym.profiles.Counter;
 import tools.dym.profiles.InvocationProfile;
 import tools.dym.profiles.LoopProfile;
@@ -74,6 +75,7 @@ public final class MetricsCsvWriter {
 
     methodActivations();
     methodCallsites();
+    closureApplications();
     newObjectCount();
     newArrayCount();
     fieldAccesses();
@@ -344,6 +346,22 @@ public final class MetricsCsvWriter {
             p.getValue(),
             receivers.values().size(),
             calltargets.values().size());
+      }
+    }
+  }
+
+  private void closureApplications() {
+    @SuppressWarnings("unchecked")
+    Map<SourceSection, ClosureApplicationProfile> profiles = (Map<SourceSection, ClosureApplicationProfile>) data.get(JsonWriter.CLOSURE_APPLICATIONS);
+
+    try (CsvWriter file = new CsvWriter(metricsFolder, "closure-applications.csv",
+        "Source Section", "Call Count", "Num Targets")) {
+      for (Entry<SourceSection, ClosureApplicationProfile> e : sortSS(profiles)) {
+        ClosureApplicationProfile p = e.getValue();
+        String abbrv = getSourceSectionAbbrv(p.getSourceSection());
+        Map<Invokable, Integer> calltargets = p.getCallTargets();
+
+        file.write(abbrv, p.getValue(), calltargets.values().size());
       }
     }
   }

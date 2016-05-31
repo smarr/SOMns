@@ -18,6 +18,7 @@ public final class JsonWriter {
 
   public static final String METHOD_INVOCATION_PROFILE = "methodInvocationProfile";
   public static final String METHOD_CALLSITE           = "methodCallsite";
+  public static final String CLOSURE_APPLICATIONS      = "closureApplications";
   public static final String NEW_OBJECT_COUNT          = "newObjectCount";
   public static final String NEW_ARRAY_COUNT           = "newArrayCount";
   public static final String FIELD_READS      = "fieldReads";

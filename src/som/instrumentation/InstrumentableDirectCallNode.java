@@ -7,6 +7,7 @@ import com.oracle.truffle.api.instrumentation.Instrumentable;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 
+import tools.dym.Tags.CachedClosureInvoke;
 import tools.dym.Tags.CachedVirtualInvoke;
 
 
@@ -79,5 +80,24 @@ public class InstrumentableDirectCallNode extends DirectCallNode {
   @Override
   public CallTarget getClonedCallTarget() {
     return callNode.getClonedCallTarget();
+  }
+
+  @Instrumentable(factory = DirectCallNodeWrapper.class)
+  public static class InstrumentableBlockApplyNode extends InstrumentableDirectCallNode {
+    public InstrumentableBlockApplyNode(final DirectCallNode callNode,
+        final SourceSection source) {
+      super(callNode, source);
+    }
+
+    @Override
+    protected boolean isTaggedWith(final Class<?> tag) {
+      if (tag == CachedClosureInvoke.class) {
+        return true;
+      } else if (tag == CachedVirtualInvoke.class) {
+        return false;  // don't want that type of instrumentation here
+      } else {
+        return super.isTaggedWith(tag);
+      }
+    }
   }
 }
