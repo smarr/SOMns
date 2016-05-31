@@ -1,5 +1,13 @@
 package som.primitives.reflection;
 
+import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.IndirectCallNode;
+import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.source.SourceSection;
+
+import som.VmSettings;
 import som.compiler.AccessModifier;
 import som.interpreter.Types;
 import som.interpreter.nodes.MessageSendNode;
@@ -11,16 +19,9 @@ import som.primitives.arrays.ToArgumentsArrayNodeGen;
 import som.vmobjects.SArray;
 import som.vmobjects.SSymbol;
 
-import com.oracle.truffle.api.dsl.Cached;
-import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.IndirectCallNode;
-import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.source.SourceSection;
-
 
 public abstract class AbstractSymbolDispatch extends Node {
-  public static final int INLINE_CACHE_SIZE = 6;
+  public static final int INLINE_CACHE_SIZE = VmSettings.DYNAMIC_METRICS ? 100 : 6;
 
   private final SourceSection sourceSection;
 

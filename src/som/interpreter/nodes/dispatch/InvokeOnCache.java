@@ -1,7 +1,6 @@
 package som.interpreter.nodes.dispatch;
 
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
-import som.vmobjects.SInvokable;
 
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -9,9 +8,12 @@ import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.nodes.Node;
 
+import som.VmSettings;
+import som.vmobjects.SInvokable;
+
 
 public abstract class InvokeOnCache extends Node implements DispatchChain {
-  public static final int INLINE_CACHE_SIZE = 6;
+  public static final int INLINE_CACHE_SIZE = VmSettings.DYNAMIC_METRICS ? 100 : 6;
 
   public static InvokeOnCache create() {
     return new UninitializedDispatchNode(0);

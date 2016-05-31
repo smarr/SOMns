@@ -9,6 +9,7 @@ import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.VmSettings;
 import som.interpreter.SomException;
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
@@ -27,7 +28,7 @@ public abstract class ExceptionsPrims {
   @Primitive("exceptionDo:catch:onException:")
   public abstract static class ExceptionDoOnPrim extends TernaryExpressionNode {
 
-    protected static final int INLINE_CACHE_SIZE = 6;
+    protected static final int INLINE_CACHE_SIZE = VmSettings.DYNAMIC_METRICS ? 100 : 6;
     protected static final IndirectCallNode indirect = Truffle.getRuntime().createIndirectCallNode();
 
     public static final DirectCallNode createCallNode(final SBlock block) {

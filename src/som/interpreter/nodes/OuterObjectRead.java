@@ -7,6 +7,7 @@ import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.VmSettings;
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.interpreter.actors.SFarReference;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
@@ -21,7 +22,7 @@ import som.vmobjects.SObjectWithClass;
 public abstract class OuterObjectRead
     extends ExprWithTagsNode implements ISpecialSend {
 
-  protected static final int INLINE_CACHE_SIZE = 3;
+  protected static final int INLINE_CACHE_SIZE = VmSettings.DYNAMIC_METRICS ? 100 : 3;
 
   protected final int contextLevel;
   private final MixinDefinitionId mixinId;

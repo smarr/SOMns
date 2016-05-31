@@ -7,6 +7,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.VmSettings;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.vm.constants.Nil;
@@ -16,7 +17,7 @@ import tools.dym.Tags.LoopNode;
 
 
 public abstract class WhileCache extends BinaryComplexOperation {
-  public static final int INLINE_CACHE_SIZE = 6;
+  public static final int INLINE_CACHE_SIZE = VmSettings.DYNAMIC_METRICS ? 100 : 6;
 
   protected final boolean predicateBool;
 

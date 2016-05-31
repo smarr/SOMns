@@ -27,7 +27,7 @@ import tools.dym.Tags.OpClosureApplication;
 
 
 public abstract class BlockPrims {
-  public static final int CHAIN_LENGTH = 6;
+  public static final int CHAIN_LENGTH = VmSettings.DYNAMIC_METRICS ? 100 : 6;
 
   /** Dummy Node to work around restrictions that a node that is going to
    * be instrumented, needs to have a parent. */

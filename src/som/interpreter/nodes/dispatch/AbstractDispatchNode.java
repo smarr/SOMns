@@ -5,13 +5,15 @@ import com.oracle.truffle.api.instrumentation.Instrumentable;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.VmSettings;
 import som.instrumentation.DispatchNodeWrapper;
 
 
 @Instrumentable(factory = DispatchNodeWrapper.class)
 public abstract class AbstractDispatchNode
     extends Node implements DispatchChain {
-  public static final int INLINE_CACHE_SIZE = 6;
+  public static final int INLINE_CACHE_SIZE = VmSettings.DYNAMIC_METRICS ? 100 : 6;
+
   protected final SourceSection sourceSection;
 
   protected AbstractDispatchNode(final SourceSection source) {
