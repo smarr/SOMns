@@ -295,12 +295,12 @@ public class DynamicMetrics extends TruffleInstrument {
 
     addRootTagInstrumentation(instrumenter);
 
-    ExecutionEventNodeFactory virtInvokeFacoty = addInstrumentation(
+    ExecutionEventNodeFactory virtInvokeFactory = addInstrumentation(
         instrumenter, methodCallsiteProfiles,
         new Class<?>[] {VirtualInvoke.class}, NO_TAGS,
         CallsiteProfile::new, CountingNode<CallsiteProfile>::new);
-    addReceiverInstrumentation(instrumenter, virtInvokeFacoty);
-    addCalltargetInstrumentation(instrumenter, virtInvokeFacoty);
+    addReceiverInstrumentation(instrumenter, virtInvokeFactory);
+    addCalltargetInstrumentation(instrumenter, virtInvokeFactory);
 
     addInstrumentation(instrumenter, newObjectCounter,
         new Class<?>[] {NewObject.class}, NO_TAGS,
