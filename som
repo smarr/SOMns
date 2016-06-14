@@ -162,7 +162,7 @@ TWEAK_INLINING = ['-Dgraal.TruffleCompilationThreshold=191',
                   '-Dgraal.TruffleInliningMaxCallerSize=10000',
                   '-Dgraal.TruffleSplittingMaxCalleeSize=100000']
 
-if GRAAL_FLAGS:
+if not args.interpreter and GRAAL_FLAGS:
     flags = shlex.split(str.strip(GRAAL_FLAGS))
 else:
     flags = []
