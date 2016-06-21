@@ -1,0 +1,29 @@
+stages:
+  - build-and-test
+  - benchmark
+
+variables:
+  PYTHONUNBUFFERED: "true"
+  JVMCI_BIN: /home/gitlab-runner/.local/graal-core/bin/java
+
+build_and_test_job:
+  stage: build-and-test
+  tags: [benchmarks, infinity]
+  script:
+    - make test
+
+benchmark_savina_job:
+  stage: benchmark
+  tags: [benchmarks, infinity]
+  allow_failure: true
+  script:
+    - make
+    - rebench -d --without-nice -c --commit-id="$CI_BUILD_REF" --environment="Infinity Ubuntu" --project=SOMns-Savina --branch="$CI_BUILD_REF_NAME" core-lib/codespeed.conf SOMns-Savina
+
+benchmark_job:
+  stage: benchmark
+  tags: [benchmarks, infinity]
+  allow_failure: true
+  script:
+    - make
+    - rebench -d --without-nice -c --commit-id="$CI_BUILD_REF" --environment="Infinity Ubuntu" --project=SOMns-Savina --branch="$CI_BUILD_REF_NAME" core-lib/codespeed.conf SOMns
