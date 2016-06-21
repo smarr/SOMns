@@ -136,9 +136,9 @@ public class BasicInterpreterTests {
         {"OuterSends", "testOuterBindings3",   6, Long.class, UNSAFE_OM },
         {"OuterSends", "testOuterSendLegalTargets", 666, Long.class, UNSAFE_OM },
 
-        {"ObjectCreation", "testNew",  "ObjectCreation", Object.class, null },
-        {"ObjectCreation", "testImmutableRead",       3, Long.class, null },
-        {"ObjectCreation", "testImmutableReadInner", 42, Long.class, null },
+        {"ObjectCreation", "testNew",  "ObjectCreation", Object.class, UNSAFE_OM },
+        {"ObjectCreation", "testImmutableRead",       3, Long.class, UNSAFE_OM },
+        {"ObjectCreation", "testImmutableReadInner", 42, Long.class, UNSAFE_OM },
 
         {"Parser", "testOuterInKeyword",   32 * 32 * 32, Long.class, UNSAFE_OM },
         {"Parser", "testOuterWithKeyword",        3 * 4, Long.class, UNSAFE_OM },
