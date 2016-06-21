@@ -26,4 +26,4 @@ benchmark_job:
   allow_failure: true
   script:
     - make
-    - rebench -d --without-nice -c --commit-id="$CI_BUILD_REF" --environment="Infinity Ubuntu" --project=SOMns-Savina --branch="$CI_BUILD_REF_NAME" core-lib/codespeed.conf SOMns
+    - rebench -d --without-nice -c --commit-id="$CI_BUILD_REF" --environment="Infinity Ubuntu" --project=SOMns --branch="$CI_BUILD_REF_NAME" core-lib/codespeed.conf SOMns
