@@ -7,7 +7,6 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Instrumentable;
 import com.oracle.truffle.api.instrumentation.StandardTags;
-import com.oracle.truffle.api.instrumentation.StandardTags.CallTag;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.NodeCost;
@@ -777,8 +776,6 @@ public final class MessageSendNode {
     @Override
     protected boolean isTaggedWith(final Class<?> tag) {
       if (tag == VirtualInvoke.class) {
-        return true;
-      } else if (tag == CallTag.class) {
         return true;
       } else {
         return super.isTaggedWith(tag);
