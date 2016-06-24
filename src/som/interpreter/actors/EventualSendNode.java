@@ -139,7 +139,7 @@ public abstract class EventualSendNode extends ExprWithTagsNode {
     assert !(args[0] instanceof SPromise) : "Should not happen either, but just to be sure";
 
 
-    DirectMessage msg = new DirectMessage(target, selector, args, owner,
+    DirectMessage msg = new DirectMessage(EventualMessage.getCurrentExecutingMessage(), target, selector, args, owner,
         resolver, onReceive);
     target.send(msg);
   }
@@ -169,7 +169,7 @@ public abstract class EventualSendNode extends ExprWithTagsNode {
   private void sendPromiseMessage(final Object[] args, final SPromise rcvr,
       final SResolver resolver, final RegisterWhenResolved registerNode) {
     assert rcvr.getOwner() == EventualMessage.getActorCurrentMessageIsExecutionOn() : "think this should be true because the promise is an Object and owned by this specific actor";
-    PromiseSendMessage msg = new PromiseSendMessage(selector, args, rcvr.getOwner(), resolver, onReceive);
+    PromiseSendMessage msg = new PromiseSendMessage(EventualMessage.getCurrentExecutingMessage(), selector, args, rcvr.getOwner(), resolver, onReceive);
 
     registerNode.register(rcvr, msg, rcvr.getOwner());
   }
@@ -180,7 +180,8 @@ public abstract class EventualSendNode extends ExprWithTagsNode {
     SPromise  result   = SPromise.createPromise(current);
     SResolver resolver = SPromise.createResolver(result, "eventualSend:", selector);
 
-    DirectMessage msg = new DirectMessage(current, selector, args, current,
+    DirectMessage msg = new DirectMessage(EventualMessage.getCurrentExecutingMessage(),
+        current, selector, args, current,
         resolver, onReceive);
     current.send(msg);
 
@@ -190,7 +191,8 @@ public abstract class EventualSendNode extends ExprWithTagsNode {
   @Specialization(guards = {"!isResultUsed()", "!isFarRefRcvr(args)", "!isPromiseRcvr(args)"})
   public final Object toNearRefWithoutResultPromise(final Object[] args) {
     Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
-    DirectMessage msg = new DirectMessage(current, selector, args, current,
+    DirectMessage msg = new DirectMessage(EventualMessage.getCurrentExecutingMessage(),
+        current, selector, args, current,
         null, onReceive);
     current.send(msg);
     return Nil.nilObject;

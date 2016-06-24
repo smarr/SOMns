@@ -94,7 +94,7 @@ public final class PromisePrims {
       SPromise  promise  = SPromise.createPromise(current);
       SResolver resolver = SPromise.createResolver(promise, "wR:block");
 
-      PromiseCallbackMessage msg = new PromiseCallbackMessage(rcvr.getOwner(),
+      PromiseCallbackMessage msg = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessage(), rcvr.getOwner(),
           block, resolver, blockCallTarget);
       registerNode.register(rcvr, msg, current);
 
@@ -174,8 +174,8 @@ public final class PromisePrims {
       SPromise  promise  = SPromise.createPromise(current);
       SResolver resolver = SPromise.createResolver(promise, "wROE:block:block");
 
-      PromiseCallbackMessage onResolved = new PromiseCallbackMessage(rcvr.getOwner(), resolved, resolver, resolverTarget);
-      PromiseCallbackMessage onError    = new PromiseCallbackMessage(rcvr.getOwner(), error, resolver, errorTarget);
+      PromiseCallbackMessage onResolved = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessage(), rcvr.getOwner(), resolved, resolver, resolverTarget);
+      PromiseCallbackMessage onError    = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessage(), rcvr.getOwner(), error, resolver, errorTarget);
 
       synchronized (rcvr) {
         registerNode.register(rcvr, onResolved, current);

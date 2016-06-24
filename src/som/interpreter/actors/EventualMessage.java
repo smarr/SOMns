@@ -19,9 +19,11 @@ public abstract class EventualMessage {
   protected final Object[]  args;
   protected final SResolver resolver;
   protected final RootCallTarget onReceive;
+  protected final EventualMessage causalMessage;
 
-  protected EventualMessage(final Object[] args,
+  protected EventualMessage(final EventualMessage causalMessage, final Object[] args,
       final SResolver resolver, final RootCallTarget onReceive) {
+    this.causalMessage = causalMessage;
     this.args     = args;
     this.resolver = resolver;
     this.onReceive = onReceive;
@@ -44,10 +46,10 @@ public abstract class EventualMessage {
     private final Actor   target;
     private final Actor   sender;
 
-    public DirectMessage(final Actor target, final SSymbol selector,
+    public DirectMessage(final EventualMessage causalMessage, final Actor target, final SSymbol selector,
         final Object[] arguments, final Actor sender, final SResolver resolver,
         final RootCallTarget onReceive) {
-      super(arguments, resolver, onReceive);
+      super(causalMessage, arguments, resolver, onReceive);
       this.selector = selector;
       this.sender   = sender;
       this.target   = target;
@@ -120,9 +122,9 @@ public abstract class EventualMessage {
 
     protected final Actor originalSender; // initial owner of the arguments
 
-    public PromiseMessage(final Object[] arguments, final Actor originalSender,
+    public PromiseMessage(final EventualMessage causalMessage, final Object[] arguments, final Actor originalSender,
         final SResolver resolver, final RootCallTarget onReceive) {
-      super(arguments, resolver, onReceive);
+      super(causalMessage, arguments, resolver, onReceive);
       this.originalSender = originalSender;
     }
 
@@ -144,10 +146,10 @@ public abstract class EventualMessage {
     protected Actor target;
     protected Actor finalSender;
 
-    protected PromiseSendMessage(final SSymbol selector,
+    protected PromiseSendMessage(final EventualMessage causalMessage, final SSymbol selector,
         final Object[] arguments, final Actor originalSender,
         final SResolver resolver, final RootCallTarget onReceive) {
-      super(arguments, originalSender, resolver, onReceive);
+      super(causalMessage, arguments, originalSender, resolver, onReceive);
       this.selector = selector;
     }
 
@@ -193,9 +195,9 @@ public abstract class EventualMessage {
   /** The callback message to be send after a promise is resolved. */
   public static final class PromiseCallbackMessage extends PromiseMessage {
 
-    public PromiseCallbackMessage(final Actor owner, final SBlock callback,
+    public PromiseCallbackMessage(final EventualMessage causalMessage, final Actor owner, final SBlock callback,
         final SResolver resolver, final RootCallTarget onReceive) {
-      super(new Object[] {callback, null}, owner, resolver, onReceive);
+      super(causalMessage, new Object[] {callback, null}, owner, resolver, onReceive);
     }
 
     @Override
@@ -256,5 +258,10 @@ public abstract class EventualMessage {
   public static Actor getActorCurrentMessageIsExecutionOn() {
     Thread t = Thread.currentThread();
     return ((ActorProcessingThread) t).currentlyExecutingActor;
+  }
+
+  public static EventualMessage getCurrentExecutingMessage() {
+    Thread t = Thread.currentThread();
+    return ((ActorProcessingThread) t).currentMessage;
   }
 }
