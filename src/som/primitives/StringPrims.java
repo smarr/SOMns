@@ -118,12 +118,7 @@ public class StringPrims {
         return "Error - index out of bounds";
       }
 
-      try {
-        return receiver.substring(beginIndex, end);
-      } catch (IndexOutOfBoundsException e) {
-        invalidArgs.enter();
-        return "Error - index out of bounds";
-      }
+      return receiver.substring(beginIndex, end);
     }
 
     @Specialization
