@@ -16,7 +16,9 @@ class WebResourceHandler implements HttpHandler {
   @Override
   public void handle(final HttpExchange exchange) throws IOException {
     WebDebugger.log("[REQ] " + exchange.getRequestURI().toString());
-    String rootFolder = "/Users/smarr/Projects/SOM/SOMns/tools";
+    String rootFolder = System.getProperty("som.tools");
+    WebDebugger.log(rootFolder);
+
     String requestedFile = exchange.getRequestURI().toString();
     if (requestedFile.equals("/")) {
       requestedFile = "/index.html";

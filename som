@@ -271,6 +271,8 @@ if args.print_graal_options:
 if args.java_properties:
     flags += ['-D' + property for property in args.java_properties]
 
+flags += ['-Dsom.tools=' + BASE_DIR + '/tools']
+
 all_args = JAVA_ARGS + flags + SOM_ARGS + args.args
 
 if args.verbose:
