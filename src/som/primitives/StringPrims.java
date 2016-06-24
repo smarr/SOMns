@@ -2,6 +2,7 @@ package som.primitives;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.profiles.BranchProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.nodes.nary.BinaryComplexOperation;
@@ -82,6 +83,8 @@ public class StringPrims {
     public SubstringPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
     public SubstringPrim(final SourceSection source) { super(false, source); }
 
+    private final BranchProfile invalidArgs = BranchProfile.create();
+
     @Override
     protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
       if (tag == StringAccess.class) {
@@ -95,10 +98,29 @@ public class StringPrims {
 
     @Specialization
     public final String doString(final String receiver, final long start,
-        final long end) {
+        final long endIndex) {
+      int beginIndex = (int) start - 1;
+      int end = (int) endIndex;
+      if (beginIndex < 0) {
+        invalidArgs.enter();
+        return "Error - index out of bounds";
+      }
+
+      if (end > receiver.length()) {
+        invalidArgs.enter();
+        return "Error - index out of bounds";
+      }
+
+      int subLen = end - beginIndex;
+      if (subLen < 0) {
+        invalidArgs.enter();
+        return "Error - index out of bounds";
+      }
+
       try {
-        return receiver.substring((int) start - 1, (int) end);
+        return receiver.substring(beginIndex, end);
       } catch (IndexOutOfBoundsException e) {
+        invalidArgs.enter();
         return "Error - index out of bounds";
       }
     }
