@@ -13,7 +13,6 @@ import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.vm.constants.Nil;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
-import tools.dym.Tags.ControlFlowCondition;
 
 
 public abstract class IfMessageNode extends BinaryComplexOperation {
@@ -32,15 +31,6 @@ public abstract class IfMessageNode extends BinaryComplexOperation {
 
   protected static IndirectCallNode createIndirect() {
     return Truffle.getRuntime().createIndirectCallNode();
-  }
-
-  @Override
-  protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
-    if (tag == ControlFlowCondition.class) {
-      return true;
-    } else {
-      return super.isTaggedWithIgnoringEagerness(tag);
-    }
   }
 
   @Specialization(guards = {"arg.getMethod() == method"})
