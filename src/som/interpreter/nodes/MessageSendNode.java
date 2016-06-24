@@ -66,6 +66,7 @@ import som.primitives.ObjectPrimsFactory.IsNilNodeGen;
 import som.primitives.ObjectPrimsFactory.IsValueFactory;
 import som.primitives.ObjectPrimsFactory.NotNilNodeGen;
 import som.primitives.SizeAndLengthPrimFactory;
+import som.primitives.StringPrimsFactory.CharAtPrimFactory;
 import som.primitives.StringPrimsFactory.SubstringPrimFactory;
 import som.primitives.SystemPrims;
 import som.primitives.SystemPrimsFactory.TicksPrimFactory;
@@ -384,6 +385,11 @@ public final class MessageSendNode {
         case "at:":
           if (arguments[0] instanceof SArray) {
             return makeEagerBinaryPrim(AtPrimFactory.create(true, getSourceSection(), null, null));
+          }
+          break;
+        case "charAt:":
+          if (arguments[0] instanceof String) {
+            return makeEagerBinaryPrim(CharAtPrimFactory.create(true, getSourceSection(), null, null));
           }
           break;
         case "new:":

@@ -6,6 +6,7 @@ import com.oracle.truffle.api.profiles.BranchProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.nodes.nary.BinaryComplexOperation;
+import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryBasicOperation;
 import som.vm.Symbols;
@@ -129,6 +130,36 @@ public class StringPrims {
     public final String doSSymbol(final SSymbol receiver, final long start,
         final long end) {
       return doString(receiver.getString(), start, end);
+    }
+  }
+
+  @GenerateNodeFactory
+  @Primitive("string:charAt:")
+  public abstract static class CharAtPrim extends BinaryExpressionNode {
+    public CharAtPrim(final boolean eagerWrap, final SourceSection source) { super(eagerWrap, source); }
+    public CharAtPrim(final SourceSection source) { super(false, source); }
+
+    private final BranchProfile invalidArgs = BranchProfile.create();
+
+    @Override
+    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+      if (tag == StringAccess.class) {
+        return true;
+      } else if (tag == ComplexPrimitiveOperation.class) {
+        return true;
+      } else {
+        return super.isTaggedWithIgnoringEagerness(tag);
+      }
+    }
+
+    @Specialization
+    public final String doString(final String receiver, final long idx) {
+      int i = (int) idx - 1;
+      if (i < 0 || i >= receiver.length()) {
+        invalidArgs.enter();
+        return "Error - index out of bounds";
+      }
+      return String.valueOf(receiver.charAt(i));
     }
   }
 }
