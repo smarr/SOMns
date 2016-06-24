@@ -4,6 +4,7 @@ import com.oracle.truffle.api.dsl.UnsupportedSpecializationException;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
+import com.oracle.truffle.api.profiles.ConditionProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.nodes.ExpressionNode;
@@ -20,6 +21,8 @@ public abstract class BooleanInlinedLiteralNode extends ExprWithTagsNode {
   // original nodes around
   @SuppressWarnings("unused") private final ExpressionNode argumentAcutalNode;
 
+  protected final ConditionProfile profile;
+
   public BooleanInlinedLiteralNode(
       final ExpressionNode receiverNode,
       final ExpressionNode inlinedArgumentNode,
@@ -29,6 +32,7 @@ public abstract class BooleanInlinedLiteralNode extends ExprWithTagsNode {
     this.receiverNode = receiverNode;
     this.argumentNode = inlinedArgumentNode;
     this.argumentAcutalNode = originalArgumentNode;
+    this.profile = ConditionProfile.createBinaryProfile();
   }
 
   @Override
@@ -42,7 +46,7 @@ public abstract class BooleanInlinedLiteralNode extends ExprWithTagsNode {
 
   protected final boolean evaluateReceiver(final VirtualFrame frame) {
     try {
-      return receiverNode.executeBoolean(frame);
+      return profile.profile(receiverNode.executeBoolean(frame));
     } catch (UnexpectedResultException e) {
       // TODO: should rewrite to a node that does a proper message send...
       throw new UnsupportedSpecializationException(this,
