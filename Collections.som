@@ -209,11 +209,12 @@ class Collections usingKernel: kernel = Value (
       
       current isNil
         ifTrue: [
-          buckets at: i put: (newEntry: aKey value: aVal hash: hash) ]
+          buckets at: i put: (newEntry: aKey value: aVal hash: hash).
+          size_ := size_ + 1 ]
         ifFalse: [
           insertBucketEntry: aKey value: aVal hash: hash head: current ].
 
-      size_ := size_ + 1.
+
       size_ > buckets size ifTrue: [ resize ]
     )
 
@@ -230,6 +231,7 @@ class Collections usingKernel: kernel = Value (
           current value: value.
           ^ self ].
         current next isNil ifTrue: [
+          size_ := size_ + 1.
           current next: (newEntry: key value: value hash: hash).
           ^ self ].
         current := current next ]
