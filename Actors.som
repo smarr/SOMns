@@ -194,7 +194,7 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel = Value (
         completionResolver: promisePair resolver.
     ] ifFalse: [
       promisePair resolve: collection.
-    ]
+    ].
     
     ^ promisePair promise.
   )
