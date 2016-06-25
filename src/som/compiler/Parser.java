@@ -844,10 +844,15 @@ public final class Parser {
     SourceCoordinate coord = getCoordinate();
     List<ExpressionNode> expressions = new ArrayList<ExpressionNode>();
 
+    boolean sawPeriod = true;
+
     while (true) {
       comment();
 
       if (accept(Exit, KeywordTag.class)) {
+        if (!sawPeriod) {
+          expect(Period, null);
+        }
         expressions.add(result(builder));
         return createSequence(expressions, getSource(coord));
       } else if (sym == EndBlock) {
@@ -860,8 +865,12 @@ public final class Parser {
         return createSequence(expressions, getSource(coord));
       }
 
+      if (!sawPeriod) {
+        expect(Period, null);
+      }
+
       expressions.add(expression(builder));
-      accept(Period, StatementSeparatorTag.class);
+      sawPeriod = accept(Period, StatementSeparatorTag.class);
     }
   }
 
