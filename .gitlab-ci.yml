@@ -6,6 +6,9 @@ variables:
   PYTHONUNBUFFERED: "true"
   JVMCI_BIN: /home/gitlab-runner/.local/graal-core/bin/java
 
+before_script:
+  - git submodule update --init
+
 build_and_test_job:
   stage: build-and-test
   tags: [benchmarks, infinity]
