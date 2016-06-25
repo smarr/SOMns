@@ -309,7 +309,7 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
       | sum poly b |
       sum := 0.
       [sum < 1000] whileTrue: [
-        sum := sum + 1
+        sum := sum + 1.
         (sum % 4) = 0 ifTrue: [ poly := 1 ].
         (sum % 4) = 1 ifTrue: [ poly := 'abc' ].
         (sum % 4) = 2 ifTrue: [ poly := 2222222222222222 ].
