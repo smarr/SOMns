@@ -144,8 +144,8 @@ public class BasicInterpreterTests {
         {"Parser", "testOuterWithKeyword",        3 * 4, Long.class, UNSAFE_OM },
         {"Parser", "testOuterInheritancePrefix",     32, Long.class, UNSAFE_OM },
 
-        {"Initializers", "testInit1", 42, Long.class, null },
-        {"Initializers", "testInit2", 42, Long.class, null },
+        {"Initializers", "testInit1", 42, Long.class, UNSAFE_OM },
+        {"Initializers", "testInit2", 42, Long.class, UNSAFE_OM },
 
         {"DoesNotUnderstand", "test",  "Foo", SSymbol.class, null },
 
