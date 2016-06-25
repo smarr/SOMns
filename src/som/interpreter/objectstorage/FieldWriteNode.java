@@ -1,16 +1,16 @@
 package som.interpreter.objectstorage;
 
+import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.profiles.IntValueProfile;
+
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.objectstorage.StorageLocation.AbstractObjectStorageLocation;
 import som.interpreter.objectstorage.StorageLocation.DoubleStorageLocation;
 import som.interpreter.objectstorage.StorageLocation.LongStorageLocation;
 import som.interpreter.objectstorage.StorageLocation.UnwrittenStorageLocation;
 import som.vmobjects.SObject;
-
-import com.oracle.truffle.api.CompilerAsserts;
-import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.profiles.IntValueProfile;
 
 
 public final class FieldWriteNode  {
@@ -113,7 +113,7 @@ public final class FieldWriteNode  {
     private long writeAndEnsureWasSetBefore(final SObject selfArg, final long valueArg) {
       location.writeLongSet(selfArg, valueArg);
       if (!location.isSet(selfArg, primMarkProfile)) {
-        CompilerDirectives.transferToInterpreter();
+        CompilerDirectives.transferToInterpreterAndInvalidate();
 
         // fall back to WriteSetOrUnsetLong, but first set this
         location.markAsSet(selfArg);
@@ -177,7 +177,7 @@ public final class FieldWriteNode  {
     private void writeAndEnsureWasSetBefore(final SObject selfArg, final double valueArg) {
       location.writeDoubleSet(selfArg, valueArg);
       if (!location.isSet(selfArg, primMarkProfile)) {
-        CompilerDirectives.transferToInterpreter();
+        CompilerDirectives.transferToInterpreterAndInvalidate();
 
         // fall back to WriteSetOrUnsetLong, but first set this
         location.markAsSet(selfArg);

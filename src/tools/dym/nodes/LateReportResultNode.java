@@ -35,7 +35,7 @@ public class LateReportResultNode extends ExecutionEventNode {
 
   @Override
   protected void onEnter(final VirtualFrame frame) {
-    CompilerDirectives.transferToInterpreter();
+    CompilerDirectives.transferToInterpreterAndInvalidate();
     ExecutionEventNode node = specialize();
     if (node == this) {
       return;
@@ -46,7 +46,7 @@ public class LateReportResultNode extends ExecutionEventNode {
 
   @Override
   protected void onReturnValue(final VirtualFrame frame, final Object result) {
-    CompilerDirectives.transferToInterpreter();
+    CompilerDirectives.transferToInterpreterAndInvalidate();
     ExecutionEventNode node = specialize();
     if (node == this) {
       return;
@@ -57,7 +57,7 @@ public class LateReportResultNode extends ExecutionEventNode {
 
   @Override
   protected void onReturnExceptional(final VirtualFrame frame, final Throwable exception) {
-    CompilerDirectives.transferToInterpreter();
+    CompilerDirectives.transferToInterpreterAndInvalidate();
     ExecutionEventNode node = specialize();
     if (node == this) {
       return;

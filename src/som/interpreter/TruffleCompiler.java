@@ -5,7 +5,7 @@ import com.oracle.truffle.api.CompilerDirectives;
 
 public final class TruffleCompiler {
   public static void transferToInterpreter(final String reason) {
-    CompilerDirectives.transferToInterpreter();
+    CompilerDirectives.transferToInterpreterAndInvalidate();
   }
 
   public static void transferToInterpreterAndInvalidate(final String reason) {

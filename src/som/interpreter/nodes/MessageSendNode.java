@@ -210,7 +210,7 @@ public final class MessageSendNode {
     @Override
     public Object executeGeneric(final VirtualFrame frame) {
       // This is a branch never taken, none of the code here should be compiled.
-      CompilerDirectives.transferToInterpreter();
+      CompilerDirectives.transferToInterpreterAndInvalidate();
       return super.executeGeneric(frame);
     }
 
@@ -218,7 +218,7 @@ public final class MessageSendNode {
     public final Object doPreEvaluated(final VirtualFrame frame,
         final Object[] arguments) {
       // This is a branch never taken, none of the code here should be compiled.
-      CompilerDirectives.transferToInterpreter();
+      CompilerDirectives.transferToInterpreterAndInvalidate();
       return specialize(arguments).
           doPreEvaluated(frame, arguments);
     }

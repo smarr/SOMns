@@ -52,7 +52,7 @@ public abstract class CachedSlotAccessNode extends AbstractDispatchNode {
           return nextInCache.executeDispatch(frame, arguments);
         }
       } catch (InvalidAssumptionException e) {
-        CompilerDirectives.transferToInterpreter();
+        CompilerDirectives.transferToInterpreterAndInvalidate();
         return replace(nextInCache).
             executeDispatch(frame, arguments);
       }
@@ -130,7 +130,7 @@ public abstract class CachedSlotAccessNode extends AbstractDispatchNode {
           return nextInCache.executeDispatch(frame, arguments);
         }
       } catch (InvalidAssumptionException e) {
-        CompilerDirectives.transferToInterpreter();
+        CompilerDirectives.transferToInterpreterAndInvalidate();
         return replace(nextInCache).executeDispatch(frame, arguments);
       }
     }

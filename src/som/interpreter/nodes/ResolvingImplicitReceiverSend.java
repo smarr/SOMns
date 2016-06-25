@@ -45,13 +45,13 @@ public final class ResolvingImplicitReceiverSend extends AbstractMessageSendNode
 
   @Override
   public Object executeGeneric(final VirtualFrame frame) {
-    CompilerDirectives.transferToInterpreter();
+    CompilerDirectives.transferToInterpreterAndInvalidate();
     return super.executeGeneric(frame);
   }
 
   @Override
   public Object doPreEvaluated(final VirtualFrame frame, final Object[] args) {
-    CompilerDirectives.transferToInterpreter();
+    CompilerDirectives.transferToInterpreterAndInvalidate();
     // this specialize method is designed to be execute only once and
     // tracks its replacement nodes to avoid re-specialization in case of
     // re-execution
