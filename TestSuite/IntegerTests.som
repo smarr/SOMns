@@ -30,7 +30,7 @@ class IntegerTests usingPlatform: platform testFramework: minitest = (
   public class IntegerTest = TestContext ()(
 
     public testBasicNumberCoercionToInteger = (
-      self assert: 5 equals: 25 sqrt.
+      self assert: 5.0 equals: 25 sqrt.
       self assert: 1 equals: (2 // 4) * 2.
       self assert: 1 equals: 2 * (2 // 4).
     )
@@ -227,8 +227,8 @@ class IntegerTests usingPlatform: platform testFramework: minitest = (
     )
 
     public testSquareRoot = (
-      self assert:        5 equals: 25 sqrt.
-      self assert: #Integer equals: (ObjectMirror reflecting: 25 sqrt) className.
+      self assert:     5.0 equals: 25 sqrt.
+      self assert: #Double equals: (ObjectMirror reflecting: 25 sqrt) className.
     )
 
     public testAnd = (
