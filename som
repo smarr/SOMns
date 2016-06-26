@@ -246,7 +246,7 @@ if not args.interpreter and args.trace_invalidation:
     flags += ['-Dgraal.TraceTruffleTransferToInterpreter=true',
               '-Dgraal.TraceTruffleAssumptions=true']
 if not args.interpreter and args.only_compile:
-    flags.append("-Dgraal.TruffleCompileOnly=%s" % only_compile)
+    flags.append("-Dgraal.TruffleCompileOnly=%s" % args.only_compile)
 if args.visual_vm:
     flags += ['-agentpath:/Users/smarr/Downloads/visualvm_138/profiler/lib/deployed/jdk16/mac/libprofilerinterface.jnilib=/Users/smarr/Downloads/visualvm_138/profiler/lib,5140']
 if args.assert_:
