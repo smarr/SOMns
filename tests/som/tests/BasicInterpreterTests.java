@@ -45,7 +45,10 @@ import som.vmobjects.SSymbol;
 
 @RunWith(Parameterized.class)
 public class BasicInterpreterTests {
-  private static final String UNSAFE_OM = "Parallel test fails because of object transition not being thread-safe. This is not a problem at the moment for normal SOMns use. So, technically it is fine to ignore this one";
+  // parallel test fails because of object transition not being thread-safe.
+  // This is not a problem at the moment for normal SOMns use.
+  // So, technically it is fine to ignore this one.
+  private static final String UNSAFE_OM = "Not Threadsafe";
 
   @Parameters(name = "{0}.{1} [{index}]")
   public static Iterable<Object[]> data() {
