@@ -324,7 +324,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         nextActor := threadActors at: (i % numActors) + 1.
         (threadActors at: i) <-: nextActor: nextActor.
       ].
-      
+
       (threadActors at: 1) <-: ping: numPings.
       ^ completionPP promise
     )
@@ -1003,8 +1003,120 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     )
   )
 
-  public class Philosophers = Benchmark ()( todo = () )
-  public class SleepingBarber = Benchmark ()( todo = ( USE_MATH_RANDOM_WHICH_SEQUENTIALIZES ) )
+  public class Philosophers new: numPhil rounds: numRounds = Benchmark (
+  | private numPhil   = numPhil.
+    private numRounds = numRounds.
+  |)(
+    private class Counter = (
+    | private value ::= 0. |
+    )(
+      public inc: anInt = ( value := value + anInt. )
+      public get = ( ^ value )
+    )
+    
+    private class PhilosopherActor new: id rounds: rounds counter: aCounter arbitrator: arbitrator = (
+    | private localCounter ::= 0.
+      private roundsSoFar  ::= 0.
+      private id     = id.
+      private rounds = rounds.
+      private arbitrator = arbitrator.
+      private counter    = aCounter.
+    |)(
+      public denied = (
+        localCounter := localCounter + 1.
+        arbitrator <-: hungry: self id: id.
+      )
+      
+      public eat = (
+        roundsSoFar := roundsSoFar + 1.
+        localCounter > 0 ifTrue: [
+          counter <-: inc: localCounter.
+          localCounter := 0. ].
+        
+        arbitrator <-: done: id.
+        roundsSoFar < rounds
+          ifTrue:  [ self <-: start ]
+          ifFalse: [ arbitrator <-: exit ]
+      )
+      
+      public start = (
+        arbitrator <-: hungry: self id: id.
+      )
+    )
+    
+    private class ArbitratorActor new: numForks resolver: resolver = (
+    | private numForks = numForks.
+      private forks    = Array new: numForks withAll: false.
+      private numExitedPhilosophers ::= 0.
+      private resolver = resolver.
+    |)(
+      public hungry: philosopher id: leftForkId = (
+        | rightForkId |
+        rightForkId := 1 + ((leftForkId + 1) % numForks).
+        
+        ((forks at: leftForkId) or: [forks at: rightForkId])
+          ifTrue:  [ philosopher <-: denied ]
+          ifFalse: [
+            forks at: leftForkId  put: true.
+            forks at: rightForkId put: true.
+            philosopher <-: eat ]
+      )
+      
+      public done: leftForkId = (
+        | rightForkId |
+        rightForkId := 1 + ((leftForkId + 1) % numForks).
+        
+        forks at: leftForkId  put: false.
+        forks at: rightForkId put: false.
+      )
+      
+      public exit = (
+        numExitedPhilosophers := numExitedPhilosophers + 1.
+  
+        numForks = numExitedPhilosophers ifTrue: [
+          | forksTaken |
+          forksTaken := 0.
+          forks do: [:f | f ifTrue: [ forksTaken := forksTaken + 1 ] ].
+
+          resolver resolve: forksTaken ]
+      )
+    )
+    
+    public benchmark = (
+      | counter completionPP arbitrator philosophers |
+      counter := Counter new.
+      completionPP := actors createPromisePair.
+      
+      arbitrator := (actors createActorFromValue: ArbitratorActor) <-: new: numPhil resolver: completionPP resolver.
+      philosophers := Array new: numPhil.
+      philosophers doIndexes: [:i |
+        | ph |
+        ph := (actors createActorFromValue: PhilosopherActor) <-: new: i
+                        rounds: numRounds counter: counter arbitrator: arbitrator.
+        philosophers at: i put: ph ].
+      
+      philosophers do: [:ph | ph <-: start ].
+
+      ^ completionPP promise
+    )
+
+    public verifyResult: result = (
+      ^ result = 0
+    )
+  ) : (
+    public newInstance: problemSize = (
+      | problem |
+      problem := problemSize split: ':'.
+      
+      ^ self new: (problem at: 1) asInteger
+          rounds: (problem at: 2) asInteger
+    )
+    
+    public setupVerifiedRun: run = (
+      run problemSize: '20:10000'
+    )
+  )
+
   public class CigaretteSmokers = Benchmark ()( todo = ( USE_MATH_RANDOM_WHICH_SEQUENTIALIZES ) )
 
   public class LogisticsMapSeries numTerms: terms numSeries: series startRate: rate = Benchmark (
