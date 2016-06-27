@@ -2,6 +2,7 @@ package som.interpreter.objectstorage;
 
 import com.oracle.truffle.api.Assumption;
 import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.NodeChild;
@@ -240,6 +241,8 @@ public abstract class InitializerFieldWrite extends ExprWithTagsNode {
 
   @Specialization(guards = {"!rcvr.getObjectLayout().isValid()"})
   public final Object updateObject(final SObject rcvr, final Object value) {
+    // no invalidation, just moving to interpreter to avoid recursion in PE
+    CompilerDirectives.transferToInterpreter();
     rcvr.updateLayoutToMatchClass();
     return executeEvaluated(rcvr, value);
   }
