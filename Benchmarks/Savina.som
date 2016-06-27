@@ -1117,6 +1117,161 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     )
   )
 
+  public class SleepingBarber numHaircuts: numHaircuts waitingRoomSize: waitingRoomSize avProductionRate: avProductionRate avHaircutRate: avHaircutRate = Benchmark (
+  | private numHaircuts      = numHaircuts.
+    private waitingRoomSize  = waitingRoomSize.
+    private avProductionRate = avProductionRate.
+    private avHaircutRate    = avHaircutRate.
+  |)(
+    private class WaitingRoomActor new: capacity barber: anActor = (
+    | private waitingCustomers = Vector new.
+      private barberAsleep ::= true.
+      private barber   = anActor.
+      private capacity = capacity.
+    |)(
+      public enter: customer in: room = (
+        waitingCustomers size = capacity
+          ifTrue:  [ customer <-: full ]
+          ifFalse: [
+            waitingCustomers append: customer.
+            barberAsleep
+              ifTrue: [
+                barberAsleep := false.
+                self <-: next ]
+              ifFalse: [
+                customer <-: wait ] ]
+      )
+
+      public next = (
+        waitingCustomers size > 0
+          ifTrue: [
+            | customer |
+            customer := waitingCustomers removeFirst.
+            barber <-: enter: customer in: self ]
+          ifFalse: [
+            barber <-: wait.
+            barberAsleep := true ]
+      )
+      
+      public exit = ( barber <-: exit )
+    )
+
+    private class BarberActor new: resolver = (
+    | private random = Random new. 
+      private resolver = resolver.
+    |)(
+      public enter: customer in: room = (
+        customer <-: start.
+        busyWait: (random next: avHaircutRate) + 10.
+        customer <-: done.
+        room <-: next
+      )
+      
+      private busyWait: limit = (
+        | test |
+        test := 0.
+        limit timesRepeat: [
+          random next.
+          test := test + 1 ].
+        ^ test
+      )
+      
+      public wait = ()
+      public exit = ( resolver resolve: random next )
+    )
+    
+    private class CustomerFactoryActor new: numHaircuts room: room = (
+    | private random = Random new.
+      private numHaircuts = numHaircuts.
+      private room = room.
+      private numHaircutsSoFar ::= 0.
+      private idGenerator ::= 0.
+    |)(
+      public start = (
+        numHaircuts timesRepeat: [
+          sendCustomerToRoom.
+          busyWait: (random next: avHaircutRate) + 10 ].
+      )
+      
+      private busyWait: limit = (
+        | test |
+        test := 0.
+        limit timesRepeat: [
+          random next.
+          test := test + 1 ].
+        ^ test
+      )
+      
+      public returned: customer = (
+        idGenerator := idGenerator + 1.
+        sendCustomerToRoom: customer
+      )
+      
+      public done = (
+        numHaircutsSoFar := numHaircutsSoFar + 1.
+        numHaircutsSoFar = numHaircuts ifTrue: [
+          room <-: exit ]
+      )
+      
+      private sendCustomerToRoom = (
+        | customer |
+        customer := (actors createActorFromValue: CustomerActor) <-: new: idGenerator factory: self.
+        idGenerator := idGenerator + 1.
+        sendCustomerToRoom: customer.
+      )
+      
+      private sendCustomerToRoom: customer = (
+        room <-: enter: customer in: room
+      )
+    )
+    
+    private class CustomerActor new: id factory: factoryActor = (
+    | private factoryActor = factoryActor.
+    |)(
+      public full = ( factoryActor <-: returned: self )      
+      public wait = ()
+      public start= ()
+      public done = ( factoryActor <-: done )
+    )
+    
+    public benchmark = (
+      | barber room factoryActor completionPP  |
+      completionPP := actors createPromisePair.
+
+      barber := (actors createActorFromValue: BarberActor) <-: new: completionPP resolver.
+      room   := (actors createActorFromValue: WaitingRoomActor) <-: new: waitingRoomSize barber: barber.
+      factoryActor := (actors createActorFromValue: CustomerFactoryActor) <-: new: numHaircuts room: room.
+      
+      factoryActor <-: start.
+
+      ^ completionPP promise
+    )
+
+    public verifyResult: result = (
+      (numHaircuts = 1000 and: [avHaircutRate =  500]) ifTrue: [ ^ result =  5029 ].
+      (numHaircuts = 2500 and: [avHaircutRate =  500]) ifTrue: [ ^ result = 16033 ].
+      (numHaircuts = 2500 and: [avHaircutRate = 1000]) ifTrue: [ ^ result = 32109 ].
+      (numHaircuts = 5000 and: [avHaircutRate = 1000]) ifTrue: [ ^ result = 32109 ].
+    
+      ('no verification result for avHaircutRate: ' + avHaircutRate + ' result is: ' + result) println.
+      ^ false
+    )
+  ) : (
+    public newInstance: problemSize = (
+      | problem |
+      problem := problemSize split: ':'.
+      
+      ^ self numHaircuts: (problem at: 1) asInteger
+         waitingRoomSize: (problem at: 2) asInteger
+        avProductionRate: (problem at: 3) asInteger
+           avHaircutRate: (problem at: 4) asInteger
+    )
+    
+    public setupVerifiedRun: run = (
+      run problemSize: '5000:1000:1000:1000'
+    )
+  )
+  
   public class CigaretteSmokers = Benchmark ()( todo = ( USE_MATH_RANDOM_WHICH_SEQUENTIALIZES ) )
 
   public class LogisticsMapSeries numTerms: terms numSeries: series startRate: rate = Benchmark (
