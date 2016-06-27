@@ -1,5 +1,15 @@
 package som.interpreter.objectstorage;
 
+import com.oracle.truffle.api.Assumption;
+import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.Fallback;
+import com.oracle.truffle.api.dsl.NodeChild;
+import com.oracle.truffle.api.dsl.NodeChildren;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.profiles.IntValueProfile;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
@@ -10,16 +20,6 @@ import som.interpreter.objectstorage.StorageLocation.UnwrittenStorageLocation;
 import som.vmobjects.SObject;
 import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SObject.SMutableObject;
-
-import com.oracle.truffle.api.Assumption;
-import com.oracle.truffle.api.CompilerAsserts;
-import com.oracle.truffle.api.dsl.Cached;
-import com.oracle.truffle.api.dsl.Fallback;
-import com.oracle.truffle.api.dsl.NodeChild;
-import com.oracle.truffle.api.dsl.NodeChildren;
-import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.profiles.IntValueProfile;
-import com.oracle.truffle.api.source.SourceSection;
 
 
 @NodeChildren({
@@ -73,7 +73,6 @@ public abstract class InitializerFieldWrite extends ExprWithTagsNode {
   protected final IntValueProfile createProfile() {
     return IntValueProfile.createIdentityProfile();
   }
-
 
   @Specialization(
       assumptions = {"isLatestLayout"},
@@ -235,6 +234,14 @@ public abstract class InitializerFieldWrite extends ExprWithTagsNode {
     CompilerAsserts.neverPartOfCompilation("should never be part of a compiled AST.");
     rcvr.writeSlot(slot, value);
     return value;
+  }
+
+  public abstract Object executeEvaluated(final SObject rcvr, final Object value);
+
+  @Specialization(guards = {"!rcvr.getObjectLayout().isValid()"})
+  public final Object updateObject(final SObject rcvr, final Object value) {
+    rcvr.updateLayoutToMatchClass();
+    return executeEvaluated(rcvr, value);
   }
 
   @Fallback
