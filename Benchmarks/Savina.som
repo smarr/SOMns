@@ -1272,7 +1272,100 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     )
   )
   
-  public class CigaretteSmokers = Benchmark ()( todo = ( USE_MATH_RANDOM_WHICH_SEQUENTIALIZES ) )
+  public class CigaretteSmokers rounds: rounds smokers: smokers = Benchmark (
+  | private rounds  = rounds.
+    private smokers = smokers.
+  |)(
+    private class ArbiterActor new: numRounds smokers: numSmokers resolver: resolver = (
+    | private numRounds  = numRounds.
+      private numSmokers = numSmokers.
+      private resolver   = resolver.
+      
+      private smokers = Array new: numSmokers withAll: [ (actors createActorFromValue: SmokerActor) <-: new: self ].
+      private random  = Random new.
+      private roundsSoFar ::= 0.
+      private smokersExited ::= numSmokers.
+    |)(
+      public start = ( notifyRandomSmoker )
+      
+      public startedSmoking = (
+        roundsSoFar := roundsSoFar + 1.
+        roundsSoFar >= numRounds
+          ifTrue:  [ requestSmokersToExit ]
+          ifFalse: [ notifyRandomSmoker ]
+      )
+      
+      private notifyRandomSmoker = (
+        | newSmokerIndex busyWaitPeriod |
+        newSmokerIndex := 1 + (random next abs) % numSmokers.
+        busyWaitPeriod := 10 + (random next: 1000).
+        (smokers at: newSmokerIndex) <-: startSmoking: busyWaitPeriod
+      )
+      
+      private requestSmokersToExit = (
+        smokers do: [:s | s <-: exit ]
+      )
+      
+      public exited = (
+        smokersExited := smokersExited - 1.
+        smokersExited = 0 ifTrue: [
+          resolver resolve: random next ]
+      )
+    )
+    
+    private class SmokerActor new: arbiterActor = (
+    | private arbiterActor = arbiterActor.
+      private random = Random new.
+    |)(
+      public startSmoking: busyWaitPeriod = (
+        arbiterActor <-: startedSmoking.
+        busyWait: busyWaitPeriod
+      )
+      
+      private busyWait: limit = (
+        | test |
+        test := 0.
+        limit timesRepeat: [
+          random next.
+          test := test + 1 ].
+        ^ test
+      )
+      
+      public exit = (
+        arbiterActor <-: exited
+      )
+    )
+  
+    public benchmark = (
+      | arbiterActor completionPP  |
+      completionPP := actors createPromisePair.
+
+      arbiterActor := (actors createActorFromValue: ArbiterActor) <-: new: rounds smokers: smokers resolver: completionPP resolver.
+      arbiterActor <-: start.
+
+      ^ completionPP promise
+    )
+
+    public verifyResult: result = (
+      (rounds = 1000 and: [ smokers = 200 ]) ifTrue: [ ^ result = 50272 ].
+      (rounds = 2000 and: [ smokers = 200 ]) ifTrue: [ ^ result = 11088 ].
+      (rounds = 10000 and: [ smokers = 200 ]) ifTrue: [ ^ result = 53968 ].
+      ('no verification result for rounds: ' + rounds + ' smokers: ' + smokers + ' result is: ' + result) println.
+      ^ false
+    )
+  ) : (
+    public newInstance: problemSize = (
+      | problem |
+      problem := problemSize split: ':'.
+      
+      ^ self rounds: (problem at: 1) asInteger
+            smokers: (problem at: 2) asInteger
+    )
+    
+    public setupVerifiedRun: run = (
+      run problemSize: '1000:200'
+    )
+  )
 
   public class LogisticsMapSeries numTerms: terms numSeries: series startRate: rate = Benchmark (
   | private numTerms  = terms.
