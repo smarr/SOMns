@@ -1,10 +1,12 @@
 package som.primitives;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.VmSettings;
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.interpreter.nodes.ISpecialSend;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
@@ -25,6 +27,8 @@ import tools.dym.Tags.NewObject;
 // @GenerateNodeFactory
 //    @Primitive("instantiate:")
 public abstract class NewObjectPrim extends UnaryExpressionNode implements ISpecialSend {
+  protected static final int INLINE_CACHE_SIZE = VmSettings.DYNAMIC_METRICS ? 100 : 6;
+
   private final MixinDefinitionId mixinId;
 
   public NewObjectPrim(final SourceSection source, final MixinDefinitionId mixinId) {
@@ -53,7 +57,8 @@ public abstract class NewObjectPrim extends UnaryExpressionNode implements ISpec
       "receiver.getInstanceFactory() == factory",
       "factory.hasSlots()",
       "factory.hasOnlyImmutableFields()",
-      "receiver.getInstanceFactory().getInstanceLayout() == layout"})
+      "receiver.getInstanceFactory().getInstanceLayout() == layout"},
+      limit = "INLINE_CACHE_SIZE")
   public final SAbstractObject doClassWithOnlyImmutableFields(final SClass receiver,
       @Cached("receiver.getInstanceFactory()") final ClassFactory factory,
       @Cached("receiver.getInstanceFactory().getInstanceLayout()") final ObjectLayout layout) {
@@ -64,7 +69,8 @@ public abstract class NewObjectPrim extends UnaryExpressionNode implements ISpec
       "receiver.getInstanceFactory() == factory",
       "factory.hasSlots()",
       "!factory.hasOnlyImmutableFields()",
-      "receiver.getInstanceFactory().getInstanceLayout() == layout"})
+      "receiver.getInstanceFactory().getInstanceLayout() == layout"},
+      limit = "INLINE_CACHE_SIZE")
   public final SAbstractObject doClassWithFields(
       final SClass receiver,
       @Cached("receiver.getInstanceFactory()") final ClassFactory factory,
@@ -74,13 +80,15 @@ public abstract class NewObjectPrim extends UnaryExpressionNode implements ISpec
 
   @Specialization(guards = {
       "receiver.getInstanceFactory() == factory",
-      "!factory.hasSlots()"})
+      "!factory.hasSlots()"},
+      limit = "INLINE_CACHE_SIZE")
   public final SAbstractObject doClassWithoutFields(final SClass receiver,
       @Cached("receiver.getInstanceFactory()") final ClassFactory factory) {
     return new SObjectWithoutFields(receiver, factory);
   }
 
   @Fallback
+  @TruffleBoundary
   public final SAbstractObject fallback(final SClass receiver) {
     ClassFactory factory = receiver.getInstanceFactory();
     if (factory.hasSlots()) {
