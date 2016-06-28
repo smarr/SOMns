@@ -24,6 +24,7 @@ import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.interpreter.LexicalScope.MixinScope;
 import som.interpreter.Method;
 import som.interpreter.SNodeFactory;
+import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ClassInstantiationNode;
 import som.interpreter.nodes.ClassSlotAccessNode;
 import som.interpreter.nodes.ExpressionNode;
@@ -659,10 +660,10 @@ public final class MixinDefinition {
     MethodBuilder builder = new MethodBuilder(true);
     builder.setSignature(init);
     builder.addArgumentIfAbsent("self",
-        Source.fromNamedText("self read", "super-class-resolution").
+        SomLanguage.getSyntheticSource("self read", "super-class-resolution").
         createSection("self read", 1));
 
-    Source source = Source.fromNamedText("self", "Thing>>" + init.getString());
+    Source source = SomLanguage.getSyntheticSource("self", "Thing>>" + init.getString());
     SourceSection ss = source.createSection(init.getString(), 0, 4);
     SInvokable thingInitNew = builder.assembleInitializer(builder.getSelfRead(ss),
         AccessModifier.PROTECTED, Symbols.INITIALIZER, ss);

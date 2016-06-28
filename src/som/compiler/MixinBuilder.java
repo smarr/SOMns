@@ -32,7 +32,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
@@ -43,6 +42,7 @@ import som.compiler.Variable.Argument;
 import som.interpreter.LexicalScope.MixinScope;
 import som.interpreter.Method;
 import som.interpreter.SNodeFactory;
+import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.IsValueCheckNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
@@ -366,9 +366,10 @@ public final class MixinBuilder {
       definitionMethod = new MethodBuilder(outerBuilder,
           outerBuilder.getInstanceScope());
     }
+
     // self is going to be the enclosing object
     definitionMethod.addArgumentIfAbsent("self",
-        Source.fromNamedText("self read", "super-class-resolution").
+        SomLanguage.getSyntheticSource("self read", "super-class-resolution").
         createSection("self read", 1));
     definitionMethod.setSignature(Symbols.DEF_CLASS);
 

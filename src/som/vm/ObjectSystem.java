@@ -28,6 +28,7 @@ import som.compiler.MixinDefinition.SlotDefinition;
 import som.compiler.SourcecodeCompiler;
 import som.interpreter.LexicalScope.MixinScope;
 import som.interpreter.Primitive;
+import som.interpreter.SomLanguage;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage.DirectMessage;
 import som.interpreter.actors.EventualSendNode;
@@ -151,7 +152,7 @@ public final class ObjectSystem {
     // ignore the implicit vmMirror argument
     final int numArgs = signature.getNumberOfSignatureArguments() - 1;
 
-    Source s = Source.fromNamedText("primitive", factory.getClass().getSimpleName());
+    Source s = SomLanguage.getSyntheticSource("primitive", factory.getClass().getSimpleName());
     MethodBuilder prim = new MethodBuilder(true);
     ExpressionNode[] args = new ExpressionNode[numArgs];
 
@@ -523,7 +524,7 @@ Classes.transferClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInst
   public void executeApplication(final SObjectWithoutFields vmMirror, final Actor mainActor) {
     Object platform = platformModule.instantiateObject(platformClass, vmMirror);
 
-    SourceSection source = Source.fromNamedText("",
+    SourceSection source = SomLanguage.getSyntheticSource("",
         "ObjectSystem.executeApplication").createSection("start", 1);
     SSymbol start = Symbols.symbolFor("start");
 
