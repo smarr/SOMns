@@ -234,8 +234,9 @@ public abstract class EventualMessage {
     try {
       executeMessage();
     } catch (Throwable t) {
+      VM.errorPrintln("EventualMessage: " + toString());
       t.printStackTrace();
-      VM.errorExit("Some EventualMessage failed with Exception.");
+      VM.errorExit("EventualMessage failed with Exception.");
     }
   }
 
