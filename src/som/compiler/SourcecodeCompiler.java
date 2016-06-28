@@ -35,6 +35,7 @@ import som.VM;
 import som.compiler.Lexer.SourceCoordinate;
 import som.compiler.MixinBuilder.MixinDefinitionError;
 import som.compiler.Parser.ParseError;
+import som.interpreter.SomLanguage;
 
 public final class SourcecodeCompiler {
 
@@ -43,7 +44,7 @@ public final class SourcecodeCompiler {
       throws IOException {
     FileReader stream = new FileReader(file);
 
-    Source source = Source.fromFileName(file.getPath());
+    Source source = Source.newBuilder(file).mimeType(SomLanguage.MIME_TYPE).build();
     Parser parser = new Parser(stream, file.length(), source);
 
     MixinDefinition result = compile(parser);
