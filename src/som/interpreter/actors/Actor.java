@@ -1,5 +1,6 @@
 package som.interpreter.actors;
 
+import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ForkJoinPool;
@@ -7,7 +8,6 @@ import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
 import java.util.concurrent.ForkJoinWorkerThread;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.impl.Accessor;
 
 import som.VM;
 import som.VmSettings;
@@ -249,9 +249,22 @@ public class Actor {
     }
   }
 
+  /**
+   * In case an actor processing thread terminates, provide some info.
+   */
+  private static final class UncaughtExceptions implements UncaughtExceptionHandler {
+    @Override
+    public void uncaughtException(final Thread t, final Throwable e) {
+      ActorProcessingThread thread = (ActorProcessingThread) t;
+      VM.errorPrintln("Processing of eventual message failed for actor: "
+          + thread.currentlyExecutingActor.toString());
+      e.printStackTrace();
+    }
+  }
+
   private static final ForkJoinPool actorPool = new ForkJoinPool(
-      VmSettings.NUM_THREADS,
-      new ActorProcessingThreadFactor(), null, true);
+      VmSettings.NUM_THREADS, new ActorProcessingThreadFactor(),
+      new UncaughtExceptions(), true);
 
   @Override
   public String toString() {
