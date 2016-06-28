@@ -313,6 +313,7 @@ public final class VM {
       }
 
       if (vmOptions.dynamicMetricsEnabled) {
+        assert VmSettings.DYNAMIC_METRICS;
         instruments.get(DynamicMetrics.ID).setEnabled(true);
       }
 
