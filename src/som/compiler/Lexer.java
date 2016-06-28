@@ -282,7 +282,7 @@ public final class Lexer {
       case 'n': state.text.append("\n"); break;
       case 'r': state.text.append("\r"); break;
       case 'f': state.text.append("\f"); break;
-      case '\'': state.text.append("'"); break;
+      case '\'': state.text.append('\''); break;
       case '\\': state.text.append("\\"); break;
     }
     state.incPtr();
