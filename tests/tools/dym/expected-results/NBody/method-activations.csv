@@ -39,13 +39,13 @@ Integer_class>>#fromString:	3
 String>>#asString	5
 String>>#primSubstringFrom:to:	5
 String>>#includes:	1
-String>>#$blockMethod@366@10:	5
+String>>#$blockMethod@362@10:	5
 String>>#asInteger	3
 String>>#print	1
 ArrayReadMixin>>#do:	4
-ArrayReadMixin>>#$blockMethod@436@44:	20
+ArrayReadMixin>>#$blockMethod@432@44:	20
 ArrayReadMixin>>#doIndexes:	4
-ArrayReadMixin>>#$blockMethod@438@44:	20
+ArrayReadMixin>>#$blockMethod@434@44:	20
 Block>>#on:do:	1
 Kernel>>#`define`cls	1
 Kernel>>#`define`cls	1

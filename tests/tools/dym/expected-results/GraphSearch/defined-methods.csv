@@ -9,7 +9,6 @@ Method(Actors>>#async:whileTrue:)	false	0
 Method(Actors>>#async:whileTrue:prevPromise:completionResolver:)	false	0
 Method(Actors>>#createActorFromValue:)	false	0
 Method(Actors>>#createPromisePair)	false	0
-Method(Actors>>#whenResolvedUnwrap:)	false	0
 Method(ArrayReadMixin>>#average)	false	0
 Method(ArrayReadMixin>>#collect:)	false	0
 Method(ArrayReadMixin>>#contains:)	false	0
@@ -25,8 +24,6 @@ Method(ArrayReadMixin>>#reject:)	false	0
 Method(ArrayReadMixin>>#select:)	false	0
 Method(ArrayReadMixin>>#sum)	false	0
 Method(ArrayReadMixin>>#union:)	false	0
-Method(Array>>#asTransferArray)	false	0
-Method(Array>>#asValueArray)	false	0
 Method(Array>>#at:)	false	0
 Method(Array>>#at:put:)	false	0
 Method(Array>>#copy)	false	0
@@ -166,7 +163,7 @@ Method(Integer>>#>>>)	false	0
 Method(Integer>>#abs)	false	0
 Method(Integer>>#as32BitSignedValue)	false	0
 Method(Integer>>#as32BitUnsignedValue)	false	0
-Method(Integer>>#asString)	true	3
+Method(Integer>>#asString)	true	1
 Method(Integer>>#between:and:)	false	0
 Method(Integer>>#bitXor:)	false	0
 Method(Integer>>#downTo:by:do:)	false	0
@@ -272,7 +269,7 @@ Method(String>>#indexOf:)	false	0
 Method(String>>#indexOf:startingAt:)	false	0
 Method(String>>#length)	false	0
 Method(String>>#primSubstringFrom:to:)	true	11
-Method(String>>#print)	true	3
+Method(String>>#print)	true	1
 Method(String>>#split:)	false	0
 Method(String>>#substringFrom:to:)	false	0
 Method(Symbol>>#asString)	false	0
@@ -305,14 +302,11 @@ Method(Thing>>#isNil)	false	0
 Method(Thing>>#kernel)	false	0
 Method(Thing>>#notNil)	false	0
 Method(Thing>>#print)	false	0
-Method(Thing>>#println)	true	7
+Method(Thing>>#println)	true	5
 Method(Thing>>#subclassResponsibility)	false	0
 Method(Thing>>#value)	true	20916
 Method(TransferArray>>#new:withAll:)	false	0
 Method(TransferObjectsCannotBeValues>>#asString)	false	0
-Method(TransferVector>>#new)	false	0
-Method(TransferVector>>#new:)	false	0
-Method(TransferVector>>#with:)	false	0
 Method(True>>#and:)	false	0
 Method(True>>#asString)	false	0
 Method(True>>#ifFalse:)	false	0
@@ -343,7 +337,6 @@ Method(Vector>>#doIndexes:)	false	0
 Method(Vector>>#first)	false	0
 Method(Vector>>#isEmpty)	false	0
 Method(Vector>>#new)	true	3000
-Method(Vector>>#new:)	true	3000
 Method(Vector>>#println)	false	0
 Method(Vector>>#remove)	false	0
 Method(Vector>>#remove:)	false	0

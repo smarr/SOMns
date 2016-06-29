@@ -3,32 +3,32 @@ Harness.som pos=2138 len=4	read	Integer	259
 Harness.som pos=2138 len=4	read	ALL	259
 Harness.som pos=2177 len=4	read	Integer	259
 Harness.som pos=2177 len=4	read	ALL	259
-Kernel.som pos=2477 len=10	read	Object class	7
-Kernel.som pos=2477 len=10	read	ALL	7
-Kernel.som pos=2514 len=9	read	Value class	6
-Kernel.som pos=2514 len=9	read	ALL	6
-Kernel.som pos=2892 len=8	read	VmMirror	4
-Kernel.som pos=2892 len=8	read	ALL	4
-Kernel.som pos=9017 len=8	read	VmMirror	2
-Kernel.som pos=9017 len=8	read	ALL	2
-Kernel.som pos=11630 len=8	read	VmMirror	21
-Kernel.som pos=11630 len=8	read	ALL	21
-Kernel.som pos=21583 len=7	read	Array	1
-Kernel.som pos=21583 len=7	read	ALL	1
-Kernel.som pos=22588 len=7	read	Integer	1
-Kernel.som pos=22588 len=7	read	ALL	1
-Kernel.som pos=22599 len=7	read	Array	1
-Kernel.som pos=22599 len=7	read	ALL	1
-Kernel.som pos=22863 len=7	read	Array	1
-Kernel.som pos=22863 len=7	read	ALL	1
-Kernel.som pos=22875 len=7	read	Integer	1
-Kernel.som pos=22875 len=7	read	ALL	1
-Kernel.som pos=22914 len=7	read	Integer	1
-Kernel.som pos=22914 len=7	read	ALL	1
-Kernel.som pos=24738 len=8	read	Integer	1
-Kernel.som pos=24738 len=8	read	ALL	1
-Kernel.som pos=24769 len=7	read	Integer	1
-Kernel.som pos=24769 len=7	read	ALL	1
+Kernel.som pos=2334 len=10	read	Object class	7
+Kernel.som pos=2334 len=10	read	ALL	7
+Kernel.som pos=2371 len=9	read	Value class	6
+Kernel.som pos=2371 len=9	read	ALL	6
+Kernel.som pos=2749 len=8	read	VmMirror	4
+Kernel.som pos=2749 len=8	read	ALL	4
+Kernel.som pos=8874 len=8	read	VmMirror	2
+Kernel.som pos=8874 len=8	read	ALL	2
+Kernel.som pos=11487 len=8	read	VmMirror	21
+Kernel.som pos=11487 len=8	read	ALL	21
+Kernel.som pos=21165 len=7	read	Array	1
+Kernel.som pos=21165 len=7	read	ALL	1
+Kernel.som pos=22170 len=7	read	Integer	1
+Kernel.som pos=22170 len=7	read	ALL	1
+Kernel.som pos=22181 len=7	read	Array	1
+Kernel.som pos=22181 len=7	read	ALL	1
+Kernel.som pos=22445 len=7	read	Array	1
+Kernel.som pos=22445 len=7	read	ALL	1
+Kernel.som pos=22457 len=7	read	Integer	1
+Kernel.som pos=22457 len=7	read	ALL	1
+Kernel.som pos=22496 len=7	read	Integer	1
+Kernel.som pos=22496 len=7	read	ALL	1
+Kernel.som pos=24320 len=8	read	Integer	1
+Kernel.som pos=24320 len=8	read	ALL	1
+Kernel.som pos=24351 len=7	read	Integer	1
+Kernel.som pos=24351 len=7	read	ALL	1
 Sort.som pos=1423 len=6	read	Random class	1
 Sort.som pos=1423 len=6	read	ALL	1
 Sort.som pos=1633 len=8	read	Integer	1
@@ -42,7 +42,7 @@ Sort.som pos=2398 len=7	read	ALL	259
 Sort.som pos=2456 len=8	read	Integer	259
 Sort.som pos=2456 len=8	read	ALL	259
 Harness.som pos=2128 len=39	write	ALL	259
-Kernel.som pos=22903 len=22	write	ALL	1
+Kernel.som pos=22485 len=22	write	ALL	1
 Sort.som pos=2316 len=34	write	ALL	1
 Sort.som pos=2328 len=22	write	ALL	1
 Sort.som pos=2418 len=15	write	ALL	7

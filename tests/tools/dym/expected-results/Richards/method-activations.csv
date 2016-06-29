@@ -42,13 +42,13 @@ Integer_class>>#fromString:	3
 String>>#asString	5
 String>>#primSubstringFrom:to:	8
 String>>#includes:	1
-String>>#$blockMethod@366@10:	8
+String>>#$blockMethod@362@10:	8
 String>>#asInteger	3
 String>>#print	1
 ArrayReadMixin>>#doIndexes:	9
-ArrayReadMixin>>#$blockMethod@438@44:	38
+ArrayReadMixin>>#$blockMethod@434@44:	38
 Array>>#putAll:	9
-Array>>#$blockMethod@505@43:	38
+Array>>#$blockMethod@501@43:	38
 Array_class>>#new:withAll:	9
 Block>>#on:do:	1
 Kernel>>#`define`cls	1

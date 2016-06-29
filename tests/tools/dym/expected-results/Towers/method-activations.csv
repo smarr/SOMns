@@ -44,7 +44,7 @@ Integer_class>>#fromString:	3
 String>>#asString	5
 String>>#primSubstringFrom:to:	6
 String>>#includes:	1
-String>>#$blockMethod@366@10:	6
+String>>#$blockMethod@362@10:	6
 String>>#asInteger	3
 String>>#print	1
 Block>>#on:do:	1
@@ -72,12 +72,11 @@ _unknown_>>#`define`cls	1
 TowersSuite>>#initializer`usingPlatform:andHarness:	1
 Towers>>#new	2
 TowersSuite>>#`define`cls	1
-Towers>>#initializer`new	2
 Towers>>#pushDisk:onPile:	16410
 Towers>>#popDiskFrom:	16382
 Towers>>#moveTopDiskFrom:to:	16382
 Towers>>#buildTowerAt:disks:	2
-Towers>>#$blockMethod@63@13:	28
+Towers>>#$blockMethod@62@13:	28
 Towers>>#move:disksFrom:to:	16382
 Towers>>#benchmark	2
 Towers>>#verifyResult:	2

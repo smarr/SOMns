@@ -1,14 +1,14 @@
 Source Section	Access Type	Data Type	Count
-Kernel.som pos=2477 len=10	read	Object class	6
-Kernel.som pos=2477 len=10	read	ALL	6
-Kernel.som pos=2514 len=9	read	Value class	6
-Kernel.som pos=2514 len=9	read	ALL	6
-Kernel.som pos=2892 len=8	read	VmMirror	4
-Kernel.som pos=2892 len=8	read	ALL	4
-Kernel.som pos=9017 len=8	read	VmMirror	2
-Kernel.som pos=9017 len=8	read	ALL	2
-Kernel.som pos=11630 len=8	read	VmMirror	5
-Kernel.som pos=11630 len=8	read	ALL	5
+Kernel.som pos=2334 len=10	read	Object class	6
+Kernel.som pos=2334 len=10	read	ALL	6
+Kernel.som pos=2371 len=9	read	Value class	6
+Kernel.som pos=2371 len=9	read	ALL	6
+Kernel.som pos=2749 len=8	read	VmMirror	4
+Kernel.som pos=2749 len=8	read	ALL	4
+Kernel.som pos=8874 len=8	read	VmMirror	2
+Kernel.som pos=8874 len=8	read	ALL	2
+Kernel.som pos=11487 len=8	read	VmMirror	5
+Kernel.som pos=11487 len=8	read	ALL	5
 Queens.som pos=1533 len=5	read	Array class	49
 Queens.som pos=1533 len=5	read	ALL	49
 Queens.som pos=1581 len=5	read	Array class	49

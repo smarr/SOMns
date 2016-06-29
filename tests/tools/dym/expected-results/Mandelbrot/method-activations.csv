@@ -39,7 +39,7 @@ Integer_class>>#fromString:	3
 String>>#asString	5
 String>>#primSubstringFrom:to:	10
 String>>#includes:	1
-String>>#$blockMethod@366@10:	10
+String>>#$blockMethod@362@10:	10
 String>>#asInteger	3
 String>>#print	1
 Block>>#on:do:	1

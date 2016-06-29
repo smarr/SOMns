@@ -9,7 +9,6 @@ Method(Actors>>#async:whileTrue:)	false	0
 Method(Actors>>#async:whileTrue:prevPromise:completionResolver:)	false	0
 Method(Actors>>#createActorFromValue:)	false	0
 Method(Actors>>#createPromisePair)	false	0
-Method(Actors>>#whenResolvedUnwrap:)	false	0
 Method(ArrayReadMixin>>#average)	false	0
 Method(ArrayReadMixin>>#collect:)	false	0
 Method(ArrayReadMixin>>#contains:)	false	0
@@ -25,8 +24,6 @@ Method(ArrayReadMixin>>#reject:)	false	0
 Method(ArrayReadMixin>>#select:)	false	0
 Method(ArrayReadMixin>>#sum)	false	0
 Method(ArrayReadMixin>>#union:)	false	0
-Method(Array>>#asTransferArray)	false	0
-Method(Array>>#asValueArray)	false	0
 Method(Array>>#at:)	false	0
 Method(Array>>#at:put:)	false	0
 Method(Array>>#copy)	false	0
@@ -312,9 +309,6 @@ Method(Thing>>#subclassResponsibility)	false	0
 Method(Thing>>#value)	true	2360
 Method(TransferArray>>#new:withAll:)	false	0
 Method(TransferObjectsCannotBeValues>>#asString)	false	0
-Method(TransferVector>>#new)	false	0
-Method(TransferVector>>#new:)	false	0
-Method(TransferVector>>#with:)	false	0
 Method(True>>#and:)	false	0
 Method(True>>#asString)	false	0
 Method(True>>#ifFalse:)	false	0
@@ -345,7 +339,6 @@ Method(Vector>>#doIndexes:)	false	0
 Method(Vector>>#first)	false	0
 Method(Vector>>#isEmpty)	false	0
 Method(Vector>>#new)	false	0
-Method(Vector>>#new:)	false	0
 Method(Vector>>#println)	false	0
 Method(Vector>>#remove)	false	0
 Method(Vector>>#remove:)	false	0

@@ -44,7 +44,7 @@ Integer_class>>#fromString:	3
 String>>#asString	5
 String>>#primSubstringFrom:to:	7
 String>>#includes:	1
-String>>#$blockMethod@366@10:	7
+String>>#$blockMethod@362@10:	7
 String>>#asInteger	3
 String>>#print	1
 Block>>#on:do:	1

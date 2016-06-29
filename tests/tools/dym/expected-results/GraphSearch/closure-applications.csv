@@ -1,6 +1,6 @@
 Source Section	Call Count	Num Targets
-Kernel.som pos=8196 len=8	263434	8
-Kernel.som pos=14670 len=19	11998	2
-Kernel.som pos=14800 len=8	89830	4
-Kernel.som pos=17010 len=5	9000	0
-Kernel.som pos=21898 len=22	35830	1
+Kernel.som pos=8053 len=8	263434	8
+Kernel.som pos=14527 len=19	11998	2
+Kernel.som pos=14657 len=8	89830	4
+Kernel.som pos=16867 len=5	9000	0
+Kernel.som pos=21480 len=22	35830	1
