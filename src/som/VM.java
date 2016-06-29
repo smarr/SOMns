@@ -93,11 +93,15 @@ public final class VM {
   }
 
   public static void reportNewMixin(final MixinDefinition m) {
-    structuralProbes.recordNewClass(m);
+    if (VmSettings.DYNAMIC_METRICS) {
+      structuralProbes.recordNewClass(m);
+    }
   }
 
   public static void reportNewMethod(final SInvokable m) {
-    structuralProbes.recordNewMethod(m);
+    if (VmSettings.DYNAMIC_METRICS) {
+      structuralProbes.recordNewMethod(m);
+    }
   }
 
   public VM(final String[] args, final boolean avoidExitForTesting) throws IOException {
