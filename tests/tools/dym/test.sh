@@ -12,7 +12,7 @@ SOM_DIR=$SCRIPT_PATH/../../..
 function runBenchmark {
   BENCH=$1
   HARNESS="$SOM_DIR/som -dm -Ddm.metrics=$SCRIPT_PATH/expected-results/$BENCH \
-    -G $SOM_DIR/core-lib/benchmarks/Harness.som"
+    -G $SOM_DIR/core-lib/Benchmarks/Harness.som"
   echo $HARNESS $@
   $HARNESS $@
   
