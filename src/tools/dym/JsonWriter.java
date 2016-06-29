@@ -77,9 +77,7 @@ public final class JsonWriter {
     builder.add("description", ss.getShortDescription());
     builder.add("sourceId", sourceToId.get(ss.getSource()));
 
-    // Checkstyle: stop
-    System.out.println("TODO: add tags!");
-    // Checkstyle: resume
+    // TODO: add tags to section, need to get it from some tag map, I think
 //    if (ss.getTags() != null && ss.getTags().length > 0) {
 //      JSONArrayBuilder arr = JSONHelper.array();
 //      for (String tag : ss.getTags()) {
@@ -87,6 +85,7 @@ public final class JsonWriter {
 //      }
 //      builder.add("tags", arr);
 //    }
+
     builder.add("data", collectDataForSection(ss));
 
     return builder;
