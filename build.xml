@@ -153,5 +153,10 @@
       </exec>
     </target>
 
-    <target name="tests" depends="unit-tests,som-tests" />
+    <target name="dynamic-metrics-tests" depends="compile">
+      <exec executable="echo" failonerror="true"></exec>
+      <exec executable="tests/tools/dym/test.sh" failonerror="true"></exec>
+    </target>
+
+    <target name="tests" depends="unit-tests,som-tests,dynamic-metrics-tests" />
 </project>

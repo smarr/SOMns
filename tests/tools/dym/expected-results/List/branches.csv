@@ -1,0 +1,22 @@
+Source Section	TrueCnt	FalseCnt	Total
+Harness.som pos=1578 len=28	1	0	1
+Harness.som pos=1822 len=7	1	0	1
+Harness.som pos=4605 len=3	0	1	1
+Harness.som pos=5203 len=35	1	0	1
+Harness.som pos=5394 len=8	1	0	1
+Harness.som pos=5604 len=3	0	1	1
+Harness.som pos=6326 len=3	1	0	1
+Harness.som pos=6405 len=3	1	0	1
+Harness.som pos=6481 len=3	1	0	1
+Harness.som pos=6615 len=3	0	1	1
+Harness.som pos=7824 len=13	0	1	1
+Kernel.som pos=8166 len=8	6	3	9
+Kernel.som pos=12741 len=13	0	1	1
+Kernel.som pos=12784 len=13	0	1	1
+Kernel.som pos=12935 len=9	0	4	4
+List.som pos=1582 len=3	3	31	34
+List.som pos=1874 len=5	2107	18752	20859
+List.som pos=1920 len=5	702	18050	18752
+List.som pos=2101 len=20	702	2107	2809
+List.som pos=2514 len=5	1	9	10
+Platform.som pos=981 len=3	0	1	1

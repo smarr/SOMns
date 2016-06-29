@@ -1,0 +1,14 @@
+Source Section	New Objects	Number of Fields	Class
+Actors.som pos=1084 len=43	1	8	Actors
+Collections.som pos=1089 len=19	1	9	Collections
+GraphSearch.som pos=23 len=43	1	15	GraphSearchSuite
+GraphSearch.som pos=536 len=0	2	8	GraphSearch
+GraphSearch.som pos=4408 len=25	17916	2	Edge
+GraphSearch.som pos=4520 len=32	3000	2	Node
+Harness.som pos=1085 len=23	1	7	Harness
+Harness.som pos=2224 len=9	1	1	JenkinsRandom
+Harness.som pos=3894 len=0	1	8	Run
+Kernel.som pos=21389 len=14	3000	3	Vector
+Mirrors.som pos=1080 len=23	1	6	Mirrors
+Platform.som pos=15 len=23	1	5	Platform
+System.som pos=1084 len=23	1	1	System

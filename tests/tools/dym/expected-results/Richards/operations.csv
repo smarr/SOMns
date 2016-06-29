@@ -1,0 +1,123 @@
+Source Section	Operation	Category	Type	Invocations
+Harness.som pos=4605 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	0
+Harness.som pos=5604 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	0
+Harness.som pos=6326 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	0
+Harness.som pos=6405 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	0
+Harness.som pos=6481 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	0
+Harness.som pos=6615 len=3	<	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	0
+Kernel.som pos=8166 len=8	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	2339
+Kernel.som pos=8166 len=8	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	9355
+Kernel.som pos=8166 len=8	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	11694
+Kernel.som pos=8213 len=6	+	BasicPrimitiveOperation OpArithmetic StatementTag	int	9355
+Kernel.som pos=8213 len=6	+	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	9355
+Kernel.som pos=12741 len=13	>	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	0
+Kernel.som pos=12784 len=13	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	0
+Kernel.som pos=12926 len=3	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument StatementTag	int	7
+Kernel.som pos=12926 len=3	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument StatementTag	TOTAL	7
+Kernel.som pos=12930 len=3	-	BasicPrimitiveOperation OpArithmetic StatementTag	int	7
+Kernel.som pos=12930 len=3	-	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	7
+Kernel.som pos=12935 len=9	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	7
+Kernel.som pos=12935 len=9	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	7
+Kernel.som pos=14741 len=4	size	BasicPrimitiveOperation OpLength StatementTag	arr	8
+Kernel.som pos=14741 len=4	size	BasicPrimitiveOperation OpLength StatementTag	TOTAL	8
+Kernel.som pos=16993 len=22	at:put:	ArrayWrite BasicPrimitiveOperation RootTag StatementTag	int	32
+Kernel.som pos=16993 len=22	at:put:	ArrayWrite BasicPrimitiveOperation RootTag StatementTag	ref	5
+Kernel.som pos=16993 len=22	at:put:	ArrayWrite BasicPrimitiveOperation RootTag StatementTag	TOTAL	37
+Platform.som pos=981 len=3	<	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	0
+Richards.som pos=1232 len=15	==	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	ref	9295
+Richards.som pos=1232 len=15	==	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	ref	18588
+Richards.som pos=1232 len=15	==	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	27883
+Richards.som pos=1277 len=33	==	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	ref	9293
+Richards.som pos=1277 len=33	==	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	ref	9294
+Richards.som pos=1277 len=33	==	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	18587
+Richards.som pos=2038 len=7	==	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	ref	11626
+Richards.som pos=2038 len=7	==	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	ref	11625
+Richards.som pos=2038 len=7	==	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	23251
+Richards.som pos=2087 len=11	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	9299
+Richards.som pos=2087 len=11	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	2327
+Richards.som pos=2087 len=11	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	11626
+Richards.som pos=2239 len=30	==	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	ref	20310
+Richards.som pos=2239 len=30	==	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	ref	2941
+Richards.som pos=2239 len=30	==	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	23251
+Richards.som pos=2426 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	17984
+Richards.som pos=2426 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	2325
+Richards.som pos=2426 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	20309
+Richards.som pos=2658 len=34	==	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	ref	9299
+Richards.som pos=2658 len=34	==	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	ref	8685
+Richards.som pos=2658 len=34	==	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	17984
+Richards.som pos=2894 len=9	at:	ArrayRead BasicPrimitiveOperation StatementTag	int	9299
+Richards.som pos=2894 len=9	at:	ArrayRead BasicPrimitiveOperation StatementTag	TOTAL	9299
+Richards.som pos=2955 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	int	9299
+Richards.som pos=2955 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	9299
+Richards.som pos=3429 len=3	-	BasicPrimitiveOperation OpArithmetic StatementTag	int	9999
+Richards.som pos=3429 len=3	-	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	9999
+Richards.som pos=3449 len=12	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	9998
+Richards.som pos=3449 len=12	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	1
+Richards.som pos=3449 len=12	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	9999
+Richards.som pos=3549 len=20	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	4991
+Richards.som pos=3549 len=20	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	5007
+Richards.som pos=3549 len=20	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	9998
+Richards.som pos=3565 len=3	&	BasicPrimitiveOperation OpArithmetic PrimitiveArgument StatementTag	int	9998
+Richards.som pos=3565 len=3	&	BasicPrimitiveOperation OpArithmetic PrimitiveArgument StatementTag	TOTAL	9998
+Richards.som pos=3647 len=3	/	BasicPrimitiveOperation OpArithmetic StatementTag	int	5006
+Richards.som pos=3647 len=3	/	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	5006
+Richards.som pos=3776 len=3	/	BasicPrimitiveOperation OpArithmetic PrimitiveArgument StatementTag	int	4991
+Richards.som pos=3776 len=3	/	BasicPrimitiveOperation OpArithmetic PrimitiveArgument StatementTag	TOTAL	4991
+Richards.som pos=3780 len=13	bitXor:	BasicPrimitiveOperation OpArithmetic StatementTag	int	4991
+Richards.som pos=3780 len=13	bitXor:	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	4991
+Richards.som pos=4558 len=19	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	ref	5
+Richards.som pos=4558 len=19	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	TOTAL	5
+Richards.som pos=4946 len=7	==	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	ref	2326
+Richards.som pos=4946 len=7	==	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	ref	2327
+Richards.som pos=4946 len=7	==	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	4653
+Richards.som pos=5063 len=18	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	1163
+Richards.som pos=5063 len=18	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	1163
+Richards.som pos=5063 len=18	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	2326
+Richards.som pos=5359 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	int	9307
+Richards.som pos=5359 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	9307
+Richards.som pos=5394 len=4	>	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	8950
+Richards.som pos=5394 len=4	>	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	357
+Richards.som pos=5394 len=4	>	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	9307
+Richards.som pos=5497 len=30	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	int	9307
+Richards.som pos=5497 len=30	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	TOTAL	9307
+Richards.som pos=5511 len=12	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument StatementTag	int	9307
+Richards.som pos=5511 len=12	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument StatementTag	TOTAL	9307
+Richards.som pos=5524 len=3	-	BasicPrimitiveOperation OpArithmetic PrimitiveArgument StatementTag	int	9307
+Richards.som pos=5524 len=3	-	BasicPrimitiveOperation OpArithmetic PrimitiveArgument StatementTag	TOTAL	9307
+Richards.som pos=7774 len=12	at:	ArrayRead BasicPrimitiveOperation StatementTag	ref	33244
+Richards.som pos=7774 len=12	at:	ArrayRead BasicPrimitiveOperation StatementTag	TOTAL	33244
+Richards.som pos=7801 len=4	==	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	ref	33244
+Richards.som pos=7801 len=4	==	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	33244
+Richards.som pos=7910 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	int	9296
+Richards.som pos=7910 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	9296
+Richards.som pos=8301 len=4	==	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	ref	23245
+Richards.som pos=8301 len=4	==	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	23245
+Richards.som pos=8371 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	int	23245
+Richards.som pos=8371 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	23245
+Richards.som pos=8595 len=4	==	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	ref	9998
+Richards.som pos=8595 len=4	==	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	9998
+Richards.som pos=8667 len=22	>	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	9998
+Richards.som pos=8667 len=22	>	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	9998
+Richards.som pos=9067 len=14	==	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	ref	106603
+Richards.som pos=9067 len=14	==	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	ref	1
+Richards.som pos=9067 len=14	==	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	106604
+Richards.som pos=9537 len=12	==	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	ref	10127
+Richards.som pos=9537 len=12	==	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	ref	9986
+Richards.som pos=9537 len=12	==	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	20113
+Richards.som pos=9613 len=23	==	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	ref	340
+Richards.som pos=9613 len=23	==	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	ref	10126
+Richards.som pos=9613 len=23	==	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	10466
+Richards.som pos=12003 len=3	not	BasicPrimitiveOperation OpArithmetic StatementTag	bool	41163
+Richards.som pos=12003 len=3	not	BasicPrimitiveOperation OpArithmetic StatementTag	bool	59879
+Richards.som pos=12003 len=3	not	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	101042
+Richards.som pos=12209 len=3	not	BasicPrimitiveOperation OpArithmetic StatementTag	bool	23249
+Richards.som pos=12209 len=3	not	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	23249
+Richards.som pos=13087 len=8	==	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	ref	8487
+Richards.som pos=13087 len=8	==	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	ref	14758
+Richards.som pos=13087 len=8	==	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	23245
+Richards.som pos=13196 len=18	>	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	11619
+Richards.som pos=13196 len=18	>	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	3139
+Richards.som pos=13196 len=18	>	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	14758
+Richards.som pos=13495 len=8	==	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	ref	8489
+Richards.som pos=13495 len=8	==	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	ref	14760
+Richards.som pos=13495 len=8	==	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	23249

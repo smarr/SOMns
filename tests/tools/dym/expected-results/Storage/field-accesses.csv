@@ -1,0 +1,28 @@
+Source Section	Access Type	Data Type	Count
+Harness.som pos=2138 len=4	read	Integer	8191
+Harness.som pos=2138 len=4	read	ALL	8191
+Harness.som pos=2177 len=4	read	Integer	8191
+Harness.som pos=2177 len=4	read	ALL	8191
+Kernel.som pos=2477 len=10	read	Object class	7
+Kernel.som pos=2477 len=10	read	ALL	7
+Kernel.som pos=2514 len=9	read	Value class	6
+Kernel.som pos=2514 len=9	read	ALL	6
+Kernel.som pos=2892 len=8	read	VmMirror	4
+Kernel.som pos=2892 len=8	read	ALL	4
+Kernel.som pos=9017 len=8	read	VmMirror	2
+Kernel.som pos=9017 len=8	read	ALL	2
+Kernel.som pos=11630 len=8	read	VmMirror	6
+Kernel.som pos=11630 len=8	read	ALL	6
+Storage.som pos=1370 len=6	read	Random class	1
+Storage.som pos=1370 len=6	read	ALL	1
+Storage.som pos=1451 len=5	read	Integer	1
+Storage.som pos=1451 len=5	read	ALL	1
+Storage.som pos=1607 len=5	read	Integer	10921
+Storage.som pos=1607 len=5	read	ALL	10921
+Storage.som pos=1659 len=5	read	Array class	8191
+Storage.som pos=1659 len=5	read	ALL	8191
+Storage.som pos=1728 len=5	read	Array class	2729
+Storage.som pos=1728 len=5	read	ALL	2729
+Harness.som pos=2128 len=39	write	ALL	8191
+Storage.som pos=1388 len=10	write	ALL	1
+Storage.som pos=1598 len=18	write	ALL	10921

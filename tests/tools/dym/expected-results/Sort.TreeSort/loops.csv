@@ -1,0 +1,8 @@
+Source Section	Loop Activations	Num Iterations
+Kernel.som pos=8177 len=44	0	2
+Kernel.som pos=8177 len=44	18	1
+Kernel.som pos=8177 len=44	1000	4
+Kernel.som pos=8177 len=44	1001	1
+Kernel.som pos=8177 len=44	1002	1
+Kernel.som pos=8177 len=44	TOTAL	11
+Kernel.som pos=13599 len=366	TOTAL	1

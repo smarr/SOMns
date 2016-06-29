@@ -1,0 +1,217 @@
+Source Section	Operation	Category	Type	Invocations
+Harness.som pos=4605 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	0
+Harness.som pos=5604 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	0
+Harness.som pos=6326 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	0
+Harness.som pos=6405 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	0
+Harness.som pos=6481 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	0
+Harness.som pos=6615 len=3	<	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	0
+Json.som pos=27326 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	2801
+Json.som pos=27326 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	590
+Json.som pos=27326 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	3391
+Json.som pos=27377 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	2775
+Json.som pos=27377 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	26
+Json.som pos=27377 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	2801
+Json.som pos=27428 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	2772
+Json.som pos=27428 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	3
+Json.som pos=27428 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	2775
+Json.som pos=27479 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	1421
+Json.som pos=27479 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	1351
+Json.som pos=27479 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	2772
+Json.som pos=27530 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	868
+Json.som pos=27530 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	553
+Json.som pos=27530 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	1421
+Json.som pos=27581 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	712
+Json.som pos=27581 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	156
+Json.som pos=27581 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	868
+Json.som pos=27759 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	704
+Json.som pos=27759 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	7
+Json.som pos=27759 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	711
+Json.som pos=27810 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	685
+Json.som pos=27810 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	19
+Json.som pos=27810 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	704
+Json.som pos=27861 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	443
+Json.som pos=27861 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	242
+Json.som pos=27861 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	685
+Json.som pos=27912 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	192
+Json.som pos=27912 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	251
+Json.som pos=27912 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	443
+Json.som pos=27963 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	173
+Json.som pos=27963 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	19
+Json.som pos=27963 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	192
+Json.som pos=28014 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	133
+Json.som pos=28014 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	40
+Json.som pos=28014 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	173
+Json.som pos=28065 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	96
+Json.som pos=28065 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	36
+Json.som pos=28065 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	132
+Json.som pos=28116 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	45
+Json.som pos=28116 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	50
+Json.som pos=28116 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	95
+Json.som pos=28167 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	27
+Json.som pos=28167 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	17
+Json.som pos=28167 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	44
+Json.som pos=28218 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	16
+Json.som pos=28218 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	11
+Json.som pos=28218 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	27
+Json.som pos=28269 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	16
+Json.som pos=28269 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	16
+Json.som pos=29712 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	597
+Json.som pos=29712 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	597
+Json.som pos=30600 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	12885
+Json.som pos=30600 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	1949
+Json.som pos=30600 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	14834
+Json.som pos=30637 len=6	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	12885
+Json.som pos=30637 len=6	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	12885
+Json.som pos=31905 len=6	<>	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	19
+Json.som pos=31905 len=6	<>	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	692
+Json.som pos=31905 len=6	<>	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	711
+Json.som pos=32307 len=3	not	BasicPrimitiveOperation OpArithmetic StatementTag	bool	711
+Json.som pos=32307 len=3	not	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	711
+Json.som pos=32347 len=3	not	BasicPrimitiveOperation OpArithmetic StatementTag	bool	711
+Json.som pos=32347 len=3	not	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	711
+Json.som pos=32602 len=4	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	4258
+Json.som pos=32602 len=4	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	5857
+Json.som pos=32602 len=4	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	10115
+Json.som pos=32927 len=6	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	25820
+Json.som pos=32927 len=6	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	25820
+Json.som pos=33026 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	int	25820
+Json.som pos=33026 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	25820
+Json.som pos=33054 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	int	25820
+Json.som pos=33054 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	25820
+Json.som pos=33118 len=15	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	1
+Json.som pos=33118 len=15	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	25819
+Json.som pos=33118 len=15	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	25820
+Json.som pos=33127 len=6	length	BasicPrimitiveOperation OpLength PrimitiveArgument StatementTag	str	25820
+Json.som pos=33127 len=6	length	BasicPrimitiveOperation OpLength PrimitiveArgument StatementTag	TOTAL	25820
+Json.som pos=33170 len=13	charAt:	ComplexPrimitiveOperation StatementTag StringAccess	str	25819
+Json.som pos=33170 len=13	charAt:	ComplexPrimitiveOperation StatementTag StringAccess	TOTAL	25819
+Json.som pos=33495 len=15	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	2660
+Json.som pos=33495 len=15	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	2660
+Json.som pos=33548 len=41	substringFrom:to:	ComplexPrimitiveOperation StatementTag StringAccess	str	2660
+Json.som pos=33548 len=41	substringFrom:to:	ComplexPrimitiveOperation StatementTag StringAccess	TOTAL	2660
+Json.som pos=33586 len=3	-	BasicPrimitiveOperation OpArithmetic PrimitiveArgument StatementTag	int	2660
+Json.som pos=33586 len=3	-	BasicPrimitiveOperation OpArithmetic PrimitiveArgument StatementTag	TOTAL	2660
+Json.som pos=34267 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	ref	1
+Json.som pos=34267 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	8688
+Json.som pos=34267 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	8689
+Json.som pos=34306 len=6	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	ref	1
+Json.som pos=34306 len=6	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	8688
+Json.som pos=34306 len=6	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	8689
+Json.som pos=34345 len=6	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	ref	1
+Json.som pos=34345 len=6	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	8688
+Json.som pos=34345 len=6	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	8689
+Json.som pos=34384 len=6	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	ref	1
+Json.som pos=34384 len=6	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	8688
+Json.som pos=34384 len=6	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	8689
+Json.som pos=34460 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	2441
+Json.som pos=34460 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	101
+Json.som pos=34460 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	2542
+Json.som pos=34498 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	2145
+Json.som pos=34498 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	296
+Json.som pos=34498 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	2441
+Json.som pos=34536 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	1746
+Json.som pos=34536 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	399
+Json.som pos=34536 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	2145
+Json.som pos=34574 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	1596
+Json.som pos=34574 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	150
+Json.som pos=34574 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	1746
+Json.som pos=34612 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	1525
+Json.som pos=34612 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	71
+Json.som pos=34612 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	1596
+Json.som pos=34650 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	1115
+Json.som pos=34650 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	409
+Json.som pos=34650 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	1524
+Json.som pos=34688 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	990
+Json.som pos=34688 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	125
+Json.som pos=34688 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	1115
+Json.som pos=34726 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	852
+Json.som pos=34726 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	138
+Json.som pos=34726 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	990
+Json.som pos=34764 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	747
+Json.som pos=34764 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	105
+Json.som pos=34764 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	852
+Json.som pos=34802 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	692
+Json.som pos=34802 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	55
+Json.som pos=34802 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	747
+Json.som pos=35094 len=5	<	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	597
+Json.som pos=35094 len=5	<	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	597
+Json.som pos=35129 len=23	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	int	597
+Json.som pos=35129 len=23	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	TOTAL	597
+Json.som pos=35149 len=3	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument StatementTag	int	597
+Json.som pos=35149 len=3	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument StatementTag	TOTAL	597
+Json.som pos=35637 len=8	at:	ArrayRead BasicPrimitiveOperation PrimitiveArgument StatementTag	int	2
+Json.som pos=35637 len=8	at:	ArrayRead BasicPrimitiveOperation PrimitiveArgument StatementTag	TOTAL	2
+Json.som pos=35647 len=5	&	BasicPrimitiveOperation OpArithmetic PrimitiveArgument StatementTag	int	2
+Json.som pos=35647 len=5	&	BasicPrimitiveOperation OpArithmetic PrimitiveArgument StatementTag	TOTAL	2
+Json.som pos=35654 len=3	-	BasicPrimitiveOperation OpArithmetic StatementTag	int	2
+Json.som pos=35654 len=3	-	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	2
+Json.som pos=35720 len=4	&	BasicPrimitiveOperation OpArithmetic PrimitiveArgument StatementTag	int	600
+Json.som pos=35720 len=4	&	BasicPrimitiveOperation OpArithmetic PrimitiveArgument StatementTag	TOTAL	600
+Json.som pos=35726 len=3	+	BasicPrimitiveOperation OpArithmetic RootTag StatementTag	int	600
+Json.som pos=35726 len=3	+	BasicPrimitiveOperation OpArithmetic RootTag StatementTag	TOTAL	600
+Json.som pos=39692 len=5	=	BasicPrimitiveOperation OpComparison StatementTag	str	2
+Json.som pos=39692 len=5	=	BasicPrimitiveOperation OpComparison StatementTag	TOTAL	2
+Json.som pos=39730 len=5	=	BasicPrimitiveOperation OpComparison StatementTag	str	1
+Json.som pos=39730 len=5	=	BasicPrimitiveOperation OpComparison StatementTag	str	1
+Json.som pos=39730 len=5	=	BasicPrimitiveOperation OpComparison StatementTag	TOTAL	2
+Json.som pos=39768 len=5	=	BasicPrimitiveOperation OpComparison StatementTag	str	1
+Json.som pos=39768 len=5	=	BasicPrimitiveOperation OpComparison StatementTag	str	1
+Json.som pos=39768 len=5	=	BasicPrimitiveOperation OpComparison StatementTag	TOTAL	2
+Json.som pos=42650 len=4	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	2
+Json.som pos=42650 len=4	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	2
+Json.som pos=44104 len=5	<>	BasicPrimitiveOperation OpComparison StatementTag VirtualInvokeReceiver	int	2
+Json.som pos=44104 len=5	<>	BasicPrimitiveOperation OpComparison StatementTag VirtualInvokeReceiver	TOTAL	2
+Json.som pos=44118 len=17	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	2
+Json.som pos=44118 len=17	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	2
+Kernel.som pos=8166 len=8	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	162
+Kernel.som pos=8166 len=8	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	5179
+Kernel.som pos=8166 len=8	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	5341
+Kernel.som pos=8213 len=6	+	BasicPrimitiveOperation OpArithmetic StatementTag	int	5179
+Kernel.som pos=8213 len=6	+	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	5179
+Kernel.som pos=12741 len=13	>	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	0
+Kernel.som pos=12784 len=13	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	0
+Kernel.som pos=12926 len=3	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument StatementTag	int	3
+Kernel.som pos=12926 len=3	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument StatementTag	TOTAL	3
+Kernel.som pos=12930 len=3	-	BasicPrimitiveOperation OpArithmetic StatementTag	int	3
+Kernel.som pos=12930 len=3	-	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	3
+Kernel.som pos=12935 len=9	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	3
+Kernel.som pos=12935 len=9	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	3
+Kernel.som pos=14741 len=4	size	BasicPrimitiveOperation OpLength StatementTag	arr	158
+Kernel.som pos=14741 len=4	size	BasicPrimitiveOperation OpLength StatementTag	TOTAL	158
+Kernel.som pos=16993 len=22	at:put:	ArrayWrite BasicPrimitiveOperation RootTag StatementTag	int	5023
+Kernel.som pos=16993 len=22	at:put:	ArrayWrite BasicPrimitiveOperation RootTag StatementTag	TOTAL	5023
+Kernel.som pos=21591 len=9	at:	ArrayRead BasicPrimitiveOperation StatementTag	ref	2
+Kernel.som pos=21591 len=9	at:	ArrayRead BasicPrimitiveOperation StatementTag	ref	1
+Kernel.som pos=21591 len=9	at:	ArrayRead BasicPrimitiveOperation StatementTag	str	2
+Kernel.som pos=21591 len=9	at:	ArrayRead BasicPrimitiveOperation StatementTag	TOTAL	5
+Kernel.som pos=22596 len=15	>=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	3986
+Kernel.som pos=22596 len=15	>=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	2
+Kernel.som pos=22596 len=15	>=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	3988
+Kernel.som pos=22607 len=4	size	BasicPrimitiveOperation OpLength PrimitiveArgument StatementTag	arr	3988
+Kernel.som pos=22607 len=4	size	BasicPrimitiveOperation OpLength PrimitiveArgument StatementTag	TOTAL	3988
+Kernel.som pos=22725 len=14	*	BasicPrimitiveOperation OpArithmetic PrimitiveArgument StatementTag	int	1
+Kernel.som pos=22725 len=14	*	BasicPrimitiveOperation OpArithmetic PrimitiveArgument StatementTag	TOTAL	1
+Kernel.som pos=22735 len=4	size	BasicPrimitiveOperation OpLength PrimitiveArgument StatementTag	arr	1
+Kernel.som pos=22735 len=4	size	BasicPrimitiveOperation OpLength PrimitiveArgument StatementTag	TOTAL	1
+Kernel.som pos=22786 len=26	at:put:	ArrayWrite BasicPrimitiveOperation RootTag StatementTag	ref	147
+Kernel.som pos=22786 len=26	at:put:	ArrayWrite BasicPrimitiveOperation RootTag StatementTag	ref	2
+Kernel.som pos=22786 len=26	at:put:	ArrayWrite BasicPrimitiveOperation RootTag StatementTag	TOTAL	149
+Kernel.som pos=22806 len=5	at:	ArrayRead BasicPrimitiveOperation PrimitiveArgument StatementTag	ref	147
+Kernel.som pos=22806 len=5	at:	ArrayRead BasicPrimitiveOperation PrimitiveArgument StatementTag	ref	2
+Kernel.som pos=22806 len=5	at:	ArrayRead BasicPrimitiveOperation PrimitiveArgument StatementTag	TOTAL	149
+Kernel.som pos=22871 len=24	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	ref	553
+Kernel.som pos=22871 len=24	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	ref	619
+Kernel.som pos=22871 len=24	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	ref	712
+Kernel.som pos=22871 len=24	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	ref	156
+Kernel.som pos=22871 len=24	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	ref	1351
+Kernel.som pos=22871 len=24	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	str	597
+Kernel.som pos=22871 len=24	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	TOTAL	3988
+Kernel.som pos=22922 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	int	3988
+Kernel.som pos=22922 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	3988
+Kernel.som pos=24479 len=10	-	BasicPrimitiveOperation OpArithmetic RootTag StatementTag	int	598
+Kernel.som pos=24479 len=10	-	BasicPrimitiveOperation OpArithmetic RootTag StatementTag	TOTAL	598
+Kernel.som pos=24747 len=8	<=	BasicPrimitiveOperation OpComparison StatementTag	int	5
+Kernel.som pos=24747 len=8	<=	BasicPrimitiveOperation OpComparison StatementTag	TOTAL	5
+Kernel.som pos=24767 len=9	<	BasicPrimitiveOperation OpComparison StatementTag	int	5
+Kernel.som pos=24767 len=9	<	BasicPrimitiveOperation OpComparison StatementTag	TOTAL	5
+Platform.som pos=981 len=3	<	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	0

@@ -1,0 +1,37 @@
+Source Section	Access Type	Data Type	Count
+Kernel.som pos=2477 len=10	read	Object class	7
+Kernel.som pos=2477 len=10	read	ALL	7
+Kernel.som pos=2514 len=9	read	Value class	6
+Kernel.som pos=2514 len=9	read	ALL	6
+Kernel.som pos=2892 len=8	read	VmMirror	4
+Kernel.som pos=2892 len=8	read	ALL	4
+Kernel.som pos=9017 len=8	read	VmMirror	2
+Kernel.som pos=9017 len=8	read	ALL	2
+Kernel.som pos=11630 len=8	read	VmMirror	5
+Kernel.som pos=11630 len=8	read	ALL	5
+Towers.som pos=1419 len=5	read	Array	16409
+Towers.som pos=1419 len=5	read	ALL	16409
+Towers.som pos=1462 len=4	read	Integer	16153
+Towers.som pos=1462 len=4	read	ALL	16153
+Towers.som pos=1474 len=4	read	Integer	16153
+Towers.som pos=1474 len=4	read	ALL	16153
+Towers.som pos=1590 len=5	read	Array	16409
+Towers.som pos=1590 len=5	read	ALL	16409
+Towers.som pos=1695 len=5	read	Array	16381
+Towers.som pos=1695 len=5	read	ALL	16381
+Towers.som pos=1832 len=5	read	Array	16381
+Towers.som pos=1832 len=5	read	ALL	16381
+Towers.som pos=1856 len=4	read	Nil	252
+Towers.som pos=1856 len=4	read	TowersDisk	16129
+Towers.som pos=1856 len=4	read	ALL	16381
+Towers.som pos=2044 len=9	read	Integer	16381
+Towers.som pos=2044 len=9	read	ALL	16381
+Towers.som pos=2672 len=5	read	Array class	1
+Towers.som pos=2672 len=5	read	ALL	1
+Towers.som pos=2794 len=9	read	Integer	1
+Towers.som pos=2794 len=9	read	ALL	1
+Towers.som pos=1573 len=9	write	ALL	16409
+Towers.som pos=1872 len=9	write	ALL	16381
+Towers.som pos=2031 len=26	write	ALL	16381
+Towers.som pos=2663 len=21	write	ALL	1
+Towers.som pos=2730 len=14	write	ALL	1

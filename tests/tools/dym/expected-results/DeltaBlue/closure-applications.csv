@@ -1,0 +1,16 @@
+Source Section	Call Count	Num Targets
+DeltaBlue.som pos=8313 len=8	14	1
+DeltaBlue.som pos=21813 len=9	10	2
+DeltaBlue.som pos=21851 len=9	6	1
+DeltaBlue.som pos=25321 len=9	14	2
+DeltaBlue.som pos=25356 len=12	14	2
+DeltaBlue.som pos=25394 len=13	14	2
+DeltaBlue.som pos=25434 len=9	2	1
+DeltaBlue.som pos=25470 len=12	2	1
+DeltaBlue.som pos=25509 len=13	2	1
+Kernel.som pos=8196 len=8	1578	10
+Kernel.som pos=8568 len=5	78	1
+Kernel.som pos=14670 len=19	40	2
+Kernel.som pos=14800 len=8	186	3
+Kernel.som pos=17010 len=5	4	1
+Kernel.som pos=21898 len=22	1078	7

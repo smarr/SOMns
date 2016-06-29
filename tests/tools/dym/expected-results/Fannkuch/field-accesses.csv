@@ -1,0 +1,32 @@
+Source Section	Access Type	Data Type	Count
+Fannkuch.som pos=2406 len=4	read	Array	23
+Fannkuch.som pos=2406 len=4	read	ALL	23
+Fannkuch.som pos=2495 len=4	read	Array	39
+Fannkuch.som pos=2495 len=4	read	ALL	39
+Fannkuch.som pos=2538 len=4	read	Array	59
+Fannkuch.som pos=2538 len=4	read	ALL	59
+Fannkuch.som pos=2555 len=4	read	Array	59
+Fannkuch.som pos=2555 len=4	read	ALL	59
+Fannkuch.som pos=2582 len=4	read	Array	39
+Fannkuch.som pos=2582 len=4	read	ALL	39
+Fannkuch.som pos=2613 len=12	read	Array	39
+Fannkuch.som pos=2613 len=12	read	ALL	39
+Fannkuch.som pos=2639 len=12	read	Array	39
+Fannkuch.som pos=2639 len=12	read	ALL	39
+Fannkuch.som pos=2690 len=12	read	Array	39
+Fannkuch.som pos=2690 len=12	read	ALL	39
+Fannkuch.som pos=3049 len=5	read	False	23
+Fannkuch.som pos=3049 len=5	read	True	1
+Fannkuch.som pos=3049 len=5	read	ALL	24
+Fannkuch.som pos=3227 len=4	read	Array	23
+Fannkuch.som pos=3227 len=4	read	ALL	23
+Kernel.som pos=2477 len=10	read	Object class	7
+Kernel.som pos=2477 len=10	read	ALL	7
+Kernel.som pos=2514 len=9	read	Value class	6
+Kernel.som pos=2514 len=9	read	ALL	6
+Kernel.som pos=2892 len=8	read	VmMirror	4
+Kernel.som pos=2892 len=8	read	ALL	4
+Kernel.som pos=9017 len=8	read	VmMirror	2
+Kernel.som pos=9017 len=8	read	ALL	2
+Kernel.som pos=11630 len=8	read	VmMirror	7
+Kernel.som pos=11630 len=8	read	ALL	7

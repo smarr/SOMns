@@ -1,0 +1,12 @@
+Source Section	Loop Activations	Num Iterations
+Kernel.som pos=8177 len=44	1	1
+Kernel.som pos=8177 len=44	10	1
+Kernel.som pos=8177 len=44	TOTAL	2
+Mandelbrot.som pos=3023 len=1659	3	1
+Mandelbrot.som pos=3023 len=1659	TOTAL	1
+Mandelbrot.som pos=3147 len=1504	3	3
+Mandelbrot.som pos=3147 len=1504	TOTAL	3
+Mandelbrot.som pos=3460 len=428	3	4
+Mandelbrot.som pos=3460 len=428	6	1
+Mandelbrot.som pos=3460 len=428	50	4
+Mandelbrot.som pos=3460 len=428	TOTAL	9
