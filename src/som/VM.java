@@ -92,10 +92,6 @@ public final class VM {
     }
   }
 
-  public static StructuralProbe getStructuralProbe() {
-    return structuralProbes;
-  }
-
   public static void reportNewMixin(final MixinDefinition m) {
     structuralProbes.recordNewClass(m);
   }
@@ -106,9 +102,6 @@ public final class VM {
 
   public VM(final String[] args, final boolean avoidExitForTesting) throws IOException {
     vm = this;
-
-    // TODO: fix hack, we need this early, and we want tool/polyglot engine support for the events...
-    structuralProbes = new StructuralProbe();
 
     this.avoidExitForTesting = avoidExitForTesting;
     options = new VMOptions(args);
@@ -314,7 +307,10 @@ public final class VM {
 
       if (vmOptions.dynamicMetricsEnabled) {
         assert VmSettings.DYNAMIC_METRICS;
-        instruments.get(DynamicMetrics.ID).setEnabled(true);
+        Instrument dynM = instruments.get(DynamicMetrics.ID);
+        dynM.setEnabled(true);
+        structuralProbes = dynM.lookup(StructuralProbe.class);
+        assert structuralProbes != null : "Initialization of DynamicMetrics tool incomplete";
       }
 
       engine.eval(SomLanguage.START);

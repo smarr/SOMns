@@ -28,7 +28,6 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
 
-import som.VM;
 import som.compiler.MixinDefinition;
 import som.instrumentation.InstrumentableDirectCallNode;
 import som.instrumentation.InstrumentableDirectCallNode.InstrumentableBlockApplyNode;
@@ -130,9 +129,7 @@ public class DynamicMetrics extends TruffleInstrument {
   }
 
   public DynamicMetrics() {
-    // TODO: avoid this major hack, there should be some event interface
-    //       or a way from the polyglot engine to obtain a reference
-    structuralProbe = VM.getStructuralProbe();
+    structuralProbe = new StructuralProbe();
 
     methodInvocationCounter = new HashMap<>();
     methodCallsiteProfiles  = new HashMap<>();
@@ -378,6 +375,8 @@ public class DynamicMetrics extends TruffleInstrument {
         LoopProfile::new, LoopProfilingNode::new);
 
     addLoopBodyInstrumentation(instrumenter, loopProfileFactory);
+
+    env.registerService(structuralProbe);
   }
 
   private void addLoopBodyInstrumentation(
