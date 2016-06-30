@@ -467,6 +467,9 @@ public final class Lexer {
   }
 
   private boolean endOfBuffer() {
+    if (state.buf == null) {
+      return true;
+    }
     return state.bufPointer >= state.buf.length();
   }
 
