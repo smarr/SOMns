@@ -1,0 +1,40 @@
+class TruffleSomTCK usingVmMirror: vmMirror = Value (
+| private Array    = (vmMirror kernelObject: nil) Array.
+  private vmMirror = vmMirror.
+|
+  vmMirror systemExport: [ 42 ]           as: #fourtyTwo.
+  vmMirror systemExport: [:a :b | a + b ] as: #sum:and:.
+  vmMirror systemExport: [ nil ]          as: #returnNil.
+  vmMirror systemExport: [ nil ]          as: #compoundObject.
+  vmMirror systemExport: [:val | val ]    as: #identity:.
+  vmMirror systemExport: [:f | doApply: f ] as: #apply:.
+  vmMirror systemExport: [ CompoundObject new ] as: #compoundObject.
+  vmMirror systemExport: [ ValuesObject new ]   as: #valuesObject.
+  vmMirror systemExport: [:a :b |
+                           a real: a real + b real.
+                           a imaginary: a imaginary + b imaginary
+                         ] as: #complexAdd.
+)(
+  private class CompoundObject = ()(
+    public fourtyTwo = ( ^ 42 )
+    public plus: a and: b = ( ^ a + b )
+    public returnsNull = ( ^ nil )
+    public returnsThis = ( ^ self )
+  )
+  
+  private class ValuesObject = (
+  | public byteValue    ::= 0.
+    public shortValue   ::= 0.
+    public intValue     ::= 0.
+    public longValue    ::= 0.
+    public floatValue   ::= 0.0.
+    public doubleValue  ::= 0.0.
+    public charValue    ::= '0'.
+    public stringValue  ::= ''.
+    public booleanValue ::= false.
+  |)()
+  
+  private doApply: f = (
+    ^ (vmMirror systemApply: f with: (Array with: 18 with: 32)) + 10
+  )
+)

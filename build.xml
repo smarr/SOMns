@@ -128,6 +128,7 @@
             <batchtest fork="yes" filtertrace="false">
               <fileset dir="tests">
                   <include name="**/*Test*.java"/>
+                  <include name="**/*TCK.java"/>
               </fileset>
             </batchtest>
             <formatter type="brief" usefile="false"/>
