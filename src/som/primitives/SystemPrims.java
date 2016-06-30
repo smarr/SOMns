@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
@@ -11,17 +12,31 @@ import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameInstance;
 import com.oracle.truffle.api.frame.FrameInstanceVisitor;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.impl.FindContextNode;
+import com.oracle.truffle.api.interop.ArityException;
+import com.oracle.truffle.api.interop.ForeignAccess;
+import com.oracle.truffle.api.interop.Message;
+import com.oracle.truffle.api.interop.TruffleObject;
+import com.oracle.truffle.api.interop.UnsupportedMessageException;
+import com.oracle.truffle.api.interop.UnsupportedTypeException;
 import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
 import som.compiler.MixinDefinition;
+import som.interop.ValueConversion.ToSomConversion;
+import som.interop.ValueConversionFactory.ToSomConversionNodeGen;
 import som.interpreter.Invokable;
+import som.interpreter.SomLanguage;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.nary.UnaryBasicOperation;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.vm.NotYetImplementedException;
 import som.vm.constants.Classes;
 import som.vm.constants.Nil;
+import som.vmobjects.SArray;
 import som.vmobjects.SArray.SImmutableArray;
 import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
@@ -221,6 +236,70 @@ public final class SystemPrims {
     @Specialization
     public final long doSObject(final Object receiver) {
       return System.nanoTime() / 1000L - startMicroTime;
+    }
+  }
+
+  @GenerateNodeFactory
+  @Primitive("systemExport:as:")
+  public abstract static class ExportAsPrim extends BinaryComplexOperation {
+    @Child protected FindContextNode<VM> findContext;
+
+    @SuppressWarnings("unchecked")
+    protected ExportAsPrim(final SourceSection source) {
+      super(false, source);
+      findContext = (FindContextNode<VM>) SomLanguage.INSTANCE.createNewFindContextNode();
+    }
+
+    @Specialization
+    public final boolean doString(final Object obj, final String name) {
+      VM vm = findContext.executeFindContext();
+      vm.registerExport(name, obj);
+      return true;
+    }
+
+    @Specialization
+    public final boolean doSymbol(final Object obj, final SSymbol name) {
+      return doString(obj, name.getString());
+    }
+  }
+
+  @GenerateNodeFactory
+  @Primitive("systemApply:with:")
+  public abstract static class ApplyWithPrim extends BinaryComplexOperation {
+    protected ApplyWithPrim(final SourceSection source) { super(false, source); }
+
+    private final ValueProfile storageType  = ValueProfile.createClassProfile();
+
+    @Child protected SizeAndLengthPrim size = SizeAndLengthPrimFactory.create(null, null);
+    @Child protected ToSomConversion convert = ToSomConversionNodeGen.create(null);
+
+    @Specialization
+    public final Object doApply(final VirtualFrame frame,
+        final TruffleObject fun, final SArray args) {
+      Node execNode = Message.createExecute((int) size.executeEvaluated(args)).createNode();
+
+      Object[] arguments;
+      if (args.isLongType()) {
+        long[] arr = args.getLongStorage(storageType);
+        arguments = new Object[arr.length];
+        for (int i = 0; i < arr.length; i++) {
+          arguments[i] = arr[i];
+        }
+      } else if (args.isObjectType()) {
+        arguments = args.getObjectStorage(storageType);
+      } else {
+        CompilerDirectives.transferToInterpreter();
+        throw new NotYetImplementedException();
+      }
+
+      try {
+        Object result = ForeignAccess.sendExecute(execNode, frame, fun, arguments);
+        return convert.executeEvaluated(result);
+      } catch (UnsupportedTypeException | ArityException
+          | UnsupportedMessageException e) {
+        CompilerDirectives.transferToInterpreter();
+        throw new RuntimeException(e);
+      }
     }
   }
 

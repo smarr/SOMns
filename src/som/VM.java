@@ -1,6 +1,7 @@
 package som;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
@@ -48,6 +49,18 @@ public final class VM {
   @CompilationFinal private static VM vm;
   @CompilationFinal private static StructuralProbe structuralProbes;
 
+  private final Map<String, Object> exports = new HashMap<>();
+
+  public boolean registerExport(final String name, final Object value) {
+    boolean wasExportedAlready = exports.containsKey(name);
+    exports.put(name, value);
+    return wasExportedAlready;
+  }
+
+  public Object getExport(final String name) {
+    return exports.get(name);
+  }
+
   public static PolyglotEngine getEngine() {
     return engine;
   }
@@ -68,6 +81,10 @@ public final class VM {
   private SObjectWithoutFields vmMirror;
   @CompilationFinal
   private Actor mainActor;
+
+  public SObjectWithoutFields getVmMirror() {
+    return vmMirror;
+  }
 
   public static void thisMethodNeedsToBeOptimized(final String msg) {
     if (VmSettings.FAIL_ON_MISSING_OPTIMIZATIONS) {
@@ -137,6 +154,10 @@ public final class VM {
 
   public static void reportSuspendedEvent(final SuspendedEvent e) {
     WebDebugger.reportSuspendedEvent(e);
+  }
+
+  public void setCompletionFuture(final CompletableFuture<Object> future) {
+    vmMainCompletion = future;
   }
 
   public static void setVMMainCompletion(final CompletableFuture<Object> future) {

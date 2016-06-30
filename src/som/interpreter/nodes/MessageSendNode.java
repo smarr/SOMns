@@ -651,7 +651,6 @@ public final class MessageSendNode {
         final ExpressionNode[] arguments,
         final SourceSection source) {
       super(selector, arguments, source);
-      assert source != null;
     }
 
     /**
@@ -708,7 +707,6 @@ public final class MessageSendNode {
 
     protected UninitializedSymbolSendNode(final SSymbol selector, final SourceSection source) {
       super(selector, new ExpressionNode[0], source);
-      assert source != null;
     }
 
     @Override

@@ -107,6 +107,15 @@ public final class SomLanguage extends TruffleLanguage<VM> {
     }
   }
 
+  /**
+   * Do not instantiate, use {@link INSTANCE} instead.
+   */
+  private SomLanguage() { }
+
+  public Node createNewFindContextNode() {
+    return super.createFindContextNode();
+  }
+
   @Override
   protected VM createContext(final Env env) {
     VM vm;
@@ -163,7 +172,7 @@ public final class SomLanguage extends TruffleLanguage<VM> {
   @Override
   protected Object findExportedSymbol(final VM context, final String globalName,
       final boolean onlyExplicit) {
-    throw new NotYetImplementedException();
+    return context.getExport(globalName);
   }
 
   @Override

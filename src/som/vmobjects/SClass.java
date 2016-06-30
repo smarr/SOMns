@@ -27,6 +27,10 @@ package som.vmobjects;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
+
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
 
 import som.VM;
 import som.compiler.AccessModifier;
@@ -39,9 +43,6 @@ import som.interpreter.objectstorage.ClassFactory;
 import som.interpreter.objectstorage.ObjectLayout;
 import som.vm.ObjectSystem;
 import som.vm.constants.Classes;
-
-import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
-import com.oracle.truffle.api.nodes.ExplodeLoop;
 
 
 // TODO: should we move more of that out of SClass and use the corresponding
@@ -207,6 +208,10 @@ public final class SClass extends SObjectWithClass {
       }
     }
     return classes.toArray(new SClass[classes.size()]);
+  }
+
+  public Map<SSymbol, Dispatchable> getDispatchables() {
+    return dispatchables;
   }
 
   public Dispatchable lookupPrivate(final SSymbol selector,

@@ -18,7 +18,6 @@ public abstract class AbstractDispatchNode
 
   protected AbstractDispatchNode(final SourceSection source) {
     super();
-    assert source != null;
     this.sourceSection = source;
   }
 

@@ -24,11 +24,15 @@
 
 package som.vmobjects;
 
+import com.oracle.truffle.api.frame.MaterializedFrame;
+import com.oracle.truffle.api.interop.ForeignAccess;
+import com.oracle.truffle.api.interop.TruffleObject;
+
+import som.interop.SBlockInteropMessageResolutionForeign;
 import som.interpreter.SArguments;
 
-import com.oracle.truffle.api.frame.MaterializedFrame;
 
-public final class SBlock extends SAbstractObject {
+public final class SBlock extends SAbstractObject implements TruffleObject {
 
   private final SInvokable        method;
   private final MaterializedFrame context;
@@ -67,5 +71,10 @@ public final class SBlock extends SAbstractObject {
   @Override
   public String toString() {
     return super.toString() + "[" + method.toString() + "]";
+  }
+
+  @Override
+  public ForeignAccess getForeignAccess() {
+    return SBlockInteropMessageResolutionForeign.createAccess();
   }
 }
