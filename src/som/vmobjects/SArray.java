@@ -2,11 +2,11 @@ package som.vmobjects;
 
 import java.util.Arrays;
 
-import som.vm.NotYetImplementedException;
-import som.vm.constants.Nil;
-
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.profiles.ValueProfile;
+
+import som.vm.NotYetImplementedException;
+import som.vm.constants.Nil;
 
 /**
  * SArrays are implemented using a Strategy-like approach.
@@ -189,7 +189,7 @@ public abstract class SArray extends SAbstractObject {
      * For internal use only, specifically, for SClass.
      * There we now, it is either empty, or of OBJECT type.
      * @param value
-     * @return
+     * @return new mutable array extended by value
      */
     public SArray copyAndExtendWith(final Object value) {
       Object[] newArr;

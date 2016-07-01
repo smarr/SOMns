@@ -42,8 +42,8 @@ import tools.Tagging;
  *
  * <p>
  * Highlight expects that the root nodes that should be included are reported
- * to it using the {@link reportParsedRootNode} function.
- * For elements that are not part of the AST, the {@link reportNonAstSyntax}
+ * to it using the {@link #reportParsedRootNode} function.
+ * For elements that are not part of the AST, the {@link #reportNonAstSyntax}
  * function can be used.
  *
  * <p>
@@ -60,10 +60,10 @@ public final class Highlight extends TruffleInstrument {
   /**
    * Report an element for highlighting that is not part of an AST,
    * and thus is not known to this tool from a root node
-   * ({@see reportParsedRootNode}).
+   * ({@link #reportParsedRootNode}).
    *
-   * @param tag, indicating the type of the element
-   * @param source, the source section describing the location of the element
+   * @param tag indicating the type of the element
+   * @param source the source section describing the location of the element
    */
   // TODO: this is a bad hack. but, I don't know how to work around the polyglot engine otherwise
   //       normally, each polyglot engine should have a separate map
@@ -76,7 +76,7 @@ public final class Highlight extends TruffleInstrument {
    * Report a root node of which the AST nodes should be used for highlighting
    * code.
    *
-   * @param rootNode, created by the parser.
+   * @param rootNode created by the parser.
    *         While we would like to have all, there is not simply way to get them.
    */
   // TODO: this is a bad hack. but, I don't know how to work around the polyglot engine otherwise

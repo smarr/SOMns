@@ -100,7 +100,7 @@ public abstract class SOMNode extends Node {
    * trigger adaptation of methods lexically embedded/included in this copy.
    * The actual adaptation of those methods is done by
    * replaceWithCopyAdaptedToEmbeddedOuterContext();
-   * @param inlinerForLexicallyEmbeddedMethods
+   * @param inliner
    */
   public void replaceWithLexicallyEmbeddedNode(
       final InlinerForLexicallyEmbeddedMethods inliner) {
@@ -116,7 +116,7 @@ public abstract class SOMNode extends Node {
    * just got embedded into its outer context.
    * Thus, all frame slots need to be fixed up, as well as all embedded
    * blocks.
-   * @param inlinerAdaptToEmbeddedOuterContext
+   * @param inliner
    */
   public void replaceWithCopyAdaptedToEmbeddedOuterContext(
       final InlinerAdaptToEmbeddedOuterContext inliner) {
