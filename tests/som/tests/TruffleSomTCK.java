@@ -112,6 +112,11 @@ public class TruffleSomTCK extends TruffleTCK {
   }
 
   @Override
+  protected String complexAddWithMethod() {
+    return "complexAddWithMethod";
+  }
+
+  @Override
   @Test
   @Ignore("todo: remove override")
   public void testCoExistanceOfMultipleLanguageInstances() throws Exception { }
@@ -125,11 +130,6 @@ public class TruffleSomTCK extends TruffleTCK {
   @Test
   @Ignore("needs support for code snippet parsing, don't have that yet")
   public void multiplyTwoVariables() throws Exception { }
-
-  @Override
-  @Test
-  @Ignore("todo: figure out how to integrate TruffleObject into message dispatch")
-  public void testAddComplexNumbers() throws Exception { }
 
   @Override
   @Test
@@ -165,11 +165,6 @@ public class TruffleSomTCK extends TruffleTCK {
   @Test
   @Ignore("todo: remove override")
   public void testCopyStructuredComplexToComplexNumbersA() throws Exception { }
-
-  @Test
-  @Override
-  @Ignore("todo: remove override")
-  public void testAddComplexNumbersWithMethod() throws Exception { }
 
   @Test
   @Override

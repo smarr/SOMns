@@ -14,6 +14,10 @@ class TruffleSomTCK usingVmMirror: vmMirror = Value (
                            a real: a real + b real.
                            a imaginary: a imaginary + b imaginary
                          ] as: #complexAdd.
+  vmMirror systemExport: [:a :b |
+                           a real: a real + b real.
+                           a imaginary: a imaginary + b imaginary
+                         ] as: #complexAddWithMethod.
 )(
   private class CompoundObject = ()(
     public fourtyTwo = ( ^ 42 )

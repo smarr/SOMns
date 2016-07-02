@@ -1,9 +1,9 @@
 package som.interpreter;
 
+import com.oracle.truffle.api.frame.Frame;
+
 import som.vm.constants.Classes;
 import som.vmobjects.SArray.SImmutableArray;
-
-import com.oracle.truffle.api.frame.Frame;
 
 public final class SArguments {
 
@@ -27,14 +27,21 @@ public final class SArguments {
    * #doesNotUnderstand (#dnu)
    */
   public static SImmutableArray getArgumentsWithoutReceiver(final Object[] arguments) {
+    if (arguments.length == 1) {
+      return new SImmutableArray(0, Classes.valueArrayClass);
+    }
+
+    Object[] argsArr = getPlainArgumentWithoutReceiver(arguments);
+    return new SImmutableArray(argsArr, Classes.valueArrayClass);
+  }
+
+  public static Object[] getPlainArgumentWithoutReceiver(final Object[] arguments) {
     int rcvrIdx = 0; // the code and magic numbers below are based on the following assumption
     assert RCVR_IDX == rcvrIdx;
     assert arguments.length >= 1;  // <- that's the receiver
     Object[] argsArr = new Object[arguments.length - 1];
-    if (argsArr.length == 0) {
-      return new SImmutableArray(0, Classes.valueArrayClass);
-    }
+
     System.arraycopy(arguments, 1, argsArr, 0, argsArr.length);
-    return new SImmutableArray(argsArr, Classes.valueArrayClass);
+    return argsArr;
   }
 }

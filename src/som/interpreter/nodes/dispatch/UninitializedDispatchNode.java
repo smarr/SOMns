@@ -3,6 +3,7 @@ package som.interpreter.nodes.dispatch;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
+import com.oracle.truffle.api.interop.TruffleObject;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
@@ -15,6 +16,7 @@ import som.interpreter.Types;
 import som.interpreter.nodes.ISuperReadNode;
 import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
 import som.vm.NotYetImplementedException;
+import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
@@ -44,16 +46,34 @@ public final class UninitializedDispatchNode {
 
       if (chainDepth < INLINE_CACHE_SIZE) {
         Object firstArg = arguments.length > 1 ? arguments[1] : null;
-        return insertSpecialization(rcvr, firstArg);
+        return insertSpecialization(rcvr, firstArg, arguments.length);
       } else {
         return generalizeChain((GenericMessageSendNode) first.getParent());
       }
     }
 
     protected final AbstractDispatchNode insertSpecialization(final Object rcvr,
-        final Object firstArg) {
+        final Object firstArg, final int numArgs) {
       VM.insertInstrumentationWrapper(this);
 
+      AbstractDispatchNode node;
+      if (!(rcvr instanceof SAbstractObject) && rcvr instanceof TruffleObject) {
+        node = createForeignDispatchNode(numArgs);
+      } else {
+        node = createSomDispatchNode(rcvr, firstArg);
+      }
+
+      replace(node);
+      VM.insertInstrumentationWrapper(node);
+      return node;
+    }
+
+    private AbstractDispatchNode createForeignDispatchNode(final int numArgs) {
+      return new ForeignDispatchNode(numArgs, selector.getString(), this);
+    }
+
+    private AbstractDispatchNode createSomDispatchNode(final Object rcvr,
+        final Object firstArg) {
       SClass rcvrClass = Types.getClassOf(rcvr);
       Dispatchable dispatchable = doLookup(rcvrClass);
 
@@ -69,9 +89,6 @@ public final class UninitializedDispatchNode {
       } else {
         node = dispatchable.getDispatchNode(rcvr, firstArg, newChainEnd);
       }
-
-      replace(node);
-      VM.insertInstrumentationWrapper(node);
       return node;
     }
 
