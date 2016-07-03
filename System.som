@@ -42,4 +42,11 @@ class System usingVmMirror: vmMirror = Value (
   
   (* Force Garbage Collection *)
   public fullGC = ( ^ vmMirror systemGC: nil )
+  
+  (* Export given object with given name (string or symbol) to external users.
+     At the moment, the only external user is the Truffle polyglot engine. *)
+  public export: obj as: name = ( ^ vmMirror systemExport: obj as: name )
+  
+  (* Applying a foreign function *)
+  public apply: foreignFunction with: args = ( ^ vmMirror systemApply: foreignFunction with: args )
 )
