@@ -154,7 +154,6 @@ public final class SystemPrims {
       Truffle.getRuntime().iterateFrames(new FrameInstanceVisitor<Object>() {
         @Override
         public Object visitFrame(final FrameInstance frameInstance) {
-          Node callNode = frameInstance.getCallNode();
           RootCallTarget ct = (RootCallTarget) frameInstance.getCallTarget();
 
           // TODO: do we need to handle other kinds of root nodes?
@@ -168,9 +167,13 @@ public final class SystemPrims {
             String id = ss.getIdentifier();
             method.add(id);
             maxLengthMethod[0] = Math.max(maxLengthMethod[0], id.length());
-            SourceSection nodeSS = callNode.getEncapsulatingSourceSection();
-            location.add(nodeSS.getSource().getName() + ":" + nodeSS.getStartLine() + ":" + nodeSS.getStartColumn());
-
+            Node callNode = frameInstance.getCallNode();
+            if (callNode != null) {
+              SourceSection nodeSS = callNode.getEncapsulatingSourceSection();
+              location.add(nodeSS.getSource().getName() + ":" + nodeSS.getStartLine() + ":" + nodeSS.getStartColumn());
+            } else {
+              location.add("");
+            }
           } else {
             String id = m.toString();
             method.add(id);
