@@ -307,7 +307,7 @@ public final class Parser {
     MethodBuilder def = mxnBuilder.getClassInstantiationMethodBuilder();
     ExpressionNode selfRead = def.getSelfRead(source);
     ExpressionNode superClass = createMessageSend(Symbols.OBJECT,
-        new ExpressionNode[] {selfRead}, false, source);
+        new ExpressionNode[] {selfRead}, false, source, null);
     mxnBuilder.setSuperClassResolution(superClass);
 
     mxnBuilder.setSuperclassFactorySend(
@@ -365,7 +365,7 @@ public final class Parser {
       mixinFactorySend = (AbstractUninitializedMessageSendNode)
           SNodeFactory.createMessageSend(uniqueInitName,
               new ExpressionNode[] {mxnBuilder.getInitializerMethodBuilder().getSelfRead(getSource(coord))},
-              false, getSource(coord));
+              false, getSource(coord), null);
     }
 
     mxnBuilder.addMixinFactorySend(mixinFactorySend);
@@ -411,7 +411,7 @@ public final class Parser {
       String outer = identifier();
       OuterObjectRead self = meth.getOuterRead(outer, getSource(coord));
       if (sym == Identifier) {
-        return unaryMessage(self, false);
+        return unaryMessage(self, false, null);
       } else {
         return self;
       }
@@ -425,7 +425,7 @@ public final class Parser {
     } else {
       return meth.getImplicitReceiverSend(unarySelector(), getSource(coord));
     }
-    return unaryMessage(self, false);
+    return unaryMessage(self, false, null);
   }
 
   private void classBody(final MixinBuilder mxnBuilder)
@@ -938,7 +938,7 @@ public final class Parser {
       throws ParseError, MixinDefinitionError {
     ExpressionNode exp;
     if (sym == Keyword) {
-      exp = keywordMessage(builder, builder.getSelfRead(getEmptySource()), false, false);
+      exp = keywordMessage(builder, builder.getSelfRead(getEmptySource()), false, false, null);
     } else {
       exp = primary(builder);
     }
@@ -1011,17 +1011,22 @@ public final class Parser {
     String outer = identifier();
 
     ExpressionNode operand = builder.getOuterRead(outer, getSource(coord));
-    operand = binaryConsecutiveMessages(builder, operand, false);
+    operand = binaryConsecutiveMessages(builder, operand, false, null);
     return operand;
   }
 
   protected ExpressionNode binaryConsecutiveMessages(
       final MethodBuilder builder, ExpressionNode operand,
-      boolean eventualSend) throws ParseError,
+      boolean eventualSend, SourceSection sendOp) throws ParseError,
       MixinDefinitionError {
     while (sym == OperatorSequence || symIn(binaryOpSyms)) {
-      operand = binaryMessage(builder, operand, eventualSend);
+      operand = binaryMessage(builder, operand, eventualSend, sendOp);
+      SourceCoordinate coord = getCoordinate();
+
       eventualSend = accept(EventualSend, KeywordTag.class);
+      if (eventualSend) {
+        sendOp = getSource(coord);
+      }
     }
     return operand;
   }
@@ -1029,44 +1034,62 @@ public final class Parser {
   private ExpressionNode messages(final MethodBuilder builder,
       final ExpressionNode receiver) throws ParseError, MixinDefinitionError {
     ExpressionNode msg;
-    boolean evenutalSend = accept(EventualSend, KeywordTag.class);
+    SourceCoordinate coord = getCoordinate();
+    boolean eventualSend = accept(EventualSend, KeywordTag.class);
+
+    SourceSection sendOp = null;
+    if (eventualSend) {
+      sendOp = getSource(coord);
+    }
 
     if (sym == Identifier) {
-      msg = unaryMessage(receiver, evenutalSend);
-      evenutalSend = accept(EventualSend, KeywordTag.class);
+      msg = unaryMessage(receiver, eventualSend, sendOp);
+      eventualSend = accept(EventualSend, KeywordTag.class);
+      if (eventualSend) {
+        sendOp = getSource(coord);
+      }
 
       while (sym == Identifier) {
-        msg = unaryMessage(msg, evenutalSend);
-        evenutalSend = accept(EventualSend, KeywordTag.class);
+        msg = unaryMessage(msg, eventualSend, sendOp);
+        eventualSend = accept(EventualSend, KeywordTag.class);
+        if (eventualSend) {
+          sendOp = getSource(coord);
+        }
       }
 
       if (sym == OperatorSequence || symIn(binaryOpSyms)) {
-        msg = binaryConsecutiveMessages(builder, msg, evenutalSend);
-        evenutalSend = accept(EventualSend, KeywordTag.class);
+        msg = binaryConsecutiveMessages(builder, msg, eventualSend, sendOp);
+        eventualSend = accept(EventualSend, KeywordTag.class);
+        if (eventualSend) {
+          sendOp = getSource(coord);
+        }
       }
 
       if (sym == Keyword) {
-        msg = keywordMessage(builder, msg, true, evenutalSend);
+        msg = keywordMessage(builder, msg, true, eventualSend, sendOp);
       }
     } else if (sym == OperatorSequence || symIn(binaryOpSyms)) {
-      msg = binaryConsecutiveMessages(builder, receiver, evenutalSend);
-      evenutalSend = accept(EventualSend, KeywordTag.class);
+      msg = binaryConsecutiveMessages(builder, receiver, eventualSend, sendOp);
+      eventualSend = accept(EventualSend, KeywordTag.class);
+      if (eventualSend) {
+        sendOp = getSource(coord);
+      }
 
       if (sym == Keyword) {
-        msg = keywordMessage(builder, msg, true, evenutalSend);
+        msg = keywordMessage(builder, msg, true, eventualSend, sendOp);
       }
     } else {
-      msg = keywordMessage(builder, receiver, true, evenutalSend);
+      msg = keywordMessage(builder, receiver, true, eventualSend, sendOp);
     }
     return msg;
   }
 
   private ExpressionNode unaryMessage(final ExpressionNode receiver,
-      final boolean eventualSend) throws ParseError {
+      final boolean eventualSend, final SourceSection sendOperator) throws ParseError {
     SourceCoordinate coord = getCoordinate();
     SSymbol selector = unarySelector();
     return createMessageSend(selector, new ExpressionNode[] {receiver},
-        eventualSend, getSource(coord));
+        eventualSend, getSource(coord), sendOperator);
   }
 
   private ExpressionNode tryInliningBinaryMessage(final MethodBuilder builder,
@@ -1082,7 +1105,8 @@ public final class Parser {
   }
 
   private ExpressionNode binaryMessage(final MethodBuilder builder,
-      final ExpressionNode receiver, final boolean eventualSend)
+      final ExpressionNode receiver, final boolean eventualSend,
+      final SourceSection sendOperator)
           throws ParseError, MixinDefinitionError {
     SourceCoordinate coord = getCoordinate();
     SSymbol msg = binarySelector();
@@ -1096,7 +1120,7 @@ public final class Parser {
       }
     }
     return createMessageSend(msg, new ExpressionNode[] {receiver, operand},
-        eventualSend, getSource(coord));
+        eventualSend, getSource(coord), sendOperator);
   }
 
   private ExpressionNode binaryOperand(final MethodBuilder builder)
@@ -1106,9 +1130,14 @@ public final class Parser {
     // a binary operand can receive unaryMessages
     // Example: 2 * 3 asString
     //   is evaluated as 2 * (3 asString)
+    SourceCoordinate coord = getCoordinate();
     boolean evenutalSend = accept(EventualSend, KeywordTag.class);
     while (sym == Identifier) {
-      operand = unaryMessage(operand, evenutalSend);
+      SourceSection sendOp = null;
+      if (evenutalSend) {
+        sendOp = getSource(coord);
+      }
+      operand = unaryMessage(operand, evenutalSend, sendOp);
       evenutalSend = accept(EventualSend, KeywordTag.class);
     }
 
@@ -1121,7 +1150,7 @@ public final class Parser {
 
   private ExpressionNode keywordMessage(final MethodBuilder builder,
       final ExpressionNode receiver, final boolean explicitRcvr,
-      final boolean eventualSend) throws ParseError, MixinDefinitionError {
+      final boolean eventualSend, final SourceSection sendOperator) throws ParseError, MixinDefinitionError {
     assert !(!explicitRcvr && eventualSend);
     SourceCoordinate coord = getCoordinate();
     List<ExpressionNode> arguments = new ArrayList<ExpressionNode>();
@@ -1149,7 +1178,7 @@ public final class Parser {
     SourceSection source = getSource(coord);
     ExpressionNode[] args = arguments.toArray(new ExpressionNode[0]);
     if (explicitRcvr) {
-      return createMessageSend(msg, args, eventualSend, source);
+      return createMessageSend(msg, args, eventualSend, source, sendOperator);
     } else {
       assert !eventualSend;
       return createImplicitReceiverSend(msg, args,
@@ -1235,9 +1264,14 @@ public final class Parser {
   private ExpressionNode formula(final MethodBuilder builder)
       throws ParseError, MixinDefinitionError {
     ExpressionNode operand = binaryOperand(builder);
+    SourceCoordinate coord = getCoordinate();
     boolean evenutalSend = accept(EventualSend, KeywordTag.class);
+    SourceSection sendOp = null;
+    if (evenutalSend) {
+      sendOp = getSource(coord);
+    }
 
-    operand = binaryConsecutiveMessages(builder, operand, evenutalSend);
+    operand = binaryConsecutiveMessages(builder, operand, evenutalSend, sendOp);
     return operand;
   }
 

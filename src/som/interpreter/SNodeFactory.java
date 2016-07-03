@@ -2,12 +2,16 @@ package som.interpreter;
 
 import java.util.List;
 
+import com.oracle.truffle.api.frame.FrameSlot;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.compiler.Variable.Argument;
 import som.compiler.Variable.Local;
 import som.interpreter.LexicalScope.MethodScope;
-import som.interpreter.actors.EventualSendNodeGen;
+import som.interpreter.actors.EventualSendNode;
 import som.interpreter.nodes.ArgumentReadNode.LocalArgumentReadNode;
 import som.interpreter.nodes.ArgumentReadNode.LocalSelfReadNode;
 import som.interpreter.nodes.ArgumentReadNode.LocalSuperReadNode;
@@ -36,10 +40,6 @@ import som.interpreter.objectstorage.InitializerFieldWriteNodeGen;
 import som.vm.NotYetImplementedException;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
-
-import com.oracle.truffle.api.frame.FrameSlot;
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.source.SourceSection;
 
 
 public final class SNodeFactory {
@@ -118,9 +118,10 @@ public final class SNodeFactory {
 
   public static ExpressionNode createMessageSend(final SSymbol msg,
       final ExpressionNode[] exprs, final boolean eventualSend,
-      final SourceSection source) {
+      final SourceSection source, final SourceSection sendOperator) {
     if (eventualSend) {
-      return EventualSendNodeGen.create(msg, exprs.length, source, new InternalObjectArrayNode(exprs, source));
+      return new EventualSendNode(msg, exprs.length,
+          new InternalObjectArrayNode(exprs, source), source, sendOperator);
     } else {
       return MessageSendNode.createMessageSend(msg, exprs, source);
     }

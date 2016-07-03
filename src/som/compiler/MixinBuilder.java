@@ -470,7 +470,7 @@ public final class MixinBuilder {
     ExpressionNode superNode = initializer.getSuperReadNode(source);
     SSymbol init = getInitializerName(Symbols.NEW);
     ExpressionNode superFactorySend = SNodeFactory.createMessageSend(
-        init, new ExpressionNode[] {superNode}, false, source);
+        init, new ExpressionNode[] {superNode}, false, source, null);
     return superFactorySend;
   }
 
