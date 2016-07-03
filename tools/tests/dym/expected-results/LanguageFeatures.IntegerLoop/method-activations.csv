@@ -65,7 +65,7 @@ LanguageFeaturesSuite>>#initializer`usingPlatform:andHarness:	1
 IntegerLoop_class>>#new	2
 LanguageFeaturesSuite>>#`define`cls	1
 IntegerLoop>>#benchmark	2
-IntegerLoop>>#$blockMethod@149@54:	80002
+IntegerLoop>>#$blockMethod@150@54:	80002
 IntegerLoop>>#verifyResult:	2
 IntegerLoop_class>>#newInstance	2
 Mirrors>>#usingVmMirror:	1

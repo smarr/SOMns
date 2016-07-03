@@ -61,15 +61,15 @@ Kernel.som pos=24329 len=8	<=	BasicPrimitiveOperation OpComparison StatementTag	
 Kernel.som pos=24329 len=8	<=	BasicPrimitiveOperation OpComparison StatementTag	TOTAL	1
 Kernel.som pos=24349 len=9	<	BasicPrimitiveOperation OpComparison StatementTag	int	1
 Kernel.som pos=24349 len=9	<	BasicPrimitiveOperation OpComparison StatementTag	TOTAL	1
-LanguageFeatures.som pos=1609 len=4	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	21889
-LanguageFeatures.som pos=1609 len=4	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	21892
-LanguageFeatures.som pos=1609 len=4	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	43781
-LanguageFeatures.som pos=1680 len=3	-	BasicPrimitiveOperation OpArithmetic StatementTag	int	21889
-LanguageFeatures.som pos=1680 len=3	-	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	21889
-LanguageFeatures.som pos=1685 len=25	+	BasicPrimitiveOperation OpArithmetic StatementTag	int	21871
-LanguageFeatures.som pos=1685 len=25	+	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	21871
-LanguageFeatures.som pos=1706 len=3	-	BasicPrimitiveOperation OpArithmetic StatementTag	int	21889
-LanguageFeatures.som pos=1706 len=3	-	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	21889
-LanguageFeatures.som pos=1772 len=8	=	BasicPrimitiveOperation OpComparison RootTag StatementTag	int	1
-LanguageFeatures.som pos=1772 len=8	=	BasicPrimitiveOperation OpComparison RootTag StatementTag	TOTAL	1
+LanguageFeatures.som pos=1660 len=4	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	21889
+LanguageFeatures.som pos=1660 len=4	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	21892
+LanguageFeatures.som pos=1660 len=4	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	43781
+LanguageFeatures.som pos=1731 len=3	-	BasicPrimitiveOperation OpArithmetic StatementTag	int	21889
+LanguageFeatures.som pos=1731 len=3	-	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	21889
+LanguageFeatures.som pos=1736 len=25	+	BasicPrimitiveOperation OpArithmetic StatementTag	int	21871
+LanguageFeatures.som pos=1736 len=25	+	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	21871
+LanguageFeatures.som pos=1757 len=3	-	BasicPrimitiveOperation OpArithmetic StatementTag	int	21889
+LanguageFeatures.som pos=1757 len=3	-	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	21889
+LanguageFeatures.som pos=1823 len=8	=	BasicPrimitiveOperation OpComparison RootTag StatementTag	int	1
+LanguageFeatures.som pos=1823 len=8	=	BasicPrimitiveOperation OpComparison RootTag StatementTag	TOTAL	1
 Platform.som pos=981 len=3	<	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	0

@@ -64,9 +64,9 @@ LanguageFeaturesSuite>>#initializer`usingPlatform:andHarness:	1
 Loop_class>>#new	2
 LanguageFeaturesSuite>>#`define`cls	1
 Loop>>#singleRun	400
-Loop>>#$blockMethod@165@31:	40000
+Loop>>#$blockMethod@166@31:	40000
 Loop>>#benchmark	2
-Loop>>#$blockMethod@174@31:	400
+Loop>>#$blockMethod@175@31:	400
 Loop>>#verifyResult:	2
 Loop_class>>#newInstance	2
 Mirrors>>#usingVmMirror:	1

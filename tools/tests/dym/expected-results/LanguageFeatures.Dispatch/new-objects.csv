@@ -4,8 +4,8 @@ Collections.som pos=1089 len=19	1	9	Collections
 Harness.som pos=1085 len=23	1	7	Harness
 Harness.som pos=3894 len=0	1	8	Run
 Kernel.som pos=20966 len=9	1	3	Vector
-LanguageFeatures.som pos=1099 len=43	1	22	LanguageFeaturesSuite
-LanguageFeatures.som pos=8961 len=0	2	0	Dispatch
+LanguageFeatures.som pos=1099 len=43	1	31	LanguageFeaturesSuite
+LanguageFeatures.som pos=9012 len=0	2	0	Dispatch
 Mirrors.som pos=1080 len=23	1	6	Mirrors
 Mirrors.som pos=3500 len=15	1	1	ObjectMirror
 Platform.som pos=15 len=23	1	5	Platform

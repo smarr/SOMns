@@ -269,10 +269,12 @@ Method(String>>#substringFrom:to:)	false	0
 Method(Symbol>>#asString)	false	0
 Method(Symbol>>#asSymbol)	false	0
 Method(Symbol>>#print)	false	0
+Method(System>>#apply:with:)	false	0
 Method(System>>#arguments)	true	1
 Method(System>>#error:)	false	0
 Method(System>>#exit)	false	0
 Method(System>>#exit:)	false	0
+Method(System>>#export:as:)	false	0
 Method(System>>#fullGC)	false	0
 Method(System>>#loadModule:)	true	1
 Method(System>>#loadModule:nextTo:)	true	1

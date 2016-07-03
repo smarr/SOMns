@@ -61,8 +61,8 @@ Kernel.som pos=24329 len=8	<=	BasicPrimitiveOperation OpComparison StatementTag	
 Kernel.som pos=24329 len=8	<=	BasicPrimitiveOperation OpComparison StatementTag	TOTAL	1
 Kernel.som pos=24349 len=9	<	BasicPrimitiveOperation OpComparison StatementTag	int	1
 Kernel.som pos=24349 len=9	<	BasicPrimitiveOperation OpComparison StatementTag	TOTAL	1
-LanguageFeatures.som pos=9071 len=18	+	BasicPrimitiveOperation OpArithmetic StatementTag	int	39999
-LanguageFeatures.som pos=9071 len=18	+	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	39999
-LanguageFeatures.som pos=9212 len=8	=	BasicPrimitiveOperation OpComparison RootTag StatementTag	int	1
-LanguageFeatures.som pos=9212 len=8	=	BasicPrimitiveOperation OpComparison RootTag StatementTag	TOTAL	1
+LanguageFeatures.som pos=9122 len=18	+	BasicPrimitiveOperation OpArithmetic StatementTag	int	39999
+LanguageFeatures.som pos=9122 len=18	+	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	39999
+LanguageFeatures.som pos=9263 len=8	=	BasicPrimitiveOperation OpComparison RootTag StatementTag	int	1
+LanguageFeatures.som pos=9263 len=8	=	BasicPrimitiveOperation OpComparison RootTag StatementTag	TOTAL	1
 Platform.som pos=981 len=3	<	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	0

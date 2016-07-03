@@ -61,12 +61,12 @@ Kernel.som pos=24329 len=8	<=	BasicPrimitiveOperation OpComparison StatementTag	
 Kernel.som pos=24329 len=8	<=	BasicPrimitiveOperation OpComparison StatementTag	TOTAL	1
 Kernel.som pos=24349 len=9	<	BasicPrimitiveOperation OpComparison StatementTag	int	1
 Kernel.som pos=24349 len=9	<	BasicPrimitiveOperation OpComparison StatementTag	TOTAL	1
-LanguageFeatures.som pos=4604 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	int	39999
-LanguageFeatures.som pos=4604 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	39999
-LanguageFeatures.som pos=4621 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	399
-LanguageFeatures.som pos=4621 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	399
-LanguageFeatures.som pos=4817 len=16	+	BasicPrimitiveOperation OpArithmetic StatementTag	int	399
-LanguageFeatures.som pos=4817 len=16	+	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	399
-LanguageFeatures.som pos=4908 len=8	=	BasicPrimitiveOperation OpComparison RootTag StatementTag	int	1
-LanguageFeatures.som pos=4908 len=8	=	BasicPrimitiveOperation OpComparison RootTag StatementTag	TOTAL	1
+LanguageFeatures.som pos=4655 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	int	39999
+LanguageFeatures.som pos=4655 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	39999
+LanguageFeatures.som pos=4672 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	399
+LanguageFeatures.som pos=4672 len=5	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	399
+LanguageFeatures.som pos=4868 len=16	+	BasicPrimitiveOperation OpArithmetic StatementTag	int	399
+LanguageFeatures.som pos=4868 len=16	+	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	399
+LanguageFeatures.som pos=4959 len=8	=	BasicPrimitiveOperation OpComparison RootTag StatementTag	int	1
+LanguageFeatures.som pos=4959 len=8	=	BasicPrimitiveOperation OpComparison RootTag StatementTag	TOTAL	1
 Platform.som pos=981 len=3	<	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	0

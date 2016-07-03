@@ -38,11 +38,11 @@ Kernel.som pos=27169 len=7	0	0	0
 Kernel.som pos=27348 len=0	0	0	0
 LanguageFeatures.som pos=1099 len=43	0	0	0
 LanguageFeatures.som pos=1145 len=0	0	0	0
-LanguageFeatures.som pos=8961 len=0	2	1	1
-LanguageFeatures.som pos=8963 len=9	0	0	0
-LanguageFeatures.som pos=9040 len=51	2	1	1
-LanguageFeatures.som pos=9079 len=9	79998	1	1
-LanguageFeatures.som pos=9269 len=3	2	1	1
+LanguageFeatures.som pos=9012 len=0	2	1	1
+LanguageFeatures.som pos=9014 len=9	0	0	0
+LanguageFeatures.som pos=9091 len=51	2	1	1
+LanguageFeatures.som pos=9130 len=9	79998	1	1
+LanguageFeatures.som pos=9320 len=3	2	1	1
 Mirrors.som pos=1080 len=23	0	0	0
 Mirrors.som pos=1106 len=5	0	0	0
 Mirrors.som pos=3500 len=15	0	0	0

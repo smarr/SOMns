@@ -64,7 +64,7 @@ LanguageFeaturesSuite>>#initializer`usingPlatform:andHarness:	1
 Dispatch_class>>#new	2
 LanguageFeaturesSuite>>#`define`cls	1
 Dispatch>>#benchmark	2
-Dispatch>>#$blockMethod@373@32:	40000
+Dispatch>>#$blockMethod@374@32:	40000
 Dispatch>>#method:	40000
 Dispatch>>#verifyResult:	2
 Dispatch_class>>#newInstance	2
