@@ -148,7 +148,7 @@ public abstract class SOMNode extends Node {
     if (parent instanceof WrapperNode) {
       return parent.getParent();
     } else {
-      return node;
+      return parent;
     }
   }
 }
