@@ -25,6 +25,7 @@ import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.vm.constants.Nil;
 import som.vmobjects.SSymbol;
+import tools.actors.Tags.EventualMessageSend;
 
 
 @NodeChild(value = "arguments", type = InternalObjectArrayNode.class)
@@ -201,5 +202,13 @@ public abstract class EventualSendNode extends ExprWithTagsNode {
   @Override
   public String toString() {
     return "EventSend[" + selector.toString() + "]";
+  }
+
+  @Override
+  protected boolean isTaggedWith(final Class<?> tag) {
+    if (tag == EventualMessageSend.class) {
+      return true;
+    }
+    return super.isTaggedWith(tag);
   }
 }

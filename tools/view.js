@@ -381,6 +381,11 @@ View.prototype.displaySuspendEvent = function (data, getSource) {
     var annotationArray = sourceToArray(source.sourceText);
     annotateArray(annotationArray, source.id, data.sections);
     sourceFile.html(arrayToString(annotationArray));
+
+    // enable clicking on EventualSendNodes
+    sourceFile.find(".EventualMessageSend").click(function (e) {
+      ctrl.onToggleMessageSendBreakpoint(e)
+      })
   }
 
   // highlight current node
@@ -442,6 +447,10 @@ View.prototype.updateBreakpoint = function (breakpoint) {
     lineNumSpan.removeClass("breakpoint-active");
   }
 };
+
+View.prototype.updateSendBreakpoint = function (sendBreakpoint) {
+ $("#"+sendBreakpoint.id).addClass("send-breakpoint-active"); 
+}
 
 View.prototype.lazyFindDebuggerButtons = function () {
   if (!this.debuggerButtonJQNodes) {
