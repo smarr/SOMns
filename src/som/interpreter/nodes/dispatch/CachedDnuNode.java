@@ -1,19 +1,22 @@
 package som.interpreter.nodes.dispatch;
 
-import som.VM;
-import som.compiler.AccessModifier;
-import som.interpreter.SArguments;
-import som.vm.Symbols;
-import som.vmobjects.SClass;
-import som.vmobjects.SInvokable;
-import som.vmobjects.SSymbol;
-
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.InvalidAssumptionException;
+
+import som.VM;
+import som.VmSettings;
+import som.compiler.AccessModifier;
+import som.interpreter.SArguments;
+import som.interpreter.Types;
+import som.primitives.SystemPrims.PrintStackTracePrim;
+import som.vm.Symbols;
+import som.vmobjects.SClass;
+import som.vmobjects.SInvokable;
+import som.vmobjects.SSymbol;
 
 
 public final class CachedDnuNode extends AbstractDispatchNode {
@@ -52,6 +55,11 @@ public final class CachedDnuNode extends AbstractDispatchNode {
 
   protected Object performDnu(final VirtualFrame frame, final Object[] arguments,
       final Object rcvr) {
+    if (VmSettings.DNU_PRINT_STACK_TRACE) {
+      PrintStackTracePrim.printStackTrace();
+      VM.errorPrintln("Lookup of " + selector + " failed in " + Types.getClassOf(rcvr).getName().getString());
+    }
+
     Object[] argsArr = new Object[] {
         rcvr, selector, SArguments.getArgumentsWithoutReceiver(arguments) };
     return cachedMethod.call(frame, argsArr);

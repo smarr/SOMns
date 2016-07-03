@@ -9,6 +9,7 @@ public class VmSettings {
   public static final boolean ACTOR_TRACING;
   public static final boolean INSTRUMENTATION;
   public static final boolean DYNAMIC_METRICS;
+  public static final boolean DNU_PRINT_STACK_TRACE;
 
   public static final String INSTRUMENTATION_PROP = "som.instrumentation";
 
@@ -27,6 +28,8 @@ public class VmSettings {
     boolean dm = getBool("som.dynamicMetrics", false);
     DYNAMIC_METRICS = dm;
     INSTRUMENTATION = dm || getBool(INSTRUMENTATION_PROP, false);
+
+    DNU_PRINT_STACK_TRACE = getBool("som.printStackTraceOnDNU", false);
   }
 
   private static boolean getBool(final String prop, final boolean defaultVal) {

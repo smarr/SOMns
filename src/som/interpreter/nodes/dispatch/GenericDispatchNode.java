@@ -1,19 +1,22 @@
 package som.interpreter.nodes.dispatch;
 
-import som.compiler.AccessModifier;
-import som.compiler.MixinBuilder.MixinDefinitionId;
-import som.interpreter.SArguments;
-import som.interpreter.Types;
-import som.vmobjects.SArray;
-import som.vmobjects.SClass;
-import som.vmobjects.SSymbol;
-
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
+
+import som.VM;
+import som.VmSettings;
+import som.compiler.AccessModifier;
+import som.compiler.MixinBuilder.MixinDefinitionId;
+import som.interpreter.SArguments;
+import som.interpreter.Types;
+import som.primitives.SystemPrims.PrintStackTracePrim;
+import som.vmobjects.SArray;
+import som.vmobjects.SClass;
+import som.vmobjects.SSymbol;
 
 
 public final class GenericDispatchNode extends AbstractDispatchNode {
@@ -42,6 +45,11 @@ public final class GenericDispatchNode extends AbstractDispatchNode {
     if (method != null) {
       return method.invoke(call, frame, arguments);
     } else {
+      if (VmSettings.DNU_PRINT_STACK_TRACE) {
+        PrintStackTracePrim.printStackTrace();
+        VM.errorPrintln("Lookup of " + selector + " failed in " + Types.getClassOf(rcvr).getName().getString());
+      }
+
       // Won't use DNU caching here, because it is already a megamorphic node
       SArray argumentsArray = SArguments.getArgumentsWithoutReceiver(arguments);
       Object[] args = new Object[] {arguments[0], selector, argumentsArray};
