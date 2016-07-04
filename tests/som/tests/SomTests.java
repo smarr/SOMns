@@ -86,7 +86,9 @@ public class SomTests {
 
     engine.getInstruments().values().forEach(i -> i.setEnabled(false));
 
-    VM vm = (VM) engine.getLanguages().get(SomLanguage.MIME_TYPE).getGlobalObject().get();
+    // Trigger initialization
+    engine.getLanguages().get(SomLanguage.MIME_TYPE).getGlobalObject();
+    VM vm = VM.getVM();
 
     vm.execute();
 
