@@ -39,7 +39,7 @@ class WebSocketHandler extends WebSocketServer {
 
   private void processBreakpoint(final JsonObject obj) {
     String type =  obj.getString("type", null);
-    switch(type){
+    switch (type) {
       case "lineBreakpoint":
         processLineBreakpoint(obj);
         break;

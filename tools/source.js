@@ -103,7 +103,7 @@ function SendBreakpoint(id) {
   this.type = "sendBreakpoint";
   this.id = id;
   this.enabled = false;
-};
+}
 
 SendBreakpoint.prototype.toggle = function () {
   this.enabled = !this.enabled;
