@@ -14,21 +14,26 @@ function Begin(section) {
   this.section = section;
   this.type    = Begin;
 }
+
 Begin.prototype.toString = function () {
   return '<span id="' + this.section.id + '" class="' + this.section.tags.join(" ") + '">';
 };
+
 function End(section) {
   this.section = section;
   this.type    = End;
 }
+
 End.prototype.toString = function () {
   return '</span>';
 };
+
 function Annotation(char) {
   this.char   = char;
   this.before = [];
   this.after  = [];
 }
+
 Annotation.prototype.toString = function() {
   this.before.sort(function (a, b) {
     if (a.section.type !== b.section.type) {
