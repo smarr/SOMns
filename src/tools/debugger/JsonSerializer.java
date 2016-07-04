@@ -54,6 +54,7 @@ public final class JsonSerializer {
   private static final Map<Source, String> sourcesId = new HashMap<>();
   private static final Map<String, Source> idSources = new HashMap<>();
   private static final Map<SourceSection, String> sourceSectionId = new HashMap<>();
+  private static final Map<String, SourceSection> idSourceSections = new HashMap<>();
 
 
   public static String createSourceId(final Source source) {
@@ -76,12 +77,18 @@ public final class JsonSerializer {
     return sourceSectionId.computeIfAbsent(source, s -> {
       int n = nextSourceSectionId;
       nextSourceSectionId += 1;
-      return "ss-" + n;
+      String id = "ss-" + n;
+      idSourceSections.put(id, source);
+      return id;
     });
   }
 
   public static Source getSource(final String id) {
     return idSources.get(id);
+  }
+
+  public static SourceSection getSourceSection(final String id) {
+    return idSourceSections.get(id);
   }
 
   public static String createSourceAndSectionMessage(final Source source,
