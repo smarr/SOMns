@@ -75,30 +75,34 @@ Controller.prototype.onUnknownMessage = function (msg) {
   dbgLog("[WS] unknown message of type:" + msg.type);
 };
 
-Controller.prototype.onToggleBreakpoint = function (line, clickedSpan) {
-  dbgLog("updateBreakpoint");
-
+Controller.prototype.toggleBreakpoint = function (key, newBp) {
   var sourceId = this.view.getActiveSourceId();
   var source   = this.dbg.getSource(sourceId);
 
-  var breakpoint = this.dbg.getBreakpoint(source, line, clickedSpan);
+  var breakpoint = this.dbg.getBreakpoint(source, key, newBp);
   breakpoint.toggle();
 
   this.vmConnection.updateBreakpoint(breakpoint);
-  this.view.updateBreakpoint(breakpoint);
+  return breakpoint;
+};
+
+Controller.prototype.onToggleLineBreakpoint = function (line, clickedSpan) {
+  dbgLog("updateBreakpoint");
+
+  var breakpoint = this.toggleBreakpoint(line,
+    function (source) { return new LineBreakpoint(source, line, clickedSpan); });
+
+  this.view.updateLineBreakpoint(breakpoint);
 };
 
 Controller.prototype.onToggleMessageSendBreakpoint = function (e) {
   dbgLog("onToggleMessageSendBreakpoint");
 
-  //update the view 
-  var sendBreakpoint = new SendBreakpoint(e.currentTarget.id);
-  this.view.updateSendBreakpoint(sendBreakpoint);
+  var breakpoint = this.toggleBreakpoint(e.currentTarget.id,
+    function (source) { return new SendBreakpoint(source, e.currentTarget.id); });
 
-  //send id to backend
-  this.vmConnection.updateBreakpoint(sendBreakpoint);
-
-}
+  this.view.updateSendBreakpoint(breakpoint);
+};
 
 Controller.prototype.resumeExecution = function () {
   this.vmConnection.sendDebuggerAction('resume', this.dbg.lastSuspendEventId);

@@ -72,10 +72,10 @@ function nodeFromTemplate(tplId) {
 }
 
 function createLineNumbers(cnt) {
-  var result = "<span class='ln' onclick='ctrl.onToggleBreakpoint(1, this);'>1</span>",
+  var result = "<span class='ln' onclick='ctrl.onToggleLineBreakpoint(1, this);'>1</span>",
     i;
   for (i = 2; i <= cnt; i += 1) {
-    result = result + "\n<span class='ln' onclick='ctrl.onToggleBreakpoint("+ i +", this);'>" + i + "</span>";
+    result = result + "\n<span class='ln' onclick='ctrl.onToggleLineBreakpoint("+ i +", this);'>" + i + "</span>";
   }
   return result;
 }
@@ -419,13 +419,13 @@ View.prototype.ensureBreakpointListEntry = function (breakpoint) {
     return;
   }
 
-  var bpId = "bp:" + breakpoint.source.id + ":" + breakpoint.line;
+  var bpId = "bp:" + breakpoint.source.id + ":" + breakpoint.getId();
   var entry = nodeFromTemplate("breakpoint-tpl");
   entry.setAttribute("id", bpId);
 
   var tds = $(entry).find("td");
   tds[0].innerHTML = breakpoint.source.shortName;
-  tds[1].innerHTML = breakpoint.line;
+  tds[1].innerHTML = breakpoint.getId();
 
   breakpoint.checkbox = $(entry).find("input");
   breakpoint.checkbox.attr("id", bpId + "chk");
@@ -434,23 +434,28 @@ View.prototype.ensureBreakpointListEntry = function (breakpoint) {
   list.appendChild(entry);
 };
 
-View.prototype.updateBreakpoint = function (breakpoint) {
+View.prototype.updateBreakpoint = function (breakpoint, highlightElem,
+                                            highlightClass) {
   this.ensureBreakpointListEntry(breakpoint);
-
-  var lineNumSpan = $(breakpoint.lineNumSpan),
-    enabled = breakpoint.isEnabled();
+  var enabled = breakpoint.isEnabled();
 
   breakpoint.checkbox.prop('checked', enabled);
   if (enabled) {
-    lineNumSpan.addClass("breakpoint-active");
+    highlightElem.addClass(highlightClass);
   } else {
-    lineNumSpan.removeClass("breakpoint-active");
+    highlightElem.removeClass(highlightClass);
   }
 };
 
-View.prototype.updateSendBreakpoint = function (sendBreakpoint) {
- $("#"+sendBreakpoint.id).addClass("send-breakpoint-active"); 
-}
+View.prototype.updateLineBreakpoint = function (bp) {
+  var lineNumSpan = $(bp.lineNumSpan);
+  this.updateBreakpoint(bp, lineNumSpan, "breakpoint-active");
+};
+
+View.prototype.updateSendBreakpoint = function (bp) {
+  var bpSpan = $("#"+bp.id);
+  this.updateBreakpoint(bp, bpSpan, "send-breakpoint-active");
+};
 
 View.prototype.lazyFindDebuggerButtons = function () {
   if (!this.debuggerButtonJQNodes) {

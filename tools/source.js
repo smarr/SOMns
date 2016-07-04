@@ -82,13 +82,11 @@ function handleFileSelect(e) {
   }
 }
 
-function Breakpoint(source, line, lineNumSpan) {
-  this.type = "lineBreakpoint";
-  this.source      = source;
-  this.line        = line;
-  this.enabled     = false;
-  this.lineNumSpan = lineNumSpan;
-  this.checkbox    = null;
+function Breakpoint(source) {
+  this.type     = "abstract-breakpoint";
+  this.source   = source;
+  this.enabled  = false;
+  this.checkbox = null;
 }
 
 Breakpoint.prototype.toggle = function () {
@@ -99,18 +97,60 @@ Breakpoint.prototype.isEnabled = function () {
   return this.enabled;
 };
 
-function SendBreakpoint(id) {
-  this.type = "sendBreakpoint";
-  this.id = id;
-  this.enabled = false;
-}
-
-SendBreakpoint.prototype.toggle = function () {
-  this.enabled = !this.enabled;
+/**
+ * @returns a unique id (for the corresponding source)
+ */
+Breakpoint.prototype.getId = function () {
+  return null;
 };
 
-SendBreakpoint.prototype.isEnabled = function () {
-  return this.enabled;
+/**
+ * @returns object for JSON serialization
+ */
+Breakpoint.prototype.toJsonObj = function () {
+  return {
+    type:       this.type,
+    sourceId:   this.source.id,
+    sourceName: this.source.name,
+    enabled:    this.isEnabled()
+  }
+};
+
+function LineBreakpoint(source, line, lineNumSpan) {
+  Breakpoint.call(this, source);
+
+  this.type        = "lineBreakpoint";
+  this.line        = line;
+  this.lineNumSpan = lineNumSpan;
+}
+LineBreakpoint.prototype = Object.create(Breakpoint.prototype);
+
+LineBreakpoint.prototype.getId = function () {
+  return this.line;
+};
+
+LineBreakpoint.prototype.toJsonObj = function () {
+  var obj = Breakpoint.prototype.toJsonObj.call(this);
+  obj.line = this.line;
+  return obj;
+};
+
+function SendBreakpoint(source, sectionId) {
+  Breakpoint.call(this, source);
+
+  this.type = "sendBreakpoint";
+  this.sectionId = sectionId;
+}
+SendBreakpoint.prototype = Object.create(Breakpoint.prototype);
+
+SendBreakpoint.prototype.getId = function () {
+  return this.sectionId;
+};
+
+SendBreakpoint.prototype.toJsonObj = function () {
+  var obj = Breakpoint.prototype.toJsonObj.call(this);
+  obj.sectionId = this.sectionId;
+  return obj;
 };
 
 function handleDragOver(evt) {
@@ -148,15 +188,15 @@ Debugger.prototype.addSources = function (msg) {
   }
 };
 
-Debugger.prototype.getBreakpoint = function (source, line, clickedSpan) {
+Debugger.prototype.getBreakpoint = function (source, key, newBp) {
   if (!this.breakpoints[source.name]) {
     this.breakpoints[source.name] = {};
   }
 
-  var bp = this.breakpoints[source.name][line];
+  var bp = this.breakpoints[source.name][key];
   if (!bp) {
-    bp = new Breakpoint(source, line, clickedSpan);
-    this.breakpoints[source.name][line] = bp;
+    bp = newBp(source);
+    this.breakpoints[source.name][key] = bp;
   }
   return bp;
 };
