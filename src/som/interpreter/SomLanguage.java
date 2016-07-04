@@ -24,6 +24,7 @@ import som.compiler.Parser.ParseError;
 import som.vm.NotYetImplementedException;
 import som.vm.constants.Nil;
 import som.vmobjects.SClass;
+import tools.actors.Tags.EventualMessageSend;
 import tools.dym.Tags.ArrayRead;
 import tools.dym.Tags.ArrayWrite;
 import tools.dym.Tags.BasicPrimitiveOperation;
@@ -77,7 +78,9 @@ import tools.highlight.Tags.StatementSeparatorTag;
   ArrayWrite.class, LoopNode.class, LoopBody.class, BasicPrimitiveOperation.class,
   ComplexPrimitiveOperation.class, PrimitiveArgument.class,
   StringAccess.class, OpClosureApplication.class, OpArithmetic.class,
-  OpComparison.class, OpLength.class
+  OpComparison.class, OpLength.class,
+
+  EventualMessageSend.class
 })
 public final class SomLanguage extends TruffleLanguage<VM> {
 

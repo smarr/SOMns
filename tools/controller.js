@@ -88,6 +88,18 @@ Controller.prototype.onToggleBreakpoint = function (line, clickedSpan) {
   this.view.updateBreakpoint(breakpoint);
 };
 
+Controller.prototype.onToggleMessageSendBreakpoint = function (e) {
+  dbgLog("onToggleMessageSendBreakpoint");
+
+  //update the view 
+  var sendBreakpoint = new SendBreakpoint(e.currentTarget.id);
+  this.view.updateSendBreakpoint(sendBreakpoint);
+
+  //send id to backend
+  this.vmConnection.updateBreakpoint(sendBreakpoint);
+
+}
+
 Controller.prototype.resumeExecution = function () {
   this.vmConnection.sendDebuggerAction('resume', this.dbg.lastSuspendEventId);
   this.view.onContinueExecution();

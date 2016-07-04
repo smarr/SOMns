@@ -531,7 +531,7 @@ Classes.transferClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInst
     CompletableFuture<Object> future = new CompletableFuture<>();
     VM.setVMMainCompletion(future);
 
-    DirectMessage msg = new DirectMessage(mainActor, start,
+    DirectMessage msg = new DirectMessage(null, mainActor, start,
         new Object[] {platform}, mainActor,
         null, EventualSendNode.createOnReceiveCallTargetForVMMain(start, 1, source, future));
     mainActor.send(msg);

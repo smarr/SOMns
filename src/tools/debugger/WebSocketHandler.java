@@ -37,8 +37,29 @@ class WebSocketHandler extends WebSocketServer {
     WebDebugger.log("onClose: code=" + code + " " + reason);
   }
 
-
   private void processBreakpoint(final JsonObject obj) {
+    String type =  obj.getString("type", null);
+    switch(type){
+      case "lineBreakpoint":
+        processLineBreakpoint(obj);
+        break;
+      case "sendBreakpoint":
+        processSendBreakpoint(obj);
+        break;
+    }
+  }
+
+  private void processSendBreakpoint(final JsonObject obj) {
+    String sourceSectionId   = obj.getString("id", null);
+
+    //create debugger manager
+
+    //enable breakpoint in AST node
+    //use meanwhile with the line number
+
+  }
+
+  private void processLineBreakpoint(final JsonObject obj) {
     String sourceId   = obj.getString("sourceId", null);
     String sourceName = obj.getString("sourceName", null);
     int lineNumber    = obj.getInt("line", -1);

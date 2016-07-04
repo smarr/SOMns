@@ -157,6 +157,8 @@ public class Actor {
     private void processCurrentMessages(final ActorProcessingThread currentThread) {
       for (EventualMessage msg : current) {
         actor.logMessageBeingExecuted(msg);
+        currentThread.currentMessage = msg;
+
         msg.execute();
       }
       if (VmSettings.ACTOR_TRACING) {
@@ -220,6 +222,7 @@ public class Actor {
   }
 
   public static final class ActorProcessingThread extends ForkJoinWorkerThread {
+    public EventualMessage currentMessage;
     protected Actor currentlyExecutingActor;
     protected final ObjectBuffer<SFarReference> createdActors;
     protected final ObjectBuffer<ObjectBuffer<EventualMessage>> processedMessages;

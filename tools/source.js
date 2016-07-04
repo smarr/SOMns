@@ -83,6 +83,7 @@ function handleFileSelect(e) {
 }
 
 function Breakpoint(source, line, lineNumSpan) {
+  this.type = "lineBreakpoint";
   this.source      = source;
   this.line        = line;
   this.enabled     = false;
@@ -95,6 +96,20 @@ Breakpoint.prototype.toggle = function () {
 };
 
 Breakpoint.prototype.isEnabled = function () {
+  return this.enabled;
+};
+
+function SendBreakpoint(id) {
+  this.type = "sendBreakpoint";
+  this.id = id;
+  this.enabled = false;
+};
+
+SendBreakpoint.prototype.toggle = function () {
+  this.enabled = !this.enabled;
+};
+
+SendBreakpoint.prototype.isEnabled = function () {
   return this.enabled;
 };
 
