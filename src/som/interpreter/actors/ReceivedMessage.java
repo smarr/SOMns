@@ -19,11 +19,11 @@ public class ReceivedMessage extends ReceivedRootNode {
 
   private final SSymbol selector;
 
-  public ReceivedMessage(final AbstractMessageSendNode onRecieve, final SSymbol selector) {
-    super(SomLanguage.class, onRecieve.getSourceSection(), null);
-    this.onReceive = onRecieve;
+  public ReceivedMessage(final AbstractMessageSendNode onReceive, final SSymbol selector) {
+    super(SomLanguage.class, onReceive.getSourceSection(), null);
+    this.onReceive = onReceive;
     this.selector  = selector;
-    assert onRecieve.getSourceSection() != null;
+    assert onReceive.getSourceSection() != null;
   }
 
   @Override
