@@ -7,3 +7,7 @@ user-dict.txt
 libs/*.jar
 *.json
 nbproject
+.idea
+.pmd
+newspeak
+*.ns3
