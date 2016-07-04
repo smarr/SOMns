@@ -97,7 +97,7 @@ public final class SomLanguage extends TruffleLanguage<VM> {
   public static final SomLanguage INSTANCE = new SomLanguage();
 
   public static Source getSyntheticSource(final String text, final String name) {
-    return Source.newBuilder(text).name(name).mimeType(SomLanguage.MIME_TYPE).build();
+    return Source.newBuilder(text).internal().name(name).mimeType(SomLanguage.MIME_TYPE).build();
   }
 
   private static final class ParseResult extends RootNode {
