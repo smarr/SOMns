@@ -113,7 +113,7 @@ Breakpoint.prototype.toJsonObj = function () {
     sourceId:   this.source.id,
     sourceName: this.source.name,
     enabled:    this.isEnabled()
-  }
+  };
 };
 
 function LineBreakpoint(source, line, lineNumSpan) {
