@@ -458,7 +458,7 @@ View.prototype.updateLineBreakpoint = function (bp) {
 };
 
 View.prototype.updateSendBreakpoint = function (bp) {
-  var bpSpan = $("#"+bp.id);
+  var bpSpan = $("#" + bp.sectionId);
   this.updateBreakpoint(bp, bpSpan, "send-breakpoint-active");
 };
 
