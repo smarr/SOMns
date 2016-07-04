@@ -2,6 +2,7 @@ package som.interpreter.actors;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.instrumentation.Instrumentable;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.actors.SPromise.SResolver;
@@ -11,6 +12,7 @@ import som.primitives.Primitive;
 
 @GenerateNodeFactory
 @Primitive("actorsResolve:with:")
+@Instrumentable(factory = ResolvePromiseNodeWrapper.class)
 public abstract class ResolvePromiseNode extends BinaryComplexOperation {
   protected ResolvePromiseNode(final SourceSection source) { super(false, source); }
 
