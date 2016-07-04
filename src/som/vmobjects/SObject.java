@@ -29,18 +29,18 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
+import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
+import com.oracle.truffle.api.profiles.IntValueProfile;
+
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.objectstorage.ClassFactory;
 import som.interpreter.objectstorage.ObjectLayout;
 import som.interpreter.objectstorage.StorageLocation;
 import som.interpreter.objectstorage.StorageLocation.AbstractObjectStorageLocation;
 import som.vm.constants.Nil;
-
-import com.oracle.truffle.api.CompilerAsserts;
-import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
-import com.oracle.truffle.api.nodes.ExplodeLoop;
-import com.oracle.truffle.api.profiles.IntValueProfile;
 
 public abstract class SObject extends SObjectWithClass {
 
@@ -110,11 +110,11 @@ public abstract class SObject extends SObjectWithClass {
   }
 
   public static final class SMutableObject extends SObject {
-    @SuppressWarnings("unused")  private long   primField1;
-    @SuppressWarnings("unused")  private long   primField2;
-    @SuppressWarnings("unused")  private long   primField3;
-    @SuppressWarnings("unused")  private long   primField4;
-    @SuppressWarnings("unused")  private long   primField5;
+    private long   primField1;
+    private long   primField2;
+    private long   primField3;
+    private long   primField4;
+    private long   primField5;
 
     @SuppressWarnings("unused")  private Object field1;
     @SuppressWarnings("unused")  private Object field2;
@@ -165,8 +165,8 @@ public abstract class SObject extends SObjectWithClass {
   // TODO: if there is the possibility that we can hint that a read is from a
   //       final field, we should reconsider removing these and store them in
   //       normal object fields
-  @SuppressWarnings("unused") @CompilationFinal private long[]   extensionPrimFields;
-  @SuppressWarnings("unused") @CompilationFinal private Object[] extensionObjFields;
+  @CompilationFinal private long[]   extensionPrimFields;
+  @CompilationFinal private Object[] extensionObjFields;
 
   // we manage the layout entirely in the class, but need to keep a copy here
   // to know in case the layout changed that we can update the instances lazily

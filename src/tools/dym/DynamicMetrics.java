@@ -249,7 +249,6 @@ public class DynamicMetrics extends TruffleInstrument {
         return new LateReportResultNode(ctx, factory);
       }
 
-      @SuppressWarnings("unchecked")
       OperationProfilingNode p = (OperationProfilingNode) parent;
       int idx = p.registerSubexpressionAndGetIdx(ctx.getInstrumentedNode());
       return new ReportResultNode(p.getProfile(), idx);
