@@ -17,8 +17,6 @@ import com.oracle.truffle.api.debug.SuspendedEvent;
 import com.oracle.truffle.api.source.LineLocation;
 import com.oracle.truffle.api.source.Source;
 
-import som.vm.NotYetImplementedException;
-
 class WebSocketHandler extends WebSocketServer {
   private static final int NUM_THREADS = 1;
 
@@ -51,12 +49,7 @@ class WebSocketHandler extends WebSocketServer {
     if (source == null) {
       // this can happen when restoring breakpoints on load and sources are
       // not yet loaded
-      try {
-        source = Source.fromFileName(sourceName);
-      } catch (IOException e) {
-        e.printStackTrace();
-        throw new NotYetImplementedException();  // TODO: need to handle this, but requires interaction with UI
-      }
+      source = Source.find(sourceName);
     } else {
       assert source.getName().equals(sourceName) :
         "Filenames of source by id and known name should match, probably should handle this case";
