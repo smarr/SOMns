@@ -57,8 +57,9 @@ public class SomPolyglotTests {
 
     engine.getInstruments().values().forEach(i -> i.setEnabled(false));
 
-    Value v = engine.getLanguages().get(SomLanguage.MIME_TYPE).getGlobalObject();
-    VM vm = (VM) v.get();
+    // Trigger initialization of SOMns
+    engine.getLanguages().get(SomLanguage.MIME_TYPE).getGlobalObject();
+    VM vm = VM.getVM();
     Object result = vm.execute("testEmptyToInts");
     assertEquals((long) 3, result);
   }
