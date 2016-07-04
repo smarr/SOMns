@@ -5,6 +5,7 @@ import java.io.IOException;
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.TruffleLanguage;
+import com.oracle.truffle.api.debug.DebuggerTags.AlwaysHalt;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.impl.FindContextNode;
@@ -64,7 +65,11 @@ import tools.highlight.Tags.StatementSeparatorTag;
 
 @TruffleLanguage.Registration(name = "SOMns", version = "0.1.0",
                               mimeType = "application/x-newspeak-som-ns")
-@ProvidedTags({RootTag.class, StatementTag.class, CallTag.class,
+@ProvidedTags({
+  RootTag.class, StatementTag.class, CallTag.class,
+
+  AlwaysHalt.class,
+
   KeywordTag.class, LiteralTag.class,
   CommentTag.class, IdentifierTag.class, ArgumentTag.class,
   LocalVariableTag.class, StatementSeparatorTag.class,
