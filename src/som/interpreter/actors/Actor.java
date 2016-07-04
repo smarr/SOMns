@@ -191,6 +191,8 @@ public class Actor {
    *         message queues.
    */
   public static boolean isPoolIdle() {
+    // TODO: this is not working when a thread blocks, then it seems
+    //       not to be considered running
     return actorPool.isQuiescent();
   }
 
