@@ -9,6 +9,7 @@ import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Instrumentable;
+import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
@@ -249,6 +250,8 @@ public class EventualSendNode extends ExprWithTagsNode {
     @Override
     protected boolean isTaggedWith(final Class<?> tag) {
       if (tag == EventualMessageSend.class) {
+        return true;
+      } else if (tag == StatementTag.class) {
         return true;
       }
       return super.isTaggedWith(tag);
