@@ -177,7 +177,7 @@ public final class SomLanguage extends TruffleLanguage<VM> {
 
   @Override
   protected Object getLanguageGlobal(final VM context) {
-    return context;
+    return null;
   }
 
   @Override

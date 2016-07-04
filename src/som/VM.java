@@ -65,6 +65,13 @@ public final class VM {
     return engine;
   }
 
+  /**
+   * @return last VM instance, for tests only
+   */
+  public static VM getVM() {
+    return vm;
+  }
+
   public static void setEngine(final PolyglotEngine e) {
     engine = e;
   }

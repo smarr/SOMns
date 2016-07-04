@@ -247,7 +247,9 @@ public class BasicInterpreterTests {
 
     engine.getInstruments().values().forEach(i -> i.setEnabled(false));
 
-    return (VM) engine.getLanguages().get(SomLanguage.MIME_TYPE).getGlobalObject().get();
+    // Trigger initialization of SOMns
+    assert null == engine.getLanguages().get(SomLanguage.MIME_TYPE).getGlobalObject();
+    return VM.getVM();
   }
 
   protected String[] getVMArguments() {
