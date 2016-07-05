@@ -39,9 +39,7 @@ public class TruffleSomTCK extends TruffleTCK {
     Value tckModule = engine.eval(source);
     SClass tck = tckModule.as(SClass.class);
 
-
-    @SuppressWarnings("unchecked")
-    FindContextNode<VM> contextNode = (FindContextNode<VM>) SomLanguage.INSTANCE.createNewFindContextNode();
+    FindContextNode<VM> contextNode = SomLanguage.INSTANCE.createNewFindContextNode();
     VM vm = contextNode.executeFindContext();
 
     CompletableFuture<Object> future = new CompletableFuture<>();

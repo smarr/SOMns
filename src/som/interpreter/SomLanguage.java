@@ -120,8 +120,9 @@ public final class SomLanguage extends TruffleLanguage<VM> {
    */
   private SomLanguage() { }
 
-  public Node createNewFindContextNode() {
-    return super.createFindContextNode();
+  @SuppressWarnings("unchecked")
+  public FindContextNode<VM> createNewFindContextNode() {
+    return (FindContextNode<VM>) super.createFindContextNode();
   }
 
   @Override

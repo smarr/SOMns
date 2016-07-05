@@ -247,10 +247,9 @@ public final class SystemPrims {
   public abstract static class ExportAsPrim extends BinaryComplexOperation {
     @Child protected FindContextNode<VM> findContext;
 
-    @SuppressWarnings("unchecked")
     protected ExportAsPrim(final SourceSection source) {
       super(false, source);
-      findContext = (FindContextNode<VM>) SomLanguage.INSTANCE.createNewFindContextNode();
+      findContext = SomLanguage.INSTANCE.createNewFindContextNode();
     }
 
     @Specialization
