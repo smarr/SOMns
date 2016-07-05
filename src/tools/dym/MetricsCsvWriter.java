@@ -461,7 +461,7 @@ public final class MetricsCsvWriter {
     if (source.getSource() == null) {
       result = source.getShortDescription();
     } else {
-      result = source.getSource().getShortName() + " pos=" + source.getCharIndex() + " len=" + source.getCharLength();
+      result = source.getSource().getName() + " pos=" + source.getCharIndex() + " len=" + source.getCharLength();
     }
     return result;
   }

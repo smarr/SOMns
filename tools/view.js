@@ -118,7 +118,7 @@ function showSource(s, sections) {
   var tabListEntry = document.getElementById(s.id),
     aElem = document.getElementById("a" + s.id);
   if (tabListEntry) {
-    if (aElem.innerText !== s.shortName) {
+    if (aElem.innerText !== s.name) {
       $(tabListEntry).remove();
       $(aElem).remove();
       tabListEntry = null;
@@ -138,7 +138,7 @@ function showSource(s, sections) {
     aElem = $(tabListEntry).find("a");
     aElem.attr("href", "#" + s.id);
     aElem.attr("id", "a" + s.id);
-    aElem.text(s.shortName);
+    aElem.text(s.name);
     $("#tabs").append(tabListEntry);
   }
 
@@ -429,7 +429,7 @@ View.prototype.ensureBreakpointListEntry = function (breakpoint) {
   entry.setAttribute("id", bpId);
 
   var tds = $(entry).find("td");
-  tds[0].innerHTML = breakpoint.source.shortName;
+  tds[0].innerHTML = breakpoint.source.name;
   tds[1].innerHTML = breakpoint.getId();
 
   breakpoint.checkbox = $(entry).find("input");
