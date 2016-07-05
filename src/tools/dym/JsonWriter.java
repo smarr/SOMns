@@ -61,9 +61,9 @@ public final class JsonWriter {
     JSONObjectBuilder builder = JSONHelper.object();
     builder.add("id", id);
     builder.add("sourceText", s.getCode());
-    builder.add("mimeType", s.getMimeType());
-    builder.add("name", s.getName());
-    builder.add("shortName", s.getShortName());
+    builder.add("mimeType",   s.getMimeType());
+    builder.add("name",       s.getName());
+    builder.add("uri",        s.getURI().toString());
     return builder;
   }
 
@@ -71,11 +71,11 @@ public final class JsonWriter {
     JSONObjectBuilder builder = JSONHelper.object();
 
     builder.add("id", id);
-    builder.add("firstIndex", ss.getCharIndex());
-    builder.add("length", ss.getCharLength());
-    builder.add("identifier", ss.getIdentifier());
+    builder.add("firstIndex",  ss.getCharIndex());
+    builder.add("length",      ss.getCharLength());
+    builder.add("identifier",  ss.getIdentifier());
     builder.add("description", ss.getShortDescription());
-    builder.add("sourceId", sourceToId.get(ss.getSource()));
+    builder.add("sourceId",    sourceToId.get(ss.getSource()));
 
     // TODO: add tags to section, need to get it from some tag map, I think
 //    if (ss.getTags() != null && ss.getTags().length > 0) {

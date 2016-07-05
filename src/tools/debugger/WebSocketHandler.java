@@ -2,6 +2,8 @@ package tools.debugger;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.concurrent.CompletableFuture;
 
 import org.java_websocket.WebSocket;
@@ -14,21 +16,20 @@ import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
 import com.oracle.truffle.api.debug.Breakpoint;
 import com.oracle.truffle.api.debug.SuspendedEvent;
-import com.oracle.truffle.api.source.LineLocation;
-import com.oracle.truffle.api.source.Source;
-import com.oracle.truffle.api.source.SourceSection;
 
 class WebSocketHandler extends WebSocketServer {
   private static final int NUM_THREADS = 1;
 
   private final CompletableFuture<WebSocket> clientConnected;
+  private final Breakpoints breakpoints;
   private final WebDebugger webDebugger;
 
   WebSocketHandler(final InetSocketAddress address,
       final CompletableFuture<WebSocket> clientConnected,
-      final WebDebugger webDebugger) {
+      final Breakpoints breakpoints, final WebDebugger webDebugger) {
     super(address, NUM_THREADS);
     this.clientConnected = clientConnected;
+    this.breakpoints = breakpoints;
     this.webDebugger = webDebugger;
   }
 
@@ -42,63 +43,50 @@ class WebSocketHandler extends WebSocketServer {
   }
 
   private void processBreakpoint(final JsonObject obj) {
-    Breakpoint bp = null;
-    String type =  obj.getString("type", null);
-    String sourceId   = obj.getString("sourceId", null);
-    String sourceName = obj.getString("sourceName", null);
-    Source source = getSource(sourceId, sourceName);
-    boolean enabled   = obj.getBoolean("enabled", false);
+    String type = obj.getString("type", null);
+    URI uri = null;
+    try {
+      uri = new URI(obj.getString("uri", null));
+    } catch (URISyntaxException e) {
+      throw new RuntimeException(e);
+    }
 
+    boolean enabled = obj.getBoolean("enabled", false);
 
     switch (type) {
       case "lineBreakpoint":
-        processLineBreakpoint(obj, source, enabled);
+        processLineBreakpoint(obj, uri, enabled);
         break;
       case "sendBreakpoint":
-        processSendBreakpoint(obj, source, enabled);
+        processSendBreakpoint(obj, uri, enabled);
         break;
     }
   }
 
-  private void processSendBreakpoint(final JsonObject obj, final Source source,
+  private void processSendBreakpoint(final JsonObject obj, final URI sourceUri,
       final boolean enabled) {
-    Breakpoint bp = null;
-    Object newBp = new Object();
-    String sourceSectionId = obj.getString("sectionId", null);
-    SourceSection section = JsonSerializer.getSourceSection(sourceSectionId);
+    int startLine   = obj.getInt("startLine",   -1);
+    int startColumn = obj.getInt("startColumn", -1);
+    int charLength  = obj.getInt("charLength",  -1);
 
-    if (enabled && bp == null) {
-    } else if (bp != null) {
+    try {
+      Breakpoint bp = breakpoints.getBreakpoint(sourceUri, startLine, startColumn, charLength);
       bp.setEnabled(enabled);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
-
   }
 
-  private void processLineBreakpoint(final JsonObject obj, final Source source,
+  private void processLineBreakpoint(final JsonObject obj, final URI sourceUri,
       final boolean enabled) {
-    Object newBp = new Object();
-    Breakpoint bp = null;
     int lineNumber = obj.getInt("line", -1);
 
-    LineLocation line = source.createLineLocation(lineNumber);
-
-    if (enabled && bp == null) {
-    } else if (bp != null) {
+    try {
+      Breakpoint bp = breakpoints.getBreakpoint(sourceUri, lineNumber);
       bp.setEnabled(enabled);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
-  }
-
-  private Source getSource(final String sourceId, final String sourceName) {
-    Source source = JsonSerializer.getSource(sourceId);
-    if (source == null) {
-      // this can happen when restoring breakpoints on load and sources are
-      // not yet loaded
-      source = Source.find(sourceName);
-    } else {
-      assert source.getName().equals(sourceName) :
-        "Filenames of source by id and known name should match, probably should handle this case";
-    }
-    return source;
   }
 
   @Override

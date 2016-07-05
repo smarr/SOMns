@@ -55,7 +55,7 @@ public class WebDebugger extends TruffleInstrument {
 
   private WebSocket client;
   private Debugger truffleDebugger;
-
+  private Breakpoints breakpoints;
 
   public void reportSyntaxElement(final Class<? extends Tags> type,
       final SourceSection source) {
@@ -241,6 +241,7 @@ public class WebDebugger extends TruffleInstrument {
 
   public void startServer(final Debugger dbg) {
     truffleDebugger = dbg;
+    breakpoints = new Breakpoints(dbg);
 
     try {
       log("[DEBUGGER] Initialize HTTP and WebSocket Server for Debugger");
@@ -275,7 +276,8 @@ public class WebDebugger extends TruffleInstrument {
       clientConnected = new CompletableFuture<WebSocket>();
       InetSocketAddress addess = new InetSocketAddress(port);
       webSocketServer = new WebSocketHandler(
-          addess, (CompletableFuture<WebSocket>) clientConnected, this);
+          addess, (CompletableFuture<WebSocket>) clientConnected,
+          breakpoints, this);
       webSocketServer.start();
     }
   }
