@@ -146,8 +146,10 @@ public class WebDebugger extends TruffleInstrument {
 
     String id = getNextSuspendEventId();
 
-    JSONObjectBuilder builder = JsonSerializer.createSuspendedEventJson(e, suspendedNode,
-        suspendedRoot, suspendedSource, id, WebDebugger.loadedSourcesTags, WebDebugger.instrumenter, WebDebugger.rootNodes);
+    JSONObjectBuilder builder = JsonSerializer.createSuspendedEventJson(e,
+        suspendedNode, suspendedRoot, suspendedSource, id,
+        WebDebugger.loadedSourcesTags, WebDebugger.instrumenter,
+        WebDebugger.rootNodes);
 
     CompletableFuture<Object> future = new CompletableFuture<>();
     suspendEvents.put(id, e);
