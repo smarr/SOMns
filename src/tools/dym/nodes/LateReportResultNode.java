@@ -27,7 +27,6 @@ public class LateReportResultNode extends ExecutionEventNode {
       return this;
     }
 
-    @SuppressWarnings("unchecked")
     OperationProfilingNode p = (OperationProfilingNode) parent;
     int idx = p.registerSubexpressionAndGetIdx(ctx.getInstrumentedNode());
     return replace(new ReportResultNode(p.getProfile(), idx));
