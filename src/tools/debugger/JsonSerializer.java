@@ -67,12 +67,6 @@ public final class JsonSerializer {
     });
   }
 
-  public static String getExistingSourceId(final Source source) {
-    String id = sourcesId.get(source);
-    assert id != null;
-    return id;
-  }
-
   public static String createSourceSectionId(final SourceSection source) {
     return sourceSectionId.computeIfAbsent(source, s -> {
       int n = nextSourceSectionId;
@@ -217,7 +211,7 @@ public final class JsonSerializer {
     builder.add("type", "suspendEvent");
 
     // first add the source info, because this builds up also tag info
-    builder.add("sourceId", getExistingSourceId(suspendedSource));
+    builder.add("sourceId", createSourceId(suspendedSource));
     builder.add("sections", createJsonForSourceSections(suspendedSource, tags, instrumenter, roots));
 
     JSONArrayBuilder stackJson = JSONHelper.array();
