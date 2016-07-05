@@ -17,6 +17,7 @@ import org.java_websocket.WebSocket;
 import com.oracle.truffle.api.debug.Debugger;
 import com.oracle.truffle.api.debug.ExecutionEvent;
 import com.oracle.truffle.api.debug.SuspendedEvent;
+import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.instrumentation.Instrumenter;
 import com.oracle.truffle.api.instrumentation.TruffleInstrument;
 import com.oracle.truffle.api.instrumentation.TruffleInstrument.Registration;
@@ -165,6 +166,12 @@ public class WebDebugger extends TruffleInstrument {
       log("[DEBUGGER] Future failed:");
       e1.printStackTrace();
     }
+  }
+
+  public static void suspendExecution(final Node haltedNode,
+      final MaterializedFrame haltedFrame) {
+    SuspendedEvent event = truffleDebugger.createSuspendedEvent(haltedNode, haltedFrame);
+    reportSuspendedEvent(event);
   }
 
   static void log(final String str) {
