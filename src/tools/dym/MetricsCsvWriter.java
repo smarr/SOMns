@@ -183,16 +183,6 @@ public final class MetricsCsvWriter {
     }
   }
 
-
-  private boolean hasTag(final Set<Class<?>> tags, final Class<?> tag) {
-    for (Class<?> t : tags) {
-      if (t == tag) {
-        return true;
-      }
-    }
-    return false;
-  }
-
   private String typeCategory(final String typeName) {
     switch (typeName) {
       case "Integer":

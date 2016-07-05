@@ -130,8 +130,6 @@ public class WebDebugger extends TruffleInstrument {
     return suspendFutures.get(id);
   }
 
-
-
   private String getNextSuspendEventId() {
     int id = nextSuspendEventId;
     nextSuspendEventId += 1;
