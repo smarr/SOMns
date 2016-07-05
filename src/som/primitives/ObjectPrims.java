@@ -32,7 +32,6 @@ import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SObject.SMutableObject;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import som.vmobjects.SSymbol;
-import tools.debugger.WebDebugger;
 import tools.dym.Tags.OpComparison;
 
 
@@ -69,7 +68,6 @@ public final class ObjectPrims {
       Truffle.getRuntime().iterateFrames(new FrameInstanceVisitor<FrameInstance>() {
         int stackIndex = 0;
 
-
         @Override
         public FrameInstance visitFrame(final FrameInstance frameInstance) {
           if (stackIndex == 2) {
@@ -82,7 +80,7 @@ public final class ObjectPrims {
         }
       });
 
-      WebDebugger.suspendExecution(callNode[0], frame[0].materialize());
+      VM.getWebDebugger().suspendExecution(callNode[0], frame[0].materialize());
     }
   }
 

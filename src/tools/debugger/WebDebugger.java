@@ -46,22 +46,18 @@ public class WebDebugger extends TruffleInstrument {
 
   private HttpServer httpServer;
   private WebSocketHandler webSocketServer;
-  private static Future<WebSocket> clientConnected;
+  private Future<WebSocket> clientConnected;
 
-  private static Instrumenter instrumenter;
+  private Instrumenter instrumenter;
 
-  private static final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> loadedSourcesTags = new HashMap<>();
-  private static final Map<Source, Set<RootNode>> rootNodes = new HashMap<>();
+  private final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> loadedSourcesTags = new HashMap<>();
+  private final Map<Source, Set<RootNode>> rootNodes = new HashMap<>();
 
-  private static WebDebugger debugger;
-  private static WebSocket client;
-  static Debugger truffleDebugger;
+  private WebSocket client;
+  private Debugger truffleDebugger;
 
-  public WebDebugger() {
-    debugger = this;
-  }
 
-  public static void reportSyntaxElement(final Class<? extends Tags> type,
+  public void reportSyntaxElement(final Class<? extends Tags> type,
       final SourceSection source) {
     Map<SourceSection, Set<Class<? extends Tags>>> sections = loadedSourcesTags.computeIfAbsent(
         source.getSource(), s -> new HashMap<>());
@@ -72,10 +68,10 @@ public class WebDebugger extends TruffleInstrument {
     JsonSerializer.createSourceSectionId(source);
   }
 
-  private static final ArrayList<Source> notReady = new ArrayList<>();
+  private final ArrayList<Source> notReady = new ArrayList<>();
 
-  public static void reportLoadedSource(final Source source) {
-    if (debugger == null || debugger.webSocketServer == null || client == null) {
+  public void reportLoadedSource(final Source source) {
+    if (webSocketServer == null || client == null) {
       notReady.add(source);
       return;
     }
@@ -94,15 +90,13 @@ public class WebDebugger extends TruffleInstrument {
     client.send(json);
   }
 
-  private static void ensureConnectionIsAvailable() {
-    assert debugger != null;
-    assert debugger.webSocketServer != null;
+  private void ensureConnectionIsAvailable() {
+    assert webSocketServer != null;
     assert client != null;
-
     assert client.isOpen();
   }
 
-  public static void reportRootNodeAfterParsing(final RootNode rootNode) {
+  public void reportRootNodeAfterParsing(final RootNode rootNode) {
     assert rootNode.getSourceSection() != null : "RootNode without source section";
     Set<RootNode> roots = rootNodes.computeIfAbsent(
         rootNode.getSourceSection().getSource(), s -> new HashSet<>());
@@ -110,8 +104,8 @@ public class WebDebugger extends TruffleInstrument {
     roots.add(rootNode);
   }
 
-  public static void reportExecutionEvent(final ExecutionEvent e) {
-    truffleDebugger = e.getDebugger();
+  public void reportExecutionEvent(final ExecutionEvent e) {
+    assert truffleDebugger == e.getDebugger();
 
     assert clientConnected != null;
     log("[DEBUGGER] Waiting for debugger to connect.");
@@ -124,18 +118,27 @@ public class WebDebugger extends TruffleInstrument {
     log("[DEBUGGER] Debugger connected.");
   }
 
-  private static int nextSuspendEventId = 0;
-  static final Map<String, SuspendedEvent> suspendEvents  = new HashMap<>();
-  static final Map<String, CompletableFuture<Object>> suspendFutures = new HashMap<>();
+  private int nextSuspendEventId = 0;
+  private final Map<String, SuspendedEvent> suspendEvents  = new HashMap<>();
+  private final Map<String, CompletableFuture<Object>> suspendFutures = new HashMap<>();
+
+  SuspendedEvent getSuspendedEvent(final String id) {
+    return suspendEvents.get(id);
+  }
+
+  CompletableFuture<Object> getSuspendFuture(final String id) {
+    return suspendFutures.get(id);
+  }
 
 
-  private static String getNextSuspendEventId() {
+
+  private String getNextSuspendEventId() {
     int id = nextSuspendEventId;
     nextSuspendEventId += 1;
     return "se-" + id;
   }
 
-  public static void reportSuspendedEvent(final SuspendedEvent e) {
+  public void reportSuspendedEvent(final SuspendedEvent e) {
     Node     suspendedNode = e.getNode();
     RootNode suspendedRoot = suspendedNode.getRootNode();
     Source suspendedSource;
@@ -149,8 +152,7 @@ public class WebDebugger extends TruffleInstrument {
 
     JSONObjectBuilder builder = JsonSerializer.createSuspendedEventJson(e,
         suspendedNode, suspendedRoot, suspendedSource, id,
-        WebDebugger.loadedSourcesTags, WebDebugger.instrumenter,
-        WebDebugger.rootNodes);
+        loadedSourcesTags, instrumenter, rootNodes);
 
     CompletableFuture<Object> future = new CompletableFuture<>();
     suspendEvents.put(id, e);
@@ -168,7 +170,7 @@ public class WebDebugger extends TruffleInstrument {
     }
   }
 
-  public static void suspendExecution(final Node haltedNode,
+  public void suspendExecution(final Node haltedNode,
       final MaterializedFrame haltedFrame) {
     SuspendedEvent event = truffleDebugger.createSuspendedEvent(haltedNode, haltedFrame);
     reportSuspendedEvent(event);
@@ -234,27 +236,28 @@ public class WebDebugger extends TruffleInstrument {
   @Override
   protected void onCreate(final Env env) {
     instrumenter = env.getInstrumenter();
+    env.registerService(this);
+  }
 
-    // Checkstyle: stop
+  public void startServer(final Debugger dbg) {
+    truffleDebugger = dbg;
+
     try {
-      System.out.println("[DEBUGGER] Initialize HTTP and WebSocket Server for Debugger");
+      log("[DEBUGGER] Initialize HTTP and WebSocket Server for Debugger");
       int port = 8889;
       initializeWebSocket(8889);
-      System.out.println("[DEBUGGER] Started WebSocket Server");
+      log("[DEBUGGER] Started WebSocket Server");
 
       port = 8888;
       initializeHttpServer(port);
-      System.out.println("[DEBUGGER] Started HTTP Server");
-      System.out.println("[DEBUGGER]   URL: http://localhost:" + port + "/index.html");
+      log("[DEBUGGER] Started HTTP Server");
+      log("[DEBUGGER]   URL: http://localhost:" + port + "/index.html");
     } catch (IOException e) {
       e.printStackTrace();
-      System.out.println("Failed starting WebSocket and/or HTTP Server");
+      log("Failed starting WebSocket and/or HTTP Server");
     }
-
     // now we continue execution, but we wait for the future in the execution
     // event
-
-    // Checkstyle: resume
   }
 
   private void initializeHttpServer(final int port) throws IOException {
@@ -272,7 +275,7 @@ public class WebDebugger extends TruffleInstrument {
       clientConnected = new CompletableFuture<WebSocket>();
       InetSocketAddress addess = new InetSocketAddress(port);
       webSocketServer = new WebSocketHandler(
-          addess, (CompletableFuture<WebSocket>) clientConnected);
+          addess, (CompletableFuture<WebSocket>) clientConnected, this);
       webSocketServer.start();
     }
   }
