@@ -17,6 +17,9 @@ public abstract class Tagging {
       final Iterable<RootNode> rootNodes,
       final Map<SourceSection, Set<Class<? extends Tags>>> sourceSectionsAndTags,
       final Instrumenter instrumenter) {
+    if (rootNodes == null) {
+      return;
+    }
     for (RootNode root : rootNodes) {
       root.accept(node -> {
         @SuppressWarnings("rawtypes")  Set t = instrumenter.queryTags(node);

@@ -102,10 +102,12 @@ public final class JsonSerializer {
     Map<SourceSection, Set<Class<? extends Tags>>> tagsForSections = sourcesTags.get(source);
     Tagging.collectSourceSectionsAndTags(rootNodes.get(source), tagsForSections, instrumenter);
 
-    for (SourceSection section : tagsForSections.keySet()) {
-      if (section.getSource() == source) {
-        sections.add(section);
-        createSourceSectionId(section);
+    if (tagsForSections != null) {
+      for (SourceSection section : tagsForSections.keySet()) {
+        if (section.getSource() == source) {
+          sections.add(section);
+          createSourceSectionId(section);
+        }
       }
     }
 

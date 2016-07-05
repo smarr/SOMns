@@ -137,7 +137,12 @@ public class WebDebugger extends TruffleInstrument {
   public static void reportSuspendedEvent(final SuspendedEvent e) {
     Node     suspendedNode = e.getNode();
     RootNode suspendedRoot = suspendedNode.getRootNode();
-    Source suspendedSource = suspendedRoot.getSourceSection().getSource();
+    Source suspendedSource;
+    if (suspendedRoot.getSourceSection() != null) {
+      suspendedSource = suspendedRoot.getSourceSection().getSource();
+    } else {
+      suspendedSource = suspendedNode.getSourceSection().getSource();
+    }
 
     String id = getNextSuspendEventId();
 
