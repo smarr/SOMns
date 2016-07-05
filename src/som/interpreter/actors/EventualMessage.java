@@ -3,6 +3,7 @@ package som.interpreter.actors;
 import java.util.Arrays;
 
 import com.oracle.truffle.api.RootCallTarget;
+import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
 import som.interpreter.actors.Actor.ActorProcessingThread;
@@ -34,6 +35,10 @@ public abstract class EventualMessage {
   public abstract Actor getSender();
 
   protected abstract SSymbol getSelector();
+
+  public SourceSection getTargetSourceSection() {
+    return onReceive.getRootNode().getSourceSection();
+  }
 
   /**
    * A message to a known receiver that is to be executed on the actor owning

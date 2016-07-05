@@ -11,6 +11,8 @@ public class VmSettings {
   public static final boolean DYNAMIC_METRICS;
   public static final boolean DNU_PRINT_STACK_TRACE;
 
+  public static final boolean TRUFFLE_DEBUGGER_ENABLED;
+
   public static final String INSTRUMENTATION_PROP = "som.instrumentation";
 
   static {
@@ -30,6 +32,7 @@ public class VmSettings {
     INSTRUMENTATION = dm || getBool(INSTRUMENTATION_PROP, false);
 
     DNU_PRINT_STACK_TRACE = getBool("som.printStackTraceOnDNU", false);
+    TRUFFLE_DEBUGGER_ENABLED = getBool("som.truffleDebugger", false);
   }
 
   private static boolean getBool(final String prop, final boolean defaultVal) {

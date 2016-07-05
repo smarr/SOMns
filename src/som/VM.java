@@ -8,6 +8,7 @@ import java.util.concurrent.CompletableFuture;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.debug.Debugger;
 import com.oracle.truffle.api.debug.ExecutionEvent;
 import com.oracle.truffle.api.debug.SuspendedEvent;
 import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
@@ -48,6 +49,11 @@ public final class VM {
   @CompilationFinal private static PolyglotEngine engine;
   @CompilationFinal private static VM vm;
   @CompilationFinal private static StructuralProbe structuralProbes;
+  @CompilationFinal private static Debugger debugger;
+
+  public static Debugger getDebugger() {
+    return debugger;
+  }
 
   private final Map<String, Object> exports = new HashMap<>();
 
@@ -289,6 +295,7 @@ public final class VM {
     SimpleREPLClient client = new SimpleREPLClient();
     REPLServer server = new REPLServer(client, builder);
     engine = server.getEngine();
+    debugger = server.getDebugger();
     server.start();
     client.start(server);
   }
@@ -326,8 +333,14 @@ public final class VM {
       }
       instruments.get(Highlight.ID).setEnabled(vmOptions.highlightingEnabled);
 
+      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+        debugger = Debugger.find(engine);
+      }
+
       if (vmOptions.webDebuggerEnabled) {
-        instruments.get(WebDebugger.ID).setEnabled(true);
+        assert debugger != null;
+        Instrument webDebugger = instruments.get(WebDebugger.ID);
+        webDebugger.setEnabled(true);
       }
 
       if (vmOptions.coverageEnabled) {
