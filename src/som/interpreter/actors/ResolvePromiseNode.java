@@ -2,6 +2,7 @@ package som.interpreter.actors;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Instrumentable;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -16,7 +17,7 @@ import som.primitives.Primitive;
 public abstract class ResolvePromiseNode extends BinaryComplexOperation {
   protected ResolvePromiseNode(final SourceSection source) { super(false, source); }
 
-  public abstract Object executeEvaluated(final SResolver receiver, Object argument);
+  public abstract Object executeEvaluated(VirtualFrame frame, final SResolver receiver, Object argument);
 
   @Specialization(guards = {"resolver.getPromise() == result"})
   public SResolver selfResolution(final SResolver resolver, final SPromise result) {

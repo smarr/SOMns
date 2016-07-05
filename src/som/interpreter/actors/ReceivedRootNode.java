@@ -19,7 +19,7 @@ public abstract class ReceivedRootNode extends RootNode {
     assert sourceSection != null;
   }
 
-  protected final void resolvePromise(final SResolver resolver, final Object result) {
+  protected final void resolvePromise(final VirtualFrame frame, final SResolver resolver, final Object result) {
     if (resolve == null) {
       if (resolver == null) {
         this.resolve = insert(new NullResolver(getSourceSection()));
@@ -28,7 +28,7 @@ public abstract class ReceivedRootNode extends RootNode {
       }
     }
 
-    resolve.executeEvaluated(resolver, result);
+    resolve.executeEvaluated(frame, resolver, result);
   }
 
   public final class NullResolver extends ResolvePromiseNode {
@@ -38,7 +38,7 @@ public abstract class ReceivedRootNode extends RootNode {
     }
 
     @Override
-    public Object executeEvaluated(final SResolver receiver, final Object argument) {
+    public Object executeEvaluated(final VirtualFrame frame, final SResolver receiver, final Object argument) {
       assert receiver == null;
       return null;
     }
