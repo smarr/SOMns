@@ -46,7 +46,7 @@ class WebSocketHandler extends WebSocketServer {
     String type = obj.getString("type", null);
     URI uri = null;
     try {
-      uri = new URI(obj.getString("uri", null));
+      uri = new URI(obj.getString("sourceUri", null));
     } catch (URISyntaxException e) {
       throw new RuntimeException(e);
     }

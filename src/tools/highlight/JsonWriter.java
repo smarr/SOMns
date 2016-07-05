@@ -153,9 +153,9 @@ public final class JsonWriter {
     JSONObjectBuilder builder = JSONHelper.object();
     builder.add("id", id);
     builder.add("sourceText", s.getCode());
-    builder.add("mimeType", s.getMimeType());
-    builder.add("name", s.getName());
-    builder.add("shortName", s.getShortName());
+    builder.add("mimeType",   s.getMimeType());
+    builder.add("name",       s.getName());
+    builder.add("uri",        s.getURI().toString());
     return builder;
   }
 

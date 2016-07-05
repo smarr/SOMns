@@ -9,9 +9,27 @@ var data = {};
  * @constructor
  */
 function SourceSection() {
+  this.id         = "";
   this.firstIndex = 0;
+  this.length     = 0;
+  this.identifier = "";
+  this.line       = 0;
+  this.column     = 0;
+  this.description = 0;
+  this.sourceId   = "";
+}
+
+/**
+ * Dummy definition for IDE support. These objects are
+ * generally read from the web socket connection.
+ * @constructor
+ */
+function Source() {
+  this.id         = "";
   this.sourceText = "";
-  this.shortName  = "";
+  this.mimeType   = "";
+  this.name       = "";
+  this.uri        = "";
 }
 
 /**
@@ -110,8 +128,7 @@ Breakpoint.prototype.getId = function () {
 Breakpoint.prototype.toJsonObj = function () {
   return {
     type:       this.type,
-    sourceId:   this.source.id,
-    sourceName: this.source.name,
+    sourceUri:  this.source.uri,
     enabled:    this.isEnabled()
   };
 };
