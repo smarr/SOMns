@@ -1,7 +1,6 @@
 package tools.dym;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -121,6 +120,8 @@ public class DynamicMetrics extends TruffleInstrument {
 
   private final StructuralProbe structuralProbe;
 
+  private final Set<RootNode> rootNodes;
+
   @CompilationFinal private static Instrumenter instrumenter; // TODO: this is one of those evil hacks
 
   public static boolean isTaggedWith(final Node node, final Class<?> tag) {
@@ -148,6 +149,8 @@ public class DynamicMetrics extends TruffleInstrument {
     literalReadCounter      = new HashMap<>();
     localsReadProfiles      = new HashMap<>();
     localsWriteProfiles     = new HashMap<>();
+
+    rootNodes = new HashSet<>();
 
     assert "DefaultTruffleRuntime".equals(
         Truffle.getRuntime().getClass().getSimpleName())
@@ -375,6 +378,11 @@ public class DynamicMetrics extends TruffleInstrument {
 
     addLoopBodyInstrumentation(instrumenter, loopProfileFactory);
 
+    instrumenter.attachLoadSourceSectionListener(
+        SourceSectionFilter.newBuilder().tagIs(RootTag.class).build(),
+        e -> rootNodes.add(e.getNode().getRootNode()),
+        true);
+
     env.registerService(structuralProbe);
   }
 
@@ -406,11 +414,9 @@ public class DynamicMetrics extends TruffleInstrument {
   }
 
   private List<SourceSection> getAllStatementsAlsoNotExecuted() {
-    Collection<RootCallTarget> collection = Truffle.getRuntime().getCallTargets();
     List<SourceSection> allSourceSections = new ArrayList<>();
 
-    for (RootCallTarget  rootCallTarget: collection) {
-      RootNode root = rootCallTarget.getRootNode(); // AST node
+    for (RootNode root : rootNodes) {
       Map<SourceSection, Set<Class<?>>> sourceSectionsAndTags = new HashMap<>();
 
       root.accept(node -> {
