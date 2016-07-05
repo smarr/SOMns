@@ -48,6 +48,7 @@ Controller.prototype.onError = function () {
 
 Controller.prototype.onReceivedSource = function (msg) {
   this.dbg.addSources(msg);
+  this.dbg.addSections(msg);
   this.view.displaySources(msg);
 
   for (var sId in msg.sources) {
@@ -98,8 +99,10 @@ Controller.prototype.onToggleLineBreakpoint = function (line, clickedSpan) {
 Controller.prototype.onToggleMessageSendBreakpoint = function (e) {
   dbgLog("onToggleMessageSendBreakpoint");
 
-  var breakpoint = this.toggleBreakpoint(e.currentTarget.id,
-    function (source) { return new SendBreakpoint(source, e.currentTarget.id); });
+  var sectionId   = e.currentTarget.id,
+    sourceSection = this.dbg.getSection(sectionId),
+    breakpoint    = this.toggleBreakpoint(sectionId,
+      function (source) { return new SendBreakpoint(source, sourceSection); });
 
   this.view.updateSendBreakpoint(breakpoint);
 };

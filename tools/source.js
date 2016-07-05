@@ -152,11 +152,14 @@ LineBreakpoint.prototype.toJsonObj = function () {
   return obj;
 };
 
-function SendBreakpoint(source, sectionId) {
+function SendBreakpoint(source, sourceSection) {
   Breakpoint.call(this, source);
 
   this.type = "sendBreakpoint";
-  this.sectionId = sectionId;
+  this.sectionId   = sourceSection.id;
+  this.startLine   = sourceSection.line;
+  this.startColumn = sourceSection.column;
+  this.charLength  = sourceSection.length;
 }
 SendBreakpoint.prototype = Object.create(Breakpoint.prototype);
 
@@ -166,7 +169,10 @@ SendBreakpoint.prototype.getId = function () {
 
 SendBreakpoint.prototype.toJsonObj = function () {
   var obj = Breakpoint.prototype.toJsonObj.call(this);
-  obj.sectionId = this.sectionId;
+  obj.sectionId   = this.sectionId;
+  obj.startLine   = this.startLine;
+  obj.startColumn = this.startColumn;
+  obj.charLength  = this.charLength;
   return obj;
 };
 
@@ -186,8 +192,9 @@ function dbgLog(msg) {
 function Debugger() {
   this.suspended = false;
   this.lastSuspendEventId = null;
-  this.sourceObjects = {};
-  this.breakpoints = {};
+  this.sourceObjects  = {};
+  this.sectionObjects = {};
+  this.breakpoints    = {};
 }
 
 Debugger.prototype.getSource = function (id) {
@@ -199,9 +206,19 @@ Debugger.prototype.getSource = function (id) {
   return null;
 };
 
+Debugger.prototype.getSection = function (id) {
+  return this.sectionObjects[id];
+};
+
 Debugger.prototype.addSources = function (msg) {
   for (var sId in msg.sources) {
     this.sourceObjects[msg.sources[sId].name] = msg.sources[sId];
+  }
+};
+
+Debugger.prototype.addSections = function (msg) {
+  for (let ssId in msg.sections) {
+    this.sectionObjects[ssId] = msg.sections[ssId];
   }
 };
 
