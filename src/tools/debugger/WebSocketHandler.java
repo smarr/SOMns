@@ -1,6 +1,5 @@
 package tools.debugger;
 
-import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -14,23 +13,20 @@ import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
-import com.oracle.truffle.api.debug.Breakpoint;
 import com.oracle.truffle.api.debug.SuspendedEvent;
 
 class WebSocketHandler extends WebSocketServer {
   private static final int NUM_THREADS = 1;
 
   private final CompletableFuture<WebSocket> clientConnected;
-  private final Breakpoints breakpoints;
-  private final WebDebugger webDebugger;
+  private final FrontendConnector connector;
 
   WebSocketHandler(final InetSocketAddress address,
       final CompletableFuture<WebSocket> clientConnected,
-      final Breakpoints breakpoints, final WebDebugger webDebugger) {
+      final FrontendConnector connector) {
     super(address, NUM_THREADS);
     this.clientConnected = clientConnected;
-    this.breakpoints = breakpoints;
-    this.webDebugger = webDebugger;
+    this.connector = connector;
   }
 
   @Override
@@ -69,24 +65,13 @@ class WebSocketHandler extends WebSocketServer {
     int startColumn = obj.getInt("startColumn", -1);
     int charLength  = obj.getInt("charLength",  -1);
 
-    try {
-      Breakpoint bp = breakpoints.getBreakpoint(sourceUri, startLine, startColumn, charLength);
-      bp.setEnabled(enabled);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+    connector.requestBreakpoint(enabled, sourceUri, startLine, startColumn, charLength);
   }
 
   private void processLineBreakpoint(final JsonObject obj, final URI sourceUri,
       final boolean enabled) {
     int lineNumber = obj.getInt("line", -1);
-
-    try {
-      Breakpoint bp = breakpoints.getBreakpoint(sourceUri, lineNumber);
-      bp.setEnabled(enabled);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+    connector.requestBreakpoint(enabled, sourceUri, lineNumber);
   }
 
   @Override
@@ -112,7 +97,7 @@ class WebSocketHandler extends WebSocketServer {
       case "resume":
       case "stop": {
         String id = msg.getString("suspendEvent", null);
-        SuspendedEvent event = webDebugger.getSuspendedEvent(id);
+        SuspendedEvent event = connector.getSuspendedEvent(id);
         assert event != null : "didn't find SuspendEvent";
 
         switch (msg.getString("action", null)) {
@@ -122,7 +107,7 @@ class WebSocketHandler extends WebSocketServer {
           case "resume":   event.prepareContinue();  break;
           case "stop":     event.prepareKill();      break;
         }
-        webDebugger.getSuspendFuture(id).complete(new Object());
+        connector.completeSuspendFuture(id, new Object());
         return;
       }
     }
