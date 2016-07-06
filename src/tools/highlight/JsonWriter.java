@@ -173,7 +173,6 @@ public final class JsonWriter {
     builder.add("id", id);
     builder.add("firstIndex", ss.getCharIndex());
     builder.add("length", ss.getCharLength());
-    builder.add("identifier", ss.getIdentifier());
     builder.add("line", ss.getStartLine());
     builder.add("column", ss.getStartColumn());
     builder.add("description", ss.getShortDescription());

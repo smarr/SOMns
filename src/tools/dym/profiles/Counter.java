@@ -29,7 +29,7 @@ public class Counter implements JsonSerializable {
 
   @Override
   public String toString() {
-    return "Cnt[" + invocationCount + ", " + source.getIdentifier() + "]";
+    return "Cnt[" + invocationCount + "]";
   }
 
   @Override

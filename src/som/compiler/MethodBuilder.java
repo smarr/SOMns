@@ -217,13 +217,22 @@ public final class MethodBuilder {
     return assembleInvokable(body, currentScope, sourceSection);
   }
 
+  private String getMethodIdentifier() {
+    MixinBuilder holder = getEnclosingMixinBuilder();
+    String cls = holder != null && holder.isClassSide() ? "_class" : "";
+    String name = holder == null ? "_unknown_" : holder.getName().getString();
+
+    return name + cls + ">>" + signature.toString();
+  }
+
   private Method assembleInvokable(ExpressionNode body, final MethodScope scope,
       final SourceSection sourceSection) {
     if (needsToCatchNonLocalReturn()) {
       body = createCatchNonLocalReturn(body, getFrameOnStackMarkerSlot());
     }
 
-    Method truffleMethod = new Method(getSourceSectionForMethod(sourceSection),
+    Method truffleMethod = new Method(getMethodIdentifier(),
+        getSourceSectionForMethod(sourceSection),
         body, scope, (ExpressionNode) body.deepCopy());
     scope.setMethod(truffleMethod);
     return truffleMethod;

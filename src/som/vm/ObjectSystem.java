@@ -199,7 +199,9 @@ public final class ObjectSystem {
         throw new RuntimeException("Not supported by SOM.");
     }
 
-    Primitive primMethodNode = new Primitive(primNode,
+    String name = "vmMirror>>" + signature.toString();
+
+    Primitive primMethodNode = new Primitive(name, primNode,
         prim.getCurrentMethodScope().getFrameDescriptor(),
         (ExpressionNode) primNode.deepCopy());
     return new SInvokable(signature, AccessModifier.PUBLIC, null,

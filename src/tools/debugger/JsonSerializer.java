@@ -123,13 +123,8 @@ public final class JsonSerializer {
     }
 
     RootCallTarget rct = (RootCallTarget) stackFrame.getCallTarget();
-    SourceSection rootSource = rct.getRootNode().getSourceSection();
-    String methodName;
-    if (rootSource != null) {
-      methodName = rootSource.getIdentifier();
-    } else {
-      methodName = rct.toString();
-    }
+    String methodName = rct.getRootNode().getName();
+
     frame.add("methodName", methodName);
 
     // TODO: stack frame content, or on demand?

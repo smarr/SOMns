@@ -307,7 +307,7 @@ public final class MetricsCsvWriter {
         "Source Identifier", "Activation Count")) {
       for (Entry<SourceSection, InvocationProfile> e : sortSS(profiles)) {
         file.write(
-            e.getValue().getMethod().getRootNode().getSourceSection().getIdentifier(), //TODO: probably need something more precise
+            e.getValue().getMethod().getRootNode().getName(),
             e.getValue().getValue());
       }
     }

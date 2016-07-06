@@ -1,8 +1,5 @@
 package som.interpreter;
 
-import som.interpreter.LexicalScope.MethodScope;
-import som.interpreter.nodes.ExpressionNode;
-
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
@@ -11,13 +8,16 @@ import com.oracle.truffle.api.frame.FrameInstance;
 import com.oracle.truffle.api.frame.FrameInstanceVisitor;
 import com.oracle.truffle.api.nodes.Node;
 
+import som.interpreter.LexicalScope.MethodScope;
+import som.interpreter.nodes.ExpressionNode;
+
 
 public final class Primitive extends Invokable {
 
-  public Primitive(final ExpressionNode primitive,
+  public Primitive(final String name, final ExpressionNode primitive,
       final FrameDescriptor frameDescriptor,
       final ExpressionNode uninitialized) {
-    super(null, frameDescriptor, primitive, uninitialized);
+    super(name, null, frameDescriptor, primitive, uninitialized);
   }
 
   @Override
@@ -28,7 +28,7 @@ public final class Primitive extends Invokable {
         outerContext, null /* since we got an outer method scope, there won't be a direct class scope*/);
     ExpressionNode  inlinedBody = SplitterForLexicallyEmbeddedCode.doInline(uninitializedBody,
         inlinedContext);
-    return new Primitive(inlinedBody, inlinedFrameDescriptor, uninitializedBody);
+    return new Primitive(name, inlinedBody, inlinedFrameDescriptor, uninitializedBody);
   }
 
   @Override

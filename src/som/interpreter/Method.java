@@ -35,11 +35,11 @@ public class Method extends Invokable {
 
   private final MethodScope currentMethodScope;
 
-  public Method(final SourceSection sourceSection,
+  public Method(final String name, final SourceSection sourceSection,
                 final ExpressionNode expressions,
                 final MethodScope currentLexicalScope,
                 final ExpressionNode uninitialized) {
-    super(sourceSection, currentLexicalScope.getFrameDescriptor(),
+    super(name, sourceSection, currentLexicalScope.getFrameDescriptor(),
         expressions, uninitialized);
     this.currentMethodScope = currentLexicalScope;
     expressions.markAsRootExpression();
@@ -47,9 +47,7 @@ public class Method extends Invokable {
 
   @Override
   public final String toString() {
-    SourceSection ss = getSourceSection();
-    final String id = ss == null ? "" : ss.getIdentifier();
-    return "Method " + id + "\t@" + Integer.toHexString(hashCode());
+    return "Method " + getName() + "\t@" + Integer.toHexString(hashCode());
   }
 
   @Override
@@ -60,7 +58,7 @@ public class Method extends Invokable {
         null /* because we got an enclosing method anyway */);
     ExpressionNode  inlinedBody = SplitterForLexicallyEmbeddedCode.doInline(
         uninitializedBody, inlinedCurrentScope);
-    Method clone = new Method(getSourceSection(), inlinedBody,
+    Method clone = new Method(name, getSourceSection(), inlinedBody,
         inlinedCurrentScope, uninitializedBody);
     inlinedCurrentScope.setMethod(clone);
     return clone;
@@ -75,7 +73,7 @@ public class Method extends Invokable {
         uninitializedBody, inliner, currentAdaptedScope);
     ExpressionNode uninitAdaptedBody = NodeUtil.cloneNode(adaptedBody);
 
-    Method clone = new Method(getSourceSection(), adaptedBody,
+    Method clone = new Method(name, getSourceSection(), adaptedBody,
         currentAdaptedScope, uninitAdaptedBody);
     currentAdaptedScope.setMethod(clone);
     return clone;
@@ -90,7 +88,7 @@ public class Method extends Invokable {
         uninitializedBody, inliner, currentAdaptedScope);
     ExpressionNode uninitAdaptedBody = NodeUtil.cloneNode(adaptedBody);
 
-    Method clone = new Method(getSourceSection(),
+    Method clone = new Method(name, getSourceSection(),
         adaptedBody, currentAdaptedScope, uninitAdaptedBody);
     currentAdaptedScope.setMethod(clone);
     return clone;

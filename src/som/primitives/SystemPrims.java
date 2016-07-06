@@ -162,24 +162,18 @@ public final class SystemPrims {
           }
 
           Invokable m = (Invokable) ct.getRootNode();
-          SourceSection ss = m.getSourceSection();
-          if (ss != null) {
-            String id = ss.getIdentifier();
-            method.add(id);
-            maxLengthMethod[0] = Math.max(maxLengthMethod[0], id.length());
-            Node callNode = frameInstance.getCallNode();
-            if (callNode != null) {
-              SourceSection nodeSS = callNode.getEncapsulatingSourceSection();
-              location.add(nodeSS.getSource().getName() + ":" + nodeSS.getStartLine() + ":" + nodeSS.getStartColumn());
-            } else {
-              location.add("");
-            }
+
+          String id = m.getName();
+          method.add(id);
+          maxLengthMethod[0] = Math.max(maxLengthMethod[0], id.length());
+          Node callNode = frameInstance.getCallNode();
+          if (callNode != null) {
+            SourceSection nodeSS = callNode.getEncapsulatingSourceSection();
+            location.add(nodeSS.getSource().getName() + ":" + nodeSS.getStartLine() + ":" + nodeSS.getStartColumn());
           } else {
-            String id = m.toString();
-            method.add(id);
-            maxLengthMethod[0] = Math.max(maxLengthMethod[0], id.length());
             location.add("");
           }
+
           return null;
         }
       });
