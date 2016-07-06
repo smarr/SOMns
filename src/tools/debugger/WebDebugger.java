@@ -118,6 +118,7 @@ public class WebDebugger extends TruffleInstrument {
   @Override
   protected void onDispose(final Env env) {
     connector.sendActorHistory();
+    connector.shutdown();
   }
 
   @Override

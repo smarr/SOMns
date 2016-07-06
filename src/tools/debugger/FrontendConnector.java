@@ -252,4 +252,15 @@ public class FrontendConnector {
     System.out.println(str);
     // Checkstyle: resume
   }
+
+  public void shutdown() {
+    int delaySec = 5;
+    contentServer.stop(delaySec);
+
+    sender.close();
+    try {
+      int delayMsec = 1000;
+      receiver.stop(delayMsec);
+    } catch (InterruptedException e) { }
+  }
 }
