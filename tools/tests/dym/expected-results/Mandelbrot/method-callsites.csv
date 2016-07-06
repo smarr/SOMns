@@ -36,7 +36,7 @@ Mandelbrot.som pos=4677 len=3	2	1	1
 Mirrors.som pos=1080 len=23	0	0	0
 Mirrors.som pos=1106 len=5	0	0	0
 Mirrors.som pos=3518 len=0	0	0	0
-null pos=0 len=0	2	0	1
+ObjectSystem.executeApplication pos=0 len=0	2	0	1
 Platform.som pos=15 len=23	0	0	0
 Platform.som pos=41 len=5	0	0	0
 System.som pos=1084 len=23	0	0	0

@@ -48,7 +48,7 @@ NBody.som pos=3336 len=0	8	1	1
 NBody.som pos=4060 len=2	14	1	1
 NBody.som pos=4070 len=2	14	1	1
 NBody.som pos=5867 len=3	2	1	1
-null pos=0 len=0	2	0	1
+ObjectSystem.executeApplication pos=0 len=0	2	0	1
 Platform.som pos=15 len=23	0	0	0
 Platform.som pos=41 len=5	0	0	0
 System.som pos=1084 len=23	0	0	0

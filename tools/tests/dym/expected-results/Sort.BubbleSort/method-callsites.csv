@@ -48,7 +48,7 @@ Mirrors.som pos=1106 len=5	0	0	0
 Mirrors.som pos=3500 len=15	0	0	0
 Mirrors.som pos=3518 len=0	0	0	0
 Mirrors.som pos=3868 len=26	0	0	0
-null pos=0 len=0	2	0	1
+ObjectSystem.executeApplication pos=0 len=0	2	0	1
 Platform.som pos=15 len=23	0	0	0
 Platform.som pos=41 len=5	0	0	0
 Sort.som pos=1092 len=43	0	0	0
