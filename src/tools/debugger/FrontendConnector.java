@@ -75,7 +75,7 @@ public class FrontendConnector {
     try {
       log("[DEBUGGER] Initialize HTTP and WebSocket Server for Debugger");
       int port = 8889;
-      receiver = initializeWebSocket(port, clientConnected, breakpoints);
+      receiver = initializeWebSocket(port, clientConnected);
       log("[DEBUGGER] Started WebSocket Server");
 
       port = 8888;
@@ -91,7 +91,7 @@ public class FrontendConnector {
   }
 
   private WebSocketHandler initializeWebSocket(final int port,
-      final Future<WebSocket> clientConnected, final Breakpoints breakpoints) {
+      final Future<WebSocket> clientConnected) {
     InetSocketAddress addess = new InetSocketAddress(port);
     WebSocketHandler server = new WebSocketHandler(
         addess, (CompletableFuture<WebSocket>) clientConnected, this);
