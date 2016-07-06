@@ -11,6 +11,7 @@ import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.frame.FrameInstance;
 import com.oracle.truffle.api.frame.FrameInstance.FrameAccess;
 import com.oracle.truffle.api.frame.FrameInstanceVisitor;
+import com.oracle.truffle.api.instrumentation.Instrumentable;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -143,6 +144,7 @@ public final class ObjectPrims {
   @GenerateNodeFactory
   @Primitive("objIsValue:")
   @ImportStatic(Nil.class)
+  @Instrumentable(factory = IsValueWrapper.class)
   public abstract static class IsValue extends UnaryExpressionNode {
     public IsValue(final SourceSection source) { super(false, source); }
 
