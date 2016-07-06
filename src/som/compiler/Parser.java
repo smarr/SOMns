@@ -697,13 +697,13 @@ public final class Parser {
 
   SourceSection getEmptySource() {
     SourceCoordinate coord = getCoordinate();
-    return source.createSection("method", coord.startLine, coord.startColumn,
+    return source.createSection(null, coord.startLine, coord.startColumn,
         coord.charIndex, 0);
   }
 
   SourceSection getSource(final SourceCoordinate coord) {
     assert lexer.getNumberOfCharactersRead() - coord.charIndex >= 0;
-    SourceSection ss = source.createSection("method", coord.startLine,
+    SourceSection ss = source.createSection(null, coord.startLine,
         coord.startColumn, coord.charIndex,
         Math.max(lexer.getNumberOfNonWhiteCharsRead() - coord.charIndex, 0));
     return ss;

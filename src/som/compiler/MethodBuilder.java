@@ -232,12 +232,7 @@ public final class MethodBuilder {
   private SourceSection getSourceSectionForMethod(final SourceSection ssBody) {
     assert ssBody != null;
 
-    MixinBuilder holder = getEnclosingMixinBuilder();
-    String cls = holder != null && holder.isClassSide() ? "_class" : "";
-    String name = holder == null ? "_unknown_" : holder.getName().getString();
-
-    SourceSection ssMethod = ssBody.getSource().createSection(
-        name + cls + ">>" + signature.toString(),
+    SourceSection ssMethod = ssBody.getSource().createSection(null,
         ssBody.getStartLine(), ssBody.getStartColumn(),
         ssBody.getCharIndex(), ssBody.getCharLength());
     return ssMethod;
