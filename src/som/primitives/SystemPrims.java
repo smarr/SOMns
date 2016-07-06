@@ -179,7 +179,7 @@ public final class SystemPrims {
       });
 
       StringBuilder sb = new StringBuilder();
-      final int skipDnuFrames = 2;
+      final int skipDnuFrames = 1;
       for (int i = method.size() - 1; i >= skipDnuFrames; i--) {
         sb.append(String.format("\t%1$-" + (maxLengthMethod[0] + 4) + "s",
           method.get(i)));
