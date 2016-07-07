@@ -34,7 +34,6 @@ import som.interpreter.actors.SFarReference;
 import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.SResolver;
 import som.vm.ObjectSystem;
-import som.vmobjects.SInvokable;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import tools.ObjectBuffer;
 import tools.debugger.WebDebugger;
@@ -48,7 +47,7 @@ public final class VM {
 
   @CompilationFinal private static PolyglotEngine engine;
   @CompilationFinal private static VM vm;
-  @CompilationFinal private static StructuralProbe structuralProbes;
+  @CompilationFinal private static StructuralProbe structuralProbe;
   @CompilationFinal private static Debugger    debugger;
   @CompilationFinal private static WebDebugger webDebugger;
 
@@ -58,6 +57,10 @@ public final class VM {
 
   public static WebDebugger getWebDebugger() {
     return webDebugger;
+  }
+
+  public static StructuralProbe getStructuralProbe() {
+    return structuralProbe;
   }
 
   private final Map<String, Object> exports = new HashMap<>();
@@ -131,13 +134,7 @@ public final class VM {
 
   public static void reportNewMixin(final MixinDefinition m) {
     if (VmSettings.DYNAMIC_METRICS) {
-      structuralProbes.recordNewClass(m);
-    }
-  }
-
-  public static void reportNewMethod(final SInvokable m) {
-    if (VmSettings.DYNAMIC_METRICS) {
-      structuralProbes.recordNewMethod(m);
+      structuralProbe.recordNewClass(m);
     }
   }
 
@@ -372,8 +369,8 @@ public final class VM {
         assert VmSettings.DYNAMIC_METRICS;
         Instrument dynM = instruments.get(DynamicMetrics.ID);
         dynM.setEnabled(true);
-        structuralProbes = dynM.lookup(StructuralProbe.class);
-        assert structuralProbes != null : "Initialization of DynamicMetrics tool incomplete";
+        structuralProbe = dynM.lookup(StructuralProbe.class);
+        assert structuralProbe != null : "Initialization of DynamicMetrics tool incomplete";
       }
 
       engine.eval(SomLanguage.START);

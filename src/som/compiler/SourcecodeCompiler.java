@@ -41,26 +41,26 @@ public final class SourcecodeCompiler {
 
   @TruffleBoundary
   public static MixinDefinition compileModule(final File file)
-      throws IOException {
+      throws IOException, ParseError, MixinDefinitionError {
     FileReader stream = new FileReader(file);
 
     Source source = Source.newBuilder(file).mimeType(SomLanguage.MIME_TYPE).build();
-    Parser parser = new Parser(stream, file.length(), source);
-
-    MixinDefinition result = compile(parser);
-    VM.reportLoadedSource(source);
-    return result;
+    Parser parser = new Parser(stream, file.length(), source, VM.getStructuralProbe());
+    return compile(parser, source);
   }
 
-  private static MixinDefinition compile(final Parser parser) {
-    SourceCoordinate coord = parser.getCoordinate();
+  public static MixinDefinition compileModule(final Source source) throws ParseError, MixinDefinitionError {
+    Parser parser = new Parser(
+        source.getReader(), source.getLength(), source, VM.getStructuralProbe());
+    return compile(parser, source);
+  }
 
-    try {
-      MixinBuilder mxnBuilder = parser.moduleDeclaration();
-      return mxnBuilder.assemble(parser.getSource(coord));
-    } catch (ParseError | MixinDefinitionError pe) {
-      VM.errorExit(pe.toString());
-      return null;
-    }
+  private static MixinDefinition compile(final Parser parser,
+      final Source source) throws ParseError, MixinDefinitionError {
+    SourceCoordinate coord = parser.getCoordinate();
+    MixinBuilder mxnBuilder = parser.moduleDeclaration();
+    MixinDefinition result = mxnBuilder.assemble(parser.getSource(coord));
+    VM.reportLoadedSource(source);
+    return result;
   }
 }

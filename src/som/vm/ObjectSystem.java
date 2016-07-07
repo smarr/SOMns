@@ -22,9 +22,11 @@ import com.oracle.truffle.api.source.SourceSection;
 import som.VM;
 import som.compiler.AccessModifier;
 import som.compiler.MethodBuilder;
+import som.compiler.MixinBuilder.MixinDefinitionError;
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.compiler.MixinDefinition;
 import som.compiler.MixinDefinition.SlotDefinition;
+import som.compiler.Parser.ParseError;
 import som.compiler.SourcecodeCompiler;
 import som.interpreter.LexicalScope.MixinScope;
 import som.interpreter.Primitive;
@@ -134,10 +136,15 @@ public final class ObjectSystem {
       return loadedModules.get(file.getAbsolutePath());
     }
 
-    MixinDefinition module = SourcecodeCompiler.compileModule(file);
-    loadedModules.put(file.getAbsolutePath(), module);
-
-    return module;
+    MixinDefinition module;
+    try {
+      module = SourcecodeCompiler.compileModule(file);
+      loadedModules.put(file.getAbsolutePath(), module);
+      return module;
+    } catch (ParseError | MixinDefinitionError e) {
+      VM.errorExit(e.getMessage());
+      throw new IOException(e);
+    }
   }
 
   private static SInvokable constructVmMirrorPrimitive(

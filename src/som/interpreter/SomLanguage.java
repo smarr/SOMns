@@ -20,8 +20,8 @@ import com.oracle.truffle.api.source.Source;
 import som.VM;
 import som.compiler.MixinBuilder.MixinDefinitionError;
 import som.compiler.MixinDefinition;
-import som.compiler.Parser;
 import som.compiler.Parser.ParseError;
+import som.compiler.SourcecodeCompiler;
 import som.vm.NotYetImplementedException;
 import som.vm.constants.Nil;
 import som.vmobjects.SClass;
@@ -170,7 +170,7 @@ public final class SomLanguage extends TruffleLanguage<VM> {
     }
 
     try {
-      MixinDefinition moduleDef = Parser.parseModule(code);
+      MixinDefinition moduleDef = SourcecodeCompiler.compileModule(code);
       ParseResult result = new ParseResult(moduleDef.instantiateModuleClass());
       return Truffle.getRuntime().createCallTarget(result);
     } catch (ParseError | MixinDefinitionError e) {

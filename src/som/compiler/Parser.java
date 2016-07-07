@@ -107,6 +107,7 @@ import som.interpreter.nodes.specialized.whileloops.WhileInlinedLiteralsNode;
 import som.vm.Symbols;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
+import tools.dym.profiles.StructuralProbe;
 import tools.highlight.Tags;
 import tools.highlight.Tags.ArgumentTag;
 import tools.highlight.Tags.CommentTag;
@@ -131,6 +132,7 @@ public final class Parser {
 
   private SourceSection             lastMethodsSourceSection;
   private final Set<SourceSection>  syntaxAnnotations;
+  private final StructuralProbe     structuralProbe;
 
   private static final Symbol[] singleOpSyms = new Symbol[] {Not, And, Or, Star,
     Div, Mod, Plus, Equal, More, Less, Comma, At, Per, NONE};
@@ -152,13 +154,6 @@ public final class Parser {
       }
     }
     return false;
-  }
-
-  public static MixinDefinition parseModule(final Source source) throws ParseError, MixinDefinitionError {
-    Parser parser = new Parser(source.getReader(), source.getLength(), source);
-    SourceCoordinate coord = parser.getCoordinate();
-    MixinBuilder moduleBuilder = parser.moduleDeclaration();
-    return moduleBuilder.assemble(parser.getSource(coord));
   }
 
   @Override
@@ -257,7 +252,8 @@ public final class Parser {
     }
   }
 
-  public Parser(final Reader reader, final long fileSize, final Source source) {
+  public Parser(final Reader reader, final long fileSize, final Source source,
+      final StructuralProbe structuralProbe) {
     this.source   = source;
 
     sym = NONE;
@@ -266,6 +262,7 @@ public final class Parser {
     getSymbolFromLexer();
 
     this.syntaxAnnotations = new HashSet<>();
+    this.structuralProbe = structuralProbe;
   }
 
   Set<SourceSection> getSyntaxAnnotations() {
@@ -746,7 +743,9 @@ public final class Parser {
     ExpressionNode body = methodBlock(builder);
     SInvokable meth = builder.assemble(body, accessModifier, category, getSource(coord));
 
-    VM.reportNewMethod(meth);
+    if (structuralProbe != null) {
+      structuralProbe.recordNewMethod(meth);
+    }
     mxnBuilder.addMethod(meth);
   }
 
