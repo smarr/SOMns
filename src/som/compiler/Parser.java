@@ -190,6 +190,28 @@ public final class Parser {
       return expected.toString();
     }
 
+    public SourceCoordinate getSourceCoordinate() {
+      return sourceCoordinate;
+    }
+
+    @Override
+    public String getMessage() {
+      String msg = message;
+
+      String foundStr;
+      if (Parser.printableSymbol(found)) {
+        foundStr = found + " (" + text + ")";
+      } else {
+        foundStr = found.toString();
+      }
+      String expectedStr = expectedSymbolAsString();
+
+      msg = msg.replace("%(expected)s", expectedStr);
+      msg = msg.replace("%(found)s",    foundStr);
+
+      return msg;
+    }
+
     @Override
     public String toString() {
       String msg = "%(file)s:%(line)d:%(column)d: error: " + message;
