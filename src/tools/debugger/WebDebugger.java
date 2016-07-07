@@ -58,7 +58,7 @@ public class WebDebugger extends TruffleInstrument {
 
   public void reportLoadedSource(final Source source) {
     connector.sendLoadedSource(source, loadedSourcesTags, rootNodes);
-  }
+    }
 
   public void reportRootNodeAfterParsing(final RootNode rootNode) {
     assert rootNode.getSourceSection() != null : "RootNode without source section";
@@ -75,7 +75,7 @@ public class WebDebugger extends TruffleInstrument {
 
   SuspendedEvent getSuspendedEvent(final String id) {
     return suspendEvents.get(id);
-  }
+    }
 
   CompletableFuture<Object> getSuspendFuture(final String id) {
     return suspendFutures.get(id);
@@ -119,17 +119,17 @@ public class WebDebugger extends TruffleInstrument {
   protected void onDispose(final Env env) {
     connector.sendActorHistory();
     connector.shutdown();
-  }
+    }
 
   @Override
   protected void onCreate(final Env env) {
     instrumenter = env.getInstrumenter();
     env.registerService(this);
-  }
+    }
 
   public void startServer(final Debugger dbg) {
     truffleDebugger = dbg;
     breakpoints = new Breakpoints(dbg);
     connector = new FrontendConnector(breakpoints, instrumenter, this);
   }
-}
+    }

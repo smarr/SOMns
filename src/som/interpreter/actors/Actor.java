@@ -18,6 +18,7 @@ import som.vmobjects.SArray.STransferArray;
 import som.vmobjects.SObject;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import tools.ObjectBuffer;
+import tools.actors.ActorExecutionTrace;
 
 
 /**
@@ -213,22 +214,6 @@ public class Actor {
     return actorPool.isQuiescent();
   }
 
-  public static ObjectBuffer<ObjectBuffer<SFarReference>> getAllCreateActors() {
-    return createdActorsPerThread;
-  }
-
-  public static ObjectBuffer<ObjectBuffer<ObjectBuffer<EventualMessage>>> getAllProcessedMessages() {
-    return messagesProcessedPerThread;
-  }
-
-  /** Access to this data structure needs to be synchronized. */
-  private static final ObjectBuffer<ObjectBuffer<SFarReference>> createdActorsPerThread =
-      VmSettings.ACTOR_TRACING ? new ObjectBuffer<>(VmSettings.NUM_THREADS) : null;
-
-  /** Access to this data structure needs to be synchronized. Typically via {@link createdActorsPerThread} */
-  private static final ObjectBuffer<ObjectBuffer<ObjectBuffer<EventualMessage>>> messagesProcessedPerThread =
-      VmSettings.ACTOR_TRACING ? new ObjectBuffer<>(VmSettings.NUM_THREADS) : null;
-
   private static final class ActorProcessingThreadFactor implements ForkJoinWorkerThreadFactory {
     @Override
     public ForkJoinWorkerThread newThread(final ForkJoinPool pool) {
@@ -248,6 +233,9 @@ public class Actor {
       if (VmSettings.ACTOR_TRACING) {
         createdActors = new ObjectBuffer<>(128);
         processedMessages = new ObjectBuffer<>(128);
+
+        ObjectBuffer<ObjectBuffer<SFarReference>> createdActorsPerThread = ActorExecutionTrace.getAllCreateActors();
+        ObjectBuffer<ObjectBuffer<ObjectBuffer<EventualMessage>>> messagesProcessedPerThread = ActorExecutionTrace.getAllProcessedMessages();
 
         // publish the thread local buffer for later querying
         synchronized (createdActorsPerThread) {

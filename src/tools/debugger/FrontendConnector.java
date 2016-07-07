@@ -28,6 +28,7 @@ import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.SFarReference;
 import tools.ObjectBuffer;
+import tools.actors.ActorExecutionTrace;
 import tools.highlight.Tags;
 
 
@@ -198,8 +199,8 @@ public class FrontendConnector {
 
     log("[ACTORS] send message history");
 
-    ObjectBuffer<ObjectBuffer<SFarReference>> actorsPerThread = Actor.getAllCreateActors();
-    ObjectBuffer<ObjectBuffer<ObjectBuffer<EventualMessage>>> messagesPerThread = Actor.getAllProcessedMessages();
+    ObjectBuffer<ObjectBuffer<SFarReference>> actorsPerThread = ActorExecutionTrace.getAllCreateActors();
+    ObjectBuffer<ObjectBuffer<ObjectBuffer<EventualMessage>>> messagesPerThread = ActorExecutionTrace.getAllProcessedMessages();
 
     Map<SFarReference, String> actorsToIds = createActorMap(actorsPerThread);
     Map<Actor, String> actorObjsToIds = new HashMap<>(actorsToIds.size());
