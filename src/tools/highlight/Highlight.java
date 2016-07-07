@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import com.oracle.truffle.api.instrumentation.Instrumenter;
 import com.oracle.truffle.api.instrumentation.TruffleInstrument;
 import com.oracle.truffle.api.instrumentation.TruffleInstrument.Registration;
 import com.oracle.truffle.api.nodes.RootNode;
@@ -56,6 +57,15 @@ public final class Highlight extends TruffleInstrument {
 
   private static final Map<SourceSection, Set<Class<? extends Tags>>> nonAstSourceSections = new HashMap<>();
   private static final Set<RootNode> rootNodes = new HashSet<>();
+
+  private static Instrumenter instrumenter;
+
+  public static Map<SourceSection, Set<Class<? extends Tags>>> getSourceSections() {
+    Map<SourceSection, Set<Class<? extends Tags>>> sourceSectionsAndTags = new HashMap<>(nonAstSourceSections);
+    Tagging.collectSourceSectionsAndTags(rootNodes, sourceSectionsAndTags, instrumenter);
+
+    return sourceSectionsAndTags;
+  }
 
   /**
    * Report an element for highlighting that is not part of an AST,
@@ -88,7 +98,9 @@ public final class Highlight extends TruffleInstrument {
   public Highlight() { }
 
   @Override
-  protected void onCreate(final Env env) { }
+  protected void onCreate(final Env env) {
+    instrumenter = env.getInstrumenter();
+  }
 
   @Override
   protected void onDispose(final Env env) {
