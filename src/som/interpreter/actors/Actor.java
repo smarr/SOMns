@@ -224,15 +224,28 @@ public class Actor {
   public static final class ActorProcessingThread extends ForkJoinWorkerThread {
     public EventualMessage currentMessage;
     protected Actor currentlyExecutingActor;
-    ObjectBuffer<SFarReference> createdActors;
-    ObjectBuffer<ObjectBuffer<EventualMessage>> processedMessages;
-
+    protected final ObjectBuffer<SFarReference> createdActors;
+    protected final ObjectBuffer<ObjectBuffer<EventualMessage>> processedMessages;
 
     protected ActorProcessingThread(final ForkJoinPool pool) {
       super(pool);
 
-      createdActors = ActorExecutionTrace.createActorBuffer();
-      processedMessages = ActorExecutionTrace.createProcessedMessagesBuffer();
+      if (VmSettings.ACTOR_TRACING) {
+        createdActors = new ObjectBuffer<>(128);
+        processedMessages = new ObjectBuffer<>(128);
+
+        ObjectBuffer<ObjectBuffer<SFarReference>> createdActorsPerThread = ActorExecutionTrace.getAllCreateActors();
+        ObjectBuffer<ObjectBuffer<ObjectBuffer<EventualMessage>>> messagesProcessedPerThread = ActorExecutionTrace.getAllProcessedMessages();
+
+        // publish the thread local buffer for later querying
+        synchronized (createdActorsPerThread) {
+          createdActorsPerThread.append(createdActors);
+          messagesProcessedPerThread.append(processedMessages);
+        }
+      } else {
+        createdActors = null;
+        processedMessages = null;
+      }
     }
 
     @Override

@@ -1,10 +1,11 @@
 package tools.actors;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import som.VmSettings;
-import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.SFarReference;
-import som.vm.ObjectSystem;
 import tools.ObjectBuffer;
 
 public class ActorExecutionTrace {
@@ -17,60 +18,26 @@ public class ActorExecutionTrace {
   private static final ObjectBuffer<ObjectBuffer<ObjectBuffer<EventualMessage>>> messagesProcessedPerThread =
       VmSettings.ACTOR_TRACING ? new ObjectBuffer<>(VmSettings.NUM_THREADS) : null;
 
-      protected static ObjectBuffer<ObjectBuffer<SFarReference>> getAllCreateActors() {
+      public static ObjectBuffer<ObjectBuffer<SFarReference>> getAllCreateActors() {
         return createdActorsPerThread;
       }
 
-      protected static ObjectBuffer<ObjectBuffer<ObjectBuffer<EventualMessage>>> getAllProcessedMessages() {
+      public static ObjectBuffer<ObjectBuffer<ObjectBuffer<EventualMessage>>> getAllProcessedMessages() {
         return messagesProcessedPerThread;
       }
 
-      public static void recordMainActor(final Actor mainActor, final ObjectSystem objectSystem) {
-        if (VmSettings.ACTOR_TRACING) {
-          ObjectBuffer<ObjectBuffer<SFarReference>> actors = getAllCreateActors();
-          SFarReference mainActorRef = new SFarReference(mainActor, objectSystem.getPlatformClass());
+      public static Map<SFarReference, String> createActorMap(
+          final ObjectBuffer<ObjectBuffer<SFarReference>> actorsPerThread) {
+        HashMap<SFarReference, String> map = new HashMap<>();
+        int numActors = 0;
 
-          ObjectBuffer<SFarReference> main = new ObjectBuffer<>(1);
-          main.append(mainActorRef);
-          actors.append(main);
-        }
-      }
-
-      public static ObjectBuffer<SFarReference> createActorBuffer() {
-         ObjectBuffer<SFarReference> createdActors;
-
-        if (VmSettings.ACTOR_TRACING) {
-          createdActors = new ObjectBuffer<>(128);
-
-          ObjectBuffer<ObjectBuffer<SFarReference>> createdActorsPerThread = getAllCreateActors();
-
-          // publish the thread local buffer for later querying
-          synchronized (createdActorsPerThread) {
-            createdActorsPerThread.append(createdActors);
+        for (ObjectBuffer<SFarReference> perThread : actorsPerThread) {
+          for (SFarReference a : perThread) {
+            assert !map.containsKey(a);
+            map.put(a, "a-" + numActors);
+            numActors += 1;
           }
-        } else {
-          createdActors = null;
         }
-
-        return createdActors;
-      }
-
-      public static ObjectBuffer<ObjectBuffer<EventualMessage>> createProcessedMessagesBuffer() {
-        ObjectBuffer<ObjectBuffer<EventualMessage>> processedMessages;
-
-        if (VmSettings.ACTOR_TRACING) {
-          processedMessages = new ObjectBuffer<>(128);
-
-          ObjectBuffer<ObjectBuffer<ObjectBuffer<EventualMessage>>> messagesProcessedPerThread = getAllProcessedMessages();
-
-          // publish the thread local buffer for later querying
-          synchronized (messagesProcessedPerThread) {
-            messagesProcessedPerThread.append(processedMessages);
-          }
-        } else {
-          processedMessages = null;
-        }
-
-        return processedMessages;
+        return map;
       }
 }
