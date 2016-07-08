@@ -2,15 +2,15 @@ package som.interpreter;
 
 import java.util.HashMap;
 
+import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.frame.FrameDescriptor;
+
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.compiler.MixinDefinition;
 import som.interpreter.LexicalScope.MixinScope.MixinIdAndContextLevel;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.vmobjects.SSymbol;
-
-import com.oracle.truffle.api.CompilerAsserts;
-import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
-import com.oracle.truffle.api.frame.FrameDescriptor;
 
 
 public abstract class LexicalScope {
@@ -26,6 +26,13 @@ public abstract class LexicalScope {
 
     public MixinScope(final MixinScope outerMixin) {
       this.outerMixin = outerMixin;
+    }
+
+    public MixinDefinition getOuter() {
+      if (outerMixin != null) {
+        return outerMixin.mixinDefinition;
+      }
+      return null;
     }
 
     public HashMap<SSymbol, Dispatchable> getDispatchables() {

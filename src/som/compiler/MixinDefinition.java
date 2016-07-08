@@ -130,6 +130,11 @@ public final class MixinDefinition {
     return name;
   }
 
+  public MixinDefinition getOuter() {
+    assert instanceScope.getOuter() == classScope.getOuter() : "Inconsistent outer scope?";
+    return instanceScope.getOuter();
+  }
+
   // TODO: does this really have to be an invokable?
   //       could it just be the AST, that is than directly used in
   //       the ClassSlotAccessNode?
