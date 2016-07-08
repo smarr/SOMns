@@ -117,21 +117,6 @@ public class WebDebugger extends TruffleInstrument {
     // Checkstyle: resume
   }
 
-  protected Map<SFarReference, String> createActorMap(
-      final ObjectBuffer<ObjectBuffer<SFarReference>> actorsPerThread) {
-    HashMap<SFarReference, String> map = new HashMap<>();
-    int numActors = 0;
-
-    for (ObjectBuffer<SFarReference> perThread : actorsPerThread) {
-      for (SFarReference a : perThread) {
-        assert !map.containsKey(a);
-        map.put(a, "a-" + numActors);
-        numActors += 1;
-      }
-    }
-    return map;
-  }
-
   @Override
   protected void onDispose(final Env env) {
     connector.sendActorHistory();
