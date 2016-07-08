@@ -36,6 +36,7 @@ import som.compiler.Lexer.SourceCoordinate;
 import som.compiler.MixinBuilder.MixinDefinitionError;
 import som.compiler.Parser.ParseError;
 import som.interpreter.SomLanguage;
+import tools.dym.profiles.StructuralProbe;
 
 public final class SourcecodeCompiler {
 
@@ -50,8 +51,13 @@ public final class SourcecodeCompiler {
   }
 
   public static MixinDefinition compileModule(final Source source) throws ParseError, MixinDefinitionError {
+    return compileModule(source, VM.getStructuralProbe());
+  }
+
+  public static MixinDefinition compileModule(final Source source,
+      final StructuralProbe structuralProbe) throws ParseError, MixinDefinitionError {
     Parser parser = new Parser(
-        source.getReader(), source.getLength(), source, VM.getStructuralProbe());
+        source.getReader(), source.getLength(), source, structuralProbe);
     return compile(parser, source);
   }
 

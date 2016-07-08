@@ -285,7 +285,8 @@ public final class Parser {
     String mixinName = text;
     expect(Identifier, IdentifierTag.class);
 
-    MixinBuilder mxnBuilder = new MixinBuilder(outerBuilder, accessModifier, symbolFor(mixinName));
+    MixinBuilder mxnBuilder = new MixinBuilder(outerBuilder, accessModifier,
+        symbolFor(mixinName), structuralProbe);
 
     MethodBuilder primaryFactory = mxnBuilder.getPrimaryFactoryMethodBuilder();
     SourceCoordinate coord = getCoordinate();

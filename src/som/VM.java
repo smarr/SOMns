@@ -132,12 +132,6 @@ public final class VM {
     }
   }
 
-  public static void reportNewMixin(final MixinDefinition m) {
-    if (VmSettings.DYNAMIC_METRICS) {
-      structuralProbe.recordNewClass(m);
-    }
-  }
-
   public VM(final String[] args, final boolean avoidExitForTesting) throws IOException {
     vm = this;
 

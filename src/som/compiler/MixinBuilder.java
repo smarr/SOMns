@@ -34,7 +34,6 @@ import java.util.List;
 
 import com.oracle.truffle.api.source.SourceSection;
 
-import som.VM;
 import som.compiler.MixinDefinition.ClassSlotDefinition;
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.compiler.MixinDefinition.SlotMutator;
@@ -50,6 +49,7 @@ import som.primitives.NewObjectPrimNodeGen;
 import som.vm.Symbols;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
+import tools.dym.profiles.StructuralProbe;
 
 
 /**
@@ -101,6 +101,8 @@ public final class MixinBuilder {
 
   private final MixinDefinitionId mixinId;
 
+  private final StructuralProbe structuralProbe;
+
   /**
    * A unique id to identify the mixin definition. Having the Id distinct from
    * the actual definition allows us to make the definition immutable and
@@ -125,7 +127,8 @@ public final class MixinBuilder {
   };
 
   public MixinBuilder(final MixinBuilder outerBuilder,
-      final AccessModifier accessModifier, final SSymbol name) {
+      final AccessModifier accessModifier, final SSymbol name,
+      final StructuralProbe structuralProbe) {
     this.name         = name;
     this.mixinId      = new MixinDefinitionId(name);
 
@@ -142,6 +145,7 @@ public final class MixinBuilder {
     this.superclassAndMixinResolutionBuilder = createSuperclassResolutionBuilder();
 
     this.accessModifier = accessModifier;
+    this.structuralProbe = structuralProbe;
   }
 
   public static class MixinDefinitionError extends Exception {
@@ -335,7 +339,9 @@ public final class MixinBuilder {
 
     setHolders(clsDef);
 
-    VM.reportNewMixin(clsDef);
+    if (structuralProbe != null) {
+      structuralProbe.recordNewClass(clsDef);
+    }
     return clsDef;
   }
 
