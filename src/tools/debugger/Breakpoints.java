@@ -28,7 +28,7 @@ public class Breakpoints {
     private final URI sourceUri;
     private final int line;
 
-    public LineBreakpoint(final URI sourceUri, final int line) {
+    LineBreakpoint(final URI sourceUri, final int line) {
       this.sourceUri = sourceUri;
       this.line = line;
     }
@@ -57,7 +57,7 @@ public class Breakpoints {
     private final int startColumn;
     private final int charLength;
 
-    public SectionBreakpoint(final URI sourceUri, final int startLine,
+    SectionBreakpoint(final URI sourceUri, final int startLine,
         final int startColumn, final int charLength) {
       this.sourceUri = sourceUri;
       this.startLine = startLine;
