@@ -17,11 +17,11 @@ public class ActorExecutionTrace {
   private static final ObjectBuffer<ObjectBuffer<ObjectBuffer<EventualMessage>>> messagesProcessedPerThread =
       VmSettings.ACTOR_TRACING ? new ObjectBuffer<>(VmSettings.NUM_THREADS) : null;
 
-      protected static ObjectBuffer<ObjectBuffer<SFarReference>> getAllCreateActors() {
+      public static ObjectBuffer<ObjectBuffer<SFarReference>> getAllCreateActors() {
         return createdActorsPerThread;
       }
 
-      protected static ObjectBuffer<ObjectBuffer<ObjectBuffer<EventualMessage>>> getAllProcessedMessages() {
+      public static ObjectBuffer<ObjectBuffer<ObjectBuffer<EventualMessage>>> getAllProcessedMessages() {
         return messagesProcessedPerThread;
       }
 
