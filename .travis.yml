@@ -7,4 +7,4 @@ env:
   - TASK=checkstyle
 script:
   - if [ "$TASK" = "tests" ];      then ant tests; fi
-  - if [ "$TASK" = "checkstyle" ]; then ant checkstyle-jar && ant checkstyle; fi
+  - if [ "$TASK" = "checkstyle" ]; then ant checkstyle; fi
