@@ -6,8 +6,6 @@ import java.util.Map.Entry;
 
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.SFarReference;
-import tools.ObjectBuffer;
-import tools.actors.ActorExecutionTrace;
 
 /**
  * Manager for the debugging session.
@@ -33,8 +31,8 @@ public class DebuggerManager {
   Map<Actor, LocalManager> actorLocalManager;
 
   public DebuggerManager() {
-    ObjectBuffer<ObjectBuffer<SFarReference>> createdActorsPerThread = ActorExecutionTrace.getAllCreateActors();
-    actorsToIds = ActorExecutionTrace.createActorMap(createdActorsPerThread);
+    //ObjectBuffer<ObjectBuffer<SFarReference>> createdActorsPerThread = ActorExecutionTrace.getAllCreateActors();
+    //actorsToIds = ActorExecutionTrace.createActorMap(createdActorsPerThread);
 
     //breakpoints = new ArrayList<Breakpoint>();
     actorLocalManager = new HashMap<>();
