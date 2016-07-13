@@ -36,7 +36,7 @@ import som.compiler.Lexer.SourceCoordinate;
 import som.compiler.MixinBuilder.MixinDefinitionError;
 import som.compiler.Parser.ParseError;
 import som.interpreter.SomLanguage;
-import tools.dym.profiles.StructuralProbe;
+import tools.language.StructuralProbe;
 
 public final class SourcecodeCompiler {
 

@@ -107,7 +107,6 @@ import som.interpreter.nodes.specialized.whileloops.WhileInlinedLiteralsNode;
 import som.vm.Symbols;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
-import tools.dym.profiles.StructuralProbe;
 import tools.highlight.Tags;
 import tools.highlight.Tags.ArgumentTag;
 import tools.highlight.Tags.CommentTag;
@@ -118,6 +117,7 @@ import tools.highlight.Tags.KeywordTag;
 import tools.highlight.Tags.LiteralTag;
 import tools.highlight.Tags.LocalVariableTag;
 import tools.highlight.Tags.StatementSeparatorTag;
+import tools.language.StructuralProbe;
 
 
 public final class Parser {

@@ -80,8 +80,8 @@ import tools.dym.profiles.InvocationProfile;
 import tools.dym.profiles.LoopProfile;
 import tools.dym.profiles.OperationProfile;
 import tools.dym.profiles.ReadValueProfile;
-import tools.dym.profiles.StructuralProbe;
 import tools.highlight.Tags.LiteralTag;
+import tools.language.StructuralProbe;
 
 
 /**

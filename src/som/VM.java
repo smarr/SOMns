@@ -38,9 +38,9 @@ import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import tools.ObjectBuffer;
 import tools.debugger.WebDebugger;
 import tools.dym.DynamicMetrics;
-import tools.dym.profiles.StructuralProbe;
 import tools.highlight.Highlight;
 import tools.highlight.Tags;
+import tools.language.StructuralProbe;
 
 
 public final class VM {
