@@ -49,7 +49,7 @@ import som.primitives.NewObjectPrimNodeGen;
 import som.vm.Symbols;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
-import tools.dym.profiles.StructuralProbe;
+import tools.language.StructuralProbe;
 
 
 /**
@@ -258,8 +258,25 @@ public final class MixinBuilder {
       }
       dispatchables.put(name, meth);
     } else {
-      factoryMethods.put(name, meth);
+      addFactoryMethod(meth, name);
     }
+  }
+
+  private void addFactoryMethod(final SInvokable meth, final SSymbol name) {
+    SInvokable existing = factoryMethods.get(name);
+    // we allow overriding the primary factory method here for convenient
+    // hacks, example: ValueArray uses this to delegate to the primitive
+    // However, there is an expectation that all methods in the system get set
+    // their holders, so, we're going to mess a little with the ones
+    // that are overridden to keep them in the dict
+    if (existing != null) {
+      // We use here the constructor directly to not record the symbol in the
+      // global table, which also neatly guarantees uniqueness with same string
+      SSymbol hackedName = new SSymbol("\0!" + name.getString());
+      assert !factoryMethods.containsKey(hackedName);
+      factoryMethods.put(hackedName, existing);
+    }
+    factoryMethods.put(name, meth);
   }
 
   public void addSlot(final SSymbol name, final AccessModifier acccessModifier,
@@ -321,7 +338,7 @@ public final class MixinBuilder {
     Method superclassResolution = assembleSuperclassAndMixinResoltionMethod();
     SInvokable primaryFactory       = assemblePrimaryFactoryMethod();
     SInvokable initializationMethod = assembleInitializationMethod();
-    factoryMethods.put(primaryFactory.getSignature(), primaryFactory);
+    addFactoryMethod(primaryFactory, primaryFactory.getSignature());
 
     if (initializationMethod != null) {
       dispatchables.put(
