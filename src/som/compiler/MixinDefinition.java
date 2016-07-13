@@ -130,6 +130,10 @@ public final class MixinDefinition {
     return name;
   }
 
+  public boolean isModule() {
+    return isModule;
+  }
+
   public MixinDefinition getOuter() {
     assert instanceScope.getOuter() == classScope.getOuter() : "Inconsistent outer scope?";
     return instanceScope.getOuter();
@@ -538,6 +542,10 @@ public final class MixinDefinition {
 
     public void setValueDuringBootstrap(final SObject obj, final Object value) {
       obj.writeSlot(this, value);
+    }
+
+    public SourceSection getSourceSection() {
+      return source;
     }
   }
 
