@@ -9,10 +9,8 @@ import som.vmobjects.SInvokable;
 
 public class StructuralProbe {
 
-  // TODO: make language independent, for instance by using fully qualified
-  //       names
-  private final Set<MixinDefinition> classes;
-  private final Set<SInvokable>      methods;
+  protected final Set<MixinDefinition> classes;
+  protected final Set<SInvokable>      methods;
 
   public StructuralProbe() {
     classes = new HashSet<>();
