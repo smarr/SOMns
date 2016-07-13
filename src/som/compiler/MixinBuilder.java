@@ -353,6 +353,7 @@ public final class MixinBuilder {
   }
 
   private void setHolders(final MixinDefinition clsDef) {
+    assert clsDef != null;
     for (Dispatchable disp : dispatchables.values()) {
       if (disp instanceof SInvokable) {
         ((SInvokable) disp).setHolder(clsDef);

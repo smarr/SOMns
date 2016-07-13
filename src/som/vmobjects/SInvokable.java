@@ -26,6 +26,13 @@
 package som.vmobjects;
 
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
+
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.RootCallTarget;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.IndirectCallNode;
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.compiler.AccessModifier;
 import som.compiler.MixinDefinition;
 import som.interpreter.Invokable;
@@ -35,12 +42,6 @@ import som.interpreter.nodes.dispatch.DispatchGuard;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.nodes.dispatch.LexicallyBoundDispatchNode;
 import som.vm.constants.Classes;
-
-import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
-import com.oracle.truffle.api.RootCallTarget;
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.IndirectCallNode;
-import com.oracle.truffle.api.source.SourceSection;
 
 public class SInvokable extends SAbstractObject implements Dispatchable {
 
@@ -112,10 +113,12 @@ public class SInvokable extends SAbstractObject implements Dispatchable {
   }
 
   public final MixinDefinition getHolder() {
+    assert holder != null;
     return holder;
   }
 
   public final void setHolder(final MixinDefinition value) {
+    assert value != null;
     transferToInterpreterAndInvalidate("SMethod.setHolder");
     holder = value;
   }
