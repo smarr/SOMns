@@ -63,6 +63,10 @@ public final class ObjectPrims {
     }
 
     private static void reportBreakpoint() {
+      if (VM.getWebDebugger() == null) {
+        return;
+      }
+
       Node[] callNode = new Node[1];
       Frame[] frame = new Frame[1];
 
