@@ -165,8 +165,8 @@ public abstract class SObject extends SObjectWithClass {
   // TODO: if there is the possibility that we can hint that a read is from a
   //       final field, we should reconsider removing these and store them in
   //       normal object fields
-  @CompilationFinal private long[]   extensionPrimFields;
-  @CompilationFinal private Object[] extensionObjFields;
+  @CompilationFinal(dimensions = 0) private long[]   extensionPrimFields;
+  @CompilationFinal(dimensions = 0) private Object[] extensionObjFields;
 
   // we manage the layout entirely in the class, but need to keep a copy here
   // to know in case the layout changed that we can update the instances lazily
