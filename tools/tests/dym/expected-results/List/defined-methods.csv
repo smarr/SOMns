@@ -1,6 +1,4 @@
 Name	Executed	Execution Count
-Method(nil>>#new)	false	0
-Method(nil>>#new:withAll:)	false	0
 Method(Actors>>#async:do:)	false	0
 Method(Actors>>#async:do:next:prevPromise:completionResolver:)	false	0
 Method(Actors>>#async:to:do:)	false	0
@@ -30,6 +28,7 @@ Method(Array>>#copy)	false	0
 Method(Array>>#copyFrom:)	false	0
 Method(Array>>#copyFrom:to:)	false	0
 Method(Array>>#copyFrom:to:to:)	false	0
+Method(Array>>#new)	false	0
 Method(Array>>#new:)	false	0
 Method(Array>>#new:withAll:)	false	0
 Method(Array>>#putAll:)	false	0
@@ -319,6 +318,7 @@ Method(True>>#not)	false	0
 Method(True>>#or:)	false	0
 Method(ValueArray>>#at:)	false	0
 Method(ValueArray>>#copy)	false	0
+Method(ValueArray>>#new:withAll:)	false	0
 Method(ValueArray>>#size)	false	0
 Method(Value>>#<>)	false	0
 Method(Value>>#=)	false	0

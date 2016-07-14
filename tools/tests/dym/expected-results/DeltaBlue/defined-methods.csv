@@ -1,6 +1,4 @@
 Name	Executed	Execution Count
-Method(nil>>#new)	false	0
-Method(nil>>#new:withAll:)	false	0
 Method(AbstractConstraint>>#addConstraint:)	true	12
 Method(AbstractConstraint>>#addToGraph)	false	0
 Method(AbstractConstraint>>#chooseMethod:)	false	0
@@ -44,6 +42,7 @@ Method(Array>>#copy)	false	0
 Method(Array>>#copyFrom:)	false	0
 Method(Array>>#copyFrom:to:)	false	0
 Method(Array>>#copyFrom:to:to:)	false	0
+Method(Array>>#new)	false	0
 Method(Array>>#new:)	false	0
 Method(Array>>#new:withAll:)	true	1
 Method(Array>>#putAll:)	true	1
@@ -380,6 +379,7 @@ Method(UnaryConstraint>>#recalculate)	true	11
 Method(UnaryConstraint>>#removeFromGraph)	true	10
 Method(ValueArray>>#at:)	false	0
 Method(ValueArray>>#copy)	false	0
+Method(ValueArray>>#new:withAll:)	false	0
 Method(ValueArray>>#size)	false	0
 Method(Value>>#<>)	false	0
 Method(Value>>#=)	false	0
