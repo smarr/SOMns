@@ -22,12 +22,15 @@ public abstract class EventualMessage {
   protected final RootCallTarget onReceive;
   protected final EventualMessage causalMessage;
 
+  protected boolean pause;
+
   protected EventualMessage(final EventualMessage causalMessage, final Object[] args,
       final SResolver resolver, final RootCallTarget onReceive) {
     this.causalMessage = causalMessage;
     this.args     = args;
     this.resolver = resolver;
     this.onReceive = onReceive;
+    this.pause = false;
     assert onReceive.getRootNode() instanceof ReceivedMessage || onReceive.getRootNode() instanceof ReceivedCallback;
   }
 
@@ -268,5 +271,15 @@ public abstract class EventualMessage {
   public static EventualMessage getCurrentExecutingMessage() {
     Thread t = Thread.currentThread();
     return ((ActorProcessingThread) t).currentMessage;
+  }
+
+  //indicates if the message is already in the actor mailbox and it is paused (due to breakpoint or step into command)
+  public boolean hasPause() {
+    return pause;
+  }
+
+  //call when adding a breakpoint
+  public void setPause(final boolean value) {
+    this.pause = value;
   }
 }

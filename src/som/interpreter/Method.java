@@ -119,4 +119,8 @@ public final class Method extends Invokable {
   public boolean isBlock() {
     return block;
   }
+
+  public MethodScope getCurrentMethodScope() {
+    return currentMethodScope;
+  }
 }

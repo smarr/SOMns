@@ -1,5 +1,7 @@
 package tools.actors;
 
+import com.oracle.truffle.api.debug.Breakpoint;
+
 import som.VmSettings;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
@@ -72,5 +74,27 @@ public class ActorExecutionTrace {
         }
 
         return processedMessages;
+      }
+
+      /**
+       * TODO: finish
+       * Assign breakpoint for the actor that is the receiver of the message.
+       *
+       * @param bp
+       * @param receiver
+       */
+      public static void assignBreakpoint(final Breakpoint bp, final Actor receiver, final EventualMessage msg) {
+
+        // for concurrency the breakpoint is assign to one actor
+        ObjectBuffer<ObjectBuffer<SFarReference>> actorsPerThread = getAllCreateActors();
+        for (ObjectBuffer<SFarReference> perThread : actorsPerThread) {
+          for (SFarReference a : perThread) {
+            if (a.getActor().equals(receiver)) {
+              //a.getActor().getLocalManager().addBreakpoint(bp);
+              break;
+            }
+            }
+          }
+
       }
 }

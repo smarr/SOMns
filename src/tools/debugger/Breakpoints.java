@@ -9,6 +9,9 @@ import java.util.Objects;
 import com.oracle.truffle.api.debug.Breakpoint;
 import com.oracle.truffle.api.debug.Debugger;
 
+import som.interpreter.actors.Actor;
+import som.interpreter.actors.EventualMessage;
+
 
 public class Breakpoints {
 
@@ -21,7 +24,8 @@ public class Breakpoints {
   }
 
   public abstract static class BreakpointId {
-
+    Actor receiver;
+    EventualMessage msg;
   }
 
   static class LineBreakpoint extends BreakpointId {

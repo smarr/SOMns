@@ -159,6 +159,17 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
     text-anchor: middle;
     font-weight: bold;
   }
+
+  .dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #f9f9f9;
+    box-shadow: 0px 8px 8px 0px rgba(0,0,0,0.2);
+    padding: 1px 1px;
+    font: 10px sans-serif;
+        
+}
+
   </style>
 
   <style id="style-heatmap">
@@ -280,6 +291,11 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
   /* display: none; */
 ">
 <label><input type="checkbox" id="cb-heatmap" value="on" checked="checked" onchange="toggleHeatMap();"> Heat Map</label>
+</div>
+
+<div id="hover-menu" class="dropdown-content">
+    <button id="btnReceiver" class ="btn btn-default btn-sm btn-block">Break on receiver</button>
+    <button id="btnSend" class ="btn btn-default btn-sm btn-block">Break on sender</button>
 </div>
 
 <!-- REM: https://github.com/earmbrust/bootstrap-window -->

@@ -48,24 +48,25 @@ class WebSocketHandler extends WebSocketServer {
     }
 
     boolean enabled = obj.getBoolean("enabled", false);
+    String role = obj.getString("role", null);
 
     switch (type) {
       case "lineBreakpoint":
         processLineBreakpoint(obj, uri, enabled);
         break;
       case "sendBreakpoint":
-        processSendBreakpoint(obj, uri, enabled);
+        processSendBreakpoint(obj, uri, enabled, role);
         break;
     }
   }
 
   private void processSendBreakpoint(final JsonObject obj, final URI sourceUri,
-      final boolean enabled) {
+      final boolean enabled, final String role) {
     int startLine   = obj.getInt("startLine",   -1);
     int startColumn = obj.getInt("startColumn", -1);
     int charLength  = obj.getInt("charLength",  -1);
 
-    connector.requestBreakpoint(enabled, sourceUri, startLine, startColumn, charLength);
+    connector.requestBreakpoint(enabled, sourceUri, startLine, startColumn, charLength, role);
   }
 
   private void processLineBreakpoint(final JsonObject obj, final URI sourceUri,
@@ -76,6 +77,7 @@ class WebSocketHandler extends WebSocketServer {
 
   @Override
   public void onMessage(final WebSocket conn, final String message) {
+    WebDebugger.log("onMessage " + message);
     JsonObject msg = Json.parse(message).asObject();
 
     switch (msg.getString("action", null)) {
@@ -92,10 +94,23 @@ class WebSocketHandler extends WebSocketServer {
         processBreakpoint(msg.get("breakpoint").asObject());
         return;
       case "stepInto":
+        WebDebugger.log("STEP INTO");
+        //processStepInto(msg);
+        return;
       case "stepOver":
+        WebDebugger.log("STEP OVER");
+      //processStepOver(msg);
+        return;
       case "return":
+        WebDebugger.log("RETURN");
+        //processStepReturn(msg);
+        return;
       case "resume":
+        WebDebugger.log("RESUME");
+      //processResume(msg);
+        return;
       case "stop": {
+        WebDebugger.log("STOP");
         String id = msg.getString("suspendEvent", null);
         SuspendedEvent event = connector.getSuspendedEvent(id);
         assert event != null : "didn't find SuspendEvent";
@@ -110,6 +125,8 @@ class WebSocketHandler extends WebSocketServer {
         connector.completeSuspendFuture(id, new Object());
         return;
       }
+
+      //todo..add an action pause?
     }
 
     WebDebugger.log("not supported: onMessage: " + message);

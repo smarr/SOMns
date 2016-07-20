@@ -152,7 +152,7 @@ LineBreakpoint.prototype.toJsonObj = function () {
   return obj;
 };
 
-function SendBreakpoint(source, sourceSection) {
+function SendBreakpoint(source, sourceSection, role) {
   Breakpoint.call(this, source);
 
   this.type = "sendBreakpoint";
@@ -160,6 +160,7 @@ function SendBreakpoint(source, sourceSection) {
   this.startLine   = sourceSection.line;
   this.startColumn = sourceSection.column;
   this.charLength  = sourceSection.length;
+  this.role = role;
 }
 SendBreakpoint.prototype = Object.create(Breakpoint.prototype);
 
@@ -173,6 +174,7 @@ SendBreakpoint.prototype.toJsonObj = function () {
   obj.startLine   = this.startLine;
   obj.startColumn = this.startColumn;
   obj.charLength  = this.charLength;
+  obj.role = this.role;
   return obj;
 };
 

@@ -19,6 +19,7 @@ import som.vmobjects.SObject;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import tools.ObjectBuffer;
 import tools.actors.ActorExecutionTrace;
+import tools.debugger.session.LocalManager;
 
 
 /**
@@ -65,9 +66,15 @@ public class Actor {
   /** Is scheduled on the pool, and executes messages to this actor. */
   private final ExecAllMessages executor;
 
+  /**
+   * contains the operations for the management of messages between actors.
+   */
+  private LocalManager localManager;
+
   protected Actor() {
     isExecuting = false;
     executor = new ExecAllMessages(this);
+    localManager = new LocalManager(this);
   }
 
   public final Object wrapForUse(final Object o, final Actor owner,
@@ -123,13 +130,21 @@ public class Actor {
   @TruffleBoundary
   public final synchronized void send(final EventualMessage msg) {
     assert msg.getTarget() == this;
-    mailbox.append(msg);
-    logMessageAddedToMailbox(msg);
+    if (msg.hasPause()) {
+      VM.println("Message pause--");
 
-    if (!isExecuting) {
-      isExecuting = true;
-      executeOnPool();
+        localManager.schedule(msg);
+
+    } else {
+      mailbox.append(msg);
+      logMessageAddedToMailbox(msg);
+
+      if (!isExecuting) {
+        isExecuting = true;
+        executeOnPool();
+      }
     }
+
   }
 
   /**
@@ -300,6 +315,25 @@ public class Actor {
     @Override
     public String toString() {
       return "Actor[" + (isMain ? "main" : id) + "]";
+    }
+  }
+
+
+  public LocalManager getLocalManager() {
+    return localManager;
+  }
+
+
+  public ObjectBuffer<EventualMessage> getMailbox() {
+    return mailbox;
+  }
+
+  //Not sure about the class location
+  public void updateInbox(final EventualMessage msg, final boolean addition) {
+    if (addition) {
+      //messageAddedToActorEvent
+    } else {
+      //messageRemovedFromActorEvent
     }
   }
 }
