@@ -114,6 +114,12 @@ function countNumberOfLines(str) {
   return cnt;
 }
 
+function enableEventualSendClicks(fileNode) {
+  fileNode.find(".EventualMessageSend").click(function (e) {
+    ctrl.onToggleMessageSendBreakpoint(e)
+  })
+}
+
 function showSource(s, sections) {
   var tabListEntry = document.getElementById(s.id),
     aElem = document.getElementById("a" + s.id);
@@ -146,7 +152,9 @@ function showSource(s, sections) {
   var newFileElement = nodeFromTemplate("file");
   newFileElement.setAttribute("id", s.id);
   newFileElement.getElementsByClassName("line-numbers")[0].innerHTML = createLineNumbers(countNumberOfLines(s.sourceText));
-  newFileElement.getElementsByClassName("source-file")[0].innerHTML = arrayToString(annotationArray);
+  var fileNode = newFileElement.getElementsByClassName("source-file")[0];
+  fileNode.innerHTML = arrayToString(annotationArray);
+  enableEventualSendClicks($(fileNode));
 
   var files = document.getElementById("files");
   files.appendChild(newFileElement);
@@ -388,9 +396,7 @@ View.prototype.displaySuspendEvent = function (data, getSource) {
     sourceFile.html(arrayToString(annotationArray));
 
     // enable clicking on EventualSendNodes
-    sourceFile.find(".EventualMessageSend").click(function (e) {
-      ctrl.onToggleMessageSendBreakpoint(e)
-      })
+    enableEventualSendClicks(sourceFile)
   }
 
   // highlight current node
