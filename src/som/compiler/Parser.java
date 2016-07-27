@@ -765,21 +765,29 @@ public final class Parser {
     }
   }
 
-  private void unaryPattern(final MethodBuilder builder) throws ParseError {
+  protected void unaryPattern(final MethodBuilder builder) throws ParseError {
+    SourceCoordinate coord = getCoordinate();
     builder.setSignature(unarySelector());
+    builder.addMethodDefinitionSource(getSource(coord));
   }
 
-  private void binaryPattern(final MethodBuilder builder) throws ParseError {
-    builder.setSignature(binarySelector());
+  protected void binaryPattern(final MethodBuilder builder) throws ParseError {
     SourceCoordinate coord = getCoordinate();
+    builder.setSignature(binarySelector());
+    builder.addMethodDefinitionSource(getSource(coord));
+
+    coord = getCoordinate();
     builder.addArgumentIfAbsent(argument(), getSource(coord));
   }
 
-  private void keywordPattern(final MethodBuilder builder) throws ParseError {
+  protected void keywordPattern(final MethodBuilder builder) throws ParseError {
     StringBuilder kw = new StringBuilder();
     do {
-      kw.append(keyword());
       SourceCoordinate coord = getCoordinate();
+      kw.append(keyword());
+      builder.addMethodDefinitionSource(getSource(coord));
+
+      coord = getCoordinate();
       builder.addArgumentIfAbsent(argument(), getSource(coord));
     }
     while (sym == Keyword);

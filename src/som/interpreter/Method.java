@@ -34,13 +34,16 @@ import som.interpreter.nodes.ExpressionNode;
 public class Method extends Invokable {
 
   private final MethodScope currentMethodScope;
+  private final SourceSection[] definition;
 
   public Method(final String name, final SourceSection sourceSection,
+                final SourceSection[] definition,
                 final ExpressionNode expressions,
                 final MethodScope currentLexicalScope,
                 final ExpressionNode uninitialized) {
     super(name, sourceSection, currentLexicalScope.getFrameDescriptor(),
         expressions, uninitialized);
+    this.definition = definition;
     this.currentMethodScope = currentLexicalScope;
     expressions.markAsRootExpression();
   }
@@ -58,7 +61,7 @@ public class Method extends Invokable {
         null /* because we got an enclosing method anyway */);
     ExpressionNode  inlinedBody = SplitterForLexicallyEmbeddedCode.doInline(
         uninitializedBody, inlinedCurrentScope);
-    Method clone = new Method(name, getSourceSection(), inlinedBody,
+    Method clone = new Method(name, getSourceSection(), definition, inlinedBody,
         inlinedCurrentScope, uninitializedBody);
     inlinedCurrentScope.setMethod(clone);
     return clone;
@@ -73,7 +76,7 @@ public class Method extends Invokable {
         uninitializedBody, inliner, currentAdaptedScope);
     ExpressionNode uninitAdaptedBody = NodeUtil.cloneNode(adaptedBody);
 
-    Method clone = new Method(name, getSourceSection(), adaptedBody,
+    Method clone = new Method(name, getSourceSection(), definition, adaptedBody,
         currentAdaptedScope, uninitAdaptedBody);
     currentAdaptedScope.setMethod(clone);
     return clone;
@@ -88,7 +91,7 @@ public class Method extends Invokable {
         uninitializedBody, inliner, currentAdaptedScope);
     ExpressionNode uninitAdaptedBody = NodeUtil.cloneNode(adaptedBody);
 
-    Method clone = new Method(name, getSourceSection(),
+    Method clone = new Method(name, getSourceSection(), definition,
         adaptedBody, currentAdaptedScope, uninitAdaptedBody);
     currentAdaptedScope.setMethod(clone);
     return clone;

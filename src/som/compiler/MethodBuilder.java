@@ -63,6 +63,8 @@ public final class MethodBuilder {
   private final boolean       blockMethod;
 
   private SSymbol signature;
+  private final List<SourceSection> definition = new ArrayList<>(3);
+
   private boolean needsToCatchNonLocalReturn;
   private boolean throwsNonLocalReturn;       // does directly or indirectly a non-local return
 
@@ -188,7 +190,6 @@ public final class MethodBuilder {
     return meth;
   }
 
-
   public SInitializer assembleInitializerAs(final SSymbol signature,
       final ExpressionNode body, final AccessModifier accessModifier,
       final SSymbol category, final SourceSection sourceSection) {
@@ -232,7 +233,7 @@ public final class MethodBuilder {
     }
 
     Method truffleMethod = new Method(getMethodIdentifier(),
-        sourceSection,
+        sourceSection, definition.toArray(new SourceSection[0]),
         body, scope, (ExpressionNode) body.deepCopy());
     scope.setMethod(truffleMethod);
     return truffleMethod;
@@ -464,6 +465,10 @@ public final class MethodBuilder {
 
   public SSymbol getSignature() {
     return signature;
+  }
+
+  public void addMethodDefinitionSource(final SourceSection source) {
+    definition.add(source);
   }
 
   @Override
