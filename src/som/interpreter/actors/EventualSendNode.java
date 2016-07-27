@@ -162,6 +162,8 @@ public class EventualSendNode extends ExprWithTagsNode {
       DirectMessage msg = new DirectMessage(
           EventualMessage.getCurrentExecutingMessage(), target, selector, args,
           owner, resolver, onReceive);
+
+      checkMessageBreakpointed(msg);
       target.send(msg);
     }
 
@@ -172,6 +174,7 @@ public class EventualSendNode extends ExprWithTagsNode {
           EventualMessage.getCurrentExecutingMessage(), selector, args,
           rcvr.getOwner(), resolver, onReceive);
 
+     // checkMessageBreakpointed(msg);
       registerNode.register(rcvr, msg, rcvr.getOwner());
     }
 
@@ -216,6 +219,7 @@ public class EventualSendNode extends ExprWithTagsNode {
       DirectMessage msg = new DirectMessage(EventualMessage.getCurrentExecutingMessage(),
           current, selector, args, current,
           resolver, onReceive);
+      checkMessageBreakpointed(msg);
       current.send(msg);
 
       return result;
@@ -243,6 +247,7 @@ public class EventualSendNode extends ExprWithTagsNode {
       DirectMessage msg = new DirectMessage(EventualMessage.getCurrentExecutingMessage(),
           current, selector, args, current,
           null, onReceive);
+      checkMessageBreakpointed(msg);
       current.send(msg);
       return Nil.nilObject;
     }
@@ -256,5 +261,15 @@ public class EventualSendNode extends ExprWithTagsNode {
       }
       return super.isTaggedWith(tag);
     }
+
+    protected void checkMessageBreakpointed(final EventualMessage msg) {
+      Actor receiver = msg.getTarget();
+
+      boolean receiverBreakpointed = receiver.getLocalManager().isBreakpointed(msg, true);
+
+       if (receiverBreakpointed) {
+          msg.setPause(true);
+        }
+      }
   }
 }

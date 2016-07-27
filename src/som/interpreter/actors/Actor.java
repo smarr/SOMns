@@ -133,7 +133,7 @@ public class Actor {
     if (msg.hasPause()) {
       VM.println("Message pause--");
 
-        localManager.schedule(msg);
+      localManager.schedule(msg, true);
 
     } else {
       mailbox.append(msg);

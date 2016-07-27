@@ -8,6 +8,7 @@ import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.SFarReference;
 import som.vm.ObjectSystem;
 import tools.ObjectBuffer;
+import tools.debugger.FrontendConnector.BreakpointLocation;
 
 public class ActorExecutionTrace {
 
@@ -77,22 +78,21 @@ public class ActorExecutionTrace {
       }
 
       /**
-       * TODO: finish
+       *
        * Assign breakpoint for the actor that is the receiver of the message.
        *
        * @param bp
        * @param receiver
        */
-      public static void assignBreakpoint(final Breakpoint bp, final Actor receiver, final EventualMessage msg) {
+      public static void assignBreakpoint(final Breakpoint bp, final Actor actor, final BreakpointLocation bl, final boolean receiver) {
 
-        // for concurrency the breakpoint is assign to one actor
         ObjectBuffer<ObjectBuffer<SFarReference>> actorsPerThread = getAllCreateActors();
         for (ObjectBuffer<SFarReference> perThread : actorsPerThread) {
           for (SFarReference a : perThread) {
-            if (a.getActor().equals(receiver)) {
-              //a.getActor().getLocalManager().addBreakpoint(bp);
+            if (a.getActor().equals(actor)) {
+              a.getActor().getLocalManager().addBreakpoint(bp, bl, receiver);
               break;
-            }
+             }
             }
           }
 

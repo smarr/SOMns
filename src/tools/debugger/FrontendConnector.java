@@ -30,6 +30,9 @@ import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.SFarReference;
 import tools.ObjectBuffer;
 import tools.actors.ActorExecutionTrace;
+import tools.debugger.Breakpoints.BreakpointId;
+import tools.debugger.Breakpoints.LineBreakpoint;
+import tools.debugger.Breakpoints.SectionBreakpoint;
 import tools.highlight.Tags;
 
 /**
@@ -217,7 +220,9 @@ public class FrontendConnector {
     log("[ACTORS] Message sent?");
     try {
       Thread.sleep(150000);
-    } catch (InterruptedException e1) {}
+    } catch (InterruptedException e1) {
+
+    }
     log("[ACTORS] Message sent waiting completed");
 
     sender.close();
@@ -234,36 +239,68 @@ public class FrontendConnector {
       ObjectBuffer<ObjectBuffer<SFarReference>> aa = ActorExecutionTrace.getAllCreateActors();
 
       Actor actor = null;
+      boolean receiver;
       if (role.equals("receiver")) {
         // TODO get receiver actor
         log("Send breakpoint on receiver");
+        receiver = true;
       } else {
         // TODO get sender actor
         log("Send breakpoint on sender");
+        receiver = false;
       }
 
-      EventualMessage msgBreakpointed = null; //TODO finish
+      log("breakpoint coordinates " + startLine + " " + startColumn + " " + charLength);
+
+      Map<BreakpointId, Breakpoint> storeBreakpoints = breakpoints.getKnownBreakpoints();
+      BreakpointId bId = getBreakpointId(storeBreakpoints, sourceUri, startLine, startColumn, charLength);
 
       //get holder class and method name from root node from coordinates
-      BreakpointLocation location = getBreakpointLocation(sourceUri, startLine, startColumn, charLength);
+      BreakpointLocation location = getBreakpointLocation(sourceUri, startLine, bId);
       if (location != null) {
         log("holder class: " + location.getHolderClass());
         log("method name: " + location.getMethodName());
       }
-      //ActorExecutionTrace.assignBreakpoint(bp, actor, msgBreakpointed);
+
+      if (actor != null) {
+       actor.getLocalManager().setFileName(sourceUri);
+       ActorExecutionTrace.assignBreakpoint(bp, actor, location, receiver);
+      }
 
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
   }
 
-  private BreakpointLocation getBreakpointLocation(final URI sourceUri, final int startLine,
-      final int startColumn, final int charLength) {
+  private BreakpointId getBreakpointId(final Map<BreakpointId, Breakpoint> storeBreakpoints, final URI sourceUri,
+      final int startLine, final int startColumn, final int charLength) {
+    Set<BreakpointId> ids = storeBreakpoints.keySet();
+
+    for (BreakpointId breakpointId : ids) {
+      if (breakpointId instanceof SectionBreakpoint) {
+        BreakpointId bId = new SectionBreakpoint(sourceUri, startLine, startColumn, charLength);
+        SectionBreakpoint sb = (SectionBreakpoint) breakpointId;
+        if (sb.equals(bId)) {
+          return sb;
+        }
+
+      } else if (breakpointId instanceof LineBreakpoint) {
+        BreakpointId bId = new LineBreakpoint(sourceUri, startLine);
+        LineBreakpoint lb = (LineBreakpoint) breakpointId;
+        if (lb.equals(bId)) {
+          return lb;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  private BreakpointLocation getBreakpointLocation(final URI sourceUri, final int startLine, final BreakpointId bId) {
     BreakpointLocation location = null;
-
-    log("coordinates received " + startLine + " " + startColumn + " " + charLength);
-
     Set<RootNode> nodes = null;
+    RootNode rn = null;
+
     Map<Source, Set<RootNode>> rootNodesParsed = this.webDebugger.getRootNodes();
     for (Source source : rootNodesParsed.keySet()) {
       if ((source.getURI()).equals(sourceUri)) {
@@ -272,18 +309,17 @@ public class FrontendConnector {
       }
     }
 
-    RootNode rn = null;
-    for (RootNode rootNode : nodes) {
-      int nodeStartLine = rootNode.getSourceSection().getStartLine();
-      int nodeStartColumn = rootNode.getSourceSection().getStartColumn();
-      int nodeCharLength = rootNode.getSourceSection().getCharLength();
-      log("rootNode coordinates " + nodeStartLine + " " + nodeStartColumn + " " + nodeCharLength);
+    if (nodes != null) {
+      for (RootNode rootNode : nodes) {
+        int nodeStartLine = rootNode.getSourceSection().getStartLine(); //startLine of the rootNode corresponds to first line of the method
+        int nodeEndLine = rootNode.getSourceSection().getEndLine();
 
-      if (nodeStartLine == startLine - 1) { //startLine of the rootNode corresponds to first line of the method
-        log(rootNode.getSourceSection().getCode());
-        log("endline " + String.valueOf(rootNode.getSourceSection().getEndLine()));
-        rn = rootNode;
-        break;
+        if (startLine > nodeStartLine && startLine < nodeEndLine) { //check if the breakpoint startLine is in the rootNode coordinates
+          rn = rootNode;
+          log(rootNode.getSourceSection().getCode());
+          log("rootNode coordinates " + nodeStartLine + " " + nodeEndLine);
+          break;
+        }
       }
     }
 
@@ -293,7 +329,7 @@ public class FrontendConnector {
     //log("outer class " +enclosingMixin.getOuter().getName().getString());
 
       String methodName = ((som.interpreter.Method) rn).getCurrentMethodScope().getMethod().getName().split("#")[1];
-      location = new BreakpointLocation(holderClass, methodName);
+      location = new BreakpointLocation(holderClass, methodName, bId);
     }
 
     return location;
@@ -340,13 +376,21 @@ public class FrontendConnector {
     }
   }
 
+/**
+ * Encapsulates the holder class and the method name of the breakpoint.
+ *
+ * @author carmentorres
+ *
+ */
   public class BreakpointLocation{
     private String holderClass;
     private String methodName;
+    private BreakpointId id;
 
-    BreakpointLocation(final String holderClass, final String methodName) {
+    BreakpointLocation(final String holderClass, final String methodName, final BreakpointId id) {
         this.holderClass = holderClass;
         this.methodName = methodName;
+        this.id = id;
     }
 
 
@@ -359,5 +403,9 @@ public class FrontendConnector {
       return methodName;
     }
 
+
+    public BreakpointId getId() {
+      return id;
+    }
   }
 }

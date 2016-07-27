@@ -9,9 +9,6 @@ import java.util.Objects;
 import com.oracle.truffle.api.debug.Breakpoint;
 import com.oracle.truffle.api.debug.Debugger;
 
-import som.interpreter.actors.Actor;
-import som.interpreter.actors.EventualMessage;
-
 
 public class Breakpoints {
 
@@ -24,8 +21,7 @@ public class Breakpoints {
   }
 
   public abstract static class BreakpointId {
-    Actor receiver;
-    EventualMessage msg;
+
   }
 
   static class LineBreakpoint extends BreakpointId {
@@ -55,13 +51,13 @@ public class Breakpoints {
     }
   }
 
-  static class SectionBreakpoint extends BreakpointId {
+  public static class SectionBreakpoint extends BreakpointId {
     private final URI sourceUri;
     private final int startLine;
     private final int startColumn;
     private final int charLength;
 
-    SectionBreakpoint(final URI sourceUri, final int startLine,
+    public SectionBreakpoint(final URI sourceUri, final int startLine,
         final int startColumn, final int charLength) {
       this.sourceUri = sourceUri;
       this.startLine = startLine;
@@ -108,5 +104,10 @@ public class Breakpoints {
       knownBreakpoints.put(bId, bp);
     }
     return bp;
+  }
+
+
+  public Map<BreakpointId, Breakpoint> getKnownBreakpoints() {
+    return knownBreakpoints;
   }
 }
