@@ -394,7 +394,7 @@ public final class MixinBuilder {
     // self is going to be the enclosing object
     definitionMethod.addArgumentIfAbsent("self",
         SomLanguage.getSyntheticSource("self read", "super-class-resolution").
-        createSection("self read", 1));
+        createSection(null, 1));
     definitionMethod.setSignature(Symbols.DEF_CLASS);
 
     return definitionMethod;

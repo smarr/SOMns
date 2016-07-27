@@ -674,10 +674,10 @@ public final class MixinDefinition {
     builder.setSignature(init);
     builder.addArgumentIfAbsent("self",
         SomLanguage.getSyntheticSource("self read", "super-class-resolution").
-        createSection("self read", 1));
+        createSection(null, 1));
 
     Source source = SomLanguage.getSyntheticSource("self", "Thing>>" + init.getString());
-    SourceSection ss = source.createSection(init.getString(), 0, 4);
+    SourceSection ss = source.createSection(null, 0, 4);
     SInvokable thingInitNew = builder.assembleInitializer(builder.getSelfRead(ss),
         AccessModifier.PROTECTED, Symbols.INITIALIZER, ss);
     instanceDispatchables.put(init, thingInitNew);
