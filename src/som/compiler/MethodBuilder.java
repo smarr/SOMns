@@ -232,19 +232,10 @@ public final class MethodBuilder {
     }
 
     Method truffleMethod = new Method(getMethodIdentifier(),
-        getSourceSectionForMethod(sourceSection),
+        sourceSection,
         body, scope, (ExpressionNode) body.deepCopy());
     scope.setMethod(truffleMethod);
     return truffleMethod;
-  }
-
-  private SourceSection getSourceSectionForMethod(final SourceSection ssBody) {
-    assert ssBody != null;
-
-    SourceSection ssMethod = ssBody.getSource().createSection(null,
-        ssBody.getStartLine(), ssBody.getStartColumn(),
-        ssBody.getCharIndex(), ssBody.getCharLength());
-    return ssMethod;
   }
 
   public void setSignature(final SSymbol sig) {
