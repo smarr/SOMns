@@ -57,7 +57,7 @@ public class WebDebugger extends TruffleInstrument {
   }
 
   public void reportLoadedSource(final Source source) {
-    connector.sendLoadedSource(source, loadedSourcesTags);
+    connector.sendLoadedSource(source, loadedSourcesTags, rootNodes);
   }
 
   public void reportRootNodeAfterParsing(final RootNode rootNode) {

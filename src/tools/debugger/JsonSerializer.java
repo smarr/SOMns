@@ -5,14 +5,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.Set;
 
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.debug.SuspendedEvent;
 import com.oracle.truffle.api.frame.FrameInstance;
-import com.oracle.truffle.api.frame.FrameSlot;
-import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.instrumentation.Instrumenter;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
@@ -25,28 +22,13 @@ import com.oracle.truffle.api.utilities.JSONHelper.JSONObjectBuilder;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.SFarReference;
-import som.vmobjects.SClass;
 import tools.ObjectBuffer;
 import tools.Tagging;
-import tools.highlight.JsonWriter;
 import tools.highlight.Tags;
 
 public final class JsonSerializer {
 
   private JsonSerializer() { }
-
-  public static JSONObjectBuilder toJson(final String id, final SFarReference a) {
-    Object value = a.getValue();
-    assert value instanceof SClass;
-    SClass actorClass = (SClass) value;
-
-    JSONObjectBuilder builder = JSONHelper.object();
-    builder.add("id", id);
-    builder.add("name",     actorClass.getName().getString());
-    builder.add("typeName", actorClass.getName().getString());
-
-    return builder;
-  }
 
   private static int nextSourceId = 0;
   private static int nextSourceSectionId = 0;
@@ -55,7 +37,6 @@ public final class JsonSerializer {
   private static final Map<String, Source> idSources = new HashMap<>();
   private static final Map<SourceSection, String> sourceSectionId = new HashMap<>();
   private static final Map<String, SourceSection> idSourceSections = new HashMap<>();
-
 
   public static String createSourceId(final Source source) {
     return sourcesId.computeIfAbsent(source, src -> {
@@ -85,16 +66,26 @@ public final class JsonSerializer {
     return idSourceSections.get(id);
   }
 
-  public static String createSourceAndSectionMessage(final Source source,
-      final Map<SourceSection, Set<Class<? extends Tags>>> tags) {
-    return JsonWriter.createJson("source", tags, sourcesId, sourceSectionId);
+  public static JSONObjectBuilder createSourceAndSectionMessage(
+      final String type, final Source source,
+      final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> loadedSourcesTags,
+      final Instrumenter instrumenter, final Set<RootNode> rootNodes) {
+    JSONObjectBuilder allSourcesJson = JSONHelper.object();
+    String id = sourcesId.get(source);
+    assert id != null && !id.equals("");
+    allSourcesJson.add(id, ToJson.source(source, id));
+
+    return ToJson.sourceAndSectionMessage(type, allSourcesJson,
+        createSourceSections(source, loadedSourcesTags, instrumenter, rootNodes));
   }
 
-  public static JSONObjectBuilder createJsonForSourceSections(final Source source, final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> sourcesTags, final Instrumenter instrumenter, final Map<Source, Set<RootNode>> rootNodes) {
+  public static JSONObjectBuilder createSourceSections(final Source source,
+      final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> sourcesTags,
+      final Instrumenter instrumenter, final Set<RootNode> rootNodes) {
     Set<SourceSection> sections = new HashSet<>();
 
     Map<SourceSection, Set<Class<? extends Tags>>> tagsForSections = sourcesTags.get(source);
-    Tagging.collectSourceSectionsAndTags(rootNodes.get(source), tagsForSections, instrumenter);
+    Tagging.collectSourceSectionsAndTags(rootNodes, tagsForSections, instrumenter);
 
     if (tagsForSections != null) {
       for (SourceSection section : tagsForSections.keySet()) {
@@ -105,7 +96,8 @@ public final class JsonSerializer {
       }
     }
 
-    return JsonWriter.createJsonForSourceSections(sourcesId, sourceSectionId, sections, tagsForSections);
+    return ToJson.sourceSections(
+        sections, sourcesId, sourceSectionId, tagsForSections);
   }
 
   public static JSONObjectBuilder createFrame(final Node node,
@@ -116,8 +108,9 @@ public final class JsonSerializer {
       SourceSection section = node.getEncapsulatingSourceSection();
       if (section != null) {
         Map<SourceSection, Set<Class<? extends Tags>>> tagsForSections = tags.get(section.getSource());
-        frame.add("sourceSection", JsonWriter.sectionToJson(
-            section, createSourceSectionId(section), sourcesId,
+        frame.add("sourceSection", ToJson.sourceSection(
+            section, createSourceSectionId(section),
+            sourcesId.get(section.getSource()),
             (tagsForSections == null) ? null : tagsForSections.get(section)));
       }
     }
@@ -132,54 +125,18 @@ public final class JsonSerializer {
     return frame;
   }
 
-  public static JSONObjectBuilder createTopFrameJson(final MaterializedFrame frame, final RootNode root) {
-    JSONArrayBuilder arguments = JSONHelper.array();
-    for (Object o : frame.getArguments()) {
-      arguments.add(o.toString());
-    }
-
-    JSONObjectBuilder slots = JSONHelper.object();
-    for (FrameSlot slot : root.getFrameDescriptor().getSlots()) {
-      Object value = frame.getValue(slot);
-      slots.add(slot.getIdentifier().toString(),
-          Objects.toString(value));
-    }
-
-    JSONObjectBuilder frameJson = JSONHelper.object();
-    frameJson.add("arguments", arguments);
-    frameJson.add("slots", slots);
-    return frameJson;
-  }
-
   public static JSONObjectBuilder createMessageHistoryJson(
       final ObjectBuffer<ObjectBuffer<ObjectBuffer<EventualMessage>>> messagesPerThread,
       final Map<SFarReference, String> actorsToIds,
       final Map<Actor, String> actorObjsToIds) {
     JSONArrayBuilder actors = JSONHelper.array();
     for (Entry<SFarReference, String> e : actorsToIds.entrySet()) {
-      actors.add(toJson(e.getValue(), e.getKey()));
+      actors.add(ToJson.farReference(e.getValue(), e.getKey()));
     }
 
-    int mId = 0;
     JSONObjectBuilder messages = JSONHelper.object();
-
-    Map<Actor, Set<JSONObjectBuilder>> perReceiver = new HashMap<>();
-    for (ObjectBuffer<ObjectBuffer<EventualMessage>> perThread : messagesPerThread) {
-      for (ObjectBuffer<EventualMessage> perBatch : perThread) {
-        for (EventualMessage m : perBatch) {
-          perReceiver.computeIfAbsent(m.getTarget(), a -> new HashSet<>());
-
-          JSONObjectBuilder jsonM = JSONHelper.object();
-          jsonM.add("id", "m-" + mId);
-          mId += 1;
-          assert actorObjsToIds.containsKey(m.getSender());
-          assert actorObjsToIds.containsKey(m.getTarget());
-          jsonM.add("sender", actorObjsToIds.get(m.getSender()));
-          jsonM.add("receiver", actorObjsToIds.get(m.getTarget()));
-          perReceiver.get(m.getTarget()).add(jsonM);
-        }
-      }
-    }
+    Map<Actor, Set<JSONObjectBuilder>> perReceiver = messagesPerReceiver(
+        messagesPerThread, actorObjsToIds);
 
     for (Entry<Actor, Set<JSONObjectBuilder>> e : perReceiver.entrySet()) {
       JSONArrayBuilder arr = JSONHelper.array();
@@ -190,7 +147,7 @@ public final class JsonSerializer {
     }
 
     JSONObjectBuilder history = JSONHelper.object();
-    history.add("messages", messages); // TODO
+    history.add("messages", messages);
     history.add("actors", actors);
 
     JSONObjectBuilder msg = JSONHelper.object();
@@ -199,26 +156,52 @@ public final class JsonSerializer {
     return msg;
   }
 
+  private static Map<Actor, Set<JSONObjectBuilder>> messagesPerReceiver(
+      final ObjectBuffer<ObjectBuffer<ObjectBuffer<EventualMessage>>> messagesPerThread,
+      final Map<Actor, String> actorObjsToIds) {
+    Map<Actor, Set<JSONObjectBuilder>> perReceiver = new HashMap<>();
+    int mId = 0;
+    for (ObjectBuffer<ObjectBuffer<EventualMessage>> perThread : messagesPerThread) {
+      for (ObjectBuffer<EventualMessage> perBatch : perThread) {
+        for (EventualMessage m : perBatch) {
+          perReceiver.computeIfAbsent(m.getTarget(), a -> new HashSet<>());
+
+          assert actorObjsToIds.containsKey(m.getSender());
+          assert actorObjsToIds.containsKey(m.getTarget());
+
+          JSONObjectBuilder jsonM = ToJson.message(
+              actorObjsToIds.get(m.getSender()),
+              actorObjsToIds.get(m.getTarget()), mId, m);
+          perReceiver.get(m.getTarget()).add(jsonM);
+          mId += 1;
+        }
+      }
+    }
+    return perReceiver;
+  }
+
   public static JSONObjectBuilder createSuspendedEventJson(
       final SuspendedEvent e, final Node suspendedNode, final RootNode suspendedRoot,
-      final Source suspendedSource, final String id, final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> tags, final Instrumenter instrumenter, final Map<Source, Set<RootNode>> roots) {
+      final Source suspendedSource, final String id,
+      final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> tags,
+      final Instrumenter instrumenter, final Map<Source, Set<RootNode>> roots) {
     JSONObjectBuilder builder  = JSONHelper.object();
     builder.add("type", "suspendEvent");
 
     // first add the source info, because this builds up also tag info
     builder.add("sourceId", createSourceId(suspendedSource));
-    builder.add("sections", createJsonForSourceSections(suspendedSource, tags, instrumenter, roots));
+    builder.add("sections", createSourceSections(suspendedSource, tags,
+        instrumenter, roots.get(suspendedSource)));
 
     JSONArrayBuilder stackJson = JSONHelper.array();
     List<FrameInstance> stack = e.getStack();
-
 
     for (int stackIndex = 0; stackIndex < stack.size(); stackIndex++) {
       final Node callNode = stackIndex == 0 ? suspendedNode : stack.get(stackIndex).getCallNode();
       stackJson.add(createFrame(callNode, stack.get(stackIndex), tags));
     }
     builder.add("stack", stackJson);
-    builder.add("topFrame", createTopFrameJson(e.getFrame(), suspendedRoot));
+    builder.add("topFrame", ToJson.topFrameJson(e.getFrame(), suspendedRoot));
     builder.add("id", id);
     return builder;
   }

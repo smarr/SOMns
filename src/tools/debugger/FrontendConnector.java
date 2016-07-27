@@ -115,30 +115,35 @@ public class FrontendConnector {
   }
 
   private void sendSource(final Source source,
-      final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> loadedSourcesTags) {
-    String json = JsonSerializer.createSourceAndSectionMessage(source, loadedSourcesTags.get(source));
+      final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> loadedSourcesTags,
+      final Set<RootNode> rootNodes) {
+    String json = JsonSerializer.createSourceAndSectionMessage("source", source,
+        loadedSourcesTags, instrumenter, rootNodes).toString();
     sender.send(json);
   }
 
-  private void sendBufferedSources(final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> loadedSourcesTags) {
+  private void sendBufferedSources(
+      final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> loadedSourcesTags,
+      final Map<Source, Set<RootNode>> rootNodes) {
     if (!notReady.isEmpty()) {
       for (Source s : notReady) {
-        sendSource(s, loadedSourcesTags);
+        sendSource(s, loadedSourcesTags, rootNodes.get(s));
       }
       notReady.clear();
     }
   }
 
   public void sendLoadedSource(final Source source,
-      final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> loadedSourcesTags) {
+      final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> loadedSourcesTags,
+      final Map<Source, Set<RootNode>> rootNodes) {
     if (receiver == null || sender == null) {
       notReady.add(source);
       return;
     }
 
     ensureConnectionIsAvailable();
-    sendBufferedSources(loadedSourcesTags);
-    sendSource(source, loadedSourcesTags);
+    sendBufferedSources(loadedSourcesTags, rootNodes);
+    sendSource(source, loadedSourcesTags, rootNodes.get(source));
   }
 
   public void awaitClient() {
