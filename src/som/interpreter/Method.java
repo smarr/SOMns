@@ -44,7 +44,6 @@ public class Method extends Invokable {
                 final ExpressionNode uninitialized, final boolean block) {
     super(name, sourceSection, currentLexicalScope.getFrameDescriptor(),
         expressions, uninitialized);
-    assert definition.length >= 1 && definition[0] != null;
     this.definition = definition;
     this.block = block;
     this.currentMethodScope = currentLexicalScope;
