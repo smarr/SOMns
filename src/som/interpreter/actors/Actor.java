@@ -131,10 +131,7 @@ public class Actor {
   public final synchronized void send(final EventualMessage msg) {
     assert msg.getTarget() == this;
     if (msg.hasPause()) {
-      VM.println("Message pause--");
-
       localManager.schedule(msg, true);
-
     } else {
       mailbox.append(msg);
       logMessageAddedToMailbox(msg);
@@ -144,7 +141,6 @@ public class Actor {
         executeOnPool();
       }
     }
-
   }
 
   /**
@@ -239,8 +235,8 @@ public class Actor {
   public static final class ActorProcessingThread extends ForkJoinWorkerThread {
     public EventualMessage currentMessage;
     protected Actor currentlyExecutingActor;
-    ObjectBuffer<SFarReference> createdActors;
-    ObjectBuffer<ObjectBuffer<EventualMessage>> processedMessages;
+    protected final ObjectBuffer<SFarReference> createdActors;
+    protected final ObjectBuffer<ObjectBuffer<EventualMessage>> processedMessages;
 
 
     protected ActorProcessingThread(final ForkJoinPool pool) {
@@ -281,6 +277,23 @@ public class Actor {
     return "Actor";
   }
 
+  public LocalManager getLocalManager() {
+    return localManager;
+  }
+
+  public ObjectBuffer<EventualMessage> getMailbox() {
+    return mailbox;
+  }
+
+  //Not sure about the class location
+  public void updateInbox(final EventualMessage msg, final boolean addition) {
+    if (addition) {
+      //messageAddedToActorEvent
+    } else {
+      //messageRemovedFromActorEvent
+    }
+  }
+
   public static final class DebugActor extends Actor {
     // TODO: remove this tracking, the new one should be more efficient
     private static final ArrayList<Actor> actors = new ArrayList<Actor>();
@@ -315,25 +328,6 @@ public class Actor {
     @Override
     public String toString() {
       return "Actor[" + (isMain ? "main" : id) + "]";
-    }
-  }
-
-
-  public LocalManager getLocalManager() {
-    return localManager;
-  }
-
-
-  public ObjectBuffer<EventualMessage> getMailbox() {
-    return mailbox;
-  }
-
-  //Not sure about the class location
-  public void updateInbox(final EventualMessage msg, final boolean addition) {
-    if (addition) {
-      //messageAddedToActorEvent
-    } else {
-      //messageRemovedFromActorEvent
     }
   }
 }
