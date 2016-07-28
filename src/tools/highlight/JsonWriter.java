@@ -32,8 +32,9 @@ import java.util.Set;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.api.utilities.JSONHelper;
-import com.oracle.truffle.api.utilities.JSONHelper.JSONArrayBuilder;
 import com.oracle.truffle.api.utilities.JSONHelper.JSONObjectBuilder;
+
+import tools.debugger.ToJson;
 
 
 public final class JsonWriter {
@@ -43,26 +44,8 @@ public final class JsonWriter {
     new JsonWriter(outputFile, sourceSectionTags).createJsonFile();
   }
 
-  public static String createJson(final String type,
-      final Map<SourceSection, Set<Class<? extends Tags>>> sourceSectionTags) {
-    return new JsonWriter(sourceSectionTags).createJsonString(type);
-  }
-
-  public static String createJson(final String type,
-      final Map<SourceSection, Set<Class<? extends Tags>>> sourceSectionTags,
-      final Map<Source, String> sourceToId,
-      final Map<SourceSection, String> sectionToId) {
-    return new JsonWriter(sourceSectionTags).createJsonString(
-        type, sourceToId, sectionToId);
-  }
-
   private final String outputFile;
   private final Map<SourceSection, Set<Class<? extends Tags>>> sourceSectionTags;
-
-  private JsonWriter(
-      final Map<SourceSection, Set<Class<? extends Tags>>> sourceSectionTags) {
-    this(null, sourceSectionTags);
-  }
 
   private JsonWriter(final String outputFile,
       final Map<SourceSection, Set<Class<? extends Tags>>> sourceSectionTags) {
@@ -70,7 +53,7 @@ public final class JsonWriter {
     this.outputFile = outputFile;
   }
 
-  public void createJsonFile() {
+  private void createJsonFile() {
     try {
       try (PrintWriter jsonFile = new PrintWriter(new File(outputFile))) {
         jsonFile.println(createJsonString(null));
@@ -83,20 +66,13 @@ public final class JsonWriter {
   public String createJsonString(final String type) {
     return createJsonString(type, null, null);
   }
+
   public String createJsonString(final String type,
       Map<Source, String> sourceToId, Map<SourceSection, String> sectionToId) {
     Set<SourceSection> allSections = sourceSectionTags.keySet();
 
     Set<Source> allSources = new HashSet<>();
     allSections.forEach(ss -> allSources.add(ss.getSource()));
-
-    // TODO:
-//    for (Source s : allSources) {
-//      Set<SourceSection> annotations = SourcecodeCompiler.getSyntaxAnnotations(s);
-//      if (annotations != null) {
-//        allSections.addAll(annotations);
-//      }
-//    }
 
     if (sourceToId == null) {
       sourceToId  = createIdMap(allSources, "s-");
@@ -109,11 +85,11 @@ public final class JsonWriter {
     for (Source s : allSources) {
       String id = sourceToId.get(s);
       assert id != null && !id.equals("");
-      allSourcesJson.add(id, sourceToJson(s, id));
+      allSourcesJson.add(id, ToJson.source(s, id));
     }
 
-    JSONObjectBuilder allSectionsJson = createJsonForSourceSections(sourceToId,
-        sectionToId, allSections, sourceSectionTags);
+    JSONObjectBuilder allSectionsJson = ToJson.sourceSections(
+        allSections, sourceToId, sectionToId,  sourceSectionTags);
 
     JSONObjectBuilder root = JSONHelper.object();
     if (type != null) {
@@ -126,18 +102,6 @@ public final class JsonWriter {
     return root.toString();
   }
 
-  public static JSONObjectBuilder createJsonForSourceSections(
-      final Map<Source, String> sourceToId,
-      final Map<SourceSection, String> sectionToId,
-      final Set<SourceSection> allSections,
-      final Map<SourceSection, Set<Class<? extends Tags>>> tags) {
-    JSONObjectBuilder allSectionsJson = JSONHelper.object();
-    for (SourceSection ss : allSections) {
-      allSectionsJson.add(sectionToId.get(ss), sectionToJson(ss, sectionToId.get(ss), sourceToId, tags));
-    }
-    return allSectionsJson;
-  }
-
   private <U> Map<U, String> createIdMap(final Set<U> set, final String idPrefix) {
     Map<U, String> eToId = new HashMap<>();
 
@@ -147,45 +111,5 @@ public final class JsonWriter {
       i += 1;
     }
     return eToId;
-  }
-
-  private JSONObjectBuilder sourceToJson(final Source s, final String id) {
-    JSONObjectBuilder builder = JSONHelper.object();
-    builder.add("id", id);
-    builder.add("sourceText", s.getCode());
-    builder.add("mimeType",   s.getMimeType());
-    builder.add("name",       s.getName());
-    builder.add("uri",        s.getURI().toString());
-    return builder;
-  }
-
-  private static JSONObjectBuilder sectionToJson(final SourceSection ss,
-      final String id, final Map<Source, String> sourceToId,
-      final Map<SourceSection, Set<Class<? extends Tags>>> tags) {
-    return sectionToJson(ss, id, sourceToId, tags.get(ss));
-  }
-
-  public static JSONObjectBuilder sectionToJson(final SourceSection ss,
-      final String id, final Map<Source, String> sourceToId,
-      final Set<Class<? extends Tags>> tags) {
-    JSONObjectBuilder builder = JSONHelper.object();
-
-    builder.add("id", id);
-    builder.add("firstIndex", ss.getCharIndex());
-    builder.add("length", ss.getCharLength());
-    builder.add("line", ss.getStartLine());
-    builder.add("column", ss.getStartColumn());
-    builder.add("description", ss.getShortDescription());
-    builder.add("sourceId", sourceToId.get(ss.getSource()));
-
-    if (tags != null && tags.size() > 0) {
-      JSONArrayBuilder arr = JSONHelper.array();
-      for (Class<? extends Tags> tagClass : tags) {
-        arr.add(tagClass.getSimpleName());
-      }
-      builder.add("tags", arr);
-    }
-//    builder.add("data", collectDataForSection(ss));
-    return builder;
   }
 }
