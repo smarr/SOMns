@@ -120,7 +120,7 @@ import tools.highlight.Tags.StatementSeparatorTag;
 import tools.language.StructuralProbe;
 
 
-public final class Parser {
+public class Parser {
 
   private final Lexer               lexer;
   private final Source              source;
@@ -269,7 +269,7 @@ public final class Parser {
     return syntaxAnnotations;
   }
 
-  SourceCoordinate getCoordinate() {
+  public SourceCoordinate getCoordinate() {
     return lexer.getStartCoordinate();
   }
 
@@ -721,7 +721,7 @@ public final class Parser {
         coord.charIndex, 0);
   }
 
-  SourceSection getSource(final SourceCoordinate coord) {
+  public SourceSection getSource(final SourceCoordinate coord) {
     assert lexer.getNumberOfCharactersRead() - coord.charIndex >= 0;
     SourceSection ss = source.createSection(null, coord.startLine,
         coord.startColumn, coord.charIndex,
