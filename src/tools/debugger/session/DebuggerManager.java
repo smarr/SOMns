@@ -7,6 +7,7 @@ import java.util.Map.Entry;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.SFarReference;
 
+
 /**
  * Manager for the debugging session.
  *
@@ -38,7 +39,7 @@ public class DebuggerManager {
     actorLocalManager = new HashMap<>();
   }
 
-//check: move createActorMap method from WebDebugger to ActorExecutionThread to get the map of actors...
+  // check: move createActorMap method from WebDebugger to ActorExecutionThread to get the map of actors...
   public void removeActorFromDataStructures(final Actor actor, final LocalManager lm) {
 
     for (Entry<SFarReference, String> e : actorsToIds.entrySet()) {
@@ -47,18 +48,18 @@ public class DebuggerManager {
       actorsToIds.remove(a);
     }
 
-    //remove localManager corresponding to that actor
+    // remove localManager corresponding to that actor
     if (actorLocalManager.containsKey(actor)) {
       actorLocalManager.remove(actor);
     }
   }
 
   public void addActorToDataStructures(final Actor actor, final LocalManager lm) {
-    //createdActorsPerThread is updated in Actor 54 traceActorsExceptMainOne()
+    // createdActorsPerThread is updated in Actor 54 traceActorsExceptMainOne()
     actorLocalManager.put(actor, lm);
   }
 
-  //param actorSetId is not needed
+  // param actorSetId is not needed
   /*public void notifyBreakpoint(final Breakpoint breakpoint, final boolean isAddition) {
     for (Actor actor : actorLocalManager.keySet()) {
       LocalManager lm = actorLocalManager.get(actor);
@@ -75,10 +76,8 @@ public class DebuggerManager {
   public void notifyCommand(final Actor actor, final String message) {
     LocalManager lm = actorLocalManager.get(actor);
     if (lm != null) {
-    //TODO: frLocalManager <+ message; //apply the message
-
+      // TODO: frLocalManager <+ message; //apply the message
     }
-
   }
 
   /**
@@ -89,7 +88,7 @@ public class DebuggerManager {
    *
    */
   public class LocalInterface{
-  //listLocalManagers
+    //listLocalManagers
     //getLocalManagerById
     //setupDebugSession
     //loadMainCode
@@ -120,6 +119,4 @@ public class DebuggerManager {
     //updateInbox
     //updateMessageSent
   }
-
-
 }

@@ -441,36 +441,35 @@ View.prototype.displaySuspendEvent = function (data, getSource) {
     annotateArray(annotationArray, source.id, data.sections);
     sourceFile.html(arrayToString(annotationArray));
 
-   var sendOperator = sourceFile.find(".EventualMessageSend");
-   $(sendOperator).attr("data-toggle", "popover");
-   $(sendOperator).attr("data-trigger", "click hover");//focus= stay, click = appear and dissapear
-   $(sendOperator).attr("title", "Message Breakpoint");
+    var sendOperator = sourceFile.find(".EventualMessageSend");
+    $(sendOperator).attr("data-toggle", "popover");
+    $(sendOperator).attr("data-trigger", "click hover");//focus= stay, click = appear and dissapear
+    $(sendOperator).attr("title", "Message Breakpoint");
 
-   $(sendOperator).attr("tab-index", "0");
-   $(sendOperator).attr("role", "button");
-   
-   $(sendOperator).attr("data-content", function(){
+    $(sendOperator).attr("tab-index", "0");
+    $(sendOperator).attr("role", "button");
+
+    $(sendOperator).attr("data-content", function() {
       var menuContent = nodeFromTemplate("hover-menu");
       return $(menuContent).html();
-   });
-  
+    });
+
     $(sendOperator).attr("data-html", "true");
     $(sendOperator).attr("data-placement", "auto top");
     $(sendOperator).popover();
-  
-   var sectionId;
-   // enable clicking on EventualSendNodes
-   enableEventualSendClicks(sourceFile);
 
-  //capture click event from buttons inside popover
-   $(document).on('click',"#btnReceiver",function () {
-     ctrl.messageBreakpointReceiver(sectionId);     
-   });
+    var sectionId;
+    // enable clicking on EventualSendNodes
+    enableEventualSendClicks(sourceFile);
 
-   $(document).on('click',"#btnSend",function () {
+    // capture click event from buttons inside popover
+    $(document).on("click", "#btnReceiver",function () {
+      ctrl.messageBreakpointReceiver(sectionId);
+    });
+
+    $(document).on("click", "#btnSend",function () {
       ctrl.messageBreakpointSender(sectionId);
-   });
-
+    });
   }
 
   // highlight current node

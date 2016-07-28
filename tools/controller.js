@@ -117,7 +117,7 @@ Controller.prototype.messageBreakpointReceiver = function (sectionId) {
       function (source) { return new SendBreakpoint(source, sourceSection, "receiver"); });
 
   this.view.updateSendBreakpoint(breakpoint);
-}
+};
 
 Controller.prototype.messageBreakpointSender = function (sectionId) {
   dbgLog("--messageBreakpointSender");
@@ -127,7 +127,7 @@ Controller.prototype.messageBreakpointSender = function (sectionId) {
       function (source) { return new SendBreakpoint(source, sourceSection, "sender"); });
 
   this.view.updateSendBreakpoint(breakpoint);
-}
+};
 
 Controller.prototype.resumeExecution = function () {
   this.vmConnection.sendDebuggerAction('resume', this.dbg.lastSuspendEventId);

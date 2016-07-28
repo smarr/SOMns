@@ -114,9 +114,6 @@ public class LocalManager {
 
   /**
    * Check if the message is breakpointed.
-   *
-   * @param msg
-   * @return
    */
   public boolean isBreakpointed(final EventualMessage msg,
       final boolean receiver) {
@@ -136,10 +133,8 @@ public class LocalManager {
           if (bId.equals(savedBreakpoint)) {
             return true;
           }
-
         }
       }
-
     } else { // sender
       if (!this.senderBreakpoints.isEmpty()) {
         Set<BreakpointLocation> keys = this.senderBreakpoints.keySet();
@@ -164,9 +159,6 @@ public class LocalManager {
 
   /**
    * Set debugging state to pause.
-   *
-   * @param msg
-   * @param state
    */
   public void pauseAndBuffer(final EventualMessage msg, final State state) {
 

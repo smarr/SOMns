@@ -95,19 +95,19 @@ class WebSocketHandler extends WebSocketServer {
         return;
       case "stepInto":
         WebDebugger.log("STEP INTO");
-        //processStepInto(msg);
+        // processStepInto(msg);
         return;
       case "stepOver":
         WebDebugger.log("STEP OVER");
-      //processStepOver(msg);
+        // processStepOver(msg);
         return;
       case "return":
         WebDebugger.log("RETURN");
-        //processStepReturn(msg);
+        // processStepReturn(msg);
         return;
       case "resume":
         WebDebugger.log("RESUME");
-      //processResume(msg);
+        // processResume(msg);
         return;
       case "stop": {
         WebDebugger.log("STOP");
