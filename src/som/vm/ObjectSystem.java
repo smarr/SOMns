@@ -20,6 +20,7 @@ import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
+import som.VmSettings;
 import som.compiler.AccessModifier;
 import som.compiler.MethodBuilder;
 import som.compiler.MixinBuilder.MixinDefinitionError;
@@ -518,7 +519,9 @@ Classes.transferClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInst
       }
 
       try { Thread.sleep(500); } catch (InterruptedException e) { }
-      if (Actor.isPoolIdle()) {
+
+      // never timeout when debugging
+      if (Actor.isPoolIdle() && !VmSettings.DEBUG_MODE) {
         emptyFJPool++;
       } else {
         emptyFJPool = 0;
