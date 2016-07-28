@@ -396,7 +396,7 @@ View.prototype.displaySuspendEvent = function (data, getSource) {
     sourceFile.html(arrayToString(annotationArray));
 
     // enable clicking on EventualSendNodes
-    enableEventualSendClicks(sourceFile)
+    enableEventualSendClicks(sourceFile);
   }
 
   // highlight current node
