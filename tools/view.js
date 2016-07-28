@@ -19,13 +19,42 @@ Begin.prototype.toString = function () {
   return '<span id="' + this.section.id + '" class="' + this.section.tags.join(" ") + '">';
 };
 
-function End(section) {
+Begin.prototype.length = function () {
+  return this.section.length;
+}
+
+function BeginMethodDef(method, i, defPart) {
+  this.method  = method;
+  this.i       = i;
+  this.defPart = defPart;
+  this.type    = Begin;
+}
+
+BeginMethodDef.prototype.length = function () {
+  return this.defPart.length;
+}
+
+
+BeginMethodDef.prototype.toString = function () {
+  let tags = "MethodDeclaration",
+    id = "m:" + this.method.sourceSection.sourceId +
+      ":" + this.method.sourceSection.id +
+      ":" + this.i;
+  return '<span id="' + id + '" class="' + tags + '">';
+};
+
+function End(section, length) {
   this.section = section;
+  this.len     = length;
   this.type    = End;
 }
 
 End.prototype.toString = function () {
   return '</span>';
+};
+
+End.prototype.length = function () {
+  return this.len;
 };
 
 function Annotation(char) {
@@ -36,22 +65,22 @@ function Annotation(char) {
 
 Annotation.prototype.toString = function() {
   this.before.sort(function (a, b) {
-    if (a.section.type !== b.section.type) {
-      if (a.section.type === Begin) {
+    if (a.type !== b.type) {
+      if (a.type === Begin) {
         return -1;
       } else {
         return 1;
       }
     }
-
-    if (a.section.length === b.section.length) {
+    
+    if (a.length() === b.length()) {
       return 0;
     }
 
-    if (a.section.length < b.section.length) {
-      return (a.section.type === Begin) ? 1 : -1;
+    if (a.length() < b.length()) {
+      return (a.type === Begin) ? 1 : -1;
     } else {
-      return (a.section.type === Begin) ? -1 : 1;
+      return (a.type === Begin) ? -1 : 1;
     }
   });
 
@@ -92,14 +121,31 @@ function ensureItIsAnnotation(arr, idx) {
   return arr[idx];
 }
 
-function annotateArray(arr, sourceId, sections) {
+function annotateArray(arr, sourceId, sections, methods) {
+  // adding all source sections
   for (var sId in sections) {
     var s = sections[sId];
     if (s.sourceId === sourceId) {
       var start = ensureItIsAnnotation(arr, s.firstIndex),
-        end   = ensureItIsAnnotation(arr, s.firstIndex + s.length);
+            end = ensureItIsAnnotation(arr, s.firstIndex + s.length);
       start.before.push(new Begin(s));
-      end.before.push(new End(s));
+      end.before.push(new End(s, s.length));
+    }
+  }
+
+  // adding method definitions
+  for (let k in methods) {
+    let meth = methods[k];
+    if (meth.sourceSection.sourceId !== sourceId) {
+      continue;
+    }
+
+    for (let i in meth.definition) {
+      let defPart = meth.definition[i],
+        start = ensureItIsAnnotation(arr, defPart.firstIndex),
+        end = ensureItIsAnnotation(arr, defPart.firstIndex + defPart.length);
+      start.before.push(new BeginMethodDef(meth, i, defPart));
+      end.before.push(new End(meth, defPart.length));
     }
   }
 }
@@ -120,7 +166,7 @@ function enableEventualSendClicks(fileNode) {
   })
 }
 
-function showSource(s, sections) {
+function showSource(s, sections, methods) {
   var tabListEntry = document.getElementById(s.id),
     aElem = document.getElementById("a" + s.id);
   if (tabListEntry) {
@@ -135,7 +181,7 @@ function showSource(s, sections) {
   }
 
   var annotationArray = sourceToArray(s.sourceText);
-  annotateArray(annotationArray, s.id, sections);
+  annotateArray(annotationArray, s.id, sections, methods);
 
   tabListEntry = nodeFromTemplate("tab-list-entry");
 
@@ -302,7 +348,7 @@ View.prototype.onClose = function () {
 View.prototype.displaySources = function (msg) {
   var sId;
   for (sId in msg.sources) {
-    showSource(msg.sources[sId], msg.sections);
+    showSource(msg.sources[sId], msg.sections, msg.methods);
   }
 
   for (var ssId in msg.sections) {

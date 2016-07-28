@@ -194,6 +194,7 @@ function Debugger() {
   this.lastSuspendEventId = null;
   this.sourceObjects  = {};
   this.sectionObjects = {};
+  this.methods        = {};
   this.breakpoints    = {};
 }
 
@@ -219,6 +220,18 @@ Debugger.prototype.addSources = function (msg) {
 Debugger.prototype.addSections = function (msg) {
   for (let ssId in msg.sections) {
     this.sectionObjects[ssId] = msg.sections[ssId];
+  }
+};
+
+Debugger.prototype.addMethods = function (msg) {
+  for (let k in msg.methods) {
+    let meth = msg.methods[k];
+    let sId  = meth.sourceSection.sourceId;
+    let ssId = meth.sourceSection.id;
+    if (!this.methods[sId]) {
+      this.methods[sId] = {};
+    }
+    this.methods[sId][ssId] = meth;
   }
 };
 

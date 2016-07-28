@@ -49,6 +49,8 @@ Controller.prototype.onError = function () {
 Controller.prototype.onReceivedSource = function (msg) {
   this.dbg.addSources(msg);
   this.dbg.addSections(msg);
+  this.dbg.addMethods(msg);
+
   this.view.displaySources(msg);
 
   for (var sId in msg.sources) {
