@@ -31,7 +31,7 @@ import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.nodes.ExpressionNode;
 
 
-public class Method extends Invokable {
+public final class Method extends Invokable {
 
   private final MethodScope currentMethodScope;
   private final SourceSection[] definition;
@@ -55,12 +55,12 @@ public class Method extends Invokable {
   }
 
   @Override
-  public final String toString() {
+  public String toString() {
     return "Method " + getName() + "\t@" + Integer.toHexString(hashCode());
   }
 
   @Override
-  public final Invokable cloneWithNewLexicalContext(final MethodScope outerMethodScope) {
+  public Invokable cloneWithNewLexicalContext(final MethodScope outerMethodScope) {
     FrameDescriptor inlinedFrameDescriptor = getFrameDescriptor().copy();
     MethodScope     inlinedCurrentScope = new MethodScope(
         inlinedFrameDescriptor, outerMethodScope,
@@ -73,7 +73,7 @@ public class Method extends Invokable {
     return clone;
   }
 
-  public final Invokable cloneAndAdaptToEmbeddedOuterContext(
+  public Invokable cloneAndAdaptToEmbeddedOuterContext(
       final InlinerForLexicallyEmbeddedMethods inliner) {
     MethodScope currentAdaptedScope = new MethodScope(
         getFrameDescriptor().copy(), inliner.getCurrentMethodScope(),
@@ -88,7 +88,7 @@ public class Method extends Invokable {
     return clone;
   }
 
-  public final Invokable cloneAndAdaptToSomeOuterContextBeingEmbedded(
+  public Invokable cloneAndAdaptToSomeOuterContextBeingEmbedded(
       final InlinerAdaptToEmbeddedOuterContext inliner) {
     MethodScope currentAdaptedScope = new MethodScope(
         getFrameDescriptor().copy(), inliner.getCurrentMethodScope(),
@@ -104,7 +104,7 @@ public class Method extends Invokable {
   }
 
   @Override
-  public final void propagateLoopCountThroughoutMethodScope(final long count) {
+  public void propagateLoopCountThroughoutMethodScope(final long count) {
     assert count >= 0;
     currentMethodScope.propagateLoopCountThroughoutMethodScope(count);
     LoopNode.reportLoopCount(expressionOrSequence,
@@ -112,7 +112,7 @@ public class Method extends Invokable {
   }
 
   @Override
-  public final Node deepCopy() {
+  public Node deepCopy() {
     return cloneWithNewLexicalContext(currentMethodScope.getOuterMethodScopeOrNull());
   }
 
