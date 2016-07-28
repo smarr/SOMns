@@ -12,7 +12,7 @@ import tools.debugger.FrontendConnector.BreakpointLocation;
 
 public class ActorExecutionTrace {
 
-  private final static int MSG_BUFFER_SIZE = 128;
+  private static final int MSG_BUFFER_SIZE = 128;
 
   /** Access to this data structure needs to be synchronized. */
   private static final ObjectBuffer<ObjectBuffer<SFarReference>> createdActorsPerThread =
