@@ -123,8 +123,7 @@ public class LocalManager {
       if (!this.receiverBreakpoints.isEmpty()) {
         Set<BreakpointLocation> keys = this.receiverBreakpoints.keySet();
         for (BreakpointLocation breakpointLocation : keys) {
-          SectionBreakpoint bId = (SectionBreakpoint) breakpointLocation
-              .getId();
+          SectionBreakpoint bId = (SectionBreakpoint) breakpointLocation.getId();
 
           SectionBreakpoint savedBreakpoint = new SectionBreakpoint(fileName,
               source.getStartLine(), source.getStartColumn(),
@@ -139,8 +138,7 @@ public class LocalManager {
       if (!this.senderBreakpoints.isEmpty()) {
         Set<BreakpointLocation> keys = this.senderBreakpoints.keySet();
         for (BreakpointLocation breakpointLocation : keys) {
-          SectionBreakpoint bId = (SectionBreakpoint) breakpointLocation
-              .getId();
+          SectionBreakpoint bId = (SectionBreakpoint) breakpointLocation.getId();
 
           SectionBreakpoint savedBreakpoint = new SectionBreakpoint(fileName,
               source.getStartLine(), source.getStartColumn(),
@@ -214,8 +212,6 @@ public class LocalManager {
 
   /**
    * Save message in actor mailbox.
-   *
-   * @param msg
    */
   public void schedule(final EventualMessage msg, final boolean receiver) {
     if (isStarted()) {
@@ -247,8 +243,8 @@ public class LocalManager {
         // check whether the msg has a breakpoint
         boolean isBreakpointed = isBreakpointed(msg, receiver);
         if (isBreakpointed) {
-          if (receiver == false) { // pausing at sender actor = PauseResolve
-                                   // annotation in remed
+          // pausing at sender actor = PauseResolve, annotation in REME-D
+          if (!receiver) {
             installFutureBreakpoint(msg);
             this.actor.getMailbox().append(msg);
           } else { // pausing at receiver
