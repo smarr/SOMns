@@ -108,6 +108,11 @@ public final class JsonSerializer {
     for (RootNode r : rootNodes) {
       assert r instanceof Method;
       Method m = (Method) r;
+
+      if (m.isBlock()) {
+        continue;
+      }
+
       String ssId = createSourceSectionId(m.getSourceSection());
       String sId  = createSourceId(m.getSourceSection().getSource());
       arr.add(ToJson.method(m, ssId, sId));

@@ -234,7 +234,7 @@ public final class MethodBuilder {
 
     Method truffleMethod = new Method(getMethodIdentifier(),
         sourceSection, definition.toArray(new SourceSection[0]),
-        body, scope, (ExpressionNode) body.deepCopy());
+        body, scope, (ExpressionNode) body.deepCopy(), blockMethod);
     scope.setMethod(truffleMethod);
     return truffleMethod;
   }

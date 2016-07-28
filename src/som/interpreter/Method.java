@@ -35,16 +35,18 @@ public class Method extends Invokable {
 
   private final MethodScope currentMethodScope;
   private final SourceSection[] definition;
+  private final boolean block;
 
   public Method(final String name, final SourceSection sourceSection,
                 final SourceSection[] definition,
                 final ExpressionNode expressions,
                 final MethodScope currentLexicalScope,
-                final ExpressionNode uninitialized) {
+                final ExpressionNode uninitialized, final boolean block) {
     super(name, sourceSection, currentLexicalScope.getFrameDescriptor(),
         expressions, uninitialized);
     assert definition.length >= 1 && definition[0] != null;
     this.definition = definition;
+    this.block = block;
     this.currentMethodScope = currentLexicalScope;
     expressions.markAsRootExpression();
   }
@@ -67,7 +69,7 @@ public class Method extends Invokable {
     ExpressionNode  inlinedBody = SplitterForLexicallyEmbeddedCode.doInline(
         uninitializedBody, inlinedCurrentScope);
     Method clone = new Method(name, getSourceSection(), definition, inlinedBody,
-        inlinedCurrentScope, uninitializedBody);
+        inlinedCurrentScope, uninitializedBody, block);
     inlinedCurrentScope.setMethod(clone);
     return clone;
   }
@@ -82,7 +84,7 @@ public class Method extends Invokable {
     ExpressionNode uninitAdaptedBody = NodeUtil.cloneNode(adaptedBody);
 
     Method clone = new Method(name, getSourceSection(), definition, adaptedBody,
-        currentAdaptedScope, uninitAdaptedBody);
+        currentAdaptedScope, uninitAdaptedBody, block);
     currentAdaptedScope.setMethod(clone);
     return clone;
   }
@@ -97,7 +99,7 @@ public class Method extends Invokable {
     ExpressionNode uninitAdaptedBody = NodeUtil.cloneNode(adaptedBody);
 
     Method clone = new Method(name, getSourceSection(), definition,
-        adaptedBody, currentAdaptedScope, uninitAdaptedBody);
+        adaptedBody, currentAdaptedScope, uninitAdaptedBody, block);
     currentAdaptedScope.setMethod(clone);
     return clone;
   }
@@ -113,5 +115,9 @@ public class Method extends Invokable {
   @Override
   public final Node deepCopy() {
     return cloneWithNewLexicalContext(currentMethodScope.getOuterMethodScopeOrNull());
+  }
+
+  public boolean isBlock() {
+    return block;
   }
 }
