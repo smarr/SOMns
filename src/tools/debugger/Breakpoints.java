@@ -5,9 +5,13 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import com.oracle.truffle.api.debug.Breakpoint;
 import com.oracle.truffle.api.debug.Debugger;
+import com.oracle.truffle.api.nodes.RootNode;
+
+import som.interpreter.LexicalScope.MixinScope;
 
 
 public class Breakpoints {
@@ -106,7 +110,85 @@ public class Breakpoints {
     return bp;
   }
 
-  public Map<BreakpointId, Breakpoint> getKnownBreakpoints() {
-    return knownBreakpoints;
+
+
+  public BreakpointId getBreakpointId(final URI sourceUri,
+      final int startLine, final int startColumn, final int charLength) {
+    Set<BreakpointId> ids = knownBreakpoints.keySet();
+
+    for (BreakpointId breakpointId : ids) {
+      if (breakpointId instanceof SectionBreakpoint) {
+        BreakpointId bId = new SectionBreakpoint(sourceUri, startLine, startColumn, charLength);
+        SectionBreakpoint sb = (SectionBreakpoint) breakpointId;
+        if (sb.equals(bId)) {
+          return sb;
+        }
+
+      } else if (breakpointId instanceof LineBreakpoint) {
+        BreakpointId bId = new LineBreakpoint(sourceUri, startLine);
+        LineBreakpoint lb = (LineBreakpoint) breakpointId;
+        if (lb.equals(bId)) {
+          return lb;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  public BreakpointDataTrace getBreakpointDataTrace(final Set<RootNode> nodes, final URI sourceUri, final int startLine, final BreakpointId breakpointId) {
+    BreakpointDataTrace breakpointTrace = null;
+    RootNode rn = null;
+
+    if (nodes != null) {
+      for (RootNode rootNode : nodes) {
+        int nodeStartLine = rootNode.getSourceSection().getStartLine(); //startLine of the rootNode corresponds to first line of the method
+        int nodeEndLine = rootNode.getSourceSection().getEndLine();
+
+        if (startLine > nodeStartLine && startLine < nodeEndLine) { //check if the breakpoint startLine is in the rootNode coordinates
+          rn = rootNode;
+          break;
+        }
+      }
+    }
+
+    if (rn != null) {
+      MixinScope enclosingMixin = ((som.interpreter.Method) rn).getLexicalScope().getHolderScope();
+      String holderClass = enclosingMixin.getMixinDefinition().getName().getString();
+    //log("outer class " +enclosingMixin.getOuter().getName().getString());
+
+      String methodName = ((som.interpreter.Method) rn).getLexicalScope().getMethod().getName().split("#")[1];
+      breakpointTrace = new BreakpointDataTrace(holderClass, methodName, breakpointId);
+    }
+
+    return breakpointTrace;
+  }
+
+  /**
+   * Encapsulates data related to the breakpoint.
+   */
+  public class BreakpointDataTrace {
+    private String holderClass;
+    private String methodName;
+    private BreakpointId id;
+
+    BreakpointDataTrace(final String holderClass, final String methodName,
+        final BreakpointId id) {
+      this.holderClass = holderClass;
+      this.methodName = methodName;
+      this.id = id;
+    }
+
+    public String getHolderClass() {
+      return holderClass;
+    }
+
+    public String getMethodName() {
+      return methodName;
+    }
+
+    public BreakpointId getId() {
+      return id;
+    }
   }
 }

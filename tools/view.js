@@ -161,9 +161,36 @@ function countNumberOfLines(str) {
 }
 
 function enableEventualSendClicks(fileNode) {
-  fileNode.find(".EventualMessageSend").click(function (e) {
-    ctrl.onToggleMessageSendBreakpoint(e)
-  })
+   var sendOperator = fileNode.find(".EventualMessageSend");
+   $(sendOperator).attr("data-toggle", "popover");
+   $(sendOperator).attr("data-trigger", "click hover");
+   $(sendOperator).attr("title", "Message Breakpoint");
+
+   $(sendOperator).attr("tab-index", "0");
+   $(sendOperator).attr("role", "button");
+
+   $(sendOperator).attr("data-content", function() {
+     var menuContent = nodeFromTemplate("hover-menu");
+     return $(menuContent).html();
+   });
+
+   $(sendOperator).attr("data-html", "true");
+   $(sendOperator).attr("data-placement", "auto top");
+   $(sendOperator).popover();
+
+   var sectionId;
+   $(sendOperator).click(function (e) {
+    sectionId = e.currentTarget.id; 
+
+    //capture click event from buttons inside popover
+    $(document).on("click","#btnReceiver",function () {
+      ctrl.messageBreakpointReceiver(sectionId);     
+    });
+
+    $(document).on("click","#btnSend",function () {
+      ctrl.messageBreakpointSender(sectionId);
+    });
+   })
 }
 
 function showSource(s, sections, methods) {
@@ -200,6 +227,7 @@ function showSource(s, sections, methods) {
   newFileElement.getElementsByClassName("line-numbers")[0].innerHTML = createLineNumbers(countNumberOfLines(s.sourceText));
   var fileNode = newFileElement.getElementsByClassName("source-file")[0];
   fileNode.innerHTML = arrayToString(annotationArray);
+  
   enableEventualSendClicks($(fileNode));
 
   var files = document.getElementById("files");
@@ -440,36 +468,6 @@ View.prototype.displaySuspendEvent = function (data, getSource) {
     var annotationArray = sourceToArray(source.sourceText);
     annotateArray(annotationArray, source.id, data.sections);
     sourceFile.html(arrayToString(annotationArray));
-
-    var sendOperator = sourceFile.find(".EventualMessageSend");
-    $(sendOperator).attr("data-toggle", "popover");
-    $(sendOperator).attr("data-trigger", "click hover");//focus= stay, click = appear and dissapear
-    $(sendOperator).attr("title", "Message Breakpoint");
-
-    $(sendOperator).attr("tab-index", "0");
-    $(sendOperator).attr("role", "button");
-
-    $(sendOperator).attr("data-content", function() {
-      var menuContent = nodeFromTemplate("hover-menu");
-      return $(menuContent).html();
-    });
-
-    $(sendOperator).attr("data-html", "true");
-    $(sendOperator).attr("data-placement", "auto top");
-    $(sendOperator).popover();
-
-    var sectionId;
-    // enable clicking on EventualSendNodes
-    enableEventualSendClicks(sourceFile);
-
-    // capture click event from buttons inside popover
-    $(document).on("click", "#btnReceiver",function () {
-      ctrl.messageBreakpointReceiver(sectionId);
-    });
-
-    $(document).on("click", "#btnSend",function () {
-      ctrl.messageBreakpointSender(sectionId);
-    });
   }
 
   // highlight current node

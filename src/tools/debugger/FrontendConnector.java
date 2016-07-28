@@ -24,15 +24,14 @@ import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.api.utilities.JSONHelper.JSONObjectBuilder;
 import com.sun.net.httpserver.HttpServer;
 
-import som.interpreter.LexicalScope.MixinScope;
 import som.interpreter.actors.Actor;
+import som.interpreter.actors.Actor.Role;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.SFarReference;
 import tools.ObjectBuffer;
 import tools.actors.ActorExecutionTrace;
+import tools.debugger.Breakpoints.BreakpointDataTrace;
 import tools.debugger.Breakpoints.BreakpointId;
-import tools.debugger.Breakpoints.LineBreakpoint;
-import tools.debugger.Breakpoints.SectionBreakpoint;
 import tools.highlight.Tags;
 
 /**
@@ -230,17 +229,17 @@ public class FrontendConnector {
 
   public void requestBreakpoint(final boolean enabled, final URI sourceUri,
       final int startLine, final int startColumn, final int charLength,
-      final String role) {
+      final Role role) {
     try {
-      Breakpoint bp = breakpoints.getBreakpoint(sourceUri, startLine, startColumn, charLength);
-      bp.setEnabled(enabled);
+      Breakpoint breakpoint = breakpoints.getBreakpoint(sourceUri, startLine, startColumn, charLength);
+      breakpoint.setEnabled(enabled);
 
-      ObjectBuffer<ObjectBuffer<ObjectBuffer<EventualMessage>>> mm = ActorExecutionTrace.getAllProcessedMessages();
-      ObjectBuffer<ObjectBuffer<SFarReference>> aa = ActorExecutionTrace.getAllCreateActors();
+      ObjectBuffer<ObjectBuffer<ObjectBuffer<EventualMessage>>> messages = ActorExecutionTrace.getAllProcessedMessages();
+      ObjectBuffer<ObjectBuffer<SFarReference>> actors = ActorExecutionTrace.getAllCreateActors();
 
       Actor actor = null;
       boolean receiver;
-      if (role.equals("receiver")) {
+      if (role != null && role.equals(Role.RECEIVER)) {
         // TODO get receiver actor
         log("Send breakpoint on receiver");
         receiver = true;
@@ -252,97 +251,32 @@ public class FrontendConnector {
 
       log("breakpoint coordinates " + startLine + " " + startColumn + " " + charLength);
 
-      Map<BreakpointId, Breakpoint> storeBreakpoints = breakpoints.getKnownBreakpoints();
-      BreakpointId bId = getBreakpointId(storeBreakpoints, sourceUri, startLine, startColumn, charLength);
+      BreakpointId bId = breakpoints.getBreakpointId(sourceUri, startLine, startColumn, charLength);
 
-      //get holder class and method name from root node from coordinates
-      BreakpointLocation location = getBreakpointLocation(sourceUri, startLine, bId);
-      if (location != null) {
-        log("holder class: " + location.getHolderClass());
-        log("method name: " + location.getMethodName());
+      Set<RootNode> rootNodes = webDebugger.getRootNodesBySource(sourceUri);
+      BreakpointDataTrace breakpointTrace = breakpoints.getBreakpointDataTrace(rootNodes, sourceUri, startLine, bId);
+      if (breakpointTrace != null) {
+        log("holder class: " + breakpointTrace.getHolderClass());
+        log("method name: " + breakpointTrace.getMethodName());
       }
 
       if (actor != null) {
        actor.getLocalManager().setFileName(sourceUri);
-       ActorExecutionTrace.assignBreakpoint(bp, actor, location, receiver);
+       ActorExecutionTrace.assignBreakpoint(breakpoint, actor, breakpointTrace, receiver);
       }
 
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
   }
-
-  private BreakpointId getBreakpointId(final Map<BreakpointId, Breakpoint> storeBreakpoints, final URI sourceUri,
-      final int startLine, final int startColumn, final int charLength) {
-    Set<BreakpointId> ids = storeBreakpoints.keySet();
-
-    for (BreakpointId breakpointId : ids) {
-      if (breakpointId instanceof SectionBreakpoint) {
-        BreakpointId bId = new SectionBreakpoint(sourceUri, startLine, startColumn, charLength);
-        SectionBreakpoint sb = (SectionBreakpoint) breakpointId;
-        if (sb.equals(bId)) {
-          return sb;
-        }
-
-      } else if (breakpointId instanceof LineBreakpoint) {
-        BreakpointId bId = new LineBreakpoint(sourceUri, startLine);
-        LineBreakpoint lb = (LineBreakpoint) breakpointId;
-        if (lb.equals(bId)) {
-          return lb;
-        }
-      }
-    }
-
-    return null;
-  }
-
-  private BreakpointLocation getBreakpointLocation(final URI sourceUri, final int startLine, final BreakpointId bId) {
-    BreakpointLocation location = null;
-    Set<RootNode> nodes = null;
-    RootNode rn = null;
-
-    Map<Source, Set<RootNode>> rootNodesParsed = this.webDebugger.getRootNodes();
-    for (Source source : rootNodesParsed.keySet()) {
-      if ((source.getURI()).equals(sourceUri)) {
-        nodes = rootNodesParsed.get(source);
-        break;
-      }
-    }
-
-    if (nodes != null) {
-      for (RootNode rootNode : nodes) {
-        int nodeStartLine = rootNode.getSourceSection().getStartLine(); //startLine of the rootNode corresponds to first line of the method
-        int nodeEndLine = rootNode.getSourceSection().getEndLine();
-
-        if (startLine > nodeStartLine && startLine < nodeEndLine) { //check if the breakpoint startLine is in the rootNode coordinates
-          rn = rootNode;
-          log(rootNode.getSourceSection().getCode());
-          log("rootNode coordinates " + nodeStartLine + " " + nodeEndLine);
-          break;
-        }
-      }
-    }
-
-    if (rn != null) {
-      MixinScope enclosingMixin = ((som.interpreter.Method) rn).getLexicalScope().getHolderScope();
-      String holderClass = enclosingMixin.getMixinDefinition().getName().getString();
-    //log("outer class " +enclosingMixin.getOuter().getName().getString());
-
-      String methodName = ((som.interpreter.Method) rn).getLexicalScope().getMethod().getName().split("#")[1];
-      location = new BreakpointLocation(holderClass, methodName, bId);
-    }
-
-    return location;
-  }
-
   public void requestBreakpoint(final boolean enabled, final URI sourceUri,
       final int lineNumber) {
     try {
       Breakpoint bp = breakpoints.getBreakpoint(sourceUri, lineNumber);
       bp.setEnabled(enabled);
 
-      ObjectBuffer<ObjectBuffer<ObjectBuffer<EventualMessage>>> mm = ActorExecutionTrace.getAllProcessedMessages();
-      ObjectBuffer<ObjectBuffer<SFarReference>> aa = ActorExecutionTrace.getAllCreateActors();
+      ObjectBuffer<ObjectBuffer<ObjectBuffer<EventualMessage>>> messages = ActorExecutionTrace.getAllProcessedMessages();
+      ObjectBuffer<ObjectBuffer<SFarReference>> actors = ActorExecutionTrace.getAllCreateActors();
 
     } catch (IOException e) {
       throw new RuntimeException(e);
@@ -373,34 +307,6 @@ public class FrontendConnector {
       receiver.stop(delayMsec);
     } catch (InterruptedException e) {
 
-    }
-  }
-
-  /**
-   * Encapsulates the holder class and the method name of the breakpoint.
-   */
-  public class BreakpointLocation {
-    private String holderClass;
-    private String methodName;
-    private BreakpointId id;
-
-    BreakpointLocation(final String holderClass, final String methodName,
-        final BreakpointId id) {
-      this.holderClass = holderClass;
-      this.methodName = methodName;
-      this.id = id;
-    }
-
-    public String getHolderClass() {
-      return holderClass;
-    }
-
-    public String getMethodName() {
-      return methodName;
-    }
-
-    public BreakpointId getId() {
-      return id;
     }
   }
 }

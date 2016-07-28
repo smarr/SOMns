@@ -15,6 +15,8 @@ import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
 import com.oracle.truffle.api.debug.SuspendedEvent;
 
+import som.interpreter.actors.Actor.Role;
+
 class WebSocketHandler extends WebSocketServer {
   private static final int NUM_THREADS = 1;
 
@@ -49,19 +51,31 @@ class WebSocketHandler extends WebSocketServer {
 
     boolean enabled = obj.getBoolean("enabled", false);
     String role = obj.getString("role", null);
+    Role selectedRole = null;
+
+    if (role != null) {
+      switch (role) {
+        case "receiver":
+          selectedRole = Role.RECEIVER;
+          break;
+        case "sender":
+          selectedRole = Role.SENDER;
+          break;
+      }
+    }
 
     switch (type) {
       case "lineBreakpoint":
         processLineBreakpoint(obj, uri, enabled);
         break;
       case "sendBreakpoint":
-        processSendBreakpoint(obj, uri, enabled, role);
+        processSendBreakpoint(obj, uri, enabled, selectedRole);
         break;
     }
   }
 
   private void processSendBreakpoint(final JsonObject obj, final URI sourceUri,
-      final boolean enabled, final String role) {
+      final boolean enabled, final Role role) {
     int startLine   = obj.getInt("startLine",   -1);
     int startColumn = obj.getInt("startColumn", -1);
     int charLength  = obj.getInt("charLength",  -1);
@@ -95,19 +109,19 @@ class WebSocketHandler extends WebSocketServer {
         return;
       case "stepInto":
         WebDebugger.log("STEP INTO");
-        // processStepInto(msg);
+        //processStepInto(msg);
         return;
       case "stepOver":
         WebDebugger.log("STEP OVER");
-        // processStepOver(msg);
+        //processStepOver(msg);
         return;
       case "return":
         WebDebugger.log("RETURN");
-        // processStepReturn(msg);
+        //processStepReturn(msg);
         return;
       case "resume":
         WebDebugger.log("RESUME");
-        // processResume(msg);
+        //processResume(msg);
         return;
       case "stop": {
         WebDebugger.log("STOP");
@@ -126,7 +140,7 @@ class WebSocketHandler extends WebSocketServer {
         return;
       }
 
-      //todo..add an action pause?
+      //TODO..add case of action pause
     }
 
     WebDebugger.log("not supported: onMessage: " + message);

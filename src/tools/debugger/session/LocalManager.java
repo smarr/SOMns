@@ -11,8 +11,8 @@ import com.oracle.truffle.api.source.SourceSection;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
 import tools.ObjectBuffer;
+import tools.debugger.Breakpoints.BreakpointDataTrace;
 import tools.debugger.Breakpoints.SectionBreakpoint;
-import tools.debugger.FrontendConnector.BreakpointLocation;
 
 /**
  * This class is responsible for:
@@ -54,8 +54,8 @@ public class LocalManager {
    */
   private URI                           fileName;
 
-  final Map<BreakpointLocation, Breakpoint>   senderBreakpoints;
-  final Map<BreakpointLocation, Breakpoint>   receiverBreakpoints;
+  final Map<BreakpointDataTrace, Breakpoint>   senderBreakpoints;
+  final Map<BreakpointDataTrace, Breakpoint>   receiverBreakpoints;
 
   public LocalManager(final Actor actor) {
     this.actor = actor;
@@ -95,34 +95,33 @@ public class LocalManager {
   }
 
   public void addBreakpoint(final Breakpoint breakpoint,
-      final BreakpointLocation bLocation, final boolean receiver) {
+      final BreakpointDataTrace breakpointTrace, final boolean receiver) {
     if (receiver) {
-      receiverBreakpoints.put(bLocation, breakpoint);
+      receiverBreakpoints.put(breakpointTrace, breakpoint);
     } else {
-      senderBreakpoints.put(bLocation, breakpoint);
+      senderBreakpoints.put(breakpointTrace, breakpoint);
     }
   }
 
-  public void removeBreakpoint(final BreakpointLocation bLocation,
+  public void removeBreakpoint(final BreakpointDataTrace breakpointTrace,
       final boolean receiver) {
     if (receiver) {
-      receiverBreakpoints.remove(bLocation);
+      receiverBreakpoints.remove(breakpointTrace);
     } else {
-      senderBreakpoints.remove(bLocation);
+      senderBreakpoints.remove(breakpointTrace);
     }
   }
 
   /**
-   * Check if the message is breakpointed.
+   * Check if the message source section is breakpointed.
    */
-  public boolean isBreakpointed(final EventualMessage msg,
+  public boolean isBreakpointed(final SourceSection source,
       final boolean receiver) {
-    SourceSection source = msg.getTargetSourceSection();
 
     if (receiver) {
       if (!this.receiverBreakpoints.isEmpty()) {
-        Set<BreakpointLocation> keys = this.receiverBreakpoints.keySet();
-        for (BreakpointLocation breakpointLocation : keys) {
+        Set<BreakpointDataTrace> keys = this.receiverBreakpoints.keySet();
+        for (BreakpointDataTrace breakpointLocation : keys) {
           SectionBreakpoint bId = (SectionBreakpoint) breakpointLocation.getId();
 
           SectionBreakpoint savedBreakpoint = new SectionBreakpoint(fileName,
@@ -136,8 +135,8 @@ public class LocalManager {
       }
     } else { // sender
       if (!this.senderBreakpoints.isEmpty()) {
-        Set<BreakpointLocation> keys = this.senderBreakpoints.keySet();
-        for (BreakpointLocation breakpointLocation : keys) {
+        Set<BreakpointDataTrace> keys = this.senderBreakpoints.keySet();
+        for (BreakpointDataTrace breakpointLocation : keys) {
           SectionBreakpoint bId = (SectionBreakpoint) breakpointLocation.getId();
 
           SectionBreakpoint savedBreakpoint = new SectionBreakpoint(fileName,
@@ -197,7 +196,7 @@ public class LocalManager {
     }
 
     if (stopReceiver) {
-      // todo finish
+      // TODO finish
       if (isInStepInto()) {
         this.pausedState = State.INITIAL;
       }
@@ -221,12 +220,12 @@ public class LocalManager {
           // executed
           // or that we are paused in a message, and the user click on step over
 
-          // updateInbox..
+          this.actor.updateInbox(msg, false);
 
           // add message in the queue of the actor
           this.actor.getMailbox().append(msg);
         } else if (isInStepReturn()) {
-          // updateInbox..
+          this.actor.updateInbox(msg, false);
 
           // means we got a futurized message that needs to be executed with a
           // conditional breakpoint.
@@ -241,7 +240,7 @@ public class LocalManager {
         }
       } else { // actor running
         // check whether the msg has a breakpoint
-        boolean isBreakpointed = isBreakpointed(msg, receiver);
+        boolean isBreakpointed = isBreakpointed(msg.getTargetSourceSection(), receiver);
         if (isBreakpointed) {
           // pausing at sender actor = PauseResolve, annotation in REME-D
           if (!receiver) {
@@ -250,9 +249,7 @@ public class LocalManager {
           } else { // pausing at receiver
             pauseAndBuffer(msg, State.BREAKPOINT);
           }
-
         } else {
-
           this.actor.getMailbox().append(msg);
         }
 
@@ -313,7 +310,7 @@ public class LocalManager {
     if (size > 0) {
       EventualMessage msg = this.inbox.iterator().next();
 
-      // todo check on the length of the inbox, maybe it was the last message.
+      // TODO check on the length of the inbox, maybe it was the last message.
       schedule(msg, true);
     }
   }

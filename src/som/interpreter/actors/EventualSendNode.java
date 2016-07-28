@@ -158,23 +158,30 @@ public class EventualSendNode extends ExprWithTagsNode {
       assert !(args[0] instanceof SFarReference) : "This should not happen for this specialization, but it is handled in determineTargetAndWrapArguments(.)";
       assert !(args[0] instanceof SPromise) : "Should not happen either, but just to be sure";
 
-
+      SourceSection sourceSection = onReceive.getRootNode().getSourceSection();
+      boolean isBreakpointed = isMessageBreakpointed(target, sourceSection);
+      boolean pause = false;
+      if (isBreakpointed) {
+        pause = true;
+      }
       DirectMessage msg = new DirectMessage(
           EventualMessage.getCurrentExecutingMessage(), target, selector, args,
-          owner, resolver, onReceive);
-
-      checkMessageBreakpointed(msg);
+          owner, resolver, onReceive, pause);
       target.send(msg);
     }
 
     protected void sendPromiseMessage(final Object[] args, final SPromise rcvr,
         final SResolver resolver, final RegisterWhenResolved registerNode) {
       assert rcvr.getOwner() == EventualMessage.getActorCurrentMessageIsExecutionOn() : "think this should be true because the promise is an Object and owned by this specific actor";
+      SourceSection sourceSection = onReceive.getRootNode().getSourceSection();
+      boolean isBreakpointed = isMessageBreakpointed(rcvr.getOwner(), sourceSection);
+      boolean pause = false;
+      if (isBreakpointed) {
+        pause = true;
+      }
       PromiseSendMessage msg = new PromiseSendMessage(
           EventualMessage.getCurrentExecutingMessage(), selector, args,
-          rcvr.getOwner(), resolver, onReceive);
-
-      // checkMessageBreakpointed(msg);
+          rcvr.getOwner(), resolver, onReceive, pause);
       registerNode.register(rcvr, msg, rcvr.getOwner());
     }
 
@@ -216,10 +223,15 @@ public class EventualSendNode extends ExprWithTagsNode {
       SPromise  result   = SPromise.createPromise(current);
       SResolver resolver = SPromise.createResolver(result, "eventualSend:", selector);
 
+      SourceSection sourceSection = onReceive.getRootNode().getSourceSection();
+      boolean isBreakpointed = isMessageBreakpointed(current, sourceSection);
+      boolean pause = false;
+      if (isBreakpointed) {
+        pause = true;
+      }
       DirectMessage msg = new DirectMessage(EventualMessage.getCurrentExecutingMessage(),
           current, selector, args, current,
-          resolver, onReceive);
-      checkMessageBreakpointed(msg);
+          resolver, onReceive, pause);
       current.send(msg);
 
       return result;
@@ -244,10 +256,15 @@ public class EventualSendNode extends ExprWithTagsNode {
     @Specialization(guards = {"!isResultUsed()", "!isFarRefRcvr(args)", "!isPromiseRcvr(args)"})
     public final Object toNearRefWithoutResultPromise(final Object[] args) {
       Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
+      SourceSection sourceSection = onReceive.getRootNode().getSourceSection();
+      boolean isBreakpointed = isMessageBreakpointed(current, sourceSection);
+      boolean pause = false;
+      if (isBreakpointed) {
+        pause = true;
+      }
       DirectMessage msg = new DirectMessage(EventualMessage.getCurrentExecutingMessage(),
           current, selector, args, current,
-          null, onReceive);
-      checkMessageBreakpointed(msg);
+          null, onReceive, pause);
       current.send(msg);
       return Nil.nilObject;
     }
@@ -262,14 +279,8 @@ public class EventualSendNode extends ExprWithTagsNode {
       return super.isTaggedWith(tag);
     }
 
-    protected void checkMessageBreakpointed(final EventualMessage msg) {
-      Actor receiver = msg.getTarget();
-
-      boolean receiverBreakpointed = receiver.getLocalManager().isBreakpointed(msg, true);
-
-       if (receiverBreakpointed) {
-          msg.setPause(true);
-        }
-      }
+    protected boolean isMessageBreakpointed(final Actor receiver, final SourceSection sourceSection) {
+      return receiver.getLocalManager().isBreakpointed(sourceSection, true);
+    }
   }
 }

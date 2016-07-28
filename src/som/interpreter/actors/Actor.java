@@ -71,6 +71,14 @@ public class Actor {
    */
   private final LocalManager localManager;
 
+  /**
+   * Possible roles for an actor.
+   */
+  public enum Role {
+    SENDER,
+    RECEIVER
+  }
+
   protected Actor() {
     isExecuting = false;
     executor = new ExecAllMessages(this);
@@ -130,7 +138,7 @@ public class Actor {
   @TruffleBoundary
   public final synchronized void send(final EventualMessage msg) {
     assert msg.getTarget() == this;
-    if (msg.hasPause()) {
+    if (msg.isPause()) {
       localManager.schedule(msg, true);
     } else {
       mailbox.append(msg);
@@ -285,12 +293,14 @@ public class Actor {
     return mailbox;
   }
 
-  //Not sure about the class location
+  //TODO finish
   public void updateInbox(final EventualMessage msg, final boolean addition) {
     if (addition) {
       //messageAddedToActorEvent
+      logMessageAddedToMailbox(msg);
     } else {
       //messageRemovedFromActorEvent
+      logMessageBeingExecuted(msg);
     }
   }
 
