@@ -278,12 +278,18 @@ public class Parser {
     return classDeclaration(null, AccessModifier.PUBLIC);
   }
 
+  protected String className() throws ParseError {
+    String mixinName = text;
+    expect(Identifier, IdentifierTag.class);
+    return mixinName;
+  }
+
   private MixinBuilder classDeclaration(final MixinBuilder outerBuilder,
       final AccessModifier accessModifier) throws ParseError, MixinDefinitionError {
     expectIdentifier("class", "Found unexpected token %(found)s. " +
-      "Tried parsing a class declaration and expected 'class' instead.", KeywordTag.class);
-    String mixinName = text;
-    expect(Identifier, IdentifierTag.class);
+      "Tried parsing a class declaration and expected 'class' instead.",
+      KeywordTag.class);
+    String mixinName = className();
 
     MixinBuilder mxnBuilder = new MixinBuilder(outerBuilder, accessModifier,
         symbolFor(mixinName), structuralProbe);
