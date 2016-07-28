@@ -14,15 +14,12 @@ import tools.ObjectBuffer;
 import tools.debugger.Breakpoints.SectionBreakpoint;
 import tools.debugger.FrontendConnector.BreakpointLocation;
 
- /**
- *
+/**
  * This class is responsible for:
- * - instrumenting message sending, processing
- * and reception.
- * - receives information regarding to the breakpoints relevant to it.
+ *  - instrumenting message sending, processing and reception
+ *  - receives information regarding to the breakpoints relevant to it.
  *
  * @author carmentorres
- *
  */
 public class LocalManager {
 
@@ -39,13 +36,13 @@ public class LocalManager {
     BREAKPOINT, STEPINTO, STEPOVER, STEPRETURN,
   }
 
-  public State debuggingState = State.INITIAL;
-  public State pausedState = State.INITIAL;
+  public State                          debuggingState = State.INITIAL;
+  public State                          pausedState    = State.INITIAL;
 
   /**
    * corresponding actor for this localManager.
    */
-  private Actor actor;
+  private final Actor                         actor;
 
   /**
    * stores base-level messages that cannot be process because actor is paused.
@@ -55,10 +52,10 @@ public class LocalManager {
   /**
    * filename to debug.
    */
-  private URI  fileName;
+  private URI                           fileName;
 
-  Map<BreakpointLocation, Breakpoint> senderBreakpoints;
-  Map<BreakpointLocation, Breakpoint> receiverBreakpoints;
+  final Map<BreakpointLocation, Breakpoint>   senderBreakpoints;
+  final Map<BreakpointLocation, Breakpoint>   receiverBreakpoints;
 
   public LocalManager(final Actor actor) {
     this.actor = actor;
@@ -93,31 +90,27 @@ public class LocalManager {
     return pausedState == State.STEPRETURN;
   }
 
-
   public void setFileName(final URI fileName) {
     this.fileName = fileName;
   }
 
-   public void addBreakpoint(final Breakpoint breakpoint, final BreakpointLocation bLocation, final boolean receiver) {
-
-     if (receiver) {
-       receiverBreakpoints.put(bLocation, breakpoint);
-     } else {
-       senderBreakpoints.put(bLocation, breakpoint);
-     }
-
-   }
-
-    public void removeBreakpoint(final BreakpointLocation bLocation, final boolean receiver) {
-
-      if (receiver) {
-        receiverBreakpoints.remove(bLocation);
-      } else {
-        senderBreakpoints.remove(bLocation);
-      }
-
+  public void addBreakpoint(final Breakpoint breakpoint,
+      final BreakpointLocation bLocation, final boolean receiver) {
+    if (receiver) {
+      receiverBreakpoints.put(bLocation, breakpoint);
+    } else {
+      senderBreakpoints.put(bLocation, breakpoint);
     }
+  }
 
+  public void removeBreakpoint(final BreakpointLocation bLocation,
+      final boolean receiver) {
+    if (receiver) {
+      receiverBreakpoints.remove(bLocation);
+    } else {
+      senderBreakpoints.remove(bLocation);
+    }
+  }
 
   /**
    * Check if the message is breakpointed.
@@ -125,16 +118,20 @@ public class LocalManager {
    * @param msg
    * @return
    */
-  public boolean isBreakpointed(final EventualMessage msg, final boolean receiver) {
+  public boolean isBreakpointed(final EventualMessage msg,
+      final boolean receiver) {
     SourceSection source = msg.getTargetSourceSection();
 
     if (receiver) {
       if (!this.receiverBreakpoints.isEmpty()) {
         Set<BreakpointLocation> keys = this.receiverBreakpoints.keySet();
         for (BreakpointLocation breakpointLocation : keys) {
-          SectionBreakpoint bId = (SectionBreakpoint) breakpointLocation.getId();
+          SectionBreakpoint bId = (SectionBreakpoint) breakpointLocation
+              .getId();
 
-          SectionBreakpoint savedBreakpoint = new SectionBreakpoint(fileName, source.getStartLine(), source.getStartColumn(), source.getCharIndex());
+          SectionBreakpoint savedBreakpoint = new SectionBreakpoint(fileName,
+              source.getStartLine(), source.getStartColumn(),
+              source.getCharIndex());
 
           if (bId.equals(savedBreakpoint)) {
             return true;
@@ -143,13 +140,16 @@ public class LocalManager {
         }
       }
 
-    } else { //sender
+    } else { // sender
       if (!this.senderBreakpoints.isEmpty()) {
         Set<BreakpointLocation> keys = this.senderBreakpoints.keySet();
         for (BreakpointLocation breakpointLocation : keys) {
-          SectionBreakpoint bId = (SectionBreakpoint) breakpointLocation.getId();
+          SectionBreakpoint bId = (SectionBreakpoint) breakpointLocation
+              .getId();
 
-          SectionBreakpoint savedBreakpoint = new SectionBreakpoint(fileName, source.getStartLine(), source.getStartColumn(), source.getCharIndex());
+          SectionBreakpoint savedBreakpoint = new SectionBreakpoint(fileName,
+              source.getStartLine(), source.getStartColumn(),
+              source.getCharIndex());
 
           if (bId.equals(savedBreakpoint)) {
             return true;
@@ -162,12 +162,12 @@ public class LocalManager {
     return false;
   }
 
-/**
- * Set debugging state to pause.
- *
- * @param msg
- * @param state
- */
+  /**
+   * Set debugging state to pause.
+   *
+   * @param msg
+   * @param state
+   */
   public void pauseAndBuffer(final EventualMessage msg, final State state) {
 
     this.inbox.append(msg);
@@ -175,9 +175,9 @@ public class LocalManager {
     if (isStarted()) {
 
       if (!isPaused()) {
-        //set actor Paused
+        // set actor Paused
       }
-      //updateInbox(this.actor, msg);
+      // updateInbox(this.actor, msg);
       this.debuggingState = State.PAUSED;
     }
     this.pausedState = state;
@@ -195,137 +195,138 @@ public class LocalManager {
 
       if (this.inbox.isEmpty()) {
         this.debuggingState = State.RUNNING;
-        //actorResumed
+        // actorResumed
       }
     }
 
     if (isInStepInto()) {
-      //senderBreakpoints.remove(futureBreakpoint....
+      // senderBreakpoints.remove(futureBreakpoint....
       this.pausedState = State.INITIAL;
       this.debuggingState = State.RUNNING;
-      //actorResumed
+      // actorResumed
     }
 
     if (stopReceiver) {
-      //todo finish
+      // todo finish
       if (isInStepInto()) {
         this.pausedState = State.INITIAL;
       }
-
     }
-
   }
 
- /* public void send(final EventualMessage msg) {
+  /*
+   * public void send(final EventualMessage msg) {
+   *
+   * }
+   */
 
-  }*/
-/**
- * Save message in actor mailbox.
- *
- * @param msg
- */
+  /**
+   * Save message in actor mailbox.
+   *
+   * @param msg
+   */
   public void schedule(final EventualMessage msg, final boolean receiver) {
     if (isStarted()) {
-
-      if (isPaused()) { //actor paused
+      if (isPaused()) { // actor paused
         if (isInStepInto() || isInStepOver()) {
-          // This means we got the message breakpointed that needs to be executed
+          // This means we got the message breakpointed that needs to be
+          // executed
           // or that we are paused in a message, and the user click on step over
 
-          //updateInbox..
+          // updateInbox..
 
-          //add message in the queue of the actor
+          // add message in the queue of the actor
           this.actor.getMailbox().append(msg);
         } else if (isInStepReturn()) {
-           //updateInbox..
+          // updateInbox..
 
-          // means we got a futurized message that needs to be executed with a conditional breakpoint.
-          //TODO check if this is need it for this debugger
+          // means we got a futurized message that needs to be executed with a
+          // conditional breakpoint.
+          // TODO check if this is need it for this debugger
           installFutureBreakpoint(msg);
 
           this.actor.getMailbox().append(msg);
 
         } else {
-        //here for all messages arriving to a paused actor
+          // here for all messages arriving to a paused actor
           pauseAndBuffer(msg, pausedState);
         }
-    } else { //actor running
-    //check whether the msg has a breakpoint
-      boolean isBreakpointed = isBreakpointed(msg, receiver);
-      if (isBreakpointed) {
-        if (receiver == false) { //pausing at sender actor = PauseResolve annotation in remed
-          installFutureBreakpoint(msg);
+      } else { // actor running
+        // check whether the msg has a breakpoint
+        boolean isBreakpointed = isBreakpointed(msg, receiver);
+        if (isBreakpointed) {
+          if (receiver == false) { // pausing at sender actor = PauseResolve
+                                   // annotation in remed
+            installFutureBreakpoint(msg);
+            this.actor.getMailbox().append(msg);
+          } else { // pausing at receiver
+            pauseAndBuffer(msg, State.BREAKPOINT);
+          }
+
+        } else {
+
           this.actor.getMailbox().append(msg);
-        } else { //pausing at receiver
-          pauseAndBuffer(msg, State.BREAKPOINT);
         }
 
-      } else {
-
-        this.actor.getMailbox().append(msg);
       }
-
-    }
-    } else { //actor doesn't started
-    //check if it is ExternalMessage
+    } else { // actor doesn't started
+      // check if it is ExternalMessage
       pauseAndBuffer(msg, State.INITIAL);
     }
-
   }
 
   private void installFutureBreakpoint(final EventualMessage msg) {
-    //create a MessageResolution breakpoint from the message and add it to the senderBreakpoints
+    // create a MessageResolution breakpoint from the message and add it to the
+    // senderBreakpoints
   }
 
   public void serve() {
-    //dequeue the message when reaches the beginning of the queue and execute it
-    //check if it is breakpointed
+    // dequeue the message when reaches the beginning of the queue and execute
+    // it
+    // check if it is breakpointed
   }
 
   public void pause() {
     this.debuggingState = State.PAUSED;
     this.pausedState = State.COMMAND;
-    //actorPause(actorId, actorState)
+    // actorPause(actorId, actorState)
   }
 
- public void resume() {
-   this.debuggingState = State.RUNNING;
-   this.pausedState = State.INITIAL;
-   //actorResume(actorId)
+  public void resume() {
+    this.debuggingState = State.RUNNING;
+    this.pausedState = State.INITIAL;
+    // actorResume(actorId)
   }
 
- public void stepInto() {
-   stepCommand(State.STEPINTO);
- }
+  public void stepInto() {
+    stepCommand(State.STEPINTO);
+  }
 
- public void stepOver() {
-   stepCommand(State.STEPOVER);
- }
+  public void stepOver() {
+    stepCommand(State.STEPOVER);
+  }
 
- public void stepReturn() {
-   stepCommand(State.STEPRETURN);
- }
+  public void stepReturn() {
+    stepCommand(State.STEPRETURN);
+  }
 
- public void stepCommand(final State step) {
-   if (isPaused()) {
-     this.pausedState = step;
-   }
-   scheduleOneMessageFromInbox();
- }
+  public void stepCommand(final State step) {
+    if (isPaused()) {
+      this.pausedState = step;
+    }
+    scheduleOneMessageFromInbox();
+  }
 
-//you can re-schedule a message which is not breakpointed
- // but it is paused because of an explicit pause command!
- public void scheduleOneMessageFromInbox() {
-   int size = this.inbox.size();
+  // you can re-schedule a message which is not breakpointed
+  // but it is paused because of an explicit pause command!
+  public void scheduleOneMessageFromInbox() {
+    int size = this.inbox.size();
 
-   if (size > 0) {
-     EventualMessage msg = this.inbox.iterator().next();
+    if (size > 0) {
+      EventualMessage msg = this.inbox.iterator().next();
 
-     // todo check on the length of the inbox, maybe it was the last message.
-
-     schedule(msg, true);
-   }
-
- }
-
+      // todo check on the length of the inbox, maybe it was the last message.
+      schedule(msg, true);
+    }
+  }
 }

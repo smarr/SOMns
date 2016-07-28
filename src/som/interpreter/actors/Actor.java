@@ -67,9 +67,9 @@ public class Actor {
   private final ExecAllMessages executor;
 
   /**
-   * contains the operations for the management of messages between actors.
+   * Contains the operations for the management of messages between actors.
    */
-  private LocalManager localManager;
+  private final LocalManager localManager;
 
   protected Actor() {
     isExecuting = false;
