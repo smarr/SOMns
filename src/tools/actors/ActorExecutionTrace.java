@@ -12,6 +12,8 @@ import tools.debugger.FrontendConnector.BreakpointLocation;
 
 public class ActorExecutionTrace {
 
+  private final static int MSG_BUFFER_SIZE = 128;
+
   /** Access to this data structure needs to be synchronized. */
   private static final ObjectBuffer<ObjectBuffer<SFarReference>> createdActorsPerThread =
       VmSettings.ACTOR_TRACING ? new ObjectBuffer<>(VmSettings.NUM_THREADS) : null;
@@ -45,7 +47,7 @@ public class ActorExecutionTrace {
     ObjectBuffer<SFarReference> createdActors;
 
     if (VmSettings.ACTOR_TRACING) {
-      createdActors = new ObjectBuffer<>(128);
+      createdActors = new ObjectBuffer<>(MSG_BUFFER_SIZE);
 
       ObjectBuffer<ObjectBuffer<SFarReference>> createdActorsPerThread = getAllCreateActors();
 
@@ -63,7 +65,7 @@ public class ActorExecutionTrace {
     ObjectBuffer<ObjectBuffer<EventualMessage>> processedMessages;
 
     if (VmSettings.ACTOR_TRACING) {
-      processedMessages = new ObjectBuffer<>(128);
+      processedMessages = new ObjectBuffer<>(MSG_BUFFER_SIZE);
 
       ObjectBuffer<ObjectBuffer<ObjectBuffer<EventualMessage>>> messagesProcessedPerThread = getAllProcessedMessages();
 
