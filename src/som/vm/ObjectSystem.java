@@ -504,7 +504,7 @@ Classes.transferClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInst
 
   private static void handlePromiseResult(final SPromise promise) {
     int emptyFJPool = 0;
-    while (emptyFJPool < 60) {
+    while (emptyFJPool < 120) {
       if (promise.isCompleted() || VM.shouldExit()) {
         if (VM.isAvoidingExit()) {
           return;
@@ -517,7 +517,7 @@ Classes.transferClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInst
         }
       }
 
-      try { Thread.sleep(1000); } catch (InterruptedException e) { }
+      try { Thread.sleep(500); } catch (InterruptedException e) { }
       if (Actor.isPoolIdle()) {
         emptyFJPool++;
       } else {
