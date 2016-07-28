@@ -106,7 +106,6 @@ public class Breakpoints {
     return bp;
   }
 
-
   public Map<BreakpointId, Breakpoint> getKnownBreakpoints() {
     return knownBreakpoints;
   }

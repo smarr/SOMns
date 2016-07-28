@@ -177,7 +177,7 @@ public class FrontendConnector {
   public void sendSuspendedEvent(final SuspendedEvent e, final String id,
       final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> loadedSourcesTags,
       final Map<Source, Set<RootNode>> rootNodes) {
-    Node suspendedNode = e.getNode();
+    Node     suspendedNode = e.getNode();
     RootNode suspendedRoot = suspendedNode.getRootNode();
     Source suspendedSource;
     if (suspendedRoot.getSourceSection() != null) {
@@ -376,33 +376,28 @@ public class FrontendConnector {
     }
   }
 
-/**
- * Encapsulates the holder class and the method name of the breakpoint.
- *
- * @author carmentorres
- *
- */
-  public class BreakpointLocation{
+  /**
+   * Encapsulates the holder class and the method name of the breakpoint.
+   */
+  public class BreakpointLocation {
     private String holderClass;
     private String methodName;
     private BreakpointId id;
 
-    BreakpointLocation(final String holderClass, final String methodName, final BreakpointId id) {
-        this.holderClass = holderClass;
-        this.methodName = methodName;
-        this.id = id;
+    BreakpointLocation(final String holderClass, final String methodName,
+        final BreakpointId id) {
+      this.holderClass = holderClass;
+      this.methodName = methodName;
+      this.id = id;
     }
-
 
     public String getHolderClass() {
       return holderClass;
     }
 
-
     public String getMethodName() {
       return methodName;
     }
-
 
     public BreakpointId getId() {
       return id;
