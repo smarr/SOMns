@@ -43,9 +43,14 @@ public class Method extends Invokable {
                 final ExpressionNode uninitialized) {
     super(name, sourceSection, currentLexicalScope.getFrameDescriptor(),
         expressions, uninitialized);
+    assert definition.length >= 1 && definition[0] != null;
     this.definition = definition;
     this.currentMethodScope = currentLexicalScope;
     expressions.markAsRootExpression();
+  }
+
+  public SourceSection[] getDefinition() {
+    return definition;
   }
 
   @Override

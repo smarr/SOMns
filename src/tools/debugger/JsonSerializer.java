@@ -19,6 +19,7 @@ import com.oracle.truffle.api.utilities.JSONHelper;
 import com.oracle.truffle.api.utilities.JSONHelper.JSONArrayBuilder;
 import com.oracle.truffle.api.utilities.JSONHelper.JSONObjectBuilder;
 
+import som.interpreter.Method;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.SFarReference;
@@ -66,7 +67,7 @@ public final class JsonSerializer {
     return idSourceSections.get(id);
   }
 
-  public static JSONObjectBuilder createSourceAndSectionMessage(
+  public static JSONObjectBuilder createInitialSourceMessage(
       final String type, final Source source,
       final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> loadedSourcesTags,
       final Instrumenter instrumenter, final Set<RootNode> rootNodes) {
@@ -75,8 +76,9 @@ public final class JsonSerializer {
     assert id != null && !id.equals("");
     allSourcesJson.add(id, ToJson.source(source, id));
 
-    return ToJson.sourceAndSectionMessage(type, allSourcesJson,
-        createSourceSections(source, loadedSourcesTags, instrumenter, rootNodes));
+    return ToJson.initialSourceMessage(type, allSourcesJson,
+        createSourceSections(source, loadedSourcesTags, instrumenter, rootNodes),
+        createMethodDefinitions(rootNodes));
   }
 
   public static JSONObjectBuilder createSourceSections(final Source source,
@@ -98,6 +100,19 @@ public final class JsonSerializer {
 
     return ToJson.sourceSections(
         sections, sourcesId, sourceSectionId, tagsForSections);
+  }
+
+  public static JSONArrayBuilder createMethodDefinitions(final Set<RootNode> rootNodes) {
+    JSONArrayBuilder arr = JSONHelper.array();
+
+    for (RootNode r : rootNodes) {
+      assert r instanceof Method;
+      Method m = (Method) r;
+      String ssId = createSourceSectionId(m.getSourceSection());
+      String sId  = createSourceId(m.getSourceSection().getSource());
+      arr.add(ToJson.method(m, ssId, sId));
+    }
+    return arr;
   }
 
   public static JSONObjectBuilder createFrame(final Node node,

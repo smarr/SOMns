@@ -13,6 +13,7 @@ import com.oracle.truffle.api.utilities.JSONHelper;
 import com.oracle.truffle.api.utilities.JSONHelper.JSONArrayBuilder;
 import com.oracle.truffle.api.utilities.JSONHelper.JSONObjectBuilder;
 
+import som.interpreter.Method;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.SFarReference;
 import som.vmobjects.SClass;
@@ -27,12 +28,14 @@ import tools.highlight.Tags;
  */
 public final class ToJson {
 
-  public static JSONObjectBuilder sourceAndSectionMessage(final String type,
-      final JSONObjectBuilder sources, final JSONObjectBuilder sections) {
+  public static JSONObjectBuilder initialSourceMessage(final String type,
+      final JSONObjectBuilder sources, final JSONObjectBuilder sections,
+      final JSONArrayBuilder methodDefinitions) {
     JSONObjectBuilder root = JSONHelper.object();
     root.add("type",     type);
     root.add("sources",  sources);
     root.add("sections", sections);
+    root.add("methods",  methodDefinitions);
     return root;
   }
 
@@ -49,13 +52,9 @@ public final class ToJson {
   public static JSONObjectBuilder sourceSection(final SourceSection ss,
       final String id, final String sourceId,
       final Set<Class<? extends Tags>> tags) {
-    JSONObjectBuilder builder = JSONHelper.object();
+    JSONObjectBuilder builder = simpleSourceSection(ss);
 
     builder.add("id", id);
-    builder.add("firstIndex", ss.getCharIndex());
-    builder.add("length",     ss.getCharLength());
-    builder.add("line",       ss.getStartLine());
-    builder.add("column",     ss.getStartColumn());
     builder.add("description", ss.getShortDescription());
     builder.add("sourceId", sourceId);
 
@@ -66,6 +65,17 @@ public final class ToJson {
       }
       builder.add("tags", arr);
     }
+    return builder;
+  }
+
+  public static JSONObjectBuilder simpleSourceSection(final SourceSection ss) {
+    JSONObjectBuilder builder = JSONHelper.object();
+
+    builder.add("firstIndex", ss.getCharIndex());
+    builder.add("length",     ss.getCharLength());
+    builder.add("line",       ss.getStartLine());
+    builder.add("column",     ss.getStartColumn());
+
     return builder;
   }
 
@@ -81,6 +91,21 @@ public final class ToJson {
               sourcesId.get(ss.getSource()), tags.get(ss)));
     }
     return allSectionsJson;
+  }
+
+  public static JSONObjectBuilder method(final Method method, final String ssId, final String sourceId) {
+    JSONObjectBuilder m = JSONHelper.object();
+    m.add("name", method.getName());
+
+    JSONArrayBuilder defs = JSONHelper.array();
+    for (SourceSection ss : method.getDefinition()) {
+      defs.add(simpleSourceSection(ss));
+    }
+
+    m.add("definition",    defs);
+    m.add("sourceSection", sourceSection(method.getSourceSection(), ssId, sourceId, null));
+
+    return m;
   }
 
   public static JSONObjectBuilder topFrameJson(final MaterializedFrame frame,

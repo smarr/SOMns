@@ -117,7 +117,7 @@ public class FrontendConnector {
   private void sendSource(final Source source,
       final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> loadedSourcesTags,
       final Set<RootNode> rootNodes) {
-    String json = JsonSerializer.createSourceAndSectionMessage("source", source,
+    String json = JsonSerializer.createInitialSourceMessage("source", source,
         loadedSourcesTags, instrumenter, rootNodes).toString();
     sender.send(json);
   }
