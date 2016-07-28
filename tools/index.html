@@ -55,11 +55,12 @@
   .invocation-profiles { white-space: normal; }
 
   /* Profiling Tags */
+  /* Don't highlight these elements for the moment.
   .RootTag {}
   .RootTag::before { content: "\1F332";}
-  .RootTag::before + .invocation-profiles { display: block; } /* TODO: this does not work yet */
-  .LoopBody::before { content: "\21BB";}
-  .ControlFlowCondition::before { content: "\2928";}
+  .RootTag::before + .invocation-profiles { display: block; } /* /* TODO: this does not work yet */
+  /*.LoopBody::before { content: "\21BB";}
+  .ControlFlowCondition::before { content: "\2928";} */
 
   .UnspecifiedInvoke { font-style: italic; }
   .ControlFlowCondition { color: #800; }
