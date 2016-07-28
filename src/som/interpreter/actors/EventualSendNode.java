@@ -158,30 +158,21 @@ public class EventualSendNode extends ExprWithTagsNode {
       assert !(args[0] instanceof SFarReference) : "This should not happen for this specialization, but it is handled in determineTargetAndWrapArguments(.)";
       assert !(args[0] instanceof SPromise) : "Should not happen either, but just to be sure";
 
-      SourceSection sourceSection = onReceive.getRootNode().getSourceSection();
-      boolean isBreakpointed = isMessageBreakpointed(target, sourceSection);
-      boolean pause = false;
-      if (isBreakpointed) {
-        pause = true;
-      }
+      boolean isBreakpointed = isMessageBreakpointed(target, onReceive);
       DirectMessage msg = new DirectMessage(
           EventualMessage.getCurrentExecutingMessage(), target, selector, args,
-          owner, resolver, onReceive, pause);
+          owner, resolver, onReceive, isBreakpointed);
       target.send(msg);
     }
 
     protected void sendPromiseMessage(final Object[] args, final SPromise rcvr,
         final SResolver resolver, final RegisterWhenResolved registerNode) {
       assert rcvr.getOwner() == EventualMessage.getActorCurrentMessageIsExecutionOn() : "think this should be true because the promise is an Object and owned by this specific actor";
-      SourceSection sourceSection = onReceive.getRootNode().getSourceSection();
-      boolean isBreakpointed = isMessageBreakpointed(rcvr.getOwner(), sourceSection);
-      boolean pause = false;
-      if (isBreakpointed) {
-        pause = true;
-      }
+
+      boolean isBreakpointed = isMessageBreakpointed(rcvr.getOwner(), onReceive);
       PromiseSendMessage msg = new PromiseSendMessage(
           EventualMessage.getCurrentExecutingMessage(), selector, args,
-          rcvr.getOwner(), resolver, onReceive, pause);
+          rcvr.getOwner(), resolver, onReceive, isBreakpointed);
       registerNode.register(rcvr, msg, rcvr.getOwner());
     }
 
@@ -223,15 +214,10 @@ public class EventualSendNode extends ExprWithTagsNode {
       SPromise  result   = SPromise.createPromise(current);
       SResolver resolver = SPromise.createResolver(result, "eventualSend:", selector);
 
-      SourceSection sourceSection = onReceive.getRootNode().getSourceSection();
-      boolean isBreakpointed = isMessageBreakpointed(current, sourceSection);
-      boolean pause = false;
-      if (isBreakpointed) {
-        pause = true;
-      }
+      boolean isBreakpointed = isMessageBreakpointed(current, onReceive);
       DirectMessage msg = new DirectMessage(EventualMessage.getCurrentExecutingMessage(),
           current, selector, args, current,
-          resolver, onReceive, pause);
+          resolver, onReceive, isBreakpointed);
       current.send(msg);
 
       return result;
@@ -256,15 +242,11 @@ public class EventualSendNode extends ExprWithTagsNode {
     @Specialization(guards = {"!isResultUsed()", "!isFarRefRcvr(args)", "!isPromiseRcvr(args)"})
     public final Object toNearRefWithoutResultPromise(final Object[] args) {
       Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
-      SourceSection sourceSection = onReceive.getRootNode().getSourceSection();
-      boolean isBreakpointed = isMessageBreakpointed(current, sourceSection);
-      boolean pause = false;
-      if (isBreakpointed) {
-        pause = true;
-      }
+
+      boolean isBreakpointed = isMessageBreakpointed(current, onReceive);
       DirectMessage msg = new DirectMessage(EventualMessage.getCurrentExecutingMessage(),
           current, selector, args, current,
-          null, onReceive, pause);
+          null, onReceive, isBreakpointed);
       current.send(msg);
       return Nil.nilObject;
     }
@@ -279,8 +261,8 @@ public class EventualSendNode extends ExprWithTagsNode {
       return super.isTaggedWith(tag);
     }
 
-    protected boolean isMessageBreakpointed(final Actor receiver, final SourceSection sourceSection) {
-      return receiver.getLocalManager().isBreakpointed(sourceSection, true);
+    protected boolean isMessageBreakpointed(final Actor receiver, final RootCallTarget root) {
+      return receiver.getLocalManager().isBreakpointed(root.getRootNode().getSourceSection(), true);
     }
   }
 }
