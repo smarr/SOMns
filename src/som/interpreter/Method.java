@@ -120,7 +120,7 @@ public final class Method extends Invokable {
     return block;
   }
 
-  public MethodScope getCurrentMethodScope() {
+  public MethodScope getLexicalScope() {
     return currentMethodScope;
   }
 }

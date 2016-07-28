@@ -324,11 +324,11 @@ public class FrontendConnector {
     }
 
     if (rn != null) {
-      MixinScope enclosingMixin = ((som.interpreter.Method) rn).getCurrentMethodScope().getHolderScope();
+      MixinScope enclosingMixin = ((som.interpreter.Method) rn).getLexicalScope().getHolderScope();
       String holderClass = enclosingMixin.getMixinDefinition().getName().getString();
     //log("outer class " +enclosingMixin.getOuter().getName().getString());
 
-      String methodName = ((som.interpreter.Method) rn).getCurrentMethodScope().getMethod().getName().split("#")[1];
+      String methodName = ((som.interpreter.Method) rn).getLexicalScope().getMethod().getName().split("#")[1];
       location = new BreakpointLocation(holderClass, methodName, bId);
     }
 
