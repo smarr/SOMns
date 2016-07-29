@@ -165,6 +165,25 @@ function enableEventualSendClicks(fileNode) {
   })
 }
 
+function enableMethodBreakpointHover(fileNode) {
+  let methDecls = fileNode.find(".MethodDeclaration");
+  methDecls.attr({
+    "data-toggle"   : "popover",
+    "data-trigger"  : "click hover",
+    "title"         : "Breakpoints",
+    "animation"     : "false",
+    "data-html"     : "true",
+    "data-placement": "auto top" });
+
+  methDecls.attr("data-content", function () {
+    let content = nodeFromTemplate("method-breakpoints");
+    $(content).on("click", ".bp-async-rcv", function () { dbgLog("bp-async-rcv"); });
+    return $(content).html();
+  });
+
+  methDecls.popover();
+}
+
 function showSource(s, sections, methods) {
   var tabListEntry = document.getElementById(s.id),
     aElem = document.getElementById("a" + s.id);
@@ -200,6 +219,7 @@ function showSource(s, sections, methods) {
   var fileNode = newFileElement.getElementsByClassName("source-file")[0];
   fileNode.innerHTML = arrayToString(annotationArray);
   enableEventualSendClicks($(fileNode));
+  enableMethodBreakpointHover($(fileNode));
 
   var files = document.getElementById("files");
   files.appendChild(newFileElement);
@@ -294,6 +314,7 @@ View.prototype.displaySuspendEvent = function (data, getSourceAndMethods) {
 
     // enable clicking on EventualSendNodes
     enableEventualSendClicks(sourceFile);
+    enableMethodBreakpointHover(sourceFile);
   }
 
   // highlight current node
