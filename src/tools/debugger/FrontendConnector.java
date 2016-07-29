@@ -30,8 +30,9 @@ import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.SFarReference;
 import tools.ObjectBuffer;
 import tools.actors.ActorExecutionTrace;
-import tools.debugger.Breakpoints.BreakpointDataTrace;
-import tools.debugger.Breakpoints.BreakpointId;
+import tools.debugger.session.Breakpoints;
+import tools.debugger.session.Breakpoints.BreakpointDataTrace;
+import tools.debugger.session.Breakpoints.BreakpointId;
 import tools.highlight.Tags;
 
 /**

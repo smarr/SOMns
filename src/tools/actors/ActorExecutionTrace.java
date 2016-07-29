@@ -8,7 +8,7 @@ import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.SFarReference;
 import som.vm.ObjectSystem;
 import tools.ObjectBuffer;
-import tools.debugger.Breakpoints.BreakpointDataTrace;
+import tools.debugger.session.Breakpoints.BreakpointDataTrace;
 
 public class ActorExecutionTrace {
 
@@ -87,9 +87,9 @@ public class ActorExecutionTrace {
 
     ObjectBuffer<ObjectBuffer<SFarReference>> actorsPerThread = getAllCreateActors();
     for (ObjectBuffer<SFarReference> perThread : actorsPerThread) {
-      for (SFarReference a : perThread) {
-        if (a.getActor().equals(actor)) {
-          a.getActor().getLocalManager().addBreakpoint(breakpoint, breakpointTrace, receiver);
+      for (SFarReference farReference : perThread) {
+        if (farReference.getActor().equals(actor)) {
+          farReference.getActor().getLocalManager().addBreakpoint(breakpoint, breakpointTrace, receiver);
           break;
         }
       }

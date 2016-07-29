@@ -11,8 +11,8 @@ import com.oracle.truffle.api.source.SourceSection;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
 import tools.ObjectBuffer;
-import tools.debugger.Breakpoints.BreakpointDataTrace;
-import tools.debugger.Breakpoints.SectionBreakpoint;
+import tools.debugger.session.Breakpoints.BreakpointDataTrace;
+import tools.debugger.session.Breakpoints.SectionBreakpoint;
 
 /**
  * This class is responsible for:

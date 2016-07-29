@@ -1,4 +1,4 @@
-package tools.debugger;
+package tools.debugger.session;
 
 import java.io.IOException;
 import java.net.URI;
@@ -12,6 +12,7 @@ import com.oracle.truffle.api.debug.Debugger;
 import com.oracle.truffle.api.nodes.RootNode;
 
 import som.interpreter.LexicalScope.MixinScope;
+import tools.debugger.WebDebugger;
 
 
 public class Breakpoints {

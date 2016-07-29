@@ -20,6 +20,7 @@ import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
+import tools.debugger.session.Breakpoints;
 import tools.highlight.Tags;
 
 
@@ -110,7 +111,7 @@ public class WebDebugger extends TruffleInstrument {
     reportSuspendedEvent(event);
   }
 
-  static void log(final String str) {
+  public static void log(final String str) {
     // Checkstyle: stop
     System.out.println(str);
     // Checkstyle: resume
