@@ -21,7 +21,7 @@ Begin.prototype.toString = function () {
 
 Begin.prototype.length = function () {
   return this.section.length;
-}
+};
 
 function BeginMethodDef(method, i, defPart) {
   this.method  = method;
@@ -32,8 +32,7 @@ function BeginMethodDef(method, i, defPart) {
 
 BeginMethodDef.prototype.length = function () {
   return this.defPart.length;
-}
-
+};
 
 BeginMethodDef.prototype.toString = function () {
   let tags = "MethodDeclaration",
@@ -72,7 +71,7 @@ Annotation.prototype.toString = function() {
         return 1;
       }
     }
-    
+
     if (a.length() === b.length()) {
       return 0;
     }
