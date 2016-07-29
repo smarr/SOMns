@@ -315,16 +315,6 @@ function generateGraph() {
     .attr("transform", "translate(0," + height + ")")
     .call(xAxis);
 }
-
-var heatmapStyleNode = null;
-function toggleHeatMap() {
-  if (heatmapStyleNode === null) {
-    heatmapStyleNode = $("#style-heatmap").detach();
-  } else {
-    $("#style-main").after(heatmapStyleNode);
-  }
-}
-
 /**
  * The HTML View, which realizes all access to the DOM for displaying
  * data and reacting to events.
