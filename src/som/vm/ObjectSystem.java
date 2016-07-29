@@ -521,7 +521,7 @@ Classes.transferClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInst
       try { Thread.sleep(500); } catch (InterruptedException e) { }
 
       // never timeout when debugging
-      if (Actor.isPoolIdle() && !VmSettings.DEBUG_MODE) {
+      if (Actor.isPoolIdle() && !VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
         emptyFJPool++;
       } else {
         emptyFJPool = 0;
