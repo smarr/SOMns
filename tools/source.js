@@ -68,38 +68,6 @@ function Message(id, sender, receiver) {
   this.receiver = receiver;
 }
 
-function loadAndProcessFile(f) {
-  var reader = new FileReader();
-  reader.onload = (function(theFile) {
-
-    function receivedFile(e) {
-      var o = JSON.parse(e.target.result);
-      data[theFile.name] = o;
-      displaySources(o);
-    }
-
-    return receivedFile;
-  })(f);
-
-  reader.readAsText(f);
-}
-
-/**
- * @param {DragEvent} e
- */
-function handleFileSelect(e) {
-  e.stopPropagation();
-  e.preventDefault();
-
-  var files = e.dataTransfer.files; // FileList object.
-
-  // files is a FileList of File objects. List some properties.
-  var output = [];
-  for (var i = 0; i < files.length; i++) {
-    loadAndProcessFile(files[i]);
-  }
-}
-
 function Breakpoint(source) {
   this.type     = "abstract-breakpoint";
   this.source   = source;
@@ -175,12 +143,6 @@ SendBreakpoint.prototype.toJsonObj = function () {
   obj.charLength  = this.charLength;
   return obj;
 };
-
-function handleDragOver(evt) {
-  evt.stopPropagation();
-  evt.preventDefault();
-  evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
-}
 
 function dbgLog(msg) {
   var tzOffset = (new Date()).getTimezoneOffset() * 60000; // offset in milliseconds
@@ -299,32 +261,4 @@ function init() {
     dbg = new Debugger();
   ctrl = new Controller(dbg, view, vmConnection);
   ctrl.toggleConnection();
-
-  // Init drag and drop
-  var fileDrop = document.getElementById('file-drop');
-  fileDrop.addEventListener('dragover', handleDragOver,   false);
-  fileDrop.addEventListener('drop',     handleFileSelect, false);
-}
-
-function blobToFile(blob, name) {
-  blob.lastModifiedDate = new Date();
-  blob.name = name;
-  return blob;
-}
-
-function getFileObjectFromPath(pathOrUrl, callback) {
-  var request = new XMLHttpRequest();
-  request.open("GET", pathOrUrl);
-  request.responseType = "blob";
-  request.addEventListener('load', function () {
-    callback(blobToFile(request.response, pathOrUrl));
-  });
-  request.send();
-}
-
-function loadStandardFile() {
-  getFileObjectFromPath("highlight.json",
-    function(file) {
-      loadAndProcessFile(file);
-    });
 }

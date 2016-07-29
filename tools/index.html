@@ -25,14 +25,6 @@
   <title>Kompos Debugger</title>
 
   <style id="style-main">
-  #file-drop {
-    border: 5px #ccc dashed;
-    font-weight: bold;
-    width: 100%;
-    text-align: center;
-    font-family:sans-serif;
-  }
-
   #templates { display: none; }
 
   .filename  { font-family: sans-serif; }
@@ -171,11 +163,6 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
   </style>
 </head>
 <body onload="init()">
-<div id="file-drop">
-  Drop JSON file produced by DynamicMetrics tool.
-  <a onclick="loadStandardFile()">Or, click here to load highlight.json</a>
-</div>
-
 <div id="content">
 <ul id="tabs" class="nav nav-tabs" data-tabs="tabs"></ul>
 <div id="files" class="tab-content"></div>
