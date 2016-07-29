@@ -205,52 +205,6 @@ function showSource(s, sections, methods) {
   files.appendChild(newFileElement);
 }
 
-function showInvocationProfile(profileData, rootSpan) {
-  if (profileData.length < 1) {
-    return;
-  }
-
-  var profiles = nodeFromTemplate("invocation-profiles");
-
-  for (var i = 0; i < profileData.length; i++) {
-    var profile = nodeFromTemplate("invocation-profile");
-    profile.getElementsByClassName("counter")[0].textContent = profileData[i].invocations;
-    profile.getElementsByClassName("types")[0].textContent = profileData[i].somTypes.join(", ");
-    profiles.appendChild(profile);
-  }
-
-  var html = $(profiles).html();
-
-  $(rootSpan).attr("data-toggle", "popover");
-  $(rootSpan).attr("data-trigger", "focus hover");
-  $(rootSpan).attr("title", "Invocation Profile");
-  $(rootSpan).attr("data-content", html);
-  $(rootSpan).attr("data-html", "true");
-  $(rootSpan).attr("data-placement", "auto top");
-  $(rootSpan).popover();
-}
-
-var accessProfiles = [],
-  maxAccessCount = -1;
-
-function showAccessProfile(profileData, rootSpan) {
-  if (profileData.count < 1) {
-    return;
-  }
-
-  $(rootSpan).attr("data-toggle", "popover");
-  $(rootSpan).attr("data-trigger", "focus hover");
-//     $(rootSpan).attr("title", "");
-  $(rootSpan).attr("data-content", "Accesses: " + profileData.count);
-  $(rootSpan).attr("data-placement", "auto top");
-  $(rootSpan).popover();
-
-  // collect data for histogram of variable accesses
-  maxAccessCount = Math.max(maxAccessCount, profileData.count);
-  profileData.spanId = rootSpan.id;
-  accessProfiles.push(profileData);
-}
-
 /**
  * The HTML View, which realizes all access to the DOM for displaying
  * data and reacting to events.
@@ -275,36 +229,7 @@ View.prototype.displaySources = function (msg) {
   for (sId in msg.sources) {
     showSource(msg.sources[sId], msg.sections, msg.methods);
   }
-
-  for (var ssId in msg.sections) {
-    this.showSectionData(msg.sections[ssId]);
-  }
-
   $('.nav-tabs a[href="#' + sId + '"]').tab('show');
-
-  /*
-   if (first) {
-   $(tabListEntry).addClass("active");
-   }
-   if (first) {
-   $(newFileElement).addClass("active");
-   }
-   */
-};
-
-View.prototype.showSectionData = function (section) {
-  if (section.data && section.data.methodInvocationProfile) {
-    showInvocationProfile(section.data.methodInvocationProfile,
-      document.getElementById(section.id));
-  }
-
-  if (section.data && (section.data.localReads !== null || section.data.localWrites !== null)) {
-    if (section.data.localReads !== null && section.data.localWrites !== null) {
-      throw "this is unexpected, adapt program";
-    }
-    showAccessProfile(section.data.localReads || section.data.localWrites,
-      document.getElementById(section.id));
-  }
 };
 
 function showVar(name, value, list) {

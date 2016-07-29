@@ -43,14 +43,11 @@
     cursor: pointer;
   }
 
-  .invocation-profile  { font-size: 0.8em; display: block; }
-  .invocation-profiles { white-space: normal; }
 
   /* Profiling Tags */
   /* Don't highlight these elements for the moment.
   .RootTag {}
   .RootTag::before { content: "\1F332";}
-  .RootTag::before + .invocation-profiles { display: block; } /* /* TODO: this does not work yet */
   /*.LoopBody::before { content: "\21BB";}
   .ControlFlowCondition::before { content: "\2928";} */
 
@@ -222,11 +219,6 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
     <div class="line-numbers"></div>
     <div class="source-file"></div>
   </div>
-
-  <div id="invocation-profiles" class="invocation-profiles"></div>
-  <span id="invocation-profile" class="invocation-profile">
-    <span class="counter"></span>:  <span class="types"></span>
-  </span>
 
   <table>
   <tr id="breakpoint-tpl">
