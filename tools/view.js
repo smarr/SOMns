@@ -405,7 +405,7 @@ function showFrame(frame, i, list) {
   list.appendChild(entry);
 }
 
-View.prototype.displaySuspendEvent = function (data, getSource) {
+View.prototype.displaySuspendEvent = function (data, getSourceAndMethods) {
   var list = document.getElementById("stack-frames");
   while (list.lastChild) {
     list.removeChild(list.lastChild);
@@ -435,9 +435,12 @@ View.prototype.displaySuspendEvent = function (data, getSource) {
     sourceFile.find("span").replaceWith($(".html"));
 
     // apply new spans
-    var source = getSource(data.sourceId);
+    var result = getSourceAndMethods(data.sourceId),
+      source   = result[0],
+      methods  = result[1];
+
     var annotationArray = sourceToArray(source.sourceText);
-    annotateArray(annotationArray, source.id, data.sections);
+    annotateArray(annotationArray, source.id, data.sections, methods);
     sourceFile.html(arrayToString(annotationArray));
 
     // enable clicking on EventualSendNodes

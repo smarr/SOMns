@@ -67,7 +67,9 @@ Controller.prototype.onExecutionSuspension = function (msg) {
   this.view.switchDebuggerToSuspendedState();
 
   var dbg = this.dbg;
-  this.view.displaySuspendEvent(msg, function (id) {return dbg.getSource(id);});
+  this.view.displaySuspendEvent(msg, function (id) {
+    return [dbg.getSource(id), dbg.getMethods(id)];
+  });
 };
 
 Controller.prototype.onMessageHistory = function (msg) {

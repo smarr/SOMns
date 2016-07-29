@@ -235,6 +235,10 @@ Debugger.prototype.addMethods = function (msg) {
   }
 };
 
+Debugger.prototype.getMethods = function (sourceId) {
+  return this.methods[sourceId];
+};
+
 Debugger.prototype.getBreakpoint = function (source, key, newBp) {
   if (!this.breakpoints[source.name]) {
     this.breakpoints[source.name] = {};
