@@ -64,10 +64,9 @@ public final class SystemPrims {
       module = vm.loadModule(path);
       return module.instantiateModuleClass();
     } catch (IOException e) {
-      // TODO convert to SOM exception when we support them
-      e.printStackTrace();
+      // TODO: convert to SOM exception
+      throw new RuntimeException(e);
     }
-    return Nil.nilObject;
   }
 
   @GenerateNodeFactory
