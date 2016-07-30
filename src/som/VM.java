@@ -27,6 +27,7 @@ import com.oracle.truffle.tools.debug.shell.server.REPLServer;
 
 import coveralls.truffle.Coverage;
 import som.compiler.MixinDefinition;
+import som.compiler.SourcecodeCompiler;
 import som.interpreter.SomLanguage;
 import som.interpreter.TruffleCompiler;
 import som.interpreter.actors.Actor;
@@ -57,10 +58,6 @@ public final class VM {
 
   public static WebDebugger getWebDebugger() {
     return webDebugger;
-  }
-
-  public static StructuralProbe getStructuralProbe() {
-    return structuralProbe;
   }
 
   private final Map<String, Object> exports = new HashMap<>();
@@ -137,7 +134,8 @@ public final class VM {
 
     this.avoidExitForTesting = avoidExitForTesting;
     options = new VMOptions(args);
-    objectSystem = new ObjectSystem(options.platformFile, options.kernelFile);
+    objectSystem = new ObjectSystem(new SourcecodeCompiler(), structuralProbe,
+        options.platformFile, options.kernelFile);
 
     if (options.showUsage) {
       VMOptions.printUsageAndExit();
@@ -377,6 +375,10 @@ public final class VM {
 
   public MixinDefinition loadModule(final String filename) throws IOException {
     return objectSystem.loadModule(filename);
+  }
+
+  public MixinDefinition loadModule(final Source source) throws IOException {
+    return objectSystem.loadModule(source);
   }
 
   /** This is only meant to be used in unit tests. */

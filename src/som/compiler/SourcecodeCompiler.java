@@ -24,44 +24,24 @@
 
 package som.compiler;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.source.Source;
 
 import som.VM;
 import som.compiler.Lexer.SourceCoordinate;
 import som.compiler.MixinBuilder.MixinDefinitionError;
 import som.compiler.Parser.ParseError;
-import som.interpreter.SomLanguage;
 import tools.language.StructuralProbe;
 
-public final class SourcecodeCompiler {
+public class SourcecodeCompiler {
 
-  @TruffleBoundary
-  public static MixinDefinition compileModule(final File file)
-      throws IOException, ParseError, MixinDefinitionError {
-    FileReader stream = new FileReader(file);
-
-    Source source = Source.newBuilder(file).mimeType(SomLanguage.MIME_TYPE).build();
-    Parser parser = new Parser(stream, file.length(), source, VM.getStructuralProbe());
-    return compile(parser, source);
-  }
-
-  public static MixinDefinition compileModule(final Source source) throws ParseError, MixinDefinitionError {
-    return compileModule(source, VM.getStructuralProbe());
-  }
-
-  public static MixinDefinition compileModule(final Source source,
+  public MixinDefinition compileModule(final Source source,
       final StructuralProbe structuralProbe) throws ParseError, MixinDefinitionError {
     Parser parser = new Parser(
         source.getReader(), source.getLength(), source, structuralProbe);
     return compile(parser, source);
   }
 
-  private static MixinDefinition compile(final Parser parser,
+  private MixinDefinition compile(final Parser parser,
       final Source source) throws ParseError, MixinDefinitionError {
     SourceCoordinate coord = parser.getCoordinate();
     MixinBuilder mxnBuilder = parser.moduleDeclaration();

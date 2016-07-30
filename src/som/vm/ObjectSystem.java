@@ -4,6 +4,7 @@ import static som.vm.constants.Classes.metaclassClass;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -94,6 +95,7 @@ import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import som.vmobjects.SSymbol;
+import tools.language.StructuralProbe;
 
 
 public final class ObjectSystem {
@@ -101,7 +103,7 @@ public final class ObjectSystem {
   @CompilationFinal
   private static ObjectSystem last;
 
-  private final Map<String, MixinDefinition> loadedModules;
+  private final Map<URI, MixinDefinition> loadedModules;
 
   private final MixinDefinition platformModule;
   private final MixinDefinition kernelModule;
@@ -112,9 +114,15 @@ public final class ObjectSystem {
   @CompilationFinal
   private boolean initialized = false;
 
-  public ObjectSystem(final String platformFilename,
+  private final SourcecodeCompiler compiler;
+  private final StructuralProbe structuralProbe;
+
+  public ObjectSystem(final SourcecodeCompiler compiler,
+      final StructuralProbe probe, final String platformFilename,
       final String kernelFilename) throws IOException {
     last = this;
+    this.compiler  = compiler;
+    structuralProbe = probe;
     loadedModules  = new LinkedHashMap<>();
     platformModule = loadModule(platformFilename);
     kernelModule   = loadModule(kernelFilename);
@@ -129,18 +137,22 @@ public final class ObjectSystem {
     return platformClass;
   }
 
-  public MixinDefinition loadModule(final String filename)
-      throws IOException {
+  public MixinDefinition loadModule(final String filename) throws IOException {
     File file = new File(filename);
+    Source source = Source.newBuilder(file).mimeType(SomLanguage.MIME_TYPE).build();
+    return loadModule(source);
+  }
 
-    if (loadedModules.containsKey(file.getAbsolutePath())) {
-      return loadedModules.get(file.getAbsolutePath());
+  public MixinDefinition loadModule(final Source source) throws IOException {
+    URI uri = source.getURI();
+    if (loadedModules.containsKey(uri)) {
+      return loadedModules.get(uri);
     }
 
     MixinDefinition module;
     try {
-      module = SourcecodeCompiler.compileModule(file);
-      loadedModules.put(file.getAbsolutePath(), module);
+      module = compiler.compileModule(source, structuralProbe);
+      loadedModules.put(uri, module);
       return module;
     } catch (ParseError | MixinDefinitionError e) {
       VM.errorExit(e.getMessage());
