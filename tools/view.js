@@ -184,11 +184,11 @@ function enableEventualSendClicks(fileNode) {
 
     //capture click event from buttons inside popover
     $(document).on("click","#btnReceiver",function () {
-      ctrl.messageBreakpointReceiver(sectionId);     
+      ctrl.onToggleSendBreakpoint(sectionId, "receiver");     
     });
 
     $(document).on("click","#btnSend",function () {
-      ctrl.messageBreakpointSender(sectionId);
+      ctrl.onToggleSendBreakpoint(sectionId, "sender"); 
     });
    })
 }
@@ -228,8 +228,9 @@ function showSource(s, sections, methods) {
   var fileNode = newFileElement.getElementsByClassName("source-file")[0];
   fileNode.innerHTML = arrayToString(annotationArray);
   
+  // enable clicking on EventualSendNodes
   enableEventualSendClicks($(fileNode));
-
+    
   var files = document.getElementById("files");
   files.appendChild(newFileElement);
 }
@@ -468,6 +469,9 @@ View.prototype.displaySuspendEvent = function (data, getSource) {
     var annotationArray = sourceToArray(source.sourceText);
     annotateArray(annotationArray, source.id, data.sections);
     sourceFile.html(arrayToString(annotationArray));
+
+    // enable clicking on EventualSendNodes
+    enableEventualSendClicks(sourceFile);
   }
 
   // highlight current node
