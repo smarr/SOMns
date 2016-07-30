@@ -323,7 +323,7 @@ public final class ObjectSystem {
     MixinScope scope = new MixinScope(null);
 
     MixinDefinition vmMirrorDef = new MixinDefinition(
-        Symbols.VMMIRROR, null, null, null, null, null, null,
+        Symbols.VMMIRROR, null, null, null, null, null, null, null,
         vmMirrorMethods, null,
         null, new MixinDefinitionId(Symbols.VMMIRROR), AccessModifier.PUBLIC, scope, scope,
         true, true, true, null);

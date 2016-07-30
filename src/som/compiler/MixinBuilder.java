@@ -77,6 +77,7 @@ public final class MixinBuilder {
   private final ArrayList<ExpressionNode> slotAndInitExprs = new ArrayList<>();
 
   private final SSymbol name;
+  private final SourceSection nameSection;
   @SuppressWarnings("unused") private String mixinComment;
 
   private final HashMap<SSymbol, SlotDefinition> slots = new HashMap<>();
@@ -128,8 +129,10 @@ public final class MixinBuilder {
 
   public MixinBuilder(final MixinBuilder outerBuilder,
       final AccessModifier accessModifier, final SSymbol name,
+      final SourceSection nameSection,
       final StructuralProbe structuralProbe) {
     this.name         = name;
+    this.nameSection  = nameSection;
     this.mixinId      = new MixinDefinitionId(name);
 
     this.classSide    = false;
@@ -345,7 +348,7 @@ public final class MixinBuilder {
           initializationMethod.getSignature(), initializationMethod);
     }
 
-    MixinDefinition clsDef = new MixinDefinition(name,
+    MixinDefinition clsDef = new MixinDefinition(name, nameSection,
         primaryFactory.getSignature(), slotAndInitExprs, initializer,
         initializerSource, superclassResolution,
         slots, dispatchables, factoryMethods, embeddedMixins, mixinId,

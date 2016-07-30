@@ -289,13 +289,16 @@ public class Parser {
     expectIdentifier("class", "Found unexpected token %(found)s. " +
       "Tried parsing a class declaration and expected 'class' instead.",
       KeywordTag.class);
+
+    SourceCoordinate coord = getCoordinate();
     String mixinName = className();
+    SourceSection nameSS = getSource(coord);
 
     MixinBuilder mxnBuilder = new MixinBuilder(outerBuilder, accessModifier,
-        symbolFor(mixinName), structuralProbe);
+        symbolFor(mixinName), nameSS, structuralProbe);
 
     MethodBuilder primaryFactory = mxnBuilder.getPrimaryFactoryMethodBuilder();
-    SourceCoordinate coord = getCoordinate();
+    coord = getCoordinate();
 
     // Newspeak-spec: this is not strictly sufficient for Newspeak
     //                it could also parse a binary selector here, I think

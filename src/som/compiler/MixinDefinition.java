@@ -62,6 +62,7 @@ import som.vmobjects.SSymbol;
  */
 public final class MixinDefinition {
   private final SSymbol       name;
+  private final SourceSection nameSection;
 
   private final SSymbol       primaryFactoryName;
   private final List<ExpressionNode> initializerBody;
@@ -87,7 +88,8 @@ public final class MixinDefinition {
   @Nullable
   private final LinkedHashMap<SSymbol, MixinDefinition> nestedMixinDefinitions;
 
-  public MixinDefinition(final SSymbol name, final SSymbol primaryFactoryName,
+  public MixinDefinition(final SSymbol name, final SourceSection nameSection,
+      final SSymbol primaryFactoryName,
       final List<ExpressionNode> initializerBody,
       final MethodBuilder initializerBuilder,
       final SourceSection initializerSource,
@@ -102,6 +104,7 @@ public final class MixinDefinition {
       final boolean isModule,
       final SourceSection sourceSection) {
     this.name = name;
+    this.nameSection = nameSection;
 
     this.primaryFactoryName = primaryFactoryName;
     this.initializerBody    = initializerBody;
