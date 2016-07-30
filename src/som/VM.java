@@ -375,8 +375,8 @@ public final class VM {
     System.exit(vm.lastExitCode);
   }
 
-  public static MixinDefinition loadModule(final String filename) throws IOException {
-    return vm.objectSystem.loadModule(filename);
+  public MixinDefinition loadModule(final String filename) throws IOException {
+    return objectSystem.loadModule(filename);
   }
 
   /** This is only meant to be used in unit tests. */

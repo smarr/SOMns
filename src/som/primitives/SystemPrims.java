@@ -58,10 +58,10 @@ public final class SystemPrims {
     }
   }
 
-  public static Object loadModule(final String path) {
+  public static Object loadModule(final VM vm, final String path) {
     MixinDefinition module;
     try {
-      module = VM.loadModule(path);
+      module = vm.loadModule(path);
       return module.instantiateModuleClass();
     } catch (IOException e) {
       // TODO convert to SOM exception when we support them
@@ -73,24 +73,29 @@ public final class SystemPrims {
   @GenerateNodeFactory
   @Primitive("load:")
   public abstract static class LoadPrim extends UnaryExpressionNode {
-    public LoadPrim(final SourceSection source) { super(false, source); }
+    @Child protected FindContextNode<VM> findContext = SomLanguage.INSTANCE.createNewFindContextNode();
+
+    protected LoadPrim(final SourceSection source) { super(false, source); }
 
     @Specialization
     public final Object doSObject(final String moduleName) {
-      return loadModule(moduleName);
+      return loadModule(findContext.executeFindContext(), moduleName);
     }
   }
 
   @GenerateNodeFactory
   @Primitive("load:nextTo:")
   public abstract static class LoadNextToPrim extends BinaryComplexOperation {
+    @Child protected FindContextNode<VM> findContext = SomLanguage.INSTANCE.createNewFindContextNode();
+
     protected LoadNextToPrim(final SourceSection source) { super(false, source); }
 
     @Specialization
     public final Object load(final String filename, final SObjectWithClass moduleObj) {
       String path = moduleObj.getSOMClass().getMixinDefinition().getSourceSection().getSource().getPath();
       File file = new File(path);
-      return loadModule(file.getParent() + File.separator + filename);
+      return loadModule(findContext.executeFindContext(),
+          file.getParent() + File.separator + filename);
     }
   }
 
