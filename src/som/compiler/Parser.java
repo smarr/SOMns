@@ -944,7 +944,7 @@ public class Parser {
     return assignments(builder);
   }
 
-  private ExpressionNode assignments(final MethodBuilder builder)
+  protected ExpressionNode assignments(final MethodBuilder builder)
       throws ParseError, MixinDefinitionError {
     SourceCoordinate coord = getCoordinate();
 
@@ -967,7 +967,7 @@ public class Parser {
     return builder.getSetterSend(identifier, value, getSource(coord));
   }
 
-  private SSymbol assignment() throws ParseError {
+  protected SSymbol assignment() throws ParseError {
     SSymbol id = symbolFor(identifier());
     expect(Assign, KeywordTag.class);
     return id;

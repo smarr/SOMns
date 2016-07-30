@@ -41,7 +41,7 @@ public class SourcecodeCompiler {
     return compile(parser, source);
   }
 
-  private MixinDefinition compile(final Parser parser,
+  protected final MixinDefinition compile(final Parser parser,
       final Source source) throws ParseError, MixinDefinitionError {
     SourceCoordinate coord = parser.getCoordinate();
     MixinBuilder mxnBuilder = parser.moduleDeclaration();
