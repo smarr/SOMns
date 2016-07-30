@@ -812,11 +812,11 @@ public class Parser {
     return methodBody;
   }
 
-  private SSymbol unarySelector() throws ParseError {
+  protected SSymbol unarySelector() throws ParseError {
     return symbolFor(identifier());
   }
 
-  private SSymbol binarySelector() throws ParseError {
+  protected SSymbol binarySelector() throws ParseError {
     String s = text;
 
     // Checkstyle: stop
@@ -841,7 +841,7 @@ public class Parser {
     return s;
   }
 
-  private String keyword() throws ParseError {
+  protected String keyword() throws ParseError {
     String s = text;
     expect(Keyword, null);
 
@@ -1120,7 +1120,7 @@ public class Parser {
     return msg;
   }
 
-  private ExpressionNode unaryMessage(final ExpressionNode receiver,
+  protected ExpressionNode unaryMessage(final ExpressionNode receiver,
       final boolean eventualSend, final SourceSection sendOperator) throws ParseError {
     SourceCoordinate coord = getCoordinate();
     SSymbol selector = unarySelector();
@@ -1140,7 +1140,7 @@ public class Parser {
     return node;
   }
 
-  private ExpressionNode binaryMessage(final MethodBuilder builder,
+  protected ExpressionNode binaryMessage(final MethodBuilder builder,
       final ExpressionNode receiver, final boolean eventualSend,
       final SourceSection sendOperator)
           throws ParseError, MixinDefinitionError {
@@ -1184,7 +1184,7 @@ public class Parser {
   // TODO: if the eventual send is not consumed by an expression (assignment, etc)
   //       we don't need to create a promise
 
-  private ExpressionNode keywordMessage(final MethodBuilder builder,
+  protected ExpressionNode keywordMessage(final MethodBuilder builder,
       final ExpressionNode receiver, final boolean explicitRcvr,
       final boolean eventualSend, final SourceSection sendOperator) throws ParseError, MixinDefinitionError {
     assert !(!explicitRcvr && eventualSend);
