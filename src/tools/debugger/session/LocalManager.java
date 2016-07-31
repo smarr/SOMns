@@ -15,34 +15,31 @@ import tools.debugger.session.Breakpoints.BreakpointDataTrace;
 import tools.debugger.session.Breakpoints.SectionBreakpoint;
 
 /**
- * This class is responsible for:
- *  - instrumenting message sending, processing and reception
- *  - receives information regarding to the breakpoints relevant to it.
+ * This class contains the operations for the debugging of messages between
+ * actors at application level and is responsible for:
+ * - instrumenting message sending, processing and reception
+ * - receives information regarding to the breakpoints relevant to it.
  *
  * @author carmentorres
  */
-public class LocalManager {
+public class LocalManager extends Actor {
 
   /**
    * Local manager life cycle.
-   *
+   * - all messages arrived in INITIAL correspond to initialization
+   *  code, so we let them pass
+   * - RUNNING is set when the Truffle debugger starts
+   * - PAUSED is set due to a message breakpoint (implicit activation)
+   *   or a pause command is received (explicit activation)
+   * - COMMAND, BREAKPOINT, STEPINTO, STEPOVER, STEPRETURN is to distinguish
+   *   between the two paused states
    */
   public enum State {
-    INITIAL, // all messages arrived in INITIAL correspond to initialization
-             // code, so we let them pass
-    RUNNING, PAUSED, // is set due to a message breakpoint (implicit activation)
-                     // or a pause command is received (explicit activation).
-    COMMAND, // to distinguish between the two paused states
-    BREAKPOINT, STEPINTO, STEPOVER, STEPRETURN,
+    INITIAL, RUNNING, PAUSED, COMMAND, BREAKPOINT, STEPINTO, STEPOVER, STEPRETURN
   }
 
-  public State                          debuggingState = State.INITIAL;
-  public State                          pausedState    = State.INITIAL;
-
-  /**
-   * corresponding actor for this localManager.
-   */
-  private final Actor                         actor;
+  public State debuggingState = State.INITIAL;
+  public State pausedState = State.INITIAL;
 
   /**
    * stores base-level messages that cannot be process because actor is paused.
@@ -52,13 +49,18 @@ public class LocalManager {
   /**
    * filename to debug.
    */
-  private URI                           fileName;
+  private URI fileName;
 
-  final Map<BreakpointDataTrace, Breakpoint>   senderBreakpoints;
-  final Map<BreakpointDataTrace, Breakpoint>   receiverBreakpoints;
+  /**
+   * breakpoints corresponding to the sender actor of the message.
+   */
+  final Map<BreakpointDataTrace, Breakpoint> senderBreakpoints;
+  /**
+   * breakpoints corresponding to the receiver actor of the message.
+   */
+  final Map<BreakpointDataTrace, Breakpoint> receiverBreakpoints;
 
-  public LocalManager(final Actor actor) {
-    this.actor = actor;
+  public LocalManager() {
     this.inbox = new ObjectBuffer<EventualMessage>(16);
     this.debuggingState = State.INITIAL;
     this.pausedState = State.INITIAL;
@@ -92,6 +94,15 @@ public class LocalManager {
 
   public void setFileName(final URI fileName) {
     this.fileName = fileName;
+  }
+
+  @Override
+  public synchronized void send(final EventualMessage msg) {
+    if (msg.isPause()) {
+      schedule(msg, true);
+    } else {
+      super.send(msg);
+    }
   }
 
   public void addBreakpoint(final Breakpoint breakpoint,
@@ -220,19 +231,19 @@ public class LocalManager {
           // executed
           // or that we are paused in a message, and the user click on step over
 
-          this.actor.updateInbox(msg, false);
+          updateInbox(msg, false);
 
           // add message in the queue of the actor
-          this.actor.getMailbox().append(msg);
+          getMailbox().append(msg);
         } else if (isInStepReturn()) {
-          this.actor.updateInbox(msg, false);
+          updateInbox(msg, false);
 
           // means we got a futurized message that needs to be executed with a
           // conditional breakpoint.
           // TODO check if this is need it for this debugger
           installFutureBreakpoint(msg);
 
-          this.actor.getMailbox().append(msg);
+          getMailbox().append(msg);
 
         } else {
           // here for all messages arriving to a paused actor
@@ -240,17 +251,18 @@ public class LocalManager {
         }
       } else { // actor running
         // check whether the msg has a breakpoint
-        boolean isBreakpointed = isBreakpointed(msg.getTargetSourceSection(), receiver);
+        boolean isBreakpointed = isBreakpointed(msg.getTargetSourceSection(),
+            receiver);
         if (isBreakpointed) {
           // pausing at sender actor = PauseResolve, annotation in REME-D
           if (!receiver) {
             installFutureBreakpoint(msg);
-            this.actor.getMailbox().append(msg);
+            getMailbox().append(msg);
           } else { // pausing at receiver
             pauseAndBuffer(msg, State.BREAKPOINT);
           }
         } else {
-          this.actor.getMailbox().append(msg);
+          getMailbox().append(msg);
         }
 
       }
@@ -312,6 +324,17 @@ public class LocalManager {
 
       // TODO check on the length of the inbox, maybe it was the last message.
       schedule(msg, true);
+    }
+  }
+
+//TODO finish
+  public void updateInbox(final EventualMessage msg, final boolean addition) {
+    if (addition) {
+      //messageAddedToActorEvent
+      logMessageAddedToMailbox(msg);
+    } else {
+      //messageRemovedFromActorEvent
+      logMessageBeingExecuted(msg);
     }
   }
 }

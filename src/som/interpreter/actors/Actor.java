@@ -44,6 +44,8 @@ public class Actor {
   public static Actor createActor() {
     if (VmSettings.DEBUG_MODE) {
       return new DebugActor();
+    } if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+      return new LocalManager();
     } else {
       return new Actor();
     }
@@ -67,11 +69,6 @@ public class Actor {
   private final ExecAllMessages executor;
 
   /**
-   * Contains the operations for the management of messages between actors.
-   */
-  private final LocalManager localManager;
-
-  /**
    * Possible roles for an actor.
    */
   public enum Role {
@@ -82,7 +79,6 @@ public class Actor {
   protected Actor() {
     isExecuting = false;
     executor = new ExecAllMessages(this);
-    localManager = new LocalManager(this);
   }
 
   public final Object wrapForUse(final Object o, final Actor owner,
@@ -136,18 +132,14 @@ public class Actor {
    * This is the main method to be used in this API.
    */
   @TruffleBoundary
-  public final synchronized void send(final EventualMessage msg) {
+  public synchronized void send(final EventualMessage msg) {
     assert msg.getTarget() == this;
-    if (msg.isPause()) {
-      localManager.schedule(msg, true);
-    } else {
-      mailbox.append(msg);
-      logMessageAddedToMailbox(msg);
+    mailbox.append(msg);
+    logMessageAddedToMailbox(msg);
 
-      if (!isExecuting) {
-        isExecuting = true;
-        executeOnPool();
-      }
+    if (!isExecuting) {
+      isExecuting = true;
+      executeOnPool();
     }
   }
 
@@ -285,23 +277,8 @@ public class Actor {
     return "Actor";
   }
 
-  public LocalManager getLocalManager() {
-    return localManager;
-  }
-
   public ObjectBuffer<EventualMessage> getMailbox() {
     return mailbox;
-  }
-
-  //TODO finish
-  public void updateInbox(final EventualMessage msg, final boolean addition) {
-    if (addition) {
-      //messageAddedToActorEvent
-      logMessageAddedToMailbox(msg);
-    } else {
-      //messageRemovedFromActorEvent
-      logMessageBeingExecuted(msg);
-    }
   }
 
   public static final class DebugActor extends Actor {

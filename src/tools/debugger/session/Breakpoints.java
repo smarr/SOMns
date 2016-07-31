@@ -10,6 +10,7 @@ import java.util.Set;
 import com.oracle.truffle.api.debug.Breakpoint;
 import com.oracle.truffle.api.debug.Debugger;
 import com.oracle.truffle.api.nodes.RootNode;
+import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.LexicalScope.MixinScope;
 import tools.debugger.WebDebugger;
@@ -135,6 +136,25 @@ public class Breakpoints {
     }
 
     return null;
+  }
+
+  //TODO choose between this or LocalManager isBreakpointed method
+  public boolean isBreakpointed(final SourceSection source, final URI fileName) {
+    if (!knownBreakpoints.isEmpty()) {
+      Set<BreakpointId> keys = knownBreakpoints.keySet();
+      for (BreakpointId id : keys) {
+        SectionBreakpoint bId = (SectionBreakpoint) id;
+
+        SectionBreakpoint savedBreakpoint = new SectionBreakpoint(fileName,
+            source.getStartLine(), source.getStartColumn(),
+            source.getCharIndex());
+
+        if (bId.equals(savedBreakpoint)) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   public BreakpointDataTrace getBreakpointDataTrace(final Set<RootNode> nodes, final URI sourceUri, final int startLine, final BreakpointId breakpointId) {

@@ -29,6 +29,7 @@ import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.vm.constants.Nil;
 import som.vmobjects.SSymbol;
 import tools.actors.Tags.EventualMessageSend;
+import tools.debugger.session.LocalManager;
 
 
 @Instrumentable(factory = EventualSendNodeWrapper.class)
@@ -262,7 +263,10 @@ public class EventualSendNode extends ExprWithTagsNode {
     }
 
     protected boolean isMessageBreakpointed(final Actor receiver, final RootCallTarget root) {
-      return receiver.getLocalManager().isBreakpointed(root.getRootNode().getSourceSection(), true);
+      if (receiver instanceof LocalManager) {
+        return ((LocalManager) receiver).isBreakpointed(root.getRootNode().getSourceSection(), true);
+      }
+      return false;
     }
   }
 }

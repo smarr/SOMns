@@ -33,6 +33,7 @@ import tools.actors.ActorExecutionTrace;
 import tools.debugger.session.Breakpoints;
 import tools.debugger.session.Breakpoints.BreakpointDataTrace;
 import tools.debugger.session.Breakpoints.BreakpointId;
+import tools.debugger.session.LocalManager;
 import tools.highlight.Tags;
 
 /**
@@ -234,10 +235,7 @@ public class FrontendConnector {
     try {
       Breakpoint breakpoint = breakpoints.getBreakpoint(sourceUri, startLine, startColumn, charLength);
       breakpoint.setEnabled(enabled);
-
-      ObjectBuffer<ObjectBuffer<ObjectBuffer<EventualMessage>>> messages = ActorExecutionTrace.getAllProcessedMessages();
-      ObjectBuffer<ObjectBuffer<SFarReference>> actors = ActorExecutionTrace.getAllCreateActors();
-
+      // TODO Decide if use actor specification when requesting a breakpoint
       Actor actor = null;
       boolean receiver;
       if (role != null && role.equals(Role.RECEIVER)) {
@@ -262,7 +260,7 @@ public class FrontendConnector {
       }
 
       if (actor != null) {
-       actor.getLocalManager().setFileName(sourceUri);
+       ((LocalManager) actor).setFileName(sourceUri);
        ActorExecutionTrace.assignBreakpoint(breakpoint, actor, breakpointTrace, receiver);
       }
 
@@ -275,10 +273,6 @@ public class FrontendConnector {
     try {
       Breakpoint bp = breakpoints.getBreakpoint(sourceUri, lineNumber);
       bp.setEnabled(enabled);
-
-      ObjectBuffer<ObjectBuffer<ObjectBuffer<EventualMessage>>> messages = ActorExecutionTrace.getAllProcessedMessages();
-      ObjectBuffer<ObjectBuffer<SFarReference>> actors = ActorExecutionTrace.getAllCreateActors();
-
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
