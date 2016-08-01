@@ -238,7 +238,6 @@ public class Actor {
     protected final ObjectBuffer<SFarReference> createdActors;
     protected final ObjectBuffer<ObjectBuffer<EventualMessage>> processedMessages;
 
-
     protected ActorProcessingThread(final ForkJoinPool pool) {
       super(pool);
 

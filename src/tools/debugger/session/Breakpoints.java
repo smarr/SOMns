@@ -85,8 +85,8 @@ public class Breakpoints {
         return false;
       }
       SectionBreakpoint o = (SectionBreakpoint) obj;
-      return o.startLine == startLine && o.startColumn == startColumn &&
-          o.charLength == charLength && o.sourceUri.equals(sourceUri);
+      return o.startLine == startLine && o.startColumn == startColumn
+          && o.charLength == charLength && o.sourceUri.equals(sourceUri);
     }
   }
 

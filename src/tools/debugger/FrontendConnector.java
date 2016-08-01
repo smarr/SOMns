@@ -220,9 +220,7 @@ public class FrontendConnector {
     log("[ACTORS] Message sent?");
     try {
       Thread.sleep(150000);
-    } catch (InterruptedException e1) {
-
-    }
+    } catch (InterruptedException e1) { }
     log("[ACTORS] Message sent waiting completed");
 
     sender.close();
