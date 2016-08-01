@@ -91,7 +91,6 @@ class WebSocketHandler extends WebSocketServer {
 
   @Override
   public void onMessage(final WebSocket conn, final String message) {
-    WebDebugger.log("onMessage " + message);
     JsonObject msg = Json.parse(message).asObject();
 
     switch (msg.getString("action", null)) {
@@ -108,21 +107,9 @@ class WebSocketHandler extends WebSocketServer {
         processBreakpoint(msg.get("breakpoint").asObject());
         return;
       case "stepInto":
-        WebDebugger.log("STEP INTO");
-        //processStepInto(msg);
-        return;
       case "stepOver":
-        WebDebugger.log("STEP OVER");
-        //processStepOver(msg);
-        return;
       case "return":
-        WebDebugger.log("RETURN");
-        //processStepReturn(msg);
-        return;
       case "resume":
-        WebDebugger.log("RESUME");
-        //processResume(msg);
-        return;
       case "stop": {
         WebDebugger.log("STOP");
         String id = msg.getString("suspendEvent", null);
@@ -140,7 +127,7 @@ class WebSocketHandler extends WebSocketServer {
         return;
       }
 
-      //TODO..add case of action pause
+      // TODO: add case of action pause
     }
 
     WebDebugger.log("not supported: onMessage: " + message);
