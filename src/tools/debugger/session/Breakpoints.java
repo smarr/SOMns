@@ -174,8 +174,6 @@ public class Breakpoints {
     if (rn != null) {
       MixinScope enclosingMixin = ((som.interpreter.Method) rn).getLexicalScope().getHolderScope();
       String holderClass = enclosingMixin.getMixinDefinition().getName().getString();
-    //log("outer class " +enclosingMixin.getOuter().getName().getString());
-
       String methodName = ((som.interpreter.Method) rn).getLexicalScope().getMethod().getName().split("#")[1];
       breakpointTrace = new BreakpointDataTrace(holderClass, methodName, breakpointId);
     }
