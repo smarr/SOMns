@@ -204,11 +204,12 @@ function enableMethodBreakpointHover(fileNode) {
 
   methDecls.attr("data-content", function () {
     let content = nodeFromTemplate("method-breakpoints");
-    $(content).on("click", ".bp-async-rcv", function () { dbgLog("bp-async-rcv"); });
     return $(content).html();
   });
 
   methDecls.popover();
+
+  $(document).on("click", ".bp-async-rcv", function () { dbgLog("bp-async-rcv"); });
 }
 
 function showSource(s, sections, methods) {
