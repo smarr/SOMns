@@ -106,7 +106,7 @@ Controller.prototype.onToggleSendBreakpoint = function (sectionId, role) {
       function (source) { return new SendBreakpoint(source, sourceSection, role); });
 
   this.view.updateSendBreakpoint(breakpoint);
-}
+};
 
 Controller.prototype.resumeExecution = function () {
   this.vmConnection.sendDebuggerAction('resume', this.dbg.lastSuspendEventId);

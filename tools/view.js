@@ -72,7 +72,7 @@ Annotation.prototype.toString = function() {
         return 1;
       }
     }
-    
+
     if (a.length() === b.length()) {
       return 0;
     }
@@ -180,15 +180,15 @@ function enableEventualSendClicks(fileNode) {
 
    var sectionId;
    $(sendOperator).click(function (e) {
-    sectionId = e.currentTarget.id; 
+    sectionId = e.currentTarget.id;
 
     //capture click event from buttons inside popover
     $(document).on("click","#btnReceiver",function () {
-      ctrl.onToggleSendBreakpoint(sectionId, "receiver");     
+      ctrl.onToggleSendBreakpoint(sectionId, "receiver");
     });
 
     $(document).on("click","#btnSend",function () {
-      ctrl.onToggleSendBreakpoint(sectionId, "sender"); 
+      ctrl.onToggleSendBreakpoint(sectionId, "sender");
     });
    })
 }
@@ -227,10 +227,10 @@ function showSource(s, sections, methods) {
   newFileElement.getElementsByClassName("line-numbers")[0].innerHTML = createLineNumbers(countNumberOfLines(s.sourceText));
   var fileNode = newFileElement.getElementsByClassName("source-file")[0];
   fileNode.innerHTML = arrayToString(annotationArray);
-  
+
   // enable clicking on EventualSendNodes
   enableEventualSendClicks($(fileNode));
-    
+
   var files = document.getElementById("files");
   files.appendChild(newFileElement);
 }
