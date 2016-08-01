@@ -22,12 +22,15 @@ public abstract class EventualMessage {
   protected final RootCallTarget onReceive;
   protected final EventualMessage causalMessage;
 
+  protected final boolean paused;
+
   protected EventualMessage(final EventualMessage causalMessage, final Object[] args,
-      final SResolver resolver, final RootCallTarget onReceive) {
+      final SResolver resolver, final RootCallTarget onReceive, final boolean paused) {
     this.causalMessage = causalMessage;
     this.args     = args;
     this.resolver = resolver;
     this.onReceive = onReceive;
+    this.paused   = paused;
     assert onReceive.getRootNode() instanceof ReceivedMessage || onReceive.getRootNode() instanceof ReceivedCallback;
   }
 
@@ -53,8 +56,8 @@ public abstract class EventualMessage {
 
     public DirectMessage(final EventualMessage causalMessage, final Actor target, final SSymbol selector,
         final Object[] arguments, final Actor sender, final SResolver resolver,
-        final RootCallTarget onReceive) {
-      super(causalMessage, arguments, resolver, onReceive);
+        final RootCallTarget onReceive, final boolean pause) {
+      super(causalMessage, arguments, resolver, onReceive, pause);
       this.selector = selector;
       this.sender   = sender;
       this.target   = target;
@@ -128,8 +131,8 @@ public abstract class EventualMessage {
     protected final Actor originalSender; // initial owner of the arguments
 
     public PromiseMessage(final EventualMessage causalMessage, final Object[] arguments, final Actor originalSender,
-        final SResolver resolver, final RootCallTarget onReceive) {
-      super(causalMessage, arguments, resolver, onReceive);
+        final SResolver resolver, final RootCallTarget onReceive,  final boolean pause) {
+      super(causalMessage, arguments, resolver, onReceive, pause);
       this.originalSender = originalSender;
     }
 
@@ -153,8 +156,8 @@ public abstract class EventualMessage {
 
     protected PromiseSendMessage(final EventualMessage causalMessage, final SSymbol selector,
         final Object[] arguments, final Actor originalSender,
-        final SResolver resolver, final RootCallTarget onReceive) {
-      super(causalMessage, arguments, originalSender, resolver, onReceive);
+        final SResolver resolver, final RootCallTarget onReceive, final boolean pause) {
+      super(causalMessage, arguments, originalSender, resolver, onReceive, pause);
       this.selector = selector;
     }
 
@@ -201,8 +204,8 @@ public abstract class EventualMessage {
   public static final class PromiseCallbackMessage extends PromiseMessage {
 
     public PromiseCallbackMessage(final EventualMessage causalMessage, final Actor owner, final SBlock callback,
-        final SResolver resolver, final RootCallTarget onReceive) {
-      super(causalMessage, new Object[] {callback, null}, owner, resolver, onReceive);
+        final SResolver resolver, final RootCallTarget onReceive, final boolean pause) {
+      super(causalMessage, new Object[] {callback, null}, owner, resolver, onReceive, pause);
     }
 
     @Override
@@ -268,5 +271,14 @@ public abstract class EventualMessage {
   public static EventualMessage getCurrentExecutingMessage() {
     Thread t = Thread.currentThread();
     return ((ActorProcessingThread) t).currentMessage;
+  }
+
+  /**
+   * Indicates that the is paused (due to breakpoint or step into command).
+   * The execution should stop and yield to the debugger,
+   * before the message is processed.
+   */
+  public boolean isPaused() {
+    return paused;
   }
 }

@@ -557,7 +557,7 @@ Classes.transferClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInst
 
     DirectMessage msg = new DirectMessage(null, mainActor, start,
         new Object[] {platform}, mainActor,
-        null, EventualSendNode.createOnReceiveCallTargetForVMMain(start, 1, source, future));
+        null, EventualSendNode.createOnReceiveCallTargetForVMMain(start, 1, source, future), false);
     mainActor.send(msg);
 
     try {

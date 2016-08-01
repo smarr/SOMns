@@ -100,13 +100,12 @@ Controller.prototype.onToggleLineBreakpoint = function (line, clickedSpan) {
   this.view.updateLineBreakpoint(breakpoint);
 };
 
-Controller.prototype.onToggleMessageSendBreakpoint = function (e) {
-  dbgLog("onToggleMessageSendBreakpoint");
+Controller.prototype.onToggleSendBreakpoint = function (sectionId, role) {
+  dbgLog("--sendBreakpoint");
 
-  var sectionId   = e.currentTarget.id,
-    sourceSection = this.dbg.getSection(sectionId),
-    breakpoint    = this.toggleBreakpoint(sectionId,
-      function (source) { return new SendBreakpoint(source, sourceSection); });
+  var sourceSection = this.dbg.getSection(sectionId),
+  breakpoint    = this.toggleBreakpoint(sectionId,
+      function (source) { return new SendBreakpoint(source, sourceSection, role); });
 
   this.view.updateSendBreakpoint(breakpoint);
 };

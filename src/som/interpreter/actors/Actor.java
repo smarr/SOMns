@@ -18,6 +18,8 @@ import som.vmobjects.SArray.STransferArray;
 import som.vmobjects.SObject;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import tools.ObjectBuffer;
+import tools.actors.ActorExecutionTrace;
+import tools.debugger.session.BreakpointActor;
 
 
 /**
@@ -42,6 +44,8 @@ public class Actor {
   public static Actor createActor() {
     if (VmSettings.DEBUG_MODE) {
       return new DebugActor();
+    } if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+      return new BreakpointActor();
     } else {
       return new Actor();
     }
@@ -63,6 +67,14 @@ public class Actor {
 
   /** Is scheduled on the pool, and executes messages to this actor. */
   private final ExecAllMessages executor;
+
+  /**
+   * Possible roles for an actor.
+   */
+  public enum Role {
+    SENDER,
+    RECEIVER
+  }
 
   protected Actor() {
     isExecuting = false;
@@ -120,7 +132,7 @@ public class Actor {
    * This is the main method to be used in this API.
    */
   @TruffleBoundary
-  public final synchronized void send(final EventualMessage msg) {
+  public synchronized void send(final EventualMessage msg) {
     assert msg.getTarget() == this;
     mailbox.append(msg);
     logMessageAddedToMailbox(msg);
@@ -213,22 +225,6 @@ public class Actor {
     return actorPool.isQuiescent();
   }
 
-  public static ObjectBuffer<ObjectBuffer<SFarReference>> getAllCreateActors() {
-    return createdActorsPerThread;
-  }
-
-  public static ObjectBuffer<ObjectBuffer<ObjectBuffer<EventualMessage>>> getAllProcessedMessages() {
-    return messagesProcessedPerThread;
-  }
-
-  /** Access to this data structure needs to be synchronized. */
-  private static final ObjectBuffer<ObjectBuffer<SFarReference>> createdActorsPerThread =
-      VmSettings.ACTOR_TRACING ? new ObjectBuffer<>(VmSettings.NUM_THREADS) : null;
-
-  /** Access to this data structure needs to be synchronized. Typically via {@link createdActorsPerThread} */
-  private static final ObjectBuffer<ObjectBuffer<ObjectBuffer<EventualMessage>>> messagesProcessedPerThread =
-      VmSettings.ACTOR_TRACING ? new ObjectBuffer<>(VmSettings.NUM_THREADS) : null;
-
   private static final class ActorProcessingThreadFactor implements ForkJoinWorkerThreadFactory {
     @Override
     public ForkJoinWorkerThread newThread(final ForkJoinPool pool) {
@@ -245,19 +241,8 @@ public class Actor {
     protected ActorProcessingThread(final ForkJoinPool pool) {
       super(pool);
 
-      if (VmSettings.ACTOR_TRACING) {
-        createdActors = new ObjectBuffer<>(128);
-        processedMessages = new ObjectBuffer<>(128);
-
-        // publish the thread local buffer for later querying
-        synchronized (createdActorsPerThread) {
-          createdActorsPerThread.append(createdActors);
-          messagesProcessedPerThread.append(processedMessages);
-        }
-      } else {
-        createdActors = null;
-        processedMessages = null;
-      }
+      createdActors = ActorExecutionTrace.createActorBuffer();
+      processedMessages = ActorExecutionTrace.createProcessedMessagesBuffer();
     }
 
     @Override
@@ -289,6 +274,10 @@ public class Actor {
   @Override
   public String toString() {
     return "Actor";
+  }
+
+  public ObjectBuffer<EventualMessage> getMailbox() {
+    return mailbox;
   }
 
   public static final class DebugActor extends Actor {

@@ -107,7 +107,7 @@ public class SPromise extends SObjectWithClass {
     SPromise  promise  = createPromise(current);
     SResolver resolver = createResolver(promise, "oE:block");
 
-    PromiseCallbackMessage msg = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessage(), owner, block, resolver, blockCallTarget);
+    PromiseCallbackMessage msg = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessage(), owner, block, resolver, blockCallTarget, false);
     registerOnError(msg, current);
     return promise;
   }
@@ -153,7 +153,7 @@ public class SPromise extends SObjectWithClass {
     SPromise  promise  = createPromise(current);
     SResolver resolver = createResolver(promise, "oEx:class:block");
 
-    PromiseCallbackMessage msg = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessage(), owner, block, resolver, blockCallTarget);
+    PromiseCallbackMessage msg = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessage(), owner, block, resolver, blockCallTarget, false);
 
     synchronized (this) {
       if (resolutionState == Resolution.ERRORNOUS) {

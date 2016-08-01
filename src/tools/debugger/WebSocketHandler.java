@@ -15,6 +15,8 @@ import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
 import com.oracle.truffle.api.debug.SuspendedEvent;
 
+import som.interpreter.actors.Actor.Role;
+
 class WebSocketHandler extends WebSocketServer {
   private static final int NUM_THREADS = 1;
 
@@ -48,24 +50,37 @@ class WebSocketHandler extends WebSocketServer {
     }
 
     boolean enabled = obj.getBoolean("enabled", false);
+    String role = obj.getString("role", null);
+    Role selectedRole = null;
+
+    if (role != null) {
+      switch (role) {
+        case "receiver":
+          selectedRole = Role.RECEIVER;
+          break;
+        case "sender":
+          selectedRole = Role.SENDER;
+          break;
+      }
+    }
 
     switch (type) {
       case "lineBreakpoint":
         processLineBreakpoint(obj, uri, enabled);
         break;
       case "sendBreakpoint":
-        processSendBreakpoint(obj, uri, enabled);
+        processSendBreakpoint(obj, uri, enabled, selectedRole);
         break;
     }
   }
 
   private void processSendBreakpoint(final JsonObject obj, final URI sourceUri,
-      final boolean enabled) {
+      final boolean enabled, final Role role) {
     int startLine   = obj.getInt("startLine",   -1);
     int startColumn = obj.getInt("startColumn", -1);
     int charLength  = obj.getInt("charLength",  -1);
 
-    connector.requestBreakpoint(enabled, sourceUri, startLine, startColumn, charLength);
+    connector.requestBreakpoint(enabled, sourceUri, startLine, startColumn, charLength, role);
   }
 
   private void processLineBreakpoint(final JsonObject obj, final URI sourceUri,
@@ -96,6 +111,7 @@ class WebSocketHandler extends WebSocketServer {
       case "return":
       case "resume":
       case "stop": {
+        WebDebugger.log("STOP");
         String id = msg.getString("suspendEvent", null);
         SuspendedEvent event = connector.getSuspendedEvent(id);
         assert event != null : "didn't find SuspendEvent";
@@ -110,6 +126,8 @@ class WebSocketHandler extends WebSocketServer {
         connector.completeSuspendFuture(id, new Object());
         return;
       }
+
+      // TODO: add case of action pause
     }
 
     WebDebugger.log("not supported: onMessage: " + message);

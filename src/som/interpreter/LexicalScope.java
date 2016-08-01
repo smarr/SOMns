@@ -84,6 +84,10 @@ public abstract class LexicalScope {
           ? mixinDefinition.getName().getString() : "";
       return "MixinScope(" + clsName + ")";
     }
+
+    public MixinDefinition getMixinDefinition() {
+      return mixinDefinition;
+    }
   }
 
   public static final class MethodScope extends LexicalScope {

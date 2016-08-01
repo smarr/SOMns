@@ -1,5 +1,6 @@
 package tools.debugger;
 
+import java.net.URI;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -19,6 +20,7 @@ import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
+import tools.debugger.session.Breakpoints;
 import tools.highlight.Tags;
 
 
@@ -109,7 +111,7 @@ public class WebDebugger extends TruffleInstrument {
     reportSuspendedEvent(event);
   }
 
-  static void log(final String str) {
+  public static void log(final String str) {
     // Checkstyle: stop
     System.out.println(str);
     // Checkstyle: resume
@@ -131,5 +133,17 @@ public class WebDebugger extends TruffleInstrument {
     truffleDebugger = dbg;
     breakpoints = new Breakpoints(dbg);
     connector = new FrontendConnector(breakpoints, instrumenter, this);
+  }
+
+  public Set<RootNode> getRootNodesBySource(final URI source) {
+    Set<RootNode> nodes = null;
+
+    for (Source sourceNode : this.rootNodes.keySet()) {
+      if ((sourceNode.getURI()).equals(source)) {
+        nodes = rootNodes.get(source);
+        break;
+      }
+    }
+    return nodes;
   }
 }
