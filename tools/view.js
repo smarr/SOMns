@@ -178,10 +178,12 @@ function enableEventualSendClicks(fileNode) {
   sendOperator.popover();
 
   $(document).on("click", ".bp-rcv", function (e) {
+    e.stopImmediatePropagation();
     ctrl.onToggleSendBreakpoint(e.currentTarget.attributes["data-ss-id"].value, "receiver");
   });
 
   $(document).on("click", ".bp-send", function (e) {
+    e.stopImmediatePropagation();
     ctrl.onToggleSendBreakpoint(e.currentTarget.attributes["data-ss-id"].value, "sender");
   });
 }
