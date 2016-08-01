@@ -160,36 +160,30 @@ function countNumberOfLines(str) {
 }
 
 function enableEventualSendClicks(fileNode) {
-   var sendOperator = fileNode.find(".EventualMessageSend");
-   $(sendOperator).attr("data-toggle", "popover");
-   $(sendOperator).attr("data-trigger", "click hover");
-   $(sendOperator).attr("title", "Message Breakpoint");
+  var sendOperator = fileNode.find(".EventualMessageSend");
+  sendOperator.attr({
+    "data-toggle"    : "popover",
+    "data-trigger"   : "click hover",
+    "title"          : "Message Breakpoint",
+    "data-html"      : "true",
+    "data-placement" : "auto top"
+  });
 
-   $(sendOperator).attr("tab-index", "0");
-   $(sendOperator).attr("role", "button");
+  sendOperator.attr("data-content", function() {
+    let content = nodeFromTemplate("hover-menu");
+    // capture the source section id, and store it on the buttons
+    $(content).find("button").attr("data-ss-id", this.id);
+    return $(content).html();
+  });
+  sendOperator.popover();
 
-   $(sendOperator).attr("data-content", function() {
-     var menuContent = nodeFromTemplate("hover-menu");
-     return $(menuContent).html();
-   });
+  $(document).on("click", ".bp-rcv", function (e) {
+    ctrl.onToggleSendBreakpoint(e.currentTarget.attributes["data-ss-id"].value, "receiver");
+  });
 
-   $(sendOperator).attr("data-html", "true");
-   $(sendOperator).attr("data-placement", "auto top");
-   $(sendOperator).popover();
-
-   var sectionId;
-   $(sendOperator).click(function (e) {
-    sectionId = e.currentTarget.id;
-
-    //capture click event from buttons inside popover
-    $(document).on("click","#btnReceiver",function () {
-      ctrl.onToggleSendBreakpoint(sectionId, "receiver");
-    });
-
-    $(document).on("click","#btnSend",function () {
-      ctrl.onToggleSendBreakpoint(sectionId, "sender");
-    });
-   })
+  $(document).on("click", ".bp-send", function (e) {
+    ctrl.onToggleSendBreakpoint(e.currentTarget.attributes["data-ss-id"].value, "sender");
+  });
 }
 
 function enableMethodBreakpointHover(fileNode) {
