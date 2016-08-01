@@ -112,8 +112,6 @@ public class Breakpoints {
     return bp;
   }
 
-
-
   public BreakpointId getBreakpointId(final URI sourceUri,
       final int startLine, final int startColumn, final int charLength) {
     Set<BreakpointId> ids = knownBreakpoints.keySet();
@@ -138,14 +136,14 @@ public class Breakpoints {
     return null;
   }
 
-  //TODO choose between this or LocalManager isBreakpointed method
-  public boolean isBreakpointed(final SourceSection source, final URI fileName) {
+  //TODO choose between this or TracingActor isBreakpointed method
+  public boolean isBreakpointed(final SourceSection source) {
     if (!knownBreakpoints.isEmpty()) {
       Set<BreakpointId> keys = knownBreakpoints.keySet();
       for (BreakpointId id : keys) {
         SectionBreakpoint bId = (SectionBreakpoint) id;
 
-        SectionBreakpoint savedBreakpoint = new SectionBreakpoint(fileName,
+        SectionBreakpoint savedBreakpoint = new SectionBreakpoint(source.getSource().getURI(),
             source.getStartLine(), source.getStartColumn(),
             source.getCharIndex());
 

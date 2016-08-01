@@ -1,6 +1,5 @@
 package tools.debugger.session;
 
-import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -22,7 +21,7 @@ import tools.debugger.session.Breakpoints.SectionBreakpoint;
  *
  * @author carmentorres
  */
-public class LocalManager extends Actor {
+public class BreakpointActor extends Actor {
 
   /**
    * Local manager life cycle.
@@ -47,11 +46,6 @@ public class LocalManager extends Actor {
   private ObjectBuffer<EventualMessage> inbox;
 
   /**
-   * filename to debug.
-   */
-  private URI fileName;
-
-  /**
    * breakpoints corresponding to the sender actor of the message.
    */
   final Map<BreakpointDataTrace, Breakpoint> senderBreakpoints;
@@ -60,7 +54,7 @@ public class LocalManager extends Actor {
    */
   final Map<BreakpointDataTrace, Breakpoint> receiverBreakpoints;
 
-  public LocalManager() {
+  public BreakpointActor() {
     this.inbox = new ObjectBuffer<EventualMessage>(16);
     this.debuggingState = State.INITIAL;
     this.pausedState = State.INITIAL;
@@ -90,10 +84,6 @@ public class LocalManager extends Actor {
 
   public boolean isInStepReturn() {
     return pausedState == State.STEPRETURN;
-  }
-
-  public void setFileName(final URI fileName) {
-    this.fileName = fileName;
   }
 
   @Override
@@ -135,7 +125,7 @@ public class LocalManager extends Actor {
         for (BreakpointDataTrace breakpointLocation : keys) {
           SectionBreakpoint bId = (SectionBreakpoint) breakpointLocation.getId();
 
-          SectionBreakpoint savedBreakpoint = new SectionBreakpoint(fileName,
+          SectionBreakpoint savedBreakpoint = new SectionBreakpoint(source.getSource().getURI(),
               source.getStartLine(), source.getStartColumn(),
               source.getCharIndex());
 
@@ -150,14 +140,13 @@ public class LocalManager extends Actor {
         for (BreakpointDataTrace breakpointLocation : keys) {
           SectionBreakpoint bId = (SectionBreakpoint) breakpointLocation.getId();
 
-          SectionBreakpoint savedBreakpoint = new SectionBreakpoint(fileName,
+          SectionBreakpoint savedBreakpoint = new SectionBreakpoint(source.getSource().getURI(),
               source.getStartLine(), source.getStartColumn(),
               source.getCharIndex());
 
           if (bId.equals(savedBreakpoint)) {
             return true;
           }
-
         }
       }
     }

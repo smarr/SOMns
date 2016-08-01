@@ -33,7 +33,6 @@ import tools.actors.ActorExecutionTrace;
 import tools.debugger.session.Breakpoints;
 import tools.debugger.session.Breakpoints.BreakpointDataTrace;
 import tools.debugger.session.Breakpoints.BreakpointId;
-import tools.debugger.session.LocalManager;
 import tools.highlight.Tags;
 
 /**
@@ -260,7 +259,6 @@ public class FrontendConnector {
       }
 
       if (actor != null) {
-       ((LocalManager) actor).setFileName(sourceUri);
        ActorExecutionTrace.assignBreakpoint(breakpoint, actor, breakpointTrace, receiver);
       }
 

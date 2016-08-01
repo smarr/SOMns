@@ -9,7 +9,7 @@ import som.interpreter.actors.SFarReference;
 import som.vm.ObjectSystem;
 import tools.ObjectBuffer;
 import tools.debugger.session.Breakpoints.BreakpointDataTrace;
-import tools.debugger.session.LocalManager;
+import tools.debugger.session.BreakpointActor;
 
 public class ActorExecutionTrace {
 
@@ -91,7 +91,7 @@ public class ActorExecutionTrace {
       for (SFarReference farReference : perThread) {
         if (farReference.getActor().equals(actor)) {
           Actor actorReference = farReference.getActor();
-          ((LocalManager) actorReference).addBreakpoint(breakpoint, breakpointTrace, receiver);
+          ((BreakpointActor) actorReference).addBreakpoint(breakpoint, breakpointTrace, receiver);
           break;
         }
       }
