@@ -88,7 +88,7 @@ public class BreakpointActor extends Actor {
 
   @Override
   public synchronized void send(final EventualMessage msg) {
-    if (msg.isPause()) {
+    if (msg.isPaused()) {
       schedule(msg, true);
     } else {
       super.send(msg);

@@ -22,15 +22,15 @@ public abstract class EventualMessage {
   protected final RootCallTarget onReceive;
   protected final EventualMessage causalMessage;
 
-  protected final boolean pause;
+  protected final boolean paused;
 
   protected EventualMessage(final EventualMessage causalMessage, final Object[] args,
-      final SResolver resolver, final RootCallTarget onReceive, final boolean pause) {
+      final SResolver resolver, final RootCallTarget onReceive, final boolean paused) {
     this.causalMessage = causalMessage;
     this.args     = args;
     this.resolver = resolver;
     this.onReceive = onReceive;
-    this.pause = pause;
+    this.paused   = paused;
     assert onReceive.getRootNode() instanceof ReceivedMessage || onReceive.getRootNode() instanceof ReceivedCallback;
   }
 
@@ -273,8 +273,12 @@ public abstract class EventualMessage {
     return ((ActorProcessingThread) t).currentMessage;
   }
 
-  //indicates if the message is already in the actor mailbox and it is paused (due to breakpoint or step into command)
-  public boolean isPause() {
-    return pause;
+  /**
+   * Indicates that the is paused (due to breakpoint or step into command).
+   * The execution should stop and yield to the debugger,
+   * before the message is processed.
+   */
+  public boolean isPaused() {
+    return paused;
   }
 }
