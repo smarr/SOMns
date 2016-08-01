@@ -296,8 +296,6 @@ public class FrontendConnector {
     try {
       int delayMsec = 1000;
       receiver.stop(delayMsec);
-    } catch (InterruptedException e) {
-
-    }
+    } catch (InterruptedException e) { }
   }
 }
