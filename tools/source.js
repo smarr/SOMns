@@ -196,6 +196,9 @@ Debugger.prototype.addMethods = function (msg) {
       this.methods[sId] = {};
     }
     this.methods[sId][ssId] = meth;
+
+    // also register the source section for later lookups
+    this.sectionObjects[ssId] = meth.sourceSection;
   }
 };
 
