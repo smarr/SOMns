@@ -10,6 +10,19 @@ function sourceToArray(source) {
   return arr;
 }
 
+function methodDeclIdToString(sourceId, sectionId, idx) {
+  return "m:" + sourceId + ":" + sectionId + ":" + idx;
+}
+
+function methodDeclIdToObj(id) {
+  let arr = id.split(":");
+  return {
+    "sourceId"  : arr[1],
+    "sectionId" : arr[2],
+    "idx" : arr[3]
+  };
+}
+
 function Begin(section) {
   this.section = section;
   this.type    = Begin;
@@ -36,9 +49,8 @@ BeginMethodDef.prototype.length = function () {
 
 BeginMethodDef.prototype.toString = function () {
   let tags = "MethodDeclaration",
-    id = "m:" + this.method.sourceSection.sourceId +
-      ":" + this.method.sourceSection.id +
-      ":" + this.i;
+    id = methodDeclIdToString(this.method.sourceSection.sourceId,
+      this.method.sourceSection.id, this.i);
   return '<span id="' + id + '" class="' + tags + '">';
 };
 
