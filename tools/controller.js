@@ -111,6 +111,17 @@ Controller.prototype.onToggleSendBreakpoint = function (sectionId, role) {
   this.view.updateSendBreakpoint(breakpoint);
 };
 
+Controller.prototype.onToggleMethodAsyncRcvBreakpoint = function (sectionId) {
+  dbgLog("async method rcv bp: " + sectionId);
+
+  var id = sectionId + ":async-rcv",
+    sourceSection = this.dbg.getSection(sectionId),
+    breakpoint    = this.toggleBreakpoint(id, function (source) {
+      return new AsyncMethodRcvBreakpoint(source, sourceSection); });
+
+  this.view.updateAsyncMethodRcvBreakpoint(breakpoint);
+};
+
 Controller.prototype.resumeExecution = function () {
   this.vmConnection.sendDebuggerAction('resume', this.dbg.lastSuspendEventId);
   this.view.onContinueExecution();

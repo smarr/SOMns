@@ -211,13 +211,18 @@ function enableMethodBreakpointHover(fileNode) {
     "data-placement": "auto top" });
 
   methDecls.attr("data-content", function () {
+    let idObj = methodDeclIdToObj(this.id);
     let content = nodeFromTemplate("method-breakpoints");
+    $(content).find("button").attr("data-ss-id", idObj.sectionId);
     return $(content).html();
   });
 
   methDecls.popover();
 
-  $(document).on("click", ".bp-async-rcv", function () { dbgLog("bp-async-rcv"); });
+  $(document).on("click", ".bp-async-rcv", function (e) {
+    e.stopImmediatePropagation();
+    ctrl.onToggleMethodAsyncRcvBreakpoint(e.currentTarget.attributes["data-ss-id"].value);
+  });
 }
 
 function showSource(s, sections, methods) {
@@ -422,6 +427,15 @@ View.prototype.updateLineBreakpoint = function (bp) {
 View.prototype.updateSendBreakpoint = function (bp) {
   var bpSpan = $("#" + bp.sectionId);
   this.updateBreakpoint(bp, bpSpan, "send-breakpoint-active");
+};
+
+View.prototype.updateAsyncMethodRcvBreakpoint = function (bp) {
+  let i = 0,
+    elem = null;
+  while (elem = document.getElementById(methodDeclIdToString(bp.source.id, bp.sectionId, i))) {
+    this.updateBreakpoint(bp, $(elem), "send-breakpoint-active");
+    i += 1;
+  }
 };
 
 View.prototype.lazyFindDebuggerButtons = function () {
