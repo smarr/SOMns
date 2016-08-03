@@ -21,7 +21,7 @@ import com.oracle.truffle.api.vm.EventConsumer;
 import com.oracle.truffle.api.vm.PolyglotEngine;
 import com.oracle.truffle.api.vm.PolyglotEngine.Builder;
 import com.oracle.truffle.api.vm.PolyglotEngine.Instrument;
-import com.oracle.truffle.tools.TruffleProfiler;
+import com.oracle.truffle.tools.ProfilerInstrument;
 import com.oracle.truffle.tools.debug.shell.client.SimpleREPLClient;
 import com.oracle.truffle.tools.debug.shell.server.REPLServer;
 
@@ -320,7 +320,7 @@ public final class VM {
 
     try {
       Map<String, Instrument> instruments = engine.getInstruments();
-      Instrument profiler = instruments.get(TruffleProfiler.ID);
+      Instrument profiler = instruments.get(ProfilerInstrument.ID);
       if (vmOptions.profilingEnabled && profiler == null) {
         VM.errorPrintln("Truffle profiler not available. Might be a class path issue");
       } else if (profiler != null) {

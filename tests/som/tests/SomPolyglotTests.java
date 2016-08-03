@@ -15,7 +15,7 @@ import com.oracle.truffle.api.vm.PolyglotEngine;
 import com.oracle.truffle.api.vm.PolyglotEngine.Builder;
 import com.oracle.truffle.api.vm.PolyglotEngine.Instrument;
 import com.oracle.truffle.api.vm.PolyglotEngine.Value;
-import com.oracle.truffle.tools.TruffleProfiler;
+import com.oracle.truffle.tools.ProfilerInstrument;
 
 import som.VM;
 import som.interpreter.SomLanguage;
@@ -73,7 +73,7 @@ public class SomPolyglotTests {
     PolyglotEngine vm = builder.build();
     VM.setEngine(vm);
 
-    Instrument profiler = vm.getInstruments().get(TruffleProfiler.ID);
+    Instrument profiler = vm.getInstruments().get(ProfilerInstrument.ID);
 
     Assume.assumeNotNull(profiler);
     profiler.setEnabled(true);
@@ -95,7 +95,7 @@ public class SomPolyglotTests {
     PolyglotEngine vm = builder.build();
     VM.setEngine(vm);
 
-    Instrument profiler = vm.getInstruments().get(TruffleProfiler.ID);
+    Instrument profiler = vm.getInstruments().get(ProfilerInstrument.ID);
 
     Assume.assumeNotNull(profiler);
 
