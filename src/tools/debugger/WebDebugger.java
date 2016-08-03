@@ -131,7 +131,7 @@ public class WebDebugger extends TruffleInstrument {
 
   public void startServer(final Debugger dbg) {
     truffleDebugger = dbg;
-    breakpoints = new Breakpoints(dbg);
+    breakpoints = new Breakpoints(dbg, rootNodes);
     connector = new FrontendConnector(breakpoints, instrumenter, this);
   }
 
