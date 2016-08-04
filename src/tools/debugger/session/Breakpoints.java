@@ -26,15 +26,14 @@ import tools.debugger.WebDebugger;
 
 public class Breakpoints {
 
-  private final Map<Source, Set<RootNode>> rootNodes;
+  private final WebDebugger webDebugger;
   private final Map<BreakpointId, Breakpoint> knownBreakpoints;
   private final Debugger debugger;
 
-  public Breakpoints(final Debugger debugger,
-      final Map<Source, Set<RootNode>> rootNodes) {
+  public Breakpoints(final Debugger debugger, final WebDebugger webDebugger) {
     knownBreakpoints = new HashMap<>();
     this.debugger    = debugger;
-    this.rootNodes   = rootNodes;
+    this.webDebugger = webDebugger;
   }
 
   public abstract static class BreakpointId {
@@ -175,18 +174,11 @@ public class Breakpoints {
 
     if (bp == null) {
       WebDebugger.log("RootBreakpoint: " + bId);
-      Source source = null;
-      for (Source s : rootNodes.keySet()) {
-        if (s.getURI().equals(sourceUri)) {
-          source = s;
-          break;
-        }
-      }
-
+      Source source = webDebugger.getSource(sourceUri);
       assert source != null : "TODO: handle problem somehow? defer breakpoint creation on source loading? ugh...";
 
       SourceSection rootSS = source.createSection(null, startLine, startColumn, charLength);
-      Set<RootNode> roots = rootNodes.get(source);
+      Set<RootNode> roots = webDebugger.getRootNodesBySource(source);
       for (RootNode root : roots) {
         if (rootSS.equals(root.getSourceSection())) {
           FindRootTagNode finder = new FindRootTagNode();
