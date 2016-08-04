@@ -53,6 +53,11 @@ public final class EagerTernaryPrimitiveNode extends EagerPrimitive {
   }
 
   @Override
+  public boolean isMarkedAsRootExpression() {
+    return primitive.isMarkedAsRootExpression();
+  }
+
+  @Override
   public void markAsLoopBody() {
     primitive.markAsLoopBody();
   }

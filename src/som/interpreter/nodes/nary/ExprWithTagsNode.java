@@ -75,6 +75,11 @@ public abstract class ExprWithTagsNode extends ExpressionNode {
   }
 
   @Override
+  public boolean isMarkedAsRootExpression() {
+    return isTagged(ROOT_EXPR);
+  }
+
+  @Override
   public void markAsLoopBody() {
     assert !isTagged(LOOP_BODY);
     assert !isTagged(ROOT_EXPR);
