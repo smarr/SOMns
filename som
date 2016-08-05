@@ -9,10 +9,8 @@ JVMCI_BIN   = os.getenv('JVMCI_BIN',  None)
 GRAAL_HOME  = os.getenv('GRAAL_HOME',  None)
 GRAAL_FLAGS = os.getenv('GRAAL_FLAGS', None)
 
-GRAAL_LOCATIONS = [BASE_DIR + '/../graal/jvmci',
-                   BASE_DIR + '/../GraalVM/jvmci',
-                   '/home/smarr/Projects/SOM/graal/jvmci',
-                   '/Users/smarr/Projects/SOM/graal/jvmci']
+GRAAL_LOCATIONS = [BASE_DIR + '/../graal/graal-jvmci-8',
+                   '/Users/smarr/Projects/SOM/graal/graal-jvmci-8']
 JDK_VERSIONS = ['jdk1.8.0_91', 'jdk1.8.0_77', 'jdk1.8.0_72', 'jdk1.8.0_66',
                 'jdk1.8.0_65', 'jdk1.8.0_60', 'jdk1.8.0_45']
 
@@ -169,6 +167,10 @@ if not args.interpreter and GRAAL_FLAGS:
     flags = shlex.split(str.strip(GRAAL_FLAGS))
 else:
     flags = []
+
+if not args.interpreter:
+    flags += ['-server', '-XX:+UnlockExperimentalVMOptions', '-XX:+EnableJVMCI',
+              '-Djvmci.Compiler=graal']
 
 if args.som_dnu:
     flags += ['-Dsom.printStackTraceOnDNU']
