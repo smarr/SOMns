@@ -29,7 +29,7 @@ public class Breakpoints {
 
   private final WebDebugger webDebugger;
   private final Map<BreakpointId, Breakpoint> knownBreakpoints;
-  List<SectionBreakpoint> receiverBreakpoints;
+  private final List<SectionBreakpoint> receiverBreakpoints;
   private final Debugger debugger;
 
   public Breakpoints(final Debugger debugger, final WebDebugger webDebugger) {
@@ -104,8 +104,8 @@ public class Breakpoints {
 
     @Override
     public String toString() {
-      return "SectionBreakpoint: startLine " + startLine + "startColumn "
-          + startColumn + "charLength " + charLength + "sourceURi " + sourceUri;
+      return "SectionBreakpoint: startLine " + startLine + " startColumn "
+          + startColumn + " charLength " + charLength + " sourceURi " + sourceUri;
     }
   }
 
@@ -248,33 +248,5 @@ public class Breakpoints {
     }
 
     return null;
-  }
-
-  /**
-   * Encapsulates data related to the breakpoint.
-   */
-  public class BreakpointTrace {
-    private String holderClass;
-    private String methodName;
-    private BreakpointId id;
-
-    BreakpointTrace(final String holderClass, final String methodName,
-        final BreakpointId id) {
-      this.holderClass = holderClass;
-      this.methodName = methodName;
-      this.id = id;
-    }
-
-    public String getHolderClass() {
-      return holderClass;
-    }
-
-    public String getMethodName() {
-      return methodName;
-    }
-
-    public BreakpointId getId() {
-      return id;
-    }
   }
 }
