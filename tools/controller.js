@@ -101,15 +101,25 @@ Controller.prototype.onToggleLineBreakpoint = function (line, clickedSpan) {
 };
 
 Controller.prototype.onToggleSendBreakpoint = function (sectionId, role) {
-  dbgLog("--sendBreakpoint ");
-  
-  var id = sectionId.concat(role);
-  var sourceSection = this.dbg.getSection(sectionId);
+  dbgLog("--send-op breakpoint: " + role);
 
-  var breakpoint    = this.toggleBreakpoint(id,
-      function (source) { return new SendBreakpoint(source, sourceSection, role); });
+  var id = sectionId + ":" + role,
+    sourceSection = this.dbg.getSection(sectionId),
+    breakpoint    = this.toggleBreakpoint(id, function (source) {
+      return new SendBreakpoint(source, sourceSection, role); });
 
   this.view.updateSendBreakpoint(breakpoint);
+};
+
+Controller.prototype.onToggleMethodAsyncRcvBreakpoint = function (sectionId) {
+  dbgLog("async method rcv bp: " + sectionId);
+
+  var id = sectionId + ":async-rcv",
+    sourceSection = this.dbg.getSection(sectionId),
+    breakpoint    = this.toggleBreakpoint(id, function (source) {
+      return new AsyncMethodRcvBreakpoint(source, sourceSection); });
+
+  this.view.updateAsyncMethodRcvBreakpoint(breakpoint);
 };
 
 Controller.prototype.resumeExecution = function () {

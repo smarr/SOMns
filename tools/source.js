@@ -146,6 +146,30 @@ SendBreakpoint.prototype.toJsonObj = function () {
   return obj;
 };
 
+function AsyncMethodRcvBreakpoint(source, sourceSection) {
+  Breakpoint.call(this, source);
+
+  this.type = "asyncMsgRcvBreakpoint";
+  this.sectionId   = sourceSection.id;
+  this.startLine   = sourceSection.line;
+  this.startColumn = sourceSection.column;
+  this.charLength  = sourceSection.length;
+}
+AsyncMethodRcvBreakpoint.prototype = Object.create(Breakpoint.prototype);
+
+AsyncMethodRcvBreakpoint.prototype.getId = function () {
+  return this.sectionId + ":async-rcv";
+};
+
+AsyncMethodRcvBreakpoint.prototype.toJsonObj = function () {
+  var obj = Breakpoint.prototype.toJsonObj.call(this);
+  obj.sectionId   = this.sectionId;
+  obj.startLine   = this.startLine;
+  obj.startColumn = this.startColumn;
+  obj.charLength  = this.charLength;
+  return obj;
+};
+
 function dbgLog(msg) {
   var tzOffset = (new Date()).getTimezoneOffset() * 60000; // offset in milliseconds
   var localISOTime = (new Date(Date.now() - tzOffset)).toISOString().slice(0,-1);
@@ -196,6 +220,9 @@ Debugger.prototype.addMethods = function (msg) {
       this.methods[sId] = {};
     }
     this.methods[sId][ssId] = meth;
+
+    // also register the source section for later lookups
+    this.sectionObjects[ssId] = meth.sourceSection;
   }
 };
 

@@ -226,6 +226,18 @@ public class FrontendConnector {
     sender.close();
   }
 
+  public void requestAsyncMessageRcvBreakpoint(final boolean enabled,
+      final URI sourceUri, final int startLine, final int startColumn,
+      final int charLength) {
+    try {
+      Breakpoint bp = breakpoints.getAsyncMessageRcvBreakpoint(sourceUri,
+          startLine, startColumn, charLength);
+      bp.setEnabled(enabled);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
   public void requestBreakpoint(final boolean enabled, final URI sourceUri,
       final int startLine, final int startColumn, final int charLength,
       final Role role) {
@@ -264,6 +276,7 @@ public class FrontendConnector {
       throw new RuntimeException(e);
     }
   }
+
   public void requestBreakpoint(final boolean enabled, final URI sourceUri,
       final int lineNumber) {
     try {

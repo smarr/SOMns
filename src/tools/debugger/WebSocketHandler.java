@@ -71,7 +71,18 @@ class WebSocketHandler extends WebSocketServer {
       case "sendBreakpoint":
         processSendBreakpoint(obj, uri, enabled, selectedRole);
         break;
+      case "asyncMsgRcvBreakpoint":
+        processAsyncMsgRcvBreakpoint(obj, uri, enabled);
+        break;
     }
+  }
+
+  private void processAsyncMsgRcvBreakpoint(final JsonObject obj, final URI sourceUri, final boolean enabled) {
+    int startLine   = obj.getInt("startLine",   -1);
+    int startColumn = obj.getInt("startColumn", -1);
+    int charLength  = obj.getInt("charLength",  -1);
+
+    connector.requestAsyncMessageRcvBreakpoint(enabled, sourceUri, startLine, startColumn, charLength);
   }
 
   private void processSendBreakpoint(final JsonObject obj, final URI sourceUri,

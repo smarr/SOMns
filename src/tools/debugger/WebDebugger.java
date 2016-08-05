@@ -131,19 +131,29 @@ public class WebDebugger extends TruffleInstrument {
 
   public void startServer(final Debugger dbg) {
     truffleDebugger = dbg;
-    breakpoints = new Breakpoints(dbg);
+    breakpoints = new Breakpoints(dbg, this);
     connector = new FrontendConnector(breakpoints, instrumenter, this);
   }
 
-  public Set<RootNode> getRootNodesBySource(final URI source) {
-    Set<RootNode> nodes = null;
-
-    for (Source sourceNode : this.rootNodes.keySet()) {
-      if ((sourceNode.getURI()).equals(source)) {
-        nodes = rootNodes.get(source);
-        break;
+  public Source getSource(final URI sourceUri) {
+    for (Source source : this.rootNodes.keySet()) {
+      if ((source.getURI()).equals(sourceUri)) {
+        return source;
       }
     }
-    return nodes;
+    return null;
+  }
+
+  public Set<RootNode> getRootNodesBySource(final Source source) {
+    return rootNodes.get(source);
+  }
+
+  public Set<RootNode> getRootNodesBySource(final URI sourceUri) {
+    Set<RootNode> roots = null;
+    Source source = getSource(sourceUri);
+    if (source != null) {
+      roots = rootNodes.get(source);
+    }
+    return roots;
   }
 }

@@ -58,6 +58,8 @@ public abstract class ExpressionNode extends SOMNode {
 
   public void markAsRootExpression() { throw new UnsupportedOperationException(); }
 
+  public boolean isMarkedAsRootExpression() { throw new UnsupportedOperationException(); }
+
   public void markAsLoopBody()  { throw new UnsupportedOperationException(); }
 
   public void markAsControlFlowCondition()  { throw new UnsupportedOperationException(); }

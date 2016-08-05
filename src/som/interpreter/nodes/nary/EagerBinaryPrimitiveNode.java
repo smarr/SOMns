@@ -48,6 +48,11 @@ public final class EagerBinaryPrimitiveNode extends EagerPrimitive {
   }
 
   @Override
+  public boolean isMarkedAsRootExpression() {
+    return primitive.isMarkedAsRootExpression();
+  }
+
+  @Override
   public void markAsLoopBody() {
     primitive.markAsLoopBody();
   }
