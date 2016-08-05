@@ -2,7 +2,9 @@ package tools.debugger.session;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -18,7 +20,6 @@ import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
-import som.interpreter.LexicalScope.MixinScope;
 import som.interpreter.actors.ReceivedRootNode;
 import som.interpreter.nodes.ExpressionNode;
 import tools.debugger.WebDebugger;
@@ -28,12 +29,14 @@ public class Breakpoints {
 
   private final WebDebugger webDebugger;
   private final Map<BreakpointId, Breakpoint> knownBreakpoints;
+  List<SectionBreakpoint> receiverBreakpoints;
   private final Debugger debugger;
 
   public Breakpoints(final Debugger debugger, final WebDebugger webDebugger) {
     knownBreakpoints = new HashMap<>();
     this.debugger    = debugger;
     this.webDebugger = webDebugger;
+    this.receiverBreakpoints = new ArrayList<>();
   }
 
   public abstract static class BreakpointId {
@@ -98,6 +101,12 @@ public class Breakpoints {
       return o.startLine == startLine && o.startColumn == startColumn
           && o.charLength == charLength && o.sourceUri.equals(sourceUri);
     }
+
+    @Override
+    public String toString() {
+      return "SectionBreakpoint: startLine " + startLine + "startColumn "
+          + startColumn + "charLength " + charLength + "sourceURi " + sourceUri;
+    }
   }
 
   /**
@@ -111,9 +120,10 @@ public class Breakpoints {
     }
   }
 
-  public Breakpoint getBreakpoint(final URI sourceUri, final int line) throws IOException {
+  public Breakpoint getLineBreakpoint(final URI sourceUri, final int line) throws IOException {
     BreakpointId bId = new LineBreakpoint(sourceUri, line);
     Breakpoint bp = knownBreakpoints.get(bId);
+
     if (bp == null) {
       WebDebugger.log("LineBreakpoint: " + bId);
       bp = debugger.setLineBreakpoint(0, sourceUri, line, false);
@@ -122,7 +132,7 @@ public class Breakpoints {
     return bp;
   }
 
-  public Breakpoint getBreakpoint(final URI sourceUri, final int startLine, final int startColumn, final int charLength) throws IOException {
+  public Breakpoint getBreakpointOnSender(final URI sourceUri, final int startLine, final int startColumn, final int charLength) throws IOException {
     BreakpointId bId = new SectionBreakpoint(sourceUri, startLine, startColumn, charLength);
     Breakpoint bp = knownBreakpoints.get(bId);
     if (bp == null) {
@@ -195,6 +205,27 @@ public class Breakpoints {
     return bp;
   }
 
+  public void saveReceiverBreakpoint(final URI sourceUri, final int startLine,
+      final int startColumn, final int charLength) {
+    SectionBreakpoint bId = new SectionBreakpoint(sourceUri, startLine, startColumn, charLength);
+    if (!receiverBreakpoints.contains(bId)) {
+      this.receiverBreakpoints.add(bId);
+    }
+  }
+
+  public boolean isBreakpointed(final SourceSection source) {
+    if (!receiverBreakpoints.isEmpty()) {
+      SectionBreakpoint checkBreakpoint = new SectionBreakpoint(source.getSource().getURI(),
+          source.getStartLine(), source.getStartColumn(),
+          source.getCharLength());
+
+      if (receiverBreakpoints.contains(checkBreakpoint)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   public BreakpointId getBreakpointId(final URI sourceUri,
       final int startLine, final int startColumn, final int charLength) {
     Set<BreakpointId> ids = knownBreakpoints.keySet();
@@ -219,60 +250,15 @@ public class Breakpoints {
     return null;
   }
 
-  //TODO choose between this or TracingActor isBreakpointed method
-  public boolean isBreakpointed(final SourceSection source) {
-    if (!knownBreakpoints.isEmpty()) {
-      Set<BreakpointId> keys = knownBreakpoints.keySet();
-      for (BreakpointId id : keys) {
-        SectionBreakpoint bId = (SectionBreakpoint) id;
-
-        SectionBreakpoint savedBreakpoint = new SectionBreakpoint(source.getSource().getURI(),
-            source.getStartLine(), source.getStartColumn(),
-            source.getCharIndex());
-
-        if (bId.equals(savedBreakpoint)) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  public BreakpointDataTrace getBreakpointDataTrace(final Set<RootNode> nodes, final URI sourceUri, final int startLine, final BreakpointId breakpointId) {
-    BreakpointDataTrace breakpointTrace = null;
-    RootNode rn = null;
-
-    if (nodes != null) {
-      for (RootNode rootNode : nodes) {
-        int nodeStartLine = rootNode.getSourceSection().getStartLine(); //startLine of the rootNode corresponds to first line of the method
-        int nodeEndLine = rootNode.getSourceSection().getEndLine();
-
-        if (startLine > nodeStartLine && startLine < nodeEndLine) { //check if the breakpoint startLine is in the rootNode coordinates
-          rn = rootNode;
-          break;
-        }
-      }
-    }
-
-    if (rn != null) {
-      MixinScope enclosingMixin = ((som.interpreter.Method) rn).getLexicalScope().getHolderScope();
-      String holderClass = enclosingMixin.getMixinDefinition().getName().getString();
-      String methodName = ((som.interpreter.Method) rn).getLexicalScope().getMethod().getName().split("#")[1];
-      breakpointTrace = new BreakpointDataTrace(holderClass, methodName, breakpointId);
-    }
-
-    return breakpointTrace;
-  }
-
   /**
    * Encapsulates data related to the breakpoint.
    */
-  public class BreakpointDataTrace {
+  public class BreakpointTrace {
     private String holderClass;
     private String methodName;
     private BreakpointId id;
 
-    BreakpointDataTrace(final String holderClass, final String methodName,
+    BreakpointTrace(final String holderClass, final String methodName,
         final BreakpointId id) {
       this.holderClass = holderClass;
       this.methodName = methodName;

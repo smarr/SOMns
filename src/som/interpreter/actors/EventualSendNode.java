@@ -14,6 +14,7 @@ import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.VM;
 import som.interpreter.actors.EventualMessage.DirectMessage;
 import som.interpreter.actors.EventualMessage.PromiseSendMessage;
 import som.interpreter.actors.EventualSendNodeFactory.SendNodeGen;
@@ -29,7 +30,6 @@ import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.vm.constants.Nil;
 import som.vmobjects.SSymbol;
 import tools.actors.Tags.EventualMessageSend;
-import tools.debugger.session.BreakpointActor;
 
 
 @Instrumentable(factory = EventualSendNodeWrapper.class)
@@ -130,6 +130,10 @@ public class EventualSendNode extends ExprWithTagsNode {
       return source;
     }
 
+    public RootCallTarget getOnReceive() {
+      return onReceive;
+    }
+
     protected final boolean isResultUsed() {
       Node parent = SOMNode.getParentIgnoringWrapper(this);
       assert parent instanceof EventualSendNode;
@@ -159,7 +163,7 @@ public class EventualSendNode extends ExprWithTagsNode {
       assert !(args[0] instanceof SFarReference) : "This should not happen for this specialization, but it is handled in determineTargetAndWrapArguments(.)";
       assert !(args[0] instanceof SPromise) : "Should not happen either, but just to be sure";
 
-      boolean isBreakpointed = isMessageBreakpointed(target, onReceive);
+      boolean isBreakpointed = isMessageBreakpointed(getSourceSection());
       DirectMessage msg = new DirectMessage(
           EventualMessage.getCurrentExecutingMessage(), target, selector, args,
           owner, resolver, onReceive, isBreakpointed);
@@ -170,7 +174,7 @@ public class EventualSendNode extends ExprWithTagsNode {
         final SResolver resolver, final RegisterWhenResolved registerNode) {
       assert rcvr.getOwner() == EventualMessage.getActorCurrentMessageIsExecutionOn() : "think this should be true because the promise is an Object and owned by this specific actor";
 
-      boolean isBreakpointed = isMessageBreakpointed(rcvr.getOwner(), onReceive);
+      boolean isBreakpointed = isMessageBreakpointed(getSourceSection());
       PromiseSendMessage msg = new PromiseSendMessage(
           EventualMessage.getCurrentExecutingMessage(), selector, args,
           rcvr.getOwner(), resolver, onReceive, isBreakpointed);
@@ -215,7 +219,7 @@ public class EventualSendNode extends ExprWithTagsNode {
       SPromise  result   = SPromise.createPromise(current);
       SResolver resolver = SPromise.createResolver(result, "eventualSend:", selector);
 
-      boolean isBreakpointed = isMessageBreakpointed(current, onReceive);
+      boolean isBreakpointed = isMessageBreakpointed(getSourceSection());
       DirectMessage msg = new DirectMessage(EventualMessage.getCurrentExecutingMessage(),
           current, selector, args, current,
           resolver, onReceive, isBreakpointed);
@@ -244,7 +248,7 @@ public class EventualSendNode extends ExprWithTagsNode {
     public final Object toNearRefWithoutResultPromise(final Object[] args) {
       Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
 
-      boolean isBreakpointed = isMessageBreakpointed(current, onReceive);
+      boolean isBreakpointed = isMessageBreakpointed(getSourceSection());
       DirectMessage msg = new DirectMessage(EventualMessage.getCurrentExecutingMessage(),
           current, selector, args, current,
           null, onReceive, isBreakpointed);
@@ -262,11 +266,8 @@ public class EventualSendNode extends ExprWithTagsNode {
       return super.isTaggedWith(tag);
     }
 
-    protected boolean isMessageBreakpointed(final Actor receiver, final RootCallTarget root) {
-      if (receiver instanceof BreakpointActor) {
-        return ((BreakpointActor) receiver).isBreakpointed(root.getRootNode().getSourceSection(), true);
-      }
-      return false;
+    protected boolean isMessageBreakpointed(final SourceSection source) {
+      return VM.getWebDebugger().getBreakpoints().isBreakpointed(source);
     }
   }
 }

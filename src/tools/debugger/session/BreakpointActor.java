@@ -10,7 +10,7 @@ import com.oracle.truffle.api.source.SourceSection;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
 import tools.ObjectBuffer;
-import tools.debugger.session.Breakpoints.BreakpointDataTrace;
+import tools.debugger.session.Breakpoints.BreakpointTrace;
 import tools.debugger.session.Breakpoints.SectionBreakpoint;
 
 /**
@@ -48,11 +48,11 @@ public class BreakpointActor extends Actor {
   /**
    * breakpoints corresponding to the sender actor of the message.
    */
-  final Map<BreakpointDataTrace, Breakpoint> senderBreakpoints;
+  final Map<BreakpointTrace, Breakpoint> senderBreakpoints;
   /**
    * breakpoints corresponding to the receiver actor of the message.
    */
-  final Map<BreakpointDataTrace, Breakpoint> receiverBreakpoints;
+  final Map<BreakpointTrace, Breakpoint> receiverBreakpoints;
 
   public BreakpointActor() {
     this.inbox = new ObjectBuffer<EventualMessage>(16);
@@ -96,7 +96,7 @@ public class BreakpointActor extends Actor {
   }
 
   public void addBreakpoint(final Breakpoint breakpoint,
-      final BreakpointDataTrace breakpointTrace, final boolean receiver) {
+      final BreakpointTrace breakpointTrace, final boolean receiver) {
     if (receiver) {
       receiverBreakpoints.put(breakpointTrace, breakpoint);
     } else {
@@ -104,7 +104,7 @@ public class BreakpointActor extends Actor {
     }
   }
 
-  public void removeBreakpoint(final BreakpointDataTrace breakpointTrace,
+  public void removeBreakpoint(final BreakpointTrace breakpointTrace,
       final boolean receiver) {
     if (receiver) {
       receiverBreakpoints.remove(breakpointTrace);
@@ -121,8 +121,8 @@ public class BreakpointActor extends Actor {
 
     if (receiver) {
       if (!this.receiverBreakpoints.isEmpty()) {
-        Set<BreakpointDataTrace> keys = this.receiverBreakpoints.keySet();
-        for (BreakpointDataTrace breakpointLocation : keys) {
+        Set<BreakpointTrace> keys = this.receiverBreakpoints.keySet();
+        for (BreakpointTrace breakpointLocation : keys) {
           SectionBreakpoint bId = (SectionBreakpoint) breakpointLocation.getId();
 
           SectionBreakpoint savedBreakpoint = new SectionBreakpoint(source.getSource().getURI(),
@@ -136,8 +136,8 @@ public class BreakpointActor extends Actor {
       }
     } else { // sender
       if (!this.senderBreakpoints.isEmpty()) {
-        Set<BreakpointDataTrace> keys = this.senderBreakpoints.keySet();
-        for (BreakpointDataTrace breakpointLocation : keys) {
+        Set<BreakpointTrace> keys = this.senderBreakpoints.keySet();
+        for (BreakpointTrace breakpointLocation : keys) {
           SectionBreakpoint bId = (SectionBreakpoint) breakpointLocation.getId();
 
           SectionBreakpoint savedBreakpoint = new SectionBreakpoint(source.getSource().getURI(),

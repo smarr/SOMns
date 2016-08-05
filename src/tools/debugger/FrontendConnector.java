@@ -31,8 +31,6 @@ import som.interpreter.actors.SFarReference;
 import tools.ObjectBuffer;
 import tools.actors.ActorExecutionTrace;
 import tools.debugger.session.Breakpoints;
-import tools.debugger.session.Breakpoints.BreakpointDataTrace;
-import tools.debugger.session.Breakpoints.BreakpointId;
 import tools.highlight.Tags;
 
 /**
@@ -242,36 +240,13 @@ public class FrontendConnector {
       final int startLine, final int startColumn, final int charLength,
       final Role role) {
     try {
-      Breakpoint breakpoint = breakpoints.getBreakpoint(sourceUri, startLine, startColumn, charLength);
-      breakpoint.setEnabled(enabled);
-      // TODO Decide if use actor specification when requesting a breakpoint
-      Actor actor = null;
-      boolean receiver;
-      if (role != null && role.equals(Role.RECEIVER)) {
-        // TODO get receiver actor
-        log("Send breakpoint on receiver");
-        receiver = true;
+      if (role.equals(Role.SENDER)) {
+        Breakpoint breakpoint = breakpoints.getBreakpointOnSender(sourceUri, startLine, startColumn, charLength);
+        breakpoint.setEnabled(enabled);
       } else {
-        // TODO get sender actor
-        log("Send breakpoint on sender");
-        receiver = false;
+        //receiver breakpoint
+        breakpoints.saveReceiverBreakpoint(sourceUri, startLine, startColumn, charLength);
       }
-
-      log("breakpoint coordinates " + startLine + " " + startColumn + " " + charLength);
-
-      BreakpointId bId = breakpoints.getBreakpointId(sourceUri, startLine, startColumn, charLength);
-
-      Set<RootNode> rootNodes = webDebugger.getRootNodesBySource(sourceUri);
-      BreakpointDataTrace breakpointTrace = breakpoints.getBreakpointDataTrace(rootNodes, sourceUri, startLine, bId);
-      if (breakpointTrace != null) {
-        log("holder class: " + breakpointTrace.getHolderClass());
-        log("method name: " + breakpointTrace.getMethodName());
-      }
-
-      if (actor != null) {
-       ActorExecutionTrace.assignBreakpoint(breakpoint, actor, breakpointTrace, receiver);
-      }
-
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -280,7 +255,7 @@ public class FrontendConnector {
   public void requestBreakpoint(final boolean enabled, final URI sourceUri,
       final int lineNumber) {
     try {
-      Breakpoint bp = breakpoints.getBreakpoint(sourceUri, lineNumber);
+      Breakpoint bp = breakpoints.getLineBreakpoint(sourceUri, lineNumber);
       bp.setEnabled(enabled);
     } catch (IOException e) {
       throw new RuntimeException(e);
