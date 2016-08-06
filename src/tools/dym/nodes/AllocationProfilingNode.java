@@ -2,19 +2,20 @@ package tools.dym.nodes;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 
-import som.vmobjects.SObjectWithClass;
 import tools.dym.profiles.AllocationProfile;
+import tools.dym.profiles.AllocationProfile.AllocProfileNode;
 
 
-public class AllocationProfilingNode extends CountingNode<AllocationProfile> {
+public final class AllocationProfilingNode extends CountingNode<AllocationProfile> {
+  @Child private AllocProfileNode profile;
 
   public AllocationProfilingNode(final AllocationProfile profile) {
     super(profile);
+    this.profile = profile.getProfile();
   }
 
   @Override
   protected void onReturnValue(final VirtualFrame frame, final Object result) {
-    assert result instanceof SObjectWithClass : "WAT? this should only be tracking SObject allocations";
-    counter.recordResult((SObjectWithClass) result);
+    profile.executeProfiling(result);
   }
 }
