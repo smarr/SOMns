@@ -16,14 +16,14 @@ import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SObject.SMutableObject;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import som.vmobjects.SSymbol;
-import tools.dym.profiles.ReadValueProfile;
+import tools.dym.profiles.CreateCounter;
 import tools.dym.profiles.ReadValueProfile.ProfileCounter;
 
 
 public abstract class TypeProfileNode extends Node {
-  protected final ReadValueProfile profile;
+  protected final CreateCounter profile;
 
-  protected TypeProfileNode(final ReadValueProfile profile) {
+  protected TypeProfileNode(final CreateCounter profile) {
     this.profile = profile;
   }
 

@@ -11,7 +11,7 @@ import som.VM;
 import som.interpreter.objectstorage.ClassFactory;
 
 
-public class ReadValueProfile extends Counter {
+public class ReadValueProfile extends Counter implements CreateCounter {
 
   private final Map<ClassFactory, Integer> typesOfReadValue;
   private final List<ProfileCounter> counters;
@@ -43,6 +43,7 @@ public class ReadValueProfile extends Counter {
     return result;
   }
 
+  @Override
   public ProfileCounter createCounter(final ClassFactory type) {
     ProfileCounter counter = new ProfileCounter(type);
     counters.add(counter);
@@ -53,7 +54,7 @@ public class ReadValueProfile extends Counter {
     private int count;
     private final ClassFactory type;
 
-    private ProfileCounter(final ClassFactory type) {
+    public ProfileCounter(final ClassFactory type) {
       this.type = type;
     }
 
