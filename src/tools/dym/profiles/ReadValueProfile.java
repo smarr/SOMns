@@ -31,11 +31,16 @@ public class ReadValueProfile extends Counter {
   }
 
   public Map<ClassFactory, Integer> getTypeProfile() {
+    Map<ClassFactory, Integer> result = new HashMap<>(typesOfReadValue);
     for (ProfileCounter c : counters) {
-      assert !typesOfReadValue.containsKey(c.getType()) : "need a smarter merge if we already got this type here";
-      typesOfReadValue.put(c.getType(), c.getValue());
+      Integer val = result.get(c.getType());
+      if (val == null) {
+        result.put(c.getType(), c.getValue());
+      } else {
+        result.put(c.getType(), c.getValue() + val);
+      }
     }
-    return typesOfReadValue;
+    return result;
   }
 
   public ProfileCounter createCounter(final ClassFactory type) {
