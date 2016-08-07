@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.Invokable;
@@ -16,7 +16,7 @@ import tools.dym.profiles.ReadValueProfile.ProfileCounter;
 
 public class CallsiteProfile extends Counter implements CreateCounter {
 
-  private final Map<Invokable, Integer> callTargetMap;
+  private final Map<Invokable, Counter> callTargetMap;
   private final Map<ClassFactory, Integer> receiverMap;
   private final List<ProfileCounter> counters;
   private TypeProfileNode typeProfile;
@@ -39,13 +39,22 @@ public class CallsiteProfile extends Counter implements CreateCounter {
     this.typeProfile = rcvrProfile;
   }
 
-  @TruffleBoundary
-  public void recordInvocationTarget(final Invokable invokable) {
-    callTargetMap.merge(invokable, 1, Integer::sum);
+  public Counter createCounter(final Invokable invokable) {
+    Counter c = callTargetMap.get(invokable);
+    if (c != null) {
+      return c;
+    }
+    c = new Counter();
+    callTargetMap.put(invokable, c);
+    return c;
   }
 
   public Map<Invokable, Integer> getCallTargets() {
-    return callTargetMap;
+    HashMap<Invokable, Integer> result = new HashMap<>();
+    for (Entry<Invokable, Counter> e : callTargetMap.entrySet()) {
+      result.put(e.getKey(), e.getValue().val);
+    }
+    return result;
   }
 
   public Map<ClassFactory, Integer> getReceivers() {
@@ -59,5 +68,13 @@ public class CallsiteProfile extends Counter implements CreateCounter {
       }
     }
     return result;
+  }
+
+  public static final class Counter {
+    private int val;
+
+    public void inc() {
+      val += 1;
+    }
   }
 }
