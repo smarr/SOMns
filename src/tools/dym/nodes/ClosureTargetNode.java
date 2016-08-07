@@ -4,21 +4,22 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 
 import som.interpreter.Invokable;
 import tools.dym.profiles.ClosureApplicationProfile;
+import tools.dym.profiles.ClosureApplicationProfile.ActivationCounter;
 
 
-public class ClosureTargetNode extends CountingNode<ClosureApplicationProfile> {
+public final class ClosureTargetNode extends CountingNode<ClosureApplicationProfile> {
 
-  protected final Invokable invokable; // TODO: should I try harder to get SInvokable?
+  protected final ActivationCounter cnt;
 
   public ClosureTargetNode(final ClosureApplicationProfile profile, final Invokable invokable) {
     super(profile);
-    this.invokable = invokable;
+    cnt = profile.createCounter(invokable);
   }
 
   @Override
   public void onEnter(final VirtualFrame frame) {
     super.onEnter(frame);
-    counter.recordInvocationTarget(invokable);
+    cnt.inc();
   }
 
   @Override
