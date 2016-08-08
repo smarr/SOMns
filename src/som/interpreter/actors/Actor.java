@@ -8,7 +8,6 @@ import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
 import java.util.concurrent.ForkJoinWorkerThread;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.debug.Debugger;
 
 import som.VM;
@@ -181,8 +180,7 @@ public class Actor {
 
           //TODO if the message is breakpointed stop message in the interpreter and notify UI
           if (msg.isPaused()) {
-            //WebDebugger.log("message paused--" + msg.toString());
-            RootCallTarget onReceiveNode = msg.getOnReceive();
+            dbg.prepareStepUntilRootTag();
           }
         }
 
