@@ -267,7 +267,7 @@ public class EventualSendNode extends ExprWithTagsNode {
     }
 
     protected boolean isMessageBreakpointed() {
-      return VM.getWebDebugger().getBreakpoints().isBreakpointed(getSourceSection());
+      return VM.getWebDebugger().isBreakpointed(getSourceSection());
     }
   }
 }

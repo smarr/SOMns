@@ -162,7 +162,7 @@ public class BreakpointActor extends Actor {
         }
       } else { // actor running
         // check whether the msg has a breakpoint
-        boolean isBreakpointed = VM.getWebDebugger().getBreakpoints().isBreakpointed(msg.getTargetSourceSection());
+        boolean isBreakpointed = VM.getWebDebugger().isBreakpointed(msg.getTargetSourceSection());
         if (isBreakpointed) {
           // pausing at sender actor = PauseResolve, annotation in REME-D
           if (!receiver) {

@@ -20,7 +20,6 @@ import som.vmobjects.SObject;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import tools.ObjectBuffer;
 import tools.actors.ActorExecutionTrace;
-import tools.debugger.session.BreakpointActor;
 
 
 /**
@@ -45,8 +44,6 @@ public class Actor {
   public static Actor createActor() {
     if (VmSettings.DEBUG_MODE) {
       return new DebugActor();
-    } if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-      return new BreakpointActor();
     } else {
       return new Actor();
     }

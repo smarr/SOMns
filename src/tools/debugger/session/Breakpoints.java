@@ -2,9 +2,7 @@ package tools.debugger.session;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -29,14 +27,14 @@ public class Breakpoints {
 
   private final WebDebugger webDebugger;
   private final Map<BreakpointId, Breakpoint> knownBreakpoints;
-  private final List<SectionBreakpoint> receiverBreakpoints;
+  private final Map<BreakpointId, Breakpoint> receiverBreakpoints;
   private final Debugger debugger;
 
   public Breakpoints(final Debugger debugger, final WebDebugger webDebugger) {
-    knownBreakpoints = new HashMap<>();
+    this.knownBreakpoints = new HashMap<>();
     this.debugger    = debugger;
     this.webDebugger = webDebugger;
-    this.receiverBreakpoints = new ArrayList<>();
+    this.receiverBreakpoints = new HashMap<>();
   }
 
   public abstract static class BreakpointId {
@@ -205,21 +203,25 @@ public class Breakpoints {
     return bp;
   }
 
-  public void saveReceiverBreakpoint(final URI sourceUri, final int startLine,
+  public synchronized void saveReceiverBreakpoint(final URI sourceUri, final int startLine,
       final int startColumn, final int charLength) {
-    SectionBreakpoint bId = new SectionBreakpoint(sourceUri, startLine, startColumn, charLength);
-    if (!receiverBreakpoints.contains(bId)) {
-      this.receiverBreakpoints.add(bId);
-    }
+    BreakpointId bId = new SectionBreakpoint(sourceUri, startLine, startColumn, charLength);
+    assert !receiverBreakpoints.containsKey(bId) : "The receiver breakpoint is already saved";
+    receiverBreakpoints.putIfAbsent(bId, null);
   }
 
-  public boolean isBreakpointed(final SourceSection source) {
+  public synchronized void updateReceiverBreakpoint(final BreakpointId bId, final Breakpoint bReceiver) {
+    assert receiverBreakpoints.containsKey(bId) : "The receiver breakpoint does not exist";
+    receiverBreakpoints.put(bId, bReceiver);
+  }
+
+  public synchronized boolean isBreakpointed(final SourceSection source) {
     if (!receiverBreakpoints.isEmpty()) {
       SectionBreakpoint checkBreakpoint = new SectionBreakpoint(source.getSource().getURI(),
           source.getStartLine(), source.getStartColumn(),
           source.getCharLength());
 
-      if (receiverBreakpoints.contains(checkBreakpoint)) {
+      if (receiverBreakpoints.containsKey(checkBreakpoint)) {
         return true;
       }
     }
