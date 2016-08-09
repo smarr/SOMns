@@ -157,7 +157,7 @@ public class WebDebugger extends TruffleInstrument {
     return roots;
   }
 
-  public boolean isBreakpointed(final SourceSection source) {
-    return breakpoints.isBreakpointed(source);
+  public Breakpoints getBreakpoints() {
+    return breakpoints;
   }
 }

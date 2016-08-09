@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import com.oracle.truffle.api.Assumption;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.debug.Breakpoint;
@@ -27,7 +28,9 @@ public class Breakpoints {
 
   private final WebDebugger webDebugger;
   private final Map<BreakpointId, Breakpoint> knownBreakpoints;
-  private final Map<BreakpointId, Breakpoint> receiverBreakpoints;
+  private final Map<BreakpointId, ReceiverBreakpoint> receiverBreakpoints;
+  private Assumption receiverBreakpointVersion;
+
   private final Debugger debugger;
 
   public Breakpoints(final Debugger debugger, final WebDebugger webDebugger) {
@@ -35,6 +38,7 @@ public class Breakpoints {
     this.debugger    = debugger;
     this.webDebugger = webDebugger;
     this.receiverBreakpoints = new HashMap<>();
+    this.receiverBreakpointVersion = Truffle.getRuntime().createAssumption("receiverBreakpointVersion");
   }
 
   public abstract static class BreakpointId {
@@ -80,6 +84,11 @@ public class Breakpoints {
       this.startLine = startLine;
       this.startColumn = startColumn;
       this.charLength  = charLength;
+    }
+
+    public SectionBreakpoint(final SourceSection section) {
+      this(section.getSource().getURI(), section.getStartLine(),
+          section.getStartColumn(), section.getCharLength());
     }
 
     @Override
@@ -205,22 +214,66 @@ public class Breakpoints {
 
   public synchronized void addReceiverBreakpoint(final URI sourceUri, final int startLine,
       final int startColumn, final int charLength) {
-    BreakpointId bId = new SectionBreakpoint(sourceUri, startLine, startColumn, charLength);
+    SectionBreakpoint bId = new SectionBreakpoint(sourceUri, startLine, startColumn, charLength);
     assert !receiverBreakpoints.containsKey(bId) : "The receiver breakpoint is already saved";
-    receiverBreakpoints.putIfAbsent(bId, null);
+    receiverBreakpoints.putIfAbsent(bId, new ReceiverBreakpoint(bId));
+
+    receiverBreakpointVersion.invalidate();
+    receiverBreakpointVersion = Truffle.getRuntime().createAssumption();
   }
 
-  public synchronized boolean isBreakpointed(final SourceSection source) {
-    if (!receiverBreakpoints.isEmpty()) {
-      SectionBreakpoint checkBreakpoint = new SectionBreakpoint(source.getSource().getURI(),
-          source.getStartLine(), source.getStartColumn(),
-          source.getCharLength());
+  public static class BreakpointInfo {
+    public final ReceiverBreakpoint breakpoint;
+    public final boolean hasBreakpoint;
+    public final Assumption receiverBreakpointVersion;
 
-      if (receiverBreakpoints.containsKey(checkBreakpoint)) {
-        return true;
+    public BreakpointInfo(final boolean hasBreakpoint,
+        final ReceiverBreakpoint bp,
+        final Assumption receiverBreakpointVersion) {
+      this.breakpoint    = bp;
+      this.hasBreakpoint = hasBreakpoint;
+      this.receiverBreakpointVersion = receiverBreakpointVersion;
+    }
+  }
+
+  public static class ReceiverBreakpoint {
+    private SectionBreakpoint id;
+    private boolean isEnabled;
+    private Assumption unchanged;
+
+    public ReceiverBreakpoint(final SectionBreakpoint id) {
+      this.id   = id;
+      isEnabled = true;
+      unchanged = Truffle.getRuntime().createAssumption("unchanged breakpoint");
+    }
+
+    public synchronized void setEnabled(final boolean isEnabled) {
+      if (this.isEnabled != isEnabled) {
+        this.isEnabled = isEnabled;
+        unchanged.invalidate();
+        unchanged = Truffle.getRuntime().createAssumption("unchanged breakpoint");
       }
     }
-    return false;
+
+    public boolean isEnabled() {
+      return unchanged.isValid() && isEnabled;
+    }
+
+    /**
+     * TODO: redundant, just a work around for the DSL, which has an issue with ! currently.
+     */
+    public boolean isDisabled() {
+      return !isEnabled();
+    }
+
+    public Assumption getAssumption() {
+      return unchanged;
+    }
+  }
+
+  public synchronized BreakpointInfo hasReceiverBreakpoint(final SectionBreakpoint section) {
+    ReceiverBreakpoint bp = receiverBreakpoints.get(section);
+    return new BreakpointInfo(bp != null, bp, receiverBreakpointVersion);
   }
 
   public BreakpointId getBreakpointId(final URI sourceUri,

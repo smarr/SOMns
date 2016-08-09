@@ -2,6 +2,7 @@ package som.interpreter.actors;
 
 import java.util.concurrent.CompletableFuture;
 
+import com.oracle.truffle.api.Assumption;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
@@ -15,8 +16,10 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
+import som.VmSettings;
 import som.interpreter.actors.EventualMessage.DirectMessage;
 import som.interpreter.actors.EventualMessage.PromiseSendMessage;
+import som.interpreter.actors.EventualSendNodeFactory.BreakpointNodeGen;
 import som.interpreter.actors.EventualSendNodeFactory.SendNodeGen;
 import som.interpreter.actors.ReceivedMessage.ReceivedMessageForVMMain;
 import som.interpreter.actors.RegisterOnPromiseNode.RegisterWhenResolved;
@@ -30,6 +33,9 @@ import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.vm.constants.Nil;
 import som.vmobjects.SSymbol;
 import tools.actors.Tags.EventualMessageSend;
+import tools.debugger.session.Breakpoints;
+import tools.debugger.session.Breakpoints.BreakpointInfo;
+import tools.debugger.session.Breakpoints.SectionBreakpoint;
 
 
 @Instrumentable(factory = EventualSendNodeWrapper.class)
@@ -108,12 +114,19 @@ public class EventualSendNode extends ExprWithTagsNode {
 
     protected final SourceSection source;
 
+    protected final BreakpointNode breakpoint;
+
     protected SendNode(final SSymbol selector, final WrapReferenceNode[] wrapArgs,
         final RootCallTarget onReceive, final SourceSection source) {
       this.selector = selector;
       this.wrapArgs = wrapArgs;
       this.onReceive = onReceive;
       this.source = source;
+      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+        this.breakpoint = BreakpointNodeGen.create(source);
+      } else {
+        this.breakpoint = new DisabledBreakpointNode();
+      }
     }
 
     /**
@@ -159,10 +172,9 @@ public class EventualSendNode extends ExprWithTagsNode {
       assert !(args[0] instanceof SFarReference) : "This should not happen for this specialization, but it is handled in determineTargetAndWrapArguments(.)";
       assert !(args[0] instanceof SPromise) : "Should not happen either, but just to be sure";
 
-      boolean isBreakpointed = isMessageBreakpointed();
       DirectMessage msg = new DirectMessage(
           EventualMessage.getCurrentExecutingMessage(), target, selector, args,
-          owner, resolver, onReceive, isBreakpointed);
+          owner, resolver, onReceive, breakpoint.executeCheckIsSetAndEnabled());
       target.send(msg);
     }
 
@@ -170,10 +182,9 @@ public class EventualSendNode extends ExprWithTagsNode {
         final SResolver resolver, final RegisterWhenResolved registerNode) {
       assert rcvr.getOwner() == EventualMessage.getActorCurrentMessageIsExecutionOn() : "think this should be true because the promise is an Object and owned by this specific actor";
 
-      boolean isBreakpointed = isMessageBreakpointed();
       PromiseSendMessage msg = new PromiseSendMessage(
           EventualMessage.getCurrentExecutingMessage(), selector, args,
-          rcvr.getOwner(), resolver, onReceive, isBreakpointed);
+          rcvr.getOwner(), resolver, onReceive, breakpoint.executeCheckIsSetAndEnabled());
       registerNode.register(rcvr, msg, rcvr.getOwner());
     }
 
@@ -215,10 +226,9 @@ public class EventualSendNode extends ExprWithTagsNode {
       SPromise  result   = SPromise.createPromise(current);
       SResolver resolver = SPromise.createResolver(result, "eventualSend:", selector);
 
-      boolean isBreakpointed = isMessageBreakpointed();
       DirectMessage msg = new DirectMessage(EventualMessage.getCurrentExecutingMessage(),
           current, selector, args, current,
-          resolver, onReceive, isBreakpointed);
+          resolver, onReceive, breakpoint.executeCheckIsSetAndEnabled());
       current.send(msg);
 
       return result;
@@ -244,10 +254,9 @@ public class EventualSendNode extends ExprWithTagsNode {
     public final Object toNearRefWithoutResultPromise(final Object[] args) {
       Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
 
-      boolean isBreakpointed = isMessageBreakpointed();
       DirectMessage msg = new DirectMessage(EventualMessage.getCurrentExecutingMessage(),
           current, selector, args, current,
-          null, onReceive, isBreakpointed);
+          null, onReceive, breakpoint.executeCheckIsSetAndEnabled());
       current.send(msg);
       return Nil.nilObject;
     }
@@ -261,9 +270,53 @@ public class EventualSendNode extends ExprWithTagsNode {
       }
       return super.isTaggedWith(tag);
     }
+  }
 
-    protected boolean isMessageBreakpointed() {
-      return VM.getWebDebugger().isBreakpointed(getSourceSection());
+  protected abstract static class BreakpointNode extends Node {
+    private final Breakpoints breakpoints;
+    private final SectionBreakpoint section;
+
+    protected BreakpointNode(final SourceSection sourceSection) {
+      this.section = new SectionBreakpoint(sourceSection);
+      this.breakpoints = VM.getWebDebugger().getBreakpoints();
+    }
+
+    /** Only to be used by the DisabledBreakpointNode. */
+    protected BreakpointNode() {
+      this.section     = null;
+      this.breakpoints = null;
+    }
+
+    public abstract boolean executeCheckIsSetAndEnabled();
+
+    protected BreakpointInfo getBreakpointStatus() {
+      return breakpoints.hasReceiverBreakpoint(section);
+    }
+
+    @Specialization(assumptions = "info.receiverBreakpointVersion", guards = "!info.hasBreakpoint")
+    public boolean noBreakpoint(@Cached("getBreakpointStatus()") final BreakpointInfo info) {
+      return false;
+    }
+
+    @Specialization(assumptions = {"info.receiverBreakpointVersion", "bpUnchanged"},
+        guards = {"info.hasBreakpoint", "info.breakpoint.isDisabled()"})
+    public boolean breakpointDisabled(@Cached("getBreakpointStatus()") final BreakpointInfo info,
+        @Cached("info.breakpoint.getAssumption()") final Assumption bpUnchanged) {
+      return false;
+    }
+
+    @Specialization(assumptions = {"info.receiverBreakpointVersion", "bpUnchanged"},
+        guards = {"info.hasBreakpoint", "info.breakpoint.isEnabled()"})
+    public boolean breakpointEnabled(@Cached("getBreakpointStatus()") final BreakpointInfo info,
+        @Cached("info.breakpoint.getAssumption()") final Assumption bpUnchanged) {
+      return true;
+    }
+  }
+
+  protected static final class DisabledBreakpointNode extends BreakpointNode {
+    @Override
+    public boolean executeCheckIsSetAndEnabled() {
+      return false;
     }
   }
 }
