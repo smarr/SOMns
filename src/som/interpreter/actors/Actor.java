@@ -178,7 +178,6 @@ public class Actor {
         if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
           dbg.executionStarted(-1, msg.getTargetSourceSection().getSource());
 
-          //TODO if the message is breakpointed stop message in the interpreter and notify UI
           if (msg.isPaused()) {
             dbg.prepareStepUntilRootTag();
           }

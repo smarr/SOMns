@@ -240,12 +240,12 @@ public class FrontendConnector {
       final int startLine, final int startColumn, final int charLength,
       final Role role) {
     try {
-      if (role.equals(Role.SENDER)) {
+      if (role == Role.SENDER) {
         Breakpoint breakpoint = breakpoints.getBreakpointOnSender(sourceUri, startLine, startColumn, charLength);
         breakpoint.setEnabled(enabled);
       } else {
-        //receiver breakpoint
-        breakpoints.saveReceiverBreakpoint(sourceUri, startLine, startColumn, charLength);
+        assert role == Role.RECEIVER : "Do we have a not yet supported breakpoint type?";
+        breakpoints.addReceiverBreakpoint(sourceUri, startLine, startColumn, charLength);
       }
     } catch (IOException e) {
       throw new RuntimeException(e);

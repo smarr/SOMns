@@ -203,16 +203,11 @@ public class Breakpoints {
     return bp;
   }
 
-  public synchronized void saveReceiverBreakpoint(final URI sourceUri, final int startLine,
+  public synchronized void addReceiverBreakpoint(final URI sourceUri, final int startLine,
       final int startColumn, final int charLength) {
     BreakpointId bId = new SectionBreakpoint(sourceUri, startLine, startColumn, charLength);
     assert !receiverBreakpoints.containsKey(bId) : "The receiver breakpoint is already saved";
     receiverBreakpoints.putIfAbsent(bId, null);
-  }
-
-  public synchronized void updateReceiverBreakpoint(final BreakpointId bId, final Breakpoint bReceiver) {
-    assert receiverBreakpoints.containsKey(bId) : "The receiver breakpoint does not exist";
-    receiverBreakpoints.put(bId, bReceiver);
   }
 
   public synchronized boolean isBreakpointed(final SourceSection source) {

@@ -43,11 +43,6 @@ public abstract class EventualMessage {
     return onReceive.getRootNode().getSourceSection();
   }
 
-
-  public RootCallTarget getOnReceive() {
-    return onReceive;
-  }
-
   /**
    * A message to a known receiver that is to be executed on the actor owning
    * the receiver.

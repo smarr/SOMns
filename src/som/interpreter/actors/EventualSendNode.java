@@ -130,10 +130,6 @@ public class EventualSendNode extends ExprWithTagsNode {
       return source;
     }
 
-    public RootCallTarget getOnReceive() {
-      return onReceive;
-    }
-
     protected final boolean isResultUsed() {
       Node parent = SOMNode.getParentIgnoringWrapper(this);
       assert parent instanceof EventualSendNode;
