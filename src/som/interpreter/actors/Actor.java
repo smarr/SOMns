@@ -178,7 +178,7 @@ public class Actor {
         if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
           dbg.executionStarted(-1, msg.getTargetSourceSection().getSource());
 
-          if (msg.isPaused()) {
+          if (msg.isBreakpoint()) {
             dbg.prepareStepUntilRootTag();
           }
         }
