@@ -173,7 +173,7 @@ if not args.interpreter:
               '-Djvmci.Compiler=graal']
 
 if args.som_dnu:
-    flags += ['-Dsom.printStackTraceOnDNU']
+    flags += ['-Dsom.printStackTraceOnDNU=true']
 
 # Handle executable names
 if sys.argv[0].endswith('fast'):
