@@ -19,7 +19,6 @@ import som.vmobjects.SObject;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import tools.ObjectBuffer;
 import tools.actors.ActorExecutionTrace;
-import tools.debugger.session.BreakpointActor;
 
 
 /**
@@ -44,8 +43,6 @@ public class Actor {
   public static Actor createActor() {
     if (VmSettings.DEBUG_MODE) {
       return new DebugActor();
-    } if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-      return new BreakpointActor();
     } else {
       return new Actor();
     }
@@ -180,6 +177,10 @@ public class Actor {
 
         if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
           dbg.executionStarted(-1, msg.getTargetSourceSection().getSource());
+
+          if (msg.isBreakpoint()) {
+            dbg.prepareStepUntilRootTag();
+          }
         }
 
         msg.execute();

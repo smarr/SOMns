@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import com.oracle.truffle.api.Assumption;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.debug.Breakpoint;
@@ -18,7 +19,6 @@ import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
-import som.interpreter.LexicalScope.MixinScope;
 import som.interpreter.actors.ReceivedRootNode;
 import som.interpreter.nodes.ExpressionNode;
 import tools.debugger.WebDebugger;
@@ -28,12 +28,17 @@ public class Breakpoints {
 
   private final WebDebugger webDebugger;
   private final Map<BreakpointId, Breakpoint> knownBreakpoints;
+  private final Map<BreakpointId, ReceiverBreakpoint> receiverBreakpoints;
+  private Assumption receiverBreakpointVersion;
+
   private final Debugger debugger;
 
   public Breakpoints(final Debugger debugger, final WebDebugger webDebugger) {
-    knownBreakpoints = new HashMap<>();
+    this.knownBreakpoints = new HashMap<>();
     this.debugger    = debugger;
     this.webDebugger = webDebugger;
+    this.receiverBreakpoints = new HashMap<>();
+    this.receiverBreakpointVersion = Truffle.getRuntime().createAssumption("receiverBreakpointVersion");
   }
 
   public abstract static class BreakpointId {
@@ -81,6 +86,11 @@ public class Breakpoints {
       this.charLength  = charLength;
     }
 
+    public SectionBreakpoint(final SourceSection section) {
+      this(section.getSource().getURI(), section.getStartLine(),
+          section.getStartColumn(), section.getCharLength());
+    }
+
     @Override
     public int hashCode() {
       return Objects.hash(sourceUri, startLine, startColumn, charLength);
@@ -98,6 +108,12 @@ public class Breakpoints {
       return o.startLine == startLine && o.startColumn == startColumn
           && o.charLength == charLength && o.sourceUri.equals(sourceUri);
     }
+
+    @Override
+    public String toString() {
+      return "SectionBreakpoint: startLine " + startLine + " startColumn "
+          + startColumn + " charLength " + charLength + " sourceURi " + sourceUri;
+    }
   }
 
   /**
@@ -111,9 +127,10 @@ public class Breakpoints {
     }
   }
 
-  public Breakpoint getBreakpoint(final URI sourceUri, final int line) throws IOException {
+  public Breakpoint getLineBreakpoint(final URI sourceUri, final int line) throws IOException {
     BreakpointId bId = new LineBreakpoint(sourceUri, line);
     Breakpoint bp = knownBreakpoints.get(bId);
+
     if (bp == null) {
       WebDebugger.log("LineBreakpoint: " + bId);
       bp = debugger.setLineBreakpoint(0, sourceUri, line, false);
@@ -122,7 +139,7 @@ public class Breakpoints {
     return bp;
   }
 
-  public Breakpoint getBreakpoint(final URI sourceUri, final int startLine, final int startColumn, final int charLength) throws IOException {
+  public Breakpoint getBreakpointOnSender(final URI sourceUri, final int startLine, final int startColumn, final int charLength) throws IOException {
     BreakpointId bId = new SectionBreakpoint(sourceUri, startLine, startColumn, charLength);
     Breakpoint bp = knownBreakpoints.get(bId);
     if (bp == null) {
@@ -195,6 +212,70 @@ public class Breakpoints {
     return bp;
   }
 
+  public synchronized void addReceiverBreakpoint(final URI sourceUri, final int startLine,
+      final int startColumn, final int charLength) {
+    SectionBreakpoint bId = new SectionBreakpoint(sourceUri, startLine, startColumn, charLength);
+    assert !receiverBreakpoints.containsKey(bId) : "The receiver breakpoint is already saved";
+    receiverBreakpoints.putIfAbsent(bId, new ReceiverBreakpoint(bId));
+
+    receiverBreakpointVersion.invalidate();
+    receiverBreakpointVersion = Truffle.getRuntime().createAssumption();
+  }
+
+  public static final class BreakpointInfo {
+    public final ReceiverBreakpoint breakpoint;
+    public final Assumption receiverBreakpointVersion;
+
+    public BreakpointInfo(final ReceiverBreakpoint bp,
+        final Assumption receiverBreakpointVersion) {
+      this.breakpoint    = bp;
+      this.receiverBreakpointVersion = receiverBreakpointVersion;
+    }
+
+    public boolean hasBreakpoint() { return breakpoint != null; }
+    public boolean noBreakpoint()  { return breakpoint == null; }
+  }
+
+  public static class ReceiverBreakpoint {
+    private SectionBreakpoint id;
+    private boolean isEnabled;
+    private Assumption unchanged;
+
+    public ReceiverBreakpoint(final SectionBreakpoint id) {
+      this.id   = id;
+      isEnabled = true;
+      unchanged = Truffle.getRuntime().createAssumption("unchanged breakpoint");
+    }
+
+    public synchronized void setEnabled(final boolean isEnabled) {
+      if (this.isEnabled != isEnabled) {
+        this.isEnabled = isEnabled;
+        unchanged.invalidate();
+        unchanged = Truffle.getRuntime().createAssumption("unchanged breakpoint");
+      }
+    }
+
+    public boolean isEnabled() {
+      return unchanged.isValid() && isEnabled;
+    }
+
+    /**
+     * TODO: redundant, just a work around for the DSL, which has an issue with ! currently.
+     */
+    public boolean isDisabled() {
+      return !isEnabled();
+    }
+
+    public Assumption getAssumption() {
+      return unchanged;
+    }
+  }
+
+  public synchronized BreakpointInfo hasReceiverBreakpoint(final SectionBreakpoint section) {
+    ReceiverBreakpoint bp = receiverBreakpoints.get(section);
+    return new BreakpointInfo(bp, receiverBreakpointVersion);
+  }
+
   public BreakpointId getBreakpointId(final URI sourceUri,
       final int startLine, final int startColumn, final int charLength) {
     Set<BreakpointId> ids = knownBreakpoints.keySet();
@@ -217,78 +298,5 @@ public class Breakpoints {
     }
 
     return null;
-  }
-
-  //TODO choose between this or TracingActor isBreakpointed method
-  public boolean isBreakpointed(final SourceSection source) {
-    if (!knownBreakpoints.isEmpty()) {
-      Set<BreakpointId> keys = knownBreakpoints.keySet();
-      for (BreakpointId id : keys) {
-        SectionBreakpoint bId = (SectionBreakpoint) id;
-
-        SectionBreakpoint savedBreakpoint = new SectionBreakpoint(source.getSource().getURI(),
-            source.getStartLine(), source.getStartColumn(),
-            source.getCharIndex());
-
-        if (bId.equals(savedBreakpoint)) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  public BreakpointDataTrace getBreakpointDataTrace(final Set<RootNode> nodes, final URI sourceUri, final int startLine, final BreakpointId breakpointId) {
-    BreakpointDataTrace breakpointTrace = null;
-    RootNode rn = null;
-
-    if (nodes != null) {
-      for (RootNode rootNode : nodes) {
-        int nodeStartLine = rootNode.getSourceSection().getStartLine(); //startLine of the rootNode corresponds to first line of the method
-        int nodeEndLine = rootNode.getSourceSection().getEndLine();
-
-        if (startLine > nodeStartLine && startLine < nodeEndLine) { //check if the breakpoint startLine is in the rootNode coordinates
-          rn = rootNode;
-          break;
-        }
-      }
-    }
-
-    if (rn != null) {
-      MixinScope enclosingMixin = ((som.interpreter.Method) rn).getLexicalScope().getHolderScope();
-      String holderClass = enclosingMixin.getMixinDefinition().getName().getString();
-      String methodName = ((som.interpreter.Method) rn).getLexicalScope().getMethod().getName().split("#")[1];
-      breakpointTrace = new BreakpointDataTrace(holderClass, methodName, breakpointId);
-    }
-
-    return breakpointTrace;
-  }
-
-  /**
-   * Encapsulates data related to the breakpoint.
-   */
-  public class BreakpointDataTrace {
-    private String holderClass;
-    private String methodName;
-    private BreakpointId id;
-
-    BreakpointDataTrace(final String holderClass, final String methodName,
-        final BreakpointId id) {
-      this.holderClass = holderClass;
-      this.methodName = methodName;
-      this.id = id;
-    }
-
-    public String getHolderClass() {
-      return holderClass;
-    }
-
-    public String getMethodName() {
-      return methodName;
-    }
-
-    public BreakpointId getId() {
-      return id;
-    }
   }
 }

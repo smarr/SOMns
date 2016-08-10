@@ -156,4 +156,8 @@ public class WebDebugger extends TruffleInstrument {
     }
     return roots;
   }
+
+  public Breakpoints getBreakpoints() {
+    return breakpoints;
+  }
 }

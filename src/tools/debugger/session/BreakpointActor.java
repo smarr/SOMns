@@ -1,17 +1,8 @@
 package tools.debugger.session;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-
-import com.oracle.truffle.api.debug.Breakpoint;
-import com.oracle.truffle.api.source.SourceSection;
-
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
 import tools.ObjectBuffer;
-import tools.debugger.session.Breakpoints.BreakpointDataTrace;
-import tools.debugger.session.Breakpoints.SectionBreakpoint;
 
 /**
  * This class contains the operations for the debugging of messages between
@@ -45,21 +36,10 @@ public class BreakpointActor extends Actor {
    */
   private ObjectBuffer<EventualMessage> inbox;
 
-  /**
-   * breakpoints corresponding to the sender actor of the message.
-   */
-  final Map<BreakpointDataTrace, Breakpoint> senderBreakpoints;
-  /**
-   * breakpoints corresponding to the receiver actor of the message.
-   */
-  final Map<BreakpointDataTrace, Breakpoint> receiverBreakpoints;
-
   public BreakpointActor() {
     this.inbox = new ObjectBuffer<EventualMessage>(16);
     this.debuggingState = State.INITIAL;
     this.pausedState = State.INITIAL;
-    this.receiverBreakpoints = new HashMap<>();
-    this.senderBreakpoints = new HashMap<>();
   }
 
   public boolean isStarted() {
@@ -88,70 +68,11 @@ public class BreakpointActor extends Actor {
 
   @Override
   public synchronized void send(final EventualMessage msg) {
-    if (msg.isPaused()) {
+    if (msg.isBreakpoint()) {
       schedule(msg, true);
     } else {
       super.send(msg);
     }
-  }
-
-  public void addBreakpoint(final Breakpoint breakpoint,
-      final BreakpointDataTrace breakpointTrace, final boolean receiver) {
-    if (receiver) {
-      receiverBreakpoints.put(breakpointTrace, breakpoint);
-    } else {
-      senderBreakpoints.put(breakpointTrace, breakpoint);
-    }
-  }
-
-  public void removeBreakpoint(final BreakpointDataTrace breakpointTrace,
-      final boolean receiver) {
-    if (receiver) {
-      receiverBreakpoints.remove(breakpointTrace);
-    } else {
-      senderBreakpoints.remove(breakpointTrace);
-    }
-  }
-
-  /**
-   * Check if the message source section is breakpointed.
-   */
-  public boolean isBreakpointed(final SourceSection source,
-      final boolean receiver) {
-
-    if (receiver) {
-      if (!this.receiverBreakpoints.isEmpty()) {
-        Set<BreakpointDataTrace> keys = this.receiverBreakpoints.keySet();
-        for (BreakpointDataTrace breakpointLocation : keys) {
-          SectionBreakpoint bId = (SectionBreakpoint) breakpointLocation.getId();
-
-          SectionBreakpoint savedBreakpoint = new SectionBreakpoint(source.getSource().getURI(),
-              source.getStartLine(), source.getStartColumn(),
-              source.getCharIndex());
-
-          if (bId.equals(savedBreakpoint)) {
-            return true;
-          }
-        }
-      }
-    } else { // sender
-      if (!this.senderBreakpoints.isEmpty()) {
-        Set<BreakpointDataTrace> keys = this.senderBreakpoints.keySet();
-        for (BreakpointDataTrace breakpointLocation : keys) {
-          SectionBreakpoint bId = (SectionBreakpoint) breakpointLocation.getId();
-
-          SectionBreakpoint savedBreakpoint = new SectionBreakpoint(source.getSource().getURI(),
-              source.getStartLine(), source.getStartColumn(),
-              source.getCharIndex());
-
-          if (bId.equals(savedBreakpoint)) {
-            return true;
-          }
-        }
-      }
-    }
-
-    return false;
   }
 
   /**
@@ -240,8 +161,9 @@ public class BreakpointActor extends Actor {
         }
       } else { // actor running
         // check whether the msg has a breakpoint
-        boolean isBreakpointed = isBreakpointed(msg.getTargetSourceSection(),
-            receiver);
+
+        /** TODO: UNSUPPORTED CODE FOR THE MOMENT:
+        boolean isBreakpointed = VM.getWebDebugger().isBreakpointed(msg.getTargetSourceSection());
         if (isBreakpointed) {
           // pausing at sender actor = PauseResolve, annotation in REME-D
           if (!receiver) {
@@ -252,7 +174,7 @@ public class BreakpointActor extends Actor {
           }
         } else {
           getMailbox().append(msg);
-        }
+        }*/
 
       }
     } else { // actor doesn't started

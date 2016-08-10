@@ -1,15 +1,11 @@
 package tools.actors;
 
-import com.oracle.truffle.api.debug.Breakpoint;
-
 import som.VmSettings;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.SFarReference;
 import som.vm.ObjectSystem;
 import tools.ObjectBuffer;
-import tools.debugger.session.Breakpoints.BreakpointDataTrace;
-import tools.debugger.session.BreakpointActor;
 
 public class ActorExecutionTrace {
 
@@ -78,23 +74,5 @@ public class ActorExecutionTrace {
       processedMessages = null;
     }
     return processedMessages;
-  }
-
-  /**
-   * Assign breakpoint for the actor that is the receiver of the message.
-   */
-  public static void assignBreakpoint(final Breakpoint breakpoint, final Actor actor,
-      final BreakpointDataTrace breakpointTrace, final boolean receiver) {
-
-    ObjectBuffer<ObjectBuffer<SFarReference>> actorsPerThread = getAllCreateActors();
-    for (ObjectBuffer<SFarReference> perThread : actorsPerThread) {
-      for (SFarReference farReference : perThread) {
-        if (farReference.getActor().equals(actor)) {
-          Actor actorReference = farReference.getActor();
-          ((BreakpointActor) actorReference).addBreakpoint(breakpoint, breakpointTrace, receiver);
-          break;
-        }
-      }
-    }
   }
 }
