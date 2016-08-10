@@ -123,9 +123,9 @@ public class EventualSendNode extends ExprWithTagsNode {
       this.onReceive = onReceive;
       this.source = source;
       if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-        this.breakpoint = BreakpointNodeGen.create(source);
+        this.breakpoint = insert(BreakpointNodeGen.create(source));
       } else {
-        this.breakpoint = new DisabledBreakpointNode();
+        this.breakpoint = insert(new DisabledBreakpointNode());
       }
     }
 
