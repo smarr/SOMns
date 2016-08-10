@@ -685,7 +685,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     public , element = ( ^ self append: element )
     
     public append: element = (
-      (lastIdx >= storage size) ifTrue: [
+      (lastIdx > storage size) ifTrue: [
         (* Need to expand capacity first *)
         | newStorage |
         newStorage := Array new: 2 * storage size.
