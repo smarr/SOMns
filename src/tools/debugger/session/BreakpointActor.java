@@ -1,6 +1,5 @@
 package tools.debugger.session;
 
-import som.VM;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
 import tools.ObjectBuffer;
@@ -162,6 +161,8 @@ public class BreakpointActor extends Actor {
         }
       } else { // actor running
         // check whether the msg has a breakpoint
+
+        /** TODO: UNSUPPORTED CODE FOR THE MOMENT:
         boolean isBreakpointed = VM.getWebDebugger().isBreakpointed(msg.getTargetSourceSection());
         if (isBreakpointed) {
           // pausing at sender actor = PauseResolve, annotation in REME-D
@@ -173,7 +174,7 @@ public class BreakpointActor extends Actor {
           }
         } else {
           getMailbox().append(msg);
-        }
+        }*/
 
       }
     } else { // actor doesn't started
