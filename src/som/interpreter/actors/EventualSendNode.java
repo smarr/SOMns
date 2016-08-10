@@ -114,7 +114,7 @@ public class EventualSendNode extends ExprWithTagsNode {
 
     protected final SourceSection source;
 
-    protected final BreakpointNode breakpoint;
+    protected final AbstractBreakpointNode breakpoint;
 
     protected SendNode(final SSymbol selector, final WrapReferenceNode[] wrapArgs,
         final RootCallTarget onReceive, final SourceSection source) {
@@ -272,7 +272,11 @@ public class EventualSendNode extends ExprWithTagsNode {
     }
   }
 
-  protected abstract static class BreakpointNode extends Node {
+  protected abstract static class AbstractBreakpointNode extends Node {
+    public abstract boolean executeCheckIsSetAndEnabled();
+  }
+
+  protected abstract static class BreakpointNode extends AbstractBreakpointNode {
     private final Breakpoints breakpoints;
     private final SectionBreakpoint section;
 
@@ -287,33 +291,32 @@ public class EventualSendNode extends ExprWithTagsNode {
       this.breakpoints = null;
     }
 
-    public abstract boolean executeCheckIsSetAndEnabled();
 
-    protected BreakpointInfo getBreakpointStatus() {
+    protected final BreakpointInfo getBreakpointStatus() {
       return breakpoints.hasReceiverBreakpoint(section);
     }
 
-    @Specialization(assumptions = "info.receiverBreakpointVersion", guards = "!info.hasBreakpoint")
-    public boolean noBreakpoint(@Cached("getBreakpointStatus()") final BreakpointInfo info) {
+    @Specialization(assumptions = "info.receiverBreakpointVersion", guards = "info.noBreakpoint()")
+    public final boolean noBreakpoint(@Cached("getBreakpointStatus()") final BreakpointInfo info) {
       return false;
     }
 
     @Specialization(assumptions = {"info.receiverBreakpointVersion", "bpUnchanged"},
-        guards = {"info.hasBreakpoint", "info.breakpoint.isDisabled()"})
-    public boolean breakpointDisabled(@Cached("getBreakpointStatus()") final BreakpointInfo info,
+        guards = {"info.hasBreakpoint()", "info.breakpoint.isDisabled()"})
+    public final boolean breakpointDisabled(@Cached("getBreakpointStatus()") final BreakpointInfo info,
         @Cached("info.breakpoint.getAssumption()") final Assumption bpUnchanged) {
       return false;
     }
 
     @Specialization(assumptions = {"info.receiverBreakpointVersion", "bpUnchanged"},
-        guards = {"info.hasBreakpoint", "info.breakpoint.isEnabled()"})
-    public boolean breakpointEnabled(@Cached("getBreakpointStatus()") final BreakpointInfo info,
+        guards = {"info.hasBreakpoint()", "info.breakpoint.isEnabled()"})
+    public final boolean breakpointEnabled(@Cached("getBreakpointStatus()") final BreakpointInfo info,
         @Cached("info.breakpoint.getAssumption()") final Assumption bpUnchanged) {
       return true;
     }
   }
 
-  protected static final class DisabledBreakpointNode extends BreakpointNode {
+  private static final class DisabledBreakpointNode extends AbstractBreakpointNode {
     @Override
     public boolean executeCheckIsSetAndEnabled() {
       return false;

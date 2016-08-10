@@ -222,18 +222,18 @@ public class Breakpoints {
     receiverBreakpointVersion = Truffle.getRuntime().createAssumption();
   }
 
-  public static class BreakpointInfo {
+  public static final class BreakpointInfo {
     public final ReceiverBreakpoint breakpoint;
-    public final boolean hasBreakpoint;
     public final Assumption receiverBreakpointVersion;
 
-    public BreakpointInfo(final boolean hasBreakpoint,
-        final ReceiverBreakpoint bp,
+    public BreakpointInfo(final ReceiverBreakpoint bp,
         final Assumption receiverBreakpointVersion) {
       this.breakpoint    = bp;
-      this.hasBreakpoint = hasBreakpoint;
       this.receiverBreakpointVersion = receiverBreakpointVersion;
     }
+
+    public boolean hasBreakpoint() { return breakpoint != null; }
+    public boolean noBreakpoint()  { return breakpoint == null; }
   }
 
   public static class ReceiverBreakpoint {
@@ -273,7 +273,7 @@ public class Breakpoints {
 
   public synchronized BreakpointInfo hasReceiverBreakpoint(final SectionBreakpoint section) {
     ReceiverBreakpoint bp = receiverBreakpoints.get(section);
-    return new BreakpointInfo(bp != null, bp, receiverBreakpointVersion);
+    return new BreakpointInfo(bp, receiverBreakpointVersion);
   }
 
   public BreakpointId getBreakpointId(final URI sourceUri,
