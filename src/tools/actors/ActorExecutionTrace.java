@@ -75,22 +75,4 @@ public class ActorExecutionTrace {
     }
     return processedMessages;
   }
-
-  /**
-   * Assign breakpoint for the actor that is the receiver of the message.
-   */
-  /*public static void assignBreakpoint(final Breakpoint breakpoint, final Actor actor,
-      final BreakpointTrace breakpointTrace, final boolean receiver) {
-
-    ObjectBuffer<ObjectBuffer<SFarReference>> actorsPerThread = getAllCreateActors();
-    for (ObjectBuffer<SFarReference> perThread : actorsPerThread) {
-      for (SFarReference farReference : perThread) {
-        if (farReference.getActor().equals(actor)) {
-          Actor actorReference = farReference.getActor();
-          ((BreakpointActor) actorReference).addBreakpoint(breakpoint, breakpointTrace, receiver);
-          break;
-        }
-      }
-    }
-  }*/
 }
