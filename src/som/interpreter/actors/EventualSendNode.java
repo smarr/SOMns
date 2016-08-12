@@ -122,7 +122,11 @@ public class EventualSendNode extends ExprWithTagsNode {
       this.wrapArgs = wrapArgs;
       this.onReceive = onReceive;
       this.source = source;
-      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+
+      if (selector == null) {
+        // this node is going to be used as a wrapper node
+        this.breakpoint = null;
+      } else if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
         this.breakpoint = insert(BreakpointNodeGen.create(source));
       } else {
         this.breakpoint = insert(new DisabledBreakpointNode());
