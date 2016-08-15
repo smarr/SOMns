@@ -75,7 +75,7 @@ public class FrontendConnector {
 
     try {
       log("[DEBUGGER] Initialize HTTP and WebSocket Server for Debugger");
-      int port = 8889;
+      int port = 7977;
       receiver = initializeWebSocket(port, clientConnected);
       log("[DEBUGGER] Started WebSocket Server");
 

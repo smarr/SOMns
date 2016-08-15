@@ -27,7 +27,7 @@ VmConnection.prototype.isConnected = function () {
 
 VmConnection.prototype.connect = function () {
   console.assert(this.socket === null || this.socket.readyState === CLOSED);
-  this.socket = new WebSocket("ws://localhost:8889");
+  this.socket = new WebSocket("ws://localhost:7977");
 
   var controller = this.controller;
   this.socket.onopen = function (e) {
