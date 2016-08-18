@@ -38,14 +38,33 @@ interface Source {
   uri:        string;
 }
 
-interface SourceMap {
-  [key: string]: Source;
+interface IdMap<T> {
+  [key: string]: T;
+}
+
+interface SimpleSourceSection {
+  firstIndex: number;
+  length:     number;
+  line:       number;
+  column:     number;
+}
+
+interface SourceSection extends SimpleSourceSection {
+  id:          string;
+  description: string;
+  sourceId:    string;
+}
+
+interface Method {
+  name:          string;
+  definition:    SimpleSourceSection[];
+  sourceSection: SourceSection;
 }
 
 interface SourceMessage extends Message {
-  sources: SourceMap;
-  sections: any; // TODO
-  methods:  any; // TODO
+  sources:  IdMap<Source>;
+  sections: IdMap<SourceSection>;
+  methods:  Method[];
 }
 
 interface Respond {
@@ -57,6 +76,19 @@ interface Breakpoint {
 
 interface InitialBreakpointsResponds extends Respond {
   breakpoints: Breakpoint[];
+}
+
+function expectSimpleSourceSection(section: SimpleSourceSection) {
+  expect(section).to.have.property('firstIndex');
+  expect(section).to.have.property('length');
+  expect(section).to.have.property('column');
+  expect(section).to.have.property('line');
+}
+
+function expectSourceSection(section: SourceSection) {
+  expect(section).to.have.property('id');
+  expect(section).to.have.property('sourceId');
+  expect(section.id.startsWith("ss")).to.be.true;
 }
 
 function getInitialBreakpointsResponds(breakpoints: Breakpoint[]): string {
@@ -146,7 +178,7 @@ describe('Basic Protocol', function() {
     connectionP.then(c => c.somProc.kill());
   });
 
-  describe('source information format', () => {
+  describe('source message', () => {
     // Capture first source message for testing
     let firstSourceCaptured = false;
     let getSourceData: (event: OnMessageEvent) => void;
@@ -166,12 +198,13 @@ describe('Basic Protocol', function() {
       connectionP = startSomAndConnect(getSourceData, []);
     });
 
-    it('should have the expected fields and data', onlyWithConection(done => {
+    it('should have sources', onlyWithConection(done => {
       sourceP.then(sourceMsg => {
         for (let sourceId in sourceMsg.sources) {
           try {
             expect(sourceId).to.equal("s-0");
             const source = sourceMsg.sources[sourceId];
+            expect(source.id).to.equal(sourceId);
             expect(source.mimeType).to.equal("application/x-newspeak-som-ns");
             expect(source.name).to.equal("Platform.som");
             expect(source).to.have.property('sourceText');
@@ -180,6 +213,41 @@ describe('Basic Protocol', function() {
           } catch (e) {
             done(e);
           }
+          return;
+        }
+      });
+    }));
+
+    it('should have source sections', onlyWithConection(done => {
+      sourceP.then(sourceMsg => {
+        for (let ssId in sourceMsg.sections) {
+          try {
+            const section = sourceMsg.sections[ssId];
+            expectSourceSection(section);
+            done();
+          } catch (e) {
+            done(e);
+          }
+          return;
+        }
+      });
+    }));
+
+    it('should have methods', onlyWithConection(done => {
+      sourceP.then(sourceMsg => {
+        for (let method of sourceMsg.methods) {
+          try {
+            expect(method.name).to.equal("Platform>>#start");
+            expect(method.definition).to.have.length(1);
+            
+            const def = method.definition[0];
+            expectSimpleSourceSection(def);
+            expectSourceSection(method.sourceSection);
+            done();
+          } catch (e) {
+            done(e);
+          }
+          return;
         }
       });
     }));
