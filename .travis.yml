@@ -5,6 +5,8 @@ sudo: false
 env:
   - TASK=tests
   - TASK=checkstyle
+  - TASK=webdebugger
 script:
   - if [ "$TASK" = "tests" ];      then ant tests; fi
   - if [ "$TASK" = "checkstyle" ]; then ant checkstyle; fi
+  - if [ "$TASK" = "webdebugger" ]; then nvm install 6 && ant && cd tools/webdebugger && npm install && npm test; fi
