@@ -63,6 +63,10 @@ interface InitialBreakpointsResponds extends Respond {
   breakpoints: Breakpoint[];
 }
 
+function getInitialBreakpointsResponds(breakpoints: Breakpoint[]): string {
+  return JSON.stringify({action: "initialBreakpoints", breakpoints});
+}
+
   const promise = new Promise((resolve, reject) => {
     let connecting = false;
     somProc.stdout.on('data', (data) => {
@@ -70,6 +74,10 @@ interface InitialBreakpointsResponds extends Respond {
         connecting = true;
         const socket = new WebSocket('ws://localhost:' + debuggerPort);
         socket.on('open', () => {
+          if (initialBreakpoints) {
+            socket.send(getInitialBreakpointsResponds(initialBreakpoints));
+          }
+
           resolve({somProc: somProc, socket: socket});
         });
       }
