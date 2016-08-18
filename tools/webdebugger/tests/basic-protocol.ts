@@ -20,6 +20,49 @@ function startSomAndConnect(): Promise<SomConnection> {
   const somProc = spawn(som, ['-G', '-t1', '-wd',
                               somBasepath + 'core-lib/Benchmarks/AsyncHarness.som',
                              'Savina.PingPong', '10', '0', '800']);
+interface OnMessageEvent {
+  data:   any;
+  type:   string;
+  target: WebSocket
+}
+
+interface OnMessageHandler {
+  (event: OnMessageEvent): void
+}
+
+interface Message {
+  type: string;
+}
+
+interface Source {
+  id:         string;
+  sourceText: string;
+  mimeType:   string;
+  name:       string;
+  uri:        string;
+}
+
+interface SourceMap {
+  [key: string]: Source;
+}
+
+interface SourceMessage extends Message {
+  sources: SourceMap;
+  sections: any; // TODO
+  methods:  any; // TODO
+}
+
+interface Respond {
+  action: string;
+}
+
+interface Breakpoint {
+}
+
+interface InitialBreakpointsResponds extends Respond {
+  breakpoints: Breakpoint[];
+}
+
   const promise = new Promise((resolve, reject) => {
     let connecting = false;
     somProc.stdout.on('data', (data) => {
