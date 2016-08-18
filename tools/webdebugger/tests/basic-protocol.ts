@@ -79,6 +79,9 @@ function startSomAndConnect(onMessageHandler?: OnMessageHandler,
 
           resolve({somProc: somProc, socket: socket});
         });
+        if (onMessageHandler) {
+          socket.onmessage = onMessageHandler;
+        }
       }
       if (data.toString().includes("Failed starting WebSocket and/or HTTP Server")) {
         reject(new Error('SOMns failed to starting WebSocket and/or HTTP Server'));
@@ -124,7 +127,7 @@ describe('Basic Project Setup', () => {
       connectionP.then(connection => {
         connection.somProc.kill();
         connection.somProc.on('exit', code => {
-          // wait until process is shut down
+          // wait until process is shut down, to make sure all ports are closed
           done();
         });
         connectionPossible = true;
@@ -139,27 +142,47 @@ describe('Basic Project Setup', () => {
 describe('Basic Protocol', function() {
   let connectionP : Promise<SomConnection> = null;
 
-  before('Start SOMns and Connect', () => {
-    connectionP = startSomAndConnect();
-  });
-
-  after(() => {
+  afterEach(() => {
     connectionP.then(c => c.somProc.kill());
   });
 
-
-  describe('connection successful', () => {
-    it('should eventually connect', onlyWithConection(done => {
-
-      connectionP.then(c => {
-        done();
-      });
-      connectionP.catch(e => done(e));
-    }));
-  });
-
   describe('source information format', () => {
-    it('should have the expected fields and data');
+    // Capture first source message for testing
+    let firstSourceCaptured = false;
+    let getSourceData: (event: OnMessageEvent) => void;
+    let sourceP = new Promise<SourceMessage>((resolve, reject) => {
+      getSourceData = (event: OnMessageEvent) => {
+        // console.log(event);
+        if (firstSourceCaptured) { return; }    
+        const data = JSON.parse(event.data);
+        if (data.type == "source") {
+          firstSourceCaptured = true;
+          resolve(data);
+        }
+      }
+    });
+
+    before('Start SOMns and Connect', () => {
+      connectionP = startSomAndConnect(getSourceData, []);
+    });
+
+    it('should have the expected fields and data', onlyWithConection(done => {
+      sourceP.then(sourceMsg => {
+        for (let sourceId in sourceMsg.sources) {
+          try {
+            expect(sourceId).to.equal("s-0");
+            const source = sourceMsg.sources[sourceId];
+            expect(source.mimeType).to.equal("application/x-newspeak-som-ns");
+            expect(source.name).to.equal("Platform.som");
+            expect(source).to.have.property('sourceText');
+            expect(source).to.have.property('uri');
+            done();
+          } catch (e) {
+            done(e);
+          }
+        }
+      });
+    }));
   });
 
   describe('setting breakpoints', () => {
