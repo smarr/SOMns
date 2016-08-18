@@ -16,10 +16,6 @@ interface SomConnection {
   socket:  WebSocket;
 }
 
-function startSomAndConnect(): Promise<SomConnection> {
-  const somProc = spawn(som, ['-G', '-t1', '-wd',
-                              somBasepath + 'core-lib/Benchmarks/AsyncHarness.som',
-                             'Savina.PingPong', '10', '0', '800']);
 interface OnMessageEvent {
   data:   any;
   type:   string;
@@ -67,6 +63,9 @@ function getInitialBreakpointsResponds(breakpoints: Breakpoint[]): string {
   return JSON.stringify({action: "initialBreakpoints", breakpoints});
 }
 
+function startSomAndConnect(onMessageHandler?: OnMessageHandler,
+    initialBreakpoints?: Breakpoint[]): Promise<SomConnection> {
+  const somProc = spawn(som, ['-G', '-t1', '-wd', 'tests/pingpong.som']);
   const promise = new Promise((resolve, reject) => {
     let connecting = false;
     somProc.stdout.on('data', (data) => {

@@ -1,0 +1,67 @@
+class PingPongApp usingPlatform: platform = Value (
+| private actors = platform actors.
+|)(
+  public class PingPong new: numPings = Value (
+  | private NumPings = numPings.
+  |
+  )(
+    class Ping new: cnt with: pong = (
+      | private pingsLeft ::= cnt.
+        private pong = pong.
+      |
+    ) (
+      public start = (
+        'Ping>>start' println.
+        pong <-: ping: self.
+        pingsLeft := pingsLeft - 1.
+      )
+    
+      public ping = (
+        'Ping>>ping' println.
+        pong <-: ping: self.
+        pingsLeft := pingsLeft - 1.
+      )
+    
+      public pong: sender = (
+        'Ping>>pong' println.
+        pingsLeft > 0
+          ifTrue:  [ self <-: ping ]
+          ifFalse: [ pong <-: stop ].
+      )
+    )
+  
+    class Pong new: completionRes = (
+    | private pongCount ::= 0.
+      private completionRes = completionRes.
+    |
+    ) (
+      public ping: sender = (
+        'Pong>>ping' println.
+        sender <-: pong: self.
+        pongCount := pongCount + 1.
+      )
+    
+      public stop = (
+        'Pong>>stop' println.
+        completionRes resolve: pongCount
+      )
+    )
+    
+    public benchmark = (
+      | ping pong completionPP |
+      completionPP := actors createPromisePair.
+      pong := (actors createActorFromValue: Pong) <-: new: completionPP resolver.
+      ping := (actors createActorFromValue: Ping) <-: new: NumPings with: pong.
+      ping <-: start.
+      ^ completionPP promise whenResolved: [:r |
+         ('Done with: ' + r asString) println. ]
+    )
+  ) : (
+    public newInstance: problemSize = ( ^ self new: problemSize asInteger )
+    public setupVerifiedRun: run = ( run problemSize: 1 )
+  )
+
+  public main: args = (
+    ^ (PingPong new: 3) benchmark
+  )
+)
