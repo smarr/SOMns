@@ -14,6 +14,7 @@ import * as fs from 'fs';
 interface SomConnection {
   somProc: ChildProcess;
   socket:  WebSocket;
+  closed:  boolean;
 }
 
 interface OnMessageEvent {
@@ -102,6 +103,19 @@ function getInitialBreakpointsResponds(breakpoints: Breakpoint[]): string {
   return JSON.stringify({action: "initialBreakpoints", breakpoints});
 }
 
+function closeConnection(connection: SomConnection, done: MochaDone) {
+  if (connection.closed) {
+    done();
+    return;
+  }
+  connection.somProc.kill();
+  connection.somProc.on('exit', code => {
+    connection.closed = true;
+    // wait until process is shut down, to make sure all ports are closed
+    done();
+  });
+}
+
 function startSomAndConnect(onMessageHandler?: OnMessageHandler,
     initialBreakpoints?: Breakpoint[]): Promise<SomConnection> {
   const somProc = spawn(som, ['-G', '-t1', '-wd', 'tests/pingpong.som']);
@@ -116,7 +130,7 @@ function startSomAndConnect(onMessageHandler?: OnMessageHandler,
             socket.send(getInitialBreakpointsResponds(initialBreakpoints));
           }
 
-          resolve({somProc: somProc, socket: socket});
+          resolve({somProc: somProc, socket: socket, closed: false});
         });
         if (onMessageHandler) {
           socket.onmessage = onMessageHandler;
@@ -134,7 +148,11 @@ let connectionPossible = false;
 function onlyWithConection(fn: ActionFunction) {
   return function(done) {
     if (connectionPossible) {
-      fn(done);
+      try {
+        fn(done);
+      } catch (e) {
+        done(e);
+      }
     } else {
       this.skip();
     }
@@ -164,11 +182,7 @@ describe('Basic Project Setup', () => {
     it('should be possible to connect', done => {
       const connectionP = startSomAndConnect();
       connectionP.then(connection => {
-        connection.somProc.kill();
-        connection.somProc.on('exit', code => {
-          // wait until process is shut down, to make sure all ports are closed
-          done();
-        });
+        closeConnection(connection, done);
         connectionPossible = true;
       });
       connectionP.catch(reason => {
@@ -181,8 +195,9 @@ describe('Basic Project Setup', () => {
 describe('Basic Protocol', function() {
   let connectionP : Promise<SomConnection> = null;
 
-  afterEach(() => {
-    connectionP.then(c => c.somProc.kill());
+  afterEach((done) => {
+    connectionP.then(c => { closeConnection(c, done);});
+    connectionP.catch(reason => done(reason));
   });
 
   describe('source message', () => {
