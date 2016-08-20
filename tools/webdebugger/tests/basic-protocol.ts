@@ -70,6 +70,24 @@ interface SourceMessage extends Message {
   methods:  Method[];
 }
 
+interface Frame {
+  sourceSection: SourceSection;
+  methodName: string;
+}
+
+interface TopFrame {
+  arguments: string[];
+  slots:     IdMap<string>;
+}
+
+interface SuspendEventMessage extends Message {
+  sourceId: string;
+  sections: SourceSection[];
+  stack:    Frame[];
+  topFrame: TopFrame;
+  id: string;
+}
+
 interface Respond {
   action: string;
 }
@@ -80,7 +98,28 @@ type BreakpointType = "lineBreakpoint" |
 
 interface Breakpoint {
   type:      BreakpointType;
+  sourceUri: string;
+  enabled:   boolean;
 }
+
+interface LineBreakpoint extends Breakpoint {
+  line: number;
+}
+
+interface SendBreakpoint extends Breakpoint {
+  sectionId:   string;
+  startLine:   number;
+  startColumn: number;
+  charLength:  number;
+  role:        string;
+}
+
+interface AsyncMethodRcvBreakpoint extends Breakpoint {
+  sectionId:   string;
+  startLine:   number;
+  startColumn: number;
+  charLength:  number;
+} 
 
 interface InitialBreakpointsResponds extends Respond {
   breakpoints: Breakpoint[];
@@ -275,10 +314,64 @@ describe('Basic Protocol', function() {
     }));
   });
 
+  describe('setting a line breakpoint', () => {
+    let firstSuspendCaptured = false;
+    let getSuspendEvent: (event: OnMessageEvent) => void;
+    let suspendP = new Promise<SuspendEventMessage>((resolve, reject) => {
+      getSuspendEvent = (event: OnMessageEvent) => {
+        // console.log('getSuspendEvent');
+        if (firstSuspendCaptured) { return; }    
+        const data = JSON.parse(event.data);
+        // console.log('getSuspendEvent data.type: ' + data.type);
+        if (data.type == "suspendEvent") {
+          firstSuspendCaptured = true;
+          resolve(data);
+        }
+      }
+    });
+
+    before('Start SOMns and Connect', () => {
+      const breakpoint: LineBreakpoint = {
+        type: "lineBreakpoint",
+        line: 52,
+        sourceUri: 'file:' + resolve('tests/pingpong.som'),
+        enabled: true
+      };
+      connectionP = startSomAndConnect(getSuspendEvent, [breakpoint]);
+    });
+
+    it('should accept line breakpoint, and halt on expected line', onlyWithConection(done => {
+      suspendP.then(msg => {
+        try {
+          expect(msg.stack).lengthOf(7);
+          expect(msg.stack[0].methodName).to.equal("PingPong>>#benchmark");
+          expect(msg.stack[0].sourceSection.line).to.equal(52);
+          done();
+        } catch (e) {
+          done(e);
+        }
+      });
+    }));
+
+    it('should have a well structured suspended event', onlyWithConection(done => {
+      suspendP.then(msg => {
+        try {
+          expectSourceSection(msg.stack[0].sourceSection);
+          expectSourceSection(msg.sections[msg.stack[0].sourceSection.id]);
+          expect(msg.id).to.equal("se-0");
+          expect(msg.sourceId).to.equal("s-6");
+          expect(msg.topFrame.arguments[0]).to.equal("a PingPong");
+          expect(msg.topFrame.slots['ping']).to.equal('null');
+          done();          
+        } catch (e) {
+          done(e);
+        }
+      });
+    }));
+  });
+
   describe('setting breakpoints', () => {
-    it('should accept line breakpoint format, and halt on expected line');
     it('should accept source section breakpoint format (sender), and halt on eventual send');
-    it('suspended event should have expected structure and data');
     it('should accept source section breakpoint format (receiver), and halt at expected method');
     it('should accept source section breakpoint format (promise), and halt at resolution');
   });
