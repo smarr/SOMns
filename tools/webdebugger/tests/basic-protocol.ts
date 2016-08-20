@@ -26,8 +26,10 @@ interface OnMessageHandler {
   (event: OnMessageEvent): void
 }
 
+type MessageType = "source" | "suspendEvent";
+
 interface Message {
-  type: string;
+  type: MessageType;
 }
 
 interface Source {
@@ -71,7 +73,12 @@ interface Respond {
   action: string;
 }
 
+type BreakpointType = "lineBreakpoint" |
+                      "sendBreakpoint" |
+                      "asyncMsgRcvBreakpoint";
+
 interface Breakpoint {
+  type:      BreakpointType;
 }
 
 interface InitialBreakpointsResponds extends Respond {
