@@ -106,12 +106,14 @@ interface LineBreakpoint extends Breakpoint {
   line: number;
 }
 
+type SendBreakpointType = "receiver" | "sender";
+
 interface SendBreakpoint extends Breakpoint {
   sectionId:   string;
   startLine:   number;
   startColumn: number;
   charLength:  number;
-  role:        string;
+  role:        SendBreakpointType;
 }
 
 interface AsyncMethodRcvBreakpoint extends Breakpoint {
@@ -298,9 +300,9 @@ describe('Basic Protocol', function() {
       sourceP.then(sourceMsg => {
         for (let method of sourceMsg.methods) {
           try {
-            expect(method.name).to.equal("Platform>>#start");
-            expect(method.definition).to.have.length(1);
-            
+            expect(method).to.have.property('name');
+            expect(method).to.have.property('definition');
+
             const def = method.definition[0];
             expectSimpleSourceSection(def);
             expectSourceSection(method.sourceSection);
@@ -370,14 +372,97 @@ describe('Basic Protocol', function() {
     }));
   });
 
-  describe('setting breakpoints', () => {
-    it('should accept source section breakpoint format (sender), and halt on eventual send');
-    it('should accept source section breakpoint format (receiver), and halt at expected method');
-    it('should accept source section breakpoint format (promise), and halt at resolution');
+  describe('setting a source section sender breakpoint', () => {
+    // Capture first suspended event for testing
+    let firstSuspendCaptured = false;
+    let getSuspendEvent: (event: OnMessageEvent) => void;
+    let suspendP = new Promise<SuspendEventMessage>((resolve, reject) => {
+      getSuspendEvent = (event: OnMessageEvent) => {
+        if (firstSuspendCaptured) { return; }    
+        const data = JSON.parse(event.data);
+        if (data.type == "suspendEvent") {
+          firstSuspendCaptured = true;
+          resolve(data);
+        }
+      }
+    });
+
+    before('Start SOMns and Connect', () => {
+      const breakpoint: SendBreakpoint = {
+        type: "sendBreakpoint",
+        sourceUri: 'file:' + resolve('tests/pingpong.som'),
+        enabled: true,
+        sectionId:   'ss-7291',
+        startLine:   15,
+        startColumn: 14,
+        charLength:  3,
+        role:        "sender"
+      };
+      connectionP = startSomAndConnect(getSuspendEvent, [breakpoint]);
+    });
+
+    it('should accept send breakpoint, and halt on expected source section', onlyWithConection(done => {
+      suspendP.then(msg => {
+        try {
+          expect(msg.stack).lengthOf(2);
+          expect(msg.stack[0].methodName).to.equal("Ping>>#start");
+          expect(msg.stack[0].sourceSection.line).to.equal(15);
+          done();
+        } catch (e) {
+          done(e);
+        }
+      });
+    }));
   });
+
+  describe('setting a source section receiver breakpoint', () => {
+    // Capture first suspended event for testing
+    let firstSuspendCaptured = false;
+    let getSuspendEvent: (event: OnMessageEvent) => void;
+    let suspendP = new Promise<SuspendEventMessage>((resolve, reject) => {
+      getSuspendEvent = (event: OnMessageEvent) => {
+        if (firstSuspendCaptured) { return; }    
+        const data = JSON.parse(event.data);
+        if (data.type == "suspendEvent") {
+          firstSuspendCaptured = true;
+          resolve(data);
+        }
+      }
+    });
+
+    before('Start SOMns and Connect', () => {
+      const breakpoint: SendBreakpoint = {
+        type: "sendBreakpoint",
+        sourceUri: 'file:' + resolve('tests/pingpong.som'),
+        enabled: true,
+        sectionId:   'ss-7291',
+        startLine:   15,
+        startColumn: 14,
+        charLength:  3,
+        role:        "receiver"
+      };
+      connectionP = startSomAndConnect(getSuspendEvent, [breakpoint]);
+    });
+
+    it('should accept send breakpoint, and halt on expected source section', onlyWithConection(done => {
+      suspendP.then(msg => {
+        try {
+          expect(msg.stack).lengthOf(2);
+          expect(msg.stack[0].methodName).to.equal("Pong>>#ping:");
+          expect(msg.stack[0].sourceSection.line).to.equal(39);
+          done();
+        } catch (e) {
+          done(e);
+        }
+      });
+    }));
+  });
+
+  it('should accept source section breakpoint format (promise), and halt at resolution');
 
   describe('stepping', () => {
     it('should be possible to do single stepping with line breakpoints');
+    it('should be possible to disable a line breakpoint');
     it('should be possible to do single stepping with source section breakpoints');
 
     it('should be possible to do continue execution');
