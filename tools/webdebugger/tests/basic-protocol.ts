@@ -236,11 +236,6 @@ describe('Basic Project Setup', () => {
 describe('Basic Protocol', function() {
   let connectionP : Promise<SomConnection> = null;
 
-  afterEach((done) => {
-    connectionP.then(c => { closeConnection(c, done);});
-    connectionP.catch(reason => done(reason));
-  });
-
   describe('source message', () => {
     // Capture first source message for testing
     let firstSourceCaptured = false;
@@ -259,6 +254,11 @@ describe('Basic Protocol', function() {
 
     before('Start SOMns and Connect', () => {
       connectionP = startSomAndConnect(getSourceData, []);
+    });
+
+    after((done) => {
+      connectionP.then(c => { closeConnection(c, done);});
+      connectionP.catch(reason => done(reason));
     });
 
     it('should have sources', onlyWithConection(done => {
@@ -342,6 +342,11 @@ describe('Basic Protocol', function() {
       connectionP = startSomAndConnect(getSuspendEvent, [breakpoint]);
     });
 
+    after((done) => {
+      connectionP.then(c => { closeConnection(c, done);});
+      connectionP.catch(reason => done(reason));
+    });
+
     it('should accept line breakpoint, and halt on expected line', onlyWithConection(done => {
       suspendP.then(msg => {
         try {
@@ -401,6 +406,11 @@ describe('Basic Protocol', function() {
       connectionP = startSomAndConnect(getSuspendEvent, [breakpoint]);
     });
 
+    after((done) => {
+      connectionP.then(c => { closeConnection(c, done);});
+      connectionP.catch(reason => done(reason));
+    });
+
     it('should accept send breakpoint, and halt on expected source section', onlyWithConection(done => {
       suspendP.then(msg => {
         try {
@@ -442,6 +452,11 @@ describe('Basic Protocol', function() {
         role:        "receiver"
       };
       connectionP = startSomAndConnect(getSuspendEvent, [breakpoint]);
+    });
+
+    after((done) => {
+      connectionP.then(c => { closeConnection(c, done);});
+      connectionP.catch(reason => done(reason));
     });
 
     it('should accept send breakpoint, and halt on expected source section', onlyWithConection(done => {
