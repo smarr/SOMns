@@ -88,8 +88,11 @@ interface SuspendEventMessage extends Message {
   id: string;
 }
 
+type RespondType = "initialBreakpoints" | "stepInto" | "stepOver" | "return" |
+                   "resume" | "stop";
+
 interface Respond {
-  action: string;
+  action: RespondType;
 }
 
 type BreakpointType = "lineBreakpoint" |
@@ -125,6 +128,12 @@ interface AsyncMethodRcvBreakpoint extends Breakpoint {
 
 interface InitialBreakpointsResponds extends Respond {
   breakpoints: Breakpoint[];
+}
+
+interface StepMessage extends Respond {
+  // TODO: should be renamed to suspendEventId
+  /** Id of the corresponding suspend event. */
+  suspendEvent: string;
 }
 
 function expectSimpleSourceSection(section: SimpleSourceSection) {
@@ -476,9 +485,81 @@ describe('Basic Protocol', function() {
   it('should accept source section breakpoint format (promise), and halt at resolution');
 
   describe('stepping', () => {
+    // Capture suspended events
+    const suspendPs: Promise<SuspendEventMessage>[] = [];
+    const resolves = [];
+    suspendPs.push(new Promise<SuspendEventMessage>((res, rej) => resolves.push(res)));
+    suspendPs.push(new Promise<SuspendEventMessage>((res, rej) => resolves.push(res)));
+
+    let capturedEvents = 0;
+    let getSuspendEvent: (event: OnMessageEvent) => void;
+    
+    getSuspendEvent = (event: OnMessageEvent) => {
+      console.log('getSuspendEvent');
+      if (capturedEvents > 2) { return; }    
+      const data = JSON.parse(event.data);
+      console.log('getSuspendEvent data.type: ' + data.type);
+      if (data.type == "suspendEvent") {
+        resolves[capturedEvents](data);
+        capturedEvents += 1;
+      }
+    }
+
+    before('Start SOMns and Connect', () => {
+      const breakpoint: SendBreakpoint = {
+        type: "sendBreakpoint",
+        sourceUri: 'file:' + resolve('tests/pingpong.som'),
+        enabled: true,
+        sectionId:   'ss-7291',
+        startLine:   15,
+        startColumn: 14,
+        charLength:  3,
+        role:        "sender"
+      };
+      connectionP = startSomAndConnect(getSuspendEvent, [breakpoint]);
+    });
+    after((done) => {
+      connectionP.then(c => { closeConnection(c, done);});
+      connectionP.catch(reason => done(reason));
+    });
+
+    it('should stop initially at breakpoint', onlyWithConection(done => {
+      suspendPs[0].then(msg => {
+        try {
+          expect(msg.stack).lengthOf(2);
+          expect(msg.stack[0].methodName).to.equal("Ping>>#start");
+          expect(msg.stack[0].sourceSection.line).to.equal(15);
+          done();
+        } catch (e) {
+          done(e);
+        }
+      });
+    }));
+
+    it('should single stepping', onlyWithConection(done => {
+      this.timeout(20000);
+      suspendPs[0].then(msg => {
+        const step : StepMessage = {action: "stepInto", suspendEvent: msg.id};
+        connectionP.then(con => {
+          console.log(step);
+          con.socket.send(JSON.stringify(step))});
+
+        suspendPs[1].then(msgAfterStep => {
+          try {
+            expect(msgAfterStep.stack).lengthOf(2);
+            expect(msgAfterStep.stack[0].methodName).to.equal("Ping>>#start");
+            expect(msgAfterStep.stack[0].sourceSection.line).to.equal(16);
+            done();
+          } catch (e) {
+            done(e);
+          }
+        });
+      });
+    }));
+
     it('should be possible to do single stepping with line breakpoints');
     it('should be possible to disable a line breakpoint');
-    it('should be possible to do single stepping with source section breakpoints');
+    
 
     it('should be possible to do continue execution');
   });
