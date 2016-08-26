@@ -488,15 +488,17 @@ describe('Basic Protocol', function() {
   describe('stepping', () => {
     // Capture suspended events
     const suspendPs: Promise<SuspendEventMessage>[] = [];
+    const numSuspends = 4;
     const resolves = [];
-    suspendPs.push(new Promise<SuspendEventMessage>((res, rej) => resolves.push(res)));
-    suspendPs.push(new Promise<SuspendEventMessage>((res, rej) => resolves.push(res)));
+    for (let i = 0; i < numSuspends; i++) {
+      suspendPs.push(new Promise<SuspendEventMessage>((res, rej) => resolves.push(res)));
+    }
 
     let capturedEvents = 0;
     let getSuspendEvent: (event: OnMessageEvent) => void;
     
     getSuspendEvent = (event: OnMessageEvent) => {
-      if (capturedEvents > 2) { return; }    
+      if (capturedEvents > numSuspends) { return; }    
       const data = JSON.parse(event.data);
       if (data.type == "suspendEvent") {
         resolves[capturedEvents](data);
