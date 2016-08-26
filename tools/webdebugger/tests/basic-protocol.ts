@@ -88,8 +88,8 @@ interface SuspendEventMessage extends Message {
   id: string;
 }
 
-type RespondType = "initialBreakpoints" | "stepInto" | "stepOver" | "return" |
-                   "resume" | "stop";
+type RespondType = "initialBreakpoints" | "updateBreakpoint" | "stepInto" |
+                    "stepOver" | "return" | "resume" | "stop";
 
 interface Respond {
   action: RespondType;
@@ -128,6 +128,10 @@ interface AsyncMethodRcvBreakpoint extends Breakpoint {
 
 interface InitialBreakpointsResponds extends Respond {
   breakpoints: Breakpoint[];
+}
+
+interface UpdateBreakpoint extends Respond {
+  breakpoint: Breakpoint;
 }
 
 interface StepMessage extends Respond {
@@ -550,10 +554,74 @@ describe('Basic Protocol', function() {
       });
     }));
 
-    it('should be possible to do single stepping with line breakpoints');
-    it('should be possible to disable a line breakpoint');
-    
 
-    it('should be possible to do continue execution');
+    it('should be possible to dynamically activate line breakpoints',
+        onlyWithConection(done => {
+      suspendPs[1].then(msgAfterStep => {
+        connectionP.then(con => {
+          // set another breakpoint, after stepping, and with connection
+          const lbp: LineBreakpoint = {
+            type: "lineBreakpoint",
+            line: 21,
+            sourceUri: 'file:' + resolve('tests/pingpong.som'),
+            enabled: true
+          };
+          con.socket.send(JSON.stringify(
+            {action: "updateBreakpoint", breakpoint: lbp}));
+          con.socket.send(JSON.stringify(
+            {action: "resume", suspendEvent: msgAfterStep.id}
+          ));  
+        });
+      });
+
+      suspendPs[2].then(msgLineBP => {
+        try {
+          expect(msgLineBP.stack).lengthOf(2);
+          expect(msgLineBP.stack[0].methodName).to.equal("Ping>>#ping");
+          expect(msgLineBP.stack[0].sourceSection.line).to.equal(21);
+          done();
+        } catch (e) {
+          done(e);
+        }
+      });
+    }));
+
+    it('should be possible to disable a line breakpoint',
+        onlyWithConection(done => {
+      suspendPs[2].then(msgAfterStep => {
+        connectionP.then(con => {
+          const lbp22: LineBreakpoint = {
+            type: "lineBreakpoint",
+            line: 22,
+            sourceUri: 'file:' + resolve('tests/pingpong.som'),
+            enabled: true
+          };
+          con.socket.send(JSON.stringify(
+            {action: "updateBreakpoint", breakpoint: lbp22}));
+          
+          const lbp21: LineBreakpoint = {
+            type: "lineBreakpoint",
+            line: 21,
+            sourceUri: 'file:' + resolve('tests/pingpong.som'),
+            enabled: false
+          };
+          con.socket.send(JSON.stringify(
+            {action: "updateBreakpoint", breakpoint: lbp21}));
+          con.socket.send(JSON.stringify(
+            {action: "resume", suspendEvent: msgAfterStep.id}));
+
+          suspendPs[3].then(msgLineBP => {
+            try {
+              expect(msgLineBP.stack).lengthOf(2);
+              expect(msgLineBP.stack[0].methodName).to.equal("Ping>>#ping");
+              expect(msgLineBP.stack[0].sourceSection.line).to.equal(22);
+              done();
+            } catch (e) {
+              done(e);
+            }
+          });
+        });
+      })
+    }));
   });
 });
