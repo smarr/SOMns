@@ -200,14 +200,10 @@ function startSomAndConnect(onMessageHandler?: OnMessageHandler,
 }
 
 let connectionPossible = false;
-function onlyWithConection(fn: ActionFunction) {
-  return function(done) {
+function onlyWithConnection(fn) {
+  return function() {
     if (connectionPossible) {
-      try {
-        fn(done);
-      } catch (e) {
-        done(e);
-      }
+      return fn();
     } else {
       this.skip();
     }
@@ -275,55 +271,40 @@ describe('Basic Protocol', function() {
 
     after(closeConnectionAfterSuite);
 
-    it('should have sources', onlyWithConection(done => {
-      sourceP.then(sourceMsg => {
+    it('should have sources', onlyWithConnection(() => {
+      return sourceP.then(sourceMsg => {
         for (let sourceId in sourceMsg.sources) {
-          try {
-            expect(sourceId).to.equal("s-0");
-            const source = sourceMsg.sources[sourceId];
-            expect(source.id).to.equal(sourceId);
-            expect(source.mimeType).to.equal("application/x-newspeak-som-ns");
-            expect(source.name).to.equal("Platform.som");
-            expect(source).to.have.property('sourceText');
-            expect(source).to.have.property('uri');
-            done();
-          } catch (e) {
-            done(e);
-          }
+          expect(sourceId).to.equal("s-0");
+          const source = sourceMsg.sources[sourceId];
+          expect(source.id).to.equal(sourceId);
+          expect(source.mimeType).to.equal("application/x-newspeak-som-ns");
+          expect(source.name).to.equal("Platform.som");
+          expect(source).to.have.property('sourceText');
+          expect(source).to.have.property('uri');
           return;
         }
       });
     }));
 
-    it('should have source sections', onlyWithConection(done => {
-      sourceP.then(sourceMsg => {
+    it('should have source sections', onlyWithConnection(() => {
+      return sourceP.then(sourceMsg => {
         for (let ssId in sourceMsg.sections) {
-          try {
-            const section = sourceMsg.sections[ssId];
-            expectSourceSection(section);
-            done();
-          } catch (e) {
-            done(e);
-          }
+          const section = sourceMsg.sections[ssId];
+          expectSourceSection(section);
           return;
         }
       });
     }));
 
-    it('should have methods', onlyWithConection(done => {
-      sourceP.then(sourceMsg => {
+    it('should have methods', onlyWithConnection(() => {
+      return sourceP.then(sourceMsg => {
         for (let method of sourceMsg.methods) {
-          try {
-            expect(method).to.have.property('name');
-            expect(method).to.have.property('definition');
+          expect(method).to.have.property('name');
+          expect(method).to.have.property('definition');
 
-            const def = method.definition[0];
-            expectSimpleSourceSection(def);
-            expectSourceSection(method.sourceSection);
-            done();
-          } catch (e) {
-            done(e);
-          }
+          const def = method.definition[0];
+          expectSimpleSourceSection(def);
+          expectSourceSection(method.sourceSection);
           return;
         }
       });
@@ -357,32 +338,22 @@ describe('Basic Protocol', function() {
 
     after(closeConnectionAfterSuite);
 
-    it('should accept line breakpoint, and halt on expected line', onlyWithConection(done => {
-      suspendP.then(msg => {
-        try {
-          expect(msg.stack).lengthOf(7);
-          expect(msg.stack[0].methodName).to.equal("PingPong>>#benchmark");
-          expect(msg.stack[0].sourceSection.line).to.equal(52);
-          done();
-        } catch (e) {
-          done(e);
-        }
+    it('should accept line breakpoint, and halt on expected line', onlyWithConnection(() => {
+      return suspendP.then(msg => {
+        expect(msg.stack).lengthOf(7);
+        expect(msg.stack[0].methodName).to.equal("PingPong>>#benchmark");
+        expect(msg.stack[0].sourceSection.line).to.equal(52);
       });
     }));
 
-    it('should have a well structured suspended event', onlyWithConection(done => {
-      suspendP.then(msg => {
-        try {
-          expectSourceSection(msg.stack[0].sourceSection);
-          expectSourceSection(msg.sections[msg.stack[0].sourceSection.id]);
-          expect(msg.id).to.equal("se-0");
-          expect(msg.sourceId).to.equal("s-6");
-          expect(msg.topFrame.arguments[0]).to.equal("a PingPong");
-          expect(msg.topFrame.slots['ping']).to.equal('null');
-          done();          
-        } catch (e) {
-          done(e);
-        }
+    it('should have a well structured suspended event', onlyWithConnection(() => {
+      return suspendP.then(msg => {
+        expectSourceSection(msg.stack[0].sourceSection);
+        expectSourceSection(msg.sections[msg.stack[0].sourceSection.id]);
+        expect(msg.id).to.equal("se-0");
+        expect(msg.sourceId).to.equal("s-6");
+        expect(msg.topFrame.arguments[0]).to.equal("a PingPong");
+        expect(msg.topFrame.slots['ping']).to.equal('null');
       });
     }));    
   });
@@ -418,16 +389,11 @@ describe('Basic Protocol', function() {
 
     after(closeConnectionAfterSuite);
 
-    it('should accept send breakpoint, and halt on expected source section', onlyWithConection(done => {
-      suspendP.then(msg => {
-        try {
-          expect(msg.stack).lengthOf(2);
-          expect(msg.stack[0].methodName).to.equal("Ping>>#start");
-          expect(msg.stack[0].sourceSection.line).to.equal(15);
-          done();
-        } catch (e) {
-          done(e);
-        }
+    it('should accept send breakpoint, and halt on expected source section', onlyWithConnection(() => {
+      return suspendP.then(msg => {
+        expect(msg.stack).lengthOf(2);
+        expect(msg.stack[0].methodName).to.equal("Ping>>#start");
+        expect(msg.stack[0].sourceSection.line).to.equal(15);
       });
     }));    
   });
@@ -463,16 +429,11 @@ describe('Basic Protocol', function() {
 
     after(closeConnectionAfterSuite);
 
-    it('should accept send breakpoint, and halt on expected source section', onlyWithConection(done => {
-      suspendP.then(msg => {
-        try {
-          expect(msg.stack).lengthOf(2);
-          expect(msg.stack[0].methodName).to.equal("Pong>>#ping:");
-          expect(msg.stack[0].sourceSection.line).to.equal(39);
-          done();
-        } catch (e) {
-          done(e);
-        }
+    it('should accept send breakpoint, and halt on expected source section', onlyWithConnection(() => {
+      return suspendP.then(msg => {
+        expect(msg.stack).lengthOf(2);
+        expect(msg.stack[0].methodName).to.equal("Pong>>#ping:");
+        expect(msg.stack[0].sourceSection.line).to.equal(39);
       });
     }));
   });
@@ -516,106 +477,91 @@ describe('Basic Protocol', function() {
 
     after(closeConnectionAfterSuite);
 
-    it('should stop initially at breakpoint', onlyWithConection(done => {
-      suspendPs[0].then(msg => {
-        try {
-          expect(msg.stack).lengthOf(2);
-          expect(msg.stack[0].methodName).to.equal("Ping>>#start");
-          expect(msg.stack[0].sourceSection.line).to.equal(15);
-          done();
-        } catch (e) {
-          done(e);
-        }
+    it('should stop initially at breakpoint', onlyWithConnection(() => {
+      return suspendPs[0].then(msg => {
+        expect(msg.stack).lengthOf(2);
+        expect(msg.stack[0].methodName).to.equal("Ping>>#start");
+        expect(msg.stack[0].sourceSection.line).to.equal(15);
       });
     }));
 
-    it('should single stepping', onlyWithConection(done => {
-      suspendPs[0].then(msg => {
-        const step : StepMessage = {action: "stepInto", suspendEvent: msg.id};
-        connectionP.then(con => {
-          con.socket.send(JSON.stringify(step))});
+    it('should single stepping', onlyWithConnection(() => {
+      return new Promise((resolve, reject) => {
+        suspendPs[0].then(msg => {
+          const step : StepMessage = {action: "stepInto", suspendEvent: msg.id};
+          connectionP.then(con => {
+            con.socket.send(JSON.stringify(step))});
 
-        suspendPs[1].then(msgAfterStep => {
-          try {
+          const p = suspendPs[1].then(msgAfterStep => {
             expect(msgAfterStep.stack).lengthOf(2);
             expect(msgAfterStep.stack[0].methodName).to.equal("Ping>>#start");
             expect(msgAfterStep.stack[0].sourceSection.line).to.equal(16);
-            done();
-          } catch (e) {
-            done(e);
-          }
+          });
+          resolve(p);
         });
       });
     }));
 
-
     it('should be possible to dynamically activate line breakpoints',
-        onlyWithConection(done => {
-      suspendPs[1].then(msgAfterStep => {
-        connectionP.then(con => {
-          // set another breakpoint, after stepping, and with connection
-          const lbp: LineBreakpoint = {
-            type: "lineBreakpoint",
-            line: 21,
-            sourceUri: 'file:' + resolve('tests/pingpong.som'),
-            enabled: true
-          };
-          con.socket.send(JSON.stringify(
-            {action: "updateBreakpoint", breakpoint: lbp}));
-          con.socket.send(JSON.stringify(
-            {action: "resume", suspendEvent: msgAfterStep.id}
-          ));  
-        });
-      });
-
-      suspendPs[2].then(msgLineBP => {
-        try {
+        onlyWithConnection(() => {
+      return Promise.all([
+        suspendPs[1].then(msgAfterStep => {
+          connectionP.then(con => {
+            // set another breakpoint, after stepping, and with connection
+            const lbp: LineBreakpoint = {
+              type: "lineBreakpoint",
+              line: 21,
+              sourceUri: 'file:' + resolve('tests/pingpong.som'),
+              enabled: true
+            };
+            con.socket.send(JSON.stringify(
+              {action: "updateBreakpoint", breakpoint: lbp}));
+            con.socket.send(JSON.stringify(
+              {action: "resume", suspendEvent: msgAfterStep.id}
+            ));  
+          });
+        }),
+        suspendPs[2].then(msgLineBP => {
           expect(msgLineBP.stack).lengthOf(2);
           expect(msgLineBP.stack[0].methodName).to.equal("Ping>>#ping");
           expect(msgLineBP.stack[0].sourceSection.line).to.equal(21);
-          done();
-        } catch (e) {
-          done(e);
-        }
-      });
+        })]);
     }));
 
     it('should be possible to disable a line breakpoint',
-        onlyWithConection(done => {
-      suspendPs[2].then(msgAfterStep => {
-        connectionP.then(con => {
-          const lbp22: LineBreakpoint = {
-            type: "lineBreakpoint",
-            line: 22,
-            sourceUri: 'file:' + resolve('tests/pingpong.som'),
-            enabled: true
-          };
-          con.socket.send(JSON.stringify(
-            {action: "updateBreakpoint", breakpoint: lbp22}));
-          
-          const lbp21: LineBreakpoint = {
-            type: "lineBreakpoint",
-            line: 21,
-            sourceUri: 'file:' + resolve('tests/pingpong.som'),
-            enabled: false
-          };
-          con.socket.send(JSON.stringify(
-            {action: "updateBreakpoint", breakpoint: lbp21}));
-          con.socket.send(JSON.stringify(
-            {action: "resume", suspendEvent: msgAfterStep.id}));
+        onlyWithConnection(() => {
+      return new Promise((resolve, reject) => {
+        suspendPs[2].then(msgAfterStep => {
+          connectionP.then(con => {
+            const lbp22: LineBreakpoint = {
+              type: "lineBreakpoint",
+              line: 22,
+              sourceUri: 'file:' + resolve('tests/pingpong.som'),
+              enabled: true
+            };
+            con.socket.send(JSON.stringify(
+              {action: "updateBreakpoint", breakpoint: lbp22}));
+            
+            const lbp21: LineBreakpoint = {
+              type: "lineBreakpoint",
+              line: 21,
+              sourceUri: 'file:' + resolve('tests/pingpong.som'),
+              enabled: false
+            };
+            con.socket.send(JSON.stringify(
+              {action: "updateBreakpoint", breakpoint: lbp21}));
+            con.socket.send(JSON.stringify(
+              {action: "resume", suspendEvent: msgAfterStep.id}));
 
-          suspendPs[3].then(msgLineBP => {
-            try {
+            const p = suspendPs[3].then(msgLineBP => {
               expect(msgLineBP.stack).lengthOf(2);
               expect(msgLineBP.stack[0].methodName).to.equal("Ping>>#ping");
               expect(msgLineBP.stack[0].sourceSection.line).to.equal(22);
-              done();
-            } catch (e) {
-              done(e);
-            }
+            });
+            resolve(p);
           });
         });
-      })
+      });
     }));
   });
 });
