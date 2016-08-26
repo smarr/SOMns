@@ -119,6 +119,7 @@ interface SendBreakpoint extends Breakpoint {
   role:        SendBreakpointType;
 }
 
+// TODO: refactor protocol, and just include a simple source section here
 interface AsyncMethodRcvBreakpoint extends Breakpoint {
   sectionId:   string;
   startLine:   number;
@@ -329,6 +330,7 @@ describe('Basic Protocol', function() {
   });
 
   describe('setting a line breakpoint', () => {
+    // Capture first suspended event for testing
     let firstSuspendCaptured = false;
     let getSuspendEvent: (event: OnMessageEvent) => void;
     let suspendP = new Promise<SuspendEventMessage>((resolve, reject) => {
@@ -384,7 +386,7 @@ describe('Basic Protocol', function() {
           done(e);
         }
       });
-    }));
+    }));    
   });
 
   describe('setting a source section sender breakpoint', () => {
@@ -432,7 +434,7 @@ describe('Basic Protocol', function() {
           done(e);
         }
       });
-    }));
+    }));    
   });
 
   describe('setting a source section receiver breakpoint', () => {
@@ -519,6 +521,7 @@ describe('Basic Protocol', function() {
       };
       connectionP = startSomAndConnect(getSuspendEvent, [breakpoint]);
     });
+
     after((done) => {
       connectionP.then(c => { closeConnection(c, done);});
       connectionP.catch(reason => done(reason));
