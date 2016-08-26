@@ -251,7 +251,6 @@ describe('Basic Protocol', function() {
     let getSourceData: (event: OnMessageEvent) => void;
     let sourceP = new Promise<SourceMessage>((resolve, reject) => {
       getSourceData = (event: OnMessageEvent) => {
-        // console.log(event);
         if (firstSourceCaptured) { return; }    
         const data = JSON.parse(event.data);
         if (data.type == "source") {
@@ -330,10 +329,8 @@ describe('Basic Protocol', function() {
     let getSuspendEvent: (event: OnMessageEvent) => void;
     let suspendP = new Promise<SuspendEventMessage>((resolve, reject) => {
       getSuspendEvent = (event: OnMessageEvent) => {
-        // console.log('getSuspendEvent');
         if (firstSuspendCaptured) { return; }    
         const data = JSON.parse(event.data);
-        // console.log('getSuspendEvent data.type: ' + data.type);
         if (data.type == "suspendEvent") {
           firstSuspendCaptured = true;
           resolve(data);
@@ -495,10 +492,8 @@ describe('Basic Protocol', function() {
     let getSuspendEvent: (event: OnMessageEvent) => void;
     
     getSuspendEvent = (event: OnMessageEvent) => {
-      console.log('getSuspendEvent');
       if (capturedEvents > 2) { return; }    
       const data = JSON.parse(event.data);
-      console.log('getSuspendEvent data.type: ' + data.type);
       if (data.type == "suspendEvent") {
         resolves[capturedEvents](data);
         capturedEvents += 1;
@@ -537,11 +532,9 @@ describe('Basic Protocol', function() {
     }));
 
     it('should single stepping', onlyWithConection(done => {
-      this.timeout(20000);
       suspendPs[0].then(msg => {
         const step : StepMessage = {action: "stepInto", suspendEvent: msg.id};
         connectionP.then(con => {
-          console.log(step);
           con.socket.send(JSON.stringify(step))});
 
         suspendPs[1].then(msgAfterStep => {
