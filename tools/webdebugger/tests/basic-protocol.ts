@@ -249,6 +249,10 @@ describe('Basic Project Setup', () => {
 
 describe('Basic Protocol', function() {
   let connectionP : Promise<SomConnection> = null;
+  const closeConnectionAfterSuite = (done) => {
+    connectionP.then(c => { closeConnection(c, done);});
+    connectionP.catch(reason => done(reason));
+  };
 
   describe('source message', () => {
     // Capture first source message for testing
@@ -269,10 +273,7 @@ describe('Basic Protocol', function() {
       connectionP = startSomAndConnect(getSourceData, []);
     });
 
-    after((done) => {
-      connectionP.then(c => { closeConnection(c, done);});
-      connectionP.catch(reason => done(reason));
-    });
+    after(closeConnectionAfterSuite);
 
     it('should have sources', onlyWithConection(done => {
       sourceP.then(sourceMsg => {
@@ -354,10 +355,7 @@ describe('Basic Protocol', function() {
       connectionP = startSomAndConnect(getSuspendEvent, [breakpoint]);
     });
 
-    after((done) => {
-      connectionP.then(c => { closeConnection(c, done);});
-      connectionP.catch(reason => done(reason));
-    });
+    after(closeConnectionAfterSuite);
 
     it('should accept line breakpoint, and halt on expected line', onlyWithConection(done => {
       suspendP.then(msg => {
@@ -418,10 +416,7 @@ describe('Basic Protocol', function() {
       connectionP = startSomAndConnect(getSuspendEvent, [breakpoint]);
     });
 
-    after((done) => {
-      connectionP.then(c => { closeConnection(c, done);});
-      connectionP.catch(reason => done(reason));
-    });
+    after(closeConnectionAfterSuite);
 
     it('should accept send breakpoint, and halt on expected source section', onlyWithConection(done => {
       suspendP.then(msg => {
@@ -466,10 +461,7 @@ describe('Basic Protocol', function() {
       connectionP = startSomAndConnect(getSuspendEvent, [breakpoint]);
     });
 
-    after((done) => {
-      connectionP.then(c => { closeConnection(c, done);});
-      connectionP.catch(reason => done(reason));
-    });
+    after(closeConnectionAfterSuite);
 
     it('should accept send breakpoint, and halt on expected source section', onlyWithConection(done => {
       suspendP.then(msg => {
@@ -522,10 +514,7 @@ describe('Basic Protocol', function() {
       connectionP = startSomAndConnect(getSuspendEvent, [breakpoint]);
     });
 
-    after((done) => {
-      connectionP.then(c => { closeConnection(c, done);});
-      connectionP.catch(reason => done(reason));
-    });
+    after(closeConnectionAfterSuite);
 
     it('should stop initially at breakpoint', onlyWithConection(done => {
       suspendPs[0].then(msg => {
