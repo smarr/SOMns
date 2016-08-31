@@ -116,6 +116,9 @@ and their interactions. Here, we collect related papers:
     Truffle](http://stefan-marr.de/2015/10/optimizing-communicating-event-loop-languages-with-truffle/),
     Stefan Marr, Hanspeter Mössenböck; Presentation at the AGERE!’15 Workshop, co-located with SPLASH’15.
 
+ - [Cross-Language Compiler Benchmarking: Are We Fast Yet?](http://stefan-marr.de/papers/dls-marr-et-al-cross-language-compiler-benchmarking-are-we-fast-yet/)
+    Stefan Marr, Benoit Daloze, Hanspeter Mössenböck at the 12th Symposium on
+    Dynamic Languages co-located with SPLASH'16.
 
  [SOM]: http://som-st.github.io/
  [TSOM]:https://github.com/SOM-st/TruffleSOM
