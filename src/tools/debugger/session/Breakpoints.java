@@ -70,6 +70,11 @@ public class Breakpoints {
       LineBreakpoint o = (LineBreakpoint) obj;
       return o.line == line && o.sourceUri.equals(sourceUri);
     }
+
+    @Override
+    public String toString() {
+      return "LineBreakpoint[" + line + ", " + sourceUri.toString() + "]";
+    }
   }
 
   public static class SectionBreakpoint extends BreakpointId {
