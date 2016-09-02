@@ -10,7 +10,7 @@ import tools.dym.Tags.OpArithmetic;
 
 
 @GenerateNodeFactory
-@Primitive("doubleSin:")
+@Primitive(primitive = "doubleSin:", selector = "sin", receiverType = Double.class)
 public abstract class SinPrim extends UnaryBasicOperation {
   public SinPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
   public SinPrim(final SourceSection source) { super(false, source); }

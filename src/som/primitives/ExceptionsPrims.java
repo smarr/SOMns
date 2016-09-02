@@ -25,7 +25,7 @@ import som.vmobjects.SInvokable;
 public abstract class ExceptionsPrims {
 
   @GenerateNodeFactory
-  @Primitive("exceptionDo:catch:onException:")
+  @Primitive(primitive = "exceptionDo:catch:onException:")
   public abstract static class ExceptionDoOnPrim extends TernaryExpressionNode {
 
     protected static final int INLINE_CACHE_SIZE = VmSettings.DYNAMIC_METRICS ? 100 : 6;
@@ -80,7 +80,7 @@ public abstract class ExceptionsPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive("signalException:")
+  @Primitive(primitive = "signalException:")
   public abstract static class SignalPrim extends UnaryExpressionNode {
     public SignalPrim(final SourceSection source) { super(false, source); }
 
@@ -91,7 +91,7 @@ public abstract class ExceptionsPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive("exceptionDo:ensure:")
+  @Primitive(primitive = "exceptionDo:ensure:")
   public abstract static class EnsurePrim extends BinaryComplexOperation {
 
     @Child protected BlockDispatchNode dispatchBody    = BlockDispatchNodeGen.create();

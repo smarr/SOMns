@@ -14,6 +14,7 @@ import som.vmobjects.SSymbol;
 
 @GenerateNodeFactory
 @ImportStatic(Nil.class)
+@Primitive(selector = "<>")
 public abstract class UnequalsPrim extends ComparisonPrim {
   protected UnequalsPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
   protected UnequalsPrim(final SourceSection source) { super(false, source); }

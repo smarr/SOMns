@@ -30,10 +30,12 @@ import som.interop.ValueConversion.ToSomConversion;
 import som.interop.ValueConversionFactory.ToSomConversionNodeGen;
 import som.interpreter.Invokable;
 import som.interpreter.SomLanguage;
+import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.nary.UnaryBasicOperation;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vm.NotYetImplementedException;
+import som.vm.Primitives.Specializer;
 import som.vm.constants.Classes;
 import som.vm.constants.Nil;
 import som.vmobjects.SArray;
@@ -47,7 +49,7 @@ public final class SystemPrims {
   @CompilationFinal public static SObjectWithClass SystemModule;
 
   @GenerateNodeFactory
-  @Primitive("systemModuleObject:")
+  @Primitive(primitive = "systemModuleObject:")
   public abstract static class SystemModuleObjectPrim extends UnaryExpressionNode {
     public SystemModuleObjectPrim(final SourceSection source) { super(false, source); }
 
@@ -70,7 +72,7 @@ public final class SystemPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive("load:")
+  @Primitive(primitive = "load:")
   public abstract static class LoadPrim extends UnaryExpressionNode {
     @Child protected FindContextNode<VM> findContext = SomLanguage.INSTANCE.createNewFindContextNode();
 
@@ -83,7 +85,7 @@ public final class SystemPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive("load:nextTo:")
+  @Primitive(primitive = "load:nextTo:")
   public abstract static class LoadNextToPrim extends BinaryComplexOperation {
     @Child protected FindContextNode<VM> findContext = SomLanguage.INSTANCE.createNewFindContextNode();
 
@@ -99,7 +101,7 @@ public final class SystemPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive("exit:")
+  @Primitive(primitive = "exit:")
   public abstract static class ExitPrim extends UnaryExpressionNode {
     public ExitPrim(final SourceSection source) { super(false, source); }
 
@@ -111,7 +113,7 @@ public final class SystemPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive("printString:")
+  @Primitive(primitive = "printString:")
   public abstract static class PrintStringPrim extends UnaryExpressionNode {
     public PrintStringPrim(final SourceSection source) { super(false, source); }
 
@@ -128,7 +130,7 @@ public final class SystemPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive("printNewline:")
+  @Primitive(primitive = "printNewline:")
   public abstract static class PrintInclNewlinePrim extends UnaryExpressionNode {
     public PrintInclNewlinePrim(final SourceSection source) { super(false, source); }
 
@@ -140,7 +142,7 @@ public final class SystemPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive("printStackTrace:")
+  @Primitive(primitive = "printStackTrace:")
   public abstract static class PrintStackTracePrim extends UnaryExpressionNode {
     public PrintStackTracePrim(final SourceSection source) { super(false, source); }
 
@@ -196,7 +198,7 @@ public final class SystemPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive("vmArguments:")
+  @Primitive(primitive = "vmArguments:")
   public abstract static class VMArgumentsPrim extends UnaryExpressionNode {
     public VMArgumentsPrim(final SourceSection source) { super(false, source); }
 
@@ -207,7 +209,7 @@ public final class SystemPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive("systemGC:")
+  @Primitive(primitive = "systemGC:")
   public abstract static class FullGCPrim extends UnaryExpressionNode {
     public FullGCPrim(final SourceSection source) { super(false, source); }
 
@@ -219,7 +221,7 @@ public final class SystemPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive("systemTime:")
+  @Primitive(primitive = "systemTime:")
   public abstract static class TimePrim extends UnaryBasicOperation {
     public TimePrim(final SourceSection source) { super(false, source); }
 
@@ -229,9 +231,18 @@ public final class SystemPrims {
     }
   }
 
+  public static class IsSystemModule extends Specializer {
+    @Override
+    public boolean matches(final Primitive prim, final Object receiver, ExpressionNode[] args) {
+      return receiver == SystemPrims.SystemModule;
+    }
+  }
+
   @GenerateNodeFactory
-  @Primitive("systemTicks:")
+  @Primitive(primitive = "systemTicks:", selector = "ticks",
+             specializer = IsSystemModule.class, noWrapper = true)
   public abstract static class TicksPrim extends UnaryBasicOperation {
+    public TicksPrim(final boolean eagerWrapper, final SourceSection source) { super(eagerWrapper, source); }
     public TicksPrim(final SourceSection source) { super(false, source); }
 
     @Specialization
@@ -241,7 +252,7 @@ public final class SystemPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive("systemExport:as:")
+  @Primitive(primitive = "systemExport:as:")
   public abstract static class ExportAsPrim extends BinaryComplexOperation {
     @Child protected FindContextNode<VM> findContext;
 
@@ -264,7 +275,7 @@ public final class SystemPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive("systemApply:with:")
+  @Primitive(primitive = "systemApply:with:")
   public abstract static class ApplyWithPrim extends BinaryComplexOperation {
     protected ApplyWithPrim(final SourceSection source) { super(false, source); }
 

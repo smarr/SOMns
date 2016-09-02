@@ -6,10 +6,12 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.nodes.nary.UnaryBasicOperation;
+import som.primitives.Primitive;
 import tools.dym.Tags.OpArithmetic;
 
 
 @GenerateNodeFactory
+@Primitive(selector = "not", receiverType = Boolean.class)
 public abstract class NotMessageNode extends UnaryBasicOperation {
   public NotMessageNode(final boolean eagerlyWrapped, final SourceSection source) { super(eagerlyWrapped, source); }
   public NotMessageNode(final SourceSection source) { super(false, source); }

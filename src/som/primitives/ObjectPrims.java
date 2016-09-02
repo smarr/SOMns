@@ -39,7 +39,7 @@ import tools.dym.Tags.OpComparison;
 public final class ObjectPrims {
 
   @GenerateNodeFactory
-  @Primitive("objClassName:")
+  @Primitive(primitive = "objClassName:")
   public abstract static class ObjectClassNamePrim extends UnaryExpressionNode {
     public ObjectClassNamePrim(final SourceSection source) { super(false, source); }
 
@@ -51,7 +51,7 @@ public final class ObjectPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive("halt:")
+  @Primitive(primitive = "halt:")
   public abstract static class HaltPrim extends UnaryExpressionNode {
     public HaltPrim(final SourceSection source) { super(false, source); }
 
@@ -88,7 +88,7 @@ public final class ObjectPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive("objClass:")
+  @Primitive(primitive = "objClass:")
   public abstract static class ClassPrim extends UnaryExpressionNode {
     public ClassPrim(final SourceSection source) { super(false, source); }
 
@@ -104,7 +104,10 @@ public final class ObjectPrims {
     }
   }
 
+  @GenerateNodeFactory
+  @Primitive(selector = "isNil", noWrapper = true)
   public abstract static class IsNilNode extends UnaryBasicOperation {
+    public IsNilNode(final boolean eagerWrapper, final SourceSection source) { super(eagerWrapper, source); }
     public IsNilNode(final SourceSection source) { super(false, source); }
 
     @Override
@@ -122,7 +125,10 @@ public final class ObjectPrims {
     }
   }
 
+  @GenerateNodeFactory
+  @Primitive(selector = "notNil", noWrapper = true)
   public abstract static class NotNilNode extends UnaryBasicOperation {
+    public NotNilNode(final boolean eagerWrapper, final SourceSection source) { super(eagerWrapper, source); }
     public NotNilNode(final SourceSection source) { super(false, source); }
 
     @Override
@@ -144,7 +150,7 @@ public final class ObjectPrims {
    * A node that checks whether a given object is a Value.
    */
   @GenerateNodeFactory
-  @Primitive("objIsValue:")
+  @Primitive(primitive = "objIsValue:")
   @ImportStatic(Nil.class)
   @Instrumentable(factory = IsValueWrapper.class)
   public abstract static class IsValue extends UnaryExpressionNode {

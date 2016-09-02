@@ -61,10 +61,13 @@ public final class ObjectSystem {
   private final SourcecodeCompiler compiler;
   private final StructuralProbe structuralProbe;
 
+  private final Primitives primitives;
+
   public ObjectSystem(final SourcecodeCompiler compiler,
       final StructuralProbe probe, final String platformFilename,
       final String kernelFilename) throws IOException {
     last = this;
+    this.primitives = new Primitives();
     this.compiler  = compiler;
     structuralProbe = probe;
     loadedModules  = new LinkedHashMap<>();
@@ -74,6 +77,10 @@ public final class ObjectSystem {
 
   public static boolean isInitialized() {
     return last.initialized;
+  }
+
+  public Primitives getPrimitives() {
+    return primitives;
   }
 
   public SClass getPlatformClass() {
@@ -104,8 +111,8 @@ public final class ObjectSystem {
     }
   }
 
-  private static SObjectWithoutFields constructVmMirror() {
-    HashMap<SSymbol, Dispatchable> vmMirrorMethods = Primitives.constructVmMirrorPrimitives();
+  private SObjectWithoutFields constructVmMirror() {
+    HashMap<SSymbol, Dispatchable> vmMirrorMethods = primitives.takeVmMirrorPrimitives();
     MixinScope scope = new MixinScope(null);
 
     MixinDefinition vmMirrorDef = new MixinDefinition(

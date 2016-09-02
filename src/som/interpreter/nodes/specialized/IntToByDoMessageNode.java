@@ -2,27 +2,43 @@ package som.interpreter.nodes.specialized;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
+import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
+import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.PreevaluatedExpression;
 import som.interpreter.nodes.nary.QuaternaryExpressionNode;
+import som.interpreter.nodes.specialized.IntToByDoMessageNode.Splzr;
+import som.primitives.Primitive;
+import som.vm.Primitives.Specializer;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import tools.dym.Tags.LoopNode;
 
 
+@GenerateNodeFactory
+@Primitive(selector = "to:by:do:", disabled = true, specializer = Splzr.class, noWrapper = true)
 public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode
     implements PreevaluatedExpression {
+  public static class Splzr extends Specializer {
+    @Override
+    public <T> T create(final NodeFactory<T> factory, final Object[] arguments,
+        final ExpressionNode[] argNodes, final SourceSection section,
+        final boolean eagerWrapper) {
+      return factory.createNode(section, arguments[3], argNodes[0],
+          argNodes[1], argNodes[2], argNodes[3]);
+    }
+  }
 
   private final SInvokable blockMethod;
   @Child private DirectCallNode valueSend;
 
-  public IntToByDoMessageNode(final ExpressionNode orignialNode,
-      final SBlock block) {
-    super(orignialNode.getSourceSection());
+  public IntToByDoMessageNode(final SourceSection section, final SBlock block) {
+    super(section);
     blockMethod = block.getMethod();
     valueSend = Truffle.getRuntime().createDirectCallNode(
                     blockMethod.getCallTarget());

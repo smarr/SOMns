@@ -16,7 +16,7 @@ import som.vmobjects.SObject.SImmutableObject;
 
 public final class ActorClasses {
   @GenerateNodeFactory
-  @Primitive("actorsFarReferenceClass:")
+  @Primitive(primitive = "actorsFarReferenceClass:")
   public abstract static class SetFarReferenceClassPrim extends UnaryExpressionNode {
     public SetFarReferenceClassPrim(final SourceSection source) { super(false, source); }
 
@@ -28,7 +28,7 @@ public final class ActorClasses {
   }
 
   @GenerateNodeFactory
-  @Primitive("actorsPromiseClass:")
+  @Primitive(primitive = "actorsPromiseClass:")
   public abstract static class SetPromiseClassPrim extends UnaryExpressionNode {
     public SetPromiseClassPrim(final SourceSection source) { super(false, source); }
 
@@ -40,7 +40,7 @@ public final class ActorClasses {
   }
 
   @GenerateNodeFactory
-  @Primitive("actorsPairClass:")
+  @Primitive(primitive = "actorsPairClass:")
   public abstract static class SetPairClassPrim extends UnaryExpressionNode {
     public SetPairClassPrim(final SourceSection source) { super(false, source); }
 
@@ -52,7 +52,7 @@ public final class ActorClasses {
   }
 
   @GenerateNodeFactory
-  @Primitive("actorsResolverClass:")
+  @Primitive(primitive = "actorsResolverClass:")
   public abstract static class SetResolverClassPrim extends UnaryExpressionNode {
     public SetResolverClassPrim(final SourceSection source) { super(false, source); }
 
@@ -66,7 +66,7 @@ public final class ActorClasses {
   @CompilationFinal public static SImmutableObject ActorModule;
 
   @GenerateNodeFactory
-  @Primitive("actorsModule:")
+  @Primitive(primitive = "actorsModule:")
   public abstract static class SetModulePrim extends UnaryExpressionNode {
     public SetModulePrim(final SourceSection source) { super(false, source); }
 

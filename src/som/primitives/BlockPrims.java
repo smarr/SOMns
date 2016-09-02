@@ -57,7 +57,7 @@ public abstract class BlockPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive("blockRestart:")
+  @Primitive(primitive = "blockRestart:")
   public abstract static class RestartPrim extends UnaryExpressionNode {
     public RestartPrim(final SourceSection source) { super(false, source); }
 
@@ -73,7 +73,8 @@ public abstract class BlockPrims {
 
   @GenerateNodeFactory
   @ImportStatic(BlockPrims.class)
-  @Primitive("blockValue:")
+  @Primitive(primitive = "blockValue:", selector = "value",
+             receiverType = {SBlock.class, Boolean.class})
   public abstract static class ValueNonePrim extends UnaryExpressionNode {
     public ValueNonePrim(final boolean eagerlyWrapped, final SourceSection source) { super(eagerlyWrapped, source); }
     public ValueNonePrim(final SourceSection source) { super(false, source); }
@@ -109,7 +110,8 @@ public abstract class BlockPrims {
 
   @GenerateNodeFactory
   @ImportStatic(BlockPrims.class)
-  @Primitive("blockValue:with:")
+  @Primitive(primitive = "blockValue:with:", selector = "value:",
+             receiverType = SBlock.class)
   public abstract static class ValueOnePrim extends BinaryExpressionNode {
     protected ValueOnePrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
     protected ValueOnePrim(final SourceSection source) { super(false, source); }
@@ -141,7 +143,8 @@ public abstract class BlockPrims {
 
   @GenerateNodeFactory
   @ImportStatic(BlockPrims.class)
-  @Primitive("blockValue:with:with:")
+  @Primitive(primitive = "blockValue:with:with:", selector = "value:with:",
+             receiverType = SBlock.class)
   public abstract static class ValueTwoPrim extends TernaryExpressionNode {
     public ValueTwoPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
     public ValueTwoPrim(final SourceSection source) { super(false, source); }

@@ -14,7 +14,9 @@ import som.vmobjects.SSymbol;
 
 
 @GenerateNodeFactory
-@Primitive({"int:add:", "double:add:"})
+@Primitive(primitive = "int:add:")
+@Primitive(primitive = "double:add:")
+@Primitive(selector = "+")
 public abstract class AdditionPrim extends ArithmeticPrim {
   protected AdditionPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
   protected AdditionPrim(final SourceSection source) { super(false, source); }

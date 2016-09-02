@@ -2,6 +2,8 @@ package som.interpreter.nodes.specialized;
 
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
+import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
@@ -9,13 +11,38 @@ import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.profiles.ConditionProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
+import som.interpreter.nodes.specialized.IfMessageNode.IfFalseSpecialier;
+import som.interpreter.nodes.specialized.IfMessageNode.IfTrueSpecialier;
+import som.primitives.Primitive;
+import som.vm.Primitives.Specializer;
 import som.vm.constants.Nil;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 
 
+@GenerateNodeFactory
+@Primitive(selector = "ifTrue:",  noWrapper = true, specializer = IfTrueSpecialier.class)
+@Primitive(selector = "ifFalse:", noWrapper = true, specializer = IfFalseSpecialier.class)
 public abstract class IfMessageNode extends BinaryComplexOperation {
+  public static class IfTrueSpecialier extends Specializer {
+    @Override
+    public <T> T create(final NodeFactory<T> factory, final Object[] arguments,
+        final ExpressionNode[] argNodes, final SourceSection section,
+        final boolean eagerWrapper) {
+      return factory.createNode(true, section, argNodes[0], argNodes[1]);
+    }
+  }
+
+  public static class IfFalseSpecialier extends Specializer {
+    @Override
+    public <T> T create(final NodeFactory<T> factory, final Object[] arguments,
+        final ExpressionNode[] argNodes, final SourceSection section,
+        final boolean eagerWrapper) {
+      return factory.createNode(false, section, argNodes[0], argNodes[1]);
+    }
+  }
 
   protected final ConditionProfile condProf = ConditionProfile.createCountingProfile();
   private final boolean expected;

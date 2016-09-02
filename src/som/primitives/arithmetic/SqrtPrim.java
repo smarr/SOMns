@@ -12,7 +12,9 @@ import tools.dym.Tags.OpArithmetic;
 
 
 @GenerateNodeFactory
-@Primitive({"intSqrt:", "doubleSqrt:"})
+@Primitive(primitive = "intSqrt:")
+@Primitive(primitive = "doubleSqrt:")
+@Primitive(selector = "sqrt", receiverType = {Long.class, BigInteger.class, Double.class})
 public abstract class SqrtPrim extends UnaryBasicOperation {
   public SqrtPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
   public SqrtPrim(final SourceSection source) { super(false, source); }

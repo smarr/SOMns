@@ -15,7 +15,7 @@ public class ClassPrims {
 
   // TODO: move to new mirror class
   @GenerateNodeFactory
-  @Primitive("mirrorAClassesName:")
+  @Primitive(primitive = "mirrorAClassesName:")
   public abstract static class NamePrim extends UnaryExpressionNode {
     public NamePrim(final SourceSection source) { super(false, source); }
 
@@ -26,7 +26,7 @@ public class ClassPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive("mirrorClassName:")
+  @Primitive(primitive = "mirrorClassName:")
   public abstract static class ClassNamePrim extends UnaryExpressionNode {
     public ClassNamePrim(final SourceSection source) { super(false, source); }
 

@@ -21,7 +21,7 @@ import som.vmobjects.SInvokable;
 public final class MethodPrims {
 
   @GenerateNodeFactory
-  @Primitive("methodName:")
+  @Primitive(primitive = "methodName:")
   public abstract static class SignaturePrim extends UnaryExpressionNode {
     public SignaturePrim(final SourceSection source) { super(false, source); }
 

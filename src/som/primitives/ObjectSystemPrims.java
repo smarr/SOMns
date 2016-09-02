@@ -12,7 +12,7 @@ import som.vmobjects.SObject;
 public abstract class ObjectSystemPrims {
 
   @GenerateNodeFactory
-  @Primitive("kernelObject:")
+  @Primitive(primitive = "kernelObject:")
   public abstract static class KernelObjectPrim extends UnaryExpressionNode {
     public KernelObjectPrim(final SourceSection source) { super(false, source); }
 

@@ -12,7 +12,7 @@ import som.vmobjects.SObjectWithClass;
 
 
 @GenerateNodeFactory
-@Primitive("object:identicalTo:")
+@Primitive(primitive = "object:identicalTo:", selector = "==")
 public abstract class EqualsEqualsPrim extends ComparisonPrim {
   protected EqualsEqualsPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
   protected EqualsEqualsPrim(final SourceSection source) { super(false, source); }

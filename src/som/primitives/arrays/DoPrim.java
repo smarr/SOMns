@@ -12,6 +12,7 @@ import som.interpreter.nodes.dispatch.BlockDispatchNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.specialized.SomLoop;
+import som.primitives.Primitive;
 import som.vm.constants.Nil;
 import som.vmobjects.SArray;
 import som.vmobjects.SArray.PartiallyEmptyArray;
@@ -19,6 +20,7 @@ import som.vmobjects.SBlock;
 
 
 @GenerateNodeFactory
+@Primitive(selector = "do:", receiverType = SArray.class, disabled = true)
 public abstract class DoPrim extends BinaryComplexOperation {
   private final ValueProfile storageType = ValueProfile.createClassProfile();
 

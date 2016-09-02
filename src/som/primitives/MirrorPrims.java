@@ -27,7 +27,7 @@ import som.vmobjects.SSymbol;
 public abstract class MirrorPrims {
 
   @GenerateNodeFactory
-  @Primitive("objNestedClasses:")
+  @Primitive(primitive = "objNestedClasses:")
   public abstract static class NestedClassesPrim extends UnaryExpressionNode {
     public NestedClassesPrim(final SourceSection source) { super(false, source); }
 
@@ -39,7 +39,7 @@ public abstract class MirrorPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive("obj:respondsTo:")
+  @Primitive(primitive = "obj:respondsTo:")
   public abstract static class RespondsToPrim extends BinaryComplexOperation {
     protected RespondsToPrim(final SourceSection source) { super(false, source); }
 
@@ -51,7 +51,7 @@ public abstract class MirrorPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive("objMethods:")
+  @Primitive(primitive = "objMethods:")
   public abstract static class MethodsPrim extends UnaryExpressionNode {
     public MethodsPrim(final SourceSection source) { super(false, source); }
 
@@ -64,7 +64,7 @@ public abstract class MirrorPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive("obj:perform:")
+  @Primitive(primitive = "obj:perform:")
   public abstract static class PerformPrim extends BinaryComplexOperation {
     @Child protected AbstractSymbolDispatch dispatch;
     public PerformPrim(final SourceSection source) {
@@ -80,7 +80,7 @@ public abstract class MirrorPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive("classDefinition:")
+  @Primitive(primitive = "classDefinition:")
   public abstract static class ClassDefinitionPrim extends UnaryExpressionNode {
     public ClassDefinitionPrim(final SourceSection source) { super(false, source); }
 
@@ -91,7 +91,7 @@ public abstract class MirrorPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive("classDefNestedClassDefinitions:")
+  @Primitive(primitive = "classDefNestedClassDefinitions:")
   public abstract static class NestedClassDefinitionsPrim extends UnaryExpressionNode {
     public NestedClassDefinitionsPrim(final SourceSection source) { super(false, source); }
 
@@ -105,7 +105,7 @@ public abstract class MirrorPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive("classDefName:")
+  @Primitive(primitive = "classDefName:")
   public abstract static class ClassDefNamePrim extends UnaryExpressionNode {
     public ClassDefNamePrim(final SourceSection source) { super(false, source); }
 
@@ -118,7 +118,7 @@ public abstract class MirrorPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive("classDefMethods:")
+  @Primitive(primitive = "classDefMethods:")
   public abstract static class ClassDefMethodsPrim extends UnaryExpressionNode {
     public ClassDefMethodsPrim(final SourceSection source) { super(false, source); }
 
@@ -139,7 +139,7 @@ public abstract class MirrorPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive("classDef:hasFactoryMethod:")
+  @Primitive(primitive = "classDef:hasFactoryMethod:")
   public abstract static class ClassDefHasFactoryMethodPrim extends BinaryComplexOperation {
     protected ClassDefHasFactoryMethodPrim(final SourceSection source) { super(false, source); }
 

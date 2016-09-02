@@ -4,15 +4,21 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.NodeChild;
+import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.specialized.SomLoop;
+import som.primitives.Primitive;
 import som.primitives.SizeAndLengthPrim;
+import som.primitives.SizeAndLengthPrimFactory;
+import som.primitives.arrays.PutAllNode.Splzr;
+import som.vm.Primitives.Specializer;
 import som.vm.constants.Nil;
 import som.vmobjects.SArray.SMutableArray;
 import som.vmobjects.SBlock;
@@ -21,8 +27,19 @@ import som.vmobjects.SObjectWithClass;
 
 @GenerateNodeFactory
 @ImportStatic(Nil.class)
+@Primitive(selector = "putAll", disabled = true, specializer = Splzr.class)
 @NodeChild(value = "length", type = SizeAndLengthPrim.class, executeWith = "receiver")
 public abstract class PutAllNode extends BinaryComplexOperation {
+  public static class Splzr extends Specializer {
+    @Override
+    public <T> T create(final NodeFactory<T> factory, final Object[] arguments,
+        final ExpressionNode[] argNodes, final SourceSection section,
+        final boolean eagerWrapper) {
+      assert eagerWrapper;
+      return factory.createNode(true, section, null, null, SizeAndLengthPrimFactory.create(null, null));
+    }
+  }
+
   @Child protected BlockDispatchNode block;
 
   public PutAllNode(final boolean eagWrap, final SourceSection source) {

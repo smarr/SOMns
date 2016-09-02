@@ -18,12 +18,14 @@ import som.interpreter.actors.ReceivedMessage.ReceivedCallback;
 import som.interpreter.actors.RegisterOnPromiseNode.RegisterWhenResolved;
 import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.SResolver;
+import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.Primitive;
+import som.vm.Primitives.Specializer;
 import som.vm.Symbols;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
@@ -34,8 +36,17 @@ import som.vmobjects.SSymbol;
 
 public final class PromisePrims {
 
+  public static class IsActorModule extends Specializer {
+    @Override
+    public boolean matches(final Primitive prim, final Object receiver, ExpressionNode[] args) {
+      return receiver == ActorClasses.ActorModule;
+    }
+  }
+
   @GenerateNodeFactory
-  @Primitive("actorsCreatePromisePair:")
+  @Primitive(primitive = "actorsCreatePromisePair:",
+             selector = "createPromisePair", specializer = IsActorModule.class,
+             noWrapper = true)
   public abstract static class CreatePromisePairPrim extends UnaryExpressionNode {
 
     protected static final DirectCallNode create() {
@@ -44,6 +55,7 @@ public final class PromisePrims {
       return Truffle.getRuntime().createDirectCallNode(((SInvokable) disp).getCallTarget());
     }
 
+    public CreatePromisePairPrim(final boolean eagerWrapper, final SourceSection source) { super(eagerWrapper, source); }
     public CreatePromisePairPrim(final SourceSection source) { super(false, source); }
 
     @Specialization
@@ -65,7 +77,8 @@ public final class PromisePrims {
 
   @GenerateNodeFactory
   @ImportStatic(PromisePrims.class)
-  @Primitive("actorsWhen:resolved:")
+  @Primitive(primitive = "actorsWhen:resolved:", selector = "whenResolved:",
+             receiverType = SPromise.class)
   public abstract static class WhenResolvedPrim extends BinaryComplexOperation {
     @Child protected RegisterWhenResolved registerNode = new RegisterWhenResolved();
 
@@ -114,7 +127,7 @@ public final class PromisePrims {
   // TODO: should I add a literal version of OnErrorPrim??
   @GenerateNodeFactory
   @ImportStatic(PromisePrims.class)
-  @Primitive("actorsFor:onError:")
+  @Primitive(primitive = "actorsFor:onError:")
   public abstract static class OnErrorPrim extends BinaryComplexOperation {
     protected OnErrorPrim(final SourceSection source) { super(false, source); }
 
@@ -130,7 +143,7 @@ public final class PromisePrims {
 
   @GenerateNodeFactory
   @ImportStatic(PromisePrims.class)
-  @Primitive("actorsFor:on:do:")
+  @Primitive(primitive = "actorsFor:on:do:")
   public abstract static class OnExceptionDoPrim extends TernaryExpressionNode {
     public OnExceptionDoPrim(final SourceSection source) { super(false, source); }
 
@@ -146,7 +159,7 @@ public final class PromisePrims {
 
   @GenerateNodeFactory
   @ImportStatic(PromisePrims.class)
-  @Primitive("actorsWhen:resolved:onError:")
+  @Primitive(primitive = "actorsWhen:resolved:onError:")
   public abstract static class WhenResolvedOnErrorPrim extends TernaryExpressionNode {
     @Child protected RegisterWhenResolved registerNode = new RegisterWhenResolved();
 

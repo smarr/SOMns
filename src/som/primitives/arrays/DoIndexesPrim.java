@@ -11,6 +11,7 @@ import som.interpreter.nodes.dispatch.BlockDispatchNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.specialized.SomLoop;
+import som.primitives.Primitive;
 import som.primitives.SizeAndLengthPrim;
 import som.primitives.SizeAndLengthPrimFactory;
 import som.vmobjects.SArray;
@@ -18,6 +19,7 @@ import som.vmobjects.SBlock;
 
 
 @GenerateNodeFactory
+@Primitive(selector = "doIndexes:", receiverType = SArray.class, disabled = true)
 public abstract class DoIndexesPrim extends BinaryComplexOperation {
   @Child protected BlockDispatchNode block;
   @Child protected SizeAndLengthPrim length;

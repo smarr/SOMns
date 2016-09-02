@@ -10,7 +10,9 @@ import som.primitives.Primitive;
 
 
 @GenerateNodeFactory
-@Primitive({"int:modulo:", "double:modulo:"})
+@Primitive(primitive = "int:modulo:")
+@Primitive(primitive = "double:modulo:")
+@Primitive(selector = "%")
 public abstract class ModuloPrim extends ArithmeticPrim {
   protected ModuloPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
   protected ModuloPrim(final SourceSection source) { super(false, source); }

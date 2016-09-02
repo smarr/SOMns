@@ -13,7 +13,7 @@ import tools.dym.Tags.ArrayRead;
 
 
 @GenerateNodeFactory
-@Primitive("array:at:")
+@Primitive(primitive = "array:at:", selector = "at:", receiverType = SArray.class)
 public abstract class AtPrim extends BinaryBasicOperation {
   private final ValueProfile storageType = ValueProfile.createClassProfile();
 
