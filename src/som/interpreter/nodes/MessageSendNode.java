@@ -22,18 +22,12 @@ import som.interpreter.nodes.dispatch.DispatchChain.Cost;
 import som.interpreter.nodes.dispatch.GenericDispatchNode;
 import som.interpreter.nodes.dispatch.UninitializedDispatchNode;
 import som.interpreter.nodes.literals.BlockNode;
-import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.interpreter.nodes.nary.EagerBinaryPrimitiveNode;
-import som.interpreter.nodes.nary.EagerTernaryPrimitiveNode;
-import som.interpreter.nodes.nary.EagerUnaryPrimitiveNode;
+import som.interpreter.nodes.nary.EagerlySpecializableNode;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
-import som.interpreter.nodes.nary.TernaryExpressionNode;
-import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.interpreter.nodes.specialized.AndMessageNodeFactory;
 import som.interpreter.nodes.specialized.AndMessageNodeFactory.AndBoolMessageNodeFactory;
 import som.interpreter.nodes.specialized.IfTrueIfFalseMessageNodeGen;
 import som.interpreter.nodes.specialized.IntDownToDoMessageNodeGen;
-import som.interpreter.nodes.specialized.IntToByDoMessageNode;
 import som.interpreter.nodes.specialized.IntToDoMessageNodeGen;
 import som.interpreter.nodes.specialized.OrMessageNodeGen;
 import som.interpreter.nodes.specialized.OrMessageNodeGen.OrBoolMessageNodeGen;
@@ -170,13 +164,20 @@ public final class MessageSendNode {
       Object receiver = arguments[0];
       PrimAndFact prim = prims.getFactoryForEagerSpecialization(selector, receiver, argumentNodes);
 
+      if (prim != null) {
+        EagerlySpecializableNode newNode = prim.createNode(arguments, argumentNodes, getSourceSection());
+        if (prim.noWrapper()) {
+          return replace(newNode);
+        } else {
+          return makeEagerPrim(newNode);
+        }
+      }
+
       // let's organize the specializations by number of arguments
       // perhaps not the best, but simple
       switch (argumentNodes.length) {
-        case  1: return specializeUnary(prim, arguments);
-        case  2: return specializeBinary(prim, arguments);
-        case  3: return specializeTernary(prim, arguments);
-        case  4: return specializeQuaternary(prim, arguments);
+        case  2: return specializeBinary(arguments);
+        case  3: return specializeTernary(arguments);
       }
       return makeSend();
     }
@@ -193,53 +194,32 @@ public final class MessageSendNode {
     protected abstract PreevaluatedExpression makeSpecialSend();
     protected abstract GenericMessageSendNode makeOrdenarySend();
 
-    private PreevaluatedExpression makeEagerUnaryPrim(final UnaryExpressionNode prim) {
+    private PreevaluatedExpression makeEagerPrim(final EagerlySpecializableNode prim) {
+      synchronized (getAtomicLock()) {
+        return makeEagerPrimUnsyced(prim);
+      }
+    }
+
+    private PreevaluatedExpression makeEagerPrimUnsyced(final EagerlySpecializableNode prim) {
       VM.insertInstrumentationWrapper(this);
       assert prim.getSourceSection() != null;
 
-      unwrapIfNecessary(argumentNodes[0]).markAsPrimitiveArgument();
-      PreevaluatedExpression result = replace(new EagerUnaryPrimitiveNode(
-          prim.getSourceSection(), selector, argumentNodes[0], prim));
+      for (ExpressionNode exp : argumentNodes) {
+        unwrapIfNecessary(exp).markAsPrimitiveArgument();
+      }
+
+      PreevaluatedExpression result = replace(prim.wrapInEagerWrapper(prim, selector, argumentNodes));
+
       VM.insertInstrumentationWrapper((Node) result);
-      VM.insertInstrumentationWrapper(argumentNodes[0]);
+
+      for (ExpressionNode exp : argumentNodes) {
+        VM.insertInstrumentationWrapper(exp);
+      }
+
       return result;
     }
 
-    protected PreevaluatedExpression specializeUnary(final PrimAndFact prim,
-        final Object[] args) {
-      // TODO: remove null check, and better, get this stuff somehow realized polymorphically
-      if (prim != null) {
-        UnaryExpressionNode newNode = prim.createNode(args, argumentNodes, getSourceSection());
-        if (prim.noWrapper()) {
-          return replace(newNode);
-        } else {
-          return makeEagerUnaryPrim(newNode);
-        }
-      }
-      return makeSend();
-    }
-
-    private PreevaluatedExpression makeEagerBinaryPrim(final BinaryExpressionNode prim) {
-      VM.insertInstrumentationWrapper(this);
-      assert prim.getSourceSection() != null;
-
-      unwrapIfNecessary(argumentNodes[0]).markAsPrimitiveArgument();
-      unwrapIfNecessary(argumentNodes[1]).markAsPrimitiveArgument();
-
-      PreevaluatedExpression result = replace(new EagerBinaryPrimitiveNode(
-          selector, argumentNodes[0], argumentNodes[1], prim, prim.getSourceSection()));
-      VM.insertInstrumentationWrapper((Node) result);
-      VM.insertInstrumentationWrapper(argumentNodes[0]);
-      VM.insertInstrumentationWrapper(argumentNodes[1]);
-      return result;
-    }
-
-    protected PreevaluatedExpression specializeBinary(final PrimAndFact prim, final Object[] arguments) {
-      if (prim != null) {
-        assert !prim.noWrapper();
-        return makeEagerBinaryPrim(prim.createNode(arguments, argumentNodes, getSourceSection()));
-      }
-
+    protected PreevaluatedExpression specializeBinary(final Object[] arguments) {
       switch (selector.getString()) {
         case "and:":
         case "&&":
@@ -277,36 +257,7 @@ public final class MessageSendNode {
       return makeSend();
     }
 
-    private PreevaluatedExpression makeEagerTernaryPrim(final TernaryExpressionNode prim) {
-      VM.insertInstrumentationWrapper(this);
-      assert prim.getSourceSection() != null;
-
-      unwrapIfNecessary(argumentNodes[0]).markAsPrimitiveArgument();
-      unwrapIfNecessary(argumentNodes[1]).markAsPrimitiveArgument();
-      unwrapIfNecessary(argumentNodes[2]).markAsPrimitiveArgument();
-
-      PreevaluatedExpression result = replace(new EagerTernaryPrimitiveNode(
-          prim.getSourceSection(), selector, argumentNodes[0],
-          argumentNodes[1], argumentNodes[2], prim));
-
-      VM.insertInstrumentationWrapper((Node) result);
-      VM.insertInstrumentationWrapper(argumentNodes[0]);
-      VM.insertInstrumentationWrapper(argumentNodes[1]);
-      VM.insertInstrumentationWrapper(argumentNodes[2]);
-      return result;
-    }
-
-    protected PreevaluatedExpression specializeTernary(final PrimAndFact prim,
-        final Object[] arguments) {
-      if (prim != null) {
-        TernaryExpressionNode node = prim.createNode(arguments, argumentNodes, getSourceSection());
-        if (prim.noWrapper()) {
-          return replace(node);
-        } else {
-          return makeEagerTernaryPrim(node);
-        }
-      }
-
+    protected PreevaluatedExpression specializeTernary(final Object[] arguments) {
       switch (selector.getString()) {
         case "ifTrue:ifFalse:":
           return replace(IfTrueIfFalseMessageNodeGen.create(getSourceSection(),
@@ -337,14 +288,6 @@ public final class MessageSendNode {
           return replace(InvokeOnPrimFactory.create(getSourceSection(),
               argumentNodes[0], argumentNodes[1], argumentNodes[2],
               ToArgumentsArrayNodeGen.create(null, null)));
-      }
-      return makeSend();
-    }
-
-    protected PreevaluatedExpression specializeQuaternary(final PrimAndFact prim, final Object[] arguments) {
-      if (prim != null) {
-        IntToByDoMessageNode newNode = prim.createNode(arguments, argumentNodes, getSourceSection());
-        return replace(newNode);
       }
       return makeSend();
     }
@@ -439,8 +382,7 @@ public final class MessageSendNode {
     }
 
     @Override
-    protected PreevaluatedExpression specializeBinary(final PrimAndFact prim,
-        final Object[] arguments) {
+    protected PreevaluatedExpression specializeBinary(final Object[] arguments) {
       switch (selector.getString()) {
         case "whileTrue:": {
           if (arguments[1] instanceof SBlock && arguments[0] instanceof SBlock) {
@@ -459,7 +401,7 @@ public final class MessageSendNode {
           break; // use normal send
       }
 
-      return super.specializeBinary(prim, arguments);
+      return super.specializeBinary(arguments);
     }
   }
 

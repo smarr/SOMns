@@ -10,7 +10,6 @@ import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.PreevaluatedExpression;
 import som.interpreter.nodes.nary.QuaternaryExpressionNode;
 import som.interpreter.nodes.specialized.IntToByDoMessageNode.Splzr;
 import som.primitives.Primitive;
@@ -22,8 +21,7 @@ import tools.dym.Tags.LoopNode;
 
 @GenerateNodeFactory
 @Primitive(selector = "to:by:do:", disabled = true, specializer = Splzr.class, noWrapper = true)
-public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode
-    implements PreevaluatedExpression {
+public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode {
   public static class Splzr extends Specializer {
     @Override
     public <T> T create(final NodeFactory<T> factory, final Object[] arguments,
@@ -38,32 +36,25 @@ public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode
   @Child private DirectCallNode valueSend;
 
   public IntToByDoMessageNode(final SourceSection section, final SBlock block) {
-    super(section);
+    super(false, section);
     blockMethod = block.getMethod();
     valueSend = Truffle.getRuntime().createDirectCallNode(
                     blockMethod.getCallTarget());
   }
 
   public IntToByDoMessageNode(final IntToByDoMessageNode node) {
-    super(node.getSourceSection());
+    super(false, node.getSourceSection());
     this.blockMethod = node.blockMethod;
     this.valueSend   = node.valueSend;
   }
 
   @Override
-  protected boolean isTaggedWith(final Class<?> tag) {
+  protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
     if (tag == LoopNode.class) {
       return true;
     } else {
-      return super.isTaggedWith(tag);
+      return super.isTaggedWithIgnoringEagerness(tag);
     }
-  }
-
-  @Override
-  public final Object doPreEvaluated(final VirtualFrame frame,
-      final Object[] arguments) {
-    return executeEvaluated(frame, arguments[0], arguments[1],  arguments[2],
-        arguments[3]);
   }
 
   protected final boolean isSameBlockLong(final SBlock block) {

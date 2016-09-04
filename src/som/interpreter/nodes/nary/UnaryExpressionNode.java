@@ -1,28 +1,21 @@
 package som.interpreter.nodes.nary;
 
-import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Instrumentable;
-import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
-import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.PreevaluatedExpression;
+import som.vmobjects.SSymbol;
 
 
 @Instrumentable(factory = UnaryExpressionNodeWrapper.class)
 @NodeChild(value = "receiver", type = ExpressionNode.class)
-public abstract class UnaryExpressionNode extends ExprWithTagsNode
-    implements PreevaluatedExpression {
-
-  @CompilationFinal private boolean eagerlyWrapped;
+public abstract class UnaryExpressionNode extends EagerlySpecializableNode {
 
   public UnaryExpressionNode(final boolean eagerlyWrapped,
       final SourceSection source) {
-    super(source);
-    this.eagerlyWrapped = eagerlyWrapped;
+    super(eagerlyWrapped, source);
   }
 
   /**
@@ -30,35 +23,6 @@ public abstract class UnaryExpressionNode extends ExprWithTagsNode
    */
   protected UnaryExpressionNode(final UnaryExpressionNode wrappedNode) {
     super(wrappedNode);
-    assert !wrappedNode.eagerlyWrapped : "I think this should be true.";
-    this.eagerlyWrapped = false;
-  }
-
-  /**
-   * This method is used by eager wrapper or if this node is not eagerly
-   * wrapped.
-   */
-  protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
-    return super.isTaggedWith(tag);
-  }
-
-  @Override
-  protected final boolean isTaggedWith(final Class<?> tag) {
-    if (eagerlyWrapped) {
-      return false;
-    } else {
-      return isTaggedWithIgnoringEagerness(tag);
-    }
-  }
-
-  @Override
-  protected void onReplace(final Node newNode, final CharSequence reason) {
-    if (newNode instanceof WrapperNode ||
-        !(newNode instanceof UnaryExpressionNode)) { return; }
-
-    UnaryExpressionNode n = (UnaryExpressionNode) newNode;
-    n.eagerlyWrapped = eagerlyWrapped;
-    super.onReplace(newNode, reason);
   }
 
   public abstract Object executeEvaluated(final VirtualFrame frame,
@@ -68,5 +32,12 @@ public abstract class UnaryExpressionNode extends ExprWithTagsNode
   public final Object doPreEvaluated(final VirtualFrame frame,
       final Object[] arguments) {
     return executeEvaluated(frame, arguments[0]);
+  }
+
+  public EagerPrimitive wrapInEagerWrapper(
+      final EagerlySpecializableNode prim, final SSymbol selector,
+      final ExpressionNode[] arguments) {
+    return new EagerUnaryPrimitiveNode(getSourceSection(), selector,
+        arguments[0], this);
   }
 }
