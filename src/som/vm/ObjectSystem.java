@@ -179,11 +179,11 @@ public final class ObjectSystem {
     for (int i = 0; i < numArgs; i++) {
       // we do not pass the vmMirror, makes it easier to use the same primitives
       // as replacements on the node level
-      args[i] = new LocalArgumentReadNode(i + 1, s.createSection(null, 1));
+      args[i] = new LocalArgumentReadNode(i + 1, s.createSection(1));
     }
 
     ExpressionNode primNode;
-    SourceSection source = s.createSection(null, 1);
+    SourceSection source = s.createSection(1);
     switch (numArgs) {
       case 1:
         primNode = factory.createNode(source, args[0]);
@@ -549,7 +549,7 @@ Classes.transferClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInst
     Object platform = platformModule.instantiateObject(platformClass, vmMirror);
 
     SourceSection source = SomLanguage.getSyntheticSource("",
-        "ObjectSystem.executeApplication").createSection(null, 1);
+        "ObjectSystem.executeApplication").createSection(1);
     SSymbol start = Symbols.symbolFor("start");
 
     CompletableFuture<Object> future = new CompletableFuture<>();

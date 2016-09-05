@@ -199,7 +199,7 @@ public class Breakpoints {
       Source source = webDebugger.getSource(sourceUri);
       assert source != null : "TODO: handle problem somehow? defer breakpoint creation on source loading? ugh...";
 
-      SourceSection rootSS = source.createSection(null, startLine, startColumn, charLength);
+      SourceSection rootSS = source.createSection(startLine, startColumn, charLength);
       Set<RootNode> roots = webDebugger.getRootNodesBySource(source);
       for (RootNode root : roots) {
         if (rootSS.equals(root.getSourceSection())) {

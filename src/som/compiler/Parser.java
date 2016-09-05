@@ -726,13 +726,13 @@ public class Parser {
 
   SourceSection getEmptySource() {
     SourceCoordinate coord = getCoordinate();
-    return source.createSection(null, coord.startLine, coord.startColumn,
+    return source.createSection(coord.startLine, coord.startColumn,
         coord.charIndex, 0);
   }
 
   public SourceSection getSource(final SourceCoordinate coord) {
     assert lexer.getNumberOfCharactersRead() - coord.charIndex >= 0;
-    SourceSection ss = source.createSection(null, coord.startLine,
+    SourceSection ss = source.createSection(coord.startLine,
         coord.startColumn, coord.charIndex,
         Math.max(lexer.getNumberOfNonWhiteCharsRead() - coord.charIndex, 0));
     return ss;
