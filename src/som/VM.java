@@ -318,51 +318,47 @@ public final class VM {
     }
     engine = builder.build();
 
-    try {
-      Map<String, Instrument> instruments = engine.getInstruments();
-      Instrument profiler = instruments.get(ProfilerInstrument.ID);
-      if (vmOptions.profilingEnabled && profiler == null) {
-        VM.errorPrintln("Truffle profiler not available. Might be a class path issue");
-      } else if (profiler != null) {
-        profiler.setEnabled(vmOptions.profilingEnabled);
-      }
-      instruments.get(Highlight.ID).setEnabled(vmOptions.highlightingEnabled);
-
-      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-        debugger = Debugger.find(engine);
-      }
-
-      if (vmOptions.webDebuggerEnabled) {
-        assert debugger != null;
-        Instrument webDebuggerInst = instruments.get(WebDebugger.ID);
-        webDebuggerInst.setEnabled(true);
-
-        webDebugger = webDebuggerInst.lookup(WebDebugger.class);
-        webDebugger.startServer(debugger);
-      }
-
-      if (vmOptions.coverageEnabled) {
-        Instrument coveralls = instruments.get(Coverage.ID);
-        coveralls.setEnabled(true);
-        Coverage cov = coveralls.lookup(Coverage.class);
-        cov.setRepoToken(vmOptions.coverallsRepoToken);
-        cov.setServiceName("travis-ci");
-        cov.includeTravisData(true);
-      }
-
-      if (vmOptions.dynamicMetricsEnabled) {
-        assert VmSettings.DYNAMIC_METRICS;
-        Instrument dynM = instruments.get(DynamicMetrics.ID);
-        dynM.setEnabled(true);
-        structuralProbe = dynM.lookup(StructuralProbe.class);
-        assert structuralProbe != null : "Initialization of DynamicMetrics tool incomplete";
-      }
-
-      engine.eval(SomLanguage.START);
-      engine.dispose();
-    } catch (IOException e) {
-      throw new RuntimeException("This should never happen", e);
+    Map<String, Instrument> instruments = engine.getInstruments();
+    Instrument profiler = instruments.get(ProfilerInstrument.ID);
+    if (vmOptions.profilingEnabled && profiler == null) {
+      VM.errorPrintln("Truffle profiler not available. Might be a class path issue");
+    } else if (profiler != null) {
+      profiler.setEnabled(vmOptions.profilingEnabled);
     }
+    instruments.get(Highlight.ID).setEnabled(vmOptions.highlightingEnabled);
+
+    if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+      debugger = Debugger.find(engine);
+    }
+
+    if (vmOptions.webDebuggerEnabled) {
+      assert debugger != null;
+      Instrument webDebuggerInst = instruments.get(WebDebugger.ID);
+      webDebuggerInst.setEnabled(true);
+
+      webDebugger = webDebuggerInst.lookup(WebDebugger.class);
+      webDebugger.startServer(debugger);
+    }
+
+    if (vmOptions.coverageEnabled) {
+      Instrument coveralls = instruments.get(Coverage.ID);
+      coveralls.setEnabled(true);
+      Coverage cov = coveralls.lookup(Coverage.class);
+      cov.setRepoToken(vmOptions.coverallsRepoToken);
+      cov.setServiceName("travis-ci");
+      cov.includeTravisData(true);
+    }
+
+    if (vmOptions.dynamicMetricsEnabled) {
+      assert VmSettings.DYNAMIC_METRICS;
+      Instrument dynM = instruments.get(DynamicMetrics.ID);
+      dynM.setEnabled(true);
+      structuralProbe = dynM.lookup(StructuralProbe.class);
+      assert structuralProbe != null : "Initialization of DynamicMetrics tool incomplete";
+    }
+
+    engine.eval(SomLanguage.START);
+    engine.dispose();
     System.exit(vm.lastExitCode);
   }
 
