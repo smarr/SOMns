@@ -3,6 +3,7 @@ package som.primitives;
 import java.math.BigInteger;
 
 import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.debug.DebuggerSession.SteppingLocation;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.ImportStatic;
@@ -12,7 +13,6 @@ import com.oracle.truffle.api.frame.FrameInstance;
 import com.oracle.truffle.api.frame.FrameInstance.FrameAccess;
 import com.oracle.truffle.api.frame.FrameInstanceVisitor;
 import com.oracle.truffle.api.instrumentation.Instrumentable;
-import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
@@ -67,7 +67,6 @@ public final class ObjectPrims {
         return;
       }
 
-      Node[] callNode = new Node[1];
       Frame[] frame = new Frame[1];
 
       Truffle.getRuntime().iterateFrames(new FrameInstanceVisitor<FrameInstance>() {
@@ -76,8 +75,7 @@ public final class ObjectPrims {
         @Override
         public FrameInstance visitFrame(final FrameInstance frameInstance) {
           if (stackIndex == 2) {
-            callNode[0] = frameInstance.getCallNode();
-            frame[0]    = frameInstance.getFrame(FrameAccess.READ_ONLY, true);
+            frame[0] = frameInstance.getFrame(FrameAccess.READ_ONLY, true);
             return frameInstance;
           }
           stackIndex += 1;
@@ -85,7 +83,7 @@ public final class ObjectPrims {
         }
       });
 
-      VM.getWebDebugger().suspendExecution(callNode[0], frame[0].materialize());
+      VM.getWebDebugger().suspendExecution(frame[0].materialize(), SteppingLocation.BEFORE_STATEMENT);
     }
   }
 

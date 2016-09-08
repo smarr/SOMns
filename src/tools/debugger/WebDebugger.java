@@ -9,13 +9,13 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 import com.oracle.truffle.api.debug.Debugger;
-import com.oracle.truffle.api.debug.ExecutionEvent;
+import com.oracle.truffle.api.debug.DebuggerSession.SteppingLocation;
+import com.oracle.truffle.api.debug.SuspendedCallback;
 import com.oracle.truffle.api.debug.SuspendedEvent;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.instrumentation.Instrumenter;
 import com.oracle.truffle.api.instrumentation.TruffleInstrument;
 import com.oracle.truffle.api.instrumentation.TruffleInstrument.Registration;
-import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
@@ -29,7 +29,7 @@ import tools.highlight.Tags;
  * application using WebSockets and JSON.
  */
 @Registration(id = WebDebugger.ID)
-public class WebDebugger extends TruffleInstrument {
+public class WebDebugger extends TruffleInstrument implements SuspendedCallback {
 
   public static final String ID = "web-debugger";
 
@@ -40,7 +40,6 @@ public class WebDebugger extends TruffleInstrument {
   private final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> loadedSourcesTags = new HashMap<>();
   private final Map<Source, Set<RootNode>> rootNodes = new HashMap<>();
 
-  private Debugger truffleDebugger;
   private Breakpoints breakpoints;
 
   private int nextSuspendEventId = 0;
@@ -70,11 +69,6 @@ public class WebDebugger extends TruffleInstrument {
     roots.add(rootNode);
   }
 
-  public void reportExecutionEvent(final ExecutionEvent e) {
-    assert truffleDebugger == e.getDebugger() : "Something going wrong. Multiple PolyglotEngines?";
-    connector.awaitClient();
-  }
-
   SuspendedEvent getSuspendedEvent(final String id) {
     return suspendEvents.get(id);
   }
@@ -89,7 +83,8 @@ public class WebDebugger extends TruffleInstrument {
     return "se-" + id;
   }
 
-  public void reportSuspendedEvent(final SuspendedEvent e) {
+  @Override
+  public void onSuspend(final SuspendedEvent e) {
     String id = getNextSuspendEventId();
     CompletableFuture<Object> future = new CompletableFuture<>();
     suspendEvents.put(id, e);
@@ -105,10 +100,9 @@ public class WebDebugger extends TruffleInstrument {
     }
   }
 
-  public void suspendExecution(final Node haltedNode,
-      final MaterializedFrame haltedFrame) {
-    SuspendedEvent event = truffleDebugger.createSuspendedEvent(haltedNode, haltedFrame);
-    reportSuspendedEvent(event);
+  public void suspendExecution(final MaterializedFrame haltedFrame,
+      final SteppingLocation steppingLocation) {
+    breakpoints.doSuspend(haltedFrame, steppingLocation);
   }
 
   public static void log(final String str) {
@@ -130,9 +124,9 @@ public class WebDebugger extends TruffleInstrument {
   }
 
   public void startServer(final Debugger dbg) {
-    truffleDebugger = dbg;
     breakpoints = new Breakpoints(dbg, this);
     connector = new FrontendConnector(breakpoints, instrumenter, this);
+    connector.awaitClient();
   }
 
   public Source getSource(final URI sourceUri) {

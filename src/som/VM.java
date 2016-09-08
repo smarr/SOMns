@@ -9,15 +9,12 @@ import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.debug.Debugger;
-import com.oracle.truffle.api.debug.ExecutionEvent;
-import com.oracle.truffle.api.debug.SuspendedEvent;
 import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
 import com.oracle.truffle.api.instrumentation.InstrumentationHandler;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
-import com.oracle.truffle.api.vm.EventConsumer;
 import com.oracle.truffle.api.vm.PolyglotEngine;
 import com.oracle.truffle.api.vm.PolyglotEngine.Builder;
 import com.oracle.truffle.api.vm.PolyglotEngine.Instrument;
@@ -167,12 +164,6 @@ public final class VM {
     }
   }
 
-  public static void reportSuspendedEvent(final SuspendedEvent e) {
-    if (webDebugger != null) {
-      webDebugger.reportSuspendedEvent(e);
-    }
-  }
-
   public void setCompletionFuture(final CompletableFuture<Object> future) {
     vmMainCompletion = future;
   }
@@ -295,27 +286,9 @@ public final class VM {
     client.start(server);
   }
 
-  private static final EventConsumer<ExecutionEvent> onExec =
-      new EventConsumer<ExecutionEvent>(ExecutionEvent.class) {
-    @Override
-    protected void on(final ExecutionEvent event) {
-      webDebugger.reportExecutionEvent(event);
-    }
-  };
-
-  private static final EventConsumer<SuspendedEvent> onHalted =
-      new EventConsumer<SuspendedEvent>(SuspendedEvent.class) {
-    @Override
-    protected void on(final SuspendedEvent e) {
-      webDebugger.reportSuspendedEvent(e);
-    }
-  };
 
   private static void startExecution(final Builder builder,
       final VMOptions vmOptions) {
-    if (vmOptions.webDebuggerEnabled) {
-      builder.onEvent(onExec).onEvent(onHalted);
-    }
     engine = builder.build();
 
     Map<String, Instrument> instruments = engine.getInstruments();
