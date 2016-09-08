@@ -85,6 +85,8 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
 
   @Override
   public void onSuspend(final SuspendedEvent e) {
+    // TODO: I need to capture the stack here, to make sure it is accessible
+    //       also when running on Graal
     String id = getNextSuspendEventId();
     CompletableFuture<Object> future = new CompletableFuture<>();
     suspendEvents.put(id, e);
