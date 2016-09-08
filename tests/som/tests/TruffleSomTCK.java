@@ -105,6 +105,16 @@ public class TruffleSomTCK extends TruffleTCK {
   }
 
   @Override
+  protected String objectWithElement() {
+    return "objectWithElement";
+  }
+
+  @Override
+  protected String functionAddNumbers() {
+    return "functionAddNumbers";
+  }
+
+  @Override
   protected String complexAdd() {
     return "complexAdd";
   }
@@ -178,4 +188,104 @@ public class TruffleSomTCK extends TruffleTCK {
   @Override
   @Ignore("todo: remove override")
   public void testRootNodeName() throws Exception { }
+
+  @Test
+  @Override
+  @Ignore("todo: remove override")
+  public void testFunctionAddNumbers() throws Exception { }
+
+  @Test
+  @Override
+  @Ignore("todo: remove override")
+  public void testReadValueFromForeign() throws Exception { }
+
+  @Test
+  @Override
+  @Ignore("todo: remove override")
+  public void testReadElementFromForeign() throws Exception { }
+
+  @Test
+  @Override
+  @Ignore("todo: remove override")
+  public void testWriteValueToForeign() throws Exception { }
+
+  @Test
+  @Override
+  @Ignore("todo: remove override")
+  public void testObjectWithValueAndAddProperty() throws Exception { }
+
+  @Test
+  @Override
+  @Ignore("todo: remove override")
+  public void testIsExecutableOfForeign() throws Exception { }
+
+  @Test
+  @Override
+  @Ignore("todo: remove override")
+  public void testCallMethod() throws Exception { }
+
+  @Test
+  @Override
+  @Ignore("todo: remove override")
+  public void testHasSize() throws Exception { }
+
+  @Test
+  @Override
+  @Ignore("todo: remove override")
+  public void testHasSizeOfForeign() throws Exception { }
+
+  @Test
+  @Override
+  @Ignore("todo: remove override")
+  public void testGetSize() throws Exception { }
+
+  @Test
+  @Override
+  @Ignore("todo: remove override")
+  public void testIsExecutable() throws Exception { }
+
+  @Test
+  @Override
+  @Ignore("todo: remove override")
+  public void testWriteElementOfForeign() throws Exception { }
+
+  @Test
+  @Override
+  @Ignore("todo: remove override")
+  public void testIsNullOfForeign() throws Exception { }
+
+  @Test
+  @Override
+  @Ignore("todo: remove override")
+  public void testReadFromObjectWithElement() throws Exception { }
+
+  @Test
+  @Override
+  @Ignore("todo: remove override")
+  public void testGetSizeOfForeign() throws Exception { }
+
+  @Test
+  @Override
+  @Ignore("todo: remove override")
+  public void testIsNotNull() throws Exception { }
+
+  @Test
+  @Override
+  @Ignore("todo: remove override")
+  public void testWriteToObjectWithValueProperty() throws Exception { }
+
+  @Test
+  @Override
+  @Ignore("todo: remove override")
+  public void testReadFromObjectWithValueProperty() throws Exception { }
+
+  @Test
+  @Override
+  @Ignore("todo: remove override")
+  public void testCallFunction() throws Exception { }
+
+  @Test
+  @Override
+  @Ignore("todo: remove override")
+  public void testWriteToObjectWithElement() throws Exception { }
 }

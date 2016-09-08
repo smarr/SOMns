@@ -89,7 +89,8 @@ public abstract class NewObjectPrim extends UnaryExpressionNode implements ISpec
 
   @Fallback
   @TruffleBoundary
-  public final SAbstractObject fallback(final SClass receiver) {
+  public final SAbstractObject fallback(final Object rcvr) {
+    SClass receiver = (SClass) rcvr;
     ClassFactory factory = receiver.getInstanceFactory();
     if (factory.hasSlots()) {
       if (factory.hasOnlyImmutableFields()) {

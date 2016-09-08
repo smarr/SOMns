@@ -9,15 +9,12 @@ import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.debug.Debugger;
-import com.oracle.truffle.api.debug.ExecutionEvent;
-import com.oracle.truffle.api.debug.SuspendedEvent;
 import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
 import com.oracle.truffle.api.instrumentation.InstrumentationHandler;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
-import com.oracle.truffle.api.vm.EventConsumer;
 import com.oracle.truffle.api.vm.PolyglotEngine;
 import com.oracle.truffle.api.vm.PolyglotEngine.Builder;
 import com.oracle.truffle.api.vm.PolyglotEngine.Instrument;
@@ -49,12 +46,7 @@ public final class VM {
   @CompilationFinal private static PolyglotEngine engine;
   @CompilationFinal private static VM vm;
   @CompilationFinal private static StructuralProbe structuralProbe;
-  @CompilationFinal private static Debugger    debugger;
   @CompilationFinal private static WebDebugger webDebugger;
-
-  public static Debugger getDebugger() {
-    return debugger;
-  }
 
   public static WebDebugger getWebDebugger() {
     return webDebugger;
@@ -70,10 +62,6 @@ public final class VM {
 
   public Object getExport(final String name) {
     return exports.get(name);
-  }
-
-  public static PolyglotEngine getEngine() {
-    return engine;
   }
 
   /**
@@ -164,12 +152,6 @@ public final class VM {
   public static void reportLoadedSource(final Source source) {
     if (webDebugger != null) {
       webDebugger.reportLoadedSource(source);
-    }
-  }
-
-  public static void reportSuspendedEvent(final SuspendedEvent e) {
-    if (webDebugger != null) {
-      webDebugger.reportSuspendedEvent(e);
     }
   }
 
@@ -290,79 +272,58 @@ public final class VM {
     SimpleREPLClient client = new SimpleREPLClient();
     REPLServer server = new REPLServer(client, builder);
     engine = server.getEngine();
-    debugger = server.getDebugger();
+    Debugger.find(engine);
     server.start();
     client.start(server);
   }
 
-  private static final EventConsumer<ExecutionEvent> onExec =
-      new EventConsumer<ExecutionEvent>(ExecutionEvent.class) {
-    @Override
-    protected void on(final ExecutionEvent event) {
-      webDebugger.reportExecutionEvent(event);
-    }
-  };
-
-  private static final EventConsumer<SuspendedEvent> onHalted =
-      new EventConsumer<SuspendedEvent>(SuspendedEvent.class) {
-    @Override
-    protected void on(final SuspendedEvent e) {
-      webDebugger.reportSuspendedEvent(e);
-    }
-  };
 
   private static void startExecution(final Builder builder,
       final VMOptions vmOptions) {
-    if (vmOptions.webDebuggerEnabled) {
-      builder.onEvent(onExec).onEvent(onHalted);
-    }
     engine = builder.build();
 
-    try {
-      Map<String, Instrument> instruments = engine.getInstruments();
-      Instrument profiler = instruments.get(ProfilerInstrument.ID);
-      if (vmOptions.profilingEnabled && profiler == null) {
-        VM.errorPrintln("Truffle profiler not available. Might be a class path issue");
-      } else if (profiler != null) {
-        profiler.setEnabled(vmOptions.profilingEnabled);
-      }
-      instruments.get(Highlight.ID).setEnabled(vmOptions.highlightingEnabled);
-
-      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-        debugger = Debugger.find(engine);
-      }
-
-      if (vmOptions.webDebuggerEnabled) {
-        assert debugger != null;
-        Instrument webDebuggerInst = instruments.get(WebDebugger.ID);
-        webDebuggerInst.setEnabled(true);
-
-        webDebugger = webDebuggerInst.lookup(WebDebugger.class);
-        webDebugger.startServer(debugger);
-      }
-
-      if (vmOptions.coverageEnabled) {
-        Instrument coveralls = instruments.get(Coverage.ID);
-        coveralls.setEnabled(true);
-        Coverage cov = coveralls.lookup(Coverage.class);
-        cov.setRepoToken(vmOptions.coverallsRepoToken);
-        cov.setServiceName("travis-ci");
-        cov.includeTravisData(true);
-      }
-
-      if (vmOptions.dynamicMetricsEnabled) {
-        assert VmSettings.DYNAMIC_METRICS;
-        Instrument dynM = instruments.get(DynamicMetrics.ID);
-        dynM.setEnabled(true);
-        structuralProbe = dynM.lookup(StructuralProbe.class);
-        assert structuralProbe != null : "Initialization of DynamicMetrics tool incomplete";
-      }
-
-      engine.eval(SomLanguage.START);
-      engine.dispose();
-    } catch (IOException e) {
-      throw new RuntimeException("This should never happen", e);
+    Map<String, Instrument> instruments = engine.getInstruments();
+    Instrument profiler = instruments.get(ProfilerInstrument.ID);
+    if (vmOptions.profilingEnabled && profiler == null) {
+      VM.errorPrintln("Truffle profiler not available. Might be a class path issue");
+    } else if (profiler != null) {
+      profiler.setEnabled(vmOptions.profilingEnabled);
     }
+    instruments.get(Highlight.ID).setEnabled(vmOptions.highlightingEnabled);
+
+    Debugger debugger = null;
+    if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+      debugger = Debugger.find(engine);
+    }
+
+    if (vmOptions.webDebuggerEnabled) {
+      assert VmSettings.TRUFFLE_DEBUGGER_ENABLED && debugger != null;
+      Instrument webDebuggerInst = instruments.get(WebDebugger.ID);
+      webDebuggerInst.setEnabled(true);
+
+      webDebugger = webDebuggerInst.lookup(WebDebugger.class);
+      webDebugger.startServer(debugger);
+    }
+
+    if (vmOptions.coverageEnabled) {
+      Instrument coveralls = instruments.get(Coverage.ID);
+      coveralls.setEnabled(true);
+      Coverage cov = coveralls.lookup(Coverage.class);
+      cov.setRepoToken(vmOptions.coverallsRepoToken);
+      cov.setServiceName("travis-ci");
+      cov.includeTravisData(true);
+    }
+
+    if (vmOptions.dynamicMetricsEnabled) {
+      assert VmSettings.DYNAMIC_METRICS;
+      Instrument dynM = instruments.get(DynamicMetrics.ID);
+      dynM.setEnabled(true);
+      structuralProbe = dynM.lookup(StructuralProbe.class);
+      assert structuralProbe != null : "Initialization of DynamicMetrics tool incomplete";
+    }
+
+    engine.eval(SomLanguage.START);
+    engine.dispose();
     System.exit(vm.lastExitCode);
   }
 

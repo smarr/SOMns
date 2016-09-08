@@ -8,7 +8,6 @@ import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
 import java.util.concurrent.ForkJoinWorkerThread;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.debug.Debugger;
 
 import som.VM;
 import som.VmSettings;
@@ -19,6 +18,7 @@ import som.vmobjects.SObject;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import tools.ObjectBuffer;
 import tools.actors.ActorExecutionTrace;
+import tools.debugger.WebDebugger;
 
 
 /**
@@ -155,9 +155,9 @@ public class Actor {
     @Override
     public void run() {
       ActorProcessingThread t = (ActorProcessingThread) Thread.currentThread();
-      Debugger dbg = null;
+      WebDebugger dbg = null;
       if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-        dbg = VM.getDebugger();
+        dbg = VM.getWebDebugger();
         assert dbg != null;
       }
 
@@ -170,24 +170,18 @@ public class Actor {
       t.currentlyExecutingActor = null;
     }
 
-    private void processCurrentMessages(final ActorProcessingThread currentThread, final Debugger dbg) {
+    private void processCurrentMessages(final ActorProcessingThread currentThread, final WebDebugger dbg) {
       for (EventualMessage msg : current) {
         actor.logMessageBeingExecuted(msg);
         currentThread.currentMessage = msg;
 
         if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-          dbg.executionStarted(-1, msg.getTargetSourceSection().getSource());
-
           if (msg.isBreakpoint()) {
-            dbg.prepareStepUntilRootTag();
+            dbg.prepareSteppingUntilNextRootNode();
           }
         }
 
         msg.execute();
-
-        if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-          dbg.executionEnded();
-        }
       }
       if (VmSettings.ACTOR_TRACING) {
         currentThread.processedMessages.append(current);
