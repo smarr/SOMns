@@ -13,6 +13,9 @@ import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.debug.Breakpoint;
 import com.oracle.truffle.api.debug.Breakpoint.SimpleCondition;
 import com.oracle.truffle.api.debug.Debugger;
+import com.oracle.truffle.api.debug.DebuggerSession;
+import com.oracle.truffle.api.debug.DebuggerSession.SteppingLocation;
+import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.NodeVisitor;
 import com.oracle.truffle.api.nodes.RootNode;
@@ -25,6 +28,8 @@ import tools.debugger.WebDebugger;
 
 
 public class Breakpoints {
+
+  private DebuggerSession debuggerSession;
 
   private final WebDebugger webDebugger;
   private final Map<BreakpointId, Breakpoint> knownBreakpoints;
@@ -39,6 +44,17 @@ public class Breakpoints {
     this.webDebugger = webDebugger;
     this.receiverBreakpoints = new HashMap<>();
     this.receiverBreakpointVersion = Truffle.getRuntime().createAssumption("receiverBreakpointVersion");
+  }
+
+  private void ensureOpenDebuggerSession() {
+    if (debuggerSession == null) {
+      debuggerSession = debugger.startSession(webDebugger);
+    }
+  }
+
+  public void doSuspend(final MaterializedFrame frame, final SteppingLocation steppingLocation) {
+    ensureOpenDebuggerSession();
+    debuggerSession.doSuspend(frame, steppingLocation);
   }
 
   public abstract static class BreakpointId {
@@ -137,8 +153,12 @@ public class Breakpoints {
     Breakpoint bp = knownBreakpoints.get(bId);
 
     if (bp == null) {
+      ensureOpenDebuggerSession();
       WebDebugger.log("LineBreakpoint: " + bId);
-      bp = debugger.setLineBreakpoint(0, sourceUri, line, false);
+      bp = Breakpoint.newBuilder(sourceUri).
+          lineIs(line).
+          build();
+      debuggerSession.install(bp);
       knownBreakpoints.put(bId, bp);
     }
     return bp;
@@ -148,8 +168,14 @@ public class Breakpoints {
     BreakpointId bId = new SectionBreakpoint(sourceUri, startLine, startColumn, charLength);
     Breakpoint bp = knownBreakpoints.get(bId);
     if (bp == null) {
+      ensureOpenDebuggerSession();
       WebDebugger.log("SetSectionBreakpoint: " + bId);
-      bp = debugger.setSourceSectionBreakpoint(0, sourceUri, startLine, startColumn, charLength, false);
+      bp = Breakpoint.newBuilder(sourceUri).
+          lineIs(startLine).
+          columnIs(startColumn).
+          sectionLength(charLength).
+          build();
+      debuggerSession.install(bp);
       knownBreakpoints.put(bId, bp);
     }
     return bp;
@@ -208,7 +234,10 @@ public class Breakpoints {
           ExpressionNode rootExpression = finder.getResult();
           assert rootExpression.getSourceSection() != null;
 
-          bp = debugger.setSourceSectionBreakpoint(0, rootExpression.getSourceSection(), false);
+          ensureOpenDebuggerSession();
+          bp = Breakpoint.newBuilder(rootExpression.getSourceSection()).
+              build();
+          debuggerSession.install(bp);
           bp.setCondition(BreakWhenActivatedByAsyncMessage.INSTANCE);
           knownBreakpoints.put(bId, bp);
         }
