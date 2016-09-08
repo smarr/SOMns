@@ -46,12 +46,7 @@ public final class VM {
   @CompilationFinal private static PolyglotEngine engine;
   @CompilationFinal private static VM vm;
   @CompilationFinal private static StructuralProbe structuralProbe;
-  @CompilationFinal private static Debugger    debugger;
   @CompilationFinal private static WebDebugger webDebugger;
-
-  public static Debugger getDebugger() {
-    return debugger;
-  }
 
   public static WebDebugger getWebDebugger() {
     return webDebugger;
@@ -67,10 +62,6 @@ public final class VM {
 
   public Object getExport(final String name) {
     return exports.get(name);
-  }
-
-  public static PolyglotEngine getEngine() {
-    return engine;
   }
 
   /**
@@ -281,7 +272,7 @@ public final class VM {
     SimpleREPLClient client = new SimpleREPLClient();
     REPLServer server = new REPLServer(client, builder);
     engine = server.getEngine();
-    debugger = server.getDebugger();
+    Debugger.find(engine);
     server.start();
     client.start(server);
   }
@@ -300,12 +291,13 @@ public final class VM {
     }
     instruments.get(Highlight.ID).setEnabled(vmOptions.highlightingEnabled);
 
+    Debugger debugger = null;
     if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
       debugger = Debugger.find(engine);
     }
 
     if (vmOptions.webDebuggerEnabled) {
-      assert debugger != null;
+      assert VmSettings.TRUFFLE_DEBUGGER_ENABLED && debugger != null;
       Instrument webDebuggerInst = instruments.get(WebDebugger.ID);
       webDebuggerInst.setEnabled(true);
 

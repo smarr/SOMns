@@ -8,7 +8,6 @@ import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
 import java.util.concurrent.ForkJoinWorkerThread;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.debug.Debugger;
 
 import som.VM;
 import som.VmSettings;
@@ -157,7 +156,6 @@ public class Actor {
       ActorProcessingThread t = (ActorProcessingThread) Thread.currentThread();
       Debugger dbg = null;
       if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-        dbg = VM.getDebugger();
         assert dbg != null;
       }
 
@@ -176,18 +174,11 @@ public class Actor {
         currentThread.currentMessage = msg;
 
         if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-          dbg.executionStarted(-1, msg.getTargetSourceSection().getSource());
-
           if (msg.isBreakpoint()) {
-            dbg.prepareStepUntilRootTag();
           }
         }
 
         msg.execute();
-
-        if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-          dbg.executionEnded();
-        }
       }
       if (VmSettings.ACTOR_TRACING) {
         currentThread.processedMessages.append(current);
