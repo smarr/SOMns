@@ -105,6 +105,16 @@ public class TruffleSomTCK extends TruffleTCK {
   }
 
   @Override
+  protected String objectWithElement() {
+    return "objectWithElement";
+  }
+
+  @Override
+  protected String functionAddNumbers() {
+    return "functionAddNumbers";
+  }
+
+  @Override
   protected String complexAdd() {
     return "complexAdd";
   }
