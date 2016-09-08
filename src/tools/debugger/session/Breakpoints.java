@@ -57,6 +57,11 @@ public class Breakpoints {
     debuggerSession.doSuspend(frame, steppingLocation);
   }
 
+  public void prepareSteppingUntilNextRootNode() {
+    ensureOpenDebuggerSession();
+    debuggerSession.prepareSteppingUntilNextRootNode();
+  }
+
   public abstract static class BreakpointId {
 
   }

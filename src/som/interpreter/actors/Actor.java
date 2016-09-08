@@ -18,6 +18,7 @@ import som.vmobjects.SObject;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import tools.ObjectBuffer;
 import tools.actors.ActorExecutionTrace;
+import tools.debugger.WebDebugger;
 
 
 /**
@@ -154,8 +155,9 @@ public class Actor {
     @Override
     public void run() {
       ActorProcessingThread t = (ActorProcessingThread) Thread.currentThread();
-      Debugger dbg = null;
+      WebDebugger dbg = null;
       if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+        dbg = VM.getWebDebugger();
         assert dbg != null;
       }
 
@@ -168,13 +170,14 @@ public class Actor {
       t.currentlyExecutingActor = null;
     }
 
-    private void processCurrentMessages(final ActorProcessingThread currentThread, final Debugger dbg) {
+    private void processCurrentMessages(final ActorProcessingThread currentThread, final WebDebugger dbg) {
       for (EventualMessage msg : current) {
         actor.logMessageBeingExecuted(msg);
         currentThread.currentMessage = msg;
 
         if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
           if (msg.isBreakpoint()) {
+            dbg.prepareSteppingUntilNextRootNode();
           }
         }
 

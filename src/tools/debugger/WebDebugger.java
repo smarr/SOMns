@@ -83,6 +83,10 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
     return "se-" + id;
   }
 
+  public void prepareSteppingUntilNextRootNode() {
+    breakpoints.prepareSteppingUntilNextRootNode();
+  }
+
   @Override
   public void onSuspend(final SuspendedEvent e) {
     // TODO: I need to capture the stack here, to make sure it is accessible
