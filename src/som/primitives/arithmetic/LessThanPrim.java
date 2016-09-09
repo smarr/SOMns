@@ -16,7 +16,6 @@ import som.primitives.Primitive;
 @Primitive(selector = "<")
 public abstract class LessThanPrim extends ComparisonPrim {
   protected LessThanPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
-  protected LessThanPrim(final SourceSection source) { super(false, source); }
 
   @Specialization
   public final boolean doLong(final long left, final long right) {

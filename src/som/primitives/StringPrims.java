@@ -21,7 +21,7 @@ public class StringPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "string:concat:")
   public abstract static class ConcatPrim extends BinaryComplexOperation {
-    protected ConcatPrim(final SourceSection source) { super(false, source); }
+    protected ConcatPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
 
     @Override
     protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
@@ -56,7 +56,7 @@ public class StringPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "stringAsSymbol:")
   public abstract static class AsSymbolPrim extends UnaryBasicOperation {
-    public AsSymbolPrim(final SourceSection source) { super(false, source); }
+    public AsSymbolPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
 
     @Override
     protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
@@ -83,7 +83,6 @@ public class StringPrims {
              selector = "substringFrom:to:", receiverType = String.class)
   public abstract static class SubstringPrim extends TernaryExpressionNode {
     public SubstringPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
-    public SubstringPrim(final SourceSection source) { super(false, source); }
 
     private final BranchProfile invalidArgs = BranchProfile.create();
 
@@ -133,7 +132,6 @@ public class StringPrims {
   @Primitive(primitive = "string:charAt:", selector = "charAt:", receiverType = String.class)
   public abstract static class CharAtPrim extends BinaryExpressionNode {
     public CharAtPrim(final boolean eagerWrap, final SourceSection source) { super(eagerWrap, source); }
-    public CharAtPrim(final SourceSection source) { super(false, source); }
 
     private final BranchProfile invalidArgs = BranchProfile.create();
 

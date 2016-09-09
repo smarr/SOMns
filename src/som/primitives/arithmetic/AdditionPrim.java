@@ -19,7 +19,6 @@ import som.vmobjects.SSymbol;
 @Primitive(selector = "+")
 public abstract class AdditionPrim extends ArithmeticPrim {
   protected AdditionPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
-  protected AdditionPrim(final SourceSection source) { super(false, source); }
 
   @Specialization(rewriteOn = ArithmeticException.class)
   public final long doLong(final long left, final long argument) {

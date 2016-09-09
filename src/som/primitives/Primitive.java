@@ -6,6 +6,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import com.oracle.truffle.api.dsl.NodeFactory;
+import com.oracle.truffle.api.dsl.internal.NodeFactoryBase;
+
 import som.vm.Primitives.Specializer;
 
 
@@ -16,18 +19,29 @@ public @interface Primitive {
 
   /** Name of the selector, for which the primitive is to be installed. */
   String primitive() default "";
-  // TODO: additional hints for instantiation
 
   /** Selector for eager replacement. */
   String selector() default "";
 
-  /** Expected type of receiver for eager replacement. */
+  /**
+   * Expected type of receiver for eager replacement,
+   * if given one of the types needs to match.
+   */
   Class<?>[] receiverType() default {};
 
   /**
    * The specializer is used to check when eager specialization is to be
-   * applied and to construct the node. */
+   * applied and to construct the node.
+   */
+  @SuppressWarnings("rawtypes")
   Class<? extends Specializer> specializer() default Specializer.class;
+
+  /** A factory for an extra child node that is passed as last argument. */
+  @SuppressWarnings("rawtypes")
+  Class<? extends NodeFactory> extraChild() default NodeFactoryBase.class;
+
+  /** Pass array of evaluated arguments to node constructor. */
+  boolean requiresArguments() default false;
 
   /** Disabled for Dynamic Metrics. */
   boolean disabled() default false;

@@ -18,7 +18,6 @@ public abstract class AtPrim extends BinaryBasicOperation {
   private final ValueProfile storageType = ValueProfile.createClassProfile();
 
   protected AtPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
-  protected AtPrim(final SourceSection source) { super(false, source); }
 
   @Override
   protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {

@@ -1,6 +1,7 @@
 package som.primitives;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
+import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -20,7 +21,6 @@ public abstract class DoublePrims  {
              receiverType = Double.class)
   public abstract static class RoundPrim extends UnaryBasicOperation {
     public RoundPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
-    public RoundPrim(final SourceSection source) { super(false, source); }
 
     @Override
     protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
@@ -42,7 +42,6 @@ public abstract class DoublePrims  {
              receiverType = Double.class)
   public abstract static class AsIntPrim extends UnaryBasicOperation {
     public AsIntPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
-    public AsIntPrim(final SourceSection source) { super(false, source); }
 
     @Override
     protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
@@ -59,10 +58,12 @@ public abstract class DoublePrims  {
     }
   }
 
-  public static class IsDoubleClass extends Specializer {
+  public static class IsDoubleClass extends Specializer<ExpressionNode> {
+    public IsDoubleClass(final Primitive prim, final NodeFactory<ExpressionNode> fact) { super(prim, fact); }
+
     @Override
-    public boolean matches(final Primitive prim, final Object receiver, ExpressionNode[] args) {
-      return receiver == Classes.doubleClass;
+    public boolean matches(final Object[] args, final ExpressionNode[] argNodess) {
+      return args[0] == Classes.doubleClass;
     }
   }
 
@@ -72,7 +73,6 @@ public abstract class DoublePrims  {
              specializer = IsDoubleClass.class)
   public abstract static class PositiveInfinityPrim extends UnaryExpressionNode {
     public PositiveInfinityPrim(final boolean eagerWrapper, final SourceSection source) { super(eagerWrapper, source); }
-    public PositiveInfinityPrim(final SourceSection source) { super(false, source); }
 
     @Override
     protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {

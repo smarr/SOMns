@@ -2,6 +2,7 @@ package som.primitives.arrays;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
+import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
@@ -26,18 +27,19 @@ import som.vmobjects.SClass;
 @Primitive(selector = "new:withAll:",
            specializer = NewImmutableArrayNode.IsValueArrayClass.class)
 public abstract class NewImmutableArrayNode extends TernaryExpressionNode {
-  public static class IsValueArrayClass extends Specializer {
+  public static class IsValueArrayClass extends Specializer<NewImmutableArrayNode> {
+    public IsValueArrayClass(final Primitive prim, final NodeFactory<NewImmutableArrayNode> fact) { super(prim, fact); }
+
     @Override
-    public boolean matches(final Primitive prim, final Object receiver, ExpressionNode[] args) {
-      return !VmSettings.DYNAMIC_METRICS && receiver == Classes.valueArrayClass;
+    public boolean matches(final Object[] args, final ExpressionNode[] argNodes) {
+      return !VmSettings.DYNAMIC_METRICS && args[0] == Classes.valueArrayClass;
     }
   }
 
   public NewImmutableArrayNode(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
-  public NewImmutableArrayNode(final SourceSection source) { super(false, source); }
 
   @Child protected BlockDispatchNode block = BlockDispatchNodeGen.create();
-  @Child protected IsValue isValue = IsValueFactory.create(null, null);
+  @Child protected IsValue isValue = IsValueFactory.create(false, null, null);
 
   public static boolean isValueArrayClass(final SClass valueArrayClass) {
     return Classes.valueArrayClass == valueArrayClass;

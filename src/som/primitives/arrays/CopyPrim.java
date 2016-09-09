@@ -15,7 +15,6 @@ import som.vmobjects.SArray.SMutableArray;
 @Primitive(selector = "copy", receiverType = SArray.class, disabled = true)
 public abstract class CopyPrim extends UnaryExpressionNode {
   public CopyPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
-  public CopyPrim(final SourceSection source) { super(false, source); }
 
   private final ValueProfile storageType = ValueProfile.createClassProfile();
 

@@ -16,7 +16,7 @@ import som.vmobjects.SSymbol;
 @Primitive(primitive = "intAsString:")
 @Primitive(primitive = "doubleAsString:")
 public abstract class AsStringPrim extends UnaryBasicOperation {
-  public AsStringPrim(final SourceSection source) { super(false, source); }
+  public AsStringPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
 
   // TODO: assign a tag
 

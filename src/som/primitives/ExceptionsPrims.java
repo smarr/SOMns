@@ -36,7 +36,7 @@ public abstract class ExceptionsPrims {
           block.getMethod().getCallTarget());
     }
 
-    public ExceptionDoOnPrim(final SourceSection source) { super(false, source); }
+    public ExceptionDoOnPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
 
     public static final boolean sameBlock(final SBlock block, final SInvokable method) {
       return block.getMethod() == method;
@@ -82,7 +82,7 @@ public abstract class ExceptionsPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "signalException:")
   public abstract static class SignalPrim extends UnaryExpressionNode {
-    public SignalPrim(final SourceSection source) { super(false, source); }
+    public SignalPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
 
     @Specialization
     public final Object doSignal(final SAbstractObject exceptionObject) {
@@ -97,7 +97,7 @@ public abstract class ExceptionsPrims {
     @Child protected BlockDispatchNode dispatchBody    = BlockDispatchNodeGen.create();
     @Child protected BlockDispatchNode dispatchHandler = BlockDispatchNodeGen.create();
 
-    protected EnsurePrim(final SourceSection source) { super(false, source); }
+    protected EnsurePrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
 
     @Specialization
     public final Object doException(final VirtualFrame frame, final SBlock body,

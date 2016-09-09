@@ -13,7 +13,6 @@ import som.primitives.Primitive;
 @Primitive(primitive = "int:reminder:", selector = "rem:")
 public abstract class RemainderPrim extends ArithmeticPrim {
   protected RemainderPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
-  protected RemainderPrim(final SourceSection source) { super(false, source); }
 
   @Specialization
   public final double doDouble(final double left, final double right) {

@@ -14,7 +14,7 @@ public abstract class ObjectSystemPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "kernelObject:")
   public abstract static class KernelObjectPrim extends UnaryExpressionNode {
-    public KernelObjectPrim(final SourceSection source) { super(false, source); }
+    public KernelObjectPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
 
     @Specialization
     public final SObject getKernel(final Object self) {

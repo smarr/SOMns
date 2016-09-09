@@ -41,7 +41,7 @@ public final class ObjectPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "objClassName:")
   public abstract static class ObjectClassNamePrim extends UnaryExpressionNode {
-    public ObjectClassNamePrim(final SourceSection source) { super(false, source); }
+    public ObjectClassNamePrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
 
     @Specialization
     public final SSymbol getName(final Object obj) {
@@ -53,7 +53,7 @@ public final class ObjectPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "halt:")
   public abstract static class HaltPrim extends UnaryExpressionNode {
-    public HaltPrim(final SourceSection source) { super(false, source); }
+    public HaltPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
 
     @Specialization
     public final Object doSAbstractObject(final Object receiver) {
@@ -90,7 +90,7 @@ public final class ObjectPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "objClass:")
   public abstract static class ClassPrim extends UnaryExpressionNode {
-    public ClassPrim(final SourceSection source) { super(false, source); }
+    public ClassPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
 
     @Specialization
     public final SClass doSAbstractObject(final SAbstractObject receiver) {
@@ -107,8 +107,7 @@ public final class ObjectPrims {
   @GenerateNodeFactory
   @Primitive(selector = "isNil", noWrapper = true)
   public abstract static class IsNilNode extends UnaryBasicOperation {
-    public IsNilNode(final boolean eagerWrapper, final SourceSection source) { super(eagerWrapper, source); }
-    public IsNilNode(final SourceSection source) { super(false, source); }
+    public IsNilNode(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
 
     @Override
     protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
@@ -128,8 +127,7 @@ public final class ObjectPrims {
   @GenerateNodeFactory
   @Primitive(selector = "notNil", noWrapper = true)
   public abstract static class NotNilNode extends UnaryBasicOperation {
-    public NotNilNode(final boolean eagerWrapper, final SourceSection source) { super(eagerWrapper, source); }
-    public NotNilNode(final SourceSection source) { super(false, source); }
+    public NotNilNode(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
 
     @Override
     protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
@@ -154,12 +152,13 @@ public final class ObjectPrims {
   @ImportStatic(Nil.class)
   @Instrumentable(factory = IsValueWrapper.class)
   public abstract static class IsValue extends UnaryExpressionNode {
-    public IsValue(final SourceSection source) { super(false, source); }
+    public IsValue(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+    public IsValue(final IsValue node) { super(node); }
 
     public abstract boolean executeEvaluated(Object rcvr);
 
     public static IsValue createSubNode() {
-      return IsValueFactory.create(null, null);
+      return IsValueFactory.create(false, null, null);
     }
 
     @Specialization

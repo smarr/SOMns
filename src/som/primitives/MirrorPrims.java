@@ -29,7 +29,7 @@ public abstract class MirrorPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "objNestedClasses:")
   public abstract static class NestedClassesPrim extends UnaryExpressionNode {
-    public NestedClassesPrim(final SourceSection source) { super(false, source); }
+    public NestedClassesPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
 
     @Specialization
     public final SMutableArray getNestedClasses(final SObjectWithClass rcvr) {
@@ -41,7 +41,7 @@ public abstract class MirrorPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "obj:respondsTo:")
   public abstract static class RespondsToPrim extends BinaryComplexOperation {
-    protected RespondsToPrim(final SourceSection source) { super(false, source); }
+    protected RespondsToPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
 
     @Specialization
     public final boolean objectResondsTo(final Object rcvr, final SSymbol selector) {
@@ -53,7 +53,7 @@ public abstract class MirrorPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "objMethods:")
   public abstract static class MethodsPrim extends UnaryExpressionNode {
-    public MethodsPrim(final SourceSection source) { super(false, source); }
+    public MethodsPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
 
     @Specialization
     public final SImmutableArray getMethod(final Object rcvr) {
@@ -67,8 +67,8 @@ public abstract class MirrorPrims {
   @Primitive(primitive = "obj:perform:")
   public abstract static class PerformPrim extends BinaryComplexOperation {
     @Child protected AbstractSymbolDispatch dispatch;
-    public PerformPrim(final SourceSection source) {
-      super(false, source);
+    public PerformPrim(final boolean eagWrap, final SourceSection source) {
+      super(eagWrap, source);
       dispatch = AbstractSymbolDispatchNodeGen.create(source);
     }
 
@@ -82,7 +82,7 @@ public abstract class MirrorPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "classDefinition:")
   public abstract static class ClassDefinitionPrim extends UnaryExpressionNode {
-    public ClassDefinitionPrim(final SourceSection source) { super(false, source); }
+    public ClassDefinitionPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
 
     @Specialization
     public final Object getClassDefinition(final SClass rcvr) {
@@ -93,7 +93,7 @@ public abstract class MirrorPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "classDefNestedClassDefinitions:")
   public abstract static class NestedClassDefinitionsPrim extends UnaryExpressionNode {
-    public NestedClassDefinitionsPrim(final SourceSection source) { super(false, source); }
+    public NestedClassDefinitionsPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
 
     @Specialization
     public final Object getClassDefinition(final Object mixinHandle) {
@@ -107,7 +107,7 @@ public abstract class MirrorPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "classDefName:")
   public abstract static class ClassDefNamePrim extends UnaryExpressionNode {
-    public ClassDefNamePrim(final SourceSection source) { super(false, source); }
+    public ClassDefNamePrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
 
     @Specialization
     public final SSymbol getName(final Object mixinHandle) {
@@ -120,7 +120,7 @@ public abstract class MirrorPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "classDefMethods:")
   public abstract static class ClassDefMethodsPrim extends UnaryExpressionNode {
-    public ClassDefMethodsPrim(final SourceSection source) { super(false, source); }
+    public ClassDefMethodsPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
 
     @Specialization
     public final SImmutableArray getName(final Object mixinHandle) {
@@ -141,7 +141,7 @@ public abstract class MirrorPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "classDef:hasFactoryMethod:")
   public abstract static class ClassDefHasFactoryMethodPrim extends BinaryComplexOperation {
-    protected ClassDefHasFactoryMethodPrim(final SourceSection source) { super(false, source); }
+    protected ClassDefHasFactoryMethodPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
 
     @Specialization
     public final boolean hasFactoryMethod(final Object mixinHandle,

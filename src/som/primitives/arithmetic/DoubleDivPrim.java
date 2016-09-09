@@ -18,7 +18,6 @@ import som.vmobjects.SAbstractObject;
 @Primitive(selector = "//")
 public abstract class DoubleDivPrim extends ArithmeticPrim {
   protected DoubleDivPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
-  protected DoubleDivPrim(final SourceSection source) { super(false, source); }
 
   @Specialization
   public final double doDouble(final double left, final double right) {

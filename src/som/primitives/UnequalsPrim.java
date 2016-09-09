@@ -14,12 +14,11 @@ import som.vmobjects.SSymbol;
 
 @GenerateNodeFactory
 @ImportStatic(Nil.class)
-@Primitive(selector = "<>")
+//@Primitive(selector = "<>")
 // TODO: this primitive is somehow not correct, needs debugging. Not sure it is fixable
 // perhaps, i is ok to remove certain specializations
 public abstract class UnequalsPrim extends ComparisonPrim {
   protected UnequalsPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
-  protected UnequalsPrim(final SourceSection source) { super(false, source); }
 
   @Specialization
   public final boolean doBoolean(final boolean left, final boolean right) {

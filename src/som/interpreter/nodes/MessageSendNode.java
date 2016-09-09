@@ -13,7 +13,6 @@ import com.oracle.truffle.api.nodes.NodeCost;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
-import som.VmSettings;
 import som.compiler.AccessModifier;
 import som.instrumentation.MessageSendNodeWrapper;
 import som.interpreter.TruffleCompiler;
@@ -21,22 +20,12 @@ import som.interpreter.nodes.dispatch.AbstractDispatchNode;
 import som.interpreter.nodes.dispatch.DispatchChain.Cost;
 import som.interpreter.nodes.dispatch.GenericDispatchNode;
 import som.interpreter.nodes.dispatch.UninitializedDispatchNode;
-import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.nary.EagerlySpecializableNode;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
-import som.interpreter.nodes.specialized.AndMessageNodeFactory;
-import som.interpreter.nodes.specialized.AndMessageNodeFactory.AndBoolMessageNodeFactory;
-import som.interpreter.nodes.specialized.IfTrueIfFalseMessageNodeGen;
-import som.interpreter.nodes.specialized.IntDownToDoMessageNodeGen;
-import som.interpreter.nodes.specialized.IntToDoMessageNodeGen;
-import som.interpreter.nodes.specialized.OrMessageNodeGen;
-import som.interpreter.nodes.specialized.OrMessageNodeGen.OrBoolMessageNodeGen;
 import som.interpreter.nodes.specialized.whileloops.WhileWithDynamicBlocksNode;
-import som.primitives.MethodPrimsFactory.InvokeOnPrimFactory;
-import som.primitives.arrays.ToArgumentsArrayNodeGen;
 import som.vm.NotYetImplementedException;
 import som.vm.Primitives;
-import som.vm.Primitives.PrimAndFact;
+import som.vm.Primitives.Specializer;
 import som.vmobjects.SBlock;
 import som.vmobjects.SSymbol;
 import tools.dym.Tags.VirtualInvoke;
@@ -161,12 +150,12 @@ public final class MessageSendNode {
 
       Primitives prims = VM.getVM().getPrimitives();
 
-      Object receiver = arguments[0];
-      PrimAndFact prim = prims.getFactoryForEagerSpecialization(selector, receiver, argumentNodes);
+      Specializer<EagerlySpecializableNode> specializer = prims.getEagerSpecializer(selector,
+          arguments, argumentNodes);
 
-      if (prim != null) {
-        EagerlySpecializableNode newNode = prim.createNode(arguments, argumentNodes, getSourceSection());
-        if (prim.noWrapper()) {
+      if (specializer != null) {
+        EagerlySpecializableNode newNode = specializer.create(arguments, argumentNodes, getSourceSection(), !specializer.noWrapper());
+        if (specializer.noWrapper()) {
           return replace(newNode);
         } else {
           return makeEagerPrim(newNode);
@@ -221,73 +210,12 @@ public final class MessageSendNode {
 
     protected PreevaluatedExpression specializeBinary(final Object[] arguments) {
       switch (selector.getString()) {
-        case "and:":
-        case "&&":
-          if (arguments[0] instanceof Boolean) {
-            if (unwrapIfNecessary(argumentNodes[1]) instanceof BlockNode) {
-              return replace(AndMessageNodeFactory.create((SBlock) arguments[1],
-                  getSourceSection(), argumentNodes[0], argumentNodes[1]));
-            } else if (arguments[1] instanceof Boolean) {
-              return replace(AndBoolMessageNodeFactory.create(getSourceSection(),
-                  argumentNodes[0], argumentNodes[1]));
-            }
-          }
-          break;
-        case "or:":
-        case "||":
-          if (arguments[0] instanceof Boolean) {
-            if (unwrapIfNecessary(argumentNodes[1]) instanceof BlockNode) {
-              return replace(OrMessageNodeGen.create((SBlock) arguments[1],
-                  getSourceSection(),
-                  argumentNodes[0], argumentNodes[1]));
-            } else if (arguments[1] instanceof Boolean) {
-              return replace(OrBoolMessageNodeGen.create(
-                  getSourceSection(),
-                  argumentNodes[0], argumentNodes[1]));
-            }
-          }
-          break;
-// TODO: this is not a correct primitive, new an UnequalsUnequalsPrim...
-//        case "~=":
-//          return replace(new EagerBinaryPrimitiveNode(selector, argumentNodes[0],
-//              argumentNodes[1],
-//              UnequalsPrimFactory.create(null, null)));
-
       }
       return makeSend();
     }
 
     protected PreevaluatedExpression specializeTernary(final Object[] arguments) {
       switch (selector.getString()) {
-        case "ifTrue:ifFalse:":
-          return replace(IfTrueIfFalseMessageNodeGen.create(getSourceSection(),
-              arguments[0], arguments[1], arguments[2], argumentNodes[0],
-              argumentNodes[1], argumentNodes[2]));
-        case "to:do:":
-          if (!VmSettings.DYNAMIC_METRICS &&
-              arguments[0] instanceof Long &&
-              (arguments[1] instanceof Long ||
-                  arguments[1] instanceof Double) &&
-              arguments[2] instanceof SBlock) {
-            return replace(IntToDoMessageNodeGen.create(getSourceSection(),
-                argumentNodes[0], argumentNodes[1], argumentNodes[2]));
-          }
-          break;
-        case "downTo:do:":
-          if (!VmSettings.DYNAMIC_METRICS &&
-              arguments[0] instanceof Long &&
-              (arguments[1] instanceof Long ||
-                  arguments[1] instanceof Double) &&
-              arguments[2] instanceof SBlock) {
-            return replace(IntDownToDoMessageNodeGen.create(this,
-                (SBlock) arguments[2], argumentNodes[0], argumentNodes[1],
-                argumentNodes[2]));
-          }
-          break;
-        case "invokeOn:with:":
-          return replace(InvokeOnPrimFactory.create(getSourceSection(),
-              argumentNodes[0], argumentNodes[1], argumentNodes[2],
-              ToArgumentsArrayNodeGen.create(null, null)));
       }
       return makeSend();
     }

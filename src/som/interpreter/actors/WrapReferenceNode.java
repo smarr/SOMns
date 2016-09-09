@@ -1,12 +1,12 @@
 package som.interpreter.actors;
 
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.nodes.Node;
+
 import som.primitives.ObjectPrims.IsValue;
 import som.primitives.ObjectPrimsFactory.IsValueFactory;
 import som.vmobjects.SArray.STransferArray;
 import som.vmobjects.SObject;
-
-import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.nodes.Node;
 
 
 public abstract class WrapReferenceNode extends Node {
@@ -42,7 +42,7 @@ public abstract class WrapReferenceNode extends Node {
     return !(obj instanceof SFarReference) && !(obj instanceof SPromise);
   }
 
-  @Child protected IsValue isValue = IsValueFactory.create(null, null);
+  @Child protected IsValue isValue = IsValueFactory.create(false, null, null);
 
   protected final boolean isValue(final Object obj) {
     return isValue.executeEvaluated(obj);

@@ -26,7 +26,6 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
   private final ValueProfile storageType = ValueProfile.createClassProfile();
 
   protected AtPutPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
-  protected AtPutPrim(final SourceSection source) { super(false, source); }
 
   @Override
   protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {

@@ -1,6 +1,7 @@
 package som.primitives.arrays;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
+import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -20,15 +21,16 @@ import tools.dym.Tags.NewArray;
 @Primitive(primitive = "array:new:", selector = "new:",
            specializer = NewPrim.IsArrayClass.class)
 public abstract class NewPrim extends BinaryExpressionNode {
-  public static class IsArrayClass extends Specializer {
+  public static class IsArrayClass extends Specializer<NewPrim> {
+    public IsArrayClass(final Primitive prim, final NodeFactory<NewPrim> fact) { super(prim, fact); }
+
     @Override
-    public boolean matches(final Primitive prim, final Object rcvr, ExpressionNode[] args) {
-      return rcvr instanceof SClass && ((SClass) rcvr).isArray();
+    public boolean matches(final Object[] args, final ExpressionNode[] argNodes) {
+      return args[0] instanceof SClass && ((SClass) args[0]).isArray();
     }
   }
 
   public NewPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
-  public NewPrim(final SourceSection source) { super(false, source); }
 
   @Override
   protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {

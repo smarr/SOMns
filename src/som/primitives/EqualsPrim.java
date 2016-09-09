@@ -23,7 +23,6 @@ import som.vmobjects.SSymbol;
 @Primitive(selector = "=")
 public abstract class EqualsPrim extends ComparisonPrim {
   protected EqualsPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
-  protected EqualsPrim(final SourceSection source) { super(false, source); }
 
   @Specialization
   public final boolean doBoolean(final boolean left, final boolean right) {

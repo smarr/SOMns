@@ -20,39 +20,43 @@ import som.vmobjects.SBlock;
 @Primitive(selector = "whileTrue:",  noWrapper = true, specializer = WhileTrueSplzr.class)
 @Primitive(selector = "whileFalse:", noWrapper = true, specializer = WhileFalseSplzr.class)
 public final class WhileWithStaticBlocksNode extends AbstractWhileNode {
-  public abstract static class WhileSplzr extends Specializer {
+  public abstract static class WhileSplzr extends Specializer<WhileWithStaticBlocksNode> {
     private final boolean whileTrueOrFalse;
-    protected WhileSplzr(final boolean whileTrueOrFalse) {
+    protected WhileSplzr(final Primitive prim,
+        final NodeFactory<WhileWithStaticBlocksNode> fact,
+        final boolean whileTrueOrFalse) {
+      super(prim, fact);
       this.whileTrueOrFalse = whileTrueOrFalse;
     }
 
     @Override
-    public boolean matches(final Primitive prim, final Object receiver,
-        final ExpressionNode[] args) {
-      return unwrapIfNecessary(args[1]) instanceof BlockNode &&
-          unwrapIfNecessary(args[0]) instanceof BlockNode;
+    public boolean matches(final Object[] args,
+        final ExpressionNode[] argNodes) {
+      return unwrapIfNecessary(argNodes[1]) instanceof BlockNode &&
+          unwrapIfNecessary(argNodes[0]) instanceof BlockNode;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public <T> T create(final NodeFactory<T> factory, final Object[] arguments,
+    public WhileWithStaticBlocksNode create(final Object[] arguments,
         final ExpressionNode[] argNodes, final SourceSection section,
         final boolean eagerWrapper) {
       assert !eagerWrapper;
       BlockNode argBlockNode = (BlockNode) unwrapIfNecessary(argNodes[1]);
       SBlock    argBlock     = (SBlock)    arguments[1];
-      return (T) new WhileWithStaticBlocksNode(
+      return new WhileWithStaticBlocksNode(
           (BlockNode) unwrapIfNecessary(argNodes[0]), argBlockNode,
           (SBlock) arguments[0], argBlock, whileTrueOrFalse, section);
     }
   }
 
   public static final class WhileTrueSplzr extends WhileSplzr {
-    public WhileTrueSplzr() { super(true); }
+    public WhileTrueSplzr(final Primitive prim,
+        final NodeFactory<WhileWithStaticBlocksNode> fact) { super(prim, fact, true); }
   }
 
   public static final class WhileFalseSplzr extends WhileSplzr {
-    public WhileFalseSplzr() { super(false); }
+    public WhileFalseSplzr(final Primitive prim,
+        final NodeFactory<WhileWithStaticBlocksNode> fact) { super(prim, fact, false); }
   }
 
   @Child protected BlockNode receiver;
