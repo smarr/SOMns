@@ -22,11 +22,9 @@ import som.interpreter.nodes.dispatch.GenericDispatchNode;
 import som.interpreter.nodes.dispatch.UninitializedDispatchNode;
 import som.interpreter.nodes.nary.EagerlySpecializableNode;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
-import som.interpreter.nodes.specialized.whileloops.WhileWithDynamicBlocksNode;
 import som.vm.NotYetImplementedException;
 import som.vm.Primitives;
 import som.vm.Primitives.Specializer;
-import som.vmobjects.SBlock;
 import som.vmobjects.SSymbol;
 import tools.dym.Tags.VirtualInvoke;
 
@@ -161,13 +159,6 @@ public final class MessageSendNode {
           return makeEagerPrim(newNode);
         }
       }
-
-      // let's organize the specializations by number of arguments
-      // perhaps not the best, but simple
-      switch (argumentNodes.length) {
-        case  2: return specializeBinary(arguments);
-        case  3: return specializeTernary(arguments);
-      }
       return makeSend();
     }
 
@@ -206,18 +197,6 @@ public final class MessageSendNode {
       }
 
       return result;
-    }
-
-    protected PreevaluatedExpression specializeBinary(final Object[] arguments) {
-      switch (selector.getString()) {
-      }
-      return makeSend();
-    }
-
-    protected PreevaluatedExpression specializeTernary(final Object[] arguments) {
-      switch (selector.getString()) {
-      }
-      return makeSend();
     }
   }
 
@@ -307,29 +286,6 @@ public final class MessageSendNode {
     protected PreevaluatedExpression makeSpecialSend() {
       // should never be reached with isSuperSend() returning always false
       throw new RuntimeException("A symbol send should never be a special send.");
-    }
-
-    @Override
-    protected PreevaluatedExpression specializeBinary(final Object[] arguments) {
-      switch (selector.getString()) {
-        case "whileTrue:": {
-          if (arguments[1] instanceof SBlock && arguments[0] instanceof SBlock) {
-            SBlock argBlock = (SBlock) arguments[1];
-            return replace(new WhileWithDynamicBlocksNode((SBlock) arguments[0],
-                argBlock, true, getSourceSection()));
-          }
-          break;
-        }
-        case "whileFalse:":
-          if (arguments[1] instanceof SBlock && arguments[0] instanceof SBlock) {
-            SBlock    argBlock     = (SBlock)    arguments[1];
-            return replace(new WhileWithDynamicBlocksNode(
-                (SBlock) arguments[0], argBlock, false, getSourceSection()));
-          }
-          break; // use normal send
-      }
-
-      return super.specializeBinary(arguments);
     }
   }
 
