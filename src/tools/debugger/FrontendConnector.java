@@ -24,6 +24,7 @@ import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.api.utilities.JSONHelper.JSONObjectBuilder;
 import com.sun.net.httpserver.HttpServer;
 
+import som.VmSettings;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.Actor.Role;
 import som.interpreter.actors.EventualMessage;
@@ -194,6 +195,10 @@ public class FrontendConnector {
   }
 
   public void sendActorHistory() {
+    if (!VmSettings.ACTOR_TRACING) {
+      return;
+    }
+
     ensureConnectionIsAvailable();
 
     log("[ACTORS] send message history");
