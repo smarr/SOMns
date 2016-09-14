@@ -10,14 +10,17 @@ import som.interpreter.actors.Actor;
 import som.interpreter.actors.SFarReference;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.primitives.ObjectPrims.IsValue;
+import som.primitives.ObjectPrimsFactory.IsValueFactory;
 import som.primitives.Primitive;
+import som.primitives.actors.PromisePrims.IsActorModule;
 
 
 @GenerateNodeFactory
-@Primitive("actors:createFromValue:")
+@Primitive(primitive = "actors:createFromValue:", selector  = "createActorFromValue:",
+           specializer = IsActorModule.class, extraChild = IsValueFactory.class)
 @NodeChild(value = "isValue", type = IsValue.class, executeWith = "receiver")
 public abstract class CreateActorPrim extends BinaryComplexOperation {
-  protected CreateActorPrim(final SourceSection source) { super(false, source); }
+  protected CreateActorPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
 
   @Specialization(guards = "isValue")
   public final SFarReference createActor(final Object nil, final Object value, final boolean isValue) {

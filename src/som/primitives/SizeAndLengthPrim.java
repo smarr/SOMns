@@ -12,12 +12,12 @@ import tools.dym.Tags.OpLength;
 
 
 @GenerateNodeFactory
-@Primitive({"arraySize:", "stringLength:"})
+@Primitive(primitive = "arraySize:",    selector = "size",   receiverType = SArray.class)
+@Primitive(primitive = "stringLength:", selector = "length", receiverType = String.class)
 public abstract class SizeAndLengthPrim extends UnaryBasicOperation {
   private final ValueProfile storageType = ValueProfile.createClassProfile();
 
   public SizeAndLengthPrim(final boolean eagerlyWrapped, final SourceSection source) { super(eagerlyWrapped, source); }
-  public SizeAndLengthPrim(final SourceSection source) { super(false, source); }
 
   @Override
   protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {

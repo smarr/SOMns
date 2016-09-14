@@ -13,6 +13,7 @@ import tools.dym.Tags.ComplexPrimitiveOperation;
  */
 public abstract class BinaryComplexOperation extends BinaryExpressionNode {
   protected BinaryComplexOperation(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+  protected BinaryComplexOperation(final BinaryComplexOperation node) { super(node); }
 
   @Override
   protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {

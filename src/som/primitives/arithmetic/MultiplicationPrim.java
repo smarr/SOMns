@@ -11,10 +11,11 @@ import som.primitives.Primitive;
 
 
 @GenerateNodeFactory
-@Primitive({"int:multiply:", "double:multiply:"})
+@Primitive(primitive = "int:multiply:")
+@Primitive(primitive = "double:multiply:")
+@Primitive(selector = "*")
 public abstract class MultiplicationPrim extends ArithmeticPrim {
   protected MultiplicationPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
-  protected MultiplicationPrim(final SourceSection source) { super(false, source); }
 
   @Specialization(rewriteOn = ArithmeticException.class)
   public final long doLong(final long left, final long right) {

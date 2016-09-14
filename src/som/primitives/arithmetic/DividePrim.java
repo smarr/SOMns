@@ -10,10 +10,9 @@ import som.primitives.Primitive;
 
 
 @GenerateNodeFactory
-@Primitive("int:divideBy:")
+@Primitive(primitive = "int:divideBy:", selector = "/")
 public abstract class DividePrim extends ArithmeticPrim {
   protected DividePrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
-  protected DividePrim(final SourceSection source) { super(false, source); }
 
   @Specialization
   public final long doLong(final long left, final long right) {

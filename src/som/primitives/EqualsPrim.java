@@ -16,10 +16,13 @@ import som.vmobjects.SSymbol;
 
 @GenerateNodeFactory
 @ImportStatic(Nil.class)
-@Primitive({"value:sameAs:", "int:equals:", "double:equals:", "string:equals:"})
+@Primitive(primitive = "value:sameAs:")
+@Primitive(primitive = "int:equals:")
+@Primitive(primitive = "double:equals:")
+@Primitive(primitive = "string:equals:")
+@Primitive(selector = "=")
 public abstract class EqualsPrim extends ComparisonPrim {
   protected EqualsPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
-  protected EqualsPrim(final SourceSection source) { super(false, source); }
 
   @Specialization
   public final boolean doBoolean(final boolean left, final boolean right) {

@@ -11,10 +11,11 @@ import som.primitives.Primitive;
 
 
 @GenerateNodeFactory
-@Primitive({"int:lessThan:", "double:lessThan:"})
+@Primitive(primitive = "int:lessThan:")
+@Primitive(primitive = "double:lessThan:")
+@Primitive(selector = "<")
 public abstract class LessThanPrim extends ComparisonPrim {
   protected LessThanPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
-  protected LessThanPrim(final SourceSection source) { super(false, source); }
 
   @Specialization
   public final boolean doLong(final long left, final long right) {

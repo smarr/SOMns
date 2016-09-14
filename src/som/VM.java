@@ -32,6 +32,7 @@ import som.interpreter.actors.SFarReference;
 import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.SResolver;
 import som.vm.ObjectSystem;
+import som.vm.Primitives;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import tools.actors.ActorExecutionTrace;
 import tools.debugger.WebDebugger;
@@ -90,6 +91,10 @@ public final class VM {
 
   public SObjectWithoutFields getVmMirror() {
     return vmMirror;
+  }
+
+  public Primitives getPrimitives() {
+    return objectSystem.getPrimitives();
   }
 
   public static void thisMethodNeedsToBeOptimized(final String msg) {

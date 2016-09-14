@@ -9,10 +9,9 @@ import som.primitives.Primitive;
 
 
 @GenerateNodeFactory
-@Primitive("doubleExp:")
+@Primitive(primitive = "doubleExp:", selector = "exp", receiverType = Double.class)
 public abstract class ExpPrim extends UnaryExpressionNode {
   public ExpPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
-  public ExpPrim(final SourceSection source) { super(false, source); }
 
   @Specialization
   public final double doExp(final double rcvr) {

@@ -23,11 +23,11 @@ public final class EagerBinaryPrimitiveNode extends EagerPrimitive {
 
   private final SSymbol selector;
 
-  public EagerBinaryPrimitiveNode(final SSymbol selector,
+  public EagerBinaryPrimitiveNode(final SourceSection source,
+      final SSymbol selector,
       final ExpressionNode receiver,
       final ExpressionNode argument,
-      final BinaryExpressionNode primitive,
-      final SourceSection source) {
+      final BinaryExpressionNode primitive) {
     super(source);
     assert source == primitive.getSourceSection();
     this.receiver  = receiver;

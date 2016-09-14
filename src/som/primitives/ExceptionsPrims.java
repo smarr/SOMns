@@ -25,7 +25,7 @@ import som.vmobjects.SInvokable;
 public abstract class ExceptionsPrims {
 
   @GenerateNodeFactory
-  @Primitive("exceptionDo:catch:onException:")
+  @Primitive(primitive = "exceptionDo:catch:onException:")
   public abstract static class ExceptionDoOnPrim extends TernaryExpressionNode {
 
     protected static final int INLINE_CACHE_SIZE = VmSettings.DYNAMIC_METRICS ? 100 : 6;
@@ -36,7 +36,7 @@ public abstract class ExceptionsPrims {
           block.getMethod().getCallTarget());
     }
 
-    public ExceptionDoOnPrim(final SourceSection source) { super(false, source); }
+    public ExceptionDoOnPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
 
     public static final boolean sameBlock(final SBlock block, final SInvokable method) {
       return block.getMethod() == method;
@@ -80,9 +80,9 @@ public abstract class ExceptionsPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive("signalException:")
+  @Primitive(primitive = "signalException:")
   public abstract static class SignalPrim extends UnaryExpressionNode {
-    public SignalPrim(final SourceSection source) { super(false, source); }
+    public SignalPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
 
     @Specialization
     public final Object doSignal(final SAbstractObject exceptionObject) {
@@ -91,13 +91,13 @@ public abstract class ExceptionsPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive("exceptionDo:ensure:")
+  @Primitive(primitive = "exceptionDo:ensure:")
   public abstract static class EnsurePrim extends BinaryComplexOperation {
 
     @Child protected BlockDispatchNode dispatchBody    = BlockDispatchNodeGen.create();
     @Child protected BlockDispatchNode dispatchHandler = BlockDispatchNodeGen.create();
 
-    protected EnsurePrim(final SourceSection source) { super(false, source); }
+    protected EnsurePrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
 
     @Specialization
     public final Object doException(final VirtualFrame frame, final SBlock body,

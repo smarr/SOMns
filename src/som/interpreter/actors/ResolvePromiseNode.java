@@ -12,10 +12,11 @@ import som.primitives.Primitive;
 
 
 @GenerateNodeFactory
-@Primitive("actorsResolve:with:")
+@Primitive(primitive = "actorsResolve:with:")
 @Instrumentable(factory = ResolvePromiseNodeWrapper.class)
 public abstract class ResolvePromiseNode extends BinaryComplexOperation {
-  protected ResolvePromiseNode(final SourceSection source) { super(false, source); }
+  protected ResolvePromiseNode(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+  protected ResolvePromiseNode(final ResolvePromiseNode node) { super(node); }
 
   public abstract Object executeEvaluated(VirtualFrame frame, final SResolver receiver, Object argument);
 

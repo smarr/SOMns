@@ -11,6 +11,7 @@ import com.oracle.truffle.api.source.SourceSection;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.primitives.Primitive;
 import som.vm.constants.Nil;
+import som.vmobjects.SArray;
 import som.vmobjects.SArray.PartiallyEmptyArray;
 import som.vmobjects.SArray.SMutableArray;
 import tools.dym.Tags.ArrayWrite;
@@ -19,12 +20,12 @@ import tools.dym.Tags.BasicPrimitiveOperation;
 
 @GenerateNodeFactory
 @ImportStatic(Nil.class)
-@Primitive("array:at:put:")
+@Primitive(primitive = "array:at:put:", selector = "at:put:",
+           receiverType = SArray.class)
 public abstract class AtPutPrim extends TernaryExpressionNode {
   private final ValueProfile storageType = ValueProfile.createClassProfile();
 
   protected AtPutPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
-  protected AtPutPrim(final SourceSection source) { super(false, source); }
 
   @Override
   protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {

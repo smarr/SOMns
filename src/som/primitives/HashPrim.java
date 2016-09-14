@@ -11,9 +11,10 @@ import som.vmobjects.SSymbol;
 
 
 @GenerateNodeFactory
-@Primitive({"objHashcode:", "stringHashcode:"})
+@Primitive(primitive = "objHashcode:")
+@Primitive(primitive = "stringHashcode:")
 public abstract class HashPrim extends UnaryExpressionNode {
-  public HashPrim(final SourceSection source) { super(false, source); }
+  public HashPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
 
   @Specialization
   @TruffleBoundary

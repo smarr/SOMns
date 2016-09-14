@@ -22,10 +22,10 @@ import tools.dym.Tags.StringAccess;
 public abstract class IntegerPrims {
 
   @GenerateNodeFactory
-  @Primitive("intAs32BitSignedValue:")
+  @Primitive(primitive = "intAs32BitSignedValue:",
+             selector = "as32BitSignedValue", receiverType = Long.class)
   public abstract static class As32BitSignedValue extends UnaryBasicOperation {
     public As32BitSignedValue(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
-    public As32BitSignedValue(final SourceSection source) { super(false, source); }
 
     @Override
     protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
@@ -43,10 +43,10 @@ public abstract class IntegerPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive("intAs32BitUnsignedValue:")
+  @Primitive(primitive = "intAs32BitUnsignedValue:",
+             selector = "as32BitUnsignedValue", receiverType = Long.class)
   public abstract static class As32BitUnsignedValue extends UnaryBasicOperation {
     public As32BitUnsignedValue(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
-    public As32BitUnsignedValue(final SourceSection source) { super(false, source); }
 
     @Override
     protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
@@ -64,9 +64,9 @@ public abstract class IntegerPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive("intFromString:")
+  @Primitive(primitive = "intFromString:")
   public abstract static class FromStringPrim extends UnaryExpressionNode {
-    public FromStringPrim(final SourceSection source) { super(false, source); }
+    public FromStringPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
 
     @Override
     protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
@@ -91,10 +91,9 @@ public abstract class IntegerPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive("int:leftShift:")
+  @Primitive(primitive = "int:leftShift:", selector = "<<", receiverType = Long.class)
   public abstract static class LeftShiftPrim extends ArithmeticPrim {
     protected LeftShiftPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
-    protected LeftShiftPrim(final SourceSection source) { super(false, source); }
 
     private final BranchProfile overflow = BranchProfile.create();
 
@@ -120,10 +119,10 @@ public abstract class IntegerPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive("int:unsignedRightShift:")
+  @Primitive(primitive = "int:unsignedRightShift:", selector = ">>>",
+             receiverType = Long.class)
   public abstract static class UnsignedRightShiftPrim extends ArithmeticPrim {
     protected UnsignedRightShiftPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
-    protected UnsignedRightShiftPrim(final SourceSection source) { super(false, source); }
 
     @Specialization
     public final long doLong(final long receiver, final long right) {
@@ -131,9 +130,10 @@ public abstract class IntegerPrims {
     }
   }
 
+  @GenerateNodeFactory
+  @Primitive(selector = "max:", receiverType = Long.class, disabled = true)
   public abstract static class MaxIntPrim extends ArithmeticPrim {
     protected MaxIntPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
-    protected MaxIntPrim(final SourceSection source) { super(false, source); }
 
     @Specialization
     public final long doLong(final long receiver, final long right) {
@@ -141,9 +141,10 @@ public abstract class IntegerPrims {
     }
   }
 
+  @GenerateNodeFactory
+  @Primitive(selector = "to:", receiverType = Long.class, disabled = true)
   public abstract static class ToPrim extends BinaryComplexOperation {
     protected ToPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
-    protected ToPrim(final SourceSection source) { super(false, source); }
 
     @Specialization
     public final SMutableArray doLong(final long receiver, final long right) {
@@ -156,9 +157,10 @@ public abstract class IntegerPrims {
     }
   }
 
+  @GenerateNodeFactory
+  @Primitive(selector = "abs", receiverType = Long.class)
   public abstract static class AbsPrim extends UnaryBasicOperation {
     public AbsPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
-    public AbsPrim(final SourceSection source) { super(false, source); }
 
     @Override
     protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {

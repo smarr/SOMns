@@ -12,7 +12,9 @@ import som.interpreter.nodes.dispatch.BlockDispatchNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.specialized.SomLoop;
+import som.primitives.Primitive;
 import som.primitives.SizeAndLengthPrim;
+import som.primitives.SizeAndLengthPrimFactory;
 import som.vm.constants.Nil;
 import som.vmobjects.SArray.SMutableArray;
 import som.vmobjects.SBlock;
@@ -21,6 +23,8 @@ import som.vmobjects.SObjectWithClass;
 
 @GenerateNodeFactory
 @ImportStatic(Nil.class)
+@Primitive(selector = "putAll:", disabled = true,
+           extraChild = SizeAndLengthPrimFactory.class)
 @NodeChild(value = "length", type = SizeAndLengthPrim.class, executeWith = "receiver")
 public abstract class PutAllNode extends BinaryComplexOperation {
   @Child protected BlockDispatchNode block;

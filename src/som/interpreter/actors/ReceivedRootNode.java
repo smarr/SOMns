@@ -24,7 +24,7 @@ public abstract class ReceivedRootNode extends RootNode {
       if (resolver == null) {
         this.resolve = insert(new NullResolver(getSourceSection()));
       } else {
-        this.resolve = insert(ResolvePromiseNodeFactory.create(getSourceSection(), null, null));
+        this.resolve = insert(ResolvePromiseNodeFactory.create(false, getSourceSection(), null, null));
       }
     }
 
@@ -34,7 +34,7 @@ public abstract class ReceivedRootNode extends RootNode {
   public final class NullResolver extends ResolvePromiseNode {
 
     public NullResolver(final SourceSection source) {
-      super(source);
+      super(false, source);
     }
 
     @Override

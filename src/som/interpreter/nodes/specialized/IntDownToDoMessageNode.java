@@ -2,17 +2,23 @@ package som.interpreter.nodes.specialized;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
+import som.interpreter.nodes.specialized.IntToDoMessageNode.ToDoSplzr;
+import som.primitives.Primitive;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import tools.dym.Tags.LoopNode;
 
 
+@GenerateNodeFactory
+@Primitive(selector = "downTo:do:", noWrapper = true, disabled = true,
+           specializer = ToDoSplzr.class)
 public abstract class IntDownToDoMessageNode extends TernaryExpressionNode {
 
   private final SInvokable blockMethod;
