@@ -6,6 +6,7 @@ import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.nodes.ExpressionNode;
@@ -19,10 +20,11 @@ import tools.dym.Tags.LoopNode;
 @GenerateNodeFactory
 @Primitive(selector = "to:by:do:", disabled = true, noWrapper = true, requiresArguments = true)
 public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode {
-  private final SInvokable blockMethod;
-  @Child private DirectCallNode valueSend;
+  protected final SInvokable blockMethod;
+  @Child protected DirectCallNode valueSend;
 
-  public IntToByDoMessageNode(final boolean eagWrap, final SourceSection section, final Object[] args) {
+  public IntToByDoMessageNode(final boolean eagWrap,
+      final SourceSection section, final Object[] args) {
     super(eagWrap, section);
     assert !eagWrap;
     blockMethod = ((SBlock) args[3]).getMethod();
@@ -45,43 +47,34 @@ public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode {
     }
   }
 
-  protected final boolean isSameBlockLong(final SBlock block) {
-    return block.getMethod() == blockMethod;
+  @Specialization(guards = "block.getMethod() == blockMethod")
+  public final long doIntToByDo(final VirtualFrame frame, final long receiver,
+      final long limit, final long step, final SBlock block) {
+    return doLoop(frame, valueSend, this, receiver, limit, step, block);
   }
 
-  protected final boolean isSameBlockDouble(final SBlock block) {
-    return block.getMethod() == blockMethod;
+  @Specialization(guards = "block.getMethod() == blockMethod")
+  public final long doIntToByDo(final VirtualFrame frame, final long receiver,
+      final double limit, final long step, final SBlock block) {
+    return doLoop(frame, valueSend, this, receiver, (long) limit, step, block);
   }
 
-  @Specialization(guards = "isSameBlockLong(block)")
-  public final long doIntToByDo(final VirtualFrame frame, final long receiver, final long limit, final long step, final SBlock block) {
+  public static long doLoop(final VirtualFrame frame, final DirectCallNode value,
+      final Node loopNode, final long receiver, final long limit, final long step,
+      final SBlock block) {
     try {
       if (receiver <= limit) {
-        valueSend.call(frame, new Object[] {block, receiver});
+        value.call(frame, new Object[] {block, receiver});
       }
       for (long i = receiver + step; i <= limit; i += step) {
-        valueSend.call(frame, new Object[] {block, i});
+        value.call(frame, new Object[] {block, i});
       }
     } finally {
       if (CompilerDirectives.inInterpreter()) {
-        SomLoop.reportLoopCount(limit - receiver, this);
-      }
-    }
-    return receiver;
-  }
-
-  @Specialization(guards = "isSameBlockDouble(block)")
-  public final long doIntToByDo(final VirtualFrame frame, final long receiver, final double limit, final long step, final SBlock block) {
-    try {
-      if (receiver <= limit) {
-        valueSend.call(frame, new Object[] {block, receiver});
-      }
-      for (long i = receiver + step; i <= limit; i += step) {
-        valueSend.call(frame, new Object[] {block, i});
-      }
-    } finally {
-      if (CompilerDirectives.inInterpreter()) {
-        SomLoop.reportLoopCount((long) limit - receiver, this);
+        long loopCount = limit - receiver;
+        if (loopCount > 0) {
+          SomLoop.reportLoopCount(loopCount, loopNode);
+        }
       }
     }
     return receiver;
