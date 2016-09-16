@@ -228,6 +228,12 @@ public final class SClass extends SObjectWithClass {
     return lookupMessage(selector, AccessModifier.PROTECTED);
   }
 
+  /**
+   * @param selector to be used for lookup
+   * @param hasAtLeast the minimal access level the found method/slot-accessor
+   *                   is allowed to have
+   * @return a method or slot accessor
+   */
   public Dispatchable lookupMessage(final SSymbol selector,
       final AccessModifier hasAtLeast) {
     assert hasAtLeast.ordinal() >= AccessModifier.PROTECTED.ordinal();

@@ -14,7 +14,6 @@ import som.interpreter.TruffleCompiler;
 import som.interpreter.Types;
 import som.interpreter.nodes.ISuperReadNode;
 import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
-import som.vm.NotYetImplementedException;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
@@ -33,6 +32,9 @@ public final class UninitializedDispatchNode {
       this.selector = selector;
     }
 
+    /**
+     * The minimal visibility a target for this send can have.
+     */
     protected abstract AccessModifier    getMinimalVisibility();
     protected abstract MixinDefinitionId getMixinForPrivateLockupOrNull();
     protected abstract Dispatchable      doLookup(SClass rcvrClass);
@@ -176,6 +178,9 @@ public final class UninitializedDispatchNode {
       return rcvrClass.lookupMessage(selector, minimalVisibility);
     }
 
+    /**
+     * The minimal visibility a target for this send can have.
+     */
     @Override
     protected AccessModifier getMinimalVisibility() {
       return minimalVisibility;
@@ -278,16 +283,14 @@ public final class UninitializedDispatchNode {
 
     @Override
     protected AccessModifier getMinimalVisibility() {
-      // TODO: if we actually get a megamorphic super send,
-      //       then we need to implement this
-      throw new NotYetImplementedException();
+      // Super sends can only access public or protected methods
+      // see spec sec. 5.10
+      return AccessModifier.PROTECTED;
     }
 
     @Override
     protected MixinDefinitionId getMixinForPrivateLockupOrNull() {
-      // TODO: if we actually get a megamorphic super send,
-      //       then we need to implement this
-      throw new NotYetImplementedException();
+      return null;
     }
   }
 
