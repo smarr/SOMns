@@ -5,7 +5,6 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
 import com.oracle.truffle.api.interop.TruffleObject;
 import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
@@ -137,12 +136,9 @@ public final class UninitializedDispatchNode {
         }
       }
 
-      RootNode root = getRootNode();
-      assert root != null;
-
       AbstractDispatchNode newNode;
       // we modify a dispatch chain here, so, better grab the root node before we do anything
-      synchronized (root) {
+      synchronized (getAtomicLock()) {
         newNode = specialize(arguments, chainDepth, first);
       }
       return newNode.executeDispatch(frame, arguments);
