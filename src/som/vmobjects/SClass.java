@@ -229,6 +229,8 @@ public final class SClass extends SObjectWithClass {
   }
 
   /**
+   * Find the dispatchable for the given selector symbol.
+   *
    * @param selector to be used for lookup
    * @param hasAtLeast the minimal access level the found method/slot-accessor
    *                   is allowed to have
