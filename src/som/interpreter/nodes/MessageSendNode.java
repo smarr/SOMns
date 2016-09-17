@@ -184,15 +184,12 @@ public final class MessageSendNode {
       VM.insertInstrumentationWrapper(this);
       assert prim.getSourceSection() != null;
 
-      for (ExpressionNode exp : argumentNodes) {
-        unwrapIfNecessary(exp).markAsPrimitiveArgument();
-      }
-
       PreevaluatedExpression result = replace(prim.wrapInEagerWrapper(prim, selector, argumentNodes));
 
       VM.insertInstrumentationWrapper((Node) result);
 
       for (ExpressionNode exp : argumentNodes) {
+        unwrapIfNecessary(exp).markAsPrimitiveArgument();
         VM.insertInstrumentationWrapper(exp);
       }
 
