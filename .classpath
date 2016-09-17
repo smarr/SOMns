@@ -8,8 +8,6 @@
 			<attribute name="optional" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="libs/junit-4.12.jar" sourcepath="libs/junit-4.12-sources.jar"/>
-	<classpathentry kind="lib" path="libs/hamcrest-core-1.3.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/com.oracle.truffle.api"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/com.oracle.truffle.api.dsl"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/com.oracle.truffle.api.interop"/>
@@ -21,8 +19,8 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/com.oracle.truffle.api.profiles"/>
 	<classpathentry kind="src" path="/com.oracle.truffle.tools"/>
 	<classpathentry kind="src" path="/com.oracle.truffle.tools.debug.shell"/>
-	<classpathentry kind="lib" path="libs/websocket/dist/websocket.jar" sourcepath="libs/websocket/src"/>
-	<classpathentry kind="lib" path="libs/minimal-json/build/minimal-json.jar" sourcepath="libs/minimal-json/com.eclipsesource.json/src/main/java"/>
 	<classpathentry kind="src" path="/CoverallsTruffle"/>
+	<classpathentry kind="lib" path="libs/somns-deps-dev.jar"/>
+	<classpathentry kind="lib" path="libs/somns-deps.jar"/>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>
