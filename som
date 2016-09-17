@@ -148,12 +148,7 @@ BOOT_CLASSPATH = ('-Xbootclasspath/a:'
              + BASE_DIR + '/build/classes:'
              + BASE_DIR + '/libs/truffle/mxbuild/dists/truffle-api.jar:'
              + BASE_DIR + '/libs/truffle/mxbuild/dists/truffle-debug.jar:'
-             + BASE_DIR + '/libs/jline-2.11.jar:'
-             + BASE_DIR + '/libs/websocket/dist/websocket.jar:'
-             + BASE_DIR + '/libs/minimal-json/build/minimal-json.jar')
-
-if args.coveralls_repo_token:
-    BOOT_CLASSPATH += ':' + BASE_DIR + '/libs/coveralls-truffle/coveralls-truffle.jar'
+             + BASE_DIR + '/libs/somns-deps.jar')
 
 SOM_ARGS = [BOOT_CLASSPATH, 'som.VM',
             '--platform', args.som_platform, '--kernel', args.som_kernel]
