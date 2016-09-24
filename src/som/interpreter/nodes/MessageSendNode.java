@@ -100,7 +100,7 @@ public final class MessageSendNode {
       Object[] arguments = new Object[argumentNodes.length];
       for (int i = 0; i < argumentNodes.length; i++) {
         arguments[i] = argumentNodes[i].executeGeneric(frame);
-        assert arguments[i] != null;
+        assert arguments[i] != null : "Some expression evaluated to null, which is not supported.";
       }
       return arguments;
     }
