@@ -9,6 +9,8 @@ import com.oracle.truffle.api.source.SourceSection;
  * Represents a potentially empty range of source characters, for a potentially
  * not yet loaded source.
  */
+// TODO: this needs further cleanup by making class names nicer
+// and, some instance might not have a charIndex
 public class SourceCoordinate {
   public final int startLine;
   public final int startColumn;
