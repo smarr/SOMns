@@ -197,7 +197,7 @@ function restart() {
   path = path.data(links);
 
   // update existing links
-  path.classed('selected', function(d) { return d === selected_link; })
+  path //.classed('selected', function(d) { return d === selected_link; })
     .style('marker-start', function(d) { return d.left ? 'url(#start-arrow)' : ''; })
     .style('marker-end', function(d) { return d.right ? 'url(#end-arrow)' : ''; });
 
@@ -220,7 +220,7 @@ function restart() {
   // update existing nodes (reflexive & selected visual states)
   circle.selectAll('circle')
     .style('fill', function(d) {
-      return (d === selected_node) ? d3.rgb(colors(d.id)).brighter().toString() : colors(d.id);
+      return /*(d === selected_node) ? d3.rgb(colors(d.id)).brighter().toString() :*/ colors(d.id);
     })
     .classed('reflexive', function(d) { return d.reflexive; });
 

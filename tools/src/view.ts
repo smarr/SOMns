@@ -111,7 +111,7 @@ function arrayToString(arr) {
 
 function nodeFromTemplate(tplId) {
   var tpl = document.getElementById(tplId),
-    result = tpl.cloneNode(true);
+    result = <Element> tpl.cloneNode(true);
   result.removeAttribute("id");
   return result;
 }
@@ -226,7 +226,7 @@ function enableMethodBreakpointHover(fileNode) {
 }
 
 function showSource(s, sections, methods) {
-  var tabListEntry = document.getElementById(s.id),
+  var tabListEntry = <Element> document.getElementById(s.id),
     aElem = document.getElementById("a" + s.id);
   if (tabListEntry) {
     if (aElem.innerText !== s.name) {
@@ -246,10 +246,11 @@ function showSource(s, sections, methods) {
 
   if (aElem === null) {
     // create the tab "header/handle"
-    aElem = $(tabListEntry).find("a");
-    aElem.attr("href", "#" + s.id);
-    aElem.attr("id", "a" + s.id);
-    aElem.text(s.name);
+    var elem = $(tabListEntry).find("a");
+    elem.attr("href", "#" + s.id);
+    elem.attr("id", "a" + s.id);
+    elem.text(s.name);
+    aElem = elem.get(0);
     $("#tabs").append(tabListEntry);
   }
 

@@ -26,11 +26,11 @@ class WebResourceHandler implements HttpHandler {
 
     switch (requestedFile) {
       case "/index.html":
-      case "/view.js":
-      case "/vm-connection.js":
-      case "/controller.js":
-      case "/source.js":
-      case "/visualizations.js":
+      case "/out/view.js":
+      case "/out/vm-connection.js":
+      case "/out/controller.js":
+      case "/out/source.js":
+      case "/out/visualizations.js":
         File f = new File(rootFolder + requestedFile);
         exchange.sendResponseHeaders(200, f.length());
         copy(f, exchange.getResponseBody());
