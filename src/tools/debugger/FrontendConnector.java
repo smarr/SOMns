@@ -30,6 +30,8 @@ import som.interpreter.actors.Actor.Role;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.SFarReference;
 import tools.ObjectBuffer;
+import tools.SourceCoordinate;
+import tools.SourceCoordinate.FullSourceCoordinate;
 import tools.actors.ActorExecutionTrace;
 import tools.debugger.session.Breakpoints;
 import tools.highlight.Tags;
@@ -229,28 +231,37 @@ public class FrontendConnector {
     sender.close();
   }
 
+  /**
+   * @deprecated Should be handled by the JSON serializer directly, we might just need to register the breakpoint
+   */
+  @Deprecated
   public void requestAsyncMessageRcvBreakpoint(final boolean enabled,
       final URI sourceUri, final int startLine, final int startColumn,
       final int charLength) {
     try {
-      Breakpoint bp = breakpoints.getAsyncMessageRcvBreakpoint(sourceUri,
-          startLine, startColumn, charLength);
+      FullSourceCoordinate coord = SourceCoordinate.create(sourceUri, startLine, startColumn, charLength);
+      Breakpoint bp = breakpoints.getAsyncMessageRcvBreakpoint(coord);
       bp.setEnabled(enabled);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
   }
 
+  /**
+   * @deprecated Should be handled by the JSON serializer directly, we might just need to register the breakpoint
+   */
+  @Deprecated
   public void requestBreakpoint(final boolean enabled, final URI sourceUri,
       final int startLine, final int startColumn, final int charLength,
       final Role role) {
+    FullSourceCoordinate coord = SourceCoordinate.create(sourceUri, startLine, startColumn, charLength);
     try {
       if (role == Role.SENDER) {
-        Breakpoint breakpoint = breakpoints.getBreakpointOnSender(sourceUri, startLine, startColumn, charLength);
+        Breakpoint breakpoint = breakpoints.getBreakpointOnSender(coord);
         breakpoint.setEnabled(enabled);
       } else {
         assert role == Role.RECEIVER : "Do we have a not yet supported breakpoint type?";
-        breakpoints.addReceiverBreakpoint(sourceUri, startLine, startColumn, charLength);
+        breakpoints.addReceiverBreakpoint(coord);
       }
     } catch (IOException e) {
       throw new RuntimeException(e);

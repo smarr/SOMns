@@ -24,6 +24,8 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.actors.ReceivedRootNode;
 import som.interpreter.nodes.ExpressionNode;
+import tools.SourceCoordinate;
+import tools.SourceCoordinate.FullSourceCoordinate;
 import tools.debugger.WebDebugger;
 
 
@@ -33,7 +35,7 @@ public class Breakpoints {
 
   private final WebDebugger webDebugger;
   private final Map<BreakpointId, Breakpoint> knownBreakpoints;
-  private final Map<BreakpointId, ReceiverBreakpoint> receiverBreakpoints;
+  private final Map<FullSourceCoordinate, ReceiverBreakpoint> receiverBreakpoints;
   private Assumption receiverBreakpointVersion;
 
   private final Debugger debugger;
@@ -62,17 +64,67 @@ public class Breakpoints {
     debuggerSession.prepareSteppingUntilNextRootNode();
   }
 
+  // TODO: remove Id from name
   public abstract static class BreakpointId {
+    private boolean   enabled;
+    private transient Assumption unchanged;
 
+
+    public BreakpointId() {
+      this.unchanged = Truffle.getRuntime().createAssumption("unchanged breakpoint");
+    }
+
+    BreakpointId(final boolean enabled) {
+      this();
+      this.enabled = enabled;
+    }
+
+    public synchronized void setEnabled(final boolean enabled) {
+      if (this.enabled != enabled) {
+        this.enabled = enabled;
+        this.unchanged.invalidate();
+        this.unchanged = Truffle.getRuntime().createAssumption("unchanged breakpoint");
+      }
+    }
+
+    public boolean isEnabled() {
+      return unchanged.isValid() && enabled;
+    }
+
+    /**
+     * TODO: redundant, just a work around for the DSL, which has an issue with ! currently.
+     */
+    public boolean isDisabled() {
+      return !isEnabled();
+    }
+
+    public Assumption getAssumption() {
+      return unchanged;
+    }
   }
 
-  static class LineBreakpoint extends BreakpointId {
+  public static class LineBreakpoint extends BreakpointId {
     private final URI sourceUri;
     private final int line;
 
-    LineBreakpoint(final URI sourceUri, final int line) {
+    public LineBreakpoint(final boolean enabled, final URI sourceUri, final int line) {
+      super(enabled);
       this.sourceUri = sourceUri;
       this.line = line;
+    }
+
+    LineBreakpoint() {
+      super();
+      this.sourceUri = null;
+      this.line = 0;
+    }
+
+    public int getLine() {
+      return line;
+    }
+
+    public URI getURI() {
+      return sourceUri;
     }
 
     @Override
@@ -98,28 +150,21 @@ public class Breakpoints {
     }
   }
 
-  public static class SectionBreakpoint extends BreakpointId {
-    private final URI sourceUri;
-    private final int startLine;
-    private final int startColumn;
-    private final int charLength;
+  public abstract static class SectionBreakpoint extends BreakpointId {
+    protected final FullSourceCoordinate coord;
 
-    public SectionBreakpoint(final URI sourceUri, final int startLine,
-        final int startColumn, final int charLength) {
-      this.sourceUri = sourceUri;
-      this.startLine = startLine;
-      this.startColumn = startColumn;
-      this.charLength  = charLength;
+    public SectionBreakpoint(final boolean enabled, final FullSourceCoordinate coord) {
+      super(enabled);
+      this.coord = coord;
     }
 
-    public SectionBreakpoint(final SourceSection section) {
-      this(section.getSource().getURI(), section.getStartLine(),
-          section.getStartColumn(), section.getCharLength());
+    public FullSourceCoordinate getCoordinate() {
+      return coord;
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(sourceUri, startLine, startColumn, charLength);
+      return coord.hashCode();
     }
 
     @Override
@@ -127,18 +172,31 @@ public class Breakpoints {
       if (obj == this) {
         return true;
       }
-      if (obj == null || obj.getClass() != getClass()) {
+      if (!(obj instanceof SectionBreakpoint)) {
         return false;
       }
       SectionBreakpoint o = (SectionBreakpoint) obj;
-      return o.startLine == startLine && o.startColumn == startColumn
-          && o.charLength == charLength && o.sourceUri.equals(sourceUri);
+      return o.equals(this);
     }
 
     @Override
     public String toString() {
-      return "SectionBreakpoint: startLine " + startLine + " startColumn "
-          + startColumn + " charLength " + charLength + " sourceURi " + sourceUri;
+      return "SectionBreakpoint: " + coord.toString();
+    }
+  }
+
+  public static class SenderBreakpoint extends SectionBreakpoint {
+    public SenderBreakpoint(final boolean enabled, final FullSourceCoordinate coord) {
+      super(enabled, coord);
+    }
+
+    public SenderBreakpoint(final boolean enabled, final SourceSection section) {
+      this(true, SourceCoordinate.create(section));
+    }
+
+    @Override
+    public String toString() {
+      return "SenderBreakpoint: " + coord.toString();
     }
   }
 
@@ -146,15 +204,14 @@ public class Breakpoints {
    * Breakpoint on the RootTag node of a method.
    * The method is identified by the source section info of the breakpoint.
    */
-  public static class RootBreakpoint extends SectionBreakpoint {
-    public RootBreakpoint(final URI sourceUri, final int startLine,
-        final int startColumn, final int charLength) {
-      super(sourceUri, startLine, startColumn, charLength);
+  public static class AsyncMessageBreakpoint extends SectionBreakpoint {
+    public AsyncMessageBreakpoint(final boolean enabled, final FullSourceCoordinate coord) {
+      super(enabled, coord);
     }
   }
 
   public Breakpoint getLineBreakpoint(final URI sourceUri, final int line) throws IOException {
-    BreakpointId bId = new LineBreakpoint(sourceUri, line);
+    BreakpointId bId = new LineBreakpoint(true, sourceUri, line);
     Breakpoint bp = knownBreakpoints.get(bId);
 
     if (bp == null) {
@@ -169,16 +226,16 @@ public class Breakpoints {
     return bp;
   }
 
-  public Breakpoint getBreakpointOnSender(final URI sourceUri, final int startLine, final int startColumn, final int charLength) throws IOException {
-    BreakpointId bId = new SectionBreakpoint(sourceUri, startLine, startColumn, charLength);
+  public Breakpoint getBreakpointOnSender(final FullSourceCoordinate coord) throws IOException {
+    BreakpointId bId = new SenderBreakpoint(true, coord);
     Breakpoint bp = knownBreakpoints.get(bId);
     if (bp == null) {
       ensureOpenDebuggerSession();
       WebDebugger.log("SetSectionBreakpoint: " + bId);
-      bp = Breakpoint.newBuilder(sourceUri).
-          lineIs(startLine).
-          columnIs(startColumn).
-          sectionLength(charLength).
+      bp = Breakpoint.newBuilder(coord.uri).
+          lineIs(coord.startLine).
+          columnIs(coord.startColumn).
+          sectionLength(coord.charLength).
           build();
       debuggerSession.install(bp);
       knownBreakpoints.put(bId, bp);
@@ -220,17 +277,16 @@ public class Breakpoints {
 
   }
 
-  public Breakpoint getAsyncMessageRcvBreakpoint(final URI sourceUri,
-      final int startLine, final int startColumn, final int charLength) throws IOException {
-    BreakpointId bId = new RootBreakpoint(sourceUri, startLine, startColumn, charLength);
+  public Breakpoint getAsyncMessageRcvBreakpoint(final FullSourceCoordinate coord) throws IOException {
+    BreakpointId bId = new AsyncMessageBreakpoint(true, coord);
     Breakpoint bp = knownBreakpoints.get(bId);
 
     if (bp == null) {
       WebDebugger.log("RootBreakpoint: " + bId);
-      Source source = webDebugger.getSource(sourceUri);
+      Source source = webDebugger.getSource(coord.uri);
       assert source != null : "TODO: handle problem somehow? defer breakpoint creation on source loading? ugh...";
 
-      SourceSection rootSS = source.createSection(startLine, startColumn, charLength);
+      SourceSection rootSS = source.createSection(coord.startLine, coord.startColumn, coord.charLength);
       Set<RootNode> roots = webDebugger.getRootNodesBySource(source);
       for (RootNode root : roots) {
         if (rootSS.equals(root.getSourceSection())) {
@@ -251,91 +307,39 @@ public class Breakpoints {
     return bp;
   }
 
-  public synchronized void addReceiverBreakpoint(final URI sourceUri, final int startLine,
-      final int startColumn, final int charLength) {
-    SectionBreakpoint bId = new SectionBreakpoint(sourceUri, startLine, startColumn, charLength);
-    assert !receiverBreakpoints.containsKey(bId) : "The receiver breakpoint is already saved";
-    receiverBreakpoints.putIfAbsent(bId, new ReceiverBreakpoint(bId));
+  public synchronized void addReceiverBreakpoint(final FullSourceCoordinate coord) {
+    ReceiverBreakpoint bId = new ReceiverBreakpoint(true, coord);
+    ReceiverBreakpoint existingBP = receiverBreakpoints.get(bId);
+    if (existingBP == null) {
+      receiverBreakpoints.put(coord, bId);
+    }
+    else {
+      existingBP.setEnabled(true);
+    }
+
 
     receiverBreakpointVersion.invalidate();
     receiverBreakpointVersion = Truffle.getRuntime().createAssumption();
   }
 
-  public static final class BreakpointInfo {
-    public final ReceiverBreakpoint breakpoint;
-    public final Assumption receiverBreakpointVersion;
-
-    public BreakpointInfo(final ReceiverBreakpoint bp,
-        final Assumption receiverBreakpointVersion) {
-      this.breakpoint    = bp;
-      this.receiverBreakpointVersion = receiverBreakpointVersion;
+  public static class ReceiverBreakpoint extends SectionBreakpoint {
+    public ReceiverBreakpoint(final boolean enabled, final FullSourceCoordinate coord) {
+      super(enabled, coord);
     }
 
-    public boolean hasBreakpoint() { return breakpoint != null; }
-    public boolean noBreakpoint()  { return breakpoint == null; }
-  }
-
-  public static class ReceiverBreakpoint {
-    private SectionBreakpoint id;
-    private boolean isEnabled;
-    private Assumption unchanged;
-
-    public ReceiverBreakpoint(final SectionBreakpoint id) {
-      this.id   = id;
-      isEnabled = true;
-      unchanged = Truffle.getRuntime().createAssumption("unchanged breakpoint");
+    public ReceiverBreakpoint(final boolean enabled, final SourceSection section) {
+      this(enabled, SourceCoordinate.create(section));
     }
 
-    public synchronized void setEnabled(final boolean isEnabled) {
-      if (this.isEnabled != isEnabled) {
-        this.isEnabled = isEnabled;
-        unchanged.invalidate();
-        unchanged = Truffle.getRuntime().createAssumption("unchanged breakpoint");
-      }
-    }
-
-    public boolean isEnabled() {
-      return unchanged.isValid() && isEnabled;
-    }
-
-    /**
-     * TODO: redundant, just a work around for the DSL, which has an issue with ! currently.
-     */
-    public boolean isDisabled() {
-      return !isEnabled();
-    }
-
-    public Assumption getAssumption() {
-      return unchanged;
+    @Override
+    public String toString() {
+      return "ReceiverBreakpoint: " + coord.toString();
     }
   }
 
-  public synchronized BreakpointInfo hasReceiverBreakpoint(final SectionBreakpoint section) {
-    ReceiverBreakpoint bp = receiverBreakpoints.get(section);
-    return new BreakpointInfo(bp, receiverBreakpointVersion);
-  }
-
-  public BreakpointId getBreakpointId(final URI sourceUri,
-      final int startLine, final int startColumn, final int charLength) {
-    Set<BreakpointId> ids = knownBreakpoints.keySet();
-
-    for (BreakpointId breakpointId : ids) {
-      if (breakpointId instanceof SectionBreakpoint) {
-        BreakpointId bId = new SectionBreakpoint(sourceUri, startLine, startColumn, charLength);
-        SectionBreakpoint sb = (SectionBreakpoint) breakpointId;
-        if (sb.equals(bId)) {
-          return sb;
-        }
-
-      } else if (breakpointId instanceof LineBreakpoint) {
-        BreakpointId bId = new LineBreakpoint(sourceUri, startLine);
-        LineBreakpoint lb = (LineBreakpoint) breakpointId;
-        if (lb.equals(bId)) {
-          return lb;
-        }
-      }
-    }
-
-    return null;
+  public synchronized ReceiverBreakpoint getReceiverBreakpoint(
+      final FullSourceCoordinate section) {
+    return receiverBreakpoints.computeIfAbsent(section,
+        ss -> new ReceiverBreakpoint(false, section));
   }
 }

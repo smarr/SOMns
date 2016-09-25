@@ -32,10 +32,9 @@ import som.interpreter.nodes.SOMNode;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.vm.constants.Nil;
 import som.vmobjects.SSymbol;
+import tools.SourceCoordinate;
 import tools.actors.Tags.EventualMessageSend;
-import tools.debugger.session.Breakpoints;
-import tools.debugger.session.Breakpoints.BreakpointInfo;
-import tools.debugger.session.Breakpoints.SectionBreakpoint;
+import tools.debugger.session.Breakpoints.ReceiverBreakpoint;
 
 
 @Instrumentable(factory = EventualSendNodeWrapper.class)
@@ -281,41 +280,27 @@ public class EventualSendNode extends ExprWithTagsNode {
   }
 
   protected abstract static class BreakpointNode extends AbstractBreakpointNode {
-    private final Breakpoints breakpoints;
-    private final SectionBreakpoint section;
+    protected final ReceiverBreakpoint breakpoint;
 
     protected BreakpointNode(final SourceSection sourceSection) {
-      this.section = new SectionBreakpoint(sourceSection);
-      this.breakpoints = VM.getWebDebugger().getBreakpoints();
+      this.breakpoint = VM.getWebDebugger().getBreakpoints().
+          getReceiverBreakpoint(SourceCoordinate.create(sourceSection));
     }
 
     /** Only to be used by the DisabledBreakpointNode. */
     protected BreakpointNode() {
-      this.section     = null;
-      this.breakpoints = null;
+      this.breakpoint = null;
     }
 
-
-    protected final BreakpointInfo getBreakpointStatus() {
-      return breakpoints.hasReceiverBreakpoint(section);
-    }
-
-    @Specialization(assumptions = "info.receiverBreakpointVersion", guards = "info.noBreakpoint()")
-    public final boolean noBreakpoint(@Cached("getBreakpointStatus()") final BreakpointInfo info) {
+    @Specialization(assumptions = "bpUnchanged", guards = "breakpoint.isDisabled()")
+    public final boolean breakpointDisabled(
+        @Cached("breakpoint.getAssumption()") final Assumption bpUnchanged) {
       return false;
     }
 
-    @Specialization(assumptions = {"info.receiverBreakpointVersion", "bpUnchanged"},
-        guards = {"info.hasBreakpoint()", "info.breakpoint.isDisabled()"})
-    public final boolean breakpointDisabled(@Cached("getBreakpointStatus()") final BreakpointInfo info,
-        @Cached("info.breakpoint.getAssumption()") final Assumption bpUnchanged) {
-      return false;
-    }
-
-    @Specialization(assumptions = {"info.receiverBreakpointVersion", "bpUnchanged"},
-        guards = {"info.hasBreakpoint()", "info.breakpoint.isEnabled()"})
-    public final boolean breakpointEnabled(@Cached("getBreakpointStatus()") final BreakpointInfo info,
-        @Cached("info.breakpoint.getAssumption()") final Assumption bpUnchanged) {
+    @Specialization(assumptions = {"bpUnchanged"}, guards = {"breakpoint.isEnabled()"})
+    public final boolean breakpointEnabled(
+        @Cached("breakpoint.getAssumption()") final Assumption bpUnchanged) {
       return true;
     }
   }
