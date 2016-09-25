@@ -29,6 +29,8 @@ import java.io.IOException;
 import java.io.Reader;
 import java.lang.reflect.Field;
 
+import tools.SourceCoordinate;
+
 public final class Lexer {
 
   public static class Peek {
@@ -127,26 +129,9 @@ public final class Lexer {
     nextCharField = f;
   }
 
-  public static final class SourceCoordinate {
-    public final int startLine;
-    public final int startColumn;
-    public final int charIndex;
-    public final int lastNonWhiteIdx;
-
-    public SourceCoordinate(final LexerState state) {
-      this.startLine   = state.lineNumber;
-      this.startColumn = state.bufPointer + 1;
-      this.charIndex   = state.charsRead + state.bufPointer;
-      this.lastNonWhiteIdx = state.lastNonWhiteCharIdx;
-      assert startLine   >= 0;
-      assert startColumn >= 0;
-      assert charIndex   >= 0;
-    }
-
-    @Override
-    public String toString() {
-      return "SrcCoord(line: " + startLine + ", col: " + startColumn + ")";
-    }
+  public static SourceCoordinate createSourceCoordinate(final LexerState state) {
+    return new SourceCoordinate(state.lineNumber, state.bufPointer + 1,
+        state.charsRead + state.bufPointer, state.lastNonWhiteCharIdx);
   }
 
   public SourceCoordinate getStartCoordinate() {
@@ -171,7 +156,7 @@ public final class Lexer {
     }
     while (endOfBuffer() || Character.isWhitespace(currentChar()));
 
-    state.startCoord = new SourceCoordinate(state);
+    state.startCoord = createSourceCoordinate(state);
 
     if (currentChar() == '\'') {
       lexString();
@@ -381,7 +366,7 @@ public final class Lexer {
   }
 
   protected int getNumberOfNonWhiteCharsRead() {
-    return state.startCoord.lastNonWhiteIdx;
+    return state.startCoord.charLength;
   }
 
   // All characters read and processed, including current line

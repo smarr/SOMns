@@ -27,9 +27,9 @@ package som.compiler;
 import com.oracle.truffle.api.source.Source;
 
 import som.VM;
-import som.compiler.Lexer.SourceCoordinate;
 import som.compiler.MixinBuilder.MixinDefinitionError;
 import som.compiler.Parser.ParseError;
+import tools.SourceCoordinate;
 import tools.language.StructuralProbe;
 
 public class SourcecodeCompiler {
