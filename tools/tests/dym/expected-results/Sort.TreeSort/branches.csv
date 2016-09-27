@@ -18,8 +18,8 @@ Kernel.som pos=13190 len=9	1	12	13
 Kernel.som pos=13332 len=14	0	1	1
 Kernel.som pos=13451 len=3	2	0	2
 Kernel.som pos=13545 len=3	1	1	2
-Kernel.som pos=22178 len=15	0	2	2
-Kernel.som pos=24339 len=20	2	0	2
+Kernel.som pos=22178 len=14	0	2	2
+Kernel.som pos=24338 len=20	2	0	2
 Platform.som pos=981 len=3	0	1	1
 Sort.som pos=2396 len=9	10	1990	2000
 Sort.som pos=2454 len=10	6	1994	2000

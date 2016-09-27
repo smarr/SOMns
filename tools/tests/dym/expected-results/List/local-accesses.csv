@@ -384,8 +384,8 @@ Kernel.som pos=20742 len=0	read	Kernel	1
 Kernel.som pos=20742 len=0	read	ALL	1
 Kernel.som pos=20978 len=0	read	Kernel	1
 Kernel.som pos=20978 len=0	read	ALL	1
-Kernel.som pos=27348 len=0	read	Kernel	1
-Kernel.som pos=27348 len=0	read	ALL	1
+Kernel.som pos=27347 len=0	read	Kernel	1
+Kernel.som pos=27347 len=0	read	ALL	1
 List.som pos=1087 len=43	read	ListSuite class	1
 List.som pos=1087 len=43	read	ALL	1
 List.som pos=1102 len=8	read	Platform	1

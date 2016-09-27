@@ -157,8 +157,8 @@ Thing>>#Value	7
 Thing>>#ifNil:	1
 Thing>>#println	5
 Integer>>#asString	1
-Integer>>#to:do:	288
-Integer>>#to:by:do:	288
+Integer>>#to:do:	259
+Integer>>#to:by:do:	259
 Integer>>#timesRepeat:	4
 Integer>>#$blockMethod@231@34:	40
 Integer_class>>#fromString:	3
@@ -173,8 +173,8 @@ ArrayReadMixin>>#first	101
 ArrayReadMixin>>#last	101
 ArrayReadMixin>>#do:	6
 ArrayReadMixin>>#$blockMethod@432@44:	21
-ArrayReadMixin>>#doIndexes:	53
-ArrayReadMixin>>#$blockMethod@434@44:	94
+ArrayReadMixin>>#doIndexes:	24
+ArrayReadMixin>>#$blockMethod@434@44:	49
 Array>>#putAll:	1
 Array>>#$blockMethod@501@43:	3
 Array_class>>#new:withAll:	1
@@ -188,7 +188,7 @@ Vector>>#at:	2
 Vector>>#do:	224
 Vector>>#$blockMethod@661@48:	540
 Vector>>#append:	101
-Vector>>#$blockMethod@692@45:	70
+Vector>>#$blockMethod@692@45:	25
 Vector>>#remove:	10
 Vector>>#$blockMethod@719@11:	21
 Vector>>#isEmpty	143

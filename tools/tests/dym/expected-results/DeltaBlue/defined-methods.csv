@@ -25,7 +25,7 @@ Method(ArrayReadMixin>>#average)	false	0
 Method(ArrayReadMixin>>#collect:)	false	0
 Method(ArrayReadMixin>>#contains:)	false	0
 Method(ArrayReadMixin>>#do:)	true	6
-Method(ArrayReadMixin>>#doIndexes:)	true	53
+Method(ArrayReadMixin>>#doIndexes:)	true	24
 Method(ArrayReadMixin>>#first)	true	101
 Method(ArrayReadMixin>>#from:to:do:)	false	0
 Method(ArrayReadMixin>>#indexOf:)	false	0
@@ -201,8 +201,8 @@ Method(Integer>>#round)	false	0
 Method(Integer>>#sqrt)	false	0
 Method(Integer>>#timesRepeat:)	true	4
 Method(Integer>>#to:)	false	0
-Method(Integer>>#to:by:do:)	true	288
-Method(Integer>>#to:do:)	true	288
+Method(Integer>>#to:by:do:)	true	259
+Method(Integer>>#to:do:)	true	259
 Method(Integer>>#~=)	false	0
 Method(JenkinsRandom>>#next)	false	0
 Method(Kernel>>#signalNotAValueWith:)	false	0

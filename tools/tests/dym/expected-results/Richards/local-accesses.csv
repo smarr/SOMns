@@ -409,8 +409,8 @@ Kernel.som pos=20742 len=0	read	Kernel	1
 Kernel.som pos=20742 len=0	read	ALL	1
 Kernel.som pos=20978 len=0	read	Kernel	1
 Kernel.som pos=20978 len=0	read	ALL	1
-Kernel.som pos=27348 len=0	read	Kernel	1
-Kernel.som pos=27348 len=0	read	ALL	1
+Kernel.som pos=27347 len=0	read	Kernel	1
+Kernel.som pos=27347 len=0	read	ALL	1
 Mirrors.som pos=1080 len=23	read	Mirrors class	1
 Mirrors.som pos=1080 len=23	read	ALL	1
 Mirrors.som pos=1095 len=8	read	VmMirror	1
