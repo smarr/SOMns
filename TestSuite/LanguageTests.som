@@ -604,4 +604,25 @@ class LanguageTests usingPlatform: platform testFramework: minitest = Value (
     
     private collection = ( ^ Array with: 7 with: 8 )
   ) : ( TEST_CONTEXT = () )
+
+  public class ReadUnwrittenVar = TestContext ()(
+    private helper = (
+      | v result |
+      result := Array new: 2.
+      result at: 1 put: v.
+      v := 1.
+      result at: 2 put: v.
+      ^ result
+    )
+    public testReadUnwrittenVars = (
+      | result |
+      result := helper.
+      self assert: nil equals: (result at: 1).
+      self assert:   1 equals: (result at: 2).
+
+      result := helper.
+      self assert: nil equals: (result at: 1).
+      self assert:   1 equals: (result at: 2).
+    )
+  ) : ( TEST_CONTEXT = () )
 )
