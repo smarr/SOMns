@@ -51,6 +51,7 @@ import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.OuterObjectRead;
 import som.interpreter.nodes.OuterObjectReadNodeGen;
 import som.interpreter.nodes.ReturnNonLocalNode;
+import som.vm.constants.Nil;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SInvokable.SInitializer;
 import som.vmobjects.SSymbol;
@@ -101,7 +102,8 @@ public final class MethodBuilder {
     MethodScope outer = (outerBuilder != null)
         ? outerBuilder.getCurrentMethodScope()
         : null;
-    this.currentScope   = new MethodScope(new FrameDescriptor(), outer, clsScope);
+    assert Nil.nilObject != null : "Nil.nilObject not yet initialized";
+    this.currentScope   = new MethodScope(new FrameDescriptor(Nil.nilObject), outer, clsScope);
 
     accessesVariablesOfOuterScope = false;
     throwsNonLocalReturn          = false;
