@@ -353,7 +353,7 @@ describe('Basic Protocol', function() {
         expect(msg.id).to.equal("se-0");
         expect(msg.sourceId).to.equal("s-6");
         expect(msg.topFrame.arguments[0]).to.equal("a PingPong");
-        expect(msg.topFrame.slots['ping']).to.equal('null');
+        expect(msg.topFrame.slots['ping']).to.equal('a Nil');
       });
     }));    
   });
