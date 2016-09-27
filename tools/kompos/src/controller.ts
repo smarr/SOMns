@@ -1,6 +1,10 @@
 /* jshint -W097 */
 "use strict";
 
+import {dbgLog, LineBreakpoint, SendBreakpoint,
+  AsyncMethodRcvBreakpoint} from './source';
+import {displayMessageHistory} from './visualizations';
+
 /* globals dbgLog */
 
 /**
@@ -12,7 +16,7 @@
  * @param {VmConnection} vmConnection
  * @constructor
  */
-function Controller(dbg, view, vmConnection) {
+export function Controller(dbg, view, vmConnection) {
   this.dbg = dbg;
   this.view = view;
   this.vmConnection = vmConnection;

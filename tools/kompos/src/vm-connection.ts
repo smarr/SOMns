@@ -1,6 +1,8 @@
 /* jshint -W097 */
 "use strict";
 
+import * as WebSocket from 'ws';
+
 /** WebSocket connection states */
 var CONNECTING = 0,
   OPEN = 1,
@@ -12,7 +14,7 @@ var CONNECTING = 0,
  * the communication protocol, currently using JSON.
  * @constructor
  */
-function VmConnection() {
+export function VmConnection() {
   this.socket = null;
   this.controller = null;
 }

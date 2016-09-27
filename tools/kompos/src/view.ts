@@ -1,6 +1,8 @@
 /* jshint -W097 */
 "use strict";
 
+declare var ctrl;
+
 function sourceToArray(source) {
   var arr = new Array(source.length),
     i;
@@ -274,7 +276,7 @@ function showSource(s, sections, methods) {
  * data and reacting to events.
  * @constructor
  */
-function View() {
+export function View() {
   this.currentSectionId = null;
   this.currentDomNode   = null;
   this.debuggerButtonJQNodes = null;

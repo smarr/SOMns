@@ -1,13 +1,14 @@
 {
   "compilerOptions": {
     "target": "es6",
+    "outDir": "../out/tests/",
     "module": "commonjs",
     "moduleResolution": "node",
     "inlineSourceMap": true,
-    "outDir": "out"
+    "allowJs": true
   },
-  "exclude": [
-    "node_modules",
-    "out"
+  "include" : [
+    "../src/common/**/*",
+    "../tests/**/*"
   ]
 }

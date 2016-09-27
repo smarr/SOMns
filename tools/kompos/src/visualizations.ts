@@ -1,6 +1,9 @@
 /* jshint -W097 */
 'use strict';
 
+import {dbgLog} from './source';
+import * as d3 from 'd3';
+
 var path, circle, nodes, links, force, colors;
 
 var horizontalDistance = 100,
@@ -106,7 +109,7 @@ function determineLinks(msgHist, nodeMap) {
 /**
  * @param {MessageHistory} msgHist
  */
-function displayMessageHistory(msgHist) {
+export function displayMessageHistory(msgHist) {
   colors = d3.scale.category10();
 
   var svg = d3.select('#graph-canvas')

@@ -1,6 +1,10 @@
 /* jshint -W097 */
 "use strict";
 
+import {VmConnection} from './vm-connection';
+import {Controller} from './controller';
+import {View} from './view';
+
 var data = {};
 
 /**
@@ -101,7 +105,7 @@ Breakpoint.prototype.toJsonObj = function () {
   };
 };
 
-function LineBreakpoint(source, line, lineNumSpan) {
+export function LineBreakpoint(source, line, lineNumSpan) {
   Breakpoint.call(this, source);
 
   this.type        = "lineBreakpoint";
@@ -120,7 +124,7 @@ LineBreakpoint.prototype.toJsonObj = function () {
   return obj;
 };
 
-function SendBreakpoint(source, sourceSection, role) {
+export function SendBreakpoint(source, sourceSection, role) {
   Breakpoint.call(this, source);
 
   this.type = "sendBreakpoint";
@@ -146,7 +150,7 @@ SendBreakpoint.prototype.toJsonObj = function () {
   return obj;
 };
 
-function AsyncMethodRcvBreakpoint(source, sourceSection) {
+export function AsyncMethodRcvBreakpoint(source, sourceSection) {
   Breakpoint.call(this, source);
 
   this.type = "asyncMsgRcvBreakpoint";
@@ -170,14 +174,14 @@ AsyncMethodRcvBreakpoint.prototype.toJsonObj = function () {
   return obj;
 };
 
-function dbgLog(msg) {
+export function dbgLog(msg) {
   var tzOffset = (new Date()).getTimezoneOffset() * 60000; // offset in milliseconds
   var localISOTime = (new Date(Date.now() - tzOffset)).toISOString().slice(0,-1);
 
   $("#debugger-log").html(localISOTime + ": " + msg + "<br/>" + $("#debugger-log").html());
 }
 
-function Debugger() {
+export function Debugger() {
   this.suspended = false;
   this.lastSuspendEventId = null;
   this.sourceObjects  = {};
@@ -279,15 +283,3 @@ Debugger.prototype.setResumed = function () {
   console.assert(this.suspended);
   this.suspended = false;
 };
-
-
-/* globals View, Controller, VmConnection */
-var ctrl;
-
-function init() {
-  var view = new View(),
-    vmConnection = new VmConnection(),
-    dbg = new Debugger();
-  ctrl = new Controller(dbg, view, vmConnection);
-  ctrl.toggleConnection();
-}

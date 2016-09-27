@@ -11,5 +11,5 @@ nbproject
 .pmd
 newspeak
 *.ns3
-tools/node_modules
-tools/out
+tools/kompos/node_modules
+tools/kompos/out
