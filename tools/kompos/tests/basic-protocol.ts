@@ -11,6 +11,8 @@ import { resolve } from 'path';
 import * as fs from 'fs';
 import {X_OK} from 'constants';
 
+import {SimpleSourceSection, SourceSection, SourceMessage, SuspendEventMessage,
+  BreakpointData, LineBreakpointData, SendBreakpointData} from '../src/messages';
 
 interface SomConnection {
   somProc: ChildProcess;
@@ -28,67 +30,6 @@ interface OnMessageHandler {
   (event: OnMessageEvent): void
 }
 
-type MessageType = "source" | "suspendEvent";
-
-interface Message {
-  type: MessageType;
-}
-
-interface Source {
-  id:         string;
-  sourceText: string;
-  mimeType:   string;
-  name:       string;
-  uri:        string;
-}
-
-interface IdMap<T> {
-  [key: string]: T;
-}
-
-interface SimpleSourceSection {
-  firstIndex: number;
-  length:     number;
-  line:       number;
-  column:     number;
-}
-
-interface SourceSection extends SimpleSourceSection {
-  id:          string;
-  description: string;
-  sourceId:    string;
-}
-
-interface Method {
-  name:          string;
-  definition:    SimpleSourceSection[];
-  sourceSection: SourceSection;
-}
-
-interface SourceMessage extends Message {
-  sources:  IdMap<Source>;
-  sections: IdMap<SourceSection>;
-  methods:  Method[];
-}
-
-interface Frame {
-  sourceSection: SourceSection;
-  methodName: string;
-}
-
-interface TopFrame {
-  arguments: string[];
-  slots:     IdMap<string>;
-}
-
-interface SuspendEventMessage extends Message {
-  sourceId: string;
-  sections: SourceSection[];
-  stack:    Frame[];
-  topFrame: TopFrame;
-  id: string;
-}
-
 type RespondType = "initialBreakpoints" | "updateBreakpoint" | "stepInto" |
                     "stepOver" | "return" | "resume" | "stop";
 
@@ -96,44 +37,12 @@ interface Respond {
   action: RespondType;
 }
 
-type BreakpointType = "lineBreakpoint" |
-                      "sendBreakpoint" |
-                      "asyncMsgRcvBreakpoint";
-
-interface Breakpoint {
-  type:      BreakpointType;
-  sourceUri: string;
-  enabled:   boolean;
-}
-
-interface LineBreakpoint extends Breakpoint {
-  line: number;
-}
-
-type SendBreakpointType = "receiver" | "sender";
-
-interface SendBreakpoint extends Breakpoint {
-  sectionId:   string;
-  startLine:   number;
-  startColumn: number;
-  charLength:  number;
-  role:        SendBreakpointType;
-}
-
-// TODO: refactor protocol, and just include a simple source section here
-interface AsyncMethodRcvBreakpoint extends Breakpoint {
-  sectionId:   string;
-  startLine:   number;
-  startColumn: number;
-  charLength:  number;
-} 
-
 interface InitialBreakpointsResponds extends Respond {
-  breakpoints: Breakpoint[];
+  breakpoints: BreakpointData[];
 }
 
 interface UpdateBreakpoint extends Respond {
-  breakpoint: Breakpoint;
+  breakpoint: BreakpointData;
 }
 
 interface StepMessage extends Respond {
@@ -155,7 +64,7 @@ function expectSourceSection(section: SourceSection) {
   expect(section.id.startsWith("ss")).to.be.true;
 }
 
-function getInitialBreakpointsResponds(breakpoints: Breakpoint[]): string {
+function getInitialBreakpointsResponds(breakpoints: BreakpointData[]): string {
   return JSON.stringify({action: "initialBreakpoints", breakpoints});
 }
 
@@ -173,7 +82,7 @@ function closeConnection(connection: SomConnection, done: MochaDone) {
 }
 
 function startSomAndConnect(onMessageHandler?: OnMessageHandler,
-    initialBreakpoints?: Breakpoint[]): Promise<SomConnection> {
+    initialBreakpoints?: BreakpointData[]): Promise<SomConnection> {
   const somProc = spawn(som, ['-G', '-t1', '-wd', 'tests/pingpong.som']);
   const promise = new Promise((resolve, reject) => {
     let connecting = false;
@@ -328,7 +237,7 @@ describe('Basic Protocol', function() {
     });
 
     before('Start SOMns and Connect', () => {
-      const breakpoint: LineBreakpoint = {
+      const breakpoint: LineBreakpointData = {
         type: "lineBreakpoint",
         line: 52,
         sourceUri: 'file:' + resolve('tests/pingpong.som'),
@@ -375,7 +284,7 @@ describe('Basic Protocol', function() {
     });
 
     before('Start SOMns and Connect', () => {
-      const breakpoint: SendBreakpoint = {
+      const breakpoint: SendBreakpointData = {
         type: "sendBreakpoint",
         sourceUri: 'file:' + resolve('tests/pingpong.som'),
         enabled: true,
@@ -415,7 +324,7 @@ describe('Basic Protocol', function() {
     });
 
     before('Start SOMns and Connect', () => {
-      const breakpoint: SendBreakpoint = {
+      const breakpoint: SendBreakpointData = {
         type: "sendBreakpoint",
         sourceUri: 'file:' + resolve('tests/pingpong.som'),
         enabled: true,
@@ -463,7 +372,7 @@ describe('Basic Protocol', function() {
     }
 
     before('Start SOMns and Connect', () => {
-      const breakpoint: SendBreakpoint = {
+      const breakpoint: SendBreakpointData = {
         type: "sendBreakpoint",
         sourceUri: 'file:' + resolve('tests/pingpong.som'),
         enabled: true,
@@ -509,7 +418,7 @@ describe('Basic Protocol', function() {
         suspendPs[1].then(msgAfterStep => {
           connectionP.then(con => {
             // set another breakpoint, after stepping, and with connection
-            const lbp: LineBreakpoint = {
+            const lbp: LineBreakpointData = {
               type: "lineBreakpoint",
               line: 21,
               sourceUri: 'file:' + resolve('tests/pingpong.som'),
@@ -534,7 +443,7 @@ describe('Basic Protocol', function() {
       return new Promise((resolve, reject) => {
         suspendPs[2].then(msgAfterStep => {
           connectionP.then(con => {
-            const lbp22: LineBreakpoint = {
+            const lbp22: LineBreakpointData = {
               type: "lineBreakpoint",
               line: 22,
               sourceUri: 'file:' + resolve('tests/pingpong.som'),
@@ -543,7 +452,7 @@ describe('Basic Protocol', function() {
             con.socket.send(JSON.stringify(
               {action: "updateBreakpoint", breakpoint: lbp22}));
             
-            const lbp21: LineBreakpoint = {
+            const lbp21: LineBreakpointData = {
               type: "lineBreakpoint",
               line: 21,
               sourceUri: 'file:' + resolve('tests/pingpong.som'),

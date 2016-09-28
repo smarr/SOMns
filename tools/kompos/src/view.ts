@@ -1,6 +1,9 @@
 /* jshint -W097 */
 "use strict";
 
+import {Breakpoint, AsyncMethodRcvBreakpoint, SendBreakpoint,
+  LineBreakpoint} from './messages';
+
 declare var ctrl;
 
 function sourceToArray(source) {
@@ -389,7 +392,7 @@ View.prototype.getActiveSourceId = function () {
   return $(".tab-pane.active").attr("id");
 };
 
-View.prototype.ensureBreakpointListEntry = function (breakpoint) {
+View.prototype.ensureBreakpointListEntry = function (breakpoint: Breakpoint) {
   if (breakpoint.checkbox !== null) {
     return;
   }
@@ -409,7 +412,7 @@ View.prototype.ensureBreakpointListEntry = function (breakpoint) {
   list.appendChild(entry);
 };
 
-View.prototype.updateBreakpoint = function (breakpoint, highlightElem,
+View.prototype.updateBreakpoint = function (breakpoint: Breakpoint, highlightElem,
                                             highlightClass) {
   this.ensureBreakpointListEntry(breakpoint);
   var enabled = breakpoint.isEnabled();
@@ -422,20 +425,20 @@ View.prototype.updateBreakpoint = function (breakpoint, highlightElem,
   }
 };
 
-View.prototype.updateLineBreakpoint = function (bp) {
+View.prototype.updateLineBreakpoint = function (bp: LineBreakpoint) {
   var lineNumSpan = $(bp.lineNumSpan);
   this.updateBreakpoint(bp, lineNumSpan, "breakpoint-active");
 };
 
-View.prototype.updateSendBreakpoint = function (bp) {
-  var bpSpan = $("#" + bp.sectionId);
+View.prototype.updateSendBreakpoint = function (bp: SendBreakpoint) {
+  var bpSpan = $("#" + bp.data.sectionId);
   this.updateBreakpoint(bp, bpSpan, "send-breakpoint-active");
 };
 
-View.prototype.updateAsyncMethodRcvBreakpoint = function (bp) {
+View.prototype.updateAsyncMethodRcvBreakpoint = function (bp: AsyncMethodRcvBreakpoint) {
   let i = 0,
     elem = null;
-  while (elem = document.getElementById(methodDeclIdToString(bp.source.id, bp.sectionId, i))) {
+  while (elem = document.getElementById(methodDeclIdToString(bp.source.id, bp.data.sectionId, i))) {
     this.updateBreakpoint(bp, $(elem), "send-breakpoint-active");
     i += 1;
   }

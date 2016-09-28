@@ -1,9 +1,14 @@
 /* jshint -W097 */
 "use strict";
 
-import {dbgLog, LineBreakpoint, SendBreakpoint,
-  AsyncMethodRcvBreakpoint} from './source';
+import {dbgLog} from './source';
 import {displayMessageHistory} from './visualizations';
+
+import {SourceMessage, SuspendEventMessage, MessageHistoryMessage,
+  LineBreakpoint, SendBreakpoint,
+  AsyncMethodRcvBreakpoint, SendBreakpointType,
+  createLineBreakpoint, createSendBreakpoint,
+  createAsyncMethodRcvBreakpoint} from './messages';
 
 /* globals dbgLog */
 
@@ -50,7 +55,7 @@ Controller.prototype.onError = function () {
   dbgLog("[WS] error");
 };
 
-Controller.prototype.onReceivedSource = function (msg) {
+Controller.prototype.onReceivedSource = function (msg: SourceMessage) {
   this.dbg.addSources(msg);
   this.dbg.addSections(msg);
   this.dbg.addMethods(msg);
@@ -66,7 +71,7 @@ Controller.prototype.onReceivedSource = function (msg) {
   }
 };
 
-Controller.prototype.onExecutionSuspension = function (msg) {
+Controller.prototype.onExecutionSuspension = function (msg: SuspendEventMessage) {
   this.dbg.setSuspended(msg.id);
   this.view.switchDebuggerToSuspendedState();
 
@@ -76,11 +81,11 @@ Controller.prototype.onExecutionSuspension = function (msg) {
   });
 };
 
-Controller.prototype.onMessageHistory = function (msg) {
+Controller.prototype.onMessageHistory = function (msg: MessageHistoryMessage) {
   displayMessageHistory(msg.messageHistory);
 };
 
-Controller.prototype.onUnknownMessage = function (msg) {
+Controller.prototype.onUnknownMessage = function (msg: any) {
   dbgLog("[WS] unknown message of type:" + msg.type);
 };
 
@@ -95,33 +100,33 @@ Controller.prototype.toggleBreakpoint = function (key, newBp) {
   return breakpoint;
 };
 
-Controller.prototype.onToggleLineBreakpoint = function (line, clickedSpan) {
+Controller.prototype.onToggleLineBreakpoint = function (line: number, clickedSpan) {
   dbgLog("updateBreakpoint");
 
   var breakpoint = this.toggleBreakpoint(line,
-    function (source) { return new LineBreakpoint(source, line, clickedSpan); });
+    function (source) { return createLineBreakpoint(source, line, clickedSpan); });
 
   this.view.updateLineBreakpoint(breakpoint);
 };
 
-Controller.prototype.onToggleSendBreakpoint = function (sectionId, role) {
+Controller.prototype.onToggleSendBreakpoint = function (sectionId: string, role: SendBreakpointType) {
   dbgLog("--send-op breakpoint: " + role);
 
   var id = sectionId + ":" + role,
     sourceSection = this.dbg.getSection(sectionId),
     breakpoint    = this.toggleBreakpoint(id, function (source) {
-      return new SendBreakpoint(source, sourceSection, role); });
+      return createSendBreakpoint(source, sourceSection, role); });
 
   this.view.updateSendBreakpoint(breakpoint);
 };
 
-Controller.prototype.onToggleMethodAsyncRcvBreakpoint = function (sectionId) {
+Controller.prototype.onToggleMethodAsyncRcvBreakpoint = function (sectionId: string) {
   dbgLog("async method rcv bp: " + sectionId);
 
   var id = sectionId + ":async-rcv",
     sourceSection = this.dbg.getSection(sectionId),
     breakpoint    = this.toggleBreakpoint(id, function (source) {
-      return new AsyncMethodRcvBreakpoint(source, sourceSection); });
+      return createAsyncMethodRcvBreakpoint(source, sourceSection); });
 
   this.view.updateAsyncMethodRcvBreakpoint(breakpoint);
 };

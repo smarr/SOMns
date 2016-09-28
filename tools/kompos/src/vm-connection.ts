@@ -3,6 +3,9 @@
 
 import * as WebSocket from 'ws';
 
+import {Message, Breakpoint} from './messages';
+
+
 /** WebSocket connection states */
 var CONNECTING = 0,
   OPEN = 1,
@@ -45,7 +48,7 @@ VmConnection.prototype.connect = function () {
   };
 
   this.socket.onmessage = function (e) {
-    var data = JSON.parse(e.data);
+    var data: Message = JSON.parse(e.data);
 
     switch (data.type) {
       case "source":
@@ -68,10 +71,10 @@ VmConnection.prototype.disconnect = function () {
   console.assert(this.isConnected());
 };
 
-VmConnection.prototype.sendInitialBreakpoints = function (breakpoints) {
+VmConnection.prototype.sendInitialBreakpoints = function (breakpoints: Breakpoint[]) {
   var bps = [];
   for (var bp of breakpoints) {
-    bps.push(bp.toJsonObj());
+    bps.push(bp);
   }
   this.socket.send(JSON.stringify({
     action: "initialBreakpoints",
@@ -79,10 +82,10 @@ VmConnection.prototype.sendInitialBreakpoints = function (breakpoints) {
   }));
 };
 
-VmConnection.prototype.updateBreakpoint = function (breakpoint) {
+VmConnection.prototype.updateBreakpoint = function (breakpoint: Breakpoint) {
   this.socket.send(JSON.stringify({
     action: "updateBreakpoint",
-    breakpoint: breakpoint.toJsonObj()
+    breakpoint: breakpoint
   }));
 };
 

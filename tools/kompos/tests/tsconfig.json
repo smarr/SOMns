@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "es6",
-    "outDir": "../out/tests/",
+    "outDir": "../out/",
     "module": "commonjs",
     "moduleResolution": "node",
     "inlineSourceMap": true,
