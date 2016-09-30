@@ -6,9 +6,7 @@ import {displayMessageHistory} from './visualizations';
 import {VmConnection} from './vm-connection';
 
 import {SourceMessage, SuspendEventMessage, MessageHistoryMessage,
-  LineBreakpoint, SendBreakpoint,
-  AsyncMethodRcvBreakpoint, SendBreakpointType,
-  createLineBreakpoint, createSendBreakpoint,
+  SendBreakpointType, createLineBreakpoint, createSendBreakpoint,
   createAsyncMethodRcvBreakpoint} from './messages';
 
 /**

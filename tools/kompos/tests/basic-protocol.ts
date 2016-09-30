@@ -23,11 +23,11 @@ interface SomConnection {
 interface OnMessageEvent {
   data:   any;
   type:   string;
-  target: WebSocket
+  target: WebSocket;
 }
 
 interface OnMessageHandler {
-  (event: OnMessageEvent): void
+  (event: OnMessageEvent): void;
 }
 
 type RespondType = "initialBreakpoints" | "updateBreakpoint" | "stepInto" |
@@ -117,7 +117,7 @@ function onlyWithConnection(fn) {
     } else {
       this.skip();
     }
-  }
+  };
 }
 
 describe('Basic Project Setup', () => {
@@ -126,7 +126,7 @@ describe('Basic Project Setup', () => {
       fs.access(som, X_OK, (err) => {
         expect(err).to.be.null;
         done();
-      })
+      });
     });
 
     it('should show help', done => {
@@ -148,8 +148,8 @@ describe('Basic Project Setup', () => {
       });
       connectionP.catch(reason => {
         done(reason);
-      })
-    })
+      });
+    });
   });
 });
 
@@ -168,11 +168,11 @@ describe('Basic Protocol', function() {
       getSourceData = (event: OnMessageEvent) => {
         if (firstSourceCaptured) { return; }    
         const data = JSON.parse(event.data);
-        if (data.type == "source") {
+        if (data.type === "source") {
           firstSourceCaptured = true;
           resolve(data);
         }
-      }
+      };
     });
 
     before('Start SOMns and Connect', () => {
@@ -229,11 +229,11 @@ describe('Basic Protocol', function() {
       getSuspendEvent = (event: OnMessageEvent) => {
         if (firstSuspendCaptured) { return; }    
         const data = JSON.parse(event.data);
-        if (data.type == "suspendEvent") {
+        if (data.type === "suspendEvent") {
           firstSuspendCaptured = true;
           resolve(data);
         }
-      }
+      };
     });
 
     before('Start SOMns and Connect', () => {
@@ -276,11 +276,11 @@ describe('Basic Protocol', function() {
       getSuspendEvent = (event: OnMessageEvent) => {
         if (firstSuspendCaptured) { return; }    
         const data = JSON.parse(event.data);
-        if (data.type == "suspendEvent") {
+        if (data.type === "suspendEvent") {
           firstSuspendCaptured = true;
           resolve(data);
         }
-      }
+      };
     });
 
     before('Start SOMns and Connect', () => {
@@ -316,11 +316,11 @@ describe('Basic Protocol', function() {
       getSuspendEvent = (event: OnMessageEvent) => {
         if (firstSuspendCaptured) { return; }    
         const data = JSON.parse(event.data);
-        if (data.type == "suspendEvent") {
+        if (data.type === "suspendEvent") {
           firstSuspendCaptured = true;
           resolve(data);
         }
-      }
+      };
     });
 
     before('Start SOMns and Connect', () => {
@@ -365,11 +365,11 @@ describe('Basic Protocol', function() {
     getSuspendEvent = (event: OnMessageEvent) => {
       if (capturedEvents > numSuspends) { return; }    
       const data = JSON.parse(event.data);
-      if (data.type == "suspendEvent") {
+      if (data.type === "suspendEvent") {
         resolves[capturedEvents](data);
         capturedEvents += 1;
       }
-    }
+    };
 
     before('Start SOMns and Connect', () => {
       const breakpoint: SendBreakpointData = {
@@ -400,7 +400,7 @@ describe('Basic Protocol', function() {
         suspendPs[0].then(msg => {
           const step : StepMessage = {action: "stepInto", suspendEvent: msg.id};
           connectionP.then(con => {
-            con.socket.send(JSON.stringify(step))});
+            con.socket.send(JSON.stringify(step)); });
 
           const p = suspendPs[1].then(msgAfterStep => {
             expect(msgAfterStep.stack).lengthOf(2);
