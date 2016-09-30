@@ -79,22 +79,24 @@ Setup Development Environment with Eclipse
 3. Run `ant` on the command line, or via Eclipse, to make sure that all
    libraries are loaded and available.
 
-4. Create Truffle Eclipse projects with Truffle's mx build tool
-```
-$ cd libs/truffle/
-$ ../mx/mx eclipseinit
+4. Create Truffle Eclipse projects with Truffle's mx build tool:
+
+```bash
+cd libs/truffle/
+../mx/mx eclipseinit
 ```
 
 5. Import SOMns project and the Truffle projects into Eclipse
 
-6. For debugging, create a run configuration with the Mandelbrot benchmark  
-In option Run Configurations go to Java Application/SOMns and select tab arguments, enter:
+6. For debugging, create a run configuration with the Mandelbrot benchmark. 
+   In option Run Configurations go to Java Application/SOMns and select tab
+   arguments, enter:
 
-  In Program arguments:
-   `core-lib/Benchmarks/Harness.som Mandelbrot 2 0 500`
+   In Program arguments:
+     `core-lib/Benchmarks/Harness.som Mandelbrot 2 0 500`
 
-  In VM arguments:
-   `-ea -esa`
+   In VM arguments:
+     `-ea -esa`
 
 For testing on the command line, the full command is
 `$ ./som -G core-lib/Benchmarks/Harness.som Mandelbrot 2 0 500`

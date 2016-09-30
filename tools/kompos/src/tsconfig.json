@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "outFile": "../out/code.js",
+    "module": "amd",
+    "moduleResolution": "node",
+    "inlineSourceMap": true,
+    "allowJs": true
+  },
+  "exclude": [
+    "libs",
+    "node_modules",
+    "out",
+    "tests/dym",
+    "webdebugger"
+  ]
+}

@@ -16,7 +16,7 @@ class WebResourceHandler implements HttpHandler {
   @Override
   public void handle(final HttpExchange exchange) throws IOException {
     WebDebugger.log("[REQ] " + exchange.getRequestURI().toString());
-    String rootFolder = System.getProperty("som.tools");
+    String rootFolder = System.getProperty("som.tools") + "/kompos";
     WebDebugger.log(rootFolder);
 
     String requestedFile = exchange.getRequestURI().toString();
@@ -26,11 +26,7 @@ class WebResourceHandler implements HttpHandler {
 
     switch (requestedFile) {
       case "/index.html":
-      case "/view.js":
-      case "/vm-connection.js":
-      case "/controller.js":
-      case "/source.js":
-      case "/visualizations.js":
+      case "/out/code.js":
         File f = new File(rootFolder + requestedFile);
         exchange.sendResponseHeaders(200, f.length());
         copy(f, exchange.getResponseBody());

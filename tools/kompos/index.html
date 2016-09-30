@@ -12,16 +12,8 @@
   <!-- Debugger Icons -->
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css" />
 
-  <!-- use d3 for some visualization -->
-  <!-- perhaps use $.getScript() for lazy loading -->
-<!--   <script src="//d3js.org/d3.v3.min.js"></script> -->
-  <script src="//d3js.org/d3.v3.js"></script>
+  <script data-main="out/code.js" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.2/require.min.js"></script>
 
-  <script src="controller.js"></script>
-  <script src="view.js"></script>
-  <script src="vm-connection.js"></script>
-  <script src="source.js"></script>
-  <script src="visualizations.js"></script>
   <title>Kompos Debugger</title>
 
   <style id="style-main">
@@ -160,7 +152,7 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
 
   </style>
 </head>
-<body onload="init()">
+<body>
 <div id="content">
 <ul id="tabs" class="nav nav-tabs" data-tabs="tabs"></ul>
 <div id="files" class="tab-content"></div>

@@ -9,6 +9,7 @@ import { expect } from 'chai';
 import { spawn, ChildProcess } from 'child_process';
 import { resolve } from 'path';
 import * as fs from 'fs';
+import {X_OK} from 'constants';
 
 
 interface SomConnection {
@@ -213,7 +214,7 @@ function onlyWithConnection(fn) {
 describe('Basic Project Setup', () => {
   describe('SOMns is testable', () => {
     it('SOMns executable should be in somBasepath', (done) => {
-      fs.access(som, fs.X_OK, (err) => {
+      fs.access(som, X_OK, (err) => {
         expect(err).to.be.null;
         done();
       })

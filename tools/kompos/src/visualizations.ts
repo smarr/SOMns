@@ -1,6 +1,9 @@
 /* jshint -W097 */
 'use strict';
 
+import {dbgLog} from './source';
+import * as d3 from 'd3';
+
 var path, circle, nodes, links, force, colors;
 
 var horizontalDistance = 100,
@@ -106,7 +109,7 @@ function determineLinks(msgHist, nodeMap) {
 /**
  * @param {MessageHistory} msgHist
  */
-function displayMessageHistory(msgHist) {
+export function displayMessageHistory(msgHist) {
   colors = d3.scale.category10();
 
   var svg = d3.select('#graph-canvas')
@@ -197,7 +200,7 @@ function restart() {
   path = path.data(links);
 
   // update existing links
-  path.classed('selected', function(d) { return d === selected_link; })
+  path //.classed('selected', function(d) { return d === selected_link; })
     .style('marker-start', function(d) { return d.left ? 'url(#start-arrow)' : ''; })
     .style('marker-end', function(d) { return d.right ? 'url(#end-arrow)' : ''; });
 
@@ -220,7 +223,7 @@ function restart() {
   // update existing nodes (reflexive & selected visual states)
   circle.selectAll('circle')
     .style('fill', function(d) {
-      return (d === selected_node) ? d3.rgb(colors(d.id)).brighter().toString() : colors(d.id);
+      return /*(d === selected_node) ? d3.rgb(colors(d.id)).brighter().toString() :*/ colors(d.id);
     })
     .classed('reflexive', function(d) { return d.reflexive; });
 
