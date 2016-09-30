@@ -3,6 +3,7 @@
 
 import * as WebSocket from 'ws';
 
+import {Controller} from './controller';
 import {Message, Breakpoint} from './messages';
 
 /**
@@ -11,14 +12,14 @@ import {Message, Breakpoint} from './messages';
  */
 export class VmConnection {
   private socket: WebSocket;
-  private controller;
+  private controller: Controller;
 
   constructor() {
     this.socket = null;
     this.controller = null;
   }
 
-  setController(controller) {
+  setController(controller: Controller) {
     this.controller = controller;
   }
 

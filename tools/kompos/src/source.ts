@@ -1,6 +1,7 @@
 /* jshint -W097 */
 "use strict";
 
+import {Breakpoint} from './messages';
 import {VmConnection} from './vm-connection';
 import {Controller} from './controller';
 import {View} from './view';
@@ -103,7 +104,7 @@ Debugger.prototype.getMethods = function (sourceId) {
   return this.methods[sourceId];
 };
 
-Debugger.prototype.getBreakpoint = function (source, key, newBp) {
+Debugger.prototype.getBreakpoint = function (source, key, newBp): Breakpoint {
   if (!this.breakpoints[source.name]) {
     this.breakpoints[source.name] = {};
   }
