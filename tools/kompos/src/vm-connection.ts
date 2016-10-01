@@ -4,7 +4,7 @@
 import * as WebSocket from 'ws';
 
 import {Controller} from './controller';
-import {Message, Breakpoint} from './messages';
+import {Message, Breakpoint, Respond} from './messages';
 
 /**
  * Encapsulates the connection to the VM via a web socket and encodes
@@ -69,22 +69,26 @@ export class VmConnection {
   }
 
   sendInitialBreakpoints(breakpoints: Breakpoint[]) {
-    this.socket.send(JSON.stringify({
+    this.send({
       action: "initialBreakpoints",
-      breakpoints: breakpoints
-    }));
+      breakpoints: breakpoints.map(b => b.data)
+    });
   }
 
   updateBreakpoint(breakpoint: Breakpoint) {
-    this.socket.send(JSON.stringify({
+    this.send({
       action: "updateBreakpoint",
-      breakpoint: breakpoint
-    }));
+      breakpoint: breakpoint.data
+    });
   };
 
   sendDebuggerAction(action, lastSuspendEventId) {
-    this.socket.send(JSON.stringify({
+    this.send({
       action: action,
-      suspendEvent: lastSuspendEventId}));
+      suspendEvent: lastSuspendEventId});
+  }
+
+  private send(respond: Respond) {
+    this.socket.send(JSON.stringify(respond));
   }
 }

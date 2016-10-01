@@ -117,10 +117,6 @@ abstract class AbstractBreakpoint<T extends AbstractBreakpointData> {
   isEnabled() {
     return this.data.enabled;
   }
-
-  toJSON() {
-    return this.data;
-  }
 }
 
 export class LineBreakpoint extends AbstractBreakpoint<LineBreakpointData> {
@@ -186,4 +182,26 @@ export function createAsyncMethodRcvBreakpoint(source: Source,
     startColumn: sourceSection.column,
     charLength:  sourceSection.length
   }, source);
+}
+
+export type Respond = InitialBreakpointsResponds | UpdateBreakpoint |
+  StepMessage; 
+
+export interface InitialBreakpointsResponds {
+  action: "initialBreakpoints";
+  breakpoints: BreakpointData[];
+}
+
+interface UpdateBreakpoint {
+  action: "updateBreakpoint";
+  breakpoint: BreakpointData;
+}
+
+export type StepType = "stepInto" | "stepOver" | "return" | "resume" | "stop"; 
+
+export interface StepMessage {
+  action: StepType;
+  // TODO: should be renamed to suspendEventId
+  /** Id of the corresponding suspend event. */
+  suspendEvent: string;
 }
