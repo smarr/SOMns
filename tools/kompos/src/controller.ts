@@ -1,6 +1,7 @@
 /* jshint -W097 */
 "use strict";
 
+import {Debugger} from './debugger';
 import {dbgLog} from './source';
 import {displayMessageHistory} from './visualizations';
 import {VmConnection} from './vm-connection';
@@ -14,7 +15,7 @@ import {SourceMessage, SuspendEventMessage, MessageHistoryMessage,
  * interaction.
  */
 export class Controller {
-  private dbg;
+  private dbg: Debugger;
   private view;
   private vmConnection: VmConnection;
 
@@ -36,7 +37,7 @@ export class Controller {
 
   onConnect() {
     dbgLog("[WS] open");
-    this.dbg.suspended = false;
+    this.dbg.setResumed();
     this.view.onConnect();
     var bps = this.dbg.getEnabledBreakpoints();
     dbgLog("Send breakpoints: " + bps.length);
