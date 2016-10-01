@@ -1,9 +1,11 @@
 /* jshint -W097 */
 "use strict";
 
-import {Debugger} from './debugger';
-import {dbgLog} from './source';
+import {Debugger}     from './debugger';
+import {LineBreakpoint, SendBreakpoint, AsyncMethodRcvBreakpoint} from './messages';
+import {dbgLog}       from './source';
 import {displayMessageHistory} from './visualizations';
+import {View}         from './view';
 import {VmConnection} from './vm-connection';
 
 import {SourceMessage, SuspendEventMessage, MessageHistoryMessage,
@@ -16,7 +18,7 @@ import {SourceMessage, SuspendEventMessage, MessageHistoryMessage,
  */
 export class Controller {
   private dbg: Debugger;
-  private view;
+  private view: View;
   private vmConnection: VmConnection;
 
   constructor(dbg, view, vmConnection: VmConnection) {
@@ -64,7 +66,20 @@ export class Controller {
       var source = msg.sources[sId];
       var bps = this.dbg.getEnabledBreakpointsForSource(source.name);
       for (var bp of bps) {
-        this.view.updateBreakpoint(bp);
+        switch (bp.data.type) {
+          case "lineBreakpoint":
+            this.view.updateLineBreakpoint(<LineBreakpoint> bp);
+            break;
+          case "sendBreakpoint":
+            this.view.updateSendBreakpoint(<SendBreakpoint> bp);
+            break;
+          case "asyncMsgRcvBreakpoint":
+            this.view.updateAsyncMethodRcvBreakpoint(<AsyncMethodRcvBreakpoint> bp);
+            break;
+          default:
+            console.error("Unsupported breakpoint type: " + JSON.stringify(bp.data));
+            break;
+        }
       }
     }
   }
@@ -104,7 +119,7 @@ export class Controller {
     var breakpoint = this.toggleBreakpoint(line,
       function (source) { return createLineBreakpoint(source, line, clickedSpan); });
 
-    this.view.updateLineBreakpoint(breakpoint);
+    this.view.updateLineBreakpoint(<LineBreakpoint> breakpoint);
   }
 
   onToggleSendBreakpoint(sectionId: string, role: SendBreakpointType) {
@@ -115,7 +130,7 @@ export class Controller {
       breakpoint    = this.toggleBreakpoint(id, function (source) {
         return createSendBreakpoint(source, sourceSection, role); });
 
-    this.view.updateSendBreakpoint(breakpoint);
+    this.view.updateSendBreakpoint(<SendBreakpoint> breakpoint);
   }
 
   onToggleMethodAsyncRcvBreakpoint(sectionId: string) {
@@ -126,7 +141,7 @@ export class Controller {
       breakpoint    = this.toggleBreakpoint(id, function (source) {
         return createAsyncMethodRcvBreakpoint(source, sourceSection); });
 
-    this.view.updateAsyncMethodRcvBreakpoint(breakpoint);
+    this.view.updateAsyncMethodRcvBreakpoint(<AsyncMethodRcvBreakpoint> breakpoint);
   }
 
   resumeExecution() {
