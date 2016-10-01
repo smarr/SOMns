@@ -1,0 +1,24 @@
+{
+  "version": "0.1.0",
+  "command": "npm",
+  "isShellCommand": true,
+  "showOutput": "always",
+  "echoCommand": true,
+  "suppressTaskName": true,
+  "options": {
+    "cwd": "${workspaceRoot}"
+  },
+  "tasks": [
+    {
+      "taskName": "watch",
+      "isWatching": true,
+      "args": ["run", "watch"],
+      "problemMatcher": "$tsc-watch"
+    },
+    {
+      "taskName": "test",
+      "isWatching": false,
+      "args": []
+    }
+  ]
+}
