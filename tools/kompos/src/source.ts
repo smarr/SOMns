@@ -1,12 +1,8 @@
 /* jshint -W097 */
 "use strict";
 
-import {Breakpoint} from './messages';
-import {VmConnection} from './vm-connection';
-import {Controller} from './controller';
-import {View} from './view';
-
-var data = {};
+import {Breakpoint, IdMap, Source, SourceSection, Method,
+  SourceMessage} from './messages';
 
 /**
  * Dummy definition for IDE support. These objects are
@@ -51,75 +47,97 @@ export function dbgLog(msg) {
   $("#debugger-log").html(localISOTime + ": " + msg + "<br/>" + $("#debugger-log").html());
 }
 
-export function Debugger() {
-  this.suspended = false;
-  this.lastSuspendEventId = null;
-  this.sourceObjects  = {};
-  this.sectionObjects = {};
-  this.methods        = {};
-  this.breakpoints    = {};
-}
+export class Debugger {
+  private suspended: boolean;
+  private lastSuspendEventId?: string;
 
-Debugger.prototype.getSource = function (id) {
-  for (var fileName in this.sourceObjects) {
-    if (this.sourceObjects[fileName].id === id) {
-      return this.sourceObjects[fileName];
+  private sourceObjects:  IdMap<Source>;
+  private sectionObjects: IdMap<SourceSection>;
+  private methods:        IdMap<IdMap<Method>>;
+  private breakpoints:    IdMap<IdMap<Breakpoint>>;
+
+  constructor() {
+    this.suspended = false;
+    this.lastSuspendEventId = null;
+    this.sourceObjects  = {};
+    this.sectionObjects = {};
+    this.methods        = {};
+    this.breakpoints    = {};
+  }
+
+  getSource(id): Source {
+    for (var fileName in this.sourceObjects) {
+      if (this.sourceObjects[fileName].id === id) {
+        return this.sourceObjects[fileName];
+      }
+    }
+    return null;
+  }
+
+  getSection(id): SourceSection {
+    return this.sectionObjects[id];
+  }
+
+  addSources(msg: SourceMessage) {
+    for (var sId in msg.sources) {
+      this.sourceObjects[msg.sources[sId].name] = msg.sources[sId];
     }
   }
-  return null;
-};
 
-Debugger.prototype.getSection = function (id) {
-  return this.sectionObjects[id];
-};
-
-Debugger.prototype.addSources = function (msg) {
-  for (var sId in msg.sources) {
-    this.sourceObjects[msg.sources[sId].name] = msg.sources[sId];
-  }
-};
-
-Debugger.prototype.addSections = function (msg) {
-  for (let ssId in msg.sections) {
-    this.sectionObjects[ssId] = msg.sections[ssId];
-  }
-};
-
-Debugger.prototype.addMethods = function (msg) {
-  for (let k in msg.methods) {
-    let meth = msg.methods[k];
-    let sId  = meth.sourceSection.sourceId;
-    let ssId = meth.sourceSection.id;
-    if (!this.methods[sId]) {
-      this.methods[sId] = {};
+  addSections(msg: SourceMessage) {
+    for (let ssId in msg.sections) {
+      this.sectionObjects[ssId] = msg.sections[ssId];
     }
-    this.methods[sId][ssId] = meth;
-
-    // also register the source section for later lookups
-    this.sectionObjects[ssId] = meth.sourceSection;
-  }
-};
-
-Debugger.prototype.getMethods = function (sourceId) {
-  return this.methods[sourceId];
-};
-
-Debugger.prototype.getBreakpoint = function (source, key, newBp): Breakpoint {
-  if (!this.breakpoints[source.name]) {
-    this.breakpoints[source.name] = {};
   }
 
-  var bp = this.breakpoints[source.name][key];
-  if (!bp) {
-    bp = newBp(source);
-    this.breakpoints[source.name][key] = bp;
-  }
-  return bp;
-};
+  addMethods(msg: SourceMessage) {
+    for (let k in msg.methods) {
+      let meth = msg.methods[k];
+      let sId  = meth.sourceSection.sourceId;
+      let ssId = meth.sourceSection.id;
+      if (!this.methods[sId]) {
+        this.methods[sId] = {};
+      }
+      this.methods[sId][ssId] = meth;
 
-Debugger.prototype.getEnabledBreakpoints = function () {
-  var bps = [];
-  for (var sourceName in this.breakpoints) {
+      // also register the source section for later lookups
+      this.sectionObjects[ssId] = meth.sourceSection;
+    }
+  }
+
+  getMethods(sourceId) {
+    return this.methods[sourceId];
+  }
+
+  getBreakpoint(source, key, newBp): Breakpoint {
+    if (!this.breakpoints[source.name]) {
+      this.breakpoints[source.name] = {};
+    }
+
+    var bp = this.breakpoints[source.name][key];
+    if (!bp) {
+      bp = newBp(source);
+      this.breakpoints[source.name][key] = bp;
+    }
+    return bp;
+  }
+
+  getEnabledBreakpoints(): Breakpoint[] {
+    var bps = [];
+    for (var sourceName in this.breakpoints) {
+      var lines = this.breakpoints[sourceName];
+      for (var line in lines) {
+        var bp = lines[line];
+        if (bp.isEnabled()) {
+          bps.push(bp);
+        }
+      }
+    }
+    return bps;
+  }
+
+  getEnabledBreakpointsForSource(sourceName: string): Breakpoint[] {
+    var bps = [];
     var lines = this.breakpoints[sourceName];
     for (var line in lines) {
       var bp = lines[line];
@@ -127,29 +145,17 @@ Debugger.prototype.getEnabledBreakpoints = function () {
         bps.push(bp);
       }
     }
+    return bps;
   }
-  return bps;
-};
 
-Debugger.prototype.getEnabledBreakpointsForSource = function (sourceName) {
-  var bps = [];
-  var lines = this.breakpoints[sourceName];
-  for (var line in lines) {
-    var bp = lines[line];
-    if (bp.isEnabled()) {
-      bps.push(bp);
-    }
+  setSuspended(eventId) {
+    console.assert(!this.suspended);
+    this.suspended = true;
+    this.lastSuspendEventId = eventId;
   }
-  return bps;
-};
 
-Debugger.prototype.setSuspended = function(eventId) {
-  console.assert(!this.suspended);
-  this.suspended = true;
-  this.lastSuspendEventId = eventId;
-};
-
-Debugger.prototype.setResumed = function () {
-  console.assert(this.suspended);
-  this.suspended = false;
-};
+  setResumed() {
+    console.assert(this.suspended);
+    this.suspended = false;
+  }
+}

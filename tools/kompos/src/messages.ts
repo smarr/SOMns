@@ -1,9 +1,9 @@
 
-interface IdMap<T> {
+export interface IdMap<T> {
   [key: string]: T;
 }
 
-interface Source {
+export interface Source {
   id:         string;
   sourceText: string;
   mimeType:   string;
@@ -24,7 +24,7 @@ export interface SourceSection extends SimpleSourceSection {
   sourceId?:    string;
 }
 
-interface Method {
+export interface Method {
   name:          string;
   definition:    SimpleSourceSection[];
   sourceSection: SourceSection;
@@ -84,7 +84,7 @@ export interface SendBreakpointData extends AbstractBreakpointData {
   role:        SendBreakpointType;
 }
 
-interface AsyncMethodRcvBreakpointData extends AbstractBreakpointData {
+export interface AsyncMethodRcvBreakpointData extends AbstractBreakpointData {
   type:        "asyncMsgRcvBreakpoint";
   sectionId:   string;
   startLine:   number;
