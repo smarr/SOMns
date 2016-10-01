@@ -24,13 +24,14 @@ class WebResourceHandler implements HttpHandler {
       requestedFile = "/index.html";
     }
 
+    if (requestedFile.startsWith("/out/") || "/index.html".equals(requestedFile)) {
+      File f = new File(rootFolder + requestedFile);
+      exchange.sendResponseHeaders(200, f.length());
+      copy(f, exchange.getResponseBody());
+      return;
+    }
+
     switch (requestedFile) {
-      case "/index.html":
-      case "/out/code.js":
-        File f = new File(rootFolder + requestedFile);
-        exchange.sendResponseHeaders(200, f.length());
-        copy(f, exchange.getResponseBody());
-        return;
       case "/favicon.ico":
         exchange.sendResponseHeaders(404, 0);
         exchange.close();

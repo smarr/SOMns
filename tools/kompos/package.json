@@ -25,6 +25,7 @@
     "@types/mocha":     "^2.2.32",
     "@types/node":      "^6.0.41",
     "@types/ws":        "^0.0.33",
+    "node-define":      "^0.1.1",
     "requirejs":        "^2.3.2",
     "ws":               "^1.1.1"
   },
@@ -36,13 +37,9 @@
   },
   "scripts": {
     "postinstall": "npm run compile",
-    "compile:src":   "node ./node_modules/typescript/bin/tsc -p src",
-    "compile:tests": "node ./node_modules/typescript/bin/tsc -p tests",
-    "compile":       "npm run compile:src && npm run compile:tests",
-    "lint:src":      "node_modules/tslint/bin/tslint --project src",
-    "lint:tests":    "node_modules/tslint/bin/tslint --project tests",
-    "lint":          "npm run lint:src && npm run lint:tests",
+    "compile":       "node ./node_modules/typescript/bin/tsc",
+    "lint":          "node_modules/tslint/bin/tslint",
     "watch": "node ./node_modules/typescript/bin/tsc -w",
-    "test": "node ./node_modules/mocha/bin/mocha -t 5000 -u tdd ./out/tests/"
+    "test": "node ./node_modules/mocha/bin/mocha -r node-define -t 5000 -u bdd ./out/tests/"
   }
 }
