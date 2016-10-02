@@ -1,4 +1,21 @@
-This file lists all people who have contributed to the SOM VM.
+This file lists all people with major contributions to SOMns.
+
+SOMns
+=====
+
+SOMns is derived from TruffleSOM, which is derived from SOM.
+
+It is implemented by Stefan Marr and includes contributions by:
+ - Carmen Torres Lopez, Software Languages Lab, Vrije Universiteit Brussel
+
+TruffleSOM
+==========
+
+TruffleSOM is based on SOM using Oracle's Truffle framework.
+It is implemented by Stefan Marr.
+
+SOM
+===
 
 SOM was originally implemented at the University of Aarhus (Denmark) in
 2001/2002. The implementation of SOM was done by Jakob Roland Andersen, Kasper
@@ -10,11 +27,3 @@ SOM was used by Michael Haupt in courses on virtual machines at Lancaster
 University and Technische Universitaet Darmstadt (Germany) in VM courses in
 2006. During that time, some changes were applied to SOM by Michael Haupt and
 Sebastian Kanthak.
-
-TruffleSOM is based on SOM as well as Oracle's Truffle Framework, which is part
-of the OpenJDK Graal project.
-
-TruffleSOM was implemented by Stefan Marr.
-
-2013-06-28, Stefan Marr
-<stefan.marr@vub.ac.be>
