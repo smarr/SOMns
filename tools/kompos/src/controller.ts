@@ -1,158 +1,177 @@
 /* jshint -W097 */
 "use strict";
 
-import {dbgLog, LineBreakpoint, SendBreakpoint,
-  AsyncMethodRcvBreakpoint} from './source';
+import {Debugger}     from './debugger';
+import {LineBreakpoint, SendBreakpoint, AsyncMethodRcvBreakpoint} from './messages';
+import {dbgLog}       from './source';
 import {displayMessageHistory} from './visualizations';
+import {View}         from './view';
+import {VmConnection} from './vm-connection';
 
-/* globals dbgLog */
+import {SourceMessage, SuspendEventMessage, MessageHistoryMessage,
+  SendBreakpointType, createLineBreakpoint, createSendBreakpoint,
+  createAsyncMethodRcvBreakpoint} from './messages';
 
 /**
  * The controller binds the domain model and the views, and mediates their
  * interaction.
- *
- * @param {Debugger} dbg
- * @param {View} view
- * @param {VmConnection} vmConnection
- * @constructor
  */
-export function Controller(dbg, view, vmConnection) {
-  this.dbg = dbg;
-  this.view = view;
-  this.vmConnection = vmConnection;
+export class Controller {
+  private dbg: Debugger;
+  private view: View;
+  private vmConnection: VmConnection;
 
-  vmConnection.setController(this);
-}
+  constructor(dbg, view, vmConnection: VmConnection) {
+    this.dbg = dbg;
+    this.view = view;
+    this.vmConnection = vmConnection;
 
-Controller.prototype.toggleConnection = function() {
-  if (this.vmConnection.isConnected()) {
-    this.vmConnection.disconnect();
-  } else {
-    this.vmConnection.connect();
+    vmConnection.setController(this);
   }
-};
 
-Controller.prototype.onConnect = function () {
-  dbgLog("[WS] open");
-  this.dbg.suspended = false;
-  this.view.onConnect();
-  var bps = this.dbg.getEnabledBreakpoints();
-  dbgLog("Send breakpoints: " + bps.length);
-  this.vmConnection.sendInitialBreakpoints(bps);
-};
-
-Controller.prototype.onClose = function () {
-  dbgLog("[WS] close");
-  this.view.onClose();
-};
-
-Controller.prototype.onError = function () {
-  dbgLog("[WS] error");
-};
-
-Controller.prototype.onReceivedSource = function (msg) {
-  this.dbg.addSources(msg);
-  this.dbg.addSections(msg);
-  this.dbg.addMethods(msg);
-
-  this.view.displaySources(msg);
-
-  for (var sId in msg.sources) {
-    var source = msg.sources[sId];
-    var bps = this.dbg.getEnabledBreakpointsForSource(source.name);
-    for (var bp of bps) {
-      this.view.updateBreakpoint(bp);
+  toggleConnection() {
+    if (this.vmConnection.isConnected()) {
+      this.vmConnection.disconnect();
+    } else {
+      this.vmConnection.connect();
     }
   }
-};
 
-Controller.prototype.onExecutionSuspension = function (msg) {
-  this.dbg.setSuspended(msg.id);
-  this.view.switchDebuggerToSuspendedState();
+  onConnect() {
+    dbgLog("[WS] open");
+    this.dbg.setResumed();
+    this.view.onConnect();
+    var bps = this.dbg.getEnabledBreakpoints();
+    dbgLog("Send breakpoints: " + bps.length);
+    this.vmConnection.sendInitialBreakpoints(bps);
+  }
 
-  var dbg = this.dbg;
-  this.view.displaySuspendEvent(msg, function (id) {
-    return [dbg.getSource(id), dbg.getMethods(id)];
-  });
-};
+  onClose() {
+    dbgLog("[WS] close");
+    this.view.onClose();
+  }
 
-Controller.prototype.onMessageHistory = function (msg) {
-  displayMessageHistory(msg.messageHistory);
-};
+  onError() {
+    dbgLog("[WS] error");
+  }
 
-Controller.prototype.onUnknownMessage = function (msg) {
-  dbgLog("[WS] unknown message of type:" + msg.type);
-};
+  onReceivedSource(msg: SourceMessage) {
+    this.dbg.addSources(msg);
+    this.dbg.addSections(msg);
+    this.dbg.addMethods(msg);
 
-Controller.prototype.toggleBreakpoint = function (key, newBp) {
-  var sourceId = this.view.getActiveSourceId();
-  var source   = this.dbg.getSource(sourceId);
+    this.view.displaySources(msg);
 
-  var breakpoint = this.dbg.getBreakpoint(source, key, newBp);
-  breakpoint.toggle();
+    for (var sId in msg.sources) {
+      var source = msg.sources[sId];
+      var bps = this.dbg.getEnabledBreakpointsForSource(source.name);
+      for (var bp of bps) {
+        switch (bp.data.type) {
+          case "lineBreakpoint":
+            this.view.updateLineBreakpoint(<LineBreakpoint> bp);
+            break;
+          case "sendBreakpoint":
+            this.view.updateSendBreakpoint(<SendBreakpoint> bp);
+            break;
+          case "asyncMsgRcvBreakpoint":
+            this.view.updateAsyncMethodRcvBreakpoint(<AsyncMethodRcvBreakpoint> bp);
+            break;
+          default:
+            console.error("Unsupported breakpoint type: " + JSON.stringify(bp.data));
+            break;
+        }
+      }
+    }
+  }
 
-  this.vmConnection.updateBreakpoint(breakpoint);
-  return breakpoint;
-};
+  onExecutionSuspension(msg: SuspendEventMessage) {
+    this.dbg.setSuspended(msg.id);
+    this.view.switchDebuggerToSuspendedState();
 
-Controller.prototype.onToggleLineBreakpoint = function (line, clickedSpan) {
-  dbgLog("updateBreakpoint");
+    var dbg = this.dbg;
+    this.view.displaySuspendEvent(msg, function (id) {
+      return [dbg.getSource(id), dbg.getMethods(id)];
+    });
+  }
 
-  var breakpoint = this.toggleBreakpoint(line,
-    function (source) { return new LineBreakpoint(source, line, clickedSpan); });
+  onMessageHistory(msg: MessageHistoryMessage) {
+    displayMessageHistory(msg.messageHistory);
+  }
 
-  this.view.updateLineBreakpoint(breakpoint);
-};
+  onUnknownMessage(msg: any) {
+    dbgLog("[WS] unknown message of type:" + msg.type);
+  }
 
-Controller.prototype.onToggleSendBreakpoint = function (sectionId, role) {
-  dbgLog("--send-op breakpoint: " + role);
+  toggleBreakpoint(key, newBp) {
+    var sourceId = this.view.getActiveSourceId();
+    var source   = this.dbg.getSource(sourceId);
 
-  var id = sectionId + ":" + role,
-    sourceSection = this.dbg.getSection(sectionId),
-    breakpoint    = this.toggleBreakpoint(id, function (source) {
-      return new SendBreakpoint(source, sourceSection, role); });
+    let breakpoint = this.dbg.getBreakpoint(source, key, newBp);
+    breakpoint.toggle();
 
-  this.view.updateSendBreakpoint(breakpoint);
-};
+    this.vmConnection.updateBreakpoint(breakpoint);
+    return breakpoint;
+  }
 
-Controller.prototype.onToggleMethodAsyncRcvBreakpoint = function (sectionId) {
-  dbgLog("async method rcv bp: " + sectionId);
+  onToggleLineBreakpoint(line: number, clickedSpan) {
+    dbgLog("updateBreakpoint");
 
-  var id = sectionId + ":async-rcv",
-    sourceSection = this.dbg.getSection(sectionId),
-    breakpoint    = this.toggleBreakpoint(id, function (source) {
-      return new AsyncMethodRcvBreakpoint(source, sourceSection); });
+    var breakpoint = this.toggleBreakpoint(line,
+      function (source) { return createLineBreakpoint(source, line, clickedSpan); });
 
-  this.view.updateAsyncMethodRcvBreakpoint(breakpoint);
-};
+    this.view.updateLineBreakpoint(<LineBreakpoint> breakpoint);
+  }
 
-Controller.prototype.resumeExecution = function () {
-  this.vmConnection.sendDebuggerAction('resume', this.dbg.lastSuspendEventId);
-  this.view.onContinueExecution();
-};
+  onToggleSendBreakpoint(sectionId: string, role: SendBreakpointType) {
+    dbgLog("--send-op breakpoint: " + role);
 
-Controller.prototype.pauseExecution = function () {
+    var id = sectionId + ":" + role,
+      sourceSection = this.dbg.getSection(sectionId),
+      breakpoint    = this.toggleBreakpoint(id, function (source) {
+        return createSendBreakpoint(source, sourceSection, role); });
 
-};
+    this.view.updateSendBreakpoint(<SendBreakpoint> breakpoint);
+  }
 
-Controller.prototype.stopExecution = function () {
+  onToggleMethodAsyncRcvBreakpoint(sectionId: string) {
+    dbgLog("async method rcv bp: " + sectionId);
 
-};
+    var id = sectionId + ":async-rcv",
+      sourceSection = this.dbg.getSection(sectionId),
+      breakpoint    = this.toggleBreakpoint(id, function (source) {
+        return createAsyncMethodRcvBreakpoint(source, sourceSection); });
 
-Controller.prototype.stepInto = function () {
-  this.dbg.setResumed();
-  this.view.onContinueExecution();
-  this.vmConnection.sendDebuggerAction('stepInto', this.dbg.lastSuspendEventId);
-};
+    this.view.updateAsyncMethodRcvBreakpoint(<AsyncMethodRcvBreakpoint> breakpoint);
+  }
 
-Controller.prototype.stepOver = function () {
-  this.dbg.setResumed();
-  this.view.onContinueExecution();
-  this.vmConnection.sendDebuggerAction('stepOver', this.dbg.lastSuspendEventId);
-};
+  resumeExecution() {
+    this.vmConnection.sendDebuggerAction('resume', this.dbg.lastSuspendEventId);
+    this.view.onContinueExecution();
+  }
 
-Controller.prototype.returnFromExecution = function () {
-  this.dbg.setResumed();
-  this.view.onContinueExecution();
-  this.vmConnection.sendDebuggerAction('return', this.dbg.lastSuspendEventId);
-};
+  pauseExecution() {
+    // TODO
+  }
+
+  stopExecution() {
+    // TODO
+  }
+
+  stepInto() {
+    this.dbg.setResumed();
+    this.view.onContinueExecution();
+    this.vmConnection.sendDebuggerAction('stepInto', this.dbg.lastSuspendEventId);
+  }
+
+  stepOver() {
+    this.dbg.setResumed();
+    this.view.onContinueExecution();
+    this.vmConnection.sendDebuggerAction('stepOver', this.dbg.lastSuspendEventId);
+  }
+
+  returnFromExecution() {
+    this.dbg.setResumed();
+    this.view.onContinueExecution();
+    this.vmConnection.sendDebuggerAction('return', this.dbg.lastSuspendEventId);
+  }
+}

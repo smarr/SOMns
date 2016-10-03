@@ -12,11 +12,11 @@ requirejs.config({
 var ctrl;
 
 requirejs(
-  ['vm-connection', 'controller', 'source', 'view', 'visualizations'], 
-  function(vmConn, cont, src, vw) {
+  ['vm-connection', 'controller', 'debugger', 'view', 'visualizations'], 
+  function(vmConn, cont, d, vw) {
     var view = new vw.View(),
       vmConnection = new vmConn.VmConnection(),
-      dbg = new src.Debugger();
+      dbg = new d.Debugger();
     ctrl = new cont.Controller(dbg, view, vmConnection);
     ctrl.toggleConnection();
   });

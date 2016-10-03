@@ -11,6 +11,9 @@ import { resolve } from 'path';
 import * as fs from 'fs';
 import {X_OK} from 'constants';
 
+import {SimpleSourceSection, SourceSection, SourceMessage, SuspendEventMessage,
+  BreakpointData, LineBreakpointData, SendBreakpointData,
+  AsyncMethodRcvBreakpointData, Respond, StepMessage} from '../src/messages';
 
 interface SomConnection {
   somProc: ChildProcess;
@@ -21,125 +24,11 @@ interface SomConnection {
 interface OnMessageEvent {
   data:   any;
   type:   string;
-  target: WebSocket
+  target: WebSocket;
 }
 
 interface OnMessageHandler {
-  (event: OnMessageEvent): void
-}
-
-type MessageType = "source" | "suspendEvent";
-
-interface Message {
-  type: MessageType;
-}
-
-interface Source {
-  id:         string;
-  sourceText: string;
-  mimeType:   string;
-  name:       string;
-  uri:        string;
-}
-
-interface IdMap<T> {
-  [key: string]: T;
-}
-
-interface SimpleSourceSection {
-  firstIndex: number;
-  length:     number;
-  line:       number;
-  column:     number;
-}
-
-interface SourceSection extends SimpleSourceSection {
-  id:          string;
-  description: string;
-  sourceId:    string;
-}
-
-interface Method {
-  name:          string;
-  definition:    SimpleSourceSection[];
-  sourceSection: SourceSection;
-}
-
-interface SourceMessage extends Message {
-  sources:  IdMap<Source>;
-  sections: IdMap<SourceSection>;
-  methods:  Method[];
-}
-
-interface Frame {
-  sourceSection: SourceSection;
-  methodName: string;
-}
-
-interface TopFrame {
-  arguments: string[];
-  slots:     IdMap<string>;
-}
-
-interface SuspendEventMessage extends Message {
-  sourceId: string;
-  sections: SourceSection[];
-  stack:    Frame[];
-  topFrame: TopFrame;
-  id: string;
-}
-
-type RespondType = "initialBreakpoints" | "updateBreakpoint" | "stepInto" |
-                    "stepOver" | "return" | "resume" | "stop";
-
-interface Respond {
-  action: RespondType;
-}
-
-type BreakpointType = "lineBreakpoint" |
-                      "sendBreakpoint" |
-                      "asyncMsgRcvBreakpoint";
-
-interface Breakpoint {
-  type:      BreakpointType;
-  sourceUri: string;
-  enabled:   boolean;
-}
-
-interface LineBreakpoint extends Breakpoint {
-  line: number;
-}
-
-type SendBreakpointType = "receiver" | "sender";
-
-interface SendBreakpoint extends Breakpoint {
-  sectionId:   string;
-  startLine:   number;
-  startColumn: number;
-  charLength:  number;
-  role:        SendBreakpointType;
-}
-
-// TODO: refactor protocol, and just include a simple source section here
-interface AsyncMethodRcvBreakpoint extends Breakpoint {
-  sectionId:   string;
-  startLine:   number;
-  startColumn: number;
-  charLength:  number;
-} 
-
-interface InitialBreakpointsResponds extends Respond {
-  breakpoints: Breakpoint[];
-}
-
-interface UpdateBreakpoint extends Respond {
-  breakpoint: Breakpoint;
-}
-
-interface StepMessage extends Respond {
-  // TODO: should be renamed to suspendEventId
-  /** Id of the corresponding suspend event. */
-  suspendEvent: string;
+  (event: OnMessageEvent): void;
 }
 
 function expectSimpleSourceSection(section: SimpleSourceSection) {
@@ -155,8 +44,8 @@ function expectSourceSection(section: SourceSection) {
   expect(section.id.startsWith("ss")).to.be.true;
 }
 
-function getInitialBreakpointsResponds(breakpoints: Breakpoint[]): string {
-  return JSON.stringify({action: "initialBreakpoints", breakpoints});
+function send(socket: WebSocket, respond: Respond) {
+  socket.send(JSON.stringify(respond));
 }
 
 function closeConnection(connection: SomConnection, done: MochaDone) {
@@ -173,7 +62,7 @@ function closeConnection(connection: SomConnection, done: MochaDone) {
 }
 
 function startSomAndConnect(onMessageHandler?: OnMessageHandler,
-    initialBreakpoints?: Breakpoint[]): Promise<SomConnection> {
+    initialBreakpoints?: BreakpointData[]): Promise<SomConnection> {
   const somProc = spawn(som, ['-G', '-t1', '-wd', 'tests/pingpong.som']);
   const promise = new Promise((resolve, reject) => {
     let connecting = false;
@@ -183,7 +72,7 @@ function startSomAndConnect(onMessageHandler?: OnMessageHandler,
         const socket = new WebSocket('ws://localhost:' + debuggerPort);
         socket.on('open', () => {
           if (initialBreakpoints) {
-            socket.send(getInitialBreakpointsResponds(initialBreakpoints));
+            send(socket, {action: "initialBreakpoints", breakpoints: initialBreakpoints});
           }
 
           resolve({somProc: somProc, socket: socket, closed: false});
@@ -208,7 +97,7 @@ function onlyWithConnection(fn) {
     } else {
       this.skip();
     }
-  }
+  };
 }
 
 describe('Basic Project Setup', () => {
@@ -217,7 +106,7 @@ describe('Basic Project Setup', () => {
       fs.access(som, X_OK, (err) => {
         expect(err).to.be.null;
         done();
-      })
+      });
     });
 
     it('should show help', done => {
@@ -239,8 +128,8 @@ describe('Basic Project Setup', () => {
       });
       connectionP.catch(reason => {
         done(reason);
-      })
-    })
+      });
+    });
   });
 });
 
@@ -259,11 +148,11 @@ describe('Basic Protocol', function() {
       getSourceData = (event: OnMessageEvent) => {
         if (firstSourceCaptured) { return; }    
         const data = JSON.parse(event.data);
-        if (data.type == "source") {
+        if (data.type === "source") {
           firstSourceCaptured = true;
           resolve(data);
         }
-      }
+      };
     });
 
     before('Start SOMns and Connect', () => {
@@ -320,15 +209,15 @@ describe('Basic Protocol', function() {
       getSuspendEvent = (event: OnMessageEvent) => {
         if (firstSuspendCaptured) { return; }    
         const data = JSON.parse(event.data);
-        if (data.type == "suspendEvent") {
+        if (data.type === "suspendEvent") {
           firstSuspendCaptured = true;
           resolve(data);
         }
-      }
+      };
     });
 
     before('Start SOMns and Connect', () => {
-      const breakpoint: LineBreakpoint = {
+      const breakpoint: LineBreakpointData = {
         type: "lineBreakpoint",
         line: 52,
         sourceUri: 'file:' + resolve('tests/pingpong.som'),
@@ -367,15 +256,15 @@ describe('Basic Protocol', function() {
       getSuspendEvent = (event: OnMessageEvent) => {
         if (firstSuspendCaptured) { return; }    
         const data = JSON.parse(event.data);
-        if (data.type == "suspendEvent") {
+        if (data.type === "suspendEvent") {
           firstSuspendCaptured = true;
           resolve(data);
         }
-      }
+      };
     });
 
     before('Start SOMns and Connect', () => {
-      const breakpoint: SendBreakpoint = {
+      const breakpoint: SendBreakpointData = {
         type: "sendBreakpoint",
         sourceUri: 'file:' + resolve('tests/pingpong.som'),
         enabled: true,
@@ -407,15 +296,15 @@ describe('Basic Protocol', function() {
       getSuspendEvent = (event: OnMessageEvent) => {
         if (firstSuspendCaptured) { return; }    
         const data = JSON.parse(event.data);
-        if (data.type == "suspendEvent") {
+        if (data.type === "suspendEvent") {
           firstSuspendCaptured = true;
           resolve(data);
         }
-      }
+      };
     });
 
     before('Start SOMns and Connect', () => {
-      const breakpoint: SendBreakpoint = {
+      const breakpoint: SendBreakpointData = {
         type: "sendBreakpoint",
         sourceUri: 'file:' + resolve('tests/pingpong.som'),
         enabled: true,
@@ -456,14 +345,14 @@ describe('Basic Protocol', function() {
     getSuspendEvent = (event: OnMessageEvent) => {
       if (capturedEvents > numSuspends) { return; }    
       const data = JSON.parse(event.data);
-      if (data.type == "suspendEvent") {
+      if (data.type === "suspendEvent") {
         resolves[capturedEvents](data);
         capturedEvents += 1;
       }
-    }
+    };
 
     before('Start SOMns and Connect', () => {
-      const breakpoint: SendBreakpoint = {
+      const breakpoint: SendBreakpointData = {
         type: "sendBreakpoint",
         sourceUri: 'file:' + resolve('tests/pingpong.som'),
         enabled: true,
@@ -491,7 +380,7 @@ describe('Basic Protocol', function() {
         suspendPs[0].then(msg => {
           const step : StepMessage = {action: "stepInto", suspendEvent: msg.id};
           connectionP.then(con => {
-            con.socket.send(JSON.stringify(step))});
+            send(con.socket, step); });
 
           const p = suspendPs[1].then(msgAfterStep => {
             expect(msgAfterStep.stack).lengthOf(2);
@@ -509,17 +398,14 @@ describe('Basic Protocol', function() {
         suspendPs[1].then(msgAfterStep => {
           connectionP.then(con => {
             // set another breakpoint, after stepping, and with connection
-            const lbp: LineBreakpoint = {
+            const lbp: LineBreakpointData = {
               type: "lineBreakpoint",
               line: 21,
               sourceUri: 'file:' + resolve('tests/pingpong.som'),
               enabled: true
             };
-            con.socket.send(JSON.stringify(
-              {action: "updateBreakpoint", breakpoint: lbp}));
-            con.socket.send(JSON.stringify(
-              {action: "resume", suspendEvent: msgAfterStep.id}
-            ));  
+            send(con.socket, {action: "updateBreakpoint", breakpoint: lbp});
+            send(con.socket, {action: "resume", suspendEvent: msgAfterStep.id});  
           });
         }),
         suspendPs[2].then(msgLineBP => {
@@ -534,25 +420,22 @@ describe('Basic Protocol', function() {
       return new Promise((resolve, reject) => {
         suspendPs[2].then(msgAfterStep => {
           connectionP.then(con => {
-            const lbp22: LineBreakpoint = {
+            const lbp22: LineBreakpointData = {
               type: "lineBreakpoint",
               line: 22,
               sourceUri: 'file:' + resolve('tests/pingpong.som'),
               enabled: true
             };
-            con.socket.send(JSON.stringify(
-              {action: "updateBreakpoint", breakpoint: lbp22}));
+            send(con.socket, {action: "updateBreakpoint", breakpoint: lbp22});
             
-            const lbp21: LineBreakpoint = {
+            const lbp21: LineBreakpointData = {
               type: "lineBreakpoint",
               line: 21,
               sourceUri: 'file:' + resolve('tests/pingpong.som'),
               enabled: false
             };
-            con.socket.send(JSON.stringify(
-              {action: "updateBreakpoint", breakpoint: lbp21}));
-            con.socket.send(JSON.stringify(
-              {action: "resume", suspendEvent: msgAfterStep.id}));
+            send(con.socket, {action: "updateBreakpoint", breakpoint: lbp21});
+            send(con.socket, {action: "resume", suspendEvent: msgAfterStep.id});
 
             const p = suspendPs[3].then(msgLineBP => {
               expect(msgLineBP.stack).lengthOf(2);

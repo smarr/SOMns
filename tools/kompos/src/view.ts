@@ -1,6 +1,9 @@
 /* jshint -W097 */
 "use strict";
 
+import {Breakpoint, AsyncMethodRcvBreakpoint, SendBreakpoint,
+  LineBreakpoint, SourceMessage, SuspendEventMessage} from './messages';
+
 declare var ctrl;
 
 function sourceToArray(source) {
@@ -271,33 +274,6 @@ function showSource(s, sections, methods) {
   files.appendChild(newFileElement);
 }
 
-/**
- * The HTML View, which realizes all access to the DOM for displaying
- * data and reacting to events.
- * @constructor
- */
-export function View() {
-  this.currentSectionId = null;
-  this.currentDomNode   = null;
-  this.debuggerButtonJQNodes = null;
-}
-
-View.prototype.onConnect = function () {
-  $("#dbg-connect-btn").html("Connected");
-};
-
-View.prototype.onClose = function () {
-  $("#dbg-connect-btn").html("Reconnect");
-};
-
-View.prototype.displaySources = function (msg) {
-  var sId;
-  for (sId in msg.sources) {
-    showSource(msg.sources[sId], msg.sections, msg.methods);
-  }
-  $('.nav-tabs a[href="#' + sId + '"]').tab('show');
-};
-
 function showVar(name, value, list) {
   var entry = nodeFromTemplate("frame-state-tpl");
   var t = $(entry).find("th");
@@ -320,165 +296,196 @@ function showFrame(frame, i, list) {
   list.appendChild(entry);
 }
 
-View.prototype.displaySuspendEvent = function (data, getSourceAndMethods) {
-  var list = document.getElementById("stack-frames");
-  while (list.lastChild) {
-    list.removeChild(list.lastChild);
+/**
+ * The HTML View, which realizes all access to the DOM for displaying
+ * data and reacting to events.
+ */
+export class View {
+  private currentSectionId?: string;
+  private currentDomNode?;
+  private debuggerButtonJQNodes?;
+
+  constructor() {
+    this.currentSectionId = null;
+    this.currentDomNode   = null;
+    this.debuggerButtonJQNodes = null;
   }
 
-  for (var i = 0; i < data.stack.length; i++) {
-    showFrame(data.stack[i], i, list);
+  onConnect() {
+    $("#dbg-connect-btn").html("Connected");
   }
 
-  list = document.getElementById("frame-state");
-  while (list.lastChild) {
-    list.removeChild(list.lastChild);
+  onClose() {
+    $("#dbg-connect-btn").html("Reconnect");
   }
 
-  showVar("Arguments", data.topFrame.arguments.join(", "), list);
-
-  for (var varName in data.topFrame.slots) {
-    showVar(varName, data.topFrame.slots[varName], list);
+  displaySources(msg: SourceMessage) {
+    var sId;
+    for (sId in msg.sources) {
+      showSource(msg.sources[sId], msg.sections, msg.methods);
+    }
+    $('.nav-tabs a[href="#' + sId + '"]').tab('show');
   }
 
-  // update the source sections for the sourceId
-  if (data.sections) {
-    var pane = document.getElementById(data.sourceId);
-    var sourceFile = $(pane).find(".source-file");
+  displaySuspendEvent(data: SuspendEventMessage, getSourceAndMethods) {
+    var list = document.getElementById("stack-frames");
+    while (list.lastChild) {
+      list.removeChild(list.lastChild);
+    }
 
-    // remove all spans
-    sourceFile.find("span").replaceWith($(".html"));
+    for (var i = 0; i < data.stack.length; i++) {
+      showFrame(data.stack[i], i, list);
+    }
 
-    // apply new spans
-    var result = getSourceAndMethods(data.sourceId),
-      source   = result[0],
-      methods  = result[1];
+    list = document.getElementById("frame-state");
+    while (list.lastChild) {
+      list.removeChild(list.lastChild);
+    }
 
-    var annotationArray = sourceToArray(source.sourceText);
-    annotateArray(annotationArray, source.id, data.sections, methods);
-    sourceFile.html(arrayToString(annotationArray));
+    showVar("Arguments", data.topFrame.arguments.join(", "), list);
 
-    // enable clicking on EventualSendNodes
-    enableEventualSendClicks(sourceFile);
-    enableMethodBreakpointHover(sourceFile);
+    for (var varName in data.topFrame.slots) {
+      showVar(varName, data.topFrame.slots[varName], list);
+    }
+
+    // update the source sections for the sourceId
+    if (data.sections) {
+      var pane = document.getElementById(data.sourceId);
+      var sourceFile = $(pane).find(".source-file");
+
+      // remove all spans
+      sourceFile.find("span").replaceWith($(".html"));
+
+      // apply new spans
+      var result = getSourceAndMethods(data.sourceId),
+        source   = result[0],
+        methods  = result[1];
+
+      var annotationArray = sourceToArray(source.sourceText);
+      annotateArray(annotationArray, source.id, data.sections, methods);
+      sourceFile.html(arrayToString(annotationArray));
+
+      // enable clicking on EventualSendNodes
+      enableEventualSendClicks(sourceFile);
+      enableMethodBreakpointHover(sourceFile);
+    }
+
+    // highlight current node
+    var ssId = data.stack[0].sourceSection.id;
+    var sourceId = data.stack[0].sourceSection.sourceId;
+    var ss = document.getElementById(ssId);
+    $(ss).addClass("DbgCurrentNode");
+
+    this.currentDomNode   = ss;
+    this.currentSectionId = ssId;
+    this.showSourceById(sourceId);
+
+    // scroll to the statement
+    $('html, body').animate({
+      scrollTop: $(ss).offset().top
+    }, 300);
   }
 
-  // highlight current node
-  var ssId = data.stack[0].sourceSection.id;
-  var sourceId = data.stack[0].sourceSection.sourceId;
-  var ss = document.getElementById(ssId);
-  $(ss).addClass("DbgCurrentNode");
-
-  this.currentDomNode   = ss;
-  this.currentSectionId = ssId;
-  this.showSourceById(sourceId);
-
-  // scroll to the statement
-  $('html, body').animate({
-    scrollTop: $(ss).offset().top
-  }, 300);
-};
-
-View.prototype.showSourceById = function (sourceId) {
-  if (this.getActiveSourceId() !== sourceId) {
-    $(document.getElementById("a" + sourceId)).tab('show');
-  }
-};
-
-View.prototype.getActiveSourceId = function () {
-  return $(".tab-pane.active").attr("id");
-};
-
-View.prototype.ensureBreakpointListEntry = function (breakpoint) {
-  if (breakpoint.checkbox !== null) {
-    return;
+  showSourceById(sourceId: string) {
+    if (this.getActiveSourceId() !== sourceId) {
+      $(document.getElementById("a" + sourceId)).tab('show');
+    }
   }
 
-  var bpId = "bp:" + breakpoint.source.id + ":" + breakpoint.getId();
-  var entry = nodeFromTemplate("breakpoint-tpl");
-  entry.setAttribute("id", bpId);
-
-  var tds = $(entry).find("td");
-  tds[0].innerHTML = breakpoint.source.name;
-  tds[1].innerHTML = breakpoint.getId();
-
-  breakpoint.checkbox = $(entry).find("input");
-  breakpoint.checkbox.attr("id", bpId + "chk");
-
-  var list = document.getElementById("breakpoint-list");
-  list.appendChild(entry);
-};
-
-View.prototype.updateBreakpoint = function (breakpoint, highlightElem,
-                                            highlightClass) {
-  this.ensureBreakpointListEntry(breakpoint);
-  var enabled = breakpoint.isEnabled();
-
-  breakpoint.checkbox.prop('checked', enabled);
-  if (enabled) {
-    highlightElem.addClass(highlightClass);
-  } else {
-    highlightElem.removeClass(highlightClass);
+  getActiveSourceId() {
+    return $(".tab-pane.active").attr("id");
   }
-};
 
-View.prototype.updateLineBreakpoint = function (bp) {
-  var lineNumSpan = $(bp.lineNumSpan);
-  this.updateBreakpoint(bp, lineNumSpan, "breakpoint-active");
-};
+  ensureBreakpointListEntry(breakpoint: Breakpoint) {
+    if (breakpoint.checkbox !== null) {
+      return;
+    }
 
-View.prototype.updateSendBreakpoint = function (bp) {
-  var bpSpan = $("#" + bp.sectionId);
-  this.updateBreakpoint(bp, bpSpan, "send-breakpoint-active");
-};
+    var bpId = "bp:" + breakpoint.source.id + ":" + breakpoint.getId();
+    var entry = nodeFromTemplate("breakpoint-tpl");
+    entry.setAttribute("id", bpId);
 
-View.prototype.updateAsyncMethodRcvBreakpoint = function (bp) {
-  let i = 0,
-    elem = null;
-  while (elem = document.getElementById(methodDeclIdToString(bp.source.id, bp.sectionId, i))) {
-    this.updateBreakpoint(bp, $(elem), "send-breakpoint-active");
-    i += 1;
+    var tds = $(entry).find("td");
+    tds[0].innerHTML = breakpoint.source.name;
+    tds[1].innerHTML = breakpoint.getId();
+
+    breakpoint.checkbox = $(entry).find("input");
+    breakpoint.checkbox.attr("id", bpId + "chk");
+
+    var list = document.getElementById("breakpoint-list");
+    list.appendChild(entry);
   }
-};
 
-View.prototype.lazyFindDebuggerButtons = function () {
-  if (!this.debuggerButtonJQNodes) {
-    this.debuggerButtonJQNodes = {};
-    this.debuggerButtonJQNodes.resume = $(document.getElementById("dbg-btn-resume"));
-    this.debuggerButtonJQNodes.pause  = $(document.getElementById("dbg-btn-pause"));
-    this.debuggerButtonJQNodes.stop   = $(document.getElementById("dbg-btn-stop"));
+  updateBreakpoint(breakpoint: Breakpoint, highlightElem, highlightClass) {
+    this.ensureBreakpointListEntry(breakpoint);
+    var enabled = breakpoint.isEnabled();
 
-    this.debuggerButtonJQNodes.stepInto = $(document.getElementById("dbg-btn-step-into"));
-    this.debuggerButtonJQNodes.stepOver = $(document.getElementById("dbg-btn-step-over"));
-    this.debuggerButtonJQNodes.return   = $(document.getElementById("dbg-btn-return"));
+    breakpoint.checkbox.prop('checked', enabled);
+    if (enabled) {
+      highlightElem.addClass(highlightClass);
+    } else {
+      highlightElem.removeClass(highlightClass);
+    }
   }
-};
 
-View.prototype.switchDebuggerToSuspendedState = function () {
-  this.lazyFindDebuggerButtons();
+  updateLineBreakpoint(bp: LineBreakpoint) {
+    var lineNumSpan = $(bp.lineNumSpan);
+    this.updateBreakpoint(bp, lineNumSpan, "breakpoint-active");
+  }
 
-  this.debuggerButtonJQNodes.resume.removeClass("disabled");
-  this.debuggerButtonJQNodes.pause.addClass("disabled");
-  this.debuggerButtonJQNodes.stop.removeClass("disabled");
+  updateSendBreakpoint(bp: SendBreakpoint) {
+    var bpSpan = $("#" + bp.data.sectionId);
+    this.updateBreakpoint(bp, bpSpan, "send-breakpoint-active");
+  }
 
-  this.debuggerButtonJQNodes.stepInto.removeClass("disabled");
-  this.debuggerButtonJQNodes.stepOver.removeClass("disabled");
-  this.debuggerButtonJQNodes.return.removeClass("disabled");
-};
+  updateAsyncMethodRcvBreakpoint(bp: AsyncMethodRcvBreakpoint) {
+    let i = 0,
+      elem = null;
+    while (elem = document.getElementById(methodDeclIdToString(bp.source.id, bp.data.sectionId, i))) {
+      this.updateBreakpoint(bp, $(elem), "send-breakpoint-active");
+      i += 1;
+    }
+  }
 
-View.prototype.switchDebuggerToResumedState = function () {
-  this.lazyFindDebuggerButtons();
+  lazyFindDebuggerButtons() {
+    if (!this.debuggerButtonJQNodes) {
+      this.debuggerButtonJQNodes = {};
+      this.debuggerButtonJQNodes.resume = $(document.getElementById("dbg-btn-resume"));
+      this.debuggerButtonJQNodes.pause  = $(document.getElementById("dbg-btn-pause"));
+      this.debuggerButtonJQNodes.stop   = $(document.getElementById("dbg-btn-stop"));
 
-  this.debuggerButtonJQNodes.resume.addClass("disabled");
-  this.debuggerButtonJQNodes.pause.removeClass("disabled");
-  this.debuggerButtonJQNodes.stop.removeClass("disabled");
+      this.debuggerButtonJQNodes.stepInto = $(document.getElementById("dbg-btn-step-into"));
+      this.debuggerButtonJQNodes.stepOver = $(document.getElementById("dbg-btn-step-over"));
+      this.debuggerButtonJQNodes.return   = $(document.getElementById("dbg-btn-return"));
+    }
+  }
 
-  this.debuggerButtonJQNodes.stepInto.addClass("disabled");
-  this.debuggerButtonJQNodes.stepOver.addClass("disabled");
-  this.debuggerButtonJQNodes.return.addClass("disabled");
-};
+  switchDebuggerToSuspendedState() {
+    this.lazyFindDebuggerButtons();
 
-View.prototype.onContinueExecution = function () {
-  this.switchDebuggerToResumedState();
-  $(this.currentDomNode).removeClass("DbgCurrentNode");
-};
+    this.debuggerButtonJQNodes.resume.removeClass("disabled");
+    this.debuggerButtonJQNodes.pause.addClass("disabled");
+    this.debuggerButtonJQNodes.stop.removeClass("disabled");
+
+    this.debuggerButtonJQNodes.stepInto.removeClass("disabled");
+    this.debuggerButtonJQNodes.stepOver.removeClass("disabled");
+    this.debuggerButtonJQNodes.return.removeClass("disabled");
+  }
+
+  switchDebuggerToResumedState() {
+    this.lazyFindDebuggerButtons();
+
+    this.debuggerButtonJQNodes.resume.addClass("disabled");
+    this.debuggerButtonJQNodes.pause.removeClass("disabled");
+    this.debuggerButtonJQNodes.stop.removeClass("disabled");
+
+    this.debuggerButtonJQNodes.stepInto.addClass("disabled");
+    this.debuggerButtonJQNodes.stepOver.addClass("disabled");
+    this.debuggerButtonJQNodes.return.addClass("disabled");
+  }
+
+  onContinueExecution() {
+    this.switchDebuggerToResumedState();
+    $(this.currentDomNode).removeClass("DbgCurrentNode");
+  }
+}

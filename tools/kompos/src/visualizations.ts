@@ -15,7 +15,7 @@ var width = 360,
 
 function hasSelfSends(actorId, messages) {
   for (var i in messages) {
-    if (messages[i].sender == "actorId") {
+    if (messages[i].sender === "actorId") {
       return true;
     }
   }
