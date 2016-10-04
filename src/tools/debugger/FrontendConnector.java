@@ -63,7 +63,7 @@ public class FrontendConnector {
   /**
    * Future to await the client's connection.
    */
-  private Future<WebSocket> clientConnected;
+  private CompletableFuture<WebSocket> clientConnected;
 
   private final ArrayList<Source> notReady = new ArrayList<>(); //TODO rename: toBeSend
 
@@ -96,8 +96,7 @@ public class FrontendConnector {
   private WebSocketHandler initializeWebSocket(final int port,
       final Future<WebSocket> clientConnected) {
     InetSocketAddress address = new InetSocketAddress(port);
-    WebSocketHandler server = new WebSocketHandler(address,
-        (CompletableFuture<WebSocket>) clientConnected, this);
+    WebSocketHandler server = new WebSocketHandler(address, this);
     server.start();
     return server;
   }
@@ -258,6 +257,10 @@ public class FrontendConnector {
     // Checkstyle: stop
     System.out.println(str);
     // Checkstyle: resume
+  }
+
+  public void completeConnection(final WebSocket conn) {
+    clientConnected.complete(conn);
   }
 
   public void shutdown() {

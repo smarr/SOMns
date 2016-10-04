@@ -2,7 +2,7 @@ package tools.debugger.message;
 
 import org.java_websocket.WebSocket;
 
-import tools.debugger.WebSocketHandler;
+import tools.debugger.FrontendConnector;
 import tools.debugger.session.BreakpointInfo;
 
 
@@ -18,7 +18,7 @@ public class UpdateBreakpoint extends Respond {
   }
 
   @Override
-  public void process(final WebSocketHandler handler, final WebSocket conn) {
-    handler.onBreakpointUpdate(breakpoint);
+  public void process(final FrontendConnector connector, final WebSocket conn) {
+    breakpoint.registerOrUpdate(connector);
   }
 }

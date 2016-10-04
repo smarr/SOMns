@@ -2,7 +2,7 @@ package tools.debugger.message;
 
 import org.java_websocket.WebSocket;
 
-import tools.debugger.WebSocketHandler;
+import tools.debugger.FrontendConnector;
 import tools.debugger.session.BreakpointInfo;
 
 
@@ -17,7 +17,11 @@ public class InitialBreakpointsResponds extends Respond {
     return breakpoints;
   }
 
-  public void process(final WebSocketHandler handler, final WebSocket conn) {
-    handler.onInitialBreakpoints(conn, breakpoints);
+  @Override
+  public void process(final FrontendConnector connector, final WebSocket conn) {
+    for (BreakpointInfo bp : breakpoints) {
+      bp.registerOrUpdate(connector);
+    }
+    connector.completeConnection(conn);
   }
 }

@@ -1,24 +1,23 @@
 package tools.debugger;
 
 import java.net.InetSocketAddress;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.concurrent.CompletableFuture;
 
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 
-import com.eclipsesource.json.Json;
-import com.eclipsesource.json.JsonArray;
-import com.eclipsesource.json.JsonObject;
-import com.eclipsesource.json.JsonValue;
-import com.oracle.truffle.api.debug.SuspendedEvent;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import gson.ClassHierarchyAdapterFactory;
 import som.VM;
 import tools.debugger.message.InitialBreakpointsResponds;
 import tools.debugger.message.Respond;
+import tools.debugger.message.StepMessage.Resume;
+import tools.debugger.message.StepMessage.Return;
+import tools.debugger.message.StepMessage.StepInto;
+import tools.debugger.message.StepMessage.StepOver;
+import tools.debugger.message.StepMessage.Stop;
 import tools.debugger.message.UpdateBreakpoint;
 import tools.debugger.session.AsyncMessageReceiveBreakpoint;
 import tools.debugger.session.BreakpointInfo;
@@ -30,15 +29,12 @@ import tools.debugger.session.MessageSenderBreakpoint;
 public class WebSocketHandler extends WebSocketServer {
   private static final int NUM_THREADS = 1;
 
-  private final CompletableFuture<WebSocket> clientConnected;
   private final FrontendConnector connector;
   private final Gson gson;
 
   WebSocketHandler(final InetSocketAddress address,
-      final CompletableFuture<WebSocket> clientConnected,
       final FrontendConnector connector) {
     super(address, NUM_THREADS);
-    this.clientConnected = clientConnected;
     this.connector = connector;
     this.gson = createJsonProcessor();
   }
@@ -51,6 +47,11 @@ public class WebSocketHandler extends WebSocketServer {
     ClassHierarchyAdapterFactory<Respond> respondAF = new ClassHierarchyAdapterFactory<>(Respond.class, "action");
     respondAF.register(INITIAL_BREAKPOINTS, InitialBreakpointsResponds.class);
     respondAF.register(UPDATE_BREAKPOINT,   UpdateBreakpoint.class);
+    respondAF.register("stepInto", StepInto.class);
+    respondAF.register("stepOver", StepOver.class);
+    respondAF.register("return",   Return.class);
+    respondAF.register("resume",   Resume.class);
+    respondAF.register("stop",     Stop.class);
 
     ClassHierarchyAdapterFactory<BreakpointInfo> breakpointAF = new ClassHierarchyAdapterFactory<>(BreakpointInfo.class, "type");
     breakpointAF.register(LineBreakpoint.class);
@@ -73,38 +74,14 @@ public class WebSocketHandler extends WebSocketServer {
     WebDebugger.log("onClose: code=" + code + " " + reason);
   }
 
-  @Deprecated // should be moved to proper separate class, perhaps frontend?
-  public void onInitialBreakpoints(final WebSocket conn, final BreakpointInfo[] breakpoints) {
-    for (BreakpointInfo bp : breakpoints) {
-      bp.registerOrUpdate(connector);
-
-    }
-    clientConnected.complete(conn);
-  }
-
-  @Deprecated // should be moved to proper separate class
-  public void onBreakpointUpdate(final BreakpointInfo breakpoint) {
-    breakpoint.registerOrUpdate(connector);
-  }
-
-  @Deprecated
-  public SuspendedEvent getSuspendedEvent(final String id) {
-    return connector.getSuspendedEvent(id);
-  }
-
-  @Deprecated
-  public void completeSuspendFuture(final String id) {
-    connector.completeSuspendFuture(id, new Object());
-  }
-
   @Override
   public void onMessage(final WebSocket conn, final String message) {
     try {
       Respond respond = gson.fromJson(message, Respond.class);
-      respond.process(this, conn);
-    } catch (Throwable t) {
+      respond.process(connector, conn);
+    } catch (Exception ex) {
       VM.errorPrint("Error on parsing Json:" + message);
-      t.printStackTrace();
+      ex.printStackTrace();
     }
   }
 
