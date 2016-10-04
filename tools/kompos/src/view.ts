@@ -1,7 +1,7 @@
 /* jshint -W097 */
 "use strict";
 
-import {Breakpoint, AsyncMethodRcvBreakpoint, SendBreakpoint,
+import {Breakpoint, AsyncMethodRcvBreakpoint, MessageBreakpoint,
   LineBreakpoint, SourceMessage, SuspendEventMessage} from './messages';
 
 declare var ctrl;
@@ -433,15 +433,15 @@ export class View {
     this.updateBreakpoint(bp, lineNumSpan, "breakpoint-active");
   }
 
-  updateSendBreakpoint(bp: SendBreakpoint) {
-    var bpSpan = $("#" + bp.data.sectionId);
+  updateSendBreakpoint(bp: MessageBreakpoint) {
+    var bpSpan = $("#" + bp.sectionId);
     this.updateBreakpoint(bp, bpSpan, "send-breakpoint-active");
   }
 
   updateAsyncMethodRcvBreakpoint(bp: AsyncMethodRcvBreakpoint) {
     let i = 0,
       elem = null;
-    while (elem = document.getElementById(methodDeclIdToString(bp.source.id, bp.data.sectionId, i))) {
+    while (elem = document.getElementById(methodDeclIdToString(bp.source.id, bp.sectionId, i))) {
       this.updateBreakpoint(bp, $(elem), "send-breakpoint-active");
       i += 1;
     }

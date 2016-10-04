@@ -12,8 +12,8 @@ import * as fs from 'fs';
 import {X_OK} from 'constants';
 
 import {SimpleSourceSection, SourceSection, SourceMessage, SuspendEventMessage,
-  BreakpointData, LineBreakpointData, SendBreakpointData,
-  AsyncMethodRcvBreakpointData, Respond, StepMessage} from '../src/messages';
+  BreakpointData, LineBreakpointData, SectionBreakpointData, Respond,
+  StepMessage} from '../src/messages';
 
 interface SomConnection {
   somProc: ChildProcess;
@@ -218,7 +218,7 @@ describe('Basic Protocol', function() {
 
     before('Start SOMns and Connect', () => {
       const breakpoint: LineBreakpointData = {
-        type: "lineBreakpoint",
+        type: "LineBreakpoint",
         line: 52,
         sourceUri: 'file:' + resolve('tests/pingpong.som'),
         enabled: true
@@ -264,16 +264,14 @@ describe('Basic Protocol', function() {
     });
 
     before('Start SOMns and Connect', () => {
-      const breakpoint: SendBreakpointData = {
-        type: "sendBreakpoint",
-        sourceUri: 'file:' + resolve('tests/pingpong.som'),
+      const breakpoint: SectionBreakpointData = {
+        type: "MessageSenderBreakpoint",
         enabled: true,
-        sectionId:   'ss-7291',
-        startLine:   15,
-        startColumn: 14,
-        charLength:  3,
-        role:        "sender"
-      };
+        coord: {
+          uri:        'file:' + resolve('tests/pingpong.som'),
+          startLine:   15,
+          startColumn: 14,
+          charLength:   3}};
       connectionP = startSomAndConnect(getSuspendEvent, [breakpoint]);
     });
 
@@ -304,16 +302,14 @@ describe('Basic Protocol', function() {
     });
 
     before('Start SOMns and Connect', () => {
-      const breakpoint: SendBreakpointData = {
-        type: "sendBreakpoint",
-        sourceUri: 'file:' + resolve('tests/pingpong.som'),
+      const breakpoint: SectionBreakpointData = {
+        type: "MessageReceiveBreakpoint",
         enabled: true,
-        sectionId:   'ss-7291',
-        startLine:   15,
-        startColumn: 14,
-        charLength:  3,
-        role:        "receiver"
-      };
+        coord: {
+          uri:        'file:' + resolve('tests/pingpong.som'),
+          startLine:   15,
+          startColumn: 14,
+          charLength:   3}};
       connectionP = startSomAndConnect(getSuspendEvent, [breakpoint]);
     });
 
@@ -352,16 +348,14 @@ describe('Basic Protocol', function() {
     };
 
     before('Start SOMns and Connect', () => {
-      const breakpoint: SendBreakpointData = {
-        type: "sendBreakpoint",
-        sourceUri: 'file:' + resolve('tests/pingpong.som'),
+      const breakpoint: SectionBreakpointData = {
+        type: "MessageSenderBreakpoint",
         enabled: true,
-        sectionId:   'ss-7291',
-        startLine:   15,
-        startColumn: 14,
-        charLength:  3,
-        role:        "sender"
-      };
+        coord: {
+          uri:        'file:' + resolve('tests/pingpong.som'),
+          startLine:   15,
+          startColumn: 14,
+          charLength:   3}};
       connectionP = startSomAndConnect(getSuspendEvent, [breakpoint]);
     });
 
@@ -399,7 +393,7 @@ describe('Basic Protocol', function() {
           connectionP.then(con => {
             // set another breakpoint, after stepping, and with connection
             const lbp: LineBreakpointData = {
-              type: "lineBreakpoint",
+              type: "LineBreakpoint",
               line: 21,
               sourceUri: 'file:' + resolve('tests/pingpong.som'),
               enabled: true
@@ -421,7 +415,7 @@ describe('Basic Protocol', function() {
         suspendPs[2].then(msgAfterStep => {
           connectionP.then(con => {
             const lbp22: LineBreakpointData = {
-              type: "lineBreakpoint",
+              type: "LineBreakpoint",
               line: 22,
               sourceUri: 'file:' + resolve('tests/pingpong.som'),
               enabled: true
@@ -429,7 +423,7 @@ describe('Basic Protocol', function() {
             send(con.socket, {action: "updateBreakpoint", breakpoint: lbp22});
             
             const lbp21: LineBreakpointData = {
-              type: "lineBreakpoint",
+              type: "LineBreakpoint",
               line: 21,
               sourceUri: 'file:' + resolve('tests/pingpong.som'),
               enabled: false

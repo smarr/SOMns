@@ -63,36 +63,35 @@ export interface MessageHistoryMessage {
   messageHistory: any; // TODO
 }
 
-export type BreakpointData = LineBreakpointData | SendBreakpointData | AsyncMethodRcvBreakpointData;
+export interface SourceCoordinate {
+  uri:         string;
+  startLine:   number;
+  startColumn: number;
+  charLength:  number;
+}
+
+export type BreakpointData = LineBreakpointData | SectionBreakpointData;
+
+export type SectionBreakpointType = "MessageSenderBreakpoint" |
+  "MessageReceiveBreakpoint" | "AsyncMessageReceiveBreakpoint";
 
 interface AbstractBreakpointData {
-  sourceUri: string;
   enabled:   boolean;
 }
 
 export interface LineBreakpointData extends AbstractBreakpointData {
-  type: "lineBreakpoint";
-  line: number;
+  type: "LineBreakpoint";
+  sourceUri: string;
+  line:      number;
 }
 
-export interface SendBreakpointData extends AbstractBreakpointData {
-  type:        "sendBreakpoint";
-  sectionId:   string;
-  startLine:   number;
-  startColumn: number;
-  charLength:  number;
-  role:        SendBreakpointType;
+export interface SectionBreakpointData extends AbstractBreakpointData {
+  type:  SectionBreakpointType;
+  coord: SourceCoordinate;
 }
 
-export interface AsyncMethodRcvBreakpointData extends AbstractBreakpointData {
-  type:        "asyncMsgRcvBreakpoint";
-  sectionId:   string;
-  startLine:   number;
-  startColumn: number;
-  charLength:  number;
-}
-
-export type Breakpoint = LineBreakpoint | SendBreakpoint | AsyncMethodRcvBreakpoint;
+export type Breakpoint = LineBreakpoint | MessageBreakpoint |
+  AsyncMethodRcvBreakpoint;
 
 abstract class AbstractBreakpoint<T extends AbstractBreakpointData> {
   readonly data: T;
@@ -132,56 +131,61 @@ export class LineBreakpoint extends AbstractBreakpoint<LineBreakpointData> {
   }
 }
 
-export type SendBreakpointType = "receiver" | "sender";
+export class MessageBreakpoint extends AbstractBreakpoint<SectionBreakpointData> {
+  readonly sectionId: string;
 
-export class SendBreakpoint extends AbstractBreakpoint<SendBreakpointData> {
-  constructor(data: SendBreakpointData, source: Source) {
+  constructor(data: SectionBreakpointData, source: Source, sectionId: string) {
     super(data, source);
+    this.sectionId = sectionId;
   }
 
   getId(): string {
-    return this.data.sectionId;
+    return this.sectionId;
   }
 }
 
-// TODO: refactor protocol, and just include a simple source section here
-export class AsyncMethodRcvBreakpoint extends AbstractBreakpoint<AsyncMethodRcvBreakpointData> {
-  constructor(data: AsyncMethodRcvBreakpointData, source: Source) {
+export class AsyncMethodRcvBreakpoint extends AbstractBreakpoint<SectionBreakpointData> {
+  readonly sectionId: string;
+
+  constructor(data: SectionBreakpointData, source: Source, sectionId: string) {
     super(data, source);
+    this.sectionId = sectionId;
   }
 
   getId(): string {
-    return this.data.sectionId + ":async-rcv";
+    return this.sectionId + ":async-rcv";
   }
 }
 
 export function createLineBreakpoint(source: Source, line: number, clickedSpan) {
   return new LineBreakpoint({
-    type: "lineBreakpoint", line: line, sourceUri: source.uri, enabled: false},
+    type: "LineBreakpoint", line: line, sourceUri: source.uri, enabled: false},
     source, clickedSpan);
 }
 
-export function createSendBreakpoint(source: Source,
-    sourceSection: SourceSection, role: SendBreakpointType) {
-  return new SendBreakpoint({
-    type: "sendBreakpoint", sourceUri: source.uri, enabled: false,
-    sectionId:   sourceSection.id,
-    startLine:   sourceSection.line,
-    startColumn: sourceSection.column,
-    charLength:  sourceSection.length,
-    role: role
-  }, source);
+export function createMsgBreakpoint(source: Source,
+    sourceSection: SourceSection, type: SectionBreakpointType) {
+  return new MessageBreakpoint({
+    type: type,
+    enabled: false,
+    coord: {
+      uri:         source.uri,
+      startLine:   sourceSection.line,
+      startColumn: sourceSection.column,
+      charLength:  sourceSection.length}},
+    source, sourceSection.id);
 }
 
 export function createAsyncMethodRcvBreakpoint(source: Source,
     sourceSection: SourceSection) {
   return new AsyncMethodRcvBreakpoint({
-    type: "asyncMsgRcvBreakpoint", sourceUri: source.uri, enabled: false,
-    sectionId:   sourceSection.id,
-    startLine:   sourceSection.line,
-    startColumn: sourceSection.column,
-    charLength:  sourceSection.length
-  }, source);
+    type: "AsyncMessageReceiveBreakpoint", enabled: false,
+    coord: {
+      uri:         source.uri,
+      startLine:   sourceSection.line,
+      startColumn: sourceSection.column,
+      charLength:  sourceSection.length}},
+    source, sourceSection.id);
 }
 
 export type Respond = InitialBreakpointsResponds | UpdateBreakpoint |
