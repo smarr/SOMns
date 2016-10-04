@@ -34,7 +34,7 @@ import som.vm.constants.Nil;
 import som.vmobjects.SSymbol;
 import tools.SourceCoordinate;
 import tools.actors.Tags.EventualMessageSend;
-import tools.debugger.session.Breakpoints.ReceiverBreakpoint;
+import tools.debugger.session.Breakpoints.MessageReceiveBreakpoint;
 
 
 @Instrumentable(factory = EventualSendNodeWrapper.class)
@@ -280,7 +280,7 @@ public class EventualSendNode extends ExprWithTagsNode {
   }
 
   protected abstract static class BreakpointNode extends AbstractBreakpointNode {
-    protected final ReceiverBreakpoint breakpoint;
+    protected final MessageReceiveBreakpoint breakpoint;
 
     protected BreakpointNode(final SourceSection sourceSection) {
       this.breakpoint = VM.getWebDebugger().getBreakpoints().

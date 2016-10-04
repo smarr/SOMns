@@ -1,6 +1,7 @@
 package tools;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Objects;
 
 import com.oracle.truffle.api.source.SourceSection;
@@ -73,5 +74,14 @@ public class SourceCoordinate {
   public static FullSourceCoordinate create(final URI sourceUri, final int startLine,
       final int startColumn, final int charLength) {
     return new FullSourceCoordinate(sourceUri, startLine, startColumn, -1, charLength);
+  }
+
+  public static FullSourceCoordinate create(final String sourceUri, final int startLine,
+      final int startColumn, final int charLength) {
+    try {
+      return create(new URI(sourceUri), startLine, startColumn, charLength);
+    } catch (URISyntaxException e) {
+      throw new RuntimeException(e);
+    }
   }
 }

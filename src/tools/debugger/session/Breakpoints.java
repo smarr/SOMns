@@ -35,7 +35,7 @@ public class Breakpoints {
 
   private final WebDebugger webDebugger;
   private final Map<BreakpointId, Breakpoint> knownBreakpoints;
-  private final Map<FullSourceCoordinate, ReceiverBreakpoint> receiverBreakpoints;
+  private final Map<FullSourceCoordinate, MessageReceiveBreakpoint> receiverBreakpoints;
   private Assumption receiverBreakpointVersion;
 
   private final Debugger debugger;
@@ -69,8 +69,10 @@ public class Breakpoints {
     private boolean   enabled;
     private transient Assumption unchanged;
 
-
-    public BreakpointId() {
+    /**
+     * Note: Meant mostly for use by serialization.
+     */
+    protected BreakpointId() {
       this.unchanged = Truffle.getRuntime().createAssumption("unchanged breakpoint");
     }
 
@@ -113,7 +115,10 @@ public class Breakpoints {
       this.line = line;
     }
 
-    LineBreakpoint() {
+    /**
+     * Note: Meant for use by serialization.
+     */
+    protected LineBreakpoint() {
       super();
       this.sourceUri = null;
       this.line = 0;
@@ -158,6 +163,14 @@ public class Breakpoints {
       this.coord = coord;
     }
 
+    /**
+     * Note: Meant for use by serialization.
+     */
+    protected SectionBreakpoint() {
+      super();
+      this.coord = null;
+    }
+
     public FullSourceCoordinate getCoordinate() {
       return coord;
     }
@@ -185,13 +198,20 @@ public class Breakpoints {
     }
   }
 
-  public static class SenderBreakpoint extends SectionBreakpoint {
-    public SenderBreakpoint(final boolean enabled, final FullSourceCoordinate coord) {
+  public static class MessageSenderBreakpoint extends SectionBreakpoint {
+    public MessageSenderBreakpoint(final boolean enabled, final FullSourceCoordinate coord) {
       super(enabled, coord);
     }
 
-    public SenderBreakpoint(final boolean enabled, final SourceSection section) {
+    public MessageSenderBreakpoint(final boolean enabled, final SourceSection section) {
       this(true, SourceCoordinate.create(section));
+    }
+
+    /**
+     * Note: Meant for use by serialization.
+     */
+    protected MessageSenderBreakpoint() {
+      super();
     }
 
     @Override
@@ -204,9 +224,16 @@ public class Breakpoints {
    * Breakpoint on the RootTag node of a method.
    * The method is identified by the source section info of the breakpoint.
    */
-  public static class AsyncMessageBreakpoint extends SectionBreakpoint {
-    public AsyncMessageBreakpoint(final boolean enabled, final FullSourceCoordinate coord) {
+  public static class AsyncMessageReceiveBreakpoint extends SectionBreakpoint {
+    public AsyncMessageReceiveBreakpoint(final boolean enabled, final FullSourceCoordinate coord) {
       super(enabled, coord);
+    }
+
+    /**
+     * Note: Meant for use by serialization.
+     */
+    protected AsyncMessageReceiveBreakpoint() {
+      super();
     }
   }
 
@@ -227,7 +254,7 @@ public class Breakpoints {
   }
 
   public Breakpoint getBreakpointOnSender(final FullSourceCoordinate coord) throws IOException {
-    BreakpointId bId = new SenderBreakpoint(true, coord);
+    BreakpointId bId = new MessageSenderBreakpoint(true, coord);
     Breakpoint bp = knownBreakpoints.get(bId);
     if (bp == null) {
       ensureOpenDebuggerSession();
@@ -278,7 +305,7 @@ public class Breakpoints {
   }
 
   public Breakpoint getAsyncMessageRcvBreakpoint(final FullSourceCoordinate coord) throws IOException {
-    BreakpointId bId = new AsyncMessageBreakpoint(true, coord);
+    BreakpointId bId = new AsyncMessageReceiveBreakpoint(true, coord);
     Breakpoint bp = knownBreakpoints.get(bId);
 
     if (bp == null) {
@@ -308,8 +335,8 @@ public class Breakpoints {
   }
 
   public synchronized void addReceiverBreakpoint(final FullSourceCoordinate coord) {
-    ReceiverBreakpoint bId = new ReceiverBreakpoint(true, coord);
-    ReceiverBreakpoint existingBP = receiverBreakpoints.get(bId);
+    MessageReceiveBreakpoint bId = new MessageReceiveBreakpoint(true, coord);
+    MessageReceiveBreakpoint existingBP = receiverBreakpoints.get(bId);
     if (existingBP == null) {
       receiverBreakpoints.put(coord, bId);
     }
@@ -322,13 +349,20 @@ public class Breakpoints {
     receiverBreakpointVersion = Truffle.getRuntime().createAssumption();
   }
 
-  public static class ReceiverBreakpoint extends SectionBreakpoint {
-    public ReceiverBreakpoint(final boolean enabled, final FullSourceCoordinate coord) {
+  public static class MessageReceiveBreakpoint extends SectionBreakpoint {
+    public MessageReceiveBreakpoint(final boolean enabled, final FullSourceCoordinate coord) {
       super(enabled, coord);
     }
 
-    public ReceiverBreakpoint(final boolean enabled, final SourceSection section) {
+    public MessageReceiveBreakpoint(final boolean enabled, final SourceSection section) {
       this(enabled, SourceCoordinate.create(section));
+    }
+
+    /**
+     * Note: Meant for use by serialization.
+     */
+    protected MessageReceiveBreakpoint() {
+      super();
     }
 
     @Override
@@ -337,9 +371,9 @@ public class Breakpoints {
     }
   }
 
-  public synchronized ReceiverBreakpoint getReceiverBreakpoint(
+  public synchronized MessageReceiveBreakpoint getReceiverBreakpoint(
       final FullSourceCoordinate section) {
     return receiverBreakpoints.computeIfAbsent(section,
-        ss -> new ReceiverBreakpoint(false, section));
+        ss -> new MessageReceiveBreakpoint(false, section));
   }
 }
