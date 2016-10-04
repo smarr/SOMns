@@ -1,15 +1,24 @@
 package tools.debugger.message;
 
-import tools.debugger.session.Breakpoints.BreakpointId;
+import org.java_websocket.WebSocket;
+
+import tools.debugger.WebSocketHandler;
+import tools.debugger.session.BreakpointInfo;
+
 
 public class UpdateBreakpoint extends Respond {
-  private final BreakpointId breakpoint;
+  private final BreakpointInfo breakpoint;
 
-  public UpdateBreakpoint(final BreakpointId breakpoint) {
+  public UpdateBreakpoint(final BreakpointInfo breakpoint) {
     this.breakpoint = breakpoint;
   }
 
-  public BreakpointId getBreakpoint() {
+  public BreakpointInfo getBreakpoint() {
     return breakpoint;
+  }
+
+  @Override
+  public void process(final WebSocketHandler handler, final WebSocket conn) {
+    handler.onBreakpointUpdate(breakpoint);
   }
 }

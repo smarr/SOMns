@@ -1,16 +1,23 @@
 package tools.debugger.message;
 
-import tools.debugger.session.Breakpoints.BreakpointId;
+import org.java_websocket.WebSocket;
+
+import tools.debugger.WebSocketHandler;
+import tools.debugger.session.BreakpointInfo;
 
 
 public class InitialBreakpointsResponds extends Respond {
-  private final BreakpointId[] breakpoints;
+  private final BreakpointInfo[] breakpoints;
 
-  public InitialBreakpointsResponds(final BreakpointId[] breakpoints) {
+  public InitialBreakpointsResponds(final BreakpointInfo[] breakpoints) {
     this.breakpoints = breakpoints;
   }
 
-  public BreakpointId[] getBreakpoints() {
+  public BreakpointInfo[] getBreakpoints() {
     return breakpoints;
+  }
+
+  public void process(final WebSocketHandler handler, final WebSocket conn) {
+    handler.onInitialBreakpoints(conn, breakpoints);
   }
 }

@@ -2,7 +2,6 @@ package tools.debugger;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -14,7 +13,6 @@ import java.util.concurrent.Future;
 
 import org.java_websocket.WebSocket;
 
-import com.oracle.truffle.api.debug.Breakpoint;
 import com.oracle.truffle.api.debug.SuspendedEvent;
 import com.oracle.truffle.api.instrumentation.Instrumenter;
 import com.oracle.truffle.api.nodes.Node;
@@ -26,14 +24,15 @@ import com.sun.net.httpserver.HttpServer;
 
 import som.VmSettings;
 import som.interpreter.actors.Actor;
-import som.interpreter.actors.Actor.Role;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.SFarReference;
 import tools.ObjectBuffer;
-import tools.SourceCoordinate;
-import tools.SourceCoordinate.FullSourceCoordinate;
 import tools.actors.ActorExecutionTrace;
+import tools.debugger.session.AsyncMessageReceiveBreakpoint;
 import tools.debugger.session.Breakpoints;
+import tools.debugger.session.LineBreakpoint;
+import tools.debugger.session.MessageReceiveBreakpoint;
+import tools.debugger.session.MessageSenderBreakpoint;
 import tools.highlight.Tags;
 
 /**
@@ -231,51 +230,20 @@ public class FrontendConnector {
     sender.close();
   }
 
-  /**
-   * @deprecated Should be handled by the JSON serializer directly, we might just need to register the breakpoint
-   */
-  @Deprecated
-  public void requestAsyncMessageRcvBreakpoint(final boolean enabled,
-      final URI sourceUri, final int startLine, final int startColumn,
-      final int charLength) {
-    try {
-      FullSourceCoordinate coord = SourceCoordinate.create(sourceUri, startLine, startColumn, charLength);
-      Breakpoint bp = breakpoints.getAsyncMessageRcvBreakpoint(coord);
-      bp.setEnabled(enabled);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+  public void registerOrUpdate(final LineBreakpoint bp) {
+    breakpoints.addOrUpdate(bp);
   }
 
-  /**
-   * @deprecated Should be handled by the JSON serializer directly, we might just need to register the breakpoint
-   */
-  @Deprecated
-  public void requestBreakpoint(final boolean enabled, final URI sourceUri,
-      final int startLine, final int startColumn, final int charLength,
-      final Role role) {
-    FullSourceCoordinate coord = SourceCoordinate.create(sourceUri, startLine, startColumn, charLength);
-    try {
-      if (role == Role.SENDER) {
-        Breakpoint breakpoint = breakpoints.getBreakpointOnSender(coord);
-        breakpoint.setEnabled(enabled);
-      } else {
-        assert role == Role.RECEIVER : "Do we have a not yet supported breakpoint type?";
-        breakpoints.addReceiverBreakpoint(coord);
-      }
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+  public void registerOrUpdate(final MessageSenderBreakpoint bp) {
+    breakpoints.addOrUpdate(bp);
   }
 
-  public void requestBreakpoint(final boolean enabled, final URI sourceUri,
-      final int lineNumber) {
-    try {
-      Breakpoint bp = breakpoints.getLineBreakpoint(sourceUri, lineNumber);
-      bp.setEnabled(enabled);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+  public void registerOrUpdate(final MessageReceiveBreakpoint bp) {
+    breakpoints.addOrUpdate(bp);
+  }
+
+  public void registerOrUpdate(final AsyncMessageReceiveBreakpoint bp) {
+    breakpoints.addOrUpdate(bp);
   }
 
   public SuspendedEvent getSuspendedEvent(final String id) {
