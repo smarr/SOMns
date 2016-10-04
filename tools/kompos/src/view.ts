@@ -1,10 +1,11 @@
 /* jshint -W097 */
 "use strict";
 
+import {Controller} from './controller';
 import {Breakpoint, AsyncMethodRcvBreakpoint, MessageBreakpoint,
   LineBreakpoint, SourceMessage, SuspendEventMessage} from './messages';
 
-declare var ctrl;
+declare var ctrl: Controller;
 
 function sourceToArray(source) {
   var arr = new Array(source.length),
@@ -196,12 +197,12 @@ function enableEventualSendClicks(fileNode) {
 
   $(document).on("click", ".bp-rcv", function (e) {
     e.stopImmediatePropagation();
-    ctrl.onToggleSendBreakpoint(e.currentTarget.attributes["data-ss-id"].value, "receiver");
+    ctrl.onToggleSendBreakpoint(e.currentTarget.attributes["data-ss-id"].value, "MessageReceiveBreakpoint");
   });
 
   $(document).on("click", ".bp-send", function (e) {
     e.stopImmediatePropagation();
-    ctrl.onToggleSendBreakpoint(e.currentTarget.attributes["data-ss-id"].value, "sender");
+    ctrl.onToggleSendBreakpoint(e.currentTarget.attributes["data-ss-id"].value, "MessageSenderBreakpoint");
   });
 }
 
