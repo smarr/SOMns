@@ -12,11 +12,10 @@ import org.hamcrest.core.IsInstanceOf;
 import org.junit.Test;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
-import gson.ClassHierarchyAdapterFactory;
 import tools.SourceCoordinate;
 import tools.SourceCoordinate.FullSourceCoordinate;
+import tools.debugger.WebSocketHandler;
 import tools.debugger.message.InitialBreakpointsResponds;
 import tools.debugger.message.Respond;
 import tools.debugger.message.UpdateBreakpoint;
@@ -28,27 +27,7 @@ import tools.debugger.session.MessageSenderBreakpoint;
 
 
 public class JsonTests {
-  private static final String INITIAL_BREAKPOINTS = "initialBreakpoints";
-  private static final String UPDATE_BREAKPOINT   = "updateBreakpoint";
-
-  private final Gson gson;
-
-  public JsonTests() {
-    ClassHierarchyAdapterFactory<Respond> respondAF = new ClassHierarchyAdapterFactory<>(Respond.class, "action");
-    respondAF.register(INITIAL_BREAKPOINTS, InitialBreakpointsResponds.class);
-    respondAF.register(UPDATE_BREAKPOINT,   UpdateBreakpoint.class);
-
-    ClassHierarchyAdapterFactory<BreakpointId> breakpointAF = new ClassHierarchyAdapterFactory<>(BreakpointId.class, "type");
-    breakpointAF.register(LineBreakpoint.class);
-    breakpointAF.register(MessageSenderBreakpoint.class);
-    breakpointAF.register(MessageReceiveBreakpoint.class);
-    breakpointAF.register(AsyncMessageReceiveBreakpoint.class);
-
-    gson = new GsonBuilder().
-        registerTypeAdapterFactory(respondAF).
-        registerTypeAdapterFactory(breakpointAF).
-        create();
-  }
+  private final Gson gson = WebSocketHandler.createJsonProcessor();
 
   private static final String FULL_COORD = "{\"uri\":\"file:/test\",\"startLine\":2,\"startColumn\":3,\"charLength\":55}";
   private static final FullSourceCoordinate FULL_COORD_OBJ = SourceCoordinate.create("file:/test", 2, 3, 55);
