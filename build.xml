@@ -5,7 +5,7 @@
     <property name="lib.dir"     value="libs" />
     <property name="truffle.dir" value="${lib.dir}/truffle" />
     <property name="truffle.build" value="${truffle.dir}/mxbuild/dists" />
-    <property name="somns-deps.version" value="0.2.0" />
+    <property name="somns-deps.version" value="0.3.0" />
     <property name="checkstyle.version" value="6.17" />
 
     <property name="build.dir"   value="build"/>
