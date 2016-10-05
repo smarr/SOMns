@@ -3,7 +3,7 @@
 
 import {Controller} from './controller';
 import {Breakpoint, AsyncMethodRcvBreakpoint, MessageBreakpoint,
-  LineBreakpoint, SourceMessage, SuspendEventMessage} from './messages';
+  LineBreakpoint, SourceMessage, SuspendEventMessage, SourceSection} from './messages';
 
 declare var ctrl: Controller;
 
@@ -29,18 +29,23 @@ function methodDeclIdToObj(id) {
   };
 }
 
-function Begin(section) {
-  this.section = section;
-  this.type    = Begin;
+class Begin {
+  private section: SourceSection;
+  private type;
+
+  constructor(section: SourceSection) {
+    this.section = section;
+    this.type    = Begin;
+  }
+
+  toString() {
+    return '<span id="' + this.section.id + '" class="' + this.section.tags.join(" ") + '">';
+  }
+
+  length() {
+    return this.section.length;
+  }
 }
-
-Begin.prototype.toString = function () {
-  return '<span id="' + this.section.id + '" class="' + this.section.tags.join(" ") + '">';
-};
-
-Begin.prototype.length = function () {
-  return this.section.length;
-};
 
 function BeginMethodDef(method, i, defPart) {
   this.method  = method;

@@ -22,6 +22,7 @@ export interface SourceSection extends SimpleSourceSection {
   id:           string;
   description?: string;
   sourceId?:    string;
+  tags?:        string[];
 }
 
 export interface Method {
