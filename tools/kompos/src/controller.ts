@@ -56,14 +56,10 @@ export class Controller {
   }
 
   onReceivedSource(msg: SourceMessage) {
-    this.dbg.addSources(msg);
-    this.dbg.addSections(msg);
-    this.dbg.addMethods(msg);
+    let newSources = this.dbg.addSources(msg);
+    this.view.displaySources(newSources);
 
-    this.view.displaySources(msg);
-
-    for (var sId in msg.sources) {
-      var source = msg.sources[sId];
+    for (let source of msg.sources) {
       var bps = this.dbg.getEnabledBreakpointsForSource(source.name);
       for (var bp of bps) {
         switch (bp.data.type) {
@@ -103,7 +99,7 @@ export class Controller {
     dbgLog("[WS] unknown message of type:" + msg.type);
   }
 
-  toggleBreakpoint(key, newBp) {
+  private toggleBreakpoint(key, newBp) {
     var sourceId = this.view.getActiveSourceId();
     var source   = this.dbg.getSource(sourceId);
 
@@ -129,7 +125,7 @@ export class Controller {
     var id = sectionId + ":" + type,
       sourceSection = this.dbg.getSection(sectionId),
       breakpoint    = this.toggleBreakpoint(id, function (source) {
-        return createMsgBreakpoint(source, sourceSection, type); });
+        return createMsgBreakpoint(source, sourceSection, sectionId, type); });
 
     this.view.updateSendBreakpoint(<MessageBreakpoint> breakpoint);
   }
@@ -140,7 +136,7 @@ export class Controller {
     var id = sectionId + ":async-rcv",
       sourceSection = this.dbg.getSection(sectionId),
       breakpoint    = this.toggleBreakpoint(id, function (source) {
-        return createAsyncMethodRcvBreakpoint(source, sourceSection); });
+        return createAsyncMethodRcvBreakpoint(source, sourceSection, sectionId); });
 
     this.view.updateAsyncMethodRcvBreakpoint(<AsyncMethodRcvBreakpoint> breakpoint);
   }

@@ -4,35 +4,43 @@ export interface IdMap<T> {
 }
 
 export interface Source {
-  id:         string;
   sourceText: string;
   mimeType:   string;
   name:       string;
   uri:        string;
+  sections:   TaggedSourceCoordinate[];
+  methods:    Method[];
 }
 
-export interface SimpleSourceSection {
-  firstIndex?: number;
-  length:      number;
-  line:        number;
-  column:      number;
+export function getSectionId(sourceId: string, section: SourceCoordinate) {
+  return sourceId + ':' + section.startLine + ':' + section.startColumn + ':' +
+    section.charLength;
 }
 
-export interface SourceSection extends SimpleSourceSection {
-  id:           string;
-  description?: string;
-  sourceId?:    string;
-  tags?:        string[];
+// TODO: rename
+export interface SourceCoordinate {
+  charLength:       number;
+  startLine:        number;
+  startColumn:      number;
+}
+
+// TODO: rename
+export interface FullSourceCoordinate extends SourceCoordinate {
+  uri: string;
+}
+
+export interface TaggedSourceCoordinate extends SourceCoordinate {
+  tags: string[];
 }
 
 export interface Method {
   name:          string;
-  definition:    SimpleSourceSection[];
-  sourceSection: SourceSection;
+  definition:    SourceCoordinate[];
+  sourceSection: SourceCoordinate;
 }
 
 interface Frame {
-  sourceSection: SourceSection;
+  sourceSection: FullSourceCoordinate;
   methodName: string;
 }
 
@@ -45,15 +53,13 @@ export type Message = SourceMessage | SuspendEventMessage | MessageHistoryMessag
 
 export interface SourceMessage {
   type:     "source";
-  sources:  IdMap<Source>;
-  sections: IdMap<SourceSection>;
-  methods:  Method[];
+  sources:  Source[];
 }
 
 export interface SuspendEventMessage {
   type:     "suspendEvent";
   sourceId: string;
-  sections: SourceSection[];
+  sections: FullSourceCoordinate[];
   stack:    Frame[];
   topFrame: TopFrame;
   id: string;
@@ -165,28 +171,29 @@ export function createLineBreakpoint(source: Source, line: number, clickedSpan) 
 }
 
 export function createMsgBreakpoint(source: Source,
-    sourceSection: SourceSection, type: SectionBreakpointType) {
+    sourceSection: SourceCoordinate, sectionId: string,
+    type: SectionBreakpointType) {
   return new MessageBreakpoint({
     type: type,
     enabled: false,
     coord: {
       uri:         source.uri,
-      startLine:   sourceSection.line,
-      startColumn: sourceSection.column,
-      charLength:  sourceSection.length}},
-    source, sourceSection.id);
+      startLine:   sourceSection.startLine,
+      startColumn: sourceSection.startColumn,
+      charLength:  sourceSection.charLength }},
+    source, sectionId);
 }
 
 export function createAsyncMethodRcvBreakpoint(source: Source,
-    sourceSection: SourceSection) {
+    sourceSection: SourceCoordinate, sectionId: string) {
   return new AsyncMethodRcvBreakpoint({
     type: "AsyncMessageReceiveBreakpoint", enabled: false,
     coord: {
       uri:         source.uri,
-      startLine:   sourceSection.line,
-      startColumn: sourceSection.column,
-      charLength:  sourceSection.length}},
-    source, sourceSection.id);
+      startLine:   sourceSection.startLine,
+      startColumn: sourceSection.startColumn,
+      charLength:  sourceSection.charLength }},
+    source, sectionId);
 }
 
 export type Respond = InitialBreakpointsResponds | UpdateBreakpoint |
