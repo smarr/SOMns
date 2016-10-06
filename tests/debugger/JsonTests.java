@@ -15,7 +15,7 @@ import com.google.gson.Gson;
 
 import tools.SourceCoordinate;
 import tools.SourceCoordinate.FullSourceCoordinate;
-import tools.debugger.WebSocketHandler;
+import tools.debugger.WebDebugger;
 import tools.debugger.message.InitialBreakpointsResponds;
 import tools.debugger.message.Respond;
 import tools.debugger.message.UpdateBreakpoint;
@@ -27,7 +27,7 @@ import tools.debugger.session.MessageSenderBreakpoint;
 
 
 public class JsonTests {
-  private final Gson gson = WebSocketHandler.createJsonProcessor();
+  private final Gson gson = WebDebugger.createJsonProcessor();
 
   private static final String FULL_COORD = "{\"uri\":\"file:/test\",\"startLine\":2,\"startColumn\":3,\"charLength\":55}";
   private static final FullSourceCoordinate FULL_COORD_OBJ = SourceCoordinate.create("file:/test", 2, 3, 55);

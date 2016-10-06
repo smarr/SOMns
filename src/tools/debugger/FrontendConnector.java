@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -13,6 +14,7 @@ import java.util.concurrent.Future;
 
 import org.java_websocket.WebSocket;
 
+import com.google.gson.Gson;
 import com.oracle.truffle.api.debug.SuspendedEvent;
 import com.oracle.truffle.api.instrumentation.Instrumenter;
 import com.oracle.truffle.api.nodes.Node;
@@ -23,11 +25,19 @@ import com.oracle.truffle.api.utilities.JSONHelper.JSONObjectBuilder;
 import com.sun.net.httpserver.HttpServer;
 
 import som.VmSettings;
+import som.interpreter.Method;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.SFarReference;
 import tools.ObjectBuffer;
+import tools.SourceCoordinate;
+import tools.SourceCoordinate.TaggedSourceCoordinate;
+import tools.Tagging;
 import tools.actors.ActorExecutionTrace;
+import tools.debugger.message.Message;
+import tools.debugger.message.SourceMessage;
+import tools.debugger.message.SourceMessage.MethodData;
+import tools.debugger.message.SourceMessage.SourceData;
 import tools.debugger.session.AsyncMessageReceiveBreakpoint;
 import tools.debugger.session.Breakpoints;
 import tools.debugger.session.LineBreakpoint;
@@ -65,13 +75,17 @@ public class FrontendConnector {
    */
   private CompletableFuture<WebSocket> clientConnected;
 
+  private final Gson gson;
+
   private final ArrayList<Source> notReady = new ArrayList<>(); //TODO rename: toBeSend
 
   public FrontendConnector(final Breakpoints breakpoints,
-      final Instrumenter instrumenter, final WebDebugger webDebugger) {
+      final Instrumenter instrumenter, final WebDebugger webDebugger,
+      final Gson gson) {
     this.instrumenter = instrumenter;
     this.breakpoints = breakpoints;
     this.webDebugger = webDebugger;
+    this.gson = gson;
 
     clientConnected = new CompletableFuture<WebSocket>();
 
@@ -96,7 +110,7 @@ public class FrontendConnector {
   private WebSocketHandler initializeWebSocket(final int port,
       final Future<WebSocket> clientConnected) {
     InetSocketAddress address = new InetSocketAddress(port);
-    WebSocketHandler server = new WebSocketHandler(address, this);
+    WebSocketHandler server = new WebSocketHandler(address, this, gson);
     server.start();
     return server;
   }
@@ -116,12 +130,66 @@ public class FrontendConnector {
     assert sender.isOpen();
   }
 
+  private static MethodData[] createMethodDefinitions(final Set<RootNode> rootNodes) {
+    ArrayList<MethodData> methods = new ArrayList<>();
+
+    for (RootNode r : rootNodes) {
+      assert r instanceof Method;
+      Method m = (Method) r;
+
+      if (m.isBlock()) {
+        continue;
+      }
+
+      SourceSection[] defs = m.getDefinition();
+      SourceCoordinate[] definition = new SourceCoordinate[defs.length];
+      for (int j = 0; j < defs.length; j += 1) {
+        definition[j] = SourceCoordinate.createCoord(defs[j]);
+      }
+
+      methods.add(new MethodData(
+          m.getName(), definition, SourceCoordinate.create(m.getSourceSection())));
+    }
+    return methods.toArray(new MethodData[0]);
+  }
+
+  // TODO: simplify, way to convoluted
+  private static TaggedSourceCoordinate[] createSourceSections(final Source source,
+      final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> sourcesTags,
+      final Instrumenter instrumenter, final Set<RootNode> rootNodes) {
+    Set<SourceSection> sections = new HashSet<>();
+    Map<SourceSection, Set<Class<? extends Tags>>> tagsForSections = sourcesTags.get(source);
+
+    if (tagsForSections != null) {
+      Tagging.collectSourceSectionsAndTags(rootNodes, tagsForSections, instrumenter);
+      for (SourceSection section : tagsForSections.keySet()) {
+        if (section.getSource() == source) {
+          sections.add(section);
+        }
+      }
+    }
+
+    TaggedSourceCoordinate[] result = new TaggedSourceCoordinate[sections.size()];
+    int i = 0;
+    for (SourceSection section : sections) {
+      result[i] = SourceCoordinate.create(section, tagsForSections.get(section));
+      i += 1;
+    }
+
+    return result;
+  }
+
   private void sendSource(final Source source,
       final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> loadedSourcesTags,
       final Set<RootNode> rootNodes) {
-    String json = JsonSerializer.createInitialSourceMessage("source", source,
-        loadedSourcesTags, instrumenter, rootNodes).toString();
-    sender.send(json);
+    SourceData[] sources = new SourceData[1];
+    sources[0] = new SourceData(source.getCode(), source.getMimeType(),
+        source.getName(), source.getURI().toString(),
+        createSourceSections(source, loadedSourcesTags, instrumenter, rootNodes),
+        createMethodDefinitions(rootNodes));
+
+    SourceMessage msg = new SourceMessage(sources);
+    sender.send(gson.toJson(msg, Message.class));
   }
 
   private void sendBufferedSources(
