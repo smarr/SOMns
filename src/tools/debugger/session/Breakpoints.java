@@ -26,7 +26,7 @@ import tools.debugger.WebDebugger;
 
 public class Breakpoints {
 
-  private DebuggerSession debuggerSession;
+  private final DebuggerSession debuggerSession;
 
   private final WebDebugger webDebugger;
 
@@ -40,28 +40,18 @@ public class Breakpoints {
    */
   private final Map<FullSourceCoordinate, BreakpointEnabling<MessageReceiveBreakpoint>> receiverBreakpoints;
 
-  private final Debugger debugger;
-
   public Breakpoints(final Debugger debugger, final WebDebugger webDebugger) {
     this.truffleBreakpoints = new HashMap<>();
-    this.debugger    = debugger;
     this.webDebugger = webDebugger;
     this.receiverBreakpoints = new HashMap<>();
-  }
-
-  private void ensureOpenDebuggerSession() {
-    if (debuggerSession == null) {
-      debuggerSession = debugger.startSession(webDebugger);
-    }
+    this.debuggerSession = debugger.startSession(webDebugger);
   }
 
   public void doSuspend(final MaterializedFrame frame, final SteppingLocation steppingLocation) {
-    ensureOpenDebuggerSession();
     debuggerSession.doSuspend(frame, steppingLocation);
   }
 
   public void prepareSteppingUntilNextRootNode() {
-    ensureOpenDebuggerSession();
     debuggerSession.prepareSteppingUntilNextRootNode();
   }
 
@@ -69,7 +59,6 @@ public class Breakpoints {
     Breakpoint bp = truffleBreakpoints.get(bId);
 
     if (bp == null) {
-      ensureOpenDebuggerSession();
       WebDebugger.log("LineBreakpoint: " + bId);
       bp = Breakpoint.newBuilder(bId.getURI()).
           lineIs(bId.getLine()).
@@ -84,7 +73,6 @@ public class Breakpoints {
   public Breakpoint addOrUpdate(final MessageSenderBreakpoint bId) {
     Breakpoint bp = truffleBreakpoints.get(bId);
     if (bp == null) {
-      ensureOpenDebuggerSession();
       WebDebugger.log("SetSectionBreakpoint: " + bId);
       bp = Breakpoint.newBuilder(bId.getCoordinate().uri).
           lineIs(bId.getCoordinate().startLine).
@@ -115,7 +103,6 @@ public class Breakpoints {
           ExpressionNode rootExpression = finder.getResult();
           assert rootExpression.getSourceSection() != null;
 
-          ensureOpenDebuggerSession();
           bp = Breakpoint.newBuilder(rootExpression.getSourceSection()).
               build();
           debuggerSession.install(bp);
