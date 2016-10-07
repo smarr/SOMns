@@ -133,4 +133,8 @@ export class Debugger {
   setResumed() {
     this.suspended = false;
   }
+
+  isSuspended() {
+    return this.suspended;
+  }
 }
