@@ -13,9 +13,9 @@ import com.oracle.truffle.api.source.SourceSection;
 import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
 import som.interpreter.InlinerForLexicallyEmbeddedMethods;
 import som.vm.constants.Nil;
+import tools.debugger.Tags.LocalVariableTag;
 import tools.dym.Tags.LocalVarRead;
 import tools.dym.Tags.LocalVarWrite;
-import tools.highlight.Tags.LocalVariableTag;
 
 
 public abstract class NonLocalVariableNode extends ContextualNode {

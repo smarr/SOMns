@@ -59,8 +59,6 @@ profile.add_argument('-tp', '--truffle-profile', help='enable Graal-level profil
                     
 
 tools = parser.add_argument_group('Tools', 'Additional Tools')
-tools.add_argument('-hl', '--highlight', nargs=1, help='enable highlight tool and define output file',
-                    dest='highlight_file', default=False, metavar='highlight-file')
 tools.add_argument('-td', '--truffle-debugger', help='start Truffle debugger',
                     dest='truffle_debugger', action='store_true', default=False)
 tools.add_argument('-wd', '--web-debugger', help='start Web debugger',
@@ -210,9 +208,6 @@ if not args.interpreter and args.graal_branch_profile:
 if args.truffle_profile:
     flags += ['-Dtruffle.profiling.enabled=true']
     SOM_ARGS += ['--profile']
-if args.highlight_file:
-    flags += ['-Dhl.output=' + args.highlight_file[0]]
-    SOM_ARGS += ['--highlight']
 
 if args.coveralls_repo_token:
     SOM_ARGS += ['--coveralls', args.coveralls_repo_token[0]]
@@ -229,7 +224,7 @@ if args.actor_tracing:
     flags += ['-Dsom.actorTracing=true']
 
 if (args.truffle_profile or args.truffle_debugger or args.web_debugger or
-    args.dynamic_metrics or args.highlight_file or args.coveralls_repo_token):
+    args.dynamic_metrics or args.coveralls_repo_token):
     flags += ['-Dsom.instrumentation=true']
 
 if (args.truffle_debugger or args.web_debugger):

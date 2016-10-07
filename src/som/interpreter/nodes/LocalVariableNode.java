@@ -15,9 +15,9 @@ import som.interpreter.InlinerForLexicallyEmbeddedMethods;
 import som.interpreter.SplitterForLexicallyEmbeddedCode;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.vm.constants.Nil;
+import tools.debugger.Tags.LocalVariableTag;
 import tools.dym.Tags.LocalVarRead;
 import tools.dym.Tags.LocalVarWrite;
-import tools.highlight.Tags.LocalVariableTag;
 
 
 public abstract class LocalVariableNode extends ExprWithTagsNode {

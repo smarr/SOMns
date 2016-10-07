@@ -17,7 +17,7 @@ import som.vm.constants.Classes;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
-import tools.highlight.Tags.LiteralTag;
+import tools.debugger.Tags.LiteralTag;
 
 public class BlockNode extends LiteralNode {
 

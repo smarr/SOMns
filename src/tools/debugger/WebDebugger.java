@@ -40,7 +40,6 @@ import tools.debugger.session.Breakpoints;
 import tools.debugger.session.LineBreakpoint;
 import tools.debugger.session.MessageReceiveBreakpoint;
 import tools.debugger.session.MessageSenderBreakpoint;
-import tools.highlight.Tags;
 
 
 /**

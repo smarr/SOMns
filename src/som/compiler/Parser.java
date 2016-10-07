@@ -107,16 +107,16 @@ import som.vm.Symbols;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 import tools.SourceCoordinate;
-import tools.highlight.Tags;
-import tools.highlight.Tags.ArgumentTag;
-import tools.highlight.Tags.CommentTag;
-import tools.highlight.Tags.DelimiterClosingTag;
-import tools.highlight.Tags.DelimiterOpeningTag;
-import tools.highlight.Tags.IdentifierTag;
-import tools.highlight.Tags.KeywordTag;
-import tools.highlight.Tags.LiteralTag;
-import tools.highlight.Tags.LocalVariableTag;
-import tools.highlight.Tags.StatementSeparatorTag;
+import tools.debugger.Tags;
+import tools.debugger.Tags.ArgumentTag;
+import tools.debugger.Tags.CommentTag;
+import tools.debugger.Tags.DelimiterClosingTag;
+import tools.debugger.Tags.DelimiterOpeningTag;
+import tools.debugger.Tags.IdentifierTag;
+import tools.debugger.Tags.KeywordTag;
+import tools.debugger.Tags.LiteralTag;
+import tools.debugger.Tags.LocalVariableTag;
+import tools.debugger.Tags.StatementSeparatorTag;
 import tools.language.StructuralProbe;
 
 

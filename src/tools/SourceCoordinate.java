@@ -7,7 +7,7 @@ import java.util.Set;
 
 import com.oracle.truffle.api.source.SourceSection;
 
-import tools.highlight.Tags;
+import tools.debugger.Tags;
 
 /**
  * Represents a potentially empty range of source characters, for a potentially

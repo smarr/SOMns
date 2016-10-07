@@ -8,7 +8,7 @@ import com.oracle.truffle.api.instrumentation.Instrumenter;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
 
-import tools.highlight.Tags;
+import tools.debugger.Tags;
 
 public abstract class Tagging {
   private Tagging() { }
