@@ -1,5 +1,12 @@
 package tools.debugger.message;
 
+import java.util.ArrayList;
+import java.util.Set;
+
+import com.oracle.truffle.api.nodes.RootNode;
+import com.oracle.truffle.api.source.SourceSection;
+
+import som.interpreter.Method;
 import tools.SourceCoordinate;
 import tools.SourceCoordinate.TaggedSourceCoordinate;
 
@@ -33,16 +40,39 @@ public class SourceMessage extends Message {
     }
   }
 
-  public static class MethodData {
+  protected static class MethodData {
     private final String               name;
     private final SourceCoordinate[]   definition;
     private final SourceCoordinate     sourceSection;
 
-    public MethodData(final String name, final SourceCoordinate[] definition,
+    protected MethodData(final String name, final SourceCoordinate[] definition,
         final SourceCoordinate sourceSection) {
       this.name          = name;
       this.definition    = definition;
       this.sourceSection = sourceSection;
     }
+  }
+
+  public static MethodData[] createMethodDefinitions(final Set<RootNode> rootNodes) {
+    ArrayList<MethodData> methods = new ArrayList<>();
+
+    for (RootNode r : rootNodes) {
+      assert r instanceof Method;
+      Method m = (Method) r;
+
+      if (m.isBlock()) {
+        continue;
+      }
+
+      SourceSection[] defs = m.getDefinition();
+      SourceCoordinate[] definition = new SourceCoordinate[defs.length];
+      for (int j = 0; j < defs.length; j += 1) {
+        definition[j] = SourceCoordinate.createCoord(defs[j]);
+      }
+
+      methods.add(new MethodData(
+          m.getName(), definition, SourceCoordinate.create(m.getSourceSection())));
+    }
+    return methods.toArray(new MethodData[0]);
   }
 }

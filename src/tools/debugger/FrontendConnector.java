@@ -24,7 +24,6 @@ import com.oracle.truffle.api.utilities.JSONHelper.JSONObjectBuilder;
 import com.sun.net.httpserver.HttpServer;
 
 import som.VmSettings;
-import som.interpreter.Method;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.SFarReference;
@@ -35,7 +34,6 @@ import tools.Tagging;
 import tools.actors.ActorExecutionTrace;
 import tools.debugger.message.Message;
 import tools.debugger.message.SourceMessage;
-import tools.debugger.message.SourceMessage.MethodData;
 import tools.debugger.message.SourceMessage.SourceData;
 import tools.debugger.message.SuspendedEventMessage;
 import tools.debugger.session.AsyncMessageReceiveBreakpoint;
@@ -129,29 +127,6 @@ public class FrontendConnector {
     assert sender.isOpen();
   }
 
-  private static MethodData[] createMethodDefinitions(final Set<RootNode> rootNodes) {
-    ArrayList<MethodData> methods = new ArrayList<>();
-
-    for (RootNode r : rootNodes) {
-      assert r instanceof Method;
-      Method m = (Method) r;
-
-      if (m.isBlock()) {
-        continue;
-      }
-
-      SourceSection[] defs = m.getDefinition();
-      SourceCoordinate[] definition = new SourceCoordinate[defs.length];
-      for (int j = 0; j < defs.length; j += 1) {
-        definition[j] = SourceCoordinate.createCoord(defs[j]);
-      }
-
-      methods.add(new MethodData(
-          m.getName(), definition, SourceCoordinate.create(m.getSourceSection())));
-    }
-    return methods.toArray(new MethodData[0]);
-  }
-
   // TODO: simplify, way to convoluted
   private static TaggedSourceCoordinate[] createSourceSections(final Source source,
       final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> sourcesTags,
@@ -185,7 +160,7 @@ public class FrontendConnector {
     sources[0] = new SourceData(source.getCode(), source.getMimeType(),
         source.getName(), source.getURI().toString(),
         createSourceSections(source, loadedSourcesTags, instrumenter, rootNodes),
-        createMethodDefinitions(rootNodes));
+        SourceMessage.createMethodDefinitions(rootNodes));
     send(new SourceMessage(sources));
   }
 
