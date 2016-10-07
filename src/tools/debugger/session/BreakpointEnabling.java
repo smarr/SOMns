@@ -7,7 +7,7 @@ import com.oracle.truffle.api.Truffle;
  * BreakpointEnabling represents the interpreter data for optimized testing
  * whether a breakpoint is active or not (enabled/disabled).
  *
- * This class is used for breakpoints that are not managed by the Truffle
+ * <p>This class is used for breakpoints that are not managed by the Truffle
  * framework directly.
  */
 public class BreakpointEnabling<T extends BreakpointInfo> {

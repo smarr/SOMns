@@ -6,8 +6,7 @@ import tools.SourceCoordinate.TaggedSourceCoordinate;
  * This message is send to update the front-end with the latest source section
  * information.
  *
- * <p>
- * This is useful to have dynamic semantic highlighting for a dynamic language.
+ * <p>This is useful to have dynamic semantic highlighting for a dynamic language.
  * The highlighting can then also indicate field reads done by slot getters,
  * distinguish local accesses from message sends in a uniform language, etc.
  */
