@@ -71,9 +71,6 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
         source.getSource(), s -> new HashMap<>());
     Set<Class<? extends Tags>> tags = sections.computeIfAbsent(source, s -> new HashSet<>(2));
     tags.add(type);
-
-    JsonSerializer.createSourceId(source.getSource());
-    JsonSerializer.createSourceSectionId(source);
   }
 
   public void reportLoadedSource(final Source source) {

@@ -6,8 +6,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import com.oracle.truffle.api.source.Source;
-import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.api.utilities.JSONHelper;
 import com.oracle.truffle.api.utilities.JSONHelper.JSONArrayBuilder;
 import com.oracle.truffle.api.utilities.JSONHelper.JSONObjectBuilder;
@@ -20,43 +18,6 @@ import tools.ObjectBuffer;
 public final class JsonSerializer {
 
   private JsonSerializer() { }
-
-  private static int nextSourceId = 0;
-  private static int nextSourceSectionId = 0;
-
-  // TODO: remove these maps, should not be necessary any longer
-  private static final Map<Source, String> sourcesId = new HashMap<>();
-  private static final Map<String, Source> idSources = new HashMap<>();
-  private static final Map<SourceSection, String> sourceSectionId = new HashMap<>();
-  private static final Map<String, SourceSection> idSourceSections = new HashMap<>();
-
-  public static String createSourceId(final Source source) {
-    return sourcesId.computeIfAbsent(source, src -> {
-      int n = nextSourceId;
-      nextSourceId += 1;
-      String id = "s-" + n;
-      idSources.put(id, src);
-      return id;
-    });
-  }
-
-  public static String createSourceSectionId(final SourceSection source) {
-    return sourceSectionId.computeIfAbsent(source, s -> {
-      int n = nextSourceSectionId;
-      nextSourceSectionId += 1;
-      String id = "ss-" + n;
-      idSourceSections.put(id, source);
-      return id;
-    });
-  }
-
-  public static Source getSource(final String id) {
-    return idSources.get(id);
-  }
-
-  public static SourceSection getSourceSection(final String id) {
-    return idSourceSections.get(id);
-  }
 
   public static JSONObjectBuilder createMessageHistoryJson(
       final ObjectBuffer<ObjectBuffer<ObjectBuffer<EventualMessage>>> messagesPerThread,
