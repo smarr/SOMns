@@ -80,7 +80,19 @@ export interface SourceInfo {
 
 export interface MessageHistoryMessage {
   type: "messageHistory";
-  messageHistory: any; // TODO
+  messages: MessageData[];
+  actors:   FarRefData[];
+}
+
+export interface MessageData {
+  id:       string;
+  senderId: string;
+  targetId: string;
+}
+
+export interface FarRefData {
+  id:       string;
+  typeName: string;
 }
 
 export type BreakpointData = LineBreakpointData | SectionBreakpointData;

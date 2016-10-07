@@ -25,6 +25,7 @@ import com.oracle.truffle.api.source.SourceSection;
 import gson.ClassHierarchyAdapterFactory;
 import tools.debugger.message.InitialBreakpointsResponds;
 import tools.debugger.message.Message;
+import tools.debugger.message.MessageHistory;
 import tools.debugger.message.Respond;
 import tools.debugger.message.SourceMessage;
 import tools.debugger.message.StepMessage.Resume;
@@ -185,6 +186,7 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
     ClassHierarchyAdapterFactory<Message> msgAF = new ClassHierarchyAdapterFactory<>(Message.class, "type");
     msgAF.register("source",       SourceMessage.class);
     msgAF.register("suspendEvent", SuspendedEventMessage.class);
+    msgAF.register("messageHistory", MessageHistory.class);
 
     ClassHierarchyAdapterFactory<Respond> respondAF = new ClassHierarchyAdapterFactory<>(Respond.class, "action");
     respondAF.register(INITIAL_BREAKPOINTS, InitialBreakpointsResponds.class);

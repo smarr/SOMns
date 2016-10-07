@@ -89,7 +89,7 @@ export class Controller {
   }
 
   onMessageHistory(msg: MessageHistoryMessage) {
-    displayMessageHistory(msg.messageHistory);
+    displayMessageHistory(msg);
   }
 
   onUnknownMessage(msg: any) {

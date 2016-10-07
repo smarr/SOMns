@@ -20,7 +20,6 @@ import com.oracle.truffle.api.instrumentation.Instrumenter;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
-import com.oracle.truffle.api.utilities.JSONHelper.JSONObjectBuilder;
 import com.sun.net.httpserver.HttpServer;
 
 import som.VmSettings;
@@ -33,6 +32,7 @@ import tools.SourceCoordinate.TaggedSourceCoordinate;
 import tools.Tagging;
 import tools.actors.ActorExecutionTrace;
 import tools.debugger.message.Message;
+import tools.debugger.message.MessageHistory;
 import tools.debugger.message.SourceMessage;
 import tools.debugger.message.SourceMessage.SourceData;
 import tools.debugger.message.SuspendedEventMessage;
@@ -242,10 +242,10 @@ public class FrontendConnector {
       actorObjsToIds.put(a, e.getValue());
     }
 
-    JSONObjectBuilder msg = JsonSerializer.createMessageHistoryJson(
-        messagesPerThread, actorsToIds, actorObjsToIds);
+    MessageHistory msg = MessageHistory.create(
+        actorsToIds, messagesPerThread, actorObjsToIds);
 
-    String m = msg.toString();
+    String m = gson.toJson(msg, Message.class);
     log("[ACTORS] Message length: " + m.length());
     sender.send(m);
     log("[ACTORS] Message sent?");

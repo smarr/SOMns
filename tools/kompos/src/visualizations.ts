@@ -1,6 +1,7 @@
 /* jshint -W097 */
 'use strict';
 
+import {IdMap, MessageHistoryMessage, MessageData, FarRefData} from './messages';
 import {dbgLog} from './source';
 import * as d3 from 'd3';
 
@@ -13,16 +14,16 @@ var horizontalDistance = 100,
 var width = 360,
   height  = 350;
 
-function hasSelfSends(actorId, messages) {
+function hasSelfSends(actorId: string, messages: MessageData[]) {
   for (var i in messages) {
-    if (messages[i].sender === "actorId") {
+    if (messages[i].senderId === actorId) {
       return true;
     }
   }
   return false;
 }
 
-function hashAtInc(hash, idx, inc) {
+function hashAtInc(hash, idx: string, inc: number) {
   if (hash.hasOwnProperty(idx)) {
     hash[idx] += inc;
   } else {
@@ -30,7 +31,7 @@ function hashAtInc(hash, idx, inc) {
   }
 }
 
-function determineNodes(msgHist) {
+function determineNodes(msgHist: MessageHistoryMessage) {
   var actorsPerType = {};
   var nodes = {};
   for (var aId in msgHist.actors) {
@@ -40,7 +41,7 @@ function determineNodes(msgHist) {
     var selfSends = hasSelfSends(actor.id, msgHist.messages);
     var node = {
       id: actor.id,
-      name: actor.name,
+      name: actor.typeName,
       reflexive: selfSends,
       x: horizontalDistance + horizontalDistance * actorsPerType[actor.typeName],
       y: verticalDistance * Object.keys(actorsPerType).length,
@@ -62,27 +63,27 @@ function mapToArray(map) {
 
 var maxMessageCount = 0;
 
-function countMessagesSenderToReceiver(msgHist, nodeMap) {
-  var msgSends = {};
+function countMessagesSenderToReceiver(msgHist: MessageHistoryMessage, nodeMap): IdMap<IdMap<number>> {
+  let msgSends = {};
 
-  dbgLog("[DetLinks] #msg: " + Object.keys(msgHist.messages).length);
-  for (var aId in msgHist.messages) {
-    for (var msg of msgHist.messages[aId]) {
-      if (!msgSends.hasOwnProperty(msg.sender)) {
-        msgSends[msg.sender] = {};
-      }
-      hashAtInc(msgSends[msg.sender], msg.receiver, 1);
+  dbgLog("[DetLinks] #msg: " + msgHist.messages.length);
+  for (let msg of msgHist.messages) {
+    if (!msgSends.hasOwnProperty(msg.senderId)) {
+      msgSends[msg.senderId] = {};
+    }
+    if (msg.senderId !== msg.targetId) {
+      hashAtInc(msgSends[msg.senderId], msg.targetId, 1);
     }
   }
   return msgSends;
 }
 
-function createLinksData(msgSends, nodeMap) {
+function createLinksData(msgSends: IdMap<IdMap<number>>, nodeMap) {
   dbgLog("[DetLinks] completed ");
 
-  var links = [];
-  for (var sendId in msgSends) {
-    for (var rcvrId in msgSends[sendId]) {
+  let links = [];
+  for (let sendId in msgSends) {
+    for (let rcvrId in msgSends[sendId]) {
       maxMessageCount = Math.max(maxMessageCount, msgSends[sendId][rcvrId]);
       if (nodeMap[sendId] === undefined) {
         dbgLog("WAT? unknown sendId: " + sendId);
@@ -101,7 +102,7 @@ function createLinksData(msgSends, nodeMap) {
   return links;
 }
 
-function determineLinks(msgHist, nodeMap) {
+function determineLinks(msgHist: MessageHistoryMessage, nodeMap) {
   var msgSends = countMessagesSenderToReceiver(msgHist, nodeMap);
   return createLinksData(msgSends, nodeMap);
 }
@@ -109,7 +110,7 @@ function determineLinks(msgHist, nodeMap) {
 /**
  * @param {MessageHistory} msgHist
  */
-export function displayMessageHistory(msgHist) {
+export function displayMessageHistory(msgHist: MessageHistoryMessage) {
   colors = d3.scale.category10();
 
   var svg = d3.select('#graph-canvas')
