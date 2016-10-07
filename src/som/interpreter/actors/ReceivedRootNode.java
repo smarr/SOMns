@@ -3,6 +3,7 @@ package som.interpreter.actors;
 import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -52,6 +53,14 @@ public abstract class ReceivedRootNode extends RootNode {
     @Override
     public Object executeGeneric(final VirtualFrame frame) {
       return null;
+    }
+
+    @Override
+    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+      if (tag == StatementTag.class) {
+        return isMarkedAsRootExpression();
+      }
+      return super.isTaggedWith(tag);
     }
   }
 }
