@@ -78,6 +78,11 @@ public class SourceCoordinate {
     }
   }
 
+  public static SourceCoordinate createCoord(final SourceSection section) {
+    return new SourceCoordinate(section.getStartLine(), section.getStartColumn(),
+        section.getCharIndex(), section.getCharLength());
+  }
+
   public static TaggedSourceCoordinate create(final SourceSection section,
       final Set<Class<? extends Tags>> tags) {
     String[] strTags = new String[tags.size()];
@@ -91,11 +96,6 @@ public class SourceCoordinate {
     return new TaggedSourceCoordinate(section.getStartLine(),
         section.getStartColumn(),
         section.getCharIndex(), section.getCharLength(), strTags);
-  }
-
-  public static SourceCoordinate createCoord(final SourceSection section) {
-    return new SourceCoordinate(section.getStartLine(), section.getStartColumn(),
-        section.getCharIndex(), section.getCharLength());
   }
 
   public static FullSourceCoordinate create(final SourceSection section) {
