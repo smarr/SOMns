@@ -2,7 +2,6 @@
 "use strict";
 
 import {Controller} from './controller';
-import {isRelevant} from './debugger';
 import {Breakpoint, AsyncMethodRcvBreakpoint, MessageBreakpoint, Source, Method,
   LineBreakpoint, SuspendEventMessage, IdMap,
   SourceCoordinate, TaggedSourceCoordinate, getSectionId} from './messages';
@@ -25,7 +24,6 @@ function splitAndKeepNewlineAsEmptyString(str) {
   return result;
 }
 
-
 function sourceToArray(source: string): string[][] {
   let lines = splitAndKeepNewlineAsEmptyString(source);
   let arr = new Array(lines.length);
@@ -40,16 +38,18 @@ function sourceToArray(source: string): string[][] {
   return arr;
 }
 
-function methodDeclIdToString(sourceId: string, sectionId: string, idx: number) {
-  return "m:" + sourceId + ":" + sectionId + ":" + idx;
+function methodDeclIdToString(sectionId: string, idx: number) {
+  return "m:" + sectionId + ":" + idx;
 }
 
 function methodDeclIdToObj(id: string) {
   let arr = id.split(":");
   return {
-    sourceId:  arr[1],
-    sectionId: arr[2],
-    idx:       arr[3]
+    sourceId:    arr[1],
+    startLine:   parseInt(arr[2]),
+    startColumn: parseInt(arr[3]),
+    charLength:  parseInt(arr[4]),
+    idx:         arr[5]
   };
 }
 
@@ -67,16 +67,15 @@ class Begin extends SectionMarker {
   private section: TaggedSourceCoordinate;
   private sectionId?: string;
 
-  constructor(section: TaggedSourceCoordinate, sectionId?: string) {
+  constructor(section: TaggedSourceCoordinate, sectionId: string) {
     super(Begin);
     this.sectionId = sectionId;
     this.section = section;
     this.type    = Begin;
   }
 
-  toString() {
-    let id = this.sectionId ? 'id="' + this.sectionId + '" ' : ''; 
-    return '<span ' + id + 'class="' + this.section.tags.join(" ") + '">';
+  toString() { 
+    return '<span id="' + this.sectionId + '" class="' + this.section.tags.join(" ") + '">';
   }
 
   length() {
@@ -105,7 +104,7 @@ class BeginMethodDef extends SectionMarker {
 
   toString() {
     let tags = "MethodDeclaration",
-      id = methodDeclIdToString(this.sourceId,
+      id = methodDeclIdToString(
         getSectionId(this.sourceId, this.method.sourceSection), this.i);
     return '<span id="' + id + '" class="' + tags + '">';
   }
@@ -242,7 +241,7 @@ function annotateArray(arr: any[][], sourceId: string, sections: TaggedSourceCoo
     let start = ensureItIsAnnotation(arr, s.startLine, s.startColumn),
         coord = getCoord(arr, s.startLine, s.startColumn, s.charLength),
           end = ensureItIsAnnotation(arr, coord.line, coord.column),
-    sectionId = isRelevant(s) ? getSectionId(sourceId, s) : null;
+    sectionId = getSectionId(sourceId, s);
 
     start.before.push(new Begin(s, sectionId));
     end.before.push(new End(s, s.charLength));
@@ -304,7 +303,7 @@ function enableMethodBreakpointHover(fileNode) {
   methDecls.attr("data-content", function () {
     let idObj = methodDeclIdToObj(this.id);
     let content = nodeFromTemplate("method-breakpoints");
-    $(content).find("button").attr("data-ss-id", idObj.sectionId);
+    $(content).find("button").attr("data-ss-id", getSectionId(idObj.sourceId, idObj));
     return $(content).html();
   });
 
@@ -413,13 +412,36 @@ export class View {
     $('.nav-tabs a[href="#' + sId + '"]').tab('show');
   }
 
-  displaySuspendEvent(data: SuspendEventMessage, getSourceAndMethods) {
-    var list = document.getElementById("stack-frames");
+  displayUpdatedSourceSections(data, getSourceAndMethods) {
+    // update the source sections for the sourceId
+  
+    var pane = document.getElementById(data.sourceId);
+    var sourceFile = $(pane).find(".source-file");
+
+    // remove all spans
+    sourceFile.find("span").replaceWith($(".html"));
+
+    // apply new spans
+    var result = getSourceAndMethods(data.sourceId),
+      source   = result[0],
+      methods  = result[1];
+
+    var annotationArray = sourceToArray(source.sourceText);
+    annotateArray(annotationArray, source.id, data.sections, methods);
+    sourceFile.html(arrayToString(annotationArray));
+
+    // enable clicking on EventualSendNodes
+    enableEventualSendClicks(sourceFile);
+    enableMethodBreakpointHover(sourceFile);
+  }
+
+  displaySuspendEvent(data: SuspendEventMessage, sourceId: string) {
+    let list = document.getElementById("stack-frames");
     while (list.lastChild) {
       list.removeChild(list.lastChild);
     }
 
-    for (var i = 0; i < data.stack.length; i++) {
+    for (let i = 0; i < data.stack.length; i++) {
       showFrame(data.stack[i], i, list);
     }
 
@@ -433,33 +455,10 @@ export class View {
     for (var varName in data.topFrame.slots) {
       showVar(varName, data.topFrame.slots[varName], list);
     }
-
-    // update the source sections for the sourceId
-    if (data.sections) {
-      var pane = document.getElementById(data.sourceId);
-      var sourceFile = $(pane).find(".source-file");
-
-      // remove all spans
-      sourceFile.find("span").replaceWith($(".html"));
-
-      // apply new spans
-      var result = getSourceAndMethods(data.sourceId),
-        source   = result[0],
-        methods  = result[1];
-
-      var annotationArray = sourceToArray(source.sourceText);
-      annotateArray(annotationArray, source.id, data.sections, methods);
-      sourceFile.html(arrayToString(annotationArray));
-
-      // enable clicking on EventualSendNodes
-      enableEventualSendClicks(sourceFile);
-      enableMethodBreakpointHover(sourceFile);
-    }
-
+    
     // highlight current node
-    var ssId = data.stack[0].sourceSection.id;
-    var sourceId = data.stack[0].sourceSection.sourceId;
-    var ss = document.getElementById(ssId);
+    let ssId = getSectionId(sourceId, data.stack[0].sourceSection);
+    let ss = document.getElementById(ssId);
     $(ss).addClass("DbgCurrentNode");
 
     this.currentDomNode   = ss;
@@ -487,11 +486,11 @@ export class View {
       return;
     }
 
-    var bpId = "bp:" + breakpoint.source.id + ":" + breakpoint.getId();
-    var entry = nodeFromTemplate("breakpoint-tpl");
+    let bpId = breakpoint.getId();
+    let entry = nodeFromTemplate("breakpoint-tpl");
     entry.setAttribute("id", bpId);
 
-    var tds = $(entry).find("td");
+    let tds = $(entry).find("td");
     tds[0].innerHTML = breakpoint.source.name;
     tds[1].innerHTML = breakpoint.getId();
 
@@ -528,7 +527,8 @@ export class View {
   updateAsyncMethodRcvBreakpoint(bp: AsyncMethodRcvBreakpoint) {
     let i = 0,
       elem = null;
-    while (elem = document.getElementById(methodDeclIdToString(bp.source.id, bp.sectionId, i))) {
+    while (elem = document.getElementById(
+        methodDeclIdToString(bp.sectionId, i))) {
       this.updateBreakpoint(bp, $(elem), "send-breakpoint-active");
       i += 1;
     }

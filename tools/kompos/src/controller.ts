@@ -84,11 +84,8 @@ export class Controller {
   onExecutionSuspension(msg: SuspendEventMessage) {
     this.dbg.setSuspended(msg.id);
     this.view.switchDebuggerToSuspendedState();
-
-    var dbg = this.dbg;
-    this.view.displaySuspendEvent(msg, function (id) {
-      return [dbg.getSource(id), dbg.getMethods(id)];
-    });
+    this.view.displaySuspendEvent(
+      msg, this.dbg.getSourceId(msg.stack[0].sourceSection.uri));
   }
 
   onMessageHistory(msg: MessageHistoryMessage) {
@@ -113,8 +110,10 @@ export class Controller {
   onToggleLineBreakpoint(line: number, clickedSpan) {
     dbgLog("updateBreakpoint");
 
-    var breakpoint = this.toggleBreakpoint(line,
-      function (source) { return createLineBreakpoint(source, line, clickedSpan); });
+    let dbg = this.dbg,
+      breakpoint = this.toggleBreakpoint(line,
+        function (source) { return createLineBreakpoint(source,
+          dbg.getSourceId(source.uri), line, clickedSpan); });
 
     this.view.updateLineBreakpoint(<LineBreakpoint> breakpoint);
   }
@@ -122,7 +121,7 @@ export class Controller {
   onToggleSendBreakpoint(sectionId: string, type: SectionBreakpointType) {
     dbgLog("--send-op breakpoint: " + type);
 
-    var id = sectionId + ":" + type,
+    let id = sectionId + ":" + type,
       sourceSection = this.dbg.getSection(sectionId),
       breakpoint    = this.toggleBreakpoint(id, function (source) {
         return createMsgBreakpoint(source, sourceSection, sectionId, type); });

@@ -161,9 +161,7 @@ describe('Basic Protocol', function() {
 
     it('should have sources', onlyWithConnection(() => {
       return sourceP.then(sourceMsg => {
-        for (let sourceId in sourceMsg.sources) {
-          expect(sourceId).to.equal("s-0");
-          const source = sourceMsg.sources[sourceId];
+        for (let source of sourceMsg.sources) {
           expect(source.mimeType).to.equal("application/x-newspeak-som-ns");
           expect(source.name).to.equal("Platform.som");
           expect(source).to.have.property('sourceText');
@@ -238,10 +236,9 @@ describe('Basic Protocol', function() {
 
     it('should have a well structured suspended event', onlyWithConnection(() => {
       return suspendP.then(msg => {
-        expectSourceCoordinate(msg.stack[0].sourceSection);
-        expectSourceCoordinate(msg.sections[msg.stack[0].sourceSection.id]);
+        expectFullSourceCoordinate(msg.stack[0].sourceSection);
         expect(msg.id).to.equal("se-0");
-        expect(msg.sourceId).to.equal("s-6");
+        expect(msg.sourceUri).to.equal('file:' + resolve('tests/pingpong.som'));
         expect(msg.topFrame.arguments[0]).to.equal("a PingPong");
         expect(msg.topFrame.slots['ping']).to.equal('a Nil');
       });

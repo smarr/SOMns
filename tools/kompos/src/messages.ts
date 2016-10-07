@@ -49,7 +49,8 @@ interface TopFrame {
   slots:     IdMap<string>;
 }
 
-export type Message = SourceMessage | SuspendEventMessage | MessageHistoryMessage;
+export type Message = SourceMessage | SuspendEventMessage |
+  MessageHistoryMessage | UpdateSourceSections;
 
 export interface SourceMessage {
   type:     "source";
@@ -58,23 +59,28 @@ export interface SourceMessage {
 
 export interface SuspendEventMessage {
   type:     "suspendEvent";
-  sourceId: string;
-  sections: FullSourceCoordinate[];
+  
+  /** id of SuspendEvent, to be recognized in backend. */
+  id:        string;
+  sourceUri: string;
+
   stack:    Frame[];
   topFrame: TopFrame;
-  id: string;
+}
+
+export interface UpdateSourceSections {
+  type: "UpdateSourceSections";
+  updates: SourceInfo[];
+}
+
+export interface SourceInfo {
+  sourceUri: string;
+  sections:  TaggedSourceCoordinate[];
 }
 
 export interface MessageHistoryMessage {
   type: "messageHistory";
   messageHistory: any; // TODO
-}
-
-export interface SourceCoordinate {
-  uri:         string;
-  startLine:   number;
-  startColumn: number;
-  charLength:  number;
 }
 
 export type BreakpointData = LineBreakpointData | SectionBreakpointData;
@@ -94,7 +100,7 @@ export interface LineBreakpointData extends AbstractBreakpointData {
 
 export interface SectionBreakpointData extends AbstractBreakpointData {
   type:  SectionBreakpointType;
-  coord: SourceCoordinate;
+  coord: FullSourceCoordinate;
 }
 
 export type Breakpoint = LineBreakpoint | MessageBreakpoint |
@@ -112,9 +118,11 @@ abstract class AbstractBreakpoint<T extends AbstractBreakpointData> {
   }
 
   /**
-   * @return a unique id (for the corresponding source)
+   * @return a unique id for the breakpoint, to be used in the view as HTML id
    */
-  abstract getId(): string;
+  getId() {
+    return 'bp:';
+  }
 
   toggle() {
     this.data.enabled = !this.data.enabled;
@@ -126,15 +134,18 @@ abstract class AbstractBreakpoint<T extends AbstractBreakpointData> {
 }
 
 export class LineBreakpoint extends AbstractBreakpoint<LineBreakpointData> {
-  lineNumSpan?: any;
+  readonly lineNumSpan: Element;
+  readonly sourceId: string;
 
-  constructor(data: LineBreakpointData, source: Source, lineNumSpan?: any) {
+  constructor(data: LineBreakpointData, source: Source, sourceId: string,
+      lineNumSpan: Element) {
     super(data, source);
     this.lineNumSpan = lineNumSpan;
+    this.sourceId    = sourceId;
   }
 
   getId(): string {
-    return '' + this.data.line;
+    return super.getId() + this.sourceId + ':' + this.data.line;
   }
 }
 
@@ -147,7 +158,7 @@ export class MessageBreakpoint extends AbstractBreakpoint<SectionBreakpointData>
   }
 
   getId(): string {
-    return this.sectionId;
+    return super.getId() + this.sectionId;
   }
 }
 
@@ -160,14 +171,15 @@ export class AsyncMethodRcvBreakpoint extends AbstractBreakpoint<SectionBreakpoi
   }
 
   getId(): string {
-    return this.sectionId + ":async-rcv";
+    return super.getId() + this.sectionId + ":async-rcv";
   }
 }
 
-export function createLineBreakpoint(source: Source, line: number, clickedSpan) {
+export function createLineBreakpoint(source: Source, sourceId: string,
+    line: number, clickedSpan: Element) {
   return new LineBreakpoint({
     type: "LineBreakpoint", line: line, sourceUri: source.uri, enabled: false},
-    source, clickedSpan);
+    source, sourceId, clickedSpan);
 }
 
 export function createMsgBreakpoint(source: Source,

@@ -37,7 +37,7 @@ export class Debugger {
     this.breakpoints    = [];
   }
 
-  private getSourceId(uri: string): string {
+  getSourceId(uri: string): string {
     if (!(uri in this.uriToSourceId)) {
       this.uriToSourceId[uri] = 's' + Object.keys(this.uriToSourceId).length;
     }
