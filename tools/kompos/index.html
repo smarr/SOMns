@@ -166,20 +166,20 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
   </div>
 
   <div class="btn-group btn-group-xs" role="group" aria-label="Basic Controls">
-    <button id="dbg-btn-resume" type="button" class="btn btn-default disabled"
+    <button id="dbg-btn-resume" type="button" class="btn btn-default disabled" title="Resume Execution"
             onclick="ctrl.resumeExecution();"><i class="fa fa-play"></i></button>
-    <button id="dbg-btn-pause"  type="button" class="btn btn-default"
+    <button id="dbg-btn-pause"  type="button" class="btn btn-default" title="Pause Execution"
             onclick="ctrl.pauseExecution();"><i class="fa fa-pause"></i></button>
-    <button id="dbg-btn-stop"   type="button" class="btn btn-default"
+    <button id="dbg-btn-stop"   type="button" class="btn btn-default" title="Stop Execution"
             onclick="ctrl.stopExecution();"><i class="fa fa-stop"></i></button>
   </div>
 
   <div class="btn-group btn-group-xs" role="group" aria-label="Stepping">
-    <button id="dbg-btn-step-into" type="button" class="btn btn-default disabled"
+    <button id="dbg-btn-step-into" type="button" class="btn btn-default disabled" title="Step Into"
             onclick="ctrl.stepInto();"><i class="fa fa-share" style="transform: rotate(90deg);"></i></button>
-    <button id="dbg-btn-step-over" type="button" class="btn btn-default disabled"
+    <button id="dbg-btn-step-over" type="button" class="btn btn-default disabled" title="Step Over"
             onclick="ctrl.stepOver();"><i class="fa fa-share"></i></button>
-    <button id="dbg-btn-return"    type="button" class="btn btn-default disabled"
+    <button id="dbg-btn-return"    type="button" class="btn btn-default disabled" title="Return from Method" 
             onclick="ctrl.returnFromExecution();"><i class="fa fa-reply" style="transform: scaleY(-1);"></i></button>
   </div>
 </div>
