@@ -1,6 +1,7 @@
 class LanguageTests usingPlatform: platform testFramework: minitest = Value (
 | private TestContext  = minitest TestContext.
   private Array        = platform kernel Array.
+  private ValueArray   = platform kernel ValueArray.
   private ObjectMirror = platform mirrors ObjectMirror.
   private Set          = platform collections Set.
   private kernel       = platform kernel.
@@ -369,6 +370,28 @@ class LanguageTests usingPlatform: platform testFramework: minitest = Value (
       self assert: 6 equals: ClassC fields size.
       *)
     ) 
+  ) : ( TEST_CONTEXT = () )
+  
+  public class EqualsTests = TestContext <: Value ()(
+    public testEquals = (
+      | arr |
+      arr := Array new: 9.
+      arr at: 1 put: true.
+      arr at: 2 put: false.
+      arr at: 3 put: nil.
+      arr at: 4 put: 1.
+      arr at: 5 put: 1 << 70.
+      arr at: 6 put: 5.55555.
+      arr at: 7 put: 'foo'.
+      arr at: 8 put: #barr.
+      (* arr at: 9 put: (ValueArray new: 3 withAll: 1). *)
+      
+      1 to: 8 do: [:i |
+        1 to: 8 do: [:j |
+          i = j
+            ifTrue: [ assert: (arr at: i) equals: (arr at: j) ]
+            ifFalse: [ deny: (arr at: i) = (arr at: j) ] ] ]
+    )
   ) : ( TEST_CONTEXT = () )
   
   public class ValueTests = TestContext <: Value ()(
