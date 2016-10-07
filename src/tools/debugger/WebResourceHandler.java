@@ -24,7 +24,9 @@ class WebResourceHandler implements HttpHandler {
       requestedFile = "/index.html";
     }
 
-    if (requestedFile.startsWith("/out/") || "/index.html".equals(requestedFile)) {
+    if (requestedFile.startsWith("/out/") ||
+        requestedFile.startsWith("/src/") ||
+        "/index.html".equals(requestedFile)) {
       File f = new File(rootFolder + requestedFile);
       exchange.sendResponseHeaders(200, f.length());
       copy(f, exchange.getResponseBody());
