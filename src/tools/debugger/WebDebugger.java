@@ -32,6 +32,7 @@ import tools.debugger.message.StepMessage.Return;
 import tools.debugger.message.StepMessage.StepInto;
 import tools.debugger.message.StepMessage.StepOver;
 import tools.debugger.message.StepMessage.Stop;
+import tools.debugger.message.SuspendedEventMessage;
 import tools.debugger.message.UpdateBreakpoint;
 import tools.debugger.session.AsyncMessageReceiveBreakpoint;
 import tools.debugger.session.BreakpointInfo;
@@ -114,7 +115,7 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
     suspendEvents.put(id, e);
     suspendFutures.put(id, future);
 
-    connector.sendSuspendedEvent(e, id, loadedSourcesTags, rootNodes);
+    connector.sendSuspendedEvent(e, id);
 
     try {
       future.get();
@@ -186,7 +187,8 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
 
   public static Gson createJsonProcessor() {
     ClassHierarchyAdapterFactory<Message> msgAF = new ClassHierarchyAdapterFactory<>(Message.class, "type");
-    msgAF.register("source", SourceMessage.class);
+    msgAF.register("source",       SourceMessage.class);
+    msgAF.register("suspendEvent", SuspendedEventMessage.class);
 
     ClassHierarchyAdapterFactory<Respond> respondAF = new ClassHierarchyAdapterFactory<>(Respond.class, "action");
     respondAF.register(INITIAL_BREAKPOINTS, InitialBreakpointsResponds.class);

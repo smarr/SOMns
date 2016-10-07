@@ -3,8 +3,11 @@ package tools;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Objects;
+import java.util.Set;
 
 import com.oracle.truffle.api.source.SourceSection;
+
+import tools.highlight.Tags;
 
 /**
  * Represents a potentially empty range of source characters, for a potentially
@@ -63,6 +66,36 @@ public class SourceCoordinate {
           // sc.charIndex == charIndex &&
           sc.charLength == charLength;
     }
+  }
+
+  public static class TaggedSourceCoordinate extends SourceCoordinate {
+    private final String[] tags;
+
+    protected TaggedSourceCoordinate(final int startLine, final int startColumn,
+      final int charIndex, final int length, final String[] tags) {
+      super(startLine, startColumn, charIndex, length);
+      this.tags = tags;
+    }
+  }
+
+  public static TaggedSourceCoordinate create(final SourceSection section,
+      final Set<Class<? extends Tags>> tags) {
+    String[] strTags = new String[tags.size()];
+
+    int i = 0;
+    for (Class<? extends Tags> tagClass : tags) {
+      strTags[i] = tagClass.getSimpleName();
+      i += 1;
+    }
+
+    return new TaggedSourceCoordinate(section.getStartLine(),
+        section.getStartColumn(),
+        section.getCharIndex(), section.getCharLength(), strTags);
+  }
+
+  public static SourceCoordinate createCoord(final SourceSection section) {
+    return new SourceCoordinate(section.getStartLine(), section.getStartColumn(),
+        section.getCharIndex(), section.getCharLength());
   }
 
   public static FullSourceCoordinate create(final SourceSection section) {

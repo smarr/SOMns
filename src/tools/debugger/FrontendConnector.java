@@ -17,7 +17,6 @@ import org.java_websocket.WebSocket;
 import com.google.gson.Gson;
 import com.oracle.truffle.api.debug.SuspendedEvent;
 import com.oracle.truffle.api.instrumentation.Instrumenter;
-import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
@@ -38,6 +37,7 @@ import tools.debugger.message.Message;
 import tools.debugger.message.SourceMessage;
 import tools.debugger.message.SourceMessage.MethodData;
 import tools.debugger.message.SourceMessage.SourceData;
+import tools.debugger.message.SuspendedEventMessage;
 import tools.debugger.session.AsyncMessageReceiveBreakpoint;
 import tools.debugger.session.Breakpoints;
 import tools.debugger.session.LineBreakpoint;
@@ -187,8 +187,11 @@ public class FrontendConnector {
         source.getName(), source.getURI().toString(),
         createSourceSections(source, loadedSourcesTags, instrumenter, rootNodes),
         createMethodDefinitions(rootNodes));
+    send(new SourceMessage(sources));
+  }
 
-    SourceMessage msg = new SourceMessage(sources);
+  private void send(final Message msg) {
+    ensureConnectionIsAvailable();
     sender.send(gson.toJson(msg, Message.class));
   }
 
@@ -241,25 +244,8 @@ public class FrontendConnector {
     return map;
   }
 
-  public void sendSuspendedEvent(final SuspendedEvent e, final String id,
-      final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> loadedSourcesTags,
-      final Map<Source, Set<RootNode>> rootNodes) {
-    Node     suspendedNode = e.getNode();
-    RootNode suspendedRoot = suspendedNode.getRootNode();
-    Source suspendedSource;
-    if (suspendedRoot.getSourceSection() != null) {
-      suspendedSource = suspendedRoot.getSourceSection().getSource();
-    } else {
-      suspendedSource = suspendedNode.getSourceSection().getSource();
-    }
-
-    JSONObjectBuilder builder = JsonSerializer.createSuspendedEventJson(e,
-        suspendedNode, suspendedRoot, suspendedSource, id, loadedSourcesTags,
-        instrumenter, rootNodes);
-
-    ensureConnectionIsAvailable();
-
-    sender.send(builder.toString());
+  public void sendSuspendedEvent(final SuspendedEvent e, final String id) {
+    send(SuspendedEventMessage.create(e, id));
   }
 
   public void sendActorHistory() {

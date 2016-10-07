@@ -1,0 +1,98 @@
+package tools.debugger.message;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+
+import com.oracle.truffle.api.debug.DebugStackFrame;
+import com.oracle.truffle.api.debug.DebugValue;
+import com.oracle.truffle.api.debug.SuspendedEvent;
+import com.oracle.truffle.api.frame.MaterializedFrame;
+import com.oracle.truffle.api.source.SourceSection;
+
+import tools.SourceCoordinate;
+import tools.SourceCoordinate.FullSourceCoordinate;
+
+
+@SuppressWarnings("unused")
+public class SuspendedEventMessage extends Message {
+
+  public static SuspendedEventMessage create(final SuspendedEvent e,
+      final String eventId) {
+    String sourceUri  = getSuspendedSourceUri(e);
+    Frame[] frames    = getStack(e);
+    TopFrame topFrame = getTopFrame(e, e.getFrame());
+
+    return new SuspendedEventMessage(sourceUri, eventId, getStack(e), topFrame);
+  }
+
+  private final String id;
+  private final String sourceUri;
+
+  private final Frame[] stack;
+  private final TopFrame topFrame;
+
+  protected SuspendedEventMessage(final String uri, final String eventId,
+      final Frame[] stack, final TopFrame topFrame) {
+    this.sourceUri = uri;
+    this.id        = eventId;
+    this.stack     = stack;
+    this.topFrame  = topFrame;
+  }
+
+  protected static class Frame {
+    private final FullSourceCoordinate sourceSection;
+    private final String methodName;
+
+    protected Frame(final FullSourceCoordinate sourceSection,
+        final String methodName) {
+      this.sourceSection = sourceSection;
+      this.methodName    = methodName;
+    }
+  }
+
+  protected static class TopFrame {
+    private final String[] arguments;
+    private final Map<String, String> slots;
+
+    protected TopFrame(final String[] arguments, final Map<String, String> slots) {
+      this.arguments = arguments;
+      this.slots     = slots;
+    }
+  }
+
+  private static TopFrame getTopFrame(final SuspendedEvent e,
+      final MaterializedFrame frame) {
+    Object[] arguments = frame.getArguments();
+    String[] args = new String[arguments.length];
+
+    for (int i = 0; i < arguments.length; i += 1) {
+      args[i] = Objects.toString(arguments[i]);
+    }
+
+    Map<String, String> slots = new HashMap<>();
+
+    for (DebugValue v : e.getTopStackFrame()) {
+      slots.put(v.getName(), v.as(String.class));
+    }
+
+    return new TopFrame(args, slots);
+  }
+
+  private static Frame[] getStack(final SuspendedEvent e) {
+    ArrayList<Frame> frames = new ArrayList<>();
+    for (DebugStackFrame f : e.getStackFrames()) {
+      frames.add(new Frame(SourceCoordinate.create(f.getSourceSection()),
+          f.getName()));
+    }
+    return frames.toArray(new Frame[0]);
+  }
+
+  private static String getSuspendedSourceUri(final SuspendedEvent e) {
+    SourceSection suspendedSection =  e.getSourceSection();
+    assert suspendedSection != null : "TODO: what is this case, was supported before. Not sure whether the top frame has another source section";
+    String sourceUri = suspendedSection.getSource().getURI().toString();
+    return sourceUri;
+  }
+}
