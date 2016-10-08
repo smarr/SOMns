@@ -10,8 +10,8 @@ import som.interpreter.nodes.nary.UnaryBasicOperation;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vm.Primitives.Specializer;
 import som.vm.constants.Classes;
+import tools.debugger.Tags.LiteralTag;
 import tools.dym.Tags.OpArithmetic;
-import tools.highlight.Tags.LiteralTag;
 
 
 public abstract class DoublePrims  {

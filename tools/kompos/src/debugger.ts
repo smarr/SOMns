@@ -1,88 +1,109 @@
-import {Breakpoint, IdMap, Source, SourceSection, Method,
-  SourceMessage} from './messages';
+import {Breakpoint, IdMap, Source, SourceCoordinate, SourceMessage,
+  TaggedSourceCoordinate, getSectionId} from './messages';
+
+export function isRelevant(sc: TaggedSourceCoordinate) {
+  return -1 !== sc.tags.indexOf('EventualMessageSend');
+}
 
 export class Debugger {
   public lastSuspendEventId?: string;
 
   private suspended: boolean;
   
-  private sourceObjects:  IdMap<Source>;
-  private sectionObjects: IdMap<SourceSection>;
-  private methods:        IdMap<IdMap<Method>>;
-  private breakpoints:    IdMap<IdMap<Breakpoint>>;
+  /**
+   * Mapping Source URIs to id used for easy access, and for short unique ids to
+   * be used by {@link getSectionId}.
+   */
+  private uriToSourceId:  IdMap<string>;
+
+  /**
+   * Array of sources, indexed by id from {@link getSourceId}.
+   */
+  private sources:  IdMap<Source>;
+
+  /**
+   * All source sections relevant for the debugger, indexed by {@link getSectionId}.
+   */
+  private sections: IdMap<SourceCoordinate>;
+
+  private breakpoints:    IdMap<Breakpoint>[];
 
   constructor() {
     this.suspended = false;
     this.lastSuspendEventId = null;
-    this.sourceObjects  = {};
-    this.sectionObjects = {};
-    this.methods        = {};
-    this.breakpoints    = {};
+    this.uriToSourceId  = {};
+    this.sources        = {};
+    this.sections       = {};
+    this.breakpoints    = [];
   }
 
-  getSource(id): Source {
-    for (var fileName in this.sourceObjects) {
-      if (this.sourceObjects[fileName].id === id) {
-        return this.sourceObjects[fileName];
+  getSourceId(uri: string): string {
+    if (!(uri in this.uriToSourceId)) {
+      this.uriToSourceId[uri] = 's' + Object.keys(this.uriToSourceId).length;
+    }
+    return this.uriToSourceId[uri];
+  }
+
+  getSource(id: string): Source {
+    return this.sources[id];
+  }
+
+  addSources(msg: SourceMessage): IdMap<Source> {
+    let newSources = {};
+    for (let s of msg.sources) {
+      let id = this.getSourceId(s.uri);
+      this.sources[id] = s;
+      this.addSections(s);
+      this.addMethods(s);
+      newSources[id] = s;
+    }
+    return newSources;
+  }
+
+  getSection(id: string): SourceCoordinate {
+    return this.sections[id];
+  }
+
+  private addSections(s: Source) {
+    let sId = this.getSourceId(s.uri);
+    for (let sc of s.sections) {
+      // Filter out all non-relevant source sections
+      if (isRelevant(sc)) {
+        let id = getSectionId(sId, sc);
+        this.sections[id] = sc;
       }
     }
-    return null;
   }
 
-  getSection(id): SourceSection {
-    return this.sectionObjects[id];
-  }
-
-  addSources(msg: SourceMessage) {
-    for (var sId in msg.sources) {
-      this.sourceObjects[msg.sources[sId].name] = msg.sources[sId];
-    }
-  }
-
-  addSections(msg: SourceMessage) {
-    for (let ssId in msg.sections) {
-      this.sectionObjects[ssId] = msg.sections[ssId];
-    }
-  }
-
-  addMethods(msg: SourceMessage) {
-    for (let k in msg.methods) {
-      let meth = msg.methods[k];
-      let sId  = meth.sourceSection.sourceId;
-      let ssId = meth.sourceSection.id;
-      if (!this.methods[sId]) {
-        this.methods[sId] = {};
+  private addMethods(s: Source) {
+    let sId = this.getSourceId(s.uri);
+    for (let meth of s.methods) {
+      let ssId = getSectionId(sId, meth.sourceSection);
+      if (!(ssId in this.sections)) {
+        this.sections[ssId] = meth.sourceSection;
       }
-      this.methods[sId][ssId] = meth;
-
-      // also register the source section for later lookups
-      this.sectionObjects[ssId] = meth.sourceSection;
     }
-  }
-
-  getMethods(sourceId): IdMap<Method> {
-    return this.methods[sourceId];
   }
 
   getBreakpoint(source, key, newBp): Breakpoint {
-    if (!this.breakpoints[source.name]) {
-      this.breakpoints[source.name] = {};
+    let sId = this.getSourceId(source.uri);
+    if (!this.breakpoints[sId]) {
+      this.breakpoints[sId] = {};
     }
 
-    var bp = this.breakpoints[source.name][key];
+    let bp: Breakpoint = this.breakpoints[sId][key];
     if (!bp) {
       bp = newBp(source);
-      this.breakpoints[source.name][key] = bp;
+      this.breakpoints[sId][key] = bp;
     }
     return bp;
   }
 
   getEnabledBreakpoints(): Breakpoint[] {
-    var bps = [];
-    for (var sourceName in this.breakpoints) {
-      var lines = this.breakpoints[sourceName];
-      for (var line in lines) {
-        var bp = lines[line];
+    let bps = [];
+    for (let breakpoints of this.breakpoints) {
+      for (let key in breakpoints) {
+        let bp = breakpoints[key];
         if (bp.isEnabled()) {
           bps.push(bp);
         }

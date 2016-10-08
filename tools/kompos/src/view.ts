@@ -1,127 +1,193 @@
 /* jshint -W097 */
 "use strict";
 
-import {Breakpoint, AsyncMethodRcvBreakpoint, SendBreakpoint,
-  LineBreakpoint, SourceMessage, SuspendEventMessage} from './messages';
+import {Controller} from './controller';
+import {Breakpoint, AsyncMethodRcvBreakpoint, MessageBreakpoint, Source, Method,
+  LineBreakpoint, SuspendEventMessage, IdMap,
+  SourceCoordinate, TaggedSourceCoordinate, getSectionId} from './messages';
 
-declare var ctrl;
+declare var ctrl: Controller;
 
-function sourceToArray(source) {
-  var arr = new Array(source.length),
-    i;
-  for (i = 0; i < source.length; i += 1) {
-    arr[i] = source[i];
+function splitAndKeepNewlineAsEmptyString(str) {
+  let result = new Array();
+  let line = new Array();
+
+  for (let i = 0; i < str.length; i++) {
+    line.push(str[i]);
+    if (str[i] === "\n") {
+      line.pop();
+      line.push('');
+      result.push(line);
+      line = new Array();
+    }
   }
+  return result;
+}
+
+function sourceToArray(source: string): string[][] {
+  let lines = splitAndKeepNewlineAsEmptyString(source);
+  let arr = new Array(lines.length);
+  
+  for (let i in lines) {
+    let line = lines[i];
+    arr[i] = new Array(line.length);
+    for (let j = 0; j < line.length; j += 1) {
+      arr[i][j] = line[j];
+    }
+  }  
   return arr;
 }
 
-function methodDeclIdToString(sourceId, sectionId, idx) {
-  return "m:" + sourceId + ":" + sectionId + ":" + idx;
+function methodDeclIdToString(sectionId: string, idx: number) {
+  return "m:" + sectionId + ":" + idx;
 }
 
-function methodDeclIdToObj(id) {
+function methodDeclIdToObj(id: string) {
   let arr = id.split(":");
   return {
-    "sourceId"  : arr[1],
-    "sectionId" : arr[2],
-    "idx" : arr[3]
+    sourceId:    arr[1],
+    startLine:   parseInt(arr[2]),
+    startColumn: parseInt(arr[3]),
+    charLength:  parseInt(arr[4]),
+    idx:         arr[5]
   };
 }
 
-function Begin(section) {
-  this.section = section;
-  this.type    = Begin;
+abstract class SectionMarker {
+  public type: any;
+
+  constructor(type: any) {
+    this.type = type;
+  }
+
+  abstract length(): number;
 }
 
-Begin.prototype.toString = function () {
-  return '<span id="' + this.section.id + '" class="' + this.section.tags.join(" ") + '">';
-};
+class Begin extends SectionMarker {
+  private section: TaggedSourceCoordinate;
+  private sectionId?: string;
 
-Begin.prototype.length = function () {
-  return this.section.length;
-};
+  constructor(section: TaggedSourceCoordinate, sectionId: string) {
+    super(Begin);
+    this.sectionId = sectionId;
+    this.section = section;
+    this.type    = Begin;
+  }
 
-function BeginMethodDef(method, i, defPart) {
-  this.method  = method;
-  this.i       = i;
-  this.defPart = defPart;
-  this.type    = Begin;
+  toString() { 
+    return '<span id="' + this.sectionId + '" class="' + this.section.tags.join(" ") + '">';
+  }
+
+  length() {
+    return this.section.charLength;
+  }
 }
 
-BeginMethodDef.prototype.length = function () {
-  return this.defPart.length;
-};
+class BeginMethodDef extends SectionMarker {
+  private method:   Method;
+  private sourceId: string;
+  private i:        number;
+  private defPart:  SourceCoordinate;
 
-BeginMethodDef.prototype.toString = function () {
-  let tags = "MethodDeclaration",
-    id = methodDeclIdToString(this.method.sourceSection.sourceId,
-      this.method.sourceSection.id, this.i);
-  return '<span id="' + id + '" class="' + tags + '">';
-};
+  constructor(method: Method, sourceId: string, i: number,
+      defPart: SourceCoordinate) {
+    super(Begin);
+    this.method   = method;
+    this.sourceId = sourceId;
+    this.i        = i;
+    this.defPart  = defPart;
+  }
 
-function End(section, length) {
-  this.section = section;
-  this.len     = length;
-  this.type    = End;
+  length() {
+    return this.defPart.charLength;
+  }
+
+  toString() {
+    let tags = "MethodDeclaration",
+      id = methodDeclIdToString(
+        getSectionId(this.sourceId, this.method.sourceSection), this.i);
+    return '<span id="' + id + '" class="' + tags + '">';
+  }
 }
 
-End.prototype.toString = function () {
-  return '</span>';
-};
+class End extends SectionMarker {
+  private section: SourceCoordinate;
+  private len:     number;
 
-End.prototype.length = function () {
-  return this.len;
-};
+constructor(section: SourceCoordinate, length: number) {
+    super(End);
+    this.section = section;
+    this.len     = length;
+  }
 
-function Annotation(char) {
-  this.char   = char;
-  this.before = [];
-  this.after  = [];
+  toString() {
+    return '</span>';
+  }
+
+  length() {
+    return this.len;
+  }
 }
 
-Annotation.prototype.toString = function() {
-  this.before.sort(function (a, b) {
-    if (a.type !== b.type) {
-      if (a.type === Begin) {
-        return -1;
-      } else {
-        return 1;
+class Annotation {
+  private char: string;
+  private before: SectionMarker[];
+  private after:  SectionMarker[];
+
+  constructor(char: string) {
+    this.char   = char;
+    this.before = [];
+    this.after  = [];
+  }
+
+  toString() {
+    this.before.sort(function (a, b) {
+      if (a.type !== b.type) {
+        if (a.type === Begin) {
+          return -1;
+        } else {
+          return 1;
+        }
       }
+
+      if (a.length() === b.length()) {
+        return 0;
+      }
+
+      if (a.length() < b.length()) {
+        return (a.type === Begin) ? 1 : -1;
+      } else {
+        return (a.type === Begin) ? -1 : 1;
+      }
+    });
+
+    let result = this.before.join("");
+    result += this.char;
+    result += this.after.join("");
+    return result;
+  }
+}
+
+function arrayToString(arr: any[][]) {
+  let result = "";
+
+  for (let line of arr) {
+    for (let c of line) {
+      result += c.toString();
     }
-
-    if (a.length() === b.length()) {
-      return 0;
-    }
-
-    if (a.length() < b.length()) {
-      return (a.type === Begin) ? 1 : -1;
-    } else {
-      return (a.type === Begin) ? -1 : 1;
-    }
-  });
-
-  var result = this.before.join("");
-  result += this.char;
-  result += this.after.join("");
-  return result;
-};
-
-function arrayToString(arr) {
-  var result = "";
-  for (var i = 0; i < arr.length; i++) {
-    result += arr[i].toString();
+    result += "\n";
   }
   return result;
 }
 
-function nodeFromTemplate(tplId) {
+function nodeFromTemplate(tplId: string) {
   var tpl = document.getElementById(tplId),
     result = <Element> tpl.cloneNode(true);
   result.removeAttribute("id");
   return result;
 }
 
-function createLineNumbers(cnt) {
+function createLineNumbers(cnt: number) {
   var result = "<span class='ln' onclick='ctrl.onToggleLineBreakpoint(1, this);'>1</span>",
     i;
   for (i = 2; i <= cnt; i += 1) {
@@ -130,50 +196,69 @@ function createLineNumbers(cnt) {
   return result;
 }
 
-function ensureItIsAnnotation(arr, idx) {
-  if (!(arr[idx] instanceof Annotation)) {
-    arr[idx] = new Annotation(arr[idx]);
+/**
+ * Arguments and results are 1-based.
+ * Computation is zero-based.
+ */
+function ensureItIsAnnotation(arr: any[][], line: number, column: number) {
+  let l = line - 1,
+    c = column - 1;
+
+  if (!(arr[l][c] instanceof Annotation)) {
+    console.assert(typeof arr[l][c] === 'string');
+    arr[l][c] = new Annotation(arr[l][c]);
   }
-  return arr[idx];
+  return arr[l][c];
 }
 
-function annotateArray(arr, sourceId, sections, methods) {
-  // adding all source sections
-  for (var sId in sections) {
-    var s = sections[sId];
-    if (s.sourceId === sourceId) {
-      var start = ensureItIsAnnotation(arr, s.firstIndex),
-            end = ensureItIsAnnotation(arr, s.firstIndex + s.length);
-      start.before.push(new Begin(s));
-      end.before.push(new End(s, s.length));
+/**
+ * Determine line and column for `length` elements from given start location.
+ * 
+ * Arguments and results are 1-based.
+ * Computation is zero-based.
+ */
+function getCoord(arr: any[][], startLine: number, startColumn: number, length: number) {
+  let remaining = length,
+    line   = startLine - 1,
+    column = startColumn - 1;
+
+  while (remaining > 0) {
+    while (column < arr[line].length && remaining > 0) {
+      column    += 1;
+      remaining -= 1;
     }
+    if (column === arr[line].length) {
+      line      += 1;
+      column    =  0;
+      remaining -= 1; // the newline character
+    }
+  }
+  return {line: line + 1, column: column + 1};
+}
+
+function annotateArray(arr: any[][], sourceId: string, sections: TaggedSourceCoordinate[], methods: Method[]) {
+  for (let s of sections) {
+    let start = ensureItIsAnnotation(arr, s.startLine, s.startColumn),
+        coord = getCoord(arr, s.startLine, s.startColumn, s.charLength),
+          end = ensureItIsAnnotation(arr, coord.line, coord.column),
+    sectionId = getSectionId(sourceId, s);
+
+    start.before.push(new Begin(s, sectionId));
+    end.before.push(new End(s, s.charLength));
   }
 
   // adding method definitions
-  for (let k in methods) {
-    let meth = methods[k];
-    if (meth.sourceSection.sourceId !== sourceId) {
-      continue;
-    }
-
+  for (let meth of methods) {
     for (let i in meth.definition) {
       let defPart = meth.definition[i],
-        start = ensureItIsAnnotation(arr, defPart.firstIndex),
-        end = ensureItIsAnnotation(arr, defPart.firstIndex + defPart.length);
-      start.before.push(new BeginMethodDef(meth, i, defPart));
-      end.before.push(new End(meth, defPart.length));
-    }
-  }
-}
+        start = ensureItIsAnnotation(arr, defPart.startLine, defPart.startColumn),
+        coord = getCoord(arr, defPart.startLine, defPart.startColumn, defPart.charLength),
+        end   = ensureItIsAnnotation(arr, coord.line, coord.column);
 
-function countNumberOfLines(str) {
-  var cnt = 1;
-  for (var i = 0; i < str.length; i++) {
-    if (str[i] === "\n") {
-      cnt += 1;
+      start.before.push(new BeginMethodDef(meth, sourceId, parseInt(i), defPart));
+      end.before.push(new End(meth.sourceSection, defPart.charLength));
     }
   }
-  return cnt;
 }
 
 function enableEventualSendClicks(fileNode) {
@@ -196,12 +281,12 @@ function enableEventualSendClicks(fileNode) {
 
   $(document).on("click", ".bp-rcv", function (e) {
     e.stopImmediatePropagation();
-    ctrl.onToggleSendBreakpoint(e.currentTarget.attributes["data-ss-id"].value, "receiver");
+    ctrl.onToggleSendBreakpoint(e.currentTarget.attributes["data-ss-id"].value, "MessageReceiveBreakpoint");
   });
 
   $(document).on("click", ".bp-send", function (e) {
     e.stopImmediatePropagation();
-    ctrl.onToggleSendBreakpoint(e.currentTarget.attributes["data-ss-id"].value, "sender");
+    ctrl.onToggleSendBreakpoint(e.currentTarget.attributes["data-ss-id"].value, "MessageSenderBreakpoint");
   });
 }
 
@@ -218,7 +303,7 @@ function enableMethodBreakpointHover(fileNode) {
   methDecls.attr("data-content", function () {
     let idObj = methodDeclIdToObj(this.id);
     let content = nodeFromTemplate("method-breakpoints");
-    $(content).find("button").attr("data-ss-id", idObj.sectionId);
+    $(content).find("button").attr("data-ss-id", getSectionId(idObj.sourceId, idObj));
     return $(content).html();
   });
 
@@ -230,11 +315,11 @@ function enableMethodBreakpointHover(fileNode) {
   });
 }
 
-function showSource(s, sections, methods) {
-  var tabListEntry = <Element> document.getElementById(s.id),
-    aElem = document.getElementById("a" + s.id);
+function showSource(source: Source, sourceId: string) {
+  var tabListEntry = <Element> document.getElementById('' + sourceId),
+    aElem = document.getElementById('a' + sourceId);
   if (tabListEntry) {
-    if (aElem.innerText !== s.name) {
+    if (aElem.innerText !== source.name) {
       $(tabListEntry).remove();
       $(aElem).remove();
       tabListEntry = null;
@@ -244,25 +329,25 @@ function showSource(s, sections, methods) {
     }
   }
 
-  var annotationArray = sourceToArray(s.sourceText);
-  annotateArray(annotationArray, s.id, sections, methods);
+  var annotationArray = sourceToArray(source.sourceText);
+  annotateArray(annotationArray, sourceId, source.sections, source.methods);
 
   tabListEntry = nodeFromTemplate("tab-list-entry");
 
   if (aElem === null) {
     // create the tab "header/handle"
     var elem = $(tabListEntry).find("a");
-    elem.attr("href", "#" + s.id);
-    elem.attr("id", "a" + s.id);
-    elem.text(s.name);
+    elem.attr("href", "#" + sourceId);
+    elem.attr("id", "a" + sourceId);
+    elem.text(source.name);
     aElem = elem.get(0);
     $("#tabs").append(tabListEntry);
   }
 
   // create tab pane
   var newFileElement = nodeFromTemplate("file");
-  newFileElement.setAttribute("id", s.id);
-  newFileElement.getElementsByClassName("line-numbers")[0].innerHTML = createLineNumbers(countNumberOfLines(s.sourceText));
+  newFileElement.setAttribute("id", '' + sourceId);
+  newFileElement.getElementsByClassName("line-numbers")[0].innerHTML = createLineNumbers(annotationArray.length);
   var fileNode = newFileElement.getElementsByClassName("source-file")[0];
   fileNode.innerHTML = arrayToString(annotationArray);
 
@@ -319,21 +404,44 @@ export class View {
     $("#dbg-connect-btn").html("Reconnect");
   }
 
-  displaySources(msg: SourceMessage) {
-    var sId;
-    for (sId in msg.sources) {
-      showSource(msg.sources[sId], msg.sections, msg.methods);
+  displaySources(sources: IdMap<Source>) {
+    let sId; // keep last id to show tab
+    for (sId in sources) {
+      showSource(sources[sId], sId);
     }
     $('.nav-tabs a[href="#' + sId + '"]').tab('show');
   }
 
-  displaySuspendEvent(data: SuspendEventMessage, getSourceAndMethods) {
-    var list = document.getElementById("stack-frames");
+  displayUpdatedSourceSections(data, getSourceAndMethods) {
+    // update the source sections for the sourceId
+  
+    var pane = document.getElementById(data.sourceId);
+    var sourceFile = $(pane).find(".source-file");
+
+    // remove all spans
+    sourceFile.find("span").replaceWith($(".html"));
+
+    // apply new spans
+    var result = getSourceAndMethods(data.sourceId),
+      source   = result[0],
+      methods  = result[1];
+
+    var annotationArray = sourceToArray(source.sourceText);
+    annotateArray(annotationArray, source.id, data.sections, methods);
+    sourceFile.html(arrayToString(annotationArray));
+
+    // enable clicking on EventualSendNodes
+    enableEventualSendClicks(sourceFile);
+    enableMethodBreakpointHover(sourceFile);
+  }
+
+  displaySuspendEvent(data: SuspendEventMessage, sourceId: string) {
+    let list = document.getElementById("stack-frames");
     while (list.lastChild) {
       list.removeChild(list.lastChild);
     }
 
-    for (var i = 0; i < data.stack.length; i++) {
+    for (let i = 0; i < data.stack.length; i++) {
       showFrame(data.stack[i], i, list);
     }
 
@@ -347,33 +455,10 @@ export class View {
     for (var varName in data.topFrame.slots) {
       showVar(varName, data.topFrame.slots[varName], list);
     }
-
-    // update the source sections for the sourceId
-    if (data.sections) {
-      var pane = document.getElementById(data.sourceId);
-      var sourceFile = $(pane).find(".source-file");
-
-      // remove all spans
-      sourceFile.find("span").replaceWith($(".html"));
-
-      // apply new spans
-      var result = getSourceAndMethods(data.sourceId),
-        source   = result[0],
-        methods  = result[1];
-
-      var annotationArray = sourceToArray(source.sourceText);
-      annotateArray(annotationArray, source.id, data.sections, methods);
-      sourceFile.html(arrayToString(annotationArray));
-
-      // enable clicking on EventualSendNodes
-      enableEventualSendClicks(sourceFile);
-      enableMethodBreakpointHover(sourceFile);
-    }
-
+    
     // highlight current node
-    var ssId = data.stack[0].sourceSection.id;
-    var sourceId = data.stack[0].sourceSection.sourceId;
-    var ss = document.getElementById(ssId);
+    let ssId = getSectionId(sourceId, data.stack[0].sourceSection);
+    let ss = document.getElementById(ssId);
     $(ss).addClass("DbgCurrentNode");
 
     this.currentDomNode   = ss;
@@ -388,11 +473,11 @@ export class View {
 
   showSourceById(sourceId: string) {
     if (this.getActiveSourceId() !== sourceId) {
-      $(document.getElementById("a" + sourceId)).tab('show');
+      $(document.getElementById('a' + sourceId)).tab('show');
     }
   }
 
-  getActiveSourceId() {
+  getActiveSourceId(): string {
     return $(".tab-pane.active").attr("id");
   }
 
@@ -401,11 +486,11 @@ export class View {
       return;
     }
 
-    var bpId = "bp:" + breakpoint.source.id + ":" + breakpoint.getId();
-    var entry = nodeFromTemplate("breakpoint-tpl");
+    let bpId = breakpoint.getId();
+    let entry = nodeFromTemplate("breakpoint-tpl");
     entry.setAttribute("id", bpId);
 
-    var tds = $(entry).find("td");
+    let tds = $(entry).find("td");
     tds[0].innerHTML = breakpoint.source.name;
     tds[1].innerHTML = breakpoint.getId();
 
@@ -416,7 +501,8 @@ export class View {
     list.appendChild(entry);
   }
 
-  updateBreakpoint(breakpoint: Breakpoint, highlightElem, highlightClass) {
+  updateBreakpoint(breakpoint: Breakpoint, highlightElem: JQuery,
+      highlightClass: string) {
     this.ensureBreakpointListEntry(breakpoint);
     var enabled = breakpoint.isEnabled();
 
@@ -433,15 +519,16 @@ export class View {
     this.updateBreakpoint(bp, lineNumSpan, "breakpoint-active");
   }
 
-  updateSendBreakpoint(bp: SendBreakpoint) {
-    var bpSpan = $("#" + bp.data.sectionId);
-    this.updateBreakpoint(bp, bpSpan, "send-breakpoint-active");
+  updateSendBreakpoint(bp: MessageBreakpoint) {
+    var bpSpan = document.getElementById(bp.sectionId);
+    this.updateBreakpoint(bp, $(bpSpan), "send-breakpoint-active");
   }
 
   updateAsyncMethodRcvBreakpoint(bp: AsyncMethodRcvBreakpoint) {
     let i = 0,
       elem = null;
-    while (elem = document.getElementById(methodDeclIdToString(bp.source.id, bp.data.sectionId, i))) {
+    while (elem = document.getElementById(
+        methodDeclIdToString(bp.sectionId, i))) {
       this.updateBreakpoint(bp, $(elem), "send-breakpoint-active");
       i += 1;
     }

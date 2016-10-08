@@ -18,7 +18,6 @@ public class VMOptions {
   @CompilationFinal public boolean webDebuggerEnabled;
   @CompilationFinal public boolean profilingEnabled;
   @CompilationFinal public boolean dynamicMetricsEnabled;
-  @CompilationFinal public boolean highlightingEnabled;
   @CompilationFinal public boolean coverageEnabled;
   @CompilationFinal public String  coverallsRepoToken;
 
@@ -27,7 +26,7 @@ public class VMOptions {
     showUsage = args.length == 0;
     if (!VmSettings.INSTRUMENTATION &&
         (debuggerEnabled || webDebuggerEnabled || profilingEnabled ||
-        dynamicMetricsEnabled || highlightingEnabled || coverageEnabled)) {
+        dynamicMetricsEnabled || coverageEnabled)) {
       throw new IllegalStateException(
           "Instrumentation is not enabled, but one of the tools is used. " +
           "Please set -D" + VmSettings.INSTRUMENTATION_PROP + "=true");
@@ -62,9 +61,6 @@ public class VMOptions {
         } else if (arguments[currentArg].equals("--dynamic-metrics")) {
           dynamicMetricsEnabled = true;
           currentArg += 1;
-        } else if (arguments[currentArg].equals("--highlight")) {
-          highlightingEnabled = true;
-          currentArg += 1;
         } else if (arguments[currentArg].equals("--coveralls")) {
           coverageEnabled = true;
           coverallsRepoToken = arguments[currentArg + 1];
@@ -96,7 +92,6 @@ public class VMOptions {
     VM.println("");
     VM.println("  --profile              Enable the TruffleProfiler");
     VM.println("  --dynamic-metrics      Enable the DynamicMetrics tool");
-    VM.println("  --highlight            Enable the Highlight tool"); // TODO: this should take a parameter at some point, but for that we need to be able to access config options from tools
     VM.println("  --coveralls REPO_TOKEN Enable the Coverage tool and reporting to Coveralls.io");
     VM.exit(1);
   }

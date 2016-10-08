@@ -2,9 +2,9 @@ package tools.debugger;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -14,25 +14,33 @@ import java.util.concurrent.Future;
 
 import org.java_websocket.WebSocket;
 
-import com.oracle.truffle.api.debug.Breakpoint;
+import com.google.gson.Gson;
 import com.oracle.truffle.api.debug.SuspendedEvent;
 import com.oracle.truffle.api.instrumentation.Instrumenter;
-import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
-import com.oracle.truffle.api.utilities.JSONHelper.JSONObjectBuilder;
 import com.sun.net.httpserver.HttpServer;
 
 import som.VmSettings;
 import som.interpreter.actors.Actor;
-import som.interpreter.actors.Actor.Role;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.SFarReference;
 import tools.ObjectBuffer;
+import tools.SourceCoordinate;
+import tools.SourceCoordinate.TaggedSourceCoordinate;
+import tools.Tagging;
 import tools.actors.ActorExecutionTrace;
+import tools.debugger.message.Message;
+import tools.debugger.message.MessageHistory;
+import tools.debugger.message.SourceMessage;
+import tools.debugger.message.SourceMessage.SourceData;
+import tools.debugger.message.SuspendedEventMessage;
+import tools.debugger.session.AsyncMessageReceiveBreakpoint;
 import tools.debugger.session.Breakpoints;
-import tools.highlight.Tags;
+import tools.debugger.session.LineBreakpoint;
+import tools.debugger.session.MessageReceiveBreakpoint;
+import tools.debugger.session.MessageSenderBreakpoint;
 
 /**
  * Connect the debugger to the UI front-end.
@@ -62,15 +70,19 @@ public class FrontendConnector {
   /**
    * Future to await the client's connection.
    */
-  private Future<WebSocket> clientConnected;
+  private CompletableFuture<WebSocket> clientConnected;
+
+  private final Gson gson;
 
   private final ArrayList<Source> notReady = new ArrayList<>(); //TODO rename: toBeSend
 
   public FrontendConnector(final Breakpoints breakpoints,
-      final Instrumenter instrumenter, final WebDebugger webDebugger) {
+      final Instrumenter instrumenter, final WebDebugger webDebugger,
+      final Gson gson) {
     this.instrumenter = instrumenter;
     this.breakpoints = breakpoints;
     this.webDebugger = webDebugger;
+    this.gson = gson;
 
     clientConnected = new CompletableFuture<WebSocket>();
 
@@ -95,8 +107,7 @@ public class FrontendConnector {
   private WebSocketHandler initializeWebSocket(final int port,
       final Future<WebSocket> clientConnected) {
     InetSocketAddress address = new InetSocketAddress(port);
-    WebSocketHandler server = new WebSocketHandler(address,
-        (CompletableFuture<WebSocket>) clientConnected, this);
+    WebSocketHandler server = new WebSocketHandler(address, this, gson);
     server.start();
     return server;
   }
@@ -116,12 +127,46 @@ public class FrontendConnector {
     assert sender.isOpen();
   }
 
+  // TODO: simplify, way to convoluted
+  private static TaggedSourceCoordinate[] createSourceSections(final Source source,
+      final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> sourcesTags,
+      final Instrumenter instrumenter, final Set<RootNode> rootNodes) {
+    Set<SourceSection> sections = new HashSet<>();
+    Map<SourceSection, Set<Class<? extends Tags>>> tagsForSections = sourcesTags.get(source);
+
+    if (tagsForSections != null) {
+      Tagging.collectSourceSectionsAndTags(rootNodes, tagsForSections, instrumenter);
+      for (SourceSection section : tagsForSections.keySet()) {
+        if (section.getSource() == source) {
+          sections.add(section);
+        }
+      }
+    }
+
+    TaggedSourceCoordinate[] result = new TaggedSourceCoordinate[sections.size()];
+    int i = 0;
+    for (SourceSection section : sections) {
+      result[i] = SourceCoordinate.create(section, tagsForSections.get(section));
+      i += 1;
+    }
+
+    return result;
+  }
+
   private void sendSource(final Source source,
       final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> loadedSourcesTags,
       final Set<RootNode> rootNodes) {
-    String json = JsonSerializer.createInitialSourceMessage("source", source,
-        loadedSourcesTags, instrumenter, rootNodes).toString();
-    sender.send(json);
+    SourceData[] sources = new SourceData[1];
+    sources[0] = new SourceData(source.getCode(), source.getMimeType(),
+        source.getName(), source.getURI().toString(),
+        createSourceSections(source, loadedSourcesTags, instrumenter, rootNodes),
+        SourceMessage.createMethodDefinitions(rootNodes));
+    send(new SourceMessage(sources));
+  }
+
+  private void send(final Message msg) {
+    ensureConnectionIsAvailable();
+    sender.send(gson.toJson(msg, Message.class));
   }
 
   private void sendBufferedSources(
@@ -173,25 +218,8 @@ public class FrontendConnector {
     return map;
   }
 
-  public void sendSuspendedEvent(final SuspendedEvent e, final String id,
-      final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> loadedSourcesTags,
-      final Map<Source, Set<RootNode>> rootNodes) {
-    Node     suspendedNode = e.getNode();
-    RootNode suspendedRoot = suspendedNode.getRootNode();
-    Source suspendedSource;
-    if (suspendedRoot.getSourceSection() != null) {
-      suspendedSource = suspendedRoot.getSourceSection().getSource();
-    } else {
-      suspendedSource = suspendedNode.getSourceSection().getSource();
-    }
-
-    JSONObjectBuilder builder = JsonSerializer.createSuspendedEventJson(e,
-        suspendedNode, suspendedRoot, suspendedSource, id, loadedSourcesTags,
-        instrumenter, rootNodes);
-
-    ensureConnectionIsAvailable();
-
-    sender.send(builder.toString());
+  public void sendSuspendedEvent(final SuspendedEvent e, final String id) {
+    send(SuspendedEventMessage.create(e, id));
   }
 
   public void sendActorHistory() {
@@ -214,10 +242,10 @@ public class FrontendConnector {
       actorObjsToIds.put(a, e.getValue());
     }
 
-    JSONObjectBuilder msg = JsonSerializer.createMessageHistoryJson(
-        messagesPerThread, actorsToIds, actorObjsToIds);
+    MessageHistory msg = MessageHistory.create(
+        actorsToIds, messagesPerThread, actorObjsToIds);
 
-    String m = msg.toString();
+    String m = gson.toJson(msg, Message.class);
     log("[ACTORS] Message length: " + m.length());
     sender.send(m);
     log("[ACTORS] Message sent?");
@@ -229,42 +257,20 @@ public class FrontendConnector {
     sender.close();
   }
 
-  public void requestAsyncMessageRcvBreakpoint(final boolean enabled,
-      final URI sourceUri, final int startLine, final int startColumn,
-      final int charLength) {
-    try {
-      Breakpoint bp = breakpoints.getAsyncMessageRcvBreakpoint(sourceUri,
-          startLine, startColumn, charLength);
-      bp.setEnabled(enabled);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+  public void registerOrUpdate(final LineBreakpoint bp) {
+    breakpoints.addOrUpdate(bp);
   }
 
-  public void requestBreakpoint(final boolean enabled, final URI sourceUri,
-      final int startLine, final int startColumn, final int charLength,
-      final Role role) {
-    try {
-      if (role == Role.SENDER) {
-        Breakpoint breakpoint = breakpoints.getBreakpointOnSender(sourceUri, startLine, startColumn, charLength);
-        breakpoint.setEnabled(enabled);
-      } else {
-        assert role == Role.RECEIVER : "Do we have a not yet supported breakpoint type?";
-        breakpoints.addReceiverBreakpoint(sourceUri, startLine, startColumn, charLength);
-      }
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+  public void registerOrUpdate(final MessageSenderBreakpoint bp) {
+    breakpoints.addOrUpdate(bp);
   }
 
-  public void requestBreakpoint(final boolean enabled, final URI sourceUri,
-      final int lineNumber) {
-    try {
-      Breakpoint bp = breakpoints.getLineBreakpoint(sourceUri, lineNumber);
-      bp.setEnabled(enabled);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+  public void registerOrUpdate(final MessageReceiveBreakpoint bp) {
+    breakpoints.addOrUpdate(bp);
+  }
+
+  public void registerOrUpdate(final AsyncMessageReceiveBreakpoint bp) {
+    breakpoints.addOrUpdate(bp);
   }
 
   public SuspendedEvent getSuspendedEvent(final String id) {
@@ -279,6 +285,10 @@ public class FrontendConnector {
     // Checkstyle: stop
     System.out.println(str);
     // Checkstyle: resume
+  }
+
+  public void completeConnection(final WebSocket conn) {
+    clientConnected.complete(conn);
   }
 
   public void shutdown() {

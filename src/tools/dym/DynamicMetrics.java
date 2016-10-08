@@ -35,6 +35,7 @@ import som.interpreter.nodes.OperationNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.vm.NotYetImplementedException;
 import som.vmobjects.SInvokable;
+import tools.debugger.Tags.LiteralTag;
 import tools.dym.Tags.BasicPrimitiveOperation;
 import tools.dym.Tags.CachedClosureInvoke;
 import tools.dym.Tags.CachedVirtualInvoke;
@@ -80,7 +81,6 @@ import tools.dym.profiles.InvocationProfile;
 import tools.dym.profiles.LoopProfile;
 import tools.dym.profiles.OperationProfile;
 import tools.dym.profiles.ReadValueProfile;
-import tools.highlight.Tags.LiteralTag;
 import tools.language.StructuralProbe;
 
 

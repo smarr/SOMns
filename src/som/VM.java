@@ -35,10 +35,9 @@ import som.vm.ObjectSystem;
 import som.vm.Primitives;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import tools.actors.ActorExecutionTrace;
+import tools.debugger.Tags;
 import tools.debugger.WebDebugger;
 import tools.dym.DynamicMetrics;
-import tools.highlight.Highlight;
-import tools.highlight.Tags;
 import tools.language.StructuralProbe;
 
 
@@ -141,14 +140,12 @@ public final class VM {
 
   public static void reportSyntaxElement(final Class<? extends Tags> type,
       final SourceSection source) {
-    Highlight.reportNonAstSyntax(type, source);
     if (webDebugger != null) {
       webDebugger.reportSyntaxElement(type, source);
     }
   }
 
   public static void reportParsedRootNode(final RootNode rootNode) {
-    Highlight.reportParsedRootNode(rootNode);
     if (webDebugger != null) {
       webDebugger.reportRootNodeAfterParsing(rootNode);
     }
@@ -294,7 +291,6 @@ public final class VM {
     } else if (profiler != null) {
       profiler.setEnabled(vmOptions.profilingEnabled);
     }
-    instruments.get(Highlight.ID).setEnabled(vmOptions.highlightingEnabled);
 
     Debugger debugger = null;
     if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {

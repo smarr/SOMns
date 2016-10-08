@@ -23,6 +23,15 @@ import som.vm.NotYetImplementedException;
 import som.vm.constants.Nil;
 import som.vmobjects.SClass;
 import tools.actors.Tags.EventualMessageSend;
+import tools.debugger.Tags.ArgumentTag;
+import tools.debugger.Tags.CommentTag;
+import tools.debugger.Tags.DelimiterClosingTag;
+import tools.debugger.Tags.DelimiterOpeningTag;
+import tools.debugger.Tags.IdentifierTag;
+import tools.debugger.Tags.KeywordTag;
+import tools.debugger.Tags.LiteralTag;
+import tools.debugger.Tags.LocalVariableTag;
+import tools.debugger.Tags.StatementSeparatorTag;
 import tools.dym.Tags.ArrayRead;
 import tools.dym.Tags.ArrayWrite;
 import tools.dym.Tags.BasicPrimitiveOperation;
@@ -49,15 +58,6 @@ import tools.dym.Tags.StringAccess;
 import tools.dym.Tags.UnspecifiedInvoke;
 import tools.dym.Tags.VirtualInvoke;
 import tools.dym.Tags.VirtualInvokeReceiver;
-import tools.highlight.Tags.ArgumentTag;
-import tools.highlight.Tags.CommentTag;
-import tools.highlight.Tags.DelimiterClosingTag;
-import tools.highlight.Tags.DelimiterOpeningTag;
-import tools.highlight.Tags.IdentifierTag;
-import tools.highlight.Tags.KeywordTag;
-import tools.highlight.Tags.LiteralTag;
-import tools.highlight.Tags.LocalVariableTag;
-import tools.highlight.Tags.StatementSeparatorTag;
 
 
 @TruffleLanguage.Registration(name = "SOMns", version = "0.1.0",

@@ -32,7 +32,7 @@ import som.compiler.Variable.Local;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.PreevaluatedExpression;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
-import tools.highlight.Tags.LiteralTag;
+import tools.debugger.Tags.LiteralTag;
 
 @NodeInfo(cost = NodeCost.NONE)
 @Instrumentable(factory = LiteralNodeWrapper.class)

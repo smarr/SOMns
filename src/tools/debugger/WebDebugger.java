@@ -8,6 +8,8 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.oracle.truffle.api.debug.Debugger;
 import com.oracle.truffle.api.debug.DebuggerSession.SteppingLocation;
 import com.oracle.truffle.api.debug.SuspendedCallback;
@@ -20,8 +22,25 @@ import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
+import gson.ClassHierarchyAdapterFactory;
+import tools.debugger.message.InitialBreakpointsResponds;
+import tools.debugger.message.Message;
+import tools.debugger.message.MessageHistory;
+import tools.debugger.message.Respond;
+import tools.debugger.message.SourceMessage;
+import tools.debugger.message.StepMessage.Resume;
+import tools.debugger.message.StepMessage.Return;
+import tools.debugger.message.StepMessage.StepInto;
+import tools.debugger.message.StepMessage.StepOver;
+import tools.debugger.message.StepMessage.Stop;
+import tools.debugger.message.SuspendedEventMessage;
+import tools.debugger.message.UpdateBreakpoint;
+import tools.debugger.session.AsyncMessageReceiveBreakpoint;
+import tools.debugger.session.BreakpointInfo;
 import tools.debugger.session.Breakpoints;
-import tools.highlight.Tags;
+import tools.debugger.session.LineBreakpoint;
+import tools.debugger.session.MessageReceiveBreakpoint;
+import tools.debugger.session.MessageSenderBreakpoint;
 
 
 /**
@@ -52,9 +71,6 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
         source.getSource(), s -> new HashMap<>());
     Set<Class<? extends Tags>> tags = sections.computeIfAbsent(source, s -> new HashSet<>(2));
     tags.add(type);
-
-    JsonSerializer.createSourceId(source.getSource());
-    JsonSerializer.createSourceSectionId(source);
   }
 
   public void reportLoadedSource(final Source source) {
@@ -96,7 +112,7 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
     suspendEvents.put(id, e);
     suspendFutures.put(id, future);
 
-    connector.sendSuspendedEvent(e, id, loadedSourcesTags, rootNodes);
+    connector.sendSuspendedEvent(e, id);
 
     try {
       future.get();
@@ -131,7 +147,8 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
 
   public void startServer(final Debugger dbg) {
     breakpoints = new Breakpoints(dbg, this);
-    connector = new FrontendConnector(breakpoints, instrumenter, this);
+    connector = new FrontendConnector(breakpoints, instrumenter, this,
+        createJsonProcessor());
     connector.awaitClient();
   }
 
@@ -159,5 +176,37 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
 
   public Breakpoints getBreakpoints() {
     return breakpoints;
+  }
+
+  // TODO: to be removed
+  private static final String INITIAL_BREAKPOINTS = "initialBreakpoints";
+  private static final String UPDATE_BREAKPOINT   = "updateBreakpoint";
+
+  public static Gson createJsonProcessor() {
+    ClassHierarchyAdapterFactory<Message> msgAF = new ClassHierarchyAdapterFactory<>(Message.class, "type");
+    msgAF.register("source",       SourceMessage.class);
+    msgAF.register("suspendEvent", SuspendedEventMessage.class);
+    msgAF.register("messageHistory", MessageHistory.class);
+
+    ClassHierarchyAdapterFactory<Respond> respondAF = new ClassHierarchyAdapterFactory<>(Respond.class, "action");
+    respondAF.register(INITIAL_BREAKPOINTS, InitialBreakpointsResponds.class);
+    respondAF.register(UPDATE_BREAKPOINT,   UpdateBreakpoint.class);
+    respondAF.register("stepInto", StepInto.class);
+    respondAF.register("stepOver", StepOver.class);
+    respondAF.register("return",   Return.class);
+    respondAF.register("resume",   Resume.class);
+    respondAF.register("stop",     Stop.class);
+
+    ClassHierarchyAdapterFactory<BreakpointInfo> breakpointAF = new ClassHierarchyAdapterFactory<>(BreakpointInfo.class, "type");
+    breakpointAF.register(LineBreakpoint.class);
+    breakpointAF.register(MessageSenderBreakpoint.class);
+    breakpointAF.register(MessageReceiveBreakpoint.class);
+    breakpointAF.register(AsyncMessageReceiveBreakpoint.class);
+
+    return new GsonBuilder().
+        registerTypeAdapterFactory(msgAF).
+        registerTypeAdapterFactory(respondAF).
+        registerTypeAdapterFactory(breakpointAF).
+        create();
   }
 }

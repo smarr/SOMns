@@ -11,9 +11,9 @@ import som.interpreter.InlinerForLexicallyEmbeddedMethods;
 import som.interpreter.SArguments;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.vm.NotYetImplementedException;
+import tools.debugger.Tags.ArgumentTag;
+import tools.debugger.Tags.KeywordTag;
 import tools.dym.Tags.LocalArgRead;
-import tools.highlight.Tags.ArgumentTag;
-import tools.highlight.Tags.KeywordTag;
 
 
 public abstract class ArgumentReadNode {

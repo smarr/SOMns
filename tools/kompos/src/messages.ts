@@ -4,34 +4,43 @@ export interface IdMap<T> {
 }
 
 export interface Source {
-  id:         string;
   sourceText: string;
   mimeType:   string;
   name:       string;
   uri:        string;
+  sections:   TaggedSourceCoordinate[];
+  methods:    Method[];
 }
 
-export interface SimpleSourceSection {
-  firstIndex?: number;
-  length:      number;
-  line:        number;
-  column:      number;
+export function getSectionId(sourceId: string, section: SourceCoordinate) {
+  return sourceId + ':' + section.startLine + ':' + section.startColumn + ':' +
+    section.charLength;
 }
 
-export interface SourceSection extends SimpleSourceSection {
-  id:           string;
-  description?: string;
-  sourceId?:    string;
+// TODO: rename
+export interface SourceCoordinate {
+  charLength:       number;
+  startLine:        number;
+  startColumn:      number;
+}
+
+// TODO: rename
+export interface FullSourceCoordinate extends SourceCoordinate {
+  uri: string;
+}
+
+export interface TaggedSourceCoordinate extends SourceCoordinate {
+  tags: string[];
 }
 
 export interface Method {
   name:          string;
-  definition:    SimpleSourceSection[];
-  sourceSection: SourceSection;
+  definition:    SourceCoordinate[];
+  sourceSection: SourceCoordinate;
 }
 
 interface Frame {
-  sourceSection: SourceSection;
+  sourceSection: FullSourceCoordinate;
   methodName: string;
 }
 
@@ -40,59 +49,74 @@ interface TopFrame {
   slots:     IdMap<string>;
 }
 
-export type Message = SourceMessage | SuspendEventMessage | MessageHistoryMessage;
+export type Message = SourceMessage | SuspendEventMessage |
+  MessageHistoryMessage | UpdateSourceSections;
 
 export interface SourceMessage {
   type:     "source";
-  sources:  IdMap<Source>;
-  sections: IdMap<SourceSection>;
-  methods:  Method[];
+  sources:  Source[];
 }
 
 export interface SuspendEventMessage {
   type:     "suspendEvent";
-  sourceId: string;
-  sections: SourceSection[];
+  
+  /** id of SuspendEvent, to be recognized in backend. */
+  id:        string;
+  sourceUri: string;
+
   stack:    Frame[];
   topFrame: TopFrame;
-  id: string;
+}
+
+export interface UpdateSourceSections {
+  type: "UpdateSourceSections";
+  updates: SourceInfo[];
+}
+
+export interface SourceInfo {
+  sourceUri: string;
+  sections:  TaggedSourceCoordinate[];
 }
 
 export interface MessageHistoryMessage {
   type: "messageHistory";
-  messageHistory: any; // TODO
+  messages: MessageData[];
+  actors:   FarRefData[];
 }
 
-export type BreakpointData = LineBreakpointData | SendBreakpointData | AsyncMethodRcvBreakpointData;
+export interface MessageData {
+  id:       string;
+  senderId: string;
+  targetId: string;
+}
+
+export interface FarRefData {
+  id:       string;
+  typeName: string;
+}
+
+export type BreakpointData = LineBreakpointData | SectionBreakpointData;
+
+export type SectionBreakpointType = "MessageSenderBreakpoint" |
+  "MessageReceiveBreakpoint" | "AsyncMessageReceiveBreakpoint";
 
 interface AbstractBreakpointData {
-  sourceUri: string;
   enabled:   boolean;
 }
 
 export interface LineBreakpointData extends AbstractBreakpointData {
-  type: "lineBreakpoint";
-  line: number;
+  type: "LineBreakpoint";
+  sourceUri: string;
+  line:      number;
 }
 
-export interface SendBreakpointData extends AbstractBreakpointData {
-  type:        "sendBreakpoint";
-  sectionId:   string;
-  startLine:   number;
-  startColumn: number;
-  charLength:  number;
-  role:        SendBreakpointType;
+export interface SectionBreakpointData extends AbstractBreakpointData {
+  type:  SectionBreakpointType;
+  coord: FullSourceCoordinate;
 }
 
-export interface AsyncMethodRcvBreakpointData extends AbstractBreakpointData {
-  type:        "asyncMsgRcvBreakpoint";
-  sectionId:   string;
-  startLine:   number;
-  startColumn: number;
-  charLength:  number;
-}
-
-export type Breakpoint = LineBreakpoint | SendBreakpoint | AsyncMethodRcvBreakpoint;
+export type Breakpoint = LineBreakpoint | MessageBreakpoint |
+  AsyncMethodRcvBreakpoint;
 
 abstract class AbstractBreakpoint<T extends AbstractBreakpointData> {
   readonly data: T;
@@ -106,9 +130,11 @@ abstract class AbstractBreakpoint<T extends AbstractBreakpointData> {
   }
 
   /**
-   * @return a unique id (for the corresponding source)
+   * @return a unique id for the breakpoint, to be used in the view as HTML id
    */
-  abstract getId(): string;
+  getId() {
+    return 'bp:';
+  }
 
   toggle() {
     this.data.enabled = !this.data.enabled;
@@ -120,68 +146,78 @@ abstract class AbstractBreakpoint<T extends AbstractBreakpointData> {
 }
 
 export class LineBreakpoint extends AbstractBreakpoint<LineBreakpointData> {
-  lineNumSpan?: any;
+  readonly lineNumSpan: Element;
+  readonly sourceId: string;
 
-  constructor(data: LineBreakpointData, source: Source, lineNumSpan?: any) {
+  constructor(data: LineBreakpointData, source: Source, sourceId: string,
+      lineNumSpan: Element) {
     super(data, source);
     this.lineNumSpan = lineNumSpan;
+    this.sourceId    = sourceId;
   }
 
   getId(): string {
-    return '' + this.data.line;
+    return super.getId() + this.sourceId + ':' + this.data.line;
   }
 }
 
-export type SendBreakpointType = "receiver" | "sender";
+export class MessageBreakpoint extends AbstractBreakpoint<SectionBreakpointData> {
+  readonly sectionId: string;
 
-export class SendBreakpoint extends AbstractBreakpoint<SendBreakpointData> {
-  constructor(data: SendBreakpointData, source: Source) {
+  constructor(data: SectionBreakpointData, source: Source, sectionId: string) {
     super(data, source);
+    this.sectionId = sectionId;
   }
 
   getId(): string {
-    return this.data.sectionId;
+    return super.getId() + this.sectionId;
   }
 }
 
-// TODO: refactor protocol, and just include a simple source section here
-export class AsyncMethodRcvBreakpoint extends AbstractBreakpoint<AsyncMethodRcvBreakpointData> {
-  constructor(data: AsyncMethodRcvBreakpointData, source: Source) {
+export class AsyncMethodRcvBreakpoint extends AbstractBreakpoint<SectionBreakpointData> {
+  readonly sectionId: string;
+
+  constructor(data: SectionBreakpointData, source: Source, sectionId: string) {
     super(data, source);
+    this.sectionId = sectionId;
   }
 
   getId(): string {
-    return this.data.sectionId + ":async-rcv";
+    return super.getId() + this.sectionId + ":async-rcv";
   }
 }
 
-export function createLineBreakpoint(source: Source, line: number, clickedSpan) {
+export function createLineBreakpoint(source: Source, sourceId: string,
+    line: number, clickedSpan: Element) {
   return new LineBreakpoint({
-    type: "lineBreakpoint", line: line, sourceUri: source.uri, enabled: false},
-    source, clickedSpan);
+    type: "LineBreakpoint", line: line, sourceUri: source.uri, enabled: false},
+    source, sourceId, clickedSpan);
 }
 
-export function createSendBreakpoint(source: Source,
-    sourceSection: SourceSection, role: SendBreakpointType) {
-  return new SendBreakpoint({
-    type: "sendBreakpoint", sourceUri: source.uri, enabled: false,
-    sectionId:   sourceSection.id,
-    startLine:   sourceSection.line,
-    startColumn: sourceSection.column,
-    charLength:  sourceSection.length,
-    role: role
-  }, source);
+export function createMsgBreakpoint(source: Source,
+    sourceSection: SourceCoordinate, sectionId: string,
+    type: SectionBreakpointType) {
+  return new MessageBreakpoint({
+    type: type,
+    enabled: false,
+    coord: {
+      uri:         source.uri,
+      startLine:   sourceSection.startLine,
+      startColumn: sourceSection.startColumn,
+      charLength:  sourceSection.charLength }},
+    source, sectionId);
 }
 
 export function createAsyncMethodRcvBreakpoint(source: Source,
-    sourceSection: SourceSection) {
+    sourceSection: SourceCoordinate, sectionId: string) {
   return new AsyncMethodRcvBreakpoint({
-    type: "asyncMsgRcvBreakpoint", sourceUri: source.uri, enabled: false,
-    sectionId:   sourceSection.id,
-    startLine:   sourceSection.line,
-    startColumn: sourceSection.column,
-    charLength:  sourceSection.length
-  }, source);
+    type: "AsyncMessageReceiveBreakpoint", enabled: false,
+    coord: {
+      uri:         source.uri,
+      startLine:   sourceSection.startLine,
+      startColumn: sourceSection.startColumn,
+      charLength:  sourceSection.charLength }},
+    source, sectionId);
 }
 
 export type Respond = InitialBreakpointsResponds | UpdateBreakpoint |
