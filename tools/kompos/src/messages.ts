@@ -39,12 +39,12 @@ export interface Method {
   sourceSection: SourceCoordinate;
 }
 
-interface Frame {
+export interface Frame {
   sourceSection: FullSourceCoordinate;
   methodName: string;
 }
 
-interface TopFrame {
+export interface TopFrame {
   arguments: string[];
   slots:     IdMap<string>;
 }
