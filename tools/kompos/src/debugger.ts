@@ -26,7 +26,7 @@ export class Debugger {
    */
   private sections: IdMap<SourceCoordinate>;
 
-  private breakpoints:    IdMap<Breakpoint>[];
+  private breakpoints: IdMap<IdMap<Breakpoint>>;
 
   constructor() {
     this.suspended = false;
@@ -34,7 +34,7 @@ export class Debugger {
     this.uriToSourceId  = {};
     this.sources        = {};
     this.sections       = {};
-    this.breakpoints    = [];
+    this.breakpoints    = {};
   }
 
   getSourceId(uri: string): string {
@@ -101,9 +101,9 @@ export class Debugger {
 
   getEnabledBreakpoints(): Breakpoint[] {
     let bps = [];
-    for (let breakpoints of this.breakpoints) {
-      for (let key in breakpoints) {
-        let bp = breakpoints[key];
+    for (let sId in this.breakpoints) {
+      for (let key in this.breakpoints[sId]) {
+        let bp = this.breakpoints[sId][key];
         if (bp.isEnabled()) {
           bps.push(bp);
         }
