@@ -26,6 +26,7 @@ import java.math.BigInteger;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Instrumentable;
 import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
+import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import com.oracle.truffle.api.source.SourceSection;
@@ -54,6 +55,10 @@ public abstract class ExpressionNode extends SOMNode {
    */
   protected ExpressionNode(final ExpressionNode wrappedNode) {
     super(null);
+  }
+
+  public boolean assertIsStatement() {
+    return isTaggedWith(StatementTag.class);
   }
 
   public void markAsRootExpression() { throw new UnsupportedOperationException(); }

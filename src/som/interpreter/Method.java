@@ -29,6 +29,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.SOMNode;
 
 
 public final class Method extends Invokable {
@@ -118,6 +119,14 @@ public final class Method extends Invokable {
 
   public boolean isBlock() {
     return block;
+  }
+
+  public SourceSection getRootNodeSource() {
+    ExpressionNode root = SOMNode.unwrapIfNecessary(expressionOrSequence);
+    assert root.isMarkedAsRootExpression();
+    assert root.assertIsStatement();
+
+    return root.getSourceSection();
   }
 
   public MethodScope getLexicalScope() {

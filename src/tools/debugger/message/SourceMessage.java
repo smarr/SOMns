@@ -71,7 +71,7 @@ public class SourceMessage extends Message {
       }
 
       methods.add(new MethodData(
-          m.getName(), definition, SourceCoordinate.create(m.getSourceSection())));
+          m.getName(), definition, SourceCoordinate.create(m.getRootNodeSource())));
     }
     return methods.toArray(new MethodData[0]);
   }
