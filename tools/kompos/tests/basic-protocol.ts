@@ -283,6 +283,46 @@ describe('Basic Protocol', function() {
     }));    
   });
 
+  describe('setting a source section asynchronous method receiver breakpoint', () => {
+    // Capture first suspended event for testing
+    let firstSuspendCaptured = false;
+    let getSuspendEvent: (event: OnMessageEvent) => void;
+    let suspendP = new Promise<SuspendEventMessage>((resolve, reject) => {
+      getSuspendEvent = (event: OnMessageEvent) => {
+        if (firstSuspendCaptured) { return; }
+        const data = JSON.parse(event.data);
+        if (data.type === "suspendEvent") {
+          firstSuspendCaptured = true;
+          resolve(data);
+        }
+      };
+    });
+
+    before('Start SOMns and Connect', () => {
+      const breakpoint: SectionBreakpointData = {
+        type: "AsyncMessageReceiveBreakpoint",
+        enabled: true,
+        coord: {
+          uri:         'file:' + resolve('tests/pingpong.som'),
+          startLine:   39,
+          startColumn:  9,
+          charLength:  88}
+      };
+      connectionP = startSomAndConnect(getSuspendEvent, [breakpoint]);
+    });
+
+    after(closeConnectionAfterSuite);
+
+    it('should accept async method receiver breakpoint, and halt on expected source section', onlyWithConnection(() => {
+      return suspendP.then(msg => {
+        expect(msg.stack).lengthOf(2);
+        expect(msg.stack[0].methodName).to.equal("Pong>>#ping:");
+        expect(msg.stack[0].sourceSection.startLine).to.equal(39);
+      });
+    }));
+  });
+
+
   describe('setting a source section receiver breakpoint', () => {
     // Capture first suspended event for testing
     let firstSuspendCaptured = false;
