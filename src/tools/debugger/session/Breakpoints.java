@@ -12,6 +12,7 @@ import com.oracle.truffle.api.debug.Debugger;
 import com.oracle.truffle.api.debug.DebuggerSession;
 import com.oracle.truffle.api.debug.DebuggerSession.SteppingLocation;
 import com.oracle.truffle.api.frame.MaterializedFrame;
+import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.NodeVisitor;
 import com.oracle.truffle.api.nodes.RootNode;
@@ -147,7 +148,7 @@ public class Breakpoints {
 
     @Override
     public boolean visit(final Node node) {
-      if (node instanceof ExpressionNode) {
+      if (node instanceof ExpressionNode && !(node instanceof WrapperNode)) {
         ExpressionNode expr = (ExpressionNode) node;
         if (expr.isMarkedAsRootExpression()) {
           result = expr;
