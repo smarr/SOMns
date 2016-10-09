@@ -5,12 +5,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.debug.DebugStackFrame;
 import com.oracle.truffle.api.debug.DebugValue;
 import com.oracle.truffle.api.debug.SuspendedEvent;
+import com.oracle.truffle.api.frame.FrameInstance.FrameAccess;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.primitives.ObjectPrims.HaltPrim;
 import tools.SourceCoordinate;
 import tools.SourceCoordinate.FullSourceCoordinate;
 
@@ -63,8 +66,24 @@ public class SuspendedEventMessage extends Message {
   }
 
   private static TopFrame getTopFrame(final SuspendedEvent e,
-      final MaterializedFrame frame) {
-    Object[] arguments = frame.getArguments();
+      final MaterializedFrame topFrame) {
+    com.oracle.truffle.api.frame.Frame[] frame = new com.oracle.truffle.api.frame.Frame[1];
+    if (isHaltPrimitive(e)) {
+      int[] skipFrames = new int[]{2};
+
+      Truffle.getRuntime().iterateFrames(frameInstance -> {
+        if (skipFrames[0] > 0) {
+          skipFrames[0] -= 1;
+          return null;
+        }
+        frame[0] = frameInstance.getFrame(FrameAccess.READ_ONLY, true);
+        return frameInstance;
+      });
+    } else {
+      frame[0] = topFrame;
+    }
+
+    Object[] arguments = frame[0].getArguments();
     String[] args = new String[arguments.length];
 
     for (int i = 0; i < arguments.length; i += 1) {
@@ -81,12 +100,25 @@ public class SuspendedEventMessage extends Message {
   }
 
   private static Frame[] getStack(final SuspendedEvent e) {
+    int skipFrames = 0;
+    if (isHaltPrimitive(e)) {
+      skipFrames = 2;
+    }
+
     ArrayList<Frame> frames = new ArrayList<>();
     for (DebugStackFrame f : e.getStackFrames()) {
+      if (skipFrames > 0) {
+        skipFrames -= 1;
+        continue;
+      }
       frames.add(new Frame(SourceCoordinate.create(f.getSourceSection()),
           f.getName()));
     }
     return frames.toArray(new Frame[0]);
+  }
+
+  private static boolean isHaltPrimitive(final SuspendedEvent e) {
+    return e.getNode() instanceof HaltPrim;
   }
 
   private static String getSuspendedSourceUri(final SuspendedEvent e) {
