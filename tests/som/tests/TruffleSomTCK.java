@@ -288,4 +288,9 @@ public class TruffleSomTCK extends TruffleTCK {
   @Override
   @Ignore("todo: remove override")
   public void testWriteToObjectWithElement() throws Exception { }
+
+  @Test
+  @Override
+  @Ignore("todo: remove override")
+  public void testPropertiesInteropMessage() throws Exception { }
 }
