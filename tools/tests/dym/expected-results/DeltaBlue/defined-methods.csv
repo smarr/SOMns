@@ -94,9 +94,9 @@ Method(ClassMirror>>#nestedClasses)	false	0
 Method(ClassMirror>>#slots)	false	0
 Method(ClassMirror>>#superclass)	false	0
 Method(Class>>#new)	false	0
-Method(DeltaBlue>>#innerBenchmarkLoop:)	true	1
 Method(DeltaBlue>>#newInstance)	true	2
 Method(DeltaBlue>>#setupVerifiedRun:)	false	0
+Method(DeltaBlue>>#innerBenchmarkLoop:)	true	1
 Method(Dictionary>>#at:)	true	23
 Method(Dictionary>>#at:ifAbsent:)	true	23
 Method(Dictionary>>#at:put:)	true	16

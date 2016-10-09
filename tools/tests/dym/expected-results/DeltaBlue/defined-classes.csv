@@ -14,8 +14,8 @@ ClassDefinitionMirror	Mirrors.som pos=2697 len=771	0
 ClassMirror	Mirrors.som pos=1154 len=1537	0
 Class	Kernel.som pos=4035 len=168	0
 Collections	Collections.som pos=0 len=9113	1
-DeltaBlue	DeltaBlue.som pos=617 len=194	1
 DeltaBlue	DeltaBlue.som pos=0 len=30141	2
+DeltaBlue	DeltaBlue.som pos=617 len=194	1
 Dictionary	Collections.som pos=3862 len=4766	10
 Double	Kernel.som pos=8917 len=1878	0
 EditConstraint	DeltaBlue.som pos=22632 len=483	3
