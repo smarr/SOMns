@@ -31,6 +31,8 @@ interface OnMessageHandler {
   (event: OnMessageEvent): void;
 }
 
+const pingPongUri = 'file:' + resolve('tests/pingpong.som');
+
 function expectSourceCoordinate(section: SourceCoordinate) {
   expect(section).to.have.property('charLength');
   expect(section).to.have.property('startColumn');
@@ -60,8 +62,11 @@ function closeConnection(connection: SomConnection, done: MochaDone) {
 }
 
 function startSomAndConnect(onMessageHandler?: OnMessageHandler,
-    initialBreakpoints?: BreakpointData[]): Promise<SomConnection> {
-  const somProc = spawn(som, ['-G', '-t1', '-wd', 'tests/pingpong.som']);
+    initialBreakpoints?: BreakpointData[], extraArgs?: string[]): Promise<SomConnection> {
+  let args = ['-G', '-t1', '-wd', 'tests/pingpong.som'];
+  if (extraArgs) { args = args.concat(extraArgs); }
+
+  const somProc = spawn(som, args);
   const promise = new Promise((resolve, reject) => {
     let connecting = false;
     somProc.stdout.on('data', (data) => {
@@ -218,7 +223,7 @@ describe('Basic Protocol', function() {
       const breakpoint: LineBreakpointData = {
         type: "LineBreakpoint",
         line: 52,
-        sourceUri: 'file:' + resolve('tests/pingpong.som'),
+        sourceUri: pingPongUri,
         enabled: true
       };
       connectionP = startSomAndConnect(getSuspendEvent, [breakpoint]);
@@ -238,7 +243,7 @@ describe('Basic Protocol', function() {
       return suspendP.then(msg => {
         expectFullSourceCoordinate(msg.stack[0].sourceSection);
         expect(msg.id).to.equal("se-0");
-        expect(msg.sourceUri).to.equal('file:' + resolve('tests/pingpong.som'));
+        expect(msg.sourceUri).to.equal(pingPongUri);
         expect(msg.topFrame.arguments[0]).to.equal("a PingPong");
         expect(msg.topFrame.slots['ping']).to.equal('a Nil');
       });
@@ -265,7 +270,7 @@ describe('Basic Protocol', function() {
         type: "MessageSenderBreakpoint",
         enabled: true,
         coord: {
-          uri:        'file:' + resolve('tests/pingpong.som'),
+          uri:         pingPongUri,
           startLine:   15,
           startColumn: 14,
           charLength:   3}};
@@ -281,6 +286,45 @@ describe('Basic Protocol', function() {
         expect(msg.stack[0].sourceSection.startLine).to.equal(15);
       });
     }));    
+  });
+
+  describe('setting a source section asynchronous method receiver breakpoint', () => {
+    // Capture first suspended event for testing
+    let firstSuspendCaptured = false;
+    let getSuspendEvent: (event: OnMessageEvent) => void;
+    let suspendP = new Promise<SuspendEventMessage>((resolve, reject) => {
+      getSuspendEvent = (event: OnMessageEvent) => {
+        if (firstSuspendCaptured) { return; }
+        const data = JSON.parse(event.data);
+        if (data.type === "suspendEvent") {
+          firstSuspendCaptured = true;
+          resolve(data);
+        }
+      };
+    });
+
+    before('Start SOMns and Connect', () => {
+      const breakpoint: SectionBreakpointData = {
+        type: "AsyncMessageReceiveBreakpoint",
+        enabled: true,
+        coord: {
+          uri:         pingPongUri,
+          startLine:   39,
+          startColumn:  9,
+          charLength:  88}
+      };
+      connectionP = startSomAndConnect(getSuspendEvent, [breakpoint]);
+    });
+
+    after(closeConnectionAfterSuite);
+
+    it('should accept async method receiver breakpoint, and halt on expected source section', onlyWithConnection(() => {
+      return suspendP.then(msg => {
+        expect(msg.stack).lengthOf(2);
+        expect(msg.stack[0].methodName).to.equal("Pong>>#ping:");
+        expect(msg.stack[0].sourceSection.startLine).to.equal(39);
+      });
+    }));
   });
 
   describe('setting a source section receiver breakpoint', () => {
@@ -303,7 +347,7 @@ describe('Basic Protocol', function() {
         type: "MessageReceiveBreakpoint",
         enabled: true,
         coord: {
-          uri:        'file:' + resolve('tests/pingpong.som'),
+          uri:         pingPongUri,
           startLine:   15,
           startColumn: 14,
           charLength:   3}};
@@ -349,7 +393,7 @@ describe('Basic Protocol', function() {
         type: "MessageSenderBreakpoint",
         enabled: true,
         coord: {
-          uri:        'file:' + resolve('tests/pingpong.som'),
+          uri:         pingPongUri,
           startLine:   15,
           startColumn: 14,
           charLength:   3}};
@@ -392,8 +436,8 @@ describe('Basic Protocol', function() {
             const lbp: LineBreakpointData = {
               type: "LineBreakpoint",
               line: 21,
-              sourceUri: 'file:' + resolve('tests/pingpong.som'),
-              enabled: true
+              sourceUri: pingPongUri,
+              enabled:   true
             };
             send(con.socket, {action: "updateBreakpoint", breakpoint: lbp});
             send(con.socket, {action: "resume", suspendEvent: msgAfterStep.id});  
@@ -413,17 +457,17 @@ describe('Basic Protocol', function() {
           connectionP.then(con => {
             const lbp22: LineBreakpointData = {
               type: "LineBreakpoint",
-              line: 22,
-              sourceUri: 'file:' + resolve('tests/pingpong.som'),
-              enabled: true
+              line:      22,
+              sourceUri: pingPongUri,
+              enabled:   true
             };
             send(con.socket, {action: "updateBreakpoint", breakpoint: lbp22});
             
             const lbp21: LineBreakpointData = {
               type: "LineBreakpoint",
-              line: 21,
-              sourceUri: 'file:' + resolve('tests/pingpong.som'),
-              enabled: false
+              line:      21,
+              sourceUri: pingPongUri,
+              enabled:   false
             };
             send(con.socket, {action: "updateBreakpoint", breakpoint: lbp21});
             send(con.socket, {action: "resume", suspendEvent: msgAfterStep.id});
@@ -436,6 +480,36 @@ describe('Basic Protocol', function() {
             resolve(p);
           });
         });
+      });
+    }));
+  });
+
+  describe('execute `1 halt` and get suspended event', () => {
+    // Capture first suspended event for testing
+    let firstSuspendCaptured = false;
+    let getSuspendEvent: (event: OnMessageEvent) => void;
+    let suspendP = new Promise<SuspendEventMessage>((resolve, reject) => {
+      getSuspendEvent = (event: OnMessageEvent) => {
+        if (firstSuspendCaptured) { return; }    
+        const data = JSON.parse(event.data);
+        if (data.type === "suspendEvent") {
+          firstSuspendCaptured = true;
+          resolve(data);
+        }
+      };
+    });
+
+    before('Start SOMns and Connect', () => {
+      connectionP = startSomAndConnect(getSuspendEvent, [], ['halt']);
+    });
+
+    after(closeConnectionAfterSuite);
+
+    it('should halt on expected source section', onlyWithConnection(() => {
+      return suspendP.then(msg => {
+        expect(msg.stack).lengthOf(7);
+        expect(msg.stack[0].methodName).to.equal("PingPongApp>>#testHalt");
+        expect(msg.stack[0].sourceSection.startLine).to.equal(65);
       });
     }));
   });

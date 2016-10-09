@@ -1,130 +1,130 @@
 Source Section	Operation	Category	Type	Invocations
-Harness.som pos=4605 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	0
-Harness.som pos=5604 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	0
-Harness.som pos=6326 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	0
-Harness.som pos=6405 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	0
-Harness.som pos=6481 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	0
-Harness.som pos=6615 len=3	<	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	0
-Kernel.som pos=8023 len=8	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	3
-Kernel.som pos=8023 len=8	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	44
-Kernel.som pos=8023 len=8	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	47
-Kernel.som pos=8070 len=6	+	BasicPrimitiveOperation OpArithmetic StatementTag	int	42
-Kernel.som pos=8070 len=6	+	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	42
-Kernel.som pos=12598 len=13	>	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	0
-Kernel.som pos=12641 len=13	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	0
-Kernel.som pos=12783 len=3	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument StatementTag	int	16
-Kernel.som pos=12783 len=3	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument StatementTag	TOTAL	16
-Kernel.som pos=12787 len=3	-	BasicPrimitiveOperation OpArithmetic StatementTag	int	16
-Kernel.som pos=12787 len=3	-	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	16
-Kernel.som pos=12792 len=9	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	15
-Kernel.som pos=12792 len=9	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	1
-Kernel.som pos=12792 len=9	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	16
-Kernel.som pos=13031 len=6	length	BasicPrimitiveOperation OpLength StatementTag	str	1
-Kernel.som pos=13031 len=6	length	BasicPrimitiveOperation OpLength StatementTag	TOTAL	1
-Kernel.som pos=13051 len=3	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument StatementTag	int	1
-Kernel.som pos=13051 len=3	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument StatementTag	TOTAL	1
-Kernel.som pos=13055 len=19	>	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	1
-Kernel.som pos=13055 len=19	>	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	1
-Kernel.som pos=13063 len=6	length	BasicPrimitiveOperation OpLength PrimitiveArgument StatementTag	str	1
-Kernel.som pos=13063 len=6	length	BasicPrimitiveOperation OpLength PrimitiveArgument StatementTag	TOTAL	1
-Kernel.som pos=13070 len=3	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument StatementTag	int	1
-Kernel.som pos=13070 len=3	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument StatementTag	TOTAL	1
-Kernel.som pos=13115 len=6	length	BasicPrimitiveOperation OpLength PrimitiveArgument StatementTag	str	1
-Kernel.som pos=13115 len=6	length	BasicPrimitiveOperation OpLength PrimitiveArgument StatementTag	TOTAL	1
-Kernel.som pos=13122 len=3	-	BasicPrimitiveOperation OpArithmetic PrimitiveArgument StatementTag	int	1
-Kernel.som pos=13122 len=3	-	BasicPrimitiveOperation OpArithmetic PrimitiveArgument StatementTag	TOTAL	1
-Kernel.som pos=13126 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	int	1
-Kernel.som pos=13126 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	1
-Kernel.som pos=13181 len=3	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument StatementTag	int	25
-Kernel.som pos=13181 len=3	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument StatementTag	TOTAL	25
-Kernel.som pos=13185 len=3	-	BasicPrimitiveOperation OpArithmetic StatementTag	int	25
-Kernel.som pos=13185 len=3	-	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	25
-Kernel.som pos=13190 len=9	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	24
-Kernel.som pos=13190 len=9	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	str	1
-Kernel.som pos=13190 len=9	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	25
-Kernel.som pos=13332 len=14	<	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	0
-Kernel.som pos=13451 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	1
-Kernel.som pos=13451 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	1
-Kernel.som pos=13545 len=3	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	1
-Kernel.som pos=13545 len=3	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	1
-Kernel.som pos=21173 len=9	at:	ArrayRead BasicPrimitiveOperation StatementTag	str	1
-Kernel.som pos=21173 len=9	at:	ArrayRead BasicPrimitiveOperation StatementTag	TOTAL	1
-Kernel.som pos=22178 len=14	>	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	1
-Kernel.som pos=22178 len=14	>	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	1
-Kernel.som pos=22188 len=4	size	BasicPrimitiveOperation OpLength PrimitiveArgument StatementTag	arr	1
-Kernel.som pos=22188 len=4	size	BasicPrimitiveOperation OpLength PrimitiveArgument StatementTag	TOTAL	1
-Kernel.som pos=22452 len=24	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	str	1
-Kernel.som pos=22452 len=24	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	TOTAL	1
-Kernel.som pos=22503 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	int	1
-Kernel.som pos=22503 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	1
-Kernel.som pos=24328 len=8	<=	BasicPrimitiveOperation OpComparison StatementTag	int	1
-Kernel.som pos=24328 len=8	<=	BasicPrimitiveOperation OpComparison StatementTag	TOTAL	1
-Kernel.som pos=24348 len=9	<	BasicPrimitiveOperation OpComparison StatementTag	int	1
-Kernel.som pos=24348 len=9	<	BasicPrimitiveOperation OpComparison StatementTag	TOTAL	1
-LanguageFeatures.som pos=2499 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	1
-LanguageFeatures.som pos=2499 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	19999
-LanguageFeatures.som pos=2499 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	20000
-LanguageFeatures.som pos=2539 len=3	-	BasicPrimitiveOperation OpArithmetic StatementTag	int	19999
-LanguageFeatures.som pos=2539 len=3	-	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	19999
-LanguageFeatures.som pos=2571 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	int	19999
-LanguageFeatures.som pos=2571 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	19999
-LanguageFeatures.som pos=2603 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	int	19999
-LanguageFeatures.som pos=2603 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	19999
-LanguageFeatures.som pos=2635 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	int	19999
-LanguageFeatures.som pos=2635 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	19999
-LanguageFeatures.som pos=2667 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	int	19999
-LanguageFeatures.som pos=2667 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	19999
-LanguageFeatures.som pos=2699 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	int	19999
-LanguageFeatures.som pos=2699 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	19999
-LanguageFeatures.som pos=2738 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	int	19999
-LanguageFeatures.som pos=2738 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	19999
-LanguageFeatures.som pos=2770 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	int	19999
-LanguageFeatures.som pos=2770 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	19999
-LanguageFeatures.som pos=2802 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	int	19999
-LanguageFeatures.som pos=2802 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	19999
-LanguageFeatures.som pos=2834 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	int	19999
-LanguageFeatures.som pos=2834 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	19999
-LanguageFeatures.som pos=2866 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	int	19999
-LanguageFeatures.som pos=2866 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	19999
-LanguageFeatures.som pos=2905 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	int	19999
-LanguageFeatures.som pos=2905 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	19999
-LanguageFeatures.som pos=2937 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	int	19999
-LanguageFeatures.som pos=2937 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	19999
-LanguageFeatures.som pos=2969 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	int	19999
-LanguageFeatures.som pos=2969 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	19999
-LanguageFeatures.som pos=3001 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	int	19999
-LanguageFeatures.som pos=3001 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	19999
-LanguageFeatures.som pos=3033 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	int	19999
-LanguageFeatures.som pos=3033 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	19999
-LanguageFeatures.som pos=3072 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	int	19999
-LanguageFeatures.som pos=3072 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	19999
-LanguageFeatures.som pos=3104 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	int	19999
-LanguageFeatures.som pos=3104 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	19999
-LanguageFeatures.som pos=3136 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	int	19999
-LanguageFeatures.som pos=3136 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	19999
-LanguageFeatures.som pos=3168 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	int	19999
-LanguageFeatures.som pos=3168 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	19999
-LanguageFeatures.som pos=3200 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	int	19999
-LanguageFeatures.som pos=3200 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	19999
-LanguageFeatures.som pos=3239 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	int	19999
-LanguageFeatures.som pos=3239 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	19999
-LanguageFeatures.som pos=3271 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	int	19999
-LanguageFeatures.som pos=3271 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	19999
-LanguageFeatures.som pos=3303 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	int	19999
-LanguageFeatures.som pos=3303 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	19999
-LanguageFeatures.som pos=3335 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	int	19999
-LanguageFeatures.som pos=3335 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	19999
-LanguageFeatures.som pos=3367 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	int	19999
-LanguageFeatures.som pos=3367 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	19999
-LanguageFeatures.som pos=3406 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	int	19999
-LanguageFeatures.som pos=3406 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	19999
-LanguageFeatures.som pos=3438 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	int	19999
-LanguageFeatures.som pos=3438 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	19999
-LanguageFeatures.som pos=3470 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	int	19999
-LanguageFeatures.som pos=3470 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	19999
-LanguageFeatures.som pos=3502 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	int	19999
-LanguageFeatures.som pos=3502 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	19999
-LanguageFeatures.som pos=3534 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	int	19999
-LanguageFeatures.som pos=3534 len=3	+	BasicPrimitiveOperation OpArithmetic StatementTag	TOTAL	19999
+Harness.som pos=4605 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
+Harness.som pos=5604 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
+Harness.som pos=6326 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
+Harness.som pos=6405 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
+Harness.som pos=6481 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
+Harness.som pos=6615 len=3	<	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
+Kernel.som pos=8023 len=8	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison	int	3
+Kernel.som pos=8023 len=8	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison	int	44
+Kernel.som pos=8023 len=8	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	47
+Kernel.som pos=8070 len=6	+	BasicPrimitiveOperation OpArithmetic	int	42
+Kernel.som pos=8070 len=6	+	BasicPrimitiveOperation OpArithmetic	TOTAL	42
+Kernel.som pos=12598 len=13	>	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
+Kernel.som pos=12641 len=13	=	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
+Kernel.som pos=12783 len=3	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	int	16
+Kernel.som pos=12783 len=3	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	TOTAL	16
+Kernel.som pos=12787 len=3	-	BasicPrimitiveOperation OpArithmetic	int	16
+Kernel.som pos=12787 len=3	-	BasicPrimitiveOperation OpArithmetic	TOTAL	16
+Kernel.som pos=12792 len=9	=	BasicPrimitiveOperation ControlFlowCondition OpComparison	str	15
+Kernel.som pos=12792 len=9	=	BasicPrimitiveOperation ControlFlowCondition OpComparison	str	1
+Kernel.som pos=12792 len=9	=	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	16
+Kernel.som pos=13031 len=6	length	BasicPrimitiveOperation OpLength	str	1
+Kernel.som pos=13031 len=6	length	BasicPrimitiveOperation OpLength	TOTAL	1
+Kernel.som pos=13051 len=3	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	int	1
+Kernel.som pos=13051 len=3	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	TOTAL	1
+Kernel.som pos=13055 len=19	>	BasicPrimitiveOperation ControlFlowCondition OpComparison	int	1
+Kernel.som pos=13055 len=19	>	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	1
+Kernel.som pos=13063 len=6	length	BasicPrimitiveOperation OpLength PrimitiveArgument	str	1
+Kernel.som pos=13063 len=6	length	BasicPrimitiveOperation OpLength PrimitiveArgument	TOTAL	1
+Kernel.som pos=13070 len=3	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	int	1
+Kernel.som pos=13070 len=3	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	TOTAL	1
+Kernel.som pos=13115 len=6	length	BasicPrimitiveOperation OpLength PrimitiveArgument	str	1
+Kernel.som pos=13115 len=6	length	BasicPrimitiveOperation OpLength PrimitiveArgument	TOTAL	1
+Kernel.som pos=13122 len=3	-	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	int	1
+Kernel.som pos=13122 len=3	-	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	TOTAL	1
+Kernel.som pos=13126 len=3	+	BasicPrimitiveOperation OpArithmetic	int	1
+Kernel.som pos=13126 len=3	+	BasicPrimitiveOperation OpArithmetic	TOTAL	1
+Kernel.som pos=13181 len=3	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	int	25
+Kernel.som pos=13181 len=3	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	TOTAL	25
+Kernel.som pos=13185 len=3	-	BasicPrimitiveOperation OpArithmetic	int	25
+Kernel.som pos=13185 len=3	-	BasicPrimitiveOperation OpArithmetic	TOTAL	25
+Kernel.som pos=13190 len=9	=	BasicPrimitiveOperation ControlFlowCondition OpComparison	str	24
+Kernel.som pos=13190 len=9	=	BasicPrimitiveOperation ControlFlowCondition OpComparison	str	1
+Kernel.som pos=13190 len=9	=	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	25
+Kernel.som pos=13332 len=14	<	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
+Kernel.som pos=13451 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComparison	int	1
+Kernel.som pos=13451 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	1
+Kernel.som pos=13545 len=3	=	BasicPrimitiveOperation ControlFlowCondition OpComparison	int	1
+Kernel.som pos=13545 len=3	=	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	1
+Kernel.som pos=21173 len=9	at:	ArrayRead BasicPrimitiveOperation	str	1
+Kernel.som pos=21173 len=9	at:	ArrayRead BasicPrimitiveOperation	TOTAL	1
+Kernel.som pos=22178 len=14	>	BasicPrimitiveOperation ControlFlowCondition OpComparison	int	1
+Kernel.som pos=22178 len=14	>	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	1
+Kernel.som pos=22188 len=4	size	BasicPrimitiveOperation OpLength PrimitiveArgument	arr	1
+Kernel.som pos=22188 len=4	size	BasicPrimitiveOperation OpLength PrimitiveArgument	TOTAL	1
+Kernel.som pos=22452 len=24	at:put:	ArrayWrite BasicPrimitiveOperation	str	1
+Kernel.som pos=22452 len=24	at:put:	ArrayWrite BasicPrimitiveOperation	TOTAL	1
+Kernel.som pos=22503 len=3	+	BasicPrimitiveOperation OpArithmetic	int	1
+Kernel.som pos=22503 len=3	+	BasicPrimitiveOperation OpArithmetic	TOTAL	1
+Kernel.som pos=24328 len=8	<=	BasicPrimitiveOperation OpComparison	int	1
+Kernel.som pos=24328 len=8	<=	BasicPrimitiveOperation OpComparison	TOTAL	1
+Kernel.som pos=24348 len=9	<	BasicPrimitiveOperation OpComparison	int	1
+Kernel.som pos=24348 len=9	<	BasicPrimitiveOperation OpComparison	TOTAL	1
+LanguageFeatures.som pos=2499 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComparison	int	1
+LanguageFeatures.som pos=2499 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComparison	int	19999
+LanguageFeatures.som pos=2499 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	20000
+LanguageFeatures.som pos=2539 len=3	-	BasicPrimitiveOperation OpArithmetic	int	19999
+LanguageFeatures.som pos=2539 len=3	-	BasicPrimitiveOperation OpArithmetic	TOTAL	19999
+LanguageFeatures.som pos=2571 len=3	+	BasicPrimitiveOperation OpArithmetic	int	19999
+LanguageFeatures.som pos=2571 len=3	+	BasicPrimitiveOperation OpArithmetic	TOTAL	19999
+LanguageFeatures.som pos=2603 len=3	+	BasicPrimitiveOperation OpArithmetic	int	19999
+LanguageFeatures.som pos=2603 len=3	+	BasicPrimitiveOperation OpArithmetic	TOTAL	19999
+LanguageFeatures.som pos=2635 len=3	+	BasicPrimitiveOperation OpArithmetic	int	19999
+LanguageFeatures.som pos=2635 len=3	+	BasicPrimitiveOperation OpArithmetic	TOTAL	19999
+LanguageFeatures.som pos=2667 len=3	+	BasicPrimitiveOperation OpArithmetic	int	19999
+LanguageFeatures.som pos=2667 len=3	+	BasicPrimitiveOperation OpArithmetic	TOTAL	19999
+LanguageFeatures.som pos=2699 len=3	+	BasicPrimitiveOperation OpArithmetic	int	19999
+LanguageFeatures.som pos=2699 len=3	+	BasicPrimitiveOperation OpArithmetic	TOTAL	19999
+LanguageFeatures.som pos=2738 len=3	+	BasicPrimitiveOperation OpArithmetic	int	19999
+LanguageFeatures.som pos=2738 len=3	+	BasicPrimitiveOperation OpArithmetic	TOTAL	19999
+LanguageFeatures.som pos=2770 len=3	+	BasicPrimitiveOperation OpArithmetic	int	19999
+LanguageFeatures.som pos=2770 len=3	+	BasicPrimitiveOperation OpArithmetic	TOTAL	19999
+LanguageFeatures.som pos=2802 len=3	+	BasicPrimitiveOperation OpArithmetic	int	19999
+LanguageFeatures.som pos=2802 len=3	+	BasicPrimitiveOperation OpArithmetic	TOTAL	19999
+LanguageFeatures.som pos=2834 len=3	+	BasicPrimitiveOperation OpArithmetic	int	19999
+LanguageFeatures.som pos=2834 len=3	+	BasicPrimitiveOperation OpArithmetic	TOTAL	19999
+LanguageFeatures.som pos=2866 len=3	+	BasicPrimitiveOperation OpArithmetic	int	19999
+LanguageFeatures.som pos=2866 len=3	+	BasicPrimitiveOperation OpArithmetic	TOTAL	19999
+LanguageFeatures.som pos=2905 len=3	+	BasicPrimitiveOperation OpArithmetic	int	19999
+LanguageFeatures.som pos=2905 len=3	+	BasicPrimitiveOperation OpArithmetic	TOTAL	19999
+LanguageFeatures.som pos=2937 len=3	+	BasicPrimitiveOperation OpArithmetic	int	19999
+LanguageFeatures.som pos=2937 len=3	+	BasicPrimitiveOperation OpArithmetic	TOTAL	19999
+LanguageFeatures.som pos=2969 len=3	+	BasicPrimitiveOperation OpArithmetic	int	19999
+LanguageFeatures.som pos=2969 len=3	+	BasicPrimitiveOperation OpArithmetic	TOTAL	19999
+LanguageFeatures.som pos=3001 len=3	+	BasicPrimitiveOperation OpArithmetic	int	19999
+LanguageFeatures.som pos=3001 len=3	+	BasicPrimitiveOperation OpArithmetic	TOTAL	19999
+LanguageFeatures.som pos=3033 len=3	+	BasicPrimitiveOperation OpArithmetic	int	19999
+LanguageFeatures.som pos=3033 len=3	+	BasicPrimitiveOperation OpArithmetic	TOTAL	19999
+LanguageFeatures.som pos=3072 len=3	+	BasicPrimitiveOperation OpArithmetic	int	19999
+LanguageFeatures.som pos=3072 len=3	+	BasicPrimitiveOperation OpArithmetic	TOTAL	19999
+LanguageFeatures.som pos=3104 len=3	+	BasicPrimitiveOperation OpArithmetic	int	19999
+LanguageFeatures.som pos=3104 len=3	+	BasicPrimitiveOperation OpArithmetic	TOTAL	19999
+LanguageFeatures.som pos=3136 len=3	+	BasicPrimitiveOperation OpArithmetic	int	19999
+LanguageFeatures.som pos=3136 len=3	+	BasicPrimitiveOperation OpArithmetic	TOTAL	19999
+LanguageFeatures.som pos=3168 len=3	+	BasicPrimitiveOperation OpArithmetic	int	19999
+LanguageFeatures.som pos=3168 len=3	+	BasicPrimitiveOperation OpArithmetic	TOTAL	19999
+LanguageFeatures.som pos=3200 len=3	+	BasicPrimitiveOperation OpArithmetic	int	19999
+LanguageFeatures.som pos=3200 len=3	+	BasicPrimitiveOperation OpArithmetic	TOTAL	19999
+LanguageFeatures.som pos=3239 len=3	+	BasicPrimitiveOperation OpArithmetic	int	19999
+LanguageFeatures.som pos=3239 len=3	+	BasicPrimitiveOperation OpArithmetic	TOTAL	19999
+LanguageFeatures.som pos=3271 len=3	+	BasicPrimitiveOperation OpArithmetic	int	19999
+LanguageFeatures.som pos=3271 len=3	+	BasicPrimitiveOperation OpArithmetic	TOTAL	19999
+LanguageFeatures.som pos=3303 len=3	+	BasicPrimitiveOperation OpArithmetic	int	19999
+LanguageFeatures.som pos=3303 len=3	+	BasicPrimitiveOperation OpArithmetic	TOTAL	19999
+LanguageFeatures.som pos=3335 len=3	+	BasicPrimitiveOperation OpArithmetic	int	19999
+LanguageFeatures.som pos=3335 len=3	+	BasicPrimitiveOperation OpArithmetic	TOTAL	19999
+LanguageFeatures.som pos=3367 len=3	+	BasicPrimitiveOperation OpArithmetic	int	19999
+LanguageFeatures.som pos=3367 len=3	+	BasicPrimitiveOperation OpArithmetic	TOTAL	19999
+LanguageFeatures.som pos=3406 len=3	+	BasicPrimitiveOperation OpArithmetic	int	19999
+LanguageFeatures.som pos=3406 len=3	+	BasicPrimitiveOperation OpArithmetic	TOTAL	19999
+LanguageFeatures.som pos=3438 len=3	+	BasicPrimitiveOperation OpArithmetic	int	19999
+LanguageFeatures.som pos=3438 len=3	+	BasicPrimitiveOperation OpArithmetic	TOTAL	19999
+LanguageFeatures.som pos=3470 len=3	+	BasicPrimitiveOperation OpArithmetic	int	19999
+LanguageFeatures.som pos=3470 len=3	+	BasicPrimitiveOperation OpArithmetic	TOTAL	19999
+LanguageFeatures.som pos=3502 len=3	+	BasicPrimitiveOperation OpArithmetic	int	19999
+LanguageFeatures.som pos=3502 len=3	+	BasicPrimitiveOperation OpArithmetic	TOTAL	19999
+LanguageFeatures.som pos=3534 len=3	+	BasicPrimitiveOperation OpArithmetic	int	19999
+LanguageFeatures.som pos=3534 len=3	+	BasicPrimitiveOperation OpArithmetic	TOTAL	19999
 LanguageFeatures.som pos=3624 len=8	=	BasicPrimitiveOperation OpComparison RootTag StatementTag	TOTAL	0
-Platform.som pos=981 len=3	<	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	0
+Platform.som pos=981 len=3	<	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0

@@ -3,7 +3,7 @@
 
 import {Controller} from './controller';
 import {Breakpoint, AsyncMethodRcvBreakpoint, MessageBreakpoint, Source, Method,
-  LineBreakpoint, SuspendEventMessage, IdMap,
+  LineBreakpoint, SuspendEventMessage, IdMap, Frame,
   SourceCoordinate, TaggedSourceCoordinate, getSectionId} from './messages';
 
 declare var ctrl: Controller;
@@ -359,7 +359,7 @@ function showSource(source: Source, sourceId: string) {
   files.appendChild(newFileElement);
 }
 
-function showVar(name, value, list) {
+function showVar(name: string, value: string, list: Element) {
   var entry = nodeFromTemplate("frame-state-tpl");
   var t = $(entry).find("th");
   t.html(name);
@@ -368,10 +368,10 @@ function showVar(name, value, list) {
   list.appendChild(entry);
 }
 
-function showFrame(frame, i, list) {
+function showFrame(frame: Frame, i: number, list: Element) {
   var stackEntry = frame.methodName;
   if (frame.sourceSection) {
-    stackEntry += ":" + frame.sourceSection.line + ":" + frame.sourceSection.column;
+    stackEntry += ":" + frame.sourceSection.startLine + ":" + frame.sourceSection.startColumn;
   }
   var entry = nodeFromTemplate("stack-frame-tpl");
   entry.setAttribute("id", "frame-" + i);

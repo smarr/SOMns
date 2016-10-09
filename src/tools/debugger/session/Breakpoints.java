@@ -2,7 +2,6 @@ package tools.debugger.session;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
@@ -12,23 +11,15 @@ import com.oracle.truffle.api.debug.Debugger;
 import com.oracle.truffle.api.debug.DebuggerSession;
 import com.oracle.truffle.api.debug.DebuggerSession.SteppingLocation;
 import com.oracle.truffle.api.frame.MaterializedFrame;
-import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.nodes.NodeVisitor;
-import com.oracle.truffle.api.nodes.RootNode;
-import com.oracle.truffle.api.source.Source;
-import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.actors.ReceivedRootNode;
-import som.interpreter.nodes.ExpressionNode;
 import tools.SourceCoordinate.FullSourceCoordinate;
 import tools.debugger.WebDebugger;
 
 
 public class Breakpoints {
 
-  private DebuggerSession debuggerSession;
-
-  private final WebDebugger webDebugger;
+  private final DebuggerSession debuggerSession;
 
   /**
    * Breakpoints directly managed by Truffle.
@@ -40,28 +31,17 @@ public class Breakpoints {
    */
   private final Map<FullSourceCoordinate, BreakpointEnabling<MessageReceiveBreakpoint>> receiverBreakpoints;
 
-  private final Debugger debugger;
-
   public Breakpoints(final Debugger debugger, final WebDebugger webDebugger) {
     this.truffleBreakpoints = new HashMap<>();
-    this.debugger    = debugger;
-    this.webDebugger = webDebugger;
     this.receiverBreakpoints = new HashMap<>();
-  }
-
-  private void ensureOpenDebuggerSession() {
-    if (debuggerSession == null) {
-      debuggerSession = debugger.startSession(webDebugger);
-    }
+    this.debuggerSession = debugger.startSession(webDebugger);
   }
 
   public void doSuspend(final MaterializedFrame frame, final SteppingLocation steppingLocation) {
-    ensureOpenDebuggerSession();
     debuggerSession.doSuspend(frame, steppingLocation);
   }
 
   public void prepareSteppingUntilNextRootNode() {
-    ensureOpenDebuggerSession();
     debuggerSession.prepareSteppingUntilNextRootNode();
   }
 
@@ -69,7 +49,6 @@ public class Breakpoints {
     Breakpoint bp = truffleBreakpoints.get(bId);
 
     if (bp == null) {
-      ensureOpenDebuggerSession();
       WebDebugger.log("LineBreakpoint: " + bId);
       bp = Breakpoint.newBuilder(bId.getURI()).
           lineIs(bId.getLine()).
@@ -84,7 +63,6 @@ public class Breakpoints {
   public Breakpoint addOrUpdate(final MessageSenderBreakpoint bId) {
     Breakpoint bp = truffleBreakpoints.get(bId);
     if (bp == null) {
-      ensureOpenDebuggerSession();
       WebDebugger.log("SetSectionBreakpoint: " + bId);
       bp = Breakpoint.newBuilder(bId.getCoordinate().uri).
           lineIs(bId.getCoordinate().startLine).
@@ -103,26 +81,14 @@ public class Breakpoints {
 
     if (bp == null) {
       WebDebugger.log("RootBreakpoint: " + bId);
-      Source source = webDebugger.getSource(bId.getCoordinate().uri);
-      assert source != null : "TODO: handle problem somehow? defer breakpoint creation on source loading? ugh...";
-
-      SourceSection rootSS = source.createSection(bId.getCoordinate().startLine, bId.getCoordinate().startColumn, bId.getCoordinate().charLength);
-      Set<RootNode> roots = webDebugger.getRootNodesBySource(source);
-      for (RootNode root : roots) {
-        if (rootSS.equals(root.getSourceSection())) {
-          FindRootTagNode finder = new FindRootTagNode();
-          root.accept(finder);
-          ExpressionNode rootExpression = finder.getResult();
-          assert rootExpression.getSourceSection() != null;
-
-          ensureOpenDebuggerSession();
-          bp = Breakpoint.newBuilder(rootExpression.getSourceSection()).
-              build();
-          debuggerSession.install(bp);
-          bp.setCondition(BreakWhenActivatedByAsyncMessage.INSTANCE);
-          truffleBreakpoints.put(bId, bp);
-        }
-      }
+      bp = Breakpoint.newBuilder(bId.getCoordinate().uri).
+          lineIs(bId.getCoordinate().startLine).
+          columnIs(bId.getCoordinate().startColumn).
+          sectionLength(bId.getCoordinate().charLength).
+          build();
+      bp.setCondition(BreakWhenActivatedByAsyncMessage.INSTANCE);
+      debuggerSession.install(bp);
+      truffleBreakpoints.put(bId, bp);
     }
     bp.setEnabled(bId.isEnabled());
     return bp;
@@ -148,26 +114,6 @@ public class Breakpoints {
     public boolean evaluate() {
       RootCallTarget ct = (RootCallTarget) Truffle.getRuntime().getCallerFrame().getCallTarget();
       return (ct.getRootNode() instanceof ReceivedRootNode);
-    }
-  }
-
-  private static final class FindRootTagNode implements NodeVisitor {
-    private ExpressionNode result;
-
-    public ExpressionNode getResult() {
-      return result;
-    }
-
-    @Override
-    public boolean visit(final Node node) {
-      if (node instanceof ExpressionNode) {
-        ExpressionNode expr = (ExpressionNode) node;
-        if (expr.isMarkedAsRootExpression()) {
-          result = expr;
-          return false;
-        }
-      }
-      return true;
     }
   }
 

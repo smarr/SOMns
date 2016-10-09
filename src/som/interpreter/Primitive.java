@@ -10,6 +10,7 @@ import com.oracle.truffle.api.nodes.Node;
 
 import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.nodes.ExpressionNode;
+import som.primitives.ObjectPrims.HaltPrim;
 
 
 public final class Primitive extends Invokable {
@@ -52,7 +53,7 @@ public final class Primitive extends Invokable {
    */
   @Override
   protected boolean isInstrumentable() {
-    return false;
+    return expressionOrSequence instanceof HaltPrim;
   }
 
   private static Method getNextMethodOnStack() {

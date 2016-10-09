@@ -1,6 +1,5 @@
 package tools.debugger;
 
-import java.net.URI;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -150,28 +149,6 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
     connector = new FrontendConnector(breakpoints, instrumenter, this,
         createJsonProcessor());
     connector.awaitClient();
-  }
-
-  public Source getSource(final URI sourceUri) {
-    for (Source source : this.rootNodes.keySet()) {
-      if ((source.getURI()).equals(sourceUri)) {
-        return source;
-      }
-    }
-    return null;
-  }
-
-  public Set<RootNode> getRootNodesBySource(final Source source) {
-    return rootNodes.get(source);
-  }
-
-  public Set<RootNode> getRootNodesBySource(final URI sourceUri) {
-    Set<RootNode> roots = null;
-    Source source = getSource(sourceUri);
-    if (source != null) {
-      roots = rootNodes.get(source);
-    }
-    return roots;
   }
 
   public Breakpoints getBreakpoints() {

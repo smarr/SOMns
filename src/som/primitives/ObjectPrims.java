@@ -2,16 +2,11 @@ package som.primitives;
 
 import java.math.BigInteger;
 
-import com.oracle.truffle.api.Truffle;
-import com.oracle.truffle.api.debug.DebuggerSession.SteppingLocation;
+import com.oracle.truffle.api.debug.DebuggerTags.AlwaysHalt;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.Frame;
-import com.oracle.truffle.api.frame.FrameInstance;
-import com.oracle.truffle.api.frame.FrameInstance.FrameAccess;
-import com.oracle.truffle.api.frame.FrameInstanceVisitor;
 import com.oracle.truffle.api.instrumentation.Instrumentable;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -58,32 +53,15 @@ public final class ObjectPrims {
     @Specialization
     public final Object doSAbstractObject(final Object receiver) {
       VM.errorPrintln("BREAKPOINT");
-      reportBreakpoint();
       return receiver;
     }
 
-    private static void reportBreakpoint() {
-      if (VM.getWebDebugger() == null) {
-        return;
+    @Override
+    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+      if (tag == AlwaysHalt.class) {
+        return true;
       }
-
-      Frame[] frame = new Frame[1];
-
-      Truffle.getRuntime().iterateFrames(new FrameInstanceVisitor<FrameInstance>() {
-        int stackIndex = 0;
-
-        @Override
-        public FrameInstance visitFrame(final FrameInstance frameInstance) {
-          if (stackIndex == 2) {
-            frame[0] = frameInstance.getFrame(FrameAccess.READ_ONLY, true);
-            return frameInstance;
-          }
-          stackIndex += 1;
-          return null;
-        }
-      });
-
-      VM.getWebDebugger().suspendExecution(frame[0].materialize(), SteppingLocation.BEFORE_STATEMENT);
+      return super.isTaggedWithIgnoringEagerness(tag);
     }
   }
 

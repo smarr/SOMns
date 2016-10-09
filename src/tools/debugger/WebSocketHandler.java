@@ -40,7 +40,7 @@ public class WebSocketHandler extends WebSocketServer {
       Respond respond = gson.fromJson(message, Respond.class);
       respond.process(connector, conn);
     } catch (Exception ex) {
-      VM.errorPrint("Error on parsing Json:" + message);
+      VM.errorPrint("Error while processing msg:" + message);
       ex.printStackTrace();
     }
   }

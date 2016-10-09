@@ -141,11 +141,13 @@ export class Controller {
   }
 
   resumeExecution() {
+    if (!this.dbg.isSuspended()) { return; }
     this.vmConnection.sendDebuggerAction('resume', this.dbg.lastSuspendEventId);
     this.view.onContinueExecution();
   }
 
   pauseExecution() {
+    if (this.dbg.isSuspended()) { return; }
     // TODO
   }
 
@@ -154,18 +156,21 @@ export class Controller {
   }
 
   stepInto() {
+    if (!this.dbg.isSuspended()) { return; }
     this.dbg.setResumed();
     this.view.onContinueExecution();
     this.vmConnection.sendDebuggerAction('stepInto', this.dbg.lastSuspendEventId);
   }
 
   stepOver() {
+    if (!this.dbg.isSuspended()) { return; }
     this.dbg.setResumed();
     this.view.onContinueExecution();
     this.vmConnection.sendDebuggerAction('stepOver', this.dbg.lastSuspendEventId);
   }
 
   returnFromExecution() {
+    if (!this.dbg.isSuspended()) { return; }
     this.dbg.setResumed();
     this.view.onContinueExecution();
     this.vmConnection.sendDebuggerAction('return', this.dbg.lastSuspendEventId);
