@@ -61,7 +61,17 @@ class PingPongApp usingPlatform: platform = Value (
     public setupVerifiedRun: run = ( run problemSize: 1 )
   )
 
+  private testHalt = (
+    1 halt.
+    ^ 0
+  )
+
   public main: args = (
-    ^ (PingPong new: 3) benchmark
+    args size = 1 ifTrue: [
+      ^ (PingPong new: 3) benchmark ].
+    args size = 2 ifTrue: [
+      (args at: 2) = 'halt' ifTrue: [ ^ testHalt ].
+    ].
+    ^ 0
   )
 )

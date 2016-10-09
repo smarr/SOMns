@@ -60,8 +60,11 @@ function closeConnection(connection: SomConnection, done: MochaDone) {
 }
 
 function startSomAndConnect(onMessageHandler?: OnMessageHandler,
-    initialBreakpoints?: BreakpointData[]): Promise<SomConnection> {
-  const somProc = spawn(som, ['-G', '-t1', '-wd', 'tests/pingpong.som']);
+    initialBreakpoints?: BreakpointData[], extraArgs?: string[]): Promise<SomConnection> {
+  let args = ['-G', '-t1', '-wd', 'tests/pingpong.som'];
+  if (extraArgs) { args = args.concat(extraArgs); }
+
+  const somProc = spawn(som, args);
   const promise = new Promise((resolve, reject) => {
     let connecting = false;
     somProc.stdout.on('data', (data) => {
@@ -322,7 +325,6 @@ describe('Basic Protocol', function() {
     }));
   });
 
-
   describe('setting a source section receiver breakpoint', () => {
     // Capture first suspended event for testing
     let firstSuspendCaptured = false;
@@ -476,6 +478,36 @@ describe('Basic Protocol', function() {
             resolve(p);
           });
         });
+      });
+    }));
+  });
+
+  describe('execute `1 halt` and get suspended event', () => {
+    // Capture first suspended event for testing
+    let firstSuspendCaptured = false;
+    let getSuspendEvent: (event: OnMessageEvent) => void;
+    let suspendP = new Promise<SuspendEventMessage>((resolve, reject) => {
+      getSuspendEvent = (event: OnMessageEvent) => {
+        if (firstSuspendCaptured) { return; }    
+        const data = JSON.parse(event.data);
+        if (data.type === "suspendEvent") {
+          firstSuspendCaptured = true;
+          resolve(data);
+        }
+      };
+    });
+
+    before('Start SOMns and Connect', () => {
+      connectionP = startSomAndConnect(getSuspendEvent, [], ['halt']);
+    });
+
+    after(closeConnectionAfterSuite);
+
+    it('should halt on expected source section', onlyWithConnection(() => {
+      return suspendP.then(msg => {
+        expect(msg.stack).lengthOf(7);
+        expect(msg.stack[0].methodName).to.equal("PingPongApp>>#testHalt");
+        expect(msg.stack[0].sourceSection.startLine).to.equal(65);
       });
     }));
   });
