@@ -31,6 +31,8 @@ interface OnMessageHandler {
   (event: OnMessageEvent): void;
 }
 
+const pingPongUri = 'file:' + resolve('tests/pingpong.som');
+
 function expectSourceCoordinate(section: SourceCoordinate) {
   expect(section).to.have.property('charLength');
   expect(section).to.have.property('startColumn');
@@ -221,7 +223,7 @@ describe('Basic Protocol', function() {
       const breakpoint: LineBreakpointData = {
         type: "LineBreakpoint",
         line: 52,
-        sourceUri: 'file:' + resolve('tests/pingpong.som'),
+        sourceUri: pingPongUri,
         enabled: true
       };
       connectionP = startSomAndConnect(getSuspendEvent, [breakpoint]);
@@ -241,7 +243,7 @@ describe('Basic Protocol', function() {
       return suspendP.then(msg => {
         expectFullSourceCoordinate(msg.stack[0].sourceSection);
         expect(msg.id).to.equal("se-0");
-        expect(msg.sourceUri).to.equal('file:' + resolve('tests/pingpong.som'));
+        expect(msg.sourceUri).to.equal(pingPongUri);
         expect(msg.topFrame.arguments[0]).to.equal("a PingPong");
         expect(msg.topFrame.slots['ping']).to.equal('a Nil');
       });
@@ -268,7 +270,7 @@ describe('Basic Protocol', function() {
         type: "MessageSenderBreakpoint",
         enabled: true,
         coord: {
-          uri:        'file:' + resolve('tests/pingpong.som'),
+          uri:         pingPongUri,
           startLine:   15,
           startColumn: 14,
           charLength:   3}};
@@ -306,7 +308,7 @@ describe('Basic Protocol', function() {
         type: "AsyncMessageReceiveBreakpoint",
         enabled: true,
         coord: {
-          uri:         'file:' + resolve('tests/pingpong.som'),
+          uri:         pingPongUri,
           startLine:   39,
           startColumn:  9,
           charLength:  88}
@@ -345,7 +347,7 @@ describe('Basic Protocol', function() {
         type: "MessageReceiveBreakpoint",
         enabled: true,
         coord: {
-          uri:        'file:' + resolve('tests/pingpong.som'),
+          uri:         pingPongUri,
           startLine:   15,
           startColumn: 14,
           charLength:   3}};
@@ -391,7 +393,7 @@ describe('Basic Protocol', function() {
         type: "MessageSenderBreakpoint",
         enabled: true,
         coord: {
-          uri:        'file:' + resolve('tests/pingpong.som'),
+          uri:         pingPongUri,
           startLine:   15,
           startColumn: 14,
           charLength:   3}};
@@ -434,8 +436,8 @@ describe('Basic Protocol', function() {
             const lbp: LineBreakpointData = {
               type: "LineBreakpoint",
               line: 21,
-              sourceUri: 'file:' + resolve('tests/pingpong.som'),
-              enabled: true
+              sourceUri: pingPongUri,
+              enabled:   true
             };
             send(con.socket, {action: "updateBreakpoint", breakpoint: lbp});
             send(con.socket, {action: "resume", suspendEvent: msgAfterStep.id});  
@@ -455,17 +457,17 @@ describe('Basic Protocol', function() {
           connectionP.then(con => {
             const lbp22: LineBreakpointData = {
               type: "LineBreakpoint",
-              line: 22,
-              sourceUri: 'file:' + resolve('tests/pingpong.som'),
-              enabled: true
+              line:      22,
+              sourceUri: pingPongUri,
+              enabled:   true
             };
             send(con.socket, {action: "updateBreakpoint", breakpoint: lbp22});
             
             const lbp21: LineBreakpointData = {
               type: "LineBreakpoint",
-              line: 21,
-              sourceUri: 'file:' + resolve('tests/pingpong.som'),
-              enabled: false
+              line:      21,
+              sourceUri: pingPongUri,
+              enabled:   false
             };
             send(con.socket, {action: "updateBreakpoint", breakpoint: lbp21});
             send(con.socket, {action: "resume", suspendEvent: msgAfterStep.id});
