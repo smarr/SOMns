@@ -7,7 +7,6 @@ import java.util.List;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.dsl.NodeFactory;
-import com.oracle.truffle.api.dsl.internal.NodeFactoryBase;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -45,6 +44,7 @@ import som.primitives.MethodPrimsFactory;
 import som.primitives.MirrorPrimsFactory;
 import som.primitives.ObjectPrimsFactory;
 import som.primitives.ObjectSystemPrimsFactory;
+import som.primitives.Primitive.NoChild;
 import som.primitives.SizeAndLengthPrimFactory;
 import som.primitives.StringPrimsFactory;
 import som.primitives.SystemPrimsFactory;
@@ -115,7 +115,7 @@ public class Primitives {
       this.prim = prim;
       this.fact = fact;
 
-      if (prim.extraChild() == NodeFactoryBase.class) {
+      if (prim.extraChild() == NoChild.class) {
         extraChildFactory = null;
       } else {
         try {

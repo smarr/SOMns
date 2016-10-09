@@ -698,6 +698,6 @@ public final class MixinDefinition {
 
   @Override
   public String toString() {
-    return name.getString() + "[" + sourceSection.getShortDescription() + "]";
+    return name.getString() + "[" + sourceSection + "]";
   }
 }

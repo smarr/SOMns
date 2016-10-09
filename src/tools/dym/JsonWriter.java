@@ -73,7 +73,6 @@ public final class JsonWriter {
     builder.add("id", id);
     builder.add("firstIndex",  ss.getCharIndex());
     builder.add("length",      ss.getCharLength());
-    builder.add("description", ss.getShortDescription());
     builder.add("sourceId",    sourceToId.get(ss.getSource()));
 
     // TODO: add tags to section, need to get it from some tag map, I think

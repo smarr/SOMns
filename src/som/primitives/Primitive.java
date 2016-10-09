@@ -7,7 +7,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import com.oracle.truffle.api.dsl.NodeFactory;
-import com.oracle.truffle.api.dsl.internal.NodeFactoryBase;
 
 import som.vm.Primitives.Specializer;
 
@@ -38,7 +37,7 @@ public @interface Primitive {
 
   /** A factory for an extra child node that is passed as last argument. */
   @SuppressWarnings("rawtypes")
-  Class<? extends NodeFactory> extraChild() default NodeFactoryBase.class;
+  Class<? extends NodeFactory> extraChild() default NoChild.class;
 
   /** Pass array of evaluated arguments to node constructor. */
   boolean requiresArguments() default false;
@@ -59,4 +58,6 @@ public @interface Primitive {
   public @interface Container {
     Primitive[] value();
   }
+
+  abstract class NoChild implements NodeFactory<Object> {}
 }
