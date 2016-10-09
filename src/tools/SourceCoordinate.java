@@ -68,6 +68,7 @@ public class SourceCoordinate {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class TaggedSourceCoordinate extends SourceCoordinate {
     private final String[] tags;
 

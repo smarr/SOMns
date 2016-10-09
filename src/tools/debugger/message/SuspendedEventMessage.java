@@ -18,7 +18,7 @@ import tools.SourceCoordinate;
 import tools.SourceCoordinate.FullSourceCoordinate;
 
 
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "deprecation"})
 public class SuspendedEventMessage extends Message {
 
   public static SuspendedEventMessage create(final SuspendedEvent e,

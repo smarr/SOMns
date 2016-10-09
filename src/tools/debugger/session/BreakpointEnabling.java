@@ -14,6 +14,7 @@ public class BreakpointEnabling<T extends BreakpointInfo> {
   private boolean   enabled;
   private transient Assumption unchanged;
 
+  @SuppressWarnings("unused")
   private T breakpointInfo;
 
   BreakpointEnabling(final T breakpointInfo) {
