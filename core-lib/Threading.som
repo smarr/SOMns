@@ -1,0 +1,115 @@
+(* Copyright (c) 2016 see AUTHORS file
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the 'Software'), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*)
+class Threading usingVmMirror: vmMirror usingKernel: kernel = Value (
+| private vmMirror  = vmMirror. 
+  private Exception = kernel Exception.
+|
+  (* the easiest way to get to this reference in the VM.
+     And, yes, looks dirty, but is rather ok. They are Values after all. *)
+  vmMirror threadingRegisterCondition: Condition delay:  Delay.
+  vmMirror threadingRegisterMutex:     Mutex     thread: Thread.
+  vmMirror threadingRegisterTask:      Task      module: self
+)(
+  public class Condition = ()(
+    public signalOne = (
+      ^ vmMirror threadingSignalOne
+    )
+    
+    public signalAll = (
+      ^ vmMirror threadingSignalAll
+    )
+    
+    public await = (
+      ^ vmMirror threadingAwait
+    )
+    
+    public await: timeoutMilliseconds = (
+      ^ vmMirror threadingAwait: timeoutMilliseconds
+    )
+  ) : (
+    (* Condition variables are created from mutexes only. *)
+    public new = ( Exception signal )
+  )
+  
+  public class Delay forMilliseconds: duration = (
+  | private durationInMilliseconds = duration. |
+  )(
+    public duration = ( ^ durationInMilliseconds )
+    
+    public wait = ( ^ vmMirror threadingWait: durationInMilliseconds )
+  ) : (
+    public forSeconds: anInt = (
+      forMilliseconds: anInt * 1000
+    )
+  )
+  
+  public class Mutex = ()(
+     public critical: aBlock = (
+       | value |
+       self lock.
+       [ value := aBlock value ]
+         ensure: [ self unlock ].
+       ^ value
+     )
+     
+     public lock     = ( ^ vmMirror threadingLock:     self )
+     public unlock   = ( ^ vmMirror threadingUnlock:   self )
+     public isLocked = ( ^ vmMirror threadingIsLocked: self )
+     
+     public newCondition = ( ^ vmMirror threadingConditionFor: self )
+  ) : (
+    public new = ( ^ vmMirror threadingMutexNew )
+  )
+  
+  (* A Thread is a concurrently running entity mapped directly on an
+     operating system thread. A Thread is more heavy-weight than a Task. *)
+  public class Thread = ()(
+    public name          = ( ^ vmMirror threadingName: self )
+    public name: aString = ( ^ vmMirror threadingName: self set: aString )
+    public join = ( ^ vmMirror threadingJoin: self )
+  ) : (
+    (* #new is not supported, use #spawn*. *)
+    public new = ( Exception signal )
+  
+    public spawn: aBlock = (
+      ^ vmMirror threadingSpawn: aBlock
+    )
+    
+    public spawn: aBlock with: args = (
+      ^ vmMirror threadingSpawn: aBlock with: args
+    )
+    
+    public current = ( ^ vmMirror threadingCurrent )
+    public yield   = ( ^ vmMirror threadingYieldCurrent )
+  )
+  
+  (* A Task is a concurrently running entity more light-weight than a Thread
+     and scheduled on a thread pool. *)
+  public class Task = ()() : (
+    public spawn: aBlock = (
+      ^ vmMirror threadingSpawn: aBlock
+    )
+  
+    public spawn: aBlock with: args = (
+      ^ vmMirror threadingSpawn: aBlock with: args
+    )
+  )
+)
