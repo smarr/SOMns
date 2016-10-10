@@ -339,14 +339,14 @@ Classes.transferClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInst
   }
 
   public void executeApplication(final SObjectWithoutFields vmMirror, final Actor mainActor) {
+    CompletableFuture<Object> future = new CompletableFuture<>();
+    VM.setVMMainCompletion(future);
+
     Object platform = platformModule.instantiateObject(platformClass, vmMirror);
 
     SourceSection source = SomLanguage.getSyntheticSource("",
         "ObjectSystem.executeApplication").createSection(1);
     SSymbol start = Symbols.symbolFor("start");
-
-    CompletableFuture<Object> future = new CompletableFuture<>();
-    VM.setVMMainCompletion(future);
 
     DirectMessage msg = new DirectMessage(null, mainActor, start,
         new Object[] {platform}, mainActor,

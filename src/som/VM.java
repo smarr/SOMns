@@ -197,7 +197,7 @@ public final class VM {
 
   public static void errorExit(final String message) {
     TruffleCompiler.transferToInterpreter("errorExit");
-    errorPrintln("Runtime Error: " + message);
+    errorPrintln("Run-time Error: " + message);
     exit(1);
   }
 
@@ -260,7 +260,8 @@ public final class VM {
 
   public static void main(final String[] args) {
     Builder builder = PolyglotEngine.newBuilder();
-    builder.config(SomLanguage.MIME_TYPE, SomLanguage.CMD_ARGS, args);
+    builder.config(SomLanguage.MIME_TYPE, SomLanguage.CMD_ARGS,   args);
+    builder.config(SomLanguage.MIME_TYPE, SomLanguage.AVOID_EXIT, false);
     VMOptions vmOptions = new VMOptions(args);
 
     if (vmOptions.debuggerEnabled) {
