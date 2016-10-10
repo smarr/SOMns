@@ -361,7 +361,7 @@ Classes.transferClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInst
         if (VM.isAvoidingExit()) {
           return;
         } else {
-          System.exit(exitCode);
+          VM.getVM().realExit(exitCode);
         }
       } else if (result instanceof SPromise) {
         handlePromiseResult((SPromise) result);
