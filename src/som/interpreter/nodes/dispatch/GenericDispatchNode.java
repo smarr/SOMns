@@ -45,17 +45,23 @@ public final class GenericDispatchNode extends AbstractDispatchNode {
     if (method != null) {
       return method.invoke(call, frame, arguments);
     } else {
-      if (VmSettings.DNU_PRINT_STACK_TRACE) {
-        PrintStackTracePrim.printStackTrace();
-        VM.errorPrintln("Lookup of " + selector + " failed in " + Types.getClassOf(rcvr).getName().getString());
-      }
-
-      // Won't use DNU caching here, because it is already a megamorphic node
-      SArray argumentsArray = SArguments.getArgumentsWithoutReceiver(arguments);
-      Object[] args = new Object[] {arguments[0], selector, argumentsArray};
-      CallTarget target = CachedDnuNode.getDnu(rcvrClass);
-      return call.call(frame, target, args);
+      return performDnu(frame, arguments, rcvr, rcvrClass, selector, call);
     }
+  }
+
+  public static Object performDnu(final VirtualFrame frame,
+      final Object[] arguments, final Object rcvr, final SClass rcvrClass,
+      final SSymbol selector, final IndirectCallNode call) {
+    if (VmSettings.DNU_PRINT_STACK_TRACE) {
+      PrintStackTracePrim.printStackTrace();
+      VM.errorPrintln("Lookup of " + selector + " failed in " + Types.getClassOf(rcvr).getName().getString());
+    }
+
+    // Won't use DNU caching here, because it is already a megamorphic node
+    SArray argumentsArray = SArguments.getArgumentsWithoutReceiver(arguments);
+    Object[] args = new Object[] {arguments[0], selector, argumentsArray};
+    CallTarget target = CachedDnuNode.getDnu(rcvrClass);
+    return call.call(frame, target, args);
   }
 
   @TruffleBoundary
