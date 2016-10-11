@@ -31,9 +31,11 @@ function hashAtInc(hash, idx: string, inc: number) {
   }
 }
 
+var actorsPerType = {};
+var nodeMap = {};
+
 function determineNodes(msgHist: MessageHistoryMessage) {
-  var actorsPerType = {};
-  var nodes = {};
+  
   for (var aId in msgHist.actors) {
     var actor = msgHist.actors[aId];
     hashAtInc(actorsPerType, actor.typeName, 1);
@@ -48,9 +50,9 @@ function determineNodes(msgHist: MessageHistoryMessage) {
       type: actor.typeName
     };
 
-    nodes[actor.id] = node;
+    nodeMap[actor.id] = node;
   }
-  return nodes;
+  return nodeMap;
 }
 
 function mapToArray(map) {
@@ -62,9 +64,9 @@ function mapToArray(map) {
 }
 
 var maxMessageCount = 0;
+var msgSends = {};
 
-function countMessagesSenderToReceiver(msgHist: MessageHistoryMessage, nodeMap): IdMap<IdMap<number>> {
-  let msgSends = {};
+function countMessagesSenderToReceiver(msgHist: MessageHistoryMessage): IdMap<IdMap<number>> {
 
   dbgLog("[DetLinks] #msg: " + msgHist.messages.length);
   for (let msg of msgHist.messages) {
@@ -78,7 +80,7 @@ function countMessagesSenderToReceiver(msgHist: MessageHistoryMessage, nodeMap):
   return msgSends;
 }
 
-function createLinksData(msgSends: IdMap<IdMap<number>>, nodeMap) {
+function createLinksData(msgSends: IdMap<IdMap<number>>) {
   dbgLog("[DetLinks] completed ");
 
   let links = [];
@@ -102,9 +104,9 @@ function createLinksData(msgSends: IdMap<IdMap<number>>, nodeMap) {
   return links;
 }
 
-function determineLinks(msgHist: MessageHistoryMessage, nodeMap) {
-  var msgSends = countMessagesSenderToReceiver(msgHist, nodeMap);
-  return createLinksData(msgSends, nodeMap);
+function determineLinks(msgHist: MessageHistoryMessage) {
+  countMessagesSenderToReceiver(msgHist);
+  return createLinksData(msgSends);
 }
 
 /**
@@ -112,6 +114,7 @@ function determineLinks(msgHist: MessageHistoryMessage, nodeMap) {
  */
 export function displayMessageHistory(msgHist: MessageHistoryMessage) {
   colors = d3.scale.category10();
+  $("#graph-canvas").empty();
 
   var svg = d3.select('#graph-canvas')
     .append('svg')
@@ -123,10 +126,10 @@ export function displayMessageHistory(msgHist: MessageHistoryMessage) {
   //  - nodes are known by 'id', not by index in array.
   //  - reflexive edges are indicated on the node (as a bold black circle).
   //  - links are always source < target; edge directions are set by 'left' and 'right'.
-  var nodeMap = determineNodes(msgHist);
+  determineNodes(msgHist);
   nodes = mapToArray(nodeMap);
 
-  links = determineLinks(msgHist, nodeMap);
+  links = determineLinks(msgHist);
 
   // init D3 force layout
   force = d3.layout.force()
@@ -171,6 +174,11 @@ export function displayMessageHistory(msgHist: MessageHistoryMessage) {
   restart();
 }
 
+export function resetLinks (){
+  msgSends = {};
+  actorsPerType = {};
+  nodeMap = {};
+}
 
 // update force layout (called automatically each iteration)
 function tick() {

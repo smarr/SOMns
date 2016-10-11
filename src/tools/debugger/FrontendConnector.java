@@ -5,8 +5,8 @@ import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -75,6 +75,8 @@ public class FrontendConnector {
   private final Gson gson;
 
   private final ArrayList<Source> notReady = new ArrayList<>(); //TODO rename: toBeSend
+
+  private static int numActors = 0;
 
   public FrontendConnector(final Breakpoints breakpoints,
       final Instrumenter instrumenter, final WebDebugger webDebugger,
@@ -207,10 +209,13 @@ public class FrontendConnector {
   private static Map<SFarReference, String> createActorMap(
       final ObjectBuffer<ObjectBuffer<SFarReference>> actorsPerThread) {
     HashMap<SFarReference, String> map = new HashMap<>();
-    int numActors = 0;
+    //int numActors = 0;
     for (ObjectBuffer<SFarReference> perThread : actorsPerThread) {
-      for (SFarReference a : perThread) {
-        assert !map.containsKey(a);
+      Iterator<SFarReference> iter = perThread.iteratorFromMemory();
+      perThread.memorize();
+
+      while(iter.hasNext()){
+        SFarReference a = iter.next();
         map.put(a, "a-" + numActors);
         numActors += 1;
       }
@@ -218,7 +223,39 @@ public class FrontendConnector {
     return map;
   }
 
+  private static Map<Actor, String> createObjsMap(
+      final ObjectBuffer<ObjectBuffer<SFarReference>> actorsPerThread) {
+    HashMap<Actor, String> map = new HashMap<>();
+    int numActors = 0;
+    for (ObjectBuffer<SFarReference> perThread : actorsPerThread) {
+      for (SFarReference a : perThread) {
+        assert !map.containsKey(a);
+        map.put(a.getActor(), "a-" + numActors);
+        numActors += 1;
+      }
+
+    }
+    return map;
+  }
+
   public void sendSuspendedEvent(final SuspendedEvent e, final String id) {
+    ObjectBuffer<ObjectBuffer<SFarReference>> actorsPerThread = ActorExecutionTrace.getAllCreateActors();
+    ObjectBuffer<ObjectBuffer<ObjectBuffer<EventualMessage>>> messagesPerThread = ActorExecutionTrace.getAllProcessedMessages();
+
+    Map<SFarReference, String> actorsToIds = createActorMap(actorsPerThread);
+    Map<Actor, String> actorObjsToIds = createObjsMap(actorsPerThread);
+
+    MessageHistory msg = MessageHistory.create(
+        actorsToIds, messagesPerThread, actorObjsToIds);
+
+    String m = gson.toJson(msg, Message.class);
+    log("[ACTORS] Message length: " + m.length());
+    sender.send(m);
+
+    for(ObjectBuffer<ObjectBuffer<EventualMessage>> o : messagesPerThread){
+      o.clear();
+    }
+
     send(SuspendedEventMessage.create(e, id));
   }
 
@@ -235,12 +272,8 @@ public class FrontendConnector {
     ObjectBuffer<ObjectBuffer<ObjectBuffer<EventualMessage>>> messagesPerThread = ActorExecutionTrace.getAllProcessedMessages();
 
     Map<SFarReference, String> actorsToIds = createActorMap(actorsPerThread);
-    Map<Actor, String> actorObjsToIds = new HashMap<>(actorsToIds.size());
-    for (Entry<SFarReference, String> e : actorsToIds.entrySet()) {
-      Actor a = e.getKey().getActor();
-      assert !actorObjsToIds.containsKey(a);
-      actorObjsToIds.put(a, e.getValue());
-    }
+    Map<Actor, String> actorObjsToIds = createObjsMap(actorsPerThread);
+
 
     MessageHistory msg = MessageHistory.create(
         actorsToIds, messagesPerThread, actorObjsToIds);
