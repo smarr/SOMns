@@ -16,6 +16,9 @@ public class ObjectBuffer<T> implements Iterable<T> {
   private Entry<T> first;
   private int currentIdx;
 
+  private int memoryIdx;
+  private Entry<T> memoryEntry;
+
   private int numEntries;
 
   @SuppressWarnings("unchecked")
@@ -49,6 +52,7 @@ public class ObjectBuffer<T> implements Iterable<T> {
 
       if (first == null) {
         first = current;
+        memorize();
       }
     }
 
@@ -71,9 +75,32 @@ public class ObjectBuffer<T> implements Iterable<T> {
     return numEntries * bufferSize;
   }
 
+  public void clear() {
+    this.first = null;
+    this.current = null;
+    this.currentIdx = bufferSize;
+    this.numEntries = 0;
+  }
+
+  /**
+   * remember current position in the object buffer
+   */
+  public void memorize(){
+    this.memoryEntry = this.current;
+    this.memoryIdx = this.currentIdx;
+  }
+
+  /**
+   * iterator that starts from the memorized position
+   * @return
+   */
+  public Iterator<T> iteratorFromMemory(){
+    return new Iter<T>(currentIdx, memoryEntry, memoryIdx);
+  }
+
   @Override
   public Iterator<T> iterator() {
-    return new Iter<T>(currentIdx, first);
+    return new Iter<T>(currentIdx, first, 0);
   }
 
   private static final class Iter<T> implements Iterator<T> {
@@ -82,10 +109,10 @@ public class ObjectBuffer<T> implements Iterable<T> {
     private Entry<T> current;
     private int currentIdx;
 
-    private Iter(final int lastIdx, final Entry<T> current) {
+    private Iter(final int lastIdx, final Entry<T> current, final int fromIdx) {
       this.lastIdxInLastEntry = lastIdx - 1;
       this.current = current;
-      this.currentIdx = 0;
+      this.currentIdx = fromIdx;
     }
 
     @Override
