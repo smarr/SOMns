@@ -1,0 +1,265 @@
+(* Copyright (c) 2015-2016 see AUTHORS file
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the 'Software'), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*)
+class Actors usingVmMirror: vmMirror usingKernel: kernel = Value (
+| private vmMirror  = vmMirror. 
+  private Exception = kernel Exception.
+  private Vector    = kernel Vector.
+|
+  (* the easiest way to get to this reference in the VM.
+     And, yes, looks dirty, but is rather ok. They are Values after all. *)
+  vmMirror actorsFarReferenceClass: FarReference.
+  vmMirror actorsPromiseClass:  Promise.
+  vmMirror actorsPairClass:     Pair.
+  vmMirror actorsResolverClass: Resolver. 
+  vmMirror actorsModule: self.
+)(
+  public class FarReference = Value (
+    (* This class cannot be instantiated directly *)
+    Exception signal.
+  ) (
+    protected doesNotUnderstand: selector arguments: arguments = (
+      error: 'Cannot immediate-send ' + selector + ' to a far reference, they only accept eventual-sends.'.
+    )
+
+    public isNil = (
+      (* far reference can never have a nil target. nil is a value object. *)
+      ^ false.
+    )
+
+    public notNil = ( ^ true )
+
+    public == other = (
+      (* Experimental! Not clear whether this is correct for a capability model.
+         Should I be able to distinguish remote objects? Seems like an
+         information leak. But I need it for a benchmark, and for convenience. *)
+      ^ vmMirror object: self identicalTo: other
+    )
+
+    public ~= other = (
+      ^ (self == other) not
+    )
+  )
+
+  public class Promise = Object ()(
+    (* all whenResolved blocks are executed. *)
+    public whenResolved: aBlock = ( ^ vmMirror actorsWhen: self resolved: aBlock )
+    
+    (* all ensure blocks are executed. *)
+    public ensure: aBlock       = ( whenResolved: aBlock. onError: aBlock. )
+    
+    (* all onError blocks are executed. *)
+    public onError: errorBlock  = ( ^ vmMirror actorsFor: self onError: errorBlock )
+    
+    public whenResolved: aBlock onError: errorBlock = (
+      ^ vmMirror actorsWhen: self resolved: aBlock onError: errorBlock
+    )
+    
+    (* similar to exception handlers, only the first matching on:do: is executed.
+       registration order determines search order.
+       This seems to be also what the Bluebird JS lib is doing. *)
+    public on: exception do: errorBlock = (
+      vmMirror actorsFor: self on: exception do: errorBlock
+    )
+    
+    public , other = (
+      ^ (PromiseGroup for: self), other.
+    )
+  )
+
+  public class Resolver = Value ()( (* Object or Value? *)
+    public resolve: value = ( vmMirror actorsResolve: self with: value )
+    public error:   value = ( self notYetImplemented )
+  ) 
+
+  class Pair with: promise and: resolver = (
+    (* A promise Pair is useful for explicitly creating dependencies between
+       asynchronous computations. *)
+    | public promise  = promise.
+      public resolver = resolver. |
+  )(
+    public resolve: value = (
+      resolver resolve: value.
+    )
+  )
+
+  class PromiseGroup for: p head: h = (
+    (* A PromiseGroup represents a combined promise for a list of promises that is lazily initialized.*)
+    | public previous = h.
+      public promise  = p.
+      private lazyAll (* lazily initialized *)
+    |
+  ) (
+    public , other = (
+      ^ PromiseGroup for: other head: self.
+    )
+
+    public whenResolved: aBlock = ( ^ all whenResolved: aBlock )
+    public ensure: aBlock       = ( ^ all ensure: aBlock )
+    public onError: errorBlock  = ( ^ all onError: errorBlock )
+    public whenResolved: aBlock onError: errorBlock = (
+      ^ all whenResolved resolved: aBlock onError: errorBlock
+    )
+    public on: exception do: errorBlock = (
+      ^ all on: exception do: errorBlock
+    )
+    
+    all = (
+      (lazyAll == nil) ifTrue: [
+        | promisePair counter results |
+        counter := 0.
+        promisePair := createPromisePair.
+        results := Vector new.
+        
+        do: [ :p |
+          counter := counter + 1.
+          p whenResolved: [:r |
+            results append: r.
+            ((counter := counter - 1) = 0) ifTrue: [ promisePair resolve: results. ].
+          ] onError: [ :ex |
+            promisePair error: ex.
+          ].
+        ].
+        lazyAll := promisePair promise
+      ].
+      ^ lazyAll
+    )
+    
+    do: block = (
+      | it |
+      it := self.
+      [ it == nil ] whileFalse: [
+        block value: it promise.
+        it := it previous.
+      ].
+    )
+  ) : (
+    public for: p = (
+      ^ PromiseGroup for: p head: nil
+    )
+  )
+
+
+  public createPromisePair = (
+    ^ vmMirror actorsCreatePromisePair: nil.
+  )
+
+  public createActorFromValue: aValue = (
+    ^ vmMirror actors: nil createFromValue: aValue
+  )
+
+  (* Can't be part of kernel, don't have promises in the kernel... *)
+  private async: collection do: aBlock next: i prevPromise: prev 
+      completionResolver: resolver = (
+    prev whenResolved: [:res |
+      i <= collection size
+        ifTrue: [
+          | promise |
+          promise := aBlock value: (collection at: i).
+          async: collection do: aBlock next: i + 1 prevPromise: promise completionResolver: resolver ]
+        ifFalse: [
+          resolver resolve: collection ] ]
+  )
+  
+  (* Iteration is done sequential but asynchronous. *)
+  public async: collection do: aBlockReturningAPromise = (
+    | promisePair |
+    promisePair := createPromisePair.
+
+    collection size > 0 ifTrue: [
+      | first |
+      first := aBlockReturningAPromise value: (collection at: 1).
+
+      async:                collection
+        do:                 aBlockReturningAPromise
+        next:               2
+        prevPromise:        first 
+        completionResolver: promisePair resolver.
+    ] ifFalse: [
+      promisePair resolve: collection.
+    ].
+    
+    ^ promisePair promise.
+  )
+
+  private async: intStart to: intEnd do: aBlock
+    prevPromise: prev completionResolver: resolver = (
+    prev whenResolved: [:res |
+      intStart <= intEnd ifTrue: [
+        | prom |
+        prom := aBlock value: intStart.
+        async: intStart + 1 to: intEnd
+           do: aBlock
+           prevPromise: prom
+           completionResolver: resolver
+      ] ifFalse: [
+        resolver resolve: intStart - 1
+      ]
+    ]
+  )
+
+  (* Iteration is done sequential but asynchronous. *)
+  public async: intStart to: intEnd do: aBlockReturningAPromise = (
+    | promisePair |
+    promisePair := createPromisePair.
+    
+    intStart <= intEnd ifTrue: [
+      | first |
+      first := aBlockReturningAPromise value: intStart.
+      
+      async: intStart + 1 to: intEnd
+         do: aBlockReturningAPromise 
+         prevPromise: first
+         completionResolver: promisePair resolver.
+    ] ifFalse: [
+      promisePair resolve: intStart
+    ].
+    ^ promisePair promise
+  )
+  
+  private async: conditionBlock whileTrue: bodyBlockReturningAPromise prevPromise: prev completionResolver: resolver = (
+    prev whenResolved: [:res |
+      conditionBlock value ifTrue: [
+        | current |
+        current := bodyBlockReturningAPromise value.
+        async: conditionBlock whileTrue: bodyBlockReturningAPromise prevPromise: current completionResolver: resolver
+      ] ifFalse: [
+        resolver resolve: nil
+      ]
+    ]
+  )
+  
+  public async: conditionBlock whileTrue: bodyBlockReturningAPromise = (
+    | promisePair |
+    promisePair := createPromisePair.
+    
+    conditionBlock value ifTrue: [
+      | prevPromise |
+      prevPromise := bodyBlockReturningAPromise value.
+      async: conditionBlock
+        whileTrue: bodyBlockReturningAPromise 
+        prevPromise: prevPromise
+        completionResolver: promisePair resolver
+    ] ifFalse: [
+      promisePair resolve: nil
+    ].
+    ^ promisePair promise
+  )
+)

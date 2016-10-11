@@ -1,0 +1,399 @@
+class LanguageTests usingPlatform: platform testFramework: minitest = (
+| private TestContext  = minitest TestContext.
+  private MessageNotUnderstood = platform kernel MessageNotUnderstood.
+|
+)(
+  public class BasicApplications = TestContext ()(
+
+    class MAWithoutAnInitSend = ()(
+      class Point            = (| public x public y |)()
+      class Colored color: c = (| public color = c. |)()
+      public class ColoredPoint x: x y: y color: c = Point <: Colored color: c.
+    )
+
+    class MAWithUnaryInitSend = ()(
+      class Point = (| public x public y |)()
+      class Colored color: c = (| public color = c. |)()
+      public class ColoredPoint x: x y: y color: c = Point new <: Colored color: c.
+    )
+
+    class MAWithKeywordInitSend = ()(
+      class Point x: x y: y  = (| public x = x. public y = y. |)()
+      class Colored color: c = (| public color = c. |)()
+      public class ColoredPoint x: x y: y color: c = Point x: x y: y <: Colored color: c.
+    )
+    
+    class MAWithoutInitSendAtSecondApplication = ()(
+      class Point x: x y: y = (| public x = x. public y = y. |)()
+      class Colored = (| public color |)()
+      public class ColoredPoint x: x y: y color: c = Point x: x y: y <: Colored.
+    )
+    
+    class MAUnarySendAtSecondApplication = ()(
+      class Point x: x y: y = (| public x = x. public y = y. |)()
+      class Colored = (| public color |)()
+      public class ColoredPoint x: x y: y color: c = Point x: x y: y <: Colored new.
+    )
+    
+    class MAWithClassBody = ()(
+      class X = (| public x |)()
+      class Y = (| public y |)()
+      public class M = X <: Y (| public z |)()
+    )
+    
+    public testWithoutInitSend = (
+      | sample p |
+      sample := MAWithoutAnInitSend new.
+      p := sample ColoredPoint x: 3 y: 4 color: 'red'.
+      assert: p x is: nil.
+      assert: p y is: nil.
+      assert: p color equals: 'red'.
+      p x: 3.
+      assert: p x equals: 3.
+      p y: 4.
+      assert: p y equals: 4.
+    )
+    
+    public testWithUnaryInitSend = (
+      | sample p |
+      sample := MAWithUnaryInitSend new.
+      p := sample ColoredPoint x: 3 y: 4 color: 'red'.
+      assert: p x is: nil.
+      assert: p y is: nil.
+      assert: p color equals: 'red'.
+      p x: 3.
+      assert: p x equals: 3.
+      p y: 4.
+      assert: p y equals: 4.
+    )
+    
+    public testWithKeywordInitSend = (
+      | sample p |
+      sample := MAWithKeywordInitSend new.
+      p := sample ColoredPoint x: 3 y: 4 color: 'red'.
+      assert: p x      equals: 3.
+      assert: p y      equals: 4.
+      assert: p color  equals: 'red'.
+    )
+
+    public testWithoutSendAtSecondApplication = (
+      | sample p |
+      sample := MAWithoutInitSendAtSecondApplication new.
+      p := sample ColoredPoint x: 3 y: 4 color: 'red'.
+      assert: p x equals: 3.
+      assert: p y equals: 4.
+      assert: p color is: nil.
+      p color: 'red'.
+      assert: p color equals: 'red'.
+    )
+    
+    public testUnarySendAtSecondApplication = (
+      | sample p |
+      sample := MAUnarySendAtSecondApplication new.
+      p := sample ColoredPoint x: 3 y: 4 color: 'red'.
+      assert: p x equals: 3.
+      assert: p y equals: 4.
+      assert: p color is: nil.
+      p color: 'red'.
+      assert: p color equals: 'red'.
+    )
+    
+    public testMixinWithBody = (
+      | sample m |
+      sample := MAWithClassBody new.
+      m := sample M new.
+      assert: m x is: nil.
+      assert: m y is: nil.
+      assert: m z is: nil.
+      
+      m x: 1. m y: 2. m z: 3.
+      assert: m x equals: 1.
+      assert: m y equals: 2.
+      assert: m z equals: 3.
+    )
+
+  ) : ( TEST_CONTEXT = () )
+  
+  public class InitializationAndAccess = TestContext ()(
+    class AccessSuperSlots = ()(
+      class Point x: x y: y = (| public x = x. public y = y. |)()
+      class Colored color: c = (| public color = c. |)()
+      public class ColoredPoint x: x y: y color: c = Point x: x y: y <: Colored color: c (
+        | public z = 0. |
+      )(
+        public sum = ( ^ x + y + z )
+      )
+    )
+    
+    class NonConflicting = ()(
+      class Point  x: x y: y = (| public x = x. public y = y. |)()
+      class Vector x: x y: y = (| public a = x. public b = y. |)()
+      class Colored color: c = (| public color = c. |)()
+      public class ColoredPoint x: x y: y color: c = Colored color: c
+                                                  <: Point  x: x y: y
+                                                  <: Vector x: x y: y.
+      public class ColoredPointZ x: x y: y z: z color: c
+                                                   = Colored color: c
+                                                  <: Point  x: x y: y
+                                                  <: Vector x: x y: y
+                                                  (| public z = z. |)()
+    )
+    
+    class InitSetters = () (
+      class Point      = (| public x  public y |)()
+      class Depth z: z = (| public z = z. |)()
+      class Colored color: c = (| public color = c. |)()
+      public class ColoredPoint x: x y: y z: z color: c = Point
+                                                       <: Depth z: z
+                                                       <: Colored color: c
+      (| public origin = 0. |
+        x := x. y := y.
+      )(
+        public sum = ( ^ x + y + z + origin )
+      )
+    )
+    
+    class InitSetterForMixin = ()(
+      class Point x: x y: y  = (| public x = x. public y = y. |)()
+      class Depth            = (| public z |)()
+      class Colored color: c = (| public color = c. |) ()
+      public class ColoredPoint x: x y: y z: z color: c = Point x: x y: y
+                                                       <: Depth
+                                                       <: Colored color: c
+      (| public origin = 0. |
+        z := z.
+      )(
+        public sum = ( ^ x + y + z + origin )
+      )
+    )
+    
+    class InitSetterForMixin2 = () (
+      class Point x: x y: y = (| public x = x. public y = y. |)()
+      class Depth z: z      = (| public z = z. |)()
+      class Colored         = (| public color |)()
+      public class ColoredPoint x: x y: y z: z color: c = Point x: x y: y
+                                                       <: Depth z: z
+                                                       <: Colored
+      (| public origin = 0. |
+        color := c.
+      )(
+        public sum = ( ^ x + y + z + origin )
+      )
+    )
+    
+    public testAccessSuperSlots = (
+      | sample p |
+      sample := AccessSuperSlots new.
+      p := sample ColoredPoint x: 3 y: 4 color: 'red'.
+      assert: p x equals: 3.
+      assert: p y equals: 4.
+      assert: p z equals: 0.
+      assert: p color equals: 'red'.
+      assert: p sum equals: 7.
+    )
+    
+    public testNonConflictingMixins = (
+      | sample p |
+      sample := NonConflicting new.
+      p := sample ColoredPoint x: 3 y: 4 color: 'red'.
+      assert: p x equals: 3.
+      assert: p y equals: 4.
+      assert: p a equals: 3.
+      assert: p b equals: 4.
+      assert: p color equals: 'red'.
+    )
+    
+    public testNonConflictingMixinsWithBody = (
+      | sample p |
+      sample := NonConflicting new.
+      p := sample ColoredPointZ x: 3 y: 4 z: 5 color: 'red'.
+      assert: p x equals: 3.
+      assert: p y equals: 4.
+      assert: p z equals: 5.
+      assert: p a equals: 3.
+      assert: p b equals: 4.
+      assert: p color equals: 'red'.
+    )
+    
+    public testInitSetters = (
+      | sample p |
+      sample := InitSetters new.
+      p := sample ColoredPoint x: 3 y: 4 z: 5 color: 'red'.
+      assert: p x equals: 3.
+      assert: p y equals: 4.
+      assert: p z equals: 5.
+      assert: p origin equals: 0.
+      assert: p color  equals: 'red'.
+      assert: p sum    equals: 12.
+    )
+    
+    public testInitSetterForMixin = (
+      | sample p |
+      sample := InitSetterForMixin new.
+      p := sample ColoredPoint x: 3 y: 4 z: 5 color: 'red'.
+      assert: p x equals: 3.
+      assert: p y equals: 4.
+      assert: p z equals: 5.
+      assert: p origin equals: 0.
+      assert: p color  equals: 'red'.
+      assert: p sum    equals: 12.
+    )
+  
+    public testInitSetterForMixin2 = (
+      | sample p |
+      sample := InitSetterForMixin2 new.
+      p := sample ColoredPoint x: 3 y: 4 z: 5 color: 'red'.
+      assert: p x equals: 3.
+      assert: p y equals: 4.
+      assert: p z equals: 5.
+      assert: p origin equals: 0.
+      assert: p color  equals: 'red'.
+      assert: p sum    equals: 12.
+    )
+  ) : ( TEST_CONTEXT = () )
+  
+  public class FactoryInitialization = TestContext ()(
+    class PrimaryRenamed = ()(
+      class X notNew = (| public x = 44. |)()
+      class Y foo    = (| public y = 22. |)()
+      public class M = Object <: X <: Y ()()
+    )
+    
+    class UseFactoryMethod = ()(
+      class X new: x = (| public x = x. |)():(
+        public new = (
+          ^ self new: 4.
+        )
+      )
+      public class M = Object <: X new ()()
+    )
+    
+    public testPrimaryRenamed = (
+      | s m |
+      s := PrimaryRenamed new.
+      should: [s M new] 
+      signal: MessageNotUnderstood 
+      description: 'The primary factory method has to be used directly and explicitly currently.'
+    )
+    
+    public testUseOfFactoryMethod = (
+      | s m |
+      s := UseFactoryMethod new.      
+      should: [s M new] 
+      signal: MessageNotUnderstood 
+      description: 'The use of an arbitrary factory method is not supported. SOMns currently only supports the use of the primary factory method.'
+    )
+  ) : ( TEST_CONTEXT = () )
+  
+  public class ConflictHandling = TestContext ()(
+    class X  = (| public x |)( public setX: val = ( x := val. ) )
+    class X2 = (| public x |)()
+    class Y  = (| public y |)( public foo = ( y := 4. ))
+    class Y2 = (| public y |)( public foo = ( y := 8. ))
+    
+    class ConflictingSlots = Object <: X <: X2 ()()
+
+    class ConflictingSlotsImmutable = Object <: X (| public x = 1. |)()
+    
+    class ConflictingMethods = Object <: Y <: Y2.
+    
+    class Initializer1 = ()(
+      class X  = (| public x ::= 3. |)()
+      class X2 = (| public x ::= 4. |)()
+      public class C = Object <: X <: X2.
+    )
+    
+    class Initializer2 = ()(
+      class X  = (| public x | x := 5. )()
+      class X2 = (| public x | x := 6. )()
+      public class C = Object <: X <: X2.
+    )
+    
+    class Initializer3 = ()(
+      class X  = (| public c ::= 0. public x ::= cnt. |)( private cnt = ( c := c + 1. ^ c ) )
+      class X2 = (| public x ::= cnt. |)()
+      public class C = Object <: X <: X2.
+    )
+    
+    class MixinsAreNotTraits = ()(
+      class X = ()( public x = ( ^ 1 ) )
+      class XX = Object <: X.
+      public class XXX = Object <: XX.
+    )
+    
+    public testConflictingSlots = (
+      | c |
+      c := ConflictingSlots new.
+      assert: c x is: nil.
+      c x: 4.
+      assert: c x equals: 4.
+      c setX: 5.
+      assert: c x equals: 5.
+    )
+
+    public testDEACTIVATED = (
+      (* TODO Currently, the tests below are deactivated because we haven't 
+              yet implemented proper message send semantics for slots.
+              Instead, we do an early binding of the slot definition to
+              the access nodes, which is incorrect for mixins with conflicting
+              slots. A method in a mixin which slot was not used in the resulting
+              class will cause an assertion because the slot definition isn't known
+              in the object layout. And we cannot just use the name there because
+              inheritance allows to have multiple slots with the same name, I think. *)
+      'Process DEACTIVATED tests. ' println.
+    )
+
+    (* TODO: this is currently not safe, because there is actually no setter.
+             but, I am not verifying that at any point, so, there is an
+             assertion failing on looking up a write location...*)    
+    public DEACTIVATEDtestConflictingSlotsImmutable = (
+      | c |
+      c := ConflictingSlotsImmutable new.
+      assert: c x is: nil.
+
+      c x: 4.  (* this should give a DNU *)
+      assert: c x equals: 4.
+      
+      c setX: 5.
+      assert: c x equals: 5.
+    )
+    
+    public DEACTIVATEDtestConflictingMethods = (
+      | c |
+      c := ConflictingMethods new.
+      assert: c y is: nil.
+      c foo.
+      assert: c y equals: 8.
+    )
+    
+    public DEACTIVATEDtestInitializer1 = (
+      | i c |
+      i := Initializer1 new.
+      c := i C new.
+      assert: c x equals: 4.
+    )
+    
+    public DEACTIVATEDtestInitializer2 = (
+      | i c |
+      i := Initializer2 new.
+      c := i C new.
+      assert: c x equals: 6.
+    )
+    
+    public DEACTIVATEDtestInitializer3 = (
+      | i c |
+      i := Initializer3 new.
+      c := i C new.
+      assert: c c equals: 2.
+    )
+    
+    public testMixinsAreNotTraits = (
+      | m x |
+      m := MixinsAreNotTraits new.
+      x := m XXX new.
+      
+      should: [ x x ] signal: MessageNotUnderstood description: '#x is only defined in X not in XX, which is mixed into XXX.'
+    )
+    
+  ) : ( TEST_CONTEXT = () )
+)

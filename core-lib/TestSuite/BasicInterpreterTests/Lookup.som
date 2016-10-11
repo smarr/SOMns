@@ -1,0 +1,194 @@
+class Lookup = ()(
+  public class TestClassMethodsNotBlockingOuterMethods = ()
+  (
+    public class Inner = ()
+    (
+      public bar = (^ foo)
+    ) : (
+      public foo = (^ 91)
+    )
+    public foo = ( ^ 42 )
+  )
+
+  public class TestExplicitOuterInInitializer = () (
+    public class Inner = (
+      | public f = 2 * outer TestExplicitOuterInInitializer m. |
+    )()
+    m = ( ^ 91 )
+  )
+  
+  public class TestImplicitOuterInInitializer = () (
+    public class Inner = (
+      | public f = 2 * m. |
+    )()
+    m = ( ^ 91 )
+  )
+  
+  public class TestImplicitSend = ()(
+    method: arg = ( ^ arg )
+    public bar = (
+      | s |
+      ^ method: (s := 42)
+    )
+  )
+  
+  public class TestSiblings = ()
+  (
+    public class A = ()(
+      public foo = ( ^ 42 )
+    )
+    public class B = A ()(
+      public bar = ( ^ foo + 1 )
+    )
+  )
+  
+  public class TestNesting = ()(
+    public class NS2Test12 s: aClass = (
+      | Sup = aClass. |
+    )(
+      public class Inner1 = Sup ()(
+        public class Inner11 = Sup ()(
+          public class Inner111 = Sup ()(
+            public baz = ( ^ outer Inner11 bar
+                             + outer Inner1 foo
+                             + outer NS2Test12 m )
+          )
+          public bar = ( ^ outer NS2Test12 m + outer Inner1 foo )
+        )
+
+        public foo = (
+          ^ outer NS2Test12 m
+        )
+      )
+      m = ( ^ 91 )
+    )
+  )
+  
+  public class TestInner18 s: Sup = (
+    (* This test creates a situation where the an object''s enclosing instance 
+       with respect to its class (Inner2) is an instance of the same class
+       (TestInner18) as its enclosing instance with respect to its superclass
+       (Inner1). *)
+    | SuperClass = Sup. |
+  )(
+    public class Inner1 = ()(
+      public i1 = ( ^ Inner1 )
+    )
+    public class Inner2 = SuperClass ()(
+      public i1 = ( ^ Inner1 )
+      public supI1 = ( ^ super i1 )
+    )
+  )
+  
+  public class TestSendsToPrivateMethodsWithInheritance = ()(
+    public class Inner = ()(
+      private sendMe: arg = ( ^ arg )
+  
+      public doImplicitReceiverSendToPrivateMethod = (
+        ^ sendMe: 55
+      )
+      
+      public doSelfSendToPrivateMethod = (
+        ^ sendMe: 55
+      )
+    )
+    public class SubClass = Inner ()()
+  )  
+) : (
+  (* assert 42 *)
+  public testClassMethodsNotBlockingOuterMethods = (
+    ^ self new TestClassMethodsNotBlockingOuterMethods new Inner new bar
+  )
+  
+  (* assert 182 *)
+  public testExplicitOuterInInitializer = (
+    ^ self new TestExplicitOuterInInitializer new Inner new f
+  )
+  
+  (* assert 182 *)
+  public testImplicitOuterInInitializer = (
+    ^ self new TestImplicitOuterInInitializer new Inner new f
+  )
+  
+  (* assert 42 *)
+  public testImplicitSend = (
+    ^ self new TestImplicitSend new bar
+  )
+  
+  (* assert 42 *)
+  public testSiblingLookupA = (
+    ^ self new TestSiblings new B new foo
+  )
+  
+  (* assert 43 *)
+  public testSiblingLookupB = (
+    ^ self new TestSiblings new B new bar
+  )
+  
+  (* assert 91 *)
+  public testNesting1 = (
+    | o |
+    o := self new TestNesting new NS2Test12 s: Object.
+    o Inner1 == o Inner1 ifFalse: [ ^ #error ].
+    ^ o Inner1 new foo
+  )
+  
+  (* assert 182 *)
+  public testNesting2 = (
+    | o p |
+    o := self new TestNesting new NS2Test12 s: Object.
+    p := o Inner1 new.
+    p Inner11 == p Inner11 ifFalse: [ ^ #error ].
+    ^ p Inner11 new bar
+  )
+  
+  (* assert 364 *)
+  public testNesting3 = (
+    | o p q |
+    o := self new TestNesting new NS2Test12 s: Object.
+    p := o Inner1 new.
+    q := p Inner11 new.
+    q Inner111 == q Inner111 ifFalse: [ ^ #error ].
+    ^ q Inner111 new baz
+  )
+  
+  public testInner18 = (
+    | o1 o2 o1i1 o1i2 o2i1 o2i2 innerKlass11 innerKlass12 innerKlass21 innerKlass22 |
+    o1 := self new TestInner18 s: Object.
+    o2 := self new TestInner18 s: o1 Inner1.
+    o1i1 := o1 Inner1 new.
+    o1i2 := o1 Inner2 new.
+    o2i1 := o2 Inner1 new.
+    o2i2 := o2 Inner2 new.
+    innerKlass11 := o1 Inner1.
+    innerKlass12 := o1 Inner2.
+    innerKlass21 := o2 Inner1.
+    innerKlass22 := o2 Inner2.
+
+    o1 Inner1 == o1i1 i1 ifFalse: [ ^ 'Assertion failed: o1 Inner1 = o1i1 i1' ].
+    o1 Inner1 == o1i2 i1 ifFalse: [ ^ 'Assertion failed: o1 Inner1 = o1i2 i1' ].
+    o2 Inner1 == o2i1 i1 ifFalse: [ ^ 'Assertion failed: o2 Inner1 = o2i1 i1' ].
+    o2 Inner1 == o2i2 i1 ifFalse: [ ^ 'Assertion failed: o2 Inner1 = o2i2 i1' ].
+    o1 Inner1 == o1i2 i1 ifFalse: [ ^ 'Assertion failed: o1 Inner1 = o1i2 i1' ].
+    o1 Inner1 == o2i2 supI1 ifFalse: [ ^ 'Assertion failed: o1 Inner1 = o2i2 supI1' ].
+    (o1 Inner1 == o2 Inner1) ifTrue: [ ^ 'Assertion failed: o1 Inner1 ~= o2 Inner1' ].
+    ^ 999
+  )
+  
+  public testImplicitReceiverSendToPrivateMethod = (
+    ^ self new TestSendsToPrivateMethodsWithInheritance new Inner new doImplicitReceiverSendToPrivateMethod
+  )
+  
+  public testSelfSendToPrivateMethod = (
+    ^ self new TestSendsToPrivateMethodsWithInheritance new Inner new doSelfSendToPrivateMethod
+  )
+  
+  public testImplicitReceiverSendToPrivateMethodFromSubclass = (
+    ^ self new TestSendsToPrivateMethodsWithInheritance new SubClass new doImplicitReceiverSendToPrivateMethod
+  )
+  
+  public testSelfSendToPrivateMethodFromSubclass = (
+    ^ self new TestSendsToPrivateMethodsWithInheritance new SubClass new doSelfSendToPrivateMethod
+  )
+  
+)

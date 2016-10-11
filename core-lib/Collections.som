@@ -1,0 +1,345 @@
+(* Copyright (c) 2001-2015 see AUTHORS file
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the 'Software'), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*)
+class Collections usingKernel: kernel = Value (
+| private Array  = kernel Array. 
+  private Pair   = kernel Pair.
+  private Vector = kernel Vector.
+  private initialSize = 10.
+  private initialCapacity = 16.
+|
+)(
+  public class Set new: size = (
+  | public items ::= Vector new: size. |
+  ) (
+
+    public = otherSet = (
+      self size = otherSet size ifFalse: [^ false ].
+      
+      self do: [:item | (otherSet contains: item) ifFalse: [^ false]. ].
+      
+      ^ true.
+    )
+
+    public add: anObject = (
+      (self contains: anObject)
+        ifFalse: [ items append: anObject ]
+    )
+    
+    public addAll: aCollection = (
+      aCollection do: [:each |
+        self add: each]
+    )
+    
+    public union: aCollection = (
+      | new |
+      new := Set new.
+      new addAll: self.
+      new addAll: aCollection.
+      ^ new
+    )
+    
+    public intersection: aCollection = (
+      | new |
+      new := Set new.
+      self do: [:it | 
+          (aCollection contains: it) ifTrue: [ new add: it ]].
+      ^ new
+    )
+    
+    public - aCollection = ( (* set difference *)
+      | new |
+      new := Set new.
+      self do: [:it |
+          (aCollection contains: it) ifFalse: [ new add: it ]].
+      ^ new
+    )
+    
+    public contains: anObject = (
+      items do: [ :it | it = anObject ifTrue: [ ^ true ] ].
+      ^ false
+    )
+    
+    public remove: anObject = (
+      | newItems |
+      newItems := Vector new.
+      [ items isEmpty ]
+        whileFalse: [ | it |
+          it := items remove.
+          it = anObject ifFalse: [ newItems append: it ] ].
+      items := newItems
+    )
+    
+    (* Sets do not have the notion of ordering, but
+       for convenience we provide those accessors *)
+    public first = (
+      ^ items at: 1
+    )
+    
+    public isEmpty = (
+      ^ items isEmpty
+    )
+    
+    (* Iteration *)
+    public do: block = ( items do: block )
+    
+    'Collection'
+    public collect: block = ( | coll |
+      coll := Vector new.
+      self do: [ :e | coll append: (block value: e) ].
+      ^coll
+    )
+    
+    'Printing'
+    public println = (
+      '(' print.
+      self do: [ :it | '(' print. it print. ')' print ].
+      ')' println
+    )
+
+    public asString = (
+      | result |
+      result := 'a Set('.
+      items do: [:e | result := result + e asString + ', '].
+      result := result + ')'.
+      ^ result
+    )
+    
+    public size = (
+      ^ items size
+    )
+    
+    (* preserves capacity *)
+    public removeAll = (
+      items removeAll
+    )
+  ) : (
+    public new = ( ^ self new: initialSize )
+  )
+  
+  public class IdentitySet new: size = Set new: size ()(
+    public contains: anObject = (
+      items do: [ :it | it == anObject ifTrue: [ ^ true ] ].
+      ^ false
+    )
+  ) : (
+    public new = ( ^ self new: initialSize )
+  )
+
+  public class Dictionary new: size = (
+  | protected buckets ::= Array new: size.
+    protected size_   ::= 0.
+  |)(
+    protected class Entry new: hash key: key value: val next: next = (
+    | public hash  = hash.
+      public key   = key.
+      public value ::= val.
+      public next  ::= next.
+    |)(
+      public match: aHash key: aKey = (
+        ^ hash = aHash and: [key = aKey]
+      )
+    )
+
+    private hash: key = (
+      | hash |
+      key isNil ifTrue: [ ^ 0 ].
+      hash := key hashcode.
+      ^ hash bitXor: (hash >>> 16)
+    )
+    
+    private bucketIdx: hash = (
+      ^ 1 + ((buckets size - 1) & hash)
+    )
+    
+    private bucket: hash = (
+      ^ buckets at: (bucketIdx: hash)
+    )
+
+    public at: aKey = (
+      ^ at: aKey ifAbsent: nil
+    )
+    
+    public at: aKey ifAbsent: aBlock = (
+      | hash e |
+      hash := hash: aKey.
+      e := bucket: hash.
+    
+      [ e notNil ] whileTrue: [
+        (e match: hash key: aKey)
+          ifTrue: [ ^ e value ].
+        e := e next ].
+      ^ aBlock value
+    )
+
+    public containsKey: aKey = (
+      | hash e |
+      hash := hash: aKey.
+      e := bucket: hash.
+    
+      [ e notNil ] whileTrue: [
+        (e match: hash key: aKey)
+          ifTrue: [ ^ true ].
+        e := e next ].
+      ^ false
+    )
+    
+    public at: aKey put: aVal = (
+      | hash i current |
+      hash := hash: aKey.
+      i := bucketIdx: hash.
+      current := buckets at: i.
+      
+      current isNil
+        ifTrue: [
+          buckets at: i put: (newEntry: aKey value: aVal hash: hash).
+          size_ := size_ + 1 ]
+        ifFalse: [
+          insertBucketEntry: aKey value: aVal hash: hash head: current ].
+
+
+      size_ > buckets size ifTrue: [ resize ]
+    )
+
+    protected newEntry: aKey value: value hash: hash = (
+      ^ Entry new: hash key: aKey value: value next: nil
+    )
+
+    private insertBucketEntry: key value: value hash: hash head: head = (
+      | current |
+      current := head.
+      
+      [true] whileTrue: [
+        (current match: hash key: key) ifTrue: [
+          current value: value.
+          ^ self ].
+        current next isNil ifTrue: [
+          size_ := size_ + 1.
+          current next: (newEntry: key value: value hash: hash).
+          ^ self ].
+        current := current next ]
+    )
+
+    private resize = (
+      | oldStorage |
+      oldStorage := buckets.
+      buckets := Array new: oldStorage size * 2.
+      transferEntries: oldStorage
+    )
+
+    private transferEntries: oldStorage = (
+      1 to: oldStorage size do: [:i |
+        | current |
+        current := oldStorage at: i.
+        current notNil ifTrue: [
+          oldStorage at: i put: nil.
+          current next isNil
+            ifTrue: [
+              buckets at: 1 + (current hash & (buckets size - 1)) put: current ]
+            ifFalse: [
+              splitBucket: oldStorage bucket: i head: current ] ] ]
+    )
+
+    private splitBucket: oldStorage bucket: i head: head = (
+      | loHead loTail hiHead hiTail current |
+      loHead := nil. loTail := nil.
+      hiHead := nil. hiTail := nil.
+      current := head.
+
+      [current notNil] whileTrue: [
+        (current hash & oldStorage size) = 0
+          ifTrue: [
+            loTail isNil
+              ifTrue:  [ loHead := current ]
+              ifFalse: [ loTail next: current ].
+            loTail := current ]
+          ifFalse: [
+            hiTail isNil
+              ifTrue:  [ hiHead := current ]
+              ifFalse: [ hiTail next: current ].
+            hiTail := current ].
+        current := current next ].
+    
+      loTail notNil ifTrue: [
+        loTail next: nil.
+        buckets at: i put: loHead ].
+      hiTail notNil ifTrue: [
+        hiTail next: nil.
+        buckets at: i + oldStorage size put: hiHead ]
+    )
+
+    public size      = ( ^ size_ )
+    public isEmpty   = ( ^ size_ = 0 )
+    public removeAll = (
+      buckets := Array new: buckets size.
+      size_ := 0.
+    )
+    
+    public keys = (
+      | keys |
+      keys := Vector new: size_.
+      buckets do: [:b |
+        | current |
+        current := b.
+        [ current notNil ] whileTrue: [
+          keys append: current key.
+          current := current next ] ].
+      ^ keys
+    )
+    
+    public do: block = (
+      buckets do: [:b |
+        | current |
+        current := b.
+        [ current notNil ] whileTrue: [
+          block value: current value.
+          current := current next ] ].
+    )
+
+    public values = (
+      | values |
+      values := Vector new: size_.
+      buckets do: [:b |
+        | current |
+        current := b.
+        [ current notNil ] whileTrue: [
+          values append: current value.
+          current := current next ] ].
+      ^ values
+    )
+  ) : (
+    public new = ( ^ self new: initialCapacity )
+  )
+  
+  public class IdentityDictionary new: size = Dictionary new: size ()(
+    protected class IdEntry new: hash key: key value: val next: next = Entry new: hash key: key value: val next: next (
+    )(
+      public match: aHash key: aKey = (
+        ^ hash = aHash and: [key == aKey]
+      )
+    )
+    
+    protected newEntry: aKey value: value hash: hash = (
+      ^ IdEntry new: hash key: aKey value: value next: nil
+    )
+  ) : (
+    public new = ( ^ self new: initialCapacity )
+  )
+)

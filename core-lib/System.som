@@ -1,0 +1,52 @@
+(* Copyright (c) 2001-2015 see AUTHORS file
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the 'Software'), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*)
+class System usingVmMirror: vmMirror = Value (
+| private vmMirror = vmMirror. |
+  vmMirror systemModuleObject: self.
+)(
+  'Exiting'
+  public exit: error  = ( vmMirror exit: error )
+  public exit         = ( self exit: 0 )
+  public error: msg   = ( self printNewline: 'ERROR: ' + msg. self exit: 1 )
+  
+  'VM'
+  public arguments    = ( ^ vmMirror vmArguments: nil )
+  public loadModule: filename = ( ^ vmMirror load: filename )
+  public loadModule: filename nextTo: moduleObj = ( ^ vmMirror load: filename nextTo: moduleObj )
+  
+  'Printing'
+  public printString: string = ( vmMirror printString: string )
+  public printNewline: str   = ( vmMirror printNewline: str )
+  
+  'Time'
+  public time  = ( ^ vmMirror systemTime: nil  )
+  public ticks = ( ^ vmMirror systemTicks: nil ) (* returns the microseconds since start *)
+  
+  (* Force Garbage Collection *)
+  public fullGC = ( ^ vmMirror systemGC: nil )
+  
+  (* Export given object with given name (string or symbol) to external users.
+     At the moment, the only external user is the Truffle polyglot engine. *)
+  public export: obj as: name = ( ^ vmMirror systemExport: obj as: name )
+  
+  (* Applying a foreign function *)
+  public apply: foreignFunction with: args = ( ^ vmMirror systemApply: foreignFunction with: args )
+)
