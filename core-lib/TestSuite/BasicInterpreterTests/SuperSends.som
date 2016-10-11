@@ -1,0 +1,130 @@
+class SuperSends = ()(
+  public class TestSuperClassClause1 = ()(
+  	public class SuperHierarchy = ()(
+  		public class Inner1 new: x = (| v = x. |)(
+  			public foo = ( ^ v + 42 )
+  		)
+      public makeInnerInstance = ( ^ (Inner1 new: 1) foo )
+  	)
+
+  	public class SubHierarchy = SuperHierarchy ()(
+  		public class Inner1 new: x = super Inner1 new: x ()(
+  			public foo = ( ^ v * super foo )		
+  		)
+  	)
+  )
+  
+  public class TestSuperClassClause2 = ()(
+  	public class InnerHierarchy = ()(	
+  		public class Inner1 new: x = (| v = x. |)(
+  			public foo = ( ^ v + 42 )
+  		)
+  		public class InnerInnerHierarchy = ()(
+  			public class Inner1 new: x = outer InnerHierarchy Inner1 new: x ()(
+  				public foo = ( ^ v * super foo )
+  			)
+  		)
+  	)
+  )
+  
+  public class TestSuperClassClause3 = ()(
+  	public class Inner0 new: x =  (| v = x. |)(
+  		public foo = ( ^ v + 42 )
+  	)
+
+  	public class Inner1 new: x = outer TestSuperClassClause3 Inner0 new: x ()(
+  		public foo = ( ^ v * super foo )		
+  	)
+  )
+  
+  public class TestSuperClassClause4 = ()(
+  	public class Inner0 new: x = (| v = x. |)(
+  		public foo = ( ^ v + 42 )
+  	)
+  	public class Inner1 new: x = self Inner0 new: x ()(
+  		public foo = ( ^ v * super foo )		
+  	)
+  )
+  
+  public class TestSuperInBlock = ()(
+    public class Inner = ()(
+      public foo = ( ^ 42 )
+    )
+    public class Supclass = Inner ()(
+      public oneBlock = ( ^ [super foo] value )
+      public twoBlocks = ( ^ [[super foo] value] value )
+    )
+  )
+) : (
+  (* assert 44 *)
+  public testSuperClassClause1A = (
+    | o superklass superInstance |
+    o := self new TestSuperClassClause1 new.
+		superklass := o SuperHierarchy.
+		superInstance := superklass new.
+    superInstance Inner1 == superInstance Inner1 ifFalse: [ ^ #error ].
+    ^ (superInstance Inner1 new: 2) foo
+  )
+  
+  (* assert 88 *)
+  public testSuperClassClause1B = (
+    | o subklass subInstance |
+    o := self new TestSuperClassClause1 new.
+    subklass := o SubHierarchy.
+  	subInstance := subklass new.
+    subInstance Inner1 == subInstance Inner1 ifFalse: [ ^ #error ].
+    ^ (subInstance Inner1 new: 2) foo
+  )
+
+  (* assert 44 *)
+  public testSuperClassClause2A = (
+    | innerklass innerInstance |
+  	innerklass := self new TestSuperClassClause2 new InnerHierarchy.
+  	innerInstance := innerklass new.
+    innerInstance Inner1 == innerInstance Inner1 ifFalse: [ ^ #error ].
+    ^ (innerInstance Inner1 new: 2) foo
+  )
+  
+  (* assert 88 *)
+  public testSuperClassClause2B = (
+		| innerklass innerInstance innerInnerklass innerInnerInstance |
+		innerklass := self new TestSuperClassClause2 new InnerHierarchy.
+		innerInstance := innerklass new.
+		innerInnerklass := innerInstance InnerInnerHierarchy.
+		innerInnerInstance := innerInnerklass new.
+    innerInnerInstance Inner1 == innerInnerInstance Inner1 ifFalse: [ ^ #error ].
+    ^ (innerInnerInstance Inner1 new: 2) foo
+	)
+  
+  (* assert 44 *)
+  public testSuperClassClause3A = (
+    | innerklass0 |
+    innerklass0 := self new TestSuperClassClause3 new Inner0.
+    ^ (innerklass0 new: 2) foo
+  )
+  
+  (* assert 88 *)
+  public testSuperClassClause3B = (
+    | innerklass1 |
+    innerklass1 := self new TestSuperClassClause3 new Inner1.
+    ^ (innerklass1 new: 2) foo
+  )
+  
+  (* assert 44 *)
+  public testSuperClassClause4A = (
+    ^ (self new TestSuperClassClause4 new Inner0 new: 2) foo
+  )
+  
+  (* assert 88 *)
+  public testSuperClassClause4B = (
+    ^ (self new TestSuperClassClause4 new Inner1 new: 2) foo
+  )
+  
+  public testSuperInBlock1 = (
+    ^ self new TestSuperInBlock new Supclass new oneBlock
+  )
+  
+  public testSuperInBlock2 = (
+    ^ self new TestSuperInBlock new Supclass new twoBlocks
+  )
+)
