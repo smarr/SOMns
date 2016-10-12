@@ -1,0 +1,141 @@
+(* Copyright (c) 2015 see AUTHORS file
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the 'Software'), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*)
+class Mirrors usingVmMirror: vmMirror = Value (
+  | private vmMirror = vmMirror. |
+)(
+  public class ClassMirror reflecting: obj = (
+    (* obj is an instance, of which we want to reflect on its class *)
+    | private obj = obj. |
+  )(
+    (*:TODO: Not happy with the naming of the mirror methods yet, 
+             they are not unambiguous, about whether they apply to the object,
+             or to the object class *)
+    public name       = ( ^ vmMirror mirrorAClassesName: obj  )
+    public classObject= ( ^ vmMirror objClass: obj         )
+    public classMirror= ( ^ ClassMirror reflecting: classObject )
+    public superclass = ( ^ vmMirror mirrorSuperclass: obj )
+    public slots      = ( ^ vmMirror mirrorSlots: obj      )
+
+    public classDefinition = (
+      | classDefHandle |
+      classDefHandle := vmMirror classDefinition: classObject.
+      ^ ClassDefinitionMirror on: classDefHandle
+    )
+
+    public methods = (
+      | methods |
+      methods := vmMirror objMethods: obj.
+      ^ methods collect: [:m | MethodMirror reflecting: m ]
+    )
+
+    public nestedClasses = (
+      | classes |
+      classes := vmMirror objNestedClasses: obj.
+      ^ classes collect: [:c | ClassMirror reflecting: c ]
+    )
+
+    (*TODO: change, this is not how it works, or should be done:
+       public selectors  = ( ^ self methods collect: [:inv | inv signature ] ) *)
+    
+    (*TODO:old
+    public hasMethod: aSymbol = (
+      self methods do: [ :m |
+        m signature = aSymbol ifTrue: [ ^true ] ].
+      ^ false
+    )*)
+    
+    public canUnderstand: aSymbol = (
+      ^ vmMirror obj: obj respondsTo: aSymbol
+    )
+  )
+  
+  private class ClassDefinitionMirror on: classDefHandle = (
+    | private classDefHandle = classDefHandle. |
+  )(
+    public name = ( ^ vmMirror classDefName: classDefHandle )
+    public methods = (
+      | methods |
+      methods := vmMirror classDefMethods: classDefHandle.
+      ^ methods collect: [:m | MethodMirror reflecting: m ]
+    )
+    
+    public classDefinition = ( ^ self )
+    
+    public nestedClassDefinitions = (
+      | classes |
+      classes := vmMirror classDefNestedClassDefinitions: classDefHandle.
+      ^ classes collect: [:c | ClassDefinitionMirror on: c ]
+    )
+    
+    public hasFactoryMethod: aSelector = (
+      ^ vmMirror classDef: classDefHandle hasFactoryMethod: aSelector
+    )
+
+    public factoryMethods = ( self notYetImplemented )
+  )
+  
+  public class ObjectMirror reflecting: obj = (
+    | private obj = obj. |
+  )(
+    public className   = ( ^ vmMirror objClassName: obj  )
+    public classMirror = ( ^ ClassMirror reflecting: obj )
+    
+    public slotValue: name = ( ^ vmMirror slot: name on: obj )
+    public slotValue: name put: val = ( ^ vmMirror slot: name on: obj put: val )
+    
+    public perform: selector = ( ^ vmMirror obj: obj perform: selector )
+    public perform: selector withArguments: args = (
+      ^ vmMirror obj: obj perform: selector withArguments: args
+    )
+    
+    public respondsTo: selector = (
+      | cls |
+      cls := self classMirror.
+      (cls hasMethod: selector)
+        ifTrue:  [ ^ true ]
+        ifFalse: [ | superCls |
+          superCls := cls superclass.
+          [ superCls isNil ] whileFalse: [
+            (superCls hasMethod: selector)
+              ifTrue:  [ ^ true ]
+              ifFalse: [ superCls := superCls superclass ] ].
+          ^ false ]
+    )
+    
+    public isValue = ( ^ vmMirror objIsValue: obj )
+  )
+  
+  public class SlotMirror = ()(
+  )
+  
+  public class MethodMirror reflecting: mthd = (
+  | private mthd = mthd. |
+  )(
+    public name = ( ^ vmMirror methodName: mthd )
+    public holder = ( ^ vmMirror methodHolder:   mthd )
+    
+    public invokeOn: obj with: args = ( ^ vmMirror method: mthd invokeOn: obj with: args )
+    
+    'Debugging'
+    public asString = ( ^self holder asString + '>>' + self signature asString )
+    
+  )
+)

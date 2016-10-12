@@ -1,0 +1,437 @@
+class ActorTests usingPlatform: platform testFramework: minitest = Value (
+| private TestContext = minitest TestContext.
+  private AsyncTestContext = minitest AsyncTestContext.
+  private actors      = platform actors.
+  private Exception   = platform kernel Exception.
+  private Vector      = platform kernel Vector.
+  private Array       = platform kernel Array.
+  private ObjectMirror = platform mirrors ObjectMirror.
+|
+)(
+  class Bob meet: a = (
+    | private alice = a. |
+  ) (
+    public answerFarRef   = ( ^ alice        )
+    public answerNearRef  = ( ^ self         )
+    public answerValue    = ( ^ 42           )
+    public raiseException = ( ^ Error signal )
+  )
+
+  class DeepChain = () (
+    public nestedResolutionWithDepth: n = (
+      ^ n > 0 ifTrue:  [ self <-: nestedResolutionWithDepth: n - 1 ]
+              ifFalse: [ 'done' ]
+    )
+  )
+
+  class Math = () (
+    public factorial: n = (
+      n = 0 ifTrue: [ ^ 1 ].
+      ^ (self <-: factorial: n - 1) <-: * n
+    )
+
+(* Currently not supported because SOMns's addition doesn't unwrap promises.
+   Not sure this is essential/generally useful.
+    public fibonacci: n = (
+      n = 0 ifTrue: [ ^ 0 ].
+      n = 1 ifTrue: [ ^ 1 ].
+      ^ (self <-: fibonacci: n - 1) <-: + (self <-: fibonacci: n - 2)
+    )
+*)
+    public isPositive: n = ( ^ n > 0 )
+  )
+
+  class Ping = (
+    | public other |
+  ) (
+    public pong: n sum: m = (
+      n <= 0 ifTrue: [ ^ m ].
+      ^ other <-: ping: n - 1 sum: n + m
+    )
+
+    public start = (
+      ^ other <-: ping: 10 sum: 0
+    )
+  )
+
+  class Pong = (
+    | public other |
+  ) (
+    public ping: n sum: m = (
+      ^ other <-: pong: n - 1 sum: n + m
+    )
+  )
+
+  class Recorder = (
+    | public recording ::= ''. |
+  ) (
+    public append: x = (
+      recording := recording + x.
+      ^ recording length
+    )
+
+    public fail = (
+      Exception signal
+    )
+  )
+
+  class Cell new: val = (
+    | public val ::= val. |
+  )(
+    public valIsFarRef = (
+      ^ (ObjectMirror reflecting: val) className = 'FarReference'
+    )
+  )
+
+  public class BasicsAndWrapping = AsyncTestContext ()(
+    public testFarReferenceCannotBeInstantiated = (
+      should: [actors FarReference new] signal: Exception
+    )
+
+    public testCreateActorReturnsFarReference = (
+      | ref |
+      ref := (actors createActorFromValue: DeepChain).
+      assert: (ObjectMirror reflecting: ref) className equals: 'FarReference'.
+    )
+
+    public testCreatePromise = (
+      | promisePair |
+      promisePair := actors createPromisePair.
+      assert: (ObjectMirror reflecting: promisePair promise)  className equals: 'Promise'.
+      assert: (ObjectMirror reflecting: promisePair resolver) className equals: 'Resolver'.
+    )
+
+    public testEventualSendReturnsPromise = (
+      | refCellClass cellPromise |
+      refCellClass := (actors createActorFromValue: Cell).
+      cellPromise  := refCellClass <-: new: 4.
+      assert: (ObjectMirror reflecting: cellPromise) className equals: 'Promise'.
+    )
+
+    public testWhenResolvedOnPromiseReturnsPromise = (
+      | refCellClass cellPromise result |
+      refCellClass := (actors createActorFromValue: Cell).
+      cellPromise  := refCellClass <-: new: 5.
+      result := cellPromise whenResolved: [:r | 5].
+      assert: (ObjectMirror reflecting: result) className equals: 'Promise'.
+    )
+
+    public testAsyncTurnResultsInFarRef= (
+      | bob |
+      bob := (actors createActorFromValue: Bob) <-: meet: self.
+      ^ assert: bob <-: answerFarRef resolvedWithObject: self.
+    )
+
+    public testAsyncTurnResultsInNearRef= (
+      | bobP r |
+      bobP := (actors createActorFromValue: Bob) <-: meet: self.
+      r := bobP whenResolved: [:bob |
+          (bob <-: answerNearRef) 
+            whenResolved: [:bob2 | bob2 = bob ]].
+      ^ assert: r resolvedWith: true.
+    )
+
+    public testAsyncTurnResultsInValue = (
+      | bob |
+      bob := (actors createActorFromValue: Bob) <-: meet: self. 
+      ^ assert: (bob <-: answerValue) resolvedWith: 42.
+    )
+    
+    public testAsyncCellInstanceInActorIsFarRef = (
+      | p |
+      p := (actors createActorFromValue: Cell) <-: new: 4.
+      ^ p whenResolved: [:cellFRef |
+        assert: (ObjectMirror reflecting: cellFRef) className equals: 'FarReference'
+      ]
+    )
+    
+    public testAsyncCellPassedAsFarRef = (
+      | cellLocal p promisePair |
+      cellLocal := Cell new: 0.
+      promisePair := actors createPromisePair.
+      
+      p := (actors createActorFromValue: Cell) <-: new: cellLocal.
+      p whenResolved: [:cellFRef |
+        (cellFRef <-: valIsFarRef) whenResolved: [:isFRef |
+          assert: isFRef description: 'should be far reference'.
+          promisePair resolve: #done.
+        ]
+      ].
+      ^ promisePair promise
+    )
+
+    public testAsyncCellReturnedDirect = (
+      | cellLocal promisePair p |
+      promisePair := actors createPromisePair.
+      cellLocal := Cell new: 0.
+      p := (actors createActorFromValue: Cell) <-: new: cellLocal.
+      p whenResolved: [:cellFRef |
+        (cellFRef <-: val) whenResolved: [:c |
+          assert: c is: cellLocal.
+          promisePair resolve: #done
+        ]
+      ].
+      ^ promisePair promise
+    )
+    
+    public testIdentityOfFarRefs = (
+      | pC1 pC2 c1 c2 pp |
+      pp := actors createPromisePair.
+      
+      pC1 := (actors createActorFromValue: Cell) <-: new: 4.
+      pC2 := (actors createActorFromValue: Cell) <-: new: 5.
+      
+      pC1 whenResolved: [:cellFRef |
+        c1 := cellFRef.
+        pC2 whenResolved: [:c2FRef |
+          deny: c2FRef == c1.
+          assert: c1 == cellFRef.
+        ].
+        pp resolve: nil
+      ].
+      ^ pp promise
+    )
+    
+  ) : (
+    TEST_CONTEXT = ()
+  )
+  
+  public class PromiseResolution = AsyncTestContext ()(
+    public testAsyncWhenResolvedPromiseResolvesToBlockReturnValue = (
+      | promisePair wrPromise assertPromise |
+      promisePair := actors createPromisePair.
+      wrPromise := promisePair promise whenResolved: [:v | v ].
+      
+      assertPromise := wrPromise whenResolved: [:val |
+        assert: val equals: 5.
+      ].
+      
+      promisePair resolve: 5.
+      ^ assertPromise
+    )
+
+    public testAsyncPromiseOfPromiseResolvesToFinalValue = (
+      | promisePair1 promisePair2 assertProm |
+      (* Chained promises should be flattened *)
+      promisePair1 := actors createPromisePair.
+      promisePair2 := actors createPromisePair.
+      
+      assertProm := promisePair1 promise whenResolved: [:r |
+        assert: r equals: 500.
+      ].
+      
+      (* This should not yet resolve the promise, instead, it should
+         essentially forward it to the 2nd promise and wait for its resolution. *)
+      promisePair1 resolve: promisePair2 promise.
+      
+      promisePair2 resolve: 500.
+      ^ assertProm
+    )
+
+    public testAsyncDeeplyChainedResolution = (
+      (* A good implementation should handle this in constant rather than linear space. *)
+      | r |
+      r := (actors createActorFromValue: DeepChain) <-: new.
+      ^ assert: (r <-: nestedResolutionWithDepth: 10) resolvedWith: 'done'.
+    )
+
+    public testAsyncFactorial = (
+      | math |
+      math := (actors createActorFromValue: Math) <-: new.
+      ^ assert: (math <-: factorial: 9) resolvedWith: 362880.
+    )
+(*  Currently not supported because SOMns's addition doesn't unwrap promises.
+    Not sure this is essential/generally useful.
+    
+    public testAsyncFibonacci = (
+      | math result |
+      math := (actors createActorFromValue: Math) <-: new.
+      ^ assert: (math <-: fibonacci: 9) resolvedWith: 34
+    )
+*) 
+    public testAsyncFifo = (
+      | recorder r1 r2 r3 r4 |
+      recorder := (actors createActorFromValue: Recorder) <-: new.
+      r1 := recorder <-: append: 'a'.
+      r2 := recorder <-: append: 'b'.
+      r3 := recorder <-: append: 'c'.
+      r4 := recorder <-: append: 'd'.
+
+    ^ (assert: (recorder <-: recording) resolvedWith: 'abcd'),
+      (assert: r1 resolvedWith: 1),
+      (assert: r2 resolvedWith: 2),
+      (assert: r3 resolvedWith: 3),
+      (assert: r4 resolvedWith: 4)
+    )  
+(*
+    public testFifoFailstop = (
+      | recorder recorderFork r1 r2 r3 r4 r5 |
+      recorder := (actors createActorFromValue: Recorder) <-: new.
+      recorderFork := recorder <-: yourself.
+              
+      r1 := recorder <-: append: 'a'.
+      r2 := recorder <-: append: 'b'.
+      r3 := recorder <-: fail.
+      r4 := recorder <-: append: 'c'.
+      r5 := recorder <-: append: 'd'.
+      assert: r3 smashedWith: Error. (* Do this first because our asserts are blocking and we need to register the error handler before the next turn. *)
+      assert: (recorderFork <-: recording) resolvedWith: 'abcd'.
+      assert: r1 resolvedWith: 1.
+      assert: r2 resolvedWith: 2.
+      assert: r4 smashedWith: Error.
+      assert: r5 smashedWith: Error.
+    )
+*)
+    public testAsyncIfTrue = (
+      | math tookTruePath result |
+      math := (actors createActorFromValue: Math) <-: new.
+      tookTruePath := false.
+
+      result := (math <-: isPositive: 9) <-: ifTrue: [tookTruePath := true. 7].
+      ^ result whenResolved: [:r | 
+        assert: r equals: 7.
+        assert: tookTruePath.
+      ]
+    )
+
+    public testAsyncNestedResolutionOrder = (
+      | a b last x tmp |
+      a    := actors createPromisePair.
+      b    := actors createPromisePair.
+      last := actors createPromisePair.
+      x := Vector new.
+
+      a promise whenResolved: [:r | x append: 'a1'].
+      b promise whenResolved: [:r | x append: 'b2'].
+
+      tmp := a promise whenResolved: [:r | x append: 'a3'].
+      tmp whenResolved: [:r | x append: 'a3a'].
+      tmp whenResolved: [:r | x append: 'a3b'].
+
+      tmp := b promise whenResolved: [:r | x append: 'b4'].
+      tmp whenResolved: [:r | x append: 'b4a'].
+      tmp whenResolved: [:r | x append: 'b4b'].
+
+      b resolve: a promise.
+      tmp := a promise whenResolved: [:r | x append: 'a5'].
+      tmp whenResolved: [:r | x append: 'a5a'].
+      tmp whenResolved: [:r | x append: 'a5b'].
+
+      tmp := b promise whenResolved: [:r | x append: 'b6'].
+      tmp whenResolved: [:r | x append: 'b6a'].
+      tmp whenResolved: [:r | x append: 'b6b'].
+
+      tmp := a promise whenResolved: [:r | x append: 'a7'].
+      tmp whenResolved: [:r | x append: 'a7a'].
+      tmp whenResolved: [:r | x append: 'a7b'].
+
+      tmp := b promise whenResolved: [:r | x append: 'b8'].
+      tmp whenResolved: [:r | x append: 'b8a'].
+      tmp whenResolved: [:r | x append: 'b8b'. last resolve: x].
+      a resolve: nil.
+
+      ^ last promise whenResolved: [:vec |
+        | expected |
+        expected := Vector new.
+        expected, #a1, #a3, #a5, #a7, #b2, #b4, #b6, #b8, #a3a, #a3b, #a5a, #a5b, #a7a, #a7b, #b4a, #b4b, #b6a, #b6b, #b8a, #b8b.
+        
+        assert: vec size equals: expected size.
+        
+        vec doIndexes: [:i |
+          assert: (vec at: i) equals: (expected at: i) ]
+      ]
+    )
+
+    public testAsyncPingPong = (
+      | ping pong result |
+      ping := (actors createActorFromValue: Ping) <-: new.
+      pong := (actors createActorFromValue: Pong) <-: new.
+
+      ping <-: other: pong.
+      pong <-: other: ping.
+      ^ assert: (ping <-: start) resolvedWith: 55.
+    )
+(*
+    public testTurnResultsInException = (
+      | bob |
+      bob := (actors createActorFromValue: Bob) <-: meet: self.
+      assert: (bob <-: raiseException) smashedWith: Error.
+    )
+*)
+  ) : (
+    TEST_CONTEXT = ()
+  )
+  
+  public class Iteration = AsyncTestContext ()(
+    public testAsyncCollectionDo = (
+      | i arr prom |
+      i := 0.
+      arr := Array new: 5.
+      
+      prom := actors async: arr do: [:e |
+        | p |
+        (* Block needs to return promise, because it is meant for things
+           that are completed asynchronously. *)
+        p := actors createPromisePair.
+        p resolve: i.
+        i := i + 1.
+        p promise
+      ].
+      
+      ^ prom whenResolved: [:r | assert: i equals: 5 ]
+    )
+    
+    public testAsyncToDo = (
+      | v prom |
+      v := Vector new.
+      
+      prom := actors async: 1 to: 10 do: [:i |
+        | p |
+        p := actors createPromisePair.
+        p resolve: i.
+        v append: i.
+        p promise ].
+      
+      ^ prom whenResolved: [:r |
+        assert: v size equals: 10.
+        1 to: 10 do: [:i |
+          assert: (v at: i) equals: i ] ]
+    )
+    
+    public testAsyncWhileTrue = (
+      | cnt prom |
+      cnt := 0.
+      
+      prom := actors async: [cnt < 10] whileTrue: [
+        | p |
+        cnt := cnt + 1.
+        p := actors createPromisePair.
+        p resolve: cnt.
+        p promise ].
+
+      ^ prom whenResolved: [:r | 
+        assert: cnt equals: 10.
+      ]
+    )
+    
+    public testAsyncWhileTrueCond = (
+      | cnt prom cntCond |
+      cnt := 0.
+      cntCond := 0.
+      
+      prom := actors async: [cntCond := cntCond + 1. cnt < 10] whileTrue: [
+        | p |
+        cnt := cnt + 1.
+        p := actors createPromisePair.
+        p resolve: cnt.
+        p promise ].
+
+      ^ prom whenResolved: [:r | 
+        assert: cnt equals: 10.
+        assert: cntCond equals: 11.
+      ]
+    )
+  ) : (
+    TEST_CONTEXT = ()
+  )
+)

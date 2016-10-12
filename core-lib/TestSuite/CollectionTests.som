@@ -1,0 +1,427 @@
+(* Copyright (c) 2007-2015 see AUTHORS file
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the 'Software'), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*)
+class CollectionTests usingPlatform: platform testFramework: minitest = (
+| private TestContext = minitest TestContext.
+  private Set         = platform collections Set.
+  private Dictionary  = platform collections Dictionary.
+  private IdentityDictionary = platform collections IdentityDictionary.
+  private Array       = platform kernel Array.
+  private Vector      = platform kernel Vector.
+  private ObjectMirror= platform mirrors ObjectMirror.
+  private IndexOutOfBounds = platform kernel IndexOutOfBounds.
+|)(
+  public class ArrayTest = TestContext (
+    | a = Array new: 3. |
+    a at: 1 put: 'hello'.
+    a at: 2 put: #world.
+    a at: 3 put: 23.
+  )(
+    public testSize = (
+      self assert: 3 equals: a size
+    )
+  
+    public testAt = (
+      self assert: #world equals: (a at: 2).
+      self assert: 23     equals: (a at: 3).
+    )
+  
+    public testContains = (
+      self assert: (a contains: 23).
+      self deny:   (a contains: #notInThere).
+    )
+  
+    public testDo = (
+      | j |
+      j := 1.
+    
+      a do: [:i |
+        self assert: (a at: j) equals: i.
+        j := j + 1.
+      ]
+    )
+  
+    public testSumAndAverage = (
+      | arr |
+      arr := Array new: 3.
+      1 to: 3 do: [ :i | arr at: i put: i ].
+    
+      self assert: 6 equals: arr sum.
+      self assert: 2 equals: arr average.
+    )
+  
+    public testCopyFrom = (
+      | arr b |
+      arr := Array new: 5.
+      1 to: 5 do: [ :i | arr at: i put: i ].
+
+      b := arr copyFrom: 2 to: 4.
+      self assert: 2 equals: (b at: 1).
+      self assert: 3 equals: (b at: 2).
+      self assert: 4 equals: (b at: 3).
+    
+      b := arr copyFrom: 3.
+      self assert: 3 equals: (b at: 1).
+      self assert: 4 equals: (b at: 2).
+      self assert: 5 equals: (b at: 3).
+    )
+  
+    public testIndexOf = (
+      | arr |
+      arr := Array new: 6.
+      arr at: 1 put: #one.
+      arr at: 2 put: #two.
+      arr at: 3 put: #three.
+      arr at: 4 put: #four.
+      arr at: 5 put: #five.
+      arr at: 6 put: #one. 
+    
+      self assert: 2 equals: (arr indexOf: #two).
+      self assert: 4 equals: (arr indexOf: #four).
+      self assert: 5 equals: (arr indexOf: #five).
+    
+      self assert: nil equals: (arr indexOf: #notIncluded).
+    
+      self assert: 1 equals: (arr indexOf: #one).
+    )
+  
+    public testLastIndexOf = (
+      | arr |
+      arr := Array new: 6.
+      arr at: 1 put: #one.
+      arr at: 2 put: #two.
+      arr at: 3 put: #three.
+      arr at: 4 put: #four.
+      arr at: 5 put: #five.
+      arr at: 6 put: #one. 
+    
+      self assert: 2 equals: (arr lastIndexOf: #two).
+      self assert: 4 equals: (arr lastIndexOf: #four).
+      self assert: 5 equals: (arr lastIndexOf: #five).
+    
+      self assert: nil equals: (arr indexOf: #notIncluded).
+    
+      self assert: 6 equals: (arr lastIndexOf: #one).
+    )
+  
+    public testNewWithAll = (
+      | arr |
+      arr := Array new: 5 withAll: [1].
+      1 to: 5 do: [:i | self assert: 1 equals: (arr at: i)].
+    
+      arr := Array new: 5 withAll: 1.
+      1 to: 5 do: [:i | self assert: 1 equals: (arr at: i)].
+    )
+  
+    public testPutAllIntAndObjects = (
+      | arr o |
+      arr := Array new: 5 withAll: 5.
+      self assert: 5 equals: (arr at: 3).
+      arr at: 3 put: nil.
+      self assert: nil equals: (arr at: 3).
+    
+      o := Object new.
+      arr at: 2 put: o.
+      self assert: o is: (arr at: 2).
+    )
+  ) : (
+    TEST_CONTEXT = ()
+  )
+  
+  public class ArrayInheritanceTest = TestContext ()(
+    class MyArray new: size = Array new: size ()()
+    
+    class CustomMethodsArray new: size = Array new: size ()(
+      public add1And2 = (
+        ^ (at: 1) + (at: 2)
+      )
+    )
+    
+    class CustomFieldsArray new: size = Array new: size (
+    | public foo ::= 0.
+      public bar ::= #bar.
+    |)()
+
+    public testBasicMyArray = (
+      | arr |
+      arr := MyArray new: 10.
+      assert: arr size equals: 10.
+      assert: #MyArray equals: (ObjectMirror reflecting: arr) className.
+    )
+    
+    public testCopyMyArray = (
+      | arr cpy |
+      arr := MyArray new: 2.
+      arr at: 1 put: 11.
+      arr at: 2 put: 22.
+      
+      cpy := arr copy.
+      assert: #MyArray equals: (ObjectMirror reflecting: arr) className.
+      deny: cpy == arr.
+      assert: 11 equals: (cpy at: 1).
+      assert: 22 equals: (cpy at: 2).
+    )
+    
+    public testCustomMethods = (
+      | arr |
+      arr := CustomMethodsArray new: 3.
+      arr at: 1 put: 33.
+      arr at: 2 put: 17.
+      
+      assert: 50 equals: arr add1And2.
+    )
+    
+    public testDEACTIVATEDCustomFields = (
+      | arr |
+      (*
+      arr := CustomFieldsArray new: 10.
+      assert: 0    equals: arr foo.
+      assert: #bar equals: arr bar.
+
+      arr foo: 4.
+      arr bar: #barbar.
+
+      assert: 4    equals: arr foo.
+      assert: #barbar equals: arr bar. *)
+      'Process DEACTIVATED tests.' println.
+      ^ self
+    )
+  ) : (
+    TEST_CONTEXT = ()
+  )
+
+  public class SetTest = TestContext ()(
+    public testBasics = (
+      | a b t |
+      a := Set new.
+      b := Set new.
+
+      a add: #a.
+      b add: #b.
+
+      self deny: a = b.
+
+      t := Set new.
+      t add: #a.
+
+      self deny: a == t.        (* different objects *)
+      self assert: a equals: t. (* but with equal value *)
+    )
+    
+    public testAddAll = (
+      | a v |
+      a := Set new.
+      a add: #a.
+      a add: #b.
+      
+      v := Vector new: 4.
+      v append: #c.
+      v append: #a.
+      v append: #b.
+      v append: #d.
+      
+      a addAll: v.
+      
+      self assert: 4 equals: a size.
+      self assert: (a contains: #a).
+      self assert: (a contains: #b).
+      self assert: (a contains: #c).
+      self assert: (a contains: #d).
+    )
+    
+    public testUnion = (
+      | a b c |
+      a := Set new.
+      b := Set new.
+      a add: #a.
+      a add: #b.
+      b add: #c.
+      b add: #b.
+      
+      c := a union: b.
+
+      self deny: c == a.
+      self deny: c == b.
+      
+      self assert: 3 equals: c size.
+      self assert: (c contains: #a).
+      self assert: (c contains: #b).
+      self assert: (c contains: #c).
+    )
+  ) : ( TEST_CONTEXT = () )
+  
+  public class VectorTest = TestContext (
+    | a = Vector new. |
+
+    a append: 'hello'.
+    a append: #world.
+    a append: 23.
+  )(
+  
+    public testSize = (
+      self assert: 3 equals: a size.
+    )
+  
+    public testAt = (
+      self assert: 'hello' equals: (a at: 1).
+      self assert: #world  equals: (a at: 2).
+      self assert:     23  equals: (a at: 3).
+    )
+  
+    public testContains = (
+      self assert: (a contains: 23).
+    )
+  
+    public testDo = (
+      | j |
+      j := 1.
+      a do: [:i |
+        self assert: i equals: (a at: j).
+        j := j + 1.
+      ].
+    )
+    
+    public testIndexOutOfBoundsOutside = (
+      self should: [ a at: 0 ] signal: IndexOutOfBounds description: '0 is not a proper index, because we are 1-based'.
+
+      self assert: a size equals: 3.
+      self should: [ a at: 4 ] signal: IndexOutOfBounds description: '4 is not a proper index, because size is 3'.
+    )
+    
+    public testSelect = (
+      | v result |
+      v := Vector new.
+      v append: #t. v append: 5. v append: 55. v append: #t.
+      
+      result := v select: [:e | e = #t ].
+      
+      assert: result size    equals: 2.
+      assert: (result at: 1) equals: #t.
+      assert: (result at: 2) equals: #t.
+    )
+    
+    public testCollect = (
+      | v result |
+      v := Vector new.
+      1 to: 5 do: [:i | v append: i ].
+      
+      result := v collect: [:e | e * 2 ].
+
+      assert: result size equals: 5.
+      1 to: 5 do: [:i |
+        assert: (result at: i) equals: i * 2.
+      ].
+    )
+    
+    public testRemoveAllPreservesCapacity = (
+      | v |
+      v := Vector new: 5.
+      self assert: 5 equals: v capacity.
+      v removeAll.
+      self assert: 5 equals: v capacity.
+    )
+  ) : ( TEST_CONTEXT = () )
+  
+  public class DictionaryTest = TestContext ()(
+    public testAtAndAtPut = (
+      | dict |
+      dict := Dictionary new.
+      self assert: (dict at: #ff) equals: nil.
+      
+      dict at: #ff put: 33.
+      self assert: (dict at: #ff) equals: 33.
+
+      dict at: #ff put: 44.
+      self assert: (dict at: #ff) equals: 44.
+    )
+    
+    public testContainsKey = (
+      | dict |
+      dict := Dictionary new.
+      
+      self deny: (dict containsKey: #ff).
+      dict at: #ff put: 0.
+      self assert: (dict containsKey: #ff).
+    )
+    
+    public testKeysAndValues = (
+      | dict |
+      dict := Dictionary new.
+      self assert: dict keys size   equals: 0.
+      self assert: dict values size equals: 0.
+      
+      dict at: #ee put: 55.
+      self assert: dict keys size   equals: 1.
+      self assert: dict values size equals: 1.
+      
+      self assert: (dict keys contains: #ee).
+      self assert: (dict values contains: 55).
+    )
+    
+    public testRemoveAll = (
+      | dict |
+      dict := Dictionary new.
+      
+      self assert: dict size equals: 0 description: 'Empty after creation'.
+
+      dict at: #ee put: 55.
+      dict at: #e1 put: 55.
+      dict at: #e2 put: 55.
+
+      self assert: dict size equals: 3 description: 'After inserting 3 elements'.
+      
+      dict removeAll.
+      self assert: dict size equals: 0 description: 'Empty after removing all'.
+    )
+    
+    public testIdentDictAtAndAtPut = (
+      | dict o |
+      dict := IdentityDictionary new.
+      o := Object new.
+      self assert: (dict at: o) equals: nil.
+      
+      dict at: o put: 33.
+      self assert: (dict at: o) equals: 33.
+
+      dict at: o put: 44.
+      self assert: (dict at: o) equals: 44.
+    )
+    
+    public testIdentDictContainsKey = (
+      | dict o |
+      dict := IdentityDictionary new.
+      o := Object new.
+      
+      self deny: (dict containsKey: o).
+      dict at: o put: 0.
+      self assert: (dict containsKey: o).
+    )
+    
+    public testLargerDict = (
+      | dict |
+      dict := Dictionary new.
+      1 to: 100000 do: [:i |
+        dict at: i put: i ].
+      
+      self assert: dict size equals: 100000.
+      self assert: dict values size equals: 100000.
+    )
+  ) : ( TEST_CONTEXT = () )
+)

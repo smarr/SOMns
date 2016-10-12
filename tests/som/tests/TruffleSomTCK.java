@@ -31,6 +31,7 @@ public class TruffleSomTCK extends TruffleTCK {
     String[] args = new String [] {"--kernel", VMOptions.STANDARD_KERNEL_FILE,
         "--platform", VMOptions.STANDARD_PLATFORM_FILE};
     preparedBuilder.config(SomLanguage.MIME_TYPE, SomLanguage.CMD_ARGS, args);
+    preparedBuilder.config(SomLanguage.MIME_TYPE, SomLanguage.AVOID_EXIT, true);
 
     InputStream in = getClass().getResourceAsStream("TruffleSomTCK.som");
     Source source = Source.newBuilder(new InputStreamReader(in)).mimeType(

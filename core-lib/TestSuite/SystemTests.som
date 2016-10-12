@@ -1,0 +1,13 @@
+class SystemTests usingPlatform: platform testFramework: minitest = (
+| private TestContext = minitest TestContext.
+  private system      = platform system. |
+)(
+  public class SystemTest = TestContext ()(
+
+    public testFullGCSupport = (
+      (* Test whether #fullGC is support. We expect the VM now to return true,
+         to indicate the a GC was done. *)
+      self assert: system fullGC description: 'VM does not support #fullGC.'
+    )
+  ) : ( TEST_CONTEXT = () )
+)

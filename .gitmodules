@@ -1,6 +1,3 @@
-[submodule "core-lib"]
-	path = core-lib
-	url = https://github.com/smarr/SOMns-corelib.git
 [submodule "libs/truffle"]
 	path = libs/truffle
 	url = https://github.com/smarr/Truffle.git

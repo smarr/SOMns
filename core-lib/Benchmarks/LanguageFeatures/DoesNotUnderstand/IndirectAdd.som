@@ -1,0 +1,28 @@
+IndirectAdd = Benchmark (
+    | delegate calc |
+    
+    initialize = (
+        calc := Calculator new.
+        delegate := CalculatorDelegate new: calc
+    )
+
+    benchmark = (
+        calc initializeWith: 5.
+    
+        1 to: 20000 do: [ :i | 
+            delegate inc: #once
+        ].
+    
+        ^ calc a
+    )
+
+    verifyResult: result = (
+      ^ 20005 = result
+    )
+    
+    ----
+    
+    new = (
+        ^ super new initialize
+    )
+)
