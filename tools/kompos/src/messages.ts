@@ -112,7 +112,8 @@ export interface FarRefData {
 export type BreakpointData = LineBreakpointData | SectionBreakpointData;
 
 export type SectionBreakpointType = "MessageSenderBreakpoint" |
-  "MessageReceiveBreakpoint" | "AsyncMessageReceiveBreakpoint";
+  "MessageReceiverBreakpoint" | "AsyncMessageReceiverBreakpoint" | 
+  "PromiseResolverBreakpoint" | "PromiseResolutionBreakpoint" ;
 
 export interface AbstractBreakpointData {
   enabled:   boolean;

@@ -2,7 +2,6 @@ package som.interpreter.actors;
 
 import java.util.concurrent.CompletableFuture;
 
-import com.oracle.truffle.api.Assumption;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
@@ -19,7 +18,6 @@ import som.VM;
 import som.VmSettings;
 import som.interpreter.actors.EventualMessage.DirectMessage;
 import som.interpreter.actors.EventualMessage.PromiseSendMessage;
-import som.interpreter.actors.EventualSendNodeFactory.BreakpointNodeGen;
 import som.interpreter.actors.EventualSendNodeFactory.SendNodeGen;
 import som.interpreter.actors.ReceivedMessage.ReceivedMessageForVMMain;
 import som.interpreter.actors.RegisterOnPromiseNode.RegisterWhenResolved;
@@ -33,9 +31,12 @@ import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.vm.constants.Nil;
 import som.vmobjects.SSymbol;
 import tools.SourceCoordinate;
+import tools.SourceCoordinate.FullSourceCoordinate;
 import tools.actors.Tags.EventualMessageSend;
-import tools.debugger.session.BreakpointEnabling;
-import tools.debugger.session.MessageReceiveBreakpoint;
+import tools.debugger.nodes.AbstractBreakpointNode;
+import tools.debugger.nodes.BreakpointNodeGen;
+import tools.debugger.nodes.DisabledBreakpointNode;
+import tools.debugger.session.Breakpoints;
 
 
 @Instrumentable(factory = EventualSendNodeWrapper.class)
@@ -114,7 +115,9 @@ public class EventualSendNode extends ExprWithTagsNode {
 
     protected final SourceSection source;
 
-    protected final AbstractBreakpointNode breakpoint;
+    protected final AbstractBreakpointNode messageReceiverBreakpoint;
+    protected final AbstractBreakpointNode promiseResolverBreakpoint;
+    protected final AbstractBreakpointNode promiseResolutionBreakpoint;
 
     protected SendNode(final SSymbol selector, final WrapReferenceNode[] wrapArgs,
         final RootCallTarget onReceive, final SourceSection source) {
@@ -125,11 +128,19 @@ public class EventualSendNode extends ExprWithTagsNode {
 
       if (selector == null) {
         // this node is going to be used as a wrapper node
-        this.breakpoint = null;
+        this.messageReceiverBreakpoint = null;
+        this.promiseResolverBreakpoint = null;
+        this.promiseResolutionBreakpoint = null;
       } else if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-        this.breakpoint = insert(BreakpointNodeGen.create(source));
+        Breakpoints breakpointCatalog = VM.getWebDebugger().getBreakpoints();
+        FullSourceCoordinate sourceCoord = SourceCoordinate.create(source);
+        this.messageReceiverBreakpoint   = insert(BreakpointNodeGen.create(breakpointCatalog.getReceiverBreakpoint(sourceCoord)));
+        this.promiseResolverBreakpoint   = insert(BreakpointNodeGen.create(breakpointCatalog.getPromiseResolverBreakpoint(sourceCoord)));
+        this.promiseResolutionBreakpoint = insert(BreakpointNodeGen.create(breakpointCatalog.getPromiseResolutionBreakpoint(sourceCoord)));
       } else {
-        this.breakpoint = insert(new DisabledBreakpointNode());
+        this.messageReceiverBreakpoint   = insert(new DisabledBreakpointNode());
+        this.promiseResolverBreakpoint   = insert(new DisabledBreakpointNode());
+        this.promiseResolutionBreakpoint = insert(new DisabledBreakpointNode());
       }
     }
 
@@ -178,7 +189,10 @@ public class EventualSendNode extends ExprWithTagsNode {
 
       DirectMessage msg = new DirectMessage(
           EventualMessage.getCurrentExecutingMessage(), target, selector, args,
-          owner, resolver, onReceive, breakpoint.executeCheckIsSetAndEnabled());
+          owner, resolver, onReceive,
+          messageReceiverBreakpoint.executeCheckIsSetAndEnabled(),
+          promiseResolverBreakpoint.executeCheckIsSetAndEnabled(),
+          promiseResolutionBreakpoint.executeCheckIsSetAndEnabled());
       target.send(msg);
     }
 
@@ -188,7 +202,10 @@ public class EventualSendNode extends ExprWithTagsNode {
 
       PromiseSendMessage msg = new PromiseSendMessage(
           EventualMessage.getCurrentExecutingMessage(), selector, args,
-          rcvr.getOwner(), resolver, onReceive, breakpoint.executeCheckIsSetAndEnabled());
+          rcvr.getOwner(), resolver, onReceive,
+          messageReceiverBreakpoint.executeCheckIsSetAndEnabled(),
+          promiseResolverBreakpoint.executeCheckIsSetAndEnabled(),
+          promiseResolutionBreakpoint.executeCheckIsSetAndEnabled());
       registerNode.register(rcvr, msg, rcvr.getOwner());
     }
 
@@ -232,7 +249,10 @@ public class EventualSendNode extends ExprWithTagsNode {
 
       DirectMessage msg = new DirectMessage(EventualMessage.getCurrentExecutingMessage(),
           current, selector, args, current,
-          resolver, onReceive, breakpoint.executeCheckIsSetAndEnabled());
+          resolver, onReceive,
+          messageReceiverBreakpoint.executeCheckIsSetAndEnabled(),
+          promiseResolverBreakpoint.executeCheckIsSetAndEnabled(),
+          promiseResolutionBreakpoint.executeCheckIsSetAndEnabled());
       current.send(msg);
 
       return result;
@@ -260,7 +280,10 @@ public class EventualSendNode extends ExprWithTagsNode {
 
       DirectMessage msg = new DirectMessage(EventualMessage.getCurrentExecutingMessage(),
           current, selector, args, current,
-          null, onReceive, breakpoint.executeCheckIsSetAndEnabled());
+          null, onReceive,
+          messageReceiverBreakpoint.executeCheckIsSetAndEnabled(),
+          promiseResolverBreakpoint.executeCheckIsSetAndEnabled(),
+          promiseResolutionBreakpoint.executeCheckIsSetAndEnabled());
       current.send(msg);
       return Nil.nilObject;
     }
@@ -273,43 +296,6 @@ public class EventualSendNode extends ExprWithTagsNode {
         return true;
       }
       return super.isTaggedWith(tag);
-    }
-  }
-
-  protected abstract static class AbstractBreakpointNode extends Node {
-    public abstract boolean executeCheckIsSetAndEnabled();
-  }
-
-  protected abstract static class BreakpointNode extends AbstractBreakpointNode {
-    protected final BreakpointEnabling<MessageReceiveBreakpoint> breakpoint;
-
-    protected BreakpointNode(final SourceSection sourceSection) {
-      this.breakpoint = VM.getWebDebugger().getBreakpoints().
-          getReceiverBreakpoint(SourceCoordinate.create(sourceSection));
-    }
-
-    /** Only to be used by the DisabledBreakpointNode. */
-    protected BreakpointNode() {
-      this.breakpoint = null;
-    }
-
-    @Specialization(assumptions = "bpUnchanged", guards = "breakpoint.isDisabled()")
-    public final boolean breakpointDisabled(
-        @Cached("breakpoint.getAssumption()") final Assumption bpUnchanged) {
-      return false;
-    }
-
-    @Specialization(assumptions = {"bpUnchanged"}, guards = {"breakpoint.isEnabled()"})
-    public final boolean breakpointEnabled(
-        @Cached("breakpoint.getAssumption()") final Assumption bpUnchanged) {
-      return true;
-    }
-  }
-
-  private static final class DisabledBreakpointNode extends AbstractBreakpointNode {
-    @Override
-    public boolean executeCheckIsSetAndEnabled() {
-      return false;
     }
   }
 }

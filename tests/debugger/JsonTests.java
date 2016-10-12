@@ -19,10 +19,10 @@ import tools.debugger.WebDebugger;
 import tools.debugger.message.InitialBreakpointsMessage;
 import tools.debugger.message.Message.IncommingMessage;
 import tools.debugger.message.UpdateBreakpoint;
-import tools.debugger.session.AsyncMessageReceiveBreakpoint;
+import tools.debugger.session.AsyncMessageReceiverBreakpoint;
 import tools.debugger.session.BreakpointInfo;
 import tools.debugger.session.LineBreakpoint;
-import tools.debugger.session.MessageReceiveBreakpoint;
+import tools.debugger.session.MessageReceiverBreakpoint;
 import tools.debugger.session.MessageSenderBreakpoint;
 
 
@@ -74,19 +74,19 @@ public class JsonTests {
     assertEquals(LINE_BP, result);
   }
 
-  private static final String MSG_RCV_BP = "{\"coord\":" + FULL_COORD + ",\"enabled\":true,\"type\":\"MessageReceiveBreakpoint\"}";
+  private static final String MSG_RCV_BP = "{\"coord\":" + FULL_COORD + ",\"enabled\":true,\"type\":\"MessageReceiverBreakpoint\"}";
 
   @Test
-  public void messageReceiveBreakpointDeserialize() {
+  public void messageReceiverBreakpointDeserialize() {
     BreakpointInfo bp = gson.fromJson(MSG_RCV_BP, BreakpointInfo.class);
-    assertThat(bp, new IsInstanceOf(MessageReceiveBreakpoint.class));
+    assertThat(bp, new IsInstanceOf(MessageReceiverBreakpoint.class));
     assertTrue(bp.isEnabled());
-    assertFullCoord(((MessageReceiveBreakpoint) bp).getCoordinate());
+    assertFullCoord(((MessageReceiverBreakpoint) bp).getCoordinate());
   }
 
   @Test
-  public void messageReceiveBreakpointSerialize() {
-    MessageReceiveBreakpoint bp = new MessageReceiveBreakpoint(true, FULL_COORD_OBJ);
+  public void messageReceiverBreakpointSerialize() {
+    MessageReceiverBreakpoint bp = new MessageReceiverBreakpoint(true, FULL_COORD_OBJ);
     assertEquals(MSG_RCV_BP, gson.toJson(bp, BreakpointInfo.class));
   }
 
@@ -108,21 +108,21 @@ public class JsonTests {
     assertEquals(MSG_SND_BP, result);
   }
 
-  private static final String ASYNC_MSG_RCV_BP = "{\"coord\":" + FULL_COORD + ",\"enabled\":true,\"type\":\"AsyncMessageReceiveBreakpoint\"}";
+  private static final String ASYNC_MSG_RCV_BP = "{\"coord\":" + FULL_COORD + ",\"enabled\":true,\"type\":\"AsyncMessageReceiverBreakpoint\"}";
 
   @Test
   public void asyncMessageBreakpointDeserialize() {
     BreakpointInfo bp = gson.fromJson(ASYNC_MSG_RCV_BP, BreakpointInfo.class);
-    assertThat(bp, new IsInstanceOf(AsyncMessageReceiveBreakpoint.class));
+    assertThat(bp, new IsInstanceOf(AsyncMessageReceiverBreakpoint.class));
 
-    AsyncMessageReceiveBreakpoint abp = (AsyncMessageReceiveBreakpoint) bp;
+    AsyncMessageReceiverBreakpoint abp = (AsyncMessageReceiverBreakpoint) bp;
     assertTrue(abp.isEnabled());
     assertFullCoord(abp.getCoordinate());
   }
 
   @Test
   public void asyncMessageRcvBreakpointSerialize() {
-    AsyncMessageReceiveBreakpoint bp = new AsyncMessageReceiveBreakpoint(true, FULL_COORD_OBJ);
+    AsyncMessageReceiverBreakpoint bp = new AsyncMessageReceiverBreakpoint(true, FULL_COORD_OBJ);
     String result = gson.toJson(bp, BreakpointInfo.class);
     assertEquals(ASYNC_MSG_RCV_BP, result);
   }
@@ -153,8 +153,8 @@ public class JsonTests {
         INITIAL_NON_EMPTY_BREAKPOINT_MSG, IncommingMessage.class);
     InitialBreakpointsMessage r = (InitialBreakpointsMessage) result;
     BreakpointInfo[] bps = r.getBreakpoints();
-    assertThat(bps[0], new IsInstanceOf(AsyncMessageReceiveBreakpoint.class));
-    assertThat(bps[1], new IsInstanceOf(MessageReceiveBreakpoint.class));
+    assertThat(bps[0], new IsInstanceOf(AsyncMessageReceiverBreakpoint.class));
+    assertThat(bps[1], new IsInstanceOf(MessageReceiverBreakpoint.class));
     assertThat(bps[2], new IsInstanceOf(MessageSenderBreakpoint.class));
     assertThat(bps[3], new IsInstanceOf(LineBreakpoint.class));
     assertEquals(4, bps.length);

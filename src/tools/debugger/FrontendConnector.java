@@ -42,11 +42,13 @@ import tools.debugger.message.StackTraceResponse;
 import tools.debugger.message.StoppedMessage;
 import tools.debugger.message.SuspendedEventMessage;
 import tools.debugger.message.VariablesResponse;
-import tools.debugger.session.AsyncMessageReceiveBreakpoint;
+import tools.debugger.session.AsyncMessageReceiverBreakpoint;
 import tools.debugger.session.Breakpoints;
 import tools.debugger.session.LineBreakpoint;
-import tools.debugger.session.MessageReceiveBreakpoint;
+import tools.debugger.session.MessageReceiverBreakpoint;
 import tools.debugger.session.MessageSenderBreakpoint;
+import tools.debugger.session.PromiseResolutionBreakpoint;
+import tools.debugger.session.PromiseResolverBreakpoint;
 
 /**
  * Connect the debugger to the UI front-end.
@@ -325,11 +327,19 @@ public class FrontendConnector {
     breakpoints.addOrUpdate(bp);
   }
 
-  public void registerOrUpdate(final MessageReceiveBreakpoint bp) {
+  public void registerOrUpdate(final MessageReceiverBreakpoint bp) {
     breakpoints.addOrUpdate(bp);
   }
 
-  public void registerOrUpdate(final AsyncMessageReceiveBreakpoint bp) {
+  public void registerOrUpdate(final AsyncMessageReceiverBreakpoint bp) {
+    breakpoints.addOrUpdate(bp);
+  }
+
+  public void registerOrUpdate(final PromiseResolutionBreakpoint bp) {
+    breakpoints.addOrUpdate(bp);
+  }
+
+  public void registerOrUpdate(final PromiseResolverBreakpoint bp) {
     breakpoints.addOrUpdate(bp);
   }
 
