@@ -81,6 +81,7 @@ public class SomTests {
 
     Builder builder = PolyglotEngine.newBuilder();
     builder.config(SomLanguage.MIME_TYPE, SomLanguage.CMD_ARGS, args);
+    builder.config(SomLanguage.MIME_TYPE, SomLanguage.AVOID_EXIT, true);
     PolyglotEngine engine = builder.build();
     VM.setEngine(engine);
 

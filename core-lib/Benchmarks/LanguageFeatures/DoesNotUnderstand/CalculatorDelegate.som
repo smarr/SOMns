@@ -1,0 +1,20 @@
+CalculatorDelegate = (
+    | target |
+    
+    initializeWith: aCalculator = (
+        target := aCalculator
+    )
+    
+    inc: aSymbol = (
+        target inc: aSymbol
+    ) 
+    
+    ----
+    
+    new: a = (
+        | calc |
+        calc := self new.
+        calc initializeWith: a.
+        ^ calc
+    )
+)

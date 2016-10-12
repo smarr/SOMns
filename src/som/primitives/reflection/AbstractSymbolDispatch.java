@@ -14,9 +14,11 @@ import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.interpreter.nodes.PreevaluatedExpression;
 import som.interpreter.nodes.dispatch.Dispatchable;
+import som.interpreter.nodes.dispatch.GenericDispatchNode;
 import som.primitives.arrays.ToArgumentsArrayNode;
 import som.primitives.arrays.ToArgumentsArrayNodeFactory;
 import som.vmobjects.SArray;
+import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
 
 
@@ -81,11 +83,16 @@ public abstract class AbstractSymbolDispatch extends Node {
   public Object doUncached(final VirtualFrame frame,
       final Object receiver, final SSymbol selector, final Object argsArr,
       @Cached("create()") final IndirectCallNode call) {
-    Dispatchable invokable = Types.getClassOf(receiver).lookupMessage(selector, AccessModifier.PUBLIC);
+    SClass rcvrClass = Types.getClassOf(receiver);
+    Dispatchable invokable = rcvrClass.lookupMessage(selector, AccessModifier.PUBLIC);
 
     Object[] arguments = {receiver};
-
-    return invokable.invoke(call, frame, arguments);
+    if (invokable != null) {
+      return invokable.invoke(call, frame, arguments);
+    } else {
+      return GenericDispatchNode.performDnu(frame, arguments, receiver,
+          rcvrClass, selector, call);
+    }
   }
 
   @Specialization(contains = "doCached")

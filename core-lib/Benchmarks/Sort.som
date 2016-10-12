@@ -1,0 +1,158 @@
+(* Copyright (c) 2001-2015 see AUTHORS file
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the 'Software'), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*)
+class SortBenchmarks usingPlatform: platform andHarness: harness = (
+| private Benchmark = harness Benchmark.
+  private Random    = harness Random.
+  private Array     = platform kernel Array. |
+)(
+  class Sort = Benchmark (
+    | smallest largest |
+  ) (
+    
+    benchmark = (
+        | array |
+        array := self randomArray: self dataSize with: Random new.
+        ^ self sort: array.
+    )
+    
+    dataSize    = ( self subclassResponsibility )
+    sort: array = ( self subclassResponsibility )
+    
+    verifyResult: array = (
+        ((array at: 1) <> smallest)
+            || ((array at: (array size)) <> largest)
+                ifTrue: [ self error: 'Array is not sorted. smallest: ' + smallest asString + ' largest: ' + largest asString + ' [1]: ' + (array at: 1) asString + ' [l]: ' + (array at: array size) asString ].
+        3 to: (array size) do: [ :i |
+            (array at: i - 1) > (array at: i) 
+                ifTrue: [ self error: 'Array is not sorted. [' + i asString + ' - 1]: ' + (array at: i - 1) asString + ' [' + i asString + ']: ' + (array at: i) asString]. ].
+        ^ true
+    )
+    
+    randomArray: size with: random = (
+        | array |
+        array := Array new: size withAll: [ random next ].
+        smallest := largest := array at: 1.
+        array do: [ :elm |
+            (elm > largest)  ifTrue: [ largest  := elm ].
+            (elm < smallest) ifTrue: [ smallest := elm ]. ].
+        ^array
+    )
+  ) 
+
+  public class BubbleSort = Sort ()(
+    sort: array = (
+      array size downTo: 1 do: [ :i |
+        1 to: i - 1 do: [ :j |
+          | current next |
+          current := array at: j.
+          next    := array at: j + 1.
+          (current > next)
+            ifTrue: [
+              array at: j put: next.
+              array at: j + 1 put: current ] ] ].
+      ^ array
+    )
+
+    dataSize = ( ^ 130 )
+  ) : (
+    public newInstance = ( ^ self new )
+    public setupVerifiedRun: run = ( run innerIterations: 1 )
+  )
+
+  public class QuickSort = Sort ()(
+    sort: array = (
+      self sort: array low: 1 high: self dataSize.
+      ^ array
+    )
+    
+    sort: array low: low high: high = (
+      | pivot i j |
+      
+      pivot := array at: (low + high) / 2.
+      i := low.
+      j := high.
+      [ i <= j ]
+        whileTrue: [
+          [ (array at: i) < pivot ] whileTrue: [ i := i + 1 ].
+          [ pivot < (array at: j) ] whileTrue: [ j := j - 1 ].
+          ( i <= j )
+            ifTrue: [
+              | tmp |
+              tmp := array at: i.
+              array at: i put: (array at: j).
+              array at: j put: tmp.
+              i := i + 1.
+              j := j - 1. ] ].
+      
+      (low < j)  ifTrue: [ self sort: array low: low high: j  ].
+      (i < high) ifTrue: [ self sort: array low: i high: high ]
+    )
+    
+    dataSize = ( ^800 )
+  ) : (
+    public newInstance = ( ^ self new )
+    public setupVerifiedRun: run = ( run innerIterations: 1 )
+  )
+
+  class TreeNode new: val = (
+  | private left
+    private right 
+    public value ::= val.
+  |
+  )(
+    public check = (
+      ^(left  isNil || [ (left  value <  value) && left  check ]) &&
+       (right isNil || [ (right value >= value) && right check ])
+    )
+
+    public insert: n = (
+      (n < value)
+        ifTrue: [
+          left isNil
+            ifTrue:  [ left := TreeNode new: n ]
+            ifFalse: [ left insert: n ] ]
+        ifFalse: [
+          right isNil
+            ifTrue:  [ right := TreeNode new: n ]
+            ifFalse: [ right insert: n ] ].
+    )
+  )
+
+  public class TreeSort = Sort ()(
+    sort: array = (
+        | tree |
+        array doIndexes: [ :i |
+          (i = 1)
+            ifTrue:  [ tree := TreeNode new: (array at: i) ]
+            ifFalse: [ tree insert: (array at: i) ] ].
+        ^ tree
+    )
+    
+    public verifyResult: tree = (
+       ^ tree check
+    )
+    
+    dataSize = ( ^ 1000 )
+  ) : (
+    public newInstance = ( ^ self new )
+    public setupVerifiedRun: run = ( run innerIterations: 1 )
+  )
+)
