@@ -78,6 +78,11 @@ import som.primitives.arrays.NewPrimFactory;
 import som.primitives.arrays.PutAllNodeFactory;
 import som.primitives.bitops.BitAndPrimFactory;
 import som.primitives.bitops.BitXorPrimFactory;
+import som.primitives.threading.ConditionPrimitivesFactory;
+import som.primitives.threading.DelayPrimitivesFactory;
+import som.primitives.threading.MutexPrimitivesFactory;
+import som.primitives.threading.ThreadPrimitivesFactory;
+import som.primitives.threading.ThreadingModuleFactory;
 import som.vm.constants.KernelObjFactory;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
@@ -287,6 +292,12 @@ public class Primitives {
     allFactories.addAll(StringPrimsFactory.getFactories());
     allFactories.addAll(SystemPrimsFactory.getFactories());
     allFactories.addAll(WhilePrimitiveNodeFactory.getFactories());
+
+    allFactories.addAll(ThreadingModuleFactory.getFactories());
+    allFactories.addAll(ConditionPrimitivesFactory.getFactories());
+    allFactories.addAll(DelayPrimitivesFactory.getFactories());
+    allFactories.addAll(MutexPrimitivesFactory.getFactories());
+    allFactories.addAll(ThreadPrimitivesFactory.getFactories());
 
     allFactories.add(AdditionPrimFactory.getInstance());
     allFactories.add(AndMessageNodeFactory.getInstance());

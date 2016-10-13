@@ -20,6 +20,7 @@ THE SOFTWARE.
 *)
 class ThreadingTests usingPlatform: platform testFramework: minitest = (
 | private TestContext  = minitest TestContext.
+  private Array        = platform kernel Array.
   private Condition    = platform threading Condition.
   private Delay        = platform threading Delay.
   private Mutex        = platform threading Mutex.
@@ -37,7 +38,7 @@ class ThreadingTests usingPlatform: platform testFramework: minitest = (
       self assert: 1    equals: d duration.
     
       (* This could change, perhaps to indicate interruption. *)
-      self expect: d is: d wait.
+      self assert: d is: d wait.
     )
 
     public testMutexInterface = (
@@ -61,10 +62,10 @@ class ThreadingTests usingPlatform: platform testFramework: minitest = (
       | thread |
       thread := Thread spawn: [].
     
-      self assert: nil equals: thread name.
+      self assert: '' equals: thread name.
     
       thread := Thread spawn: [:i | i ] with: (Array with: 1).
-      self assert: nil equals: thread name
+      self assert: '' equals: thread name
     )
 
     public testThreadInterface = (
@@ -73,7 +74,9 @@ class ThreadingTests usingPlatform: platform testFramework: minitest = (
       thread := Thread spawn: [ executed := true ].
       thread name: 'bar'.
       self assert: 'bar'  equals: thread name.
-    
+
+      thread == thread.
+
       self assert: thread is: thread join.
       self assert: executed.
 
@@ -87,28 +90,33 @@ class ThreadingTests usingPlatform: platform testFramework: minitest = (
 
     public testThreadCurrent = (
       | thread subThreadCurrent |
-      thread := Thread spawn: [subThreadCurrent := Thread current].
+      thread := Thread spawn: [
+        subThreadCurrent := Thread current].
+      thread println.
       thread join.
   
       (* those two should be the same object *)
       self assert: thread is: subThreadCurrent.
-      self deny: thread == subThreadCurrent.
+      self deny: thread == Thread current.
     )
 
     public testConditionInterface = (
-      | m c t executed |
+      | m c t executed awaitResult1 |
       executed := false.
       m := Mutex new.
       c := m newCondition.
-      m lock.
-      c signalOne.
-    
-      self deny: (c await: 1) description: 'Await times out'.
+      
+      m critical: [ c signalOne ].
+      awaitResult1 := m critical: [ c await: 1 ].
+      
+      self deny: awaitResult1 description: 'Await times out'.
+      
+      (* This test is racy... remove and replace if it makes problems. *)
       t := Thread spawn: [
-        c await.
+        m critical: [ c signalOne ].
         executed := true ].
 
-      c signalOne.
+      m critical: [ c await ].
       t join.
       self assert: executed
     )

@@ -1,6 +1,8 @@
 package som.interpreter.nodes;
 
 import java.math.BigInteger;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.ImportStatic;
@@ -16,6 +18,7 @@ import som.interpreter.actors.SFarReference;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.interpreter.objectstorage.ClassFactory;
 import som.primitives.actors.ActorClasses;
+import som.primitives.threading.ThreadingModule;
 import som.vm.constants.KernelObj;
 import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
@@ -24,7 +27,7 @@ import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
 
 
-@ImportStatic(ActorClasses.class)
+@ImportStatic({ActorClasses.class, ThreadingModule.class})
 @NodeChild(value = "receiver", type = ExpressionNode.class)
 public abstract class OuterObjectRead
     extends ExprWithTagsNode implements ISpecialSend {
@@ -173,4 +176,37 @@ public abstract class OuterObjectRead
 
   @Specialization
   public Object doSBlock(final SBlock receiver) { return KernelObj.kernel; }
+
+  @Specialization(guards = {"contextLevel == 1", "mixinId == ThreadClassId"})
+  public Object doThread(final Thread receiver) {
+    assert ThreadingModule.ThreadingModule != null;
+    return ThreadingModule.ThreadingModule;
+  }
+
+  @Specialization(guards = {"contextLevel == 1", "mixinId == ConditionClassId"})
+  public Object doCondition(final Condition receiver) {
+    assert ThreadingModule.ThreadingModule != null;
+    return ThreadingModule.ThreadingModule;
+  }
+
+  @Specialization(guards = {"contextLevel == 1", "mixinId == MutexClassId"})
+  public Object doMutex(final ReentrantLock receiver) {
+    assert ThreadingModule.ThreadingModule != null;
+    return ThreadingModule.ThreadingModule;
+  }
+
+  @Specialization(guards = {"contextLevel == 1", "mixinId != ThreadClassId"})
+  public Object doThreadInKernelScope(final Thread receiver) {
+    return KernelObj.kernel;
+  }
+
+  @Specialization(guards = {"contextLevel == 1", "mixinId != ConditionClassId"})
+  public Object doConditionInKernelScope(final Condition receiver) {
+    return KernelObj.kernel;
+  }
+
+  @Specialization(guards = {"contextLevel == 1", "mixinId != MutexClassId"})
+  public Object doMutexInKernelScope(final ReentrantLock receiver) {
+    return KernelObj.kernel;
+  }
 }
