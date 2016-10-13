@@ -56,7 +56,10 @@ public final class ResolvingImplicitReceiverSend extends AbstractMessageSendNode
     // this specialize method is designed to be execute only once and
     // tracks its replacement nodes to avoid re-specialization in case of
     // re-execution
-    PreevaluatedExpression newNode = atomic(() -> specialize(args));
+    PreevaluatedExpression newNode;
+    synchronized (getAtomicLock()) {
+       newNode = specialize(args);
+    }
     return newNode.
         doPreEvaluated(frame, args);
   }
