@@ -649,6 +649,32 @@ class LanguageTests usingPlatform: platform testFramework: minitest = Value (
     )
   ) : ( TEST_CONTEXT = () )
 
+  public class OverriddingPrimaryFactoryMethods = TestContext ()(
+    public class T1 = ()() : (
+      public new = ( ^ nil )
+    )
+
+    public class T2 fooBar = ()() : (
+      public fooBar = ( ^ nil ) 
+    )
+
+    public class T3 bar: arg = ()() : (
+      public bar: arg = ( ^ arg )
+    )
+
+    public testT1OverrideNew = (
+      assert: T1 new is: nil
+    )
+
+    public testT2OverrideFooBar = (
+      assert: T2 fooBar is: nil
+    )
+
+    public testT3OverrideBarWithArg = (
+      assert: (T3 bar: nil) is: nil
+    )
+  ) : ( TEST_CONTEXT = () )
+
   (* Megamorphic Super send *)
   public class MegamorphicSuperSend = TestContext ()(
     private class A = ()(
