@@ -648,4 +648,39 @@ class LanguageTests usingPlatform: platform testFramework: minitest = Value (
       self assert:   1 equals: (result at: 2).
     )
   ) : ( TEST_CONTEXT = () )
+
+  (* Megamorphic Super send *)
+  public class MegamorphicSuperSend = TestContext ()(
+    private class A = ()(
+      public aNumber = ( ^ 41 )
+    )
+    private class B = A () (
+      public aNumber = ( ^ super aNumber + 1 )
+    )
+    private class C1 = B ()()
+    private class C2 = B ()()
+    private class C3 = B ()()
+    private class C4 = B ()()
+    private class C5 = B ()()
+    private class C6 = B ()()
+    private class C7 = B ()()
+    private class C8 = B ()()
+    private class C9 = B ()()
+  
+    public testMegamorphicSuper = (
+      | a |
+      a := Array new: 9.
+      a at: 1 put: C1 new.
+      a at: 2 put: C2 new.
+      a at: 3 put: C3 new.
+      a at: 4 put: C4 new.
+      a at: 5 put: C5 new.
+      a at: 6 put: C6 new.
+      a at: 7 put: C7 new.
+      a at: 8 put: C8 new.
+      a at: 9 put: C9 new.
+      1 to: 7 do: [:i |
+        self assert: 42 equals: (a at: i) aNumber ]
+    )
+  ) : ( TEST_CONTEXT = () )
 )

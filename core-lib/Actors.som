@@ -156,7 +156,6 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel = Value (
     )
   )
 
-
   public createPromisePair = (
     ^ vmMirror actorsCreatePromisePair: nil.
   )

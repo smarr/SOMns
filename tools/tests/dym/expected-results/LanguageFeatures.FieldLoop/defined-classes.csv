@@ -1,6 +1,6 @@
 Class Name	Source Section	Methods Executed
 AValue	LanguageFeatures.som pos=10853 len=73	0
-Actors	Actors.som pos=0 len=8599	1
+Actors	Actors.som pos=0 len=8598	1
 ArrayReadMixin	Kernel.som pos=14304 len=2151	0
 Array	Kernel.som pos=16461 len=2225	0
 Benchmark	Harness.som pos=1446 len=596	1
