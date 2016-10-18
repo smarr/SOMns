@@ -239,14 +239,6 @@ public class Actor {
       createdActors = ActorExecutionTrace.createActorBuffer();
       processedMessages = ActorExecutionTrace.createProcessedMessagesBuffer();
     }
-
-    @Override
-    public void run() {
-      // TODO: figure out whether everything still works without this hack
-      // Accessor.initializeThreadForUseWithPolglotEngine(VM.getEngine());
-
-      super.run();
-    }
   }
 
   /**
