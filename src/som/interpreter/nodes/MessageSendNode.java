@@ -18,7 +18,6 @@ import som.instrumentation.MessageSendNodeWrapper;
 import som.interpreter.TruffleCompiler;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
 import som.interpreter.nodes.dispatch.DispatchChain.Cost;
-import som.interpreter.nodes.dispatch.GenericDispatchNode;
 import som.interpreter.nodes.dispatch.UninitializedDispatchNode;
 import som.interpreter.nodes.nary.EagerlySpecializableNode;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
@@ -326,8 +325,7 @@ public final class MessageSendNode {
       dispatchNode = insert(newHead);
     }
 
-    public void replaceDispatchListHead(
-        final GenericDispatchNode replacement) {
+    public void replaceDispatchListHead(final AbstractDispatchNode replacement) {
       CompilerAsserts.neverPartOfCompilation();
       dispatchNode.replace(replacement);
     }

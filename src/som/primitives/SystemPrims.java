@@ -176,7 +176,11 @@ public final class SystemPrims {
           Node callNode = frameInstance.getCallNode();
           if (callNode != null) {
             SourceSection nodeSS = callNode.getEncapsulatingSourceSection();
-            location.add(nodeSS.getSource().getName() + ":" + nodeSS.getStartLine() + ":" + nodeSS.getStartColumn());
+            if (nodeSS != null) {
+              location.add(nodeSS.getSource().getName() + ":" + nodeSS.getStartLine() + ":" + nodeSS.getStartColumn());
+            } else {
+                location.add("");
+            }
           } else {
             location.add("");
           }

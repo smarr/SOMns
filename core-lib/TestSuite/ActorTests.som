@@ -434,4 +434,18 @@ class ActorTests usingPlatform: platform testFramework: minitest = Value (
   ) : (
     TEST_CONTEXT = ()
   )
+
+  public class RegressionTests = AsyncTestContext ()(
+    (* This test is to identify issues in the OuterObjectRead node.
+       It did not handle properly the different cases of outer scope
+       semantics, depending on the point in the inheritance tree, i.e.,
+       starting lexical scope. *)
+    public testFarReferenceLookupInKernel = (
+      | ref |
+      ref := (actors createActorFromValue: DeepChain).
+      assert: ref asString println equals: 'instance of FarReference'.
+    )
+  ) : (
+    TEST_CONTEXT = ()
+  )
 )
