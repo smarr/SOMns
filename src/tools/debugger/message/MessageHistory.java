@@ -1,10 +1,7 @@
 package tools.debugger.message;
 
 import java.util.ArrayList;
-import java.util.Map;
-import java.util.Map.Entry;
 
-import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.SFarReference;
 import som.vmobjects.SClass;
@@ -23,10 +20,10 @@ public class MessageHistory extends OutgoingMessage {
   }
 
   protected static class FarRefData {
-    private final String id;
+    private final long id;
     private final String typeName;
 
-    protected FarRefData(final String id, final String typeName) {
+    protected FarRefData(final long id, final String typeName) {
       this.id       = id;
       this.typeName = typeName;
     }
@@ -34,30 +31,28 @@ public class MessageHistory extends OutgoingMessage {
 
   protected static class MessageData {
     private final String id;
-    private final String senderId;
-    private final String targetId;
+    private final long senderId;
+    private final long targetId;
 
-    protected MessageData(final String id, final String senderId, final String targetId) {
+    protected MessageData(final String id, final long senderId, final long targetId) {
       this.id = id;
       this.senderId = senderId;
       this.targetId = targetId;
     }
   }
 
-  public static MessageHistory create(final Map<SFarReference, String> actorsToIds,
-      final ObjectBuffer<ObjectBuffer<ObjectBuffer<EventualMessage>>> messagesPerThread,
-      final Map<Actor, String> actorObjsToIds) {
-    FarRefData[] actors = new FarRefData[actorsToIds.size()];
-    int i = 0;
-    for (Entry<SFarReference, String> e : actorsToIds.entrySet()) {
-      actors[i] = create(e.getValue(), e.getKey());
-      i += 1;
+  public static MessageHistory create(final ObjectBuffer<ObjectBuffer<SFarReference>> actorList,
+      final ObjectBuffer<ObjectBuffer<ObjectBuffer<EventualMessage>>> messagesPerThread) {
+    ArrayList<FarRefData> actors = new ArrayList<>();
+    for(ObjectBuffer<SFarReference> perThread : actorList){
+      for (SFarReference e : perThread) {
+        actors.add(create(e.getActor().getActorId(), e));
+      }
     }
-
-    return new MessageHistory(actors, messages(messagesPerThread, actorObjsToIds));
+    return new MessageHistory(actors.toArray(new FarRefData[0]), messages(messagesPerThread));
   }
 
-  private static FarRefData create(final String id, final SFarReference a) {
+  private static FarRefData create(final long id, final SFarReference a) {
     Object value = a.getValue();
     assert value instanceof SClass;
     SClass actorClass = (SClass) value;
@@ -65,19 +60,15 @@ public class MessageHistory extends OutgoingMessage {
   }
 
   private static MessageData[] messages(
-      final ObjectBuffer<ObjectBuffer<ObjectBuffer<EventualMessage>>> messagesPerThread,
-      final Map<Actor, String> actorObjsToIds) {
+      final ObjectBuffer<ObjectBuffer<ObjectBuffer<EventualMessage>>> messagesPerThread) {
     ArrayList<MessageData> messages = new ArrayList<>();
     int mId = 0;
     for (ObjectBuffer<ObjectBuffer<EventualMessage>> perThread : messagesPerThread) {
       for (ObjectBuffer<EventualMessage> perBatch : perThread) {
         for (EventualMessage m : perBatch) {
-          assert actorObjsToIds.containsKey(m.getSender());
-          assert actorObjsToIds.containsKey(m.getTarget());
-
           messages.add(new MessageData("m-" + mId,
-              actorObjsToIds.get(m.getSender()),
-              actorObjsToIds.get(m.getTarget())));
+              m.getSender().getActorId(),
+              m.getTarget().getActorId()));
           mId += 1;
         }
       }

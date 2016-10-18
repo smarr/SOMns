@@ -43,7 +43,9 @@ public class Actor {
   public static Actor createActor() {
     if (VmSettings.DEBUG_MODE) {
       return new DebugActor();
-    } else {
+    } else if (VmSettings.ACTOR_TRACING) {
+      return new TracingActor();
+    } else{
       return new Actor();
     }
   }
@@ -122,6 +124,7 @@ public class Actor {
   protected void logMessageAddedToMailbox(final EventualMessage msg) { }
   protected void logMessageBeingExecuted(final EventualMessage msg) { }
   protected void logNoTaskForActor() { }
+  public long getActorId() {return 0;}
 
   /**
    * Send the give message to the actor.
@@ -131,6 +134,7 @@ public class Actor {
   @TruffleBoundary
   public synchronized void send(final EventualMessage msg) {
     assert msg.getTarget() == this;
+    //TODO REECORD message send timestamp
     mailbox.append(msg);
     logMessageAddedToMailbox(msg);
 
@@ -171,6 +175,8 @@ public class Actor {
     }
 
     private void processCurrentMessages(final ActorProcessingThread currentThread, final WebDebugger dbg) {
+    //TODO RECORD mailbox starting
+
       for (EventualMessage msg : current) {
         actor.logMessageBeingExecuted(msg);
         currentThread.currentMessage = msg;
@@ -180,11 +186,14 @@ public class Actor {
             dbg.prepareSteppingUntilNextRootNode();
           }
         }
-
+        //TODO RECORD message execute
         msg.execute();
       }
       if (VmSettings.ACTOR_TRACING) {
+        //TODO RECORD mailbox done
+        ActorExecutionTrace.logMemoryUsage();
         currentThread.processedMessages.append(current);
+
       }
     }
 
@@ -195,6 +204,7 @@ public class Actor {
         if (current.isEmpty()) {
           // complete execution after all messages are processed
           actor.isExecuting = false;
+
           return false;
         }
         actor.mailbox = new ObjectBuffer<>(actor.mailbox.size());
@@ -230,14 +240,30 @@ public class Actor {
   public static final class ActorProcessingThread extends ForkJoinWorkerThread {
     public EventualMessage currentMessage;
     protected Actor currentlyExecutingActor;
+    protected final int threadId;
+    protected long actorIdCounter;
     protected final ObjectBuffer<SFarReference> createdActors;
     protected final ObjectBuffer<ObjectBuffer<EventualMessage>> processedMessages;
 
     protected ActorProcessingThread(final ForkJoinPool pool) {
       super(pool);
-
+      threadId = this.getPoolIndex();
       createdActors = ActorExecutionTrace.createActorBuffer();
       processedMessages = ActorExecutionTrace.createProcessedMessagesBuffer();
+    }
+
+    protected long generateActorId(){
+      long result = (threadId << 56) | actorIdCounter;
+      actorIdCounter++;
+      return result;
+    }
+
+    @Override
+    public void run() {
+      // TODO: figure out whether everything still works without this hack
+      // Accessor.initializeThreadForUseWithPolglotEngine(VM.getEngine());
+
+      super.run();
     }
   }
 
@@ -274,6 +300,7 @@ public class Actor {
   public static final class DebugActor extends Actor {
     // TODO: remove this tracking, the new one should be more efficient
     private static final ArrayList<Actor> actors = new ArrayList<Actor>();
+    //ATOMIC Int instead? get and increment
 
     private final boolean isMain;
     private final int id;
@@ -285,6 +312,7 @@ public class Actor {
         actors.add(this);
         id = actors.size() - 1;
       }
+      //TODO RECORD creation timestamp
     }
 
     @Override
@@ -306,5 +334,22 @@ public class Actor {
     public String toString() {
       return "Actor[" + (isMain ? "main" : id) + "]";
     }
+  }
+
+  public static final class TracingActor extends Actor{
+    protected long actorId;
+
+    public TracingActor() {
+      super();
+    }
+
+    @Override
+    public long getActorId() {
+      if(actorId == 0){
+        actorId =  ((ActorProcessingThread) Thread.currentThread()).generateActorId();
+      }
+      return actorId;
+    }
+
   }
 }

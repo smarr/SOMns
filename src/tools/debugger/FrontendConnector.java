@@ -3,9 +3,7 @@ package tools.debugger;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -23,7 +21,6 @@ import com.oracle.truffle.api.source.SourceSection;
 import com.sun.net.httpserver.HttpServer;
 
 import som.VmSettings;
-import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.SFarReference;
 import tools.ObjectBuffer;
@@ -83,8 +80,6 @@ public class FrontendConnector {
   private final Gson gson;
 
   private final ArrayList<Source> notReady = new ArrayList<>(); //TODO rename: toBeSend
-
-  private int numActors = 0;
 
   public FrontendConnector(final Breakpoints breakpoints,
       final Instrumenter instrumenter, final WebDebugger webDebugger,
@@ -214,44 +209,6 @@ public class FrontendConnector {
     log("[DEBUGGER] Debugger connected.");
   }
 
-  /**
-   * will be removed, required to send actor information incremental.
-   */
-  private Map<SFarReference, String> createNewActorsMap(
-      final ObjectBuffer<ObjectBuffer<SFarReference>> actorsPerThread) {
-    HashMap<SFarReference, String> map = new HashMap<>();
-
-    for (ObjectBuffer<SFarReference> perThread : actorsPerThread) {
-      Iterator<SFarReference> iter = perThread.iteratorFromMemory();
-      perThread.memorize();
-
-      while (iter.hasNext()) {
-        SFarReference a = iter.next();
-        map.put(a, "a-" + numActors);
-        numActors += 1;
-      }
-    }
-    return map;
-  }
-
-  /**
-   * will be removed, required to map message senders/receivers to ids.
-   */
-  private static Map<Actor, String> createActorIdMap(
-      final ObjectBuffer<ObjectBuffer<SFarReference>> actorsPerThread) {
-    HashMap<Actor, String> map = new HashMap<>();
-    int numActors = 0;
-    for (ObjectBuffer<SFarReference> perThread : actorsPerThread) {
-      for (SFarReference a : perThread) {
-        assert !map.containsKey(a);
-        map.put(a.getActor(), "a-" + numActors);
-        numActors += 1;
-      }
-
-    }
-    return map;
-  }
-
   public void sendSuspendedEvent(final Suspension suspension) {
     sendTracingData();
     send(SuspendedEventMessage.create(
@@ -286,12 +243,7 @@ public class FrontendConnector {
     ObjectBuffer<ObjectBuffer<SFarReference>> actorsPerThread = ActorExecutionTrace.getAllCreateActors();
     ObjectBuffer<ObjectBuffer<ObjectBuffer<EventualMessage>>> messagesPerThread = ActorExecutionTrace.getAllProcessedMessages();
 
-    Map<SFarReference, String> newActors = createNewActorsMap(actorsPerThread);
-    Map<Actor, String> completeActorIdMap = createActorIdMap(actorsPerThread);
-
-
-    MessageHistory msg = MessageHistory.create(
-        newActors, messagesPerThread, completeActorIdMap);
+    MessageHistory msg = MessageHistory.create(actorsPerThread, messagesPerThread);
 
     String m = gson.toJson(msg, Message.class);
     log("[ACTORS] Message length: " + m.length());

@@ -1,5 +1,16 @@
 package tools.actors;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
+import java.util.List;
+
+import javax.management.Notification;
+import javax.management.NotificationEmitter;
+import javax.management.NotificationListener;
+import javax.management.openmbean.CompositeData;
+
+import com.sun.management.GarbageCollectionNotificationInfo;
+
 import som.VmSettings;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
@@ -19,6 +30,9 @@ public class ActorExecutionTrace {
   private static final ObjectBuffer<ObjectBuffer<ObjectBuffer<EventualMessage>>> messagesProcessedPerThread =
       VmSettings.ACTOR_TRACING ? new ObjectBuffer<>(VmSettings.NUM_THREADS) : null;
 
+  private static final MemoryMXBean mbean = ManagementFactory.getMemoryMXBean();
+  private static final List<java.lang.management.GarbageCollectorMXBean> gcbeans = ManagementFactory.getGarbageCollectorMXBeans();
+
   public static ObjectBuffer<ObjectBuffer<SFarReference>> getAllCreateActors() {
     return createdActorsPerThread;
   }
@@ -26,6 +40,8 @@ public class ActorExecutionTrace {
   public static ObjectBuffer<ObjectBuffer<ObjectBuffer<EventualMessage>>> getAllProcessedMessages() {
     return messagesProcessedPerThread;
   }
+
+  static{setUpGCMonitoring();}
 
   public static void recordMainActor(final Actor mainActor,
       final ObjectSystem objectSystem) {
@@ -37,7 +53,36 @@ public class ActorExecutionTrace {
       ObjectBuffer<SFarReference> main = new ObjectBuffer<>(1);
       main.append(mainActorRef);
       actors.append(main);
+      //TODO record start time
+
     }
+  }
+
+  public static void setUpGCMonitoring(){
+    for(java.lang.management.GarbageCollectorMXBean bean : gcbeans){
+      NotificationEmitter emitter = (NotificationEmitter) bean;
+      NotificationListener listener = new NotificationListener() {
+        @Override
+        public void handleNotification(final Notification notification, final Object handback) {
+          if (notification.getType().equals(GarbageCollectionNotificationInfo.GARBAGE_COLLECTION_NOTIFICATION)) {
+            //get the information associated with this notification
+            GarbageCollectionNotificationInfo info = GarbageCollectionNotificationInfo.from((CompositeData) notification.getUserData());
+
+            System.out.println();
+            System.out.println(info.getGcAction() + ": - " + info.getGcInfo().getId()+ " " + info.getGcName() + " (from " + info.getGcCause()+") "+ info.getGcInfo().getDuration() + " ms;");
+            System.out.println("GcInfo MemoryUsageBeforeGc: " + info.getGcInfo().getMemoryUsageBeforeGc().entrySet().stream().filter(ent -> !ent.getKey().equals("Compressed Class Space") && !ent.getKey().equals("Code Cache")).mapToLong(usage -> usage.getValue().getUsed()).sum()/1024 + " kB");
+            System.out.println("GcInfo MemoryUsageAfterGc: " + info.getGcInfo().getMemoryUsageAfterGc().entrySet().stream().filter(ent -> !ent.getKey().equals("Compressed Class Space") && !ent.getKey().equals("Code Cache")).mapToLong(usage -> usage.getValue().getUsed()).sum()/1024 + " kB");
+
+          }
+        }
+      };
+
+      emitter.addNotificationListener(listener, null, null);
+    }
+  }
+
+  public static void logMemoryUsage(){
+    System.out.println("Current Memory usage: " + mbean.getHeapMemoryUsage().getUsed() /1024 + " kB");
   }
 
   public static ObjectBuffer<SFarReference> createActorBuffer() {
