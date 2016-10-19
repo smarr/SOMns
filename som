@@ -67,6 +67,8 @@ tools.add_argument('-dm', '--dynamic-metrics', help='Capture Dynamic Metrics',
                     dest='dynamic_metrics', action='store_true', default=False)
 tools.add_argument('-at', '--actor-tracing', help='enable tracing of actor operations',
                     dest='actor_tracing', action='store_true', default=False)
+tools.add_argument('-mt', '--memory-tracing', help='enable tracing of memory usage and GC',
+                    dest='memory_tracing', action='store_true', default=False)
 tools.add_argument('--coveralls', nargs=1, help='determine code coverage and report to Coveralls with',
                     dest='coveralls_repo_token', default=False, metavar='coveralls-repo-token')
 
@@ -226,6 +228,8 @@ if args.dynamic_metrics:
 
 if args.actor_tracing:
     flags += ['-Dsom.actorTracing=true']
+if args.memory_tracing:
+    flags += ['-Dsom.memoryTracing=true']
 
 if (args.truffle_profile or args.truffle_debugger or args.web_debugger or
     args.dynamic_metrics or args.coveralls_repo_token):

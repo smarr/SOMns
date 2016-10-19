@@ -300,7 +300,6 @@ public class Actor {
   public static final class DebugActor extends Actor {
     // TODO: remove this tracking, the new one should be more efficient
     private static final ArrayList<Actor> actors = new ArrayList<Actor>();
-    //ATOMIC Int instead? get and increment
 
     private final boolean isMain;
     private final int id;
@@ -312,7 +311,6 @@ public class Actor {
         actors.add(this);
         id = actors.size() - 1;
       }
-      //TODO RECORD creation timestamp
     }
 
     @Override
@@ -338,9 +336,19 @@ public class Actor {
 
   public static final class TracingActor extends Actor{
     protected long actorId;
+    protected final long creationStamp;
+    protected final EventualMessage causalMessage;
 
     public TracingActor() {
       super();
+      creationStamp = System.nanoTime();
+      Thread current = Thread.currentThread();
+      if (current instanceof ActorProcessingThread) {
+        ActorProcessingThread t = (ActorProcessingThread) current;
+        causalMessage = t.currentMessage;
+      }else{
+        causalMessage = null;
+      }
     }
 
     @Override

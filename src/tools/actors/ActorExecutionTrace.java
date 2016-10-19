@@ -33,6 +33,8 @@ public class ActorExecutionTrace {
   private static final MemoryMXBean mbean = ManagementFactory.getMemoryMXBean();
   private static final List<java.lang.management.GarbageCollectorMXBean> gcbeans = ManagementFactory.getGarbageCollectorMXBeans();
 
+  private static long actorSystemStartTime;
+
   public static ObjectBuffer<ObjectBuffer<SFarReference>> getAllCreateActors() {
     return createdActorsPerThread;
   }
@@ -41,11 +43,16 @@ public class ActorExecutionTrace {
     return messagesProcessedPerThread;
   }
 
-  static{setUpGCMonitoring();}
+  static{
+    if(VmSettings.MEMORY_TRACING){
+      setUpGCMonitoring();
+    }
+  }
 
   public static void recordMainActor(final Actor mainActor,
       final ObjectSystem objectSystem) {
     if (VmSettings.ACTOR_TRACING) {
+      actorSystemStartTime = System.currentTimeMillis();
       ObjectBuffer<ObjectBuffer<SFarReference>> actors = getAllCreateActors();
       SFarReference mainActorRef = new SFarReference(mainActor,
           objectSystem.getPlatformClass());
@@ -53,8 +60,6 @@ public class ActorExecutionTrace {
       ObjectBuffer<SFarReference> main = new ObjectBuffer<>(1);
       main.append(mainActorRef);
       actors.append(main);
-      //TODO record start time
-
     }
   }
 
@@ -82,7 +87,9 @@ public class ActorExecutionTrace {
   }
 
   public static void logMemoryUsage(){
-    System.out.println("Current Memory usage: " + mbean.getHeapMemoryUsage().getUsed() /1024 + " kB");
+    if(VmSettings.MEMORY_TRACING){
+      System.out.println("Current Memory usage: " + mbean.getHeapMemoryUsage().getUsed() /1024 + " kB");
+    }
   }
 
   public static ObjectBuffer<SFarReference> createActorBuffer() {

@@ -13,6 +13,7 @@ import tools.debugger.message.Message.OutgoingMessage;
 public class MessageHistory extends OutgoingMessage {
   private final MessageData[] messages;
   private final FarRefData[]  actors;
+  private static long mId;
 
   protected MessageHistory(final FarRefData[] actors, final MessageData[] message) {
     this.actors   = actors;
@@ -30,11 +31,11 @@ public class MessageHistory extends OutgoingMessage {
   }
 
   protected static class MessageData {
-    private final String id;
+    private final long id;
     private final long senderId;
     private final long targetId;
 
-    protected MessageData(final String id, final long senderId, final long targetId) {
+    protected MessageData(final long id, final long senderId, final long targetId) {
       this.id = id;
       this.senderId = senderId;
       this.targetId = targetId;
@@ -62,11 +63,11 @@ public class MessageHistory extends OutgoingMessage {
   private static MessageData[] messages(
       final ObjectBuffer<ObjectBuffer<ObjectBuffer<EventualMessage>>> messagesPerThread) {
     ArrayList<MessageData> messages = new ArrayList<>();
-    int mId = 0;
+
     for (ObjectBuffer<ObjectBuffer<EventualMessage>> perThread : messagesPerThread) {
       for (ObjectBuffer<EventualMessage> perBatch : perThread) {
         for (EventualMessage m : perBatch) {
-          messages.add(new MessageData("m-" + mId,
+          messages.add(new MessageData(mId,
               m.getSender().getActorId(),
               m.getTarget().getActorId()));
           mId += 1;
