@@ -53,7 +53,7 @@ public abstract class AbstractGenericDispatchNode extends AbstractDispatchNode {
     // Won't use DNU caching here, because it is already a megamorphic node
     SArray argumentsArray = SArguments.getArgumentsWithoutReceiver(arguments);
     Object[] args = new Object[] {arguments[0], selector, argumentsArray};
-    CallTarget target = CachedDnuNode.getDnu(rcvrClass);
+    CallTarget target = CachedDnuNode.getDnu(rcvrClass, selector);
     return call.call(frame, target, args);
   }
 

@@ -32,7 +32,7 @@ public final class CachedDnuNode extends AbstractDispatchNode {
       final AbstractDispatchNode nextInCache) {
     super(nextInCache.getSourceSection());
     this.cachedMethod = Truffle.getRuntime().createDirectCallNode(
-        getDnu(rcvrClass));
+        getDnu(rcvrClass, selector));
     this.selector = selector;
     this.guard    = guard;
   }
@@ -66,12 +66,12 @@ public final class CachedDnuNode extends AbstractDispatchNode {
   }
 
   @TruffleBoundary
-  public static CallTarget getDnu(final SClass rcvrClass) {
+  public static CallTarget getDnu(final SClass rcvrClass, final SSymbol missingSymbol) {
     Dispatchable disp = rcvrClass.lookupMessage(
         Symbols.DNU, AccessModifier.PROTECTED);
 
     if (disp == null) {
-      VM.errorExit("Lookup of " + rcvrClass.getName().getString() + ">>#doesNotUnderstand:arguments: failed.");
+      VM.errorExit("Lookup of " + rcvrClass.getName().getString() + ">>#doesNotUnderstand:arguments: failed after failed lookup for: " + missingSymbol.toString());
     }
     return ((SInvokable) disp).getCallTarget();
   }
