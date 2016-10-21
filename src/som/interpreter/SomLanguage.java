@@ -169,9 +169,13 @@ public final class SomLanguage extends TruffleLanguage<VM> {
     }
 
     VM vm = createNewFindContextNode().executeFindContext();
-    MixinDefinition moduleDef = vm.loadModule(code);
-    ParseResult result = new ParseResult(moduleDef.instantiateModuleClass());
-    return Truffle.getRuntime().createCallTarget(result);
+    try {
+      MixinDefinition moduleDef = vm.loadModule(code);
+      ParseResult result = new ParseResult(moduleDef.instantiateModuleClass());
+      return Truffle.getRuntime().createCallTarget(result);
+    } catch (ThreadDeath t) {
+      throw new IOException(t);
+    }
   }
 
   @Override
