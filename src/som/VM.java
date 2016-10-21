@@ -195,6 +195,7 @@ public final class VM {
     shouldExit = true;
 
     vmMainCompletion.complete(errorCode);
+    throw new ThreadDeath();
   }
 
   public static void errorExit(final String message) {

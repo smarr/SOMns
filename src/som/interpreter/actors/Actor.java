@@ -255,6 +255,10 @@ public class Actor {
   private static final class UncaughtExceptions implements UncaughtExceptionHandler {
     @Override
     public void uncaughtException(final Thread t, final Throwable e) {
+      if (e instanceof ThreadDeath) {
+        // Ignore those, we already signaled an error
+        return;
+      }
       ActorProcessingThread thread = (ActorProcessingThread) t;
       VM.errorPrintln("Processing of eventual message failed for actor: "
           + thread.currentlyExecutingActor.toString());
