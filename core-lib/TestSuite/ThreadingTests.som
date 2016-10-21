@@ -92,7 +92,6 @@ class ThreadingTests usingPlatform: platform testFramework: minitest = (
       | thread subThreadCurrent |
       thread := Thread spawn: [
         subThreadCurrent := Thread current].
-      thread println.
       thread join.
   
       (* those two should be the same object *)
@@ -119,6 +118,30 @@ class ThreadingTests usingPlatform: platform testFramework: minitest = (
       m critical: [ c await ].
       t join.
       self assert: executed
+    )
+
+    public testTaskInterface = (
+      | t1 t2 v1 v2 |
+      t1 := Task spawn: [ v1 := 1 ].
+      t2 := Task spawn: [ v2 := #foo ].
+
+      assert: 1 equals: t1 join.
+      assert: 1 equals: v1.
+
+      assert: #foo equals: t2 join.
+      assert: #foo equals: v2.
+    )
+
+    public testTaskInterfaceWithArgs = (
+      | t1 t2 v1 v2 |
+      t1 := Task spawn: [:a | v1 := a ] with: (Array with: 1).
+      t2 := Task spawn: [:b | v2 := b ] with: (Array with: #foo).
+
+      assert: 1 equals: t1 join.
+      assert: 1 equals: v1.
+
+      assert: #foo equals: t2 join.
+      assert: #foo equals: v2.
     )
   ) : ( TEST_CONTEXT = () )
 )

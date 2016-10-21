@@ -18,6 +18,7 @@ import som.interpreter.actors.SFarReference;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.interpreter.objectstorage.ClassFactory;
 import som.primitives.actors.ActorClasses;
+import som.primitives.threading.TaskPrimitives.SomForkJoinTask;
 import som.primitives.threading.ThreadingModule;
 import som.vm.constants.KernelObj;
 import som.vmobjects.SArray;
@@ -195,6 +196,12 @@ public abstract class OuterObjectRead
     return ThreadingModule.ThreadingModule;
   }
 
+  @Specialization(guards = {"contextLevel == 1", "mixinId == TaskClassId"})
+  public Object doTask(final SomForkJoinTask receiver) {
+    assert ThreadingModule.ThreadingModule != null;
+    return ThreadingModule.ThreadingModule;
+  }
+
   @Specialization(guards = {"contextLevel == 1", "mixinId != ThreadClassId"})
   public Object doThreadInKernelScope(final Thread receiver) {
     return KernelObj.kernel;
@@ -207,6 +214,11 @@ public abstract class OuterObjectRead
 
   @Specialization(guards = {"contextLevel == 1", "mixinId != MutexClassId"})
   public Object doMutexInKernelScope(final ReentrantLock receiver) {
+    return KernelObj.kernel;
+  }
+
+  @Specialization(guards = {"contextLevel == 1", "mixinId != TaskClassId"})
+  public Object doTaskInKernelScope(final SomForkJoinTask receiver) {
     return KernelObj.kernel;
   }
 }

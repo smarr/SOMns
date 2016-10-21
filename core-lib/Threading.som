@@ -86,17 +86,17 @@ class Threading usingVmMirror: vmMirror usingKernel: kernel = Value (
   public class Thread = ()(
     public name          = ( ^ vmMirror threadingName: self )
     public name: aString = ( ^ vmMirror threadingName: self set: aString )
-    public join = ( ^ vmMirror threadingJoin: self )
+    public join = ( ^ vmMirror threadingThreadJoin: self )
   ) : (
     (* #new is not supported, use #spawn*. *)
     public new = ( Exception signal )
   
     public spawn: aBlock = (
-      ^ vmMirror threadingSpawn: aBlock
+      ^ vmMirror threadingThreadSpawn: aBlock
     )
     
     public spawn: aBlock with: args = (
-      ^ vmMirror threadingSpawn: aBlock with: args
+      ^ vmMirror threadingThreadSpawn: aBlock with: args
     )
     
     public current = ( ^ vmMirror threadingCurrent: self )
@@ -105,13 +105,17 @@ class Threading usingVmMirror: vmMirror usingKernel: kernel = Value (
   
   (* A Task is a concurrently running entity more light-weight than a Thread
      and scheduled on a thread pool. *)
-  public class Task = ()() : (
+  public class Task = ()(
+    public join = (
+      ^ vmMirror threadingTaskJoin: self
+    )
+  ) : (
     public spawn: aBlock = (
-      ^ vmMirror threadingSpawn: aBlock
+      ^ vmMirror threadingTaskSpawn: aBlock
     )
   
     public spawn: aBlock with: args = (
-      ^ vmMirror threadingSpawn: aBlock with: args
+      ^ vmMirror threadingTaskSpawn: aBlock with: args
     )
   )
 )

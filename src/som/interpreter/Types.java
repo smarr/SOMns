@@ -34,6 +34,7 @@ import som.interpreter.actors.SPromise;
 import som.interpreter.nodes.DummyParent;
 import som.primitives.SizeAndLengthPrim;
 import som.primitives.SizeAndLengthPrimFactory;
+import som.primitives.threading.TaskPrimitives.SomForkJoinTask;
 import som.primitives.threading.ThreadingModule;
 import som.vm.constants.Classes;
 import som.vmobjects.SAbstractObject;
@@ -91,6 +92,9 @@ public class Types {
     } else if (obj instanceof Condition) {
       assert ThreadingModule.ConditionClass != null;
       return ThreadingModule.ConditionClass;
+    } else if (obj instanceof SomForkJoinTask) {
+      assert ThreadingModule.TaskClass != null;
+      return ThreadingModule.TaskClass;
     }
 
     TruffleCompiler.transferToInterpreter("Should not be reachable");

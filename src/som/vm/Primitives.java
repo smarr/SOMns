@@ -81,6 +81,7 @@ import som.primitives.bitops.BitXorPrimFactory;
 import som.primitives.threading.ConditionPrimitivesFactory;
 import som.primitives.threading.DelayPrimitivesFactory;
 import som.primitives.threading.MutexPrimitivesFactory;
+import som.primitives.threading.TaskPrimitivesFactory;
 import som.primitives.threading.ThreadPrimitivesFactory;
 import som.primitives.threading.ThreadingModuleFactory;
 import som.vm.constants.KernelObjFactory;
@@ -297,6 +298,7 @@ public class Primitives {
     allFactories.addAll(ConditionPrimitivesFactory.getFactories());
     allFactories.addAll(DelayPrimitivesFactory.getFactories());
     allFactories.addAll(MutexPrimitivesFactory.getFactories());
+    allFactories.addAll(TaskPrimitivesFactory.getFactories());
     allFactories.addAll(ThreadPrimitivesFactory.getFactories());
 
     allFactories.add(AdditionPrimFactory.getInstance());

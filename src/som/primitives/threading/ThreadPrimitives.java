@@ -45,7 +45,7 @@ public final class ThreadPrimitives {
   }
 
   @GenerateNodeFactory
-  @Primitive(primitive = "threadingJoin:")
+  @Primitive(primitive = "threadingThreadJoin:")
   public abstract static class JoinPrim extends UnaryExpressionNode {
     public JoinPrim(final boolean ew, final SourceSection s) { super(ew, s); }
 
@@ -61,7 +61,7 @@ public final class ThreadPrimitives {
   }
 
   @GenerateNodeFactory
-  @Primitive(primitive = "threadingSpawn:")
+  @Primitive(primitive = "threadingThreadSpawn:")
   public abstract static class SpawnPrim extends UnaryExpressionNode {
     public SpawnPrim(final boolean ew, final SourceSection s) { super(ew, s); }
 
@@ -78,7 +78,7 @@ public final class ThreadPrimitives {
   @GenerateNodeFactory
   @NodeChild(value = "argArr", type = ToArgumentsArrayNode.class,
     executeWith = {"argument", "receiver"})
-  @Primitive(primitive = "threadingSpawn:with:", extraChild = ToArgumentsArrayNodeFactory.class)
+  @Primitive(primitive = "threadingThreadSpawn:with:", extraChild = ToArgumentsArrayNodeFactory.class)
   public abstract static class SpawnWithPrim extends BinaryExpressionNode {
     public SpawnWithPrim(final boolean ew, final SourceSection s) { super(ew, s); }
 
