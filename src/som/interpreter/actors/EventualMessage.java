@@ -243,6 +243,8 @@ public abstract class EventualMessage {
   protected final void execute() {
     try {
       executeMessage();
+    } catch (ThreadDeath t) {
+      throw t;
     } catch (Throwable t) {
       VM.errorPrintln("EventualMessage: " + toString());
       t.printStackTrace();

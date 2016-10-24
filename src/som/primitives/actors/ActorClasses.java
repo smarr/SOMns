@@ -5,6 +5,7 @@ import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.interpreter.actors.SFarReference;
 import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.SResolver;
@@ -15,6 +16,10 @@ import som.vmobjects.SObject.SImmutableObject;
 
 
 public final class ActorClasses {
+
+  @CompilationFinal public static SImmutableObject  ActorModule;
+  @CompilationFinal public static MixinDefinitionId FarRefId;
+
   @GenerateNodeFactory
   @Primitive(primitive = "actorsFarReferenceClass:")
   public abstract static class SetFarReferenceClassPrim extends UnaryExpressionNode {
@@ -23,6 +28,7 @@ public final class ActorClasses {
     @Specialization
     public final SClass setClass(final SClass value) {
       SFarReference.setSOMClass(value);
+      FarRefId = value.getMixinDefinition().getMixinId();
       return value;
     }
   }
@@ -63,7 +69,7 @@ public final class ActorClasses {
     }
   }
 
-  @CompilationFinal public static SImmutableObject ActorModule;
+
 
   @GenerateNodeFactory
   @Primitive(primitive = "actorsModule:")

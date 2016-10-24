@@ -261,25 +261,39 @@ public final class MixinBuilder {
       }
       dispatchables.put(name, meth);
     } else {
-      addFactoryMethod(meth, name);
+      addFactoryMethod(meth, name, false);
     }
   }
 
-  private void addFactoryMethod(final SInvokable meth, final SSymbol name) {
+  private void addFactoryMethod(final SInvokable meth, final SSymbol name,
+      final boolean isPrimary) throws MixinDefinitionError {
     SInvokable existing = factoryMethods.get(name);
+    if (!isPrimary) {
+      if (existing != null) {
+        throw new MixinDefinitionError("The class " + this.name.getString()
+        + " already contains a " + existing.typeForErrors() + " named "
+        + name.getString() + ". Can't define a method with the same name.",
+        meth.getSourceSection());
+      }
+      factoryMethods.put(name, meth);
+      return;
+    }
     // we allow overriding the primary factory method here for convenient
-    // hacks, example: ValueArray uses this to delegate to the primitive
-    // However, there is an expectation that all methods in the system get set
+    // hacks, example: ValueArray uses this to delegate to the primitive.
+    // Note, this code reads a bit backwards because the primary factory is
+    // added here only after all other factory methods.
+    // Further, there is an expectation that all methods in the system get set
     // their holders, so, we're going to mess a little with the ones
     // that are overridden to keep them in the dict
     if (existing != null) {
-      // We use here the constructor directly to not record the symbol in the
+      // We use here the SSymbol constructor directly to not record the symbol in the
       // global table, which also neatly guarantees uniqueness with same string
       SSymbol hackedName = new SSymbol("\0!" + name.getString());
       assert !factoryMethods.containsKey(hackedName);
-      factoryMethods.put(hackedName, existing);
+      factoryMethods.put(hackedName, meth);
+    } else {
+      factoryMethods.put(name, meth);
     }
-    factoryMethods.put(name, meth);
   }
 
   public void addSlot(final SSymbol name, final AccessModifier acccessModifier,
@@ -341,7 +355,11 @@ public final class MixinBuilder {
     Method superclassResolution = assembleSuperclassAndMixinResoltionMethod();
     SInvokable primaryFactory       = assemblePrimaryFactoryMethod();
     SInvokable initializationMethod = assembleInitializationMethod();
-    addFactoryMethod(primaryFactory, primaryFactory.getSignature());
+    try {
+      addFactoryMethod(primaryFactory, primaryFactory.getSignature(), true);
+    } catch (MixinDefinitionError e) {
+      throw new RuntimeException(e); // This should never happen
+    }
 
     if (initializationMethod != null) {
       dispatchables.put(

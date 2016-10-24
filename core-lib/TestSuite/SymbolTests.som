@@ -1,5 +1,7 @@
-"
-Copyright (c) 2001-2013 see AUTHORS file
+(* Copyright (c) 2007-2015 see AUTHORS file
+
+Software Architecture Group, Hasso Plattner Institute, Potsdam, Germany
+http://www.hpi.uni-potsdam.de/swa/
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the 'Software'), to deal
@@ -18,17 +20,25 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
-"
+*)
+class SymbolTests usingPlatform: platform testFramework: minitest = (
+| private TestContext  = minitest TestContext.
+  private ObjectMirror = platform mirrors ObjectMirror. |
+)(
+  public class SymbolTest = TestContext ()(
 
-Return = (
-    
-    ----
-    
-    returnSelf = ( ^ self )
-
-    returnSelfImplicitly = ( )
+    public testConversion = (
+      self assert: 'gunk' equals: 'gunk' asSymbol asString.
+      self assert: 'oink' equals: #oink asString.
+    )
   
-    noReturnReturnsSelf = ( 1 )
-    
-    blockReturnsImplicitlyLastValue = ( ^ ([4] value) )
+    public testEquality = (
+      self assert: #oink equals: 'oink' asSymbol.
+    )
+  
+    public testSymbolIsString = (
+      self assert: (#oink beginsWith: 'oink').
+      self assert: 100 equals: #'100' asInteger.
+    )
+  ) : ( TEST_CONTEXT = () )
 )

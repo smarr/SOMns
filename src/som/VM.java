@@ -181,23 +181,26 @@ public final class VM {
     vm.exitVM(errorCode);
   }
 
+  /**
+   * To be called from {@link ObjectSystem}.
+   */
+  public void realExit(final int errorCode) {
+    engine.dispose();
+    System.exit(errorCode);
+  }
+
   private void exitVM(final int errorCode) {
     TruffleCompiler.transferToInterpreter("exit");
-    // Exit from the Java system
-    if (!avoidExitForTesting) {
-      engine.dispose();
-      System.exit(errorCode);
-    } else {
-      lastExitCode = errorCode;
-      shouldExit = true;
-    }
+    lastExitCode = errorCode;
+    shouldExit = true;
 
     vmMainCompletion.complete(errorCode);
+    throw new ThreadDeath();
   }
 
   public static void errorExit(final String message) {
     TruffleCompiler.transferToInterpreter("errorExit");
-    errorPrintln("Runtime Error: " + message);
+    errorPrintln("Run-time Error: " + message);
     exit(1);
   }
 
@@ -260,7 +263,8 @@ public final class VM {
 
   public static void main(final String[] args) {
     Builder builder = PolyglotEngine.newBuilder();
-    builder.config(SomLanguage.MIME_TYPE, SomLanguage.CMD_ARGS, args);
+    builder.config(SomLanguage.MIME_TYPE, SomLanguage.CMD_ARGS,   args);
+    builder.config(SomLanguage.MIME_TYPE, SomLanguage.AVOID_EXIT, false);
     VMOptions vmOptions = new VMOptions(args);
 
     if (vmOptions.debuggerEnabled) {

@@ -1,5 +1,4 @@
-"
-Copyright (c) 2001-2013 see AUTHORS file
+(* Copyright (c) 2001-2015 see AUTHORS file
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the 'Software'), to deal
@@ -18,39 +17,46 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
-"
+*)
+class PermuteSuite usingPlatform: platform andHarness: harness = (
+| private Array     = platform kernel Array. 
+  private Benchmark = harness Benchmark.
+|
+) (
+  class Permute = Benchmark (
+    | count v |
+  ) (
 
-NonLocalReturn = (
-    
-    ----
-    
-    test = (
-        'test1 expect 42: ' println.
-        self test1 asString println.
-        
-        'test2 expect 43: ' println.
-        self test2 asString println.
-        
-        'test3 expect  3: ' println.
-        self test3 asString println.
+    benchmark = (
+      count := 0.
+      v     := Array new: 7.
+      self permute: 6.
+      ^ count
     )
     
-    test1 = ( | t1Frame |
-      [ | nlrFrame |
-        ^ 42 ] value
+    verifyResult: result = (
+      ^ self assert: 8660 equals: result
     )
-    test2 = ( ^ self test1 + 1 )
-    test3 = ( [ self test1. ^ 3 ] value )
     
-    test4 = ( ^ self at: 11 )
-    test5 = ( ^ self at: 10000 )
-    
-    "Test case borrowed from Vector"
-    at: index = ( self checkIndex: index ifValid: [ ^ 42 ].
-      "else" ^ 22 )
-    checkIndex: index ifValid: block = (
-        (10 <= index) && (index <= 100)
-            ifTrue:  [ ^ block value ]
-            ifFalse: [ #dontcare ]
+    permute: n = (
+      count := count + 1.
+      (n <> 0)
+        ifTrue: [
+          self permute: n - 1.
+          n downTo: 1 do: [ :i |
+            self swap: n with: i.
+            self permute: n - 1.
+            self swap: n with: i ] ]
     )
+    
+    swap: i with: j = (
+        | tmp |
+        tmp := v at: i.
+        v at: i put: (v at: j).
+        v at: j put: tmp
+    )
+  )
+  
+  public newInstance = ( ^ Permute new )
+  public setupVerifiedRun: run = ( run innerIterations: 1 )
 )

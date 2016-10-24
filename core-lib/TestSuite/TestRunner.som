@@ -1,0 +1,142 @@
+class TestRunner usingPlatform: platform = (
+| private platform = platform.
+  private system   = platform system.
+  private actors   = platform actors.
+  private minitest = (system loadModule: 'Minitest.som' nextTo: self) usingPlatform: platform.
+|
+)(
+
+  printNameAndDescription: failureOrError = (
+    failureOrError testCase environment classDeclarationMirror name asString print.
+      '>>#' print. failureOrError testCase selector println.
+    '\t' print. failureOrError description println.
+  )
+  
+  reportErrors: errors = (
+    errors size > 0 ifTrue: [
+      'Errors' println.
+      '------\n' println.
+  
+      errors do: [:terr |
+        printNameAndDescription: terr.
+      ].
+
+      '' println.
+    ].
+  )
+  
+  reportFailures: failures = (
+    failures size > 0 ifTrue: [
+      'Failures' println.
+      '--------\n' println.
+  
+      failures do: [:failure |
+        printNameAndDescription: failure
+      ].
+
+      '' println.
+    ].
+  )
+  
+  runTester: tester = (
+    | promisePair |
+    promisePair := actors createPromisePair.
+
+    tester runAll whenResolved: [:aTester |
+      reportErrors:   tester errors.
+      reportFailures: tester failures.
+
+      'Total Number of Tests:      ' print.
+      (tester errors size + tester failures size + tester successes size) println.
+      'Number of Successful Tests: ' print.
+      tester successes size println.
+
+      promisePair resolve: tester errors size + tester failures size = 0
+    ].
+    ^ promisePair promise
+  )
+  
+  runAllTests: testModule = (
+    | tester catalog |
+    catalog := minitest TestCatalog forModule: testModule.
+    tester := minitest Tester testSuite: catalog allTests.
+    
+    ^ runTester: tester
+  )
+  
+  runTest: testId in: testModule = (
+    | tester catalog |
+    (testId includes: '.') ifTrue: [
+      | testNameElems |
+      testNameElems := testId split: '.'.
+      catalog := minitest TestCatalog
+        forModule: testModule select: (testNameElems at: 1) test: (testNameElems at: 2).
+    ] ifFalse: [
+      catalog := minitest TestCatalog
+        forModule: testModule select: testId
+    ].
+    tester  := minitest Tester testSuite: catalog allTests.
+    ^ runTester: tester
+    
+  )
+  
+  runAllKnownModules = (
+    | modules allSuccessful allTestsDonePromise |
+    modules := 'LanguageTests',
+               'MixinTests',
+               'CollectionTests',
+               'DoubleTests',
+               'IntegerTests',
+               'StringTests',
+               'SymbolTests',
+               'SystemTests',
+               'BenchmarkHarnessTests',
+               'ActorTests',
+               'RegressionTests',
+               'TransferObjectTests',
+               'MinitestTests'.
+               
+               (* 'ReflectionTests', *)
+    
+    allSuccessful := true.
+    allTestsDonePromise := actors async: modules do: [:m |
+      | testModule |
+      testModule := (system loadModule: m + '.som' nextTo: self)
+                      usingPlatform: platform testFramework: minitest.
+      m println.
+      (runAllTests: testModule)
+        whenResolved: [:successful |
+        allSuccessful := allSuccessful and: successful.
+        '' println.
+      ]
+    ].
+    ^ allTestsDonePromise whenResolved: [:ms | allSuccessful ]
+  )
+
+  public main: args = (
+    | testModule testsCompletedPromise |
+    args size >= 2 ifTrue: [
+
+      testModule := (system loadModule: (args at: 2)) usingPlatform: platform testFramework: minitest.
+
+      args size = 2 ifTrue: [
+        testsCompletedPromise := runAllTests: testModule ].
+
+      args size = 3 ifTrue: [
+        testsCompletedPromise := runTest: (args at: 3) in: testModule ].
+
+      args size > 3 ifTrue: [
+        (* TODO: add --help *)
+        'not currently supported' println.
+      ]
+    ].
+    
+    args size = 1 ifTrue: [
+      testsCompletedPromise := runAllKnownModules ].
+    
+    ^ testsCompletedPromise whenResolved: [:testsPassed | 
+      testsPassed
+        ifTrue:  [ system exit: 0 ]
+        ifFalse: [ system exit: 1 ] ]
+  )
+)

@@ -243,6 +243,7 @@ public class BasicInterpreterTests {
   protected VM getInitializedVM() throws IOException {
     Builder builder = PolyglotEngine.newBuilder();
     builder.config(SomLanguage.MIME_TYPE, SomLanguage.CMD_ARGS, getVMArguments());
+    builder.config(SomLanguage.MIME_TYPE, SomLanguage.AVOID_EXIT, true);
     PolyglotEngine engine = builder.build();
 
     engine.getInstruments().values().forEach(i -> i.setEnabled(false));

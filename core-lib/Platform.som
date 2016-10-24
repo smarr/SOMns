@@ -1,0 +1,31 @@
+class Platform usingVmMirror: vmMirror = Value (
+  (* The Platform class defines the runtime system of SOMns. It loads all
+     elements required for execution, and afterwards processes the command line
+     arguments to start the application code. *)
+| public kernel  = vmMirror kernelObject: nil.
+  public system  = (vmMirror load: 'System.som' nextTo: self)  usingVmMirror: vmMirror.
+  public mirrors = (vmMirror load: 'Mirrors.som' nextTo: self) usingVmMirror: vmMirror.
+  public actors      = (vmMirror load: 'Actors.som' nextTo: self) usingVmMirror: vmMirror usingKernel: kernel.
+  public collections = (vmMirror load: 'Collections.som' nextTo: self) usingKernel: kernel.
+|
+)(
+  (* start executes the application code and returns an integer as error code,
+     or in case of an application that uses actors, a promise that indicates
+     program completion *)
+  public start = (
+    | arguments app errorCodeOrPromise |
+    arguments := system arguments.
+
+    arguments size < 1 ifTrue: [
+      system error: 'No application specified for execution.'
+    ].
+    
+    app := system loadModule: (arguments at: 1).
+    
+    [ errorCodeOrPromise := (app usingPlatform: self) main: arguments ]
+      on: kernel Exception
+      do: [:e | system error: e asString ].
+
+    ^ errorCodeOrPromise
+  )
+)

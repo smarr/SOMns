@@ -93,7 +93,7 @@ public final class UninitializedDispatchNode {
       return node;
     }
 
-    protected final AbstractDispatchNode generalizeChain(
+    protected AbstractDispatchNode generalizeChain(
         final GenericMessageSendNode sendNode) {
       // the chain is longer than the maximum defined by INLINE_CACHE_SIZE and
       // thus, this callsite is considered to be megamorphic, and we generalize
@@ -253,21 +253,10 @@ public final class UninitializedDispatchNode {
       this.classSide   = classSide;
     }
 
-    private SClass getSuperClass(final SClass rcvrClass) {
-      SClass cls = rcvrClass.getClassCorrespondingTo(holderMixin);
-      SClass superClass = cls.getSuperClass();
-
-      if (classSide) {
-        return superClass.getSOMClass();
-      } else {
-        return superClass;
-      }
-    }
-
     @Override
     protected Dispatchable doLookup(final SClass rcvrClass) {
-      return getSuperClass(rcvrClass).lookupMessage(
-          selector, AccessModifier.PROTECTED);
+      return GenericSuperDispatchNode.lookup(
+          rcvrClass, selector, holderMixin, classSide);
     }
 
     @Override
@@ -291,6 +280,18 @@ public final class UninitializedDispatchNode {
     @Override
     protected MixinDefinitionId getMixinForPrivateLockupOrNull() {
       return null;
+    }
+
+    /**
+     * For super sends we need to use our proper super node.
+     */
+    @Override
+    protected AbstractDispatchNode generalizeChain(
+        final GenericMessageSendNode sendNode) {
+      GenericSuperDispatchNode genericReplacement = new GenericSuperDispatchNode(
+          sourceSection, selector, holderMixin, classSide);
+      sendNode.replaceDispatchListHead(genericReplacement);
+      return genericReplacement;
     }
   }
 
