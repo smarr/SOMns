@@ -115,12 +115,6 @@ public class ObjectBuffer<T> implements Iterable<T> {
       this.currentIdx = fromIdx;
     }
 
-    private Iter(final int lastIdx, final Entry<T> current, final int fromIdx) {
-      this.lastIdxInLastEntry = lastIdx - 1;
-      this.current = current;
-      this.currentIdx = fromIdx;
-    }
-
     @Override
     public boolean hasNext() {
       if (current == null) {  // empty, had never any element
