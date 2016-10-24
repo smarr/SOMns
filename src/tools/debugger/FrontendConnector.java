@@ -206,7 +206,12 @@ public class FrontendConnector {
     log("[DEBUGGER] Debugger connected.");
   }
 
-  private Map<SFarReference, String> createActorMap(
+  /**
+   * will be removed, required to send actor information incremental
+   * @param actorsPerThread
+   * @return mapping of new actors to ids
+   */
+  private Map<SFarReference, String> createNewActorsMap(
       final ObjectBuffer<ObjectBuffer<SFarReference>> actorsPerThread) {
     HashMap<SFarReference, String> map = new HashMap<>();
 
@@ -223,7 +228,12 @@ public class FrontendConnector {
     return map;
   }
 
-  private static Map<Actor, String> createObjsMap(
+  /**
+   * will be removed, required to map message senders/receivers to ids
+   * @param actorsPerThread
+   * @return mapping of all actors to ids
+   */
+  private static Map<Actor, String> createActorIdMap(
       final ObjectBuffer<ObjectBuffer<SFarReference>> actorsPerThread) {
     HashMap<Actor, String> map = new HashMap<>();
     int numActors = 0;
@@ -247,12 +257,12 @@ public class FrontendConnector {
     ObjectBuffer<ObjectBuffer<SFarReference>> actorsPerThread = ActorExecutionTrace.getAllCreateActors();
     ObjectBuffer<ObjectBuffer<ObjectBuffer<EventualMessage>>> messagesPerThread = ActorExecutionTrace.getAllProcessedMessages();
 
-    Map<SFarReference, String> actorsToIds = createActorMap(actorsPerThread);
-    Map<Actor, String> actorObjsToIds = createObjsMap(actorsPerThread);
+    Map<SFarReference, String> newActors = createNewActorsMap(actorsPerThread);
+    Map<Actor, String> completeActorIdMap = createActorIdMap(actorsPerThread);
 
 
     MessageHistory msg = MessageHistory.create(
-        actorsToIds, messagesPerThread, actorObjsToIds);
+        newActors, messagesPerThread, completeActorIdMap);
 
     String m = gson.toJson(msg, Message.class);
     log("[ACTORS] Message length: " + m.length());

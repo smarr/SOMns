@@ -4,110 +4,14 @@
 import {IdMap, MessageHistoryMessage, MessageData, FarRefData} from './messages';
 import {dbgLog} from './source';
 import * as d3 from 'd3';
+import {dataStore} from './tracingData';
 
 var path, circle, nodes, links, force, colors;
-
-var horizontalDistance = 100,
-  verticalDistance = 100;
+var data = new dataStore();
 
 // set up SVG for D3
 var width = 360,
   height  = 350;
-
-function hasSelfSends(actorId: string, messages: MessageData[]) {
-  for (var i in messages) {
-    if (messages[i].senderId === actorId) {
-      return true;
-    }
-  }
-  return false;
-}
-
-function hashAtInc(hash, idx: string, inc: number) {
-  if (hash.hasOwnProperty(idx)) {
-    hash[idx] += inc;
-  } else {
-    hash[idx] = inc;
-  }
-}
-
-var actorsPerType = {};
-var nodeMap = {};
-
-function determineNodes(msgHist: MessageHistoryMessage) {
-  
-  for (var aId in msgHist.actors) {
-    var actor = msgHist.actors[aId];
-    hashAtInc(actorsPerType, actor.typeName, 1);
-
-    var selfSends = hasSelfSends(actor.id, msgHist.messages);
-    var node = {
-      id: actor.id,
-      name: actor.typeName,
-      reflexive: selfSends,
-      x: horizontalDistance + horizontalDistance * actorsPerType[actor.typeName],
-      y: verticalDistance * Object.keys(actorsPerType).length,
-      type: actor.typeName
-    };
-
-    nodeMap[actor.id] = node;
-  }
-  return nodeMap;
-}
-
-function mapToArray(map) {
-  var arr = [];
-  for (var i in map) {
-    arr.push(map[i]);
-  }
-  return arr;
-}
-
-var maxMessageCount = 0;
-var msgSends = {};
-
-function countMessagesSenderToReceiver(msgHist: MessageHistoryMessage): IdMap<IdMap<number>> {
-
-  dbgLog("[DetLinks] #msg: " + msgHist.messages.length);
-  for (let msg of msgHist.messages) {
-    if (!msgSends.hasOwnProperty(msg.senderId)) {
-      msgSends[msg.senderId] = {};
-    }
-    if (msg.senderId !== msg.targetId) {
-      hashAtInc(msgSends[msg.senderId], msg.targetId, 1);
-    }
-  }
-  return msgSends;
-}
-
-function createLinksData(msgSends: IdMap<IdMap<number>>) {
-  dbgLog("[DetLinks] completed ");
-
-  let links = [];
-  for (let sendId in msgSends) {
-    for (let rcvrId in msgSends[sendId]) {
-      maxMessageCount = Math.max(maxMessageCount, msgSends[sendId][rcvrId]);
-      if (nodeMap[sendId] === undefined) {
-        dbgLog("WAT? unknown sendId: " + sendId);
-      }
-      if (nodeMap[rcvrId] === undefined) {
-        dbgLog("WAT? unknown rcvrId: " + rcvrId);
-      }
-      links.push({
-        source: nodeMap[sendId],
-        target: nodeMap[rcvrId],
-        left: false, right: true,
-        messageCount: msgSends[sendId][rcvrId]
-      });
-    }
-  }
-  return links;
-}
-
-function determineLinks(msgHist: MessageHistoryMessage) {
-  countMessagesSenderToReceiver(msgHist);
-  return createLinksData(msgSends);
-}
 
 /**
  * @param {MessageHistory} msgHist
@@ -126,10 +30,10 @@ export function displayMessageHistory(msgHist: MessageHistoryMessage) {
   //  - nodes are known by 'id', not by index in array.
   //  - reflexive edges are indicated on the node (as a bold black circle).
   //  - links are always source < target; edge directions are set by 'left' and 'right'.
-  determineNodes(msgHist);
-  nodes = mapToArray(nodeMap);
-
-  links = determineLinks(msgHist);
+  data.updateData(msgHist)
+  nodes = data.getActorNodes();
+  
+  links = data.getLinks() ;
 
   // init D3 force layout
   force = d3.layout.force()
@@ -141,7 +45,7 @@ export function displayMessageHistory(msgHist: MessageHistoryMessage) {
     .on('tick', tick);
 
   force.linkStrength(function(link) {
-    return link.messageCount / maxMessageCount;
+    return link.messageCount / data.getMaxMessageSends();
   });
 
   // define arrow markers for graph links
@@ -175,9 +79,7 @@ export function displayMessageHistory(msgHist: MessageHistoryMessage) {
 }
 
 export function resetLinks (){
-  msgSends = {};
-  actorsPerType = {};
-  nodeMap = {};
+  data = new dataStore();
 }
 
 // update force layout (called automatically each iteration)
