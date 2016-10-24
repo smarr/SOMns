@@ -250,6 +250,7 @@ public class FrontendConnector {
     Map<SFarReference, String> actorsToIds = createActorMap(actorsPerThread);
     Map<Actor, String> actorObjsToIds = createObjsMap(actorsPerThread);
 
+
     MessageHistory msg = MessageHistory.create(
         actorsToIds, messagesPerThread, actorObjsToIds);
 
