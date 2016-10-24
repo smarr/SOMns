@@ -2,6 +2,7 @@ package som.interpreter.actors;
 
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
@@ -134,7 +135,9 @@ public class Actor {
   @TruffleBoundary
   public synchronized void send(final EventualMessage msg) {
     assert msg.getTarget() == this;
-    //TODO REECORD message send timestamp
+    if(VmSettings.ACTOR_TRACING){
+      mailbox.addMessageSendTime();
+    }
     mailbox.append(msg);
     logMessageAddedToMailbox(msg);
 
@@ -190,7 +193,9 @@ public class Actor {
             dbg.prepareSteppingUntilNextRootNode();
           }
         }
-        //TODO RECORD message execute
+        if(VmSettings.ACTOR_TRACING){
+          current.addMessageExecutionStart();
+        }
         msg.execute();
       }
       if (VmSettings.ACTOR_TRACING) {
@@ -392,6 +397,8 @@ public class Actor {
     public void setOwner(final Actor owner){}
     public void setExecutor(final ActorProcessingThread executor){}
     public void setBasemessageId(final long id){}
+    public void addMessageSendTime(){}
+    public void addMessageExecutionStart(){}
 
     public long getExecutionStart(){return 0;}
     public long getExecutionEnd(){return 0;}
@@ -405,6 +412,8 @@ public class Actor {
     Actor owner;
     long executionStart;
     long executionEnd;
+    final List<Long> messageExecutionStart = new ArrayList<>();
+    final List<Long> messageSendTime = new ArrayList<>();
 
     public TracingMailbox(final int bufferSize) {
       super(bufferSize);
@@ -448,6 +457,16 @@ public class Actor {
     @Override
     public long getBasemessageId() {
       return baseMessageId;
+    }
+
+    @Override
+    public void addMessageSendTime() {
+      messageSendTime.add(System.nanoTime());
+    }
+
+    @Override
+    public void addMessageExecutionStart() {
+      messageExecutionStart.add(System.nanoTime());
     }
   }
 }
