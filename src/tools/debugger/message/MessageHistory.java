@@ -2,6 +2,7 @@ package tools.debugger.message;
 
 import java.util.ArrayList;
 
+import som.interpreter.actors.Actor.Mailbox;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.SFarReference;
 import som.vmobjects.SClass;
@@ -13,7 +14,6 @@ import tools.debugger.message.Message.OutgoingMessage;
 public class MessageHistory extends OutgoingMessage {
   private final MessageData[] messages;
   private final FarRefData[]  actors;
-  private static long mId;
 
   protected MessageHistory(final FarRefData[] actors, final MessageData[] message) {
     this.actors   = actors;
@@ -43,7 +43,7 @@ public class MessageHistory extends OutgoingMessage {
   }
 
   public static MessageHistory create(final ObjectBuffer<ObjectBuffer<SFarReference>> actorList,
-      final ObjectBuffer<ObjectBuffer<ObjectBuffer<EventualMessage>>> messagesPerThread) {
+      final ObjectBuffer<ObjectBuffer<Mailbox>> messagesPerThread) {
     ArrayList<FarRefData> actors = new ArrayList<>();
     for(ObjectBuffer<SFarReference> perThread : actorList){
       for (SFarReference e : perThread) {
@@ -61,13 +61,14 @@ public class MessageHistory extends OutgoingMessage {
   }
 
   private static MessageData[] messages(
-      final ObjectBuffer<ObjectBuffer<ObjectBuffer<EventualMessage>>> messagesPerThread) {
+      final ObjectBuffer<ObjectBuffer<Mailbox>> messagesPerThread) {
     ArrayList<MessageData> messages = new ArrayList<>();
 
-    for (ObjectBuffer<ObjectBuffer<EventualMessage>> perThread : messagesPerThread) {
-      for (ObjectBuffer<EventualMessage> perBatch : perThread) {
+    for (ObjectBuffer<Mailbox> perThread : messagesPerThread) {
+      for (Mailbox perBatch : perThread) {
+        long mId = 0;
         for (EventualMessage m : perBatch) {
-          messages.add(new MessageData(mId,
+          messages.add(new MessageData(perBatch.getBasemessageId() + mId,
               m.getSender().getActorId(),
               m.getTarget().getActorId()));
           mId += 1;

@@ -21,7 +21,7 @@ import com.oracle.truffle.api.source.SourceSection;
 import com.sun.net.httpserver.HttpServer;
 
 import som.VmSettings;
-import som.interpreter.actors.EventualMessage;
+import som.interpreter.actors.Actor.Mailbox;
 import som.interpreter.actors.SFarReference;
 import tools.ObjectBuffer;
 import tools.SourceCoordinate;
@@ -241,7 +241,7 @@ public class FrontendConnector {
     }
 
     ObjectBuffer<ObjectBuffer<SFarReference>> actorsPerThread = ActorExecutionTrace.getAllCreateActors();
-    ObjectBuffer<ObjectBuffer<ObjectBuffer<EventualMessage>>> messagesPerThread = ActorExecutionTrace.getAllProcessedMessages();
+    ObjectBuffer<ObjectBuffer<Mailbox>> messagesPerThread = ActorExecutionTrace.getAllProcessedMessages();
 
     MessageHistory msg = MessageHistory.create(actorsPerThread, messagesPerThread);
 

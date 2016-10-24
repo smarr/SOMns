@@ -59,7 +59,7 @@ public class Actor {
   }
 
   /** Buffer for incoming messages. */
-  private ObjectBuffer<EventualMessage> mailbox = new ObjectBuffer<>(16);
+  private Mailbox mailbox = createNewMailbox(16);
 
   /** Flag to indicate whether there is currently a F/J task executing. */
   private boolean isExecuting;
@@ -150,7 +150,7 @@ public class Actor {
    */
   private static final class ExecAllMessages implements Runnable {
     private final Actor actor;
-    private ObjectBuffer<EventualMessage> current;
+    private Mailbox current;
 
     ExecAllMessages(final Actor actor) {
       this.actor = actor;
@@ -175,8 +175,12 @@ public class Actor {
     }
 
     private void processCurrentMessages(final ActorProcessingThread currentThread, final WebDebugger dbg) {
-    //TODO RECORD mailbox starting
-
+      if (VmSettings.ACTOR_TRACING) {
+        current.setExecutionStart(System.nanoTime());
+        current.setExecutor(currentThread);
+        current.setBasemessageId(currentThread.generateMessageBaseId(current.size()));
+        current.setOwner(actor);
+      }
       for (EventualMessage msg : current) {
         actor.logMessageBeingExecuted(msg);
         currentThread.currentMessage = msg;
@@ -190,10 +194,10 @@ public class Actor {
         msg.execute();
       }
       if (VmSettings.ACTOR_TRACING) {
-        //TODO RECORD mailbox done
+        current.setExecutionEnd(System.nanoTime());
         ActorExecutionTrace.logMemoryUsage();
         currentThread.processedMessages.append(current);
-
+        //System.out.println("[Mailbox] executed " + current.size() + " Message(s) in " + (current.getExecutionEnd()-current.getExecutionStart())/1000000.0 + " ms, Id:" + current.getBasemessageId());
       }
     }
 
@@ -207,8 +211,10 @@ public class Actor {
 
           return false;
         }
-        actor.mailbox = new ObjectBuffer<>(actor.mailbox.size());
+
+        actor.mailbox = createNewMailbox(actor.mailbox.size());
       }
+
       return true;
     }
   }
@@ -242,8 +248,9 @@ public class Actor {
     protected Actor currentlyExecutingActor;
     protected final int threadId;
     protected long actorIdCounter;
+    protected long messageIdCounter;
     protected final ObjectBuffer<SFarReference> createdActors;
-    protected final ObjectBuffer<ObjectBuffer<EventualMessage>> processedMessages;
+    protected final ObjectBuffer<Mailbox> processedMessages;
 
     protected ActorProcessingThread(final ForkJoinPool pool) {
       super(pool);
@@ -255,6 +262,12 @@ public class Actor {
     protected long generateActorId(){
       long result = (threadId << 56) | actorIdCounter;
       actorIdCounter++;
+      return result;
+    }
+
+    protected long generateMessageBaseId(final int numMessages){
+      long result = (threadId << 56) | messageIdCounter;
+      messageIdCounter+= numMessages;
       return result;
     }
 
@@ -293,7 +306,15 @@ public class Actor {
     return "Actor";
   }
 
-  public ObjectBuffer<EventualMessage> getMailbox() {
+  private static Mailbox createNewMailbox(final int bufferSize){
+    if (VmSettings.ACTOR_TRACING) {
+      return new TracingMailbox(bufferSize);
+    } else{
+      return new Mailbox(bufferSize);
+    }
+  }
+
+  public Mailbox getMailbox() {
     return mailbox;
   }
 
@@ -359,5 +380,74 @@ public class Actor {
       return actorId;
     }
 
+  }
+
+  public static class Mailbox extends ObjectBuffer<EventualMessage>{
+    public Mailbox(final int bufferSize) {
+      super(bufferSize);
+    }
+
+    public void setExecutionStart(final long start){}
+    public void setExecutionEnd(final long end){}
+    public void setOwner(final Actor owner){}
+    public void setExecutor(final ActorProcessingThread executor){}
+    public void setBasemessageId(final long id){}
+
+    public long getExecutionStart(){return 0;}
+    public long getExecutionEnd(){return 0;}
+    public long getBasemessageId(){return 0;}
+  }
+
+  public static final class TracingMailbox extends Mailbox{
+
+    long baseMessageId;
+    ActorProcessingThread exector;
+    Actor owner;
+    long executionStart;
+    long executionEnd;
+
+    public TracingMailbox(final int bufferSize) {
+      super(bufferSize);
+    }
+
+    @Override
+    public void setExecutionStart(final long start) {
+      this.executionStart = start;
+    }
+
+    @Override
+    public void setExecutionEnd(final long end) {
+      this.executionEnd = end;
+    }
+
+    @Override
+    public void setOwner(final Actor owner) {
+      this.owner = owner;
+    }
+
+    @Override
+    public void setExecutor(final ActorProcessingThread executor) {
+      this.exector = executor;
+    }
+
+    @Override
+    public void setBasemessageId(final long id) {
+      this.baseMessageId = id;
+    }
+
+    @Override
+    public long getExecutionStart() {
+      return executionStart;
+    }
+
+    @Override
+    public long getExecutionEnd() {
+      return executionEnd;
+    }
+
+    @Override
+    public long getBasemessageId() {
+      return baseMessageId;
+    }
   }
 }

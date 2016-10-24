@@ -13,7 +13,7 @@ import com.sun.management.GarbageCollectionNotificationInfo;
 
 import som.VmSettings;
 import som.interpreter.actors.Actor;
-import som.interpreter.actors.EventualMessage;
+import som.interpreter.actors.Actor.Mailbox;
 import som.interpreter.actors.SFarReference;
 import som.vm.ObjectSystem;
 import tools.ObjectBuffer;
@@ -27,7 +27,7 @@ public class ActorExecutionTrace {
       VmSettings.ACTOR_TRACING ? new ObjectBuffer<>(VmSettings.NUM_THREADS) : null;
 
   /** Access to this data structure needs to be synchronized. Typically via {@link createdActorsPerThread} */
-  private static final ObjectBuffer<ObjectBuffer<ObjectBuffer<EventualMessage>>> messagesProcessedPerThread =
+  private static final ObjectBuffer<ObjectBuffer<Mailbox>> messagesProcessedPerThread =
       VmSettings.ACTOR_TRACING ? new ObjectBuffer<>(VmSettings.NUM_THREADS) : null;
 
   private static final MemoryMXBean mbean = ManagementFactory.getMemoryMXBean();
@@ -39,7 +39,7 @@ public class ActorExecutionTrace {
     return createdActorsPerThread;
   }
 
-  public static ObjectBuffer<ObjectBuffer<ObjectBuffer<EventualMessage>>> getAllProcessedMessages() {
+  public static ObjectBuffer<ObjectBuffer<Mailbox>> getAllProcessedMessages() {
     return messagesProcessedPerThread;
   }
 
@@ -110,13 +110,13 @@ public class ActorExecutionTrace {
     return createdActors;
   }
 
-  public static ObjectBuffer<ObjectBuffer<EventualMessage>> createProcessedMessagesBuffer() {
-    ObjectBuffer<ObjectBuffer<EventualMessage>> processedMessages;
+  public static ObjectBuffer<Mailbox> createProcessedMessagesBuffer() {
+    ObjectBuffer<Mailbox> processedMessages;
 
     if (VmSettings.ACTOR_TRACING) {
       processedMessages = new ObjectBuffer<>(MSG_BUFFER_SIZE);
 
-      ObjectBuffer<ObjectBuffer<ObjectBuffer<EventualMessage>>> messagesProcessedPerThread = getAllProcessedMessages();
+      ObjectBuffer<ObjectBuffer<Mailbox>> messagesProcessedPerThread = getAllProcessedMessages();
 
       // publish the thread local buffer for later querying
       synchronized (messagesProcessedPerThread) {
@@ -128,8 +128,14 @@ public class ActorExecutionTrace {
     return processedMessages;
   }
 
-  public static void clearProcessedMessages() {
-    for (ObjectBuffer<ObjectBuffer<EventualMessage>> o : messagesProcessedPerThread) {
+  public static void clearProcessedMessages(){
+    for(ObjectBuffer<Mailbox> o : messagesProcessedPerThread){
+      o.clear();
+    }
+  }
+
+  public static void clearCreatedActors(){
+    for(ObjectBuffer<SFarReference> o : createdActorsPerThread){
       o.clear();
     }
   }
