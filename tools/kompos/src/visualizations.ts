@@ -4,10 +4,10 @@
 import {IdMap, MessageHistoryMessage, MessageData, FarRefData} from './messages';
 import {dbgLog} from './source';
 import * as d3 from 'd3';
-import {dataStore} from './tracingData';
+import {HistoryData} from './history-data';
 
 var path, circle, nodes, links, force, colors;
-var data = new dataStore();
+var data = new HistoryData();
 
 // set up SVG for D3
 var width = 360,
@@ -78,8 +78,8 @@ export function displayMessageHistory(msgHist: MessageHistoryMessage) {
   restart();
 }
 
-export function resetLinks (){
-  data = new dataStore();
+export function resetLinks() {
+  data = new HistoryData();
 }
 
 // update force layout (called automatically each iteration)
