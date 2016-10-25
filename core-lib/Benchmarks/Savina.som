@@ -106,11 +106,13 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     )
     
     public benchmark = (
-      | ping pong completionPP |
+      | ping ping2 pong completionPP |
       completionPP := actors createPromisePair.
       pong := (actors createActorFromValue: Pong) <-: new: completionPP resolver.
       ping := (actors createActorFromValue: Ping) <-: new: NumPings with: pong.
+      ping2 := (actors createActorFromValue: Ping) <-: new: NumPings with: pong.
       ping <-: start.
+      ping2 <-: start.
       ^ completionPP promise
     )
     
@@ -121,7 +123,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     public newInstance: problemSize = ( ^ self new: problemSize asInteger )
     public setupVerifiedRun: run = ( run problemSize: 1 )
   )
-
+  (* === Counting === *)
   public class Counting new: limit = Benchmark <: Value (
   | private limit = limit. |
   )(
@@ -153,13 +155,28 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         requester <-: count: count
       )
     )
+
+    public class DisturbanceActor new: counter = (
+    | private counter = counter.
+      private turns ::= limit / 3.
+    |
+    )(
+      public disturb = (
+        (turns = 0) ifTrue: [counter <-: increment.]
+                    ifFalse: [
+                      turns := turns -1.
+                      self <-: disturb]
+      )
+    )
   
     public benchmark = (
-      | counter producer completionPP |
+      | counter producer disturb completionPP |
       completionPP := actors createPromisePair.
       counter  := (actors createActorFromValue: CountingActor) <-: new.
       producer := (actors createActorFromValue: ProducerActor) <-: new: counter resolver: completionPP resolver.
+      disturb := (actors createActorFromValue: DisturbanceActor) <-: new: counter.
       producer <-: increment.
+      disturb <-: disturb.
 
       ^ completionPP promise
     )
@@ -172,6 +189,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     public setupVerifiedRun: run = ( run problemSize: 10000 )
   )
 
+  (* === ForkJoinThroughput === *)
   public class ForkJoinThroughput new: numActors  totalMessages: numMessages = Benchmark <: Value (
   | private numActors    = numActors.
     private numMessages  = numMessages.
@@ -234,6 +252,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     public setupVerifiedRun: run = ( run problemSize: '100:1000' )
   )
 
+  (* === ForkJoinActorCreation === *)
   public class ForkJoinActorCreation new: numActors = Benchmark <: Value (
   | private numActors = numActors. |
   )(
@@ -277,6 +296,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     public setupVerifiedRun: run = ( run problemSize: 1 )
   )
   
+  (* === ThreadRing ===*)
   public class ThreadRing new: numActors numPings: numPings = Benchmark <: Value(
   | private numActors = numActors.
     private numPings  = numPings.
@@ -290,7 +310,8 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     )(
       public ping: t = (
         t > 0 ifTrue: [
-          nextAct <-: ping: t - 1
+          (*runs indefinitely and gobbles up all available RAM with old messages*)
+          nextAct <-: ping: t - 0.
         ] ifFalse: [
           nextAct <-: exit: numActors - 1
         ]
@@ -342,6 +363,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     public setupVerifiedRun: run = ( run problemSize: '30:300' )
   )
   
+    (* === Chameneos === *)
   public class Chameneos meetings: numMeetings chameneos: numChameneos = Benchmark <: Value (
   | private numMeetings  = numMeetings.
     private numChameneos = numChameneos.
@@ -436,7 +458,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         complement := color complement: otherColor.
         meetings := meetings + 1.
         sender <-: change: color.
-        mall   <-: meet: self color: color.
+        (*mall   <-: meet: self color: color.*)
       )
       
       public change: newColor = (
@@ -470,9 +492,10 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     )
     public setupVerifiedRun: run = ( run problemSize: '100:200000' )
   )
-  
+
   (* Does not send the unnecessary exit messages because of using the promise
      for completion. *)
+
   public class BigContention numWorkers: numWorkers numMessages: numMessages = Benchmark <: Value (
   | private numMessages = numMessages.
     private numWorkers  = numWorkers.
@@ -1064,7 +1087,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       
       public done: leftForkId = (
         | rightForkId |
-        rightForkId := 1 + ((leftForkId + 1) % numForks).
+        rightForkId := 1 + ((leftForkId) % numForks).
         
         forks at: leftForkId  put: false.
         forks at: rightForkId put: false.
@@ -1161,10 +1184,10 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       private resolver = resolver.
     |)(
       public enter: customer in: room = (
-        customer <-: start.
-        busyWait: (random next: avHaircutRate) + 10.
+        room <-: next.
         customer <-: done.
-        room <-: next
+        busyWait: (random next: avHaircutRate) + 10.
+        customer <-: start.
       )
       
       private busyWait: limit = (
@@ -1318,6 +1341,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       private random = Random new.
     |)(
       public startSmoking: busyWaitPeriod = (
+        arbiterActor <-: startedSmoking.
         arbiterActor <-: startedSmoking.
         busyWait: busyWaitPeriod
       )
@@ -1567,7 +1591,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       )
       
       public reply: amount = (
-        lastSender <-: reply: amount.
+        (*lastSender <-: reply: amount.*)
         requests isEmpty
           ifTrue: [ waitingForReply := false ]
           ifFalse: [
