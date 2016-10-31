@@ -217,7 +217,7 @@ public class FrontendConnector {
       Iterator<SFarReference> iter = perThread.iteratorFromMemory();
       perThread.memorize();
 
-      while(iter.hasNext()){
+      while (iter.hasNext()) {
         SFarReference a = iter.next();
         map.put(a, "a-" + numActors);
         numActors += 1;
@@ -249,7 +249,7 @@ public class FrontendConnector {
     send(SuspendedEventMessage.create(e, id));
   }
 
-  public void sendTracingData(){
+  public void sendTracingData() {
     ObjectBuffer<ObjectBuffer<SFarReference>> actorsPerThread = ActorExecutionTrace.getAllCreateActors();
     ObjectBuffer<ObjectBuffer<ObjectBuffer<EventualMessage>>> messagesPerThread = ActorExecutionTrace.getAllProcessedMessages();
 

@@ -83,18 +83,17 @@ public class ObjectBuffer<T> implements Iterable<T> {
   }
 
   /**
-   * remember current position in the object buffer
+   * remember current position in the object buffer.
    */
-  public void memorize(){
+  public void memorize() {
     this.memoryEntry = this.current;
     this.memoryIdx = this.currentIdx;
   }
 
   /**
-   * iterator that starts from the memorized position
-   * @return
+   * create iterator that starts from the memorized position.
    */
-  public Iterator<T> iteratorFromMemory(){
+  public Iterator<T> iteratorFromMemory() {
     return new Iter<T>(currentIdx, memoryEntry, memoryIdx);
   }
 
