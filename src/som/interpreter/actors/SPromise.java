@@ -1,6 +1,7 @@
 package som.interpreter.actors;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
@@ -9,6 +10,7 @@ import com.oracle.truffle.api.RootCallTarget;
 import com.sun.istack.internal.NotNull;
 
 import som.VmSettings;
+import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.interpreter.actors.EventualMessage.PromiseCallbackMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.vm.NotYetImplementedException;
@@ -30,6 +32,8 @@ public class SPromise extends SObjectWithClass {
   public static SPromise createPromise(final Actor owner) {
     if (VmSettings.DEBUG_MODE) {
       return new SDebugPromise(owner);
+    } else if (VmSettings.ACTOR_TRACING) {
+      return new STracingPromise(owner);
     } else {
       return new SPromise(owner);
     }
@@ -82,6 +86,14 @@ public class SPromise extends SObjectWithClass {
     return false;
   }
 
+  public void setResolvingMessageId(final long id) {}
+  public void setParentPromiseId(final long id) {}
+  public long getResolvingMessageId() {return 0;}
+  public long getParentPromiseId() {return 0;}
+  public long getCausalMessageId() {return 0;}
+  public long getPromiseId() {return 0;}
+  public List<Long> getPromiseMessages() {return null;}
+
   public final Actor getOwner() {
     return owner;
   }
@@ -109,7 +121,7 @@ public class SPromise extends SObjectWithClass {
     SPromise  promise  = createPromise(current);
     SResolver resolver = createResolver(promise, "oE:block");
 
-    PromiseCallbackMessage msg = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessage(),
+    PromiseCallbackMessage msg = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessageId(),
         owner, block, resolver, blockCallTarget, false, false, false);
     registerOnError(msg, current);
     return promise;
@@ -156,7 +168,7 @@ public class SPromise extends SObjectWithClass {
     SPromise  promise  = createPromise(current);
     SResolver resolver = createResolver(promise, "oEx:class:block");
 
-    PromiseCallbackMessage msg = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessage(), owner,
+    PromiseCallbackMessage msg = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessageId(), owner,
         block, resolver, blockCallTarget, false, false, false);
 
     synchronized (this) {
@@ -189,14 +201,22 @@ public class SPromise extends SObjectWithClass {
 
     assert owner != null;
     msg.resolve(result, owner, current);
-    // update the message flag for the message breakpoint at receiver side
-    msg.setIsMessageReceiverBreakpoint(isBreakpointOnPromiseResolution);
-    msg.getTarget().send(msg);
+
+    if (VmSettings.ACTOR_TRACING && this.resolutionState == Resolution.SUCCESSFUL) {
+      getPromiseMessages().add(msg.getTarget().sendAndGetId(msg));
+    } else {
+      // update the message flag for the message breakpoint at receiver side
+      msg.setIsMessageReceiverBreakpoint(isBreakpointOnPromiseResolution);
+      msg.getTarget().send(msg);
+    }
   }
 
   public final synchronized void addChainedPromise(@NotNull final SPromise remote) {
     assert remote != null;
     remote.resolutionState = Resolution.CHAINED;
+    if (VmSettings.ACTOR_TRACING) {
+      remote.setParentPromiseId(this.getPromiseId());
+    }
 
     if (chainedPromise == null) {
       chainedPromise = remote;
@@ -256,6 +276,57 @@ public class SPromise extends SObjectWithClass {
       String r = "Promise[" + owner.toString();
       r += ", " + resolutionState.name();
       return r + (value == null ? "" : ", " + value.toString()) + ", id:" + id + "]";
+    }
+  }
+
+  protected static final class STracingPromise extends SPromise {
+    protected final long promiseId;
+    protected long parentPromiseId;
+    protected final long causalMessageId;
+    protected long resolvingMessageId;
+    protected final List<Long> promiseMessages = new ArrayList<>();
+
+    //TODO potential optimization: parent id and resolving message never used at same time => one long and use resolution state
+    protected STracingPromise(final Actor owner) {
+      super(owner);
+      ActorProcessingThread t = (ActorProcessingThread) Thread.currentThread();
+      promiseId = t.generatePromiseId();
+      causalMessageId = t.currentMessageId;
+    }
+
+    @Override
+    public long getPromiseId() {
+      return promiseId;
+    }
+
+    @Override
+    public void setParentPromiseId(final long id) {
+      parentPromiseId = id;
+    }
+
+    @Override
+    public void setResolvingMessageId(final long id) {
+      resolvingMessageId = id;
+    }
+
+    @Override
+    public long getResolvingMessageId() {
+      return resolvingMessageId;
+    }
+
+    @Override
+    public long getParentPromiseId() {
+      return parentPromiseId;
+    }
+
+    @Override
+    public long getCausalMessageId() {
+      return causalMessageId;
+    }
+
+    @Override
+    public List<Long> getPromiseMessages() {
+      return promiseMessages;
     }
   }
 

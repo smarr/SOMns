@@ -188,7 +188,7 @@ public class EventualSendNode extends ExprWithTagsNode {
       assert !(args[0] instanceof SPromise) : "Should not happen either, but just to be sure";
 
       DirectMessage msg = new DirectMessage(
-          EventualMessage.getCurrentExecutingMessage(), target, selector, args,
+          EventualMessage.getCurrentExecutingMessageId(), target, selector, args,
           owner, resolver, onReceive,
           messageReceiverBreakpoint.executeCheckIsSetAndEnabled(),
           promiseResolverBreakpoint.executeCheckIsSetAndEnabled(),
@@ -201,7 +201,7 @@ public class EventualSendNode extends ExprWithTagsNode {
       assert rcvr.getOwner() == EventualMessage.getActorCurrentMessageIsExecutionOn() : "think this should be true because the promise is an Object and owned by this specific actor";
 
       PromiseSendMessage msg = new PromiseSendMessage(
-          EventualMessage.getCurrentExecutingMessage(), selector, args,
+          EventualMessage.getCurrentExecutingMessageId(), selector, args,
           rcvr.getOwner(), resolver, onReceive,
           messageReceiverBreakpoint.executeCheckIsSetAndEnabled(),
           promiseResolverBreakpoint.executeCheckIsSetAndEnabled(),
@@ -247,7 +247,7 @@ public class EventualSendNode extends ExprWithTagsNode {
       SPromise  result   = SPromise.createPromise(current);
       SResolver resolver = SPromise.createResolver(result, "eventualSend:", selector);
 
-      DirectMessage msg = new DirectMessage(EventualMessage.getCurrentExecutingMessage(),
+      DirectMessage msg = new DirectMessage(EventualMessage.getCurrentExecutingMessageId(),
           current, selector, args, current,
           resolver, onReceive,
           messageReceiverBreakpoint.executeCheckIsSetAndEnabled(),
@@ -278,7 +278,7 @@ public class EventualSendNode extends ExprWithTagsNode {
     public final Object toNearRefWithoutResultPromise(final Object[] args) {
       Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
 
-      DirectMessage msg = new DirectMessage(EventualMessage.getCurrentExecutingMessage(),
+      DirectMessage msg = new DirectMessage(EventualMessage.getCurrentExecutingMessageId(),
           current, selector, args, current,
           null, onReceive,
           messageReceiverBreakpoint.executeCheckIsSetAndEnabled(),

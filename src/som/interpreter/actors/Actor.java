@@ -147,6 +147,11 @@ public class Actor {
     }
   }
 
+  public synchronized long sendAndGetId(final EventualMessage msg) {
+    send(msg);
+    return mailbox.getBasemessageId() + mailbox.size() -1;
+  }
+
   /**
    * Is scheduled on the fork/join pool and executes messages for a specific
    * actor.
@@ -183,6 +188,7 @@ public class Actor {
         current.setExecutor(currentThread);
         current.setBasemessageId(currentThread.generateMessageBaseId(current.size()));
         current.setOwner(actor);
+        currentThread.currentMessageId = current.getBasemessageId();
       }
       for (EventualMessage msg : current) {
         actor.logMessageBeingExecuted(msg);
@@ -193,16 +199,24 @@ public class Actor {
             dbg.prepareSteppingUntilNextRootNode();
           }
         }
-        if(VmSettings.ACTOR_TRACING){
+        if (VmSettings.ACTOR_TRACING) {
           current.addMessageExecutionStart();
         }
         msg.execute();
+        if (VmSettings.ACTOR_TRACING) {
+          currentThread.currentMessageId += 1;
+        }
       }
       if (VmSettings.ACTOR_TRACING) {
         current.setExecutionEnd(System.nanoTime());
         ActorExecutionTrace.logMemoryUsage();
         currentThread.processedMessages.append(current);
-        //System.out.println("[Mailbox] executed " + current.size() + " Message(s) in " + (current.getExecutionEnd()-current.getExecutionStart())/1000000.0 + " ms, Id:" + current.getBasemessageId());
+        System.out.println("[Mailbox] executed " + current.size() + " Message(s) in " + (current.getExecutionEnd()-current.getExecutionStart())/1000000.0 + " ms, Id:" + current.getBasemessageId());
+        int i = 0;
+        for (EventualMessage em : current) {
+          System.out.println("[MESSAGE] #"+ (current.getBasemessageId()+i) + " causal: #" + em.causalMessage + " from #"+ em.getSender().getActorId() + " to #"+ em.getTarget().getActorId() + " Type: " + em.getSelector().toString()+ " waited:" + (current.getMessageExecutionStart(i)-current.getMessageSendTime(i))/1000 + "us");
+          i++;
+        }
       }
     }
 
@@ -252,27 +266,35 @@ public class Actor {
     public EventualMessage currentMessage;
     protected Actor currentlyExecutingActor;
     protected final int threadId;
-    protected long actorIdCounter;
+    protected long actorIdCounter = 1;
     protected long messageIdCounter;
+    protected long promiseIdCounter;
+    protected long currentMessageId;
     protected final ObjectBuffer<SFarReference> createdActors;
     protected final ObjectBuffer<Mailbox> processedMessages;
 
     protected ActorProcessingThread(final ForkJoinPool pool) {
       super(pool);
-      threadId = this.getPoolIndex();
+      threadId = 0;//this.getPoolIndex();
       createdActors = ActorExecutionTrace.createActorBuffer();
       processedMessages = ActorExecutionTrace.createProcessedMessagesBuffer();
     }
 
-    protected long generateActorId(){
+    protected long generateActorId() {
       long result = (threadId << 56) | actorIdCounter;
       actorIdCounter++;
       return result;
     }
 
-    protected long generateMessageBaseId(final int numMessages){
+    protected long generateMessageBaseId(final int numMessages) {
       long result = (threadId << 56) | messageIdCounter;
       messageIdCounter+= numMessages;
+      return result;
+    }
+
+    protected long generatePromiseId() {
+      long result = (threadId << 56) | promiseIdCounter;
+      promiseIdCounter++;
       return result;
     }
 
@@ -311,7 +333,7 @@ public class Actor {
     return "Actor";
   }
 
-  private static Mailbox createNewMailbox(final int bufferSize){
+  private static Mailbox createNewMailbox(final int bufferSize) {
     if (VmSettings.ACTOR_TRACING) {
       return new TracingMailbox(bufferSize);
     } else{
@@ -360,10 +382,10 @@ public class Actor {
     }
   }
 
-  public static final class TracingActor extends Actor{
+  public static final class TracingActor extends Actor {
     protected long actorId;
     protected final long creationStamp;
-    protected final EventualMessage causalMessage;
+    protected final long causalMessage;
 
     public TracingActor() {
       super();
@@ -371,23 +393,22 @@ public class Actor {
       Thread current = Thread.currentThread();
       if (current instanceof ActorProcessingThread) {
         ActorProcessingThread t = (ActorProcessingThread) current;
-        causalMessage = t.currentMessage;
+        causalMessage = t.currentMessageId;
+        actorId = t.generateActorId();
+        System.out.println("[ACTOR] #" + getActorId() + " created by msg #"+ causalMessage);
       }else{
-        causalMessage = null;
+        causalMessage = 0;
       }
     }
 
     @Override
     public long getActorId() {
-      if(actorId == 0){
-        actorId =  ((ActorProcessingThread) Thread.currentThread()).generateActorId();
-      }
       return actorId;
     }
 
   }
 
-  public static class Mailbox extends ObjectBuffer<EventualMessage>{
+  public static class Mailbox extends ObjectBuffer<EventualMessage> {
     public Mailbox(final int bufferSize) {
       super(bufferSize);
     }
@@ -403,9 +424,11 @@ public class Actor {
     public long getExecutionStart(){return 0;}
     public long getExecutionEnd(){return 0;}
     public long getBasemessageId(){return 0;}
+    public long getMessageSendTime(final int idx){return 0;}
+    public long getMessageExecutionStart(final int idx){return 0;}
   }
 
-  public static final class TracingMailbox extends Mailbox{
+  public static final class TracingMailbox extends Mailbox {
 
     long baseMessageId;
     ActorProcessingThread exector;
@@ -467,6 +490,16 @@ public class Actor {
     @Override
     public void addMessageExecutionStart() {
       messageExecutionStart.add(System.nanoTime());
+    }
+
+    @Override
+    public long getMessageSendTime(final int idx) {
+      return messageSendTime.get(idx);
+    }
+
+    @Override
+    public long getMessageExecutionStart(final int idx) {
+      return messageExecutionStart.get(idx);
     }
   }
 }

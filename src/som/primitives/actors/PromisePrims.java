@@ -107,7 +107,7 @@ public final class PromisePrims {
       SPromise  promise  = SPromise.createPromise(current);
       SResolver resolver = SPromise.createResolver(promise, "wR:block");
 
-      PromiseCallbackMessage msg = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessage(), rcvr.getOwner(),
+      PromiseCallbackMessage msg = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessageId(), rcvr.getOwner(),
           block, resolver, blockCallTarget, false, false, false);
       registerNode.register(rcvr, msg, current);
 
@@ -187,8 +187,8 @@ public final class PromisePrims {
       SPromise  promise  = SPromise.createPromise(current);
       SResolver resolver = SPromise.createResolver(promise, "wROE:block:block");
 
-      PromiseCallbackMessage onResolved = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessage(), rcvr.getOwner(), resolved, resolver, resolverTarget, false, false, false);
-      PromiseCallbackMessage onError    = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessage(), rcvr.getOwner(), error, resolver, errorTarget, false, false, false);
+      PromiseCallbackMessage onResolved = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessageId(), rcvr.getOwner(), resolved, resolver, resolverTarget, false, false, false);
+      PromiseCallbackMessage onError    = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessageId(), rcvr.getOwner(), error, resolver, errorTarget, false, false, false);
 
       synchronized (rcvr) {
         registerNode.register(rcvr, onResolved, current);
