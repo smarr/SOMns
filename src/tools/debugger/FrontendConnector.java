@@ -207,9 +207,7 @@ public class FrontendConnector {
   }
 
   /**
-   * will be removed, required to send actor information incremental
-   * @param actorsPerThread
-   * @return mapping of new actors to ids
+   * will be removed, required to send actor information incremental.
    */
   private Map<SFarReference, String> createNewActorsMap(
       final ObjectBuffer<ObjectBuffer<SFarReference>> actorsPerThread) {
@@ -229,9 +227,7 @@ public class FrontendConnector {
   }
 
   /**
-   * will be removed, required to map message senders/receivers to ids
-   * @param actorsPerThread
-   * @return mapping of all actors to ids
+   * will be removed, required to map message senders/receivers to ids.
    */
   private static Map<Actor, String> createActorIdMap(
       final ObjectBuffer<ObjectBuffer<SFarReference>> actorsPerThread) {
