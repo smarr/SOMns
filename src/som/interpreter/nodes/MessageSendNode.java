@@ -150,15 +150,17 @@ public final class MessageSendNode {
       Specializer<EagerlySpecializableNode> specializer = prims.getEagerSpecializer(selector,
           arguments, argumentNodes);
 
-      if (specializer != null) {
-        EagerlySpecializableNode newNode = specializer.create(arguments, argumentNodes, getSourceSection(), !specializer.noWrapper());
-        if (specializer.noWrapper()) {
-          return replace(newNode);
-        } else {
-          return makeEagerPrim(newNode);
+      synchronized (getAtomicLock()) {
+        if (specializer != null) {
+          EagerlySpecializableNode newNode = specializer.create(arguments, argumentNodes, getSourceSection(), !specializer.noWrapper());
+          if (specializer.noWrapper()) {
+            return replace(newNode);
+          } else {
+            return makeEagerPrim(newNode);
+          }
         }
+        return makeSend();
       }
-      return makeSend();
     }
 
     protected PreevaluatedExpression makeSend() {
