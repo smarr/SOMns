@@ -149,9 +149,14 @@ public final class SClass extends SObjectWithClass {
     return this.mixinDef.getMixinId() == mixinId;
   }
 
+  /**
+   * Checks whether the classes are the same, including superclass hierarchy
+   * and ignoring class identity, i.e., relying on class groups/factories, too.
+   */
   public boolean isKindOf(final SClass clazz) {
     if (this == clazz) { return true; }
     if (this == Classes.topClass) { return false; }
+    if (this.instanceClassGroup == clazz.instanceClassGroup) { return true; }
     return superclass.isKindOf(clazz);
   }
 
