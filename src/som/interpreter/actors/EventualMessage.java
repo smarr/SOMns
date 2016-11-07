@@ -47,7 +47,11 @@ public abstract class EventualMessage {
   public abstract Actor getTarget();
   public abstract Actor getSender();
 
-  protected abstract SSymbol getSelector();
+  public long getCausalMessage() {
+    return causalMessage;
+  }
+
+  public abstract SSymbol getSelector();
 
   public SourceSection getTargetSourceSection() {
     return onReceive.getRootNode().getSourceSection();
@@ -93,7 +97,7 @@ public abstract class EventualMessage {
     }
 
     @Override
-    protected SSymbol getSelector() {
+    public SSymbol getSelector() {
       return selector;
     }
 
@@ -194,7 +198,7 @@ public abstract class EventualMessage {
     }
 
     @Override
-    protected SSymbol getSelector() {
+    public SSymbol getSelector() {
       return selector;
     }
 
@@ -243,7 +247,7 @@ public abstract class EventualMessage {
     }
 
     @Override
-    protected SSymbol getSelector() {
+    public SSymbol getSelector() {
       return VALUE_SELECTOR;
     }
 

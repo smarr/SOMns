@@ -18,6 +18,7 @@ import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithClass;
+import tools.actors.ActorExecutionTrace;
 
 
 public class SPromise extends SObjectWithClass {
@@ -86,11 +87,6 @@ public class SPromise extends SObjectWithClass {
     return false;
   }
 
-  public void setResolvingMessageId(final long id) {}
-  public void setParentPromiseId(final long id) {}
-  public long getResolvingMessageId() {return 0;}
-  public long getParentPromiseId() {return 0;}
-  public long getCausalMessageId() {return 0;}
   public long getPromiseId() {return 0;}
   public List<Long> getPromiseMessages() {return null;}
 
@@ -215,7 +211,7 @@ public class SPromise extends SObjectWithClass {
     assert remote != null;
     remote.resolutionState = Resolution.CHAINED;
     if (VmSettings.ACTOR_TRACING) {
-      remote.setParentPromiseId(this.getPromiseId());
+      ActorExecutionTrace.promiseChained(this.getPromiseId(), remote.getPromiseId());
     }
 
     if (chainedPromise == null) {
@@ -281,47 +277,18 @@ public class SPromise extends SObjectWithClass {
 
   protected static final class STracingPromise extends SPromise {
     protected final long promiseId;
-    protected long parentPromiseId;
-    protected final long causalMessageId;
-    protected long resolvingMessageId;
     protected final List<Long> promiseMessages = new ArrayList<>();
 
-    //TODO potential optimization: parent id and resolving message never used at same time => one long and use resolution state
     protected STracingPromise(final Actor owner) {
       super(owner);
       ActorProcessingThread t = (ActorProcessingThread) Thread.currentThread();
       promiseId = t.generatePromiseId();
-      causalMessageId = t.currentMessageId;
+      ActorExecutionTrace.promiseCreation(promiseId);
     }
 
     @Override
     public long getPromiseId() {
       return promiseId;
-    }
-
-    @Override
-    public void setParentPromiseId(final long id) {
-      parentPromiseId = id;
-    }
-
-    @Override
-    public void setResolvingMessageId(final long id) {
-      resolvingMessageId = id;
-    }
-
-    @Override
-    public long getResolvingMessageId() {
-      return resolvingMessageId;
-    }
-
-    @Override
-    public long getParentPromiseId() {
-      return parentPromiseId;
-    }
-
-    @Override
-    public long getCausalMessageId() {
-      return causalMessageId;
     }
 
     @Override
