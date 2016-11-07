@@ -311,7 +311,11 @@ public abstract class SObject extends SObjectWithClass {
     }
   }
 
-  public final boolean updateLayoutToMatchClass() {
+  public final boolean isLayoutCurrent() {
+    return objectLayout == clazz.getLayoutForInstances();
+  }
+
+  public final synchronized boolean updateLayoutToMatchClass() {
     ObjectLayout layoutAtClass = clazz.getLayoutForInstances();
 
     if (objectLayout != layoutAtClass) {
@@ -322,7 +326,7 @@ public abstract class SObject extends SObjectWithClass {
     }
   }
 
-  private synchronized void setLayoutAndTransferFields() {
+  private void setLayoutAndTransferFields() {
     CompilerDirectives.transferToInterpreterAndInvalidate();
 
     ObjectLayout layoutAtClass;
@@ -387,12 +391,12 @@ public abstract class SObject extends SObjectWithClass {
     return location.read(this);
   }
 
-  public final void writeUninitializedSlot(final SlotDefinition slot, final Object value) {
+  public final synchronized void writeUninitializedSlot(final SlotDefinition slot, final Object value) {
     updateLayoutWithInitializedField(slot, value.getClass());
     setFieldAfterLayoutChange(slot, value);
   }
 
-  public final void writeAndGeneralizeSlot(final SlotDefinition slot, final Object value) {
+  public final synchronized void writeAndGeneralizeSlot(final SlotDefinition slot, final Object value) {
     updateLayoutWithGeneralizedField(slot);
     setFieldAfterLayoutChange(slot, value);
   }

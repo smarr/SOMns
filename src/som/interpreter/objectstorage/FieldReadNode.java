@@ -1,15 +1,15 @@
 package som.interpreter.objectstorage;
 
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.InvalidAssumptionException;
+import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.profiles.IntValueProfile;
+
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.objectstorage.StorageLocation.AbstractObjectStorageLocation;
 import som.interpreter.objectstorage.StorageLocation.PrimitiveStorageLocation;
 import som.vm.constants.Nil;
 import som.vmobjects.SObject;
-
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.InvalidAssumptionException;
-import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.profiles.IntValueProfile;
 
 
 public abstract class FieldReadNode extends Node {
@@ -41,7 +41,6 @@ public abstract class FieldReadNode extends Node {
 
     @Override
     public Object read(final VirtualFrame frame, final SObject obj) {
-      assert obj.getObjectLayout().isValid();
       return Nil.nilObject;
     }
   }
@@ -59,7 +58,6 @@ public abstract class FieldReadNode extends Node {
     @Override
     public Object read(final VirtualFrame frame, final SObject obj) throws InvalidAssumptionException {
       if (storage.isSet(obj, primMarkProfile)) {
-        assert obj.getObjectLayout().isValid();
         return storage.readSet(obj);
       } else {
         throw new InvalidAssumptionException();
@@ -80,7 +78,6 @@ public abstract class FieldReadNode extends Node {
     @Override
     public Object read(final VirtualFrame frame, final SObject obj) {
       if (storage.isSet(obj, primMarkProfile)) {
-        assert obj.getObjectLayout().isValid();
         return storage.readSet(obj);
       } else {
         return Nil.nilObject;

@@ -14,6 +14,7 @@ import som.interpreter.TruffleCompiler;
 import som.interpreter.Types;
 import som.interpreter.nodes.ISuperReadNode;
 import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
+import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
@@ -137,8 +138,11 @@ public final class UninitializedDispatchNode {
       Object receiver = arguments[0];
       if (receiver instanceof SObject) {
         SObject rcvr = (SObject) receiver;
-        if (rcvr.updateLayoutToMatchClass() && first != this) { // if first is this, short cut and directly continue...
-          return first;
+        if (!rcvr.isLayoutCurrent()) {
+          ObjectTransitionSafepoint.INSTANCE.transitionObject(rcvr);
+          if (first != this) { // if first is this, short cut and directly continue...
+            return first;
+          }
         }
       }
 

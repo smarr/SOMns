@@ -15,6 +15,7 @@ import som.interpreter.InlinerForLexicallyEmbeddedMethods;
 import som.interpreter.SplitterForLexicallyEmbeddedCode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
+import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import tools.dym.Tags.LoopNode;
 
 @NodeChildren({
@@ -101,6 +102,7 @@ public abstract class IntToDoInlinedLiteralsNode extends ExprWithTagsNode {
         i++) {
       frame.setLong(loopIndex, i);
       body.executeGeneric(frame);
+      ObjectTransitionSafepoint.INSTANCE.checkAndPerformSafepoint();
     }
   }
 

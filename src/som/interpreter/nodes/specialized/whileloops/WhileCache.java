@@ -10,6 +10,7 @@ import com.oracle.truffle.api.source.SourceSection;
 import som.VmSettings;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
+import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.vm.constants.Nil;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
@@ -70,6 +71,7 @@ public abstract class WhileCache extends BinaryComplexOperation {
       loopBody.getMethod().invoke(loopBody);
       conditionResult = loopCondition.getMethod().invoke(loopCondition);
       loopConditionResult = obj2bool(conditionResult);
+      ObjectTransitionSafepoint.INSTANCE.checkAndPerformSafepoint();
     }
     return Nil.nilObject;
   }

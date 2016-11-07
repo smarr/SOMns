@@ -11,6 +11,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.QuaternaryExpressionNode;
+import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.primitives.Primitive;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
@@ -68,6 +69,7 @@ public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode {
       }
       for (long i = receiver + step; i <= limit; i += step) {
         value.call(frame, new Object[] {block, i});
+        ObjectTransitionSafepoint.INSTANCE.checkAndPerformSafepoint();
       }
     } finally {
       if (CompilerDirectives.inInterpreter()) {

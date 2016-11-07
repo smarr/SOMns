@@ -7,6 +7,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.primitives.Primitive;
 import som.primitives.arrays.ToArgumentsArrayNode;
 import som.primitives.arrays.ToArgumentsArrayNodeFactory;
@@ -67,9 +68,7 @@ public final class ThreadPrimitives {
 
     @Specialization
     public final Thread doSBlock(final SBlock block) {
-      Thread thread = new Thread(() -> {
-        block.getMethod().getCallTarget().call(block);
-      }, "");
+      SomThread thread = new SomThread(block, block);
       thread.start();
       return thread;
     }
@@ -85,9 +84,7 @@ public final class ThreadPrimitives {
     @Specialization
     public Thread doSBlock(final SBlock block, final SArray somArgArr,
         final Object[] argArr) {
-      Thread thread = new Thread(() -> {
-        block.getMethod().getCallTarget().call(argArr);
-      }, "");
+      SomThread thread = new SomThread(block, argArr);
       thread.start();
       return thread;
     }
@@ -113,6 +110,26 @@ public final class ThreadPrimitives {
     public final SClass doSClass(final SClass module) {
       Thread.yield();
       return module;
+    }
+  }
+
+  private static final class SomThread extends Thread {
+    private final Object[] args;
+    private final SBlock block;
+
+    SomThread(final SBlock block, final Object... args) {
+      this.block = block;
+      this.args  = args;
+    }
+
+    @Override
+    public void run() {
+      ObjectTransitionSafepoint.INSTANCE.register();
+      try {
+        block.getMethod().getCallTarget().call(args);
+      } finally {
+        ObjectTransitionSafepoint.INSTANCE.unregister();
+      }
     }
   }
 }

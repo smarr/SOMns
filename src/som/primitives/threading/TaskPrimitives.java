@@ -12,6 +12,7 @@ import com.oracle.truffle.api.source.SourceSection;
 import som.VmSettings;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.primitives.Primitive;
 import som.primitives.arrays.ToArgumentsArrayNode;
 import som.primitives.arrays.ToArgumentsArrayNodeFactory;
@@ -31,7 +32,12 @@ public final class TaskPrimitives {
 
     @Override
     protected Object compute() {
-      return ((SBlock) argArray[0]).getMethod().getCallTarget().call(argArray);
+      ObjectTransitionSafepoint.INSTANCE.register();
+      try {
+        return ((SBlock) argArray[0]).getMethod().getCallTarget().call(argArray);
+      } finally {
+        ObjectTransitionSafepoint.INSTANCE.unregister();
+      }
     }
   }
 

@@ -10,6 +10,7 @@ import com.oracle.truffle.api.source.SourceSection;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.specialized.SomLoop;
+import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.vm.constants.Nil;
 import som.vmobjects.SBlock;
 import tools.dym.Tags.LoopNode;
@@ -66,6 +67,7 @@ public abstract class AbstractWhileNode extends BinaryComplexOperation {
             frame, new Object[] {loopCondition});
 
         if (CompilerDirectives.inInterpreter()) { iterationCount++; }
+        ObjectTransitionSafepoint.INSTANCE.checkAndPerformSafepoint();
       }
     } finally {
       if (CompilerDirectives.inInterpreter()) {
