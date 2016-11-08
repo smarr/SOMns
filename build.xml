@@ -36,11 +36,11 @@
         <delete dir="${kompos.dir}/node_modules"/>
     </target>
     
-    <target name="check-core-lib-available">
-        <available file="core-lib/.git" property="core-lib.present"/>
+    <target name="check-truffle-available">
+        <available file="${lib.dir}/truffle/.git" property="truffle.present"/>
     </target>
-    <target name="core-lib" depends="check-core-lib-available"
-            unless="core-lib.present">
+    <target name="truffle" depends="check-truffle-available"
+            unless="truffle.present">
       <exec executable="git">
         <arg value="submodule" />
         <arg value="update" />
@@ -48,13 +48,13 @@
       </exec>
     </target>
 
-    <target name="truffle-libs" unless="skip.libs">
+    <target name="truffle-libs" unless="skip.libs" depends="truffle">
         <exec executable="../mx/mx" dir="${truffle.dir}">
             <arg value="build"/>
         </exec>
     </target>
     
-    <target name="libs" depends="core-lib,truffle-libs" unless="skip.libs">
+    <target name="libs" depends="truffle-libs" unless="skip.libs">
         <get src="https://dl.bintray.com/smarr/SOM/somns-deps-${somns-deps.version}.jar"
             usetimestamp="true"
             dest="${lib.dir}/somns-deps.jar" />
