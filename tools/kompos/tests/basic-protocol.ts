@@ -15,6 +15,8 @@ import {SourceCoordinate, FullSourceCoordinate, SourceMessage, SuspendEventMessa
   BreakpointData, LineBreakpointData, SectionBreakpointData, Respond,
   StepMessage} from '../src/messages';
 
+const PRINT_SOM_OUTPUT = false;
+
 interface SomConnection {
   somProc: ChildProcess;
   socket:  WebSocket;
@@ -69,22 +71,32 @@ function startSomAndConnect(onMessageHandler?: OnMessageHandler,
   const somProc = spawn(som, args);
   const promise = new Promise((resolve, reject) => {
     let connecting = false;
+
+    somProc.stderr.on('data', (data) => {
+      if (PRINT_SOM_OUTPUT) {
+        console.error(data.toString());
+      }
+    });
+
     somProc.stdout.on('data', (data) => {
-      if (data.toString().includes("Started HTTP Server") && !connecting) {
+      const dataStr = data.toString();
+      if (PRINT_SOM_OUTPUT) {
+        console.log(dataStr);
+      }
+      if (dataStr.includes("Started HTTP Server") && !connecting) {
         connecting = true;
         const socket = new WebSocket('ws://localhost:' + debuggerPort);
         socket.on('open', () => {
           if (initialBreakpoints) {
             send(socket, {action: "initialBreakpoints", breakpoints: initialBreakpoints});
           }
-
           resolve({somProc: somProc, socket: socket, closed: false});
         });
         if (onMessageHandler) {
           socket.onmessage = onMessageHandler;
         }
       }
-      if (data.toString().includes("Failed starting WebSocket and/or HTTP Server")) {
+      if (dataStr.includes("Failed starting WebSocket and/or HTTP Server")) {
         reject(new Error('SOMns failed to starting WebSocket and/or HTTP Server'));
       }
     });
