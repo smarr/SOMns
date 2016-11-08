@@ -1,5 +1,9 @@
 package tools.actors;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.nio.ByteBuffer;
@@ -20,13 +24,14 @@ import som.interpreter.actors.Actor.Mailbox;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.SFarReference;
 import som.vm.ObjectSystem;
+import som.vmobjects.SClass;
 import tools.ObjectBuffer;
 import tools.debugger.message.Message;
 
 public class ActorExecutionTrace {
 
   private static final int MSG_BUFFER_SIZE = 128;
-  private static final int BUFFER_POOL_SIZE = Runtime.getRuntime().availableProcessors()*4;
+  private static final int BUFFER_POOL_SIZE = Runtime.getRuntime().availableProcessors() * 4;
 
   /** Access to this data structure needs to be synchronized. */
   private static final ObjectBuffer<ObjectBuffer<SFarReference>> createdActorsPerThread =
@@ -61,29 +66,33 @@ public class ActorExecutionTrace {
   }
 
 
-  static{
-    if(VmSettings.MEMORY_TRACING){
+  static {
+    if (VmSettings.MEMORY_TRACING) {
       setUpGCMonitoring();
     }
 
-    if(VmSettings.ACTOR_TRACING){
-      for(int i = 0; i < BUFFER_POOL_SIZE; i++){
-        bufferPool.add(ByteBuffer.allocate(4096*1024));
+    if (VmSettings.ACTOR_TRACING) {
+      for (int i = 0; i < BUFFER_POOL_SIZE; i++) {
+        bufferPool.add(ByteBuffer.allocate(4096 * 1024));
       }
 
       Thread workerThread = new Thread(new Runnable() {
         @Override
         public void run() {
-          System.out.println("Worker ready!");
-          try {
-            while(true){
+          File f = new File("/home/dominik/asdf.txt");
+
+          try (FileOutputStream fos = new FileOutputStream(f)) {
+
+
+            while (true) {
               ByteBuffer b = ActorExecutionTrace.writerQueue.take();
               //TODO send/write data
-              System.out.println("Buffer Taken" + b.position());
+              fos.getChannel().write(b);
+/*
               while(b.hasRemaining()){
                 switch(b.get()){
                   case 1 :
-                    System.out.println("[ACTOR] A" + b.getLong() + " M" + b.getLong());
+                    System.out.println("[ACTOR] A" + b.getLong() + " M" + b.getLong() + " S" + b.getShort());
                     break;
                   case 2 :
                     System.out.println("[PROMISE] P" + b.getLong() + " M" + b.getLong());
@@ -100,13 +109,13 @@ public class ActorExecutionTrace {
                     long receiver = b.getLong();
                     System.out.println("[MAILBOX] of A"+receiver);
                     for(int i = 0; i < num; i++){
-                      System.out.println("\tM" + (baseid+i)+ " from A" +b.getLong());
+                      System.out.println("\tM" + (baseid+i)+ " from A" +b.getLong() + " C" + b.getLong() + " S" + b.getShort());
                     }
                     break;
                   default:
                     System.out.println("Event not supported");
                 }
-              }
+              }*/
               System.out.println("done");
               b.clear();
               ActorExecutionTrace.bufferPool.put(b);
@@ -114,8 +123,16 @@ public class ActorExecutionTrace {
           } catch (InterruptedException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
+          } catch (FileNotFoundException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+          } catch (IOException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
           }
         }
+
+
       });
       workerThread.start();
     }
@@ -135,8 +152,8 @@ public class ActorExecutionTrace {
     }
   }
 
-  public static void setUpGCMonitoring(){
-    for(java.lang.management.GarbageCollectorMXBean bean : gcbeans){
+  public static void setUpGCMonitoring() {
+    for (java.lang.management.GarbageCollectorMXBean bean : gcbeans) {
       NotificationEmitter emitter = (NotificationEmitter) bean;
       NotificationListener listener = new NotificationListener() {
         @Override
@@ -146,9 +163,9 @@ public class ActorExecutionTrace {
             GarbageCollectionNotificationInfo info = GarbageCollectionNotificationInfo.from((CompositeData) notification.getUserData());
 
             System.out.println(Thread.currentThread().toString());
-            System.out.println(info.getGcAction() + ": - " + info.getGcInfo().getId()+ " " + info.getGcName() + " (from " + info.getGcCause()+") "+ info.getGcInfo().getDuration() + " ms;");
-            System.out.println("GcInfo MemoryUsageBeforeGc: " + info.getGcInfo().getMemoryUsageBeforeGc().entrySet().stream().filter(ent -> !ent.getKey().equals("Compressed Class Space") && !ent.getKey().equals("Code Cache")).mapToLong(usage -> usage.getValue().getUsed()).sum()/1024 + " kB");
-            System.out.println("GcInfo MemoryUsageAfterGc: " + info.getGcInfo().getMemoryUsageAfterGc().entrySet().stream().filter(ent -> !ent.getKey().equals("Compressed Class Space") && !ent.getKey().equals("Code Cache")).mapToLong(usage -> usage.getValue().getUsed()).sum()/1024 + " kB");
+            System.out.println(info.getGcAction() + ": - " + info.getGcInfo().getId() + " " + info.getGcName() + " (from " + info.getGcCause() + ") " + info.getGcInfo().getDuration() + " ms;");
+            System.out.println("GcInfo MemoryUsageBeforeGc: " + info.getGcInfo().getMemoryUsageBeforeGc().entrySet().stream().filter(ent -> !ent.getKey().equals("Compressed Class Space") && !ent.getKey().equals("Code Cache")).mapToLong(usage -> usage.getValue().getUsed()).sum() / 1024 + " kB");
+            System.out.println("GcInfo MemoryUsageAfterGc: " + info.getGcInfo().getMemoryUsageAfterGc().entrySet().stream().filter(ent -> !ent.getKey().equals("Compressed Class Space") && !ent.getKey().equals("Code Cache")).mapToLong(usage -> usage.getValue().getUsed()).sum() / 1024 + " kB");
 
           }
         }
@@ -158,9 +175,9 @@ public class ActorExecutionTrace {
     }
   }
 
-  public static void logMemoryUsage(){
-    if(VmSettings.MEMORY_TRACING){
-      System.out.println("Current Memory usage: " + mbean.getHeapMemoryUsage().getUsed() /1024 + " kB");
+  public static void logMemoryUsage() {
+    if (VmSettings.MEMORY_TRACING) {
+      System.out.println("Current Memory usage: " + mbean.getHeapMemoryUsage().getUsed() / 1024 + " kB");
     }
   }
 
@@ -218,82 +235,88 @@ public class ActorExecutionTrace {
     return processedMessages;
   }
 
-  public static synchronized void swapBuffer(final ActorProcessingThread t){
-    System.out.println("swap");
+  public static synchronized void swapBuffer(final ActorProcessingThread t) {
     returnBuffer(t.getThreadLocalBuffer());
 
     try {
-      t.setThreadLocalBuffer(bufferPool.take());
+      t.setThreadLocalBuffer(bufferPool.take().put(Events.Thread.id).put((byte) t.getPoolIndex()).putLong(System.nanoTime()));
     } catch (InterruptedException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
     }
   }
 
-  public static synchronized ByteBuffer getBuffer() throws InterruptedException{
-    return bufferPool.take();
-  }
+  public static synchronized void returnBuffer(final ByteBuffer b) {
+    if(b == null) {
+      return;
+    }
 
-  public static synchronized void returnBuffer(final ByteBuffer b){
     b.limit(b.position());
     b.rewind();
+
     writerQueue.add(b);
   }
 
-  public static void clearProcessedMessages(){
-    for(ObjectBuffer<Mailbox> o : messagesProcessedPerThread){
+  public static void clearProcessedMessages() {
+    for (ObjectBuffer<Mailbox> o : messagesProcessedPerThread) {
       o.clear();
     }
   }
 
-  public static void clearCreatedActors(){
-    for(ObjectBuffer<SFarReference> o : createdActorsPerThread){
+  public static void clearCreatedActors() {
+    for (ObjectBuffer<SFarReference> o : createdActorsPerThread) {
       o.clear();
     }
   }
 
 
   //Events
-  protected enum Events{
-    ActorCreation ((byte) 1, 17),
-    PromiseCreation ((byte) 2, 17),
-    PromiseResolution ((byte) 3, 17),
-    PromiseChained ((byte) 4, 17),
-    Mailbox ((byte) 5, 19);
+  protected enum Events {
+    ActorCreation((byte) 1, 19),
+    PromiseCreation((byte) 2, 17),
+    PromiseResolution((byte) 3, 17),
+    PromiseChained((byte) 4, 17),
+    Mailbox((byte) 5, 19),//plus contained messages
+    Thread((byte) 6, 6);//at the beginning of buffer, allows to track what was created/executed on which thread, really cheap solution, timestamp?
     //for memory events another buffer is needed (the gc callback is on Thread[Service Thread,9,system])
 
     private final byte id;
     private final int size;
 
-    private Events(final byte id, final int size){
+    Events(final byte id, final int size) {
       this.id = id;
       this.size = size;
     }
   };
 
-  public static void actorCreation(final long actorId){
+  public static void actorCreation(final SFarReference actor) {
     Thread current = Thread.currentThread();
 
     if (current instanceof ActorProcessingThread) {
       ActorProcessingThread t = (ActorProcessingThread) current;
-      if(t.getThreadLocalBuffer().remaining() < Events.ActorCreation.size) {
+      if (t.getThreadLocalBuffer().remaining() < Events.ActorCreation.size) {
         swapBuffer(t);
       }
 
+      Object value = actor.getValue();
+      assert value instanceof SClass;
+      SClass actorClass = (SClass) value;
+
       ByteBuffer b = t.getThreadLocalBuffer();
       b.put(Events.ActorCreation.id);
-      b.putLong(actorId); // id of the created actor
+      b.putLong(actor.getActor().getActorId()); // id of the created actor
       b.putLong(t.getCurrentMessageId()); // causal message
+      b.putShort(actorClass.getName().getSymbolId());
     }
   }
 
-  public static void promiseCreation(final long promiseId){
+  public static void promiseCreation(final long promiseId) {
     Thread current = Thread.currentThread();
 
     if (current instanceof ActorProcessingThread) {
       ActorProcessingThread t = (ActorProcessingThread) current;
 
-      if(t.getThreadLocalBuffer().remaining() < Events.PromiseCreation.size) {
+      if (t.getThreadLocalBuffer().remaining() < Events.PromiseCreation.size) {
         swapBuffer(t);
       }
       ByteBuffer b = t.getThreadLocalBuffer();
@@ -303,29 +326,30 @@ public class ActorExecutionTrace {
     }
   }
 
-  public static void promiseResolution(final long promiseId){
+  public static void promiseResolution(final long promiseId) {
     Thread current = Thread.currentThread();
 
     if (current instanceof ActorProcessingThread) {
       ActorProcessingThread t = (ActorProcessingThread) current;
 
-      if(t.getThreadLocalBuffer().remaining() < Events.PromiseResolution.size) {
+      if (t.getThreadLocalBuffer().remaining() < Events.PromiseResolution.size) {
         swapBuffer(t);
       }
       ByteBuffer b = t.getThreadLocalBuffer();
       b.put(Events.PromiseResolution.id);
       b.putLong(promiseId); // id of the promise
       b.putLong(t.getCurrentMessageId()); // resolving message
+      //resolved with
     }
   }
 
-  public static void promiseChained(final long parent, final long child){
+  public static void promiseChained(final long parent, final long child) {
     Thread current = Thread.currentThread();
 
     if (current instanceof ActorProcessingThread) {
       ActorProcessingThread t = (ActorProcessingThread) current;
 
-      if(t.getThreadLocalBuffer().remaining() < Events.PromiseChained.size) {
+      if (t.getThreadLocalBuffer().remaining() < Events.PromiseChained.size) {
         swapBuffer(t);
       }
       ByteBuffer b = t.getThreadLocalBuffer();
@@ -335,13 +359,13 @@ public class ActorExecutionTrace {
     }
   }
 
-  public static void mailboxExecuted(final Mailbox m, final Actor actor){
+  public static void mailboxExecuted(final Mailbox m, final Actor actor) {
     Thread current = Thread.currentThread();
 
     if (current instanceof ActorProcessingThread) {
       ActorProcessingThread t = (ActorProcessingThread) current;
 
-      if(t.getThreadLocalBuffer().remaining() < Events.Mailbox.size + m.size()*8) {
+      if (t.getThreadLocalBuffer().remaining() < Events.Mailbox.size + m.size() * 18) {
         swapBuffer(t);
       }
       ByteBuffer b = t.getThreadLocalBuffer();
@@ -349,11 +373,15 @@ public class ActorExecutionTrace {
       b.putShort((short) m.size()); //number of messages in the mailbox. enough??
       b.putLong(m.getBasemessageId()); //base id for messages
       b.putLong(actor.getActorId()); //receiver of the messages
-      for(EventualMessage em : m){
+      for (EventualMessage em : m) {
         b.putLong(em.getSender().getActorId()); // sender
-        //em.getCausalMessage();
-        //em.getSelector();
+        b.putLong(em.getCausalMessage());
+        b.putShort(em.getSelector().getSymbolId());
       }
     }
+  }
+
+  public static void logSymbol(final short stringId, final String symbol){
+    //TODO write to a symbols file/ send to debugger
   }
 }

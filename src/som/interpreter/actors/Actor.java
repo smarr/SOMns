@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
 import java.util.concurrent.ForkJoinWorkerThread;
+import java.util.concurrent.TimeUnit;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
@@ -48,7 +49,7 @@ public class Actor {
       return new DebugActor();
     } else if (VmSettings.ACTOR_TRACING) {
       return new TracingActor();
-    } else{
+    } else {
       return new Actor();
     }
   }
@@ -127,7 +128,7 @@ public class Actor {
   protected void logMessageAddedToMailbox(final EventualMessage msg) { }
   protected void logMessageBeingExecuted(final EventualMessage msg) { }
   protected void logNoTaskForActor() { }
-  public long getActorId() {return 0;}
+  public long getActorId() { return 0; }
 
   /**
    * Send the give message to the actor.
@@ -137,7 +138,7 @@ public class Actor {
   @TruffleBoundary
   public synchronized void send(final EventualMessage msg) {
     assert msg.getTarget() == this;
-    if(VmSettings.ACTOR_TRACING){
+    if (VmSettings.ACTOR_TRACING) {
       mailbox.addMessageSendTime();
     }
     mailbox.append(msg);
@@ -151,7 +152,7 @@ public class Actor {
 
   public synchronized long sendAndGetId(final EventualMessage msg) {
     send(msg);
-    return mailbox.getBasemessageId() + mailbox.size() -1;
+    return mailbox.getBasemessageId() + mailbox.size() - 1;
   }
 
   /**
@@ -208,7 +209,7 @@ public class Actor {
         }
       }
       if (VmSettings.ACTOR_TRACING) {
-        currentThread.processedMessages.append(current); //TODO remove when new system works
+        //currentThread.processedMessages.append(current); //TODO remove when new system works
         ActorExecutionTrace.mailboxExecuted(current, actor);
       }
     }
@@ -273,16 +274,11 @@ public class Actor {
 
     protected ActorProcessingThread(final ForkJoinPool pool) {
       super(pool);
-      threadId = 0;//this.getPoolIndex();
+      threadId = this.getPoolIndex();
       createdActors = ActorExecutionTrace.createActorBuffer();
       processedMessages = ActorExecutionTrace.createProcessedMessagesBuffer();
       waitingMessages = ActorExecutionTrace.createMessagesBuffer();
-      try {
-        threadLocalBuffer = ActorExecutionTrace.getBuffer();
-      } catch (InterruptedException e) {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
-      }
+      ActorExecutionTrace.swapBuffer(this);
     }
 
     protected long generateActorId() {
@@ -293,7 +289,7 @@ public class Actor {
 
     protected long generateMessageBaseId(final int numMessages) {
       long result = (threadId << 56) | messageIdCounter;
-      messageIdCounter+= numMessages;
+      messageIdCounter += numMessages;
       return result;
     }
 
@@ -325,9 +321,9 @@ public class Actor {
 
     @Override
     protected void onTermination(final Throwable exception) {
-      System.out.println("pos : "+ threadLocalBuffer.position());
       ActorExecutionTrace.returnBuffer(this.threadLocalBuffer);
       this.threadLocalBuffer = null;
+      System.out.println("termination");
       super.onTermination(exception);
     }
 
@@ -355,6 +351,19 @@ public class Actor {
       VmSettings.NUM_THREADS, new ActorProcessingThreadFactor(),
       new UncaughtExceptions(), true);
 
+  public static final void shutDownActorPool(){
+
+      System.out.println("still running:" + actorPool.getActiveThreadCount());
+      actorPool.shutdown();
+      try {
+        actorPool.awaitTermination(10, TimeUnit.SECONDS);
+      } catch (InterruptedException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+      }
+
+  }
+
   @Override
   public String toString() {
     return "Actor";
@@ -363,7 +372,7 @@ public class Actor {
   private static Mailbox createNewMailbox(final int bufferSize) {
     if (VmSettings.ACTOR_TRACING) {
       return new TracingMailbox(bufferSize);
-    } else{
+    } else {
       return new Mailbox(bufferSize);
     }
   }
@@ -414,11 +423,10 @@ public class Actor {
 
     public TracingActor() {
       super();
-      if(Thread.currentThread() instanceof ActorProcessingThread){
+      if (Thread.currentThread() instanceof ActorProcessingThread) {
         ActorProcessingThread t = (ActorProcessingThread) Thread.currentThread();
         this.actorId = t.generateActorId();
-        ActorExecutionTrace.actorCreation(actorId);
-      }else{
+      } else {
         actorId = 0; //main actor
       }
     }
@@ -434,15 +442,15 @@ public class Actor {
       super(bufferSize);
     }
 
-    public void setExecutionStart(final long start){}
-    public void setBasemessageId(final long id){}
-    public void addMessageSendTime(){}
-    public void addMessageExecutionStart(){}
+    public void setExecutionStart(final long start) { }
+    public void setBasemessageId(final long id) { }
+    public void addMessageSendTime() { }
+    public void addMessageExecutionStart() { }
 
-    public long getExecutionStart(){return 0;}
-    public long getBasemessageId(){return 0;}
-    public long getMessageSendTime(final int idx){return 0;}
-    public long getMessageExecutionStart(final int idx){return 0;}
+    public long getExecutionStart() { return 0; }
+    public long getBasemessageId() { return 0; }
+    public long getMessageSendTime(final int idx) { return 0; }
+    public long getMessageExecutionStart(final int idx) { return 0; }
   }
 
   public static final class TracingMailbox extends Mailbox {

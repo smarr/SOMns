@@ -186,6 +186,7 @@ public final class VM {
    * To be called from {@link ObjectSystem}.
    */
   public void realExit(final int errorCode) {
+    Actor.shutDownActorPool();
     engine.dispose();
     System.exit(errorCode);
   }
