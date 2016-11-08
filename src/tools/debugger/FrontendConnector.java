@@ -250,6 +250,10 @@ public class FrontendConnector {
   }
 
   public void sendTracingData() {
+    if (!VmSettings.ACTOR_TRACING) {
+      return;
+    }
+
     ObjectBuffer<ObjectBuffer<SFarReference>> actorsPerThread = ActorExecutionTrace.getAllCreateActors();
     ObjectBuffer<ObjectBuffer<ObjectBuffer<EventualMessage>>> messagesPerThread = ActorExecutionTrace.getAllProcessedMessages();
 
