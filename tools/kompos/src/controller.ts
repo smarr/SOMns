@@ -8,7 +8,7 @@ import {SourceMessage, SuspendEventMessage, MessageHistoryMessage,
   createLineBreakpoint, createMsgBreakpoint,
   createAsyncMethodRcvBreakpoint} from './messages';
 import {dbgLog}       from './source';
-import {displayMessageHistory} from './visualizations';
+import {displayMessageHistory, resetLinks} from './visualizations';
 import {View}         from './view';
 import {VmConnection} from './vm-connection';
 
@@ -39,6 +39,7 @@ export class Controller {
 
   onConnect() {
     dbgLog("[WS] open");
+    resetLinks();
     this.dbg.setResumed();
     this.view.onConnect();
     var bps = this.dbg.getEnabledBreakpoints();

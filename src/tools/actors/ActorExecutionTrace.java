@@ -75,4 +75,10 @@ public class ActorExecutionTrace {
     }
     return processedMessages;
   }
+
+  public static void clearProcessedMessages() {
+    for (ObjectBuffer<ObjectBuffer<EventualMessage>> o : messagesProcessedPerThread) {
+      o.clear();
+    }
+  }
 }
