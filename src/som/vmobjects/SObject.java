@@ -347,6 +347,8 @@ public abstract class SObject extends SObjectWithClass {
   }
 
   protected final void updateLayoutWithInitializedField(final SlotDefinition slot, final Class<?> type) {
+    // TODO: this method does not yet support two threads arriving at the given slot/object at the same time
+    //       the second thread likely needs to start over completely again
     ObjectLayout layout = classGroup.updateInstanceLayoutWithInitializedField(slot, type);
     assert objectLayout != layout;
     setLayoutAndTransferFields();
