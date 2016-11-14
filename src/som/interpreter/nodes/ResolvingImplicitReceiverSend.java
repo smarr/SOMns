@@ -57,7 +57,7 @@ public final class ResolvingImplicitReceiverSend extends AbstractMessageSendNode
     // tracks its replacement nodes to avoid re-specialization in case of
     // re-execution
     PreevaluatedExpression newNode;
-    synchronized (getAtomicLock()) {
+    synchronized (getLock()) {
        newNode = specialize(args);
     }
     return newNode.

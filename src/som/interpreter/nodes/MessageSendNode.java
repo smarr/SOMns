@@ -150,7 +150,7 @@ public final class MessageSendNode {
       Specializer<EagerlySpecializableNode> specializer = prims.getEagerSpecializer(selector,
           arguments, argumentNodes);
 
-      synchronized (getAtomicLock()) {
+      synchronized (getLock()) {
         if (specializer != null) {
           EagerlySpecializableNode newNode = specializer.create(arguments, argumentNodes, getSourceSection(), !specializer.noWrapper());
           if (specializer.noWrapper()) {
@@ -176,7 +176,7 @@ public final class MessageSendNode {
     protected abstract GenericMessageSendNode makeOrdenarySend();
 
     private PreevaluatedExpression makeEagerPrim(final EagerlySpecializableNode prim) {
-      synchronized (getAtomicLock()) {
+      synchronized (getLock()) {
         return makeEagerPrimUnsyced(prim);
       }
     }

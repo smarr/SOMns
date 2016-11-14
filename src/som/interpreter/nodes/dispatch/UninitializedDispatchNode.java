@@ -140,7 +140,7 @@ public final class UninitializedDispatchNode {
 
       AbstractDispatchNode newNode;
       // we modify a dispatch chain here, so, better grab the root node before we do anything
-      synchronized (getAtomicLock()) {
+      synchronized (getLock()) {
         newNode = specialize(arguments, chainDepth, first);
       }
       return newNode.executeDispatch(frame, arguments);
