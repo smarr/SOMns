@@ -517,6 +517,9 @@ public class Parser {
       if (sym == BeginComment) {
         comment += "(*" + comment() + "*)";
       }
+      if (sym == NONE) {
+        throw new ParseError("Comment seems not to be closed", EndComment, this);
+      }
     }
     expect(EndComment, null);
     VM.reportSyntaxElement(CommentTag.class, getSource(coord));

@@ -413,6 +413,12 @@ public final class Lexer {
     boolean commentPartEnded = false;
 
     while (!commentPartEnded) {
+      while (endOfBuffer()) {
+        comment.append('\n');
+        if (fillBuffer() == -1) {
+          return comment.toString();
+        }
+      }
       char current = currentChar();
       commentPartEnded = (current == '(' && nextChar() == '*')
                       || (current == '*' && nextChar() == ')');
