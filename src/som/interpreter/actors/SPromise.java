@@ -87,8 +87,8 @@ public class SPromise extends SObjectWithClass {
     return false;
   }
 
-  public long getPromiseId() {return 0;}
-  public List<Long> getPromiseMessages() {return null;}
+  public long getPromiseId() { return 0; }
+  public List<Long> getPromiseMessages() { return null; }
 
   public final Actor getOwner() {
     return owner;
@@ -390,6 +390,12 @@ public class SPromise extends SObjectWithClass {
     protected static void resolveAndTriggerListenersUnsynced(final Object result,
         final Object wrapped, final SPromise p, final Actor current, final boolean isBreakpointOnPromiseResolution) {
       assert !(result instanceof SPromise);
+
+      if (VmSettings.ACTOR_TRACING) {
+        if (p.resolutionState != Resolution.CHAINED) {
+          ActorExecutionTrace.promiseResolution(p.getPromiseId());
+        }
+      }
 
       // LOCKING NOTE: we need a synchronization unit that is not the promise,
       //               because otherwise we might end up in a deadlock, but we still need to group the

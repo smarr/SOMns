@@ -39,9 +39,11 @@ public final class SSymbol extends SAbstractObject {
   public SSymbol(final String value) {
     string = value;
     numberOfSignatureArguments = determineNumberOfSignatureArguments();
-    symbolId = (short) idGenerator.getAndIncrement();
-    if(VmSettings.ACTOR_TRACING){
-      ActorExecutionTrace.logSymbol(symbolId, string);
+    if (VmSettings.ACTOR_TRACING) {
+      symbolId = (short) idGenerator.getAndIncrement();
+      ActorExecutionTrace.logSymbol(this);
+    } else {
+      symbolId = 0;
     }
   }
 

@@ -38,6 +38,7 @@ import tools.debugger.message.StepMessage.StepOver;
 import tools.debugger.message.StepMessage.Stop;
 import tools.debugger.message.StoppedMessage;
 import tools.debugger.message.SuspendedEventMessage;
+import tools.debugger.message.SymbolMessage;
 import tools.debugger.message.UpdateBreakpoint;
 import tools.debugger.message.VariablesRequest;
 import tools.debugger.message.VariablesResponse;
@@ -166,7 +167,6 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
 
   @Override
   protected void onDispose(final Env env) {
-    connector.sendActorHistory();
     connector.shutdown();
   }
 
@@ -196,7 +196,7 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
     outMsgAF.register("source",       SourceMessage.class);
     outMsgAF.register("suspendEvent", SuspendedEventMessage.class);
     outMsgAF.register("StoppedEvent", StoppedMessage.class);
-    outMsgAF.register("messageHistory",      MessageHistory.class);
+    outMsgAF.register("symbolMessage",      SymbolMessage.class);
     outMsgAF.register("StackTraceResponse", StackTraceResponse.class);
     outMsgAF.register("ScopesResponse",     ScopesResponse.class);
     outMsgAF.register("VariablesResponse",  VariablesResponse.class);

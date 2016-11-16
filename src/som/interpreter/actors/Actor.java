@@ -3,12 +3,12 @@ package som.interpreter.actors;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
 import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
@@ -19,10 +19,8 @@ import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray.STransferArray;
 import som.vmobjects.SObject;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
-import tools.ObjectBuffer;
 import tools.actors.ActorExecutionTrace;
 import tools.debugger.WebDebugger;
-import tools.debugger.message.Message;
 
 
 /**
@@ -58,18 +56,25 @@ public class Actor {
     Thread current = Thread.currentThread();
     if (current instanceof ActorProcessingThread) {
       ActorProcessingThread t = (ActorProcessingThread) current;
-      t.createdActors.append(actorFarRef);
     }
   }
 
   /** Buffer for incoming messages. */
-  private Mailbox mailbox = createNewMailbox(16);
+  private Mailbox mailbox = Mailbox.createNewMailbox(16);
 
   /** Flag to indicate whether there is currently a F/J task executing. */
   private boolean isExecuting;
 
   /** Is scheduled on the pool, and executes messages to this actor. */
   private final ExecAllMessages executor;
+
+  //used to collect absolute numbers from the threads
+  private static long numCreatedMessages = 0;
+  private static long numCreatedActors = 0;
+  private static long numCreatedPromises = 0;
+  private static long numResolvedPromises = 0;
+
+  private static ArrayList<ActorProcessingThread> threads = new ArrayList<>();
 
   /**
    * Possible roles for an actor.
@@ -188,7 +193,7 @@ public class Actor {
     private void processCurrentMessages(final ActorProcessingThread currentThread, final WebDebugger dbg) {
       if (VmSettings.ACTOR_TRACING) {
         current.setExecutionStart(System.nanoTime());
-        current.setBasemessageId(currentThread.generateMessageBaseId(current.size()));
+        current.setBaseMessageId(currentThread.generateMessageBaseId(current.size()));
         currentThread.currentMessageId = current.getBasemessageId();
       }
       for (EventualMessage msg : current) {
@@ -209,7 +214,6 @@ public class Actor {
         }
       }
       if (VmSettings.ACTOR_TRACING) {
-        //currentThread.processedMessages.append(current); //TODO remove when new system works
         ActorExecutionTrace.mailboxExecuted(current, actor);
       }
     }
@@ -225,10 +229,7 @@ public class Actor {
           return false;
         }
 
-        actor.mailbox = createNewMailbox(actor.mailbox.size());
-
-        ActorProcessingThread t = (ActorProcessingThread) Thread.currentThread();
-
+        actor.mailbox = Mailbox.createNewMailbox(actor.mailbox.size());
       }
 
       return true;
@@ -255,56 +256,56 @@ public class Actor {
   private static final class ActorProcessingThreadFactor implements ForkJoinWorkerThreadFactory {
     @Override
     public ForkJoinWorkerThread newThread(final ForkJoinPool pool) {
-      return new ActorProcessingThread(pool);
+      ActorProcessingThread t = new ActorProcessingThread(pool);
+      threads.add(t);
+      return t;
     }
   }
 
   public static final class ActorProcessingThread extends ForkJoinWorkerThread {
     public EventualMessage currentMessage;
+    private static AtomicInteger threadIdGen = new AtomicInteger(0);
     protected Actor currentlyExecutingActor;
-    protected final int threadId;
-    protected long actorIdCounter = 1;
-    protected long messageIdCounter;
-    protected long promiseIdCounter;
+    protected final long threadId;
+    protected long nextActorId = 1;
+    protected long nextMessageId;
+    protected long nextPromiseId;
     protected long currentMessageId;
-    protected final ObjectBuffer<SFarReference> createdActors;
-    protected final ObjectBuffer<Mailbox> processedMessages;
-    protected final ObjectBuffer<Message> waitingMessages;
-    protected ByteBuffer threadLocalBuffer;
+    protected ByteBuffer tracingDataBuffer;
+    public long resolvedPromises;
 
     protected ActorProcessingThread(final ForkJoinPool pool) {
       super(pool);
-      threadId = this.getPoolIndex();
-      createdActors = ActorExecutionTrace.createActorBuffer();
-      processedMessages = ActorExecutionTrace.createProcessedMessagesBuffer();
-      waitingMessages = ActorExecutionTrace.createMessagesBuffer();
-      ActorExecutionTrace.swapBuffer(this);
+      threadId = threadIdGen.getAndIncrement();
+      if (VmSettings.ACTOR_TRACING) {
+        ActorExecutionTrace.swapBuffer(this);
+      }
     }
 
     protected long generateActorId() {
-      long result = (threadId << 56) | actorIdCounter;
-      actorIdCounter++;
+      long result = (threadId << 56) | nextActorId;
+      nextActorId++;
       return result;
     }
 
     protected long generateMessageBaseId(final int numMessages) {
-      long result = (threadId << 56) | messageIdCounter;
-      messageIdCounter += numMessages;
+      long result = (threadId << 56) | nextMessageId;
+      nextMessageId += numMessages;
       return result;
     }
 
     protected long generatePromiseId() {
-      long result = (threadId << 56) | promiseIdCounter;
-      promiseIdCounter++;
+      long result = (threadId << 56) | nextPromiseId;
+      nextPromiseId++;
       return result;
     }
 
     public ByteBuffer getThreadLocalBuffer() {
-      return threadLocalBuffer;
+      return tracingDataBuffer;
     }
 
     public void setThreadLocalBuffer(final ByteBuffer threadLocalBuffer) {
-      this.threadLocalBuffer = threadLocalBuffer;
+      this.tracingDataBuffer = threadLocalBuffer;
     }
 
     public long getCurrentMessageId() {
@@ -312,22 +313,19 @@ public class Actor {
     }
 
     @Override
-    public void run() {
-      // TODO: figure out whether everything still works without this hack
-      // Accessor.initializeThreadForUseWithPolglotEngine(VM.getEngine());
-
-      super.run();
-    }
-
-    @Override
     protected void onTermination(final Throwable exception) {
-      ActorExecutionTrace.returnBuffer(this.threadLocalBuffer);
-      this.threadLocalBuffer = null;
-      System.out.println("termination");
+      if (VmSettings.ACTOR_TRACING) {
+        ActorExecutionTrace.returnBuffer(this.tracingDataBuffer);
+        this.tracingDataBuffer = null;
+        VM.printConcurrencyEntitiesReport("[Thread " + threadId + "]\tA#" + (nextActorId - 1) + "\t\tM#" + nextMessageId + "\t\tP#" + nextPromiseId);
+        numCreatedActors += nextActorId - 1;
+        numCreatedMessages += nextMessageId;
+        numCreatedPromises += nextPromiseId;
+        numResolvedPromises += resolvedPromises;
+      }
+      threads.remove(this);
       super.onTermination(exception);
     }
-
-
   }
 
   /**
@@ -351,30 +349,28 @@ public class Actor {
       VmSettings.NUM_THREADS, new ActorProcessingThreadFactor(),
       new UncaughtExceptions(), true);
 
-  public static final void shutDownActorPool(){
-
-      System.out.println("still running:" + actorPool.getActiveThreadCount());
+  public static final void shutDownActorPool() {
       actorPool.shutdown();
       try {
         actorPool.awaitTermination(10, TimeUnit.SECONDS);
       } catch (InterruptedException e) {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
+        throw new RuntimeException(e);
       }
+      if (VmSettings.ACTOR_TRACING) {
+        VM.printConcurrencyEntitiesReport("[Total]\t\tA#" + numCreatedActors + "\t\tM#" + numCreatedMessages + "\t\tP#" + numCreatedPromises);
+        VM.printConcurrencyEntitiesReport("[Unresolved] " + (numCreatedPromises - numResolvedPromises));
+      }
+  }
 
+  public static final void forceSwapBuffers() {
+    for (ActorProcessingThread t: threads) {
+      ActorExecutionTrace.swapBuffer(t);
+    }
   }
 
   @Override
   public String toString() {
     return "Actor";
-  }
-
-  private static Mailbox createNewMailbox(final int bufferSize) {
-    if (VmSettings.ACTOR_TRACING) {
-      return new TracingMailbox(bufferSize);
-    } else {
-      return new Mailbox(bufferSize);
-    }
   }
 
   public Mailbox getMailbox() {
@@ -434,74 +430,6 @@ public class Actor {
     @Override
     public long getActorId() {
       return actorId;
-    }
-  }
-
-  public static class Mailbox extends ObjectBuffer<EventualMessage> {
-    public Mailbox(final int bufferSize) {
-      super(bufferSize);
-    }
-
-    public void setExecutionStart(final long start) { }
-    public void setBasemessageId(final long id) { }
-    public void addMessageSendTime() { }
-    public void addMessageExecutionStart() { }
-
-    public long getExecutionStart() { return 0; }
-    public long getBasemessageId() { return 0; }
-    public long getMessageSendTime(final int idx) { return 0; }
-    public long getMessageExecutionStart(final int idx) { return 0; }
-  }
-
-  public static final class TracingMailbox extends Mailbox {
-
-    long baseMessageId;
-    long executionStart;
-    final List<Long> messageExecutionStart = new ArrayList<>();
-    final List<Long> messageSendTime = new ArrayList<>();
-
-    public TracingMailbox(final int bufferSize) {
-      super(bufferSize);
-    }
-
-    @Override
-    public void setExecutionStart(final long start) {
-      this.executionStart = start;
-    }
-
-    @Override
-    public void setBasemessageId(final long id) {
-      this.baseMessageId = id;
-    }
-
-    @Override
-    public long getExecutionStart() {
-      return executionStart;
-    }
-
-    @Override
-    public long getBasemessageId() {
-      return baseMessageId;
-    }
-
-    @Override
-    public void addMessageSendTime() {
-      messageSendTime.add(System.nanoTime());
-    }
-
-    @Override
-    public void addMessageExecutionStart() {
-      messageExecutionStart.add(System.nanoTime());
-    }
-
-    @Override
-    public long getMessageSendTime(final int idx) {
-      return messageSendTime.get(idx);
-    }
-
-    @Override
-    public long getMessageExecutionStart(final int idx) {
-      return messageExecutionStart.get(idx);
     }
   }
 }

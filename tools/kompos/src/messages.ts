@@ -50,7 +50,7 @@ export interface TopFrame {
 }
 
 export type Message = SourceMessage | SuspendEventMessage |
-  MessageHistoryMessage | UpdateSourceSections | StoppedMessage |
+  SymbolMessage | UpdateSourceSections | StoppedMessage |
   StackTraceResponse | ScopesResponse;
 
 export interface SourceMessage {
@@ -92,21 +92,10 @@ export interface SourceInfo {
   sections:  TaggedSourceCoordinate[];
 }
 
-export interface MessageHistoryMessage {
-  type: "messageHistory";
-  messages: MessageData[];
-  actors:   FarRefData[];
-}
-
-export interface MessageData {
-  id:       string;
-  senderId: string;
-  targetId: string;
-}
-
-export interface FarRefData {
-  id:       string;
-  typeName: string;
+export interface SymbolMessage {
+  type: "symbolMessage";
+  symbols: string[];
+  ids:   number[];
 }
 
 export type BreakpointData = LineBreakpointData | SectionBreakpointData;

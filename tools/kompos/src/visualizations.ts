@@ -1,7 +1,7 @@
 /* jshint -W097 */
 'use strict';
 
-import {IdMap, MessageHistoryMessage, MessageData, FarRefData} from './messages';
+import {IdMap, SymbolMessage} from './messages';
 import {dbgLog} from './source';
 import * as d3 from 'd3';
 import {HistoryData} from './history-data';
@@ -16,7 +16,7 @@ var width = 360,
 /**
  * @param {MessageHistory} msgHist
  */
-export function displayMessageHistory(msgHist: MessageHistoryMessage) {
+export function displayMessageHistory() {
   colors = d3.scale.category10();
   $("#graph-canvas").empty();
 
@@ -30,7 +30,7 @@ export function displayMessageHistory(msgHist: MessageHistoryMessage) {
   //  - nodes are known by 'id', not by index in array.
   //  - reflexive edges are indicated on the node (as a bold black circle).
   //  - links are always source < target; edge directions are set by 'left' and 'right'.
-  data.updateData(msgHist)
+
   nodes = data.getActorNodes();
   
   links = data.getLinks() ;
@@ -59,7 +59,7 @@ export function displayMessageHistory(msgHist: MessageHistoryMessage) {
     .append('svg:path')
     .attr('d', 'M0,-5L10,0L0,5')
     .attr('fill', '#000');
-
+  
   svg.append('svg:defs').append('svg:marker')
     .attr('id', 'start-arrow')
     .attr('viewBox', '0 -5 10 10')
@@ -80,6 +80,14 @@ export function displayMessageHistory(msgHist: MessageHistoryMessage) {
 
 export function resetLinks() {
   data = new HistoryData();
+}
+
+export function updateStrings(msg: SymbolMessage) {
+  data.addStrings(msg.ids, msg.symbols);
+}
+
+export function updateData(dv: DataView){
+  data.updateDataBin(dv);
 }
 
 // update force layout (called automatically each iteration)

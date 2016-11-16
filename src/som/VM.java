@@ -241,6 +241,17 @@ public final class VM {
     // Checkstyle: resume
   }
 
+  @TruffleBoundary
+  /**
+   * This method is used to print reports about the number of created artifacts.
+   * For example actors, messages and promises.
+   */
+  public static void printConcurrencyEntitiesReport(final String msg) {
+    // Checkstyle: stop
+    System.out.println(msg);
+    // Checkstyle: resume
+  }
+
   public static boolean isAvoidingExit() {
     return vm.avoidExitForTesting;
   }
