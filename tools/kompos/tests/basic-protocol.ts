@@ -6,7 +6,7 @@ const som = somBasepath + 'som';
 
 import * as WebSocket from 'ws';
 import { expect } from 'chai';
-import { spawn, ChildProcess } from 'child_process';
+import { spawn, spawnSync, ChildProcess, SpawnSyncReturns } from 'child_process';
 import { resolve } from 'path';
 import * as fs from 'fs';
 import {X_OK} from 'constants';
@@ -106,6 +106,11 @@ function startSomAndConnect(onMessageHandler?: OnMessageHandler,
   return promise;
 }
 
+function execSom(extraArgs: string[]): SpawnSyncReturns<string> {
+  const args = ['-G', '-t1', '-dnu', 'tests/pingpong.som'].concat(extraArgs);
+  return spawnSync(som, args);
+}
+
 let connectionPossible = false;
 function onlyWithConnection(fn) {
   return function() {
@@ -146,6 +151,31 @@ describe('Basic Project Setup', () => {
       connectionP.catch(reason => {
         done(reason);
       });
+    });
+  });
+
+  describe('SOMns stack trace', () => {
+    it('should be correct for #doesNotUnderstand', () => {
+      const result = execSom(['dnu']);
+      expect(result.output[1].toString()).to.equal('Stack Trace\n\
+\tPlatform>>#start                             Platform.som:26:7\n\
+\tBlock>>#on:do:                               Kernel.som:602:18\n\
+\tvmMirror>>#exceptionDo:catch:onException:    ExceptionDoOnPrimFactory:1:1\n\
+\tPlatform>>#$blockMethod@25@25                Platform.som:25:55\n\
+\tPingPongApp>>#main:                          pingpong.som:87:34\n\
+\tPingPongApp>>#testDNU                        \n\
+ERROR: MessageNotUnderstood(Integer>>#foobar)\n');
+    });
+
+    it('should be correct for `system printStackTrace`', () => {
+      const result = execSom(['stack']);
+      expect(result.output[1].toString()).to.equal('Stack Trace\n\
+\tPlatform>>#start                             Platform.som:26:7\n\
+\tBlock>>#on:do:                               Kernel.som:602:18\n\
+\tvmMirror>>#exceptionDo:catch:onException:    ExceptionDoOnPrimFactory:1:1\n\
+\tPlatform>>#$blockMethod@25@25                Platform.som:25:55\n\
+\tPingPongApp>>#main:                          pingpong.som:88:34\n\
+\tPingPongApp>>#testPrintStackTrace            pingpong.som:76:12\n');
     });
   });
 });
@@ -236,7 +266,7 @@ describe('Basic Protocol', function() {
     before('Start SOMns and Connect', () => {
       const breakpoint: LineBreakpointData = {
         type: "LineBreakpoint",
-        line: 52,
+        line: 53,
         sourceUri: pingPongUri,
         enabled: true
       };
@@ -249,7 +279,7 @@ describe('Basic Protocol', function() {
       return suspendP.then(msg => {
         expect(msg.stack).lengthOf(7);
         expect(msg.stack[0].methodName).to.equal("PingPong>>#benchmark");
-        expect(msg.stack[0].sourceSection.startLine).to.equal(52);
+        expect(msg.stack[0].sourceSection.startLine).to.equal(53);
       });
     }));
 
@@ -285,7 +315,7 @@ describe('Basic Protocol', function() {
         enabled: true,
         coord: {
           uri:         pingPongUri,
-          startLine:   15,
+          startLine:   16,
           startColumn: 14,
           charLength:   3}};
       connectionP = startSomAndConnect(getSuspendEvent, [breakpoint]);
@@ -297,7 +327,7 @@ describe('Basic Protocol', function() {
       return suspendP.then(msg => {
         expect(msg.stack).lengthOf(2);
         expect(msg.stack[0].methodName).to.equal("Ping>>#start");
-        expect(msg.stack[0].sourceSection.startLine).to.equal(15);
+        expect(msg.stack[0].sourceSection.startLine).to.equal(16);
       });
     }));    
   });
@@ -323,7 +353,7 @@ describe('Basic Protocol', function() {
         enabled: true,
         coord: {
           uri:         pingPongUri,
-          startLine:   39,
+          startLine:   40,
           startColumn:  9,
           charLength:  88}
       };
@@ -336,7 +366,7 @@ describe('Basic Protocol', function() {
       return suspendP.then(msg => {
         expect(msg.stack).lengthOf(2);
         expect(msg.stack[0].methodName).to.equal("Pong>>#ping:");
-        expect(msg.stack[0].sourceSection.startLine).to.equal(39);
+        expect(msg.stack[0].sourceSection.startLine).to.equal(40);
       });
     }));
   });
@@ -362,7 +392,7 @@ describe('Basic Protocol', function() {
         enabled: true,
         coord: {
           uri:         pingPongUri,
-          startLine:   15,
+          startLine:   16,
           startColumn: 14,
           charLength:   3}};
       connectionP = startSomAndConnect(getSuspendEvent, [breakpoint]);
@@ -374,7 +404,7 @@ describe('Basic Protocol', function() {
       return suspendP.then(msg => {
         expect(msg.stack).lengthOf(2);
         expect(msg.stack[0].methodName).to.equal("Pong>>#ping:");
-        expect(msg.stack[0].sourceSection.startLine).to.equal(39);
+        expect(msg.stack[0].sourceSection.startLine).to.equal(40);
       });
     }));
   });
@@ -408,7 +438,7 @@ describe('Basic Protocol', function() {
         enabled: true,
         coord: {
           uri:         pingPongUri,
-          startLine:   15,
+          startLine:   16,
           startColumn: 14,
           charLength:   3}};
       connectionP = startSomAndConnect(getSuspendEvent, [breakpoint]);
@@ -420,7 +450,7 @@ describe('Basic Protocol', function() {
       return suspendPs[0].then(msg => {
         expect(msg.stack).lengthOf(2);
         expect(msg.stack[0].methodName).to.equal("Ping>>#start");
-        expect(msg.stack[0].sourceSection.startLine).to.equal(15);
+        expect(msg.stack[0].sourceSection.startLine).to.equal(16);
       });
     }));
 
@@ -434,7 +464,7 @@ describe('Basic Protocol', function() {
           const p = suspendPs[1].then(msgAfterStep => {
             expect(msgAfterStep.stack).lengthOf(2);
             expect(msgAfterStep.stack[0].methodName).to.equal("Ping>>#start");
-            expect(msgAfterStep.stack[0].sourceSection.startLine).to.equal(16);
+            expect(msgAfterStep.stack[0].sourceSection.startLine).to.equal(17);
           });
           resolve(p);
         });
@@ -449,7 +479,7 @@ describe('Basic Protocol', function() {
             // set another breakpoint, after stepping, and with connection
             const lbp: LineBreakpointData = {
               type: "LineBreakpoint",
-              line: 21,
+              line: 22,
               sourceUri: pingPongUri,
               enabled:   true
             };
@@ -460,7 +490,7 @@ describe('Basic Protocol', function() {
         suspendPs[2].then(msgLineBP => {
           expect(msgLineBP.stack).lengthOf(2);
           expect(msgLineBP.stack[0].methodName).to.equal("Ping>>#ping");
-          expect(msgLineBP.stack[0].sourceSection.startLine).to.equal(21);
+          expect(msgLineBP.stack[0].sourceSection.startLine).to.equal(22);
         })]);
     }));
 
@@ -471,7 +501,7 @@ describe('Basic Protocol', function() {
           connectionP.then(con => {
             const lbp22: LineBreakpointData = {
               type: "LineBreakpoint",
-              line:      22,
+              line:      23,
               sourceUri: pingPongUri,
               enabled:   true
             };
@@ -479,7 +509,7 @@ describe('Basic Protocol', function() {
             
             const lbp21: LineBreakpointData = {
               type: "LineBreakpoint",
-              line:      21,
+              line:      22,
               sourceUri: pingPongUri,
               enabled:   false
             };
@@ -489,7 +519,7 @@ describe('Basic Protocol', function() {
             const p = suspendPs[3].then(msgLineBP => {
               expect(msgLineBP.stack).lengthOf(2);
               expect(msgLineBP.stack[0].methodName).to.equal("Ping>>#ping");
-              expect(msgLineBP.stack[0].sourceSection.startLine).to.equal(22);
+              expect(msgLineBP.stack[0].sourceSection.startLine).to.equal(23);
             });
             resolve(p);
           });
@@ -523,7 +553,7 @@ describe('Basic Protocol', function() {
       return suspendP.then(msg => {
         expect(msg.stack).lengthOf(7);
         expect(msg.stack[0].methodName).to.equal("PingPongApp>>#testHalt");
-        expect(msg.stack[0].sourceSection.startLine).to.equal(65);
+        expect(msg.stack[0].sourceSection.startLine).to.equal(66);
       });
     }));
   });

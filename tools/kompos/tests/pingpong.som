@@ -1,5 +1,6 @@
 class PingPongApp usingPlatform: platform = Value (
 | private actors = platform actors.
+  private system = platform system.
 |)(
   public class PingPong new: numPings = Value (
   | private NumPings = numPings.
@@ -66,11 +67,25 @@ class PingPongApp usingPlatform: platform = Value (
     ^ 0
   )
 
+  private testDNU = (
+    1 foobar.
+    ^ 0
+  )
+
+  private testPrintStackTrace = (
+    system printStackTrace.
+    ^ 0
+  )
+
   public main: args = (
     args size = 1 ifTrue: [
       ^ (PingPong new: 3) benchmark ].
     args size = 2 ifTrue: [
-      (args at: 2) = 'halt' ifTrue: [ ^ testHalt ].
+      | test |
+      test := args at: 2. 
+      test = 'halt'  ifTrue: [ ^ testHalt ].
+      test = 'dnu'   ifTrue: [ ^ testDNU  ].
+      test = 'stack' ifTrue: [ ^ testPrintStackTrace  ].
     ].
     ^ 0
   )
