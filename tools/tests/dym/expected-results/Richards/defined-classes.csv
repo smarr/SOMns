@@ -55,7 +55,7 @@ Set	Collections.som pos=1286 len=2340	0
 SlotMirror	Mirrors.som pos=4510 len=33	0
 String	Kernel.som pos=10801 len=3275	5
 Symbol	Kernel.som pos=14082 len=216	0
-System	System.som pos=0 len=2346	4
+System	System.som pos=0 len=2411	4
 TaskControlBlock	Richards.som pos=12451 len=1241	3
 TaskState	Richards.som pos=10964 len=1483	12
 Thing	Kernel.som pos=1254 len=1658	6

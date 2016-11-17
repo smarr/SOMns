@@ -286,6 +286,7 @@ Method(System>>#fullGC)	false	0
 Method(System>>#loadModule:)	true	1
 Method(System>>#loadModule:nextTo:)	true	1
 Method(System>>#printNewline:)	false	0
+Method(System>>#printStackTrace)	false	0
 Method(System>>#printString:)	false	0
 Method(System>>#ticks)	false	0
 Method(System>>#time)	false	0

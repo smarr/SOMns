@@ -50,7 +50,7 @@ Set	Collections.som pos=1286 len=2340	0
 SlotMirror	Mirrors.som pos=4510 len=33	0
 String	Kernel.som pos=10801 len=3275	5
 Symbol	Kernel.som pos=14082 len=216	0
-System	System.som pos=0 len=2346	4
+System	System.som pos=0 len=2411	4
 Thing	Kernel.som pos=1254 len=1658	5
 Top	Kernel.som pos=1224 len=24	0
 TransferArray	Kernel.som pos=18692 len=163	0
