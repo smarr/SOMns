@@ -253,12 +253,18 @@ public class Parser {
   }
 
   public Parser(final Reader reader, final long fileSize, final Source source,
-      final StructuralProbe structuralProbe) {
-    this.source   = source;
+      final StructuralProbe structuralProbe) throws ParseError {
+    this.source = source;
 
     sym = NONE;
-    lexer = new Lexer(reader, fileSize);
     nextSym = NONE;
+
+    if (fileSize == 0) {
+      throw new ParseError("Provided file is empty.", NONE, this);
+    }
+
+    lexer = new Lexer(reader, fileSize);
+
     getSymbolFromLexer();
 
     this.syntaxAnnotations = new HashSet<>();
