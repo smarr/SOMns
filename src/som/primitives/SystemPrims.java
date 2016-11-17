@@ -149,11 +149,11 @@ public final class SystemPrims {
 
     @Specialization
     public final Object doSObject(final Object receiver) {
-      printStackTrace();
+      printStackTrace(2);
       return receiver;
     }
 
-    public static void printStackTrace() {
+    public static void printStackTrace(final int skipDnuFrames) {
       ArrayList<String> method   = new ArrayList<String>();
       ArrayList<String> location = new ArrayList<String>();
       int[] maxLengthMethod = {0};
@@ -190,7 +190,6 @@ public final class SystemPrims {
       });
 
       StringBuilder sb = new StringBuilder();
-      final int skipDnuFrames = 1;
       for (int i = method.size() - 1; i >= skipDnuFrames; i--) {
         sb.append(String.format("\t%1$-" + (maxLengthMethod[0] + 4) + "s",
           method.get(i)));

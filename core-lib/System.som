@@ -35,6 +35,7 @@ class System usingVmMirror: vmMirror = Value (
   'Printing'
   public printString: string = ( vmMirror printString: string )
   public printNewline: str   = ( vmMirror printNewline: str )
+  public printStackTrace     = ( vmMirror printStackTrace: nil )
   
   'Time'
   public time  = ( ^ vmMirror systemTime: nil  )
