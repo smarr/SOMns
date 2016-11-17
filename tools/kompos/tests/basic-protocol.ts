@@ -65,9 +65,9 @@ function closeConnection(connection: SomConnection, done: MochaDone) {
 
 function startSomAndConnect(onMessageHandler?: OnMessageHandler,
     initialBreakpoints?: BreakpointData[], extraArgs?: string[],
-    trigggerDebugger?: boolean): Promise<SomConnection> {
+    triggerDebugger?: boolean): Promise<SomConnection> {
   let args = ['-G', '-t1', '-wd', 'tests/pingpong.som'];
-  if (trigggerDebugger) { args = ['-d'].concat(args); };
+  if (triggerDebugger) { args = ['-d'].concat(args); };
   if (extraArgs) { args = args.concat(extraArgs); }
 
   const somProc = spawn(som, args);
