@@ -141,6 +141,46 @@ class CollectionTests usingPlatform: platform testFramework: minitest = (
       arr at: 2 put: o.
       self assert: o is: (arr at: 2).
     )
+
+    private arrayTypeSpecializations = (
+      | types |
+      types := Array new: 6.
+      types at: 1 put: nil.
+      types at: 2 put: 55.
+      types at: 3 put: 3.3.
+      types at: 4 put: 'string'. (* not separate from object, but tested anyways *)
+      types at: 5 put: Object new.
+      types at: 6 put: true.
+      ^ types
+    )
+
+    public testAtIndexOutOfBounds = (
+      | types |
+      types := arrayTypeSpecializations.
+
+      types do: [:initVal |
+        | arr |
+        arr := Array new: 5 withAll: initVal.
+        arr at: 1. (* shouldn't throw *)
+
+        should: [ arr at: 0 ] signal: IndexOutOfBounds.
+        should: [ arr at: 6 ] signal: IndexOutOfBounds.
+        should: [ arr at: 123234234 ] signal: IndexOutOfBounds ]
+    )
+
+    public testAtPutIndexOutOfBounds = (
+      | types |
+      types := arrayTypeSpecializations.
+
+      types do: [:initVal |
+        | arr |
+        arr := Array new: 5 withAll: initVal.
+        arr at: 1. (* shouldn't throw *)
+
+        should: [ arr at: 0 put: initVal ] signal: IndexOutOfBounds.
+        should: [ arr at: 6 put: initVal ] signal: IndexOutOfBounds.
+        should: [ arr at: 123234234 put: initVal ] signal: IndexOutOfBounds ]
+    )
   ) : (
     TEST_CONTEXT = ()
   )
