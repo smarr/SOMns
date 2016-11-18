@@ -158,10 +158,10 @@ describe('Basic Project Setup', () => {
     it('should be correct for #doesNotUnderstand', () => {
       const result = execSom(['dnu']);
       expect(result.output[1].toString()).to.equal('Stack Trace\n\
-\tPlatform>>#start                             Platform.som:26:7\n\
-\tBlock>>#on:do:                               Kernel.som:602:18\n\
+\tPlatform>>#start                             Platform.som:27:7\n\
+\tBlock>>#on:do:                               Kernel.som:601:18\n\
 \tvmMirror>>#exceptionDo:catch:onException:    ExceptionDoOnPrimFactory:1:1\n\
-\tPlatform>>#$blockMethod@25@25                Platform.som:25:55\n\
+\tPlatform>>#$blockMethod@26@25                Platform.som:26:55\n\
 \tPingPongApp>>#main:                          pingpong.som:87:34\n\
 \tPingPongApp>>#testDNU                        \n\
 ERROR: MessageNotUnderstood(Integer>>#foobar)\n');
@@ -170,10 +170,10 @@ ERROR: MessageNotUnderstood(Integer>>#foobar)\n');
     it('should be correct for `system printStackTrace`', () => {
       const result = execSom(['stack']);
       expect(result.output[1].toString()).to.equal('Stack Trace\n\
-\tPlatform>>#start                             Platform.som:26:7\n\
-\tBlock>>#on:do:                               Kernel.som:602:18\n\
+\tPlatform>>#start                             Platform.som:27:7\n\
+\tBlock>>#on:do:                               Kernel.som:601:18\n\
 \tvmMirror>>#exceptionDo:catch:onException:    ExceptionDoOnPrimFactory:1:1\n\
-\tPlatform>>#$blockMethod@25@25                Platform.som:25:55\n\
+\tPlatform>>#$blockMethod@26@25                Platform.som:26:55\n\
 \tPingPongApp>>#main:                          pingpong.som:88:34\n\
 \tPingPongApp>>#testPrintStackTrace            pingpong.som:76:12\n');
     });
