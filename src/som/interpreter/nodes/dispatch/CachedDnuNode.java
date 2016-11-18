@@ -56,7 +56,7 @@ public final class CachedDnuNode extends AbstractDispatchNode {
   protected Object performDnu(final VirtualFrame frame, final Object[] arguments,
       final Object rcvr) {
     if (VmSettings.DNU_PRINT_STACK_TRACE) {
-      PrintStackTracePrim.printStackTrace(0);
+      PrintStackTracePrim.printStackTrace(0, getSourceSection());
       VM.errorPrintln("Lookup of " + selector + " failed in " + Types.getClassOf(rcvr).getName().getString());
     }
 

@@ -46,7 +46,7 @@ public abstract class AbstractGenericDispatchNode extends AbstractDispatchNode {
       final Object[] arguments, final Object rcvr, final SClass rcvrClass,
       final SSymbol selector, final IndirectCallNode call) {
     if (VmSettings.DNU_PRINT_STACK_TRACE) {
-      PrintStackTracePrim.printStackTrace(0);
+      PrintStackTracePrim.printStackTrace(0, null);
       VM.errorPrintln("Lookup of " + selector + " failed in " + Types.getClassOf(rcvr).getName().getString());
     }
 

@@ -163,7 +163,7 @@ describe('Basic Project Setup', () => {
 \tvmMirror>>#exceptionDo:catch:onException:    ExceptionDoOnPrimFactory:1:1\n\
 \tPlatform>>#$blockMethod@26@25                Platform.som:26:55\n\
 \tPingPongApp>>#main:                          pingpong.som:87:34\n\
-\tPingPongApp>>#testDNU                        \n\
+\tPingPongApp>>#testDNU                        pingpong.som:71:7\n\
 ERROR: MessageNotUnderstood(Integer>>#foobar)\n');
     });
 

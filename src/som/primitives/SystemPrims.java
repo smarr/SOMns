@@ -149,15 +149,17 @@ public final class SystemPrims {
 
     @Specialization
     public final Object doSObject(final Object receiver) {
-      printStackTrace(2);
+      printStackTrace(2, null);
       return receiver;
     }
 
-    public static void printStackTrace(final int skipDnuFrames) {
+    public static void printStackTrace(final int skipDnuFrames, final SourceSection topNode) {
       ArrayList<String> method   = new ArrayList<String>();
       ArrayList<String> location = new ArrayList<String>();
       int[] maxLengthMethod = {0};
+      boolean[] first = {true};
       VM.println("Stack Trace");
+
       Truffle.getRuntime().iterateFrames(new FrameInstanceVisitor<Object>() {
         @Override
         public Object visitFrame(final FrameInstance frameInstance) {
@@ -174,12 +176,18 @@ public final class SystemPrims {
           method.add(id);
           maxLengthMethod[0] = Math.max(maxLengthMethod[0], id.length());
           Node callNode = frameInstance.getCallNode();
-          if (callNode != null) {
-            SourceSection nodeSS = callNode.getEncapsulatingSourceSection();
+          if (callNode != null || first[0]) {
+            SourceSection nodeSS;
+            if (first[0]) {
+              first[0] = false;
+              nodeSS = topNode;
+            } else {
+              nodeSS = callNode.getEncapsulatingSourceSection();
+            }
             if (nodeSS != null) {
               location.add(nodeSS.getSource().getName() + ":" + nodeSS.getStartLine() + ":" + nodeSS.getStartColumn());
             } else {
-                location.add("");
+              location.add("");
             }
           } else {
             location.add("");
