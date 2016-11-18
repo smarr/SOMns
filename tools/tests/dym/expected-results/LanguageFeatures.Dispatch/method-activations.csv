@@ -42,9 +42,9 @@ String>>#asString	5
 String>>#asSymbol	1
 String>>#primSubstringFrom:to:	44
 String>>#includes:	1
-String>>#$blockMethod@362@10:	17
+String>>#$blockMethod@361@10:	17
 String>>#indexOf:startingAt:	2
-String>>#$blockMethod@378@10:	25
+String>>#$blockMethod@377@10:	25
 String>>#split:	1
 String>>#asInteger	3
 String>>#print	1
@@ -57,6 +57,7 @@ Vector>>#at:	2
 Vector>>#append:	2
 Vector>>#checkIndex:	2
 Vector_class>>#new	1
+Kernel>>#`define`cls	1
 Kernel>>#`define`cls	1
 LanguageFeaturesSuite>>#usingPlatform:andHarness:	1
 _unknown_>>#`define`cls	1
@@ -79,7 +80,7 @@ Platform>>#usingVmMirror:	1
 _unknown_>>#`define`cls	1
 Platform>>#initializer`usingVmMirror:	1
 Platform>>#start	1
-Platform>>#$blockMethod@25@25	1
+Platform>>#$blockMethod@26@25	1
 System>>#usingVmMirror:	1
 _unknown_>>#`define`cls	1
 System>>#initializer`usingVmMirror:	1

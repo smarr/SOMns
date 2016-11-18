@@ -44,10 +44,11 @@ Integer_class>>#fromString:	3
 String>>#asString	5
 String>>#primSubstringFrom:to:	6
 String>>#includes:	1
-String>>#$blockMethod@362@10:	6
+String>>#$blockMethod@361@10:	6
 String>>#asInteger	3
 String>>#print	1
 Block>>#on:do:	1
+Kernel>>#`define`cls	1
 Kernel>>#`define`cls	1
 Kernel>>#`define`cls	1
 Kernel>>#`define`cls	1
@@ -59,7 +60,7 @@ Platform>>#usingVmMirror:	1
 _unknown_>>#`define`cls	1
 Platform>>#initializer`usingVmMirror:	1
 Platform>>#start	1
-Platform>>#$blockMethod@25@25	1
+Platform>>#$blockMethod@26@25	1
 System>>#usingVmMirror:	1
 _unknown_>>#`define`cls	1
 System>>#initializer`usingVmMirror:	1

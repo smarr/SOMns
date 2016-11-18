@@ -3,16 +3,16 @@ Harness.som pos=2138 len=4	read	Integer	8191
 Harness.som pos=2138 len=4	read	ALL	8191
 Harness.som pos=2177 len=4	read	Integer	8191
 Harness.som pos=2177 len=4	read	ALL	8191
-Kernel.som pos=2334 len=10	read	Object class	7
-Kernel.som pos=2334 len=10	read	ALL	7
-Kernel.som pos=2371 len=9	read	Value class	6
-Kernel.som pos=2371 len=9	read	ALL	6
-Kernel.som pos=2749 len=8	read	VmMirror	4
-Kernel.som pos=2749 len=8	read	ALL	4
-Kernel.som pos=8874 len=8	read	VmMirror	2
-Kernel.som pos=8874 len=8	read	ALL	2
-Kernel.som pos=11487 len=8	read	VmMirror	6
-Kernel.som pos=11487 len=8	read	ALL	6
+Kernel.som pos=2333 len=10	read	Object class	7
+Kernel.som pos=2333 len=10	read	ALL	7
+Kernel.som pos=2370 len=9	read	Value class	6
+Kernel.som pos=2370 len=9	read	ALL	6
+Kernel.som pos=2748 len=8	read	VmMirror	4
+Kernel.som pos=2748 len=8	read	ALL	4
+Kernel.som pos=8873 len=8	read	VmMirror	2
+Kernel.som pos=8873 len=8	read	ALL	2
+Kernel.som pos=11486 len=8	read	VmMirror	6
+Kernel.som pos=11486 len=8	read	ALL	6
 Storage.som pos=1370 len=6	read	Random class	1
 Storage.som pos=1370 len=6	read	ALL	1
 Storage.som pos=1451 len=5	read	Integer	1

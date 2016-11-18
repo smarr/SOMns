@@ -15,7 +15,7 @@ DeltaBlue.som pos=27953 len=54	3	3	StayConstraint
 DeltaBlue.som pos=28524 len=0	9	6	Variable
 Harness.som pos=1085 len=23	1	7	Harness
 Harness.som pos=3894 len=0	1	8	Run
-Kernel.som pos=20966 len=9	49	3	Vector
+Kernel.som pos=20965 len=9	49	3	Vector
 Mirrors.som pos=1080 len=23	1	6	Mirrors
 Platform.som pos=15 len=23	1	5	Platform
 System.som pos=1084 len=23	1	1	System

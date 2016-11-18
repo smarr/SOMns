@@ -20,13 +20,13 @@ Fannkuch.som pos=3049 len=5	read	True	1
 Fannkuch.som pos=3049 len=5	read	ALL	24
 Fannkuch.som pos=3227 len=4	read	Array	23
 Fannkuch.som pos=3227 len=4	read	ALL	23
-Kernel.som pos=2334 len=10	read	Object class	7
-Kernel.som pos=2334 len=10	read	ALL	7
-Kernel.som pos=2371 len=9	read	Value class	6
-Kernel.som pos=2371 len=9	read	ALL	6
-Kernel.som pos=2749 len=8	read	VmMirror	4
-Kernel.som pos=2749 len=8	read	ALL	4
-Kernel.som pos=8874 len=8	read	VmMirror	2
-Kernel.som pos=8874 len=8	read	ALL	2
-Kernel.som pos=11487 len=8	read	VmMirror	7
-Kernel.som pos=11487 len=8	read	ALL	7
+Kernel.som pos=2333 len=10	read	Object class	7
+Kernel.som pos=2333 len=10	read	ALL	7
+Kernel.som pos=2370 len=9	read	Value class	6
+Kernel.som pos=2370 len=9	read	ALL	6
+Kernel.som pos=2748 len=8	read	VmMirror	4
+Kernel.som pos=2748 len=8	read	ALL	4
+Kernel.som pos=8873 len=8	read	VmMirror	2
+Kernel.som pos=8873 len=8	read	ALL	2
+Kernel.som pos=11486 len=8	read	VmMirror	7
+Kernel.som pos=11486 len=8	read	ALL	7

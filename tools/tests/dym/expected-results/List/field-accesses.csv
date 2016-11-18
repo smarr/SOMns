@@ -1,14 +1,14 @@
 Source Section	Access Type	Data Type	Count
-Kernel.som pos=2334 len=10	read	Object class	7
-Kernel.som pos=2334 len=10	read	ALL	7
-Kernel.som pos=2371 len=9	read	Value class	6
-Kernel.som pos=2371 len=9	read	ALL	6
-Kernel.som pos=2749 len=8	read	VmMirror	4
-Kernel.som pos=2749 len=8	read	ALL	4
-Kernel.som pos=8874 len=8	read	VmMirror	2
-Kernel.som pos=8874 len=8	read	ALL	2
-Kernel.som pos=11487 len=8	read	VmMirror	3
-Kernel.som pos=11487 len=8	read	ALL	3
+Kernel.som pos=2333 len=10	read	Object class	7
+Kernel.som pos=2333 len=10	read	ALL	7
+Kernel.som pos=2370 len=9	read	Value class	6
+Kernel.som pos=2370 len=9	read	ALL	6
+Kernel.som pos=2748 len=8	read	VmMirror	4
+Kernel.som pos=2748 len=8	read	ALL	4
+Kernel.som pos=8873 len=8	read	VmMirror	2
+Kernel.som pos=8873 len=8	read	ALL	2
+Kernel.som pos=11486 len=8	read	VmMirror	3
+Kernel.som pos=11486 len=8	read	ALL	3
 List.som pos=1971 len=4	read	ListElement	16805
 List.som pos=1971 len=4	read	Nil	1244
 List.som pos=1971 len=4	read	ALL	18049

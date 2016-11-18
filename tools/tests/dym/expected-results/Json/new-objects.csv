@@ -12,7 +12,7 @@ Json.som pos=39617 len=8	3	4	JsonLiteral
 Json.som pos=40243 len=12	712	1	JsonNumber
 Json.som pos=40838 len=0	157	3	JsonObject
 Json.som pos=44420 len=8	1351	1	JsonString
-Kernel.som pos=20966 len=9	867	3	Vector
+Kernel.som pos=20965 len=9	867	3	Vector
 Mirrors.som pos=1080 len=23	1	6	Mirrors
 Platform.som pos=15 len=23	1	5	Platform
 System.som pos=1084 len=23	1	1	System
