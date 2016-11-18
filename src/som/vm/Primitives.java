@@ -77,6 +77,7 @@ import som.primitives.arrays.NewPrimFactory;
 import som.primitives.arrays.PutAllNodeFactory;
 import som.primitives.bitops.BitAndPrimFactory;
 import som.primitives.bitops.BitXorPrimFactory;
+import som.vm.constants.KernelObjFactory;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 
@@ -276,6 +277,7 @@ public class Primitives {
     allFactories.addAll(ExceptionsPrimsFactory.getFactories());
     allFactories.addAll(IfMessageNodeGen.getFactories());
     allFactories.addAll(IntegerPrimsFactory.getFactories());
+    allFactories.addAll(KernelObjFactory.getFactories());
     allFactories.addAll(MethodPrimsFactory.getFactories());
     allFactories.addAll(MirrorPrimsFactory.getFactories());
     allFactories.addAll(ObjectPrimsFactory.getFactories());

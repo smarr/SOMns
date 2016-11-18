@@ -8,6 +8,7 @@ class Platform usingVmMirror: vmMirror = Value (
   public actors      = (vmMirror load: 'Actors.som' nextTo: self) usingVmMirror: vmMirror usingKernel: kernel.
   public collections = (vmMirror load: 'Collections.som' nextTo: self) usingKernel: kernel.
 |
+  vmMirror kernelIndexOutOfBounds: kernel IndexOutOfBounds.
 )(
   (* start executes the application code and returns an integer as error code,
      or in case of an application that uses actors, a promise that indicates

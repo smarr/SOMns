@@ -22,8 +22,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
 | private vmMirror   = vmMirror.
   private ObjectSlot = Object.
   private ValueSlot  = Value.
-|
-)(
+|)(
   private class Top = ()()
   
   public class Thing = Top ()(
@@ -921,10 +920,12 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     )
   )
   
+  (* Short cut from VM. Likely to be removed when optimized. *)
   private signalNotAValueWith: aClass = (
     NotAValue signalWith: aClass
   )
   
+  (* Short cut from VM. Likely to be removed when optimized. *)
   private signalTOCannotBeValues: aClass = (
     TransferObjectsCannotBeValues signalWith: aClass
   )

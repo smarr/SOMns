@@ -33,6 +33,7 @@ import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.SResolver;
 import som.vm.ObjectSystem;
 import som.vm.Primitives;
+import som.vm.constants.KernelObj;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import tools.actors.ActorExecutionTrace;
 import tools.debugger.Tags;
@@ -347,5 +348,7 @@ public final class VM {
     SPromise.setPairClass(null);
     SPromise.setSOMClass(null);
     SResolver.setSOMClass(null);
+
+    KernelObj.indexOutOfBoundsClass = null;
   }
 }
