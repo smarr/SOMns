@@ -29,7 +29,7 @@ class Harness usingPlatform: platform = (
 )(
 
   public class Benchmark = ()(
-    public innerBenchmarkLoop: innerIterations = (
+    public innerBenchmarkLoop: innerIterations numThreads: threads = (
       1 to: innerIterations do: [:i |
         (self verifyResult: self benchmark) ifFalse: [ ^ false ].
       ].
@@ -93,6 +93,7 @@ class Harness usingPlatform: platform = (
       public numIterations   ::= 1.
       public warmUp          ::= 0.
       public innerIterations ::= 1.
+      public numThreads      ::= 1.
       public maxRuntime      ::= 0.
       public printAll        ::= true.
       public benchmarkSuite  ::= nil.
@@ -141,7 +142,7 @@ class Harness usingPlatform: platform = (
     private measure: bench = (
       | startTime endTime runTime |
       startTime := system ticks.
-      (bench innerBenchmarkLoop: innerIterations) ifFalse: [
+      (bench innerBenchmarkLoop: innerIterations numThreads: numThreads) ifFalse: [
         self error: 'Benchmark failed with incorrect result'. ].
       endTime := system ticks.
 
@@ -187,7 +188,9 @@ class Harness usingPlatform: platform = (
         run warmUp: (args at: 4) asInteger.
         args size > 4 ifTrue: [
           run innerIterations: (args at: 5) asInteger.
-    ] ] ]
+          args size > 5 ifTrue: [
+            run numThreads: (args at: 6) asInteger
+    ] ] ] ]
   )
 
   public main: args = (

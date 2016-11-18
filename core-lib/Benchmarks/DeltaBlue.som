@@ -12,7 +12,7 @@ class DeltaBlue usingPlatform: platform andHarness: harness = (
   |
 )(
   class DeltaBlue = Benchmark ()(
-    public innerBenchmarkLoop: innerIterations = (
+    public innerBenchmarkLoop: innerIterations numThreads: threads = (
       Planner chainTest: innerIterations.
       Planner projectionTest: innerIterations.
       ^ true

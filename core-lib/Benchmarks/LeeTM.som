@@ -3,6 +3,8 @@ class LeeTMSuite usingPlatform: platform andHarness: harness = (
 | private Benchmark = harness Benchmark.
   private Array     = platform kernel Array.
   private Vector    = platform kernel Vector.
+  private Mutex     = platform threading Mutex.
+  private Thread    = platform threading Thread.
   private system    = platform system.
 
   private EMPTY      = 0.
@@ -20,15 +22,26 @@ class LeeTMSuite usingPlatform: platform andHarness: harness = (
   | private data ::= nil.
     private gridSize ::= 0.
   |)(
-    public innerBenchmarkLoop: problemSize = (
-      | lr t m |
+    public innerBenchmarkLoop: problemSize numThreads: numThreads = (
+      | totalLaidTracks lr threads m |
+      m := Mutex new.
       data isNil ifTrue: [ loadData: problemSize ].
 
+      totalLaidTracks := 0.
       lr := LeeRouter new: data gridSize: gridSize.
-      t := LeeThread new: lr.
-      t run.
 
-      ^ lr sanityCheck: t myLaidTracks in: problemSize.
+      threads := Array new: numThreads withAll: [
+        Thread spawn: [ | t |
+          t := LeeThread new: lr.
+          t run.
+          m critical: [
+            totalLaidTracks := totalLaidTracks + t myLaidTracks
+          ]  ]
+      ].
+
+      threads do: [:t | t join ].
+
+      ^ lr sanityCheck: totalLaidTracks in: problemSize.
     )
 
     private loadData: fileId = (
@@ -107,7 +120,7 @@ class LeeTMSuite usingPlatform: platform andHarness: harness = (
           a next: b next.
           b next: a.
           done := false ].
-
+        
         ent := a.
         a := b.
         b := b next.
@@ -166,7 +179,7 @@ class LeeTMSuite usingPlatform: platform andHarness: harness = (
     )
 
     public pointX: x y: y z: z = (
-      ^ (((grid at: x) at: y) at: z) routeId
+      ^ (((grid at: x) at: y) at: z) routeId 
     )
 
     public pointX: x y: y z: z val: val = (
@@ -183,6 +196,7 @@ class LeeTMSuite usingPlatform: platform andHarness: harness = (
   class LeeRouter new: data gridSize: size = (
   | public gridSize  = size.
     private grid     = Grid width: size height: size depth: 2.
+    private gridLock = Mutex new.
 
     private netNo      ::= 0.
     private failures   ::= 0.
@@ -192,7 +206,8 @@ class LeeTMSuite usingPlatform: platform andHarness: harness = (
     private inputLine ::= nil.
     private linePos   ::= 1.
 
-    private work      = WorkQueue new.
+    private queueLock = Mutex new.
+    private work      = WorkQueue new. 
   |
     parseData: data.
     grid addWeights.
@@ -203,10 +218,10 @@ class LeeTMSuite usingPlatform: platform andHarness: harness = (
         | c |
         inputLine := line.
         linePos   := 1.
-
+        
         c := readChar.
         c = 'E' ifTrue: [ ^ self ].  (* end of file *)
-
+        
         c = 'C' ifTrue: [ (* chip bounding box *)
           | x0 y0 x1 y1 |
           x0 := readInt + 1.
@@ -237,13 +252,21 @@ class LeeTMSuite usingPlatform: platform andHarness: harness = (
     )
 
     public nextTrack = (
-      work next notNil ifTrue: [
-        ^ work dequeue ].
+      queueLock critical: [
+        work next notNil ifTrue: [
+          ^ work dequeue
+      ] ].
       ^ nil
     )
 
     public layNextTrack: q with: tempg = (
-      ^ connectXs: q x1 ys: q y1 xg: q x2 yg: q y2 netNo: q nn tempg: tempg
+      | done |
+      (* start transaction *)
+      done := false.
+      gridLock critical: [
+        done := connectXs: q x1 ys: q y1 xg: q x2 yg: q y2 netNo: q nn tempg: tempg ].
+      (* end transaction *) 
+      ^ done.
     )
 
     private readChar = (
@@ -251,7 +274,7 @@ class LeeTMSuite usingPlatform: platform andHarness: harness = (
       [ ((inputLine charAt: linePos) = ' ') and: [
         (inputLine charAt: linePos) = '\t' ] ] whileTrue: [
         linePos := linePos + 1 ].
-
+      
       c := inputLine charAt: linePos.
 
       linePos <= inputLine length ifTrue: [
@@ -291,7 +314,7 @@ class LeeTMSuite usingPlatform: platform andHarness: harness = (
 
       front append: (Frontier x: x y: y z: 1 dw: 0).
       front append: (Frontier x: x y: y z: 2 dw: 0). (* we can start from either side *)
-
+      
       extraIterations := 50.
       reached0 := false.
       reached1 := false.
@@ -309,7 +332,7 @@ class LeeTMSuite usingPlatform: platform andHarness: harness = (
             expandTo: xGoal and: yGoal on: tempg and: tmpFront for: f to:  1 and:  0. (* looking easy  *)
             expandTo: xGoal and: yGoal on: tempg and: tmpFront for: f to:  0 and: -1. (* looking south *)
             expandTo: xGoal and: yGoal on: tempg and: tmpFront for: f to: -1 and:  0. (* looking west  *)
-
+            
             f z = 1
               ifTrue:  [ expandOnZ: tempg with: tmpFront and: f to: 2 and: 1 ]
               ifFalse: [ expandOnZ: tempg with: tmpFront and: f to: 1 and: 2 ].
@@ -347,7 +370,7 @@ class LeeTMSuite usingPlatform: platform andHarness: harness = (
       | weight prevVal reached |
       weight  := (grid pointX: f x + dirX y: f y + dirY z: f z) + 1.
       prevVal := ((tempg at: f x + dirX) at: f y + dirY) at: f z.
-      reached := (f x + dirX) = xGoal and: [ (f y + dirY) = yGoal ].
+      reached := (f x + dirX) = xGoal and: [ (f y + dirY) = yGoal ]. 
 
       (((prevVal > ((((tempg at: f x) at: f y) at: f z) + weight)) and: [
         weight < OCC]) or: reached) ifTrue: [
@@ -361,10 +384,10 @@ class LeeTMSuite usingPlatform: platform andHarness: harness = (
       | ok  zo sqval |
       zo := 3 - z. (* other side *)
       sqval := ((g at: x) at: y) at: zo.
-
+      
       (sqval = VIA or: [sqval = BVIA])
         ifTrue: [ ^ false ].
-
+      
       ok := (((g at: x) at: y) at: zo) <= (((g at: x) at: y) at: z).
       ok ifTrue: [
         ok := (((g at: x - 1) at: y) at: zo) < sqval or: [
@@ -385,10 +408,10 @@ class LeeTMSuite usingPlatform: platform andHarness: harness = (
       | xdiff ydiff |
       xdiff := x2 - x1.
       ydiff := y2 - y1.
-
+      
       xdiff < 0 ifTrue: [ xdiff := 0 - xdiff ].
       ydiff < 0 ifTrue: [ ydiff := 0 - ydiff ].
-
+      
       xdiff < ydiff
         ifTrue:  [ ^ xdiff ]
         ifFalse: [ ^ ydiff ]
@@ -409,19 +432,19 @@ class LeeTMSuite usingPlatform: platform andHarness: harness = (
         Until back at starting point
         *** *)
       | zGoal distsofar tempX tempY tempZ lastdir |
-      distsofar := 0.
+      distsofar := 0. 
       (xGoal - xStart) abs > (yGoal - yStart) abs
         ifTrue: [ zGoal := 1 ] ifFalse: [ zGoal := 2 ].
-
+      
       (((tempg at: xGoal) at: yGoal) at: zGoal) = TEMP_EMPTY ifTrue: [
         zGoal := 3 - zGoal (* the other side *) ].
-
+      
       tempY := yGoal.
       tempX := xGoal.
       tempZ := zGoal.
       lastdir := -10.
 
-      [tempX ~= xStart or: [tempY ~= yStart]] whileTrue: [ (* PDL: until back *)
+      [tempX ~= xStart or: [tempY ~= yStart]] whileTrue: [ (* PDL: until back *) 
         | advanced mind dir minSquare |
         (* at starting point *)
         advanced := false.
@@ -434,10 +457,10 @@ class LeeTMSuite usingPlatform: platform andHarness: harness = (
           | p |
           (* current position *)
           p := ((tempg at: tempX + ((dx at: tempZ) at: d))
-                  at: tempY + ((dy at: tempZ) at: d)) at: tempZ.
+                  at: tempY + ((dy at: tempZ) at: d)) at: tempZ. 
           (p < (((tempg at: tempX) at: tempY) at: tempZ) and: [ p ~= TEMP_EMPTY ])
             ifTrue: [
-
+              
             p < minSquare ifTrue: [
               minSquare := p.
               mind := d.
@@ -448,7 +471,7 @@ class LeeTMSuite usingPlatform: platform andHarness: harness = (
             ] ] ].
 
         advanced ifTrue: [ distsofar := distsofar + 1 ].
-
+        
         ((pathFromOtherSide: tempg x: tempX y: tempY z: tempZ) and: [
           (mind > 1 and: [ (* not preferred dir for this layer *)
           distsofar > 15 and: [
@@ -460,12 +483,12 @@ class LeeTMSuite usingPlatform: platform andHarness: harness = (
           tZ := 3 - tempZ. (* 1 if 2, 2 if 1 *)
           advanced
             ifTrue:  [ viat := VIA ]
-            ifFalse: [ viat := BVIA ]. (* BVIA is nowhere else to go *)
+            ifFalse: [ viat := BVIA ]. (* BVIA is nowhere else to go *)  
 
           (* mark via *)
           ((tempg at: tempX) at: tempY) at: tempZ put: viat.
           grid pointX: tempX y: tempY z: tempZ val: viat.
-
+          
           tempZ := tZ.
           (* and the other side *)
           ((tempg at: tempX) at: tempY) at: tempZ put: viat.
@@ -504,7 +527,7 @@ class LeeTMSuite usingPlatform: platform andHarness: harness = (
         overhead because it avoids the grid 'reset' phase needed if we do the
         expansion in place. *)
       tempg do: [:x | x do: [:y | y putAll: TEMP_EMPTY ] ].
-
+      
       (* call the expansion method to return found/not found boolean *)
       found := expandFromX: xs y: ys toX: xg y: yg num: gridSize * 5 tempg: tempg.
       found

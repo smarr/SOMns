@@ -65,7 +65,7 @@ class GraphSearchSuite usingPlatform: platform andHarness: harness = (
       cost at: source put: 0.
     )
 
-    public innerBenchmarkLoop: innerIterations = (
+    public innerBenchmarkLoop: innerIterations numThreads: threads = (
       | noOfNodes random |
       random := JenkinsRandom new: 49734321.
       noOfNodes := ExpectedNoOfNodes / 1000 * innerIterations.

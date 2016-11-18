@@ -5,6 +5,8 @@ class VacationSuite usingPlatform: platform andHarness: harness = (
   private Array     = platform kernel Array.
   private Vector    = platform kernel Vector.
   private RedBlackTree = (platform system loadModule: 'RedBlackTree.som' nextTo: self) new RedBlackTree.
+  private Mutex     = platform threading Mutex.
+  private Thread    = platform threading Thread.
 
   private ActionMakeReservation    = 0.
   private ActionDeleteCustomer     = 1.
@@ -21,12 +23,20 @@ class VacationSuite usingPlatform: platform andHarness: harness = (
   private NumReservationType       = 3.
 |) (
   private class Vacation = Benchmark ()(
-    public innerBenchmarkLoop: problemSize = (
-      | manager clients |
+    public innerBenchmarkLoop: problemSize numThreads: numThreads = (
+      | manager clients threads i |
       manager := initializeManager: problemSize.
-      clients := initializeClients: manager for: 1 and: problemSize.
+      clients := initializeClients: manager for: numThreads and: problemSize.
 
-      (clients at: 1) run.
+      i := 0.
+      threads := Array new: numThreads withAll: [
+        i := i + 1.
+        Thread spawn: [:i |
+          (clients at: i) run
+        ] with: (Array with: i)
+      ].
+
+      threads do: [:t | t join ].
 
       ^ checkTables: manager problemSize: problemSize
     )
@@ -129,32 +139,37 @@ class VacationSuite usingPlatform: platform andHarness: harness = (
     )
   )
 
+  private class RBTreeWithMutex = RedBlackTree (
+  | public mtx = Mutex new.
+  |)()
+
   private class Manager = (
-  | public cars      = RedBlackTree new.
-    public rooms     = RedBlackTree new.
-    public flights   = RedBlackTree new.
-    public customers = RedBlackTree new.
+  | public cars      = RBTreeWithMutex new.
+    public rooms     = RBTreeWithMutex new.
+    public flights   = RBTreeWithMutex new.
+    public customers = RBTreeWithMutex new.
   |)(
 
     (* If 'num' > 0 then add, if < 0 remove.
        Adding 0 seats is error if does not exist.
        If 'price' < 0, do not update price. *)
     private addReservation: reservations id: id num: num price: price = (
-      | reservation |
-      reservation := reservations at: id.
-      reservation == nil
-        ifTrue: [
-          (* Create new reservation *)
-          (num < 1 and: [ price < 0 ]) ifTrue: [ ^ false ].
-          reservation := Reservation new: id num: num price: price.
-          reservations at: id put: reservation ]
-        ifFalse: [
-          (* Update existing reservation *)
-          (reservation addToTotal: num) ifFalse: [
-            ^ false ].
-          reservation getNumTotal = 0
-            ifTrue:  [ reservations remove: id ]
-            ifFalse: [ reservation updatePrice: price ] ].
+      reservations mtx critical: [
+        | reservation |
+        reservation := reservations at: id.
+        reservation == nil
+          ifTrue: [
+            (* Create new reservation *)
+            (num < 1 and: [ price < 0 ]) ifTrue: [ ^ false ].
+            reservation := Reservation new: id num: num price: price.
+            reservations at: id put: reservation ]
+          ifFalse: [
+            (* Update existing reservation *)
+            (reservation addToTotal: num) ifFalse: [
+              ^ false ].
+            reservation getNumTotal = 0
+              ifTrue:  [ reservations remove: id ]
+              ifFalse: [ reservation updatePrice: price ] ] ].
 
       ^ true
     )
@@ -199,7 +214,8 @@ class VacationSuite usingPlatform: platform andHarness: harness = (
        Fails if customer has reservation on this flight. *)
     public deleteFlight: flightId = (
       | reservation |
-      reservation := flights at: flightId.
+      flights mtx critical: [
+        reservation := flights at: flightId ].
 
       reservation == nil ifTrue: [ ^ false ].
 
@@ -213,38 +229,44 @@ class VacationSuite usingPlatform: platform andHarness: harness = (
 
     (* If customer already exists, returns failure. *)
     public addCustomer: customerId = (
-      | customer |
-      (customers contains: customerId)
-        ifTrue: [ ^ false ].
+      customers mtx critical: [
+        | customer |
+        (customers contains: customerId)
+          ifTrue: [ ^ false ].
 
-      customer := Customer new: customerId.
-      customers at: customerId put: customer.
-
+        customer := Customer new: customerId.
+        customers at: customerId put: customer
+      ].
       ^ true
     )
 
     (* Delete this customer and associated reservations.
        If customer does not exist, returns success. *)
     public deleteCustomer: customerId = (
-      | customer reservations reservationList it |
-      customer := customers at: customerId.
+      | customer reservations |
+      customers mtx critical: [
+        customer := customers at: customerId ].
 
       customer == nil ifTrue: [ ^ false ].
 
       reservations := Array with: cars with: rooms with: flights.
 
       (* Cancel this customer's reservations *)
-      reservationList := customer reservations.
-      it := reservationList head.
-      [ it next == nil ] whileFalse: [
-        | reservation table resrv |
-        it := it next.
-        reservation := it data.
-        table := reservations at: reservation type.
-        resrv := table at: reservation id.
-        resrv cancel ].
+      customer mtx critical: [
+        | reservationList it |
+        reservationList := customer reservations.
+        it := reservationList head.
+        [ it next == nil ] whileFalse: [
+          | reservation table resrv |
+          it := it next.
+          reservation := it data.
+          table := reservations at: reservation type.
+          table mtx critical: [
+            resrv := table at: reservation id ].
+          resrv cancel ] ].
 
-      customers remove: customerId.
+      customers mtx critical: [
+        customers remove: customerId ].
       ^ true
     )
 
@@ -253,7 +275,8 @@ class VacationSuite usingPlatform: platform andHarness: harness = (
       | numFree reservation |
       numFree := -1.
 
-      reservation := table at: id.
+      table mtx critical: [
+        reservation := table at: id ].
 
       reservation ~= nil ifTrue: [
         numFree := reservation getNumFree ].
@@ -265,7 +288,8 @@ class VacationSuite usingPlatform: platform andHarness: harness = (
     public queryPrice: table id: id = (
       | price reservation |
       price := -1.
-      reservation := table at: id.
+      table mtx critical: [
+        reservation := table at: id ].
 
       reservation ~= nil ifTrue: [
         price := reservation getPrice ].
@@ -311,7 +335,8 @@ class VacationSuite usingPlatform: platform andHarness: harness = (
     public queryCustomerBill: customerId = (
       | bill customer |
       bill := -1.
-      customer := customers at: customerId.
+      customers mtx critical: [
+        customer := customers at: customerId ].
 
       customer ~= nil ifTrue: [
         bill := customer bill ].
@@ -322,11 +347,14 @@ class VacationSuite usingPlatform: platform andHarness: harness = (
     (* Customer is not allowed to reserve same (type, id) multiple times. *)
     public reserve: table csts: customers cId: customerId id: id type: type = (
       | customer reservation |
-      customer := customers at: customerId.
+
+      customers mtx critical: [
+        customer := customers at: customerId ].
 
       customer == nil ifTrue: [ ^ false ].
 
-      reservation := table at: id.
+      table mtx critical: [
+        reservation := table at: id ].
 
       reservation == nil ifTrue: [
         ^ false ].
@@ -513,6 +541,7 @@ class VacationSuite usingPlatform: platform andHarness: harness = (
   private class Customer new: id = (
   | private id = id.
     public reservations = List new.
+    public mtx = Mutex new.
   |)(
     public addReservationInfo: type id: id price: price = (
       | reservation |
@@ -535,12 +564,13 @@ class VacationSuite usingPlatform: platform andHarness: harness = (
       | bill it |
       bill := 0.
 
-      it := reservations head.
-      [ it next == nil ] whileFalse: [
-        | reservation |
-        it := it next.
-        reservation := it data.
-        bill := bill + reservation price ].
+      mtx critical: [
+        it := reservations head.
+        [ it next == nil ] whileFalse: [
+          | reservation |
+          it := it next.
+          reservation := it data.
+          bill := bill + reservation price ] ].
       ^ bill
     )
   )
@@ -621,6 +651,7 @@ class VacationSuite usingPlatform: platform andHarness: harness = (
     private numFree ::= numTotal.
     private numTotal ::= numTotal.
     private price    ::= price.
+    public mtx = Mutex new.
   |
     checkReservation.
   )(
@@ -641,38 +672,42 @@ class VacationSuite usingPlatform: platform andHarness: harness = (
 
     (* Adds if 'num' > 0, removes if 'num' < 0 *)
     public addToTotal: num = (
-      numFree + num < 0 ifTrue: [ ^ false ].
+      mtx critical: [
+        numFree + num < 0 ifTrue: [ ^ false ].
 
-      numFree  := numFree + num.
-      numTotal := numTotal + num.
-      checkReservation.
-      ^ true
+        numFree  := numFree + num.
+        numTotal := numTotal + num.
+        checkReservation.
+        ^ true ]
     )
 
     public makeReservation = (
-      numFree < 1 ifTrue: [ ^ false ].
+      mtx critical: [
+        numFree < 1 ifTrue: [ ^ false ].
 
-      numUsed := numUsed + 1.
-      numFree := numFree - 1.
-      checkReservation.
-      ^ true
+        numUsed := numUsed + 1.
+        numFree := numFree - 1.
+        checkReservation.
+        ^ true ]
     )
 
     public cancel = (
-      numUsed < 1 ifTrue: [ ^ false ].
-      numUsed := numUsed + 1.
-      numFree := numFree - 1.
-      checkReservation.
-      ^ true
+      mtx critical: [
+        numUsed < 1 ifTrue: [ ^ false ].
+        numUsed := numUsed + 1.
+        numFree := numFree - 1.
+        checkReservation.
+        ^ true ]
     )
 
     (* Failure if 'price' < 0 *)
     public updatePrice: newPrice = (
-      newPrice < 0 ifTrue: [ ^ false ].
+      mtx critical: [
+        newPrice < 0 ifTrue: [ ^ false ].
 
-      price := newPrice.
-      checkReservation.
-      ^ true
+        price := newPrice.
+        checkReservation.
+        ^ true ]
     )
   )
 

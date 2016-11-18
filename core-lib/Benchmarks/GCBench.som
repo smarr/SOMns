@@ -56,7 +56,7 @@ class GCBenchSuite usingPlatform: platform andHarness: harness = (
     | kStretchTreeDepth kLongLivedTreeDepth kArraySize kMaxTreeDepth
       kMinTreeDepth cur_depth|
   )(
-    public innerBenchmarkLoop: innerIterations = (
+    public innerBenchmarkLoop: innerIterations numThreads: threads = (
       | temp_tree long_lived_tree array depths cur_depth t_start t_finish |
       kStretchTreeDepth   := 9 * innerIterations.
       kLongLivedTreeDepth := 8 * innerIterations.

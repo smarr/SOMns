@@ -51,7 +51,7 @@ class MandelbrotSuite usingPlatform: platform andHarness: harness = (
   class Mandelbrot = Benchmark (
     | firstResult |
   ) (
-    public innerBenchmarkLoop: innerIterations = ( 
+    public innerBenchmarkLoop: innerIterations numThreads: threads = ( 
       ^ self verify: (self mandelbrot: innerIterations) inner: innerIterations
     )
 

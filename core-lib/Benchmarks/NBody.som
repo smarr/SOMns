@@ -16,7 +16,7 @@ class NBodySuite usingPlatform: platform andHarness: harness = (
     | expectedEnergy |
   )(
     
-    public innerBenchmarkLoop: innerIterations = (
+    public innerBenchmarkLoop: innerIterations numThreads: threads = (
         | bodies |
         bodies := NBodySystem new.
         

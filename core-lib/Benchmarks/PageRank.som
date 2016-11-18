@@ -78,7 +78,7 @@ class PageRankSuite usingPlatform: platform andHarness: harness = (
       ^ dif
     )
 
-    public innerBenchmarkLoop: innerIterations = (
+    public innerBenchmarkLoop: innerIterations numThreads: threads = (
       | random |
       random := JenkinsRandom new: 49734321.
       (* standard for verification

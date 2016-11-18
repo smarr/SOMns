@@ -31,7 +31,7 @@ class FannkuchSuite usingPlatform: platform andHarness: harness = (
 |
 )(
   class FannkuchBenchmark = Benchmark ()(
-    public innerBenchmarkLoop: innerIterations = (
+    public innerBenchmarkLoop: innerIterations numThreads: threads = (
       | result |
       result := (Fannkuch new: innerIterations) maxPfannkuchen.
       ^ result = (expectedResults at: innerIterations)
