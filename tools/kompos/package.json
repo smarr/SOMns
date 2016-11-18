@@ -19,21 +19,21 @@
   },
   "dependencies": {
     "@types/bootstrap": "^3.3.32",
-    "@types/chai":      "^3.4.33",
+    "@types/chai":      "^3.4.34",
     "@types/d3":        "^3.5.36",
-    "@types/jquery":    "^2.0.32",
-    "@types/mocha":     "^2.2.32",
-    "@types/node":      "^6.0.41",
-    "@types/ws":        "^0.0.33",
+    "@types/jquery":    "^2.0.34",
+    "@types/mocha":     "^2.2.33",
+    "@types/node":      "^6.0.48",
+    "@types/ws":        "^0.0.36",
     "node-define":      "^0.1.1",
     "requirejs":        "^2.3.2",
     "ws":               "^1.1.1"
   },
   "devDependencies": {
     "chai"      : "^3.5.0",
-    "mocha"     : "^3.0.2",
+    "mocha"     : "^3.1.2",
     "tslint"    : "^3.15.1",
-    "typescript": "2.0.3"
+    "typescript": "2.0.10"
   },
   "scripts": {
     "postinstall": "npm run compile",
