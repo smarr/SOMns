@@ -1,5 +1,6 @@
 package tools.debugger;
 
+import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -22,6 +23,7 @@ import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
 import gson.ClassHierarchyAdapterFactory;
+import som.interpreter.actors.Actor.ActorProcessingThread;
 import tools.debugger.message.InitialBreakpointsResponds;
 import tools.debugger.message.Message;
 import tools.debugger.message.MessageHistory;
@@ -52,17 +54,41 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
   public static final String ID = "web-debugger";
 
   private FrontendConnector connector;
-
-  private Instrumenter instrumenter;
+  private Instrumenter      instrumenter;
+  private Breakpoints       breakpoints;
+  private boolean debuggerProtocol;
 
   private final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> loadedSourcesTags = new HashMap<>();
   private final Map<Source, Set<RootNode>> rootNodes = new HashMap<>();
 
-  private Breakpoints breakpoints;
+  private int nextActivityId = 0;
+  private final Map<WeakReference<Object>, Suspension> activityToSuspension = new HashMap<>();
+  private final Map<Integer, Suspension> idToSuspension = new HashMap<>();
 
-  private int nextSuspendEventId = 0;
-  private final Map<String, SuspendedEvent> suspendEvents  = new HashMap<>();
-  private final Map<String, CompletableFuture<Object>> suspendFutures = new HashMap<>();
+  public static class Suspension {
+    final WeakReference<Object> activity;
+    public final int activityId;
+    private CompletableFuture<Object> future;
+    private SuspendedEvent suspendedEvent;
+
+    Suspension(final WeakReference<Object> activity, final int activityId) {
+      this.activity   = activity;
+      this.activityId = activityId;
+    }
+
+    synchronized void update(final CompletableFuture<Object> future,
+        final SuspendedEvent e) {
+      this.future = future;
+      this.suspendedEvent = e;
+    }
+
+    public synchronized SuspendedEvent getEvent() { return suspendedEvent; }
+    synchronized CompletableFuture<Object> getFuture() { return future; }
+  }
+
+  public void useDebuggerProtocol(final boolean debuggerProtocol) {
+    this.debuggerProtocol = debuggerProtocol;
+  }
 
   public void reportSyntaxElement(final Class<? extends Tags> type,
       final SourceSection source) {
@@ -84,34 +110,63 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
     roots.add(rootNode);
   }
 
-  SuspendedEvent getSuspendedEvent(final String id) {
-    return suspendEvents.get(id);
+  SuspendedEvent getSuspendedEvent(final int activityId) {
+    Suspension suspension = idToSuspension.get(activityId);
+    assert suspension != null;
+    assert suspension.suspendedEvent != null;
+    return suspension.suspendedEvent;
   }
 
-  CompletableFuture<Object> getSuspendFuture(final String id) {
-    return suspendFutures.get(id);
-  }
-
-  private String getNextSuspendEventId() {
-    int id = nextSuspendEventId;
-    nextSuspendEventId += 1;
-    return "se-" + id;
+  CompletableFuture<Object> getSuspendFuture(final int activityId) {
+    Suspension suspension = idToSuspension.get(activityId);
+    assert suspension != null;
+    assert suspension.future != null;
+    return suspension.future;
   }
 
   public void prepareSteppingUntilNextRootNode() {
     breakpoints.prepareSteppingUntilNextRootNode();
   }
 
+  private synchronized Suspension getSuspension(final Object activity) {
+    Suspension suspension = activityToSuspension.get(activity);
+    if (suspension == null) {
+      WeakReference<Object> ref = new WeakReference<Object>(activity);
+      int id = nextActivityId;
+      nextActivityId += 1;
+      suspension = new Suspension(ref, id);
+
+      activityToSuspension.put(ref, suspension);
+      idToSuspension.put(id, suspension);
+    }
+    return suspension;
+  }
+
+  private Suspension getSuspension() {
+    Thread thread = Thread.currentThread();
+    Object current;
+    if (thread instanceof ActorProcessingThread) {
+      current = ((ActorProcessingThread) thread).currentMessage.getTarget();
+    } else {
+      assert thread.getClass() == Thread.class : "Should support other thread subclasses explicitly";
+      current = thread;
+    }
+    return getSuspension(current);
+  }
+
   @Override
   public void onSuspend(final SuspendedEvent e) {
-    // TODO: I need to capture the stack here, to make sure it is accessible
-    //       also when running on Graal
-    String id = getNextSuspendEventId();
-    CompletableFuture<Object> future = new CompletableFuture<>();
-    suspendEvents.put(id, e);
-    suspendFutures.put(id, future);
+    Suspension suspension = getSuspension();
+    assert suspension.future == null || suspension.future.isDone() : "The future should have been completed some how, otherwise the same activity should not be able to generate a second suspend event";
 
-    connector.sendSuspendedEvent(e, id);
+    CompletableFuture<Object> future = new CompletableFuture<>();
+    suspension.update(future, e);
+
+    if (debuggerProtocol) {
+      connector.sendStoppedMessage(suspension);
+    } else {
+      connector.sendSuspendedEvent(suspension);
+    }
 
     try {
       future.get();

@@ -31,10 +31,12 @@ import tools.SourceCoordinate;
 import tools.SourceCoordinate.TaggedSourceCoordinate;
 import tools.Tagging;
 import tools.actors.ActorExecutionTrace;
+import tools.debugger.WebDebugger.Suspension;
 import tools.debugger.message.Message;
 import tools.debugger.message.MessageHistory;
 import tools.debugger.message.SourceMessage;
 import tools.debugger.message.SourceMessage.SourceData;
+import tools.debugger.message.StoppedMessage;
 import tools.debugger.message.SuspendedEventMessage;
 import tools.debugger.session.AsyncMessageReceiveBreakpoint;
 import tools.debugger.session.Breakpoints;
@@ -244,9 +246,20 @@ public class FrontendConnector {
     return map;
   }
 
-  public void sendSuspendedEvent(final SuspendedEvent e, final String id) {
+  public void sendSuspendedEvent(final Suspension suspension) {
     sendTracingData();
-    send(SuspendedEventMessage.create(e, id));
+    // TODO: I need to capture the stack here, to make sure it is accessible
+    //       also when running on Graal
+
+    send(SuspendedEventMessage.create(
+        suspension.getEvent(),
+        SUSPENDED_EVENT_ID_PREFIX + suspension.activityId));
+  }
+
+  private static final String SUSPENDED_EVENT_ID_PREFIX = "se-";
+
+  public void sendStoppedMessage(final Suspension suspension) {
+    send(StoppedMessage.create(suspension));
   }
 
   public void sendTracingData() {
@@ -307,11 +320,13 @@ public class FrontendConnector {
   }
 
   public SuspendedEvent getSuspendedEvent(final String id) {
-    return webDebugger.getSuspendedEvent(id);
+    int activityId = Integer.valueOf(id.substring(SUSPENDED_EVENT_ID_PREFIX.length()));
+    return webDebugger.getSuspendedEvent(activityId);
   }
 
   public void completeSuspendFuture(final String id, final Object value) {
-    webDebugger.getSuspendFuture(id).complete(value);
+    int activityId = Integer.valueOf(id.substring(SUSPENDED_EVENT_ID_PREFIX.length()));
+    webDebugger.getSuspendFuture(activityId).complete(value);
   }
 
   static void log(final String str) {
@@ -320,8 +335,9 @@ public class FrontendConnector {
     // Checkstyle: resume
   }
 
-  public void completeConnection(final WebSocket conn) {
+  public void completeConnection(final WebSocket conn, final boolean debuggerProtocol) {
     clientConnected.complete(conn);
+    webDebugger.useDebuggerProtocol(debuggerProtocol);
   }
 
   public void shutdown() {

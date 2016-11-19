@@ -9,8 +9,14 @@ import tools.debugger.session.BreakpointInfo;
 public class InitialBreakpointsResponds extends Respond {
   private final BreakpointInfo[] breakpoints;
 
+  /**
+   * The client is using a protocol similar to VS code.
+   */
+  private final boolean debuggerProtocol;
+
   public InitialBreakpointsResponds(final BreakpointInfo[] breakpoints) {
     this.breakpoints = breakpoints;
+    this.debuggerProtocol = false;
   }
 
   public BreakpointInfo[] getBreakpoints() {
@@ -22,6 +28,6 @@ public class InitialBreakpointsResponds extends Respond {
     for (BreakpointInfo bp : breakpoints) {
       bp.registerOrUpdate(connector);
     }
-    connector.completeConnection(conn);
+    connector.completeConnection(conn, debuggerProtocol);
   }
 }

@@ -90,7 +90,8 @@ function startSomAndConnect(onMessageHandler?: OnMessageHandler,
         const socket = new WebSocket('ws://localhost:' + debuggerPort);
         socket.on('open', () => {
           if (initialBreakpoints) {
-            send(socket, {action: "initialBreakpoints", breakpoints: initialBreakpoints});
+            send(socket, {action: "initialBreakpoints",
+              breakpoints: initialBreakpoints, debuggerProtocol: false});
           }
           resolve({somProc: somProc, socket: socket, closed: false});
         });

@@ -127,7 +127,7 @@ public class JsonTests {
     assertEquals(ASYNC_MSG_RCV_BP, result);
   }
 
-  private static final String EMPTY_INITAL_BP = "{\"breakpoints\":[],\"action\":\"initialBreakpoints\"}";
+  private static final String EMPTY_INITAL_BP = "{\"breakpoints\":[],\"debuggerProtocol\":false,\"action\":\"initialBreakpoints\"}";
 
   @Test
   public void initialBreakpointsMessageEmptySerialize() {
