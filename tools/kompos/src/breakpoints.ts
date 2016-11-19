@@ -1,5 +1,6 @@
 import {Source, SourceCoordinate, AbstractBreakpointData, LineBreakpointData,
-  SectionBreakpointData, SectionBreakpointType} from './messages';
+  SectionBreakpointData, SectionBreakpointType,
+  createLineBreakpointData} from './messages';
 
 export type Breakpoint = LineBreakpoint | MessageBreakpoint |
   AsyncMethodRcvBreakpoint;
@@ -75,8 +76,7 @@ export class AsyncMethodRcvBreakpoint extends AbstractBreakpoint<SectionBreakpoi
 
 export function createLineBreakpoint(source: Source, sourceId: string,
     line: number, clickedSpan: Element) {
-  return new LineBreakpoint({
-    type: "LineBreakpoint", line: line, sourceUri: source.uri, enabled: false},
+  return new LineBreakpoint(createLineBreakpointData(source.uri, line),
     source, sourceId, clickedSpan);
 }
 

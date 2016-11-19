@@ -115,6 +115,14 @@ export interface SectionBreakpointData extends AbstractBreakpointData {
   coord: FullSourceCoordinate;
 }
 
+export function createLineBreakpointData(sourceUri: string, line: number): LineBreakpointData {
+  return {
+    type: "LineBreakpoint",
+    line:      line,
+    sourceUri: sourceUri,
+    enabled:   false};
+}
+
 export type Respond = InitialBreakpointsResponds | UpdateBreakpoint |
   StepMessage; 
 
