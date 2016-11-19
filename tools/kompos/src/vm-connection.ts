@@ -4,7 +4,8 @@
 import * as WebSocket from 'ws';
 
 import {Controller} from './controller';
-import {Message, Breakpoint, Respond} from './messages';
+import {Message, Respond} from './messages';
+import {Breakpoint} from './breakpoints';
 
 /**
  * Encapsulates the connection to the VM via a web socket and encodes

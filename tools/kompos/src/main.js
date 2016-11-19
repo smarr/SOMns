@@ -12,7 +12,8 @@ requirejs.config({
 var ctrl;
 
 requirejs(
-  ['vm-connection', 'controller', 'debugger', 'view', 'visualizations'], 
+  ['vm-connection', 'controller', 'debugger', 'view', 'visualizations',
+   'breakpoints'], 
   function(vmConn, cont, d, vw) {
     var view = new vw.View(),
       vmConnection = new vmConn.VmConnection(),

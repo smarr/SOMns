@@ -3,10 +3,10 @@
 
 import {Debugger}     from './debugger';
 import {SourceMessage, SuspendEventMessage, MessageHistoryMessage,
-  LineBreakpoint, MessageBreakpoint, AsyncMethodRcvBreakpoint,
-  SectionBreakpointType,
+  SectionBreakpointType} from './messages';
+import {LineBreakpoint, MessageBreakpoint, AsyncMethodRcvBreakpoint,
   createLineBreakpoint, createMsgBreakpoint,
-  createAsyncMethodRcvBreakpoint} from './messages';
+  createAsyncMethodRcvBreakpoint} from './breakpoints';
 import {dbgLog}       from './source';
 import {displayMessageHistory, resetLinks} from './visualizations';
 import {View}         from './view';

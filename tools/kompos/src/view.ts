@@ -2,9 +2,10 @@
 "use strict";
 
 import {Controller} from './controller';
-import {Breakpoint, AsyncMethodRcvBreakpoint, MessageBreakpoint, Source, Method,
-  LineBreakpoint, SuspendEventMessage, IdMap, Frame,
-  SourceCoordinate, TaggedSourceCoordinate, getSectionId} from './messages';
+import {Source, Method, SuspendEventMessage, IdMap, Frame, SourceCoordinate,
+  TaggedSourceCoordinate, getSectionId} from './messages';
+import {Breakpoint, AsyncMethodRcvBreakpoint, MessageBreakpoint,
+  LineBreakpoint} from './breakpoints';
 
 declare var ctrl: Controller;
 

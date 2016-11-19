@@ -1,5 +1,6 @@
-import {Breakpoint, IdMap, Source, SourceCoordinate, SourceMessage,
-  TaggedSourceCoordinate, getSectionId} from './messages';
+import {IdMap, Source, SourceCoordinate, SourceMessage, TaggedSourceCoordinate,
+  getSectionId} from './messages';
+import {Breakpoint} from './breakpoints';
 
 export function isRelevant(sc: TaggedSourceCoordinate) {
   return -1 !== sc.tags.indexOf('EventualMessageSend');
