@@ -1,18 +1,23 @@
 package tools.debugger.message;
 
-import tools.debugger.WebDebugger.Suspension;
+import som.interpreter.actors.Actor;
+import tools.debugger.Suspension;
 
+
+@SuppressWarnings("unused")
 public final class StoppedMessage extends Message {
   private String  reason;
-  private int     threadId;
+  private int     activityId;
+  private String  activityType;
   private String  text;
   private boolean allThreadsStopped;
 
-  private StoppedMessage(final Reason reason, final int threadId,
-      final String text) {
-    this.reason   = reason.value;
-    this.threadId = threadId;
-    this.text     = text;
+  private StoppedMessage(final Reason reason, final int activityId,
+      final ActivityType type, final String text) {
+    this.reason     = reason.value;
+    this.activityId = activityId;
+    this.activityType = type.value;
+    this.text       = text;
     this.allThreadsStopped = false;
   }
 
@@ -29,9 +34,23 @@ public final class StoppedMessage extends Message {
     }
   }
 
+  private enum ActivityType {
+    Actor("Actor");
+
+    private final String value;
+
+    ActivityType(final String value) {
+      this.value = value;
+    }
+  }
+
   public static StoppedMessage create(final Suspension suspension) {
     assert !suspension.getEvent().getBreakpoints().isEmpty() : "Need to support other reasons for suspension";
     Reason reason = Reason.breakpoint;
-    return new StoppedMessage(reason, suspension.activityId, ""); // TODO: look into additional details that can be provided as text
+
+    assert suspension.getActivity() instanceof Actor;
+
+    return new StoppedMessage(reason, suspension.activityId,
+        ActivityType.Actor, ""); // TODO: look into additional details that can be provided as text
   }
 }

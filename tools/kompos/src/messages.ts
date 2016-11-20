@@ -50,7 +50,7 @@ export interface TopFrame {
 }
 
 export type Message = SourceMessage | SuspendEventMessage |
-  MessageHistoryMessage | UpdateSourceSections;
+  MessageHistoryMessage | UpdateSourceSections | StoppedMessage | StackTraceResponse;
 
 export interface SourceMessage {
   type:     "source";
@@ -66,6 +66,19 @@ export interface SuspendEventMessage {
 
   stack:    Frame[];
   topFrame: TopFrame;
+}
+
+export type StoppedReason = "step" | "breakpoint" | "exception" | "pause";
+export type ActivityType  = "Actor"; 
+
+export interface StoppedMessage {
+  type: "StoppedEvent";
+
+  reason:            StoppedReason;
+  activityId:        number;
+  activityType:      ActivityType;
+  text:              string;
+  allThreadsStopped: boolean; 
 }
 
 export interface UpdateSourceSections {
@@ -124,7 +137,7 @@ export function createLineBreakpointData(sourceUri: string, line: number): LineB
 }
 
 export type Respond = InitialBreakpointsResponds | UpdateBreakpoint |
-  StepMessage; 
+  StepMessage | StackTraceRequest; 
 
 export interface InitialBreakpointsResponds {
   action: "initialBreakpoints";
@@ -148,4 +161,44 @@ export interface StepMessage {
   // TODO: should be renamed to suspendEventId
   /** Id of the corresponding suspend event. */
   suspendEvent: string;
+}
+
+export interface StackTraceRequest {
+  action: "StackTraceRequest";
+
+  activityId: number;
+  startFrame: number;
+  levels:     number;
+
+  requestId:  number;
+}
+
+export interface StackFrame {
+  /** Id for the frame, unique across all threads. */
+  id: number;
+  
+  /** Name of the frame, typically a method name. */
+  name: string;
+
+  /** Optional source of the frame. */
+  sourceUri: string;
+
+  /** Optional, line within the file of the frame. */
+  line: number;
+
+  /** Optional, column within the line. */
+  column: number;
+
+  /** Optional, end line of the range covered by the stack frame. */
+  endLine: number;
+
+  /** Optional end column of the range covered by the stack frame. */
+  endColumn: number;
+}
+
+export interface StackTraceResponse {
+  type: "StackTraceResponse";
+  stackFrames: StackFrame[];
+  totalFrames: number;
+  requestId:   number;
 }

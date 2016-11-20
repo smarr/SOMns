@@ -35,6 +35,7 @@ import tools.debugger.message.Message;
 import tools.debugger.message.MessageHistory;
 import tools.debugger.message.SourceMessage;
 import tools.debugger.message.SourceMessage.SourceData;
+import tools.debugger.message.StackTraceMessage;
 import tools.debugger.message.StoppedMessage;
 import tools.debugger.message.SuspendedEventMessage;
 import tools.debugger.session.AsyncMessageReceiveBreakpoint;
@@ -254,6 +255,12 @@ public class FrontendConnector {
         suspension.getEvent(),
         SUSPENDED_EVENT_ID_PREFIX + suspension.activityId));
   }
+
+  public void sendStackTrace(final int startFrame, final int levels,
+      final Suspension suspension, final int requestId) {
+    send(StackTraceMessage.create(startFrame, levels, suspension, requestId));
+  }
+
 
   private static final String SUSPENDED_EVENT_ID_PREFIX = "se-";
 

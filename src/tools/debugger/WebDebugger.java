@@ -27,11 +27,14 @@ import tools.debugger.message.Message;
 import tools.debugger.message.MessageHistory;
 import tools.debugger.message.Respond;
 import tools.debugger.message.SourceMessage;
+import tools.debugger.message.StackTraceMessage;
+import tools.debugger.message.StackTraceRequest;
 import tools.debugger.message.StepMessage.Resume;
 import tools.debugger.message.StepMessage.Return;
 import tools.debugger.message.StepMessage.StepInto;
 import tools.debugger.message.StepMessage.StepOver;
 import tools.debugger.message.StepMessage.Stop;
+import tools.debugger.message.StoppedMessage;
 import tools.debugger.message.SuspendedEventMessage;
 import tools.debugger.message.UpdateBreakpoint;
 import tools.debugger.session.AsyncMessageReceiveBreakpoint;
@@ -183,7 +186,9 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
     ClassHierarchyAdapterFactory<Message> msgAF = new ClassHierarchyAdapterFactory<>(Message.class, "type");
     msgAF.register("source",       SourceMessage.class);
     msgAF.register("suspendEvent", SuspendedEventMessage.class);
+    msgAF.register("StoppedEvent", StoppedMessage.class);
     msgAF.register("messageHistory", MessageHistory.class);
+    msgAF.register("StackTraceResponse", StackTraceMessage.class);
 
     ClassHierarchyAdapterFactory<Respond> respondAF = new ClassHierarchyAdapterFactory<>(Respond.class, "action");
     respondAF.register(INITIAL_BREAKPOINTS, InitialBreakpointsResponds.class);
@@ -193,6 +198,7 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
     respondAF.register("return",   Return.class);
     respondAF.register("resume",   Resume.class);
     respondAF.register("stop",     Stop.class);
+    respondAF.register("StackTraceRequest", StackTraceRequest.class);
 
     ClassHierarchyAdapterFactory<BreakpointInfo> breakpointAF = new ClassHierarchyAdapterFactory<>(BreakpointInfo.class, "type");
     breakpointAF.register(LineBreakpoint.class);

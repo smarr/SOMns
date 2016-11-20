@@ -21,7 +21,7 @@ public abstract class StepMessage extends Respond {
     SuspendedEvent event = connector.getSuspendedEvent(suspendEvent);
     assert event != null : "didn't find SuspendEvent";
     process(event);
-    connector.completeSuspendFuture(suspendEvent, new Object());
+    connector.getSuspension(suspendEvent).resume();
   }
 
   public abstract void process(SuspendedEvent event);

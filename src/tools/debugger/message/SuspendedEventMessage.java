@@ -69,7 +69,7 @@ public class SuspendedEventMessage extends Message {
       final MaterializedFrame topFrame) {
     com.oracle.truffle.api.frame.Frame[] frame = new com.oracle.truffle.api.frame.Frame[1];
     if (isHaltPrimitive(e)) {
-      int[] skipFrames = new int[]{2};
+      int[] skipFrames = new int[]{FRAMES_SKIPPED_FOR_HALT};
 
       Truffle.getRuntime().iterateFrames(frameInstance -> {
         if (skipFrames[0] > 0) {
@@ -117,7 +117,9 @@ public class SuspendedEventMessage extends Message {
     return frames.toArray(new Frame[0]);
   }
 
-  private static boolean isHaltPrimitive(final SuspendedEvent e) {
+  public static final int FRAMES_SKIPPED_FOR_HALT = 2;
+
+  public static boolean isHaltPrimitive(final SuspendedEvent e) {
     return e.getNode() instanceof HaltPrim;
   }
 
