@@ -5,8 +5,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -65,27 +63,6 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
   private final Map<WeakReference<Object>, Suspension> activityToSuspension = new HashMap<>();
   private final Map<Integer, Suspension> idToSuspension = new HashMap<>();
 
-  public static class Suspension {
-    final WeakReference<Object> activity;
-    public final int activityId;
-    private CompletableFuture<Object> future;
-    private SuspendedEvent suspendedEvent;
-
-    Suspension(final WeakReference<Object> activity, final int activityId) {
-      this.activity   = activity;
-      this.activityId = activityId;
-    }
-
-    synchronized void update(final CompletableFuture<Object> future,
-        final SuspendedEvent e) {
-      this.future = future;
-      this.suspendedEvent = e;
-    }
-
-    public synchronized SuspendedEvent getEvent() { return suspendedEvent; }
-    synchronized CompletableFuture<Object> getFuture() { return future; }
-  }
-
   public void useDebuggerProtocol(final boolean debuggerProtocol) {
     this.debuggerProtocol = debuggerProtocol;
   }
@@ -110,18 +87,15 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
     roots.add(rootNode);
   }
 
-  SuspendedEvent getSuspendedEvent(final int activityId) {
+  synchronized SuspendedEvent getSuspendedEvent(final int activityId) {
     Suspension suspension = idToSuspension.get(activityId);
     assert suspension != null;
-    assert suspension.suspendedEvent != null;
-    return suspension.suspendedEvent;
+    assert suspension.getEvent() != null;
+    return suspension.getEvent();
   }
 
-  CompletableFuture<Object> getSuspendFuture(final int activityId) {
-    Suspension suspension = idToSuspension.get(activityId);
-    assert suspension != null;
-    assert suspension.future != null;
-    return suspension.future;
+  Suspension getSuspension(final int activityId) {
+    return idToSuspension.get(activityId);
   }
 
   public void prepareSteppingUntilNextRootNode() {
@@ -157,23 +131,14 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
   @Override
   public void onSuspend(final SuspendedEvent e) {
     Suspension suspension = getSuspension();
-    assert suspension.future == null || suspension.future.isDone() : "The future should have been completed some how, otherwise the same activity should not be able to generate a second suspend event";
-
-    CompletableFuture<Object> future = new CompletableFuture<>();
-    suspension.update(future, e);
+    suspension.update(e);
 
     if (debuggerProtocol) {
       connector.sendStoppedMessage(suspension);
     } else {
       connector.sendSuspendedEvent(suspension);
     }
-
-    try {
-      future.get();
-    } catch (InterruptedException | ExecutionException e1) {
-      log("[DEBUGGER] Future failed:");
-      e1.printStackTrace();
-    }
+    suspension.suspend();
   }
 
   public void suspendExecution(final MaterializedFrame haltedFrame,

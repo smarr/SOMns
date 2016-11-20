@@ -31,7 +31,6 @@ import tools.SourceCoordinate;
 import tools.SourceCoordinate.TaggedSourceCoordinate;
 import tools.Tagging;
 import tools.actors.ActorExecutionTrace;
-import tools.debugger.WebDebugger.Suspension;
 import tools.debugger.message.Message;
 import tools.debugger.message.MessageHistory;
 import tools.debugger.message.SourceMessage;
@@ -319,14 +318,19 @@ public class FrontendConnector {
     breakpoints.addOrUpdate(bp);
   }
 
+  public Suspension getSuspension(final int activityId) {
+    return webDebugger.getSuspension(activityId);
+  }
+
+  public Suspension getSuspension(final String suspendedEventId) {
+    int activityId = Integer.valueOf(suspendedEventId.substring(SUSPENDED_EVENT_ID_PREFIX.length()));
+    return webDebugger.getSuspension(activityId);
+  }
+
+
   public SuspendedEvent getSuspendedEvent(final String id) {
     int activityId = Integer.valueOf(id.substring(SUSPENDED_EVENT_ID_PREFIX.length()));
     return webDebugger.getSuspendedEvent(activityId);
-  }
-
-  public void completeSuspendFuture(final String id, final Object value) {
-    int activityId = Integer.valueOf(id.substring(SUSPENDED_EVENT_ID_PREFIX.length()));
-    webDebugger.getSuspendFuture(activityId).complete(value);
   }
 
   static void log(final String str) {
