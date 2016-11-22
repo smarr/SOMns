@@ -50,7 +50,8 @@ export interface TopFrame {
 }
 
 export type Message = SourceMessage | SuspendEventMessage |
-  MessageHistoryMessage | UpdateSourceSections | StoppedMessage | StackTraceResponse;
+  MessageHistoryMessage | UpdateSourceSections | StoppedMessage |
+  StackTraceResponse | ScopesResponse;
 
 export interface SourceMessage {
   type:     "source";
@@ -137,7 +138,7 @@ export function createLineBreakpointData(sourceUri: string, line: number): LineB
 }
 
 export type Respond = InitialBreakpointsResponds | UpdateBreakpoint |
-  StepMessage | StackTraceRequest; 
+  StepMessage | StackTraceRequest | ScopesRequest | VariablesRequest;
 
 export interface InitialBreakpointsResponds {
   action: "initialBreakpoints";
@@ -202,3 +203,61 @@ export interface StackTraceResponse {
   totalFrames: number;
   requestId:   number;
 }
+
+export interface ScopesRequest {
+  action: "ScopesRequest";
+  requestId: number;
+  frameId:   number;
+}
+
+export interface Scope {
+  /** Name of the scope such as 'Arguments', 'Locals'. */
+  name: string;
+
+  /**
+   * The variables of this scope can be retrieved by passing the value of
+   * variablesReference to the VariablesRequest.
+   */
+  variablesReference: number;
+
+  /** If true, the number of variables in this scope is large or expensive to retrieve. */
+  expensive: boolean;
+} 
+
+export interface ScopesResponse {
+  type: "ScopesResponse";
+  scopes:    Scope[];
+  requestId: number;
+}
+
+export interface VariablesRequest {
+  action: "VariablesRequest";
+  requestId: number;
+
+  /** Reference of the variable container/scope. */
+  variablesReference: number;
+}
+
+export interface VariablesResponse {
+  type: "VariablesResponse";
+  variables: Variable[];
+  requestId: number;
+}
+
+export interface Variable {
+  name: string;
+  value: string;
+  
+  /**
+   * If variablesReference is > 0, the variable is structured and its
+   * children can be retrieved by passing variablesReference to the
+   * VariablesRequest.
+   */
+  variablesReference: number;
+
+  /** The number of named child variables. */
+  namedVariables: number;
+  /** The number of indexed child variables. */
+  indexedVariables: number;
+}
+
