@@ -23,9 +23,15 @@ package som.interpreter;
 
 import java.math.BigInteger;
 
+import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.dsl.TypeSystem;
+
 import som.VM;
 import som.interpreter.actors.SFarReference;
 import som.interpreter.actors.SPromise;
+import som.interpreter.nodes.DummyParent;
+import som.primitives.SizeAndLengthPrim;
+import som.primitives.SizeAndLengthPrimFactory;
 import som.vm.constants.Classes;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray;
@@ -35,8 +41,6 @@ import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
-
-import com.oracle.truffle.api.dsl.TypeSystem;
 
 @TypeSystem({   boolean.class,
                    long.class,
@@ -79,5 +83,36 @@ public class Types {
 
     TruffleCompiler.transferToInterpreter("Should not be reachable");
     throw new RuntimeException("We got an object that should be covered by the above check: " + obj.toString());
+  }
+
+  public static int getNumberOfNamedSlots(final Object obj) {
+    CompilerAsserts.neverPartOfCompilation();
+
+    // think, only SObject has fields
+    if (!(obj instanceof SObject)) {
+      return 0;
+    }
+
+    SObject o = (SObject) obj;
+    return o.getObjectLayout().getNumberOfFields();
+  }
+
+  private static SizeAndLengthPrim sizePrim;
+
+  static {
+    sizePrim = SizeAndLengthPrimFactory.create(false, null, null);
+    new DummyParent(sizePrim);
+  }
+
+  public static int getNumberOfIndexedSlots(final Object obj) {
+    CompilerAsserts.neverPartOfCompilation();
+
+    // think, only SArray has fields
+    if (!(obj instanceof SArray)) {
+      return 0;
+    }
+
+    SArray arr = (SArray) obj;
+    return (int) sizePrim.executeEvaluated(arr);
   }
 }

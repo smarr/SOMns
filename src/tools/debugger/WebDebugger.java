@@ -26,6 +26,8 @@ import tools.debugger.message.InitialBreakpointsResponds;
 import tools.debugger.message.Message;
 import tools.debugger.message.MessageHistory;
 import tools.debugger.message.Respond;
+import tools.debugger.message.ScopesMessage;
+import tools.debugger.message.ScopesRequest;
 import tools.debugger.message.SourceMessage;
 import tools.debugger.message.StackTraceMessage;
 import tools.debugger.message.StackTraceRequest;
@@ -37,6 +39,8 @@ import tools.debugger.message.StepMessage.Stop;
 import tools.debugger.message.StoppedMessage;
 import tools.debugger.message.SuspendedEventMessage;
 import tools.debugger.message.UpdateBreakpoint;
+import tools.debugger.message.VariablesMessage;
+import tools.debugger.message.VariablesRequest;
 import tools.debugger.session.AsyncMessageReceiveBreakpoint;
 import tools.debugger.session.BreakpointInfo;
 import tools.debugger.session.Breakpoints;
@@ -187,8 +191,10 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
     msgAF.register("source",       SourceMessage.class);
     msgAF.register("suspendEvent", SuspendedEventMessage.class);
     msgAF.register("StoppedEvent", StoppedMessage.class);
-    msgAF.register("messageHistory", MessageHistory.class);
+    msgAF.register("messageHistory",      MessageHistory.class);
     msgAF.register("StackTraceResponse", StackTraceMessage.class);
+    msgAF.register("ScopesResponse",     ScopesMessage.class);
+    msgAF.register("VariablesResponse",  VariablesMessage.class);
 
     ClassHierarchyAdapterFactory<Respond> respondAF = new ClassHierarchyAdapterFactory<>(Respond.class, "action");
     respondAF.register(INITIAL_BREAKPOINTS, InitialBreakpointsResponds.class);
@@ -199,6 +205,8 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
     respondAF.register("resume",   Resume.class);
     respondAF.register("stop",     Stop.class);
     respondAF.register("StackTraceRequest", StackTraceRequest.class);
+    respondAF.register("ScopesRequest",     ScopesRequest.class);
+    respondAF.register("VariablesRequest",  VariablesRequest.class);
 
     ClassHierarchyAdapterFactory<BreakpointInfo> breakpointAF = new ClassHierarchyAdapterFactory<>(BreakpointInfo.class, "type");
     breakpointAF.register(LineBreakpoint.class);

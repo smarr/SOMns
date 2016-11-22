@@ -2,6 +2,7 @@ package som.vmobjects;
 
 import java.util.Arrays;
 
+import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.profiles.ValueProfile;
 
@@ -33,6 +34,11 @@ public abstract class SArray extends SAbstractObject {
   @Override
   public final SClass getSOMClass() {
     return clazz;
+  }
+
+  public Object getStoragePlain() {
+    CompilerAsserts.neverPartOfCompilation();
+    return storage;
   }
 
   public int getEmptyStorage(final ValueProfile storageType) {

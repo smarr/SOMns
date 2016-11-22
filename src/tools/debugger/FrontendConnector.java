@@ -33,11 +33,13 @@ import tools.Tagging;
 import tools.actors.ActorExecutionTrace;
 import tools.debugger.message.Message;
 import tools.debugger.message.MessageHistory;
+import tools.debugger.message.ScopesMessage;
 import tools.debugger.message.SourceMessage;
 import tools.debugger.message.SourceMessage.SourceData;
 import tools.debugger.message.StackTraceMessage;
 import tools.debugger.message.StoppedMessage;
 import tools.debugger.message.SuspendedEventMessage;
+import tools.debugger.message.VariablesMessage;
 import tools.debugger.session.AsyncMessageReceiveBreakpoint;
 import tools.debugger.session.Breakpoints;
 import tools.debugger.session.LineBreakpoint;
@@ -261,7 +263,14 @@ public class FrontendConnector {
     send(StackTraceMessage.create(startFrame, levels, suspension, requestId));
   }
 
+  public void sendScopes(final int frameId, final Suspension suspension,
+      final int requestId) {
+    send(ScopesMessage.create(frameId, suspension, requestId));
+  }
 
+  public void sendVariables(final int varRef, final int requestId, final Suspension suspension) {
+    send(VariablesMessage.create(varRef, requestId, suspension));
+  }
   private static final String SUSPENDED_EVENT_ID_PREFIX = "se-";
 
   public void sendStoppedMessage(final Suspension suspension) {
@@ -334,6 +343,9 @@ public class FrontendConnector {
     return webDebugger.getSuspension(activityId);
   }
 
+  public Suspension getSuspensionForGlobalId(final int globalId) {
+    return webDebugger.getSuspension(Suspension.getActivityIdFromGlobalId(globalId));
+  }
 
   public SuspendedEvent getSuspendedEvent(final String id) {
     int activityId = Integer.valueOf(id.substring(SUSPENDED_EVENT_ID_PREFIX.length()));

@@ -3,22 +3,23 @@ package tools.debugger.message;
 import java.util.ArrayList;
 
 import com.oracle.truffle.api.debug.DebugStackFrame;
-import com.oracle.truffle.api.debug.SuspendedEvent;
 import com.oracle.truffle.api.source.SourceSection;
 
 import tools.debugger.Suspension;
 
-public class StackTraceMessage extends Message {
-  StackFrame[] stackFrames;
+
+@SuppressWarnings("unused")
+public final class StackTraceMessage extends Message {
+  private final StackFrame[] stackFrames;
 
   /**
    * Total number of frames available.
    */
-  int totalFrames;
+  private final int totalFrames;
 
-  int requestId;
+  private final int requestId;
 
-  public StackTraceMessage(final StackFrame[] stackFrames, final int totalFrames, final int requestId) {
+  private StackTraceMessage(final StackFrame[] stackFrames, final int totalFrames, final int requestId) {
     this.stackFrames = stackFrames;
     this.totalFrames = totalFrames;
     this.requestId   = requestId;
@@ -28,27 +29,28 @@ public class StackTraceMessage extends Message {
     /**
      * Id for the frame, unique across all threads.
      */
-    final int id;
+    private final int id;
 
     /** Name of the frame, typically a method name. */
-    final String name;
+    private final String name;
 
     /** Optional source of the frame. */
-    final String sourceUri;
+    private final String sourceUri;
 
     /** The line within the file of the frame. */
-    final int line;
+    private final int line;
 
     /** The column within the line. */
-    final int column;
+    private final int column;
 
     /** An optional end line of the range covered by the stack frame. */
-    final int endLine;
+    private final int endLine;
 
     /** An optional end column of the range covered by the stack frame. */
-    final int endColumn;
+    private final int endColumn;
 
-    StackFrame(final int id, final String name, final String sourceUri, final int line, final int column, final int endLine, final int endColumn) {
+    StackFrame(final int id, final String name, final String sourceUri,
+        final int line, final int column, final int endLine, final int endColumn) {
       this.id        = id;
       this.name      = name;
       this.sourceUri = sourceUri;
@@ -59,41 +61,34 @@ public class StackTraceMessage extends Message {
     }
   }
 
-  private static int getGlobalFrameId(final int frameId, final int activityId) {
-    final int maxFrameId = 100000;
-    assert frameId < maxFrameId;
-    return activityId * maxFrameId + frameId;
-  }
-
   public static StackTraceMessage create(final int startFrame, final int levels,
       final Suspension suspension, final int requestId) {
-    SuspendedEvent suspendedEvent = suspension.getEvent();
-    int frameId = 0;
-    ArrayList<StackFrame> list = new ArrayList<>(levels == 0 ? 10 : levels);
+    ArrayList<DebugStackFrame> frames = suspension.getStackFrames();
 
-    int skipFrames = SuspendedEventMessage.isHaltPrimitive(suspendedEvent) ? SuspendedEventMessage.FRAMES_SKIPPED_FOR_HALT : 0;
+    StackFrame[] arr = new StackFrame[Math.min(frames.size(), levels)];
+
+    int skipFrames = suspension.isHaltPrimitive() ? Suspension.FRAMES_SKIPPED_FOR_HALT : 0;
     if (startFrame > skipFrames) {
       skipFrames = startFrame;
     }
 
-    for (DebugStackFrame frame : suspendedEvent.getStackFrames()) {
-      if (frameId >= skipFrames && list.size() < levels) {
-        StackFrame f = createFrame(suspension.activityId, frameId, frame);
-        list.add(f);
-      }
-
-      frameId += 1;
+    for (int frameId = skipFrames; frameId < frames.size() && frameId < levels; frameId += 1) {
+      StackFrame f = createFrame(suspension, frameId, frames.get(frameId));
+      arr[frameId - skipFrames] = f;
     }
 
-    assert list.size() <= levels;
-    return new StackTraceMessage(list.toArray(new StackFrame[0]), frameId, requestId);
+    return new StackTraceMessage(arr, frames.size(), requestId);
   }
 
-  private static StackFrame createFrame(final int activityId,
+  private static StackFrame createFrame(final Suspension suspension,
       final int frameId, final DebugStackFrame frame) {
-    int id = getGlobalFrameId(frameId, activityId);
+    int id = suspension.getGlobalId(frameId);
 
     String name = frame.getName();
+    if (name == null) {
+      name = "vm (internal)";
+    }
+
     SourceSection ss = frame.getSourceSection();
     String sourceUri;
     int line;
