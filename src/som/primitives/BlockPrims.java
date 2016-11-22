@@ -10,12 +10,12 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
-import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
 import som.VmSettings;
 import som.instrumentation.InstrumentableDirectCallNode.InstrumentableBlockApplyNode;
+import som.interpreter.nodes.DummyParent;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.QuaternaryExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
@@ -28,13 +28,6 @@ import tools.dym.Tags.OpClosureApplication;
 
 public abstract class BlockPrims {
   public static final int CHAIN_LENGTH = VmSettings.DYNAMIC_METRICS ? 100 : 6;
-
-  /** Dummy Node to work around restrictions that a node that is going to
-   * be instrumented, needs to have a parent. */
-  private static final class DummyParent extends Node {
-    @Child private Node child;
-    private DummyParent(final Node node) { this.child = insert(node); }
-  }
 
   public static final DirectCallNode createDirectCallNode(final SBlock receiver,
       final SourceSection sourceSection) {
