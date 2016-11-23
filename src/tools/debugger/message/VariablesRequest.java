@@ -3,16 +3,16 @@ package tools.debugger.message;
 import org.java_websocket.WebSocket;
 
 import tools.debugger.FrontendConnector;
-import tools.debugger.Suspension;
+import tools.debugger.frontend.Suspension;
+import tools.debugger.message.Message.Request;
 
 
-public final class VariablesRequest extends Respond {
+public final class VariablesRequest extends Request {
 
-  private final int requestId;
   private final int variablesReference;
 
   VariablesRequest(final int requestId, final int variablesReference) {
-    this.requestId = requestId;
+    super(requestId);
     this.variablesReference = variablesReference;
   }
 
@@ -21,5 +21,4 @@ public final class VariablesRequest extends Respond {
     Suspension suspension = connector.getSuspensionForGlobalId(variablesReference);
     suspension.sendVariables(variablesReference, connector, requestId);
   }
-
 }

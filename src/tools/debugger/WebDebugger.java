@@ -22,15 +22,16 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import gson.ClassHierarchyAdapterFactory;
 import som.interpreter.actors.Actor.ActorProcessingThread;
-import tools.debugger.message.InitialBreakpointsResponds;
-import tools.debugger.message.Message;
+import tools.debugger.frontend.Suspension;
+import tools.debugger.message.InitialBreakpointsMessage;
+import tools.debugger.message.Message.IncommingMessage;
+import tools.debugger.message.Message.OutgoingMessage;
 import tools.debugger.message.MessageHistory;
-import tools.debugger.message.Respond;
-import tools.debugger.message.ScopesMessage;
 import tools.debugger.message.ScopesRequest;
+import tools.debugger.message.ScopesResponse;
 import tools.debugger.message.SourceMessage;
-import tools.debugger.message.StackTraceMessage;
 import tools.debugger.message.StackTraceRequest;
+import tools.debugger.message.StackTraceResponse;
 import tools.debugger.message.StepMessage.Resume;
 import tools.debugger.message.StepMessage.Return;
 import tools.debugger.message.StepMessage.StepInto;
@@ -39,8 +40,8 @@ import tools.debugger.message.StepMessage.Stop;
 import tools.debugger.message.StoppedMessage;
 import tools.debugger.message.SuspendedEventMessage;
 import tools.debugger.message.UpdateBreakpoint;
-import tools.debugger.message.VariablesMessage;
 import tools.debugger.message.VariablesRequest;
+import tools.debugger.message.VariablesResponse;
 import tools.debugger.session.AsyncMessageReceiveBreakpoint;
 import tools.debugger.session.BreakpointInfo;
 import tools.debugger.session.Breakpoints;
@@ -94,6 +95,10 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
     roots.add(rootNode);
   }
 
+  public void prepareSteppingUntilNextRootNode() {
+    breakpoints.prepareSteppingUntilNextRootNode();
+  }
+
   synchronized SuspendedEvent getSuspendedEvent(final int activityId) {
     Suspension suspension = idToSuspension.get(activityId);
     assert suspension != null;
@@ -103,10 +108,6 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
 
   Suspension getSuspension(final int activityId) {
     return idToSuspension.get(activityId);
-  }
-
-  public void prepareSteppingUntilNextRootNode() {
-    breakpoints.prepareSteppingUntilNextRootNode();
   }
 
   private synchronized Suspension getSuspension(final Object activity) {
@@ -187,26 +188,26 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
   private static final String UPDATE_BREAKPOINT   = "updateBreakpoint";
 
   public static Gson createJsonProcessor() {
-    ClassHierarchyAdapterFactory<Message> msgAF = new ClassHierarchyAdapterFactory<>(Message.class, "type");
-    msgAF.register("source",       SourceMessage.class);
-    msgAF.register("suspendEvent", SuspendedEventMessage.class);
-    msgAF.register("StoppedEvent", StoppedMessage.class);
-    msgAF.register("messageHistory",      MessageHistory.class);
-    msgAF.register("StackTraceResponse", StackTraceMessage.class);
-    msgAF.register("ScopesResponse",     ScopesMessage.class);
-    msgAF.register("VariablesResponse",  VariablesMessage.class);
+    ClassHierarchyAdapterFactory<OutgoingMessage> outMsgAF = new ClassHierarchyAdapterFactory<>(OutgoingMessage.class, "type");
+    outMsgAF.register("source",       SourceMessage.class);
+    outMsgAF.register("suspendEvent", SuspendedEventMessage.class);
+    outMsgAF.register("StoppedEvent", StoppedMessage.class);
+    outMsgAF.register("messageHistory",      MessageHistory.class);
+    outMsgAF.register("StackTraceResponse", StackTraceResponse.class);
+    outMsgAF.register("ScopesResponse",     ScopesResponse.class);
+    outMsgAF.register("VariablesResponse",  VariablesResponse.class);
 
-    ClassHierarchyAdapterFactory<Respond> respondAF = new ClassHierarchyAdapterFactory<>(Respond.class, "action");
-    respondAF.register(INITIAL_BREAKPOINTS, InitialBreakpointsResponds.class);
-    respondAF.register(UPDATE_BREAKPOINT,   UpdateBreakpoint.class);
-    respondAF.register("stepInto", StepInto.class);
-    respondAF.register("stepOver", StepOver.class);
-    respondAF.register("return",   Return.class);
-    respondAF.register("resume",   Resume.class);
-    respondAF.register("stop",     Stop.class);
-    respondAF.register("StackTraceRequest", StackTraceRequest.class);
-    respondAF.register("ScopesRequest",     ScopesRequest.class);
-    respondAF.register("VariablesRequest",  VariablesRequest.class);
+    ClassHierarchyAdapterFactory<IncommingMessage> inMsgAF = new ClassHierarchyAdapterFactory<>(IncommingMessage.class, "action");
+    inMsgAF.register(INITIAL_BREAKPOINTS, InitialBreakpointsMessage.class);
+    inMsgAF.register(UPDATE_BREAKPOINT,   UpdateBreakpoint.class);
+    inMsgAF.register("stepInto", StepInto.class);
+    inMsgAF.register("stepOver", StepOver.class);
+    inMsgAF.register("return",   Return.class);
+    inMsgAF.register("resume",   Resume.class);
+    inMsgAF.register("stop",     Stop.class);
+    inMsgAF.register("StackTraceRequest", StackTraceRequest.class);
+    inMsgAF.register("ScopesRequest",     ScopesRequest.class);
+    inMsgAF.register("VariablesRequest",  VariablesRequest.class);
 
     ClassHierarchyAdapterFactory<BreakpointInfo> breakpointAF = new ClassHierarchyAdapterFactory<>(BreakpointInfo.class, "type");
     breakpointAF.register(LineBreakpoint.class);
@@ -215,8 +216,8 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
     breakpointAF.register(AsyncMessageReceiveBreakpoint.class);
 
     return new GsonBuilder().
-        registerTypeAdapterFactory(msgAF).
-        registerTypeAdapterFactory(respondAF).
+        registerTypeAdapterFactory(outMsgAF).
+        registerTypeAdapterFactory(inMsgAF).
         registerTypeAdapterFactory(breakpointAF).
         create();
   }

@@ -31,15 +31,17 @@ import tools.SourceCoordinate;
 import tools.SourceCoordinate.TaggedSourceCoordinate;
 import tools.Tagging;
 import tools.actors.ActorExecutionTrace;
+import tools.debugger.frontend.Suspension;
 import tools.debugger.message.Message;
+import tools.debugger.message.Message.OutgoingMessage;
 import tools.debugger.message.MessageHistory;
-import tools.debugger.message.ScopesMessage;
+import tools.debugger.message.ScopesResponse;
 import tools.debugger.message.SourceMessage;
 import tools.debugger.message.SourceMessage.SourceData;
-import tools.debugger.message.StackTraceMessage;
+import tools.debugger.message.StackTraceResponse;
 import tools.debugger.message.StoppedMessage;
 import tools.debugger.message.SuspendedEventMessage;
-import tools.debugger.message.VariablesMessage;
+import tools.debugger.message.VariablesResponse;
 import tools.debugger.session.AsyncMessageReceiveBreakpoint;
 import tools.debugger.session.Breakpoints;
 import tools.debugger.session.LineBreakpoint;
@@ -172,7 +174,7 @@ public class FrontendConnector {
 
   private void send(final Message msg) {
     ensureConnectionIsAvailable();
-    sender.send(gson.toJson(msg, Message.class));
+    sender.send(gson.toJson(msg, OutgoingMessage.class));
   }
 
   private void sendBufferedSources(
@@ -257,16 +259,16 @@ public class FrontendConnector {
 
   public void sendStackTrace(final int startFrame, final int levels,
       final Suspension suspension, final int requestId) {
-    send(StackTraceMessage.create(startFrame, levels, suspension, requestId));
+    send(StackTraceResponse.create(startFrame, levels, suspension, requestId));
   }
 
   public void sendScopes(final int frameId, final Suspension suspension,
       final int requestId) {
-    send(ScopesMessage.create(frameId, suspension, requestId));
+    send(ScopesResponse.create(frameId, suspension, requestId));
   }
 
   public void sendVariables(final int varRef, final int requestId, final Suspension suspension) {
-    send(VariablesMessage.create(varRef, requestId, suspension));
+    send(VariablesResponse.create(varRef, requestId, suspension));
   }
   private static final String SUSPENDED_EVENT_ID_PREFIX = "se-";
 

@@ -5,8 +5,9 @@ import org.java_websocket.WebSocket;
 import com.oracle.truffle.api.debug.SuspendedEvent;
 
 import tools.debugger.FrontendConnector;
+import tools.debugger.message.Message.IncommingMessage;
 
-public abstract class StepMessage extends Respond {
+public abstract class StepMessage extends IncommingMessage {
   private final String suspendEvent;
 
   /**

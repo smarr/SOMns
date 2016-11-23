@@ -15,17 +15,17 @@ import som.vm.constants.Nil;
 import som.vmobjects.SArray;
 import som.vmobjects.SArray.PartiallyEmptyArray;
 import som.vmobjects.SObject;
-import tools.debugger.Suspension;
-import tools.debugger.Suspension.RuntimeScope;
+import tools.debugger.frontend.RuntimeScope;
+import tools.debugger.frontend.Suspension;
+import tools.debugger.message.Message.Response;
 
 
 @SuppressWarnings("unused")
-public final class VariablesMessage extends Message {
-  private final int requestId;
+public final class VariablesResponse extends Response {
   private final Variable[] variables;
 
-  private VariablesMessage(final int requestId, final Variable[] variables) {
-    this.requestId = requestId;
+  private VariablesResponse(final int requestId, final Variable[] variables) {
+    super(requestId);
     this.variables = variables;
   }
 
@@ -37,7 +37,8 @@ public final class VariablesMessage extends Message {
     private final int namedVariables;
     private final int indexedVariables;
 
-    Variable(final String name, final String value, final int varRef, final int named, final int indexed) {
+    Variable(final String name, final String value, final int varRef,
+        final int named, final int indexed) {
       this.name = name;
       this.value = value;
       this.variablesReference = varRef;
@@ -46,7 +47,8 @@ public final class VariablesMessage extends Message {
     }
   }
 
-  public static VariablesMessage create(final int varRef, final int requestId, final Suspension suspension) {
+  public static VariablesResponse create(final int varRef, final int requestId,
+      final Suspension suspension) {
     Object scopeOrObject = suspension.getScopeOrObject(varRef);
     ArrayList<Variable> results;
     if (scopeOrObject instanceof RuntimeScope) {
@@ -54,7 +56,7 @@ public final class VariablesMessage extends Message {
     } else {
       results = createFromObject(scopeOrObject, suspension);
     }
-    return new VariablesMessage(requestId, results.toArray(new Variable[0]));
+    return new VariablesResponse(requestId, results.toArray(new Variable[0]));
   }
 
   private static ArrayList<Variable> createFromObject(final Object obj,

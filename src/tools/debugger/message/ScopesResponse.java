@@ -11,17 +11,17 @@ import som.interpreter.Method;
 import som.interpreter.Primitive;
 import som.interpreter.SArguments;
 import som.vmobjects.SBlock;
-import tools.debugger.Suspension;
+import tools.debugger.frontend.Suspension;
+import tools.debugger.message.Message.Response;
 
 
 @SuppressWarnings("unused")
-public final class ScopesMessage extends Message {
+public final class ScopesResponse extends Response {
   private final Scope[] scopes;
-  private final int requestId;
 
-  private ScopesMessage(final Scope[] scopes, final int requestId) {
+  private ScopesResponse(final Scope[] scopes, final int requestId) {
+    super(requestId);
     this.scopes = scopes;
-    this.requestId = requestId;
   }
 
   private static final class Scope {
@@ -59,7 +59,7 @@ public final class ScopesMessage extends Message {
 
   private static final int SMALL_INITIAL_SIZE = 5;
 
-  public static ScopesMessage create(final int frameId, final Suspension suspension,
+  public static ScopesResponse create(final int frameId, final Suspension suspension,
       final int requestId) {
     DebugStackFrame frame = suspension.getFrame(frameId);
     ArrayList<Scope> scopes = new ArrayList<>(SMALL_INITIAL_SIZE);
@@ -80,6 +80,6 @@ public final class ScopesMessage extends Message {
         " here. Means we need to add support";
     }
 
-    return new ScopesMessage(scopes.toArray(new Scope[0]), requestId);
+    return new ScopesResponse(scopes.toArray(new Scope[0]), requestId);
   }
 }

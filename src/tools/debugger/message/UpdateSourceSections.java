@@ -1,6 +1,7 @@
 package tools.debugger.message;
 
 import tools.SourceCoordinate.TaggedSourceCoordinate;
+import tools.debugger.message.Message.OutgoingMessage;
 
 /**
  * This message is send to update the front-end with the latest source section
@@ -11,7 +12,7 @@ import tools.SourceCoordinate.TaggedSourceCoordinate;
  * distinguish local accesses from message sends in a uniform language, etc.
  */
 @SuppressWarnings("unused")
-public class UpdateSourceSections extends Message {
+public class UpdateSourceSections extends OutgoingMessage {
   private final SourceInfo[] updates;
 
   public UpdateSourceSections(final SourceInfo[] updates) {

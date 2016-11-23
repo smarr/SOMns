@@ -5,11 +5,12 @@ import java.util.ArrayList;
 import com.oracle.truffle.api.debug.DebugStackFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
-import tools.debugger.Suspension;
+import tools.debugger.frontend.Suspension;
+import tools.debugger.message.Message.Response;
 
 
 @SuppressWarnings("unused")
-public final class StackTraceMessage extends Message {
+public final class StackTraceResponse extends Response {
   private final StackFrame[] stackFrames;
 
   /**
@@ -17,12 +18,11 @@ public final class StackTraceMessage extends Message {
    */
   private final int totalFrames;
 
-  private final int requestId;
-
-  private StackTraceMessage(final StackFrame[] stackFrames, final int totalFrames, final int requestId) {
+  private StackTraceResponse(final StackFrame[] stackFrames,
+      final int totalFrames, final int requestId) {
+    super(requestId);
     this.stackFrames = stackFrames;
     this.totalFrames = totalFrames;
-    this.requestId   = requestId;
   }
 
   static class StackFrame {
@@ -61,7 +61,7 @@ public final class StackTraceMessage extends Message {
     }
   }
 
-  public static StackTraceMessage create(final int startFrame, final int levels,
+  public static StackTraceResponse create(final int startFrame, final int levels,
       final Suspension suspension, final int requestId) {
     ArrayList<DebugStackFrame> frames = suspension.getStackFrames();
 
@@ -77,7 +77,7 @@ public final class StackTraceMessage extends Message {
       arr[frameId - skipFrames] = f;
     }
 
-    return new StackTraceMessage(arr, frames.size(), requestId);
+    return new StackTraceResponse(arr, frames.size(), requestId);
   }
 
   private static StackFrame createFrame(final Suspension suspension,
@@ -108,7 +108,6 @@ public final class StackTraceMessage extends Message {
       endLine   = 0;
       endColumn = 0;
     }
-    StackFrame f = new StackFrame(id, name, sourceUri, line, column, endLine, endColumn);
-    return f;
+    return new StackFrame(id, name, sourceUri, line, column, endLine, endColumn);
   }
 }

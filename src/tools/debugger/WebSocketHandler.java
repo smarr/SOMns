@@ -9,7 +9,7 @@ import org.java_websocket.server.WebSocketServer;
 import com.google.gson.Gson;
 
 import som.VM;
-import tools.debugger.message.Respond;
+import tools.debugger.message.Message.IncommingMessage;
 
 
 public class WebSocketHandler extends WebSocketServer {
@@ -37,7 +37,7 @@ public class WebSocketHandler extends WebSocketServer {
   @Override
   public void onMessage(final WebSocket conn, final String message) {
     try {
-      Respond respond = gson.fromJson(message, Respond.class);
+      IncommingMessage respond = gson.fromJson(message, IncommingMessage.class);
       respond.process(connector, conn);
     } catch (Exception ex) {
       VM.errorPrint("Error while processing msg:" + message);

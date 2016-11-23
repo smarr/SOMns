@@ -9,10 +9,11 @@ import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.SFarReference;
 import som.vmobjects.SClass;
 import tools.ObjectBuffer;
+import tools.debugger.message.Message.OutgoingMessage;
 
 
 @SuppressWarnings("unused")
-public class MessageHistory extends Message {
+public class MessageHistory extends OutgoingMessage {
   private final MessageData[] messages;
   private final FarRefData[]  actors;
 

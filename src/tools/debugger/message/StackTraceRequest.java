@@ -3,11 +3,11 @@ package tools.debugger.message;
 import org.java_websocket.WebSocket;
 
 import tools.debugger.FrontendConnector;
-import tools.debugger.Suspension;
+import tools.debugger.frontend.Suspension;
+import tools.debugger.message.Message.Request;
 
 
-public class StackTraceRequest extends Respond {
-
+public class StackTraceRequest extends Request {
   private int activityId;
 
   /**
@@ -20,17 +20,12 @@ public class StackTraceRequest extends Respond {
    */
   private int levels;
 
-  /**
-   * Id to connect request and responds.
-   */
-  private int requestId;
-
   public StackTraceRequest(final int activityId, final int startFrame,
       final int levels, final int requestId) {
+    super(requestId);
     this.activityId = activityId;
     this.startFrame = startFrame;
     this.levels     = levels;
-    this.requestId  = requestId;
   }
 
   @Override

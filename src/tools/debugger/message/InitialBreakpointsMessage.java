@@ -3,10 +3,11 @@ package tools.debugger.message;
 import org.java_websocket.WebSocket;
 
 import tools.debugger.FrontendConnector;
+import tools.debugger.message.Message.IncommingMessage;
 import tools.debugger.session.BreakpointInfo;
 
 
-public class InitialBreakpointsResponds extends Respond {
+public class InitialBreakpointsMessage extends IncommingMessage {
   private final BreakpointInfo[] breakpoints;
 
   /**
@@ -14,7 +15,7 @@ public class InitialBreakpointsResponds extends Respond {
    */
   private final boolean debuggerProtocol;
 
-  public InitialBreakpointsResponds(final BreakpointInfo[] breakpoints) {
+  public InitialBreakpointsMessage(final BreakpointInfo[] breakpoints) {
     this.breakpoints = breakpoints;
     this.debuggerProtocol = false;
   }

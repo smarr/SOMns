@@ -3,16 +3,15 @@ package tools.debugger.message;
 import org.java_websocket.WebSocket;
 
 import tools.debugger.FrontendConnector;
-import tools.debugger.Suspension;
+import tools.debugger.frontend.Suspension;
+import tools.debugger.message.Message.Request;
 
 
-public final class ScopesRequest extends Respond {
-
-  private final int requestId;
+public final class ScopesRequest extends Request {
   private final int frameId;
 
   ScopesRequest(final int requestId, final int frameId) {
-    this.requestId = requestId;
+    super(requestId);
     this.frameId   = frameId;
   }
 

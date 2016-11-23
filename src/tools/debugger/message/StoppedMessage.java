@@ -1,11 +1,12 @@
 package tools.debugger.message;
 
 import som.interpreter.actors.Actor;
-import tools.debugger.Suspension;
+import tools.debugger.frontend.Suspension;
+import tools.debugger.message.Message.OutgoingMessage;
 
 
 @SuppressWarnings("unused")
-public final class StoppedMessage extends Message {
+public final class StoppedMessage extends OutgoingMessage {
   private String  reason;
   private int     activityId;
   private String  activityType;

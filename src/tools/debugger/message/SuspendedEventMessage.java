@@ -16,11 +16,12 @@ import com.oracle.truffle.api.source.SourceSection;
 import som.primitives.ObjectPrims.HaltPrim;
 import tools.SourceCoordinate;
 import tools.SourceCoordinate.FullSourceCoordinate;
-import tools.debugger.Suspension;
+import tools.debugger.frontend.Suspension;
+import tools.debugger.message.Message.OutgoingMessage;
 
 
 @SuppressWarnings({"unused", "deprecation"})
-public class SuspendedEventMessage extends Message {
+public class SuspendedEventMessage extends OutgoingMessage {
 
   public static SuspendedEventMessage create(final SuspendedEvent e,
       final String eventId) {
