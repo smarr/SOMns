@@ -121,11 +121,11 @@ public class Suspension {
 
   public void sendScopes(final int frameId, final FrontendConnector frontend,
       final int requestId) {
-    submitTask(new SendScopes(frameId, frontend, this, requestId));
+    frontend.sendScopes(frameId, this, requestId);
   }
 
   public void sendVariables(final int varRef, final FrontendConnector frontend, final int requestId) {
-    submitTask(new SendVariables(varRef, requestId, frontend, this));
+    frontend.sendVariables(varRef, requestId, this);
   }
 
   private void submitTask(final Task task) {
@@ -187,48 +187,6 @@ public class Suspension {
     @Override
     boolean execute() {
       frontend.sendStackTrace(startFrame, levels, suspension, requestId);
-      return true;
-    }
-  }
-
-  // TODO: not strictly necessary, I think
-  private static class SendScopes extends Task {
-    private final int frameId;
-    private final int requestId;
-    private final FrontendConnector frontend;
-    private final Suspension suspension;
-
-    SendScopes(final int frameId, final FrontendConnector frontend,
-        final Suspension suspension, final int requestId) {
-      this.frameId   = frameId;
-      this.requestId = requestId;
-      this.frontend   = frontend;
-      this.suspension = suspension;
-    }
-
-    @Override
-    boolean execute() {
-      frontend.sendScopes(frameId, suspension, requestId);
-      return true;
-    }
-  }
-
-  private static class SendVariables extends Task {
-    private final int varRef;
-    private final int requestId;
-    private final FrontendConnector frontend;
-    private final Suspension suspension;
-
-    SendVariables(final int varRef, final int requestId, final FrontendConnector frontend, final Suspension suspension) {
-      this.varRef     = varRef;
-      this.requestId  = requestId;
-      this.frontend   = frontend;
-      this.suspension = suspension;
-    }
-
-    @Override
-    boolean execute() {
-      frontend.sendVariables(varRef, requestId, suspension);
       return true;
     }
   }
