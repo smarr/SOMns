@@ -16,10 +16,12 @@ import com.oracle.truffle.api.source.SourceSection;
 import som.primitives.ObjectPrims.HaltPrim;
 import tools.SourceCoordinate;
 import tools.SourceCoordinate.FullSourceCoordinate;
+import tools.debugger.frontend.Suspension;
+import tools.debugger.message.Message.OutgoingMessage;
 
 
 @SuppressWarnings({"unused", "deprecation"})
-public class SuspendedEventMessage extends Message {
+public class SuspendedEventMessage extends OutgoingMessage {
 
   public static SuspendedEventMessage create(final SuspendedEvent e,
       final String eventId) {
@@ -69,7 +71,7 @@ public class SuspendedEventMessage extends Message {
       final MaterializedFrame topFrame) {
     com.oracle.truffle.api.frame.Frame[] frame = new com.oracle.truffle.api.frame.Frame[1];
     if (isHaltPrimitive(e)) {
-      int[] skipFrames = new int[]{2};
+      int[] skipFrames = new int[]{Suspension.FRAMES_SKIPPED_FOR_HALT};
 
       Truffle.getRuntime().iterateFrames(frameInstance -> {
         if (skipFrames[0] > 0) {
@@ -117,7 +119,11 @@ public class SuspendedEventMessage extends Message {
     return frames.toArray(new Frame[0]);
   }
 
-  private static boolean isHaltPrimitive(final SuspendedEvent e) {
+  /**
+   * @deprecated because it should be only implemented in {@link Suspension} but requires a few more changes
+   */
+  @Deprecated
+  public static boolean isHaltPrimitive(final SuspendedEvent e) {
     return e.getNode() instanceof HaltPrim;
   }
 

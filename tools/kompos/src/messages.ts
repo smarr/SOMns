@@ -50,7 +50,8 @@ export interface TopFrame {
 }
 
 export type Message = SourceMessage | SuspendEventMessage |
-  MessageHistoryMessage | UpdateSourceSections;
+  MessageHistoryMessage | UpdateSourceSections | StoppedMessage |
+  StackTraceResponse | ScopesResponse;
 
 export interface SourceMessage {
   type:     "source";
@@ -66,6 +67,19 @@ export interface SuspendEventMessage {
 
   stack:    Frame[];
   topFrame: TopFrame;
+}
+
+export type StoppedReason = "step" | "breakpoint" | "exception" | "pause";
+export type ActivityType  = "Actor"; 
+
+export interface StoppedMessage {
+  type: "StoppedEvent";
+
+  reason:            StoppedReason;
+  activityId:        number;
+  activityType:      ActivityType;
+  text:              string;
+  allThreadsStopped: boolean; 
 }
 
 export interface UpdateSourceSections {
@@ -124,11 +138,16 @@ export function createLineBreakpointData(sourceUri: string, line: number): LineB
 }
 
 export type Respond = InitialBreakpointsResponds | UpdateBreakpoint |
-  StepMessage; 
+  StepMessage | StackTraceRequest | ScopesRequest | VariablesRequest;
 
 export interface InitialBreakpointsResponds {
   action: "initialBreakpoints";
   breakpoints: BreakpointData[];
+
+  /**
+   * Use a VSCode-like debugger protocol.
+   */
+  debuggerProtocol: boolean;
 }
 
 interface UpdateBreakpoint {
@@ -144,3 +163,101 @@ export interface StepMessage {
   /** Id of the corresponding suspend event. */
   suspendEvent: string;
 }
+
+export interface StackTraceRequest {
+  action: "StackTraceRequest";
+
+  activityId: number;
+  startFrame: number;
+  levels:     number;
+
+  requestId:  number;
+}
+
+export interface StackFrame {
+  /** Id for the frame, unique across all threads. */
+  id: number;
+  
+  /** Name of the frame, typically a method name. */
+  name: string;
+
+  /** Optional source of the frame. */
+  sourceUri: string;
+
+  /** Optional, line within the file of the frame. */
+  line: number;
+
+  /** Optional, column within the line. */
+  column: number;
+
+  /** Optional, end line of the range covered by the stack frame. */
+  endLine: number;
+
+  /** Optional end column of the range covered by the stack frame. */
+  endColumn: number;
+}
+
+export interface StackTraceResponse {
+  type: "StackTraceResponse";
+  stackFrames: StackFrame[];
+  totalFrames: number;
+  requestId:   number;
+}
+
+export interface ScopesRequest {
+  action: "ScopesRequest";
+  requestId: number;
+  frameId:   number;
+}
+
+export interface Scope {
+  /** Name of the scope such as 'Arguments', 'Locals'. */
+  name: string;
+
+  /**
+   * The variables of this scope can be retrieved by passing the value of
+   * variablesReference to the VariablesRequest.
+   */
+  variablesReference: number;
+
+  /** If true, the number of variables in this scope is large or expensive to retrieve. */
+  expensive: boolean;
+} 
+
+export interface ScopesResponse {
+  type: "ScopesResponse";
+  scopes:    Scope[];
+  requestId: number;
+}
+
+export interface VariablesRequest {
+  action: "VariablesRequest";
+  requestId: number;
+
+  /** Reference of the variable container/scope. */
+  variablesReference: number;
+}
+
+export interface VariablesResponse {
+  type: "VariablesResponse";
+  variables: Variable[];
+  requestId: number;
+}
+
+export interface Variable {
+  name: string;
+  value: string;
+  
+  /**
+   * If variablesReference is > 0, the variable is structured and its
+   * children can be retrieved by passing variablesReference to the
+   * VariablesRequest.
+   */
+  variablesReference: number;
+
+  /** The number of named child variables. */
+  namedVariables: number;
+  /** The number of indexed child variables. */
+  indexedVariables: number;
+}
+

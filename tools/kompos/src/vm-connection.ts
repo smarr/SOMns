@@ -72,7 +72,8 @@ export class VmConnection {
   sendInitialBreakpoints(breakpoints: Breakpoint[]) {
     this.send({
       action: "initialBreakpoints",
-      breakpoints: breakpoints.map(b => b.data)
+      breakpoints: breakpoints.map(b => b.data),
+      debuggerProtocol: false
     });
   }
 

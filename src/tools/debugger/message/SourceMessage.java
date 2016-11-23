@@ -9,10 +9,11 @@ import com.oracle.truffle.api.source.SourceSection;
 import som.interpreter.Method;
 import tools.SourceCoordinate;
 import tools.SourceCoordinate.TaggedSourceCoordinate;
+import tools.debugger.message.Message.OutgoingMessage;
 
 
 @SuppressWarnings("unused")
-public class SourceMessage extends Message {
+public class SourceMessage extends OutgoingMessage {
   private final SourceData[] sources;
 
   public SourceMessage(final SourceData[] sources) {

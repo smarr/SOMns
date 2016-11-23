@@ -31,11 +31,17 @@ import tools.SourceCoordinate;
 import tools.SourceCoordinate.TaggedSourceCoordinate;
 import tools.Tagging;
 import tools.actors.ActorExecutionTrace;
+import tools.debugger.frontend.Suspension;
 import tools.debugger.message.Message;
+import tools.debugger.message.Message.OutgoingMessage;
 import tools.debugger.message.MessageHistory;
+import tools.debugger.message.ScopesResponse;
 import tools.debugger.message.SourceMessage;
 import tools.debugger.message.SourceMessage.SourceData;
+import tools.debugger.message.StackTraceResponse;
+import tools.debugger.message.StoppedMessage;
 import tools.debugger.message.SuspendedEventMessage;
+import tools.debugger.message.VariablesResponse;
 import tools.debugger.session.AsyncMessageReceiveBreakpoint;
 import tools.debugger.session.Breakpoints;
 import tools.debugger.session.LineBreakpoint;
@@ -168,7 +174,7 @@ public class FrontendConnector {
 
   private void send(final Message msg) {
     ensureConnectionIsAvailable();
-    sender.send(gson.toJson(msg, Message.class));
+    sender.send(gson.toJson(msg, OutgoingMessage.class));
   }
 
   private void sendBufferedSources(
@@ -244,9 +250,30 @@ public class FrontendConnector {
     return map;
   }
 
-  public void sendSuspendedEvent(final SuspendedEvent e, final String id) {
+  public void sendSuspendedEvent(final Suspension suspension) {
     sendTracingData();
-    send(SuspendedEventMessage.create(e, id));
+    send(SuspendedEventMessage.create(
+        suspension.getEvent(),
+        SUSPENDED_EVENT_ID_PREFIX + suspension.activityId));
+  }
+
+  public void sendStackTrace(final int startFrame, final int levels,
+      final Suspension suspension, final int requestId) {
+    send(StackTraceResponse.create(startFrame, levels, suspension, requestId));
+  }
+
+  public void sendScopes(final int frameId, final Suspension suspension,
+      final int requestId) {
+    send(ScopesResponse.create(frameId, suspension, requestId));
+  }
+
+  public void sendVariables(final int varRef, final int requestId, final Suspension suspension) {
+    send(VariablesResponse.create(varRef, requestId, suspension));
+  }
+  private static final String SUSPENDED_EVENT_ID_PREFIX = "se-";
+
+  public void sendStoppedMessage(final Suspension suspension) {
+    send(StoppedMessage.create(suspension));
   }
 
   public void sendTracingData() {
@@ -306,12 +333,22 @@ public class FrontendConnector {
     breakpoints.addOrUpdate(bp);
   }
 
-  public SuspendedEvent getSuspendedEvent(final String id) {
-    return webDebugger.getSuspendedEvent(id);
+  public Suspension getSuspension(final int activityId) {
+    return webDebugger.getSuspension(activityId);
   }
 
-  public void completeSuspendFuture(final String id, final Object value) {
-    webDebugger.getSuspendFuture(id).complete(value);
+  public Suspension getSuspension(final String suspendedEventId) {
+    int activityId = Integer.valueOf(suspendedEventId.substring(SUSPENDED_EVENT_ID_PREFIX.length()));
+    return webDebugger.getSuspension(activityId);
+  }
+
+  public Suspension getSuspensionForGlobalId(final int globalId) {
+    return webDebugger.getSuspension(Suspension.getActivityIdFromGlobalId(globalId));
+  }
+
+  public SuspendedEvent getSuspendedEvent(final String id) {
+    int activityId = Integer.valueOf(id.substring(SUSPENDED_EVENT_ID_PREFIX.length()));
+    return webDebugger.getSuspendedEvent(activityId);
   }
 
   static void log(final String str) {
@@ -320,8 +357,9 @@ public class FrontendConnector {
     // Checkstyle: resume
   }
 
-  public void completeConnection(final WebSocket conn) {
+  public void completeConnection(final WebSocket conn, final boolean debuggerProtocol) {
     clientConnected.complete(conn);
+    webDebugger.useDebuggerProtocol(debuggerProtocol);
   }
 
   public void shutdown() {
