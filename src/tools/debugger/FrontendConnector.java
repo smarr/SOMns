@@ -250,9 +250,6 @@ public class FrontendConnector {
 
   public void sendSuspendedEvent(final Suspension suspension) {
     sendTracingData();
-    // TODO: I need to capture the stack here, to make sure it is accessible
-    //       also when running on Graal
-
     send(SuspendedEventMessage.create(
         suspension.getEvent(),
         SUSPENDED_EVENT_ID_PREFIX + suspension.activityId));
