@@ -8,6 +8,7 @@ import com.oracle.truffle.api.debug.SuspendedEvent;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 
 import som.interpreter.LexicalScope.MethodScope;
+import som.interpreter.actors.SuspendExecutionNode;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.primitives.ObjectPrims.HaltPrim;
 import tools.TraceData;
@@ -58,6 +59,14 @@ public class Suspension {
 
   public synchronized boolean isHaltPrimitive() {
     return suspendedEvent.getNode() instanceof HaltPrim;
+  }
+
+  public synchronized boolean isSuspendExecutionNode() {
+    return suspendedEvent.getNode() instanceof SuspendExecutionNode;
+  }
+
+  public int skipFrames() {
+    return ((SuspendExecutionNode) suspendedEvent.getNode()).getSkipFrames();
   }
 
   public long getGlobalId(final int localId) {
@@ -131,6 +140,19 @@ public class Suspension {
     }
 
     ObjectTransitionSafepoint.INSTANCE.register();
+  }
+
+  /**
+   * Get skipping frame count for the case when it is a HaltPrimitive of a SuspendExecutionNode.
+   */
+  public int getFrameSkipCount() {
+    int skipFrames = 0;
+    if (isHaltPrimitive()) {
+      skipFrames = Suspension.FRAMES_SKIPPED_FOR_HALT;
+    } else if (isSuspendExecutionNode()) {
+      skipFrames = skipFrames();
+    }
+    return skipFrames;
   }
 
   public Object getActivity() { return activity; }

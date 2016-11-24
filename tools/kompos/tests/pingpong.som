@@ -1,6 +1,7 @@
 class PingPongApp usingPlatform: platform = Value (
 | private actors = platform actors.
   private system = platform system.
+  private Exception = platform kernel Exception.
 |)(
   public class PingPong new: numPings = Value (
   | private NumPings = numPings.
@@ -17,26 +18,38 @@ class PingPongApp usingPlatform: platform = Value (
       )
 
       public ping = (
-      | p1 |
+      | p1 p2 |
         'Ping>>ping' println.
         pong <-: ping: self.
         pingsLeft := pingsLeft - 1.
 
         p1 := self <-: validate: pingsLeft.
-        p1 whenResolved: [:v | v println. ].
+        p2 := p1 whenResolved: [:v | v println. ].
+        p2 <-: println.
       )
 
       public validate: pings = (
-        ^ self <-: validMessage: pings.
-      )
+      | p3 p4 |
+        p3 := self <-: validNumber: pings.
+        p4 := p3 whenResolved: [:v | ('-Resolved: ' + v) println. ] onError: [:e| ('-Error: ' + e) println ].
+        p4 <-: println.
+        ^ p4
+       )
 
-      public validMessage: pings = (
-      | p2 r |
-        p2 := actors createPromisePair.
-        r := p2 resolver.
-        r resolve: ' ping value ' + pings.
-
-        ^ p2 promise
+      public validNumber: pings = (
+      | p5 r |
+        p5 := actors createPromisePair.
+        r := p5 resolver.
+        (pings = 2)
+        ifTrue: [
+          (' ping last value ' + pings) println.
+          kernel Exception signal.
+        ]
+        ifFalse: [
+          r resolve: ' ping value ' + pings.
+          p5 promise <-: println.
+        ].
+        ^ p5 promise
       )
 
       public pong: sender = (
@@ -59,8 +72,18 @@ class PingPongApp usingPlatform: platform = Value (
       )
 
       public stop = (
+      | p6 p7 |
         'Pong>>stop' println.
-        completionRes resolve: pongCount
+         p6 := self <-: endWithException.
+         p7 := p6 onError: [:e| ('-Error stopping: ' + e) println. ].
+         p7 <-: println.
+         completionRes resolve: pongCount
+      )
+
+      public endWithException = (
+        'create another exception' println.
+        kernel Exception signal.
+        ^ 0
       )
     )
 

@@ -7,7 +7,13 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.PreevaluatedExpression;
+import som.vm.VmSettings;
 import som.vmobjects.SSymbol;
+import tools.debugger.nodes.AbstractBreakpointNode;
+import tools.debugger.nodes.BreakpointNodeGen;
+import tools.debugger.nodes.DisabledBreakpointNode;
+import tools.debugger.session.BreakpointEnabling;
+import tools.debugger.session.SectionBreakpoint;
 
 public abstract class EagerlySpecializableNode extends ExprWithTagsNode
   implements PreevaluatedExpression {
@@ -59,4 +65,18 @@ public abstract class EagerlySpecializableNode extends ExprWithTagsNode
   public abstract EagerPrimitive wrapInEagerWrapper(
       final EagerlySpecializableNode prim, final SSymbol selector,
       final ExpressionNode[] arguments);
+
+  /**
+   * Create a breakpoint node that can be enable or disable.
+   */
+  public <T extends SectionBreakpoint> AbstractBreakpointNode createBreakpointNode(final SourceSection source, final BreakpointEnabling<T> bkp) {
+    AbstractBreakpointNode node;
+
+    if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+        node = insert(BreakpointNodeGen.create(bkp));
+    } else {
+        node = insert(new DisabledBreakpointNode());
+    }
+    return node;
+}
 }

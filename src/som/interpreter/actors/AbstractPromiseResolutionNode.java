@@ -5,18 +5,30 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Instrumentable;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.VM;
 import som.interpreter.actors.SPromise.Resolution;
 import som.interpreter.actors.SPromise.SResolver;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
+import som.interpreter.nodes.nary.UnaryExpressionNode;
 
 
 @Instrumentable(factory = AbstractPromiseResolutionNodeWrapper.class)
 public abstract class AbstractPromiseResolutionNode extends TernaryExpressionNode {
 
   @Child protected WrapReferenceNode wrapper = WrapReferenceNodeGen.create();
+  @Child protected UnaryExpressionNode haltNode;
 
-  protected AbstractPromiseResolutionNode(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
-  protected AbstractPromiseResolutionNode(final AbstractPromiseResolutionNode node) { super(node); }
+  protected AbstractPromiseResolutionNode(final boolean eagWrap, final SourceSection source) {
+    super(eagWrap, source);
+    haltNode = insert(SuspendExecutionNodeGen.create(false, source, 2, null));
+    VM.insertInstrumentationWrapper(haltNode);
+  }
+
+  protected AbstractPromiseResolutionNode(final AbstractPromiseResolutionNode node) {
+    super(node);
+    haltNode = insert(SuspendExecutionNodeGen.create(false, node.getSourceSection(), 2, null));
+    VM.insertInstrumentationWrapper(haltNode);
+  }
 
   public abstract Object executeEvaluated(final VirtualFrame frame,
       final SResolver receiver, Object argument,
@@ -51,15 +63,19 @@ public abstract class AbstractPromiseResolutionNode extends TernaryExpressionNod
       final boolean isBreakpointOnPromiseResolution) {
     assert resolver.assertNotCompleted();
     SPromise promiseToBeResolved = resolver.getPromise();
-
+    boolean breakpointOnResolution = isBreakpointOnPromiseResolution;
     synchronized (promiseValue) {
       Resolution state = promiseValue.getResolutionStateUnsync();
       if (SPromise.isCompleted(state)) {
         resolvePromise(state, resolver, promiseValue.getValueUnsync(),
-           isBreakpointOnPromiseResolution);
+            breakpointOnResolution);
       } else {
         synchronized (promiseToBeResolved) { // TODO: is this really deadlock free?
-          promiseToBeResolved.setTriggerResolutionBreakpointOnUnresolvedChainedPromise(isBreakpointOnPromiseResolution);
+          // TODO: check this condition.
+          if (promiseValue.isTriggerPromiseResolutionBreakpoint() && !breakpointOnResolution) {
+            breakpointOnResolution = promiseValue.isTriggerPromiseResolutionBreakpoint();
+          }
+          promiseToBeResolved.setTriggerResolutionBreakpointOnUnresolvedChainedPromise(breakpointOnResolution);
           promiseValue.addChainedPromise(promiseToBeResolved);
         }
       }

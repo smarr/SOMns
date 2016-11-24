@@ -4,7 +4,8 @@ import {Breakpoint} from "./breakpoints";
 
 export function isRelevant(sc: TaggedSourceCoordinate) {
   // use ExpressionBreakpoint tag, since it is implied by ChannelRead,
-  // ChannelWrite, and EventualMessageSend
+  // ChannelWrite, EventualMessageSend, CreatePromisePair, WhenResolved,
+  // WhenResolvedOnError and OnError
   return -1 !== sc.tags.indexOf("ExpressionBreakpoint");
 }
 

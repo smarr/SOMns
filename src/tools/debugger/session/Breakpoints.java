@@ -82,11 +82,16 @@ public class Breakpoints {
   }
 
   public synchronized void addOrUpdate(final MessageSenderBreakpoint bId) {
-    saveTruffleBasedBreakpoints(bId, ExpressionBreakpoint.class);
+    saveTruffleBasedBreakpoints(bId, ExpressionBreakpoint.class, null);
   }
 
-  public synchronized void addOrUpdate(final AsyncMessageReceiverBreakpoint bId) {
-    Breakpoint bp = saveTruffleBasedBreakpoints(bId, RootTag.class);
+  public synchronized void addOrUpdate(final AsyncMessageBeforeExecutionBreakpoint bId) {
+    Breakpoint bp = saveTruffleBasedBreakpoints(bId, RootTag.class, null);
+    bp.setCondition(BreakWhenActivatedByAsyncMessage.INSTANCE);
+  }
+
+  public synchronized void addOrUpdate(final AsyncMessageAfterExecutionBreakpoint bId) {
+    Breakpoint bp = saveTruffleBasedBreakpoints(bId, RootTag.class, SteppingLocation.AFTER_STATEMENT);
     bp.setCondition(BreakWhenActivatedByAsyncMessage.INSTANCE);
   }
 
@@ -106,7 +111,7 @@ public class Breakpoints {
     saveBreakpoint(bId, channelOppositeBreakpoint);
   }
 
-  private Breakpoint saveTruffleBasedBreakpoints(final SectionBreakpoint bId, final Class<?> tag) {
+  private Breakpoint saveTruffleBasedBreakpoints(final SectionBreakpoint bId, final Class<?> tag, final SteppingLocation sl) {
     Breakpoint bp = truffleBreakpoints.get(bId);
     if (bp == null) {
       bp = Breakpoint.newBuilder(bId.getCoordinate().uri).
@@ -114,6 +119,7 @@ public class Breakpoints {
           columnIs(bId.getCoordinate().startColumn).
           sectionLength(bId.getCoordinate().charLength).
           tag(tag).
+          steppingLocation(sl).
           build();
       debuggerSession.install(bp);
       truffleBreakpoints.put(bId, bp);

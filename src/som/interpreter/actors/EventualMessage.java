@@ -27,20 +27,17 @@ public abstract class EventualMessage {
     * can reuse the stepping strategy implemented for message receiver breakpoints.
     */
   protected boolean triggerMessageReceiverBreakpoint;
-  protected final boolean triggerPromiseResolverBreakpoint;
-  protected final boolean triggerPromiseResolutionBreakpoint;
+  protected boolean triggerPromiseNullResolutionBreakpoint;
 
   protected EventualMessage(final long causalMessageId, final Object[] args,
       final SResolver resolver, final RootCallTarget onReceive,
-      final boolean triggerMessageReceiverBreakpoint, final boolean triggerPromiseResolverBreakpoint,
-      final boolean triggerPromiseResolutionBreakpoint) {
+      final boolean triggerMessageReceiverBreakpoint, final boolean triggerPromiseNullResolutionBreakpoint) {
     this.causalMessageId = causalMessageId;
     this.args     = args;
     this.resolver = resolver;
     this.onReceive = onReceive;
     this.triggerMessageReceiverBreakpoint = triggerMessageReceiverBreakpoint;
-    this.triggerPromiseResolverBreakpoint = triggerPromiseResolverBreakpoint;
-    this.triggerPromiseResolutionBreakpoint = triggerPromiseResolutionBreakpoint;
+    this.triggerPromiseNullResolutionBreakpoint = triggerPromiseNullResolutionBreakpoint;
     assert onReceive.getRootNode() instanceof ReceivedMessage || onReceive.getRootNode() instanceof ReceivedCallback;
   }
 
@@ -74,11 +71,8 @@ public abstract class EventualMessage {
 
     public DirectMessage(final long causalMessageId, final Actor target, final SSymbol selector,
         final Object[] arguments, final Actor sender, final SResolver resolver,
-        final RootCallTarget onReceive, final boolean triggerMessageReceiverBreakpoint,
-        final boolean triggerPromiseResolverBreakpoint,
-        final boolean triggerPromiseResolutionBreakpoint) {
-      super(causalMessageId, arguments, resolver, onReceive, triggerMessageReceiverBreakpoint,
-      triggerPromiseResolverBreakpoint, triggerPromiseResolutionBreakpoint);
+        final RootCallTarget onReceive, final boolean triggerMessageReceiverBreakpoint, final boolean triggerPromiseNullResolutionBreakpoint) {
+      super(causalMessageId, arguments, resolver, onReceive, triggerMessageReceiverBreakpoint, triggerPromiseNullResolutionBreakpoint);
       this.selector = selector;
       this.sender   = sender;
       this.target   = target;
@@ -152,10 +146,8 @@ public abstract class EventualMessage {
     protected final Actor originalSender; // initial owner of the arguments
 
     public PromiseMessage(final long causalMessageId, final Object[] arguments, final Actor originalSender,
-        final SResolver resolver, final RootCallTarget onReceive, final boolean triggerMessageReceiverBreakpoint,
-        final boolean triggerPromiseResolverBreakpoint, final boolean triggerPromiseResolutionBreakpoint) {
-      super(causalMessageId, arguments, resolver, onReceive, triggerMessageReceiverBreakpoint,
-          triggerPromiseResolverBreakpoint, triggerPromiseResolutionBreakpoint);
+        final SResolver resolver, final RootCallTarget onReceive, final boolean triggerMessageReceiverBreakpoint, final boolean triggerPromiseNullResolutionBreakpoint) {
+      super(causalMessageId, arguments, resolver, onReceive, triggerMessageReceiverBreakpoint, triggerPromiseNullResolutionBreakpoint);
       this.originalSender = originalSender;
     }
 
@@ -182,10 +174,8 @@ public abstract class EventualMessage {
 
     protected PromiseSendMessage(final long causalMessageId, final SSymbol selector,
         final Object[] arguments, final Actor originalSender,
-        final SResolver resolver, final RootCallTarget onReceive, final boolean triggerMessageReceiverBreakpoint,
-        final boolean triggerPromiseResolverBreakpoint, final boolean triggerPromiseResolutionBreakpoint) {
-      super(causalMessageId, arguments, originalSender, resolver, onReceive, triggerMessageReceiverBreakpoint,
-          triggerPromiseResolverBreakpoint, triggerPromiseResolutionBreakpoint);
+        final SResolver resolver, final RootCallTarget onReceive, final boolean triggerMessageReceiverBreakpoint, final boolean triggerPromiseNullResolutionBreakpoint) {
+      super(causalMessageId, arguments, originalSender, resolver, onReceive, triggerMessageReceiverBreakpoint, triggerPromiseNullResolutionBreakpoint);
       this.selector = selector;
       assert (args[0] instanceof SPromise);
       this.originalTarget = (SPromise) args[0];
@@ -241,9 +231,9 @@ public abstract class EventualMessage {
 
     public PromiseCallbackMessage(final long causalMessageId, final Actor owner, final SBlock callback,
         final SResolver resolver, final RootCallTarget onReceive, final boolean triggerMessageReceiverBreakpoint,
-        final boolean triggerPromiseResolverBreakpoint, final boolean triggerPromiseResolutionBreakpoint, final SPromise parent) {
+        final boolean triggerPromiseNullResolutionBreakpoint, final SPromise parent) {
       super(causalMessageId, new Object[] {callback, null}, owner, resolver, onReceive,
-          triggerMessageReceiverBreakpoint, triggerPromiseResolverBreakpoint, triggerPromiseResolutionBreakpoint);
+          triggerMessageReceiverBreakpoint, triggerPromiseNullResolutionBreakpoint);
       this.promise = parent;
     }
 

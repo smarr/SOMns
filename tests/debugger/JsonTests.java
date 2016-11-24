@@ -19,7 +19,7 @@ import tools.debugger.WebDebugger;
 import tools.debugger.message.InitialBreakpointsMessage;
 import tools.debugger.message.Message.IncommingMessage;
 import tools.debugger.message.UpdateBreakpoint;
-import tools.debugger.session.AsyncMessageReceiverBreakpoint;
+import tools.debugger.session.AsyncMessageBeforeExecutionBreakpoint;
 import tools.debugger.session.BreakpointInfo;
 import tools.debugger.session.LineBreakpoint;
 import tools.debugger.session.MessageReceiverBreakpoint;
@@ -108,21 +108,21 @@ public class JsonTests {
     assertEquals(MSG_SND_BP, result);
   }
 
-  private static final String ASYNC_MSG_RCV_BP = "{\"coord\":" + FULL_COORD + ",\"enabled\":true,\"type\":\"AsyncMessageReceiverBreakpoint\"}";
+  private static final String ASYNC_MSG_RCV_BP = "{\"coord\":" + FULL_COORD + ",\"enabled\":true,\"type\":\"AsyncMessageBeforeExecutionBreakpoint\"}";
 
   @Test
   public void asyncMessageBreakpointDeserialize() {
     BreakpointInfo bp = gson.fromJson(ASYNC_MSG_RCV_BP, BreakpointInfo.class);
-    assertThat(bp, new IsInstanceOf(AsyncMessageReceiverBreakpoint.class));
+    assertThat(bp, new IsInstanceOf(AsyncMessageBeforeExecutionBreakpoint.class));
 
-    AsyncMessageReceiverBreakpoint abp = (AsyncMessageReceiverBreakpoint) bp;
+    AsyncMessageBeforeExecutionBreakpoint abp = (AsyncMessageBeforeExecutionBreakpoint) bp;
     assertTrue(abp.isEnabled());
     assertFullCoord(abp.getCoordinate());
   }
 
   @Test
   public void asyncMessageRcvBreakpointSerialize() {
-    AsyncMessageReceiverBreakpoint bp = new AsyncMessageReceiverBreakpoint(true, FULL_COORD_OBJ);
+    AsyncMessageBeforeExecutionBreakpoint bp = new AsyncMessageBeforeExecutionBreakpoint(true, FULL_COORD_OBJ);
     String result = gson.toJson(bp, BreakpointInfo.class);
     assertEquals(ASYNC_MSG_RCV_BP, result);
   }
@@ -153,7 +153,7 @@ public class JsonTests {
         INITIAL_NON_EMPTY_BREAKPOINT_MSG, IncommingMessage.class);
     InitialBreakpointsMessage r = (InitialBreakpointsMessage) result;
     BreakpointInfo[] bps = r.getBreakpoints();
-    assertThat(bps[0], new IsInstanceOf(AsyncMessageReceiverBreakpoint.class));
+    assertThat(bps[0], new IsInstanceOf(AsyncMessageBeforeExecutionBreakpoint.class));
     assertThat(bps[1], new IsInstanceOf(MessageReceiverBreakpoint.class));
     assertThat(bps[2], new IsInstanceOf(MessageSenderBreakpoint.class));
     assertThat(bps[3], new IsInstanceOf(LineBreakpoint.class));

@@ -8,7 +8,17 @@ import som.interpreter.nodes.nary.UnaryExpressionNode;
 
 
 public abstract class SuspendExecutionNode extends UnaryExpressionNode {
-  SuspendExecutionNode(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+  private int skipFrames;
+
+  SuspendExecutionNode(final boolean eagWrap, final SourceSection source) {
+    super(eagWrap, source);
+    this.skipFrames = 0;
+  }
+
+  SuspendExecutionNode(final boolean eagWrap, final SourceSection source, final int skipFrames) {
+    super(eagWrap, source);
+    this.skipFrames = skipFrames;
+  }
 
   @Specialization
   public final Object doSAbstractObject(final Object receiver) {
@@ -21,5 +31,9 @@ public abstract class SuspendExecutionNode extends UnaryExpressionNode {
       return true;
     }
     return super.isTaggedWithIgnoringEagerness(tag);
+  }
+
+  public int getSkipFrames() {
+    return skipFrames;
   }
 }

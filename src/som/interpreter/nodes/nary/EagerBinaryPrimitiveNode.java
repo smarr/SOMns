@@ -38,7 +38,7 @@ public final class EagerBinaryPrimitiveNode extends EagerPrimitive {
 
   @Override
   protected boolean isTaggedWith(final Class<?> tag) {
-    assert !(primitive instanceof WrapperNode);
+    assert !(primitive instanceof WrapperNode) : "primitive can't be WrapperNodes to avoid double wrapping. It is: " + primitive.getClass().getSimpleName() + " and contains a " + ((WrapperNode) primitive).getDelegateNode().getClass().getSimpleName();
     return primitive.isTaggedWithIgnoringEagerness(tag);
   }
 

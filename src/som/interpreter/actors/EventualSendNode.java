@@ -36,7 +36,9 @@ import tools.concurrency.Tags.ExpressionBreakpoint;
 import tools.debugger.nodes.AbstractBreakpointNode;
 import tools.debugger.nodes.BreakpointNodeGen;
 import tools.debugger.nodes.DisabledBreakpointNode;
+import tools.debugger.session.BreakpointEnabling;
 import tools.debugger.session.Breakpoints;
+import tools.debugger.session.SectionBreakpoint;
 
 
 @Instrumentable(factory = EventualSendNodeWrapper.class)
@@ -190,9 +192,7 @@ public class EventualSendNode extends ExprWithTagsNode {
       DirectMessage msg = new DirectMessage(
           EventualMessage.getCurrentExecutingMessageId(), target, selector, args,
           owner, resolver, onReceive,
-          messageReceiverBreakpoint.executeCheckIsSetAndEnabled(),
-          promiseResolverBreakpoint.executeCheckIsSetAndEnabled(),
-          promiseResolutionBreakpoint.executeCheckIsSetAndEnabled());
+          messageReceiverBreakpoint.executeCheckIsSetAndEnabled(), promiseResolverBreakpoint.executeCheckIsSetAndEnabled());
       target.send(msg);
     }
 
@@ -203,9 +203,7 @@ public class EventualSendNode extends ExprWithTagsNode {
       PromiseSendMessage msg = new PromiseSendMessage(
           EventualMessage.getCurrentExecutingMessageId(), selector, args,
           rcvr.getOwner(), resolver, onReceive,
-          messageReceiverBreakpoint.executeCheckIsSetAndEnabled(),
-          promiseResolverBreakpoint.executeCheckIsSetAndEnabled(),
-          promiseResolutionBreakpoint.executeCheckIsSetAndEnabled());
+          messageReceiverBreakpoint.executeCheckIsSetAndEnabled(), promiseResolverBreakpoint.executeCheckIsSetAndEnabled());
       registerNode.register(rcvr, msg, rcvr.getOwner());
     }
 
@@ -222,7 +220,7 @@ public class EventualSendNode extends ExprWithTagsNode {
     public final SPromise toFarRefWithResultPromise(final Object[] args) {
       Actor owner = EventualMessage.getActorCurrentMessageIsExecutionOn();
 
-      SPromise  result   = SPromise.createPromise(owner);
+      SPromise  result   = SPromise.createPromise(owner, promiseResolverBreakpoint.executeCheckIsSetAndEnabled(), promiseResolutionBreakpoint.executeCheckIsSetAndEnabled(), false);
       SResolver resolver = SPromise.createResolver(result);
 
       sendDirectMessage(args, owner, resolver);
@@ -234,7 +232,7 @@ public class EventualSendNode extends ExprWithTagsNode {
     public final SPromise toPromiseWithResultPromise(final Object[] args,
         @Cached("createRegisterNode()") final RegisterWhenResolved registerNode) {
       SPromise rcvr = (SPromise) args[0];
-      SPromise  promise  = SPromise.createPromise(EventualMessage.getActorCurrentMessageIsExecutionOn());
+      SPromise  promise  = SPromise.createPromise(EventualMessage.getActorCurrentMessageIsExecutionOn(), promiseResolverBreakpoint.executeCheckIsSetAndEnabled(), promiseResolutionBreakpoint.executeCheckIsSetAndEnabled(), false);
       SResolver resolver = SPromise.createResolver(promise);
 
       sendPromiseMessage(args, rcvr, resolver, registerNode);
@@ -244,15 +242,14 @@ public class EventualSendNode extends ExprWithTagsNode {
     @Specialization(guards = {"isResultUsed()", "!isFarRefRcvr(args)", "!isPromiseRcvr(args)"})
     public final SPromise toNearRefWithResultPromise(final Object[] args) {
       Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
-      SPromise  result   = SPromise.createPromise(current);
+
+      SPromise  result   = SPromise.createPromise(current, promiseResolverBreakpoint.executeCheckIsSetAndEnabled(), promiseResolutionBreakpoint.executeCheckIsSetAndEnabled(), false);
       SResolver resolver = SPromise.createResolver(result);
 
       DirectMessage msg = new DirectMessage(EventualMessage.getCurrentExecutingMessageId(),
           current, selector, args, current,
           resolver, onReceive,
-          messageReceiverBreakpoint.executeCheckIsSetAndEnabled(),
-          promiseResolverBreakpoint.executeCheckIsSetAndEnabled(),
-          promiseResolutionBreakpoint.executeCheckIsSetAndEnabled());
+          messageReceiverBreakpoint.executeCheckIsSetAndEnabled(), promiseResolverBreakpoint.executeCheckIsSetAndEnabled());
       current.send(msg);
 
       return result;
@@ -281,9 +278,7 @@ public class EventualSendNode extends ExprWithTagsNode {
       DirectMessage msg = new DirectMessage(EventualMessage.getCurrentExecutingMessageId(),
           current, selector, args, current,
           null, onReceive,
-          messageReceiverBreakpoint.executeCheckIsSetAndEnabled(),
-          promiseResolverBreakpoint.executeCheckIsSetAndEnabled(),
-          promiseResolutionBreakpoint.executeCheckIsSetAndEnabled());
+          messageReceiverBreakpoint.executeCheckIsSetAndEnabled(), promiseResolverBreakpoint.executeCheckIsSetAndEnabled());
       current.send(msg);
       return Nil.nilObject;
     }
@@ -294,6 +289,17 @@ public class EventualSendNode extends ExprWithTagsNode {
         return true;
       }
       return super.isTaggedWith(tag);
+    }
+
+    public <T extends SectionBreakpoint> AbstractBreakpointNode createAbstractBreakpointNode(final SourceSection source, final BreakpointEnabling<T> bkp) {
+      AbstractBreakpointNode node;
+
+      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+        node = insert(BreakpointNodeGen.create(bkp));
+      } else {
+        node = insert(new DisabledBreakpointNode());
+      }
+      return node;
     }
   }
 }

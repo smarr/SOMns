@@ -30,6 +30,6 @@ export class Controller {
   public onTracingData(_data: DataView) {}
 
   public onToggleSendBreakpoint(_sectionId: string, _type: SectionBreakpointType) {}
-  public onToggleMethodAsyncRcvBreakpoint(_sectionId: string) {}
+  public onToggleMethodAsyncRcvBreakpoint(_sectionId: string, _type: SectionBreakpointType) {}
   public onTogglePromiseBreakpoint(_sectionId: string, _type: SectionBreakpointType) {}
 }

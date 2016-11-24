@@ -11,6 +11,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.VM;
 import som.compiler.AccessModifier;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
@@ -28,10 +29,21 @@ import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.Primitive;
 import som.vm.Primitives.Specializer;
 import som.vm.Symbols;
+import som.vm.VmSettings;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SSymbol;
+import tools.SourceCoordinate;
+import tools.SourceCoordinate.FullSourceCoordinate;
+import tools.concurrency.Tags.CreatePromisePair;
+import tools.concurrency.Tags.ExpressionBreakpoint;
+import tools.concurrency.Tags.OnError;
+import tools.concurrency.Tags.WhenResolved;
+import tools.concurrency.Tags.WhenResolvedOnError;
+import tools.debugger.nodes.AbstractBreakpointNode;
+import tools.debugger.nodes.DisabledBreakpointNode;
+import tools.debugger.session.Breakpoints;
 
 
 public final class PromisePrims {
@@ -52,6 +64,8 @@ public final class PromisePrims {
   @Primitive(primitive = "actorsCreatePromisePair:", selector = "createPromisePair",
              specializer = IsActorModule.class, noWrapper = true)
   public abstract static class CreatePromisePairPrim extends UnaryExpressionNode {
+    @Child protected AbstractBreakpointNode promiseResolverBreakpoint;
+    @Child protected AbstractBreakpointNode promiseResolutionBreakpoint;
 
     protected static final DirectCallNode create() {
       Dispatchable disp = SPromise.pairClass.getSOMClass().lookupMessage(
@@ -59,17 +73,36 @@ public final class PromisePrims {
       return Truffle.getRuntime().createDirectCallNode(((SInvokable) disp).getCallTarget());
     }
 
-    public CreatePromisePairPrim(final boolean eagerWrapper, final SourceSection source) { super(eagerWrapper, source); }
+    public CreatePromisePairPrim(final boolean eagerWrapper, final SourceSection source) {
+      super(eagerWrapper, source);
+      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+        Breakpoints breakpointCatalog = VM.getWebDebugger().getBreakpoints();
+        FullSourceCoordinate sourceCoord = SourceCoordinate.create(source);
+        this.promiseResolverBreakpoint = createBreakpointNode(source, breakpointCatalog.getPromiseResolverBreakpoint(sourceCoord));
+        this.promiseResolutionBreakpoint = createBreakpointNode(source, breakpointCatalog.getPromiseResolutionBreakpoint(sourceCoord));
+      } else {
+        this.promiseResolverBreakpoint   = insert(new DisabledBreakpointNode());
+        this.promiseResolutionBreakpoint = insert(new DisabledBreakpointNode());
+      }
+    }
 
     @Specialization
     public final SImmutableObject createPromisePair(final Object nil,
         @Cached("create()") final DirectCallNode factory) {
-      SPromise promise   = SPromise.createPromise(EventualMessage.getActorCurrentMessageIsExecutionOn());
+      SPromise promise   = SPromise.createPromise(EventualMessage.getActorCurrentMessageIsExecutionOn(), promiseResolverBreakpoint.executeCheckIsSetAndEnabled(), promiseResolutionBreakpoint.executeCheckIsSetAndEnabled(), true);
       SResolver resolver = SPromise.createResolver(promise);
       return (SImmutableObject) factory.call(new Object[] {SPromise.pairClass, promise, resolver});
     }
 
     private static final SSymbol withAndFactory = Symbols.symbolFor("with:and:");
+
+    @Override
+    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+      if (tag == CreatePromisePair.class || tag == ExpressionBreakpoint.class) {
+        return true;
+      }
+      return super.isTaggedWithIgnoringEagerness(tag);
+    }
   }
 
   // TODO: can we find another solution for megamorphics callers that
@@ -83,12 +116,25 @@ public final class PromisePrims {
 
   @GenerateNodeFactory
   @ImportStatic(PromisePrims.class)
-  @Primitive(primitive = "actorsWhen:resolved:",
+  @Primitive(primitive = "actorsWhen:resolved:", selector = "whenResolved:",
              receiverType = SPromise.class)
   public abstract static class WhenResolvedPrim extends BinaryComplexOperation {
     @Child protected RegisterWhenResolved registerNode = new RegisterWhenResolved();
+    @Child protected AbstractBreakpointNode promiseResolverBreakpoint;
+    @Child protected AbstractBreakpointNode promiseResolutionBreakpoint;
 
-    protected WhenResolvedPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+    protected WhenResolvedPrim(final boolean eagWrap, final SourceSection source) {
+      super(eagWrap, source);
+      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+        Breakpoints breakpointCatalog = VM.getWebDebugger().getBreakpoints();
+        FullSourceCoordinate sourceCoord = SourceCoordinate.create(source);
+        this.promiseResolverBreakpoint = createBreakpointNode(source, breakpointCatalog.getPromiseResolverBreakpoint(sourceCoord));
+        this.promiseResolutionBreakpoint = createBreakpointNode(source, breakpointCatalog.getPromiseResolutionBreakpoint(sourceCoord));
+      } else {
+        this.promiseResolverBreakpoint   = insert(new DisabledBreakpointNode());
+        this.promiseResolutionBreakpoint = insert(new DisabledBreakpointNode());
+      }
+    }
 
     @Specialization(guards = "blockMethod == callback.getMethod()", limit = "10")
     public final SPromise whenResolved(final SPromise promise,
@@ -103,31 +149,52 @@ public final class PromisePrims {
       return registerWhenResolved(promise, callback, createReceived(callback), registerNode);
     }
 
-    protected static final SPromise registerWhenResolved(final SPromise rcvr,
+    protected final SPromise registerWhenResolved(final SPromise rcvr,
         final SBlock block, final RootCallTarget blockCallTarget,
         final RegisterWhenResolved registerNode) {
       assert block.getMethod().getNumberOfArguments() == 2;
 
       Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
-      SPromise  promise  = SPromise.createPromise(current);
+      SPromise  promise  = SPromise.createPromise(current, promiseResolverBreakpoint.executeCheckIsSetAndEnabled(), promiseResolutionBreakpoint.executeCheckIsSetAndEnabled(), false);
       SResolver resolver = SPromise.createResolver(promise);
 
       PromiseCallbackMessage msg = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessageId(), rcvr.getOwner(),
-          block, resolver, blockCallTarget, false, false, false, promise);
+          block, resolver, blockCallTarget, false, false, promise);
       registerNode.register(rcvr, msg, current);
 
       return promise;
+    }
+
+    @Override
+    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+      if (tag == WhenResolved.class || tag == ExpressionBreakpoint.class) {
+        return true;
+      }
+      return super.isTaggedWithIgnoringEagerness(tag);
     }
   }
 
   // TODO: should I add a literal version of OnErrorPrim??
   @GenerateNodeFactory
   @ImportStatic(PromisePrims.class)
-  @Primitive(primitive = "actorsFor:onError:")
+  @Primitive(primitive = "actorsFor:onError:", selector = "onError:")
   public abstract static class OnErrorPrim extends BinaryComplexOperation {
     @Child protected RegisterOnError registerNode = new RegisterOnError();
+    @Child protected AbstractBreakpointNode promiseResolverBreakpoint;
+    @Child protected AbstractBreakpointNode promiseResolutionBreakpoint;
 
-    protected OnErrorPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+    protected OnErrorPrim(final boolean eagWrap, final SourceSection source) {
+      super(eagWrap, source);
+      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+        Breakpoints breakpointCatalog = VM.getWebDebugger().getBreakpoints();
+        FullSourceCoordinate sourceCoord = SourceCoordinate.create(source);
+        this.promiseResolverBreakpoint = createBreakpointNode(source, breakpointCatalog.getPromiseResolverBreakpoint(sourceCoord));
+        this.promiseResolutionBreakpoint = createBreakpointNode(source, breakpointCatalog.getPromiseResolutionBreakpoint(sourceCoord));
+      } else {
+        this.promiseResolverBreakpoint   = insert(new DisabledBreakpointNode());
+        this.promiseResolutionBreakpoint = insert(new DisabledBreakpointNode());
+      }
+    }
 
     @Specialization(guards = "blockMethod == callback.getMethod()", limit = "10")
     public final SPromise onError(final SPromise promise,
@@ -142,31 +209,52 @@ public final class PromisePrims {
       return registerOnError(promise, callback, createReceived(callback), registerNode);
     }
 
-    protected static final SPromise registerOnError(final SPromise rcvr,
+    protected final SPromise registerOnError(final SPromise rcvr,
         final SBlock block, final RootCallTarget blockCallTarget,
         final RegisterOnError registerNode) {
       assert block.getMethod().getNumberOfArguments() == 2;
 
       Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
-      SPromise  promise  = SPromise.createPromise(current);
+      SPromise  promise  = SPromise.createPromise(current, promiseResolverBreakpoint.executeCheckIsSetAndEnabled(), promiseResolutionBreakpoint.executeCheckIsSetAndEnabled(), false);
       SResolver resolver = SPromise.createResolver(promise);
 
       PromiseCallbackMessage msg = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessageId(), rcvr.getOwner(),
-          block, resolver, blockCallTarget, false, false, false, promise);
+          block, resolver, blockCallTarget, false, false, promise);
       registerNode.register(rcvr, msg, current);
 
       return promise;
+    }
+
+    @Override
+    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+      if (tag == OnError.class || tag == ExpressionBreakpoint.class) {
+        return true;
+      }
+      return super.isTaggedWithIgnoringEagerness(tag);
     }
   }
 
   @GenerateNodeFactory
   @ImportStatic(PromisePrims.class)
-  @Primitive(primitive = "actorsWhen:resolved:onError:")
+  @Primitive(primitive = "actorsWhen:resolved:onError:", selector = "whenResolved:onError:")
   public abstract static class WhenResolvedOnErrorPrim extends TernaryExpressionNode {
     @Child protected RegisterWhenResolved registerWhenResolved = new RegisterWhenResolved();
     @Child protected RegisterOnError registerOnError = new RegisterOnError();
+    @Child protected AbstractBreakpointNode promiseResolverBreakpoint;
+    @Child protected AbstractBreakpointNode promiseResolutionBreakpoint;
 
-    public WhenResolvedOnErrorPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+    public WhenResolvedOnErrorPrim(final boolean eagWrap, final SourceSection source) {
+      super(eagWrap, source);
+      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+        Breakpoints breakpointCatalog = VM.getWebDebugger().getBreakpoints();
+        FullSourceCoordinate sourceCoord = SourceCoordinate.create(source);
+        this.promiseResolverBreakpoint = createBreakpointNode(source, breakpointCatalog.getPromiseResolverBreakpoint(sourceCoord));
+        this.promiseResolutionBreakpoint = createBreakpointNode(source, breakpointCatalog.getPromiseResolutionBreakpoint(sourceCoord));
+      } else {
+        this.promiseResolverBreakpoint   = insert(new DisabledBreakpointNode());
+        this.promiseResolutionBreakpoint = insert(new DisabledBreakpointNode());
+      }
+    }
 
     @Specialization(guards = {"resolvedMethod == resolved.getMethod()", "errorMethod == error.getMethod()"})
     public final SPromise whenResolvedOnError(final SPromise promise,
@@ -186,7 +274,7 @@ public final class PromisePrims {
           createReceived(error), registerWhenResolved, registerOnError);
     }
 
-    protected static final SPromise registerWhenResolvedOrError(final SPromise rcvr,
+    protected final SPromise registerWhenResolvedOrError(final SPromise rcvr,
         final SBlock resolved, final SBlock error,
         final RootCallTarget resolverTarget, final RootCallTarget errorTarget,
         final RegisterWhenResolved registerWhenResolved,
@@ -195,17 +283,25 @@ public final class PromisePrims {
       assert error.getMethod().getNumberOfArguments()    == 2;
 
       Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
-      SPromise  promise  = SPromise.createPromise(current);
+      SPromise  promise  = SPromise.createPromise(current, promiseResolverBreakpoint.executeCheckIsSetAndEnabled(), promiseResolutionBreakpoint.executeCheckIsSetAndEnabled(), false);
       SResolver resolver = SPromise.createResolver(promise);
 
-      PromiseCallbackMessage onResolved = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessageId(), rcvr.getOwner(), resolved, resolver, resolverTarget, false, false, false, rcvr);
-      PromiseCallbackMessage onError    = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessageId(), rcvr.getOwner(), error,    resolver, errorTarget,    false, false, false, rcvr);
+      PromiseCallbackMessage onResolved = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessageId(), rcvr.getOwner(), resolved, resolver, resolverTarget, false, false, rcvr);
+      PromiseCallbackMessage onError    = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessageId(), rcvr.getOwner(), error,    resolver, errorTarget,    false, false, rcvr);
 
       synchronized (rcvr) {
         registerWhenResolved.register(rcvr, onResolved, current);
         registerOnError.register(rcvr, onError, current);
       }
       return promise;
+    }
+
+    @Override
+    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+      if (tag == WhenResolvedOnError.class || tag == ExpressionBreakpoint.class) {
+        return true;
+      }
+      return super.isTaggedWithIgnoringEagerness(tag);
     }
   }
 }

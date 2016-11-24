@@ -23,4 +23,24 @@ public abstract class Tags {
   public final class ExpressionBreakpoint extends Tags {
     private ExpressionBreakpoint() { }
   }
+
+  /** Marks the createPromisePair primitive. */
+  public final class CreatePromisePair extends Tags {
+    private CreatePromisePair() { }
+  }
+
+  /** Marks the whenResolved primitive. */
+  public final class WhenResolved extends Tags {
+    private WhenResolved() { }
+  }
+
+  /** Marks the whenResolvedOnError primitive. */
+  public final class WhenResolvedOnError extends Tags {
+    private WhenResolvedOnError() { }
+  }
+
+  /** Marks the onError primitive. */
+  public final class OnError extends Tags {
+    private OnError() { }
+  }
 }
