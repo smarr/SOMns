@@ -1,6 +1,6 @@
 Class Name	Source Section	Methods Executed
 AValue	LanguageFeatures.som pos=10853 len=73	0
-Actors	Actors.som pos=0 len=8598	1
+Actors	Actors.som pos=0 len=8572	1
 ArrayReadMixin	Kernel.som pos=14303 len=2151	0
 Array	Kernel.som pos=16460 len=2225	0
 Benchmark	Harness.som pos=1446 len=596	1
@@ -23,7 +23,7 @@ Entry	Collections.som pos=3982 len=279	0
 Exception	Kernel.som pos=27321 len=317	0
 Exceptions	LanguageFeatures.som pos=5588 len=656	0
 False	Kernel.som pos=4947 len=348	0
-FarReference	Actors.som pos=1591 len=827	0
+FarReference	Actors.som pos=1589 len=827	0
 Fibonacci	LanguageFeatures.som pos=1491 len=460	3
 FieldLoop	LanguageFeatures.som pos=2345 len=1407	0
 FieldWriteToEscapedObject	LanguageFeatures.som pos=12380 len=384	0
@@ -53,15 +53,15 @@ ObjWithOneMutableField	LanguageFeatures.som pos=12312 len=62	0
 ObjectMirror	Mirrors.som pos=3474 len=1030	2
 Object	Kernel.som pos=2915 len=155	0
 OuterConstLoop	LanguageFeatures.som pos=1957 len=384	0
-Pair	Actors.som pos=3572 len=301	0
+Pair	Actors.som pos=3590 len=301	0
 Pair	Kernel.som pos=20690 len=249	0
 Platform	Platform.som pos=0 len=1355	2
 PolyMorphicBlocks	LanguageFeatures.som pos=12770 len=920	0
-PromiseGroup	Actors.som pos=3877 len=1527	0
-Promise	Actors.som pos=2422 len=953	0
+PromiseGroup	Actors.som pos=3895 len=1511	0
+Promise	Actors.som pos=2420 len=933	0
 Random	Harness.som pos=2048 len=143	0
 Recurse	LanguageFeatures.som pos=6250 len=375	0
-Resolver	Actors.som pos=3379 len=188	0
+Resolver	Actors.som pos=3357 len=229	0
 ReturnEx	LanguageFeatures.som pos=5632 len=88	0
 Run	Harness.som pos=3877 len=2253	8
 Set	Collections.som pos=1286 len=2340	0

@@ -1,5 +1,5 @@
 Class Name	Source Section	Methods Executed
-Actors	Actors.som pos=0 len=8598	1
+Actors	Actors.som pos=0 len=8572	1
 ArrayReadMixin	Kernel.som pos=14303 len=2151	2
 Array	Kernel.som pos=16460 len=2225	1
 Benchmark	Harness.som pos=1446 len=596	1
@@ -19,7 +19,7 @@ EmptyCollectionException	Kernel.som pos=27796 len=156	0
 Entry	Collections.som pos=3982 len=279	0
 Exception	Kernel.som pos=27321 len=317	0
 False	Kernel.som pos=4947 len=348	0
-FarReference	Actors.som pos=1591 len=827	0
+FarReference	Actors.som pos=1589 len=827	0
 Harness	Harness.som pos=0 len=8052	5
 IdEntry	Collections.som pos=8707 len=218	0
 IdentityDictionary	Collections.som pos=8634 len=479	0
@@ -36,14 +36,14 @@ Nil	Kernel.som pos=5299 len=417	0
 NotAValue	Kernel.som pos=28384 len=487	0
 ObjectMirror	Mirrors.som pos=3474 len=1030	2
 Object	Kernel.som pos=2915 len=155	0
-Pair	Actors.som pos=3572 len=301	0
+Pair	Actors.som pos=3590 len=301	0
 Pair	Kernel.som pos=20690 len=249	0
 Platform	Platform.som pos=0 len=1355	2
-PromiseGroup	Actors.som pos=3877 len=1527	0
-Promise	Actors.som pos=2422 len=953	0
+PromiseGroup	Actors.som pos=3895 len=1511	0
+Promise	Actors.som pos=2420 len=933	0
 QuickSort	Sort.som pos=3049 len=959	0
 Random	Harness.som pos=2048 len=143	2
-Resolver	Actors.som pos=3379 len=188	0
+Resolver	Actors.som pos=3357 len=229	0
 Run	Harness.som pos=3877 len=2253	8
 Set	Collections.som pos=1286 len=2340	0
 SlotMirror	Mirrors.som pos=4510 len=33	0
