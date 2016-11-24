@@ -358,6 +358,99 @@ class ActorTests usingPlatform: platform testFramework: minitest = Value (
       assert: (bob <-: raiseException) smashedWith: Error.
     )
 *)
+
+    (* Test promise chaining *)
+    public testAsyncFirstResolvedThenChainedThenRegistered123 = (
+      | pp ppChained |
+      pp           := actors createPromisePair.
+      ppChained    := actors createPromisePair.
+
+      (* resolve 1 *)
+      pp resolver resolve: 11.
+      (* chain 2 *)
+      ppChained resolver resolve: pp promise.
+      (* register 3 *)
+      ^ ppChained promise whenResolved: [:v |
+        assert: v equals: 11 ]
+    )
+
+    public testAsyncFirstResolvedThenRegisteredThenChained132 = (
+      | pp ppChained resultProm |
+      pp           := actors createPromisePair.
+      ppChained    := actors createPromisePair.
+
+      (* resolve 1 *)
+      pp resolver resolve: 11.
+      (* register 3 *)
+      resultProm := (ppChained promise whenResolved: [:v |
+        assert: v equals: 11 ]).
+      (* chain 2 *)
+      ppChained resolver resolve: pp promise.
+
+      ^ resultProm
+    )
+
+    public testAsyncFirstChainedThenResolvedThenRegistered213 = (
+      | pp ppChained |
+      pp           := actors createPromisePair.
+      ppChained    := actors createPromisePair.
+
+      (* chain 2 *)
+      ppChained resolver resolve: pp promise.
+      (* resolve 1 *)
+      pp resolver resolve: 11.
+      (* register 3 *)
+      ^ ppChained promise whenResolved: [:v |
+        assert: v equals: 11 ]
+    )
+
+    public testAsyncFirstChainedThenRegisteredThenResolved231 = (
+      | pp ppChained resultProm |
+      pp           := actors createPromisePair.
+      ppChained    := actors createPromisePair.
+
+      (* chain 2 *)
+      ppChained resolver resolve: pp promise.
+      (* register 3 *)
+      resultProm := ppChained promise whenResolved: [:v |
+        assert: v equals: 11 ].
+      (* resolve 1 *)
+      pp resolver resolve: 11.
+
+      ^ resultProm
+    )
+
+    public testAsyncFirstRegisteredThenResolvedThenChained312 = (
+      | pp ppChained resultProm |
+      pp           := actors createPromisePair.
+      ppChained    := actors createPromisePair.
+
+      (* register 3 *)
+      resultProm := ppChained promise whenResolved: [:v |
+        assert: v equals: 11 ].
+      (* resolve 1 *)
+      pp resolver resolve: 11.
+      (* chain 2 *)
+      ppChained resolver resolve: pp promise.
+
+      ^ resultProm
+    )
+
+    public testAsyncFirstRegisteredThenChainedThenResolved321 = (
+      | pp ppChained resultProm |
+      pp           := actors createPromisePair.
+      ppChained    := actors createPromisePair.
+
+      (* register 3 *)
+      resultProm := ppChained promise whenResolved: [:v |
+        assert: v equals: 11 ].
+      (* chain 2 *)
+      ppChained resolver resolve: pp promise.
+      (* resolve 1 *)
+      pp resolver resolve: 11.
+
+      ^ resultProm
+    )
   ) : (
     TEST_CONTEXT = ()
   )
