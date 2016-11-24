@@ -1,5 +1,6 @@
 package som.interpreter.actors;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -11,6 +12,7 @@ import som.interpreter.actors.SPromise.SResolver;
 import som.interpreter.nodes.nary.QuaternaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.Primitive;
+import som.vm.NotYetImplementedException;
 
 
 @GenerateNodeFactory
@@ -51,8 +53,19 @@ public abstract class ResolvePromiseNode extends QuaternaryExpressionNode {
       final boolean isBreakpointOnPromiseResolver, final boolean isBreakpointOnPromiseResolution) {
     assert resolver.assertNotCompleted();
     SPromise promise = resolver.getPromise();
-    synchronized (promise) { // TODO: is this really deadlock free?
-      result.addChainedPromise(promise);
+
+    synchronized (result) {
+      if (result.isResolvedUnsync()) {
+        normalResolution(frame, resolver, result.getValueUnsync(),
+            isBreakpointOnPromiseResolver, isBreakpointOnPromiseResolution);
+      } else if (result.isErroredUnsync()) {
+        CompilerDirectives.transferToInterpreter();
+        throw new NotYetImplementedException();
+      } else {
+        synchronized (promise) { // TODO: is this really deadlock free?
+          result.addChainedPromise(promise);
+        }
+      }
     }
 
     if (isBreakpointOnPromiseResolver) {
