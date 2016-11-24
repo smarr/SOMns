@@ -4,9 +4,9 @@
 import {Debugger}     from './debugger';
 import {SourceMessage, SuspendEventMessage, MessageHistoryMessage,
   SectionBreakpointType} from './messages';
-import {LineBreakpoint, MessageBreakpoint, AsyncMethodRcvBreakpoint,
+import {LineBreakpoint, MessageBreakpoint, AsyncMethodRcvBreakpoint, PromiseBreakpoint,
   createLineBreakpoint, createMsgBreakpoint,
-  createAsyncMethodRcvBreakpoint} from './breakpoints';
+  createAsyncMethodRcvBreakpoint, createPromiseBreakpoint} from './breakpoints';
 import {dbgLog}       from './source';
 import {displayMessageHistory, resetLinks} from './visualizations';
 import {View}         from './view';
@@ -68,11 +68,14 @@ export class Controller {
             this.view.updateLineBreakpoint(<LineBreakpoint> bp);
             break;
           case "MessageSenderBreakpoint":
-          case "MessageReceiveBreakpoint":
+          case "MessageReceiverBreakpoint":
             this.view.updateSendBreakpoint(<MessageBreakpoint> bp);
             break;
-          case "AsyncMessageReceiveBreakpoint":
+          case "AsyncMessageReceiverBreakpoint":
             this.view.updateAsyncMethodRcvBreakpoint(<AsyncMethodRcvBreakpoint> bp);
+            break;
+          case "PromiseResolverBreakpoint" || "PromiseResolutionBreakpoint":
+            this.view.updatePromiseBreakpoint(<PromiseBreakpoint> bp);
             break;
           default:
             console.error("Unsupported breakpoint type: " + JSON.stringify(bp.data));
@@ -120,7 +123,7 @@ export class Controller {
   }
 
   onToggleSendBreakpoint(sectionId: string, type: SectionBreakpointType) {
-    dbgLog("--send-op breakpoint: " + type);
+    dbgLog("send-op breakpoint: " + type);
 
     let id = sectionId + ":" + type,
       sourceSection = this.dbg.getSection(sectionId),
@@ -139,6 +142,17 @@ export class Controller {
         return createAsyncMethodRcvBreakpoint(source, sourceSection, sectionId); });
 
     this.view.updateAsyncMethodRcvBreakpoint(<AsyncMethodRcvBreakpoint> breakpoint);
+  }
+
+  onTogglePromiseBreakpoint(sectionId: string, type: SectionBreakpointType) {
+    dbgLog("promise breakpoint: " + type);
+
+     let id = sectionId + ":" + type,
+      sourceSection = this.dbg.getSection(sectionId),
+      breakpoint    = this.toggleBreakpoint(id, function (source) {
+        return createPromiseBreakpoint(source, sourceSection, sectionId, type); });
+
+    this.view.updatePromiseBreakpoint(<PromiseBreakpoint> breakpoint);
   }
 
   resumeExecution() {

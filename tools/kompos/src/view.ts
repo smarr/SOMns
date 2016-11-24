@@ -5,7 +5,7 @@ import {Controller} from './controller';
 import {Source, Method, SuspendEventMessage, IdMap, Frame, SourceCoordinate,
   TaggedSourceCoordinate, getSectionId} from './messages';
 import {Breakpoint, AsyncMethodRcvBreakpoint, MessageBreakpoint,
-  LineBreakpoint} from './breakpoints';
+  LineBreakpoint, PromiseBreakpoint} from './breakpoints';
 
 declare var ctrl: Controller;
 
@@ -267,7 +267,7 @@ function enableEventualSendClicks(fileNode) {
   sendOperator.attr({
     "data-toggle"    : "popover",
     "data-trigger"   : "click hover",
-    "title"          : "Message Breakpoint",
+    "title"          : "Breakpoints",
     "data-html"      : "true",
     "data-placement" : "auto top"
   });
@@ -280,14 +280,24 @@ function enableEventualSendClicks(fileNode) {
   });
   sendOperator.popover();
 
-  $(document).on("click", ".bp-rcv", function (e) {
+  $(document).on("click", ".bp-rcv-msg", function (e) {
     e.stopImmediatePropagation();
-    ctrl.onToggleSendBreakpoint(e.currentTarget.attributes["data-ss-id"].value, "MessageReceiveBreakpoint");
+    ctrl.onToggleSendBreakpoint(e.currentTarget.attributes["data-ss-id"].value, "MessageReceiverBreakpoint");
   });
 
-  $(document).on("click", ".bp-send", function (e) {
+  $(document).on("click", ".bp-send-msg", function (e) {
     e.stopImmediatePropagation();
     ctrl.onToggleSendBreakpoint(e.currentTarget.attributes["data-ss-id"].value, "MessageSenderBreakpoint");
+  });
+
+  $(document).on("click", ".bp-rcv-prom", function (e) {
+    e.stopImmediatePropagation();
+    ctrl.onTogglePromiseBreakpoint(e.currentTarget.attributes["data-ss-id"].value, "PromiseResolutionBreakpoint");
+  });
+
+  $(document).on("click", ".bp-send-prom", function (e) {
+    e.stopImmediatePropagation();
+    ctrl.onTogglePromiseBreakpoint(e.currentTarget.attributes["data-ss-id"].value, "PromiseResolverBreakpoint");
   });
 }
 
@@ -533,6 +543,11 @@ export class View {
       this.updateBreakpoint(bp, $(elem), "send-breakpoint-active");
       i += 1;
     }
+  }
+
+  updatePromiseBreakpoint(bp: PromiseBreakpoint) {
+    var bpSpan = document.getElementById(bp.sectionId);
+    this.updateBreakpoint(bp, $(bpSpan), "promise-breakpoint-active");
   }
 
   lazyFindDebuggerButtons() {

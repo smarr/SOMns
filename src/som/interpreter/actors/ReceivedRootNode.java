@@ -1,5 +1,6 @@
 package som.interpreter.actors;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -20,33 +21,46 @@ public abstract class ReceivedRootNode extends RootNode {
     assert sourceSection != null;
   }
 
-  protected final void resolvePromise(final VirtualFrame frame, final SResolver resolver, final Object result) {
+  protected final void resolvePromise(final VirtualFrame frame, final SResolver resolver, final Object result,
+      final boolean isBreakpointOnPromiseResolver, final boolean isBreakpointOnPromiseResolution) {
+    // lazy initialization of resolution node
     if (resolve == null) {
+      CompilerDirectives.transferToInterpreterAndInvalidate();
       if (resolver == null) {
         this.resolve = insert(new NullResolver(getSourceSection()));
       } else {
-        this.resolve = insert(ResolvePromiseNodeFactory.create(false, getSourceSection(), null, null));
+        this.resolve = insert(ResolvePromiseNodeFactory.create(false, getSourceSection(), null, null, null, null));
       }
     }
 
-    resolve.executeEvaluated(frame, resolver, result);
+    // resolve promise
+    resolve.executeEvaluated(frame, resolver, result, isBreakpointOnPromiseResolver, isBreakpointOnPromiseResolution);
   }
 
+  /**
+   * Promise resolver for the case that the actual promise has been optimized out.
+   */
   public final class NullResolver extends ResolvePromiseNode {
-
     public NullResolver(final SourceSection source) {
       super(false, source);
     }
 
     @Override
-    public Object executeEvaluated(final VirtualFrame frame, final SResolver receiver, final Object argument) {
+    public Object executeEvaluated(final VirtualFrame frame, final SResolver receiver, final Object argument,
+        final boolean isBreakpointOnPromiseResolver, final boolean isBreakpointOnPromiseResolution) {
       assert receiver == null;
+      if (isBreakpointOnPromiseResolver) {
+        haltNode.executeEvaluated(frame, argument);
+      }
+      /* TODO: add a tag to the send node to disable or remove the button
+       * if (isBreakpointOnResolutionAtRcvr) {} */
       return null;
     }
 
     @Override
     public Object executeEvaluated(final VirtualFrame frame, final Object receiver,
-        final Object argument) {
+        final Object argument, final Object isBreakpointOnPromiseResolver,
+        final Object isBreakpointOnPromiseResolution) {
       return null;
     }
 

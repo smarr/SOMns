@@ -32,7 +32,7 @@ public class ReceivedMessage extends ReceivedRootNode {
 
     Object result = onReceive.doPreEvaluated(frame, msg.args);
 
-    resolvePromise(frame, msg.resolver, result);
+    resolvePromise(frame, msg.resolver, result, msg.triggerPromiseResolverBreakpoint, msg.triggerPromiseResolutionBreakpoint);
     return null;
   }
 
@@ -74,7 +74,7 @@ public class ReceivedMessage extends ReceivedRootNode {
 
       Object result = onReceive.call(frame, msg.args);
 
-      resolvePromise(frame, msg.resolver, result);
+      resolvePromise(frame, msg.resolver, result, msg.triggerPromiseResolverBreakpoint, msg.triggerPromiseResolutionBreakpoint);
       return null;
     }
   }

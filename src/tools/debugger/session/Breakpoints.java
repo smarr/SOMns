@@ -27,13 +27,26 @@ public class Breakpoints {
   private final Map<BreakpointInfo, Breakpoint> truffleBreakpoints;
 
   /**
-   * MessageReceiveBreakpoints, manually managed by us (instead of Truffle).
+   * MessageReceiverBreakpoints, manually managed by us (instead of Truffle).
    */
-  private final Map<FullSourceCoordinate, BreakpointEnabling<MessageReceiveBreakpoint>> receiverBreakpoints;
+  private final Map<FullSourceCoordinate, BreakpointEnabling<MessageReceiverBreakpoint>> receiverBreakpoints;
+
+
+  /**
+   * PromiseResolverBreakpoint, manually managed by us (instead of Truffle).
+   */
+  private final Map<FullSourceCoordinate, BreakpointEnabling<PromiseResolverBreakpoint>> promiseResolverBreakpoints;
+
+  /**
+   * PromiseResolutionBreakpoint, manually managed by us (instead of Truffle).
+   */
+  private final Map<FullSourceCoordinate, BreakpointEnabling<PromiseResolutionBreakpoint>> promiseResolutionBreakpoints;
 
   public Breakpoints(final Debugger debugger, final WebDebugger webDebugger) {
     this.truffleBreakpoints = new HashMap<>();
     this.receiverBreakpoints = new HashMap<>();
+    this.promiseResolverBreakpoints = new HashMap<>();
+    this.promiseResolutionBreakpoints = new HashMap<>();
     this.debuggerSession = debugger.startSession(webDebugger);
   }
 
@@ -45,9 +58,8 @@ public class Breakpoints {
     debuggerSession.prepareSteppingUntilNextRootNode();
   }
 
-  public Breakpoint addOrUpdate(final LineBreakpoint bId) {
+  public synchronized void addOrUpdate(final LineBreakpoint bId) {
     Breakpoint bp = truffleBreakpoints.get(bId);
-
     if (bp == null) {
       WebDebugger.log("LineBreakpoint: " + bId);
       bp = Breakpoint.newBuilder(bId.getURI()).
@@ -57,10 +69,30 @@ public class Breakpoints {
       truffleBreakpoints.put(bId, bp);
     }
     bp.setEnabled(bId.isEnabled());
-    return bp;
   }
 
-  public Breakpoint addOrUpdate(final MessageSenderBreakpoint bId) {
+  public synchronized void addOrUpdate(final MessageSenderBreakpoint bId) {
+    saveTruffleBasedBreakpoints(bId);
+  }
+
+  public synchronized void addOrUpdate(final AsyncMessageReceiverBreakpoint bId) {
+    Breakpoint bp = saveTruffleBasedBreakpoints(bId);
+    bp.setCondition(BreakWhenActivatedByAsyncMessage.INSTANCE);
+  }
+
+  public synchronized void addOrUpdate(final MessageReceiverBreakpoint bId) {
+    saveBreakpoint(bId, receiverBreakpoints);
+  }
+
+  public synchronized void addOrUpdate(final PromiseResolverBreakpoint bId) {
+    saveBreakpoint(bId, promiseResolverBreakpoints);
+  }
+
+  public synchronized void addOrUpdate(final PromiseResolutionBreakpoint bId) {
+    saveBreakpoint(bId, promiseResolutionBreakpoints);
+  }
+
+  private Breakpoint saveTruffleBasedBreakpoints(final SectionBreakpoint bId) {
     Breakpoint bp = truffleBreakpoints.get(bId);
     if (bp == null) {
       WebDebugger.log("SetSectionBreakpoint: " + bId);
@@ -76,30 +108,13 @@ public class Breakpoints {
     return bp;
   }
 
-  public Breakpoint addOrUpdate(final AsyncMessageReceiveBreakpoint bId) {
-    Breakpoint bp = truffleBreakpoints.get(bId);
-
-    if (bp == null) {
-      WebDebugger.log("RootBreakpoint: " + bId);
-      bp = Breakpoint.newBuilder(bId.getCoordinate().uri).
-          lineIs(bId.getCoordinate().startLine).
-          columnIs(bId.getCoordinate().startColumn).
-          sectionLength(bId.getCoordinate().charLength).
-          build();
-      bp.setCondition(BreakWhenActivatedByAsyncMessage.INSTANCE);
-      debuggerSession.install(bp);
-      truffleBreakpoints.put(bId, bp);
-    }
-    bp.setEnabled(bId.isEnabled());
-    return bp;
-  }
-
-  public synchronized void addOrUpdate(final MessageReceiveBreakpoint bId) {
+  private <T extends SectionBreakpoint> void saveBreakpoint(final T bId,
+      final Map<FullSourceCoordinate, BreakpointEnabling<T>> breakpoints) {
     FullSourceCoordinate coord = bId.getCoordinate();
-    BreakpointEnabling<MessageReceiveBreakpoint> existingBP = receiverBreakpoints.get(coord);
+    BreakpointEnabling<T> existingBP = breakpoints.get(coord);
     if (existingBP == null) {
-      existingBP = new BreakpointEnabling<MessageReceiveBreakpoint>(bId);
-      receiverBreakpoints.put(coord, existingBP);
+      existingBP = new BreakpointEnabling<T>(bId);
+      breakpoints.put(coord, existingBP);
     } else {
       existingBP.setEnabled(bId.isEnabled());
     }
@@ -117,9 +132,22 @@ public class Breakpoints {
     }
   }
 
-  public synchronized BreakpointEnabling<MessageReceiveBreakpoint> getReceiverBreakpoint(
+ public synchronized BreakpointEnabling<MessageReceiverBreakpoint> getReceiverBreakpoint(
       final FullSourceCoordinate section) {
     return receiverBreakpoints.computeIfAbsent(section,
-        ss -> new BreakpointEnabling<>(new MessageReceiveBreakpoint(false, section)));
+        ss -> new BreakpointEnabling<>(new MessageReceiverBreakpoint(false, section)));
   }
+
+  public synchronized BreakpointEnabling<PromiseResolverBreakpoint> getPromiseResolverBreakpoint(
+      final FullSourceCoordinate section) {
+    return promiseResolverBreakpoints.computeIfAbsent(section,
+        ss -> new BreakpointEnabling<>(new PromiseResolverBreakpoint(false, section)));
+  }
+
+  public synchronized BreakpointEnabling<PromiseResolutionBreakpoint> getPromiseResolutionBreakpoint(
+      final FullSourceCoordinate section) {
+    return promiseResolutionBreakpoints.computeIfAbsent(section,
+        ss -> new BreakpointEnabling<>(new PromiseResolutionBreakpoint(false, section)));
+  }
+
 }

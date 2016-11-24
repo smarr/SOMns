@@ -350,7 +350,7 @@ describe('Basic Protocol', function() {
 
     before('Start SOMns and Connect', () => {
       const breakpoint: SectionBreakpointData = {
-        type: "AsyncMessageReceiveBreakpoint",
+        type: "AsyncMessageReceiverBreakpoint",
         enabled: true,
         coord: {
           uri:         pingPongUri,
@@ -389,7 +389,7 @@ describe('Basic Protocol', function() {
 
     before('Start SOMns and Connect', () => {
       const breakpoint: SectionBreakpointData = {
-        type: "MessageReceiveBreakpoint",
+        type: "MessageReceiverBreakpoint",
         enabled: true,
         coord: {
           uri:         pingPongUri,

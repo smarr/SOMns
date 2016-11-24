@@ -10,15 +10,15 @@ import tools.debugger.FrontendConnector;
  *
  * <p>The method is identified by the source section info of the breakpoint.
  */
-public class AsyncMessageReceiveBreakpoint extends SectionBreakpoint {
-  public AsyncMessageReceiveBreakpoint(final boolean enabled, final FullSourceCoordinate coord) {
+public class AsyncMessageReceiverBreakpoint extends SectionBreakpoint {
+  public AsyncMessageReceiverBreakpoint(final boolean enabled, final FullSourceCoordinate coord) {
     super(enabled, coord);
   }
 
   /**
    * Note: Meant for use by serialization.
    */
-  protected AsyncMessageReceiveBreakpoint() {
+  protected AsyncMessageReceiverBreakpoint() {
     super();
   }
 

@@ -19,7 +19,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/com.oracle.truffle.api.profiles"/>
 	<classpathentry kind="src" path="/com.oracle.truffle.tools"/>
 	<classpathentry kind="src" path="/com.oracle.truffle.tools.debug.shell"/>
-	<classpathentry kind="src" path="/CoverallsTruffle"/>
 	<classpathentry kind="lib" path="libs/somns-deps-dev.jar"/>
 	<classpathentry kind="lib" path="libs/somns-deps.jar"/>
 	<classpathentry kind="output" path="build/classes"/>

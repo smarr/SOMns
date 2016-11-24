@@ -19,7 +19,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 *)
 class Actors usingVmMirror: vmMirror usingKernel: kernel = Value (
-| private vmMirror  = vmMirror. 
+| private vmMirror  = vmMirror.
   private Exception = kernel Exception.
   private Vector    = kernel Vector.
 |
@@ -28,7 +28,7 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel = Value (
   vmMirror actorsFarReferenceClass: FarReference.
   vmMirror actorsPromiseClass:  Promise.
   vmMirror actorsPairClass:     Pair.
-  vmMirror actorsResolverClass: Resolver. 
+  vmMirror actorsResolverClass: Resolver.
   vmMirror actorsModule: self.
 )(
   public class FarReference = Value (
@@ -61,33 +61,33 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel = Value (
   public class Promise = Object ()(
     (* all whenResolved blocks are executed. *)
     public whenResolved: aBlock = ( ^ vmMirror actorsWhen: self resolved: aBlock )
-    
+
     (* all ensure blocks are executed. *)
     public ensure: aBlock       = ( whenResolved: aBlock. onError: aBlock. )
-    
+
     (* all onError blocks are executed. *)
     public onError: errorBlock  = ( ^ vmMirror actorsFor: self onError: errorBlock )
-    
+
     public whenResolved: aBlock onError: errorBlock = (
       ^ vmMirror actorsWhen: self resolved: aBlock onError: errorBlock
     )
-    
+
     (* similar to exception handlers, only the first matching on:do: is executed.
        registration order determines search order.
        This seems to be also what the Bluebird JS lib is doing. *)
     public on: exception do: errorBlock = (
       vmMirror actorsFor: self on: exception do: errorBlock
     )
-    
+
     public , other = (
       ^ (PromiseGroup for: self), other.
     )
   )
 
   public class Resolver = Value ()( (* Object or Value? *)
-    public resolve: value = ( vmMirror actorsResolve: self with: value )
+    public resolve: value = ( vmMirror actorsResolve: self with: value isBPResolver: false isBPResolution: false)
     public error:   value = ( self notYetImplemented )
-  ) 
+  )
 
   class Pair with: promise and: resolver = (
     (* A promise Pair is useful for explicitly creating dependencies between
@@ -120,14 +120,14 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel = Value (
     public on: exception do: errorBlock = (
       ^ all on: exception do: errorBlock
     )
-    
+
     all = (
       (lazyAll == nil) ifTrue: [
         | promisePair counter results |
         counter := 0.
         promisePair := createPromisePair.
         results := Vector new.
-        
+
         do: [ :p |
           counter := counter + 1.
           p whenResolved: [:r |
@@ -141,7 +141,7 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel = Value (
       ].
       ^ lazyAll
     )
-    
+
     do: block = (
       | it |
       it := self.
@@ -165,7 +165,7 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel = Value (
   )
 
   (* Can't be part of kernel, don't have promises in the kernel... *)
-  private async: collection do: aBlock next: i prevPromise: prev 
+  private async: collection do: aBlock next: i prevPromise: prev
       completionResolver: resolver = (
     prev whenResolved: [:res |
       i <= collection size
@@ -176,7 +176,7 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel = Value (
         ifFalse: [
           resolver resolve: collection ] ]
   )
-  
+
   (* Iteration is done sequential but asynchronous. *)
   public async: collection do: aBlockReturningAPromise = (
     | promisePair |
@@ -189,12 +189,12 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel = Value (
       async:                collection
         do:                 aBlockReturningAPromise
         next:               2
-        prevPromise:        first 
+        prevPromise:        first
         completionResolver: promisePair resolver.
     ] ifFalse: [
       promisePair resolve: collection.
     ].
-    
+
     ^ promisePair promise.
   )
 
@@ -218,13 +218,13 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel = Value (
   public async: intStart to: intEnd do: aBlockReturningAPromise = (
     | promisePair |
     promisePair := createPromisePair.
-    
+
     intStart <= intEnd ifTrue: [
       | first |
       first := aBlockReturningAPromise value: intStart.
-      
+
       async: intStart + 1 to: intEnd
-         do: aBlockReturningAPromise 
+         do: aBlockReturningAPromise
          prevPromise: first
          completionResolver: promisePair resolver.
     ] ifFalse: [
@@ -232,7 +232,7 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel = Value (
     ].
     ^ promisePair promise
   )
-  
+
   private async: conditionBlock whileTrue: bodyBlockReturningAPromise prevPromise: prev completionResolver: resolver = (
     prev whenResolved: [:res |
       conditionBlock value ifTrue: [
@@ -244,16 +244,16 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel = Value (
       ]
     ]
   )
-  
+
   public async: conditionBlock whileTrue: bodyBlockReturningAPromise = (
     | promisePair |
     promisePair := createPromisePair.
-    
+
     conditionBlock value ifTrue: [
       | prevPromise |
       prevPromise := bodyBlockReturningAPromise value.
       async: conditionBlock
-        whileTrue: bodyBlockReturningAPromise 
+        whileTrue: bodyBlockReturningAPromise
         prevPromise: prevPromise
         completionResolver: promisePair resolver
     ] ifFalse: [
