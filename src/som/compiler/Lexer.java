@@ -293,6 +293,7 @@ public final class Lexer {
         if (fillBuffer() == -1) {
           return;
         }
+        state.text.append('\n');
       }
     }
 

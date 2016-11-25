@@ -131,6 +131,14 @@ class StringTests usingPlatform: platform testFramework: minitest = (
 1234567890
 1234567890'
     )
+
+    public testMultLineStringPreserveNewlines = (
+      | str |
+      str := '123
+567'.
+      assert: '\n' equals: (str charAt: 4).
+      assert: 7 equals: str length.
+    )
   
     public testEscapeSequences = (
       (* Tests for escape sequences, not all of them are reliable represented
