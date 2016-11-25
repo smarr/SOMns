@@ -78,6 +78,7 @@ import com.oracle.truffle.api.source.SourceSection;
 import som.VM;
 import som.VmSettings;
 import som.compiler.Lexer.Peek;
+import som.compiler.MethodBuilder.MethodDefinitionError;
 import som.compiler.MixinBuilder.MixinDefinitionError;
 import som.compiler.Variable.Local;
 import som.interpreter.SNodeFactory;
@@ -161,9 +162,8 @@ public class Parser {
     return "Parser(" + source.getName() + ", " + this.getCoordinate().toString() + ")";
   }
 
-  public static class ParseError extends Exception {
+  public static class ParseError extends ProgramDefinitionError {
     private static final long serialVersionUID = 425390202979033628L;
-    private final String message;
     private final SourceCoordinate sourceCoordinate;
     private final String text;
     private final String rawBuffer;
@@ -172,7 +172,7 @@ public class Parser {
     private final Symbol found;
 
     ParseError(final String message, final Symbol expected, final Parser parser) {
-      this.message = message;
+      super(message);
       this.sourceCoordinate = parser.getCoordinate();
       this.text             = parser.text;
       this.rawBuffer        = parser.lexer.getRawBuffer();
@@ -191,7 +191,7 @@ public class Parser {
 
     @Override
     public String getMessage() {
-      String msg = message;
+      String msg = super.getMessage();
 
       String foundStr;
       if (Parser.printableSymbol(found)) {
@@ -209,7 +209,7 @@ public class Parser {
 
     @Override
     public String toString() {
-      String msg = "%(file)s:%(line)d:%(column)d: error: " + message;
+      String msg = "%(file)s:%(line)d:%(column)d: error: " + super.getMessage();
       String foundStr;
       if (Parser.printableSymbol(found)) {
         foundStr = found + " (" + text + ")";
@@ -279,7 +279,7 @@ public class Parser {
     return lexer.getStartCoordinate();
   }
 
-  public MixinBuilder moduleDeclaration() throws ParseError, MixinDefinitionError {
+  public MixinBuilder moduleDeclaration() throws ProgramDefinitionError {
     comment();
     return classDeclaration(null, AccessModifier.PUBLIC);
   }
@@ -291,7 +291,7 @@ public class Parser {
   }
 
   private MixinBuilder classDeclaration(final MixinBuilder outerBuilder,
-      final AccessModifier accessModifier) throws ParseError, MixinDefinitionError {
+      final AccessModifier accessModifier) throws ProgramDefinitionError {
     expectIdentifier("class", "Found unexpected token %(found)s. " +
       "Tried parsing a class declaration and expected 'class' instead.",
       KeywordTag.class);
@@ -328,7 +328,7 @@ public class Parser {
   }
 
   private void inheritanceListAndOrBody(final MixinBuilder mxnBuilder)
-      throws ParseError, MixinDefinitionError {
+      throws ProgramDefinitionError {
     if (sym == NewTerm) {
       defaultSuperclassAndBody(mxnBuilder);
     } else {
@@ -337,7 +337,7 @@ public class Parser {
   }
 
   private void defaultSuperclassAndBody(final MixinBuilder mxnBuilder)
-      throws ParseError, MixinDefinitionError {
+      throws ProgramDefinitionError {
     SourceSection source = getEmptySource();
     MethodBuilder def = mxnBuilder.getClassInstantiationMethodBuilder();
     ExpressionNode selfRead = def.getSelfRead(source);
@@ -352,7 +352,7 @@ public class Parser {
   }
 
   private void explicitInheritanceListAndOrBody(final MixinBuilder mxnBuilder)
-      throws ParseError, MixinDefinitionError {
+      throws ProgramDefinitionError {
     SourceCoordinate superAndMixinCoord = getCoordinate();
     inheritanceClause(mxnBuilder);
 
@@ -377,7 +377,7 @@ public class Parser {
   }
 
   private void mixinApplication(final MixinBuilder mxnBuilder, final int mixinId)
-      throws ParseError, MixinDefinitionError {
+      throws ProgramDefinitionError {
     expect(MixinOperator, KeywordTag.class);
     SourceCoordinate coord = getCoordinate();
 
@@ -407,7 +407,7 @@ public class Parser {
   }
 
   private void inheritanceClause(final MixinBuilder mxnBuilder)
-      throws ParseError, MixinDefinitionError {
+      throws ProgramDefinitionError {
     ExpressionNode superClassResolution = inheritancePrefixAndSuperclass(mxnBuilder);
     mxnBuilder.setSuperClassResolution(superClassResolution);
 
@@ -463,8 +463,7 @@ public class Parser {
     return unaryMessage(self, false, null);
   }
 
-  private void classBody(final MixinBuilder mxnBuilder)
-      throws ParseError, MixinDefinitionError {
+  private void classBody(final MixinBuilder mxnBuilder) throws ProgramDefinitionError {
     classHeader(mxnBuilder);
     sideDeclaration(mxnBuilder);
     if (sym == Colon) {
@@ -473,7 +472,7 @@ public class Parser {
   }
 
   private void classSideDecl(final MixinBuilder mxnBuilder)
-      throws ParseError, MixinDefinitionError {
+      throws ProgramDefinitionError {
     mxnBuilder.switchToClassSide();
 
     expect(Colon, KeywordTag.class);
@@ -487,7 +486,7 @@ public class Parser {
   }
 
   private void classHeader(final MixinBuilder mxnBuilder)
-      throws ParseError, MixinDefinitionError {
+      throws ProgramDefinitionError {
     expect(NewTerm, null);
     classComment(mxnBuilder);
 
@@ -533,7 +532,7 @@ public class Parser {
   }
 
   private void slotDeclarations(final MixinBuilder mxnBuilder)
-      throws ParseError, MixinDefinitionError {
+      throws ProgramDefinitionError {
     // Newspeak-speak: we do not support simSlotDecls, i.e.,
     //                 simultaneous slots clauses (spec 6.3.2)
     expect(Or, DelimiterOpeningTag.class);
@@ -548,7 +547,7 @@ public class Parser {
   }
 
   private void slotDefinition(final MixinBuilder mxnBuilder)
-      throws ParseError, MixinDefinitionError {
+      throws ProgramDefinitionError {
     comment();
     if (sym == Or) { return; }
 
@@ -588,8 +587,7 @@ public class Parser {
     return identifier();
   }
 
-  private void initExprs(final MixinBuilder mxnBuilder)
-      throws ParseError, MixinDefinitionError {
+  private void initExprs(final MixinBuilder mxnBuilder) throws ProgramDefinitionError {
     MethodBuilder initializer = mxnBuilder.getInitializerMethodBuilder();
     mxnBuilder.addInitializerExpression(expression(initializer));
 
@@ -600,8 +598,7 @@ public class Parser {
     }
   }
 
-  private void sideDeclaration(final MixinBuilder mxnBuilder)
-      throws ParseError, MixinDefinitionError {
+  private void sideDeclaration(final MixinBuilder mxnBuilder) throws ProgramDefinitionError {
     expect(NewTerm, DelimiterOpeningTag.class);
     comment();
 
@@ -618,16 +615,14 @@ public class Parser {
     expect(EndTerm, DelimiterClosingTag.class);
   }
 
-  private void nestedClassDeclaration(final MixinBuilder mxnBuilder)
-      throws ParseError, MixinDefinitionError {
+  private void nestedClassDeclaration(final MixinBuilder mxnBuilder) throws ProgramDefinitionError {
     SourceCoordinate coord = getCoordinate();
     AccessModifier accessModifier = accessModifier();
     MixinBuilder nestedCls = classDeclaration(mxnBuilder, accessModifier);
     mxnBuilder.addNestedMixin(nestedCls.assemble(getSource(coord)));
   }
 
-  private void category(final MixinBuilder mxnBuilder)
-      throws ParseError, MixinDefinitionError {
+  private void category(final MixinBuilder mxnBuilder) throws ProgramDefinitionError {
     String categoryName;
     // Newspeak-spec: this is not conform with Newspeak,
     //                as the category is normally not optional
@@ -746,7 +741,7 @@ public class Parser {
   }
 
   private void methodDeclaration(final MixinBuilder mxnBuilder,
-      final SSymbol category) throws ParseError, MixinDefinitionError {
+      final SSymbol category) throws ProgramDefinitionError {
     SourceCoordinate coord = getCoordinate();
 
     AccessModifier accessModifier = accessModifier();
@@ -812,7 +807,7 @@ public class Parser {
   }
 
   private ExpressionNode methodBlock(final MethodBuilder builder)
-      throws ParseError, MixinDefinitionError {
+      throws ProgramDefinitionError {
     SourceCoordinate coord = getCoordinate();
     expect(NewTerm, DelimiterOpeningTag.class);
 
@@ -866,7 +861,7 @@ public class Parser {
   }
 
   private ExpressionNode blockContents(final MethodBuilder builder)
-      throws ParseError, MixinDefinitionError {
+      throws ProgramDefinitionError {
     comment();
     if (accept(Or, DelimiterOpeningTag.class)) {
       locals(builder);
@@ -875,7 +870,7 @@ public class Parser {
     return blockBody(builder);
   }
 
-  private void locals(final MethodBuilder builder) throws ParseError {
+  private void locals(final MethodBuilder builder) throws ParseError, MethodDefinitionError {
     while (sym == Identifier) {
       SourceCoordinate coord = getCoordinate();
       String id = identifier();
@@ -885,8 +880,7 @@ public class Parser {
     }
   }
 
-  private ExpressionNode blockBody(final MethodBuilder builder)
-      throws ParseError, MixinDefinitionError {
+  private ExpressionNode blockBody(final MethodBuilder builder) throws ProgramDefinitionError {
     SourceCoordinate coord = getCoordinate();
     List<ExpressionNode> expressions = new ArrayList<ExpressionNode>();
 
@@ -921,7 +915,7 @@ public class Parser {
   }
 
   private ExpressionNode result(final MethodBuilder builder)
-      throws ParseError, MixinDefinitionError {
+      throws ProgramDefinitionError {
     SourceCoordinate coord = getCoordinate();
 
     ExpressionNode exp = expression(builder);
@@ -935,7 +929,7 @@ public class Parser {
   }
 
   private ExpressionNode expression(final MethodBuilder builder)
-      throws ParseError, MixinDefinitionError {
+      throws ProgramDefinitionError {
     comment();
     peekForNextSymbolFromLexer();
 
@@ -947,12 +941,12 @@ public class Parser {
   }
 
   private ExpressionNode assignation(final MethodBuilder builder)
-      throws ParseError, MixinDefinitionError {
+      throws ProgramDefinitionError {
     return assignments(builder);
   }
 
   protected ExpressionNode assignments(final MethodBuilder builder)
-      throws ParseError, MixinDefinitionError {
+      throws ProgramDefinitionError {
     SourceCoordinate coord = getCoordinate();
 
     if (sym != Identifier) {
@@ -981,7 +975,7 @@ public class Parser {
   }
 
   private ExpressionNode evaluation(final MethodBuilder builder)
-      throws ParseError, MixinDefinitionError {
+      throws ProgramDefinitionError {
     ExpressionNode exp;
     if (sym == Keyword) {
       exp = keywordMessage(builder, builder.getSelfRead(getEmptySource()), false, false, null);
@@ -999,8 +993,7 @@ public class Parser {
         || symIn(binaryOpSyms) || sym == EventualSend;
   }
 
-  private ExpressionNode primary(final MethodBuilder builder)
-      throws ParseError, MixinDefinitionError {
+  private ExpressionNode primary(final MethodBuilder builder) throws ProgramDefinitionError {
     switch (sym) {
       case Identifier: {
         SourceCoordinate coord = getCoordinate();
@@ -1051,7 +1044,7 @@ public class Parser {
   }
 
   private ExpressionNode outerSend(final MethodBuilder builder)
-      throws ParseError, MixinDefinitionError {
+      throws ProgramDefinitionError {
     SourceCoordinate coord = getCoordinate();
     expectIdentifier("outer", KeywordTag.class);
     String outer = identifier();
@@ -1063,8 +1056,7 @@ public class Parser {
 
   protected ExpressionNode binaryConsecutiveMessages(
       final MethodBuilder builder, ExpressionNode operand,
-      boolean eventualSend, SourceSection sendOp) throws ParseError,
-      MixinDefinitionError {
+      boolean eventualSend, SourceSection sendOp) throws ProgramDefinitionError {
     while (sym == OperatorSequence || symIn(binaryOpSyms)) {
       operand = binaryMessage(builder, operand, eventualSend, sendOp);
       SourceCoordinate coord = getCoordinate();
@@ -1078,7 +1070,7 @@ public class Parser {
   }
 
   private ExpressionNode messages(final MethodBuilder builder,
-      final ExpressionNode receiver) throws ParseError, MixinDefinitionError {
+      final ExpressionNode receiver) throws ProgramDefinitionError {
     ExpressionNode msg;
     SourceCoordinate coord = getCoordinate();
     boolean eventualSend = accept(EventualSend, KeywordTag.class);
@@ -1152,8 +1144,7 @@ public class Parser {
 
   protected ExpressionNode binaryMessage(final MethodBuilder builder,
       final ExpressionNode receiver, final boolean eventualSend,
-      final SourceSection sendOperator)
-          throws ParseError, MixinDefinitionError {
+      final SourceSection sendOperator) throws ProgramDefinitionError {
     SourceCoordinate coord = getCoordinate();
     SSymbol msg = binarySelector();
     ExpressionNode operand = binaryOperand(builder);
@@ -1169,8 +1160,7 @@ public class Parser {
         eventualSend, getSource(coord), sendOperator);
   }
 
-  private ExpressionNode binaryOperand(final MethodBuilder builder)
-      throws ParseError, MixinDefinitionError {
+  private ExpressionNode binaryOperand(final MethodBuilder builder) throws ProgramDefinitionError {
     ExpressionNode operand = primary(builder);
 
     // a binary operand can receive unaryMessages
@@ -1196,7 +1186,7 @@ public class Parser {
 
   protected ExpressionNode keywordMessage(final MethodBuilder builder,
       final ExpressionNode receiver, final boolean explicitRcvr,
-      final boolean eventualSend, final SourceSection sendOperator) throws ParseError, MixinDefinitionError {
+      final boolean eventualSend, final SourceSection sendOperator) throws ProgramDefinitionError {
     assert !(!explicitRcvr && eventualSend);
     SourceCoordinate coord = getCoordinate();
     List<ExpressionNode> arguments = new ArrayList<ExpressionNode>();
@@ -1290,25 +1280,33 @@ public class Parser {
             source);
       } else if (!VmSettings.DYNAMIC_METRICS && "to:do:".equals(msgStr) &&
           arguments.get(2) instanceof LiteralNode) {
-        Local loopIdx = builder.addLocal("i:" + source.getCharIndex(), source);
-        ExpressionNode inlinedBody = ((LiteralNode) arguments.get(2)).inline(builder, loopIdx);
-        inlinedBody.markAsLoopBody();
-        return IntToDoInlinedLiteralsNodeGen.create(inlinedBody, loopIdx.getSlot(), loopIdx.source,
-            arguments.get(2), source, arguments.get(0), arguments.get(1));
+        try {
+          Local loopIdx = builder.addLocal("i:" + source.getCharIndex(), source);
+          ExpressionNode inlinedBody = ((LiteralNode) arguments.get(2)).inline(builder, loopIdx);
+          inlinedBody.markAsLoopBody();
+          return IntToDoInlinedLiteralsNodeGen.create(inlinedBody, loopIdx.getSlot(), loopIdx.source,
+              arguments.get(2), source, arguments.get(0), arguments.get(1));
+        } catch (MethodDefinitionError e) {
+          throw new RuntimeException(e);
+        }
       } else if (!VmSettings.DYNAMIC_METRICS && "downTo:do:".equals(msgStr) &&
           arguments.get(2) instanceof LiteralNode) {
-        Local loopIdx = builder.addLocal("i:" + source.getCharIndex(), source);
-        ExpressionNode inlinedBody = ((LiteralNode) arguments.get(2)).inline(builder, loopIdx);
-        inlinedBody.markAsLoopBody();
-        return IntDownToDoInlinedLiteralsNodeGen.create(inlinedBody, loopIdx.getSlot(), loopIdx.source,
-            arguments.get(2), source, arguments.get(0), arguments.get(1));
+        try {
+          Local loopIdx = builder.addLocal("i:" + source.getCharIndex(), source);
+          ExpressionNode inlinedBody = ((LiteralNode) arguments.get(2)).inline(builder, loopIdx);
+          inlinedBody.markAsLoopBody();
+          return IntDownToDoInlinedLiteralsNodeGen.create(inlinedBody, loopIdx.getSlot(), loopIdx.source,
+              arguments.get(2), source, arguments.get(0), arguments.get(1));
+        } catch (MethodDefinitionError e) {
+          throw new RuntimeException(e);
+        }
       }
     }
     return null;
   }
 
   private ExpressionNode formula(final MethodBuilder builder)
-      throws ParseError, MixinDefinitionError {
+      throws ProgramDefinitionError {
     ExpressionNode operand = binaryOperand(builder);
     SourceCoordinate coord = getCoordinate();
     boolean evenutalSend = accept(EventualSend, KeywordTag.class);
@@ -1322,7 +1320,7 @@ public class Parser {
   }
 
   private ExpressionNode nestedTerm(final MethodBuilder builder)
-      throws ParseError, MixinDefinitionError {
+      throws ProgramDefinitionError {
     expect(NewTerm, DelimiterOpeningTag.class);
     ExpressionNode exp = expression(builder);
     expect(EndTerm, DelimiterClosingTag.class);
@@ -1440,8 +1438,7 @@ public class Parser {
     return s;
   }
 
-  private ExpressionNode nestedBlock(final MethodBuilder builder)
-      throws ParseError, MixinDefinitionError {
+  private ExpressionNode nestedBlock(final MethodBuilder builder) throws ProgramDefinitionError {
     SourceCoordinate coord = getCoordinate();
     expect(NewBlock, DelimiterOpeningTag.class);
 
