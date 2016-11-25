@@ -1,6 +1,5 @@
 package tools.debugger.frontend;
 
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.concurrent.ArrayBlockingQueue;
 
@@ -25,13 +24,13 @@ import tools.debugger.frontend.ApplicationThreadTask.SendStackTrace;
  */
 public class Suspension {
   public final int activityId;
-  private final WeakReference<Object> activity;
+  private final Object activity;
   private final ArrayBlockingQueue<ApplicationThreadTask> tasks;
 
   private SuspendedEvent suspendedEvent;
   private ApplicationThreadStack stack;
 
-  public Suspension(final WeakReference<Object> activity, final int activityId) {
+  public Suspension(final Object activity, final int activityId) {
     this.activity   = activity;
     this.activityId = activityId;
     this.tasks = new ArrayBlockingQueue<>(2);
@@ -137,6 +136,6 @@ public class Suspension {
     }
   }
 
-  public Object getActivity() { return activity.get(); }
+  public Object getActivity() { return activity; }
   public synchronized SuspendedEvent getEvent() { return suspendedEvent; }
 }

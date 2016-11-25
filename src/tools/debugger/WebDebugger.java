@@ -1,6 +1,5 @@
 package tools.debugger;
 
-import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -70,7 +69,7 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
   private final Map<Source, Set<RootNode>> rootNodes = new HashMap<>();
 
   private int nextActivityId = 0;
-  private final Map<WeakReference<Object>, Suspension> activityToSuspension = new HashMap<>();
+  private final Map<Object, Suspension> activityToSuspension = new HashMap<>();
   private final Map<Integer, Suspension> idToSuspension = new HashMap<>();
 
   public void useDebuggerProtocol(final boolean debuggerProtocol) {
@@ -119,12 +118,11 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
   private synchronized Suspension getSuspension(final Object activity) {
     Suspension suspension = activityToSuspension.get(activity);
     if (suspension == null) {
-      WeakReference<Object> ref = new WeakReference<Object>(activity);
       int id = nextActivityId;
       nextActivityId += 1;
-      suspension = new Suspension(ref, id);
+      suspension = new Suspension(activity, id);
 
-      activityToSuspension.put(ref, suspension);
+      activityToSuspension.put(activity, suspension);
       idToSuspension.put(id, suspension);
     }
     return suspension;
