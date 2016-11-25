@@ -74,7 +74,7 @@ public abstract class ReceivedRootNode extends RootNode {
       if (tag == StatementTag.class) {
         return isMarkedAsRootExpression();
       }
-      return super.isTaggedWith(tag);
+      return super.isTaggedWithIgnoringEagerness(tag);
     }
   }
 }
