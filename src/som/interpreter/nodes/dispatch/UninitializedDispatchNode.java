@@ -107,6 +107,11 @@ public final class UninitializedDispatchNode {
 
     @Override
     public final Object executeDispatch(final VirtualFrame frame, final Object[] arguments) {
+      return specialize(frame, arguments).
+          executeDispatch(frame, arguments);
+    }
+
+    private AbstractDispatchNode specialize(final VirtualFrame frame, final Object[] arguments) {
       TruffleCompiler.transferToInterpreterAndInvalidate("Initialize a dispatch node.");
 
       // Determine position in dispatch node chain, i.e., size of inline cache
@@ -134,16 +139,14 @@ public final class UninitializedDispatchNode {
       if (receiver instanceof SObject) {
         SObject rcvr = (SObject) receiver;
         if (rcvr.updateLayoutToMatchClass() && first != this) { // if first is this, short cut and directly continue...
-          return first.executeDispatch(frame, arguments);
+          return first;
         }
       }
 
-      AbstractDispatchNode newNode;
       // we modify a dispatch chain here, so, better grab the root node before we do anything
       synchronized (getLock()) {
-        newNode = specialize(arguments, chainDepth, first);
+        return specialize(arguments, chainDepth, first);
       }
-      return newNode.executeDispatch(frame, arguments);
     }
 
     @Override
