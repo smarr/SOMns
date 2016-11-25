@@ -317,9 +317,9 @@ Classes.transferClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInst
         }
 
         if (promise.isErroredUnsync()) {
-          System.exit(1);
+          VM.getVM().realExit(1);
         } else {
-          System.exit(0);
+          VM.getVM().realExit(0);
         }
       }
 
@@ -335,7 +335,7 @@ Classes.transferClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInst
 
     assert !VM.shouldExit();
     VM.errorExit("VM seems to have exited prematurely. But the actor pool has been idle for " + emptyFJPool + " checks in a row.");
-    System.exit(1); // just in case it was disable for VM.errorExit
+    VM.getVM().realExit(1); // just in case it was disable for VM.errorExit
   }
 
   public void executeApplication(final SObjectWithoutFields vmMirror, final Actor mainActor) {
@@ -372,7 +372,7 @@ Classes.transferClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInst
     } catch (InterruptedException | ExecutionException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
-      System.exit(0);
+      VM.getVM().realExit(1);
     }
   }
 

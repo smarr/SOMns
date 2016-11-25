@@ -329,8 +329,7 @@ public final class VM {
     }
 
     engine.eval(SomLanguage.START);
-    engine.dispose();
-    System.exit(vm.lastExitCode);
+    vm.realExit(0);
   }
 
   public MixinDefinition loadModule(final String filename) throws IOException {
