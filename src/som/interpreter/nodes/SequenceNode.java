@@ -56,7 +56,7 @@ public final class SequenceNode extends ExprWithTagsNode {
 
   @Override
   public boolean isResultUsed(final ExpressionNode child) {
-    if (expressions[expressions.length - 1] == child) {
+    if (SOMNode.unwrapIfNecessary(expressions[expressions.length - 1]) == child) {
       Node parent = getParent();
       assert parent != null;
       if (parent instanceof ExpressionNode) {
