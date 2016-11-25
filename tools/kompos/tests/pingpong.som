@@ -14,13 +14,30 @@ class PingPongApp usingPlatform: platform = Value (
       public start = (
         'Ping>>start' println.
         pong <-: ping: self.
-        pingsLeft := pingsLeft - 1.
+        pingsLeft := pingsLeft - 1.       
       )
     
-      public ping = (
+      public ping = ( 
+      | p1 |
         'Ping>>ping' println.
         pong <-: ping: self.
         pingsLeft := pingsLeft - 1.
+
+        p1 := self <-: validate: pingsLeft.        
+        p1 whenResolved: [:v | v println. ].
+      )
+
+      public validate: pings = (
+        ^ self <-: validMessage: pings.
+      )
+
+      public validMessage: pings = (
+      | p2 r |
+        p2 := actors createPromisePair.
+        r := p2 resolver.
+        r resolve: ' ping value ' + pings.
+        
+        ^ p2 promise
       )
     
       public pong: sender = (
@@ -49,11 +66,12 @@ class PingPongApp usingPlatform: platform = Value (
     )
     
     public benchmark = (
-      | ping pong completionPP |
+      | ping pong completionPP p |
       completionPP := actors createPromisePair.
       pong := (actors createActorFromValue: Pong) <-: new: completionPP resolver.
       ping := (actors createActorFromValue: Ping) <-: new: NumPings with: pong.
-      ping <-: start.
+      p := ping <-: start.
+      p <-: println.
       ^ completionPP promise whenResolved: [:r |
          ('Done with: ' + r asString) println. ]
     )

@@ -117,6 +117,7 @@ public class Breakpoints {
     FullSourceCoordinate coord = bId.getCoordinate();
     BreakpointEnabling<T> existingBP = breakpoints.get(coord);
     if (existingBP == null) {
+      WebDebugger.log("SetSectionBreakpoint: " + bId);
       existingBP = new BreakpointEnabling<T>(bId);
       breakpoints.put(coord, existingBP);
     } else {

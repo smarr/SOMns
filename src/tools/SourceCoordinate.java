@@ -34,7 +34,7 @@ public class SourceCoordinate {
 
   @Override
   public String toString() {
-    return "SrcCoord(line: " + startLine + ", col: " + startColumn + ")";
+    return "SrcCoord(line: " + startLine + ", col: " + startColumn + ", charlength:" + charLength + ")";
   }
 
   public static class FullSourceCoordinate extends SourceCoordinate {
