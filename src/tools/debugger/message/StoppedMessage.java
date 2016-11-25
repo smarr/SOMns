@@ -46,10 +46,14 @@ public final class StoppedMessage extends OutgoingMessage {
   }
 
   public static StoppedMessage create(final Suspension suspension) {
-    assert !suspension.getEvent().getBreakpoints().isEmpty() : "Need to support other reasons for suspension";
-    Reason reason = Reason.breakpoint;
+    Reason reason;
+    if (suspension.getEvent().getBreakpoints().isEmpty()) {
+      reason = Reason.step;
+    } else {
+      reason = Reason.breakpoint;
+    }
 
-    assert suspension.getActivity() instanceof Actor;
+    assert suspension.getActivity() instanceof Actor : "TODO support threads";
 
     return new StoppedMessage(reason, suspension.activityId,
         ActivityType.Actor, ""); // TODO: look into additional details that can be provided as text
