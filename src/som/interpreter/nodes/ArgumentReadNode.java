@@ -56,6 +56,8 @@ public abstract class ArgumentReadNode {
         return true;
       } else if (tag == LocalArgRead.class) {
         return true;
+      } else if (tag == StatementTag.class) {
+        return isMarkedAsRootExpression();
       } else {
         return super.isTaggedWith(tag);
       }
@@ -97,8 +99,6 @@ public abstract class ArgumentReadNode {
     protected boolean isTaggedWith(final Class<?> tag) {
       if (tag == KeywordTag.class) {
         return true;
-      } else if (tag == StatementTag.class) {
-        return isMarkedAsRootExpression();
       } else {
         return super.isTaggedWith(tag);
       }
@@ -167,6 +167,8 @@ public abstract class ArgumentReadNode {
         return true;
       } else if (tag == LocalArgRead.class) {
         return true;
+      } else if (tag == StatementTag.class) {
+        return isMarkedAsRootExpression();
       } else {
         return super.isTaggedWith(tag);
       }
@@ -209,8 +211,6 @@ public abstract class ArgumentReadNode {
     protected boolean isTaggedWith(final Class<?> tag) {
       if (tag == KeywordTag.class) {
         return true;
-      } else if (tag == StatementTag.class) {
-        return isMarkedAsRootExpression();
       } else {
         return super.isTaggedWith(tag);
       }
@@ -244,8 +244,6 @@ public abstract class ArgumentReadNode {
     protected boolean isTaggedWith(final Class<?> tag) {
       if (tag == KeywordTag.class) {
         return true;
-      } else if (tag == StatementTag.class) {
-        return isMarkedAsRootExpression();
       } else {
         return super.isTaggedWith(tag);
       }
@@ -291,8 +289,6 @@ public abstract class ArgumentReadNode {
     protected boolean isTaggedWith(final Class<?> tag) {
       if (tag == KeywordTag.class) {
         return true;
-      } else if (tag == StatementTag.class) {
-        return isMarkedAsRootExpression();
       } else {
         return super.isTaggedWith(tag);
       }
